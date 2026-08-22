@@ -1,463 +1,475 @@
 ---
 repository: "red-hat-data-services/MLServer"
-overall_score: 6.7
+overall_score: 5.3
 scorecard:
   - dimension: "Unit Tests"
-    score: 8.5
-    status: "Extensive pytest suite with 450+ test functions across 114 test files; async-first with pytest-asyncio; parallel execution via pytest-xdist"
-  - dimension: "Integration/E2E"
-    score: 7.0
-    status: "Good runtime integration tests (9 ML runtimes), Kafka/gRPC/REST server tests, but no E2E cluster deployment testing"
-  - dimension: "Build Integration"
-    score: 5.0
-    status: "Konflux PR pipeline (Tekton) builds multi-arch images on /build-konflux comment; no automatic PR-time build validation"
-  - dimension: "Image Testing"
-    score: 4.5
-    status: "Dockerfiles present with multi-stage builds but no runtime validation, startup testing, or functional image tests"
-  - dimension: "Coverage Tracking"
-    score: 2.0
-    status: "No coverage tooling — no pytest-cov, no codecov/coveralls integration, no coverage thresholds or PR reporting"
-  - dimension: "CI/CD Automation"
     score: 8.0
-    status: "Well-organized workflows: PR tests, security scanning, benchmarks, license checks, requirements regeneration, release automation"
+    status: "Strong pytest suite with 118 test files across core + 10 runtimes, multi-Python matrix"
+  - dimension: "Integration/E2E"
+    score: 4.0
+    status: "No dedicated E2E or integration test suite; component tests exist but no cluster-level validation"
+  - dimension: "Build Integration"
+    score: 4.0
+    status: "Tekton Konflux builds exist but are comment-triggered; no automatic PR-time image build validation"
+  - dimension: "Image Testing"
+    score: 4.0
+    status: "Multi-stage Dockerfiles with UBI9 base, but no runtime validation, health checks, or multi-arch"
+  - dimension: "Coverage Tracking"
+    score: 1.0
+    status: "No coverage tooling configured — no pytest-cov, no codecov, no thresholds"
+  - dimension: "CI/CD Automation"
+    score: 7.0
+    status: "Comprehensive PR test matrix (3 Python versions x 9 runtimes) with SHA-pinned actions, but no caching or concurrency controls"
+  - dimension: "Static Analysis"
+    score: 7.0
+    status: "Black + flake8 + mypy linting trio; Dependabot + Renovate for deps; no pre-commit hooks"
   - dimension: "Agent Rules"
-    score: 7.5
-    status: "Comprehensive AGENTS.md with constraints, gotchas, branch strategy, and release process; no .claude/rules/ for test patterns"
+    score: 8.0
+    status: "Excellent 12KB AGENTS.md with development constraints, gotchas, boundaries, and release process"
 critical_gaps:
-  - title: "No test coverage tracking or enforcement"
-    impact: "Cannot measure test coverage, track regressions, or enforce minimum coverage on PRs — blind spot for quality degradation"
+  - title: "No coverage tracking or enforcement"
+    impact: "Impossible to measure test effectiveness or detect coverage regressions on PRs"
     severity: "HIGH"
     effort: "4-6 hours"
-  - title: "No container image runtime validation"
-    impact: "Image startup failures, missing dependencies, or broken entrypoints not caught until deployment to staging/production"
+  - title: "No dedicated integration/E2E test suite"
+    impact: "Multi-component interactions (REST + gRPC + Kafka + model loading) are not validated end-to-end in a realistic deployment"
     severity: "HIGH"
-    effort: "6-8 hours"
-  - title: "No pre-commit hooks"
-    impact: "Developers can commit code that fails lint checks (black, flake8, mypy) — caught only at CI time, slowing feedback loop"
-    severity: "MEDIUM"
-    effort: "1-2 hours"
-  - title: "Security scans gated on SeldonIO/MLServer — not running on forks"
-    impact: "Snyk code scan, static analysis, and image scan only run on the upstream SeldonIO repo — all fork PRs (including RHDS) skip security scanning entirely"
+    effort: "20-40 hours"
+  - title: "No automatic PR-time image build validation"
+    impact: "Dockerfile breakages discovered only after merge in Konflux pipelines"
     severity: "HIGH"
-    effort: "2-4 hours"
-  - title: "No E2E deployment testing"
-    impact: "No validation that MLServer actually serves predictions in a KServe/ModelMesh environment before merge"
+    effort: "8-12 hours"
+  - title: "No container runtime validation or health checks"
+    impact: "Image startup failures and runtime issues not caught until deployment"
     severity: "MEDIUM"
-    effort: "16-24 hours"
+    effort: "6-10 hours"
 quick_wins:
   - title: "Add pytest-cov and codecov integration"
     effort: "4-6 hours"
-    impact: "Immediate visibility into test coverage with PR-level reporting and minimum threshold enforcement"
-  - title: "Add pre-commit hooks for black, flake8, mypy"
+    impact: "Immediate visibility into test coverage with PR-level reporting and threshold enforcement"
+  - title: "Add pre-commit hooks for black, flake8, and mypy"
     effort: "1-2 hours"
-    impact: "Catch formatting and type errors locally before CI — faster developer feedback loop"
-  - title: "Fix security scan conditionals to run on forks"
-    effort: "2-3 hours"
-    impact: "Enable Snyk scanning on red-hat-data-services/MLServer and opendatahub-io/MLServer forks"
-  - title: "Add image startup smoke test to Tekton PR pipeline"
-    effort: "3-4 hours"
-    impact: "Validate the built image can start MLServer and respond to health checks before merge"
-  - title: "Create .claude/rules/ for test creation patterns"
-    effort: "2-3 hours"
-    impact: "Standardize AI-generated tests to match project conventions (async, fixtures, conftest patterns)"
+    impact: "Catch lint issues before commit, reducing CI failures from formatting/type errors"
+  - title: "Add concurrency controls to CI workflows"
+    effort: "1 hour"
+    impact: "Prevent redundant CI runs on rapid pushes, saving compute resources"
+  - title: "Add HEALTHCHECK to Dockerfiles"
+    effort: "1-2 hours"
+    impact: "Basic container health validation during orchestrator deployments"
 recommendations:
   priority_0:
-    - "Add pytest-cov with codecov integration and enforce minimum coverage threshold (e.g., 70%) on PRs"
-    - "Fix security.yml conditionals so Snyk scans run on opendatahub-io and red-hat-data-services forks"
-    - "Add container runtime smoke test: build image, start MLServer, hit /v2/health/ready endpoint"
+    - "Add pytest-cov with codecov integration and enforce a coverage threshold (e.g., 60% initially, increasing over time)"
+    - "Add PR-triggered Docker build step to tests.yml to catch image build failures before merge"
+    - "Create an integration test suite that validates MLServer startup, model loading, and inference end-to-end"
   priority_1:
-    - "Add pre-commit hooks (.pre-commit-config.yaml) for black, flake8, mypy"
-    - "Add image startup validation to Tekton PR pipeline (health check after build)"
-    - "Create .claude/rules/ with test-creation rules matching project patterns (async tests, conftest fixtures, pytest-cases)"
-    - "Add contract tests for V2 inference protocol REST and gRPC endpoints"
+    - "Add HEALTHCHECK instructions to all Dockerfiles for container runtime validation"
+    - "Add pre-commit hooks (black, flake8, mypy) to catch issues before CI"
+    - "Add concurrency controls and pip caching to CI workflows to reduce build times"
+    - "Add multi-architecture build support (amd64 + arm64) for broader platform coverage"
   priority_2:
-    - "Add E2E deployment testing with Kind/Minikube and KServe InferenceService"
-    - "Add performance regression testing comparing benchmark results against baseline"
-    - "Add SBOM generation and image signing to container build pipeline"
-    - "Add Trivy scanning as alternative/supplement to Snyk for image vulnerability detection"
+    - "Create .claude/rules/ directory with granular test creation rules per component"
+    - "Add contract tests for the V2 Inference Protocol REST/gRPC API surface"
+    - "Add performance regression tests integrated into CI (currently benchmarks are nightly-only)"
 ---
 
-# Quality Analysis: MLServer (red-hat-data-services/MLServer)
+# Quality Analysis: red-hat-data-services/MLServer
 
 ## Executive Summary
 
-- **Overall Score: 6.7/10**
-- **Repository Type**: Python ML inference server library + monorepo with 10 runtime packages
-- **Primary Language**: Python 3.10-3.12
-- **Framework**: FastAPI (REST) + gRPC, Poetry monorepo, V2 Inference Protocol (KFServing)
-- **Key Strengths**: Excellent test coverage breadth (450+ tests across core + 9 runtimes), well-organized CI matrix with multi-Python testing, comprehensive AGENTS.md, Snyk security scanning, automated requirements regeneration, k6 performance benchmarks
-- **Critical Gaps**: No coverage tracking/enforcement, no image runtime validation, security scans only run on upstream SeldonIO fork, no pre-commit hooks
-- **Agent Rules Status**: Comprehensive AGENTS.md present; no `.claude/rules/` directory for test-creation patterns
+- **Overall Score: 5.3/10**
+- **Repository Type**: Python ML model serving library (V2 Inference Protocol / KFServing)
+- **Primary Language**: Python 3.10–3.12
+- **Package Manager**: Poetry (monorepo: core `mlserver` + 10 runtime packages under `runtimes/`)
+- **Jira Component**: Model Runtimes (RHOAIENG)
+- **Tier**: Downstream (red-hat-data-services)
+
+### Key Strengths
+- Extensive unit test suite with 118 test files covering core server, REST, gRPC, Kafka, metrics, and 10 ML runtimes
+- Comprehensive CI matrix testing across 3 Python versions with SHA-pinned GitHub Actions
+- Strong static analysis setup (black + flake8 + mypy) with both Dependabot and Renovate for dependency management
+- Exceptional AGENTS.md with detailed development constraints, gotchas, boundaries, and release process documentation
+
+### Critical Gaps
+- **Zero coverage tracking** — no pytest-cov, no codecov, no coverage thresholds
+- **No integration/E2E tests** — no cluster-level or deployment-level validation
+- **No automatic PR-time image builds** — Dockerfile breakages caught only post-merge
+- **No container health checks** — no HEALTHCHECK, no runtime validation testing
+
+### Agent Rules Status: **Present (AGENTS.md)** — comprehensive and actionable
 
 ## Quality Scorecard
 
-| Dimension | Score | Status |
-|-----------|-------|--------|
-| Unit Tests | 8.5/10 | Extensive pytest suite with 450+ test functions across 114 files |
-| Integration/E2E | 7.0/10 | Good runtime integration tests; no E2E cluster deployment testing |
-| **Build Integration** | **5.0/10** | **Konflux PR pipeline exists but requires manual `/build-konflux` comment trigger** |
-| Image Testing | 4.5/10 | Multi-stage Dockerfiles; no runtime validation or startup tests |
-| Coverage Tracking | 2.0/10 | No coverage tooling, thresholds, or PR reporting whatsoever |
-| CI/CD Automation | 8.0/10 | Well-organized: PR tests, security, benchmarks, licenses, release automation |
-| Agent Rules | 7.5/10 | Strong AGENTS.md with constraints, gotchas, boundaries; no .claude/rules/ |
+| Dimension | Score | Weight | Weighted | Status |
+|-----------|-------|--------|----------|--------|
+| Unit Tests | 8.0/10 | 15% | 1.20 | Strong pytest suite with 118 test files, multi-Python matrix |
+| Integration/E2E | 4.0/10 | 20% | 0.80 | No dedicated E2E suite; component tests only |
+| Build Integration | 4.0/10 | 15% | 0.60 | Tekton exists but comment-triggered; no PR-auto build |
+| Image Testing | 4.0/10 | 10% | 0.40 | Multi-stage UBI9 Dockerfiles, but no runtime validation |
+| Coverage Tracking | 1.0/10 | 10% | 0.10 | No coverage tooling at all |
+| CI/CD Automation | 7.0/10 | 15% | 1.05 | Comprehensive matrix, no caching/concurrency |
+| Static Analysis | 7.0/10 | 10% | 0.70 | black + flake8 + mypy; Dependabot + Renovate |
+| Agent Rules | 8.0/10 | 5% | 0.40 | Excellent AGENTS.md with detailed guidance |
+| **Overall** | **5.3/10** | **100%** | **5.25** | |
 
 ## Critical Gaps
 
-### 1. No Test Coverage Tracking or Enforcement
-- **Impact**: Cannot measure test coverage, identify untested code paths, track coverage regressions, or enforce minimum coverage on PRs. Complete blind spot for quality degradation.
+### 1. No Coverage Tracking or Enforcement
+- **Impact**: Impossible to measure test effectiveness or detect coverage regressions on PRs
 - **Severity**: HIGH
-- **Effort**: 4-6 hours
-- **Details**: No `pytest-cov` in dependencies, no `.codecov.yml` or `.coveragerc`, no coverage reporting in any CI workflow. Test-to-code ratio is excellent (~0.96:1 by lines) but without measurement, coverage gaps are invisible.
+- **Effort**: 4–6 hours
+- **Details**: No `pytest-cov` in dependencies, no `.codecov.yml`, no `--cov` flags in tox.ini, and no coverage threshold enforcement. The test suite could be extensive but missing critical code paths without anyone knowing.
 
-### 2. Security Scans Gated on Upstream Only
-- **Impact**: All three Snyk jobs (code scan, static analysis, image scan) have `if: github.repository == 'SeldonIO/MLServer'` — they never run on `opendatahub-io/MLServer` or `red-hat-data-services/MLServer` forks.
+### 2. No Dedicated Integration/E2E Test Suite
+- **Impact**: Multi-component interactions are not validated in a realistic deployment scenario
 - **Severity**: HIGH
-- **Effort**: 2-4 hours
-- **Details**: The RHDS fork where RHOAI builds originate gets zero Snyk scanning coverage. Vulnerabilities introduced in fork-specific changes go undetected.
+- **Effort**: 20–40 hours
+- **Details**: No `e2e/` or `integration/` directories. While tests cover REST, gRPC, Kafka, and individual runtimes, there is no test that validates the full MLServer lifecycle: image build → startup → model loading → inference → metrics collection in a container or cluster context. No Kind/Minikube/envtest usage.
 
-### 3. No Container Image Runtime Validation
-- **Impact**: Image startup failures, missing Python dependencies, or broken entrypoints not caught until deployment to staging/production environments.
+### 3. No Automatic PR-time Image Build Validation
+- **Impact**: Dockerfile breakages are discovered only after merge in Konflux pipelines
 - **Severity**: HIGH
-- **Effort**: 6-8 hours
-- **Details**: The Dockerfile builds a multi-stage image with runtime selection, but no CI step validates that the built image can actually start `mlserver`, load runtimes, or respond to health checks. The Tekton PR pipeline builds the image but doesn't test it.
+- **Effort**: 8–12 hours
+- **Details**: The `tests.yml` workflow runs unit tests and linting on PRs but does not build any Docker images. Docker builds exist only in `release.yml` (manual dispatch). Tekton pipelines in `.tekton/` exist for Konflux builds but are triggered by commenting `/build-konflux` on a PR, not automatically. This means a Dockerfile change that breaks the build can be merged without detection.
 
-### 4. No Pre-commit Hooks
-- **Impact**: Developers can commit code that fails black formatting, flake8 lint, or mypy type checks — only caught at CI time, adding 10-15 minutes to the feedback loop.
+### 4. No Container Runtime Validation or Health Checks
+- **Impact**: Image startup failures and runtime errors not caught until deployment
 - **Severity**: MEDIUM
-- **Effort**: 1-2 hours
-
-### 5. No E2E Deployment Testing
-- **Impact**: No validation that MLServer actually serves predictions in a realistic KServe/ModelMesh environment before merge.
-- **Severity**: MEDIUM
-- **Effort**: 16-24 hours
+- **Effort**: 6–10 hours
+- **Details**: None of the 4 Dockerfiles include `HEALTHCHECK` instructions. No testcontainers usage, no image startup validation in CI, and no Kubernetes readiness/liveness probe definitions in the repo. The gap between "tests pass" and "container works" is unvalidated.
 
 ## Quick Wins
 
-### 1. Add pytest-cov and Codecov Integration (4-6 hours)
-- Add `pytest-cov` to dev dependencies
-- Add `--cov=mlserver --cov-report=xml` to pytest invocation in tox.ini
-- Create `.codecov.yml` with minimum coverage threshold
-- Add codecov upload step to tests.yml workflow
-- **Impact**: Immediate visibility into coverage with PR-level reporting
+### 1. Add pytest-cov and Codecov Integration
+- **Effort**: 4–6 hours
+- **Impact**: Immediate visibility into test coverage with PR-level reporting
+- **Implementation**:
+  1. Add `pytest-cov` to dev dependencies in `pyproject.toml`
+  2. Add `--cov=mlserver --cov-report=xml` to tox.ini test commands
+  3. Create `.codecov.yml` with initial threshold (e.g., 60%)
+  4. Add codecov upload step to `tests.yml`
 
-### 2. Add Pre-commit Hooks (1-2 hours)
-Create `.pre-commit-config.yaml`:
+### 2. Add Pre-commit Hooks
+- **Effort**: 1–2 hours
+- **Impact**: Catch lint issues before commit, reducing CI failures
+- **Implementation**: Create `.pre-commit-config.yaml`:
 ```yaml
 repos:
   - repo: https://github.com/psf/black
     rev: 24.8.0
     hooks:
       - id: black
-  - repo: https://github.com/PyCQA/flake8
+  - repo: https://github.com/pycqa/flake8
     rev: 7.0.0
     hooks:
       - id: flake8
-        args: [--config=setup.cfg]
+        args: [--max-line-length=88, --extend-ignore=E203]
   - repo: https://github.com/pre-commit/mirrors-mypy
     rev: v1.11.2
     hooks:
       - id: mypy
         additional_dependencies: [pydantic]
-        args: [--config-file=pyproject.toml]
 ```
 
-### 3. Fix Security Scan Conditionals (2-3 hours)
-Update `security.yml` to also run on forks:
+### 3. Add Concurrency Controls to CI Workflows
+- **Effort**: 1 hour
+- **Impact**: Prevent redundant CI runs on rapid pushes
+- **Implementation**: Add to `tests.yml`:
 ```yaml
-if: github.repository == 'SeldonIO/MLServer' || github.repository == 'opendatahub-io/MLServer' || github.repository == 'red-hat-data-services/MLServer'
-```
-Or remove the conditional entirely if secrets are configured on all forks.
-
-### 4. Add Image Startup Smoke Test (3-4 hours)
-Add a step to the Tekton PR pipeline or a new GitHub Actions job:
-```yaml
-- name: Smoke test built image
-  run: |
-    docker run -d --name mlserver-test -p 8080:8080 $IMAGE
-    sleep 10
-    curl -sf http://localhost:8080/v2/health/ready || exit 1
-    docker stop mlserver-test
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 ```
 
-### 5. Create .claude/rules/ for Test Patterns (2-3 hours)
-- Create rules for async test patterns (`async def test_*` with `asyncio_mode = auto`)
-- Document conftest.py fixture patterns and `TEST_ONLY_EXTRA_IMPLEMENTATIONS` registration
-- Add pytest-cases usage examples for parameterized tests
-- **Impact**: Standardize AI-generated tests to match project conventions
+### 4. Add HEALTHCHECK to Dockerfiles
+- **Effort**: 1–2 hours
+- **Impact**: Basic container health validation
+- **Implementation**: Add before CMD in each Dockerfile:
+```dockerfile
+HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
+  CMD python -c "import urllib.request; urllib.request.urlopen('http://localhost:8080/v2/health/ready')" || exit 1
+```
 
 ## Detailed Findings
 
-### CI/CD Pipeline
+### Unit Tests
 
-**Workflows Inventory** (8 total):
+**Score: 8.0/10**
 
+**Strengths:**
+- 118 test files across core (`tests/`: 74 files) and runtimes (`runtimes/*/tests/`: 44 files)
+- Test-to-code file ratio: 0.72 (118 test files / 164 source files) — strong
+- Pytest with `asyncio_mode = auto` for async test support
+- Parallel execution with `pytest-xdist` (`-n auto`)
+- Well-organized test directories: batching, cache, cli, codecs, env, grpc, handlers, kafka, metrics, parallel, repository, rest, tracing
+- Serial isolation for flaky suites (kafka, parallel, grpc, env, cli) to avoid port conflicts
+- Conftest fixtures at multiple levels (root, tests/, and per-subdirectory)
+- CUDA test markers (`@pytest.mark.cuda`) with auto-skip on CPU-only systems
+
+**Test Framework Stack:**
+- `pytest` 7.4.4
+- `pytest-asyncio` 0.21.1
+- `pytest-mock` 3.12.0
+- `pytest-cases` 3.8.5
+- `pytest-xdist` 3.6.1
+- `pytest-lazy-fixture`
+- `httpx` 0.27.0 (async HTTP testing)
+- `docker` 7.1.0 (container interaction in tests)
+
+**Runtime-specific test coverage:**
+| Runtime | Test Directory | Present |
+|---------|---------------|---------|
+| sklearn | `runtimes/sklearn/tests/` | Yes |
+| xgboost | `runtimes/xgboost/tests/` | Yes |
+| lightgbm | `runtimes/lightgbm/tests/` | Yes |
+| onnx | `runtimes/onnx/tests/` | Yes |
+| mlflow | `runtimes/mlflow/tests/` | Yes |
+| huggingface | `runtimes/huggingface/tests/` | Yes |
+| catboost | `runtimes/catboost/tests/` | Yes |
+| alibi-explain | `runtimes/alibi-explain/tests/` | Yes |
+| alibi-detect | `runtimes/alibi-detect/tests/` | Yes |
+
+**Gaps:**
+- No coverage measurement (see Coverage Tracking below)
+- No mutation testing
+
+### Integration/E2E Tests
+
+**Score: 4.0/10**
+
+**Present:**
+- Component-level tests for REST, gRPC, Kafka, CLI, and metrics
+- Docker dependency in dev requirements for container-based testing
+- k6 benchmarking scenarios (REST and gRPC inference, multi-model serving)
+
+**Missing:**
+- No `e2e/` or `integration/` directories
+- No cluster-level testing (no Kind, Minikube, envtest)
+- No end-to-end lifecycle testing (build image → start container → load model → run inference)
+- No multi-version testing matrix (e.g., different Python or Kubernetes versions in E2E)
+- No contract tests for V2 Inference Protocol compliance
+- No deployment validation (no kubectl apply, no kustomize build)
+
+### Build Integration
+
+**Score: 4.0/10**
+
+**Present:**
+- 4 Dockerfiles: `Dockerfile` (UBI9 multi-stage), `Dockerfile.cuda` (UBI9 multi-stage + CUDA), `Dockerfile.konflux` (AIPCC single-stage), `Dockerfile.konflux.cuda` (AIPCC single-stage + CUDA)
+- Tekton pipelines in `.tekton/` for Konflux builds (CPU and CUDA variants)
+- `Makefile` with `build` target
+- `hack/build-wheels.sh` and `hack/build-images.sh` scripts
+
+**Missing:**
+- **No automatic PR-time image builds** — tests.yml only runs unit tests and linting
+- Tekton builds are comment-triggered (`/build-konflux`), not automatic on PR
+- No `docker build` step in PR CI
+- No image startup validation after build
+- No kustomize/kubectl dry-run validation
+- No Konflux build simulation in PR workflow
+
+**CI Docker Build Locations:**
+| Workflow | Trigger | Builds Image |
+|----------|---------|-------------|
+| tests.yml | PR + push | No |
+| release.yml | manual dispatch | Yes (multi-variant) |
+| release-sc.yml | manual dispatch | Yes |
+| security.yml | push + schedule | Yes (for scanning only) |
+
+### Image Testing
+
+**Score: 4.0/10**
+
+**Present:**
+- Multi-stage builds in `Dockerfile` and `Dockerfile.cuda` (wheel-builder → runtime)
+- UBI9 `ubi-minimal` base images for standard builds (FIPS-capable)
+- AIPCC base images for Konflux builds (`quay.io/aipcc/base-images/...`)
+- `.dockerignore` configured
+- Non-root user (UID 1000) with world-writable workdir for random UID compatibility
+- Trusted-runtimes.json validation at build time (validates runtime import paths)
+
+**Missing:**
+- **No HEALTHCHECK instructions** in any Dockerfile
+- No multi-architecture support (no `--platform`, no `docker buildx`, no manifest lists)
+- No testcontainers or container runtime validation
+- No image startup testing in CI
+- No K8s readiness/liveness probe definitions in the repo
+
+### Coverage Tracking
+
+**Score: 1.0/10**
+
+**Missing (all):**
+- No `pytest-cov` in any dependency group
+- No `.codecov.yml` or `codecov.yml`
+- No `--cov` flags in tox.ini or any CI configuration
+- No coverage threshold enforcement
+- No PR coverage reporting
+- No `.coveragerc` configuration
+
+This is the most critical gap. With 118 test files, there's likely decent coverage, but it's entirely unmeasured and unenforced.
+
+### CI/CD Automation
+
+**Score: 7.0/10**
+
+**Strengths:**
+- **PR-triggered tests** for all critical branches (`master`, `release-*`, `rhoai-staging`)
+- **Multi-Python matrix**: 3.10, 3.11, 3.12
+- **Multi-runtime matrix**: 9 runtimes tested individually on PRs
+- **SHA-pinned actions** for supply chain security (checkout, setup-python, install-poetry)
+- **fail-fast: false** for comprehensive failure reporting
+- **Slack notifications** for PR events
+- **Scheduled workflows**: benchmarks (nightly), requirements regeneration (every 12h), security scanning
+- **MacOS exclusion** on PRs (run only on merge to save time)
+
+**Workflow Inventory:**
 | Workflow | Trigger | Purpose |
 |----------|---------|---------|
-| `tests.yml` | push + PR (master, release-*, rhoai-staging) | Generate validation, lint, core tests, runtime tests |
-| `security.yml` | push + daily schedule | Snyk code scan, static analysis, image scan |
-| `requirements.yml` | every 12h + manual | Regenerate pinned requirements, open PR |
-| `benchmark.yml` | daily schedule + manual | k6 load testing (REST + gRPC) |
-| `licenses.yml` | daily schedule + manual | License compliance check |
-| `release.yml` | manual dispatch | Version bump, Docker build, PyPI publish |
-| `release-sc.yml` | manual dispatch | Supply chain release variant |
-| `publish.yml` | on release published | Changelog generation |
+| tests.yml | PR + push | Unit tests, linting, code generation validation |
+| benchmark.yml | schedule (nightly) | k6 performance benchmarks |
+| licenses.yml | schedule (nightly) | License compliance scanning |
+| publish.yml | release published | Changelog and tag updates |
+| release.yml | manual dispatch | Full release pipeline |
+| release-sc.yml | manual dispatch | SC release pipeline |
+| requirements.yml | schedule (12h) + dispatch | Regenerate hermetic build dependencies |
+| security.yml | push + schedule | Snyk security scanning |
+| slack-notifications.yml | PR events | Slack channel notifications |
 
-**Tekton Pipelines**:
-- `odh-mlserver-pull-request.yaml` — Multi-arch Konflux build on `/build-konflux` PR comment
-  - Builds linux/x86_64, linux/arm64, linux/ppc64le
-  - Hermetic build with prefetch
-  - Image expires after 5 days
+**Missing:**
+- **No concurrency controls** — rapid pushes queue all CI runs
+- **No pip/dependency caching** — every run installs from scratch via Poetry
+- **No timeout-minutes** on main test jobs
+- **No test parallelization across jobs** beyond the matrix strategy
 
-**Strengths**:
-- Multi-Python matrix (3.10, 3.11, 3.12) on all test jobs
-- Tests run on both conda and venv environments
-- Separate all-runtimes suite on push (not PR — saves CI time)
-- Pinned action SHA hashes prevent supply chain attacks
-- k6 benchmarking for REST and gRPC inference paths
-- Automated requirements regeneration every 12 hours
+### Static Analysis
 
-**Gaps**:
-- No concurrency control on PR workflows (could run duplicate jobs)
-- No caching of Poetry/pip dependencies
-- No test result reporting (JUnit XML upload, etc.)
-- Benchmark results not tracked over time (no regression detection)
-- Tekton PR build requires manual `/build-konflux` comment — not automatic
+**Score: 7.0/10**
 
-### Test Coverage
+#### Linting
+- **Black** 24.8.0 (formatter) — line length 88, configured in `pyproject.toml`, enforced in CI via `make lint`
+- **Flake8** 7.0.0 (linter) — configured in `setup.cfg`, ignores E203, excludes generated code
+- **mypy** 1.11.2 (type checker) — with `pydantic.mypy` plugin, `ignore_missing_imports = true`, enforced in CI
+- All three tools run on every PR via `make lint` step
 
-**Test Statistics**:
-- **114 test files** (72 core + 42 runtime)
-- **450+ test functions** (199 async, 251 sync)
-- **~18,800 lines of test code** vs ~19,700 lines of source code
-- **Test-to-code ratio**: ~0.96:1 (excellent)
+#### FIPS Compatibility
+- **Clean**: No non-FIPS-compliant crypto imports detected (`hashlib.md5`, `Crypto.Cipher.*`, etc.)
+- **UBI9 base images**: `registry.access.redhat.com/ubi9/ubi-minimal` (FIPS-capable) for standard Dockerfiles
+- **AIPCC base images**: FIPS-capable base images for Konflux builds
+- No explicit FIPS build flags needed (Python library, not Go)
 
-**Test Organization**:
-```
-tests/
-├── batching/        # Request batching (adaptive, hooks, shape)
-├── batch_processing/ # Batch processing REST API
-├── cache/           # Local caching
-├── cli/             # CLI commands (start, serve, build, version)
-├── codecs/          # Data codecs (numpy, pandas, base64, JSON, etc.)
-├── env/             # Environment isolation (venv + conda)
-├── grpc/            # gRPC servicers, interceptors, converters, codecs
-├── handlers/        # Request handlers
-├── kafka/           # Kafka integration
-├── metrics/         # Metrics/telemetry
-├── parallel/        # Parallel inference workers
-├── repository/      # Model repository
-├── rest/            # REST server, endpoints, responses
-├── testdata/        # Fixtures and test models
-└── tracing/         # OpenTelemetry tracing (REST + gRPC)
+#### Dependency Alerts
+- **Dependabot**: Configured in `.github/dependabot.yml` covering:
+  - Root pip directory
+  - 9 runtime pip directories
+  - Docker ecosystem
+  - Weekly update schedule
+- **Renovate**: Configured via `.github/renovate.json`, extending from `red-hat-data-services/konflux-central`
 
-runtimes/
-├── alibi-detect/tests/   # Outlier/drift detection
-├── alibi-explain/tests/  # Model explainability
-├── catboost/tests/       # CatBoost runtime (no test files found in tree)
-├── huggingface/tests/    # HuggingFace transformers
-├── lightgbm/tests/       # LightGBM runtime
-├── mlflow/tests/         # MLflow runtime
-├── onnx/tests/           # ONNX runtime (9 test files — most thorough)
-├── sklearn/tests/        # Scikit-learn runtime
-└── xgboost/tests/        # XGBoost runtime
-```
+**Missing:**
+- **No pre-commit hooks** (`.pre-commit-config.yaml` absent) — lint issues caught only in CI, not locally
+- **No ruff** adoption (modern alternative to black + flake8)
 
-**Testing Frameworks**:
-- **pytest** 7.4.4 with **pytest-asyncio** (auto mode)
-- **pytest-xdist** for parallel execution (`-n auto`)
-- **pytest-cases** for parameterized test cases
-- **pytest-mock** for mocking
-- **httpx** for async FastAPI testing
-- **docker** (Python SDK) for container tests
-- **aiohttp + aiohttp-retry** for async HTTP testing
-- **kafka-python-ng** for Kafka integration tests
-- **tenacity** for retry logic in tests
+### Agent Rules
 
-**Strengths**:
-- Async-first testing (`asyncio_mode = auto`)
-- Comprehensive codec testing (8 different data types)
-- Protocol testing for both REST and gRPC
-- Smart test splitting: flaky tests (kafka, parallel, grpc, env, cli) run sequentially after parallel bulk
-- Multi-environment testing (venv + conda)
+**Score: 8.0/10**
 
-**Gaps**:
-- No coverage measurement at all
-- No mutation testing
-- No contract tests for V2 inference protocol
-- No fuzz testing for input validation
+**Present:**
+- **AGENTS.md** (12,452 bytes) — comprehensive and actionable
+  - Repository overview and constraints
+  - Generated files policy (read-only protobuf/OpenAPI outputs)
+  - Development workflow: formatter, linter, type checker, test commands
+  - 10 detailed "Gotchas" covering trusted-runtimes, serial test suites, version sync, Konflux Dockerfiles, etc.
+  - Boundary definitions: "Always", "Ask First", "Never" categories
+  - Full branch strategy documentation (ODH + RHDS + upstream flow)
+  - Release process for both ODH and RHOAI
+  - Code ownership reference
 
-### Code Quality
-
-**Linting & Formatting**:
-- **black** (line length 88) — formatter
-- **flake8** (line length 88, E203 ignored) — linter
-- **mypy** with pydantic plugin — type checker (applied to mlserver, all runtimes, tests, hack, benchmarking, docs/examples)
-
-**Quality Assessment**:
-- Triple-check quality gate: `black --check` + `flake8` + `mypy` in CI
-- mypy applied broadly (not just source — also tests, hack scripts, examples)
-- Type annotations expected on new public functions (per AGENTS.md)
-- Generated protobuf/gRPC code excluded from linting
-- No ruff migration (still using flake8 + black separately)
-
-**Missing**:
-- No pre-commit hooks
-- No pylint or additional linter rules
-- No complexity thresholds (radon, etc.)
-- No import ordering enforcement (isort)
-
-### Container Images
-
-**Dockerfiles**:
-1. **Dockerfile** — Production image (UBI9-minimal base)
-   - Multi-stage build: wheel-builder → runtime
-   - Poetry-based wheel building with constraints
-   - Configurable runtimes via `RUNTIMES` ARG
-   - Trusted-runtimes.json security artifact generation
-   - Non-root user (UID 1000)
-   - Proper permission handling for random UIDs (OpenShift compatible)
-
-2. **Dockerfile.konflux** — RHOAI hermetic build (aipcc base image)
-   - Single-stage, pip-based install from PyPI
-   - Same trusted-runtimes.json security model
-   - Red Hat labels for compliance
-   - Used only on `rhoai-staging` branch
-
-**Strengths**:
-- Multi-arch support (x86_64, arm64, ppc64le) via Tekton
-- Security hardening with trusted-runtimes allowlist
-- OpenShift-compatible random UID support
-- Hermetic builds with prefetch for Konflux
-
-**Gaps**:
-- No image startup/health check validation in CI
-- No Trivy scanning (only Snyk, and only on upstream)
-- No SBOM generation
-- No image signing or attestation
-- No `.dockerignore` optimization review
-
-### Security
-
-**Strengths**:
-- **Snyk code scanning** — dependency vulnerability detection
-- **Snyk static code analysis** — SAST for Python code
-- **Snyk Docker image scanning** — container image vulnerability detection
-- **SARIF upload** to GitHub Code Scanning for unified view
-- **Snyk policy file** (`.snyk`) with documented vulnerability exceptions
-- **Trusted-runtimes security model** — production images only load approved runtime implementations
-- **Pinned action SHAs** in test workflows to prevent supply chain attacks
-
-**Gaps**:
-- All Snyk scans gated on `github.repository == 'SeldonIO/MLServer'` — never run on forks
-- No CodeQL/GHAS as backup to Snyk
-- No Gitleaks/TruffleHog for secret detection
-- No Trivy as alternative scanner
-- No dependency update automation (Dependabot/Renovate) visible
-- No SBOM generation
-
-### Agent Rules (Agentic Flow Quality)
-
-**Status**: Partially Present
-
-**AGENTS.md** (11,161 bytes) — Comprehensive and well-structured:
-- Repository purpose and architecture overview
-- Development constraints (generated files, branch syncs, pyproject.toml)
-- Complete development workflow commands
-- 8 documented gotchas (fixture registration, serial test suites, version sync, etc.)
-- Clear boundaries (Always/Ask First/Never)
-- Detailed branch strategy with diagram
-- Full release process documentation (ODH + RHOAI)
-
-**Missing**:
-- No `.claude/` directory
-- No `.claude/rules/` for test-creation patterns
-- No specific rules for async test patterns, conftest fixture usage, or pytest-cases
-- No rule for the trusted-runtimes test registration gotcha (critical — Gotcha #1 in AGENTS.md)
-- No CI/CD change restriction rules for automated enforcement
-
-**Recommendation**: Generate test-creation rules with `/test-rules-generator` to codify:
-- Async test patterns (`async def test_*` with auto mode)
-- Conftest fixture registration for new MLModel subclasses
-- pytest-cases parameterization patterns
-- Serial vs parallel test placement guidance
+**Gaps:**
+- No `.claude/` directory or `.claude/rules/` for granular, file-type-specific rules
+- No CLAUDE.md (AGENTS.md covers this well though)
+- No dedicated test creation rules (e.g., unit-tests.md, runtime-tests.md)
+- Could benefit from .claude/rules/ with per-component test patterns
 
 ## Recommendations
 
 ### Priority 0 (Critical)
 
-1. **Add pytest-cov with codecov integration** — Enforce minimum coverage threshold (start at 60%, ratchet up). This is the single highest-ROI improvement.
-2. **Fix security scan conditionals** — Remove or expand the `if: github.repository == 'SeldonIO/MLServer'` gates so Snyk scans run on `opendatahub-io/MLServer` and `red-hat-data-services/MLServer`.
-3. **Add container runtime smoke test** — After image build (in Tekton or GHA), validate `mlserver start` succeeds and `/v2/health/ready` responds.
+1. **Add pytest-cov with codecov integration** — Add `pytest-cov` to dev dependencies, configure `--cov=mlserver --cov-report=xml` in tox.ini, create `.codecov.yml` with a minimum threshold (start at 60%), and add codecov upload to `tests.yml`. This is the single highest-ROI improvement: it makes test quality measurable.
+
+2. **Add PR-triggered Docker build step** — Add a job to `tests.yml` that runs `docker build -f Dockerfile .` on PRs. This catches Dockerfile syntax errors, missing files, and dependency resolution failures before merge. Include both standard and CUDA variants.
+
+3. **Create an integration test suite** — Build a test that exercises the full MLServer lifecycle in a container: build image → start container → load a test model → run REST + gRPC inference → verify metrics. Use `testcontainers` or `docker` library already in dev dependencies. This catches interaction bugs that unit tests miss.
 
 ### Priority 1 (High Value)
 
-4. **Add pre-commit hooks** — `.pre-commit-config.yaml` with black, flake8, mypy. Match versions to what's in pyproject.toml dev dependencies.
-5. **Add image startup validation to Tekton PR pipeline** — Extend `odh-mlserver-pull-request.yaml` with a post-build health check task.
-6. **Create `.claude/rules/` for test automation patterns** — Codify async test conventions, conftest patterns, fixture registration, serial test placement.
-7. **Add V2 inference protocol contract tests** — Validate REST and gRPC endpoints against the KServe V2 inference protocol specification.
+4. **Add HEALTHCHECK to Dockerfiles** — Add HTTP health check hitting `/v2/health/ready` endpoint. This enables orchestrator-level health monitoring and catches startup failures.
+
+5. **Add pre-commit hooks** — Create `.pre-commit-config.yaml` with black, flake8, and mypy hooks matching CI versions. This catches lint issues before they reach CI.
+
+6. **Add concurrency controls and caching to CI** — Add `concurrency` groups to cancel redundant runs. Add pip caching with `actions/cache` or Poetry's built-in caching. Add `timeout-minutes` to prevent hung jobs.
+
+7. **Add multi-architecture build support** — Use `docker buildx` for amd64 + arm64 builds, especially for the UBI9-based Dockerfiles.
 
 ### Priority 2 (Nice-to-Have)
 
-8. **Add E2E deployment testing** — Deploy to Kind/Minikube with KServe, send inference requests, validate predictions.
-9. **Add benchmark regression detection** — Store k6 results and compare against baseline thresholds.
-10. **Add SBOM generation** — Generate CycloneDX or SPDX SBOM during image build.
-11. **Add Trivy as supplementary image scanner** — Defense in depth alongside Snyk.
-12. **Migrate from flake8+black to ruff** — Faster, unified linter+formatter with broader rule coverage.
+8. **Create .claude/rules/ directory** — Add granular test creation rules for different components (core tests, runtime tests, REST/gRPC tests) to complement the existing AGENTS.md.
+
+9. **Add V2 Inference Protocol contract tests** — Validate REST and gRPC API responses against the official V2 protocol specification to prevent API drift.
+
+10. **Integrate benchmarking into PR CI** — Run a lightweight performance regression check on PRs (not the full k6 suite, but a quick latency check) to catch performance regressions before merge.
 
 ## Comparison to Gold Standards
 
-| Dimension | MLServer | odh-dashboard | notebooks | kserve |
-|-----------|----------|---------------|-----------|--------|
-| Unit Tests | 8.5 | 9.0 | 7.0 | 9.0 |
-| Integration/E2E | 7.0 | 9.0 | 8.0 | 9.5 |
-| Build Integration | 5.0 | 7.0 | 8.0 | 7.0 |
-| Image Testing | 4.5 | 6.0 | 9.0 | 7.0 |
-| Coverage Tracking | 2.0 | 8.0 | 5.0 | 9.0 |
-| CI/CD Automation | 8.0 | 9.0 | 8.0 | 9.0 |
-| Agent Rules | 7.5 | 9.0 | 3.0 | 4.0 |
-| **Overall** | **6.7** | **8.5** | **7.0** | **8.0** |
-
-**Key Differentiators**:
-- MLServer's test-to-code ratio (~0.96:1) is comparable to top-tier projects
-- AGENTS.md is exceptionally detailed — better than most Gold Standard repos
-- The coverage tracking gap (2.0) is the single biggest drag on the overall score
-- Security scanning exists but is functionally disabled on the RHDS fork
+| Capability | MLServer | odh-dashboard | notebooks | kserve |
+|------------|----------|--------------|-----------|--------|
+| Unit Test Coverage | Strong (118 files) | Strong | Moderate | Strong |
+| Coverage Enforcement | None | Yes (codecov) | Partial | Yes |
+| Integration/E2E Tests | None | Comprehensive | Image testing | Multi-version E2E |
+| PR Image Builds | Manual only | Yes | Yes | Yes |
+| Container Health Checks | None | N/A (web app) | Present | Present |
+| Multi-arch Support | None | N/A | Yes (5-layer) | Yes |
+| Static Analysis | black+flake8+mypy | ESLint+TS | Various | golangci-lint |
+| Pre-commit Hooks | None | Yes | Yes | Yes |
+| Dependency Alerts | Dependabot+Renovate | Dependabot | Renovate | Dependabot |
+| Agent Rules | AGENTS.md (excellent) | CLAUDE.md+rules | None | Partial |
+| CI Caching | None | Yes | Yes | Yes |
+| Concurrency Controls | None | Yes | Yes | Yes |
 
 ## File Paths Reference
 
 ### CI/CD
-- `.github/workflows/tests.yml` — Main test matrix (generate, lint, core, runtimes)
-- `.github/workflows/security.yml` — Snyk code, SAST, and image scanning
-- `.github/workflows/requirements.yml` — Automated requirements regeneration
+- `.github/workflows/tests.yml` — PR test automation (main CI)
+- `.github/workflows/release.yml` — Release pipeline with image builds
+- `.github/workflows/release-sc.yml` — SC release pipeline
+- `.github/workflows/requirements.yml` — Hermetic deps regeneration
 - `.github/workflows/benchmark.yml` — k6 performance benchmarks
-- `.github/workflows/licenses.yml` — License compliance checks
-- `.github/workflows/release.yml` — Release automation
-- `.github/workflows/release-sc.yml` — Supply chain release
-- `.github/workflows/publish.yml` — Changelog/tag management
-- `.tekton/odh-mlserver-pull-request.yaml` — Konflux multi-arch PR build
+- `.github/workflows/security.yml` — Snyk security scanning
+- `.github/workflows/slack-notifications.yml` — PR Slack alerts
+- `.tekton/odh-mlserver-pull-request.yaml` — Tekton Konflux PR build (CPU)
+- `.tekton/odh-mlserver-cuda-pull-request.yaml` — Tekton Konflux PR build (CUDA)
+- `Makefile` — Build, test, lint, and release targets
 
 ### Testing
-- `tests/` — Core test suite (72 test files)
-- `runtimes/*/tests/` — Runtime-specific tests (42 test files)
-- `conftest.py` — Root conftest with trusted-runtime registration
-- `tox.ini` — Core tox environments (mlserver-{conda,venv}, all-runtimes-{conda,venv})
-- `tox.runtime.ini` — Runtime tox template
-- `docs/testing/TESTING_ENVIRONMENTS.md` — Venv/Conda testing guide
-- `docs/testing/TESTING_WITH_PODMAN.md` — Podman Docker replacement guide
-
-### Code Quality
-- `pyproject.toml` — Poetry deps, black/mypy/pytest config
-- `setup.cfg` — Flake8 configuration
-- `Makefile` — lint, fmt, test, generate targets
+- `tests/` — Core MLServer test suite (74 test files)
+- `runtimes/*/tests/` — Runtime-specific tests (44 test files across 9 runtimes)
+- `conftest.py` — Root-level test fixtures and trusted-runtime configuration
+- `tox.ini` — Core test environments (mlserver-{conda,venv}, all-runtimes-{conda,venv})
+- `tox.runtime.ini` — Template for runtime tox.ini files
+- `benchmarking/` — k6 performance benchmarking scenarios
 
 ### Container Images
-- `Dockerfile` — Production multi-stage build (UBI9)
-- `Dockerfile.konflux` — RHOAI hermetic build
-- `.dockerignore` — Build context exclusions
+- `Dockerfile` — Standard UBI9 multi-stage build
+- `Dockerfile.cuda` — CUDA UBI9 multi-stage build
+- `Dockerfile.konflux` — Konflux AIPCC single-stage build
+- `Dockerfile.konflux.cuda` — Konflux CUDA AIPCC single-stage build
+- `.dockerignore` — Docker build exclusions
 
-### Security
-- `.snyk` — Snyk vulnerability ignore policy
-- `.github/workflows/security.yml` — Snyk scan workflows
+### Code Quality
+- `setup.cfg` — Flake8 configuration
+- `pyproject.toml` — Black + mypy + pytest configuration
+- `.github/dependabot.yml` — Dependabot (pip + docker)
+- `.github/renovate.json` — Renovate (extends konflux-central)
+- `.snyk` — Snyk security policy
 
 ### Agent Rules
-- `AGENTS.md` — Comprehensive development, constraints, and release documentation
+- `AGENTS.md` — Comprehensive development guide (12KB)

@@ -44,16 +44,26 @@ var { isVisible, isPinned, popoverId, onMouseEnter, onMouseLeave, onClick, dismi
         </button>
       </div>
       <div class="px-3 py-2 text-gray-700 dark:text-gray-300 space-y-2">
-        <p>Status reflects feature readiness against planning gates.</p>
+        <p>Status reflects feature readiness against the Planning Phase Definition of Ready (FPDoR).</p>
         <div>
           <div class="font-semibold text-gray-900 dark:text-gray-100 mb-1">Statuses:</div>
           <ul class="space-y-0.5 pl-2">
-            <li><span class="font-medium text-red-600 dark:text-red-400">Not Ready</span> -- DoR not passed</li>
-            <li><span class="font-medium text-yellow-600 dark:text-yellow-400">In Planning</span> -- DoR passed, DoD not passed</li>
-            <li><span class="font-medium text-green-600 dark:text-green-400">Ready</span> -- Both DoR and DoD passed</li>
+            <li><span class="font-medium text-red-600 dark:text-red-400">Not Ready</span> -- FPDoR not passed</li>
+            <li><span class="font-medium text-yellow-600 dark:text-yellow-400">In Planning</span> -- partially passing FPDoR</li>
+            <li><span class="font-medium text-green-600 dark:text-green-400">Ready</span> -- all applicable FPDoR items passed</li>
           </ul>
         </div>
-        <p class="text-gray-500 dark:text-gray-400">Specific checks (e.g., RICE Score, Strategy Sign-off) vary by release configuration. Post-freeze, status shows completion % from child epics/stories.</p>
+        <p class="text-gray-500 dark:text-gray-400">
+          Checklist source of truth:
+          <a
+            href="https://redhat.atlassian.net/wiki/spaces/RHAI/pages/442958832/Planning+Phase+-+Definition+of+Ready+Definition+of+Done"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="text-primary-600 dark:text-primary-400 hover:underline"
+            @click.stop
+          >Planning Phase DoR / DoD</a>.
+          N/A items do not block readiness. Rubric scores are informational only.
+        </p>
       </div>
     </div>
   </span>

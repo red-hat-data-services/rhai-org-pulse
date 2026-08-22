@@ -539,6 +539,7 @@
 <script setup>
 import { ref, computed, onMounted, onBeforeUpdate, nextTick, watch, inject } from 'vue'
 import { apiRequest } from '@shared/client/services/api.js'
+import { getProduct } from '../composables/useScheduleHelpers.js'
 import { useAuth } from '@shared/client/composables/useAuth.js'
 import HygieneConfigView from '../components/HygieneConfigView.vue'
 
@@ -623,11 +624,6 @@ const editForm = ref({
 
 const KNOWN_MILESTONES = ['codeFreeze', 'ea1', 'ga']
 
-function getProduct(release) {
-  if (release.productPagesShortname) return release.productPagesShortname
-  const match = release.id.match(/^([a-z]+)-/)
-  return match ? match[1] : release.id
-}
 
 const products = computed(() => {
   const set = new Set(releases.value.map(getProduct))

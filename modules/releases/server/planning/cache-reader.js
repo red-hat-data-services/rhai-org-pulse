@@ -11,16 +11,16 @@ const FT_PREFIX = 'releases/execution'
 
 // ─── Data Loading ───
 
-function loadIndex(readFromStorage) {
-  return readFromStorage(FT_PREFIX + '/index.json') || { features: [], rfes: [] }
+async function loadIndex(readFromStorage) {
+  return await readFromStorage(FT_PREFIX + '/index.json') || { features: [], rfes: [] }
 }
 
-function loadFeatureDetail(readFromStorage, key) {
-  return readFromStorage(FT_PREFIX + '/features/' + key + '.json')
+async function loadFeatureDetail(readFromStorage, key) {
+  return await readFromStorage(FT_PREFIX + '/features/' + key + '.json')
 }
 
-function loadRfeDetail(readFromStorage, key) {
-  return readFromStorage(FT_PREFIX + '/rfes/' + key + '.json')
+async function loadRfeDetail(readFromStorage, key) {
+  return await readFromStorage(FT_PREFIX + '/rfes/' + key + '.json')
 }
 
 // ─── Field Extraction Helpers ───
@@ -110,11 +110,11 @@ function mapToCandidate(item, bigRockName, sourcePass) {
     priority: item.priority || '',
     phase: getPhase(item, fixVersions),
     summary: item.summary || '',
-    components: components.join(', '),
+    components: components,
     labels: labels.join(', '),
     targetRelease: targetVersions.length > 0 ? targetVersions[0] : '',
     fixVersion: fixVersions.join(', '),
-    team: components.join(', '),
+    team: components,
     pm: getDisplayName(item.pm),
     architect: getDisplayName(item.architect),
     deliveryOwner: getDisplayName(item.assignee),
@@ -123,7 +123,9 @@ function mapToCandidate(item, bigRockName, sourcePass) {
     source: item.key.startsWith('RHAIRFE-') ? 'rfe' : 'jira',
     sourcePass: sourcePass,
     jiraUrl: JIRA_BROWSE_URL + '/' + item.key,
-    parentKey: item.parentKey || (item._indexEntry && item._indexEntry.parentKey) || ''
+    parentKey: item.parentKey || (item._indexEntry && item._indexEntry.parentKey) || '',
+    // false when discovered via live Jira hierarchy but not yet in execution index
+    inIndex: item.inIndex !== false
   }
 }
 
@@ -159,7 +161,7 @@ function rfeLinksToOutcome(issueLinks, outcomeSet) {
  * Find Tier 1 features: children of outcome keys with matching target version.
  * Uses parentKey from the index to identify outcome children.
  */
-function findTier1Features(readFromStorage, index, outcomeKeys, stats) {
+async function findTier1Features(readFromStorage, index, outcomeKeys, stats) {
   const outcomeSet = new Set(outcomeKeys)
   const results = []
 
@@ -189,11 +191,103 @@ function findTier1Features(readFromStorage, index, outcomeKeys, stats) {
     }
 
     // Load detail for components and issueLinks
-    const detail = loadFeatureDetail(readFromStorage, f.key)
+    const detail = await loadFeatureDetail(readFromStorage, f.key)
     if (detail) {
       detail._indexEntry = f
+      detail.inIndex = true
+    } else {
+      f.inIndex = true
     }
     results.push(detail || f)
+  }
+
+  return results
+}
+
+/**
+ * Tier 1 features from live Jira children, enriched from the execution index.
+ * Jira hierarchy is authoritative for membership; index supplies metrics/links.
+ *
+ * @param {Function} readFromStorage
+ * @param {object} index
+ * @param {string[]} outcomeKeys
+ * @param {Record<string, object[]>} jiraChildrenByOutcome
+ * @param {object} [stats]
+ */
+async function findTier1FeaturesFromJira(readFromStorage, index, outcomeKeys, jiraChildrenByOutcome, stats) {
+  const results = []
+  const indexByKey = {}
+  const features = index.features || []
+  for (var ii = 0; ii < features.length; ii++) {
+    if (features[ii] && features[ii].key) indexByKey[features[ii].key] = features[ii]
+  }
+
+  if (stats) {
+    stats.totalMatches = 0
+    stats.closedFiltered = 0
+    stats.noTargetVersion = 0
+    stats.jiraOnly = 0
+  }
+
+  for (var oi = 0; oi < outcomeKeys.length; oi++) {
+    var outcomeKey = outcomeKeys[oi]
+    var children = (jiraChildrenByOutcome && jiraChildrenByOutcome[outcomeKey]) || []
+    for (var ci = 0; ci < children.length; ci++) {
+      var jiraChild = children[ci]
+      if (!jiraChild || !jiraChild.key) continue
+      if (stats) stats.totalMatches++
+
+      var indexEntry = indexByKey[jiraChild.key]
+      var detail = indexEntry ? await loadFeatureDetail(readFromStorage, jiraChild.key) : null
+      var merged
+      if (detail) {
+        merged = Object.assign({}, detail)
+        merged.inIndex = true
+        // Prefer fresher Jira status/TV/parent when present
+        if (jiraChild.status) merged.status = jiraChild.status
+        if (jiraChild.priority) merged.priority = jiraChild.priority
+        if (jiraChild.summary) merged.summary = jiraChild.summary
+        if (jiraChild.targetVersions && jiraChild.targetVersions.length) {
+          merged.targetVersions = jiraChild.targetVersions
+        }
+        if (jiraChild.fixVersions && jiraChild.fixVersions.length) {
+          merged.fixVersions = jiraChild.fixVersions
+        }
+        merged.parentKey = jiraChild.parentKey || outcomeKey
+        merged._indexEntry = indexEntry
+      } else if (indexEntry) {
+        merged = Object.assign({}, indexEntry, {
+          inIndex: true,
+          status: jiraChild.status || indexEntry.status,
+          priority: jiraChild.priority || indexEntry.priority,
+          summary: jiraChild.summary || indexEntry.summary,
+          targetVersions: (jiraChild.targetVersions && jiraChild.targetVersions.length)
+            ? jiraChild.targetVersions
+            : indexEntry.targetVersions,
+          parentKey: jiraChild.parentKey || outcomeKey
+        })
+      } else {
+        merged = Object.assign({}, jiraChild, {
+          inIndex: false,
+          parentKey: jiraChild.parentKey || outcomeKey
+        })
+      }
+
+      var versions = getTargetVersions(merged)
+      if (versions.length === 0) {
+        if (stats) stats.noTargetVersion++
+        continue
+      }
+
+      var status = merged.status || ''
+      if (CLOSED_STATUSES.indexOf(status) !== -1) {
+        if (stats) stats.closedFiltered++
+        continue
+      }
+
+      if (stats && merged.inIndex === false) stats.jiraOnly++
+      results.push(merged)
+    }
   }
 
   return results
@@ -206,7 +300,7 @@ function findTier1Features(readFromStorage, index, outcomeKeys, stats) {
  * Note: RFEs don't have parentKey in the pipeline data, so we use
  * issueLinks to find connections to outcome keys.
  */
-function findTier1Rfes(readFromStorage, index, outcomeKeys, release) {
+async function findTier1Rfes(readFromStorage, index, outcomeKeys, release) {
   const outcomeSet = new Set(outcomeKeys)
   const results = []
   const candidateLabel = release + '-candidate'
@@ -222,7 +316,7 @@ function findTier1Rfes(readFromStorage, index, outcomeKeys, release) {
     if (labels.indexOf(candidateLabel) === -1) continue
 
     // Need detail file to check issueLinks
-    const detail = loadRfeDetail(readFromStorage, r.key)
+    const detail = await loadRfeDetail(readFromStorage, r.key)
     if (!detail) continue
 
     if (!rfeLinksToOutcome(detail.issueLinks, outcomeSet)) continue
@@ -256,7 +350,7 @@ function findOutcomeSummaries(index, outcomeKeys) {
  * Find Tier 2 features: features with target version matching the release,
  * excluding already-discovered Tier 1 keys.
  */
-function findTier2Features(readFromStorage, index, release, excludeKeys) {
+async function findTier2Features(readFromStorage, index, release, excludeKeys) {
   const results = []
   const features = index.features || []
 
@@ -277,7 +371,7 @@ function findTier2Features(readFromStorage, index, release, excludeKeys) {
     const status = f.status || ''
     if (CLOSED_STATUSES.indexOf(status) !== -1) continue
 
-    const detail = loadFeatureDetail(readFromStorage, f.key)
+    const detail = await loadFeatureDetail(readFromStorage, f.key)
     results.push(detail || f)
   }
 
@@ -288,7 +382,7 @@ function findTier2Features(readFromStorage, index, release, excludeKeys) {
  * Find Tier 2 RFEs: RFEs with {release}-candidate label,
  * not closed, not Approved, excluding Tier 1 keys.
  */
-function findTier2Rfes(readFromStorage, index, release, excludeKeys) {
+async function findTier2Rfes(readFromStorage, index, release, excludeKeys) {
   const results = []
   const candidateLabel = release + '-candidate'
   const rfes = index.rfes || []
@@ -304,7 +398,7 @@ function findTier2Rfes(readFromStorage, index, release, excludeKeys) {
     const labels = getLabels(r)
     if (labels.indexOf(candidateLabel) === -1) continue
 
-    const detail = loadRfeDetail(readFromStorage, r.key)
+    const detail = await loadRfeDetail(readFromStorage, r.key)
     results.push(detail || r)
   }
 
@@ -314,7 +408,7 @@ function findTier2Rfes(readFromStorage, index, release, excludeKeys) {
 /**
  * Find Tier 3 features: In Progress, no target version, no fix version.
  */
-function findTier3Features(readFromStorage, index, excludeKeys) {
+async function findTier3Features(readFromStorage, index, excludeKeys) {
   const results = []
   const features = index.features || []
 
@@ -330,7 +424,7 @@ function findTier3Features(readFromStorage, index, excludeKeys) {
     const fixVersions = getFixVersions(f)
     if (fixVersions.length > 0) continue
 
-    const detail = loadFeatureDetail(readFromStorage, f.key)
+    const detail = await loadFeatureDetail(readFromStorage, f.key)
     results.push(detail || f)
   }
 
@@ -374,6 +468,7 @@ module.exports = {
   mapToCandidate: mapToCandidate,
   findRfeFromLinks: findRfeFromLinks,
   findTier1Features: findTier1Features,
+  findTier1FeaturesFromJira: findTier1FeaturesFromJira,
   findTier1Rfes: findTier1Rfes,
   findOutcomeSummaries: findOutcomeSummaries,
   findTier2Features: findTier2Features,

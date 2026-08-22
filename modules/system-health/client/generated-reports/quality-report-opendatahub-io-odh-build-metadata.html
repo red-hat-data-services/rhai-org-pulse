@@ -332,7 +332,7 @@
     <div class="container">
         <header>
             <h1>Quality Analysis Report</h1>
-            <p class="timestamp">Generated on July 06, 2026 at 04:20 PM</p>
+            <p class="timestamp">Generated on July 20, 2026 at 04:27 PM</p>
             <h2 style="margin-top: 1rem; font-weight: 400;">opendatahub-io/odh-build-metadata</h2>
         </header>
 
@@ -344,11 +344,11 @@
                         <circle class="score-arc" cx="100" cy="100" r="90"
                                 stroke="#dc3545"
                                 stroke-dasharray="565.4861999999999"
-                                stroke-dashoffset="480.66326999999995"
+                                stroke-dashoffset="508.93757999999997"
                                 id="scoreArc"></circle>
                     </svg>
                     <div class="score-text">
-                        <div class="score-value">1.5</div>
+                        <div class="score-value">1.0</div>
                         <div class="score-label">Overall Score</div>
                     </div>
                 </div>
@@ -365,37 +365,42 @@
                         <div class="scorecard-item">
                             <h3>Unit Tests</h3>
                             <div class="scorecard-score" style="color: #dc3545;">0.0/10</div>
-                            <div class="scorecard-status">No source code or tests — pure metadata storage repo</div>
+                            <div class="scorecard-status">No source code exists — pure data/metadata storage repository</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Integration/E2E</h3>
                             <div class="scorecard-score" style="color: #dc3545;">0.0/10</div>
-                            <div class="scorecard-status">No integration or E2E tests; no validation of manifest correctness</div>
+                            <div class="scorecard-status">No integration or E2E tests; repo is a git-based data store</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Build Integration</h3>
-                            <div class="scorecard-score" style="color: #dc3545;">1.0/10</div>
-                            <div class="scorecard-status">No PR workflow; commits pushed directly by automation without validation</div>
+                            <div class="scorecard-score" style="color: #dc3545;">0.0/10</div>
+                            <div class="scorecard-status">No build process — manifests are pushed by external CI systems</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Image Testing</h3>
                             <div class="scorecard-score" style="color: #dc3545;">0.0/10</div>
-                            <div class="scorecard-status">No container images built from this repo</div>
+                            <div class="scorecard-status">No container images built from this repository</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Coverage Tracking</h3>
                             <div class="scorecard-score" style="color: #dc3545;">0.0/10</div>
-                            <div class="scorecard-status">No coverage tooling — nothing to cover</div>
+                            <div class="scorecard-status">No code to cover — no coverage tooling applicable</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>CI/CD Automation</h3>
-                            <div class="scorecard-score" style="color: #dc3545;">3.0/10</div>
-                            <div class="scorecard-status">Automated commit pipeline exists upstream but no GitHub Actions in this repo</div>
+                            <div class="scorecard-score" style="color: #dc3545;">2.0/10</div>
+                            <div class="scorecard-status">No GitHub workflows; external CI pushes to early-gate and ci-artifacts branches</div>
+                        </div>
+                        <div class="scorecard-item">
+                            <h3>Static Analysis</h3>
+                            <div class="scorecard-score" style="color: #dc3545;">1.0/10</div>
+                            <div class="scorecard-status">No linting, no Dependabot/Renovate, no pre-commit hooks</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Agent Rules</h3>
                             <div class="scorecard-score" style="color: #dc3545;">0.0/10</div>
-                            <div class="scorecard-status">No CLAUDE.md, .claude/ directory, or agent rules</div>
+                            <div class="scorecard-status">No CLAUDE.md, AGENTS.md, or .claude/ directory</div>
                         </div>
                     </div>
                 </div>
@@ -411,40 +416,32 @@
                     <ul class="items-list">
                         
                         <li class="item-card high">
-                            <div class="item-description">No manifest validation on commit</div>
-                            <p>Malformed YAML, broken kustomization references, or invalid CRDs can land without detection</p>
+                            <div class="item-description">No validation of incoming build metadata</div>
+                            <p>Malformed or inconsistent manifests can be pushed without any schema validation, potentially breaking downstream consumers</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-high">HIGH</span>
-                                <span class="meta-tag effort-tag">8-12 hours</span>
+                                <span class="meta-tag effort-tag">8-16 hours</span>
                             </div>
                         </li>
                         <li class="item-card high">
-                            <div class="item-description">No GitHub Actions workflows at all</div>
-                            <p>Zero automated quality gates — every commit is trusted blindly from the upstream automation</p>
+                            <div class="item-description">No CI/CD workflows on the main branch</div>
+                            <p>No automated checks on pushes or PRs — data integrity relies entirely on the pushing system</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-high">HIGH</span>
                                 <span class="meta-tag effort-tag">4-8 hours</span>
                             </div>
                         </li>
-                        <li class="item-card high">
-                            <div class="item-description">No schema validation for manifests-config.yaml</div>
-                            <p>Incorrect source repo URLs, missing commits, or malformed config could break downstream operator builds</p>
-                            <div class="item-meta">
-                                <span class="meta-tag severity-high">HIGH</span>
-                                <span class="meta-tag effort-tag">4-6 hours</span>
-                            </div>
-                        </li>
                         <li class="item-card medium">
-                            <div class="item-description">No kustomize build verification</div>
-                            <p>Broken kustomization overlays not detected until downstream consumers (odh-operator) attempt to use them</p>
+                            <div class="item-description">No README or documentation on main branch</div>
+                            <p>New contributors and consumers have no guidance on repo structure, usage, or data format</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-medium">MEDIUM</span>
-                                <span class="meta-tag effort-tag">8-16 hours</span>
+                                <span class="meta-tag effort-tag">2-4 hours</span>
                             </div>
                         </li>
                         <li class="item-card medium">
-                            <div class="item-description">No branch protection or review requirements</div>
-                            <p>Automated commits bypass any human review; no safeguard against corrupted automation output</p>
+                            <div class="item-description">No branch protection or PR workflow visible</div>
+                            <p>Direct pushes to main without review increase risk of incorrect metadata</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-medium">MEDIUM</span>
                                 <span class="meta-tag effort-tag">1-2 hours</span>
@@ -464,35 +461,27 @@
                     <ul class="items-list">
                         
                         <li class="item-card ">
-                            <div class="item-description">Add YAML lint workflow</div>
-                            <p>Catch malformed YAML before it lands in the repo</p>
+                            <div class="item-description">Add a README.md documenting repository purpose, structure, and data format</div>
+                            <p>Improves discoverability and onboarding for anyone interacting with this repository</p>
                             <div class="item-meta">
                                 
                                 <span class="meta-tag effort-tag">1-2 hours</span>
                             </div>
                         </li>
                         <li class="item-card ">
-                            <div class="item-description">Add manifests-config.yaml schema validation</div>
-                            <p>Ensure every commit has valid config structure with valid git URLs and commit SHAs</p>
+                            <div class="item-description">Add a CI workflow to validate manifests-config.yaml schema on push</div>
+                            <p>Catches malformed metadata before it lands in the repository</p>
                             <div class="item-meta">
                                 
-                                <span class="meta-tag effort-tag">2-3 hours</span>
+                                <span class="meta-tag effort-tag">2-4 hours</span>
                             </div>
                         </li>
                         <li class="item-card ">
-                            <div class="item-description">Add kustomize build smoke test</div>
-                            <p>Verify that kustomization overlays can be built successfully</p>
+                            <div class="item-description">Enable Dependabot for the early-gate branch if any tooling dependencies exist</div>
+                            <p>Minimal but establishes a baseline security posture</p>
                             <div class="item-meta">
                                 
-                                <span class="meta-tag effort-tag">3-4 hours</span>
-                            </div>
-                        </li>
-                        <li class="item-card ">
-                            <div class="item-description">Enable branch protection on main</div>
-                            <p>Require status checks to pass before commits land</p>
-                            <div class="item-meta">
-                                
-                                <span class="meta-tag effort-tag">30 minutes</span>
+                                <span class="meta-tag effort-tag">1 hour</span>
                             </div>
                         </li>
                     </ul>
@@ -509,15 +498,15 @@
                         
                         <div class="rec-priority p0">
                             <h3>Priority 0: Critical</h3>
-                            <ul><li>Add a GitHub Actions workflow that validates YAML syntax for all changed files</li><li>Add schema validation for manifests-config.yaml (verify git URLs resolve, commit SHAs are valid hex)</li><li>Add kustomize build validation for changed component manifests</li></ul>
+                            <ul><li>Add a GitHub Actions workflow to validate manifests-config.yaml files against a JSON schema on every push to main</li><li>Add a README.md explaining the repository purpose, branch strategy (main, early-gate, ci-artifacts), and data format</li></ul>
                         </div>
                         <div class="rec-priority p1">
                             <h3>Priority 1: High Value</h3>
-                            <ul><li>Add branch protection requiring CI status checks before merge</li><li>Add a periodic job to verify upstream git commits referenced in manifests-config.yaml still exist</li><li>Add diff-size alerting for unexpectedly large metadata updates</li></ul>
+                            <ul><li>Implement a schema validation script for manifests-config.yaml and kustomize overlays</li><li>Add a periodic staleness check — flag hash directories that haven&#x27;t been updated in N days</li><li>Create basic agent rules (CLAUDE.md) to guide contributors on data format and structure</li></ul>
                         </div>
                         <div class="rec-priority p2">
                             <h3>Priority 2: Nice-to-Have</h3>
-                            <ul><li>Add CLAUDE.md with repo purpose documentation and contribution guidelines</li><li>Add a CODEOWNERS file for review routing</li><li>Consider adding Renovate/Dependabot-style freshness checks for pinned commits</li></ul>
+                            <ul><li>Add a data integrity checker that validates git.url references are reachable</li><li>Consider adding a lightweight index or search mechanism given 16M+ files</li><li>Document the early-gate and ci-artifacts branch workflows and their consumers</li></ul>
                         </div>
                     </div>
                 </div>

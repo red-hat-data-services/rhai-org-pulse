@@ -1,120 +1,120 @@
 ---
 repository: "opendatahub-io/odh-template-sig"
-overall_score: 0.8
+overall_score: 0.5
 scorecard:
   - dimension: "Unit Tests"
     score: 0.0
-    status: "No source code or tests exist — documentation-only SIG template repository"
+    status: "No source code or test files present — documentation-only template repository"
   - dimension: "Integration/E2E"
     score: 0.0
-    status: "No integration or E2E tests — no code to test"
+    status: "No integration or E2E test infrastructure — no executable code exists"
   - dimension: "Build Integration"
     score: 0.0
-    status: "No build system, Makefile, or CI pipeline — no artifacts produced"
+    status: "No build system, Makefile, Dockerfile, or CI workflows — nothing to build"
   - dimension: "Image Testing"
     score: 0.0
-    status: "No container images — no Dockerfile or Containerfile present"
+    status: "No container images, Dockerfiles, or image testing — documentation-only repo"
   - dimension: "Coverage Tracking"
     score: 0.0
-    status: "No coverage tooling — no code to measure"
+    status: "No code coverage tooling — no source code to measure"
   - dimension: "CI/CD Automation"
     score: 1.0
-    status: "No CI/CD workflows — not even branch protection or markdown linting"
+    status: "OWNERS file present for Prow-based review gating, but no CI/CD workflows"
+  - dimension: "Static Analysis"
+    score: 0.0
+    status: "No linting, FIPS checks, or dependency management — no code to analyze"
   - dimension: "Agent Rules"
     score: 0.0
-    status: "No CLAUDE.md, .claude/ directory, or agent configuration"
+    status: "No CLAUDE.md, AGENTS.md, or .claude/ directory — no agent rules"
 critical_gaps:
-  - title: "Repository is a documentation-only SIG template with no code"
-    impact: "No quality practices can be evaluated because there is nothing to build, test, or deploy"
-    severity: "HIGH"
-    effort: "N/A — by design"
-  - title: "No CI/CD workflows at all"
-    impact: "No automated checks on PRs — even markdown linting or link validation is absent"
+  - title: "Repository is a documentation-only template with no executable code"
+    impact: "Quality dimensions are not applicable — the repo serves as a SIG charter template, not a software project"
+    severity: "LOW"
+    effort: "N/A"
+  - title: "No CI/CD workflows for documentation validation"
+    impact: "Markdown link rot, formatting issues, and stale content go undetected"
+    severity: "MEDIUM"
+    effort: "2-3 hours"
+  - title: "No branch protection or PR validation automation"
+    impact: "Changes can be merged without review enforcement beyond OWNERS file"
     severity: "MEDIUM"
     effort: "1-2 hours"
-  - title: "No branch protection or PR review enforcement"
-    impact: "Changes can be merged without review despite OWNERS file existing"
-    severity: "MEDIUM"
-    effort: "30 minutes"
-  - title: "Placeholder content in README"
-    impact: "Template placeholders (Member 1, github_user_1) remain unfilled, reducing discoverability"
-    severity: "LOW"
-    effort: "30 minutes"
 quick_wins:
-  - title: "Add markdown linting workflow"
-    effort: "1 hour"
-    impact: "Catch broken links, formatting issues, and ensure documentation quality"
-  - title: "Replace placeholder names in README and OWNERS"
+  - title: "Add a markdown linting workflow"
+    effort: "1-2 hours"
+    impact: "Catches broken links, formatting inconsistencies, and style issues automatically on PRs"
+  - title: "Add CODEOWNERS file for GitHub-native review enforcement"
     effort: "30 minutes"
-    impact: "Make governance clear and repository functional for its intended purpose"
-  - title: "Add a CODEOWNERS file"
-    effort: "15 minutes"
-    impact: "Enforce review assignments on GitHub PRs automatically"
+    impact: "Ensures PR reviews are required and routed to the right reviewers"
+  - title: "Add a link checker workflow"
+    effort: "1 hour"
+    impact: "Detects broken links in charter and README before they go stale"
 recommendations:
   priority_0:
-    - "Decide if this repository should remain as-is (pure template) or be populated with actual SIG content"
-    - "If active: fill in placeholder names and add basic CI (markdown lint, link check)"
+    - "No critical software quality gaps — this is a documentation-only SIG template repository"
   priority_1:
-    - "Add a GitHub Actions workflow for markdown linting (markdownlint-cli2) and link validation"
-    - "Configure branch protection rules on the main branch"
+    - "Add a GitHub Actions workflow for markdown linting (markdownlint-cli2) to validate PR content"
+    - "Add a link checker workflow (lychee or markdown-link-check) to catch stale links"
   priority_2:
-    - "Add a CONTRIBUTING.md with SIG participation guidelines"
-    - "Consider archiving the repository if the SIG is inactive"
+    - "Add a CLAUDE.md with contribution guidelines and documentation standards"
+    - "Consider adding a PR template to standardize SIG document contributions"
 ---
 
 # Quality Analysis: odh-template-sig
 
+**Repository**: [opendatahub-io/odh-template-sig](https://github.com/opendatahub-io/odh-template-sig)
+**Jira**: RHOAIENG / Internal Processes & Documentation
+**Tier**: Midstream
+**Analysis Date**: 2026-07-20
+**Repository Type**: Documentation-only SIG template
+**Primary Language**: Markdown (no executable code)
+
 ## Executive Summary
-- **Overall Score: 0.8/10**
-- **Repository Type**: Documentation-only SIG (Special Interest Group) template
-- **Primary Language**: None (Markdown documentation only)
-- **Key Finding**: This is not a software project — it is a governance template repository for Open Data Hub SIGs containing only a README, charter document, OWNERS file, and GPL v3 license. All quality dimensions score at or near zero because there is no code, no tests, no CI/CD, and no container images.
+
+- **Overall Score: 0.5/10**
+- **Key Strengths**: Clean, minimal SIG charter template with an OWNERS file for Prow-based review assignment
+- **Critical Gaps**: This is a documentation-only template repository containing 4 files (README.md, OWNERS, LICENSE, Docs/charter.md). Standard software quality dimensions (unit tests, CI/CD, build integration, etc.) are not applicable. The repo would benefit from lightweight documentation-quality automation.
 - **Agent Rules Status**: Missing
 
 ## Quality Scorecard
 
-| Dimension | Score | Status |
-|-----------|-------|--------|
-| Unit Tests | 0/10 | No source code or tests exist |
-| Integration/E2E | 0/10 | No integration or E2E tests |
-| **Build Integration** | **0/10** | **No build system or CI pipeline** |
-| Image Testing | 0/10 | No container images |
-| Coverage Tracking | 0/10 | No code to measure |
-| CI/CD Automation | 1/10 | No workflows — not even markdown linting |
-| Agent Rules | 0/10 | No agent configuration |
+| Dimension | Weight | Score | Status |
+|-----------|--------|-------|--------|
+| Unit Tests | 15% | 0.0/10 | No source code or test files |
+| Integration/E2E | 20% | 0.0/10 | No integration or E2E test infrastructure |
+| Build Integration | 15% | 0.0/10 | No build system or CI workflows |
+| Image Testing | 10% | 0.0/10 | No container images or Dockerfiles |
+| Coverage Tracking | 10% | 0.0/10 | No code coverage tooling |
+| CI/CD Automation | 15% | 1.0/10 | OWNERS file present; no workflows |
+| Static Analysis | 10% | 0.0/10 | No linting or analysis configuration |
+| Agent Rules | 5% | 0.0/10 | No agent rules present |
+| **Overall** | **100%** | **0.5/10** | **Documentation-only template** |
 
 ## Critical Gaps
 
-1. **Repository is a documentation-only SIG template with no code**
-   - Impact: No quality practices can be evaluated — there is nothing to build, test, or deploy
-   - Severity: HIGH
-   - Effort: N/A — this is by design
-   - Note: This repository's purpose is governance documentation, not software delivery
+1. **Repository is a documentation-only template with no executable code**
+   - Impact: Standard software quality dimensions are not applicable
+   - Severity: LOW (by design — this is a SIG charter template)
+   - Effort: N/A
 
-2. **No CI/CD workflows at all**
-   - Impact: No automated checks on PRs — even markdown linting or link validation is absent
+2. **No CI/CD workflows for documentation validation**
+   - Impact: Markdown link rot, formatting issues, and stale content go undetected
+   - Severity: MEDIUM
+   - Effort: 2-3 hours
+
+3. **No branch protection or PR validation automation**
+   - Impact: Changes can be merged without automated checks beyond the OWNERS file
    - Severity: MEDIUM
    - Effort: 1-2 hours
-   - Even documentation repositories benefit from automated quality checks
-
-3. **No branch protection or PR review enforcement**
-   - Impact: Changes can be merged without review despite an OWNERS file existing
-   - Severity: MEDIUM
-   - Effort: 30 minutes via GitHub repository settings
-
-4. **Placeholder content throughout**
-   - Impact: README contains "Member 1", "Member 2" placeholders; OWNERS has "github_user_1" placeholders
-   - Severity: LOW
-   - Effort: 30 minutes
 
 ## Quick Wins
 
-1. **Add markdown linting workflow** (~1 hour)
-   - Impact: Catch broken links, formatting issues, and ensure documentation quality
+1. **Add a markdown linting workflow** (1-2 hours)
+   - Impact: Catches broken links, formatting inconsistencies, and style violations on PRs
    - Implementation:
    ```yaml
-   # .github/workflows/lint.yml
-   name: Lint Markdown
+   # .github/workflows/lint-docs.yml
+   name: Lint Documentation
    on: [pull_request]
    jobs:
      lint:
@@ -126,132 +126,173 @@ recommendations:
              globs: '**/*.md'
    ```
 
-2. **Replace placeholder names** (~30 minutes)
-   - Fill in actual SIG chair and member names in README.md
-   - Replace github_user_1/2/3 with real GitHub handles in OWNERS
-
-3. **Add CODEOWNERS file** (~15 minutes)
+2. **Add CODEOWNERS file** (30 minutes)
+   - Impact: GitHub-native review enforcement alongside existing OWNERS file
+   - Implementation:
    ```
    # .github/CODEOWNERS
-   * @actual-sig-chair-1 @actual-sig-chair-2
+   * @opendatahub-io/sig-ml-developer-experience
+   ```
+
+3. **Add a link checker workflow** (1 hour)
+   - Impact: Detects broken links in charter and README
+   - Implementation:
+   ```yaml
+   # .github/workflows/check-links.yml
+   name: Check Links
+   on:
+     pull_request:
+     schedule:
+       - cron: '0 9 * * 1'
+   jobs:
+     check:
+       runs-on: ubuntu-latest
+       steps:
+         - uses: actions/checkout@v4
+         - uses: lycheeverse/lychee-action@v2
+           with:
+             args: --verbose --no-progress '**/*.md'
    ```
 
 ## Detailed Findings
 
-### Repository Structure
+### Unit Tests
+**Score: 0.0/10**
 
-The entire repository consists of 4 files:
+No source code exists in this repository. The repo contains only Markdown documentation files:
+- `README.md` — SIG overview
+- `Docs/charter.md` — SIG charter
+- `OWNERS` — Prow review configuration
+- `LICENSE` — Apache 2.0 license
 
-| File | Purpose |
-|------|---------|
-| `README.md` | SIG description, meeting info, leadership, contact |
-| `Docs/charter.md` | SIG scope, governance, in-scope/out-of-scope |
-| `OWNERS` | Prow-style approvers/reviewers (placeholder names) |
-| `LICENSE` | GPL v3 |
+There are no test files (`*_test.go`, `*.spec.ts`, `*_test.py`, etc.) because there is no code to test.
 
-### CI/CD Pipeline
-**Status: Non-existent**
+### Integration/E2E Tests
+**Score: 0.0/10**
 
-- No `.github/workflows/` directory
-- No `.gitlab-ci.yml`
+No `e2e/`, `integration/`, or `test/` directories. No cluster setup, no multi-version testing, no test scenarios. Not applicable for a documentation-only repository.
+
+### Build Integration
+**Score: 0.0/10**
+
+No build system present:
 - No `Makefile`
-- No `Jenkinsfile`
-- No automated checks of any kind run on PRs or pushes
-
-### Test Coverage
-**Status: Not applicable**
-
-- No source code exists in any language
-- No test files of any kind
-- No test frameworks configured
-
-### Code Quality
-**Status: Not applicable**
-
-- No linting configuration (no `.golangci.yaml`, `.eslintrc`, `ruff.toml`, etc.)
-- No `.pre-commit-config.yaml`
-- No static analysis tools
-- No `.editorconfig`
-
-### Container Images
-**Status: Not applicable**
-
+- No `.github/workflows/` directory
 - No `Dockerfile` or `Containerfile`
-- No container build configuration
-- No image scanning
+- No `go.mod`, `package.json`, `requirements.txt`, or any build configuration
+- No Konflux integration
 
-### Security
-**Status: Not applicable**
+This is expected for a documentation-only SIG template.
 
-- No CodeQL, Trivy, or Snyk configuration
-- No dependency scanning (no dependencies exist)
-- No secret detection
-- License is GPL v3 (present and valid)
+### Image Testing
+**Score: 0.0/10**
 
-### Agent Rules (Agentic Flow Quality)
-**Status: Missing**
+No container images or Dockerfiles present. No multi-stage builds, no base image selection, no runtime validation. Not applicable.
 
-- No `CLAUDE.md` or `AGENTS.md` in repository root
-- No `.claude/` directory
-- No `.claude/rules/` for test creation guidance
-- No `.claude/skills/` for custom skills
-- **Recommendation**: Not applicable for a documentation-only repository
+### Coverage Tracking
+**Score: 0.0/10**
 
-### Documentation Quality
-**Status: Incomplete — placeholder content**
+No code coverage configuration:
+- No `.codecov.yml` or `codecov.yml`
+- No `--coverprofile`, `pytest-cov`, or similar coverage flags
+- No coverage threshold enforcement
+- No PR coverage reporting
 
-- README.md: Good structure (intro, meetings, leadership, contact) but uses placeholder names
-- Charter: Well-structured with clear scope definition, in-scope/out-of-scope items
-- OWNERS: Uses placeholder GitHub usernames (github_user_1, etc.)
-- Missing: CONTRIBUTING.md, CODE_OF_CONDUCT.md
+Not applicable — no source code to measure.
+
+### CI/CD Automation
+**Score: 1.0/10**
+
+The repository has an `OWNERS` file for Prow-based review routing, which provides minimal review gating:
+
+```yaml
+approvers:
+  - github_user_1
+  - github_user_2
+  - github_user_3
+reviewers:
+  - github_user_1
+  - github_user_2
+  - github_user_3
+```
+
+**Missing**:
+- No `.github/workflows/` directory — zero GitHub Actions workflows
+- No `.gitlab-ci.yml` or `Jenkinsfile`
+- No PR validation (markdown linting, link checking)
+- No automated stale content detection
+- No concurrency control, caching, or test parallelization (not applicable)
+
+### Static Analysis
+**Score: 0.0/10**
+
+#### Linting
+No linting configuration present:
+- No `.markdownlint.yml` or `.markdownlint-cli2.yaml` for markdown linting
+- No `.golangci.yaml`, `.eslintrc`, `ruff.toml`, or any code linting
+- No `.pre-commit-config.yaml`
+
+#### FIPS Compatibility
+Not applicable — no source code or cryptographic imports.
+
+#### Dependency Alerts
+- No `.github/dependabot.yml`
+- No `renovate.json` or `.renovaterc`
+- Not applicable — no dependencies to manage
+
+### Agent Rules
+**Score: 0.0/10**
+
+- **Status**: Missing
+- **CLAUDE.md**: Not present
+- **AGENTS.md**: Not present
+- **.claude/ directory**: Not present
+- **Coverage**: No test automation rules (no tests to guide)
+- **Quality**: N/A
+- **Gaps**: Complete absence of agent rules — low priority given documentation-only nature
+- **Recommendation**: If the repo evolves to include templates with code scaffolding, generate rules with `/test-rules-generator`
 
 ## Recommendations
 
 ### Priority 0 (Critical)
-1. **Determine repository status**: Is this SIG active? If not, consider archiving
-2. **If active**: Replace all placeholder content with real names and handles
+- No critical software quality gaps — this is a documentation-only SIG template repository by design
 
 ### Priority 1 (High Value)
-1. **Add basic CI**: Markdown lint + link validation workflow for PR quality
-2. **Configure branch protection**: Require PR reviews before merge
-3. **Add CODEOWNERS**: Map to actual SIG leadership for automatic review assignments
+- **Add markdown linting workflow**: Validates formatting and style on PRs (see Quick Wins #1)
+- **Add link checker workflow**: Catches stale/broken links in charter and README (see Quick Wins #3)
 
 ### Priority 2 (Nice-to-Have)
-1. **Add CONTRIBUTING.md**: Guide SIG participants on how to contribute
-2. **Add meeting notes template**: Standardize SIG meeting documentation
-3. **Add issue templates**: For SIG proposals, agenda items, etc.
+- **Add CLAUDE.md**: Document contribution guidelines and documentation standards for AI-assisted contributions
+- **Add PR template**: Standardize how SIG document changes are proposed
+- **Add branch protection rules**: Require PR reviews and status checks before merging
+- **Update OWNERS with real GitHub usernames**: Current file contains placeholder values (`github_user_1`, etc.)
 
 ## Comparison to Gold Standards
 
-| Dimension | odh-template-sig | odh-dashboard | notebooks | kserve |
-|-----------|-----------------|---------------|-----------|--------|
-| Unit Tests | 0/10 | 9/10 | 7/10 | 9/10 |
-| Integration/E2E | 0/10 | 9/10 | 8/10 | 9/10 |
-| Build Integration | 0/10 | 8/10 | 7/10 | 8/10 |
-| Image Testing | 0/10 | 7/10 | 9/10 | 7/10 |
-| Coverage Tracking | 0/10 | 8/10 | 6/10 | 9/10 |
-| CI/CD Automation | 1/10 | 9/10 | 8/10 | 9/10 |
-| Agent Rules | 0/10 | 8/10 | 3/10 | 2/10 |
-| **Overall** | **0.8/10** | **8.5/10** | **7.0/10** | **8.0/10** |
+| Feature | odh-template-sig | odh-dashboard | notebooks | kserve |
+|---------|-----------------|---------------|-----------|--------|
+| CI/CD Workflows | None | Comprehensive | Multi-layer | Extensive |
+| Unit Tests | N/A | Jest + React Testing | Python pytest | Go testing |
+| E2E Tests | N/A | Cypress | Image validation | Ginkgo |
+| Coverage | None | Codecov enforced | Present | Enforced |
+| Static Analysis | None | ESLint + TypeScript | Linting | golangci-lint |
+| Agent Rules | None | Comprehensive | Present | Present |
+| Doc Validation | None | Present | Present | Present |
 
-**Note**: Comparison is provided for context but is not meaningful — this is a governance template repository, not a software project. The gold standards are active software delivery repositories with code, tests, and deployment pipelines.
+**Note**: Direct comparison is not meaningful — odh-template-sig is a documentation-only SIG charter template, not a software project. The comparison is included for completeness.
 
 ## File Paths Reference
 
-| File | Path | Notes |
-|------|------|-------|
-| README | `README.md` | SIG description with placeholder names |
-| Charter | `Docs/charter.md` | SIG scope and governance |
-| Owners | `OWNERS` | Prow-style with placeholder handles |
-| License | `LICENSE` | GPL v3 |
+| File | Purpose |
+|------|---------|
+| `README.md` | SIG overview, meeting info, leadership |
+| `Docs/charter.md` | SIG charter defining scope and governance |
+| `OWNERS` | Prow review/approval configuration (placeholder usernames) |
+| `LICENSE` | Apache License 2.0 |
 
-## Summary
+## Repository Context
 
-`odh-template-sig` scores **0.8/10** overall. This is expected and largely by design — the repository is a documentation-only template for Open Data Hub Special Interest Groups, not a software project. It contains no code, tests, CI/CD, or container images.
-
-The primary actionable findings are:
-1. **Placeholder content** needs to be replaced with real names if the SIG is active
-2. **Basic CI** (markdown linting) would improve even documentation-only repositories
-3. **Repository may need archiving** if the SIG is no longer active
-
-For repositories that actually deliver software within the ODH ecosystem, use `/quality-repo-analysis` on the relevant code repositories (e.g., `odh-dashboard`, `notebooks`, `kserve`).
+- **Jira Project**: RHOAIENG
+- **Jira Component**: Internal Processes & Documentation
+- **Tier**: Midstream
+- **Purpose**: Template repository for Open Data Hub Special Interest Groups (SIGs). Defines the structure and governance for SIG documentation. Not a software project — contains no executable code.

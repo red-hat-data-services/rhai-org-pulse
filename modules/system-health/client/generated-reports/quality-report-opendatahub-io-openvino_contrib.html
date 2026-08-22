@@ -332,7 +332,7 @@
     <div class="container">
         <header>
             <h1>Quality Analysis Report</h1>
-            <p class="timestamp">Generated on July 06, 2026 at 04:27 PM</p>
+            <p class="timestamp">Generated on July 20, 2026 at 05:23 PM</p>
             <h2 style="margin-top: 1rem; font-weight: 400;">opendatahub-io/openvino_contrib</h2>
         </header>
 
@@ -344,11 +344,11 @@
                         <circle class="score-arc" cx="100" cy="100" r="90"
                                 stroke="#fd7e14"
                                 stroke-dasharray="565.4861999999999"
-                                stroke-dashoffset="305.362548"
+                                stroke-dashoffset="294.052824"
                                 id="scoreArc"></circle>
                     </svg>
                     <div class="score-text">
-                        <div class="score-value">4.6</div>
+                        <div class="score-value">4.8</div>
                         <div class="score-label">Overall Score</div>
                     </div>
                 </div>
@@ -365,37 +365,42 @@
                         <div class="scorecard-item">
                             <h3>Unit Tests</h3>
                             <div class="scorecard-score" style="color: #fd7e14;">5.5/10</div>
-                            <div class="scorecard-status">Good coverage in nvidia_plugin (unit + functional), weak elsewhere</div>
+                            <div class="scorecard-status">Moderate test coverage across C++, Java, and Python modules; no TS/JS tests despite Jest config</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Integration/E2E</h3>
-                            <div class="scorecard-score" style="color: #fd7e14;">4.0/10</div>
-                            <div class="scorecard-status">E2E tests exist for llama_cpp and token_merging; other modules lack integration tests</div>
+                            <div class="scorecard-score" style="color: #fd7e14;">5.0/10</div>
+                            <div class="scorecard-status">E2E tests for llama_cpp_plugin and functional tests for NVIDIA; limited overall coverage</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Build Integration</h3>
-                            <div class="scorecard-score" style="color: #dc3545;">3.0/10</div>
-                            <div class="scorecard-status">No PR-time container build validation; CUDA tests run on self-hosted runners only</div>
+                            <div class="scorecard-score" style="color: #fd7e14;">4.0/10</div>
+                            <div class="scorecard-status">CMake builds on Linux/Windows/macOS in CI but no container image builds or deployment validation</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Image Testing</h3>
                             <div class="scorecard-score" style="color: #dc3545;">2.0/10</div>
-                            <div class="scorecard-status">Single Dockerfile exists (nvidia_plugin) but no runtime validation or scanning</div>
+                            <div class="scorecard-status">Single Dockerfile for NVIDIA plugin dev environment; no runtime validation or multi-arch support</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Coverage Tracking</h3>
-                            <div class="scorecard-score" style="color: #dc3545;">1.0/10</div>
-                            <div class="scorecard-status">No coverage tool integration (no codecov, no coverage thresholds, no PR reporting)</div>
+                            <div class="scorecard-score" style="color: #dc3545;">0.0/10</div>
+                            <div class="scorecard-status">No coverage tooling, no codecov integration, no coverage thresholds or PR reporting</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>CI/CD Automation</h3>
                             <div class="scorecard-score" style="color: #ffc107;">6.5/10</div>
-                            <div class="scorecard-status">11 workflows with concurrency control and caching; cross-platform builds (Linux/Windows/macOS)</div>
+                            <div class="scorecard-status">12 workflows with good concurrency control and caching; path-scoped triggers; cross-platform testing</div>
+                        </div>
+                        <div class="scorecard-item">
+                            <h3>Static Analysis</h3>
+                            <div class="scorecard-score" style="color: #fd7e14;">4.5/10</div>
+                            <div class="scorecard-status">ESLint for TS extension, ruff/Black for Python server, Java code style check; no Dependabot, no pre-commit, no FIPS</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Agent Rules</h3>
                             <div class="scorecard-score" style="color: #dc3545;">0.0/10</div>
-                            <div class="scorecard-status">No CLAUDE.md, no .claude/ directory, no agent rules of any kind</div>
+                            <div class="scorecard-status">No CLAUDE.md, AGENTS.md, or .claude/ directory; no AI agent test guidance</div>
                         </div>
                     </div>
                 </div>
@@ -411,51 +416,51 @@
                     <ul class="items-list">
                         
                         <li class="item-card high">
-                            <div class="item-description">Zero code coverage tracking or enforcement</div>
-                            <p>No visibility into test coverage; regressions can merge without detection</p>
+                            <div class="item-description">No code coverage tracking anywhere</div>
+                            <p>Cannot measure test effectiveness, identify untested code paths, or enforce quality gates</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-high">HIGH</span>
                                 <span class="meta-tag effort-tag">4-8 hours</span>
                             </div>
                         </li>
                         <li class="item-card high">
-                            <div class="item-description">No container image security scanning</div>
-                            <p>Vulnerabilities in NVIDIA CUDA base images and dependencies go undetected</p>
-                            <div class="item-meta">
-                                <span class="meta-tag severity-high">HIGH</span>
-                                <span class="meta-tag effort-tag">2-4 hours</span>
-                            </div>
-                        </li>
-                        <li class="item-card high">
-                            <div class="item-description">No PR-time container build validation</div>
-                            <p>Dockerfile breakage discovered only after merge or in manual testing</p>
+                            <div class="item-description">No container image runtime validation</div>
+                            <p>NVIDIA Dockerfile exists but is never built or tested in CI; image issues found only at runtime</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-high">HIGH</span>
                                 <span class="meta-tag effort-tag">4-6 hours</span>
                             </div>
                         </li>
+                        <li class="item-card high">
+                            <div class="item-description">No Dependabot or Renovate for dependency management</div>
+                            <p>Vulnerable dependencies may go undetected; manual dependency updates required</p>
+                            <div class="item-meta">
+                                <span class="meta-tag severity-high">HIGH</span>
+                                <span class="meta-tag effort-tag">1-2 hours</span>
+                            </div>
+                        </li>
                         <li class="item-card medium">
-                            <div class="item-description">CUDA tests depend on self-hosted runners with no fallback</div>
-                            <p>CUDA CI is fragile; if self-hosted runner goes down, no tests run</p>
+                            <div class="item-description">No pre-commit hooks for consistent code quality</div>
+                            <p>Code style and quality checks only enforced in CI, not locally</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-medium">MEDIUM</span>
+                                <span class="meta-tag effort-tag">2-3 hours</span>
+                            </div>
+                        </li>
+                        <li class="item-card high">
+                            <div class="item-description">OpenVINO Code extension has Jest config but no test files</div>
+                            <p>TypeScript module has zero test coverage despite having test infrastructure configured</p>
+                            <div class="item-meta">
+                                <span class="meta-tag severity-high">HIGH</span>
                                 <span class="meta-tag effort-tag">8-16 hours</span>
                             </div>
                         </li>
-                        <li class="item-card high">
-                            <div class="item-description">openvino_code module has zero test execution in CI</div>
-                            <p>VS Code extension ships without any automated test validation</p>
+                        <li class="item-card medium">
+                            <div class="item-description">No FIPS compatibility measures</div>
+                            <p>Dockerfile uses nvidia/cuda base (non-UBI); no FIPS build tags or crypto compliance checks</p>
                             <div class="item-meta">
-                                <span class="meta-tag severity-high">HIGH</span>
+                                <span class="meta-tag severity-medium">MEDIUM</span>
                                 <span class="meta-tag effort-tag">4-8 hours</span>
-                            </div>
-                        </li>
-                        <li class="item-card high">
-                            <div class="item-description">No SAST, CodeQL, or dependency scanning</div>
-                            <p>Security vulnerabilities and supply chain risks go undetected</p>
-                            <div class="item-meta">
-                                <span class="meta-tag severity-high">HIGH</span>
-                                <span class="meta-tag effort-tag">2-4 hours</span>
                             </div>
                         </li>
                     </ul>
@@ -472,40 +477,32 @@
                     <ul class="items-list">
                         
                         <li class="item-card ">
-                            <div class="item-description">Add Trivy container scanning to PR workflow</div>
-                            <p>Detect vulnerabilities in CUDA base images before merge</p>
+                            <div class="item-description">Enable Dependabot for automated dependency alerts</div>
+                            <p>Automated security and dependency updates across all ecosystems (pip, npm, gradle, docker)</p>
                             <div class="item-meta">
                                 
                                 <span class="meta-tag effort-tag">1-2 hours</span>
                             </div>
                         </li>
                         <li class="item-card ">
-                            <div class="item-description">Add CodeQL analysis workflow</div>
-                            <p>Automated SAST for C++, Java, Python, and TypeScript</p>
+                            <div class="item-description">Add .pre-commit-config.yaml with existing linters</div>
+                            <p>Enforce code style checks locally before CI runs, reducing failed PR cycles</p>
                             <div class="item-meta">
                                 
-                                <span class="meta-tag effort-tag">1-2 hours</span>
+                                <span class="meta-tag effort-tag">2-3 hours</span>
                             </div>
                         </li>
                         <li class="item-card ">
-                            <div class="item-description">Enable Jest test execution in openvino_code CI</div>
-                            <p>Run existing Jest infrastructure that is configured but not executed</p>
+                            <div class="item-description">Add codecov integration to Linux CI workflow</div>
+                            <p>Track test coverage trends and enable PR coverage reporting</p>
                             <div class="item-meta">
                                 
-                                <span class="meta-tag effort-tag">1-2 hours</span>
+                                <span class="meta-tag effort-tag">3-4 hours</span>
                             </div>
                         </li>
                         <li class="item-card ">
-                            <div class="item-description">Add codecov integration to Linux workflow</div>
-                            <p>Visibility into test coverage with PR reporting</p>
-                            <div class="item-meta">
-                                
-                                <span class="meta-tag effort-tag">2-4 hours</span>
-                            </div>
-                        </li>
-                        <li class="item-card ">
-                            <div class="item-description">Create basic CLAUDE.md with testing guidelines</div>
-                            <p>Guide AI-assisted contributions to follow project testing patterns</p>
+                            <div class="item-description">Create basic CLAUDE.md with test patterns</div>
+                            <p>Improve AI-generated test quality and consistency across the monorepo</p>
                             <div class="item-meta">
                                 
                                 <span class="meta-tag effort-tag">2-3 hours</span>
@@ -525,15 +522,15 @@
                         
                         <div class="rec-priority p0">
                             <h3>Priority 0: Critical</h3>
-                            <ul><li>Add code coverage collection and reporting (gcov/lcov for C++, pytest-cov for Python, JaCoCo for Java)</li><li>Add container security scanning (Trivy) for the nvidia_plugin Dockerfile</li><li>Enable CodeQL or similar SAST tool for all supported languages</li><li>Execute tests in openvino_code CI workflow (Jest config exists but tests are never run)</li></ul>
+                            <ul><li>Add code coverage collection and reporting (codecov/coveralls) to at least the Linux CI workflow</li><li>Enable Dependabot for pip, npm, gradle, and docker ecosystems</li><li>Write unit tests for the OpenVINO Code TypeScript extension (Jest infrastructure already exists)</li></ul>
                         </div>
                         <div class="rec-priority p1">
                             <h3>Priority 1: High Value</h3>
-                            <ul><li>Add PR-time Dockerfile build validation for nvidia_plugin</li><li>Add dependency scanning (Dependabot or Renovate) for npm, pip, and Gradle dependencies</li><li>Create integration tests for java_api beyond Gradle build tests</li><li>Add pre-commit hooks configuration (.pre-commit-config.yaml) for consistent code quality</li></ul>
+                            <ul><li>Add container image build validation for the NVIDIA plugin Dockerfile in CI</li><li>Add pre-commit hooks with existing linters (ESLint, ruff, Black, google-java-format)</li><li>Create CLAUDE.md with test patterns and guidelines per module</li><li>Add integration tests for custom_operations module beyond run_tests.py</li></ul>
                         </div>
                         <div class="rec-priority p2">
                             <h3>Priority 2: Nice-to-Have</h3>
-                            <ul><li>Add agent rules (.claude/rules/) for test creation patterns per module</li><li>Add multi-architecture container builds (ARM64 support)</li><li>Add SBOM generation for container images</li><li>Implement secret detection (Gitleaks or TruffleHog)</li></ul>
+                            <ul><li>Migrate NVIDIA Dockerfile to UBI base image for FIPS compatibility</li><li>Add multi-architecture build support for container images</li><li>Add contract tests between Java API and native OpenVINO library</li><li>Implement performance regression testing for inference benchmarks</li></ul>
                         </div>
                     </div>
                 </div>

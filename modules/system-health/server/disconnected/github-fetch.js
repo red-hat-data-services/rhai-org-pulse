@@ -1,7 +1,7 @@
 const AdmZip = require('adm-zip');
 const path = require('path');
 const { Octokit } = require('@octokit/rest');
-const { upsertReport, readReports, writeReportsAtomic } = require('./storage');
+const { upsertReport, readReports, writeReports } = require('./storage');
 
 const SCORER_OWNER = 'opendatahub-io';
 const SCORER_REPO = 'disconnected-readiness-scorer';
@@ -128,7 +128,7 @@ async function fetchAllReports(storage, token) {
     return { status: result.status, message: result.message, timestamp: new Date().toISOString() };
   }
 
-  const data = readReports(storage.readFromStorage);
+  const data = await readReports(storage.readFromStorage);
   const counts = { created: 0, updated: 0, unchanged: 0 };
 
   for (const report of result.reports) {
@@ -141,7 +141,7 @@ async function fetchAllReports(storage, token) {
 
   data.lastSyncedAt = new Date().toISOString();
   data.repoCount = Object.keys(data.repos).length;
-  writeReportsAtomic(storage.writeToStorageAtomic, data);
+  await writeReports(storage.writeToStorage, data);
 
   const duration = Date.now() - startTime;
   console.log(`[system-health/disconnected] Fetch complete: ${result.reports.length} repos in ${duration}ms (${counts.created} created, ${counts.updated} updated, ${counts.unchanged} unchanged)`);

@@ -7,7 +7,7 @@
 
 const { loadConfig, saveConfig } = require('./config');
 const { evaluateHygiene, hygieneRules, RULE_CATEGORIES } = require('./hygiene-rules');
-const { fetchHygieneFeatures } = require('./jira-fetch');
+const { fetchHygieneFeatures, buildVersionReleaseMap } = require('./jira-fetch');
 const { logAudit } = require('../planning/audit-log');
 const { readRegistry } = require('../registry');
 
@@ -121,11 +121,41 @@ const refreshState = {
  *         description: Cross-version hygiene summary for program reporting
  */
 
-module.exports = function registerHygieneRoutes(router, context) {
+module.exports = async function registerHygieneRoutes(router, context) {
   const { storage, requireAuth, requirePlanningManager, requireScope, registerDiagnostics } = context;
 
   function storageKey(version) {
     return DATA_PREFIX + '/features-' + version + '.json';
+  }
+
+  async function resolveHygieneVersion(version) {
+    var data = await storage.readFromStorage(storageKey(version));
+    if (data) return { data: data, resolvedVersion: version };
+
+    var registry = await readRegistry(storage.readFromStorage);
+    var registryReleases = registry.releases || [];
+    for (var ri = 0; ri < registryReleases.length; ri++) {
+      var rel = registryReleases[ri];
+      var aliases = [rel.displayName, rel.id].concat(rel.fixVersions || []).filter(Boolean);
+      var isMatch = false;
+      for (var ai = 0; ai < aliases.length; ai++) {
+        if (aliases[ai] === version) { isMatch = true; break; }
+      }
+      if (!isMatch) {
+        for (var ai2 = 0; ai2 < aliases.length; ai2++) {
+          if (aliases[ai2].indexOf(version) !== -1 || version.indexOf(aliases[ai2]) !== -1) { isMatch = true; break; }
+        }
+      }
+      if (isMatch) {
+        for (var ai3 = 0; ai3 < aliases.length; ai3++) {
+          if (aliases[ai3] !== version) {
+            var aliasData = await storage.readFromStorage(storageKey(aliases[ai3]));
+            if (aliasData) return { data: aliasData, resolvedVersion: aliases[ai3] };
+          }
+        }
+      }
+    }
+    return { data: null, resolvedVersion: version };
   }
 
   async function runHygieneRefreshAll(options) {
@@ -137,7 +167,7 @@ module.exports = function registerHygieneRoutes(router, context) {
       return { status: 'cooldown' };
     }
 
-    var registry = readRegistry(storage.readFromStorage);
+    var registry = await readRegistry(storage.readFromStorage);
     var registryReleases = registry.releases || [];
     var seen = {};
     var activeVersions = [];
@@ -160,11 +190,21 @@ module.exports = function registerHygieneRoutes(router, context) {
     refreshState.lastResult = null;
     refreshState.progress = { stage: 'starting', message: 'Refreshing all versions (' + activeVersions.length + ')' };
 
-    var config = loadConfig(storage);
+    var config = await loadConfig(storage);
     var jira = require('../../../../shared/server/jira');
     var jiraRequest = jira.jiraRequest;
     var fetchAllJqlResults = jira.fetchAllJqlResults;
     var results = [];
+
+    // Resolve Jira version names → registry release ids so fix-version precedence
+    // can place each feature under its effective (committed) release.
+    var versionReleaseMap = buildVersionReleaseMap(registryReleases);
+    var activeReleaseIds = [];
+    for (var ari = 0; ari < registryReleases.length; ari++) {
+      if (registryReleases[ari].state !== 'archived' && registryReleases[ari].displayName) {
+        activeReleaseIds.push(registryReleases[ari].id);
+      }
+    }
 
     try {
       for (var vi = 0; vi < activeVersions.length; vi++) {
@@ -194,7 +234,12 @@ module.exports = function registerHygieneRoutes(router, context) {
         }
 
         try {
-          var result = await fetchHygieneFeatures(jiraRequest, fetchAllJqlResults, version, config, onProgress, { jqlVersions: jqlVersions });
+          var result = await fetchHygieneFeatures(jiraRequest, fetchAllJqlResults, version, config, onProgress, {
+            jqlVersions: jqlVersions,
+            versionReleaseMap: versionReleaseMap,
+            activeReleaseIds: activeReleaseIds,
+            releaseId: relForVersion ? relForVersion.id : null
+          });
           var gaDate = relForVersion && relForVersion.milestones && (relForVersion.milestones.gaDate || relForVersion.milestones.ga);
           var versionReleased = false;
           var versionGaDate = null;
@@ -216,7 +261,7 @@ module.exports = function registerHygieneRoutes(router, context) {
             feature.violations = evaluateHygiene(feature, rulesConfig);
           }
 
-          storage.writeToStorage(storageKey(version), result);
+          await storage.writeToStorage(storageKey(version), result);
           results.push({ version: version, status: 'success', featureCount: featureKeys.length });
         } catch (err) {
           console.error('[hygiene] Refresh-all failed for ' + version + ':', err.message);
@@ -234,7 +279,7 @@ module.exports = function registerHygieneRoutes(router, context) {
       };
       refreshState.progress = null;
 
-      logAudit(storage.readFromStorage, storage.writeToStorage, {
+      await logAudit(storage.readFromStorage, storage.writeToStorage, {
         domain: 'hygiene',
         action: 'hygiene_refresh_all',
         user: (options && options.user) || 'system',
@@ -253,13 +298,14 @@ module.exports = function registerHygieneRoutes(router, context) {
   }
 
   // GET /features — hygiene features for a release version
-  router.get('/features', requireAuth, requireScope('releases:read'), function(req, res) {
-    var version = req.query.version;
+  router.get('/features', requireAuth, requireScope('releases:read'), async function(req, res) {
+    var version = Array.isArray(req.query.version) ? req.query.version[0] : req.query.version;
     if (!version) {
       return res.status(400).json({ error: 'version query parameter is required' });
     }
 
-    var data = storage.readFromStorage(storageKey(version));
+    var resolved = await resolveHygieneVersion(version);
+    var data = resolved.data;
     if (!data) {
       return res.json({ features: {}, fetchedAt: null, version: version });
     }
@@ -277,13 +323,14 @@ module.exports = function registerHygieneRoutes(router, context) {
   });
 
   // GET /summary — aggregate violation summary
-  router.get('/summary', requireAuth, requireScope('releases:read'), function(req, res) {
-    var version = req.query.version;
+  router.get('/summary', requireAuth, requireScope('releases:read'), async function(req, res) {
+    var version = Array.isArray(req.query.version) ? req.query.version[0] : req.query.version;
     if (!version) {
       return res.status(400).json({ error: 'version query parameter is required' });
     }
 
-    var data = storage.readFromStorage(storageKey(version));
+    var resolved = await resolveHygieneVersion(version);
+    var data = resolved.data;
     if (!data || !data.features) {
       return res.json({
         version: version,
@@ -295,7 +342,7 @@ module.exports = function registerHygieneRoutes(router, context) {
       });
     }
 
-    var config = loadConfig(storage);
+    var config = await loadConfig(storage);
     var rulesConfig = config.rules || {};
 
     var totalFeatures = 0;
@@ -331,8 +378,8 @@ module.exports = function registerHygieneRoutes(router, context) {
   });
 
   // POST /refresh — trigger Jira data refresh (fire-and-forget)
-  router.post('/refresh', requirePlanningManager, requireScope('releases:write'), function(req, res) {
-    var version = req.query.version;
+  router.post('/refresh', requirePlanningManager, requireScope('releases:write'), async function(req, res) {
+    var version = Array.isArray(req.query.version) ? req.query.version[0] : req.query.version;
     if (!version) {
       return res.status(400).json({ error: 'version query parameter is required' });
     }
@@ -359,20 +406,22 @@ module.exports = function registerHygieneRoutes(router, context) {
 
     var userEmail = req.userEmail || 'unknown';
 
-    setImmediate(function() {
-      var config = loadConfig(storage);
+    setImmediate(async function() {
+      var config = await loadConfig(storage);
 
       var jira = require('../../../../shared/server/jira');
       var jiraRequest = jira.jiraRequest;
       var fetchAllJqlResults = jira.fetchAllJqlResults;
 
       // Look up fixVersions from registry for JQL queries
-      var registry = readRegistry(storage.readFromStorage);
+      var registry = await readRegistry(storage.readFromStorage);
       var registryReleases = registry.releases || [];
       var jqlVersions = null;
+      var refreshReleaseId = null;
       for (var rli = 0; rli < registryReleases.length; rli++) {
         var rl = registryReleases[rli];
         if (rl.displayName === version || rl.id === version) {
+          refreshReleaseId = rl.id;
           if (rl.fixVersions && rl.fixVersions.length > 0) {
             jqlVersions = rl.fixVersions;
           }
@@ -380,12 +429,27 @@ module.exports = function registerHygieneRoutes(router, context) {
         }
       }
 
+      // Resolve Jira version names → registry release ids for effective-release
+      // membership (fix-version precedence).
+      var versionReleaseMap = buildVersionReleaseMap(registryReleases);
+      var activeReleaseIds = [];
+      for (var arj = 0; arj < registryReleases.length; arj++) {
+        if (registryReleases[arj].state !== 'archived' && registryReleases[arj].displayName) {
+          activeReleaseIds.push(registryReleases[arj].id);
+        }
+      }
+
       function onProgress(stage, detail) {
         refreshState.progress = { stage: stage, message: detail.message || stage };
       }
 
-      fetchHygieneFeatures(jiraRequest, fetchAllJqlResults, version, config, onProgress, { jqlVersions: jqlVersions })
-        .then(function(result) {
+      fetchHygieneFeatures(jiraRequest, fetchAllJqlResults, version, config, onProgress, {
+        jqlVersions: jqlVersions,
+        versionReleaseMap: versionReleaseMap,
+        activeReleaseIds: activeReleaseIds,
+        releaseId: refreshReleaseId
+      })
+        .then(async function(result) {
           // Enrich with version-released status from registry
           var registryReleases = registry.releases || [];
           var versionReleased = false;
@@ -416,7 +480,7 @@ module.exports = function registerHygieneRoutes(router, context) {
             feature.violations = evaluateHygiene(feature, rulesConfig);
           }
 
-          storage.writeToStorage(storageKey(version), result);
+          await storage.writeToStorage(storageKey(version), result);
 
           refreshState.running = false;
           refreshState.completedAt = new Date().toISOString();
@@ -428,7 +492,7 @@ module.exports = function registerHygieneRoutes(router, context) {
           };
           refreshState.progress = null;
 
-          logAudit(storage.readFromStorage, storage.writeToStorage, {
+          await logAudit(storage.readFromStorage, storage.writeToStorage, {
             domain: 'hygiene',
             action: 'hygiene_refresh',
             user: userEmail,
@@ -461,12 +525,12 @@ module.exports = function registerHygieneRoutes(router, context) {
    *       200:
    *         description: Refresh started, already running, or no versions
    */
-  router.post('/refresh-all', requirePlanningManager, requireScope('releases:write'), function(req, res) {
+  router.post('/refresh-all', requirePlanningManager, requireScope('releases:write'), async function(req, res) {
     if (refreshState.running || (context.isRefreshRunning && context.isRefreshRunning())) {
       return res.json({ status: 'already_running' });
     }
 
-    var registry = readRegistry(storage.readFromStorage);
+    var registry = await readRegistry(storage.readFromStorage);
     var registryReleases = registry.releases || [];
     var seen = {};
     var activeVersions = [];
@@ -486,7 +550,7 @@ module.exports = function registerHygieneRoutes(router, context) {
     res.json({ status: 'started', versions: activeVersions });
 
     var userEmail = req.userEmail || 'unknown';
-    runHygieneRefreshAll({ skipCooldown: true, user: userEmail }).catch(function() {});
+    await runHygieneRefreshAll({ skipCooldown: true, user: userEmail }).catch(function() {});
   });
 
   // GET /refresh/status — current refresh state
@@ -502,8 +566,8 @@ module.exports = function registerHygieneRoutes(router, context) {
   });
 
   // GET /config — hygiene rule configuration with rule definitions
-  router.get('/config', requirePlanningManager, requireScope('releases:read'), function(req, res) {
-    var config = loadConfig(storage);
+  router.get('/config', requirePlanningManager, requireScope('releases:read'), async function(req, res) {
+    var config = await loadConfig(storage);
 
     var ruleDefinitions = [];
     for (var i = 0; i < hygieneRules.length; i++) {
@@ -527,11 +591,11 @@ module.exports = function registerHygieneRoutes(router, context) {
   });
 
   // POST /config — save hygiene rule configuration
-  router.post('/config', requirePlanningManager, requireScope('releases:write'), function(req, res) {
+  router.post('/config', requirePlanningManager, requireScope('releases:write'), async function(req, res) {
     try {
-      saveConfig(storage, req.body);
+      await saveConfig(storage, req.body);
 
-      logAudit(storage.readFromStorage, storage.writeToStorage, {
+      await logAudit(storage.readFromStorage, storage.writeToStorage, {
         domain: 'hygiene',
         action: 'hygiene_config_update',
         user: req.userEmail || 'unknown',
@@ -551,15 +615,15 @@ module.exports = function registerHygieneRoutes(router, context) {
   });
 
   // GET /program-report — aggregate hygiene across all versions
-  router.get('/program-report', requireAuth, requireScope('releases:read'), function(req, res) {
-    var registry = readRegistry(storage.readFromStorage);
+  router.get('/program-report', requireAuth, requireScope('releases:read'), async function(req, res) {
+    var registry = await readRegistry(storage.readFromStorage);
     var registryReleases = registry.releases || [];
-    var config = loadConfig(storage);
+    var config = await loadConfig(storage);
     var rulesConfig = config.rules || {};
 
     // Scan stored hygiene data files instead of iterating registry
     // (hygiene version strings may differ from registry IDs)
-    var hygieneFiles = storage.listStorageFiles ? storage.listStorageFiles('releases/hygiene') : [];
+    var hygieneFiles = storage.listStorageFiles ? await storage.listStorageFiles('releases/hygiene') : [];
     var versions = [];
 
     for (var ri = 0; ri < hygieneFiles.length; ri++) {
@@ -567,7 +631,7 @@ module.exports = function registerHygieneRoutes(router, context) {
       if (!match) continue;
 
       var versionId = match[1];
-      var data = storage.readFromStorage(storageKey(versionId));
+      var data = await storage.readFromStorage(storageKey(versionId));
       if (!data || !data.features || Object.keys(data.features).length === 0) continue;
 
       // Look up registry release for GA date / released status
@@ -615,7 +679,9 @@ module.exports = function registerHygieneRoutes(router, context) {
           if (v.id === 'open-in-released-version') openInReleasedTotal++;
         }
 
-        var team = feature.team || 'Unassigned';
+        // Guard against a corrupted team value stored as "[object Object]"
+        // (a label-less Jira team object from before serializeField was fixed).
+        var team = (feature.team && feature.team !== '[object Object]') ? feature.team : 'Unassigned';
         if (violations.length > 0) {
           violationsByTeam[team] = (violationsByTeam[team] || 0) + violations.length;
         }
@@ -627,8 +693,11 @@ module.exports = function registerHygieneRoutes(router, context) {
             summary: feature.summary,
             issueType: feature.issueType,
             status: feature.status,
-            team: feature.team || 'Unassigned',
+            team: team,
             assignee: feature.assignee || 'Unassigned',
+            components: feature.components || [],
+            labels: feature.labels || [],
+            priority: feature.priority || null,
             violationCount: violations.length,
             violations: violations.map(function(vv) { return vv.id; })
           });
@@ -637,6 +706,7 @@ module.exports = function registerHygieneRoutes(router, context) {
 
       versions.push({
         versionId: versionId,
+        registryId: rel ? rel.id : null,
         displayName: (rel && rel.displayName) || data.version || versionId,
         gaDate: gaDate || null,
         isReleased: !!isReleased,
@@ -707,7 +777,7 @@ module.exports = function registerHygieneRoutes(router, context) {
       timeout: 600000,
       description: 'Fetches feature data from Jira and evaluates hygiene rules across active releases.',
       handler: async function() {
-        return runHygieneRefreshAll({ skipCooldown: true, user: 'system' });
+        return await runHygieneRefreshAll({ skipCooldown: true, user: 'system' });
       }
     });
   }

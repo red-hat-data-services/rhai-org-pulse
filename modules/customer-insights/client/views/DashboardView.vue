@@ -15,9 +15,12 @@
         v-model="selectedComponent"
         class="px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
       >
-        <option v-for="c in components" :key="c.id" :value="c.id">
-          {{ c.label }}
-        </option>
+        <option value="all">Portfolio (All)</option>
+        <optgroup v-for="pillar in pillars" :key="pillar.name" :label="pillar.name">
+          <option v-for="c in pillar.components" :key="c.id" :value="c.id">
+            {{ c.label }}
+          </option>
+        </optgroup>
       </select>
     </div>
 
@@ -127,7 +130,7 @@ import { useAnalytics } from '../composables/useAnalytics'
 // Register Chart.js components
 ChartJS.register(Title, Tooltip, Legend, BarElement, CategoryScale, LinearScale, ArcElement)
 
-const { components, selectedComponent } = useComponentSelector()
+const { pillars, selectedComponent } = useComponentSelector()
 const { analytics, loading, error } = useAnalytics(selectedComponent)
 
 // Check if analytics has any data

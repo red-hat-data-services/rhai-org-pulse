@@ -332,7 +332,7 @@
     <div class="container">
         <header>
             <h1>Quality Analysis Report</h1>
-            <p class="timestamp">Generated on July 06, 2026 at 04:02 PM</p>
+            <p class="timestamp">Generated on July 20, 2026 at 05:48 PM</p>
             <h2 style="margin-top: 1rem; font-weight: 400;">opendatahub-io/kubeflow</h2>
         </header>
 
@@ -364,38 +364,43 @@
                         
                         <div class="scorecard-item">
                             <h3>Unit Tests</h3>
-                            <div class="scorecard-score" style="color: #28a745;">8.0/10</div>
-                            <div class="scorecard-status">Excellent test-to-code ratio (1.3:1) with envtest + Ginkgo, dual RBAC permutations</div>
+                            <div class="scorecard-score" style="color: #28a745;">8.5/10</div>
+                            <div class="scorecard-status">Comprehensive envtest-based unit tests with Ginkgo framework, strong test-to-code ratio</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Integration/E2E</h3>
                             <div class="scorecard-score" style="color: #28a745;">9.0/10</div>
-                            <div class="scorecard-status">Full KinD-based integration tests on PRs with real Notebook CR lifecycle validation</div>
+                            <div class="scorecard-status">Full KinD-based integration tests on PRs with Kustomize deployment and real notebook creation</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Build Integration</h3>
-                            <div class="scorecard-score" style="color: #ffc107;">7.0/10</div>
-                            <div class="scorecard-status">Tekton/Konflux PR pipelines + kustomize validation; no GH Actions Konflux simulation</div>
+                            <div class="scorecard-score" style="color: #28a745;">8.5/10</div>
+                            <div class="scorecard-status">Konflux/Tekton PR builds with group testing, kustomize manifest validation in CI</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Image Testing</h3>
-                            <div class="scorecard-score" style="color: #ffc107;">6.0/10</div>
-                            <div class="scorecard-status">UBI9 multi-stage FIPS builds deployed to KinD; no dedicated scanning or SBOM</div>
+                            <div class="scorecard-score" style="color: #ffc107;">7.5/10</div>
+                            <div class="scorecard-status">Multi-stage UBI9 builds with FIPS tags, PR-time image builds, but no runtime container validation</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Coverage Tracking</h3>
-                            <div class="scorecard-score" style="color: #28a745;">8.0/10</div>
-                            <div class="scorecard-status">Codecov integration with per-component flags, carryforward, and PR diff reporting</div>
+                            <div class="scorecard-score" style="color: #28a745;">8.5/10</div>
+                            <div class="scorecard-status">Codecov integration with PR reporting, per-component flags, threshold enforcement</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>CI/CD Automation</h3>
                             <div class="scorecard-score" style="color: #28a745;">9.0/10</div>
-                            <div class="scorecard-status">14 workflows with path filtering, Tekton pipelines, release automation, code-gen verification</div>
+                            <div class="scorecard-status">15 workflows with PR triggers, matrix strategy, path filtering, chaos validation, govulncheck</div>
+                        </div>
+                        <div class="scorecard-item">
+                            <h3>Static Analysis</h3>
+                            <div class="scorecard-score" style="color: #28a745;">8.5/10</div>
+                            <div class="scorecard-status">golangci-lint v2 with 10+ linters, pre-commit hooks, Dependabot + Renovate, FIPS build tags</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Agent Rules</h3>
-                            <div class="scorecard-score" style="color: #ffc107;">7.0/10</div>
-                            <div class="scorecard-status">CLAUDE.md/AGENTS.md with build/test/deploy guidance; no .claude/rules/ for test patterns</div>
+                            <div class="scorecard-score" style="color: #28a745;">8.0/10</div>
+                            <div class="scorecard-status">Comprehensive AGENTS.md with build/test/debug/deploy/chaos instructions</div>
                         </div>
                     </div>
                 </div>
@@ -410,33 +415,25 @@
                 <div class="section-content">
                     <ul class="items-list">
                         
-                        <li class="item-card high">
-                            <div class="item-description">No container vulnerability scanning in CI</div>
-                            <p>CVEs in dependencies or base images not caught until downstream Konflux scans</p>
-                            <div class="item-meta">
-                                <span class="meta-tag severity-high">HIGH</span>
-                                <span class="meta-tag effort-tag">2-4 hours</span>
-                            </div>
-                        </li>
-                        <li class="item-card high">
-                            <div class="item-description">No SBOM generation</div>
-                            <p>Cannot track supply chain provenance; may block compliance requirements</p>
-                            <div class="item-meta">
-                                <span class="meta-tag severity-high">HIGH</span>
-                                <span class="meta-tag effort-tag">2-3 hours</span>
-                            </div>
-                        </li>
                         <li class="item-card medium">
-                            <div class="item-description">No multi-architecture CI builds</div>
-                            <p>ARM64 build failures only discovered in Konflux production pipeline</p>
+                            <div class="item-description">No container runtime validation tests</div>
+                            <p>Image startup or runtime failures not caught until deployment to a real cluster</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-medium">MEDIUM</span>
                                 <span class="meta-tag effort-tag">4-6 hours</span>
                             </div>
                         </li>
+                        <li class="item-card low">
+                            <div class="item-description">math/rand used in test code instead of crypto/rand</div>
+                            <p>Minor FIPS hygiene issue in test files — not production but sets a bad pattern</p>
+                            <div class="item-meta">
+                                <span class="meta-tag severity-low">LOW</span>
+                                <span class="meta-tag effort-tag">1 hour</span>
+                            </div>
+                        </li>
                         <li class="item-card medium">
-                            <div class="item-description">No CodeQL or SAST scanning</div>
-                            <p>Semgrep covers custom rules but misses CodeQL&#x27;s interprocedural analysis</p>
+                            <div class="item-description">No coverage threshold enforcement gate</div>
+                            <p>Coverage can regress without blocking PRs — threshold is auto-tracking, not a hard floor</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-medium">MEDIUM</span>
                                 <span class="meta-tag effort-tag">2-3 hours</span>
@@ -456,35 +453,27 @@
                     <ul class="items-list">
                         
                         <li class="item-card ">
-                            <div class="item-description">Add Trivy container scanning to integration test workflows</div>
-                            <p>Catch CVEs in built images before merge</p>
+                            <div class="item-description">Set explicit Codecov coverage floor (e.g. 50%) to prevent regression</div>
+                            <p>Prevents gradual coverage erosion with a hard gate</p>
                             <div class="item-meta">
                                 
-                                <span class="meta-tag effort-tag">1-2 hours</span>
+                                <span class="meta-tag effort-tag">1 hour</span>
                             </div>
                         </li>
                         <li class="item-card ">
-                            <div class="item-description">Add Syft SBOM generation step to Tekton pipelines</div>
-                            <p>Supply chain transparency and compliance readiness</p>
-                            <div class="item-meta">
-                                
-                                <span class="meta-tag effort-tag">1-2 hours</span>
-                            </div>
-                        </li>
-                        <li class="item-card ">
-                            <div class="item-description">Create .claude/rules/ with unit-test and e2e-test pattern files</div>
-                            <p>Consistent AI-generated tests following Ginkgo/envtest patterns</p>
+                            <div class="item-description">Add multi-arch image build validation to PR workflow</div>
+                            <p>Catch architecture-specific build failures before merge</p>
                             <div class="item-meta">
                                 
                                 <span class="meta-tag effort-tag">2-3 hours</span>
                             </div>
                         </li>
                         <li class="item-card ">
-                            <div class="item-description">Enable CodeQL via GitHub Actions</div>
-                            <p>Interprocedural security analysis beyond Semgrep&#x27;s pattern matching</p>
+                            <div class="item-description">Add container startup smoke test to integration workflow</div>
+                            <p>Verify images start cleanly and respond to health checks</p>
                             <div class="item-meta">
                                 
-                                <span class="meta-tag effort-tag">1-2 hours</span>
+                                <span class="meta-tag effort-tag">3-4 hours</span>
                             </div>
                         </li>
                     </ul>
@@ -501,15 +490,15 @@
                         
                         <div class="rec-priority p0">
                             <h3>Priority 0: Critical</h3>
-                            <ul><li>Add Trivy or Grype container scanning to integration test workflows</li><li>Enable SBOM generation (Syft) in Tekton/Konflux pipelines</li></ul>
+                            <ul><li>Add container runtime validation (health check / readiness probe test) to integration workflow</li><li>Set explicit Codecov coverage floor to prevent regression below current baseline</li></ul>
                         </div>
                         <div class="rec-priority p1">
                             <h3>Priority 1: High Value</h3>
-                            <ul><li>Add CodeQL analysis for Go code</li><li>Create .claude/rules/ test automation guidance for AI agents</li><li>Add multi-architecture (amd64+arm64) image build validation on PRs</li></ul>
+                            <ul><li>Add multi-arch build validation in PR CI (currently only builds linux/amd64)</li><li>Expand E2E test scenarios to cover culling, RBAC injection, and MLflow/Feast integrations</li><li>Enable remaining golangci-lint rules (dupl, gocyclo, lll, unparam) marked as TODO</li></ul>
                         </div>
                         <div class="rec-priority p2">
                             <h3>Priority 2: Nice-to-Have</h3>
-                            <ul><li>Increase Codecov coverage threshold from 2% to 5% for stricter enforcement</li><li>Add benchmark/performance regression tests for controller reconciliation</li><li>Enable remaining golangci-lint rules (dupl, gocyclo, lll, unparam)</li></ul>
+                            <ul><li>Add API contract tests between notebook-controller and odh-notebook-controller</li><li>Add performance regression testing for reconcile loop latency</li><li>Replace math/rand with crypto/rand in test files for FIPS consistency</li></ul>
                         </div>
                     </div>
                 </div>

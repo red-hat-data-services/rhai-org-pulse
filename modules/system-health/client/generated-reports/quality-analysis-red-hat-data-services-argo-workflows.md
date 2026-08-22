@@ -1,182 +1,150 @@
 ---
 repository: "red-hat-data-services/argo-workflows"
-overall_score: 6.4
+upstream: "argoproj/argo-workflows"
+jira_project: "RHOAIENG"
+jira_component: "AI Pipelines"
+tier: "downstream"
+overall_score: 7.4
 scorecard:
   - dimension: "Unit Tests"
-    score: 7.5
-    status: "207 test files, 1034 test functions, strong Go testify usage, 38% test-to-code ratio by LOC"
+    score: 7.0
+    status: "236 Go test files with good coverage generation; UI test coverage is weak (11/250 files)"
   - dimension: "Integration/E2E"
-    score: 8.0
-    status: "29 E2E test files with 285 test functions, multi-profile matrix (minimal/mysql/plugins), K3S-based, multi-K8s-version testing"
+    score: 8.5
+    status: "Comprehensive E2E suite with 29 test files, multi-version K8s testing (v1.28-v1.31), 13 matrix combos"
   - dimension: "Build Integration"
-    score: 5.0
-    status: "PR builds Docker images and runs E2E against K3S, but no Konflux simulation at PR time; Konflux builds are label/comment triggered only"
+    score: 8.0
+    status: "Tekton/Konflux PR pipelines with hermetic multi-arch builds; GitHub CI builds Docker images on PRs"
   - dimension: "Image Testing"
-    score: 4.5
-    status: "Images built on PR but no runtime validation, no startup testing, no Trivy/vulnerability scanning"
+    score: 6.5
+    status: "Multi-stage UBI9 builds with multi-arch support; no runtime validation or Testcontainers"
   - dimension: "Coverage Tracking"
-    score: 5.5
-    status: "Codecov configured with 2% threshold, but coverage only uploaded on main (not on PRs), patch coverage disabled"
+    score: 6.0
+    status: "Codecov configured but only uploads on main; no PR coverage reporting; 2% threshold"
   - dimension: "CI/CD Automation"
-    score: 7.5
-    status: "Well-organized workflows with smart changed-file filtering, concurrency control, matrix E2E strategy, Tekton/Konflux for RHOAI builds"
+    score: 9.0
+    status: "Excellent workflow automation with concurrency, caching, matrix testing, and changed-file detection"
+  - dimension: "Static Analysis"
+    score: 8.0
+    status: "16+ golangci-lint rules, GOFIPS140 in builds, Dependabot + Renovate, SHA-pinned actions"
   - dimension: "Agent Rules"
     score: 0.0
-    status: "No CLAUDE.md, no .claude/ directory, no agent rules for test patterns"
+    status: "No CLAUDE.md, AGENTS.md, or .claude/ directory present"
 critical_gaps:
-  - title: "No container vulnerability scanning"
-    impact: "Security vulnerabilities in container images are not detected before merge or release in the downstream fork"
-    severity: "HIGH"
-    effort: "2-4 hours"
   - title: "No PR-time coverage reporting"
-    impact: "Coverage regressions are invisible during code review; codecov only runs on main branch pushes"
-    severity: "HIGH"
-    effort: "1-2 hours"
-  - title: "No pre-commit hooks"
-    impact: "Code quality checks only run in CI, allowing poorly-formatted or lint-failing code to be committed"
-    severity: "MEDIUM"
-    effort: "1-2 hours"
-  - title: "No image runtime validation"
-    impact: "Built images are not tested for startup/health, issues only found during deployment"
-    severity: "HIGH"
-    effort: "4-6 hours"
-  - title: "Snyk scanning only runs on upstream repo"
-    impact: "Fork (red-hat-data-services) never runs Snyk because of 'if: github.repository == argoproj/argo-workflows' guard"
-    severity: "HIGH"
-    effort: "1-2 hours"
-  - title: "Konflux builds only triggered by label/comment"
-    impact: "Konflux build failures are not caught automatically on every PR; rely on manual trigger"
+    impact: "Developers cannot see coverage impact of their changes before merge"
     severity: "MEDIUM"
     effort: "2-4 hours"
+  - title: "No container runtime validation"
+    impact: "Image startup and runtime issues not caught until deployment"
+    severity: "HIGH"
+    effort: "4-8 hours"
+  - title: "No agent rules for AI-assisted development"
+    impact: "AI-generated code lacks project-specific test and coding guidance"
+    severity: "LOW"
+    effort: "2-4 hours"
+  - title: "Weak UI test coverage"
+    impact: "UI regressions not caught before merge; 11 test files for 250 source files"
+    severity: "MEDIUM"
+    effort: "16-24 hours"
 quick_wins:
-  - title: "Enable codecov on PRs (not just main)"
-    effort: "30 minutes"
-    impact: "Developers see coverage impact during review, catch regressions before merge"
-  - title: "Remove upstream-only guards from Snyk workflow"
-    effort: "30 minutes"
-    impact: "Enable security scanning on the downstream fork"
-  - title: "Add Trivy container scanning to CI"
+  - title: "Enable PR coverage reporting in Codecov"
     effort: "1-2 hours"
-    impact: "Catch CVEs in container images before merge"
-  - title: "Add pre-commit hooks with golangci-lint"
-    effort: "1-2 hours"
-    impact: "Catch lint/format issues before push, faster feedback loop"
-  - title: "Create basic agent rules for test patterns"
+    impact: "Developers see coverage delta on every PR, preventing coverage regressions"
+  - title: "Add basic agent rules for test patterns"
     effort: "2-3 hours"
-    impact: "Improve AI-generated test quality and consistency"
+    impact: "Improve consistency of AI-generated tests and code contributions"
+  - title: "Add pre-commit hooks"
+    effort: "1-2 hours"
+    impact: "Catch linting and formatting issues before CI, faster feedback loop"
 recommendations:
   priority_0:
-    - "Remove 'if: github.repository == argoproj/argo-workflows' guards from Snyk workflow to enable security scanning on the fork"
-    - "Enable codecov coverage reporting on PRs, not just main branch pushes"
-    - "Add container vulnerability scanning (Trivy) to PR and main workflows"
+    - "Enable Codecov PR coverage comments and enforce coverage thresholds on patches"
+    - "Add container runtime validation for argoexec and workflow-controller images"
   priority_1:
-    - "Add image startup validation after Docker build in CI (health check endpoint, binary execution test)"
-    - "Enable automatic Konflux PR builds instead of label/comment-only triggers"
-    - "Add pre-commit hooks configuration (.pre-commit-config.yaml) for Go formatting and linting"
-    - "Increase UI test coverage (currently 11 test files for 239 source files = 4.6% file coverage)"
+    - "Increase UI test coverage from 4% to at least 30% of components"
+    - "Create CLAUDE.md with project-specific test patterns and coding guidelines"
+    - "Add pre-commit hooks for Go formatting and linting"
   priority_2:
-    - "Create comprehensive agent rules (.claude/rules/) for unit test, E2E test, and integration test patterns"
-    - "Add SBOM generation for downstream RHOAI images (upstream has it for release only)"
-    - "Enable CodeQL or gosec as standalone SAST workflow for the fork"
-    - "Add contract testing between workflow controller and argoexec components"
+    - "Add contract tests between workflow-controller and argoexec components"
+    - "Consider Windows unit test re-enablement with FIPS-compatible toolchain"
 ---
 
 # Quality Analysis: red-hat-data-services/argo-workflows
 
 ## Executive Summary
 
-- **Overall Score: 6.4/10**
-- **Repository Type**: Go-based Kubernetes workflow engine (Argo Workflows fork for Red Hat OpenShift AI / Data Science Pipelines)
-- **Primary Languages**: Go (backend, ~162K LOC), TypeScript/React (UI, ~239 source files)
-- **Key Strengths**: Comprehensive E2E test matrix with K3S, smart changed-file CI filtering, well-structured golangci-lint config, Konflux integration for RHOAI builds
-- **Critical Gaps**: No container vulnerability scanning on fork, coverage not reported on PRs, no image runtime validation, Snyk guards prevent scanning on fork
-- **Agent Rules Status**: Missing - No CLAUDE.md, no .claude/ directory
+- **Overall Score: 7.4/10**
+- **Repository Type**: Go-based Kubernetes workflow engine (downstream fork)
+- **Upstream**: argoproj/argo-workflows
+- **Jira**: RHOAIENG / AI Pipelines
+- **Key Strengths**: Excellent CI/CD automation with smart changed-file detection, comprehensive E2E test suite with multi-version K8s testing, strong Konflux integration with hermetic multi-arch builds, well-configured static analysis with FIPS compliance
+- **Critical Gaps**: No PR-time coverage reporting, no container runtime validation, no agent rules, weak UI test coverage
+- **Agent Rules Status**: Missing
 
 ## Quality Scorecard
 
-| Dimension | Score | Status |
-|-----------|-------|--------|
-| Unit Tests | 7.5/10 | 207 test files, 1034 test functions, testify framework |
-| Integration/E2E | 8.0/10 | 29 E2E files, 285 functions, multi-profile K3S matrix |
-| **Build Integration** | **5.0/10** | **PR builds images but no Konflux simulation** |
-| Image Testing | 4.5/10 | Images built but no runtime/vulnerability validation |
-| Coverage Tracking | 5.5/10 | Codecov present but disabled on PRs |
-| CI/CD Automation | 7.5/10 | Smart filtering, concurrency, matrix strategy |
-| Agent Rules | 0.0/10 | No agent rules exist |
+| Dimension | Score | Weight | Weighted | Status |
+|-----------|-------|--------|----------|--------|
+| Unit Tests | 7.0/10 | 15% | 1.05 | 236 Go test files, weak UI coverage |
+| Integration/E2E | 8.5/10 | 20% | 1.70 | 29 E2E tests, multi-K8s versions, K3S |
+| Build Integration | 8.0/10 | 15% | 1.20 | Konflux PR pipelines, multi-arch |
+| Image Testing | 6.5/10 | 10% | 0.65 | UBI9 multi-stage, no runtime validation |
+| Coverage Tracking | 6.0/10 | 10% | 0.60 | Codecov on main only, no PR reporting |
+| CI/CD Automation | 9.0/10 | 15% | 1.35 | Concurrency, caching, matrix, smart skips |
+| Static Analysis | 8.0/10 | 10% | 0.80 | 16+ linters, GOFIPS140, Dependabot+Renovate |
+| Agent Rules | 0.0/10 | 5% | 0.00 | No agent rules present |
+| **Overall** | **7.4/10** | **100%** | **7.35** | |
 
 ## Critical Gaps
 
-### 1. No Container Vulnerability Scanning on Fork
-- **Impact**: Security vulnerabilities in container images are not detected before merge on the `red-hat-data-services` fork
-- **Severity**: HIGH
-- **Effort**: 2-4 hours
-- **Details**: The upstream Snyk workflow has `if: github.repository == 'argoproj/argo-workflows'` guards that prevent it from running on the fork. There is no Trivy, Grype, or other scanner configured independently.
-
-### 2. Coverage Not Reported on PRs
-- **Impact**: Coverage regressions are invisible during code review
-- **Severity**: HIGH
-- **Effort**: 1-2 hours
-- **Details**: The CI workflow generates `coverage.out` on PRs but only uploads to Codecov on `main`. The comment in the workflow says "engineers just ignore this in PRs, so lets not even run it." Patch coverage is also explicitly disabled in `.codecov.yml`.
-
-### 3. No Image Runtime Validation
-- **Impact**: Built images are not tested for startup, health, or basic functionality before E2E tests load them
-- **Severity**: HIGH
-- **Effort**: 4-6 hours
-- **Details**: The `argo-images` job builds argoexec and argocli images and uploads them as artifacts, but there is no validation step (startup test, entrypoint check, health probe) between build and E2E consumption.
-
-### 4. Snyk Scanning Disabled on Fork
-- **Impact**: Go and Node dependency vulnerability scanning never runs on `red-hat-data-services/argo-workflows`
-- **Severity**: HIGH
-- **Effort**: 30 minutes (remove or update the `if` guard)
-- **Details**: `.github/workflows/snyk.yml` uses `if: github.repository == 'argoproj/argo-workflows'` on both the `golang` and `node` jobs.
-
-### 5. Konflux Builds Only Triggered by Label/Comment
-- **Impact**: Konflux build failures are not caught automatically on every PR
+### 1. No PR-time Coverage Reporting
 - **Severity**: MEDIUM
+- **Impact**: Coverage is generated (`--coverprofile=coverage.out`) but only uploaded to Codecov on the `main` branch. PR authors cannot see how their changes affect coverage before merging.
 - **Effort**: 2-4 hours
-- **Details**: Tekton PipelineRuns in `.tekton/` use `on-comment: "^/build-konflux workflowcontroller"` and `on-label` triggers. This means Konflux builds require manual action and are easy to skip.
+- **Evidence**: `ci-build.yaml` line 137: `if: github.ref == 'refs/heads/main'` gates Codecov upload. Patch coverage is explicitly disabled: `patch: off`.
 
-### 6. No Pre-commit Hooks
-- **Impact**: Lint and format errors are only caught in CI, not at commit time
+### 2. No Container Runtime Validation
+- **Severity**: HIGH
+- **Impact**: Images are built in CI but never tested for startup, correct entrypoint behavior, or health. Runtime issues (missing libraries, permission errors) surface only during deployment.
+- **Effort**: 4-8 hours
+- **Evidence**: CI builds and uploads images as artifacts for E2E but does not validate the images themselves (no `docker run`, no Testcontainers, no health check validation).
+
+### 3. Weak UI Test Coverage
 - **Severity**: MEDIUM
-- **Effort**: 1-2 hours
+- **Impact**: Only 11 test files for 250 TypeScript source files (~4.4% ratio). UI regressions may go undetected.
+- **Effort**: 16-24 hours
+- **Evidence**: `find ui -name '*.test.*'` returns 11 files. Most component and page files have no corresponding test.
+
+### 4. No Agent Rules
+- **Severity**: LOW
+- **Impact**: AI coding assistants have no project-specific guidance for test patterns, coding standards, or contribution guidelines.
+- **Effort**: 2-4 hours
+- **Evidence**: No `CLAUDE.md`, `AGENTS.md`, or `.claude/` directory found.
 
 ## Quick Wins
 
-### 1. Enable Codecov on PRs (30 minutes)
-Remove the `if: github.ref == 'refs/heads/main'` condition from the coverage upload step in `ci-build.yaml`:
+### 1. Enable PR Coverage Reporting (1-2 hours)
+Remove the `if: github.ref == 'refs/heads/main'` condition on Codecov upload, and re-enable patch coverage in `.codecov.yml`:
+
 ```yaml
-- name: Upload coverage report
-  uses: codecov/codecov-action@84508663e988701840491b86de86b666e8a86bed
-  with:
-    fail_ci_if_error: true
-  env:
-    CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+# .codecov.yml
+coverage:
+  status:
+    patch:
+      default:
+        threshold: 5%
+    project:
+      default:
+        threshold: 2
 ```
 
-### 2. Remove Upstream-Only Guards from Snyk (30 minutes)
-Update `.github/workflows/snyk.yml` to remove or change:
-```yaml
-# Before:
-if: github.repository == 'argoproj/argo-workflows'
-# After (remove or update):
-if: true
-```
+### 2. Add Basic Agent Rules (2-3 hours)
+Create `CLAUDE.md` at the repo root with Go test patterns, E2E test fixture conventions, and the project's code organization. Use `/test-rules-generator` to bootstrap.
 
-### 3. Add Trivy Container Scanning (1-2 hours)
-Add to `.github/workflows/ci-build.yaml` after image build:
-```yaml
-- name: Scan image with Trivy
-  uses: aquasecurity/trivy-action@master
-  with:
-    image-ref: quay.io/argoproj/${{matrix.image}}:latest
-    format: 'sarif'
-    severity: 'CRITICAL,HIGH'
-    exit-code: '1'
-```
+### 3. Add Pre-commit Hooks (1-2 hours)
+Create `.pre-commit-config.yaml` with golangci-lint, gofmt, and yaml linting to catch issues before CI:
 
-### 4. Add Pre-commit Hooks (1-2 hours)
-Create `.pre-commit-config.yaml`:
 ```yaml
 repos:
   - repo: https://github.com/golangci/golangci-lint
@@ -191,244 +159,278 @@ repos:
       - id: check-yaml
 ```
 
-### 5. Create Basic Agent Rules (2-3 hours)
-Generate test automation rules with `/test-rules-generator` to create `.claude/rules/` with Go and TypeScript test patterns.
-
 ## Detailed Findings
 
-### CI/CD Pipeline
+### Unit Tests
 
-**Workflow Inventory** (11 workflows):
+**Score: 7.0/10**
 
-| Workflow | Trigger | Purpose |
-|----------|---------|---------|
-| `ci-build.yaml` | PR + push (main, stable, rhoai-*) | Unit tests, lint, codegen, E2E, UI, image builds |
-| `build-main.yml` | push (main) + dispatch | Build & push ODH images to Quay |
-| `pr.yaml` | pull_request_target | PR title semantic check |
-| `release.yaml` | tags (v*) + push (main) | Multi-arch build, cosign signing, SBOM, release |
-| `snyk.yml` | scheduled (daily) + push (main) | Go + Node dependency scanning (upstream only) |
-| `dependabot-reviewer.yml` | pull_request | Auto-approve and merge dependabot PRs |
-| `docs.yaml` | Push/PR | Documentation build |
-| `sdks.yaml` | Push/PR | SDK generation/validation |
-| `changelog.yaml` | Push | Changelog generation |
-| `stale.yaml` | Scheduled | Stale issue/PR management |
-| `retest.yaml` | issue_comment | `/retest` support |
+| Metric | Value |
+|--------|-------|
+| Go test files | 236 |
+| Go source files | 554 |
+| Test-to-code ratio (Go) | 0.43 |
+| UI test files | 11 |
+| UI source files | 250 |
+| Test-to-code ratio (UI) | 0.04 |
+| Framework (Go) | `go test` with `-p 20` parallelization |
+| Framework (UI) | Jest/yarn test |
+| Coverage generation | `--covermode=atomic --coverprofile=coverage.out` |
 
-**Strengths**:
-- Smart changed-file detection using `tj-actions/changed-files` to skip irrelevant CI jobs
-- Concurrency control with `cancel-in-progress: true`
-- Matrix E2E strategy with 12 combinations (executor, core, functional, API, CLI, cron, examples, plugins, SDKs, multi-K8s-version)
-- GHA SHA pinning enforced via `zgosalvez/github-actions-ensure-sha-pinned-actions`
-- Docker layer caching with GHA cache
+**Strengths:**
+- Solid Go test-to-code ratio (0.43)
+- Test parallelization with `-p 20` for speed
+- Coverage profile generation in CI
+- Build tags for test organization (api, cli, cron, executor, functional, plugins)
 
-**Weaknesses**:
-- Windows unit tests disabled (`if: false`) due to FIPS requirements
-- No CodeQL or SAST workflow
-- Security scanning (Snyk) has upstream-only guards
-- Konflux builds require manual trigger
+**Weaknesses:**
+- UI test coverage is critically low (4.4%)
+- Windows unit tests disabled due to FIPS/go-toolset incompatibility
+- No test isolation patterns (e.g., `t.Parallel()`) enforced
 
-**Tekton/Konflux Integration**:
-- 2 Tekton PipelineRuns for workflowcontroller and argoexec PR builds
-- Multi-arch builds (x86_64, arm64, ppc64le)
-- Hermetic builds with prefetch for gomod and rpm
-- Source image generation enabled
-- But trigger requires label (`kfbuild-all/kfbuild-workflowcontroller`) or comment (`/build-konflux`)
+### Integration/E2E Tests
 
-### Test Coverage
+**Score: 8.5/10**
 
-**Go Unit Tests**:
-- 207 test files (excluding E2E) with 1,034 test functions
-- ~61,718 lines of test code for ~161,741 lines of source code (38% ratio)
-- Framework: Go's built-in `testing` package + `stretchr/testify` (assert/require)
-- Mocking: Fake implementations (not gomock/mockgen)
-- Coverage generation: `go test -covermode=atomic -coverprofile=coverage.out`
-- Key coverage areas: workflow controller, server, util, persist, pkg, cmd
+| Metric | Value |
+|--------|-------|
+| E2E test files | 29 |
+| E2E directory | `test/e2e/` |
+| K8s versions tested | v1.28.13 (min), v1.31.0 (max) |
+| Cluster setup | K3S |
+| Matrix combinations | 13 |
+| Test suites | executor, corefunctional, functional, api, cli, cron, examples, plugins, java-sdk, python-sdk |
+| Fixture pattern | BDD (given/when/then) |
+| Timeout | 60 minutes |
 
-**E2E Tests**:
-- 29 test files with 285 test functions (~10,960 LOC)
-- Infrastructure: K3S with custom fixtures framework (given/when/then pattern)
-- Multi-profile: minimal, mysql, postgres, plugins, sso
-- Multi-K8s-version: min + max version testing
-- Test parallelism: 20 concurrent tests, 15-20m suite timeout
-- Coverage areas: executor, workflow lifecycle, artifacts, hooks, cron, CLI, server API, SDK clients
+**Strengths:**
+- Comprehensive E2E matrix covering all major features
+- Multi-version K8s testing (min/max versions)
+- BDD-style test fixtures with `given.go`, `when.go`, `then.go`
+- SDK integration tests (Java and Python)
+- Extensive failure debugging steps (k3s logs, pod descriptions, workflow logs)
+- Changed-file detection to skip E2E when irrelevant files change
 
-**UI Tests**:
-- Only 11 test files for 239 source files (4.6% file coverage)
-- Framework: Jest
-- Coverage areas: shared utilities, services, components (very sparse)
-- TypeScript with React
+**Weaknesses:**
+- No OCP-specific testing (only K3S/upstream K8s)
+- E2E only runs on changed files matching Go/manifest patterns
 
-**Missing**:
-- No envtest usage (Kubernetes controller-runtime envtest)
-- No contract tests between components
-- No performance/load tests in CI
-- Very low UI test coverage
+### Build Integration
 
-### Code Quality
+**Score: 8.0/10**
 
-**Linting** (golangci-lint v2):
-- 18 linters enabled including `gosec`, `staticcheck`, `errcheck`, `bodyclose`, `testifylint`
-- Build tags for all test suites: api, cli, cron, executor, examples, corefunctional, functional, plugins
-- Formatters: `gofmt`, `goimports` with local prefix enforcement
-- Extensive exclusion paths (vendor, docs, examples, hack, UI)
-- Custom gosec rules (G304, G307 only)
+| Metric | Value |
+|--------|-------|
+| PR Docker builds | Yes (argoexec, argocli via GitHub Actions) |
+| Konflux PR pipelines | Yes (argoexec, workflowcontroller via Tekton) |
+| Hermetic builds | Yes |
+| Multi-arch support | x86_64, arm64, ppc64le |
+| Kustomize overlays | 10+ kustomization.yaml files |
+| Buildx caching | GHA cache (cache-from, cache-to) |
+| Dockerfile variants | 8 (upstream, RHOAI, Konflux, ODH × 2 components) |
 
-**UI Linting**:
-- ESLint configured (run via `yarn lint` in CI)
-- TypeScript strict mode via `tsconfig.json`
+**Strengths:**
+- Tekton/Konflux PR pipelines with hermetic builds and multi-arch
+- GitHub Actions CI builds images and uses them in E2E tests
+- ODH-specific Dockerfiles with cross-platform build support (`BUILDPLATFORM`, `TARGETOS`, `TARGETARCH`)
+- Kustomize manifests well-organized (base, cluster-install, namespace-install, quick-start profiles)
 
-**Other Quality Tools**:
-- `.markdownlint.yaml` for documentation
-- `.mlc_config.json` for markdown link checking
-- `.spelling` word list
-- Renovate for dependency updates (extends konflux-central config)
-- Dependabot auto-merge for upstream
+**Weaknesses:**
+- Konflux builds are comment/label-triggered (`/build-konflux`), not automatic on every PR
+- No kustomize build validation in CI (no `kustomize build --dry-run`)
 
-**Missing**:
-- No `.pre-commit-config.yaml`
-- No standalone SAST (CodeQL/Semgrep)
-- No secret detection (Gitleaks/TruffleHog)
+### Image Testing
 
-### Container Images
+**Score: 6.5/10**
 
-**Dockerfiles** (8 total):
-- `Dockerfile` - Upstream multi-stage (argoexec, argocli, workflow-controller targets)
-- `Dockerfile.windows` - Windows argoexec build
-- `argo-workflowcontroller/Dockerfile.konflux` - Konflux build (UBI9, go-toolset 1.26.3, FIPS-enabled)
-- `argo-workflowcontroller/Dockerfile.ODH` - ODH community build
-- `argo-argoexec/Dockerfile.konflux` - Konflux argoexec build (UBI9, FIPS-enabled)
-- `argo-argoexec/Dockerfile.ODH` - ODH community argoexec
-- `rhoai/Dockerfile.workflowcontroller` - RHOAI build (UBI8, older go-toolset 1.21)
-- `rhoai/Dockerfile.argoexec` - RHOAI argoexec
+| Metric | Value |
+|--------|-------|
+| Dockerfiles | 8 total across upstream/RHOAI/Konflux/ODH |
+| Multi-stage builds | Yes, all |
+| Base images (downstream) | UBI9 (go-toolset:1.26.3, ubi-minimal) |
+| Base images (upstream) | golang:alpine, distroless/static-debian13 |
+| Non-root user | Yes (USER 8737 or USER 2000) |
+| Multi-arch | x86_64, arm64, ppc64le |
+| HEALTHCHECK | Not in Dockerfiles |
+| Runtime validation | None |
+| Testcontainers | Not used |
+| Image pinning | SHA256 digest pinning on base images |
 
-**Build Practices**:
-- Multi-stage builds throughout
-- UBI base images for RHOAI/Konflux
-- FIPS compliance: `GOFIPS140=v1.0.0`, `CGO_ENABLED=0`, `-tags no_openssl`
-- Non-root user execution (user 8737 for controller, 2000 for argoexec)
-- Docker layer caching in CI
-- Multi-arch: amd64, arm64 (upstream), + ppc64le (Konflux)
+**Strengths:**
+- UBI9 base images for all downstream builds (FIPS-capable)
+- SHA256 digest pinning for reproducible builds
+- Non-root execution enforced
+- Multi-arch builds in Konflux (3 architectures)
 
-**Security**:
-- Cosign image signing in upstream release workflow
-- SBOM generation (spdx/bom) in upstream release
-- Image digest pinning in Konflux Dockerfiles
+**Weaknesses:**
+- No container runtime validation (no `docker run` smoke tests)
+- No `HEALTHCHECK` instruction in Dockerfiles
+- No Testcontainers for integration testing
+- Health probes only defined in K8s manifests, not validated in CI
 
-**Missing**:
-- No Trivy/vulnerability scanning in any workflow
-- No image startup validation
-- No SBOM for downstream RHOAI builds
-- RHOAI Dockerfiles use older UBI8 + go-toolset 1.21 (may be stale)
-- No `.trivyignore` or vulnerability allowlist
+### Coverage Tracking
 
-### Security
+**Score: 6.0/10**
 
-**Present**:
-- Snyk dependency scanning (Go + Node) - but upstream-only
-- Cosign image signing (upstream releases)
-- SBOM generation (upstream releases)
-- GHA SHA pinning enforcement
-- Renovate for dependency updates
-- gosec linter enabled in golangci-lint (limited rules: G304, G307)
-- Dependabot auto-merge with metadata validation
+| Metric | Value |
+|--------|-------|
+| Coverage tool | Codecov |
+| Config file | `.codecov.yml` |
+| Coverage generation | `--covermode=atomic --coverprofile=coverage.out` |
+| PR reporting | Disabled (only uploads on main) |
+| Patch coverage | Explicitly disabled (`patch: off`) |
+| Threshold | 2% drop allowed |
+| Generated code exclusion | Yes (pb.go, deepcopy, generated, client, vendor) |
 
-**Missing**:
-- No container image scanning (Trivy/Grype/Snyk Container)
-- No CodeQL/SAST workflow
-- No secret detection (Gitleaks/TruffleHog)
-- No SBOM for downstream RHOAI/Konflux images
-- Snyk workflow disabled on fork (`if: github.repository == 'argoproj/argo-workflows'`)
-- Limited gosec coverage (only 2 rules enabled)
+**Strengths:**
+- Coverage is generated during CI test runs
+- Generated code properly excluded from coverage calculations
+- Codecov integration configured
 
-### Agent Rules (Agentic Flow Quality)
+**Weaknesses:**
+- Coverage only uploaded on `main` branch, not on PRs
+- Patch coverage explicitly disabled with comment "we've found this not to be useful"
+- 2% threshold is lenient -- allows gradual coverage erosion
+- No PR coverage comments for developer feedback
+
+### CI/CD Automation
+
+**Score: 9.0/10**
+
+| Metric | Value |
+|--------|-------|
+| Workflows | 11 (CI, build-main, release, PR, docs, SDKs, dependabot-reviewer, retest, stale, changelog, snyk) |
+| PR-triggered | CI (tests, lint, codegen, E2E, UI), PR title check |
+| Concurrency control | All major workflows |
+| Caching | Go modules, Docker buildx GHA, Node modules, Maven, pip |
+| Test parallelization | `go test -p 20`, E2E matrix with 13 combos |
+| Changed-file detection | Smart file grouping (tests, e2e-tests, codegen, lint, ui) |
+| Timeout controls | All jobs have explicit timeouts |
+| SHA-pinned actions | Yes, enforced by lint step |
+
+**Strengths:**
+- Smart changed-file detection skips irrelevant CI jobs (saves CI time and cost)
+- Concurrency control with `cancel-in-progress` on all workflows
+- Comprehensive caching strategy (Go, Docker, Node, Maven, pip)
+- E2E matrix runs 13 different test combinations
+- SHA-pinned GitHub Actions with enforcement step
+- `/test` comment support for re-running CI
+- Retest workflow for selective re-execution
+- Dependabot auto-reviewer workflow
+
+**Weaknesses:**
+- No scheduled/periodic test runs beyond Dependabot
+- Some E2E combos share the same profile which could be consolidated
+
+### Static Analysis
+
+**Score: 8.0/10**
+
+#### Linting
+- **golangci-lint v2** with 16+ linters: asasalint, bidichk, bodyclose, copyloopvar, errcheck, gosec (selective), govet, ineffassign, misspell, nakedret, nosprintfhostport, reassign, rowserrcheck, sqlclosecheck, staticcheck, testifylint, unparam, unused
+- Formatters: gofmt, goimports with local prefix ordering
+- Proper exclusion of generated, vendor, and non-Go directories
+- Markdown linting (`.markdownlint.yaml`)
+- Link checking (`.mlc_config.json`)
+
+#### FIPS Compatibility
+- **GOFIPS140=v1.0.0** set in all Konflux and ODH Dockerfiles
+- `-tags no_openssl` build flag used
+- `CGO_ENABLED=0` for static builds
+- UBI9 base images (FIPS-capable)
+- Minor: `math/rand` imported in `workflow/util/util.go` (non-crypto context, low risk)
+- Windows tests disabled specifically because "godebug fips140=auto requires Red Hat go-toolset"
+
+#### Dependency Alerts
+- **Dependabot**: Configured for gomod, npm, pip, github-actions with weekly Saturday schedule
+- **Renovate**: Configured, extending from `red-hat-data-services/konflux-central`
+- Security-only updates (open-pull-requests-limit: 0 for non-security)
+- Selective ignores for k8s.io, grpc dependencies
+
+### Agent Rules
+
+**Score: 0.0/10**
 
 - **Status**: Missing
-- **Coverage**: None - no `.claude/` directory, no `CLAUDE.md`, no `AGENTS.md`
+- **CLAUDE.md**: Not present
+- **AGENTS.md**: Not present
+- **.claude/ directory**: Not present
+- **Coverage**: No test type rules, no coding guidelines, no project-specific patterns
 - **Quality**: N/A
-- **Gaps**: Complete absence of agent rules for any test type
-- **Recommendation**: Generate rules with `/test-rules-generator` covering:
-  - Go unit test patterns (testify assertions, table-driven tests)
-  - E2E test patterns (given/when/then fixtures, K3S setup)
-  - UI test patterns (Jest, React component testing)
-  - Controller test patterns (workflow operator testing)
+- **Gaps**: All agent rules missing
+- **Recommendation**: Generate rules with `/test-rules-generator` to create:
+  - Go unit test patterns (table-driven tests, test isolation)
+  - E2E test fixture conventions (given/when/then BDD pattern)
+  - Coding standards (error handling, naming conventions)
+  - Build and contribution workflow guidance
 
 ## Recommendations
 
 ### Priority 0 (Critical)
 
-1. **Remove upstream-only guards from Snyk workflow** - The `if: github.repository == 'argoproj/argo-workflows'` condition in `.github/workflows/snyk.yml` prevents security scanning on the fork. Either remove it or create a fork-specific security scanning workflow.
-
-2. **Enable codecov coverage on PRs** - Remove the `if: github.ref == 'refs/heads/main'` guard in `ci-build.yaml` so developers see coverage impact during review.
-
-3. **Add container vulnerability scanning** - Add Trivy or Grype scanning to the `argo-images` job in `ci-build.yaml` to catch CVEs before E2E tests consume the images.
+1. **Enable Codecov PR coverage comments** -- Remove the `main`-branch-only gate on Codecov upload and re-enable patch coverage. This gives developers immediate feedback on coverage impact.
+2. **Add container runtime smoke tests** -- After building images in CI, run basic `docker run --entrypoint /bin/argoexec help` and `docker run --entrypoint /bin/workflow-controller --help` to validate startup.
 
 ### Priority 1 (High Value)
 
-4. **Add image startup validation** - After building argoexec and argocli images, add a step to verify the entrypoint works (`docker run --entrypoint /bin/argoexec image --help`).
-
-5. **Enable automatic Konflux PR builds** - Change Tekton PipelineRun triggers from label/comment-only to `on-event: "[pull_request]"` so Konflux builds run on every PR.
-
-6. **Add pre-commit hooks** - Create `.pre-commit-config.yaml` with golangci-lint, go fmt, and basic file hygiene hooks.
-
-7. **Increase UI test coverage** - From 4.6% (11/239 files) to at least 30%. Focus on shared components, services, and critical user flows.
+1. **Increase UI test coverage** -- Add tests for critical UI components (workflow list, DAG view, log viewer). Current 4.4% ratio is a regression risk.
+2. **Create CLAUDE.md with project conventions** -- Document Go test patterns, E2E fixture usage, commit message format, and code organization.
+3. **Add pre-commit hooks** -- Enforce formatting and linting locally before CI.
+4. **Add kustomize build validation** -- Run `kustomize build` on all overlays in CI to catch manifest errors early.
 
 ### Priority 2 (Nice-to-Have)
 
-8. **Create comprehensive agent rules** - Use `/test-rules-generator` to generate `.claude/rules/` covering Go unit tests, E2E tests, and React component tests.
-
-9. **Add SBOM generation for RHOAI images** - Upstream has SBOM for releases; extend to downstream Konflux/RHOAI images.
-
-10. **Enable CodeQL or expand gosec coverage** - Add a standalone CodeQL workflow or enable more gosec rules beyond G304/G307.
-
-11. **Update RHOAI Dockerfiles** - `rhoai/Dockerfile.workflowcontroller` uses UBI8 + go-toolset 1.21 while Konflux Dockerfiles use UBI9 + go-toolset 1.26.3. This may be stale.
-
-12. **Add contract testing** - Test the interface between workflow-controller and argoexec to catch breaking changes in the protocol.
+1. **Contract tests between workflow-controller and argoexec** -- Validate the interface contract between these two core components.
+2. **Re-enable Windows unit tests** -- When Red Hat go-toolset becomes available on Windows runners.
+3. **Add periodic/scheduled test runs** -- Run the full E2E suite on a schedule to catch flaky tests and infrastructure regressions.
+4. **UI accessibility testing** -- Add axe-core or similar for automated accessibility checks.
 
 ## Comparison to Gold Standards
 
 | Dimension | argo-workflows | odh-dashboard | notebooks | kserve |
 |-----------|---------------|---------------|-----------|--------|
-| Unit Tests | 7.5 (207 files, testify) | 9.0 (Jest+RTL, high coverage) | 6.0 (limited) | 8.5 (high coverage, envtest) |
-| Integration/E2E | 8.0 (K3S matrix, multi-profile) | 8.5 (Cypress+Playwright) | 7.0 (image validation) | 8.0 (multi-version K8s) |
-| Build Integration | 5.0 (builds but no Konflux sim) | 7.0 (PR build validation) | 6.0 (image builds) | 5.0 (no Konflux sim) |
-| Image Testing | 4.5 (build only) | 5.0 (basic) | 9.0 (5-layer validation) | 5.0 (basic) |
-| Coverage Tracking | 5.5 (codecov, main-only) | 8.0 (PR coverage, thresholds) | 4.0 (no tracking) | 8.5 (enforcement + thresholds) |
-| CI/CD Automation | 7.5 (smart filtering) | 8.5 (comprehensive) | 7.0 (periodic jobs) | 8.0 (well-organized) |
-| Agent Rules | 0.0 (none) | 8.0 (comprehensive) | 2.0 (minimal) | 3.0 (basic) |
-| **Overall** | **6.4** | **8.0** | **6.0** | **7.0** |
+| Unit Tests | 7.0 | 9.0 | 6.0 | 8.0 |
+| Integration/E2E | 8.5 | 8.5 | 7.0 | 9.0 |
+| Build Integration | 8.0 | 8.0 | 8.0 | 7.0 |
+| Image Testing | 6.5 | 7.0 | 9.0 | 6.0 |
+| Coverage Tracking | 6.0 | 8.0 | 5.0 | 8.0 |
+| CI/CD Automation | 9.0 | 9.0 | 7.0 | 8.0 |
+| Static Analysis | 8.0 | 8.0 | 6.0 | 7.0 |
+| Agent Rules | 0.0 | 8.0 | 2.0 | 2.0 |
+| **Overall** | **7.4** | **8.4** | **6.6** | **7.2** |
+
+**Key Takeaway**: argo-workflows has best-in-class CI/CD automation and E2E testing. Its main gaps are coverage visibility on PRs, runtime image validation, and agent rules -- all addressable with moderate effort.
 
 ## File Paths Reference
 
 ### CI/CD
-- `.github/workflows/ci-build.yaml` - Main CI workflow (tests, lint, E2E, images)
-- `.github/workflows/build-main.yml` - ODH image builds
-- `.github/workflows/snyk.yml` - Snyk dependency scanning (upstream-only)
-- `.github/workflows/release.yaml` - Multi-arch release + cosign + SBOM
-- `.github/workflows/pr.yaml` - PR title check
-- `.tekton/odh-data-science-pipelines-argo-workflowcontroller-pull-request.yaml` - Konflux build
-- `.tekton/odh-data-science-pipelines-argo-argoexec-pull-request.yaml` - Konflux build
+- `.github/workflows/ci-build.yaml` -- Main CI (tests, lint, E2E, codegen, UI)
+- `.github/workflows/build-main.yml` -- Image builds on main push
+- `.github/workflows/pr.yaml` -- PR title semantic check
+- `.github/workflows/release.yaml` -- Release workflow with multi-arch
+- `.tekton/odh-data-science-pipelines-argo-argoexec-pull-request.yaml` -- Konflux PR pipeline
+- `.tekton/odh-data-science-pipelines-argo-workflowcontroller-pull-request.yaml` -- Konflux PR pipeline
+- `Makefile` -- Build/test/lint targets
 
 ### Testing
-- `test/e2e/` - 29 E2E test files with fixtures framework
-- `test/e2e/fixtures/` - Given/When/Then test framework
-- `test/e2e/manifests/` - K3S test cluster manifests
-- `workflow/controller/*_test.go` - Controller unit tests
-- `server/*_test.go` - Server unit tests
-- `ui/src/**/*.test.ts` - 11 UI test files
-
-### Code Quality
-- `.golangci.yml` - 18 linters + formatters
-- `.codecov.yml` - Coverage config (2% threshold, patch off)
-- `.markdownlint.yaml` - Markdown linting
-- `renovate.json` - Dependency updates (extends konflux-central)
+- `test/e2e/` -- E2E test suite (29 test files)
+- `test/e2e/fixtures/` -- BDD test fixtures (given/when/then)
+- `test/e2e/testdata/` -- Test workflow manifests
+- `test/e2e/manifests/` -- E2E cluster setup manifests
+- `hack/k8s-versions.sh` -- K8s version configuration
 
 ### Container Images
-- `Dockerfile` - Upstream multi-stage build
-- `argo-workflowcontroller/Dockerfile.konflux` - RHOAI Konflux (UBI9, FIPS)
-- `argo-argoexec/Dockerfile.konflux` - RHOAI Konflux (UBI9, FIPS)
-- `rhoai/Dockerfile.workflowcontroller` - RHOAI legacy (UBI8)
-- `cosign.pub` - Cosign public key
+- `Dockerfile` -- Upstream multi-stage build
+- `rhoai/Dockerfile.workflowcontroller` -- RHOAI UBI8 build
+- `rhoai/Dockerfile.argoexec` -- RHOAI UBI8 build
+- `argo-workflowcontroller/Dockerfile.konflux` -- Konflux UBI9 build
+- `argo-argoexec/Dockerfile.konflux` -- Konflux UBI9 build
+- `argo-workflowcontroller/Dockerfile.ODH` -- ODH UBI9 build
+- `argo-argoexec/Dockerfile.ODH` -- ODH UBI9 build
 
-### Security
-- `.github/workflows/snyk.yml` - Snyk scanning (upstream-only)
-- `cosign.pub` - Image signing public key
+### Code Quality
+- `.golangci.yml` -- 16+ linters configured
+- `.codecov.yml` -- Coverage configuration
+- `.github/dependabot.yml` -- Dependency alerts (gomod, npm, pip, actions)
+- `renovate.json` -- Renovate config (extends from konflux-central)
+- `.markdownlint.yaml` -- Markdown linting

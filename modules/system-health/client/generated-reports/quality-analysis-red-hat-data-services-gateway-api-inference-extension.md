@@ -1,440 +1,464 @@
 ---
 repository: "red-hat-data-services/gateway-api-inference-extension"
-overall_score: 7.2
+overall_score: 6.5
 scorecard:
   - dimension: "Unit Tests"
     score: 8.0
-    status: "Strong coverage with 146 test files, 0.88 test-to-source LOC ratio, 74/104 packages covered"
+    status: "Strong test suite with 128 pkg test files, table-driven tests, t.Parallel() usage"
   - dimension: "Integration/E2E"
-    score: 8.5
-    status: "Comprehensive integration suite with envtest, E2E on Kind/GKE, and conformance tests"
+    score: 7.5
+    status: "Well-structured integration and E2E suites with Kind support and conformance tests"
   - dimension: "Build Integration"
-    score: 5.0
-    status: "CRD validation and helm verification on PRs but no PR-time container image build or Konflux simulation"
+    score: 6.0
+    status: "Image build in Makefile, CRD validation on PR, but no PR-time Konflux simulation"
   - dimension: "Image Testing"
-    score: 4.0
-    status: "Multi-stage distroless Dockerfiles but no image startup validation or container scanning in CI"
+    score: 4.5
+    status: "Multi-stage Dockerfiles but no runtime validation, no HEALTHCHECK, non-UBI base images"
   - dimension: "Coverage Tracking"
     score: 4.0
-    status: "Local coverprofile generated but no Codecov/Coveralls integration or enforcement"
+    status: "Local coverprofile generation but no Codecov integration or PR coverage reporting"
   - dimension: "CI/CD Automation"
-    score: 6.5
-    status: "PR lint/CRD validation automated, E2E is workflow_dispatch only, no periodic CI on this fork"
+    score: 5.5
+    status: "PR-triggered CRD validation and linting, but E2E tests are comment-triggered only"
+  - dimension: "Static Analysis"
+    score: 7.5
+    status: "Comprehensive golangci-lint with 22 linters, Dependabot configured, custom KAL linter"
   - dimension: "Agent Rules"
     score: 0.0
-    status: "No CLAUDE.md, .claude/ directory, or agent test automation guidance"
+    status: "No CLAUDE.md, AGENTS.md, or .claude/ directory present"
 critical_gaps:
-  - title: "No coverage tracking or enforcement"
-    impact: "Coverage regressions go undetected; no visibility into per-PR coverage delta"
-    severity: "HIGH"
-    effort: "4-6 hours"
-  - title: "No container security scanning (Trivy, Snyk, CodeQL)"
-    impact: "Vulnerable dependencies and container images ship without detection"
+  - title: "No coverage tracking integration (Codecov/Coveralls)"
+    impact: "Coverage regressions go undetected on PRs; no visibility into test coverage trends"
     severity: "HIGH"
     effort: "2-4 hours"
-  - title: "E2E tests not automated on PRs"
-    impact: "Integration regressions only caught via manual workflow_dispatch on GKE"
+  - title: "E2E tests not automated on PR — comment-triggered only"
+    impact: "E2E regressions can merge without detection; relies on manual /run-gke-* comments"
     severity: "HIGH"
-    effort: "8-12 hours"
-  - title: "No PR-time container image build validation"
-    impact: "Dockerfile breakages discovered only after merge in Prow/CloudBuild"
+    effort: "8-16 hours"
+  - title: "No container runtime validation or health checks"
+    impact: "Image startup failures and runtime issues not caught until deployment"
+    severity: "HIGH"
+    effort: "4-8 hours"
+  - title: "Non-UBI base images (distroless, python:slim) — not FIPS-capable"
+    impact: "Cannot run in FIPS-enforced environments without base image changes"
     severity: "MEDIUM"
-    effort: "4-6 hours"
-  - title: "30 packages lack unit tests"
-    impact: "Config, observability, request handling, and framework interface packages untested"
-    severity: "MEDIUM"
-    effort: "16-24 hours"
-  - title: "No agent rules for AI-assisted development"
-    impact: "AI-generated PRs lack project-specific test patterns and quality gates"
+    effort: "4-8 hours"
+  - title: "math/rand usage in 10+ production files (non-cryptographic but FIPS audit flag)"
+    impact: "While math/rand is acceptable for non-security contexts, its widespread use may trigger FIPS audit findings"
     severity: "LOW"
-    effort: "4-6 hours"
-quick_wins:
-  - title: "Add Codecov integration with coverage thresholds"
     effort: "2-4 hours"
-    impact: "Immediate visibility into coverage trends and per-PR delta reporting"
-  - title: "Add Trivy container scanning to PR workflow"
+quick_wins:
+  - title: "Add Codecov integration with PR coverage reporting"
+    effort: "2-4 hours"
+    impact: "Automatic coverage tracking, PR comments showing coverage delta, threshold enforcement"
+  - title: "Add HEALTHCHECK to Dockerfiles"
     effort: "1-2 hours"
-    impact: "Block PRs with critical/high CVEs in container images"
-  - title: "Add CodeQL/gosec SAST workflow"
-    effort: "1-2 hours"
-    impact: "Automated detection of security vulnerabilities in Go source code"
-  - title: "Add PR-time Docker image build step"
+    impact: "Container orchestrators can detect unhealthy containers; improves deployment reliability"
+  - title: "Create basic CLAUDE.md with test creation guidance"
     effort: "2-3 hours"
-    impact: "Catch Dockerfile build failures before merge"
-  - title: "Generate agent rules with /test-rules-generator"
-    effort: "2-3 hours"
-    impact: "Standardize AI-generated test quality and consistency"
+    impact: "AI agents can generate tests consistent with project patterns (table-driven, envtest, Ginkgo)"
+  - title: "Add timeout-minutes to all CI workflows"
+    effort: "30 minutes"
+    impact: "Prevents stuck jobs from consuming CI resources indefinitely"
+  - title: "Add concurrency control to PR workflows"
+    effort: "30 minutes"
+    impact: "Cancels superseded runs, saves CI resources"
 recommendations:
   priority_0:
-    - "Integrate Codecov with coverage thresholds to prevent regression below current baseline"
-    - "Add Trivy/Snyk container scanning and CodeQL SAST to PR workflows"
-    - "Automate lightweight E2E tests on PRs (Kind-based subset, not full GKE)"
+    - "Add Codecov integration with .codecov.yml and coverage threshold enforcement (e.g., 60% minimum)"
+    - "Add concurrency control and timeout-minutes to all GitHub Actions workflows"
+    - "Implement HEALTHCHECK in Dockerfiles and add readiness/liveness probes to K8s manifests"
   priority_1:
-    - "Add PR-time Docker image build and startup validation step"
-    - "Fill unit test gaps in 30 untested packages (config, observability, request)"
-    - "Add Dependabot/Renovate for automated dependency updates"
-    - "Create comprehensive agent rules (.claude/rules/) for test automation guidance"
+    - "Automate E2E tests to run on PR (at least a smoke suite) instead of comment-triggered only"
+    - "Add PR-time Konflux build simulation to catch downstream build failures before merge"
+    - "Switch to UBI-based images for FIPS compatibility in downstream builds"
+    - "Create comprehensive CLAUDE.md / .claude/rules/ for test automation guidance"
   priority_2:
-    - "Add pre-commit hooks for fmt, vet, and lint enforcement locally"
-    - "Implement chaos/resilience testing for the ext-proc scheduling path"
-    - "Add contract tests for the model server protocol interface"
-    - "Set up periodic fuzz testing for protobuf/gRPC handlers"
+    - "Add pre-commit hooks for linting and formatting"
+    - "Expand conformance test coverage beyond the current 13 test scenarios"
+    - "Add container image startup validation tests"
 ---
 
 # Quality Analysis: gateway-api-inference-extension
 
-**Repository**: [red-hat-data-services/gateway-api-inference-extension](https://github.com/red-hat-data-services/gateway-api-inference-extension)
-**Fork of**: [kubernetes-sigs/gateway-api-inference-extension](https://github.com/kubernetes-sigs/gateway-api-inference-extension)
-**Type**: Kubernetes Extension (Envoy ext-proc for inference gateway routing)
-**Language**: Go (521 source files, 12 Python files)
-**Framework**: Kubebuilder operator + Envoy ext-proc server
-**Analysis Date**: 2026-07-06
-
 ## Executive Summary
 
-- **Overall Score: 7.2/10**
-- **Key Strengths**: Excellent test-to-code ratio (0.88), comprehensive integration test harness with envtest, conformance test suite following Gateway API patterns, strong linting with 20+ golangci-lint rules plus Kube API linter, and robust verification scripts (CRD, Helm, manifests, boilerplate).
-- **Critical Gaps**: No coverage tracking/enforcement (Codecov), no container security scanning (Trivy/CodeQL), E2E tests require manual workflow_dispatch, no PR-time image build validation, and 30/104 Go packages lack unit tests.
-- **Agent Rules Status**: Missing - No CLAUDE.md, .claude/ directory, or agent test automation guidance.
+- **Overall Score: 6.5/10**
+- **Repository**: [red-hat-data-services/gateway-api-inference-extension](https://github.com/red-hat-data-services/gateway-api-inference-extension)
+- **Type**: Go / Kubernetes Gateway API Extension (downstream fork of kubernetes-sigs/gateway-api-inference-extension)
+- **Tier**: Downstream (RHOAIENG / Inference Gateway)
+- **Primary Language**: Go (with Python latency predictor sidecar)
+- **Framework**: Kubernetes controller (kubebuilder/controller-runtime, envtest, Ginkgo/Gomega for E2E)
+
+### Key Strengths
+- Excellent unit test coverage with 128 test files across `pkg/` (56% test-to-code ratio)
+- Table-driven test patterns in 100 test files with 35 using `t.Parallel()`
+- Comprehensive golangci-lint configuration with 22 linters plus a custom Kube API Linter
+- Well-organized test hierarchy: unit, integration, E2E, and conformance tests
+- CRD backward-compatibility validation on every PR
+- Dependabot configured for gomod ecosystem
+
+### Critical Gaps
+- No coverage tracking integration (Codecov/Coveralls) — coverage generated locally only
+- E2E tests are comment-triggered (`/run-gke-*`), not automated on PRs
+- No container runtime validation or HEALTHCHECK directives
+- No agent rules (CLAUDE.md, .claude/) for AI-assisted development
+- Non-UBI base images in all Dockerfiles (distroless, python:slim)
 
 ## Quality Scorecard
 
-| Dimension | Score | Status |
-|-----------|-------|--------|
-| Unit Tests | 8.0/10 | 146 test files, 0.88 LOC ratio, Ginkgo/Gomega + testify, envtest for controller tests |
-| Integration/E2E | 8.5/10 | envtest-based integration suite, Kind E2E, GKE benchmarking E2E, conformance tests |
-| **Build Integration** | **5.0/10** | **CRD validation + helm verify on PRs, but no image build or Konflux simulation** |
-| Image Testing | 4.0/10 | Multi-stage distroless Dockerfiles, no runtime validation or scanning |
-| Coverage Tracking | 4.0/10 | Local coverprofile generated but no CI integration or enforcement |
-| CI/CD Automation | 6.5/10 | PR lint and CRD validation automated, E2E manual-only, Prow via upstream |
-| Agent Rules | 0.0/10 | No agent rules, skills, or test automation guidance |
+| Dimension | Weight | Score | Status |
+|-----------|--------|-------|--------|
+| Unit Tests | 15% | 8.0/10 | Strong test suite with 128 pkg test files, table-driven tests, t.Parallel() |
+| Integration/E2E | 20% | 7.5/10 | Well-structured integration/E2E suites with Kind support and conformance tests |
+| Build Integration | 15% | 6.0/10 | Image build in Makefile, CRD validation on PR, no Konflux simulation |
+| Image Testing | 10% | 4.5/10 | Multi-stage Dockerfiles but no runtime validation or HEALTHCHECK |
+| Coverage Tracking | 10% | 4.0/10 | Local coverprofile only; no Codecov, no PR reporting, no thresholds |
+| CI/CD Automation | 15% | 5.5/10 | PR-triggered CRD/lint checks, but E2E is comment-only; no concurrency/timeout |
+| Static Analysis | 10% | 7.5/10 | 22-linter golangci-lint + custom KAL linter + Dependabot |
+| Agent Rules | 5% | 0.0/10 | No CLAUDE.md, AGENTS.md, or .claude/ directory |
 
-**Weighted Overall: 7.2/10** (Unit 20%, Integration/E2E 25%, Image 20%, Coverage 15%, CI/CD 20%)
+**Weighted Overall: 6.5/10**
 
 ## Critical Gaps
 
-### 1. No Coverage Tracking or Enforcement
-- **Impact**: Coverage regressions go undetected across PRs; no visibility into per-PR delta
-- **Severity**: HIGH
-- **Effort**: 4-6 hours
-- **Detail**: The Makefile generates `cover.out` via `-coverprofile` for both unit and integration tests, and `test-unit` even runs `go tool cover -func=cover.out` locally. However, there is no `.codecov.yml`, no Codecov/Coveralls GitHub Action, and no coverage threshold enforcement. Contributors have no visibility into whether their PR decreases coverage.
-- **Fix**: Add Codecov GitHub Action, create `.codecov.yml` with project/patch thresholds, upload `cover.out` from PR workflow.
-
-### 2. No Container Security Scanning
-- **Impact**: Vulnerable dependencies and base images ship without detection
+### 1. No Coverage Tracking Integration
+- **Impact**: Coverage regressions go undetected on PRs; no visibility into test coverage trends
 - **Severity**: HIGH
 - **Effort**: 2-4 hours
-- **Detail**: No Trivy, Snyk, CodeQL, gosec, or any SAST/SCA tool configured in `.github/workflows/`. No `.trivyignore` or `.gitleaks.toml`. The only security files are `SECURITY.md` and `SECURITY_CONTACTS` (responsible disclosure). The distroless base image is good practice, but no scanning validates it.
-- **Fix**: Add Trivy scan step to PR workflow scanning Dockerfile images. Add CodeQL analysis workflow for Go.
+- **Details**: Makefile generates `cover.out` via `--coverprofile`, but there is no `.codecov.yml`, no Codecov/Coveralls GitHub Action, and no PR coverage comments. Coverage thresholds are not enforced.
 
-### 3. E2E Tests Not Automated on PRs
-- **Impact**: Integration regressions only caught via manual `workflow_dispatch` on GKE
+### 2. E2E Tests Not Automated on PR
+- **Impact**: E2E regressions can merge without detection; relies on manual `/run-gke-*` PR comments
 - **Severity**: HIGH
-- **Effort**: 8-12 hours
-- **Detail**: The three E2E workflows (`e2e-decode-heavy-gke`, `e2e-prefill-heavy-gke`, `e2e-prefix-cache-aware-gke`) all require manual triggering via `workflow_dispatch` or `/run-gke-*` PR comments. They deploy to a GKE cluster with GPU resources. There is a `make test-e2e` target that supports Kind clusters, but no workflow runs it on PRs. The conformance tests also lack a CI workflow.
-- **Fix**: Create a lightweight Kind-based E2E workflow that runs on PRs (without GPU). Reserve GKE E2E for nightly/weekly.
+- **Effort**: 8-16 hours
+- **Details**: All three E2E workflows (`e2e-decode-heavy-gke`, `e2e-prefill-heavy-gke`, `e2e-prefix-cache-aware-gke`) are triggered via `issue_comment` or `workflow_dispatch` only. No E2E test runs automatically on PR creation/update.
 
-### 4. No PR-Time Container Image Build Validation
-- **Impact**: Dockerfile breakages discovered only post-merge in Prow/CloudBuild
-- **Severity**: MEDIUM
-- **Effort**: 4-6 hours
-- **Detail**: Image builds happen via `cloudbuild.yaml` (Prow staging) and local Makefile targets. No GitHub Actions workflow validates that `docker build` succeeds on PR. The `test:` Makefile target includes `image-build` but that's for local use, not CI.
-- **Fix**: Add a PR workflow step that runs `docker build --target builder` to validate the build stage.
+### 3. No Container Runtime Validation
+- **Impact**: Image startup failures and runtime issues not caught until deployment
+- **Severity**: HIGH
+- **Effort**: 4-8 hours
+- **Details**: Dockerfiles contain no `HEALTHCHECK` directive. No container startup tests or Testcontainers usage found. No readiness/liveness probes defined in K8s manifests under `config/`.
 
-### 5. 30 Packages Lack Unit Tests
-- **Impact**: Config, observability, request handling, and framework interface packages are untested
+### 4. Non-UBI Base Images
+- **Impact**: Cannot run in FIPS-enforced environments without base image changes
 - **Severity**: MEDIUM
-- **Effort**: 16-24 hours
-- **Detail**: 74 of 104 Go packages under `pkg/` have test files (71% package coverage). Notable gaps include: `pkg/bbr/config`, `pkg/common/observability/*` (metrics, profiling, tracing), `pkg/common/request`, `pkg/epp/config`, `pkg/epp/flowcontrol/contracts`, and several framework interface/plugin packages. Mock packages are excluded from this count.
-- **Packages needing tests**: `pkg/epp/framework/plugins/datalayer/attribute/*`, `pkg/epp/framework/plugins/datalayer/source/http`, `pkg/epp/framework/plugins/scheduling/scorer/*`, `pkg/epp/controller/reconcilers/*`
+- **Effort**: 4-8 hours
+- **Details**: Go binaries use `gcr.io/distroless/static:nonroot`; Python sidecars use `python:3.11-slim` and `python:3.9-slim`. None are UBI-based. For downstream RHOAI builds, these need to be replaced with UBI equivalents.
+
+### 5. No CI Concurrency Control or Timeouts
+- **Impact**: Stuck jobs consume CI resources indefinitely; superseded runs waste compute
+- **Severity**: MEDIUM
+- **Effort**: 30 minutes
+- **Details**: No `concurrency:` group or `timeout-minutes:` found in any GitHub Actions workflow.
 
 ## Quick Wins
 
 ### 1. Add Codecov Integration (2-4 hours)
-- **Impact**: Immediate visibility into coverage trends and per-PR delta reporting
-- **Implementation**:
-  ```yaml
-  # .github/workflows/pr-tests.yml (new or add to existing)
-  - name: Run tests with coverage
-    run: make test-unit
-  - name: Upload coverage
-    uses: codecov/codecov-action@v5
-    with:
-      file: cover.out
-      fail_ci_if_error: true
-  ```
-  ```yaml
-  # .codecov.yml
-  coverage:
-    status:
-      project:
-        default:
-          target: auto
-          threshold: 1%
-      patch:
-        default:
-          target: 80%
-  ```
+Add `.codecov.yml` and a Codecov upload step to CI:
+```yaml
+# .codecov.yml
+coverage:
+  status:
+    project:
+      default:
+        target: 60%
+        threshold: 2%
+    patch:
+      default:
+        target: 70%
+```
 
-### 2. Add Trivy Container Scanning (1-2 hours)
-- **Impact**: Block PRs introducing critical/high CVEs
-- **Implementation**:
-  ```yaml
-  - name: Build image
-    run: docker build -t epp:test .
-  - name: Trivy scan
-    uses: aquasecurity/trivy-action@master
-    with:
-      image-ref: 'epp:test'
-      severity: 'CRITICAL,HIGH'
-      exit-code: '1'
-  ```
+### 2. Add HEALTHCHECK to Dockerfiles (1-2 hours)
+```dockerfile
+HEALTHCHECK --interval=30s --timeout=5s --retries=3 \
+  CMD ["/epp", "--health-check"] || exit 1
+```
 
-### 3. Add CodeQL/gosec Analysis (1-2 hours)
-- **Impact**: Automated SAST for Go security vulnerabilities
-- **Implementation**: Use GitHub's standard CodeQL workflow template for Go.
+### 3. Add Concurrency Control + Timeouts (30 minutes)
+```yaml
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
-### 4. Add PR-Time Docker Build Step (2-3 hours)
-- **Impact**: Catch Dockerfile breakages before merge
-- **Implementation**: Add `docker build` step to PR workflow for both EPP and BBR Dockerfiles.
+jobs:
+  lint:
+    timeout-minutes: 15
+```
 
-### 5. Generate Agent Rules (2-3 hours)
-- **Impact**: Standardize AI-generated test quality
-- **Implementation**: Run `/test-rules-generator` to create `.claude/rules/` with patterns for Go unit tests, Ginkgo/Gomega integration tests, and conformance tests.
+### 4. Create Basic CLAUDE.md (2-3 hours)
+Document test patterns (table-driven, envtest, Ginkgo), naming conventions, and framework-specific guidance for AI-assisted test generation.
 
 ## Detailed Findings
 
-### CI/CD Pipeline
+### Unit Tests
 
-**Workflows (5 total)**:
+**Score: 8.0/10**
+
+| Metric | Value |
+|--------|-------|
+| Total test files | 146 |
+| Package test files (pkg/) | 128 |
+| Package source files (pkg/) | 227 |
+| Test-to-code ratio (pkg/) | 56.4% |
+| Table-driven test files | 100 |
+| t.Parallel() usage | 35 files |
+| Testing framework | Go standard testing + Ginkgo/Gomega (E2E) |
+
+**Strengths**:
+- High test-to-code ratio (56.4% in `pkg/`)
+- Extensive use of table-driven tests (100 files)
+- Good use of `t.Parallel()` for test isolation (35 files)
+- Tests cover core scheduling, request handling, data layer, controllers, and metrics
+
+**Gaps**:
+- `internal/` directory has 3 Go files with 0 test files
+- `sidecars/` has 7 Go files with only 1 test file
+- No explicit test isolation for envtest-based tests beyond the integration harness
+
+### Integration/E2E Tests
+
+**Score: 7.5/10**
+
+**Integration Tests** (`test/integration/`):
+- EPP integration: 8 test files with ~16 test functions
+- BBR integration: 3 test files with ~5 test functions
+- Uses envtest for Kubernetes API simulation
+- Hermetic test harness pattern for reproducible tests
+
+**E2E Tests** (`test/e2e/`):
+- Ginkgo/Gomega-based E2E suite
+- 4 test scenarios in `e2e_test.go`
+- Kind cluster support with automated setup (`hack/test-e2e.sh`)
+- GKE-based E2E workflows for benchmarking (decode-heavy, prefill-heavy, prefix-cache)
+
+**Conformance Tests** (`conformance/`):
+- 13 conformance test scenarios (~1,863 lines)
+- Tests: pool acceptance, routing, port validation, app protocol, fail-open, weighted routing
+- Separate Go module with its own `go.mod`
+
+**Gaps**:
+- E2E tests are comment-triggered only in CI (not automated on PRs)
+- Only 4 Go E2E test scenarios (though complemented by conformance tests)
+- No multi-version Kubernetes testing matrix
+
+### Build Integration
+
+**Score: 6.0/10**
+
+**Strengths**:
+- CRD backward-compatibility validation on every PR (`crd-validation.yml` using `crdify`)
+- Kube API Linter runs on every PR (`kal.yml`)
+- Comprehensive Makefile with `image-build`, `image-push`, `image-kind`, `bbr-image-*` targets
+- Helm chart validation (`verify-helm-charts`)
+- `verify-all.sh` runs all verification scripts (boilerplate, manifests, helm, framework imports)
+- Cloud Build (Prow) integration for image pushing to staging registry
+
+**Gaps**:
+- No PR-time Konflux build simulation
+- No `docker build` or `podman build` in PR-triggered CI workflows
+- Build validation relies on Makefile targets only (not integrated into GitHub Actions PRs)
+- No operator integration testing in PR workflows
+
+### Image Testing
+
+**Score: 4.5/10**
+
+**Dockerfiles Found**: 5
+| File | Base Image | Multi-stage |
+|------|-----------|-------------|
+| `Dockerfile` (EPP) | golang:1.25 → distroless/static:nonroot | Yes |
+| `bbr.Dockerfile` (BBR) | golang:1.25 → distroless/static:nonroot | Yes |
+| `latencypredictor/Dockerfile-training` | python:3.11-slim | No |
+| `latencypredictor/Dockerfile-prediction` | python:3.11-slim | No |
+| `latencypredictor/Dockerfile-test` | python:3.9-slim | No |
+
+**Strengths**:
+- Go binaries use multi-stage builds with distroless final image (minimal attack surface)
+- `.dockerignore` present
+- Python test Dockerfile includes pytest for validation
+
+**Gaps**:
+- No `HEALTHCHECK` directive in any Dockerfile
+- No runtime validation tests (no Testcontainers, no `docker run` tests in CI)
+- No readiness/liveness probe definitions in K8s manifests
+- No multi-architecture builds (`--platform`, `buildx` for multi-arch)
+- All base images are non-UBI (not FIPS-capable)
+- Python Dockerfiles are single-stage (larger final image)
+
+### Coverage Tracking
+
+**Score: 4.0/10**
+
+**What Exists**:
+- `--coverprofile cover.out` in Makefile targets (`test`, `test-unit`, `test-integration`)
+- `go tool cover -func=cover.out` in `test-unit` target for local reporting
+- Race condition detection enabled (`-race` flag)
+
+**What's Missing**:
+- No `.codecov.yml` or `codecov.yml`
+- No Codecov/Coveralls GitHub Action in any workflow
+- No PR coverage comments or delta reporting
+- No coverage thresholds or gates
+- Coverage data not uploaded or tracked over time
+
+### CI/CD Automation
+
+**Score: 5.5/10**
+
+**Workflow Inventory** (5 workflows):
+
 | Workflow | Trigger | Purpose |
 |----------|---------|---------|
-| `crd-validation.yml` | PR | Validates CRD backward compatibility using `crdify` |
-| `kal.yml` | PR | Kube API linting via `golangci-kal` |
-| `e2e-decode-heavy-gke.yaml` | `workflow_dispatch` / PR comment | GKE E2E with decode-heavy workload |
-| `e2e-prefill-heavy-gke.yaml` | `workflow_dispatch` / PR comment | GKE E2E with prefill-heavy workload |
-| `e2e-prefix-cache-aware-gke.yaml` | `workflow_dispatch` / PR comment | GKE E2E with prefix-cache workload |
+| `crd-validation.yml` | `pull_request` | CRD backward-compatibility check |
+| `kal.yml` | `pull_request` | Kube API Linter |
+| `e2e-decode-heavy-gke.yaml` | `issue_comment`, `workflow_dispatch` | GKE decode-heavy benchmarking |
+| `e2e-prefill-heavy-gke.yaml` | `issue_comment`, `workflow_dispatch` | GKE prefill-heavy benchmarking |
+| `e2e-prefix-cache-aware-gke.yaml` | `issue_comment`, `workflow_dispatch` | GKE prefix-cache benchmarking |
+
+**Note**: This is a kubernetes-sigs project — additional CI runs via Prow (test-infra). The GitHub workflows shown here are supplementary. Core unit tests, linting, and builds are likely handled by Prow jobs not visible in the `.github/workflows/` directory.
 
 **Strengths**:
-- CRD backward compatibility validation is excellent (rare even in mature projects)
-- Dedicated Kube API linter ensures API types follow Kubernetes conventions
-- E2E workflows have proper authorization checks for GKE access
-- `cloudbuild.yaml` handles image publishing via Prow/k8s-staging infrastructure
+- CRD validation ensures backward compatibility on every PR
+- API linting with custom KAL rules on every PR
+- GKE E2E workflows include authorization checks, cleanup, and artifact upload
+- Go caching enabled in CRD validation workflow
 
 **Gaps**:
-- Only 2 PR-triggered workflows (CRD validation + API lint) - no unit test, integration test, or lint workflow on PRs in this fork
-- E2E tests require manual triggering and GKE GPU resources
-- No PR-time `make test`, `make lint`, or `make verify` workflow
-- This is a fork of kubernetes-sigs; upstream likely has Prow CI, but this fork has minimal GitHub Actions
+- No `concurrency:` control in any workflow
+- No `timeout-minutes:` in any workflow
+- No scheduled (cron) workflows for periodic testing
+- E2E tests require manual `/run-gke-*` comment trigger
+- No unit test or build workflow in GitHub Actions (relies on Prow)
 
-**Note**: As a Red Hat fork of `kubernetes-sigs/gateway-api-inference-extension`, the primary CI likely runs in Prow on the upstream repo. This fork adds only CRD validation and API linting workflows.
+### Static Analysis
 
-### Test Coverage
+**Score: 7.5/10**
 
-**Unit Tests**:
-- **Framework**: Go testing + Ginkgo/Gomega + testify (assert/require)
-- **Files**: 146 test files across the codebase
-- **LOC Ratio**: 47,554 test LOC / 53,496 source LOC = 0.88 (excellent)
-- **Package Coverage**: 74/104 packages have test files (71%)
-- **Coverage Generation**: `make test-unit` generates `cover.out` with `-coverprofile`
-- **Race Detection**: All test targets use `-race` flag (excellent)
+#### Linting
+- `.golangci.yml`: 22 linters enabled including `errcheck`, `govet`, `staticcheck`, `revive`, `ineffassign`, `gocritic`, `ginkgolinter`, `perfsprint`, `prealloc`
+- `.golangci-kal.yml`: Custom Kube API Linter for API conventions (optional fields, conditions, markers)
+- `.custom-gcl.yml`: Custom golangci-lint build config for KAL module
+- `gofmt` and `goimports` formatters enabled
+- Both `lint` and `api-lint` Makefile targets available
+- Parallel runners allowed for performance
 
-**Integration Tests**:
-- **Framework**: envtest (controller-runtime test environment)
-- **Location**: `test/integration/epp/` and `test/integration/bbr/`
-- **Harness**: Custom test harness with gRPC client setup, mock data sources, and OpenTelemetry tracing
-- **Scope**: EPP runtime polling, notification, request attributes, streaming, gRPC, datalayer; BBR body mutation
-- **Quality**: Well-structured with embedded test config YAML, proper cleanup, and test isolation
+#### FIPS Compatibility
+- **math/rand usage**: Found in 10+ production files (`pkg/epp/requestcontrol/director.go`, scheduling scorers, latency predictor async). While `math/rand` is acceptable for non-security uses (scheduling randomization), it may trigger FIPS audit findings.
+- **No FIPS build tags**: No `-tags=fips`, `-tags=strictfipsruntime`, or `GOEXPERIMENT=boringcrypto` found
+- **Non-UBI base images**: All Dockerfiles use non-FIPS-capable base images (distroless, python:slim)
 
-**E2E Tests**:
-- **Framework**: Ginkgo/Gomega with controller-runtime client
-- **Infrastructure**: Kind cluster (local) or GKE with GPU (CI)
-- **Scope**: InferencePool CRUD, model server deployment, envoy proxy routing, metrics scraping, leader election
-- **Setup**: Full stack deployment - CRDs, model server, EPP, envoy, RBAC
-- **Quality**: Comprehensive setup/teardown, pause-on-exit for debugging, environment-variable-driven configuration
+#### Dependency Alerts
+- **Dependabot**: Configured in `.github/dependabot.yml`
+  - Covers `gomod` ecosystem for root `/` and `/conformance`
+  - Weekly schedule
+  - K8s dependency grouping with major/minor version ignore (patches only)
+  - Labels: `area/dependency`, `ok-to-test`, `release-note-none`
+- **Renovate**: Not configured
+- **Pre-commit hooks**: Not configured
 
-**Conformance Tests**:
-- **Framework**: Gateway API conformance test suite
-- **Tests**: 12 conformance test cases with YAML fixtures
-- **Scope**: InferencePool acceptance, gateway routing, HTTPRoute validation, weighted pools, app protocol
-- **Reports**: Published conformance reports for v0.4.0 through v1.4.0 (7 versions)
-- **Quality**: Follows upstream Gateway API conformance patterns exactly
+### Agent Rules
 
-**CEL Tests**:
-- Custom CEL validation tests for InferencePool CRD
-- Tests CEL rules embedded in CRD schema
+**Score: 0.0/10**
 
-### Code Quality
-
-**Linting**:
-- **golangci-lint v2**: 20+ linters enabled including errcheck, govet, staticcheck, revive, ineffassign, unconvert, unused, goconst, gocritic, misspell, ginkgolinter
-- **golangci-kal**: Dedicated Kube API linter with opinionated rules for API conventions (optional fields, conditions, conflict markers)
-- **Formatters**: gofmt + goimports enforced
-- **Custom binary**: `.custom-gcl.yml` defines a custom golangci binary with the kube-api-linter plugin
-
-**Verification Suite** (excellent):
-- `hack/verify-all.sh` - Runs all verify scripts
-- `hack/verify-manifests.sh` - kubectl-validate against CRDs + external Gateway API CRDs
-- `hack/verify-helm.sh` - Helm template + kubectl-validate for all chart variants (basic, GKE, multi-replica, latency-predictor)
-- `hack/verify-boilerplate.sh` - License header checks
-- `hack/verify-framework-imports.go` - Ensures framework import hygiene
-- `make verify` - Aggregates vet, fmt-verify, generate, ci-lint, api-lint, verify-all, verify-fw-imports
-
-**Gaps**:
-- No pre-commit hooks (`.pre-commit-config.yaml` missing)
-- No Dependabot or Renovate for automated dependency updates
-- No secret detection (gitleaks, trufflehog)
-
-### Container Images
-
-**Dockerfiles** (6 total):
-| File | Purpose | Base Image |
-|------|---------|------------|
-| `Dockerfile` | EPP (Endpoint Picker) | `gcr.io/distroless/static:nonroot` |
-| `bbr.Dockerfile` | Body Based Router | `gcr.io/distroless/static:nonroot` |
-| `latencypredictor/Dockerfile-training` | ML training | Python-based |
-| `latencypredictor/Dockerfile-prediction` | ML prediction server | Python-based |
-| `latencypredictor/Dockerfile-test` | ML test image | Python-based |
-| `hack/mkdocs/image/Dockerfile` | Documentation | MkDocs |
-
-**Strengths**:
-- Multi-stage builds with separate builder and deploy stages
-- Distroless base images (minimal attack surface)
-- `CGO_ENABLED=0` for static binaries
-- Build args for commit SHA and build ref traceability
-- `.dockerignore` configured
-
-**Gaps**:
-- No multi-architecture support (hardcoded `GOARCH=amd64`)
-- No container image scanning (Trivy, Snyk)
-- No image startup validation tests
-- No SBOM generation or image signing/attestation
-- No `HEALTHCHECK` instruction in Dockerfiles
-
-### Security
-
-**Present**:
-- `SECURITY.md` with responsible disclosure process
-- `SECURITY_CONTACTS` listing security team
-- Distroless base images (good practice)
-- Minimal permissions in GitHub Actions (`permissions: {}` in kal.yml)
-- E2E workflow authorization check against allowlist file
-
-**Missing**:
-- No SAST (CodeQL, gosec, Semgrep)
-- No dependency scanning (Dependabot, Renovate, Snyk)
-- No container scanning (Trivy)
-- No secret detection (Gitleaks, TruffleHog)
-- No SBOM generation
-- No image signing
-
-### Agent Rules (Agentic Flow Quality)
-
-- **Status**: Missing
 - **CLAUDE.md**: Not present
 - **AGENTS.md**: Not present
-- **`.claude/` directory**: Not present
-- **`.claude/rules/`**: Not present
-- **Coverage**: No test types have agent rules
-- **Quality**: N/A
-- **Gaps**: No AI-assisted development guidance exists
-- **Recommendation**: Generate comprehensive rules with `/test-rules-generator` covering:
-  - Go unit test patterns (table-driven tests, testify assertions)
-  - Ginkgo/Gomega integration test patterns (envtest setup)
-  - E2E test patterns (Kind cluster setup, Ginkgo describe/it)
-  - Conformance test authoring patterns
-  - CRD validation and CEL test patterns
+- `.claude/` directory: Not present
+- `.claude/rules/`: Not present
+- No test automation guidance for AI agents
+
+**Recommendation**: Generate comprehensive agent rules using `/test-rules-generator` covering:
+- Go table-driven test patterns
+- envtest setup for controller tests
+- Ginkgo/Gomega patterns for E2E tests
+- Integration test harness patterns (`test/integration/epp/harness.go`)
+- Coverage generation with `--coverprofile`
 
 ## Recommendations
 
 ### Priority 0 (Critical)
 
-1. **Integrate Codecov with coverage thresholds** - Upload `cover.out` from unit and integration tests, set project target at current baseline and patch target at 80%. This gives immediate visibility into whether PRs are maintaining or improving coverage.
+1. **Add Codecov integration** — Create `.codecov.yml` with 60% project target and 70% patch target. Add `codecov/codecov-action` to CI workflow that runs unit tests. This is the single highest-ROI improvement.
 
-2. **Add container security scanning** - Add Trivy to scan built images on PR, and CodeQL for Go SAST analysis. These are table-stakes for any project shipping container images.
+2. **Add concurrency control and timeouts** — Add `concurrency:` group and `timeout-minutes:` to all 5 workflows to prevent resource waste and stuck jobs.
 
-3. **Automate lightweight E2E on PRs** - Create a Kind-based E2E workflow that runs `make test-e2e` on PRs without GPU. This catches integration regressions before merge. Reserve GKE E2E for nightly/weekly runs.
+3. **Add container health checks** — Add `HEALTHCHECK` directives to Go Dockerfiles and define readiness/liveness probes in Kubernetes manifests.
 
 ### Priority 1 (High Value)
 
-4. **Add PR-time Docker build validation** - Build both EPP and BBR images on PR to catch Dockerfile breakages early. Use `docker build --target builder` for faster feedback.
+4. **Automate a lightweight E2E smoke test on PR** — Create a Kind-based E2E workflow triggered on `pull_request` that runs the core 4 E2E scenarios. The GKE benchmarking workflows can remain comment-triggered.
 
-5. **Fill unit test gaps** - Focus on the 30 untested packages, prioritizing `pkg/epp/config`, `pkg/common/observability/*`, and `pkg/epp/framework/plugins/datalayer/attribute/*` which are likely to have subtle bugs.
+5. **Add PR-time Konflux build simulation** — Build Docker images in PR workflows to catch build failures before merge (at minimum run `make image-build` in a PR workflow).
 
-6. **Add Dependabot/Renovate** - Automate Go module, GitHub Actions, and Docker base image dependency updates with auto-merge for patch versions.
+6. **Switch to UBI base images** — Replace `gcr.io/distroless/static:nonroot` with `registry.access.redhat.com/ubi9-micro` and `python:3.11-slim` with UBI Python images for FIPS compatibility.
 
-7. **Create agent rules** - Generate `.claude/rules/` with test automation guidance for all project test types.
+7. **Create CLAUDE.md and .claude/rules/** — Document test patterns, naming conventions, and framework-specific guidance. Use `/test-rules-generator` for initial scaffold.
 
 ### Priority 2 (Nice-to-Have)
 
-8. **Add pre-commit hooks** - Enforce `gofmt`, `go vet`, and lint locally before push. Reduces CI failures.
+8. **Add pre-commit hooks** — Create `.pre-commit-config.yaml` with golangci-lint, gofmt, and goimports hooks.
 
-9. **Contract tests for model server protocol** - The model server protocol (`docs/proposals/003-model-server-protocol/`) is a critical interface. Contract tests would prevent protocol drift.
+9. **Expand E2E test coverage** — Current Go E2E tests have only 4 scenarios; add tests for error paths, edge cases, and multi-pool routing.
 
-10. **Fuzz testing for gRPC/protobuf handlers** - Go's native fuzz testing for the ext-proc request/response handlers.
+10. **Add multi-architecture image builds** — Use `docker buildx` with `--platform linux/amd64,linux/arm64` for broader compatibility.
 
-11. **Multi-architecture image builds** - Currently hardcoded to `GOARCH=amd64`. Add arm64 support for broader deployment targets.
+11. **Add internal/ package tests** — The `internal/` directory has 3 Go files with no tests.
 
 ## Comparison to Gold Standards
 
-| Dimension | This Repo | odh-dashboard | notebooks | kserve |
-|-----------|-----------|---------------|-----------|--------|
-| Unit Test Ratio | 0.88 (Excellent) | ~0.6 | ~0.3 | ~0.7 |
-| Integration Tests | envtest + Kind E2E | Cypress + Jest | Image validation | envtest + Kind |
-| Conformance Tests | Yes (12 cases) | N/A | N/A | Yes |
-| Coverage Tracking | Local only | Codecov enforced | N/A | Codecov |
-| Container Scanning | None | Trivy | Trivy | Trivy |
-| CI/CD Automation | Partial (2 PR workflows) | Full (20+ workflows) | Full | Full |
-| Agent Rules | None | Comprehensive | None | Partial |
-| Pre-commit Hooks | None | Yes | N/A | Yes |
-| CRD Validation | Yes (crdify) | N/A | N/A | Yes |
-| Helm Verification | Yes (multi-variant) | N/A | N/A | Yes |
-
-**Strengths vs. Gold Standards**:
-- Test-to-code ratio is the highest among compared projects
-- CRD backward compatibility validation is best-in-class
-- Helm chart verification with multiple test cases is excellent
-- Conformance test suite with published reports across 7 versions is exemplary
-
-**Gaps vs. Gold Standards**:
-- Coverage tracking and enforcement is the biggest gap
-- Security scanning is absent (all gold standards have it)
-- CI/CD automation is minimal compared to odh-dashboard's comprehensive suite
-- Agent rules need to be created from scratch
+| Capability | gateway-api-inference-extension | odh-dashboard (Gold) | notebooks (Gold) | kserve (Gold) |
+|---|---|---|---|---|
+| Unit test ratio | 56% (pkg/) | 60%+ | 40%+ | 50%+ |
+| Table-driven tests | 100 files | Extensive | N/A | Extensive |
+| Integration tests | envtest-based | Contract + integration | Multi-layer | envtest + webhooks |
+| E2E automation | Comment-triggered | Automated on PR | Automated | Automated on PR |
+| Coverage tracking | Local only | Codecov with thresholds | Coverage gates | Codecov enforced |
+| CI concurrency | None | Configured | Configured | Configured |
+| Linting | 22 linters + KAL | ESLint + custom | Various | golangci-lint |
+| FIPS compliance | No UBI, no tags | Partial | UBI images | Partial |
+| Agent rules | None | Comprehensive | Basic | None |
+| Dependabot | Configured | Configured | Configured | Configured |
+| Pre-commit | None | Configured | None | None |
+| Conformance tests | 13 scenarios | N/A | N/A | N/A |
 
 ## File Paths Reference
 
 ### CI/CD
-- `.github/workflows/crd-validation.yml` - CRD backward compatibility check
-- `.github/workflows/kal.yml` - Kube API linting
-- `.github/workflows/e2e-*.yaml` - GKE E2E tests (3 workflows)
-- `cloudbuild.yaml` - Prow/GCB image publishing
-- `Makefile` - All build/test/verify targets
+- `.github/workflows/crd-validation.yml` — CRD backward-compatibility validation
+- `.github/workflows/kal.yml` — Kube API Linter
+- `.github/workflows/e2e-decode-heavy-gke.yaml` — GKE decode-heavy benchmark
+- `.github/workflows/e2e-prefill-heavy-gke.yaml` — GKE prefill-heavy benchmark
+- `.github/workflows/e2e-prefix-cache-aware-gke.yaml` — GKE prefix-cache benchmark
+- `Makefile` — Build, test, lint, verify targets
+- `cloudbuild.yaml` — Cloud Build / Prow image push config
 
 ### Testing
-- `pkg/**/*_test.go` - Unit tests (146 files)
-- `test/integration/epp/` - EPP integration tests with envtest
-- `test/integration/bbr/` - BBR integration tests
-- `test/e2e/epp/` - E2E tests (Kind/GKE)
-- `conformance/` - Gateway API conformance tests (12 cases)
-- `test/cel/` - CEL validation tests
-- `test/testdata/` - Test fixtures and manifests
-- `test/utils/` - Shared test utilities
+- `pkg/**/*_test.go` — 128 unit test files
+- `test/integration/epp/` — EPP integration tests (8 files)
+- `test/integration/bbr/` — BBR integration tests (3 files)
+- `test/e2e/epp/` — Ginkgo-based E2E tests (2 files, 4 scenarios)
+- `conformance/` — Conformance test suite (13 scenarios, ~1,863 lines)
+- `test/testdata/` — Test fixture YAML files
+- `test/utils/` — Shared test utilities
+- `hack/test-e2e.sh` — E2E test runner with Kind support
 
-### Code Quality
-- `.golangci.yml` - golangci-lint v2 config (20+ linters)
-- `.golangci-kal.yml` - Kube API linter config
-- `.custom-gcl.yml` - Custom golangci binary config
-- `hack/verify-*.sh` - Verification scripts
+### Static Analysis
+- `.golangci.yml` — Main golangci-lint config (22 linters)
+- `.golangci-kal.yml` — Kube API Linter config
+- `.custom-gcl.yml` — Custom golangci-lint build config
+- `.github/dependabot.yml` — Dependabot configuration
 
 ### Container Images
-- `Dockerfile` - EPP image (distroless)
-- `bbr.Dockerfile` - BBR image (distroless)
-- `latencypredictor/Dockerfile-*` - ML component images
-- `.dockerignore` - Build context exclusions
+- `Dockerfile` — EPP multi-stage build
+- `bbr.Dockerfile` — BBR multi-stage build
+- `latencypredictor/Dockerfile-training` — Python training server
+- `latencypredictor/Dockerfile-prediction` — Python prediction server
+- `latencypredictor/Dockerfile-test` — Python test runner
+- `.dockerignore` — Docker build exclusions
 
-### Configuration
-- `config/crd/` - CRD definitions
-- `config/charts/` - Helm charts (inferencepool, standalone, bbr, epplib)
-- `config/manifests/` - Deployment manifests
-- `config/observability/` - Prometheus monitoring config
+### Verification
+- `hack/verify-all.sh` — Runs all verification scripts
+- `hack/verify-boilerplate.sh` — License boilerplate check
+- `hack/verify-manifests.sh` — Manifest validation
+- `hack/verify-helm.sh` — Helm chart validation
+- `hack/verify-framework-imports.go` — Framework import restrictions

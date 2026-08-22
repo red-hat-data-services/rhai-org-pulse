@@ -42,7 +42,7 @@ function clearReport() {
   }
 }
 
-// Restore report from URL params (e.g. returning from feature detail)
+// Sync report selection with URL params
 watch(() => nav.params.value, (params) => {
   const reportId = params?.report
   if (reportId && !selectedReport.value) {
@@ -54,6 +54,12 @@ watch(() => nav.params.value, (params) => {
       selectedReport.value = report
       nextTick(() => { updatingFromUrl = false })
     }
+  } else if (!reportId && selectedReport.value) {
+    updatingFromUrl = true
+    selectedReport.value = null
+    initialProduct.value = null
+    initialVersion.value = null
+    nextTick(() => { updatingFromUrl = false })
   }
 }, { immediate: true })
 </script>

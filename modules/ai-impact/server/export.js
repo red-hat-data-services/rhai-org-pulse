@@ -63,7 +63,7 @@ function anonymizeIssue(issue, mapping) {
 }
 
 async function exportRfeData(addFile, readFromStorage, mapping) {
-  const data = readFromStorage(`${PREFIX}/rfe-data.json`);
+  const data = await readFromStorage(`${PREFIX}/rfe-data.json`);
   if (!data) return;
 
   const anonymized = { ...data };
@@ -74,7 +74,7 @@ async function exportRfeData(addFile, readFromStorage, mapping) {
 }
 
 async function exportAutofixData(addFile, readFromStorage, mapping) {
-  const data = readFromStorage(`${PREFIX}/autofix-data.json`);
+  const data = await readFromStorage(`${PREFIX}/autofix-data.json`);
   if (!data) return;
 
   const anonymized = { ...data };
@@ -85,7 +85,7 @@ async function exportAutofixData(addFile, readFromStorage, mapping) {
 }
 
 async function exportDocData(addFile, readFromStorage, mapping) {
-  const data = readFromStorage(`${PREFIX}/doc-data.json`);
+  const data = await readFromStorage(`${PREFIX}/doc-data.json`);
   if (!data) return;
 
   const anonymized = { ...data };
@@ -111,7 +111,7 @@ async function exportDocData(addFile, readFromStorage, mapping) {
 }
 
 async function exportDocMrKpiData(addFile, readFromStorage, mapping) {
-  const data = readFromStorage(`${PREFIX}/doc-mr-kpi-data.json`);
+  const data = await readFromStorage(`${PREFIX}/doc-mr-kpi-data.json`);
   if (!data) return;
 
   const anonymized = { ...data };
@@ -130,7 +130,7 @@ async function exportDocMrKpiData(addFile, readFromStorage, mapping) {
 
 async function exportConfig(addFile, readFromStorage) {
   const { getConfig } = require('./config');
-  const config = getConfig(readFromStorage);
+  const config = await getConfig(readFromStorage);
   if (!config) return;
 
   addFile(`${PREFIX}/config.json`, config);
@@ -138,7 +138,7 @@ async function exportConfig(addFile, readFromStorage) {
 
 async function exportAssessments(addFile, readFromStorage, mapping) {
   const { readAssessments } = require('./assessments/storage');
-  const data = readAssessments(readFromStorage);
+  const data = await readAssessments(readFromStorage);
   if (!data.assessments || Object.keys(data.assessments).length === 0) return;
 
   const anonymized = { ...data, assessments: {} };
@@ -161,7 +161,7 @@ function anonymizeAssessment(assessment, mapping) {
 
 async function exportTestPlans(addFile, readFromStorage, mapping) {
   const { readTestPlans } = require('./test-plans/storage');
-  const data = readTestPlans(readFromStorage);
+  const data = await readTestPlans(readFromStorage);
   if (!data.testPlans || Object.keys(data.testPlans).length === 0) return;
 
   const anonymized = { ...data, testPlans: {} };
@@ -188,7 +188,7 @@ function anonymizeTestPlan(plan, mapping) {
 }
 
 async function exportFeatures(addFile, readFromStorage, mapping) {
-  const data = readFromStorage(`${PREFIX}/features.json`);
+  const data = await readFromStorage(`${PREFIX}/features.json`);
   if (!data || !data.features) return;
 
   const anonymized = { ...data, features: {} };
@@ -214,7 +214,7 @@ function anonymizeFeatureReview(review, mapping) {
 
 async function exportComponentOnboarding(addFile, readFromStorage, mapping) {
   const { readComponentOnboarding } = require('./component-onboarding/storage');
-  const data = readComponentOnboarding(readFromStorage);
+  const data = await readComponentOnboarding(readFromStorage);
   if (!data.components || Object.keys(data.components).length === 0) return;
 
   const anonymized = { ...data, components: {} };

@@ -3,6 +3,12 @@ import { ref, computed } from 'vue'
 import OnboardingMetricsRow from './OnboardingMetricsRow.vue'
 import OnboardingCharts from './OnboardingCharts.vue'
 import ComponentOnboardingTable from './ComponentOnboardingTable.vue'
+import MultiSelectDropdown from './MultiSelectDropdown.vue'
+import { collectVersionGroups, matchesVersionGroups, formatVersionGroupLabel } from '../utils/version-group.js'
+import {
+  filterChipVersionClass,
+  filterChipRemoveClass
+} from '../utils/filter-chip-classes.js'
 
 const props = defineProps({
   loading: { type: Boolean, default: true },
@@ -14,12 +20,49 @@ const props = defineProps({
 const emit = defineEmits(['loadDetail', 'retry'])
 
 const chartsExpanded = ref(true)
+// Empty = all versions; otherwise match any selected version.
+const versionFilter = ref([])
 
 const allComponents = computed(() => props.data?.components ?? {})
 
+const availableVersions = computed(() => {
+  const raw = []
+  if (Array.isArray(props.data?.availableVersions) && props.data.availableVersions.length) {
+    raw.push(...props.data.availableVersions)
+  } else {
+    for (const comp of Object.values(allComponents.value)) {
+      if (comp.targetVersion) raw.push(comp.targetVersion)
+    }
+  }
+  // One option per logical release (version + phase); merge naming formats only.
+  return collectVersionGroups(raw).map(g => ({
+    value: g,
+    label: formatVersionGroupLabel(g)
+  }))
+})
+
+const selectedVersionChips = computed(() =>
+  versionFilter.value.map(v => ({
+    value: v,
+    label: formatVersionGroupLabel(v)
+  }))
+)
+const filteredComponents = computed(() => {
+  if (!versionFilter.value.length) return allComponents.value
+  const filtered = {}
+  for (const [key, comp] of Object.entries(allComponents.value)) {
+    if (matchesVersionGroups(comp.targetVersion, versionFilter.value)) filtered[key] = comp
+  }
+  return filtered
+})
+
+function removeVersion(value) {
+  versionFilter.value = versionFilter.value.filter(v => v !== value)
+}
+
 const featureTitles = computed(() => {
   const merged = {}
-  for (const comp of Object.values(allComponents.value)) {
+  for (const comp of Object.values(filteredComponents.value)) {
     Object.assign(merged, comp.featureTitles || {})
   }
   return merged
@@ -48,12 +91,13 @@ function calcAvgDaysManual(list) {
 }
 
 const metrics = computed(() => {
-  const list = Object.values(allComponents.value)
+  const list = Object.values(filteredComponents.value)
   const automated = list.filter(c => (c.onboardingMethod || 'automated') === 'automated')
   const manual = list.filter(c => c.onboardingMethod === 'manual')
   const completedAutomated = automated.filter(c => c.completionStatus === 'completed')
   const completedManual = manual.filter(c => c.completionStatus === 'completed')
   const inProgressAutomated = automated.filter(c => c.completionStatus === 'in-progress')
+  const inQueueAutomated = automated.filter(c => c.completionStatus === 'in_queue')
 
   const avgDaysAutomated = calcAvgDaysAutomated(completedAutomated)
   const avgDaysManual = calcAvgDaysManual(completedManual)
@@ -64,6 +108,7 @@ const metrics = computed(() => {
   return {
     totalOnboarded: completedAutomated.length,
     totalInProgress: inProgressAutomated.length,
+    totalInQueue: inQueueAutomated.length,
     completionRate: automated.length ? Math.round((completedAutomated.length / automated.length) * 100) : 0,
     rhoaiCount: automated.filter(c => c.productContext === 'RHOAI').length,
     odhCount: automated.filter(c => c.productContext === 'ODH').length,
@@ -111,15 +156,42 @@ const metrics = computed(() => {
 
     <!-- Content -->
     <div v-else class="flex-1 flex flex-col overflow-hidden">
+      <!-- Version filter (multi-select) — analysis scope -->
+      <div
+        v-if="availableVersions.length"
+        class="px-6 py-3 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50 flex flex-wrap items-center gap-3"
+      >
+        <span class="text-sm font-medium text-gray-700 dark:text-gray-300">Version Filter</span>
+        <MultiSelectDropdown
+          v-model="versionFilter"
+          :options="availableVersions"
+          placeholder="All versions"
+          test-id="page-version-filter-menu"
+        />
+        <span
+          v-for="chip in selectedVersionChips"
+          :key="chip.value"
+          :class="filterChipVersionClass"
+        >
+          {{ chip.label }}
+          <button
+            type="button"
+            :class="filterChipRemoveClass"
+            :aria-label="'Remove ' + chip.label"
+            @click="removeVersion(chip.value)"
+          >×</button>
+        </span>
+      </div>
+
       <OnboardingMetricsRow :metrics="metrics" />
       <OnboardingCharts
-        :components="allComponents"
+        :components="filteredComponents"
         :feature-titles="featureTitles"
         :expanded="chartsExpanded"
         @toggle="chartsExpanded = !chartsExpanded"
       />
       <ComponentOnboardingTable
-        :components="allComponents"
+        :components="filteredComponents"
         :feature-titles="featureTitles"
         :detail-cache="detailCache"
         @load-detail="emit('loadDetail', $event)"

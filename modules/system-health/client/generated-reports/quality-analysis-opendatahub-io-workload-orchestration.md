@@ -1,312 +1,317 @@
 ---
 repository: "opendatahub-io/workload-orchestration"
-overall_score: 1.4
+overall_score: 0.2
 scorecard:
   - dimension: "Unit Tests"
     score: 0.0
-    status: "No source code or unit tests exist — repo is demo/documentation only"
+    status: "No source code or test files — repo contains only demos and documentation"
   - dimension: "Integration/E2E"
     score: 0.0
-    status: "No integration or E2E tests — no testable code present"
+    status: "No automated test suites — demos are manually replayed, not CI-executed"
   - dimension: "Build Integration"
-    score: 0.0
-    status: "No build pipeline — no artifacts to build"
+    score: 1.0
+    status: "Makefile has update-readme target; no PR build validation or image builds"
   - dimension: "Image Testing"
     score: 0.0
-    status: "No container images — repo contains only YAML manifests and demo recordings"
+    status: "No container images built by this repository"
   - dimension: "Coverage Tracking"
     score: 0.0
-    status: "No coverage tracking — no code to measure"
+    status: "No coverage tooling — no source code to cover"
   - dimension: "CI/CD Automation"
-    score: 1.0
-    status: "No CI/CD workflows — only a Makefile with a single readme-update target"
+    score: 0.0
+    status: "No CI/CD workflows — no .github/workflows/ directory exists"
+  - dimension: "Static Analysis"
+    score: 0.0
+    status: "No linting, no shellcheck, no dependency alerts, no pre-commit hooks"
   - dimension: "Agent Rules"
     score: 0.0
     status: "No CLAUDE.md, AGENTS.md, or .claude/ directory"
 critical_gaps:
-  - title: "No CI/CD pipeline at all"
-    impact: "No automated validation of YAML correctness, link integrity, or demo asset consistency"
+  - title: "No CI/CD pipeline of any kind"
+    impact: "No automated validation on PRs — YAML syntax errors, broken links, and script bugs can merge unchecked"
     severity: "HIGH"
-    effort: "4-6 hours"
-  - title: "No YAML validation or linting"
-    impact: "Kubernetes manifests could contain syntax errors, invalid API versions, or deprecated fields without detection"
-    severity: "HIGH"
-    effort: "2-3 hours"
-  - title: "No link/asset validation"
-    impact: "Broken asciinema links, missing .cast files, or stale README references go undetected"
-    severity: "MEDIUM"
     effort: "2-4 hours"
-  - title: "No PR review automation"
-    impact: "All quality checks are manual — relies entirely on reviewer diligence"
-    severity: "MEDIUM"
+  - title: "No YAML validation for Kubernetes resources"
+    impact: "Demo YAML files referencing invalid API versions or missing required fields won't be caught until a user tries them"
+    severity: "HIGH"
     effort: "2-3 hours"
+  - title: "No shellcheck or linting for hack scripts"
+    impact: "Shell script bugs in update-readme.sh could silently corrupt READMEs"
+    severity: "MEDIUM"
+    effort: "1-2 hours"
+  - title: "No link validation for asciinema URLs"
+    impact: "Demo recording links may go stale without detection"
+    severity: "MEDIUM"
+    effort: "1-2 hours"
 quick_wins:
-  - title: "Add a GitHub Actions workflow with yamllint"
+  - title: "Add a GitHub Actions PR workflow with YAML linting (yamllint)"
     effort: "1-2 hours"
-    impact: "Catch YAML syntax errors and enforce consistent formatting on every PR"
-  - title: "Add kubeconform validation for Kubernetes manifests"
-    effort: "1-2 hours"
-    impact: "Validate CRD schemas and API versions against Kubernetes + Kueue specs"
-  - title: "Add a Makefile check target to verify make update-readme produces no diff"
-    effort: "30 minutes"
-    impact: "Ensure READMEs are always in sync with YAML resource files"
-  - title: "Add a markdown link checker"
+    impact: "Catches YAML syntax errors in demo resource files before merge"
+  - title: "Add shellcheck to CI for hack/update_readme/update-readme.sh"
     effort: "1 hour"
-    impact: "Detect broken links in documentation and demo READMEs"
+    impact: "Prevents shell script regressions in the readme update tooling"
+  - title: "Add a basic CLAUDE.md with contribution guidelines"
+    effort: "1 hour"
+    impact: "Enables AI-assisted contributions with repo-specific context"
+  - title: "Add .github/dependabot.yml for GitHub Actions version updates"
+    effort: "30 minutes"
+    impact: "Keeps future CI actions pinned and updated (once CI exists)"
 recommendations:
   priority_0:
-    - "Create a basic GitHub Actions workflow with yamllint + kubeconform to validate all YAML on PRs"
-    - "Add a CI check that runs 'make update-readme' and fails if there's a diff (README/YAML sync)"
+    - "Create a minimal GitHub Actions workflow that validates YAML files and runs shellcheck on PRs"
+    - "Add kubeval or kubeconform to validate Kubernetes resource YAML against API schemas"
   priority_1:
-    - "Add markdown-link-check to validate all links in README files"
-    - "Add a pre-commit config with yamllint, trailing-whitespace, and end-of-file-fixer hooks"
-    - "Add OWNERS_ALIASES or CODEOWNERS for GitHub-native review assignment"
+    - "Add a link-checker workflow to detect stale asciinema and external URLs"
+    - "Add a pre-commit config with yamllint, shellcheck, and trailing-whitespace checks"
+    - "Create CLAUDE.md or AGENTS.md with demo creation guidelines"
   priority_2:
-    - "Add a CLAUDE.md with contribution guidelines and demo creation standards"
-    - "Consider adding shellcheck validation for hack/ scripts"
-    - "Add a CONTRIBUTING.md with demo authoring checklist"
+    - "Consider adding automated demo replay testing (asciinema + expect-based validation)"
+    - "Add a Makefile target for local YAML validation (make lint)"
 ---
 
 # Quality Analysis: workload-orchestration
 
 ## Executive Summary
+- **Overall Score: 0.2/10**
+- **Repository Type**: Documentation / Demos (no source code)
+- **Primary Content**: Kueue demo recordings (asciinema `.cast` files) and Kubernetes YAML resources
+- **Key Strengths**: Well-organized demo structure with automated README generation from YAML sources
+- **Critical Gaps**: No CI/CD pipeline, no validation of any kind, no linting, no agent rules
+- **Agent Rules Status**: Missing
+- **Jira**: RHOAIENG / Workload Orchestration (midstream tier)
 
-- **Overall Score: 1.4/10**
-- **Repository Type**: Documentation / Demo repository (NOT a software project)
-- **Primary Content**: Kueue workload orchestration demos (asciinema recordings + Kubernetes YAML manifests)
-- **Languages**: YAML (24 files), Markdown (5 files), Shell (1 file)
-- **Key Strengths**: Well-structured demo content, good README documentation with auto-generated YAML blocks, clear OWNERS file
-- **Critical Gaps**: No CI/CD pipeline, no YAML validation, no automated checks of any kind
-- **Agent Rules Status**: Missing — no CLAUDE.md, AGENTS.md, or .claude/ directory
-
-### Important Context
-
-This repository is **not a software project** — it contains no Go, Python, TypeScript, or other source code. It is a collection of Kueue demo recordings (`.cast` files) and their associated Kubernetes YAML manifests. The quality scoring reflects this reality: most dimensions score 0 because they are structurally absent, not because of negligence. The recommendations below are tailored to what *would* be valuable for a documentation/demo repository.
+> **Context Note**: This repository is a documentation/demos-only repo. It contains no source code (Go, Python, TypeScript, etc.), no container images, and no tests. Many quality dimensions score 0 not due to neglect but because they are structurally inapplicable. However, even docs/demos repos benefit from CI validation — YAML linting, link checking, shellcheck — and those are genuinely missing.
 
 ## Quality Scorecard
 
-| Dimension | Score | Status |
-|-----------|-------|--------|
-| Unit Tests | 0/10 | No source code exists — N/A for demo repo |
-| Integration/E2E | 0/10 | No testable code — N/A for demo repo |
-| **Build Integration** | **0/10** | **No build pipeline — no artifacts to build** |
-| Image Testing | 0/10 | No container images — YAML manifests only |
-| Coverage Tracking | 0/10 | No code to measure coverage on |
-| CI/CD Automation | 1/10 | Single Makefile target; no GitHub Actions |
-| Agent Rules | 0/10 | No agent rules or contribution guidance |
-
-**Weighted Overall: 1.4/10** (weighted toward CI/CD since that's the only applicable dimension)
+| Dimension | Weight | Score | Status |
+|-----------|--------|-------|--------|
+| Unit Tests | 15% | 0.0/10 | No source code or test files |
+| Integration/E2E | 20% | 0.0/10 | Demos are manual, not automated tests |
+| Build Integration | 15% | 1.0/10 | Makefile exists but no PR build validation |
+| Image Testing | 10% | 0.0/10 | No container images in this repo |
+| Coverage Tracking | 10% | 0.0/10 | No coverage tooling |
+| CI/CD Automation | 15% | 0.0/10 | No workflows at all |
+| Static Analysis | 10% | 0.0/10 | No linting or dependency alerts |
+| Agent Rules | 5% | 0.0/10 | No agent configuration files |
+| **Overall** | **100%** | **0.2/10** | **Critical gaps across all dimensions** |
 
 ## Critical Gaps
 
-### 1. No CI/CD Pipeline
-- **Impact**: Zero automated validation — all quality assurance is manual reviewer effort
+### 1. No CI/CD Pipeline of Any Kind
+- **Impact**: No automated validation on PRs — YAML syntax errors, broken links, and script bugs can merge unchecked
 - **Severity**: HIGH
-- **Effort**: 4-6 hours
-- **Details**: The repository has no `.github/workflows/` directory. The only automation is a `Makefile` with a single `update-readme` target that synchronizes YAML content into README files. No checks run on PRs.
-
-### 2. No YAML Validation or Linting
-- **Impact**: Kubernetes manifests (24 YAML files) could contain syntax errors, invalid API versions, deprecated Kueue CRD fields, or formatting inconsistencies without any detection
-- **Severity**: HIGH
-- **Effort**: 2-3 hours
-- **Details**: The repo contains Kueue CRD manifests (`ClusterQueue`, `LocalQueue`, `ResourceFlavor`, `WorkloadPriorityClass`) that reference specific API versions (`kueue.x-k8s.io/v1beta1`). Without validation, these could become stale as Kueue evolves.
-
-### 3. No Link/Asset Validation
-- **Impact**: Broken asciinema links (e.g., `https://asciinema.org/a/A46ZADXa9EQkoLxKM7NJD1Gu6`), missing `.cast` files, or dead README references would go unnoticed
-- **Severity**: MEDIUM
 - **Effort**: 2-4 hours
+- **Details**: The `.github/workflows/` directory does not exist. There is no CI/CD of any kind — no GitHub Actions, no GitLab CI, no Jenkins. PRs are merged with zero automated validation.
 
-### 4. No PR Review Automation
-- **Impact**: Without any CI checks, reviewers must manually verify YAML validity, README consistency, and link integrity
-- **Severity**: MEDIUM
+### 2. No YAML Validation for Kubernetes Resources
+- **Impact**: Demo YAML files referencing invalid API versions, missing required fields, or incorrect indentation won't be caught until a user manually tries them
+- **Severity**: HIGH
 - **Effort**: 2-3 hours
+- **Details**: The repository contains 20+ Kubernetes YAML resource files across 3 demo directories. None are validated against K8s API schemas. A typo in an API version (e.g., `v1beta1` → `v1beta2`) would go undetected.
+
+### 3. No Shellcheck or Script Linting
+- **Impact**: Shell script bugs in `hack/update_readme/update-readme.sh` could silently corrupt READMEs during `make update-readme`
+- **Severity**: MEDIUM
+- **Effort**: 1-2 hours
+- **Details**: The `update-readme.sh` script uses `awk` inline scripting to replace YAML blocks in README files. It writes to a `temp.md` file and does an `mv` — a crash mid-execution could leave partial files.
+
+### 4. No Link Validation
+- **Impact**: Demo recording links (asciinema.org URLs) may go stale without detection
+- **Severity**: MEDIUM
+- **Effort**: 1-2 hours
+- **Details**: READMEs link to hosted asciinema recordings. If recordings are deleted or moved, users hitting those links get 404s with no automated detection.
 
 ## Quick Wins
 
-### 1. Add yamllint CI check (1-2 hours)
-Create `.github/workflows/lint.yaml`:
+### 1. Add GitHub Actions PR Workflow with YAML Linting (1-2 hours)
+Create `.github/workflows/pr-validation.yml`:
 ```yaml
-name: Lint
-on: [pull_request]
+name: PR Validation
+on:
+  pull_request:
+    branches: [main]
 jobs:
-  yamllint:
+  lint:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: ibiqlik/action-yamllint@v3
-        with:
-          file_or_dir: demos/
-          config_data: |
-            extends: default
-            rules:
-              line-length:
-                max: 200
+      - name: Install yamllint
+        run: pip install yamllint
+      - name: Lint YAML files
+        run: yamllint -d relaxed demos/
+      - name: Validate K8s manifests
+        run: |
+          curl -sL https://github.com/yannh/kubeconform/releases/latest/download/kubeconform-linux-amd64.tar.gz | tar xz
+          find demos -name '*.yaml' -not -name 'README*' | xargs ./kubeconform -strict -summary
 ```
 
-### 2. Add kubeconform validation (1-2 hours)
-Validate Kubernetes manifests against real schemas:
+### 2. Add Shellcheck to CI (1 hour)
+Add to the workflow above:
 ```yaml
-  kubeconform:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: yokawasa/action-setup-kube-tools@v0.11.1
-        with:
-          kubeconform: '0.6.4'
-      - run: |
-          find demos -name '*.yaml' -not -name 'README*' | \
-            xargs kubeconform -strict -summary
+      - name: Shellcheck
+        run: shellcheck hack/update_readme/update-readme.sh
 ```
 
-### 3. Add README sync check (30 minutes)
-Add to CI workflow:
-```yaml
-  readme-sync:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - run: |
-          make update-readme
-          if ! git diff --exit-code; then
-            echo "README files are out of sync. Run 'make update-readme' locally."
-            exit 1
-          fi
-```
+### 3. Add Basic CLAUDE.md (1 hour)
+Create a `CLAUDE.md` with:
+- Repository purpose (Kueue demos)
+- How to add new demos
+- YAML resource conventions
+- `make update-readme` usage
 
-### 4. Add markdown link checker (1 hour)
+### 4. Add Dependabot for GitHub Actions (30 minutes)
+Create `.github/dependabot.yml`:
 ```yaml
-  link-check:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: gaurav-nelson/github-action-markdown-link-check@v1
-        with:
-          folder-path: 'demos/'
+version: 2
+updates:
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
 ```
 
 ## Detailed Findings
 
-### CI/CD Pipeline
+### Unit Tests
+- **Score: 0.0/10**
+- **Files Found**: None
+- **Analysis**: This repository contains no source code (no `.go`, `.py`, `.ts`, or `.js` files). It is a demos/documentation repository. Unit testing is structurally inapplicable.
 
-**Current State**: No CI/CD exists. The only automation is a Makefile with one target:
-- `make update-readme` — synchronizes YAML file contents into README markdown blocks using `hack/update_readme/update-readme.sh`
+### Integration/E2E Tests
+- **Score: 0.0/10**
+- **Files Found**: None
+- **Analysis**: The repository contains 3 demo scenarios with asciinema recordings:
+  1. `demos/wait-for-pods-ready/` — Kueue Gang Scheduling + WaitForPodsReady
+  2. `demos/preemption_fairness/` — GPU preemption across teams
+  3. `demos/resourceflavour-taints-and-tolerations/` — ResourceFlavor taints/tolerations
+- These are manually-replayed demos, not automated integration tests. They require a live Kubernetes cluster with Kueue installed. No automated E2E framework wraps these demos.
+- **Gap**: The demo YAML could be tested via `kubectl apply --dry-run=server` in a Kind cluster with Kueue CRDs installed.
 
-**Assessment**: The `update-readme.sh` script is well-written (uses `set -o errexit/nounset/pipefail`, handles edge cases with awk), but it's never run automatically. Contributors must remember to run it manually.
+### Build Integration
+- **Score: 1.0/10**
+- **Files Found**: `Makefile` (1 target: `update-readme`)
+- **Analysis**: The Makefile has a single `update-readme` target that invokes `hack/update_readme/update-readme.sh` to sync YAML file contents into README files. This is a useful content-generation tool but is not a build process in the traditional sense. There is no PR-triggered build, no image creation, and no manifest validation.
 
-**Missing**:
-- No GitHub Actions workflows
-- No PR checks
-- No branch protection enforcement
-- No automated review assignment (OWNERS file exists but requires Prow or equivalent)
+### Image Testing
+- **Score: 0.0/10**
+- **Files Found**: None
+- **Analysis**: No `Dockerfile`, `Containerfile`, `docker-compose.yml`, or `.dockerignore` exists. This repository does not build or publish container images.
 
-### Test Coverage
+### Coverage Tracking
+- **Score: 0.0/10**
+- **Files Found**: None
+- **Analysis**: No `.codecov.yml`, `codecov.yml`, `.coveragerc`, or any coverage configuration. Without source code or tests, coverage tracking is inapplicable.
 
-**N/A** — This repository contains no source code to test. The only "code" is:
-- 1 shell script (`hack/update_readme/update-readme.sh` — 67 lines)
-- 24 Kubernetes YAML manifests
-- 5 Markdown files
-- 3 asciinema `.cast` recordings
+### CI/CD Automation
+- **Score: 0.0/10**
+- **Files Found**: None
+- **Analysis**: The `.github/workflows/` directory does not exist. There is zero CI/CD automation:
+  - No PR validation workflow
+  - No YAML linting
+  - No link checking
+  - No shellcheck on hack scripts
+  - No `make update-readme` verification (checking that READMEs stay in sync with YAML files)
+  - No concurrency control, caching, or matrix strategies (nothing to apply them to)
 
-### Code Quality
+### Static Analysis
 
-**Linting**: None configured
-- No `.yamllint.yml` for YAML validation
-- No `shellcheck` for the shell script
-- No `.pre-commit-config.yaml`
-- No `.editorconfig`
+#### Linting
+- **Score: 0.0/10** (contributing to overall Static Analysis)
+- No `.golangci.yaml`, `.eslintrc`, `ruff.toml`, or any linting configuration
+- The shell script `hack/update_readme/update-readme.sh` is not checked with `shellcheck`
+- No `yamllint` configuration for the 20+ YAML resource files
 
-**Shell Script Quality**: The `update-readme.sh` script follows good practices (error handling, pipefail), but is not validated by any linter.
+#### FIPS Compatibility
+- Not applicable — no source code, no builds, no crypto imports, no container images
 
-### Container Images
+#### Dependency Alerts
+- No `.github/dependabot.yml` or `renovate.json`
+- Currently no dependencies to manage, but once CI is added, GitHub Actions versions should be tracked
 
-**N/A** — No Dockerfiles or container images exist. The YAML manifests reference external images (`busybox`) for demo purposes only.
-
-### Security
-
-**N/A for code scanning** — No source code to scan. However:
-- YAML manifests could benefit from security linting (e.g., ensuring demo Jobs don't use `privileged: true` or run as root)
-- No secrets in the repository (verified — only public demo content)
-
-### Agent Rules (Agentic Flow Quality)
-
+### Agent Rules
+- **Score: 0.0/10**
 - **Status**: Missing
-- **Coverage**: None — no `.claude/` directory, no `CLAUDE.md`, no `AGENTS.md`
-- **Quality**: N/A
-- **Gaps**: No contribution guidelines for AI-assisted demo creation
-- **Recommendation**: For a demo repo, agent rules could guide:
-  - Demo YAML authoring standards (required fields, naming conventions)
-  - README template structure
-  - YAML-to-README sync workflow
+- **Analysis**: No `CLAUDE.md`, `AGENTS.md`, or `.claude/` directory exists. There are no agent rules, no test creation guidance, and no contribution automation guidelines.
+- **Recommendation**: Create a basic `CLAUDE.md` covering:
+  - Repository purpose and structure
+  - How to create new demo directories
+  - YAML resource conventions (Kueue CRDs, namespaces)
+  - How to record asciinema demos
+  - `make update-readme` workflow
 
 ## Recommendations
 
 ### Priority 0 (Critical)
-
-1. **Create a basic GitHub Actions workflow** with yamllint + kubeconform
-   - Validates all YAML on PRs
-   - Catches syntax errors and schema violations
-   - Effort: 2-4 hours
-
-2. **Add README sync CI check**
-   - Run `make update-readme` in CI and fail if diff exists
-   - Prevents README/YAML content drift
-   - Effort: 30 minutes
+1. **Create a GitHub Actions PR validation workflow** that:
+   - Runs `yamllint` on all YAML resource files
+   - Runs `kubeconform` to validate K8s manifests against API schemas
+   - Runs `shellcheck` on `hack/update_readme/update-readme.sh`
+   - Verifies `make update-readme` produces no diff (ensures READMEs stay in sync)
+2. **Add `kubeconform` or `kubeval` validation** for all Kubernetes YAML files to catch API version drift (e.g., Kueue API changes from `v1beta1` to `v1`)
 
 ### Priority 1 (High Value)
-
-3. **Add markdown-link-check** to validate external links (asciinema URLs)
-   - Effort: 1 hour
-
-4. **Add pre-commit hooks** with yamllint, trailing-whitespace, end-of-file-fixer
-   - Effort: 1-2 hours
-
-5. **Add CODEOWNERS file** for GitHub-native review assignment
-   - The OWNERS file is Prow-compatible but GitHub doesn't use it natively
-   - Effort: 30 minutes
+1. **Add a link-checker workflow** (e.g., `lychee-action`) to detect stale asciinema URLs and external links
+2. **Add a `.pre-commit-config.yaml`** with:
+   - `yamllint` for YAML validation
+   - `shellcheck` for shell scripts
+   - `trailing-whitespace` and `end-of-file-fixer`
+3. **Create `CLAUDE.md` or `AGENTS.md`** with demo creation guidelines for AI-assisted contributions
 
 ### Priority 2 (Nice-to-Have)
-
-6. **Add CLAUDE.md** with demo contribution guidelines
-   - Effort: 1-2 hours
-
-7. **Add shellcheck** validation for `hack/` scripts
-   - Effort: 30 minutes
-
-8. **Add CONTRIBUTING.md** with demo authoring checklist
-   - Effort: 1-2 hours
+1. **Automated demo testing**: Use a Kind cluster with Kueue CRDs to run `kubectl apply --dry-run=server` against all demo YAML files
+2. **Makefile improvements**: Add `make lint` target that runs yamllint + shellcheck locally
+3. **Demo template**: Create a template directory structure for new demos with pre-populated YAML and README scaffolding
 
 ## Comparison to Gold Standards
 
-| Dimension | workload-orchestration | odh-dashboard | notebooks | kserve |
-|-----------|----------------------|---------------|-----------|--------|
-| CI/CD | None | Comprehensive | Multi-stage | Multi-version |
-| YAML Validation | None | N/A | N/A | kubeconform |
-| Link Checking | None | Markdown checks | N/A | N/A |
-| Pre-commit | None | Yes (extensive) | Yes | Yes |
-| Agent Rules | None | Comprehensive | None | None |
-| Automated Review | OWNERS only | CODEOWNERS + CI | OWNERS | OWNERS |
+| Capability | workload-orchestration | odh-dashboard (Gold) | notebooks (Gold) | kserve (Gold) |
+|------------|----------------------|---------------------|------------------|---------------|
+| Unit Tests | None | Comprehensive Jest/Cypress | Image-level testing | Go testing + envtest |
+| Integration/E2E | None (manual demos) | Cypress E2E | Multi-layer validation | Multi-version Ginkgo |
+| Build Integration | Makefile (readme only) | PR builds, Module Federation | Multi-arch builds | Operator bundle builds |
+| Image Testing | N/A | N/A | 5-layer image validation | Runtime validation |
+| Coverage Tracking | None | Codecov with thresholds | Coverage reporting | Codecov enforcement |
+| CI/CD Automation | None | 15+ workflows | Matrix builds | PR + periodic jobs |
+| Static Analysis | None | ESLint + Prettier | shellcheck + yamllint | golangci-lint |
+| Agent Rules | None | CLAUDE.md + .claude/rules/ | Partial | Partial |
 
-**Note**: This comparison is somewhat unfair — those gold standards are large software projects while this is a demo repository. The applicable dimensions are CI/CD (YAML validation, link checking) and contribution automation.
+> **Note**: Direct comparison is limited because `workload-orchestration` is a demos/documentation repository, not a software project. The gold standards are full application/operator repositories.
 
 ## File Paths Reference
 
-| File | Purpose |
-|------|---------|
-| `Makefile` | Single `update-readme` target |
-| `OWNERS` | Prow-compatible reviewer/approver list (10 reviewers, 9 approvers) |
-| `hack/update_readme/update-readme.sh` | Syncs YAML content into README markdown blocks |
-| `demos/*/README.md` | Demo documentation with embedded YAML |
-| `demos/*/resources/*.yaml` | Kubernetes/Kueue manifests (24 files) |
-| `demos/*/*.cast` | asciinema demo recordings (3 files) |
+### Repository Structure
+```
+workload-orchestration/
+├── Makefile                          # update-readme target
+├── OWNERS                            # Approvers and reviewers
+├── README.md                         # Repository overview
+├── demos/
+│   ├── preemption_fairness/          # GPU preemption demo
+│   │   ├── README.md
+│   │   ├── gpu-preemption-demo.cast
+│   │   └── resources/               # 12 K8s YAML files
+│   ├── resourceflavour-taints-and-tolerations/
+│   │   ├── README.md
+│   │   ├── resource-flavor-t-and-t.cast
+│   │   └── resources/               # 5 K8s YAML files
+│   └── wait-for-pods-ready/
+│       ├── README.md
+│       ├── wait-for-pods-ready-demo.cast
+│       └── resources/               # 7 K8s YAML files
+├── hack/
+│   └── update_readme/
+│       ├── update-readme.md
+│       ├── update-readme.sh          # YAML-to-README sync script
+│       └── update-readme-script-demo.webp
+└── LICENSE
+```
 
-## Repository Statistics
-
-- **Total files**: 37 (excluding .git)
-- **YAML files**: 24 (all Kubernetes manifests)
-- **Markdown files**: 5
-- **Shell scripts**: 1
-- **Demo recordings**: 3 (.cast files)
-- **Source code files**: 0
-- **Test files**: 0
-- **CI workflows**: 0
-- **Commits**: ~6 (shallow clone shows merge of PR #6 as latest)
+### Missing Configuration Files
+- `.github/workflows/` — No CI/CD
+- `.github/dependabot.yml` — No dependency alerts
+- `.pre-commit-config.yaml` — No pre-commit hooks
+- `.yamllint.yml` — No YAML linting
+- `CLAUDE.md` / `AGENTS.md` / `.claude/` — No agent rules
+- `Dockerfile` / `Containerfile` — No container images
+- `go.mod` / `package.json` / `requirements.txt` — No source code dependencies

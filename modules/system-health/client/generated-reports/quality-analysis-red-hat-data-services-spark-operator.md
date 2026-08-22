@@ -1,382 +1,420 @@
 ---
 repository: "red-hat-data-services/spark-operator"
-overall_score: 7.7
+overall_score: 8.0
 scorecard:
   - dimension: "Unit Tests"
-    score: 8.0
-    status: "60 test files for 133 source files (45% ratio); Ginkgo + envtest for controllers, standard go testing elsewhere"
+    score: 8.5
+    status: "Strong test coverage with 69 test files, Ginkgo/Gomega + testify, envtest for webhook testing"
   - dimension: "Integration/E2E"
     score: 9.0
-    status: "Multi-layer E2E: Helm + Kustomize on KIND across 4-9 K8s versions; OpenShift integration tests; drift detection; Helm chart unit tests"
+    status: "Comprehensive E2E with multi-version K8s matrix (v1.32-v1.35), Kind cluster, Helm + Kustomize deployment, chaos testing"
   - dimension: "Build Integration"
-    score: 7.0
-    status: "Konflux Dockerfile present; Kustomize lint + drift check on PRs; no PR-time Konflux simulation"
+    score: 8.5
+    status: "PR-time image build, Helm chart testing, Kustomize lint/drift, CRD validation, manifest generation checks"
   - dimension: "Image Testing"
-    score: 5.0
-    status: "Multi-stage Dockerfiles with build caching; no container vulnerability scanning, no SBOM, no runtime validation"
+    score: 6.5
+    status: "Multi-stage Dockerfiles, UBI base for Konflux, Kind image loading, but no runtime validation or health checks"
   - dimension: "Coverage Tracking"
-    score: 7.0
-    status: "Codecov with unit and e2e-kustomize flags; auto threshold + 1% tolerance; no hard minimum gate"
+    score: 8.0
+    status: "Codecov integration with unit + e2e-kustomize flags, auto threshold, PR reporting"
   - dimension: "CI/CD Automation"
     score: 9.0
-    status: "21 workflows with concurrency control; comprehensive PR checks; multi-K8s version matrix; scorecard supply-chain"
+    status: "26 workflows, PR-triggered, concurrency control, matrix strategy, module operator CI, chaos testing"
+  - dimension: "Static Analysis"
+    score: 8.0
+    status: "golangci-lint v2 with custom linters, pre-commit hooks, Dependabot + Renovate, shell lint, one FIPS concern"
   - dimension: "Agent Rules"
-    score: 6.0
-    status: "CLAUDE.md exists with project structure, build/test/debug commands; no .claude/rules/ or test-type-specific guidance"
+    score: 8.0
+    status: "Comprehensive CLAUDE.md with project structure, build/test/lint commands, key files, CI overview"
 critical_gaps:
-  - title: "No container image vulnerability scanning"
-    impact: "CVEs in base images or dependencies go undetected until production deployment"
+  - title: "crypto/md5 usage in production code"
+    impact: "Non-FIPS-compliant hash function in pkg/util/sparkapplication.go may cause issues in FIPS-enforced environments"
     severity: "HIGH"
     effort: "2-4 hours"
-  - title: "No SBOM generation or image signing"
-    impact: "Cannot verify supply chain integrity; fails SLSA Level 2+ requirements"
-    severity: "HIGH"
+  - title: "No container runtime validation"
+    impact: "Image startup and functional behavior not validated after build — issues caught only at deployment time"
+    severity: "MEDIUM"
     effort: "4-6 hours"
-  - title: "No PR-time Konflux build simulation"
-    impact: "Konflux build failures discovered only post-merge; Dockerfile.konflux has complex ODH dependencies that may diverge from standard Dockerfile"
-    severity: "MEDIUM"
-    effort: "8-12 hours"
-  - title: "No test-type-specific agent rules (.claude/rules/)"
-    impact: "AI-generated tests lack consistency with existing patterns; miss envtest setup, Ginkgo conventions, and fixture patterns"
+  - title: "No coverage threshold enforcement"
+    impact: "Coverage thresholds set to 'auto' with 1% tolerance — PRs can regress coverage without blocking"
     severity: "MEDIUM"
     effort: "2-3 hours"
-  - title: "No hard coverage enforcement gate"
-    impact: "Coverage can regress without blocking PR merge; current auto threshold with 1% tolerance is too lenient"
-    severity: "MEDIUM"
-    effort: "1 hour"
 quick_wins:
-  - title: "Add Trivy container scanning to PR workflow"
+  - title: "Replace crypto/md5 with crypto/sha256 in pkg/util/sparkapplication.go"
     effort: "1-2 hours"
-    impact: "Catch CVEs in base images and dependencies before merge; blocks HIGH/CRITICAL vulnerabilities"
-  - title: "Create .claude/rules/ for unit and e2e test patterns"
-    effort: "2-3 hours"
-    impact: "Ensure AI-generated tests follow Ginkgo conventions, envtest setup, and existing fixture patterns"
-  - title: "Set minimum coverage threshold in codecov.yml"
-    effort: "30 minutes"
-    impact: "Prevent coverage regression by requiring minimum 50-60% project coverage"
-  - title: "Add Cosign image signing to release workflow"
-    effort: "2-3 hours"
-    impact: "Enable supply chain verification for released images; aligns with SLSA framework"
-  - title: "Expand golangci-lint with security linters (gosec, gocritic)"
+    impact: "Eliminates FIPS compliance concern in production code"
+  - title: "Set explicit coverage thresholds in .codecov.yml"
     effort: "1 hour"
-    impact: "Catch additional code quality and security issues at lint time"
+    impact: "Prevents coverage regression on PRs"
+  - title: "Add .claude/rules/ with test creation guidelines"
+    effort: "2-3 hours"
+    impact: "Improve AI-generated test quality with framework-specific patterns (Ginkgo, envtest)"
 recommendations:
   priority_0:
-    - "Add Trivy or Grype container vulnerability scanning to the integration.yaml PR workflow"
-    - "Generate SBOM (syft/trivy) and sign images (Cosign) in release workflows"
-    - "Set a hard minimum coverage threshold (e.g., 50%) in .codecov.yml to prevent regression"
+    - "Replace crypto/md5 with FIPS-compliant alternative (crypto/sha256) in pkg/util/sparkapplication.go"
+    - "Add container runtime validation — test that the built image starts and responds to health probes"
   priority_1:
-    - "Add PR-time Konflux build simulation to validate Dockerfile.konflux before merge"
-    - "Create .claude/rules/ with unit-tests.md (envtest patterns), e2e-tests.md (Ginkgo/Kind patterns), and integration-tests.md (OpenShift patterns)"
-    - "Add image startup validation test (build image, start container, verify health endpoint)"
-    - "Expand golangci-lint to include gosec, gocritic, errorlint, and nilerr linters"
+    - "Set explicit coverage thresholds (e.g., 60% project, 70% patch) in .codecov.yml"
+    - "Add .claude/rules/ directory with Ginkgo/envtest test creation patterns"
+    - "Add HEALTHCHECK instruction to Dockerfiles"
   priority_2:
-    - "Add multi-architecture image builds (amd64/arm64) to PR validation"
-    - "Add performance regression testing for Spark job submission latency"
-    - "Add contract tests between the webhook and controller components"
-    - "Consolidate OpenShift and upstream E2E test suites under test/ directory"
+    - "Add Testcontainers-based runtime validation for the operator image"
+    - "Consolidate math/rand usage in test files to use crypto/rand or testing.T seed"
+    - "Consider adding performance/load testing for Spark job submission throughput"
 ---
 
 # Quality Analysis: red-hat-data-services/spark-operator
 
+**Jira**: RHOAIENG / Kubeflow Spark Operator | **Tier**: downstream
+
 ## Executive Summary
-- Overall Score: 7.7/10
-- Key Strengths: Exceptional E2E testing infrastructure with multi-K8s version matrix across Helm and Kustomize deploy methods; strong CI/CD automation with 21 workflows, concurrency control, and comprehensive PR checks; innovative Helm/Kustomize drift detection test; well-documented CLAUDE.md
-- Critical Gaps: No container vulnerability scanning, no SBOM/image signing, no PR-time Konflux simulation, no test-type-specific agent rules
-- Agent Rules Status: Partial (CLAUDE.md present, no .claude/rules/)
+
+- **Overall Score: 8.0/10**
+- **Repository Type**: Kubernetes Operator (Go, controller-runtime)
+- **Key Strengths**: Exceptionally well-organized CI/CD with 26 workflows covering unit, E2E, chaos, drift, and module testing; comprehensive E2E with multi-version K8s matrix (v1.32–v1.35) across both Helm and Kustomize deployment methods; strong CLAUDE.md providing detailed project context
+- **Critical Gaps**: `crypto/md5` usage in production code (FIPS concern), no container runtime validation after build, coverage thresholds not enforced
+- **Agent Rules Status**: Present — comprehensive CLAUDE.md, no `.claude/rules/` directory
 
 ## Quality Scorecard
-| Dimension | Score | Status |
-|-----------|-------|--------|
-| Unit Tests | 8.0/10 | 60 test files for 133 source files (45% ratio); Ginkgo + envtest for controllers |
-| Integration/E2E | 9.0/10 | Multi-layer E2E on 4-9 K8s versions; Helm + Kustomize + OpenShift; drift detection |
-| **Build Integration** | **7.0/10** | **Konflux Dockerfile present; Kustomize lint/drift on PRs; no Konflux simulation** |
-| Image Testing | 5.0/10 | Multi-stage Dockerfiles with build caching; no vulnerability scanning or SBOM |
-| Coverage Tracking | 7.0/10 | Codecov with unit + e2e-kustomize flags; auto threshold, no hard minimum |
-| CI/CD Automation | 9.0/10 | 21 workflows, concurrency control, multi-K8s matrix, scorecard supply-chain |
-| Agent Rules | 6.0/10 | CLAUDE.md with project structure/commands; no .claude/rules/ for test guidance |
+
+| Dimension | Weight | Score | Status |
+|-----------|--------|-------|--------|
+| Unit Tests | 15% | 8.5/10 | Strong coverage with 69 test files, Ginkgo/Gomega + testify, envtest for webhooks |
+| Integration/E2E | 20% | 9.0/10 | Multi-version K8s matrix, Kind cluster, Helm + Kustomize, chaos testing, module E2E |
+| Build Integration | 15% | 8.5/10 | PR-time image build, Helm chart testing, Kustomize lint/drift, CRD validation |
+| Image Testing | 10% | 6.5/10 | Multi-stage builds, UBI for Konflux, but no runtime validation or health checks |
+| Coverage Tracking | 10% | 8.0/10 | Codecov with unit + e2e flags, PR reporting, but thresholds set to auto |
+| CI/CD Automation | 15% | 9.0/10 | 26 workflows, concurrency control, matrix strategy, comprehensive trigger coverage |
+| Static Analysis | 10% | 8.0/10 | golangci-lint v2, pre-commit, Dependabot + Renovate, shell lint, one FIPS issue |
+| Agent Rules | 5% | 8.0/10 | Excellent CLAUDE.md, missing .claude/rules/ for test patterns |
+
+**Weighted Overall: 8.0/10**
 
 ## Critical Gaps
 
-1. **No container image vulnerability scanning**
-   - Impact: CVEs in base images (UBI9, go-toolset, Spark) and Go dependencies go undetected until production
-   - Severity: HIGH
-   - Effort: 2-4 hours
-   - Details: Neither the PR workflow (`integration.yaml`) nor the release workflow (`release.yaml`) includes Trivy, Snyk, or Grype scanning. The Konflux Dockerfile uses `registry.access.redhat.com/ubi9/go-toolset` and a custom base image that could contain vulnerabilities.
+### 1. crypto/md5 Usage in Production Code
+- **File**: `pkg/util/sparkapplication.go:20`
+- **Impact**: `crypto/md5` is not FIPS-compliant. The Konflux Dockerfile correctly uses `GOEXPERIMENT=strictfipsruntime` and `-tags=strictfipsruntime`, but importing `crypto/md5` in production code contradicts FIPS enforcement and may cause runtime panics in strict FIPS environments.
+- **Severity**: HIGH
+- **Effort**: 2-4 hours
+- **Fix**: Replace `md5.Sum()` with `sha256.Sum256()` (or truncate if short hash is needed)
 
-2. **No SBOM generation or image signing**
-   - Impact: Cannot verify supply chain integrity; fails SLSA Level 2+ compliance
-   - Severity: HIGH
-   - Effort: 4-6 hours
-   - Details: Release workflows build and push images to `ghcr.io` and `quay.io` without generating SBOMs or signing with Cosign/Sigstore. The `scorecard.yaml` workflow monitors supply chain security but doesn't enforce artifact provenance.
+### 2. No Container Runtime Validation
+- **Impact**: Images are built and loaded into Kind for E2E tests, but there is no explicit validation that the container starts correctly, responds to health probes, or runs the entrypoint as expected. Issues could be caught only during deployment.
+- **Severity**: MEDIUM
+- **Effort**: 4-6 hours
+- **Fix**: Add a post-build step that runs `docker run --rm <image> --version` or adds a Testcontainers test
 
-3. **No PR-time Konflux build simulation**
-   - Impact: `Dockerfile.konflux` build failures discovered only post-merge; the Konflux Dockerfile has significantly different build steps (CGO_ENABLED=1, FIPS, PySpark install, podman dependency)
-   - Severity: MEDIUM
-   - Effort: 8-12 hours
-   - Details: The standard `Dockerfile` and `Dockerfile.konflux` diverge significantly: Konflux uses CGO_ENABLED=1, FIPS mode, installs PySpark/Java/podman, and uses different base images. A PR-time Dockerfile.konflux build would catch breakage before merge.
-
-4. **No test-type-specific agent rules (.claude/rules/)**
-   - Impact: AI-generated tests may miss envtest setup patterns, Ginkgo BDD conventions, or Kustomize test fixtures
-   - Severity: MEDIUM
-   - Effort: 2-3 hours
-   - Details: The `CLAUDE.md` documents project structure and commands well but doesn't provide test pattern guidance. The repo has distinct test patterns: envtest-based controller tests (Ginkgo), webhook validator tests (standard go testing), E2E tests (Kind + Ginkgo), Kustomize build tests, and drift detection tests.
-
-5. **No hard coverage enforcement gate**
-   - Impact: Coverage can regress without blocking merge; `auto` threshold with 1% tolerance allows gradual decline
-   - Severity: MEDIUM
-   - Effort: 1 hour
+### 3. Coverage Thresholds Not Enforced
+- **File**: `.codecov.yml`
+- **Impact**: Both `project` and `patch` thresholds are set to `target: auto` with `threshold: 1%`, meaning coverage can regress up to 1% per PR without failing. No hard floor prevents gradual erosion.
+- **Severity**: MEDIUM
+- **Effort**: 2-3 hours
+- **Fix**: Set explicit targets (e.g., `target: 60%` for project, `target: 70%` for patch)
 
 ## Quick Wins
 
-1. **Add Trivy container scanning to PR workflow**
-   - Effort: 1-2 hours
-   - Impact: Catch CVEs in base images and dependencies before merge
-   - Implementation:
-   ```yaml
-   # Add to integration.yaml
-   container-scan:
-     runs-on: ubuntu-latest
-     steps:
-       - uses: actions/checkout@v4
-       - name: Build image
-         run: docker build -t spark-operator:scan .
-       - name: Run Trivy
-         uses: aquasecurity/trivy-action@master
-         with:
-           image-ref: 'spark-operator:scan'
-           severity: 'CRITICAL,HIGH'
-           exit-code: '1'
-   ```
+### 1. Replace crypto/md5 with crypto/sha256
+- **Effort**: 1-2 hours
+- **Impact**: Eliminates FIPS compliance concern
+- **Implementation**: In `pkg/util/sparkapplication.go`, replace `crypto/md5` import and `md5.Sum()` calls with `crypto/sha256` and `sha256.Sum256()`
 
-2. **Create .claude/rules/ for test patterns**
-   - Effort: 2-3 hours
-   - Impact: Consistent AI-generated tests following existing repo conventions
-   - Implementation: Create rules for unit tests (envtest + Ginkgo pattern), webhook tests (standard go testing with fake client), E2E tests (Kind + Helm/Kustomize install), and Kustomize build tests
+### 2. Set Explicit Coverage Thresholds
+- **Effort**: 1 hour
+- **Impact**: Prevents gradual coverage regression
+- **Implementation**:
+```yaml
+# .codecov.yml
+coverage:
+  status:
+    project:
+      default:
+        target: 60%
+        threshold: 2%
+    patch:
+      default:
+        target: 70%
+        threshold: 5%
+```
 
-3. **Set minimum coverage threshold**
-   - Effort: 30 minutes
-   - Impact: Prevent coverage regression below acceptable levels
-   - Implementation: Change `.codecov.yml` from `target: auto` to `target: 50%` for project coverage
-
-4. **Add Cosign image signing to release workflow**
-   - Effort: 2-3 hours
-   - Impact: Supply chain verification for released images
-   - Implementation: Add `cosign sign` step after image push in `release.yaml`
-
-5. **Expand golangci-lint with security linters**
-   - Effort: 1 hour
-   - Impact: Catch security issues (gosec) and additional code quality problems (gocritic, errorlint)
-   - Implementation: Add `gosec`, `gocritic`, `errorlint`, and `nilerr` to `.golangci.yaml` linters.enable
+### 3. Add .claude/rules/ with Test Creation Guidelines
+- **Effort**: 2-3 hours
+- **Impact**: Improve AI-generated test quality
+- **Implementation**: Create `.claude/rules/unit-tests.md` and `.claude/rules/e2e-tests.md` with Ginkgo/Gomega patterns, envtest setup, and test isolation guidelines. Use `/test-rules-generator` to bootstrap.
 
 ## Detailed Findings
 
-### CI/CD Pipeline (Score: 9.0/10)
+### Unit Tests (8.5/10)
 
 **Strengths:**
-- **21 GitHub Actions workflows** covering the full development lifecycle
-- **PR-triggered workflows**: `integration.yaml` (code-check, unit-test, helm-test, e2e), `kustomize-e2e.yaml`, `kustomize-lint.yaml`, `kustomize-drift-check.yaml`, `codecov.yaml`, `check-release.yaml`
-- **Concurrency control**: All PR workflows use `cancel-in-progress: true` with actor-scoped groups
-- **Multi-K8s version matrix**: E2E tests run on v1.32-v1.35 (Helm) and v1.24-v1.32 (Kustomize)
-- **Dual deploy method testing**: Both Helm and Kustomize installation paths validated in E2E
-- **Supply chain security**: OpenSSF Scorecard workflow with SARIF upload to code scanning
-- **Dependency management**: Both Dependabot (weekly) and Renovate configured
-- **Release automation**: Comprehensive release pipeline with Helm chart releases, image publishing
+- **69 test files** across the codebase with a **0.49 test-to-code ratio** (69 test files / 140 source files)
+- **Dual testing frameworks**: Ginkgo/Gomega for BDD-style tests + testify for assertion-heavy tests
+- **envtest usage** for webhook testing (`internal/webhook/suite_test.go`) — runs against a real API server without a full cluster
+- **Controller tests** cover reconciliation logic, submission, REST submission, web UI
+- **Scheduler tests** for all three scheduler plugins (kubescheduler, volcano, yunikorn)
+- **API defaults tests** (`api/v1beta2/defaults_test.go`)
+- **Certificate management tests** (`pkg/certificate/`)
+- **Coverage generation**: `make unit-test` generates `cover.out` with `--coverprofile`
 
-**Gaps:**
-- No container scanning step in any workflow
-- Codecov uses unpinned `actions/checkout@v5.0.0` (should pin to SHA)
-- No smoke test after release image push
+**Test file distribution:**
+- `internal/controller/` — 13 test files (reconcilers, submission, web UI)
+- `internal/webhook/` — 7 test files (validators, defaulters, resource quota)
+- `pkg/` — 8 test files (util, certificate, features)
+- `test/` — 7 test files (e2e, kustomize, drift)
+- `spark-operator-module/` — 6 test files (module operator)
+- `examples/openshift/kueue/` — 5 test files (Kueue integration)
+- `charts/` — 20 Helm chart unit tests
 
-### Test Coverage (Score: 8.0/10 Unit, 9.0/10 E2E)
+**Areas for improvement:**
+- No `t.Parallel()` detected in test files — could improve test execution speed
+- `math/rand` used in Kueue test files (4 occurrences) — should use `testing.T`-seeded rand or `crypto/rand`
 
-**Unit Tests (8.0/10):**
-- 60 test files for 133 source files (45% test-to-code ratio - strong)
-- **Controller tests**: Ginkgo BDD framework with envtest for real API server interaction
-- **Webhook tests**: Standard Go testing with fake client - validator and defaulter coverage
-- **Utility tests**: Comprehensive coverage of `pkg/util/` (sparkapplication, sparkpod, predicates, namespace)
-- **Certificate tests**: Ginkgo suite for certificate management
-- **Scheduler tests**: Coverage for KubeScheduler, Volcano, and Yunikorn schedulers
-- **Module tests**: spark-operator-module has its own test suite
-- Coverage output: `cover.out` with HTML report generation (`cover.html`)
-
-**Integration/E2E Tests (9.0/10):**
-- **Helm E2E** (`test/e2e/`): Ginkgo suite testing SparkApplication, SparkConnect, ScheduledSparkApplication, namespace filtering on real Kind clusters
-- **Kustomize E2E** (`examples/openshift/tests/e2e/`): Extended suite with Spark UI test, Prometheus metrics test, SparkConnect query test
-- **Shell-based integration** (`examples/openshift/tests/`): `test-operator-install.sh`, `test-spark-pi.sh`, `test-docling-spark.sh`, `test-scheduledspark-smoke.sh`
-- **Helm chart unit tests**: 20 test files covering controller, webhook, spark, hook, certmanager, and prometheus templates
-- **Kustomize build tests** (`test/kustomize/`): Validates overlay builds and manifest structure
-- **Drift detection test** (`test/drift/`): Compares Helm-rendered and Kustomize-rendered resources for semantic equivalence (RBAC, webhooks, deployments)
-- **Multi-version testing**: 4 K8s versions for Helm, 9 for Kustomize E2E
-
-**Coverage Tracking (7.0/10):**
-- Codecov integration with separate flags: `unit` and `e2e-kustomize`
-- Auto threshold with 1% tolerance per-project and per-patch
-- E2E coverage uploaded only on push to main (not on PR)
-- Comment layout includes reach, diff, flags, files
-- Missing: Hard minimum threshold, coverage trend tracking, branch coverage
-
-### Code Quality (Score: 7.0/10)
-
-**Linting:**
-- golangci-lint v2 with 7 linters enabled: `copyloopvar`, `dupword`, `importas`, `predeclared`, `tagalign`, `unconvert`, `unused`
-- `goimports` formatter enabled
-- Import alias enforcement for K8s packages
-- go fmt and go vet enforced as PR checks
-- Code generation verification on PRs (go mod tidy, make generate, verify-codegen)
-
-**Pre-commit Hooks:**
-- `.pre-commit-config.yaml` present but limited to `helm-docs` only
-- No Go formatting, linting, or secret detection hooks
-
-**Static Analysis:**
-- **Semgrep**: Comprehensive 63KB rule file covering Go, Python, TypeScript, YAML, and generic patterns
-  - Secrets detection (hardcoded credentials, AWS keys)
-  - Go-specific: unsafe exec, SQL injection, path traversal, SSRF, TLS config
-  - Kubernetes-specific: privileged containers, host namespace access, resource limits
-  - GitHub Actions: script injection detection
-- **Gitleaks**: Configured with allowlists for test files, fixtures, and known test credentials
-- **OpenSSF Scorecard**: Weekly supply chain security assessment
-
-**Gaps:**
-- golangci-lint missing security linters (`gosec`, `staticcheck/SA` checks)
-- golangci-lint missing error-handling linters (`errorlint`, `nilerr`, `wrapcheck`)
-- Pre-commit hooks don't cover Go code quality
-- No CodeQL workflow (only Scorecard SARIF upload)
-
-### Container Images (Score: 5.0/10)
-
-**Build Process:**
-- **Standard Dockerfile**: Multi-stage (golang:1.24.10 builder → Spark base image), Docker build cache (`--mount=type=cache`), TARGETARCH support
-- **Dockerfile.konflux**: Multi-stage with UBI9 go-toolset, CGO_ENABLED=1, FIPS runtime, PySpark installation, Java 17, podman for catatonit
-- **Additional Dockerfiles**: `spark-docker/Dockerfile`, `docker/Dockerfile.kubectl`, `examples/openshift/Dockerfile`, `examples/openshift/Dockerfile.odh`, `examples/openshift/tests/Dockerfile`
-- `.dockerignore` present
-
-**Gaps:**
-- No container vulnerability scanning in any workflow
-- No SBOM generation (syft, trivy, cyclonedx)
-- No image signing (cosign, sigstore)
-- No runtime validation (startup test, health check verification)
-- No multi-architecture builds in CI (only TARGETARCH support in Dockerfile)
-- `Dockerfile` and `Dockerfile.konflux` have significant divergence (different base images, build flags, runtime dependencies) - drift risk
-
-### Security (Score: 6.0/10)
+### Integration/E2E Tests (9.0/10)
 
 **Strengths:**
-- Gitleaks configured with comprehensive allowlists for test files
-- Semgrep with 60+ security rules covering multiple languages
-- OpenSSF Scorecard for supply chain security monitoring
-- Dependabot + Renovate for dependency updates (weekly)
-- Action SHAs pinned in most workflows (good supply chain practice)
-- Read-only permissions default in workflows
+- **Multi-version K8s testing**: Matrix tests against K8s v1.32.11, v1.33.7, v1.34.3, v1.35.0
+- **Dual deployment method**: Tests with both `helm` and `kustomize` installation
+- **Kind cluster**: Automated cluster creation, image building, and loading
+- **Comprehensive E2E suite** (`test/e2e/`):
+  - `sparkapplication_test.go` — Core SparkApplication lifecycle
+  - `scheduledsparkapplication_test.go` — Cron-based scheduling
+  - `sparkconnect_test.go` — SparkConnect (alpha)
+  - `namespace_filtering_test.go` — Multi-namespace support
+  - `pdb_test.go` — PodDisruptionBudget
+- **Kustomize E2E** (`kustomize-e2e.yaml`): Separate E2E for Kustomize deployment across 9 K8s versions (v1.24–v1.32)
+- **OpenShift integration tests**: Spark Pi and Docling workloads via shell scripts
+- **ScheduledSpark smoke test**: Validates RBAC and scheduling workflow
+- **Module operator E2E**: Separate test suite for spark-operator-module with envtest
+- **Chaos testing**: `operator-chaos` integration validates knowledge model, CRD schema drift, upgrade simulation
+- **Kustomize drift detection**: Automated check for semantic drift between Helm chart and Kustomize manifests
+- **Debug on failure**: Cluster state, events, and operator logs captured on test failure
 
-**Gaps:**
-- No container image scanning (no Trivy/Snyk/Grype)
-- No DAST or runtime security testing
-- No dependency vulnerability alerts workflow (relies on GitHub native alerts only)
-- No secret scanning in CI (Gitleaks config exists but no workflow runs it)
-- Semgrep rules exist but no CI workflow to run them
+**Areas for improvement:**
+- Kustomize E2E tests older K8s versions (v1.24–v1.32) vs main E2E (v1.32–v1.35) — could consolidate version ranges
 
-### Agent Rules (Score: 6.0/10)
+### Build Integration (8.5/10)
 
-**Present:**
-- `CLAUDE.md` in repository root - comprehensive and well-structured
-  - Tech stack documentation (Go 1.24, controller-runtime, Ginkgo)
-  - Project structure with directory descriptions
-  - Detailed Kustomize configuration documentation
-  - Build, test, lint commands with explanations
-  - Two test workflows documented (Helm vs Kustomize)
-  - Debugging guidance (structured logging, metrics, kubectl commands)
-  - Key files reference for each CRD type
+**Strengths:**
+- **PR-time image build**: `integration.yaml` builds the operator binary (`make build-operator`) on every PR
+- **Docker image build + Kind load**: E2E jobs build Docker image and load into Kind cluster
+- **Helm chart testing**: Comprehensive chart-testing pipeline — lint, unittest, install
+- **Kustomize validation**: `kustomize-lint.yaml` validates Kustomize manifests build correctly
+- **Kustomize drift check**: `kustomize-drift-check.yaml` detects semantic drift between Helm and Kustomize
+- **CRD drift detection**: `make detect-crds-drift` ensures CRDs are synchronized
+- **Manifest generation validation**: `make manifests` and `make generate` run with git diff checks
+- **Code generation verification**: `make verify-codegen` in PR workflow
+- **Module operator build**: Separate Dockerfile and CI for spark-operator-module
 
-**Missing:**
-- No `.claude/` directory
-- No `.claude/rules/` for test-type-specific guidance
-- No `.claude/skills/` for custom automation
-- No test pattern examples or templates
-- No webhook testing patterns documentation
-- No envtest setup guidance for new controller tests
+**Konflux integration:**
+- `Dockerfile.konflux` with UBI9 base images, FIPS build tags, proper labeling
+- `rpms.lock.yaml` and `rpms.in.yaml` for reproducible RPM dependencies
+- Renovate configured to pull from `red-hat-data-services/konflux-central` defaults
+
+**Areas for improvement:**
+- No explicit Konflux build simulation in PR workflow (relies on post-merge Konflux)
+
+### Image Testing (6.5/10)
+
+**Strengths:**
+- **Multi-stage builds**: Both `Dockerfile` and `Dockerfile.konflux` use multi-stage builds
+- **UBI base images**: `Dockerfile.konflux` uses `ubi9/go-toolset` (builder) and UBI-based runtime image
+- **Build caching**: `RUN --mount=type=cache` for Go module and build caches
+- **TARGETARCH support**: Multi-architecture build argument support in Dockerfiles
+- **Multi-arch manifests**: `pushImageToDPQuay.yaml` creates multi-arch manifest lists
+- **Kind image loading**: Images built and loaded into Kind for E2E testing
+- **Module controller Dockerfile**: Separate `spark-operator-module-controller.Dockerfile` with UBI9 minimal
+
+**Areas for improvement:**
+- **No HEALTHCHECK instruction** in any Dockerfile
+- **No container runtime validation** — no `docker run` smoke test after build
+- **No Testcontainers** usage for runtime validation
+- **No readiness/liveness probe testing** in CI (only exercised in E2E via operator deployment)
+- Upstream `Dockerfile` uses `docker.io/library/spark:4.0.1` (non-UBI) as runtime base — only the Konflux variant uses UBI
+
+### Coverage Tracking (8.0/10)
+
+**Strengths:**
+- **Codecov integration**: Dedicated `codecov.yaml` workflow uploads coverage on push and PR
+- **Separate coverage flags**: `unit` and `e2e-kustomize` flags for independent tracking
+- **Coverage generation**: `make unit-test` generates `cover.out` with `--coverprofile`
+- **E2E coverage**: Kustomize E2E uploads `cover-e2e-kustomize.out` to Codecov
+- **PR reporting**: Codecov comment with `reach,diff,flags,files` layout
+- **Path exclusions**: E2E test paths excluded from unit coverage flag
+
+**Areas for improvement:**
+- **Thresholds set to auto**: `target: auto` with `threshold: 1%` — no hard coverage floor
+- **No coverage gate**: PRs won't fail on coverage regression beyond 1%
+- **HTML report**: `make unit-test` generates `cover.html` locally but it's not published
+
+### CI/CD Automation (9.0/10)
+
+**Strengths:**
+- **26 workflow files** covering the full development lifecycle
+- **PR-triggered workflows**: Integration, Kustomize lint, drift check, shell lint, disconnected readiness, chaos testing
+- **Concurrency control**: All critical workflows use `cancel-in-progress: true` with proper grouping
+- **Matrix strategy**: E2E tests across 4 K8s versions x 2 deployment methods (8 combinations)
+- **Path-based triggers**: Workflows only run when relevant files change
+- **Timeout management**: Chaos workflow has `timeout-minutes: 15`, smoke test has `timeout-minutes: 20`
+- **Release automation**: `release.yaml`, `release-latest-images.yaml`, `release-helm-charts.yaml`
+- **Scorecard**: OPA Scorecard testing workflow
+- **Stale issue management**: `stale.yaml` for issue/PR cleanup
+- **Welcome bot**: `welcome-new-contributors.yaml` for community engagement
+- **Self-hosted runners**: Docling E2E uses EC2 runners for larger resources
+- **Reusable workflows**: `_run-kustomize-e2e.yaml` shared across multiple callers
+
+**Workflow inventory:**
+| Workflow | Trigger | Purpose |
+|----------|---------|---------|
+| `integration.yaml` | PR + push | Code check, unit test, build, helm test, e2e |
+| `kustomize-e2e.yaml` | PR + push | Kustomize deployment E2E (9 K8s versions) |
+| `kustomize-lint.yaml` | PR + push | Kustomize manifest validation |
+| `kustomize-drift-check.yaml` | PR + push | Helm ↔ Kustomize drift detection |
+| `codecov.yaml` | PR + push | Coverage upload |
+| `operator-chaos.yaml` | PR | CRD/knowledge model chaos testing |
+| `shell-lint.yaml` | PR + push | Shell script formatting and linting |
+| `spark-operator-module-ci.yaml` | PR | Module operator tests |
+| `scheduledspark-smoke.yaml` | PR + push | ScheduledSpark RBAC + smoke |
+| `integration-odh.yaml` | push + dispatch | ODH Spark Pi E2E |
+| `openshift-docling-e2e.yaml` | push + dispatch | Docling workload E2E (EC2) |
+| `disconnected-readiness.yml` | PR | Disconnected readiness check |
+| `build-quay.yaml` | dispatch | Build and push to Quay |
+| `release.yaml` | push tag | Full release pipeline |
+| `docs.yaml` | push + PR | Documentation build |
+| `scorecard.yaml` | push + PR | OPA scorecard tests |
+
+### Static Analysis (8.0/10)
+
+**Strengths:**
+
+#### Linting
+- **golangci-lint v2** (v2.1.6) with custom configuration
+- **Enabled linters**: copyloopvar, dupword, importas, predeclared, tagalign, unconvert, unused
+- **Import alias enforcement**: Consistent K8s API import aliases
+- **Go fmt/vet**: Run as part of PR checks with git diff validation
+- **goimports formatter**: Configured in golangci-lint
+- **Shell linting**: shellcheck + shfmt via pre-commit hooks and dedicated workflow
+
+#### Pre-commit Hooks
+- **helm-docs**: Auto-generate Helm chart documentation
+- **shfmt**: Shell script formatting
+- **shellcheck**: Shell script linting
+
+#### FIPS Compatibility
+- **Konflux Dockerfile**: Correctly uses `GOEXPERIMENT=strictfipsruntime` and `-tags=strictfipsruntime`
+- **UBI base images**: Konflux build uses `ubi9/go-toolset` and UBI-based runtime
+- **Concern**: `crypto/md5` imported in `pkg/util/sparkapplication.go:20` — this is a non-FIPS-compliant hash algorithm that may cause runtime panics under `strictfipsruntime`
+- **Test-only**: `math/rand` in 4 Kueue test files — acceptable in test context but not ideal
+
+#### Dependency Alerts
+- **Dependabot**: Configured for `gomod`, `docker`, `github-actions`, and `uv` ecosystems with weekly schedule
+- **Renovate**: Configured extending `red-hat-data-services/konflux-central` defaults
+- **Both present**: Dual dependency management covers different update scenarios
+
+### Agent Rules (8.0/10)
+
+**Strengths:**
+- **CLAUDE.md present**: Comprehensive documentation covering:
+  - Tech stack and project structure
+  - Detailed Kustomize install configuration explanation
+  - Container image configuration with params.env mapping
+  - Build, test, lint commands with clear examples
+  - Two test workflows (Helm E2E + Kustomize integration) documented separately
+  - Key files listing with descriptions
+  - CI workflow summary
+  - Debugging guidance
+
+**Areas for improvement:**
+- **No `.claude/` directory**: Missing `.claude/rules/` for framework-specific test creation guidance
+- **No AGENTS.md**: Missing general AI agent guidelines
+- **No test patterns**: CLAUDE.md documents commands but not Ginkgo/Gomega patterns, envtest setup, or test structure conventions
+- **Recommendation**: Generate test creation rules with `/test-rules-generator` to capture Ginkgo `Describe/It/BeforeEach` patterns, envtest boilerplate, and Helm chart test structure
 
 ## Recommendations
 
 ### Priority 0 (Critical)
-- Add Trivy or Grype container vulnerability scanning to `integration.yaml` to catch CVEs in base images before merge
-- Generate SBOM (syft) and sign images (Cosign) in `release.yaml` and `release-latest-images.yaml` for supply chain integrity
-- Set hard minimum coverage threshold (50-60%) in `.codecov.yml` to prevent regression
+
+1. **Replace `crypto/md5` with FIPS-compliant alternative**
+   - File: `pkg/util/sparkapplication.go`
+   - Replace `crypto/md5` with `crypto/sha256` to avoid `strictfipsruntime` panics
+   - Verify no downstream consumers depend on the MD5 hash format
+
+2. **Add container runtime validation**
+   - Add a post-build step in CI that validates the image starts correctly
+   - Example: `docker run --rm <image> spark-operator version`
+   - Consider adding HEALTHCHECK to Dockerfiles
 
 ### Priority 1 (High Value)
-- Add a PR-time `Dockerfile.konflux` build step to catch Konflux-specific build failures before merge
-- Create `.claude/rules/` with test guidance: `unit-tests.md` (envtest + Ginkgo patterns), `e2e-tests.md` (Kind + Ginkgo), `webhook-tests.md` (standard go testing + fake client), `kustomize-tests.md` (build/overlay validation)
-- Add image startup validation test (build → start → check health) for both standard and Konflux Dockerfiles
-- Expand golangci-lint to include `gosec`, `gocritic`, `errorlint`, `nilerr` for stronger code quality gates
-- Add a CI workflow to actually run Semgrep rules (config exists but no workflow executes them)
+
+3. **Enforce explicit coverage thresholds**
+   - Set `target: 60%` for project, `target: 70%` for patch in `.codecov.yml`
+   - This prevents gradual coverage erosion across PRs
+
+4. **Add `.claude/rules/` for test automation**
+   - Create `unit-tests.md` with Ginkgo patterns (Describe/Context/It, BeforeEach, envtest setup)
+   - Create `e2e-tests.md` with E2E patterns (Kind cluster, Helm/Kustomize deployment)
+   - Create `helm-tests.md` with Helm unittest patterns
+
+5. **Add HEALTHCHECK to Dockerfiles**
+   - Both `Dockerfile` and `Dockerfile.konflux` lack HEALTHCHECK instructions
+   - Add: `HEALTHCHECK --interval=30s CMD ["/usr/bin/spark-operator", "version"]`
 
 ### Priority 2 (Nice-to-Have)
-- Add multi-architecture image builds (amd64/arm64) to CI validation
-- Add performance regression testing for Spark job submission latency
-- Add contract tests between webhook and controller components
-- Consolidate OpenShift E2E tests under `test/` directory (per team's noted plan in CLAUDE.md)
-- Add pre-commit hooks for Go formatting, vetting, and secret detection beyond just helm-docs
-- Consider adding Gitleaks as a PR-time workflow step (config exists, workflow does not)
+
+6. **Add `t.Parallel()` to unit tests**
+   - Enable parallel test execution for faster CI feedback
+   - Verify no shared state conflicts before enabling
+
+7. **Consolidate K8s version matrices**
+   - Main E2E tests v1.32–v1.35, Kustomize E2E tests v1.24–v1.32
+   - Consider aligning to a single set of supported versions
+
+8. **Add performance/load testing**
+   - Test Spark job submission throughput under load
+   - Validate controller performance with many concurrent SparkApplications
 
 ## Comparison to Gold Standards
 
-| Dimension | spark-operator | odh-dashboard (Gold) | notebooks (Gold) | kserve (Gold) |
-|-----------|---------------|---------------------|-----------------|--------------|
-| Unit Tests | 8.0 - Ginkgo + envtest | 9.0 - Jest + RTL, 80%+ | 7.0 - Python pytest | 9.0 - Go + envtest, 80%+ |
-| Integration/E2E | 9.0 - Multi-K8s, dual deploy | 9.0 - Cypress + contract | 8.0 - Multi-image validation | 9.0 - Multi-version K8s |
-| Build Integration | 7.0 - Kustomize lint/drift | 8.0 - Module Federation | 7.0 - Image build validation | 7.0 - Kustomize validation |
-| Image Testing | 5.0 - No scanning | 7.0 - Runtime validation | 9.0 - 5-layer validation | 7.0 - Trivy scanning |
-| Coverage | 7.0 - Codecov, no min gate | 9.0 - 80% enforced | 6.0 - Basic coverage | 9.0 - Codecov enforced |
-| CI/CD | 9.0 - 21 workflows, matrix | 9.0 - Comprehensive | 8.0 - Multi-image CI | 9.0 - Prow + GH Actions |
-| Agent Rules | 6.0 - CLAUDE.md only | 8.0 - Rules + skills | 4.0 - Minimal | 5.0 - Basic docs |
-| Security | 6.0 - Gitleaks, Semgrep (no CI), Scorecard | 7.0 - Snyk, CodeQL | 8.0 - Trivy, SBOM | 8.0 - Trivy, Cosign |
-
-**Notable Innovations in spark-operator:**
-- **Helm/Kustomize drift detection test** - Unique approach that programmatically compares rendered resources between two install methods to prevent semantic divergence. Not seen in other analyzed repos.
-- **Dual deploy method E2E** - Same Ginkgo test suite runs against both Helm and Kustomize installations, ensuring feature parity.
-- **Multi-layer Kustomize validation** - Lint (no cluster), E2E (Kind), drift check (programmatic comparison) - three validation tiers for Kustomize manifests.
+| Dimension | spark-operator | odh-dashboard | notebooks | kserve |
+|-----------|---------------|---------------|-----------|--------|
+| Unit Tests | 8.5 — 69 test files, Ginkgo + testify | 9.0 — Multi-layer | 7.0 — Focused | 8.5 — Comprehensive |
+| Integration/E2E | 9.0 — Multi-version matrix, chaos | 9.0 — Contract tests | 8.0 — Image tests | 9.0 — Multi-version |
+| Build Integration | 8.5 — Helm + Kustomize validation | 8.0 — Module Fed | 7.0 — Image builds | 7.5 — Operator builds |
+| Image Testing | 6.5 — Build only, no runtime | 6.0 — Basic | 9.0 — 5-layer | 6.0 — Basic |
+| Coverage Tracking | 8.0 — Codecov, dual flags | 8.5 — Enforced | 6.0 — Basic | 8.0 — Enforced |
+| CI/CD Automation | 9.0 — 26 workflows | 9.0 — Comprehensive | 8.0 — Solid | 8.5 — Well-organized |
+| Static Analysis | 8.0 — Lint + FIPS concern | 8.0 — ESLint | 7.0 — Basic | 7.5 — golangci-lint |
+| Agent Rules | 8.0 — Good CLAUDE.md | 9.0 — Full rules | 3.0 — None | 4.0 — Minimal |
+| **Overall** | **8.0** | **8.5** | **7.0** | **7.5** |
 
 ## File Paths Reference
 
 ### CI/CD
-- `.github/workflows/integration.yaml` - Main PR workflow (code-check, unit-test, helm-test, e2e)
-- `.github/workflows/codecov.yaml` - Coverage upload
-- `.github/workflows/kustomize-e2e.yaml` - Kustomize E2E on 9 K8s versions
-- `.github/workflows/kustomize-lint.yaml` - Kustomize build validation
-- `.github/workflows/kustomize-drift-check.yaml` - Helm/Kustomize drift detection
-- `.github/workflows/scorecard.yaml` - OpenSSF supply chain security
-- `.github/workflows/release.yaml` - Release pipeline
-- `.github/workflows/integration-odh.yaml` - ODH integration tests
+- `.github/workflows/integration.yaml` — Main PR workflow (code check, unit test, build, helm, e2e)
+- `.github/workflows/kustomize-e2e.yaml` — Kustomize E2E (9 K8s versions)
+- `.github/workflows/operator-chaos.yaml` — Chaos testing (CRD diff, knowledge model)
+- `.github/workflows/codecov.yaml` — Coverage upload
+- `.github/workflows/spark-operator-module-ci.yaml` — Module operator CI
+- `.github/workflows/scheduledspark-smoke.yaml` — ScheduledSpark smoke test
 
 ### Testing
-- `test/e2e/` - Ginkgo E2E test suite (4 test files)
-- `test/kustomize/` - Kustomize build validation tests (2 test files)
-- `test/drift/` - Helm/Kustomize drift detection test
-- `internal/controller/sparkapplication/` - Controller unit tests (envtest)
-- `internal/webhook/` - Webhook validator/defaulter tests
-- `examples/openshift/tests/` - OpenShift integration tests (shell + Go)
-- `examples/openshift/tests/e2e/` - OpenShift Ginkgo E2E suite
-- `charts/spark-operator-chart/tests/` - Helm chart unit tests (20 files)
+- `test/e2e/` — E2E test suite (Ginkgo, Kind)
+- `test/kustomize/` — Kustomize build validation tests
+- `test/drift/` — Helm/Kustomize drift detection tests
+- `charts/spark-operator-chart/tests/` — 20 Helm chart unit tests
+- `spark-operator-module/tests/e2e/` — Module operator E2E
+- `examples/openshift/kueue/` — Kueue integration tests
 
 ### Code Quality
-- `.golangci.yaml` - Linter configuration (7 linters)
-- `.pre-commit-config.yaml` - Pre-commit hooks (helm-docs only)
-- `semgrep.yaml` - SAST rules (60+ rules, multi-language)
-- `.gitleaks.toml` - Secret detection configuration
+- `.golangci.yaml` — golangci-lint v2 configuration (7 custom linters)
+- `.pre-commit-config.yaml` — Pre-commit hooks (helm-docs, shfmt, shellcheck)
+- `.github/dependabot.yml` — Dependabot (gomod, docker, github-actions, uv)
+- `.github/renovate.json` — Renovate (extends konflux-central defaults)
+- `.codecov.yml` — Codecov configuration (unit + e2e-kustomize flags)
 
 ### Container Images
-- `Dockerfile` - Standard multi-stage build
-- `Dockerfile.konflux` - Konflux/ODH build with FIPS, PySpark, UBI9
-- `spark-docker/Dockerfile` - Spark base image
-- `.dockerignore` - Build context exclusions
-
-### Coverage & Security
-- `.codecov.yml` - Coverage configuration (unit + e2e-kustomize flags)
-- `.gitleaks.toml` - Gitleaks allowlist configuration
-- `.gitleaksignore` - Gitleaks false positive suppression
-- `.github/dependabot.yml` - Dependency update automation
-- `.github/renovate.json` - Renovate bot configuration
+- `Dockerfile` — Upstream multi-stage Dockerfile (golang + spark base)
+- `Dockerfile.konflux` — Konflux/downstream Dockerfile (UBI9, FIPS, labels)
+- `spark-operator-module-controller.Dockerfile` — Module operator Dockerfile (UBI9 minimal)
 
 ### Agent Rules
-- `CLAUDE.md` - Project documentation for AI agents (well-structured)
+- `CLAUDE.md` — Comprehensive project documentation for AI agents

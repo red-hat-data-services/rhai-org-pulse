@@ -48,13 +48,13 @@ function getTokenSource() {
 
 const DATA_PREFIX = gitlabFetch.DATA_PREFIX;
 
-function loadConfig(storage) {
-  const stored = storage.readFromStorage(`${DATA_PREFIX}/config.json`);
+async function loadConfig(storage) {
+  const stored = await storage.readFromStorage(`${DATA_PREFIX}/config.json`);
   return { ...DEFAULT_CONFIG, ...stored };
 }
 
-function saveConfig(storage, config) {
-  storage.writeToStorage(`${DATA_PREFIX}/config.json`, config);
+async function saveConfig(storage, config) {
+  await storage.writeToStorage(`${DATA_PREFIX}/config.json`, config);
 }
 
 /**
@@ -70,7 +70,7 @@ async function runFetch(storage, config) {
     return { status: 'error', message: 'No GitLab token configured. Set FEATURE_TRAFFIC_GITLAB_TOKEN or GITLAB_TOKEN.' };
   }
 
-  config = config || loadConfig(storage);
+  config = config || await loadConfig(storage);
   if (!config.enabled) {
     return { status: 'skipped', message: 'Feature traffic fetch is disabled' };
   }
@@ -83,7 +83,7 @@ async function runFetch(storage, config) {
     }
     // Write last-fetch metadata (also written inside fetchArtifacts for success, but handle artifact_expired here)
     if (result.status === 'artifact_expired') {
-      storage.writeToStorage(`${DATA_PREFIX}/last-fetch.json`, result);
+      await storage.writeToStorage(`${DATA_PREFIX}/last-fetch.json`, result);
     }
     return result;
   } catch (err) {
@@ -93,7 +93,7 @@ async function runFetch(storage, config) {
       message: err.message,
       timestamp: new Date().toISOString()
     };
-    storage.writeToStorage(`${DATA_PREFIX}/last-fetch.json`, errorResult);
+    await storage.writeToStorage(`${DATA_PREFIX}/last-fetch.json`, errorResult);
     return errorResult;
   } finally {
     fetchInProgress = false;
@@ -161,11 +161,11 @@ function setOnCadenceChange(callback) {
 async function onConfigSave(storage, newConfig) {
   validateConfig(newConfig);
 
-  const oldConfig = loadConfig(storage);
+  const oldConfig = await loadConfig(storage);
   const wasEnabled = oldConfig.enabled;
   const config = { ...DEFAULT_CONFIG, ...newConfig };
 
-  saveConfig(storage, config);
+  await saveConfig(storage, config);
 
   // Notify cadence change
   if (_onCadenceChange) {

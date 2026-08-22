@@ -17,15 +17,6 @@
         </div>
         <div class="flex items-center space-x-3">
           <button
-            @click="goToTable"
-            class="px-4 py-2 border border-primary-600 text-primary-600 rounded-lg hover:bg-primary-50 font-medium flex items-center space-x-2 transition-colors"
-          >
-            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M3 14h18m-9-4v8m-7 0h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
-            </svg>
-            <span>Table View</span>
-          </button>
-          <button
             @click="goToKanban"
             class="px-6 py-3 bg-primary-600 text-white rounded-lg hover:bg-primary-700 font-medium flex items-center space-x-2 shadow-sm transition-colors"
           >
@@ -244,13 +235,12 @@ Meeting with John Smith from Acme Financial Corp (Banking, North America)
                   v-model="extractedData.component"
                   class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
                 >
-                  <option value="">-- Select --</option>
-                  <option value="navigator">Project Navigator</option>
-                  <option value="autox">AutoX</option>
-                  <option value="platform">AI Platform</option>
-                  <option value="d2ma">D2MA</option>
-                  <option value="agentic">Agentic</option>
-                  <option value="inferencing">Inferencing</option>
+                  <option value="">-- Select Component --</option>
+                  <optgroup v-for="pillar in pillars" :key="pillar.name" :label="pillar.name">
+                    <option v-for="c in pillar.components" :key="c.id" :value="c.id">
+                      {{ c.label }}
+                    </option>
+                  </optgroup>
                 </select>
               </div>
               <div>
@@ -355,7 +345,10 @@ Meeting with John Smith from Acme Financial Corp (Banking, North America)
               <h3 class="text-lg font-semibold text-gray-900">Google Drive Import</h3>
             </div>
             <p class="text-gray-600 mb-4">
-              Sign in with your Google account and pick files directly from Google Drive.
+              <strong>Optional:</strong> Sign in with your Google account to import files from your personal Drive.
+              All interactions are stored in a central team spreadsheet - this is only needed if you want to import files from your own Drive.
+            </p>
+            <p class="text-gray-600 mb-4 text-sm">
               Supports Google Sheets, CSV files, XLSX files, and Google Docs.
             </p>
 
@@ -437,9 +430,10 @@ Meeting with John Smith from Acme Financial Corp (Banking, North America)
 </template>
 
 <script setup>
-import { ref, computed, inject } from 'vue'
+import { ref, computed, inject, onMounted } from 'vue'
 import InfoTooltip from '../components/InfoTooltip.vue'
 import { useGoogleDrive } from '../composables/useGoogleDrive'
+import { useComponentSelector } from '../composables/useComponentSelector'
 
 const moduleNav = inject('moduleNav')
 
@@ -453,6 +447,7 @@ const fileInput = ref(null)
 const transcriptText = ref('')
 const extracting = ref(false)
 const googleDrive = useGoogleDrive()
+const { pillars } = useComponentSelector()
 const processingDriveFile = ref(false)
 const extractedData = ref({
   customerCompany: '',
@@ -466,11 +461,33 @@ const extractedData = ref({
   status: 'Discovery'
 })
 
-const tabs = [
-  { id: 'spreadsheet', label: 'Spreadsheet Import' },
-  { id: 'transcript', label: 'Transcript Import' },
-  { id: 'google-drive', label: 'Google Drive Import (Coming Soon)' }
-]
+// Check if AI features are available by checking for API key in env
+const aiEnabled = ref(false)
+
+onMounted(async () => {
+  // Check if AI extraction is configured
+  try {
+    const response = await fetch('/api/modules/customer-insights/extract/health')
+    aiEnabled.value = response.ok
+  } catch {
+    aiEnabled.value = false
+  }
+})
+
+const tabs = computed(() => {
+  const allTabs = [
+    { id: 'spreadsheet', label: 'Spreadsheet Import' }
+  ]
+
+  // Only show Transcript Import if AI is configured
+  if (aiEnabled.value) {
+    allTabs.push({ id: 'transcript', label: 'Transcript Import' })
+  }
+
+  allTabs.push({ id: 'google-drive', label: 'Google Drive Import (Coming Soon)' })
+
+  return allTabs
+})
 
 const canSubmitTranscript = computed(() => {
   return extractedData.value.customerCompany &&
@@ -681,7 +698,8 @@ async function submitTranscript() {
       environment: extractedData.value.environment || 'Unknown',
       toolsOfChoice: extractedData.value.toolsOfChoice || [],
       futureWishlist: extractedData.value.futureWishlist || [],
-      pmComments: transcriptText.value ? `Transcript: ${transcriptText.value.substring(0, 500)}...` : ''
+      meetingNotes: transcriptText.value || '',
+      pmComments: ''
     }
 
     const response = await fetch('/api/modules/customer-insights/interactions', {
@@ -813,9 +831,4 @@ function goToKanban() {
   }
 }
 
-function goToTable() {
-  if (moduleNav) {
-    moduleNav.navigateTo('table')
-  }
-}
 </script>

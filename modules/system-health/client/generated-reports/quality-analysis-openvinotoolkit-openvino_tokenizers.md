@@ -1,371 +1,397 @@
 ---
 repository: "openvinotoolkit/openvino_tokenizers"
-overall_score: 6.2
+overall_score: 5.6
 scorecard:
   - dimension: "Unit Tests"
-    score: 7.0
-    status: "Strong parametrized pytest suite covering 30+ HuggingFace models across 4 tokenizer types"
+    score: 6.0
+    status: "Good pytest-based test suite with parametrized tokenizer coverage, but no unit-level isolation of Python modules"
   - dimension: "Integration/E2E"
-    score: 7.0
-    status: "TensorFlow layer tests, ONNX contrib tests, multi-version testing, differential fuzzing"
+    score: 6.5
+    status: "Cross-platform CI runs integration tests against built wheels; TensorFlow layer tests; fuzzing support"
   - dimension: "Build Integration"
     score: 7.0
-    status: "Multi-platform CMake builds (Linux/macOS/Windows), wheel packaging, Jenkins + GHA"
+    status: "PR-triggered CMake + wheel builds on Linux/macOS/Windows; sccache/ccache; no Konflux simulation"
   - dimension: "Image Testing"
-    score: 5.0
-    status: "Library project with no container images; CI uses pre-built OpenVINO containers"
+    score: 1.0
+    status: "No Dockerfiles, no container images, no image testing"
   - dimension: "Coverage Tracking"
-    score: 3.0
-    status: "No line coverage tool (codecov/coveralls); custom pass-rate tracking only"
+    score: 1.0
+    status: "No coverage tooling — no codecov, no pytest-cov, no coverage thresholds"
   - dimension: "CI/CD Automation"
     score: 8.0
-    status: "Excellent multi-platform CI with concurrency control, caching, artifact management"
+    status: "Comprehensive cross-platform CI with concurrency control, caching, timeouts, and artifact management"
+  - dimension: "Static Analysis"
+    score: 7.0
+    status: "Ruff + Bandit configured; Dependabot covers pip/npm/actions; no pre-commit hooks; Coverity scheduled"
   - dimension: "Agent Rules"
-    score: 6.0
-    status: "Domain-specific tokenizer enablement agent + 3 skills; no test-creation rules"
+    score: 0.0
+    status: "No CLAUDE.md, AGENTS.md, or .claude/ directory"
 critical_gaps:
-  - title: "No code coverage measurement or enforcement"
-    impact: "Cannot identify untested code paths; regressions in C++ or Python may go undetected"
+  - title: "No code coverage tracking or enforcement"
+    impact: "Cannot measure test effectiveness or detect coverage regressions; blind spots in testing go undetected"
     severity: "HIGH"
-    effort: "4-8 hours"
-  - title: "No C++ unit tests"
-    impact: "123K lines of C++ source code tested only indirectly through Python integration tests"
-    severity: "HIGH"
-    effort: "40-80 hours"
-  - title: "No pre-commit hooks"
-    impact: "Code quality checks only run in CI, not locally before commit"
+    effort: "4-6 hours"
+  - title: "No container image or Dockerfile"
+    impact: "No containerized deployment path; downstream consumers must build from source or install via pip"
+    severity: "MEDIUM"
+    effort: "8-12 hours"
+  - title: "No AI agent rules for test automation"
+    impact: "AI-assisted contributions lack guidance on testing standards, frameworks, and patterns"
+    severity: "MEDIUM"
+    effort: "2-3 hours"
+  - title: "No pre-commit hooks enforcing lint/format"
+    impact: "Code style issues caught only in CI, increasing PR iteration cycles"
     severity: "MEDIUM"
     effort: "1-2 hours"
-  - title: "No CodeQL or SAST integration"
-    impact: "C++ code not scanned for memory safety, buffer overflow, or injection vulnerabilities on PRs"
-    severity: "MEDIUM"
-    effort: "2-4 hours"
 quick_wins:
   - title: "Add pytest-cov and codecov integration"
     effort: "2-4 hours"
-    impact: "Visibility into Python test coverage with PR-level reporting and threshold enforcement"
-  - title: "Add .pre-commit-config.yaml with ruff + bandit"
+    impact: "Immediate visibility into test coverage with PR-level reporting and threshold enforcement"
+  - title: "Add pre-commit hooks for ruff and bandit"
     effort: "1-2 hours"
-    impact: "Shift-left linting and security checks; catch issues before CI"
-  - title: "Enable CodeQL for C++ analysis"
-    effort: "2-3 hours"
-    impact: "Automated SAST scanning for C++ memory safety and security vulnerabilities"
-  - title: "Add CLAUDE.md with test-creation guidance"
-    effort: "2-3 hours"
-    impact: "Standardize AI-assisted test contributions and improve test quality"
+    impact: "Catch lint and security issues before push, reducing CI feedback loops"
+  - title: "Create basic CLAUDE.md with test patterns"
+    effort: "1-2 hours"
+    impact: "Guide AI agents to produce tests consistent with existing pytest + parametrize patterns"
 recommendations:
   priority_0:
-    - "Add Python code coverage tracking with codecov and enforce minimum thresholds on PRs"
-    - "Add CodeQL workflow for C++ static analysis to complement Coverity"
+    - "Add pytest-cov to CI workflows and configure codecov with coverage thresholds"
+    - "Establish minimum coverage gates (e.g., 60% for Python code) to prevent coverage regressions"
   priority_1:
-    - "Create C++ unit tests for core tokenizer operations (normalization, splitting, encoding)"
-    - "Add .pre-commit-config.yaml with ruff, bandit, and cmake-format hooks"
-    - "Add CLAUDE.md with test-creation rules for AI-assisted development"
+    - "Add pre-commit hooks (.pre-commit-config.yaml) for ruff, bandit, and cmake-format"
+    - "Create CLAUDE.md with testing guidelines covering pytest patterns, parametrized fixtures, and C++ test expectations"
+    - "Add unit tests for individual Python modules (cli.py, utils.py, convert_tokenizer.py) separate from integration tests"
   priority_2:
-    - "Add mypy or pyright type checking for Python source"
-    - "Integrate performance regression detection into CI (currently benchmark exists but is manual)"
-    - "Add Gitleaks for secret detection in CI"
+    - "Add Dockerfile for development/CI container environment"
+    - "Consider adding C++ unit tests via GoogleTest or Catch2 for the native extension code"
+    - "Add type checking with mypy for the Python codebase"
 ---
 
 # Quality Analysis: openvino_tokenizers
 
 ## Executive Summary
-- **Overall Score: 6.2/10**
-- **Repository Type**: C++/Python library (OpenVINO extension for tokenizer conversion)
-- **Primary Languages**: C++ (~123K lines), Python (~6.3K lines)
-- **Key Strengths**: Excellent multi-platform CI/CD, comprehensive parametrized test suite across 30+ HF models, Coverity static analysis, Trivy security scanning, domain-specific AI agent and skills
-- **Critical Gaps**: No code coverage measurement, no C++ unit tests, no pre-commit hooks
-- **Agent Rules Status**: Present (partial) — tokenizer enablement agent + 3 skills, but no test-creation rules
+
+- **Overall Score: 5.6/10**
+- **Repository Type**: C++/Python hybrid library (OpenVINO extension for tokenizer conversion)
+- **Primary Languages**: C++ (63 files, ~6900 lines), Python (18 files, ~4300 lines), JavaScript (npm package wrapper)
+- **JIRA**: RHOAIENG / Model Runtimes (upstream tier)
+- **Key Strengths**: Comprehensive cross-platform CI (Linux, macOS, Windows, manylinux), good regression testing with pass-rate tracking, solid dependency management via Dependabot, Coverity scheduled scans
+- **Critical Gaps**: Zero code coverage tracking, no containerization, no agent rules, no pre-commit hooks
+- **Agent Rules Status**: Missing
 
 ## Quality Scorecard
 
-| Dimension | Score | Status |
-|-----------|-------|--------|
-| Unit Tests | 7/10 | Strong parametrized pytest suite covering 30+ HF models, 4 tokenizer types |
-| Integration/E2E | 7/10 | TF layer tests, ONNX contrib tests, multi-version testing, differential fuzzing |
-| **Build Integration** | **7/10** | **Multi-platform CMake builds (Linux/macOS/Windows), wheel + cpack** |
-| Image Testing | 5/10 | Library project — no container images to test; CI uses pre-built OV images |
-| Coverage Tracking | 3/10 | No codecov/coveralls; custom pass-rate tracking in conftest.py only |
-| CI/CD Automation | 8/10 | Multi-platform CI, concurrency control, sccache/ccache, artifact management |
-| Agent Rules | 6/10 | Domain-specific tokenizer enablement agent + 3 skills; no test-creation rules |
+| Dimension | Score | Weight | Status |
+|-----------|-------|--------|--------|
+| Unit Tests | 6.0/10 | 15% | Good pytest suite with parametrized tokenizer coverage, but tests are integration-heavy |
+| Integration/E2E | 6.5/10 | 20% | Cross-platform CI builds and tests; TF layer tests; differential fuzzing |
+| Build Integration | 7.0/10 | 15% | PR-triggered CMake + wheel builds across 3 OS platforms; sccache/ccache caching |
+| Image Testing | 1.0/10 | 10% | No Dockerfiles or container images in the repository |
+| Coverage Tracking | 1.0/10 | 10% | No coverage tooling whatsoever |
+| CI/CD Automation | 8.0/10 | 15% | Well-structured multi-platform CI with concurrency, timeouts, artifact sharing |
+| Static Analysis | 7.0/10 | 10% | Ruff + Bandit + Coverity + Dependabot; missing pre-commit hooks |
+| Agent Rules | 0.0/10 | 5% | No CLAUDE.md, AGENTS.md, or .claude/ directory |
+
+**Weighted Overall: 5.6/10**
 
 ## Critical Gaps
 
-### 1. No Code Coverage Measurement or Enforcement
-- **Impact**: Cannot identify untested code paths; regressions may go undetected
+### 1. No Code Coverage Tracking or Enforcement
+- **Impact**: Cannot measure test effectiveness; coverage regressions go undetected; blind spots in testing invisible
 - **Severity**: HIGH
-- **Effort**: 4-8 hours
-- **Details**: Neither Python (`pytest-cov`, `codecov`) nor C++ (`gcov`, `lcov`) coverage tools are configured. The custom pass-rate tracking in `tests/conftest.py` tracks tokenizer output match rates, not line/branch coverage.
+- **Effort**: 4-6 hours
+- **Details**: No `.codecov.yml`, no `pytest-cov` in dependencies, no `--cov` flags in CI workflows. The project has a custom pass-rate tracking mechanism in `conftest.py` that tracks test pass/fail rates against a baseline, but this is not code coverage — it measures output correctness against HuggingFace tokenizers, not which code paths are exercised.
 
-### 2. No C++ Unit Tests
-- **Impact**: 123,340 lines of C++ source tested only indirectly through Python integration tests
-- **Severity**: HIGH
-- **Effort**: 40-80 hours
-- **Details**: The `src/` directory contains 71 C++ files implementing tokenizer operations (WordPiece, BPE, SentencePiece, regex splitting, Unicode normalization, etc.). All testing goes through the Python `openvino_tokenizers` API. Direct C++ unit tests for core operations would catch regressions faster and provide better error localization.
+### 2. No Container Image or Dockerfile
+- **Impact**: No containerized deployment pathway; downstream consumers (e.g., RHOAI model_server integration) must build from source or pip install
+- **Severity**: MEDIUM
+- **Effort**: 8-12 hours
+- **Details**: The repository has no `Dockerfile`, `Containerfile`, `docker-compose.yml`, or `.dockerignore`. Build containers are provided by the parent OpenVINO project's Azure Container Registry images, but openvino_tokenizers itself ships no container artifacts.
 
-### 3. No Pre-commit Hooks
-- **Impact**: Code quality checks only run in CI, not locally before commit
+### 3. No AI Agent Rules
+- **Impact**: AI-assisted contributions lack guidance on testing standards, build patterns, and code conventions
+- **Severity**: MEDIUM
+- **Effort**: 2-3 hours
+- **Details**: No `CLAUDE.md`, `AGENTS.md`, or `.claude/` directory. AI contributors have no guidance on the project's testing approach (pytest with parametrized tokenizer fixtures), naming conventions, or how to properly test C++/Python hybrid code.
+
+### 4. No Pre-commit Hooks
+- **Impact**: Code style and security issues caught only after push, increasing PR iteration cycles
 - **Severity**: MEDIUM
 - **Effort**: 1-2 hours
-- **Details**: Ruff and Bandit are configured in `pyproject.toml` but only enforced in CI. No `.pre-commit-config.yaml` exists to run checks locally.
-
-### 4. No CodeQL or PR-time SAST for C++
-- **Impact**: C++ code not scanned for memory safety, buffer overflow, or injection vulnerabilities on PRs
-- **Severity**: MEDIUM
-- **Effort**: 2-4 hours
-- **Details**: Coverity runs daily (scheduled), not on PRs. CodeQL would provide PR-time C++ security analysis. The SDL workflow runs Bandit (Python) and Trivy (dependencies) but no C++ SAST.
+- **Details**: Ruff and Bandit are configured in `pyproject.toml` and run in CI (SDL workflow), but there's no `.pre-commit-config.yaml` to enforce them locally before commits.
 
 ## Quick Wins
 
 ### 1. Add pytest-cov and Codecov Integration (2-4 hours)
-- **Impact**: Visibility into Python test coverage with PR-level reporting
-- **Implementation**:
+Add `pytest-cov` to dev dependencies and configure coverage collection in CI:
 ```yaml
-# Add to linux.yml test step
+# In .github/workflows/linux.yml, test step:
 - name: Tokenizers regression tests
-  run: poetry run pytest tests -n auto --cov=openvino_tokenizers --cov-report=xml
+  run: poetry run pytest tests --cov=openvino_tokenizers --cov-report=xml
 
 - name: Upload coverage
-  uses: codecov/codecov-action@v5
+  uses: codecov/codecov-action@v4
   with:
-    files: ./coverage.xml
+    file: coverage.xml
+    fail_ci_if_error: false
 ```
 
-### 2. Add .pre-commit-config.yaml (1-2 hours)
-- **Impact**: Shift-left linting and security checks
-- **Implementation**:
+### 2. Add Pre-commit Hooks (1-2 hours)
 ```yaml
+# .pre-commit-config.yaml
 repos:
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.8.0
+    rev: v0.12.0
     hooks:
       - id: ruff
         args: [--fix]
       - id: ruff-format
   - repo: https://github.com/PyCQA/bandit
-    rev: 1.8.0
+    rev: 1.8.6
     hooks:
       - id: bandit
         args: [-c, pyproject.toml]
         additional_dependencies: ["bandit[toml]"]
 ```
 
-### 3. Enable CodeQL for C++ Analysis (2-3 hours)
-- **Impact**: Automated SAST scanning on PRs for C++ memory safety
-- **Implementation**: Add `.github/workflows/codeql.yml` with C++ and Python language analysis.
-
-### 4. Add CLAUDE.md with Test-Creation Guidance (2-3 hours)
-- **Impact**: Standardize AI-assisted test contributions
-- **Implementation**: Create root `CLAUDE.md` documenting test patterns, fixture conventions, and parametrization approach.
+### 3. Create Basic CLAUDE.md (1-2 hours)
+Document testing patterns, build instructions, and conventions for AI agents.
 
 ## Detailed Findings
 
-### CI/CD Pipeline
+### Unit Tests
 
-**Workflows (7 total)**:
+**Score: 6.0/10**
 
+**Test Files Found:**
+- `tests/tokenizers_test.py` (1114 lines) — Primary test suite with parametrized tokenizer conversion tests
+- `tests/layer_tests.py` (599 lines) — OpenVINO layer operation tests
+- `tests/conftest.py` (194 lines) — Pytest configuration with custom pass-rate tracking
+- `tests/tokenizer_differential_fuzzing.py` (66 lines) — Atheris-based differential fuzzing
+- `tests/utils.py` (25 lines) — Test utilities
+- `js/tests/openvino-tokenizers.test.js` (98 lines) — Node.js test for JS bindings
+
+**Test Framework**: pytest with `pytest-xdist` (parallel execution), `pytest-harvest` (result collection)
+
+**Test-to-Code Ratio**: ~1998 test lines / ~11198 source lines = **0.18** (low; gold standard is 0.5+)
+
+**Strengths:**
+- Extensive parametrized testing across tokenizer types (WordPiece, BPE, SentencePiece, Tiktoken, WordLevel)
+- Tests multiple HuggingFace models (20+ model IDs)
+- Multilingual test strings covering English, Russian, German, French, Chinese, Arabic, Hebrew, Kazakh, Persian
+- Emoji and edge case testing (empty strings, control chars, whitespace)
+- Custom pass-rate regression tracking in `conftest.py`
+
+**Weaknesses:**
+- Tests are primarily integration-style (convert HF tokenizer → compare output), not unit tests of individual modules
+- No isolated unit tests for `cli.py`, `convert_tokenizer.py`, `utils.py`, `hf_parser.py`
+- No C++ unit tests for the native extension (63 .cpp/.hpp files with 0 dedicated tests)
+- Test-to-code ratio is low
+
+### Integration/E2E Tests
+
+**Score: 6.5/10**
+
+**Strengths:**
+- Cross-platform testing: Linux (Ubuntu 22.04), macOS 13, Windows (VS 2022), manylinux_2_28
+- TensorFlow layer tests run against the built tokenizers wheel
+- Tests run against pre-built OpenVINO packages (real integration, not mocked)
+- Differential fuzzing infrastructure with Atheris
+- Poetry-managed test environments ensure reproducible dependencies
+
+**Weaknesses:**
+- No E2E directory structure (`e2e/`, `integration/`)
+- No multi-version testing (single Python 3.11 version tested)
+- No cluster-based testing (N/A for this library type, but multi-Python-version testing would be valuable)
+- Fuzzing test exists but isn't integrated into CI workflows
+
+### Build Integration
+
+**Score: 7.0/10**
+
+**Strengths:**
+- PR-triggered builds across all 3 OS platforms (Linux, macOS, Windows)
+- CMake configure + build + install pipeline validated on every PR
+- Python wheel build validated on every PR
+- Build caching with sccache (Azure-backed, 30GB) on Linux/manylinux and ccache on macOS/Windows
+- Artifact sharing between build and test jobs via GitHub Actions artifacts
+- CPack packaging for C++ distribution alongside wheel packaging
+- Timeout controls on all jobs (10-45 minutes)
+
+**Weaknesses:**
+- No Konflux build simulation or production-like build validation
+- No manylinux compliance check beyond building on manylinux_2_28
+- Jenkinsfile exists but delegates entirely to an external shared library — unclear if it duplicates or supplements GHA
+
+### Image Testing
+
+**Score: 1.0/10**
+
+- No Dockerfiles or Containerfiles in the repository
+- No container image builds or tests
+- Build containers come from parent OpenVINO project's Azure Container Registry
+- No `.dockerignore`
+- Score of 1 (not 0) because CI jobs run in purpose-built containers from `openvinogithubactions.azurecr.io`
+
+### Coverage Tracking
+
+**Score: 1.0/10**
+
+- No `.codecov.yml` or `codecov.yml`
+- No `.coveragerc`
+- No `pytest-cov` in dependencies
+- No `--cov` or `--coverprofile` flags in any CI workflow
+- No coverage thresholds or enforcement
+- Score of 1 (not 0) because the custom pass-rate tracking in `conftest.py` provides a form of regression detection (tracking output match rates against a baseline), though this is not code coverage
+
+### CI/CD Automation
+
+**Score: 8.0/10**
+
+**Workflow Inventory:**
 | Workflow | Trigger | Purpose |
 |----------|---------|---------|
-| `linux.yml` | PR, push, merge_group | Full build + test on Ubuntu 22.04 |
-| `mac.yml` | PR, push, merge_group | Full build + test on macOS ARM64 |
-| `windows.yml` | PR, push, merge_group | Full build + test on Windows VS 2022 |
-| `manylinux_2_28.yml` | PR, push, merge_group | Manylinux build + artifact storage |
-| `coverity.yml` | Daily schedule | Coverity static analysis |
-| `sdl.yml` | PR, push, merge_group | Bandit + Trivy + Dependency Review |
-| `labeler.yml` | PR target | Auto-labeling |
+| `linux.yml` | PR, push, merge_group | Full Linux build + test pipeline |
+| `mac.yml` | PR, push, merge_group | Full macOS build + test pipeline |
+| `windows.yml` | PR, push, merge_group | Full Windows build + test pipeline |
+| `manylinux_2_28.yml` | PR, push, merge_group | manylinux wheel build + test |
+| `sdl.yml` | PR, push, merge_group | Security/SDL checks (Bandit, dependency review) |
+| `coverity.yml` | Schedule (daily), workflow_dispatch | Coverity static analysis scan |
+| `labeler.yml` | PR | Auto-labeling based on changed files |
 
-**Strengths**:
-- Multi-platform coverage (Linux x64, macOS ARM64, Windows, manylinux)
+**Strengths:**
+- All build/test workflows trigger on PRs, push to master, and merge groups
 - Concurrency control with `cancel-in-progress: true` on all workflows
-- Build caching via `sccache` (Azure Blob) on Linux and `ccache` on macOS/Windows
-- Overall status gate jobs aggregate all job results
-- Artifact management with shared drive storage
-- Binary size reporting for release tracking
-- Dependabot configured for pip, GitHub Actions, and npm dependencies
-- `permissions: read-all` principle of least privilege
+- Build caching (sccache with Azure Blob, ccache)
+- Timeout controls on all jobs
+- `permissions: read-all` on most workflows (security best practice)
+- Overall status job that gates on all prerequisite jobs
+- Artifact management for wheel and cpack distributions
+- Jenkinsfile for additional CI (OpenVINO shared library pipeline)
 
-**Gaps**:
-- No PR-time C++ static analysis (Coverity is daily only)
-- No test result aggregation/visualization (JUnit XML uploaded but no PR annotation)
-- Jenkins pipeline (`Jenkinsfile`) exists but unclear if actively used alongside GHA
+**Weaknesses:**
+- No test parallelization within test jobs (pytest-xdist available but not used with `-n` in CI)
+- No periodic/nightly test runs beyond Coverity
+- No matrix strategy for Python versions (single 3.11 target)
 
-### Test Coverage
+### Static Analysis
 
-**Test Suite Summary**:
+**Score: 7.0/10**
 
-| Test File | Lines | Description |
-|-----------|-------|-------------|
-| `tokenizers_test.py` | 1,064 | Core regression tests — tokenize + detokenize across 30+ models |
-| `layer_tests.py` | 658 | OpenVINO layer-level tests (normalization, splitting, encoding) |
-| `onnx_contrib_test.py` | 454 | ONNX Frontend conversion extension tests |
-| `conftest.py` | 259 | Test infrastructure, pass-rate tracking, README generation |
-| `utils.py` | 130 | Test utilities (AsyncTokenizerRunner, HF tokenizer helpers) |
-| `tokenizer_differential_fuzzing.py` | 66 | Atheris-based differential fuzzing |
-| `__init__.py` | 0 | Package marker |
-| `js/tests/openvino-tokenizers.test.js` | ~80 | JS binding path resolution tests |
-| `.github/actions/find_wheel/tests/index.test.js` | ~30 | GitHub Action tests |
+#### Linting
+- **Ruff**: Configured in `pyproject.toml` with custom rules (`C`, `E`, `F`, `I`, `W`, `UP006`), line length 119, per-file ignores
+- **Bandit**: Comprehensive configuration in `pyproject.toml` with explicit test selection and skip lists; runs in SDL workflow on every PR
+- **Coverity**: Scheduled daily scans via `coverity.yml` workflow
+- **No C++ linting**: No clang-tidy, cppcheck, or similar for the C++ codebase
 
-**Testing Approach**:
-- **Parametrized regression testing**: Tests run across 30+ HuggingFace model checkpoints spanning 4 tokenizer types (WordPiece, BPE, SentencePiece, Tiktoken)
-- **Multi-string testing**: English, multilingual (8 languages), emoji, edge cases (whitespace, control characters, empty strings)
-- **Bidirectional testing**: Both tokenization and detokenization verified against HuggingFace reference
-- **Multi-version testing**: Tests run with both default transformers and transformers v4
-- **Async testing**: `AsyncTokenizerRunner` for throughput-mode testing
-- **Pass rate tracking**: Custom `conftest.py` hook tracks pass rates across runs and fails CI if rate decreases
-- **Pair input testing**: Tests for two-input tokenizer configurations (rerankers, BERT pairs)
-- **Cache validation**: Tests verify model loading from OpenVINO model cache
-- **RT info verification**: Tests validate runtime metadata propagation
-- **Differential fuzzing**: Atheris-based fuzzer compares OV tokenizer output against HuggingFace reference
+#### FIPS Compatibility
+- No non-FIPS-compliant crypto imports detected in Python or C++ code
+- No FIPS build tags (not applicable — library is a tokenizer, not crypto-dependent)
+- No Dockerfile base images to evaluate
 
-**Test-to-Code Ratio**: ~2,631 test lines / ~6,349 Python source lines = **0.41** (adequate for Python; C++ untested directly)
+#### Dependency Alerts
+- **Dependabot**: Configured for 3 ecosystems:
+  - `pip` (Python dependencies) — daily checks
+  - `github-actions` (CI actions) — daily checks
+  - `npm` (JavaScript dependencies) — daily checks
+  - All with assignees and PR limits
+- **Dependency Review**: `actions/dependency-review-action` runs on PRs in SDL workflow
 
-**Gaps**:
-- No C++ unit tests for the 123K-line C++ codebase
-- No line/branch coverage measurement
-- No coverage thresholds or enforcement
-- Fuzzing test exists but appears manual (not in CI workflows)
-- No contract tests between Python API and C++ extension
-- Benchmark suite exists but not integrated into CI for regression detection
+### Agent Rules
 
-### Code Quality
+**Score: 0.0/10**
 
-**Configured Tools**:
-- **Ruff**: `pyproject.toml` — line-length=119, select C/E/F/I/W/UP006, isort configured
-- **Bandit**: `pyproject.toml` — comprehensive test/skip configuration, excludes `tests/` directory
-- **Poetry**: Dependency management with optional groups (dev, onnx_tests, benchmark, fuzzing)
-
-**Gaps**:
-- No pre-commit hooks (`.pre-commit-config.yaml` missing)
-- No mypy/pyright type checking
-- No C++ linting (clang-tidy, cppcheck)
-- No cmake-format or cmake-lint
-
-### Container Images
-
-- **Not applicable**: This is a library, not a containerized application
-- CI uses pre-built OpenVINO container images (`openvinogithubactions.azurecr.io/...`)
-- No Dockerfiles or Containerfiles in the repository
-- Image testing dimension scored based on the fact that the project distributes as wheels, not containers
-
-### Security
-
-**Configured**:
-- **Trivy**: Filesystem scanning on PRs (`sdl.yml`)
-- **Bandit**: Python SAST on PRs (`sdl.yml`)
-- **Dependency Review**: License allowlist + vulnerability check on PRs
-- **Coverity**: Daily C++ static analysis (scheduled)
-- **Dependabot**: Automated dependency updates (pip, GitHub Actions, npm)
-- **Permissions**: `permissions: read-all` on all workflows
-
-**Gaps**:
-- No CodeQL for PR-time C++ SAST
-- No Gitleaks/TruffleHog for secret detection
-- No SBOM generation
-- Coverity is daily-only, not PR-triggered
-
-### Agent Rules (Agentic Flow Quality)
-
-**Status**: Present (partial)
-
-**What exists**:
-- `.github/agents/tokenizer-enablement.agent.md` — Comprehensive orchestrator agent with 5-step pipeline (Check → Diagnose → Fix → Verify → Report)
-- `.github/skills/tokenizer-checker/SKILL.md` — Tokenizer validation skill
-- `.github/skills/tokenizer-diagnostics/SKILL.md` — Tokenizer diagnosis skill
-- `.github/skills/tokenizer-fix-python/SKILL.md` — Python fix skill
-
-**Quality Assessment**:
-- The agent definition is well-structured with clear pipeline stages, error handling, and iteration limits (max 3 fix attempts)
-- Skills cover the tokenizer enablement workflow end-to-end
-- Agent includes regression checking against baseline models
-- Good separation of concerns (checker, diagnostics, fix)
-
-**Gaps**:
-- No `CLAUDE.md` or `AGENTS.md` at root level
-- No `.claude/` directory
-- No test-creation rules (how to write new tests for this repo)
-- No general development guidance for AI agents
-- Agent rules are domain-specific (tokenizer enablement only), not covering general contributions
-- No rules for C++ development or testing patterns
-
-**Recommendation**: Generate comprehensive test-creation rules with `/test-rules-generator` and add a root `CLAUDE.md` covering the full development workflow.
-
-### Benchmark Infrastructure
-
-- `benchmark/benchmark.py` — Performance benchmarking with matplotlib/seaborn visualization
-- Compares OpenVINO tokenizers against HuggingFace reference for throughput
-- Uses async inference queues for realistic throughput measurement
-- **Not integrated into CI** — runs manually only
-- No performance regression detection
+- **Status**: Missing
+- **Coverage**: None
+- **Quality**: N/A
+- **Gaps**: No `CLAUDE.md`, `AGENTS.md`, `.claude/` directory, or `.claude/rules/` files
+- **Recommendation**: Generate test rules with `/test-rules-generator` to cover:
+  - pytest patterns with parametrized tokenizer fixtures
+  - Layer test patterns for OpenVINO operations
+  - JS test patterns using Node.js `node:test`
+  - C++ testing expectations (currently none, but should guide contributors)
 
 ## Recommendations
 
 ### Priority 0 (Critical)
 
-1. **Add Python code coverage tracking with codecov** — Add `pytest-cov` to dev dependencies, configure `--cov=openvino_tokenizers --cov-report=xml` in CI test steps, add Codecov GitHub App integration with minimum threshold (e.g., 70%)
-2. **Add CodeQL workflow for C++ and Python** — Create `.github/workflows/codeql.yml` triggered on PRs to complement daily Coverity with PR-time analysis
+1. **Add pytest-cov and codecov integration** — Install `pytest-cov`, add `--cov=openvino_tokenizers --cov-report=xml` to CI test commands, add codecov upload step, and create `.codecov.yml` with a minimum coverage threshold (start at 50%, increase over time)
+
+2. **Establish coverage gates** — Configure codecov to fail PRs that decrease coverage below the threshold, providing automated regression protection
 
 ### Priority 1 (High Value)
 
-3. **Create C++ unit tests for core tokenizer operations** — Start with the most critical operations: WordPiece tokenization, BPE merge, regex splitting, Unicode normalization. Use Google Test or Catch2 framework
-4. **Add .pre-commit-config.yaml** — Include ruff, bandit, trailing-whitespace, end-of-file-fixer. Optionally add clang-format for C++ files
-5. **Add CLAUDE.md with test-creation rules** — Document pytest fixture patterns, parametrization conventions, how to add new model checkpoints to the test matrix, and conftest.py pass-rate tracking behavior
+3. **Add pre-commit hooks** — Create `.pre-commit-config.yaml` with ruff (lint + format), bandit, and trailing-whitespace checks to catch issues before push
+
+4. **Create CLAUDE.md** — Document:
+   - How to build (CMake configure + build, pip wheel)
+   - Testing patterns (pytest with parametrized fixtures, `poetry run pytest tests`)
+   - Code conventions (ruff config, line length 119)
+   - C++/Python boundary expectations
+
+5. **Add isolated unit tests** — Write unit tests for individual Python modules (`cli.py`, `convert_tokenizer.py`, `utils.py`) that don't require downloading HF models, reducing test time and improving isolation
+
+6. **Enable pytest-xdist in CI** — The dependency exists; add `-n auto` or `-n logical` to pytest calls in Linux/macOS workflows to parallelize test execution and reduce wall time
 
 ### Priority 2 (Nice-to-Have)
 
-6. **Add mypy type checking** — The Python codebase uses type annotations already; adding mypy enforcement would catch type errors early
-7. **Integrate benchmark into CI** — Add periodic performance regression detection by running benchmark suite and comparing against baseline
-8. **Add Gitleaks for secret detection** — Add `.github/workflows/gitleaks.yml` or integrate into `sdl.yml`
-9. **Integrate fuzzing into CI** — The differential fuzzing test exists but is not run in CI; add a scheduled workflow for continuous fuzzing
+7. **Add Python version matrix** — Test against Python 3.10, 3.11, 3.12, 3.13 (all listed in classifiers) to catch compatibility issues
+
+8. **Add C++ unit tests** — Use GoogleTest or Catch2 for the 63 C++ source files; currently zero C++ tests
+
+9. **Add clang-tidy for C++ linting** — Complement Coverity with clang-tidy checks in CI for immediate feedback
+
+10. **Integrate fuzzing into CI** — The Atheris-based differential fuzzing test exists but isn't run in CI; add a periodic workflow for short fuzzing runs
 
 ## Comparison to Gold Standards
 
 | Dimension | openvino_tokenizers | odh-dashboard | notebooks | kserve |
 |-----------|-------------------|---------------|-----------|--------|
-| Unit Tests | 7/10 — Parametrized pytest | 9/10 — Multi-layer | 7/10 — Notebook validation | 8/10 — Go testing |
-| Integration/E2E | 7/10 — TF/ONNX/multi-version | 9/10 — Cypress E2E | 6/10 — Image-focused | 9/10 — Multi-version E2E |
-| Build Integration | 7/10 — Multi-platform CMake | 8/10 — Konflux simulation | 7/10 — Multi-arch images | 8/10 — Multi-platform |
-| Coverage Tracking | 3/10 — Pass-rate only | 8/10 — Codecov enforced | 5/10 — Basic | 8/10 — Codecov enforced |
-| CI/CD Automation | 8/10 — Excellent multi-platform | 9/10 — Comprehensive | 8/10 — Well-organized | 9/10 — Advanced |
-| Agent Rules | 6/10 — Domain-specific agent | 9/10 — Comprehensive rules | 3/10 — Minimal | 4/10 — Basic |
-| **Overall** | **6.2/10** | **8.7/10** | **6.0/10** | **7.7/10** |
+| Unit Tests | 6.0 — Parametrized pytest | 9.0 — Jest + React Testing Lib | 7.0 — Notebook validation | 8.0 — Go testing + envtest |
+| Integration/E2E | 6.5 — Cross-platform CI | 9.0 — Cypress E2E | 8.0 — Multi-image validation | 9.0 — Multi-version K8s |
+| Build Integration | 7.0 — CMake + wheel across 3 OS | 8.0 — PR image builds | 9.0 — 5-layer image validation | 7.0 — Operator bundle |
+| Image Testing | 1.0 — No containers | 7.0 — Container builds | 9.0 — Testcontainers | 6.0 — Basic image tests |
+| Coverage Tracking | 1.0 — None | 8.0 — Codecov enforced | 5.0 — Partial | 8.0 — Codecov with thresholds |
+| CI/CD Automation | 8.0 — Comprehensive cross-platform | 9.0 — Full automation | 8.0 — Well-organized | 8.0 — Matrix testing |
+| Static Analysis | 7.0 — Ruff + Bandit + Coverity | 8.0 — ESLint + TypeScript strict | 6.0 — Basic linting | 7.0 — golangci-lint |
+| Agent Rules | 0.0 — Missing | 8.0 — Comprehensive CLAUDE.md | 2.0 — Minimal | 3.0 — Basic |
+| **Overall** | **5.6** | **8.5** | **7.0** | **7.5** |
 
 ## File Paths Reference
 
 ### CI/CD
-- `.github/workflows/linux.yml` — Linux build + test (primary)
-- `.github/workflows/mac.yml` — macOS ARM64 build + test
-- `.github/workflows/windows.yml` — Windows build + test
-- `.github/workflows/manylinux_2_28.yml` — Manylinux build
-- `.github/workflows/coverity.yml` — Daily Coverity scan
-- `.github/workflows/sdl.yml` — Security testing (Bandit + Trivy + Dependency Review)
-- `.github/workflows/labeler.yml` — PR auto-labeling
-- `Jenkinsfile` — Jenkins pipeline integration
+- `.github/workflows/linux.yml` — Primary Linux build + test pipeline
+- `.github/workflows/mac.yml` — macOS build + test pipeline
+- `.github/workflows/windows.yml` — Windows build + test pipeline
+- `.github/workflows/manylinux_2_28.yml` — manylinux wheel build
+- `.github/workflows/sdl.yml` — Security/SDL checks (Bandit, dependency review)
+- `.github/workflows/coverity.yml` — Daily Coverity static analysis
+- `.github/workflows/labeler.yml` — Auto-labeling
+- `.github/dependabot.yml` — Dependency update configuration
+- `Jenkinsfile` — OpenVINO shared library CI pipeline
 
 ### Testing
-- `tests/tokenizers_test.py` — Core regression tests (30+ models)
-- `tests/layer_tests.py` — OpenVINO layer-level tests
-- `tests/onnx_contrib_test.py` — ONNX contrib extension tests
-- `tests/conftest.py` — Test infrastructure + pass-rate tracking
+- `tests/tokenizers_test.py` — Main tokenizer regression test suite
+- `tests/layer_tests.py` — OpenVINO layer operation tests
+- `tests/conftest.py` — Pytest configuration with pass-rate tracking
+- `tests/tokenizer_differential_fuzzing.py` — Atheris differential fuzzing
 - `tests/utils.py` — Test utilities
-- `tests/tokenizer_differential_fuzzing.py` — Atheris fuzzing
-- `tests/pass_rates.json` — Pass rate baseline
-- `tests/stats.json` — Test status tracking
-- `js/tests/openvino-tokenizers.test.js` — JS binding tests
-- `benchmark/benchmark.py` — Performance benchmarks
+- `js/tests/openvino-tokenizers.test.js` — JavaScript binding tests
+- `benchmark/benchmark.py` — Performance benchmarking
+
+### Build Configuration
+- `CMakeLists.txt` — Top-level CMake configuration
+- `src/CMakeLists.txt` — C++ source CMake configuration
+- `pyproject.toml` — Python project, build, and tool configuration
+- `poetry.lock` — Locked Python dependencies
+
+### Source Code
+- `python/openvino_tokenizers/` — Python source (11 files)
+- `src/` — C++ source (63 files)
+- `js/` — JavaScript/npm package wrapper
 
 ### Code Quality
-- `pyproject.toml` — Ruff, Bandit, Poetry, build config
-- `.github/dependabot.yml` — Automated dependency updates
-- `.github/dependency_review.yml` — License allowlist
-
-### Agent Rules
-- `.github/agents/tokenizer-enablement.agent.md` — Tokenizer enablement orchestrator
-- `.github/skills/tokenizer-checker/SKILL.md` — Checker skill
-- `.github/skills/tokenizer-diagnostics/SKILL.md` — Diagnostics skill
-- `.github/skills/tokenizer-fix-python/SKILL.md` — Python fix skill
-
-### Source
-- `src/*.cpp`, `src/*.hpp` — C++ tokenizer implementations (71 files, ~123K lines)
-- `python/` — Python package source (~6.3K lines)
-- `cmake/` — CMake build configuration
-- `CMakeLists.txt` — Root build file
+- `pyproject.toml` → `[tool.ruff]` — Ruff linter configuration
+- `pyproject.toml` → `[tool.bandit]` — Bandit security linter configuration
+- `.github/dependabot.yml` — Dependabot configuration (pip, npm, github-actions)
+- `.github/dependency_review.yml` — Dependency review configuration

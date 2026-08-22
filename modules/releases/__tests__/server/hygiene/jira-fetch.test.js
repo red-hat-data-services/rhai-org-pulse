@@ -6,7 +6,8 @@ const {
   extractClonesLinks,
   parseChangelog,
   transformIssue,
-  CUSTOM_FIELDS
+  CUSTOM_FIELDS,
+  numericField
 } = require('../../../server/hygiene/jira-fetch')
 
 // ─── serializeField ──────────────────────────────────────────────────
@@ -52,8 +53,8 @@ describe('serializeField', function () {
     expect(serializeField([42])).toBe('42')
   })
 
-  it('stringifies object without name or value', function () {
-    expect(serializeField({ id: 123 })).toBe('[object Object]')
+  it('returns null for a label-less object (avoids "[object Object]")', function () {
+    expect(serializeField({ id: 123 })).toBeNull()
   })
 
   it('stringifies a number', function () {
@@ -61,6 +62,41 @@ describe('serializeField', function () {
   })
 })
 
+
+// ─── numericField ────────────────────────────────────────────────────
+
+describe('numericField', function () {
+  it('returns null for null/undefined', function () {
+    expect(numericField(null)).toBeNull()
+    expect(numericField(undefined)).toBeNull()
+  })
+
+  it('returns plain number as-is', function () {
+    expect(numericField(42)).toBe(42)
+    expect(numericField(3.14)).toBe(3.14)
+    expect(numericField(0)).toBe(0)
+  })
+
+  it('unwraps Jira object format { value: N }', function () {
+    expect(numericField({ value: 100 })).toBe(100)
+    expect(numericField({ value: 4.5 })).toBe(4.5)
+    expect(numericField({ value: 0 })).toBe(0)
+  })
+
+  it('returns null for object with null value', function () {
+    expect(numericField({ value: null })).toBeNull()
+  })
+
+  it('returns null for non-numeric values', function () {
+    expect(numericField('not-a-number')).toBeNull()
+    expect(numericField({ value: 'abc' })).toBeNull()
+  })
+
+  it('coerces numeric strings', function () {
+    expect(numericField('42')).toBe(42)
+    expect(numericField({ value: '3.14' })).toBe(3.14)
+  })
+})
 // ─── computeRiceStatus ──────────────────────────────────────────────
 
 describe('computeRiceStatus', function () {
@@ -571,7 +607,7 @@ describe('transformIssue', function () {
 
 const { fetchHygieneFeatures } = require('../../../server/hygiene/jira-fetch')
 
-describe('fetchHygieneFeatures jqlVersions option', function () {
+describe('fetchHygieneFeatures jqlVersions option', function() {
   // Capture JQL queries without hitting Jira
   function createMockJira() {
     var capturedJqls = []
@@ -660,5 +696,184 @@ describe('fetchHygieneFeatures jqlVersions option', function () {
       jqlVersions: ['rhoai-3.5']
     })
     expect(result.version).toBe('rhoai-3.5.z')
+  })
+
+  it('broadens the main query to fixVersion OR Target Version', async function () {
+    var mock = createMockJira()
+    await fetchHygieneFeatures(mock.mockJiraRequest, mock.mockFetchAll, 'rhoai-3.5', {}, null, {
+      jqlVersions: ['3.5 GA RHOAI RELEASE']
+    })
+    expect(mock.capturedJqls[0]).toContain('fixVersion = "3.5 GA RHOAI RELEASE"')
+    expect(mock.capturedJqls[0]).toContain('"Target Version" = "3.5 GA RHOAI RELEASE"')
+    expect(mock.capturedJqls[0]).toContain(' OR ')
+  })
+})
+
+// ─── Version resolution helpers ────────────────────────────────────
+
+const {
+  extractVersionNames,
+  buildVersionReleaseMap,
+  resolveReleaseId,
+  computeEffectiveReleaseId
+} = require('../../../server/hygiene/jira-fetch')
+
+describe('extractVersionNames', function () {
+  it('returns [] for null/undefined', function () {
+    expect(extractVersionNames(null)).toEqual([])
+    expect(extractVersionNames(undefined)).toEqual([])
+  })
+  it('extracts name from a single object', function () {
+    expect(extractVersionNames({ name: '3.5 GA RHOAI RELEASE' })).toEqual(['3.5 GA RHOAI RELEASE'])
+  })
+  it('extracts names from an array of objects', function () {
+    expect(extractVersionNames([{ name: 'a' }, { name: 'b' }])).toEqual(['a', 'b'])
+  })
+  it('handles bare strings and string arrays', function () {
+    expect(extractVersionNames('3.5')).toEqual(['3.5'])
+    expect(extractVersionNames(['x', 'y'])).toEqual(['x', 'y'])
+  })
+})
+
+describe('buildVersionReleaseMap', function () {
+  it('maps lowercased fixVersion strings to release ids', function () {
+    var map = buildVersionReleaseMap([
+      { id: 'rhoai-3.5', fixVersions: ['rhoai-3.5', '3.5 GA RHOAI RELEASE'] },
+      { id: 'rhoai-3.6', fixVersions: ['3.6 GA RHOAI RELEASE'] }
+    ])
+    expect(map['rhoai-3.5']).toBe('rhoai-3.5')
+    expect(map['3.5 ga rhoai release']).toBe('rhoai-3.5')
+    expect(map['3.6 ga rhoai release']).toBe('rhoai-3.6')
+  })
+  it('tolerates missing fixVersions / null input', function () {
+    expect(buildVersionReleaseMap([{ id: 'x' }])).toEqual({})
+    expect(buildVersionReleaseMap(null)).toEqual({})
+  })
+})
+
+describe('resolveReleaseId', function () {
+  var map = { '3.5 ga rhoai release': 'rhoai-3.5' }
+  it('resolves the first matching name (case-insensitive)', function () {
+    expect(resolveReleaseId(['3.5 GA RHOAI RELEASE'], map)).toBe('rhoai-3.5')
+  })
+  it('returns null when nothing matches', function () {
+    expect(resolveReleaseId(['nope'], map)).toBeNull()
+    expect(resolveReleaseId([], map)).toBeNull()
+  })
+})
+
+describe('computeEffectiveReleaseId', function () {
+  var active = new Set(['rhoai-3.5', 'rhoai-3.6'])
+  it('prefers fix when it resolves to an active release', function () {
+    expect(computeEffectiveReleaseId('rhoai-3.6', 'rhoai-3.5', active)).toBe('rhoai-3.6')
+  })
+  it('falls back to target when the fix release is not active', function () {
+    expect(computeEffectiveReleaseId('rhoai-3.4', 'rhoai-3.5', active)).toBe('rhoai-3.5')
+  })
+  it('uses target when fix is missing', function () {
+    expect(computeEffectiveReleaseId(null, 'rhoai-3.5', active)).toBe('rhoai-3.5')
+  })
+  it('returns any resolved id when neither is active', function () {
+    expect(computeEffectiveReleaseId('rhoai-3.4', null, active)).toBe('rhoai-3.4')
+  })
+  it('returns null when nothing is set', function () {
+    expect(computeEffectiveReleaseId(null, null, active)).toBeNull()
+  })
+})
+
+// ─── transformIssue: target/fix version fields ─────────────────────
+
+describe('transformIssue target/fix version fields', function () {
+  function issue(overrides) {
+    return {
+      key: 'T-1',
+      fields: Object.assign({
+        summary: 's', issuetype: { name: 'Feature' }, status: { name: 'New' }
+      }, overrides)
+    }
+  }
+  it('extracts targetVersions from the custom field', function () {
+    var t = transformIssue(issue({ [CUSTOM_FIELDS.targetVersion]: { name: '3.5 GA RHOAI RELEASE' } }), {})
+    expect(t.targetVersions).toEqual(['3.5 GA RHOAI RELEASE'])
+  })
+  it('flags missingTargetVersion when fix set but target empty', function () {
+    var t = transformIssue(issue({ fixVersions: [{ name: '3.5 GA RHOAI RELEASE' }] }), {})
+    expect(t.missingTargetVersion).toBe(true)
+  })
+  it('does not flag when target is present', function () {
+    var t = transformIssue(issue({ fixVersions: [{ name: 'x' }], [CUSTOM_FIELDS.targetVersion]: { name: 'y' } }), {})
+    expect(t.missingTargetVersion).toBe(false)
+  })
+  it('does not flag when there is no fix version', function () {
+    expect(transformIssue(issue({}), {}).missingTargetVersion).toBe(false)
+  })
+  it('initializes resolved release ids to null', function () {
+    var t = transformIssue(issue({}), {})
+    expect(t.targetReleaseId).toBeNull()
+    expect(t.fixReleaseId).toBeNull()
+    expect(t.effectiveReleaseId).toBeNull()
+  })
+})
+
+// ─── fetchHygieneFeatures: effective-release membership ─────────────
+
+describe('fetchHygieneFeatures effective-release membership', function () {
+  function makeIssue(key, fixName, targetName) {
+    return {
+      key: key,
+      fields: {
+        summary: key,
+        issuetype: { name: 'Feature' },
+        status: { name: 'New' },
+        fixVersions: fixName ? [{ name: fixName }] : [],
+        [CUSTOM_FIELDS.targetVersion]: targetName ? { name: targetName } : null
+      }
+    }
+  }
+  // Return the given features only for the main (Target Version) query; other
+  // supplementary/RFE queries get an empty result.
+  function mockJira(features) {
+    return {
+      mockJiraRequest: function () { return Promise.resolve({}) },
+      mockFetchAll: function (_j, jql) {
+        if (jql.indexOf('"Target Version"') !== -1) return Promise.resolve(features)
+        return Promise.resolve([])
+      }
+    }
+  }
+  var MAP = {
+    '3.4 ga rhoai release': 'rhoai-3.4',
+    '3.5 ga rhoai release': 'rhoai-3.5',
+    '3.6 ga rhoai release': 'rhoai-3.6'
+  }
+
+  it('keeps a feature whose fix version is the refreshed release', async function () {
+    var m = mockJira([makeIssue('F-1', '3.5 GA RHOAI RELEASE', '3.5 GA RHOAI RELEASE')])
+    var res = await fetchHygieneFeatures(m.mockJiraRequest, m.mockFetchAll, 'rhoai-3.5', {}, null, {
+      jqlVersions: ['3.5 GA RHOAI RELEASE'], versionReleaseMap: MAP,
+      activeReleaseIds: ['rhoai-3.5', 'rhoai-3.6'], releaseId: 'rhoai-3.5'
+    })
+    expect(res.features['F-1']).toBeTruthy()
+    expect(res.features['F-1'].fixReleaseId).toBe('rhoai-3.5')
+    expect(res.features['F-1'].effectiveReleaseId).toBe('rhoai-3.5')
+  })
+
+  it('drops a feature whose fix points to a different active release (fix precedence)', async function () {
+    var m = mockJira([makeIssue('F-2', '3.6 GA RHOAI RELEASE', '3.5 GA RHOAI RELEASE')])
+    var res = await fetchHygieneFeatures(m.mockJiraRequest, m.mockFetchAll, 'rhoai-3.5', {}, null, {
+      jqlVersions: ['3.5 GA RHOAI RELEASE'], versionReleaseMap: MAP,
+      activeReleaseIds: ['rhoai-3.5', 'rhoai-3.6'], releaseId: 'rhoai-3.5'
+    })
+    expect(res.features['F-2']).toBeFalsy()
+  })
+
+  it('keeps a feature under target when its fix release is not active', async function () {
+    var m = mockJira([makeIssue('F-3', '3.4 GA RHOAI RELEASE', '3.5 GA RHOAI RELEASE')])
+    var res = await fetchHygieneFeatures(m.mockJiraRequest, m.mockFetchAll, 'rhoai-3.5', {}, null, {
+      jqlVersions: ['3.5 GA RHOAI RELEASE'], versionReleaseMap: MAP,
+      activeReleaseIds: ['rhoai-3.5'], releaseId: 'rhoai-3.5'
+    })
+    expect(res.features['F-3']).toBeTruthy()
+    expect(res.features['F-3'].effectiveReleaseId).toBe('rhoai-3.5')
   })
 })

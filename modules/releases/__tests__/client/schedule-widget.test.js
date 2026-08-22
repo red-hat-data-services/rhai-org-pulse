@@ -24,6 +24,7 @@ function makeRelease(id, opts = {}) {
     milestones: {
       ga: opts.ga || null,
       codeFreeze: opts.codeFreeze || null,
+      featureFreeze: opts.featureFreeze || null,
       planningFreeze: opts.planningFreeze || null
     }
   }
@@ -77,10 +78,10 @@ describe('ScheduleWidget', () => {
     const wrapper = mount(ScheduleWidget)
     await flushPromises()
 
-    const items = wrapper.findAll('[class*="px-5 py-2"]')
-    expect(items.length).toBeGreaterThanOrEqual(2)
-    expect(items[0].text()).toContain('RHOAI-3.4')
-    expect(items[0].text()).toContain('5d')
+    const heroCard = wrapper.find('[class*="rounded-lg border px-4"]')
+    expect(heroCard.exists()).toBe(true)
+    expect(heroCard.text()).toContain('RHOAI-3.4')
+    expect(heroCard.text()).toContain('5')
   })
 
   it('only shows active releases', async () => {
@@ -115,7 +116,7 @@ describe('ScheduleWidget', () => {
     expect(wrapper.text()).toContain('Release')
   })
 
-  it('limits to 6 milestones maximum', async () => {
+  it('limits to 5 milestones maximum (1 hero + 4 list)', async () => {
     apiRequest.mockResolvedValue({
       releases: [
         makeRelease('rhoai-3.4', {
@@ -138,8 +139,10 @@ describe('ScheduleWidget', () => {
     const wrapper = mount(ScheduleWidget)
     await flushPromises()
 
-    const items = wrapper.findAll('[class*="px-5 py-2"]')
-    expect(items).toHaveLength(6)
+    const heroCard = wrapper.find('[class*="rounded-lg border px-4"]')
+    expect(heroCard.exists()).toBe(true)
+    const listItems = wrapper.findAll('[class*="px-5 py-2"]')
+    expect(listItems).toHaveLength(4)
   })
 
   it('shows "Today" for milestones due today', async () => {
@@ -227,7 +230,7 @@ describe('ScheduleWidget', () => {
       const wrapper = mount(ScheduleWidget)
       await flushPromises()
 
-      await wrapper.find('select').setValue('rhoai')
+      await wrapper.find('select').setValue('product:rhoai')
       expect(wrapper.text()).toContain('RHOAI-3.5')
       expect(wrapper.text()).not.toContain('RHELAI-1.0')
       expect(wrapper.text()).not.toContain('RHAII-1.0')
@@ -238,7 +241,7 @@ describe('ScheduleWidget', () => {
       const wrapper = mount(ScheduleWidget)
       await flushPromises()
 
-      await wrapper.find('select').setValue('rhoai')
+      await wrapper.find('select').setValue('product:rhoai')
       await wrapper.find('select').setValue('')
       expect(wrapper.text()).toContain('RHOAI-3.5')
       expect(wrapper.text()).toContain('RHELAI-1.0')

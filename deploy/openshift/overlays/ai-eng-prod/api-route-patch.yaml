@@ -5,5 +5,8 @@ metadata:
   labels:
     shard: internal
     paas.redhat.com/appcode: AMBC-001
+  annotations:
+    # PM Hub component-release-load does live multi-project Jira; default 30s → 504
+    haproxy.router.openshift.io/timeout: 120s
 spec:
   host: api-team-tracker.apps.int.spoke.prod.us-west-2.aws.paas.redhat.com

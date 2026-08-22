@@ -1,0 +1,110 @@
+{
+  "releaseNumber": "rhoai-3.5",
+  "fetchedAt": "2026-08-04T10:00:00Z",
+  "overall": {
+    "signoffDone": 14,
+    "signoffTotal": 22,
+    "signoffPct": 64,
+    "failedOpen": 8
+  },
+  "components": [
+    {
+      "name": "Model Serving",
+      "signoffs": { "done": 4, "inProgress": 1, "todo": 0, "total": 5, "pct": 80 },
+      "failedOpen": 1,
+      "riskLevel": "green",
+      "issues": [
+        { "key": "RHOAIENG-68001", "summary": "TFA Sign-Off: Model Serving Nightly", "status": "Closed", "statusCategory": "done", "assignee": "Aarav Patel", "link": "https://redhat.atlassian.net/browse/RHOAIENG-68001" },
+        { "key": "RHOAIENG-68002", "summary": "TFA Sign-Off: Model Serving RC1", "status": "Closed", "statusCategory": "done", "assignee": "Aarav Patel", "link": "https://redhat.atlassian.net/browse/RHOAIENG-68002" },
+        { "key": "RHOAIENG-68003", "summary": "TFA Sign-Off: Model Serving RC2", "status": "Closed", "statusCategory": "done", "assignee": "Mei Chen", "link": "https://redhat.atlassian.net/browse/RHOAIENG-68003" },
+        { "key": "RHOAIENG-68004", "summary": "TFA Sign-Off: Model Serving RC3", "status": "Closed", "statusCategory": "done", "assignee": "Mei Chen", "link": "https://redhat.atlassian.net/browse/RHOAIENG-68004" },
+        { "key": "RHOAIENG-68005", "summary": "TFA Sign-Off: Model Serving GA", "status": "In Progress", "statusCategory": "inProgress", "assignee": "Aarav Patel", "link": "https://redhat.atlassian.net/browse/RHOAIENG-68005" }
+      ],
+      "failedIssues": [
+        { "key": "RHOAIENG-69001", "summary": "vLLM inference latency regression on GPU nodes", "status": "In Progress", "assignee": "Aarav Patel", "link": "https://redhat.atlassian.net/browse/RHOAIENG-69001" }
+      ]
+    },
+    {
+      "name": "KubeRay",
+      "signoffs": { "done": 2, "inProgress": 1, "todo": 0, "total": 3, "pct": 67 },
+      "failedOpen": 0,
+      "riskLevel": "yellow",
+      "issues": [
+        { "key": "RHOAIENG-68010", "summary": "TFA Sign-Off: KubeRay Nightly", "status": "Closed", "statusCategory": "done", "assignee": "Liam O'Brien", "link": "https://redhat.atlassian.net/browse/RHOAIENG-68010" },
+        { "key": "RHOAIENG-68011", "summary": "TFA Sign-Off: KubeRay RC1", "status": "Closed", "statusCategory": "done", "assignee": "Liam O'Brien", "link": "https://redhat.atlassian.net/browse/RHOAIENG-68011" },
+        { "key": "RHOAIENG-68012", "summary": "TFA Sign-Off: KubeRay RC2", "status": "In Progress", "statusCategory": "inProgress", "assignee": "Liam O'Brien", "link": "https://redhat.atlassian.net/browse/RHOAIENG-68012" }
+      ],
+      "failedIssues": []
+    },
+    {
+      "name": "AI Core Dashboard",
+      "signoffs": { "done": 2, "inProgress": 0, "todo": 2, "total": 4, "pct": 50 },
+      "failedOpen": 3,
+      "riskLevel": "yellow",
+      "issues": [
+        { "key": "RHOAIENG-68020", "summary": "TFA Sign-Off: Dashboard Nightly", "status": "Closed", "statusCategory": "done", "assignee": "Priya Sharma", "link": "https://redhat.atlassian.net/browse/RHOAIENG-68020" },
+        { "key": "RHOAIENG-68021", "summary": "TFA Sign-Off: Dashboard RC1", "status": "Closed", "statusCategory": "done", "assignee": "Priya Sharma", "link": "https://redhat.atlassian.net/browse/RHOAIENG-68021" },
+        { "key": "RHOAIENG-68022", "summary": "TFA Sign-Off: Dashboard RC2", "status": "New", "statusCategory": "todo", "assignee": null, "link": "https://redhat.atlassian.net/browse/RHOAIENG-68022" },
+        { "key": "RHOAIENG-68023", "summary": "TFA Sign-Off: Dashboard RC3", "status": "New", "statusCategory": "todo", "assignee": null, "link": "https://redhat.atlassian.net/browse/RHOAIENG-68023" }
+      ],
+      "failedIssues": [
+        { "key": "RHOAIENG-69010", "summary": "Dashboard login redirect fails on RHEL 9", "status": "Open", "assignee": "Priya Sharma", "link": "https://redhat.atlassian.net/browse/RHOAIENG-69010" },
+        { "key": "RHOAIENG-69011", "summary": "Settings page crashes with empty config", "status": "Open", "assignee": null, "link": "https://redhat.atlassian.net/browse/RHOAIENG-69011" },
+        { "key": "RHOAIENG-69012", "summary": "RBAC integration test flaky on parallel runs", "status": "In Progress", "assignee": "Priya Sharma", "link": "https://redhat.atlassian.net/browse/RHOAIENG-69012" }
+      ]
+    },
+    {
+      "name": "Notebooks",
+      "signoffs": { "done": 3, "inProgress": 0, "todo": 0, "total": 3, "pct": 100 },
+      "failedOpen": 0,
+      "riskLevel": "green",
+      "issues": [
+        { "key": "RHOAIENG-68030", "summary": "TFA Sign-Off: Notebooks Nightly", "status": "Closed", "statusCategory": "done", "assignee": "Carlos Rivera", "link": "https://redhat.atlassian.net/browse/RHOAIENG-68030" },
+        { "key": "RHOAIENG-68031", "summary": "TFA Sign-Off: Notebooks RC1", "status": "Closed", "statusCategory": "done", "assignee": "Carlos Rivera", "link": "https://redhat.atlassian.net/browse/RHOAIENG-68031" },
+        { "key": "RHOAIENG-68032", "summary": "TFA Sign-Off: Notebooks RC2", "status": "Closed", "statusCategory": "done", "assignee": "Carlos Rivera", "link": "https://redhat.atlassian.net/browse/RHOAIENG-68032" }
+      ],
+      "failedIssues": []
+    },
+    {
+      "name": "AI Pipelines",
+      "signoffs": { "done": 1, "inProgress": 1, "todo": 1, "total": 3, "pct": 33 },
+      "failedOpen": 2,
+      "riskLevel": "red",
+      "issues": [
+        { "key": "RHOAIENG-68040", "summary": "TFA Sign-Off: Pipelines Nightly", "status": "Closed", "statusCategory": "done", "assignee": "Elena Volkov", "link": "https://redhat.atlassian.net/browse/RHOAIENG-68040" },
+        { "key": "RHOAIENG-68041", "summary": "TFA Sign-Off: Pipelines RC1", "status": "In Progress", "statusCategory": "inProgress", "assignee": "Elena Volkov", "link": "https://redhat.atlassian.net/browse/RHOAIENG-68041" },
+        { "key": "RHOAIENG-68042", "summary": "TFA Sign-Off: Pipelines RC2", "status": "New", "statusCategory": "todo", "assignee": null, "link": "https://redhat.atlassian.net/browse/RHOAIENG-68042" }
+      ],
+      "failedIssues": [
+        { "key": "RHOAIENG-69020", "summary": "Pipeline execution timeout on large DAGs", "status": "Open", "assignee": "Elena Volkov", "link": "https://redhat.atlassian.net/browse/RHOAIENG-69020" },
+        { "key": "RHOAIENG-69021", "summary": "S3 artifact upload fails with special chars", "status": "Open", "assignee": null, "link": "https://redhat.atlassian.net/browse/RHOAIENG-69021" }
+      ]
+    },
+    {
+      "name": "Training Kubeflow",
+      "signoffs": { "done": 0, "inProgress": 1, "todo": 1, "total": 2, "pct": 0 },
+      "failedOpen": 1,
+      "riskLevel": "red",
+      "issues": [
+        { "key": "RHOAIENG-68050", "summary": "TFA Sign-Off: Training Nightly", "status": "In Progress", "statusCategory": "inProgress", "assignee": "James Kim", "link": "https://redhat.atlassian.net/browse/RHOAIENG-68050" },
+        { "key": "RHOAIENG-68051", "summary": "TFA Sign-Off: Training RC1", "status": "New", "statusCategory": "todo", "assignee": null, "link": "https://redhat.atlassian.net/browse/RHOAIENG-68051" }
+      ],
+      "failedIssues": [
+        { "key": "RHOAIENG-69030", "summary": "Distributed training job hangs on multi-node setup", "status": "In Progress", "assignee": "James Kim", "link": "https://redhat.atlassian.net/browse/RHOAIENG-69030" }
+      ]
+    },
+    {
+      "name": "MLflow",
+      "signoffs": { "done": 2, "inProgress": 0, "todo": 0, "total": 2, "pct": 100 },
+      "failedOpen": 1,
+      "riskLevel": "green",
+      "issues": [
+        { "key": "RHOAIENG-68060", "summary": "TFA Sign-Off: MLflow Nightly", "status": "Closed", "statusCategory": "done", "assignee": "Sofia Andersson", "link": "https://redhat.atlassian.net/browse/RHOAIENG-68060" },
+        { "key": "RHOAIENG-68061", "summary": "TFA Sign-Off: MLflow RC1", "status": "Closed", "statusCategory": "done", "assignee": "Sofia Andersson", "link": "https://redhat.atlassian.net/browse/RHOAIENG-68061" }
+      ],
+      "failedIssues": [
+        { "key": "RHOAIENG-69040", "summary": "MLflow model registry sync timeout", "status": "Open", "assignee": "Sofia Andersson", "link": "https://redhat.atlassian.net/browse/RHOAIENG-69040" }
+      ]
+    }
+  ]
+}

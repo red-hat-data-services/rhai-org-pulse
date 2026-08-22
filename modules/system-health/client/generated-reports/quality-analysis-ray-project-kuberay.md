@@ -1,414 +1,446 @@
 ---
 repository: "ray-project/kuberay"
-overall_score: 7.4
+overall_score: 7.0
 scorecard:
   - dimension: "Unit Tests"
-    score: 8.5
-    status: "Excellent test-to-code ratio (0.94:1 LOC) with Ginkgo/Gomega + envtest for controller tests"
+    score: 7.0
+    status: "142 Go test files with Ginkgo/Gomega + testify; envtest for controllers; limited test parallelism"
   - dimension: "Integration/E2E"
     score: 9.0
-    status: "Comprehensive E2E suites across all CRDs — RayCluster, RayJob, RayService, RayCronJob — with upgrade and autoscaler testing via Buildkite"
+    status: "Exceptional E2E coverage across 4 components with 53+ test files; Kind-based cluster testing via BuildKite"
   - dimension: "Build Integration"
-    score: 5.0
-    status: "PR builds Docker images but no Konflux simulation or container runtime validation"
+    score: 7.0
+    status: "PR-time Docker builds, CRD/RBAC consistency checks, Helm chart testing with Kind; no Konflux simulation"
   - dimension: "Image Testing"
-    score: 5.5
-    status: "Multi-arch builds (amd64/arm64), distroless base images, but no runtime validation or startup testing"
+    score: 7.0
+    status: "Multi-stage distroless builds, multi-arch (amd64/arm64), images tested in Kind E2E; no HEALTHCHECK"
   - dimension: "Coverage Tracking"
     score: 3.0
-    status: "Coverprofile generated locally via Makefile but no CI coverage upload, no codecov, no enforcement"
+    status: "coverprofile generated locally via make test but no CI tracking, no thresholds, no PR reporting"
   - dimension: "CI/CD Automation"
     score: 8.0
-    status: "Well-organized GitHub Actions + Buildkite pipelines with Helm chart testing, concurrency control, and codegen verification"
+    status: "Dual CI (GitHub Actions + BuildKite) with 6 GHA workflows and 16+ BuildKite steps; concurrency control"
+  - dimension: "Static Analysis"
+    score: 8.0
+    status: "golangci-lint v2 with 22+ linters, comprehensive pre-commit hooks, Dependabot for gomod + actions"
   - dimension: "Agent Rules"
-    score: 0.0
-    status: "No CLAUDE.md, AGENTS.md, or .claude/ directory — no AI agent guidance for test creation"
+    score: 1.0
+    status: "No CLAUDE.md, AGENTS.md, or .claude/ directory present"
 critical_gaps:
   - title: "No coverage tracking or enforcement in CI"
-    impact: "Coverage regressions go undetected — new code can reduce test coverage without any gate"
+    impact: "Coverage regressions go undetected; no visibility into test coverage trends or PR-level impact"
     severity: "HIGH"
     effort: "4-6 hours"
-  - title: "No container security scanning (Trivy/Snyk/CodeQL)"
-    impact: "Vulnerability detection relies entirely on manual review and upstream distroless updates"
-    severity: "HIGH"
-    effort: "2-4 hours"
-  - title: "No image runtime validation in CI"
-    impact: "Built images never tested for startup/health — deployment failures only discovered in production"
-    severity: "HIGH"
-    effort: "6-8 hours"
-  - title: "Dashboard has zero test files"
-    impact: "React/Next.js frontend (59 TS files) has no unit, integration, or component tests"
-    severity: "HIGH"
-    effort: "16-24 hours"
-  - title: "No SBOM generation or image signing"
-    impact: "Supply chain security gaps — provenance explicitly disabled in builds"
+  - title: "No AI agent rules for test automation"
+    impact: "AI-assisted development lacks guidance on test patterns, frameworks, and quality expectations"
     severity: "MEDIUM"
     effort: "4-6 hours"
-  - title: "E2E tests run only on Buildkite, not on PR workflows"
-    impact: "Contributors cannot verify E2E test impact without Buildkite access; regressions caught post-merge"
+  - title: "No Konflux build simulation in PR workflows"
+    impact: "Build issues in downstream Konflux pipeline discovered only post-merge"
     severity: "MEDIUM"
     effort: "8-12 hours"
+  - title: "Distroless base images instead of UBI for FIPS compliance"
+    impact: "Downstream RHOAI builds require re-basing onto UBI; upstream images not FIPS-ready out of the box"
+    severity: "MEDIUM"
+    effort: "4-8 hours"
 quick_wins:
-  - title: "Add codecov integration with coverage upload in test-job.yaml"
+  - title: "Add Codecov integration with coverage thresholds"
+    effort: "2-4 hours"
+    impact: "Immediate visibility into coverage trends and PR-level coverage changes"
+  - title: "Create basic CLAUDE.md with test patterns and project conventions"
     effort: "2-3 hours"
-    impact: "Immediate visibility into coverage trends, PR-level coverage diffs"
-  - title: "Add Trivy container scanning to PR workflow"
+    impact: "Improve AI-generated test quality and consistency for contributors using Claude Code"
+  - title: "Add container HEALTHCHECK directives to Dockerfiles"
     effort: "1-2 hours"
-    impact: "Catch CVEs in base images and dependencies before merge"
-  - title: "Enable provenance and add cosign signing to image-release workflow"
-    effort: "2-3 hours"
-    impact: "Supply chain attestation for all released images"
-  - title: "Create basic .claude/rules/ for test patterns"
-    effort: "2-3 hours"
-    impact: "AI-assisted contributions follow established Ginkgo/Gomega patterns"
-  - title: "Add basic Jest setup for dashboard"
-    effort: "3-4 hours"
-    impact: "Foundation for frontend testing of 59 TS/TSX files"
+    impact: "Better container health monitoring and faster failure detection in orchestrated environments"
 recommendations:
   priority_0:
-    - "Add codecov integration with minimum coverage thresholds (e.g., 60% overall, no decrease on PRs)"
-    - "Add Trivy or Snyk container scanning to PR and release workflows"
-    - "Add image startup validation (container health checks) to CI pipeline"
+    - "Add Codecov or Coveralls integration with coverage thresholds (e.g., 60% minimum, 5% max regression per PR)"
+    - "Upload coverprofile from CI and configure PR comments showing coverage delta"
   priority_1:
-    - "Set up Jest/React Testing Library for dashboard component testing"
-    - "Enable provenance and cosign signing for released images"
-    - "Create comprehensive .claude/rules/ for Ginkgo/Gomega test patterns and E2E test authoring"
-    - "Add a subset of E2E tests to GitHub Actions PR workflow for contributor feedback"
+    - "Create CLAUDE.md with project conventions, test patterns (Ginkgo/Gomega for controllers, standard Go testing for utils), and contribution guidelines"
+    - "Add .claude/rules/ with unit test and E2E test patterns specific to kuberay's multi-component structure"
+    - "Consider UBI-based images for the operator Dockerfile to improve FIPS compliance readiness"
   priority_2:
-    - "Add SBOM generation (Syft or Docker buildx SBOM) to release pipeline"
-    - "Add performance/benchmark regression tests (benchmark/ dir exists but isn't CI-integrated)"
-    - "Add Python client library tests to CI (currently untested in any workflow)"
+    - "Increase t.Parallel() usage in unit tests for faster feedback (currently only 10 calls across 142 test files)"
+    - "Add Konflux build simulation step to PR workflows for downstream build confidence"
+    - "Add HEALTHCHECK instructions to production Dockerfiles"
 ---
 
 # Quality Analysis: ray-project/kuberay
 
 ## Executive Summary
 
-- **Overall Score: 7.4/10**
-- **Repository Type**: Kubernetes Operator (Go) + API Server + Kubectl Plugin + Dashboard (React/Next.js)
-- **Primary Language**: Go 1.26 with Ginkgo/Gomega test framework
-- **Key Strengths**: Exceptional E2E test coverage across all CRDs, strong pre-commit hooks with gitleaks/shellcheck/kubeconform, excellent test-to-code ratio (62.7K test LOC vs 66.8K source LOC), comprehensive Helm chart validation
-- **Critical Gaps**: No coverage tracking/enforcement, no container security scanning, zero dashboard tests, no image runtime validation
-- **Agent Rules Status**: Missing — no CLAUDE.md, AGENTS.md, or .claude/ directory
+- **Overall Score: 7.0/10**
+- **Repository Type**: Kubernetes Operator (Go) — manages Ray clusters on Kubernetes
+- **Primary Language**: Go (460 files), with Python clients (67 files) and TypeScript dashboard (59 files)
+- **Components**: ray-operator, apiserver, apiserversdk, kubectl-plugin, historyserver, podpool, dashboard, helm-chart
+- **Jira**: RHOAIENG / KubeRay (upstream tier)
+
+### Key Strengths
+- **Exceptional E2E coverage**: 53+ E2E test files across 4 components, 16+ BuildKite CI steps with Kind cluster testing covering RayCluster, RayJob, RayService, autoscaler, operator upgrades, and CronJob scenarios
+- **Comprehensive static analysis**: golangci-lint v2 with 22+ linters, 12+ pre-commit hooks (including gitleaks, shellcheck, ESLint, Helm validation, CRD schema generation)
+- **FIPS-aware builds**: `-tags strictfipsruntime` with `CGO_ENABLED=1` for operator binary
+- **Dual CI system**: GitHub Actions for PR builds/linting + BuildKite for full E2E testing
+
+### Critical Gaps
+- **No coverage tracking**: `coverprofile` generated locally but never uploaded to Codecov/Coveralls; no PR-level coverage reporting or threshold enforcement
+- **No AI agent rules**: No CLAUDE.md, AGENTS.md, or `.claude/` directory
+- **Distroless base images**: Not UBI-based, limiting FIPS readiness for downstream RHOAI consumption
 
 ## Quality Scorecard
 
-| Dimension | Score | Status |
-|-----------|-------|--------|
-| Unit Tests | 8.5/10 | Excellent test-to-code ratio (0.94:1 LOC) with Ginkgo/Gomega + envtest |
-| Integration/E2E | 9.0/10 | Comprehensive E2E across all CRDs with upgrade/autoscaler testing |
-| **Build Integration** | **5.0/10** | **PR builds Docker images but no Konflux simulation** |
-| Image Testing | 5.5/10 | Multi-arch builds, distroless images, but no runtime validation |
-| Coverage Tracking | 3.0/10 | Coverprofile generated locally only, no CI integration |
-| CI/CD Automation | 8.0/10 | Well-organized GHA + Buildkite with concurrency control |
-| Agent Rules | 0.0/10 | No AI agent test creation guidance |
-
-**Weighted Overall: 7.4/10** (Unit 20%, Integration/E2E 25%, Image 20%, Coverage 15%, CI/CD 20%)
+| Dimension | Score | Weight | Weighted | Status |
+|-----------|-------|--------|----------|--------|
+| Unit Tests | 7.0/10 | 15% | 1.05 | 142 test files, Ginkgo/Gomega + testify, envtest for controllers |
+| Integration/E2E | 9.0/10 | 20% | 1.80 | 53+ E2E files, Kind clusters, 16+ BuildKite steps |
+| Build Integration | 7.0/10 | 15% | 1.05 | PR Docker builds, CRD/RBAC checks, Helm testing |
+| Image Testing | 7.0/10 | 10% | 0.70 | Multi-stage distroless, multi-arch, Kind E2E validation |
+| Coverage Tracking | 3.0/10 | 10% | 0.30 | coverprofile exists but not tracked in CI |
+| CI/CD Automation | 8.0/10 | 15% | 1.20 | GHA + BuildKite, concurrency, matrix strategies |
+| Static Analysis | 8.0/10 | 10% | 0.80 | 22+ linters, pre-commit, Dependabot |
+| Agent Rules | 1.0/10 | 5% | 0.05 | No agent rules present |
+| **Overall** | **7.0/10** | **100%** | **6.95** | |
 
 ## Critical Gaps
 
 ### 1. No Coverage Tracking or Enforcement in CI
-- **Impact**: Coverage regressions go undetected — new code can merge without tests
+- **Impact**: Coverage regressions go undetected; no visibility into which PRs reduce coverage
 - **Severity**: HIGH
 - **Effort**: 4-6 hours
-- **Details**: The Makefile generates `cover.out` via `go test -coverprofile`, but this is never uploaded to any coverage service. No codecov/coveralls integration exists. No minimum coverage thresholds are enforced.
-- **Fix**: Add codecov upload step to `test-job.yaml` after the `make test` step in `build_operator`
+- **Details**: The `ray-operator/Makefile` generates `cover.out` via `--coverprofile`, but this file is never uploaded to a coverage service. No `.codecov.yml` or `coveralls.yml` exists. No coverage thresholds are enforced. PR authors have no visibility into the coverage impact of their changes.
 
-### 2. No Container Security Scanning
-- **Impact**: Vulnerabilities in base images and dependencies are not detected automatically
-- **Severity**: HIGH
-- **Effort**: 2-4 hours
-- **Details**: No Trivy, Snyk, CodeQL, or any vulnerability scanning in any workflow. The project uses `gcr.io/distroless/base-debian12:nonroot` and `scratch` base images (good practice), but dependency-level CVEs can still exist.
-- **Fix**: Add Trivy scan step after Docker image build in PR workflow
-
-### 3. No Image Runtime Validation
-- **Impact**: Built images never tested for startup or health — broken images only discovered at deployment
-- **Severity**: HIGH
-- **Effort**: 6-8 hours
-- **Details**: PR workflow builds Docker images and uploads as artifacts, but never runs them. No container health check, no startup validation, no deployment testing in the PR workflow itself. E2E tests on Buildkite do deploy to Kind clusters but these don't run on PRs.
-
-### 4. Dashboard Has Zero Tests
-- **Impact**: 59 TypeScript/JavaScript files with zero test coverage — React/Next.js frontend completely untested
-- **Severity**: HIGH
-- **Effort**: 16-24 hours
-- **Details**: The `dashboard/` directory contains a Next.js 15 + MUI + SWR application with no test files (no `*.test.*` or `*.spec.*`). No testing framework configured in `package.json`. Only lint and type-check are enforced.
-
-### 5. No SBOM Generation or Image Signing
-- **Impact**: Supply chain security gaps — cannot verify image provenance or contents
+### 2. No AI Agent Rules
+- **Impact**: Contributors using Claude Code or similar AI tools lack guidance on test patterns, framework conventions, and quality expectations
 - **Severity**: MEDIUM
 - **Effort**: 4-6 hours
-- **Details**: `provenance: false` is explicitly set in all Docker build-push actions. No cosign signing, no SBOM generation, no attestation.
+- **Details**: No `CLAUDE.md`, `AGENTS.md`, or `.claude/` directory. The repository uses multiple testing patterns (Ginkgo/Gomega for controller tests, standard Go testing for utils, envtest for integration) that an AI agent would need to know about.
 
-### 6. E2E Tests Not in PR Workflow
-- **Impact**: Contributors can't verify E2E impact without Buildkite access; regressions caught post-merge
+### 3. No Konflux Build Simulation
+- **Impact**: Downstream RHOAI builds via Konflux may fail post-merge if PR-time validation doesn't catch incompatibilities
 - **Severity**: MEDIUM
 - **Effort**: 8-12 hours
-- **Details**: All E2E tests run exclusively on Buildkite CI (13 separate E2E test jobs covering RayCluster, RayJob, RayService, RayCronJob, autoscaler, upgrade, kubectl-plugin, apiserver). GitHub Actions PR workflow only runs unit tests and Docker image builds.
+- **Details**: PR workflows build Docker images and run tests, but there is no Konflux-specific build simulation step. Build issues unique to the Konflux pipeline (e.g., different build context, base image resolution) are only discovered after merge.
+
+### 4. Distroless Base Images (Not UBI)
+- **Impact**: Downstream RHOAI consumption requires re-basing onto UBI images for FIPS compliance
+- **Severity**: MEDIUM
+- **Effort**: 4-8 hours
+- **Details**: All production Dockerfiles use `gcr.io/distroless/base-debian12:nonroot`. While this is a security-conscious choice, FIPS compliance for RHOAI requires UBI-based images (`registry.access.redhat.com/ubi9/ubi-minimal`). The operator builds with `-tags strictfipsruntime` and `CGO_ENABLED=1`, showing FIPS awareness, but the base image is not FIPS-capable.
 
 ## Quick Wins
 
-### 1. Add Codecov Integration (2-3 hours)
-Add coverage upload after `make test` in the `build_operator` job:
-```yaml
-- name: Upload coverage to Codecov
-  uses: codecov/codecov-action@v4
-  with:
-    file: ./ray-operator/cover.out
-    flags: operator
-    token: ${{ secrets.CODECOV_TOKEN }}
-```
+### 1. Add Codecov Integration (2-4 hours)
+- **Impact**: Immediate visibility into coverage trends and PR-level coverage changes
+- **Implementation**:
+  ```yaml
+  # .codecov.yml
+  coverage:
+    status:
+      project:
+        default:
+          target: 60%
+          threshold: 5%
+      patch:
+        default:
+          target: 70%
+  ```
+  Add to `test-job.yaml` after each `make test` step:
+  ```yaml
+  - name: Upload coverage
+    uses: codecov/codecov-action@v4
+    with:
+      file: cover.out
+      flags: ray-operator
+  ```
 
-### 2. Add Trivy Container Scanning (1-2 hours)
-Add after Docker image build in `build_operator`:
-```yaml
-- name: Run Trivy vulnerability scanner
-  uses: aquasecurity/trivy-action@master
-  with:
-    image-ref: kuberay/operator:${{ steps.vars.outputs.sha_short }}
-    format: 'table'
-    exit-code: '1'
-    severity: 'CRITICAL,HIGH'
-```
+### 2. Create Basic CLAUDE.md (2-3 hours)
+- **Impact**: AI-assisted development follows project conventions
+- **Implementation**: Document test framework choices (Ginkgo for controllers, Go testing for utils), envtest patterns, E2E test structure, and the multi-component repository layout.
 
-### 3. Enable Provenance and Image Signing (2-3 hours)
-Change `provenance: false` to `provenance: true` in `image-release.yaml` and add cosign signing step.
-
-### 4. Create Agent Rules (2-3 hours)
-Create `.claude/rules/` with Ginkgo/Gomega patterns for:
-- Unit tests with envtest
-- E2E tests with Kind cluster
-- Controller reconciliation tests
-- Webhook validation tests
-
-### 5. Add Jest for Dashboard (3-4 hours)
-```bash
-cd dashboard && yarn add -D jest @testing-library/react @testing-library/jest-dom
-```
+### 3. Add Container HEALTHCHECK Directives (1-2 hours)
+- **Impact**: Better container health monitoring
+- **Implementation**: Add `HEALTHCHECK` to production Dockerfiles for the operator, apiserver, and historyserver.
 
 ## Detailed Findings
 
-### CI/CD Pipeline
+### Unit Tests
 
-**GitHub Actions Workflows (6 workflows)**:
+**Score: 7.0/10**
 
-| Workflow | Trigger | Purpose |
-|----------|---------|---------|
-| `test-job.yaml` | PR + Push | Lint, build all components, unit tests, Docker image builds |
-| `consistency-check.yaml` | PR + Push | Codegen verification, CRD/RBAC consistency, Helm CRD sync |
-| `helm.yaml` | PR + Push | Helm chart lint, unittest, chart-testing with Kind cluster |
-| `image-release.yaml` | Manual dispatch | Multi-arch image build and push to Quay.io |
-| `kubectl-plugin-release.yaml` | Manual dispatch | Plugin binary release |
-| `site.yaml` | Push to master | Documentation deployment via MkDocs |
+- **Test files**: 142 Go test files covering 318 source files (ratio: 0.45)
+- **Frameworks**: Ginkgo/Gomega (648 Ginkgo-related lines), testify, standard Go testing
+- **envtest**: Used for controller integration tests (`setup-envtest` in Makefile, `KUBEBUILDER_ASSETS` for test execution)
+- **Test scope by component**:
+  - `ray-operator/controllers/`: Comprehensive controller tests — RayCluster, RayJob, RayService, RayCronJob, NetworkPolicy controllers plus webhook tests
+  - `ray-operator/controllers/ray/common/`: Pod, service, ingress, RBAC, job building logic
+  - `ray-operator/controllers/ray/batchscheduler/`: Volcano, Yunikorn, Kai, scheduler-plugins
+  - `apiserver/pkg/`: HTTP client, interceptors, resource manager, model converter, validations
+  - `kubectl-plugin/pkg/`: All CLI commands — create, delete, get, scale, log, session, version
+  - `historyserver/pkg/`: Event server, log collector, storage backends (S3, GCS, Azure Blob, Aliyun OSS)
+  - `podpool/test/`: Controller and manager tests
+- **Test parallelism**: Only 10 uses of `t.Parallel()` across all test files — opportunity for improvement
+- **Race detection**: `-race` flag used in CI for apiserver and kubectl-plugin tests
 
-**Buildkite Pipelines (13 E2E jobs)**:
-- RayCluster + GCS fault tolerance E2E
-- RayJob E2E
-- RayService E2E (normal + suspend + incremental upgrade)
-- Autoscaler E2E (Part 1 + Part 2)
-- Operator version upgrade E2E (v1.5.1 → v1.6.0)
-- Apiserver E2E
-- RayJob light-weight submitter E2E
-- RayCronJob E2E
-- Kubectl plugin E2E
-- History server E2E
-- Python client tests
-- Sample YAML validation
+### Integration/E2E Tests
 
-**Strengths**:
-- Concurrency control in Helm workflow (`cancel-in-progress: true`)
-- Codegen and manifest consistency verification on every PR
-- Comprehensive Helm chart validation (lint + unittest + install + kubeconform)
-- Multi-component builds (operator, apiserver, kubectl-plugin, dashboard, historyserver)
+**Score: 9.0/10**
 
-**Weaknesses**:
-- No concurrency control on `test-job.yaml` (main test workflow)
-- No caching of Go modules in `test-job.yaml` (uses `actions/setup-go` which may cache, but not explicit)
-- No timeout on most jobs in `test-job.yaml`
-- E2E tests only on Buildkite, not accessible to external contributors
+- **E2E test files**: 53+ across 4 components in 15 test directories
+- **Test infrastructure**: Kind clusters via BuildKite with 16+ separate E2E steps
+- **Coverage by CRD type**:
+  - **RayCluster**: Basic CRUD, GCS fault tolerance, multi-host, auth, autoscaler (2 parts)
+  - **RayJob**: Standard, cluster selector, deletion strategy, lightweight submitter, recovery, retry, sidecar mode, suspend
+  - **RayService**: HA, in-place update, redeploy, suspend, upgrade, validation, auth, initializing timeout, incremental upgrade (with Gateway API + Istio)
+  - **RayCronJob**: Dedicated E2E suite
+  - **Operator Upgrade**: Version upgrade testing (v1.5.1 → v1.6.0)
+- **Sample YAML validation**: Dedicated test suite validates all sample configurations
+- **Python client testing**: E2E tests for Python SDK
+- **Feature gate testing**: BuildKite overrides enable alpha features (RayClusterStatusConditions, RayJobDeletionPolicy, RayMultiHostIndexing, RayCronJob, RayServiceIncrementalUpgrade, SidecarSubmitterRestart)
+- **Configurable timeouts**: `KUBERAY_TEST_TIMEOUT_SHORT/MEDIUM/LONG` for CI tuning
+- **Why not 10**: E2E tests run only via BuildKite (not GitHub Actions PR-triggered); no multi-K8s-version matrix testing visible
 
-### Test Coverage
+### Build Integration
 
-**Component Breakdown**:
+**Score: 7.0/10**
 
-| Component | Source Files | Test Files | Ratio | Framework |
-|-----------|-------------|------------|-------|-----------|
-| ray-operator | 163 | 71 | 0.44 | Ginkgo/Gomega + envtest |
-| apiserver | 36 | 21 | 0.58 | Go testing + E2E |
-| kubectl-plugin | 29 | 26 | 0.90 | Go testing + E2E |
-| podpool | 3 | 2 | 0.67 | Go testing |
-| dashboard | 59 | 0 | 0.00 | None |
+- **PR-triggered builds** (`test-job.yaml`):
+  - Builds Docker images for operator, apiserver on every PR
+  - Runs `make build` and `make test` for ray-operator, historyserver
+  - Builds kubectl-plugin CLI binary
+  - `go build ./...` for apiserver
+- **CRD/RBAC consistency** (`consistency-check.yaml`):
+  - Verifies codegen matches types.go
+  - Validates CRD YAML files match kubebuilder markers
+  - Checks Helm chart CRDs match operator config
+  - RBAC consistency validation with Python tests
+  - API docs verification
+- **Helm chart testing** (`helm.yaml`):
+  - Helm unittest for kuberay-operator, kuberay-apiserver, ray-cluster charts
+  - chart-testing lint and install with Kind cluster
+  - Builds and loads Docker images into Kind for chart installation testing
+  - kubeconform validation for Helm-generated manifests
+- **Multi-arch builds**: amd64/arm64 via docker buildx (on merge to master only)
+- **Gap**: No Konflux build simulation; no `kustomize build` dry-run validation in PRs
 
-**Lines of Code**:
-- Go source: 66,772 LOC
-- Go tests: 62,747 LOC
-- **Test-to-source ratio: 0.94:1** (excellent for Go projects)
+### Image Testing
 
-**Test Types Present**:
-- **Unit tests**: Controller tests with envtest (real API server, etcd), unit tests for utilities
-- **Integration tests**: Ginkgo-based controller integration tests bootstrapping full controller-runtime manager
-- **E2E tests**: Comprehensive Kind cluster-based tests covering all CRDs (RayCluster, RayJob, RayService, RayCronJob)
-- **Upgrade tests**: Operator version upgrade testing (v1.5.1 → v1.6.0)
-- **Autoscaler tests**: Dedicated autoscaler E2E (split into 2 parts)
-- **Sample YAML validation**: Tests all sample YAML configs can be applied successfully
-- **Helm chart tests**: Helm unittest + chart-testing (lint + install)
+**Score: 7.0/10**
 
-**Notable Testing Patterns**:
-- Fake dashboard and HTTP proxy clients for controller unit tests
-- Configurable test timeouts via environment variables (SHORT/MEDIUM/LONG)
-- Test output directory with artifact collection on failure
-- Log collection from operator on E2E test failure
+- **Dockerfiles**: 14 Dockerfiles across components
+- **Multi-stage builds**: 6 Dockerfiles use multi-stage builds (operator, apiserver, historyserver, dashboard, proto)
+- **Base images**:
+  - Builder: `golang:1.26-bookworm`
+  - Production: `gcr.io/distroless/base-debian12:nonroot` (operator, historyserver)
+  - Production: `scratch` (apiserver, submitter)
+  - Dashboard: `node:24-alpine`
+  - Not UBI-based (FIPS gap)
+- **Multi-arch**: linux/amd64 + linux/arm64 via docker buildx
+- **Runtime validation**: Images loaded into Kind clusters and functionally tested in E2E suites
+- **Security**: nonroot user, distroless minimal attack surface
+- **Gaps**: No `HEALTHCHECK` directives; no Testcontainers usage; no explicit image scanning in CI (handled org-level, out of scope)
 
-### Code Quality
+### Coverage Tracking
 
-**Linting (Excellent)**:
-- **golangci-lint v2.11.4** with 22 enabled linters including: `gosec`, `govet`, `staticcheck`, `revive`, `errcheck`, `errorlint`, `noctx`, `modernize`, `ginkgolinter`
-- Detailed suppression rules for known deprecations (backward compat)
-- Formatter configuration: `gci`, `gofmt`, `gofumpt`, `goimports`
-- 10-minute analysis timeout
+**Score: 3.0/10**
 
-**Pre-commit Hooks (Comprehensive)**:
-- `pre-commit-hooks`: trailing whitespace, EOF fixer, YAML check, large files, merge conflicts, private key detection, JSON formatting
-- `gitleaks v8.18.2`: Secret detection
-- `shellcheck v0.10.0.1`: Shell script linting
-- `golangci-lint`: Go linting (all components)
-- `kubeconform`: CRD schema validation for Helm charts
-- `helm-docs`: Auto-generated Helm chart documentation
-- `markdownlint`: Markdown linting
-- `yamlfmt`: YAML formatting for sample configs
-- `ESLint`: Dashboard TypeScript/JavaScript linting
+- **Coverage generation**: `make test` in `ray-operator/Makefile` includes `--coverprofile cover.out`
+- **No CI integration**: `cover.out` is generated but never uploaded to any coverage service
+- **No `.codecov.yml`**: No Codecov configuration file exists
+- **No thresholds**: No minimum coverage requirements
+- **No PR reporting**: No coverage delta comments on PRs
+- **Other components**: apiserver, kubectl-plugin, historyserver `make test` targets do not include coverage profile generation
 
-### Container Images
+### CI/CD Automation
 
-**Dockerfiles**:
-- `ray-operator/Dockerfile`: Multi-stage build, `gcr.io/distroless/base-debian12:nonroot` base, non-root user (65532), FIPS-compliant (`strictfipsruntime`)
-- `ray-operator/Dockerfile.buildx`: Multi-arch (amd64/arm64) build variant
-- `ray-operator/Dockerfile.submitter.buildx`: Lightweight job submitter image from `scratch`
-- `apiserver/Dockerfile`: Multi-stage build, `scratch` base, non-root user
-- `dashboard/Dockerfile`: Next.js multi-stage build
+**Score: 8.0/10**
 
-**Strengths**:
-- Distroless and scratch base images (minimal attack surface)
-- Non-root user execution
-- Multi-arch support (amd64/arm64)
-- Multi-stage builds with build caching
-- FIPS compliance for operator binary
+- **GitHub Actions workflows** (6 total):
+  | Workflow | Trigger | Purpose |
+  |----------|---------|---------|
+  | `test-job.yaml` | PR + push | Build, test, lint all components |
+  | `consistency-check.yaml` | PR + push | Codegen, CRD, RBAC, API docs verification |
+  | `helm.yaml` | PR + push | Helm chart lint, unittest, install testing |
+  | `image-release.yaml` | dispatch | Multi-arch image release to Quay.io |
+  | `kubectl-plugin-release.yaml` | dispatch | CLI release via GoReleaser |
+  | `site.yaml` | push (master) | Deploy mkdocs documentation |
 
-**Weaknesses**:
-- No container security scanning (Trivy/Snyk)
-- No SBOM generation
-- No image signing (cosign/sigstore)
-- Provenance explicitly disabled
-- No runtime validation (health check, startup test)
+- **BuildKite pipeline** (16+ steps):
+  - 11 E2E test steps in `test-e2e.yml` (RayCluster, RayJob, RayService, autoscaler, upgrade, incremental upgrade, apiserver, submitter, CronJob)
+  - 2 sample YAML validation steps (nightly + latest release)
+  - 1 kubectl-plugin E2E step
+  - 1 historyserver E2E step
+  - 1 Python client E2E step
 
-### Security
+- **Concurrency control**: `helm.yaml` has `cancel-in-progress: true` with workflow+ref+actor grouping
+- **Caching**: `setup-go` action provides automatic Go module caching; Yarn cache for dashboard
+- **Parallelization**: `-parallel 4` for apiserver and kubectl-plugin tests; matrix strategy for Helm charts
+- **Timeout configuration**: `timeout-minutes: 10` on consistency-check jobs; configurable E2E timeouts
 
-**Present**:
-- Gitleaks for secret detection (pre-commit)
-- Private key detection (pre-commit)
-- `gosec` linter enabled in golangci-lint
-- Non-root container execution
-- Distroless/scratch base images
-- FIPS-compliant operator build
+### Static Analysis
 
-**Missing**:
-- No Trivy/Snyk/Grype container vulnerability scanning
-- No CodeQL or SAST in CI
-- No dependency scanning (Dependabot/Renovate not detected)
-- No SBOM generation
-- No image signing or attestation
-- No OSSF Scorecard
+**Score: 8.0/10**
 
-### Agent Rules (Agentic Flow Quality)
+#### Linting
+- **golangci-lint v2**: `.golangci.yml` with 22+ linters enabled:
+  - Code quality: `errcheck`, `govet`, `ineffassign`, `unused`, `unparam`, `wastedassign`
+  - Style: `asciicheck`, `misspell`, `unconvert`, `predeclared`, `revive` (with 19+ rules)
+  - Security: `gosec` (with G601 excluded)
+  - Testing: `ginkgolinter` (forbid-focus-container), `testifylint`
+  - Modern Go: `modernize`, `noctx`, `errorlint`, `staticcheck`, `nilerr`
+  - Lint discipline: `nolintlint` (require-explanation, require-specific)
+- **ESLint**: Dashboard TypeScript/JavaScript linting via pre-commit hook
+- **Shellcheck**: Shell script linting via pre-commit
+- **Markdownlint**: Markdown formatting via pre-commit
+- **yamlfmt**: YAML formatting for sample configurations
+
+#### Pre-commit Hooks
+Comprehensive `.pre-commit-config.yaml` with 12+ hooks:
+- Standard checks: trailing-whitespace, end-of-file-fixer, check-yaml, check-json, check-merge-conflict, check-case-conflict, mixed-line-ending
+- Security: `detect-private-key`, `gitleaks`
+- Code quality: `golangci-lint`, `shellcheck`, `eslint`, `markdownlint`
+- Helm: `helm-docs`, `validate-helm-charts` (kubeconform), `generate-crd-schema`
+- Formatting: `pretty-format-json`, `yamlfmt`
+
+#### FIPS Compatibility
+- **Build tags**: `-tags strictfipsruntime` used in operator Dockerfile and CI workflows
+- **CGO_ENABLED=1**: Set for operator builds (required for FIPS runtime)
+- **Minor concern**: `math/rand` imported in `kubectl-plugin/test/e2e/support.go` (test-only, not production)
+- **Gap**: Base images are `distroless/debian` not UBI — FIPS module not available
+
+#### Dependency Alerts
+- **Dependabot**: `.github/dependabot.yml` configured for:
+  - `gomod`: ray-operator, apiserver, kubectl-plugin, proto directories
+  - `github-actions`: root directory
+  - Weekly schedule with grouping (kubernetes, google-golang, github-dependencies, all-dependencies)
+- **No Renovate**: Not configured
+
+### Agent Rules
+
+**Score: 1.0/10**
 
 - **Status**: Missing
-- **Coverage**: No test type rules exist
-- **Quality**: N/A
-- **Gaps**: 
-  - No `CLAUDE.md` or `AGENTS.md` at repository root
-  - No `.claude/` directory
-  - No `.claude/rules/` for test creation patterns
-  - No `.claude/skills/` for custom quality workflows
-- **Recommendation**: Generate rules with `/test-rules-generator` covering:
-  - Ginkgo/Gomega unit test patterns with envtest
-  - E2E test patterns with Kind cluster setup
-  - Controller reconciliation test structure
-  - Helm chart test patterns
+- **No `CLAUDE.md`**: No root-level project documentation for AI agents
+- **No `AGENTS.md`**: No agent-specific guidance
+- **No `.claude/` directory**: No rules, skills, or custom configurations
+- **CONTRIBUTING.md exists** but focuses on general contribution workflow, not test-specific patterns
+- **Recommendation**: Generate comprehensive agent rules with `/test-rules-generator` covering:
+  - Ginkgo/Gomega patterns for controller tests
+  - envtest setup for integration tests
+  - E2E test structure and Kind cluster requirements
+  - Multi-component repository navigation (ray-operator, apiserver, kubectl-plugin, historyserver)
 
 ## Recommendations
 
 ### Priority 0 (Critical)
 
-1. **Add codecov integration** with minimum coverage thresholds — prevent coverage regression on every PR
-2. **Add Trivy container scanning** to PR and release workflows — catch CVEs before merge and release
-3. **Add image startup validation** — verify built images can start and respond to health checks
+1. **Add Codecov integration with coverage thresholds**
+   - Configure `.codecov.yml` with 60% project target and 70% patch target
+   - Add `codecov/codecov-action` to `test-job.yaml` for ray-operator, historyserver, apiserver
+   - Generate coverprofile in all component Makefiles, not just ray-operator
+   - Effort: 4-6 hours
+
+2. **Enable coverage reporting on PRs**
+   - Configure Codecov PR comments showing coverage delta
+   - Set up coverage gates to prevent merging PRs that reduce coverage below thresholds
+   - Effort: 2-3 hours (included in Codecov setup)
 
 ### Priority 1 (High Value)
 
-4. **Set up Jest/React Testing Library** for dashboard — 59 untested TS/TSX files is a major blind spot
-5. **Enable provenance and cosign signing** — supply chain security for released images
-6. **Create comprehensive agent rules** — `.claude/rules/` for Ginkgo/Gomega and E2E test patterns
-7. **Run subset of E2E tests on GitHub Actions** — enable contributor-visible E2E feedback on PRs
-8. **Add concurrency control** to `test-job.yaml` — prevent redundant CI runs on rapid pushes
+3. **Create CLAUDE.md and agent rules**
+   - Document the multi-component structure and test framework conventions
+   - Create `.claude/rules/` with unit-tests.md (Ginkgo patterns), e2e-tests.md (Kind setup), and controller-tests.md (envtest)
+   - Include examples of well-written tests from each component
+   - Effort: 4-6 hours
+
+4. **Consider UBI base images for FIPS compliance**
+   - Evaluate switching from `distroless/base-debian12` to `registry.access.redhat.com/ubi9/ubi-minimal`
+   - This would make upstream images directly consumable by RHOAI without re-basing
+   - Already has FIPS build tags and CGO_ENABLED=1 — base image is the remaining gap
+   - Effort: 4-8 hours (includes testing and size optimization)
+
+5. **Increase test parallelism**
+   - Add `t.Parallel()` to unit tests where safe (currently only 10 calls across 142 test files)
+   - Would significantly reduce CI feedback time
+   - Effort: 4-8 hours
 
 ### Priority 2 (Nice-to-Have)
 
-9. **Add SBOM generation** (Syft) to release pipeline
-10. **Integrate benchmark tests** — `benchmark/` directory exists but isn't CI-connected
-11. **Add Python client tests** to CI — Python client library has tests but they're not automated
-12. **Add Dependabot/Renovate** for automated dependency updates
-13. **Enable OSSF Scorecard** — track and improve supply chain security posture
+6. **Add HEALTHCHECK directives to production Dockerfiles**
+   - Operator, apiserver, and historyserver Dockerfiles lack health checks
+   - Effort: 1-2 hours
+
+7. **Add Konflux build simulation to PR workflows**
+   - Simulate downstream Konflux build environment in GitHub Actions
+   - Catch build incompatibilities before merge
+   - Effort: 8-12 hours
+
+8. **Promote E2E tests to GitHub Actions PR trigger**
+   - Currently E2E tests run only in BuildKite
+   - Adding at least a subset to GitHub Actions would improve visibility for external contributors
+   - Effort: 8-16 hours
 
 ## Comparison to Gold Standards
 
-| Dimension | kuberay | odh-dashboard | notebooks | kserve |
-|-----------|---------|---------------|-----------|--------|
-| Unit Tests | 8.5 | 9.0 | 7.0 | 9.0 |
+| Dimension | kuberay (7.0) | odh-dashboard (Gold) | notebooks (Gold) | kserve (Gold) |
+|-----------|---------------|----------------------|-------------------|---------------|
+| Unit Tests | 7.0 | 9.0 | 7.0 | 8.0 |
 | Integration/E2E | 9.0 | 9.0 | 8.0 | 9.0 |
-| Build Integration | 5.0 | 8.0 | 9.0 | 7.0 |
-| Image Testing | 5.5 | 7.0 | 9.5 | 7.0 |
-| Coverage Tracking | 3.0 | 8.0 | 6.0 | 9.0 |
+| Build Integration | 7.0 | 8.0 | 7.0 | 7.0 |
+| Image Testing | 7.0 | 7.0 | 9.0 | 7.0 |
+| Coverage Tracking | 3.0 | 8.0 | 5.0 | 8.0 |
 | CI/CD Automation | 8.0 | 9.0 | 8.0 | 8.0 |
-| Agent Rules | 0.0 | 8.0 | 3.0 | 2.0 |
-| **Overall** | **7.4** | **8.5** | **7.8** | **8.0** |
+| Static Analysis | 8.0 | 8.0 | 6.0 | 7.0 |
+| Agent Rules | 1.0 | 8.0 | 3.0 | 2.0 |
 
-**Key Differentiators vs Gold Standards**:
-- **Stronger than most**: Test-to-code ratio (0.94:1), E2E breadth (13 suites), pre-commit hooks depth, Helm chart validation
-- **Weaker than most**: Coverage tracking, container security scanning, dashboard testing, agent rules
-- **Unique strengths**: Operator upgrade E2E testing, autoscaler E2E, sample YAML validation, FIPS compliance
+**Key takeaways**:
+- kuberay's E2E testing is on par with gold standards — comprehensive, well-structured, and covering all CRD types
+- Static analysis is a strength with one of the most comprehensive pre-commit configurations across analyzed repos
+- Coverage tracking is the most significant gap — straightforward to fix with high ROI
+- FIPS build tags already present (ahead of many upstream repos) but base image choice limits full compliance
 
 ## File Paths Reference
 
-### CI/CD
+### CI/CD Configuration
 - `.github/workflows/test-job.yaml` — Main PR build/test workflow
-- `.github/workflows/consistency-check.yaml` — Codegen/CRD/RBAC verification
+- `.github/workflows/consistency-check.yaml` — Codegen, CRD, RBAC verification
 - `.github/workflows/helm.yaml` — Helm chart lint/test/install
 - `.github/workflows/image-release.yaml` — Multi-arch image release
-- `.buildkite/test-e2e.yml` — All E2E test definitions (13 jobs)
-- `.buildkite/setup-env.sh` — Buildkite environment setup
+- `.buildkite/test-e2e.yml` — 11 E2E test steps
+- `.buildkite/test-historyserver-e2e.yml` — History server E2E
+- `.buildkite/test-kubectl-plugin-e2e.yml` — kubectl plugin E2E
+- `.buildkite/test-python-client.yml` — Python client tests
+- `.buildkite/test-sample-yamls.yml` — Sample YAML validation
 
 ### Testing
-- `ray-operator/controllers/ray/suite_test.go` — Controller test suite (envtest)
-- `ray-operator/test/e2e/` — RayCluster E2E tests
+- `ray-operator/test/e2e/` — Operator E2E tests (RayCluster)
 - `ray-operator/test/e2erayjob/` — RayJob E2E tests
 - `ray-operator/test/e2erayservice/` — RayService E2E tests
 - `ray-operator/test/e2eautoscaler/` — Autoscaler E2E tests
-- `ray-operator/test/e2eupgrade/` — Operator upgrade E2E tests
+- `ray-operator/test/e2eupgrade/` — Operator upgrade tests
+- `ray-operator/test/e2eraycronjob/` — RayCronJob E2E tests
+- `ray-operator/test/e2eincrementalupgrade/` — Incremental upgrade E2E
+- `ray-operator/test/e2erayjobsubmitter/` — Lightweight submitter E2E
 - `ray-operator/test/sampleyaml/` — Sample YAML validation tests
-- `ray-operator/Makefile` — Test targets (`test`, `test-e2e`, `test-e2e-*`)
+- `ray-operator/controllers/ray/suite_test.go` — Controller test suite (envtest)
+- `apiserver/test/e2e/` — Apiserver E2E tests
+- `kubectl-plugin/test/e2e/` — kubectl plugin E2E tests
+- `historyserver/test/e2e/` — History server E2E tests
 
 ### Code Quality
-- `.golangci.yml` — 22 enabled linters with detailed configuration
-- `.pre-commit-config.yaml` — 12+ hooks including gitleaks, shellcheck, kubeconform
-- `.markdownlint.yaml` — Markdown linting rules
-- `.yamlfmt` — YAML formatting configuration
+- `.golangci.yml` — golangci-lint v2 with 22+ linters
+- `.pre-commit-config.yaml` — 12+ pre-commit hooks
+- `.github/dependabot.yml` — Dependency management for gomod + actions
 
 ### Container Images
-- `ray-operator/Dockerfile` — Operator image (distroless, FIPS)
-- `ray-operator/Dockerfile.buildx` — Multi-arch operator image
-- `apiserver/Dockerfile` — API server image (scratch base)
-- `dashboard/Dockerfile` — Dashboard image (Next.js)
+- `ray-operator/Dockerfile` — Operator image (multi-stage, distroless, FIPS tags)
+- `ray-operator/Dockerfile.buildx` — Operator multi-arch image
+- `apiserver/Dockerfile` — Apiserver image (multi-stage, scratch)
+- `historyserver/Dockerfile.historyserver` — History server image
+- `historyserver/Dockerfile.collector` — Collector image
+- `dashboard/Dockerfile` — Dashboard image (Node.js, alpine)
 
-### Helm Charts
-- `helm-chart/kuberay-operator/` — Operator chart with tests
-- `helm-chart/kuberay-apiserver/` — API server chart with tests
-- `helm-chart/ray-cluster/` — RayCluster chart with tests
+### Build/Deploy
+- `ray-operator/Makefile` — Operator build, test, deploy targets
+- `historyserver/Makefile` — History server build targets
+- `helm-chart/` — Helm charts for operator, apiserver, ray-cluster

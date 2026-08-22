@@ -3,29 +3,45 @@ import { ref } from 'vue'
 import { useFilters } from '../../../client/plan/composables/useFilters'
 
 var sampleBigRocks = [
-  { name: 'MaaS', pillar: 'Inference', owner: 'Pat Johnson', architect: 'Alex', notes: '', fullName: 'Model as a Service' },
-  { name: 'Gen AI Studio', pillar: 'Agents', owner: 'Morgan Lee', architect: 'Sam', notes: 'Priority', fullName: '' },
-  { name: 'Eval Hub', pillar: 'Inference', owner: 'Taylor', architect: '', notes: '', fullName: 'Evaluation Hub' }
+  { name: 'MaaS', pillar: 'Inference', owner: 'Pat Johnson', architect: 'Alex', notes: '', fullName: 'Model as a Service', featureCount: 3, rfeCount: 1 },
+  { name: 'Gen AI Studio', pillar: 'Agents', owner: 'Morgan Lee', architect: 'Sam', notes: 'Priority', fullName: '', featureCount: 2, rfeCount: 0 },
+  { name: 'Eval Hub', pillar: 'Inference', owner: 'Taylor', architect: '', notes: '', fullName: 'Evaluation Hub', featureCount: 1, rfeCount: 0 },
+  { name: 'Empty Rock', pillar: 'Inference', owner: 'Pat', architect: '', notes: 'wiring', fullName: '', featureCount: 0, rfeCount: 0 }
 ]
 
 describe('filteredBigRocks', function() {
-  it('returns all big rocks when no filters active', function() {
+  it('returns all rocks including empty ones', function() {
     var features = ref([])
     var rfes = ref([])
     var bigRocks = ref(sampleBigRocks)
     var result = useFilters(features, rfes, bigRocks)
-    expect(result.filteredBigRocks.value).toEqual(sampleBigRocks)
+    expect(result.filteredBigRocks.value).toHaveLength(4)
+    expect(result.filteredBigRocks.value.map(function(r) { return r.name })).toEqual([
+      'MaaS', 'Gen AI Studio', 'Eval Hub', 'Empty Rock'
+    ])
   })
 
-  it('filters by pillar', function() {
+  it('returns rocks regardless of feature/rfe counts', function() {
+    var features = ref([])
+    var rfes = ref([])
+    var bigRocks = ref([
+      { name: 'No Counts', pillar: 'Agents' },
+      { name: 'Has Work', pillar: 'Agents', featureCount: 1, rfeCount: 0 }
+    ])
+    var result = useFilters(features, rfes, bigRocks)
+    expect(result.filteredBigRocks.value).toHaveLength(2)
+    expect(result.filteredBigRocks.value.map(function(r) { return r.name })).toEqual(['No Counts', 'Has Work'])
+  })
+
+  it('filters by pillar including empty rocks', function() {
     var features = ref([])
     var rfes = ref([])
     var bigRocks = ref(sampleBigRocks)
     var result = useFilters(features, rfes, bigRocks)
 
     result.selectedPillar.value = 'Inference'
-    expect(result.filteredBigRocks.value).toHaveLength(2)
-    expect(result.filteredBigRocks.value.map(function(r) { return r.name })).toEqual(['MaaS', 'Eval Hub'])
+    expect(result.filteredBigRocks.value).toHaveLength(3)
+    expect(result.filteredBigRocks.value.map(function(r) { return r.name })).toEqual(['MaaS', 'Eval Hub', 'Empty Rock'])
   })
 
   it('filters by search query (name)', function() {
@@ -102,16 +118,16 @@ describe('filteredBigRocks', function() {
     expect(result.filteredBigRocks.value).toEqual([])
   })
 
-  it('clearFilters resets pillar and shows all rocks', function() {
+  it('clearFilters resets pillar', function() {
     var features = ref([])
     var rfes = ref([])
     var bigRocks = ref(sampleBigRocks)
     var result = useFilters(features, rfes, bigRocks)
 
     result.selectedPillar.value = 'Inference'
-    expect(result.filteredBigRocks.value).toHaveLength(2)
+    expect(result.filteredBigRocks.value).toHaveLength(3)
 
     result.clearFilters()
-    expect(result.filteredBigRocks.value).toEqual(sampleBigRocks)
+    expect(result.filteredBigRocks.value).toHaveLength(4)
   })
 })

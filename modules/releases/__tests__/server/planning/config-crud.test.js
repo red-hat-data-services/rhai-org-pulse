@@ -11,10 +11,10 @@ function createStorage(configReleases, releaseFiles) {
     }
   }
   return {
-    readFromStorage: vi.fn(function(key) {
+    readFromStorage: vi.fn(async function(key) {
       return store[key] ? JSON.parse(JSON.stringify(store[key])) : null
     }),
-    writeToStorage: vi.fn(function(key, data) {
+    writeToStorage: vi.fn(async function(key, data) {
       store[key] = JSON.parse(JSON.stringify(data))
     }),
     _store: store
@@ -28,7 +28,7 @@ function makeReleaseFile(bigRocks, version) {
 
 describe('saveBigRock', () => {
   describe('creating a new Big Rock', () => {
-    it('adds a new Big Rock to the end of the list', () => {
+    it('adds a new Big Rock to the end of the list', async () => {
       const { readFromStorage, writeToStorage } = createStorage(
         { '3.5': { release: '3.5' } },
         { '3.5': makeReleaseFile([
@@ -36,7 +36,7 @@ describe('saveBigRock', () => {
         ]) }
       )
 
-      const result = saveBigRock(readFromStorage, writeToStorage, '3.5', null, {
+      const result = await saveBigRock(readFromStorage, writeToStorage, '3.5', null, {
         name: 'New Rock',
         pillar: 'Platform'
       })
@@ -48,13 +48,13 @@ describe('saveBigRock', () => {
       expect(writeToStorage).toHaveBeenCalledWith('releases/planning/releases/3.5.json', expect.any(Object))
     })
 
-    it('assigns priority 1 to the first Big Rock', () => {
+    it('assigns priority 1 to the first Big Rock', async () => {
       const { readFromStorage, writeToStorage } = createStorage(
         { '3.5': { release: '3.5' } },
         { '3.5': makeReleaseFile([]) }
       )
 
-      const result = saveBigRock(readFromStorage, writeToStorage, '3.5', null, {
+      const result = await saveBigRock(readFromStorage, writeToStorage, '3.5', null, {
         name: 'First Rock'
       })
 
@@ -62,13 +62,13 @@ describe('saveBigRock', () => {
       expect(result.bigRocks).toHaveLength(1)
     })
 
-    it('defaults optional fields to empty strings/arrays', () => {
+    it('defaults optional fields to empty strings/arrays', async () => {
       const { readFromStorage, writeToStorage } = createStorage(
         { '3.5': { release: '3.5' } },
         { '3.5': makeReleaseFile([]) }
       )
 
-      const result = saveBigRock(readFromStorage, writeToStorage, '3.5', null, {
+      const result = await saveBigRock(readFromStorage, writeToStorage, '3.5', null, {
         name: 'Minimal Rock'
       })
 
@@ -81,13 +81,13 @@ describe('saveBigRock', () => {
       expect(result.bigRock.description).toBe('')
     })
 
-    it('trims the name', () => {
+    it('trims the name', async () => {
       const { readFromStorage, writeToStorage } = createStorage(
         { '3.5': { release: '3.5' } },
         { '3.5': makeReleaseFile([]) }
       )
 
-      const result = saveBigRock(readFromStorage, writeToStorage, '3.5', null, {
+      const result = await saveBigRock(readFromStorage, writeToStorage, '3.5', null, {
         name: '  Spaced Name  '
       })
 
@@ -96,7 +96,7 @@ describe('saveBigRock', () => {
   })
 
   describe('updating an existing Big Rock', () => {
-    it('updates fields of an existing Big Rock by name', () => {
+    it('updates fields of an existing Big Rock by name', async () => {
       const { readFromStorage, writeToStorage } = createStorage(
         { '3.5': { release: '3.5' } },
         { '3.5': makeReleaseFile([
@@ -105,7 +105,7 @@ describe('saveBigRock', () => {
         ]) }
       )
 
-      const result = saveBigRock(readFromStorage, writeToStorage, '3.5', 'MaaS', {
+      const result = await saveBigRock(readFromStorage, writeToStorage, '3.5', 'MaaS', {
         name: 'MaaS',
         fullName: 'Updated Name',
         pillar: 'New Pillar',
@@ -118,7 +118,7 @@ describe('saveBigRock', () => {
       expect(result.bigRocks).toHaveLength(2)
     })
 
-    it('allows renaming a Big Rock', () => {
+    it('allows renaming a Big Rock', async () => {
       const { readFromStorage, writeToStorage } = createStorage(
         { '3.5': { release: '3.5' } },
         { '3.5': makeReleaseFile([
@@ -126,7 +126,7 @@ describe('saveBigRock', () => {
         ]) }
       )
 
-      const result = saveBigRock(readFromStorage, writeToStorage, '3.5', 'OldName', {
+      const result = await saveBigRock(readFromStorage, writeToStorage, '3.5', 'OldName', {
         name: 'NewName'
       })
 
@@ -134,7 +134,7 @@ describe('saveBigRock', () => {
       expect(result.bigRocks[0].name).toBe('NewName')
     })
 
-    it('renames a rock while other rocks are unaffected', () => {
+    it('renames a rock while other rocks are unaffected', async () => {
       const { readFromStorage, writeToStorage } = createStorage(
         { '3.5': { release: '3.5' } },
         { '3.5': makeReleaseFile([
@@ -144,7 +144,7 @@ describe('saveBigRock', () => {
         ]) }
       )
 
-      const result = saveBigRock(readFromStorage, writeToStorage, '3.5', 'A', {
+      const result = await saveBigRock(readFromStorage, writeToStorage, '3.5', 'A', {
         name: 'RenamedA'
       })
 
@@ -157,7 +157,7 @@ describe('saveBigRock', () => {
       expect(result.bigRocks.some(function(r) { return r.name === 'A' })).toBe(false)
     })
 
-    it('throws when the original name is not found', () => {
+    it('throws when the original name is not found', async () => {
       const { readFromStorage, writeToStorage } = createStorage(
         { '3.5': { release: '3.5' } },
         { '3.5': makeReleaseFile([
@@ -165,12 +165,10 @@ describe('saveBigRock', () => {
         ]) }
       )
 
-      expect(() => {
-        saveBigRock(readFromStorage, writeToStorage, '3.5', 'NonExistent', { name: 'X' })
-      }).toThrow("'NonExistent' not found")
+      await expect(saveBigRock(readFromStorage, writeToStorage, '3.5', 'NonExistent', { name: 'X' })).rejects.toThrow("'NonExistent' not found")
     })
 
-    it('preserves priority during update', () => {
+    it('preserves priority during update', async () => {
       const { readFromStorage, writeToStorage } = createStorage(
         { '3.5': { release: '3.5' } },
         { '3.5': makeReleaseFile([
@@ -180,7 +178,7 @@ describe('saveBigRock', () => {
         ]) }
       )
 
-      const result = saveBigRock(readFromStorage, writeToStorage, '3.5', 'B', {
+      const result = await saveBigRock(readFromStorage, writeToStorage, '3.5', 'B', {
         name: 'B',
         pillar: 'Updated'
       })
@@ -191,7 +189,7 @@ describe('saveBigRock', () => {
   })
 
   describe('priority renumbering', () => {
-    it('renumbers priorities sequentially after save', () => {
+    it('renumbers priorities sequentially after save', async () => {
       const { readFromStorage, writeToStorage } = createStorage(
         { '3.5': { release: '3.5' } },
         { '3.5': makeReleaseFile([
@@ -200,7 +198,7 @@ describe('saveBigRock', () => {
         ]) }
       )
 
-      const result = saveBigRock(readFromStorage, writeToStorage, '3.5', null, { name: 'C' })
+      const result = await saveBigRock(readFromStorage, writeToStorage, '3.5', null, { name: 'C' })
 
       expect(result.bigRocks[0].priority).toBe(1)
       expect(result.bigRocks[1].priority).toBe(2)
@@ -210,7 +208,7 @@ describe('saveBigRock', () => {
 })
 
 describe('deleteBigRock', () => {
-  it('deletes a Big Rock by name', () => {
+  it('deletes a Big Rock by name', async () => {
     const { readFromStorage, writeToStorage } = createStorage(
       { '3.5': { release: '3.5' } },
       { '3.5': makeReleaseFile([
@@ -220,14 +218,14 @@ describe('deleteBigRock', () => {
       ]) }
     )
 
-    const result = deleteBigRock(readFromStorage, writeToStorage, '3.5', 'B')
+    const result = await deleteBigRock(readFromStorage, writeToStorage, '3.5', 'B')
 
     expect(result.deleted).toBe('B')
     expect(result.bigRocks).toHaveLength(2)
     expect(result.bigRocks.map(r => r.name)).toEqual(['A', 'C'])
   })
 
-  it('renumbers priorities after deletion', () => {
+  it('renumbers priorities after deletion', async () => {
     const { readFromStorage, writeToStorage } = createStorage(
       { '3.5': { release: '3.5' } },
       { '3.5': makeReleaseFile([
@@ -237,7 +235,7 @@ describe('deleteBigRock', () => {
       ]) }
     )
 
-    const result = deleteBigRock(readFromStorage, writeToStorage, '3.5', 'A')
+    const result = await deleteBigRock(readFromStorage, writeToStorage, '3.5', 'A')
 
     expect(result.bigRocks[0].priority).toBe(1)
     expect(result.bigRocks[0].name).toBe('B')
@@ -245,7 +243,7 @@ describe('deleteBigRock', () => {
     expect(result.bigRocks[1].name).toBe('C')
   })
 
-  it('allows deleting the last Big Rock', () => {
+  it('allows deleting the last Big Rock', async () => {
     const { readFromStorage, writeToStorage } = createStorage(
       { '3.5': { release: '3.5' } },
       { '3.5': makeReleaseFile([
@@ -253,13 +251,13 @@ describe('deleteBigRock', () => {
       ]) }
     )
 
-    const result = deleteBigRock(readFromStorage, writeToStorage, '3.5', 'Only')
+    const result = await deleteBigRock(readFromStorage, writeToStorage, '3.5', 'Only')
 
     expect(result.deleted).toBe('Only')
     expect(result.bigRocks).toHaveLength(0)
   })
 
-  it('throws when the Big Rock name is not found', () => {
+  it('throws when the Big Rock name is not found', async () => {
     const { readFromStorage, writeToStorage } = createStorage(
       { '3.5': { release: '3.5' } },
       { '3.5': makeReleaseFile([
@@ -267,12 +265,10 @@ describe('deleteBigRock', () => {
       ]) }
     )
 
-    expect(() => {
-      deleteBigRock(readFromStorage, writeToStorage, '3.5', 'NonExistent')
-    }).toThrow("'NonExistent' not found")
+    await expect(deleteBigRock(readFromStorage, writeToStorage, '3.5', 'NonExistent')).rejects.toThrow("'NonExistent' not found")
   })
 
-  it('writes the updated release file to storage', () => {
+  it('writes the updated release file to storage', async () => {
     const { readFromStorage, writeToStorage } = createStorage(
       { '3.5': { release: '3.5' } },
       { '3.5': makeReleaseFile([
@@ -281,7 +277,7 @@ describe('deleteBigRock', () => {
       ]) }
     )
 
-    deleteBigRock(readFromStorage, writeToStorage, '3.5', 'A')
+    await deleteBigRock(readFromStorage, writeToStorage, '3.5', 'A')
 
     expect(writeToStorage).toHaveBeenCalledWith('releases/planning/releases/3.5.json', expect.objectContaining({
       bigRocks: expect.arrayContaining([

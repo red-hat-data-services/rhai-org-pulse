@@ -1,10 +1,28 @@
 import { describe, it, expect } from 'vitest'
 
-const { mergeFeatureData, rebuildIndex, AI_REVIEW_FIELDS } = require('../feature-store')
+const { mergeFeatureData, rebuildIndex, deriveEpicCount, AI_REVIEW_FIELDS } = require('../feature-store')
 
 describe('AI_REVIEW_FIELDS', function() {
   it('includes aiReview', function() {
     expect(AI_REVIEW_FIELDS).toContain('aiReview')
+  })
+})
+
+describe('deriveEpicCount', function() {
+  it('prefers Jira feature.epics length when _sources.jira is set', function() {
+    expect(deriveEpicCount({
+      epics: [{ key: 'E-1' }, { key: 'E-2' }],
+      metrics: { totalEpics: 0 },
+      _sources: { jira: '2026-08-11T00:00:00.000Z' }
+    })).toBe(2)
+  })
+
+  it('falls back to metrics.totalEpics without Jira epic list', function() {
+    expect(deriveEpicCount({ metrics: { totalEpics: 5 } })).toBe(5)
+  })
+
+  it('returns 0 when neither epics nor metrics present', function() {
+    expect(deriveEpicCount({})).toBe(0)
   })
 })
 
@@ -67,11 +85,11 @@ describe('mergeFeatureData — aiReview handling', function() {
 })
 
 describe('rebuildIndex — aiReview summary', function() {
-  it('includes slim aiReview in index entries for features with aiReview', function() {
+  it('includes slim aiReview in index entries for features with aiReview', async function() {
     const stored = {}
     const storage = {
-      listStorageFiles: function() { return ['TEST-1.json'] },
-      readFromStorage: function(path) {
+      listStorageFiles: async function() { return ['TEST-1.json'] },
+      readFromStorage: async function(path) {
         if (path.endsWith('TEST-1.json')) {
           return {
             key: 'TEST-1',
@@ -89,12 +107,12 @@ describe('rebuildIndex — aiReview summary', function() {
         }
         return null
       },
-      writeToStorage: function(path, data) {
+      writeToStorage: async function(path, data) {
         stored[path] = data
       }
     }
 
-    rebuildIndex(storage)
+    await rebuildIndex(storage)
 
     const index = stored['releases/execution/index.json']
     expect(index.features[0].aiReview).toEqual({
@@ -109,24 +127,50 @@ describe('rebuildIndex — aiReview summary', function() {
     expect(index.features[0].aiReview.history).toBeUndefined()
   })
 
-  it('sets aiReview to null in index for features without aiReview', function() {
+  it('sets aiReview to null in index for features without aiReview', async function() {
     const stored = {}
     const storage = {
-      listStorageFiles: function() { return ['TEST-2.json'] },
-      readFromStorage: function(path) {
+      listStorageFiles: async function() { return ['TEST-2.json'] },
+      readFromStorage: async function(path) {
         if (path.endsWith('TEST-2.json')) {
           return { key: 'TEST-2', summary: 'No AI review' }
         }
         return null
       },
-      writeToStorage: function(path, data) {
+      writeToStorage: async function(path, data) {
         stored[path] = data
       }
     }
 
-    rebuildIndex(storage)
+    await rebuildIndex(storage)
 
     const index = stored['releases/execution/index.json']
     expect(index.features[0].aiReview).toBeNull()
+  })
+
+  it('indexes epicCount from Jira epics over stale metrics.totalEpics', async function() {
+    const stored = {}
+    const storage = {
+      listStorageFiles: async function() { return ['RHAISTRAT-2198.json'] },
+      readFromStorage: async function(path) {
+        if (path.endsWith('RHAISTRAT-2198.json')) {
+          return {
+            key: 'RHAISTRAT-2198',
+            summary: 'Validated Models',
+            epics: [{ key: 'RHOAIENG-1' }, { key: 'RHOAIENG-2' }],
+            metrics: { totalEpics: 0 },
+            _sources: { jira: '2026-08-11T00:00:00.000Z' }
+          }
+        }
+        return null
+      },
+      writeToStorage: async function(path, data) {
+        stored[path] = data
+      }
+    }
+
+    await rebuildIndex(storage)
+
+    expect(stored['releases/execution/index.json'].features[0].epicCount).toBe(2)
   })
 })

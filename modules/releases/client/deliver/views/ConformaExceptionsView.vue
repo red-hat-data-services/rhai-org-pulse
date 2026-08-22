@@ -59,13 +59,16 @@
       <div class="rounded-2xl bg-gradient-to-r from-blue-600 via-indigo-600 to-violet-600 dark:from-blue-700 dark:via-indigo-700 dark:to-violet-700 px-6 py-5 shadow-lg text-white">
         <div class="flex flex-wrap items-center justify-between gap-4">
           <div>
-            <p class="text-xs font-bold uppercase tracking-widest text-blue-200 mb-1">Viewing Release</p>
+            <p class="text-xs font-bold uppercase tracking-widest text-blue-200 mb-1">
+              {{ isProductLayer ? 'Product Layer' : 'Viewing Release' }}
+            </p>
             <h3 class="text-3xl font-extrabold tracking-tight leading-none">
-              {{ selectedRelease.version }}
+              {{ selectedRelease.displayName || selectedRelease.version }}
               <span v-if="tableFilterTeam" class="text-lg font-semibold text-blue-200 ml-2">· {{ tableFilterTeam }}</span>
             </h3>
+            <p v-if="isProductLayer && selectedRelease.displayName" class="text-sm text-blue-200 mt-1">{{ selectedRelease.version }}</p>
           </div>
-          <div class="flex flex-wrap gap-3">
+          <div v-if="!isProductLayer" class="flex flex-wrap gap-3">
             <div class="flex flex-col items-center bg-white/15 backdrop-blur-sm rounded-xl px-5 py-2.5 min-w-[90px]">
               <span class="text-[10px] font-semibold uppercase tracking-wider text-blue-200 mb-0.5">GA Date</span>
               <span class="text-sm font-bold">{{ selectedRelease.gaDate }}</span>
@@ -152,8 +155,8 @@
         </div>
       </div>
 
-      <!-- Charts row 2 -->
-      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <!-- Charts row 2 (hidden for product layers — no gaDate or volatile data) -->
+      <div v-if="!isProductLayer" class="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <!-- Trend across releases -->
         <div class="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900/60 p-5">
           <div class="flex items-center justify-between mb-4">
@@ -308,7 +311,7 @@
           <div class="flex flex-wrap items-center gap-2">
             <!-- Actionable toggle -->
             <button
-              v-if="isLatestUnshipped && actionableCount > 0"
+              v-if="!isProductLayer && isLatestUnshipped && actionableCount > 0"
               @click="actionableOnly = !actionableOnly"
               :class="actionableOnly
                 ? 'bg-red-600 text-white border-red-600 shadow-md'
@@ -419,7 +422,7 @@
             <thead>
               <tr class="bg-gray-50 dark:bg-gray-800/60 text-gray-500 dark:text-gray-400 uppercase tracking-wide">
                 <th
-                  v-for="col in TABLE_COLUMNS"
+                  v-for="col in visibleColumns"
                   :key="col.key"
                   class="px-4 py-3 text-left font-semibold select-none"
                   :class="[col.sortable ? 'cursor-pointer hover:text-gray-700 dark:hover:text-gray-200' : '', col.width || '']"
@@ -513,11 +516,11 @@
                   {{ ex.team || '—' }}
                 </td>
                 <!-- Effective Until -->
-                <td class="px-4 py-3 whitespace-nowrap text-gray-600 dark:text-gray-400">
+                <td v-if="!isProductLayer" class="px-4 py-3 whitespace-nowrap text-gray-600 dark:text-gray-400">
                   {{ ex.effectiveUntil ? ex.effectiveUntil.slice(0, 10) : '—' }}
                 </td>
                 <!-- Days After GA -->
-                <td class="px-4 py-3 whitespace-nowrap text-center font-semibold" :class="daysAfterGaCls(ex.daysAfterGa)">
+                <td v-if="!isProductLayer" class="px-4 py-3 whitespace-nowrap text-center font-semibold" :class="daysAfterGaCls(ex.daysAfterGa)">
                   {{ ex.daysAfterGa !== null ? ex.daysAfterGa : '—' }}
                 </td>
                 <!-- References -->
@@ -532,7 +535,7 @@
                   <span v-else class="text-gray-400">—</span>
                 </td>
                 <!-- Action -->
-                <td class="px-4 py-3 whitespace-nowrap">
+                <td v-if="!isProductLayer" class="px-4 py-3 whitespace-nowrap">
                   <template v-if="ex.isActionable">
                     <a
                       v-if="ex.extensionJiraKey"
@@ -599,7 +602,7 @@
 
   <!-- Security Policy Compliance Warning Dialog -->
   <div
-    v-if="showJiraWarning"
+    v-if="showJiraWarning && !isProductLayer"
     class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm"
     @click.self="showJiraWarning = false"
   >
@@ -674,7 +677,7 @@ import {
   KNOWN_CATEGORIES, CATEGORY_BADGE, CATEGORY_DOCS,
   AI_CATEGORIES, PERMANENT_TARGET, targetReleaseBadgeCls, targetReleaseLabel,
   normalizeTargetRelease, EXTENSION_JIRA_TEMPLATE_URL, ACTIONABLE_DAYS_THRESHOLD,
-  extractCategory, policyLabel, policyColor, sortPolicyFiles
+  extractCategory, policyLabel, policyColor, sortPolicyFiles, extensionJiraTemplateUrl
 } from '../constants/conforma'
 
 ChartJS.register(
@@ -712,20 +715,25 @@ const chartKey = ref(0)
 const todayStr = new Date().toLocaleDateString('sv-SE') // YYYY-MM-DD in local time
 
 const allReleasesRaw = computed(() => {
-  const releases = (state.releases || []).filter(r => r.gaDate)
-  const shipped = releases
+  const all = state.releases || []
+  const dated = all.filter(r => r.gaDate)
+  const productLayers = all.filter(r => !r.gaDate)
+  const shipped = dated
     .filter(r => r.gaDate <= todayStr)
     .sort((a, b) => b.gaDate.localeCompare(a.gaDate))
-  const upcoming = releases
+  const upcoming = dated
     .filter(r => r.gaDate > todayStr)
     .sort((a, b) => a.gaDate.localeCompare(b.gaDate))
-  return [...upcoming, ...shipped]
+  return [...productLayers, ...upcoming, ...shipped]
 })
 
 const allReleases = computed(() => {
-  const nextUpcoming = allReleasesRaw.value.find(r => r.gaDate > todayStr)
-  const shipped = allReleasesRaw.value.filter(r => r.gaDate <= todayStr)
-  return nextUpcoming ? [nextUpcoming, ...shipped] : shipped
+  const dated = allReleasesRaw.value.filter(r => r.gaDate)
+  const productLayers = allReleasesRaw.value.filter(r => !r.gaDate)
+  const nextUpcoming = dated.find(r => r.gaDate > todayStr)
+  const shipped = dated.filter(r => r.gaDate <= todayStr)
+  const releases = nextUpcoming ? [nextUpcoming, ...shipped] : shipped
+  return [...productLayers, ...releases]
 })
 
 const filteredConformaReleases = computed(() => {
@@ -755,6 +763,16 @@ const selectedRelease = computed(() =>
 
 const selectedVersion = computed(() => selectedRelease.value?.version || null)
 
+const isProductLayer = computed(() => !!selectedRelease.value?.productLayer)
+
+// ─── Table columns (hide release-specific columns for product layers) ───────
+
+const visibleColumns = computed(() => {
+  if (!isProductLayer.value) return TABLE_COLUMNS
+  const hide = new Set(['effectiveUntil', 'daysAfterGa', 'action'])
+  return TABLE_COLUMNS.filter(c => !hide.has(c.key))
+})
+
 // ─── Actionable exceptions ─────────────────────────────────────────────────
 
 const isLatestUnshipped = computed(() => {
@@ -772,7 +790,8 @@ function handleCreateJira() {
 
 function confirmCreateJira() {
   showJiraWarning.value = false
-  window.open(EXTENSION_JIRA_TEMPLATE_URL, '_blank', 'noopener')
+  const url = extensionJiraTemplateUrl(selectedRelease.value) || EXTENSION_JIRA_TEMPLATE_URL
+  window.open(url, '_blank', 'noopener')
 }
 
 function dismissHoveredTooltip() {
@@ -1217,7 +1236,7 @@ const typeDonutData = computed(() => {
 const trendChartData = computed(() => {
   const prods = filter.selectedProducts
   const sorted = [...allReleasesRaw.value]
-    .filter(r => !prods.size || prods.has(extractProduct(r.version)))
+    .filter(r => r.gaDate && (!prods.size || prods.has(extractProduct(r.version))))
     .sort((a, b) => a.gaDate.localeCompare(b.gaDate))
   if (sorted.length < 2) return null
 

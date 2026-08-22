@@ -19,7 +19,12 @@
       ],
       "assignee": "Unassigned",
       "pipelineState": "triage-missing-info",
-      "terminalAt": null
+      "terminalAt": null,
+      "ciFailureCount": 0,
+      "reviewRoundCount": 0,
+      "wasBlocked": false,
+      "effortScore": null,
+      "effortTier": null
     },
     {
       "key": "RHOAIENG-59198",
@@ -38,7 +43,12 @@
       ],
       "assignee": "Unassigned",
       "pipelineState": "triage-missing-info",
-      "terminalAt": null
+      "terminalAt": null,
+      "ciFailureCount": 0,
+      "reviewRoundCount": 0,
+      "wasBlocked": false,
+      "effortScore": null,
+      "effortTier": null
     },
     {
       "key": "RHOAIENG-59193",
@@ -59,7 +69,12 @@
       ],
       "assignee": "Unassigned",
       "pipelineState": "triage-pending",
-      "terminalAt": null
+      "terminalAt": null,
+      "ciFailureCount": 0,
+      "reviewRoundCount": 0,
+      "wasBlocked": false,
+      "effortScore": null,
+      "effortTier": null
     },
     {
       "key": "AIPCC-14654",
@@ -78,7 +93,12 @@
       ],
       "assignee": "Lance Barto",
       "pipelineState": "autofix-blocked",
-      "terminalAt": null
+      "terminalAt": null,
+      "ciFailureCount": 0,
+      "reviewRoundCount": 0,
+      "wasBlocked": false,
+      "effortScore": null,
+      "effortTier": null
     },
     {
       "key": "RHOAIENG-59101",
@@ -98,7 +118,12 @@
       ],
       "assignee": "Unassigned",
       "pipelineState": "autofix-blocked",
-      "terminalAt": null
+      "terminalAt": null,
+      "ciFailureCount": 0,
+      "reviewRoundCount": 0,
+      "wasBlocked": false,
+      "effortScore": null,
+      "effortTier": null
     },
     {
       "key": "AIPCC-14633",
@@ -115,7 +140,12 @@
       "components": [],
       "assignee": "Unassigned",
       "pipelineState": "autofix-pending",
-      "terminalAt": null
+      "terminalAt": null,
+      "ciFailureCount": 0,
+      "reviewRoundCount": 0,
+      "wasBlocked": false,
+      "effortScore": null,
+      "effortTier": null
     },
     {
       "key": "RHOAIENG-59075",
@@ -135,7 +165,12 @@
       ],
       "assignee": "AIPCC JIRABOT",
       "pipelineState": "autofix-merged",
-      "terminalAt": "2026-04-21T17:30:05.162+0000"
+      "terminalAt": "2026-04-21T17:30:05.162+0000",
+      "ciFailureCount": 0,
+      "reviewRoundCount": 1,
+      "wasBlocked": false,
+      "effortScore": 1,
+      "effortTier": "Quick Win"
     },
     {
       "key": "RHOAIENG-59073",
@@ -156,7 +191,12 @@
       ],
       "assignee": "Gowtham Shanmugasundaram",
       "pipelineState": "triage-missing-info",
-      "terminalAt": null
+      "terminalAt": null,
+      "ciFailureCount": 0,
+      "reviewRoundCount": 0,
+      "wasBlocked": false,
+      "effortScore": null,
+      "effortTier": null
     },
     {
       "key": "RHOAIENG-59067",
@@ -176,7 +216,12 @@
       ],
       "assignee": "Vath Sok",
       "pipelineState": "autofix-blocked",
-      "terminalAt": null
+      "terminalAt": null,
+      "ciFailureCount": 0,
+      "reviewRoundCount": 0,
+      "wasBlocked": false,
+      "effortScore": null,
+      "effortTier": null
     },
     {
       "key": "RHOAIENG-59066",
@@ -195,7 +240,12 @@
       ],
       "assignee": "Vath Sok",
       "pipelineState": "triage-missing-info",
-      "terminalAt": null
+      "terminalAt": null,
+      "ciFailureCount": 0,
+      "reviewRoundCount": 0,
+      "wasBlocked": false,
+      "effortScore": null,
+      "effortTier": null
     },
     {
       "key": "RHOAIENG-59060",
@@ -214,7 +264,12 @@
       ],
       "assignee": "Vath Sok",
       "pipelineState": "triage-not-fixable",
-      "terminalAt": null
+      "terminalAt": null,
+      "ciFailureCount": 0,
+      "reviewRoundCount": 0,
+      "wasBlocked": false,
+      "effortScore": null,
+      "effortTier": null
     },
     {
       "key": "AIPCC-14624",
@@ -233,7 +288,12 @@
       ],
       "assignee": "Doug Hellmann",
       "pipelineState": "autofix-review",
-      "terminalAt": null
+      "terminalAt": null,
+      "ciFailureCount": 0,
+      "reviewRoundCount": 0,
+      "wasBlocked": false,
+      "effortScore": null,
+      "effortTier": null
     },
     {
       "key": "RHOAIENG-59055",
@@ -252,7 +312,12 @@
       ],
       "assignee": "Gowtham Shanmugasundaram",
       "pipelineState": "triage-missing-info",
-      "terminalAt": null
+      "terminalAt": null,
+      "ciFailureCount": 0,
+      "reviewRoundCount": 0,
+      "wasBlocked": false,
+      "effortScore": null,
+      "effortTier": null
     },
     {
       "key": "RHOAIENG-58992",
@@ -271,7 +336,12 @@
       ],
       "assignee": "Davide Bianchi",
       "pipelineState": "triage-missing-info",
-      "terminalAt": null
+      "terminalAt": null,
+      "ciFailureCount": 0,
+      "reviewRoundCount": 0,
+      "wasBlocked": false,
+      "effortScore": null,
+      "effortTier": null
     },
     {
       "key": "RHOAIENG-58984",
@@ -293,7 +363,12 @@
       ],
       "assignee": "Unassigned",
       "pipelineState": "autofix-blocked",
-      "terminalAt": null
+      "terminalAt": null,
+      "ciFailureCount": 0,
+      "reviewRoundCount": 0,
+      "wasBlocked": false,
+      "effortScore": null,
+      "effortTier": null
     },
     {
       "key": "RHOAIENG-58983",
@@ -313,7 +388,12 @@
       ],
       "assignee": "Christian Vogt",
       "pipelineState": "triage-missing-info",
-      "terminalAt": null
+      "terminalAt": null,
+      "ciFailureCount": 0,
+      "reviewRoundCount": 0,
+      "wasBlocked": false,
+      "effortScore": null,
+      "effortTier": null
     },
     {
       "key": "RHOAIENG-58940",
@@ -333,7 +413,12 @@
       ],
       "assignee": "Claudia Alphonse",
       "pipelineState": "triage-missing-info",
-      "terminalAt": null
+      "terminalAt": null,
+      "ciFailureCount": 0,
+      "reviewRoundCount": 0,
+      "wasBlocked": false,
+      "effortScore": null,
+      "effortTier": null
     },
     {
       "key": "RHOAIENG-58933",
@@ -353,7 +438,12 @@
       ],
       "assignee": "Unassigned",
       "pipelineState": "triage-missing-info",
-      "terminalAt": null
+      "terminalAt": null,
+      "ciFailureCount": 0,
+      "reviewRoundCount": 0,
+      "wasBlocked": false,
+      "effortScore": null,
+      "effortTier": null
     },
     {
       "key": "RHOAIENG-58847",
@@ -372,7 +462,12 @@
       ],
       "assignee": "Manaswini Das",
       "pipelineState": "triage-missing-info",
-      "terminalAt": null
+      "terminalAt": null,
+      "ciFailureCount": 0,
+      "reviewRoundCount": 0,
+      "wasBlocked": false,
+      "effortScore": null,
+      "effortTier": null
     },
     {
       "key": "RHOAIENG-58830",
@@ -391,7 +486,12 @@
       ],
       "assignee": "Unassigned",
       "pipelineState": "triage-missing-info",
-      "terminalAt": null
+      "terminalAt": null,
+      "ciFailureCount": 0,
+      "reviewRoundCount": 0,
+      "wasBlocked": false,
+      "effortScore": null,
+      "effortTier": null
     },
     {
       "key": "RHOAIENG-58829",
@@ -411,7 +511,12 @@
       ],
       "assignee": "Unassigned",
       "pipelineState": "triage-missing-info",
-      "terminalAt": null
+      "terminalAt": null,
+      "ciFailureCount": 0,
+      "reviewRoundCount": 0,
+      "wasBlocked": false,
+      "effortScore": null,
+      "effortTier": null
     },
     {
       "key": "AIPCC-14469",
@@ -432,7 +537,12 @@
       ],
       "assignee": "Ryan Petrello",
       "pipelineState": "autofix-blocked",
-      "terminalAt": null
+      "terminalAt": null,
+      "ciFailureCount": 0,
+      "reviewRoundCount": 0,
+      "wasBlocked": false,
+      "effortScore": null,
+      "effortTier": null
     },
     {
       "key": "RHOAIENG-58758",
@@ -452,7 +562,12 @@
       ],
       "assignee": "Unassigned",
       "pipelineState": "triage-missing-info",
-      "terminalAt": null
+      "terminalAt": null,
+      "ciFailureCount": 0,
+      "reviewRoundCount": 0,
+      "wasBlocked": false,
+      "effortScore": null,
+      "effortTier": null
     },
     {
       "key": "RHOAIENG-58747",
@@ -473,7 +588,12 @@
       ],
       "assignee": "Unassigned",
       "pipelineState": "triage-missing-info",
-      "terminalAt": null
+      "terminalAt": null,
+      "ciFailureCount": 0,
+      "reviewRoundCount": 0,
+      "wasBlocked": false,
+      "effortScore": null,
+      "effortTier": null
     },
     {
       "key": "RHOAIENG-58734",
@@ -494,7 +614,12 @@
       ],
       "assignee": "Unassigned",
       "pipelineState": "triage-missing-info",
-      "terminalAt": null
+      "terminalAt": null,
+      "ciFailureCount": 0,
+      "reviewRoundCount": 0,
+      "wasBlocked": false,
+      "effortScore": null,
+      "effortTier": null
     },
     {
       "key": "AIPCC-14461",
@@ -514,7 +639,12 @@
       ],
       "assignee": "Ryan Petrello",
       "pipelineState": "autofix-merged",
-      "terminalAt": "2026-04-21T14:33:05.510+0000"
+      "terminalAt": "2026-04-21T14:33:05.510+0000",
+      "ciFailureCount": 0,
+      "reviewRoundCount": 1,
+      "wasBlocked": false,
+      "effortScore": 1,
+      "effortTier": "Quick Win"
     },
     {
       "key": "AIPCC-14460",
@@ -534,7 +664,12 @@
       ],
       "assignee": "Ryan Petrello",
       "pipelineState": "autofix-merged",
-      "terminalAt": "2026-04-21T14:33:05.973+0000"
+      "terminalAt": "2026-04-21T14:33:05.973+0000",
+      "ciFailureCount": 0,
+      "reviewRoundCount": 1,
+      "wasBlocked": false,
+      "effortScore": 1,
+      "effortTier": "Quick Win"
     },
     {
       "key": "AIPCC-14459",
@@ -554,7 +689,12 @@
       ],
       "assignee": "Ryan Petrello",
       "pipelineState": "autofix-merged",
-      "terminalAt": "2026-04-21T14:33:06.540+0000"
+      "terminalAt": "2026-04-21T14:33:06.540+0000",
+      "ciFailureCount": 1,
+      "reviewRoundCount": 1,
+      "wasBlocked": false,
+      "effortScore": 2,
+      "effortTier": "Quick Win"
     },
     {
       "key": "AIPCC-14458",
@@ -574,7 +714,12 @@
       ],
       "assignee": "Ryan Petrello",
       "pipelineState": "autofix-merged",
-      "terminalAt": "2026-04-21T14:33:07.030+0000"
+      "terminalAt": "2026-04-21T14:33:07.030+0000",
+      "ciFailureCount": 0,
+      "reviewRoundCount": 2,
+      "wasBlocked": false,
+      "effortScore": 2,
+      "effortTier": "Quick Win"
     },
     {
       "key": "AIPCC-14457",
@@ -594,7 +739,12 @@
       ],
       "assignee": "Ryan Petrello",
       "pipelineState": "autofix-merged",
-      "terminalAt": "2026-04-21T14:33:07.452+0000"
+      "terminalAt": "2026-04-21T14:33:07.452+0000",
+      "ciFailureCount": 1,
+      "reviewRoundCount": 2,
+      "wasBlocked": false,
+      "effortScore": 3,
+      "effortTier": "Standard Fix"
     },
     {
       "key": "AIPCC-14456",
@@ -614,7 +764,12 @@
       ],
       "assignee": "Ryan Petrello",
       "pipelineState": "autofix-blocked",
-      "terminalAt": null
+      "terminalAt": null,
+      "ciFailureCount": 0,
+      "reviewRoundCount": 0,
+      "wasBlocked": false,
+      "effortScore": null,
+      "effortTier": null
     },
     {
       "key": "AIPCC-14455",
@@ -634,7 +789,12 @@
       ],
       "assignee": "Ryan Petrello",
       "pipelineState": "autofix-merged",
-      "terminalAt": "2026-04-21T14:33:07.890+0000"
+      "terminalAt": "2026-04-21T14:33:07.890+0000",
+      "ciFailureCount": 1,
+      "reviewRoundCount": 3,
+      "wasBlocked": false,
+      "effortScore": 4,
+      "effortTier": "Standard Fix"
     },
     {
       "key": "AIPCC-14454",
@@ -654,7 +814,12 @@
       ],
       "assignee": "Ryan Petrello",
       "pipelineState": "autofix-blocked",
-      "terminalAt": null
+      "terminalAt": null,
+      "ciFailureCount": 0,
+      "reviewRoundCount": 0,
+      "wasBlocked": false,
+      "effortScore": null,
+      "effortTier": null
     },
     {
       "key": "RHOAIENG-58730",
@@ -674,7 +839,12 @@
       ],
       "assignee": "Unassigned",
       "pipelineState": "triage-missing-info",
-      "terminalAt": null
+      "terminalAt": null,
+      "ciFailureCount": 0,
+      "reviewRoundCount": 0,
+      "wasBlocked": false,
+      "effortScore": null,
+      "effortTier": null
     },
     {
       "key": "RHOAIENG-58729",
@@ -694,7 +864,12 @@
       ],
       "assignee": "Unassigned",
       "pipelineState": "triage-missing-info",
-      "terminalAt": null
+      "terminalAt": null,
+      "ciFailureCount": 0,
+      "reviewRoundCount": 0,
+      "wasBlocked": false,
+      "effortScore": null,
+      "effortTier": null
     },
     {
       "key": "RHOAIENG-58728",
@@ -714,7 +889,12 @@
       ],
       "assignee": "Unassigned",
       "pipelineState": "triage-missing-info",
-      "terminalAt": null
+      "terminalAt": null,
+      "ciFailureCount": 0,
+      "reviewRoundCount": 0,
+      "wasBlocked": false,
+      "effortScore": null,
+      "effortTier": null
     },
     {
       "key": "RHOAIENG-58724",
@@ -735,7 +915,12 @@
       ],
       "assignee": "Moulali Shikalwadi",
       "pipelineState": "triage-missing-info",
-      "terminalAt": null
+      "terminalAt": null,
+      "ciFailureCount": 0,
+      "reviewRoundCount": 0,
+      "wasBlocked": false,
+      "effortScore": null,
+      "effortTier": null
     },
     {
       "key": "RHOAIENG-58678",
@@ -754,7 +939,12 @@
       ],
       "assignee": "Unassigned",
       "pipelineState": "triage-missing-info",
-      "terminalAt": null
+      "terminalAt": null,
+      "ciFailureCount": 0,
+      "reviewRoundCount": 0,
+      "wasBlocked": false,
+      "effortScore": null,
+      "effortTier": null
     },
     {
       "key": "RHOAIENG-58677",
@@ -773,7 +963,12 @@
       ],
       "assignee": "Unassigned",
       "pipelineState": "triage-missing-info",
-      "terminalAt": null
+      "terminalAt": null,
+      "ciFailureCount": 0,
+      "reviewRoundCount": 0,
+      "wasBlocked": false,
+      "effortScore": null,
+      "effortTier": null
     },
     {
       "key": "RHOAIENG-58676",
@@ -792,7 +987,12 @@
       ],
       "assignee": "Unassigned",
       "pipelineState": "triage-missing-info",
-      "terminalAt": null
+      "terminalAt": null,
+      "ciFailureCount": 0,
+      "reviewRoundCount": 0,
+      "wasBlocked": false,
+      "effortScore": null,
+      "effortTier": null
     },
     {
       "key": "RHOAIENG-58655",
@@ -811,7 +1011,12 @@
       ],
       "assignee": "Unassigned",
       "pipelineState": "triage-missing-info",
-      "terminalAt": null
+      "terminalAt": null,
+      "ciFailureCount": 0,
+      "reviewRoundCount": 0,
+      "wasBlocked": false,
+      "effortScore": null,
+      "effortTier": null
     },
     {
       "key": "AIPCC-14433",
@@ -831,7 +1036,12 @@
       ],
       "assignee": "Sean Johnston",
       "pipelineState": "autofix-blocked",
-      "terminalAt": null
+      "terminalAt": null,
+      "ciFailureCount": 0,
+      "reviewRoundCount": 0,
+      "wasBlocked": false,
+      "effortScore": null,
+      "effortTier": null
     },
     {
       "key": "RHOAIENG-58577",
@@ -851,7 +1061,12 @@
       ],
       "assignee": "Unassigned",
       "pipelineState": "triage-missing-info",
-      "terminalAt": null
+      "terminalAt": null,
+      "ciFailureCount": 0,
+      "reviewRoundCount": 0,
+      "wasBlocked": false,
+      "effortScore": null,
+      "effortTier": null
     },
     {
       "key": "RHOAIENG-58544",
@@ -870,7 +1085,12 @@
       ],
       "assignee": "Unassigned",
       "pipelineState": "triage-missing-info",
-      "terminalAt": null
+      "terminalAt": null,
+      "ciFailureCount": 0,
+      "reviewRoundCount": 0,
+      "wasBlocked": false,
+      "effortScore": null,
+      "effortTier": null
     },
     {
       "key": "RHOAIENG-58513",
@@ -889,7 +1109,12 @@
       ],
       "assignee": "Claudia Alphonse",
       "pipelineState": "triage-missing-info",
-      "terminalAt": null
+      "terminalAt": null,
+      "ciFailureCount": 0,
+      "reviewRoundCount": 0,
+      "wasBlocked": false,
+      "effortScore": null,
+      "effortTier": null
     },
     {
       "key": "AIPCC-14345",
@@ -908,7 +1133,12 @@
       ],
       "assignee": "AIPCC JIRABOT",
       "pipelineState": "autofix-merged",
-      "terminalAt": "2026-04-21T14:33:10.934+0000"
+      "terminalAt": "2026-04-21T14:33:10.934+0000",
+      "ciFailureCount": 2,
+      "reviewRoundCount": 2,
+      "wasBlocked": false,
+      "effortScore": 3,
+      "effortTier": "Standard Fix"
     },
     {
       "key": "AIPCC-14342",
@@ -927,7 +1157,12 @@
       ],
       "assignee": "Lance Barto",
       "pipelineState": "autofix-merged",
-      "terminalAt": "2026-04-21T20:13:13.938+0000"
+      "terminalAt": "2026-04-21T20:13:13.938+0000",
+      "ciFailureCount": 1,
+      "reviewRoundCount": 2,
+      "wasBlocked": false,
+      "effortScore": 3,
+      "effortTier": "Standard Fix"
     },
     {
       "key": "AIPCC-14341",
@@ -946,7 +1181,12 @@
       ],
       "assignee": "AIPCC JIRABOT",
       "pipelineState": "autofix-rejected",
-      "terminalAt": "2026-04-21T14:33:11.560+0000"
+      "terminalAt": "2026-04-21T14:33:11.560+0000",
+      "ciFailureCount": 1,
+      "reviewRoundCount": 2,
+      "wasBlocked": false,
+      "effortScore": null,
+      "effortTier": null
     },
     {
       "key": "RHOAIENG-58426",
@@ -966,7 +1206,12 @@
       ],
       "assignee": "Unassigned",
       "pipelineState": "triage-missing-info",
-      "terminalAt": null
+      "terminalAt": null,
+      "ciFailureCount": 0,
+      "reviewRoundCount": 0,
+      "wasBlocked": false,
+      "effortScore": null,
+      "effortTier": null
     },
     {
       "key": "RHOAIENG-58425",
@@ -986,7 +1231,12 @@
       ],
       "assignee": "Unassigned",
       "pipelineState": "triage-not-fixable",
-      "terminalAt": null
+      "terminalAt": null,
+      "ciFailureCount": 0,
+      "reviewRoundCount": 0,
+      "wasBlocked": false,
+      "effortScore": null,
+      "effortTier": null
     },
     {
       "key": "RHOAIENG-58424",
@@ -1007,7 +1257,12 @@
       ],
       "assignee": "AIPCC JIRABOT",
       "pipelineState": "autofix-ci-failing",
-      "terminalAt": null
+      "terminalAt": null,
+      "ciFailureCount": 0,
+      "reviewRoundCount": 0,
+      "wasBlocked": false,
+      "effortScore": null,
+      "effortTier": null
     },
     {
       "key": "RHOAIENG-58423",
@@ -1028,7 +1283,12 @@
       ],
       "assignee": "AIPCC JIRABOT",
       "pipelineState": "autofix-ci-failing",
-      "terminalAt": null
+      "terminalAt": null,
+      "ciFailureCount": 0,
+      "reviewRoundCount": 0,
+      "wasBlocked": false,
+      "effortScore": null,
+      "effortTier": null
     },
     {
       "key": "RHOAIENG-58422",
@@ -1049,7 +1309,12 @@
       ],
       "assignee": "AIPCC JIRABOT",
       "pipelineState": "autofix-ci-failing",
-      "terminalAt": null
+      "terminalAt": null,
+      "ciFailureCount": 0,
+      "reviewRoundCount": 0,
+      "wasBlocked": false,
+      "effortScore": null,
+      "effortTier": null
     },
     {
       "key": "RHOAIENG-58413",
@@ -1069,7 +1334,12 @@
       ],
       "assignee": "AIPCC JIRABOT",
       "pipelineState": "autofix-blocked",
-      "terminalAt": null
+      "terminalAt": null,
+      "ciFailureCount": 0,
+      "reviewRoundCount": 0,
+      "wasBlocked": false,
+      "effortScore": null,
+      "effortTier": null
     },
     {
       "key": "AIPCC-14332",
@@ -1088,7 +1358,12 @@
       ],
       "assignee": "Unassigned",
       "pipelineState": "triage-not-fixable",
-      "terminalAt": null
+      "terminalAt": null,
+      "ciFailureCount": 0,
+      "reviewRoundCount": 0,
+      "wasBlocked": false,
+      "effortScore": null,
+      "effortTier": null
     },
     {
       "key": "RHOAIENG-58388",
@@ -1109,7 +1384,12 @@
       ],
       "assignee": "AIPCC JIRABOT",
       "pipelineState": "autofix-blocked",
-      "terminalAt": null
+      "terminalAt": null,
+      "ciFailureCount": 0,
+      "reviewRoundCount": 0,
+      "wasBlocked": false,
+      "effortScore": null,
+      "effortTier": null
     },
     {
       "key": "RHOAIENG-58373",
@@ -1128,7 +1408,12 @@
       ],
       "assignee": "Jakub Walaszczyk",
       "pipelineState": "triage-missing-info",
-      "terminalAt": null
+      "terminalAt": null,
+      "ciFailureCount": 0,
+      "reviewRoundCount": 0,
+      "wasBlocked": false,
+      "effortScore": null,
+      "effortTier": null
     },
     {
       "key": "AIPCC-14329",
@@ -1147,7 +1432,12 @@
       ],
       "assignee": "AIPCC JIRABOT",
       "pipelineState": "autofix-review",
-      "terminalAt": null
+      "terminalAt": null,
+      "ciFailureCount": 0,
+      "reviewRoundCount": 0,
+      "wasBlocked": false,
+      "effortScore": null,
+      "effortTier": null
     },
     {
       "key": "AIPCC-14320",
@@ -1166,7 +1456,12 @@
       ],
       "assignee": "Anu Oguntayo",
       "pipelineState": "autofix-merged",
-      "terminalAt": "2026-04-21T14:33:08.401+0000"
+      "terminalAt": "2026-04-21T14:33:08.401+0000",
+      "ciFailureCount": 1,
+      "reviewRoundCount": 2,
+      "wasBlocked": false,
+      "effortScore": 3,
+      "effortTier": "Standard Fix"
     },
     {
       "key": "RHOAIENG-58326",
@@ -1187,7 +1482,12 @@
       ],
       "assignee": "Unassigned",
       "pipelineState": "triage-missing-info",
-      "terminalAt": null
+      "terminalAt": null,
+      "ciFailureCount": 0,
+      "reviewRoundCount": 0,
+      "wasBlocked": false,
+      "effortScore": null,
+      "effortTier": null
     },
     {
       "key": "AIPCC-14318",
@@ -1206,7 +1506,12 @@
       ],
       "assignee": "Unassigned",
       "pipelineState": "triage-not-fixable",
-      "terminalAt": null
+      "terminalAt": null,
+      "ciFailureCount": 0,
+      "reviewRoundCount": 0,
+      "wasBlocked": false,
+      "effortScore": null,
+      "effortTier": null
     },
     {
       "key": "RHOAIENG-58288",
@@ -1228,7 +1533,12 @@
       ],
       "assignee": "AIPCC JIRABOT",
       "pipelineState": "autofix-blocked",
-      "terminalAt": null
+      "terminalAt": null,
+      "ciFailureCount": 0,
+      "reviewRoundCount": 0,
+      "wasBlocked": false,
+      "effortScore": null,
+      "effortTier": null
     },
     {
       "key": "AIPCC-14272",
@@ -1246,7 +1556,12 @@
       ],
       "assignee": "AIPCC JIRABOT",
       "pipelineState": "autofix-ready",
-      "terminalAt": null
+      "terminalAt": null,
+      "ciFailureCount": 0,
+      "reviewRoundCount": 0,
+      "wasBlocked": false,
+      "effortScore": null,
+      "effortTier": null
     },
     {
       "key": "AIPCC-14220",
@@ -1263,7 +1578,12 @@
       "components": [],
       "assignee": "AIPCC JIRABOT",
       "pipelineState": "autofix-review",
-      "terminalAt": null
+      "terminalAt": null,
+      "ciFailureCount": 0,
+      "reviewRoundCount": 0,
+      "wasBlocked": false,
+      "effortScore": null,
+      "effortTier": null
     },
     {
       "key": "AIPCC-14216",
@@ -1282,7 +1602,12 @@
       ],
       "assignee": "AIPCC JIRABOT",
       "pipelineState": "autofix-merged",
-      "terminalAt": "2026-04-21T14:33:08.929+0000"
+      "terminalAt": "2026-04-21T14:33:08.929+0000",
+      "ciFailureCount": 1,
+      "reviewRoundCount": 2,
+      "wasBlocked": false,
+      "effortScore": 4,
+      "effortTier": "Standard Fix"
     },
     {
       "key": "AIPCC-14188",
@@ -1301,7 +1626,12 @@
       ],
       "assignee": "AIPCC JIRABOT",
       "pipelineState": "autofix-merged",
-      "terminalAt": "2026-04-21T14:33:09.420+0000"
+      "terminalAt": "2026-04-21T14:33:09.420+0000",
+      "ciFailureCount": 2,
+      "reviewRoundCount": 3,
+      "wasBlocked": true,
+      "effortScore": 7,
+      "effortTier": "Complex Fix"
     },
     {
       "key": "AIPCC-14074",
@@ -1320,7 +1650,12 @@
       ],
       "assignee": "AIPCC JIRABOT",
       "pipelineState": "autofix-merged",
-      "terminalAt": "2026-04-21T14:33:09.858+0000"
+      "terminalAt": "2026-04-21T14:33:09.858+0000",
+      "ciFailureCount": 1,
+      "reviewRoundCount": 2,
+      "wasBlocked": true,
+      "effortScore": 6,
+      "effortTier": "Complex Fix"
     },
     {
       "key": "AIPCC-14062",
@@ -1339,7 +1674,12 @@
       ],
       "assignee": "AIPCC JIRABOT",
       "pipelineState": "autofix-merged",
-      "terminalAt": "2026-04-21T14:33:10.434+0000"
+      "terminalAt": "2026-04-21T14:33:10.434+0000",
+      "ciFailureCount": 2,
+      "reviewRoundCount": 3,
+      "wasBlocked": true,
+      "effortScore": 7,
+      "effortTier": "Complex Fix"
     },
     {
       "key": "AIPCC-14049",
@@ -1359,7 +1699,12 @@
       ],
       "assignee": "Emilien Macchi",
       "pipelineState": "autofix-blocked",
-      "terminalAt": null
+      "terminalAt": null,
+      "ciFailureCount": 0,
+      "reviewRoundCount": 0,
+      "wasBlocked": false,
+      "effortScore": null,
+      "effortTier": null
     },
     {
       "key": "AIPCC-12897",
@@ -1376,7 +1721,12 @@
       "components": [],
       "assignee": "Martin Prpic",
       "pipelineState": "autofix-blocked",
-      "terminalAt": null
+      "terminalAt": null,
+      "ciFailureCount": 0,
+      "reviewRoundCount": 0,
+      "wasBlocked": false,
+      "effortScore": null,
+      "effortTier": null
     },
     {
       "key": "AIPCC-12895",
@@ -1396,7 +1746,12 @@
       ],
       "assignee": "Emilien Macchi",
       "pipelineState": "autofix-blocked",
-      "terminalAt": null
+      "terminalAt": null,
+      "ciFailureCount": 0,
+      "reviewRoundCount": 0,
+      "wasBlocked": false,
+      "effortScore": null,
+      "effortTier": null
     }
   ]
 }

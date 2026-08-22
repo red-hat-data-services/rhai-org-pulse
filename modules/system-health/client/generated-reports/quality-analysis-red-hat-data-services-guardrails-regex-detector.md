@@ -1,139 +1,192 @@
 ---
 repository: "red-hat-data-services/guardrails-regex-detector"
-overall_score: 2.1
+overall_score: 1.6
 scorecard:
   - dimension: "Unit Tests"
-    score: 2.0
-    status: "Single test case covering only the generic regex_match function; no tests for built-in detectors (email, SSN, credit-card), handler, or edge cases"
+    score: 3.0
+    status: "Single test module with 1 test; critical detector functions untested"
   - dimension: "Integration/E2E"
     score: 0.0
-    status: "No integration or E2E tests; no HTTP endpoint testing; no contract tests with orchestrator"
+    status: "No integration or E2E tests exist"
   - dimension: "Build Integration"
     score: 3.0
-    status: "Dockerfile includes test/lint/format stages but no CI workflow triggers them on PRs"
+    status: "Dockerfile has test/lint/format stages but no CI integration"
   - dimension: "Image Testing"
-    score: 2.0
-    status: "Multi-stage Dockerfile with UBI9 base but no runtime validation, no vulnerability scanning, no multi-arch support"
+    score: 4.0
+    status: "Multi-stage Dockerfile with UBI base but no runtime validation"
   - dimension: "Coverage Tracking"
     score: 0.0
-    status: "No coverage tooling (tarpaulin/llvm-cov), no codecov integration, no coverage thresholds"
+    status: "No coverage tooling or tracking configured"
   - dimension: "CI/CD Automation"
     score: 0.0
-    status: "No .github/workflows directory; no CI/CD pipeline of any kind"
+    status: "No CI/CD workflows or automation of any kind"
+  - dimension: "Static Analysis"
+    score: 3.0
+    status: "Clippy and rustfmt in Dockerfile stages only; no dependency alerts"
   - dimension: "Agent Rules"
     score: 0.0
-    status: "No CLAUDE.md, no .claude/ directory, no agent rules or test automation guidance"
+    status: "No CLAUDE.md, AGENTS.md, or .claude/ directory"
 critical_gaps:
-  - title: "No CI/CD pipeline at all"
-    impact: "No automated testing, linting, or security scanning on any PR or push; all quality gates are manual"
+  - title: "No CI/CD automation"
+    impact: "No automated testing, linting, or builds on PRs — quality checks rely entirely on manual effort"
     severity: "HIGH"
     effort: "4-8 hours"
-  - title: "Minimal test coverage (1 test for 212 lines)"
-    impact: "Built-in regex detectors (email, SSN, credit-card) are completely untested; edge cases like malformed input, empty payloads, invalid regex patterns not validated"
+  - title: "No integration tests for HTTP endpoints"
+    impact: "API behavior changes or regressions go undetected; the core /api/v1/text/contents endpoint is untested"
     severity: "HIGH"
-    effort: "8-12 hours"
-  - title: "No integration/E2E tests for HTTP API"
-    impact: "Endpoint behavior, error responses, and orchestrator contract compliance are unverified"
-    severity: "HIGH"
-    effort: "8-16 hours"
-  - title: "No container security scanning"
-    impact: "Vulnerabilities in dependencies or base image not detected before deployment"
+    effort: "4-6 hours"
+  - title: "No coverage tracking"
+    impact: "No visibility into which code paths are exercised by tests; no enforcement of coverage thresholds"
     severity: "HIGH"
     effort: "2-4 hours"
-  - title: "No coverage tracking or enforcement"
-    impact: "Impossible to measure or enforce quality improvements over time"
-    severity: "MEDIUM"
+  - title: "Critical detector functions untested"
+    impact: "email, SSN, and credit-card regex detectors have zero test coverage — PII detection failures would go unnoticed"
+    severity: "HIGH"
     effort: "2-4 hours"
 quick_wins:
-  - title: "Add GitHub Actions CI workflow with cargo test, clippy, and fmt"
-    effort: "2-3 hours"
-    impact: "Enables automated quality gates on every PR; catches regressions immediately"
   - title: "Add unit tests for all built-in detectors (email, SSN, credit-card)"
-    effort: "2-4 hours"
-    impact: "Covers the core business logic that is currently completely untested"
-  - title: "Add Trivy container scanning to Dockerfile or CI"
-    effort: "1-2 hours"
-    impact: "Detects known vulnerabilities in dependencies and base image"
-  - title: "Add cargo-tarpaulin for coverage measurement"
-    effort: "1-2 hours"
-    impact: "Establishes baseline coverage metrics and enables tracking improvements"
+    effort: "2-3 hours"
+    impact: "Cover the most critical functionality — PII detection regex patterns — with targeted tests"
+  - title: "Add a GitHub Actions CI workflow for PR validation"
+    effort: "2-3 hours"
+    impact: "Automated cargo test, clippy, and fmt checks on every PR"
+  - title: "Enable Dependabot for Cargo dependencies"
+    effort: "1 hour"
+    impact: "Automated dependency update PRs with security alerts"
+  - title: "Add HEALTHCHECK to Dockerfile"
+    effort: "30 minutes"
+    impact: "Container orchestrators can detect unhealthy instances automatically"
 recommendations:
   priority_0:
-    - "Create a GitHub Actions CI workflow that runs cargo test, cargo clippy, and cargo fmt --check on every PR"
-    - "Add comprehensive unit tests for email_address_detector, ssn_detector, and credit_card_detector with valid/invalid/edge-case inputs"
-    - "Add HTTP endpoint integration tests using axum::test or tower::ServiceExt"
+    - "Create GitHub Actions CI workflow with cargo test, clippy, and fmt on PRs"
+    - "Add unit tests for email_address_detector, ssn_detector, and credit_card_detector functions"
+    - "Add integration tests for the /api/v1/text/contents HTTP endpoint"
   priority_1:
-    - "Add Trivy or Snyk container scanning in CI"
-    - "Add cargo-tarpaulin or llvm-cov for coverage tracking with codecov integration"
-    - "Add contract tests validating the API matches orchestrator expectations"
-    - "Add pre-commit hooks for fmt and clippy"
+    - "Add coverage tracking with cargo-tarpaulin or cargo-llvm-cov and codecov integration"
+    - "Configure Dependabot for Cargo ecosystem dependency updates"
+    - "Add edge-case tests: invalid regex input, empty contents, malformed requests"
   priority_2:
-    - "Create .claude/rules/ with test automation guidance for AI agents"
-    - "Add multi-architecture image builds (amd64, arm64)"
-    - "Add SBOM generation to container build"
-    - "Add load/performance tests for the regex matching endpoint"
-    - "Add dependabot or renovate for automated dependency updates"
+    - "Add CLAUDE.md with test creation rules for the project"
+    - "Add multi-architecture build support in Dockerfile"
+    - "Add HEALTHCHECK instruction to Dockerfile"
+    - "Add pre-commit hooks for clippy and fmt"
 ---
 
 # Quality Analysis: guardrails-regex-detector
 
 ## Executive Summary
 
-- **Overall Score: 2.1/10**
-- **Repository Type**: Rust HTTP microservice (regex-based PII detection)
-- **Primary Language**: Rust (212 lines across 2 source files)
-- **Framework**: Axum web framework with Tokio async runtime
-- **Key Strengths**: Clean Dockerfile with multi-stage build including test/lint/format stages; Rust toolchain pinning
-- **Critical Gaps**: No CI/CD pipeline, minimal test coverage (1 test), no security scanning, no coverage tracking, no agent rules
-- **Agent Rules Status**: Missing
+- **Overall Score: 1.6/10**
+- **Repository**: [red-hat-data-services/guardrails-regex-detector](https://github.com/red-hat-data-services/guardrails-regex-detector)
+- **Tier**: Downstream (AI Safety component, RHOAIENG)
+- **Language**: Rust (edition 2021)
+- **Type**: HTTP microservice (axum-based regex detector for PII)
+- **Codebase Size**: 2 source files (~210 lines of Rust)
+
+### Key Strengths
+- Multi-stage Dockerfile with dedicated test, lint, and format stages
+- Uses UBI9 minimal base image (FIPS-capable)
+- Rust toolchain pins clippy and rustfmt components
+- Clean, focused codebase with a clear purpose
+
+### Critical Gaps
+- **No CI/CD automation at all** — no `.github/workflows/`, no Makefile, no pipeline configuration
+- **Minimal test coverage** — 1 test for the generic `regex_match` function; all built-in detectors untested
+- **No integration tests** — the core HTTP endpoint `/api/v1/text/contents` is completely untested
+- **No coverage tracking** — no visibility into test coverage
+- **No dependency management** — no Dependabot or Renovate configured
+
+### Agent Rules Status: Missing
+No CLAUDE.md, AGENTS.md, or `.claude/` directory present.
 
 ## Quality Scorecard
 
-| Dimension | Score | Status |
-|-----------|-------|--------|
-| Unit Tests | 2/10 | Single test case; no tests for built-in detectors or handler |
-| Integration/E2E | 0/10 | No integration or endpoint tests exist |
-| **Build Integration** | **3/10** | **Dockerfile has test/lint/format stages but no CI triggers them** |
-| Image Testing | 2/10 | Multi-stage build with UBI9 but no runtime validation or scanning |
-| Coverage Tracking | 0/10 | No coverage tooling or integration |
-| CI/CD Automation | 0/10 | No GitHub Actions, no CI/CD of any kind |
-| Agent Rules | 0/10 | No CLAUDE.md, no .claude/ directory, no rules |
+| Dimension | Weight | Score | Status |
+|-----------|--------|-------|--------|
+| Unit Tests | 15% | 3.0/10 | Single test module with 1 test; critical detectors untested |
+| Integration/E2E | 20% | 0.0/10 | No integration or E2E tests exist |
+| Build Integration | 15% | 3.0/10 | Dockerfile has test/lint/format stages but no CI |
+| Image Testing | 10% | 4.0/10 | Multi-stage UBI build but no runtime validation |
+| Coverage Tracking | 10% | 0.0/10 | No coverage tooling configured |
+| CI/CD Automation | 15% | 0.0/10 | No CI/CD workflows or automation |
+| Static Analysis | 10% | 3.0/10 | Clippy/fmt in Dockerfile only; no dependency alerts |
+| Agent Rules | 5% | 0.0/10 | No agent rules or test guidance |
+| **Overall** | **100%** | **1.6/10** | **Critical gaps across most dimensions** |
 
 ## Critical Gaps
 
-### 1. No CI/CD Pipeline
-- **Impact**: Every quality gate is manual — tests, linting, formatting, and security checks must be run locally by developers. Nothing prevents broken code from being merged.
+### 1. No CI/CD Automation
 - **Severity**: HIGH
+- **Impact**: No automated testing, linting, or builds on PRs. Quality checks rely entirely on manual effort or Dockerfile build stages being run locally.
 - **Effort**: 4-8 hours
-- **Details**: The repository has zero files in `.github/workflows/`. The Dockerfile contains `tests`, `lint`, and `format` stages, but these are only executed during container builds, not on PRs or pushes. There is no automated feedback loop.
+- **Details**: The repository has zero CI/CD configuration — no `.github/` directory, no `Makefile`, no `.gitlab-ci.yml`, no `Jenkinsfile`. While the Dockerfile includes test, lint, and format stages, these only run during container builds, not on PR submissions.
 
-### 2. Minimal Test Coverage (1 test for 212 lines)
-- **Impact**: The three core business logic functions — `email_address_detector`, `ssn_detector`, and `credit_card_detector` — have zero test coverage. The single existing test (`test_regex_match`) only validates the generic `regex_match` helper with a trivial numeric pattern. Edge cases like malformed input, empty strings, partial matches, and boundary conditions are completely untested.
+### 2. No Integration Tests for HTTP Endpoints
 - **Severity**: HIGH
-- **Effort**: 8-12 hours
-- **Details**: `src/detectors.rs:139-166` contains the only test module. The `#[cfg(test)]` block has one test that checks a simple numeric regex. None of the registered patterns (SSN, email, credit-card) are validated against known-good or known-bad inputs.
+- **Impact**: The core API endpoint `/api/v1/text/contents` is completely untested. API behavior changes, request validation failures, or response format regressions would go undetected.
+- **Effort**: 4-6 hours
+- **Details**: The HTTP service handles PII detection requests but has no integration tests exercising the full request/response cycle. Axum provides excellent test utilities (`TestClient`) that could be used without requiring a running server.
 
-### 3. No Integration/E2E Tests for HTTP API
-- **Impact**: The `handle_text_contents` endpoint behavior is unverified — error handling (empty regex returns 400), response format (nested array structure), multi-content processing, and the interaction between built-in and custom regex are never tested.
+### 3. No Coverage Tracking
 - **Severity**: HIGH
-- **Effort**: 8-16 hours
-- **Details**: The API contract with FMS Guardrails Orchestrator is defined only by documentation in the README, not by tests. Any change to response format could silently break the integration.
-
-### 4. No Container Security Scanning
-- **Impact**: The Dockerfile uses `registry.access.redhat.com/ubi9/ubi-minimal` and `rust:1.84.0` base images plus installs `compat-openssl11` via microdnf. No scanning validates these layers for known CVEs.
-- **Severity**: HIGH
+- **Impact**: No visibility into which code paths are exercised by tests. No enforcement of coverage thresholds on PRs.
 - **Effort**: 2-4 hours
+- **Details**: No coverage tools (cargo-tarpaulin, cargo-llvm-cov) or reporting services (Codecov, Coveralls) are configured.
 
-### 5. No Coverage Tracking
-- **Impact**: No way to measure current coverage, track improvements, or enforce coverage thresholds. The team has no visibility into which code paths are exercised by tests.
-- **Severity**: MEDIUM
+### 4. Critical Detector Functions Untested
+- **Severity**: HIGH
+- **Impact**: The three built-in PII detectors (`email_address_detector`, `ssn_detector`, `credit_card_detector`) have zero test coverage. These are the primary value proposition of the service — regex patterns for detecting sensitive data — and failures would go unnoticed.
 - **Effort**: 2-4 hours
+- **Details**: Only the generic `regex_match()` function has a test. The specific detector functions with their complex regex patterns (SSN: 5+ alternation groups, credit card: 4 major card types) are untested.
 
 ## Quick Wins
 
-### 1. Add GitHub Actions CI Workflow (2-3 hours)
-Create `.github/workflows/ci.yml`:
+### 1. Add Unit Tests for Built-in Detectors
+- **Effort**: 2-3 hours
+- **Impact**: Cover the most critical functionality with targeted tests
+- **Implementation**:
+```rust
+#[test]
+fn test_email_detector() {
+    let content = "contact me at user@example.com please".to_string();
+    let results = email_address_detector(&content).unwrap();
+    assert_eq!(results.len(), 1);
+    assert_eq!(results[0].text, "user@example.com");
+    assert_eq!(results[0].detection, "EmailAddress");
+    assert_eq!(results[0].detection_type, "pii");
+}
+
+#[test]
+fn test_ssn_detector() {
+    let content = "my ssn is 123-45-6789".to_string();
+    let results = ssn_detector(&content).unwrap();
+    assert_eq!(results.len(), 1);
+    assert_eq!(results[0].text, "123-45-6789");
+    assert_eq!(results[0].detection, "SocialSecurity");
+}
+
+#[test]
+fn test_credit_card_detector() {
+    let content = "amex 374245455400126".to_string();
+    let results = credit_card_detector(&content).unwrap();
+    assert_eq!(results.len(), 1);
+    assert_eq!(results[0].detection, "CreditCard");
+}
+
+#[test]
+fn test_no_match() {
+    let content = "no sensitive data here".to_string();
+    let results = email_address_detector(&content).unwrap();
+    assert_eq!(results.len(), 0);
+}
+```
+
+### 2. Add GitHub Actions CI Workflow
+- **Effort**: 2-3 hours
+- **Impact**: Automated quality gates on every PR
+- **Implementation**:
 ```yaml
+# .github/workflows/ci.yml
 name: CI
 on:
   pull_request:
@@ -155,194 +208,223 @@ jobs:
       - run: cargo test
 ```
 
-### 2. Add Unit Tests for Built-in Detectors (2-4 hours)
-Add tests for each detector in `src/detectors.rs`:
-```rust
-#[test]
-fn test_email_detector_valid() {
-    let results = email_address_detector(&"contact user@example.com today".to_string()).unwrap();
-    assert_eq!(results.len(), 1);
-    assert_eq!(results[0].text, "user@example.com");
-    assert_eq!(results[0].detection, "EmailAddress");
-    assert_eq!(results[0].detection_type, "pii");
-}
-
-#[test]
-fn test_ssn_detector_valid() {
-    let results = ssn_detector(&"SSN is 123-45-6789".to_string()).unwrap();
-    assert_eq!(results.len(), 1);
-    assert_eq!(results[0].text, "123-45-6789");
-}
-
-#[test]
-fn test_credit_card_amex() {
-    let results = credit_card_detector(&"card 374245455400126".to_string()).unwrap();
-    assert_eq!(results.len(), 1);
-    assert_eq!(results[0].detection, "CreditCard");
-}
-
-#[test]
-fn test_email_detector_no_match() {
-    let results = email_address_detector(&"no email here".to_string()).unwrap();
-    assert!(results.is_empty());
-}
+### 3. Enable Dependabot
+- **Effort**: 1 hour
+- **Impact**: Automated dependency updates with security alerts
+- **Implementation**:
+```yaml
+# .github/dependabot.yml
+version: 2
+updates:
+  - package-ecosystem: "cargo"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    open-pull-requests-limit: 10
 ```
 
-### 3. Add Trivy Scanning (1-2 hours)
-Add to CI workflow:
-```yaml
-  scan:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - name: Build image
-        run: docker build -t regex-detector:test --target regex-detector-release .
-      - name: Trivy scan
-        uses: aquasecurity/trivy-action@master
-        with:
-          image-ref: regex-detector:test
-          severity: CRITICAL,HIGH
-          exit-code: 1
-```
-
-### 4. Add Coverage with cargo-tarpaulin (1-2 hours)
-```yaml
-  coverage:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: dtolnay/rust-toolchain@stable
-      - run: cargo install cargo-tarpaulin
-      - run: cargo tarpaulin --out xml
-      - uses: codecov/codecov-action@v4
-        with:
-          files: cobertura.xml
+### 4. Add HEALTHCHECK to Dockerfile
+- **Effort**: 30 minutes
+- **Impact**: Container health detection for orchestrators
+- **Implementation**:
+```dockerfile
+HEALTHCHECK --interval=30s --timeout=5s --retries=3 \
+  CMD curl -f http://localhost:8080/health || exit 1
 ```
 
 ## Detailed Findings
 
-### CI/CD Pipeline
-- **Workflows**: None. Zero files in `.github/workflows/`.
-- **Test Automation**: None. Tests only run if a developer manually executes `cargo test` or builds the Docker image (which includes a `tests` stage).
-- **Build Process**: The Dockerfile is well-structured with multi-stage builds (builder → tests → lint → format → release), but these stages are not targeted by any CI. The `tests`, `lint`, and `format` stages are defined but not automatically triggered.
-- **Concurrency**: N/A
-- **Caching**: N/A
+### Unit Tests
 
-### Test Coverage
-- **Unit Tests**: 1 test in `src/detectors.rs:145-165`. Tests the generic `regex_match` function with a numeric pattern. Test-to-code ratio: ~27 test lines / 138 non-test production lines = 0.20 (very low).
-- **Built-in Detectors Untested**: `email_address_detector` (line 38), `ssn_detector` (line 50), `credit_card_detector` (line 62) all have zero test coverage.
-- **Handler Untested**: `handle_text_contents` (line 96) — the main API endpoint — has no tests.
-- **Integration Tests**: None.
-- **E2E Tests**: None.
-- **Coverage Tracking**: No tarpaulin, llvm-cov, codecov, or any coverage tooling.
+**Score: 3.0/10**
 
-### Code Quality
-- **Linting**: `cargo clippy` is configured in the Dockerfile lint stage and `clippy` is included in `rust-toolchain.toml` components. However, no CI runs it automatically.
-- **Formatting**: `cargo fmt --check` is in the Dockerfile format stage and `rustfmt` is in `rust-toolchain.toml`. Not automated.
-- **Pre-commit Hooks**: None (`.pre-commit-config.yaml` does not exist).
-- **Static Analysis**: No CodeQL, no SAST tools.
-- **Dependency Scanning**: No dependabot, no renovate, no audit.
-- **Note**: There is a debug `println!("hi")` on line 99 of `detectors.rs` that appears to be leftover debugging code.
+The repository has a single test module in `src/detectors.rs` (lines 139–166) containing one test:
 
-### Container Images
-- **Dockerfile**: Well-structured multi-stage build:
-  - Stage 1: `rust-builder` — base Rust 1.84.0 image with rustfmt
-  - Stage 2: `regex-detector-builder` — copies source and builds
-  - Stage 3: `tests` — runs `cargo test`
-  - Stage 4: `lint` — runs `cargo clippy`
-  - Stage 5: `format` — runs `cargo fmt --check`
-  - Stage 6: `regex-detector-release` — UBI9 minimal release image
-- **Base Image**: `registry.access.redhat.com/ubi9/ubi-minimal` (good — RHEL-based, enterprise-ready)
-- **Runtime Validation**: None. No health check test, no startup validation.
-- **Security Scanning**: None. No Trivy, Snyk, or any scanner.
-- **Multi-arch**: Not configured. Only builds for the builder's native architecture.
-- **SBOM**: None.
-- **Image Signing**: None.
+- `test_regex_match()` — tests the generic `regex_match()` helper with a simple numeric pattern
 
-### Security
-- **Container Scanning**: None
-- **SAST/CodeQL**: None
-- **Dependency Scanning**: No `cargo audit` in CI
-- **Secret Detection**: None (no gitleaks, trufflehog)
-- **Concern**: The service handles PII data (SSNs, emails, credit cards). Security practices should be especially rigorous for this type of service.
+**What's tested:**
+- Basic regex matching against a simple pattern (`^[0-9]+$`)
 
-### Agent Rules (Agentic Flow Quality)
+**What's NOT tested:**
+- `email_address_detector()` — complex email regex pattern
+- `ssn_detector()` — SSN regex with 5+ alternation groups (most complex regex in the codebase)
+- `credit_card_detector()` — credit card regex covering 4 major card types
+- `handle_text_contents()` — the main request handler
+- Edge cases: invalid regex, empty input, multiple matches, overlapping patterns
+- Error paths: malformed requests, empty regex list
+
+**Test-to-code ratio**: ~27 lines of test code / ~137 lines of production code = 0.20 (very low)
+
+### Integration/E2E Tests
+
+**Score: 0.0/10**
+
+No integration or E2E tests exist. There are no `tests/`, `e2e/`, or `integration/` directories. The HTTP API endpoint is untested at the integration level.
+
+**Missing coverage:**
+- POST `/api/v1/text/contents` with valid payloads
+- POST `/api/v1/text/contents` with empty regex list (should return 400)
+- POST `/api/v1/text/contents` with invalid JSON
+- GET `/health` endpoint
+- Multiple content items with multiple regex patterns
+- Custom regex alongside built-in detectors
+
+Axum's built-in test utilities (`axum::test::TestClient` or `tower::ServiceExt`) make integration testing straightforward without spinning up a server.
+
+### Build Integration
+
+**Score: 3.0/10**
+
+The Dockerfile demonstrates awareness of build-time validation with dedicated stages:
+
+```dockerfile
+FROM regex-detector-builder AS tests
+RUN cargo test
+
+FROM regex-detector-builder AS lint
+RUN cargo clippy --all-targets --all-features -- -D warnings
+
+FROM regex-detector-builder AS format
+RUN cargo fmt --check
+```
+
+However, these stages are **not part of the default build** — the release image (`regex-detector-release`) is built from `regex-detector-builder`, not through the test/lint/format stages. These stages would only run if explicitly targeted (`docker build --target tests .`).
+
+**What's present:**
+- Multi-stage Dockerfile with test, lint, format stages
+- Cargo-based build with explicit `cargo install`
+
+**What's missing:**
+- No CI/CD pipeline to run these stages on PRs
+- No Makefile with convenience targets
+- No Konflux build simulation
+- Test/lint/format stages aren't wired into the default build path
+
+### Image Testing
+
+**Score: 4.0/10**
+
+**What's present:**
+- Multi-stage build separating builder from runtime
+- UBI9 minimal base image (`registry.access.redhat.com/ubi9/ubi-minimal`) — FIPS-capable
+- Build args for base image customization
+- Minimal runtime image (copies only the binary)
+
+**What's missing:**
+- No `HEALTHCHECK` instruction (despite the app having a `/health` endpoint)
+- No runtime validation (no testcontainers, no startup check)
+- No multi-architecture support (`--platform` / `docker buildx`)
+- No `.dockerignore` (only `.gitignore` with `/target`)
+- `compat-openssl11` is installed but may not be needed (Rust binary is statically linked unless using OpenSSL features)
+
+### Coverage Tracking
+
+**Score: 0.0/10**
+
+No coverage tooling is configured:
+- No `cargo-tarpaulin` or `cargo-llvm-cov` usage
+- No `.codecov.yml` or `codecov.yml`
+- No coverage thresholds
+- No PR coverage reporting
+- No CI step to generate coverage reports
+
+### CI/CD Automation
+
+**Score: 0.0/10**
+
+The repository has **no CI/CD configuration whatsoever**:
+- No `.github/` directory (no workflows, no Dependabot, no issue templates)
+- No `Makefile`
+- No `.gitlab-ci.yml`
+- No `Jenkinsfile`
+- No `Taskfile.yml`
+
+All quality checks (test, lint, format) exist only as Dockerfile stages that must be manually invoked. There is no automated gate on PRs.
+
+### Static Analysis
+
+**Score: 3.0/10**
+
+#### Linting
+- `clippy` is pinned in `rust-toolchain.toml` and used in a Dockerfile stage with strict settings (`-D warnings`)
+- `rustfmt` is pinned in `rust-toolchain.toml` and checked in a Dockerfile stage
+- **However**, neither runs automatically — no CI pipeline triggers them
+
+#### FIPS Compatibility
+- No cryptographic imports in the Rust source code (uses `regex` crate only)
+- UBI9 base image is FIPS-capable (positive)
+- `compat-openssl11` is installed in the container but no crypto operations are performed in the application code
+- **No FIPS concerns identified** for this specific service
+
+#### Dependency Alerts
+- No `.github/dependabot.yml`
+- No `renovate.json` / `.renovaterc`
+- Dependencies are pinned in `Cargo.toml` with exact minor versions but no automated update mechanism
+
+### Agent Rules
+
+**Score: 0.0/10**
+
 - **Status**: Missing
-- **CLAUDE.md**: Not present
-- **.claude/ directory**: Not present
-- **.claude/rules/**: Not present
-- **Coverage**: No test type rules exist
-- **Quality**: N/A
-- **Gaps**: Everything — no agent rules for unit tests, integration tests, API contract tests, or Rust testing patterns
-- **Recommendation**: Generate comprehensive rules with `/test-rules-generator` covering Rust testing patterns, axum endpoint testing, and PII detection validation
+- **Coverage**: N/A
+- No `CLAUDE.md` or `AGENTS.md` in repository root
+- No `.claude/` directory
+- No `.claude/rules/` for test creation guidance
+- No testing documentation beyond the README
+- **Recommendation**: Generate test creation rules with `/test-rules-generator`
 
 ## Recommendations
 
 ### Priority 0 (Critical)
 
-1. **Create GitHub Actions CI workflow** — Run `cargo test`, `cargo clippy --all-targets -- -D warnings`, and `cargo fmt --check` on every PR. This is the single most impactful improvement. (4-8 hours including setup and validation)
+1. **Create GitHub Actions CI workflow** — Add `.github/workflows/ci.yml` with `cargo test`, `cargo clippy`, and `cargo fmt --check` on pull requests. This is the single highest-impact improvement. (~3 hours)
 
-2. **Add comprehensive unit tests for all built-in detectors** — Each of the three detectors (email, SSN, credit-card) needs tests with:
-   - Valid inputs that should match
-   - Invalid inputs that should not match
-   - Edge cases (partial matches, multiple matches in one string, empty input)
-   - Known false positive/negative patterns
-   (8-12 hours)
+2. **Add unit tests for all built-in detector functions** — The email, SSN, and credit-card detectors contain complex regex patterns that are completely untested. Include positive matches, negative matches, and edge cases (e.g., SSN with spaces vs dashes, multiple email addresses in one string). (~3 hours)
 
-3. **Add HTTP endpoint integration tests** — Use `axum::test` helpers or `tower::ServiceExt` to test `handle_text_contents` with:
-   - Valid request with built-in patterns
-   - Valid request with custom regex
-   - Empty regex list (should return 400)
-   - Invalid JSON payload
-   - Mixed built-in and custom patterns
-   (4-8 hours)
+3. **Add integration tests for the HTTP endpoint** — Test `POST /api/v1/text/contents` with axum test utilities covering valid requests, error responses (empty regex), and the `/health` endpoint. (~4 hours)
 
 ### Priority 1 (High Value)
 
-4. **Add container security scanning** — Integrate Trivy or Snyk in CI to scan the built image for CVEs. This is especially important given the service handles PII. (2-4 hours)
+4. **Add coverage tracking** — Configure `cargo-tarpaulin` or `cargo-llvm-cov` in CI with Codecov integration. Set an initial threshold based on current coverage and increase over time. (~3 hours)
 
-5. **Add coverage tracking** — Integrate `cargo-tarpaulin` with codecov to track and enforce coverage thresholds. Set an initial baseline and incrementally raise the bar. (2-4 hours)
+5. **Configure Dependabot** — Add `.github/dependabot.yml` for the Cargo ecosystem to receive automated dependency update PRs. (~1 hour)
 
-6. **Add contract tests for orchestrator integration** — The API response format (nested array `[[...]]`) must match what FMS Guardrails Orchestrator expects. These tests should validate the exact schema. (4-8 hours)
-
-7. **Add pre-commit hooks** — Create `.pre-commit-config.yaml` with rustfmt and clippy hooks to catch issues before commit. (1-2 hours)
+6. **Add edge-case and error-handling tests** — Test invalid regex patterns, empty content arrays, very large payloads, and Unicode edge cases. (~2 hours)
 
 ### Priority 2 (Nice-to-Have)
 
-8. **Create agent rules (`.claude/rules/`)** — Add Rust-specific test patterns, axum endpoint testing guidance, and PII detection validation rules for AI-assisted development.
+7. **Add CLAUDE.md with test creation rules** — Document test patterns, naming conventions, and quality expectations for AI-assisted development. (~2 hours)
 
-9. **Add multi-architecture builds** — Support amd64 and arm64 via Docker buildx.
+8. **Add multi-architecture build support** — Use `docker buildx` for multi-arch images (amd64, arm64). (~2 hours)
 
-10. **Add SBOM generation** — Use Syft or similar tool in the container build pipeline.
+9. **Add HEALTHCHECK to Dockerfile** — Wire the existing `/health` endpoint to a Docker HEALTHCHECK instruction. (~30 minutes)
 
-11. **Add `cargo audit`** — Run dependency vulnerability auditing in CI.
-
-12. **Remove debug code** — `println!("hi")` on line 99 of `src/detectors.rs` appears to be leftover debugging.
-
-13. **Add dependabot/renovate** — Automate Cargo dependency updates.
+10. **Add pre-commit hooks** — Configure `.pre-commit-config.yaml` with clippy and fmt checks for local development. (~1 hour)
 
 ## Comparison to Gold Standards
 
-| Dimension | guardrails-regex-detector | odh-dashboard (Gold) | notebooks (Gold) | Gap |
-|-----------|--------------------------|---------------------|------------------|-----|
-| Unit Tests | 1 test, no detector coverage | Comprehensive Jest suite, 80%+ coverage | N/A (image-focused) | Massive |
-| Integration/E2E | None | Cypress E2E, contract tests | Multi-layer validation | Massive |
-| Build Integration | Dockerfile stages only | PR-time builds with validation | Konflux integration | Large |
-| Image Testing | No validation | Full runtime testing | 5-layer validation pipeline | Massive |
-| Coverage Tracking | None | Codecov with enforcement | Coverage in CI | Massive |
-| CI/CD | None | Multi-workflow, concurrency control | Automated periodic + PR | Massive |
-| Agent Rules | None | Comprehensive .claude/rules/ | N/A | Massive |
-| Security | None | CodeQL, dependency scanning | Trivy, SBOM | Massive |
+| Dimension | guardrails-regex-detector | odh-dashboard (Gold) | notebooks (Gold) | kserve (Gold) |
+|-----------|:---:|:---:|:---:|:---:|
+| Unit Tests | 3/10 | 9/10 | 7/10 | 9/10 |
+| Integration/E2E | 0/10 | 9/10 | 8/10 | 9/10 |
+| Build Integration | 3/10 | 8/10 | 8/10 | 8/10 |
+| Image Testing | 4/10 | 7/10 | 9/10 | 7/10 |
+| Coverage Tracking | 0/10 | 8/10 | 6/10 | 9/10 |
+| CI/CD Automation | 0/10 | 9/10 | 8/10 | 9/10 |
+| Static Analysis | 3/10 | 8/10 | 7/10 | 8/10 |
+| Agent Rules | 0/10 | 8/10 | 3/10 | 3/10 |
+| **Overall** | **1.6** | **8.5** | **7.3** | **8.1** |
+
+The largest gaps compared to gold standards are in CI/CD automation, integration testing, and coverage tracking — all of which are entirely absent.
 
 ## File Paths Reference
 
 | File | Purpose |
 |------|---------|
-| `src/main.rs` | HTTP server setup (axum router, health endpoint) |
-| `src/detectors.rs` | PII detection logic, built-in patterns, request handler, single test |
-| `Cargo.toml` | Rust dependencies and binary definition |
-| `Cargo.lock` | Locked dependency versions |
-| `Dockerfile` | Multi-stage build (builder, test, lint, format, release) |
-| `rust-toolchain.toml` | Rust 1.84.0 with rustfmt and clippy components |
-| `README.md` | API usage documentation with sample request/response |
-| `.gitignore` | Ignores `/target` directory |
+| `Cargo.toml` | Rust package configuration with dependencies |
+| `rust-toolchain.toml` | Pins Rust 1.84.0 with clippy and rustfmt components |
+| `Dockerfile` | Multi-stage build with test/lint/format stages and UBI9 base |
+| `src/main.rs` | HTTP server setup (axum router with /health and /api/v1/text/contents) |
+| `src/detectors.rs` | Regex detection logic, built-in patterns (email, SSN, credit card), and 1 test |
+| `.gitignore` | Ignores /target |
+| `README.md` | API documentation with sample request/response |

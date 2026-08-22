@@ -162,7 +162,7 @@ async function fetchArtifacts(storage, config, token, jira) {
   // Write non-feature files directly (e.g., config files in the artifact)
   let fileCount = 0;
   for (const [filePath, data] of nonFeatureFiles) {
-    storage.writeToStorage(`${DATA_PREFIX}/${filePath}`, data);
+    await storage.writeToStorage(`${DATA_PREFIX}/${filePath}`, data);
     fileCount++;
   }
 
@@ -189,7 +189,7 @@ async function fetchArtifacts(storage, config, token, jira) {
   const mergedFeatures = [];
 
   for (const [key, pipelineData] of pipelineFeatures) {
-    const existing = storage.readFromStorage(`${DATA_PREFIX}/features/${key}.json`);
+    const existing = await storage.readFromStorage(`${DATA_PREFIX}/features/${key}.json`);
     const jiraData = enrichmentMap.get(key) || null;
     const merged = mergeFeatureData(existing, pipelineData, jiraData);
     mergedFeatures.push(merged);
@@ -216,7 +216,7 @@ async function fetchArtifacts(storage, config, token, jira) {
   };
 
   // Write last-fetch metadata
-  storage.writeToStorage(`${DATA_PREFIX}/last-fetch.json`, result);
+  await storage.writeToStorage(`${DATA_PREFIX}/last-fetch.json`, result);
 
   return result;
 }

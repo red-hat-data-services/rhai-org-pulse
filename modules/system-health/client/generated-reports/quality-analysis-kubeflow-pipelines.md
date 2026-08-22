@@ -1,440 +1,597 @@
 ---
 repository: "kubeflow/pipelines"
-overall_score: 7.6
+overall_score: 7.3
 scorecard:
   - dimension: "Unit Tests"
-    score: 8.5
-    status: "1,809 Go test functions across 171 files; 197 Python test files; 165 TS/TSX test files with Vitest. Multi-language coverage is strong."
+    score: 7.0
+    status: "Good test coverage across Go/Python/TypeScript with Ginkgo, pytest, and Vitest"
   - dimension: "Integration/E2E"
     score: 9.0
-    status: "Comprehensive E2E suite with Ginkgo, multi-K8s-version matrix, multi-Argo-version testing, upgrade tests, API integration tests, and frontend integration tests against Kind clusters."
+    status: "Exceptional multi-version, multi-config E2E testing with Kind cluster matrices"
   - dimension: "Build Integration"
     score: 7.0
-    status: "12 Docker images built on PR via reusable workflow with matrix strategy; images loaded into Kind for E2E. No Konflux simulation but PR-time image builds are validated through E2E deployment."
+    status: "PR image builds with Kind deployment; no Konflux simulation; kustomize validation present"
   - dimension: "Image Testing"
-    score: 6.5
-    status: "Images built and deployed to Kind clusters for E2E validation. No standalone image startup tests, no multi-arch PR validation, no SBOM generation on PR."
+    score: 5.0
+    status: "20+ Dockerfiles with multi-stage builds and multi-arch; no runtime validation or health checks"
   - dimension: "Coverage Tracking"
-    score: 3.0
-    status: "No codecov/coveralls integration. pytest-cov installed in SDK tests but no coverage enforcement or PR reporting. No Go coverage tracking."
+    score: 4.0
+    status: "Coverage tooling installed (pytest-cov, vitest coverage) but no enforcement, thresholds, or PR reporting"
   - dimension: "CI/CD Automation"
     score: 9.0
-    status: "40 workflows covering unit tests, integration tests, E2E, compiler tests, SDK tests, frontend tests, upgrade tests, migration tests, and security scanning. Excellent concurrency control and path-based triggering."
+    status: "42 workflows with concurrency control, matrix strategies, caching, and test sharding"
+  - dimension: "Static Analysis"
+    score: 7.0
+    status: "golangci-lint v2, pre-commit hooks, Dependabot; missing FIPS checks and broader linter coverage"
   - dimension: "Agent Rules"
-    score: 8.0
-    status: "Comprehensive 700-line AGENTS.md with testing policy, architectural boundaries, code reuse policy, commit policy, and detailed development guides. No .claude/rules/ directory for specialized test creation rules."
+    score: 9.0
+    status: "Comprehensive 44KB AGENTS.md with architecture, testing policy, and development guides"
 critical_gaps:
-  - title: "No coverage tracking or enforcement"
-    impact: "Coverage regressions go undetected. No PR-level coverage reporting to reviewers. Impossible to identify areas lacking test coverage."
+  - title: "No coverage enforcement or PR reporting"
+    impact: "Coverage can silently regress without anyone noticing; no threshold gates on merges"
     severity: "HIGH"
-    effort: "4-8 hours"
-  - title: "Trivy and CodeQL are schedule-only (not on PR)"
-    impact: "Security vulnerabilities in new code are not caught until the weekly Friday scan. Vulnerable dependencies can be merged without detection."
-    severity: "HIGH"
-    effort: "2-4 hours"
-  - title: "No container image vulnerability scanning on PR"
-    impact: "Vulnerable base images or newly introduced dependencies are not caught before merge. 12 Docker images built on PR but not scanned."
-    severity: "MEDIUM"
     effort: "4-6 hours"
-  - title: "No SBOM generation"
-    impact: "No software bill of materials for supply chain security compliance. Cannot audit dependency provenance."
+  - title: "No container runtime validation"
+    impact: "Image startup failures, missing dependencies, or health check issues not caught until deployment"
+    severity: "HIGH"
+    effort: "6-8 hours"
+  - title: "No FIPS build configuration"
+    impact: "Binaries not compiled with FIPS-compliant crypto; alpine base images not FIPS-capable"
     severity: "MEDIUM"
-    effort: "2-3 hours"
-  - title: "mypy configured with ignore_missing_imports=true globally"
-    impact: "Type checking is extremely lenient — mistyped imports silently pass. Reduces the value of static analysis for Python SDK."
+    effort: "12-16 hours"
+  - title: "No PR-time Konflux build simulation"
+    impact: "Build failures discovered only after merge in production build system"
     severity: "MEDIUM"
-    effort: "8-16 hours"
+    effort: "8-12 hours"
 quick_wins:
-  - title: "Add Codecov integration for Go and Python coverage"
-    effort: "4-6 hours"
-    impact: "PR-level coverage reporting, trend tracking, and regression prevention for all three languages"
-  - title: "Move Trivy scanning from schedule-only to PR-triggered"
-    effort: "1-2 hours"
-    impact: "Catch security vulnerabilities before merge instead of waiting for weekly Friday scan"
-  - title: "Add CodeQL to PR workflow alongside schedule"
-    effort: "1-2 hours"
-    impact: "SAST analysis runs on every PR, catching security bugs in new code before merge"
-  - title: "Add container image Trivy scan to the image-builds workflow"
-    effort: "2-3 hours"
-    impact: "Scan all 12 Docker images built on PR for vulnerabilities before E2E deployment"
-  - title: "Create .claude/rules/ for test creation patterns"
+  - title: "Add Codecov integration with threshold enforcement"
     effort: "3-4 hours"
-    impact: "Codify Ginkgo, pytest, and Vitest patterns so agents produce consistent, framework-aligned tests"
+    impact: "Automated coverage tracking, PR comments with coverage diff, regression prevention"
+  - title: "Add HEALTHCHECK to Dockerfiles"
+    effort: "2-3 hours"
+    impact: "Container orchestrators can detect unhealthy containers and restart them automatically"
+  - title: "Enable Dependabot for npm and pip ecosystems"
+    effort: "1 hour"
+    impact: "Automated dependency updates for frontend and SDK packages beyond just Go modules"
+  - title: "Add structured .claude/rules/ directory"
+    effort: "2-3 hours"
+    impact: "More granular, file-pattern-triggered agent rules for specific test types"
 recommendations:
   priority_0:
-    - "Add Codecov/Coveralls integration with coverage thresholds for Go backend, Python SDK, and frontend"
-    - "Move Trivy vulnerability scanning from weekly schedule to PR-triggered workflow"
-    - "Move CodeQL SAST scanning from weekly schedule to PR-triggered workflow"
+    - "Implement Codecov integration with coverage thresholds and PR reporting to prevent silent coverage regression"
+    - "Add container health checks (HEALTHCHECK in Dockerfiles) and runtime validation tests"
+    - "Migrate more Dockerfiles to UBI base images for FIPS compliance readiness"
   priority_1:
-    - "Add container image vulnerability scanning to the image-builds reusable workflow"
-    - "Tighten mypy configuration — remove global ignore_missing_imports, add per-module overrides"
-    - "Add SBOM generation (Syft/Trivy) for container images in release workflow"
-    - "Create .claude/rules/ directory with test creation rules for Ginkgo, pytest, and Vitest patterns"
+    - "Expand Dependabot to cover npm and pip ecosystems"
+    - "Add coverage threshold enforcement (e.g., 70% minimum, no decrease on PRs)"
+    - "Create .claude/rules/ directory with file-pattern-specific test rules"
+    - "Add Konflux build simulation to PR workflows"
   priority_2:
-    - "Add Go race condition detection to backend presubmit (-race flag)"
-    - "Add pre-commit CI enforcement (currently commented out in pre-commit.yml)"
-    - "Add Dependabot or Renovate for automated dependency updates"
-    - "Add multi-architecture image builds to PR validation (currently release-only)"
+    - "Enable additional golangci-lint linters (errcheck, gosimple, exhaustive)"
+    - "Add FIPS build tags and boringcrypto support for Go binaries"
+    - "Add contract tests for API boundaries between backend and SDK"
+    - "Implement performance regression testing for pipeline execution times"
 ---
 
 # Quality Analysis: kubeflow/pipelines
 
 ## Executive Summary
 
-- **Overall Score: 7.6/10**
-- **Repository Type**: Monorepo — ML pipeline orchestration platform (Go backend + Python SDK + React frontend)
-- **Primary Languages**: Go (681 source files), Python (1,024 source files), TypeScript/React (455 source files)
-- **Key Strengths**: Exceptionally comprehensive E2E and integration testing with multi-version K8s/Argo matrix; well-organized CI/CD with 40 workflows; strong AGENTS.md documentation; robust pre-commit hooks
-- **Critical Gaps**: No coverage tracking/enforcement; security scanning is schedule-only (not on PR); no SBOM generation
-- **Agent Rules Status**: Strong — 700-line AGENTS.md with testing policy, but no .claude/rules/ for specialized test creation patterns
+- **Overall Score: 7.3/10**
+- **Repository Type**: Polyglot monorepo (Go backend, Python SDK, TypeScript/React frontend)
+- **JIRA**: RHOAIENG / AI Pipelines (upstream tier)
+- **Key Strengths**: Exceptional E2E test infrastructure with multi-version K8s matrices, comprehensive CI/CD automation (42 workflows), and thorough agent documentation (44KB AGENTS.md)
+- **Critical Gaps**: No coverage enforcement or PR reporting, no container runtime validation, no FIPS build configuration
+- **Agent Rules Status**: Present and comprehensive (AGENTS.md + CLAUDE.md symlink), but no .claude/rules/ directory
 
 ## Quality Scorecard
 
-| Dimension | Score | Status |
-|-----------|-------|--------|
-| Unit Tests | 8.5/10 | 1,809 Go test functions; multi-Python-version SDK tests; 165 frontend test files with Vitest |
-| Integration/E2E | 9.0/10 | Ginkgo-based E2E + API integration + compiler + upgrade + frontend integration + migration tests |
-| **Build Integration** | **7.0/10** | **12 images built on PR and deployed to Kind; no Konflux simulation but thorough E2E validation** |
-| Image Testing | 6.5/10 | Images deployed and tested in Kind clusters; no standalone image startup tests or SBOM |
-| Coverage Tracking | 3.0/10 | pytest-cov installed but no coverage enforcement, thresholds, or PR reporting |
-| CI/CD Automation | 9.0/10 | 40 workflows with path-based triggers, concurrency control, and matrix strategies |
-| Agent Rules | 8.0/10 | Comprehensive AGENTS.md; no .claude/rules/ for specialized test patterns |
+| Dimension | Score | Weight | Weighted | Status |
+|-----------|-------|--------|----------|--------|
+| Unit Tests | 7/10 | 15% | 1.05 | Good coverage with Ginkgo, pytest, Vitest |
+| Integration/E2E | 9/10 | 20% | 1.80 | Exceptional multi-version Kind-based E2E |
+| Build Integration | 7/10 | 15% | 1.05 | PR image builds + kustomize validation |
+| Image Testing | 5/10 | 10% | 0.50 | Multi-stage/multi-arch but no runtime validation |
+| Coverage Tracking | 4/10 | 10% | 0.40 | Tools present but no enforcement |
+| CI/CD Automation | 9/10 | 15% | 1.35 | 42 workflows, matrix strategies, sharding |
+| Static Analysis | 7/10 | 10% | 0.70 | golangci-lint + pre-commit; Dependabot (gomod only) |
+| Agent Rules | 9/10 | 5% | 0.45 | 44KB AGENTS.md with testing/architecture policies |
+| **Overall** | **7.3/10** | **100%** | **7.30** | |
 
 ## Critical Gaps
 
-### 1. No Coverage Tracking or Enforcement
-- **Impact**: Coverage regressions go undetected; no PR-level reporting to reviewers; impossible to identify areas lacking test coverage
+### 1. No Coverage Enforcement or PR Reporting
+- **Impact**: Coverage can silently regress on any merge without detection
 - **Severity**: HIGH
-- **Effort**: 4-8 hours
-- **Details**: pytest-cov is installed in SDK test workflows but coverage data is not collected, uploaded, or enforced. Go backend has no coverage generation. Frontend has `npm run test:ui:coverage` but it's not used in CI.
-- **Fix**: Add Codecov integration with `go test -coverprofile`, `pytest --cov`, and Vitest coverage reports uploaded to Codecov
-
-### 2. Security Scanning is Schedule-Only (Not on PR)
-- **Impact**: Security vulnerabilities in new code are not caught until the weekly Friday scan (cron `39 19 * * 5`)
-- **Severity**: HIGH
-- **Effort**: 2-4 hours
-- **Details**: Both Trivy (`trivy.yml`) and CodeQL (`codeql.yml`) run only on a weekly schedule. New vulnerabilities from PRs can be merged and sit undetected for up to 7 days.
-- **Fix**: Add `pull_request` trigger to both workflows, or create a lightweight PR-triggered version
-
-### 3. No Container Image Vulnerability Scanning on PR
-- **Impact**: 12 Docker images are built on every PR but never scanned for vulnerabilities before E2E deployment
-- **Severity**: MEDIUM
 - **Effort**: 4-6 hours
-- **Details**: The `image-builds.yml` reusable workflow builds apiserver, frontend, driver, launcher, etc. but performs no security scan. Trivy only runs in fs mode on the source code, not on built images.
-- **Fix**: Add a Trivy container scan step after each image build in the matrix
+- **Details**: pytest-cov is installed in SDK unit tests and Vitest coverage scripts exist in frontend, but there is no `.codecov.yml`, no coverage threshold enforcement, and no PR coverage comments. Backend Go tests have no coverage generation at all.
 
-### 4. No SBOM Generation
-- **Impact**: No software bill of materials for supply chain security compliance
-- **Severity**: MEDIUM
-- **Effort**: 2-3 hours
+### 2. No Container Runtime Validation
+- **Impact**: Image startup failures, missing runtime dependencies, or misconfigured entrypoints not caught until deployment
+- **Severity**: HIGH
+- **Effort**: 6-8 hours
+- **Details**: 20+ Dockerfiles exist with no HEALTHCHECK instructions. No Testcontainers usage. Runtime validation relies entirely on E2E tests deploying to Kind, which validates the overall system but not individual container health.
 
-### 5. mypy Globally Ignores Missing Imports
-- **Impact**: Extremely lenient type checking — mistyped imports and untyped dependencies silently pass
+### 3. No FIPS Build Configuration
+- **Impact**: Go binaries not compiled with FIPS-compliant cryptography; alpine/debian base images are not FIPS-capable
 - **Severity**: MEDIUM
-- **Effort**: 8-16 hours
-- **Details**: `mypy.ini` has `ignore_missing_imports = true` at global level. This eliminates much of mypy's value for catching import errors and type mismatches in the Python SDK.
+- **Effort**: 12-16 hours
+- **Details**: No `-tags=fips`, no `GOEXPERIMENT=boringcrypto`, no CGO_ENABLED=1 with BoringSSL. Base images are mixed: alpine, debian, golang-alpine, python-slim, with only one UBI image (registry.access.redhat.com/ubi9/nginx-124). `math/rand` usage found in test utilities only (acceptable). `hashlib.md5` found in google-cloud components (not core).
+
+### 4. No PR-Time Konflux Build Simulation
+- **Impact**: Build failures in production build system discovered only after merge
+- **Severity**: MEDIUM
+- **Effort**: 8-12 hours
+- **Details**: PR workflows build Docker images and deploy to Kind for testing, but do not simulate the Konflux build pipeline. Production build issues (e.g., missing FIPS dependencies, UBI-specific constraints) can slip through.
 
 ## Quick Wins
 
-### 1. Add Codecov Integration (4-6 hours)
-- **Impact**: PR-level coverage reporting, trend tracking, and regression prevention
-- **Implementation**: Add `.codecov.yml` with thresholds, upload Go/Python/frontend coverage in respective workflows
+### 1. Add Codecov Integration (3-4 hours)
+- **Impact**: Automated coverage tracking with PR comments showing coverage deltas
+- **Implementation**:
+  ```yaml
+  # .codecov.yml
+  coverage:
+    status:
+      project:
+        default:
+          target: 60%
+          threshold: 2%
+      patch:
+        default:
+          target: 70%
+  ```
+  Add `codecov/codecov-action@v4` step to `kfp-sdk-unit-tests.yml`, `presubmit-backend.yml`, and `frontend.yml` workflows.
 
-### 2. Move Trivy to PR-Triggered (1-2 hours)
-- **Impact**: Catch security vulnerabilities before merge
-- **Implementation**: Add `pull_request` trigger to `trivy.yml`
+### 2. Add HEALTHCHECK to Dockerfiles (2-3 hours)
+- **Impact**: Kubernetes and Docker can detect unhealthy containers automatically
+- **Implementation**: Add appropriate health checks to key Dockerfiles:
+  ```dockerfile
+  # backend/Dockerfile
+  HEALTHCHECK --interval=30s --timeout=5s --retries=3 \
+    CMD curl -f http://localhost:8888/apis/v2beta1/healthz || exit 1
+  ```
 
-### 3. Add CodeQL to PR Workflow (1-2 hours)
-- **Impact**: SAST analysis on every PR
-- **Implementation**: Add `pull_request` trigger to `codeql.yml`
+### 3. Enable Dependabot for npm and pip (1 hour)
+- **Impact**: Automated dependency updates for frontend and SDK beyond just Go modules
+- **Implementation**: Add to `.github/dependabot.yml`:
+  ```yaml
+  - package-ecosystem: npm
+    directory: "/frontend"
+    schedule:
+      interval: weekly
+  - package-ecosystem: pip
+    directory: "/sdk/python"
+    schedule:
+      interval: weekly
+  ```
 
-### 4. Add Container Image Scanning (2-3 hours)
-- **Impact**: Scan all 12 Docker images built on PR
-- **Implementation**: Add `aquasecurity/trivy-action` with `scan-type: image` after build step in `image-builds.yml`
-
-### 5. Create .claude/rules/ for Test Patterns (3-4 hours)
-- **Impact**: Consistent agent-generated tests matching existing Ginkgo/pytest/Vitest patterns
-- **Implementation**: Run `/test-rules-generator` to create rules for each test framework
+### 4. Add .claude/rules/ Directory (2-3 hours)
+- **Impact**: File-pattern-triggered agent rules for targeted test guidance
+- **Implementation**: Create `.claude/rules/` with rules like `go-tests.md`, `python-sdk-tests.md`, `frontend-tests.md` that trigger based on file globs and provide framework-specific testing patterns.
 
 ## Detailed Findings
 
-### CI/CD Pipeline
+### Unit Tests
 
-**Workflow Inventory (40 workflows)**:
+**Score: 7/10**
 
-| Workflow | Trigger | Purpose |
-|----------|---------|---------|
-| `e2e-test.yml` | PR (path-filtered) + push master | E2E pipeline tests with multi-K8s/Argo matrix |
-| `api-server-tests.yml` | PR (path-filtered) + push master | API server REST endpoint tests (Ginkgo, 15 parallel nodes) |
-| `frontend.yml` | PR (path-filtered) + push master | Frontend unit tests + API client validation |
-| `e2e-test-frontend.yml` | PR (path-filtered) + push master | Frontend integration tests against Kind cluster |
-| `kfp-sdk-unit-tests.yml` | PR (path-filtered) + push master | SDK unit tests (Python 3.9, 3.13) |
-| `kfp-sdk-tests.yml` | PR (path-filtered) + push master | SDK integration tests with pytest-xdist |
-| `kfp-sdk-client-tests.yml` | PR (path-filtered) + push master | SDK client tests against Kind cluster |
-| `compiler-tests.yml` | PR (path-filtered) + push master | Workflow compiler tests (Ginkgo) |
-| `presubmit-backend.yml` | PR (path-filtered) + push master | Backend Go unit tests |
-| `integration-tests-v1.yml` | PR (path-filtered) + push master | v1 API integration tests (multi-K8s version) |
-| `legacy-v2-api-integration-tests.yml` | PR (path-filtered) + push master | v2 API integration tests (database + kubernetes store) |
-| `upgrade-test.yml` | PR (path-filtered) + push master | KFP upgrade tests |
-| `kfp-kubernetes-native-migration-tests.yaml` | PR (path-filtered) + push master | K8s native migration tests |
-| `kfp-kubernetes-library-test.yml` | PR (path-filtered) + push master | kfp-kubernetes library tests |
-| `image-builds.yml` | workflow_call | Reusable workflow building 12 Docker images |
-| `validate-generated-files.yml` | PR (path-filtered) + push master | Protobuf/API generation validation |
-| `pre-commit.yml` | PR + push master | golangci-lint v2.10 |
-| `ci-checks.yml` | pull_request_target | CI status aggregation with polling |
-| `trivy.yml` | schedule (weekly Friday) | Trivy vulnerability scanner (fs mode) |
-| `codeql.yml` | schedule (weekly Friday) | CodeQL SAST (Go, JS, Python) |
-| `build-and-push.yml` | workflow_call | Production image build and push to GHCR |
-| `image-builds-master.yml` | push master | Master branch image builds |
-| `image-builds-release.yml` | push release branches | Release image builds |
-| + 17 more | Various | SDK formatting, docs, stale issues, manifests, webhooks |
+| Language | Test Files | Source Files | Ratio |
+|----------|-----------|--------------|-------|
+| Go | 181 | 688 | 26.3% |
+| Python | 220 | 1,035 | 21.3% |
+| TypeScript/JS | 169 | 447 | 37.8% |
 
-**Strengths**:
-- Excellent path-based filtering — workflows only run when relevant files change
-- Universal concurrency control with `cancel-in-progress: true`
-- Reusable workflows (`image-builds.yml` called by 8+ workflows)
-- Multi-version K8s testing matrix (v1.31.14, v1.35.0)
-- Multi-Argo-version testing (v3.7.14, v4.0.5)
-- Parallel test execution (Ginkgo with 10-15 parallel nodes)
-- Comprehensive label-based PR gating (`ok-to-test`, `needs-ok-to-test`)
+**Frameworks Detected:**
+- **Go**: Ginkgo v2 (BDD-style) + standard `testing` package
+- **Python**: pytest with pytest-xdist for parallel execution, pytest-cov for coverage
+- **Frontend**: Vitest with @testing-library/react, Playwright for browser tests
 
-**Weaknesses**:
-- Security scanning (Trivy, CodeQL) runs only on weekly schedule
-- Pre-commit workflow has the main pre-commit hooks commented out, only runs golangci-lint
-- No coverage upload in any workflow
+**Strengths:**
+- Multiple test frameworks appropriate for each language
+- Parallel test execution (Ginkgo parallel nodes, pytest-xdist `auto` workers)
+- Frontend uses modern Vitest (v4.1.8) with React Testing Library
+- Good test file organization (test files co-located and in dedicated test directories)
+- Python SDK tests matrix across Python 3.9 and 3.13
 
-### Test Coverage
+**Gaps:**
+- Go test-to-code ratio (26%) is moderate; some packages may lack tests
+- No `t.Parallel()` analysis in Go tests beyond Ginkgo
+- Coverage not enforced for any language
 
-**Go Backend (171 test files, 1,809 test functions)**:
-- Framework: Standard `testing` + Ginkgo v2 for integration/E2E
-- Unit tests: `backend/src/` (standard `go test`)
-- Integration tests: `backend/test/integration/` (11 test files covering APIs, DB, webhooks)
-- E2E tests: `backend/test/end2end/` (pipeline E2E, MLflow E2E)
-- Compiler tests: `backend/test/compiler/` (golden file comparison)
-- API tests: `backend/test/v2/api/` (Ginkgo with label filtering)
-- Test-to-source ratio: 171 test files / 681 source files = 0.25 (adequate for Go with Ginkgo suites)
+### Integration/E2E Tests
 
-**Python SDK (197 test files)**:
-- Framework: pytest with pytest-xdist (parallel) and pytest-cov
-- SDK unit tests: `sdk/python/kfp/` (run via `test/presubmit-tests-sdk-unit.sh`)
-- SDK integration tests: `test/presubmit-tests-sdk.sh`
-- kfp-kubernetes tests: `kubernetes_platform/python/test/`
-- Multi-Python-version: 3.9 and 3.13
-- Test-to-source ratio: 197 test files / 1,024 source files = 0.19
+**Score: 9/10**
 
-**Frontend (165 test files)**:
-- Framework: Vitest + React Testing Library v16
-- Test-to-source ratio: 165 test files / 455 source files = 0.36 (strong)
-- Integration tests: Cypress-based tests against Kind cluster (`e2e-test-frontend.yml`)
-- Coverage command exists (`npm run test:ui:coverage`) but not used in CI
+**Test Infrastructure:**
+- `backend/test/end2end/` - Pipeline E2E tests and MLflow integration
+- `backend/test/v2/api/` - V2 API server integration tests
+- `backend/test/integration/` - V1 API integration tests
+- `backend/test/compiler/` - Workflow compiler tests
+- `test/frontend-integration-test/` - Frontend E2E with WebdriverIO
+- `test/server-integration-test/` - Server integration with K8s
 
-### Code Quality
+**Multi-Version Testing Matrix:**
+- Kubernetes versions: v1.33.12, v1.36.1
+- Argo Workflows versions: v3.7.14, v4.0.5
+- Cache enabled/disabled variants
+- Proxy enabled/disabled variants
+- Pod-to-pod TLS enabled/disabled variants
+- Multi-user vs single-user modes
+- Pipeline store: database vs kubernetes
 
-**Go Linting**:
-- golangci-lint v2.10 with 6 linters enabled: gocritic, govet, ineffassign, misspell, staticcheck, unused
+**Cluster Setup:**
+- Kind clusters with custom create-cluster action
+- Kind node image caching for faster CI
+- Automated KFP deployment via deploy action
+- Test sharding (E2ECriticalShardA, E2ECriticalShardB) for parallelism
+
+**Strengths:**
+- One of the most comprehensive E2E matrices in the Kubeflow ecosystem
+- Tests cover critical paths: pipeline creation, execution, caching, proxy, TLS
+- Frontend E2E tests run against real Kind cluster
+- Ginkgo parallel nodes (5-10 per suite) for test speed
+- MLflow integration E2E tests
+
+**Gaps:**
+- Some E2E tests only test a single K8s version (e.g., upgrade-test)
+- No chaos engineering or failure injection testing
+
+### Build Integration
+
+**Score: 7/10**
+
+**PR Build Validation:**
+- `image-builds.yml` (reusable workflow): Builds all backend Docker images on PR
+- Images built and loaded into Kind cluster for E2E testing
+- Runtime base image caching via GitHub artifacts
+- `kubeflow-pipelines-manifests.yml`: Kustomize manifest validation on PR
+- `build-tools-images.yml`: API and visualization tool images
+- `check-diff` Makefile target: Verifies generated files are up-to-date
+
+**Build Pipeline:**
+- Multi-stage Docker builds (builder pattern)
+- BuildKit enabled (`DOCKER_BUILDKIT=1`)
+- Buildx with retry logic for multi-arch builds
+- Container registry with Kind for local testing
+
+**Strengths:**
+- Images built on every relevant PR via path-based triggers
+- Kustomize manifest presubmit validation
+- Generated file drift detection
+- Build caching via GitHub artifacts
+
+**Gaps:**
+- No Konflux build simulation
+- No operator bundle validation (not an operator, but manifest validation could be deeper)
+- `build-and-push.yml` uses buildx for multi-arch but only on master pushes, not PRs
+
+### Image Testing
+
+**Score: 5/10**
+
+**Dockerfiles Found (20+):**
+- `backend/Dockerfile` - Main API server
+- `backend/Dockerfile.driver` - Pipeline driver
+- `backend/Dockerfile.launcher` - Pipeline launcher
+- `backend/Dockerfile.persistenceagent` - Persistence agent
+- `backend/Dockerfile.scheduledworkflow` - Scheduled workflow controller
+- `backend/Dockerfile.cacheserver` - Cache server
+- `backend/Dockerfile.visualization` - Visualization server
+- `backend/Dockerfile.viewercontroller` - Viewer controller
+- `frontend/Dockerfile` - Frontend React app
+- `proxy/Dockerfile` - Inverting proxy
+- Plus tool/test images
+
+**Base Images:**
+- `golang:1.26.x-alpine` (builders)
+- `golang:1.26.x-bookworm` (builders)
+- `alpine:3.21` (runtime)
+- `debian:stable-slim` (runtime)
+- `python:3.11-slim` (SDK tools)
+- `registry.access.redhat.com/ubi9/nginx-124` (frontend)
+- Various vendor images (minio, envoy, selenium)
+
+**Multi-Architecture:**
+- Buildx with `--platform` in build-and-push workflow
+- Setup-buildx-with-retry script for reliability
+- Manifest list creation in create-manifest workflow
+
+**Strengths:**
+- Multi-stage builds used consistently
+- Multi-arch support via buildx
+- One UBI9 base image already in use (frontend)
+- Minimal runtime images (alpine, slim variants)
+
+**Gaps:**
+- No HEALTHCHECK in any Dockerfile
+- No Testcontainers or container runtime tests
+- No image scanning integration in PR workflows (out of scope per skill rules)
+- Mixed base images (alpine/debian not FIPS-capable)
+- No container startup validation tests
+
+### Coverage Tracking
+
+**Score: 4/10**
+
+**Coverage Tools Present:**
+- `pytest-cov` installed in SDK unit tests workflow
+- `vitest --coverage` scripts in frontend package.json
+- `@vitest/coverage-v8` dev dependency in frontend
+- Frontend has `coverage:baseline` and `coverage:compare` scripts
+
+**Missing:**
+- No `.codecov.yml` or `codecov.yml`
+- No coverage threshold enforcement in CI
+- No PR coverage reporting (no codecov-action, no coverage comment bots)
+- No `--coverprofile` usage in Go backend tests
+- Frontend coverage scripts exist but are not called in CI workflows
+- No `--cov-fail-under` or equivalent threshold
+
+**Assessment:**
+Coverage tooling is partially installed but completely unenforced. Coverage generation exists as opt-in local commands but is not integrated into the CI pipeline. This means coverage can regress silently on any merge.
+
+### CI/CD Automation
+
+**Score: 9/10**
+
+**Workflow Inventory (42 workflows):**
+
+| Category | Workflows | Trigger |
+|----------|----------|---------|
+| Backend Tests | presubmit-backend, api-server-tests, compiler-tests | PR + push |
+| SDK Tests | kfp-sdk-tests, kfp-sdk-unit-tests, kfp-sdk-client-tests | PR + push |
+| E2E Tests | e2e-test, e2e-test-frontend | PR + push |
+| Integration | integration-tests-v1, legacy-v2-api-integration-tests | PR + push |
+| Frontend | frontend | PR + push |
+| Build | image-builds, image-builds-master, image-builds-release, build-and-push | Various |
+| Quality | pre-commit, ci-checks, ci-health-report | PR + push |
+| SDK Quality | sdk-yapf, sdk-isort, sdk-docformatter | PR + push |
+| Manifests | kubeflow-pipelines-manifests | PR + push |
+| K8s Platform | kfp-kubernetes-library-test, kfp-kubernetes-native-migration-tests | PR + push |
+| Webhooks | kfp-webhooks | PR + push |
+| Other | stale, docs-freshness, readthedocs-builds, ai_analyzer | Various |
+
+**Automation Patterns:**
+- **Concurrency control**: 29/42 workflows use `cancel-in-progress: true`
+- **Path-based triggers**: All PR workflows use `paths:` filters for efficiency
+- **Matrix strategies**: 10+ workflows use matrix strategies
+- **Test sharding**: E2E tests sharded across runners (ShardA/ShardB)
+- **Caching**: pip cache via composite actions, Kind node image caching, GitHub artifact caching
+- **Timeout enforcement**: 7+ workflows set `timeout-minutes`
+- **Reusable workflows**: `image-builds.yml` called by multiple workflows
+- **CI health monitoring**: `ci-health-report.yml` for CI system observability
+- **AI analyzer**: `ai_analyzer.yml` for automated code analysis
+
+**Strengths:**
+- Comprehensive PR-triggered test coverage
+- Efficient path-based filtering avoids unnecessary CI runs
+- Test parallelization at multiple levels (Ginkgo nodes, matrix, sharding)
+- Reusable workflow pattern reduces duplication
+- CI health monitoring for system reliability
+
+**Gaps:**
+- 13/42 workflows lack concurrency control (some are intentional, e.g., release workflows)
+- Only 1 workflow explicitly uses `cache:` action (though composite actions handle caching)
+
+### Static Analysis
+
+**Score: 7/10**
+
+#### Linting
+
+**Go - golangci-lint v2.10:**
+- Enabled linters: gocritic, govet, ineffassign, misspell, staticcheck, unused
 - Formatters: gofmt, goimports
-- Configured with 30m timeout, good for large codebase
-- Exclusions for generated API code
-- Runs in pre-commit workflow on every PR
+- 30-minute timeout
+- Exclusions: api generated files
+- Run via pre-commit hook and dedicated CI workflow
 
-**Python Linting**:
-- Pre-commit hooks: flake8 (W605 only), pycln, isort (Google profile), yapf, docformatter
-- mypy: Global `ignore_missing_imports = true` (very lenient)
-- pylintrc present but not actively enforced in CI
-- No ruff (modern alternative to flake8/isort/black)
+**Python:**
+- flake8 (W605 only - invalid escape sequences)
+- isort (Google profile)
+- yapf (Google-style formatting)
+- pycln (unused import removal)
+- docformatter
+- pylintrc (detailed configuration, but not run in CI)
+- mypy (basic: `ignore_missing_imports = true`)
 
-**Frontend Linting**:
-- ESLint with TypeScript parser, import plugin, react-hooks plugin, jsx-a11y
-- Prettier for formatting
-- Generated API clients excluded from linting
+**Frontend:**
+- No ESLint configuration found (frontend relies on TypeScript strict mode)
 
-**Pre-commit Hooks** (`.pre-commit-config.yaml`):
+**Pre-commit Hooks:**
+- `.pre-commit-config.yaml` with comprehensive hooks
 - check-yaml, check-json, end-of-file-fixer, trailing-whitespace
-- debug-statements, check-merge-conflict, name-tests-test
+- debug-statements, check-merge-conflict
 - no-commit-to-branch (master protection)
-- golangci-lint with `--new-from-rev` for incremental analysis
-- actionlint for GitHub Actions workflow validation
+- actionlint for GitHub Actions validation
+- golangci-lint with --fix
 
-### Container Images
+#### FIPS Compatibility
 
-**Image Build Process**:
-- 12 Docker images built on every PR via `image-builds.yml` (matrix strategy)
-- Images: apiserver, persistenceagent, scheduledworkflow, launcher, driver, frontend, metadata-writer, viewer-crd-controller, visualization-server, cache-deployer, cache-server, metadata-envoy
-- Docker Buildx for builds
-- Auto-retry on build failure
-- Images saved as tarballs and uploaded as GitHub Actions artifacts
-- Loaded into Kind cluster for E2E testing
+| Check | Status |
+|-------|--------|
+| FIPS build tags (`-tags=fips`) | Not present |
+| `GOEXPERIMENT=boringcrypto` | Not present |
+| `CGO_ENABLED=1` with BoringSSL | Not present |
+| `crypto/md5` imports | Not found in core code |
+| `math/rand` in security context | Test utilities only (acceptable) |
+| `hashlib.md5` (Python) | google-cloud components only (not core) |
+| UBI base images | 1 of 20+ Dockerfiles (frontend only) |
+| Alpine/Debian base images | Majority of Dockerfiles |
 
-**Release Images**:
-- Separate workflows for master (`image-builds-master.yml`) and release branches (`image-builds-release.yml`)
-- `build-and-push.yml` reusable workflow for production image push to GHCR
-- Multi-architecture support via `platforms` input (amd64, arm64) — but only for releases, not PRs
+**FIPS Assessment**: No FIPS build infrastructure. Most Dockerfiles use alpine or debian base images that are not FIPS-capable out of the box. Crypto usage in core code is clean, but binaries are not compiled with FIPS-compliant crypto libraries.
 
-**Gaps**:
-- No image vulnerability scanning (Trivy runs on source code only)
-- No SBOM generation
-- No image signing/attestation (Cosign/Sigstore)
-- No standalone image startup validation (relies entirely on E2E)
-- No multi-arch PR validation
+#### Dependency Alerts
 
-### Security
+- **Dependabot**: Configured for `gomod` ecosystem across 5 directories
+  - Grouped updates: `golang.org/x/*` together, minor/patch batched
+  - Weekly schedule, 10 PR limit
+  - Commit prefix: `chore(deps)`
+- **Renovate**: Not configured
+- **npm/pip**: Not covered by Dependabot
 
-**Present**:
-- Trivy vulnerability scanner — weekly schedule, fs mode, CRITICAL+HIGH severity, SARIF upload to GitHub Security tab
-- CodeQL SAST — weekly schedule, Go + JavaScript + Python, results uploaded to GitHub Security tab
-- Pre-commit `no-commit-to-branch` hook for master protection
-- Pin-by-SHA for some GitHub Actions (Trivy, CodeQL upload)
+### Agent Rules
 
-**Missing**:
-- No PR-triggered security scanning
-- No container image scanning
-- No dependency scanning (Dependabot/Renovate not configured)
-- No secret detection (no Gitleaks/TruffleHog)
-- No SBOM generation
-- No image signing/attestation
+**Score: 9/10**
 
-### Agent Rules (Agentic Flow Quality)
+**Files Present:**
+- `AGENTS.md` (44KB) - Comprehensive agent guide
+- `CLAUDE.md` - Symlink to AGENTS.md
+- No `.claude/` directory or `.claude/rules/`
 
-**Status**: Strong — Present and comprehensive via AGENTS.md
+**AGENTS.md Coverage:**
 
-**Coverage**:
-- 700-line AGENTS.md symlinked as CLAUDE.md
-- Testing policy requiring unit tests for all non-trivial functions
-- Architectural boundary policy for engine-neutral abstractions
-- Code reuse policy against duplication
-- Commit policy with DCO sign-off
-- Detailed local testing instructions for all three languages
-- Frontend-specific React effect discipline guidelines
-- Generated file management documentation
+| Section | Content |
+|---------|---------|
+| Architecture | Baseline architecture, end-to-end flow, package naming |
+| Development | Local setup, cluster deployment (standalone + dev modes) |
+| Testing | Backend Ginkgo suites, SDK tests, frontend tests, local execution |
+| Build | Protobuf regeneration, generated files policy |
+| CI/CD | Workflow overview, testing matrix documentation |
+| Frontend | Prerequisites, setup, development workflows |
+| Policies | Code reuse, architectural boundaries, testing, commits |
 
-**Quality**:
-- Actionable: Provides exact commands for running tests
-- Framework-specific: Covers Ginkgo, pytest, Vitest patterns
-- Up-to-date: Last updated 2026-06-19
-- Well-maintained: Includes maintenance instructions for keeping it current
+**Strengths:**
+- One of the most thorough AGENTS.md files in the ecosystem
+- Includes testing policy with clear guidelines for agents
+- Architecture documentation with end-to-end flow
+- Local development and testing instructions
+- Generated file policy prevents accidental edits
+- Maintenance instructions for keeping the guide current
 
-**Gaps**:
-- No `.claude/rules/` directory with specialized test creation rules
-- No test pattern templates (e.g., Ginkgo table-driven test boilerplate)
-- AGENTS.md is comprehensive but monolithic — no per-file-type rules
-
-**Recommendation**: Generate `.claude/rules/` with `/test-rules-generator` for Ginkgo, pytest, and Vitest patterns
+**Gaps:**
+- No `.claude/rules/` directory for file-pattern-triggered rules
+- No `.claude/skills/` for custom analysis skills
+- All rules in a single large file rather than modular per-concern rules
+- Could benefit from separate rule files for Go tests, Python tests, frontend tests
 
 ## Recommendations
 
 ### Priority 0 (Critical)
 
-1. **Add Codecov integration with coverage thresholds** (4-8 hours)
-   - Add Go coverage: `go test -coverprofile=coverage.out ./...` + upload
-   - Add Python coverage: `pytest --cov --cov-report=xml` + upload
-   - Add frontend coverage: use existing `npm run test:ui:coverage` + upload
-   - Set initial thresholds at current coverage level, enforce no-regression
+1. **Implement Codecov with threshold enforcement**
+   - Add `.codecov.yml` with project/patch targets
+   - Add `codecov/codecov-action@v4` to backend, SDK, and frontend test workflows
+   - Set minimum coverage threshold (start at 60%, increase over time)
+   - Enable PR coverage comments for visibility
 
-2. **Move Trivy scanning from schedule to PR-triggered** (1-2 hours)
-   - Add `pull_request` trigger to `trivy.yml`
-   - Keep weekly schedule as a safety net
-   - Consider adding image scanning to `image-builds.yml`
+2. **Add container runtime validation**
+   - Add HEALTHCHECK instructions to all production Dockerfiles
+   - Consider adding container startup validation in CI (e.g., `docker run --health-cmd`)
+   - Add readiness/liveness probe definitions in Kubernetes manifests where missing
 
-3. **Move CodeQL from schedule to PR-triggered** (1-2 hours)
-   - Add `pull_request` trigger to `codeql.yml`
-   - Keep weekly schedule for full repo scans
+3. **Migrate base images to UBI for FIPS readiness**
+   - Replace `alpine` and `debian` base images with `registry.access.redhat.com/ubi9/ubi-minimal` for downstream FIPS compliance
+   - Document base image selection policy in AGENTS.md
 
 ### Priority 1 (High Value)
 
-4. **Add container image vulnerability scanning** (4-6 hours)
-   - Add Trivy image scan step to `image-builds.yml` after each build
-   - Scan all 12 Docker images before E2E deployment
-   - Fail on CRITICAL/HIGH vulnerabilities
+4. **Expand Dependabot to npm and pip ecosystems**
+   - Add npm ecosystem for `/frontend` directory
+   - Add pip ecosystem for `/sdk/python` directory
+   - Apply same grouping and scheduling patterns as gomod
 
-5. **Tighten mypy configuration** (8-16 hours)
-   - Remove global `ignore_missing_imports = true`
-   - Add per-module overrides for third-party packages
-   - Gradually enable stricter type checking
+5. **Add FIPS build infrastructure**
+   - Add `GOEXPERIMENT=boringcrypto` and `CGO_ENABLED=1` build variants
+   - Create FIPS-specific Dockerfile variants or build args
+   - Add CI job to verify FIPS-compliant builds
 
-6. **Add SBOM generation to release workflow** (2-3 hours)
-   - Use Syft or Trivy SBOM mode for container images
-   - Attach SBOMs as release artifacts
+6. **Create .claude/rules/ directory**
+   - `go-tests.md` - Ginkgo patterns, table-driven tests, test isolation
+   - `python-sdk-tests.md` - pytest patterns, fixtures, parametrize
+   - `frontend-tests.md` - Vitest + Testing Library patterns, component testing
+   - `e2e-tests.md` - Kind cluster setup, Ginkgo E2E patterns
 
-7. **Create .claude/rules/ for test creation patterns** (3-4 hours)
-   - Generate Ginkgo test rules for Go backend
-   - Generate pytest rules for Python SDK
-   - Generate Vitest rules for React frontend
+7. **Add Konflux build simulation to PR workflows**
+   - Simulate production build constraints in PR checks
+   - Validate UBI base image compatibility
+   - Test FIPS-compliant binary compilation
 
 ### Priority 2 (Nice-to-Have)
 
-8. **Add Go race detection to backend presubmit** (1 hour)
-   - Add `-race` flag to `presubmit-backend-test.sh`
+8. **Enable additional golangci-lint linters**
+   - Add `errcheck`, `gosimple`, `exhaustive` for more comprehensive static analysis
+   - Currently only 6 linters enabled out of 50+ available
 
-9. **Enable full pre-commit CI enforcement** (2-3 hours)
-   - Uncomment `pre-commit/action@v3.0.1` in `pre-commit.yml`
-   - Run all hooks, not just golangci-lint
+9. **Add contract tests for API boundaries**
+   - Test proto/gRPC contract between SDK and API server
+   - Validate REST API swagger spec against implementation
+   - Add backward compatibility checks for API changes
 
-10. **Add Dependabot or Renovate** (2-3 hours)
-    - Automated dependency update PRs
-    - Security vulnerability alerts for dependencies
+10. **Implement performance regression testing**
+    - Track pipeline compilation time
+    - Monitor API server response latency
+    - Benchmark pipeline execution overhead
 
-11. **Add secret detection** (1-2 hours)
-    - Add Gitleaks or TruffleHog to PR workflow
-    - Prevent accidental secret commits
-
-12. **Add multi-architecture image builds to PR validation** (4-6 hours)
-    - Currently only release workflows support multi-arch
-    - Catch architecture-specific build issues before merge
+11. **Integrate frontend coverage into CI**
+    - The `coverage:baseline` and `coverage:compare` scripts exist but are not run in CI
+    - Add coverage step to `frontend.yml` workflow
 
 ## Comparison to Gold Standards
 
 | Dimension | kubeflow/pipelines | odh-dashboard | notebooks | kserve |
 |-----------|-------------------|---------------|-----------|--------|
-| Unit Tests | 8.5 - Multi-language, comprehensive | 9.0 - Multi-layer | 7.0 - Focused | 8.5 - Strong |
-| Integration/E2E | 9.0 - Multi-version matrix | 9.0 - Contract tests | 8.0 - Image-focused | 9.0 - Multi-version |
-| Build Integration | 7.0 - 12 images, Kind E2E | 8.0 - Konflux sim | 9.0 - Image pipeline | 7.0 - Standard |
-| Image Testing | 6.5 - Kind deployment only | 7.0 - Basic | 9.5 - 5-layer validation | 6.0 - Basic |
-| Coverage Tracking | 3.0 - No enforcement | 8.0 - Codecov | 5.0 - Partial | 8.0 - Enforced |
-| CI/CD Automation | 9.0 - 40 workflows | 9.0 - Well-organized | 8.0 - Solid | 8.5 - Good |
-| Agent Rules | 8.0 - Strong AGENTS.md | 9.0 - Full rules/ | 3.0 - None | 4.0 - Minimal |
-| **Overall** | **7.6** | **8.6** | **7.1** | **7.3** |
+| Unit Tests | 7 - Good multi-lang coverage | 9 - Comprehensive with contracts | 6 - Basic | 8 - Strong Go tests |
+| Integration/E2E | 9 - Multi-version matrices | 8 - Multi-layer testing | 7 - Image validation | 9 - Multi-version |
+| Build Integration | 7 - PR builds + kustomize | 8 - Full build pipeline | 7 - Image builds | 7 - Operator bundle |
+| Image Testing | 5 - Multi-arch, no runtime | 7 - Container validation | 9 - 5-layer validation | 6 - Basic builds |
+| Coverage Tracking | 4 - Tools but no enforcement | 8 - Codecov with thresholds | 5 - Basic | 8 - Enforced |
+| CI/CD Automation | 9 - 42 workflows, sharding | 9 - Comprehensive | 7 - Adequate | 8 - Good automation |
+| Static Analysis | 7 - golangci + pre-commit | 8 - ESLint + strict TS | 6 - Basic | 7 - golangci |
+| Agent Rules | 9 - 44KB AGENTS.md | 9 - Rules + skills | 3 - Minimal | 5 - Basic CLAUDE.md |
+| **Overall** | **7.3** | **8.5** | **6.5** | **7.5** |
 
-**Key Differentiators**:
-- kubeflow/pipelines excels at E2E testing with its multi-K8s-version, multi-Argo-version matrix
-- The 40-workflow CI/CD suite is exceptionally well-organized with path-based triggering
-- The AGENTS.md is one of the most comprehensive agent documentation files in the ecosystem
-- The critical gap is coverage tracking — the biggest single improvement opportunity
+**Key Differentiators:**
+- kubeflow/pipelines has the most comprehensive E2E test matrix in the ecosystem
+- CI/CD automation is among the best with 42 workflows and extensive test sharding
+- AGENTS.md is exceptionally detailed compared to most projects
+- Coverage tracking is the weakest dimension - needs enforcement infrastructure
+- Image testing needs runtime validation to match notebooks' 5-layer approach
 
 ## File Paths Reference
 
-### CI/CD
-- `.github/workflows/` — 40 workflow files
-- `.github/actions/` — Reusable actions (create-cluster, deploy, test-and-report, junit-summary)
-- `.github/resources/` — Helper scripts, manifests, runtime base images
+### CI/CD Workflows
+- `.github/workflows/api-server-tests.yml` - API server integration tests
+- `.github/workflows/e2e-test.yml` - End-to-end pipeline tests
+- `.github/workflows/e2e-test-frontend.yml` - Frontend E2E tests
+- `.github/workflows/frontend.yml` - Frontend unit tests
+- `.github/workflows/presubmit-backend.yml` - Backend Go tests
+- `.github/workflows/kfp-sdk-tests.yml` - SDK integration tests
+- `.github/workflows/kfp-sdk-unit-tests.yml` - SDK unit tests
+- `.github/workflows/image-builds.yml` - Reusable image build workflow
+- `.github/workflows/pre-commit.yml` - Pre-commit checks
+- `.github/workflows/kubeflow-pipelines-manifests.yml` - Kustomize validation
 
-### Testing
-- `backend/test/` — Go test suites (integration, E2E, compiler, initialization)
-- `sdk/python/kfp/` — Python SDK tests (colocated with source)
-- `kubernetes_platform/python/test/` — kfp-kubernetes tests
-- `frontend/src/` — Frontend tests (colocated .test.tsx files)
-- `test/` — Test scripts and infrastructure
-- `test_data/` — Pipeline files, compiled workflows, golden files
+### Test Files
+- `backend/test/end2end/` - E2E tests (Ginkgo)
+- `backend/test/v2/api/` - V2 API tests (Ginkgo)
+- `backend/test/integration/` - V1 integration tests
+- `backend/test/compiler/` - Compiler tests (Ginkgo)
+- `sdk/python/test/` - Python SDK tests (pytest)
+- `frontend/src/` - Frontend tests (Vitest, co-located)
+- `test/frontend-integration-test/` - Frontend E2E (WebdriverIO)
+- `test/server-integration-test/` - Server integration
 
-### Code Quality
-- `.golangci.yaml` — Go linter config (6 linters)
-- `frontend/.eslintrc.yaml` — Frontend ESLint config
-- `.pre-commit-config.yaml` — Pre-commit hooks (12 hooks across 7 repos)
-- `mypy.ini` — Python type checking (lenient)
-- `.pylintrc` — Python linting (not CI-enforced)
-- `pytest.ini` — Pytest config
+### Configuration
+- `.golangci.yaml` - Go linter configuration
+- `.pre-commit-config.yaml` - Pre-commit hooks
+- `pytest.ini` - pytest configuration
+- `mypy.ini` - mypy type checking
+- `.pylintrc` - pylint configuration
+- `.github/dependabot.yml` - Dependabot (gomod)
+- `Makefile` - Build targets
+- `justfile` - Developer convenience commands
 
 ### Container Images
-- `backend/Dockerfile` — API server image
-- `backend/Dockerfile.*` — 6 backend component Dockerfiles
-- `frontend/Dockerfile` — Frontend image
-- `backend/metadata_writer/Dockerfile` — Metadata writer
-- `backend/src/cache/deployer/Dockerfile` — Cache deployer
-- `third_party/metadata_envoy/Dockerfile` — Metadata envoy
-
-### Security
-- `.github/workflows/trivy.yml` — Weekly Trivy scan (schedule-only)
-- `.github/workflows/codeql.yml` — Weekly CodeQL SAST (schedule-only)
+- `backend/Dockerfile` - API server
+- `backend/Dockerfile.driver` - Pipeline driver
+- `backend/Dockerfile.launcher` - Pipeline launcher
+- `backend/Dockerfile.persistenceagent` - Persistence agent
+- `backend/Dockerfile.cacheserver` - Cache server
+- `frontend/Dockerfile` - Frontend (UBI9 nginx)
+- `proxy/Dockerfile` - Inverting proxy
 
 ### Agent Rules
-- `AGENTS.md` — 700-line comprehensive agent guide
-- `CLAUDE.md` — Symlink to AGENTS.md
+- `AGENTS.md` - Comprehensive agent guide (44KB)
+- `CLAUDE.md` - Symlink to AGENTS.md

@@ -1,163 +1,158 @@
 ---
 repository: "opendatahub-io/rest-proxy"
-overall_score: 3.4
+overall_score: 3.9
 scorecard:
   - dimension: "Unit Tests"
     score: 5.0
-    status: "Tests cover core marshaling logic but only 2 of 4 source files tested; no coverage for bytes.go or main.go"
+    status: "Core marshaling logic tested, but missing coverage for main.go, bytes.go, and error paths"
   - dimension: "Integration/E2E"
     score: 1.0
-    status: "No integration or E2E tests; core gRPC-to-REST proxy function untested end-to-end"
+    status: "No integration or E2E tests — no gRPC server testing, no cluster-based validation"
   - dimension: "Build Integration"
-    score: 4.0
-    status: "PR builds dev Docker image and runs tests inside it; no Konflux simulation or runtime validation"
+    score: 6.0
+    status: "PR builds Docker image with multi-arch support, but no Konflux simulation or runtime validation"
   - dimension: "Image Testing"
-    score: 3.0
-    status: "Multi-arch builds with UBI9 base; no vulnerability scanning, SBOM, or runtime validation"
+    score: 5.0
+    status: "Good multi-stage Dockerfile with UBI base, but no runtime testing or health checks"
   - dimension: "Coverage Tracking"
     score: 2.0
-    status: "Coverage profile generated locally via Makefile but not uploaded or tracked; no thresholds"
+    status: "Cover profile generated locally but not reported, tracked, or enforced"
   - dimension: "CI/CD Automation"
+    score: 5.0
+    status: "Test and build workflows on PRs, but missing concurrency control, timeouts, and modern actions"
+  - dimension: "Static Analysis"
     score: 6.0
-    status: "4 workflows covering test/build/security/release with GHA caching; outdated action versions"
+    status: "golangci-lint v2 with pre-commit hooks, but no Dependabot/Renovate for dependency alerts"
   - dimension: "Agent Rules"
     score: 0.0
-    status: "No CLAUDE.md, no .claude/ directory, no agent rules for test creation"
+    status: "No CLAUDE.md, AGENTS.md, or .claude/ directory — zero AI agent guidance"
 critical_gaps:
-  - title: "No integration or E2E tests for the gRPC-to-REST proxy"
-    impact: "Core proxy functionality (HTTP-to-gRPC translation, TLS, error handling) is completely untested in a realistic environment"
+  - title: "No integration or E2E tests"
+    impact: "gRPC-to-REST proxy translation is never validated end-to-end; regressions in protocol handling go undetected until production"
     severity: "HIGH"
     effort: "16-24 hours"
-  - title: "No container vulnerability scanning"
-    impact: "Security vulnerabilities in base images and dependencies go undetected until production"
-    severity: "HIGH"
-    effort: "2-4 hours"
   - title: "No coverage tracking or enforcement"
-    impact: "Test coverage can silently regress; no visibility into untested code paths"
+    impact: "Coverage profile is generated but never uploaded or gated — PRs can silently reduce coverage"
     severity: "HIGH"
     effort: "2-4 hours"
-  - title: "No tests for main.go (server startup, TLS, env var parsing)"
-    impact: "Configuration errors, TLS misconfigurations, and startup failures not caught until deployment"
+  - title: "No dependency alert configuration"
+    impact: "Vulnerable dependencies (e.g., grpc, protobuf) are not flagged automatically — relies on manual monitoring"
     severity: "HIGH"
-    effort: "8-12 hours"
-  - title: "Outdated GitHub Action versions (v2/v3)"
-    impact: "Missing security patches and features; Node.js 16 deprecation warnings"
+    effort: "1-2 hours"
+  - title: "Missing FIPS build tags"
+    impact: "While UBI base images are used and no non-FIPS crypto imports were found, no FIPS build tags are present for formal compliance"
     severity: "MEDIUM"
-    effort: "1-2 hours"
+    effort: "4-8 hours"
 quick_wins:
-  - title: "Add Trivy scanning to PR and push workflows"
+  - title: "Add Dependabot configuration for Go modules and Docker"
     effort: "1-2 hours"
-    impact: "Early detection of CVEs in base images and dependencies"
-  - title: "Integrate codecov for coverage tracking"
+    impact: "Automated dependency update PRs with security alert integration"
+  - title: "Add Codecov integration to test workflow"
     effort: "2-3 hours"
-    impact: "Visibility into test coverage with PR comments and enforcement thresholds"
-  - title: "Update GitHub Action versions to latest (v4)"
-    effort: "1 hour"
-    impact: "Fix Node.js deprecation warnings and get latest security patches"
-  - title: "Add concurrency control to CI workflows"
-    effort: "30 minutes"
-    impact: "Cancel stale PR runs to save CI resources"
-  - title: "Add Dependabot or Renovate for dependency updates"
-    effort: "1 hour"
-    impact: "Automated PRs for dependency security updates"
+    impact: "PR coverage reporting and threshold enforcement"
+  - title: "Add concurrency control and timeouts to CI workflows"
+    effort: "1-2 hours"
+    impact: "Prevent stale PR runs and reduce CI resource waste"
+  - title: "Create basic CLAUDE.md with test patterns"
+    effort: "2-3 hours"
+    impact: "AI agents can generate consistent, framework-appropriate tests"
 recommendations:
   priority_0:
-    - "Add integration tests that start the REST proxy against a mock gRPC server and validate end-to-end request/response flow"
-    - "Add container vulnerability scanning (Trivy) to PR and push workflows"
-    - "Integrate codecov with coverage thresholds to prevent regression"
+    - "Add gRPC integration tests with a real gRPC server to validate end-to-end proxy behavior"
+    - "Add Codecov integration with coverage threshold enforcement (e.g., 70% minimum)"
+    - "Configure Dependabot for gomod and docker ecosystems"
   priority_1:
-    - "Add unit tests for main.go (env var parsing, TLS configuration, server startup)"
-    - "Add unit tests for bytes.go (splitRawBytes, unmarshalBytesJson edge cases)"
-    - "Create agent rules for test creation patterns (.claude/rules/)"
-    - "Update all GitHub Action versions to v4"
+    - "Add container image startup and health check validation tests"
+    - "Add FIPS build tags and boringcrypto configuration for formal compliance"
+    - "Add unit tests for bytes.go parsing logic and main.go error handling"
+    - "Create CLAUDE.md with Go testing patterns and project-specific guidance"
   priority_2:
-    - "Add SBOM generation for container images"
-    - "Add image signing/attestation (cosign)"
-    - "Add performance/load testing for proxy throughput"
-    - "Add Dependabot configuration for automated dependency updates"
+    - "Add concurrency control to all CI workflows"
+    - "Update GitHub Actions to latest versions (checkout@v4, etc.)"
+    - "Add HEALTHCHECK instruction to Dockerfile"
+    - "Implement test parallelization with t.Parallel() and subtests"
 ---
 
 # Quality Analysis: rest-proxy
 
 ## Executive Summary
-
-- **Overall Score: 3.4/10**
-- **Repository Type**: Go gRPC-to-REST reverse proxy for KServe inference protocol
-- **Primary Language**: Go (800 lines hand-written source, 2,774 lines generated protobuf code)
-- **Key Strengths**: Well-structured multi-stage Dockerfile, multi-arch builds (4 platforms), CodeQL SAST scanning, pre-commit hooks with golangci-lint
-- **Critical Gaps**: No integration/E2E tests, no container scanning, no coverage tracking, 2 of 4 source files untested
-- **Agent Rules Status**: Missing - No CLAUDE.md, no .claude/ directory
+- **Overall Score: 3.9/10**
+- **Repository Type**: Go gRPC-to-REST proxy for KServe model inference (V2 protocol)
+- **Primary Language**: Go 1.25
+- **RHOAI Component**: Model Serving (RHOAIENG)
+- **Tier**: Midstream (opendatahub-io)
+- **Key Strengths**: Good Dockerfile practices (multi-stage, UBI9 base, multi-arch), solid linting with pre-commit hooks, core marshaling logic is well-tested
+- **Critical Gaps**: No integration/E2E tests, no coverage enforcement, no dependency alerts, no agent rules
+- **Agent Rules Status**: Missing — no CLAUDE.md, AGENTS.md, or .claude/ directory
 
 ## Quality Scorecard
-
-| Dimension | Score | Status |
-|-----------|-------|--------|
-| Unit Tests | 5/10 | Core marshaling logic tested; bytes.go and main.go untested |
-| Integration/E2E | **1/10** | **No integration or E2E tests at all** |
-| **Build Integration** | **4/10** | **PR builds dev image; no Konflux simulation** |
-| Image Testing | 3/10 | Multi-arch builds; no runtime validation or scanning |
-| Coverage Tracking | 2/10 | Cover profile generated but not tracked or enforced |
-| CI/CD Automation | 6/10 | 4 workflows with caching; outdated action versions |
-| Agent Rules | 0/10 | No agent rules exist |
+| Dimension | Weight | Score | Status |
+|-----------|--------|-------|--------|
+| Unit Tests | 15% | 5.0/10 | Core marshaling tested; missing bytes.go, main.go, error paths |
+| Integration/E2E | 20% | 1.0/10 | No integration or E2E tests whatsoever |
+| Build Integration | 15% | 6.0/10 | PR Docker builds with multi-arch; no Konflux simulation |
+| Image Testing | 10% | 5.0/10 | Multi-stage UBI9 Dockerfile; no runtime validation |
+| Coverage Tracking | 10% | 2.0/10 | Cover profile generated but not reported or enforced |
+| CI/CD Automation | 15% | 5.0/10 | Test + build on PRs; missing concurrency, timeouts |
+| Static Analysis | 10% | 6.0/10 | golangci-lint v2 + pre-commit; no Dependabot/Renovate |
+| Agent Rules | 5% | 0.0/10 | Completely absent |
 
 ## Critical Gaps
 
 ### 1. No Integration or E2E Tests
-- **Impact**: The proxy's core function (translating REST HTTP requests to gRPC protobuf) is never tested end-to-end. TLS handling, server startup, graceful shutdown, and error responses are completely untested.
 - **Severity**: HIGH
+- **Impact**: The proxy translates REST requests to gRPC and gRPC responses to REST — this protocol translation is never tested end-to-end against a real gRPC server. Regressions in connection handling, TLS configuration, or error propagation are undetectable until production.
 - **Effort**: 16-24 hours
-- **What's Missing**: A test that starts the proxy, sends HTTP requests, and validates gRPC forwarding with a mock backend server.
+- **Current state**: Only unit tests exist for marshaling/unmarshaling logic. No tests validate the HTTP server, gRPC client connection, TLS setup, or full request/response lifecycle.
 
-### 2. No Container Vulnerability Scanning
-- **Impact**: The runtime image (`ubi9/ubi-micro:9.5`) and Go dependencies are never scanned for CVEs. The team relies on manual `go.mod replace` directives (e.g., CVE-2024-45338 fix) rather than automated scanning.
+### 2. No Coverage Tracking or Enforcement
 - **Severity**: HIGH
+- **Impact**: The Makefile generates a `cover.out` profile (`go test -coverprofile`), but this is never uploaded to Codecov or any coverage service. PRs can silently reduce coverage without any gate or notification.
 - **Effort**: 2-4 hours
 
-### 3. No Coverage Tracking or Enforcement
-- **Impact**: The Makefile generates `cover.out` but it's never uploaded to codecov or any tracking service. Coverage can regress silently.
+### 3. No Dependency Alert Configuration
 - **Severity**: HIGH
-- **Effort**: 2-4 hours
-
-### 4. Untested Source Files
-- **Impact**: `proxy/main.go` (server startup, TLS config, env var parsing) and `proxy/bytes.go` (raw bytes splitting, BYTES tensor handling) have zero test coverage. These contain security-sensitive code (TLS config with `InsecureSkipVerify`).
-- **Severity**: HIGH
-- **Effort**: 8-12 hours
-
-### 5. Outdated GitHub Action Versions
-- **Impact**: Using `actions/checkout@v3`, `docker/setup-buildx-action@v2`, `docker/build-push-action@v4`, `github/codeql-action/init@v2`. These are 1-2 major versions behind, missing security patches and triggering Node.js 16 deprecation warnings.
-- **Severity**: MEDIUM
+- **Impact**: No `.github/dependabot.yml` or Renovate config exists. Dependencies like `grpc v1.56.3`, `protobuf v1.35.1`, and `controller-runtime v0.14.1` are not automatically monitored for vulnerabilities. The repo already uses a `replace` directive to fix CVE-2024-45338 in `golang.org/x/net`, indicating manual dependency management is the current approach.
 - **Effort**: 1-2 hours
+
+### 4. Missing FIPS Build Configuration
+- **Severity**: MEDIUM
+- **Impact**: While UBI9 base images are used (FIPS-capable) and no non-FIPS crypto imports were detected in source code, there are no FIPS build tags (`-tags=fips`, `GOEXPERIMENT=boringcrypto`). The `crypto/tls` usage in `main.go` relies on Go's standard TLS library, not BoringCrypto.
+- **Effort**: 4-8 hours
 
 ## Quick Wins
 
-### 1. Add Trivy Scanning (1-2 hours)
-Add container image scanning to the build workflow:
+### 1. Add Dependabot Configuration (1-2 hours)
+Create `.github/dependabot.yml`:
 ```yaml
-- name: Run Trivy vulnerability scanner
-  uses: aquasecurity/trivy-action@0.28.0
-  with:
-    image-ref: '${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }}'
-    format: 'sarif'
-    output: 'trivy-results.sarif'
-    severity: 'CRITICAL,HIGH'
-
-- name: Upload Trivy scan results
-  uses: github/codeql-action/upload-sarif@v3
-  with:
-    sarif_file: 'trivy-results.sarif'
+version: 2
+updates:
+  - package-ecosystem: "gomod"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    open-pull-requests-limit: 10
+  - package-ecosystem: "docker"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
 ```
 
-### 2. Integrate Codecov (2-3 hours)
-Upload the existing coverage profile to codecov:
+### 2. Add Codecov Integration (2-3 hours)
+Update `.github/workflows/test.yml` to upload coverage:
 ```yaml
-- name: Run tests with coverage
-  run: ./scripts/develop.sh make test
+      - name: Run unit test
+        run: ./scripts/develop.sh make test
 
-- name: Upload coverage
-  uses: codecov/codecov-action@v4
-  with:
-    files: cover.out
-    fail_ci_if_error: true
+      - name: Upload coverage
+        uses: codecov/codecov-action@v4
+        with:
+          files: cover.out
+          fail_ci_if_error: true
 ```
 
 Add `.codecov.yml`:
@@ -166,283 +161,193 @@ coverage:
   status:
     project:
       default:
-        target: 60%
+        target: 70%
     patch:
       default:
         target: 80%
 ```
 
-### 3. Update Action Versions (1 hour)
-Update all workflow files to use latest action versions:
-- `actions/checkout@v3` -> `actions/checkout@v4`
-- `docker/setup-buildx-action@v2` -> `docker/setup-buildx-action@v3`
-- `docker/build-push-action@v4` -> `docker/build-push-action@v6`
-- `docker/login-action@v2` -> `docker/login-action@v3`
-- `docker/setup-qemu-action@v2` -> `docker/setup-qemu-action@v3`
-- `github/codeql-action/*@v2` -> `github/codeql-action/*@v3`
-
-### 4. Add Concurrency Control (30 minutes)
-Add to both `test.yml` and `build.yml`:
+### 3. Add Concurrency Control (1-2 hours)
+Add to each workflow:
 ```yaml
 concurrency:
-  group: ${{ github.workflow }}-${{ github.head_ref || github.ref }}
+  group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 ```
 
-### 5. Add Dependabot (1 hour)
-Create `.github/dependabot.yml`:
-```yaml
-version: 2
-updates:
-  - package-ecosystem: gomod
-    directory: /
-    schedule:
-      interval: weekly
-  - package-ecosystem: github-actions
-    directory: /
-    schedule:
-      interval: weekly
-  - package-ecosystem: docker
-    directory: /
-    schedule:
-      interval: weekly
-```
+### 4. Create Basic Agent Rules (2-3 hours)
+Create a `CLAUDE.md` file with Go testing patterns, project context, and test creation guidelines. Use `/test-rules-generator` to bootstrap this.
 
 ## Detailed Findings
 
-### CI/CD Pipeline
+### Unit Tests
+- **Test files**: 2 (`proxy/request_test.go`, `proxy/marshaler_test.go`)
+- **Source files**: 4 (excluding `gen/`) — `main.go`, `request.go`, `marshaler.go`, `bytes.go`
+- **Test-to-code ratio**: ~36% by lines (445 test lines / 1245 source lines)
+- **Framework**: Go `testing` package with `google/go-cmp` and `proto.Equal`
+- **Coverage areas**:
+  - `request_test.go`: Tests REST-to-protobuf request decoding for 1D-4D tensor data and BYTES tensor types (strings, base64, numeric arrays). 6 BYTES test cases with various shapes and content types.
+  - `marshaler_test.go`: Tests protobuf-to-REST response marshaling including INT64, BYTES, raw output contents, and base64 encoding.
+- **Gaps**:
+  - No tests for `main.go` (HTTP server setup, TLS config, environment variable parsing, `getIntegerEnv`)
+  - No tests for `bytes.go` (raw byte parsing, string array unmarshaling, escape handling, `splitRawBytes`, `isBase64Content`, `unmarshalNestedNumeric`)
+  - No error path testing (invalid datatypes, malformed JSON, FP16 unsupported type)
+  - No test isolation — tests don't use `t.Parallel()` or `t.Run()` subtests
+  - No table-driven tests with `t.Run()` for named sub-cases
 
-**Workflows (4 total):**
+### Integration/E2E Tests
+- **Status**: Completely absent
+- No `e2e/`, `integration/`, or `test/` directories
+- No gRPC server mock or test server for end-to-end proxy validation
+- No container-based testing (testcontainers, docker-compose)
+- No cluster testing (Kind, Minikube, envtest)
+- No multi-version testing
 
-| Workflow | Trigger | Purpose |
-|----------|---------|---------|
-| `test.yml` | PR to main/release branches | Build dev image, lint, unit tests |
-| `build.yml` | PR, push, schedule, dispatch | Multi-arch Docker build and push |
-| `codeql.yml` | PR, push to main, daily schedule | CodeQL SAST analysis for Go |
-| `create-tag-release.yml` | Manual dispatch | Tag creation and changelog generation |
+### Build Integration
+- **PR builds**: `build.yml` triggers on PRs to `main` and `release-*` branches; builds Docker image but does not push (`push: false` for PRs)
+- **Multi-arch**: Supports 4 architectures — `linux/amd64`, `linux/arm64`, `linux/ppc64le`, `linux/s390x`
+- **Caching**: Uses GitHub Actions cache for Docker BuildKit (`cache-from: type=gha`, `cache-to: type=gha,mode=max`)
+- **Test workflow**: Builds a dev container image and runs lint + tests inside it, ensuring consistent build environment
+- **Gaps**:
+  - No Konflux build simulation
+  - No image startup validation post-build
+  - No Kustomize/manifest validation (less relevant for this project type)
 
-**Strengths:**
-- Tests run inside Docker dev container ensuring consistent environment
-- Multi-architecture builds (amd64, arm64, ppc64le, s390x) with QEMU
-- GHA build cache (`cache-from: type=gha`, `cache-to: type=gha,mode=max`)
-- CodeQL scanning on PRs with daily scheduled scans
-- Clean separation of test and build workflows
+### Image Testing
+- **Dockerfile quality**: Well-structured 3-stage multi-stage build (develop → build → runtime)
+  - **Stage 1 (develop)**: UBI9 go-toolset with protoc, pre-commit, Node.js for development
+  - **Stage 2 (build)**: Cross-compilation with `BUILDPLATFORM`/`TARGETPLATFORM` ARGs, layer caching for go build
+  - **Stage 3 (runtime)**: Minimal `ubi9/ubi-micro:9.5` with only the compiled binary
+- **Base images**: Uses UBI9 (FIPS-capable Red Hat Universal Base Images) throughout
+- **Security**: Runs as non-root user (`USER 2000` in runtime stage), `CGO_ENABLED=0` for static binary
+- **Gaps**:
+  - No `HEALTHCHECK` instruction
+  - No readiness/liveness probe definitions
+  - No container runtime testing (image startup, port binding, gRPC connectivity)
+  - No image scanning integration (out of scope per instructions, but noted)
 
-**Weaknesses:**
-- No concurrency control (stale PR runs waste resources)
-- Outdated action versions (v2/v3 instead of v4)
-- No test result reporting (JUnit XML, etc.)
-- No artifact upload for coverage reports
-- Build workflow has no image startup validation
+### Coverage Tracking
+- **Current state**: Makefile target `make test` runs `go test -coverprofile cover.out`
+- **Reporting**: None — `cover.out` is generated but not uploaded to any service
+- **Thresholds**: None — no coverage minimum or gate
+- **PR integration**: None — no coverage comments or status checks on PRs
 
-### Test Coverage
+### CI/CD Automation
+- **Workflow inventory**:
+  | Workflow | Trigger | Purpose |
+  |----------|---------|---------|
+  | `test.yml` | PR (main, release-*) | Build dev image, lint, unit tests |
+  | `build.yml` | PR, push, schedule (Mon/Wed), dispatch | Build multi-arch Docker image |
+  | `codeql.yml` | PR, push, schedule (daily) | CodeQL security scanning (out of scope) |
+  | `create-tag-release.yml` | dispatch | Create tag and release with changelog |
+- **Strengths**: Tests and builds run on PRs; scheduled builds for regression detection; release automation
+- **Gaps**:
+  - No `concurrency:` control — stale PR runs continue wasting resources
+  - No `timeout-minutes:` on test/build workflows (only CodeQL has timeout)
+  - Using outdated action versions (`actions/checkout@v3`, `docker/setup-buildx-action@v2`)
+  - No test parallelization or matrix strategy
+  - No caching for Go modules in test workflow (though tests run inside Docker)
 
-**Test Files (2 files, 445 lines):**
+### Static Analysis
 
-| File | Lines | Tests | What's Covered |
-|------|-------|-------|----------------|
-| `proxy/request_test.go` | 269 | 2 test functions | REST request decoding (1D-4D tensors, BYTES type) |
-| `proxy/marshaler_test.go` | 176 | 4 test functions | REST response marshaling, raw output, BYTES encoding |
+#### Linting
+- **golangci-lint v2**: Well-configured with 6 linters enabled (errcheck, govet, ineffassign, staticcheck, unused, goconst)
+- **Formatters**: gofmt and goimports configured
+- **Exclusions**: Sensible exclusions for test files (gocyclo, errcheck, dupl, gosec) and generated code (`gen/`)
+- **Pre-commit**: `.pre-commit-config.yaml` with golangci-lint (v2.8.0) and prettier
+- **Development workflow**: Pre-commit hooks installed in Docker dev container; `make fmt` runs linting
+- **Gap**: Could enable additional linters (gosec for security, gocyclo for complexity, dupl for duplication detection)
 
-**Untested Files:**
+#### FIPS Compatibility
+- **Source code**: No non-FIPS crypto imports detected (`crypto/md5`, `crypto/des`, `crypto/rc4`, `math/rand` absent)
+- **`crypto/tls`**: Used in `main.go` for TLS configuration — relies on Go's standard TLS, not BoringCrypto
+- **Base images**: UBI9 (FIPS-capable) — good
+- **Build tags**: No FIPS build tags (`-tags=fips`, `GOEXPERIMENT=boringcrypto`) present
+- **Assessment**: Clean source code but lacks formal FIPS build configuration
 
-| File | Lines | What's Missing |
-|------|-------|----------------|
-| `proxy/main.go` | 140 | Server startup, TLS config, env var parsing, gRPC registration |
-| `proxy/bytes.go` | 212 | `unmarshalBytesJson`, `unmarshalStringArray`, `splitRawBytes`, `isBase64Content` edge cases |
+#### Dependency Alerts
+- **Dependabot**: Not configured — no `.github/dependabot.yml`
+- **Renovate**: Not configured — no `renovate.json` or `.renovaterc`
+- **Manual**: Using `replace` directives in `go.mod` to pin CVE fixes (e.g., `golang.org/x/net` for CVE-2024-45338)
+- **Risk**: Dependencies are manually managed; new vulnerabilities require human discovery
 
-**Test Quality:**
-- Good use of table-driven tests for BYTES tensor cases
-- Tests validate protobuf serialization round-trips
-- Uses `google.golang.org/protobuf/proto.Equal` for proto message comparison
-- Uses `github.com/google/go-cmp` for diff reporting
-- Tests run via `go test -coverprofile cover.out`
-
-**Test-to-Code Ratio**: 445 test lines / 800 source lines = **0.56** (only counting hand-written code)
-
-**Missing Test Categories:**
-- No integration tests (HTTP handler testing)
-- No E2E tests (proxy with mock gRPC backend)
-- No TLS/mTLS tests
-- No error path tests (malformed requests, gRPC failures)
-- No benchmark tests for proxy throughput
-- No fuzz tests for JSON parsing
-
-### Code Quality
-
-**Linting (golangci-lint v2):**
-- 6 linters enabled: errcheck, govet, ineffassign, staticcheck, unused, goconst
-- Formatters: gofmt, goimports
-- Test exclusions: gocyclo, errcheck, dupl, gosec excluded from test files
-- Generated code (`gen/`) properly excluded
-- Configuration is well-structured and uses v2 format
-
-**Pre-commit Hooks:**
-- golangci-lint runs on all non-generated files
-- Prettier runs on non-GitHub workflow files
-- CI runs pre-commit inside Docker dev container
-
-**Static Analysis:**
-- CodeQL for Go (security-focused SAST)
-- No gosec enabled in golangci-lint
-- No additional SAST tools
-
-**Missing:**
-- No secret detection (gitleaks, trufflehog)
-- gosec linter not enabled (excluded from test files but not enabled at all)
-
-### Container Images
-
-**Dockerfile Analysis:**
-- **3-stage build**: develop (tooling) -> build (compile) -> runtime (minimal)
-- **Base images**: `registry.access.redhat.com/ubi9/go-toolset:$GOLANG_VERSION` (build), `registry.access.redhat.com/ubi9/ubi-micro:9.5` (runtime)
-- **Multi-arch**: linux/amd64, linux/arm64, linux/ppc64le, linux/s390x via QEMU
-- **Non-root user**: Runtime image uses `USER 2000`
-- **Minimal runtime**: ubi-micro with only the compiled binary
-- **Build optimization**: Go module download cached, CGO disabled, build cache mounts
-
-**Strengths:**
-- Excellent multi-stage build with minimal runtime image
-- Proper cross-compilation using `BUILDPLATFORM`/`TARGETPLATFORM`
-- Build cache mounts for Go build and pkg caches
-- Non-root user in runtime image
-- UBI9 (Red Hat Universal Base Image) for compliance
-
-**Weaknesses:**
-- No vulnerability scanning (Trivy, Snyk, Grype)
-- No SBOM generation
-- No image signing (cosign)
-- No runtime validation (healthcheck, smoke test)
-- No `.dockerignore` optimization (file exists but not reviewed for completeness)
-- Hardcoded Go version in Dockerfile rather than CI matrix
-
-### Security
-
-**Present:**
-- CodeQL SAST scanning (Go) on PRs and daily schedule
-- CVE mitigation via `go.mod replace` directives (CVE-2024-45338 patched)
-- Non-root container runtime user
-- UBI9 base images (FIPS-validated crypto, Red Hat security updates)
-
-**Missing:**
-- No container vulnerability scanning (Trivy, Snyk, Grype)
-- No dependency scanning automation (Dependabot, Renovate)
-- No secret detection (gitleaks, trufflehog)
-- No SBOM generation or attestation
-- No image signing (cosign/sigstore)
-- gosec not enabled in golangci-lint despite being referenced in exclusion rules
-- TLS configuration in `main.go` uses `InsecureSkipVerify` option (configurable, but no test validates secure default)
-
-### Agent Rules (Agentic Flow Quality)
-
+### Agent Rules
 - **Status**: Missing
-- **Coverage**: None - no `.claude/` directory, no `CLAUDE.md`, no `AGENTS.md`
-- **Quality**: N/A
-- **Gaps**: No test automation guidance for AI agents. No patterns documented for:
-  - Unit test creation for Go protobuf/gRPC proxies
-  - Integration test patterns with mock gRPC servers
-  - Test data generation for tensor payloads
-  - Coverage requirements and enforcement
-- **Recommendation**: Generate test creation rules with `/test-rules-generator` to establish patterns for unit tests, integration tests, and protobuf test data
+- No `CLAUDE.md` or `AGENTS.md` in repository root
+- No `.claude/` directory or rules files
+- No `.claude/rules/` for test creation guidance
+- No `.claude/skills/` for custom skills
+- **Impact**: AI agents generating tests or code have no project-specific context about testing patterns, gRPC/protobuf conventions, or quality standards
 
 ## Recommendations
 
 ### Priority 0 (Critical)
-
-1. **Add integration tests for the REST proxy** (16-24 hours)
-   - Create a test that starts the HTTP server with a mock gRPC backend
-   - Validate REST-to-gRPC translation for all tensor types
-   - Test TLS configuration, error handling, and edge cases
-   - Test env var configuration (ports, max message size, TLS options)
-
-2. **Add container vulnerability scanning** (2-4 hours)
-   - Integrate Trivy into the build workflow
-   - Upload SARIF results to GitHub Security tab
-   - Set severity thresholds (fail on CRITICAL)
-
-3. **Integrate codecov for coverage tracking** (2-4 hours)
-   - Upload existing `cover.out` to codecov
-   - Set project target (60%) and patch target (80%)
-   - Add PR coverage comments
+1. **Add gRPC integration tests** — Create a test gRPC server that implements the KServe V2 inference protocol. Test the full proxy lifecycle: REST request → gRPC call → gRPC response → REST response. Validate TLS, error handling, and timeout behavior.
+2. **Add Codecov integration with threshold enforcement** — Upload `cover.out` to Codecov in the test workflow. Set project target at 70% and patch target at 80% to prevent coverage regression.
+3. **Configure Dependabot** — Add `.github/dependabot.yml` covering `gomod`, `docker`, and `github-actions` ecosystems for automated vulnerability detection and update PRs.
 
 ### Priority 1 (High Value)
-
-4. **Add unit tests for main.go and bytes.go** (8-12 hours)
-   - Test `getIntegerEnv` with valid/invalid/missing env vars
-   - Test TLS configuration logic
-   - Test `splitRawBytes` with edge cases
-   - Test `unmarshalBytesJson` with malformed input
-   - Test `isBase64Content` parameter parsing
-
-5. **Update GitHub Action versions** (1-2 hours)
-   - Update all actions to latest major versions
-   - Fix Node.js 16 deprecation warnings
-
-6. **Create agent rules** (2-3 hours)
-   - Add `.claude/rules/unit-tests.md` with Go testing patterns
-   - Add `.claude/rules/integration-tests.md` with gRPC proxy test patterns
-   - Document test data generation for tensor payloads
-
-7. **Add concurrency control and Dependabot** (1-2 hours)
-   - Cancel stale CI runs on updated PRs
-   - Automated dependency update PRs
+4. **Add unit tests for `bytes.go`** — The byte parsing logic (raw bytes splitting, string array unmarshaling, escape character handling, base64 decoding) is complex and currently untested. Add tests for edge cases: empty arrays, malformed JSON, invalid base64, mismatched shapes.
+5. **Add unit tests for `main.go`** — Test `getIntegerEnv()`, TLS configuration paths, and error handling for missing environment variables.
+6. **Add FIPS build configuration** — Add `GOEXPERIMENT=boringcrypto` or `-tags=fips` build flags. Validate that the runtime binary uses BoringCrypto for TLS operations.
+7. **Create CLAUDE.md with test patterns** — Document Go testing conventions, protobuf test helpers, and project-specific patterns. Use `/test-rules-generator` to bootstrap.
 
 ### Priority 2 (Nice-to-Have)
-
-8. **Add SBOM generation** (2-4 hours)
-   - Generate SPDX/CycloneDX SBOM during image build
-   - Attach to release artifacts
-
-9. **Add benchmark tests** (4-8 hours)
-   - Benchmark JSON-to-protobuf marshaling throughput
-   - Track regression across releases
-
-10. **Add fuzz testing** (4-8 hours)
-    - Fuzz `UnmarshalJSON` for `InputTensor`
-    - Fuzz `unmarshalBytesJson` for edge cases
-    - Go native fuzzing support (`testing.F`)
-
-11. **Enable gosec linter** (1-2 hours)
-    - Already referenced in golangci-lint exclusion rules
-    - Enable for non-test files to catch security issues
+8. **Add concurrency control** to all CI workflows to cancel stale runs and reduce resource usage.
+9. **Update GitHub Actions** to latest versions (`actions/checkout@v4`, `docker/setup-buildx-action@v3`, `docker/build-push-action@v5`).
+10. **Add `HEALTHCHECK`** instruction to the runtime stage of the Dockerfile.
+11. **Implement `t.Parallel()` and `t.Run()` subtests** for better test isolation and named test cases.
+12. **Add container image startup test** — Validate the binary starts and binds to the expected port inside the container.
 
 ## Comparison to Gold Standards
 
 | Dimension | rest-proxy | odh-dashboard | notebooks | kserve |
 |-----------|-----------|---------------|-----------|--------|
-| Unit Tests | 5/10 | 9/10 | 7/10 | 9/10 |
-| Integration/E2E | 1/10 | 9/10 | 8/10 | 9/10 |
-| Build Integration | 4/10 | 8/10 | 7/10 | 8/10 |
-| Image Testing | 3/10 | 7/10 | 9/10 | 7/10 |
-| Coverage Tracking | 2/10 | 8/10 | 5/10 | 9/10 |
-| CI/CD Automation | 6/10 | 9/10 | 8/10 | 9/10 |
-| Agent Rules | 0/10 | 8/10 | 3/10 | 4/10 |
-| **Overall** | **3.4/10** | **8.5/10** | **7.0/10** | **8.2/10** |
+| Unit Tests | 5/10 | 8/10 | 6/10 | 8/10 |
+| Integration/E2E | 1/10 | 9/10 | 7/10 | 9/10 |
+| Build Integration | 6/10 | 7/10 | 8/10 | 7/10 |
+| Image Testing | 5/10 | 6/10 | 9/10 | 6/10 |
+| Coverage Tracking | 2/10 | 8/10 | 5/10 | 8/10 |
+| CI/CD Automation | 5/10 | 9/10 | 8/10 | 8/10 |
+| Static Analysis | 6/10 | 7/10 | 6/10 | 7/10 |
+| Agent Rules | 0/10 | 7/10 | 3/10 | 4/10 |
+| **Overall** | **3.9/10** | **7.9/10** | **6.8/10** | **7.4/10** |
 
-### Key Gaps vs Gold Standards
-
-- **odh-dashboard**: Has multi-layer testing (unit, integration, contract, E2E), codecov enforcement, comprehensive CI/CD with concurrency control, and detailed agent rules
-- **notebooks**: 5-layer image validation, multi-arch testing with runtime smoke tests, Trivy scanning
-- **kserve**: Coverage enforcement (codecov thresholds), multi-version K8s testing, comprehensive operator E2E tests
+### Key Differentiators
+- **vs. odh-dashboard**: Missing contract tests, coverage enforcement, comprehensive CI, and agent rules
+- **vs. notebooks**: Missing image validation layers, multi-arch testing (though multi-arch build exists)
+- **vs. kserve**: Despite being a KServe sub-project, rest-proxy lacks the parent project's coverage enforcement, E2E testing, and webhook validation
 
 ## File Paths Reference
 
-| Category | File | Purpose |
-|----------|------|---------|
-| CI/CD | `.github/workflows/test.yml` | PR test workflow (lint + unit tests) |
-| CI/CD | `.github/workflows/build.yml` | Multi-arch Docker build and push |
-| CI/CD | `.github/workflows/codeql.yml` | CodeQL SAST scanning |
-| CI/CD | `.github/workflows/create-tag-release.yml` | Manual tag and release |
-| Source | `proxy/main.go` | HTTP server, gRPC registration, TLS config |
-| Source | `proxy/request.go` | REST request JSON-to-protobuf decoding |
-| Source | `proxy/marshaler.go` | REST response protobuf-to-JSON encoding |
-| Source | `proxy/bytes.go` | BYTES tensor data handling |
-| Tests | `proxy/request_test.go` | Request decoding tests (1D-4D, BYTES) |
-| Tests | `proxy/marshaler_test.go` | Response marshaling tests |
-| Generated | `gen/grpc_predict_v2*.go` | Generated protobuf/gRPC gateway code |
-| Config | `.golangci.yaml` | Linter configuration (6 linters + formatters) |
-| Config | `.pre-commit-config.yaml` | Pre-commit hooks (golangci-lint, prettier) |
-| Build | `Dockerfile` | 3-stage multi-arch build |
-| Build | `Makefile` | Build, test, format targets |
-| Build | `go.mod` | Go module with CVE-2024-45338 fix |
-| Proto | `grpc_predict_v2.proto` | KServe gRPC inference protocol definition |
+### CI/CD
+- `.github/workflows/test.yml` — PR test workflow (lint + unit tests)
+- `.github/workflows/build.yml` — Docker image build workflow (multi-arch)
+- `.github/workflows/codeql.yml` — CodeQL security analysis
+- `.github/workflows/create-tag-release.yml` — Release automation
+- `Makefile` — Build targets (test, build, fmt, develop)
+
+### Source Code
+- `proxy/main.go` — HTTP/gRPC server setup, TLS config
+- `proxy/request.go` — REST-to-protobuf request transformation
+- `proxy/marshaler.go` — Protobuf-to-REST response transformation
+- `proxy/bytes.go` — BYTES tensor data handling
+- `gen/` — Generated gRPC gateway stubs (excluded from analysis)
+
+### Testing
+- `proxy/request_test.go` — Request decoding tests (1D-4D tensors, BYTES)
+- `proxy/marshaler_test.go` — Response marshaling tests
+
+### Container
+- `Dockerfile` — 3-stage multi-stage build (develop, build, runtime)
+- `.dockerignore` — Build context exclusions
+
+### Code Quality
+- `.golangci.yaml` — Linter configuration (v2)
+- `.pre-commit-config.yaml` — Pre-commit hooks (golangci-lint, prettier)
+- `scripts/fmt.sh` — Lint runner script
+- `scripts/develop.sh` — Dev container runner script
+
+### Dependencies
+- `go.mod` — Go module dependencies (Go 1.25)
+- `go.sum` — Dependency checksums

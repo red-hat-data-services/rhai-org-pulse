@@ -4,6 +4,7 @@ import { useWheelBrowse, useWheelPackageSearch, useWheelFilters } from '../compo
 import { formatDate, envBadgeClass, archBadgeClass, getCommitUrl } from '../utils/formatting'
 import { apiRequest, getApiBase } from '@shared/client/services/api'
 import { impersonatingUid } from '@shared/client/state/impersonation'
+import PersistentSearchBar from '../components/PersistentSearchBar.vue'
 
 const nav = inject('moduleNav')
 
@@ -161,7 +162,7 @@ watch(activeTab, (tab) => {
 // --- Artifacts tab ---
 const ITEMS_PER_PAGE = 10
 const AVAILABLE_ARCHS = ['aarch64', 'ppc64le', 's390x', 'x86_64']
-const AVAILABLE_ACCELS = ['cpu', 'cuda', 'gaudi', 'neuron', 'rocm', 'spyre', 'tpu']
+const AVAILABLE_ACCELS = ['cpu', 'cuda', 'gaudi', 'neuron', 'rocm', 'rubin', 'spyre', 'tpu']
 const DATE_RANGE_OPTIONS = [
   { value: '7d', label: 'Last 7 days' },
   { value: '30d', label: 'Last 30 days' },
@@ -328,11 +329,14 @@ onUnmounted(() => { clearTimeout(searchTimeout); clearTimeout(containerHoverTime
 <template>
   <div class="space-y-6">
     <!-- Header -->
-    <div>
-      <h1 class="text-xl font-bold text-gray-900 dark:text-gray-100">Wheel Collections</h1>
-      <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">
-        Browse wheel collection releases or search for specific packages across releases
-      </p>
+    <div class="flex items-start justify-between gap-4">
+      <div>
+        <h1 class="text-xl font-bold text-gray-900 dark:text-gray-100">Wheel Collections</h1>
+        <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">
+          Browse wheel collection releases or search for specific packages across releases
+        </p>
+      </div>
+      <PersistentSearchBar />
     </div>
 
     <!-- Tabs -->
@@ -915,5 +919,6 @@ onUnmounted(() => { clearTimeout(searchTimeout); clearTimeout(containerHoverTime
         </div>
       </template>
     </div>
+
   </div>
 </template>

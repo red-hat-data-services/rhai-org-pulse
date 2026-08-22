@@ -332,7 +332,7 @@
     <div class="container">
         <header>
             <h1>Quality Analysis Report</h1>
-            <p class="timestamp">Generated on July 06, 2026 at 04:14 PM</p>
+            <p class="timestamp">Generated on July 20, 2026 at 04:05 PM</p>
             <h2 style="margin-top: 1rem; font-weight: 400;">opendatahub-io/model-registry</h2>
         </header>
 
@@ -342,13 +342,13 @@
                     <svg width="200" height="200">
                         <circle class="bg-circle" cx="100" cy="100" r="90"></circle>
                         <circle class="score-arc" cx="100" cy="100" r="90"
-                                stroke="#ffc107"
+                                stroke="#28a745"
                                 stroke-dasharray="565.4861999999999"
-                                stroke-dashoffset="118.75210199999997"
+                                stroke-dashoffset="107.44237800000002"
                                 id="scoreArc"></circle>
                     </svg>
                     <div class="score-text">
-                        <div class="score-value">7.9</div>
+                        <div class="score-value">8.1</div>
                         <div class="score-label">Overall Score</div>
                     </div>
                 </div>
@@ -365,37 +365,42 @@
                         <div class="scorecard-item">
                             <h3>Unit Tests</h3>
                             <div class="scorecard-score" style="color: #28a745;">8.0/10</div>
-                            <div class="scorecard-status">157 Go test files with testcontainers, pytest, Jest; 31% test-to-code ratio</div>
+                            <div class="scorecard-status">171 Go + 39 Python + 63 UI test files; stretchr/testify, pytest, Jest/Cypress; 33% Go test-to-code ratio</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Integration/E2E</h3>
                             <div class="scorecard-score" style="color: #28a745;">9.0/10</div>
-                            <div class="scorecard-status">E2E on KinD with multi-K8s, multi-DB, multi-Python, Cypress, fuzz testing</div>
+                            <div class="scorecard-status">Kind-based E2E across Python client, CSI, Catalog; multi-K8s (v1.33/v1.34), multi-DB (MySQL/Postgres), multi-Python (3.10-3.14); Fuzz testing</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Build Integration</h3>
-                            <div class="scorecard-score" style="color: #ffc107;">7.0/10</div>
-                            <div class="scorecard-status">PR image builds + KinD deployment + operator validation; Tekton/Konflux pipelines</div>
+                            <div class="scorecard-score" style="color: #28a745;">8.0/10</div>
+                            <div class="scorecard-status">PR-triggered image build + Kind deployment + Python client smoke test; Tekton pipelines for Konflux; Kustomize overlays</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Image Testing</h3>
                             <div class="scorecard-score" style="color: #ffc107;">7.0/10</div>
-                            <div class="scorecard-status">Multi-arch builds, UBI9 base images, SBOM generation; limited runtime smoke tests</div>
+                            <div class="scorecard-status">8 Dockerfiles with multi-stage builds; UBI9 base images; multi-arch (arm64/amd64); no container runtime validation tests</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Coverage Tracking</h3>
-                            <div class="scorecard-score" style="color: #ffc107;">6.0/10</div>
-                            <div class="scorecard-status">Codecov integration with fail_ci_if_error but no coverage thresholds or gates</div>
+                            <div class="scorecard-score" style="color: #ffc107;">7.0/10</div>
+                            <div class="scorecard-status">Codecov integration with fail_ci_if_error for Go and Python; no .codecov.yml threshold enforcement</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>CI/CD Automation</h3>
-                            <div class="scorecard-score" style="color: #28a745;">9.0/10</div>
-                            <div class="scorecard-status">36 well-organized workflows with path-based triggers and pinned action SHAs</div>
+                            <div class="scorecard-score" style="color: #28a745;">8.0/10</div>
+                            <div class="scorecard-status">35 workflow files; path-filtered triggers; matrix strategies for K8s/Python/DB; OpenSSF-compliant permissions; limited caching</div>
+                        </div>
+                        <div class="scorecard-item">
+                            <h3>Static Analysis</h3>
+                            <div class="scorecard-score" style="color: #28a745;">8.0/10</div>
+                            <div class="scorecard-status">golangci-lint v2.12.2, ruff+mypy (Python), ESLint (TS); pre-commit hooks; Dependabot for all ecosystems; UBI9 FIPS-capable base images</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Agent Rules</h3>
-                            <div class="scorecard-score" style="color: #ffc107;">6.0/10</div>
-                            <div class="scorecard-status">Comprehensive AGENTS.md and 4 skills; missing test-specific creation rules</div>
+                            <div class="scorecard-score" style="color: #28a745;">9.0/10</div>
+                            <div class="scorecard-status">Comprehensive 340+ line AGENTS.md with repo map, commands, testing requirements; .agents/skills/ with custom skills; CLAUDE.md symlink</div>
                         </div>
                     </div>
                 </div>
@@ -410,44 +415,36 @@
                 <div class="section-content">
                     <ul class="items-list">
                         
-                        <li class="item-card high">
-                            <div class="item-description">No coverage thresholds or gates</div>
-                            <p>Coverage can silently regress without any PR gate blocking the merge</p>
+                        <li class="item-card medium">
+                            <div class="item-description">No Codecov threshold enforcement</div>
+                            <p>Coverage can silently decrease without blocking PRs; no regression protection</p>
                             <div class="item-meta">
-                                <span class="meta-tag severity-high">HIGH</span>
+                                <span class="meta-tag severity-medium">MEDIUM</span>
+                                <span class="meta-tag effort-tag">2-3 hours</span>
+                            </div>
+                        </li>
+                        <li class="item-card medium">
+                            <div class="item-description">No container runtime validation tests</div>
+                            <p>Image startup or runtime issues not caught until deployment to staging/production</p>
+                            <div class="item-meta">
+                                <span class="meta-tag severity-medium">MEDIUM</span>
+                                <span class="meta-tag effort-tag">4-6 hours</span>
+                            </div>
+                        </li>
+                        <li class="item-card medium">
+                            <div class="item-description">No CI caching strategies</div>
+                            <p>CI runs are slower than necessary; Go module downloads and Docker layer rebuilds on every run</p>
+                            <div class="item-meta">
+                                <span class="meta-tag severity-medium">MEDIUM</span>
                                 <span class="meta-tag effort-tag">2-4 hours</span>
                             </div>
                         </li>
-                        <li class="item-card medium">
-                            <div class="item-description">No golangci-lint project configuration</div>
-                            <p>Using default linters only; missing security and style linters like gosec, errcheck strict mode, goconst</p>
-                            <div class="item-meta">
-                                <span class="meta-tag severity-medium">MEDIUM</span>
-                                <span class="meta-tag effort-tag">2-3 hours</span>
-                            </div>
-                        </li>
-                        <li class="item-card high">
-                            <div class="item-description">Trivy scanning is periodic only, not on PRs</div>
-                            <p>Vulnerable dependencies can be merged without detection; discovered only on weekly schedule</p>
-                            <div class="item-meta">
-                                <span class="meta-tag severity-high">HIGH</span>
-                                <span class="meta-tag effort-tag">2-3 hours</span>
-                            </div>
-                        </li>
-                        <li class="item-card medium">
-                            <div class="item-description">No Cypress E2E in CI against live backend</div>
-                            <p>Cypress runs only mocked; real API integration issues not caught until manual testing</p>
-                            <div class="item-meta">
-                                <span class="meta-tag severity-medium">MEDIUM</span>
-                                <span class="meta-tag effort-tag">8-12 hours</span>
-                            </div>
-                        </li>
                         <li class="item-card low">
-                            <div class="item-description">No test-specific agent rules for test creation</div>
-                            <p>AI-generated tests may not follow project conventions for each test type</p>
+                            <div class="item-description">No custom golangci-lint configuration</div>
+                            <p>Default linter set misses project-specific code quality rules; no strictness beyond defaults</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-low">LOW</span>
-                                <span class="meta-tag effort-tag">3-4 hours</span>
+                                <span class="meta-tag effort-tag">2-3 hours</span>
                             </div>
                         </li>
                     </ul>
@@ -464,32 +461,24 @@
                     <ul class="items-list">
                         
                         <li class="item-card ">
-                            <div class="item-description">Add codecov.yml with coverage thresholds</div>
-                            <p>Prevent coverage regressions with project/patch targets (e.g., 70% project, 80% patch)</p>
+                            <div class="item-description">Add .codecov.yml with coverage thresholds</div>
+                            <p>Prevent coverage regression on PRs with configurable minimum thresholds</p>
                             <div class="item-meta">
                                 
                                 <span class="meta-tag effort-tag">1-2 hours</span>
                             </div>
                         </li>
                         <li class="item-card ">
-                            <div class="item-description">Add Trivy scanning to PR workflow</div>
-                            <p>Catch vulnerable dependencies before merge, not a week later</p>
+                            <div class="item-description">Enable Go module caching in CI workflows</div>
+                            <p>Reduce CI build times by 30-50% for Go builds</p>
                             <div class="item-meta">
                                 
                                 <span class="meta-tag effort-tag">1-2 hours</span>
                             </div>
                         </li>
                         <li class="item-card ">
-                            <div class="item-description">Create .golangci.yml with security linters</div>
-                            <p>Enable gosec, errcheck, goconst, exhaustive for stronger static analysis</p>
-                            <div class="item-meta">
-                                
-                                <span class="meta-tag effort-tag">2-3 hours</span>
-                            </div>
-                        </li>
-                        <li class="item-card ">
-                            <div class="item-description">Generate test-specific agent rules with /test-rules-generator</div>
-                            <p>Improve AI-generated test quality and consistency across Go, Python, and TypeScript</p>
+                            <div class="item-description">Add custom .golangci.yml with stricter linters</div>
+                            <p>Catch more code quality issues: unused parameters, error wrapping, nil checks</p>
                             <div class="item-meta">
                                 
                                 <span class="meta-tag effort-tag">2-3 hours</span>
@@ -509,15 +498,15 @@
                         
                         <div class="rec-priority p0">
                             <h3>Priority 0: Critical</h3>
-                            <ul><li>Add codecov.yml with coverage thresholds (70% project target, 80% patch target) to prevent regressions</li><li>Add Trivy or Snyk scanning to PR workflows for early vulnerability detection</li></ul>
+                            <ul><li>Add .codecov.yml with project/patch coverage thresholds (e.g., 70% project, 80% patch)</li><li>Enable Go module and Docker layer caching in all CI workflows</li></ul>
                         </div>
                         <div class="rec-priority p1">
                             <h3>Priority 1: High Value</h3>
-                            <ul><li>Create .golangci.yml with gosec, errcheck, goconst, exhaustive, and nolintlint enabled</li><li>Add Cypress E2E tests against a live BFF+server stack on KinD for real integration validation</li><li>Create .claude/rules/ with test-specific rules for unit, integration, and E2E test creation</li></ul>
+                            <ul><li>Add container runtime validation tests (health checks, startup verification) using Testcontainers</li><li>Add custom .golangci.yml enabling additional linters (errcheck, gocritic, gosimple, staticcheck strict)</li><li>Add concurrency controls to more workflows to prevent redundant runs</li></ul>
                         </div>
                         <div class="rec-priority p2">
                             <h3>Priority 2: Nice-to-Have</h3>
-                            <ul><li>Add performance/load testing for model registry API endpoints</li><li>Add contract tests between Python client and Go server API</li><li>Consider CodeQL SAST integration alongside Semgrep for defense-in-depth</li></ul>
+                            <ul><li>Add contract tests between Go server and Python client for API compatibility</li><li>Add performance regression testing for core API endpoints</li><li>Add FIPS build tags and boringcrypto experiment for strict FIPS compliance</li></ul>
                         </div>
                     </div>
                 </div>

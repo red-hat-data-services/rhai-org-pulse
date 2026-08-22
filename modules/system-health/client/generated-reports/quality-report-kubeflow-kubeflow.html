@@ -332,7 +332,7 @@
     <div class="container">
         <header>
             <h1>Quality Analysis Report</h1>
-            <p class="timestamp">Generated on July 06, 2026 at 03:22 PM</p>
+            <p class="timestamp">Generated on July 21, 2026 at 12:28 PM</p>
             <h2 style="margin-top: 1rem; font-weight: 400;">kubeflow/kubeflow</h2>
         </header>
 
@@ -344,11 +344,11 @@
                         <circle class="score-arc" cx="100" cy="100" r="90"
                                 stroke="#dc3545"
                                 stroke-dasharray="565.4861999999999"
-                                stroke-dashoffset="480.66326999999995"
+                                stroke-dashoffset="537.2118899999999"
                                 id="scoreArc"></circle>
                     </svg>
                     <div class="score-text">
-                        <div class="score-value">1.5</div>
+                        <div class="score-value">0.5</div>
                         <div class="score-label">Overall Score</div>
                     </div>
                 </div>
@@ -365,37 +365,42 @@
                         <div class="scorecard-item">
                             <h3>Unit Tests</h3>
                             <div class="scorecard-score" style="color: #dc3545;">0.0/10</div>
-                            <div class="scorecard-status">No source code or test files present — umbrella repository only</div>
+                            <div class="scorecard-status">No source code — meta/gateway repository with no testable code</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Integration/E2E</h3>
                             <div class="scorecard-score" style="color: #dc3545;">0.0/10</div>
-                            <div class="scorecard-status">No integration or E2E tests — all testing in subproject repos</div>
+                            <div class="scorecard-status">No integration or E2E tests — no application code to test</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Build Integration</h3>
                             <div class="scorecard-score" style="color: #dc3545;">0.0/10</div>
-                            <div class="scorecard-status">No build system, Dockerfiles, or Makefile present</div>
+                            <div class="scorecard-status">No build process — repository contains only documentation and logos</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Image Testing</h3>
                             <div class="scorecard-score" style="color: #dc3545;">0.0/10</div>
-                            <div class="scorecard-status">No container images built from this repository</div>
+                            <div class="scorecard-status">No container images — no Dockerfiles or Containerfiles present</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Coverage Tracking</h3>
                             <div class="scorecard-score" style="color: #dc3545;">0.0/10</div>
-                            <div class="scorecard-status">No coverage tooling — no code to cover</div>
+                            <div class="scorecard-status">No coverage tracking — no code to measure coverage for</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>CI/CD Automation</h3>
-                            <div class="scorecard-score" style="color: #dc3545;">3.0/10</div>
-                            <div class="scorecard-status">GitHub issue routing configured; no workflows for testing or building</div>
+                            <div class="scorecard-score" style="color: #dc3545;">0.0/10</div>
+                            <div class="scorecard-status">No CI/CD workflows — no .github/workflows/ directory</div>
+                        </div>
+                        <div class="scorecard-item">
+                            <h3>Static Analysis</h3>
+                            <div class="scorecard-score" style="color: #dc3545;">1.0/10</div>
+                            <div class="scorecard-status">Issue template config redirects to subprojects; no linting, FIPS, or dependency alerts</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Agent Rules</h3>
                             <div class="scorecard-score" style="color: #dc3545;">0.0/10</div>
-                            <div class="scorecard-status">No CLAUDE.md, AGENTS.md, or .claude/ directory</div>
+                            <div class="scorecard-status">No CLAUDE.md, AGENTS.md, or .claude/ directory present</div>
                         </div>
                     </div>
                 </div>
@@ -411,35 +416,27 @@
                     <ul class="items-list">
                         
                         <li class="item-card high">
-                            <div class="item-description">Repository is an umbrella/meta repo with no source code</div>
-                            <p>All quality practices, testing, and CI/CD live in 12+ independent subproject repositories — no centralized quality governance</p>
+                            <div class="item-description">Repository is a meta/gateway repo with no source code</div>
+                            <p>All quality dimensions score 0 because there is nothing to test, build, or analyze — development happens in subproject repositories</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-high">HIGH</span>
                                 <span class="meta-tag effort-tag">N/A — by design</span>
                             </div>
                         </li>
-                        <li class="item-card high">
-                            <div class="item-description">No cross-subproject integration testing</div>
-                            <p>Subprojects are tested independently; no validation that combined Kubeflow distribution works end-to-end</p>
-                            <div class="item-meta">
-                                <span class="meta-tag severity-high">HIGH</span>
-                                <span class="meta-tag effort-tag">40-80 hours</span>
-                            </div>
-                        </li>
                         <li class="item-card medium">
-                            <div class="item-description">No centralized quality standards or testing guidelines</div>
-                            <p>Each subproject defines its own quality bar independently, leading to inconsistency across the ecosystem</p>
+                            <div class="item-description">No CI/CD workflows at all</div>
+                            <p>No automated validation of even documentation changes (link checking, markdown linting)</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-medium">MEDIUM</span>
-                                <span class="meta-tag effort-tag">16-24 hours</span>
+                                <span class="meta-tag effort-tag">2-4 hours</span>
                             </div>
                         </li>
                         <li class="item-card low">
-                            <div class="item-description">No agent rules for AI-assisted development</div>
-                            <p>AI coding agents have no guidance for contributing to Kubeflow or its subprojects</p>
+                            <div class="item-description">No agent rules or contribution guidance for AI tools</div>
+                            <p>AI agents have no guidance on how to contribute to the Kubeflow ecosystem</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-low">LOW</span>
-                                <span class="meta-tag effort-tag">4-8 hours</span>
+                                <span class="meta-tag effort-tag">2-3 hours</span>
                             </div>
                         </li>
                     </ul>
@@ -456,35 +453,27 @@
                     <ul class="items-list">
                         
                         <li class="item-card ">
-                            <div class="item-description">Add a centralized TESTING.md with quality standards for all subprojects</div>
-                            <p>Establishes minimum quality bar across the ecosystem</p>
+                            <div class="item-description">Add a markdown lint workflow for documentation PRs</div>
+                            <p>Catches broken links, formatting issues in README, CONTRIBUTING, and ROADMAP files</p>
                             <div class="item-meta">
                                 
-                                <span class="meta-tag effort-tag">4-6 hours</span>
+                                <span class="meta-tag effort-tag">1-2 hours</span>
                             </div>
                         </li>
                         <li class="item-card ">
-                            <div class="item-description">Add CI workflow to validate cross-links and subproject references</div>
-                            <p>Ensures issue routing and documentation links remain valid</p>
+                            <div class="item-description">Add a link checker workflow</div>
+                            <p>Validates that URLs in documentation (subproject links, Kubeflow.org links) remain active</p>
                             <div class="item-meta">
                                 
-                                <span class="meta-tag effort-tag">2-3 hours</span>
+                                <span class="meta-tag effort-tag">1-2 hours</span>
                             </div>
                         </li>
                         <li class="item-card ">
-                            <div class="item-description">Create CLAUDE.md with contribution guidelines for AI agents</div>
-                            <p>Directs AI agents to correct subproject repositories</p>
+                            <div class="item-description">Create a CLAUDE.md with ecosystem navigation guidance</div>
+                            <p>Helps AI agents understand this is a meta-repo and navigate to correct subproject repositories</p>
                             <div class="item-meta">
                                 
-                                <span class="meta-tag effort-tag">2-3 hours</span>
-                            </div>
-                        </li>
-                        <li class="item-card ">
-                            <div class="item-description">Add a workflow to periodically audit subproject quality practices</div>
-                            <p>Provides visibility into quality consistency across the Kubeflow ecosystem</p>
-                            <div class="item-meta">
-                                
-                                <span class="meta-tag effort-tag">8-12 hours</span>
+                                <span class="meta-tag effort-tag">1-2 hours</span>
                             </div>
                         </li>
                     </ul>
@@ -501,15 +490,15 @@
                         
                         <div class="rec-priority p0">
                             <h3>Priority 0: Critical</h3>
-                            <ul><li>Evaluate whether this repo should host cross-subproject integration tests for the Kubeflow Community Distribution</li><li>Define and publish minimum quality standards (coverage thresholds, required CI checks) for all Kubeflow subprojects</li></ul>
+                            <ul><li>Acknowledge this is a meta/gateway repository — quality analysis should target individual subproject repos (kubeflow/notebooks, kubeflow/pipelines, kubeflow/trainer, etc.) instead</li></ul>
                         </div>
                         <div class="rec-priority p1">
                             <h3>Priority 1: High Value</h3>
-                            <ul><li>Add link-checking CI workflow to validate README, CONTRIBUTING, and issue template URLs</li><li>Create a quality dashboard that aggregates test/coverage metrics from all subproject repos</li></ul>
+                            <ul><li>Add basic CI workflows for documentation validation (markdown lint, link checking)</li><li>Consider adding a CLAUDE.md that maps subprojects to their repositories for AI agent navigation</li></ul>
                         </div>
                         <div class="rec-priority p2">
                             <h3>Priority 2: Nice-to-Have</h3>
-                            <ul><li>Add CLAUDE.md or AGENTS.md to guide AI contributors to the correct subproject repos</li><li>Consider hosting shared CI/CD templates (reusable workflows) for subprojects to adopt</li></ul>
+                            <ul><li>Add Dependabot for GitHub Actions version updates in any future workflows</li><li>Consider adding a CODEOWNERS file for automated review assignment</li></ul>
                         </div>
                     </div>
                 </div>

@@ -8,7 +8,7 @@ const DEFAULT_CONFIG = {
   excludedStatuses: ['Closed'],
   lookbackMonths: 0,
   trendThresholdPp: 2,
-  autofixProjects: ['AIPCC', 'RHOAIENG'],
+  autofixProjects: ['AIPCC', 'RHOAIENG', 'RHAIENG', 'RHAIFIRST', 'INFERENG', 'JN'],
   autofixCreatedAfter: null,
   docProject: 'RHAISTRAT',
   docRequiredStatuses: ['Review', 'Release Pending'],
@@ -31,8 +31,8 @@ function validateJqlSafeString(value, fieldName) {
   }
 }
 
-function getConfig(readFromStorage) {
-  const saved = readFromStorage('ai-impact/config.json');
+async function getConfig(readFromStorage) {
+  const saved = await readFromStorage('ai-impact/config.json');
   return { ...DEFAULT_CONFIG, ...saved };
 }
 
@@ -41,7 +41,7 @@ function getConfig(readFromStorage) {
  * All string fields are checked for JQL-unsafe characters since they are
  * interpolated into JQL queries in rfe-fetcher.js.
  */
-function saveConfig(writeToStorage, config) {
+async function saveConfig(writeToStorage, config) {
   const merged = { ...DEFAULT_CONFIG };
 
   // Warn about unknown fields (helps catch frontend/backend key mismatches)
@@ -128,7 +128,16 @@ function saveConfig(writeToStorage, config) {
     merged.autofixProjects = config.autofixProjects;
   }
 
-  writeToStorage('ai-impact/config.json', merged);
+  // Only persist fields that differ from defaults so that future default
+  // changes (e.g. adding new autofix projects) take effect automatically
+  // on deployments that never customized those fields.
+  const delta = {};
+  for (const [key, value] of Object.entries(merged)) {
+    if (JSON.stringify(value) !== JSON.stringify(DEFAULT_CONFIG[key])) {
+      delta[key] = value;
+    }
+  }
+  await writeToStorage('ai-impact/config.json', delta);
 }
 
 module.exports = { DEFAULT_CONFIG, getConfig, saveConfig, validateJqlSafeString };

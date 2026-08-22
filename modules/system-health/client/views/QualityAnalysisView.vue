@@ -1,19 +1,20 @@
 <script setup>
 import { computed, inject, ref, watch } from 'vue'
-import { QUALITY_REPORTS, QUALITY_SAMPLE_META } from '../qualityReports.data.js'
+import { useQualityReports } from '../composables/useQualityReports.js'
 
 const VIEW_ID = 'quality-analysis'
 
 const nav = inject('moduleNav', null)
+const { reports, meta, loading, error, loadReports } = useQualityReports()
 
 const tierFilter = ref('all')
 const componentFilter = ref('all')
 
-const tiers = computed(() => [...new Set(QUALITY_REPORTS.map(r => r.tier).filter(Boolean))].sort())
-const components = computed(() => [...new Set(QUALITY_REPORTS.map(r => r.component).filter(Boolean))].sort())
+const tiers = computed(() => [...new Set(reports.value.map(r => r.tier).filter(Boolean))].sort())
+const components = computed(() => [...new Set(reports.value.map(r => r.component).filter(Boolean))].sort())
 
 const filteredReports = computed(() =>
-  QUALITY_REPORTS.filter(r =>
+  reports.value.filter(r =>
     (tierFilter.value === 'all' || r.tier === tierFilter.value) &&
     (componentFilter.value === 'all' || r.component === componentFilter.value)
   )
@@ -23,7 +24,7 @@ const selectedId = computed({
   get() {
     const id = nav?.params?.value?.report
     if (!id || typeof id !== 'string') return null
-    return QUALITY_REPORTS.some(r => r.id === id) ? id : null
+    return reports.value.some(r => r.id === id) ? id : null
   },
   set(next) {
     if (!nav) return
@@ -36,14 +37,20 @@ const selectedId = computed({
 })
 
 const selected = computed(() =>
-  selectedId.value ? QUALITY_REPORTS.find(r => r.id === selectedId.value) : null
+  selectedId.value ? reports.value.find(r => r.id === selectedId.value) : null
 )
 
 function scoreClass(score) {
-  const n = parseFloat(score)
+  const n = typeof score === 'number' ? score : parseFloat(score)
   if (n >= 7) return 'text-green-600 dark:text-green-400'
   if (n >= 4) return 'text-amber-600 dark:text-amber-400'
   return 'text-red-600 dark:text-red-400'
+}
+
+function formatScore(score) {
+  if (score == null) return null
+  const n = typeof score === 'number' ? score : parseFloat(score)
+  return isNaN(n) ? null : n.toFixed(1) + '/10'
 }
 
 function openReport(id) {
@@ -57,7 +64,7 @@ function clearSelection() {
 watch(
   () => nav?.params?.value?.report,
   (report) => {
-    if (report && !QUALITY_REPORTS.some(r => r.id === report)) {
+    if (report && reports.value.length && !reports.value.some(r => r.id === report)) {
       nav?.navigateTo(VIEW_ID, {})
     }
   },
@@ -84,17 +91,53 @@ watch(
     </div>
 
     <div
-      v-if="!selected"
+      v-if="!loading && !error && reports.length === 0"
+      class="rounded-xl border border-amber-200 dark:border-amber-800 bg-amber-50 dark:bg-amber-900/20 px-5 py-4"
+    >
+      <div class="flex gap-3">
+        <svg class="w-5 h-5 text-amber-500 dark:text-amber-400 shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126ZM12 15.75h.007v.008H12v-.008Z" />
+        </svg>
+        <div>
+          <p class="text-sm font-medium text-amber-800 dark:text-amber-200">
+            Quality reports are temporarily unavailable
+          </p>
+          <p class="text-sm text-amber-700 dark:text-amber-300 mt-1">
+            We are migrating to a new automated publish model for quality analysis reports.
+            Full availability is expected by mid next week (August 11).
+            We apologize for the inconvenience.
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <div v-if="loading" class="flex items-center justify-center py-20">
+      <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600" />
+    </div>
+
+    <div v-else-if="error" class="rounded-xl border border-red-200 dark:border-red-800 bg-red-50 dark:bg-red-900/20 p-6 text-center">
+      <p class="text-sm text-red-700 dark:text-red-300">{{ error }}</p>
+      <button
+        type="button"
+        class="mt-3 text-sm text-primary-600 dark:text-primary-400 hover:underline"
+        @click="loadReports"
+      >
+        Retry
+      </button>
+    </div>
+
+    <div
+      v-else-if="!selected"
       class="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 overflow-hidden shadow-sm"
     >
       <div class="px-4 py-3 border-b border-gray-100 dark:border-gray-700 bg-gray-50/80 dark:bg-gray-900/40">
         <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
           <div>
             <p class="text-sm font-medium text-gray-900 dark:text-gray-100">
-              Showing {{ filteredReports.length }} of {{ QUALITY_REPORTS.length }} repos
+              Showing {{ filteredReports.length }} of {{ reports.length }} repos
             </p>
-            <p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
-              Generated {{ QUALITY_SAMPLE_META.generatedAt }}
+            <p v-if="meta.lastSyncedAt" class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
+              Last synced {{ new Date(meta.lastSyncedAt).toLocaleString() }}
             </p>
           </div>
           <div class="flex flex-wrap items-center gap-2">
@@ -123,7 +166,7 @@ watch(
               <th class="px-4 py-3 font-medium">Tier</th>
               <th class="px-4 py-3 font-medium">Component</th>
               <th class="px-4 py-3 font-medium">Score</th>
-              <th class="px-4 py-3 font-medium">Top gaps</th>
+              <th class="px-4 py-3 font-medium">Gaps</th>
             </tr>
           </thead>
           <tbody class="divide-y divide-gray-100 dark:divide-gray-700">
@@ -158,11 +201,11 @@ watch(
               </td>
               <td class="px-4 py-3 whitespace-nowrap">
                 <span
-                  v-if="row.score !== ''"
+                  v-if="formatScore(row.score)"
                   class="font-medium"
                   :class="scoreClass(row.score)"
                 >
-                  {{ row.score }}
+                  {{ formatScore(row.score) }}
                 </span>
                 <span
                   v-else
@@ -172,12 +215,12 @@ watch(
                 </span>
               </td>
               <td class="px-4 py-3 text-gray-600 dark:text-gray-300">
-                <template v-if="row.gaps !== ''">{{ row.gaps }}</template>
+                <template v-if="row.gapCount > 0">{{ row.gapCount }} gap{{ row.gapCount !== 1 ? 's' : '' }}</template>
                 <span
                   v-else
                   class="text-xs text-gray-400 dark:text-gray-500 italic"
                 >
-                  Awaiting scan
+                  None
                 </span>
               </td>
             </tr>
@@ -187,7 +230,7 @@ watch(
     </div>
 
     <div
-      v-else
+      v-else-if="selected"
       class="rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden bg-white dark:bg-gray-900 shadow-sm"
     >
       <p class="px-4 py-2 text-xs text-gray-500 dark:text-gray-400 border-b border-gray-100 dark:border-gray-700">
@@ -197,6 +240,7 @@ watch(
         v-if="selected.reportUrl"
         :src="selected.reportUrl"
         :title="`Quality report: ${selected.label}`"
+        sandbox="allow-same-origin"
         class="w-full border-0 bg-white block"
         style="min-height: calc(100vh - 11rem)"
       />

@@ -10,21 +10,24 @@
     "entry": "./client/index.js",
     "navItems": [
       { "id": "quality-analysis", "label": "Quality analysis", "icon": "clipboard-list", "default": true },
-      { "id": "component-maturity", "label": "Component maturity", "icon": "layers" }
+      { "id": "component-maturity", "label": "Component maturity", "icon": "layers" },
+      { "id": "odh-e2e-health", "label": "opendatahub-operator E2E health", "icon": "activity" }
     ],
     "hiddenRoutes": {
-      "disconnected-repo-detail": "component-maturity"
+      "disconnected-repo-detail": "component-maturity",
+      "e2e-run-detail": "odh-e2e-health"
     }
   },
   "server": {
     "entry": "./server/index.js"
   },
   "secrets": {
-    "platform": ["github"]
+    "platform": ["github", "gitlab", "jira"]
   },
   "export": {
     "files": [
-      { "path": "system-health/disconnected/reports.json", "notes": "Disconnected readiness reports with history for all tracked repos" }
+      { "path": "system-health/disconnected/reports.json", "notes": "Disconnected readiness reports with history for all tracked repos" },
+      { "path": "system-health/quality/reports.json", "notes": "Quality analysis reports with history for tracked repos" }
     ]
   }
 }

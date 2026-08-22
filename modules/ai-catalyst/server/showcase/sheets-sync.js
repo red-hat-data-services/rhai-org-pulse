@@ -100,7 +100,7 @@ async function fetchShowcaseData(sheetId, keyFilePath, storage) {
   _cache = { data: result, ts: Date.now() };
 
   if (storage) {
-    storage.writeToStorage(STORAGE_KEY, result);
+    await storage.writeToStorage(STORAGE_KEY, result);
   }
 
   return result;
@@ -120,7 +120,7 @@ async function getShowcaseData(sheetId, keyFilePath, storage) {
     }
 
     if (storage) {
-      const stored = storage.readFromStorage(STORAGE_KEY);
+      const stored = await storage.readFromStorage(STORAGE_KEY);
       if (stored) {
         console.error('[ai-catalyst:showcase] Sheet fetch failed, using stored fallback:', err.message);
         _cache = { data: stored, ts: 0 };

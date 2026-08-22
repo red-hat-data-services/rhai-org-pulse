@@ -12,7 +12,7 @@ vi.mock('express', () => ({
   Router: () => createMockRouter()
 }));
 vi.mock('../../server/planning/audit-log', () => ({
-  getAuditLog: vi.fn(() => ({ entries: [] }))
+  getAuditLog: vi.fn(async () => ({ entries: [] }))
 }));
 
 function createMockRouter() {
@@ -30,9 +30,9 @@ function createMockRouter() {
 function createMockStorage(initial = {}) {
   const store = { ...initial };
   return {
-    readFromStorage(key) { return store[key] ? JSON.parse(JSON.stringify(store[key])) : null; },
-    writeToStorage(key, data) { store[key] = JSON.parse(JSON.stringify(data)); },
-    listStorageFiles(prefix) {
+    async readFromStorage(key) { return store[key] ? JSON.parse(JSON.stringify(store[key])) : null; },
+    async writeToStorage(key, data) { store[key] = JSON.parse(JSON.stringify(data)); },
+    async listStorageFiles(prefix) {
       const matches = [];
       const dirPrefix = prefix.endsWith('/') ? prefix : prefix + '/';
       for (const key of Object.keys(store)) {
@@ -46,7 +46,7 @@ function createMockStorage(initial = {}) {
       }
       return matches;
     },
-    deleteFromStorage(key) {
+    async deleteFromStorage(key) {
       if (!(key in store)) throw new Error(`File not found: ${key}`);
       delete store[key];
     },
@@ -70,26 +70,26 @@ function createMockContext(storage) {
 const registerRoutes = require('../../server/index');
 
 describe('Storage migration on startup', () => {
-  it('copies data from old prefixes to new prefixes', () => {
+  it('copies data from old prefixes to new prefixes', async () => {
     const storage = createMockStorage({
       'release-planning/config.json': { planning: true },
       'feature-traffic/index.json': { features: [1, 2] },
       'release-analysis/conforma.json': { releases: [] }
     });
     const router = createMockRouter();
-    registerRoutes(router, createMockContext(storage));
+    await registerRoutes(router, createMockContext(storage));
 
     expect(storage._store['releases/planning/config.json']).toEqual({ planning: true });
     expect(storage._store['releases/execution/index.json']).toEqual({ features: [1, 2] });
     expect(storage._store['releases/delivery/conforma.json']).toEqual({ releases: [] });
   });
 
-  it('does NOT delete old files after copying', () => {
+  it('does NOT delete old files after copying', async () => {
     const storage = createMockStorage({
       'release-planning/config.json': { planning: true }
     });
     const router = createMockRouter();
-    registerRoutes(router, createMockContext(storage));
+    await registerRoutes(router, createMockContext(storage));
 
     // Old data should still exist
     expect(storage._store['release-planning/config.json']).toEqual({ planning: true });
@@ -97,41 +97,41 @@ describe('Storage migration on startup', () => {
     expect(storage._store['releases/planning/config.json']).toEqual({ planning: true });
   });
 
-  it('does NOT overwrite existing data at new paths', () => {
+  it('does NOT overwrite existing data at new paths', async () => {
     const storage = createMockStorage({
       'release-planning/config.json': { old: true },
       'releases/planning/config.json': { new: true, preserved: true }
     });
     const router = createMockRouter();
-    registerRoutes(router, createMockContext(storage));
+    await registerRoutes(router, createMockContext(storage));
 
     // New data should be unchanged
     expect(storage._store['releases/planning/config.json']).toEqual({ new: true, preserved: true });
   });
 
-  it('migrates audit-log.json to releases/audit-log.json', () => {
+  it('migrates audit-log.json to releases/audit-log.json', async () => {
     const auditData = { entries: [{ action: 'created', ts: '2026-01-01' }] };
     const storage = createMockStorage({
       'release-planning/audit-log.json': auditData
     });
     const router = createMockRouter();
-    registerRoutes(router, createMockContext(storage));
+    await registerRoutes(router, createMockContext(storage));
 
     expect(storage._store['releases/audit-log.json']).toEqual(auditData);
   });
 
-  it('does NOT overwrite existing audit-log.json at new path', () => {
+  it('does NOT overwrite existing audit-log.json at new path', async () => {
     const storage = createMockStorage({
       'release-planning/audit-log.json': { entries: [{ action: 'old' }] },
       'releases/audit-log.json': { entries: [{ action: 'new' }] }
     });
     const router = createMockRouter();
-    registerRoutes(router, createMockContext(storage));
+    await registerRoutes(router, createMockContext(storage));
 
     expect(storage._store['releases/audit-log.json']).toEqual({ entries: [{ action: 'new' }] });
   });
 
-  it('migrates subdirectory files (releases, features, rfes)', () => {
+  it('migrates subdirectory files (releases, features, rfes)', async () => {
     // A top-level JSON file must exist at the old prefix for the subdirectory
     // loop to run (the code skips the entire prefix if no top-level files exist).
     const storage = createMockStorage({
@@ -141,38 +141,38 @@ describe('Storage migration on startup', () => {
       'feature-traffic/features/feat-1.json': { key: 'FEAT-1' }
     });
     const router = createMockRouter();
-    registerRoutes(router, createMockContext(storage));
+    await registerRoutes(router, createMockContext(storage));
 
     expect(storage._store['releases/planning/releases/rhoai-2.14.json']).toEqual({ version: '2.14' });
     expect(storage._store['releases/execution/features/feat-1.json']).toEqual({ key: 'FEAT-1' });
   });
 
-  it('skips non-JSON files', () => {
+  it('skips non-JSON files', async () => {
     const storage = createMockStorage({
       'release-planning/readme.txt': 'not json'
     });
     const router = createMockRouter();
-    registerRoutes(router, createMockContext(storage));
+    await registerRoutes(router, createMockContext(storage));
 
     expect(storage._store['releases/planning/readme.txt']).toBeUndefined();
   });
 
-  it('handles missing old directories gracefully', () => {
+  it('handles missing old directories gracefully', async () => {
     const storage = createMockStorage({});
     const router = createMockRouter();
 
     // Should not throw
-    expect(() => registerRoutes(router, createMockContext(storage))).not.toThrow();
+    await registerRoutes(router, createMockContext(storage));
   });
 
-  it('handles migration errors without crashing', () => {
+  it('handles migration errors without crashing', async () => {
     const storage = createMockStorage({});
     // Force listStorageFiles to throw for all calls
     storage.listStorageFiles = () => { throw new Error('disk error'); };
     const router = createMockRouter();
 
     // The try/catch in registerRoutes should prevent this from crashing
-    expect(() => registerRoutes(router, createMockContext(storage))).not.toThrow();
+    await registerRoutes(router, createMockContext(storage));
   });
 });
 
@@ -180,10 +180,10 @@ describe('POST /admin/migrate-storage (cleanup endpoint)', () => {
   let router;
   let handler;
 
-  function setupRoute(storageData) {
+  async function setupRoute(storageData) {
     const storage = createMockStorage(storageData);
     router = createMockRouter();
-    registerRoutes(router, createMockContext(storage));
+    await registerRoutes(router, createMockContext(storage));
 
     // The cleanup route is registered as POST /admin/migrate-storage
     const handlers = router._routes.post['/admin/migrate-storage'];
@@ -192,14 +192,14 @@ describe('POST /admin/migrate-storage (cleanup endpoint)', () => {
     return storage;
   }
 
-  it('deletes old files when new paths exist', () => {
-    const storage = setupRoute({
+  it('deletes old files when new paths exist', async () => {
+    const storage = await setupRoute({
       'release-planning/config.json': { old: true },
       'releases/planning/config.json': { new: true }
     });
 
     const res = { json: vi.fn() };
-    handler({ query: {} }, res);
+    await handler({ query: {} }, res);
 
     expect(res.json).toHaveBeenCalledWith(expect.objectContaining({
       status: 'completed',
@@ -211,14 +211,14 @@ describe('POST /admin/migrate-storage (cleanup endpoint)', () => {
     expect(storage._store['releases/planning/config.json']).toEqual({ new: true });
   });
 
-  it('skips deletion when new path does not exist', () => {
-    setupRoute({
+  it('skips deletion when new path does not exist', async () => {
+    await setupRoute({
       'release-planning/config.json': { old: true }
       // No corresponding new path — migration copies it, so both exist now
     });
 
     const res = { json: vi.fn() };
-    handler({ query: {} }, res);
+    await handler({ query: {} }, res);
 
     const result = res.json.mock.calls[0][0];
     // The startup migration would have copied old → new, so cleanup deletes the old.
@@ -228,10 +228,10 @@ describe('POST /admin/migrate-storage (cleanup endpoint)', () => {
     expect(result.status).toBe('completed');
   });
 
-  it('deletes old subdirectory files when new paths exist', () => {
+  it('deletes old subdirectory files when new paths exist', async () => {
     // A top-level JSON file must exist at the old prefix for the subdirectory
     // cleanup loop to run.
-    const storage = setupRoute({
+    const storage = await setupRoute({
       'feature-traffic/index.json': { features: [] },
       'feature-traffic/features/feat-1.json': { key: 'FEAT-1' },
       'releases/execution/index.json': { features: [] },
@@ -239,7 +239,7 @@ describe('POST /admin/migrate-storage (cleanup endpoint)', () => {
     });
 
     const res = { json: vi.fn() };
-    handler({ query: {} }, res);
+    await handler({ query: {} }, res);
 
     const result = res.json.mock.calls[0][0];
     expect(result.deleted).toBeGreaterThanOrEqual(1);
@@ -247,15 +247,15 @@ describe('POST /admin/migrate-storage (cleanup endpoint)', () => {
     expect(storage._store['releases/execution/features/feat-1.json']).toEqual({ key: 'FEAT-1' });
   });
 
-  it('reports errors when deletion fails', () => {
-    const storage = setupRoute({
+  it('reports errors when deletion fails', async () => {
+    const storage = await setupRoute({
       'release-analysis/conforma.json': { data: true },
       'releases/delivery/conforma.json': { data: true }
     });
 
     // Make deleteFromStorage throw for a specific path
     const origDelete = storage.deleteFromStorage.bind(storage);
-    storage.deleteFromStorage = (key) => {
+    storage.deleteFromStorage = async (key) => {
       if (key === 'release-analysis/conforma.json') {
         throw new Error('permission denied');
       }
@@ -263,7 +263,7 @@ describe('POST /admin/migrate-storage (cleanup endpoint)', () => {
     };
 
     const res = { json: vi.fn() };
-    handler({ query: {} }, res);
+    await handler({ query: {} }, res);
 
     const result = res.json.mock.calls[0][0];
     expect(result.errors).toEqual(
@@ -273,11 +273,11 @@ describe('POST /admin/migrate-storage (cleanup endpoint)', () => {
     );
   });
 
-  it('returns zero counts when no old data exists', () => {
-    setupRoute({});
+  it('returns zero counts when no old data exists', async () => {
+    await setupRoute({});
 
     const res = { json: vi.fn() };
-    handler({ query: {} }, res);
+    await handler({ query: {} }, res);
 
     const result = res.json.mock.calls[0][0];
     expect(result.status).toBe('completed');

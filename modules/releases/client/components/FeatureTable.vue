@@ -1,5 +1,6 @@
 <script setup>
 import { ref, computed } from 'vue'
+import { formatSortedVersions } from '../composables/useReleaseFamily'
 
 function parentKeyUrl(feat) {
   if (feat.url) {
@@ -17,6 +18,8 @@ const props = defineProps({
   },
   title: { type: String, default: '' },
   maxRows: { type: Number, default: 0 },
+  /** When true, emphasize TV vs FV cells (mismatched / delta category tables) */
+  highlightVersionDelta: { type: Boolean, default: false },
 })
 
 const sortCol = ref(null)
@@ -68,6 +71,20 @@ function colorBadgeClass(color) {
   if (c === 'green') return 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300'
   return 'bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400'
 }
+
+function isVersionCol(col) {
+  return col === 'target_version' || col === 'fix_versions'
+}
+
+function versionCellClass(col) {
+  if (!props.highlightVersionDelta) {
+    return 'text-gray-700 dark:text-gray-300 text-xs whitespace-normal max-w-[14rem]'
+  }
+  if (col === 'target_version') {
+    return 'text-yellow-800 dark:text-yellow-300 text-xs font-medium whitespace-normal max-w-[14rem] bg-yellow-50/80 dark:bg-yellow-900/20'
+  }
+  return 'text-gray-800 dark:text-gray-200 text-xs font-medium whitespace-normal max-w-[14rem] bg-gray-100/80 dark:bg-gray-700/40'
+}
 </script>
 
 <template>
@@ -83,6 +100,7 @@ function colorBadgeClass(color) {
               v-for="col in columns"
               :key="col"
               class="px-3 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider cursor-pointer select-none hover:text-gray-700 dark:hover:text-gray-200 transition-colors"
+              :class="{ 'min-w-[8rem]': isVersionCol(col) }"
               @click="toggleSort(col)"
             >
               {{ columnLabels[col] || col }}
@@ -99,7 +117,8 @@ function colorBadgeClass(color) {
             <td
               v-for="col in columns"
               :key="col"
-              class="px-3 py-2 whitespace-nowrap"
+              class="px-3 py-2"
+              :class="isVersionCol(col) ? '' : 'whitespace-nowrap'"
             >
               <!-- Key column: clickable link to Jira -->
               <a
@@ -118,6 +137,14 @@ function colorBadgeClass(color) {
                 :title="feat.summary"
               >
                 {{ feat.summary }}
+              </span>
+              <!-- TV / FV: sorted EA1→EA2→GA, wrap so both stay visible -->
+              <span
+                v-else-if="isVersionCol(col)"
+                :class="versionCellClass(col)"
+                :title="formatSortedVersions(feat[col])"
+              >
+                {{ formatSortedVersions(feat[col]) || '—' }}
               </span>
               <!-- Color status: badge -->
               <span

@@ -1,384 +1,462 @@
 ---
 repository: "red-hat-data-services/openvino_model_server"
-overall_score: 7.4
+overall_score: 6.4
 scorecard:
   - dimension: "Unit Tests"
-    score: 8.5
-    status: "Extensive C++ unit tests (149 files, 100K+ LOC) with Google Test, coverage thresholds enforced (76% line, 83% function)"
-  - dimension: "Integration/E2E"
     score: 8.0
-    status: "Comprehensive functional tests, Python client tests, performance tests (latency + throughput), file integrity checks via CI"
+    status: "130+ gtest C++ test files with solid test-to-code ratio and Bazel integration"
+  - dimension: "Integration/E2E"
+    score: 6.0
+    status: "Python functional tests via pytest/Docker, but limited scenario breadth"
   - dimension: "Build Integration"
-    score: 7.5
-    status: "Dual CI pipelines (Prow + Konflux), image-based integration testing triggered on PR build completion, but no PR-time image build in GitHub Actions"
-  - dimension: "Image Testing"
     score: 7.0
-    status: "Multi-stage Dockerfiles (UBI9 + Ubuntu), runtime validation via file integrity and functional tests against built image, but no container scanning in CI"
+    status: "Konflux Dockerfile and Jenkins PR builds with multi-stage Docker pipeline"
+  - dimension: "Image Testing"
+    score: 5.0
+    status: "Multi-stage UBI9 Dockerfiles but no runtime validation or health checks"
   - dimension: "Coverage Tracking"
-    score: 7.5
-    status: "Bazel coverage with lcov, enforced thresholds (76% lines / 83% functions), genhtml reports, but no codecov/coveralls PR integration"
+    score: 6.0
+    status: "Bazel coverage with lcov and threshold enforcement, but no PR-level reporting"
   - dimension: "CI/CD Automation"
     score: 7.0
-    status: "3 GitHub Actions workflows (fast-checks, integration, Konflux integration), but limited to style checks on PRs; heavy testing requires external Prow/Konflux builds"
+    status: "Jenkins CI with parallel stages, smart diff detection, and SDL checks"
+  - dimension: "Static Analysis"
+    score: 6.0
+    status: "cpplint, clang-format, hadolint, bandit — but no Dependabot or pre-commit hooks"
   - dimension: "Agent Rules"
-    score: 0.0
-    status: "No CLAUDE.md, AGENTS.md, or .claude/ directory — zero AI agent guidance"
+    score: 4.0
+    status: "Copilot instructions present; no CLAUDE.md or .claude/ rules"
 critical_gaps:
-  - title: "No container image vulnerability scanning in CI"
-    impact: "CVEs in base images or dependencies not detected until downstream scanning"
-    severity: "HIGH"
-    effort: "2-4 hours"
-  - title: "No SAST/CodeQL integration for C++ codebase"
-    impact: "Memory safety and security bugs in 78K+ lines of C++ not caught by static analysis in CI"
+  - title: "No PR-level coverage reporting"
+    impact: "Coverage regressions can slip through unnoticed; reviewers lack visibility into coverage delta on each PR"
     severity: "HIGH"
     effort: "4-6 hours"
-  - title: "No PR-time codecov/coveralls integration"
-    impact: "Coverage regressions not visible on PR reviews; coverage only checked during Docker build with CHECK_COVERAGE=1"
+  - title: "No container runtime validation or HEALTHCHECK"
+    impact: "Image startup and runtime failures not caught until deployment; no readiness signal for orchestrators"
+    severity: "HIGH"
+    effort: "4-8 hours"
+  - title: "No dependency alert configuration (Dependabot/Renovate)"
+    impact: "Vulnerable or outdated dependencies remain undetected without manual review"
+    severity: "HIGH"
+    effort: "1-2 hours"
+  - title: "Limited functional test scenario coverage"
+    impact: "Only 4 functional test modules cover a complex model serving platform; edge cases and failure modes may be untested"
     severity: "MEDIUM"
-    effort: "3-4 hours"
-  - title: "Integration tests are event-triggered, not PR-triggered"
-    impact: "Integration tests only run after external Prow/Konflux builds complete; latency between code push and test feedback is high"
-    severity: "MEDIUM"
-    effort: "8-12 hours"
-  - title: "No agent rules for AI-assisted development"
-    impact: "AI agents cannot leverage project-specific test patterns, coding standards, or build conventions"
-    severity: "LOW"
-    effort: "4-6 hours"
+    effort: "20-40 hours"
 quick_wins:
-  - title: "Add Trivy scanning to fast-checks workflow"
+  - title: "Add .github/dependabot.yml for pip and Docker ecosystems"
     effort: "1-2 hours"
-    impact: "Detect known CVEs in Dockerfiles and dependencies on every PR"
-  - title: "Add CodeQL analysis workflow for C++"
-    effort: "2-3 hours"
-    impact: "Catch memory safety, injection, and other security bugs automatically"
-  - title: "Create basic CLAUDE.md with build/test instructions"
+    impact: "Automated dependency vulnerability alerts and update PRs"
+  - title: "Add HEALTHCHECK to Dockerfile.redhat and Dockerfile.konflux"
     effort: "1-2 hours"
-    impact: "Enable AI agents to understand repo structure, build system (Bazel), and test patterns"
-  - title: "Add codecov integration to coverage workflow"
+    impact: "Container orchestrators can detect unhealthy server instances automatically"
+  - title: "Create CLAUDE.md with test creation rules from copilot-instructions.md"
     effort: "2-3 hours"
-    impact: "PR-level coverage diff reporting and enforcement"
+    impact: "AI-assisted development follows consistent patterns for test creation"
+  - title: "Add .pre-commit-config.yaml for cpplint and clang-format"
+    effort: "2-3 hours"
+    impact: "Catch style issues before commit, reducing CI feedback cycles"
 recommendations:
   priority_0:
-    - "Add container vulnerability scanning (Trivy) to PR workflow to catch CVEs before merge"
-    - "Add CodeQL or Semgrep SAST analysis for the C++ codebase"
+    - "Integrate codecov or similar tool for PR-level coverage reporting and delta tracking"
+    - "Add Dependabot configuration covering pip, Docker, and Bazel ecosystems"
+    - "Add HEALTHCHECK directive to production Dockerfiles"
   priority_1:
-    - "Integrate codecov for PR-level coverage reporting and diff coverage enforcement"
-    - "Add secret detection (Gitleaks) to prevent credential leaks"
-    - "Create comprehensive CLAUDE.md and .claude/rules/ for AI-assisted development"
+    - "Expand functional test suite to cover more model serving scenarios (gRPC/REST, LLM serving, mediapipe, embeddings)"
+    - "Create CLAUDE.md and .claude/rules/ for test automation guidance"
+    - "Add .pre-commit-config.yaml to enforce style checks locally"
   priority_2:
-    - "Add multi-architecture image builds (ARM64) for broader platform support"
-    - "Add Dockerfile best-practice linting (hadolint) to PR checks (currently only in sdl-check)"
-    - "Consider adding fuzz testing for gRPC/REST request parsing"
+    - "Add multi-architecture build support (ARM64) for broader deployment targets"
+    - "Consider migrating Jenkins CI to GitHub Actions for better PR integration and community visibility"
+    - "Add container image startup validation tests using testcontainers or equivalent"
 ---
 
-# Quality Analysis: OpenVINO Model Server (Red Hat Fork)
+# Quality Analysis: openvino_model_server
+
+**Repository**: [red-hat-data-services/openvino_model_server](https://github.com/red-hat-data-services/openvino_model_server)
+**Tier**: Downstream
+**Jira**: RHOAIENG / Model Runtimes
+**Primary Language**: C++ (Bazel build system), Python (tests and bindings)
+**Type**: AI Model Serving Platform (OpenVINO-based inference server)
+**Analysis Date**: 2026-07-20
 
 ## Executive Summary
 
-- **Overall Score: 7.4/10**
-- **Repository Type**: C++/Python model serving application with Bazel build system
-- **Primary Languages**: C++ (core server), Python (tests, client library, demos)
-- **Framework**: OpenVINO inference engine, gRPC/REST serving, MediaPipe integration
-- **Key Strengths**: Extensive unit test suite (149 C++ test files, 100K+ test LOC), enforced coverage thresholds, multi-layer security checks (SDL, bandit, checksec, forbidden functions), comprehensive functional/performance test infrastructure
-- **Critical Gaps**: No container scanning in CI, no SAST/CodeQL for C++ code, no PR-level coverage reporting, no AI agent rules
-- **Agent Rules Status**: Missing — no CLAUDE.md, AGENTS.md, or .claude/ directory
+- **Overall Score: 6.4/10**
+- **Key Strengths**: Extensive C++ unit test suite (130+ gtest files), well-structured multi-stage Docker builds with Konflux support, comprehensive Jenkins CI with parallel stages and smart diff detection, strong static analysis pipeline (cpplint, clang-format, hadolint, bandit)
+- **Critical Gaps**: No PR-level coverage reporting despite having local coverage infrastructure, no container HEALTHCHECK or runtime validation, no dependency alert configuration, limited functional test scenario breadth
+- **Agent Rules Status**: Partial — `.github/copilot-instructions.md` present with detailed project context, but no `CLAUDE.md` or `.claude/rules/`
 
 ## Quality Scorecard
 
-| Dimension | Score | Status |
-|-----------|-------|--------|
-| Unit Tests | 8.5/10 | Extensive C++ unit tests (149 files, 100K+ LOC) with Google Test, coverage thresholds enforced |
-| Integration/E2E | 8.0/10 | Comprehensive functional tests, Python client tests, performance tests via CI |
-| **Build Integration** | **7.5/10** | **Dual CI pipelines (Prow + Konflux), image-based integration testing** |
-| Image Testing | 7.0/10 | Multi-stage Dockerfiles, runtime validation, but no container scanning |
-| Coverage Tracking | 7.5/10 | Bazel coverage + lcov with enforced thresholds, but no PR-level codecov |
-| CI/CD Automation | 7.0/10 | 3 GitHub Actions workflows, but integration tests require external build triggers |
-| Agent Rules | 0.0/10 | No AI agent guidance whatsoever |
+| Dimension | Score | Weight | Weighted | Status |
+|-----------|-------|--------|----------|--------|
+| Unit Tests | 8.0/10 | 15% | 1.20 | 130+ gtest C++ test files with solid test-to-code ratio |
+| Integration/E2E | 6.0/10 | 20% | 1.20 | Python functional tests via pytest/Docker, limited scenario breadth |
+| Build Integration | 7.0/10 | 15% | 1.05 | Konflux Dockerfile + Jenkins PR builds with multi-stage pipeline |
+| Image Testing | 5.0/10 | 10% | 0.50 | Multi-stage UBI9 Dockerfiles, no runtime validation or HEALTHCHECK |
+| Coverage Tracking | 6.0/10 | 10% | 0.60 | Bazel coverage with lcov and threshold enforcement, no PR reporting |
+| CI/CD Automation | 7.0/10 | 15% | 1.05 | Jenkins CI with parallel stages, smart diff detection, SDL checks |
+| Static Analysis | 6.0/10 | 10% | 0.60 | cpplint, clang-format, hadolint, bandit — missing Dependabot/pre-commit |
+| Agent Rules | 4.0/10 | 5% | 0.20 | Copilot instructions present; no CLAUDE.md or .claude/ rules |
+| **Overall** | **6.4/10** | **100%** | **6.40** | |
 
 ## Critical Gaps
 
-### 1. No Container Image Vulnerability Scanning in CI
-- **Impact**: CVEs in UBI9 base images, Python packages, and C++ dependencies not detected until downstream Konflux/product scanning
-- **Severity**: HIGH
-- **Effort**: 2-4 hours
-- **Details**: Neither the `fast-checks.yml` nor the `integration-tests.yml` workflows include Trivy, Snyk, or Grype scanning. The `Dockerfile.redhat` pulls from `registry.access.redhat.com/ubi9/ubi:9.7` and installs EPEL packages, wget-fetched RPMs, and source-built libraries — all without vulnerability scanning.
-
-### 2. No SAST/CodeQL Integration for C++ Codebase
-- **Impact**: Memory safety bugs, buffer overflows, injection vulnerabilities in 78K+ lines of C++ server code not caught by static analysis
+### 1. No PR-Level Coverage Reporting
+- **Impact**: Coverage regressions can merge unnoticed; reviewers have no visibility into whether a PR improves or degrades coverage
 - **Severity**: HIGH
 - **Effort**: 4-6 hours
-- **Details**: The repository has 491 C++ source files. While cpplint and clang-format are used for style, no semantic static analysis (CodeQL, Semgrep, cppcheck, or Coverity) is integrated into CI. The `ci/Dockerfile.coverity` suggests historical Coverity usage but it's not in the GitHub Actions pipeline.
+- **Details**: The repo has solid local coverage infrastructure — `bazel coverage` with lcov, genhtml report generation, and threshold enforcement (76% lines, 83% functions via `ci/check_coverage.bat`). However, this runs only when `CHECK_COVERAGE=1` is set during Docker builds and results never appear on PRs. No codecov/coveralls integration exists.
 
-### 3. No PR-Level Coverage Reporting
-- **Impact**: Developers don't see coverage impact of their changes during PR review
-- **Severity**: MEDIUM
-- **Effort**: 3-4 hours
-- **Details**: Coverage is generated via `bazel coverage` with lcov and enforced by `ci/check_coverage.bat` (76% line minimum, 83% function minimum), but this only runs when `CHECK_COVERAGE=1` is passed during Docker build. No codecov/coveralls integration reports coverage diffs on PRs.
+### 2. No Container Runtime Validation or HEALTHCHECK
+- **Impact**: Image startup failures and runtime issues not caught until deployment; Kubernetes/OpenShift cannot auto-detect unhealthy pods
+- **Severity**: HIGH
+- **Effort**: 4-8 hours
+- **Details**: The Dockerfiles use well-structured multi-stage builds (base_build → build → capi-build → pkg → release) but the release stage has no `HEALTHCHECK` directive. No testcontainers or image startup validation exists in CI.
 
-### 4. Integration Tests Not Directly PR-Triggered
-- **Impact**: Long feedback loop — integration tests only fire after external Prow or Konflux successfully builds and mirrors the image
+### 3. No Dependency Alert Configuration
+- **Impact**: Vulnerable or outdated third-party dependencies remain undetected without manual review
+- **Severity**: HIGH
+- **Effort**: 1-2 hours
+- **Details**: No `.github/dependabot.yml`, `renovate.json`, or equivalent. The project has 25+ third-party dependencies in `third_party/` managed through Bazel, plus Python test dependencies in `tests/requirements.txt`. Neither ecosystem has automated update monitoring.
+
+### 4. Limited Functional Test Scenario Coverage
+- **Impact**: A complex model serving platform with gRPC, REST, LLM, mediapipe, embeddings, and reranking capabilities has only 4 functional test modules
 - **Severity**: MEDIUM
-- **Effort**: 8-12 hours
-- **Details**: `integration-tests.yml` triggers on `status` events (when Prow completes `ci/prow/pr-image-mirror-stable`) or manual dispatch. `integration-tests-konflux.yml` similarly waits for Konflux build status. While this ensures tests run against the actual built image, it creates a multi-hop delay.
+- **Effort**: 20-40 hours
+- **Details**: `tests/functional/` contains only `test_model_versions_handling.py`, `test_model_version_policy.py`, `test_reshaping.py`, and `test_llm_json.py`. Many server capabilities (embeddings, reranking, mediapipe graphs, image generation, C API, multi-model pipelines) lack functional test coverage.
 
 ## Quick Wins
 
-### 1. Add Trivy Scanning to fast-checks Workflow (1-2 hours)
+### 1. Add `.github/dependabot.yml` (1-2 hours)
 ```yaml
-# Add to .github/workflows/fast-checks.yml
-trivy-scan:
-  name: Trivy Vulnerability Scan
-  runs-on: ubuntu-latest
-  steps:
-    - uses: actions/checkout@v4
-    - name: Run Trivy vulnerability scanner
-      uses: aquasecurity/trivy-action@master
-      with:
-        scan-type: 'fs'
-        scan-ref: '.'
-        severity: 'CRITICAL,HIGH'
-        exit-code: '1'
+version: 2
+updates:
+  - package-ecosystem: "pip"
+    directory: "/tests"
+    schedule:
+      interval: "weekly"
+  - package-ecosystem: "docker"
+    directory: "/"
+    schedule:
+      interval: "weekly"
 ```
 
-### 2. Add CodeQL Analysis (2-3 hours)
+### 2. Add HEALTHCHECK to Production Dockerfiles (1-2 hours)
+```dockerfile
+# In Dockerfile.redhat and Dockerfile.konflux release stage
+HEALTHCHECK --interval=30s --timeout=5s --retries=3 \
+  CMD curl -f http://localhost:8081/v2/health/ready || exit 1
+```
+
+### 3. Create CLAUDE.md from Copilot Instructions (2-3 hours)
+The existing `.github/copilot-instructions.md` contains excellent project context. Adapt it into a `CLAUDE.md` with additional test creation rules and framework-specific patterns for `gtest` unit tests and `pytest` functional tests.
+
+### 4. Add `.pre-commit-config.yaml` (2-3 hours)
 ```yaml
-# .github/workflows/codeql.yml
-name: CodeQL Analysis
-on:
-  pull_request:
-    branches: ['stable*']
-jobs:
-  analyze:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: github/codeql-action/init@v3
-        with:
-          languages: cpp, python
-      - uses: github/codeql-action/analyze@v3
+repos:
+  - repo: https://github.com/pre-commit/mirrors-clang-format
+    rev: v14.0.0
+    hooks:
+      - id: clang-format
+        types_or: [c++]
+  - repo: https://github.com/cpplint/cpplint
+    rev: 1.6.1
+    hooks:
+      - id: cpplint
+  - repo: https://github.com/hadolint/hadolint
+    rev: v2.12.0
+    hooks:
+      - id: hadolint-docker
 ```
-
-### 3. Create Basic CLAUDE.md (1-2 hours)
-Provide AI agents with build/test context:
-```markdown
-# OpenVINO Model Server
-## Build: `bazel build --config=mp_on_py_on --//:distro=redhat //src:ovms`
-## Unit Tests: `bazel test //src:ovms_test`
-## Style: `make style`
-## C++ with Google Test, Python functional tests with pytest
-```
-
-### 4. Add Codecov Integration (2-3 hours)
-Upload lcov reports to codecov for PR-level coverage visibility.
 
 ## Detailed Findings
 
-### CI/CD Pipeline
+### Unit Tests
 
-**Workflow Inventory** (3 workflows):
+**Score: 8.0/10**
 
-| Workflow | Trigger | Purpose |
-|----------|---------|---------|
-| `fast-checks.yml` | PR to `stable*` + dispatch | Style checks, SDL security, client lib tests |
-| `integration-tests.yml` | Prow status event + dispatch | Pull built image, run file integrity, functional, performance tests |
-| `integration-tests-konflux.yml` | Konflux status event + dispatch | Same as above, triggered by Konflux builds |
+The project has a strong C++ unit testing foundation:
 
-**Strengths**:
-- Well-structured event-driven pipeline: fast checks on PR, integration tests after image build
-- Parallel test execution: file integrity, client tests, latency, throughput, and functional tests run concurrently
-- Status reporting back to PR commits for each test suite
-- Smart PR detection: finds the PR from commit SHA and handles multiple PRs
+- **130+ test files** in `src/test/` using Google Test (gtest)
+- **548 non-test source files** — giving a test-to-code file ratio of ~24%
+- **Bazel integration**: Tests build and run via `bazel test //src:ovms_test`
+- **Test infrastructure**: `test_utils.hpp`, `light_test_utils.hpp`, `c_api_test_utils.hpp` provide reusable test utilities
+- **Specialized test areas**: LLM tests (`src/test/llm/`), mediapipe tests (`src/test/mediapipe/`), Python binding tests (`src/test/python/`), embeddings tests (`src/test/embeddings/`)
+- **Test models**: Dedicated test model directories (`dummy/`, `passthrough/`, `summator/`) for reproducible testing
+- **Python binding tests**: Separate Bazel target `//src/python/binding:test_python_binding`
+- **Test runner script**: `run_unit_tests.sh` handles test execution with proper error handling and log compression
 
-**Gaps**:
-- No concurrency control on workflows (multiple runs for same PR can overlap)
-- No caching in GitHub Actions workflows
-- Client library tests only run when `client/python/ovmsclient/lib/**` changes (good filtering, but means other Python changes skip these tests)
-- No workflow for running unit tests (those run inside Docker build)
-
-### Test Coverage
-
-**Unit Tests (C++)**:
-- **149 test files** in `src/test/`
-- **~100,859 lines** of test code (vs ~77,917 lines of source code)
-- **Test-to-code ratio**: 1.29:1 (excellent)
-- **Framework**: Google Test (via Bazel `@com_google_googletest`)
-- **Areas covered**: REST/gRPC parsers, model management, custom nodes, ensembles, MediaPipe, LLM endpoints, embeddings, reranking, streaming, serialization, schema validation, configuration, storage backends (Azure, GCS, S3, local), GPU/remote tensors
-- **LLM-specific tests**: Output parsers for Llama3, Mistral, Hermes3, Phi4, Qwen3, DevStral, GPT-OSS; assisted decoding; visual language models; tokenization
-
-**Functional Tests (Python)**:
-- Located in `tests/functional/` — 4 test files + extensive support infrastructure
-- Uses pytest with JSON reporting
-- Tests model reshaping, version handling, version policies, LLM JSON output
-- Runs against the actual built Docker image
-
-**Performance Tests**:
-- Latency tests: `tests/performance/grpc_latency.py`
-- Throughput tests: `tests/performance/grpc_throughput.sh`
-- Both run against the built Docker image in CI
-
-**Client Library Tests**:
-- Python client tests build a test Docker image, launch OVMS container, run tests against it
-- Tests only triggered when client library source changes
-
-**Python Binding Tests**:
-- `src/python/binding/tests/` — Bazel-managed Python binding tests
-- Run as part of unit test suite
-
-**Coverage Tracking**:
-- Bazel `coverage` command with `--instrumentation_filter="-src/test"` and `--combined_report=lcov`
-- lcov filtering to extract only `src/*` (excluding `src/test/*` and `external/*`)
-- genhtml report generation
-- **Enforced thresholds**: 76% line coverage, 83% function coverage
-- Checked via `ci/check_coverage.bat`
-- **Gap**: No automated codecov/coveralls integration for PR-level reporting
-
-### Code Quality
-
-**Style/Formatting**:
-- `.clang-format` — LLVM-based with custom rules (4-space indent, 120-char lines)
-- `cpplint` — Google C++ style checking with custom filters
-- `cppclean` — Dead code detection
-- Spell checker for documentation
-- All enforced via `make style` target in `fast-checks.yml`
-
-**Security (SDL)**:
-- `make sdl-check` target combines: hadolint, bandit, license-headers, forbidden functions check
-- **hadolint**: Dockerfile linting via `tests/hadolint.sh`
-- **Bandit**: Python security scanner for demos and client code
-- **Forbidden functions**: Custom `ci/lib_search.py` scans for dangerous C/C++ functions
-- **checksec**: Binary security validation (RELRO, PIE, stack protection)
-- **License headers**: Ensures all source files have proper license headers
+**What's working well**:
+- Comprehensive coverage of server components (gRPC, REST, C API, config, deserialization, ensemble, custom nodes)
+- Test filter support (`--test_filter`) for targeted test execution
+- GPU test support via `RUN_GPU_TESTS=1` flag
 
 **Gaps**:
-- No SAST (CodeQL, Semgrep, cppcheck) for C++ semantic analysis
-- No secret detection (Gitleaks, TruffleHog)
-- No dependency scanning (Dependabot, Renovate) configured
-- Bandit only scans demos and client, not the main test suite
+- No `t.Parallel()` equivalent visible (Bazel provides some test isolation by default)
+- Test data management relies on model export scripts that can be slow
 
-### Container Images
+### Integration/E2E Tests
 
-**Dockerfiles**:
-- `Dockerfile.redhat` — Production Red Hat UBI9-based, 4-stage build (base_build → build → capi-build → pkg → release)
-- `Dockerfile.konflux` — Identical to redhat but with Konflux-specific workarounds (output base for locating binaries)
-- `Dockerfile.ubuntu` — Ubuntu-based alternative
+**Score: 6.0/10**
 
-**Build Process**:
-- Complex multi-stage build: OpenVINO from source or binary, OpenVINO Tokenizers, GenAI, Azure SDK, OpenCV, Boost, Bazel
-- Build-time unit test execution when `RUN_TESTS=1`
-- Binary validation: `ovms --version` smoke test in build stage
-- C-API benchmark test in capi-build stage
+- **Python functional tests** in `tests/functional/` using pytest framework
+- **46 Python files** in the functional test directory, but only **4 test modules** with actual test classes:
+  - `test_model_versions_handling.py` — Model version management
+  - `test_model_version_policy.py` — Version policy configuration
+  - `test_reshaping.py` — Dynamic shape handling
+  - `test_llm_json.py` — LLM JSON endpoint testing
+- **Test infrastructure**: Object model pattern (`tests/functional/object_model/`), server wrapper, gRPC/REST utilities
+- **Docker-based**: Tests run against containerized OVMS instances
+- **Priority markers**: `@pytest.mark.priority_low` for test prioritization
+- **Target device filtering**: Tests can be skipped based on device (CPU, GPU, NPU)
 
-**Security Hardening**:
-- SDL compiler flags: `-fpic -O2 -fstack-protector -fno-omit-frame-pointer -D_FORTIFY_SOURCE=1 -fno-strict-overflow -fwrapv -fstack-clash-protection -Werror=format-security`
-- Non-root user (`ovms:5000`) in release image
-- `ubi-minimal` base for release image
-- hadolint comments for acceptable deviations
-
-**Gaps**:
-- No Trivy/Grype scanning in CI
-- No SBOM generation
-- No image signing/attestation (cosign, Sigstore)
-- Single architecture only (x86_64) — no ARM64/multi-arch support
-- No `.dockerignore` found (may cause larger build context)
-
-### Security Practices
-
-**Strengths**:
-- Comprehensive SDL process: style checks, bandit, forbidden functions, hadolint, checksec
-- Compiler hardening flags consistently applied across all build stages
-- License compliance checking
-- Non-root container execution
+**Additional test suites**:
+- **Accuracy tests** (`tests/accuracy/`): Model accuracy validation scripts
+- **Performance tests** (`tests/performance/`): gRPC latency and throughput benchmarks
+- **SDL tests** (`tests/sdl/`): Security development lifecycle checks
+- **Windows tests** (`tests/python/`): Windows service installation tests
 
 **Gaps**:
-- No SAST/CodeQL for C++ vulnerability detection
-- No container image scanning
-- No secret detection in CI
-- No dependency vulnerability scanning
-- No SBOM generation
-- `security.md` exists but no bug bounty or security policy workflow
+- No cluster-based testing (Kind, Minikube, envtest)
+- Limited functional test coverage relative to the number of features
+- No multi-version testing matrix
+- No contract testing between gRPC/REST APIs
 
-### Agent Rules (Agentic Flow Quality)
+### Build Integration
 
-- **Status**: Missing
-- **Coverage**: None — no CLAUDE.md, AGENTS.md, or `.claude/` directory
-- **Quality**: N/A
-- **Gaps**: Complete absence of AI agent guidance
-- **Impact**: AI agents cannot leverage project-specific patterns:
-  - Bazel build system conventions
-  - Google Test patterns and fixtures
-  - Multi-stage Docker build structure
-  - SDL security requirements
-  - Performance test patterns
-- **Recommendation**: Generate rules with `/test-rules-generator` covering C++ unit tests (Google Test), Python functional tests (pytest), and build conventions (Bazel)
+**Score: 7.0/10**
+
+- **Konflux support**: Dedicated `Dockerfile.konflux` with `.konflux/build-args.conf` providing build parameters (base images, Bazel flags, source branches)
+- **Multi-stage Docker builds**: 5 stages (base_build, build, capi-build, pkg, release) for optimized image layers
+- **Jenkins PR builds**: `build_test_OnCommit.groovy` pipeline runs on PRs with:
+  - Smart diff detection — only builds when relevant files change (src, third_party, Dockerfiles, etc.)
+  - Parallel build stages for Linux and Windows
+  - Unit test execution post-build
+- **Makefile orchestration**: `make docker_build` handles full build pipeline (builder image → package → release images)
+- **In-Docker testing**: Tests can run during image build via `RUN_TESTS=1` build arg
+- **Multiple OS targets**: Ubuntu and Red Hat (UBI9) builds with `BASE_OS` flag
+
+**Gaps**:
+- No dry-run manifest validation (`kubectl apply --dry-run`)
+- No Kustomize overlay verification (K8s deployment files in `extras/openshift_AI/` and `extras/kserve/` but no build-time validation)
+
+### Image Testing
+
+**Score: 5.0/10**
+
+- **Multiple Dockerfiles**: `Dockerfile.ubuntu`, `Dockerfile.redhat`, `Dockerfile.konflux`
+- **Multi-stage builds**: 5 well-defined stages separating build, packaging, and release concerns
+- **UBI9 base images**: `registry.access.redhat.com/ubi9/ubi:9.7` for build, `ubi9/ubi-minimal:9.7` for release — FIPS-capable
+- **GPU support**: Conditional GPU driver installation and GPU release images
+- **`.dockerignore` present**: Proper build context filtering
+- **Hadolint**: Dockerfile linting via `make hadolint`
+
+**Gaps**:
+- **No HEALTHCHECK directive** in any Dockerfile
+- **No testcontainers** or container startup validation
+- **No multi-architecture support** (x86_64 only, no ARM64/buildx)
+- **No container image scanning** in CI (out of scope per instructions, but no runtime validation either)
+
+### Coverage Tracking
+
+**Score: 6.0/10**
+
+- **Bazel coverage**: `bazel coverage --instrumentation_filter="-src/test" --combined_report=lcov` generates lcov reports
+- **HTML reports**: `genhtml` produces browsable HTML coverage reports
+- **Threshold enforcement**: `ci/check_coverage.bat` enforces:
+  - Minimum lines coverage: **76.0%**
+  - Minimum function coverage: **83.0%**
+- **Makefile integration**: `make get_coverage` and `make check_coverage` targets
+- **Filtered coverage**: lcov filters out test files and external dependencies to report only OVMS source coverage
+
+**Gaps**:
+- **No codecov/coveralls integration** — coverage stays inside the Docker build container
+- **No PR coverage comments** — reviewers cannot see coverage delta per PR
+- **Coverage not automated in CI** — requires manual `CHECK_COVERAGE=1` flag; default is `CHECK_COVERAGE=0`
+- **No `.codecov.yml`** configuration
+
+### CI/CD Automation
+
+**Score: 7.0/10**
+
+- **Jenkins CI** with multiple pipeline definitions:
+  - `build_test_OnCommit.groovy` — PR pipeline (4-hour timeout)
+  - `buildOnMain.groovy` — Main branch builds
+  - `buildOnDevelop.groovy` — Develop branch builds
+- **Smart diff detection**: Only triggers builds when relevant files change (src, Dockerfiles, Makefile, Bazel configs)
+- **Parallel stages**:
+  - Style + SDL checks run in parallel
+  - Linux + Windows builds run in parallel
+  - Unit tests + internal tests + Windows tests run in parallel
+- **SDL pipeline**: Dedicated security checks:
+  - cpplint (C++ style)
+  - clang-format (formatting)
+  - hadolint (Dockerfile linting)
+  - bandit (Python security)
+  - License header verification
+  - Forbidden functions detection
+  - Spell checking
+- **Client test detection**: Separate pipeline logic for client library changes
+
+**Gaps**:
+- **Jenkins-only**: No GitHub Actions workflows; limits PR integration features (status checks, comments)
+- **No explicit caching strategies** in Jenkinsfiles (relies on Bazel's built-in caching)
+- **No test parallelization** within the test suite itself (single `bazel test` invocation)
+- **No concurrency control** visible in Jenkinsfiles (beyond Jenkins agent label constraints)
+
+### Static Analysis
+
+**Score: 6.0/10**
+
+**Linting**:
+- **cpplint**: C++ style checking integrated in `make style`
+- **clang-format**: Code formatting with `.clang-format` config file, enforced via `make clang-format-check`
+- **cppclean**: Detects unused code and includes
+- **Hadolint**: Dockerfile linting via `tests/hadolint.sh`
+- **Bandit**: Python security analysis via `ci/bandit.sh`
+- **Spell checking**: Integrated in `make style` with `spelling-whitelist.txt`
+
+**FIPS Compatibility**:
+- **UBI9 base images**: FIPS-capable (`registry.access.redhat.com/ubi9/ubi`)
+- **BoringSSL**: Included in `third_party/boringssl/` with Bazel integration
+- **No non-FIPS crypto imports detected**: grep for `crypto/md5`, `crypto/des`, `crypto/rc4`, `hashlib.md5` returned no results
+- **Assessment**: Good FIPS posture with UBI9 + BoringSSL
+
+**Dependency Alerts**:
+- **No `.github/dependabot.yml`**
+- **No `renovate.json` or `.renovaterc`**
+- **25+ third-party Bazel dependencies** in `third_party/` without automated update tracking
+- **Python test dependencies** in `tests/requirements.txt` without automated updates
+
+**Gaps**:
+- No `.pre-commit-config.yaml` for local enforcement
+- No Dependabot or Renovate for automated dependency updates
+
+### Agent Rules
+
+**Score: 4.0/10**
+
+- **`.github/copilot-instructions.md`**: Present and comprehensive — covers project overview, repository structure, code style, build system (Bazel), testing setup, and detailed code review guidelines (13 review rules covering C++ Core Guidelines, performance, formatting, and safety)
+- **No `CLAUDE.md`**: Missing Claude Code-specific rules
+- **No `.claude/` directory**: No `.claude/rules/` or `.claude/skills/`
+- **No `AGENTS.md`**: Missing general agent instructions
+
+**What's good**:
+- Copilot instructions include detailed C++ review checklist
+- Build system documentation is thorough (Bazel targets, Makefile, Docker stages)
+- Testing section explains test setup, running, and structure
+
+**Gaps**:
+- No test creation rules for unit tests (gtest patterns, fixture setup, mock patterns)
+- No test creation rules for functional tests (pytest patterns, server fixtures, gRPC/REST test utilities)
+- No framework-specific examples for AI agents
+- No quality gate checklists for PR reviews
 
 ## Recommendations
 
 ### Priority 0 (Critical)
 
-1. **Add container vulnerability scanning (Trivy) to PR workflow** — Catch CVEs in base images, installed packages, and dependencies before merge. Add to `fast-checks.yml` for filesystem scanning and to `integration-tests.yml` for image scanning.
+1. **Integrate codecov for PR-level coverage reporting** (4-6 hours)
+   - Add `.codecov.yml` with threshold configuration matching current 76%/83% gates
+   - Generate coverage report in Jenkins and upload via codecov CLI
+   - Enable PR comments showing coverage delta
 
-2. **Add CodeQL or Semgrep SAST analysis** — 78K+ lines of C++ handling network requests (gRPC, REST), model loading, and memory management need semantic static analysis beyond cpplint style checks.
+2. **Add Dependabot configuration** (1-2 hours)
+   - Create `.github/dependabot.yml` covering pip and Docker ecosystems
+   - Consider Renovate for broader Bazel dependency support
+
+3. **Add HEALTHCHECK to production Dockerfiles** (1-2 hours)
+   - Use the existing REST API health endpoint for container health checks
+   - Apply to `Dockerfile.redhat` and `Dockerfile.konflux` release stages
 
 ### Priority 1 (High Value)
 
-3. **Integrate codecov for PR-level coverage reporting** — The infrastructure exists (Bazel coverage + lcov + thresholds), but coverage isn't visible during PR review. Upload lcov output to codecov with PR annotations.
+4. **Expand functional test suite** (20-40 hours)
+   - Add functional tests for embeddings, reranking, mediapipe, image generation, and C API
+   - Target coverage of all REST/gRPC API endpoints
+   - Add failure scenario tests (malformed requests, model loading errors, resource exhaustion)
 
-4. **Add secret detection (Gitleaks)** — No secret scanning exists. Repository contains scripts that handle proxies, credentials, and URLs that could leak sensitive data.
+5. **Create CLAUDE.md and .claude/rules/ for test automation** (2-4 hours)
+   - Adapt `.github/copilot-instructions.md` content for Claude Code
+   - Add gtest unit test creation rules with examples
+   - Add pytest functional test patterns with server fixture usage
 
-5. **Create comprehensive agent rules** — Build CLAUDE.md with build/test instructions and .claude/rules/ for unit test patterns (Google Test), functional test patterns (pytest + Docker), and SDL compliance requirements.
+6. **Add .pre-commit-config.yaml** (2-3 hours)
+   - Include cpplint, clang-format, hadolint, and bandit hooks
+   - Reduces CI feedback cycle by catching issues locally
 
 ### Priority 2 (Nice-to-Have)
 
-6. **Add multi-architecture image builds** — Currently x86_64 only. ARM64 support would broaden platform compatibility (Apple Silicon dev, ARM Kubernetes nodes).
+7. **Add multi-architecture build support** (8-16 hours)
+   - Add ARM64 support via Docker buildx
+   - Useful for broader deployment targets including edge devices
 
-7. **Move hadolint to PR checks** — Hadolint currently only runs as part of `sdl-check` but not in the `fast-checks.yml` PR workflow. Move it to catch Dockerfile issues earlier.
+8. **Consider GitHub Actions migration or supplement** (16-40 hours)
+   - Add GitHub Actions workflows for PR status checks and coverage comments
+   - Keep Jenkins for heavy builds if needed, but use GHA for lightweight checks
 
-8. **Add fuzz testing** — The gRPC and REST request parsers handle untrusted input and would benefit from fuzz testing (OSS-Fuzz, libFuzzer). The repo already has `FUZZER_BUILD` build arg support.
+9. **Add container image startup validation** (4-8 hours)
+   - Test that the release image starts correctly and responds to health checks
+   - Can use a simple shell script or testcontainers framework
 
 ## Comparison to Gold Standards
 
-| Dimension | OVMS (This Repo) | odh-dashboard | notebooks | kserve |
-|-----------|-------------------|---------------|-----------|--------|
-| Unit Tests | 8.5 (149 files, 100K LOC) | 9.0 (Jest, comprehensive) | 6.0 (notebook validation) | 9.0 (Go testing) |
-| Integration/E2E | 8.0 (functional + perf) | 9.0 (Cypress E2E) | 7.0 (image testing) | 9.0 (multi-version) |
-| Build Integration | 7.5 (Prow + Konflux) | 7.0 (PR builds) | 6.0 (image builds) | 8.0 (matrix testing) |
-| Image Testing | 7.0 (runtime validation) | 6.0 (basic builds) | 9.0 (5-layer validation) | 7.0 (image tests) |
-| Coverage Tracking | 7.5 (lcov + thresholds) | 8.0 (codecov + enforcement) | 4.0 (no tracking) | 9.0 (codecov) |
-| CI/CD Automation | 7.0 (3 workflows) | 9.0 (comprehensive) | 7.0 (matrix builds) | 9.0 (well-organized) |
-| Container Scanning | 2.0 (checksec only) | 6.0 (basic) | 8.0 (Trivy + SBOM) | 7.0 (Trivy) |
-| Agent Rules | 0.0 (none) | 8.0 (comprehensive) | 2.0 (minimal) | 3.0 (basic) |
+| Capability | OVMS (This Repo) | odh-dashboard (Gold) | notebooks (Gold) | kserve (Gold) |
+|---|---|---|---|---|
+| Unit test framework | gtest (130+ files) | Jest + RTL | pytest | Go testing |
+| Test-to-code ratio | ~24% | ~40%+ | Moderate | High |
+| Functional/E2E tests | pytest (4 modules) | Cypress + contract | Multi-layer | Multi-version |
+| Coverage tracking | lcov + thresholds | Codecov + PR gates | Basic | Codecov + PR |
+| PR coverage reporting | None | Yes (Codecov) | Limited | Yes (Codecov) |
+| CI system | Jenkins | GitHub Actions | GitHub Actions | GitHub Actions |
+| HEALTHCHECK | None | N/A (web app) | Present | Present |
+| Dependabot/Renovate | None | Dependabot | Dependabot | Dependabot |
+| Pre-commit hooks | None | Yes | Yes | Yes |
+| Agent rules | Copilot only | CLAUDE.md + rules | Basic | Basic |
+| Multi-arch | None | N/A | Yes (5-layer) | Yes |
+| Konflux support | Yes | Yes | Yes | Yes |
+| FIPS posture | Good (UBI9 + BoringSSL) | Good | Good | Good |
 
 ## File Paths Reference
 
 ### CI/CD
-- `.github/workflows/fast-checks.yml` — PR style/security checks
-- `.github/workflows/integration-tests.yml` — Prow-triggered integration tests
-- `.github/workflows/integration-tests-konflux.yml` — Konflux-triggered integration tests
-- `Makefile` — 700-line build/test orchestration (test targets: style, sdl-check, test_functional, test_perf, test_throughput, run_unit_tests, run_lib_files_test)
+- `ci/build_test_OnCommit.groovy` — PR Jenkins pipeline
+- `ci/buildOnMain.groovy` — Main branch builds
+- `ci/buildOnDevelop.groovy` — Develop branch builds
+- `ci/check_coverage.bat` — Coverage threshold enforcement
+- `ci/bandit.sh` — Python security analysis
+- `Makefile` — Build and test orchestration
 
 ### Testing
-- `src/test/` — 149 C++ unit test files (Google Test)
+- `src/test/` — C++ unit tests (gtest, 130+ files)
 - `tests/functional/` — Python functional tests (pytest)
-- `tests/performance/` — Latency/throughput test scripts
-- `tests/python/` — Python client integration tests
-- `src/python/binding/tests/` — Python binding tests
+- `tests/accuracy/` — Model accuracy validation
+- `tests/performance/` — Performance benchmarks
+- `tests/sdl/` — SDL security checks
+- `tests/requirements.txt` — Python test dependencies
 - `run_unit_tests.sh` — Unit test runner with coverage support
-- `ci/check_coverage.bat` — Coverage threshold enforcement (76% line, 83% function)
-
-### Code Quality
-- `.clang-format` — C++ formatting rules
-- `ci/style_requirements.txt` — Style check Python dependencies
-- `ci/bandit.sh` — Python security scanner
-- `ci/lib_search.py` — Forbidden C/C++ function checker
-- `ci/cppclean.sh` — Dead code detection
 
 ### Container Images
-- `Dockerfile.redhat` — Production UBI9 multi-stage build
-- `Dockerfile.konflux` — Konflux-adapted build
-- `Dockerfile.ubuntu` — Ubuntu variant
+- `Dockerfile.redhat` — Red Hat UBI9 production build
+- `Dockerfile.konflux` — Konflux build configuration
+- `Dockerfile.ubuntu` — Ubuntu development build
+- `.dockerignore` — Build context filtering
+- `.konflux/build-args.conf` — Konflux build parameters
+
+### Static Analysis
+- `.clang-format` — C++ formatting configuration
+- `ci/bandit.sh` — Python security analysis
+- `tests/hadolint.sh` — Dockerfile linting
+- `spelling-whitelist.txt` — Spell check whitelist
+
+### Agent Rules
+- `.github/copilot-instructions.md` — Copilot development instructions
 
 ### Build System
 - `BUILD.bazel` — Root Bazel build file
-- `WORKSPACE` — Bazel workspace with external dependencies
 - `.bazelrc` — Bazel configuration
+- `WORKSPACE` — Bazel workspace definition
 - `common_settings.bzl` — Shared Bazel settings
+- `third_party/` — 25+ third-party Bazel dependencies

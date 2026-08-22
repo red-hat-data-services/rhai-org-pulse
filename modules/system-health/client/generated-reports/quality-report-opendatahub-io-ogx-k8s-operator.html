@@ -332,7 +332,7 @@
     <div class="container">
         <header>
             <h1>Quality Analysis Report</h1>
-            <p class="timestamp">Generated on July 06, 2026 at 04:06 PM</p>
+            <p class="timestamp">Generated on July 20, 2026 at 06:00 PM</p>
             <h2 style="margin-top: 1rem; font-weight: 400;">opendatahub-io/ogx-k8s-operator</h2>
         </header>
 
@@ -344,11 +344,11 @@
                         <circle class="score-arc" cx="100" cy="100" r="90"
                                 stroke="#ffc107"
                                 stroke-dasharray="565.4861999999999"
-                                stroke-dashoffset="152.681274"
+                                stroke-dashoffset="141.37154999999998"
                                 id="scoreArc"></circle>
                     </svg>
                     <div class="score-text">
-                        <div class="score-value">7.3</div>
+                        <div class="score-value">7.5</div>
                         <div class="score-label">Overall Score</div>
                     </div>
                 </div>
@@ -364,38 +364,43 @@
                         
                         <div class="scorecard-item">
                             <h3>Unit Tests</h3>
-                            <div class="scorecard-score" style="color: #28a745;">8.5/10</div>
-                            <div class="scorecard-status">Excellent test-to-code ratio (1:1) with envtest, table-driven tests, and strong coverage across controllers, API, and packages</div>
+                            <div class="scorecard-score" style="color: #28a745;">8.0/10</div>
+                            <div class="scorecard-status">Strong coverage with 33 test files, envtest integration, testify framework</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Integration/E2E</h3>
                             <div class="scorecard-score" style="color: #28a745;">8.0/10</div>
-                            <div class="scorecard-status">Automated E2E on PR via Kind cluster with cert-manager, operator deployment, and multi-scenario testing</div>
+                            <div class="scorecard-status">Comprehensive E2E suite with Kind cluster, automated on PRs, release-gated</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Build Integration</h3>
-                            <div class="scorecard-score" style="color: #ffc107;">6.0/10</div>
-                            <div class="scorecard-status">Tekton/Konflux pipelines present but no PR-time Konflux simulation; image built in E2E workflow</div>
+                            <div class="scorecard-score" style="color: #28a745;">8.0/10</div>
+                            <div class="scorecard-status">Konflux PR pipelines, pre-commit manifest generation, kustomize overlay validation</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Image Testing</h3>
-                            <div class="scorecard-score" style="color: #fd7e14;">5.5/10</div>
-                            <div class="scorecard-status">Multi-arch builds (amd64/arm64) with FIPS support, but no container scanning, SBOM, or runtime validation</div>
+                            <div class="scorecard-score" style="color: #ffc107;">6.0/10</div>
+                            <div class="scorecard-status">Multi-arch UBI9 multi-stage builds, tested via Kind deployment, no explicit container runtime validation</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Coverage Tracking</h3>
-                            <div class="scorecard-score" style="color: #ffc107;">6.5/10</div>
-                            <div class="scorecard-status">limgo coverage reporting on PR summary but thresholds set to 0%; no codecov integration</div>
+                            <div class="scorecard-score" style="color: #fd7e14;">5.0/10</div>
+                            <div class="scorecard-status">Coverage generated via coverprofile and limgo, but thresholds at zero — not enforcing</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>CI/CD Automation</h3>
-                            <div class="scorecard-score" style="color: #28a745;">8.5/10</div>
-                            <div class="scorecard-status">Well-organized workflows with concurrency control, Mergify auto-merge, Dependabot, pre-commit CI</div>
+                            <div class="scorecard-score" style="color: #28a745;">8.0/10</div>
+                            <div class="scorecard-status">Well-organized workflows with Mergify, Konflux, release automation, concurrency control</div>
+                        </div>
+                        <div class="scorecard-item">
+                            <h3>Static Analysis</h3>
+                            <div class="scorecard-score" style="color: #28a745;">9.0/10</div>
+                            <div class="scorecard-status">golangci-lint v2 all-enabled, 12+ pre-commit hooks, FIPS-compliant, Dependabot for 3 ecosystems</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Agent Rules</h3>
-                            <div class="scorecard-score" style="color: #ffc107;">7.0/10</div>
-                            <div class="scorecard-status">Comprehensive CLAUDE.md with architecture, commands, and conventions; no .claude/rules/ test rules</div>
+                            <div class="scorecard-score" style="color: #ffc107;">6.0/10</div>
+                            <div class="scorecard-status">Comprehensive CLAUDE.md with architecture and conventions, but no .claude/rules/ test patterns</div>
                         </div>
                     </div>
                 </div>
@@ -411,43 +416,27 @@
                     <ul class="items-list">
                         
                         <li class="item-card high">
-                            <div class="item-description">No container security scanning (Trivy/Snyk/Grype)</div>
-                            <p>Vulnerabilities in base images and dependencies go undetected until production</p>
+                            <div class="item-description">Coverage thresholds not enforced</div>
+                            <p>Coverage is tracked but thresholds are zero — regressions go undetected until too late</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-high">HIGH</span>
                                 <span class="meta-tag effort-tag">2-4 hours</span>
                             </div>
                         </li>
-                        <li class="item-card high">
-                            <div class="item-description">Coverage thresholds set to 0% — no enforcement</div>
-                            <p>Coverage can regress silently; limgo reports are informational only</p>
+                        <li class="item-card medium">
+                            <div class="item-description">No container runtime validation</div>
+                            <p>Image startup issues not caught by dedicated tests — relies on E2E Kind deployment as proxy</p>
                             <div class="item-meta">
-                                <span class="meta-tag severity-high">HIGH</span>
-                                <span class="meta-tag effort-tag">1-2 hours</span>
-                            </div>
-                        </li>
-                        <li class="item-card high">
-                            <div class="item-description">No SBOM generation or image signing</div>
-                            <p>Supply chain security gaps; no attestation for built artifacts</p>
-                            <div class="item-meta">
-                                <span class="meta-tag severity-high">HIGH</span>
+                                <span class="meta-tag severity-medium">MEDIUM</span>
                                 <span class="meta-tag effort-tag">4-6 hours</span>
                             </div>
                         </li>
                         <li class="item-card medium">
-                            <div class="item-description">No PR-time Konflux build simulation</div>
-                            <p>Konflux build failures discovered only after merge</p>
+                            <div class="item-description">No multi-version Kubernetes testing</div>
+                            <p>Operator may fail on different K8s/OCP versions discovered only in production</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-medium">MEDIUM</span>
-                                <span class="meta-tag effort-tag">8-12 hours</span>
-                            </div>
-                        </li>
-                        <li class="item-card medium">
-                            <div class="item-description">E2E tests only gate main branch PRs, not odh branch</div>
-                            <p>ODH branch changes lack E2E validation before merge</p>
-                            <div class="item-meta">
-                                <span class="meta-tag severity-medium">MEDIUM</span>
-                                <span class="meta-tag effort-tag">2-4 hours</span>
+                                <span class="meta-tag effort-tag">4-8 hours</span>
                             </div>
                         </li>
                     </ul>
@@ -464,40 +453,24 @@
                     <ul class="items-list">
                         
                         <li class="item-card ">
-                            <div class="item-description">Add Trivy scanning to PR workflow</div>
-                            <p>Catch CVEs in base images and Go dependencies before merge</p>
+                            <div class="item-description">Set non-zero limgo coverage thresholds</div>
+                            <p>Prevent coverage regressions on every PR by enforcing minimum thresholds</p>
                             <div class="item-meta">
                                 
                                 <span class="meta-tag effort-tag">1-2 hours</span>
                             </div>
                         </li>
                         <li class="item-card ">
-                            <div class="item-description">Set non-zero coverage thresholds in .limgo.json</div>
-                            <p>Prevent coverage regression on every PR</p>
+                            <div class="item-description">Add Codecov integration for PR coverage reporting</div>
+                            <p>Inline PR coverage diffs and trend tracking across branches</p>
                             <div class="item-meta">
                                 
-                                <span class="meta-tag effort-tag">30 minutes</span>
+                                <span class="meta-tag effort-tag">2-3 hours</span>
                             </div>
                         </li>
                         <li class="item-card ">
-                            <div class="item-description">Add SBOM generation to image build workflows</div>
-                            <p>Supply chain transparency and compliance readiness</p>
-                            <div class="item-meta">
-                                
-                                <span class="meta-tag effort-tag">1-2 hours</span>
-                            </div>
-                        </li>
-                        <li class="item-card ">
-                            <div class="item-description">Enable E2E tests for odh branch PRs</div>
-                            <p>Close the E2E gap on the downstream integration branch</p>
-                            <div class="item-meta">
-                                
-                                <span class="meta-tag effort-tag">1 hour</span>
-                            </div>
-                        </li>
-                        <li class="item-card ">
-                            <div class="item-description">Create .claude/rules/ test generation rules</div>
-                            <p>Standardize AI-assisted test creation patterns</p>
+                            <div class="item-description">Create .claude/rules/ for test patterns</div>
+                            <p>Improve AI-generated test quality and consistency with repo conventions</p>
                             <div class="item-meta">
                                 
                                 <span class="meta-tag effort-tag">2-3 hours</span>
@@ -517,15 +490,15 @@
                         
                         <div class="rec-priority p0">
                             <h3>Priority 0: Critical</h3>
-                            <ul><li>Add container image vulnerability scanning (Trivy) to PR and post-merge workflows</li><li>Set meaningful coverage thresholds in .limgo.json (currently 0% for all metrics)</li><li>Add SBOM generation and image signing/attestation to release pipeline</li></ul>
+                            <ul><li>Set meaningful limgo coverage thresholds (e.g., 60%+ statements/lines) to gate PRs</li><li>Add Codecov or equivalent PR coverage reporting with diff enforcement</li></ul>
                         </div>
                         <div class="rec-priority p1">
                             <h3>Priority 1: High Value</h3>
-                            <ul><li>Enable E2E test requirement for odh branch PRs in run-e2e-test.yml</li><li>Add PR-time Konflux build simulation to catch build issues pre-merge</li><li>Create .claude/rules/ with unit-tests.md, e2e-tests.md, integration-tests.md</li><li>Add CodeQL or gosec SAST scanning workflow</li></ul>
+                            <ul><li>Add K8s version matrix to E2E tests (test against 2-3 K8s versions)</li><li>Create .claude/rules/ with unit test, E2E test, and webhook test patterns</li><li>Add container health check or startup validation test</li></ul>
                         </div>
                         <div class="rec-priority p2">
                             <h3>Priority 2: Nice-to-Have</h3>
-                            <ul><li>Add Gitleaks secret detection to pre-commit and CI</li><li>Add performance/load testing for operator reconciliation</li><li>Add multi-version Kubernetes testing matrix (1.30, 1.31, 1.32)</li><li>Consider adding contract tests for API webhook validation</li></ul>
+                            <ul><li>Add contract tests for the distribution resolution API boundary</li><li>Add webhook mutation/validation fuzz testing</li><li>Consider performance regression tests for reconciliation loop</li></ul>
                         </div>
                     </div>
                 </div>

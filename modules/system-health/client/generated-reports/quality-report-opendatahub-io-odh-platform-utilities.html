@@ -332,7 +332,7 @@
     <div class="container">
         <header>
             <h1>Quality Analysis Report</h1>
-            <p class="timestamp">Generated on July 06, 2026 at 04:22 PM</p>
+            <p class="timestamp">Generated on July 20, 2026 at 03:55 PM</p>
             <h2 style="margin-top: 1rem; font-weight: 400;">opendatahub-io/odh-platform-utilities</h2>
         </header>
 
@@ -344,11 +344,11 @@
                         <circle class="score-arc" cx="100" cy="100" r="90"
                                 stroke="#ffc107"
                                 stroke-dasharray="565.4861999999999"
-                                stroke-dashoffset="180.95558400000002"
+                                stroke-dashoffset="209.22989399999997"
                                 id="scoreArc"></circle>
                     </svg>
                     <div class="score-text">
-                        <div class="score-value">6.8</div>
+                        <div class="score-value">6.3</div>
                         <div class="score-label">Overall Score</div>
                     </div>
                 </div>
@@ -364,38 +364,43 @@
                         
                         <div class="scorecard-item">
                             <h3>Unit Tests</h3>
-                            <div class="scorecard-score" style="color: #ffc107;">7.0/10</div>
-                            <div class="scorecard-status">Strong root-module coverage (1.33 test-to-source ratio), framework module severely undertested (0.13 ratio)</div>
+                            <div class="scorecard-score" style="color: #28a745;">9.0/10</div>
+                            <div class="scorecard-status">Excellent test suite with 53 test files, t.Parallel(), table-driven tests, race detector, and Gomega matchers</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Integration/E2E</h3>
-                            <div class="scorecard-score" style="color: #fd7e14;">5.0/10</div>
-                            <div class="scorecard-status">No integration or E2E tests — acceptable for a pure library, but envtest or fake-client integration suites would strengthen the framework module</div>
+                            <div class="scorecard-score" style="color: #dc3545;">3.0/10</div>
+                            <div class="scorecard-status">No integration or E2E tests; library nature partially mitigates but envtest-based tests would add value</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Build Integration</h3>
-                            <div class="scorecard-score" style="color: #fd7e14;">4.0/10</div>
-                            <div class="scorecard-status">No container images to build; CI validates lint+test+tidy+fmt but no Konflux or build simulation</div>
+                            <div class="scorecard-score" style="color: #ffc107;">7.0/10</div>
+                            <div class="scorecard-status">Strong CI validation of multi-module builds, go mod tidy, formatting, and code generation; no container builds needed</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Image Testing</h3>
-                            <div class="scorecard-score" style="color: #dc3545;">0.0/10</div>
-                            <div class="scorecard-status">N/A — pure Go library with no container images</div>
+                            <div class="scorecard-score" style="color: #fd7e14;">5.0/10</div>
+                            <div class="scorecard-status">N/A — shared Go library with no container images to test</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Coverage Tracking</h3>
-                            <div class="scorecard-score" style="color: #fd7e14;">5.0/10</div>
-                            <div class="scorecard-status">Codecov integration exists but set to informational-only; no enforcement thresholds or PR gates</div>
+                            <div class="scorecard-score" style="color: #ffc107;">6.0/10</div>
+                            <div class="scorecard-status">Codecov integration with PR uploads across all 3 modules, but informational only — no threshold enforcement</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>CI/CD Automation</h3>
-                            <div class="scorecard-score" style="color: #ffc107;">7.5/10</div>
-                            <div class="scorecard-status">Clean PR pipeline (lint, test, verify-tidy, verify-fmt, codecov upload); release workflow validates tag+tests; lacks concurrency control and caching</div>
+                            <div class="scorecard-score" style="color: #ffc107;">7.0/10</div>
+                            <div class="scorecard-status">Clean CI with lint/test/verify jobs on PRs, release workflow with tag validation; missing concurrency control and caching</div>
+                        </div>
+                        <div class="scorecard-item">
+                            <h3>Static Analysis</h3>
+                            <div class="scorecard-score" style="color: #ffc107;">7.0/10</div>
+                            <div class="scorecard-status">Aggressive golangci-lint v2 (default: all), pre-commit hooks with 7 checks, no FIPS issues; missing Dependabot/Renovate</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Agent Rules</h3>
                             <div class="scorecard-score" style="color: #28a745;">9.0/10</div>
-                            <div class="scorecard-status">Exceptional — root AGENTS.md + 7 package-level AGENTS.md files with architecture, conventions, and migration guides</div>
+                            <div class="scorecard-status">Comprehensive AGENTS.md with architecture context, coding conventions, and 7 package-level AGENTS.md files</div>
                         </div>
                     </div>
                 </div>
@@ -411,35 +416,27 @@
                     <ul class="items-list">
                         
                         <li class="item-card high">
-                            <div class="item-description">Framework module test coverage is critically low</div>
-                            <p>52 source files / 7,798 LOC with only 6 test files / 1,038 test LOC (ratio 0.13) — reconciler, actions, predicates, handlers largely untested</p>
+                            <div class="item-description">No integration tests with envtest or fake cluster</div>
+                            <p>Controller utilities (deploy, GC, conditions, webhooks) are only tested with mock clients — real reconciliation flows and server-side apply behavior are untested</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-high">HIGH</span>
-                                <span class="meta-tag effort-tag">40-60 hours</span>
-                            </div>
-                        </li>
-                        <li class="item-card high">
-                            <div class="item-description">No security scanning in CI</div>
-                            <p>Dependency vulnerabilities, secret leaks, and SAST issues go undetected until downstream consumers scan</p>
-                            <div class="item-meta">
-                                <span class="meta-tag severity-high">HIGH</span>
-                                <span class="meta-tag effort-tag">2-4 hours</span>
+                                <span class="meta-tag effort-tag">16-24 hours</span>
                             </div>
                         </li>
                         <li class="item-card medium">
-                            <div class="item-description">Codecov thresholds not enforced</div>
-                            <p>Coverage can silently regress on any PR; informational-only status checks don&#x27;t block merges</p>
+                            <div class="item-description">No coverage threshold enforcement</div>
+                            <p>Coverage can silently regress; codecov status is informational-only so uncovered code merges without blocking</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-medium">MEDIUM</span>
-                                <span class="meta-tag effort-tag">1 hour</span>
+                                <span class="meta-tag effort-tag">2-3 hours</span>
                             </div>
                         </li>
-                        <li class="item-card low">
-                            <div class="item-description">No concurrency control on CI workflows</div>
-                            <p>Multiple CI runs for the same PR waste resources and can produce confusing status checks</p>
+                        <li class="item-card medium">
+                            <div class="item-description">No Dependabot or Renovate configuration</div>
+                            <p>Dependency updates and security patches require manual tracking — vulnerabilities in transitive deps may go unnoticed</p>
                             <div class="item-meta">
-                                <span class="meta-tag severity-low">LOW</span>
-                                <span class="meta-tag effort-tag">30 minutes</span>
+                                <span class="meta-tag severity-medium">MEDIUM</span>
+                                <span class="meta-tag effort-tag">1-2 hours</span>
                             </div>
                         </li>
                     </ul>
@@ -456,40 +453,32 @@
                     <ul class="items-list">
                         
                         <li class="item-card ">
-                            <div class="item-description">Add CodeQL / gosec SAST scanning workflow</div>
-                            <p>Catches security vulnerabilities and unsafe patterns in Go code before merge</p>
-                            <div class="item-meta">
-                                
-                                <span class="meta-tag effort-tag">2-3 hours</span>
-                            </div>
-                        </li>
-                        <li class="item-card ">
-                            <div class="item-description">Enable Codecov enforcement thresholds</div>
-                            <p>Prevent coverage regression by blocking PRs that drop below a baseline</p>
-                            <div class="item-meta">
-                                
-                                <span class="meta-tag effort-tag">30 minutes</span>
-                            </div>
-                        </li>
-                        <li class="item-card ">
-                            <div class="item-description">Add concurrency control to CI workflow</div>
-                            <p>Cancel redundant CI runs on force-push, reducing resource waste</p>
-                            <div class="item-meta">
-                                
-                                <span class="meta-tag effort-tag">15 minutes</span>
-                            </div>
-                        </li>
-                        <li class="item-card ">
-                            <div class="item-description">Add dependency scanning (govulncheck or Dependabot)</div>
-                            <p>Automated alerts for known vulnerabilities in Go dependencies</p>
+                            <div class="item-description">Enable Dependabot for Go modules</div>
+                            <p>Automated PRs for dependency security updates across all 3 Go modules</p>
                             <div class="item-meta">
                                 
                                 <span class="meta-tag effort-tag">1-2 hours</span>
                             </div>
                         </li>
                         <li class="item-card ">
-                            <div class="item-description">Add Go caching in CI</div>
-                            <p>Faster CI runs by caching Go module downloads and build cache</p>
+                            <div class="item-description">Add coverage thresholds to codecov.yml</div>
+                            <p>Prevent coverage regressions by failing PRs that drop below a minimum (e.g., 60% project, 50% patch)</p>
+                            <div class="item-meta">
+                                
+                                <span class="meta-tag effort-tag">1-2 hours</span>
+                            </div>
+                        </li>
+                        <li class="item-card ">
+                            <div class="item-description">Add concurrency control to CI workflow</div>
+                            <p>Cancel redundant CI runs on force-pushes, saving compute resources</p>
+                            <div class="item-meta">
+                                
+                                <span class="meta-tag effort-tag">30 minutes</span>
+                            </div>
+                        </li>
+                        <li class="item-card ">
+                            <div class="item-description">Add timeout-minutes to CI jobs</div>
+                            <p>Prevent runaway jobs from consuming resources indefinitely</p>
                             <div class="item-meta">
                                 
                                 <span class="meta-tag effort-tag">15 minutes</span>
@@ -509,15 +498,15 @@
                         
                         <div class="rec-priority p0">
                             <h3>Priority 0: Critical</h3>
-                            <ul><li>Write unit tests for the framework module — reconciler, deploy actions, GC, conditions, predicates, handlers are all untested or minimally tested</li><li>Add SAST scanning (CodeQL or gosec) to the CI pipeline</li><li>Enforce Codecov coverage thresholds (e.g., 50% project minimum, no patch regression)</li></ul>
+                            <ul><li>Add envtest-based integration tests for core controller utilities (deploy, GC, status update, singleton enforcement)</li><li>Enable Dependabot with gomod, github-actions ecosystems for automated dependency alerts</li></ul>
                         </div>
                         <div class="rec-priority p1">
                             <h3>Priority 1: High Value</h3>
-                            <ul><li>Add govulncheck or Dependabot for dependency vulnerability scanning</li><li>Add Gitleaks or similar secret detection to pre-commit hooks and CI</li><li>Consider envtest-based integration tests for framework reconciler and deploy actions</li></ul>
+                            <ul><li>Add coverage threshold enforcement (e.g., 60% project target, 50% patch target) in codecov.yml</li><li>Add CI concurrency control and job timeouts for resource efficiency</li><li>Add FIPS build tags and boringcrypto support if this library is used in FIPS-required environments</li></ul>
                         </div>
                         <div class="rec-priority p2">
                             <h3>Priority 2: Nice-to-Have</h3>
-                            <ul><li>Add benchmark tests for performance-critical paths (deploy loop, hash computation, manifest rendering)</li><li>Add CI concurrency control and Go module caching</li><li>Create .claude/rules/ directory with test-pattern rules for each package</li></ul>
+                            <ul><li>Add Go caching to CI workflow for faster builds</li><li>Consider adding .claude/rules/ directory with test-pattern rules for AI-assisted development</li><li>Add benchmark tests for performance-critical paths (resource hashing, deploy caching, sort)</li></ul>
                         </div>
                     </div>
                 </div>

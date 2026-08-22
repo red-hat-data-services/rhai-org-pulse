@@ -1,7 +1,7 @@
 <script setup>
 import { ref, watch } from 'vue'
 import { Video, Presentation, StickyNote, Play, ExternalLink } from 'lucide-vue-next'
-import { getAIImpactEnablementCategories } from '@shared/client/enablement-links.js'
+import { getAIImpactEnablementCategories } from '../enablement-links.js'
 
 const iconMap = { Video, Presentation, StickyNote, Play }
 function resolveIcon(name) { return iconMap[name] || Video }

@@ -1280,6 +1280,12 @@ function labelColorClasses(color) {
               <AlertTriangle :size="20" class="text-teal-600 dark:text-teal-400 flex-shrink-0 mt-0.5" />
               <span class="text-sm text-gray-700 dark:text-gray-300">If a feature appears in the demand pool but already has documentation or release notes, add the <code class="px-1.5 py-0.5 bg-gray-100 dark:bg-gray-700/50 text-gray-700 dark:text-gray-300 text-xs rounded font-mono">ai1st-doc-skip</code> label to the Jira issue. Preferably add a comment explaining why (e.g. "Docs already published in 3.x release notes")</span>
             </li>
+            <li class="flex items-start gap-3">
+              <RefreshCw :size="20" class="text-teal-600 dark:text-teal-400 flex-shrink-0 mt-0.5" />
+              <span class="text-sm text-gray-700 dark:text-gray-300">If for any reason the Agent needs to be re-triggered on an issue it has already processed, first remove the <code class="px-1.5 py-0.5 bg-gray-100 dark:bg-gray-700/50 text-teal-700 dark:text-teal-400 text-xs rounded font-mono">ai1st-doc-invoked</code> label, then re-apply the <code class="px-1.5 py-0.5 bg-gray-100 dark:bg-gray-700/50 text-teal-700 dark:text-teal-400 text-xs rounded font-mono">ai1st-doc-start</code> label.
+                <br><span class="text-xs text-gray-500 dark:text-gray-400">Both steps are required; removing the "invoked" label before re-applying "start" avoids circular loops</span>
+              </span>
+            </li>
           </ul>
         </div>
 

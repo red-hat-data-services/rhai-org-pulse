@@ -51,6 +51,33 @@ describe('milestoneToReleaseNumber - EA tag deduplication', () => {
     })
   })
 
+  describe('umbrella product family extraction', () => {
+    it('extracts RHOAI family from GA milestone name', () => {
+      expect(milestoneToReleaseNumber('rhai-3.5', '3.5 GA RHOAI RELEASE'))
+        .toBe('rhoai-3.5')
+    })
+
+    it('extracts RHELAI family from EA1 milestone name', () => {
+      expect(milestoneToReleaseNumber('rhai-3.5', '3.5 EA1 RHELAI Release'))
+        .toBe('rhelai-3.5.EA1')
+    })
+
+    it('extracts RHAII family from EA2 milestone name', () => {
+      expect(milestoneToReleaseNumber('rhai-3.5', '3.5 EA2 RHAII Release'))
+        .toBe('rhaii-3.5.EA2')
+    })
+
+    it('does not extract family when no word between phase and Release', () => {
+      expect(milestoneToReleaseNumber('rhelai-3.4', 'rhelai-3.4 EA1 release'))
+        .toBe('rhelai-3.4.EA1')
+    })
+
+    it('does not extract family when milestone has no Release keyword', () => {
+      expect(milestoneToReleaseNumber('rhai-3.5', 'rhai-3.5 GA'))
+        .toBe('rhai-3.5')
+    })
+  })
+
   describe('edge cases', () => {
     it('does not match EA1 in the middle of shortname', () => {
       expect(milestoneToReleaseNumber('RHAI-EA1-3.5', 'RHAI 3.5 EA1'))

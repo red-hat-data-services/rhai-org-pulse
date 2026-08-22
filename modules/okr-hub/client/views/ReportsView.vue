@@ -87,7 +87,7 @@ var reports = [
   {
     id: 'on-time-releases',
     title: 'On Time Releases',
-    description: 'Did we hit the planned GA date? Tracks all point and major RHAI releases GA\'d after April 1, 2026.',
+    description: 'Did we hit the planned GA date? Tracks all point and major RHAI releases GA\'d after January 1, 2026.',
     icon: '🚀',
     iconBg: 'bg-blue-50 dark:bg-blue-900/30',
     measure: 'Number of Releases On Time - 100%',

@@ -332,7 +332,7 @@
     <div class="container">
         <header>
             <h1>Quality Analysis Report</h1>
-            <p class="timestamp">Generated on July 06, 2026 at 05:15 PM</p>
+            <p class="timestamp">Generated on July 20, 2026 at 06:29 PM</p>
             <h2 style="margin-top: 1rem; font-weight: 400;">red-hat-data-services/odh-dashboard-sync</h2>
         </header>
 
@@ -344,11 +344,11 @@
                         <circle class="score-arc" cx="100" cy="100" r="90"
                                 stroke="#ffc107"
                                 stroke-dasharray="565.4861999999999"
-                                stroke-dashoffset="203.57503199999996"
+                                stroke-dashoffset="220.539618"
                                 id="scoreArc"></circle>
                     </svg>
                     <div class="score-text">
-                        <div class="score-value">6.4</div>
+                        <div class="score-value">6.1</div>
                         <div class="score-label">Overall Score</div>
                     </div>
                 </div>
@@ -364,38 +364,43 @@
                         
                         <div class="scorecard-item">
                             <h3>Unit Tests</h3>
-                            <div class="scorecard-score" style="color: #ffc107;">6.5/10</div>
-                            <div class="scorecard-status">170 spec files for 1543 source files (11% ratio); Jest + Testing Library; good docs but low backend coverage</div>
+                            <div class="scorecard-score" style="color: #ffc107;">7.5/10</div>
+                            <div class="scorecard-status">170 Jest spec files covering frontend and backend; good hook testing utilities and documented patterns</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Integration/E2E</h3>
-                            <div class="scorecard-score" style="color: #ffc107;">7.5/10</div>
-                            <div class="scorecard-status">77 Cypress tests (mocked + 16 e2e); page object model; comprehensive mocked UI coverage</div>
+                            <div class="scorecard-score" style="color: #ffc107;">7.0/10</div>
+                            <div class="scorecard-status">77 Cypress tests (61 mocked + 16 e2e) with page-object pattern, snapshot testing, and accessibility checks</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Build Integration</h3>
                             <div class="scorecard-score" style="color: #dc3545;">3.0/10</div>
-                            <div class="scorecard-status">No PR-time Docker build; no Konflux simulation; no manifest validation in CI</div>
+                            <div class="scorecard-status">No PR-time Docker image build; no Konflux simulation; no kustomize validation in CI</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Image Testing</h3>
-                            <div class="scorecard-score" style="color: #dc3545;">2.5/10</div>
-                            <div class="scorecard-status">Multi-stage Dockerfile exists but no runtime validation, no startup test, no image scanning</div>
+                            <div class="scorecard-score" style="color: #fd7e14;">4.0/10</div>
+                            <div class="scorecard-status">Multi-stage Dockerfile with UBI base; multi-arch Makefile target but no runtime validation or CI image testing</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Coverage Tracking</h3>
-                            <div class="scorecard-score" style="color: #ffc107;">6.0/10</div>
-                            <div class="scorecard-status">Codecov integration with PR comments but status checks are informational only (non-blocking)</div>
+                            <div class="scorecard-score" style="color: #ffc107;">7.0/10</div>
+                            <div class="scorecard-status">Codecov integration with PR reporting; informational-only thresholds (70% patch target not enforced)</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>CI/CD Automation</h3>
-                            <div class="scorecard-score" style="color: #fd7e14;">5.5/10</div>
-                            <div class="scorecard-status">Single test workflow with caching; no concurrency control; only 3 workflows total</div>
+                            <div class="scorecard-score" style="color: #fd7e14;">5.0/10</div>
+                            <div class="scorecard-status">Single test workflow on push/PR with node_modules caching; no concurrency control, no timeout, no parallelization</div>
+                        </div>
+                        <div class="scorecard-item">
+                            <h3>Static Analysis</h3>
+                            <div class="scorecard-score" style="color: #ffc107;">6.5/10</div>
+                            <div class="scorecard-status">Comprehensive ESLint configs for frontend/backend with Prettier; Dependabot for GH actions only; no pre-commit hooks; no npm/Docker ecosystem coverage in Dependabot</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Agent Rules</h3>
-                            <div class="scorecard-score" style="color: #dc3545;">1.0/10</div>
-                            <div class="scorecard-status">No CLAUDE.md, no .claude/ directory, no agent rules or test automation guidance</div>
+                            <div class="scorecard-score" style="color: #dc3545;">0.0/10</div>
+                            <div class="scorecard-status">No CLAUDE.md, AGENTS.md, or .claude/ directory; no AI agent test automation guidance</div>
                         </div>
                     </div>
                 </div>
@@ -411,48 +416,40 @@
                     <ul class="items-list">
                         
                         <li class="item-card high">
-                            <div class="item-description">No container image scanning or security testing</div>
-                            <p>Vulnerabilities in base images and dependencies are never caught before deployment</p>
+                            <div class="item-description">No PR-time build validation</div>
+                            <p>Docker image build failures and manifest issues are only discovered post-merge in Konflux</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-high">HIGH</span>
-                                <span class="meta-tag effort-tag">2-4 hours</span>
+                                <span class="meta-tag effort-tag">8-12 hours</span>
                             </div>
                         </li>
                         <li class="item-card high">
-                            <div class="item-description">No PR-time Docker build validation</div>
-                            <p>Dockerfile build failures discovered only after merge in Konflux/production</p>
+                            <div class="item-description">No container runtime validation in CI</div>
+                            <p>Image startup failures, missing dependencies, or broken entrypoints not caught until deployment</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-high">HIGH</span>
                                 <span class="meta-tag effort-tag">4-6 hours</span>
                             </div>
                         </li>
-                        <li class="item-card high">
-                            <div class="item-description">Coverage checks are informational-only (non-blocking)</div>
-                            <p>Coverage can regress without blocking PRs; no enforcement of quality gate</p>
+                        <li class="item-card medium">
+                            <div class="item-description">Coverage thresholds are informational only</div>
+                            <p>Coverage can regress silently; no gate prevents merging untested code</p>
                             <div class="item-meta">
-                                <span class="meta-tag severity-high">HIGH</span>
+                                <span class="meta-tag severity-medium">MEDIUM</span>
                                 <span class="meta-tag effort-tag">1-2 hours</span>
                             </div>
                         </li>
-                        <li class="item-card high">
-                            <div class="item-description">Backend has only 3 test files for 100 source files</div>
-                            <p>Backend API logic (Fastify routes, K8s client interactions) is largely untested</p>
-                            <div class="item-meta">
-                                <span class="meta-tag severity-high">HIGH</span>
-                                <span class="meta-tag effort-tag">16-24 hours</span>
-                            </div>
-                        </li>
                         <li class="item-card medium">
-                            <div class="item-description">No SAST/CodeQL or secret detection</div>
-                            <p>Security vulnerabilities and leaked secrets not detected in CI</p>
+                            <div class="item-description">No concurrency control or timeouts in CI</div>
+                            <p>Redundant CI runs waste resources; hung jobs block the pipeline indefinitely</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-medium">MEDIUM</span>
-                                <span class="meta-tag effort-tag">2-4 hours</span>
+                                <span class="meta-tag effort-tag">1-2 hours</span>
                             </div>
                         </li>
                         <li class="item-card medium">
-                            <div class="item-description">No pre-commit hooks</div>
-                            <p>Linting and formatting issues only caught in CI, not at development time</p>
+                            <div class="item-description">Dependabot only covers GitHub Actions, not npm or Docker ecosystems</div>
+                            <p>Vulnerable npm dependencies and outdated base images not flagged automatically</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-medium">MEDIUM</span>
                                 <span class="meta-tag effort-tag">1-2 hours</span>
@@ -472,40 +469,40 @@
                     <ul class="items-list">
                         
                         <li class="item-card ">
-                            <div class="item-description">Add Trivy container scanning to PR workflow</div>
-                            <p>Catch CVEs in base images and npm dependencies before merge</p>
+                            <div class="item-description">Expand Dependabot to cover npm and Docker ecosystems</div>
+                            <p>Automated security alerts and PRs for vulnerable npm packages and outdated base images</p>
                             <div class="item-meta">
                                 
                                 <span class="meta-tag effort-tag">1-2 hours</span>
                             </div>
                         </li>
                         <li class="item-card ">
-                            <div class="item-description">Make Codecov status checks required (non-informational)</div>
-                            <p>Prevent coverage regressions from being merged</p>
+                            <div class="item-description">Enforce coverage thresholds (remove informational flag)</div>
+                            <p>Prevent coverage regressions on every PR</p>
+                            <div class="item-meta">
+                                
+                                <span class="meta-tag effort-tag">1 hour</span>
+                            </div>
+                        </li>
+                        <li class="item-card ">
+                            <div class="item-description">Add concurrency control and timeout to test workflow</div>
+                            <p>Cancel redundant CI runs, prevent hung jobs</p>
                             <div class="item-meta">
                                 
                                 <span class="meta-tag effort-tag">30 minutes</span>
                             </div>
                         </li>
                         <li class="item-card ">
-                            <div class="item-description">Add CodeQL/SAST workflow</div>
-                            <p>Detect XSS, injection, and other security issues automatically</p>
+                            <div class="item-description">Create basic CLAUDE.md with test patterns and conventions</div>
+                            <p>Improve AI-generated test quality and consistency</p>
                             <div class="item-meta">
                                 
-                                <span class="meta-tag effort-tag">1-2 hours</span>
+                                <span class="meta-tag effort-tag">2-3 hours</span>
                             </div>
                         </li>
                         <li class="item-card ">
-                            <div class="item-description">Add concurrency control to test workflow</div>
-                            <p>Cancel stale CI runs, save runner minutes</p>
-                            <div class="item-meta">
-                                
-                                <span class="meta-tag effort-tag">15 minutes</span>
-                            </div>
-                        </li>
-                        <li class="item-card ">
-                            <div class="item-description">Add pre-commit hooks for lint + format</div>
-                            <p>Shift lint failures left to developer workstation</p>
+                            <div class="item-description">Add pre-commit hooks for linting and formatting</div>
+                            <p>Catch formatting and lint issues before commit, reduce CI failures</p>
                             <div class="item-meta">
                                 
                                 <span class="meta-tag effort-tag">1-2 hours</span>
@@ -525,15 +522,15 @@
                         
                         <div class="rec-priority p0">
                             <h3>Priority 0: Critical</h3>
-                            <ul><li>Add container image vulnerability scanning (Trivy) to PR workflow</li><li>Make Codecov status checks blocking (remove informational: true)</li><li>Add PR-time Docker build validation step</li></ul>
+                            <ul><li>Add PR-time Docker image build validation to catch build failures before merge</li><li>Add container startup validation (docker run + health check) in CI</li><li>Enforce coverage thresholds by removing informational flag in .codecov.yml</li></ul>
                         </div>
                         <div class="rec-priority p1">
                             <h3>Priority 1: High Value</h3>
-                            <ul><li>Expand backend unit test coverage (routes, plugins, K8s client calls)</li><li>Add CodeQL/SAST security scanning workflow</li><li>Add Kustomize manifest validation to CI</li><li>Create agent rules (.claude/rules/) for test creation patterns</li></ul>
+                            <ul><li>Expand Dependabot to cover npm and Docker ecosystems</li><li>Add concurrency control and timeout-minutes to CI workflows</li><li>Create CLAUDE.md with test patterns, naming conventions, and quality guidelines</li><li>Add kustomize build validation for manifests in PR workflow</li></ul>
                         </div>
                         <div class="rec-priority p2">
                             <h3>Priority 2: Nice-to-Have</h3>
-                            <ul><li>Add pre-commit hooks (ESLint, Prettier, type-check)</li><li>Add secret detection (Gitleaks)</li><li>Add performance/bundle size regression checks</li><li>Add SBOM generation to image build</li></ul>
+                            <ul><li>Add pre-commit hooks (.pre-commit-config.yaml) for ESLint and Prettier</li><li>Increase e2e test coverage beyond current 16 test files</li><li>Add contract tests for backend API endpoints</li><li>Consider adding Renovate for more sophisticated dependency management</li></ul>
                         </div>
                     </div>
                 </div>

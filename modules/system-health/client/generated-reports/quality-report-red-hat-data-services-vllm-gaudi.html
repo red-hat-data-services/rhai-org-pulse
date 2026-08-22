@@ -332,7 +332,7 @@
     <div class="container">
         <header>
             <h1>Quality Analysis Report</h1>
-            <p class="timestamp">Generated on July 06, 2026 at 05:41 PM</p>
+            <p class="timestamp">Generated on July 20, 2026 at 07:17 PM</p>
             <h2 style="margin-top: 1rem; font-weight: 400;">red-hat-data-services/vllm-gaudi</h2>
         </header>
 
@@ -344,11 +344,11 @@
                         <circle class="score-arc" cx="100" cy="100" r="90"
                                 stroke="#fd7e14"
                                 stroke-dasharray="565.4861999999999"
-                                stroke-dashoffset="294.052824"
+                                stroke-dashoffset="299.70768599999997"
                                 id="scoreArc"></circle>
                     </svg>
                     <div class="score-text">
-                        <div class="score-value">4.8</div>
+                        <div class="score-value">4.7</div>
                         <div class="score-label">Overall Score</div>
                     </div>
                 </div>
@@ -364,38 +364,43 @@
                         
                         <div class="scorecard-item">
                             <h3>Unit Tests</h3>
-                            <div class="scorecard-score" style="color: #fd7e14;">5.5/10</div>
-                            <div class="scorecard-status">28 test files with 141 test functions covering ops, bucketing, embedding, worker, and sampler; decent HPU-specific coverage but no pytest markers, parametrization is limited, and coverage tracking is absent</div>
+                            <div class="scorecard-score" style="color: #ffc107;">7.0/10</div>
+                            <div class="scorecard-status">277 test files across 33 test subdirectories with pytest and extensive fixtures</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Integration/E2E</h3>
                             <div class="scorecard-score" style="color: #fd7e14;">5.0/10</div>
-                            <div class="scorecard-status">Jenkins-driven E2E with lm-eval-harness correctness checks across multiple models and TP configurations; full_tests cover model loading and generation; requires Gaudi hardware so not runnable in PR CI</div>
+                            <div class="scorecard-status">Distributed and spec-decode E2E tests exist but no dedicated HPU integration suite</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Build Integration</h3>
-                            <div class="scorecard-score" style="color: #dc3545;">3.5/10</div>
-                            <div class="scorecard-status">Konflux builds triggered by label/comment only, not automatic on PR; no PR-time image validation or startup testing; Tekton pipeline is build-only with no test stage</div>
+                            <div class="scorecard-score" style="color: #dc3545;">3.0/10</div>
+                            <div class="scorecard-status">No PR-time image builds; build validation delegated to external Jenkins/Buildkite</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Image Testing</h3>
-                            <div class="scorecard-score" style="color: #dc3545;">3.0/10</div>
-                            <div class="scorecard-status">6 Dockerfiles across Konflux, UBI, Ubuntu, and benchmark variants; multi-stage builds with proper UBI base; no image startup validation, no runtime smoke tests, no multi-arch support</div>
+                            <div class="scorecard-score" style="color: #fd7e14;">5.0/10</div>
+                            <div class="scorecard-status">Multi-stage UBI Dockerfile with non-root user but no HEALTHCHECK or runtime validation</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Coverage Tracking</h3>
-                            <div class="scorecard-score" style="color: #dc3545;">1.0/10</div>
-                            <div class="scorecard-status">No coverage tooling whatsoever — no .coveragerc, no codecov.yml, no pytest-cov configuration, no coverage thresholds or PR reporting</div>
+                            <div class="scorecard-score" style="color: #dc3545;">0.0/10</div>
+                            <div class="scorecard-status">No coverage configuration, thresholds, or PR reporting of any kind</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>CI/CD Automation</h3>
-                            <div class="scorecard-score" style="color: #fd7e14;">4.0/10</div>
-                            <div class="scorecard-status">Jenkins for correctness/benchmark testing on Gaudi hardware; Tekton/Konflux for container builds; no GitHub Actions workflows; Renovate for dependency updates; no automated PR-triggered test suite</div>
+                            <div class="scorecard-score" style="color: #ffc107;">6.0/10</div>
+                            <div class="scorecard-status">15 workflows with good lint coverage but no caching or concurrency controls</div>
+                        </div>
+                        <div class="scorecard-item">
+                            <h3>Static Analysis</h3>
+                            <div class="scorecard-score" style="color: #ffc107;">7.5/10</div>
+                            <div class="scorecard-status">Ruff, mypy, yapf, codespell, shellcheck, clang-format, and Dependabot configured</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Agent Rules</h3>
                             <div class="scorecard-score" style="color: #dc3545;">0.0/10</div>
-                            <div class="scorecard-status">No CLAUDE.md, no AGENTS.md, no .claude/ directory — zero AI agent guidance for test creation or development standards</div>
+                            <div class="scorecard-status">No CLAUDE.md, AGENTS.md, or .claude/ directory</div>
                         </div>
                     </div>
                 </div>
@@ -411,43 +416,35 @@
                     <ul class="items-list">
                         
                         <li class="item-card high">
-                            <div class="item-description">No test coverage tracking or enforcement</div>
-                            <p>Impossible to measure test quality, detect coverage regressions, or enforce minimum thresholds</p>
+                            <div class="item-description">Zero coverage tracking</div>
+                            <p>No visibility into test coverage, no enforcement of coverage thresholds on PRs, regressions go undetected</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-high">HIGH</span>
                                 <span class="meta-tag effort-tag">4-6 hours</span>
                             </div>
                         </li>
                         <li class="item-card high">
-                            <div class="item-description">No automated PR-triggered test suite</div>
-                            <p>Unit tests never run automatically on PRs — regressions can merge undetected</p>
+                            <div class="item-description">No PR-time build validation</div>
+                            <p>Docker image build failures only discovered in external Jenkins/Buildkite, not in the PR workflow itself</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-high">HIGH</span>
-                                <span class="meta-tag effort-tag">4-8 hours</span>
+                                <span class="meta-tag effort-tag">8-12 hours</span>
                             </div>
                         </li>
                         <li class="item-card high">
-                            <div class="item-description">No container image runtime validation</div>
-                            <p>Image startup failures, import errors, and entrypoint issues not caught until deployment</p>
+                            <div class="item-description">No container health checks or runtime validation</div>
+                            <p>Image startup failures and runtime issues not caught until deployment</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-high">HIGH</span>
-                                <span class="meta-tag effort-tag">6-8 hours</span>
-                            </div>
-                        </li>
-                        <li class="item-card high">
-                            <div class="item-description">No security scanning (Trivy, Snyk, CodeQL, Bandit)</div>
-                            <p>Vulnerabilities in dependencies and code not detected before merge or release</p>
-                            <div class="item-meta">
-                                <span class="meta-tag severity-high">HIGH</span>
-                                <span class="meta-tag effort-tag">2-4 hours</span>
+                                <span class="meta-tag effort-tag">4-6 hours</span>
                             </div>
                         </li>
                         <li class="item-card medium">
-                            <div class="item-description">Konflux builds are opt-in via label/comment, not automatic</div>
-                            <p>Build failures discovered late; inconsistent validation across PRs</p>
+                            <div class="item-description">No HPU-specific integration test suite in GitHub CI</div>
+                            <p>HPU test validation relies entirely on external Jenkins; PR reviewers have no visibility in GitHub checks</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-medium">MEDIUM</span>
-                                <span class="meta-tag effort-tag">2-3 hours</span>
+                                <span class="meta-tag effort-tag">16-24 hours</span>
                             </div>
                         </li>
                     </ul>
@@ -464,40 +461,40 @@
                     <ul class="items-list">
                         
                         <li class="item-card ">
-                            <div class="item-description">Add GitHub Actions workflow to run pytest unit tests on PRs</div>
-                            <p>Catch unit-level regressions before merge; unit tests don&#x27;t require Gaudi hardware</p>
+                            <div class="item-description">Add pytest-cov and .codecov.yml for coverage tracking</div>
+                            <p>Immediate visibility into test coverage with PR reporting and threshold enforcement</p>
                             <div class="item-meta">
                                 
                                 <span class="meta-tag effort-tag">2-4 hours</span>
                             </div>
                         </li>
                         <li class="item-card ">
-                            <div class="item-description">Add pytest-cov and codecov integration</div>
-                            <p>Establish coverage baseline and trend tracking with PR comments</p>
-                            <div class="item-meta">
-                                
-                                <span class="meta-tag effort-tag">2-3 hours</span>
-                            </div>
-                        </li>
-                        <li class="item-card ">
-                            <div class="item-description">Add Trivy container scanning to Tekton pipeline</div>
-                            <p>Detect known CVEs in container images before they reach production</p>
+                            <div class="item-description">Add pre-commit hooks configuration</div>
+                            <p>Enforce formatting and linting locally before push, reducing CI failures</p>
                             <div class="item-meta">
                                 
                                 <span class="meta-tag effort-tag">1-2 hours</span>
                             </div>
                         </li>
                         <li class="item-card ">
-                            <div class="item-description">Create CLAUDE.md with test creation guidelines</div>
-                            <p>Enable consistent AI-assisted test development following project conventions</p>
+                            <div class="item-description">Add HEALTHCHECK to Dockerfile.hpu.ubi</div>
+                            <p>Container orchestrators can detect unhealthy instances and restart them</p>
+                            <div class="item-meta">
+                                
+                                <span class="meta-tag effort-tag">1 hour</span>
+                            </div>
+                        </li>
+                        <li class="item-card ">
+                            <div class="item-description">Create basic CLAUDE.md with test patterns</div>
+                            <p>AI-assisted development follows project conventions for test creation</p>
                             <div class="item-meta">
                                 
                                 <span class="meta-tag effort-tag">2-3 hours</span>
                             </div>
                         </li>
                         <li class="item-card ">
-                            <div class="item-description">Add Bandit security scanning to pre-commit hooks</div>
-                            <p>Catch common Python security issues (SQL injection, shell injection, hardcoded secrets)</p>
+                            <div class="item-description">Add concurrency controls to GitHub workflows</div>
+                            <p>Prevent redundant CI runs on rapid pushes, saving CI resources</p>
                             <div class="item-meta">
                                 
                                 <span class="meta-tag effort-tag">1 hour</span>
@@ -517,15 +514,15 @@
                         
                         <div class="rec-priority p0">
                             <h3>Priority 0: Critical</h3>
-                            <ul><li>Add a GitHub Actions workflow that runs `pytest tests/unit_tests/ -v` on every PR — these tests don&#x27;t require Gaudi hardware</li><li>Integrate pytest-cov and codecov.io to establish a coverage baseline and enforce a minimum threshold (start at 30%, grow to 60%)</li><li>Add Trivy or Clair vulnerability scanning for all Dockerfiles in the CI pipeline</li></ul>
+                            <ul><li>Add coverage tracking with pytest-cov, .codecov.yml, and enforce minimum thresholds on PRs</li><li>Add PR-time Dockerfile.hpu.ubi build validation in GitHub Actions workflow</li><li>Add HEALTHCHECK directive to production Dockerfiles</li></ul>
                         </div>
                         <div class="rec-priority p1">
                             <h3>Priority 1: High Value</h3>
-                            <ul><li>Make Konflux PR builds automatic (remove label/comment gate) so every PR validates the container build</li><li>Add container image startup validation — build image, run `python -c &#x27;import vllm_gaudi&#x27;` and verify entrypoint responds to health check</li><li>Create comprehensive agent rules (.claude/rules/) for unit test patterns, HPU-specific testing, and model test conventions</li><li>Add Bandit and/or Semgrep to the pre-commit config for Python SAST</li></ul>
+                            <ul><li>Create a dedicated HPU integration test workflow that runs in GitHub CI (even with fake HPU)</li><li>Add concurrency controls and caching to GitHub Actions workflows</li><li>Create comprehensive agent rules (.claude/rules/) for test automation</li><li>Add pre-commit hook configuration</li></ul>
                         </div>
                         <div class="rec-priority p2">
                             <h3>Priority 2: Nice-to-Have</h3>
-                            <ul><li>Add multi-architecture (amd64/arm64) build support for broader compatibility</li><li>Implement benchmark regression testing — compare throughput/latency against baseline on each release</li><li>Add contract tests for the vLLM plugin API boundary (vllm_gaudi ↔ vllm core)</li><li>Create integration test fixtures that mock Gaudi hardware for CI environments without HPU access</li></ul>
+                            <ul><li>Add multi-architecture build support via Docker buildx</li><li>Add container startup validation tests using testcontainers</li><li>Add performance regression testing for HPU inference benchmarks</li></ul>
                         </div>
                     </div>
                 </div>

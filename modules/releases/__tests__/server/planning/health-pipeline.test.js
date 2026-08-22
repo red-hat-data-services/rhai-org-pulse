@@ -5,8 +5,6 @@ const {
   loadFeaturesForRelease,
   loadFeaturesFromCandidates,
   loadMilestones,
-  backfillFreezeDatesFromSmartsheet,
-  deriveFreezeDates,
   computeMilestoneInfo,
   computePlanningDeadline,
   getFeaturePhase,
@@ -21,13 +19,33 @@ function makeStorage(data) {
     for (var k in data) store[k] = data[k]
   }
   return {
-    readFromStorage: function(key) {
+    readFromStorage: async function(key) {
       return store[key] ? JSON.parse(JSON.stringify(store[key])) : null
     },
-    writeToStorage: function(key, value) {
+    writeToStorage: async function(key, value) {
       store[key] = value
     },
     _store: store
+  }
+}
+
+function makeRegistryJson(releases) {
+  return {
+    schemaVersion: 1,
+    releases: releases.map(function(r) {
+      return {
+        id: (r.releaseNumber || '').toLowerCase().replace(/\s+/g, '-'),
+        displayName: r.releaseNumber,
+        productPagesShortname: r.productName || '',
+        productPagesVersion: r.releaseNumber,
+        milestones: {
+          ga: r.dueDate || null,
+          codeFreeze: r.codeFreezeDate || null
+        },
+        state: 'active',
+        source: 'product-pages'
+      }
+    })
   }
 }
 
@@ -119,7 +137,7 @@ describe('computeMilestoneInfo', function() {
 describe('buildEmptyCache', function() {
   it('returns correct structure with zero counts', function() {
     var cache = buildEmptyCache('3.5', ['some warning'])
-    expect(cache.healthCacheVersion).toBe(3)
+    expect(cache.healthCacheVersion).toBe(4)
     expect(cache.version).toBe('3.5')
     expect(cache.cachedAt).toBeDefined()
     expect(cache.milestones).toBeNull()
@@ -217,14 +235,14 @@ describe('computePlanningDeadline', function() {
 })
 
 describe('loadFeaturesFromCandidates', function() {
-  it('returns warning when candidates cache is empty', function() {
+  it('returns warning when candidates cache is empty', async function() {
     var storage = makeStorage({})
-    var result = loadFeaturesFromCandidates(storage.readFromStorage, '3.5', null)
+    var result = await loadFeaturesFromCandidates(storage.readFromStorage, '3.5', null)
     expect(result.features).toEqual([])
     expect(result.warnings[0]).toContain('No candidates found')
   })
 
-  it('maps candidate fields to health feature shape', function() {
+  it('maps candidate fields to health feature shape', async function() {
     var storage = makeStorage({
       'releases/planning/candidates-cache-3.5.json': {
         cachedAt: '2026-04-26T00:00:00Z',
@@ -248,7 +266,7 @@ describe('loadFeaturesFromCandidates', function() {
         }
       }
     })
-    var result = loadFeaturesFromCandidates(storage.readFromStorage, '3.5', null)
+    var result = await loadFeaturesFromCandidates(storage.readFromStorage, '3.5', null)
     expect(result.features).toHaveLength(1)
     var f = result.features[0]
     expect(f.key).toBe('RHOAIENG-1001')
@@ -262,7 +280,7 @@ describe('loadFeaturesFromCandidates', function() {
     expect(f.labels).toEqual(['test', 'feature'])
   })
 
-  it('excludes closed features', function() {
+  it('excludes closed features', async function() {
     var storage = makeStorage({
       'releases/planning/candidates-cache-3.5.json': {
         cachedAt: '2026-04-26T00:00:00Z',
@@ -274,12 +292,12 @@ describe('loadFeaturesFromCandidates', function() {
         }
       }
     })
-    var result = loadFeaturesFromCandidates(storage.readFromStorage, '3.5', null)
+    var result = await loadFeaturesFromCandidates(storage.readFromStorage, '3.5', null)
     expect(result.features).toHaveLength(1)
     expect(result.features[0].key).toBe('T-2')
   })
 
-  it('applies phase filter', function() {
+  it('applies phase filter', async function() {
     var storage = makeStorage({
       'releases/planning/candidates-cache-3.5.json': {
         cachedAt: '2026-04-26T00:00:00Z',
@@ -292,7 +310,7 @@ describe('loadFeaturesFromCandidates', function() {
         }
       }
     })
-    var result = loadFeaturesFromCandidates(storage.readFromStorage, '3.5', 'EA2')
+    var result = await loadFeaturesFromCandidates(storage.readFromStorage, '3.5', 'EA2')
     expect(result.features).toHaveLength(2)
     var keys = result.features.map(function(f) { return f.key })
     expect(keys).toContain('T-2')
@@ -302,14 +320,14 @@ describe('loadFeaturesFromCandidates', function() {
 })
 
 describe('loadFeaturesForRelease', function() {
-  it('returns warning when index is empty', function() {
+  it('returns warning when index is empty', async function() {
     var storage = makeStorage({})
-    var result = loadFeaturesForRelease(storage.readFromStorage, '3.5')
+    var result = await loadFeaturesForRelease(storage.readFromStorage, '3.5')
     expect(result.features).toEqual([])
     expect(result.warnings).toContain('Feature index is empty -- run an execution data refresh first')
   })
 
-  it('filters features by targetVersions match', function() {
+  it('filters features by targetVersions match', async function() {
     var storage = makeStorage({
       'releases/execution/index.json': {
         features: [
@@ -318,12 +336,12 @@ describe('loadFeaturesForRelease', function() {
         ]
       }
     })
-    var result = loadFeaturesForRelease(storage.readFromStorage, '3.5')
+    var result = await loadFeaturesForRelease(storage.readFromStorage, '3.5')
     expect(result.features).toHaveLength(1)
     expect(result.features[0].key).toBe('T-1')
   })
 
-  it('filters features by fixVersions match', function() {
+  it('filters features by fixVersions match', async function() {
     var storage = makeStorage({
       'releases/execution/index.json': {
         features: [
@@ -331,11 +349,11 @@ describe('loadFeaturesForRelease', function() {
         ]
       }
     })
-    var result = loadFeaturesForRelease(storage.readFromStorage, '3.5')
+    var result = await loadFeaturesForRelease(storage.readFromStorage, '3.5')
     expect(result.features).toHaveLength(1)
   })
 
-  it('excludes closed features', function() {
+  it('excludes closed features', async function() {
     var storage = makeStorage({
       'releases/execution/index.json': {
         features: [
@@ -343,11 +361,11 @@ describe('loadFeaturesForRelease', function() {
         ]
       }
     })
-    var result = loadFeaturesForRelease(storage.readFromStorage, '3.5')
+    var result = await loadFeaturesForRelease(storage.readFromStorage, '3.5')
     expect(result.features).toHaveLength(0)
   })
 
-  it('merges detail data onto features', function() {
+  it('merges detail data onto features', async function() {
     var storage = makeStorage({
       'releases/execution/index.json': {
         features: [
@@ -360,7 +378,7 @@ describe('loadFeaturesForRelease', function() {
         releaseType: 'General Availability'
       }
     })
-    var result = loadFeaturesForRelease(storage.readFromStorage, '3.5')
+    var result = await loadFeaturesForRelease(storage.readFromStorage, '3.5')
     expect(result.features[0].pm).toEqual({ displayName: 'Jane PM' })
     expect(result.features[0].components).toEqual(['Model Serving'])
     expect(result.features[0].releaseType).toBe('General Availability')
@@ -368,23 +386,35 @@ describe('loadFeaturesForRelease', function() {
 })
 
 describe('loadMilestones', function() {
-  function ppCache(releases) {
+  function registryData(releases) {
     return {
-      'releases/delivery/product-pages-releases-cache.json': {
-        source: 'api',
-        fetchedAt: '2026-04-26T00:00:00Z',
-        releases: releases
+      'releases/registry.json': {
+        schemaVersion: 1,
+        releases: releases.map(function(r) {
+          return {
+            id: (r.releaseNumber || '').toLowerCase().replace(/\s+/g, '-'),
+            displayName: r.releaseNumber,
+            productPagesShortname: r.productName || '',
+            productPagesVersion: r.releaseNumber,
+            milestones: {
+              ga: r.dueDate || null,
+              codeFreeze: r.codeFreezeDate || null
+            },
+            state: 'active',
+            source: 'product-pages'
+          }
+        })
       }
     }
   }
 
-  it('returns milestones from Product Pages cache', function() {
-    var storage = makeStorage(ppCache([
+  it('returns milestones from Product Pages cache', async function() {
+    var storage = makeStorage(registryData([
       { productName: 'rhoai', releaseNumber: 'rhoai-3.5.EA1', dueDate: '2026-05-15', codeFreezeDate: '2026-05-01' },
       { productName: 'rhoai', releaseNumber: 'rhoai-3.5.EA2', dueDate: '2026-07-01', codeFreezeDate: '2026-06-15' },
       { productName: 'rhoai', releaseNumber: 'rhoai-3.5', dueDate: '2026-08-15', codeFreezeDate: '2026-08-01' }
     ]))
-    var result = loadMilestones(storage.readFromStorage, '3.5')
+    var result = await loadMilestones(storage.readFromStorage, '3.5')
     expect(result).not.toBeNull()
     expect(result.ea1Freeze).toBe('2026-05-01')
     expect(result.ea1Target).toBe('2026-05-15')
@@ -394,24 +424,24 @@ describe('loadMilestones', function() {
     expect(result.gaTarget).toBe('2026-08-15')
   })
 
-  it('returns null when cache is missing', function() {
+  it('returns null when cache is missing', async function() {
     var storage = makeStorage({})
-    expect(loadMilestones(storage.readFromStorage, '3.5')).toBeNull()
+    expect(await loadMilestones(storage.readFromStorage, '3.5')).toBeNull()
   })
 
-  it('returns null when no matching version', function() {
-    var storage = makeStorage(ppCache([
+  it('returns null when no matching version', async function() {
+    var storage = makeStorage(registryData([
       { productName: 'rhoai', releaseNumber: 'rhoai-3.4', dueDate: '2026-03-01', codeFreezeDate: '2026-02-15' }
     ]))
-    expect(loadMilestones(storage.readFromStorage, '3.5')).toBeNull()
+    expect(await loadMilestones(storage.readFromStorage, '3.5')).toBeNull()
   })
 
-  it('handles missing codeFreezeDate', function() {
-    var storage = makeStorage(ppCache([
+  it('handles missing codeFreezeDate', async function() {
+    var storage = makeStorage(registryData([
       { productName: 'rhoai', releaseNumber: 'rhoai-3.5.EA1', dueDate: '2026-05-15', codeFreezeDate: null },
       { productName: 'rhoai', releaseNumber: 'rhoai-3.5', dueDate: '2026-08-15', codeFreezeDate: null }
     ]))
-    var result = loadMilestones(storage.readFromStorage, '3.5')
+    var result = await loadMilestones(storage.readFromStorage, '3.5')
     expect(result).not.toBeNull()
     expect(result.ea1Freeze).toBeNull()
     expect(result.ea1Target).toBe('2026-05-15')
@@ -419,11 +449,11 @@ describe('loadMilestones', function() {
     expect(result.gaTarget).toBe('2026-08-15')
   })
 
-  it('returns partial milestones when only some phases exist', function() {
-    var storage = makeStorage(ppCache([
+  it('returns partial milestones when only some phases exist', async function() {
+    var storage = makeStorage(registryData([
       { productName: 'rhoai', releaseNumber: 'rhoai-3.5', dueDate: '2026-08-15', codeFreezeDate: '2026-08-01' }
     ]))
-    var result = loadMilestones(storage.readFromStorage, '3.5')
+    var result = await loadMilestones(storage.readFromStorage, '3.5')
     expect(result).not.toBeNull()
     expect(result.ea1Freeze).toBeNull()
     expect(result.ea1Target).toBeNull()
@@ -433,13 +463,13 @@ describe('loadMilestones', function() {
     expect(result.gaTarget).toBe('2026-08-15')
   })
 
-  it('matches space-separated EA release numbers (expanded milestone format)', function() {
-    var storage = makeStorage(ppCache([
+  it('matches space-separated EA release numbers (expanded milestone format)', async function() {
+    var storage = makeStorage(registryData([
       { productName: 'rhelai', releaseNumber: 'rhelai-3.5 EA1 release', dueDate: '2026-06-18', codeFreezeDate: null },
       { productName: 'rhelai', releaseNumber: 'rhelai-3.5 EA2 release', dueDate: '2026-07-16', codeFreezeDate: null },
       { productName: 'rhelai', releaseNumber: 'rhelai-3.5 GA', dueDate: '2026-08-20', codeFreezeDate: null }
     ]))
-    var result = loadMilestones(storage.readFromStorage, '3.5')
+    var result = await loadMilestones(storage.readFromStorage, '3.5')
     expect(result).not.toBeNull()
     expect(result.ea1Target).toBe('2026-06-18')
     expect(result.ea2Target).toBe('2026-07-16')
@@ -449,13 +479,13 @@ describe('loadMilestones', function() {
     expect(result._matched.ga).toBe('rhelai-3.5 GA')
   })
 
-  it('does not match EA releases as GA', function() {
-    var storage = makeStorage(ppCache([
+  it('does not match EA releases as GA', async function() {
+    var storage = makeStorage(registryData([
       { productName: 'RHAII', releaseNumber: 'RHAII-3.5 EA1', dueDate: '2026-06-02', codeFreezeDate: null },
       { productName: 'RHAII', releaseNumber: 'RHAII-3.5 EA2', dueDate: '2026-07-01', codeFreezeDate: null },
       { productName: 'RHAII', releaseNumber: 'RHAII-3.5 GA', dueDate: '2026-08-04', codeFreezeDate: null }
     ]))
-    var result = loadMilestones(storage.readFromStorage, '3.5')
+    var result = await loadMilestones(storage.readFromStorage, '3.5')
     expect(result).not.toBeNull()
     expect(result.ea1Target).toBe('2026-06-02')
     expect(result.ea2Target).toBe('2026-07-01')
@@ -463,26 +493,26 @@ describe('loadMilestones', function() {
     expect(result._matched.ga).toBe('RHAII-3.5 GA')
   })
 
-  it('prefers rhoai/rhelai product when multiple products match', function() {
-    var storage = makeStorage(ppCache([
+  it('prefers rhoai/rhelai product when multiple products match', async function() {
+    var storage = makeStorage(registryData([
       { productName: 'RHAII', releaseNumber: 'RHAII-3.5 EA1', dueDate: '2026-06-02', codeFreezeDate: null },
       { productName: 'rhelai', releaseNumber: 'rhelai-3.5 EA1 release', dueDate: '2026-06-18', codeFreezeDate: null },
       { productName: 'RHAII', releaseNumber: 'RHAII-3.5 GA', dueDate: '2026-08-04', codeFreezeDate: null },
       { productName: 'rhelai', releaseNumber: 'rhelai-3.5 GA', dueDate: '2026-08-20', codeFreezeDate: null }
     ]))
-    var result = loadMilestones(storage.readFromStorage, '3.5')
+    var result = await loadMilestones(storage.readFromStorage, '3.5')
     expect(result.ea1Target).toBe('2026-06-18')
     expect(result.gaTarget).toBe('2026-08-20')
     expect(result._matched.ea1).toBe('rhelai-3.5 EA1 release')
     expect(result._matched.ga).toBe('rhelai-3.5 GA')
   })
 
-  it('returns _matched with release numbers for debugging', function() {
-    var storage = makeStorage(ppCache([
+  it('returns _matched with release numbers for debugging', async function() {
+    var storage = makeStorage(registryData([
       { productName: 'rhoai', releaseNumber: 'rhoai-3.5.EA1', dueDate: '2026-05-15', codeFreezeDate: '2026-05-01' },
       { productName: 'rhoai', releaseNumber: 'rhoai-3.5', dueDate: '2026-08-15', codeFreezeDate: '2026-08-01' }
     ]))
-    var result = loadMilestones(storage.readFromStorage, '3.5')
+    var result = await loadMilestones(storage.readFromStorage, '3.5')
     expect(result._matched).toEqual({
       ea1: 'rhoai-3.5.EA1',
       ea2: null,
@@ -491,192 +521,7 @@ describe('loadMilestones', function() {
   })
 })
 
-const smartsheetClient = require('../../../../../shared/server/smartsheet')
-vi.spyOn(smartsheetClient, 'isConfigured')
-vi.spyOn(smartsheetClient, 'discoverReleasesPartial')
-
-describe('backfillFreezeDatesFromSmartsheet', function() {
-  beforeEach(function() {
-    smartsheetClient.isConfigured.mockReturnValue(false)
-    smartsheetClient.discoverReleasesPartial.mockResolvedValue([])
-  })
-
-  it('returns milestones unchanged when Smartsheet is not configured and milestones have freeze dates', async function() {
-    smartsheetClient.isConfigured.mockReturnValue(false)
-    var milestones = {
-      ea1Freeze: '2026-05-01', ea1Target: '2026-05-15',
-      ea2Freeze: '2026-06-15', ea2Target: '2026-07-01',
-      gaFreeze: '2026-08-01', gaTarget: '2026-08-15'
-    }
-    var result = await backfillFreezeDatesFromSmartsheet(milestones, '3.5')
-    expect(result.milestones).toEqual(milestones)
-    expect(result.warnings).toHaveLength(0)
-  })
-
-  it('warns when neither source is configured and milestones is null', async function() {
-    smartsheetClient.isConfigured.mockReturnValue(false)
-    var result = await backfillFreezeDatesFromSmartsheet(null, '3.5')
-    expect(result.milestones).toBeNull()
-    expect(result.warnings).toEqual(
-      expect.arrayContaining([expect.stringContaining('Neither Product Pages nor Smartsheet')])
-    )
-  })
-
-  it('warns when freeze dates missing and Smartsheet not configured', async function() {
-    smartsheetClient.isConfigured.mockReturnValue(false)
-    var milestones = {
-      ea1Freeze: null, ea1Target: '2026-05-15',
-      ea2Freeze: null, ea2Target: '2026-07-01',
-      gaFreeze: null, gaTarget: '2026-08-15'
-    }
-    var result = await backfillFreezeDatesFromSmartsheet(milestones, '3.5')
-    expect(result.milestones).toEqual(milestones)
-    expect(result.warnings).toEqual(
-      expect.arrayContaining([expect.stringContaining('Smartsheet is not configured')])
-    )
-  })
-
-  it('skips fallback when milestones already have freeze dates', async function() {
-    smartsheetClient.isConfigured.mockReturnValue(true)
-    var milestones = {
-      ea1Freeze: '2026-05-01', ea1Target: '2026-05-15',
-      ea2Freeze: '2026-06-15', ea2Target: '2026-07-01',
-      gaFreeze: '2026-08-01', gaTarget: '2026-08-15'
-    }
-    var result = await backfillFreezeDatesFromSmartsheet(milestones, '3.5')
-    expect(result.milestones).toEqual(milestones)
-    expect(result.warnings).toHaveLength(0)
-    expect(smartsheetClient.discoverReleasesPartial).not.toHaveBeenCalled()
-  })
-
-  it('loads everything from Smartsheet when milestones is null', async function() {
-    smartsheetClient.isConfigured.mockReturnValue(true)
-    smartsheetClient.discoverReleasesPartial.mockResolvedValue([
-      { version: '3.5', ea1Freeze: '2026-05-15', ea1Target: '2026-06-18', ea2Freeze: '2026-06-19', ea2Target: '2026-07-16', gaFreeze: '2026-07-24', gaTarget: '2026-08-20' }
-    ])
-    var result = await backfillFreezeDatesFromSmartsheet(null, '3.5')
-    expect(result.milestones).not.toBeNull()
-    expect(result.milestones.ea1Freeze).toBe('2026-05-15')
-    expect(result.milestones.gaTarget).toBe('2026-08-20')
-    expect(result.warnings).toEqual(
-      expect.arrayContaining([expect.stringContaining('Using Smartsheet')])
-    )
-  })
-
-  it('merges Smartsheet freeze dates into Product Pages milestones', async function() {
-    smartsheetClient.isConfigured.mockReturnValue(true)
-    smartsheetClient.discoverReleasesPartial.mockResolvedValue([
-      { version: '3.5', ea1Freeze: '2026-05-15', ea1Target: '2026-06-18', ea2Freeze: '2026-06-19', ea2Target: '2026-07-16', gaFreeze: '2026-07-24', gaTarget: '2026-08-20' }
-    ])
-    var milestones = {
-      ea1Freeze: null, ea1Target: '2026-06-18',
-      ea2Freeze: null, ea2Target: '2026-07-16',
-      gaFreeze: null, gaTarget: '2026-08-20'
-    }
-    var result = await backfillFreezeDatesFromSmartsheet(milestones, '3.5')
-    expect(result.milestones.ea1Freeze).toBe('2026-05-15')
-    expect(result.milestones.ea2Freeze).toBe('2026-06-19')
-    expect(result.milestones.gaFreeze).toBe('2026-07-24')
-    // Product Pages target dates preserved
-    expect(result.milestones.ea1Target).toBe('2026-06-18')
-    expect(result.warnings).toEqual(
-      expect.arrayContaining([expect.stringContaining('Backfilled freeze dates')])
-    )
-  })
-
-  it('returns null when Smartsheet has no matching version', async function() {
-    smartsheetClient.isConfigured.mockReturnValue(true)
-    smartsheetClient.discoverReleasesPartial.mockResolvedValue([
-      { version: '3.4', ea1Freeze: '2026-01-01', ea1Target: '2026-02-01', ea2Freeze: '2026-03-01', ea2Target: '2026-04-01', gaFreeze: '2026-05-01', gaTarget: '2026-06-01' }
-    ])
-    var result = await backfillFreezeDatesFromSmartsheet(null, '3.5')
-    expect(result.milestones).toBeNull()
-    expect(result.warnings).toEqual(
-      expect.arrayContaining([expect.stringContaining('No milestone data found')])
-    )
-  })
-
-  it('handles Smartsheet API errors gracefully', async function() {
-    smartsheetClient.isConfigured.mockReturnValue(true)
-    smartsheetClient.discoverReleasesPartial.mockRejectedValue(new Error('API timeout'))
-    var milestones = {
-      ea1Freeze: null, ea1Target: '2026-06-18',
-      ea2Freeze: null, ea2Target: '2026-07-16',
-      gaFreeze: null, gaTarget: '2026-08-20'
-    }
-    var result = await backfillFreezeDatesFromSmartsheet(milestones, '3.5')
-    expect(result.milestones).toEqual(milestones)
-    expect(result.warnings).toEqual(
-      expect.arrayContaining([expect.stringContaining('Smartsheet fallback failed')])
-    )
-  })
-})
-
-describe('deriveFreezeDates', function() {
-  it('returns null milestones unchanged', function() {
-    var result = deriveFreezeDates(null)
-    expect(result.milestones).toBeNull()
-    expect(result.warnings).toHaveLength(0)
-  })
-
-  it('derives all freeze dates from target dates', function() {
-    var milestones = {
-      ea1Freeze: null, ea1Target: '2026-06-18',
-      ea2Freeze: null, ea2Target: '2026-07-16',
-      gaFreeze: null, gaTarget: '2026-08-20'
-    }
-    var result = deriveFreezeDates(milestones)
-    expect(result.milestones.ea1Freeze).toBe('2026-05-19')
-    expect(result.milestones.ea2Freeze).toBe('2026-06-16')
-    expect(result.milestones.gaFreeze).toBe('2026-07-21')
-    expect(result.warnings[0]).toContain('Derived freeze dates')
-    expect(result.warnings[0]).toContain('ea1Freeze')
-    expect(result.warnings[0]).toContain('ea2Freeze')
-    expect(result.warnings[0]).toContain('gaFreeze')
-  })
-
-  it('does not overwrite existing freeze dates', function() {
-    var milestones = {
-      ea1Freeze: '2026-05-01', ea1Target: '2026-06-18',
-      ea2Freeze: null, ea2Target: '2026-07-16',
-      gaFreeze: '2026-08-01', gaTarget: '2026-08-20'
-    }
-    var result = deriveFreezeDates(milestones)
-    expect(result.milestones.ea1Freeze).toBe('2026-05-01')
-    expect(result.milestones.ea2Freeze).toBe('2026-06-16')
-    expect(result.milestones.gaFreeze).toBe('2026-08-01')
-    expect(result.warnings[0]).toContain('ea2Freeze')
-    expect(result.warnings[0]).not.toContain('ea1Freeze')
-    expect(result.warnings[0]).not.toContain('gaFreeze')
-  })
-
-  it('produces no warnings when all freeze dates already exist', function() {
-    var milestones = {
-      ea1Freeze: '2026-05-01', ea1Target: '2026-06-18',
-      ea2Freeze: '2026-06-15', ea2Target: '2026-07-16',
-      gaFreeze: '2026-08-01', gaTarget: '2026-08-20'
-    }
-    var result = deriveFreezeDates(milestones)
-    expect(result.warnings).toHaveLength(0)
-  })
-
-  it('handles month boundary rollover correctly', function() {
-    var milestones = {
-      ea1Freeze: null, ea1Target: '2026-01-15',
-      ea2Freeze: null, ea2Target: null,
-      gaFreeze: null, gaTarget: null
-    }
-    var result = deriveFreezeDates(milestones)
-    expect(result.milestones.ea1Freeze).toBe('2025-12-16')
-    expect(result.milestones.ea2Freeze).toBeNull()
-    expect(result.milestones.gaFreeze).toBeNull()
-  })
-})
-
 describe('runHealthPipeline', function() {
-  beforeEach(function() {
-    smartsheetClient.isConfigured.mockReturnValue(false)
-  })
 
   function makeCandidatesCache(features) {
     return {
@@ -736,30 +581,23 @@ describe('runHealthPipeline', function() {
     expect(Array.isArray(result.enrichmentStatus.warnings)).toBe(true)
   })
 
-  it('returns null milestones when neither source is available', async function() {
+  it('returns null milestones when registry has no matching releases', async function() {
     var storage = makeStorage(makeCandidatesCache([
       { issueKey: 'T-1', summary: 'F1', status: 'In Progress', components: '', fixVersion: '', deliveryOwner: 'Jane', tier: 1 }
     ]))
     var result = await runHealthPipeline('3.5', storage.readFromStorage, storage.writeToStorage, vi.fn(), vi.fn())
     expect(result.milestones).toBeNull()
-    expect(result.enrichmentStatus.warnings).toEqual(
-      expect.arrayContaining([expect.stringContaining('Neither Product Pages nor Smartsheet')])
-    )
   })
 
-  it('loads milestones from Product Pages cache when available', async function() {
+  it('loads milestones from registry when available', async function() {
     var data = makeCandidatesCache([
       { issueKey: 'T-1', summary: 'F1', status: 'In Progress', components: '', fixVersion: '', deliveryOwner: 'Jane', tier: 1 }
     ])
-    data['releases/delivery/product-pages-releases-cache.json'] = {
-      source: 'api',
-      fetchedAt: '2026-04-26T00:00:00Z',
-      releases: [
-        { productName: 'rhoai', releaseNumber: 'rhoai-3.5.EA1', dueDate: '2026-05-15', codeFreezeDate: '2026-05-01' },
-        { productName: 'rhoai', releaseNumber: 'rhoai-3.5.EA2', dueDate: '2026-07-01', codeFreezeDate: '2026-06-15' },
-        { productName: 'rhoai', releaseNumber: 'rhoai-3.5', dueDate: '2026-08-15', codeFreezeDate: '2026-08-01' }
-      ]
-    }
+    data['releases/registry.json'] = makeRegistryJson([
+      { productName: 'rhoai', releaseNumber: 'rhoai-3.5.EA1', dueDate: '2026-05-15', codeFreezeDate: '2026-05-01' },
+      { productName: 'rhoai', releaseNumber: 'rhoai-3.5.EA2', dueDate: '2026-07-01', codeFreezeDate: '2026-06-15' },
+      { productName: 'rhoai', releaseNumber: 'rhoai-3.5', dueDate: '2026-08-15', codeFreezeDate: '2026-08-01' }
+    ])
     var storage = makeStorage(data)
     var result = await runHealthPipeline('3.5', storage.readFromStorage, storage.writeToStorage, vi.fn(), vi.fn())
     expect(result.milestones).not.toBeNull()
@@ -772,7 +610,7 @@ describe('runHealthPipeline', function() {
       { issueKey: 'T-1', summary: 'F1', status: 'In Progress', components: '', fixVersion: '', deliveryOwner: 'Jane', tier: 1 }
     ]))
     var result = await runHealthPipeline('3.5', storage.readFromStorage, storage.writeToStorage, vi.fn(), vi.fn())
-    expect(result.healthCacheVersion).toBe(3)
+    expect(result.healthCacheVersion).toBe(4)
     expect(result.version).toBe('3.5')
     expect(result.cachedAt).toBeDefined()
     expect(result.phase).toBe('all')
@@ -784,29 +622,24 @@ describe('runHealthPipeline', function() {
     expect(result.summary.stratCreatorCoverage).toBeDefined()
     expect(result.features[0]).toHaveProperty('key')
     expect(result.features[0]).toHaveProperty('risk')
-    expect(result.features[0]).toHaveProperty('dor')
-    expect(result.features[0]).toHaveProperty('dod')
+    expect(result.features[0]).toHaveProperty('fpdor')
     expect(result.features[0]).toHaveProperty('planningStatus')
     expect(result.features[0]).toHaveProperty('issueType')
     expect(result.features[0]).toHaveProperty('versionStatus')
-    expect(result.features[0].dor.gate).toBe('dor')
-    expect(result.features[0].dod.gate).toBe('dod')
+    expect(result.features[0].dor).toBeUndefined()
+    expect(result.features[0].dod).toBeUndefined()
   })
 
   it('computes planningFreezes from previous phase code freeze minus 7 days', async function() {
     var data = makeCandidatesCache([
       { issueKey: 'T-1', summary: 'F1', status: 'In Progress', components: '', fixVersion: '', deliveryOwner: 'Jane', tier: 1 }
     ])
-    data['releases/delivery/product-pages-releases-cache.json'] = {
-      source: 'api',
-      fetchedAt: '2026-04-26T00:00:00Z',
-      releases: [
-        { productName: 'rhoai', releaseNumber: 'rhoai-3.4', dueDate: '2026-04-30', codeFreezeDate: '2026-04-17' },
-        { productName: 'rhoai', releaseNumber: 'rhoai-3.5.EA1', dueDate: '2026-05-15', codeFreezeDate: '2026-05-01' },
-        { productName: 'rhoai', releaseNumber: 'rhoai-3.5.EA2', dueDate: '2026-07-01', codeFreezeDate: '2026-06-15' },
-        { productName: 'rhoai', releaseNumber: 'rhoai-3.5', dueDate: '2026-08-15', codeFreezeDate: '2026-08-01' }
-      ]
-    }
+    data['releases/registry.json'] = makeRegistryJson([
+      { productName: 'rhoai', releaseNumber: 'rhoai-3.4', dueDate: '2026-04-30', codeFreezeDate: '2026-04-17' },
+      { productName: 'rhoai', releaseNumber: 'rhoai-3.5.EA1', dueDate: '2026-05-15', codeFreezeDate: '2026-05-01' },
+      { productName: 'rhoai', releaseNumber: 'rhoai-3.5.EA2', dueDate: '2026-07-01', codeFreezeDate: '2026-06-15' },
+      { productName: 'rhoai', releaseNumber: 'rhoai-3.5', dueDate: '2026-08-15', codeFreezeDate: '2026-08-01' }
+    ])
     var storage = makeStorage(data)
     var result = await runHealthPipeline('3.5', storage.readFromStorage, storage.writeToStorage, vi.fn(), vi.fn())
     expect(result.planningFreezes).not.toBeNull()
@@ -822,15 +655,11 @@ describe('runHealthPipeline', function() {
     var data = makeCandidatesCache([
       { issueKey: 'T-1', summary: 'F1', status: 'In Progress', components: '', fixVersion: '', deliveryOwner: 'Jane', tier: 1 }
     ])
-    data['releases/delivery/product-pages-releases-cache.json'] = {
-      source: 'api',
-      fetchedAt: '2026-04-26T00:00:00Z',
-      releases: [
-        { productName: 'rhoai', releaseNumber: 'rhoai-3.5.EA1', dueDate: '2026-05-15', codeFreezeDate: '2026-05-01' },
-        { productName: 'rhoai', releaseNumber: 'rhoai-3.5.EA2', dueDate: '2026-07-01', codeFreezeDate: '2026-06-15' },
-        { productName: 'rhoai', releaseNumber: 'rhoai-3.5', dueDate: '2026-08-15', codeFreezeDate: '2026-08-01' }
-      ]
-    }
+    data['releases/registry.json'] = makeRegistryJson([
+      { productName: 'rhoai', releaseNumber: 'rhoai-3.5.EA1', dueDate: '2026-05-15', codeFreezeDate: '2026-05-01' },
+      { productName: 'rhoai', releaseNumber: 'rhoai-3.5.EA2', dueDate: '2026-07-01', codeFreezeDate: '2026-06-15' },
+      { productName: 'rhoai', releaseNumber: 'rhoai-3.5', dueDate: '2026-08-15', codeFreezeDate: '2026-08-01' }
+    ])
     var storage = makeStorage(data)
     var result = await runHealthPipeline('3.5', storage.readFromStorage, storage.writeToStorage, vi.fn(), vi.fn())
     expect(result.planningFreezes.ea1).toBeNull()
@@ -848,20 +677,6 @@ describe('runHealthPipeline', function() {
     expect(result.planningFreezes.ga).toBeNull()
   })
 
-  it('falls back to Smartsheet for previous GA freeze when Product Pages cache is missing', async function() {
-    smartsheetClient.isConfigured.mockReturnValue(true)
-    smartsheetClient.discoverReleasesPartial.mockResolvedValue([
-      { version: '3.4', ea1Freeze: '2025-12-01', ea1Target: '2025-12-15', ea2Freeze: '2026-02-01', ea2Target: '2026-02-15', gaFreeze: '2026-04-17', gaTarget: '2026-04-30' },
-      { version: '3.5', ea1Freeze: '2026-05-01', ea1Target: '2026-05-15', ea2Freeze: '2026-06-15', ea2Target: '2026-07-01', gaFreeze: '2026-08-01', gaTarget: '2026-08-15' }
-    ])
-    var storage = makeStorage(makeCandidatesCache([
-      { issueKey: 'T-1', summary: 'F1', status: 'In Progress', components: '', fixVersion: '', deliveryOwner: 'Jane', tier: 1 }
-    ]))
-    var result = await runHealthPipeline('3.5', storage.readFromStorage, storage.writeToStorage, vi.fn(), vi.fn())
-    // EA1 planning freeze = previous version (3.4) GA freeze from Smartsheet - 7 = 2026-04-17 - 7 = 2026-04-10
-    expect(result.planningFreezes.ea1).toBe('2026-04-10')
-  })
-
   it('attaches priorityScore and priorityBreakdown to health features', async function() {
     var storage = makeStorage(makeCandidatesCache([
       { issueKey: 'T-1', summary: 'F1', status: 'In Progress', priority: 'Major', components: '', fixVersion: '', deliveryOwner: 'Jane', tier: 1 },
@@ -877,7 +692,7 @@ describe('runHealthPipeline', function() {
       expect(result.features[i].priorityBreakdown).toHaveProperty('rice')
       expect(result.features[i].priorityBreakdown).toHaveProperty('bigRock')
       expect(result.features[i].priorityBreakdown).toHaveProperty('priority')
-      expect(result.features[i].priorityBreakdown).toHaveProperty('complexity')
+      expect(result.features[i].priorityBreakdown).toHaveProperty('targetVersion')
     }
     // Tier 1 Major should score higher than Tier 3 Minor
     expect(result.features[0].priorityScore).toBeGreaterThan(result.features[1].priorityScore)

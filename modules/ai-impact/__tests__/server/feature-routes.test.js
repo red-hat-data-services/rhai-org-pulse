@@ -30,7 +30,7 @@ function makeValidBody() {
 function makeContext(storageData = null) {
   return {
     storage: {
-      readFromStorage: vi.fn().mockReturnValue(storageData)
+      readFromStorage: vi.fn().mockResolvedValue(storageData)
     },
     requireAdmin: (req, res, next) => next(),
     requireScope: () => (req, res, next) => next()

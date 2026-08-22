@@ -332,7 +332,7 @@
     <div class="container">
         <header>
             <h1>Quality Analysis Report</h1>
-            <p class="timestamp">Generated on July 06, 2026 at 03:16 PM</p>
+            <p class="timestamp">Generated on July 21, 2026 at 12:29 PM</p>
             <h2 style="margin-top: 1rem; font-weight: 400;">elyra-ai/elyra</h2>
         </header>
 
@@ -344,11 +344,11 @@
                         <circle class="score-arc" cx="100" cy="100" r="90"
                                 stroke="#ffc107"
                                 stroke-dasharray="565.4861999999999"
-                                stroke-dashoffset="147.026412"
+                                stroke-dashoffset="180.95558400000002"
                                 id="scoreArc"></circle>
                     </svg>
                     <div class="score-text">
-                        <div class="score-value">7.4</div>
+                        <div class="score-value">6.8</div>
                         <div class="score-label">Overall Score</div>
                     </div>
                 </div>
@@ -364,38 +364,43 @@
                         
                         <div class="scorecard-item">
                             <h3>Unit Tests</h3>
-                            <div class="scorecard-score" style="color: #ffc107;">7.5/10</div>
-                            <div class="scorecard-status">Strong Python backend coverage (63 test files, ~16k lines); weak frontend unit tests (only 4 spec files)</div>
+                            <div class="scorecard-score" style="color: #ffc107;">7.0/10</div>
+                            <div class="scorecard-status">Strong Python test suite (32 files, pytest+fixtures), sparse frontend unit tests (4 spec files for 65+ TS sources)</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Integration/E2E</h3>
-                            <div class="scorecard-score" style="color: #28a745;">8.5/10</div>
-                            <div class="scorecard-status">Comprehensive Cypress suite with 11 spec files, sharded CI, code coverage integration</div>
+                            <div class="scorecard-score" style="color: #ffc107;">7.5/10</div>
+                            <div class="scorecard-status">Comprehensive Cypress suite (11 specs, 2229 lines) with CI sharding across 3 parallel runners</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Build Integration</h3>
                             <div class="scorecard-score" style="color: #ffc107;">6.0/10</div>
-                            <div class="scorecard-status">Image environment validation on PRs; no Konflux simulation or multi-arch build testing</div>
+                            <div class="scorecard-status">Image environment validation on PRs, runtime image validation, but no PR-time Docker image builds</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Image Testing</h3>
-                            <div class="scorecard-score" style="color: #ffc107;">7.0/10</div>
-                            <div class="scorecard-status">Runtime image validation with functional checks; no vulnerability scanning or SBOM</div>
+                            <div class="scorecard-score" style="color: #fd7e14;">5.0/10</div>
+                            <div class="scorecard-status">Runtime image validation with notebook execution tests, but no multi-stage builds, HEALTHCHECK, or multi-arch</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Coverage Tracking</h3>
-                            <div class="scorecard-score" style="color: #28a745;">8.0/10</div>
-                            <div class="scorecard-status">Codecov integration for both Python and JS; nyc thresholds enforced (70% lines, 60% functions, 50% branches)</div>
+                            <div class="scorecard-score" style="color: #ffc107;">6.5/10</div>
+                            <div class="scorecard-status">Codecov integration for Python, Jest, and Cypress coverage uploads — no threshold enforcement</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>CI/CD Automation</h3>
-                            <div class="scorecard-score" style="color: #28a745;">8.5/10</div>
-                            <div class="scorecard-status">Well-organized single workflow with concurrency control, matrix testing, caching, and artifact upload</div>
+                            <div class="scorecard-score" style="color: #28a745;">8.0/10</div>
+                            <div class="scorecard-status">Well-organized workflow with matrix testing (4 Python versions), Cypress sharding, caching, concurrency control</div>
+                        </div>
+                        <div class="scorecard-item">
+                            <h3>Static Analysis</h3>
+                            <div class="scorecard-score" style="color: #ffc107;">6.0/10</div>
+                            <div class="scorecard-status">Flake8 + Black (Python), ESLint + Prettier (TS) with strict enforcement; Husky hooks; missing Dependabot/Renovate</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Agent Rules</h3>
-                            <div class="scorecard-score" style="color: #ffc107;">7.0/10</div>
-                            <div class="scorecard-status">AGENT.md with comprehensive guidelines, CLAUDE.md and GEMINI.md present; no .claude/rules/ directory</div>
+                            <div class="scorecard-score" style="color: #ffc107;">7.5/10</div>
+                            <div class="scorecard-status">Comprehensive AGENT.md with DCO sign-off guidance and dependency constraints; CLAUDE.md and GEMINI.md present; no structured test rules</div>
                         </div>
                     </div>
                 </div>
@@ -411,40 +416,32 @@
                     <ul class="items-list">
                         
                         <li class="item-card high">
-                            <div class="item-description">No container vulnerability scanning</div>
-                            <p>CVEs in base images and dependencies go undetected until deployment</p>
+                            <div class="item-description">No PR-time Docker image builds</div>
+                            <p>Image build failures (Dockerfile syntax, dependency conflicts, layer ordering) only discovered post-merge or during release</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-high">HIGH</span>
-                                <span class="meta-tag effort-tag">2-4 hours</span>
+                                <span class="meta-tag effort-tag">4-6 hours</span>
                             </div>
                         </li>
                         <li class="item-card high">
-                            <div class="item-description">Minimal frontend unit test coverage</div>
-                            <p>Only 4 spec files for 12 frontend packages (~85 TS/TSX source files); regressions easily missed</p>
+                            <div class="item-description">Sparse frontend unit test coverage</div>
+                            <p>Only 4 spec files cover 65+ TypeScript source files — frontend logic regressions may be caught only by slower Cypress integration tests</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-high">HIGH</span>
                                 <span class="meta-tag effort-tag">16-24 hours</span>
                             </div>
                         </li>
-                        <li class="item-card high">
-                            <div class="item-description">No dependency scanning or secret detection</div>
-                            <p>Supply chain vulnerabilities and credential leaks not caught in CI</p>
-                            <div class="item-meta">
-                                <span class="meta-tag severity-high">HIGH</span>
-                                <span class="meta-tag effort-tag">2-4 hours</span>
-                            </div>
-                        </li>
                         <li class="item-card medium">
-                            <div class="item-description">No multi-architecture image builds</div>
-                            <p>Images only built for single platform; no ARM64 support verified</p>
+                            <div class="item-description">No coverage threshold enforcement</div>
+                            <p>Coverage can silently regress without any PR gate; no .codecov.yml with target/threshold configuration</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-medium">MEDIUM</span>
-                                <span class="meta-tag effort-tag">4-8 hours</span>
+                                <span class="meta-tag effort-tag">2-3 hours</span>
                             </div>
                         </li>
                         <li class="item-card medium">
-                            <div class="item-description">No pre-commit hooks enforcement in CI</div>
-                            <p>Husky/lint-staged only runs locally; CI bypass possible</p>
+                            <div class="item-description">No Dependabot or Renovate configuration</div>
+                            <p>Dependency updates are manual; security vulnerabilities in transitive dependencies may go unnoticed</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-medium">MEDIUM</span>
                                 <span class="meta-tag effort-tag">1-2 hours</span>
@@ -464,43 +461,35 @@
                     <ul class="items-list">
                         
                         <li class="item-card ">
-                            <div class="item-description">Add Trivy scanning to PR workflow</div>
-                            <p>Early detection of CVEs in container images and filesystem dependencies</p>
+                            <div class="item-description">Add .codecov.yml with coverage thresholds</div>
+                            <p>Prevent silent coverage regression on every PR with automatic enforcement</p>
                             <div class="item-meta">
                                 
                                 <span class="meta-tag effort-tag">1-2 hours</span>
                             </div>
                         </li>
                         <li class="item-card ">
-                            <div class="item-description">Add Dependabot or Renovate for dependency updates</div>
-                            <p>Automated dependency freshness and security patching</p>
+                            <div class="item-description">Enable Dependabot for pip and npm ecosystems</div>
+                            <p>Automated dependency update PRs with security alerts for known vulnerabilities</p>
                             <div class="item-meta">
                                 
                                 <span class="meta-tag effort-tag">1-2 hours</span>
                             </div>
                         </li>
                         <li class="item-card ">
-                            <div class="item-description">Add secret detection with Gitleaks</div>
-                            <p>Prevent accidental credential commits</p>
+                            <div class="item-description">Add HEALTHCHECK to production Dockerfiles</div>
+                            <p>Enable container orchestrators to detect unhealthy instances and restart them automatically</p>
                             <div class="item-meta">
                                 
-                                <span class="meta-tag effort-tag">1-2 hours</span>
+                                <span class="meta-tag effort-tag">1 hour</span>
                             </div>
                         </li>
                         <li class="item-card ">
-                            <div class="item-description">Create .claude/rules/ directory with test creation rules</div>
-                            <p>Standardize AI-generated test quality across test types</p>
+                            <div class="item-description">Add PR-time Docker image build smoke test</div>
+                            <p>Catch Dockerfile and dependency issues before merge instead of during release</p>
                             <div class="item-meta">
                                 
-                                <span class="meta-tag effort-tag">2-3 hours</span>
-                            </div>
-                        </li>
-                        <li class="item-card ">
-                            <div class="item-description">Add SBOM generation to image build</div>
-                            <p>Supply chain transparency and compliance readiness</p>
-                            <div class="item-meta">
-                                
-                                <span class="meta-tag effort-tag">1-2 hours</span>
+                                <span class="meta-tag effort-tag">3-4 hours</span>
                             </div>
                         </li>
                     </ul>
@@ -517,15 +506,15 @@
                         
                         <div class="rec-priority p0">
                             <h3>Priority 0: Critical</h3>
-                            <ul><li>Add container vulnerability scanning (Trivy) to PR and push workflows</li><li>Implement dependency scanning (Dependabot/Renovate) for Python and npm</li><li>Add secret detection (Gitleaks) to prevent credential leaks</li></ul>
+                            <ul><li>Increase frontend unit test coverage — add Jest specs for untested packages (code-snippet, metadata, ui-components, python-editor, r-editor, scala-editor)</li><li>Add .codecov.yml with project/patch coverage targets (e.g., 70% project, 60% patch) to enforce coverage gates on PRs</li><li>Enable Dependabot for pip, npm, and docker ecosystems to automate security and dependency updates</li></ul>
                         </div>
                         <div class="rec-priority p1">
                             <h3>Priority 1: High Value</h3>
-                            <ul><li>Expand frontend unit tests — currently only 4 spec files across 12 packages</li><li>Add SBOM generation and image signing for supply chain security</li><li>Create comprehensive .claude/rules/ for test automation guidance</li><li>Add multi-architecture (amd64/arm64) image build support</li></ul>
+                            <ul><li>Add a PR-triggered job that builds the elyra Docker image and validates startup (docker build + docker run --health-cmd)</li><li>Add HEALTHCHECK instructions to production Dockerfiles (elyra, kubeflow)</li><li>Create structured test creation rules in .claude/rules/ for pytest and Cypress patterns</li></ul>
                         </div>
                         <div class="rec-priority p2">
                             <h3>Priority 2: Nice-to-Have</h3>
-                            <ul><li>Add performance regression testing for pipeline execution</li><li>Implement contract tests between frontend service clients and backend API</li><li>Add accessibility testing for JupyterLab extensions</li><li>Consider migrating from flake8 to ruff for faster Python linting</li></ul>
+                            <ul><li>Migrate Dockerfiles to multi-stage builds for smaller production images</li><li>Consider UBI-based images for FIPS compatibility in enterprise/Red Hat deployments</li><li>Add multi-architecture image support (amd64 + arm64) for broader deployment scenarios</li><li>Add .pre-commit-config.yaml to complement Husky hooks for Python-side enforcement</li></ul>
                         </div>
                     </div>
                 </div>

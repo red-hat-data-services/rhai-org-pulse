@@ -19,6 +19,9 @@ function defaultModelValue() {
     component: [],
     priority: [],
     team: [],
+    product: [],
+    fpdorItems: [],
+    alignment: [],
     readiness: null
   }
 }
@@ -256,6 +259,7 @@ describe('FeatureReadinessFilterBar', function() {
     expect(cleared.fixVersion).toEqual([])
     expect(cleared.component).toEqual([])
     expect(cleared.team).toEqual([])
+    expect(cleared.alignment).toEqual([])
   })
 
   // ─── Readiness single-select ───
@@ -356,5 +360,84 @@ describe('FeatureReadinessFilterBar', function() {
     var classes = outcomeBtn[0].classes().join(' ')
     expect(classes).toContain('border-gray-300')
     expect(classes).not.toContain('border-primary-400')
+  })
+
+  it('renders product and failed FPDoR filters', function() {
+    var wrapper = mount(FeatureReadinessFilterBar, {
+      props: { filterMeta: FILTER_META, modelValue: defaultModelValue() }
+    })
+    expect(wrapper.text()).toContain('All products')
+    expect(wrapper.text()).toContain('Any failed item')
+    expect(wrapper.text()).toContain('All alignments')
+  })
+
+  it('emits alignment selection', async function() {
+    var wrapper = mount(FeatureReadinessFilterBar, {
+      props: { filterMeta: FILTER_META, modelValue: defaultModelValue() },
+      attachTo: document.body
+    })
+    var alignBtn = findButtonByText(wrapper, 'All alignments')
+    expect(alignBtn.length).toBe(1)
+    await alignBtn[0].trigger('click')
+    expect(wrapper.text()).toContain('Early or as requested')
+    expect(wrapper.text()).toContain('Different products')
+    var labels = wrapper.findAll('label').filter(function(l) { return l.text().includes('Different products') })
+    expect(labels.length).toBeGreaterThan(0)
+    await labels[0].find('input').setValue(true)
+    var emitted = wrapper.emitted('update:modelValue')
+    expect(emitted[emitted.length - 1][0].alignment).toContain('misaligned')
+    wrapper.unmount()
+  })
+
+  it('After requested checkbox selects yellow and green categories', async function() {
+    var wrapper = mount(FeatureReadinessFilterBar, {
+      props: { filterMeta: FILTER_META, modelValue: defaultModelValue() },
+      attachTo: document.body
+    })
+    var alignBtn = findButtonByText(wrapper, 'All alignments')
+    await alignBtn[0].trigger('click')
+    var labels = wrapper.findAll('label').filter(function(l) { return l.text().trim() === 'After requested' })
+    expect(labels.length).toBe(1)
+    await labels[0].find('input').setValue(true)
+    var emitted = wrapper.emitted('update:modelValue')
+    expect(emitted[emitted.length - 1][0].alignment).toEqual(['after_requested', 'aligned_late'])
+    wrapper.unmount()
+  })
+
+  it('emits product selection', async function() {
+    var wrapper = mount(FeatureReadinessFilterBar, {
+      props: { filterMeta: FILTER_META, modelValue: defaultModelValue() },
+      attachTo: document.body
+    })
+    var productBtn = findButtonByText(wrapper, 'All products')
+    expect(productBtn.length).toBe(1)
+    await productBtn[0].trigger('click')
+    expect(wrapper.text()).toContain('RHOAI')
+    expect(wrapper.text()).toContain('RHAIIS')
+    expect(wrapper.text()).toContain('RHELAI')
+    var labels = wrapper.findAll('label').filter(function(l) { return l.text().includes('RHOAI') })
+    expect(labels.length).toBeGreaterThan(0)
+    await labels[0].find('input').setValue(true)
+    var emitted = wrapper.emitted('update:modelValue')
+    expect(emitted).toBeDefined()
+    expect(emitted[emitted.length - 1][0].product).toContain('RHOAI')
+    wrapper.unmount()
+  })
+
+  it('emits failed FPDoR item selection', async function() {
+    var wrapper = mount(FeatureReadinessFilterBar, {
+      props: { filterMeta: FILTER_META, modelValue: defaultModelValue() },
+      attachTo: document.body
+    })
+    var fpdorBtn = findButtonByText(wrapper, 'Any failed item')
+    expect(fpdorBtn.length).toBe(1)
+    await fpdorBtn[0].trigger('click')
+    expect(wrapper.text()).toContain('Acceptance criteria')
+    var labels = wrapper.findAll('label').filter(function(l) { return l.text().includes('Acceptance criteria') })
+    expect(labels.length).toBeGreaterThan(0)
+    await labels[0].find('input').setValue(true)
+    var emitted = wrapper.emitted('update:modelValue')
+    expect(emitted[emitted.length - 1][0].fpdorItems).toContain('Acceptance criteria')
+    wrapper.unmount()
   })
 })

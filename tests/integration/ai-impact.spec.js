@@ -203,6 +203,37 @@ test.describe('AI Impact Views @ai-impact', () => {
     expect(page.errors).toHaveLength(0);
   });
 
+  test('should load Feature Decomposer view', async ({ page }) => {
+    await testView(page, 'feature-decomposer', 'Feature Decomposer');
+  });
+
+  test('Feature Decomposer view loads snapshot data and renders charts', async ({ page }) => {
+    // Monitor the decomposer snapshot endpoint
+    const apiResponses = [];
+    page.on('response', response => {
+      if (response.url().includes('/api/modules/ai-impact/decomposer')) {
+        apiResponses.push({ url: response.url(), status: response.status() });
+      }
+    });
+
+    await page.goto('/#/ai-impact/feature-decomposer');
+    await page.waitForLoadState('networkidle');
+    await page.waitForTimeout(DEFAULT_PAGE_WAIT_TIME);
+
+    // The GET /decomposer snapshot endpoint was called and returned data
+    const decompResponse = apiResponses.find(r => r.url.includes('/decomposer'));
+    expect(decompResponse).toBeDefined();
+    expect(decompResponse.status).toBe(200);
+
+    // KPIs, the "Showing" date filter, and charts render from the demo fixture
+    await expect(page.locator('text=Strategies Decomposed')).toBeVisible();
+    await expect(page.locator('#decomposer-showing')).toBeVisible();
+    const canvases = await page.locator('canvas').count();
+    expect(canvases).toBeGreaterThan(0);
+
+    expect(page.errors).toHaveLength(0);
+  });
+
   test('should load Documentation view', async ({ page }) => {
     await testView(page, 'documentation', 'Documentation');
   });
@@ -211,8 +242,56 @@ test.describe('AI Impact Views @ai-impact', () => {
     await testView(page, 'autofix', 'AutoFix');
   });
 
+  test('Jira AutoFix view renders impact metrics sections', async ({ page }) => {
+    await page.goto('/#/ai-impact/autofix');
+    await page.waitForLoadState('networkidle');
+    await page.waitForTimeout(DEFAULT_PAGE_WAIT_TIME);
+
+    const priorityHeading = page.locator('text=Priority Distribution');
+    await expect(priorityHeading).toBeVisible();
+
+    const effortHeading = page.locator('text=Effort Breakdown');
+    await expect(effortHeading).toBeVisible();
+
+    const ttfHeading = page.getByRole('heading', { name: 'Time to Fix' });
+    await expect(ttfHeading).toBeVisible();
+
+    const effortColumn = page.locator('th:has-text("Effort")');
+    await expect(effortColumn).toBeVisible();
+
+    expect(page.errors).toHaveLength(0);
+  });
+
   test('should load Test Plan Review view', async ({ page }) => {
     await testView(page, 'test-plan-review', 'Test Plan Review');
+  });
+
+  test('Test Plan Review renders trend charts and time window selector', async ({ page }) => {
+    await page.goto('/#/ai-impact/test-plan-review');
+    await page.waitForLoadState('networkidle');
+    await page.waitForTimeout(DEFAULT_PAGE_WAIT_TIME);
+
+    const timeWindowSelect = page.locator('select#tp-time-window');
+    await expect(timeWindowSelect).toBeVisible();
+
+    const trendHeading = page.locator('text=Trend Visualization');
+    await expect(trendHeading).toBeVisible();
+
+    expect(page.errors).toHaveLength(0);
+  });
+
+  test('Feature Review renders trend charts and time window selector', async ({ page }) => {
+    await page.goto('/#/ai-impact/feature-review');
+    await page.waitForLoadState('networkidle');
+    await page.waitForTimeout(DEFAULT_PAGE_WAIT_TIME);
+
+    const timeWindowSelect = page.locator('select#fr-time-window');
+    await expect(timeWindowSelect).toBeVisible();
+
+    const trendHeading = page.locator('text=Trend Visualization');
+    await expect(trendHeading).toBeVisible();
+
+    expect(page.errors).toHaveLength(0);
   });
 
   test('should load Build & Release view', async ({ page }) => {
@@ -251,5 +330,99 @@ test.describe('AI Impact Views @ai-impact', () => {
       (e) => !e.message.includes('View "state-of-the-union" not found')
     );
     expect(unexpectedErrors).toHaveLength(0);
+  });
+});
+
+/**
+ * Build & Release (Component Onboarding) — status badges, filters, metrics
+ */
+test.describe('AI Impact Build & Release @ai-impact', () => {
+  test.beforeEach(async ({ page }) => {
+    setupErrorTracking(page);
+    // Prevent the auto-open AI Impact Guide modal from blocking filter clicks.
+    await page.addInitScript(() => {
+      localStorage.setItem('ai-impact-guide-dismissed', 'true');
+    });
+    await page.goto('/#/ai-impact/build-release');
+    await page.waitForLoadState('networkidle');
+    await page.waitForTimeout(DEFAULT_PAGE_WAIT_TIME);
+  });
+
+  test.afterEach(async ({ page }, testInfo) => {
+    logCapturedErrors(page, testInfo);
+  });
+
+  test('"In Queue" metric card renders in the header', async ({ page }) => {
+    const inQueueCard = page.locator('text=In Queue').first();
+    await expect(inQueueCard).toBeVisible();
+
+    const waitingLabel = page.locator('text=waiting');
+    await expect(waitingLabel).toBeVisible();
+
+    expect(page.errors).toHaveLength(0);
+  });
+
+  test('"In Queue" status badge displays with blue styling', async ({ page }) => {
+    const inQueueBadge = page.locator('.rounded-full:has-text("In Queue")').first();
+    await expect(inQueueBadge).toBeVisible();
+
+    const hasBlueStyling = await inQueueBadge.evaluate(el => {
+      return el.className.includes('bg-blue-100') || el.className.includes('blue');
+    });
+    expect(hasBlueStyling).toBe(true);
+
+    expect(page.errors).toHaveLength(0);
+  });
+
+  test('target version dropdown appears and filters correctly', async ({ page }) => {
+    // Page header version multi-select (button + checkbox menu).
+    const versionButton = page.getByRole('button', { name: /All versions/ }).first();
+    await expect(versionButton).toBeVisible();
+    await versionButton.click();
+
+    const menu = page.getByTestId('page-version-filter-menu');
+    await expect(menu).toBeVisible();
+    const checkboxes = menu.locator('input[type="checkbox"]');
+    expect(await checkboxes.count()).toBeGreaterThan(0);
+
+    await checkboxes.first().check();
+    await menu.getByRole('button', { name: 'Done' }).click();
+    await page.waitForTimeout(500);
+
+    const countText = page.locator('text=/\\d+ components?/');
+    await expect(countText).toBeVisible();
+
+    expect(page.errors).toHaveLength(0);
+  });
+
+  test('status filter includes "In Queue" option and filters correctly', async ({ page }) => {
+    const statusButton = page.getByRole('button', { name: /All statuses/ });
+    await expect(statusButton).toBeVisible();
+    await statusButton.click();
+
+    const menu = page.getByTestId('status-filter-menu');
+    await expect(menu).toBeVisible();
+    await expect(menu.getByText('In Queue')).toBeVisible();
+
+    await menu.locator('input[type="checkbox"][value="in_queue"]').check();
+    await menu.getByRole('button', { name: 'Done' }).click();
+    await page.waitForTimeout(500);
+
+    const rows = page.locator('table tbody tr');
+    const rowCount = await rows.count();
+    expect(rowCount).toBeGreaterThan(0);
+
+    for (let i = 0; i < rowCount; i++) {
+      const row = rows.nth(i);
+      const badge = row.locator('.rounded-full');
+      if (await badge.count() > 0) {
+        const text = await badge.first().textContent();
+        if (text && ['Completed', 'In Progress', 'In Queue'].includes(text.trim())) {
+          expect(text.trim()).toBe('In Queue');
+        }
+      }
+    }
+
+    expect(page.errors).toHaveLength(0);
   });
 });

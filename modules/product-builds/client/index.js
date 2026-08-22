@@ -3,6 +3,8 @@ import { defineAsyncComponent } from 'vue'
 const ProductView = defineAsyncComponent(() => import('./views/ProductView.vue'))
 
 export const routes = {
+  'overview': defineAsyncComponent(() => import('./views/OverviewView.vue')),
+  'search': defineAsyncComponent(() => import('./views/SearchResultsView.vue')),
   'rhaiis': ProductView,
   'rhel-ai': ProductView,
   'base-images': ProductView,

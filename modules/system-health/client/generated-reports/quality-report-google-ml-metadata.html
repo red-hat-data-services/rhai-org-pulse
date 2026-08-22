@@ -332,7 +332,7 @@
     <div class="container">
         <header>
             <h1>Quality Analysis Report</h1>
-            <p class="timestamp">Generated on July 06, 2026 at 03:19 PM</p>
+            <p class="timestamp">Generated on July 21, 2026 at 12:21 PM</p>
             <h2 style="margin-top: 1rem; font-weight: 400;">google/ml-metadata</h2>
         </header>
 
@@ -344,11 +344,11 @@
                         <circle class="score-arc" cx="100" cy="100" r="90"
                                 stroke="#fd7e14"
                                 stroke-dasharray="565.4861999999999"
-                                stroke-dashoffset="260.12365199999994"
+                                stroke-dashoffset="311.01741"
                                 id="scoreArc"></circle>
                     </svg>
                     <div class="score-text">
-                        <div class="score-value">5.4</div>
+                        <div class="score-value">4.5</div>
                         <div class="score-label">Overall Score</div>
                     </div>
                 </div>
@@ -364,38 +364,43 @@
                         
                         <div class="scorecard-item">
                             <h3>Unit Tests</h3>
-                            <div class="scorecard-score" style="color: #ffc107;">7.5/10</div>
-                            <div class="scorecard-status">Extensive C++ unit tests (317 test cases) with multi-backend parameterized suites; Python tests adequate (85 test methods)</div>
+                            <div class="scorecard-score" style="color: #ffc107;">7.0/10</div>
+                            <div class="scorecard-status">Strong C++ test suite (~418 cases), moderate Python coverage (87 test functions), minimal Go</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Integration/E2E</h3>
-                            <div class="scorecard-score" style="color: #fd7e14;">5.0/10</div>
-                            <div class="scorecard-status">Multi-backend integration tests (SQLite, MySQL, PostgreSQL) via parameterized suites; no E2E tests for gRPC server or deployment scenarios</div>
+                            <div class="scorecard-score" style="color: #fd7e14;">4.0/10</div>
+                            <div class="scorecard-status">Database-backend integration tests exist but no dedicated E2E suite or cluster testing</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Build Integration</h3>
-                            <div class="scorecard-score" style="color: #fd7e14;">4.0/10</div>
-                            <div class="scorecard-status">Conda build and test workflows on PRs across 2 OS × 4 Python versions; no Docker image validation or Konflux-style PR-time build simulation</div>
+                            <div class="scorecard-score" style="color: #fd7e14;">5.0/10</div>
+                            <div class="scorecard-status">PR builds wheels across OS/Python matrix, but no image validation or Konflux simulation</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Image Testing</h3>
-                            <div class="scorecard-score" style="color: #dc3545;">2.0/10</div>
-                            <div class="scorecard-status">Dockerfiles exist for server and dev debug but no CI-driven image builds, no runtime validation, no vulnerability scanning</div>
+                            <div class="scorecard-score" style="color: #dc3545;">3.0/10</div>
+                            <div class="scorecard-status">Multi-stage Dockerfile exists but no runtime validation, healthchecks, or multi-arch</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Coverage Tracking</h3>
                             <div class="scorecard-score" style="color: #dc3545;">2.0/10</div>
-                            <div class="scorecard-status">pytest-cov installed in conda env but never invoked; no coverage reports, thresholds, or codecov/coveralls integration</div>
+                            <div class="scorecard-status">pytest-cov in dependencies but not wired into CI; no coverage gates or reporting</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>CI/CD Automation</h3>
-                            <div class="scorecard-score" style="color: #ffc107;">6.5/10</div>
-                            <div class="scorecard-status">4 GitHub Actions workflows with matrix builds, caching, and pre-commit; but Bazel tests not in CI, no concurrency control, no required status checks visible</div>
+                            <div class="scorecard-score" style="color: #fd7e14;">5.0/10</div>
+                            <div class="scorecard-status">4 workflows with matrix testing; missing concurrency control, timeouts, parallelization</div>
+                        </div>
+                        <div class="scorecard-item">
+                            <h3>Static Analysis</h3>
+                            <div class="scorecard-score" style="color: #ffc107;">6.0/10</div>
+                            <div class="scorecard-status">Comprehensive Ruff config with pre-commit CI; no Dependabot/Renovate or FIPS checks</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Agent Rules</h3>
                             <div class="scorecard-score" style="color: #dc3545;">0.0/10</div>
-                            <div class="scorecard-status">No CLAUDE.md, no .claude/ directory, no agent rules or test automation guidance</div>
+                            <div class="scorecard-status">No CLAUDE.md, AGENTS.md, or .claude/ directory present</div>
                         </div>
                     </div>
                 </div>
@@ -411,43 +416,43 @@
                     <ul class="items-list">
                         
                         <li class="item-card high">
-                            <div class="item-description">Bazel C++ tests not running in CI</div>
-                            <p>Core library&#x27;s 317 C++ unit tests are only runnable via local Bazel builds; regressions can go undetected in PRs</p>
-                            <div class="item-meta">
-                                <span class="meta-tag severity-high">HIGH</span>
-                                <span class="meta-tag effort-tag">8-16 hours</span>
-                            </div>
-                        </li>
-                        <li class="item-card high">
                             <div class="item-description">No coverage tracking or enforcement</div>
-                            <p>pytest-cov dependency exists but is never used; no coverage data collected, reported, or enforced</p>
+                            <p>Regressions in test coverage go undetected; no visibility into coverage trends</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-high">HIGH</span>
                                 <span class="meta-tag effort-tag">4-6 hours</span>
                             </div>
                         </li>
                         <li class="item-card high">
-                            <div class="item-description">No container image CI or security scanning</div>
-                            <p>Server Dockerfile is never built or tested in CI; no Trivy/Snyk scanning, no SBOM generation</p>
+                            <div class="item-description">No dedicated E2E or integration test suite</div>
+                            <p>Cross-component interactions (gRPC server + clients) not validated in CI</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-high">HIGH</span>
-                                <span class="meta-tag effort-tag">6-8 hours</span>
+                                <span class="meta-tag effort-tag">16-24 hours</span>
                             </div>
                         </li>
                         <li class="item-card high">
-                            <div class="item-description">No E2E or gRPC server integration tests</div>
-                            <p>gRPC metadata store server has no automated deployment or smoke testing; issues found only in production</p>
+                            <div class="item-description">No container image runtime validation</div>
+                            <p>Server image startup issues not caught until deployment; ubuntu:20.04 is EOL</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-high">HIGH</span>
-                                <span class="meta-tag effort-tag">12-20 hours</span>
+                                <span class="meta-tag effort-tag">8-12 hours</span>
                             </div>
                         </li>
                         <li class="item-card medium">
-                            <div class="item-description">No agent rules for AI-assisted development</div>
-                            <p>AI coding agents have no guidance for test creation, code standards, or repository conventions</p>
+                            <div class="item-description">No dependency alert configuration</div>
+                            <p>Vulnerable dependencies not automatically flagged; manual monitoring required</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-medium">MEDIUM</span>
-                                <span class="meta-tag effort-tag">3-4 hours</span>
+                                <span class="meta-tag effort-tag">1-2 hours</span>
+                            </div>
+                        </li>
+                        <li class="item-card medium">
+                            <div class="item-description">No concurrency control or timeout in CI</div>
+                            <p>Redundant CI runs waste resources; stuck builds can block pipelines indefinitely</p>
+                            <div class="item-meta">
+                                <span class="meta-tag severity-medium">MEDIUM</span>
+                                <span class="meta-tag effort-tag">1-2 hours</span>
                             </div>
                         </li>
                     </ul>
@@ -464,43 +469,35 @@
                     <ul class="items-list">
                         
                         <li class="item-card ">
-                            <div class="item-description">Enable pytest-cov in conda-test workflow</div>
-                            <p>Immediate visibility into Python test coverage; pytest-cov is already a dependency</p>
+                            <div class="item-description">Enable Dependabot for automated dependency alerts</div>
+                            <p>Automated security and dependency updates with PR generation for pip, Bazel deps</p>
                             <div class="item-meta">
                                 
                                 <span class="meta-tag effort-tag">1-2 hours</span>
                             </div>
                         </li>
                         <li class="item-card ">
-                            <div class="item-description">Add codecov integration</div>
-                            <p>PR-level coverage reporting and enforcement with minimal setup</p>
-                            <div class="item-meta">
-                                
-                                <span class="meta-tag effort-tag">2-3 hours</span>
-                            </div>
-                        </li>
-                        <li class="item-card ">
-                            <div class="item-description">Add Trivy scanning workflow for Dockerfile</div>
-                            <p>Automated vulnerability scanning for container images</p>
+                            <div class="item-description">Add concurrency control and timeouts to CI workflows</div>
+                            <p>Prevent duplicate runs and stuck builds; save CI minutes</p>
                             <div class="item-meta">
                                 
                                 <span class="meta-tag effort-tag">1-2 hours</span>
                             </div>
                         </li>
                         <li class="item-card ">
-                            <div class="item-description">Add concurrency control to PR workflows</div>
-                            <p>Cancel redundant CI runs on force-pushes, saving CI resources</p>
+                            <div class="item-description">Wire pytest-cov into CI and add Codecov integration</div>
+                            <p>Visibility into Python test coverage with PR-level reporting and threshold enforcement</p>
                             <div class="item-meta">
                                 
-                                <span class="meta-tag effort-tag">30 minutes</span>
+                                <span class="meta-tag effort-tag">2-4 hours</span>
                             </div>
                         </li>
                         <li class="item-card ">
-                            <div class="item-description">Generate CLAUDE.md with test rules</div>
-                            <p>Enable AI agents to write tests matching existing patterns and conventions</p>
+                            <div class="item-description">Add HEALTHCHECK to server Dockerfile</div>
+                            <p>Container orchestrators can detect unhealthy instances and restart them</p>
                             <div class="item-meta">
                                 
-                                <span class="meta-tag effort-tag">2-3 hours</span>
+                                <span class="meta-tag effort-tag">1 hour</span>
                             </div>
                         </li>
                     </ul>
@@ -517,15 +514,15 @@
                         
                         <div class="rec-priority p0">
                             <h3>Priority 0: Critical</h3>
-                            <ul><li>Add Bazel C++ test execution to CI (GitHub Actions with bazel test //...)</li><li>Enable pytest --cov in conda-test workflow and add codecov reporting</li><li>Add container image build and Trivy scanning to CI pipeline</li></ul>
+                            <ul><li>Wire pytest-cov into CI test workflow and integrate Codecov for coverage reporting and gate enforcement</li><li>Add Dependabot configuration covering pip and docker ecosystems</li><li>Upgrade server Dockerfile base image from EOL ubuntu:20.04 to ubuntu:24.04 or UBI for FIPS compatibility</li></ul>
                         </div>
                         <div class="rec-priority p1">
                             <h3>Priority 1: High Value</h3>
-                            <ul><li>Create E2E tests for gRPC metadata store server (docker-compose based)</li><li>Add CLAUDE.md with test creation rules covering C++, Python, and Go patterns</li><li>Add concurrency control to all PR workflows</li></ul>
+                            <ul><li>Create a dedicated integration test workflow that builds the server image, starts it, and runs gRPC client tests against it</li><li>Add concurrency control and timeout-minutes to all GitHub Actions workflows</li><li>Add container HEALTHCHECK and runtime validation tests</li><li>Create agent rules (CLAUDE.md / .claude/rules/) for test automation guidance</li></ul>
                         </div>
                         <div class="rec-priority p2">
                             <h3>Priority 2: Nice-to-Have</h3>
-                            <ul><li>Add SBOM generation for container images</li><li>Implement CodeQL or SAST analysis workflow</li><li>Add multi-architecture Docker image builds (linux/amd64, linux/arm64)</li></ul>
+                            <ul><li>Add multi-architecture support for server Docker image (amd64/arm64)</li><li>Add Go test coverage and expand Go binding tests beyond single test file</li><li>Add C++ coverage reporting via Bazel&#x27;s coverage support</li></ul>
                         </div>
                     </div>
                 </div>

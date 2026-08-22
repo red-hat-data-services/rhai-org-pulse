@@ -1,408 +1,460 @@
 ---
 repository: "red-hat-data-services/notebooks-downstream"
-overall_score: 7.6
+overall_score: 7.2
 scorecard:
   - dimension: "Unit Tests"
     score: 7.0
-    status: "Good pytest + Go test coverage with Allure reporting, but no code coverage measurement"
+    status: "Good pytest + testcontainers suite; container-focused tests appropriate for repo type"
   - dimension: "Integration/E2E"
-    score: 9.0
-    status: "Excellent multi-layer testing — Testcontainers, Kind/CRI-O deployment, Playwright browser tests"
-  - dimension: "Build Integration"
     score: 8.0
-    status: "PR builds validate every changed image with Kind deployment tests, no Konflux simulation"
+    status: "Excellent K8s cluster testing, Playwright browser tests, FIPS compliance checks on every build"
+  - dimension: "Build Integration"
+    score: 9.0
+    status: "PR-time image builds with smart change detection, Konflux pipelines, kustomize validation"
   - dimension: "Image Testing"
     score: 9.0
-    status: "Sophisticated Testcontainers tests for base images, workbenches, runtimes, accelerators, FIPS"
+    status: "Outstanding multi-layer validation: testcontainers, K8s deployment, check-payload FIPS, Trivy, Hadolint"
   - dimension: "Coverage Tracking"
-    score: 2.0
-    status: "No codecov/coveralls integration, no coverage thresholds or PR reporting"
+    score: 1.0
+    status: "No code coverage tracking — no codecov, no pytest-cov, no coverage thresholds"
   - dimension: "CI/CD Automation"
     score: 9.0
-    status: "Well-organized matrix builds with caching, concurrency control, and smart change detection"
+    status: "16 GHA workflows + 35 Tekton pipelines, matrix builds, concurrency control, caching, daily builds"
+  - dimension: "Static Analysis"
+    score: 8.0
+    status: "Comprehensive Ruff + Pyright + Hadolint + yamllint; Renovate covers Tekton/Dockerfile but not pip"
   - dimension: "Agent Rules"
     score: 0.0
-    status: "No CLAUDE.md, AGENTS.md, or .claude/ directory — zero AI agent guidance"
+    status: "No CLAUDE.md, AGENTS.md, or .claude/ directory present"
 critical_gaps:
-  - title: "No code coverage tracking or enforcement"
-    impact: "Cannot measure test coverage trends or enforce minimum coverage on PRs — regressions go undetected"
+  - title: "No code coverage tracking"
+    impact: "Cannot measure or enforce test coverage — regressions in test quality go undetected"
     severity: "HIGH"
     effort: "4-6 hours"
   - title: "No AI agent rules for test creation"
-    impact: "AI agents have no guidance on test patterns, frameworks, or quality standards for this repo"
+    impact: "AI-generated tests lack project-specific patterns and standards"
     severity: "MEDIUM"
-    effort: "3-4 hours"
-  - title: "No CodeQL or SAST integration"
-    impact: "Static security analysis gaps — only Trivy filesystem/image scanning is present"
-    severity: "MEDIUM"
-    effort: "2-3 hours"
-  - title: "No SBOM generation or image signing"
-    impact: "Supply chain security gap — no software bill of materials or provenance attestation"
-    severity: "MEDIUM"
-    effort: "4-6 hours"
-  - title: "Trivy image scanning is label-gated on PRs"
-    impact: "Image vulnerability scanning only runs on PRs with 'trivy-scan' label — most PRs skip it"
+    effort: "2-4 hours"
+  - title: "Renovate does not cover Python/pip dependencies"
+    impact: "Python dependency updates are manual — security vulnerabilities and stale libraries may accumulate"
     severity: "MEDIUM"
     effort: "1-2 hours"
 quick_wins:
-  - title: "Add pytest-cov to generate coverage reports"
+  - title: "Add pytest-cov and codecov integration"
+    effort: "2-4 hours"
+    impact: "Visibility into test coverage with PR reporting and threshold enforcement"
+  - title: "Extend Renovate to cover pip/pyproject.toml"
+    effort: "30 minutes"
+    impact: "Automated Python dependency updates alongside existing Tekton/Dockerfile coverage"
+  - title: "Create CLAUDE.md with test creation rules"
     effort: "2-3 hours"
-    impact: "Visibility into test coverage gaps across container test suites"
-  - title: "Enable Trivy scanning on all PRs (remove label gate)"
-    effort: "1 hour"
-    impact: "Every PR gets vulnerability scanning instead of opt-in only"
-  - title: "Add CodeQL workflow for Python/Go static analysis"
-    effort: "2-3 hours"
-    impact: "Catch security vulnerabilities and code quality issues in CI tooling code"
-  - title: "Generate agent rules with /test-rules-generator"
-    effort: "2-3 hours"
-    impact: "AI agents can create consistent, high-quality tests following repo patterns"
+    impact: "Consistent AI-generated tests following project patterns (testcontainers, pytest markers)"
 recommendations:
   priority_0:
-    - "Add pytest-cov integration with coverage thresholds to catch test regression"
-    - "Remove label gate on Trivy image scanning so all PRs get scanned"
+    - "Add pytest-cov to CI and configure codecov with coverage thresholds to catch test quality regressions"
+    - "Extend Renovate configuration to include pip ecosystem for automated Python dependency updates"
   priority_1:
-    - "Add CodeQL/SAST workflow for Python and Go source code"
-    - "Add SBOM generation (Syft/Cosign) and image signing for published images"
-    - "Create .claude/rules/ with test creation guidelines for container, deployment, and browser tests"
+    - "Create CLAUDE.md and .claude/rules/ with test creation guidance for testcontainers, Playwright, and pytest marker patterns"
+    - "Add multi-version Kubernetes testing (test against K8s 1.31 and 1.33 to match OCP versions)"
   priority_2:
-    - "Add Allure report publishing to GitHub Pages or artifact storage"
-    - "Add dependency update automation (Dependabot/Renovate for Go modules and Python deps)"
-    - "Consider adding contract tests between notebook images and RHOAI dashboard expectations"
+    - "Add test coverage for ROCm-specific code paths in container tests"
+    - "Consider adding contract tests between image manifests and operator expectations"
 ---
 
 # Quality Analysis: notebooks-downstream
 
 ## Executive Summary
 
-- **Overall Score: 7.6/10**
-- **Repository Type**: Container image builder for Jupyter/RStudio/Code-Server notebook workbenches and model serving runtimes
-- **Primary Languages**: Python (tests, CI tooling), Dockerfiles (35+ images), Go (build tooling), TypeScript (browser tests)
-- **Key Strengths**: Exceptional multi-layer container testing with Testcontainers, Kind/CRI-O Kubernetes deployment validation, Playwright browser tests, smart matrix-based CI with change detection
-- **Critical Gaps**: No code coverage tracking, no agent rules, label-gated vulnerability scanning, no SAST/CodeQL
-- **Agent Rules Status**: Missing — no CLAUDE.md, AGENTS.md, or .claude/ directory
+- **Overall Score: 7.2/10**
+- **Repository Type**: Container image build repository (Jupyter notebooks, workbench images, model serving runtimes)
+- **Primary Languages**: Python, Dockerfiles, Shell, TypeScript (Playwright), Go (helper tools)
+- **Tier**: Downstream (red-hat-data-services)
+- **Jira**: RHAIENG / Notebooks
+
+### Key Strengths
+- **Exceptional build integration**: PR-time image builds with smart change detection (only builds affected images), Konflux/Tekton pipelines for production, kustomize manifest validation
+- **Multi-layer image testing**: Testcontainers, real Kubernetes deployment (kubeadm + cri-o), FIPS compliance scanning (check-payload), Trivy vulnerability scanning, Hadolint Dockerfile linting
+- **Comprehensive static analysis**: Ruff (30+ rule categories), Pyright type checking, yamllint, JSON validation, pre-commit hooks
+- **Mature CI/CD**: 16 GitHub Actions workflows + 35 Tekton pipelines, matrix builds across platforms (amd64, arm64, s390x), concurrency control, build caching
+
+### Critical Gaps
+- **No code coverage tracking** — biggest quality gap
+- **No AI agent rules** — no CLAUDE.md or test creation guidance
+- **Incomplete Renovate coverage** — only covers Tekton/Dockerfile, not pip/Python
+
+### Agent Rules Status: **Missing**
 
 ## Quality Scorecard
 
-| Dimension | Score | Status |
-|-----------|-------|--------|
-| Unit Tests | 7/10 | Good pytest + Go test coverage with Allure, no coverage measurement |
-| Integration/E2E | 9/10 | Excellent multi-layer: Testcontainers, Kind deployment, Playwright |
-| **Build Integration** | **8/10** | **PR builds validate every changed image, Kind tests, no Konflux sim** |
-| Image Testing | 9/10 | Sophisticated container validation — ELF linking, FIPS, startup, libs |
-| Coverage Tracking | 2/10 | No codecov/coveralls, no thresholds, no PR reporting |
-| CI/CD Automation | 9/10 | Matrix builds, caching, concurrency control, change detection |
-| Agent Rules | 0/10 | No AI agent rules or test automation guidance |
+| Dimension | Score | Weight | Weighted | Status |
+|-----------|-------|--------|----------|--------|
+| Unit Tests | 7.0/10 | 15% | 1.05 | Good pytest + testcontainers suite |
+| Integration/E2E | 8.0/10 | 20% | 1.60 | K8s cluster testing, Playwright, FIPS checks |
+| Build Integration | 9.0/10 | 15% | 1.35 | PR image builds, Konflux, kustomize validation |
+| Image Testing | 9.0/10 | 10% | 0.90 | Multi-layer: testcontainers, K8s deploy, FIPS, Trivy |
+| Coverage Tracking | 1.0/10 | 10% | 0.10 | No coverage tracking at all |
+| CI/CD Automation | 9.0/10 | 15% | 1.35 | 16 GHA + 35 Tekton, matrix, caching, daily builds |
+| Static Analysis | 8.0/10 | 10% | 0.80 | Ruff + Pyright + Hadolint + yamllint |
+| Agent Rules | 0.0/10 | 5% | 0.00 | No agent rules present |
+| **Overall** | **7.2/10** | **100%** | **7.15** | |
 
 ## Critical Gaps
 
-### 1. No Code Coverage Tracking or Enforcement
-- **Impact**: Cannot measure test coverage trends or enforce minimum coverage on PRs — regressions go undetected
+### 1. No Code Coverage Tracking
 - **Severity**: HIGH
+- **Impact**: Cannot measure, track, or enforce code coverage — regressions in test quality go completely undetected. The 27 Python test files and 5 TypeScript test files run without any coverage measurement.
 - **Effort**: 4-6 hours
-- **Details**: Despite having excellent test suites (pytest with Testcontainers, Go tests, Playwright), there is no coverage measurement. No `pytest-cov` in dependencies, no `.codecov.yml`, no coverage thresholds in CI.
+- **Details**: No `.codecov.yml`, no `pytest-cov` in dependencies, no `--cov` flag in CI, no coverage thresholds. The `pyproject.toml` dev dependencies include `pytest` but not `pytest-cov`.
 
 ### 2. No AI Agent Rules
-- **Impact**: AI agents generating tests or code have no guidance on the repo's sophisticated testing patterns
 - **Severity**: MEDIUM
-- **Effort**: 3-4 hours
-- **Details**: No CLAUDE.md, AGENTS.md, or `.claude/` directory exists. This repo has complex Testcontainers patterns, fixture hierarchies, and image-type-specific test selection that agents need to understand.
+- **Impact**: AI tools generating tests or code changes lack project-specific guidance on testcontainers patterns, pytest markers (`openshift`, `cuda`, `rocm`), and Dockerfile conventions.
+- **Effort**: 2-4 hours
+- **Details**: No `CLAUDE.md`, `AGENTS.md`, or `.claude/` directory. This repo has strong testing conventions (testcontainers, Playwright, specific pytest markers) that would benefit from explicit documentation for AI agents.
 
-### 3. No CodeQL or SAST Integration
-- **Impact**: Static security analysis gaps in Python/Go CI tooling code
+### 3. Renovate Limited to Tekton/Dockerfile Only
 - **Severity**: MEDIUM
-- **Effort**: 2-3 hours
-- **Details**: Only Trivy filesystem and image scanning is present. No CodeQL, Semgrep, or Bandit for the Python/Go source code that drives the build pipeline.
-
-### 4. No SBOM Generation or Image Signing
-- **Impact**: Supply chain security gap — no software bill of materials or provenance attestation for published images
-- **Severity**: MEDIUM
-- **Effort**: 4-6 hours
-- **Details**: Images are built and pushed to GHCR/Quay but lack SBOM generation (Syft) or cosign signatures.
-
-### 5. Trivy Image Scanning is Label-Gated on PRs
-- **Impact**: Most PRs skip image vulnerability scanning — only PRs with the `trivy-scan` label trigger it
-- **Severity**: MEDIUM
+- **Impact**: Python dependencies in Pipfile.lock files across 16+ image directories and in pyproject.toml/uv.lock are not automatically updated. Security vulnerabilities in Python packages go undetected until manual review.
 - **Effort**: 1-2 hours
-- **Details**: In `build-notebooks-TEMPLATE.yaml`, Trivy image scanning on PRs requires a `trivy-scan` label. Scheduled/push builds scan unconditionally, but PRs are opt-in only.
+- **Details**: `.github/renovate.json` has `"enabledManagers": ["tekton", "dockerfile"]` — intentionally excludes pip/pyproject/pipenv managers. The repo has extensive Pipfile.lock files across all image directories.
 
 ## Quick Wins
 
-### 1. Add pytest-cov for Coverage Reports (2-3 hours)
-- **Impact**: Immediate visibility into test coverage across container test suites
+### 1. Add pytest-cov and Codecov Integration (2-4 hours)
+- **Impact**: Immediate coverage visibility for all Python tests
 - **Implementation**:
-  ```bash
-  # Add to pyproject.toml [dependency-groups] dev
-  "pytest-cov",
-  ```
-  ```bash
-  # In build template workflow, add --cov flag
-  uv run pytest --cov=tests --cov-report=xml --capture=fd tests/containers ...
-  ```
+  1. Add `pytest-cov` to `[dependency-groups] dev` in `pyproject.toml`
+  2. Add `--cov=ci --cov=tests --cov-report=xml` to pytest.ini `addopts`
+  3. Add `.codecov.yml` with thresholds
+  4. Add `codecov/codecov-action@v4` step after pytest runs in `code-quality.yaml`
 
-### 2. Enable Trivy Scanning on All PRs (1 hour)
-- **Impact**: Every PR gets vulnerability scanning, not just labeled ones
-- **Implementation**: Remove the `HAS_TRIVY_LABEL` condition in `build-notebooks-TEMPLATE.yaml`, or default to running fs-scan on all PRs and image-scan on labeled ones.
+### 2. Extend Renovate for Python (30 minutes)
+- **Impact**: Automated Python dependency updates for test infrastructure
+- **Implementation**: Add `"pip_requirements"` or `"pep621"` to `enabledManagers` in `.github/renovate.json`, scoped to `pyproject.toml` and `uv.lock`
 
-### 3. Add CodeQL Workflow (2-3 hours)
-- **Impact**: Catch security vulnerabilities in Python and Go build tooling
-- **Implementation**:
-  ```yaml
-  # .github/workflows/codeql.yaml
-  name: CodeQL
-  on: [push, pull_request]
-  jobs:
-    analyze:
-      runs-on: ubuntu-latest
-      strategy:
-        matrix:
-          language: [python, go]
-      steps:
-        - uses: actions/checkout@v4
-        - uses: github/codeql-action/init@v3
-          with:
-            languages: ${{ matrix.language }}
-        - uses: github/codeql-action/analyze@v3
-  ```
-
-### 4. Generate Agent Rules (2-3 hours)
-- **Impact**: AI agents create consistent, high-quality tests following repo patterns
-- **Implementation**: Run `/test-rules-generator` on this repo to create `.claude/rules/` with guidance on Testcontainers patterns, fixture usage, image type selection, and Kubernetes deployment test patterns.
+### 3. Create CLAUDE.md with Test Patterns (2-3 hours)
+- **Impact**: Consistent AI-generated tests following established project patterns
+- **Implementation**: Document testcontainers patterns, pytest marker usage, Dockerfile conventions, and the Makefile build chain
 
 ## Detailed Findings
 
-### CI/CD Pipeline
+### Unit Tests
 
-**Workflow Inventory** (21 workflows):
+**Score: 7.0/10**
+
+The repository has a well-structured test suite organized under `tests/`:
+
+**Python Tests (27 files)**:
+- `tests/containers/base_image_test.py` — Base image validation
+- `tests/containers/workbenches/jupyterlab/jupyterlab_test.py` — JupyterLab workbench tests
+- `tests/containers/workbenches/jupyterlab/jupyterlab_datascience_test.py` — Datascience-specific tests
+- `tests/containers/workbenches/jupyterlab/jupyterlab_trustyai_test.py` — TrustyAI-specific tests
+- `tests/containers/workbenches/jupyterlab/libraries_test.py` — Library validation
+- `tests/containers/workbenches/rstudio/rstudio_test.py` — RStudio tests
+- `tests/containers/workbenches/workbench_image_test.py` — Generic workbench tests
+- `tests/containers/workbenches/accelerator_image_test.py` — GPU/accelerator tests
+- `tests/containers/runtimes/runtime_test.py` — Runtime image tests
+- `tests/test_main.py` — Main entry tests
+
+**TypeScript Tests (5 files)**:
+- `tests/browser/tests/codeserver.spec.ts` — Playwright browser tests for code-server
+- Supporting models and utilities for testcontainers integration
+
+**Test Infrastructure**:
+- **Framework**: pytest with `pytest-subtests`, `allure-pytest`, `pyfakefs`
+- **Container testing**: `testcontainers` library (Python and TypeScript)
+- **Markers**: `openshift`, `cuda`, `rocm` for conditional test execution
+- **Configuration**: Strict markers, JUnit logging, file logging to `logs/pytest-logs.txt`
+
+**Strengths**: Well-organized test hierarchy, good use of testcontainers, pytest markers for different environments
+**Gap**: No coverage tracking, limited purely "unit" tests (most are container-level)
+
+### Integration/E2E Tests
+
+**Score: 8.0/10**
+
+The `build-notebooks-TEMPLATE.yaml` workflow implements a comprehensive integration test pipeline:
+
+**Kubernetes Integration (on every PR)**:
+1. Builds image with podman
+2. Installs cri-o + kubeadm to create a real K8s cluster
+3. Deploys the built image into the cluster via kustomize
+4. Runs Makefile-based validation tests (`make test-*`, `make validate-runtime-image`, etc.)
+5. Runs testcontainers tests against the built image
+6. Runs OpenShift-specific container tests
+
+**Playwright Browser Tests (for code-server images)**:
+- Full browser testing using `@playwright/test` v1.53.1
+- Runs inside a Playwright Docker container
+- Testcontainers integration for spinning up the code-server image
+- Artifact upload for test reports
+
+**FIPS Compliance Testing**:
+- `check-payload` scan runs on every built image
+- Mounts image filesystem and scans for non-FIPS-compliant binaries
+- Installed via `go tool github.com/openshift/check-payload`
+
+**Multi-platform Testing**:
+- Supports `linux/amd64`, `linux/arm64`, `linux/s390x`
+- QEMU user-static emulation for non-native architectures
+
+**Strengths**: Real K8s cluster testing on every PR, browser testing, FIPS compliance
+**Gap**: Single Kubernetes version (v1.33) — no multi-version matrix testing
+
+### Build Integration
+
+**Score: 9.0/10**
+
+**PR Build Pipeline**:
+- `build-notebooks-pr.yaml` triggers on PR with smart change detection
+- `gen_gha_matrix_jobs.py` analyzes changed files and generates a build matrix for only affected images
+- Uses the reusable `build-notebooks-TEMPLATE.yaml` workflow
+- Concurrency control: `cancel-in-progress: true` per PR number
+- RHEL subscription builds via `pull_request_target` with contributor allowlist
+
+**Konflux/Tekton Pipelines (35 definitions)**:
+- One pipeline per image variant (e.g., `odh-workbench-jupyter-minimal-cpu-py312-ubi9-pull-request.yaml`)
+- Path-based triggers using PipelinesAsCode CEL expressions
+- Auto-generated by `scripts/generate_pull_request_pipelineruns.py`
+- References `multiarch-pull-request-pipeline` for shared pipeline logic
+- 3-hour pipeline timeout, image expiry after 5 days
+
+**Manifest Validation**:
+- `ci/kustomize.sh` validates all kustomization.yaml files build successfully
+- Code-quality workflow verifies generated code is up-to-date
+- YAML validation with yamllint, JSON validation with json_verify
+
+**Build Tooling**:
+- Makefile with 20+ image targets (cpu, cuda, rocm variants)
+- `scripts/sandbox.py` for build isolation
+- Go-based `bin/buildinputs` for Dockerfile dependency analysis
+- Smart Pipfile.lock renewal automation
+
+**Strengths**: Outstanding build integration — builds every affected image on PR, validates manifests, has both GHA and Konflux pipelines
+**Gap**: Minor — no explicit `make build` dry-run validation step separate from actual image builds
+
+### Image Testing
+
+**Score: 9.0/10**
+
+**30+ Dockerfiles** organized by workbench type and Python version:
+- Jupyter: minimal, datascience, pytorch, tensorflow, trustyai, rocm variants
+- Runtimes: minimal, datascience, pytorch, tensorflow, rocm variants
+- Code Server: ubi9-python-3.11/3.12
+- RStudio: c9s-python-3.11, rhel9-python-3.11
+
+**Dockerfile Quality**:
+- Multi-stage builds (`FROM ... AS base`, `FROM base AS jupyter-minimal`)
+- UBI9 base images (`registry.access.redhat.com/ubi9/python-312:latest`) — FIPS-capable
+- Non-root user (`USER 1001`)
+- Proper labeling (k8s display-name, description, source-location)
+- `.dockerignore` configured
+
+**Runtime Validation**:
+- Testcontainers-based Python tests verify container startup and functionality
+- Makefile targets (`validate-runtime-image`, `validate-codeserver-image`, `validate-rstudio-image`)
+- Command availability checks (`curl`, `python3`, `oc`, `code-server`, etc.)
+- Notebook execution testing with papermill
+- R script execution testing for RStudio images
+
+**Security Scanning**:
+- Hadolint for Dockerfile best practices (custom config at `ci/hadolint-config.yaml`)
+- Trivy vulnerability scanning (on labeled PRs and scheduled runs)
+- check-payload FIPS compliance scanning on every image
+
+**Strengths**: Near-gold-standard image testing pipeline with multi-layer validation
+**Gap**: No HEALTHCHECK instructions in Dockerfiles, no explicit health/readiness probe testing
+
+### Coverage Tracking
+
+**Score: 1.0/10**
+
+**No coverage tracking is configured at all**:
+- No `.codecov.yml` or `codecov.yml`
+- No `.coveragerc`
+- `pytest.ini` addopts: `--strict-markers --capture=no --tb=short` (no `--cov`)
+- `pyproject.toml` dependencies include `pytest` but not `pytest-cov`
+- No `coverage` tool in any workflow
+- No coverage threshold enforcement
+- No PR coverage reporting
+
+This is the largest quality gap in an otherwise excellent repository.
+
+### CI/CD Automation
+
+**Score: 9.0/10**
+
+**16 GitHub Actions Workflows**:
 
 | Workflow | Trigger | Purpose |
 |----------|---------|---------|
-| `build-notebooks-pr.yaml` | PR | Build changed images (non-RHEL) with matrix |
-| `build-notebooks-pr-rhel.yaml` | PR (target) | Build RHEL images with contributor access control |
-| `build-notebooks-push.yaml` | Push/Schedule | Build all images nightly + on push |
-| `build-notebooks-TEMPLATE.yaml` | Called | Reusable template: build, test, scan |
-| `code-quality.yaml` | Push/PR | Static analysis: yamllint, hadolint, JSON, pytest, pre-commit |
-| `security.yaml` | Push/PR | Trivy filesystem scan + SARIF upload |
-| `create-release.yaml` | Manual | Release workflow |
-| `notebooks-release.yaml` | Manual | Notebook release process |
-| `notebook-digest-updater.yaml` | Scheduled | Update image digests |
-| `params-env.yaml` | Scheduled | Environment parameter updates |
-| `piplock-renewal.yaml` | Scheduled | Pipfile.lock renewal |
-| `software-versions.yaml` | Scheduled | Software version tracking |
-| `purge-ghcr.yaml` | Scheduled | Clean up old GHCR images |
-| `pr-merge-image-delete.yml` | PR merge | Delete PR-specific images |
-| `docs.yaml` | - | Documentation |
-| `insta-merge.yaml` / `instant-merge.yaml` | - | Fast-track merge |
-| `sync-branches-through-pr.yml` | - | Branch synchronization |
-| `update-buildconfigs.yaml` | - | BuildConfig updates |
-| `update-commit-latest-env.yaml` | - | Commit hash tracking |
+| `build-notebooks-pr.yaml` | `pull_request` | Build affected notebook images |
+| `build-notebooks-pr-rhel.yaml` | `pull_request_target` | Build RHEL images (restricted) |
+| `build-notebooks-push.yaml` | `push`, `schedule`, `dispatch` | Build all images post-merge |
+| `build-notebooks-TEMPLATE.yaml` | `workflow_call` | Reusable build template |
+| `code-quality.yaml` | `push`, `pull_request`, `dispatch` | pytest, pre-commit, yamllint, hadolint, kustomize |
+| `security.yaml` | `push`, `pull_request`, `dispatch` | Trivy FS scan |
+| `params-env.yaml` | `push`, `pull_request` | Validate image references |
+| `notebooks-release.yaml` | `workflow_dispatch` | Release management |
+| `software-versions.yaml` | — | Software version tracking |
+| `piplock-renewal.yaml` | — | Pipfile.lock renewal |
+| `notebooks-digest-updater.yaml` | — | Digest update automation |
+| `purge-ghcr.yaml` | — | Container registry cleanup |
+| Others | Various | Sync, merge, docs |
 
-**Strengths**:
-- Smart change detection: PR builds only build affected images via `gen_gha_matrix_jobs.py`
-- Concurrency control: `cancel-in-progress: true` prevents duplicate PR builds
-- Reusable template pattern: DRY workflow via `build-notebooks-TEMPLATE.yaml`
-- Multi-platform support: amd64, arm64, s390x
-- RHEL build security: contributor allowlist on `pull_request_target`
-- Build caching: podman cache-from/cache-to with GHCR
-- UV dependency caching in CI
+**Performance Optimizations**:
+- Smart change detection: `gen_gha_matrix_jobs.py` only builds affected images
+- Build caching: `--cache-from/--cache-to` with GHCR registry
+- Linuxbrew caching for podman installation
+- uv caching for Python dependencies
+- Concurrency control: `cancel-in-progress: true` per PR
 
-**Gaps**:
-- No Konflux build simulation on PRs
-- No build time tracking or optimization metrics
+**35 Tekton/Konflux Pipelines**:
+- Auto-generated per image variant
+- Path-based triggers via PipelinesAsCode CEL expressions
+- Production build validation separate from GHA
 
-### Test Coverage
+**Strengths**: Mature, well-optimized CI with both GHA and Konflux, daily scheduled builds, smart change detection
+**Gap**: Minimal — could benefit from workflow run time monitoring/alerting
 
-**Test Architecture** — This repo has an exceptionally mature multi-layer test strategy:
+### Static Analysis
 
-**Layer 1: Static Analysis** (code-quality.yaml)
-- yamllint on all YAML/YML files
-- Hadolint on all Dockerfiles
-- JSON validation (yajl-tools)
-- Kustomize manifest validation
-- Code generation drift detection
-- Pre-commit hooks (ruff lint/format, pyright type-checking)
+**Score: 8.0/10**
 
-**Layer 2: Python Unit Tests** (code-quality.yaml)
-- pytest runs on CI tooling code
-- `ci/cached-builds/make_test.py` has 10 unit tests verifying Make command generation
-- `tests/test_main.py` for main test infrastructure
-- `tests/pytest_tutorial/test_01_intro.py` for team learning
+#### Linting
+- **Ruff**: Comprehensive configuration in `pyproject.toml` with 30+ rule categories (B, C4, COM, E, W, F, FA, FLY, G, I, INP, INT, ISC, N, PERF, PGH, PIE, PL, PYI, Q, RET, RUF, T10, TCH, TID, UP, YTT, S102)
+- **Pyright**: Type checking with `typeCheckingMode = "off"` but key checks enabled (`reportMissingImports`, `reportUnboundVariable`, `reportGeneralTypeIssues`)
+- **Hadolint**: Dockerfile linting with custom config (`ci/hadolint-config.yaml`)
+- **yamllint**: Strict YAML validation across all non-Tekton YAML files
+- **json_verify**: JSON syntax validation for `.json`, `Pipfile.lock`, and `.ipynb` files
 
-**Layer 3: Go Unit Tests**
-- `scripts/buildinputs/buildinputs_test.go` validates Dockerfile parsing across all 35+ Dockerfiles
+#### Pre-commit Hooks
+`.pre-commit-config.yaml` includes:
+- `uv-lock` — Lock file verification
+- `ruff` — Linting with auto-fix
+- `ruff-format` — Code formatting
+- `pyright` — Type checking
 
-**Layer 4: Container Tests with Testcontainers** (build template, per-image)
-- `tests/containers/base_image_test.py` — ELF binary linking, `oc` command, `skopeo`, pip install, FIPS mode, file permissions
-- `tests/containers/workbenches/workbench_image_test.py` — workbench startup with IPv4/IPv6, log checking for errors, OpenShift deployment
-- `tests/containers/workbenches/jupyterlab/jupyterlab_test.py` — spinner HTML, PDF export, mongocli binary
-- `tests/containers/workbenches/jupyterlab/libraries_test.py` — datascience library imports and validation
-- `tests/containers/runtimes/runtime_test.py` — pyzmq import validation
-- `tests/containers/workbenches/accelerator_image_test.py` — CUDA/ROCm GPU tests on OpenShift
+All hooks scoped to `ci/.*|tests/.*` directories.
 
-**Layer 5: Kubernetes Deployment Tests** (build template, via Kind + CRI-O)
-- `ci/cached-builds/make_test.py` orchestrates deploy → test → undeploy cycle
-- Deploys to real Kubernetes cluster (CRI-O + kubeadm)
-- Validates runtime behavior: API endpoints, notebook execution (papermill), RStudio scripts
-- Tests all image types: jupyter, codeserver, rstudio, runtimes
+#### FIPS Compatibility
+- **check-payload**: FIPS binary compliance scanning on every built image
+- **UBI9 base images**: All Dockerfiles use `registry.access.redhat.com/ubi9/python-312:latest` (FIPS-capable)
+- No FIPS build tags needed (Python, not Go)
 
-**Layer 6: Browser Tests** (Playwright)
-- `tests/browser/tests/codeserver.spec.ts` — code-server UI tests
-- Uses Testcontainers for browser test infrastructure
-- Tests: editor visibility, terminal interaction, file operations
+#### Dependency Alerts
+- **Renovate**: Configured via `.github/renovate.json`
+  - Covers: `tekton` and `dockerfile` managers
+  - Konflux reference updates grouped and auto-scheduled
+  - **Gap**: Does NOT cover `pip`, `pyproject`, or `pipenv` — Python dependencies are manually managed
+- **No Dependabot** configuration
 
-**Test Framework Inventory**:
-- Python: pytest, allure-pytest, pytest-subtests, testcontainers, pydantic, pyfakefs
-- Go: standard testing package
-- TypeScript: Playwright, testcontainers
-- Fixtures: Sophisticated pytest fixtures with image-type-aware skipping
+**Strengths**: Excellent multi-tool static analysis, FIPS compliance on images, pre-commit enforcement
+**Gap**: Renovate doesn't cover Python ecosystem; dependency management partially manual
 
-**Test File Count**: 21 test files (14 Python, 1 Go, 1 TypeScript, plus support files)
+### Agent Rules
 
-### Code Quality
+**Score: 0.0/10**
 
-**Pre-commit Hooks** (`.pre-commit-config.yaml`):
-- `uv-lock` — lock file consistency
-- `ruff` — Python linting with fix mode (extensive rule set: 30+ categories)
-- `ruff-format` — Python formatting
-- `pyright` — Type checking (selective: `reportMissingImports`, `reportUnboundVariable`, `reportGeneralTypeIssues`)
+- **No `CLAUDE.md`** in repository root
+- **No `AGENTS.md`** in repository root
+- **No `.claude/` directory**
+- **No `.claude/rules/`** for test creation guidance
+- **No `.claude/skills/`** for custom skills
 
-**Linting Configuration** (excellent):
-- `ruff.toml` via `pyproject.toml` — 30+ lint categories enabled (B, C4, COM, E, F, I, ISC, N, PERF, PGH, PIE, PL, UP, etc.)
-- `hadolint` for Dockerfiles with custom config
-- `yamllint` with strict mode for all YAML/YML files
-- JSON validation for notebooks and config files
-- Kustomize manifest validation
+This is a missed opportunity given the strong testing patterns in this repository. The conventions around testcontainers, pytest markers (`openshift`, `cuda`, `rocm`), Dockerfile structure, and the Makefile build chain would benefit greatly from explicit AI agent guidance.
 
-**Static Analysis**:
-- CodeRabbit for automated PR review (`.coderabbit.yaml`)
-- No CodeQL/SAST for source code
-- No Bandit/Semgrep
-
-### Container Images
-
-**Image Inventory**: 35+ Dockerfiles across multiple dimensions:
-- **Workbenches**: jupyter-minimal, jupyter-datascience, jupyter-pytorch, jupyter-tensorflow, jupyter-trustyai, code-server, rstudio
-- **Runtimes**: minimal, datascience, pytorch, tensorflow
-- **Accelerators**: CUDA, ROCm
-- **Python versions**: 3.11, 3.12
-- **OS bases**: UBI9, RHEL9, C9S
-- **Architectures**: amd64, arm64, s390x
-
-**Build Process**:
-- Podman-based builds with multi-architecture support
-- Build caching via GHCR container registry
-- Sandbox script (`scripts/sandbox.py`) for build isolation
-- RHEL subscription injection for entitled builds
-
-**Runtime Testing** (exemplary):
-- Testcontainers validates every built image:
-  - ELF binary linking (all binaries can find their shared libraries)
-  - FIPS mode compatibility
-  - File permissions and ownership
-  - IDE startup (JupyterLab, RStudio, Code-Server)
-  - IPv4 and IPv6 networking
-  - Log message quality (blocked keywords check)
-  - Library imports (pandas, scipy, torch, tensorflow)
-  - PDF export capability
-
-**Security Scanning**:
-- Trivy image scanning (label-gated on PRs, automatic on schedule)
-- Trivy filesystem scanning (on push/PR)
-- SARIF results uploaded to GitHub Security tab
-- No SBOM generation
-- No image signing/attestation
-
-### Security
-
-| Practice | Status |
-|----------|--------|
-| Trivy FS scan | Present (push/PR/dispatch) |
-| Trivy image scan | Present (label-gated PR, scheduled) |
-| SARIF upload | Present (GitHub Security tab) |
-| CodeQL/SAST | Missing |
-| Dependency scanning | Partial (Trivy FS) |
-| Secret detection | Missing (no Gitleaks/TruffleHog) |
-| SBOM generation | Missing |
-| Image signing | Missing |
-| RHEL build access control | Present (contributor allowlist) |
-
-### Agent Rules (Agentic Flow Quality)
-
-- **Status**: Missing
-- **Coverage**: No rules for any test type
-- **Quality**: N/A
-- **Gaps**: No CLAUDE.md, AGENTS.md, or `.claude/` directory exists. This repo has complex and exemplary testing patterns (Testcontainers, fixtures with image-type skipping, Kubernetes deployment orchestration) that would greatly benefit from documented agent rules.
-- **Recommendation**: Run `/test-rules-generator` to create comprehensive rules covering:
-  - Container test patterns (Testcontainers, base image validation)
-  - Fixture usage (image type selection, skip logic)
-  - Kubernetes deployment test patterns (deploy/test/undeploy)
-  - Browser test patterns (Playwright with Testcontainers)
-  - Pre-commit hook compliance
+**Recommendation**: Use `/test-rules-generator` to generate initial rules, then customize for the unique image-building and testing patterns.
 
 ## Recommendations
 
 ### Priority 0 (Critical)
-1. **Add pytest-cov for coverage measurement** — The test suite is excellent but coverage is unmeasured. Add `pytest-cov` to `pyproject.toml`, generate XML reports, and integrate with codecov for PR-level coverage tracking.
-2. **Remove label gate on Trivy image scanning** — All PRs should get vulnerability scanning, not just those manually labeled. At minimum, run filesystem-level scanning unconditionally.
+
+1. **Add pytest-cov and codecov integration**
+   - Add `pytest-cov` to dev dependencies in `pyproject.toml`
+   - Configure `--cov=ci --cov=tests --cov-report=xml` in `pytest.ini`
+   - Add `.codecov.yml` with minimum coverage thresholds (e.g., 60%)
+   - Add `codecov/codecov-action@v4` step after pytest in `code-quality.yaml`
+   - This fills the largest quality gap in the repository
+
+2. **Extend Renovate for Python dependencies**
+   - Add `"pep621"` or `"pip_requirements"` to `enabledManagers` in `.github/renovate.json`
+   - Scope to `pyproject.toml` / `uv.lock` at minimum
+   - Consider separate Renovate config for Pipfile.lock files across image directories
 
 ### Priority 1 (High Value)
-3. **Add CodeQL workflow** — Add SAST for Python and Go code to catch security issues in the CI tooling and test infrastructure.
-4. **Add SBOM generation and image signing** — Use Syft for SBOM and cosign for signatures on all published images to meet supply chain security requirements.
-5. **Create AI agent rules** — Use `/test-rules-generator` to create `.claude/rules/` with guidance on the repo's unique test patterns. Key areas: Testcontainers usage, fixture hierarchy, image type selection, Kubernetes deployment orchestration.
+
+3. **Create agent rules for test patterns**
+   - Add `CLAUDE.md` documenting:
+     - Testcontainers usage patterns (Python and TypeScript)
+     - pytest marker conventions (`openshift`, `cuda`, `rocm`)
+     - Dockerfile conventions (multi-stage, UBI9 base, non-root user)
+     - Makefile build chain and target naming
+   - Add `.claude/rules/test-creation.md` for test automation guidance
+
+4. **Add multi-version Kubernetes testing**
+   - Currently tests against K8s v1.33 only
+   - Add matrix testing against K8s 1.31 and 1.33 to match OCP 4.16 and 4.18
 
 ### Priority 2 (Nice-to-Have)
-6. **Add Allure report publishing** — Allure is already integrated (`allure-pytest`) but reports aren't published. Add Allure report generation + GitHub Pages or artifact upload.
-7. **Add secret detection** — Add Gitleaks or TruffleHog scanning, especially important given RHEL subscription handling.
-8. **Consider contract tests** — Define expected interfaces between notebook images and RHOAI Dashboard/Controller expectations (labels, ports, healthcheck endpoints).
-9. **Add Dependabot/Renovate** — Automate dependency updates for Go modules and Python packages.
+
+5. **Add coverage for ROCm-specific code paths**
+   - ROCm tests are skipped in most CI runs (no ROCm hardware)
+   - Consider ROCm emulation or mock-based testing for ROCm-specific Dockerfiles
+
+6. **Contract tests for manifest compatibility**
+   - Add tests verifying kustomize manifests match the operator's expected format
+   - Prevent drift between image manifests and OpenShift AI operator expectations
+
+7. **Performance regression testing**
+   - Track image build times across PRs
+   - Alert on image size regressions
 
 ## Comparison to Gold Standards
 
-| Dimension | notebooks-downstream | odh-dashboard (Gold) | notebooks-upstream (Gold) |
-|-----------|---------------------|---------------------|--------------------------|
-| Unit Tests | pytest + Go tests, no coverage | Jest + comprehensive mocking, coverage enforced | pytest, no coverage |
-| Integration | Testcontainers + Kind/CRI-O | Cypress E2E + API tests | Similar Testcontainers |
-| Image Testing | 9/10 — ELF, FIPS, startup, libs | N/A (web app) | 9/10 — 5-layer validation |
-| Coverage Tracking | None | Codecov with thresholds | None |
-| CI/CD | Matrix builds, smart change detection | Multi-stage, comprehensive | Similar matrix builds |
-| Security | Trivy FS + image (partial) | Trivy + CodeQL + Snyk | Trivy FS + image |
-| Agent Rules | None | Comprehensive .claude/rules/ | None |
-| Static Analysis | ruff + pyright + hadolint + yamllint | ESLint strict + TypeScript strict | Similar |
-| Browser Tests | Playwright (code-server) | Cypress (full UI) | None |
+| Practice | notebooks-downstream | odh-dashboard | notebooks (upstream) | kserve |
+|----------|---------------------|---------------|---------------------|--------|
+| Unit Tests | Testcontainers + pytest | Jest + RTL | pytest + notebook validation | Go testing + envtest |
+| Integration/E2E | K8s cluster + Playwright | Cypress E2E | Multi-layer image testing | Ginkgo E2E |
+| Build Integration | GHA + Konflux + Tekton | GHA + Konflux | GHA matrix builds | GHA + Prow |
+| Image Testing | Multi-layer validation | N/A | 5-layer validation | N/A |
+| Coverage Tracking | **None** | Codecov enforced | **Partial** | Codecov enforced |
+| CI/CD | 16 workflows + 35 Tekton | Comprehensive | Comprehensive | Comprehensive |
+| Static Analysis | Ruff + Pyright + Hadolint | ESLint + TypeScript | Ruff + Hadolint | golangci-lint |
+| Agent Rules | **None** | Comprehensive | **None** | **None** |
 
 ## File Paths Reference
 
 ### CI/CD Configuration
-- `.github/workflows/build-notebooks-pr.yaml` — PR build workflow
-- `.github/workflows/build-notebooks-pr-rhel.yaml` — RHEL PR build workflow
-- `.github/workflows/build-notebooks-push.yaml` — Push/nightly builds
-- `.github/workflows/build-notebooks-TEMPLATE.yaml` — Reusable build template (builds, tests, scans)
-- `.github/workflows/code-quality.yaml` — Static analysis and pytest
-- `.github/workflows/security.yaml` — Trivy filesystem scanning
-- `.tekton/` — Konflux pipeline definitions (30+ files)
+- `.github/workflows/build-notebooks-pr.yaml` — PR image build workflow
+- `.github/workflows/build-notebooks-TEMPLATE.yaml` — Reusable build template (340+ lines)
+- `.github/workflows/code-quality.yaml` — Static analysis and testing
+- `.github/workflows/build-notebooks-push.yaml` — Post-merge and scheduled builds
+- `.github/workflows/security.yaml` — Trivy filesystem scan
+- `.github/renovate.json` — Renovate dependency management
+- `.tekton/` — 35 Konflux/Tekton pipeline definitions
 
-### Test Infrastructure
-- `tests/containers/base_image_test.py` — Base image validation (ELF, FIPS, permissions)
-- `tests/containers/workbenches/workbench_image_test.py` — Workbench startup and network tests
-- `tests/containers/workbenches/jupyterlab/jupyterlab_test.py` — JupyterLab-specific tests
-- `tests/containers/workbenches/jupyterlab/libraries_test.py` — Library import validation
-- `tests/containers/runtimes/runtime_test.py` — Runtime image tests
-- `tests/containers/workbenches/accelerator_image_test.py` — CUDA/ROCm GPU tests
-- `tests/browser/tests/codeserver.spec.ts` — Playwright browser tests
-- `ci/cached-builds/make_test.py` — Kubernetes deployment test orchestrator
-- `scripts/buildinputs/buildinputs_test.go` — Go Dockerfile parsing tests
+### Testing
+- `tests/containers/` — Testcontainers-based image tests (Python)
+- `tests/browser/` — Playwright browser tests (TypeScript)
+- `tests/conftest.py` — pytest shared configuration
+- `pytest.ini` — pytest configuration
+- `pyproject.toml` — Python project and tool configuration
 
-### Code Quality Configuration
-- `pyproject.toml` — ruff, pyright, project deps
+### Build
+- `Makefile` — 530+ lines with image build targets
+- `jupyter/*/Dockerfile.*` — Jupyter notebook Dockerfiles
+- `runtimes/*/Dockerfile.*` — Runtime image Dockerfiles
+- `codeserver/*/Dockerfile.*` — Code Server Dockerfiles
+- `rstudio/*/Dockerfile.*` — RStudio Dockerfiles
+
+### Static Analysis
+- `pyproject.toml` — Ruff and Pyright configuration
 - `.pre-commit-config.yaml` — Pre-commit hooks (ruff, pyright, uv-lock)
-- `pytest.ini` — pytest configuration with markers
-- `.coderabbit.yaml` — CodeRabbit PR review config
-- `ci/yamllint-config.yaml` — yamllint configuration
-- `ci/hadolint-config.yaml` — Hadolint Dockerfile linting
+- `ci/hadolint-config.yaml` — Hadolint Dockerfile linting rules
+- `ci/yamllint-config.yaml` — yamllint YAML validation rules
 
-### Image Build
-- `jupyter/*/Dockerfile.*` — JupyterLab workbench images
-- `runtimes/*/Dockerfile.*` — Model serving runtime images
-- `codeserver/*/Dockerfile.*` — Code-Server workbench images
-- `rstudio/*/Dockerfile.*` — RStudio workbench images
-- `Makefile` — Build/test/deploy orchestration (532 lines)
+### Manifests
+- `manifests/base/kustomization.yaml` — Base kustomize configuration
+- `manifests/base/*.yaml` — ImageStream and BuildConfig definitions
+- `*/kustomize/base/kustomization.yaml` — Per-image kustomize overlays

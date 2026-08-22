@@ -1,389 +1,388 @@
 ---
 repository: "red-hat-data-services/codeflare-sdk"
-overall_score: 6.1
+overall_score: 5.6
 scorecard:
   - dimension: "Unit Tests"
     score: 7.0
-    status: "12 collocated test files with pytest + mocking; 90% threshold exists but not enforced (continue-on-error)"
+    status: "Good unit test coverage with pytest and mocking; co-located test files; 90% coverage gate (but continue-on-error weakens it)"
   - dimension: "Integration/E2E"
     score: 7.0
-    status: "Comprehensive KinD + GPU e2e suite with full stack deployment; label-gated, not automatic on PRs"
+    status: "Comprehensive E2E suite with KinD, Kueue, KubeRay, GPU testing, and notebook validation; label-gated"
   - dimension: "Build Integration"
-    score: 3.0
-    status: "No PR-time build validation; poetry build only in manual release workflow"
+    score: 2.0
+    status: "No PR-time image build or Konflux simulation; only a pre-commit toolchain Containerfile exists"
   - dimension: "Image Testing"
-    score: 5.0
-    status: "N/A as a Python library — but no wheel/sdist validation or install testing on PRs"
+    score: 2.0
+    status: "Single pre-commit toolchain Containerfile; no runtime image build or validation for SDK distribution"
   - dimension: "Coverage Tracking"
     score: 5.0
-    status: "Codecov uploads present but coverage check uses continue-on-error; no PR enforcement"
+    status: "coverage.py with 90% threshold and Codecov upload, but continue-on-error undermines enforcement; no .codecov.yml config"
   - dimension: "CI/CD Automation"
+    score: 7.0
+    status: "10 workflows covering unit tests, E2E, pre-commit, release, notebooks; good concurrency control; pip caching; label-gated E2E"
+  - dimension: "Static Analysis"
     score: 6.0
-    status: "Good workflow structure with concurrency control; e2e is label-gated, no Python version matrix"
+    status: "Pre-commit with black + basic hooks enforced in CI; Dependabot configured for pip and npm; no type checking (mypy/pyright); no ruff/flake8"
   - dimension: "Agent Rules"
     score: 0.0
-    status: "No .claude/ directory, no CLAUDE.md, no agent rules of any kind"
+    status: "No CLAUDE.md, AGENTS.md, or .claude/ directory; no AI agent test automation guidance"
 critical_gaps:
-  - title: "Coverage enforcement is broken — continue-on-error: true"
-    impact: "The 90% coverage threshold is decorative; PRs with coverage regressions merge freely"
+  - title: "Coverage gate undermined by continue-on-error"
+    impact: "Unit test failures and coverage drops below 90% do not block PR merges, allowing regressions to land"
     severity: "HIGH"
     effort: "1 hour"
-  - title: "No Python linter or type checker in CI"
-    impact: "No static analysis catches type errors, unused imports, or code smells before merge"
+  - title: "No PR-time image build or Konflux simulation"
+    impact: "Build failures discovered only after merge in downstream Konflux pipelines"
     severity: "HIGH"
-    effort: "2-3 hours"
-  - title: "No SAST or secret detection"
-    impact: "Vulnerabilities and leaked credentials are not caught before merge"
-    severity: "HIGH"
+    effort: "8-12 hours"
+  - title: "No type checking (mypy/pyright)"
+    impact: "Type errors in a Python SDK with complex Kubernetes API interactions are caught only at runtime"
+    severity: "MEDIUM"
+    effort: "4-8 hours"
+  - title: "E2E tests require manual label to trigger"
+    impact: "E2E regressions can slip through if labels are not applied consistently; not enforced as required check"
+    severity: "MEDIUM"
     effort: "2-4 hours"
-  - title: "E2E tests are label-gated, not automatic on PRs"
-    impact: "E2E regressions can merge when labels are not applied; requires manual reviewer action"
+  - title: "No .codecov.yml with threshold enforcement"
+    impact: "No PR-level coverage diff reporting or threshold gates integrated into GitHub checks"
     severity: "MEDIUM"
     effort: "1-2 hours"
-  - title: "No PR-time package build validation"
-    impact: "Broken packages not caught until release time; sdist/wheel issues discovered too late"
-    severity: "MEDIUM"
-    effort: "1-2 hours"
-  - title: "No Python version matrix testing"
-    impact: "SDK claims Python 3.9+ support but only tests on 3.8 (which is EOL)"
-    severity: "MEDIUM"
-    effort: "2-3 hours"
 quick_wins:
-  - title: "Remove continue-on-error from coverage check"
+  - title: "Remove continue-on-error from unit test step"
     effort: "15 minutes"
-    impact: "Immediately enforces the existing 90% coverage threshold"
-  - title: "Add ruff to pre-commit and CI"
+    impact: "Makes 90% coverage threshold actually block PRs, preventing regressions"
+  - title: "Add .codecov.yml with coverage thresholds"
     effort: "1-2 hours"
-    impact: "Fast linting + import sorting replaces need for flake8, isort; catches common bugs"
-  - title: "Add CodeQL workflow"
-    effort: "1 hour"
-    impact: "Free GitHub-native SAST scanning for Python vulnerabilities"
-  - title: "Add poetry build step to PR workflow"
-    effort: "30 minutes"
-    impact: "Catches broken package metadata and import issues before merge"
-  - title: "Fix Python version: unit tests use 3.8 (EOL) but pyproject.toml requires ^3.9"
-    effort: "30 minutes"
-    impact: "Aligns CI with actual minimum supported Python version"
-  - title: "Add basic agent rules for test patterns"
+    impact: "Enables PR-level coverage diff reporting and threshold enforcement via GitHub checks"
+  - title: "Add mypy or pyright type checking to CI"
+    effort: "4-6 hours"
+    impact: "Catches type errors at CI time in a Kubernetes-interacting SDK; especially valuable for pydantic models"
+  - title: "Create basic CLAUDE.md with test patterns"
     effort: "2-3 hours"
-    impact: "Enables AI-assisted test generation following project conventions"
+    impact: "Enables AI agents to generate consistent, high-quality tests following project conventions"
 recommendations:
   priority_0:
-    - "Remove continue-on-error: true from unit-tests.yml coverage check to enforce 90% threshold"
-    - "Add ruff or flake8+mypy to CI for static analysis and type checking"
-    - "Add CodeQL or Bandit workflow for Python SAST scanning"
-    - "Fix Python version mismatch: CI uses 3.8 (EOL) but pyproject.toml requires ^3.9"
+    - "Remove continue-on-error from unit test workflow step to enforce the 90% coverage gate"
+    - "Add .codecov.yml with project and patch coverage thresholds"
   priority_1:
-    - "Add Python version matrix (3.9, 3.10, 3.11, 3.12) to unit test workflow"
-    - "Add poetry build + twine check step to PR workflow for package validation"
-    - "Add codecov.yml with PR comment and coverage decrease blocking"
-    - "Create .claude/rules/ with unit test and e2e test guidelines"
-    - "Add conftest.py files with shared fixtures to reduce test boilerplate"
+    - "Add mypy/pyright type checking to CI pipeline"
+    - "Add PR-time SDK package build validation (poetry build in PR workflow)"
+    - "Create CLAUDE.md or .claude/rules/ with test creation guidelines"
+    - "Add ruff or flake8 linting beyond black formatting"
   priority_2:
-    - "Add gitleaks or trufflehog for secret detection in pre-commit"
-    - "Enable mypy strict mode with gradual adoption via per-module overrides"
-    - "Add CODEOWNERS file for automated PR review assignment"
-    - "Consider removing label gate from e2e tests for merge_group events"
-    - "Add upgrade/migration tests to CI instead of manual-only"
+    - "Add multi-Python-version matrix testing (currently only 3.8/3.9)"
+    - "Add test parallelization with pytest-xdist for faster CI"
+    - "Create contract tests for Kubernetes API interactions"
+    - "Add UI test coverage beyond single widget notebook test"
 ---
 
-# Quality Analysis: red-hat-data-services/codeflare-sdk
+# Quality Analysis: codeflare-sdk
+
+**Repository**: [red-hat-data-services/codeflare-sdk](https://github.com/red-hat-data-services/codeflare-sdk)
+**Tier**: Downstream (RHOAIENG / Workload Orchestration)
+**Type**: Python SDK library
+**Language**: Python (Poetry-managed)
+**Framework**: Ray, Kubernetes client, Kueue, AppWrapper integration
+**Analysis Date**: 2026-07-20
 
 ## Executive Summary
-- Overall Score: 6.1/10
-- Key Strengths: Comprehensive E2E test infrastructure with GPU-enabled KinD clusters, good test-to-code ratio (0.67), well-structured pytest suite with markers and fixtures, Dependabot and Codecov integration
-- Critical Gaps: Coverage enforcement is broken (continue-on-error), no static analysis/linting in CI, no SAST/secret detection, Python version mismatch (tests on EOL 3.8, requires ^3.9), no agent rules
-- Agent Rules Status: Missing
+
+- **Overall Score: 5.6/10**
+- **Key Strengths**: Solid unit test suite with mocking and 90% coverage target; comprehensive E2E testing with KinD clusters, GPU support, and notebook validation; pre-commit hooks enforced in CI; well-configured Dependabot
+- **Critical Gaps**: Coverage gate is undermined by `continue-on-error: true`; no PR-time build integration testing; no type checking; no agent rules for AI-assisted development
+- **Agent Rules Status**: Missing
 
 ## Quality Scorecard
-| Dimension | Score | Status |
-|-----------|-------|--------|
-| Unit Tests | 7.0/10 | 12 collocated test files with pytest + mocking; 90% threshold exists but not enforced |
-| Integration/E2E | 7.0/10 | Comprehensive KinD + GPU e2e suite with full stack deployment; label-gated |
-| **Build Integration** | **3.0/10** | **No PR-time build validation; poetry build only in manual release workflow** |
-| Image Testing | 5.0/10 | N/A as Python library — no wheel/sdist validation or install testing |
-| Coverage Tracking | 5.0/10 | Codecov uploads present but coverage check uses continue-on-error |
-| CI/CD Automation | 6.0/10 | Good workflow structure; e2e label-gated, no Python version matrix |
-| Agent Rules | 0.0/10 | No .claude/ directory, no CLAUDE.md, no agent rules |
+
+| Dimension | Weight | Score | Status |
+|-----------|--------|-------|--------|
+| Unit Tests | 15% | 7.0/10 | Good coverage with pytest+mocking; 12 test files co-located with source; 90% gate exists but not enforced |
+| Integration/E2E | 20% | 7.0/10 | Comprehensive KinD-based E2E with GPU testing, upgrade tests, and notebook validation |
+| Build Integration | 15% | 2.0/10 | No PR-time SDK build or Konflux simulation; only a pre-commit toolchain Containerfile |
+| Image Testing | 10% | 2.0/10 | Single pre-commit Containerfile; no SDK distribution image build or validation |
+| Coverage Tracking | 10% | 5.0/10 | coverage.py + Codecov upload with 90% threshold; `continue-on-error` undermines enforcement |
+| CI/CD Automation | 15% | 7.0/10 | 10 workflows with concurrency control, pip caching, and label-gated E2E |
+| Static Analysis | 10% | 6.0/10 | Black formatting + pre-commit hooks; Dependabot configured; no type checker or linter |
+| Agent Rules | 5% | 0.0/10 | No CLAUDE.md, AGENTS.md, or .claude/ directory |
 
 ## Critical Gaps
 
-1. **Coverage enforcement is broken — `continue-on-error: true`**
-   - Impact: The 90% coverage threshold in `unit-tests.yml` is cosmetic. The step extracts coverage percentage and exits non-zero if < 90%, but the workflow has `continue-on-error: true`, so PRs always pass regardless of coverage.
-   - Severity: HIGH
-   - Effort: 15 minutes (remove `continue-on-error: true`)
+### 1. Coverage Gate Undermined by `continue-on-error`
+- **Impact**: The 90% coverage threshold check in `unit-tests.yml` runs with `continue-on-error: true`, meaning test failures and coverage drops below 90% do NOT block PR merges
+- **Severity**: HIGH
+- **Effort**: 15 minutes (remove the `continue-on-error: true` line)
+- **File**: `.github/workflows/unit-tests.yml:29`
 
-2. **No Python linter or type checker in CI**
-   - Impact: No ruff, flake8, pylint, mypy, or pyright runs on PRs. The only code quality tool is Black (formatting). Type errors, unused variables, dangerous patterns, and import issues are never caught statically.
-   - Severity: HIGH
-   - Effort: 2-3 hours
+### 2. No PR-Time Build Integration Testing
+- **Impact**: The SDK package build (`poetry build`) is only validated during manual release dispatch. Build failures, packaging issues, or dependency conflicts are not caught until post-merge release
+- **Severity**: HIGH
+- **Effort**: 8-12 hours
+- **Missing**: PR-time `poetry build` validation, Konflux build simulation, package installation testing
 
-3. **No SAST or secret detection**
-   - Impact: No CodeQL, Bandit, Semgrep, or Gitleaks workflows. Python-specific vulnerabilities (SQL injection patterns, unsafe deserialization, hardcoded credentials) are not detected.
-   - Severity: HIGH
-   - Effort: 2-4 hours
+### 3. No Type Checking
+- **Impact**: This SDK interacts with Kubernetes APIs, Ray, and Kueue — all complex typed interfaces. Without mypy/pyright, type errors are caught only at runtime
+- **Severity**: MEDIUM
+- **Effort**: 4-8 hours to add mypy with initial configuration and fix existing type issues
 
-4. **Python version mismatch — CI uses 3.8, pyproject.toml requires ^3.9**
-   - Impact: `unit-tests.yml` sets up Python 3.8 (EOL since October 2024), but `pyproject.toml` declares `python = "^3.9"`. Tests may pass on 3.8 but break on 3.9+ due to syntax or stdlib differences, or vice versa.
-   - Severity: HIGH
-   - Effort: 30 minutes
-
-5. **E2E tests are label-gated, not automatic**
-   - Impact: E2E tests only run when a reviewer manually adds the `e2e` label. PRs can merge through the merge queue without E2E validation if the label is forgotten. Only merge_group events trigger E2E automatically.
-   - Severity: MEDIUM
-   - Effort: 1-2 hours
-
-6. **No PR-time package build validation**
-   - Impact: `poetry build` only runs in the manual release workflow. A broken `pyproject.toml`, missing `__init__.py`, or import error in the package structure won't be caught until release day.
-   - Severity: MEDIUM
-   - Effort: 1-2 hours
+### 4. E2E Tests Are Label-Gated Only
+- **Impact**: E2E tests require the `e2e` label to trigger. If maintainers forget to apply the label, E2E regressions can land. E2E is not a required status check
+- **Severity**: MEDIUM
+- **Effort**: 2-4 hours to make E2E a required check or automate label application
 
 ## Quick Wins
 
-1. **Remove `continue-on-error` from coverage check**
-   - Effort: 15 minutes
-   - Impact: Immediately enforces the existing 90% coverage threshold
-   - Implementation: Delete line 33 (`continue-on-error: true`) from `.github/workflows/unit-tests.yml`
+### 1. Remove `continue-on-error` from Unit Test Step
+- **Effort**: 15 minutes
+- **Impact**: Makes the 90% coverage threshold actually block PR merges
+- **Implementation**: Remove line 29 (`continue-on-error: true`) from `.github/workflows/unit-tests.yml`
 
-2. **Add ruff to pre-commit and CI**
-   - Effort: 1-2 hours
-   - Impact: Fast linting + import sorting, catches common Python bugs
-   - Implementation:
-   ```yaml
-   # .pre-commit-config.yaml
-   - repo: https://github.com/astral-sh/ruff-pre-commit
-     rev: v0.4.0
-     hooks:
-       - id: ruff
-         args: [--fix]
-       - id: ruff-format
-   ```
+### 2. Add `.codecov.yml` with Coverage Thresholds
+- **Effort**: 1-2 hours
+- **Impact**: PR-level coverage diff reporting with enforcement via GitHub checks
+- **Implementation**:
+```yaml
+# .codecov.yml
+coverage:
+  status:
+    project:
+      default:
+        target: 90%
+        threshold: 2%
+    patch:
+      default:
+        target: 80%
+```
 
-3. **Add CodeQL workflow**
-   - Effort: 1 hour
-   - Impact: Free GitHub-native SAST scanning for Python
-   - Implementation:
-   ```yaml
-   # .github/workflows/codeql.yaml
-   name: CodeQL
-   on:
-     push:
-       branches: [main]
-     pull_request:
-       branches: [main]
-   jobs:
-     analyze:
-       runs-on: ubuntu-latest
-       permissions:
-         security-events: write
-       steps:
-         - uses: actions/checkout@v4
-         - uses: github/codeql-action/init@v3
-           with:
-             languages: python
-         - uses: github/codeql-action/analyze@v3
-   ```
+### 3. Add Type Checking to CI
+- **Effort**: 4-6 hours
+- **Impact**: Catches type errors in Kubernetes API interactions at CI time
+- **Implementation**: Add mypy configuration to `pyproject.toml` and a mypy step to the unit-tests workflow
 
-4. **Add poetry build step to unit-tests.yml**
-   - Effort: 30 minutes
-   - Impact: Catches broken package metadata before merge
-   - Implementation:
-   ```yaml
-   - name: Validate package build
-     run: |
-       poetry build
-       pip install dist/*.whl
-       python -c "import codeflare_sdk; print(codeflare_sdk.__version__)"
-   ```
-
-5. **Fix Python version in CI**
-   - Effort: 30 minutes
-   - Impact: Aligns CI with actual supported Python versions
-   - Implementation: Change `python-version: '3.8'` to `python-version: '3.9'` in unit-tests.yml
+### 4. Create CLAUDE.md with Test Patterns
+- **Effort**: 2-3 hours
+- **Impact**: AI agents can generate tests following project conventions (pytest, mocker fixtures, co-located test files)
+- **Implementation**: Document test file naming (`test_*.py` co-located with source), fixture patterns, mocking conventions
 
 ## Detailed Findings
 
-### CI/CD Pipeline
+### Unit Tests
 
-**Workflow Inventory (10 workflows):**
+**Score: 7.0/10**
+
+- **Test Files**: 12 test files co-located within `src/codeflare_sdk/` alongside source modules
+- **Framework**: pytest 7.4.0 with pytest-mock 3.11.1 and pytest-timeout 2.3.1
+- **Test-to-Code Ratio**: 2,461 test LOC to 3,179 source LOC (0.77:1) — good ratio for an SDK
+- **Coverage Tool**: `coverage` 7.2.7 with `coverage run -m pytest`
+- **Coverage Target**: 90% threshold (but undermined by `continue-on-error`)
+- **Test Patterns**:
+  - Heavy use of mocker/mock (394 mock-related references across test files)
+  - Minimal use of parametrize (only 2 references) — opportunity for improvement
+  - Test isolation via setup_method/teardown_method
+  - YAML fixture files in `tests/test_cluster_yamls/` for cluster configuration testing
+- **Test Configuration**: `pytest.ini_options` in `pyproject.toml` with markers (kind, openshift, nvidia_gpu) and 900s timeout
+- **Key Test Modules**:
+  - `test_cluster.py` (610 LOC) — cluster lifecycle, URIs, job wrapping
+  - `test_pretty_print.py` (208 LOC) — output formatting
+  - `test_config.py` (170 LOC) — configuration validation
+  - `test_status.py` (114 LOC) — status reporting
+  - `test_generate_yaml.py` (70 LOC) — YAML generation
+  - `test_auth.py`, `test_kueue.py`, `test_widgets.py`, `test_generate_cert.py`, `test_awload.py`, `test_ray_jobs.py`
+
+### Integration/E2E Tests
+
+**Score: 7.0/10**
+
+- **E2E Framework**: pytest with KinD cluster deployment
+- **E2E Test Files**: 10 files in `tests/e2e/` (1,230 LOC total)
+- **Test Scenarios**:
+  - `local_interactive_sdk_kind_test.py` — Local interactive Ray sessions on KinD
+  - `mnist_raycluster_sdk_kind_test.py` — MNIST training on RayCluster
+  - `mnist_raycluster_sdk_aw_kind_test.py` — MNIST with AppWrapper integration
+  - `local_interactive_sdk_oauth_test.py` — OAuth authentication flow
+  - `mnist_raycluster_sdk_oauth_test.py` — MNIST with OAuth
+- **Upgrade Tests**: `tests/upgrade/` directory with 2 upgrade test files
+- **Notebook Tests**: 3 guided notebook tests (0_basic_ray, 1_cluster_job_client, 2_basic_interactive) run via papermill
+- **UI Tests**: Playwright-based widget notebook test (181 LOC)
+- **Cluster Setup**: Full CodeFlare stack deployment (KinD + KubeRay + Kueue + CodeFlare operator)
+- **GPU Testing**: NVIDIA GPU support with time-slicing and gpu-operator
+- **RBAC Testing**: SDK-user with limited permissions (non-admin testing)
+- **Strengths**: Real cluster testing, GPU validation, operator integration, upgrade testing
+- **Gaps**: Label-gated triggering (not enforced), no multi-K8s-version matrix, limited RBAC scenario coverage
+
+### Build Integration
+
+**Score: 2.0/10**
+
+- **PR Build Validation**: None — the PR workflows run unit tests and pre-commit but do NOT build the SDK package
+- **Konflux Simulation**: None
+- **Package Build**: `poetry build` only runs in the manual `release.yaml` workflow
+- **Container Build**: The only Containerfile (`.github/build/Containerfile`) is for the pre-commit toolchain image, not the SDK distribution
+- **Missing**:
+  - PR-time `poetry build` to catch packaging/dependency issues
+  - `pip install .` validation to ensure the built package is installable
+  - Import smoke test after install
+  - Konflux build simulation
+
+### Image Testing
+
+**Score: 2.0/10**
+
+- **Containerfile**: Single Containerfile at `.github/build/Containerfile` — pre-commit toolchain image only
+  - Base image: `registry.redhat.io/ubi9/python-39:latest` (UBI-based, FIPS-capable)
+  - Not multi-stage, not optimized
+  - Includes: Poetry, Node.js, OpenShift CLI (oc)
+- **SDK Distribution Image**: None — the SDK is distributed as a PyPI package, not a container image
+- **Missing**:
+  - No runtime image testing
+  - No multi-arch support
+  - No health checks
+  - No image startup validation
+
+### Coverage Tracking
+
+**Score: 5.0/10**
+
+- **Coverage Tool**: `coverage` 7.2.7 (Python coverage.py)
+- **Coverage Threshold**: 90% minimum enforced in shell script
+- **Coverage Badge**: Automated via `coverage-badge.yaml` workflow (pushes SVG to main)
+- **Codecov Integration**: Uses `codecov/codecov-action@v4` for upload
+- **Critical Issue**: The coverage check step has `continue-on-error: true`, meaning the 90% threshold does NOT actually block PRs
+- **Missing**:
+  - `.codecov.yml` configuration file for PR-level diff reporting
+  - Patch coverage enforcement
+  - Coverage trend tracking
+  - Per-module coverage requirements
+
+### CI/CD Automation
+
+**Score: 7.0/10**
+
+- **Workflow Inventory** (10 workflows):
 
 | Workflow | Trigger | Purpose |
 |----------|---------|---------|
-| `unit-tests.yml` | PR, push, merge_group | Unit tests + coverage |
-| `pre-commit.yaml` | All pushes, PRs | Black formatting, YAML check |
-| `e2e_tests.yaml` | Label `e2e` + merge_group | E2E on KinD with GPU |
-| `guided_notebook_tests.yaml` | Label `test-guided-notebooks` | Notebook verification (3 jobs) |
-| `ui_notebooks_test.yaml` | Labels | UI widget tests |
-| `coverage-badge.yaml` | Push to main | SVG badge generation |
-| `dependabot-labeler.yaml` | Dependabot PRs | Auto-label for merge |
-| `release.yaml` | Manual dispatch | PyPI + GitHub release |
-| `publish-documentation.yaml` | Manual dispatch | Sphinx docs to GH Pages |
-| `odh-notebooks-sync.yml` | Manual dispatch | Sync with ODH notebooks |
+| `unit-tests.yml` | push/PR/merge_group to main | Unit tests + coverage |
+| `e2e_tests.yaml` | PR (labeled: e2e) / push to main,release-* / merge_group | E2E on KinD with GPU |
+| `pre-commit.yaml` | push/PR/merge_group | Black formatting + hooks |
+| `coverage-badge.yaml` | push to main | Generate coverage badge SVG |
+| `release.yaml` | workflow_dispatch | Manual release to PyPI |
+| `guided_notebook_tests.yaml` | PR (labeled: test-guided-notebooks) | Notebook execution tests |
+| `ui_notebooks_test.yaml` | PR (labeled: test-guided/ui-notebooks) | Playwright widget tests |
+| `odh-notebooks-sync.yml` | workflow_dispatch | Sync SDK version to notebooks repo |
+| `publish-documentation.yaml` | workflow_dispatch | Sphinx docs to GitHub Pages |
+| `dependabot-labeler.yaml` | PR (dependabot) | Auto-label Dependabot PRs |
 
-**Strengths:**
-- Concurrency control on e2e and notebook tests (`cancel-in-progress: true`)
-- Dependabot configured for pip and npm with daily updates
-- Good separation of unit tests (automatic) vs e2e (label-gated)
-- Log collection and artifact uploading in e2e workflow
+- **Concurrency Control**: E2E, guided notebooks, and UI tests use `cancel-in-progress: true`
+- **Caching**: pip caching in E2E and notebook workflows
+- **Strengths**: Good workflow organization, concurrency control, artifact upload for logs
+- **Gaps**: No test parallelization, no matrix testing (Python versions), unit tests lack concurrency group
 
-**Weaknesses:**
-- No caching in unit test workflow (runs in a container image)
-- No Python version matrix
-- E2E requires manual label application
-- No build validation on PRs
-- Release process is fully manual (workflow_dispatch)
+### Static Analysis
 
-### Test Coverage
+**Score: 6.0/10**
 
-**Unit Tests (12 files, 2,461 lines):**
-- Framework: pytest 7.4.0 + pytest-mock 3.11.1 + coverage 7.2.7
-- Structure: Collocated with source files in `src/codeflare_sdk/`
-- Test helpers: `unit_test_support.py` with mock factories and assertions
-- Good use of `mocker.patch()` for Kubernetes API mocking
-- Test fixtures: YAML files in `tests/test_cluster_yamls/` for expected outputs
-- Markers: `kind`, `openshift`, `nvidia_gpu`
-- Test-to-code ratio: 2,461 / 3,662 = 0.67
+#### Linting
+- **Formatter**: Black 23.3.0 configured via pre-commit
+- **Pre-commit Hooks** (`.pre-commit-config.yaml`):
+  - `trailing-whitespace`
+  - `end-of-file-fixer`
+  - `check-yaml` (with `--allow-multiple-documents`)
+  - `check-added-large-files`
+  - `black` (Python 3.9)
+- **Pre-commit CI**: Enforced via `pre-commit.yaml` workflow on all pushes/PRs
+- **Missing**: No ruff, flake8, pylint, or type checking (mypy/pyright)
 
-**E2E Tests (10 files):**
-- Infrastructure: KinD cluster with NVidia GPU support
-- Stack: CodeFlare operator + KubeRay operator deployed
-- Tests: MNIST training on Ray clusters, SDK operations (up/down/status)
-- RBAC: Tests run as `sdk-user` with limited permissions
-- Platforms: KinD tests and OpenShift tests (separate markers)
-- GPU runners: `ubuntu-20.04-4core-gpu`
+#### FIPS Compatibility
+- **Source Code**: No non-FIPS-compliant crypto imports found
+- **Dependencies**: Uses `cryptography==40.0.2` (pinned) — supports FIPS mode
+- **Base Image**: UBI9/Python 3.9 (FIPS-capable) used for pre-commit toolchain
+- **Status**: No FIPS concerns detected
 
-**Notebook Tests (3 + 1 jobs):**
-- Guided notebook tests: 3 verification jobs across demo notebooks
-- UI notebook tests: Widget testing with Playwright snapshots
-- Infrastructure: Same KinD + operator stack as e2e
+#### Dependency Alerts
+- **Dependabot**: Well-configured (`.github/dependabot.yml`)
+  - pip ecosystem: root `/`, guided demos, E2E tests directories
+  - npm ecosystem: `/ui-tests`
+  - Daily schedule with semver-patch ignored
+  - PR limits configured (4 for demos, 1 for root/ui-tests)
+  - Auto-labeling via `dependabot-labeler.yaml` for automated merge flow
+- **Renovate**: Not configured
 
-**Upgrade Tests (3 files):**
-- Tests for SDK upgrade scenarios
-- Not automated in CI (no workflow triggers them)
+### Agent Rules
 
-**Missing:**
-- No `conftest.py` files (shared fixtures)
-- No parametrized tests visible
-- No integration test layer between unit and e2e
-- No test for import/installation of the package itself
-
-### Code Quality
-
-**Pre-commit Hooks:**
-- trailing-whitespace, end-of-file-fixer, check-yaml, check-added-large-files
-- Black formatter (v23.3.0)
-- Runs in CI via dedicated pre-commit workflow
-
-**Missing:**
-- No linter (ruff, flake8, pylint)
-- No type checker (mypy, pyright)
-- No import sorting (isort — Black doesn't sort imports)
-- No dead code detection
-- No complexity checker
-
-### Container Images
-
-Not directly applicable — codeflare-sdk is a Python library distributed via PyPI, not a container image. However:
-- Uses a pre-built container image (`quay.io/project-codeflare/codeflare-sdk-precommit:v0.0.3`) for CI
-- No validation that the SDK installs correctly in container environments
-- No wheel/sdist validation in CI
-
-### Security
-
-**Present:**
-- Dependabot with daily updates for pip and npm
-- Automatic labeling of Dependabot PRs for merge queue
-
-**Missing:**
-- No CodeQL or equivalent SAST workflow
-- No Bandit for Python-specific security scanning
-- No Gitleaks or Trufflehog for secret detection
-- No dependency vulnerability scanning beyond Dependabot
-- No SBOM generation
-- No signed releases
-
-### Agent Rules (Agentic Flow Quality)
+**Score: 0.0/10**
 
 - **Status**: Missing
-- **Coverage**: No test type rules exist
-- **Quality**: N/A
-- **Gaps**: No `.claude/` directory, no `CLAUDE.md`, no `AGENTS.md`, no test automation guidance
+- **CLAUDE.md**: Not present
+- **AGENTS.md**: Not present
+- **`.claude/` directory**: Not present
+- **Test creation rules**: None
 - **Recommendation**: Generate rules with `/test-rules-generator` covering:
-  - Unit test patterns (pytest + mocker, Kubernetes API mocking conventions)
-  - E2E test patterns (KinD setup, marker usage, fixture YAML structure)
-  - Coverage expectations and enforcement
-  - Test naming conventions (collocated `test_*.py` files)
+  - Unit test patterns (co-located `test_*.py`, pytest, mocker fixtures)
+  - E2E test patterns (KinD setup, pytest markers: kind, openshift, nvidia_gpu)
+  - YAML fixture conventions
+  - Coverage requirements (90% minimum)
+  - Pre-commit hook requirements
 
 ## Recommendations
 
 ### Priority 0 (Critical)
-
-- **Remove `continue-on-error: true`** from coverage check in `unit-tests.yml` — this single line renders the 90% threshold meaningless
-- **Add ruff or flake8 + mypy** to CI for static analysis — currently zero static analysis beyond formatting
-- **Add CodeQL or Bandit** workflow for Python SAST scanning
-- **Fix Python version**: change CI from 3.8 (EOL) to 3.9+ to match `pyproject.toml` requirement
+1. **Remove `continue-on-error: true` from unit test workflow** — The 90% coverage gate is currently meaningless because test failures don't block PRs
+2. **Add `.codecov.yml` with threshold enforcement** — Enable PR-level coverage diff reporting and threshold gates
 
 ### Priority 1 (High Value)
-
-- Add Python version matrix (3.9, 3.10, 3.11, 3.12) to unit test workflow
-- Add `poetry build` + `twine check` + install validation to PR workflow
-- Add `codecov.yml` with PR comments and coverage decrease blocking
-- Create `.claude/rules/` with unit test and e2e test pattern guidelines
-- Add `conftest.py` files with shared fixtures (reduce mocker boilerplate)
-- Add CODEOWNERS file for automated review assignment
+3. **Add mypy/pyright type checking** — This SDK interacts with complex Kubernetes and Ray APIs; type checking catches integration errors early
+4. **Add PR-time `poetry build` validation** — Catch packaging issues before merge rather than at release time
+5. **Create CLAUDE.md or `.claude/rules/`** — Document test patterns for AI-assisted development
+6. **Add ruff or flake8 linting** — Black handles formatting but not code quality linting (unused imports, complexity, etc.)
 
 ### Priority 2 (Nice-to-Have)
-
-- Add gitleaks for secret detection in pre-commit hooks
-- Enable mypy strict mode with gradual per-module adoption
-- Consider auto-triggering e2e on all PRs (remove label gate for critical paths)
-- Add upgrade test execution to CI
-- Add package install smoke test (import all public modules)
-- Generate SBOM for releases
-- Add pre-commit hook for commit message linting (conventional commits)
+7. **Add multi-Python-version matrix testing** — Currently only tests on Python 3.8/3.9; should cover 3.10+ since `pyproject.toml` specifies `^3.9`
+8. **Add pytest-xdist for test parallelization** — Speed up CI with parallel test execution
+9. **Create contract tests for Kubernetes API interactions** — Mock-based unit tests may not catch API contract changes
+10. **Expand UI test coverage** — Only one Playwright test (widget notebook); add more scenarios
 
 ## Comparison to Gold Standards
 
-| Capability | codeflare-sdk | odh-dashboard | notebooks | kserve |
-|-----------|--------------|---------------|-----------|--------|
-| Unit tests | pytest + mock | Jest + RTL | N/A | Go testing |
-| E2E tests | KinD + GPU | Cypress | Image boot | KinD + envtest |
-| Coverage enforcement | **Broken** (continue-on-error) | Enforced | N/A | Enforced |
-| Python version matrix | Single (3.8, wrong) | N/A | Multiple | N/A |
-| Static analysis | Black only | ESLint + TS strict | Linting | golangci-lint |
-| Type checking | **None** | TypeScript strict | N/A | Go (built-in) |
-| SAST scanning | **None** | CodeQL | N/A | CodeQL + gosec |
-| Secret detection | **None** | Gitleaks | N/A | Gitleaks |
-| Pre-commit | Basic + Black | Comprehensive | N/A | Comprehensive |
-| Agent rules | **None** | Present | None | None |
-| Container validation | N/A (library) | Multi-layer | 5-layer | Image tests |
-| PR build validation | **None** | Full build | Image build | Full build |
-| Dependency scanning | Dependabot | Dependabot + Snyk | Dependabot | Dependabot |
+| Dimension | codeflare-sdk | odh-dashboard | notebooks | kserve |
+|-----------|---------------|---------------|-----------|--------|
+| Unit Tests | 7.0 — pytest+mocking, co-located | 9.0 — Jest, comprehensive | 6.0 — Limited | 8.0 — Go testing |
+| Integration/E2E | 7.0 — KinD+GPU, notebooks | 9.0 — Cypress, multi-layer | 8.0 — Multi-image | 9.0 — envtest, multi-version |
+| Build Integration | 2.0 — No PR build | 8.0 — PR builds validated | 7.0 — Image builds | 7.0 — Operator builds |
+| Image Testing | 2.0 — Toolchain only | 7.0 — Container validation | 9.0 — 5-layer validation | 7.0 — Image testing |
+| Coverage Tracking | 5.0 — 90% gate (not enforced) | 9.0 — Enforced thresholds | 5.0 — Limited | 8.0 — Codecov enforced |
+| CI/CD Automation | 7.0 — 10 workflows, caching | 9.0 — Comprehensive | 8.0 — Matrix builds | 9.0 — Well-organized |
+| Static Analysis | 6.0 — Black+pre-commit | 8.0 — ESLint+TypeScript | 6.0 — Basic linting | 7.0 — golangci-lint |
+| Agent Rules | 0.0 — None | 8.0 — Comprehensive | 3.0 — Basic | 2.0 — Minimal |
+| **Overall** | **5.6** | **8.6** | **6.5** | **7.4** |
 
 ## File Paths Reference
 
-### CI/CD Configuration
-- `.github/workflows/unit-tests.yml` — Unit tests + coverage
+### CI/CD
+- `.github/workflows/unit-tests.yml` — Unit tests with coverage
 - `.github/workflows/e2e_tests.yaml` — E2E tests on KinD
-- `.github/workflows/pre-commit.yaml` — Pre-commit checks
-- `.github/workflows/guided_notebook_tests.yaml` — Notebook tests
-- `.github/workflows/ui_notebooks_test.yaml` — UI widget tests
-- `.github/workflows/coverage-badge.yaml` — Coverage SVG badge
-- `.github/workflows/release.yaml` — PyPI release
-- `.github/dependabot.yml` — Dependency updates
+- `.github/workflows/pre-commit.yaml` — Pre-commit hooks enforcement
+- `.github/workflows/coverage-badge.yaml` — Coverage badge generation
+- `.github/workflows/release.yaml` — Manual release to PyPI
+- `.github/workflows/guided_notebook_tests.yaml` — Notebook execution tests
+- `.github/workflows/ui_notebooks_test.yaml` — Playwright UI tests
+- `.github/workflows/odh-notebooks-sync.yml` — Notebooks sync
+- `.github/workflows/dependabot-labeler.yaml` — Dependabot PR labeling
 
-### Test Files
-- `src/codeflare_sdk/**/test_*.py` — 12 unit test files (collocated)
-- `tests/e2e/*.py` — 10 e2e test files
-- `tests/upgrade/*.py` — 3 upgrade test files
-- `tests/test_cluster_yamls/` — Test fixture YAML files
-- `ui-tests/tests/` — UI widget tests (TypeScript/Playwright)
-- `src/codeflare_sdk/common/utils/unit_test_support.py` — Test helpers
-- `tests/e2e/support.py` — E2E test helpers
+### Testing
+- `src/codeflare_sdk/**/test_*.py` — 12 co-located unit test files
+- `tests/e2e/` — 10 E2E test files
+- `tests/upgrade/` — 2 upgrade test files
+- `tests/test_cluster_yamls/` — YAML test fixtures
+- `ui-tests/tests/` — Playwright widget tests
+- `demo-notebooks/guided-demos/` — Guided notebook tests
 
-### Project Configuration
-- `pyproject.toml` — Poetry config, pytest settings, dependencies
-- `.pre-commit-config.yaml` — Pre-commit hooks (trailing whitespace, Black)
-- `poetry.lock` — Locked dependencies
-- `.gitignore` — Git ignore patterns
-- `coverage.svg` — Coverage badge (committed to repo)
+### Configuration
+- `pyproject.toml` — Poetry project config, pytest options
+- `.pre-commit-config.yaml` — Pre-commit hooks
+- `.github/dependabot.yml` — Dependency update config
+- `.github/build/Containerfile` — Pre-commit toolchain image
+
+### Source
+- `src/codeflare_sdk/` — Main SDK package
+- `src/codeflare_sdk/ray/` — Ray cluster, client, appwrapper modules
+- `src/codeflare_sdk/common/` — Kubernetes auth, Kueue, widgets, utils

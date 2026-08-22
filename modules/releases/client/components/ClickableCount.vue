@@ -20,6 +20,7 @@ const emit = defineEmits(['drill-down'])
     :class="{
       'text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300': color === 'red',
       'text-yellow-600 dark:text-yellow-400 hover:text-yellow-700 dark:hover:text-yellow-300': color === 'yellow',
+      'text-amber-600 dark:text-amber-400 hover:text-amber-700 dark:hover:text-amber-300': color === 'amber',
       'text-green-600 dark:text-green-400 hover:text-green-700 dark:hover:text-green-300': color === 'green',
       'text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300': !color || color === 'default',
       'text-gray-500 dark:text-gray-400 hover:text-gray-600 dark:hover:text-gray-300': color === 'muted',
@@ -37,6 +38,7 @@ const emit = defineEmits(['drill-down'])
     :class="{
       'text-red-600 dark:text-red-400': color === 'red',
       'text-yellow-600 dark:text-yellow-400': color === 'yellow',
+      'text-amber-600 dark:text-amber-400': color === 'amber',
       'text-green-600 dark:text-green-400': color === 'green',
       'text-blue-600 dark:text-blue-400': !color || color === 'default',
     }"

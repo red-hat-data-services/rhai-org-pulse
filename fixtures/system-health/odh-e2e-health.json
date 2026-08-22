@@ -1,0 +1,761 @@
+{
+  "lastSyncedAt": "2026-08-11T10:00:00.000Z",
+  "repository": "opendatahub-io/opendatahub-operator",
+  "suites": {
+    "odh": {
+      "name": "OpenDataHub E2E",
+      "suite": "odh",
+      "dailyStatus": {
+        "status": "degraded",
+        "color": "orange",
+        "class": "text-orange-600 dark:text-orange-400",
+        "bgClass": "bg-orange-100 text-orange-800 dark:bg-orange-900/20 dark:text-orange-400",
+        "label": "Degraded"
+      },
+      "totalJobs": 16,
+      "passedJobs": 10,
+      "rollingWindow": "14d",
+      "lastUpdated": "2026-08-11T10:00:00.000Z",
+      "suiteStatus": "degraded",
+      "successRate": 0.625,
+      "repository": "opendatahub-io/opendatahub-operator"
+    },
+    "rhoai": {
+      "name": "RHOAI E2E",
+      "suite": "rhoai",
+      "dailyStatus": {
+        "status": "stable",
+        "color": "green",
+        "class": "text-green-600 dark:text-green-400",
+        "bgClass": "bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400",
+        "label": "Stable"
+      },
+      "totalJobs": 14,
+      "passedJobs": 11,
+      "rollingWindow": "14d",
+      "lastUpdated": "2026-08-11T10:00:00.000Z",
+      "suiteStatus": "stable",
+      "successRate": 0.786,
+      "repository": "opendatahub-io/opendatahub-operator"
+    }
+  },
+  "summary": {
+    "totalRuns": 85,
+    "passRate": 0.694,
+    "avgResolutionTime": "0h 45m",
+    "trendDirection": "stable"
+  },
+  "recentRuns": [
+    {
+      "buildId": "2087458596924166144",
+      "jobName": "pull-ci-opendatahub-io-opendatahub-operator-main-opendatahub-operator-e2e",
+      "suite": "odh",
+      "status": "failed",
+      "timestamp": "2026-08-13T18:30:00.000Z",
+      "prNumber": 3952,
+      "prowUrl": "https://prow.ci.openshift.org/view/gs/test-platform-results/pr-logs/pull/opendatahub-io_opendatahub-operator/3952/pull-ci-opendatahub-io-opendatahub-operator-main-opendatahub-operator-e2e/2087458596924166144",
+      "artifactsUrl": "https://storage.googleapis.com/test-platform-results/pr-logs/pull/opendatahub-io_opendatahub-operator/3952/pull-ci-opendatahub-io-opendatahub-operator-main-opendatahub-operator-e2e/2087458596924166144/",
+      "failedComponents": ["operator", "csv"],
+      "runDuration": 1200
+    },
+    {
+      "buildId": "2088060780279762944",
+      "jobName": "pull-ci-opendatahub-io-opendatahub-operator-main-opendatahub-operator-e2e",
+      "suite": "odh",
+      "status": "failed",
+      "timestamp": "2026-08-14T00:58:46.000Z",
+      "prNumber": 3921,
+      "prowUrl": "https://prow.ci.openshift.org/view/gs/test-platform-results/pr-logs/pull/opendatahub-io_opendatahub-operator/3921/pull-ci-opendatahub-io-opendatahub-operator-main-opendatahub-operator-e2e/2088060780279762944",
+      "artifactsUrl": "https://storage.googleapis.com/test-platform-results/pr-logs/pull/opendatahub-io_opendatahub-operator/3921/pull-ci-opendatahub-io-opendatahub-operator-main-opendatahub-operator-e2e/2088060780279762944/",
+      "failedComponents": ["infrastructure", "rbac"],
+      "runDuration": 1658
+    },
+    {
+      "buildId": "2086990502799872001",
+      "jobName": "pull-ci-opendatahub-io-opendatahub-operator-main-opendatahub-operator-e2e",
+      "suite": "odh",
+      "status": "failed",
+      "timestamp": "2026-08-11T09:45:00.000Z",
+      "prNumber": 4001,
+      "prowUrl": "https://prow.ci.openshift.org/view/gs/test-platform-results/pr-logs/pull/opendatahub-io_opendatahub-operator/4001/pull-ci-opendatahub-io-opendatahub-operator-main-opendatahub-operator-e2e/2086990502799872001",
+      "failedComponents": ["dashboard", "infrastructure", "datasciencepipelines"],
+      "runDuration": 2145
+    },
+    {
+      "buildId": "2086990502799872002",
+      "jobName": "pull-ci-opendatahub-io-opendatahub-operator-main-opendatahub-operator-rhoai-e2e",
+      "suite": "rhoai",
+      "status": "passed",
+      "timestamp": "2026-08-11T09:30:00.000Z",
+      "prNumber": 4000,
+      "prowUrl": "https://prow.ci.openshift.org/view/gs/test-platform-results/pr-logs/pull/opendatahub-io_opendatahub-operator/4000/pull-ci-opendatahub-io-opendatahub-operator-main-opendatahub-operator-rhoai-e2e/2086990502799872002",
+      "failedComponents": [],
+      "runDuration": 1876
+    },
+    {
+      "buildId": "2086990502799872003",
+      "jobName": "pull-ci-opendatahub-io-opendatahub-operator-main-opendatahub-operator-e2e",
+      "suite": "odh",
+      "status": "failed",
+      "timestamp": "2026-08-11T09:15:00.000Z",
+      "prNumber": 3999,
+      "prowUrl": "https://prow.ci.openshift.org/view/gs/test-platform-results/pr-logs/pull/opendatahub-io_opendatahub-operator/3999/pull-ci-opendatahub-io-opendatahub-operator-main-opendatahub-operator-e2e/2086990502799872003",
+      "failedComponents": ["kserve", "datasciencepipelines"],
+      "runDuration": 3421
+    },
+    {
+      "buildId": "2086990502799872004",
+      "jobName": "pull-ci-opendatahub-io-opendatahub-operator-main-opendatahub-operator-rhoai-e2e",
+      "suite": "rhoai",
+      "status": "failed",
+      "timestamp": "2026-08-11T09:00:00.000Z",
+      "prNumber": 3998,
+      "prowUrl": "https://prow.ci.openshift.org/view/gs/test-platform-results/pr-logs/pull/opendatahub-io_opendatahub-operator/3998/pull-ci-opendatahub-io-opendatahub-operator-main-opendatahub-operator-rhoai-e2e/2086990502799872004",
+      "failedComponents": ["modelregistry", "infrastructure"],
+      "runDuration": 1654
+    },
+    {
+      "buildId": "2086990502799872005",
+      "jobName": "pull-ci-opendatahub-io-opendatahub-operator-main-opendatahub-operator-e2e",
+      "suite": "odh",
+      "status": "passed",
+      "timestamp": "2026-08-11T08:45:00.000Z",
+      "prNumber": 3997,
+      "prowUrl": "https://prow.ci.openshift.org/view/gs/test-platform-results/pr-logs/pull/opendatahub-io_opendatahub-operator/3997/pull-ci-opendatahub-io-opendatahub-operator-main-opendatahub-operator-e2e/2086990502799872005",
+      "failedComponents": [],
+      "runDuration": 1923
+    },
+    {
+      "buildId": "2086990502799872006",
+      "jobName": "pull-ci-opendatahub-io-opendatahub-operator-main-opendatahub-operator-rhoai-e2e",
+      "suite": "rhoai",
+      "status": "passed",
+      "timestamp": "2026-08-11T08:30:00.000Z",
+      "prNumber": 3996,
+      "prowUrl": "https://prow.ci.openshift.org/view/gs/test-platform-results/pr-logs/pull/opendatahub-io_opendatahub-operator/3996/pull-ci-opendatahub-io-opendatahub-operator-main-opendatahub-operator-rhoai-e2e/2086990502799872006",
+      "failedComponents": [],
+      "runDuration": 2087
+    },
+    {
+      "buildId": "2086990502799872007",
+      "jobName": "pull-ci-opendatahub-io-opendatahub-operator-main-opendatahub-operator-e2e",
+      "suite": "odh",
+      "status": "failed",
+      "timestamp": "2026-08-11T08:15:00.000Z",
+      "prNumber": 3995,
+      "prowUrl": "https://prow.ci.openshift.org/view/gs/test-platform-results/pr-logs/pull/opendatahub-io_opendatahub-operator/3995/pull-ci-opendatahub-io-opendatahub-operator-main-opendatahub-operator-e2e/2086990502799872007",
+      "failedComponents": ["infrastructure", "newcomponent"],
+      "runDuration": 892
+    },
+    {
+      "buildId": "2086990502799872008",
+      "jobName": "pull-ci-opendatahub-io-opendatahub-operator-main-opendatahub-operator-rhoai-e2e",
+      "suite": "rhoai",
+      "status": "passed",
+      "timestamp": "2026-08-11T08:00:00.000Z",
+      "prNumber": 3994,
+      "prowUrl": "https://prow.ci.openshift.org/view/gs/test-platform-results/pr-logs/pull/opendatahub-io_opendatahub-operator/3994/pull-ci-opendatahub-io-opendatahub-operator-main-opendatahub-operator-rhoai-e2e/2086990502799872008",
+      "failedComponents": [],
+      "runDuration": 1998
+    }
+  ],
+  "componentStats": {
+    "infrastructure": {
+      "totalRuns": 15,
+      "failures": 6,
+      "lastFailure": "2026-08-11T09:15:00.000Z",
+      "affectedSuites": [
+        "odh",
+        "rhoai"
+      ],
+      "failureRate": 0.4,
+      "consecutiveFailures": 2,
+      "classification": "flaky",
+      "impact": {
+        "score": 35,
+        "level": "medium",
+        "affectedSuites": [
+          "odh",
+          "rhoai"
+        ],
+        "affectedRuns": 6,
+        "totalRuns": 85
+      }
+    },
+    "dashboard": {
+      "totalRuns": 12,
+      "failures": 3,
+      "lastFailure": "2026-08-11T09:45:00.000Z",
+      "affectedSuites": [
+        "odh",
+        "rhoai"
+      ],
+      "failureRate": 0.25,
+      "consecutiveFailures": 1,
+      "classification": "flaky",
+      "impact": {
+        "score": 22,
+        "level": "low",
+        "affectedSuites": [
+          "odh",
+          "rhoai"
+        ],
+        "affectedRuns": 3,
+        "totalRuns": 85
+      }
+    },
+    "kserve": {
+      "totalRuns": 10,
+      "failures": 2,
+      "lastFailure": "2026-08-11T09:15:00.000Z",
+      "affectedSuites": [
+        "odh",
+        "rhoai"
+      ],
+      "failureRate": 0.2,
+      "consecutiveFailures": 1,
+      "classification": "stable",
+      "impact": {
+        "score": 15,
+        "level": "low",
+        "affectedSuites": [
+          "odh",
+          "rhoai"
+        ],
+        "affectedRuns": 2,
+        "totalRuns": 85
+      }
+    },
+    "modelregistry": {
+      "totalRuns": 8,
+      "failures": 1,
+      "lastFailure": "2026-08-11T09:00:00.000Z",
+      "affectedSuites": [
+        "rhoai"
+      ],
+      "failureRate": 0.125,
+      "consecutiveFailures": 1,
+      "classification": "stable",
+      "impact": {
+        "score": 8,
+        "level": "low",
+        "affectedSuites": [
+          "rhoai"
+        ],
+        "affectedRuns": 1,
+        "totalRuns": 85
+      }
+    },
+    "datasciencepipelines": {
+      "totalRuns": 12,
+      "failures": 3,
+      "lastFailure": "2026-08-11T09:15:00.000Z",
+      "affectedSuites": [
+        "odh",
+        "rhoai"
+      ],
+      "failureRate": 0.25,
+      "consecutiveFailures": 2,
+      "classification": "flaky",
+      "impact": {
+        "score": 28,
+        "level": "medium",
+        "affectedSuites": [
+          "odh",
+          "rhoai"
+        ],
+        "affectedRuns": 3,
+        "totalRuns": 85
+      }
+    },
+    "newcomponent": {
+      "totalRuns": 3,
+      "failures": 1,
+      "lastFailure": "2026-08-11T08:15:00.000Z",
+      "affectedSuites": [
+        "odh"
+      ],
+      "failureRate": 0.33,
+      "consecutiveFailures": 1,
+      "classification": "unknown",
+      "impact": {
+        "score": 12,
+        "level": "low",
+        "affectedSuites": [
+          "odh"
+        ],
+        "affectedRuns": 1,
+        "totalRuns": 85
+      }
+    }
+  },
+  "currentlyBlocking": [
+    "infrastructure",
+    "dashboard",
+    "datasciencepipelines"
+  ],
+  "assessedAt": "2026-08-11T10:00:00.000Z",
+  "dataSource": "prowjobs-api",
+  "prowJobsMetrics": {
+    "totalProwJobs": 15420,
+    "filteredJobs": 85,
+    "executionTimeMs": 8500,
+    "dataTransferMB": 23.4,
+    "filteringRatio": "0.551%"
+  },
+  "historical_trends": {
+    "daily_status": [
+      {
+        "date": "2026-08-11",
+        "odh": {
+          "status": "degraded",
+          "passRate": 0.625,
+          "totalJobs": 16,
+          "passedJobs": 10
+        },
+        "rhoai": {
+          "status": "stable",
+          "passRate": 0.786,
+          "totalJobs": 14,
+          "passedJobs": 11
+        }
+      },
+      {
+        "date": "2026-08-10",
+        "odh": {
+          "status": "stable",
+          "passRate": 0.75,
+          "totalJobs": 12,
+          "passedJobs": 9
+        },
+        "rhoai": {
+          "status": "healthy",
+          "passRate": 0.889,
+          "totalJobs": 9,
+          "passedJobs": 8
+        }
+      },
+      {
+        "date": "2026-08-09",
+        "odh": {
+          "status": "healthy",
+          "passRate": 0.857,
+          "totalJobs": 14,
+          "passedJobs": 12
+        },
+        "rhoai": {
+          "status": "stable",
+          "passRate": 0.727,
+          "totalJobs": 11,
+          "passedJobs": 8
+        }
+      },
+      {
+        "date": "2026-08-08",
+        "odh": {
+          "status": "degraded",
+          "passRate": 0.583,
+          "totalJobs": 12,
+          "passedJobs": 7
+        },
+        "rhoai": {
+          "status": "failing",
+          "passRate": 0.4,
+          "totalJobs": 10,
+          "passedJobs": 4
+        }
+      },
+      {
+        "date": "2026-08-07",
+        "odh": {
+          "status": "stable",
+          "passRate": 0.769,
+          "totalJobs": 13,
+          "passedJobs": 10
+        },
+        "rhoai": {
+          "status": "stable",
+          "passRate": 0.75,
+          "totalJobs": 8,
+          "passedJobs": 6
+        }
+      },
+      {
+        "date": "2026-08-06",
+        "odh": {
+          "status": "healthy",
+          "passRate": 0.9,
+          "totalJobs": 10,
+          "passedJobs": 9
+        },
+        "rhoai": {
+          "status": "healthy",
+          "passRate": 0.846,
+          "totalJobs": 13,
+          "passedJobs": 11
+        }
+      },
+      {
+        "date": "2026-08-05",
+        "odh": {
+          "status": "degraded",
+          "passRate": 0.636,
+          "totalJobs": 11,
+          "passedJobs": 7
+        },
+        "rhoai": {
+          "status": "stable",
+          "passRate": 0.714,
+          "totalJobs": 7,
+          "passedJobs": 5
+        }
+      },
+      {
+        "date": "2026-08-04",
+        "odh": {
+          "status": "stable",
+          "passRate": 0.733,
+          "totalJobs": 15,
+          "passedJobs": 11
+        },
+        "rhoai": {
+          "status": "degraded",
+          "passRate": 0.615,
+          "totalJobs": 13,
+          "passedJobs": 8
+        }
+      },
+      {
+        "date": "2026-08-03",
+        "odh": {
+          "status": "healthy",
+          "passRate": 0.889,
+          "totalJobs": 9,
+          "passedJobs": 8
+        },
+        "rhoai": {
+          "status": "healthy",
+          "passRate": 0.923,
+          "totalJobs": 13,
+          "passedJobs": 12
+        }
+      },
+      {
+        "date": "2026-08-02",
+        "odh": {
+          "status": "degraded",
+          "passRate": 0.545,
+          "totalJobs": 11,
+          "passedJobs": 6
+        },
+        "rhoai": {
+          "status": "stable",
+          "passRate": 0.75,
+          "totalJobs": 12,
+          "passedJobs": 9
+        }
+      },
+      {
+        "date": "2026-08-01",
+        "odh": {
+          "status": "stable",
+          "passRate": 0.778,
+          "totalJobs": 9,
+          "passedJobs": 7
+        },
+        "rhoai": {
+          "status": "stable",
+          "passRate": 0.714,
+          "totalJobs": 14,
+          "passedJobs": 10
+        }
+      },
+      {
+        "date": "2026-07-31",
+        "odh": {
+          "status": "healthy",
+          "passRate": 0.846,
+          "totalJobs": 13,
+          "passedJobs": 11
+        },
+        "rhoai": {
+          "status": "degraded",
+          "passRate": 0.6,
+          "totalJobs": 10,
+          "passedJobs": 6
+        }
+      },
+      {
+        "date": "2026-07-30",
+        "odh": {
+          "status": "failing",
+          "passRate": 0.417,
+          "totalJobs": 12,
+          "passedJobs": 5
+        },
+        "rhoai": {
+          "status": "failing",
+          "passRate": 0.455,
+          "totalJobs": 11,
+          "passedJobs": 5
+        }
+      },
+      {
+        "date": "2026-07-29",
+        "odh": {
+          "status": "degraded",
+          "passRate": 0.667,
+          "totalJobs": 15,
+          "passedJobs": 10
+        },
+        "rhoai": {
+          "status": "stable",
+          "passRate": 0.727,
+          "totalJobs": 11,
+          "passedJobs": 8
+        }
+      },
+      {
+        "date": "2026-07-28",
+        "odh": {
+          "status": "stable",
+          "passRate": 0.8,
+          "totalJobs": 10,
+          "passedJobs": 8
+        },
+        "rhoai": {
+          "status": "healthy",
+          "passRate": 0.875,
+          "totalJobs": 8,
+          "passedJobs": 7
+        }
+      },
+      {
+        "date": "2026-07-27",
+        "odh": {
+          "status": "healthy",
+          "passRate": 0.9,
+          "totalJobs": 10,
+          "passedJobs": 9
+        },
+        "rhoai": {
+          "status": "stable",
+          "passRate": 0.733,
+          "totalJobs": 15,
+          "passedJobs": 11
+        }
+      },
+      {
+        "date": "2026-07-26",
+        "odh": {
+          "status": "degraded",
+          "passRate": 0.583,
+          "totalJobs": 12,
+          "passedJobs": 7
+        },
+        "rhoai": {
+          "status": "degraded",
+          "passRate": 0.615,
+          "totalJobs": 13,
+          "passedJobs": 8
+        }
+      },
+      {
+        "date": "2026-07-25",
+        "odh": {
+          "status": "stable",
+          "passRate": 0.727,
+          "totalJobs": 11,
+          "passedJobs": 8
+        },
+        "rhoai": {
+          "status": "stable",
+          "passRate": 0.778,
+          "totalJobs": 9,
+          "passedJobs": 7
+        }
+      },
+      {
+        "date": "2026-07-24",
+        "odh": {
+          "status": "healthy",
+          "passRate": 0.857,
+          "totalJobs": 14,
+          "passedJobs": 12
+        },
+        "rhoai": {
+          "status": "healthy",
+          "passRate": 0.917,
+          "totalJobs": 12,
+          "passedJobs": 11
+        }
+      },
+      {
+        "date": "2026-07-23",
+        "odh": {
+          "status": "degraded",
+          "passRate": 0.636,
+          "totalJobs": 11,
+          "passedJobs": 7
+        },
+        "rhoai": {
+          "status": "stable",
+          "passRate": 0.7,
+          "totalJobs": 10,
+          "passedJobs": 7
+        }
+      },
+      {
+        "date": "2026-07-22",
+        "odh": {
+          "status": "stable",
+          "passRate": 0.75,
+          "totalJobs": 8,
+          "passedJobs": 6
+        },
+        "rhoai": {
+          "status": "degraded",
+          "passRate": 0.563,
+          "totalJobs": 16,
+          "passedJobs": 9
+        }
+      },
+      {
+        "date": "2026-07-21",
+        "odh": {
+          "status": "healthy",
+          "passRate": 0.846,
+          "totalJobs": 13,
+          "passedJobs": 11
+        },
+        "rhoai": {
+          "status": "stable",
+          "passRate": 0.769,
+          "totalJobs": 13,
+          "passedJobs": 10
+        }
+      },
+      {
+        "date": "2026-07-20",
+        "odh": {
+          "status": "failing",
+          "passRate": 0.4,
+          "totalJobs": 15,
+          "passedJobs": 6
+        },
+        "rhoai": {
+          "status": "failing",
+          "passRate": 0.455,
+          "totalJobs": 11,
+          "passedJobs": 5
+        }
+      },
+      {
+        "date": "2026-07-19",
+        "odh": {
+          "status": "stable",
+          "passRate": 0.778,
+          "totalJobs": 9,
+          "passedJobs": 7
+        },
+        "rhoai": {
+          "status": "stable",
+          "passRate": 0.714,
+          "totalJobs": 14,
+          "passedJobs": 10
+        }
+      },
+      {
+        "date": "2026-07-18",
+        "odh": {
+          "status": "degraded",
+          "passRate": 0.667,
+          "totalJobs": 12,
+          "passedJobs": 8
+        },
+        "rhoai": {
+          "status": "healthy",
+          "passRate": 0.9,
+          "totalJobs": 10,
+          "passedJobs": 9
+        }
+      },
+      {
+        "date": "2026-07-17",
+        "odh": {
+          "status": "healthy",
+          "passRate": 0.923,
+          "totalJobs": 13,
+          "passedJobs": 12
+        },
+        "rhoai": {
+          "status": "stable",
+          "passRate": 0.727,
+          "totalJobs": 11,
+          "passedJobs": 8
+        }
+      },
+      {
+        "date": "2026-07-16",
+        "odh": {
+          "status": "stable",
+          "passRate": 0.75,
+          "totalJobs": 12,
+          "passedJobs": 9
+        },
+        "rhoai": {
+          "status": "degraded",
+          "passRate": 0.625,
+          "totalJobs": 8,
+          "passedJobs": 5
+        }
+      },
+      {
+        "date": "2026-07-15",
+        "odh": {
+          "status": "degraded",
+          "passRate": 0.545,
+          "totalJobs": 11,
+          "passedJobs": 6
+        },
+        "rhoai": {
+          "status": "stable",
+          "passRate": 0.733,
+          "totalJobs": 15,
+          "passedJobs": 11
+        }
+      },
+      {
+        "date": "2026-07-14",
+        "odh": {
+          "status": "healthy",
+          "passRate": 0.867,
+          "totalJobs": 15,
+          "passedJobs": 13
+        },
+        "rhoai": {
+          "status": "healthy",
+          "passRate": 0.846,
+          "totalJobs": 13,
+          "passedJobs": 11
+        }
+      },
+      {
+        "date": "2026-07-13",
+        "odh": {
+          "status": "stable",
+          "passRate": 0.7,
+          "totalJobs": 10,
+          "passedJobs": 7
+        },
+        "rhoai": {
+          "status": "stable",
+          "passRate": 0.75,
+          "totalJobs": 12,
+          "passedJobs": 9
+        }
+      }
+    ],
+    "last_updated": "2026-08-11T10:00:00.000Z"
+  }
+}

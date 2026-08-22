@@ -4,7 +4,12 @@ const {
   classifyIssue,
   processIssue,
   extractTerminalAt,
+  extractPipelineHistory,
+  computeEffortScore,
+  computePriorityBreakdown,
+  computeMedianTimeToFix,
   getLastWeekBounds,
+  getWindowBounds,
   computeAutofixMetrics,
   buildTrendData
 } = require('../../server/jira/autofix-fetcher')
@@ -149,8 +154,8 @@ describe('computeAutofixMetrics', () => {
     { created: old, pipelineState: 'autofix-merged', components: ['A'] }
   ]
 
-  it('computes metrics for a week window', () => {
-    const m = computeAutofixMetrics(issues, 'week')
+  it('computes metrics for a last7 rolling window', () => {
+    const m = computeAutofixMetrics(issues, 'last7')
     expect(m.windowTotal).toBe(7)
     expect(m.triageVerdicts.ready).toBe(3)
     expect(m.triageVerdicts.missingInfo).toBe(1)
@@ -164,13 +169,13 @@ describe('computeAutofixMetrics', () => {
   })
 
   it('computes success rate from terminal states (merged / (merged + rejected + maxRetries))', () => {
-    const m = computeAutofixMetrics(issues, 'week')
+    const m = computeAutofixMetrics(issues, 'last7')
     // merged=1, rejected=1, maxRetries=0 → terminal=2, successRate = 1/2 = 50%
     expect(m.successRate).toBe(50)
   })
 
   it('returns zero success rate when no terminal autofix issues in window', () => {
-    const m = computeAutofixMetrics([], 'week')
+    const m = computeAutofixMetrics([], 'last7')
     expect(m.successRate).toBe(0)
   })
 })
@@ -180,7 +185,7 @@ describe('buildTrendData', () => {
     const issues = [
       { created: new Date().toISOString(), pipelineState: 'autofix-merged', components: [] }
     ]
-    const trend = buildTrendData(issues, 'week')
+    const trend = buildTrendData(issues, 'last7')
     expect(trend).toHaveLength(4)
     expect(trend[0]).toHaveProperty('date')
     expect(trend[0]).toHaveProperty('triaged')
@@ -196,8 +201,8 @@ describe('buildTrendData', () => {
     expect(trend[0]).toHaveProperty('securityReview')
   })
 
-  it('returns 13 points for 3months window', () => {
-    const trend = buildTrendData([], '3months')
+  it('returns 13 points for last90 window', () => {
+    const trend = buildTrendData([], 'last90')
     expect(trend).toHaveLength(13)
   })
 
@@ -216,7 +221,7 @@ describe('buildTrendData', () => {
       { created: recent, pipelineState: 'triage-external', components: [] },
       { created: recent, pipelineState: 'triage-security-review', components: [] }
     ]
-    const trend = buildTrendData(issues, 'week')
+    const trend = buildTrendData(issues, 'last7')
     const lastPoint = trend[trend.length - 1]
     expect(lastPoint.review).toBe(2)
     expect(lastPoint.ciFailing).toBe(1)
@@ -248,13 +253,13 @@ describe('buildTrendData', () => {
     expect(lastBucket.review).toBe(1)
   })
 
-  it('does not use terminalAt for existing time windows', () => {
+  it('does not use terminalAt for rolling time windows', () => {
     const recent = new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString()
     const old = new Date(Date.now() - 60 * 24 * 60 * 60 * 1000).toISOString()
     const issues = [
       { created: old, terminalAt: recent, pipelineState: 'autofix-merged' }
     ]
-    const trend = buildTrendData(issues, 'week')
+    const trend = buildTrendData(issues, 'last7')
     const lastBucket = trend[trend.length - 1]
     expect(lastBucket.merged).toBe(0)
   })
@@ -368,5 +373,325 @@ describe('getLastWeekBounds', () => {
   it('end is before now', () => {
     const { end } = getLastWeekBounds()
     expect(end).toBeLessThanOrEqual(Date.now())
+  })
+})
+
+describe('extractPipelineHistory', () => {
+  it('counts CI failure label additions', () => {
+    const changelog = {
+      histories: [
+        { created: '2026-06-10T10:00:00.000Z', items: [{ field: 'labels', toString: 'jira-autofix-ci-failing' }] },
+        { created: '2026-06-11T10:00:00.000Z', items: [{ field: 'labels', toString: 'jira-autofix-review' }] },
+        { created: '2026-06-12T10:00:00.000Z', items: [{ field: 'labels', toString: 'jira-autofix-ci-failing' }] },
+        { created: '2026-06-13T10:00:00.000Z', items: [{ field: 'labels', toString: 'jira-autofix-merged' }] }
+      ]
+    }
+    const h = extractPipelineHistory(changelog, 'autofix-merged')
+    expect(h.ciFailureCount).toBe(2)
+    expect(h.terminalAt).toBe('2026-06-13T10:00:00.000Z')
+  })
+
+  it('counts review round label additions', () => {
+    const changelog = {
+      histories: [
+        { created: '2026-06-10T10:00:00.000Z', items: [{ field: 'labels', toString: 'jira-autofix-review' }] },
+        { created: '2026-06-11T10:00:00.000Z', items: [{ field: 'labels', toString: 'jira-autofix-ci-failing' }] },
+        { created: '2026-06-12T10:00:00.000Z', items: [{ field: 'labels', toString: 'jira-autofix-review' }] },
+        { created: '2026-06-13T10:00:00.000Z', items: [{ field: 'labels', toString: 'jira-autofix-review' }] },
+        { created: '2026-06-14T10:00:00.000Z', items: [{ field: 'labels', toString: 'jira-autofix-merged' }] }
+      ]
+    }
+    const h = extractPipelineHistory(changelog, 'autofix-merged')
+    expect(h.reviewRoundCount).toBe(3)
+  })
+
+  it('detects blocked state', () => {
+    const changelog = {
+      histories: [
+        { created: '2026-06-10T10:00:00.000Z', items: [{ field: 'labels', toString: 'jira-autofix-blocked' }] },
+        { created: '2026-06-12T10:00:00.000Z', items: [{ field: 'labels', toString: 'jira-autofix-merged' }] }
+      ]
+    }
+    const h = extractPipelineHistory(changelog, 'autofix-merged')
+    expect(h.wasBlocked).toBe(true)
+  })
+
+  it('returns defaults for empty changelog', () => {
+    const h = extractPipelineHistory(null, 'autofix-merged')
+    expect(h.terminalAt).toBeNull()
+    expect(h.ciFailureCount).toBe(0)
+    expect(h.reviewRoundCount).toBe(0)
+    expect(h.wasBlocked).toBe(false)
+  })
+
+  it('handles multiple label changes in a single history entry', () => {
+    const changelog = {
+      histories: [
+        {
+          created: '2026-06-10T10:00:00.000Z',
+          items: [
+            { field: 'labels', toString: 'jira-autofix-review' },
+            { field: 'labels', toString: 'jira-autofix-ci-failing' }
+          ]
+        }
+      ]
+    }
+    const h = extractPipelineHistory(changelog, 'autofix-merged')
+    expect(h.reviewRoundCount).toBe(1)
+    expect(h.ciFailureCount).toBe(1)
+  })
+})
+
+describe('computeEffortScore', () => {
+  it('returns base score of 1 for a simple merged issue', () => {
+    const issue = { pipelineState: 'autofix-merged', created: '2026-06-10T00:00:00Z', terminalAt: '2026-06-11T00:00:00Z', priority: 'Normal' }
+    const { effortScore, effortTier } = computeEffortScore(issue)
+    expect(effortScore).toBe(1)
+    expect(effortTier).toBe('Quick Win')
+  })
+
+  it('adds 1 point for CI failures', () => {
+    const issue = { pipelineState: 'autofix-merged', ciFailureCount: 2, created: '2026-06-10T00:00:00Z', terminalAt: '2026-06-11T00:00:00Z', priority: 'Normal' }
+    const { effortScore } = computeEffortScore(issue)
+    expect(effortScore).toBe(2)
+  })
+
+  it('adds 1 point per extra review round beyond the first', () => {
+    const issue = { pipelineState: 'autofix-merged', reviewRoundCount: 3, created: '2026-06-10T00:00:00Z', terminalAt: '2026-06-11T00:00:00Z', priority: 'Normal' }
+    const { effortScore } = computeEffortScore(issue)
+    expect(effortScore).toBe(3)
+  })
+
+  it('adds 2 points for blocked state', () => {
+    const issue = { pipelineState: 'autofix-merged', wasBlocked: true, created: '2026-06-10T00:00:00Z', terminalAt: '2026-06-11T00:00:00Z', priority: 'Normal' }
+    const { effortScore } = computeEffortScore(issue)
+    expect(effortScore).toBe(3)
+  })
+
+  it('adds 1 point for time-to-fix over 7 days', () => {
+    const issue = { pipelineState: 'autofix-merged', created: '2026-06-01T00:00:00Z', terminalAt: '2026-06-10T00:00:00Z', priority: 'Normal' }
+    const { effortScore } = computeEffortScore(issue)
+    expect(effortScore).toBe(2)
+  })
+
+  it('adds 2 points for Blocker or Critical priority', () => {
+    const issue = { pipelineState: 'autofix-merged', created: '2026-06-10T00:00:00Z', terminalAt: '2026-06-11T00:00:00Z', priority: 'Blocker' }
+    const { effortScore, effortTier } = computeEffortScore(issue)
+    expect(effortScore).toBe(3)
+    expect(effortTier).toBe('Standard Fix')
+  })
+
+  it('maps tier boundaries correctly', () => {
+    const base = { pipelineState: 'autofix-merged', created: '2026-06-10T00:00:00Z', terminalAt: '2026-06-11T00:00:00Z', priority: 'Normal' }
+
+    expect(computeEffortScore({ ...base }).effortTier).toBe('Quick Win')
+    expect(computeEffortScore({ ...base, ciFailureCount: 1 }).effortTier).toBe('Quick Win')
+    expect(computeEffortScore({ ...base, wasBlocked: true }).effortTier).toBe('Standard Fix')
+    expect(computeEffortScore({ ...base, wasBlocked: true, ciFailureCount: 1 }).effortTier).toBe('Standard Fix')
+    expect(computeEffortScore({ ...base, wasBlocked: true, ciFailureCount: 1, reviewRoundCount: 3 }).effortTier).toBe('Complex Fix')
+  })
+
+  it('returns null for non-merged issues', () => {
+    const issue = { pipelineState: 'autofix-review', priority: 'Major' }
+    const { effortScore, effortTier } = computeEffortScore(issue)
+    expect(effortScore).toBeNull()
+    expect(effortTier).toBeNull()
+  })
+})
+
+describe('computePriorityBreakdown', () => {
+  it('counts issues by priority', () => {
+    const issues = [
+      { priority: 'Blocker' },
+      { priority: 'Major' },
+      { priority: 'Major' },
+      { priority: 'Undefined' }
+    ]
+    const result = computePriorityBreakdown(issues)
+    expect(result).toEqual({ Blocker: 1, Major: 2, Undefined: 1 })
+  })
+
+  it('returns empty object for empty array', () => {
+    expect(computePriorityBreakdown([])).toEqual({})
+  })
+})
+
+describe('computeMedianTimeToFix', () => {
+  it('returns median for odd number of merged issues', () => {
+    const issues = [
+      { pipelineState: 'autofix-merged', created: '2026-06-01T00:00:00Z', terminalAt: '2026-06-02T00:00:00Z' },
+      { pipelineState: 'autofix-merged', created: '2026-06-01T00:00:00Z', terminalAt: '2026-06-04T00:00:00Z' },
+      { pipelineState: 'autofix-merged', created: '2026-06-01T00:00:00Z', terminalAt: '2026-06-11T00:00:00Z' }
+    ]
+    expect(computeMedianTimeToFix(issues)).toBe(3)
+  })
+
+  it('returns median for even number of merged issues', () => {
+    const issues = [
+      { pipelineState: 'autofix-merged', created: '2026-06-01T00:00:00Z', terminalAt: '2026-06-03T00:00:00Z' },
+      { pipelineState: 'autofix-merged', created: '2026-06-01T00:00:00Z', terminalAt: '2026-06-05T00:00:00Z' }
+    ]
+    expect(computeMedianTimeToFix(issues)).toBe(3)
+  })
+
+  it('returns null when no merged issues', () => {
+    const issues = [
+      { pipelineState: 'autofix-review', created: '2026-06-01T00:00:00Z', terminalAt: null }
+    ]
+    expect(computeMedianTimeToFix(issues)).toBeNull()
+  })
+
+  it('skips non-merged issues', () => {
+    const issues = [
+      { pipelineState: 'autofix-rejected', created: '2026-06-01T00:00:00Z', terminalAt: '2026-06-02T00:00:00Z' },
+      { pipelineState: 'autofix-merged', created: '2026-06-01T00:00:00Z', terminalAt: '2026-06-06T00:00:00Z' }
+    ]
+    expect(computeMedianTimeToFix(issues)).toBe(5)
+  })
+})
+
+describe('getWindowBounds', () => {
+  it('returns calendar week bounds for week', () => {
+    const { start, end, useTerminalDate } = getWindowBounds('week')
+    const startDate = new Date(start)
+    expect(startDate.getUTCDay()).toBe(1)
+    expect(end).toBeLessThanOrEqual(Date.now() + 1000)
+    expect(end).toBeGreaterThan(start)
+    expect(useTerminalDate).toBe(false)
+  })
+
+  it('returns rolling 7-day bounds for last7', () => {
+    const { start, end, useTerminalDate } = getWindowBounds('last7')
+    const diff = end - start
+    expect(Math.abs(diff - 7 * 24 * 60 * 60 * 1000)).toBeLessThan(1000)
+    expect(useTerminalDate).toBe(false)
+  })
+
+  it('returns calendar month bounds for month', () => {
+    const { start, end, useTerminalDate } = getWindowBounds('month')
+    const startDate = new Date(start)
+    expect(startDate.getUTCDate()).toBe(1)
+    expect(end).toBeLessThanOrEqual(Date.now() + 1000)
+    expect(useTerminalDate).toBe(false)
+  })
+
+  it('returns previous calendar month bounds for lastMonth', () => {
+    const { start, end, useTerminalDate } = getWindowBounds('lastMonth')
+    const startDate = new Date(start)
+    const endDate = new Date(end)
+    expect(startDate.getUTCDate()).toBe(1)
+    expect(endDate.getUTCDate()).toBe(1)
+    expect(endDate.getUTCMonth()).toBe(new Date().getUTCMonth())
+    expect(useTerminalDate).toBe(true)
+  })
+
+  it('returns rolling 30-day bounds for last30', () => {
+    const { start, end, useTerminalDate } = getWindowBounds('last30')
+    const diff = end - start
+    expect(Math.abs(diff - 30 * 24 * 60 * 60 * 1000)).toBeLessThan(1000)
+    expect(useTerminalDate).toBe(false)
+  })
+
+  it('returns rolling 90-day bounds for last90', () => {
+    const { start, end, useTerminalDate } = getWindowBounds('last90')
+    const diff = end - start
+    expect(Math.abs(diff - 90 * 24 * 60 * 60 * 1000)).toBeLessThan(1000)
+    expect(useTerminalDate).toBe(false)
+  })
+
+  it('uses terminalDate for lastWeek', () => {
+    const { useTerminalDate } = getWindowBounds('lastWeek')
+    expect(useTerminalDate).toBe(true)
+  })
+})
+
+describe('computeAutofixMetrics with lastMonth', () => {
+  it('uses terminalAt for terminal issues in lastMonth window', () => {
+    const { start, end } = getWindowBounds('lastMonth')
+    const midLastMonth = new Date(start + (end - start) / 2).toISOString()
+    const sixMonthsAgo = new Date(Date.now() - 180 * 24 * 60 * 60 * 1000).toISOString()
+    const issues = [
+      { created: sixMonthsAgo, terminalAt: midLastMonth, pipelineState: 'autofix-merged' },
+      { created: midLastMonth, terminalAt: null, pipelineState: 'autofix-review' },
+      { created: sixMonthsAgo, terminalAt: null, pipelineState: 'autofix-merged' }
+    ]
+    const m = computeAutofixMetrics(issues, 'lastMonth')
+    expect(m.autofixStates.merged).toBe(1)
+    expect(m.autofixStates.review).toBe(1)
+    expect(m.windowTotal).toBe(2)
+  })
+})
+
+describe('buildTrendData with new windows', () => {
+  it('returns 4 points for last7 window', () => {
+    const trend = buildTrendData([], 'last7')
+    expect(trend).toHaveLength(4)
+  })
+
+  it('returns 8 points for last30 window', () => {
+    const trend = buildTrendData([], 'last30')
+    expect(trend).toHaveLength(8)
+  })
+
+  it('returns 8 points for lastMonth window', () => {
+    const trend = buildTrendData([], 'lastMonth')
+    expect(trend).toHaveLength(8)
+  })
+
+  it('returns 8 points for calendar month window', () => {
+    const trend = buildTrendData([], 'month')
+    expect(trend).toHaveLength(8)
+  })
+
+  it('returns 4 points for calendar week window', () => {
+    const trend = buildTrendData([], 'week')
+    expect(trend).toHaveLength(4)
+  })
+
+  it('uses terminalAt for lastMonth window', () => {
+    const { start, end } = getWindowBounds('lastMonth')
+    const midLastMonth = new Date(start + (end - start) / 2).toISOString()
+    const sixMonthsAgo = new Date(Date.now() - 180 * 24 * 60 * 60 * 1000).toISOString()
+    const issues = [
+      { created: sixMonthsAgo, terminalAt: midLastMonth, pipelineState: 'autofix-merged' }
+    ]
+    const trend = buildTrendData(issues, 'lastMonth')
+    const totalMerged = trend.reduce((s, p) => s + p.merged, 0)
+    expect(totalMerged).toBe(1)
+  })
+})
+
+describe('computeAutofixMetrics new fields', () => {
+  const now = new Date()
+  const recent = new Date(now.getTime() - 3 * 24 * 60 * 60 * 1000).toISOString()
+  const mergedAt = new Date(now.getTime() - 1 * 24 * 60 * 60 * 1000).toISOString()
+
+  it('includes priorityBreakdown in metrics', () => {
+    const issues = [
+      { created: recent, pipelineState: 'autofix-merged', priority: 'Blocker', terminalAt: mergedAt, effortScore: 3, effortTier: 'Standard Fix' },
+      { created: recent, pipelineState: 'triage-missing-info', priority: 'Major' }
+    ]
+    const m = computeAutofixMetrics(issues, 'last7')
+    expect(m.priorityBreakdown).toEqual({ Blocker: 1, Major: 1 })
+  })
+
+  it('includes medianTimeToFixDays for merged issues', () => {
+    const created = new Date(now.getTime() - 5 * 24 * 60 * 60 * 1000).toISOString()
+    const issues = [
+      { created, pipelineState: 'autofix-merged', priority: 'Major', terminalAt: mergedAt, effortScore: 1, effortTier: 'Quick Win' }
+    ]
+    const m = computeAutofixMetrics(issues, 'last7')
+    expect(m.medianTimeToFixDays).toBeGreaterThan(0)
+  })
+
+  it('includes effortBreakdown and totalImpactScore', () => {
+    const issues = [
+      { created: recent, pipelineState: 'autofix-merged', priority: 'Major', terminalAt: mergedAt, effortScore: 1, effortTier: 'Quick Win' },
+      { created: recent, pipelineState: 'autofix-merged', priority: 'Blocker', terminalAt: mergedAt, effortScore: 4, effortTier: 'Standard Fix' },
+      { created: recent, pipelineState: 'autofix-merged', priority: 'Critical', terminalAt: mergedAt, effortScore: 6, effortTier: 'Complex Fix' }
+    ]
+    const m = computeAutofixMetrics(issues, 'last7')
+    expect(m.effortBreakdown).toEqual({ quickWin: 1, standardFix: 1, complexFix: 1 })
+    expect(m.totalImpactScore).toBe(11)
   })
 })

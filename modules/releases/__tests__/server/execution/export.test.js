@@ -18,11 +18,11 @@ const FIXTURE_ROSTER = {
 
 function makeStorage(data = {}) {
   return {
-    readFromStorage(key) {
+    async readFromStorage(key) {
       return data[key] ? JSON.parse(JSON.stringify(data[key])) : null
     },
-    writeToStorage() {},
-    listStorageFiles(dir) {
+    async writeToStorage() {},
+    async listStorageFiles(dir) {
       return Object.keys(data)
         .filter(k => k.startsWith(dir + '/') || k.startsWith(dir))
         .map(k => k.split('/').pop())

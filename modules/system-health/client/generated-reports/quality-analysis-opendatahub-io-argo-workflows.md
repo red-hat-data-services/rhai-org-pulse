@@ -1,468 +1,467 @@
 ---
 repository: "opendatahub-io/argo-workflows"
-overall_score: 6.8
+overall_score: 7.4
 scorecard:
   - dimension: "Unit Tests"
-    score: 7.0
-    status: "236 Go test files + 11 UI tests; good distribution across packages but no PR coverage gates"
+    score: 7.5
+    status: "Strong Go test suite (236 test files / 554 source files = 43% ratio) using testify and table-driven patterns"
   - dimension: "Integration/E2E"
-    score: 8.0
-    status: "Comprehensive E2E suite with 12 matrix configs, multi-K8s version testing, K3S clusters"
+    score: 9.0
+    status: "Comprehensive E2E suite with K3S, multi-version K8s testing (v1.28–v1.31), 13-matrix strategy, SDK tests"
   - dimension: "Build Integration"
-    score: 5.0
-    status: "PR builds Docker images but ODH-specific Dockerfiles only build on push/dispatch; no Konflux simulation"
+    score: 7.0
+    status: "PR-time Docker image builds (argoexec, argocli) with ODH-specific Dockerfiles, but no Konflux simulation"
   - dimension: "Image Testing"
-    score: 5.0
-    status: "Multi-arch support and cosign signing but no runtime validation or PR-time vulnerability scanning"
+    score: 6.5
+    status: "Multi-stage builds, UBI9 base images for ODH, distroless upstream, but limited runtime validation"
   - dimension: "Coverage Tracking"
-    score: 5.0
-    status: "Codecov integration exists but coverage only uploaded on main branch, not enforced on PRs"
+    score: 6.0
+    status: "Codecov integration with 2% threshold tolerance, but coverage upload only on main (not PRs)"
   - dimension: "CI/CD Automation"
+    score: 8.5
+    status: "Well-organized workflows with concurrency control, changed-file detection, caching, multi-platform builds"
+  - dimension: "Static Analysis"
     score: 8.0
-    status: "Well-organized workflows with concurrency control, changed-file optimization, SHA-pinned actions"
+    status: "18 golangci-lint linters enabled, FIPS-compliant builds (GOFIPS140=v1.0.0), Dependabot + Renovate configured"
   - dimension: "Agent Rules"
     score: 0.0
-    status: "No CLAUDE.md, no .claude/ directory, no test automation guidance for AI agents"
+    status: "No CLAUDE.md, AGENTS.md, or .claude/ directory present"
 critical_gaps:
-  - title: "Coverage not enforced on PRs"
-    impact: "Developers cannot see coverage impact of their changes; regressions go unnoticed until post-merge"
+  - title: "No coverage enforcement on PRs"
+    impact: "Coverage regressions can be merged without detection; coverage only uploaded on main branch"
     severity: "HIGH"
     effort: "2-4 hours"
-  - title: "ODH Dockerfiles not validated on PRs"
-    impact: "ODH-specific build failures (UBI9, FIPS, go-toolset) discovered only after merge to main"
+  - title: "No Konflux build simulation on PRs"
+    impact: "ODH/RHOAI build failures discovered only after merge in Konflux pipeline"
     severity: "HIGH"
-    effort: "4-6 hours"
-  - title: "No container vulnerability scanning on PRs"
-    impact: "New vulnerabilities introduced via dependencies not caught until scheduled Snyk scan"
-    severity: "HIGH"
-    effort: "2-4 hours"
-  - title: "No runtime validation for built images"
-    impact: "Image startup failures, missing binaries, or broken entrypoints not detected until deployment"
+    effort: "8-12 hours"
+  - title: "No container image runtime validation"
+    impact: "Image startup issues or missing dependencies not caught until deployment"
     severity: "MEDIUM"
-    effort: "4-8 hours"
-  - title: "No agent rules for test automation"
-    impact: "AI-assisted test generation lacks project-specific patterns, producing inconsistent or incorrect tests"
+    effort: "4-6 hours"
+  - title: "No agent rules for AI-assisted development"
+    impact: "AI agents lack guidance on test patterns, coding standards, and project conventions"
     severity: "LOW"
-    effort: "3-5 hours"
+    effort: "2-3 hours"
 quick_wins:
-  - title: "Enable PR coverage reporting in Codecov"
+  - title: "Enable coverage reporting on PRs (not just main)"
     effort: "1-2 hours"
-    impact: "Developers see coverage delta on every PR; prevents silent coverage regression"
-  - title: "Add ODH Dockerfile build step to ci-build.yaml"
+    impact: "Catch coverage regressions before merge; currently only uploads on main"
+  - title: "Add pre-commit hooks for consistent local linting"
+    effort: "1-2 hours"
+    impact: "Catch lint and formatting issues before CI, reducing feedback loop time"
+  - title: "Create basic CLAUDE.md with test patterns and conventions"
     effort: "2-3 hours"
-    impact: "Catches UBI9/FIPS/go-toolset build failures before merge"
-  - title: "Add Trivy container scanning to PR workflow"
-    effort: "1-2 hours"
-    impact: "Early detection of HIGH/CRITICAL vulnerabilities in container images"
-  - title: "Add pre-commit hooks"
-    effort: "1-2 hours"
-    impact: "Catch linting and formatting issues locally before push"
-  - title: "Create basic CLAUDE.md with test patterns"
-    effort: "2-3 hours"
-    impact: "Improve AI-generated test quality and consistency"
+    impact: "Improve AI-generated code quality and consistency for contributors using Claude Code"
+  - title: "Add container health check in Dockerfile"
+    effort: "1 hour"
+    impact: "Enable Kubernetes liveness/readiness probes from container definition"
 recommendations:
   priority_0:
-    - "Enable Codecov coverage reporting on PRs (remove the main-branch-only condition)"
-    - "Add ODH Dockerfile build validation to PR workflow to catch FIPS/UBI9 issues pre-merge"
-    - "Add container vulnerability scanning (Trivy) to PR workflow"
+    - "Enable codecov coverage reporting on PRs with threshold enforcement to catch regressions before merge"
+    - "Add PR-time Konflux build simulation for ODH Dockerfiles to catch build failures pre-merge"
   priority_1:
-    - "Add image runtime validation (startup check, entrypoint test) for built images"
-    - "Enable CodeQL or Semgrep SAST scanning on PRs"
-    - "Add secret detection via gitleaks to PR workflow"
-    - "Create agent rules for test automation (.claude/rules/)"
+    - "Add container runtime validation tests (image startup, binary execution) in CI"
+    - "Create comprehensive agent rules (.claude/rules/) covering Go testing patterns, E2E conventions, and FIPS compliance"
+    - "Increase t.Parallel() usage across unit tests (only 16 tests currently use it)"
   priority_2:
-    - "Add pre-commit hooks for local developer experience"
-    - "Re-enable Windows unit tests with alternative Go toolchain"
-    - "Add performance regression testing for workflow controller"
-    - "Implement chaos engineering tests for controller resilience"
+    - "Add pre-commit hooks (.pre-commit-config.yaml) for golangci-lint and gofmt"
+    - "Add stress/performance testing to PR pipeline (currently manual test/stress/ only)"
+    - "Consider adding contract tests for gRPC/REST API boundaries"
 ---
 
 # Quality Analysis: opendatahub-io/argo-workflows
 
 ## Executive Summary
 
-- **Overall Score: 6.8/10**
-- **Repository Type**: Kubernetes workflow engine (forked from argoproj/argo-workflows)
-- **Primary Languages**: Go (backend), TypeScript (UI)
-- **Framework**: Kubernetes CRD-based operator with React frontend
-- **Agent Rules Status**: Missing
+- **Overall Score: 7.4/10**
+- **Repository Type**: Kubernetes workflow engine (Go + React/TypeScript UI)
+- **Primary Language**: Go (554 source files), TypeScript (UI)
+- **Tier**: Midstream (opendatahub-io fork of argoproj/argo-workflows)
+- **Jira Component**: AI Pipelines (RHOAIENG)
 
-**Key Strengths**: Excellent E2E test infrastructure with multi-K8s version testing, well-organized CI with smart changed-file detection, cosign image signing, and SBOM generation on releases.
+**Key Strengths**: Comprehensive E2E test suite with multi-version K8s testing, strong CI/CD automation with intelligent change detection, excellent FIPS compliance with `GOFIPS140=v1.0.0` in ODH builds, and thorough static analysis with 18 golangci-lint linters.
 
-**Critical Gaps**: Coverage not reported on PRs, ODH-specific Dockerfiles not validated pre-merge, no container vulnerability scanning on PRs, no agent rules for AI-assisted development.
-
-**Top 3 Recommendations**:
-1. Enable Codecov PR coverage reporting (currently main-branch only)
-2. Add ODH Dockerfile build validation to PR CI workflow
-3. Add Trivy container scanning to PR workflow
+**Critical Gaps**: Coverage is not enforced on PRs (only uploaded on main), no Konflux build simulation for ODH Dockerfiles, and zero agent rules for AI-assisted development.
 
 ## Quality Scorecard
 
-| Dimension | Score | Status |
-|-----------|-------|--------|
-| Unit Tests | 7/10 | 236 Go test files + 11 UI tests; 0.43 test-to-source ratio |
-| Integration/E2E | 8/10 | 12-config matrix, multi-K8s versions, SDK tests |
-| **Build Integration** | **5/10** | **ODH Dockerfiles only built on push/dispatch; no Konflux sim** |
-| Image Testing | 5/10 | Multi-arch + cosign, but no runtime validation on PRs |
-| Coverage Tracking | 5/10 | Codecov exists but only uploads on main, not PRs |
-| CI/CD Automation | 8/10 | Concurrency control, changed-file gating, SHA-pinned actions |
-| Agent Rules | 0/10 | No CLAUDE.md, no .claude/ directory |
+| Dimension | Score | Weight | Status |
+|-----------|-------|--------|--------|
+| Unit Tests | 7.5/10 | 15% | Strong Go test suite with testify and table-driven patterns |
+| Integration/E2E | 9.0/10 | 20% | Comprehensive E2E with K3S, multi-version K8s, SDK tests |
+| Build Integration | 7.0/10 | 15% | PR-time image builds present but no Konflux simulation |
+| Image Testing | 6.5/10 | 10% | Multi-stage builds, UBI9 for ODH, limited runtime validation |
+| Coverage Tracking | 6.0/10 | 10% | Codecov integrated but upload restricted to main branch |
+| CI/CD Automation | 8.5/10 | 15% | Excellent workflow design with change detection and caching |
+| Static Analysis | 8.0/10 | 10% | 18 linters, FIPS compliance, Dependabot + Renovate |
+| Agent Rules | 0.0/10 | 5% | No CLAUDE.md, AGENTS.md, or .claude/ directory |
 
 ## Critical Gaps
 
-### 1. Coverage Not Enforced on PRs
-- **Impact**: Developers cannot see coverage impact of their changes; regressions silently merge
-- **Severity**: HIGH
+### 1. No Coverage Enforcement on PRs (HIGH)
+- **Impact**: Coverage regressions can be merged undetected
+- **Details**: The CI workflow generates `coverage.out` with `--coverprofile` on every run, but the codecov upload step is gated with `if: github.ref == 'refs/heads/main'`. This means PR authors never see coverage impact.
 - **Effort**: 2-4 hours
-- **Details**: The CI workflow generates coverage (`-coverprofile=coverage.out`) but only uploads to Codecov on `refs/heads/main`. The comment in code says "engineers just ignore this in PRs, so lets not even run it" — but hiding coverage data makes the problem worse, not better.
-- **Fix**: Remove the `if: github.ref == 'refs/heads/main'` condition on the Codecov upload step. Configure `.codecov.yml` to add informational (non-blocking) PR comments showing coverage delta.
+- **Fix**: Remove the `if` condition from the codecov upload step and add a `coverage.status.patch` check with a threshold
 
-### 2. ODH Dockerfiles Not Validated on PRs
-- **Impact**: Build failures specific to UBI9 base images, FIPS-enabled Go (`GOFIPS140=v1.0.0`), and `go-toolset` are only discovered after merge when `build-main.yml` runs
-- **Severity**: HIGH
+### 2. No Konflux Build Simulation on PRs (HIGH)
+- **Impact**: ODH/RHOAI-specific build failures (UBI9 base images, GOFIPS140 flags, `no_openssl` tags) are only discovered after merge when Konflux pipeline runs
+- **Details**: The repo has ODH-specific Dockerfiles (`argo-workflowcontroller/Dockerfile.ODH`, `argo-argoexec/Dockerfile.ODH`) that use `registry.access.redhat.com/ubi9/go-toolset` and `GOFIPS140=v1.0.0`, but the PR CI only builds the upstream `Dockerfile` (alpine-based)
+- **Effort**: 8-12 hours
+
+### 3. No Container Runtime Validation (MEDIUM)
+- **Impact**: Image startup issues, missing runtime dependencies, or binary execution failures not caught until deployment
+- **Details**: Images are built in CI but not tested for runtime correctness (no `docker run` / health checks / smoke tests)
 - **Effort**: 4-6 hours
-- **Details**: The repository has ODH-specific Dockerfiles (`argo-workflowcontroller/Dockerfile.ODH` and `argo-argoexec/Dockerfile.ODH`) that use `registry.access.redhat.com/ubi9/go-toolset` and build with `GOFIPS140=v1.0.0`. These are only built by `build-main.yml` (triggered on push to main or manual dispatch). The PR CI workflow (`ci-build.yaml`) builds the upstream `Dockerfile` targets (`argoexec`, `argocli`) but does not test the ODH-specific build paths.
 
-### 3. No Container Vulnerability Scanning on PRs
-- **Impact**: New vulnerabilities introduced via dependency updates are not caught until the scheduled Snyk scan (daily at 2:30 AM)
-- **Severity**: HIGH
-- **Effort**: 2-4 hours
-- **Details**: Snyk runs on a schedule (`cron: "30 2 * * *"`) and only on pushes to main/release branches. The `if: github.repository == 'argoproj/argo-workflows'` condition means it doesn't run on the opendatahub-io fork at all. No Trivy, Grype, or other scanner runs on PRs.
-
-### 4. No Runtime Validation for Built Images
-- **Impact**: Broken entrypoints, missing binaries, or incorrect file permissions not detected until deployment
-- **Severity**: MEDIUM
-- **Effort**: 4-8 hours
-- **Details**: The PR CI builds and uploads Docker images as artifacts, and the E2E tests load and use them. However, there is no explicit image startup validation (e.g., `docker run --entrypoint /bin/workflow-controller image --help`). The release workflow has pull-tests but they only verify that `docker pull` succeeds, not that the image runs.
-
-### 5. No Agent Rules for Test Automation
-- **Impact**: AI-assisted test generation produces inconsistent or incorrect test patterns
-- **Severity**: LOW
-- **Effort**: 3-5 hours
-- **Details**: No `CLAUDE.md`, `AGENTS.md`, or `.claude/` directory exists. AI agents have no project-specific guidance on test frameworks, patterns, fixtures, or build tags used in this repository.
+### 4. No Agent Rules (LOW)
+- **Impact**: AI agents lack project-specific guidance for test patterns, FIPS requirements, and coding standards
+- **Details**: No `CLAUDE.md`, `AGENTS.md`, or `.claude/` directory present
+- **Effort**: 2-3 hours
 
 ## Quick Wins
 
-### 1. Enable PR Coverage Reporting (1-2 hours)
-Remove the branch condition from the Codecov upload step:
+### 1. Enable Coverage Reporting on PRs (1-2 hours)
+Remove the `if: github.ref == 'refs/heads/main'` condition from the codecov upload step in `.github/workflows/ci-build.yaml`:
+
 ```yaml
-# Before:
 - name: Upload coverage report
-  if: github.ref == 'refs/heads/main'
-  uses: codecov/codecov-action@v4
-
-# After:
-- name: Upload coverage report
-  uses: codecov/codecov-action@v4
+  uses: codecov/codecov-action@84508663e988701840491b86de86b666e8a86bed # v4.3.0
+  with:
+    fail_ci_if_error: true
+  env:
+    CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
 ```
 
-### 2. Add ODH Dockerfile Build to PR CI (2-3 hours)
-Add a job to `ci-build.yaml` that builds the ODH Dockerfiles:
+And update `.codecov.yml` to enable patch coverage:
 ```yaml
-odh-images:
-  name: ODH Image Build
-  runs-on: ubuntu-latest
-  timeout-minutes: 15
-  strategy:
-    matrix:
-      include:
-        - dockerfile: ./argo-workflowcontroller/Dockerfile.ODH
-          image: ds-pipelines-argo-workflowcontroller
-        - dockerfile: ./argo-argoexec/Dockerfile.ODH
-          image: ds-pipelines-argo-argoexec
-  steps:
-    - uses: actions/checkout@v4
-    - uses: docker/setup-buildx-action@v3
-    - name: Build ODH image
-      uses: docker/build-push-action@v5
-      with:
-        context: .
-        file: ${{ matrix.dockerfile }}
-        push: false
-        cache-from: type=gha
-        cache-to: type=gha,mode=max
+coverage:
+  status:
+    patch:
+      default:
+        threshold: 5
+    project:
+      default:
+        threshold: 2
 ```
 
-### 3. Add Trivy Scanning to PR Workflow (1-2 hours)
-```yaml
-trivy-scan:
-  name: Container Security Scan
-  needs: [odh-images]
-  runs-on: ubuntu-latest
-  steps:
-    - uses: aquasecurity/trivy-action@master
-      with:
-        image-ref: 'ds-pipelines-argo-workflowcontroller:latest'
-        severity: 'CRITICAL,HIGH'
-        exit-code: '1'
-```
-
-### 4. Add Pre-commit Hooks (1-2 hours)
+### 2. Add Pre-commit Hooks (1-2 hours)
 Create `.pre-commit-config.yaml`:
 ```yaml
 repos:
   - repo: https://github.com/golangci/golangci-lint
-    rev: v1.57.0
+    rev: v2.x.x
     hooks:
       - id: golangci-lint
   - repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v4.5.0
+    rev: v4.x.x
     hooks:
       - id: trailing-whitespace
       - id: end-of-file-fixer
-      - id: check-yaml
 ```
 
-### 5. Create Basic CLAUDE.md (2-3 hours)
-```markdown
-# Argo Workflows - Development Guide
-
-## Test Patterns
-- Unit tests use Go's `testing` package with `*_test.go` files
-- E2E tests use build tags (executor, functional, api, cli, cron, etc.)
-- UI tests use Jest with ts-jest preset
-- Run `make test` for unit tests, `make test-<suite>` for E2E
-```
+### 3. Create Basic CLAUDE.md (2-3 hours)
+Add a `CLAUDE.md` with test patterns, FIPS requirements, E2E conventions, and project-specific guidelines to improve AI-assisted development quality.
 
 ## Detailed Findings
 
-### CI/CD Pipeline
+### Unit Tests
 
-**Workflow Inventory** (11 workflows):
+**Score: 7.5/10**
+
+| Metric | Value |
+|--------|-------|
+| Test files | 236 |
+| Source files | 554 |
+| Test-to-code ratio | 42.6% |
+| Testing framework | Go testing + testify (7,540 assert/require calls) |
+| Table-driven tests | 90 instances |
+| Parallel tests | 16 instances of `t.Parallel()` |
+| UI test files | 11 spec files (Jest) |
+
+**Strengths**:
+- Good test-to-code ratio at 42.6%
+- Extensive use of testify assertions (7,540 calls)
+- Table-driven test patterns (90 instances)
+- Tests cover core packages: `workflow/`, `server/`, `cmd/`, `pkg/`, `persist/`, `config/`, `errors/`
+- UI has its own Jest test suite with 11 test files
+
+**Gaps**:
+- Low `t.Parallel()` adoption (only 16 tests) — sequential execution slows CI
+- Windows unit tests disabled due to FIPS/go-toolset dependency
+- UI test coverage appears thin relative to UI codebase size
+
+### Integration/E2E Tests
+
+**Score: 9.0/10**
+
+| Metric | Value |
+|--------|-------|
+| E2E test files | 29 (in `test/e2e/`) |
+| Cluster setup | K3S on GitHub Actions |
+| K8s versions tested | v1.28.13 (min), v1.31.0 (max) |
+| Matrix strategies | 13 test configurations |
+| SDK tests | Java and Python SDK E2E |
+| Stress tests | Present (`test/stress/`) |
+| Timeout | 60 minutes |
+
+**Strengths**:
+- **13-entry matrix** covering executor, core functional, functional, API, CLI, cron, examples, plugins, and SDK tests
+- **Multi-version K8s testing**: min (v1.28.13) and max (v1.31.0) for executor, core functional, and functional tests
+- **Multiple profiles**: minimal, mysql, plugins — testing different backend configurations
+- **SDK integration**: Java SDK (Maven) and Python SDK tests run in E2E
+- **Smart change detection**: E2E tests only run when relevant files change (via `tj-actions/changed-files`)
+- **Comprehensive failure debugging**: K3S logs, pod logs, workflow descriptions on failure
+- **Stress testing**: `test/stress/` with massive workflow and pod limits scenarios
+
+**Gaps**:
+- No OpenShift-specific E2E testing (only K3S/vanilla K8s)
+- No multi-namespace testing scenarios
+
+### Build Integration
+
+**Score: 7.0/10**
+
+| Metric | Value |
+|--------|-------|
+| PR image builds | Yes (argoexec, argocli via Docker Buildx) |
+| ODH Dockerfiles | 2 (Dockerfile.ODH for workflowcontroller and argoexec) |
+| Build caching | GHA cache + Docker layer caching |
+| Multi-platform | linux/amd64, linux/arm64 (release only) |
+| Codegen validation | Yes (with `git diff --exit-code` check) |
+| Konflux simulation | No |
+
+**Strengths**:
+- PR CI builds Docker images for argoexec and argocli and uploads as artifacts
+- Images are loaded into K3S for E2E testing (build-then-test pattern)
+- Build caching via `type=gha` and Go module caching
+- Codegen validation ensures generated code is committed
+- ODH-specific Dockerfiles use UBI9 base images with FIPS support
+
+**Gaps**:
+- ODH Dockerfiles (`Dockerfile.ODH`) are not built or tested in PR CI — only the upstream `Dockerfile` is used
+- No Konflux build simulation
+- No `kustomize build` or operator manifest validation in PR pipeline
+
+### Image Testing
+
+**Score: 6.5/10**
+
+| Metric | Value |
+|--------|-------|
+| Dockerfiles | 3 (Dockerfile, Dockerfile.windows, 2x Dockerfile.ODH) |
+| Multi-stage builds | Yes (builder, UI, build targets, final distroless) |
+| Base images (upstream) | `golang:1.26.1-alpine3.23` (builder), `gcr.io/distroless/static-debian13` (runtime) |
+| Base images (ODH) | `registry.access.redhat.com/ubi9/go-toolset:1.26.3` (builder), `registry.redhat.io/ubi9/ubi-minimal:9.5` (runtime) |
+| Non-root user | Yes (USER 8737 for upstream, USER 2000 for ODH argoexec) |
+| HEALTHCHECK | No |
+| Runtime validation | No |
+| Multi-arch | linux/amd64, linux/arm64 (release only) |
+
+**Strengths**:
+- Multi-stage builds with separate build and runtime stages
+- Distroless final images (upstream) and UBI-minimal (ODH) — minimal attack surface
+- Non-root user configuration
+- `.dockerignore` likely present (standard practice)
+- Windows container support (`Dockerfile.windows`)
+
+**Gaps**:
+- No `HEALTHCHECK` instruction in any Dockerfile
+- No runtime validation (no `docker run` smoke test in CI)
+- No image scanning in PR pipeline (handled by org-level tooling)
+- ODH images not tested in PR CI
+
+### Coverage Tracking
+
+**Score: 6.0/10**
+
+| Metric | Value |
+|--------|-------|
+| Coverage tool | `--coverprofile=coverage.out` with `covermode=atomic` |
+| Reporting | Codecov (`codecov/codecov-action@v4.3.0`) |
+| PR coverage | Disabled (upload only on main) |
+| Threshold | 2% regression tolerance (project-level) |
+| Patch coverage | Disabled (`patch: off`) |
+| Ignored paths | Generated files, test files, vendor, pkg/client |
+
+**Strengths**:
+- Coverage generation is part of the test pipeline (`--coverprofile=coverage.out`)
+- Codecov integration with token-based auth
+- Sensible ignore patterns for generated code and vendor
+- Project-level threshold of 2% prevents major regressions
+
+**Gaps**:
+- **Coverage not reported on PRs** — the upload step has `if: github.ref == 'refs/heads/main'`
+- Patch coverage explicitly disabled (`patch: off`) — new code not checked
+- No coverage gates that block PR merge
+- Comment in code: "engineers just ignore this in PRs, so lets not even run it"
+
+### CI/CD Automation
+
+**Score: 8.5/10**
+
+| Metric | Value |
+|--------|-------|
+| Total workflows | 11 |
+| PR-triggered | 3 (ci-build, pr, docs) |
+| Push-triggered | 3 (ci-build, build-main, docs) |
+| Tag/release | 2 (release, sdks) |
+| Periodic | 1 (stale) |
+| Manual/dispatch | 1 (build-main) |
+| Comment-triggered | 2 (retest, ci-build) |
+| Concurrency control | Yes (group + cancel-in-progress) |
+| Change detection | Yes (tj-actions/changed-files with YAML groups) |
+| Caching | Go modules, Docker layers (GHA), yarn |
+| Timeout limits | Yes (6-60 minutes per job) |
+
+**Workflow Inventory**:
 
 | Workflow | Trigger | Purpose |
 |----------|---------|---------|
-| `ci-build.yaml` | PR + push | Main CI: tests, lint, codegen, E2E, UI |
-| `pr.yaml` | PR target | Semantic PR title check |
-| `build-main.yml` | Push to main + dispatch | ODH image builds to quay.io |
-| `release.yaml` | Tags + push to main | Multi-arch build, sign, SBOM, release |
-| `snyk.yml` | Schedule (daily) + push | Dependency vulnerability scanning |
-| `retest.yaml` | Issue comment `/retest` | Re-run failed CI jobs |
-| `stale.yaml` | Schedule | Mark stale issues/PRs |
-| `docs.yaml` | - | Documentation build |
-| `sdks.yaml` | - | SDK generation |
-| `changelog.yaml` | - | Changelog generation |
-| `dependabot-reviewer.yml` | - | Auto-review Dependabot PRs |
+| `ci-build.yaml` | PR, push | Unit tests, E2E, lint, codegen, UI, image builds |
+| `pr.yaml` | PR | Semantic PR title check |
+| `build-main.yml` | push to main, dispatch | ODH image builds (workflowcontroller, argoexec) |
+| `release.yaml` | tag push | Multi-platform release builds + signing |
+| `sdks.yaml` | tag push | Java/Python SDK publishing |
+| `docs.yaml` | PR, push | Documentation build and lint |
+| `stale.yaml` | cron (daily) | Stale issue/PR management |
+| `retest.yaml` | issue comment | Re-run failed CI on `/retest` |
+| `dependabot-reviewer.yml` | PR | Dependabot PR auto-review |
+| `changelog.yaml` | — | Changelog generation |
+| `snyk.yml` | — | Security scanning |
 
 **Strengths**:
-- Smart changed-file detection using `tj-actions/changed-files` — tests, E2E, codegen, lint, and UI jobs only run when relevant files change
-- Concurrency control with `cancel-in-progress: true` prevents queue buildup
-- SHA-pinned GitHub Actions with verification step (`ensure-sha-pinned-actions`)
-- `/retest` comment support for re-running failed jobs
-- E2E composite result job for accurate status checks
+- **Smart change detection**: 5 file groups (tests, e2e-tests, codegen, lint, ui) with precise path matching
+- **Concurrency control**: `cancel-in-progress: true` prevents duplicate runs
+- **Custom actions**: `setup-go` and `build_and_tag` for consistency
+- **SHA-pinned actions**: Enforced via `zgosalvez/github-actions-ensure-sha-pinned-actions`
+- **Comment-based retesting**: `/retest` and `/test` commands
+- **Comprehensive failure debugging** in E2E tests
 
-**Weaknesses**:
-- ODH-specific builds (`build-main.yml`) don't run on PRs
-- Snyk has `if: github.repository == 'argoproj/argo-workflows'` — never runs on this fork
-- Windows tests disabled (`if: false`) due to FIPS/go-toolset requirements
+**Gaps**:
+- ODH builds (`build-main.yml`) only run on push to main / manual dispatch — not on PRs
+- No test result reporting (e.g., JUnit XML upload)
 
-### Test Coverage
+### Static Analysis
 
-**Go Unit Tests**:
-- 236 test files covering 554 source files (ratio: 0.43)
-- Parallel execution with `-p 20` for speed (10-minute timeout)
-- Heavy concentration in `workflow/controller/` (32 test files) — the core business logic
-- Coverage generated with `atomic` mode via `-coverprofile`
+**Score: 8.0/10**
 
-**Key test distribution**:
-| Package | Test Files | Notes |
-|---------|-----------|-------|
-| `workflow/controller/` | 32 | Core controller logic — best covered |
-| `test/e2e/` | 29 | E2E test suites |
-| `pkg/apis/workflow/v1alpha1/` | 14 | CRD type validation |
-| `workflow/sync/` | 7 | Synchronization/locking |
-| `cmd/argo/commands/` | 7 | CLI commands |
-| `workflow/common/` | 6 | Shared workflow utilities |
-| `util/template/` | 6 | Template engine |
+#### Linting
+- **golangci-lint v2** with 18 linters enabled:
+  - `asasalint`, `bidichk`, `bodyclose`, `copyloopvar`, `errcheck`, `gosec`, `govet`, `ineffassign`, `misspell`, `nakedret`, `nosprintfhostport`, `reassign`, `rowserrcheck`, `sqlclosecheck`, `staticcheck`, `testifylint`, `unparam`, `unused`
+- **Formatters**: `gofmt`, `goimports` (with local prefix `github.com/argoproj/argo-workflows/`)
+- **gosec** configured with specific includes (G304, G307) and excludes (G106, G402)
+- **staticcheck** with all checks minus some style rules (ST1003, ST1005, ST1016)
+- **UI**: ESLint configured via `yarn lint` with auto-fix
+- **Docs**: Markdown linting (`.markdownlint.yaml`, `.mlc_config.json`), spell checking (`.spelling`)
+- **GH Actions**: SHA pinning enforcement
 
-**UI Tests**:
-- 11 test files using Jest + ts-jest
-- Tests cover: services, components, pod naming, resource parsing, event flow graph
-- Jest config with TypeScript support and module mocking
+#### FIPS Compatibility
+- **Go module**: `godebug fips140=on` in `go.mod` — FIPS mode enabled at module level
+- **ODH Dockerfiles**: `GOFIPS140=v1.0.0` build flag with `-tags no_openssl`
+- **Base images**: UBI9 go-toolset for builder, UBI9 ubi-minimal for runtime — fully FIPS-capable
+- **Upstream Dockerfile**: Uses `golang:alpine` (not FIPS-capable) but this is expected for upstream
+- **Minor issue**: `math/rand` imported in `workflow/util/util.go` — not a security concern for workflow ID generation but worth noting
+- **Windows tests disabled** due to FIPS/go-toolset unavailability
 
-**E2E Tests**:
-- 12-configuration matrix across 3 profiles (minimal, mysql, plugins)
-- Tests: executor, corefunctional, functional, api, cli, cron, examples, plugins, java-sdk, python-sdk
-- Multi-K8s version testing (min and max versions via `hack/k8s-versions.sh`)
-- K3S-based cluster with Docker runtime
-- 60-minute timeout with 20-minute suite timeout
-- Comprehensive failure debugging (K3s logs, pod logs, workflow descriptions)
-- SDK integration tests for Java and Python
+#### Dependency Alerts
+- **Dependabot**: Comprehensive configuration covering 4 ecosystems:
+  - `gomod` (Go dependencies)
+  - `npm` (UI dependencies with dev/prod grouping)
+  - `pip` (docs dependencies)
+  - `github-actions` (CI action pinning)
+  - Security-only updates (non-security PRs limited via `open-pull-requests-limit: 0`)
+- **Renovate**: Configured for Nix flake updates only (`dev/nix/flake.nix`)
 
-### Code Quality
+#### Pre-commit Hooks
+- **Not configured** — no `.pre-commit-config.yaml`
+- Linting runs in CI only, not enforced locally
 
-**Linting**:
-- golangci-lint v2 with 17 linters enabled:
-  - Security: `gosec` (G304, G307)
-  - Quality: `staticcheck`, `errcheck`, `bodyclose`, `unparam`
-  - Style: `gofmt`, `goimports`, `misspell`, `nakedret`
-  - Correctness: `govet`, `rowserrcheck`, `sqlclosecheck`, `testifylint`
-- Exclusions for generated code, vendor, docs, examples
-- Lint changes verified via `git diff --exit-code`
-- Markdownlint and spell checker for documentation
-- Action SHA pinning verification
+### Agent Rules
 
-**Missing**:
-- No pre-commit hooks
-- No CodeQL or Semgrep for deep SAST
-- No secret detection (gitleaks, TruffleHog)
-
-### Container Images
-
-**Build Process**:
-- **Upstream Dockerfile**: Multi-stage build with Go builder, Node UI builder, and minimal Alpine final images
-- **ODH Dockerfiles**: UBI9 base (`registry.access.redhat.com/ubi9/go-toolset`), FIPS-enabled (`GOFIPS140=v1.0.0`), non-root users
-- BuildKit with `--mount=type=cache` for Go module and build caches
-- Multi-architecture support: linux/amd64, linux/arm64, windows
-- Docker Buildx with GHA cache layer
-
-**Security**:
-- Cosign image signing on releases
-- SBOM generation via `spdx-sbom-generator` and `bom` tools
-- Image pull verification in release pipeline
-- Non-root users in ODH Dockerfiles (user 8737 and 2000)
-
-**Missing**:
-- No container scanning (Trivy/Grype) in PR or release workflows
-- No image startup validation
-- No `.trivyignore` for known false positives
-- Snyk image scanning referenced but handled externally (app.snyk.io)
-
-### Security Practices
-
-**Present**:
-- Snyk dependency scanning (Go + Node) — scheduled + push to main
-- gosec via golangci-lint (limited checks: G304, G307)
-- Cosign image signing with private key
-- SBOM generation and publication with releases
-- Security advisory process documented
-- HackerOne bug bounty program
-- SHA-pinned GitHub Actions
-- Minimal permissions in workflows (`contents: read`)
-
-**Missing**:
-- No PR-time vulnerability scanning (Snyk condition excludes this fork)
-- No CodeQL/SAST
-- No gitleaks/secret detection
-- No dependency review action for PRs
-- No Trivy container scanning
-
-### Agent Rules (Agentic Flow Quality)
+**Score: 0.0/10**
 
 - **Status**: Missing
-- **Coverage**: None — no `.claude/` directory, no `CLAUDE.md`, no `AGENTS.md`
-- **Quality**: N/A
-- **Gaps**: All test types lack rules (unit, E2E, integration, UI)
-- **Recommendation**: Generate rules with `/test-rules-generator` covering:
-  - Go unit test patterns (build tags, test fixtures, parallel execution)
-  - E2E test patterns (K3S setup, profiles, wait conditions)
-  - UI test patterns (Jest, ts-jest, module mocking)
-  - API test patterns (SDK integration)
+- **CLAUDE.md**: Not present
+- **AGENTS.md**: Not present
+- **`.claude/` directory**: Not present
+- **`.claude/rules/`**: Not present
+
+**Recommendation**: Generate agent rules using `/test-rules-generator` to create:
+- Go unit test patterns (testify assertions, table-driven tests)
+- E2E test conventions (K3S setup, fixtures, test profiles)
+- FIPS compliance requirements (GOFIPS140, UBI base images)
+- Code generation workflow (make codegen, proto files)
+- PR guidelines (semantic commits, change detection groups)
 
 ## Recommendations
 
 ### Priority 0 (Critical)
-
-1. **Enable Codecov coverage reporting on PRs**
-   - Remove the `if: github.ref == 'refs/heads/main'` condition
-   - Add informational PR comments showing coverage delta
-   - Consider adding patch coverage checks (currently disabled)
-
-2. **Add ODH Dockerfile build validation to PR workflow**
-   - Build `Dockerfile.ODH` variants in `ci-build.yaml`
-   - Ensures FIPS, UBI9, and go-toolset compatibility before merge
-   - Prevents build breakage discovered only on main branch
-
-3. **Add container vulnerability scanning to PR workflow**
-   - Add Trivy or Grype scanning for built images
-   - Set `exit-code: 1` for CRITICAL/HIGH severabilities
-   - The Snyk condition `github.repository == 'argoproj/argo-workflows'` means it never runs on this fork
+1. **Enable codecov on PRs**: Remove the `if: github.ref == 'refs/heads/main'` gate and enable patch coverage to catch regressions before merge
+2. **Add PR-time ODH Dockerfile builds**: Build `Dockerfile.ODH` variants in the CI pipeline to catch FIPS/UBI-specific build failures before merge
 
 ### Priority 1 (High Value)
-
-4. **Add image runtime validation**
-   - Test that built images start successfully
-   - Verify entrypoint responds (e.g., `--help` or `--version`)
-   - Check for correct file permissions and non-root user
-
-5. **Enable CodeQL or Semgrep for SAST**
-   - Go and JavaScript/TypeScript analysis
-   - Catch security issues beyond what gosec finds
-   - Run on PRs for early detection
-
-6. **Add secret detection**
-   - Add gitleaks to PR workflow
-   - Prevents accidental credential commits
-   - Minimal configuration required
-
-7. **Create agent rules for test automation**
-   - Add `.claude/rules/` with test creation guidance
-   - Cover Go unit tests, E2E tests, UI tests
-   - Include build tag patterns, fixture usage, parallel execution
+3. **Add container runtime validation**: After building images, run `docker run --rm <image> --help` or similar smoke test to verify binary execution
+4. **Create agent rules**: Add `.claude/rules/` with test patterns, FIPS requirements, and project conventions
+5. **Increase t.Parallel() adoption**: Only 16 of 236 test files use parallel execution — systematic adoption could cut CI time significantly
 
 ### Priority 2 (Nice-to-Have)
-
-8. **Add pre-commit hooks**
-   - golangci-lint, trailing whitespace, YAML validation
-   - Faster developer feedback loop
-
-9. **Re-enable Windows unit tests**
-   - Currently disabled due to FIPS/go-toolset
-   - Investigate alternative approaches for Windows CI
-
-10. **Add performance regression testing**
-    - Benchmark workflow controller throughput
-    - Track compilation times
-    - Monitor memory usage under load
-
-11. **Implement chaos engineering tests**
-    - Test controller behavior under network partitions
-    - Verify recovery from pod evictions
-    - Test handling of API server unavailability
+6. **Add pre-commit hooks**: Configure `.pre-commit-config.yaml` for local linting/formatting enforcement
+7. **Integrate stress testing in CI**: The `test/stress/` scenarios are available but not run in automated CI
+8. **Add JUnit XML test reporting**: Upload test results for better GitHub PR integration and test analytics
 
 ## Comparison to Gold Standards
 
 | Dimension | argo-workflows | odh-dashboard | notebooks | kserve |
 |-----------|---------------|---------------|-----------|--------|
-| Unit Tests | 7/10 | 9/10 | 6/10 | 9/10 |
-| Integration/E2E | 8/10 | 9/10 | 7/10 | 9/10 |
-| Build Integration | 5/10 | 8/10 | 7/10 | 7/10 |
-| Image Testing | 5/10 | 7/10 | 10/10 | 6/10 |
-| Coverage Tracking | 5/10 | 9/10 | 5/10 | 8/10 |
-| CI/CD Automation | 8/10 | 9/10 | 8/10 | 8/10 |
-| Agent Rules | 0/10 | 8/10 | 3/10 | 2/10 |
-| **Overall** | **6.8/10** | **8.7/10** | **6.8/10** | **7.6/10** |
+| Unit Tests | 7.5 | 9.0 | 7.0 | 8.0 |
+| Integration/E2E | 9.0 | 9.0 | 8.0 | 9.0 |
+| Build Integration | 7.0 | 8.0 | 9.0 | 7.0 |
+| Image Testing | 6.5 | 7.0 | 9.0 | 6.0 |
+| Coverage Tracking | 6.0 | 9.0 | 6.0 | 8.0 |
+| CI/CD Automation | 8.5 | 9.0 | 8.0 | 8.0 |
+| Static Analysis | 8.0 | 8.0 | 7.0 | 7.0 |
+| Agent Rules | 0.0 | 8.0 | 2.0 | 2.0 |
+| **Overall** | **7.4** | **8.7** | **7.4** | **7.3** |
 
-**Key gaps compared to gold standards**:
-- **vs. odh-dashboard**: No contract tests, no PR coverage reporting, no agent rules
-- **vs. notebooks**: No 5-layer image testing, no runtime validation
-- **vs. kserve**: No PR coverage enforcement, no multi-version coverage
+**Notable**: argo-workflows matches or exceeds gold standards in E2E testing and CI/CD automation. The main gaps are coverage enforcement, agent rules, and ODH-specific build validation.
 
 ## File Paths Reference
 
 ### CI/CD
-- `.github/workflows/ci-build.yaml` — Main CI pipeline (tests, lint, E2E)
+- `.github/workflows/ci-build.yaml` — Main CI pipeline (unit tests, E2E, lint, codegen, UI)
 - `.github/workflows/pr.yaml` — PR title semantic check
 - `.github/workflows/build-main.yml` — ODH image builds
-- `.github/workflows/release.yaml` — Multi-arch release with signing
-- `.github/workflows/snyk.yml` — Dependency scanning (scheduled)
-- `.github/workflows/retest.yaml` — `/retest` comment handler
+- `.github/workflows/release.yaml` — Multi-platform release builds
+- `.github/workflows/docs.yaml` — Documentation build/lint
+- `.github/workflows/retest.yaml` — Comment-triggered retest
+- `.github/actions/setup-go/` — Custom Go setup action
+- `.github/actions/build_and_tag/` — Custom build/tag action
 
 ### Testing
-- `test/e2e/` — 29 E2E test files (38 total Go files)
-- `workflow/controller/*_test.go` — 32 controller unit test files
-- `ui/src/**/*.test.ts` — 11 UI test files
-- `ui/jest.config.js` — Jest configuration
+- `test/e2e/` — 29 E2E test files with fixtures and manifests
+- `test/stress/` — Stress testing scenarios
+- `test/util/` — Test utilities
+- `hack/k8s-versions.sh` — K8s version matrix configuration
+- `ui/jest.config.js` — UI test configuration
 
-### Build
-- `Dockerfile` — Upstream multi-stage build
-- `Dockerfile.windows` — Windows build
-- `argo-workflowcontroller/Dockerfile.ODH` — ODH controller image (UBI9 + FIPS)
-- `argo-argoexec/Dockerfile.ODH` — ODH executor image (UBI9 + FIPS)
-- `Makefile` — Build and test targets
+### Build / Images
+- `Dockerfile` — Upstream multi-stage Dockerfile (alpine/distroless)
+- `Dockerfile.windows` — Windows container support
+- `argo-workflowcontroller/Dockerfile.ODH` — ODH workflow controller (UBI9/FIPS)
+- `argo-argoexec/Dockerfile.ODH` — ODH argoexec (UBI9/FIPS)
+- `Makefile` — Build, test, lint, codegen targets
 
-### Quality Config
-- `.golangci.yml` — 17 linters + 2 formatters
-- `.codecov.yml` — Coverage thresholds (2% tolerance)
-- `SECURITY.md` — Security advisory process
-- `CODEOWNERS` — Code ownership for protobuf files
+### Code Quality
+- `.golangci.yml` — 18 linters + formatters configured
+- `.codecov.yml` — Coverage tracking (2% threshold, patch off)
+- `.github/dependabot.yml` — 4-ecosystem dependency management
+- `renovate.json` — Nix flake updates
+- `.markdownlint.yaml` — Markdown linting
+- `.spelling` — Spell check dictionary
+
+### FIPS
+- `go.mod` — `godebug fips140=on`
+- `argo-workflowcontroller/Dockerfile.ODH` — `GOFIPS140=v1.0.0`
+- `argo-argoexec/Dockerfile.ODH` — `GOFIPS140=v1.0.0`

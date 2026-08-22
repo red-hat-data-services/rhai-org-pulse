@@ -97,12 +97,13 @@
                       />
                     </div>
                     <textarea
+                      data-editable-status
                       :value="obj.quarters[q] ? obj.quarters[q].summary : ''"
-                      @input="updateEditableQuarter(obj.id, q, $event.target.value)"
+                      @input="updateEditableQuarter(obj.id, q, $event.target.value); autoResize($event.target)"
                       @focus="editableFocus[obj.id + '-' + q] = true"
                       @blur="editableFocus[obj.id + '-' + q] = false; saveEditableData()"
-                      class="w-full text-[11px] leading-relaxed text-gray-700 dark:text-gray-300 bg-transparent border border-gray-200 dark:border-gray-700 rounded-lg px-2.5 py-2 min-h-[5rem] resize-y focus:ring-1 focus:ring-primary-500 focus:border-primary-500"
-                      style="word-wrap: break-word; overflow-wrap: break-word; white-space: pre-wrap;"
+                      class="w-full text-[11px] leading-relaxed text-gray-700 dark:text-gray-300 bg-transparent border border-gray-200 dark:border-gray-700 rounded-lg px-2.5 py-2 min-h-[3rem] resize-none focus:ring-1 focus:ring-primary-500 focus:border-primary-500"
+                      style="word-wrap: break-word; overflow-wrap: break-word; white-space: pre-wrap; overflow: hidden;"
                       placeholder="Enter status..."
                     />
                   </div>
@@ -156,7 +157,7 @@
 </template>
 
 <script setup>
-import { reactive, inject, onMounted } from 'vue'
+import { reactive, inject, onMounted, nextTick } from 'vue'
 import { OKR_DATA, STATUS_CONFIG, QUARTERS } from '../constants/mock-okrs.js'
 import { useOkrPermissions } from '../composables/useOkrPermissions.js'
 
@@ -234,8 +235,87 @@ function updateEditableStatus(objId, q, statusKey) {
   saveEditableData()
 }
 
+function autoResize(el) {
+  if (!el.value) {
+    el.style.height = ''
+    return
+  }
+  el.style.height = 'auto'
+  el.style.height = el.scrollHeight + 'px'
+}
+
+function resizeAllTextareas() {
+  nextTick(function() {
+    var areas = document.querySelectorAll('[data-editable-status]')
+    for (var i = 0; i < areas.length; i++) {
+      autoResize(areas[i])
+    }
+  })
+}
+
+var saveTimer = null
+
 function saveEditableData() {
-  // placeholder for future persistence
+  if (saveTimer) clearTimeout(saveTimer)
+  saveTimer = setTimeout(persistEditableData, 500)
+}
+
+function collectEditableEntries() {
+  var entries = {}
+  for (var ci = 0; ci < data.categories.length; ci++) {
+    var cat = data.categories[ci]
+    for (var oi = 0; oi < cat.objectives.length; oi++) {
+      var obj = cat.objectives[oi]
+      if (!obj.editable) continue
+      for (var qi = 0; qi < quarters.length; qi++) {
+        var q = quarters[qi]
+        var qd = obj.quarters[q]
+        if (qd && (qd.summary || qd.status !== 'not-started')) {
+          var key = obj.id + '|' + q
+          entries[key] = { status: qd.status, summary: qd.summary }
+        }
+      }
+    }
+  }
+  return entries
+}
+
+async function persistEditableData() {
+  try {
+    var entries = collectEditableEntries()
+    await fetch('/api/modules/okr-hub/editable-status', {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ entries: entries })
+    })
+  } catch (err) {
+    console.warn('[okr-hub] Failed to save editable status:', err.message)
+  }
+}
+
+async function loadEditableData() {
+  try {
+    var res = await fetch('/api/modules/okr-hub/editable-status')
+    if (!res.ok) return
+    var saved = await res.json()
+    if (!saved || !saved.entries) return
+    var keys = Object.keys(saved.entries)
+    for (var i = 0; i < keys.length; i++) {
+      var parts = keys[i].split('|')
+      var objId = parts[0]
+      var q = parts[1]
+      var entry = saved.entries[keys[i]]
+      var obj = findObjective(objId)
+      if (obj && obj.editable) {
+        if (!obj.quarters[q]) obj.quarters[q] = { status: 'not-started', summary: '' }
+        obj.quarters[q].status = entry.status || 'not-started'
+        obj.quarters[q].summary = entry.summary || ''
+      }
+    }
+    resizeAllTextareas()
+  } catch (err) {
+    console.warn('[okr-hub] Failed to load editable status:', err.message)
+  }
 }
 
 function findObjective(id) {
@@ -293,48 +373,29 @@ async function fetchOnTimeReleases() {
   }
 }
 
-var quarterMonths = {
-  Q1: ['jan', 'feb', 'mar'],
-  Q2: ['apr', 'may', 'jun'],
-  Q3: ['jul', 'aug', 'sep'],
-  Q4: ['oct', 'nov', 'dec']
-}
-
 async function fetchCveSla() {
   try {
-    var res = await fetch('/api/modules/okr-hub/reports/cve-sla')
+    var res = await fetch('/api/modules/releases/cve-sustaining')
     if (!res.ok) return
     var result = await res.json()
-    if (!result.months || !result.products) return
+    if (!result.slaCompliance || !result.slaCompliance.quarters) return
 
     var obj = findObjective('cve-sla')
     if (!obj) return
 
-    for (var qi = 0; qi < quarters.length; qi++) {
-      var q = quarters[qi]
-      var months = quarterMonths[q]
-      var totalMet = 0
-      var totalMissed = 0
-      var hasData = false
-
-      for (var mi = 0; mi < months.length; mi++) {
-        var monthData = result.months[months[mi]]
-        if (!monthData) continue
-        for (var pi = 0; pi < result.products.length; pi++) {
-          var pd = monthData[result.products[pi]]
-          if (!pd) continue
-          var met = pd.met != null ? pd.met : 0
-          var missed = pd.missed != null ? pd.missed : 0
-          if (met > 0 || missed > 0) hasData = true
-          totalMet += met
-          totalMissed += missed
+    var slaQuarters = result.slaCompliance.quarters
+    var targetYear = String(data.year)
+    for (var i = 0; i < slaQuarters.length; i++) {
+      var sq = slaQuarters[i]
+      var match = sq.label.match(/Q(\d)\s+(\d{4})/)
+      if (!match) continue
+      if (match[2] !== targetYear) continue
+      var qKey = 'Q' + match[1]
+      if (sq.total > 0) {
+        obj.quarters[qKey] = {
+          status: pctToStatus(sq.pct),
+          summary: sq.pct + '%\n' + sq.metSla + ' met, ' + sq.missedSla + ' missed'
         }
-      }
-
-      if (hasData) {
-        var total = totalMet + totalMissed
-        var pct = total > 0 ? Math.round((totalMet / total) * 100) : 0
-        obj.quarters[q] = { status: pctToStatus(pct), summary: pct + '%\n' + totalMet + ' met, ' + totalMissed + ' missed' }
       }
     }
   } catch (err) {
@@ -454,6 +515,7 @@ async function fetchTechnicalVisibility() {
 }
 
 onMounted(function() {
+  loadEditableData()
   fetchOnTimeReleases()
   fetchCveSla()
   fetchSupportCases()

@@ -17,13 +17,13 @@ module.exports = async function releasesExport(addFile, storage, mapping) {
   const { readFromStorage, listStorageFiles } = storage;
 
   // Registry (no sensitive data — export as-is)
-  const registry = readFromStorage(`${DATA_PREFIX}/registry.json`);
+  const registry = await readFromStorage(`${DATA_PREFIX}/registry.json`);
   if (registry) {
     addFile(`${DATA_PREFIX}/registry.json`, registry);
   }
 
   // Execution data (feature-traffic storage -> releases/execution export)
-  const index = readFromStorage(`${EXECUTION_STORAGE_PREFIX}/index.json`);
+  const index = await readFromStorage(`${EXECUTION_STORAGE_PREFIX}/index.json`);
   if (index) {
     const anonymizedIndex = { ...index };
     if (Array.isArray(anonymizedIndex.features)) {
@@ -33,9 +33,9 @@ module.exports = async function releasesExport(addFile, storage, mapping) {
 
     // features/*.json
     let featureFiles;
-    try { featureFiles = listStorageFiles(`${EXECUTION_STORAGE_PREFIX}/features`) || []; } catch { featureFiles = []; }
+    try { featureFiles = await listStorageFiles(`${EXECUTION_STORAGE_PREFIX}/features`) || []; } catch { featureFiles = []; }
     for (const fileName of featureFiles) {
-      const feature = readFromStorage(`${EXECUTION_STORAGE_PREFIX}/features/${fileName}`);
+      const feature = await readFromStorage(`${EXECUTION_STORAGE_PREFIX}/features/${fileName}`);
       if (!feature) continue;
       const anonymized = anonymizeFeatureDetail(feature, mapping);
       const anonymizedFileName = anonymized.key ? `${anonymized.key}.json` : fileName;

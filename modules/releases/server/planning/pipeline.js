@@ -5,12 +5,14 @@ const {
   mapToCandidate,
   findRfeFromLinks,
   findTier1Features,
+  findTier1FeaturesFromJira,
   findTier1Rfes,
   findOutcomeSummaries,
   findTier2Features,
   findTier2Rfes,
   findTier3Features
 } = require('./cache-reader')
+const { fetchOutcomeChildren } = require('./outcome-children-fetch')
 
 function sortByPriority(a, b) {
   const pa = PRIORITY_ORDER[a.priority] !== undefined ? PRIORITY_ORDER[a.priority] : 99
@@ -19,8 +21,9 @@ function sortByPriority(a, b) {
   return a.issueKey.localeCompare(b.issueKey)
 }
 
-function runPipeline(config, bigRocks, release, readFromStorage, opts) {
+async function runPipeline(config, bigRocks, release, readFromStorage, opts) {
   const rockFilter = opts && opts.rockFilter
+  const jiraClient = opts && opts.jiraClient
 
   const rocksToProcess = rockFilter
     ? bigRocks.filter(function(r) { return r.name === rockFilter })
@@ -53,7 +56,7 @@ function runPipeline(config, bigRocks, release, readFromStorage, opts) {
   }
 
   // Load the execution feature index once
-  const index = loadIndex(readFromStorage)
+  const index = await loadIndex(readFromStorage)
 
   if (!index.features || index.features.length === 0) {
     warnings.push('Feature index is empty — pipeline data may be incomplete. Run an execution data refresh first.')
@@ -74,6 +77,21 @@ function runPipeline(config, bigRocks, release, readFromStorage, opts) {
     console.log('[releases/planning] ' + missingOutcomes.length + ' outcome key(s) not in feature index: ' + missingOutcomes.join(', '))
   }
 
+  // Live Jira hierarchy for Tier-1 Feature membership (hybrid). Falls back to index parentKey.
+  var jiraChildrenByOutcome = null
+  var hierarchySource = 'index'
+  if (jiraClient && jiraClient.fetchAllJqlResults && allOutcomeKeys.length > 0) {
+    try {
+      jiraChildrenByOutcome = await fetchOutcomeChildren(jiraClient, allOutcomeKeys)
+      hierarchySource = 'jira'
+    } catch (err) {
+      warnings.push('Live Jira outcome-children fetch failed; falling back to execution index parentKey: ' + (err && err.message ? err.message : err))
+      console.warn('[release-planning] ' + warnings[warnings.length - 1])
+      jiraChildrenByOutcome = null
+      hierarchySource = 'index'
+    }
+  }
+
   // Phase A: Discover children for each rock's outcomes
   // Maps: issueKey -> { candidate, rockSet: Set<"priority:name"> }
   const featureMap = new Map()
@@ -86,8 +104,15 @@ function runPipeline(config, bigRocks, release, readFromStorage, opts) {
     let rockChildCount = 0
 
     // Find Tier 1 features for this rock's outcomes (with stats tracking)
-    var rockStats = { totalMatches: 0, closedFiltered: 0, noTargetVersion: 0 }
-    const rawFeatures = findTier1Features(readFromStorage, index, rock.outcomeKeys, rockStats)
+    var rockStats = { totalMatches: 0, closedFiltered: 0, noTargetVersion: 0, jiraOnly: 0 }
+    var rawFeatures
+    if (jiraChildrenByOutcome) {
+      rawFeatures = await findTier1FeaturesFromJira(
+        readFromStorage, index, rock.outcomeKeys, jiraChildrenByOutcome, rockStats
+      )
+    } else {
+      rawFeatures = await findTier1Features(readFromStorage, index, rock.outcomeKeys, rockStats)
+    }
     var rockTerminalFiltered = 0
     var rockReleaseMismatch = 0
     for (let fi = 0; fi < rawFeatures.length; fi++) {
@@ -126,7 +151,7 @@ function runPipeline(config, bigRocks, release, readFromStorage, opts) {
     }
 
     // Find Tier 1 RFEs for this rock's outcomes
-    const rawRfes = findTier1Rfes(readFromStorage, index, rock.outcomeKeys, release)
+    const rawRfes = await findTier1Rfes(readFromStorage, index, rock.outcomeKeys, release)
     for (let rfi = 0; rfi < rawRfes.length; rfi++) {
       const rfe = rawRfes[rfi]
       const rfeCandidate = mapToCandidate(rfe, rock.name, 'outcome')
@@ -142,15 +167,18 @@ function runPipeline(config, bigRocks, release, readFromStorage, opts) {
 
     if (rockChildCount === 0 && rock.outcomeKeys.length > 0) {
       var msg
+      var sourceLabel = hierarchySource === 'jira' ? 'Jira children' : 'matching parentKey in the index'
       if (rockStats.totalMatches === 0) {
-        msg = 'Big Rock "' + rock.name + '" has outcomes (' + rock.outcomeKeys.join(', ') + ') but no features with matching parentKey found in the index. Check parent-child links in Jira.'
+        msg = 'Big Rock "' + rock.name + '" has outcomes (' + rock.outcomeKeys.join(', ')
+          + ') but no features found via ' + sourceLabel + '. Check parent-child links in Jira.'
       } else {
         var parts = []
-        parts.push(rockStats.totalMatches + ' candidate(s) with matching parentKey')
+        parts.push(rockStats.totalMatches + ' candidate(s) via ' + sourceLabel)
         if (rockStats.closedFiltered > 0) parts.push(rockStats.closedFiltered + ' excluded (closed status)')
         if (rockStats.noTargetVersion > 0) parts.push(rockStats.noTargetVersion + ' excluded (no target version)')
         if (rockReleaseMismatch > 0) parts.push(rockReleaseMismatch + ' excluded (wrong release)')
         if (rockTerminalFiltered > 0) parts.push(rockTerminalFiltered + ' excluded (terminal status)')
+        if (rockStats.jiraOnly > 0) parts.push(rockStats.jiraOnly + ' not yet in execution index')
         msg = 'Big Rock "' + rock.name + '" has outcomes (' + rock.outcomeKeys.join(', ') + ') but no qualifying features: ' + parts.join(', ')
       }
       warnings.push(msg)
@@ -204,8 +232,8 @@ function runPipeline(config, bigRocks, release, readFromStorage, opts) {
   const tier1FeatureKeys = new Set(tier1Features.map(function(c) { return c.issueKey }))
   const tier1RfeKeys = new Set(tier1Rfes.map(function(c) { return c.issueKey }))
 
-  const rawTier2Features = findTier2Features(readFromStorage, index, release, tier1FeatureKeys)
-  const rawTier2Rfes = findTier2Rfes(readFromStorage, index, release, tier1RfeKeys)
+  const rawTier2Features = await findTier2Features(readFromStorage, index, release, tier1FeatureKeys)
+  const rawTier2Rfes = await findTier2Rfes(readFromStorage, index, release, tier1RfeKeys)
 
   // Post-filter terminal statuses on Tier 2 features
   const tier2Features = []
@@ -241,7 +269,7 @@ function runPipeline(config, bigRocks, release, readFromStorage, opts) {
   tier1FeatureKeys.forEach(function(k) { tier3Exclude.add(k) })
   tier2FeatureKeys.forEach(function(k) { tier3Exclude.add(k) })
 
-  const rawTier3Features = findTier3Features(readFromStorage, index, tier3Exclude)
+  const rawTier3Features = await findTier3Features(readFromStorage, index, tier3Exclude)
 
   const tier3Features = []
   for (let t3i = 0; t3i < rawTier3Features.length; t3i++) {
@@ -294,7 +322,8 @@ function runPipeline(config, bigRocks, release, readFromStorage, opts) {
     terminalFilteredCount: terminalFilteredCount,
     rocksWithoutOutcomes: rocksWithout.map(function(r) { return r.name }),
     missingOutcomes: missingOutcomes,
-    warnings: warnings
+    warnings: warnings,
+    hierarchySource: hierarchySource
   }
 }
 
@@ -312,7 +341,9 @@ function buildCandidateResponse(pipelineResult, version, bigRocks, demoMode) {
   for (let fi = 0; fi < features.length; fi++) {
     if (features[fi].status) allStatuses.add(features[fi].status)
     if (features[fi].components) {
-      const parts = features[fi].components.split(', ')
+      const parts = Array.isArray(features[fi].components)
+        ? features[fi].components
+        : features[fi].components.split(', ')
       for (let pi = 0; pi < parts.length; pi++) {
         const trimmed = parts[pi].trim()
         if (trimmed) allTeams.add(trimmed)
@@ -361,6 +392,8 @@ function buildCandidateResponse(pipelineResult, version, bigRocks, demoMode) {
     jiraBaseUrl: require('./constants').JIRA_BROWSE_URL,
     lastRefreshed: new Date().toISOString(),
     demoMode: !!demoMode,
+    // 'jira' when Tier-1 Feature membership came from live parent query; else 'index'
+    hierarchySource: pipelineResult.hierarchySource || 'index',
     summary: {
       totalFeatures: features.length,
       totalRfes: rfes.length,

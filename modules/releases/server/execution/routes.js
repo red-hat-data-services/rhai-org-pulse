@@ -148,20 +148,20 @@ function stripZStream(value) {
  *         description: Per-key cooldown active
  */
 
-module.exports = function registerExecutionRoutes(router, context) {
+module.exports = async function registerExecutionRoutes(router, context) {
   // Initialize scheduler with secrets and jira client
   const jira = context.jira || null;
   if (context.secrets) scheduler.init(context.secrets, jira);
 
   const { storage, requireAuth, requireScope } = context;
 
-  function readDataFile(relativePath) {
-    return storage.readFromStorage(`${DATA_PREFIX}/${relativePath}`);
+  async function readDataFile(relativePath) {
+    return await storage.readFromStorage(`${DATA_PREFIX}/${relativePath}`);
   }
 
   // GET /features — list all features with summary metrics
-  router.get('/features', requireAuth, requireScope('releases:read'), function(req, res) {
-    const index = readDataFile('index.json');
+  router.get('/features', requireAuth, requireScope('releases:read'), async function(req, res) {
+    const index = await readDataFile('index.json');
     if (!index || !index.features) {
       return res.json({
         fetchedAt: null,
@@ -182,9 +182,9 @@ module.exports = function registerExecutionRoutes(router, context) {
 
     const versionFilter = req.query.version;
     if (versionFilter) {
-      const normalizedFilter = stripZStream(versionFilter);
+      const normalizedFilter = stripZStream(versionFilter).toLowerCase();
       features = features.filter(f =>
-        f.fixVersions && f.fixVersions.some(v => stripZStream(v) === normalizedFilter)
+        f.fixVersions && f.fixVersions.some(v => stripZStream(v).toLowerCase() === normalizedFilter)
       );
     }
 
@@ -215,7 +215,7 @@ module.exports = function registerExecutionRoutes(router, context) {
   });
 
   // GET /features/:key — full feature detail
-  router.get('/features/:key', requireAuth, requireScope('releases:read'), function(req, res) {
+  router.get('/features/:key', requireAuth, requireScope('releases:read'), async function(req, res) {
     const key = req.params.key.toUpperCase();
 
     // Validate key format (RHAISTRAT in production, TEST* in demo mode)
@@ -223,7 +223,7 @@ module.exports = function registerExecutionRoutes(router, context) {
       return res.status(400).json({ error: 'Invalid feature key format' });
     }
 
-    const feature = readDataFile(`features/${key}.json`);
+    const feature = await readDataFile(`features/${key}.json`);
     if (!feature) {
       return res.status(404).json({ error: `Feature ${key} not found` });
     }
@@ -242,7 +242,7 @@ module.exports = function registerExecutionRoutes(router, context) {
       return res.status(400).json({ error: 'Invalid feature key format' });
     }
 
-    const existing = readDataFile(`features/${key}.json`);
+    const existing = await readDataFile(`features/${key}.json`);
     if (!existing) {
       return res.status(404).json({ error: `Feature ${key} not found` });
     }
@@ -277,10 +277,10 @@ module.exports = function registerExecutionRoutes(router, context) {
   });
 
   // GET /status — data freshness and sync info
-  router.get('/status', requireAuth, requireScope('releases:read'), function(req, res) {
-    const index = readDataFile('index.json');
-    const lastFetch = readDataFile('last-fetch.json');
-    const config = loadConfig(storage);
+  router.get('/status', requireAuth, requireScope('releases:read'), async function(req, res) {
+    const index = await readDataFile('index.json');
+    const lastFetch = await readDataFile('last-fetch.json');
+    const config = await loadConfig(storage);
     const token = getToken();
 
     const result = {
@@ -317,50 +317,52 @@ module.exports = function registerExecutionRoutes(router, context) {
       result.nextScheduledFetch = nextFetch.toISOString();
     }
 
-    // Jira enrichment status
+    // Jira sync status
     const jiraEnrichConfig = config.jiraEnrichment || {};
-    const lastEnrichment = readDataFile('last-enrichment.json');
-    result.jiraEnrichment = {
+    const lastEnrichment = await readDataFile('last-enrichment.json');
+    const jiraSyncStatus = {
       enabled: jiraEnrichConfig.enabled !== false,
       jiraConfigured: !!jira,
       lastSync: lastEnrichment || null
     };
-    // Warn if Jira enrichment hasn't run in >24h (2x the default 6h cadence)
-    if (result.jiraEnrichment.enabled && jira) {
+    // Warn if Jira sync hasn't run in >24h
+    if (jiraSyncStatus.enabled && jira) {
       const enrichTs = lastEnrichment?.timestamp ? new Date(lastEnrichment.timestamp).getTime() : 0;
       const enrichAgeMs = enrichTs ? Date.now() - enrichTs : Infinity;
       const enrichAgeHours = enrichAgeMs / (1000 * 60 * 60);
       if (enrichAgeHours > 24) {
-        result.jiraEnrichment.stale = true;
+        jiraSyncStatus.stale = true;
         if (enrichTs === 0) {
-          result.jiraEnrichment.warning = 'Jira enrichment has never run';
+          jiraSyncStatus.warning = 'Jira sync has never run';
         } else {
           const ageDays = Math.floor(enrichAgeHours / 24);
-          result.jiraEnrichment.warning = 'Last Jira sync was ' + (ageDays === 1 ? '1 day' : ageDays + ' days') + ' ago';
+          jiraSyncStatus.warning = 'Last Jira sync was ' + (ageDays === 1 ? '1 day' : ageDays + ' days') + ' ago';
         }
       }
     } else if (!jira) {
-      result.jiraEnrichment.warning = 'Jira client not configured — enrichment cannot run';
+      jiraSyncStatus.warning = 'Jira client not configured — sync cannot run';
     }
+    result.jiraSync = jiraSyncStatus;
 
     res.json(result);
   });
 
   // GET /versions — list unique fix versions across all features
-  router.get('/versions', requireAuth, requireScope('releases:read'), function(req, res) {
-    const index = readDataFile('index.json');
+  router.get('/versions', requireAuth, requireScope('releases:read'), async function(req, res) {
+    const index = await readDataFile('index.json');
     if (!index || !index.features) {
       return res.json({ versions: [] });
     }
 
-    const versions = new Set();
+    const versions = new Map();
     for (const f of index.features) {
       for (const v of (f.fixVersions || [])) {
-        versions.add(stripZStream(v));
+        const key = stripZStream(v).toLowerCase();
+        if (!versions.has(key)) versions.set(key, stripZStream(v));
       }
     }
 
-    res.json({ versions: [...versions].sort() });
+    res.json({ versions: [...versions.values()].sort() });
   });
 
   // POST /refresh — trigger manual data refresh (admin only)
@@ -373,7 +375,7 @@ module.exports = function registerExecutionRoutes(router, context) {
       if (result.httpStatus === 429) {
         return res.status(429).json({ status: result.status, retryAfter: result.retryAfter });
       }
-      logAudit(storage.readFromStorage, storage.writeToStorage, {
+      await logAudit(storage.readFromStorage, storage.writeToStorage, {
         domain: 'execution',
         action: 'manual_refresh',
         user: req.userEmail || 'unknown',
@@ -387,8 +389,8 @@ module.exports = function registerExecutionRoutes(router, context) {
   });
 
   // GET /config — get current fetch configuration (admin only)
-  router.get('/config', context.requireAdmin, requireScope('releases:write'), function(req, res) {
-    const config = loadConfig(storage);
+  router.get('/config', context.requireAdmin, requireScope('releases:write'), async function(req, res) {
+    const config = await loadConfig(storage);
     res.json({
       ...config,
       tokenConfigured: !!getToken(),
@@ -400,7 +402,7 @@ module.exports = function registerExecutionRoutes(router, context) {
   router.post('/config', context.requireAdmin, requireScope('releases:write'), async function(req, res) {
     try {
       const result = await onConfigSave(storage, req.body);
-      logAudit(storage.readFromStorage, storage.writeToStorage, {
+      await logAudit(storage.readFromStorage, storage.writeToStorage, {
         domain: 'execution',
         action: 'config_save',
         user: req.userEmail || 'unknown',
@@ -468,7 +470,7 @@ module.exports = function registerExecutionRoutes(router, context) {
           continue;
         }
 
-        const existing = readDataFile('features/' + entry.key + '.json');
+        const existing = await readDataFile('features/' + entry.key + '.json');
         const { aiReview, status } = mergeAiReview(
           existing ? existing.aiReview : null,
           entry.aiReview
@@ -505,19 +507,19 @@ module.exports = function registerExecutionRoutes(router, context) {
    *       200:
    *         description: Deletion started
    */
-  router.delete('/ai-review', context.requireAdmin, requireScope('releases:write'), function(req, res) {
+  router.delete('/ai-review', context.requireAdmin, requireScope('releases:write'), async function(req, res) {
     res.json({ status: 'started', message: 'AI review data removal started' });
 
     // Process in background
     (async function() {
       try {
-        const fileNames = storage.listStorageFiles(DATA_PREFIX + '/features');
+        const fileNames = await storage.listStorageFiles(DATA_PREFIX + '/features');
         if (!fileNames || fileNames.length === 0) return;
 
         const toWrite = [];
         for (let i = 0; i < fileNames.length; i++) {
           if (!fileNames[i].endsWith('.json')) continue;
-          const feature = storage.readFromStorage(DATA_PREFIX + '/features/' + fileNames[i]);
+          const feature = await storage.readFromStorage(DATA_PREFIX + '/features/' + fileNames[i]);
           if (feature && feature.aiReview) {
             delete feature.aiReview;
             if (feature._sources) {
@@ -540,10 +542,10 @@ module.exports = function registerExecutionRoutes(router, context) {
   // Diagnostics
   if (context.registerDiagnostics) {
     context.registerDiagnostics(async function() {
-      const index = readDataFile('index.json');
-      const lastFetch = readDataFile('last-fetch.json');
-      const lastEnrichment = readDataFile('last-enrichment.json');
-      const config = loadConfig(storage);
+      const index = await readDataFile('index.json');
+      const lastFetch = await readDataFile('last-fetch.json');
+      const lastEnrichment = await readDataFile('last-enrichment.json');
+      const config = await loadConfig(storage);
       const jiraEnrichConfig = config.jiraEnrichment || {};
       return {
         dataAvailable: !!index,
@@ -552,12 +554,14 @@ module.exports = function registerExecutionRoutes(router, context) {
         schemaVersion: index?.schemaVersion || null,
         lastFetchStatus: lastFetch?.status || null,
         configured: config.enabled && !!getToken(),
-        jiraEnrichment: {
+        jiraSync: {
           enabled: jiraEnrichConfig.enabled !== false,
           jiraConfigured: !!jira,
           lastSyncStatus: lastEnrichment?.status || null,
           lastSyncTimestamp: lastEnrichment?.timestamp || null,
-          enrichedCount: lastEnrichment?.enrichedCount || 0
+          featureCount: lastEnrichment?.featureCount || 0,
+          newCount: lastEnrichment?.newCount || 0,
+          updatedCount: lastEnrichment?.updatedCount || 0
         }
       };
     });
@@ -579,7 +583,7 @@ module.exports = function registerExecutionRoutes(router, context) {
   };
 
   if (context.registerRefresh) {
-    const initialConfig = loadConfig(storage);
+    const initialConfig = await loadConfig(storage);
     context.registerRefresh('execution', {
       ...handlerConfig,
       cadence: initialConfig.refreshIntervalHours + 'h'
@@ -593,52 +597,39 @@ module.exports = function registerExecutionRoutes(router, context) {
       });
     });
 
-    // Register Jira enrichment periodic sync (Phase 3)
+    // Register Jira sync handler — full Jira fetch as authoritative source
     if (jira) {
-      const { syncAllFeatures, discoverFromJira, reconcileTrackingData } = require('./jira-sync');
+      const { fullJiraSync, detectStaleFeatures } = require('./jira-sync');
 
-      const enrichmentConfig = initialConfig.jiraEnrichment || {};
-      const syncIntervalHours = enrichmentConfig.syncIntervalHours || 6;
-
-      const enrichmentHandler = async function() {
-        const config = loadConfig(storage);
+      const jiraSyncHandler = async function() {
+        const config = await loadConfig(storage);
         const jiraEnrichConfig = config.jiraEnrichment || {};
-        // Default to enabled — Jira enrichment should run unless explicitly disabled
+        // Default to enabled — Jira sync should run unless explicitly disabled
         if (jiraEnrichConfig.enabled === false) {
-          return { status: 'skipped', message: 'Jira enrichment disabled in config (jiraEnrichment.enabled = false)' };
+          return { status: 'skipped', message: 'Jira sync disabled in config (jiraEnrichment.enabled = false)' };
         }
 
-        const result = await syncAllFeatures(storage, jira.jiraRequest, jira.fetchAllJqlResults);
+        const result = await fullJiraSync(storage, jira.jiraRequest, jira.fetchAllJqlResults);
 
-        // Feature discovery (Phase 4)
-        if (jiraEnrichConfig.discoveryEnabled) {
+        // Detect stale features (in store but no longer in Jira)
+        if (result.jiraKeys) {
           try {
-            const discovery = await discoverFromJira(
-              storage, jira.jiraRequest, jira.fetchAllJqlResults, jiraEnrichConfig
-            );
-            result.discovery = discovery;
+            const staleResult = await detectStaleFeatures(storage, result.jiraKeys);
+            result.stale = staleResult;
           } catch (err) {
-            console.warn('[execution] Feature discovery failed:', err.message);
+            console.warn('[execution] Stale feature detection failed:', err.message);
           }
-        }
-
-        // Tracking data reconciliation
-        try {
-          const reconciliation = await reconcileTrackingData(storage);
-          result.reconciliation = reconciliation;
-        } catch (err) {
-          console.warn('[execution] Tracking reconciliation failed:', err.message);
         }
 
         return result;
       };
 
-      context.registerRefresh('jira-enrichment', {
+      context.registerRefresh('jira-sync', {
         order: 75,
-        cadence: syncIntervalHours + 'h',
-        timeout: 120000,
-        description: 'Enriches execution data with Jira issue details, status transitions, and tracking reconciliation.',
-        handler: enrichmentHandler
+        cadence: '12h',
+        timeout: 600000,
+        description: 'Full Jira sync — fetches all RHAISTRAT features, creates/updates store entries, detects stale features.',
+        handler: jiraSyncHandler
       });
     }
   }

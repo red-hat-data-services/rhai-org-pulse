@@ -1,0 +1,37 @@
+{
+  "teams": [
+    {
+      "boardId": 101,
+      "boardName": "RHOAIENG - Notebooks",
+      "displayName": "Notebooks",
+      "enabled": true,
+      "stale": false,
+      "teamId": "101",
+      "boardType": "scrum",
+      "manuallyConfigured": true,
+      "lastSprintEndDate": "2026-03-28T00:00:00Z"
+    },
+    {
+      "boardId": 102,
+      "boardName": "RHOAIENG - Model Serving",
+      "displayName": "Model Serving",
+      "enabled": true,
+      "stale": false,
+      "teamId": "102",
+      "boardType": "scrum",
+      "manuallyConfigured": true,
+      "lastSprintEndDate": "2026-03-28T00:00:00Z"
+    },
+    {
+      "boardId": 103,
+      "boardName": "RHOAIENG - Platform",
+      "displayName": "Platform",
+      "enabled": true,
+      "stale": false,
+      "teamId": "103",
+      "boardType": "scrum",
+      "manuallyConfigured": true,
+      "lastSprintEndDate": "2026-03-28T00:00:00Z"
+    }
+  ]
+}

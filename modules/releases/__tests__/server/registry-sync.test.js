@@ -9,8 +9,8 @@ const configMod = require('../../server/delivery/config');
 function createMockStorage(initial = {}) {
   const store = { ...initial };
   return {
-    readFromStorage(key) { return store[key] ? JSON.parse(JSON.stringify(store[key])) : null; },
-    writeToStorage(key, data) { store[key] = JSON.parse(JSON.stringify(data)); },
+    async readFromStorage(key) { return store[key] ? JSON.parse(JSON.stringify(store[key])) : null; },
+    async writeToStorage(key, data) { store[key] = JSON.parse(JSON.stringify(data)); },
     _store: store
   };
 }

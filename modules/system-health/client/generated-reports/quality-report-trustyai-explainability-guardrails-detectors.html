@@ -332,7 +332,7 @@
     <div class="container">
         <header>
             <h1>Quality Analysis Report</h1>
-            <p class="timestamp">Generated on July 06, 2026 at 03:39 PM</p>
+            <p class="timestamp">Generated on July 21, 2026 at 12:20 PM</p>
             <h2 style="margin-top: 1rem; font-weight: 400;">trustyai-explainability/guardrails-detectors</h2>
         </header>
 
@@ -342,13 +342,13 @@
                     <svg width="200" height="200">
                         <circle class="bg-circle" cx="100" cy="100" r="90"></circle>
                         <circle class="score-arc" cx="100" cy="100" r="90"
-                                stroke="#ffc107"
+                                stroke="#fd7e14"
                                 stroke-dasharray="565.4861999999999"
-                                stroke-dashoffset="203.57503199999996"
+                                stroke-dashoffset="277.088238"
                                 id="scoreArc"></circle>
                     </svg>
                     <div class="score-text">
-                        <div class="score-value">6.4</div>
+                        <div class="score-value">5.1</div>
                         <div class="score-label">Overall Score</div>
                     </div>
                 </div>
@@ -364,38 +364,43 @@
                         
                         <div class="scorecard-item">
                             <h3>Unit Tests</h3>
-                            <div class="scorecard-score" style="color: #28a745;">8.0/10</div>
-                            <div class="scorecard-status">Strong unit test coverage with 161 tests across all detector components; 1.45:1 test-to-code ratio</div>
+                            <div class="scorecard-score" style="color: #ffc107;">7.5/10</div>
+                            <div class="scorecard-status">Strong test suite with 16 test files, 1.4:1 test-to-code line ratio, pytest with fixtures and mocks</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Integration/E2E</h3>
-                            <div class="scorecard-score" style="color: #fd7e14;">5.0/10</div>
-                            <div class="scorecard-status">FastAPI TestClient integration tests for builtIn and HF detectors; no E2E with real models or orchestrator</div>
+                            <div class="scorecard-score" style="color: #fd7e14;">4.0/10</div>
+                            <div class="scorecard-status">FastAPI TestClient integration tests for HF detector only; no E2E, no cluster-level tests</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Build Integration</h3>
-                            <div class="scorecard-score" style="color: #dc3545;">3.0/10</div>
-                            <div class="scorecard-status">No PR-time container build validation; no Konflux simulation; Dockerfiles not tested in CI</div>
+                            <div class="scorecard-score" style="color: #dc3545;">2.0/10</div>
+                            <div class="scorecard-status">No PR-time Docker image builds, no Makefile, no manifest validation in CI</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Image Testing</h3>
-                            <div class="scorecard-score" style="color: #dc3545;">2.0/10</div>
-                            <div class="scorecard-status">Three Dockerfiles present but no image build, startup, or runtime validation in CI</div>
+                            <div class="scorecard-score" style="color: #dc3545;">3.5/10</div>
+                            <div class="scorecard-status">3 Dockerfiles with UBI9 base and multi-stage builds, but no runtime validation or multi-arch</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Coverage Tracking</h3>
                             <div class="scorecard-score" style="color: #fd7e14;">5.0/10</div>
-                            <div class="scorecard-status">pytest-cov runs in CI with term-missing output; no codecov/coveralls, no thresholds, no PR gating</div>
+                            <div class="scorecard-status">pytest-cov runs per-component in CI but no codecov integration, no thresholds, no PR reporting</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>CI/CD Automation</h3>
-                            <div class="scorecard-score" style="color: #ffc107;">7.0/10</div>
-                            <div class="scorecard-status">Well-structured per-component workflows with path filtering, caching, shared action; no concurrency control</div>
+                            <div class="scorecard-score" style="color: #ffc107;">6.5/10</div>
+                            <div class="scorecard-status">3 component-specific test workflows with caching and path filters; no concurrency control</div>
+                        </div>
+                        <div class="scorecard-item">
+                            <h3>Static Analysis</h3>
+                            <div class="scorecard-score" style="color: #dc3545;">3.0/10</div>
+                            <div class="scorecard-status">pre-commit in dev deps and CI action stub, but no .pre-commit-config.yaml, no linter config, no Dependabot</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Agent Rules</h3>
                             <div class="scorecard-score" style="color: #dc3545;">0.0/10</div>
-                            <div class="scorecard-status">No CLAUDE.md, AGENTS.md, or .claude/ directory; zero AI agent guidance</div>
+                            <div class="scorecard-status">No CLAUDE.md, AGENTS.md, or .claude/ directory</div>
                         </div>
                     </div>
                 </div>
@@ -411,43 +416,43 @@
                     <ul class="items-list">
                         
                         <li class="item-card high">
-                            <div class="item-description">No container image build or runtime testing in CI</div>
-                            <p>Image build failures and startup issues discovered only after merge/deployment</p>
+                            <div class="item-description">No PR-time container image build validation</div>
+                            <p>Dockerfile issues (broken COPY paths, dependency mismatches) discovered only after merge in Konflux</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-high">HIGH</span>
-                                <span class="meta-tag effort-tag">6-8 hours</span>
+                                <span class="meta-tag effort-tag">8-12 hours</span>
                             </div>
                         </li>
                         <li class="item-card high">
-                            <div class="item-description">No coverage thresholds or PR gating</div>
-                            <p>Coverage can regress silently; no enforcement prevents untested code from merging</p>
+                            <div class="item-description">No coverage threshold enforcement or PR reporting</div>
+                            <p>Coverage can silently regress without anyone noticing; no gates on PR merges</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-high">HIGH</span>
-                                <span class="meta-tag effort-tag">2-4 hours</span>
+                                <span class="meta-tag effort-tag">4-6 hours</span>
                             </div>
                         </li>
                         <li class="item-card high">
-                            <div class="item-description">No E2E tests with real model inference or orchestrator integration</div>
-                            <p>Integration issues between detectors and the FMS Guardrails Orchestrator go undetected until production</p>
+                            <div class="item-description">No E2E or integration tests with real deployment</div>
+                            <p>Component interactions and KServe serving runtime compatibility untested before merge</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-high">HIGH</span>
                                 <span class="meta-tag effort-tag">16-24 hours</span>
                             </div>
                         </li>
                         <li class="item-card medium">
-                            <div class="item-description">No pre-commit config committed to repository</div>
-                            <p>Code quality checks rely on CI only; developers may push linting violations</p>
+                            <div class="item-description">No linting configuration (.pre-commit-config.yaml, ruff, mypy)</div>
+                            <p>Code style inconsistencies and type errors not caught until review</p>
+                            <div class="item-meta">
+                                <span class="meta-tag severity-medium">MEDIUM</span>
+                                <span class="meta-tag effort-tag">2-4 hours</span>
+                            </div>
+                        </li>
+                        <li class="item-card medium">
+                            <div class="item-description">No Dependabot or Renovate for dependency management</div>
+                            <p>Stale dependencies with known vulnerabilities go undetected</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-medium">MEDIUM</span>
                                 <span class="meta-tag effort-tag">1-2 hours</span>
-                            </div>
-                        </li>
-                        <li class="item-card low">
-                            <div class="item-description">No concurrency control on CI workflows</div>
-                            <p>Rapid pushes can cause redundant CI runs and wasted resources</p>
-                            <div class="item-meta">
-                                <span class="meta-tag severity-low">LOW</span>
-                                <span class="meta-tag effort-tag">1 hour</span>
                             </div>
                         </li>
                     </ul>
@@ -464,43 +469,43 @@
                     <ul class="items-list">
                         
                         <li class="item-card ">
-                            <div class="item-description">Add codecov integration with coverage thresholds</div>
-                            <p>Enforce minimum coverage on PRs and track coverage trends over time</p>
+                            <div class="item-description">Add .pre-commit-config.yaml with ruff, mypy, and basic hooks</div>
+                            <p>Immediate code quality enforcement; CI already has pre-commit action stub</p>
                             <div class="item-meta">
                                 
                                 <span class="meta-tag effort-tag">2-3 hours</span>
                             </div>
                         </li>
                         <li class="item-card ">
-                            <div class="item-description">Add concurrency control to all workflows</div>
-                            <p>Cancel redundant CI runs on rapid pushes, saving runner time</p>
+                            <div class="item-description">Enable Dependabot for pip ecosystem</div>
+                            <p>Automated dependency update PRs with security alerts</p>
+                            <div class="item-meta">
+                                
+                                <span class="meta-tag effort-tag">1 hour</span>
+                            </div>
+                        </li>
+                        <li class="item-card ">
+                            <div class="item-description">Add codecov integration with --cov-fail-under threshold</div>
+                            <p>Coverage regression prevention and PR-level coverage visibility</p>
+                            <div class="item-meta">
+                                
+                                <span class="meta-tag effort-tag">2-3 hours</span>
+                            </div>
+                        </li>
+                        <li class="item-card ">
+                            <div class="item-description">Add concurrency control to test workflows</div>
+                            <p>Avoid wasted CI resources on superseded pushes</p>
                             <div class="item-meta">
                                 
                                 <span class="meta-tag effort-tag">30 minutes</span>
                             </div>
                         </li>
                         <li class="item-card ">
-                            <div class="item-description">Add container image build smoke test to PR workflow</div>
-                            <p>Catch Dockerfile and dependency issues before merge</p>
+                            <div class="item-description">Create CLAUDE.md with test patterns and project context</div>
+                            <p>AI-assisted contributions follow established patterns</p>
                             <div class="item-meta">
                                 
                                 <span class="meta-tag effort-tag">2-3 hours</span>
-                            </div>
-                        </li>
-                        <li class="item-card ">
-                            <div class="item-description">Create .pre-commit-config.yaml with ruff and mypy</div>
-                            <p>Enforce code quality locally before push, reducing CI failures</p>
-                            <div class="item-meta">
-                                
-                                <span class="meta-tag effort-tag">1-2 hours</span>
-                            </div>
-                        </li>
-                        <li class="item-card ">
-                            <div class="item-description">Add basic CLAUDE.md with test patterns</div>
-                            <p>Guide AI agents to produce tests matching existing patterns</p>
-                            <div class="item-meta">
-                                
-                                <span class="meta-tag effort-tag">1-2 hours</span>
                             </div>
                         </li>
                     </ul>
@@ -517,15 +522,15 @@
                         
                         <div class="rec-priority p0">
                             <h3>Priority 0: Critical</h3>
-                            <ul><li>Add container image build validation to PR workflows (build all three Dockerfiles)</li><li>Integrate codecov with coverage thresholds (e.g., 80% minimum, no regression on PR)</li><li>Add image startup smoke tests (container runs and responds to health check)</li></ul>
+                            <ul><li>Add PR-time Docker image build validation for all 3 Dockerfiles</li><li>Configure codecov with threshold enforcement and PR coverage comments</li><li>Create .pre-commit-config.yaml with ruff linter and mypy type checker</li></ul>
                         </div>
                         <div class="rec-priority p1">
                             <h3>Priority 1: High Value</h3>
-                            <ul><li>Create E2E test suite that exercises detector APIs with real model inference</li><li>Add integration tests with FMS Guardrails Orchestrator mock or test harness</li><li>Create comprehensive CLAUDE.md and .claude/rules/ for test automation guidance</li><li>Add .pre-commit-config.yaml with ruff, mypy, and security checks</li></ul>
+                            <ul><li>Add E2E tests that deploy detectors as KServe InferenceServices and test end-to-end</li><li>Enable Dependabot for pip, docker, and github-actions ecosystems</li><li>Add integration tests for detector-to-orchestrator communication</li></ul>
                         </div>
                         <div class="rec-priority p2">
                             <h3>Priority 2: Nice-to-Have</h3>
-                            <ul><li>Add multi-architecture image builds (amd64/arm64)</li><li>Add SBOM generation and image signing</li><li>Add load/performance testing in periodic CI (locust is already a dev dependency)</li><li>Add Dependabot or Renovate for automated dependency updates</li></ul>
+                            <ul><li>Add multi-architecture Docker builds (amd64/arm64)</li><li>Create CLAUDE.md with project context and test creation rules</li><li>Add performance regression testing with locust (already a dev dependency)</li></ul>
                         </div>
                     </div>
                 </div>

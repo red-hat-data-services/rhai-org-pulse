@@ -32,13 +32,13 @@ import FeatureTrackingView from '../execute/views/FeatureTrackingView.vue'
 const nav = inject('moduleNav')
 
 const tabs = [
+  { id: 'feature-tracking', label: 'Feature Tracking' },
   { id: 'feature-list', label: 'Feature List' },
   { id: 'feature-status', label: 'Feature Status' },
-  { id: 'feature-tracking', label: 'Feature Tracking' },
 ]
 
 const VALID_TABS = tabs.map(t => t.id)
-const DEFAULT_TAB = 'feature-list'
+const DEFAULT_TAB = 'feature-tracking'
 
 const activeTab = ref(DEFAULT_TAB)
 

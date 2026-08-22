@@ -22,6 +22,11 @@
       "team": "Model Serving",
       "assignee": "Bob Park",
       "fixVersions": ["RHOAI-3.5.EA2"],
+      "targetVersions": ["RHOAI-3.4.GA"],
+      "fixReleaseId": "rhoai-3.5",
+      "targetReleaseId": "rhoai-3.4",
+      "effectiveReleaseId": "rhoai-3.5",
+      "missingTargetVersion": false,
       "components": ["Platform Core"],
       "violations": [
         {
@@ -30,6 +35,13 @@
           "category": "metadata",
           "message": "This issue is in In Progress but has no color status set. Set the color status to indicate health (Red/Yellow/Green).",
           "remediation": "Open the issue in Jira and set the Color Status field to Green, Yellow, or Red based on current health."
+        },
+        {
+          "id": "target-fix-version-mismatch",
+          "name": "Target/Fix Version Mismatch",
+          "category": "metadata",
+          "message": "Target Version (RHOAI-3.4.GA) does not match the committed Fix Version (RHOAI-3.5.EA2). Update the Target Version to align with the Fix Version.",
+          "remediation": "Update the Target Version to match the committed Fix Version — Fix Version is the source of truth once set."
         }
       ]
     },

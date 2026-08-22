@@ -186,10 +186,6 @@ function computeFeatureRisk(feature, milestones, enrichment, opts) {
     risk = 'yellow'
   }
 
-  if (options.planningStatus === 'not-ready' && risk === 'green') {
-    risk = 'yellow'
-  }
-
   return { risk: risk, flags: flags, riskScore: flags.length }
 }
 

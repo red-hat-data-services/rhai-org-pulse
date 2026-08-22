@@ -332,7 +332,7 @@
     <div class="container">
         <header>
             <h1>Quality Analysis Report</h1>
-            <p class="timestamp">Generated on July 06, 2026 at 05:19 PM</p>
+            <p class="timestamp">Generated on July 20, 2026 at 07:18 PM</p>
             <h2 style="margin-top: 1rem; font-weight: 400;">red-hat-data-services/openvino</h2>
         </header>
 
@@ -344,11 +344,11 @@
                         <circle class="score-arc" cx="100" cy="100" r="90"
                                 stroke="#ffc107"
                                 stroke-dasharray="565.4861999999999"
-                                stroke-dashoffset="203.57503199999996"
+                                stroke-dashoffset="175.30072199999995"
                                 id="scoreArc"></circle>
                     </svg>
                     <div class="score-text">
-                        <div class="score-value">6.4</div>
+                        <div class="score-value">6.9</div>
                         <div class="score-label">Overall Score</div>
                     </div>
                 </div>
@@ -364,38 +364,43 @@
                         
                         <div class="scorecard-item">
                             <h3>Unit Tests</h3>
-                            <div class="scorecard-score" style="color: #28a745;">8.0/10</div>
-                            <div class="scorecard-status">1,600+ test files with GoogleTest (C++) and pytest (Python), strong test-to-code ratio (~0.5)</div>
+                            <div class="scorecard-score" style="color: #28a745;">8.5/10</div>
+                            <div class="scorecard-status">Exceptional test volume with GTest (C++) and pytest (Python); strong test-to-code ratio (~1:1)</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Integration/E2E</h3>
-                            <div class="scorecard-score" style="color: #28a745;">8.0/10</div>
-                            <div class="scorecard-status">Comprehensive layer tests, model hub tests, ONNX runtime integration, fuzz testing</div>
+                            <div class="scorecard-score" style="color: #ffc107;">7.5/10</div>
+                            <div class="scorecard-status">Comprehensive model hub, layer, functional, and stress tests; no explicit e2e/ directory but excellent multi-framework coverage</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Build Integration</h3>
                             <div class="scorecard-score" style="color: #fd7e14;">5.0/10</div>
-                            <div class="scorecard-status">Multi-platform PR builds but no container/Konflux simulation</div>
+                            <div class="scorecard-status">PR builds on Linux/Windows but no Konflux simulation, no image build/validation at PR time</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Image Testing</h3>
                             <div class="scorecard-score" style="color: #dc3545;">2.0/10</div>
-                            <div class="scorecard-status">No Dockerfiles, no container image testing, no vulnerability scanning</div>
+                            <div class="scorecard-status">No Dockerfiles, no container image builds, no runtime validation; CI uses pre-built containers</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Coverage Tracking</h3>
                             <div class="scorecard-score" style="color: #fd7e14;">5.0/10</div>
-                            <div class="scorecard-status">CMake coverage infrastructure with Codecov but manual-dispatch only</div>
+                            <div class="scorecard-status">Codecov action present but coverage workflow is manual dispatch only; no threshold enforcement on PRs</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>CI/CD Automation</h3>
-                            <div class="scorecard-score" style="color: #28a745;">8.0/10</div>
-                            <div class="scorecard-status">37 workflows, Smart CI, multi-platform, sccache, OpenTelemetry observability</div>
+                            <div class="scorecard-score" style="color: #28a745;">9.0/10</div>
+                            <div class="scorecard-status">37 workflows with Smart CI, concurrency control, sccache, cross-platform PR triggers, parallel test execution</div>
+                        </div>
+                        <div class="scorecard-item">
+                            <h3>Static Analysis</h3>
+                            <div class="scorecard-score" style="color: #ffc107;">7.5/10</div>
+                            <div class="scorecard-status">Clang-format, ShellCheck, naming convention checks, flake8/mypy, Dependabot, Coverity; missing pre-commit hooks</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Agent Rules</h3>
                             <div class="scorecard-score" style="color: #dc3545;">0.0/10</div>
-                            <div class="scorecard-status">No CLAUDE.md, no .claude/ directory, no test automation guidance for AI agents</div>
+                            <div class="scorecard-status">No CLAUDE.md, AGENTS.md, or .claude/ directory; no AI agent test guidance</div>
                         </div>
                     </div>
                 </div>
@@ -411,43 +416,35 @@
                     <ul class="items-list">
                         
                         <li class="item-card high">
-                            <div class="item-description">No container image testing or Dockerfiles</div>
-                            <p>Red Hat downstream packaging relies on container images — no validation at source</p>
+                            <div class="item-description">No container image build or testing</div>
+                            <p>As a downstream fork for RHOAI Model Runtimes, container images are central to delivery — no Dockerfile exists in the repo and no image validation occurs</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-high">HIGH</span>
                                 <span class="meta-tag effort-tag">16-24 hours</span>
                             </div>
                         </li>
                         <li class="item-card high">
-                            <div class="item-description">No security scanning (CodeQL, Trivy, Snyk, Gitleaks)</div>
-                            <p>Vulnerabilities in dependencies and source code not detected until downstream</p>
+                            <div class="item-description">Coverage workflow is manual dispatch only</div>
+                            <p>Code coverage is never enforced on PRs; regressions in coverage are invisible until manually triggered</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-high">HIGH</span>
                                 <span class="meta-tag effort-tag">4-8 hours</span>
                             </div>
                         </li>
-                        <li class="item-card high">
-                            <div class="item-description">Coverage workflow is manual-dispatch only</div>
-                            <p>Coverage regressions not caught on PRs; no enforcement thresholds</p>
-                            <div class="item-meta">
-                                <span class="meta-tag severity-high">HIGH</span>
-                                <span class="meta-tag effort-tag">4-6 hours</span>
-                            </div>
-                        </li>
                         <li class="item-card medium">
-                            <div class="item-description">No pre-commit hooks</div>
-                            <p>Code quality issues caught only in CI, not locally</p>
-                            <div class="item-meta">
-                                <span class="meta-tag severity-medium">MEDIUM</span>
-                                <span class="meta-tag effort-tag">2-3 hours</span>
-                            </div>
-                        </li>
-                        <li class="item-card medium">
-                            <div class="item-description">macOS PR testing disabled</div>
-                            <p>macOS platform regressions not caught until nightly schedule</p>
+                            <div class="item-description">No coverage threshold enforcement</div>
+                            <p>Even when coverage runs, there are no minimum thresholds — coverage can decline without blocking merges</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-medium">MEDIUM</span>
                                 <span class="meta-tag effort-tag">2-4 hours</span>
+                            </div>
+                        </li>
+                        <li class="item-card medium">
+                            <div class="item-description">No AI agent rules for test creation</div>
+                            <p>AI-assisted test generation has no framework-specific guidance, producing inconsistent or low-quality tests</p>
+                            <div class="item-meta">
+                                <span class="meta-tag severity-medium">MEDIUM</span>
+                                <span class="meta-tag effort-tag">4-6 hours</span>
                             </div>
                         </li>
                     </ul>
@@ -464,35 +461,35 @@
                     <ul class="items-list">
                         
                         <li class="item-card ">
-                            <div class="item-description">Add CodeQL SAST workflow for C++ and Python</div>
-                            <p>Automated security vulnerability detection on every PR</p>
+                            <div class="item-description">Add coverage threshold to codecov config</div>
+                            <p>Prevent coverage regressions on PRs by adding .codecov.yml with patch and project thresholds</p>
                             <div class="item-meta">
                                 
                                 <span class="meta-tag effort-tag">2-3 hours</span>
                             </div>
                         </li>
                         <li class="item-card ">
-                            <div class="item-description">Enable Codecov PR comments by adding .codecov.yml</div>
-                            <p>Immediate visibility into coverage changes per PR</p>
+                            <div class="item-description">Enable coverage on PR triggers</div>
+                            <p>Move coverage from manual-only to PR-triggered, catching coverage drops before merge</p>
+                            <div class="item-meta">
+                                
+                                <span class="meta-tag effort-tag">4-6 hours</span>
+                            </div>
+                        </li>
+                        <li class="item-card ">
+                            <div class="item-description">Create CLAUDE.md with test creation rules</div>
+                            <p>Enable AI agents to generate tests following GTest/pytest patterns already established in the repo</p>
+                            <div class="item-meta">
+                                
+                                <span class="meta-tag effort-tag">3-4 hours</span>
+                            </div>
+                        </li>
+                        <li class="item-card ">
+                            <div class="item-description">Add .pre-commit-config.yaml</div>
+                            <p>Enforce clang-format, flake8, and ShellCheck locally before push, catching style issues earlier</p>
                             <div class="item-meta">
                                 
                                 <span class="meta-tag effort-tag">1-2 hours</span>
-                            </div>
-                        </li>
-                        <li class="item-card ">
-                            <div class="item-description">Add .pre-commit-config.yaml with clang-format, flake8, shellcheck</div>
-                            <p>Shift-left code quality checks to developer machines</p>
-                            <div class="item-meta">
-                                
-                                <span class="meta-tag effort-tag">2-3 hours</span>
-                            </div>
-                        </li>
-                        <li class="item-card ">
-                            <div class="item-description">Create CLAUDE.md with test patterns and conventions</div>
-                            <p>Improve AI-assisted test generation quality and consistency</p>
-                            <div class="item-meta">
-                                
-                                <span class="meta-tag effort-tag">2-3 hours</span>
                             </div>
                         </li>
                     </ul>
@@ -509,15 +506,15 @@
                         
                         <div class="rec-priority p0">
                             <h3>Priority 0: Critical</h3>
-                            <ul><li>Add CodeQL/SAST workflow to detect security vulnerabilities on PRs</li><li>Move coverage from manual-dispatch to PR-triggered with enforcement thresholds</li><li>Add Trivy or Snyk dependency scanning to PR workflow</li></ul>
+                            <ul><li>Add Dockerfile(s) and container image build/test pipeline for RHOAI downstream delivery</li><li>Move coverage workflow from manual dispatch to PR-triggered with threshold enforcement</li></ul>
                         </div>
                         <div class="rec-priority p1">
                             <h3>Priority 1: High Value</h3>
-                            <ul><li>Add Gitleaks secret detection to prevent credential leaks</li><li>Re-enable macOS PR testing to catch platform regressions early</li><li>Add .codecov.yml with PR coverage comments and delta thresholds</li><li>Create .pre-commit-config.yaml to enforce quality locally</li></ul>
+                            <ul><li>Create .codecov.yml with project and patch coverage minimums</li><li>Add .pre-commit-config.yaml integrating clang-format, flake8, mypy, and ShellCheck</li><li>Create comprehensive CLAUDE.md with GTest and pytest test creation guidelines</li></ul>
                         </div>
                         <div class="rec-priority p2">
                             <h3>Priority 2: Nice-to-Have</h3>
-                            <ul><li>Add CLAUDE.md with test patterns for AI-assisted development</li><li>Add Dockerfile for reproducible local development</li><li>Add SBOM generation for supply chain security</li><li>Consider adding Coverity results as PR gate (not just nightly)</li></ul>
+                            <ul><li>Add macOS PR-triggered builds (currently scheduled only)</li><li>Implement FIPS compatibility checks for downstream RHOAI builds</li><li>Add container health check and readiness probe validation</li></ul>
                         </div>
                     </div>
                 </div>

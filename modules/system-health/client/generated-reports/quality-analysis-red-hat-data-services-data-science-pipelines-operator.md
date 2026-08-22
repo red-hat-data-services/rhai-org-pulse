@@ -1,452 +1,436 @@
 ---
 repository: "red-hat-data-services/data-science-pipelines-operator"
-overall_score: 7.6
+overall_score: 7.1
 scorecard:
   - dimension: "Unit Tests"
     score: 8.0
-    status: "178+ test functions with build-tag isolation, testify assertions, strong controller coverage"
+    status: "Strong test-to-code ratio (0.77) with testify, envtest, t.Parallel(), and declarative test cases"
   - dimension: "Integration/E2E"
-    score: 8.5
-    status: "KinD-based integration on PRs, multi-namespace DSPA deployment, external Argo variant, upgrade testing"
+    score: 8.0
+    status: "KinD integration tests on PRs, chaos testing (tiered), upgrade testing, BYO-Argo variant"
   - dimension: "Build Integration"
-    score: 7.0
-    status: "PR image builds with ARM64 cross-compile, Go version consistency checks, but no Konflux simulation"
+    score: 8.0
+    status: "PR images to Quay, Konflux/Tekton hermetic build, ARM64 verification, Go version consistency"
   - dimension: "Image Testing"
     score: 6.0
-    status: "Multi-stage UBI9 Dockerfile, ARM64 architecture verification, but no runtime validation or Trivy scanning"
+    status: "Multi-stage UBI9 builds, architecture verification, but no runtime startup validation"
   - dimension: "Coverage Tracking"
-    score: 4.0
-    status: "coverprofile generated locally but no codecov/coveralls integration or PR enforcement"
+    score: 3.0
+    status: "Coverage generated locally via -coverprofile but no codecov, no thresholds, no PR reporting"
   - dimension: "CI/CD Automation"
-    score: 9.0
-    status: "19 workflows with concurrency control, path filtering, caching, nightly builds, release automation"
+    score: 8.0
+    status: "21 workflows, PR-triggered testing, concurrency control, nightly builds, release automation"
+  - dimension: "Static Analysis"
+    score: 7.0
+    status: "golangci-lint (8 linters), pre-commit hooks, FIPS-compliant builds, but no Dependabot/Renovate"
   - dimension: "Agent Rules"
     score: 6.0
-    status: "CLAUDE.md with architecture and build commands, AGENTS.md symlink, but no .claude/rules/ for test patterns"
-  - dimension: "Chaos Testing"
-    score: 8.5
-    status: "Operator-chaos SDK with tiered experiments, knowledge models, PR validation, and live KinD chaos integration"
+    status: "Comprehensive CLAUDE.md with architecture docs but no .claude/rules/ for test patterns"
 critical_gaps:
-  - title: "No coverage tracking or enforcement on PRs"
-    impact: "Coverage can silently regress without anyone noticing; no visibility into test gaps"
+  - title: "No coverage tracking or enforcement"
+    impact: "Coverage regressions go undetected; no visibility into test coverage trends or PR impact"
     severity: "HIGH"
     effort: "4-6 hours"
-  - title: "No container security scanning (Trivy/Snyk/Grype)"
-    impact: "Vulnerabilities in base images and dependencies not caught until production scanning"
+  - title: "No dependency alert configuration (Dependabot/Renovate)"
+    impact: "Vulnerable or outdated dependencies remain undetected until manual review"
     severity: "HIGH"
-    effort: "2-4 hours"
-  - title: "No PR-time Konflux build simulation"
-    impact: "Build failures discovered only post-merge in Konflux; multi-day debug cycles"
-    severity: "MEDIUM"
-    effort: "8-12 hours"
-  - title: "No container runtime validation"
-    impact: "Image startup failures, missing configs, or entrypoint issues not caught until deployment"
-    severity: "MEDIUM"
-    effort: "4-6 hours"
-  - title: "No SAST/CodeQL integration"
-    impact: "Security vulnerabilities in Go code not caught by static analysis"
-    severity: "MEDIUM"
-    effort: "2-3 hours"
-quick_wins:
-  - title: "Add Codecov integration to unit test workflow"
-    effort: "2-4 hours"
-    impact: "PR-level coverage visibility and regression detection"
-  - title: "Add Trivy container scanning to PR workflow"
     effort: "1-2 hours"
-    impact: "Early detection of CVEs in base images and dependencies"
-  - title: "Add CodeQL/gosec workflow"
+  - title: "No container runtime validation tests"
+    impact: "Image startup failures or misconfiguration not caught until deployment"
+    severity: "MEDIUM"
+    effort: "4-8 hours"
+quick_wins:
+  - title: "Add Codecov integration with coverage thresholds"
+    effort: "4-6 hours"
+    impact: "Immediate visibility into coverage trends, PR coverage delta reporting, regression prevention"
+  - title: "Enable Dependabot for go, docker, and github-actions ecosystems"
+    effort: "1-2 hours"
+    impact: "Automated dependency update PRs and vulnerability alerts"
+  - title: "Add .claude/rules/ with test creation patterns"
     effort: "2-3 hours"
-    impact: "Automated security analysis on every PR"
-  - title: "Create .claude/rules/ for test patterns"
-    effort: "2-3 hours"
-    impact: "Consistent AI-assisted test generation following project conventions"
-  - title: "Pin pre-commit hook versions to current releases"
-    effort: "1 hour"
-    impact: "Avoid supply chain risks from outdated hook versions"
+    impact: "AI-generated tests follow project conventions (build tags, testify, envtest patterns)"
 recommendations:
   priority_0:
-    - "Add Codecov or Coveralls integration with PR coverage reporting and minimum threshold enforcement"
-    - "Add Trivy or Grype container scanning to the PR image build workflow"
+    - "Add Codecov integration with .codecov.yml, coverage thresholds, and PR coverage reporting"
+    - "Configure Dependabot for gomod, docker, and github-actions ecosystems"
   priority_1:
-    - "Add CodeQL or gosec SAST scanning workflow for Go code"
-    - "Add container runtime validation (startup + health check) after PR image builds"
-    - "Create .claude/rules/ with unit-tests.md, integration-tests.md, and chaos-tests.md"
+    - "Add container image startup validation in CI (verify manager binary starts and serves health endpoint)"
+    - "Create .claude/rules/ with test creation patterns for unit, functional, and integration tests"
+    - "Add multi-version K8s matrix testing to KinD integration workflows"
   priority_2:
-    - "Add PR-time Konflux build simulation to catch production build failures early"
-    - "Add SBOM generation and image signing (cosign) to release builds"
-    - "Update pre-commit-config.yaml hook versions (currently v3.3.0 from 2020)"
-    - "Add performance regression testing for reconciliation latency"
+    - "Add test parallelization via matrix strategy for integration test variants"
+    - "Expand golangci-lint configuration with additional linters (gocyclo, dupl, gosec)"
+    - "Add coverage badge to README"
 ---
 
 # Quality Analysis: data-science-pipelines-operator
 
 ## Executive Summary
-
-- **Overall Score: 7.6/10**
-- **Repository Type**: Kubernetes Operator (kubebuilder/controller-runtime)
-- **Language**: Go (1.26)
-- **Framework**: OpenShift Operator for Kubeflow Pipelines v2
-
-The Data Science Pipelines Operator (DSPO) demonstrates **strong testing practices** with a well-structured multi-layer test strategy: build-tag-gated unit tests, envtest-based functional tests, KinD-based integration tests, and notably a chaos testing framework using operator-chaos SDK. The CI/CD pipeline is comprehensive with 19 workflows covering PRs, main branch, nightly, and release automation.
-
-**Key Strengths:**
-- Excellent test-to-code ratio (~89% test LOC vs source LOC)
-- Build-tag isolation for test layers (test_unit, test_functional, test_integration, test_chaos)
-- Chaos testing with tiered experiments and knowledge models
-- KinD integration tests run on PRs with multi-namespace deployment
-- ARM64 cross-compilation and architecture verification
-- Strong pre-commit hooks and linting
-
-**Critical Gaps:**
-- No coverage tracking/enforcement (coverprofile generated but not uploaded)
-- No container security scanning (Trivy/Snyk/Grype)
-- No SAST/CodeQL integration
-- No container runtime validation after image builds
-
-**Agent Rules Status:** Partial — CLAUDE.md exists with good architecture docs and build commands, but no `.claude/rules/` directory for test automation guidance.
+- **Overall Score: 7.1/10**
+- **Repository**: [red-hat-data-services/data-science-pipelines-operator](https://github.com/red-hat-data-services/data-science-pipelines-operator)
+- **Type**: Kubernetes Operator (kubebuilder/controller-runtime)
+- **Language**: Go 1.26
+- **Jira**: RHOAIENG / AI Pipelines (downstream tier)
+- **Key Strengths**: Excellent test-to-code ratio (0.77), comprehensive KinD-based integration testing on PRs, innovative chaos testing with tiered experiments, PR image builds to Quay, Konflux hermetic build pipeline with multi-arch support, strong FIPS compliance (`GOFIPS140=v1.0.0`, UBI9 base images)
+- **Critical Gaps**: No coverage tracking/enforcement, no Dependabot/Renovate configuration, no container runtime validation
+- **Agent Rules Status**: Present (comprehensive CLAUDE.md) but incomplete (no `.claude/rules/` for test patterns)
 
 ## Quality Scorecard
-
-| Dimension | Score | Status |
-|-----------|-------|--------|
-| Unit Tests | 8.0/10 | 178+ test functions with build-tag isolation, testify assertions, strong controller coverage |
-| Integration/E2E | 8.5/10 | KinD-based integration on PRs, multi-namespace DSPA deployment, external Argo variant, upgrade testing |
-| **Build Integration** | **7.0/10** | **PR image builds with ARM64 cross-compile, Go version consistency, no Konflux simulation** |
-| Image Testing | 6.0/10 | Multi-stage UBI9 Dockerfile, ARM64 arch verification, no runtime validation or security scanning |
-| Coverage Tracking | 4.0/10 | coverprofile generated locally but not uploaded or enforced |
-| CI/CD Automation | 9.0/10 | 19 workflows with concurrency control, path filtering, caching, nightly builds, release automation |
-| Agent Rules | 6.0/10 | CLAUDE.md with architecture and commands; no .claude/rules/ for test patterns |
-| Chaos Testing | 8.5/10 | Operator-chaos SDK with tiered experiments, knowledge models, PR-time validation |
+| Dimension | Score | Weight | Weighted | Status |
+|-----------|-------|--------|----------|--------|
+| Unit Tests | 8/10 | 15% | 1.20 | Strong test-to-code ratio with testify, envtest, declarative cases |
+| Integration/E2E | 8/10 | 20% | 1.60 | KinD integration on PRs, chaos testing, upgrade tests |
+| Build Integration | 8/10 | 15% | 1.20 | PR images, Konflux/Tekton pipeline, ARM64 verification |
+| Image Testing | 6/10 | 10% | 0.60 | Multi-stage UBI9 builds, arch verification, no runtime tests |
+| Coverage Tracking | 3/10 | 10% | 0.30 | Local coverprofile only, no codecov or thresholds |
+| CI/CD Automation | 8/10 | 15% | 1.20 | 21 workflows, good concurrency, nightly + release automation |
+| Static Analysis | 7/10 | 10% | 0.70 | golangci-lint + pre-commit, FIPS-compliant, no dep alerts |
+| Agent Rules | 6/10 | 5% | 0.30 | Good CLAUDE.md, no test creation rules |
+| **Overall** | **7.1/10** | **100%** | **7.10** | |
 
 ## Critical Gaps
 
-### 1. No Coverage Tracking or Enforcement on PRs
-- **Impact**: Coverage can silently regress. Developers have no visibility into whether PRs add adequate tests.
+### 1. No Coverage Tracking or Enforcement
+- **Impact**: Coverage regressions go undetected; no visibility into test coverage trends or per-PR impact
 - **Severity**: HIGH
 - **Effort**: 4-6 hours
-- **Details**: The Makefile generates `cover.out` via `-coverprofile`, but there's no codecov/coveralls integration, no `.codecov.yml`, and no PR comments showing coverage delta. The `unittests.yml` workflow runs tests but doesn't upload coverage artifacts.
+- **Details**: The Makefile generates `cover.out` via `-coverprofile` for unit, functional, and combined test targets, but this file is never uploaded, reported, or analyzed. No `.codecov.yml` exists. No coverage thresholds are enforced. PRs merge without any coverage visibility.
+- **Fix**: Add Codecov GitHub Action to test workflows, create `.codecov.yml` with target thresholds, enable PR comment reporting.
 
-### 2. No Container Security Scanning
-- **Impact**: CVEs in UBI9 base images, Go dependencies, and transitive deps not caught until production scanning.
+### 2. No Dependency Alert Configuration
+- **Impact**: Vulnerable or outdated dependencies (Go modules, Docker base images, GitHub Actions) remain undetected until manual review
 - **Severity**: HIGH
-- **Effort**: 2-4 hours
-- **Details**: No Trivy, Snyk, Grype, or equivalent scanning in any workflow. The `.trivyignore` file doesn't exist. No vulnerability threshold enforcement.
+- **Effort**: 1-2 hours
+- **Details**: Neither `.github/dependabot.yml` nor `renovate.json` exists. The repository has 216KB+ `go.sum` (significant dependency tree) with no automated update mechanism.
+- **Fix**: Add `.github/dependabot.yml` covering `gomod`, `docker`, and `github-actions` ecosystems.
 
-### 3. No SAST/CodeQL Integration
-- **Impact**: Security vulnerabilities in Go source code (injection, path traversal, etc.) not caught by automated analysis.
+### 3. No Container Runtime Validation
+- **Impact**: Image startup failures, missing binaries, or misconfigured entrypoints not caught until cluster deployment
 - **Severity**: MEDIUM
-- **Effort**: 2-3 hours
-- **Details**: No CodeQL, gosec, or Semgrep workflows. The only static analysis is golangci-lint which focuses on code quality, not security.
-
-### 4. No Container Runtime Validation
-- **Impact**: Image builds may pass but fail at runtime due to missing configs, wrong entrypoints, or missing dependencies.
-- **Severity**: MEDIUM
-- **Effort**: 4-6 hours
-- **Details**: The `build-arm64.yml` workflow verifies architecture but doesn't test startup. No health check validation, no smoke test of the operator binary inside the container.
-
-### 5. No PR-time Konflux Build Simulation
-- **Impact**: Production build failures discovered only post-merge; can cause multi-day debug cycles.
-- **Severity**: MEDIUM
-- **Effort**: 8-12 hours
+- **Effort**: 4-8 hours
+- **Details**: The ARM64 build workflow verifies architecture metadata via `podman inspect`, but no workflow validates that the built image actually starts, responds to health checks, or can serve the manager binary correctly. The KinD integration tests build and deploy but don't isolate container-specific failures.
+- **Fix**: Add a CI step after image build that runs `podman run --rm <image> --help` or validates startup behavior.
 
 ## Quick Wins
 
-### 1. Add Codecov Integration (2-4 hours)
-- **Impact**: PR-level coverage visibility and regression detection
-- **Implementation**:
-  ```yaml
-  # Add to .github/workflows/unittests.yml
-  - name: Upload coverage
-    uses: codecov/codecov-action@v4
-    with:
-      files: cover.out
-      fail_ci_if_error: false
-  ```
-  Create `.codecov.yml`:
-  ```yaml
-  coverage:
-    status:
-      project:
-        default:
-          target: auto
-          threshold: 2%
-      patch:
-        default:
-          target: 80%
-  ```
+### 1. Add Codecov Integration (4-6 hours)
+Upload existing `cover.out` artifacts and enforce coverage thresholds.
 
-### 2. Add Trivy Container Scanning (1-2 hours)
-- **Impact**: Early detection of CVEs in base images and Go dependencies
-- **Implementation**:
-  ```yaml
-  - name: Run Trivy vulnerability scanner
-    uses: aquasecurity/trivy-action@master
-    with:
-      image-ref: 'localhost/dspo:latest'
-      format: 'sarif'
-      output: 'trivy-results.sarif'
-      severity: 'CRITICAL,HIGH'
-  ```
+```yaml
+# .codecov.yml
+coverage:
+  status:
+    project:
+      default:
+        target: auto
+        threshold: 2%
+    patch:
+      default:
+        target: 70%
+```
 
-### 3. Add CodeQL Workflow (2-3 hours)
-- **Impact**: Automated Go security analysis on every PR
-- **Implementation**: Add `.github/workflows/codeql.yml` with Go analysis.
+Add to `unittests.yml` and `functests.yml`:
+```yaml
+      - name: Upload coverage
+        uses: codecov/codecov-action@v4
+        with:
+          file: cover.out
+          flags: unittests
+          token: ${{ secrets.CODECOV_TOKEN }}
+```
 
-### 4. Create .claude/rules/ Test Patterns (2-3 hours)
-- **Impact**: Consistent AI-assisted test generation following project conventions
-- **Implementation**: Generate rules with `/test-rules-generator` covering unit tests (build tags, testify), functional tests (envtest), and integration tests (KinD).
+### 2. Enable Dependabot (1-2 hours)
+```yaml
+# .github/dependabot.yml
+version: 2
+updates:
+  - package-ecosystem: gomod
+    directory: /
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 10
+  - package-ecosystem: docker
+    directory: /
+    schedule:
+      interval: weekly
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+```
 
-### 5. Update Pre-commit Hook Versions (1 hour)
-- **Impact**: Current hooks use `pre-commit-hooks v3.3.0` (2020) and `yamllint v1.25.0` (2020); updating reduces supply chain risk.
+### 3. Add Agent Test Creation Rules (2-3 hours)
+Create `.claude/rules/` with patterns for unit tests (build tags, testify assertions, envtest setup), functional tests (controller suite patterns), and integration tests (testify/suite, KinD prerequisites).
 
 ## Detailed Findings
 
-### CI/CD Pipeline
+### Unit Tests
 
-**Workflow Inventory (19 workflows):**
+**Score: 8/10**
+
+The repository has a strong unit testing foundation:
+
+- **24 test files** for **31 source files** (0.77 test-to-code ratio)
+- **Framework**: Go `testing` package + `testify` (assert, require, suite)
+- **Test isolation**: `t.Parallel()` used in 23 places across controller tests
+- **Build tags**: Tests are gated by `test_unit`, `test_functional`, `test_all` tags rather than directory alone
+- **envtest**: Used for functional tests via `sigs.k8s.io/controller-runtime/pkg/envtest` with `ENVTEST_K8S_VERSION=1.34.0`
+- **Declarative test cases**: 9 comprehensive test cases in `controllers/testdata/declarative/` with expected created/not_created resource files
+- **Test utilities**: `controllers/testutil/` with `equalities.go` and `util.go` helpers
+- **Component coverage**: Tests for apiserver, database, storage, webhook, workflow controller, MLMD, persistence agent, scheduled workflow, params, metrics, managed pipeline validation, workspace validation, chaos
+
+**Key test files**:
+- `controllers/suite_test.go` - envtest setup/teardown
+- `controllers/dspipeline_controller_func_test.go` - Functional controller tests
+- `controllers/dspipeline_params_test.go` - Parameter extraction tests
+- `controllers/dspipeline_chaos_test.go` - Chaos SDK tests (envtest-based)
+- `tls_profile_test.go` - TLS profile unit tests
+
+**Gaps**: No table-driven test patterns explicitly enforced; some test files (e.g., `storage_test.go`) have repetitive setup code that could benefit from shared fixtures.
+
+### Integration/E2E Tests
+
+**Score: 8/10**
+
+Excellent integration testing infrastructure:
+
+- **KinD Integration (PR-triggered)**: Two variants - standard (`kind-integration.yml`) and BYO-Argo (`kind-integration-byoargo.yml`), both triggered on PR changes to Go code, config, or test files
+- **Test framework**: `testify/suite` with `IntegrationTestSuite` struct providing shared setup/teardown
+- **5 integration test files**: `artifacts_test.go`, `dspa_v2_test.go`, `experiments_test.go`, `pipeline_runs_test.go`, `pipeline_test.go`
+- **Multiple DSPA configs**: `dspa-lite.yaml`, `dspa-external.yaml`, `dspa-k8s.yaml`, `dspa-external-lite.yaml`, `dspa-lite-tls.yaml`
+- **Endpoint flexibility**: Tests support both Kubernetes service (port-forward) and OpenShift route endpoints
+- **Log collection**: Automated log collection on failure via `collect_logs.sh`
+- **60-minute timeout**: Properly configured for long-running integration tests
+
+**Chaos Testing (innovative)**:
+- `chaos/knowledge/dspo-default.yaml` - Operator knowledge model defining components and steady state
+- **Tier 1 experiments**: Pod kill for apiserver, mariadb, minio, operator, workflow-controller
+- **Tier 2 experiments**: Config drift (apiserver configmap, DB secret, S3 secret), network partition (mariadb, minio)
+- `chaos-validate.yml` - Offline validation of chaos knowledge/experiments on PRs with breaking change detection
+- `chaos-integration.yml` - Live chaos experiments on KinD cluster on PRs
+
+**Upgrade Testing**: `upgrade-test.yml` (manual dispatch) tests version-to-version upgrades via OLM with DataScienceCluster resources.
+
+**Gaps**: No multi-version Kubernetes matrix testing (single KinD version v1.30.6); integration tests are not parallelized across variants.
+
+### Build Integration
+
+**Score: 8/10**
+
+Strong PR-time build validation:
+
+- **PR Image Builds**: Two-step pattern via `build-prs-trigger.yaml` (saves PR metadata as artifact) → `build-prs.yml` (builds image on `workflow_run` completion). Pushes PR images to `quay.io/opendatahub/data-science-pipelines-operator:odh-pr-<number>` and posts deployment instructions as PR comments.
+- **Konflux/Tekton Pipeline**: `.tekton/odh-data-science-pipelines-operator-controller-pull-request.yaml` defines hermetic build with gomod prefetch, multi-arch (x86_64, arm64, ppc64le), 5-day image expiry, triggered on PR via PipelinesAsCode annotations.
+- **ARM64 Build**: `build-arm64.yml` verifies cross-compilation and native arm64 builds on PR changes to Dockerfile/Makefile/go.mod.
+- **Dockerfile.konflux**: Separate Dockerfile with proper Red Hat labels (`com.redhat.component`, license terms, etc.)
+- **Go Version Consistency**: Dedicated workflow verifies Go version matches between `go.mod` and Dockerfiles.
+- **Kustomize Deployment**: Full kustomize overlay structure in `config/` with base, overlays, CRDs, RBAC, and operator manifests.
+- **Makefile Targets**: `build`, `deploy`, `deploy-kind`, `bundle`, `manifests`, `generate` with proper dependency chains.
+
+**Gaps**: PR image builds only build the operator image; no operator deployment/smoke test from the PR image in CI (that's covered by KinD integration tests separately).
+
+### Image Testing
+
+**Score: 6/10**
+
+Solid image build practices with some gaps:
+
+- **Multi-stage builds**: Both `Dockerfile` and `Dockerfile.konflux` use builder/runtime stages
+- **UBI9 base images**: `registry.access.redhat.com/ubi9/go-toolset:1.26.3` (builder) and `ubi9/ubi-minimal:latest` (runtime) - FIPS-capable
+- **Pinned digests**: Base images pinned by SHA256 digest in both Dockerfiles
+- **Non-root execution**: `USER 65532:65532` in both Dockerfiles
+- **Build cache**: `--mount=type=cache` for Go module and build cache in Dockerfile
+- **FIPS build**: `GOFIPS140=v1.0.0` and `-tags no_openssl` in build commands
+- **Architecture verification**: ARM64 workflow validates built image architecture via `podman inspect`
+- **K8s health probes**: Liveness/readiness probes defined for MLMD gRPC and MariaDB deployments in templates
+
+**Gaps**:
+- No Testcontainers or equivalent for runtime validation
+- No image startup test (verify manager binary starts correctly)
+- No container health check (`HEALTHCHECK`) in Dockerfile itself
+- Image testing limited to architecture metadata verification
+
+### Coverage Tracking
+
+**Score: 3/10**
+
+Coverage is generated but not tracked:
+
+- **Generation**: `-coverprofile cover.out` in all three Makefile test targets (`test`, `unittest`, `functest`)
+- **No reporting**: No codecov, coveralls, or equivalent integration
+- **No thresholds**: No coverage minimums enforced
+- **No PR reporting**: No coverage delta comments on PRs
+- **No `.codecov.yml`**: File does not exist
+- **No CI upload**: `cover.out` is generated but never uploaded or analyzed in any workflow
+
+This is the weakest dimension. Coverage data exists locally but provides no value to the team without reporting and enforcement.
+
+### CI/CD Automation
+
+**Score: 8/10**
+
+Comprehensive workflow coverage:
 
 | Workflow | Trigger | Purpose |
 |----------|---------|---------|
-| `unittests.yml` | PR, push to main/stable/v* | Unit tests |
-| `functests.yml` | PR, push to main/stable/v* | Functional tests (envtest) |
-| `kind-integration.yml` | PR (path-filtered), push | KinD integration tests |
-| `kind-integration-byoargo.yml` | PR (path-filtered), push | KinD with external Argo |
-| `chaos-integration.yml` | PR, push to main/stable | Chaos testing with operator-chaos SDK |
-| `chaos-validate.yml` | PR, push to main/stable | Chaos YAML validation + breaking change detection |
-| `precommit.yml` | PR, push to main/stable/v* | Pre-commit hooks (lint, fmt, vet) |
-| `build-arm64.yml` | PR (path-filtered), push to main | ARM64 cross-compile verification |
-| `build-prs-trigger.yaml` | PR (path-filtered) | Trigger PR image builds |
-| `build-prs.yml` | workflow_run | Build and push PR images |
-| `build-main.yml` | push to main | Build and push main images |
-| `build-tags.yml` | workflow_call | Build release images |
-| `go-version-consistency.yml` | PR (path-filtered), push | Verify Go version across Dockerfiles and go.mod |
-| `nightly_tests.yml` | schedule (daily), dispatch | Nightly build + test |
-| `upgrade-test.yml` | dispatch | DSP version upgrade testing |
-| `stable-merge-check.yml` | PR to stable | Integration test gate for stable branch |
-| `release_prep.yaml` | dispatch | Release preparation |
-| `release_trigger.yaml` | PR close (with label) | Trigger release creation |
-| `release_create.yaml` | workflow_run | Create release |
+| `unittests.yml` | push + PR | Unit tests via `make unittest` |
+| `functests.yml` | push + PR | Functional tests via `make functest` |
+| `kind-integration.yml` | push + PR (path-filtered) | KinD integration tests |
+| `kind-integration-byoargo.yml` | push + PR (path-filtered) | KinD integration with external Argo |
+| `chaos-validate.yml` | push + PR | Offline chaos validation + breaking change detection |
+| `chaos-integration.yml` | push + PR | Live chaos experiments on KinD |
+| `precommit.yml` | push + PR | Pre-commit hooks (lint, fmt, vet, yamllint) |
+| `build-prs-trigger.yaml` | PR | Trigger PR image build |
+| `build-prs.yml` | workflow_run | Build and push PR image to Quay |
+| `build-arm64.yml` | push + PR | ARM64 build verification |
+| `build-main.yml` | push (stable) | Build and push stable image |
+| `build-tags.yml` | workflow_call | Build tagged releases |
+| `go-version-consistency.yml` | PR (path-filtered) | Verify Go version consistency |
+| `stable-merge-check.yml` | PR (stable branch) | Validate stable branch merges |
+| `nightly_tests.yml` | schedule (daily) | Nightly build + unit + functional |
+| `upgrade-test.yml` | workflow_dispatch | Version upgrade testing |
+| `release_prep.yaml` | workflow_dispatch | Release preparation |
+| `release_trigger.yaml` | PR close (path-filtered) | Trigger release creation |
+| `release_create.yaml` | workflow_run | Create release artifacts |
 
-**Strengths:**
-- Comprehensive concurrency control on all workflows (`cancel-in-progress: true`)
-- Smart path filtering — docs-only changes don't trigger integration tests
-- Go version consistency check between `go.mod` and Dockerfiles
-- Nightly tests ensure main doesn't silently break
-- Upgrade testing workflow for version migration validation
+**Strengths**:
+- Concurrency control with `cancel-in-progress: true` on 12 of 21 workflows
+- Pre-commit caching (`actions/cache@v4`)
+- Timeout-minutes set on integration workflows (45-60 min)
+- Path-filtered triggers to avoid unnecessary runs
+- PR cleanup (delete Quay images when PR closes)
 
-**Gaps:**
-- No coverage upload step in any test workflow
-- No security scanning workflow (Trivy, CodeQL, Scorecard)
-- No SBOM generation in build workflows
-- Actions cache for Go modules via setup-go action but no explicit build cache
+**Gaps**:
+- No matrix/parallelization strategy for tests
+- Nightly tests TODO mentions notification mechanism not yet implemented
+- Some workflows use older `actions/checkout@v3` (should upgrade)
 
-### Test Coverage
+### Static Analysis
 
-**Test Architecture:**
-The project uses Go build tags to isolate test layers:
-- `test_unit` — 17 test files in `controllers/`, ~178 test functions, no cluster needed
-- `test_functional` — envtest-based tests in `controllers/`, real API server
-- `test_integration` — 6 test files in `tests/`, requires running KinD cluster
-- `test_chaos` — chaos engineering tests using operator-chaos SDK
-- `test_all` — runs unit + functional combined
+**Score: 7/10**
 
-**Test-to-Code Ratio:**
-- Source files: 30 Go files, ~7,919 lines
-- Test files: 23 test files, ~7,067 lines
-- **Ratio: 89%** — Excellent. Nearly 1:1 test-to-source ratio.
+#### Linting
+- **golangci-lint**: `.golangci.yaml` with 8 linters enabled: errcheck, gosimple, govet, ineffassign, staticcheck, typecheck, unused, revive
+- 5-minute timeout configured
+- Exclusion rule for `SA1019` (deprecated warnings) in `dspipeline_params.go`
+- Revive configured with dot-imports rule disabled
 
-**Testing Framework:**
-- `testify` (assertions and require)
-- Standard Go `testing` package
-- `envtest` from controller-runtime for functional tests
-- Custom test utilities in `tests/util/`
+#### Pre-commit Hooks
+Comprehensive `.pre-commit-config.yaml`:
+- `trailing-whitespace`, `check-merge-conflict`, `end-of-file-fixer`, `check-added-large-files`, `check-case-conflict`, `check-json`, `check-symlinks`, `detect-private-key`
+- `yamllint` with strict mode and custom `.yamllint.yaml` config
+- Go hooks: `go-fmt`, `golangci-lint`, `go-build`, `go-mod-tidy`
 
-**Key Unit Test Coverage Areas:**
-- API server template rendering (34 tests)
-- Managed pipelines validation (67 tests)
-- Parameter extraction (19 tests)
-- Storage configuration (12 tests)
-- Chaos resilience patterns (10 tests)
-- Metrics, MLMD, webhook, workflow controller
+#### FIPS Compatibility
+Excellent FIPS posture:
+- `godebug fips140=on` in `go.mod`
+- `GOFIPS140=v1.0.0` in both Dockerfiles
+- `-tags no_openssl` build flag
+- UBI9 base images (FIPS-capable)
+- No non-FIPS crypto imports detected (`crypto/md5`, `crypto/des`, `crypto/rc4`)
 
-**Integration Test Coverage:**
-- Pipeline creation and execution
-- Pipeline runs
-- Experiments
-- Artifacts
-- DSPAv2 features
-- Multi-namespace deployment (test-dspa, dspa-ext, test-k8s-dspa)
+#### Dependency Alerts
+- **No Dependabot**: `.github/dependabot.yml` does not exist
+- **No Renovate**: No `renovate.json`, `.renovaterc`, or `.renovaterc.json`
+- With a 216KB `go.sum` file representing a substantial dependency tree, this is a notable gap
 
-### Code Quality
+### Agent Rules
 
-**Linting (golangci-lint):**
-- Config: `.golangci.yaml` with 5-minute timeout
-- 8 linters enabled: errcheck, gosimple, govet, ineffassign, staticcheck, typecheck, unused, revive
-- Exclusion for deprecated API warnings (SA1019) in params
-- **Gap**: Could enable more linters (gocyclo, goconst, misspell, dupl, gofumpt)
+**Score: 6/10**
 
-**Pre-commit Hooks:**
-- Comprehensive hook set: trailing-whitespace, merge-conflict, EOF fixer, large file check, case conflict, JSON check, symlinks, private key detection
-- yamllint with strict mode
-- Go: fmt, golangci-lint, build, mod-tidy
-- **Gap**: Hook versions are from 2020 (pre-commit-hooks v3.3.0, yamllint v1.25.0)
+- **CLAUDE.md**: Present and comprehensive, covering:
+  - Project description (Kubernetes operator for DSPA CRs)
+  - Build commands (`make build`, `make manifests`, `make generate`)
+  - Test commands with all variants (`make unittest`, `make functest`, `make test`, single test example)
+  - Build tag explanation (`test_unit`, `test_functional`, `test_integration`, `test_all`)
+  - Architecture deep dive (reconcile loop, key packages, manifest templating, operator config, cache optimization)
+- **AGENTS.md**: Symlink to `CLAUDE.md`
+- **No `.claude/` directory**: No rules or skills directory exists
+- **No test creation rules**: No patterns for how to write new unit tests, functional tests, or integration tests with this project's specific conventions
 
-**Secret Detection:**
-- Gitleaks configured with `.gitleaks.toml`
-- Allowlist for test certificate fixtures (appropriate exceptions)
-- Integrated via pre-commit hooks
-
-### Container Images
-
-**Dockerfile Analysis:**
-- Multi-stage build with UBI9 go-toolset builder and ubi9-minimal runtime
-- FIPS-enabled build (`GOFIPS140=v1.0.0`)
-- Build cache mounts for Go modules and build cache
-- Non-root user (65532)
-- ARM64 support via `BUILDER_ARCH` arg (multiarch default, arm64 for Apple Silicon)
-- Architecture-specific base image digests pinned
-
-**Strengths:**
-- UBI9 base images (Red Hat supported)
-- FIPS compliance built-in
-- Non-root container
-- Build cache optimization
-- Multi-architecture support (amd64 + arm64)
-
-**Gaps:**
-- No Trivy/Snyk scanning
-- No SBOM generation
-- No image signing (cosign)
-- No runtime validation after build
-- No health check in Dockerfile
-
-### Security
-
-**Present:**
-- Gitleaks for secret detection (pre-commit + allowlist)
-- FIPS-enabled Go build
-- Non-root container user
-- Pinned action SHAs in newer workflows (v6.0.2 checkout)
-- Go version consistency enforcement
-
-**Missing:**
-- No CodeQL/SAST workflow
-- No container vulnerability scanning
-- No dependency scanning (Dependabot/Renovate)
-- No OpenSSF Scorecard
-- No SBOM generation or attestation
-- Older workflows still use unpinned action tags (e.g., `@v3`)
-
-### Chaos Testing (Standout Feature)
-
-This repository has **exceptional chaos testing** — a rare and valuable quality practice:
-
-**Framework:** `operator-chaos` SDK integrated as a Go tool
-- **Knowledge models**: `chaos/knowledge/dspo-default.yaml` — defines operator behavior expectations
-- **Tiered experiments:**
-  - Tier 1 (pod kill): operator, apiserver, mariadb, minio, workflow-controller
-  - Tier 2 (config drift + network): S3 secret drift, DB secret drift, apiserver configmap drift, MariaDB/MinIO network partition
-- **PR validation**: `chaos-validate.yml` runs offline validation and breaking change detection on every PR
-- **Live testing**: `chaos-integration.yml` runs actual chaos experiments against a KinD cluster
-- **SDK tests**: `test-chaos` build tag runs chaos-specific unit tests
-
-### Agent Rules (Agentic Flow Quality)
-
-**Status:** Partial
-
-**Present:**
-- `CLAUDE.md` — Well-written with architecture overview, build commands, test build tags, reconcile loop documentation, key packages, manifest templating, operator configuration, and cache optimization
-- `AGENTS.md` — Symlink to CLAUDE.md
-
-**Missing:**
-- No `.claude/` directory
-- No `.claude/rules/` for test creation guidance
-- No unit-tests.md, integration-tests.md, or chaos-tests.md rules
-- No test pattern examples for AI agents
-- No quality gate checklists
-
-**Gap Impact:** AI agents contributing to this repo won't know about build tag requirements (`test_unit`, `test_functional`), testify patterns, envtest setup, or chaos experiment structure. This can lead to incorrectly tagged tests or tests that don't follow project conventions.
-
-**Recommendation:** Use `/test-rules-generator` to create comprehensive test automation rules covering:
-- Unit test patterns (build tags, testify, controller test structure)
-- Functional test patterns (envtest, suite setup, TLS cert requirements)
-- Integration test patterns (KinD, test utilities, DSPA deployment)
-- Chaos test patterns (experiment YAML, knowledge models, tiered structure)
+**Gaps**:
+- No `.claude/rules/unit-tests.md` with build tag requirements, testify patterns, declarative case structure
+- No `.claude/rules/functional-tests.md` with envtest setup patterns
+- No `.claude/rules/integration-tests.md` with KinD and testify/suite conventions
 
 ## Recommendations
 
 ### Priority 0 (Critical)
-
-1. **Add Codecov/Coveralls integration** — Upload `cover.out` from unit and functional test workflows. Set minimum threshold (e.g., 80%) and patch coverage requirements. The infrastructure is already there (`-coverprofile cover.out`); just need the upload step.
-
-2. **Add Trivy container scanning** — Scan built images in the `build-arm64.yml` and `build-prs.yml` workflows. Set severity thresholds for CRITICAL and HIGH CVEs.
+1. **Add Codecov integration** - Create `.codecov.yml`, add `codecov/codecov-action` to `unittests.yml` and `functests.yml`, set project and patch coverage thresholds
+2. **Configure Dependabot** - Add `.github/dependabot.yml` covering `gomod`, `docker`, and `github-actions` ecosystems with weekly schedules
 
 ### Priority 1 (High Value)
-
-3. **Add CodeQL or gosec SAST workflow** — Create a dedicated security scanning workflow for Go code analysis.
-
-4. **Add container runtime validation** — After building the image, run `docker run --rm localhost/dspo:latest --help` or a startup check to verify the binary works inside the container.
-
-5. **Create .claude/rules/ for test patterns** — Generate rules covering all four test layers with build tag requirements, assertion patterns, and example structures.
-
-6. **Enable Dependabot or Renovate** — Automate dependency updates for Go modules and GitHub Actions.
+3. **Add container runtime validation** - After image builds, verify the manager binary starts correctly (`podman run --rm <image> /manager --help` or health endpoint check)
+4. **Create `.claude/rules/` directory** - Add test creation rules documenting build tag requirements, testify patterns, envtest setup, declarative test case structure, and integration test conventions
+5. **Add multi-version K8s matrix testing** - Test KinD integration against multiple Kubernetes versions (e.g., 1.29, 1.30, 1.31) via matrix strategy
 
 ### Priority 2 (Nice-to-Have)
-
-7. **Add PR-time Konflux build simulation** — Mirror Konflux's multi-stage build process in a PR workflow to catch production build failures early.
-
-8. **Add SBOM generation and image signing** — Use Syft for SBOM and cosign for signing release images.
-
-9. **Update pre-commit hook versions** — Current versions are 4+ years old. Update to latest for security and feature improvements.
-
-10. **Add performance regression testing** — Benchmark reconciliation latency and resource consumption to detect regressions.
-
-11. **Add OpenSSF Scorecard** — Automated security best practices assessment.
-
-12. **Pin all GitHub Action versions to SHA** — Several workflows still use `@v3` tags; pin to commit SHAs for supply chain security.
+6. **Add test parallelization** - Use matrix strategy to run KinD integration variants (standard + BYO-Argo) in parallel
+7. **Expand golangci-lint** - Add additional linters: `gocyclo`, `dupl`, `bodyclose`, `noctx`, `exhaustive`
+8. **Upgrade GitHub Actions versions** - Update `actions/checkout@v3` to `v4`, `actions/setup-python@v5` is current
+9. **Add coverage badge** - Display coverage status in README once Codecov is integrated
+10. **Implement nightly test notifications** - Address the TODO in `nightly_tests.yml` for failure notifications (Slack or email)
 
 ## Comparison to Gold Standards
 
-| Practice | DSPO | odh-dashboard | notebooks | kserve |
-|----------|------|--------------|-----------|--------|
-| Unit Tests | Build-tag gated, testify | Jest + RTL | N/A (notebooks) | Go testing + testify |
-| Integration/E2E | KinD on PRs | Cypress + contract tests | Image validation | KinD + multi-version |
-| Chaos Testing | **operator-chaos SDK** | None | None | None |
-| Coverage Tracking | Local only | Codecov enforced | N/A | Codecov enforced |
-| Coverage Enforcement | **None** | PR gates | N/A | Min threshold |
-| Container Scanning | **None** | Trivy | Trivy | Trivy |
-| SAST | **None** | CodeQL | None | CodeQL |
-| Pre-commit | Yes (comprehensive) | Yes | Limited | Yes |
-| Secret Detection | Gitleaks | Gitleaks | None | None |
-| Agent Rules | CLAUDE.md (partial) | Comprehensive .claude/ | None | None |
-| Multi-arch | ARM64 + amd64 | amd64 only | Multi-arch | amd64 only |
-| FIPS | **Yes** | No | No | No |
-| Nightly Tests | **Yes** | Yes | Yes | Yes |
-| Release Automation | **Full pipeline** | Manual | Semi-auto | Semi-auto |
+| Capability | DSPO | odh-dashboard | notebooks | kserve |
+|-----------|------|---------------|-----------|--------|
+| Unit test ratio | 0.77 (strong) | High | Moderate | High |
+| Integration tests | KinD + chaos | Multi-layer | Image-focused | envtest + KinD |
+| Coverage tracking | Local only | Enforced | Partial | Enforced |
+| PR builds | Quay + Konflux | Yes | Yes | Yes |
+| Multi-arch | x86_64 + arm64 + ppc64le | Limited | Multi-arch | Limited |
+| FIPS compliance | GOFIPS140 + UBI9 | Partial | FIPS patterns | Partial |
+| Chaos testing | Tiered experiments | None | None | None |
+| Agent rules | CLAUDE.md | Comprehensive | None | Partial |
+| Dependency alerts | None | Dependabot | Dependabot | Dependabot |
+| Coverage enforcement | None | Thresholds | Partial | Thresholds |
 
-**DSPO Standout Strengths vs Gold Standards:**
-- Only repo with chaos testing (operator-chaos SDK)
-- FIPS-enabled builds
-- Full release automation pipeline
-- Multi-architecture support with verification
-- Go version consistency enforcement
+**DSPO Strengths vs Gold Standards**:
+- **Chaos testing** is a standout capability not found in most gold standard repos
+- **Multi-architecture** Konflux builds (x86_64, arm64, ppc64le) exceed most peers
+- **FIPS configuration** with `GOFIPS140=v1.0.0` is leading-edge
+- **Build tag system** for test categorization is well-designed
+
+**DSPO Gaps vs Gold Standards**:
+- Coverage tracking is the largest gap vs peers like kserve and odh-dashboard
+- Dependency alerts (Dependabot/Renovate) are standard across gold repos
+- Test creation agent rules would bring DSPO to parity with odh-dashboard
 
 ## File Paths Reference
 
-| Category | Files |
-|----------|-------|
-| CI/CD | `.github/workflows/` (19 workflows) |
-| Actions | `.github/actions/{build,kind,setup-go}/action.yml` |
-| Test Scripts | `.github/scripts/tests/tests.sh`, `.github/scripts/tests/collect_logs.sh` |
-| Unit Tests | `controllers/*_test.go` (17 files) |
-| Integration Tests | `tests/*_test.go` (6 files) |
-| Chaos Experiments | `chaos/experiments/tier{1,2}/*.yaml` |
-| Chaos Knowledge | `chaos/knowledge/dspo-default.yaml` |
-| Linting | `.golangci.yaml` |
-| Pre-commit | `.pre-commit-config.yaml` |
-| Secret Detection | `.gitleaks.toml` |
-| Dockerfile | `Dockerfile` (main), `.github/build/Dockerfile` |
-| Agent Rules | `CLAUDE.md`, `AGENTS.md` (symlink) |
-| API Types | `api/v1/` |
-| Controllers | `controllers/` |
-| Config | `config/` |
+### CI/CD Workflows
+- `.github/workflows/unittests.yml` - Unit tests
+- `.github/workflows/functests.yml` - Functional tests
+- `.github/workflows/kind-integration.yml` - KinD integration
+- `.github/workflows/kind-integration-byoargo.yml` - KinD integration (BYO Argo)
+- `.github/workflows/chaos-validate.yml` - Chaos validation
+- `.github/workflows/chaos-integration.yml` - Chaos integration
+- `.github/workflows/precommit.yml` - Pre-commit checks
+- `.github/workflows/build-prs-trigger.yaml` - PR build trigger
+- `.github/workflows/build-prs.yml` - PR image build
+- `.github/workflows/build-arm64.yml` - ARM64 build
+- `.github/workflows/nightly_tests.yml` - Nightly tests
+- `.github/workflows/upgrade-test.yml` - Upgrade testing
+- `.tekton/odh-data-science-pipelines-operator-controller-pull-request.yaml` - Konflux PR pipeline
+
+### Test Files
+- `controllers/suite_test.go` - envtest setup
+- `controllers/*_test.go` - Unit and functional tests (17 files)
+- `controllers/testdata/declarative/` - Declarative test cases (9 cases)
+- `controllers/testutil/` - Test helpers
+- `tests/suite_test.go` - Integration test suite
+- `tests/*_test.go` - Integration tests (5 files)
+- `tests/resources/` - Test DSPA configurations
+- `chaos/knowledge/` - Chaos knowledge models
+- `chaos/experiments/` - Chaos experiments (tier 1 + tier 2)
+
+### Build & Config
+- `Dockerfile` - Standard operator image build
+- `Dockerfile.konflux` - Konflux-specific build with labels
+- `.golangci.yaml` - Linter configuration
+- `.pre-commit-config.yaml` - Pre-commit hooks
+- `.yamllint.yaml` - YAML linting rules
+- `CLAUDE.md` - Agent rules documentation
+- `Makefile` - Build and test targets
+- `config/` - Kustomize manifests and CRDs

@@ -86,7 +86,7 @@ function normalizeRock(data, priority) {
  * @param {object} parsedDoc - Pre-fetched parse result from previewDocImport
  * @returns {object} { imported, skipped, skippedNames, validationErrors, mode, bigRocks }
  */
-function executeDocImport(readFromStorage, writeToStorage, version, docIdOrUrl, mode, parsedDoc) {
+async function executeDocImport(readFromStorage, writeToStorage, version, docIdOrUrl, mode, parsedDoc) {
   const parsedRocks = parsedDoc.bigRocks
 
   if (parsedRocks.length === 0) {
@@ -96,18 +96,18 @@ function executeDocImport(readFromStorage, writeToStorage, version, docIdOrUrl, 
     )
   }
 
-  const config = getConfig(readFromStorage)
+  const config = await getConfig(readFromStorage)
   if (!config.releases[version]) {
     throw Object.assign(new Error('Release ' + version + ' not found'), { statusCode: 404 })
   }
 
   // Load pillar options from PM Hub config for validation
-  var pillarConfig = readFromStorage('releases/pm-hub/pillar-config.json')
+  var pillarConfig = await readFromStorage('releases/pm-hub/pillar-config.json')
   var pillarOptions = (pillarConfig && Array.isArray(pillarConfig.pillars))
     ? pillarConfig.pillars.map(function(p) { return p.name }).filter(Boolean)
     : []
 
-  const releaseData = loadReleaseData(readFromStorage, version)
+  const releaseData = await loadReleaseData(readFromStorage, version)
   const bigRocks = mode === 'replace' ? [] : (releaseData.bigRocks || []).slice()
   const existingNames = new Set(bigRocks.map(function(r) { return r.name }))
 
@@ -146,7 +146,7 @@ function executeDocImport(readFromStorage, writeToStorage, version, docIdOrUrl, 
   }
 
   releaseData.bigRocks = bigRocks
-  writeToStorage(releaseFilePath(version), releaseData)
+  await writeToStorage(releaseFilePath(version), releaseData)
 
   return {
     imported: imported,

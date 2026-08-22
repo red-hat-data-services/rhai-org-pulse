@@ -5,5 +5,7 @@ metadata:
   labels:
     shard: internal
     paas.redhat.com/appcode: AMBC-001
+  annotations:
+    haproxy.router.openshift.io/timeout: 120s
 spec:
   host: api-team-tracker.apps.int.spoke.preprod.us-west-2.aws.paas.redhat.com

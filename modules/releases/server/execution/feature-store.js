@@ -12,7 +12,7 @@ let storeWriteInProgress = false;
 
 // Jira-owned fields — Jira always wins, preserve existing if jiraData is null
 const JIRA_FIELDS = [
-  'status', 'statusCategory', 'colorStatus', 'ownerStatusColor',
+  'issueType', 'status', 'statusCategory', 'colorStatus', 'ownerStatusColor',
   'statusSummary', 'assignee', 'pm', 'labels', 'fixVersions',
   'targetVersions', 'components', 'priority', 'team', 'releaseType',
   'docsRequired', 'targetEnd', 'riceScore', 'riceStatus', 'isBlocked',
@@ -31,6 +31,21 @@ const PIPELINE_INDEX_FIELDS = [
 
 // AI-review-owned fields — preserved across pipeline/Jira merges
 const AI_REVIEW_FIELDS = ['aiReview'];
+
+/**
+ * Prefer Jira-discovered child Epic list over pipeline metrics.totalEpics.
+ * fullJiraSync stores linked Epics on feature.epics; pipeline totalEpics can be stale.
+ *
+ * @param {object} feature
+ * @returns {number}
+ */
+function deriveEpicCount(feature) {
+  if (!feature) return 0
+  if (Array.isArray(feature.epics) && feature._sources && feature._sources.jira) {
+    return feature.epics.length
+  }
+  return feature.metrics ? (feature.metrics.totalEpics || 0) : 0
+}
 
 /**
  * Merge data from existing store, pipeline ingest, and Jira enrichment.
@@ -141,7 +156,7 @@ async function writeFeatures(storage, features) {
     for (let i = 0; i < features.length; i++) {
       const feature = features[i];
       if (!feature.key) continue;
-      storage.writeToStorage(
+      await storage.writeToStorage(
         DATA_PREFIX + '/features/' + feature.key + '.json',
         feature
       );
@@ -160,9 +175,9 @@ async function writeFeatures(storage, features) {
  * @param {object} storage - Storage abstraction
  */
 async function rebuildIndex(storage) {
-  const fileNames = storage.listStorageFiles(DATA_PREFIX + '/features');
+  const fileNames = await storage.listStorageFiles(DATA_PREFIX + '/features');
   if (!fileNames || fileNames.length === 0) {
-    storage.writeToStorage(DATA_PREFIX + '/index.json', {
+    await storage.writeToStorage(DATA_PREFIX + '/index.json', {
       fetchedAt: new Date().toISOString(),
       schemaVersion: 'v2',
       featureCount: 0,
@@ -177,13 +192,17 @@ async function rebuildIndex(storage) {
     const fileName = fileNames[i];
     if (!fileName.endsWith('.json')) continue;
 
-    const feature = storage.readFromStorage(DATA_PREFIX + '/features/' + fileName);
+    const feature = await storage.readFromStorage(DATA_PREFIX + '/features/' + fileName);
     if (!feature || !feature.key) continue;
+
+    // Skip stale features (no longer in Jira) from the index
+    if (feature._stale) continue;
 
     // Map detail fields to index summary fields
     const indexEntry = {
       key: feature.key,
       summary: feature.summary || '',
+      issueType: feature.issueType || null,
       status: feature.status || null,
       statusCategory: feature.statusCategory || null,
       priority: feature.priority || null,
@@ -193,9 +212,9 @@ async function rebuildIndex(storage) {
         : null,
       fixVersions: feature.fixVersions || [],
       labels: feature.labels || [],
-      // Derived from metrics
+      // Derived from metrics (epicCount prefers Jira feature.epics when synced)
       completionPct: feature.metrics ? (feature.metrics.completionPct || 0) : 0,
-      epicCount: feature.metrics ? (feature.metrics.totalEpics || 0) : 0,
+      epicCount: deriveEpicCount(feature),
       issueCount: feature.metrics ? (feature.metrics.totalIssues || 0) : 0,
       blockerCount: feature.metrics ? (feature.metrics.blockerCount || 0) : 0,
       health: feature.metrics ? (feature.metrics.health || null) : null,
@@ -226,7 +245,7 @@ async function rebuildIndex(storage) {
     features.push(indexEntry);
   }
 
-  storage.writeToStorage(DATA_PREFIX + '/index.json', {
+  await storage.writeToStorage(DATA_PREFIX + '/index.json', {
     fetchedAt: new Date().toISOString(),
     schemaVersion: 'v2',
     featureCount: features.length,
@@ -238,6 +257,7 @@ module.exports = {
   mergeFeatureData,
   writeFeatures,
   rebuildIndex,
+  deriveEpicCount,
   DATA_PREFIX,
   JIRA_FIELDS,
   PIPELINE_FIELDS,

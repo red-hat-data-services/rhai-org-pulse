@@ -3,6 +3,7 @@ import { ref, computed, watch, onBeforeUnmount, nextTick } from 'vue'
 import PipelineTimeline from './PipelineTimeline.vue'
 import { getRecommendationClass, getRecommendationLabel, getRecommendationTooltip, getScoreClass, getReviewStatusClass, getReviewStatusLabel, getReviewStatusTooltip } from '../utils/feature-helpers.js'
 import { useTestPlans } from '../composables/useTestPlans.js'
+import { usePipelineSignals } from '../composables/usePipelineSignals.js'
 import InfoBubble from './InfoBubble.vue'
 
 const props = defineProps({
@@ -13,7 +14,7 @@ const props = defineProps({
   loadFeatureDetail: { type: Function, default: null }
 })
 
-const emit = defineEmits(['close', 'navigateToRFE', 'navigateToTestPlan'])
+const emit = defineEmits(['close', 'navigateToRFE', 'navigateToTestPlan', 'navigateToDecomposer', 'navigateToDocumentation', 'navigateToBuildRelease', 'viewInReleases'])
 
 const featureDetail = ref(null)
 const detailLoading = ref(false)
@@ -21,19 +22,27 @@ const modalRef = ref(null)
 let previousActiveElement = null
 
 const { loadTestPlanDetail } = useTestPlans()
+const { loadPipelineSignals } = usePipelineSignals()
 const testPlanData = ref(null)
+const pipelineSignals = ref(null)
 
 watch(
   () => props.feature?.key,
   async (key) => {
     featureDetail.value = null
     testPlanData.value = null
+    pipelineSignals.value = null
     if (!props.show || !key || !props.loadFeatureDetail) return
     detailLoading.value = true
     try {
-      featureDetail.value = await props.loadFeatureDetail(key)
-      // Load test plan data for this feature (sourceKey matches feature.key)
-      testPlanData.value = await loadTestPlanDetail(key)
+      const [detail, tp, signals] = await Promise.allSettled([
+        props.loadFeatureDetail(key),
+        loadTestPlanDetail(key),
+        loadPipelineSignals(key)
+      ])
+      featureDetail.value = detail.status === 'fulfilled' ? detail.value : null
+      testPlanData.value = tp.status === 'fulfilled' ? tp.value : null
+      pipelineSignals.value = signals.status === 'fulfilled' ? signals.value : null
     } catch {
       // Silently fail - slim data still shows
     } finally {
@@ -110,6 +119,15 @@ const history = computed(() => featureDetail.value?.history || [])
                 {{ feature.key }}
               </a>
               <span v-else class="font-mono text-xs text-gray-500 dark:text-gray-400 shrink-0">{{ feature.key }}</span>
+              <button
+                @click="emit('viewInReleases', feature.key)"
+                class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-medium text-gray-500 dark:text-gray-400 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors shrink-0"
+              >
+                <svg class="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                </svg>
+                Releases
+              </button>
             </div>
             <button
               @click="emit('close')"
@@ -271,7 +289,18 @@ const history = computed(() => featureDetail.value?.history || [])
             <div v-if="detailLoading" class="text-xs text-gray-400 dark:text-gray-500 mb-4">Loading details...</div>
 
             <!-- Pipeline Progress -->
-            <PipelineTimeline :feature="featureDetail?.latest || feature" :testPlan="testPlanData?.latest" :phases="phases" :jiraHost="jiraHost" @navigateToRFE="emit('navigateToRFE', $event)" @navigateToTestPlan="emit('navigateToTestPlan', $event)" />
+            <PipelineTimeline
+              :feature="featureDetail?.latest || feature"
+              :testPlan="testPlanData?.latest"
+              :phases="phases"
+              :jiraHost="jiraHost"
+              :signals="pipelineSignals"
+              @navigateToRFE="emit('navigateToRFE', $event)"
+              @navigateToTestPlan="emit('navigateToTestPlan', $event)"
+              @navigateToDecomposer="emit('navigateToDecomposer', $event)"
+              @navigateToDocumentation="emit('navigateToDocumentation', $event)"
+              @navigateToBuildRelease="emit('navigateToBuildRelease', $event)"
+            />
           </div>
         </div>
       </div>

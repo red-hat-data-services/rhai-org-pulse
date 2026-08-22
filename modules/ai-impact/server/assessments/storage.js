@@ -6,8 +6,8 @@ const MAX_HISTORY = 20;
  * @param {Function} readFromStorage - The storage read function
  * @returns {object} Assessments data object (never null)
  */
-function readAssessments(readFromStorage) {
-  const data = readFromStorage(STORAGE_KEY);
+async function readAssessments(readFromStorage) {
+  const data = await readFromStorage(STORAGE_KEY);
   if (!data || typeof data !== 'object' || !data.assessments) {
     return { lastSyncedAt: null, totalAssessed: 0, assessments: {} };
   }
@@ -16,11 +16,11 @@ function readAssessments(readFromStorage) {
 
 /**
  * Atomic write via the shared storage abstraction.
- * @param {Function} writeToStorageAtomic - The storage atomic write function
+ * @param {Function} writeToStorage - The storage write function
  * @param {object} data - The assessments data object to write
  */
-function writeAssessmentsAtomic(writeToStorageAtomic, data) {
-  writeToStorageAtomic(STORAGE_KEY, data);
+async function writeAssessmentsAtomic(writeToStorage, data) {
+  await writeToStorage(STORAGE_KEY, data);
 }
 
 /**

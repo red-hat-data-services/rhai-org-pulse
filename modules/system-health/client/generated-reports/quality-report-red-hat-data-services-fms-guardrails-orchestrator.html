@@ -332,7 +332,7 @@
     <div class="container">
         <header>
             <h1>Quality Analysis Report</h1>
-            <p class="timestamp">Generated on July 06, 2026 at 04:50 PM</p>
+            <p class="timestamp">Generated on July 20, 2026 at 06:50 PM</p>
             <h2 style="margin-top: 1rem; font-weight: 400;">red-hat-data-services/fms-guardrails-orchestrator</h2>
         </header>
 
@@ -344,11 +344,11 @@
                         <circle class="score-arc" cx="100" cy="100" r="90"
                                 stroke="#fd7e14"
                                 stroke-dasharray="565.4861999999999"
-                                stroke-dashoffset="265.778514"
+                                stroke-dashoffset="271.43337599999995"
                                 id="scoreArc"></circle>
                     </svg>
                     <div class="score-text">
-                        <div class="score-value">5.3</div>
+                        <div class="score-value">5.2</div>
                         <div class="score-label">Overall Score</div>
                     </div>
                 </div>
@@ -364,38 +364,43 @@
                         
                         <div class="scorecard-item">
                             <h3>Unit Tests</h3>
-                            <div class="scorecard-score" style="color: #ffc107;">7.0/10</div>
-                            <div class="scorecard-status">33 inline tests across 12 modules; good coverage of config, models, utils, but no coverage tracking</div>
+                            <div class="scorecard-score" style="color: #ffc107;">6.0/10</div>
+                            <div class="scorecard-status">Inline unit tests in 12/54 source files (22%); 28 #[test] functions with good test isolation using mocktail</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Integration/E2E</h3>
-                            <div class="scorecard-score" style="color: #ffc107;">7.0/10</div>
-                            <div class="scorecard-status">86 integration tests with excellent mock infrastructure (mocktail); no real-service E2E</div>
+                            <div class="scorecard-score" style="color: #fd7e14;">5.0/10</div>
+                            <div class="scorecard-status">86 async integration tests across 12 test files using mock servers; no true E2E or multi-version testing</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Build Integration</h3>
-                            <div class="scorecard-score" style="color: #dc3545;">3.0/10</div>
-                            <div class="scorecard-status">No PR-time image build validation; tests only run inside Dockerfiles, no Konflux simulation</div>
+                            <div class="scorecard-score" style="color: #ffc107;">7.0/10</div>
+                            <div class="scorecard-status">GitHub Actions PR validation + Tekton/Konflux multi-arch builds; tests run during image build</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Image Testing</h3>
                             <div class="scorecard-score" style="color: #fd7e14;">5.0/10</div>
-                            <div class="scorecard-status">Multi-arch builds (amd64/ppc64le/s390x); cargo test in build stage; no vulnerability scanning or SBOM</div>
+                            <div class="scorecard-status">Multi-stage UBI 9 builds for 4 architectures; no runtime validation or Testcontainers</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Coverage Tracking</h3>
                             <div class="scorecard-score" style="color: #dc3545;">1.0/10</div>
-                            <div class="scorecard-status">Zero coverage tooling — no tarpaulin, grcov, llvm-cov, or codecov integration</div>
+                            <div class="scorecard-status">No coverage tooling (no tarpaulin, llvm-cov, codecov, or thresholds)</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>CI/CD Automation</h3>
-                            <div class="scorecard-score" style="color: #fd7e14;">5.0/10</div>
-                            <div class="scorecard-status">Single workflow with fmt/clippy/build/test and caching; no security scanning, no image build, no coverage</div>
+                            <div class="scorecard-score" style="color: #ffc107;">6.0/10</div>
+                            <div class="scorecard-status">Single GitHub Actions workflow with caching and clippy enforcement; Tekton for Konflux builds</div>
+                        </div>
+                        <div class="scorecard-item">
+                            <h3>Static Analysis</h3>
+                            <div class="scorecard-score" style="color: #ffc107;">7.0/10</div>
+                            <div class="scorecard-status">Clippy with -Dwarnings, pre-commit hooks, Renovate configured; FIPS ring-based TLS not fully certified</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Agent Rules</h3>
                             <div class="scorecard-score" style="color: #dc3545;">0.0/10</div>
-                            <div class="scorecard-status">No CLAUDE.md, no .claude/ directory, no AI agent test automation guidance</div>
+                            <div class="scorecard-status">No CLAUDE.md, AGENTS.md, or .claude/ directory</div>
                         </div>
                     </div>
                 </div>
@@ -411,43 +416,35 @@
                     <ul class="items-list">
                         
                         <li class="item-card high">
-                            <div class="item-description">No code coverage tracking or enforcement</div>
-                            <p>No visibility into untested code paths; regressions can be introduced silently</p>
+                            <div class="item-description">No code coverage tracking</div>
+                            <p>Cannot measure or enforce test coverage; regressions go undetected</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-high">HIGH</span>
                                 <span class="meta-tag effort-tag">4-6 hours</span>
                             </div>
                         </li>
                         <li class="item-card high">
-                            <div class="item-description">No security scanning in CI (Trivy, CodeQL, SAST)</div>
-                            <p>Vulnerabilities in dependencies and source code go undetected until production</p>
+                            <div class="item-description">No true E2E tests against real services</div>
+                            <p>Integration issues between orchestrator and actual detector/chunker/LLM services only found in deployment</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-high">HIGH</span>
-                                <span class="meta-tag effort-tag">4-8 hours</span>
+                                <span class="meta-tag effort-tag">16-24 hours</span>
                             </div>
                         </li>
                         <li class="item-card high">
-                            <div class="item-description">No PR-time container image build validation</div>
-                            <p>Build failures only discovered post-merge in Konflux; multi-arch issues caught late</p>
+                            <div class="item-description">FIPS TLS compliance gap — rustls with ring provider</div>
+                            <p>ring crypto provider is not FIPS 140-2/3 certified; may fail FIPS compliance requirements in production</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-high">HIGH</span>
-                                <span class="meta-tag effort-tag">8-12 hours</span>
+                                <span class="meta-tag effort-tag">8-16 hours</span>
                             </div>
                         </li>
                         <li class="item-card medium">
-                            <div class="item-description">Image hardening inconsistent across architectures</div>
-                            <p>s390x and ppc64le images skip hardening scripts present in amd64 Dockerfile</p>
+                            <div class="item-description">No agent rules for AI-assisted development</div>
+                            <p>AI agents lack project-specific guidance for test patterns, architecture decisions, and coding standards</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-medium">MEDIUM</span>
                                 <span class="meta-tag effort-tag">2-4 hours</span>
-                            </div>
-                        </li>
-                        <li class="item-card medium">
-                            <div class="item-description">No E2E tests against real detectors/generators</div>
-                            <p>Mock-only integration tests may miss real-world API incompatibilities</p>
-                            <div class="item-meta">
-                                <span class="meta-tag severity-medium">MEDIUM</span>
-                                <span class="meta-tag effort-tag">16-24 hours</span>
                             </div>
                         </li>
                     </ul>
@@ -464,43 +461,35 @@
                     <ul class="items-list">
                         
                         <li class="item-card ">
-                            <div class="item-description">Add cargo-tarpaulin coverage to CI workflow</div>
-                            <p>Immediate visibility into test coverage; enables coverage enforcement thresholds</p>
+                            <div class="item-description">Add cargo-tarpaulin or llvm-cov to CI for coverage tracking</div>
+                            <p>Immediately gain visibility into test coverage gaps; enables threshold enforcement</p>
                             <div class="item-meta">
                                 
-                                <span class="meta-tag effort-tag">2-3 hours</span>
+                                <span class="meta-tag effort-tag">2-4 hours</span>
                             </div>
                         </li>
                         <li class="item-card ">
-                            <div class="item-description">Add Trivy container scan step to CI</div>
-                            <p>Catch known CVEs in dependencies and base images before merge</p>
+                            <div class="item-description">Add codecov.yml with PR coverage reporting</div>
+                            <p>Coverage reporting on every PR with diff coverage gates</p>
                             <div class="item-meta">
                                 
                                 <span class="meta-tag effort-tag">1-2 hours</span>
                             </div>
                         </li>
                         <li class="item-card ">
-                            <div class="item-description">Add CodeQL/clippy-sarif for SAST reporting</div>
-                            <p>GitHub Security tab integration; automated vulnerability alerts</p>
+                            <div class="item-description">Create CLAUDE.md with test patterns and architecture guidance</div>
+                            <p>Improve AI-generated code quality and consistency; onboard new contributors faster</p>
                             <div class="item-meta">
                                 
                                 <span class="meta-tag effort-tag">2-3 hours</span>
                             </div>
                         </li>
                         <li class="item-card ">
-                            <div class="item-description">Unify image hardening across all architecture Dockerfiles</div>
-                            <p>Consistent security posture across all supported platforms</p>
+                            <div class="item-description">Add scheduled CI workflow for nightly builds</div>
+                            <p>Catch dependency breakage and flaky tests early</p>
                             <div class="item-meta">
                                 
                                 <span class="meta-tag effort-tag">1-2 hours</span>
-                            </div>
-                        </li>
-                        <li class="item-card ">
-                            <div class="item-description">Create basic CLAUDE.md with test patterns</div>
-                            <p>AI agents can generate consistent, idiomatic tests matching existing patterns</p>
-                            <div class="item-meta">
-                                
-                                <span class="meta-tag effort-tag">2-3 hours</span>
                             </div>
                         </li>
                     </ul>
@@ -517,15 +506,15 @@
                         
                         <div class="rec-priority p0">
                             <h3>Priority 0: Critical</h3>
-                            <ul><li>Add cargo-tarpaulin or llvm-cov coverage to CI with codecov integration and minimum threshold (e.g., 60%)</li><li>Add Trivy container scanning for all three architecture Dockerfiles</li><li>Add CodeQL or equivalent SAST workflow for Rust security analysis</li></ul>
+                            <ul><li>Add code coverage tracking with cargo-tarpaulin or llvm-cov in CI, with minimum threshold enforcement</li><li>Evaluate aws-lc-rs or boring crate as FIPS-certified TLS crypto provider to replace ring</li><li>Add true E2E test suite with real detector/chunker service stubs or containerized test environment</li></ul>
                         </div>
                         <div class="rec-priority p1">
                             <h3>Priority 1: High Value</h3>
-                            <ul><li>Add PR-time Docker image build validation (at least for amd64)</li><li>Unify Dockerfile hardening scripts across all architectures</li><li>Add dependency scanning (cargo-audit) to CI workflow</li><li>Create comprehensive agent rules (.claude/rules/) for test automation guidance</li></ul>
+                            <ul><li>Add scheduled/nightly CI workflow for periodic test runs</li><li>Create CLAUDE.md and .claude/rules/ for test patterns and architecture guidance</li><li>Add matrix testing for multiple Rust toolchain versions</li><li>Implement container runtime validation (startup, health check, basic API smoke test)</li></ul>
                         </div>
                         <div class="rec-priority p2">
                             <h3>Priority 2: Nice-to-Have</h3>
-                            <ul><li>Add E2E test workflow against real detector/generator services</li><li>Add SBOM generation (syft/cyclonedx) to container builds</li><li>Add image signing with cosign</li><li>Add performance/load testing for orchestrator endpoints</li></ul>
+                            <ul><li>Add performance/load testing for API endpoints</li><li>Add test parallelization in CI (cargo test with thread options)</li><li>Create docker-compose for local development environment</li><li>Add OpenAPI contract testing against generated specs</li></ul>
                         </div>
                     </div>
                 </div>

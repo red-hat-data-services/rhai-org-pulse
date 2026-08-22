@@ -1,0 +1,23 @@
+{
+  "name": "PM Pipeline",
+  "slug": "pm-pipeline",
+  "description": "Planning prep and pipeline visibility for Product Managers — where RFEs and features are, what's blocked, and what to do next",
+  "icon": "Workflow",
+  "order": 6,
+  "client": {
+    "entry": "./client/index.js",
+    "navItems": [
+      { "id": "planning-prep", "label": "Planning Prep", "icon": "ClipboardList", "default": true },
+      { "id": "my-pipeline", "label": "My Pipeline", "icon": "GitBranch" },
+      { "id": "learn", "label": "Learn", "icon": "BookOpen" }
+    ]
+  },
+  "server": {
+    "entry": "./server/index.js"
+  },
+  "secrets": {
+    "platform": ["jira"]
+  },
+  "defaultEnabled": true,
+  "requires": ["releases"]
+}

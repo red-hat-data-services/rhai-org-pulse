@@ -7,8 +7,8 @@ const { createAuthMiddleware } = require('../../../../shared/server/auth');
 function createMockStorage(initial = {}) {
   const store = { ...initial };
   return {
-    readFromStorage(key) { return store[key] ? JSON.parse(JSON.stringify(store[key])) : null; },
-    writeToStorage(key, data) { store[key] = JSON.parse(JSON.stringify(data)); },
+    async readFromStorage(key) { return store[key] ? JSON.parse(JSON.stringify(store[key])) : null; },
+    async writeToStorage(key, data) { store[key] = JSON.parse(JSON.stringify(data)); },
     _store: store
   };
 }
@@ -39,55 +39,55 @@ describe('planning-manager role in role registry', () => {
 });
 
 describe('role store: planning-manager assignment and revocation', () => {
-  it('assigns planning-manager role to a user', () => {
+  it('assigns planning-manager role to a user', async () => {
     const registry = createTestRoleRegistry();
     const storage = createMockStorage();
     const roleStore = createRoleStore(storage.readFromStorage, storage.writeToStorage, { roleRegistry: registry });
 
-    const result = roleStore.assignRole('manager@redhat.com', 'planning-manager', 'admin@redhat.com');
+    const result = await roleStore.assignRole('manager@redhat.com', 'planning-manager', 'admin@redhat.com');
     expect(result.email).toBe('manager@redhat.com');
     expect(result.roles).toContain('planning-manager');
   });
 
-  it('confirms hasRole returns true after assignment', () => {
+  it('confirms hasRole returns true after assignment', async () => {
     const registry = createTestRoleRegistry();
     const storage = createMockStorage();
     const roleStore = createRoleStore(storage.readFromStorage, storage.writeToStorage, { roleRegistry: registry });
 
-    roleStore.assignRole('manager@redhat.com', 'planning-manager', 'admin@redhat.com');
-    expect(roleStore.hasRole('manager@redhat.com', 'planning-manager')).toBe(true);
+    await roleStore.assignRole('manager@redhat.com', 'planning-manager', 'admin@redhat.com');
+    expect(await roleStore.hasRole('manager@redhat.com', 'planning-manager')).toBe(true);
   });
 
-  it('revokes planning-manager role from a user', () => {
+  it('revokes planning-manager role from a user', async () => {
     const registry = createTestRoleRegistry();
     const storage = createMockStorage();
     const roleStore = createRoleStore(storage.readFromStorage, storage.writeToStorage, { roleRegistry: registry });
 
-    roleStore.assignRole('manager@redhat.com', 'planning-manager', 'admin@redhat.com');
-    const result = roleStore.revokeRole('manager@redhat.com', 'planning-manager', 'admin@redhat.com');
+    await roleStore.assignRole('manager@redhat.com', 'planning-manager', 'admin@redhat.com');
+    const result = await roleStore.revokeRole('manager@redhat.com', 'planning-manager', 'admin@redhat.com');
     expect(result.roles).not.toContain('planning-manager');
-    expect(roleStore.hasRole('manager@redhat.com', 'planning-manager')).toBe(false);
+    expect(await roleStore.hasRole('manager@redhat.com', 'planning-manager')).toBe(false);
   });
 
-  it('throws when revoking a role the user does not have', () => {
+  it('throws when revoking a role the user does not have', async () => {
     const registry = createTestRoleRegistry();
     const storage = createMockStorage();
     const roleStore = createRoleStore(storage.readFromStorage, storage.writeToStorage, { roleRegistry: registry });
 
-    expect(() => {
-      roleStore.revokeRole('nobody@redhat.com', 'planning-manager', 'admin@redhat.com');
-    }).toThrow(/does not have role/);
+    await expect(
+      roleStore.revokeRole('nobody@redhat.com', 'planning-manager', 'admin@redhat.com')
+    ).rejects.toThrow(/does not have role/);
   });
 
-  it('does not affect other roles when assigning planning-manager', () => {
+  it('does not affect other roles when assigning planning-manager', async () => {
     const registry = createTestRoleRegistry();
     const storage = createMockStorage();
     const roleStore = createRoleStore(storage.readFromStorage, storage.writeToStorage, { roleRegistry: registry });
 
-    roleStore.assignRole('user@redhat.com', 'admin', 'system');
-    roleStore.assignRole('user@redhat.com', 'planning-manager', 'system');
-    expect(roleStore.hasRole('user@redhat.com', 'admin')).toBe(true);
-    expect(roleStore.hasRole('user@redhat.com', 'planning-manager')).toBe(true);
+    await roleStore.assignRole('user@redhat.com', 'admin', 'system');
+    await roleStore.assignRole('user@redhat.com', 'planning-manager', 'system');
+    expect(await roleStore.hasRole('user@redhat.com', 'admin')).toBe(true);
+    expect(await roleStore.hasRole('user@redhat.com', 'planning-manager')).toBe(true);
   });
 });
 
@@ -104,36 +104,36 @@ describe('requireRole("planning-manager") middleware', () => {
     return { requirePlanningManager, roleStore, storage };
   }
 
-  it('allows admins through', () => {
+  it('allows admins through', async () => {
     const { requirePlanningManager } = createMiddleware();
     const req = { isAdmin: true, isPlanningManager: false, userEmail: 'admin@test.com' };
     const res = createMockRes();
     let nextCalled = false;
 
-    requirePlanningManager(req, res, () => { nextCalled = true; });
+    await requirePlanningManager(req, res, () => { nextCalled = true; });
     expect(nextCalled).toBe(true);
     expect(res._status).toBeNull();
   });
 
-  it('allows planning managers through', () => {
+  it('allows planning managers through', async () => {
     const { requirePlanningManager, roleStore } = createMiddleware();
-    roleStore.assignRole('pm@test.com', 'planning-manager', 'admin');
+    await roleStore.assignRole('pm@test.com', 'planning-manager', 'admin');
     const req = { isAdmin: false, isPlanningManager: true, userEmail: 'pm@test.com' };
     const res = createMockRes();
     let nextCalled = false;
 
-    requirePlanningManager(req, res, () => { nextCalled = true; });
+    await requirePlanningManager(req, res, () => { nextCalled = true; });
     expect(nextCalled).toBe(true);
     expect(res._status).toBeNull();
   });
 
-  it('blocks regular users with 403', () => {
+  it('blocks regular users with 403', async () => {
     const { requirePlanningManager } = createMiddleware();
     const req = { isAdmin: false, isPlanningManager: false, userEmail: 'user@test.com' };
     const res = createMockRes();
     let nextCalled = false;
 
-    requirePlanningManager(req, res, () => { nextCalled = true; });
+    await requirePlanningManager(req, res, () => { nextCalled = true; });
     expect(nextCalled).toBe(false);
     expect(res._status).toBe(403);
     expect(res._json.error).toMatch(/planning-manager/);

@@ -332,7 +332,7 @@
     <div class="container">
         <header>
             <h1>Quality Analysis Report</h1>
-            <p class="timestamp">Generated on July 06, 2026 at 03:54 PM</p>
+            <p class="timestamp">Generated on July 20, 2026 at 05:43 PM</p>
             <h2 style="margin-top: 1rem; font-weight: 400;">opendatahub-io/elyra</h2>
         </header>
 
@@ -342,13 +342,13 @@
                     <svg width="200" height="200">
                         <circle class="bg-circle" cx="100" cy="100" r="90"></circle>
                         <circle class="score-arc" cx="100" cy="100" r="90"
-                                stroke="#ffc107"
+                                stroke="#fd7e14"
                                 stroke-dasharray="565.4861999999999"
-                                stroke-dashoffset="180.95558400000002"
+                                stroke-dashoffset="243.15906599999994"
                                 id="scoreArc"></circle>
                     </svg>
                     <div class="score-text">
-                        <div class="score-value">6.8</div>
+                        <div class="score-value">5.7</div>
                         <div class="score-label">Overall Score</div>
                     </div>
                 </div>
@@ -364,38 +364,43 @@
                         
                         <div class="scorecard-item">
                             <h3>Unit Tests</h3>
-                            <div class="scorecard-score" style="color: #ffc107;">7.5/10</div>
-                            <div class="scorecard-status">Solid Python backend tests (32 files, pytest+coverage); TS unit tests use Jest with --passWithNoTests across 12 packages but only 4 spec files exist</div>
+                            <div class="scorecard-score" style="color: #ffc107;">6.0/10</div>
+                            <div class="scorecard-status">Strong Python pytest suite (0.85 ratio) but very sparse TypeScript unit tests (4 spec files for 67 source files)</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Integration/E2E</h3>
-                            <div class="scorecard-score" style="color: #ffc107;">7.0/10</div>
-                            <div class="scorecard-status">11 Cypress E2E tests with code coverage instrumentation, retry logic, and artifact collection; runs on every PR</div>
+                            <div class="scorecard-score" style="color: #ffc107;">6.0/10</div>
+                            <div class="scorecard-status">11 Cypress E2E tests with code coverage and snapshot testing, but no multi-version or cluster-based testing</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Build Integration</h3>
-                            <div class="scorecard-score" style="color: #fd7e14;">5.0/10</div>
-                            <div class="scorecard-status">PR workflow builds notebook images and publishes to ghcr.io; no Konflux simulation or operator-level integration testing</div>
+                            <div class="scorecard-score" style="color: #ffc107;">6.0/10</div>
+                            <div class="scorecard-status">PR workflow builds container images and validates image environment, but no Konflux simulation</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Image Testing</h3>
-                            <div class="scorecard-score" style="color: #fd7e14;">5.5/10</div>
-                            <div class="scorecard-status">Runtime image validation checks required commands; image env validation across Python 3.11-3.13; no container security scanning</div>
+                            <div class="scorecard-score" style="color: #fd7e14;">4.0/10</div>
+                            <div class="scorecard-status">Basic image validation but no multi-stage builds, no UBI base images, no runtime testing with Testcontainers</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Coverage Tracking</h3>
                             <div class="scorecard-score" style="color: #ffc107;">7.0/10</div>
-                            <div class="scorecard-status">Codecov integration for Python (pytest-cov) and JS (nyc/istanbul with Cypress); .nycrc enforces 70/60/50 thresholds for lines/functions/branches; no codecov.yml config</div>
+                            <div class="scorecard-status">Codecov integration with 3 upload points, nyc thresholds (70/60/50/70), pytest-cov, but no .codecov.yml enforcement</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>CI/CD Automation</h3>
-                            <div class="scorecard-score" style="color: #ffc107;">7.5/10</div>
-                            <div class="scorecard-status">Multi-job CI with caching, multi-Python-version matrix (3.11-3.13), daily scheduled runs; no concurrency control</div>
+                            <div class="scorecard-score" style="color: #ffc107;">7.0/10</div>
+                            <div class="scorecard-status">5 workflows with caching, Python version matrix, daily scheduled builds, but no concurrency control or timeouts</div>
+                        </div>
+                        <div class="scorecard-item">
+                            <h3>Static Analysis</h3>
+                            <div class="scorecard-score" style="color: #fd7e14;">5.0/10</div>
+                            <div class="scorecard-status">ESLint + Flake8 + Black + Prettier, but no Dependabot/Renovate and no pre-commit hooks</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Agent Rules</h3>
                             <div class="scorecard-score" style="color: #dc3545;">0.0/10</div>
-                            <div class="scorecard-status">No CLAUDE.md, AGENTS.md, or .claude/ directory; no AI agent test automation guidance</div>
+                            <div class="scorecard-status">No CLAUDE.md, no .claude/ directory, no agent rules or test creation guidance</div>
                         </div>
                     </div>
                 </div>
@@ -411,43 +416,43 @@
                     <ul class="items-list">
                         
                         <li class="item-card high">
-                            <div class="item-description">No container security scanning (Trivy/Snyk)</div>
-                            <p>Vulnerability in base images or dependencies not caught until production deployment</p>
+                            <div class="item-description">No Dependabot or Renovate for automated dependency updates</div>
+                            <p>Dependencies may become stale or contain known vulnerabilities without automated alerting</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-high">HIGH</span>
+                                <span class="meta-tag effort-tag">1-2 hours</span>
+                            </div>
+                        </li>
+                        <li class="item-card high">
+                            <div class="item-description">Very sparse TypeScript unit test coverage</div>
+                            <p>Frontend logic changes lack regression protection; only 4 spec files cover 67 source files</p>
+                            <div class="item-meta">
+                                <span class="meta-tag severity-high">HIGH</span>
+                                <span class="meta-tag effort-tag">16-24 hours</span>
+                            </div>
+                        </li>
+                        <li class="item-card high">
+                            <div class="item-description">Non-UBI base images in Dockerfiles</div>
+                            <p>Container images not FIPS-capable; uses jupyterhub and ubuntu base images instead of UBI</p>
+                            <div class="item-meta">
+                                <span class="meta-tag severity-high">HIGH</span>
+                                <span class="meta-tag effort-tag">8-12 hours</span>
+                            </div>
+                        </li>
+                        <li class="item-card medium">
+                            <div class="item-description">No concurrency control or timeout limits in CI workflows</div>
+                            <p>Stale PR runs can waste resources; stuck jobs run indefinitely</p>
+                            <div class="item-meta">
+                                <span class="meta-tag severity-medium">MEDIUM</span>
+                                <span class="meta-tag effort-tag">1-2 hours</span>
+                            </div>
+                        </li>
+                        <li class="item-card medium">
+                            <div class="item-description">No agent rules for AI-assisted development</div>
+                            <p>AI-generated code and tests lack project-specific guidance and quality standards</p>
+                            <div class="item-meta">
+                                <span class="meta-tag severity-medium">MEDIUM</span>
                                 <span class="meta-tag effort-tag">2-4 hours</span>
-                            </div>
-                        </li>
-                        <li class="item-card medium">
-                            <div class="item-description">No concurrency control in CI workflows</div>
-                            <p>Redundant CI runs on rapid pushes waste resources and can cause race conditions</p>
-                            <div class="item-meta">
-                                <span class="meta-tag severity-medium">MEDIUM</span>
-                                <span class="meta-tag effort-tag">1 hour</span>
-                            </div>
-                        </li>
-                        <li class="item-card high">
-                            <div class="item-description">Extremely sparse frontend unit tests (4 spec files across 12 packages)</div>
-                            <p>Frontend logic changes have almost no automated safety net beyond E2E tests</p>
-                            <div class="item-meta">
-                                <span class="meta-tag severity-high">HIGH</span>
-                                <span class="meta-tag effort-tag">20-40 hours</span>
-                            </div>
-                        </li>
-                        <li class="item-card high">
-                            <div class="item-description">No SBOM generation or image signing</div>
-                            <p>Supply chain security not verifiable; compliance gaps for software provenance</p>
-                            <div class="item-meta">
-                                <span class="meta-tag severity-high">HIGH</span>
-                                <span class="meta-tag effort-tag">4-6 hours</span>
-                            </div>
-                        </li>
-                        <li class="item-card medium">
-                            <div class="item-description">No agent rules for AI-assisted test generation</div>
-                            <p>AI agents generate inconsistent test patterns without project-specific guidance</p>
-                            <div class="item-meta">
-                                <span class="meta-tag severity-medium">MEDIUM</span>
-                                <span class="meta-tag effort-tag">3-4 hours</span>
                             </div>
                         </li>
                     </ul>
@@ -464,43 +469,35 @@
                     <ul class="items-list">
                         
                         <li class="item-card ">
-                            <div class="item-description">Add Trivy scanning to PR workflow</div>
-                            <p>Catch CVEs in base images and dependencies before merge</p>
+                            <div class="item-description">Add .github/dependabot.yml for pip and npm ecosystems</div>
+                            <p>Automated dependency update PRs and vulnerability alerts</p>
                             <div class="item-meta">
                                 
-                                <span class="meta-tag effort-tag">2 hours</span>
+                                <span class="meta-tag effort-tag">1-2 hours</span>
                             </div>
                         </li>
                         <li class="item-card ">
-                            <div class="item-description">Add concurrency control to build.yml</div>
-                            <p>Cancel redundant CI runs on rapid pushes, saving compute and reducing queue times</p>
-                            <div class="item-meta">
-                                
-                                <span class="meta-tag effort-tag">30 minutes</span>
-                            </div>
-                        </li>
-                        <li class="item-card ">
-                            <div class="item-description">Create codecov.yml with coverage thresholds</div>
-                            <p>Enforce coverage gates on PRs and prevent coverage regression</p>
+                            <div class="item-description">Add concurrency control and timeout-minutes to CI workflows</div>
+                            <p>Prevent duplicate workflow runs and stuck jobs</p>
                             <div class="item-meta">
                                 
                                 <span class="meta-tag effort-tag">1 hour</span>
                             </div>
                         </li>
                         <li class="item-card ">
-                            <div class="item-description">Generate agent rules with /test-rules-generator</div>
-                            <p>Standardize AI-generated test patterns for both Python and TypeScript codebases</p>
+                            <div class="item-description">Add .codecov.yml with PR-level coverage thresholds</div>
+                            <p>Enforce coverage standards at the PR level, not just local checks</p>
                             <div class="item-meta">
                                 
-                                <span class="meta-tag effort-tag">2-3 hours</span>
+                                <span class="meta-tag effort-tag">1-2 hours</span>
                             </div>
                         </li>
                         <li class="item-card ">
-                            <div class="item-description">Add SBOM generation to release workflow</div>
-                            <p>Comply with supply chain security requirements (SLSA, EO 14028)</p>
+                            <div class="item-description">Create CLAUDE.md with test patterns and coding standards</div>
+                            <p>Enable AI agents to generate tests and code that match project conventions</p>
                             <div class="item-meta">
                                 
-                                <span class="meta-tag effort-tag">2 hours</span>
+                                <span class="meta-tag effort-tag">2-3 hours</span>
                             </div>
                         </li>
                     </ul>
@@ -517,15 +514,15 @@
                         
                         <div class="rec-priority p0">
                             <h3>Priority 0: Critical</h3>
-                            <ul><li>Add container vulnerability scanning (Trivy) to PR and release workflows</li><li>Increase frontend unit test coverage — only 4 spec files exist for 12 packages</li><li>Add SBOM generation and image signing to the release pipeline</li></ul>
+                            <ul><li>Add Dependabot configuration covering pip, npm, and docker ecosystems</li><li>Increase TypeScript unit test coverage — prioritize pipeline-editor and services packages</li><li>Migrate Dockerfiles to UBI-based images for FIPS compatibility in downstream builds</li></ul>
                         </div>
                         <div class="rec-priority p1">
                             <h3>Priority 1: High Value</h3>
-                            <ul><li>Add concurrency control to all CI workflows to cancel redundant runs</li><li>Create codecov.yml with target coverage and fail-on-regression rules</li><li>Create comprehensive agent rules (.claude/rules/) for test automation</li><li>Add pre-commit hooks (flake8, black, prettier, eslint) for local enforcement</li></ul>
+                            <ul><li>Add concurrency control and timeout-minutes to all CI workflows</li><li>Add .codecov.yml with coverage thresholds and PR-level enforcement</li><li>Create agent rules (CLAUDE.md, .claude/rules/) for test creation patterns</li><li>Add pre-commit hooks configuration (.pre-commit-config.yaml)</li></ul>
                         </div>
                         <div class="rec-priority p2">
                             <h3>Priority 2: Nice-to-Have</h3>
-                            <ul><li>Add accessibility testing for JupyterLab extensions</li><li>Add performance regression tests for pipeline editor operations</li><li>Implement contract tests between frontend services and backend API</li></ul>
+                            <ul><li>Consider adding multi-stage Docker builds for smaller image sizes</li><li>Add HEALTHCHECK directives to production Dockerfiles</li><li>Explore multi-architecture container builds</li></ul>
                         </div>
                     </div>
                 </div>

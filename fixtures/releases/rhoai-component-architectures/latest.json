@@ -1,0 +1,1326 @@
+{
+  "fetchedAt": "2026-08-18T12:00:00.000Z",
+  "source": {
+    "owner": "red-hat-data-services",
+    "repo": "konflux-central"
+  },
+  "branches": {
+    "rhoai-3.5": {
+      "generatedAt": "2026-08-18T10:00:00.000Z",
+      "branch": "rhoai-3.5",
+      "architectures": [
+        "amd64",
+        "arm64",
+        "ppc64le",
+        "s390x"
+      ],
+      "components": [
+        {
+          "name": "odh-ai-gateway-operator",
+          "imageName": "odh-ai-gateway-operator-rhel9",
+          "image": "quay.io/rhoai/odh-ai-gateway-operator-rhel9",
+          "architectures": {
+            "amd64": {
+              "status": "supported"
+            },
+            "arm64": {
+              "status": "supported"
+            },
+            "ppc64le": {
+              "status": "supported"
+            },
+            "s390x": {
+              "status": "supported"
+            }
+          },
+          "pipelineRunFile": "pipelineruns/ai-gateway-operator/.tekton/odh-ai-gateway-operator-v3-5-push.yaml"
+        },
+        {
+          "name": "odh-automl",
+          "imageName": "odh-automl-rhel9",
+          "image": "quay.io/rhoai/odh-automl-rhel9",
+          "architectures": {
+            "amd64": {
+              "status": "supported"
+            },
+            "arm64": {
+              "status": "supported"
+            },
+            "ppc64le": {
+              "status": "supported"
+            },
+            "s390x": {
+              "status": "supported"
+            }
+          },
+          "pipelineRunFile": "pipelineruns/pipelines-components/.tekton/odh-automl-v3-5-push.yaml"
+        },
+        {
+          "name": "odh-dashboard",
+          "imageName": "odh-dashboard-rhel9",
+          "image": "quay.io/rhoai/odh-dashboard-rhel9",
+          "architectures": {
+            "amd64": {
+              "status": "supported"
+            },
+            "arm64": {
+              "status": "supported"
+            },
+            "ppc64le": {
+              "status": "supported"
+            },
+            "s390x": {
+              "status": "supported"
+            }
+          },
+          "pipelineRunFile": "pipelineruns/odh-dashboard/.tekton/odh-dashboard-v3-5-push.yaml"
+        },
+        {
+          "name": "odh-data-science-pipelines-operator-controller",
+          "imageName": "odh-data-science-pipelines-operator-controller-rhel9",
+          "image": "quay.io/rhoai/odh-data-science-pipelines-operator-controller-rhel9",
+          "architectures": {
+            "amd64": {
+              "status": "supported"
+            },
+            "arm64": {
+              "status": "supported"
+            },
+            "ppc64le": {
+              "status": "not_built"
+            },
+            "s390x": {
+              "status": "not_built"
+            }
+          },
+          "pipelineRunFile": "pipelineruns/data-science-pipelines-operator/.tekton/odh-data-science-pipelines-operator-controller-v3-5-push.yaml"
+        },
+        {
+          "name": "odh-kserve-controller",
+          "imageName": "odh-kserve-controller-rhel9",
+          "image": "quay.io/rhoai/odh-kserve-controller-rhel9",
+          "architectures": {
+            "amd64": {
+              "status": "supported"
+            },
+            "arm64": {
+              "status": "supported"
+            },
+            "ppc64le": {
+              "status": "supported"
+            },
+            "s390x": {
+              "status": "supported"
+            }
+          },
+          "pipelineRunFile": "pipelineruns/kserve/.tekton/odh-kserve-controller-v3-5-push.yaml"
+        },
+        {
+          "name": "odh-ml-pipelines-api-server-v2",
+          "imageName": "odh-ml-pipelines-api-server-v2-rhel9",
+          "image": "quay.io/rhoai/odh-ml-pipelines-api-server-v2-rhel9",
+          "architectures": {
+            "amd64": {
+              "status": "supported"
+            },
+            "arm64": {
+              "status": "supported"
+            },
+            "ppc64le": {
+              "status": "exception",
+              "issueKey": "RHOAIENG-38736",
+              "issueUrl": "https://issues.redhat.com/browse/RHOAIENG-38736",
+              "reason": "ppc64le enablement"
+            },
+            "s390x": {
+              "status": "exception",
+              "issueKey": "RHOAIENG-38737",
+              "issueUrl": "https://issues.redhat.com/browse/RHOAIENG-38737",
+              "reason": "s390x enablement"
+            }
+          },
+          "pipelineRunFile": "pipelineruns/data-science-pipelines/.tekton/odh-ml-pipelines-api-server-v2-v3-5-push.yaml"
+        },
+        {
+          "name": "odh-ml-pipelines-driver",
+          "imageName": "odh-ml-pipelines-driver-rhel9",
+          "image": "quay.io/rhoai/odh-ml-pipelines-driver-rhel9",
+          "architectures": {
+            "amd64": {
+              "status": "supported"
+            },
+            "arm64": {
+              "status": "supported"
+            },
+            "ppc64le": {
+              "status": "exception",
+              "issueKey": "RHOAIENG-38738",
+              "issueUrl": "https://issues.redhat.com/browse/RHOAIENG-38738",
+              "reason": "ppc64le enablement"
+            },
+            "s390x": {
+              "status": "exception",
+              "issueKey": "RHOAIENG-38739",
+              "issueUrl": "https://issues.redhat.com/browse/RHOAIENG-38739",
+              "reason": "s390x enablement"
+            }
+          },
+          "pipelineRunFile": "pipelineruns/data-science-pipelines/.tekton/odh-ml-pipelines-driver-v3-5-push.yaml"
+        },
+        {
+          "name": "odh-mlmd-grpc-server",
+          "imageName": "odh-mlmd-grpc-server-rhel9",
+          "image": "quay.io/rhoai/odh-mlmd-grpc-server-rhel9",
+          "architectures": {
+            "amd64": {
+              "status": "supported"
+            },
+            "arm64": {
+              "status": "supported"
+            },
+            "ppc64le": {
+              "status": "supported"
+            },
+            "s390x": {
+              "status": "exception",
+              "issueKey": "RHOAIENG-38728",
+              "issueUrl": "https://issues.redhat.com/browse/RHOAIENG-38728",
+              "reason": "Not yet implemented"
+            }
+          },
+          "pipelineRunFile": "pipelineruns/ml-metadata/.tekton/odh-mlmd-grpc-server-v3-5-push.yaml"
+        },
+        {
+          "name": "odh-model-controller",
+          "imageName": "odh-model-controller-rhel9",
+          "image": "quay.io/rhoai/odh-model-controller-rhel9",
+          "architectures": {
+            "amd64": {
+              "status": "supported"
+            },
+            "arm64": {
+              "status": "supported"
+            },
+            "ppc64le": {
+              "status": "supported"
+            },
+            "s390x": {
+              "status": "exception",
+              "issueKey": "RHOAIENG-12345",
+              "issueUrl": "https://issues.redhat.com/browse/RHOAIENG-12345",
+              "reason": "s390x enablement in progress"
+            }
+          },
+          "pipelineRunFile": "pipelineruns/odh-model-controller/.tekton/odh-model-controller-v3-5-push.yaml"
+        },
+        {
+          "name": "odh-notebook-controller",
+          "imageName": "odh-notebook-controller-rhel9",
+          "image": "quay.io/rhoai/odh-notebook-controller-rhel9",
+          "architectures": {
+            "amd64": {
+              "status": "supported"
+            },
+            "arm64": {
+              "status": "supported"
+            },
+            "ppc64le": {
+              "status": "supported"
+            },
+            "s390x": {
+              "status": "supported"
+            }
+          },
+          "pipelineRunFile": "pipelineruns/kubeflow/.tekton/odh-notebook-controller-v3-5-push.yaml"
+        },
+        {
+          "name": "odh-rhel9-operator",
+          "imageName": "odh-rhel9-operator",
+          "image": "quay.io/rhoai/odh-rhel9-operator",
+          "architectures": {
+            "amd64": {
+              "status": "supported"
+            },
+            "arm64": {
+              "status": "supported"
+            },
+            "ppc64le": {
+              "status": "supported"
+            },
+            "s390x": {
+              "status": "supported"
+            }
+          },
+          "pipelineRunFile": "pipelineruns/rhods-operator/.tekton/odh-rhel9-operator-v3-5-push.yaml"
+        },
+        {
+          "name": "odh-trustyai-service",
+          "imageName": "odh-trustyai-service-rhel9",
+          "image": "quay.io/rhoai/odh-trustyai-service-rhel9",
+          "architectures": {
+            "amd64": {
+              "status": "supported"
+            },
+            "arm64": {
+              "status": "supported"
+            },
+            "ppc64le": {
+              "status": "supported"
+            },
+            "s390x": {
+              "status": "supported"
+            }
+          },
+          "pipelineRunFile": "pipelineruns/trustyai-service/.tekton/odh-trustyai-service-v3-5-push.yaml"
+        },
+        {
+          "name": "odh-vllm-gaudi",
+          "imageName": "odh-vllm-gaudi-rhel9",
+          "image": "quay.io/rhoai/odh-vllm-gaudi-rhel9",
+          "architectures": {
+            "amd64": {
+              "status": "supported"
+            },
+            "arm64": {
+              "status": "incompatible",
+              "accelerator": "gaudi"
+            },
+            "ppc64le": {
+              "status": "incompatible",
+              "accelerator": "gaudi"
+            },
+            "s390x": {
+              "status": "incompatible",
+              "accelerator": "gaudi"
+            }
+          },
+          "pipelineRunFile": "pipelineruns/vllm/.tekton/odh-vllm-gaudi-v3-5-push.yaml"
+        },
+        {
+          "name": "odh-vllm-rocm",
+          "imageName": "odh-vllm-rocm-rhel9",
+          "image": "quay.io/rhoai/odh-vllm-rocm-rhel9",
+          "architectures": {
+            "amd64": {
+              "status": "supported"
+            },
+            "arm64": {
+              "status": "incompatible",
+              "accelerator": "rocm"
+            },
+            "ppc64le": {
+              "status": "incompatible",
+              "accelerator": "rocm"
+            },
+            "s390x": {
+              "status": "incompatible",
+              "accelerator": "rocm"
+            }
+          },
+          "pipelineRunFile": "pipelineruns/vllm/.tekton/odh-vllm-rocm-v3-5-push.yaml"
+        },
+        {
+          "name": "odh-workbench-cuda",
+          "imageName": "odh-workbench-cuda-rhel9",
+          "image": "quay.io/rhoai/odh-workbench-cuda-rhel9",
+          "architectures": {
+            "amd64": {
+              "status": "supported"
+            },
+            "arm64": {
+              "status": "supported"
+            },
+            "ppc64le": {
+              "status": "incompatible",
+              "accelerator": "cuda"
+            },
+            "s390x": {
+              "status": "incompatible",
+              "accelerator": "cuda"
+            }
+          },
+          "pipelineRunFile": "pipelineruns/notebooks/.tekton/odh-workbench-cuda-v3-5-push.yaml"
+        }
+      ],
+      "summary": {
+        "totalComponents": 15,
+        "fullMultiArch": 7,
+        "withExceptions": 4,
+        "withIncompatible": 3,
+        "withNotBuilt": 1
+      },
+      "reportAvailable": true
+    },
+    "rhoai-3.6-ea.1": {
+      "generatedAt": "2026-08-19T08:00:00.000Z",
+      "branch": "rhoai-3.6-ea.1",
+      "architectures": [
+        "amd64",
+        "arm64",
+        "ppc64le",
+        "s390x"
+      ],
+      "components": [
+        {
+          "name": "odh-ai-gateway-operator",
+          "imageName": "odh-ai-gateway-operator-rhel9",
+          "image": "quay.io/rhoai/odh-ai-gateway-operator-rhel9",
+          "architectures": {
+            "amd64": {
+              "status": "supported"
+            },
+            "arm64": {
+              "status": "supported"
+            },
+            "ppc64le": {
+              "status": "supported"
+            },
+            "s390x": {
+              "status": "supported"
+            }
+          },
+          "pipelineRunFile": "pipelineruns/ai-gateway-operator/.tekton/odh-ai-gateway-operator-v3-6-ea-1-push.yaml"
+        },
+        {
+          "name": "odh-ai-gateway-payload-processing",
+          "imageName": "odh-ai-gateway-payload-processing-rhel9",
+          "image": "quay.io/rhoai/odh-ai-gateway-payload-processing-rhel9",
+          "architectures": {
+            "amd64": {
+              "status": "supported"
+            },
+            "arm64": {
+              "status": "supported"
+            },
+            "ppc64le": {
+              "status": "supported"
+            },
+            "s390x": {
+              "status": "supported"
+            }
+          },
+          "pipelineRunFile": "pipelineruns/ai-gateway-payload-processing/.tekton/odh-ai-gateway-payload-processing-v3-6-ea-1-push.yaml"
+        },
+        {
+          "name": "odh-automl",
+          "imageName": "odh-automl-rhel9",
+          "image": "quay.io/rhoai/odh-automl-rhel9",
+          "architectures": {
+            "amd64": {
+              "status": "supported"
+            },
+            "arm64": {
+              "status": "supported"
+            },
+            "ppc64le": {
+              "status": "supported"
+            },
+            "s390x": {
+              "status": "supported"
+            }
+          },
+          "pipelineRunFile": "pipelineruns/pipelines-components/.tekton/odh-automl-v3-6-ea-1-push.yaml"
+        },
+        {
+          "name": "odh-codeflare-operator",
+          "imageName": "odh-codeflare-operator-rhel9",
+          "image": "quay.io/rhoai/odh-codeflare-operator-rhel9",
+          "architectures": {
+            "amd64": {
+              "status": "supported"
+            },
+            "arm64": {
+              "status": "supported"
+            },
+            "ppc64le": {
+              "status": "supported"
+            },
+            "s390x": {
+              "status": "supported"
+            }
+          },
+          "pipelineRunFile": "pipelineruns/codeflare-operator/.tekton/odh-codeflare-operator-v3-6-ea-1-push.yaml"
+        },
+        {
+          "name": "odh-dashboard",
+          "imageName": "odh-dashboard-rhel9",
+          "image": "quay.io/rhoai/odh-dashboard-rhel9",
+          "architectures": {
+            "amd64": {
+              "status": "supported"
+            },
+            "arm64": {
+              "status": "supported"
+            },
+            "ppc64le": {
+              "status": "supported"
+            },
+            "s390x": {
+              "status": "supported"
+            }
+          },
+          "pipelineRunFile": "pipelineruns/odh-dashboard/.tekton/odh-dashboard-v3-6-ea-1-push.yaml"
+        },
+        {
+          "name": "odh-data-science-pipelines-argo-workflowcontroller",
+          "imageName": "odh-data-science-pipelines-argo-workflowcontroller-rhel9",
+          "image": "quay.io/rhoai/odh-data-science-pipelines-argo-workflowcontroller-rhel9",
+          "architectures": {
+            "amd64": {
+              "status": "supported"
+            },
+            "arm64": {
+              "status": "supported"
+            },
+            "ppc64le": {
+              "status": "exception",
+              "issueKey": "RHOAIENG-40100",
+              "issueUrl": "https://issues.redhat.com/browse/RHOAIENG-40100",
+              "reason": "ppc64le enablement blocked by upstream"
+            },
+            "s390x": {
+              "status": "exception",
+              "issueKey": "RHOAIENG-40101",
+              "issueUrl": "https://issues.redhat.com/browse/RHOAIENG-40101",
+              "reason": "s390x enablement blocked by upstream"
+            }
+          },
+          "pipelineRunFile": "pipelineruns/data-science-pipelines/.tekton/odh-data-science-pipelines-argo-workflowcontroller-v3-6-ea-1-push.yaml"
+        },
+        {
+          "name": "odh-data-science-pipelines-operator-controller",
+          "imageName": "odh-data-science-pipelines-operator-controller-rhel9",
+          "image": "quay.io/rhoai/odh-data-science-pipelines-operator-controller-rhel9",
+          "architectures": {
+            "amd64": {
+              "status": "supported"
+            },
+            "arm64": {
+              "status": "supported"
+            },
+            "ppc64le": {
+              "status": "not_built"
+            },
+            "s390x": {
+              "status": "not_built"
+            }
+          },
+          "pipelineRunFile": "pipelineruns/data-science-pipelines-operator/.tekton/odh-data-science-pipelines-operator-controller-v3-6-ea-1-push.yaml"
+        },
+        {
+          "name": "odh-feast-operator",
+          "imageName": "odh-feast-operator-rhel9",
+          "image": "quay.io/rhoai/odh-feast-operator-rhel9",
+          "architectures": {
+            "amd64": {
+              "status": "supported"
+            },
+            "arm64": {
+              "status": "supported"
+            },
+            "ppc64le": {
+              "status": "exception",
+              "issueKey": "RHOAIENG-41200",
+              "issueUrl": "https://issues.redhat.com/browse/RHOAIENG-41200",
+              "reason": "Feast upstream lacks ppc64le support"
+            },
+            "s390x": {
+              "status": "exception",
+              "issueKey": "RHOAIENG-41201",
+              "issueUrl": "https://issues.redhat.com/browse/RHOAIENG-41201",
+              "reason": "Feast upstream lacks s390x support"
+            }
+          },
+          "pipelineRunFile": "pipelineruns/feast/.tekton/odh-feast-operator-v3-6-ea-1-push.yaml"
+        },
+        {
+          "name": "odh-feature-server",
+          "imageName": "odh-feature-server-rhel9",
+          "image": "quay.io/rhoai/odh-feature-server-rhel9",
+          "architectures": {
+            "amd64": {
+              "status": "supported"
+            },
+            "arm64": {
+              "status": "supported"
+            },
+            "ppc64le": {
+              "status": "exception",
+              "issueKey": "RHOAIENG-41202",
+              "issueUrl": "https://issues.redhat.com/browse/RHOAIENG-41202",
+              "reason": "Feature server not available on ppc64le"
+            },
+            "s390x": {
+              "status": "exception",
+              "issueKey": "RHOAIENG-41203",
+              "issueUrl": "https://issues.redhat.com/browse/RHOAIENG-41203",
+              "reason": "Feature server not available on s390x"
+            }
+          },
+          "pipelineRunFile": "pipelineruns/feast/.tekton/odh-feature-server-v3-6-ea-1-push.yaml"
+        },
+        {
+          "name": "odh-kf-notebook-controller",
+          "imageName": "odh-kf-notebook-controller-rhel9",
+          "image": "quay.io/rhoai/odh-kf-notebook-controller-rhel9",
+          "architectures": {
+            "amd64": {
+              "status": "supported"
+            },
+            "arm64": {
+              "status": "supported"
+            },
+            "ppc64le": {
+              "status": "supported"
+            },
+            "s390x": {
+              "status": "supported"
+            }
+          },
+          "pipelineRunFile": "pipelineruns/kubeflow/.tekton/odh-kf-notebook-controller-v3-6-ea-1-push.yaml"
+        },
+        {
+          "name": "odh-kserve-controller",
+          "imageName": "odh-kserve-controller-rhel9",
+          "image": "quay.io/rhoai/odh-kserve-controller-rhel9",
+          "architectures": {
+            "amd64": {
+              "status": "supported"
+            },
+            "arm64": {
+              "status": "supported"
+            },
+            "ppc64le": {
+              "status": "supported"
+            },
+            "s390x": {
+              "status": "supported"
+            }
+          },
+          "pipelineRunFile": "pipelineruns/kserve/.tekton/odh-kserve-controller-v3-6-ea-1-push.yaml"
+        },
+        {
+          "name": "odh-kuberay-operator-controller",
+          "imageName": "odh-kuberay-operator-controller-rhel9",
+          "image": "quay.io/rhoai/odh-kuberay-operator-controller-rhel9",
+          "architectures": {
+            "amd64": {
+              "status": "supported"
+            },
+            "arm64": {
+              "status": "supported"
+            },
+            "ppc64le": {
+              "status": "supported"
+            },
+            "s390x": {
+              "status": "exception",
+              "issueKey": "RHOAIENG-38740",
+              "issueUrl": "https://issues.redhat.com/browse/RHOAIENG-38740",
+              "reason": "s390x enablement pending"
+            }
+          },
+          "pipelineRunFile": "pipelineruns/kuberay/.tekton/odh-kuberay-operator-controller-v3-6-ea-1-push.yaml"
+        },
+        {
+          "name": "odh-ml-pipelines-api-server-v2",
+          "imageName": "odh-ml-pipelines-api-server-v2-rhel9",
+          "image": "quay.io/rhoai/odh-ml-pipelines-api-server-v2-rhel9",
+          "architectures": {
+            "amd64": {
+              "status": "supported"
+            },
+            "arm64": {
+              "status": "supported"
+            },
+            "ppc64le": {
+              "status": "exception",
+              "issueKey": "RHOAIENG-38736",
+              "issueUrl": "https://issues.redhat.com/browse/RHOAIENG-38736",
+              "reason": "ppc64le enablement"
+            },
+            "s390x": {
+              "status": "exception",
+              "issueKey": "RHOAIENG-38737",
+              "issueUrl": "https://issues.redhat.com/browse/RHOAIENG-38737",
+              "reason": "s390x enablement"
+            }
+          },
+          "pipelineRunFile": "pipelineruns/data-science-pipelines/.tekton/odh-ml-pipelines-api-server-v2-v3-6-ea-1-push.yaml"
+        },
+        {
+          "name": "odh-ml-pipelines-driver",
+          "imageName": "odh-ml-pipelines-driver-rhel9",
+          "image": "quay.io/rhoai/odh-ml-pipelines-driver-rhel9",
+          "architectures": {
+            "amd64": {
+              "status": "supported"
+            },
+            "arm64": {
+              "status": "supported"
+            },
+            "ppc64le": {
+              "status": "exception",
+              "issueKey": "RHOAIENG-38738",
+              "issueUrl": "https://issues.redhat.com/browse/RHOAIENG-38738",
+              "reason": "ppc64le enablement"
+            },
+            "s390x": {
+              "status": "exception",
+              "issueKey": "RHOAIENG-38739",
+              "issueUrl": "https://issues.redhat.com/browse/RHOAIENG-38739",
+              "reason": "s390x enablement"
+            }
+          },
+          "pipelineRunFile": "pipelineruns/data-science-pipelines/.tekton/odh-ml-pipelines-driver-v3-6-ea-1-push.yaml"
+        },
+        {
+          "name": "odh-ml-pipelines-launcher",
+          "imageName": "odh-ml-pipelines-launcher-rhel9",
+          "image": "quay.io/rhoai/odh-ml-pipelines-launcher-rhel9",
+          "architectures": {
+            "amd64": {
+              "status": "supported"
+            },
+            "arm64": {
+              "status": "supported"
+            },
+            "ppc64le": {
+              "status": "exception",
+              "issueKey": "RHOAIENG-38741",
+              "issueUrl": "https://issues.redhat.com/browse/RHOAIENG-38741",
+              "reason": "ppc64le enablement"
+            },
+            "s390x": {
+              "status": "exception",
+              "issueKey": "RHOAIENG-38742",
+              "issueUrl": "https://issues.redhat.com/browse/RHOAIENG-38742",
+              "reason": "s390x enablement"
+            }
+          },
+          "pipelineRunFile": "pipelineruns/data-science-pipelines/.tekton/odh-ml-pipelines-launcher-v3-6-ea-1-push.yaml"
+        },
+        {
+          "name": "odh-mlmd-grpc-server",
+          "imageName": "odh-mlmd-grpc-server-rhel9",
+          "image": "quay.io/rhoai/odh-mlmd-grpc-server-rhel9",
+          "architectures": {
+            "amd64": {
+              "status": "supported"
+            },
+            "arm64": {
+              "status": "supported"
+            },
+            "ppc64le": {
+              "status": "supported"
+            },
+            "s390x": {
+              "status": "exception",
+              "issueKey": "RHOAIENG-38728",
+              "issueUrl": "https://issues.redhat.com/browse/RHOAIENG-38728",
+              "reason": "Not yet implemented"
+            }
+          },
+          "pipelineRunFile": "pipelineruns/ml-metadata/.tekton/odh-mlmd-grpc-server-v3-6-ea-1-push.yaml"
+        },
+        {
+          "name": "odh-model-controller",
+          "imageName": "odh-model-controller-rhel9",
+          "image": "quay.io/rhoai/odh-model-controller-rhel9",
+          "architectures": {
+            "amd64": {
+              "status": "supported"
+            },
+            "arm64": {
+              "status": "supported"
+            },
+            "ppc64le": {
+              "status": "supported"
+            },
+            "s390x": {
+              "status": "supported"
+            }
+          },
+          "pipelineRunFile": "pipelineruns/odh-model-controller/.tekton/odh-model-controller-v3-6-ea-1-push.yaml"
+        },
+        {
+          "name": "odh-modelmesh-runtime-adapter",
+          "imageName": "odh-modelmesh-runtime-adapter-rhel9",
+          "image": "quay.io/rhoai/odh-modelmesh-runtime-adapter-rhel9",
+          "architectures": {
+            "amd64": {
+              "status": "supported"
+            },
+            "arm64": {
+              "status": "supported"
+            },
+            "ppc64le": {
+              "status": "supported"
+            },
+            "s390x": {
+              "status": "supported"
+            }
+          },
+          "pipelineRunFile": "pipelineruns/modelmesh-runtime-adapter/.tekton/odh-modelmesh-runtime-adapter-v3-6-ea-1-push.yaml"
+        },
+        {
+          "name": "odh-modelmesh-serving-controller",
+          "imageName": "odh-modelmesh-serving-controller-rhel9",
+          "image": "quay.io/rhoai/odh-modelmesh-serving-controller-rhel9",
+          "architectures": {
+            "amd64": {
+              "status": "supported"
+            },
+            "arm64": {
+              "status": "supported"
+            },
+            "ppc64le": {
+              "status": "supported"
+            },
+            "s390x": {
+              "status": "supported"
+            }
+          },
+          "pipelineRunFile": "pipelineruns/modelmesh-serving/.tekton/odh-modelmesh-serving-controller-v3-6-ea-1-push.yaml"
+        },
+        {
+          "name": "odh-notebook-controller",
+          "imageName": "odh-notebook-controller-rhel9",
+          "image": "quay.io/rhoai/odh-notebook-controller-rhel9",
+          "architectures": {
+            "amd64": {
+              "status": "supported"
+            },
+            "arm64": {
+              "status": "supported"
+            },
+            "ppc64le": {
+              "status": "supported"
+            },
+            "s390x": {
+              "status": "supported"
+            }
+          },
+          "pipelineRunFile": "pipelineruns/kubeflow/.tekton/odh-notebook-controller-v3-6-ea-1-push.yaml"
+        },
+        {
+          "name": "odh-rhel9-operator",
+          "imageName": "odh-rhel9-operator",
+          "image": "quay.io/rhoai/odh-rhel9-operator",
+          "architectures": {
+            "amd64": {
+              "status": "supported"
+            },
+            "arm64": {
+              "status": "supported"
+            },
+            "ppc64le": {
+              "status": "supported"
+            },
+            "s390x": {
+              "status": "supported"
+            }
+          },
+          "pipelineRunFile": "pipelineruns/rhods-operator/.tekton/odh-rhel9-operator-v3-6-ea-1-push.yaml"
+        },
+        {
+          "name": "odh-training-cuda121-torch24-py311",
+          "imageName": "odh-training-cuda121-torch24-py311-rhel9",
+          "image": "quay.io/rhoai/odh-training-cuda121-torch24-py311-rhel9",
+          "architectures": {
+            "amd64": {
+              "status": "supported"
+            },
+            "arm64": {
+              "status": "supported"
+            },
+            "ppc64le": {
+              "status": "incompatible",
+              "accelerator": "cuda"
+            },
+            "s390x": {
+              "status": "incompatible",
+              "accelerator": "cuda"
+            }
+          },
+          "pipelineRunFile": "pipelineruns/distributed-workloads/.tekton/odh-training-cuda121-torch24-py311-v3-6-ea-1-push.yaml"
+        },
+        {
+          "name": "odh-training-cuda128-torch29-py312",
+          "imageName": "odh-training-cuda128-torch29-py312-rhel9",
+          "image": "quay.io/rhoai/odh-training-cuda128-torch29-py312-rhel9",
+          "architectures": {
+            "amd64": {
+              "status": "supported"
+            },
+            "arm64": {
+              "status": "supported"
+            },
+            "ppc64le": {
+              "status": "incompatible",
+              "accelerator": "cuda"
+            },
+            "s390x": {
+              "status": "incompatible",
+              "accelerator": "cuda"
+            }
+          },
+          "pipelineRunFile": "pipelineruns/distributed-workloads/.tekton/odh-training-cuda128-torch29-py312-v3-6-ea-1-push.yaml"
+        },
+        {
+          "name": "odh-trustyai-service",
+          "imageName": "odh-trustyai-service-rhel9",
+          "image": "quay.io/rhoai/odh-trustyai-service-rhel9",
+          "architectures": {
+            "amd64": {
+              "status": "supported"
+            },
+            "arm64": {
+              "status": "supported"
+            },
+            "ppc64le": {
+              "status": "supported"
+            },
+            "s390x": {
+              "status": "supported"
+            }
+          },
+          "pipelineRunFile": "pipelineruns/trustyai-service/.tekton/odh-trustyai-service-v3-6-ea-1-push.yaml"
+        },
+        {
+          "name": "odh-vllm-cpu",
+          "imageName": "odh-vllm-cpu-rhel9",
+          "image": "quay.io/rhoai/odh-vllm-cpu-rhel9",
+          "architectures": {
+            "amd64": {
+              "status": "supported"
+            },
+            "arm64": {
+              "status": "not_built"
+            },
+            "ppc64le": {
+              "status": "not_built"
+            },
+            "s390x": {
+              "status": "not_built"
+            }
+          },
+          "pipelineRunFile": "pipelineruns/vllm/.tekton/odh-vllm-cpu-v3-6-ea-1-push.yaml"
+        },
+        {
+          "name": "odh-vllm-gaudi",
+          "imageName": "odh-vllm-gaudi-rhel9",
+          "image": "quay.io/rhoai/odh-vllm-gaudi-rhel9",
+          "architectures": {
+            "amd64": {
+              "status": "supported"
+            },
+            "arm64": {
+              "status": "incompatible",
+              "accelerator": "gaudi"
+            },
+            "ppc64le": {
+              "status": "incompatible",
+              "accelerator": "gaudi"
+            },
+            "s390x": {
+              "status": "incompatible",
+              "accelerator": "gaudi"
+            }
+          },
+          "pipelineRunFile": "pipelineruns/vllm/.tekton/odh-vllm-gaudi-v3-6-ea-1-push.yaml"
+        },
+        {
+          "name": "odh-vllm-rocm",
+          "imageName": "odh-vllm-rocm-rhel9",
+          "image": "quay.io/rhoai/odh-vllm-rocm-rhel9",
+          "architectures": {
+            "amd64": {
+              "status": "supported"
+            },
+            "arm64": {
+              "status": "incompatible",
+              "accelerator": "rocm"
+            },
+            "ppc64le": {
+              "status": "incompatible",
+              "accelerator": "rocm"
+            },
+            "s390x": {
+              "status": "incompatible",
+              "accelerator": "rocm"
+            }
+          },
+          "pipelineRunFile": "pipelineruns/vllm/.tekton/odh-vllm-rocm-v3-6-ea-1-push.yaml"
+        },
+        {
+          "name": "odh-workbench-cuda",
+          "imageName": "odh-workbench-cuda-rhel9",
+          "image": "quay.io/rhoai/odh-workbench-cuda-rhel9",
+          "architectures": {
+            "amd64": {
+              "status": "supported"
+            },
+            "arm64": {
+              "status": "supported"
+            },
+            "ppc64le": {
+              "status": "incompatible",
+              "accelerator": "cuda"
+            },
+            "s390x": {
+              "status": "incompatible",
+              "accelerator": "cuda"
+            }
+          },
+          "pipelineRunFile": "pipelineruns/notebooks/.tekton/odh-workbench-cuda-v3-6-ea-1-push.yaml"
+        }
+      ],
+      "summary": {
+        "totalComponents": 28,
+        "fullMultiArch": 13,
+        "withExceptions": 8,
+        "withIncompatible": 5,
+        "withNotBuilt": 2
+      },
+      "reportAvailable": true
+    },
+    "rhoai-3.4": {
+      "generatedAt": "2026-08-15T10:00:00.000Z",
+      "branch": "rhoai-3.4",
+      "architectures": [
+        "amd64",
+        "arm64",
+        "ppc64le",
+        "s390x"
+      ],
+      "components": [
+        {
+          "name": "odh-automl",
+          "imageName": "odh-automl-rhel9",
+          "image": "quay.io/rhoai/odh-automl-rhel9",
+          "architectures": {
+            "amd64": {
+              "status": "supported"
+            },
+            "arm64": {
+              "status": "supported"
+            },
+            "ppc64le": {
+              "status": "supported"
+            },
+            "s390x": {
+              "status": "supported"
+            }
+          },
+          "pipelineRunFile": "pipelineruns/pipelines-components/.tekton/odh-automl-v3-4-push.yaml"
+        },
+        {
+          "name": "odh-dashboard",
+          "imageName": "odh-dashboard-rhel9",
+          "image": "quay.io/rhoai/odh-dashboard-rhel9",
+          "architectures": {
+            "amd64": {
+              "status": "supported"
+            },
+            "arm64": {
+              "status": "supported"
+            },
+            "ppc64le": {
+              "status": "supported"
+            },
+            "s390x": {
+              "status": "supported"
+            }
+          },
+          "pipelineRunFile": "pipelineruns/odh-dashboard/.tekton/odh-dashboard-v3-4-push.yaml"
+        },
+        {
+          "name": "odh-data-science-pipelines-operator-controller",
+          "imageName": "odh-data-science-pipelines-operator-controller-rhel9",
+          "image": "quay.io/rhoai/odh-data-science-pipelines-operator-controller-rhel9",
+          "architectures": {
+            "amd64": {
+              "status": "supported"
+            },
+            "arm64": {
+              "status": "supported"
+            },
+            "ppc64le": {
+              "status": "exception",
+              "issueKey": "RHOAIENG-34100",
+              "issueUrl": "https://issues.redhat.com/browse/RHOAIENG-34100",
+              "reason": "ppc64le build dependency missing"
+            },
+            "s390x": {
+              "status": "exception",
+              "issueKey": "RHOAIENG-34101",
+              "issueUrl": "https://issues.redhat.com/browse/RHOAIENG-34101",
+              "reason": "s390x build dependency missing"
+            }
+          },
+          "pipelineRunFile": "pipelineruns/data-science-pipelines-operator/.tekton/odh-data-science-pipelines-operator-controller-v3-4-push.yaml"
+        },
+        {
+          "name": "odh-kserve-controller",
+          "imageName": "odh-kserve-controller-rhel9",
+          "image": "quay.io/rhoai/odh-kserve-controller-rhel9",
+          "architectures": {
+            "amd64": {
+              "status": "supported"
+            },
+            "arm64": {
+              "status": "supported"
+            },
+            "ppc64le": {
+              "status": "supported"
+            },
+            "s390x": {
+              "status": "not_built"
+            }
+          },
+          "pipelineRunFile": "pipelineruns/kserve/.tekton/odh-kserve-controller-v3-4-push.yaml"
+        },
+        {
+          "name": "odh-ml-pipelines-api-server-v2",
+          "imageName": "odh-ml-pipelines-api-server-v2-rhel9",
+          "image": "quay.io/rhoai/odh-ml-pipelines-api-server-v2-rhel9",
+          "architectures": {
+            "amd64": {
+              "status": "supported"
+            },
+            "arm64": {
+              "status": "supported"
+            },
+            "ppc64le": {
+              "status": "not_built"
+            },
+            "s390x": {
+              "status": "not_built"
+            }
+          },
+          "pipelineRunFile": "pipelineruns/data-science-pipelines/.tekton/odh-ml-pipelines-api-server-v2-v3-4-push.yaml"
+        },
+        {
+          "name": "odh-ml-pipelines-driver",
+          "imageName": "odh-ml-pipelines-driver-rhel9",
+          "image": "quay.io/rhoai/odh-ml-pipelines-driver-rhel9",
+          "architectures": {
+            "amd64": {
+              "status": "supported"
+            },
+            "arm64": {
+              "status": "supported"
+            },
+            "ppc64le": {
+              "status": "not_built"
+            },
+            "s390x": {
+              "status": "not_built"
+            }
+          },
+          "pipelineRunFile": "pipelineruns/data-science-pipelines/.tekton/odh-ml-pipelines-driver-v3-4-push.yaml"
+        },
+        {
+          "name": "odh-mlmd-grpc-server",
+          "imageName": "odh-mlmd-grpc-server-rhel9",
+          "image": "quay.io/rhoai/odh-mlmd-grpc-server-rhel9",
+          "architectures": {
+            "amd64": {
+              "status": "supported"
+            },
+            "arm64": {
+              "status": "supported"
+            },
+            "ppc64le": {
+              "status": "supported"
+            },
+            "s390x": {
+              "status": "exception",
+              "issueKey": "RHOAIENG-38728",
+              "issueUrl": "https://issues.redhat.com/browse/RHOAIENG-38728",
+              "reason": "Not yet implemented"
+            }
+          },
+          "pipelineRunFile": "pipelineruns/ml-metadata/.tekton/odh-mlmd-grpc-server-v3-4-push.yaml"
+        },
+        {
+          "name": "odh-model-controller",
+          "imageName": "odh-model-controller-rhel9",
+          "image": "quay.io/rhoai/odh-model-controller-rhel9",
+          "architectures": {
+            "amd64": {
+              "status": "supported"
+            },
+            "arm64": {
+              "status": "supported"
+            },
+            "ppc64le": {
+              "status": "supported"
+            },
+            "s390x": {
+              "status": "supported"
+            }
+          },
+          "pipelineRunFile": "pipelineruns/odh-model-controller/.tekton/odh-model-controller-v3-4-push.yaml"
+        },
+        {
+          "name": "odh-notebook-controller",
+          "imageName": "odh-notebook-controller-rhel9",
+          "image": "quay.io/rhoai/odh-notebook-controller-rhel9",
+          "architectures": {
+            "amd64": {
+              "status": "supported"
+            },
+            "arm64": {
+              "status": "supported"
+            },
+            "ppc64le": {
+              "status": "supported"
+            },
+            "s390x": {
+              "status": "supported"
+            }
+          },
+          "pipelineRunFile": "pipelineruns/kubeflow/.tekton/odh-notebook-controller-v3-4-push.yaml"
+        },
+        {
+          "name": "odh-rhel9-operator",
+          "imageName": "odh-rhel9-operator",
+          "image": "quay.io/rhoai/odh-rhel9-operator",
+          "architectures": {
+            "amd64": {
+              "status": "supported"
+            },
+            "arm64": {
+              "status": "supported"
+            },
+            "ppc64le": {
+              "status": "supported"
+            },
+            "s390x": {
+              "status": "supported"
+            }
+          },
+          "pipelineRunFile": "pipelineruns/rhods-operator/.tekton/odh-rhel9-operator-v3-4-push.yaml"
+        },
+        {
+          "name": "odh-trustyai-service",
+          "imageName": "odh-trustyai-service-rhel9",
+          "image": "quay.io/rhoai/odh-trustyai-service-rhel9",
+          "architectures": {
+            "amd64": {
+              "status": "supported"
+            },
+            "arm64": {
+              "status": "supported"
+            },
+            "ppc64le": {
+              "status": "not_built"
+            },
+            "s390x": {
+              "status": "not_built"
+            }
+          },
+          "pipelineRunFile": "pipelineruns/trustyai-service/.tekton/odh-trustyai-service-v3-4-push.yaml"
+        },
+        {
+          "name": "odh-vllm-gaudi",
+          "imageName": "odh-vllm-gaudi-rhel9",
+          "image": "quay.io/rhoai/odh-vllm-gaudi-rhel9",
+          "architectures": {
+            "amd64": {
+              "status": "supported"
+            },
+            "arm64": {
+              "status": "incompatible",
+              "accelerator": "gaudi"
+            },
+            "ppc64le": {
+              "status": "incompatible",
+              "accelerator": "gaudi"
+            },
+            "s390x": {
+              "status": "incompatible",
+              "accelerator": "gaudi"
+            }
+          },
+          "pipelineRunFile": "pipelineruns/vllm/.tekton/odh-vllm-gaudi-v3-4-push.yaml"
+        },
+        {
+          "name": "odh-vllm-rocm",
+          "imageName": "odh-vllm-rocm-rhel9",
+          "image": "quay.io/rhoai/odh-vllm-rocm-rhel9",
+          "architectures": {
+            "amd64": {
+              "status": "supported"
+            },
+            "arm64": {
+              "status": "incompatible",
+              "accelerator": "rocm"
+            },
+            "ppc64le": {
+              "status": "incompatible",
+              "accelerator": "rocm"
+            },
+            "s390x": {
+              "status": "incompatible",
+              "accelerator": "rocm"
+            }
+          },
+          "pipelineRunFile": "pipelineruns/vllm/.tekton/odh-vllm-rocm-v3-4-push.yaml"
+        },
+        {
+          "name": "odh-workbench-cuda",
+          "imageName": "odh-workbench-cuda-rhel9",
+          "image": "quay.io/rhoai/odh-workbench-cuda-rhel9",
+          "architectures": {
+            "amd64": {
+              "status": "supported"
+            },
+            "arm64": {
+              "status": "supported"
+            },
+            "ppc64le": {
+              "status": "incompatible",
+              "accelerator": "cuda"
+            },
+            "s390x": {
+              "status": "incompatible",
+              "accelerator": "cuda"
+            }
+          },
+          "pipelineRunFile": "pipelineruns/notebooks/.tekton/odh-workbench-cuda-v3-4-push.yaml"
+        }
+      ],
+      "summary": {
+        "totalComponents": 14,
+        "fullMultiArch": 5,
+        "withExceptions": 2,
+        "withIncompatible": 3,
+        "withNotBuilt": 4
+      },
+      "reportAvailable": true
+    },
+    "rhoai-3.5-ea.1": {
+      "reportAvailable": false,
+      "components": [],
+      "summary": null
+    },
+    "rhoai-3.5-ea.2": {
+      "reportAvailable": false,
+      "components": [],
+      "summary": null
+    },
+    "rhoai-3.6": {
+      "reportAvailable": false,
+      "components": [],
+      "summary": null
+    },
+    "rhoai-3.6-ea.2": {
+      "reportAvailable": false,
+      "components": [],
+      "summary": null
+    }
+  }
+}

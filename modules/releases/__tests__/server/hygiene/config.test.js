@@ -5,8 +5,8 @@ const { loadConfig, saveConfig, getDefaults } = require('../../../server/hygiene
 function createMockStorage() {
   var store = {}
   return {
-    readFromStorage: function (key) { return store[key] || null },
-    writeToStorage: function (key, data) { store[key] = data },
+    readFromStorage: async function (key) { return store[key] || null },
+    writeToStorage: async function (key, data) { store[key] = data },
     _store: store
   }
 }
@@ -49,36 +49,36 @@ describe('getDefaults', function () {
 
 // ─── loadConfig ──────────────────────────────────────────────────────
 
-describe('loadConfig', function () {
-  it('returns defaults when nothing is stored', function () {
+describe('loadConfig', function() {
+  it('returns defaults when nothing is stored', async function() {
     var storage = createMockStorage()
-    var config = loadConfig(storage)
+    var config = await loadConfig(storage)
     var defaults = getDefaults()
     expect(config).toEqual(defaults)
   })
 
-  it('returns defaults when stored value is null', function () {
+  it('returns defaults when stored value is null', async function() {
     var storage = createMockStorage()
     storage._store['releases/hygiene-config.json'] = null
-    var config = loadConfig(storage)
+    var config = await loadConfig(storage)
     expect(config).toEqual(getDefaults())
   })
 
-  it('returns defaults when stored value is not an object', function () {
+  it('returns defaults when stored value is not an object', async function() {
     var storage = createMockStorage()
     storage._store['releases/hygiene-config.json'] = 'not-an-object'
-    var config = loadConfig(storage)
+    var config = await loadConfig(storage)
     expect(config).toEqual(getDefaults())
   })
 
-  it('merges stored rules with defaults', function () {
+  it('merges stored rules with defaults', async function() {
     var storage = createMockStorage()
     storage._store['releases/hygiene-config.json'] = {
       rules: {
         'missing-team': { enabled: false, threshold: 30 }
       }
     }
-    var config = loadConfig(storage)
+    var config = await loadConfig(storage)
 
     // Stored override applied
     expect(config.rules['missing-team'].enabled).toBe(false)
@@ -88,50 +88,50 @@ describe('loadConfig', function () {
     expect(config.rules['missing-assignee'].enabled).toBe(true)
   })
 
-  it('preserves stored projects array', function () {
+  it('preserves stored projects array', async function() {
     var storage = createMockStorage()
     storage._store['releases/hygiene-config.json'] = {
       projects: ['MYPROJECT']
     }
-    var config = loadConfig(storage)
+    var config = await loadConfig(storage)
     expect(config.projects).toEqual(['MYPROJECT'])
   })
 
-  it('preserves stored issueTypes array', function () {
+  it('preserves stored issueTypes array', async function() {
     var storage = createMockStorage()
     storage._store['releases/hygiene-config.json'] = {
       issueTypes: ['Bug']
     }
-    var config = loadConfig(storage)
+    var config = await loadConfig(storage)
     expect(config.issueTypes).toEqual(['Bug'])
   })
 
-  it('falls back to default projects if stored projects is not an array', function () {
+  it('falls back to default projects if stored projects is not an array', async function() {
     var storage = createMockStorage()
     storage._store['releases/hygiene-config.json'] = {
       projects: 'not-an-array'
     }
-    var config = loadConfig(storage)
+    var config = await loadConfig(storage)
     expect(config.projects).toEqual(['RHAISTRAT', 'RHOAIENG'])
   })
 
-  it('falls back to default issueTypes if stored issueTypes is not an array', function () {
+  it('falls back to default issueTypes if stored issueTypes is not an array', async function() {
     var storage = createMockStorage()
     storage._store['releases/hygiene-config.json'] = {
       issueTypes: null
     }
-    var config = loadConfig(storage)
+    var config = await loadConfig(storage)
     expect(config.issueTypes).toEqual(['Feature', 'Initiative'])
   })
 
-  it('includes new rules not present in stored config', function () {
+  it('includes new rules not present in stored config', async function() {
     var storage = createMockStorage()
     storage._store['releases/hygiene-config.json'] = {
       rules: {
         'missing-assignee': { enabled: false }
       }
     }
-    var config = loadConfig(storage)
+    var config = await loadConfig(storage)
     // New rules from defaults should be present
     expect(config.rules).toHaveProperty('missing-team')
     expect(config.rules['missing-team'].enabled).toBe(true)
@@ -142,15 +142,15 @@ describe('loadConfig', function () {
 
 // ─── saveConfig ──────────────────────────────────────────────────────
 
-describe('saveConfig', function () {
-  it('writes config to the correct storage key', function () {
+describe('saveConfig', function() {
+  it('writes config to the correct storage key', async function() {
     var storage = createMockStorage()
     var config = {
       rules: { 'missing-team': { enabled: false } },
       projects: ['TESTPROJ'],
       issueTypes: ['Feature']
     }
-    saveConfig(storage, config)
+    await saveConfig(storage, config)
     var stored = storage._store['releases/hygiene-config.json']
     expect(stored).toBeTruthy()
     expect(stored.rules['missing-team'].enabled).toBe(false)
@@ -158,36 +158,36 @@ describe('saveConfig', function () {
     expect(stored.issueTypes).toEqual(['Feature'])
   })
 
-  it('defaults projects if not provided as array', function () {
+  it('defaults projects if not provided as array', async function() {
     var storage = createMockStorage()
-    saveConfig(storage, { rules: {} })
+    await saveConfig(storage, { rules: {} })
     var stored = storage._store['releases/hygiene-config.json']
     expect(stored.projects).toEqual(['RHAISTRAT', 'RHOAIENG'])
     expect(stored.issueTypes).toEqual(['Feature', 'Initiative'])
   })
 
-  it('defaults rules to empty object if not provided', function () {
+  it('defaults rules to empty object if not provided', async function() {
     var storage = createMockStorage()
-    saveConfig(storage, {})
+    await saveConfig(storage, {})
     var stored = storage._store['releases/hygiene-config.json']
     expect(stored.rules).toEqual({})
   })
 
-  it('throws when config is not an object', function () {
+  it('throws when config is not an object', async function() {
     var storage = createMockStorage()
-    expect(function () { saveConfig(storage, null) }).toThrow('Config must be an object')
-    expect(function () { saveConfig(storage, 'bad') }).toThrow('Config must be an object')
+    await expect(saveConfig(storage, null)).rejects.toThrow('Config must be an object')
+    await expect(saveConfig(storage, 'bad')).rejects.toThrow('Config must be an object')
   })
 
-  it('roundtrips with loadConfig', function () {
+  it('roundtrips with loadConfig', async function() {
     var storage = createMockStorage()
     var config = {
       rules: { 'missing-team': { enabled: false } },
       projects: ['MYPROJ'],
       issueTypes: ['Bug', 'Feature']
     }
-    saveConfig(storage, config)
-    var loaded = loadConfig(storage)
+    await saveConfig(storage, config)
+    var loaded = await loadConfig(storage)
     expect(loaded.projects).toEqual(['MYPROJ'])
     expect(loaded.issueTypes).toEqual(['Bug', 'Feature'])
     expect(loaded.rules['missing-team'].enabled).toBe(false)

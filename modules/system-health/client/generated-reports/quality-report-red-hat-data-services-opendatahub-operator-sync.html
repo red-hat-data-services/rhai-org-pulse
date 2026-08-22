@@ -332,7 +332,7 @@
     <div class="container">
         <header>
             <h1>Quality Analysis Report</h1>
-            <p class="timestamp">Generated on July 06, 2026 at 05:19 PM</p>
+            <p class="timestamp">Generated on July 20, 2026 at 06:34 PM</p>
             <h2 style="margin-top: 1rem; font-weight: 400;">red-hat-data-services/opendatahub-operator-sync</h2>
         </header>
 
@@ -364,38 +364,43 @@
                         
                         <div class="scorecard-item">
                             <h3>Unit Tests</h3>
-                            <div class="scorecard-score" style="color: #ffc107;">6.0/10</div>
-                            <div class="scorecard-status">Good test-to-code ratio with Ginkgo/envtest, but zero component controller unit tests</div>
+                            <div class="scorecard-score" style="color: #ffc107;">7.0/10</div>
+                            <div class="scorecard-status">Good envtest-based controller tests with Ginkgo/Gomega; test-to-code ratio 0.60</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Integration/E2E</h3>
                             <div class="scorecard-score" style="color: #ffc107;">6.0/10</div>
-                            <div class="scorecard-status">Comprehensive E2E suite per component, but not automated in CI</div>
+                            <div class="scorecard-status">Comprehensive E2E suite covering all components; envtest integration tests; not PR-automated</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Build Integration</h3>
                             <div class="scorecard-score" style="color: #dc3545;">3.0/10</div>
-                            <div class="scorecard-status">No PR-time image build, no Konflux simulation, no manifest validation</div>
+                            <div class="scorecard-status">No PR-time image build, no Konflux simulation, no deployment testing</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Image Testing</h3>
-                            <div class="scorecard-score" style="color: #dc3545;">2.0/10</div>
-                            <div class="scorecard-status">Multi-stage Dockerfile only; no runtime validation, scanning, or multi-arch</div>
+                            <div class="scorecard-score" style="color: #dc3545;">3.0/10</div>
+                            <div class="scorecard-status">Multi-stage Dockerfile with UBI8 base but no runtime validation or multi-arch</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Coverage Tracking</h3>
                             <div class="scorecard-score" style="color: #fd7e14;">5.0/10</div>
-                            <div class="scorecard-status">Codecov upload present but no thresholds, no PR gating, no .codecov.yml</div>
+                            <div class="scorecard-status">Codecov integration with PR uploads but no threshold enforcement</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>CI/CD Automation</h3>
                             <div class="scorecard-score" style="color: #fd7e14;">5.0/10</div>
-                            <div class="scorecard-status">Unit tests and linting on PRs, but no caching, concurrency control, or E2E in CI</div>
+                            <div class="scorecard-status">PR-triggered tests and linting; no caching, concurrency, or matrix testing</div>
+                        </div>
+                        <div class="scorecard-item">
+                            <h3>Static Analysis</h3>
+                            <div class="scorecard-score" style="color: #ffc107;">6.0/10</div>
+                            <div class="scorecard-status">Comprehensive golangci-lint with enable-all; missing Dependabot and pre-commit hooks</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Agent Rules</h3>
                             <div class="scorecard-score" style="color: #dc3545;">0.0/10</div>
-                            <div class="scorecard-status">No CLAUDE.md, no .claude/ directory, no agent rules whatsoever</div>
+                            <div class="scorecard-status">No CLAUDE.md, AGENTS.md, or .claude/ directory</div>
                         </div>
                     </div>
                 </div>
@@ -411,43 +416,43 @@
                     <ul class="items-list">
                         
                         <li class="item-card high">
-                            <div class="item-description">Zero unit tests for all 12 component controllers</div>
-                            <p>Component reconciliation logic (dashboard, kserve, ray, codeflare, etc.) has no unit test coverage — bugs in reconcile loops are only caught at E2E level</p>
-                            <div class="item-meta">
-                                <span class="meta-tag severity-high">HIGH</span>
-                                <span class="meta-tag effort-tag">16-24 hours</span>
-                            </div>
-                        </li>
-                        <li class="item-card high">
-                            <div class="item-description">No security scanning in CI</div>
-                            <p>Vulnerabilities in Go dependencies and container images are never detected before production</p>
-                            <div class="item-meta">
-                                <span class="meta-tag severity-high">HIGH</span>
-                                <span class="meta-tag effort-tag">2-4 hours</span>
-                            </div>
-                        </li>
-                        <li class="item-card high">
-                            <div class="item-description">E2E tests not automated in CI</div>
-                            <p>18 E2E test files covering all components exist but require manual execution on a live cluster; regressions can merge undetected</p>
+                            <div class="item-description">No PR-time image build or Konflux simulation</div>
+                            <p>Build failures discovered only after merge in Konflux pipelines</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-high">HIGH</span>
                                 <span class="meta-tag effort-tag">8-12 hours</span>
                             </div>
                         </li>
                         <li class="item-card high">
-                            <div class="item-description">No PR-time image build validation</div>
-                            <p>Dockerfile build failures and manifest issues discovered only after merge in Konflux/production</p>
+                            <div class="item-description">E2E tests not automated on PRs</div>
+                            <p>Regressions in component deployment not caught until manual testing or release dry-run</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-high">HIGH</span>
+                                <span class="meta-tag effort-tag">12-16 hours</span>
+                            </div>
+                        </li>
+                        <li class="item-card medium">
+                            <div class="item-description">No coverage threshold enforcement</div>
+                            <p>Coverage can silently regress without any gate preventing merge</p>
+                            <div class="item-meta">
+                                <span class="meta-tag severity-medium">MEDIUM</span>
+                                <span class="meta-tag effort-tag">2-4 hours</span>
+                            </div>
+                        </li>
+                        <li class="item-card medium">
+                            <div class="item-description">Single-architecture image build (amd64 only)</div>
+                            <p>ARM64/multi-arch deployments not validated at build time</p>
+                            <div class="item-meta">
+                                <span class="meta-tag severity-medium">MEDIUM</span>
                                 <span class="meta-tag effort-tag">4-6 hours</span>
                             </div>
                         </li>
                         <li class="item-card medium">
-                            <div class="item-description">Single architecture build (amd64 only)</div>
-                            <p>No arm64 support; blocks adoption on ARM-based infrastructure</p>
+                            <div class="item-description">No dependency alert configuration</div>
+                            <p>Vulnerable or outdated dependencies not flagged automatically</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-medium">MEDIUM</span>
-                                <span class="meta-tag effort-tag">4-8 hours</span>
+                                <span class="meta-tag effort-tag">1-2 hours</span>
                             </div>
                         </li>
                     </ul>
@@ -464,32 +469,32 @@
                     <ul class="items-list">
                         
                         <li class="item-card ">
-                            <div class="item-description">Add Trivy container scanning to PR workflow</div>
-                            <p>Immediate visibility into CVEs in base images and Go dependencies</p>
+                            <div class="item-description">Add .codecov.yml with coverage thresholds</div>
+                            <p>Enforce minimum coverage and prevent regressions on PRs</p>
                             <div class="item-meta">
                                 
                                 <span class="meta-tag effort-tag">1-2 hours</span>
                             </div>
                         </li>
                         <li class="item-card ">
-                            <div class="item-description">Add .codecov.yml with coverage thresholds</div>
-                            <p>Enforce minimum coverage on PRs and prevent coverage regression</p>
+                            <div class="item-description">Enable Dependabot for Go modules and GitHub Actions</div>
+                            <p>Automated dependency update PRs and security alerts</p>
                             <div class="item-meta">
                                 
-                                <span class="meta-tag effort-tag">1 hour</span>
+                                <span class="meta-tag effort-tag">1-2 hours</span>
                             </div>
                         </li>
                         <li class="item-card ">
                             <div class="item-description">Add concurrency control to PR workflows</div>
-                            <p>Cancel redundant CI runs on force-pushes, saving runner time</p>
+                            <p>Cancel redundant workflow runs, save CI resources</p>
                             <div class="item-meta">
                                 
                                 <span class="meta-tag effort-tag">30 minutes</span>
                             </div>
                         </li>
                         <li class="item-card ">
-                            <div class="item-description">Add Go module and build caching to CI</div>
-                            <p>Reduce CI runtime by 30-50% for unit tests and linting</p>
+                            <div class="item-description">Add caching for Go modules in CI</div>
+                            <p>Faster CI runs by caching downloaded Go modules</p>
                             <div class="item-meta">
                                 
                                 <span class="meta-tag effort-tag">1 hour</span>
@@ -497,7 +502,7 @@
                         </li>
                         <li class="item-card ">
                             <div class="item-description">Create basic CLAUDE.md with test patterns</div>
-                            <p>Enable AI agents to generate correct, pattern-conforming tests</p>
+                            <p>Improve AI-generated test quality and consistency</p>
                             <div class="item-meta">
                                 
                                 <span class="meta-tag effort-tag">2-3 hours</span>
@@ -517,15 +522,15 @@
                         
                         <div class="rec-priority p0">
                             <h3>Priority 0: Critical</h3>
-                            <ul><li>Add unit tests for component controllers using envtest — 12 controllers currently have zero tests</li><li>Add container vulnerability scanning (Trivy) to PR and push workflows</li><li>Add PR-time Docker image build step to catch build failures before merge</li></ul>
+                            <ul><li>Add PR-time image build step to unit-tests or a new build-validation workflow</li><li>Automate E2E tests on PR merges or as a periodic job with results posted back</li><li>Add .codecov.yml with project and patch coverage thresholds (e.g., 60% project, 70% patch)</li></ul>
                         </div>
                         <div class="rec-priority p1">
                             <h3>Priority 1: High Value</h3>
-                            <ul><li>Automate E2E test execution in CI using Kind or a scheduled OpenShift cluster</li><li>Add .codecov.yml with patch and project coverage thresholds</li><li>Add CodeQL/gosec SAST scanning workflow</li><li>Create comprehensive CLAUDE.md and .claude/rules/ for test automation guidance</li></ul>
+                            <ul><li>Enable Dependabot for gomod and github-actions ecosystems</li><li>Add concurrency control and Go module caching to all PR workflows</li><li>Add multi-arch build support (buildx with linux/amd64,linux/arm64)</li><li>Create agent rules (.claude/rules/) for unit and E2E test patterns</li></ul>
                         </div>
                         <div class="rec-priority p2">
                             <h3>Priority 2: Nice-to-Have</h3>
-                            <ul><li>Add multi-architecture image builds (amd64 + arm64)</li><li>Add pre-commit hooks for fmt, vet, and import ordering</li><li>Add dependency scanning with govulncheck</li><li>Add image signing and SBOM generation</li></ul>
+                            <ul><li>Add pre-commit hooks for go fmt, go vet, and linting</li><li>Add FIPS build tags for environments requiring strict FIPS compliance</li><li>Add container HEALTHCHECK to the main Dockerfile</li><li>Add timeout-minutes to CI workflows to prevent runaway jobs</li></ul>
                         </div>
                     </div>
                 </div>

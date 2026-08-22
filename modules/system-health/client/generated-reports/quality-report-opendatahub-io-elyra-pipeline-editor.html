@@ -332,7 +332,7 @@
     <div class="container">
         <header>
             <h1>Quality Analysis Report</h1>
-            <p class="timestamp">Generated on July 06, 2026 at 03:55 PM</p>
+            <p class="timestamp">Generated on July 20, 2026 at 05:42 PM</p>
             <h2 style="margin-top: 1rem; font-weight: 400;">opendatahub-io/elyra-pipeline-editor</h2>
         </header>
 
@@ -364,38 +364,43 @@
                         
                         <div class="scorecard-item">
                             <h3>Unit Tests</h3>
-                            <div class="scorecard-score" style="color: #ffc107;">6.5/10</div>
-                            <div class="scorecard-status">Good test-to-code ratio (22 test files / 57 src files); Jest + Testing Library; 5,309 test LOC covering validation, migration, UI components</div>
+                            <div class="scorecard-score" style="color: #ffc107;">7.0/10</div>
+                            <div class="scorecard-status">Good test coverage with Jest + Testing Library across both packages</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Integration/E2E</h3>
                             <div class="scorecard-score" style="color: #dc3545;">3.0/10</div>
-                            <div class="scorecard-status">Cypress present but minimal — single E2E test (no-toolbar); no real user-flow coverage; Storybook-based integration only</div>
+                            <div class="scorecard-status">Minimal Cypress setup with only 1 integration test</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Build Integration</h3>
                             <div class="scorecard-score" style="color: #dc3545;">2.0/10</div>
-                            <div class="scorecard-status">No container image build; no Konflux simulation; no PR-time build validation beyond yarn build</div>
+                            <div class="scorecard-status">No Docker/container build in CI, no image validation or Konflux simulation</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Image Testing</h3>
                             <div class="scorecard-score" style="color: #dc3545;">0.0/10</div>
-                            <div class="scorecard-status">No Dockerfile or container image testing; library published as npm package only</div>
+                            <div class="scorecard-status">No Dockerfile, Containerfile, or container image testing present</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Coverage Tracking</h3>
-                            <div class="scorecard-score" style="color: #ffc107;">6.0/10</div>
-                            <div class="scorecard-status">Codecov integration in CI; LCOV + text reporters; collectCoverageFrom configured; but no enforcement thresholds</div>
+                            <div class="scorecard-score" style="color: #fd7e14;">5.0/10</div>
+                            <div class="scorecard-status">Codecov upload configured but no threshold enforcement</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>CI/CD Automation</h3>
-                            <div class="scorecard-score" style="color: #fd7e14;">5.5/10</div>
-                            <div class="scorecard-status">Single workflow with lint, test, coverage, Cypress jobs; multi-node matrix; yarn cache; but outdated actions (v2), no concurrency control</div>
+                            <div class="scorecard-score" style="color: #fd7e14;">5.0/10</div>
+                            <div class="scorecard-status">Single workflow with lint, test, coverage, and Cypress jobs but outdated actions and no concurrency control</div>
+                        </div>
+                        <div class="scorecard-item">
+                            <h3>Static Analysis</h3>
+                            <div class="scorecard-score" style="color: #fd7e14;">5.0/10</div>
+                            <div class="scorecard-status">ESLint with multiple plugins but no Dependabot, no pre-commit CI enforcement</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Agent Rules</h3>
                             <div class="scorecard-score" style="color: #dc3545;">0.0/10</div>
-                            <div class="scorecard-status">No CLAUDE.md, AGENTS.md, or .claude/ directory; no AI agent test automation guidance</div>
+                            <div class="scorecard-status">No CLAUDE.md, AGENTS.md, or .claude/ directory present</div>
                         </div>
                     </div>
                 </div>
@@ -410,52 +415,52 @@
                 <div class="section-content">
                     <ul class="items-list">
                         
-                        <li class="item-card high">
-                            <div class="item-description">Repository appears unmaintained — last commit March 2024</div>
-                            <p>No security patches, dependency updates, or bug fixes for 15+ months; consumers face increasing CVE exposure</p>
+                        <li class="item-card medium">
+                            <div class="item-description">No container image or Dockerfile</div>
+                            <p>Library is published as an npm package only; if containerized downstream, no build validation exists</p>
                             <div class="item-meta">
-                                <span class="meta-tag severity-high">HIGH</span>
-                                <span class="meta-tag effort-tag">Ongoing</span>
+                                <span class="meta-tag severity-medium">MEDIUM</span>
+                                <span class="meta-tag effort-tag">N/A for library — downstream concern</span>
                             </div>
                         </li>
                         <li class="item-card high">
-                            <div class="item-description">Severely outdated CI dependencies</div>
-                            <p>actions/checkout@v2, actions/setup-node@v2, actions/cache@v2, codecov-action@v1 are all EOL/deprecated; CI may break at any time</p>
-                            <div class="item-meta">
-                                <span class="meta-tag severity-high">HIGH</span>
-                                <span class="meta-tag effort-tag">2-4 hours</span>
-                            </div>
-                        </li>
-                        <li class="item-card high">
-                            <div class="item-description">Minimal E2E test coverage</div>
-                            <p>Only 1 Cypress test (renders empty pipeline message); no user flow coverage for pipeline editing, node drag/drop, properties panels</p>
+                            <div class="item-description">Minimal Cypress E2E coverage (1 test)</div>
+                            <p>Visual editor interactions, drag-and-drop, node linking, and properties panels are untested in integration</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-high">HIGH</span>
                                 <span class="meta-tag effort-tag">16-24 hours</span>
                             </div>
                         </li>
                         <li class="item-card high">
-                            <div class="item-description">No security scanning</div>
-                            <p>No Trivy, Snyk, CodeQL, or dependency scanning; vulnerabilities in 700K+ line yarn.lock undetected</p>
+                            <div class="item-description">No coverage threshold enforcement</div>
+                            <p>Coverage can silently regress without blocking PRs</p>
+                            <div class="item-meta">
+                                <span class="meta-tag severity-high">HIGH</span>
+                                <span class="meta-tag effort-tag">1-2 hours</span>
+                            </div>
+                        </li>
+                        <li class="item-card high">
+                            <div class="item-description">Outdated CI actions and Node.js matrix</div>
+                            <p>Using actions/checkout@v2, actions/cache@v2, codecov/codecov-action@v1; testing Node 12/14/15 which are all EOL</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-high">HIGH</span>
                                 <span class="meta-tag effort-tag">2-4 hours</span>
                             </div>
                         </li>
-                        <li class="item-card medium">
-                            <div class="item-description">No container image or build integration testing</div>
-                            <p>Library consumers discover build issues; no validation that the package integrates correctly</p>
+                        <li class="item-card high">
+                            <div class="item-description">No dependency update automation</div>
+                            <p>Vulnerable or outdated dependencies discovered only manually; last commit was March 2024</p>
                             <div class="item-meta">
-                                <span class="meta-tag severity-medium">MEDIUM</span>
-                                <span class="meta-tag effort-tag">8-12 hours</span>
+                                <span class="meta-tag severity-high">HIGH</span>
+                                <span class="meta-tag effort-tag">1-2 hours</span>
                             </div>
                         </li>
-                        <li class="item-card medium">
-                            <div class="item-description">No coverage enforcement thresholds</div>
-                            <p>Coverage can silently decrease without blocking PRs</p>
+                        <li class="item-card high">
+                            <div class="item-description">Repository appears unmaintained</div>
+                            <p>Last commit March 2024, only 1 commit visible (Dependabot bump), no active development</p>
                             <div class="item-meta">
-                                <span class="meta-tag severity-medium">MEDIUM</span>
-                                <span class="meta-tag effort-tag">1-2 hours</span>
+                                <span class="meta-tag severity-high">HIGH</span>
+                                <span class="meta-tag effort-tag">N/A — organizational decision</span>
                             </div>
                         </li>
                     </ul>
@@ -472,40 +477,32 @@
                     <ul class="items-list">
                         
                         <li class="item-card ">
-                            <div class="item-description">Update CI actions to current versions (v4)</div>
-                            <p>Prevent CI breakage from EOL action versions; improve security of CI pipeline</p>
+                            <div class="item-description">Add Dependabot configuration for npm ecosystem</div>
+                            <p>Automated dependency updates and security vulnerability alerts</p>
                             <div class="item-meta">
                                 
-                                <span class="meta-tag effort-tag">1-2 hours</span>
+                                <span class="meta-tag effort-tag">1 hour</span>
                             </div>
                         </li>
                         <li class="item-card ">
-                            <div class="item-description">Add CodeQL / dependency scanning workflow</div>
-                            <p>Automated vulnerability detection for TypeScript codebase and dependencies</p>
+                            <div class="item-description">Add coverage threshold in jest.config.js</div>
+                            <p>Prevent silent coverage regression on PRs</p>
                             <div class="item-meta">
                                 
-                                <span class="meta-tag effort-tag">1-2 hours</span>
+                                <span class="meta-tag effort-tag">1 hour</span>
                             </div>
                         </li>
                         <li class="item-card ">
-                            <div class="item-description">Add coverage threshold enforcement in Jest config</div>
-                            <p>Prevent coverage regressions on PRs</p>
+                            <div class="item-description">Update CI workflow actions to latest versions</div>
+                            <p>Fix deprecation warnings, improve security, use current Node.js LTS versions</p>
                             <div class="item-meta">
                                 
-                                <span class="meta-tag effort-tag">30 minutes</span>
-                            </div>
-                        </li>
-                        <li class="item-card ">
-                            <div class="item-description">Add concurrency control to CI workflow</div>
-                            <p>Cancel redundant CI runs on force-pushed commits</p>
-                            <div class="item-meta">
-                                
-                                <span class="meta-tag effort-tag">30 minutes</span>
+                                <span class="meta-tag effort-tag">2 hours</span>
                             </div>
                         </li>
                         <li class="item-card ">
                             <div class="item-description">Create basic CLAUDE.md with test patterns</div>
-                            <p>Guide AI agents to generate consistent, high-quality tests</p>
+                            <p>Improve AI-generated code quality and consistency with existing patterns</p>
                             <div class="item-meta">
                                 
                                 <span class="meta-tag effort-tag">2-3 hours</span>
@@ -525,15 +522,15 @@
                         
                         <div class="rec-priority p0">
                             <h3>Priority 0: Critical</h3>
-                            <ul><li>Assess project status — if actively consumed by ODH, establish maintenance cadence or archive if abandoned</li><li>Update all GitHub Actions to current versions (checkout@v4, setup-node@v4, cache@v4, codecov-action@v4)</li><li>Add CodeQL analysis workflow for automated vulnerability scanning</li><li>Add Dependabot or Renovate for automated dependency updates</li></ul>
+                            <ul><li>Update Node.js test matrix to current LTS versions (18, 20, 22) — Node 12/14/15 are EOL</li><li>Update all GitHub Actions to latest versions (actions/checkout@v4, actions/setup-node@v4, codecov/codecov-action@v4)</li><li>Add Dependabot configuration for npm dependency monitoring</li></ul>
                         </div>
                         <div class="rec-priority p1">
                             <h3>Priority 1: High Value</h3>
-                            <ul><li>Expand Cypress E2E tests to cover core user flows — pipeline creation, node operations, property editing</li><li>Add coverage enforcement thresholds (e.g., 70% minimum)</li><li>Add concurrency control to prevent redundant CI runs</li><li>Create .claude/rules/ with unit test and E2E test patterns</li></ul>
+                            <ul><li>Expand Cypress E2E test suite to cover editor interactions (node creation, linking, properties editing, palette usage)</li><li>Add coverageThreshold to jest.config.js to enforce minimum coverage gates</li><li>Add concurrency control to CI workflow to cancel redundant runs</li></ul>
                         </div>
                         <div class="rec-priority p2">
                             <h3>Priority 2: Nice-to-Have</h3>
-                            <ul><li>Add accessibility testing (jest-axe or Cypress-axe)</li><li>Add visual regression testing for Storybook components</li><li>Consider migrating from Jest to Vitest for faster test execution</li><li>Add pre-commit hook enforcement via CI (currently husky local only)</li></ul>
+                            <ul><li>Create CLAUDE.md and .claude/rules/ with test creation patterns for Jest + Testing Library</li><li>Add timeout-minutes to CI jobs to prevent hung workflows</li><li>Consider adding Storybook visual regression tests for component library</li></ul>
                         </div>
                     </div>
                 </div>

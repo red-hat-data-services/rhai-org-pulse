@@ -65,91 +65,113 @@ Usage.
 Platform tab components receive no props and emit no events. They are
 standalone sections that render their own content.
 
-## Allocation Strategy (`platform/allocation-strategy/`)
+## Allocation (`platform/allocation/`)
 
-The allocation tracker supports customizable work classification via
-`platform/allocation-strategy/`. When present, the allocation tab appears on
-team detail views and the Work Allocation report appears in the reports hub.
-When absent, allocation features are hidden entirely.
+Allocation was removed from `@org-pulse/core` in v2.0.61 and now lives entirely
+in this consumer repo as a self-contained `module-views` platform extension at
+`platform/allocation/`. It registers into team-tracker's contribution slots via
+the discovery seam (a per-team **Allocation** tab, the **Work Allocation**
+report, and an **Allocation** settings tab) and ships its own classification
+strategy, server engine, and Jira transport.
 
-### Manifest format
+### Structure
+
+```
+platform/allocation/
+  manifest.json                 # type module-views, targetModule team-tracker,
+                                #   server.entry, secrets (jira), strategy metadata
+  team-tracker-contributions.js # register({ registerTeamDetailTab, registerReport,
+                                #   registerSettingsTab }) — the discovery seam
+  classify.js                   # classifyIssue() + getJiraFields() (owns classification)
+  client/                       # tab, settings, report, subcomponents, composables
+  server/                       # index.js (entry) + routes/orchestration/…engine
+```
+
+### Contribution seam (`team-tracker-contributions.js`)
+
+Core discovers `platform/*/team-tracker-contributions.js` and calls its exported
+`register(api)` with an **injected** registrar API — the extension never imports
+team-tracker internals:
+
+```js
+export function register({ registerTeamDetailTab, registerReport, registerSettingsTab }) {
+  registerTeamDetailTab({
+    id: 'allocation', label: 'Allocation', order: 40,
+    isVisible: () => true, // gated on the strategy being configured
+    render: { type: 'component', load: () => import('./client/TeamAllocationTab.vue') }
+  })
+  // registerReport({ … render: { … './client/reports/AllocationReport.vue' } })
+  // registerSettingsTab({ … render: { … './client/AllocationSettings.vue' } })
+}
+```
+
+`render` is a **descriptor** (`{ type: 'component', load: () => import(...) }`),
+never a raw component, so client chunks stay code-split.
+
+### Strategy metadata (`manifest.json` → `strategy`)
+
+The strategy (formerly `platform/allocation-strategy/`) is folded in. Its
+metadata lives under `manifest.strategy`:
 
 ```json
 {
-  "id": "ai-eng-40-40-20",
-  "name": "40/40/20 Allocation",
-  "description": "Tracks tech debt, features, and learning investment.",
-  "classify": "classify.js",
-  "categories": [
-    { "key": "tech-debt-quality", "name": "Tech Debt & Quality", "color": "amber", "target": 40 },
-    { "key": "new-features", "name": "New Features", "color": "blue", "target": 40 },
-    { "key": "learning-enablement", "name": "Learning & Enablement", "color": "green", "target": 20 }
-  ]
-}
-```
-
-| Field | Type | Required | Description |
-|-------|------|----------|-------------|
-| `id` | string | yes | Unique strategy identifier (stored in sprint data for cache invalidation) |
-| `name` | string | yes | Display name for the strategy |
-| `description` | string | no | Short description |
-| `classify` | string | yes | Path to CommonJS classification module relative to the extension directory |
-| `categories` | array | yes | Ordered list of allocation categories |
-| `settingsComponent` | string | no | Path to Vue component for strategy-specific admin settings |
-
-Each category object:
-
-| Field | Type | Required | Description |
-|-------|------|----------|-------------|
-| `key` | string | yes | Unique identifier (used in data storage) |
-| `name` | string | yes | Display name |
-| `color` | string | yes | Tailwind color name (e.g., `amber`, `blue`, `green`) |
-| `target` | number | yes | Target percentage (all targets should sum to 100) |
-
-### Classification module (`classify.js`)
-
-The classification module must export:
-
-```js
-// Required: classify a Jira issue into a category
-function classifyIssue(issue) {
-  // issue has: issueType, status, storyPoints, summary, assignee,
-  //            plus any extra fields declared by getJiraFields()
-  return 'category-key' // or 'uncategorized'
-}
-
-// Optional: declare additional Jira fields needed for classification
-function getJiraFields() {
-  return {
-    fieldIds: ['customfield_10464'],
-    extract: (issue, fields) => ({
-      activityType: fields.customfield_10464?.value || null
-    })
+  "strategy": {
+    "id": "ai-eng-40-40-20",
+    "name": "AI Engineering 40/40/20",
+    "description": "Classifies work into Tech Debt & Quality (40%), New Features (40%), and Learning & Enablement (20%)",
+    "categories": [
+      { "key": "tech-debt-quality", "name": "Tech Debt & Quality", "color": "amber", "target": 40 },
+      { "key": "new-features", "name": "New Features", "color": "blue", "target": 40 },
+      { "key": "learning-enablement", "name": "Learning & Enablement", "color": "green", "target": 20 }
+    ]
   }
 }
-
-module.exports = { classifyIssue, getJiraFields }
 ```
 
-### How it works
+`classify.js` exports `classifyIssue(issue)` (returns a category key or
+`'uncategorized'`) and optionally `getJiraFields()` (declares extra Jira field
+IDs + an `extract` function). The AI-Eng story-points field remains the
+hardcoded `customfield_10028`.
 
-- **Server-side**: `server/platform-loader.js` discovers the manifest and loads
-  the classification module. The strategy is passed into module context via
-  `context.allocationStrategy`.
-- **Frontend**: `src/platform-loader.js` discovers the manifest via
-  `import.meta.glob` and exposes category metadata. The `useAllocationStrategy()`
-  composable provides reactive access to categories.
-- **Cache invalidation**: The `strategyId` is stored alongside sprint data. When
-  the strategy changes, cached closed sprint data is invalidated and re-classified.
-- **Uncategorized**: Issues that don't match any category are automatically placed
-  in an "Uncategorized" bucket (always appended, not declared in the manifest).
+### Self-loading the strategy (core no longer provides it)
 
-### Adding a new strategy
+Core removed `loadAllocationStrategy` and `context.allocationStrategy`, so the
+extension is fully self-sufficient:
 
-1. Create `platform/allocation-strategy/manifest.json` with your categories
-2. Create `platform/allocation-strategy/classify.js` with classification logic
-3. Run `npm run validate:platform` to verify
-4. The allocation tab and report appear automatically
+- **Backend** — `server/index.js` builds the strategy object from
+  `manifest.strategy` + `classify.js` and threads it (plus the Jira transport)
+  into `server/routes.js`/orchestration via an augmented context. Routes are
+  registered on the passed `router` and mounted by core at
+  `/api/modules/team-tracker/allocation/...`. The refresh handler is preserved
+  via `context.registerRefresh`.
+- **Frontend** — `useAllocationStrategy()` reads `manifest.strategy` directly
+  (no core loader). It reports `configured: true` whenever the extension is
+  present. Backend metadata is also available at
+  `GET /api/modules/team-tracker/allocation/strategy`.
+
+### Secrets
+
+The extension slug is `team-tracker/allocation`, so it does **not** inherit
+team-tracker's Jira secrets automatically. `manifest.json` declares the `jira`
+platform secret group and `server/index.js` reads `JIRA_EMAIL`/`JIRA_TOKEN` from
+`context.secrets` (via core's shared `createJiraClient`) — never `process.env`.
+
+```json
+{ "secrets": { "platform": ["jira"] } }
+```
+
+### Server-only manifest (no nav item)
+
+Core v2.0.62 allows server-only `module-views` extensions, so the manifest
+declares only `server.entry` (plus `secrets` and `strategy`) — no `navItems` or
+`client.views`. All UI surfaces through the contribution seam: the per-team
+allocation tab, the report card, and the settings tab.
+
+### Adding or changing the strategy
+
+1. Edit `platform/allocation/manifest.json` → `strategy` (categories, targets).
+2. Edit `platform/allocation/classify.js` classification logic.
+3. Run `npm run validate:platform` to verify the manifest.
 
 ## Dockerfile layering
 

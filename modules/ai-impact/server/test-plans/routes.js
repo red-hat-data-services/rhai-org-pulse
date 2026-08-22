@@ -8,6 +8,8 @@ const {
   countHistoryEntries
 } = require('./storage');
 const { syncTestPlansFromJira, acquireLock, releaseLock } = require('./jira-sync');
+const { computeTestPlanMetrics } = require('./metrics');
+const { getConfig } = require('../config');
 
 const DEMO_MODE = process.env.DEMO_MODE === 'true';
 const jsonLimit = express.json({ limit: '10mb' });
@@ -26,7 +28,7 @@ const syncState = {
  * Run the Jira sync in the background. Updates syncState.
  * @param {Function} readFromStorage
  */
-async function runSync(readFromStorage, writeToStorageAtomic) {
+async function runSync(readFromStorage, writeToStorage) {
   if (syncState.running) return;
   if (!acquireLock()) {
     console.warn('[ai-impact] Test plan sync skipped: write lock held');
@@ -37,7 +39,7 @@ async function runSync(readFromStorage, writeToStorageAtomic) {
   syncState.startedAt = new Date().toISOString();
 
   try {
-    const result = await syncTestPlansFromJira(readFromStorage, writeToStorageAtomic);
+    const result = await syncTestPlansFromJira(readFromStorage, writeToStorage);
     syncState.lastResult = {
       status: result.errors.length > 0 ? 'partial' : 'success',
       message: `Synced ${result.synced} test plans: ${result.updated} updated (${result.statusChanged} review status changes), ${result.notFound} not found in Jira`,
@@ -59,7 +61,7 @@ async function runSync(readFromStorage, writeToStorageAtomic) {
 
 module.exports = function registerTestPlanRoutes(router, context) {
   const { storage, requireAdmin, requireScope } = context;
-  const { readFromStorage, writeToStorageAtomic } = storage;
+  const { readFromStorage, writeToStorage } = storage;
 
   // ─── 1. Static routes FIRST ───
 
@@ -74,8 +76,8 @@ module.exports = function registerTestPlanRoutes(router, context) {
    *       200:
    *         description: Test plan data status
    */
-  router.get('/test-plans/status', requireAdmin, requireScope('ai-impact:read'), function(req, res) {
-    const data = readTestPlans(readFromStorage);
+  router.get('/test-plans/status', requireAdmin, requireScope('ai-impact:read'), async function(req, res) {
+    const data = await readTestPlans(readFromStorage);
     res.json({
       lastSyncedAt: data.lastSyncedAt,
       lastJiraSyncAt: data.lastJiraSyncAt || null,
@@ -118,7 +120,7 @@ module.exports = function registerTestPlanRoutes(router, context) {
     }
 
     res.json({ status: 'started' });
-    runSync(readFromStorage, writeToStorageAtomic);
+    runSync(readFromStorage, writeToStorage);
   });
 
   /**
@@ -141,7 +143,7 @@ module.exports = function registerTestPlanRoutes(router, context) {
    *       200:
    *         description: Bulk upsert results
    */
-  router.post('/test-plans/bulk', requireAdmin, requireScope('ai-impact:write'), jsonLimit, function(req, res) {
+  router.post('/test-plans/bulk', requireAdmin, requireScope('ai-impact:write'), jsonLimit, async function(req, res) {
     if (DEMO_MODE) {
       return res.json({ status: 'skipped', message: 'Test plan ingest disabled in demo mode' });
     }
@@ -154,7 +156,7 @@ module.exports = function registerTestPlanRoutes(router, context) {
       return res.status(400).json({ error: `Bulk payload exceeds maximum of ${BULK_CAP} entries` });
     }
 
-    const data = readTestPlans(readFromStorage);
+    const data = await readTestPlans(readFromStorage);
     const counts = { created: 0, updated: 0, unchanged: 0 };
     const errors = [];
 
@@ -178,7 +180,7 @@ module.exports = function registerTestPlanRoutes(router, context) {
     if (counts.created > 0 || counts.updated > 0) {
       data.lastSyncedAt = new Date().toISOString();
       data.totalTestPlans = Object.keys(data.testPlans).length;
-      writeTestPlansAtomic(writeToStorageAtomic, data);
+      await writeTestPlansAtomic(writeToStorage, data);
     }
 
     res.json({
@@ -193,7 +195,7 @@ module.exports = function registerTestPlanRoutes(router, context) {
     if (counts.created > 0 || counts.updated > 0) {
       setTimeout(() => {
         console.log('[ai-impact] Triggering post-ingest test plan Jira sync');
-        runSync(readFromStorage, writeToStorageAtomic);
+        runSync(readFromStorage, writeToStorage);
       }, 10000);
     }
   });
@@ -209,28 +211,53 @@ module.exports = function registerTestPlanRoutes(router, context) {
    *       200:
    *         description: Test plan data cleared
    */
-  router.delete('/test-plans', requireAdmin, requireScope('ai-impact:write'), function(req, res) {
+  router.delete('/test-plans', requireAdmin, requireScope('ai-impact:write'), async function(req, res) {
     if (DEMO_MODE) {
       return res.json({ status: 'skipped', message: 'Test plan ingest disabled in demo mode' });
     }
 
-    writeTestPlansAtomic(writeToStorageAtomic, { lastSyncedAt: null, totalTestPlans: 0, testPlans: {} });
+    await writeTestPlansAtomic(writeToStorage, { lastSyncedAt: null, totalTestPlans: 0, testPlans: {} });
     res.json({ status: 'cleared' });
   });
+
+  const VALID_TIME_WINDOWS = ['week', 'month', '3months'];
 
   /**
    * @openapi
    * /api/modules/ai-impact/test-plans:
    *   get:
-   *     summary: List all test plans (slim projection)
+   *     summary: List all test plans with computed metrics
    *     tags: [AI Impact - Test Plans]
+   *     parameters:
+   *       - in: query
+   *         name: timeWindow
+   *         schema:
+   *           type: string
+   *           enum: [week, month, 3months]
+   *           default: month
+   *         description: Time window for metric computation
    *     responses:
    *       200:
-   *         description: All test plans with latest scores
+   *         description: All test plans with latest scores and trend metrics
    */
-  router.get('/test-plans', requireScope('ai-impact:read'), function(req, res) {
-    const data = readTestPlans(readFromStorage);
-    res.json(getLatestProjection(data));
+  router.get('/test-plans', requireScope('ai-impact:read'), async function(req, res) {
+    const timeWindow = VALID_TIME_WINDOWS.includes(req.query.timeWindow)
+      ? req.query.timeWindow
+      : 'month';
+
+    const data = await readTestPlans(readFromStorage);
+    const projection = getLatestProjection(data);
+    const plans = Object.values(projection.testPlans);
+    const config = await getConfig(readFromStorage);
+    const { metrics, trendData, breakdown, reviewStatus } = computeTestPlanMetrics(plans, timeWindow, config);
+
+    res.json({
+      ...projection,
+      metrics,
+      trendData,
+      breakdown,
+      reviewStatus
+    });
   });
 
   // ─── 2. Parameterized routes AFTER ───
@@ -253,8 +280,8 @@ module.exports = function registerTestPlanRoutes(router, context) {
    *       404:
    *         description: Not found
    */
-  router.get('/test-plans/:key', requireScope('ai-impact:read'), function(req, res) {
-    const data = readTestPlans(readFromStorage);
+  router.get('/test-plans/:key', requireScope('ai-impact:read'), async function(req, res) {
+    const data = await readTestPlans(readFromStorage);
     const entry = data.testPlans[req.params.key];
     if (!entry) {
       return res.status(404).json({ error: 'Not found' });
@@ -290,7 +317,7 @@ module.exports = function registerTestPlanRoutes(router, context) {
    *       400:
    *         description: Validation errors
    */
-  router.put('/test-plans/:key', requireAdmin, requireScope('ai-impact:write'), jsonLimit, function(req, res) {
+  router.put('/test-plans/:key', requireAdmin, requireScope('ai-impact:write'), jsonLimit, async function(req, res) {
     if (DEMO_MODE) {
       return res.json({ status: 'skipped', message: 'Test plan ingest disabled in demo mode' });
     }
@@ -300,13 +327,13 @@ module.exports = function registerTestPlanRoutes(router, context) {
       return res.status(400).json({ errors: result.errors });
     }
 
-    const data = readTestPlans(readFromStorage);
+    const data = await readTestPlans(readFromStorage);
     const status = upsertTestPlan(data, req.params.key, result.data);
 
     data.lastSyncedAt = new Date().toISOString();
     data.totalTestPlans = Object.keys(data.testPlans).length;
 
-    writeTestPlansAtomic(writeToStorageAtomic, data);
+    await writeTestPlansAtomic(writeToStorage, data);
     res.json({ status });
   });
 
@@ -317,7 +344,7 @@ module.exports = function registerTestPlanRoutes(router, context) {
       description: 'Syncs test plan data from Jira, updating local test plan records.',
       handler: async function() {
         if (DEMO_MODE) return;
-        await runSync(readFromStorage, writeToStorageAtomic);
+        await runSync(readFromStorage, writeToStorage);
       }
     });
   }

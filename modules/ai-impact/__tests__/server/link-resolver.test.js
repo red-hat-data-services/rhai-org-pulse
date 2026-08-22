@@ -21,9 +21,23 @@ describe('extractLinkedKey', () => {
     expect(extractLinkedKey(links, CONFIG)).toBeNull();
   });
 
-  it('returns null when no outward issue exists', () => {
+  it('returns key from inwardIssue when outwardIssue is absent', () => {
     const links = [
       { type: { name: 'Cloners' }, inwardIssue: { key: 'RHAISTRAT-123' } }
+    ];
+    expect(extractLinkedKey(links, CONFIG)).toBe('RHAISTRAT-123');
+  });
+
+  it('prefers outwardIssue over inwardIssue when both are present', () => {
+    const links = [
+      { type: { name: 'Cloners' }, outwardIssue: { key: 'RHAISTRAT-100' }, inwardIssue: { key: 'RHAISTRAT-200' } }
+    ];
+    expect(extractLinkedKey(links, CONFIG)).toBe('RHAISTRAT-100');
+  });
+
+  it('returns null when inwardIssue is a different project', () => {
+    const links = [
+      { type: { name: 'Cloners' }, inwardIssue: { key: 'OTHER-123' } }
     ];
     expect(extractLinkedKey(links, CONFIG)).toBeNull();
   });

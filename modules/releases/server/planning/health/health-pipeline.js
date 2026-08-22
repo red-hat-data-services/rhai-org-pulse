@@ -5,25 +5,58 @@
  *   1. Load features from Big Rocks candidates cache
  *   2. Load milestone dates (Product Pages → Smartsheet fallback for freeze dates)
  *   3. Run Jira enrichment (two-pass)
- *   4. Evaluate DoR for each feature
+ *   4. Evaluate FPDoR readiness for each feature
  *   5. Compute risk for each feature
- *   6. Compute RICE scores (if enabled)
- *   7. Build and write health cache
+ *   6. Build and write health cache
  *
  * Graceful degradation at every step -- if any data source is unavailable,
  * the pipeline continues with reduced accuracy rather than failing entirely.
  */
 
 const { loadIndex, loadFeatureDetail } = require('../cache-reader')
-const { getConfig } = require('../config')
-const { JIRA_BROWSE_URL, CLOSED_STATUSES, PLANNING_DEADLINE_OFFSET_DAYS, VALID_PHASES } = require('../constants')
+const { getConfig, getConfiguredReleases, loadBigRocks } = require('../config')
+const { JIRA_BROWSE_URL, CLOSED_STATUSES, PLANNING_DEADLINE_OFFSET_DAYS, VALID_PHASES, STRAT_CREATOR_LABELS } = require('../constants')
 const { enrichFeatures } = require('./jira-enrichment')
-const { computeDoR, computeDoD, computePlanningChecks, derivePlanningStatus, applyBlockerEscalation, parseStratCreatorStatus } = require('./planning-gates')
 const { computeFeatureRisk } = require('./risk-engine')
+var { computeFPDoRReadiness } = require('../fpdor')
 const { computePriorityScores } = require('./priority-scorer')
-const smartsheetClient = require('../../../../../shared/server/smartsheet')
+const { getRegistryReleasesFlat } = require('../../registry')
 
 var DATA_PREFIX = 'releases/planning'
+
+function parseStratCreatorStatus(labels) {
+  if (!labels || !Array.isArray(labels) || labels.length === 0) return 'not-assessed'
+  if (labels.indexOf(STRAT_CREATOR_LABELS.HUMAN_SIGN_OFF) !== -1) return 'human-sign-off'
+  if (labels.indexOf(STRAT_CREATOR_LABELS.RUBRIC_PASS) !== -1) return 'rubric-pass'
+  if (labels.indexOf(STRAT_CREATOR_LABELS.NEEDS_ATTENTION) !== -1) return 'needs-attention'
+  return 'not-assessed'
+}
+
+function computePlanningChecks(feature) {
+  var checks = []
+  var components = feature.components || []
+  var hasComponents = Array.isArray(components) ? components.length > 0 : (typeof components === 'string' && components.trim().length > 0)
+  checks.push({ id: 'DoR-P1', label: 'Components Set', passed: hasComponents, severity: 'hard-blocker', detail: hasComponents ? (Array.isArray(components) ? components.join(', ') : components) : 'No components assigned' })
+  var pm = feature.pm || ''
+  var hasPM = typeof pm === 'object' ? !!(pm.displayName || pm.name) : pm.length > 0
+  checks.push({ id: 'DoR-P2', label: 'Product Manager Assigned', passed: hasPM, severity: 'hard-blocker', detail: hasPM ? (typeof pm === 'object' ? pm.displayName || pm.name : pm) : null })
+  var phase = feature.phase || feature.releaseType || ''
+  checks.push({ id: 'DoR-P3', label: 'Release Type Set', passed: phase.length > 0, severity: 'hard-blocker', detail: phase || 'No release type (DP/TP/GA) specified' })
+  var epicCount = feature.epicCount || 0
+  checks.push({ id: 'DoR-P4', label: 'Child Epics Created', passed: epicCount > 0, severity: 'hard-blocker', detail: epicCount > 0 ? epicCount + ' epic(s)' : 'No child epics linked' })
+  var hasRfe = !!(feature.rfe || feature.parentKey)
+  checks.push({ id: 'DoR-P5', label: 'RFE Linked', passed: hasRfe, severity: 'hard-blocker', detail: hasRfe ? (feature.rfe || feature.parentKey) : 'No source RFE linked' })
+  var hardBlockersFailed = checks.filter(function(c) { return c.severity === 'hard-blocker' && !c.passed })
+  return { checks: checks, passedCount: checks.filter(function(c) { return c.passed }).length, totalCount: checks.length, hasHardBlockers: hardBlockersFailed.length > 0, hardBlockersFailed: hardBlockersFailed }
+}
+
+function derivePlanningStatus(fpdorResult) {
+  if (!fpdorResult) return 'not-ready'
+  if (fpdorResult.allApplicablePassed) return 'ready-for-execution'
+  var applicable = fpdorResult.applicableCount != null ? fpdorResult.applicableCount : fpdorResult.totalCount
+  if (applicable > 0 && fpdorResult.passedCount >= Math.ceil(applicable / 2)) return 'in-planning'
+  return 'not-ready'
+}
 
 /**
  * Get a display name from an assignee/pm field that may be a string or object.
@@ -93,23 +126,35 @@ function passesPhaseFilter(candidate, version, phase) {
  * @returns {object}
  */
 function mapCandidateToHealthFeature(candidate) {
+  var labels = candidate.labels
+  if (Array.isArray(labels)) {
+    labels = labels.slice()
+  } else {
+    labels = splitCommaString(labels)
+  }
   return {
     key: candidate.issueKey,
     summary: candidate.summary || '',
     status: candidate.status || '',
     priority: candidate.priority || '',
     releaseType: candidate.phase || '',
-    components: splitCommaString(candidate.components),
+    components: Array.isArray(candidate.components) ? candidate.components : splitCommaString(candidate.components),
     fixVersions: splitCommaString(candidate.fixVersion),
     targetVersions: candidate.targetRelease ? [candidate.targetRelease] : [],
     assignee: candidate.deliveryOwner || '',
     deliveryOwner: candidate.deliveryOwner || '',
     pm: candidate.pm || '',
+    pmOwner: candidate.pm || '',
     bigRock: candidate.bigRock || '',
     tier: candidate.tier || null,
     rfe: candidate.rfe || '',
-    labels: splitCommaString(candidate.labels),
-    parentKey: candidate.rfe || ''
+    sourceRfe: candidate.rfe || candidate.sourceRfe || '',
+    linkedRfeKey: candidate.linkedRfeKey || candidate.rfe || null,
+    labels: labels,
+    parentKey: candidate.rfe || '',
+    docsRequired: candidate.docsRequired != null ? candidate.docsRequired : null,
+    epicCount: candidate.epicCount != null ? candidate.epicCount : 0,
+    riceScore: candidate.riceScore != null ? candidate.riceScore : null
   }
 }
 
@@ -121,10 +166,10 @@ function mapCandidateToHealthFeature(candidate) {
  * @param {string|null} phase - Phase filter (EA1/EA2/GA) or null for all
  * @returns {{ features: Array<object>, warnings: Array<string> }}
  */
-function loadFeaturesFromCandidates(readFromStorage, version, phase) {
+async function loadFeaturesFromCandidates(readFromStorage, version, phase) {
   var warnings = []
   var cacheKey = DATA_PREFIX + '/candidates-cache-' + version + '.json'
-  var cached = readFromStorage(cacheKey)
+  var cached = await readFromStorage(cacheKey)
 
   if (!cached || !cached.data || !cached.data.features) {
     warnings.push('No candidates found -- run a Big Rocks refresh first')
@@ -225,16 +270,16 @@ function getFeaturePhase(feature) {
 }
 
 /**
- * Load milestone data from the Product Pages cache (written by release-analysis module).
- * Maps Product Pages release entries to the milestones shape the health pipeline expects.
+ * Load milestone data from the release registry.
+ * Maps registry release entries to the milestones shape the health pipeline expects.
  *
  * @param {Function} readFromStorage
  * @param {string} version - Release version (e.g., '3.5')
  * @returns {object|null} Milestone dates or null
  */
-function loadMilestones(readFromStorage, version) {
-  var cached = readFromStorage('releases/delivery/product-pages-releases-cache.json')
-  if (!cached || !cached.releases || !Array.isArray(cached.releases)) {
+async function loadMilestones(readFromStorage, version) {
+  var releases = await getRegistryReleasesFlat(readFromStorage)
+  if (!releases || releases.length === 0) {
     return null
   }
 
@@ -248,8 +293,8 @@ function loadMilestones(readFromStorage, version) {
   var ea2Entry = null
   var gaEntry = null
 
-  for (var i = 0; i < cached.releases.length; i++) {
-    var r = cached.releases[i]
+  for (var i = 0; i < releases.length; i++) {
+    var r = releases[i]
     var rn = r.releaseNumber || ''
     if (ea1Pattern.test(rn)) {
       if (!ea1Entry || preferredProduct.test(rn)) ea1Entry = r
@@ -280,7 +325,7 @@ function loadMilestones(readFromStorage, version) {
 }
 
 /**
- * Look up the previous version's GA code freeze date from Product Pages cache.
+ * Look up the previous version's GA code freeze date from the release registry.
  * Used to compute EA1's planning freeze (1 week before previous GA code freeze).
  *
  * @param {Function} readFromStorage
@@ -294,122 +339,17 @@ async function loadPreviousGaFreeze(readFromStorage, version) {
   if (prevMinor < 0) return null
   var prevVersion = parts[0] + '.' + prevMinor
 
-  // Try Product Pages cache first
-  var cached = readFromStorage('releases/delivery/product-pages-releases-cache.json')
-  if (cached && cached.releases && Array.isArray(cached.releases)) {
-    for (var i = 0; i < cached.releases.length; i++) {
-      var r = cached.releases[i]
-      var rn = r.releaseNumber || ''
-      if (rn.indexOf(prevVersion) !== -1 && !/\bEA\d?\b/i.test(rn)) {
-        if (r.codeFreezeDate) return r.codeFreezeDate
-      }
-    }
-  }
-
-  // Fallback to Smartsheet
-  if (smartsheetClient.isConfigured()) {
-    try {
-      var releases = await smartsheetClient.discoverReleasesPartial()
-      for (var j = 0; j < releases.length; j++) {
-        if (releases[j].version === prevVersion && releases[j].gaFreeze) {
-          return releases[j].gaFreeze
-        }
-      }
-    } catch {
-      // fall through
+  var releases = await getRegistryReleasesFlat(readFromStorage)
+  for (var i = 0; i < releases.length; i++) {
+    var r = releases[i]
+    var rn = r.releaseNumber || ''
+    if (rn.indexOf(prevVersion) !== -1 && !/\bEA\d?\b/i.test(rn)) {
+      if (r.codeFreezeDate) return r.codeFreezeDate
     }
   }
 
   return null
 }
-
-/**
- * Fill missing freeze dates from Smartsheet.
- *
- * If milestones is null (no Product Pages data), attempts to load everything
- * from Smartsheet. If milestones exist but freeze dates are null, merges
- * Smartsheet freeze dates into the existing object.
- *
- * @param {object|null} milestones - Milestones from Product Pages (may have null freeze fields)
- * @param {string} version - Release version (e.g., '3.5')
- * @returns {Promise<{ milestones: object|null, warnings: string[] }>}
- */
-async function backfillFreezeDatesFromSmartsheet(milestones, version) {
-  var warnings = []
-
-  if (!smartsheetClient.isConfigured()) {
-    if (!milestones) {
-      warnings.push('Neither Product Pages nor Smartsheet is configured -- milestone risk checks will be skipped')
-    } else if (!milestones.ea1Freeze && !milestones.ea2Freeze && !milestones.gaFreeze) {
-      warnings.push('Product Pages freeze dates are missing and Smartsheet is not configured')
-    }
-    return { milestones: milestones, warnings: warnings }
-  }
-
-  var needsFullLoad = !milestones
-  var needsFreezeFill = milestones &&
-    !milestones.ea1Freeze && !milestones.ea2Freeze && !milestones.gaFreeze
-
-  if (!needsFullLoad && !needsFreezeFill) {
-    return { milestones: milestones, warnings: warnings }
-  }
-
-  try {
-    var releases = await smartsheetClient.discoverReleasesPartial()
-    var match = null
-    for (var i = 0; i < releases.length; i++) {
-      if (releases[i].version === version) {
-        match = releases[i]
-        break
-      }
-    }
-
-    if (!match) {
-      if (needsFullLoad) {
-        warnings.push('No milestone data found in Smartsheet for version ' + version)
-      }
-      return { milestones: milestones, warnings: warnings }
-    }
-
-    if (needsFullLoad) {
-      warnings.push('Using Smartsheet as milestone source (Product Pages unavailable)')
-      return {
-        milestones: {
-          ea1Freeze: match.ea1Freeze,
-          ea1Target: match.ea1Target,
-          ea2Freeze: match.ea2Freeze,
-          ea2Target: match.ea2Target,
-          gaFreeze: match.gaFreeze,
-          gaTarget: match.gaTarget
-        },
-        warnings: warnings
-      }
-    }
-
-    // Merge freeze dates from Smartsheet into existing Product Pages milestones
-    var merged = {
-      ea1Freeze: milestones.ea1Freeze || match.ea1Freeze || null,
-      ea1Target: milestones.ea1Target,
-      ea2Freeze: milestones.ea2Freeze || match.ea2Freeze || null,
-      ea2Target: milestones.ea2Target,
-      gaFreeze: milestones.gaFreeze || match.gaFreeze || null,
-      gaTarget: milestones.gaTarget
-    }
-    var filled = []
-    if (!milestones.ea1Freeze && merged.ea1Freeze) filled.push('ea1Freeze')
-    if (!milestones.ea2Freeze && merged.ea2Freeze) filled.push('ea2Freeze')
-    if (!milestones.gaFreeze && merged.gaFreeze) filled.push('gaFreeze')
-    if (filled.length > 0) {
-      warnings.push('Backfilled freeze dates from Smartsheet: ' + filled.join(', '))
-    }
-    return { milestones: merged, warnings: warnings }
-  } catch (err) {
-    warnings.push('Smartsheet fallback failed: ' + err.message)
-    return { milestones: milestones, warnings: warnings }
-  }
-}
-
-var FREEZE_OFFSET_DAYS = 30
 
 /**
  * Offset a date string by a given number of days.
@@ -424,38 +364,6 @@ function offsetDate(dateStr, days) {
 }
 
 /**
- * Derive missing freeze dates by subtracting FREEZE_OFFSET_DAYS from target dates.
- *
- * @param {object|null} milestones
- * @returns {{ milestones: object|null, warnings: string[] }}
- */
-function deriveFreezeDates(milestones) {
-  var warnings = []
-  if (!milestones) return { milestones: null, warnings: warnings }
-
-  var derived = []
-
-  if (!milestones.ea1Freeze && milestones.ea1Target) {
-    milestones.ea1Freeze = offsetDate(milestones.ea1Target, -FREEZE_OFFSET_DAYS)
-    derived.push('ea1Freeze')
-  }
-  if (!milestones.ea2Freeze && milestones.ea2Target) {
-    milestones.ea2Freeze = offsetDate(milestones.ea2Target, -FREEZE_OFFSET_DAYS)
-    derived.push('ea2Freeze')
-  }
-  if (!milestones.gaFreeze && milestones.gaTarget) {
-    milestones.gaFreeze = offsetDate(milestones.gaTarget, -FREEZE_OFFSET_DAYS)
-    derived.push('gaFreeze')
-  }
-
-  if (derived.length > 0) {
-    warnings.push('Derived freeze dates (target minus ' + FREEZE_OFFSET_DAYS + ' days): ' + derived.join(', '))
-  }
-
-  return { milestones: milestones, warnings: warnings }
-}
-
-/**
  * Load features for a release version from the feature-traffic cache.
  * Filters features by target version match and excludes closed statuses.
  * Loads detail files for each feature to get pm, components, releaseType, etc.
@@ -464,8 +372,8 @@ function deriveFreezeDates(milestones) {
  * @param {string} version - Release version (e.g., '3.5')
  * @returns {{ features: Array<object>, warnings: Array<string> }}
  */
-function loadFeaturesForRelease(readFromStorage, version) {
-  var index = loadIndex(readFromStorage)
+async function loadFeaturesForRelease(readFromStorage, version) {
+  var index = await loadIndex(readFromStorage)
   var warnings = []
 
   if (!index.features || index.features.length === 0) {
@@ -504,7 +412,7 @@ function loadFeaturesForRelease(readFromStorage, version) {
     if (CLOSED_STATUSES.indexOf(status) !== -1) continue
 
     // Load detail file for additional fields
-    var detail = loadFeatureDetail(readFromStorage, f.key)
+    var detail = await loadFeatureDetail(readFromStorage, f.key)
 
     // Merge index + detail data, preferring detail where available
     var merged = Object.assign({}, f)
@@ -607,7 +515,7 @@ function deriveReleasePhaseMode(currentPhase) {
  * @returns {Promise<object>} Health cache data
  */
 async function runHealthPipeline(version, readFromStorage, writeToStorage, jiraRequest, fetchAllJqlResults, phase) {
-  var config = getConfig(readFromStorage)
+  var config = await getConfig(readFromStorage)
   var healthConfig = config.healthConfig || {}
   var warnings = []
   var today = new Date()
@@ -616,22 +524,23 @@ async function runHealthPipeline(version, readFromStorage, writeToStorage, jiraR
   console.log('[health] Starting health pipeline for version ' + version + ' phase ' + phaseKey)
 
   // Step 1: Load features from Big Rocks candidates cache
-  var featureResult = loadFeaturesFromCandidates(readFromStorage, version, phase)
+  var featureResult = await loadFeaturesFromCandidates(readFromStorage, version, phase)
   var features = featureResult.features
   warnings = warnings.concat(featureResult.warnings)
 
   if (features.length === 0) {
     console.warn('[health] No features found for version ' + version + ' phase ' + phaseKey)
     var emptyCache = buildEmptyCache(version, warnings)
-    writeToStorage(DATA_PREFIX + '/health-cache-' + version + '-' + phaseKey + '.json', emptyCache)
+    await writeToStorage(DATA_PREFIX + '/health-cache-' + version + '-' + phaseKey + '.json', emptyCache)
     return emptyCache
   }
 
   console.log('[health] Found ' + features.length + ' features for version ' + version + ' phase ' + phaseKey)
 
-  // Step 1b: Enrich epicCount from execution index
-  // mapCandidateToHealthFeature() does not map epicCount; source it from execution index
-  var execIndex = loadIndex(readFromStorage)
+  // Step 1b: Enrich epicCount + scores from execution index
+  // mapCandidateToHealthFeature() does not map epicCount; source it from execution index.
+  // Also bridge aiReview.scores from feature detail files so FPDoR rubric items can be evaluated.
+  var execIndex = await loadIndex(readFromStorage)
   if (execIndex && execIndex.features) {
     var execByKey = {}
     for (var ei = 0; ei < execIndex.features.length; ei++) {
@@ -639,23 +548,27 @@ async function runHealthPipeline(version, readFromStorage, writeToStorage, jiraR
     }
     for (var fi = 0; fi < features.length; fi++) {
       var execFeature = execByKey[features[fi].key]
-      if (execFeature && execFeature.epicCount) {
+      if (!execFeature) continue
+      if (execFeature.epicCount) {
         features[fi].epicCount = execFeature.epicCount
       }
-      if (execFeature && typeof execFeature.completionPct === 'number') {
+      if (typeof execFeature.completionPct === 'number') {
         features[fi].completionPct = execFeature.completionPct
+      }
+      var execDetail = await loadFeatureDetail(readFromStorage, features[fi].key)
+      if (execDetail) {
+        if (!features[fi].scores && execDetail.aiReview && execDetail.aiReview.scores) {
+          features[fi].scores = execDetail.aiReview.scores
+        }
+        if (execDetail.releaseType) {
+          features[fi].releaseType = execDetail.releaseType
+        }
       }
     }
   }
 
-  // Step 2: Load milestone dates (Product Pages → Smartsheet fallback → derived from targets)
-  var milestones = loadMilestones(readFromStorage, version)
-  var fallbackResult = await backfillFreezeDatesFromSmartsheet(milestones, version)
-  milestones = fallbackResult.milestones
-  warnings = warnings.concat(fallbackResult.warnings)
-  var deriveResult = deriveFreezeDates(milestones)
-  milestones = deriveResult.milestones
-  warnings = warnings.concat(deriveResult.warnings)
+  // Step 2: Load milestone dates from registry (freeze dates already backfilled by registry-sync)
+  var milestones = await loadMilestones(readFromStorage, version)
   var prevGaFreeze = await loadPreviousGaFreeze(readFromStorage, version)
 
   // Step 3: Run Jira enrichment
@@ -669,7 +582,7 @@ async function runHealthPipeline(version, readFromStorage, writeToStorage, jiraR
   }
 
   // Step 4: Load overrides
-  var overrides = readFromStorage(DATA_PREFIX + '/health-overrides-' + version + '.json') || { overrides: {} }
+  var overrides = await readFromStorage(DATA_PREFIX + '/health-overrides-' + version + '.json') || { overrides: {} }
 
   // Step 5: Build per-feature health assessments
   var planningDeadline = computePlanningDeadline(milestones, phase, prevGaFreeze)
@@ -682,21 +595,15 @@ async function runHealthPipeline(version, readFromStorage, writeToStorage, jiraR
   var blockedCount = 0
   var byPlanningStatus = { 'not-ready': 0, 'in-planning': 0, 'ready-for-execution': 0 }
   var cardCounts = {
-    total: 0, dorPassed: 0, dodPassed: 0, stratSignedOff: 0,
+    total: 0, stratSignedOff: 0,
     riceComplete: 0, ownerAssigned: 0, versionSet: 0, unblocked: 0, escalatedBlockers: 0
   }
   var stratCreatorCoverage = { signedOff: 0, rubricPass: 0, needsAttention: 0, notAssessed: 0 }
-  var dorOpts = { enableStratCreator: !!healthConfig.enableStratCreator, enableRice: !!healthConfig.enableRice }
 
   for (var i = 0; i < features.length; i++) {
     var feature = features[i]
     var key = feature.key
     var enrichment = enrichResult.enrichments.get(key) || null
-    // Evaluate planning gates
-    var dorResult = computeDoR(feature, enrichment, dorOpts)
-    var dodResult = computeDoD(feature, enrichment)
-    var planningStatus = derivePlanningStatus(dorResult, dodResult)
-    byPlanningStatus[planningStatus] = (byPlanningStatus[planningStatus] || 0) + 1
 
     // Derive phase for risk engine
     var featurePhase = getFeaturePhase(feature)
@@ -709,6 +616,19 @@ async function runHealthPipeline(version, readFromStorage, writeToStorage, jiraR
     if (releasePhaseMode === 'planning' && healthConfig.enablePlanningChecks) {
       planningChecksResult = computePlanningChecks(feature)
     }
+
+    // Compute FPDoR readiness (rubric items evaluated when scores are bridged from execution detail files)
+    var featureForFpdor = Object.assign({}, feature, {
+      riceScore: (enrichment && enrichment.rice && enrichment.rice.score != null) ? enrichment.rice.score : (feature.riceScore != null ? feature.riceScore : null),
+      storyPoints: enrichment ? enrichment.storyPoints || null : null,
+      tshirtSize: enrichment ? enrichment.tshirtSize || null : null,
+      descriptionSignals: enrichment ? enrichment.descriptionSignals || null : null,
+      scores: feature.scores || null
+    })
+    var fpdorResult = computeFPDoRReadiness(featureForFpdor)
+
+    var planningStatus = derivePlanningStatus(fpdorResult)
+    byPlanningStatus[planningStatus] = (byPlanningStatus[planningStatus] || 0) + 1
 
     // Compute risk
     var riskResult = computeFeatureRisk(featureForRisk, milestones, enrichment, {
@@ -746,8 +666,8 @@ async function runHealthPipeline(version, readFromStorage, writeToStorage, jiraR
 
     // Build health feature entry
     var components = Array.isArray(feature.components)
-      ? feature.components.join(', ')
-      : ''
+      ? feature.components
+      : []
 
     healthFeatures.push({
       key: key,
@@ -773,24 +693,23 @@ async function runHealthPipeline(version, readFromStorage, writeToStorage, jiraR
         flags: riskResult.flags,
         override: override
       },
-      dor: dorResult,
-      dod: dodResult,
       planningStatus: planningStatus,
       rice: riceResult,
       planningChecks: planningChecksResult,
+      fpdor: fpdorResult,
       issueType: feature.issueType || '',
       versionStatus: (feature.fixVersions && feature.fixVersions.length > 0) ? 'committed'
         : (feature.targetVersions && feature.targetVersions.length > 0) ? 'targeted' : 'none',
       storyPoints: enrichment ? enrichment.storyPoints || null : null,
       tshirtSize: enrichment ? enrichment.tshirtSize || null : null,
+      descriptionSignals: enrichment ? enrichment.descriptionSignals || null : null,
+      scores: feature.scores || null,
       versionHistory: enrichment && enrichment.refinementHistory ? enrichment.refinementHistory : [],
       jiraUrl: JIRA_BROWSE_URL + '/' + key
     })
 
     // Accumulate card counts
     cardCounts.total++
-    if (dorResult.passed) cardCounts.dorPassed++
-    if (dodResult.passed) cardCounts.dodPassed++
 
     // strat-creator coverage
     var featureLabels = (feature.labels && feature.labels.length > 0) ? feature.labels : (enrichment ? enrichment.labels : null) || []
@@ -800,22 +719,26 @@ async function runHealthPipeline(version, readFromStorage, writeToStorage, jiraR
     else if (stratStatus === 'needs-attention') stratCreatorCoverage.needsAttention++
     else stratCreatorCoverage.notAssessed++
 
-    // Warning-level card counts from DoR warnings
-    for (var wi = 0; wi < dorResult.warnings.length; wi++) {
-      var w = dorResult.warnings[wi]
-      if (w.id === 'DoR-W1' && w.passed) cardCounts.ownerAssigned++
-      if (w.id === 'DoR-W2' && w.passed) cardCounts.versionSet++
-      if (w.id === 'DoR-W3' && w.passed) cardCounts.unblocked++
-    }
-
-    // RICE complete from DoR blockers
-    for (var bi = 0; bi < dorResult.blockers.length; bi++) {
-      if (dorResult.blockers[bi].id === 'DoR-B2' && dorResult.blockers[bi].passed) cardCounts.riceComplete++
-    }
+    // Card counts derived from direct field checks (no longer from DoR/DoD)
+    if (feature.deliveryOwner || feature.assignee) cardCounts.ownerAssigned++
+    var fv = feature.fixVersions || []
+    var tv = feature.targetVersions || []
+    if (fv.length > 0 || tv.length > 0) cardCounts.versionSet++
+    if (riceResult) cardCounts.riceComplete++
+    var safeEnrichment = enrichment || {}
+    var depLinks = safeEnrichment.dependencyLinks || []
+    var hasUnresolved = depLinks.some(function(d) { return d.direction === 'inward' && d.type === 'Blocks' && CLOSED_STATUSES.indexOf(d.linkedStatus) === -1 })
+    if (!hasUnresolved) cardCounts.unblocked++
   }
 
-  // Step 6b: Compute composite priority scores
-  var priorityScores = computePriorityScores(healthFeatures)
+  // Step 6b: Build Big Rock priority map and compute composite priority scores
+  var bigRocks = await loadBigRocks(readFromStorage, version)
+  var bigRockPriorityMap = new Map()
+  for (var bri = 0; bri < bigRocks.length; bri++) {
+    if (bigRocks[bri].name) bigRockPriorityMap.set(bigRocks[bri].name, bigRocks[bri].priority || (bri + 1))
+  }
+  var configuredVersions = (await getConfiguredReleases(readFromStorage)).map(function(r) { return r.version })
+  var priorityScores = computePriorityScores(healthFeatures, { bigRockPriorityMap: bigRockPriorityMap, configuredVersions: configuredVersions })
   for (var pi = 0; pi < healthFeatures.length; pi++) {
     var pKey = healthFeatures[pi].key
     var pResult = priorityScores.get(pKey)
@@ -823,9 +746,7 @@ async function runHealthPipeline(version, readFromStorage, writeToStorage, jiraR
     healthFeatures[pi].priorityBreakdown = pResult ? pResult.breakdown : null
   }
 
-  // Step 6a: Blocker escalation pass
-  var escalatedCount = applyBlockerEscalation(healthFeatures)
-  cardCounts.escalatedBlockers = escalatedCount
+  cardCounts.escalatedBlockers = 0
 
   // Degradation logging
   if (healthConfig.enableStratCreator && stratCreatorCoverage.signedOff === 0 && stratCreatorCoverage.rubricPass === 0 && stratCreatorCoverage.needsAttention === 0) {
@@ -863,8 +784,17 @@ async function runHealthPipeline(version, readFromStorage, writeToStorage, jiraR
     }
   }
 
+  // FPDoR summary aggregation
+  var fpdorFullyPassedCount = 0
+  for (var fpi = 0; fpi < healthFeatures.length; fpi++) {
+    var fpd = healthFeatures[fpi].fpdor
+    if (fpd && (fpd.allApplicablePassed || (fpd.passedCount === fpd.evaluatedCount && fpd.evaluatedCount >= 6))) {
+      fpdorFullyPassedCount++
+    }
+  }
+
   var cache = {
-    healthCacheVersion: 3,
+    healthCacheVersion: 4,
     cachedAt: today.toISOString(),
     version: version,
     releasePhaseMode: releasePhaseMode,
@@ -895,7 +825,11 @@ async function runHealthPipeline(version, readFromStorage, writeToStorage, jiraR
       daysToNextMilestone: milestoneInfo.daysToNextMilestone,
       nextMilestone: milestoneInfo.nextMilestone,
       planningDeadline: planningDeadline,
-      planningReadiness: planningReadiness
+      planningReadiness: planningReadiness,
+      fpdorReadiness: {
+        fullyPassed: fpdorFullyPassedCount,
+        totalFeatures: healthFeatures.length
+      }
     },
     features: healthFeatures,
     enrichmentStatus: {
@@ -908,7 +842,7 @@ async function runHealthPipeline(version, readFromStorage, writeToStorage, jiraR
   }
 
   // Step 7: Write health cache
-  writeToStorage(DATA_PREFIX + '/health-cache-' + version + '-' + phaseKey + '.json', cache)
+  await writeToStorage(DATA_PREFIX + '/health-cache-' + version + '-' + phaseKey + '.json', cache)
   console.log('[health] Health pipeline completed for version ' + version + ' phase ' + phaseKey + ': ' + features.length + ' features assessed')
 
   return cache
@@ -922,7 +856,7 @@ async function runHealthPipeline(version, readFromStorage, writeToStorage, jiraR
  */
 function buildEmptyCache(version, warnings) {
   return {
-    healthCacheVersion: 3,
+    healthCacheVersion: 4,
     cachedAt: new Date().toISOString(),
     version: version,
     releasePhaseMode: 'unknown',
@@ -940,7 +874,9 @@ function buildEmptyCache(version, warnings) {
       blockedCount: 0,
       currentPhase: 'Unknown',
       daysToNextMilestone: null,
-      nextMilestone: null
+      nextMilestone: null,
+      planningReadiness: null,
+      fpdorReadiness: null
     },
     features: [],
     enrichmentStatus: {
@@ -959,8 +895,6 @@ module.exports = {
   loadFeaturesForRelease: loadFeaturesForRelease,
   loadFeaturesFromCandidates: loadFeaturesFromCandidates,
   loadMilestones: loadMilestones,
-  backfillFreezeDatesFromSmartsheet: backfillFreezeDatesFromSmartsheet,
-  deriveFreezeDates: deriveFreezeDates,
   computeMilestoneInfo: computeMilestoneInfo,
   computePlanningDeadline: computePlanningDeadline,
   deriveReleasePhaseMode: deriveReleasePhaseMode,
@@ -968,5 +902,8 @@ module.exports = {
   buildEmptyCache: buildEmptyCache,
   splitCommaString: splitCommaString,
   passesPhaseFilter: passesPhaseFilter,
-  mapCandidateToHealthFeature: mapCandidateToHealthFeature
+  mapCandidateToHealthFeature: mapCandidateToHealthFeature,
+  computePlanningChecks: computePlanningChecks,
+  parseStratCreatorStatus: parseStratCreatorStatus,
+  derivePlanningStatus: derivePlanningStatus
 }

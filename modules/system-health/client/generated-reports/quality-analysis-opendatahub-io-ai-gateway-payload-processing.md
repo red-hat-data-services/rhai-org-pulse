@@ -1,424 +1,465 @@
 ---
 repository: "opendatahub-io/ai-gateway-payload-processing"
-overall_score: 7.4
+overall_score: 7.3
 scorecard:
   - dimension: "Unit Tests"
     score: 8.5
-    status: "Excellent test-to-code ratio (1.77:1) with envtest integration and table-driven tests"
+    status: "Strong test suite with 33 test files, high test-to-code ratio (1.55x lines), uses testify and envtest"
   - dimension: "Integration/E2E"
-    score: 8.0
-    status: "Comprehensive E2E suite with Kind+Istio, multi-provider coverage, and tiered labels"
-  - dimension: "Build Integration"
-    score: 7.5
-    status: "Tekton Konflux multi-arch PR builds with group testing; no PR-time image validation"
-  - dimension: "Image Testing"
-    score: 6.0
-    status: "Multi-stage Dockerfile with FIPS, dedicated E2E image; no runtime startup validation on PR"
-  - dimension: "Coverage Tracking"
-    score: 3.0
-    status: "Local cover.out generation only; no Codecov/Coveralls integration or enforcement"
-  - dimension: "CI/CD Automation"
     score: 8.5
-    status: "Well-organized GitHub Actions + Tekton dual CI with path filtering and concurrency control"
+    status: "Comprehensive Ginkgo E2E suite with Kind cluster, Istio, multi-provider coverage, JUnit reporting"
+  - dimension: "Build Integration"
+    score: 8.0
+    status: "PR-triggered CI with lint/test/vet, Konflux/Tekton pipelines with group testing and E2E"
+  - dimension: "Image Testing"
+    score: 7.0
+    status: "Multi-stage UBI9 builds, FIPS-compliant, multi-arch support, but no container health checks"
+  - dimension: "Coverage Tracking"
+    score: 4.0
+    status: "Coverprofile generated locally but no codecov integration, no PR coverage reporting or thresholds"
+  - dimension: "CI/CD Automation"
+    score: 8.0
+    status: "Well-structured workflows with path filtering, caching, timeout controls, multi-arch release pipeline"
+  - dimension: "Static Analysis"
+    score: 7.0
+    status: "golangci-lint v2.9 in CI, Dependabot configured for 3 ecosystems, no pre-commit hooks or golangci config file"
   - dimension: "Agent Rules"
     score: 0.0
-    status: "No CLAUDE.md, .claude/ directory, or agent rules present"
+    status: "No CLAUDE.md, AGENTS.md, or .claude/ directory present"
 critical_gaps:
   - title: "No coverage tracking or enforcement"
-    impact: "Coverage regressions go undetected; no visibility into per-PR coverage delta"
+    impact: "Coverage regressions go undetected; no PR-level coverage gates or trend visibility"
     severity: "HIGH"
-    effort: "2-4 hours"
-  - title: "No SAST/CodeQL or secret detection"
-    impact: "Security vulnerabilities and leaked secrets not caught in CI pipeline"
-    severity: "HIGH"
-    effort: "2-3 hours"
-  - title: "No pre-commit hooks"
-    impact: "Lint/format issues discovered only in CI, slowing feedback loop"
-    severity: "MEDIUM"
-    effort: "1-2 hours"
-  - title: "No agent rules for AI-assisted development"
-    impact: "AI-generated tests/code lack project-specific patterns and standards"
+    effort: "4-6 hours"
+  - title: "No agent rules for test automation"
+    impact: "AI-assisted development lacks guidance on test patterns, framework usage, and quality standards"
     severity: "MEDIUM"
     effort: "3-4 hours"
-  - title: "Trivy scanning only on release, not on PRs"
-    impact: "Vulnerability introductions not caught until post-merge release pipeline"
-    severity: "HIGH"
-    effort: "1-2 hours"
-  - title: "Metrics package is empty placeholder"
-    impact: "No observability into plugin chain behavior in production"
+  - title: "No container health checks in Dockerfiles"
+    impact: "Kubernetes readiness/liveness probes must be defined externally; no built-in startup validation"
     severity: "MEDIUM"
-    effort: "4-8 hours"
+    effort: "2-3 hours"
+  - title: "No golangci-lint configuration file"
+    impact: "Relying on default linters only; missing opportunity for stricter checks and custom rules"
+    severity: "LOW"
+    effort: "2-3 hours"
 quick_wins:
-  - title: "Add Codecov integration to PR workflow"
+  - title: "Add Codecov integration with coverage thresholds"
+    effort: "3-4 hours"
+    impact: "PR-level coverage reporting, regression prevention, and trend tracking"
+  - title: "Create .golangci.yml with project-specific linter rules"
+    effort: "1-2 hours"
+    impact: "Stricter static analysis with domain-specific checks (errorlint, gosec, unused, etc.)"
+  - title: "Add CLAUDE.md with test creation rules"
     effort: "2-3 hours"
-    impact: "Immediate visibility into coverage trends and enforcement of minimum thresholds"
-  - title: "Add Trivy scan to PR workflow"
+    impact: "Guide AI-assisted development with project-specific test patterns and conventions"
+  - title: "Add HEALTHCHECK to Dockerfile"
     effort: "1 hour"
-    impact: "Catch CVEs before merge using existing composite action"
-  - title: "Add CodeQL workflow for Go SAST"
-    effort: "1-2 hours"
-    impact: "Catch injection, taint, and logic vulnerabilities automatically"
-  - title: "Add pre-commit config with golangci-lint and gofmt"
-    effort: "1-2 hours"
-    impact: "Faster developer feedback loop; fewer CI failures from formatting issues"
-  - title: "Generate agent rules with /test-rules-generator"
-    effort: "2-3 hours"
-    impact: "AI agents produce tests matching project conventions (envtest, Ginkgo, table-driven)"
+    impact: "Built-in container health validation for local development and CI"
 recommendations:
   priority_0:
-    - "Add Codecov/Coveralls integration with minimum coverage threshold (e.g., 60%) and PR delta reporting"
-    - "Add Trivy vulnerability scanning to ci-pr-checks.yaml using existing .github/actions/trivy-scan composite action"
-    - "Add CodeQL or gosec SAST scanning as a GitHub Actions workflow"
+    - "Add Codecov or Coveralls integration with coverage thresholds and PR comment reporting"
+    - "Create .golangci.yml with comprehensive linter configuration (errorlint, gosec, gocritic, unused, etc.)"
   priority_1:
-    - "Add pre-commit hooks (.pre-commit-config.yaml) for golangci-lint, gofmt, go vet"
-    - "Create .claude/rules/ with test patterns for unit, controller, and E2E tests"
-    - "Implement metrics collection in the empty pkg/metrics package"
-    - "Add Gitleaks secret detection to CI pipeline"
+    - "Create CLAUDE.md and .claude/rules/ with test creation patterns for unit tests (testify + envtest) and E2E tests (Ginkgo/Gomega)"
+    - "Add pre-commit hooks for fmt, vet, and lint checks"
+    - "Add HEALTHCHECK instruction to Dockerfile for container startup validation"
   priority_2:
-    - "Add contract tests for the translator interface across providers"
-    - "Add chaos/fault injection tests for plugin chain resilience"
-    - "Add performance benchmarks for request/response translation latency"
-    - "Add image startup validation test in PR workflow (build + health check)"
+    - "Add contract tests for CRD API boundaries"
+    - "Add performance/load testing for payload processing throughput"
+    - "Consider adding Renovate alongside Dependabot for richer dependency management"
 ---
 
 # Quality Analysis: ai-gateway-payload-processing
 
 ## Executive Summary
 
-- **Overall Score: 7.4/10**
-- **Repository Type**: Go Kubernetes controller + Envoy Gateway plugin chain
-- **Primary Language**: Go 1.25 (5,647 source LOC, 9,955 test LOC)
-- **Framework**: controller-runtime, llm-d-inference-payload-processor, Gateway API
-- **Key Strengths**: Excellent test-to-code ratio (1.77:1), comprehensive E2E with Kind+Istio, sophisticated Tekton/Konflux multi-arch builds, well-organized CI
-- **Critical Gaps**: No coverage tracking/enforcement, no SAST/secret scanning, no pre-commit hooks, Trivy only at release-time
-- **Agent Rules Status**: Missing — no CLAUDE.md, .claude/, or agent rules present
+- **Overall Score: 7.3/10**
+- **Repository**: [opendatahub-io/ai-gateway-payload-processing](https://github.com/opendatahub-io/ai-gateway-payload-processing)
+- **Type**: Go Kubernetes controller (Inference Payload Processor for AI Gateway)
+- **Primary Language**: Go 1.25
+- **Jira**: RHOAIENG / Inference Gateway (midstream tier)
+- **Key Strengths**: Excellent test-to-code ratio (1.55x test lines to source lines), comprehensive E2E suite with Kind cluster + Istio + multi-provider coverage, strong FIPS compliance with `GOEXPERIMENT=strictfipsruntime` and UBI9 base images, well-structured Konflux/Tekton pipelines with group testing
+- **Critical Gaps**: No coverage tracking/enforcement, no agent rules, no golangci-lint config file
+- **Agent Rules Status**: Missing
 
 ## Quality Scorecard
 
-| Dimension | Score | Status |
-|-----------|-------|--------|
-| Unit Tests | 8.5/10 | Excellent test-to-code ratio (1.77:1) with envtest integration and table-driven tests |
-| Integration/E2E | 8.0/10 | Comprehensive E2E suite with Kind+Istio, multi-provider coverage, tiered labels |
-| **Build Integration** | **7.5/10** | **Tekton Konflux multi-arch PR builds with group testing; no PR-time image validation** |
-| Image Testing | 6.0/10 | Multi-stage Dockerfile with FIPS, dedicated E2E image; no runtime startup validation on PR |
-| Coverage Tracking | 3.0/10 | Local cover.out generation only; no integration or enforcement |
-| CI/CD Automation | 8.5/10 | Well-organized GitHub Actions + Tekton dual CI with path filtering and caching |
-| Agent Rules | 0.0/10 | No AI agent guidance present |
+| Dimension | Weight | Score | Status |
+|-----------|--------|-------|--------|
+| Unit Tests | 15% | 8.5/10 | Strong test suite: 33 test files, 11,038 test lines vs 7,135 source lines |
+| Integration/E2E | 20% | 8.5/10 | Comprehensive Ginkgo E2E with Kind, Istio, 6 providers, tiered labels |
+| Build Integration | 15% | 8.0/10 | PR-triggered CI + Konflux/Tekton pipelines with group testing |
+| Image Testing | 10% | 7.0/10 | Multi-stage UBI9, FIPS-compliant, multi-arch, no HEALTHCHECK |
+| Coverage Tracking | 10% | 4.0/10 | Coverprofile generated locally, no CI integration or thresholds |
+| CI/CD Automation | 15% | 8.0/10 | 6 workflows, path filtering, caching, timeouts, JUnit reporting |
+| Static Analysis | 10% | 7.0/10 | golangci-lint v2.9, Dependabot (3 ecosystems), no pre-commit |
+| Agent Rules | 5% | 0.0/10 | No CLAUDE.md, AGENTS.md, or .claude/ directory |
 
 ## Critical Gaps
 
 ### 1. No Coverage Tracking or Enforcement
-- **Impact**: Coverage regressions go undetected; no visibility into per-PR coverage delta
 - **Severity**: HIGH
-- **Effort**: 2-4 hours
-- **Details**: The Makefile has a `COVERAGE` flag that generates `cover.out` locally and immediately deletes it. No Codecov/Coveralls integration exists. No coverage threshold is enforced in CI. There is no `.codecov.yml` or `codecov.yml` configuration file.
+- **Impact**: Coverage regressions go undetected across PRs. No visibility into coverage trends. Team cannot enforce minimum coverage thresholds.
+- **Current State**: `make test-unit` generates `cover.out` with `--coverprofile` but deletes it after optional display. No Codecov/Coveralls integration. No PR coverage comments.
+- **Effort**: 4-6 hours
+- **Fix**: Add `.codecov.yml` with thresholds, integrate `codecov/codecov-action` in CI workflow, retain `cover.out` artifact.
 
-### 2. No SAST/CodeQL or Secret Detection
-- **Impact**: Go-specific vulnerabilities (injection, taint flow) and accidentally committed secrets are not caught
-- **Severity**: HIGH
-- **Effort**: 2-3 hours
-- **Details**: No CodeQL, gosec, Semgrep, or Gitleaks workflows found. The codebase handles API keys (SigV4, bearer tokens) making secret detection particularly important.
-
-### 3. Trivy Scanning Only at Release Time
-- **Impact**: Vulnerabilities introduced in dependencies are only caught after merge, during the release pipeline
-- **Severity**: HIGH
-- **Effort**: 1-2 hours
-- **Details**: The Trivy scan composite action (`.github/actions/trivy-scan/action.yaml`) exists and is well-configured (HIGH+CRITICAL severity, exit-code 1), but is only invoked in `ci-release.yaml`. Adding it to `ci-pr-checks.yaml` would shift vulnerability detection left.
-
-### 4. No Pre-commit Hooks
-- **Impact**: Formatting and lint issues discovered only in CI, adding 5-10 minutes per feedback cycle
+### 2. No Agent Rules for Test Automation
 - **Severity**: MEDIUM
-- **Effort**: 1-2 hours
-
-### 5. No Agent Rules
-- **Impact**: AI-assisted development lacks project-specific guidance on test patterns, envtest usage, controller testing, and plugin architecture
-- **Severity**: MEDIUM
+- **Impact**: AI-assisted development (Claude Code, Copilot) has no guidance on project-specific test patterns, frameworks, or conventions. Generated tests may not follow the project's testify + envtest + Ginkgo/Gomega patterns.
 - **Effort**: 3-4 hours
+- **Fix**: Create `CLAUDE.md` with test creation rules, `.claude/rules/unit-tests.md` and `.claude/rules/e2e-tests.md`.
 
-### 6. Empty Metrics Package
-- **Impact**: No observability into plugin chain behavior; production debugging is limited to logs
+### 3. No Container Health Checks
 - **Severity**: MEDIUM
-- **Effort**: 4-8 hours
-- **Details**: `pkg/metrics/README.md` says "placeholder for exposing metrics from plugins" — no implementation exists.
+- **Impact**: Dockerfile has no `HEALTHCHECK` instruction. Container startup validation relies entirely on external Kubernetes probe configuration.
+- **Effort**: 2-3 hours
+- **Fix**: Add `HEALTHCHECK` to Dockerfile; verify probes are defined in Helm chart values.
+
+### 4. No golangci-lint Configuration File
+- **Severity**: LOW
+- **Impact**: Running `golangci-lint` with defaults only. Missing opportunity for project-specific linter rules (errorlint, gosec, gocritic, revive, etc.).
+- **Effort**: 2-3 hours
+- **Fix**: Create `.golangci.yml` with comprehensive linter configuration.
 
 ## Quick Wins
 
-### 1. Add Codecov Integration to PR Workflow (2-3 hours)
-Upload the existing `cover.out` to Codecov instead of deleting it:
+### 1. Add Codecov Integration (3-4 hours)
+Add coverage tracking with PR-level reporting:
 
 ```yaml
-# In ci-pr-checks.yaml, after 'make test':
+# .codecov.yml
+coverage:
+  status:
+    project:
+      default:
+        target: auto
+        threshold: 2%
+    patch:
+      default:
+        target: 80%
+```
+
+Update `ci-pr-checks.yaml` to upload coverage:
+```yaml
 - name: Upload coverage
   uses: codecov/codecov-action@v5
   with:
-    files: ./cover.out
-    fail_ci_if_error: true
+    files: cover.out
+    fail_ci_if_error: false
 ```
 
-Also update the Makefile to preserve cover.out when in CI:
-
+Update Makefile to retain `cover.out`:
 ```makefile
-test-unit: envtest download-test-crds
-	@set -e; \
-	kubebuilder_assets_path="..."; \
-	$(GO_ENV) KUBEBUILDER_ASSETS="$$kubebuilder_assets_path" go test ./pkg/... -race -count=1 -coverprofile=cover.out; \
-	if [ "$(COVERAGE)" = "true" ] || [ "$(COVERAGE)" = "1" ]; then \
-		go tool cover -func=cover.out; \
-	fi
-	# Remove: rm -f cover.out  (keep for CI upload)
+# Remove the `rm -f cover.out` line from test-unit target
 ```
 
-### 2. Add Trivy Scan to PR Workflow (1 hour)
-The composite action already exists — just invoke it on the PR image:
-
+### 2. Create .golangci.yml (1-2 hours)
 ```yaml
-# In ci-pr-checks.yaml, add a new job:
-  trivy-scan:
-    needs: lint-and-test
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v7
-      - name: Build image
-        run: docker build -t pr-scan:latest .
-      - name: Trivy scan
-        uses: ./.github/actions/trivy-scan
-        with:
-          image: pr-scan:latest
+version: "2"
+linters:
+  enable:
+    - errorlint
+    - gocritic
+    - gosec
+    - revive
+    - unused
+    - unconvert
+    - unparam
+    - wastedassign
+  settings:
+    gosec:
+      excludes:
+        - G404 # math/rand used for non-security weighted selection
+run:
+  timeout: 5m
 ```
 
-### 3. Add CodeQL Workflow (1-2 hours)
-```yaml
-# .github/workflows/codeql.yaml
-name: CodeQL Analysis
-on:
-  push:
-    branches: [main]
-  pull_request:
-    branches: [main]
-  schedule:
-    - cron: '0 6 * * 1'
-jobs:
-  analyze:
-    runs-on: ubuntu-latest
-    permissions:
-      security-events: write
-    steps:
-      - uses: actions/checkout@v7
-      - uses: github/codeql-action/init@v3
-        with:
-          languages: go
-      - uses: github/codeql-action/autobuild@v3
-      - uses: github/codeql-action/analyze@v3
-```
+### 3. Add CLAUDE.md with Test Rules (2-3 hours)
+Create `CLAUDE.md` with project-specific test patterns:
+- Unit tests: Go testing + testify (assert/require) + envtest for controller tests
+- E2E tests: Ginkgo v2 + Gomega with `ginkgo.Label()` for tiered execution
+- Test data: inline YAML manifests via `kubectlApplyLiteral()`
+- Coverage: always include `-coverprofile=cover.out`
 
-### 4. Add Pre-commit Config (1-2 hours)
-```yaml
-# .pre-commit-config.yaml
-repos:
-  - repo: https://github.com/golangci/golangci-lint
-    rev: v2.9.0
-    hooks:
-      - id: golangci-lint
-  - repo: https://github.com/dnephin/pre-commit-golang
-    hooks:
-      - id: go-fmt
-      - id: go-vet
-  - repo: https://github.com/gitleaks/gitleaks
-    rev: v8.18.0
-    hooks:
-      - id: gitleaks
+### 4. Add HEALTHCHECK to Dockerfile (1 hour)
+```dockerfile
+HEALTHCHECK --interval=30s --timeout=5s --retries=3 \
+  CMD ["/bbr", "--health-check"] || exit 1
 ```
-
-### 5. Generate Agent Rules (2-3 hours)
-Run `/test-rules-generator` to create `.claude/rules/` covering:
-- Unit test patterns (table-driven with `stretchr/testify`, `assert`/`require`)
-- Controller tests (envtest, `controller-runtime/pkg/client/fake`)
-- E2E test patterns (Ginkgo/Gomega with `ginkgo.Label` tiers)
-- Plugin test patterns (mock translators, `CycleState` setup)
 
 ## Detailed Findings
 
-### CI/CD Pipeline
+### Unit Tests (8.5/10)
 
-**Strengths:**
-- **Dual CI system**: GitHub Actions for community + Tekton/Konflux for RHOAI productization
-- **6 GitHub Actions workflows**: `ci-pr-checks`, `ci-e2e`, `ci-release`, `check-typos`, `promote-main-to-stable`, `pr-size-labeler`
-- **7 Tekton pipelines**: PR builds, push-to-main, push-to-stable for both main image and E2E image, plus group testing
-- **Smart path filtering**: PR checks only run when Go files, Dockerfile, Makefile, or dependency files change
-- **Multi-arch builds**: Tekton builds for x86_64, arm64, ppc64le, s390x; GitHub release builds for amd64+arm64
-- **Concurrency control**: `cancel-in-progress` on Tekton PR pipelines
-- **Build caching**: GitHub Actions uses `gha` cache for Docker Buildx; Go uses `cache-dependency-path`
-- **Dependabot**: Configured for gomod (weekly), GitHub Actions (weekly), and Docker base images (weekly) with sensible ignore rules for K8s major/minor bumps
-- **JUnit reporting**: E2E results published via `action-junit-report`
-- **PR size labeler**: Auto-labels PRs (XS through XXL)
+**Strengths**:
+- **Excellent test-to-code ratio**: 33 test files covering 45 source files (73% file coverage). 11,038 test lines vs 7,135 source lines (1.55x ratio) — well above industry average
+- **Comprehensive plugin testing**: Every plugin has corresponding test files (apikey-injection, api-translation, model-provider-resolver, nemo, stream-usage-enforcer, external-metering, maas-headers-guard)
+- **Controller testing with envtest**: `legacymigration/reconciler_test.go` uses `envtest.Environment` with real CRDs, demonstrating proper Kubernetes controller testing patterns
+- **Testing frameworks**: Uses both `testify` (assert/require) and standard Go testing, with `t.Helper()` for proper error attribution
+- **Multi-provider translator coverage**: Separate test files for each translator (Anthropic, Azure, Bedrock, OpenAI, Vertex OpenAI, Vertex Anthropic)
+- **Auth generator testing**: Dedicated tests for API key, GCP OAuth2, and SigV4 auth generators
+- **Race detection enabled**: `-race` flag in test command
 
-**Gaps:**
-- No concurrency control on GitHub Actions workflows (missing `concurrency:` key)
-- E2E depends on external simulator (hardcoded IP `3.147.232.199`) — tests skip if unreachable rather than fail
-- `e2e-ci.sh` has a TODO: "Add Deployment and E2E tests" — appears to be an incomplete shift-left script
+**Gaps**:
+- No `t.Parallel()` usage detected in unit tests — could improve test execution time
+- API types test (`api/inference/v1alpha1/types_test.go`) exists but is the only test at the API level
 
-### Test Coverage
+**Key Files**:
+- `pkg/plugins/*/plugin_test.go` — Plugin chain tests
+- `pkg/plugins/apikey-injection/auth-generator/*_test.go` — Auth generator tests
+- `pkg/plugins/api-translation/translator/*/*_test.go` — Multi-provider translator tests
+- `pkg/controller/*/reconciler_test.go` — Controller reconciler tests with envtest
 
-**Unit Tests (8.5/10):**
-- **29 test files** covering 70 Go source files (41% file coverage)
-- **9,955 test LOC vs 5,647 source LOC** — excellent 1.77:1 test-to-code ratio
-- **Frameworks**: `stretchr/testify` (assert/require) for unit tests, `Ginkgo/Gomega` for E2E
-- **Controller tests**: Use `controller-runtime/pkg/client/fake` and envtest with downloaded CRDs (Istio, Gateway API, legacy MaaS)
-- **Plugin tests**: Well-structured with mock translators, table-driven tests, edge case coverage
-- **API type tests**: `api/inference/v1alpha1/types_test.go` validates CRD types
-- **All major plugins tested**: api-translation (525 LOC), model-provider-resolver (340 LOC), apikey-injection (258+280+212+176 LOC), nemo guards (611+572 LOC), stream-usage-enforcer (193 LOC), maas-headers-guard
-- **Translator tests**: Each provider translator has its own test file — vertex (1,621 LOC!), anthropic (879 LOC), azure (443 LOC), bedrock (135 LOC), openai (61 LOC)
+### Integration/E2E Tests (8.5/10)
 
-**Gaps in Unit Tests:**
-- `pkg/plugins/common/` packages (state, auth, provider, apiformat) have no tests (constants-only, but apiformat may have logic)
-- `pkg/plugins/plugins.go` (plugin registry) has no test
-- `cmd/` (main.go, controllers.go) has no test
-- `pkg/metrics/` is an empty placeholder — no code, no tests
+**Strengths**:
+- **Comprehensive E2E suite**: Uses Ginkgo v2 + Gomega with proper `BeforeSuite`/`AfterSuite` lifecycle
+- **Real cluster testing**: Kind cluster with Istio service mesh, Gateway API CRDs, and full deployment via Helm chart
+- **Multi-provider coverage**: Tests 6 providers (OpenAI, Anthropic, Azure OpenAI, Bedrock, Vertex OpenAI) with actual HTTP requests through the gateway
+- **Tiered test labels**: `ginkgo.Label("e2e", "tier1", "smoke", "sanity")`, `ginkgo.Label("tier2", "tool-calling")` — enables selective test execution
+- **Rich test scenarios**: Basic chat completions, tool calling, multimodal (image), JSON mode, system prompts, multi-turn conversations, API key validation
+- **JUnit reporting**: `--ginkgo.junit-report` for CI integration with `mikepenz/action-junit-report`
+- **Simulator-based testing**: Uses external simulator (`llm-katan`) for provider-agnostic testing without real API calls
+- **E2E container image**: Dedicated `Dockerfile.e2e` for shift-left Jenkins pipeline testing
+- **Debug on failure**: Comprehensive debug steps in CI (pod logs, CRD status, curl tests)
+- **Automated cluster setup**: `setup-kind.sh` installs Kind, Istio, Gateway API CRDs, CRDs, and deploys the application
 
-**E2E Tests (8.0/10):**
-- **Comprehensive multi-provider E2E**: Tests 5 providers (OpenAI, Anthropic, Azure OpenAI, Bedrock, Vertex OpenAI)
-- **Kind cluster setup**: Automated via `test/e2e/scripts/setup-kind.sh` with Istio, Gateway API CRDs, and Helm deployment
-- **Tiered test labels**: `smoke`, `sanity`, `tier1`, `tier2` — enables selective test runs
-- **Test scenarios**: Basic 200 OK, OpenAI format validation, tool calling, multimodal (image), JSON mode, system prompts, multi-turn conversations, invalid API key rejection
-- **Containerized E2E**: `Dockerfile.e2e` with compiled test binary for RHOAI shift-left Jenkins pipeline
-- **JUnit XML output**: Configurable via `E2E_JUNIT_REPORT` env var
-- **Simulator connectivity check**: Graceful skip when simulator unavailable
+**Gaps**:
+- No multi-version testing (single K8s version via Kind)
+- E2E tests depend on external simulator endpoint (3.147.232.199) — connectivity check skips tests if unreachable
 
-**Gaps in E2E:**
-- External simulator dependency (`3.147.232.199`) — not self-contained
-- No streaming response E2E tests
-- No error/fault injection tests
-- No performance/latency benchmarks
+**Key Files**:
+- `test/e2e/e2e_test.go` — Main E2E test scenarios (~480 lines)
+- `test/e2e/e2e_suite_test.go` — Suite setup with Kubernetes helpers (~210 lines)
+- `test/e2e/scripts/setup-kind.sh` — Kind cluster setup (~180 lines)
+- `Dockerfile.e2e` — E2E test container for RHOAI shift-left pipeline
 
-### Code Quality
+### Build Integration (8.0/10)
 
-**Linting (Good):**
-- `golangci-lint v2.9.0` integrated via Makefile (`make lint`, `make lint-fix`)
-- No `.golangci.yaml` config file found — uses default linter set (could be more strict)
-- `go vet` and `go fmt` run as part of `make verify`
-- `make verify` = `tidy + vet + fmt + lint` — comprehensive verification target
-- `verify-codegen` checks that generated files are up-to-date
-- Typo checking via `crate-ci/typos` in CI
+**Strengths**:
+- **PR-triggered CI**: `ci-pr-checks.yaml` runs `make verify` (tidy, vet, fmt, lint) and `make test` on every PR
+- **Konflux/Tekton pipelines**: 7 Tekton PipelineRun definitions for PR, push, and stable builds
+- **Group testing**: `ai-gateway-group-test.yaml` enables cross-component testing with related repos
+- **Path filtering**: Smart change detection with `dorny/paths-filter` — skips CI for non-code changes
+- **Code generation verification**: `make verify-codegen` ensures generated deepcopy methods and CRD manifests are up-to-date
+- **E2E in CI**: Dedicated `ci-e2e.yaml` workflow builds from source, deploys to Kind, and runs full E2E suite
+- **Build from source in E2E**: Kind setup always builds the image from current source, not a stale registry image
 
-**Static Analysis (Missing):**
-- No CodeQL/gosec/Semgrep configuration
-- No secret detection (Gitleaks/TruffleHog)
-- No pre-commit hooks (`.pre-commit-config.yaml` absent)
+**Gaps**:
+- No PR-time Konflux simulation in GitHub Actions (Konflux runs separately via Tekton)
+- No kustomize build validation in CI (CRDs are in `config/crd/bases/` but not validated beyond codegen)
 
-### Container Images
+**Key Files**:
+- `.github/workflows/ci-pr-checks.yaml` — PR lint and test
+- `.github/workflows/ci-e2e.yaml` — PR E2E tests with Kind
+- `.tekton/odh-ai-gateway-payload-processing-ci-on-pull-request.yaml` — Konflux PR build
+- `.tekton/ai-gateway-group-test.yaml` — Cross-component group testing
 
-**Build Process (Good):**
-- **Multi-stage Dockerfile**: Builder stage with UBI9 Go toolset, minimal runtime with UBI9-minimal
-- **FIPS compliance**: `GOEXPERIMENT=strictfipsruntime` and `CGO_ENABLED=1`
-- **Security hardening**: Non-root user (`USER 1001`), pinned base image digest
-- **Multi-arch support**: amd64, arm64, ppc64le, s390x via Tekton; amd64+arm64 via GitHub Actions
-- **Build args**: Commit SHA and build ref injected for traceability
-- **Dedicated E2E image**: `Dockerfile.e2e` with compiled test binary + FIPS-compliant kubectl
+### Image Testing (7.0/10)
 
-**Security Scanning:**
-- Trivy composite action exists with `severity: HIGH,CRITICAL` and `exit-code: 1`
-- Only invoked at release time (`ci-release.yaml`), not on PRs
-- No SBOM generation
-- No image signing/attestation (Sigstore/cosign)
+**Strengths**:
+- **Multi-stage builds**: Builder stage (UBI9 Go toolset) + minimal runtime (UBI9 minimal) — proper separation
+- **FIPS compliance**: `GOEXPERIMENT=strictfipsruntime` in both Dockerfile and Dockerfile.e2e
+- **UBI9 base images**: `registry.access.redhat.com/ubi9/go-toolset` and `ubi9/ubi-minimal` — FIPS-capable
+- **Multi-architecture**: CI release builds for both `linux/amd64` and `linux/arm64` via matrix strategy
+- **Pinned base images**: Runtime image uses SHA256 digest pinning (`@sha256:463cae...`)
+- **Non-root user**: Both Dockerfiles use `USER 1001`
+- **Build arguments**: `COMMIT_SHA` and `BUILD_REF` injected for traceability
+- **E2E test image**: Separate `Dockerfile.e2e` with compiled test binary and FIPS-compliant kubectl
 
-### Security
+**Gaps**:
+- No `HEALTHCHECK` instruction in either Dockerfile
+- No container startup validation tests in CI (image is built and loaded to Kind, but not independently tested)
+- `.dockerignore` not present (may include unnecessary files in build context)
 
-**Strengths:**
-- API key handling through Kubernetes Secrets with controlled access
-- FIPS-compliant builds
-- Dependabot for dependency updates
-- Authorization header always stripped in API translation plugin
-- Non-root container runtime
+**Key Files**:
+- `Dockerfile` — Production multi-stage build
+- `Dockerfile.e2e` — E2E test container build
+- `.github/actions/docker-build-and-push/action.yaml` — Reusable build action
+- `.github/workflows/ci-release.yaml` — Multi-arch release pipeline
 
-**Gaps:**
-- No SAST (CodeQL, gosec, Semgrep)
-- No secret detection (Gitleaks)
-- No vulnerability scanning on PRs (only release)
-- No SBOM generation
-- No image signing
+### Coverage Tracking (4.0/10)
 
-### Agent Rules (Agentic Flow Quality)
+**Strengths**:
+- `make test-unit` generates `coverprofile=cover.out` during test execution
+- Optional per-function coverage display with `COVERAGE=true` flag
+- `-race` flag detects data races during testing
 
-- **Status**: Missing
-- **Coverage**: None — no `.claude/` directory, no `CLAUDE.md`, no `AGENTS.md`
-- **Quality**: N/A
-- **Gaps**: No rules for any test type
-- **Recommendation**: Generate rules with `/test-rules-generator` covering:
-  - Unit tests: testify assert/require, table-driven, envtest patterns
-  - Controller tests: fake client, envtest setup, CRD downloads
-  - Plugin tests: mock translators, CycleState manipulation, request/response lifecycle
-  - E2E tests: Ginkgo/Gomega, tiered labels, provider resource creation
-  - Translator tests: per-provider format conversion, edge cases
+**Gaps**:
+- **No Codecov/Coveralls integration**: Coverage data is generated but not uploaded or tracked
+- **No PR coverage reporting**: No coverage comments on PRs, no diff coverage analysis
+- **No coverage thresholds**: No minimum coverage gates in CI
+- **Coverage file deleted**: `rm -f cover.out` at end of `test-unit` target — data is discarded
+- **No coverage trend tracking**: No historical coverage data available
+
+**Key Files**:
+- `Makefile:118` — `--coverprofile=cover.out` (generated but deleted)
+
+### CI/CD Automation (8.0/10)
+
+**Strengths**:
+- **6 GitHub Actions workflows**:
+  - `ci-pr-checks.yaml` — Lint + test on PR/push (path-filtered)
+  - `ci-e2e.yaml` — Full E2E on PR/push with Kind + Istio (path-filtered, simulator-conditional)
+  - `ci-release.yaml` — Multi-arch image build and push on tags/releases
+  - `check-typos.yaml` — Typo detection on PR/push
+  - `pr-size-labeler.yml` — Automatic PR size labels (XS to XXL)
+  - `promote-main-to-stable.yml` — Manual main-to-stable branch promotion
+- **7 Tekton/Konflux pipelines**: PR, push, and stable builds for both main image and E2E image, plus group testing
+- **Smart path filtering**: Both `ci-pr-checks` and `ci-e2e` skip when no relevant files changed
+- **Concurrency**: Tekton uses `cancel-in-progress: "true"` for PR pipelines
+- **Caching**: Go module caching via `actions/setup-go` with `cache-dependency-path`; Docker layer caching via `cache-from: type=gha`
+- **Timeout controls**: E2E workflow has `timeout-minutes: 30`; Tekton has `pipeline: 4h` / `tasks: 3h`
+- **JUnit reporting**: E2E results uploaded as artifacts and published via `action-junit-report`
+- **Multi-arch releases**: Matrix strategy with `ubuntu-latest` (amd64) and `ubuntu-24.04-arm` (arm64), digest-based manifest list creation
+
+**Gaps**:
+- No concurrency controls in GitHub Actions workflows (no `concurrency:` key)
+- No scheduled/periodic test runs (all triggered by PR/push/tag only)
+
+**Key Files**:
+- `.github/workflows/` — 6 workflow files
+- `.tekton/` — 7 Tekton PipelineRun definitions
+- `.github/actions/docker-build-and-push/action.yaml` — Reusable composite action
+- `Makefile` — Build and test targets
+
+### Static Analysis (7.0/10)
+
+#### Linting
+- **golangci-lint v2.9.0**: Installed and run via `make lint` in CI (`make verify` target)
+- **No `.golangci.yml` config file**: Uses default linters only — missing opportunity for stricter checks
+- **`make verify`**: Runs `tidy`, `vet`, `fmt`, `lint` — comprehensive verification pipeline
+- **Typo checking**: `crate-ci/typos` action for spell checking
+
+#### FIPS Compatibility
+- **FIPS-compliant builds**: Both `Dockerfile` and `Dockerfile.e2e` use `GOEXPERIMENT=strictfipsruntime`
+- **UBI9 base images**: FIPS-capable `registry.access.redhat.com/ubi9/go-toolset` and `ubi9/ubi-minimal`
+- **CGO_ENABLED=1**: Required for FIPS runtime, properly set in both Dockerfiles and Makefile
+- **Local FIPS testing**: `make test-unit GO_STRICTFIPS=true` supports FIPS mode in local development
+- **`math/rand/v2` usage**: Used at `pkg/plugins/model-provider-resolver/plugin.go:233` for weighted random model selection — not a security context, acceptable
+- **No non-FIPS crypto imports**: No `crypto/md5`, `crypto/des`, or `crypto/rc4` detected in source
+
+#### Dependency Alerts
+- **Dependabot configured**: `.github/dependabot.yml` covers 3 ecosystems:
+  - `gomod` — Weekly updates with smart ignore rules (skip major K8s updates, manual GAIE updates)
+  - `github-actions` — Weekly updates including major versions
+  - `docker` — Weekly base image updates
+- **Dependency grouping**: Go dependencies grouped; K8s packages grouped separately
+- **No Renovate**: Only Dependabot configured
+
+**Key Files**:
+- `Makefile` — `lint`, `verify` targets
+- `.github/dependabot.yml` — Dependency update configuration
+- `.github/workflows/check-typos.yaml` — Typo detection
+
+### Agent Rules (0.0/10)
+
+- **No `CLAUDE.md`**: No project-level AI agent instructions
+- **No `AGENTS.md`**: No agent-specific documentation
+- **No `.claude/` directory**: No rules, skills, or agent configuration
+- **No test creation guidance**: AI agents have no direction on test frameworks, patterns, or conventions
+- **Recommendation**: Generate rules with `/test-rules-generator` for this repository
 
 ## Recommendations
 
 ### Priority 0 (Critical)
-1. **Add Codecov/Coveralls integration** with minimum coverage threshold and PR delta reporting — the test suite is strong but there's no way to detect regressions
-2. **Add Trivy scanning to PR workflow** using existing composite action — shift vulnerability detection left from release-time to PR-time
-3. **Add CodeQL or gosec SAST scanning** — the codebase handles API keys and auth tokens, making static analysis for injection/taint vulnerabilities critical
+
+1. **Add Codecov integration with coverage thresholds**
+   - Add `.codecov.yml` with project target `auto` and patch target `80%`
+   - Update `ci-pr-checks.yaml` to upload `cover.out` via `codecov/codecov-action`
+   - Remove `rm -f cover.out` from Makefile to retain coverage data
+   - Effort: 4-6 hours
+
+2. **Create `.golangci.yml` with comprehensive linter configuration**
+   - Enable `errorlint`, `gosec`, `gocritic`, `revive`, `unused`, `unconvert`, `unparam`, `wastedassign`
+   - Add project-specific exclusions (e.g., `G404` for acceptable `math/rand` usage)
+   - Effort: 2-3 hours
 
 ### Priority 1 (High Value)
-4. **Add pre-commit hooks** (`.pre-commit-config.yaml`) for golangci-lint, go-fmt, go-vet, and Gitleaks
-5. **Create `.claude/rules/`** with test patterns for unit, controller, plugin, translator, and E2E tests
-6. **Implement metrics collection** in the empty `pkg/metrics` package — Prometheus metrics for request latency, error rates, provider distribution
-7. **Add Gitleaks secret detection** to CI pipeline
-8. **Add `.golangci.yaml`** with stricter linter configuration (enable errcheck, gocritic, gocyclo, etc.)
+
+3. **Create CLAUDE.md and agent rules**
+   - Document test patterns: testify (assert/require) for unit tests, envtest for controller tests, Ginkgo/Gomega for E2E
+   - Add `.claude/rules/unit-tests.md` with patterns for plugin and translator testing
+   - Add `.claude/rules/e2e-tests.md` with Ginkgo label conventions and provider test patterns
+   - Effort: 3-4 hours
+
+4. **Add pre-commit hooks**
+   - Configure `.pre-commit-config.yaml` with `go fmt`, `go vet`, `golangci-lint`
+   - Enforce consistent code style before commits reach CI
+   - Effort: 1-2 hours
+
+5. **Add HEALTHCHECK to Dockerfile**
+   - Add health check endpoint to the application
+   - Add `HEALTHCHECK` instruction for container-level validation
+   - Effort: 2-3 hours
 
 ### Priority 2 (Nice-to-Have)
-9. **Add contract tests** for the `translator.Translator` interface across all providers
-10. **Add chaos/fault injection tests** for plugin chain resilience (e.g., provider timeout, malformed responses)
-11. **Add performance benchmarks** for request/response translation (Go benchmark tests)
-12. **Add image startup validation** in PR workflow (build container, verify it starts and responds to health check)
-13. **Add SBOM generation** and image signing with cosign
-14. **Add concurrency control** to GitHub Actions workflows
+
+6. **Add contract tests for CRD API boundaries**
+   - Validate ExternalModel and ExternalProvider CRD schemas against expected contracts
+   - Effort: 4-6 hours
+
+7. **Add multi-version Kubernetes testing**
+   - Extend E2E matrix to test against multiple K8s versions
+   - Effort: 4-8 hours
+
+8. **Add concurrency controls to GitHub Actions**
+   - Add `concurrency:` key to prevent duplicate workflow runs on rapid pushes
+   - Effort: 1 hour
+
+9. **Add `.dockerignore`**
+   - Exclude unnecessary files from Docker build context (docs, test, .github, .tekton)
+   - Effort: 30 minutes
 
 ## Comparison to Gold Standards
 
-| Capability | ai-gateway-payload-processing | odh-dashboard (Gold) | notebooks (Gold) | kserve (Gold) |
-|---|---|---|---|---|
-| Unit test ratio | 1.77:1 | ~1.5:1 | Varies | ~1.2:1 |
-| E2E automation | PR-triggered (Kind) | PR-triggered | Periodic | PR-triggered |
-| Coverage tracking | Local only | Codecov enforced | Codecov | Codecov enforced |
-| SAST/CodeQL | None | CodeQL | N/A | CodeQL |
-| Trivy/scanning | Release only | PR + Release | Image testing | PR + Release |
-| Pre-commit hooks | None | Configured | N/A | Configured |
-| Agent rules | None | Comprehensive | N/A | N/A |
-| Multi-arch builds | 4 platforms (Tekton) | Multi-arch | 5-layer | Multi-arch |
-| Dependabot | Configured (3 ecosystems) | Configured | N/A | Configured |
-| Secret detection | None | Gitleaks | N/A | Gitleaks |
-| Contract tests | None | Present | N/A | Present |
-| Metrics | Empty placeholder | Full Prometheus | N/A | Full Prometheus |
+| Practice | ai-gateway-payload-processing | odh-dashboard (Gold) | notebooks (Gold) | kserve (Gold) |
+|----------|-------------------------------|----------------------|-------------------|---------------|
+| Test-to-code ratio | 1.55x (excellent) | ~0.8x | ~0.5x | ~0.7x |
+| E2E framework | Ginkgo + Kind + Istio | Cypress + Playwright | Custom scripts | Ginkgo + Kind |
+| Coverage tracking | Local only, no CI | Codecov with thresholds | Basic | Codecov enforced |
+| FIPS compliance | strictfipsruntime + UBI9 | N/A (frontend) | UBI-based | UBI-based |
+| Multi-arch | amd64 + arm64 | amd64 | Multi-arch matrix | amd64 |
+| Dependency mgmt | Dependabot (3 ecosystems) | Dependabot | Dependabot | Dependabot |
+| Agent rules | None | Comprehensive | None | Basic |
+| Konflux/Tekton | 7 pipelines + group test | Yes | Yes | Yes |
+| Container testing | Build + Kind deploy | Build + test | 5-layer validation | Build + envtest |
+| Pre-commit hooks | None | Yes | None | Yes |
 
 ## File Paths Reference
 
 ### CI/CD
-- `.github/workflows/ci-pr-checks.yaml` — PR linting and unit tests
-- `.github/workflows/ci-e2e.yaml` — PR E2E tests with Kind+Istio
-- `.github/workflows/ci-release.yaml` — Release builds (multi-arch) + Trivy scan
-- `.github/workflows/check-typos.yaml` — Typo checking
-- `.github/workflows/promote-main-to-stable.yml` — Main → stable promotion
-- `.github/workflows/pr-size-labeler.yml` — PR size auto-labeling
-- `.github/actions/trivy-scan/action.yaml` — Trivy composite action
-- `.github/actions/docker-build-and-push/action.yaml` — Docker build composite action
-- `.github/dependabot.yml` — Dependency update config
-- `.tekton/` — 7 Tekton/Konflux pipeline definitions
+- `.github/workflows/ci-pr-checks.yaml` — PR lint and test
+- `.github/workflows/ci-e2e.yaml` — PR E2E tests
+- `.github/workflows/ci-release.yaml` — Multi-arch release
+- `.github/workflows/check-typos.yaml` — Typo detection
+- `.github/workflows/pr-size-labeler.yml` — PR size labels
+- `.github/workflows/promote-main-to-stable.yml` — Branch promotion
+- `.github/actions/docker-build-and-push/action.yaml` — Reusable build action
+- `.tekton/*.yaml` — 7 Konflux/Tekton pipeline definitions
 
 ### Testing
-- `test/e2e/` — E2E test suite (Kind + Istio + multi-provider)
+- `pkg/plugins/*/plugin_test.go` — Plugin unit tests
+- `pkg/plugins/apikey-injection/auth-generator/*_test.go` — Auth generator tests
+- `pkg/plugins/api-translation/translator/*/*_test.go` — Translator tests
+- `pkg/controller/*/reconciler_test.go` — Controller tests (envtest)
+- `test/e2e/e2e_test.go` — E2E test scenarios
+- `test/e2e/e2e_suite_test.go` — E2E suite setup
 - `test/e2e/scripts/setup-kind.sh` — Kind cluster setup
-- `test/e2e/scripts/e2e-ci.sh` — CI E2E orchestrator (incomplete)
-- `test/e2e/scripts/entrypoint.sh` — E2E container entrypoint
-- `hack/download-test-crds.sh` — CRD download for envtest
-- `Dockerfile.e2e` — E2E test container image
 
 ### Build
-- `Dockerfile` — Production multi-stage build (FIPS, non-root)
-- `Makefile` — Build, test, and lint targets
+- `Dockerfile` — Production multi-stage build (UBI9, FIPS)
+- `Dockerfile.e2e` — E2E test container
+- `Makefile` — Build, test, lint targets
 - `deploy/payload-processing/` — Helm chart
 
-### Source Code
-- `cmd/` — Main entry point and controller registration
-- `pkg/controller/` — Kubernetes controllers (ExternalModel, ExternalProvider, LegacyMigration)
-- `pkg/plugins/` — Gateway plugin chain (api-translation, apikey-injection, model-provider-resolver, nemo guards, maas-headers, stream-usage-enforcer)
-- `api/inference/v1alpha1/` — CRD type definitions
-- `config/crd/bases/` — Generated CRD manifests
+### Static Analysis
+- `.github/dependabot.yml` — Dependency update configuration
+- `Makefile` — `verify`, `lint`, `fmt`, `vet` targets
+
+### Configuration
+- `go.mod` — Go module (Go 1.25)
+- `config/crd/bases/` — CRD YAML manifests
+- `api/inference/v1alpha1/` — CRD Go types

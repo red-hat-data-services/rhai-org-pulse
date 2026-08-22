@@ -9,16 +9,13 @@
 
 const { logAudit } = require('./planning/audit-log');
 const { loadRegistryConfig, saveRegistryConfig } = require('./registry-config');
+const { stripZStream, normalizeVersionName } = require('./version-utils');
+const smartsheetClient = require('../../../shared/server/smartsheet');
 
 const REGISTRY_FILE = 'releases/registry.json';
 const SCHEMA_VERSION = 1;
 
 const VALID_STATES = ['active', 'archived'];
-
-function stripZStream(value) {
-  if (!value) return value;
-  return String(value).replace(/\.z\b/gi, '');
-}
 
 // Fields controlled by Product Pages — cannot be edited locally on PP-sourced releases
 const PP_MANAGED_FIELDS = ['displayName', 'productPagesShortname', 'productPagesVersion', 'milestones'];
@@ -26,8 +23,8 @@ const PP_MANAGED_FIELDS = ['displayName', 'productPagesShortname', 'productPages
 /**
  * Read the registry from storage, returning a normalized object.
  */
-function readRegistry(readFromStorage) {
-  const data = readFromStorage(REGISTRY_FILE);
+async function readRegistry(readFromStorage) {
+  const data = await readFromStorage(REGISTRY_FILE);
   if (data && Array.isArray(data.releases)) return data;
   return { schemaVersion: SCHEMA_VERSION, releases: [] };
 }
@@ -35,8 +32,8 @@ function readRegistry(readFromStorage) {
 /**
  * Write the registry to storage.
  */
-function writeRegistry(writeToStorage, registry) {
-  writeToStorage(REGISTRY_FILE, registry);
+async function writeRegistry(writeToStorage, registry) {
+  await writeToStorage(REGISTRY_FILE, registry);
 }
 
 /**
@@ -64,6 +61,33 @@ function validateRelease(release) {
 }
 
 /**
+ * Read releases from the registry in the flat shape that delivery/health/tracking
+ * consumers expect (flat shape with productName, releaseNumber, dueDate, etc.).
+ *
+ * @param {Function} readFromStorage
+ * @param {object} [opts]
+ * @param {string} [opts.state] - Filter by state (e.g. 'active'). Omit for all.
+ * @returns {Promise<Array<{productName, releaseNumber, dueDate, codeFreezeDate, featureFreezeDate, planningFreezeDate}>>}
+ */
+async function getRegistryReleasesFlat(readFromStorage, opts) {
+  const registry = await readRegistry(readFromStorage);
+  const releases = [];
+  for (const r of registry.releases) {
+    if (opts && opts.state && r.state !== opts.state) continue;
+    const m = r.milestones || {};
+    releases.push({
+      productName: r.productPagesShortname || '',
+      releaseNumber: r.productPagesVersion || r.displayName || r.id,
+      dueDate: m.ga || m.gaDate || null,
+      codeFreezeDate: m.codeFreeze || m.codeFreezeDate || null,
+      featureFreezeDate: m.featureFreeze || null,
+      planningFreezeDate: m.planningFreeze || null
+    });
+  }
+  return releases;
+}
+
+/**
  * Normalize a release object for storage.
  */
 function normalizeRelease(input) {
@@ -80,34 +104,6 @@ function normalizeRelease(input) {
     createdAt: input.createdAt || now,
     updatedAt: now
   };
-}
-
-/**
- * Normalize a version name for fuzzy matching.
- * Lowercases, strips ".z" suffixes (Product Pages z-stream convention),
- * collapses separators (hyphens, dots) to spaces, and handles the
- * RHAISTRAT naming convention ("3.5 GA RHOAI RELEASE" → "rhoai 3 5").
- * @param {string} name
- * @returns {string}
- */
-function normalizeVersionName(name) {
-  var s = String(name).toLowerCase();
-  // Strip ".z" suffix (but not ".z." — only terminal .z)
-  s = s.replace(/\.z(?=$|\.)/g, '');
-  // Collapse hyphens and dots to spaces
-  s = s.replace(/[-._]+/g, ' ');
-  // Collapse multiple spaces
-  s = s.replace(/\s+/g, ' ');
-  s = s.trim();
-  // RHAISTRAT uses "3.5 GA RHOAI RELEASE" / "3.5 EA1 RHOAI RELEASE" format.
-  // Rearrange to canonical "rhoai 3 5" / "rhoai 3 5 ea1" form.
-  var rhaistrat = /^(\d+\s+\d+)\s+(ga|ea\d+)\s+(rhoai|rhaii|rhelai)\s+release$/.exec(s);
-  if (rhaistrat) {
-    s = rhaistrat[2] === 'ga'
-      ? rhaistrat[3] + ' ' + rhaistrat[1]
-      : rhaistrat[3] + ' ' + rhaistrat[1] + ' ' + rhaistrat[2];
-  }
-  return s;
 }
 
 /**
@@ -283,7 +279,7 @@ function migrateNormalizedIds(registry) {
  */
 async function autoResolveFixVersions(storage, deps) {
   const { readFromStorage, writeToStorage } = storage;
-  const registry = readRegistry(readFromStorage);
+  const registry = await readRegistry(readFromStorage);
 
   const activeReleases = registry.releases.filter(function (r) {
     return r.state === 'active';
@@ -293,7 +289,7 @@ async function autoResolveFixVersions(storage, deps) {
     return { status: 'skipped', message: 'No active releases in registry' };
   }
 
-  const config = loadRegistryConfig(storage);
+  const config = await loadRegistryConfig(storage);
   const projects = config.jiraProjects || [];
   if (projects.length === 0) {
     return { status: 'skipped', message: 'No Jira projects configured for version resolution' };
@@ -332,8 +328,8 @@ async function autoResolveFixVersions(storage, deps) {
   }
 
   if (applied.length > 0) {
-    writeRegistry(writeToStorage, registry);
-    logAudit(readFromStorage, writeToStorage, {
+    await writeRegistry(writeToStorage, registry);
+    await logAudit(readFromStorage, writeToStorage, {
       domain: 'registry',
       action: 'registry_auto_resolve_versions',
       user: 'system',
@@ -371,7 +367,7 @@ async function runRegistrySync(storage, options) {
     return { status: 'skipped', message: 'Product Pages auth not configured' };
   }
 
-  const deliveryConfig = getConfig(readFromStorage);
+  const deliveryConfig = await getConfig(readFromStorage);
   const shortnames = deliveryConfig.productPagesProductShortnames || [];
   if (shortnames.length === 0) {
     return { status: 'skipped', message: 'No product shortnames configured' };
@@ -382,7 +378,7 @@ async function runRegistrySync(storage, options) {
     return { status: 'empty', discovered: 0, created: 0, message: 'No releases found from Product Pages' };
   }
 
-  const registry = readRegistry(readFromStorage);
+  const registry = await readRegistry(readFromStorage);
 
   // Merge stale .z-suffixed entries into their clean counterparts before lookup.
   // This fixes the split caused by stripZStream normalising IDs while the old
@@ -439,6 +435,7 @@ async function runRegistrySync(storage, options) {
           ...(existing.milestones || {}),
           ga: ppRelease.dueDate || existing.milestones?.ga || null,
           codeFreeze: ppRelease.codeFreezeDate || existing.milestones?.codeFreeze || null,
+          featureFreeze: ppRelease.featureFreezeDate || existing.milestones?.featureFreeze || null,
           planningFreeze: ppRelease.planningFreezeDate || existing.milestones?.planningFreeze || null
         };
         existing.updatedAt = new Date().toISOString();
@@ -453,6 +450,7 @@ async function runRegistrySync(storage, options) {
         milestones: {
           ga: ppRelease.dueDate || null,
           codeFreeze: ppRelease.codeFreezeDate || null,
+          featureFreeze: ppRelease.featureFreezeDate || null,
           planningFreeze: ppRelease.planningFreezeDate || null
         },
         source: 'product-pages',
@@ -475,24 +473,127 @@ async function runRegistrySync(storage, options) {
     }
   }
 
-  if (created > 0 || updated > 0 || archived > 0) {
-    writeRegistry(writeToStorage, registry);
-    logAudit(readFromStorage, writeToStorage, {
+  // Backfill missing freeze dates from Smartsheet + derive from target dates
+  const dateBackfill = await backfillRegistryDates(registry);
+  if (dateBackfill.backfilled > 0 || dateBackfill.derived > 0) {
+    console.log(`[releases/registry] Date backfill: ${dateBackfill.backfilled} from Smartsheet, ${dateBackfill.derived} derived from target dates`);
+  }
+
+  const totalChanges = created + updated + archived + dateBackfill.backfilled + dateBackfill.derived;
+  if (totalChanges > 0) {
+    await writeRegistry(writeToStorage, registry);
+    await logAudit(readFromStorage, writeToStorage, {
       domain: 'registry',
       action: 'registry_discover',
       user: options.user || 'system',
-      summary: `Synced with Product Pages: ${created} created, ${updated} updated, ${archived} archived`,
-      details: { discovered: discovered.length, created, updated, archived, shortnames }
+      summary: `Synced with Product Pages: ${created} created, ${updated} updated, ${archived} archived` +
+        (dateBackfill.backfilled + dateBackfill.derived > 0
+          ? `, ${dateBackfill.backfilled} freeze dates from Smartsheet, ${dateBackfill.derived} derived`
+          : ''),
+      details: { discovered: discovered.length, created, updated, archived, shortnames, dateBackfill }
     });
   }
 
-  return { status: 'ok', discovered: discovered.length, created, updated, archived, releases: discovered };
+  return { status: 'ok', discovered: discovered.length, created, updated, archived, dateBackfill, releases: discovered };
+}
+
+const FREEZE_OFFSET_DAYS = 30;
+
+/**
+ * Offset a date string by a given number of days.
+ */
+function offsetDate(dateStr, days) {
+  var d = new Date(dateStr + 'T00:00:00Z');
+  d.setUTCDate(d.getUTCDate() + days);
+  return d.toISOString().split('T')[0];
+}
+
+/**
+ * Backfill missing codeFreeze dates on active registry releases.
+ *
+ * Two-pass approach:
+ *   1. Smartsheet — match registry entries to Smartsheet version+phase freeze dates
+ *   2. Derive — if codeFreeze is still missing but ga (target) date exists,
+ *      derive codeFreeze as ga minus FREEZE_OFFSET_DAYS
+ *
+ * Mutates the registry in place. Returns { backfilled, derived } counts.
+ */
+async function backfillRegistryDates(registry) {
+  var backfilled = 0;
+  var derived = 0;
+
+  var activeReleases = registry.releases.filter(function(r) { return r.state === 'active'; });
+  if (activeReleases.length === 0) return { backfilled, derived };
+
+  // Pass 1: Smartsheet backfill
+  if (smartsheetClient.isConfigured()) {
+    try {
+      var ssReleases = await smartsheetClient.discoverReleasesPartial();
+      var ssByVersion = {};
+      for (var si = 0; si < ssReleases.length; si++) {
+        ssByVersion[ssReleases[si].version] = ssReleases[si];
+      }
+
+      var ea1Re = /(\d+\.\d+)[.\s]EA1/i;
+      var ea2Re = /(\d+\.\d+)[.\s]EA2/i;
+      var gaRe = /(\d+\.\d+)/;
+      var eaExclude = /\bEA\d?\b/i;
+
+      for (var ri = 0; ri < activeReleases.length; ri++) {
+        var rel = activeReleases[ri];
+        var m = rel.milestones || {};
+        if (m.codeFreeze) continue; // already has freeze date
+
+        var displayName = rel.productPagesVersion || rel.displayName || rel.id;
+        var match, ssEntry, freezeDate;
+
+        match = displayName.match(ea1Re);
+        if (match) {
+          ssEntry = ssByVersion[match[1]];
+          freezeDate = ssEntry && ssEntry.ea1Freeze;
+        } else {
+          match = displayName.match(ea2Re);
+          if (match) {
+            ssEntry = ssByVersion[match[1]];
+            freezeDate = ssEntry && ssEntry.ea2Freeze;
+          } else {
+            match = displayName.match(gaRe);
+            if (match && !eaExclude.test(displayName)) {
+              ssEntry = ssByVersion[match[1]];
+              freezeDate = ssEntry && ssEntry.gaFreeze;
+            }
+          }
+        }
+
+        if (freezeDate) {
+          rel.milestones = Object.assign({}, m, { codeFreeze: freezeDate });
+          rel.updatedAt = new Date().toISOString();
+          backfilled++;
+        }
+      }
+    } catch (err) {
+      console.warn('[releases/registry] Smartsheet backfill failed:', err.message);
+    }
+  }
+
+  // Pass 2: Derive missing codeFreeze from ga date (target - FREEZE_OFFSET_DAYS)
+  for (var di = 0; di < activeReleases.length; di++) {
+    var r = activeReleases[di];
+    var ms = r.milestones || {};
+    if (!ms.codeFreeze && ms.ga) {
+      r.milestones = Object.assign({}, ms, { codeFreeze: offsetDate(ms.ga, -FREEZE_OFFSET_DAYS) });
+      r.updatedAt = new Date().toISOString();
+      derived++;
+    }
+  }
+
+  return { backfilled, derived };
 }
 
 /**
  * Register release registry routes on the provided router.
  */
-function registerRegistryRoutes(router, context) {
+async function registerRegistryRoutes(router, context) {
   const { storage, requireAuth, requirePlanningManager, requireScope } = context;
   const { readFromStorage, writeToStorage } = storage;
 
@@ -517,8 +618,8 @@ function registerRegistryRoutes(router, context) {
    *                   items:
    *                     type: object
    */
-  router.get('/registry', requireAuth, requireScope('releases:read'), function(req, res) {
-    const registry = readRegistry(readFromStorage);
+  router.get('/registry', requireAuth, requireScope('releases:read'), async function(req, res) {
+    const registry = await readRegistry(readFromStorage);
     res.json(registry);
   });
 
@@ -532,8 +633,8 @@ function registerRegistryRoutes(router, context) {
    *       200:
    *         description: Registry config
    */
-  router.get('/registry/config', requirePlanningManager, requireScope('releases:read'), function(req, res) {
-    var config = loadRegistryConfig(storage);
+  router.get('/registry/config', requirePlanningManager, requireScope('releases:read'), async function(req, res) {
+    var config = await loadRegistryConfig(storage);
     res.json(config);
   });
 
@@ -560,9 +661,9 @@ function registerRegistryRoutes(router, context) {
    *       400:
    *         description: Validation error
    */
-  router.post('/registry/config', requirePlanningManager, requireScope('releases:write'), function(req, res) {
+  router.post('/registry/config', requirePlanningManager, requireScope('releases:write'), async function(req, res) {
     try {
-      saveRegistryConfig(storage, req.body);
+      await saveRegistryConfig(storage, req.body);
       res.json({ status: 'saved' });
     } catch (err) {
       res.status(400).json({ error: err.message });
@@ -587,8 +688,8 @@ function registerRegistryRoutes(router, context) {
    *       404:
    *         description: Release not found
    */
-  router.get('/registry/:id', requireAuth, requireScope('releases:read'), function(req, res) {
-    const registry = readRegistry(readFromStorage);
+  router.get('/registry/:id', requireAuth, requireScope('releases:read'), async function(req, res) {
+    const registry = await readRegistry(readFromStorage);
     const release = registry.releases.find(r => r.id === req.params.id);
     if (!release) {
       return res.status(404).json({ error: 'Release not found' });
@@ -633,13 +734,13 @@ function registerRegistryRoutes(router, context) {
    *       400:
    *         description: Validation error or duplicate ID
    */
-  router.post('/registry', requirePlanningManager, requireScope('releases:write'), function(req, res) {
+  router.post('/registry', requirePlanningManager, requireScope('releases:write'), async function(req, res) {
     const error = validateRelease(req.body);
     if (error) {
       return res.status(400).json({ error });
     }
 
-    const registry = readRegistry(readFromStorage);
+    const registry = await readRegistry(readFromStorage);
     const normalizedId = stripZStream(req.body.id.trim()).toLowerCase();
 
     if (registry.releases.some(r => r.id === normalizedId)) {
@@ -648,9 +749,9 @@ function registerRegistryRoutes(router, context) {
 
     const release = normalizeRelease(req.body);
     registry.releases.push(release);
-    writeRegistry(writeToStorage, registry);
+    await writeRegistry(writeToStorage, registry);
 
-    logAudit(readFromStorage, writeToStorage, {
+    await logAudit(readFromStorage, writeToStorage, {
       domain: 'registry',
       action: 'registry_create',
       user: req.userEmail || 'unknown',
@@ -687,8 +788,8 @@ function registerRegistryRoutes(router, context) {
    *       404:
    *         description: Release not found
    */
-  router.put('/registry/:id', requirePlanningManager, requireScope('releases:write'), function(req, res) {
-    const registry = readRegistry(readFromStorage);
+  router.put('/registry/:id', requirePlanningManager, requireScope('releases:write'), async function(req, res) {
+    const registry = await readRegistry(readFromStorage);
     const idx = registry.releases.findIndex(r => r.id === req.params.id);
     if (idx === -1) {
       return res.status(404).json({ error: 'Release not found' });
@@ -723,9 +824,9 @@ function registerRegistryRoutes(router, context) {
     const updated = normalizeRelease(merged);
     updated.createdAt = existing.createdAt; // preserve original
     registry.releases[idx] = updated;
-    writeRegistry(writeToStorage, registry);
+    await writeRegistry(writeToStorage, registry);
 
-    logAudit(readFromStorage, writeToStorage, {
+    await logAudit(readFromStorage, writeToStorage, {
       domain: 'registry',
       action: 'registry_update',
       user: req.userEmail || 'unknown',
@@ -754,8 +855,8 @@ function registerRegistryRoutes(router, context) {
    *       404:
    *         description: Release not found
    */
-  router.delete('/registry/:id', requirePlanningManager, requireScope('releases:write'), function(req, res) {
-    const registry = readRegistry(readFromStorage);
+  router.delete('/registry/:id', requirePlanningManager, requireScope('releases:write'), async function(req, res) {
+    const registry = await readRegistry(readFromStorage);
     const idx = registry.releases.findIndex(r => r.id === req.params.id);
     if (idx === -1) {
       return res.status(404).json({ error: 'Release not found' });
@@ -764,9 +865,9 @@ function registerRegistryRoutes(router, context) {
     // Archive rather than hard delete
     registry.releases[idx].state = 'archived';
     registry.releases[idx].updatedAt = new Date().toISOString();
-    writeRegistry(writeToStorage, registry);
+    await writeRegistry(writeToStorage, registry);
 
-    logAudit(readFromStorage, writeToStorage, {
+    await logAudit(readFromStorage, writeToStorage, {
       domain: 'registry',
       action: 'registry_archive',
       user: req.userEmail || 'unknown',
@@ -823,7 +924,7 @@ function registerRegistryRoutes(router, context) {
    */
   router.post('/registry/resolve-jira-versions', requirePlanningManager, requireScope('releases:write'), async function(req, res) {
     try {
-      var config = loadRegistryConfig(storage);
+      var config = await loadRegistryConfig(storage);
       var projects = config.jiraProjects || [];
 
       if (projects.length === 0) {
@@ -835,7 +936,7 @@ function registerRegistryRoutes(router, context) {
       var { fetchProjectVersions, jiraRequest: jiraRequestFn } = require('../../../shared/server/jira');
 
       var jiraVersions = await fetchProjectVersions(jiraRequestFn, projects);
-      var registry = readRegistry(readFromStorage);
+      var registry = await readRegistry(readFromStorage);
       var result = matchVersionsToReleases(jiraVersions, registry.releases);
 
       res.json({
@@ -886,13 +987,13 @@ function registerRegistryRoutes(router, context) {
    *       400:
    *         description: Invalid request
    */
-  router.post('/registry/resolve-jira-versions/apply', requirePlanningManager, requireScope('releases:write'), function(req, res) {
+  router.post('/registry/resolve-jira-versions/apply', requirePlanningManager, requireScope('releases:write'), async function(req, res) {
     var mappings = req.body && req.body.mappings;
     if (!Array.isArray(mappings) || mappings.length === 0) {
       return res.status(400).json({ error: 'mappings array is required and must not be empty' });
     }
 
-    var registry = readRegistry(readFromStorage);
+    var registry = await readRegistry(readFromStorage);
     var updated = [];
 
     for (var i = 0; i < mappings.length; i++) {
@@ -918,8 +1019,8 @@ function registerRegistryRoutes(router, context) {
     }
 
     if (updated.length > 0) {
-      writeRegistry(writeToStorage, registry);
-      logAudit(readFromStorage, writeToStorage, {
+      await writeRegistry(writeToStorage, registry);
+      await logAudit(readFromStorage, writeToStorage, {
         domain: 'registry',
         action: 'registry_resolve_jira_versions',
         user: req.userEmail || 'unknown',
@@ -937,7 +1038,7 @@ function registerRegistryRoutes(router, context) {
       timeout: 300000,
       description: 'Syncs the release registry from Product Pages, updating release metadata and versions.',
       handler: async function() {
-        return runRegistrySync(storage);
+        return await runRegistrySync(storage);
       }
     });
 
@@ -946,14 +1047,14 @@ function registerRegistryRoutes(router, context) {
       timeout: 120000,
       description: 'Auto-resolves Jira fixVersions for active registry releases (additive only).',
       handler: async function() {
-        return autoResolveFixVersions(storage);
+        return await autoResolveFixVersions(storage);
       }
     });
   }
 }
 
 module.exports = {
-  registerRegistryRoutes, readRegistry, writeRegistry, validateRelease, normalizeRelease,
-  normalizeVersionName, matchVersionsToReleases, runRegistrySync, migrateNormalizedIds,
-  autoResolveFixVersions, REGISTRY_FILE
+  registerRegistryRoutes, readRegistry, getRegistryReleasesFlat, writeRegistry, validateRelease,
+  normalizeRelease, normalizeVersionName, matchVersionsToReleases, runRegistrySync,
+  migrateNormalizedIds, autoResolveFixVersions, REGISTRY_FILE
 };

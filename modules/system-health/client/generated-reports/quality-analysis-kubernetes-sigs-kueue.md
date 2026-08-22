@@ -1,527 +1,455 @@
 ---
 repository: "kubernetes-sigs/kueue"
-overall_score: 8.6
+overall_score: 7.3
 scorecard:
   - dimension: "Unit Tests"
-    score: 8.5
-    status: "425 test files for 777 source files (0.55 ratio); Go testing + Ginkgo/Gomega; coverage profiles generated; unit test sharding support"
+    score: 8.0
+    status: "Excellent test-to-code ratio (0.55) with 437 test files, gotestsum, sharding support, and coverage profiling"
   - dimension: "Integration/E2E"
-    score: 9.5
-    status: "Exceptional multi-layer testing: envtest integration (125 files), E2E on Kind (74 files), MultiKueue, TAS, DRA, upgrade, cert-manager, and performance suites"
+    score: 9.0
+    status: "Exceptional coverage with 200+ test files, multi-version K8s testing (1.34-1.36), Kind clusters, envtest, upgrade and performance tests"
   - dimension: "Build Integration"
     score: 7.0
-    status: "Cloud Build for image pushing; Prow-based CI; no PR-time Konflux simulation but Kustomize/Helm validation in verify"
+    status: "Multi-stage Docker builds, multi-arch support, CloudBuild pipelines, but no PR-time image build validation"
   - dimension: "Image Testing"
-    score: 6.5
-    status: "Multi-arch builds (amd64/arm64/s390x/ppc64le); distroless base; multi-stage Dockerfile; no runtime image validation or Trivy scanning"
+    score: 6.0
+    status: "Distroless base image, multi-arch builds, health probes in K8s manifests, but no container runtime validation"
   - dimension: "Coverage Tracking"
-    score: 5.5
-    status: "Coverage profiles generated via -coverprofile; no Codecov/Coveralls integration or PR coverage gates"
+    score: 3.0
+    status: "Coverage profiles generated via --coverprofile but no codecov integration, thresholds, or PR reporting"
   - dimension: "CI/CD Automation"
-    score: 9.0
-    status: "Prow CI with comprehensive verify pipeline; parallelized make verify (8 procs); Cloud Build; Dependabot; test sharding"
+    score: 8.0
+    status: "Prow-based CI with Make infrastructure, test sharding, Ginkgo parallelization, comprehensive verify pipeline"
+  - dimension: "Static Analysis"
+    score: 7.0
+    status: "golangci-lint v2 with 21+ linters, Dependabot across 4 ecosystems, no pre-commit hooks or FIPS configuration"
   - dimension: "Agent Rules"
     score: 9.0
-    status: "AGENTS.md with 58 skills including 54 reviewer skills; skillsaw linting; flake debugger; lineage tracer; release notes skill"
+    status: "CLAUDE.md + AGENTS.md with 6 operational skills and 30+ code review skills covering security, architecture, and code style"
 critical_gaps:
-  - title: "No coverage tracking integration (Codecov/Coveralls)"
-    impact: "Coverage regressions can go unnoticed; no PR-level coverage gates or trend visibility"
+  - title: "No coverage tracking or enforcement"
+    impact: "Coverage regressions go undetected; no PR-level coverage feedback for contributors"
     severity: "HIGH"
-    effort: "2-4 hours"
-  - title: "No container vulnerability scanning (Trivy/Snyk)"
-    impact: "Security vulnerabilities in base images or dependencies not caught before release"
-    severity: "HIGH"
-    effort: "2-3 hours"
-  - title: "No pre-commit hooks"
-    impact: "Developers may push code that fails CI linting checks, wasting CI resources"
+    effort: "4-6 hours"
+  - title: "No PR-time container image build validation"
+    impact: "Image build failures only discovered post-merge via CloudBuild"
     severity: "MEDIUM"
-    effort: "1-2 hours"
-  - title: "No SAST/CodeQL integration"
-    impact: "Static security analysis not automated; relies on manual code review for security issues"
+    effort: "4-8 hours"
+  - title: "No container runtime validation"
+    impact: "Image startup issues and runtime failures not caught until deployment"
     severity: "MEDIUM"
-    effort: "2-3 hours"
+    effort: "6-10 hours"
+  - title: "No FIPS build configuration"
+    impact: "Binary not built with FIPS-compliant crypto; distroless base not FIPS-capable"
+    severity: "MEDIUM"
+    effort: "8-16 hours"
 quick_wins:
-  - title: "Add Codecov integration with PR coverage reporting"
+  - title: "Add Codecov integration with PR reporting"
     effort: "2-4 hours"
-    impact: "Immediate visibility into coverage trends; prevent coverage regressions on PRs"
-  - title: "Add Trivy container scanning to Cloud Build"
-    effort: "2-3 hours"
-    impact: "Automated vulnerability detection for container images before release"
-  - title: "Add pre-commit hooks for formatting and linting"
+    impact: "Immediate visibility into coverage changes per PR with threshold enforcement"
+  - title: "Add pre-commit hooks for linting and formatting"
     effort: "1-2 hours"
-    impact: "Catch lint and formatting issues before they reach CI; faster developer feedback"
-  - title: "Enable CodeQL or gosec scanning via Prow"
-    effort: "2-3 hours"
-    impact: "Automated static security analysis catches vulnerabilities early"
+    impact: "Catch formatting and lint issues before CI, faster developer feedback"
+  - title: "Add PR-triggered Docker build step to Prow"
+    effort: "2-4 hours"
+    impact: "Catch image build failures before merge"
 recommendations:
   priority_0:
-    - "Integrate Codecov for PR coverage reporting and threshold enforcement"
-    - "Add container vulnerability scanning (Trivy) to the image build pipeline"
+    - "Implement Codecov integration with .codecov.yml, coverage thresholds, and PR coverage comments"
+    - "Add PR-time container image build validation to catch build failures pre-merge"
   priority_1:
-    - "Add CodeQL or Semgrep for automated SAST in CI"
-    - "Implement pre-commit hooks (.pre-commit-config.yaml) for linting, formatting, and secret detection"
-    - "Add image runtime validation testing (container startup, health check verification)"
+    - "Add container runtime validation tests (image startup, binary execution check)"
+    - "Configure pre-commit hooks for golangci-lint and gofmt"
+    - "Consider FIPS build configuration for downstream consumption (UBI base, boringcrypto)"
   priority_2:
-    - "Add container image signing and attestation (Cosign/Sigstore)"
-    - "Create .claude/rules/ directory for test creation guidance to complement existing skills"
-    - "Add Gitleaks or TruffleHog for secret detection in CI"
+    - "Expand t.Parallel() usage across unit tests for faster execution"
+    - "Add HEALTHCHECK instruction to Dockerfile for container orchestration"
+    - "Consider adding contract tests for API boundaries"
 ---
 
 # Quality Analysis: kubernetes-sigs/kueue
 
 ## Executive Summary
 
-- **Overall Score: 8.6/10**
-- **Repository Type**: Kubernetes operator (job queueing system)
-- **Primary Language**: Go
-- **Framework**: Kubernetes controller-runtime, Kubebuilder
-- **Key Strengths**: Exceptional test infrastructure spanning unit, integration (envtest), E2E (Kind), multi-cluster (MultiKueue), performance, and upgrade testing. Outstanding agent rules with 58 AgentSkill definitions including 54 code review skills with skillsaw linting. Well-organized Makefile with parallelized verification. Comprehensive Dependabot coverage across Go, Docker, npm, and GitHub Actions.
-- **Critical Gaps**: No coverage tracking integration (Codecov/Coveralls), no container vulnerability scanning, no pre-commit hooks, no SAST/CodeQL.
-- **Agent Rules Status**: Excellent - AGENTS.md with 58 skills, skillsaw linting integration, comprehensive reviewer skills
+- **Overall Score: 7.3/10**
+- **Repository Type**: Kubernetes Operator (Go, batch job queueing system)
+- **Primary Language**: Go 1.26
+- **Framework**: controller-runtime, Ginkgo/Gomega
+- **Jira**: RHOAIENG / Workload Orchestration (upstream tier)
+
+**Key Strengths**: Kueue demonstrates exceptional testing practices with a 0.55 test-to-code ratio, comprehensive E2E testing across multiple Kubernetes versions, and an outstanding set of agent rules with 30+ code review skills. The Prow-based CI infrastructure with Make-driven test sharding and parallelization is mature and well-organized.
+
+**Critical Gaps**: The most significant gap is the absence of coverage tracking and enforcement — coverage profiles are generated but never reported or gated. Additionally, there is no PR-time container image build validation, and no FIPS build configuration for downstream Red Hat consumption.
+
+**Agent Rules Status**: Present and comprehensive — CLAUDE.md references AGENTS.md which includes AI contribution policy, 6 operational skills, and 30+ granular code review skills.
 
 ## Quality Scorecard
 
-| Dimension | Score | Status |
-|-----------|-------|--------|
-| Unit Tests | 8.5/10 | 425 test files; Go testing + Ginkgo/Gomega; coverage profiles; sharding |
-| Integration/E2E | 9.5/10 | Multi-layer: envtest, Kind E2E, MultiKueue, TAS, DRA, upgrade, performance |
-| Build Integration | 7.0/10 | Cloud Build + Prow; Kustomize/Helm validation; no Konflux simulation |
-| Image Testing | 6.5/10 | Multi-arch (4 platforms); distroless base; no runtime validation or scanning |
-| Coverage Tracking | 5.5/10 | Coverage profiles generated but no external integration or PR gates |
-| CI/CD Automation | 9.0/10 | Prow CI; parallelized verify; Dependabot; test sharding; Cloud Build |
-| Agent Rules | 9.0/10 | 58 skills; 54 reviewer skills; skillsaw linting; flake debugger |
+| Dimension | Score | Weight | Weighted | Status |
+|-----------|-------|--------|----------|--------|
+| Unit Tests | 8.0/10 | 15% | 1.20 | Excellent test-to-code ratio with sharding and coverage profiling |
+| Integration/E2E | 9.0/10 | 20% | 1.80 | Exceptional multi-version, multi-cluster E2E with upgrade tests |
+| Build Integration | 7.0/10 | 15% | 1.05 | Multi-stage Docker builds, CloudBuild, but no PR-time validation |
+| Image Testing | 6.0/10 | 10% | 0.60 | Distroless base, multi-arch, but no runtime validation |
+| Coverage Tracking | 3.0/10 | 10% | 0.30 | Profiles generated but no reporting or enforcement |
+| CI/CD Automation | 8.0/10 | 15% | 1.20 | Prow + Make with sharding, parallelization, verify pipeline |
+| Static Analysis | 7.0/10 | 10% | 0.70 | 21+ linters, Dependabot, no pre-commit or FIPS |
+| Agent Rules | 9.0/10 | 5% | 0.45 | AGENTS.md with 36+ skills and AI contribution policy |
+| **Overall** | **7.3/10** | **100%** | **7.30** | |
 
 ## Critical Gaps
 
-### 1. No Coverage Tracking Integration
-- **Impact**: Coverage regressions can silently merge; no trend visibility or PR-level feedback
+### 1. No Coverage Tracking or Enforcement
+- **Impact**: Coverage regressions go undetected; no PR-level coverage feedback for contributors
 - **Severity**: HIGH
-- **Effort**: 2-4 hours
-- **Details**: The `make test` target generates `cover.out` via `-coverprofile`, but there is no Codecov, Coveralls, or equivalent integration. No `.codecov.yml` exists (only vendor libraries have them). No coverage threshold enforcement in CI.
-- **Fix**: Add `.codecov.yml` with project and patch thresholds; integrate Codecov upload into the Prow test job.
+- **Effort**: 4-6 hours
+- **Details**: The `make test` target generates `--coverprofile` output, but there is no `.codecov.yml`, no codecov/coveralls GitHub Action, and no coverage threshold enforcement. Contributors receive zero coverage feedback on PRs.
+- **Evidence**: No `.codecov.yml`, no `codecov` references in `.github/workflows/`
 
-### 2. No Container Vulnerability Scanning
-- **Impact**: Known CVEs in base images or Go dependencies not caught automatically before release
-- **Severity**: HIGH
-- **Effort**: 2-3 hours
-- **Details**: No Trivy, Snyk, or Grype integration found. The SECURITY-INSIGHTS.yaml lists only Dependabot as the SCA tool. While Dependabot catches dependency CVEs in Go modules, it does not scan built container images.
-- **Fix**: Add Trivy scan step to `cloudbuild.yaml` after image build, or add a Prow job for periodic image scanning.
-
-### 3. No Pre-Commit Hooks
-- **Impact**: Developers may push code that fails CI linting checks, wasting CI resources and developer time
+### 2. No PR-time Container Image Build Validation
+- **Impact**: Image build failures only discovered post-merge via CloudBuild postsubmit
 - **Severity**: MEDIUM
-- **Effort**: 1-2 hours
-- **Details**: No `.pre-commit-config.yaml` found. The project has excellent linting (20+ golangci-lint rules, KAL API linter, shell linting, Helm linting, skillsaw linting) but all checks run only in CI.
-- **Fix**: Add `.pre-commit-config.yaml` with golangci-lint, gofmt, shellcheck, and Gitleaks hooks.
+- **Effort**: 4-8 hours
+- **Details**: The `cloudbuild.yaml` is postsubmit only. GitHub workflows do not include Docker image building. Dockerfile changes can break the build but won't be caught until after merge.
+- **Evidence**: `cloudbuild.yaml` triggered on postsubmit only; no `docker build` in PR workflows
 
-### 4. No SAST/CodeQL Integration
-- **Impact**: No automated static security analysis; security vulnerabilities may be caught only during manual code review
+### 3. No Container Runtime Validation
+- **Impact**: Image startup issues and runtime failures not caught until deployment
 - **Severity**: MEDIUM
-- **Effort**: 2-3 hours
-- **Details**: No `.github/workflows/codeql.yml`, no gosec integration, no Semgrep configuration. While the project has excellent manual review skills (security reviewer skill with 8 sub-skills covering injection, path-traversal, nil-safety, DoS, etc.), automated SAST would provide an additional safety net.
+- **Effort**: 6-10 hours
+- **Details**: While the E2E tests deploy to Kind clusters (which implicitly tests the image), there's no explicit container startup validation or Testcontainers-based testing. No HEALTHCHECK instruction in Dockerfile.
+
+### 4. No FIPS Build Configuration
+- **Impact**: Binary not built with FIPS-compliant crypto; distroless base not FIPS-capable
+- **Severity**: MEDIUM
+- **Effort**: 8-16 hours
+- **Details**: No FIPS build tags (`-tags=fips`, `GOEXPERIMENT=boringcrypto`), no UBI base image. The distroless base (`gcr.io/distroless/static:nonroot`) is not FIPS-capable. No non-compliant crypto imports were found, which is positive.
 
 ## Quick Wins
 
 ### 1. Add Codecov Integration (2-4 hours)
-```yaml
-# .codecov.yml
-coverage:
-  status:
-    project:
-      default:
-        target: auto
-        threshold: 1%
-    patch:
-      default:
-        target: 80%
-comment:
-  layout: "reach, diff, flags, files"
-  behavior: default
-```
-Upload step in Prow job after `make test`:
-```bash
-bash <(curl -s https://codecov.io/bash) -f $(ARTIFACTS)/cover.out
-```
+- **Impact**: Immediate visibility into coverage changes per PR with threshold enforcement
+- **Implementation**:
+  ```yaml
+  # .codecov.yml
+  coverage:
+    status:
+      project:
+        default:
+          target: auto
+          threshold: 1%
+      patch:
+        default:
+          target: 80%
+  comment:
+    layout: "reach, diff, flags, files"
+    behavior: default
+  ```
+  Add codecov upload step to Prow job or create a GitHub Action triggered on PR.
 
-### 2. Add Trivy Container Scanning (2-3 hours)
-Add to `cloudbuild.yaml`:
-```yaml
-- name: 'aquasec/trivy'
-  args: ['image', '--exit-code', '1', '--severity', 'HIGH,CRITICAL', '${IMAGE_TAG}']
-```
+### 2. Add Pre-commit Hooks (1-2 hours)
+- **Impact**: Catch formatting and lint issues before CI, faster developer feedback
+- **Implementation**:
+  ```yaml
+  # .pre-commit-config.yaml
+  repos:
+    - repo: https://github.com/golangci/golangci-lint
+      rev: v2.x.x
+      hooks:
+        - id: golangci-lint
+    - repo: https://github.com/dnephin/pre-commit-golang
+      rev: master
+      hooks:
+        - id: go-fmt
+  ```
 
-### 3. Add Pre-Commit Hooks (1-2 hours)
-```yaml
-# .pre-commit-config.yaml
-repos:
-  - repo: https://github.com/golangci/golangci-lint
-    rev: v2.1.6
-    hooks:
-      - id: golangci-lint
-  - repo: https://github.com/gitleaks/gitleaks
-    rev: v8.24.3
-    hooks:
-      - id: gitleaks
-  - repo: https://github.com/koalaman/shellcheck-precommit
-    rev: v0.10.0
-    hooks:
-      - id: shellcheck
-```
-
-### 4. Enable CodeQL Scanning (2-3 hours)
-```yaml
-# .github/workflows/codeql.yml
-name: CodeQL
-on:
-  push:
-    branches: [main]
-  pull_request:
-    branches: [main]
-  schedule:
-    - cron: '0 6 * * 1'
-jobs:
-  analyze:
-    runs-on: ubuntu-latest
-    permissions:
-      security-events: write
-    steps:
-      - uses: actions/checkout@v4
-      - uses: github/codeql-action/init@v3
-        with:
-          languages: go
-      - uses: github/codeql-action/autobuild@v3
-      - uses: github/codeql-action/analyze@v3
-```
+### 3. Add PR-triggered Docker Build (2-4 hours)
+- **Impact**: Catch image build failures before merge
+- **Implementation**: Add `make image-local-build` to Prow presubmit or create a GitHub Actions workflow triggered on PR for Dockerfile changes.
 
 ## Detailed Findings
 
-### CI/CD Pipeline
+### Unit Tests
 
-**Prow-Based CI (Score: 9.0/10)**
+**Score: 8.0/10**
 
-Kueue uses the Kubernetes SIG standard Prow CI system rather than GitHub Actions for test automation. The `.github/workflows/` directory contains only 4 workflows for non-test operations:
+- **Test Files**: 437 test files vs 783 source files (0.55 ratio — excellent)
+- **Lines of Test Code**: 174,293 lines of unit test code
+- **Framework**: Go standard testing + Ginkgo/Gomega (v2.32.0)
+- **Test Runner**: gotestsum with JUnit XML output
+- **Coverage**: `--coverprofile` flag generates coverage data
+- **Sharding**: Unit test sharding via `UNIT_TOTAL_SHARDS` / `UNIT_SHARD_INDEX` for parallel CI
+- **Race Detection**: `--race` flag enabled by default
+- **Mock Generation**: mockgen for interface mocking (`internal/mocks/`)
 
-| Workflow | Trigger | Purpose |
-|----------|---------|---------|
-| `krew-release.yml` | Release (non-prerelease) | Publish kubectl plugin to krew-index |
-| `sbom.yaml` | Manual dispatch | Generate SPDX SBOM for releases |
-| `openvex.yaml` | Manual dispatch | Generate OpenVEX vulnerability data |
-| `sync-dependabot.yaml` | PR (dependabot) | Sync Hugo/controller-tools versions |
+**Strengths**:
+- Outstanding test-to-code ratio
+- Sophisticated sharding support for CI parallelization
+- Race detection enabled by default
+- gotestsum provides structured test output
 
-**Cloud Build** handles image pushing:
-- Post-submit: `cloudbuild.yaml` - builds and pushes images on merge
-- Periodic: `cloudbuild-periodic.yaml` - periodic image builds
-- Uses `E2_HIGHCPU_32` machine type for fast builds
+**Gaps**:
+- Very limited `t.Parallel()` usage (only 1 file) — sequential test execution within packages
+- Coverage generated but not tracked or reported
 
-**Make Verify Pipeline** is the core verification:
-- `make verify` runs with `-j 8` parallelism (configurable via `VERIFY_NPROCS`)
-- Output sync per target for clear failure identification
-- Two phases: tree prerequisites (generation) then read-only checks
-- Checks: golangci-lint, KAL API lint, gofmt, shell lint, Helm lint+unittest, npm depcheck, kustomize build, skillsaw lint
-- Final assertion: `git diff --exit-code` on generated paths
+### Integration/E2E Tests
 
-**Dependabot** coverage is comprehensive:
-- Go modules (6 directories)
-- Docker images (15+ directories)
-- npm packages (3 directories)
-- GitHub Actions (daily)
-- Groups for Kubernetes deps, MUI, Vite stack
+**Score: 9.0/10**
 
-### Test Coverage
+- **Integration Tests**: 123 test files, 70,617 lines
+- **E2E Tests**: 77 test files, 25,373 lines
+- **Test Specs**: 1,026 Ginkgo `It` blocks, 667 `Describe`/`Context`/`When` blocks
+- **Cluster Setup**: Kind clusters for E2E, envtest for integration
+- **Multi-version**: K8s 1.34.8, 1.35.5, 1.36.1
+- **Test Tiers**: Baseline/Extended split via Ginkgo label filters
 
-**Unit Tests (Score: 8.5/10)**
+**Test Coverage Areas**:
+- Singlecluster: controller, webhook, scheduler, TAS, kueuectl, importer, conversion
+- Multikueue: scheduler, TAS, baseline, extended, sequential, DRA
+- Special: certmanager, DRA (counter, whole-device), upgrade validation
+- Performance: scheduler benchmarks with stats/scraper/recorder infrastructure
+- KueueViz: Cypress-based frontend E2E tests
 
-- **425 test files** covering **777 source files** (0.55 test-to-code ratio)
-- Framework: Go `testing` package + Ginkgo/Gomega
-- Tools: `gotestsum` for JUnit XML output
-- Coverage: `-coverprofile` flag generates `cover.out`
-- Sharding: Supports `UNIT_TOTAL_SHARDS` / `UNIT_SHARD_INDEX` for CI parallelism
-- Race detection: `-race` flag enabled by default
-- Mocking: `mockgen` for controller mocks (`internal/mocks/`)
+**Strengths**:
+- Comprehensive multi-cluster testing (singlecluster + multikueue)
+- Multi-version Kubernetes testing across 3 versions
+- Upgrade validation testing
+- Performance/scalability testing infrastructure
+- Integration test sharding for CI optimization
+- Ginkgo parallelization with configurable NPROCS
+- Extensive label-based test filtering system
 
-Key test areas:
-- Scheduler logic (scheduler, fairsharing, admission)
-- Webhook validation (workload, cluster queue, resource flavor, cohort)
-- DRA (Dynamic Resource Allocation) mapper and claims
-- Cache layer (scheduler, queue)
-- Config validation
-- Metrics collection
-- Feature gates
-- PodSet management
-- Workload slicing
+**Gaps**:
+- Minor: could benefit from more structured contract tests between components
 
-**Integration Tests (Score: 9.5/10)**
+### Build Integration
 
-- **125 Go test files** using envtest (controller-runtime's test framework)
-- Organized into singlecluster and multikueue suites
-- Comprehensive controller testing across 16+ job types:
-  - Core: Job, Pod, StatefulSet
-  - ML frameworks: PyTorchJob, TensorFlowJob, JAXJob, XGBoostJob, PaddleJob
-  - Distributed: MPIJob, TrainJob, SparkApplication
-  - Ecosystem: AppWrapper, JobSet, LeaderWorkerSet, RayCluster, RayJob
-- Feature-specific suites: TAS (Topology-Aware Scheduling), DRA, concurrent admission, failure recovery
-- Webhook tests, scheduler tests, kueuectl CLI tests, importer tests, conversion tests
-- Label-based filtering system for targeted test runs
-- Parallelism: 4 procs (singlecluster), 3 procs (multikueue)
-- `ginkgo-top` for test timing analysis
+**Score: 7.0/10**
 
-**E2E Tests (Score: 9.5/10)**
+- **Dockerfile**: Multi-stage build (Go builder → distroless runtime)
+- **Multi-arch**: docker buildx with configurable PLATFORMS
+- **Build System**: CloudBuild (postsubmit + periodic)
+- **Makefile Targets**: `build`, `image-build`, `image-push`, `image-local-build`
+- **Operator Patterns**: controller-gen for CRD/RBAC generation, kustomize for manifests
+- **Helm**: Chart with unit tests (5 test files) via helm-unittest plugin
+- **Verify Pipeline**: Comprehensive `make verify` with parallel phase, tree-diff checks
 
-- **74 Go test files** + Cypress tests for KueueViz
-- Infrastructure: Kind clusters with multi-version K8s support (1.34, 1.35, 1.36)
-- Test categories:
-  - **Baseline**: Core Kueue functionality (jobs, pods, metrics, kueuectl, visibility, HA)
-  - **Extended**: Job framework integrations (KubeRay, JobSet, AppWrapper, PyTorch, Train)
-  - **Sequential**: Tests requiring exclusive cluster access (admission fair sharing, failure recovery, wait-for-pods-ready)
-  - **MultiKueue**: Multi-cluster testing (baseline, extended with sharding, sequential, DRA)
-  - **TAS**: Topology-Aware Scheduling (baseline + extended)
-  - **DRA**: Dynamic Resource Allocation (whole-device, counter/partitionable)
-  - **Upgrade**: Version upgrade testing from v0.14.8
-  - **Cert-Manager**: Certificate management testing
-  - **KueueViz**: Cypress E2E for the visualization UI
-- E2E modes: `ci` and `dev` (with cluster reuse)
-- Helm installation testing for all suites
-- Test against k/k main branch with WAS enabled
-- Prometheus operator integration testing
+**Strengths**:
+- Well-structured multi-stage Docker build with retry logic
+- Multi-architecture support
+- Helm chart unit testing
+- Comprehensive `make verify` pipeline with parallelized verification
 
-**Performance Tests (Score: 8.5/10)**
+**Gaps**:
+- No PR-time Docker image build (CloudBuild is postsubmit only)
+- No Konflux build simulation
+- No kustomize build validation in PR checks
 
-- **11 Go test files** for scheduler performance
-- Custom `performance-scheduler-runner` and `minimalkueue` binaries
-- Configurations: baseline, TAS, large-scale
-- Metrics scraping during tests
-- CPU and memory profiling support
-- Range spec validation with automated thresholds
-- In-cluster testing support
-- Retry mechanism for flaky performance results
+### Image Testing
 
-### Code Quality
+**Score: 6.0/10**
 
-**Linting (Score: 9.0/10)**
+- **Base Image**: `gcr.io/distroless/static:nonroot` (secure, minimal)
+- **Multi-stage**: Yes (golang builder → distroless)
+- **Multi-arch**: Yes, via `--platform` and `docker buildx`
+- **Health Probes**: readiness/liveness probes in K8s deployment manifests
+- **.dockerignore**: Present and well-configured
 
-Excellent linting configuration:
-
-1. **golangci-lint** (`.golangci.yaml` - v2 config format):
-   - 20+ linters enabled: copyloopvar, dupword, durationcheck, fatcontext, ginkgolinter, gocritic, goheader, intrange, loggercheck, makezero, misspell, modernize, nilerr, nilnesserr, nolintlint, perfsprint, revive, unconvert, usetesting, forbidigo
-   - Formatters: gci (import grouping), golines (200 char max)
-   - Strict nolintlint: requires explanation and specific linter name
-   - Custom revive rules: context-as-argument, deep-exit, var-naming, use-slices-sort, use-waitgroup-go
-   - forbidigo: bans `sort.Slice/Sort/Stable` in favor of slices package
-   - 15-minute timeout for large codebase
-
-2. **KAL API Linter** (`.golangci-kal.yaml`):
-   - Kubernetes API conventions linter with 20 checks
-   - Validates: json tags, conditions, integers, maxlength, no bools, no durations, no floats, no maps, optional/required markers, SSA tags, status subresource, no phase fields
-   - Well-documented exclusions for intentional API design decisions
-
-3. **Shell Linting**: ShellCheck integration via `.shellcheckrc` and `hack/testing/shellcheck/verify.sh`
-
-4. **Helm Linting**: `helm lint` + template rendering with various config combinations + unit tests
-
-5. **Skills Linting**: Skillsaw linter validates AgentSkill definitions against spec, with strict mode
-
-6. **npm Depcheck**: Dependency checking for KueueViz frontend and E2E
-
-**Missing**: No pre-commit hooks, no Gitleaks/secret detection
-
-### Container Images
-
-**Build Process (Score: 7.0/10)**
-
-Main Dockerfile:
-- Multi-stage build: golang builder + distroless/static:nonroot runtime
-- Cross-platform: `BUILDPLATFORM` for build, `TARGETPLATFORM` for runtime
-- Pinned base images with SHA256 digests
-- Dependency caching: separate `go mod download` layer
-- CGO disabled by default
+**Strengths**:
+- Distroless base for minimal attack surface
 - Non-root user (65532:65532)
-- Retry mechanism for `go mod download`
+- Well-configured .dockerignore
+- Health probes defined in K8s manifests
 
-Additional Dockerfiles:
-- `cmd/importer/Dockerfile` - Data importer
-- `cmd/kueueviz/backend/Dockerfile` and `frontend/Dockerfile` (implied)
-- Testing images: agnhost, cypress, depcheck, shellcheck, spark, secretreader, ray
-- Debug pod image
+**Gaps**:
+- No HEALTHCHECK instruction in Dockerfile
+- No Testcontainers or explicit container runtime validation
+- No container startup testing in CI
+- E2E tests implicitly validate (via Kind deployment) but no isolated image tests
 
-Multi-architecture support: `linux/amd64,linux/arm64,linux/s390x,linux/ppc64le`
+### Coverage Tracking
 
-**Missing**: No Trivy/vulnerability scanning, no image signing, no runtime validation tests, no SBOM integrated into build (manual workflow only)
+**Score: 3.0/10**
 
-### Security
+- **Coverage Generation**: `--coverprofile` in `make test`
+- **Codecov Config**: Not present
+- **Coverage Reporting**: Not configured
+- **Threshold Enforcement**: None
 
-**Security Practices (Score: 6.0/10)**
+**Details**:
+The unit test target generates coverage profiles (`cover.out`), but the data is never uploaded, analyzed, or enforced. There is no `.codecov.yml`, no codecov/coveralls GitHub Action, and no coverage threshold configuration. This is the most significant quality gap in the repository.
 
-Strengths:
-- SECURITY-INSIGHTS.yaml (OpenSSF standard) with comprehensive metadata
-- SECURITY.md and SECURITY_CONTACTS
-- Bug bounty program via HackerOne
-- Dependabot for dependency scanning (Go, Docker, npm, GitHub Actions)
-- OpenVEX vulnerability data generation for releases
-- SBOM generation (SPDX format) for releases
-- DEPENDENCY_LIFECYCLE.md documenting dependency management policy
-- Pinned GitHub Actions with SHA digests
-- Pinned Docker base images with SHA digests
-- Distroless non-root container image
+### CI/CD Automation
 
-Gaps:
-- No SAST/CodeQL automated scanning
-- No Trivy/Snyk container scanning in CI
-- No Gitleaks/TruffleHog secret detection
-- No image signing/attestation (Cosign/Sigstore)
+**Score: 8.0/10**
 
-### Agent Rules (Agentic Flow Quality)
+- **Primary CI**: Prow (Kubernetes standard — managed in k/test-infra)
+- **GitHub Workflows**: Release (krew), SBOM, OpenVEX, Dependabot sync (5 workflows)
+- **CloudBuild**: Image building (postsubmit + periodic)
+- **Make Infrastructure**: Comprehensive Makefile system split across 4 files
+- **Test Parallelization**: Ginkgo `--procs`, unit/integration sharding
+- **JUnit Output**: gotestsum with `--junitfile`
 
-**Status**: Excellent (Score: 9.0/10)
+**CI Job Hierarchy**:
+- `make test` — Unit tests with sharding
+- `make test-integration` — Integration tests (baseline/extended/multikueue)
+- `make test-e2e-*` — E2E tests (baseline/extended, TAS, multikueue, DRA, upgrade)
+- `make verify` — Comprehensive verification (linting, generation, formatting, helm tests)
+- `make test-performance-scheduler` — Scheduler performance benchmarks
 
-**CLAUDE.md**: Delegates to AGENTS.md via `@AGENTS.md`
+**Strengths**:
+- Prow provides mature CI with extensive Kubernetes ecosystem integration
+- Sophisticated test sharding across unit and integration tiers
+- Parallel verification with configurable worker count
+- JUnit XML output for CI integration
+- Multiple e2e test shards for parallel CI execution
 
-**AGENTS.md** (comprehensive):
-- Kueue project description
-- Canary mechanism for instruction-following degradation detection
-- AI Contribution Policy (Kubernetes AI Tool Usage Policy compliance)
-- Links to 58 AgentSkill definitions
-- Code review patterns documentation
+**Gaps**:
+- GitHub workflows are minimal (release/SBOM only) — all testing is via Prow (which is correct for k-sigs but means CI config is external)
+- No concurrency controls in GitHub workflows (minor — Prow handles this)
 
-**Skills Architecture**:
+### Static Analysis
 
-| Category | Count | Description |
-|----------|-------|-------------|
-| Operational Skills | 4 | kueue-who-preempted, kueue-lineage, kueue-flake-debugger, kueue-release-notes |
-| Reviewer Skills | 54 | Comprehensive code review patterns organized by domain |
+**Score: 7.0/10**
 
-Reviewer skill domains:
-- **Architectural Decisions** (7 sub-skills): illogical-structure, nonsensical-decisions, avoidable-complexity, pointless-intermediate-variables, duplicated-logic, scope-creep, misplaced-logic
-- **Buggy Behavior** (4 sub-skills): logic-errors, deleted-backwards-compatibility-code, feature-gate-interaction-bugs, unnecessary-guard-conditions
-- **Code Style** (6 sub-skills): imprecise-names, convention-drift, reinvented-helpers, wrong-log-verbosity, misaligned-test-names, code-style-typos
-- **Comments** (5 sub-skills): over-commenting, wrong-kind-of-comment, inaccurate-comments, missing-deferred-removal-markers, comment-typos
-- **Security** (7 sub-skills): input-validation, injection, path-traversal, resource-bounds-dos, nil-safety, authn-authz-relaxation, information-disclosure
-- **Test Patterns**: table-driven-tests, split-test-files, integration-tests-for-updates
-- **API Quality**: api-field-comments, metrics-label-sets, metrics-feature-gates
-- **Code Organization**: extract-helpers, encapsulate-paired-ops, push-guards-to-callees, visibility-exports, ctx-structured-logging, feature-gated-code, terminology-semantics, algorithm-comments, race-conditions
+**Linting**:
+- golangci-lint v2 with 21+ linters enabled
+- Notable linters: gocritic, revive, ginkgolinter, loggercheck, forbidigo, perfsprint, modernize, usetesting
+- Formatting: gci (import ordering) + golines (line length 200)
+- Additional KAL (kube-api-linter) config for API-specific checks
+- Nolint directives require explanation and specificity
 
-**Skillsaw Integration**: `.skillsaw.yaml` configures comprehensive skill linting with strict mode enabled. Validates against AgentSkill specification, checks for secrets, context budget, weak language, contradictions, and broken references.
+**Dependency Management**:
+- Dependabot configured for 4 ecosystems: gomod, github-actions, docker, npm
+- 5 gomod directories tracked
+- 18 docker directories tracked
+- 3 npm directories tracked
+- Groups: kubernetes, MUI, vite-stack
+- Auto-labeling: `ok-to-test`, `release-note-none`, `dependencies`
 
-**Gaps**: No `.claude/rules/` directory for test creation guidance (existing skills focus on review and debugging rather than test authoring patterns).
+**FIPS Compatibility**:
+- No non-compliant crypto imports (clean scan)
+- No FIPS build tags configured
+- Base image: distroless (not FIPS-capable)
+
+**Strengths**:
+- Extensive golangci-lint configuration with 21+ linters
+- Comprehensive Dependabot coverage across all ecosystems
+- Clean crypto usage (no banned imports)
+
+**Gaps**:
+- No pre-commit hooks
+- No FIPS build configuration
+- Distroless base is not UBI/FIPS-capable
+
+### Agent Rules
+
+**Score: 9.0/10**
+
+- **CLAUDE.md**: Present (references AGENTS.md)
+- **AGENTS.md**: Comprehensive with canary marker, AI contribution policy, skills index
+- **Operational Skills** (6):
+  - `kueue-who-preempted` — Preemption investigation
+  - `kueue-lineage` — Workload-to-pod tracing
+  - `kueue-flake-debugger` — CI flake debugging
+  - `kueue-release-notes` — PR release note generation
+  - `was-cluster` — WAS cluster management
+  - `reviewer/` — Code review orchestration
+
+- **Code Review Skills** (30+):
+  - Architecture: illogical-structure, nonsensical-decisions, avoidable-complexity, duplicated-logic, scope-creep, misplaced-logic
+  - Bugs: logic-errors, feature-gate-interaction-bugs, deleted-backwards-compatibility-code, unnecessary-guard-conditions
+  - Code Style: imprecise-names, convention-drift, reinvented-helpers, wrong-log-verbosity, misaligned-test-names, typos
+  - Comments: over-commenting, wrong-kind-of-comment, inaccurate-comments, missing-deferred-removal-markers
+  - Security: input-validation, injection, path-traversal, resource-bounds-dos, nil-safety, authn-authz-relaxation, information-disclosure
+  - Testing: table-driven-tests, split-test-files, integration-tests-for-updates
+
+**Strengths**:
+- One of the most comprehensive agent rule setups in any Kubernetes project
+- Granular security review skills with specific vulnerability categories
+- Canary marker for instruction-following degradation detection
+- AI Contribution Policy aligned with Kubernetes standards
+- Code review skills cover all major quality dimensions
+
+**Gaps**:
+- Skills are in `cmd/experimental/skills/` (non-standard location, not in `.claude/`)
+- No `.claude/rules/` directory
+- Could add test creation rules for unit/integration test patterns
 
 ## Recommendations
 
 ### Priority 0 (Critical)
 
-1. **Integrate Codecov for PR coverage reporting**
-   - Add `.codecov.yml` with project target (auto) and patch target (80%)
-   - Upload coverage from Prow test job
-   - Enable PR comments with coverage diff
-   - Effort: 2-4 hours
+1. **Implement Codecov integration** — Add `.codecov.yml` with project/patch coverage targets, upload coverage from `make test` via Prow or GitHub Action. This is the single highest-impact improvement available.
 
-2. **Add container vulnerability scanning**
-   - Integrate Trivy into Cloud Build pipeline
-   - Set severity thresholds (HIGH/CRITICAL = fail)
-   - Consider periodic scanning of released images
-   - Effort: 2-3 hours
+2. **Add PR-time image build validation** — Add a Prow presubmit job or GitHub Action that runs `make image-local-build` on Dockerfile changes to catch build failures before merge.
 
 ### Priority 1 (High Value)
 
-3. **Add SAST integration (CodeQL or Semgrep)**
-   - GitHub CodeQL for Go is well-supported
-   - Could also add gosec via golangci-lint integration
-   - Weekly scanning + PR scanning
-   - Effort: 2-3 hours
+3. **Add container runtime validation** — Implement basic container startup validation after image build (e.g., verify `/manager --help` runs successfully in the built image).
 
-4. **Implement pre-commit hooks**
-   - golangci-lint, gofmt, shellcheck, gitleaks
-   - Reduces CI churn from formatting/lint failures
-   - Effort: 1-2 hours
+4. **Configure pre-commit hooks** — Add `.pre-commit-config.yaml` with golangci-lint and gofmt hooks for faster local developer feedback.
 
-5. **Add image runtime validation**
-   - Verify container starts successfully
-   - Test health/readiness endpoints
-   - Validate manager binary executes
-   - Effort: 4-6 hours
+5. **Consider FIPS build configuration** — For downstream Red Hat consumption, add FIPS build tags (`-tags=strictfipsruntime`, `GOEXPERIMENT=boringcrypto`) and UBI-based Dockerfile variant.
 
 ### Priority 2 (Nice-to-Have)
 
-6. **Container image signing with Cosign/Sigstore**
-   - Already have SBOM and OpenVEX; signing completes the supply chain security picture
-   - Effort: 4-6 hours
+6. **Expand t.Parallel() usage** — Only 1 test file uses `t.Parallel()`. Enabling parallel test execution within packages would reduce unit test runtime.
 
-7. **Create .claude/rules/ test creation guidelines**
-   - Document unit test patterns specific to Kueue
-   - Integration test setup patterns (envtest configuration)
-   - E2E test structure and label taxonomy
-   - Would complement the excellent reviewer skills
-   - Effort: 3-4 hours
+7. **Add HEALTHCHECK to Dockerfile** — While K8s manifests define probes, a Dockerfile HEALTHCHECK provides an additional layer of container health validation.
 
-8. **Add Gitleaks secret detection**
-   - Prevent accidental credential commits
-   - Add to both pre-commit hooks and CI
-   - Effort: 1-2 hours
+8. **Add contract tests for API boundaries** — Formal contract tests between Kueue components (scheduler, webhook, controller) would catch interface drift.
 
 ## Comparison to Gold Standards
 
-| Dimension | Kueue | odh-dashboard | notebooks | kserve | Notes |
-|-----------|-------|---------------|-----------|--------|-------|
-| Unit Tests | 8.5 | 9.0 | 7.0 | 8.5 | Strong coverage; missing PR coverage gates |
-| Integration/E2E | 9.5 | 9.0 | 7.5 | 9.0 | Exceptional multi-layer + multi-cluster testing |
-| Build Integration | 7.0 | 8.0 | 8.5 | 7.5 | Cloud Build + Prow; no Konflux simulation |
-| Image Testing | 6.5 | 7.5 | 9.0 | 7.0 | Multi-arch but no scanning or runtime validation |
-| Coverage Tracking | 5.5 | 9.0 | 6.0 | 8.0 | Coverage generated but not tracked/reported |
-| CI/CD Automation | 9.0 | 9.0 | 8.0 | 8.5 | Prow + parallelized verify is excellent |
-| Agent Rules | 9.0 | 8.0 | 3.0 | 4.0 | Industry-leading with 58 skills + skillsaw |
-| **Overall** | **8.6** | **8.5** | **7.0** | **7.5** | |
+| Dimension | Kueue (7.3) | odh-dashboard | notebooks | kserve | K8s Best Practice |
+|-----------|-------------|---------------|-----------|--------|-------------------|
+| Unit Tests | 8.0 | 8.0 | 6.0 | 8.0 | 8.0 |
+| Integration/E2E | 9.0 | 9.0 | 7.0 | 9.0 | 9.0 |
+| Build Integration | 7.0 | 7.0 | 8.0 | 6.0 | 8.0 |
+| Image Testing | 6.0 | 5.0 | 9.0 | 5.0 | 7.0 |
+| Coverage Tracking | 3.0 | 8.0 | 4.0 | 8.0 | 8.0 |
+| CI/CD Automation | 8.0 | 9.0 | 7.0 | 8.0 | 8.0 |
+| Static Analysis | 7.0 | 7.0 | 5.0 | 7.0 | 7.0 |
+| Agent Rules | 9.0 | 8.0 | 2.0 | 3.0 | 5.0 |
 
-Kueue stands out for its agent rules and testing infrastructure. It has the most comprehensive AgentSkill collection of any Kubernetes SIG project analyzed, with 54 code review skills organized by domain. The multi-layer testing (unit + envtest integration + Kind E2E + multi-cluster + performance + upgrade) is among the best in the ecosystem.
+**Notable**: Kueue leads in Agent Rules with one of the most comprehensive AI-assisted development setups across all analyzed repositories. Its Integration/E2E testing is also top-tier. Coverage tracking is the primary gap holding back the overall score.
 
 ## File Paths Reference
 
 ### CI/CD
-- `.github/workflows/` - GitHub Actions (krew-release, SBOM, OpenVEX, Dependabot sync)
-- `.github/dependabot.yml` - Comprehensive dependency automation
-- `cloudbuild.yaml` - Post-submit image pushing
-- `cloudbuild-periodic.yaml` - Periodic image builds
-- `Makefile` - Main build orchestration
-- `Makefile-test.mk` - Test targets (unit, integration, E2E, performance)
-- `Makefile-verify.mk` - Verification pipeline (lint, format, Helm, skills)
+- `.github/workflows/` — Release, SBOM, OpenVEX, Dependabot sync
+- `cloudbuild.yaml` — Postsubmit image building
+- `cloudbuild-periodic.yaml` — Periodic image building
+- `Makefile` — Primary build system
+- `Makefile-test.mk` — Test targets and configuration
+- `Makefile-verify.mk` — Verification pipeline
+- `Makefile-deps.mk` — Tool dependency management
 
 ### Testing
-- `test/integration/` - 125 files: envtest-based integration tests
-- `test/integration/singlecluster/controller/` - Controller tests for 16+ job types
-- `test/integration/singlecluster/scheduler/` - Scheduler integration tests
-- `test/integration/singlecluster/webhook/` - Webhook tests
-- `test/integration/multikueue/` - Multi-cluster integration tests
-- `test/e2e/` - 74 files: Kind-based E2E tests
-- `test/e2e/singlecluster/{baseline,extended}/` - Core E2E
-- `test/e2e/multikueue/` - Multi-cluster E2E
-- `test/e2e/tas/` - Topology-Aware Scheduling E2E
-- `test/e2e/dra/` - Dynamic Resource Allocation E2E
-- `test/e2e/upgrade/` - Upgrade testing
-- `test/e2e/kueueviz/` - Cypress UI tests
-- `test/performance/` - Scheduler performance tests
-- `charts/kueue/tests/` - Helm unit tests (4 files)
+- `test/integration/singlecluster/` — Singlecluster integration tests
+- `test/integration/multikueue/` — MultiKueue integration tests
+- `test/e2e/singlecluster/` — Singlecluster E2E tests
+- `test/e2e/multikueue/` — MultiKueue E2E tests
+- `test/e2e/tas/` — TAS E2E tests
+- `test/e2e/dra/` — DRA E2E tests
+- `test/e2e/upgrade/` — Upgrade validation tests
+- `test/e2e/certmanager/` — Cert-manager E2E tests
+- `test/performance/` — Performance benchmarks
+- `hack/testing/` — Test infrastructure and utilities
 
 ### Code Quality
-- `.golangci.yaml` - Primary linter config (20+ linters, formatters)
-- `.golangci-kal.yaml` - Kubernetes API conventions linter (20 checks)
-- `.shellcheckrc` - Shell linting config
-- `.skillsaw.yaml` - AgentSkill linting config (strict mode)
+- `.golangci.yaml` — golangci-lint v2 configuration (21+ linters)
+- `.golangci-kal.yaml` — Kube API Linter config
+- `.github/dependabot.yml` — Dependabot (gomod, actions, docker, npm)
+- `hack/boilerplate.txt` — License header template
 
 ### Container Images
-- `Dockerfile` - Main manager image (multi-stage, distroless, multi-arch)
-- `cmd/importer/Dockerfile` - Data importer
-- `hack/testing/*/Dockerfile` - Test infrastructure images (7+)
-
-### Security
-- `SECURITY-INSIGHTS.yaml` - OpenSSF security metadata
-- `SECURITY.md` - Security policy
-- `SECURITY_CONTACTS` - Security contact list
-- `DEPENDENCY_LIFECYCLE.md` - Dependency management policy
+- `Dockerfile` — Main multi-stage Dockerfile
+- `cmd/importer/Dockerfile` — Importer Dockerfile
+- `.dockerignore` — Docker build context exclusions
 
 ### Agent Rules
-- `CLAUDE.md` - Delegates to AGENTS.md
-- `AGENTS.md` - Main agent instructions with skill index
-- `.skillsaw.yaml` - Skill validation configuration
-- `cmd/experimental/skills/` - 58 AgentSkill definitions
-- `cmd/experimental/skills/reviewer/` - 54 code review skills
-- `cmd/experimental/skills/kueue-flake-debugger/` - CI flake investigation
-- `cmd/experimental/skills/kueue-lineage/` - Workload ownership tracing
-- `cmd/experimental/skills/kueue-who-preempted/` - Preemption investigation
-- `cmd/experimental/skills/kueue-release-notes/` - Release note drafting
+- `CLAUDE.md` — Claude Code instructions (references AGENTS.md)
+- `AGENTS.md` — Comprehensive agent instructions
+- `cmd/experimental/skills/` — 6 operational skills + 30+ review skills

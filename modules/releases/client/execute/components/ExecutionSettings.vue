@@ -70,17 +70,17 @@ function formatAge(timestamp) {
   return days === 1 ? '1 day ago' : days + ' days ago'
 }
 
-const jiraEnrichmentStatusClass = computed(() => {
-  const je = statusData.value?.jiraEnrichment
-  if (!je) return ''
-  if (!je.jiraConfigured || je.stale || je.warning) return 'bg-yellow-50 dark:bg-yellow-900/20'
+const jiraSyncStatusClass = computed(() => {
+  const js = statusData.value?.jiraSync
+  if (!js) return ''
+  if (!js.jiraConfigured || js.stale || js.warning) return 'bg-yellow-50 dark:bg-yellow-900/20'
   return 'bg-green-50 dark:bg-green-900/20'
 })
 
-const jiraEnrichmentTextClass = computed(() => {
-  const je = statusData.value?.jiraEnrichment
-  if (!je) return ''
-  if (!je.jiraConfigured || je.stale || je.warning) return 'text-yellow-700 dark:text-yellow-300'
+const jiraSyncTextClass = computed(() => {
+  const js = statusData.value?.jiraSync
+  if (!js) return ''
+  if (!js.jiraConfigured || js.stale || js.warning) return 'text-yellow-700 dark:text-yellow-300'
   return 'text-green-700 dark:text-green-300'
 })
 
@@ -114,20 +114,21 @@ onMounted(() => {
         </p>
       </div>
 
-      <!-- Jira Enrichment Status -->
-      <div v-if="statusData?.jiraEnrichment" class="rounded-md p-3" :class="jiraEnrichmentStatusClass">
-        <p class="text-sm font-medium" :class="jiraEnrichmentTextClass">Jira Enrichment</p>
-        <p class="text-sm mt-1" :class="jiraEnrichmentTextClass">
-          <template v-if="!statusData.jiraEnrichment.jiraConfigured">
+      <!-- Jira Sync Status -->
+      <div v-if="statusData?.jiraSync" class="rounded-md p-3" :class="jiraSyncStatusClass">
+        <p class="text-sm font-medium" :class="jiraSyncTextClass">Jira Sync</p>
+        <p class="text-sm mt-1" :class="jiraSyncTextClass">
+          <template v-if="!statusData.jiraSync.jiraConfigured">
             Jira client not configured — feature status, assignees, and fields cannot be synced from Jira.
           </template>
-          <template v-else-if="statusData.jiraEnrichment.warning">
-            {{ statusData.jiraEnrichment.warning }}.
+          <template v-else-if="statusData.jiraSync.warning">
+            {{ statusData.jiraSync.warning }}.
             Feature statuses may be outdated.
           </template>
-          <template v-else-if="statusData.jiraEnrichment.lastSync">
-            Last synced {{ formatAge(statusData.jiraEnrichment.lastSync.timestamp) }},
-            {{ statusData.jiraEnrichment.lastSync.enrichedCount }} features updated.
+          <template v-else-if="statusData.jiraSync.lastSync">
+            Last synced {{ formatAge(statusData.jiraSync.lastSync.timestamp) }},
+            {{ statusData.jiraSync.lastSync.featureCount }} features synced
+            ({{ statusData.jiraSync.lastSync.newCount }} new, {{ statusData.jiraSync.lastSync.updatedCount }} updated).
           </template>
           <template v-else>
             Enabled but has not run yet.

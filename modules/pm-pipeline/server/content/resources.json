@@ -1,0 +1,106 @@
+[
+  {
+    "id": "confluence-rhai-home",
+    "label": "RHAI Confluence Space",
+    "url": "https://redhat.atlassian.net/wiki/spaces/RHAI/overview?homepageId=297598978",
+    "category": "confluence",
+    "phase": 0,
+    "description": "Home for RHAI product and engineering documentation."
+  },
+  {
+    "id": "confluence-release-process",
+    "label": "Release Process and Operations",
+    "url": "https://redhat.atlassian.net/wiki/spaces/RHAI/pages/297600836/Release+Process+and+Operations",
+    "category": "confluence",
+    "phase": 3,
+    "description": "Release planning process, operations, and PM workflows."
+  },
+  {
+    "id": "rfe-creator-repo",
+    "label": "rfe-creator (GitHub)",
+    "url": "https://github.com/opendatahub-io/rfe-creator",
+    "category": "repo",
+    "phase": 1,
+    "description": "RFE creation and quality validation pipeline."
+  },
+  {
+    "id": "strat-creator-repo",
+    "label": "strat-creator (GitHub)",
+    "url": "https://github.com/opendatahub-io/strat-creator",
+    "category": "repo",
+    "phase": 2,
+    "description": "Strategy generation, scoring, and sign-off pipeline."
+  },
+  {
+    "id": "strat-creator-pipeline-settings",
+    "label": "strat-creator scope labels",
+    "url": "https://github.com/opendatahub-io/strat-creator/blob/main/config/pipeline-settings.yaml",
+    "category": "repo",
+    "phase": 2,
+    "description": "Target version and scope label configuration for strat pickup."
+  },
+  {
+    "id": "strat-creator-human-review",
+    "label": "Strategy Human Review Guide",
+    "url": "https://github.com/opendatahub-io/strat-creator/blob/main/docs/human-review-guide.md",
+    "category": "repo",
+    "phase": 2,
+    "description": "Staff engineer workflow for reviewing and signing off strategies."
+  },
+  {
+    "id": "epic-creator-repo",
+    "label": "epic-creator (GitHub)",
+    "url": "https://github.com/opendatahub-io/epic-creator",
+    "category": "repo",
+    "phase": 4,
+    "description": "Epic decomposition and Jira submission pipeline."
+  },
+  {
+    "id": "architecture-context-repo",
+    "label": "architecture-context (GitHub)",
+    "url": "https://github.com/opendatahub-io/architecture-context",
+    "category": "repo",
+    "phase": 0,
+    "description": "Platform architecture overlays used by strat-creator."
+  },
+  {
+    "id": "strat-dashboard",
+    "label": "Strat Dashboard",
+    "url": "https://strat-dashboard-0f1209.gitlab.io/",
+    "category": "dashboard",
+    "phase": 2,
+    "description": "CI scores, reviews, and batch run status for strategies."
+  },
+  {
+    "id": "org-pulse-ai-impact",
+    "label": "Org Pulse — AI Impact",
+    "url": "https://team-tracker.apps.int.spoke.prod.us-west-2.aws.paas.redhat.com/#/ai-impact/main",
+    "category": "org-pulse",
+    "phase": 2,
+    "description": "RFE and strategy pipeline metrics and friction trends."
+  },
+  {
+    "id": "org-pulse-feature-readiness",
+    "label": "Org Pulse — Feature Readiness",
+    "url": "https://team-tracker.apps.int.spoke.prod.us-west-2.aws.paas.redhat.com/#/releases/plan/feature-readiness",
+    "category": "org-pulse",
+    "phase": 2,
+    "description": "Seven planning-ready gates and DoR status per feature."
+  },
+  {
+    "id": "org-pulse-release-plan",
+    "label": "Org Pulse — Release Plan",
+    "url": "https://team-tracker.apps.int.spoke.prod.us-west-2.aws.paas.redhat.com/#/releases/plan/release-plan",
+    "category": "org-pulse",
+    "phase": 3,
+    "description": "Gate 1/2 status, phase assignments, and gap analysis."
+  },
+  {
+    "id": "pm-pipeline-guide",
+    "label": "PM Agentic Pipeline Guide",
+    "url": "https://github.com/redhat-ai-tools/rhai-org-pulse/blob/main/design/pm-agentic-pipeline-guide.md",
+    "category": "doc",
+    "phase": 0,
+    "description": "Full PM guide with decision tree and unstuck playbooks."
+  }
+]

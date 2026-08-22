@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'vitest'
+import { describe, it, expect, vi } from 'vitest'
 const { runPipeline, buildCandidateResponse } = require('../../../server/planning/pipeline')
 
 function makeFeatureIndex(key, opts) {
@@ -120,7 +120,7 @@ function makeConfig() {
 }
 
 describe('runPipeline', () => {
-  it('discovers Tier 1 features from outcome children', () => {
+  it('discovers Tier 1 features from outcome children', async () => {
     const index = {
       features: [
         makeFeatureIndex('RHAISTRAT-1513', { summary: 'MaaS Outcome', status: 'New' }),
@@ -140,7 +140,7 @@ describe('runPipeline', () => {
       { priority: 1, name: 'MaaS', outcomeKeys: ['RHAISTRAT-1513'], pillar: 'Inference' }
     ]
 
-    const result = runPipeline(config, bigRocks, '3.5', readFromStorage)
+    const result = await runPipeline(config, bigRocks, '3.5', readFromStorage)
 
     expect(result.features).toHaveLength(2)
     expect(result.tier1Features).toBe(2)
@@ -148,7 +148,7 @@ describe('runPipeline', () => {
     expect(result.features[0].tier).toBe(1)
   })
 
-  it('filters features without matching target release', () => {
+  it('filters features without matching target release', async () => {
     const index = {
       features: [
         makeFeatureIndex('KEY-1', { summary: 'Outcome', status: 'New' }),
@@ -168,14 +168,14 @@ describe('runPipeline', () => {
       { priority: 1, name: 'Rock', outcomeKeys: ['KEY-1'], pillar: 'Platform' }
     ]
 
-    const result = runPipeline(config, bigRocks, '3.5', readFromStorage)
+    const result = await runPipeline(config, bigRocks, '3.5', readFromStorage)
 
     expect(result.features).toHaveLength(1)
     expect(result.features[0].issueKey).toBe('RHAISTRAT-101')
     expect(result.skippedCount).toBe(1)
   })
 
-  it('filters terminal status features', () => {
+  it('filters terminal status features', async () => {
     const index = {
       features: [
         makeFeatureIndex('KEY-1', { summary: 'Outcome', status: 'New' }),
@@ -195,14 +195,14 @@ describe('runPipeline', () => {
       { priority: 1, name: 'Rock', outcomeKeys: ['KEY-1'], pillar: 'Platform' }
     ]
 
-    const result = runPipeline(config, bigRocks, '3.5', readFromStorage)
+    const result = await runPipeline(config, bigRocks, '3.5', readFromStorage)
 
     expect(result.features).toHaveLength(1)
     // Terminal feature is discovered and filtered in both Tier 1 and Tier 2 scans
     expect(result.terminalFilteredCount).toBe(2)
   })
 
-  it('deduplicates features across multiple rocks sharing an outcome', () => {
+  it('deduplicates features across multiple rocks sharing an outcome', async () => {
     const index = {
       features: [
         makeFeatureIndex('KEY-1', { summary: 'Outcome 1', status: 'New' }),
@@ -221,13 +221,13 @@ describe('runPipeline', () => {
       { priority: 2, name: 'Rock B', outcomeKeys: ['KEY-1'], pillar: 'Platform' }
     ]
 
-    const result = runPipeline(config, bigRocks, '3.5', readFromStorage)
+    const result = await runPipeline(config, bigRocks, '3.5', readFromStorage)
 
     expect(result.features).toHaveLength(1)
     expect(result.features[0].bigRock).toBe('Rock A, Rock B')
   })
 
-  it('applies rockFilter', () => {
+  it('applies rockFilter', async () => {
     const index = {
       features: [
         makeFeatureIndex('KEY-1', { summary: 'Outcome', status: 'New' }),
@@ -246,25 +246,23 @@ describe('runPipeline', () => {
       { priority: 2, name: 'Other', outcomeKeys: ['KEY-2'], pillar: 'Platform' }
     ]
 
-    const result = runPipeline(config, bigRocks, '3.5', readFromStorage, { rockFilter: 'MaaS' })
+    const result = await runPipeline(config, bigRocks, '3.5', readFromStorage, { rockFilter: 'MaaS' })
 
     expect(result.features).toHaveLength(1)
     expect(result.features[0].bigRock).toBe('MaaS')
   })
 
-  it('throws for invalid rockFilter', () => {
+  it('throws for invalid rockFilter', async () => {
     const readFromStorage = createMockStorage({ features: [], rfes: [] })
     const config = makeConfig()
     const bigRocks = [
       { priority: 1, name: 'MaaS', outcomeKeys: ['KEY-1'], pillar: 'Inference' }
     ]
 
-    expect(function() {
-      runPipeline(config, bigRocks, '3.5', readFromStorage, { rockFilter: 'NonExistent' })
-    }).toThrow('No matching rock found')
+    await expect(runPipeline(config, bigRocks, '3.5', readFromStorage, { rockFilter: 'NonExistent' })).rejects.toThrow('No matching rock found')
   })
 
-  it('skips rocks without outcome keys', () => {
+  it('skips rocks without outcome keys', async () => {
     const index = { features: [], rfes: [] }
     const readFromStorage = createMockStorage(index)
 
@@ -273,7 +271,7 @@ describe('runPipeline', () => {
       { priority: 1, name: 'NoOutcome', outcomeKeys: [], pillar: 'Platform' }
     ]
 
-    const result = runPipeline(config, bigRocks, '3.5', readFromStorage)
+    const result = await runPipeline(config, bigRocks, '3.5', readFromStorage)
 
     expect(result.features).toHaveLength(0)
     expect(result.rocksWithoutOutcomes).toContain('NoOutcome')
@@ -283,7 +281,7 @@ describe('runPipeline', () => {
     )
   })
 
-  it('filters invalid outcome keys before processing', () => {
+  it('filters invalid outcome keys before processing', async () => {
     const index = {
       features: [
         makeFeatureIndex('KEY-1', { summary: 'Valid Outcome', status: 'New' }),
@@ -301,7 +299,7 @@ describe('runPipeline', () => {
       { priority: 1, name: 'Rock', outcomeKeys: ['KEY-1', 'not valid', '', 123, 'KEY-2'], pillar: 'Platform' }
     ]
 
-    const result = runPipeline(config, bigRocks, '3.5', readFromStorage)
+    const result = await runPipeline(config, bigRocks, '3.5', readFromStorage)
 
     expect(result.features).toHaveLength(1)
     expect(result.features[0].issueKey).toBe('RHAISTRAT-100')
@@ -310,7 +308,7 @@ describe('runPipeline', () => {
     )
   })
 
-  it('provides diagnostic detail when rock has outcomes but no qualifying features', () => {
+  it('provides diagnostic detail when rock has outcomes but no qualifying features', async () => {
     const index = {
       features: [
         makeFeatureIndex('KEY-1', { summary: 'Outcome', status: 'New' }),
@@ -331,19 +329,20 @@ describe('runPipeline', () => {
       { priority: 1, name: 'TestRock', outcomeKeys: ['KEY-1'], pillar: 'Platform' }
     ]
 
-    const result = runPipeline(config, bigRocks, '3.5', readFromStorage)
+    const result = await runPipeline(config, bigRocks, '3.5', readFromStorage)
 
     // Should have a diagnostic warning with filter breakdown
     expect(result.warnings).toEqual(
-      expect.arrayContaining([expect.stringContaining('candidate(s) with matching parentKey')])
+      expect.arrayContaining([expect.stringContaining('candidate(s) via matching parentKey in the index')])
     )
-    // Should mention specific filter reasons
-    const diagWarning = result.warnings.find(function(w) { return w.indexOf('candidate(s) with matching parentKey') !== -1 })
+    const diagWarning = result.warnings.find(function(w) {
+      return w.indexOf('candidate(s) via matching parentKey in the index') !== -1
+    })
     expect(diagWarning).toBeDefined()
     expect(diagWarning).toContain('excluded')
   })
 
-  it('warns about missing parentKey when no features match at all', () => {
+  it('warns about missing parentKey when no features match at all', async () => {
     const index = {
       features: [
         makeFeatureIndex('KEY-1', { summary: 'Outcome', status: 'New' })
@@ -357,14 +356,14 @@ describe('runPipeline', () => {
       { priority: 1, name: 'EmptyRock', outcomeKeys: ['KEY-1'], pillar: 'Platform' }
     ]
 
-    const result = runPipeline(config, bigRocks, '3.5', readFromStorage)
+    const result = await runPipeline(config, bigRocks, '3.5', readFromStorage)
 
     expect(result.warnings).toEqual(
-      expect.arrayContaining([expect.stringContaining('no features with matching parentKey found in the index')])
+      expect.arrayContaining([expect.stringContaining('no features found via matching parentKey in the index')])
     )
   })
 
-  it('accumulates warnings for empty index', () => {
+  it('accumulates warnings for empty index', async () => {
     const index = { features: [], rfes: [] }
     const readFromStorage = createMockStorage(index)
 
@@ -373,7 +372,7 @@ describe('runPipeline', () => {
       { priority: 1, name: 'Rock', outcomeKeys: ['KEY-999'], pillar: 'Platform' }
     ]
 
-    const result = runPipeline(config, bigRocks, '3.5', readFromStorage)
+    const result = await runPipeline(config, bigRocks, '3.5', readFromStorage)
 
     expect(result.warnings).toEqual(
       expect.arrayContaining([
@@ -382,7 +381,7 @@ describe('runPipeline', () => {
     )
   })
 
-  it('returns missingOutcomes array listing keys not found in index', () => {
+  it('returns missingOutcomes array listing keys not found in index', async () => {
     const index = {
       features: [
         makeFeatureIndex('KEY-1', { summary: 'Outcome Found' })
@@ -396,7 +395,7 @@ describe('runPipeline', () => {
       { priority: 1, name: 'Rock', outcomeKeys: ['KEY-1', 'KEY-999', 'KEY-888'], pillar: 'Platform' }
     ]
 
-    const result = runPipeline(config, bigRocks, '3.5', readFromStorage)
+    const result = await runPipeline(config, bigRocks, '3.5', readFromStorage)
 
     expect(result.missingOutcomes).toBeDefined()
     expect(result.missingOutcomes).toContain('KEY-999')
@@ -408,7 +407,7 @@ describe('runPipeline', () => {
     )
   })
 
-  it('discovers RFEs linked to outcomes', () => {
+  it('discovers RFEs linked to outcomes', async () => {
     const index = {
       features: [
         makeFeatureIndex('KEY-1', { summary: 'Outcome', status: 'New' })
@@ -430,14 +429,14 @@ describe('runPipeline', () => {
       { priority: 1, name: 'Rock', outcomeKeys: ['KEY-1'], pillar: 'Data' }
     ]
 
-    const result = runPipeline(config, bigRocks, '3.5', readFromStorage)
+    const result = await runPipeline(config, bigRocks, '3.5', readFromStorage)
 
     expect(result.rfes).toHaveLength(1)
     expect(result.rfes[0].issueKey).toBe('RHAIRFE-100')
     expect(result.tier1Rfes).toBe(1)
   })
 
-  it('excludes Approved RFEs', () => {
+  it('excludes Approved RFEs', async () => {
     const index = {
       features: [
         makeFeatureIndex('KEY-1', { summary: 'Outcome', status: 'New' })
@@ -453,11 +452,11 @@ describe('runPipeline', () => {
       { priority: 1, name: 'Rock', outcomeKeys: ['KEY-1'], pillar: 'Data' }
     ]
 
-    const result = runPipeline(config, bigRocks, '3.5', readFromStorage)
+    const result = await runPipeline(config, bigRocks, '3.5', readFromStorage)
     expect(result.rfes).toHaveLength(0)
   })
 
-  it('discovers Tier 2 and Tier 3 features', () => {
+  it('discovers Tier 2 and Tier 3 features', async () => {
     const index = {
       features: [
         makeFeatureIndex('KEY-1', { summary: 'Outcome', status: 'New' }),
@@ -479,7 +478,7 @@ describe('runPipeline', () => {
       { priority: 1, name: 'Rock', outcomeKeys: ['KEY-1'], pillar: 'Platform' }
     ]
 
-    const result = runPipeline(config, bigRocks, '3.5', readFromStorage)
+    const result = await runPipeline(config, bigRocks, '3.5', readFromStorage)
 
     expect(result.tier1Features).toBe(1)
     expect(result.tier2Features).toBe(1)
@@ -488,11 +487,110 @@ describe('runPipeline', () => {
     expect(result.features[0].tier).toBe(1)
     expect(result.features[1].tier).toBe(2)
     expect(result.features[2].tier).toBe(3)
+    expect(result.hierarchySource).toBe('index')
+  })
+
+  it('uses live Jira children for Tier 1 membership and flags not-in-index', async () => {
+    const index = {
+      features: [
+        makeFeatureIndex('RHAISTRAT-1513', { summary: 'Outcome', status: 'New' }),
+        // Stale/wrong parent in index — hybrid should still find via Jira
+        makeFeatureIndex('RHAISTRAT-100', {
+          parentKey: 'WRONG-PARENT',
+          targetVersions: ['rhoai-3.5'],
+          status: 'In Progress'
+        })
+      ],
+      rfes: []
+    }
+    const details = [
+      makeFeatureDetail('RHAISTRAT-100', {
+        parentKey: 'WRONG-PARENT',
+        targetVersions: ['rhoai-3.5']
+      })
+    ]
+    const readFromStorage = createMockStorage(index, details)
+
+    const fetchAllJqlResults = vi.fn().mockResolvedValue([
+      {
+        key: 'RHAISTRAT-100',
+        fields: {
+          summary: 'In index',
+          status: { name: 'In Progress' },
+          issuetype: { name: 'Feature' },
+          parent: { key: 'RHAISTRAT-1513' },
+          customfield_10855: [{ name: 'rhoai-3.5' }]
+        }
+      },
+      {
+        key: 'RHAISTRAT-900',
+        fields: {
+          summary: 'Jira only',
+          status: { name: 'New' },
+          issuetype: { name: 'Feature' },
+          parent: { key: 'RHAISTRAT-1513' },
+          customfield_10855: [{ name: 'rhoai-3.5' }]
+        }
+      }
+    ])
+
+    const result = await runPipeline(
+      makeConfig(),
+      [{ priority: 1, name: 'MaaS', outcomeKeys: ['RHAISTRAT-1513'], pillar: 'Inference' }],
+      '3.5',
+      readFromStorage,
+      { jiraClient: { fetchAllJqlResults: fetchAllJqlResults } }
+    )
+
+    expect(result.hierarchySource).toBe('jira')
+    expect(result.tier1Features).toBe(2)
+    const byKey = {}
+    for (let i = 0; i < result.features.length; i++) {
+      byKey[result.features[i].issueKey] = result.features[i]
+    }
+    expect(byKey['RHAISTRAT-100'].inIndex).toBe(true)
+    expect(byKey['RHAISTRAT-100'].parentKey).toBe('RHAISTRAT-1513')
+    expect(byKey['RHAISTRAT-900'].inIndex).toBe(false)
+    expect(byKey['RHAISTRAT-900'].summary).toBe('Jira only')
+  })
+
+  it('falls back to index parentKey when Jira fetch fails', async () => {
+    const index = {
+      features: [
+        makeFeatureIndex('RHAISTRAT-1513', { summary: 'Outcome', status: 'New' }),
+        makeFeatureIndex('RHAISTRAT-100', {
+          parentKey: 'RHAISTRAT-1513',
+          targetVersions: ['rhoai-3.5'],
+          status: 'In Progress'
+        })
+      ],
+      rfes: []
+    }
+    const details = [
+      makeFeatureDetail('RHAISTRAT-100', {
+        parentKey: 'RHAISTRAT-1513',
+        targetVersions: ['rhoai-3.5']
+      })
+    ]
+    const readFromStorage = createMockStorage(index, details)
+    const fetchAllJqlResults = vi.fn().mockRejectedValue(new Error('Jira down'))
+
+    const result = await runPipeline(
+      makeConfig(),
+      [{ priority: 1, name: 'MaaS', outcomeKeys: ['RHAISTRAT-1513'], pillar: 'Inference' }],
+      '3.5',
+      readFromStorage,
+      { jiraClient: { fetchAllJqlResults: fetchAllJqlResults } }
+    )
+
+    expect(result.hierarchySource).toBe('index')
+    expect(result.tier1Features).toBe(1)
+    expect(result.warnings.some(function (w) { return w.indexOf('Live Jira outcome-children fetch failed') !== -1 })).toBe(true)
   })
 })
 
 describe('buildCandidateResponse', () => {
-  it('builds a complete response object', () => {
+  it('builds a complete response object', async () => {
     const pipelineResult = {
       features: [
         { issueKey: 'RHAISTRAT-100', status: 'In Progress', priority: 'Major', components: 'Serving', bigRock: 'MaaS', tier: 1, labels: '' },
@@ -526,7 +624,7 @@ describe('buildCandidateResponse', () => {
       }
     ]
 
-    const response = buildCandidateResponse(pipelineResult, '3.5', bigRocks, false)
+    const response = await buildCandidateResponse(pipelineResult, '3.5', bigRocks, false)
 
     expect(response.version).toBe('3.5')
     expect(response.demoMode).toBe(false)
@@ -542,9 +640,29 @@ describe('buildCandidateResponse', () => {
     expect(response.filterOptions.statuses).toContain('In Progress')
     expect(response.filterOptions.pillars).toContain('Inference')
     expect(response.pipelineWarnings).toEqual(['test warning'])
+    expect(response.hierarchySource).toBe('index')
   })
 
-  it('omits pipelineWarnings when empty', () => {
+  it('passes through hierarchySource from pipeline', async () => {
+    const response = await buildCandidateResponse({
+      features: [],
+      rfes: [],
+      tier1Features: 0,
+      tier1Rfes: 0,
+      tier2Features: 0,
+      tier2Rfes: 0,
+      tier3Features: 0,
+      outcomeSummaries: {},
+      perRockStats: {},
+      release: '3.5',
+      warnings: [],
+      hierarchySource: 'jira'
+    }, '3.5', [], false)
+
+    expect(response.hierarchySource).toBe('jira')
+  })
+
+  it('omits pipelineWarnings when empty', async () => {
     const pipelineResult = {
       features: [],
       rfes: [],
@@ -559,7 +677,7 @@ describe('buildCandidateResponse', () => {
       warnings: []
     }
 
-    const response = buildCandidateResponse(pipelineResult, '3.5', [], false)
+    const response = await buildCandidateResponse(pipelineResult, '3.5', [], false)
 
     expect(response.pipelineWarnings).toBeUndefined()
   })

@@ -16,6 +16,8 @@ const ALLOWED = new Set([
   'JIRA_STORY_POINTS_FIELD',
   'GITLAB_BASE_URL',
   'PROXY_AUTH_SECRET',
+  // Same domain rewrite used by platform role matching (core role-store)
+  'AUTH_EMAIL_DOMAIN',
   // AI Eng: releases module
   'PRODUCT_PAGES_BASE_URL',
   'PRODUCT_PAGES_RELEASES_URL',

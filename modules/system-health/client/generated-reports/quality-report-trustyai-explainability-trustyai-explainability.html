@@ -332,7 +332,7 @@
     <div class="container">
         <header>
             <h1>Quality Analysis Report</h1>
-            <p class="timestamp">Generated on July 06, 2026 at 03:40 PM</p>
+            <p class="timestamp">Generated on July 21, 2026 at 12:22 PM</p>
             <h2 style="margin-top: 1rem; font-weight: 400;">trustyai-explainability/trustyai-explainability</h2>
         </header>
 
@@ -344,11 +344,11 @@
                         <circle class="score-arc" cx="100" cy="100" r="90"
                                 stroke="#fd7e14"
                                 stroke-dasharray="565.4861999999999"
-                                stroke-dashoffset="248.813928"
+                                stroke-dashoffset="316.6722719999999"
                                 id="scoreArc"></circle>
                     </svg>
                     <div class="score-text">
-                        <div class="score-value">5.6</div>
+                        <div class="score-value">4.4</div>
                         <div class="score-label">Overall Score</div>
                     </div>
                 </div>
@@ -364,38 +364,43 @@
                         
                         <div class="scorecard-item">
                             <h3>Unit Tests</h3>
-                            <div class="scorecard-score" style="color: #ffc107;">7.5/10</div>
-                            <div class="scorecard-status">Strong test suite with 257 test files, JUnit 5 + Mockito + REST-Assured + Quarkus test profiles</div>
+                            <div class="scorecard-score" style="color: #ffc107;">7.0/10</div>
+                            <div class="scorecard-status">Solid JUnit 5 test suite with 202 test files, AssertJ assertions, and Mockito mocking across 449 source files</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Integration/E2E</h3>
-                            <div class="scorecard-score" style="color: #ffc107;">6.0/10</div>
-                            <div class="scorecard-status">Dedicated integration tests module with DMN/PMML/OpenNLP; external E2E suite (trustyai-tests) via containerized pytest</div>
+                            <div class="scorecard-score" style="color: #fd7e14;">5.0/10</div>
+                            <div class="scorecard-status">Dedicated integration test module (PMML, OpenNLP, DMN) but E2E tests are container-based and not automated in CI</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Build Integration</h3>
-                            <div class="scorecard-score" style="color: #dc3545;">3.0/10</div>
-                            <div class="scorecard-status">No PR-time Docker build, no Konflux simulation, no image validation before merge</div>
+                            <div class="scorecard-score" style="color: #fd7e14;">4.0/10</div>
+                            <div class="scorecard-status">Maven build across 3 versions with formatter validation, but no PR-time Docker image build or Konflux simulation</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Image Testing</h3>
-                            <div class="scorecard-score" style="color: #dc3545;">3.5/10</div>
-                            <div class="scorecard-status">Multi-stage Dockerfile exists but no runtime validation, no startup testing, no multi-arch CI</div>
+                            <div class="scorecard-score" style="color: #dc3545;">3.0/10</div>
+                            <div class="scorecard-status">Multi-stage Dockerfile with UBI8 base, but no runtime validation, health checks, or multi-arch support</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Coverage Tracking</h3>
-                            <div class="scorecard-score" style="color: #dc3545;">2.0/10</div>
-                            <div class="scorecard-status">No JaCoCo plugin, no Codecov/Coveralls integration, no coverage thresholds or PR reporting</div>
+                            <div class="scorecard-score" style="color: #dc3545;">1.0/10</div>
+                            <div class="scorecard-status">No coverage tool configured - no JaCoCo, no Codecov, no thresholds, no PR reporting</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>CI/CD Automation</h3>
-                            <div class="scorecard-score" style="color: #ffc107;">6.5/10</div>
-                            <div class="scorecard-status">Separate build and test workflows with concurrency control and multi-Maven matrix; lacks caching</div>
+                            <div class="scorecard-score" style="color: #ffc107;">6.0/10</div>
+                            <div class="scorecard-status">Good concurrency control and matrix testing, Mergify backporting, but no scheduled tests or E2E automation</div>
+                        </div>
+                        <div class="scorecard-item">
+                            <h3>Static Analysis</h3>
+                            <div class="scorecard-score" style="color: #fd7e14;">4.0/10</div>
+                            <div class="scorecard-status">Code formatter with CI validation, but no Dependabot, no pre-commit hooks, no static analyzers beyond formatting</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Agent Rules</h3>
                             <div class="scorecard-score" style="color: #dc3545;">0.0/10</div>
-                            <div class="scorecard-status">No CLAUDE.md, no .claude/ directory, no agent rules or test automation guidance</div>
+                            <div class="scorecard-status">No CLAUDE.md, AGENTS.md, or .claude/ directory - zero AI agent guidance</div>
                         </div>
                     </div>
                 </div>
@@ -411,43 +416,43 @@
                     <ul class="items-list">
                         
                         <li class="item-card high">
-                            <div class="item-description">No code coverage tracking or enforcement</div>
-                            <p>Impossible to know current coverage levels or detect coverage regressions on PRs</p>
+                            <div class="item-description">No code coverage tracking</div>
+                            <p>Test quality degradation goes undetected; no visibility into which code paths are untested</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-high">HIGH</span>
                                 <span class="meta-tag effort-tag">4-6 hours</span>
                             </div>
                         </li>
                         <li class="item-card high">
-                            <div class="item-description">No PR-time Docker image build or validation</div>
-                            <p>Dockerfile and image issues discovered only post-merge in downstream Konflux/CPaaS builds</p>
+                            <div class="item-description">No PR-time Docker image build validation</div>
+                            <p>Dockerfile and Quarkus packaging issues discovered only after merge or in downstream builds</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-high">HIGH</span>
-                                <span class="meta-tag effort-tag">4-8 hours</span>
-                            </div>
-                        </li>
-                        <li class="item-card medium">
-                            <div class="item-description">No agent rules for AI-assisted test creation</div>
-                            <p>AI agents lack guidance on test patterns, frameworks, and quality standards for this project</p>
-                            <div class="item-meta">
-                                <span class="meta-tag severity-medium">MEDIUM</span>
-                                <span class="meta-tag effort-tag">3-4 hours</span>
+                                <span class="meta-tag effort-tag">4-6 hours</span>
                             </div>
                         </li>
                         <li class="item-card high">
-                            <div class="item-description">No dependency scanning or secret detection</div>
-                            <p>Vulnerable dependencies and leaked secrets may go undetected until production</p>
+                            <div class="item-description">E2E tests not automated in CI</div>
+                            <p>OpenShift-level regressions not caught until manual test execution; trustyai-tests suite requires manual container build and cluster access</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-high">HIGH</span>
-                                <span class="meta-tag effort-tag">2-4 hours</span>
+                                <span class="meta-tag effort-tag">16-24 hours</span>
                             </div>
                         </li>
                         <li class="item-card medium">
-                            <div class="item-description">Integration tests not run in CI by default</div>
-                            <p>Integration regressions in DMN/PMML/OpenNLP discovered late</p>
+                            <div class="item-description">No dependency update automation</div>
+                            <p>Known vulnerabilities in dependencies remain undetected; manual tracking of upstream updates</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-medium">MEDIUM</span>
-                                <span class="meta-tag effort-tag">2-3 hours</span>
+                                <span class="meta-tag effort-tag">1-2 hours</span>
+                            </div>
+                        </li>
+                        <li class="item-card medium">
+                            <div class="item-description">No static analysis beyond formatting</div>
+                            <p>Bug patterns, code smells, and potential security issues not caught at PR time</p>
+                            <div class="item-meta">
+                                <span class="meta-tag severity-medium">MEDIUM</span>
+                                <span class="meta-tag effort-tag">4-8 hours</span>
                             </div>
                         </li>
                     </ul>
@@ -464,43 +469,35 @@
                     <ul class="items-list">
                         
                         <li class="item-card ">
-                            <div class="item-description">Add JaCoCo plugin and Codecov integration</div>
-                            <p>Gain visibility into coverage levels and enforce minimum thresholds on PRs</p>
+                            <div class="item-description">Add JaCoCo coverage plugin and Codecov integration</div>
+                            <p>Immediate visibility into test coverage with PR-level reporting and threshold enforcement</p>
                             <div class="item-meta">
                                 
-                                <span class="meta-tag effort-tag">3-4 hours</span>
+                                <span class="meta-tag effort-tag">4-6 hours</span>
                             </div>
                         </li>
                         <li class="item-card ">
-                            <div class="item-description">Add Dependabot for dependency updates</div>
-                            <p>Automated dependency update PRs with security vulnerability detection</p>
+                            <div class="item-description">Enable Dependabot for Maven and Docker dependencies</div>
+                            <p>Automated PRs for dependency updates across Maven (pom.xml) and Docker (Dockerfile) ecosystems</p>
                             <div class="item-meta">
                                 
-                                <span class="meta-tag effort-tag">30 minutes</span>
+                                <span class="meta-tag effort-tag">1-2 hours</span>
                             </div>
                         </li>
                         <li class="item-card ">
-                            <div class="item-description">Add PR-time Docker build step</div>
-                            <p>Catch Dockerfile and image build failures before merge</p>
+                            <div class="item-description">Add Docker image build step to CI workflow</div>
+                            <p>Catch Dockerfile and packaging issues before merge</p>
                             <div class="item-meta">
                                 
                                 <span class="meta-tag effort-tag">2-3 hours</span>
                             </div>
                         </li>
                         <li class="item-card ">
-                            <div class="item-description">Generate agent rules with /test-rules-generator</div>
-                            <p>Improve AI-generated test quality for Quarkus + JUnit 5 + REST-Assured patterns</p>
+                            <div class="item-description">Create CLAUDE.md with test creation guidelines</div>
+                            <p>AI agents can generate tests following project patterns (JUnit 5, AssertJ, Mockito)</p>
                             <div class="item-meta">
                                 
                                 <span class="meta-tag effort-tag">2-3 hours</span>
-                            </div>
-                        </li>
-                        <li class="item-card ">
-                            <div class="item-description">Enable Maven dependency caching in CI</div>
-                            <p>Reduce CI build times significantly across 3-version Maven matrix</p>
-                            <div class="item-meta">
-                                
-                                <span class="meta-tag effort-tag">1 hour</span>
                             </div>
                         </li>
                     </ul>
@@ -517,15 +514,15 @@
                         
                         <div class="rec-priority p0">
                             <h3>Priority 0: Critical</h3>
-                            <ul><li>Add JaCoCo coverage plugin with 70%+ line coverage threshold and Codecov PR reporting</li><li>Add Dependabot or Renovate for automated dependency updates and CVE detection</li><li>Add PR-time Docker image build to catch build failures before merge</li></ul>
+                            <ul><li>Add JaCoCo Maven plugin with coverage thresholds and Codecov GitHub Action for PR reporting</li><li>Add Docker image build validation to the CI workflow (build but don&#x27;t push)</li><li>Enable Dependabot for gomod/pip/npm/docker ecosystems</li></ul>
                         </div>
                         <div class="rec-priority p1">
                             <h3>Priority 1: High Value</h3>
-                            <ul><li>Run integration tests in CI (activate the integration-tests Maven profile in a workflow)</li><li>Add CodeQL or Semgrep SAST scanning workflow</li><li>Add secret detection (Gitleaks) to PR workflow</li><li>Create comprehensive agent rules (.claude/rules/) for test creation patterns</li></ul>
+                            <ul><li>Automate E2E test execution in a periodic CI workflow using Kind or OpenShift CI</li><li>Add SpotBugs or Error Prone for static bug detection in Java code</li><li>Create .claude/rules/ with test creation patterns for JUnit 5 + AssertJ + Mockito</li></ul>
                         </div>
                         <div class="rec-priority p2">
                             <h3>Priority 2: Nice-to-Have</h3>
-                            <ul><li>Add multi-architecture Docker build testing (amd64, arm64)</li><li>Add container runtime validation (startup, health check, basic API response)</li><li>Add pre-commit hooks for formatting and import sort validation</li><li>Add performance regression tests for critical XAI algorithms</li></ul>
+                            <ul><li>Add multi-architecture Docker image builds (amd64/arm64)</li><li>Add HEALTHCHECK instruction to production Dockerfile</li><li>Add pre-commit hooks for formatting and import sort validation</li></ul>
                         </div>
                     </div>
                 </div>

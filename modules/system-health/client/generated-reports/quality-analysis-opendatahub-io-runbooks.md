@@ -1,303 +1,295 @@
 ---
 repository: "opendatahub-io/runbooks"
-overall_score: 1.4
+overall_score: 0.1
 scorecard:
   - dimension: "Unit Tests"
     score: 0.0
-    status: "No code or tests — documentation-only repository"
+    status: "N/A — documentation-only repository with no source code"
   - dimension: "Integration/E2E"
     score: 0.0
-    status: "No integration or E2E testing infrastructure"
+    status: "N/A — no code or services to integration-test"
   - dimension: "Build Integration"
     score: 0.0
-    status: "No build process — no Dockerfiles, Makefiles, or build scripts"
+    status: "N/A — no build artifacts; purely Markdown content"
   - dimension: "Image Testing"
     score: 0.0
-    status: "No container images built from this repository"
+    status: "N/A — no container images produced"
   - dimension: "Coverage Tracking"
     score: 0.0
-    status: "No coverage tooling — no code to measure"
+    status: "N/A — no code to measure coverage against"
   - dimension: "CI/CD Automation"
-    score: 2.0
-    status: "No CI/CD workflows — no .github/workflows/, Makefile, or CI config"
+    score: 0.0
+    status: "No CI/CD workflows exist — no markdown linting, link checking, or spell checking"
+  - dimension: "Static Analysis"
+    score: 1.0
+    status: "OWNERS files provide review governance but no automated linting or link validation"
   - dimension: "Agent Rules"
     score: 0.0
-    status: "No CLAUDE.md, .claude/, or agent rules present"
-  - dimension: "Documentation Quality"
-    score: 4.0
-    status: "Template exists but only one component covered; no validation"
+    status: "No CLAUDE.md, AGENTS.md, or .claude/ directory"
 critical_gaps:
-  - title: "No CI/CD pipeline for content validation"
-    impact: "Runbook quality is entirely dependent on human review — broken links, invalid shell commands, and formatting errors go undetected"
+  - title: "No CI/CD workflows at all"
+    impact: "Broken links, formatting errors, and inconsistencies are only caught by human review"
     severity: "HIGH"
-    effort: "4-6 hours"
-  - title: "Minimal component coverage — only Kueue"
-    impact: "Most ODH components (KServe, Dashboard, Model Mesh, TrustyAI, CodeFlare, etc.) have no runbooks"
+    effort: "2-4 hours"
+  - title: "No markdown linting or link validation"
+    impact: "Runbook quality degrades silently as content grows; dead links can mislead operators during incidents"
     severity: "HIGH"
-    effort: "40+ hours"
-  - title: "No automated linting or link validation"
-    impact: "Markdown syntax errors, broken oc commands, and stale references accumulate silently"
-    severity: "MEDIUM"
     effort: "2-3 hours"
-  - title: "No structured metadata in runbooks"
-    impact: "Cannot programmatically index, search, or integrate runbooks into alerting systems"
+  - title: "Only one component (Kueue) has runbooks"
+    impact: "Most RHOAI alerts have no documented response procedures"
+    severity: "HIGH"
+    effort: "Ongoing — team-by-team contribution"
+  - title: "No spell checking or prose linting"
+    impact: "Inconsistent language and typos erode trust in operational documentation"
     severity: "MEDIUM"
-    effort: "4-8 hours"
-quick_wins:
-  - title: "Add markdownlint CI workflow"
     effort: "1-2 hours"
-    impact: "Catches formatting issues, enforces consistent runbook structure"
-  - title: "Add link checker GitHub Action"
-    effort: "1 hour"
-    impact: "Detects broken links and stale references automatically on PRs"
-  - title: "Add CODEOWNERS file"
-    effort: "30 minutes"
-    impact: "Ensures correct reviewers are auto-assigned for new component runbooks"
-  - title: "Add shellcheck validation for embedded scripts"
+quick_wins:
+  - title: "Add a GitHub Actions workflow for markdownlint + link checking"
     effort: "2-3 hours"
-    impact: "Validates that oc/kubectl commands in runbooks are syntactically correct"
+    impact: "Catches broken formatting and dead links on every PR automatically"
+  - title: "Add .github/dependabot.yml for GitHub Actions version pinning"
+    effort: "30 minutes"
+    impact: "Keeps future CI workflow dependencies up to date"
+  - title: "Add a CLAUDE.md with runbook authoring guidelines"
+    effort: "1-2 hours"
+    impact: "Enables AI-assisted runbook creation that follows the template standard"
+  - title: "Add a CODEOWNERS file to auto-assign reviewers per component"
+    effort: "1 hour"
+    impact: "Ensures the right team reviews runbooks for their alerts"
 recommendations:
   priority_0:
-    - "Implement a basic CI workflow with markdownlint and link checking to prevent quality regressions"
-    - "Create a content coverage plan to onboard runbooks for critical ODH components (KServe, Dashboard, Model Controller, TrustyAI)"
+    - "Create a CI workflow with markdownlint, markdown-link-check, and optional spell checking to catch errors before merge"
+    - "Expand runbook coverage beyond Kueue — prioritize components with critical alerts (operator, dashboard, model serving)"
   priority_1:
-    - "Add YAML frontmatter to runbooks for structured metadata (severity, component, alert name) enabling programmatic integration"
-    - "Integrate runbook links into Prometheus AlertManager annotations so alerts link directly to remediation steps"
-    - "Add a PR template enforcing the runbook template structure"
+    - "Add a CLAUDE.md or AGENTS.md with runbook authoring rules referencing the existing template.md structure"
+    - "Add pre-commit hooks for local markdown linting before push"
   priority_2:
-    - "Create agent rules (.claude/rules/) for generating consistent runbooks"
-    - "Add shellcheck or bats validation for embedded shell scripts"
-    - "Add a table of contents / index page generated from frontmatter"
+    - "Consider adding a runbook index/table of contents (auto-generated from file structure)"
+    - "Add Vale prose linting for consistent terminology across runbooks"
 ---
 
 # Quality Analysis: opendatahub-io/runbooks
 
 ## Executive Summary
 
-- **Overall Score: 1.4/10**
-- **Repository Type**: Documentation-only (operational runbooks for ODH alert rules)
+- **Overall Score: 0.1/10**
+- **Repository Type**: Documentation-only (Markdown runbooks for RHOAI alert rules)
 - **Primary Language**: Markdown
-- **Key Strengths**: Well-structured runbook template, good remediation steps in existing Kueue runbooks
-- **Critical Gaps**: No CI/CD, no content validation, covers only 1 of 15+ ODH components
+- **Jira**: RHOAIENG / Internal Processes & Documentation (midstream tier)
+- **Key Strengths**: Well-structured template, clear runbook format with severity/impact/summary/steps, OWNERS-based review governance
+- **Critical Gaps**: Zero CI/CD automation, no markdown linting or link validation, runbooks exist for only one component (Kueue)
 - **Agent Rules Status**: Missing
 
-The `runbooks` repository is an early-stage documentation project providing operational runbooks for Open Data Hub alert rules. It currently contains **4 runbooks for the Kueue component only**, with a single contributor and 1 merged PR. While the existing content is well-written with clear remediation steps, the repository lacks any automated quality controls, CI/CD pipelines, or validation tooling. The most pressing concern is not code quality (there is no code) but **content coverage and content validation infrastructure**.
+## Important Context
+
+This is a **pure documentation repository** — it contains no source code, no builds, no container images, and no tests. Five of the eight quality dimensions (Unit Tests, Integration/E2E, Build Integration, Image Testing, Coverage Tracking) are structurally inapplicable. The remaining three (CI/CD Automation, Static Analysis, Agent Rules) are fully applicable and all score very low. The overall score reflects the absence of quality tooling infrastructure, not the quality of the runbook content itself (which follows a consistent template).
 
 ## Quality Scorecard
 
-| Dimension | Score | Status |
-|-----------|-------|--------|
-| Unit Tests | 0/10 | No code or tests — documentation-only repository |
-| Integration/E2E | 0/10 | No integration or E2E testing infrastructure |
-| Build Integration | 0/10 | No build process — no Dockerfiles, Makefiles, or build scripts |
-| Image Testing | 0/10 | No container images built from this repository |
-| Coverage Tracking | 0/10 | No coverage tooling — no code to measure |
-| CI/CD Automation | 2/10 | No CI/CD workflows; OWNERS files provide basic review gating |
-| Agent Rules | 0/10 | No CLAUDE.md, .claude/, or agent rules present |
-| **Documentation Quality** | **4/10** | **Template exists but only 1 component covered** |
+| Dimension | Score | Weight | Status |
+|-----------|-------|--------|--------|
+| Unit Tests | 0.0/10 | 15% | N/A — documentation-only repository |
+| Integration/E2E | 0.0/10 | 20% | N/A — no code or services |
+| Build Integration | 0.0/10 | 15% | N/A — no build artifacts |
+| Image Testing | 0.0/10 | 10% | N/A — no container images |
+| Coverage Tracking | 0.0/10 | 10% | N/A — no code |
+| CI/CD Automation | 0.0/10 | 15% | No workflows exist |
+| Static Analysis | 1.0/10 | 10% | OWNERS files only; no linting |
+| Agent Rules | 0.0/10 | 5% | No agent rules |
+| **Overall** | **0.1/10** | **100%** | **Critical infrastructure gaps** |
 
 ## Critical Gaps
 
-### 1. No CI/CD Pipeline for Content Validation
-- **Impact**: Runbook quality is entirely dependent on human review — broken links, invalid shell commands, and formatting errors go undetected
-- **Severity**: HIGH
-- **Effort**: 4-6 hours
-- **Details**: The repository has zero GitHub Actions workflows. There is no `.github/workflows/` directory, no Makefile, and no CI configuration of any kind. Every PR is reviewed purely by human judgment with no automated checks.
+### 1. No CI/CD Workflows (Severity: HIGH)
+- **Impact**: Broken links, formatting errors, and template violations are only caught by manual human review
+- **Current state**: The `.github/workflows/` directory does not exist
+- **Effort**: 2-4 hours to add markdownlint + link checking workflow
+- **What to add**: A PR-triggered workflow that runs `markdownlint` and `markdown-link-check` on all `.md` files
 
-### 2. Minimal Component Coverage — Only Kueue
-- **Impact**: Most ODH components have no runbooks, leaving operators without remediation guidance when alerts fire
-- **Severity**: HIGH
-- **Effort**: 40+ hours (ongoing)
-- **Details**: The repository contains runbooks for only 1 component (Kueue) with 4 alert runbooks. Major ODH components without runbooks include:
-  - KServe / Model Controller
-  - ODH Dashboard
-  - Model Mesh
-  - TrustyAI
-  - CodeFlare / MCAD
-  - Data Science Pipelines
-  - Notebooks / Workbenches
-  - ODH Operator itself
-  - Ray / Training Operator
-
-### 3. No Automated Linting or Link Validation
-- **Impact**: Markdown syntax errors, broken `oc` commands, and stale references accumulate silently
-- **Severity**: MEDIUM
+### 2. No Markdown Linting or Link Validation (Severity: HIGH)
+- **Impact**: As the repository grows, formatting inconsistencies and dead links will accumulate; during an incident, a dead link in a runbook can cost critical minutes
+- **Current state**: No `.markdownlint.json`, no `markdown-link-check` config, no markdownlint CI step
 - **Effort**: 2-3 hours
 
-### 4. No Structured Metadata in Runbooks
-- **Impact**: Cannot programmatically index, search, or integrate runbooks into alerting systems (e.g., linking from AlertManager annotations)
-- **Severity**: MEDIUM
-- **Effort**: 4-8 hours
-- **Details**: Runbooks use freeform markdown headers for severity/impact/summary. YAML frontmatter would enable:
-  - Automated alert-to-runbook linking
-  - Severity-based filtering
-  - Component inventory generation
-  - Staleness detection
+### 3. Only One Component Has Runbooks (Severity: HIGH)
+- **Impact**: RHOAI has dozens of components (operator, dashboard, model serving, pipelines, notebooks, etc.) but only Kueue has runbooks here
+- **Current state**: 4 runbooks in `alerts/kueue/`, zero for all other components
+- **Effort**: Ongoing — requires team-by-team contribution following the onboarding process in README
+
+### 4. No Spell Checking or Prose Linting (Severity: MEDIUM)
+- **Impact**: Inconsistent terminology, typos, and unclear instructions can slow down incident response
+- **Effort**: 1-2 hours to add Vale or cspell
 
 ## Quick Wins
 
-### 1. Add markdownlint CI Workflow (1-2 hours)
-Enforce consistent formatting across all runbooks.
-
+### 1. Add a markdownlint + link-check CI workflow (2-3 hours)
 ```yaml
 # .github/workflows/lint.yml
 name: Lint Markdown
-on: [pull_request]
+on:
+  pull_request:
+    paths: ['**/*.md']
+
 jobs:
   lint:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: DavidAnson/markdownlint-cli2-action@v16
+      - uses: DavidAnson/markdownlint-cli2-action@v19
+      - uses: gaurav-nelson/github-action-markdown-link-check@v1
         with:
-          globs: '**/*.md'
+          use-quiet-mode: 'yes'
 ```
 
-### 2. Add Link Checker (1 hour)
-Detect broken links automatically.
-
+### 2. Add Dependabot for GitHub Actions (30 minutes)
 ```yaml
-# .github/workflows/links.yml
-name: Check Links
-on:
-  pull_request:
-  schedule:
-    - cron: '0 9 * * 1'
-jobs:
-  links:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: lycheeverse/lychee-action@v1
-        with:
-          args: --verbose '**/*.md'
+# .github/dependabot.yml
+version: 2
+updates:
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
 ```
 
-### 3. Add CODEOWNERS File (30 minutes)
+### 3. Add a CLAUDE.md with runbook authoring rules (1-2 hours)
+Create a `CLAUDE.md` referencing the existing `template.md` structure, specifying:
+- Follow the template: Severity, Impact, Summary, Steps
+- Use `oc` commands (not `kubectl`) for OpenShift context
+- Include both diagnostic and remediation steps
+- Always include an escalation step as the final action
+
+### 4. Add CODEOWNERS (1 hour)
 ```
 # .github/CODEOWNERS
-* @opendatahub-io/runbooks-maintainers
+# Default reviewers
+* @opendatahub-io/runbooks-reviewers
+
+# Component-specific owners
 /alerts/kueue/ @astefanutti @kpostoffice @sutaakar
 ```
 
-### 4. Add ShellCheck Validation for Embedded Scripts (2-3 hours)
-Extract and validate shell commands embedded in runbooks to catch syntax errors.
-
 ## Detailed Findings
 
-### CI/CD Pipeline
-- **Workflows**: None (no `.github/workflows/` directory)
-- **Build automation**: None (no Makefile, no scripts)
-- **PR checks**: Only OWNERS-based review assignment via Prow/GitHub
+### Unit Tests
+**Score: 0.0/10** — Not applicable. This repository contains only Markdown documentation files. There is no source code in any programming language.
+
+### Integration/E2E Tests
+**Score: 0.0/10** — Not applicable. No services, APIs, or integrations to test.
+
+### Build Integration
+**Score: 0.0/10** — Not applicable. No build artifacts are produced.
+
+### Image Testing
+**Score: 0.0/10** — Not applicable. No Dockerfiles or container images.
+
+### Coverage Tracking
+**Score: 0.0/10** — Not applicable. No code to measure coverage against.
+
+### CI/CD Automation
+**Score: 0.0/10**
+
+- **Workflows**: None. The `.github/workflows/` directory does not exist
+- **PR checks**: No automated checks run on pull requests
 - **Periodic jobs**: None
-- **Branch protection**: Unknown (no CI to gate on)
+- **What should exist for a docs repo**:
+  - Markdown linting (markdownlint) on PRs
+  - Link validation (markdown-link-check) on PRs
+  - Optional: spell checking, prose linting (Vale)
+  - Optional: template compliance check (verify new runbooks follow `template.md` structure)
 
-### Test Coverage
-Not applicable — this is a documentation-only repository with no executable code. However, the embedded shell scripts (`oc` commands) in runbooks could benefit from syntax validation.
+### Static Analysis
+**Score: 1.0/10**
 
-### Code Quality
-- **Linting**: None — no markdownlint, no prose linting (vale, textlint)
-- **Pre-commit hooks**: None
-- **Static analysis**: None
-- **Formatters**: None
+**What exists**:
+- `OWNERS` file at root with approvers and reviewers (Prow-style governance)
+- `alerts/kueue/OWNERS` with component-specific ownership
+- `template.md` provides a standard structure for runbooks
 
-### Container Images
-Not applicable — no container images are built from this repository.
+**What's missing**:
+- No `.markdownlint.json` or `.markdownlint.yaml` configuration
+- No `.vale.ini` or Vale style rules for prose linting
+- No `.pre-commit-config.yaml` for local pre-commit hooks
+- No `.github/dependabot.yml` (will be needed once CI workflows are added)
+- No Renovate configuration
 
-### Security
-- **Secret detection**: None
-- **SAST**: None
-- No sensitive data in runbooks (commands reference cluster resources by generic names)
+#### FIPS Compatibility
+Not applicable — no source code or cryptographic operations.
 
-### Agent Rules (Agentic Flow Quality)
-- **Status**: Missing
-- **Coverage**: No rules exist for any test type or content generation
-- **Quality**: N/A
-- **Gaps**: No `.claude/` directory, no `CLAUDE.md`, no `AGENTS.md`
-- **Recommendation**: Create agent rules for runbook authoring to ensure consistency:
-  - Template compliance checking
-  - Severity classification guidelines
-  - Required sections validation
-  - Shell command formatting standards
+#### Dependency Alerts
+Not configured — no `.github/dependabot.yml` or `renovate.json`. Once CI workflows are added, Dependabot should be enabled for `github-actions` ecosystem.
 
-### Documentation Quality
-- **Template**: A `template.md` exists with the correct structure (Severity, Impact, Summary, Steps)
-- **Existing runbooks**: 4 Kueue runbooks, all well-written with:
-  - Clear severity classification
-  - Actionable `oc` commands with copy-pasteable scripts
-  - Escalation steps
-  - Variable placeholders for user customization
-- **OWNERS files**: Present at root and component level
-- **README**: Brief but adequate orientation
-- **Gaps**:
-  - No contribution guide beyond README
-  - No PR template enforcing runbook structure
-  - No table of contents or index
-  - Template lacks YAML frontmatter guidance
+### Agent Rules
+**Score: 0.0/10**
 
-## Repository Statistics
+- **CLAUDE.md**: Not present
+- **AGENTS.md**: Not present
+- **.claude/ directory**: Not present
+- **Impact**: AI agents cannot effectively contribute runbooks matching the repository's conventions
+- **Recommendation**: Create a `CLAUDE.md` that documents:
+  - The runbook template structure (from `template.md`)
+  - Required sections: Severity, Impact, Summary, Steps
+  - Style guide: use `oc` commands, include escalation step, provide copy-pasteable bash blocks
+  - File naming: `alerts/<component>/<alert-name>.md`
+  - OWNERS file requirements for new components
 
-| Metric | Value |
-|--------|-------|
-| Total files | 8 (excluding .git) |
-| Runbook files | 4 |
+## Repository Content Summary
+
+| Item | Details |
+|------|---------|
+| Total runbooks | 4 (all Kueue) |
 | Components covered | 1 (Kueue) |
-| Contributors | 1 |
-| Merged PRs | 1 |
-| CI workflows | 0 |
-| Test files | 0 |
-| Lines of markdown | ~250 |
+| Template | Yes (`template.md` with standard structure) |
+| OWNERS governance | Yes (root + per-component) |
+| License | Apache 2.0 |
+| Total commits | 1 (initial contribution) |
+
+### Runbooks Inventory
+
+| Runbook | Severity | Component |
+|---------|----------|-----------|
+| `kueue-pod-down.md` | Critical | Kueue |
+| `low-cluster-queue-resource-usage.md` | Info | Kueue |
+| `pending-workload-pods.md` | Info | Kueue |
+| `resource-reservation-exceeds-quota.md` | Info | Kueue |
 
 ## Recommendations
 
 ### Priority 0 (Critical)
-1. **Implement a basic CI workflow** with markdownlint and link checking to prevent quality regressions. This is the single highest-impact improvement.
-2. **Create a content coverage roadmap** to onboard runbooks for critical ODH components — start with KServe, Dashboard, and ODH Operator as they generate the most operational incidents.
+1. **Create a CI workflow for markdown linting and link checking** — this is the single highest-impact improvement; catches broken formatting and dead links automatically on every PR
+2. **Expand runbook coverage to more components** — prioritize components with critical production alerts (opendatahub-operator, odh-dashboard, model serving, data science pipelines)
 
 ### Priority 1 (High Value)
-1. **Add YAML frontmatter to runbooks** for structured metadata:
-   ```yaml
-   ---
-   alert: KueuePodDown
-   component: kueue
-   severity: critical
-   namespace: redhat-ods-applications
-   last_verified: 2024-12-01
-   ---
-   ```
-2. **Integrate runbook URLs into AlertManager annotations** so operators get direct links when alerts fire.
-3. **Add a PR template** enforcing the runbook template structure with a checklist.
-4. **Add a `CONTRIBUTING.md`** with detailed onboarding instructions for component teams.
+1. **Add a CLAUDE.md with runbook authoring rules** — enables AI-assisted runbook creation following the template standard; reference the existing `template.md` structure
+2. **Add pre-commit hooks for markdown linting** — catches issues before push with `.pre-commit-config.yaml` using `markdownlint`
+3. **Add `.github/CODEOWNERS`** — auto-assigns reviewers per component directory
 
 ### Priority 2 (Nice-to-Have)
-1. **Create agent rules** (`.claude/rules/runbook-authoring.md`) for generating consistent runbooks via AI assistants.
-2. **Add shellcheck validation** for embedded shell scripts to catch syntax issues.
-3. **Generate an index page** from frontmatter showing all components, alert severities, and coverage gaps.
-4. **Add prose linting** (vale or textlint) to enforce consistent writing style.
-5. **Set up a scheduled staleness check** — flag runbooks not updated in 6+ months for re-verification.
+1. **Add Vale prose linting** — enforces consistent terminology (e.g., "RHOAI" vs "Red Hat OpenShift AI") and catches unclear language
+2. **Auto-generate a runbook index** — a CI step or pre-commit hook that maintains a table of contents in README
+3. **Add a runbook template compliance check** — a simple CI script that verifies new `.md` files under `alerts/` contain the required sections (Severity, Impact, Summary, Steps)
 
 ## Comparison to Gold Standards
 
-| Dimension | runbooks | odh-dashboard | notebooks | kserve |
-|-----------|----------|---------------|-----------|--------|
-| CI/CD Automation | None | Comprehensive (20+ workflows) | Multi-layer | Extensive |
-| Content Validation | None | ESLint, TypeScript strict | Linting + testing | golangci-lint |
-| Coverage Tracking | None | Codecov enforced | Image coverage | Codecov |
-| Template/Standards | Basic template | Comprehensive patterns | Image standards | CRD patterns |
-| Review Process | OWNERS only | OWNERS + CI gates | OWNERS + CI gates | OWNERS + CI gates |
-| Agent Rules | None | Comprehensive | None | None |
-
-**Key Takeaway**: While `runbooks` is a documentation repo (not a code repo), it can still benefit enormously from the same CI discipline applied to code repositories — automated linting, link checking, template enforcement, and structured metadata.
+| Practice | odh-dashboard | notebooks | runbooks |
+|----------|--------------|-----------|----------|
+| CI/CD Workflows | Comprehensive multi-workflow | Multi-layer | None |
+| Linting | ESLint + TypeScript strict | Python linting | None |
+| Markdown Linting | Yes | N/A | None |
+| Link Checking | Yes | N/A | None |
+| Pre-commit Hooks | Yes | N/A | None |
+| Dependabot/Renovate | Yes | Yes | None |
+| CLAUDE.md / Agent Rules | Yes (comprehensive) | Partial | None |
+| OWNERS/CODEOWNERS | Yes | Yes | Yes (Prow-style) |
+| Template/Standards | Yes | Yes | Yes (`template.md`) |
 
 ## File Paths Reference
 
 | File | Purpose |
 |------|---------|
-| `README.md` | Repository overview and onboarding |
-| `template.md` | Runbook authoring template |
-| `OWNERS` | Root-level reviewer/approver list |
-| `alerts/kueue/OWNERS` | Kueue component reviewer/approver list |
-| `alerts/kueue/kueue-pod-down.md` | Critical: Kueue controller pod not ready |
-| `alerts/kueue/low-cluster-queue-resource-usage.md` | Info: Under-utilized cluster queue resources |
-| `alerts/kueue/pending-workload-pods.md` | Info: Pods pending for 3+ days |
-| `alerts/kueue/resource-reservation-exceeds-quota.md` | Info: Resource reservation exceeds 10x quota |
+| `README.md` | Repository overview and onboarding guide |
+| `template.md` | Standard runbook template (Severity, Impact, Summary, Steps) |
+| `OWNERS` | Root-level Prow approvers/reviewers |
+| `alerts/kueue/OWNERS` | Kueue component ownership |
+| `alerts/kueue/*.md` | 4 Kueue alert runbooks |
+| `LICENSE` | Apache 2.0 |

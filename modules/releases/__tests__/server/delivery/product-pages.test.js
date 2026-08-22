@@ -190,6 +190,140 @@ describe('product-pages', () => {
     })
   })
 
+  describe('expandReleaseMilestones — umbrella products', () => {
+    it('expands rhai umbrella milestones into per-sub-product entries', () => {
+      const release = {
+        shortname: 'rhai-3.5',
+        major_milestones: [
+          { name: '3.5 EA1 RHOAI RELEASE', date_finish: '2026-06-17' },
+          { name: '3.5 EA1 RHELAI RELEASE', date_finish: '2026-06-18' },
+          { name: '3.5 GA RHOAI RELEASE', date_finish: '2026-08-20' },
+          { name: '3.5 GA RHELAI RELEASE', date_finish: '2026-08-21' }
+        ]
+      }
+      const result = productPages.expandReleaseMilestones(release, 'RHAI')
+      expect(result).not.toBeNull()
+      const releaseNumbers = result.map(r => r.releaseNumber)
+      expect(releaseNumbers).toContain('rhoai-3.5.EA1')
+      expect(releaseNumbers).toContain('rhelai-3.5.EA1')
+      expect(releaseNumbers).toContain('rhoai-3.5')
+      expect(releaseNumbers).toContain('rhelai-3.5')
+      // Should NOT contain rhai- prefixed entries
+      expect(releaseNumbers.every(r => !r.startsWith('rhai-'))).toBe(true)
+    })
+
+    it('sets per-sub-product productName on umbrella entries', () => {
+      const release = {
+        shortname: 'rhai-3.5',
+        major_milestones: [
+          { name: '3.5 EA1 RHOAI RELEASE', date_finish: '2026-06-17' },
+          { name: '3.5 GA RHOAI RELEASE', date_finish: '2026-08-20' }
+        ]
+      }
+      const result = productPages.expandReleaseMilestones(release, 'RHAI')
+      expect(result).not.toBeNull()
+      expect(result.every(r => r.productName === 'RHOAI')).toBe(true)
+    })
+
+    it('matches "3.5 GA RHOAI RELEASE" as a GA milestone', () => {
+      const release = {
+        shortname: 'rhai-3.5',
+        major_milestones: [
+          { name: '3.5 EA1 RHOAI RELEASE', date_finish: '2026-06-17' },
+          { name: '3.5 GA RHOAI RELEASE', date_finish: '2026-08-20' }
+        ]
+      }
+      const result = productPages.expandReleaseMilestones(release, 'RHAI')
+      expect(result).toHaveLength(2)
+      const ga = result.find(r => r.releaseNumber === 'rhoai-3.5')
+      expect(ga).toBeTruthy()
+      expect(ga.dueDate).toBe('2026-08-20')
+    })
+  })
+
+  describe('extractSubProduct', () => {
+    it('extracts RHOAI from umbrella milestone', () => {
+      expect(productPages.extractSubProduct('3.5 EA1 RHOAI RELEASE', 'rhai-3.5')).toBe('rhoai')
+    })
+
+    it('extracts RHELAI from umbrella milestone', () => {
+      expect(productPages.extractSubProduct('3.5 GA RHELAI RELEASE', 'rhai-3.5')).toBe('rhelai')
+    })
+
+    it('extracts RHAII from umbrella milestone', () => {
+      expect(productPages.extractSubProduct('3.5 EA1 RHAII RELEASE', 'rhai-3.5')).toBe('rhaii')
+    })
+
+    it('returns null when parent is already a known sub-product', () => {
+      expect(productPages.extractSubProduct('rhoai-3.5 EA1 release', 'rhoai-3.5')).toBeNull()
+    })
+
+    it('returns null when no sub-product is found', () => {
+      expect(productPages.extractSubProduct('3.5 GA Release', 'rhai-3.5')).toBeNull()
+    })
+  })
+
+  describe('milestoneToReleaseNumber — umbrella products', () => {
+    it('uses sub-product prefix for umbrella EA milestones', () => {
+      expect(productPages.milestoneToReleaseNumber('rhai-3.5', '3.5 EA1 RHOAI RELEASE')).toBe('rhoai-3.5.EA1')
+    })
+
+    it('uses sub-product prefix for umbrella GA milestones', () => {
+      expect(productPages.milestoneToReleaseNumber('rhai-3.5', '3.5 GA RHOAI RELEASE')).toBe('rhoai-3.5')
+    })
+
+    it('uses sub-product prefix for RHELAI in umbrella', () => {
+      expect(productPages.milestoneToReleaseNumber('rhai-3.5', '3.5 EA1 RHELAI RELEASE')).toBe('rhelai-3.5.EA1')
+    })
+
+    it('preserves original behavior for non-umbrella products', () => {
+      expect(productPages.milestoneToReleaseNumber('rhelai-3.5', 'rhelai-3.5 EA1 release')).toBe('rhelai-3.5.EA1')
+      expect(productPages.milestoneToReleaseNumber('rhelai-3.5', 'rhelai-3.5 GA')).toBe('rhelai-3.5')
+    })
+  })
+
+  describe('matchScheduleFreezeDate', () => {
+    const tasks = [
+      { name: '3.5 GA RHOAI Feature Freeze', date_finish: '2026-07-15' },
+      { name: '3.5 GA RHELAI Feature Freeze', date_finish: '2026-07-16' },
+      { name: '3.5 EA1 RHOAI Feature Freeze', date_finish: '2026-05-15' },
+      { name: '3.5 GA RHOAI Code Freeze', date_finish: '2026-08-01' },
+      { name: '3.5 GA RHOAI Planning Freeze', date_finish: '2026-06-01' }
+    ]
+
+    it('matches product + phase + freeze type', () => {
+      expect(productPages.matchScheduleFreezeDate(tasks, 'rhoai-3.5', 'feature')).toBe('2026-07-15')
+    })
+
+    it('matches EA phase', () => {
+      expect(productPages.matchScheduleFreezeDate(tasks, 'rhoai-3.5.EA1', 'feature')).toBe('2026-05-15')
+    })
+
+    it('matches code freeze type', () => {
+      expect(productPages.matchScheduleFreezeDate(tasks, 'rhoai-3.5', 'code')).toBe('2026-08-01')
+    })
+
+    it('matches planning freeze type', () => {
+      expect(productPages.matchScheduleFreezeDate(tasks, 'rhoai-3.5', 'planning')).toBe('2026-06-01')
+    })
+
+    it('falls back to phase-only match for umbrella products', () => {
+      // "rhai" won't match any task name, so it falls back to earliest GA feature freeze
+      expect(productPages.matchScheduleFreezeDate(tasks, 'rhai-3.5', 'feature')).toBe('2026-07-15')
+    })
+
+    it('skips draft tasks', () => {
+      const draftTasks = [
+        { name: '3.5 GA RHOAI Feature Freeze', date_finish: '2026-07-15', draft: true }
+      ]
+      expect(productPages.matchScheduleFreezeDate(draftTasks, 'rhoai-3.5', 'feature')).toBeNull()
+    })
+
+    it('returns null when no matching release number format', () => {
+      expect(productPages.matchScheduleFreezeDate(tasks, 'no-prefix', 'nonexistent')).toBeNull()
+    })
+  })
+
   describe('extractCodeFreezeDate', () => {
     it('extracts code freeze date from major_milestones', () => {
       const release = {

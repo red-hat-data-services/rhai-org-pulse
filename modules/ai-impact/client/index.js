@@ -5,6 +5,7 @@ const ComingSoonView = defineAsyncComponent(() => import('./components/ComingSoo
 export const routes = {
   'rfe-review': defineAsyncComponent(() => import('./views/RFEReviewView.vue')),
   'feature-review': defineAsyncComponent(() => import('./views/FeatureReviewView.vue')),
+  'feature-decomposer': defineAsyncComponent(() => import('./views/FeatureDecomposerView.vue')),
   'autofix': defineAsyncComponent(() => import('./views/AutofixView.vue')),
   'ai-factory-guide': defineAsyncComponent(() => import('./views/AIFactoryGuideView.vue')),
   'implementation': ComingSoonView,

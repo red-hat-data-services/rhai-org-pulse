@@ -74,11 +74,12 @@ const automatedList = computed(() => componentList.value.filter(c => (c.onboardi
 const statusChartData = computed(() => {
   const completed = automatedList.value.filter(c => c.completionStatus === 'completed').length
   const inProgress = automatedList.value.filter(c => c.completionStatus === 'in-progress').length
+  const inQueue = automatedList.value.filter(c => c.completionStatus === 'in_queue').length
   return {
-    labels: ['Completed', 'In Progress'],
+    labels: ['Completed', 'In Progress', 'In Queue'],
     datasets: [{
-      data: [completed, inProgress],
-      backgroundColor: ['#10b981', '#f59e0b'],
+      data: [completed, inProgress, inQueue],
+      backgroundColor: ['#10b981', '#f59e0b', '#3b82f6'],
       borderWidth: 0
     }]
   }
@@ -96,13 +97,16 @@ const statusChartOptions = computed(() => ({
 const productChartData = computed(() => {
   const rhoaiCompleted = automatedList.value.filter(c => c.productContext === 'RHOAI' && c.completionStatus === 'completed').length
   const rhoaiInProgress = automatedList.value.filter(c => c.productContext === 'RHOAI' && c.completionStatus === 'in-progress').length
+  const rhoaiInQueue = automatedList.value.filter(c => c.productContext === 'RHOAI' && c.completionStatus === 'in_queue').length
   const odhCompleted = automatedList.value.filter(c => c.productContext === 'ODH' && c.completionStatus === 'completed').length
   const odhInProgress = automatedList.value.filter(c => c.productContext === 'ODH' && c.completionStatus === 'in-progress').length
+  const odhInQueue = automatedList.value.filter(c => c.productContext === 'ODH' && c.completionStatus === 'in_queue').length
   return {
     labels: ['RHOAI', 'ODH'],
     datasets: [
       { label: 'Completed', data: [rhoaiCompleted, odhCompleted], backgroundColor: '#10b981' },
-      { label: 'In Progress', data: [rhoaiInProgress, odhInProgress], backgroundColor: '#f59e0b' }
+      { label: 'In Progress', data: [rhoaiInProgress, odhInProgress], backgroundColor: '#f59e0b' },
+      { label: 'In Queue', data: [rhoaiInQueue, odhInQueue], backgroundColor: '#3b82f6' }
     ]
   }
 })
@@ -169,10 +173,12 @@ const featureChartData = computed(() => {
   for (const comp of automatedList.value) {
     for (const feat of (comp.linkedFeatures || [])) {
       if (!featureMap[feat]) {
-        featureMap[feat] = { completed: 0, inProgress: 0, latestCreated: '' }
+        featureMap[feat] = { completed: 0, inProgress: 0, inQueue: 0, latestCreated: '' }
       }
       if (comp.completionStatus === 'completed') {
         featureMap[feat].completed++
+      } else if (comp.completionStatus === 'in_queue') {
+        featureMap[feat].inQueue++
       } else {
         featureMap[feat].inProgress++
       }
@@ -202,6 +208,11 @@ const featureChartData = computed(() => {
         label: 'In Progress',
         data: sorted.map(([, v]) => v.inProgress),
         backgroundColor: '#f59e0b'
+      },
+      {
+        label: 'In Queue',
+        data: sorted.map(([, v]) => v.inQueue),
+        backgroundColor: '#3b82f6'
       }
     ]
   }

@@ -10,6 +10,7 @@ import EpicBreakdown from '../execute/components/EpicBreakdown.vue'
 import SignoffSection from '../execute/components/SignoffSection.vue'
 import AIReviewSection from '../execute/components/AIReviewSection.vue'
 import HygieneViolations from '@shared/client/components/HygieneViolations.vue'
+import PipelineTimelineLite from '../components/PipelineTimelineLite.vue'
 
 const nav = inject('moduleNav')
 const { feature, loading, error, loadFeature } = useFeatureDetail()
@@ -21,6 +22,28 @@ const hygieneLoading = ref(false)
 const hygieneViolations = ref([])
 const hygieneAvailable = ref(true)
 const hygieneExpanded = ref(false)
+const pipelineExpanded = ref(false)
+
+// --- FPDoR Readiness ---
+const fpdorData = ref(null)
+const fpdorLoading = ref(false)
+
+async function loadFPDoR(version, key) {
+  if (!version || !key) return
+  fpdorLoading.value = true
+  try {
+    const data = await apiRequest(`/modules/releases/planning/releases/${encodeURIComponent(version)}/health/feature/${encodeURIComponent(key)}`)
+    if (data && data.fpdor) {
+      fpdorData.value = data.fpdor
+    } else {
+      fpdorData.value = null
+    }
+  } catch {
+    fpdorData.value = null
+  } finally {
+    fpdorLoading.value = false
+  }
+}
 
 async function loadHygiene(version) {
   if (!version) { hygieneAvailable.value = false; return }
@@ -146,10 +169,12 @@ const hasDeliveryInsight = computed(() => {
 
 const fromRfe = computed(() => nav.params.value.fromRfe)
 const fromFeatureReview = computed(() => nav.params.value.fromFeatureReview)
+const fromDecomposer = computed(() => nav.params.value.fromDecomposer)
 const fromPlan = computed(() => nav.params.value.from === 'plan')
 const fromPlanFeatures = computed(() => nav.params.value.from === 'plan-features')
 const fromFeatureStatus = computed(() => nav.params.value.from === 'feature-status')
 const fromHygieneReport = computed(() => nav.params.value.from === 'hygiene-report')
+const fromCapacityReport = computed(() => nav.params.value.from === 'capacity-report')
 const fromForYou = computed(() => nav.params.value.from === 'sotu' || nav.params.value.from === 'state-of-the-union')
 
 function goBack() {
@@ -159,6 +184,8 @@ function goBack() {
     crossNavigate('ai-impact', 'rfe-review', { select: fromRfe.value })
   } else if (fromFeatureReview.value) {
     crossNavigate('ai-impact', 'feature-review')
+  } else if (fromDecomposer.value) {
+    crossNavigate('ai-impact', 'feature-decomposer')
   } else if (fromPlanFeatures.value) {
     nav.navigateTo('plan', { tab: 'feature-readiness' })
   } else if (fromPlan.value) {
@@ -168,6 +195,12 @@ function goBack() {
     if (nav.params.value.product) params.product = nav.params.value.product
     if (nav.params.value.version) params.version = nav.params.value.version
     nav.navigateTo('reports', params)
+  } else if (fromCapacityReport.value) {
+    const params = { report: 'capacity-commitment' }
+    if (nav.params.value.modalStatus) params.modalStatus = nav.params.value.modalStatus
+    if (nav.params.value.modalPhase) params.modalPhase = nav.params.value.modalPhase
+    if (nav.params.value.modalField) params.modalField = nav.params.value.modalField
+    nav.navigateTo('reports', params)
   } else if (fromFeatureStatus.value) {
     const params = { tab: 'feature-status' }
     if (nav.params.value.version) params.version = nav.params.value.version
@@ -175,6 +208,21 @@ function goBack() {
     nav.navigateTo('execute', params)
   } else {
     nav.navigateTo('execute')
+  }
+}
+
+function handlePipelineNavigate({ phase, key }) {
+  const viewMap = {
+    'rfe-review': 'rfe-review',
+    'feature-review': 'feature-review',
+    'decomposer': 'feature-decomposer',
+    'test-plan-review': 'test-plan-review',
+    'documentation': 'documentation',
+    'build-release': 'build-release'
+  }
+  const viewId = viewMap[phase]
+  if (viewId) {
+    crossNavigate('ai-impact', viewId, { select: key })
   }
 }
 
@@ -345,6 +393,7 @@ watch(feature, (feat) => {
   const version = versionParam || (feat?.fixVersions?.length ? feat.fixVersions[0] : null)
   if (version) {
     loadHygiene(version)
+    if (featureKey.value) loadFPDoR(version, featureKey.value)
   } else if (feat) {
     hygieneAvailable.value = false
   }
@@ -365,7 +414,7 @@ onMounted(() => {
       class="text-sm text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white flex items-center gap-1"
       @click="goBack"
     >
-      &larr; {{ fromForYou ? 'Back to State of the Union' : fromRfe ? 'Back to RFE Review' : fromFeatureReview ? 'Back to Feature Review' : fromPlanFeatures ? 'Back to Features List' : fromPlan ? 'Back to Plan' : fromHygieneReport ? 'Back to Hygiene Report' : fromFeatureStatus ? 'Back to Feature Status' : 'Back to Execute' }}
+      &larr; {{ fromForYou ? 'Back to State of the Union' : fromRfe ? 'Back to RFE Review' : fromFeatureReview ? 'Back to Feature Review' : fromDecomposer ? 'Back to Feature Decomposer' : fromPlanFeatures ? 'Back to Features List' : fromPlan ? 'Back to Plan' : fromHygieneReport ? 'Back to Hygiene Report' : fromCapacityReport ? 'Back to Program Level Release Report' : fromFeatureStatus ? 'Back to Feature Status' : 'Back to Execute' }}
     </button>
 
     <!-- Loading -->
@@ -441,6 +490,49 @@ onMounted(() => {
         <SignoffSection v-if="signoffValidation" collapsible :validation="signoffValidation" />
       </div>
 
+      <!-- FPDoR Readiness Section -->
+      <div
+        v-if="fpdorData && fpdorData.items"
+        class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-5"
+      >
+        <div class="flex items-center gap-3 mb-1">
+          <span class="text-sm font-semibold text-gray-900 dark:text-gray-100">FPDoR Readiness</span>
+          <span
+            class="inline-flex items-center px-2 py-0.5 rounded text-xs font-bold"
+            :class="fpdorData.allApplicablePassed ? 'bg-green-100 text-green-800 dark:bg-green-900/40 dark:text-green-200' : 'bg-red-100 text-red-800 dark:bg-red-900/40 dark:text-red-200'"
+          >{{ fpdorData.passedCount }}/{{ fpdorData.applicableCount != null ? fpdorData.applicableCount : fpdorData.totalCount }}</span>
+        </div>
+        <p class="text-xs text-gray-400 dark:text-gray-500 mb-3">
+          Source of truth:
+          <a
+            :href="fpdorData.confluenceUrl || 'https://redhat.atlassian.net/wiki/spaces/RHAI/pages/442958832/Planning+Phase+-+Definition+of+Ready+Definition+of+Done'"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="text-primary-600 dark:text-primary-400 hover:underline"
+          >Planning Phase DoR</a>
+        </p>
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-6 gap-y-1">
+          <div v-for="item in fpdorData.items" :key="item.name" class="flex items-start gap-2 py-1 text-sm">
+            <svg v-if="item.pass === true" class="w-4 h-4 text-green-500 dark:text-green-400 flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+            </svg>
+            <svg v-else-if="item.pass === false" class="w-4 h-4 text-red-500 dark:text-red-400 flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+            <svg v-else class="w-4 h-4 text-gray-300 dark:text-gray-600 flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M20 12H4" />
+            </svg>
+            <div class="min-w-0">
+              <span :class="item.pass === true ? 'text-gray-700 dark:text-gray-300' : item.pass === false ? 'text-gray-500 dark:text-gray-400' : 'text-gray-400 dark:text-gray-500'">{{ item.name }}</span>
+              <div v-if="item.detail" class="text-xs text-gray-400 dark:text-gray-500 mt-0.5 truncate">{{ item.detail }}</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div v-else-if="fpdorLoading" class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-5">
+        <span class="text-sm text-gray-500 dark:text-gray-400">Loading readiness data...</span>
+      </div>
+
       <!-- Hygiene Section (collapsible) -->
       <div
         v-if="hygieneAvailable || hygieneLoading"
@@ -480,6 +572,31 @@ onMounted(() => {
         class="text-xs text-gray-400 dark:text-gray-500 italic px-1"
       >
         No hygiene data available
+      </div>
+
+      <!-- AI Pipeline Progress (collapsible) -->
+      <div class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
+        <button
+          class="w-full flex items-center justify-between px-5 py-3 text-left hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors"
+          @click="pipelineExpanded = !pipelineExpanded"
+        >
+          <div class="flex items-center gap-2">
+            <svg
+              class="h-4 w-4 text-gray-400 dark:text-gray-500 transition-transform"
+              :class="{ 'rotate-90': pipelineExpanded }"
+              xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"
+            >
+              <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7" />
+            </svg>
+            <span class="text-sm font-semibold text-gray-900 dark:text-gray-100">AI Pipeline</span>
+          </div>
+        </button>
+        <div v-if="pipelineExpanded" class="px-5 pb-4">
+          <PipelineTimelineLite
+            :featureKey="featureKey"
+            @navigate="handlePipelineNavigate"
+          />
+        </div>
       </div>
 
       <!-- Progress Summary (always visible above tabs) -->

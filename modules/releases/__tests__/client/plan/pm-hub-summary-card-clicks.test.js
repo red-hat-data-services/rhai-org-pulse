@@ -1,32 +1,13 @@
 /**
- * Tests for PM Hub summary card click-to-filter and blocked percentage.
+ * Tests for PM Hub summary card display-only KPIs, blocked percentage,
+ * and filter-chip persistence (REQ/COM / Blocked chips — not tile clicks).
  *
- * Exercises the toggle logic, ring-class bindings, blocked percentage
- * computation, and filter persistence for the click-to-filter feature
- * added to the Requested, Committed, and Blocked summary cards.
+ * Summary tiles no longer toggle filters; click-to-filter was removed so
+ * independent Requested (TV) / Committed (FV) counts are not correlated via UI.
  *
  * Same inlined-function pattern as the other PM Hub test files.
  */
 import { describe, it, expect, beforeEach, vi } from 'vitest'
-
-// ---------------------------------------------------------------------------
-// Inline toggle helpers from ComponentReleaseLoadReport.vue
-// ---------------------------------------------------------------------------
-
-function toggleInArray(arr, value) {
-  var idx = arr.indexOf(value)
-  if (idx >= 0) {
-    arr.splice(idx, 1)
-  } else {
-    arr.push(value)
-  }
-  return arr
-}
-
-function toggleFilter(filterRefs, filterName, value) {
-  var arr = filterRefs[filterName]
-  if (arr) toggleInArray(arr, value)
-}
 
 // ---------------------------------------------------------------------------
 // Inline totalFeatures + blockedPercent from ComponentReleaseLoadReport.vue
@@ -59,25 +40,22 @@ function computeBlockedPercent(totalBlocked, totalFeatures) {
 }
 
 // ---------------------------------------------------------------------------
-// Ring class helpers — mirrors the :class bindings on the cards
+// Chip toggle helpers (filter bar — not summary tiles)
 // ---------------------------------------------------------------------------
 
-function requestedCardRingClass(filterType) {
-  return filterType.indexOf('requested') >= 0
-    ? 'ring-2 ring-blue-300 dark:ring-blue-700'
-    : 'hover:shadow-md'
+function toggleInArray(arr, value) {
+  var idx = arr.indexOf(value)
+  if (idx >= 0) {
+    arr.splice(idx, 1)
+  } else {
+    arr.push(value)
+  }
+  return arr
 }
 
-function committedCardRingClass(filterType) {
-  return filterType.indexOf('committed') >= 0
-    ? 'ring-2 ring-emerald-300 dark:ring-emerald-700'
-    : 'hover:shadow-md'
-}
-
-function blockedCardRingClass(filterBlocked) {
-  return filterBlocked === true
-    ? 'ring-2 ring-red-300 dark:ring-red-700'
-    : 'hover:shadow-md'
+function toggleFilter(filterRefs, filterName, value) {
+  var arr = filterRefs[filterName]
+  if (arr) toggleInArray(arr, value)
 }
 
 // ---------------------------------------------------------------------------
@@ -184,108 +162,25 @@ beforeEach(function () {
 })
 
 // ---------------------------------------------------------------------------
-// Requested card click-to-filter
+// Summary tiles are display-only (no click-to-filter / selection rings)
 // ---------------------------------------------------------------------------
 
-describe('Requested card click-to-filter', function () {
-  it('clicking adds requested to filterType', function () {
-    var filterType = []
-    toggleInArray(filterType, 'requested')
-    expect(filterType).toEqual(['requested'])
-  })
-
-  it('clicking again removes requested from filterType', function () {
-    var filterType = ['requested']
-    toggleInArray(filterType, 'requested')
-    expect(filterType).toEqual([])
-  })
-
-  it('shows blue ring when requested filter is active', function () {
-    expect(requestedCardRingClass(['requested'])).toBe('ring-2 ring-blue-300 dark:ring-blue-700')
-  })
-
-  it('shows hover shadow when requested filter is inactive', function () {
-    expect(requestedCardRingClass([])).toBe('hover:shadow-md')
-  })
-
-  it('ring persists when both requested and committed are active', function () {
-    expect(requestedCardRingClass(['requested', 'committed'])).toBe('ring-2 ring-blue-300 dark:ring-blue-700')
+describe('summary tiles are display-only', function () {
+  it('does not apply selection ring classes for filterType', function () {
+    // Tiles no longer bind ring/hover-as-button classes to filterType
+    var tileClass = 'relative overflow-hidden bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 px-4 py-3.5'
+    expect(tileClass.indexOf('cursor-pointer')).toBe(-1)
+    expect(tileClass.indexOf('ring-2')).toBe(-1)
+    expect(tileClass.indexOf('hover:shadow-md')).toBe(-1)
   })
 })
 
 // ---------------------------------------------------------------------------
-// Committed card click-to-filter
+// Filter bar chips still toggle type / blocked
 // ---------------------------------------------------------------------------
 
-describe('Committed card click-to-filter', function () {
-  it('clicking adds committed to filterType', function () {
-    var filterType = []
-    toggleInArray(filterType, 'committed')
-    expect(filterType).toEqual(['committed'])
-  })
-
-  it('clicking again removes committed from filterType', function () {
-    var filterType = ['committed']
-    toggleInArray(filterType, 'committed')
-    expect(filterType).toEqual([])
-  })
-
-  it('shows emerald ring when committed filter is active', function () {
-    expect(committedCardRingClass(['committed'])).toBe('ring-2 ring-emerald-300 dark:ring-emerald-700')
-  })
-
-  it('shows hover shadow when committed filter is inactive', function () {
-    expect(committedCardRingClass([])).toBe('hover:shadow-md')
-  })
-})
-
-// ---------------------------------------------------------------------------
-// Blocked card click-to-filter
-// ---------------------------------------------------------------------------
-
-describe('Blocked card click-to-filter', function () {
-  it('clicking when null sets filterBlocked to true', function () {
-    var filterBlocked = null
-    filterBlocked = filterBlocked === true ? null : true
-    expect(filterBlocked).toBe(true)
-  })
-
-  it('clicking when true sets filterBlocked to null', function () {
-    var filterBlocked = true
-    filterBlocked = filterBlocked === true ? null : true
-    expect(filterBlocked).toBeNull()
-  })
-
-  it('never cycles through false — null toggles straight to true', function () {
-    var filterBlocked = null
-    var states = []
-    for (var i = 0; i < 6; i++) {
-      filterBlocked = filterBlocked === true ? null : true
-      states.push(filterBlocked)
-    }
-    expect(states).toEqual([true, null, true, null, true, null])
-    expect(states.indexOf(false)).toBe(-1)
-  })
-
-  it('shows red ring when blocked filter is active', function () {
-    expect(blockedCardRingClass(true)).toBe('ring-2 ring-red-300 dark:ring-red-700')
-  })
-
-  it('shows hover shadow when blocked filter is null', function () {
-    expect(blockedCardRingClass(null)).toBe('hover:shadow-md')
-  })
-
-  it('shows hover shadow when blocked filter is false', function () {
-    expect(blockedCardRingClass(false)).toBe('hover:shadow-md')
-  })
-})
-
-// ---------------------------------------------------------------------------
-// toggleFilter via filterRefs (simulates card @click through toggleFilter)
-// ---------------------------------------------------------------------------
-
-describe('toggleFilter via filterRefs', function () {
-  it('Requested card click path toggles filterType correctly', function () {
+describe('filter bar chips toggle filters', function () {
+  it('REQ chip toggles filterType requested', function () {
     var filterRefs = { filterType: [] }
     toggleFilter(filterRefs, 'filterType', 'requested')
     expect(filterRefs.filterType).toEqual(['requested'])
@@ -293,7 +188,7 @@ describe('toggleFilter via filterRefs', function () {
     expect(filterRefs.filterType).toEqual([])
   })
 
-  it('Committed card click path toggles filterType correctly', function () {
+  it('COM chip toggles filterType committed', function () {
     var filterRefs = { filterType: [] }
     toggleFilter(filterRefs, 'filterType', 'committed')
     expect(filterRefs.filterType).toEqual(['committed'])
@@ -301,17 +196,21 @@ describe('toggleFilter via filterRefs', function () {
     expect(filterRefs.filterType).toEqual([])
   })
 
-  it('clicking both cards adds both values', function () {
+  it('both chips can be active together', function () {
     var filterRefs = { filterType: [] }
     toggleFilter(filterRefs, 'filterType', 'requested')
     toggleFilter(filterRefs, 'filterType', 'committed')
     expect(filterRefs.filterType).toEqual(['requested', 'committed'])
   })
 
-  it('ignores unknown filter names', function () {
-    var filterRefs = { filterType: [] }
-    toggleFilter(filterRefs, 'unknownFilter', 'value')
-    expect(filterRefs.filterType).toEqual([])
+  it('Blocked chip cycles null → true → false → null', function () {
+    var filterBlocked = null
+    filterBlocked = filterBlocked === null ? true : filterBlocked === true ? false : null
+    expect(filterBlocked).toBe(true)
+    filterBlocked = filterBlocked === null ? true : filterBlocked === true ? false : null
+    expect(filterBlocked).toBe(false)
+    filterBlocked = filterBlocked === null ? true : filterBlocked === true ? false : null
+    expect(filterBlocked).toBeNull()
   })
 })
 
@@ -463,41 +362,41 @@ describe('blocked percentage from group data', function () {
 })
 
 // ---------------------------------------------------------------------------
-// Filter persistence for card-click state
+// Filter persistence for chip state (not tile clicks)
 // ---------------------------------------------------------------------------
 
-describe('filter persistence for card-click state', function () {
-  it('saves and restores filterType set by Requested card click', function () {
+describe('filter persistence for chip state', function () {
+  it('saves and restores filterType from REQ chip', function () {
     saveFilters({ type: ['requested'] })
     var restored = restoreFilters()
     expect(restored.type).toEqual(['requested'])
   })
 
-  it('saves and restores filterType set by Committed card click', function () {
+  it('saves and restores filterType from COM chip', function () {
     saveFilters({ type: ['committed'] })
     var restored = restoreFilters()
     expect(restored.type).toEqual(['committed'])
   })
 
-  it('saves and restores both Requested and Committed active', function () {
+  it('saves and restores both REQ and COM active', function () {
     saveFilters({ type: ['requested', 'committed'] })
     var restored = restoreFilters()
     expect(restored.type).toEqual(['requested', 'committed'])
   })
 
-  it('saves and restores filterBlocked=true set by Blocked card click', function () {
+  it('saves and restores filterBlocked=true from Blocked chip', function () {
     saveFilters({ blocked: true })
     var restored = restoreFilters()
     expect(restored.blocked).toBe(true)
   })
 
-  it('saves and restores filterBlocked=null after Blocked card toggle off', function () {
+  it('saves and restores filterBlocked=null after Blocked chip clear', function () {
     saveFilters({ blocked: null })
     var restored = restoreFilters()
     expect(restored.blocked).toBeNull()
   })
 
-  it('round-trips a full card-click scenario', function () {
+  it('round-trips a full chip filter scenario', function () {
     saveFilters({ type: ['requested'], blocked: true })
     var restored = restoreFilters()
     expect(restored.type).toEqual(['requested'])

@@ -1,25 +1,16 @@
 <script setup>
 import { reactive } from 'vue'
+import { productColors } from '../../composables/useProductColors.js'
 
 const props = defineProps({
   groups: { type: Array, default: () => [] },
   portfolioVersion: { type: String, default: '' },
-  featureFreezeDate: { type: String, default: null }
+  featureFreezeDate: { type: String, default: null },
+  totalUniqueFeatures: { type: Number, default: null },
+  filteredFeatureCount: { type: Number, default: null }
 })
 
 const JIRA_BASE = 'https://redhat.atlassian.net/browse'
-
-const PRODUCT_COLORS = {
-  rhoai: { bg: 'bg-violet-50 dark:bg-violet-900/15', border: 'border-l-violet-500', badge: 'bg-violet-100 dark:bg-violet-800/40 text-violet-700 dark:text-violet-300', dot: 'bg-violet-500' },
-  rhelai: { bg: 'bg-teal-50 dark:bg-teal-900/15', border: 'border-l-teal-500', badge: 'bg-teal-100 dark:bg-teal-800/40 text-teal-700 dark:text-teal-300', dot: 'bg-teal-500' },
-  rhaii: { bg: 'bg-sky-50 dark:bg-sky-900/15', border: 'border-l-sky-500', badge: 'bg-sky-100 dark:bg-sky-800/40 text-sky-700 dark:text-sky-300', dot: 'bg-sky-500' }
-}
-
-const DEFAULT_COLORS = { bg: 'bg-gray-50 dark:bg-gray-800/50', border: 'border-l-gray-400', badge: 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300', dot: 'bg-gray-400' }
-
-function productColors(product) {
-  return PRODUCT_COLORS[product] || DEFAULT_COLORS
-}
 
 const expandedPortfolio = reactive({})
 const expandedProducts = reactive({})
@@ -68,6 +59,7 @@ function collapseAll() {
 }
 
 function totalFeatureCount() {
+  if (props.totalUniqueFeatures != null) return props.totalUniqueFeatures
   var count = 0
   for (var i = 0; i < props.groups.length; i++) {
     count += props.groups[i].featureCount || 0
@@ -146,7 +138,7 @@ defineExpose({ expandAll, collapseAll })
           class="cursor-pointer select-none bg-gradient-to-r from-gray-100 to-gray-50 dark:from-gray-800 dark:to-gray-800/80 hover:from-gray-200 hover:to-gray-100 dark:hover:from-gray-750 dark:hover:to-gray-800"
           @click="togglePortfolio(portfolioVersion)"
         >
-          <td colspan="8" class="px-4 py-3.5">
+          <td colspan="9" class="px-4 py-3.5">
             <div class="flex items-center gap-3">
               <svg
                 class="w-4 h-4 text-gray-400 dark:text-gray-500 transition-transform duration-200"
@@ -157,7 +149,7 @@ defineExpose({ expandAll, collapseAll })
               </svg>
               <span class="font-bold text-gray-900 dark:text-gray-100">RHAI {{ portfolioVersion }}</span>
               <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-semibold bg-indigo-100 dark:bg-indigo-900/40 text-indigo-700 dark:text-indigo-300">
-                {{ totalFeatureCount() }} features
+                <template v-if="filteredFeatureCount != null && filteredFeatureCount !== totalFeatureCount()">{{ filteredFeatureCount }} of </template>{{ totalFeatureCount() }} features
               </span>
               <span
                 v-if="featureFreezeDate"
@@ -187,7 +179,7 @@ defineExpose({ expandAll, collapseAll })
               ]"
               @click="toggleProduct(portfolioVersion, group.product)"
             >
-              <td colspan="8" class="px-6 py-2.5">
+              <td colspan="9" class="px-6 py-2.5">
                 <div class="flex items-center gap-2.5">
                   <svg
                     class="w-3.5 h-3.5 text-gray-400 dark:text-gray-500 transition-transform duration-200"
@@ -231,7 +223,8 @@ defineExpose({ expandAll, collapseAll })
               v-if="isProductExpanded(portfolioVersion, group.product)"
               class="border-b border-gray-200 dark:border-gray-700 bg-gray-50/80 dark:bg-gray-900/80 sticky top-0"
             >
-              <th class="px-3 py-2 text-left text-[11px] font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider w-36">Feature</th>
+              <th class="px-3 py-2 text-left text-[11px] font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider w-36">Key</th>
+              <th class="px-3 py-2 text-left text-[11px] font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider w-24">Issue Type</th>
               <th class="px-3 py-2 text-left text-[11px] font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Title</th>
               <th class="px-3 py-2 text-center text-[11px] font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider w-16">Status</th>
               <th class="px-3 py-2 text-left text-[11px] font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider w-52">Status Summary</th>
@@ -283,6 +276,11 @@ defineExpose({ expandAll, collapseAll })
                       Dropped
                     </span>
                   </div>
+                </td>
+
+                <!-- Issue Type -->
+                <td class="px-3 py-2.5 whitespace-nowrap">
+                  <span class="text-xs text-gray-600 dark:text-gray-300">{{ feature.issueType || '--' }}</span>
                 </td>
 
                 <!-- Title -->
@@ -358,7 +356,7 @@ defineExpose({ expandAll, collapseAll })
             <tr
               v-if="isProductExpanded(portfolioVersion, group.product) && group.features.length === 0"
             >
-              <td colspan="8" class="px-8 py-6 text-sm text-gray-400 dark:text-gray-500 italic text-center">
+              <td colspan="9" class="px-8 py-6 text-sm text-gray-400 dark:text-gray-500 italic text-center">
                 No features found for {{ group.releaseNumber }}
               </td>
             </tr>

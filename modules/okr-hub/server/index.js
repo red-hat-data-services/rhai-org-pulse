@@ -1,10 +1,6 @@
 const { createJiraClient } = require('../../../shared/server/jira')
 const { createGoogleSheetsClient } = require('../../../shared/server/google-sheets')
 
-var versionsCache = null
-var versionsCacheAt = 0
-var VERSIONS_CACHE_TTL = 10 * 60 * 1000
-
 var techVisCache = null
 var techVisCacheAt = 0
 var TECH_VIS_CACHE_TTL = 15 * 60 * 1000
@@ -34,8 +30,6 @@ module.exports = function registerRoutes(router, context) {
     host: process.env.JIRA_HOST
   })
 
-  var JIRA_PROJECTS = ['RHAISTRAT', 'RHOAIENG']
-
   /**
    * @openapi
    * /api/modules/okr-hub/status:
@@ -52,6 +46,50 @@ module.exports = function registerRoutes(router, context) {
 
   /**
    * @openapi
+   * /api/modules/okr-hub/editable-status:
+   *   get:
+   *     tags: [OKR Hub]
+   *     summary: Get saved editable OKR quarter status data
+   *     responses:
+   *       200:
+   *         description: Saved editable status entries keyed by objectiveId and quarter
+   */
+  router.get('/editable-status', requireScope('okr-hub:read'), async function(req, res) {
+    var saved = await storage.readFromStorage('okr-hub/editable-status.json')
+    res.json(saved || { entries: {} })
+  })
+
+  /**
+   * @openapi
+   * /api/modules/okr-hub/editable-status:
+   *   put:
+   *     tags: [OKR Hub]
+   *     summary: Save editable OKR quarter status data
+   *     requestBody:
+   *       required: true
+   *       content:
+   *         application/json:
+   *           schema: { type: object }
+   *     responses:
+   *       200:
+   *         description: Saved
+   */
+  router.put('/editable-status', requireScope('okr-hub:write'), async function(req, res) {
+    try {
+      var body = req.body
+      if (!body || typeof body.entries !== 'object') {
+        return res.status(400).json({ error: 'Invalid payload: requires entries object' })
+      }
+      await storage.writeToStorage('okr-hub/editable-status.json', body)
+      res.json({ ok: true })
+    } catch (err) {
+      console.error('[okr-hub] editable-status save error:', err)
+      res.status(500).json({ error: err.message })
+    }
+  })
+
+  /**
+   * @openapi
    * /api/modules/okr-hub/reports/on-time-releases:
    *   get:
    *     tags: [OKR Hub]
@@ -60,119 +98,44 @@ module.exports = function registerRoutes(router, context) {
    *       - name: since
    *         in: query
    *         schema: { type: string }
-   *         description: ISO date cutoff for planned GA (default 2026-04-01)
+   *         description: ISO date cutoff for planned GA (default 2026-01-01)
    *     responses:
    *       200:
    *         description: Array of releases with on-time analysis
    */
   router.get('/reports/on-time-releases', requireScope('okr-hub:read'), async function(req, res) {
     try {
-      var since = req.query.since || '2026-04-01'
+      var since = req.query.since || '2026-01-01'
 
-      var overrides = storage.readFromStorage('okr-hub/on-time-overrides.json')
-      var overrideMap = {}
-      var removedIds = {}
-      var customReleases = []
-      if (overrides && Array.isArray(overrides.releases)) {
-        for (var oi = 0; oi < overrides.releases.length; oi++) {
-          var ov = overrides.releases[oi]
-          if (ov.removed) { removedIds[ov.id] = true; continue }
-          if (ov.custom) { customReleases.push(ov); continue }
-          overrideMap[ov.id] = ov
-        }
-      }
-
-      var registry = storage.readFromStorage('releases/registry.json')
-      var registryReleases = (registry && Array.isArray(registry.releases)) ? registry.releases : []
-
-      var candidates = []
-      for (var i = 0; i < registryReleases.length; i++) {
-        var rel = registryReleases[i]
-        if (removedIds[rel.id]) continue
-        var ga = rel.milestones && rel.milestones.ga
-        if (!ga || ga < since) continue
-        if (isEaRelease(rel.id)) continue
-        if (overrideMap[rel.id]) {
-          var ovr = overrideMap[rel.id]
-          rel = Object.assign({}, rel, { milestones: Object.assign({}, rel.milestones, { ga: ovr.plannedGa || rel.milestones.ga }) })
-          rel._overrideActualGa = ovr.actualGa || null
-          rel._overrideDisplayName = ovr.displayName || null
-        }
-        candidates.push(rel)
-      }
-
-      var jiraVersions = await fetchJiraVersions(jira)
-
-      var jiraVersionMap = {}
-      for (var vi = 0; vi < jiraVersions.length; vi++) {
-        var v = jiraVersions[vi]
-        jiraVersionMap[v.name.toLowerCase()] = v
-      }
+      var overrides = await storage.readFromStorage('okr-hub/on-time-overrides.json')
+      var entries = (overrides && Array.isArray(overrides.releases)) ? overrides.releases : []
 
       var results = []
-      for (var ri = 0; ri < candidates.length; ri++) {
-        var release = candidates[ri]
-        var plannedGa = release.milestones.ga
-        var actualGa = release._overrideActualGa || null
-        var released = !!actualGa
+      for (var i = 0; i < entries.length; i++) {
+        var entry = entries[i]
+        if (entry.removed) continue
+        if (!entry.plannedGa || entry.plannedGa < since) continue
 
-        if (!actualGa) {
-          var fvList = release.fixVersions || []
-          for (var fvi = 0; fvi < fvList.length; fvi++) {
-            var match = jiraVersionMap[fvList[fvi].toLowerCase()]
-            if (match && match.released && match.releaseDate) {
-              actualGa = match.releaseDate
-              released = true
-              break
-            }
-          }
-        }
-
+        var released = !!entry.actualGa
         var onTime = null
         var daysLate = null
-        if (released && actualGa) {
-          var planned = new Date(plannedGa + 'T00:00:00Z')
-          var actual = new Date(actualGa + 'T00:00:00Z')
+        if (released && entry.actualGa) {
+          var planned = new Date(entry.plannedGa + 'T00:00:00Z')
+          var actual = new Date(entry.actualGa + 'T00:00:00Z')
           var diffMs = actual.getTime() - planned.getTime()
           daysLate = Math.ceil(diffMs / (1000 * 60 * 60 * 24))
           onTime = daysLate <= 0
         }
 
         results.push({
-          id: release.id,
-          displayName: release._overrideDisplayName || release.displayName,
-          plannedGa: plannedGa,
-          actualGa: actualGa,
+          id: entry.id,
+          displayName: entry.displayName,
+          plannedGa: entry.plannedGa,
+          actualGa: entry.actualGa || null,
           released: released,
           onTime: onTime,
           daysLate: daysLate,
-          custom: false
-        })
-      }
-
-      for (var ci = 0; ci < customReleases.length; ci++) {
-        var cr = customReleases[ci]
-        if (removedIds[cr.id]) continue
-        if (!cr.plannedGa || cr.plannedGa < since) continue
-        var crReleased = !!cr.actualGa
-        var crOnTime = null
-        var crDaysLate = null
-        if (crReleased && cr.actualGa) {
-          var crPlanned = new Date(cr.plannedGa + 'T00:00:00Z')
-          var crActual = new Date(cr.actualGa + 'T00:00:00Z')
-          var crDiffMs = crActual.getTime() - crPlanned.getTime()
-          crDaysLate = Math.ceil(crDiffMs / (1000 * 60 * 60 * 24))
-          crOnTime = crDaysLate <= 0
-        }
-        results.push({
-          id: cr.id,
-          displayName: cr.displayName,
-          plannedGa: cr.plannedGa,
-          actualGa: cr.actualGa || null,
-          released: crReleased,
-          onTime: crOnTime,
-          daysLate: crDaysLate,
-          custom: true
+          custom: !!entry.custom
         })
       }
 
@@ -222,8 +185,8 @@ module.exports = function registerRoutes(router, context) {
    *       200:
    *         description: Override entries
    */
-  router.get('/reports/on-time-releases/overrides', requireScope('okr-hub:read'), function(req, res) {
-    var saved = storage.readFromStorage('okr-hub/on-time-overrides.json')
+  router.get('/reports/on-time-releases/overrides', requireScope('okr-hub:read'), async function(req, res) {
+    var saved = await storage.readFromStorage('okr-hub/on-time-overrides.json')
     res.json(saved || { releases: [] })
   })
 
@@ -242,48 +205,19 @@ module.exports = function registerRoutes(router, context) {
    *       200:
    *         description: Saved
    */
-  router.put('/reports/on-time-releases/overrides', requireScope('okr-hub:write'), function(req, res) {
+  router.put('/reports/on-time-releases/overrides', requireScope('okr-hub:write'), async function(req, res) {
     try {
       var body = req.body
       if (!body || !Array.isArray(body.releases)) {
         return res.status(400).json({ error: 'Invalid payload: requires releases array' })
       }
-      storage.writeToStorage('okr-hub/on-time-overrides.json', body)
+      await storage.writeToStorage('okr-hub/on-time-overrides.json', body)
       res.json({ ok: true })
     } catch (err) {
       console.error('[okr-hub] on-time-overrides save error:', err)
       res.status(500).json({ error: err.message })
     }
   })
-
-  async function fetchJiraVersions(jiraClient) {
-    var now = Date.now()
-    if (versionsCache && (now - versionsCacheAt) < VERSIONS_CACHE_TTL) {
-      return versionsCache
-    }
-
-    var allVersions = []
-    for (var pi = 0; pi < JIRA_PROJECTS.length; pi++) {
-      var project = JIRA_PROJECTS[pi]
-      try {
-        var data = await jiraClient.jiraRequest('/rest/api/3/project/' + project + '/versions')
-        for (var dvi = 0; dvi < data.length; dvi++) {
-          allVersions.push({
-            name: data[dvi].name,
-            releaseDate: data[dvi].releaseDate || null,
-            released: data[dvi].released || false,
-            project: project
-          })
-        }
-      } catch (err) {
-        console.warn('[okr-hub] Failed to fetch versions for ' + project + ':', err.message)
-      }
-    }
-
-    versionsCache = allVersions
-    versionsCacheAt = now
-    return allVersions
-  }
 
   /**
    * @openapi
@@ -295,8 +229,8 @@ module.exports = function registerRoutes(router, context) {
    *       200:
    *         description: CVE SLA dataset
    */
-  router.get('/reports/cve-sla', requireScope('okr-hub:read'), function(req, res) {
-    var saved = storage.readFromStorage('okr-hub/cve-sla-data.json')
+  router.get('/reports/cve-sla', requireScope('okr-hub:read'), async function(req, res) {
+    var saved = await storage.readFromStorage('okr-hub/cve-sla-data.json')
     if (saved && saved.products && saved.months) {
       return res.json(saved)
     }
@@ -318,13 +252,13 @@ module.exports = function registerRoutes(router, context) {
    *       200:
    *         description: Saved successfully
    */
-  router.put('/reports/cve-sla', requireScope('okr-hub:write'), function(req, res) {
+  router.put('/reports/cve-sla', requireScope('okr-hub:write'), async function(req, res) {
     try {
       var body = req.body
       if (!body || !Array.isArray(body.products) || !body.months) {
         return res.status(400).json({ error: 'Invalid payload: requires products array and months object' })
       }
-      storage.writeToStorage('okr-hub/cve-sla-data.json', body)
+      await storage.writeToStorage('okr-hub/cve-sla-data.json', body)
       res.json({ ok: true })
     } catch (err) {
       console.error('[okr-hub] cve-sla save error:', err)
@@ -609,8 +543,8 @@ module.exports = function registerRoutes(router, context) {
    *       200:
    *         description: Support case data by quarter and product
    */
-  router.get('/reports/support-cases', requireScope('okr-hub:read'), function(req, res) {
-    var saved = storage.readFromStorage('okr-hub/support-case-data.json')
+  router.get('/reports/support-cases', requireScope('okr-hub:read'), async function(req, res) {
+    var saved = await storage.readFromStorage('okr-hub/support-case-data.json')
     if (saved && saved.products && saved.quarters) {
       return res.json(saved)
     }
@@ -632,13 +566,13 @@ module.exports = function registerRoutes(router, context) {
    *       200:
    *         description: Saved
    */
-  router.put('/reports/support-cases', requireScope('okr-hub:write'), function(req, res) {
+  router.put('/reports/support-cases', requireScope('okr-hub:write'), async function(req, res) {
     try {
       var body = req.body
       if (!body || !Array.isArray(body.products) || !body.quarters) {
         return res.status(400).json({ error: 'Invalid payload: requires products array and quarters object' })
       }
-      storage.writeToStorage('okr-hub/support-case-data.json', body)
+      await storage.writeToStorage('okr-hub/support-case-data.json', body)
       res.json({ ok: true })
     } catch (err) {
       console.error('[okr-hub] support-cases save error:', err)
@@ -656,8 +590,8 @@ module.exports = function registerRoutes(router, context) {
    *       200:
    *         description: Version configuration per release family
    */
-  router.get('/reports/90day-tracking-config', requireScope('okr-hub:read'), function(req, res) {
-    var saved = storage.readFromStorage('okr-hub/90day-tracking-config.json')
+  router.get('/reports/90day-tracking-config', requireScope('okr-hub:read'), async function(req, res) {
+    var saved = await storage.readFromStorage('okr-hub/90day-tracking-config.json')
     if (saved && Array.isArray(saved.releases)) {
       return res.json(saved)
     }
@@ -679,13 +613,13 @@ module.exports = function registerRoutes(router, context) {
    *       200:
    *         description: Saved
    */
-  router.put('/reports/90day-tracking-config', requireScope('okr-hub:write'), function(req, res) {
+  router.put('/reports/90day-tracking-config', requireScope('okr-hub:write'), async function(req, res) {
     try {
       var body = req.body
       if (!body || !Array.isArray(body.releases)) {
         return res.status(400).json({ error: 'Invalid payload: requires releases array' })
       }
-      storage.writeToStorage('okr-hub/90day-tracking-config.json', body)
+      await storage.writeToStorage('okr-hub/90day-tracking-config.json', body)
       res.json({ ok: true })
     } catch (err) {
       console.error('[okr-hub] 90day-tracking-config save error:', err)
@@ -703,8 +637,8 @@ module.exports = function registerRoutes(router, context) {
    *       200:
    *         description: Release configuration with product versions and dates
    */
-  router.get('/reports/feature-delivery-config', requireScope('okr-hub:read'), function(req, res) {
-    var saved = storage.readFromStorage('okr-hub/feature-delivery-config.json')
+  router.get('/reports/feature-delivery-config', requireScope('okr-hub:read'), async function(req, res) {
+    var saved = await storage.readFromStorage('okr-hub/feature-delivery-config.json')
     if (saved && Array.isArray(saved.releases)) {
       return res.json(saved)
     }
@@ -726,13 +660,13 @@ module.exports = function registerRoutes(router, context) {
    *       200:
    *         description: Saved
    */
-  router.put('/reports/feature-delivery-config', requireScope('okr-hub:write'), function(req, res) {
+  router.put('/reports/feature-delivery-config', requireScope('okr-hub:write'), async function(req, res) {
     try {
       var body = req.body
       if (!body || !Array.isArray(body.releases)) {
         return res.status(400).json({ error: 'Invalid payload: requires releases array' })
       }
-      storage.writeToStorage('okr-hub/feature-delivery-config.json', body)
+      await storage.writeToStorage('okr-hub/feature-delivery-config.json', body)
       featureDeliveryCache = {}
       res.json({ ok: true })
     } catch (err) {
@@ -753,7 +687,7 @@ module.exports = function registerRoutes(router, context) {
    */
   router.get('/reports/feature-delivery', requireScope('okr-hub:read'), async function(req, res) {
     try {
-      var config = storage.readFromStorage('okr-hub/feature-delivery-config.json')
+      var config = await storage.readFromStorage('okr-hub/feature-delivery-config.json')
       if (!config || !Array.isArray(config.releases) || config.releases.length === 0) {
         return res.json({ releases: [], summary: { committed: 0, delivered: 0, accuracy: 0 } })
       }
@@ -851,11 +785,6 @@ module.exports = function registerRoutes(router, context) {
   context.registerDiagnostics(async function() {
     return { status: 'ok' }
   })
-}
-
-function isEaRelease(id) {
-  var lower = (id || '').toLowerCase()
-  return lower.includes('.ea') || lower.includes('-ea')
 }
 
 function findColumnIndex(headers, candidates) {

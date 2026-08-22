@@ -332,7 +332,7 @@
     <div class="container">
         <header>
             <h1>Quality Analysis Report</h1>
-            <p class="timestamp">Generated on July 06, 2026 at 04:13 PM</p>
+            <p class="timestamp">Generated on July 20, 2026 at 05:19 PM</p>
             <h2 style="margin-top: 1rem; font-weight: 400;">opendatahub-io/mlflow</h2>
         </header>
 
@@ -344,11 +344,11 @@
                         <circle class="score-arc" cx="100" cy="100" r="90"
                                 stroke="#ffc107"
                                 stroke-dasharray="565.4861999999999"
-                                stroke-dashoffset="118.75210199999997"
+                                stroke-dashoffset="130.06182599999997"
                                 id="scoreArc"></circle>
                     </svg>
                     <div class="score-text">
-                        <div class="score-value">7.9</div>
+                        <div class="score-value">7.7</div>
                         <div class="score-label">Overall Score</div>
                     </div>
                 </div>
@@ -364,38 +364,43 @@
                         
                         <div class="scorecard-item">
                             <h3>Unit Tests</h3>
-                            <div class="scorecard-score" style="color: #28a745;">8.5/10</div>
-                            <div class="scorecard-status">722 Python test files + 530 JS/TS test files with pytest and Jest; well-organized per-module test suites</div>
+                            <div class="scorecard-score" style="color: #28a745;">9.0/10</div>
+                            <div class="scorecard-status">Extensive pytest + Jest test suites with 1508 test files and 4-way parallel splitting</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Integration/E2E</h3>
-                            <div class="scorecard-score" style="color: #28a745;">8.5/10</div>
-                            <div class="scorecard-status">Operator integration tests with Kind cluster, Playwright E2E for UI, database integration tests across PostgreSQL/MySQL/MSSQL</div>
+                            <div class="scorecard-score" style="color: #28a745;">9.0/10</div>
+                            <div class="scorecard-status">Playwright E2E, Kind-based operator integration tests, docker-compose DB tests</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Build Integration</h3>
                             <div class="scorecard-score" style="color: #28a745;">8.0/10</div>
-                            <div class="scorecard-status">Konflux PR builds with multi-arch, E2E waits for Konflux image, operator integration builds and deploys on PR</div>
+                            <div class="scorecard-status">PR-triggered wheel builds, Konflux Dockerfile, operator image builds on PRs</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Image Testing</h3>
-                            <div class="scorecard-score" style="color: #ffc107;">7.0/10</div>
-                            <div class="scorecard-status">Konflux multi-arch builds (amd64/arm64/ppc64le/s390x), UBI9 base, hermetic builds; limited runtime validation outside E2E</div>
+                            <div class="scorecard-score" style="color: #ffc107;">6.0/10</div>
+                            <div class="scorecard-status">Multi-stage UBI9 Konflux build, E2E validates built image, but no HEALTHCHECK or multi-arch</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Coverage Tracking</h3>
-                            <div class="scorecard-score" style="color: #dc3545;">3.0/10</div>
-                            <div class="scorecard-status">JS CI has --coverage flag but no enforcement; no Python coverage tracking, no codecov/coveralls integration</div>
+                            <div class="scorecard-score" style="color: #dc3545;">1.0/10</div>
+                            <div class="scorecard-status">No coverage tooling, no codecov integration, no coverage thresholds or PR reporting</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>CI/CD Automation</h3>
                             <div class="scorecard-score" style="color: #28a745;">9.0/10</div>
-                            <div class="scorecard-status">49 workflows with concurrency control, path filtering, matrix strategies, test splitting; excellent automation</div>
+                            <div class="scorecard-status">30+ workflows with concurrency control, caching, matrix testing, cross-platform</div>
+                        </div>
+                        <div class="scorecard-item">
+                            <h3>Static Analysis</h3>
+                            <div class="scorecard-score" style="color: #28a745;">8.0/10</div>
+                            <div class="scorecard-status">Strict ruff + mypy, 25+ pre-commit hooks, custom clint linter, but no Dependabot/Renovate</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Agent Rules</h3>
-                            <div class="scorecard-score" style="color: #ffc107;">7.5/10</div>
-                            <div class="scorecard-status">CLAUDE.md + 2 agent rules (python.md, github-actions.md) + 8 skills; rules are high quality but lack test-specific guidance</div>
+                            <div class="scorecard-score" style="color: #28a745;">10.0/10</div>
+                            <div class="scorecard-status">Exemplary CLAUDE.md, scoped rules, enforcement hooks, multiple custom skills</div>
                         </div>
                     </div>
                 </div>
@@ -411,35 +416,27 @@
                     <ul class="items-list">
                         
                         <li class="item-card high">
-                            <div class="item-description">No Python test coverage tracking or enforcement</div>
-                            <p>Cannot identify undertested code paths; coverage regressions go unnoticed</p>
+                            <div class="item-description">No coverage tracking or enforcement</div>
+                            <p>Test coverage regressions go undetected; impossible to measure test effectiveness or identify untested code paths</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-high">HIGH</span>
+                                <span class="meta-tag effort-tag">4-8 hours</span>
+                            </div>
+                        </li>
+                        <li class="item-card medium">
+                            <div class="item-description">No Dependabot or Renovate for automated dependency updates</div>
+                            <p>Dependency vulnerabilities and outdated packages require manual discovery; 7-day cooldown policy mitigates but does not replace automated alerts</p>
+                            <div class="item-meta">
+                                <span class="meta-tag severity-medium">MEDIUM</span>
+                                <span class="meta-tag effort-tag">1-2 hours</span>
+                            </div>
+                        </li>
+                        <li class="item-card medium">
+                            <div class="item-description">No container HEALTHCHECK or multi-architecture support</div>
+                            <p>Container health not validated at build time; no arm64 image builds limit deployment flexibility</p>
+                            <div class="item-meta">
+                                <span class="meta-tag severity-medium">MEDIUM</span>
                                 <span class="meta-tag effort-tag">4-6 hours</span>
-                            </div>
-                        </li>
-                        <li class="item-card high">
-                            <div class="item-description">No security vulnerability scanning (Trivy/Snyk/CodeQL) in CI</div>
-                            <p>Dependency and code vulnerabilities not detected pre-merge</p>
-                            <div class="item-meta">
-                                <span class="meta-tag severity-high">HIGH</span>
-                                <span class="meta-tag effort-tag">2-4 hours</span>
-                            </div>
-                        </li>
-                        <li class="item-card medium">
-                            <div class="item-description">No coverage enforcement thresholds for JS or Python</div>
-                            <p>Test coverage can decrease without any CI gate catching it</p>
-                            <div class="item-meta">
-                                <span class="meta-tag severity-medium">MEDIUM</span>
-                                <span class="meta-tag effort-tag">2-3 hours</span>
-                            </div>
-                        </li>
-                        <li class="item-card medium">
-                            <div class="item-description">Missing agent rules for test creation patterns</div>
-                            <p>AI-generated tests may not follow project conventions for pytest fixtures, mocking, parametrization</p>
-                            <div class="item-meta">
-                                <span class="meta-tag severity-medium">MEDIUM</span>
-                                <span class="meta-tag effort-tag">3-4 hours</span>
                             </div>
                         </li>
                     </ul>
@@ -456,35 +453,27 @@
                     <ul class="items-list">
                         
                         <li class="item-card ">
-                            <div class="item-description">Add codecov/coveralls integration for Python tests</div>
-                            <p>Visibility into test coverage trends and PR-level coverage changes</p>
+                            <div class="item-description">Add pytest-cov and codecov integration to CI</div>
+                            <p>Immediate visibility into test coverage with PR-level reporting and threshold enforcement</p>
                             <div class="item-meta">
                                 
                                 <span class="meta-tag effort-tag">4-6 hours</span>
                             </div>
                         </li>
                         <li class="item-card ">
-                            <div class="item-description">Add Trivy container scanning to PR workflow</div>
-                            <p>Early detection of CVEs in container images and dependencies</p>
+                            <div class="item-description">Enable Dependabot for pip and npm ecosystems</div>
+                            <p>Automated dependency update PRs and vulnerability alerts complement the 7-day cooldown policy</p>
                             <div class="item-meta">
                                 
                                 <span class="meta-tag effort-tag">1-2 hours</span>
                             </div>
                         </li>
                         <li class="item-card ">
-                            <div class="item-description">Add CodeQL or Semgrep SAST scanning</div>
-                            <p>Automated detection of security anti-patterns in Python code</p>
+                            <div class="item-description">Add HEALTHCHECK instruction to Dockerfile.konflux</div>
+                            <p>Container orchestrators can detect unhealthy containers; build-time validation of runtime health</p>
                             <div class="item-meta">
                                 
-                                <span class="meta-tag effort-tag">2-3 hours</span>
-                            </div>
-                        </li>
-                        <li class="item-card ">
-                            <div class="item-description">Create agent rules for test patterns (unit-tests.md)</div>
-                            <p>Consistent AI-generated tests following project conventions</p>
-                            <div class="item-meta">
-                                
-                                <span class="meta-tag effort-tag">2-3 hours</span>
+                                <span class="meta-tag effort-tag">1 hour</span>
                             </div>
                         </li>
                     </ul>
@@ -501,15 +490,15 @@
                         
                         <div class="rec-priority p0">
                             <h3>Priority 0: Critical</h3>
-                            <ul><li>Implement Python test coverage tracking with codecov integration and PR reporting</li><li>Add container security scanning (Trivy) to the Konflux and/or GitHub Actions pipeline</li></ul>
+                            <ul><li>Implement pytest-cov with codecov integration and enforce minimum coverage thresholds on PRs</li><li>Add coverage gates to prevent regressions in critical paths (tracking store, model serving, tracing)</li></ul>
                         </div>
                         <div class="rec-priority p1">
                             <h3>Priority 1: High Value</h3>
-                            <ul><li>Add CodeQL or Semgrep SAST workflow for Python code analysis</li><li>Create comprehensive agent rules for test creation (.claude/rules/unit-tests.md, integration-tests.md)</li><li>Add coverage enforcement thresholds (e.g., 60% minimum, no decrease on PR)</li></ul>
+                            <ul><li>Enable Dependabot for pip, npm, and Docker ecosystems to complement the 7-day cooldown policy</li><li>Add HEALTHCHECK to Dockerfile.konflux and validate container health in operator integration tests</li><li>Add multi-architecture (amd64/arm64) image builds via docker buildx</li></ul>
                         </div>
                         <div class="rec-priority p2">
                             <h3>Priority 2: Nice-to-Have</h3>
-                            <ul><li>Add dependency scanning workflow (Dependabot or Renovate)</li><li>Add performance regression testing for model serving endpoints</li><li>Create agent rules for E2E test patterns with Playwright</li></ul>
+                            <ul><li>Add contract tests for API boundaries between MLflow server and operator</li><li>Add performance regression testing beyond the existing gateway and tracing benchmarks</li></ul>
                         </div>
                     </div>
                 </div>

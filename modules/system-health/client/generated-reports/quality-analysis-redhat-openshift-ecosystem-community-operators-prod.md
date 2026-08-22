@@ -1,344 +1,297 @@
 ---
 repository: "redhat-openshift-ecosystem/community-operators-prod"
-overall_score: 4.8
+overall_score: 1.7
 scorecard:
   - dimension: "Unit Tests"
     score: 1.0
-    status: "No unit tests — this is a data/catalog repository, not a software project"
+    status: "No source code — repo is a YAML metadata catalog, not a code project"
   - dimension: "Integration/E2E"
-    score: 7.0
-    status: "External Tekton pipeline runs DeployableByOLM, preflight-trigger, dangling bundle checks"
+    score: 3.0
+    status: "External pipeline runs DeployableByOLM and preflight checks; no in-repo test code"
   - dimension: "Build Integration"
-    score: 6.0
-    status: "External pipeline validates bundle builds, index image construction, and FBC catalog generation"
+    score: 2.0
+    status: "3,080 bundle.Dockerfiles exist but no PR-time build validation in-repo"
   - dimension: "Image Testing"
-    score: 5.0
-    status: "Bundle images built from scratch Dockerfiles; preflight checks run but no runtime validation"
-  - dimension: "Coverage Tracking"
     score: 1.0
-    status: "No code coverage — N/A for a data repository; no operator manifest coverage metrics"
+    status: "Bundle Dockerfiles are FROM scratch metadata-only; no runtime validation"
+  - dimension: "Coverage Tracking"
+    score: 0.0
+    status: "No code coverage tooling — no source code to measure"
   - dimension: "CI/CD Automation"
-    score: 6.0
-    status: "External Tekton pipeline (operator-hosted-pipeline) handles PR validation and release; only 2 GitHub Actions workflows (stale issues, label commands)"
+    score: 3.0
+    status: "Only 2 lightweight GitHub workflows; main CI runs externally via operator-pipelines"
+  - dimension: "Static Analysis"
+    score: 1.0
+    status: "No linting, no YAML schema validation, no dependency alerts, no pre-commit hooks"
   - dimension: "Agent Rules"
     score: 0.0
-    status: "No CLAUDE.md, AGENTS.md, .claude/ directory, or any AI agent guidance"
+    status: "No CLAUDE.md, AGENTS.md, or .claude/ directory"
 critical_gaps:
-  - title: "No in-repo CI/CD — entire validation depends on external pipeline"
-    impact: "Contributors cannot run validation locally; pipeline failures are opaque; no way to reproduce issues without access to the external Tekton infrastructure"
+  - title: "No in-repo YAML schema validation for operator bundles"
+    impact: "Malformed CSVs, CRDs, or catalog entries can only be caught by external pipeline after PR submission, slowing contributor feedback"
     severity: "HIGH"
-    effort: "40+ hours"
-  - title: "No manifest schema validation in-repo"
-    impact: "Malformed CSVs, CRDs, or FBC catalog entries are only caught by external pipeline, not locally or in PR checks"
+    effort: "8-16 hours"
+  - title: "No PR-time bundle structure validation workflow"
+    impact: "Contributors wait for external pipeline to validate bundle structure, increasing PR cycle time"
     severity: "HIGH"
-    effort: "8-12 hours"
-  - title: "No FBC catalog consistency checks"
-    impact: "Catalog entries across 11 OCP versions (v4.12-v4.22) can drift; no automated cross-version validation"
+    effort: "6-10 hours"
+  - title: "No Dependabot or Renovate for GitHub Actions pinning"
+    impact: "Workflows reference unpinned actions (e.g., actions/stale@v3) that could become outdated or compromised"
     severity: "MEDIUM"
-    effort: "12-16 hours"
-  - title: "No security scanning of contributed operator bundles"
-    impact: "Operator images referenced in CSVs are not scanned for vulnerabilities at PR time"
-    severity: "HIGH"
-    effort: "8-12 hours"
-  - title: "No agent rules for AI-assisted contributions"
-    impact: "AI agents contributing operators have no guidance on bundle structure, required fields, or validation steps"
-    severity: "LOW"
-    effort: "4-6 hours"
-quick_wins:
-  - title: "Add YAML schema validation GitHub Action for CSVs and annotations"
-    effort: "2-4 hours"
-    impact: "Catch malformed manifests before external pipeline runs, faster feedback for contributors"
-  - title: "Add CODEOWNERS file for operator directories"
     effort: "1-2 hours"
-    impact: "Automated review routing; each operator's ci.yaml already lists reviewers but CODEOWNERS enables GitHub-native enforcement"
-  - title: "Add basic CLAUDE.md with contribution guidelines for AI agents"
+  - title: "No pre-commit hooks for YAML linting or bundle format checks"
+    impact: "Contributors submit malformed YAML that is only caught after PR review"
+    severity: "MEDIUM"
+    effort: "2-4 hours"
+quick_wins:
+  - title: "Add Dependabot for GitHub Actions version pinning"
+    effort: "1 hour"
+    impact: "Automated security updates for workflow dependencies"
+  - title: "Add a YAML linting pre-commit hook or CI check"
     effort: "2-3 hours"
-    impact: "Enable AI-assisted operator submissions with correct bundle structure"
-  - title: "Add a pre-commit hook or GitHub Action to validate FBC catalog YAML syntax"
+    impact: "Catch YAML syntax errors before PR submission"
+  - title: "Create CLAUDE.md with contribution guidelines for AI-assisted PRs"
     effort: "2-3 hours"
-    impact: "Prevent merge of syntactically invalid catalog.yaml files"
-  - title: "Add opm validate as a PR check"
-    effort: "3-4 hours"
-    impact: "Run OLM's own validation tool on bundle content before external pipeline"
+    impact: "Ensure AI agents follow bundle structure conventions when creating operator submissions"
+  - title: "Add a basic PR validation workflow for bundle directory structure"
+    effort: "4-6 hours"
+    impact: "Fast feedback on structural issues without waiting for external pipeline"
 recommendations:
   priority_0:
-    - "Implement in-repo operator-sdk bundle validate as a GitHub Action to catch bundle structure issues before external pipeline"
-    - "Add FBC (File-Based Catalog) validation using opm validate for catalog.yaml changes"
-    - "Add image reference validation to verify that CSV-referenced images exist and are pullable"
+    - "Add in-repo YAML schema validation for ClusterServiceVersion and CRD files in a PR-triggered workflow"
+    - "Pin GitHub Actions to SHA digests and enable Dependabot for .github/workflows"
   priority_1:
-    - "Add cross-version catalog consistency checks (ensure replaces chains are valid across OCP versions)"
-    - "Implement Trivy/Grype scanning of referenced operator images at PR time"
-    - "Create CLAUDE.md and .claude/rules/ for AI-assisted operator submissions"
+    - "Add a PR-triggered workflow to validate bundle directory structure (manifests/, metadata/, annotations.yaml)"
+    - "Add yamllint or similar YAML schema validation as a pre-commit hook or CI step"
+    - "Create CLAUDE.md with operator bundle contribution guidelines"
   priority_2:
-    - "Add mkdocs CI to validate documentation builds on PR"
-    - "Add metrics/dashboards for pipeline pass/fail rates per operator"
-    - "Implement a local validation script contributors can run before submitting PRs"
+    - "Add catalog consistency checks (verify catalog.yaml entries match operator bundles)"
+    - "Add a CI workflow to validate ci.yaml reviewer/updateGraph fields"
+    - "Consider an in-repo scorecard/preflight dry-run step for faster contributor feedback"
 ---
 
 # Quality Analysis: community-operators-prod
 
 ## Executive Summary
-- **Overall Score: 4.8/10**
-- **Repository Type**: Operator catalog / data repository (not a software project)
-- **Primary Content**: 323 operator bundles, 6,647 CSVs, 59,057 manifest files, FBC catalogs for OCP v4.12-v4.22
-- **Size**: 3.3 GB, 75,247 files
-- **Key Strengths**: Mature external Tekton pipeline (operator-hosted-pipeline) with DeployableByOLM testing, preflight checks, and automated release; well-structured operator bundle format with per-operator ci.yaml configuration
-- **Critical Gaps**: Zero in-repo CI/CD validation, no local validation tooling, no manifest schema enforcement, no security scanning, no agent rules
-- **Agent Rules Status**: Missing — no CLAUDE.md, AGENTS.md, or .claude/ directory
+
+- **Overall Score: 1.7/10**
+- **Repository Type**: Operator catalog/registry (YAML metadata, not source code)
+- **Primary Language**: YAML (73,098 YAML files across 328 operators)
+- **Key Strengths**: Well-organized operator bundle structure; FBC (File-Based Catalog) for OCP 4.12-4.22; external pipeline integration via config.yaml with 4 defined test suites; comprehensive PR template
+- **Critical Gaps**: No in-repo CI/CD validation, no YAML schema enforcement, no static analysis, no agent rules
+- **Agent Rules Status**: Missing
+
+### Important Context
+
+This repository is a **community operator catalog**, not a source code project. It contains operator bundle manifests (CSVs, CRDs, metadata) submitted by external contributors. The primary CI/CD validation (DeployableByOLM, preflight checks, dangling bundle checks) is handled by the **external operator-pipelines** infrastructure, configured via `config.yaml`. This explains the low scores in code-centric dimensions — many are structurally inapplicable.
 
 ## Quality Scorecard
-| Dimension | Score | Status |
-|-----------|-------|--------|
-| Unit Tests | 1/10 | No unit tests (N/A for data repo) |
-| Integration/E2E | 7/10 | External pipeline: DeployableByOLM, preflight, dangling bundle checks |
-| **Build Integration** | **6/10** | **External pipeline builds bundle images and index images; no in-repo build validation** |
-| Image Testing | 5/10 | Bundle images use FROM scratch; preflight checks run but no runtime validation |
-| Coverage Tracking | 1/10 | No coverage metrics for manifest completeness or validation |
-| CI/CD Automation | 6/10 | Robust external pipeline but only 2 GitHub Actions (stale issues, label commands) |
-| Agent Rules | 0/10 | No AI agent guidance whatsoever |
+
+| Dimension | Score | Weight | Status |
+|-----------|-------|--------|--------|
+| Unit Tests | 1/10 | 15% | No source code — repo is a YAML metadata catalog |
+| Integration/E2E | 3/10 | 20% | External pipeline runs DeployableByOLM and preflight checks |
+| Build Integration | 2/10 | 15% | 3,080 bundle.Dockerfiles exist but no PR-time build validation |
+| Image Testing | 1/10 | 10% | Bundle Dockerfiles are FROM scratch metadata-only |
+| Coverage Tracking | 0/10 | 10% | No code coverage — no source code to measure |
+| CI/CD Automation | 3/10 | 15% | Only 2 lightweight GitHub workflows; main CI external |
+| Static Analysis | 1/10 | 10% | No YAML linting, no schema validation, no dependency alerts |
+| Agent Rules | 0/10 | 5% | No CLAUDE.md, AGENTS.md, or .claude/ directory |
+
+**Weighted Overall: 1.7/10**
 
 ## Critical Gaps
 
-### 1. No In-Repo CI/CD Validation
-- **Impact**: Contributors cannot validate bundles locally or see what checks will run. Pipeline failures are discovered only after external pipeline runs (which require Tekton infrastructure access).
+### 1. No In-Repo YAML Schema Validation
+- **Impact**: Malformed CSVs, CRDs, or catalog entries can only be caught by the external operator-pipelines after PR submission, creating slow feedback loops for contributors
 - **Severity**: HIGH
-- **Effort**: 40+ hours (to replicate key pipeline checks as GitHub Actions)
-- **Detail**: The repository relies entirely on the [operator-pipelines](https://github.com/redhat-openshift-ecosystem/operator-pipelines) external Tekton pipeline. GitHub Actions are limited to stale issue cleanup and PR label commands. The config.yaml defines 4 test suites (DeployableByOLM, check_dangling_bundles, check_operator_name, preflight-trigger) but none run within GitHub Actions.
+- **Effort**: 8-16 hours
+- **Details**: The repo contains 6,790 ClusterServiceVersion YAMLs and 4,197 CRD YAMLs with no in-repo validation. Contributors must wait for the external pipeline to discover structural issues.
 
-### 2. No Manifest Schema Validation
-- **Impact**: Malformed ClusterServiceVersions, CRDs, annotations.yaml, or FBC catalog entries are only caught by the external pipeline, not at PR submission time or locally.
+### 2. No PR-Time Bundle Structure Validation
+- **Impact**: Contributors wait for external pipeline to validate that bundles contain required directories (manifests/, metadata/) and files (annotations.yaml)
 - **Severity**: HIGH
-- **Effort**: 8-12 hours
-- **Detail**: With 6,647 CSVs and 59,057 manifest files, even basic YAML syntax validation would catch issues early. Tools like `operator-sdk bundle validate` and `opm validate` could run as GitHub Actions.
+- **Effort**: 6-10 hours
+- **Details**: A lightweight GitHub Actions workflow could validate directory structure, required labels in bundle.Dockerfile, and annotations.yaml format within seconds of PR creation.
 
-### 3. No FBC Catalog Consistency Checks
-- **Impact**: The repository maintains FBC catalogs for 11 OCP versions (v4.12-v4.22) with varying numbers of operators per version. There is no automated check that replaces chains are valid, that channels are consistent, or that images referenced in catalog.yaml entries actually exist.
+### 3. No Dependency Management for GitHub Actions
+- **Impact**: Workflows use unpinned action references (`actions/stale@v3`) that could become outdated or introduce supply chain risk
 - **Severity**: MEDIUM
-- **Effort**: 12-16 hours
+- **Effort**: 1-2 hours
+- **Details**: No `.github/dependabot.yml` or Renovate configuration exists for the 2 workflow files.
 
-### 4. No Security Scanning of Operator Images
-- **Impact**: CSVs reference container images (e.g., `quay.io/community-operator-pipeline-prod/*`), but there is no vulnerability scanning of these images at PR time.
-- **Severity**: HIGH
-- **Effort**: 8-12 hours
-
-### 5. No CODEOWNERS or Branch Protection Visibility
-- **Impact**: Per-operator reviewers are defined in ci.yaml files (321 of 323 operators have ci.yaml), but this is consumed only by the external pipeline. GitHub's native CODEOWNERS mechanism is not used.
-- **Severity**: LOW
-- **Effort**: 1-2 hours (auto-generate from ci.yaml files)
+### 4. No Pre-Commit Hooks
+- **Impact**: Basic YAML syntax errors pass through to PR review
+- **Severity**: MEDIUM
+- **Effort**: 2-4 hours
 
 ## Quick Wins
 
-### 1. Add YAML Schema Validation GitHub Action (2-4 hours)
-- **Impact**: Catch malformed CSVs and annotations before external pipeline runs
-- **Implementation**:
+### 1. Add Dependabot for GitHub Actions (1 hour)
 ```yaml
-name: Validate Operator Bundles
-on: [pull_request]
+# .github/dependabot.yml
+version: 2
+updates:
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+```
+
+### 2. Add YAML Linting CI Check (2-3 hours)
+```yaml
+# .github/workflows/yaml-lint.yml
+name: YAML Lint
+on:
+  pull_request:
+    paths:
+      - 'operators/**/*.yaml'
+      - 'operators/**/*.yml'
+      - 'catalogs/**/*.yaml'
 jobs:
-  validate:
+  lint:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Install operator-sdk
+      - name: Install yamllint
+        run: pip install yamllint
+      - name: Lint changed YAML files
         run: |
-          curl -LO https://github.com/operator-framework/operator-sdk/releases/latest/download/operator-sdk_linux_amd64
-          chmod +x operator-sdk_linux_amd64 && sudo mv operator-sdk_linux_amd64 /usr/local/bin/operator-sdk
-      - name: Validate changed bundles
-        run: |
-          CHANGED_DIRS=$(git diff --name-only ${{ github.event.pull_request.base.sha }} HEAD | grep "^operators/" | cut -d/ -f1-3 | sort -u)
-          for dir in $CHANGED_DIRS; do
-            if [ -d "$dir/manifests" ]; then
-              echo "Validating $dir..."
-              operator-sdk bundle validate "$dir" --select-optional suite=operatorframework
-            fi
-          done
+          git diff --name-only --diff-filter=ACMR origin/main...HEAD \
+            | grep -E '\.(yaml|yml)$' \
+            | xargs -r yamllint -c .yamllint.yml
 ```
 
-### 2. Add CODEOWNERS from ci.yaml (1-2 hours)
-- **Impact**: Enable GitHub-native review routing
-- **Implementation**: Script to parse `operators/*/ci.yaml` and generate `.github/CODEOWNERS`
+### 3. Create CLAUDE.md (2-3 hours)
+Add a `CLAUDE.md` with operator bundle contribution guidelines so AI agents follow the correct structure when preparing operator submissions.
 
-### 3. Add CLAUDE.md for AI Contributions (2-3 hours)
-- **Impact**: Guide AI agents on bundle structure, required fields, and validation
-- **Implementation**: Document the operator bundle structure, required CSV fields, ci.yaml format, and FBC catalog format
-
-### 4. Add FBC Catalog YAML Lint (2-3 hours)
-- **Impact**: Prevent merge of syntactically invalid catalog.yaml files
-- **Implementation**: `yamllint` or `opm validate` on changed catalog files
-
-### 5. Add opm validate Check (3-4 hours)
-- **Impact**: Run OLM's own validation before external pipeline
-- **Implementation**: Install `opm` and run `opm validate catalogs/<version>/` on changed catalog directories
+### 4. Add Bundle Structure Validation Workflow (4-6 hours)
+A lightweight workflow to verify that PRs touching `operators/` contain the required bundle structure (manifests/, metadata/, annotations.yaml, bundle.Dockerfile).
 
 ## Detailed Findings
 
-### CI/CD Pipeline
+### Unit Tests
+- **Score**: 1/10
+- **Finding**: No test files found (`*_test.go`, `*.spec.ts`, `*_test.py`, etc.)
+- **Context**: This is expected — the repository contains only operator bundle manifests (YAML), not executable code. The score of 1 (rather than 0) reflects that `config.yaml` defines structural validation tests (check_operator_name, check_dangling_bundles) that run externally.
 
-**GitHub Actions Workflows (2 total)**:
-1. **stale_issues.yaml** — Scheduled daily cron to close stale issues (30 days stale, 30 days to close) and PRs (30 days stale, 7 days to close). Uses `actions/stale@v3` (outdated, v9 is current).
-2. **pr-label-command.yml** — Delegates to `redhat-openshift-ecosystem/github-workflows/.github/workflows/label-command.yml@main` for handling PR label commands via comments.
+### Integration/E2E Tests
+- **Score**: 3/10
+- **Finding**: The `config.yaml` defines 4 test suites executed by the external operator-pipelines:
+  - `DeployableByOLM` — deploys bundles via OLM to verify they install (with ignore rules for ACK operators)
+  - `check_dangling_bundles` — validates bundle integrity
+  - `check_operator_name` — validates naming conventions
+  - `preflight-trigger` — runs Red Hat preflight certification checks
+- **Strength**: These are meaningful integration tests, even though they're defined and executed externally
+- **Gap**: No test code lives in this repository; contributors cannot run any validation locally
 
-**External Pipeline (Tekton-based)**:
-- The `operator-hosted-pipeline` runs on every PR and applies labels:
-  - `operator-hosted-pipeline/passed` or `operator-hosted-pipeline/failed`
-  - `operator-release-pipeline/passed` or `operator-release-pipeline/failed`
-  - `validation-failed` on failures
-  - `approved` when all checks pass
-- Tests defined in `config.yaml`:
-  - **DeployableByOLM** — Deploys operator on a live cluster (excludes ACK operators, community-windows-machine-config-operator)
-  - **check_dangling_bundles** — Validates bundle references (excludes assisted-service-operator)
-  - **check_operator_name** — Validates operator naming conventions (excludes ibm-block-csi-operator-community, postgresql)
-  - **preflight-trigger** — Runs Red Hat preflight checks (excludes ACK operators)
+### Build Integration
+- **Score**: 2/10
+- **Finding**: 3,080 `bundle.Dockerfile` files exist across operator versions, but they are all `FROM scratch` metadata containers (labels + COPY manifests). No actual build logic exists in-repo.
+- **Gap**: No PR-time validation that bundle.Dockerfiles are well-formed or that required labels are present. The `allowed_bundle_registries` config constrains where images are published but doesn't validate build-time.
 
-**Observations**:
-- The external pipeline is robust and well-tested (all recent merged PRs show passed labels)
-- However, contributors have no way to run these checks locally
-- Pipeline failure debugging requires external system access
-- The stale bot uses an outdated action version (v3 vs v9)
+### Image Testing
+- **Score**: 1/10
+- **Finding**: Bundle images are `FROM scratch` with only LABEL and COPY instructions — they are not runtime containers. There is no container startup testing, health checking, or multi-arch validation.
+- **Context**: This is partially expected for OLM bundle images, which are metadata-only containers consumed by OLM indexing.
 
-### Test Coverage
+### Coverage Tracking
+- **Score**: 0/10
+- **Finding**: No `.codecov.yml`, `coveralls.yml`, `.coveragerc`, or any coverage tooling
+- **Context**: No source code exists to measure coverage for. This dimension is structurally inapplicable.
 
-**In-Repo Tests**: None. This is a data repository with no application code to test.
+### CI/CD Automation
+- **Score**: 3/10
+- **Finding**: Only 2 GitHub workflow files:
+  1. `pr-label-command.yml` — handles PR labels via issue comments (references external `redhat-openshift-ecosystem/github-workflows`)
+  2. `stale_issues.yaml` — scheduled daily cleanup of stale issues/PRs (30 day stale, 7 day close for PRs)
+- **Gap**: The main CI/CD pipeline (operator-pipelines) runs entirely outside this repo. No build caching, no test parallelization, no matrix strategies, no concurrency control in-repo.
+- **Positive**: The external pipeline integration via `config.yaml` is well-structured with per-operator `ci.yaml` files (326 total) defining update strategies and reviewer lists.
 
-**External Pipeline Tests**: 4 test suites configured in `config.yaml` with per-operator ignore lists.
+### Static Analysis
 
-**Operator Scorecard Tests**: Some operators include `tests/scorecard/config.yaml` with OLM scorecard tests (basic-check-spec, olm-bundle-validation, olm-crds-have-validation, olm-crds-have-resources, olm-spec-descriptors, olm-status-descriptors). These are run by the external pipeline, not by GitHub Actions.
+#### Linting
+- No YAML linting configuration (`.yamllint.yml` or equivalent)
+- No schema validation for CSV/CRD/catalog YAML files
+- No format enforcement for the 73,098 YAML files
 
-**Test-to-Code Ratio**: N/A (data repository)
+#### FIPS Compatibility
+- Not applicable — no compiled binaries or crypto-dependent code
 
-### Code Quality
+#### Dependency Alerts
+- **No Dependabot** (`.github/dependabot.yml` missing)
+- **No Renovate** (`renovate.json` / `.renovaterc` missing)
+- GitHub Actions are referenced without SHA pinning (`actions/stale@v3`)
 
-- **Linting**: None in-repo. No `.golangci.yaml`, `.eslintrc`, `ruff.toml`, or any linting configuration.
-- **Pre-commit Hooks**: None. No `.pre-commit-config.yaml`.
-- **Static Analysis**: None in-repo. No CodeQL, gosec, or Semgrep configuration.
-- **YAML Validation**: No yamllint or schema validation for the 59,057+ manifest files.
-- **Formatters**: None.
+#### Pre-commit Hooks
+- No `.pre-commit-config.yaml`
+- No enforcement of YAML formatting or bundle structure at commit time
 
-### Container Images
-
-**Bundle Dockerfiles**: 2,975 bundle Dockerfiles across operator versions, all following the same pattern:
-```dockerfile
-FROM scratch
-LABEL operators.operatorframework.io.bundle.mediatype.v1=registry+v1
-LABEL operators.operatorframework.io.bundle.manifests.v1=manifests/
-# ... more labels
-COPY manifests /manifests/
-COPY metadata /metadata/
-```
-
-**Regular Dockerfiles**: 459 Dockerfiles (mostly for older operators like volume-expander-operator that include build Dockerfiles).
-
-**Observations**:
-- All bundle Dockerfiles use `FROM scratch` (minimal attack surface)
-- No multi-architecture build support in bundle Dockerfiles (not needed for metadata-only images)
-- No image signing or SBOM generation in-repo (may be handled by external pipeline)
-- Referenced operator images in CSVs are not validated for existence or scanned
-
-### Security
-
-- **Container Scanning**: None in-repo. No Trivy, Snyk, or Grype configuration.
-- **SAST/CodeQL**: None. No `.github/workflows/codeql.yml`.
-- **Dependency Scanning**: N/A (no application dependencies).
-- **Secret Detection**: None. No `.gitleaks.toml` or TruffleHog configuration.
-- **Image Reference Validation**: No automated check that images referenced in CSVs are pullable or free of known vulnerabilities.
-- **Allowed Registries**: Config enforces `quay.io/community-operator-pipeline-prod/` and `quay.io/openshift-community-operators/` as allowed bundle registries.
-
-### Agent Rules (Agentic Flow Quality)
-
+### Agent Rules
+- **Score**: 0/10
 - **Status**: Missing
-- **Coverage**: None — no CLAUDE.md, AGENTS.md, `.claude/` directory, or any AI agent guidance
-- **Quality**: N/A
-- **Gaps**:
-  - No guidance on operator bundle structure for AI agents
-  - No rules for CSV required fields validation
-  - No rules for FBC catalog format
-  - No contribution workflow documentation for AI tools
-- **Recommendation**: Generate basic agent rules with `/test-rules-generator` covering:
-  - Operator bundle structure (manifests/, metadata/, tests/scorecard/)
-  - Required CSV fields and annotations
-  - ci.yaml configuration format
-  - FBC catalog.yaml format and replaces chains
-  - PR submission guidelines (one operator per PR, squashed commits)
+- No `CLAUDE.md` or `AGENTS.md` in repository root
+- No `.claude/` directory
+- No `.claude/rules/` for contribution guidelines
+- **Impact**: AI agents have no guidance on operator bundle structure, required files, naming conventions, or the ci.yaml format
+- **Recommendation**: Create `CLAUDE.md` with operator packaging guidelines and generate rules with `/test-rules-generator` for YAML validation patterns
 
 ## Recommendations
 
 ### Priority 0 (Critical)
-
-1. **Implement in-repo bundle validation GitHub Action** — Run `operator-sdk bundle validate` on changed operator bundles at PR time. This gives contributors immediate feedback without waiting for the external pipeline.
-
-2. **Add FBC catalog validation using `opm validate`** — Run OLM's catalog validation tool on changed `catalogs/` directories to catch invalid catalog entries before the external pipeline.
-
-3. **Add image reference validation** — Verify that container images referenced in CSVs exist and are pullable from allowed registries.
+1. **Add in-repo YAML schema validation** — Create a PR-triggered workflow that validates ClusterServiceVersion and CRD YAML files against OLM schemas. This provides fast feedback without waiting for the external pipeline.
+2. **Pin GitHub Actions to SHA digests and enable Dependabot** — The current `actions/stale@v3` reference is unpinned and could introduce supply chain risk.
 
 ### Priority 1 (High Value)
-
-4. **Add cross-version catalog consistency checks** — Verify that replaces chains are valid across all 11 OCP versions, channels are consistent, and no dangling references exist.
-
-5. **Implement Trivy scanning of referenced operator images** — Scan images referenced in new/changed CSVs for known vulnerabilities.
-
-6. **Create CLAUDE.md and .claude/rules/** — Add AI agent guidance for operator submissions, including bundle structure, required fields, and validation steps.
-
-7. **Generate CODEOWNERS from ci.yaml** — Auto-generate a CODEOWNERS file from per-operator ci.yaml reviewer lists for GitHub-native review routing.
+1. **Add PR-triggered bundle structure validation** — Verify that new operator bundles contain required directories (`manifests/`, `metadata/`) and files (`annotations.yaml`, `bundle.Dockerfile`).
+2. **Add yamllint or equivalent** — Even basic YAML syntax validation would catch common contributor errors.
+3. **Create CLAUDE.md** — Document operator bundle contribution conventions for AI-assisted submissions (bundle structure, ci.yaml format, naming rules, catalog entry requirements).
 
 ### Priority 2 (Nice-to-Have)
-
-8. **Add yamllint configuration** — Enforce consistent YAML formatting across the 59,057+ manifest files.
-
-9. **Add mkdocs CI** — Validate documentation builds on PRs that touch docs/ or mkdocs.yml.
-
-10. **Add local validation script** — Create a `validate.sh` that contributors can run locally before submitting PRs, wrapping `operator-sdk bundle validate` and `opm validate`.
-
-11. **Update stale bot action** — Upgrade from `actions/stale@v3` to `actions/stale@v9` for latest features and security fixes.
-
-12. **Add pipeline pass/fail metrics** — Dashboard tracking validation pass rates by operator, identifying consistently problematic operators.
+1. **Add catalog consistency checks** — Verify that FBC `catalog.yaml` entries reference operator bundles that actually exist in the `operators/` directory.
+2. **Add ci.yaml validation** — Ensure per-operator `ci.yaml` files have valid `updateGraph` values and at least one reviewer.
+3. **In-repo preflight dry-run** — Allow contributors to run a subset of preflight checks locally before submitting PRs.
 
 ## Comparison to Gold Standards
 
-| Feature | community-operators-prod | odh-dashboard | notebooks | kserve |
-|---------|------------------------|---------------|-----------|--------|
-| In-Repo CI/CD | 2 GitHub Actions (admin only) | Comprehensive GHA | Full CI/CD | Full CI/CD |
-| External Pipeline | Tekton (robust) | N/A | N/A | N/A |
-| Unit Tests | None (data repo) | Jest + Cypress | Python tests | Go tests |
-| Integration Tests | DeployableByOLM (external) | Contract tests | Image validation | envtest |
-| Schema Validation | None in-repo | TypeScript strict | N/A | CRD validation |
-| Security Scanning | None | Trivy, CodeQL | Trivy | CodeQL |
-| Coverage Tracking | None | Codecov | N/A | Codecov |
-| Agent Rules | None | .claude/rules/ | N/A | N/A |
-| Pre-commit Hooks | None | ESLint, Prettier | N/A | golangci-lint |
-| Local Validation | None | `npm test` | `make test` | `make test` |
+| Dimension | community-operators-prod | odh-dashboard | notebooks | kserve |
+|-----------|--------------------------|---------------|-----------|--------|
+| Unit Tests | 1/10 | 8/10 | 6/10 | 8/10 |
+| Integration/E2E | 3/10 | 9/10 | 7/10 | 9/10 |
+| Build Integration | 2/10 | 7/10 | 8/10 | 7/10 |
+| Image Testing | 1/10 | 6/10 | 9/10 | 6/10 |
+| Coverage Tracking | 0/10 | 8/10 | 5/10 | 8/10 |
+| CI/CD Automation | 3/10 | 9/10 | 8/10 | 8/10 |
+| Static Analysis | 1/10 | 7/10 | 5/10 | 7/10 |
+| Agent Rules | 0/10 | 6/10 | 2/10 | 3/10 |
+| **Overall** | **1.7/10** | **7.8/10** | **6.5/10** | **7.3/10** |
 
-**Note**: Direct comparison is limited because community-operators-prod is a data/catalog repository, not a software project. The gold standards are application repositories with source code. The most relevant comparison dimensions are CI/CD automation, schema validation, and security scanning.
-
-## Repository Statistics
-
-| Metric | Value |
-|--------|-------|
-| Total Files | 75,247 |
-| Repository Size | 3.3 GB |
-| Operator Directories | 323 |
-| Operator Versions (CSVs) | 6,647 |
-| Manifest Files | 59,057 |
-| Bundle Dockerfiles | 2,975 |
-| Regular Dockerfiles | 459 |
-| FBC Catalog Versions | 11 (v4.12 - v4.22) |
-| FBC Catalog YAML Files | 266 |
-| ci.yaml Config Files | 321 |
-| Scorecard Test Configs | Present in some operators |
-| GitHub Actions Workflows | 2 |
-| External Pipeline Tests | 4 (DeployableByOLM, check_dangling_bundles, check_operator_name, preflight-trigger) |
+**Note**: Direct comparison is limited because community-operators-prod is a metadata catalog, not a source code project. Gold standard repositories contain executable code with inherently richer testing opportunities. The most relevant improvements for this repo center on YAML validation, bundle structure enforcement, and contributor experience tooling.
 
 ## File Paths Reference
 
 | File | Purpose |
 |------|---------|
-| `config.yaml` | Repository-level configuration: maintainers, test suites, allowed registries, index image settings |
-| `.github/workflows/stale_issues.yaml` | Stale issue/PR cleanup (daily cron) |
-| `.github/workflows/pr-label-command.yml` | PR label command handler |
-| `operators/*/ci.yaml` | Per-operator CI config: update graph mode, reviewers |
-| `operators/*/VERSION/manifests/*.yaml` | Operator manifests (CSVs, CRDs, RBAC, services) |
-| `operators/*/VERSION/metadata/annotations.yaml` | Bundle metadata annotations |
-| `operators/*/VERSION/bundle.Dockerfile` | Bundle image Dockerfiles |
-| `operators/*/VERSION/tests/scorecard/config.yaml` | OLM scorecard test configuration |
-| `catalogs/vX.YY/OPERATOR/catalog.yaml` | FBC (File-Based Catalog) entries per OCP version |
+| `config.yaml` | External pipeline configuration (test suites, maintainers, registries) |
 | `mkdocs.yml` | Documentation site configuration |
-| `docs/pull_request_template.md` | PR template with contribution checklist |
+| `.github/workflows/pr-label-command.yml` | PR label management via comments |
+| `.github/workflows/stale_issues.yaml` | Stale issue/PR cleanup (daily cron) |
+| `operators/*/ci.yaml` | Per-operator pipeline settings (326 files) |
+| `operators/*/*/bundle.Dockerfile` | OLM bundle Dockerfiles (3,080 files) |
+| `operators/*/*/manifests/*.yaml` | Operator manifests — CSVs, CRDs (73K+ files) |
+| `catalogs/v4.12-v4.22/*/catalog.yaml` | File-Based Catalog entries for OCP versions |
+| `docs/pull_request_template.md` | PR checklist for operator submissions |
+
+## Repository Statistics
+
+| Metric | Value |
+|--------|-------|
+| Total files | 77,031 |
+| Operator directories | 328 |
+| Bundle Dockerfiles | 3,080 |
+| ClusterServiceVersion files | 6,790 |
+| CRD files | 4,197 |
+| YAML files (in operators/) | 73,098 |
+| Catalog versions | 11 (v4.12 - v4.22) |
+| Per-operator ci.yaml files | 326 |
+| GitHub workflow files | 2 |

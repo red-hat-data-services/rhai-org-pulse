@@ -65,7 +65,6 @@ export function useFilters(features, rfes, bigRocks) {
 
   const filteredBigRocks = computed(() => {
     if (!bigRocks.value) return []
-    if (!selectedPillar.value && !searchQuery.value) return bigRocks.value
     return bigRocks.value.filter(function(rock) {
       if (selectedPillar.value && rock.pillar !== selectedPillar.value) return false
       if (searchQuery.value) {

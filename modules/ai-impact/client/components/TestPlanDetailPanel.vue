@@ -6,6 +6,7 @@ import GapAnalysisText from './GapAnalysisText.vue'
 import InfoBubble from './InfoBubble.vue'
 import { getVerdictBgClass, getVerdictLabel, getCriterionLabel, getCriterionScoreClass, getCriterionScoreBgClass, getCriterionScoreLabel, getScoreColorClass, CRITERIA } from '../utils/test-plan-helpers.js'
 import { getReviewStatusClass } from '../utils/feature-helpers.js'
+import { usePipelineSignals } from '../composables/usePipelineSignals.js'
 
 const props = defineProps({
   show: { type: Boolean, default: false },
@@ -15,12 +16,15 @@ const props = defineProps({
   loadTestPlanDetail: { type: Function, default: null }
 })
 
-const emit = defineEmits(['close', 'navigateToFeature', 'navigateToRFE'])
+const emit = defineEmits(['close', 'navigateToFeature', 'navigateToRFE', 'navigateToDecomposer', 'navigateToDocumentation', 'navigateToBuildRelease'])
+
+const { loadPipelineSignals } = usePipelineSignals()
 
 const planDetail = ref(null)
 const detailLoading = ref(false)
 const modalRef = ref(null)
 const expandedCriteria = ref({})
+const pipelineSignals = ref(null)
 let previousActiveElement = null
 
 watch(
@@ -28,10 +32,16 @@ watch(
   async (key) => {
     planDetail.value = null
     expandedCriteria.value = {}
+    pipelineSignals.value = null
     if (!props.show || !key || !props.loadTestPlanDetail) return
     detailLoading.value = true
     try {
-      planDetail.value = await props.loadTestPlanDetail(key)
+      const [detail, signals] = await Promise.all([
+        props.loadTestPlanDetail(key),
+        loadPipelineSignals(key)
+      ])
+      planDetail.value = detail
+      pipelineSignals.value = signals
     } catch {
       // Silently fail - slim data still shows
     } finally {
@@ -379,7 +389,17 @@ const allHistoryEntries = computed(() => {
             <div v-if="detailLoading" class="text-xs text-gray-400 dark:text-gray-500 mb-4">Loading details...</div>
 
             <!-- Pipeline Progress -->
-            <PipelineTimeline :testPlan="currentPlan" :phases="phases" :jiraHost="jiraHost" @navigateToFeature="emit('navigateToFeature', $event)" @navigateToRFE="emit('navigateToRFE', $event)" />
+            <PipelineTimeline
+              :testPlan="currentPlan"
+              :phases="phases"
+              :jiraHost="jiraHost"
+              :signals="pipelineSignals"
+              @navigateToFeature="emit('navigateToFeature', $event)"
+              @navigateToRFE="emit('navigateToRFE', $event)"
+              @navigateToDecomposer="emit('navigateToDecomposer', $event)"
+              @navigateToDocumentation="emit('navigateToDocumentation', $event)"
+              @navigateToBuildRelease="emit('navigateToBuildRelease', $event)"
+            />
           </div>
         </div>
       </div>

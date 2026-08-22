@@ -15,9 +15,8 @@ describe('ai-catalyst server module', () => {
     }
     const context = {
       storage: {
-        readFromStorage: vi.fn(),
-        writeToStorage: vi.fn(),
-        writeToStorageAtomic: vi.fn()
+        readFromStorage: vi.fn(async () => null),
+        writeToStorage: vi.fn(async () => {})
       },
       requireAuth: vi.fn((req, res, next) => next()),
       requireAdmin: vi.fn((req, res, next) => next()),
@@ -52,9 +51,8 @@ describe('ai-catalyst server module', () => {
     }
     const context = {
       storage: {
-        readFromStorage: vi.fn(),
-        writeToStorage: vi.fn(),
-        writeToStorageAtomic: vi.fn()
+        readFromStorage: vi.fn(async () => null),
+        writeToStorage: vi.fn(async () => {})
       },
       requireAuth: vi.fn((req, res, next) => next()),
       requireAdmin: vi.fn((req, res, next) => next()),
@@ -79,7 +77,7 @@ describe('ai-catalyst server module', () => {
   it('registers scopes', () => {
     const router = { get: vi.fn(), post: vi.fn() }
     const context = {
-      storage: { readFromStorage: vi.fn(), writeToStorage: vi.fn(), writeToStorageAtomic: vi.fn() },
+      storage: { readFromStorage: vi.fn(async () => null), writeToStorage: vi.fn(async () => {}) },
       requireAuth: vi.fn((req, res, next) => next()),
       requireAdmin: vi.fn((req, res, next) => next()),
       requireScope: vi.fn(() => vi.fn((req, res, next) => next())),
@@ -104,7 +102,7 @@ describe('ai-catalyst server module', () => {
   it('registers refresh handlers', () => {
     const router = { get: vi.fn(), post: vi.fn() }
     const context = {
-      storage: { readFromStorage: vi.fn(), writeToStorage: vi.fn(), writeToStorageAtomic: vi.fn() },
+      storage: { readFromStorage: vi.fn(async () => null), writeToStorage: vi.fn(async () => {}) },
       requireAuth: vi.fn((req, res, next) => next()),
       requireAdmin: vi.fn((req, res, next) => next()),
       requireScope: vi.fn(() => vi.fn((req, res, next) => next())),
@@ -131,7 +129,7 @@ describe('ai-catalyst server module', () => {
   it('registers diagnostics hook', () => {
     const router = { get: vi.fn(), post: vi.fn() }
     const context = {
-      storage: { readFromStorage: vi.fn(), writeToStorage: vi.fn(), writeToStorageAtomic: vi.fn() },
+      storage: { readFromStorage: vi.fn(async () => null), writeToStorage: vi.fn(async () => {}) },
       requireAuth: vi.fn((req, res, next) => next()),
       requireAdmin: vi.fn((req, res, next) => next()),
       requireScope: vi.fn(() => vi.fn((req, res, next) => next())),
@@ -151,7 +149,7 @@ describe('ai-catalyst server module', () => {
   it('registers export hook', () => {
     const router = { get: vi.fn(), post: vi.fn() }
     const context = {
-      storage: { readFromStorage: vi.fn(), writeToStorage: vi.fn(), writeToStorageAtomic: vi.fn() },
+      storage: { readFromStorage: vi.fn(async () => null), writeToStorage: vi.fn(async () => {}) },
       requireAuth: vi.fn((req, res, next) => next()),
       requireAdmin: vi.fn((req, res, next) => next()),
       requireScope: vi.fn(() => vi.fn((req, res, next) => next())),

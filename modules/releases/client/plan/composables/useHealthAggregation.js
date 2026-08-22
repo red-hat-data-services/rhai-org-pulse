@@ -64,7 +64,7 @@ export function useHealthAggregation(healthData, features, _rfes, _bigRocks) {
       var level = effectiveLevel(h)
       var existing = map[f.rfe]
       if (!existing || isWorse(level, effectiveLevel(existing))) {
-        map[f.rfe] = { risk: { ...h.risk, level: level }, dor: h.dor || null, dod: h.dod || null, planningStatus: h.planningStatus || '' }
+        map[f.rfe] = { risk: { ...h.risk, level: level }, planningStatus: h.planningStatus || '' }
       }
     }
     return map
@@ -74,6 +74,11 @@ export function useHealthAggregation(healthData, features, _rfes, _bigRocks) {
    * Planning readiness data from the health API summary.
    * Null when not in planning mode or enablePlanningChecks is off.
    */
+  var fpdorReadiness = computed(function() {
+    if (!healthData.value || !healthData.value.summary) return null
+    return healthData.value.summary.fpdorReadiness || null
+  })
+
   var planningReadiness = computed(function() {
     if (!healthData.value || !healthData.value.summary) return null
     return healthData.value.summary.planningReadiness || null
@@ -103,7 +108,7 @@ export function useHealthAggregation(healthData, features, _rfes, _bigRocks) {
       for (var ri = 0; ri < rockNames.length; ri++) {
         var rockName = rockNames[ri]
         if (!result[rockName]) {
-          result[rockName] = { worstLevel: 'green', totalFlags: 0, featureCount: 0, dorPassedCount: 0, dodPassedCount: 0, planningReady: 0, planningTotal: 0, planningBlockers: 0, versionedCount: 0, missingVersionCount: 0, committedCount: 0, targetedCount: 0, distinctVersions: new Set(), releaseTypes: new Set() }
+          result[rockName] = { worstLevel: 'green', totalFlags: 0, featureCount: 0, planningReady: 0, planningTotal: 0, planningBlockers: 0, fpdorReady: 0, fpdorTotal: 0, versionedCount: 0, missingVersionCount: 0, committedCount: 0, targetedCount: 0, distinctVersions: new Set(), releaseTypes: new Set() }
         }
 
         // Collect release type from candidates data (available on all features)
@@ -118,8 +123,6 @@ export function useHealthAggregation(healthData, features, _rfes, _bigRocks) {
 
         result[rockName].featureCount++
         result[rockName].totalFlags += (h.risk.score || 0)
-        if (h.dor && h.dor.passed) result[rockName].dorPassedCount++
-        if (h.dod && h.dod.passed) result[rockName].dodPassedCount++
         var level = effectiveLevel(h)
         if (isWorse(level, result[rockName].worstLevel)) {
           result[rockName].worstLevel = level
@@ -131,6 +134,12 @@ export function useHealthAggregation(healthData, features, _rfes, _bigRocks) {
             result[rockName].planningReady++
           } else {
             result[rockName].planningBlockers++
+          }
+        }
+        if (h.fpdor) {
+          result[rockName].fpdorTotal++
+          if (h.fpdor.allApplicablePassed || (h.fpdor.passedCount === h.fpdor.evaluatedCount && h.fpdor.evaluatedCount >= 6)) {
+            result[rockName].fpdorReady++
           }
         }
         // Version aggregation
@@ -163,13 +172,16 @@ export function useHealthAggregation(healthData, features, _rfes, _bigRocks) {
 
   /**
    * Per-big-rock feature detail: key, effective level, flag count, flag categories.
-   * Respects risk overrides.
+   * Built from candidates (so Jira-only hybrid children appear even without health),
+   * enriched with health when available. Respects risk overrides.
    */
   var rockFeatures = computed(function() {
-    if (Object.keys(healthByKey.value).length === 0) return {}
+    if (!features.value || features.value.length === 0) return {}
     var result = {}
     for (var i = 0; i < features.value.length; i++) {
       var f = features.value[i]
+      // Tier 1 Big Rock children only in the expanded Outcome view
+      if (f.tier != null && f.tier !== 1) continue
       var rockNames = f.bigRock ? f.bigRock.split(', ') : []
       if (rockNames.length === 0) continue
       var h = healthByKey.value[f.issueKey]
@@ -185,20 +197,20 @@ export function useHealthAggregation(healthData, features, _rfes, _bigRocks) {
           level: level,
           flagCount: flags.length,
           flagCategories: flags.map(function(fl) { return fl.category }),
-          summary: h ? (h.summary || '') : '',
-          dorPassed: h && h.dor ? h.dor.passed : null,
-          dodPassed: h && h.dod ? h.dod.passed : null,
+          summary: (h && h.summary) || f.summary || '',
           planningStatus: h ? (h.planningStatus || '') : '',
-          deliveryOwner: h ? (h.deliveryOwner || '') : '',
-          jiraUrl: h ? (h.jiraUrl || '') : '',
+          deliveryOwner: (h && h.deliveryOwner) || f.deliveryOwner || '',
+          jiraUrl: (h && h.jiraUrl) || f.jiraUrl || '',
           override: h && h.risk ? (h.risk.override || null) : null,
-          status: h ? (h.status || '') : '',
-          fixVersions: h ? (h.fixVersions || '') : '',
-          targetRelease: h ? (h.targetRelease || '') : '',
+          status: (h && h.status) || f.status || '',
+          fixVersions: (h && h.fixVersions) || f.fixVersion || '',
+          targetRelease: (h && h.targetRelease) || f.targetRelease || '',
           versionStatus: h ? (h.versionStatus || 'none') : 'none',
           completionPct: h ? (h.completionPct || 0) : 0,
           planningChecks: h && h.planningChecks ? h.planningChecks : null,
-          parentKey: f.parentKey || ''
+          fpdor: h && h.fpdor ? h.fpdor : null,
+          parentKey: f.parentKey || '',
+          inIndex: f.inIndex !== false
         })
       }
     }
@@ -235,6 +247,7 @@ export function useHealthAggregation(healthData, features, _rfes, _bigRocks) {
     healthSummary: healthSummary,
     tier1HealthSummary: tier1HealthSummary,
     planningReadiness: planningReadiness,
+    fpdorReadiness: fpdorReadiness,
     releasePhaseMode: releasePhaseMode
   }
 }

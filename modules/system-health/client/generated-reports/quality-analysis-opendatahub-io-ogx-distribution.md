@@ -1,448 +1,504 @@
 ---
 repository: "opendatahub-io/ogx-distribution"
-overall_score: 6.4
+overall_score: 7.0
 scorecard:
   - dimension: "Unit Tests"
-    score: 3.0
-    status: "No unit tests for build scripts (~750 LOC); distribution repo relies on upstream testing"
+    score: 4.0
+    status: "Shell-based unit tests for secrets/labels, but build scripts (964 LOC Python) have zero unit test coverage"
   - dimension: "Integration/E2E"
     score: 9.0
-    status: "Outstanding multi-layer strategy: smoke, integration, functional, Showroom (OpenShift), weekly cross-provider"
+    status: "Exceptional multi-provider, multi-arch integration + E2E with real OpenShift cluster testing"
   - dimension: "Build Integration"
-    score: 7.0
-    status: "PR builds and tests image; Tekton/Konflux pipelines exist; no PR-time Konflux simulation"
+    score: 8.0
+    status: "PR-time multi-arch image build + smoke/integration tests + Tekton Konflux pipelines"
   - dimension: "Image Testing"
     score: 7.0
-    status: "Multi-arch builds, OCI label verification, runtime smoke tests; no vulnerability scanning or SBOM"
+    status: "UBI base, multi-arch (amd64/arm64), health check validation, separate vLLM image pipeline"
   - dimension: "Coverage Tracking"
     score: 2.0
-    status: "No coverage tools, no codecov integration, no thresholds"
+    status: "No coverage tooling — no codecov, no pytest-cov, no thresholds"
   - dimension: "CI/CD Automation"
     score: 9.0
-    status: "17 workflows, concurrency control, build caching, path filtering, nightly builds, weekly reports"
+    status: "18+ workflows with concurrency control, caching, matrix builds, nightly/weekly schedules, Mergify, Slack"
+  - dimension: "Static Analysis"
+    score: 8.0
+    status: "Comprehensive pre-commit (Ruff, ShellCheck, Actionlint) + Dependabot for 3 ecosystems"
   - dimension: "Agent Rules"
-    score: 5.0
-    status: "Comprehensive CLAUDE.md but no .claude/rules/ for test creation guidance"
+    score: 7.0
+    status: "Thorough CLAUDE.md covering architecture, commands, CI/CD — missing test creation rules"
 critical_gaps:
-  - title: "No container vulnerability scanning"
-    impact: "CVEs in base images or Python dependencies not caught until downstream Konflux/ACS scanning"
+  - title: "No code coverage tracking"
+    impact: "Cannot measure or enforce test coverage on Python build scripts; regressions go undetected"
     severity: "HIGH"
-    effort: "2-4 hours"
-  - title: "No unit tests for build scripts"
-    impact: "Build script regressions (build.py, gen_distro_docs.py, ~750 LOC) only caught by downstream failures"
+    effort: "4-6 hours"
+  - title: "Build scripts lack unit tests"
+    impact: "964 lines of Python (gen_config.py, gen_containerfile.py, gen_lockfile.py, verify_secrets.py) have zero pytest unit tests — logic errors only surface at container build time"
     severity: "HIGH"
     effort: "8-12 hours"
-  - title: "No SAST/CodeQL integration"
-    impact: "Code-level security issues in Python scripts not detected; relies solely on pre-commit Ruff linting"
+  - title: "No HEALTHCHECK instruction in Containerfile"
+    impact: "Container orchestrators cannot auto-detect unhealthy containers; relies on external probes only"
     severity: "MEDIUM"
-    effort: "2-3 hours"
-  - title: "No SBOM generation"
-    impact: "Supply chain transparency missing; increasingly required for compliance and customer trust"
-    severity: "MEDIUM"
-    effort: "2-4 hours"
-  - title: "Functional tests not in PR workflow"
-    impact: "Bruno API contract and notebook tests only run in Showroom/ITS, not on every PR"
-    severity: "MEDIUM"
-    effort: "4-6 hours"
+    effort: "1-2 hours"
 quick_wins:
-  - title: "Add Trivy container scanning to PR workflow"
-    effort: "1-2 hours"
-    impact: "Catch CVEs in base images and Python dependencies before merge"
-  - title: "Add CodeQL/SAST workflow"
-    effort: "1-2 hours"
-    impact: "Automated security analysis for Python code"
-  - title: "Add Syft SBOM generation to publish job"
-    effort: "1-2 hours"
-    impact: "Supply chain transparency and compliance"
-  - title: "Create agent rules for test patterns (.claude/rules/)"
+  - title: "Add pytest-cov to functional test runs"
     effort: "2-3 hours"
-    impact: "Improve AI-assisted test creation quality and consistency"
-  - title: "Add basic pytest for build.py"
-    effort: "4-6 hours"
-    impact: "Catch regressions in the most critical build script before they break CI"
+    impact: "Immediate visibility into which Python code paths are exercised by existing tests"
+  - title: "Add HEALTHCHECK to Containerfile.in"
+    effort: "1 hour"
+    impact: "Container-level health monitoring via /v1/health endpoint"
+  - title: "Create .claude/rules/ with test creation guidance"
+    effort: "2-3 hours"
+    impact: "Improve AI-generated test quality for smoke and integration test patterns"
 recommendations:
   priority_0:
-    - "Add Trivy container scanning to the redhat-distro-container.yml workflow (scan built image before publish)"
-    - "Add unit tests for build/build.py — config generation, requirements generation, and Containerfile templating"
+    - "Add pytest unit tests for build scripts (gen_config.py, gen_containerfile.py, verify_secrets.py, common.py)"
+    - "Integrate pytest-cov into CI and set a baseline coverage threshold for Python code"
   priority_1:
-    - "Integrate functional tests (Bruno + notebooks) into PR workflow for faster feedback"
-    - "Add CodeQL workflow for Python SAST"
-    - "Generate SBOM in the publish job using Syft or similar"
-    - "Create .claude/rules/ with test creation guidance (smoke test patterns, integration test patterns)"
+    - "Add HEALTHCHECK instruction to Containerfile.in for container-native health detection"
+    - "Create .claude/rules/ directory with test patterns for shell smoke tests and Python build scripts"
+    - "Enable Tekton early-gate-testing in Konflux pipelines (currently disabled)"
   priority_2:
-    - "Add coverage tracking for build scripts with pytest-cov"
-    - "Add image signing/attestation (cosign) for published images"
-    - "Add performance regression testing for API response times"
-    - "Consider Gitleaks for secret scanning beyond detect-private-key"
+    - "Add contract tests between build scripts and generated artifacts (e.g., verify config.yaml schema)"
+    - "Consider adding type hints and mypy to Python build scripts for static type checking"
 ---
 
-# Quality Analysis: opendatahub-io/ogx-distribution
+# Quality Analysis: ogx-distribution
 
 ## Executive Summary
-- Overall Score: 6.4/10
-- Key Strengths: Outstanding multi-layer integration testing strategy (smoke → integration → functional → Showroom/OpenShift), comprehensive CI/CD with 17 well-organized workflows, excellent multi-provider cross-testing (OpenAI, Vertex AI, vLLM, Gemini, Anthropic), and a detailed CLAUDE.md
-- Critical Gaps: No container vulnerability scanning, no unit tests for build scripts, no SAST/CodeQL, no SBOM generation
-- Agent Rules Status: Partial — comprehensive CLAUDE.md exists but no `.claude/rules/` for test automation guidance
+
+- **Overall Score: 7.0/10**
+- **Repository**: [opendatahub-io/ogx-distribution](https://github.com/opendatahub-io/ogx-distribution)
+- **Type**: Container distribution / build + CI project (Python, Bash)
+- **Jira**: RHOAIENG / OGX Core (midstream)
+- **Key Strengths**: Exceptional integration/E2E testing across multiple providers and architectures, outstanding CI/CD automation with 18+ workflows, comprehensive pre-commit linting pipeline, and a thorough CLAUDE.md
+- **Critical Gaps**: Zero unit test coverage for Python build scripts, no code coverage tracking
+- **Agent Rules Status**: Present (CLAUDE.md) — comprehensive architecture docs but no test creation rules
 
 ## Quality Scorecard
 
-| Dimension | Score | Status |
-|-----------|-------|--------|
-| Unit Tests | 3.0/10 | No unit tests for build scripts (~750 LOC); relies on upstream testing |
-| Integration/E2E | 9.0/10 | Outstanding multi-layer: smoke, integration, functional, Showroom |
-| **Build Integration** | **7.0/10** | **PR builds/tests image; Tekton exists; no PR-time Konflux simulation** |
-| Image Testing | 7.0/10 | Multi-arch, OCI label verification, runtime smoke; no vuln scanning |
-| Coverage Tracking | 2.0/10 | No coverage tools, no codecov, no thresholds |
-| CI/CD Automation | 9.0/10 | 17 workflows, concurrency, caching, nightly builds, weekly reports |
-| Agent Rules | 5.0/10 | Comprehensive CLAUDE.md; no .claude/rules/ for test guidance |
+| Dimension | Score | Weight | Weighted | Status |
+|-----------|-------|--------|----------|--------|
+| Unit Tests | 4.0/10 | 15% | 0.60 | Shell unit tests for secrets/labels; build scripts untested |
+| Integration/E2E | 9.0/10 | 20% | 1.80 | Multi-provider, multi-arch, real OpenShift cluster testing |
+| Build Integration | 8.0/10 | 15% | 1.20 | PR-time multi-arch build + test + Tekton Konflux pipelines |
+| Image Testing | 7.0/10 | 10% | 0.70 | UBI base, multi-arch, health validation; no HEALTHCHECK |
+| Coverage Tracking | 2.0/10 | 10% | 0.20 | No coverage tooling at all |
+| CI/CD Automation | 9.0/10 | 15% | 1.35 | 18+ workflows, concurrency, caching, nightly/weekly, Mergify |
+| Static Analysis | 8.0/10 | 10% | 0.80 | Ruff + ShellCheck + Actionlint + Dependabot (3 ecosystems) |
+| Agent Rules | 7.0/10 | 5% | 0.35 | Thorough CLAUDE.md; no .claude/rules/ for test patterns |
+| **Overall** | **7.0/10** | | **7.00** | |
 
 ## Critical Gaps
 
-1. **No container vulnerability scanning**
-   - Impact: CVEs in base images or Python dependencies not caught until downstream Konflux/ACS
-   - Severity: HIGH
-   - Effort: 2-4 hours
+### 1. Build Scripts Lack Unit Tests
+- **Impact**: 964 lines of Python code (`build/gen_config.py`, `build/gen_containerfile.py`, `build/gen_lockfile.py`, `build/verify_secrets.py`, `build/common.py`, `build/gen_distro_docs.py`) have zero pytest unit tests. Logic errors only surface at container build time or during pre-commit runs.
+- **Severity**: HIGH
+- **Effort**: 8-12 hours
+- **Details**: These scripts handle critical operations — stripping providers, generating Containerfiles, compiling lock files, verifying secret consistency. A malformed `config.yaml` or `Containerfile` could break production deployments.
 
-2. **No unit tests for build scripts**
-   - Impact: build.py (466 LOC) and gen_distro_docs.py (264 LOC) have zero test coverage; regressions only caught by downstream CI failures or manual verification
-   - Severity: HIGH
-   - Effort: 8-12 hours
+### 2. No Code Coverage Tracking
+- **Impact**: Cannot measure which code paths are exercised by existing tests. No baseline for tracking coverage improvements. Regressions in test coverage go completely undetected.
+- **Severity**: HIGH
+- **Effort**: 4-6 hours
+- **Details**: No `.codecov.yml`, no `pytest-cov` usage, no coverage thresholds. While the codebase is relatively small, the build scripts contain complex logic that deserves coverage visibility.
 
-3. **No SAST/CodeQL integration**
-   - Impact: Code-level security issues in Python scripts and test helpers not detected
-   - Severity: MEDIUM
-   - Effort: 2-3 hours
-
-4. **No SBOM generation**
-   - Impact: Supply chain transparency missing for published container images
-   - Severity: MEDIUM
-   - Effort: 2-4 hours
-
-5. **Functional tests not integrated into PR workflow**
-   - Impact: Bruno API contract tests and notebook tests only run in Showroom/Konflux ITS, not on every PR
-   - Severity: MEDIUM
-   - Effort: 4-6 hours
+### 3. No HEALTHCHECK in Containerfile
+- **Impact**: Container orchestrators (Docker, Podman, Kubernetes without explicit probes) cannot auto-detect unhealthy containers. The application has a `/v1/health` endpoint, but it's only checked by external test scripts.
+- **Severity**: MEDIUM
+- **Effort**: 1-2 hours
 
 ## Quick Wins
 
-1. **Add Trivy container scanning to PR workflow**
-   - Effort: 1-2 hours
-   - Impact: Catch CVEs in base images and Python dependencies before merge
-   - Implementation:
-   ```yaml
-   - name: Trivy vulnerability scan
-     uses: aquasecurity/trivy-action@master
-     with:
-       image-ref: '${{ env.IMAGE_NAME }}:${{ github.sha }}'
-       format: 'sarif'
-       output: 'trivy-results.sarif'
-       severity: 'CRITICAL,HIGH'
-   ```
+### 1. Add pytest-cov to Functional Test Runs (2-3 hours)
+The functional test suite already uses pytest. Adding `pytest-cov` provides immediate coverage visibility.
 
-2. **Add CodeQL/SAST workflow**
-   - Effort: 1-2 hours
-   - Impact: Automated security analysis for Python code
-   - Implementation: Create `.github/workflows/codeql.yml` with `language: python`
+```toml
+# tests/functional/pyproject.toml — add to dependencies
+[project.optional-dependencies]
+dev = ["pytest-cov>=6.0"]
+```
 
-3. **Add Syft SBOM generation to publish job**
-   - Effort: 1-2 hours
-   - Impact: Supply chain transparency and compliance
-   - Implementation:
-   ```yaml
-   - name: Generate SBOM
-     uses: anchore/sbom-action@v0
-     with:
-       image: '${{ env.IMAGE_NAME }}:${{ github.sha }}'
-       format: spdx-json
-   ```
+```bash
+# In CI, add --cov flag
+uv run pytest --cov=scripts --cov-report=xml tests/
+```
 
-4. **Create agent rules for test patterns**
-   - Effort: 2-3 hours
-   - Impact: Improve AI-assisted test creation quality
-   - Implementation: Create `.claude/rules/smoke-tests.md`, `.claude/rules/integration-tests.md`
+### 2. Add HEALTHCHECK to Containerfile.in (1 hour)
+```dockerfile
+# Add before ENTRYPOINT in Containerfile.in
+HEALTHCHECK --interval=30s --timeout=5s --start-period=60s --retries=3 \
+  CMD curl -fsS http://localhost:8321/v1/health || exit 1
+```
 
-5. **Add basic pytest for build.py**
-   - Effort: 4-6 hours
-   - Impact: Catch regressions in config generation, requirements generation, Containerfile templating
-   - Implementation: Create `tests/unit/test_build.py` with fixtures for build.yaml variants
+### 3. Create Test Creation Rules (2-3 hours)
+Generate `.claude/rules/` with patterns for writing smoke tests and build script tests using `/test-rules-generator`.
 
 ## Detailed Findings
 
-### CI/CD Pipeline
+### Unit Tests
 
-**Workflow Inventory (17 total):**
+**Score: 4.0/10**
+
+The repo has shell-based unit tests but no pytest unit tests for Python code:
+
+**Present:**
+- `tests/test_file_secrets.sh` — 8 test cases for `resolve_file_secret()` function, covering happy paths, error cases, mutual exclusion, special characters, and edge cases. Well-structured with `pass`/`fail` helpers.
+- `tests/verify-config-label.sh` — Validates OCI config labels on built images match `distribution/config.yaml`.
+- `tests/check_secret_scrub_list.sh` — Verifies CI log scrub list matches secrets in smoke.sh.
+- `build/verify_secrets.py` — Pre-commit hook verifying `_FILE` secret support (runs as a hook, not a test suite).
+
+**Missing:**
+- Zero pytest unit tests for any Python build script
+- `build/gen_config.py` (91 LOC) — parses `build.yaml`, strips providers, generates `config.yaml`
+- `build/gen_containerfile.py` (78 LOC) — generates `Containerfile` from template with base64-encoded config
+- `build/gen_lockfile.py` (336 LOC) — creates virtualenvs, runs dependency discovery, compiles lock files
+- `build/gen_distro_docs.py` (324 LOC) — generates provider documentation tables
+- `build/common.py` (34 LOC) — shared `BuildConfig` class
+
+**Test-to-code ratio**: 16 test files (shell+Python) / 13 source files — reasonable by file count, but the critical Python build logic has 0% unit test coverage.
+
+**Files examined**: `tests/test_file_secrets.sh`, `tests/verify-config-label.sh`, `tests/check_secret_scrub_list.sh`, `build/*.py`
+
+### Integration/E2E Tests
+
+**Score: 9.0/10**
+
+This is a standout dimension. The repo has an exceptionally well-designed multi-layer testing strategy:
+
+**Layer 1 — Smoke Tests (`tests/smoke.sh`)**
+- Container startup with health check polling (60s timeout)
+- Model listing verification for all configured providers
+- OpenAI-compatible chat completions inference
+- Anthropic-compatible Messages API (`/v1/messages`) shape validation
+- PostgreSQL table creation verification (`ogx_kvstore`, `inference_store`)
+- PostgreSQL data population check
+- File processor validation (inline::pypdf with embedded marker verification)
+- RAG file ingestion pipeline (upload → vector store → index with status polling)
+- Provider-conditional testing: vLLM, Vertex AI, OpenAI, Gemini, Anthropic all tested when credentials are available
+
+**Layer 2 — Integration Tests (`tests/run_integration_tests.sh`)**
+- Clones upstream OGX repo at the matching version tag
+- Runs upstream `tests/integration/inference/` pytest suite against the running container
+- Tests against multiple providers in sequence
+- Well-documented skip reasons for each excluded test with upstream issue references
+
+**Layer 3 — Functional Tests (`tests/functional/`)**
+- Bruno API contract tests for CRUD operations
+- Jupyter notebook integration tests executed via pytest
+- JUnit XML output for CI reporting
+- Reusable across deployment targets (local podman, Konflux ITS, RHOAI cluster)
+
+**Layer 4 — Real Cluster Testing (`test-pr-in-showroom.yml`)**
+- Deploys to a real OpenShift cluster
+- Builds image, pushes to OpenShift internal registry
+- Runs full showroom setup/provision/test/cleanup cycle
+- PR author trust verification before building
+
+**Layer 5 — Weekly Provider Regression (`responses-weekly.yml`)**
+- Tests Responses API across OpenAI, Vertex AI, vLLM MaaS, and Bedrock
+- JUnit results published to GitHub Pages with historical trends
+- Matrix-based model testing per provider
+
+**Layer 6 — Messages API Testing (`messages-vllm.yml`, `messages-openai.yml`)**
+- Claude Agent SDK 3-turn session tests
+- Both native passthrough (vLLM) and translation (OpenAI) paths
+
+**Multi-architecture**: Both amd64 and arm64 run smoke + integration tests. With MaaS, both architectures run the full suite; without MaaS, arm64 runs smoke only.
+
+**Files examined**: `tests/smoke.sh`, `tests/run_integration_tests.sh`, `tests/functional/`, `.github/workflows/redhat-distro-container.yml`, `test-pr-in-showroom.yml`, `responses-weekly.yml`, `messages-*.yml`
+
+### Build Integration
+
+**Score: 8.0/10**
+
+**PR-time Build Validation:**
+- `redhat-distro-container.yml` builds the container image on every PR (triggered by path filters on `build/`, `Containerfile`, `distribution/`, `tests/`)
+- Multi-arch builds: both amd64 and arm64 via matrix strategy
+- Built image is immediately tested with smoke + integration tests
+- OCI label verification on built images (`verify-config-label.sh`)
+
+**Pre-commit Build Pipeline:**
+- `gen_config.py` regenerates `distribution/config.yaml` from `build/build.yaml`
+- `gen_containerfile.py` regenerates `Containerfile` from `Containerfile.in` with embedded base64 config
+- `verify_secrets.py` validates `_FILE` secret env var consistency
+- `gen_distro_docs.py` regenerates `distribution/README.md`
+- `pre-commit.yml` CI workflow ensures no uncommitted changes remain after hooks run
+
+**Konflux/Tekton Integration:**
+- `.tekton/odh-ogx-core-pull-request.yaml` — PR pipeline for Konflux builds
+- `.tekton/odh-ogx-core-push.yaml` — Push pipeline for Konflux builds
+- Both reference shared pipeline from `odh-konflux-central`
+- Mergify rule reminds about Konflux Dockerfile sync when Containerfile changes
+
+**Gap**: Tekton has `enable-early-gate-testing: "false"` — early gate testing is disabled in Konflux pipelines.
+
+**Files examined**: `.github/workflows/redhat-distro-container.yml`, `.github/workflows/pre-commit.yml`, `.tekton/*.yaml`, `.pre-commit-config.yaml`, `.github/mergify.yml`
+
+### Image Testing
+
+**Score: 7.0/10**
+
+**Base Image:**
+- Main image uses `quay.io/opendatahub/odh-midstream-python-base-3-12:latest` — UBI-based, FIPS-capable
+- vLLM test image uses `vllm/vllm-openai-cpu:v0.25.0` — non-UBI base (acceptable for CI-only image)
+
+**Multi-arch Support:**
+- Full multi-arch builds: `linux/amd64` and `linux/arm64`
+- Publish step creates multi-platform manifest via `docker/build-push-action`
+- Separate runners for each architecture (ubuntu-24.04 and ubuntu-24.04-arm)
+
+**Container Runtime Validation:**
+- Health check endpoint polling (60s timeout via curl)
+- Model listing and inference validation after startup
+- PostgreSQL connectivity verification
+- File processor and RAG pipeline validation
+
+**Build Optimization:**
+- GHA build cache (`cache-from: type=gha`, `cache-to: type=gha,mode=max`)
+- `--verify-hashes` on pip sync for supply chain integrity
+- Mount cache for artifact downloads
+
+**Separate vLLM CPU Container Pipeline:**
+- `vllm-cpu-container.yml` builds, tests, and publishes pre-built vLLM CPU images
+- Models are pre-loaded into the image to avoid download during CI
+- Multi-arch build with digest-based publishing and manifest assembly
+
+**Gaps:**
+- No `HEALTHCHECK` instruction in Containerfile
+- No Testcontainers usage (uses docker directly, which is fine for this use case)
+
+**Files examined**: `Containerfile`, `Containerfile.in`, `vllm/Containerfile`, `.github/workflows/vllm-cpu-container.yml`, `.github/workflows/redhat-distro-container.yml`
+
+### Coverage Tracking
+
+**Score: 2.0/10**
+
+No coverage tracking is implemented:
+
+- No `.codecov.yml` or `codecov.yml`
+- No `pytest-cov` or `--coverprofile` usage in any CI workflow
+- No coverage thresholds or enforcement
+- No PR coverage reporting
+
+The functional test suite produces JUnit XML reports (via Bruno and pytest), which is good for test result tracking, but code coverage is entirely absent.
+
+The score is not 0 because the codebase is primarily shell scripts and configuration (where traditional coverage tools are less applicable), and the Python code is relatively small. However, the build scripts contain enough logic to warrant coverage tracking.
+
+**Files examined**: All workflow files, `tests/functional/pyproject.toml`, `.github/workflows/`
+
+### CI/CD Automation
+
+**Score: 9.0/10**
+
+Outstanding CI/CD setup with 18+ workflow files:
+
+**Workflow Inventory:**
 
 | Workflow | Trigger | Purpose |
 |----------|---------|---------|
-| `redhat-distro-container.yml` | PR, push, schedule (6AM daily), dispatch | Main build/test/publish pipeline |
-| `pre-commit.yml` | PR, push | Ruff, ShellCheck, Actionlint, artifact generation |
-| `semantic-pr.yml` | PR | Conventional Commits title enforcement |
-| `test-pr-in-showroom.yml` | schedule (daily 8AM), dispatch | Build and test PRs on OpenShift cluster |
-| `test-upstream-in-showroom.yml` | schedule (daily 2AM), dispatch | Test upstream OGX main on OpenShift |
-| `responses-weekly.yml` | schedule (Sunday 22:00), dispatch | Cross-provider Responses API test suite |
-| `messages-weekly.yml` | schedule (Sunday 23:00), dispatch | Cross-provider Messages API test suite |
-| `responses-openai.yml` | workflow_call, dispatch | OpenAI Responses API tests |
-| `responses-vertexai.yml` | workflow_call, dispatch | Vertex AI Responses API tests |
-| `responses-vllm-maas.yml` | workflow_call, dispatch | vLLM MaaS Responses API tests |
-| `messages-openai.yml` | workflow_call, dispatch | OpenAI Messages API + Agent SDK tests |
-| `messages-vllm.yml` | workflow_call, dispatch | Native vLLM Messages API tests |
-| `vllm-cpu-container.yml` | Manual | CI vLLM CPU image builder |
-| `create-or-update-release-branch.yml` | dispatch | Release branch management |
-| `stale_bot.yml` | schedule | Stale issue/PR cleanup |
-| `dependabot.yml` | schedule (weekly) | GitHub Actions, Python deps, Docker deps |
+| `redhat-distro-container.yml` | PR, push, schedule (6AM daily), dispatch | Main build + test + publish pipeline |
+| `pre-commit.yml` | PR, push to main | Linting + artifact regeneration |
+| `semantic-pr.yml` | PR events | Conventional Commits title enforcement |
+| `test-pr-in-showroom.yml` | Schedule (daily 8AM), dispatch | Real OpenShift cluster testing |
+| `responses-weekly.yml` | Schedule (Sunday 22:00), dispatch | Multi-provider Responses API regression |
+| `responses-openai.yml` | workflow_call | OpenAI Responses API tests |
+| `responses-vertexai.yml` | workflow_call | Vertex AI Responses API tests |
+| `responses-vllm-maas.yml` | workflow_call | vLLM MaaS Responses API tests |
+| `responses-bedrock.yml` | workflow_call | AWS Bedrock Responses API tests |
+| `messages-weekly.yml` | Schedule (Sunday 23:00), dispatch | Weekly Messages API regression |
+| `messages-openai.yml` | workflow_call, dispatch | OpenAI Messages API + Agent SDK |
+| `messages-vllm.yml` | workflow_call, dispatch | vLLM native Messages passthrough |
+| `vllm-cpu-container.yml` | PR, push, dispatch | vLLM CPU image build + test + publish |
+| `update-lockfiles.yml` | — | Lock file management |
+| `create-or-update-release-branch.yml` | — | Release branch management |
+| `stale_bot.yml` | Schedule (daily midnight) | Issue/PR staleness management |
 
-**Strengths:**
-- Concurrency control on all relevant workflows (`cancel-in-progress: true`)
-- Build caching via GHA cache (`cache-from: type=gha`)
-- Path filtering on main workflow (only rebuilds on relevant file changes)
-- Multi-arch matrix strategy (amd64 + arm64) on native runners
-- Intelligent distribution-changed detection for conditional publishing
-- Slack notifications on failure
-- Provider credential validation with graceful degradation for forks/Dependabot
-- Reusable composite actions (`setup-vllm`, `setup-postgres`, `setup-server`, `free-disk-space`)
+**Best Practices:**
+- **Concurrency control**: All workflows use `concurrency:` with `cancel-in-progress: true`
+- **Caching**: GHA build cache for Docker layers, uv cache for Python
+- **Matrix strategy**: Multi-arch builds (amd64/arm64)
+- **Reusable actions**: 6 composite actions (`free-disk-space`, `notify-slack`, `regenerate-artifacts`, `setup-postgres`, `setup-server`, `setup-vllm`)
+- **Artifact management**: Log uploads with 7-day retention + secret scrubbing (CWE-532 aware)
+- **Slack notifications**: On failure and successful publish
+- **Mergify**: Smart auto-merge with dependency update fast-track (1 approval), standard PRs (2 approvals), conflict detection, and conditional build checks
+- **Timeout management**: Explicit `timeout-minutes` on jobs
+- **Pin SHA versions**: All GitHub Actions pinned to commit SHAs with version comments
+- **Credential validation**: Pre-flight checks for all provider API keys before testing
 
-**Gaps:**
-- No PR-time Konflux build simulation
-- Functional tests (Bruno + notebooks) not in PR workflow
+**Files examined**: All 18 workflow files in `.github/workflows/`, `.github/actions/`, `.github/mergify.yml`
 
-### Test Coverage
+### Static Analysis
 
-**Test Architecture (3 layers + 2 weekly suites + 2 daily Showroom runs):**
+**Score: 8.0/10**
 
-| Layer | Location | Framework | Trigger |
-|-------|----------|-----------|---------|
-| Smoke | `tests/smoke.sh` | Bash + curl | PR (via redhat-distro-container) |
-| Integration | `tests/run_integration_tests.sh` | pytest (upstream OGX suite) | PR (via redhat-distro-container) |
-| Functional | `tests/functional/` | Bruno + Jupyter + pytest | Showroom/Konflux ITS only |
-| Responses API | `responses-*.yml` | pytest (upstream OGX suite) | Weekly + dispatch |
-| Messages API | `messages-*.yml` | Bash + Claude Agent SDK | Weekly + dispatch |
-| Showroom | `test-pr-in-showroom.yml` | OpenShift deployment + tests | Daily + dispatch |
+**Linting Configuration (via `.pre-commit-config.yaml`):**
 
-**Smoke Test Coverage (`tests/smoke.sh`):**
-- Container health check (60s retry loop)
-- Model listing verification (all providers)
-- OpenAI-compatible inference (chat completion)
-- Anthropic-compatible Messages API (`/v1/messages`)
-- PostgreSQL table creation verification
-- PostgreSQL data population verification
-- File processor (pypdf) validation with custom marker
-- RAG file ingestion pipeline (upload → vector store → index)
+| Tool | Target | Version |
+|------|--------|---------|
+| Ruff (lint + format) | Python files | v0.9.4 |
+| ShellCheck | Shell scripts | v0.11.0.1 |
+| Actionlint | GitHub Actions workflows | v1.7.11 |
+| pre-commit-hooks | General (YAML, JSON, TOML, merge conflicts, large files, executables, private keys, line endings) | v5.0.0 |
 
-**Integration Test Coverage (`tests/run_integration_tests.sh`):**
-- Clones upstream OGX repo at pinned version
-- Runs upstream `tests/integration/inference/` pytest suite
-- Tests against multiple providers based on available credentials
-- Known skip list for tests incompatible with CI environment
+**Custom Pre-commit Hooks:**
+- `gen-config` — Regenerates config.yaml (always runs)
+- `gen-containerfile` — Regenerates Containerfile (always runs)
+- `verify-secrets` — Validates _FILE secret consistency (always runs)
+- `doc-gen` — Regenerates distribution docs (conditional on build.yaml/build.env/config.yaml changes)
+- `check-secret-scrub` — Validates CI log scrub list matches smoke.sh secrets
 
-**Functional Test Coverage (`tests/functional/`):**
-- Bruno API contracts (CRUD operations against all API endpoints)
-- Jupyter notebook execution tests (asserts required)
-- JUnit XML report generation
-- Provider matrix testing with configurable providers
-- Health check with server restart capability
+**Dependency Alerts (`.github/dependabot.yml`):**
+- `github-actions` ecosystem — weekly Saturday
+- `uv` (Python) ecosystem — weekly Saturday, security-only updates (open-pull-requests-limit: 0)
+- `docker` ecosystem for `vllm/` — weekly Saturday
+- Labels and conventional commit prefixes configured
 
-**Cross-Provider Weekly Testing:**
-- OpenAI: gpt-4.1-nano + text-embedding-3-small
-- Vertex AI: gemini-2.5-flash + gemini-embedding-2
-- vLLM MaaS: llama-3-2-3b + nomic-embed-text-v1-5
-- GitHub Pages interactive test report dashboard
+**FIPS Compatibility:**
+- Main image: UBI-based (`quay.io/opendatahub/odh-midstream-python-base-3-12:latest`) — FIPS-capable
+- vLLM image: Non-UBI (`vllm/vllm-openai-cpu:v0.25.0`) — acceptable for CI-only image
+- No explicit FIPS build tags or `GOEXPERIMENT=boringcrypto` (not applicable — Python project)
+- No non-FIPS crypto imports detected in source code
 
-**Messages API Testing:**
-- OpenAI translation path (Messages → Chat Completions)
-- Native vLLM passthrough path (direct /v1/messages)
-- Claude Agent SDK 3-turn session test
+**Files examined**: `.pre-commit-config.yaml`, `.github/dependabot.yml`, `Containerfile.in`, `vllm/Containerfile`
 
-**File Counts:**
-- Source Python files: 10 (~1,224 LOC)
-- Shell scripts: 10
-- Test files: 9
-- Test-to-code ratio: ~0.9:1 (good for distribution repo)
+### Agent Rules
 
-### Code Quality
+**Score: 7.0/10**
 
-**Pre-commit Configuration (`.pre-commit-config.yaml`):**
-- `pre-commit-hooks`: merge conflict, trailing whitespace, large files (1MB), end-of-file, no-commit-to-branch, YAML/JSON/TOML validation, private key detection, mixed line endings, executable shebangs, symlinks
-- `ruff`: Python linting + auto-fix + formatting
-- `actionlint`: GitHub Actions workflow linting
-- `shellcheck`: Shell script static analysis
-- Local hooks: `pkg-gen` (build.py), `doc-gen` (gen_distro_docs.py)
-
-**Strengths:**
-- Comprehensive pre-commit with 4 linters (Ruff, ShellCheck, Actionlint, pre-commit-hooks)
-- Semantic PR titles enforced via workflow
-- Dependabot for GitHub Actions (weekly), Python deps (security-only), Docker deps
-- CODEOWNERS for CI and documentation
-- PR template exists
-
-**Gaps:**
-- No SAST/CodeQL
-- No Gitleaks (only `detect-private-key` in pre-commit)
-- No `ruff.toml` at repo root (only in functional tests pyproject.toml)
-
-### Container Images
-
-**Build Process:**
-- Base image: `quay.io/opendatahub/odh-midstream-python-base-3-12:latest` (Red Hat midstream)
-- Generated from `Containerfile.in` template by `build/build.py`
-- Multi-stage: installs requirements, runs install-common.sh, embeds config as OCI labels
-- `uv pip install` with constraints file for dependency management
-
-**Multi-arch Support:**
-- ✅ amd64 (ubuntu-24.04) + arm64 (ubuntu-24.04-arm) with native runners
-- ✅ QEMU for publish job cross-compilation
-- ✅ Docker Buildx for multi-platform builds
-
-**Image Validation:**
-- ✅ OCI config label verification (`verify-config-label.sh`)
-- ✅ Runtime smoke test against built image
-- ✅ Multi-provider inference testing
-- ❌ No vulnerability scanning (Trivy/Snyk)
-- ❌ No SBOM generation
-- ❌ No image signing/attestation
-
-**Tekton/Konflux:**
-- Pull request pipeline: `odh-ogx-core-pull-request.yaml`
-- Push pipeline: `odh-ogx-core-push.yaml`
-- Uses central pipeline from `opendatahub-io/odh-konflux-central`
-- Early gate testing disabled
-
-### Security
-
-**Current Practices:**
-- ✅ Private key detection (pre-commit)
-- ✅ Provider credential validation before tests
-- ✅ Fork/Dependabot credential handling (secrets unavailable = graceful skip)
-- ✅ Dependabot for dependency updates (security-focused for Python)
-- ✅ Pinned GitHub Actions (SHA references, not tags)
-- ✅ Permissions restricted (`contents: read`, `id-token: write` only where needed)
+**Present — `CLAUDE.md` (root):**
+- **Project overview**: Clear description of OGX distribution purpose and container image
+- **Common commands**: Build, run, test commands with explanations
+- **Architecture**: Detailed build pipeline documentation covering all 4 pre-commit hooks
+- **Auto-generated files**: Clear listing of files that should not be edited manually
+- **Key files**: `build/build.yaml`, `build/build.env`, `Containerfile.in`, `distribution/entrypoint.sh`, `distribution/constraints.txt`
+- **Provider activation pattern**: Explains `${env.SOME_VAR:+provider-name}` conditional syntax
+- **Version management**: `OGX_VERSION` in `build/build.env`, `BuildConfig` in `common.py`
+- **CI/CD overview**: Main workflow, Tekton, weekly testing pipelines
+- **PR title format**: Conventional Commits enforcement
+- **Important notes**: Python 3.12, `uv`, OGX fork distinction
 
 **Missing:**
-- ❌ Container vulnerability scanning (Trivy/Snyk)
-- ❌ SAST (CodeQL/Semgrep)
-- ❌ Secret scanning (Gitleaks/TruffleHog)
-- ❌ SBOM generation
-- ❌ Image signing (cosign)
-- ❌ `.trivyignore` or vulnerability threshold configuration
+- No `.claude/` directory
+- No `.claude/rules/` with test creation rules
+- No AGENTS.md
+- No test pattern documentation for AI agents (how to write smoke tests, what assertions to include, which env vars are required)
 
-### Agent Rules (Agentic Flow Quality)
+**Recommendation**: Generate test creation rules with `/test-rules-generator` to capture the existing test patterns (shell smoke tests with `test_*` functions, pytest functional tests, Bruno API contract tests).
 
-**Status**: Partial
-
-**CLAUDE.md (Root):**
-- ✅ Present and comprehensive (~5KB)
-- ✅ Project overview and architecture
-- ✅ Common commands (pre-commit, build, run, test)
-- ✅ Auto-generated file warnings
-- ✅ Build pipeline documentation
-- ✅ Provider activation pattern explanation
-- ✅ CI/CD documentation
-- ✅ PR title format requirements
-
-**Gaps:**
-- ❌ No `.claude/` directory
-- ❌ No `.claude/rules/` for test creation guidance
-- ❌ No test pattern documentation for AI agents
-- ❌ No smoke test writing guide
-- ❌ No integration test extension guide
-- ❌ No Bruno API test creation guide
-
-**Recommendation:** Use `/test-rules-generator` to create rules for:
-- Smoke test patterns (Bash + curl, health checks, model verification)
-- Integration test patterns (upstream pytest suite, provider configuration)
-- Functional test patterns (Bruno API contracts, Jupyter notebook tests)
+**Files examined**: `CLAUDE.md`, directory listing for `.claude/`
 
 ## Recommendations
 
 ### Priority 0 (Critical)
 
-- **Add Trivy container scanning** to `redhat-distro-container.yml` — scan the built image before publishing to catch CVEs in base images and Python dependencies
-- **Add unit tests for `build/build.py`** — this 466-line script generates config.yaml, requirements.txt, and Containerfile; regressions here break the entire build pipeline
+1. **Add pytest unit tests for Python build scripts**
+   - Target: `build/gen_config.py`, `build/gen_containerfile.py`, `build/verify_secrets.py`, `build/common.py`
+   - These scripts generate critical deployment artifacts; a bug in `gen_config.py` could silently break provider configuration
+   - Effort: 8-12 hours
+   - Example test:
+     ```python
+     # tests/test_gen_config.py
+     def test_stripped_providers_excluded():
+         """Verify dependency-only providers are stripped from output config."""
+         config = generate_config(build_yaml_path)
+         for provider in STRIPPED_PROVIDER_TYPES:
+             assert provider not in config["providers"]
+     ```
+
+2. **Integrate coverage tracking**
+   - Add `pytest-cov` to functional test dependencies
+   - Configure `.codecov.yml` or GitHub Actions coverage reporting
+   - Set a baseline threshold (e.g., 60% for Python code)
+   - Effort: 4-6 hours
 
 ### Priority 1 (High Value)
 
-- **Integrate functional tests into PR workflow** — Bruno API contracts and notebook tests should run on PRs, not just in Showroom/Konflux ITS
-- **Add CodeQL workflow** — Python SAST for build scripts and test helpers
-- **Generate SBOM** — use Syft or similar in the publish job for supply chain transparency
-- **Create `.claude/rules/`** — test creation guidance for smoke, integration, and functional test patterns
+3. **Add HEALTHCHECK to Containerfile.in**
+   - The `/v1/health` endpoint already exists; wire it into the container spec
+   - Effort: 1 hour
+
+4. **Create `.claude/rules/` with test patterns**
+   - Document smoke test conventions (function naming, env var requirements, failure tracking pattern)
+   - Document pytest functional test patterns (notebook execution, Bruno contract tests)
+   - Use `/test-rules-generator` to bootstrap
+   - Effort: 2-3 hours
+
+5. **Enable early-gate-testing in Tekton pipelines**
+   - Currently `enable-early-gate-testing: "false"` in both PR and push pipelines
+   - Evaluate whether this can be enabled for faster feedback
+   - Effort: 2-4 hours
 
 ### Priority 2 (Nice-to-Have)
 
-- **Add pytest-cov for build scripts** — coverage tracking for build.py and gen_distro_docs.py
-- **Add cosign image signing** — sign published images for verification
-- **Performance regression testing** — track API response times across releases
-- **Gitleaks integration** — broader secret scanning beyond detect-private-key
-- **PR-time Konflux build simulation** — catch Konflux-specific build issues before merge
+6. **Add schema validation for generated artifacts**
+   - Validate `config.yaml` against OGX config schema after generation
+   - Validate `Containerfile` structure (e.g., required labels, entrypoint)
+   - Effort: 4-6 hours
+
+7. **Add type hints and mypy to build scripts**
+   - Build scripts are pure Python with no type annotations
+   - Adding mypy would catch type-related bugs at lint time
+   - Effort: 4-6 hours
 
 ## Comparison to Gold Standards
 
-| Dimension | ogx-distribution | odh-dashboard | notebooks | kserve |
-|-----------|-----------------|---------------|-----------|--------|
-| Unit Tests | ❌ None | ✅ Comprehensive | ⚠️ Limited | ✅ Comprehensive |
-| Integration/E2E | ✅ Multi-layer + weekly | ✅ Multi-layer | ✅ E2E | ✅ E2E + envtest |
-| Contract Tests | ✅ Bruno API contracts | ✅ API contracts | ❌ None | ⚠️ Limited |
-| Coverage Tracking | ❌ None | ✅ Codecov enforced | ❌ None | ✅ Codecov |
-| Image Testing | ✅ Runtime smoke | ✅ Full validation | ✅ 5-layer | ⚠️ Basic |
-| Vuln Scanning | ❌ None | ⚠️ Limited | ✅ Trivy | ⚠️ Limited |
-| SBOM | ❌ None | ❌ None | ⚠️ Partial | ❌ None |
-| Multi-arch | ✅ amd64+arm64 | ❌ amd64 only | ✅ amd64+arm64 | ❌ amd64 only |
-| Agent Rules | ⚠️ CLAUDE.md only | ✅ Full rules | ❌ None | ❌ None |
-| CI/CD Quality | ✅ Excellent (17 workflows) | ✅ Excellent | ✅ Good | ✅ Good |
-| Pre-commit | ✅ Comprehensive | ✅ Comprehensive | ⚠️ Basic | ⚠️ Basic |
-| Provider Testing | ✅ 5+ providers weekly | N/A | N/A | N/A |
-
-**Notable strengths vs. gold standards:**
-- Cross-provider weekly testing (unique among compared repos)
-- OpenShift Showroom integration testing (unique)
-- Claude Agent SDK session testing (unique)
-- GitHub Pages test report dashboard (unique)
+| Practice | ogx-distribution | odh-dashboard | notebooks | kserve |
+|----------|-----------------|---------------|-----------|--------|
+| Multi-layer testing | Smoke + Integration + Functional + Cluster | Unit + Integration + E2E + Contract | Unit + Image + E2E | Unit + Integration + E2E |
+| Coverage tracking | None | Codecov with thresholds | Partial | Codecov with enforcement |
+| PR build validation | Multi-arch build + smoke + integration | Build + unit + integration | Image build + validation | Build + unit + E2E |
+| Multi-arch support | amd64 + arm64 | N/A (web app) | amd64 + arm64 + s390x | amd64 |
+| Multi-provider testing | vLLM, OpenAI, Vertex, Gemini, Anthropic, Bedrock | N/A | N/A | N/A |
+| Pre-commit hooks | Ruff + ShellCheck + Actionlint + custom | ESLint + Prettier | Various | golangci-lint |
+| Dependabot | github-actions + uv + docker | github-actions + npm | github-actions + pip | github-actions + gomod |
+| Agent rules (CLAUDE.md) | Comprehensive | Comprehensive | Basic | None |
+| Test creation rules | Missing | Present | Missing | Missing |
+| Nightly testing | Daily 6AM build + test | N/A | Periodic | Weekly |
+| Weekly regression | Provider-specific Responses + Messages API tests | N/A | N/A | N/A |
+| Real cluster testing | OpenShift showroom deployment | N/A | N/A | Kind-based |
 
 ## File Paths Reference
 
 ### CI/CD
-- `.github/workflows/redhat-distro-container.yml` — Main build/test/publish
-- `.github/workflows/pre-commit.yml` — Linting
+- `.github/workflows/redhat-distro-container.yml` — Main build/test/publish pipeline
+- `.github/workflows/pre-commit.yml` — Linting and artifact validation
+- `.github/workflows/test-pr-in-showroom.yml` — OpenShift cluster testing
+- `.github/workflows/responses-weekly.yml` — Weekly multi-provider regression
+- `.github/workflows/messages-vllm.yml` — Native Messages API testing
+- `.github/workflows/messages-openai.yml` — OpenAI Messages API testing
+- `.github/workflows/vllm-cpu-container.yml` — vLLM CI image build
 - `.github/workflows/semantic-pr.yml` — PR title enforcement
-- `.github/workflows/responses-weekly.yml` — Weekly Responses API tests
-- `.github/workflows/messages-weekly.yml` — Weekly Messages API tests
-- `.github/workflows/test-pr-in-showroom.yml` — OpenShift PR testing
-- `.github/workflows/test-upstream-in-showroom.yml` — Upstream testing
-- `.github/actions/setup-vllm/action.yml` — vLLM composite action
-- `.github/actions/setup-postgres/action.yml` — PostgreSQL composite action
-- `.github/actions/setup-server/action.yml` — Server composite action
+- `.github/mergify.yml` — Auto-merge rules
 - `.tekton/odh-ogx-core-pull-request.yaml` — Konflux PR pipeline
 - `.tekton/odh-ogx-core-push.yaml` — Konflux push pipeline
 
 ### Testing
-- `tests/smoke.sh` — Smoke test suite (health, inference, Messages, PostgreSQL, RAG)
-- `tests/run_integration_tests.sh` — Upstream integration test runner
-- `tests/test_utils.sh` — Test helper utilities
+- `tests/smoke.sh` — Container smoke tests (health, inference, Messages, PostgreSQL, file processor, RAG)
+- `tests/run_integration_tests.sh` — Upstream OGX pytest integration suite
+- `tests/test_file_secrets.sh` — Unit tests for _FILE secret resolution
 - `tests/verify-config-label.sh` — OCI label verification
-- `tests/messages_agent_sdk.py` — Claude Agent SDK session test
-- `tests/functional/` — Bruno API contracts + Jupyter notebooks
-- `tests/functional/scripts/run-tests-with-providers.sh` — Functional test runner
-- `tests/functional/tests/test_notebooks.py` — Notebook pytest runner
-- `tests/functional/bruno/` — Bruno API test collections
+- `tests/messages_agent_sdk.py` — Claude Agent SDK 3-turn session
+- `tests/functional/` — Bruno API contracts + Jupyter notebook tests
+- `tests/README.md` — Comprehensive testing documentation
 
-### Build
-- `build/build.py` — Main build script (config, requirements, Containerfile generation)
-- `build/build.yaml` — Provider definitions (source of truth)
-- `build/build.env` — OGX version and build flags
-- `build/gen_distro_docs.py` — Documentation generator
-- `Containerfile.in` — Container build template
-- `Containerfile` — Generated container build file
-
-### Code Quality
-- `.pre-commit-config.yaml` — Pre-commit hooks (Ruff, ShellCheck, Actionlint)
-- `.github/dependabot.yml` — Dependency updates
-- `.github/CODEOWNERS` — Code ownership
-- `.github/PULL_REQUEST_TEMPLATE.md` — PR template
-- `CLAUDE.md` — AI agent guidance
+### Build Configuration
+- `build/build.yaml` — Source of truth for provider definitions
+- `build/build.env` — OGX version configuration
+- `build/gen_config.py` — Generates distribution/config.yaml
+- `build/gen_containerfile.py` — Generates Containerfile from template
+- `build/gen_lockfile.py` — Generates pinned lock files
+- `build/verify_secrets.py` — Validates secret env var consistency
+- `build/common.py` — Shared BuildConfig class
+- `Containerfile.in` — Container build template (hand-edited)
+- `Containerfile` — Auto-generated (do not edit)
 
 ### Container Images
-- `Containerfile` — Main container build (auto-generated)
-- `Containerfile.in` — Container build template
-- `vllm/Containerfile` — CI vLLM CPU image
-- `distribution/entrypoint.sh` — Container entrypoint
-- `distribution/config.yaml` — Runtime configuration (auto-generated)
-- `distribution/requirements.txt` — Python dependencies (auto-generated)
-- `distribution/constraints.txt` — Pip constraints
+- `Containerfile.in` — Main distribution container template (UBI-based)
+- `vllm/Containerfile` — vLLM CPU test image
+
+### Static Analysis
+- `.pre-commit-config.yaml` — Ruff, ShellCheck, Actionlint, custom hooks
+- `.github/dependabot.yml` — github-actions, uv, docker ecosystems
+
+### Agent Rules
+- `CLAUDE.md` — Comprehensive project documentation for AI agents

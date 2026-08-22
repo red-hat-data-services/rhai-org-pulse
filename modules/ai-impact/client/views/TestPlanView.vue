@@ -13,14 +13,17 @@ const selectedPlan = ref(null)
 const searchQuery = ref('')
 const verdictFilter = ref('all')
 const sortBy = ref('default')
+const chartExpanded = ref(true)
 
-const { testPlans, testPlanMeta, testPlanLoading, testPlanError, loadTestPlans, loadTestPlanDetail } = useTestPlans()
-
-loadTestPlans()
+const {
+  testPlans, testPlanMeta, metrics, trendData, breakdown, reviewStatus,
+  testPlanLoading, testPlanError, loadTestPlans, loadTestPlanDetail,
+  timeWindow
+} = useTestPlans()
 
 // Load RFE data only for jiraHost (used by detail panel links)
-const timeWindow = ref('month')
-const { rfeData } = useAIImpact(timeWindow)
+const rfeTimeWindow = ref('month')
+const { rfeData } = useAIImpact(rfeTimeWindow)
 
 function handleRetry() {
   loadTestPlans()
@@ -44,6 +47,18 @@ function handleNavigateToFeature(featureKey) {
 
 function handleNavigateToRFE(rfeKey) {
   moduleNav.navigateTo('rfe-review', { select: rfeKey })
+}
+
+function handleNavigateToDecomposer(featureKey) {
+  moduleNav.navigateTo('feature-decomposer', { select: featureKey })
+}
+
+function handleNavigateToDocumentation(featureKey) {
+  moduleNav.navigateTo('documentation', { highlight: featureKey })
+}
+
+function handleNavigateToBuildRelease(featureKey) {
+  moduleNav.navigateTo('build-release', { highlight: featureKey })
 }
 
 // Handle incoming select param (cross-link from other views)
@@ -78,10 +93,18 @@ watch(() => Object.keys(testPlans.value).length, () => {
       :error="testPlanError"
       :testPlans="testPlans"
       :testPlanMeta="testPlanMeta"
+      :metrics="metrics"
+      :trendData="trendData"
+      :breakdown="breakdown"
+      :reviewStatus="reviewStatus"
+      :timeWindow="timeWindow"
+      :chartExpanded="chartExpanded"
       :searchQuery="searchQuery"
       :verdictFilter="verdictFilter"
       :sortBy="sortBy"
       :selectedPlan="selectedPlan"
+      @update:timeWindow="timeWindow = $event"
+      @update:chartExpanded="chartExpanded = $event"
       @update:searchQuery="searchQuery = $event"
       @update:verdictFilter="verdictFilter = $event"
       @update:sortBy="sortBy = $event"
@@ -98,6 +121,9 @@ watch(() => Object.keys(testPlans.value).length, () => {
       @close="handleCloseModal"
       @navigateToFeature="handleNavigateToFeature"
       @navigateToRFE="handleNavigateToRFE"
+      @navigateToDecomposer="handleNavigateToDecomposer"
+      @navigateToDocumentation="handleNavigateToDocumentation"
+      @navigateToBuildRelease="handleNavigateToBuildRelease"
     />
 
     <AIImpactGuide defaultTab="testplans" />

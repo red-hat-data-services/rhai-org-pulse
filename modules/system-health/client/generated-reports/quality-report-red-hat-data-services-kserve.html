@@ -332,7 +332,7 @@
     <div class="container">
         <header>
             <h1>Quality Analysis Report</h1>
-            <p class="timestamp">Generated on July 06, 2026 at 04:57 PM</p>
+            <p class="timestamp">Generated on July 20, 2026 at 07:55 PM</p>
             <h2 style="margin-top: 1rem; font-weight: 400;">red-hat-data-services/kserve</h2>
         </header>
 
@@ -364,38 +364,43 @@
                         
                         <div class="scorecard-item">
                             <h3>Unit Tests</h3>
-                            <div class="scorecard-score" style="color: #28a745;">8.5/10</div>
-                            <div class="scorecard-status">192 Go + 255 Python test files with envtest, pytest-cov, multi-Python-version matrix</div>
+                            <div class="scorecard-score" style="color: #28a745;">8.0/10</div>
+                            <div class="scorecard-status">Strong Go unit test suite with 54% test-to-code ratio; Python SDK has 180+ tests across 7 packages</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Integration/E2E</h3>
                             <div class="scorecard-score" style="color: #28a745;">9.0/10</div>
-                            <div class="scorecard-status">91 E2E tests across 14 domains; Minikube/KinD PR-gated; multi-Istio-version matrix</div>
+                            <div class="scorecard-status">Comprehensive PR-triggered E2E suite with 98 Python test files across 12 categories, Minikube clusters, multi-install-method matrix</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Build Integration</h3>
-                            <div class="scorecard-score" style="color: #ffc107;">7.5/10</div>
-                            <div class="scorecard-status">Distro build-tag verification on PR; Tekton/Konflux multi-arch PR builds; no Konflux simulation in GitHub CI</div>
+                            <div class="scorecard-score" style="color: #28a745;">8.5/10</div>
+                            <div class="scorecard-status">PR-time distro build check, Konflux Dockerfiles, Tekton pipelines, kustomize/helm dual install validation</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Image Testing</h3>
                             <div class="scorecard-score" style="color: #ffc107;">6.5/10</div>
-                            <div class="scorecard-status">Multi-stage UBI Dockerfiles with license checking; no runtime validation or startup tests</div>
+                            <div class="scorecard-status">Multi-stage UBI-based builds with FIPS support; no runtime validation or container healthchecks</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Coverage Tracking</h3>
                             <div class="scorecard-score" style="color: #28a745;">8.5/10</div>
-                            <div class="scorecard-status">go-test-coverage enforces 80% threshold; PR coverage diff reporting; Python pytest-cov available but not enforced</div>
+                            <div class="scorecard-status">Go coverage with 80% threshold enforcement, PR diff reporting, master baseline comparison; Python uses pytest-cov but no threshold gate</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>CI/CD Automation</h3>
                             <div class="scorecard-score" style="color: #28a745;">9.0/10</div>
-                            <div class="scorecard-status">48 workflows with concurrency control, path-based triggers, pinned SHAs, required checks gate</div>
+                            <div class="scorecard-status">50+ workflows with concurrency control, caching, path-filtered triggers, merge queue support</div>
+                        </div>
+                        <div class="scorecard-item">
+                            <h3>Static Analysis</h3>
+                            <div class="scorecard-score" style="color: #ffc107;">7.5/10</div>
+                            <div class="scorecard-status">Extensive golangci-lint (35+ linters), ruff for Python, pre-commit hooks; no Dependabot/Renovate</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Agent Rules</h3>
-                            <div class="scorecard-score" style="color: #ffc107;">7.0/10</div>
-                            <div class="scorecard-status">AGENTS.md + 5 detailed .rules/ files for midstream patterns; missing test creation guidance</div>
+                            <div class="scorecard-score" style="color: #28a745;">8.0/10</div>
+                            <div class="scorecard-status">AGENTS.md with testing guidance, .rules/ with 6 domain-specific rules, .github/agents/ with release automation</div>
                         </div>
                     </div>
                 </div>
@@ -411,35 +416,35 @@
                     <ul class="items-list">
                         
                         <li class="item-card high">
-                            <div class="item-description">No container image runtime validation</div>
-                            <p>Image startup failures and runtime issues not caught until deployment on cluster</p>
+                            <div class="item-description">No Dependabot or Renovate for dependency alerts</div>
+                            <p>Vulnerable or outdated dependencies go undetected; no automated PR generation for security patches</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-high">HIGH</span>
-                                <span class="meta-tag effort-tag">6-8 hours</span>
+                                <span class="meta-tag effort-tag">1-2 hours</span>
                             </div>
                         </li>
                         <li class="item-card high">
-                            <div class="item-description">Python coverage not enforced</div>
-                            <p>Python SDK (384 source files) has pytest-cov installed but no threshold enforcement; coverage can silently regress</p>
+                            <div class="item-description">No container runtime validation or healthcheck testing</div>
+                            <p>Image startup failures and misconfigured entrypoints not caught until deployment</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-high">HIGH</span>
                                 <span class="meta-tag effort-tag">4-6 hours</span>
                             </div>
                         </li>
                         <li class="item-card medium">
-                            <div class="item-description">No vulnerability scanning in CI</div>
-                            <p>Container vulnerabilities discovered only after images are built in Konflux; Snyk config exists but no CI workflow</p>
+                            <div class="item-description">Python coverage has no threshold enforcement</div>
+                            <p>Python SDK coverage can silently regress without blocking PRs</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-medium">MEDIUM</span>
-                                <span class="meta-tag effort-tag">2-4 hours</span>
+                                <span class="meta-tag effort-tag">2-3 hours</span>
                             </div>
                         </li>
                         <li class="item-card medium">
-                            <div class="item-description">No agent rules for test creation</div>
-                            <p>AI-assisted test generation lacks guidance on test patterns, envtest setup, and pytest conventions specific to this repo</p>
+                            <div class="item-description">No FIPS build tags in upstream Dockerfiles</div>
+                            <p>Only Konflux Dockerfiles have strictfipsruntime; dev/upstream builds are not FIPS-validated</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-medium">MEDIUM</span>
-                                <span class="meta-tag effort-tag">3-4 hours</span>
+                                <span class="meta-tag effort-tag">2-4 hours</span>
                             </div>
                         </li>
                     </ul>
@@ -456,32 +461,32 @@
                     <ul class="items-list">
                         
                         <li class="item-card ">
-                            <div class="item-description">Add Trivy scanning to PR workflow</div>
-                            <p>Catch CVEs in base images and Go/Python dependencies before merge</p>
+                            <div class="item-description">Add .github/dependabot.yml for Go, Python, Docker, and GitHub Actions ecosystems</div>
+                            <p>Automated dependency update PRs with security alerts</p>
                             <div class="item-meta">
                                 
                                 <span class="meta-tag effort-tag">1-2 hours</span>
                             </div>
                         </li>
                         <li class="item-card ">
-                            <div class="item-description">Enforce Python coverage threshold</div>
-                            <p>Prevent Python SDK coverage regressions with pytest-cov --cov-fail-under</p>
+                            <div class="item-description">Add Python coverage threshold in CI (pytest --cov-fail-under=80)</div>
+                            <p>Prevents Python SDK coverage regression on PRs</p>
                             <div class="item-meta">
                                 
-                                <span class="meta-tag effort-tag">2-3 hours</span>
+                                <span class="meta-tag effort-tag">1 hour</span>
                             </div>
                         </li>
                         <li class="item-card ">
-                            <div class="item-description">Add container startup validation step to E2E workflows</div>
-                            <p>Catch entrypoint and runtime failures before full E2E test execution</p>
+                            <div class="item-description">Add HEALTHCHECK to Dockerfiles</div>
+                            <p>Enables container orchestrators to detect unhealthy containers earlier</p>
                             <div class="item-meta">
                                 
-                                <span class="meta-tag effort-tag">3-4 hours</span>
+                                <span class="meta-tag effort-tag">1-2 hours</span>
                             </div>
                         </li>
                         <li class="item-card ">
-                            <div class="item-description">Generate test creation agent rules with /test-rules-generator</div>
-                            <p>Enable consistent AI-generated tests following envtest and pytest patterns</p>
+                            <div class="item-description">Add .claude/rules/ directory with test-creation rules</div>
+                            <p>Improve AI-generated test quality with framework-specific patterns</p>
                             <div class="item-meta">
                                 
                                 <span class="meta-tag effort-tag">2-3 hours</span>
@@ -501,15 +506,15 @@
                         
                         <div class="rec-priority p0">
                             <h3>Priority 0: Critical</h3>
-                            <ul><li>Add container vulnerability scanning (Trivy) to PR and scheduled workflows</li><li>Enforce Python test coverage thresholds across all Python packages</li><li>Add image startup validation to catch runtime failures before E2E tests</li></ul>
+                            <ul><li>Add Dependabot configuration covering gomod, pip, docker, and github-actions ecosystems</li><li>Add container runtime validation tests (build image, start container, verify health endpoint)</li></ul>
                         </div>
                         <div class="rec-priority p1">
                             <h3>Priority 1: High Value</h3>
-                            <ul><li>Create agent rules for unit test, integration test, and E2E test creation patterns</li><li>Add SBOM generation to GitHub CI (Syft config exists but is unused in workflows)</li><li>Integrate Codecov or similar for unified Go+Python coverage visualization</li></ul>
+                            <ul><li>Enforce Python coverage thresholds in CI matching Go&#x27;s 80% standard</li><li>Add FIPS build tags to upstream Dockerfiles for consistency with Konflux builds</li><li>Add .claude/rules/ with unit test and E2E test creation patterns for the repo&#x27;s specific frameworks</li></ul>
                         </div>
                         <div class="rec-priority p2">
                             <h3>Priority 2: Nice-to-Have</h3>
-                            <ul><li>Add contract tests for the KServe Python SDK inference protocol</li><li>Add performance regression testing for prediction latency</li><li>Implement chaos engineering tests for controller resilience</li></ul>
+                            <ul><li>Add chaos testing integration to CI (currently in chaos/ directory but not automated)</li><li>Add performance regression testing for inference endpoints</li><li>Consolidate Python coverage reporting with Codecov or similar dashboard</li></ul>
                         </div>
                     </div>
                 </div>

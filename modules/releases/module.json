@@ -36,7 +36,7 @@
     "entry": "./server/index.js"
   },
   "secrets": {
-    "platform": ["jira"],
+    "platform": ["jira", "github"],
     "module": [
       {
         "key": "PRODUCT_PAGES_CLIENT_ID",
@@ -66,6 +66,11 @@
         "key": "SMARTSHEET_API_TOKEN",
         "description": "SmartSheet API token for release discovery",
         "required": false
+      },
+      {
+        "key": "DRAFT_PLANS_GITLAB_TOKEN",
+        "description": "GitLab PAT for draft plans data fetching (overrides GITLAB_TOKEN)",
+        "required": false
       }
     ]
   },
@@ -73,7 +78,8 @@
     "files": [
       { "path": "releases/registry.json", "notes": "Canonical release registry" },
       { "path": "releases/execution/index.json", "notes": "Feature index with summary metrics" },
-      { "path": "releases/execution/features/*.json", "notes": "Per-feature detail files" }
+      { "path": "releases/execution/features/*.json", "notes": "Per-feature detail files" },
+      { "path": "releases/rhoai-component-architectures/latest.json", "notes": "RHOAI component architecture support matrix" }
     ]
   }
 }

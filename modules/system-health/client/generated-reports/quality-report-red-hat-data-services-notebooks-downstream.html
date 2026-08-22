@@ -332,7 +332,7 @@
     <div class="container">
         <header>
             <h1>Quality Analysis Report</h1>
-            <p class="timestamp">Generated on July 06, 2026 at 05:14 PM</p>
+            <p class="timestamp">Generated on July 20, 2026 at 07:35 PM</p>
             <h2 style="margin-top: 1rem; font-weight: 400;">red-hat-data-services/notebooks-downstream</h2>
         </header>
 
@@ -344,11 +344,11 @@
                         <circle class="score-arc" cx="100" cy="100" r="90"
                                 stroke="#ffc107"
                                 stroke-dasharray="565.4861999999999"
-                                stroke-dashoffset="135.71668799999998"
+                                stroke-dashoffset="158.336136"
                                 id="scoreArc"></circle>
                     </svg>
                     <div class="score-text">
-                        <div class="score-value">7.6</div>
+                        <div class="score-value">7.2</div>
                         <div class="score-label">Overall Score</div>
                     </div>
                 </div>
@@ -365,37 +365,42 @@
                         <div class="scorecard-item">
                             <h3>Unit Tests</h3>
                             <div class="scorecard-score" style="color: #ffc107;">7.0/10</div>
-                            <div class="scorecard-status">Good pytest + Go test coverage with Allure reporting, but no code coverage measurement</div>
+                            <div class="scorecard-status">Good pytest + testcontainers suite; container-focused tests appropriate for repo type</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Integration/E2E</h3>
-                            <div class="scorecard-score" style="color: #28a745;">9.0/10</div>
-                            <div class="scorecard-status">Excellent multi-layer testing — Testcontainers, Kind/CRI-O deployment, Playwright browser tests</div>
+                            <div class="scorecard-score" style="color: #28a745;">8.0/10</div>
+                            <div class="scorecard-status">Excellent K8s cluster testing, Playwright browser tests, FIPS compliance checks on every build</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Build Integration</h3>
-                            <div class="scorecard-score" style="color: #28a745;">8.0/10</div>
-                            <div class="scorecard-status">PR builds validate every changed image with Kind deployment tests, no Konflux simulation</div>
+                            <div class="scorecard-score" style="color: #28a745;">9.0/10</div>
+                            <div class="scorecard-status">PR-time image builds with smart change detection, Konflux pipelines, kustomize validation</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Image Testing</h3>
                             <div class="scorecard-score" style="color: #28a745;">9.0/10</div>
-                            <div class="scorecard-status">Sophisticated Testcontainers tests for base images, workbenches, runtimes, accelerators, FIPS</div>
+                            <div class="scorecard-status">Outstanding multi-layer validation: testcontainers, K8s deployment, check-payload FIPS, Trivy, Hadolint</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Coverage Tracking</h3>
-                            <div class="scorecard-score" style="color: #dc3545;">2.0/10</div>
-                            <div class="scorecard-status">No codecov/coveralls integration, no coverage thresholds or PR reporting</div>
+                            <div class="scorecard-score" style="color: #dc3545;">1.0/10</div>
+                            <div class="scorecard-status">No code coverage tracking — no codecov, no pytest-cov, no coverage thresholds</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>CI/CD Automation</h3>
                             <div class="scorecard-score" style="color: #28a745;">9.0/10</div>
-                            <div class="scorecard-status">Well-organized matrix builds with caching, concurrency control, and smart change detection</div>
+                            <div class="scorecard-status">16 GHA workflows + 35 Tekton pipelines, matrix builds, concurrency control, caching, daily builds</div>
+                        </div>
+                        <div class="scorecard-item">
+                            <h3>Static Analysis</h3>
+                            <div class="scorecard-score" style="color: #28a745;">8.0/10</div>
+                            <div class="scorecard-status">Comprehensive Ruff + Pyright + Hadolint + yamllint; Renovate covers Tekton/Dockerfile but not pip</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Agent Rules</h3>
                             <div class="scorecard-score" style="color: #dc3545;">0.0/10</div>
-                            <div class="scorecard-status">No CLAUDE.md, AGENTS.md, or .claude/ directory — zero AI agent guidance</div>
+                            <div class="scorecard-status">No CLAUDE.md, AGENTS.md, or .claude/ directory present</div>
                         </div>
                     </div>
                 </div>
@@ -411,8 +416,8 @@
                     <ul class="items-list">
                         
                         <li class="item-card high">
-                            <div class="item-description">No code coverage tracking or enforcement</div>
-                            <p>Cannot measure test coverage trends or enforce minimum coverage on PRs — regressions go undetected</p>
+                            <div class="item-description">No code coverage tracking</div>
+                            <p>Cannot measure or enforce test coverage — regressions in test quality go undetected</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-high">HIGH</span>
                                 <span class="meta-tag effort-tag">4-6 hours</span>
@@ -420,31 +425,15 @@
                         </li>
                         <li class="item-card medium">
                             <div class="item-description">No AI agent rules for test creation</div>
-                            <p>AI agents have no guidance on test patterns, frameworks, or quality standards for this repo</p>
+                            <p>AI-generated tests lack project-specific patterns and standards</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-medium">MEDIUM</span>
-                                <span class="meta-tag effort-tag">3-4 hours</span>
+                                <span class="meta-tag effort-tag">2-4 hours</span>
                             </div>
                         </li>
                         <li class="item-card medium">
-                            <div class="item-description">No CodeQL or SAST integration</div>
-                            <p>Static security analysis gaps — only Trivy filesystem/image scanning is present</p>
-                            <div class="item-meta">
-                                <span class="meta-tag severity-medium">MEDIUM</span>
-                                <span class="meta-tag effort-tag">2-3 hours</span>
-                            </div>
-                        </li>
-                        <li class="item-card medium">
-                            <div class="item-description">No SBOM generation or image signing</div>
-                            <p>Supply chain security gap — no software bill of materials or provenance attestation</p>
-                            <div class="item-meta">
-                                <span class="meta-tag severity-medium">MEDIUM</span>
-                                <span class="meta-tag effort-tag">4-6 hours</span>
-                            </div>
-                        </li>
-                        <li class="item-card medium">
-                            <div class="item-description">Trivy image scanning is label-gated on PRs</div>
-                            <p>Image vulnerability scanning only runs on PRs with &#x27;trivy-scan&#x27; label — most PRs skip it</p>
+                            <div class="item-description">Renovate does not cover Python/pip dependencies</div>
+                            <p>Python dependency updates are manual — security vulnerabilities and stale libraries may accumulate</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-medium">MEDIUM</span>
                                 <span class="meta-tag effort-tag">1-2 hours</span>
@@ -464,32 +453,24 @@
                     <ul class="items-list">
                         
                         <li class="item-card ">
-                            <div class="item-description">Add pytest-cov to generate coverage reports</div>
-                            <p>Visibility into test coverage gaps across container test suites</p>
+                            <div class="item-description">Add pytest-cov and codecov integration</div>
+                            <p>Visibility into test coverage with PR reporting and threshold enforcement</p>
                             <div class="item-meta">
                                 
-                                <span class="meta-tag effort-tag">2-3 hours</span>
+                                <span class="meta-tag effort-tag">2-4 hours</span>
                             </div>
                         </li>
                         <li class="item-card ">
-                            <div class="item-description">Enable Trivy scanning on all PRs (remove label gate)</div>
-                            <p>Every PR gets vulnerability scanning instead of opt-in only</p>
+                            <div class="item-description">Extend Renovate to cover pip/pyproject.toml</div>
+                            <p>Automated Python dependency updates alongside existing Tekton/Dockerfile coverage</p>
                             <div class="item-meta">
                                 
-                                <span class="meta-tag effort-tag">1 hour</span>
+                                <span class="meta-tag effort-tag">30 minutes</span>
                             </div>
                         </li>
                         <li class="item-card ">
-                            <div class="item-description">Add CodeQL workflow for Python/Go static analysis</div>
-                            <p>Catch security vulnerabilities and code quality issues in CI tooling code</p>
-                            <div class="item-meta">
-                                
-                                <span class="meta-tag effort-tag">2-3 hours</span>
-                            </div>
-                        </li>
-                        <li class="item-card ">
-                            <div class="item-description">Generate agent rules with /test-rules-generator</div>
-                            <p>AI agents can create consistent, high-quality tests following repo patterns</p>
+                            <div class="item-description">Create CLAUDE.md with test creation rules</div>
+                            <p>Consistent AI-generated tests following project patterns (testcontainers, pytest markers)</p>
                             <div class="item-meta">
                                 
                                 <span class="meta-tag effort-tag">2-3 hours</span>
@@ -509,15 +490,15 @@
                         
                         <div class="rec-priority p0">
                             <h3>Priority 0: Critical</h3>
-                            <ul><li>Add pytest-cov integration with coverage thresholds to catch test regression</li><li>Remove label gate on Trivy image scanning so all PRs get scanned</li></ul>
+                            <ul><li>Add pytest-cov to CI and configure codecov with coverage thresholds to catch test quality regressions</li><li>Extend Renovate configuration to include pip ecosystem for automated Python dependency updates</li></ul>
                         </div>
                         <div class="rec-priority p1">
                             <h3>Priority 1: High Value</h3>
-                            <ul><li>Add CodeQL/SAST workflow for Python and Go source code</li><li>Add SBOM generation (Syft/Cosign) and image signing for published images</li><li>Create .claude/rules/ with test creation guidelines for container, deployment, and browser tests</li></ul>
+                            <ul><li>Create CLAUDE.md and .claude/rules/ with test creation guidance for testcontainers, Playwright, and pytest marker patterns</li><li>Add multi-version Kubernetes testing (test against K8s 1.31 and 1.33 to match OCP versions)</li></ul>
                         </div>
                         <div class="rec-priority p2">
                             <h3>Priority 2: Nice-to-Have</h3>
-                            <ul><li>Add Allure report publishing to GitHub Pages or artifact storage</li><li>Add dependency update automation (Dependabot/Renovate for Go modules and Python deps)</li><li>Consider adding contract tests between notebook images and RHOAI dashboard expectations</li></ul>
+                            <ul><li>Add test coverage for ROCm-specific code paths in container tests</li><li>Consider adding contract tests between image manifests and operator expectations</li></ul>
                         </div>
                     </div>
                 </div>

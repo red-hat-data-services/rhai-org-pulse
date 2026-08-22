@@ -369,35 +369,6 @@ describe('missing-docs-required', function () {
   })
 })
 
-describe('missing-target-end', function () {
-  var rule = findRule('missing-target-end')
-
-  it('triggers for Feature in progress with no target end', function () {
-    var feature = makeFeature({ status: 'In Progress', issueType: 'Feature', targetEnd: null })
-    expect(rule.check(feature, {})).toBe(true)
-  })
-
-  it('triggers for Feature in Refinement with no target end', function () {
-    var feature = makeFeature({ status: 'Refinement', issueType: 'Feature', targetEnd: null })
-    expect(rule.check(feature, {})).toBe(true)
-  })
-
-  it('does not trigger when target end is set', function () {
-    var feature = makeFeature({ status: 'In Progress', issueType: 'Feature', targetEnd: '2026-06-01' })
-    expect(rule.check(feature, {})).toBe(false)
-  })
-
-  it('does not trigger for non-Feature types', function () {
-    var feature = makeFeature({ status: 'In Progress', issueType: 'Initiative', targetEnd: null })
-    expect(rule.check(feature, {})).toBe(false)
-  })
-
-  it('does not trigger for inactive status', function () {
-    var feature = makeFeature({ status: 'Closed', issueType: 'Feature', targetEnd: null })
-    expect(rule.check(feature, {})).toBe(false)
-  })
-})
-
 describe('missing-rice-score', function () {
   var rule = findRule('missing-rice-score')
 
@@ -681,5 +652,57 @@ describe('missing-affected-version', function () {
     var feature = makeFeature({ issueType: 'Bug', versionReleased: true })
     // affectedVersions defaults to undefined in makeFeature, rule treats as empty
     expect(rule.check(feature, {})).toBe(true)
+  })
+})
+
+describe('target-fix-version-mismatch rule', function () {
+  var rule = findRule('target-fix-version-mismatch')
+
+  it('exists and is categorized as metadata, enabled by default', function () {
+    expect(rule).toBeTruthy()
+    expect(rule.category).toBe('metadata')
+    expect(rule.defaultEnabled).toBe(true)
+  })
+
+  it('triggers when both release ids are set and differ in a later phase', function () {
+    var feature = makeFeature({
+      status: 'In Progress',
+      fixReleaseId: 'rhoai-3.6', targetReleaseId: 'rhoai-3.5',
+      fixVersions: ['3.6 GA RHOAI RELEASE'], targetVersions: ['3.5 GA RHOAI RELEASE']
+    })
+    expect(rule.check(feature, {})).toBe(true)
+    expect(rule.message(feature)).toContain('3.5 GA RHOAI RELEASE')
+    expect(rule.message(feature)).toContain('3.6 GA RHOAI RELEASE')
+  })
+
+  it('also triggers in terminal phases', function () {
+    var feature = makeFeature({ status: 'Closed', fixReleaseId: 'rhoai-3.6', targetReleaseId: 'rhoai-3.5' })
+    expect(rule.check(feature, {})).toBe(true)
+  })
+
+  it('does not trigger when the release ids agree', function () {
+    var feature = makeFeature({ status: 'In Progress', fixReleaseId: 'rhoai-3.5', targetReleaseId: 'rhoai-3.5' })
+    expect(rule.check(feature, {})).toBe(false)
+  })
+
+  it('does not trigger in earlier phases', function () {
+    var feature = makeFeature({ status: 'Refinement', fixReleaseId: 'rhoai-3.6', targetReleaseId: 'rhoai-3.5' })
+    expect(rule.check(feature, {})).toBe(false)
+  })
+
+  it('does not trigger when only one side is set', function () {
+    expect(rule.check(makeFeature({ status: 'In Progress', fixReleaseId: 'rhoai-3.6', targetReleaseId: null }), {})).toBe(false)
+    expect(rule.check(makeFeature({ status: 'In Progress', fixReleaseId: null, targetReleaseId: 'rhoai-3.5' }), {})).toBe(false)
+  })
+
+  it('does not trigger for bugs', function () {
+    var feature = makeFeature({ issueType: 'Bug', status: 'In Progress', fixReleaseId: 'rhoai-3.6', targetReleaseId: 'rhoai-3.5' })
+    expect(rule.check(feature, {})).toBe(false)
+  })
+
+  it('can be disabled via config', function () {
+    var feature = makeFeature({ status: 'In Progress', fixReleaseId: 'rhoai-3.6', targetReleaseId: 'rhoai-3.5' })
+    var violations = evaluateHygiene(feature, { 'target-fix-version-mismatch': { enabled: false } })
+    expect(violations.some(function (v) { return v.id === 'target-fix-version-mismatch' })).toBe(false)
   })
 })

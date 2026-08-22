@@ -491,19 +491,22 @@
         "area": "Model Governance & Compliance",
         "description": "No roadmap items addressing model governance, audit trails, or regulatory compliance beyond HIPAA/FedRAMP. EU AI Act risk management and model cards are unaddressed.",
         "affectedCustomers": 4,
-        "painPointMentions": 12
+        "painPointMentions": 12,
+        "sourceCustomers": ["HealthFirst Corp", "EU Banking Ltd"]
       },
       {
         "area": "Multi-Cloud Portability",
         "description": "Customers request ability to migrate models between cloud providers and on-prem. No initiative addressing cloud-agnostic deployment or cross-cloud model sync.",
         "affectedCustomers": 3,
-        "painPointMentions": 8
+        "painPointMentions": 8,
+        "sourceCustomers": ["TechCorp Industries", "Global Telecom Ltd"]
       },
       {
         "area": "AutoML & Low-Code ML",
         "description": "Business analysts and citizen data scientists requesting no-code ML capabilities. Gap vs competitors offering AutoML workflows (H2O.ai, DataRobot).",
         "affectedCustomers": 5,
-        "painPointMentions": 15
+        "painPointMentions": 15,
+        "sourceCustomers": ["Retail Analytics Corp", "Marketing Insights Ltd"]
       }
     ],
     "quickWins": [
@@ -512,21 +515,24 @@
         "rationale": "Leverage existing monitoring infrastructure. Customers need visibility into GPU spend vs idle time. Can be delivered in 2 sprints.",
         "effort": "Low",
         "impact": "Medium",
-        "customerBenefit": "Immediate cost visibility for 8 customers with GPU cost concerns"
+        "customerBenefit": "Immediate cost visibility for 8 customers with GPU cost concerns",
+        "sourceCustomers": ["TechCorp Industries", "Manufacturing Solutions Inc"]
       },
       {
         "suggestion": "Create air-gapped installation checklist and validator script",
         "rationale": "While full automation is long-term, a validated checklist would reduce 50% of current deployment errors. Minimal development, high customer impact.",
         "effort": "Low",
         "impact": "High",
-        "customerBenefit": "Reduces air-gapped deployment time from 2-3 months to 3-4 weeks"
+        "customerBenefit": "Reduces air-gapped deployment time from 2-3 months to 3-4 weeks",
+        "sourceCustomers": ["FedBank Corp", "Defense Contractor Alpha"]
       },
       {
         "suggestion": "Build model deployment templates for common frameworks",
         "rationale": "80% of deployments are PyTorch, TensorFlow, or scikit-learn. Pre-built templates would eliminate 2-3 days of YAML configuration per deployment.",
         "effort": "Medium",
         "impact": "High",
-        "customerBenefit": "Addresses #1 pain point (deployment complexity) with lower investment than full wizard"
+        "customerBenefit": "Addresses #1 pain point (deployment complexity) with lower investment than full wizard",
+        "sourceCustomers": ["Acme Financial Corp", "Global Telecom Ltd"]
       }
     ],
     "strategicThemes": [

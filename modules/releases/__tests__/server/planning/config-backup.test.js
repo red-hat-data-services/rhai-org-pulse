@@ -12,23 +12,23 @@ function createMocks(configData, releaseFiles, existingBackupFiles) {
     }
   }
   return {
-    readFromStorage: vi.fn(function(key) {
+    readFromStorage: vi.fn(async function(key) {
       return store[key] ? JSON.parse(JSON.stringify(store[key])) : null
     }),
-    writeToStorage: vi.fn(),
-    listStorageFiles: vi.fn().mockReturnValue(existingBackupFiles || []),
-    deleteFromStorage: vi.fn()
+    writeToStorage: vi.fn().mockResolvedValue(undefined),
+    listStorageFiles: vi.fn().mockResolvedValue(existingBackupFiles || []),
+    deleteFromStorage: vi.fn().mockResolvedValue(undefined)
   }
 }
 
 describe('backupConfig', () => {
-  it('creates a timestamped backup bundling config and per-release files', () => {
+  it('creates a timestamped backup bundling config and per-release files', async () => {
     const config = { releases: { '3.5': { release: '3.5' } } }
     const releaseData = { release: '3.5', bigRocks: [{ name: 'A', priority: 1 }] }
     const { readFromStorage, writeToStorage, listStorageFiles, deleteFromStorage } =
       createMocks(config, { '3.5': releaseData }, [])
 
-    backupConfig(readFromStorage, writeToStorage, listStorageFiles, deleteFromStorage)
+    await backupConfig(readFromStorage, writeToStorage, listStorageFiles, deleteFromStorage)
 
     expect(readFromStorage).toHaveBeenCalledWith('releases/planning/config.json')
     expect(readFromStorage).toHaveBeenCalledWith('releases/planning/releases/3.5.json')
@@ -41,25 +41,25 @@ describe('backupConfig', () => {
     expect(data.releases['3.5']).toEqual(releaseData)
   })
 
-  it('does nothing when config.json is null', () => {
+  it('does nothing when config.json is null', async () => {
     const { readFromStorage, writeToStorage, listStorageFiles, deleteFromStorage } =
       createMocks(null, null, [])
 
-    backupConfig(readFromStorage, writeToStorage, listStorageFiles, deleteFromStorage)
+    await backupConfig(readFromStorage, writeToStorage, listStorageFiles, deleteFromStorage)
 
     expect(writeToStorage).not.toHaveBeenCalled()
   })
 
-  it('handles missing listStorageFiles gracefully', () => {
+  it('handles missing listStorageFiles gracefully', async () => {
     const config = { releases: {} }
     const { readFromStorage, writeToStorage } = createMocks(config)
 
-    backupConfig(readFromStorage, writeToStorage, null, vi.fn())
+    await backupConfig(readFromStorage, writeToStorage, null, vi.fn())
 
     expect(writeToStorage).toHaveBeenCalledTimes(1)
   })
 
-  it('bundles multiple per-release files', () => {
+  it('bundles multiple per-release files', async () => {
     const config = { releases: { '3.5': { release: '3.5' }, '3.6': { release: '3.6' } } }
     const { readFromStorage, writeToStorage, listStorageFiles, deleteFromStorage } =
       createMocks(config, {
@@ -67,14 +67,14 @@ describe('backupConfig', () => {
         '3.6': { release: '3.6', bigRocks: [{ name: 'B' }] }
       }, [])
 
-    backupConfig(readFromStorage, writeToStorage, listStorageFiles, deleteFromStorage)
+    await backupConfig(readFromStorage, writeToStorage, listStorageFiles, deleteFromStorage)
 
     const data = writeToStorage.mock.calls[0][1]
     expect(data.releases['3.5'].bigRocks[0].name).toBe('A')
     expect(data.releases['3.6'].bigRocks[0].name).toBe('B')
   })
 
-  it('prunes old backups when more than 10 exist', () => {
+  it('prunes old backups when more than 10 exist', async () => {
     const config = { releases: {} }
     const existingFiles = Array.from({ length: 12 }, (_, i) => {
       const num = String(i).padStart(2, '0')
@@ -84,14 +84,14 @@ describe('backupConfig', () => {
     const { readFromStorage, writeToStorage, listStorageFiles, deleteFromStorage } =
       createMocks(config, null, existingFiles)
 
-    backupConfig(readFromStorage, writeToStorage, listStorageFiles, deleteFromStorage)
+    await backupConfig(readFromStorage, writeToStorage, listStorageFiles, deleteFromStorage)
 
     expect(deleteFromStorage).toHaveBeenCalledTimes(2)
     expect(deleteFromStorage.mock.calls[0][0]).toContain('config-backup-2026-04-00')
     expect(deleteFromStorage.mock.calls[1][0]).toContain('config-backup-2026-04-01')
   })
 
-  it('does not prune when 10 or fewer backups exist', () => {
+  it('does not prune when 10 or fewer backups exist', async () => {
     const config = { releases: {} }
     const existingFiles = Array.from({ length: 9 }, (_, i) =>
       `config-backup-2026-04-0${i + 1}T12-00-00-000Z.json`
@@ -100,12 +100,12 @@ describe('backupConfig', () => {
     const { readFromStorage, writeToStorage, listStorageFiles, deleteFromStorage } =
       createMocks(config, null, existingFiles)
 
-    backupConfig(readFromStorage, writeToStorage, listStorageFiles, deleteFromStorage)
+    await backupConfig(readFromStorage, writeToStorage, listStorageFiles, deleteFromStorage)
 
     expect(deleteFromStorage).not.toHaveBeenCalled()
   })
 
-  it('ignores non-backup files when pruning', () => {
+  it('ignores non-backup files when pruning', async () => {
     const config = { releases: {} }
     const existingFiles = [
       'config.json',
@@ -118,17 +118,17 @@ describe('backupConfig', () => {
     const { readFromStorage, writeToStorage, listStorageFiles, deleteFromStorage } =
       createMocks(config, null, existingFiles)
 
-    backupConfig(readFromStorage, writeToStorage, listStorageFiles, deleteFromStorage)
+    await backupConfig(readFromStorage, writeToStorage, listStorageFiles, deleteFromStorage)
 
     expect(deleteFromStorage).not.toHaveBeenCalled()
   })
 
-  it('handles listStorageFiles error gracefully', () => {
+  it('handles listStorageFiles error gracefully', async () => {
     const config = { releases: {} }
     const { readFromStorage, writeToStorage } = createMocks(config)
-    const listStorageFiles = vi.fn().mockImplementation(() => { throw new Error('disk error') })
+    const listStorageFiles = vi.fn().mockRejectedValue(new Error('disk error'))
 
-    expect(() => backupConfig(readFromStorage, writeToStorage, listStorageFiles, vi.fn())).not.toThrow()
+    await backupConfig(readFromStorage, writeToStorage, listStorageFiles, vi.fn())
     expect(writeToStorage).toHaveBeenCalledTimes(1)
   })
 })

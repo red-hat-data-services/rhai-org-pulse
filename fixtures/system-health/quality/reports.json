@@ -1,0 +1,165 @@
+{
+  "lastSyncedAt": "2026-07-28T10:30:00.000Z",
+  "totalReports": 5,
+  "reports": {
+    "kserve--kserve": {
+      "latest": {
+        "repository": "kserve/kserve",
+        "overallScore": 7.4,
+        "scorecard": [
+          { "dimension": "Unit Tests", "score": 8.0, "status": "Comprehensive pytest suite with 800+ tests" },
+          { "dimension": "Integration/E2E", "score": 7.5, "status": "E2E tests via KServe test framework" },
+          { "dimension": "Build Integration", "score": 8.0, "status": "Multi-stage Docker builds with CI" },
+          { "dimension": "Image Testing", "score": 6.0, "status": "Basic container smoke tests" },
+          { "dimension": "Coverage Tracking", "score": 5.0, "status": "No coverage enforcement or PR gates" },
+          { "dimension": "CI/CD Automation", "score": 9.0, "status": "GitHub Actions with matrix builds" },
+          { "dimension": "Static Analysis", "score": 8.0, "status": "golangci-lint, mypy, ruff" },
+          { "dimension": "Agent Rules", "score": 7.5, "status": "Basic CLAUDE.md with project conventions" }
+        ],
+        "criticalGaps": [
+          { "title": "No coverage enforcement or PR coverage gates", "impact": "Regression risk from untested code paths", "severity": "HIGH", "effort": "4-8 hours" },
+          { "title": "No container vulnerability scanning", "impact": "Security vulnerabilities in production images", "severity": "HIGH", "effort": "2-4 hours" }
+        ],
+        "quickWins": [
+          { "title": "Add Codecov/Coveralls integration", "effort": "2-3 hours", "impact": "Immediate coverage visibility" }
+        ],
+        "tier": "upstream",
+        "component": "Model Serving",
+        "team": "",
+        "githubUrl": "https://github.com/kserve/kserve",
+        "hasHtmlReport": false,
+        "assessedAt": "2026-07-28T10:00:00.000Z"
+      },
+      "history": [
+        { "overallScore": 6.8, "gapCount": 3, "assessedAt": "2026-07-21T10:00:00.000Z" },
+        { "overallScore": 6.5, "gapCount": 4, "assessedAt": "2026-07-14T10:00:00.000Z" }
+      ]
+    },
+    "opendatahub-io--odh-dashboard": {
+      "latest": {
+        "repository": "opendatahub-io/odh-dashboard",
+        "overallScore": 8.7,
+        "scorecard": [
+          { "dimension": "Unit Tests", "score": 9.0, "status": "Jest + React Testing Library, 1200+ tests" },
+          { "dimension": "Integration/E2E", "score": 9.0, "status": "Cypress E2E suite with visual regression" },
+          { "dimension": "Build Integration", "score": 9.0, "status": "Multi-stage Dockerfile, Webpack optimized" },
+          { "dimension": "Image Testing", "score": 7.5, "status": "Container smoke tests in CI" },
+          { "dimension": "Coverage Tracking", "score": 7.0, "status": "Coverage reports but informational only" },
+          { "dimension": "CI/CD Automation", "score": 9.5, "status": "Comprehensive GitHub Actions + Prow" },
+          { "dimension": "Static Analysis", "score": 9.0, "status": "ESLint, TypeScript strict mode, Prettier" },
+          { "dimension": "Agent Rules", "score": 8.5, "status": "Detailed CLAUDE.md with architecture docs" }
+        ],
+        "criticalGaps": [
+          { "title": "Coverage enforcement is informational only", "impact": "No PR blocking on coverage drops", "severity": "MEDIUM", "effort": "2-4 hours" }
+        ],
+        "quickWins": [
+          { "title": "Add coverage threshold enforcement to CI", "effort": "1-2 hours", "impact": "Prevent coverage regression" }
+        ],
+        "tier": "upstream",
+        "component": "AI Core Dashboard",
+        "team": "AI Core Dashboard",
+        "githubUrl": "https://github.com/opendatahub-io/odh-dashboard",
+        "hasHtmlReport": false,
+        "assessedAt": "2026-07-28T10:15:00.000Z"
+      },
+      "history": [
+        { "overallScore": 8.5, "gapCount": 2, "assessedAt": "2026-07-21T10:15:00.000Z" }
+      ]
+    },
+    "red-hat-data-services--odh-dashboard": {
+      "latest": {
+        "repository": "red-hat-data-services/odh-dashboard",
+        "overallScore": 8.5,
+        "scorecard": [
+          { "dimension": "Unit Tests", "score": 9.0, "status": "Inherited from upstream, same test suite" },
+          { "dimension": "Integration/E2E", "score": 8.5, "status": "Downstream-specific E2E tests added" },
+          { "dimension": "Build Integration", "score": 9.0, "status": "Brew/OSBS build integration" },
+          { "dimension": "Image Testing", "score": 8.0, "status": "Container verification via OSBS" },
+          { "dimension": "Coverage Tracking", "score": 7.0, "status": "Coverage tracked but not enforced" },
+          { "dimension": "CI/CD Automation", "score": 9.0, "status": "Prow + downstream CI" },
+          { "dimension": "Static Analysis", "score": 8.5, "status": "ESLint, TypeScript" },
+          { "dimension": "Agent Rules", "score": 7.0, "status": "Basic contributing guide" }
+        ],
+        "criticalGaps": [
+          { "title": "No multi-architecture container builds", "impact": "ARM64 customers cannot deploy", "severity": "MEDIUM", "effort": "8-12 hours" }
+        ],
+        "quickWins": [],
+        "tier": "downstream",
+        "component": "AI Core Dashboard",
+        "team": "AI Core Dashboard",
+        "githubUrl": "https://github.com/red-hat-data-services/odh-dashboard",
+        "hasHtmlReport": false,
+        "assessedAt": "2026-07-28T10:20:00.000Z"
+      },
+      "history": []
+    },
+    "opendatahub-io--model-registry": {
+      "latest": {
+        "repository": "opendatahub-io/model-registry",
+        "overallScore": 5.8,
+        "scorecard": [
+          { "dimension": "Unit Tests", "score": 6.0, "status": "Go unit tests, moderate coverage" },
+          { "dimension": "Integration/E2E", "score": 5.0, "status": "Limited integration test suite" },
+          { "dimension": "Build Integration", "score": 7.0, "status": "Multi-stage Docker build" },
+          { "dimension": "Image Testing", "score": 4.0, "status": "No container-level testing" },
+          { "dimension": "Coverage Tracking", "score": 3.0, "status": "No coverage reporting" },
+          { "dimension": "CI/CD Automation", "score": 7.5, "status": "GitHub Actions CI" },
+          { "dimension": "Static Analysis", "score": 6.0, "status": "golangci-lint configured" },
+          { "dimension": "Agent Rules", "score": 4.0, "status": "No CLAUDE.md or agent configuration" }
+        ],
+        "criticalGaps": [
+          { "title": "No coverage tracking or reporting", "impact": "Cannot measure test effectiveness", "severity": "HIGH", "effort": "4-6 hours" },
+          { "title": "No container-level testing", "impact": "Image defects caught late in pipeline", "severity": "HIGH", "effort": "6-8 hours" },
+          { "title": "Limited integration test suite", "impact": "Cross-component bugs slip through", "severity": "HIGH", "effort": "12-20 hours" }
+        ],
+        "quickWins": [
+          { "title": "Add Codecov integration", "effort": "1-2 hours", "impact": "Immediate coverage visibility" },
+          { "title": "Add CLAUDE.md with project conventions", "effort": "1 hour", "impact": "Better AI-assisted development" }
+        ],
+        "tier": "upstream",
+        "component": "Model Registry",
+        "team": "",
+        "githubUrl": "https://github.com/opendatahub-io/model-registry",
+        "hasHtmlReport": false,
+        "assessedAt": "2026-07-28T10:25:00.000Z"
+      },
+      "history": [
+        { "overallScore": 5.2, "gapCount": 4, "assessedAt": "2026-07-21T10:25:00.000Z" },
+        { "overallScore": 4.8, "gapCount": 5, "assessedAt": "2026-07-14T10:25:00.000Z" },
+        { "overallScore": 4.5, "gapCount": 5, "assessedAt": "2026-07-07T10:25:00.000Z" }
+      ]
+    },
+    "kubeflow--trainer": {
+      "latest": {
+        "repository": "kubeflow/trainer",
+        "overallScore": 6.9,
+        "scorecard": [
+          { "dimension": "Unit Tests", "score": 7.5, "status": "Go and Python unit tests" },
+          { "dimension": "Integration/E2E", "score": 7.0, "status": "E2E tests with Kind cluster" },
+          { "dimension": "Build Integration", "score": 7.0, "status": "Multi-stage Docker builds" },
+          { "dimension": "Image Testing", "score": 5.0, "status": "Basic smoke tests only" },
+          { "dimension": "Coverage Tracking", "score": 6.0, "status": "Coveralls integrated, no enforcement" },
+          { "dimension": "CI/CD Automation", "score": 8.0, "status": "GitHub Actions + Prow" },
+          { "dimension": "Static Analysis", "score": 7.0, "status": "golangci-lint, pylint" },
+          { "dimension": "Agent Rules", "score": 5.5, "status": "Contributing guide, no AI agent config" }
+        ],
+        "criticalGaps": [
+          { "title": "No coverage enforcement in CI", "impact": "Coverage can silently regress", "severity": "MEDIUM", "effort": "2-4 hours" },
+          { "title": "No container vulnerability scanning", "impact": "Security vulnerabilities undetected", "severity": "HIGH", "effort": "2-4 hours" }
+        ],
+        "quickWins": [
+          { "title": "Add Trivy container scanning to CI", "effort": "1-2 hours", "impact": "Catch vulnerabilities pre-merge" }
+        ],
+        "tier": "upstream",
+        "component": "Training",
+        "team": "",
+        "githubUrl": "https://github.com/kubeflow/trainer",
+        "hasHtmlReport": false,
+        "assessedAt": "2026-07-28T10:30:00.000Z"
+      },
+      "history": [
+        { "overallScore": 6.5, "gapCount": 3, "assessedAt": "2026-07-21T10:30:00.000Z" }
+      ]
+    }
+  }
+}

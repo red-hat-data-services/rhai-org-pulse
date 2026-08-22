@@ -40,7 +40,7 @@ function makeFeatureFile(overrides = {}) {
 }
 
 describe('readFeatures', () => {
-  it('returns features from releases index when aiReview data exists', () => {
+  it('returns features from releases index when aiReview data exists', async () => {
     const indexEntry = {
       key: 'RHAISTRAT-1168',
       summary: 'GPU-as-a-Service Observability',
@@ -56,76 +56,76 @@ describe('readFeatures', () => {
       }
     };
     const featureFile = makeFeatureFile();
-    const read = vi.fn(function(key) {
+    const read = vi.fn(async function(key) {
       if (key === 'releases/execution/index.json') return makeReleasesIndex([indexEntry]);
       if (key === 'releases/execution/features/RHAISTRAT-1168.json') return featureFile;
       return null;
     });
 
-    const result = readFeatures(read);
+    const result = await readFeatures(read);
     expect(result.totalFeatures).toBe(1);
     expect(result.features['RHAISTRAT-1168']).toBeDefined();
     expect(result.features['RHAISTRAT-1168'].latest.recommendation).toBe('approve');
     expect(result.features['RHAISTRAT-1168'].history).toHaveLength(1);
   });
 
-  it('falls back to legacy store when no releases index', () => {
+  it('falls back to legacy store when no releases index', async () => {
     const legacyData = {
       lastSyncedAt: '2026-04-19T12:00:00Z',
       totalFeatures: 1,
       features: { A: { latest: { key: 'A' }, history: [] } }
     };
-    const read = vi.fn(function(key) {
+    const read = vi.fn(async function(key) {
       if (key === 'releases/execution/index.json') return null;
       if (key === 'ai-impact/features.json') return legacyData;
       return null;
     });
 
-    const result = readFeatures(read);
+    const result = await readFeatures(read);
     expect(result).toBe(legacyData);
   });
 
-  it('falls back to legacy store when releases index has no aiReview features', () => {
+  it('falls back to legacy store when releases index has no aiReview features', async () => {
     const legacyData = {
       lastSyncedAt: '2026-04-19T12:00:00Z',
       totalFeatures: 1,
       features: { A: { latest: { key: 'A' }, history: [] } }
     };
-    const read = vi.fn(function(key) {
+    const read = vi.fn(async function(key) {
       if (key === 'releases/execution/index.json') return makeReleasesIndex([{ key: 'X', summary: 'No AI' }]);
       if (key === 'ai-impact/features.json') return legacyData;
       return null;
     });
 
-    const result = readFeatures(read);
+    const result = await readFeatures(read);
     expect(result).toBe(legacyData);
   });
 
-  it('returns empty state when both stores are empty', () => {
-    const read = vi.fn().mockReturnValue(null);
-    expect(readFeatures(read)).toEqual({ lastSyncedAt: null, totalFeatures: 0, features: {} });
+  it('returns empty state when both stores are empty', async () => {
+    const read = vi.fn().mockResolvedValue(null);
+    expect(await readFeatures(read)).toEqual({ lastSyncedAt: null, totalFeatures: 0, features: {} });
   });
 
-  it('returns empty state when releases index exists but no features', () => {
-    const read = vi.fn(function(key) {
+  it('returns empty state when releases index exists but no features', async () => {
+    const read = vi.fn(async function(key) {
       if (key === 'releases/execution/index.json') return makeReleasesIndex([]);
       return null;
     });
-    expect(readFeatures(read)).toEqual({ lastSyncedAt: null, totalFeatures: 0, features: {} });
+    expect(await readFeatures(read)).toEqual({ lastSyncedAt: null, totalFeatures: 0, features: {} });
   });
 
-  it('skips features without aiReview in releases index', () => {
+  it('skips features without aiReview in releases index', async () => {
     const indexEntries = [
       { key: 'A', summary: 'With AI', aiReview: { recommendation: 'approve', scores: {}, humanReviewStatus: 'approved', needsAttention: false, reviewedAt: '2026-04-19T12:00:00Z' } },
       { key: 'B', summary: 'Without AI' }
     ];
-    const read = vi.fn(function(key) {
+    const read = vi.fn(async function(key) {
       if (key === 'releases/execution/index.json') return makeReleasesIndex(indexEntries);
       if (key === 'releases/execution/features/A.json') return { key: 'A', aiReview: { recommendation: 'approve', reviewedAt: '2026-04-19T12:00:00Z', history: [] } };
       return null;
     });
 
-    const result = readFeatures(read);
+    const result = await readFeatures(read);
     expect(result.totalFeatures).toBe(1);
     expect(result.features['A']).toBeDefined();
     expect(result.features['B']).toBeUndefined();

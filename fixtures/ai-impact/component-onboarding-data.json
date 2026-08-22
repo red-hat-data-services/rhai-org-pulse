@@ -1,6 +1,6 @@
 {
   "fetchedAt": "2026-05-10T11:01:55.980Z",
-  "totalComponents": 15,
+  "totalComponents": 16,
   "components": {
     "RHOAIENG-61528": {
       "latest": {
@@ -53,6 +53,7 @@
         },
         "onboardingMethod": "automated",
         "firstCommentDate": null,
+        "targetVersion": "rhoai-2.20",
         "syncedAt": "2026-05-10T11:01:55.977Z",
         "resolution": "Done"
       },
@@ -109,6 +110,7 @@
         },
         "onboardingMethod": "automated",
         "firstCommentDate": null,
+        "targetVersion": "rhoai-2.20",
         "syncedAt": "2026-05-10T11:01:55.980Z",
         "resolution": null
       },
@@ -170,6 +172,7 @@
         },
         "onboardingMethod": "automated",
         "firstCommentDate": null,
+        "targetVersion": "rhoai-2.20",
         "syncedAt": "2026-05-10T11:01:55.980Z",
         "resolution": "Done"
       },
@@ -801,6 +804,54 @@
         "firstCommentDate": "2024-09-18T11:05:47.220+0000",
         "syncedAt": "2026-05-10T11:01:55.980Z",
         "resolution": "Won't Do"
+      },
+      "history": []
+    },
+    "RHOAIENG-62100": {
+      "latest": {
+        "key": "RHOAIENG-62100",
+        "summary": "RHOAI Konflux Onboarding odh-model-registry",
+        "status": "New",
+        "completionStatus": "new",
+        "productContext": "RHOAI",
+        "componentName": "odh-model-registry",
+        "repoUrl": "",
+        "branch": "",
+        "dockerfilePath": "",
+        "contextPath": "",
+        "isOperator": false,
+        "linkedFeatures": [
+          "RHAISTRAT-853"
+        ],
+        "featureTitles": {
+          "RHAISTRAT-853": "Implement Model Cache in RHOAI"
+        },
+        "labels": [
+          "component-onboarding",
+          "yaml-attached"
+        ],
+        "created": "2026-05-12T09:15:30.450+0000",
+        "resolved": null,
+        "validationDate": null,
+        "onboardingSteps": {
+          "yamlValidated": false,
+          "quayRepoCreated": false,
+          "deliveryRepoProvisioned": false,
+          "konfluxOnboarded": false,
+          "pushPipelineConfigured": false,
+          "pullPipelineConfigured": false,
+          "odhKonfluxOnboarded": false,
+          "operatorIntegrated": false,
+          "bundleConfigured": false,
+          "productListingUpdated": false,
+          "autoMergeSetup": false,
+          "renovateSetup": false
+        },
+        "onboardingMethod": "automated",
+        "firstCommentDate": null,
+        "targetVersion": "rhoai-2.21",
+        "syncedAt": "2026-05-12T09:15:30.450Z",
+        "resolution": null
       },
       "history": []
     }

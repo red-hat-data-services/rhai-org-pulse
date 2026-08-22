@@ -76,6 +76,20 @@ export function getCommitUrl(artifact) {
   return `${baseUrl}/-/commit/${commit}`
 }
 
+export const CHI_GRADE_CLASSES = {
+  A: 'bg-green-600 text-white',
+  B: 'bg-lime-500 text-white',
+  C: 'bg-yellow-400 text-gray-900',
+  D: 'bg-orange-500 text-white',
+  E: 'bg-amber-600 text-white',
+  F: 'bg-red-700 text-white',
+  Unknown: 'bg-gray-400 text-white',
+}
+
+export function chiGradeBadgeClass(grade) {
+  return CHI_GRADE_CLASSES[grade] || CHI_GRADE_CLASSES.Unknown
+}
+
 export function getAcceleratorInfo(art) {
   const labels = art?.labels || {}
   let accel = art?.variant ? art.variant.split('-')[0] : null
@@ -89,4 +103,42 @@ export function getAcceleratorInfo(art) {
     python: labels['com.redhat.aiplatform.python'] || null,
     baseImage: labels['com.redhat.aiplatform.image'] || null
   }
+}
+
+export function getRegistryUrl(key) {
+  if (!key) return null
+  if (key.startsWith('quay.io/')) {
+    const path = key.replace('quay.io/', '').split(':')[0]
+    return `https://quay.io/repository/${path}?tab=tags`
+  }
+  if (key.startsWith('registry.redhat.io/')) {
+    const path = key.replace('registry.redhat.io/', '').split(':')[0]
+    return `https://catalog.redhat.com/en/search?searchType=All&q=${encodeURIComponent(path)}&p=1`
+  }
+  return null
+}
+
+export function getQuayDirectTagUrl(key) {
+  if (!key || !key.startsWith('quay.io/')) return null
+  const withoutRegistry = key.replace('quay.io/', '')
+  const [path, tag] = withoutRegistry.split(':')
+  if (!tag) return null
+  return `https://quay.io/repository/${path}/tag/${tag}`
+}
+
+export function getQuayAllTagsUrl(key) {
+  if (!key || !key.startsWith('quay.io/')) return null
+  const withoutRegistry = key.replace('quay.io/', '')
+  const [path, tag] = withoutRegistry.split(':')
+  const url = `https://quay.io/repository/${path}?tab=tags`
+  return tag ? `${url}&tag=${tag}` : url
+}
+
+export function getDigestUrl(art) {
+  if (!art?.sha_digest || !art?.key) return null
+  if (art.key.startsWith('quay.io/')) {
+    const path = art.key.replace('quay.io/', '').split(':')[0]
+    return `https://quay.io/repository/${path}/manifest/${art.sha_digest}`
+  }
+  return getRegistryUrl(art.key)
 }

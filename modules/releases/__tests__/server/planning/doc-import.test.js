@@ -11,10 +11,10 @@ function createStorage(configReleases, releaseFiles) {
     }
   }
   return {
-    readFromStorage: vi.fn(function(key) {
+    readFromStorage: vi.fn(async function(key) {
       return store[key] ? JSON.parse(JSON.stringify(store[key])) : null
     }),
-    writeToStorage: vi.fn(function(key, data) {
+    writeToStorage: vi.fn(async function(key, data) {
       store[key] = JSON.parse(JSON.stringify(data))
     }),
     _store: store
@@ -81,7 +81,7 @@ describe('parseDocId', () => {
 
 describe('executeDocImport', () => {
   describe('replace mode', () => {
-    it('replaces all existing Big Rocks', () => {
+    it('replaces all existing Big Rocks', async () => {
       const storage = createStorage(
         { '3.5': { release: '3.5' } },
         { '3.5': makeReleaseFile([
@@ -94,7 +94,7 @@ describe('executeDocImport', () => {
         makeRock('New Rock 2', ['RHAISTRAT-400'])
       ])
 
-      const result = executeDocImport(
+      const result = await executeDocImport(
         storage.readFromStorage, storage.writeToStorage,
         '3.5', 'test-doc-id', 'replace', parsedDoc
       )
@@ -109,7 +109,7 @@ describe('executeDocImport', () => {
   })
 
   describe('append mode', () => {
-    it('adds new rocks after existing ones', () => {
+    it('adds new rocks after existing ones', async () => {
       const storage = createStorage(
         { '3.5': { release: '3.5' } },
         { '3.5': makeReleaseFile([
@@ -120,7 +120,7 @@ describe('executeDocImport', () => {
         makeRock('New Rock', ['RHAISTRAT-200'])
       ])
 
-      const result = executeDocImport(
+      const result = await executeDocImport(
         storage.readFromStorage, storage.writeToStorage,
         '3.5', 'test-doc-id', 'append', parsedDoc
       )
@@ -131,7 +131,7 @@ describe('executeDocImport', () => {
       expect(result.bigRocks).toHaveLength(2)
     })
 
-    it('skips duplicate names', () => {
+    it('skips duplicate names', async () => {
       const storage = createStorage(
         { '3.5': { release: '3.5' } },
         { '3.5': makeReleaseFile([
@@ -143,7 +143,7 @@ describe('executeDocImport', () => {
         makeRock('New Rock', ['RHAISTRAT-300'])
       ])
 
-      const result = executeDocImport(
+      const result = await executeDocImport(
         storage.readFromStorage, storage.writeToStorage,
         '3.5', 'test-doc-id', 'append', parsedDoc
       )
@@ -155,37 +155,33 @@ describe('executeDocImport', () => {
     })
   })
 
-  it('throws when no Big Rocks are parsed', () => {
+  it('throws when no Big Rocks are parsed', async () => {
     const storage = createStorage(
       { '3.5': { release: '3.5' } },
       { '3.5': makeReleaseFile([]) }
     )
     const parsedDoc = makeParsedDoc([])
 
-    expect(function() {
-      executeDocImport(
-        storage.readFromStorage, storage.writeToStorage,
-        '3.5', 'test-doc-id', 'replace', parsedDoc
-      )
-    }).toThrow('No Big Rocks could be extracted')
+    await expect(executeDocImport(
+      storage.readFromStorage, storage.writeToStorage,
+      '3.5', 'test-doc-id', 'replace', parsedDoc
+    )).rejects.toThrow('No Big Rocks could be extracted')
   })
 
-  it('throws when release version not found', () => {
+  it('throws when release version not found', async () => {
     const storage = createStorage(
       { '3.5': { release: '3.5' } },
       { '3.5': makeReleaseFile([]) }
     )
     const parsedDoc = makeParsedDoc([makeRock('Test')])
 
-    expect(function() {
-      executeDocImport(
-        storage.readFromStorage, storage.writeToStorage,
-        '9.9', 'test-doc-id', 'replace', parsedDoc
-      )
-    }).toThrow('Release 9.9 not found')
+    await expect(executeDocImport(
+      storage.readFromStorage, storage.writeToStorage,
+      '9.9', 'test-doc-id', 'replace', parsedDoc
+    )).rejects.toThrow('Release 9.9 not found')
   })
 
-  it('skips rocks that fail validation', () => {
+  it('skips rocks that fail validation', async () => {
     const storage = createStorage(
       { '3.5': { release: '3.5' } },
       { '3.5': makeReleaseFile([]) }
@@ -196,7 +192,7 @@ describe('executeDocImport', () => {
       makeRock('Valid Rock', ['RHAISTRAT-100'])
     ])
 
-    const result = executeDocImport(
+    const result = await executeDocImport(
       storage.readFromStorage, storage.writeToStorage,
       '3.5', 'test-doc-id', 'replace', parsedDoc
     )
@@ -207,7 +203,7 @@ describe('executeDocImport', () => {
     expect(result.validationErrors[0].name).toBe(longName)
   })
 
-  it('writes per-release file exactly once in replace mode', () => {
+  it('writes per-release file exactly once in replace mode', async () => {
     const storage = createStorage(
       { '3.5': { release: '3.5' } },
       { '3.5': makeReleaseFile([
@@ -221,7 +217,7 @@ describe('executeDocImport', () => {
       makeRock('New 2', ['RHAISTRAT-500'])
     ])
 
-    executeDocImport(
+    await executeDocImport(
       storage.readFromStorage, storage.writeToStorage,
       '3.5', 'test-doc-id', 'replace', parsedDoc
     )
@@ -233,7 +229,7 @@ describe('executeDocImport', () => {
     )
   })
 
-  it('writes per-release file exactly once in append mode', () => {
+  it('writes per-release file exactly once in append mode', async () => {
     const storage = createStorage(
       { '3.5': { release: '3.5' } },
       { '3.5': makeReleaseFile([
@@ -245,7 +241,7 @@ describe('executeDocImport', () => {
       makeRock('New B', ['RHAISTRAT-300'])
     ])
 
-    executeDocImport(
+    await executeDocImport(
       storage.readFromStorage, storage.writeToStorage,
       '3.5', 'test-doc-id', 'append', parsedDoc
     )
@@ -257,7 +253,7 @@ describe('executeDocImport', () => {
     )
   })
 
-  it('renumbers priorities sequentially', () => {
+  it('renumbers priorities sequentially', async () => {
     const storage = createStorage(
       { '3.5': { release: '3.5' } },
       { '3.5': makeReleaseFile([]) }
@@ -268,7 +264,7 @@ describe('executeDocImport', () => {
       makeRock('Rock C')
     ])
 
-    const result = executeDocImport(
+    const result = await executeDocImport(
       storage.readFromStorage, storage.writeToStorage,
       '3.5', 'test-doc-id', 'replace', parsedDoc
     )

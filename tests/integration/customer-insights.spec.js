@@ -29,18 +29,6 @@ test.describe('@customer-insights Customer Insights Module', () => {
     expect(hasBoard || hasEmptyState).toBeTruthy()
   })
 
-  test('Table view loads correctly', async ({ page }) => {
-    await page.goto('/#/customer-insights/table')
-
-    await page.waitForLoadState('networkidle')
-
-    // Check for table or empty state
-    const hasTable = await page.locator('table').isVisible().catch(() => false)
-    const hasEmptyState = await page.locator('text=/no.*data|coming soon|get started/i').isVisible().catch(() => false)
-
-    expect(hasTable || hasEmptyState).toBeTruthy()
-  })
-
   test('Dashboard view loads correctly', async ({ page }) => {
     await page.goto('/#/customer-insights/dashboard')
 
@@ -67,18 +55,6 @@ test.describe('@customer-insights Customer Insights Module', () => {
     await expect(csvTab).toBeVisible()
     await expect(transcriptTab).toBeVisible()
     await expect(driveTab).toBeVisible()
-  })
-
-  test('Insights view loads correctly', async ({ page }) => {
-    await page.goto('/#/customer-insights/insights')
-
-    await page.waitForLoadState('networkidle')
-
-    // Check for insights content or empty state
-    const hasInsights = await page.locator('[data-testid="insights-list"]').isVisible().catch(() => false)
-    const hasEmptyState = await page.locator('text=/no.*data|coming soon|pipeline/i').isVisible().catch(() => false)
-
-    expect(hasInsights || hasEmptyState).toBeTruthy()
   })
 
   test('Roadmap view loads correctly', async ({ page }) => {
@@ -141,18 +117,18 @@ test.describe('@customer-insights Customer Insights Module', () => {
     await page.goto('/#/customer-insights/kanban')
     await page.waitForLoadState('networkidle')
 
-    // Navigate to table view
-    const tableLink = page.locator('a:has-text("Table"), button:has-text("Table")')
-    if (await tableLink.isVisible().catch(() => false)) {
-      await tableLink.click()
-      await expect(page).toHaveURL(/#\/customer-insights\/table/)
+    // Navigate to analytics view
+    const analyticsLink = page.locator('a:has-text("Analytics"), button:has-text("Analytics")')
+    if (await analyticsLink.isVisible().catch(() => false)) {
+      await analyticsLink.click()
+      await expect(page).toHaveURL(/#\/customer-insights\/dashboard/)
     }
 
-    // Navigate to dashboard
-    const dashboardLink = page.locator('a:has-text("Dashboard"), button:has-text("Dashboard")')
-    if (await dashboardLink.isVisible().catch(() => false)) {
-      await dashboardLink.click()
-      await expect(page).toHaveURL(/#\/customer-insights\/dashboard/)
+    // Navigate to roadmap
+    const roadmapLink = page.locator('a:has-text("Roadmap"), button:has-text("Roadmap")')
+    if (await roadmapLink.isVisible().catch(() => false)) {
+      await roadmapLink.click()
+      await expect(page).toHaveURL(/#\/customer-insights\/roadmap/)
     }
   })
 })

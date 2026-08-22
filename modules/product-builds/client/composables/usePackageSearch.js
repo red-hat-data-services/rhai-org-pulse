@@ -91,10 +91,6 @@ export function usePackageSearch() {
     return options.value.package_ui_url
   })
 
-  const upstreamPypiAvailable = computed(function () {
-    return options.value && options.value.upstream_pypi_available === true
-  })
-
   return {
     options,
     results,
@@ -108,7 +104,6 @@ export function usePackageSearch() {
     anyPackageFound,
     anyIndexExists,
     availableArchs,
-    packageUiHref,
-    upstreamPypiAvailable
+    packageUiHref
   }
 }

@@ -332,7 +332,7 @@
     <div class="container">
         <header>
             <h1>Quality Analysis Report</h1>
-            <p class="timestamp">Generated on July 06, 2026 at 04:15 PM</p>
+            <p class="timestamp">Generated on July 20, 2026 at 05:24 PM</p>
             <h2 style="margin-top: 1rem; font-weight: 400;">opendatahub-io/model-runtimes-agent</h2>
         </header>
 
@@ -344,11 +344,11 @@
                         <circle class="score-arc" cx="100" cy="100" r="90"
                                 stroke="#dc3545"
                                 stroke-dasharray="565.4861999999999"
-                                stroke-dashoffset="395.8403399999999"
+                                stroke-dashoffset="480.66326999999995"
                                 id="scoreArc"></circle>
                     </svg>
                     <div class="score-text">
-                        <div class="score-value">3.0</div>
+                        <div class="score-value">1.5</div>
                         <div class="score-label">Overall Score</div>
                     </div>
                 </div>
@@ -365,37 +365,42 @@
                         <div class="scorecard-item">
                             <h3>Unit Tests</h3>
                             <div class="scorecard-score" style="color: #fd7e14;">5.0/10</div>
-                            <div class="scorecard-status">5 test files (717 lines) covering validators, report rendering, QA helpers, and SSRF; test-to-code ratio ~12%</div>
+                            <div class="scorecard-status">49 test methods across 5 files using unittest; covers validators and helpers but leaves agent orchestration, config parsing, and LLM integration untested</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Integration/E2E</h3>
                             <div class="scorecard-score" style="color: #dc3545;">1.0/10</div>
-                            <div class="scorecard-status">No integration or E2E test suites; cluster-dependent flows are untested in CI</div>
+                            <div class="scorecard-status">No integration or E2E test suites; the tool itself performs KServe E2E validation but has no automated tests for its own workflows</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Build Integration</h3>
                             <div class="scorecard-score" style="color: #dc3545;">0.0/10</div>
-                            <div class="scorecard-status">No CI/CD pipeline exists — no PR builds, no Konflux simulation, no automated checks</div>
+                            <div class="scorecard-status">No CI workflows, no Makefile, no PR-time build validation whatsoever</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Image Testing</h3>
                             <div class="scorecard-score" style="color: #dc3545;">0.0/10</div>
-                            <div class="scorecard-status">No Dockerfile/Containerfile; no container image build or runtime validation</div>
+                            <div class="scorecard-status">No Dockerfile or Containerfile; no container image build or runtime validation</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Coverage Tracking</h3>
                             <div class="scorecard-score" style="color: #dc3545;">0.0/10</div>
-                            <div class="scorecard-status">No coverage tool configured — no codecov, coveralls, or coverage threshold enforcement</div>
+                            <div class="scorecard-status">No coverage configuration, no codecov integration, no coverage thresholds</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>CI/CD Automation</h3>
                             <div class="scorecard-score" style="color: #dc3545;">0.0/10</div>
-                            <div class="scorecard-status">No .github/workflows, no .gitlab-ci.yml, no Jenkinsfile — zero CI/CD automation</div>
+                            <div class="scorecard-status">No CI/CD — no GitHub Actions, no GitLab CI, no Makefile, no Jenkinsfile</div>
+                        </div>
+                        <div class="scorecard-item">
+                            <h3>Static Analysis</h3>
+                            <div class="scorecard-score" style="color: #dc3545;">0.0/10</div>
+                            <div class="scorecard-status">No linting (ruff, flake8, mypy), no pre-commit hooks, no Dependabot/Renovate</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Agent Rules</h3>
-                            <div class="scorecard-score" style="color: #fd7e14;">4.0/10</div>
-                            <div class="scorecard-status">AGENTS.md present with detailed specialist flow and stability rubric; no .claude/ rules or test automation guidance</div>
+                            <div class="scorecard-score" style="color: #fd7e14;">5.0/10</div>
+                            <div class="scorecard-status">Comprehensive AGENTS.md with specialist flow, verdict rubric, and quantization matrix; no test creation rules or CLAUDE.md</div>
                         </div>
                     </div>
                 </div>
@@ -411,51 +416,43 @@
                     <ul class="items-list">
                         
                         <li class="item-card high">
-                            <div class="item-description">No CI/CD pipeline of any kind</div>
-                            <p>No automated testing, linting, or quality checks run on PRs or merges — all quality assurance is manual</p>
+                            <div class="item-description">Zero CI/CD automation</div>
+                            <p>No automated testing, linting, or build validation on any PR or push — regressions can ship undetected</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-high">HIGH</span>
-                                <span class="meta-tag effort-tag">8-12 hours</span>
+                                <span class="meta-tag effort-tag">4-8 hours</span>
                             </div>
                         </li>
                         <li class="item-card high">
-                            <div class="item-description">No coverage tracking or enforcement</div>
-                            <p>Test coverage is unknown and unmonitored; regressions go undetected</p>
+                            <div class="item-description">No static analysis or linting</div>
+                            <p>Type errors, style inconsistencies, and unused imports accumulate unchecked; no mypy means runtime type bugs in a 5,000+ line Python codebase</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-high">HIGH</span>
                                 <span class="meta-tag effort-tag">2-4 hours</span>
                             </div>
                         </li>
                         <li class="item-card high">
-                            <div class="item-description">No linting, type checking, or static analysis</div>
-                            <p>Code quality issues, type errors, and style inconsistencies are caught only by human review</p>
+                            <div class="item-description">No coverage tracking</div>
+                            <p>Cannot measure test adequacy or enforce coverage gates; new code merged without test requirements</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-high">HIGH</span>
-                                <span class="meta-tag effort-tag">2-4 hours</span>
+                                <span class="meta-tag effort-tag">2-3 hours</span>
                             </div>
                         </li>
                         <li class="item-card medium">
-                            <div class="item-description">No container image build or testing</div>
-                            <p>Application is not packaged as a container — no image-based deployment or validation possible</p>
+                            <div class="item-description">No container image or Dockerfile</div>
+                            <p>No reproducible deployment artifact; application can only be installed via pip/uv from source, limiting distribution and Konflux integration</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-medium">MEDIUM</span>
+                                <span class="meta-tag effort-tag">4-8 hours</span>
+                            </div>
+                        </li>
+                        <li class="item-card high">
+                            <div class="item-description">No integration tests for agent orchestration</div>
+                            <p>The core supervisor-specialist pipeline (LLMAgent → specialists → deployment matrix → QA) has zero automated test coverage</p>
+                            <div class="item-meta">
+                                <span class="meta-tag severity-high">HIGH</span>
                                 <span class="meta-tag effort-tag">8-16 hours</span>
-                            </div>
-                        </li>
-                        <li class="item-card high">
-                            <div class="item-description">No integration or E2E tests in CI</div>
-                            <p>The core agent pipeline (supervisor → specialist chain → KServe QA) is only validated manually</p>
-                            <div class="item-meta">
-                                <span class="meta-tag severity-high">HIGH</span>
-                                <span class="meta-tag effort-tag">16-24 hours</span>
-                            </div>
-                        </li>
-                        <li class="item-card high">
-                            <div class="item-description">No security scanning (SAST, dependency scanning, secret detection)</div>
-                            <p>Vulnerabilities in dependencies (langchain, kubernetes, etc.) and secrets in code go undetected</p>
-                            <div class="item-meta">
-                                <span class="meta-tag severity-high">HIGH</span>
-                                <span class="meta-tag effort-tag">2-4 hours</span>
                             </div>
                         </li>
                     </ul>
@@ -472,51 +469,43 @@
                     <ul class="items-list">
                         
                         <li class="item-card ">
-                            <div class="item-description">Add GitHub Actions CI workflow with pytest</div>
-                            <p>Automated test execution on every PR — catches regressions immediately</p>
+                            <div class="item-description">Add a GitHub Actions CI workflow for tests and linting</div>
+                            <p>Automated test execution on every PR; immediate regression detection</p>
                             <div class="item-meta">
                                 
-                                <span class="meta-tag effort-tag">2-3 hours</span>
+                                <span class="meta-tag effort-tag">2-4 hours</span>
                             </div>
                         </li>
                         <li class="item-card ">
-                            <div class="item-description">Add ruff linter + type checking with mypy</div>
-                            <p>Catches style issues, unused imports, type errors across 6k+ lines of Python</p>
-                            <div class="item-meta">
-                                
-                                <span class="meta-tag effort-tag">1-2 hours</span>
-                            </div>
-                        </li>
-                        <li class="item-card ">
-                            <div class="item-description">Add codecov integration with coverage threshold</div>
-                            <p>Visibility into test coverage with enforcement on PRs</p>
+                            <div class="item-description">Add ruff linter + mypy type checking configuration</div>
+                            <p>Catch type errors, unused imports, and style violations automatically</p>
                             <div class="item-meta">
                                 
                                 <span class="meta-tag effort-tag">1-2 hours</span>
                             </div>
                         </li>
                         <li class="item-card ">
-                            <div class="item-description">Add Dependabot or Renovate for dependency updates</div>
-                            <p>Automated alerts for vulnerable or outdated dependencies (langchain, kubernetes, etc.)</p>
+                            <div class="item-description">Add pytest-cov and codecov integration</div>
+                            <p>Visibility into current test coverage; foundation for coverage gates</p>
+                            <div class="item-meta">
+                                
+                                <span class="meta-tag effort-tag">1-2 hours</span>
+                            </div>
+                        </li>
+                        <li class="item-card ">
+                            <div class="item-description">Add Dependabot for dependency alerts</div>
+                            <p>Automated security and version updates for 9+ direct dependencies</p>
                             <div class="item-meta">
                                 
                                 <span class="meta-tag effort-tag">30 minutes</span>
                             </div>
                         </li>
                         <li class="item-card ">
-                            <div class="item-description">Add pre-commit hooks (ruff, mypy, trailing whitespace)</div>
-                            <p>Catch quality issues before commit, enforce consistent code style</p>
+                            <div class="item-description">Add a pre-commit configuration</div>
+                            <p>Enforce formatting and linting checks before commits land</p>
                             <div class="item-meta">
                                 
                                 <span class="meta-tag effort-tag">1 hour</span>
-                            </div>
-                        </li>
-                        <li class="item-card ">
-                            <div class="item-description">Create .claude/rules/ with test creation guidance</div>
-                            <p>AI-generated tests follow project patterns consistently</p>
-                            <div class="item-meta">
-                                
-                                <span class="meta-tag effort-tag">2-3 hours</span>
                             </div>
                         </li>
                     </ul>
@@ -533,15 +522,15 @@
                         
                         <div class="rec-priority p0">
                             <h3>Priority 0: Critical</h3>
-                            <ul><li>Create a GitHub Actions CI pipeline with pytest, ruff linting, and mypy type checking on every PR</li><li>Add coverage tracking (pytest-cov + codecov) with a minimum threshold (e.g. 60%)</li><li>Enable Dependabot or Renovate for automated security updates on Python dependencies</li></ul>
+                            <ul><li>Create a GitHub Actions CI workflow with test execution, linting, and type checking on pull requests</li><li>Add ruff (linting + formatting) and mypy (type checking) configuration to pyproject.toml</li><li>Add pytest-cov coverage tracking with a minimum threshold (start at 30%, increase iteratively)</li></ul>
                         </div>
                         <div class="rec-priority p1">
                             <h3>Priority 1: High Value</h3>
-                            <ul><li>Add integration tests that exercise the agent pipeline with mocked LLM responses and stubbed oc CLI</li><li>Create a Dockerfile for containerized deployment and add container image build/test to CI</li><li>Add CodeQL or Semgrep SAST scanning to the CI pipeline</li><li>Create comprehensive .claude/rules/ for unit test, integration test, and security test patterns</li></ul>
+                            <ul><li>Create a Dockerfile for reproducible deployment and Konflux build integration</li><li>Add integration tests for the supervisor-specialist pipeline using mocked LLM responses</li><li>Add Dependabot configuration for gomod, pip, and docker ecosystem monitoring</li><li>Create .claude/rules/ with test creation guidelines for AI-assisted development</li></ul>
                         </div>
                         <div class="rec-priority p2">
                             <h3>Priority 2: Nice-to-Have</h3>
-                            <ul><li>Add pre-commit hooks for ruff, mypy, and secret detection (gitleaks)</li><li>Create E2E tests that validate the Streamlit UI workflow with mocked backends</li><li>Add performance benchmarking for the deployability engine&#x27;s decision matrix computation</li><li>Implement SBOM generation for supply chain transparency</li></ul>
+                            <ul><li>Add pre-commit hooks for automated formatting and lint enforcement</li><li>Add E2E tests that exercise the full agent workflow against a mock cluster</li><li>Add multi-architecture container image support for broader deployment targets</li></ul>
                         </div>
                     </div>
                 </div>

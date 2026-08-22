@@ -117,6 +117,18 @@ function handleNavigateToTestPlan(sourceKey) {
   moduleNav.navigateTo('test-plan-review', { select: sourceKey })
 }
 
+function handleNavigateToDecomposer(featureKey) {
+  moduleNav.navigateTo('feature-decomposer', { select: featureKey })
+}
+
+function handleNavigateToDocumentation(featureKey) {
+  moduleNav.navigateTo('documentation', { highlight: featureKey })
+}
+
+function handleNavigateToBuildRelease(featureKey) {
+  moduleNav.navigateTo('build-release', { highlight: featureKey })
+}
+
 const fromForYou = computed(() => moduleNav.params.value?.from === 'sotu' || moduleNav.params.value?.from === 'state-of-the-union')
 
 function goBackToForYou() {
@@ -238,6 +250,9 @@ watch([() => moduleNav.params.value, rfeData], ([params]) => {
       @close="handleCloseModal"
       @navigateToFeature="handleNavigateToFeature"
       @navigateToTestPlan="handleNavigateToTestPlan"
+      @navigateToDecomposer="handleNavigateToDecomposer"
+      @navigateToDocumentation="handleNavigateToDocumentation"
+      @navigateToBuildRelease="handleNavigateToBuildRelease"
     />
 
     <AIImpactGuide />

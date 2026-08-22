@@ -1,0 +1,46 @@
+{
+  "lastSyncedAt": "2026-08-11T10:00:00.000Z",
+  "available": true,
+  "count": 3,
+  "jql": "project = RHOAIENG AND labels = \"odh-operator-auto-e2e-blocker\" AND resolution = Unresolved ORDER BY created DESC",
+  "jqlUrl": "https://redhat.atlassian.net/issues/?jql=project%20%3D%20RHOAIENG%20AND%20labels%20%3D%20%22odh-operator-auto-e2e-blocker%22%20AND%20resolution%20%3D%20Unresolved%20ORDER%20BY%20created%20DESC",
+  "templateIssue": "RHOAIENG-79740",
+  "issues": [
+    {
+      "key": "RHOAIENG-81234",
+      "summary": "[Auto] E2E blocker: dashboard tests failing",
+      "status": "New",
+      "priority": "Blocker",
+      "component": "Dashboard",
+      "affectsVersions": ["2.20 GA RHOAI RELEASE"],
+      "assignee": null,
+      "created": "2026-08-10T14:22:00.000Z",
+      "updated": "2026-08-11T08:15:00.000Z",
+      "url": "https://redhat.atlassian.net/browse/RHOAIENG-81234"
+    },
+    {
+      "key": "RHOAIENG-81198",
+      "summary": "[Auto] E2E blocker: kserve tests failing",
+      "status": "In Progress",
+      "priority": "Blocker",
+      "component": "KServe",
+      "affectsVersions": ["2.20 GA RHOAI RELEASE"],
+      "assignee": "Jane Doe",
+      "created": "2026-08-09T09:05:00.000Z",
+      "updated": "2026-08-10T16:40:00.000Z",
+      "url": "https://redhat.atlassian.net/browse/RHOAIENG-81198"
+    },
+    {
+      "key": "RHOAIENG-81050",
+      "summary": "[Auto] E2E blocker: modelregistry tests failing",
+      "status": "New",
+      "priority": "Blocker",
+      "component": "Model Registry",
+      "affectsVersions": ["2.19 EA1 RHOAI RELEASE"],
+      "assignee": null,
+      "created": "2026-08-07T11:30:00.000Z",
+      "updated": "2026-08-08T12:00:00.000Z",
+      "url": "https://redhat.atlassian.net/browse/RHOAIENG-81050"
+    }
+  ]
+}

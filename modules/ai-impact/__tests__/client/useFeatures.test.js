@@ -35,7 +35,7 @@ describe('useFeatures', () => {
     const { features, featureMeta, loadFeatures } = useFeatures();
     await loadFeatures();
 
-    expect(mockApiRequest).toHaveBeenCalledWith('/modules/ai-impact/features');
+    expect(mockApiRequest).toHaveBeenCalledWith('/modules/ai-impact/features?timeWindow=month');
     expect(features.value).toEqual(mockData.features);
     expect(featureMeta.value.totalFeatures).toBe(2);
   });

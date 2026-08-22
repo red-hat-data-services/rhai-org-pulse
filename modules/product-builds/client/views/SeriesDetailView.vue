@@ -4,6 +4,7 @@ import { useDrops } from '../composables/useDrops'
 import { apiRequest } from '@shared/client/services/api'
 import { formatDate, envBadgeClass } from '../utils/formatting'
 import SeriesTimeline from '../components/SeriesTimeline.vue'
+import PersistentSearchBar from '../components/PersistentSearchBar.vue'
 
 const BASE = '/modules/product-builds'
 const nav = inject('moduleNav')
@@ -54,7 +55,10 @@ const hasMetrics = computed(() => Object.keys(metricsMap).length > 0)
     >&larr; Back</button>
 
     <!-- Title -->
-    <h1 class="text-xl font-bold text-gray-900 dark:text-gray-100">Series: {{ seriesName }}</h1>
+    <div class="flex items-start justify-between gap-4">
+      <h1 class="text-xl font-bold text-gray-900 dark:text-gray-100 min-w-0 break-all">Series: {{ seriesName }}</h1>
+      <PersistentSearchBar />
+    </div>
 
     <!-- Loading / Error -->
     <div v-if="dropsLoading && drops.length === 0" class="text-sm text-gray-500 dark:text-gray-400">Loading drops…</div>

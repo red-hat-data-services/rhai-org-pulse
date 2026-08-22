@@ -332,7 +332,7 @@
     <div class="container">
         <header>
             <h1>Quality Analysis Report</h1>
-            <p class="timestamp">Generated on July 06, 2026 at 04:01 PM</p>
+            <p class="timestamp">Generated on July 20, 2026 at 03:54 PM</p>
             <h2 style="margin-top: 1rem; font-weight: 400;">opendatahub-io/kube-authkit</h2>
         </header>
 
@@ -342,13 +342,13 @@
                     <svg width="200" height="200">
                         <circle class="bg-circle" cx="100" cy="100" r="90"></circle>
                         <circle class="score-arc" cx="100" cy="100" r="90"
-                                stroke="#ffc107"
+                                stroke="#fd7e14"
                                 stroke-dasharray="565.4861999999999"
-                                stroke-dashoffset="175.30072199999995"
+                                stroke-dashoffset="237.504204"
                                 id="scoreArc"></circle>
                     </svg>
                     <div class="score-text">
-                        <div class="score-value">6.9</div>
+                        <div class="score-value">5.8</div>
                         <div class="score-label">Overall Score</div>
                     </div>
                 </div>
@@ -365,37 +365,42 @@
                         <div class="scorecard-item">
                             <h3>Unit Tests</h3>
                             <div class="scorecard-score" style="color: #28a745;">8.5/10</div>
-                            <div class="scorecard-status">185+ unit tests with 2:1 test-to-code ratio, well-organized fixtures, all strategies covered</div>
+                            <div class="scorecard-status">Strong test suite with 231 test functions across 12 files, excellent fixtures and markers</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Integration/E2E</h3>
                             <div class="scorecard-score" style="color: #ffc107;">7.0/10</div>
-                            <div class="scorecard-status">46 integration tests with mock OAuth server; Docker Compose E2E setup exists but not automated in CI</div>
+                            <div class="scorecard-status">Dedicated integration tests with mock OAuth server and docker-compose, no multi-version K8s testing</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Build Integration</h3>
-                            <div class="scorecard-score" style="color: #fd7e14;">5.0/10</div>
-                            <div class="scorecard-status">Package build validation only in publish workflow; mypy removed; no PR-time type checking</div>
+                            <div class="scorecard-score" style="color: #dc3545;">3.0/10</div>
+                            <div class="scorecard-status">No PR-time build validation, no package build verification in PR workflows</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Image Testing</h3>
-                            <div class="scorecard-score" style="color: #fd7e14;">4.0/10</div>
-                            <div class="scorecard-status">Library project - Dockerfile.test for test execution only; no production container artifact</div>
+                            <div class="scorecard-score" style="color: #dc3545;">3.0/10</div>
+                            <div class="scorecard-status">Dockerfile.test exists for test runner only, no production image, no multi-arch support</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Coverage Tracking</h3>
-                            <div class="scorecard-score" style="color: #ffc107;">7.0/10</div>
-                            <div class="scorecard-status">Codecov upload in CI with 70% threshold; no .codecov.yml for PR blocking/commenting</div>
+                            <div class="scorecard-score" style="color: #ffc107;">7.5/10</div>
+                            <div class="scorecard-status">pytest-cov with 70% threshold enforcement, Codecov integration, dedicated coverage-check job</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>CI/CD Automation</h3>
                             <div class="scorecard-score" style="color: #ffc107;">7.0/10</div>
-                            <div class="scorecard-status">4 workflows, multi-Python/multi-OS matrix; no concurrency control or dependency caching</div>
+                            <div class="scorecard-status">4 workflows with matrix testing (3 Python x 2 OS), minimum-version testing, but no caching or concurrency control</div>
+                        </div>
+                        <div class="scorecard-item">
+                            <h3>Static Analysis</h3>
+                            <div class="scorecard-score" style="color: #fd7e14;">5.5/10</div>
+                            <div class="scorecard-status">Ruff with 7 rule sets and pip-audit, but no Dependabot/Renovate or pre-commit hooks</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Agent Rules</h3>
-                            <div class="scorecard-score" style="color: #dc3545;">1.0/10</div>
-                            <div class="scorecard-status">No .claude/ directory, CLAUDE.md, or agent rules of any kind</div>
+                            <div class="scorecard-score" style="color: #dc3545;">0.0/10</div>
+                            <div class="scorecard-status">No CLAUDE.md, AGENTS.md, or .claude/ directory</div>
                         </div>
                     </div>
                 </div>
@@ -411,43 +416,35 @@
                     <ul class="items-list">
                         
                         <li class="item-card high">
-                            <div class="item-description">No static type checking in CI</div>
-                            <p>Type errors only caught at runtime; mypy was previously present but removed</p>
-                            <div class="item-meta">
-                                <span class="meta-tag severity-high">HIGH</span>
-                                <span class="meta-tag effort-tag">4-6 hours</span>
-                            </div>
-                        </li>
-                        <li class="item-card high">
-                            <div class="item-description">E2E tests not automated in CI</div>
-                            <p>Docker Compose E2E with Keycloak exists but never runs automatically; regressions in real OIDC flows go undetected</p>
-                            <div class="item-meta">
-                                <span class="meta-tag severity-high">HIGH</span>
-                                <span class="meta-tag effort-tag">8-12 hours</span>
-                            </div>
-                        </li>
-                        <li class="item-card high">
-                            <div class="item-description">No SAST/security scanning in CI</div>
-                            <p>Bandit and CodeQL mentioned in docs but not present in workflows; security issues in auth code undetected</p>
+                            <div class="item-description">No PR-time package build validation</div>
+                            <p>Build failures (e.g., missing package data, incorrect entry points) discovered only at publish time</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-high">HIGH</span>
                                 <span class="meta-tag effort-tag">2-4 hours</span>
                             </div>
                         </li>
+                        <li class="item-card high">
+                            <div class="item-description">No dependency update automation (Dependabot/Renovate)</div>
+                            <p>Stale dependencies with potential security vulnerabilities go undetected until manual review</p>
+                            <div class="item-meta">
+                                <span class="meta-tag severity-high">HIGH</span>
+                                <span class="meta-tag effort-tag">1-2 hours</span>
+                            </div>
+                        </li>
                         <li class="item-card medium">
-                            <div class="item-description">Documentation-CI mismatch</div>
-                            <p>CONTRIBUTING.md and workflow README reference mypy, Black, and Bandit but none run in CI; contributors get incorrect guidance</p>
+                            <div class="item-description">No agent rules for AI-assisted development</div>
+                            <p>AI agents lack project-specific testing and contribution guidance, reducing code quality</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-medium">MEDIUM</span>
                                 <span class="meta-tag effort-tag">2-3 hours</span>
                             </div>
                         </li>
                         <li class="item-card medium">
-                            <div class="item-description">No agent rules for test automation</div>
-                            <p>AI agents cannot generate tests following project conventions; inconsistent AI-generated contributions</p>
+                            <div class="item-description">Coverage threshold set at 70% — below gold standard</div>
+                            <p>Significant portions of code may lack test coverage, increasing regression risk</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-medium">MEDIUM</span>
-                                <span class="meta-tag effort-tag">3-4 hours</span>
+                                <span class="meta-tag effort-tag">4-8 hours</span>
                             </div>
                         </li>
                     </ul>
@@ -464,48 +461,40 @@
                     <ul class="items-list">
                         
                         <li class="item-card ">
+                            <div class="item-description">Add .github/dependabot.yml for pip ecosystem</div>
+                            <p>Automated security alerts and dependency update PRs</p>
+                            <div class="item-meta">
+                                
+                                <span class="meta-tag effort-tag">30 minutes</span>
+                            </div>
+                        </li>
+                        <li class="item-card ">
                             <div class="item-description">Add concurrency control to CI workflows</div>
-                            <p>Prevent redundant CI runs on rapid pushes, save CI minutes</p>
+                            <p>Cancel redundant workflow runs on force-push, saving CI minutes</p>
                             <div class="item-meta">
                                 
                                 <span class="meta-tag effort-tag">30 minutes</span>
                             </div>
                         </li>
                         <li class="item-card ">
-                            <div class="item-description">Add uv cache to CI workflows</div>
-                            <p>Reduce CI execution time by caching Python dependencies</p>
-                            <div class="item-meta">
-                                
-                                <span class="meta-tag effort-tag">30 minutes</span>
-                            </div>
-                        </li>
-                        <li class="item-card ">
-                            <div class="item-description">Add Bandit security scanning to lint workflow</div>
-                            <p>Catch security issues in authentication code before merge</p>
+                            <div class="item-description">Add pip/uv caching to CI workflows</div>
+                            <p>Faster CI runs by caching Python dependencies</p>
                             <div class="item-meta">
                                 
                                 <span class="meta-tag effort-tag">1 hour</span>
                             </div>
                         </li>
                         <li class="item-card ">
-                            <div class="item-description">Create .codecov.yml with PR status checks</div>
-                            <p>Block PRs that decrease coverage; get inline coverage annotations</p>
+                            <div class="item-description">Create basic CLAUDE.md with testing guidance</div>
+                            <p>Consistent AI-assisted test generation following project patterns</p>
                             <div class="item-meta">
                                 
-                                <span class="meta-tag effort-tag">1 hour</span>
+                                <span class="meta-tag effort-tag">1-2 hours</span>
                             </div>
                         </li>
                         <li class="item-card ">
-                            <div class="item-description">Raise coverage threshold from 70% to 80%</div>
-                            <p>Prevent coverage regression as codebase grows</p>
-                            <div class="item-meta">
-                                
-                                <span class="meta-tag effort-tag">30 minutes</span>
-                            </div>
-                        </li>
-                        <li class="item-card ">
-                            <div class="item-description">Add pre-commit hooks with Ruff</div>
-                            <p>Catch lint/format issues before push, reduce CI failures</p>
+                            <div class="item-description">Add python -m build step to PR workflow</div>
+                            <p>Catch packaging issues before merge</p>
                             <div class="item-meta">
                                 
                                 <span class="meta-tag effort-tag">1 hour</span>
@@ -525,15 +514,15 @@
                         
                         <div class="rec-priority p0">
                             <h3>Priority 0: Critical</h3>
-                            <ul><li>Re-enable mypy type checking in CI - critical for an authentication library where type safety prevents security bugs</li><li>Add Bandit SAST scanning to lint workflow - currently referenced in docs but not enforced</li><li>Automate E2E tests in CI using Docker Compose service containers</li></ul>
+                            <ul><li>Add PR-time package build validation (python -m build + twine check) to test.yml workflow</li><li>Enable Dependabot for pip ecosystem with weekly update schedule</li></ul>
                         </div>
                         <div class="rec-priority p1">
                             <h3>Priority 1: High Value</h3>
-                            <ul><li>Add CodeQL or Semgrep for deeper static analysis of authentication flows</li><li>Create .codecov.yml with PR status checks and coverage diff requirements</li><li>Add concurrency control and dependency caching to all workflows</li><li>Fix documentation-CI mismatch in CONTRIBUTING.md and workflow README</li></ul>
+                            <ul><li>Raise coverage threshold from 70% to 80% and add per-module coverage targets</li><li>Add concurrency control and dependency caching to all CI workflows</li><li>Create CLAUDE.md with testing patterns, architecture overview, and contribution guidelines</li></ul>
                         </div>
                         <div class="rec-priority p2">
                             <h3>Priority 2: Nice-to-Have</h3>
-                            <ul><li>Create comprehensive agent rules (.claude/rules/) for test patterns</li><li>Add pre-commit hooks with Ruff, mypy, and Bandit</li><li>Add Gitleaks or TruffleHog for secret detection in CI</li><li>Add wheel install testing in PR workflow to catch packaging issues</li></ul>
+                            <ul><li>Add pre-commit hooks for ruff linting and formatting</li><li>Add type checking with mypy to CI pipeline</li><li>Add E2E test job using docker-compose.test.yml to CI</li></ul>
                         </div>
                     </div>
                 </div>

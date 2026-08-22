@@ -3,6 +3,20 @@ const JIRA_BROWSE_URL = 'https://redhat.atlassian.net/browse'
 const CLOSED_STATUSES = ['Closed', 'Done', 'Resolved', 'Cancelled']
 const TERMINAL_STATUSES = ['Review', 'Pending Release']
 
+/**
+ * Canonical Features/Initiatives population (Features List + PM Hub).
+ * Planning Features live in RHAISTRAT + AIPCC only — eng-project Features
+ * (RHAIENG, RHOAIENG, …) are out of scope. Child epics FPDoR uses quality-gate /
+ * epic-creator labels, not a multi-project Feature scrape.
+ */
+const FEATURE_PIPELINE_PROJECTS = ['RHAISTRAT', 'AIPCC']
+
+/** Live Features List / PM Hub fetch — same population as FEATURE_PIPELINE_PROJECTS. */
+const FEATURES_LIST_PROJECTS = FEATURE_PIPELINE_PROJECTS
+
+/** Statuses Features List hides after merge (and excludes at live fetch). */
+const FEATURES_LIST_HIDDEN_STATUSES = ['Closed', 'Done', 'Resolved']
+
 const PRIORITY_ORDER = { Blocker: 0, Critical: 1, Major: 2, Normal: 3, Minor: 4 }
 
 const JIRA_THROTTLE_MS = 1000
@@ -91,6 +105,9 @@ const CHANGELOG_FIELDS = 'summary'
 module.exports = {
   JIRA_BROWSE_URL,
   CLOSED_STATUSES,
+  FEATURE_PIPELINE_PROJECTS,
+  FEATURES_LIST_PROJECTS,
+  FEATURES_LIST_HIDDEN_STATUSES,
   TERMINAL_STATUSES,
   PRIORITY_ORDER,
   JIRA_THROTTLE_MS,

@@ -3,7 +3,8 @@ import { extractProduct, extractVersion } from '../composables/release-utils'
 // FIPS is first because it is matched by keyword, not by value prefix.
 export const KNOWN_CATEGORIES = [
   'fips', 'hermetic_task', 'test', 'tasks', 'schedule',
-  'sbom_spdx', 'rpm_signature', 'cve', 'other'
+  'sbom_spdx', 'rpm_signature', 'rpm_packages', 'cve',
+  'labels', 'base_image_registries', 'buildah_build_task', 'other'
 ]
 
 export const CATEGORY_BADGE = {
@@ -17,6 +18,10 @@ export const CATEGORY_BADGE = {
   cve:                   'bg-pink-100 dark:bg-pink-900/40 text-pink-700 dark:text-pink-300',
   source_image:          'bg-teal-100 dark:bg-teal-900/40 text-teal-700 dark:text-teal-300',
   step_image_registries: 'bg-orange-100 dark:bg-orange-900/40 text-orange-700 dark:text-orange-300',
+  rpm_packages:          'bg-rose-100 dark:bg-rose-900/40 text-rose-700 dark:text-rose-300',
+  labels:                'bg-lime-100 dark:bg-lime-900/40 text-lime-700 dark:text-lime-300',
+  base_image_registries: 'bg-sky-100 dark:bg-sky-900/40 text-sky-700 dark:text-sky-300',
+  buildah_build_task:    'bg-fuchsia-100 dark:bg-fuchsia-900/40 text-fuchsia-700 dark:text-fuchsia-300',
   other:                 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400'
 }
 
@@ -31,9 +36,23 @@ export const CATEGORY_DOCS = {
   cve:                   'https://conforma.dev/docs/policy/packages/release_cve.html',
   source_image:          'https://conforma.dev/docs/policy/packages/release_source_image.html',
   step_image_registries: 'https://conforma.dev/docs/policy/packages/task_step_image_registries.html',
+  rpm_packages:          'https://conforma.dev/docs/policy/packages/release_rpm_packages.html',
+  labels:                'https://conforma.dev/docs/policy/packages/release_labels.html',
+  base_image_registries: 'https://conforma.dev/docs/policy/packages/release_base_image_registries.html',
+  buildah_build_task:    'https://conforma.dev/docs/policy/packages/release_buildah_build_task.html',
 }
 
-export const EXTENSION_JIRA_TEMPLATE_URL = 'https://redhat.atlassian.net/browse/RHOAIENG-62569'
+const EXTENSION_JIRA_URLS = {
+  rhoai: 'https://redhat.atlassian.net/browse/RHOAIENG-62569'
+}
+
+export const EXTENSION_JIRA_TEMPLATE_URL = EXTENSION_JIRA_URLS.rhoai
+
+export function extensionJiraTemplateUrl(release) {
+  if (release?.productLayer) return null
+  const product = extractProduct(release?.version || '')
+  return EXTENSION_JIRA_URLS[product] || EXTENSION_JIRA_URLS.rhoai
+}
 
 export const ACTIONABLE_DAYS_THRESHOLD = 7
 
@@ -151,7 +170,7 @@ export function normalizeTargetRelease(raw) {
 export function extractCategory(value) {
   if (!value) return 'other'
   if (value.toLowerCase().includes('fips')) return 'fips'
-  const prefixKnown = ['hermetic_task', 'test', 'tasks', 'schedule', 'sbom_spdx', 'rpm_signature', 'cve', 'source_image', 'step_image_registries']
+  const prefixKnown = ['hermetic_task', 'test', 'tasks', 'schedule', 'sbom_spdx', 'rpm_signature', 'rpm_packages', 'cve', 'source_image', 'step_image_registries', 'labels', 'base_image_registries', 'buildah_build_task']
   const prefix = value.split('.')[0].split(':')[0]
   return prefixKnown.includes(prefix) ? prefix : 'other'
 }

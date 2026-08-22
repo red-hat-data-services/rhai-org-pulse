@@ -26,7 +26,8 @@ const CUSTOM_FIELDS = {
   impact: 'customfield_10836',
   confidence: 'customfield_10838',
   effort: 'customfield_10637',
-  riceScore: 'customfield_10864'
+  riceScore: 'customfield_10864',
+  blockedDropdown: 'customfield_10517'
 }
 
 // Fields fetched in Pass 1 for all features
@@ -35,6 +36,7 @@ const PASS1_FIELDS = [
   'components', 'labels', 'issuelinks',
   CUSTOM_FIELDS.team,
   CUSTOM_FIELDS.releaseType,
+  CUSTOM_FIELDS.targetVersion,
   CUSTOM_FIELDS.statusSummary,
   CUSTOM_FIELDS.colorStatus,
   CUSTOM_FIELDS.docsRequired,
@@ -79,11 +81,99 @@ function serializeField(field) {
     const first = field[0]
     if (first && first.name) return first.name
     if (first && first.value) return first.value
+    // Avoid stringifying a label-less object to "[object Object]"
+    if (first && typeof first === 'object') return null
     return String(first)
   }
   if (field.name) return field.name
   if (field.value) return field.value
+  if (field.title) return field.title
+  // Object with no readable label — return null rather than "[object Object]"
+  if (typeof field === 'object') return null
   return String(field)
+}
+
+
+function numericField(field) {
+  if (field == null) return null
+  var val = typeof field === 'object' && field !== null ? field.value : field
+  if (val == null) return null
+  var num = Number(val)
+  return isNaN(num) ? null : num
+}
+
+/**
+ * Extract version-name strings from a Jira version-picker field, which may be a
+ * single object, an array of objects, or a bare string.
+ * @param {*} field - Raw field value from Jira API
+ * @returns {string[]}
+ */
+function extractVersionNames(field) {
+  if (field === null || field === undefined) return []
+  if (Array.isArray(field)) {
+    var out = []
+    for (var i = 0; i < field.length; i++) {
+      var v = field[i]
+      if (v && v.name) out.push(v.name)
+      else if (typeof v === 'string' && v) out.push(v)
+    }
+    return out
+  }
+  if (typeof field === 'object' && field.name) return [field.name]
+  if (typeof field === 'string' && field) return [field]
+  return []
+}
+
+/**
+ * Build a map of Jira version-name (lowercased) → registry release id from the
+ * fixVersions arrays of all registry releases.
+ * @param {Array<{id: string, fixVersions?: string[]}>} registryReleases
+ * @returns {Record<string, string>}
+ */
+function buildVersionReleaseMap(registryReleases) {
+  var map = {}
+  var rels = registryReleases || []
+  for (var i = 0; i < rels.length; i++) {
+    var r = rels[i]
+    var fvs = r.fixVersions || []
+    for (var j = 0; j < fvs.length; j++) {
+      if (fvs[j]) map[String(fvs[j]).toLowerCase()] = r.id
+    }
+  }
+  return map
+}
+
+/**
+ * Resolve the first version name that maps to a registry release id.
+ * @param {string[]} names
+ * @param {Record<string, string>} versionReleaseMap
+ * @returns {string|null}
+ */
+function resolveReleaseId(names, versionReleaseMap) {
+  var map = versionReleaseMap || {}
+  var list = names || []
+  for (var i = 0; i < list.length; i++) {
+    var id = map[String(list[i]).toLowerCase()]
+    if (id) return id
+  }
+  return null
+}
+
+/**
+ * Determine the effective release a feature belongs to. Fix Version wins over
+ * Target Version (the delivery commitment beats the original ask), but only when
+ * it resolves to an active release — otherwise fall back to the Target Version so
+ * the feature still surfaces somewhere rather than disappearing.
+ * @param {string|null} fixReleaseId
+ * @param {string|null} targetReleaseId
+ * @param {Set<string>} activeReleaseIds
+ * @returns {string|null}
+ */
+function computeEffectiveReleaseId(fixReleaseId, targetReleaseId, activeReleaseIds) {
+  var active = activeReleaseIds || new Set()
+  if (fixReleaseId && active.has(fixReleaseId)) return fixReleaseId
+  if (targetReleaseId && active.has(targetReleaseId)) return targetReleaseId
+  return fixReleaseId || targetReleaseId || null
 }
 
 /**
@@ -264,6 +354,15 @@ function transformIssue(rawIssue, rfeMap) {
   }
   const isBlocked = blockedBy.length > 0
 
+  // Target versions (version-picker custom field) — the PM's requested release.
+  const targetVersions = extractVersionNames(fields[CUSTOM_FIELDS.targetVersion])
+
+  // Issue type + "fix version set but Target Version missing" flag
+  const issueType = fields.issuetype ? fields.issuetype.name : null
+  const isFeatureOrInitiative = issueType === 'Feature' || issueType === 'Initiative'
+  const missingTargetVersion = isFeatureOrInitiative &&
+    fixVersions.length > 0 && targetVersions.length === 0
+
   // Priority
   const priority = fields.priority ? fields.priority.name : null
 
@@ -274,7 +373,7 @@ function transformIssue(rawIssue, rfeMap) {
   return {
     key: rawIssue.key,
     summary: fields.summary || '',
-    issueType: fields.issuetype ? fields.issuetype.name : null,
+    issueType,
     status: fields.status ? fields.status.name : null,
     statusCategory: fields.status && fields.status.statusCategory
       ? fields.status.statusCategory.name
@@ -282,17 +381,22 @@ function transformIssue(rawIssue, rfeMap) {
     assignee: fields.assignee ? fields.assignee.displayName : null,
     team: serializeField(fields[CUSTOM_FIELDS.team]),
     fixVersions,
+    targetVersions,
     affectedVersions,
     components,
     labels,
     releaseType: serializeField(fields[CUSTOM_FIELDS.releaseType]),
-    missingTargetVersion: false,
+    missingTargetVersion,
+    // Resolved to registry release ids during fetch (see fetchHygieneFeatures)
+    targetReleaseId: null,
+    fixReleaseId: null,
+    effectiveReleaseId: null,
     statusSummary,
     colorStatus: serializeField(fields[CUSTOM_FIELDS.colorStatus]),
     docsRequired: serializeField(fields[CUSTOM_FIELDS.docsRequired]),
     targetEnd: fields[CUSTOM_FIELDS.targetEnd] || null,
     riceStatus: computeRiceStatus(fields),
-    riceScore: fields[CUSTOM_FIELDS.riceScore] || null,
+    riceScore: numericField(fields[CUSTOM_FIELDS.riceScore]),
     priority,
     isBlocked,
     blockedBy,
@@ -366,6 +470,15 @@ async function fetchRfeMap(jiraRequestFn, fetchAllJqlResultsFn, rfeKeys) {
  * @param {string[]} [options.jqlVersions] - Jira version strings to use in JQL queries.
  *   When provided, uses these instead of `version` for Target Version and fixVersion filters.
  *   Supports multiple values via IN (...) syntax.
+ * @param {Record<string,string>} [options.versionReleaseMap] - Map of Jira version
+ *   name (lowercased) → registry release id. When provided, each feature's
+ *   targetReleaseId/fixReleaseId/effectiveReleaseId are resolved.
+ * @param {string[]} [options.activeReleaseIds] - Registry ids of releases currently
+ *   being refreshed; used so fix-version precedence only applies when the fix
+ *   version resolves to an active release.
+ * @param {string} [options.releaseId] - Registry id of the release being refreshed.
+ *   When provided (with versionReleaseMap), features whose effective release is a
+ *   different release are dropped, enforcing single-release membership.
  * @returns {Promise<{ features: object, fetchedAt: string, version: string }>}
  */
 async function fetchHygieneFeatures(jiraRequestFn, fetchAllJqlResultsFn, version, config, onProgress, options) {
@@ -389,9 +502,17 @@ async function fetchHygieneFeatures(jiraRequestFn, fetchAllJqlResultsFn, version
 
   const projectFilter = 'project IN (' + projects.join(', ') + ')'
   const issueTypeFilter = 'issuetype IN (' + issueTypes.join(', ') + ')'
-  const versionFilter = sanitized.length === 1
+  const targetVersionFilter = sanitized.length === 1
     ? '"Target Version" = "' + sanitized[0] + '"'
     : '"Target Version" IN (' + sanitized.map(function (v) { return '"' + v + '"' }).join(', ') + ')'
+  const fixVersionFilter = sanitized.length === 1
+    ? 'fixVersion = "' + sanitized[0] + '"'
+    : 'fixVersion IN (' + sanitized.map(function (v) { return '"' + v + '"' }).join(', ') + ')'
+  // Match on either the delivery commitment (fixVersion) or the original ask
+  // (Target Version). Effective-release resolution below picks the single release
+  // each feature belongs to when the two disagree. This also subsumes the old
+  // "fixVersion set but Target Version empty" supplementary query.
+  const versionFilter = '(' + fixVersionFilter + ' OR ' + targetVersionFilter + ')'
 
   const jql = projectFilter + ' AND ' + issueTypeFilter + ' AND ' + versionFilter
 
@@ -400,33 +521,6 @@ async function fetchHygieneFeatures(jiraRequestFn, fetchAllJqlResultsFn, version
   })
 
   notify('pass1', { message: 'Fetched ' + rawIssues.length + ' features' })
-
-  // ── Supplementary: Issues with fixVersion but no Target Version ──
-  notify('supplementary', { message: 'Checking for issues with fixVersion but no Target Version' })
-
-  const fixVersionFilter = sanitized.length === 1
-    ? 'fixVersion = "' + sanitized[0] + '"'
-    : 'fixVersion IN (' + sanitized.map(function (v) { return '"' + v + '"' }).join(', ') + ')'
-
-  const missingTvJql = projectFilter + ' AND ' + issueTypeFilter +
-    ' AND ' + fixVersionFilter + ' AND "Target Version" IS EMPTY'
-
-  try {
-    const missingTvIssues = await fetchAllJqlResultsFn(jiraRequestFn, missingTvJql, PASS1_FIELDS, {
-      expand: 'renderedFields'
-    })
-    for (let mti = 0; mti < missingTvIssues.length; mti++) {
-      if (!rawIssues.some(function (ri) { return ri.key === missingTvIssues[mti].key })) {
-        rawIssues.push(missingTvIssues[mti])
-        missingTvIssues[mti]._missingTargetVersion = true
-      }
-    }
-    if (missingTvIssues.length > 0) {
-      notify('supplementary', { message: 'Found ' + missingTvIssues.length + ' issues missing Target Version' })
-    }
-  } catch (err) {
-    console.warn('[hygiene] Missing Target Version fetch failed:', err.message)
-  }
 
   // ── Supplementary: Post-release bugs missing Affected Version ──
   notify('supplementary', { message: 'Checking for post-release bugs' })
@@ -473,10 +567,33 @@ async function fetchHygieneFeatures(jiraRequestFn, fetchAllJqlResultsFn, version
   const features = {}
   for (let ti = 0; ti < rawIssues.length; ti++) {
     const transformed = transformIssue(rawIssues[ti], rfeMap)
-    if (rawIssues[ti]._missingTargetVersion) {
-      transformed.missingTargetVersion = true
-    }
     features[transformed.key] = transformed
+  }
+
+  // ── Resolve target/fix release ids + effective-release membership ──
+  const versionReleaseMap = (options && options.versionReleaseMap) || null
+  if (versionReleaseMap) {
+    const activeReleaseIds = new Set((options && options.activeReleaseIds) || [])
+    const keepReleaseId = options && options.releaseId
+    for (const fkey in features) {
+      const f = features[fkey]
+      f.targetReleaseId = resolveReleaseId(f.targetVersions, versionReleaseMap)
+      f.fixReleaseId = resolveReleaseId(f.fixVersions, versionReleaseMap)
+      f.effectiveReleaseId = computeEffectiveReleaseId(f.fixReleaseId, f.targetReleaseId, activeReleaseIds)
+    }
+    // Keep only features whose effective release is the one being refreshed, so
+    // fix-version precedence moves a feature to its committed release instead of
+    // double-listing it under its (possibly stale) Target Version release. Bugs
+    // are matched by fixVersion only and always belong to the release they hit.
+    if (keepReleaseId) {
+      for (const dkey in features) {
+        const df = features[dkey]
+        if (df.issueType === 'Bug') continue
+        if (df.effectiveReleaseId && df.effectiveReleaseId !== keepReleaseId) {
+          delete features[dkey]
+        }
+      }
+    }
   }
 
   // ── Pass 2: Changelog for active features ──
@@ -588,6 +705,11 @@ module.exports = {
   fetchHygieneFeatures,
   transformIssue,
   serializeField,
+  numericField,
+  extractVersionNames,
+  buildVersionReleaseMap,
+  resolveReleaseId,
+  computeEffectiveReleaseId,
   computeRiceStatus,
   extractClonesLinks,
   parseChangelog,

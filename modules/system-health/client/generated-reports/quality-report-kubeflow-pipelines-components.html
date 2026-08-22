@@ -332,7 +332,7 @@
     <div class="container">
         <header>
             <h1>Quality Analysis Report</h1>
-            <p class="timestamp">Generated on July 06, 2026 at 03:23 PM</p>
+            <p class="timestamp">Generated on July 21, 2026 at 12:21 PM</p>
             <h2 style="margin-top: 1rem; font-weight: 400;">kubeflow/pipelines-components</h2>
         </header>
 
@@ -344,11 +344,11 @@
                         <circle class="score-arc" cx="100" cy="100" r="90"
                                 stroke="#ffc107"
                                 stroke-dasharray="565.4861999999999"
-                                stroke-dashoffset="180.95558400000002"
+                                stroke-dashoffset="197.92016999999996"
                                 id="scoreArc"></circle>
                     </svg>
                     <div class="score-text">
-                        <div class="score-value">6.8</div>
+                        <div class="score-value">6.5</div>
                         <div class="score-label">Overall Score</div>
                     </div>
                 </div>
@@ -364,38 +364,43 @@
                         
                         <div class="scorecard-item">
                             <h3>Unit Tests</h3>
-                            <div class="scorecard-score" style="color: #ffc107;">7.5/10</div>
-                            <div class="scorecard-status">Strong script-level coverage with pytest; component tests emerging but sparse</div>
+                            <div class="scorecard-score" style="color: #ffc107;">7.0/10</div>
+                            <div class="scorecard-status">Good test coverage for scripts and components with pytest; room for broader component test coverage</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Integration/E2E</h3>
-                            <div class="scorecard-score" style="color: #fd7e14;">5.0/10</div>
-                            <div class="scorecard-status">LocalRunner tests for components exist; no cluster-level E2E or KFP integration tests</div>
+                            <div class="scorecard-score" style="color: #fd7e14;">4.0/10</div>
+                            <div class="scorecard-status">No dedicated E2E or integration test suite; component tests use KFP LocalRunner but no cluster-based validation</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Build Integration</h3>
-                            <div class="scorecard-score" style="color: #ffc107;">6.5/10</div>
-                            <div class="scorecard-status">PR builds containers and validates components; no Konflux simulation or operator integration</div>
+                            <div class="scorecard-score" style="color: #ffc107;">7.0/10</div>
+                            <div class="scorecard-status">PR-time container builds with validation, compile checks, and base image verification</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Image Testing</h3>
-                            <div class="scorecard-score" style="color: #fd7e14;">5.5/10</div>
-                            <div class="scorecard-status">Container build with multi-arch on merge; PR only builds amd64; no runtime validation</div>
+                            <div class="scorecard-score" style="color: #fd7e14;">5.0/10</div>
+                            <div class="scorecard-status">Single example Containerfile using python:3.11-slim; no multi-arch PR builds, no runtime validation, no health checks</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Coverage Tracking</h3>
                             <div class="scorecard-score" style="color: #dc3545;">3.0/10</div>
-                            <div class="scorecard-status">Makefile has test-coverage target but no Codecov/Coveralls integration or enforcement</div>
+                            <div class="scorecard-status">pytest-cov available as dependency but not enforced in CI; no codecov integration or thresholds</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>CI/CD Automation</h3>
-                            <div class="scorecard-score" style="color: #28a745;">8.5/10</div>
-                            <div class="scorecard-status">17 workflows with concurrency control, path filtering, multi-Python matrix, CI-passed gating</div>
+                            <div class="scorecard-score" style="color: #28a745;">9.0/10</div>
+                            <div class="scorecard-status">16 well-organized workflows, concurrency control, path-filtered triggers, multi-Python matrix testing</div>
+                        </div>
+                        <div class="scorecard-item">
+                            <h3>Static Analysis</h3>
+                            <div class="scorecard-score" style="color: #28a745;">9.0/10</div>
+                            <div class="scorecard-status">Ruff linting/formatting, yamllint, markdownlint, import guard, pre-commit hooks, Dependabot configured</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Agent Rules</h3>
-                            <div class="scorecard-score" style="color: #ffc107;">7.0/10</div>
-                            <div class="scorecard-status">Comprehensive AGENTS.md with 3 modes; no .claude/rules/ or test-creation-specific rules</div>
+                            <div class="scorecard-score" style="color: #28a745;">8.0/10</div>
+                            <div class="scorecard-status">Comprehensive AGENTS.md with mode-based guidance, validation tables, and references to contributing docs</div>
                         </div>
                     </div>
                 </div>
@@ -411,35 +416,43 @@
                     <ul class="items-list">
                         
                         <li class="item-card high">
-                            <div class="item-description">No coverage enforcement or tracking integration</div>
-                            <p>Coverage regressions can merge unnoticed; no visibility into coverage trends over time</p>
+                            <div class="item-description">No coverage tracking or enforcement in CI</div>
+                            <p>Coverage regressions go undetected; no visibility into test quality trends</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-high">HIGH</span>
                                 <span class="meta-tag effort-tag">4-6 hours</span>
                             </div>
                         </li>
                         <li class="item-card high">
-                            <div class="item-description">No security scanning (Trivy, CodeQL, SAST)</div>
-                            <p>Container images and dependencies ship without vulnerability assessment</p>
-                            <div class="item-meta">
-                                <span class="meta-tag severity-high">HIGH</span>
-                                <span class="meta-tag effort-tag">2-4 hours</span>
-                            </div>
-                        </li>
-                        <li class="item-card high">
-                            <div class="item-description">No cluster-level E2E or KFP integration tests</div>
-                            <p>Components only tested locally; pipeline-level failures caught only in production</p>
+                            <div class="item-description">No E2E or integration tests against a real KFP cluster</div>
+                            <p>Components may compile but fail at runtime in actual Kubeflow Pipelines environments</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-high">HIGH</span>
                                 <span class="meta-tag effort-tag">16-24 hours</span>
                             </div>
                         </li>
+                        <li class="item-card high">
+                            <div class="item-description">Only 4 out of ~10+ components/pipelines have unit tests</div>
+                            <p>Most component code paths are untested; regressions in untested components go undetected</p>
+                            <div class="item-meta">
+                                <span class="meta-tag severity-high">HIGH</span>
+                                <span class="meta-tag effort-tag">12-20 hours</span>
+                            </div>
+                        </li>
                         <li class="item-card medium">
-                            <div class="item-description">No container image runtime validation on PR</div>
-                            <p>Image startup issues and missing dependencies discovered only after merge and push</p>
+                            <div class="item-description">Example Containerfile uses python:3.11-slim (not FIPS-capable)</div>
+                            <p>Components using custom base images cannot be deployed in FIPS-required environments without rebuilding</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-medium">MEDIUM</span>
-                                <span class="meta-tag effort-tag">4-8 hours</span>
+                                <span class="meta-tag effort-tag">2-4 hours</span>
+                            </div>
+                        </li>
+                        <li class="item-card low">
+                            <div class="item-description">No CLAUDE.md or .claude/rules/ for test creation patterns</div>
+                            <p>AI agents lack framework-specific guidance for writing KFP component tests</p>
+                            <div class="item-meta">
+                                <span class="meta-tag severity-low">LOW</span>
+                                <span class="meta-tag effort-tag">3-4 hours</span>
                             </div>
                         </li>
                     </ul>
@@ -457,34 +470,42 @@
                         
                         <li class="item-card ">
                             <div class="item-description">Add Codecov integration with coverage thresholds</div>
-                            <p>Immediate visibility into coverage trends; prevent regressions on every PR</p>
+                            <p>Automated coverage tracking on every PR with regression detection</p>
                             <div class="item-meta">
                                 
-                                <span class="meta-tag effort-tag">2-4 hours</span>
+                                <span class="meta-tag effort-tag">3-4 hours</span>
                             </div>
                         </li>
                         <li class="item-card ">
-                            <div class="item-description">Add Trivy container scanning to container-build workflow</div>
-                            <p>Catch CVEs in base images and dependencies before they reach GHCR</p>
+                            <div class="item-description">Add timeout-minutes to all CI workflow jobs</div>
+                            <p>Prevent hung jobs from consuming CI resources indefinitely</p>
                             <div class="item-meta">
                                 
-                                <span class="meta-tag effort-tag">1-2 hours</span>
+                                <span class="meta-tag effort-tag">1 hour</span>
                             </div>
                         </li>
                         <li class="item-card ">
-                            <div class="item-description">Add CodeQL analysis workflow</div>
-                            <p>Automated SAST for Python code catching injection, logic, and data-flow issues</p>
-                            <div class="item-meta">
-                                
-                                <span class="meta-tag effort-tag">1-2 hours</span>
-                            </div>
-                        </li>
-                        <li class="item-card ">
-                            <div class="item-description">Add container smoke test step to PR builds</div>
-                            <p>Validate image starts and imports work before merge</p>
+                            <div class="item-description">Create CLAUDE.md with test creation rules pointing to AGENTS.md patterns</div>
+                            <p>AI-generated tests will follow KFP component test conventions (LocalRunner, MockArtifact patterns)</p>
                             <div class="item-meta">
                                 
                                 <span class="meta-tag effort-tag">2-3 hours</span>
+                            </div>
+                        </li>
+                        <li class="item-card ">
+                            <div class="item-description">Add UBI-based Containerfile example for FIPS-capable builds</div>
+                            <p>Provide FIPS-compatible base image template for regulated environments</p>
+                            <div class="item-meta">
+                                
+                                <span class="meta-tag effort-tag">1-2 hours</span>
+                            </div>
+                        </li>
+                        <li class="item-card ">
+                            <div class="item-description">Enable coverage collection in scripts-tests.yml workflow</div>
+                            <p>Coverage data collected and uploaded automatically on every PR</p>
+                            <div class="item-meta">
+                                
+                                <span class="meta-tag effort-tag">1-2 hours</span>
                             </div>
                         </li>
                     </ul>
@@ -501,15 +522,15 @@
                         
                         <div class="rec-priority p0">
                             <h3>Priority 0: Critical</h3>
-                            <ul><li>Add Codecov integration with minimum coverage thresholds and PR coverage reporting</li><li>Add Trivy vulnerability scanning for all container images built in CI</li><li>Add CodeQL or Semgrep SAST workflow for Python security analysis</li></ul>
+                            <ul><li>Add Codecov integration with .codecov.yml and coverage upload in CI workflows</li><li>Enforce coverage thresholds (e.g., 70% project, 60% patch) to prevent regressions</li><li>Require unit tests for all new components/pipelines via CI enforcement</li></ul>
                         </div>
                         <div class="rec-priority p1">
                             <h3>Priority 1: High Value</h3>
-                            <ul><li>Build a KFP integration test suite that deploys components to a real Kubeflow Pipelines cluster</li><li>Add container runtime validation (smoke test) in PR builds</li><li>Create .claude/rules/ directory with test-creation rules for unit, local, and integration tests</li></ul>
+                            <ul><li>Add integration tests that deploy components to a real KFP cluster (Kind + KFP)</li><li>Expand unit test coverage to all existing components and pipelines</li><li>Create CLAUDE.md with KFP-specific test patterns and link to AGENTS.md</li><li>Add UBI-based Containerfile example for FIPS-capable deployments</li><li>Add timeout-minutes to all CI jobs to prevent resource exhaustion</li></ul>
                         </div>
                         <div class="rec-priority p2">
                             <h3>Priority 2: Nice-to-Have</h3>
-                            <ul><li>Add SBOM generation for container images</li><li>Implement image signing/attestation with cosign</li><li>Add performance regression testing for component execution time</li><li>Add contract tests for component interface stability</li></ul>
+                            <ul><li>Add multi-architecture support for component base images in PR builds</li><li>Add container health checks in Containerfile examples</li><li>Add performance benchmarks for component compilation and validation</li><li>Create .claude/rules/ with unit-test and integration-test patterns</li></ul>
                         </div>
                     </div>
                 </div>

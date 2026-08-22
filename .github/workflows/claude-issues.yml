@@ -63,7 +63,7 @@ jobs:
 
       - name: Set up Node.js
         if: steps.check-claimed.outputs.is_claimed != 'true'
-        uses: actions/setup-node@v6
+        uses: actions/setup-node@v7
         with:
           node-version: 22
           cache: 'npm'
@@ -212,8 +212,8 @@ jobs:
             - **PR branch naming:** `fix/issue-<number>-<short-desc>` for bugs,
               `feat/issue-<number>-<short-desc>` for features.
         env:
-          ANTHROPIC_VERTEX_PROJECT_ID: "itpc-gcp-ai-eng-claude"
-          CLOUD_ML_REGION: "us-east5"
+          ANTHROPIC_VERTEX_PROJECT_ID: "rhai-org-pulse"
+          CLOUD_ML_REGION: "global"
           CLAUDE_CODE_DISABLE_EXPERIMENTAL_BETAS: "1"
           DISABLE_PROMPT_CACHING: "1"
           GH_TOKEN: ${{ secrets.GH_PAT }}

@@ -57,7 +57,7 @@ async function getOutcomeSummaries(jiraRequest, keys, version, readFromStorage, 
   if (!keys || keys.length === 0) return {}
 
   var cachePath = DATA_PREFIX + '/outcome-summaries-cache-' + version + '.json'
-  var cached = readFromStorage(cachePath)
+  var cached = await readFromStorage(cachePath)
 
   // Check if all keys are already cached
   if (cached) {
@@ -86,7 +86,7 @@ async function getOutcomeSummaries(jiraRequest, keys, version, readFromStorage, 
     for (var key in fetched) {
       merged[key] = fetched[key]
     }
-    writeToStorage(cachePath, merged)
+    await writeToStorage(cachePath, merged)
     console.log('[release-planning] Fetched ' + Object.keys(fetched).length + ' outcome summaries from Jira')
   }
 

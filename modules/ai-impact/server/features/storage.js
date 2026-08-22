@@ -22,11 +22,11 @@ const LEGACY_STORAGE_KEY = 'ai-impact/features.json';
  * @param {Function} readFromStorage - The storage read function
  * @returns {object} Features data object (never null)
  */
-function readFeatures(readFromStorage) {
-  const index = readFromStorage(RELEASES_INDEX_KEY);
+async function readFeatures(readFromStorage) {
+  const index = await readFromStorage(RELEASES_INDEX_KEY);
   if (!index || !Array.isArray(index.features)) {
     // Fallback to legacy store
-    const legacy = readFromStorage(LEGACY_STORAGE_KEY);
+    const legacy = await readFromStorage(LEGACY_STORAGE_KEY);
     if (legacy && typeof legacy === 'object' && legacy.features) {
       return legacy;
     }
@@ -37,7 +37,7 @@ function readFeatures(readFromStorage) {
   const aiFeatures = index.features.filter(function(f) { return f.aiReview; });
   if (aiFeatures.length === 0) {
     // Check legacy store as fallback
-    const legacy = readFromStorage(LEGACY_STORAGE_KEY);
+    const legacy = await readFromStorage(LEGACY_STORAGE_KEY);
     if (legacy && typeof legacy === 'object' && legacy.features && Object.keys(legacy.features).length > 0) {
       return legacy;
     }
@@ -48,7 +48,7 @@ function readFeatures(readFromStorage) {
   for (var i = 0; i < aiFeatures.length; i++) {
     var entry = aiFeatures[i];
     // Read the full feature file for history
-    var featureFile = readFromStorage(RELEASES_FEATURE_PREFIX + entry.key + '.json');
+    var featureFile = await readFromStorage(RELEASES_FEATURE_PREFIX + entry.key + '.json');
     var aiReview = featureFile && featureFile.aiReview ? featureFile.aiReview : {};
 
     features[entry.key] = {

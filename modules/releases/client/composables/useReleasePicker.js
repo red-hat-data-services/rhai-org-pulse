@@ -49,8 +49,9 @@ export function useReleasePicker(data, registryReleases, jiraVersions) {
 
     for (const rel of registryReleases.value) {
       for (const fv of (rel.fixVersions || [])) {
-        if (!seen.has(fv)) {
-          seen.add(fv)
+        const key = fv.toLowerCase()
+        if (!seen.has(key)) {
+          seen.add(key)
           result.push({
             name: fv,
             displayName: rel.displayName,
@@ -62,8 +63,9 @@ export function useReleasePicker(data, registryReleases, jiraVersions) {
     }
 
     for (const v of jiraVersions.value) {
-      if (!seen.has(v.name)) {
-        seen.add(v.name)
+      const key = v.name.toLowerCase()
+      if (!seen.has(key)) {
+        seen.add(key)
         result.push({
           name: v.name,
           displayName: v.name,

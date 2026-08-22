@@ -135,7 +135,7 @@ function computeStats(candidates) {
  */
 module.exports = function registerRoutes(router, context) {
   const { storage, requireAuth, requireAdmin, requireScope, secrets } = context;
-  const { readFromStorage, writeToStorage, writeToStorageAtomic } = storage;
+  const { readFromStorage, writeToStorage } = storage;
 
   context.registerScopes([
     { key: 'ai-catalyst:read', label: 'AI Catalyst (Read)', description: 'Read AI Catalyst board data', category: 'AI Catalyst' },
@@ -145,20 +145,20 @@ module.exports = function registerRoutes(router, context) {
   let lastSyncTime = null;
   let syncRunning = false;
 
-  function getSheetId() {
-    return getBoardConfig(readFromStorage).sheetId || (secrets && secrets.POC_EXPLORER_SHEET_ID) || '';
+  async function getSheetId() {
+    return (await getBoardConfig(readFromStorage)).sheetId || (secrets && secrets.POC_EXPLORER_SHEET_ID) || '';
   }
 
-  function isConfigured() {
-    return !!getSheetId();
+  async function isConfigured() {
+    return !!(await getSheetId());
   }
 
-  function readIndex() {
-    return readFromStorage(INDEX_PATH) || { boards: [] };
+  async function readIndex() {
+    return (await readFromStorage(INDEX_PATH)) || { boards: [] };
   }
 
-  function readBoard(month) {
-    return readFromStorage(`${STORAGE_PREFIX}/boards/${month}.json`);
+  async function readBoard(month) {
+    return await readFromStorage(`${STORAGE_PREFIX}/boards/${month}.json`);
   }
 
   // --- Demo data ---
@@ -182,12 +182,12 @@ module.exports = function registerRoutes(router, context) {
   // --- Sync logic ---
 
   async function syncBoards() {
-    if (syncRunning || !isConfigured()) return { skipped: true };
+    if (syncRunning || !(await isConfigured())) return { skipped: true };
     syncRunning = true;
     try {
       const keyFile = (secrets && secrets.GOOGLE_SERVICE_ACCOUNT_KEY_FILE) || '/etc/secrets/google-sa-key.json';
       const sheetsClient = createGoogleSheetsClient({ keyFile });
-      const sheetId = getSheetId();
+      const sheetId = await getSheetId();
 
       const sheetNames = await sheetsClient.discoverSheetNames(sheetId);
       const boardSheets = sheetNames.filter(n => BOARD_SHEET_RE.test(n));
@@ -196,7 +196,7 @@ module.exports = function registerRoutes(router, context) {
         return { synced: 0, message: 'No board sheets found' };
       }
 
-      const existingIndex = readIndex();
+      const existingIndex = await readIndex();
       const existingMonths = new Set((existingIndex.boards || []).map(b => b.month));
       let syncCount = 0;
 
@@ -207,7 +207,7 @@ module.exports = function registerRoutes(router, context) {
         if (!headers.length) continue;
 
         const candidates = parseBoardSheet(headers, rows);
-        writeToStorage(`${STORAGE_PREFIX}/boards/${month}.json`, candidates);
+        await writeToStorage(`${STORAGE_PREFIX}/boards/${month}.json`, candidates);
         syncCount++;
 
         if (!existingMonths.has(month)) {
@@ -215,16 +215,17 @@ module.exports = function registerRoutes(router, context) {
         }
       }
 
-      const boards = [...existingMonths].sort().reverse().map(month => {
-        const data = readBoard(month);
-        return {
+      const boards = [];
+      for (const month of [...existingMonths].sort().reverse()) {
+        const data = await readBoard(month);
+        boards.push({
           month,
           candidateCount: Array.isArray(data) ? data.length : 0,
           lastSynced: new Date().toISOString()
-        };
-      });
+        });
+      }
 
-      writeToStorageAtomic(INDEX_PATH, { boards, lastSynced: new Date().toISOString() });
+      await writeToStorage(INDEX_PATH, { boards, lastSynced: new Date().toISOString() });
       lastSyncTime = new Date().toISOString();
       return { synced: syncCount, total: boardSheets.length };
     } finally {
@@ -244,8 +245,8 @@ module.exports = function registerRoutes(router, context) {
    *       200:
    *         description: Current board configuration
    */
-  router.get('/board-config', requireAdmin, function(req, res) {
-    res.json(getBoardConfig(readFromStorage));
+  router.get('/board-config', requireAdmin, async function(req, res) {
+    res.json(await getBoardConfig(readFromStorage));
   });
 
   /**
@@ -260,9 +261,9 @@ module.exports = function registerRoutes(router, context) {
    *       400:
    *         description: Validation error
    */
-  router.post('/board-config', requireAdmin, function(req, res) {
+  router.post('/board-config', requireAdmin, async function(req, res) {
     try {
-      saveBoardConfig(writeToStorage, req.body);
+      await saveBoardConfig(writeToStorage, req.body);
       res.json({ status: 'saved' });
     } catch (err) {
       res.status(400).json({ error: err.message });
@@ -279,10 +280,10 @@ module.exports = function registerRoutes(router, context) {
    *       200:
    *         description: Configuration status
    */
-  router.get('/config', requireAuth, requireScope('ai-catalyst:read'), function(req, res) {
-    const index = DEMO_MODE ? getDemoIndex() : readIndex();
+  router.get('/config', requireAuth, requireScope('ai-catalyst:read'), async function(req, res) {
+    const index = DEMO_MODE ? getDemoIndex() : await readIndex();
     res.json({
-      configured: isConfigured(),
+      configured: await isConfigured(),
       demoMode: DEMO_MODE,
       lastSyncTime: lastSyncTime || (index && index.lastSynced) || null,
       boardCount: (index && index.boards) ? index.boards.length : 0
@@ -299,8 +300,8 @@ module.exports = function registerRoutes(router, context) {
    *       200:
    *         description: Array of available board months with candidate counts
    */
-  router.get('/boards', requireAuth, requireScope('ai-catalyst:read'), function(req, res) {
-    const index = DEMO_MODE ? getDemoIndex() : readIndex();
+  router.get('/boards', requireAuth, requireScope('ai-catalyst:read'), async function(req, res) {
+    const index = DEMO_MODE ? getDemoIndex() : await readIndex();
     res.json({ boards: (index && index.boards) || [] });
   });
 
@@ -348,13 +349,13 @@ module.exports = function registerRoutes(router, context) {
    *       404:
    *         description: Board not found
    */
-  router.get('/boards/:month', requireAuth, requireScope('ai-catalyst:read'), function(req, res) {
+  router.get('/boards/:month', requireAuth, requireScope('ai-catalyst:read'), async function(req, res) {
     const { month } = req.params;
     if (!/^\d{4}-\d{2}$/.test(month)) {
       return res.status(400).json({ error: 'Month must be in YYYY-MM format' });
     }
 
-    const candidates = DEMO_MODE ? getDemoBoard(month) : readBoard(month);
+    const candidates = DEMO_MODE ? getDemoBoard(month) : await readBoard(month);
     if (!candidates) {
       return res.status(404).json({ error: `Board not found for ${month}` });
     }
@@ -387,13 +388,13 @@ module.exports = function registerRoutes(router, context) {
    *       404:
    *         description: Candidate not found
    */
-  router.get('/candidates/:id', requireAuth, requireScope('ai-catalyst:read'), function(req, res) {
+  router.get('/candidates/:id', requireAuth, requireScope('ai-catalyst:read'), async function(req, res) {
     const { id } = req.params;
-    const index = DEMO_MODE ? getDemoIndex() : readIndex();
+    const index = DEMO_MODE ? getDemoIndex() : await readIndex();
     const months = (index && index.boards) ? index.boards.map(b => b.month) : [];
 
     for (const month of months) {
-      const candidates = DEMO_MODE ? getDemoBoard(month) : readBoard(month);
+      const candidates = DEMO_MODE ? getDemoBoard(month) : await readBoard(month);
       if (!Array.isArray(candidates)) continue;
       const found = candidates.find(c => c.uniqueId === id);
       if (found) {
@@ -419,19 +420,19 @@ module.exports = function registerRoutes(router, context) {
    *       200:
    *         description: Aggregate statistics
    */
-  router.get('/stats', requireAuth, requireScope('ai-catalyst:read'), function(req, res) {
+  router.get('/stats', requireAuth, requireScope('ai-catalyst:read'), async function(req, res) {
     const { month } = req.query;
-    const index = DEMO_MODE ? getDemoIndex() : readIndex();
+    const index = DEMO_MODE ? getDemoIndex() : await readIndex();
 
     if (month) {
-      const candidates = DEMO_MODE ? getDemoBoard(month) : readBoard(month);
+      const candidates = DEMO_MODE ? getDemoBoard(month) : await readBoard(month);
       return res.json(computeStats(candidates || []));
     }
 
     const allCandidates = [];
     const months = (index && index.boards) ? index.boards.map(b => b.month) : [];
     for (const m of months) {
-      const candidates = DEMO_MODE ? getDemoBoard(m) : readBoard(m);
+      const candidates = DEMO_MODE ? getDemoBoard(m) : await readBoard(m);
       if (Array.isArray(candidates)) {
         allCandidates.push(...candidates);
       }
@@ -467,8 +468,8 @@ module.exports = function registerRoutes(router, context) {
 
   const showcaseKeyFile = context.resolveSecret('GOOGLE_SERVICE_ACCOUNT_KEY_FILE') || '/etc/secrets/google-sa-key.json';
 
-  function loadShowcaseDemoData() {
-    return readFromStorage(SHOWCASE_STORAGE_KEY) || { entries: [], pillars: [], fetchedAt: null };
+  async function loadShowcaseDemoData() {
+    return (await readFromStorage(SHOWCASE_STORAGE_KEY)) || { entries: [], pillars: [], fetchedAt: null };
   }
 
   /**
@@ -481,8 +482,8 @@ module.exports = function registerRoutes(router, context) {
    *       200:
    *         description: Current showcase configuration
    */
-  router.get('/showcase/config', requireAdmin, function(req, res) {
-    res.json(getShowcaseConfig(readFromStorage));
+  router.get('/showcase/config', requireAdmin, async function(req, res) {
+    res.json(await getShowcaseConfig(readFromStorage));
   });
 
   /**
@@ -497,9 +498,9 @@ module.exports = function registerRoutes(router, context) {
    *       400:
    *         description: Validation error
    */
-  router.post('/showcase/config', requireAdmin, function(req, res) {
+  router.post('/showcase/config', requireAdmin, async function(req, res) {
     try {
-      saveShowcaseConfig(writeToStorage, req.body);
+      await saveShowcaseConfig(writeToStorage, req.body);
       res.json({ status: 'saved' });
     } catch (err) {
       res.status(400).json({ error: err.message });
@@ -519,9 +520,9 @@ module.exports = function registerRoutes(router, context) {
   router.get('/showcase/entries', requireAuth, requireScope('ai-catalyst:showcase'), async function(req, res) {
     try {
       let data;
-      const sheetId = getShowcaseConfig(readFromStorage).sheetId;
+      const sheetId = (await getShowcaseConfig(readFromStorage)).sheetId;
       if (DEMO_MODE || !sheetId) {
-        data = loadShowcaseDemoData();
+        data = await loadShowcaseDemoData();
       } else {
         data = await getShowcaseData(sheetId, showcaseKeyFile, storage);
       }
@@ -563,9 +564,9 @@ module.exports = function registerRoutes(router, context) {
   router.get('/showcase/entries/:slug', requireAuth, requireScope('ai-catalyst:showcase'), async function(req, res) {
     try {
       let data;
-      const sheetId = getShowcaseConfig(readFromStorage).sheetId;
+      const sheetId = (await getShowcaseConfig(readFromStorage)).sheetId;
       if (DEMO_MODE || !sheetId) {
-        data = loadShowcaseDemoData();
+        data = await loadShowcaseDemoData();
       } else {
         data = await getShowcaseData(sheetId, showcaseKeyFile, storage);
       }
@@ -600,7 +601,7 @@ module.exports = function registerRoutes(router, context) {
    *         description: Refresh result
    */
   router.post('/showcase/refresh', requireAdmin, async function(req, res) {
-    const sheetId = getShowcaseConfig(readFromStorage).sheetId;
+    const sheetId = (await getShowcaseConfig(readFromStorage)).sheetId;
     if (DEMO_MODE || !sheetId) {
       return res.json({ status: 'skipped', reason: 'Demo mode or no sheet configured' });
     }
@@ -629,7 +630,7 @@ module.exports = function registerRoutes(router, context) {
       description: 'Sync monthly board data from POC Explorer Google Sheet',
       handler: async function() {
         if (DEMO_MODE) return { status: 'skipped', reason: 'demo mode' };
-        if (!isConfigured()) return { status: 'skipped', reason: 'not configured' };
+        if (!(await isConfigured())) return { status: 'skipped', reason: 'not configured' };
         const result = await syncBoards();
         return { status: 'success', ...result };
       }
@@ -640,7 +641,7 @@ module.exports = function registerRoutes(router, context) {
       cadence: '1h',
       description: 'Sync AI Catalyst Showcase data from Google Sheets',
       handler: async function() {
-        const sheetId = getShowcaseConfig(readFromStorage).sheetId;
+        const sheetId = (await getShowcaseConfig(readFromStorage)).sheetId;
         if (DEMO_MODE || !sheetId) return;
         clearShowcaseCache();
         await fetchShowcaseData(sheetId, showcaseKeyFile, storage);
@@ -652,17 +653,17 @@ module.exports = function registerRoutes(router, context) {
 
   if (context.registerDiagnostics) {
     context.registerDiagnostics(async function() {
-      const index = readIndex();
-      const showcaseData = readFromStorage(SHOWCASE_STORAGE_KEY);
+      const index = await readIndex();
+      const showcaseData = await readFromStorage(SHOWCASE_STORAGE_KEY);
       return {
-        configured: isConfigured(),
+        configured: await isConfigured(),
         demoMode: DEMO_MODE,
         lastSyncTime,
         syncRunning,
         boardCount: (index && index.boards) ? index.boards.length : 0,
         boards: (index && index.boards) || [],
         showcase: {
-          sheetConfigured: !!getShowcaseConfig(readFromStorage).sheetId,
+          sheetConfigured: !!(await getShowcaseConfig(readFromStorage)).sheetId,
           dataExists: !!showcaseData,
           entryCount: showcaseData?.entries?.length || 0,
           pillarCount: showcaseData?.pillars?.length || 0,
@@ -676,19 +677,19 @@ module.exports = function registerRoutes(router, context) {
 
   if (context.registerExport) {
     context.registerExport(async function(addFile, exportStorage) {
-      const index = exportStorage.readFromStorage(INDEX_PATH);
+      const index = await exportStorage.readFromStorage(INDEX_PATH);
       if (!index) return;
       addFile(INDEX_PATH, index);
 
       const boards = (index && index.boards) || [];
       for (const b of boards) {
-        const data = exportStorage.readFromStorage(`${STORAGE_PREFIX}/boards/${b.month}.json`);
+        const data = await exportStorage.readFromStorage(`${STORAGE_PREFIX}/boards/${b.month}.json`);
         if (data) {
           addFile(`${STORAGE_PREFIX}/boards/${b.month}.json`, data);
         }
       }
 
-      const showcaseData = exportStorage.readFromStorage(SHOWCASE_STORAGE_KEY);
+      const showcaseData = await exportStorage.readFromStorage(SHOWCASE_STORAGE_KEY);
       if (showcaseData) {
         addFile(SHOWCASE_STORAGE_KEY, showcaseData);
       }

@@ -57,11 +57,16 @@ jobs:
             releases:
               - 'modules/releases/server/execution/**'
               - 'modules/releases/server/planning/**'
+              - 'modules/releases/server/rhoai-component-architectures/**'
               - 'modules/releases/client/views/FeatureDetailView.vue'
+              - 'modules/releases/client/views/ScheduleView.vue'
               - 'modules/releases/client/execute/**'
               - 'modules/releases/client/plan/**'
+              - 'modules/releases/client/components/ReleaseTimeline.vue'
+              - 'modules/releases/client/reports/RhoaiComponentArchitecturesReport.vue'
               - 'tests/integration/execution-data.spec.js'
               - 'tests/integration/releases.spec.js'
+              - 'tests/integration/release-timeline.spec.js'
             tv-fv-delta:
               - 'modules/releases/server/tv-fv-delta/**'
               - 'modules/releases/server/index.js'
@@ -92,6 +97,9 @@ jobs:
               - 'modules/releases/client/components/MonthlyFlowChart.vue'
               - 'modules/releases/client/components/ClickableCount.vue'
               - 'tests/integration/feature-pressure.spec.js'
+            pm-pipeline:
+              - 'modules/pm-pipeline/**'
+              - 'tests/integration/pm-pipeline.spec.js'
 
       # For merge_group events, dorny/paths-filter doesn't support this event type.
       # Use git diff directly, mirroring the filter definitions above.
@@ -109,7 +117,7 @@ jobs:
           echo "Changed files:"
           echo "$CHANGED"
 
-          ALL_MODULES='["about-tabs", "ai-impact", "catalyst-showcase", "system-health", "upstream-pulse", "package-analysis", "releases", "tv-fv-delta", "feature-pressure", "sotu-dashboard"]'
+          ALL_MODULES='["about-tabs", "ai-impact", "catalyst-showcase", "system-health", "upstream-pulse", "package-analysis", "releases", "tv-fv-delta", "feature-pressure", "pm-pipeline", "sotu-dashboard"]'
 
           # If shared test infrastructure changed, test all modules
           if echo "$CHANGED" | grep -qE '^tests/integration/(constants|helpers)\.js$'; then
@@ -141,11 +149,13 @@ jobs:
           check_module "package-analysis" \
             "^(modules/product-builds/server/(analysis|index)\.js|modules/product-builds/client/views/PackageAnalysisView\.vue|tests/integration/package-analysis\.spec\.js)"
           check_module "releases" \
-            "^(modules/releases/server/(execution|planning)/|modules/releases/client/views/FeatureDetailView\.vue|modules/releases/client/(execute|plan)/|tests/integration/(execution-data|releases)\.spec\.js)"
+            "^(modules/releases/server/(execution|planning|rhoai-component-architectures)/|modules/releases/client/views/(FeatureDetailView|ScheduleView)\.vue|modules/releases/client/(execute|plan)/|modules/releases/client/components/ReleaseTimeline\.vue|modules/releases/client/reports/RhoaiComponentArchitecturesReport\.vue|tests/integration/(execution-data|releases|release-timeline)\.spec\.js)"
           check_module "tv-fv-delta" \
             "^(modules/releases/server/(tv-fv-delta/|index\.js)|modules/releases/client/views/TvFvDeltaView\.vue|modules/releases/client/composables/use.*(TvFv|ReleasePicker|ComponentBreakdown)\.js|modules/releases/client/components/(FeatureTable|ClickableCount)\.vue|tests/integration/tv-fv-delta\.spec\.js)"
           check_module "feature-pressure" \
             "^(modules/releases/server/(feature-pressure/|index\.js)|modules/releases/client/views/FeaturePressureView\.vue|modules/releases/client/composables/use(FeaturePressureData|ComponentPressure)\.js|modules/releases/client/components/(PressureHeatmap|MonthlyFlowChart|ClickableCount)\.vue|tests/integration/feature-pressure\.spec\.js)"
+          check_module "pm-pipeline" \
+            "^(modules/pm-pipeline/|tests/integration/pm-pipeline\.spec\.js)"
           check_module "sotu-dashboard" \
             "^(modules/.*/client/widgets/|modules/.*/module\.json|tests/integration/sotu-dashboard\.spec\.js)"
 
@@ -158,7 +168,7 @@ jobs:
           if [ "${{ github.event_name }}" = "merge_group" ]; then
             MODULES='${{ steps.git-filter.outputs.modules }}'
           elif [ "${{ steps.filter.outputs.shared-test-files }}" == "true" ]; then
-            MODULES='["about-tabs", "ai-impact", "catalyst-showcase", "system-health", "upstream-pulse", "package-analysis", "releases", "tv-fv-delta", "feature-pressure", "sotu-dashboard"]'
+            MODULES='["about-tabs", "ai-impact", "catalyst-showcase", "system-health", "upstream-pulse", "package-analysis", "releases", "tv-fv-delta", "feature-pressure", "pm-pipeline", "sotu-dashboard"]'
           else
             # Use the modules that have direct changes
             MODULES='${{ steps.filter.outputs.changes }}'

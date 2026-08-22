@@ -19,6 +19,7 @@ export function useRfeCreator() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(rfeData),
+        credentials: 'include' // Important: send session cookies for OAuth
       })
 
       if (!res.ok) {
@@ -27,7 +28,7 @@ export function useRfeCreator() {
       }
 
       const results = await res.json()
-      return results.similar || []
+      return { similar: results.similar || [], warning: results.warning || null }
     } catch (err) {
       error.value = err.message
       console.error('Error searching similar RFEs:', err)
@@ -49,6 +50,7 @@ export function useRfeCreator() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(rfeData),
+        credentials: 'include' // Important: send session cookies for OAuth
       })
 
       if (!res.ok) {

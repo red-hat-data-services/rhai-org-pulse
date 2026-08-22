@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { mount, flushPromises } from '@vue/test-utils'
-import { ref, computed, reactive } from 'vue'
+import { ref, computed } from 'vue'
 import MainView from '../../../client/deliver/views/MainView.vue'
 
 const mockApiRequest = vi.fn()
@@ -44,21 +44,8 @@ const mockReleases = [
   }
 ]
 
-function createMockFilter(releases = []) {
-  return {
-    filteredReleases: computed(() => releases),
-    selectedProducts: reactive(new Set()),
-    selectedVersions: reactive(new Set()),
-    allProducts: computed(() => []),
-    allVersions: computed(() => []),
-    visibleProducts: computed(() => []),
-    visibleVersions: computed(() => []),
-    toggleProduct: vi.fn(),
-    toggleVersion: vi.fn(),
-    clearProducts: vi.fn(),
-    clearVersions: vi.fn(),
-    resetFilters: vi.fn()
-  }
+function createMockAllAnalysisReleases(releases = []) {
+  return computed(() => releases)
 }
 
 function createMockAnalysisState(overrides = {}) {
@@ -93,12 +80,12 @@ function seedPortfolioConfig(releases) {
 
 function mountView(releases = [], analysisOverrides = {}) {
   if (releases.length) seedPortfolioConfig(releases)
-  const mockFilter = createMockFilter(releases)
+  const mockAllAnalysisReleases = createMockAllAnalysisReleases(releases)
   const mockAnalysis = createMockAnalysisState(analysisOverrides)
   return mount(MainView, {
     global: {
       provide: {
-        releaseFilter: mockFilter,
+        allAnalysisReleases: mockAllAnalysisReleases,
         analysisState: mockAnalysis
       }
     }

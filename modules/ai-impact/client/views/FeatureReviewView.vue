@@ -17,14 +17,17 @@ const recommendationFilter = ref('all')
 const priorityFilter = ref('all')
 const humanReviewFilter = ref('all')
 const sortBy = ref('default')
+const chartExpanded = ref(true)
 
-const { features, featureMeta, featureLoading, featureError, loadFeatures, loadFeatureDetail } = useFeatures()
-
-loadFeatures()
+const {
+  features, featureMeta, metrics, trendData, breakdown, reviewStatus,
+  featureLoading, featureError, loadFeatures, loadFeatureDetail,
+  timeWindow
+} = useFeatures()
 
 // Load RFE data only for jiraHost (used by detail panel links)
-const timeWindow = ref('month')
-const { rfeData } = useAIImpact(timeWindow)
+const rfeTimeWindow = ref('month')
+const { rfeData } = useAIImpact(rfeTimeWindow)
 
 function handleRetry() {
   loadFeatures()
@@ -32,11 +35,8 @@ function handleRetry() {
 
 function handleSelectFeature(feature) {
   if (feature) {
-    // Navigate to the consolidated Feature Traffic Feature page
-    crossNavigate('releases', 'feature-detail', {
-      key: feature.key,
-      fromFeatureReview: '1'
-    })
+    selectedFeature.value = feature
+    moduleNav.navigateTo('feature-review', { select: feature.key })
   }
 }
 
@@ -51,6 +51,25 @@ function handleNavigateToRFE(rfeKey) {
 
 function handleNavigateToTestPlan(sourceKey) {
   moduleNav.navigateTo('test-plan-review', { select: sourceKey })
+}
+
+function handleNavigateToDecomposer(featureKey) {
+  moduleNav.navigateTo('feature-decomposer', { select: featureKey })
+}
+
+function handleNavigateToDocumentation(featureKey) {
+  moduleNav.navigateTo('documentation', { highlight: featureKey })
+}
+
+function handleNavigateToBuildRelease(featureKey) {
+  moduleNav.navigateTo('build-release', { highlight: featureKey })
+}
+
+function handleViewInReleases(featureKey) {
+  crossNavigate('releases', 'feature-detail', {
+    key: featureKey,
+    fromFeatureReview: '1'
+  })
 }
 
 // Handle incoming select param (cross-link from RFE Review)
@@ -87,12 +106,20 @@ watch(() => Object.keys(features.value).length, () => {
       :error="featureError"
       :features="features"
       :featureMeta="featureMeta"
+      :metrics="metrics"
+      :trendData="trendData"
+      :breakdown="breakdown"
+      :reviewStatus="reviewStatus"
+      :timeWindow="timeWindow"
+      :chartExpanded="chartExpanded"
       :searchQuery="searchQuery"
       :recommendationFilter="recommendationFilter"
       :priorityFilter="priorityFilter"
       :humanReviewFilter="humanReviewFilter"
       :sortBy="sortBy"
       :selectedFeature="selectedFeature"
+      @update:timeWindow="timeWindow = $event"
+      @update:chartExpanded="chartExpanded = $event"
       @update:searchQuery="searchQuery = $event"
       @update:recommendationFilter="recommendationFilter = $event"
       @update:priorityFilter="priorityFilter = $event"
@@ -111,6 +138,10 @@ watch(() => Object.keys(features.value).length, () => {
       @close="handleCloseModal"
       @navigateToRFE="handleNavigateToRFE"
       @navigateToTestPlan="handleNavigateToTestPlan"
+      @navigateToDecomposer="handleNavigateToDecomposer"
+      @navigateToDocumentation="handleNavigateToDocumentation"
+      @navigateToBuildRelease="handleNavigateToBuildRelease"
+      @viewInReleases="handleViewInReleases"
     />
 
     <AIImpactGuide />

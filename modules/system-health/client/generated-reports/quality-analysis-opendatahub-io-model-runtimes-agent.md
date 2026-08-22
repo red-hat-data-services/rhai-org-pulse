@@ -1,400 +1,419 @@
 ---
 repository: "opendatahub-io/model-runtimes-agent"
-overall_score: 3.0
+overall_score: 1.5
 scorecard:
   - dimension: "Unit Tests"
     score: 5.0
-    status: "5 test files (717 lines) covering validators, report rendering, QA helpers, and SSRF; test-to-code ratio ~12%"
+    status: "49 test methods across 5 files using unittest; covers validators and helpers but leaves agent orchestration, config parsing, and LLM integration untested"
   - dimension: "Integration/E2E"
     score: 1.0
-    status: "No integration or E2E test suites; cluster-dependent flows are untested in CI"
+    status: "No integration or E2E test suites; the tool itself performs KServe E2E validation but has no automated tests for its own workflows"
   - dimension: "Build Integration"
     score: 0.0
-    status: "No CI/CD pipeline exists — no PR builds, no Konflux simulation, no automated checks"
+    status: "No CI workflows, no Makefile, no PR-time build validation whatsoever"
   - dimension: "Image Testing"
     score: 0.0
-    status: "No Dockerfile/Containerfile; no container image build or runtime validation"
+    status: "No Dockerfile or Containerfile; no container image build or runtime validation"
   - dimension: "Coverage Tracking"
     score: 0.0
-    status: "No coverage tool configured — no codecov, coveralls, or coverage threshold enforcement"
+    status: "No coverage configuration, no codecov integration, no coverage thresholds"
   - dimension: "CI/CD Automation"
     score: 0.0
-    status: "No .github/workflows, no .gitlab-ci.yml, no Jenkinsfile — zero CI/CD automation"
+    status: "No CI/CD — no GitHub Actions, no GitLab CI, no Makefile, no Jenkinsfile"
+  - dimension: "Static Analysis"
+    score: 0.0
+    status: "No linting (ruff, flake8, mypy), no pre-commit hooks, no Dependabot/Renovate"
   - dimension: "Agent Rules"
-    score: 4.0
-    status: "AGENTS.md present with detailed specialist flow and stability rubric; no .claude/ rules or test automation guidance"
+    score: 5.0
+    status: "Comprehensive AGENTS.md with specialist flow, verdict rubric, and quantization matrix; no test creation rules or CLAUDE.md"
 critical_gaps:
-  - title: "No CI/CD pipeline of any kind"
-    impact: "No automated testing, linting, or quality checks run on PRs or merges — all quality assurance is manual"
+  - title: "Zero CI/CD automation"
+    impact: "No automated testing, linting, or build validation on any PR or push — regressions can ship undetected"
     severity: "HIGH"
-    effort: "8-12 hours"
-  - title: "No coverage tracking or enforcement"
-    impact: "Test coverage is unknown and unmonitored; regressions go undetected"
-    severity: "HIGH"
-    effort: "2-4 hours"
-  - title: "No linting, type checking, or static analysis"
-    impact: "Code quality issues, type errors, and style inconsistencies are caught only by human review"
+    effort: "4-8 hours"
+  - title: "No static analysis or linting"
+    impact: "Type errors, style inconsistencies, and unused imports accumulate unchecked; no mypy means runtime type bugs in a 5,000+ line Python codebase"
     severity: "HIGH"
     effort: "2-4 hours"
-  - title: "No container image build or testing"
-    impact: "Application is not packaged as a container — no image-based deployment or validation possible"
+  - title: "No coverage tracking"
+    impact: "Cannot measure test adequacy or enforce coverage gates; new code merged without test requirements"
+    severity: "HIGH"
+    effort: "2-3 hours"
+  - title: "No container image or Dockerfile"
+    impact: "No reproducible deployment artifact; application can only be installed via pip/uv from source, limiting distribution and Konflux integration"
     severity: "MEDIUM"
+    effort: "4-8 hours"
+  - title: "No integration tests for agent orchestration"
+    impact: "The core supervisor-specialist pipeline (LLMAgent → specialists → deployment matrix → QA) has zero automated test coverage"
+    severity: "HIGH"
     effort: "8-16 hours"
-  - title: "No integration or E2E tests in CI"
-    impact: "The core agent pipeline (supervisor → specialist chain → KServe QA) is only validated manually"
-    severity: "HIGH"
-    effort: "16-24 hours"
-  - title: "No security scanning (SAST, dependency scanning, secret detection)"
-    impact: "Vulnerabilities in dependencies (langchain, kubernetes, etc.) and secrets in code go undetected"
-    severity: "HIGH"
-    effort: "2-4 hours"
 quick_wins:
-  - title: "Add GitHub Actions CI workflow with pytest"
-    effort: "2-3 hours"
-    impact: "Automated test execution on every PR — catches regressions immediately"
-  - title: "Add ruff linter + type checking with mypy"
+  - title: "Add a GitHub Actions CI workflow for tests and linting"
+    effort: "2-4 hours"
+    impact: "Automated test execution on every PR; immediate regression detection"
+  - title: "Add ruff linter + mypy type checking configuration"
     effort: "1-2 hours"
-    impact: "Catches style issues, unused imports, type errors across 6k+ lines of Python"
-  - title: "Add codecov integration with coverage threshold"
+    impact: "Catch type errors, unused imports, and style violations automatically"
+  - title: "Add pytest-cov and codecov integration"
     effort: "1-2 hours"
-    impact: "Visibility into test coverage with enforcement on PRs"
-  - title: "Add Dependabot or Renovate for dependency updates"
+    impact: "Visibility into current test coverage; foundation for coverage gates"
+  - title: "Add Dependabot for dependency alerts"
     effort: "30 minutes"
-    impact: "Automated alerts for vulnerable or outdated dependencies (langchain, kubernetes, etc.)"
-  - title: "Add pre-commit hooks (ruff, mypy, trailing whitespace)"
+    impact: "Automated security and version updates for 9+ direct dependencies"
+  - title: "Add a pre-commit configuration"
     effort: "1 hour"
-    impact: "Catch quality issues before commit, enforce consistent code style"
-  - title: "Create .claude/rules/ with test creation guidance"
-    effort: "2-3 hours"
-    impact: "AI-generated tests follow project patterns consistently"
+    impact: "Enforce formatting and linting checks before commits land"
 recommendations:
   priority_0:
-    - "Create a GitHub Actions CI pipeline with pytest, ruff linting, and mypy type checking on every PR"
-    - "Add coverage tracking (pytest-cov + codecov) with a minimum threshold (e.g. 60%)"
-    - "Enable Dependabot or Renovate for automated security updates on Python dependencies"
+    - "Create a GitHub Actions CI workflow with test execution, linting, and type checking on pull requests"
+    - "Add ruff (linting + formatting) and mypy (type checking) configuration to pyproject.toml"
+    - "Add pytest-cov coverage tracking with a minimum threshold (start at 30%, increase iteratively)"
   priority_1:
-    - "Add integration tests that exercise the agent pipeline with mocked LLM responses and stubbed oc CLI"
-    - "Create a Dockerfile for containerized deployment and add container image build/test to CI"
-    - "Add CodeQL or Semgrep SAST scanning to the CI pipeline"
-    - "Create comprehensive .claude/rules/ for unit test, integration test, and security test patterns"
+    - "Create a Dockerfile for reproducible deployment and Konflux build integration"
+    - "Add integration tests for the supervisor-specialist pipeline using mocked LLM responses"
+    - "Add Dependabot configuration for gomod, pip, and docker ecosystem monitoring"
+    - "Create .claude/rules/ with test creation guidelines for AI-assisted development"
   priority_2:
-    - "Add pre-commit hooks for ruff, mypy, and secret detection (gitleaks)"
-    - "Create E2E tests that validate the Streamlit UI workflow with mocked backends"
-    - "Add performance benchmarking for the deployability engine's decision matrix computation"
-    - "Implement SBOM generation for supply chain transparency"
+    - "Add pre-commit hooks for automated formatting and lint enforcement"
+    - "Add E2E tests that exercise the full agent workflow against a mock cluster"
+    - "Add multi-architecture container image support for broader deployment targets"
 ---
 
 # Quality Analysis: model-runtimes-agent
 
 ## Executive Summary
 
-- **Overall Score: 3.0/10**
-- **Repository Type**: Python LLM agent application (LangChain + Streamlit UI)
-- **Primary Language**: Python 3.12+
-- **Framework**: LangChain supervisor agent with Google Gemini, Streamlit web UI
-- **Key Strengths**: Well-structured AGENTS.md with detailed specialist flow documentation; deterministic deployability engine with good unit test coverage; security-conscious oc CLI allowlist pattern; SSRF protection on inference URLs
-- **Critical Gaps**: Zero CI/CD automation; no linting, type checking, or coverage tracking; no container image; no integration/E2E tests; no security scanning
-- **Agent Rules Status**: Partial (AGENTS.md exists but no .claude/ rules)
+- **Overall Score: 1.5/10**
+- **Repository**: [opendatahub-io/model-runtimes-agent](https://github.com/opendatahub-io/model-runtimes-agent)
+- **Type**: Python LangChain agent / CLI + Streamlit web application
+- **Language**: Python 3.12+
+- **Jira**: RHOAIENG / Model Runtimes (midstream)
+- **Key Strengths**: Good unit test quality for validators; comprehensive AGENTS.md with specialist flow documentation; deterministic deployability engine with solid test coverage
+- **Critical Gaps**: Zero CI/CD, no linting or type checking, no coverage tracking, no container image, no integration tests for the core agent pipeline
+- **Agent Rules Status**: Partial — AGENTS.md present with operational guidance but no CLAUDE.md or test creation rules
 
 ## Quality Scorecard
 
-| Dimension | Score | Status |
-|-----------|-------|--------|
-| Unit Tests | 5.0/10 | 5 test files (717 lines) covering validators, report, QA helpers; test-to-code ratio ~12% |
-| Integration/E2E | 1.0/10 | No integration or E2E test suites exist |
-| **Build Integration** | **0.0/10** | **No CI/CD pipeline — no PR builds, no Konflux simulation** |
-| Image Testing | 0.0/10 | No Dockerfile/Containerfile; no image build or runtime validation |
-| Coverage Tracking | 0.0/10 | No coverage tool configured |
-| CI/CD Automation | 0.0/10 | No .github/workflows, .gitlab-ci.yml, or Jenkinsfile |
-| Agent Rules | 4.0/10 | AGENTS.md with specialist flow docs but no .claude/ test rules |
+| Dimension | Score | Weight | Weighted | Status |
+|-----------|-------|--------|----------|--------|
+| Unit Tests | 5.0/10 | 15% | 0.75 | 49 test methods across 5 files; covers validators and QA helpers |
+| Integration/E2E | 1.0/10 | 20% | 0.20 | No integration or E2E test infrastructure |
+| Build Integration | 0.0/10 | 15% | 0.00 | No CI workflows, no Makefile, no build validation |
+| Image Testing | 0.0/10 | 10% | 0.00 | No Dockerfile/Containerfile; no container builds |
+| Coverage Tracking | 0.0/10 | 10% | 0.00 | No coverage config, no codecov, no thresholds |
+| CI/CD Automation | 0.0/10 | 15% | 0.00 | Zero CI/CD — no workflows, no automation at all |
+| Static Analysis | 0.0/10 | 10% | 0.00 | No linting, no type checking, no dependency alerts |
+| Agent Rules | 5.0/10 | 5% | 0.25 | AGENTS.md with specialist flow; no test creation rules |
+| **Overall** | **1.5/10** | **100%** | **1.20** | |
 
 ## Critical Gaps
 
-### 1. No CI/CD Pipeline of Any Kind
-- **Impact**: All quality assurance is entirely manual. No automated testing, linting, or validation runs on PRs or merges.
+### 1. Zero CI/CD Automation
+- **Impact**: No automated testing, linting, or build validation on any PR or push — regressions can ship completely undetected
 - **Severity**: HIGH
-- **Effort**: 8-12 hours
-- **Detail**: The repository has zero CI configuration — no `.github/workflows/`, no `.gitlab-ci.yml`, no `Jenkinsfile`, no `Makefile`. The only documented way to run tests is `uv run pytest` manually.
+- **Effort**: 4-8 hours
+- **Details**: The repository has no `.github/workflows/` directory, no `.gitlab-ci.yml`, no `Makefile`, no `Jenkinsfile`, and no `Taskfile.yml`. There is absolutely no automated pipeline. The 49 existing test methods only run if a developer remembers to invoke them locally.
 
-### 2. No Coverage Tracking or Enforcement
-- **Impact**: Test coverage is unknown and unmonitored. There's no way to detect coverage regressions.
-- **Severity**: HIGH
-- **Effort**: 2-4 hours
-- **Detail**: No `.coveragerc`, no codecov/coveralls integration, no coverage thresholds. The existing 5 test files cover ~717 lines against ~6,144 lines of source code (~12% test-to-code ratio by line count), but actual statement coverage is unknown.
-
-### 3. No Linting, Type Checking, or Static Analysis
-- **Impact**: Code quality issues, type errors, unused imports, and style inconsistencies are caught only by human review.
+### 2. No Static Analysis or Type Checking
+- **Impact**: Type errors, style inconsistencies, unused imports, and potential bugs accumulate unchecked in a 5,000+ line Python codebase with complex LLM agent logic
 - **Severity**: HIGH
 - **Effort**: 2-4 hours
-- **Detail**: No ruff, flake8, pylint, mypy, or any linting configuration exists. No `.pre-commit-config.yaml`. The codebase uses type hints extensively (`from __future__ import annotations`, typed function signatures) but never validates them.
+- **Details**: No `ruff.toml`, `.flake8`, `mypy.ini`, or any linter configuration. No type checking despite the codebase using type annotations (e.g., `from __future__ import annotations`). The `pyproject.toml` has no `[tool.ruff]`, `[tool.mypy]`, or similar sections.
 
-### 4. No Security Scanning
-- **Impact**: Vulnerabilities in dependencies (langchain, kubernetes, google-genai, streamlit) and potential secrets in code are undetected.
+### 3. No Coverage Tracking
+- **Impact**: Cannot measure or enforce test adequacy; new code merged with no test requirements; impossible to identify untested code paths in critical deployment logic
 - **Severity**: HIGH
-- **Effort**: 2-4 hours
-- **Detail**: No CodeQL, Semgrep, Bandit, Dependabot, gitleaks, or Trivy integration. The project depends on rapidly-evolving LLM libraries (langchain >= 1.0.3) where security patches are frequent.
+- **Effort**: 2-3 hours
+- **Details**: No `.codecov.yml`, no `--cov` flags, no coverage thresholds. Current test-to-code ratio is approximately 0.12 (717 lines of tests vs ~6,200 lines of source code).
 
-### 5. No Container Image
-- **Impact**: The application cannot be deployed as a container. No image-based testing, scanning, or production deployment path.
+### 4. No Container Image
+- **Impact**: No reproducible deployment artifact; the application can only run via `pip install -e .` or `uv sync`, preventing Konflux integration and standardized distribution
 - **Severity**: MEDIUM
-- **Effort**: 8-16 hours
-- **Detail**: No Dockerfile or Containerfile exists. The app runs via `uv run streamlit run app.py` or `agent` CLI. For production deployment in OpenShift, a containerized distribution is essential.
+- **Effort**: 4-8 hours
+- **Details**: No `Dockerfile`, `Containerfile`, `.dockerignore`, or `docker-compose.yml`. The tool requires Python 3.12+, external CLI tools (`oc`, `skopeo`), and a `GEMINI_API_KEY` — a Dockerfile would codify these dependencies.
 
-### 6. No Integration or E2E Tests
-- **Impact**: The core agent pipeline (supervisor → Configuration → Accelerator → Decision → QA specialists) is only validated manually.
+### 5. No Integration Tests for Agent Orchestration
+- **Impact**: The core value of this tool — the supervisor coordinating four specialists through deployment assessment — has zero automated test coverage
 - **Severity**: HIGH
-- **Effort**: 16-24 hours
-- **Detail**: All existing tests are pure unit tests. The LangChain agent orchestration, specialist handoffs, Streamlit UI workflows, and KServe deployment pipeline have zero automated integration coverage. Tests that mock the Gemini LLM responses and stub `oc` CLI calls would be high-value.
+- **Effort**: 8-16 hours
+- **Details**: The existing tests cover only deterministic helpers (`deployability_engine`, `deployability_reconcile`, `html_report`, `render`, `heuristics`). The `LLMAgent` supervisor, specialist prompt chains, config parsing (`model_config.py`), preflight checks, and `execute_agent.py` are entirely untested. The `pipeline.py` (789 lines) and `post_deploy.py` (337 lines) — the two largest modules — have no tests.
 
 ## Quick Wins
 
-### 1. Add GitHub Actions CI Workflow with pytest (2-3 hours)
+### 1. Add a GitHub Actions CI Workflow (2-4 hours)
+Create `.github/workflows/ci.yml` to run tests on every PR:
+
 ```yaml
-# .github/workflows/ci.yml
 name: CI
-on: [push, pull_request]
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+
 jobs:
   test:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: astral-sh/setup-uv@v3
+      - uses: astral-sh/setup-uv@v4
       - run: uv sync
-      - run: uv run pytest -v --tb=short
+      - run: uv run python -m pytest tests/ -v
 ```
 
-### 2. Add ruff Linter + mypy Type Checking (1-2 hours)
+### 2. Add ruff + mypy Configuration (1-2 hours)
+Add to `pyproject.toml`:
+
 ```toml
-# Add to pyproject.toml
 [tool.ruff]
 target-version = "py312"
 line-length = 120
-
-[tool.ruff.lint]
-select = ["E", "F", "I", "UP", "B", "SIM", "S"]
+select = ["E", "F", "I", "W", "UP", "B", "SIM"]
 
 [tool.mypy]
 python_version = "3.12"
 warn_return_any = true
 warn_unused_configs = true
+disallow_untyped_defs = false  # start permissive, tighten over time
 ```
 
-### 3. Add Codecov Integration (1-2 hours)
+### 3. Add pytest-cov and Coverage Tracking (1-2 hours)
+```bash
+uv add --dev pytest pytest-cov
+```
+Add to CI workflow:
 ```yaml
-# Add to CI workflow
-- run: uv run pytest --cov=runtimes_dep_agent --cov-report=xml
+- run: uv run python -m pytest tests/ --cov=runtimes_dep_agent --cov-report=xml
 - uses: codecov/codecov-action@v4
-  with:
-    file: coverage.xml
-    fail_ci_if_error: true
 ```
 
 ### 4. Add Dependabot (30 minutes)
+Create `.github/dependabot.yml`:
 ```yaml
-# .github/dependabot.yml
 version: 2
 updates:
   - package-ecosystem: pip
     directory: "/"
     schedule:
       interval: weekly
-    open-pull-requests-limit: 10
 ```
 
-### 5. Add Pre-commit Hooks (1 hour)
+### 5. Add Pre-commit Configuration (1 hour)
+Create `.pre-commit-config.yaml`:
 ```yaml
-# .pre-commit-config.yaml
 repos:
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.5.0
+    rev: v0.8.0
     hooks:
       - id: ruff
       - id: ruff-format
-  - repo: https://github.com/pre-commit/mirrors-mypy
-    rev: v1.10.0
-    hooks:
-      - id: mypy
-        additional_dependencies: [types-PyYAML]
 ```
 
 ## Detailed Findings
 
-### CI/CD Pipeline
+### Unit Tests
 
-**Status: Non-existent**
+**Score: 5.0/10**
 
-The repository has zero CI/CD configuration:
+The repository has 5 test files with 49 test methods using Python's built-in `unittest` framework:
+
+| Test File | Methods | Lines | What It Covers |
+|-----------|---------|-------|----------------|
+| `test_qa_kserve.py` | 27 | 373 | KServe QA helpers: pod classification, OOM detection, YAML rendering, K8s name sanitization, dockerconfig encoding, template loading, serving argument manipulation |
+| `test_deployability_engine.py` | 8 | 109 | Deterministic deployability matrix: accelerator family detection, FP8/capacity checks, tensor-parallel sizing, quantization inference |
+| `test_deployability_reconcile.py` | 6 | 93 | FP8 false-negative reconciliation: GPU detection, matrix entry correction, JSON file handling |
+| `test_decision_fit.py` | 5 | 47 | Weight-based tensor-parallel heuristics, GPU inventory parsing |
+| `test_html_report_narrative.py` | 3 | 95 | Report narrative alignment, HTML badge generation, markdown heading rendering |
+
+**Strengths**:
+- Tests for deterministic validators are thorough with edge cases (e.g., insufficient GPUs, unknown quantization, pipe-separated base64)
+- Good test isolation — no external dependencies or cluster access required
+- Tests validate critical deployment logic (FP8 compatibility, tensor-parallel sizing)
+
+**Gaps**:
+- **No tests for**: `llm_agent.py` (supervisor), all 4 specialist modules, `model_config.py`, `preflight.py`, `execute_agent.py`, `pipeline.py` (789 lines), `post_deploy.py` (337 lines)
+- **Test-to-code ratio**: 0.12 (717 test lines / ~6,200 source lines) — well below the recommended 0.5+
+- **No test runner configured**: No `pytest.ini`, no `[tool.pytest]` section in `pyproject.toml`
+- **No mocking framework**: No `unittest.mock` usage for testing LLM interactions or `oc` subprocess calls
+
+### Integration/E2E Tests
+
+**Score: 1.0/10**
+
+No `e2e/` or `integration/` directories exist. No integration tests for:
+- The full supervisor-specialist pipeline
+- Cluster interaction via `oc` CLI
+- KServe deployment workflow (render → apply → wait → remediate → cleanup)
+- Streamlit web UI interactions
+
+The irony is that this tool IS an E2E testing agent for model deployments, but it has no automated tests for its own functionality beyond unit-level helpers.
+
+The score of 1 (rather than 0) is given because the unit tests in `test_qa_kserve.py` partially test integration-adjacent functionality (YAML template rendering, pod JSON classification) though without actual cluster interaction.
+
+### Build Integration
+
+**Score: 0.0/10**
+
+- No CI workflows of any kind
+- No `Makefile` or `Taskfile.yml`
+- No PR-time build validation
+- No `docker build` or `podman build` steps
+- No operator manifest validation (not an operator, but also no packaging validation)
+- The `pyproject.toml` defines a `[build-system]` using setuptools, but no CI invokes `python -m build` or `uv build`
+
+### Image Testing
+
+**Score: 0.0/10**
+
+- No `Dockerfile` or `Containerfile` in the repository
+- No `.dockerignore`
+- No `docker-compose.yml`
+- No multi-architecture support
+- No container health checks
+- The tool requires `oc` and `skopeo` CLI tools at runtime but has no container image that bundles them
+
+### Coverage Tracking
+
+**Score: 0.0/10**
+
+- No `.codecov.yml` or `codecov.yml`
+- No `.coveragerc`
+- No `pytest-cov` in dependencies
+- No `--cov` flags in any configuration
+- No coverage thresholds defined
+- No PR coverage reporting
+
+### CI/CD Automation
+
+**Score: 0.0/10**
+
+The repository has zero CI/CD automation:
 - No `.github/workflows/` directory
 - No `.gitlab-ci.yml`
 - No `Jenkinsfile`
-- No `Makefile` with test/lint targets
-- No `tox.ini`
+- No `Makefile`
+- No `Taskfile.yml`
+- No concurrency controls, caching strategies, or parallelization — because there's nothing to configure
+- Tests can only be run manually via `python -m pytest tests/` or `uv run python -m pytest tests/`
 
-The only documented test execution path is manual: `uv run pytest`.
+### Static Analysis
 
-### Test Coverage
+**Score: 0.0/10**
 
-**Status: Partial unit tests, no integration/E2E**
+#### Linting
+- No linter configured despite the codebase using type annotations
+- No `ruff.toml`, `.flake8`, `mypy.ini`, `.pylintrc`, or `[tool.ruff]`/`[tool.mypy]` sections in `pyproject.toml`
+- The codebase imports `from __future__ import annotations` in test files, suggesting type awareness, but no enforcement
 
-**Test files (5 total, 717 lines):**
+#### FIPS Compatibility
+- No FIPS-sensitive cryptographic imports found in the source code
+- No FIPS build tags or configurations needed (pure Python tool, no crypto operations)
+- Base image analysis: N/A (no Dockerfile)
 
-| Test File | Lines | What It Tests |
-|-----------|-------|---------------|
-| `test_qa_kserve.py` | 373 | QA pipeline helpers: SSRF blocking, sanitize names, dockerconfig encoding, YAML rendering, OOM heuristics, oc allowlist, remediation JSON parsing, self-heal defaults |
-| `test_deployability_engine.py` | 109 | Deployment matrix computation: accelerator family inference, FP8 compatibility checks, capacity/TP sizing, quantization inference |
-| `test_html_report_narrative.py` | 95 | Report generation: markdown-to-HTML headings, narrative alignment when matrix contradicts stale prose, badge rendering |
-| `test_deployability_reconcile.py` | 93 | FP8/GPU reconciliation: H100 detection, false-negative flipping, file handling |
-| `test_decision_fit.py` | 47 | Tensor-parallel heuristics: VRAM-to-TP calculation, GPU inventory parsing |
+#### Dependency Alerts
+- No `.github/dependabot.yml`
+- No `renovate.json` or `.renovaterc`
+- The project has 9 direct dependencies (kubernetes, langchain, streamlit, pillow, pandas, plotly, pyyaml, langchain-core, langchain-google-genai) with no automated update mechanism
 
-**Source code (21 files, ~6,144 lines):**
+#### Pre-commit Hooks
+- No `.pre-commit-config.yaml`
+- No hook enforcement of any kind
 
-Key untested modules:
-- `agent/llm_agent.py` (260 lines) — Supervisor orchestration
-- `agent/specialists/*.py` (~950 lines) — All four specialist builders
-- `execute_agent.py` (360 lines) — CLI entrypoint and oc login
-- `qa_kserve/pipeline.py` (789 lines) — Full KServe QA pipeline
-- `qa_kserve/post_deploy.py` (337 lines) — Post-deployment smoke tests
-- `config/model_config.py` (225 lines) — YAML + skopeo helpers
-- `app.py` (2042 lines) — Entire Streamlit UI
+### Agent Rules
 
-**Test-to-code ratio**: ~12% by line count (717 test lines / 6,144 source lines)
+**Score: 5.0/10**
 
-**Coverage tracking**: None. No `.coveragerc`, no codecov integration, no pytest-cov in dependencies.
+**AGENTS.md** (root): Comprehensive and well-structured:
+- Full supervisor-specialist flow diagram (Mermaid)
+- Artifact I/O table (which files each specialist reads/writes)
+- Stable verdict rubric with ordered reasoning steps
+- Quantization vs hardware compatibility matrix (aligned with vLLM docs)
+- Deterministic vs LLM-driven behavior table
+- Stability/reproducibility checklist
 
-**Strengths**: Existing tests are well-written with clear assertions, good edge case coverage for deterministic components (deployability engine, reconciliation logic), and proper SSRF validation testing.
+**deployment-yamls/agents.md**: Operational playbook for KServe QA:
+- Required substitutions and allowed `oc` subcommands
+- Apply order documentation
+- Failure signatures and remediation hints
+- Self-heal loop constraints (max 3 attempts, JSON schema)
 
-### Code Quality
-
-**Status: No tooling configured**
-
-- **Linting**: None. No ruff, flake8, pylint, or ESLint configuration.
-- **Type checking**: None. Code uses extensive type annotations (`from __future__ import annotations`, typed parameters) but mypy is not configured or run.
-- **Formatting**: None. No black, ruff-format, or any formatter configuration.
-- **Pre-commit**: None. No `.pre-commit-config.yaml`.
-- **Static analysis**: None. No CodeQL, Semgrep, Bandit, or any SAST tool.
-
-**Positive observations**: The codebase follows consistent patterns — all modules use `from __future__ import annotations`, functions have type annotations, and test files follow a uniform structure.
-
-### Container Images
-
-**Status: No container image**
-
-- No `Dockerfile` or `Containerfile` exists
-- No `.dockerignore` (beyond the standard gitignore)
-- No container build configuration
-- No multi-architecture support
-- No vulnerability scanning
-- No SBOM generation
-
-The application is distributed as a Python package installable via `pip install -e .` or `uv sync`, with a `pyproject.toml`-based build system.
-
-### Security
-
-**Status: Mixed — good code practices, no automated scanning**
-
-**Positive patterns found in code:**
-- `oc_cli.py`: Command allowlisting via `ALLOWED_OC_SUBCOMMANDS` frozenset — only permits `get`, `apply`, `create`, `delete`, `patch`, `logs`, `wait`, `project`, `describe`, `whoami`, `version`
-- `post_deploy.py`: SSRF protection via `_inference_url_ssrf_block_reason()` — blocks loopback IPs, non-HTTP schemes
-- Tests explicitly validate these security controls (`TestOcAllowlist`, `TestPostDeploySsrf`)
-- `shlex`-based input handling for oc login commands
-
-**Missing:**
-- No Dependabot/Renovate for dependency vulnerability monitoring
-- No CodeQL or Semgrep SAST scanning
-- No gitleaks or TruffleHog for secret detection
-- No Trivy/Snyk for dependency scanning
-- No SBOM generation
-- Sensitive data (API keys, pull secrets) handled via environment variables — good, but `app.py` stores secrets in `st.session_state` and `os.environ` at runtime
-
-### Agent Rules (Agentic Flow Quality)
-
-**Status: Partial**
-
-- **AGENTS.md**: Present and comprehensive (detailed specialist flow, quantization compatibility matrix, verdict rubric, stability/reproducibility checklist, artifact documentation)
-- **CLAUDE.md**: Not present
-- **.claude/ directory**: Not present
-- **.claude/rules/**: Not present — no test creation rules
-- **.claude/skills/**: Not present — no custom skills
-
-**Quality of AGENTS.md**: High — includes Mermaid flow diagram, per-specialist responsibilities, deterministic vs LLM-driven behavior table, stable verdict rubric, quantization × hardware reference table, and drift policy. This is well above average for project documentation.
-
-**Gaps**: No `.claude/rules/` directory with test creation guidance. No rules for how AI agents should write unit tests, integration tests, or handle the LangChain specialist pattern. The AGENTS.md focuses on runtime behavior, not on test automation.
+**Gaps**:
+- No `CLAUDE.md` — no general contribution or development guidance for AI agents
+- No `.claude/` directory or `.claude/rules/` for test creation rules
+- No guidance on how to write tests for this codebase
+- AGENTS.md focuses on operational behavior, not development workflow
 
 ## Recommendations
 
 ### Priority 0 (Critical)
 
-1. **Create a GitHub Actions CI pipeline** with pytest, ruff linting, and mypy type checking on every PR. This is the single highest-impact improvement — the repository currently has zero automated quality gates.
+1. **Create a GitHub Actions CI workflow** — Run `pytest` on every PR. This is the single highest-impact change. Without CI, the 49 existing tests provide no automated safety net.
 
-2. **Add coverage tracking** (pytest-cov + codecov) with a minimum threshold (e.g., 60% initially, increasing over time). The existing unit tests provide a foundation to build on.
+2. **Add ruff linting and mypy type checking** — Configure in `pyproject.toml` and enforce in CI. The codebase already uses type annotations but doesn't validate them. Start with permissive settings and tighten iteratively.
 
-3. **Enable Dependabot** for automated security updates. The project depends on rapidly-evolving LLM libraries (langchain >= 1.0.3, langchain-google-genai >= 3.2.0) where security patches are frequent.
+3. **Add pytest-cov with coverage reporting** — Start with a 30% threshold (likely the current coverage level) and increase over time. Integrate with codecov for PR-level reporting.
 
 ### Priority 1 (High Value)
 
-4. **Add integration tests** that exercise the agent pipeline with mocked LLM responses (using `langchain.testing` or `unittest.mock`) and stubbed `oc` CLI calls. Focus on the supervisor → specialist handoff chain and the KServe QA pipeline decision paths.
+4. **Create a Dockerfile** — Bundle Python 3.12, `oc`, `skopeo`, and all pip dependencies. This enables Konflux builds, reproducible deployments, and container-based CI.
 
-5. **Create a Dockerfile** for containerized deployment and add container image build/test to CI. Essential for production deployment in OpenShift environments.
+5. **Add integration tests for the supervisor pipeline** — Mock the Gemini LLM responses and test the full specialist coordination flow. The `llm_agent.py`, `pipeline.py`, and `post_deploy.py` modules (1,386 lines combined) need test coverage.
 
-6. **Add CodeQL or Semgrep** SAST scanning to the CI pipeline. The codebase uses `subprocess.run` in multiple modules — static analysis would catch any injection risks.
+6. **Add Dependabot configuration** — Monitor the 9 direct Python dependencies for security vulnerabilities and version updates.
 
-7. **Create .claude/rules/** with test creation rules specific to this project's patterns (LangChain agents, specialist tools, deterministic validators, YAML rendering).
+7. **Create `.claude/rules/` with test creation guidelines** — Document unittest patterns, mock strategies for LLM and `oc` subprocess calls, and test data conventions. Use `/test-rules-generator` to bootstrap.
 
 ### Priority 2 (Nice-to-Have)
 
-8. **Add pre-commit hooks** for ruff, mypy, and secret detection (gitleaks).
+8. **Add pre-commit hooks** — Enforce ruff formatting and linting before commits. Reduces CI noise from formatting-only failures.
 
-9. **Create E2E tests** for the Streamlit UI workflow using `streamlit.testing` or similar.
+9. **Add E2E tests with mock cluster** — Test the full agent workflow end-to-end using mocked `oc` responses (without requiring a real OpenShift cluster).
 
-10. **Add performance benchmarking** for the deployability engine's decision matrix computation — this is deterministic and measurable.
-
-11. **Implement SBOM generation** for supply chain transparency.
+10. **Add multi-architecture container support** — When a Dockerfile exists, add `docker buildx` for ARM64/AMD64 builds.
 
 ## Comparison to Gold Standards
 
-| Dimension | model-runtimes-agent | odh-dashboard (Gold) | notebooks (Gold) | kserve (Gold) |
-|-----------|---------------------|---------------------|------------------|---------------|
-| CI/CD Pipeline | None | Multi-workflow GitHub Actions | Comprehensive GHA | Extensive GHA + Prow |
-| Unit Tests | 5 files, ~12% ratio | Hundreds of tests, >70% | Extensive | >80% coverage |
-| Integration/E2E | None | Cypress + contract tests | Multi-layer validation | envtest + E2E |
-| Coverage Tracking | None | Codecov enforced | Coverage reports | Codecov enforced |
-| Linting | None | ESLint + Prettier + strict TS | Various | golangci-lint (30+ linters) |
-| Container Testing | None | Image build in CI | 5-layer image validation | Multi-arch builds |
-| Security Scanning | None (code-level SSRF/allowlist only) | Trivy + CodeQL | Trivy + scanning | CodeQL + Snyk |
-| Agent Rules | AGENTS.md only | Comprehensive .claude/rules/ | N/A | N/A |
-| Pre-commit | None | Husky + lint-staged | Pre-commit hooks | Pre-commit hooks |
+| Practice | model-runtimes-agent | odh-dashboard (Gold) | notebooks (Gold) | kserve (Gold) |
+|----------|---------------------|----------------------|-------------------|---------------|
+| CI/CD Workflows | None | Comprehensive (lint, test, build, deploy) | Multi-layer CI | Full PR + periodic |
+| Unit Tests | 49 methods, 5 files | Extensive with Jest/Cypress | Comprehensive | Go testing + envtest |
+| Integration/E2E | None | Cypress E2E suite | Image validation pipeline | Multi-version E2E |
+| Coverage | None | Codecov with thresholds | Coverage enforcement | Codecov + gates |
+| Linting | None | ESLint + TypeScript strict | Linting configured | golangci-lint |
+| Container Image | No Dockerfile | Multi-stage Dockerfile | 5-layer image validation | Multi-arch images |
+| Dependency Alerts | None | Dependabot configured | Dependabot | Dependabot + Renovate |
+| Agent Rules | AGENTS.md (operational) | CLAUDE.md + .claude/rules/ | N/A | N/A |
+| Pre-commit | None | Configured | N/A | N/A |
 
 ## File Paths Reference
 
+### Source Code
+- `app.py` — Streamlit web UI entry point (967 lines)
+- `src/runtimes_dep_agent/agent/llm_agent.py` — Supervisor agent with LangChain (260 lines)
+- `src/runtimes_dep_agent/agent/specialists/*.py` — Four specialist agents
+- `src/runtimes_dep_agent/qa_kserve/pipeline.py` — KServe QA pipeline (789 lines)
+- `src/runtimes_dep_agent/qa_kserve/post_deploy.py` — Post-deployment validation (337 lines)
+- `src/runtimes_dep_agent/validators/deployability_engine.py` — Deterministic deployment matrix (398 lines)
+- `src/runtimes_dep_agent/validators/accelerator_validator.py` — GPU/accelerator validation (607 lines)
+- `src/runtimes_dep_agent/report/html_report.py` — HTML report generation (773 lines)
+
+### Test Files
+- `tests/test_qa_kserve.py` — 27 test methods (373 lines)
+- `tests/test_deployability_engine.py` — 8 test methods (109 lines)
+- `tests/test_deployability_reconcile.py` — 6 test methods (93 lines)
+- `tests/test_html_report_narrative.py` — 3 test methods (95 lines)
+- `tests/test_decision_fit.py` — 5 test methods (47 lines)
+
 ### Configuration
-- `pyproject.toml` — Project metadata, dependencies, build config
-- `sample_modelcar_config.yaml` — Example model-car YAML input
-- `example-env.sh` — Environment variable template
+- `pyproject.toml` — Project metadata and dependencies (no lint/test/coverage config)
+- `AGENTS.md` — Comprehensive agent operational guidance
+- `deployment-yamls/agents.md` — KServe QA operational playbook
+- `.gitignore` — Standard Python gitignore
 
-### Source Code (21 Python files, ~6,144 lines)
-- `src/runtimes_dep_agent/agent/llm_agent.py` — Supervisor agent
-- `src/runtimes_dep_agent/agent/specialists/` — Four specialist builders
-- `src/runtimes_dep_agent/qa_kserve/pipeline.py` — KServe QA pipeline
-- `src/runtimes_dep_agent/qa_kserve/oc_cli.py` — Allowlisted oc CLI wrapper
-- `src/runtimes_dep_agent/validators/deployability_engine.py` — Deterministic deploy/no-deploy
-- `src/runtimes_dep_agent/report/html_report.py` — HTML report generator
-- `app.py` — Streamlit web UI (2,042 lines)
-
-### Tests (5 files, 717 lines)
-- `tests/test_qa_kserve.py` — QA pipeline helper tests
-- `tests/test_deployability_engine.py` — Deployability engine tests
-- `tests/test_html_report_narrative.py` — Report narrative alignment tests
-- `tests/test_deployability_reconcile.py` — FP8/GPU reconciliation tests
-- `tests/test_decision_fit.py` — Tensor-parallel heuristic tests
-
-### Agent Documentation
-- `AGENTS.md` — Specialist flow, stability rubric, quantization matrix
-- `deployment-yamls/agents.md` — KServe QA playbook and apply order
-
-### Missing (Expected)
-- `.github/workflows/` — No CI/CD
-- `.claude/` — No agent rules
-- `Dockerfile` — No container image
-- `.pre-commit-config.yaml` — No pre-commit hooks
-- `.codecov.yml` — No coverage config
-- `ruff.toml` / `mypy.ini` — No linting config
+### Missing (Recommended)
+- `.github/workflows/ci.yml` — CI pipeline
+- `Dockerfile` — Container image
+- `.github/dependabot.yml` — Dependency monitoring
+- `.pre-commit-config.yaml` — Pre-commit hooks
+- `CLAUDE.md` — General AI agent development guidance
+- `.claude/rules/` — Test creation rules

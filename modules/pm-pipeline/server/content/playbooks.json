@@ -1,0 +1,184 @@
+[
+  {
+    "section": 1,
+    "title": "RFE has rfe-creator-needs-attention",
+    "symptom": "RFE failed the quality rubric or review flagged issues.",
+    "owner": "PM",
+    "steps": [
+      "Open the RHAIRFE in Jira and read the review feedback (ask engineering for the HTML review report if needed).",
+      "Fix failing criteria — usually WHY (business justification), Right-sized (split RFEs), or Open to HOW (avoid prescribing architecture).",
+      "If the RFE is too large, split into separate tickets.",
+      "Ask AI Engineering to re-run the rfe-creator review on your ticket.",
+      "Confirm rfe-creator-autofix-rubric-pass or tech-reviewed appears before adding strat scope labels."
+    ],
+    "links": ["rfe-creator-repo", "confluence-rhai-home"],
+    "stepLinks": [[], [], [], ["rfe-creator-repo"], ["strat-creator-pipeline-settings"]],
+    "jqlTemplate": "project = RHAIRFE AND labels = \"rfe-creator-needs-attention\""
+  },
+  {
+    "section": 2,
+    "title": "RFE has feasibility-fail or feasibility-unknown",
+    "symptom": "The need may not be achievable on the current platform, or architecture context was insufficient.",
+    "owner": "Engineering / PM",
+    "steps": [
+      "Engage the component owner or staff engineer listed on related STRATs.",
+      "Determine whether the RFE needs reframing, deferral, or an architecture overlay update.",
+      "If scope changes, update the RFE and return to quality review.",
+      "If architecture context was wrong, engineering submits an overlay PR to architecture-context."
+    ],
+    "links": ["architecture-context-repo", "confluence-rhai-home"],
+    "stepLinks": [[], [], ["rfe-creator-repo"], ["architecture-context-repo"]],
+    "jqlTemplate": "project = RHAIRFE AND labels in (\"rfe-creator-feasibility-fail\", \"rfe-creator-feasibility-unknown\")"
+  },
+  {
+    "section": 3,
+    "title": "RFE passed quality but has no strat-creator scope",
+    "symptom": "RFE has quality pass but no STRAT has been created.",
+    "owner": "PM",
+    "steps": [
+      "Add strat-creator-3.5 or strat-creator-3.6 label, or set a matching Target Version for your release.",
+      "Confirm status is not Draft, Closed, or Resolved.",
+      "If all gates pass, wait for strat-creator CI pickup (see §4)."
+    ],
+    "links": ["strat-creator-pipeline-settings", "confluence-release-process"],
+    "stepLinks": [["strat-creator-pipeline-settings"], [], []],
+    "jqlTemplate": null
+  },
+  {
+    "section": 4,
+    "title": "RFE has scope + quality but no STRAT yet",
+    "symptom": "Everything looks ready on the RFE, but no linked RHAISTRAT exists.",
+    "owner": "Wait on CI; PM escalates if > ~1 week",
+    "steps": [
+      "Verify no existing RHAISTRAT is already linked (Cloners link).",
+      "Check the strat dashboard for recent batch runs.",
+      "Confirm the RFE is not stuck behind batch limits (default 10 per run).",
+      "Escalate to AI Engineering if eligible for multiple CI cycles without pickup."
+    ],
+    "links": ["strat-dashboard", "strat-creator-repo"],
+    "stepLinks": [[], ["strat-dashboard"], [], ["confluence-rhai-home"]],
+    "jqlTemplate": "project = RHAIRFE AND labels in (\"strat-creator-3.6\", \"strat-creator-3.5\") AND labels in (\"rfe-creator-autofix-rubric-pass\", \"tech-reviewed\") AND status not in (Closed, Resolved, Draft)"
+  },
+  {
+    "section": 5,
+    "title": "STRAT has strat-creator-needs-attention",
+    "symptom": "CI scored the strategy below the approval threshold.",
+    "owner": "Staff engineer",
+    "steps": [
+      "Staff engineer pulls the strategy and reads the review score table.",
+      "Fix inputs (overlay, Staff Engineer / SME Input, or RFE update) — not the AI Strategy section.",
+      "Re-run refine and review until scores improve.",
+      "Push back to CI and wait for strat-creator-rubric-pass.",
+      "PM: provide business justification or scope clarifications when flagged."
+    ],
+    "links": ["strat-creator-human-review", "architecture-context-repo"],
+    "stepLinks": [["strat-creator-human-review"], ["architecture-context-repo"], [], [], []],
+    "jqlTemplate": "project = RHAISTRAT AND labels = \"strat-creator-needs-attention\""
+  },
+  {
+    "section": 6,
+    "title": "STRAT has rubric-pass but no human-sign-off",
+    "symptom": "CI approved the strategy; waiting on human sign-off.",
+    "owner": "Staff engineer",
+    "steps": [
+      "Staff engineer reviews scores, dependencies, effort, and test criteria.",
+      "Make minor improvements via Staff Engineer / SME Input if needed.",
+      "Sign off via strat-creator workflow — applies strat-creator-human-sign-off.",
+      "PM: escalate to the staff engineer or architect for your component."
+    ],
+    "links": ["strat-creator-human-review", "strat-dashboard"],
+    "stepLinks": [["strat-creator-human-review"], [], ["strat-creator-human-review"], []],
+    "jqlTemplate": "project = RHAISTRAT AND labels = \"strat-creator-rubric-pass\" AND labels not in (\"strat-creator-human-sign-off\")"
+  },
+  {
+    "section": 7,
+    "title": "STRAT has human-sign-off but not planning-ready",
+    "symptom": "Strategy approved but feature fails one or more readiness gates.",
+    "owner": "PM",
+    "steps": [
+      "Confirm strat-creator-human-sign-off is present.",
+      "Assign Product Manager and delivery owner on the RHAISTRAT ticket.",
+      "Advance status past New / Refinement.",
+      "Set Target Version for your release.",
+      "Populate RICE scores (Reach, Impact, Confidence, Effort).",
+      "Fix any hygiene issues (assignee, fix version) — check Org Pulse Feature Readiness."
+    ],
+    "links": ["org-pulse-feature-readiness", "confluence-release-process", "confluence-rhai-home"],
+    "stepLinks": [[], [], [], [], ["confluence-release-process"], ["org-pulse-feature-readiness"]],
+    "jqlTemplate": "project = RHAISTRAT AND labels = \"strat-creator-human-sign-off\" AND status in (New, Refinement)"
+  },
+  {
+    "section": 8,
+    "title": "Planning-ready but missing rp-qg1-pass",
+    "symptom": "Feature passes readiness but lacks the planning quality gate label.",
+    "owner": "PM / planning owner",
+    "steps": [
+      "Confirm all §7 checklist items pass, especially RICE scores.",
+      "Verify fix version / target version align with the release.",
+      "Ask the planning owner to run Release Quality Gate 1 for your release.",
+      "Passing features receive rp-qg1-pass (3.5)."
+    ],
+    "links": ["org-pulse-release-plan", "confluence-release-process"],
+    "stepLinks": [["org-pulse-feature-readiness"], [], ["confluence-release-process"], []],
+    "jqlTemplate": "project = RHAISTRAT AND labels = \"strat-creator-human-sign-off\" AND labels not in (\"rp-qg1-pass\") AND status != Closed"
+  },
+  {
+    "section": 9,
+    "title": "Feature has rp-qg1-fail",
+    "symptom": "Feature failed Release Quality Gate 1 (Definition of Ready).",
+    "owner": "PM",
+    "steps": [
+      "Open Feature Readiness in Org Pulse to see which DoR checks failed.",
+      "Fix blockers on the RHAISTRAT ticket (owners, RICE, status).",
+      "Request re-evaluation through the release planning process."
+    ],
+    "links": ["org-pulse-feature-readiness", "confluence-release-process"],
+    "stepLinks": [["org-pulse-feature-readiness"], [], ["confluence-release-process"]],
+    "jqlTemplate": "project = RHAISTRAT AND labels = \"rp-qg1-fail\""
+  },
+  {
+    "section": 10,
+    "title": "Feature passed Gate 1 but wrong phase or deferred",
+    "symptom": "Strategy evaluation assigned unexpected phase or deferral.",
+    "owner": "PM",
+    "steps": [
+      "Read the strategy evaluation rationale in the Gate 1 report.",
+      "If Big Rock mapping is wrong, request a Gate 1 adjustment.",
+      "If deferral is capacity-driven, request a Gate 2 adjustment.",
+      "Document business justification for the planning review."
+    ],
+    "links": ["org-pulse-release-plan", "confluence-release-process"],
+    "stepLinks": [["org-pulse-release-plan"], [], [], []],
+    "jqlTemplate": null
+  },
+  {
+    "section": 11,
+    "title": "Gate 2 approved but no child epics",
+    "symptom": "Feature is in the committed plan but has no RHAI child epics.",
+    "owner": "Engineering; PM escalates",
+    "steps": [
+      "Confirm Gate 2 approval and epic manifest exist (Org Pulse Release Plan).",
+      "Verify strat-creator-human-sign-off and complete strategy content.",
+      "Check whether epic-creator CI has run for your release batch.",
+      "Ask AI Engineering to run epic decomposition for your RHAISTRAT key."
+    ],
+    "links": ["epic-creator-repo", "org-pulse-release-plan"],
+    "stepLinks": [["org-pulse-release-plan"], [], ["epic-creator-repo"], ["epic-creator-repo"]],
+    "jqlTemplate": "project = RHAISTRAT AND labels = \"strat-creator-human-sign-off\" AND labels not in (\"epic-creator-auto-decomposed\") AND status != Closed"
+  },
+  {
+    "section": 12,
+    "title": "Decomposition review failed",
+    "symptom": "epic-creator ran but epics were not submitted (review pass: false).",
+    "owner": "Staff engineer; PM if scope gaps",
+    "steps": [
+      "Engineering reads the decomp review artifact for criterion scores.",
+      "Fix missing HLR coverage, DAG edges, or Investigation vs Implementation issues.",
+      "Re-run decomposition until review passes (≥ 10/14, no zero criteria).",
+      "PM: update Staff Engineer / SME Input or source RFE if scope is ambiguous."
+    ],
+    "links": ["epic-creator-repo", "strat-creator-human-review"],
+    "stepLinks": [["epic-creator-repo"], [], ["epic-creator-repo"], []],
+    "jqlTemplate": null
+  }
+]

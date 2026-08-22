@@ -46,12 +46,12 @@ async function runFetch(storage) {
     if (fetchResult.status === 'success') {
       lastSuccessfulFetch = Date.now();
     }
-    storage.writeToStorage('system-health/disconnected/last-fetch.json', fetchResult);
+    await storage.writeToStorage('system-health/disconnected/last-fetch.json', fetchResult);
     return fetchResult;
   } catch (err) {
     console.error('[system-health/disconnected] Fetch error:', err.message);
     const errorResult = { status: 'error', message: err.message, timestamp: new Date().toISOString() };
-    storage.writeToStorage('system-health/disconnected/last-fetch.json', errorResult);
+    await storage.writeToStorage('system-health/disconnected/last-fetch.json', errorResult);
     return errorResult;
   } finally {
     fetchInProgress = false;

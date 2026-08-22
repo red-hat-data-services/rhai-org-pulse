@@ -2,9 +2,14 @@ const sharedJira = require('../../../../shared/server/jira')
 var { jiraRequest, JIRA_HOST, fetchAllJqlResults } = sharedJira
 const { getConfig, saveConfig, deleteConfig } = require('./config')
 const productPages = require('./product-pages')
-const { fetchProductsByShortname, fetchAllProducts, getProductPagesToken, getAuthStatus } = productPages
+const { fetchAllProducts, getAuthStatus } = productPages
+const { getRegistryReleasesFlat, readRegistry, writeRegistry, normalizeRelease } = require('../registry')
 const registerConformaRoutes = require('./conforma')
+const { registerConformaFetcher } = require('./conforma-fetcher')
+const registerBlockerRoutes = require('./blockers')
+const registerTfaRiskRoutes = require('./tfa-risk')
 const { logAudit } = require('../planning/audit-log')
+const { stripZStream: sharedStripZStream, normalizeVersionName, extractProduct: sharedExtractProduct } = require('../version-utils')
 
 const DEMO_MODE = process.env.DEMO_MODE === 'true'
 
@@ -12,36 +17,19 @@ const FIX_VERSION_FIELD_KEY = 'fixVersions'
 
 function getDefaultFixVersionJql(config) {
   if (config.targetVersionJqlFragment) return config.targetVersionJqlFragment
-  // Fallback: match any Target Version that looks like a version number (3.x, 4.x, etc.)
-  // This auto-discovers future versions without manual config updates
-  return 'cf[10855] is not EMPTY'
+  return 'fixVersion is not EMPTY'
 }
 
 function normalizeText(value) {
   return String(value || '').trim().toLowerCase()
 }
 
-/**
- * Normalizes release/fix version names by removing z-stream notation.
- * Z-stream releases (async/minor updates) should group with parent version.
- * Examples:
- *   "rhoai-3.5.z" → "rhoai-3.5"
- *   "rhoai-3.5.z.EA1" → "rhoai-3.5.EA1"
- *   "RHAI 3.5.z" → "RHAI 3.5"
- */
 function normalizeReleaseNumber(value) {
-  if (!value) return value
-  // Remove .z notation (z-stream releases)
-  return String(value).replace(/\.z\b/gi, '')
+  return sharedStripZStream(value)
 }
 
 function normalizeKey(value) {
-  // Remove common suffixes like " release", " GA", etc. before normalizing
-  let normalized = normalizeText(value);
-  normalized = normalized.replace(/\s+release$/i, ''); // "rhelai-3.5 EA1 release" → "rhelai-3.5 ea1"
-  normalized = normalized.replace(/\s+ga$/i, '');      // "RHAII-3.5 GA" → "rhaii-3.5"
-  normalized = normalized.replace(/\.z\b/gi, '');      // "rhoai-3.5.z.EA1" → "rhoai-3.5.ea1"
-  return normalized.replace(/[^a-z0-9]/g, '');
+  return normalizeVersionName(value).replace(/[^a-z0-9]/g, '');
 }
 
 function toIsoDate(dateValue) {
@@ -228,7 +216,6 @@ function safeDaysBetween(fromDate, toDate) {
  * Returns releases in the same format as Product Pages.
  */
 async function discoverReleasesFromJira(storage, config) {
-  // Query Jira using the configured Target Version JQL
   const jqlClause = getDefaultFixVersionJql(config)
   if (!jqlClause) return []
 
@@ -237,9 +224,9 @@ async function discoverReleasesFromJira(storage, config) {
     : `project in (${config.projectKeys.map(k => `"${k}"`).join(', ')}) AND `
   const jql = `${projectsFilter}issuetype = Feature AND ${jqlClause} ORDER BY updated DESC`
 
-  const issues = await fetchAllJqlResults(jiraRequest, jql, FIX_VERSION_FIELD_KEY, { maxResults: 100 })
+  const issues = await fetchAllJqlResults(jiraRequest, jql, `${FIX_VERSION_FIELD_KEY},customfield_10855`, { maxResults: 100 })
 
-  // Extract unique Target Version values
+  // Extract unique fix version values
   const releaseVersions = new Set()
   const featureCounts = new Map()
 
@@ -252,7 +239,7 @@ async function discoverReleasesFromJira(storage, config) {
   }
 
   // Load metadata from storage
-  const metadata = storage.readFromStorage('releases/delivery/releases-metadata.json') || {}
+  const metadata = await storage.readFromStorage('releases/delivery/releases-metadata.json') || {}
 
   // Build releases array with metadata
   const releases = []
@@ -283,64 +270,15 @@ async function fetchOpenReleases(storage, config) {
     } catch (err) {
       console.error('[releases/delivery] Jira release discovery failed:', err.message)
     }
-    // Fall through to other methods on failure
+    // Fall through to registry on failure
   }
 
-  // Priority 2: product shortnames configured
-  if (config.productPagesProductShortnames?.length) {
-    try {
-      const releases = await fetchProductsByShortname(config.productPagesProductShortnames, config)
-      if (releases.length > 0) {
-        storage.writeToStorage('releases/delivery/product-pages-releases-cache.json', {
-          source: 'api',
-          fetchedAt: new Date().toISOString(),
-          releases
-        })
-        return releases
-      }
-    } catch (err) {
-      console.error('[releases/delivery] Product Pages fetch by shortname failed:', err.message)
-    }
-    // Fall through to cache on failure or empty result
+  // Priority 2: Registry (single source of truth for release schedule data)
+  const registryReleases = await getRegistryReleasesFlat(storage.readFromStorage, { state: 'active' })
+  if (registryReleases.length > 0) {
+    return registryReleases
   }
 
-  // Legacy path: raw URL (preserved for backward compatibility)
-  if (config.productPagesReleasesUrl) {
-    const token = await getProductPagesToken(config)
-    const headers = { Accept: 'application/json' }
-    if (token) headers.Authorization = `Bearer ${token}`
-    const response = await fetch(config.productPagesReleasesUrl, {
-      headers,
-      signal: AbortSignal.timeout(30000)
-    })
-    if (!response.ok) {
-      throw new Error(`Product Pages API error (${response.status})`)
-    }
-    const payload = await response.json()
-    const rows = Array.isArray(payload) ? payload : (payload.releases || payload.items || [])
-    const releases = rows
-      .map(r => ({
-        productName: r.productName || r.product_name || r.product || r.product_shortname || '',
-        releaseNumber: r.releaseNumber || r.release_number || r.name || '',
-        dueDate: toIsoDate(r.dueDate || r.due_date || r.gaDate || r.ga_date || r.date_finish || r.date_start),
-        codeFreezeDate: toIsoDate(r.codeFreezeDate || r.code_freeze_date || r.codeFreeze || r.code_freeze) || null,
-        featureFreezeDate: toIsoDate(r.featureFreezeDate || r.feature_freeze_date || r.featureFreeze || r.feature_freeze) || null,
-        planningFreezeDate: toIsoDate(r.planningFreezeDate || r.planning_freeze_date || r.planningFreeze || r.planning_freeze) || null
-      }))
-      .filter(r => r.productName && r.releaseNumber && r.dueDate)
-    storage.writeToStorage('releases/delivery/product-pages-releases-cache.json', {
-      source: 'api',
-      fetchedAt: new Date().toISOString(),
-      releases
-    })
-    return releases
-  }
-
-  // Fallback cache. This lets teams load MCP-fetched release snapshots into storage.
-  const cached = storage.readFromStorage('releases/delivery/product-pages-releases-cache.json')
-  if (cached?.releases && Array.isArray(cached.releases)) {
-    return cached.releases
-  }
   return []
 }
 
@@ -412,15 +350,16 @@ async function fetchUnreleasedJiraFixVersions(config) {
         if (version.archived) continue
         if (version.released === true) continue
 
-        if (!releaseMap.has(name)) {
-          releaseMap.set(name, {
+        const key = name.toLowerCase()
+        if (!releaseMap.has(key)) {
+          releaseMap.set(key, {
             productName: 'Jira version catalog',
             releaseNumber: name,
             dueDate: toIsoDate(version.releaseDate),
             _projects: new Set()
           })
         }
-        const row = releaseMap.get(name)
+        const row = releaseMap.get(key)
         row._projects.add(projectKey)
         if (!row.dueDate && version.releaseDate) {
           row.dueDate = toIsoDate(version.releaseDate)
@@ -1038,6 +977,22 @@ async function runFullAnalysis(storage, config) {
     }
   }
 
+  // Recalculate risk using weighted incomplete (childrenRemaining) after enrichment
+  const now2 = new Date()
+  for (const release of result.releases) {
+    const daysRemaining = safeDaysBetween(now2, release.dueDate)
+    let weightedIncomplete = 0
+    for (const issue of release.issues) {
+      if (issue.statusBucket !== 'done') {
+        weightedIncomplete += (issue.childrenRemaining || 1)
+      }
+    }
+    const aggRisk = releaseRiskFromIncompleteAndTime(daysRemaining, weightedIncomplete, config)
+    release.risk = aggRisk
+    release.riskScore = riskScoreFromLevel(aggRisk)
+    release.riskSummary = buildReleaseRiskSummary(release, aggRisk, release.riskDriver, daysRemaining)
+  }
+
   if (jiraWarning) result.warning = jiraWarning
 
   const d = result.fixVersionDiagnostics
@@ -1052,7 +1007,7 @@ async function runFullAnalysis(storage, config) {
 
 const CACHE_MAX_AGE_MS = 60 * 60 * 1000 // 1 hour
 
-module.exports = function registerRoutes(router, context) {
+module.exports = async function registerRoutes(router, context) {
   // Initialize product-pages with secrets
   if (context.secrets) productPages.init(context.secrets)
 
@@ -1063,6 +1018,9 @@ module.exports = function registerRoutes(router, context) {
   }
 
   registerConformaRoutes(router, context)
+  registerConformaFetcher(router, context)
+  registerBlockerRoutes(router, context)
+  registerTfaRiskRoutes(router, context)
 
   const { storage, requireAuth, requireAdmin, requireScope } = context
   const { readFromStorage, writeToStorage } = storage
@@ -1073,9 +1031,9 @@ module.exports = function registerRoutes(router, context) {
     if (refreshState.running) return { status: 'already_running' }
     refreshState = { running: true, startedAt: new Date().toISOString(), lastResult: refreshState.lastResult }
     try {
-      const config = getConfig(readFromStorage)
+      const config = await getConfig(readFromStorage)
       const result = await runFullAnalysis(storage, config)
-      writeToStorage('releases/delivery/analysis-cache.json', {
+      await writeToStorage('releases/delivery/analysis-cache.json', {
         cachedAt: new Date().toISOString(),
         data: result
       })
@@ -1115,10 +1073,10 @@ module.exports = function registerRoutes(router, context) {
    *       200:
    *         description: Configuration with source info
    */
-  router.get('/config', requireAdmin, requireScope('releases:write'), function(req, res) {
-    const saved = readFromStorage('releases/delivery/config.json')
+  router.get('/config', requireAdmin, requireScope('releases:write'), async function(req, res) {
+    const saved = await readFromStorage('releases/delivery/config.json')
     const hasStoredConfig = saved && typeof saved === 'object' && !saved._deleted
-    const config = getConfig(readFromStorage)
+    const config = await getConfig(readFromStorage)
     // Never expose featureWeightField fallback in stored form — show raw stored value
     if (hasStoredConfig && saved.featureWeightField === undefined) {
       config.featureWeightField = ''
@@ -1136,10 +1094,10 @@ module.exports = function registerRoutes(router, context) {
    *       200:
    *         description: Configuration saved
    */
-  router.post('/config', requireAdmin, requireScope('releases:write'), function(req, res) {
+  router.post('/config', requireAdmin, requireScope('releases:write'), async function(req, res) {
     try {
-      saveConfig(writeToStorage, req.body)
-      logAudit(readFromStorage, writeToStorage, {
+      await saveConfig(writeToStorage, req.body)
+      await logAudit(readFromStorage, writeToStorage, {
         domain: 'delivery',
         action: 'config_save',
         user: req.userEmail || 'unknown',
@@ -1162,9 +1120,9 @@ module.exports = function registerRoutes(router, context) {
    *       200:
    *         description: Configuration reset to defaults
    */
-  router.delete('/config', requireAdmin, requireScope('releases:write'), function(req, res) {
-    deleteConfig(writeToStorage)
-    const config = getConfig(readFromStorage)
+  router.delete('/config', requireAdmin, requireScope('releases:write'), async function(req, res) {
+    await deleteConfig(writeToStorage)
+    const config = await getConfig(readFromStorage)
     res.json({ config, source: 'env' })
   })
 
@@ -1182,7 +1140,7 @@ module.exports = function registerRoutes(router, context) {
    */
   router.get('/product-pages/products', requireAdmin, requireScope('releases:write'), async function(req, res) {
     try {
-      const config = getConfig(readFromStorage)
+      const config = await getConfig(readFromStorage)
       const authStatus = getAuthStatus()
       const products = await fetchAllProducts(config)
       res.json({ products, authStatus })
@@ -1218,14 +1176,14 @@ module.exports = function registerRoutes(router, context) {
    *       200:
    *         description: Refresh started or already running
    */
-  router.post('/refresh', requireAdmin, requireScope('releases:write'), function(req, res) {
+  router.post('/refresh', requireAdmin, requireScope('releases:write'), async function(req, res) {
     if (DEMO_MODE) {
       return res.json({ status: 'skipped', message: 'Refresh disabled in demo mode' })
     }
     if (refreshState.running || (context.isRefreshRunning && context.isRefreshRunning())) {
       return res.json({ status: 'already_running' })
     }
-    logAudit(readFromStorage, writeToStorage, {
+    await logAudit(readFromStorage, writeToStorage, {
       domain: 'delivery',
       action: 'manual_refresh',
       user: req.userEmail || 'unknown',
@@ -1247,10 +1205,10 @@ module.exports = function registerRoutes(router, context) {
    *       200:
    *         description: Analysis data (possibly stale, with refresh indicators)
    */
-  router.get('/analysis', requireAuth, requireScope('releases:read'), function(req, res) {
+  router.get('/analysis', requireAuth, requireScope('releases:read'), async function(req, res) {
     try {
       const forceRefresh = req.query.refresh === 'true'
-      const cached = readFromStorage('releases/delivery/analysis-cache.json')
+      const cached = await readFromStorage('releases/delivery/analysis-cache.json')
       const hasCachedData = cached?.data && cached.cachedAt
 
       if (hasCachedData) {
@@ -1327,14 +1285,14 @@ module.exports = function registerRoutes(router, context) {
 
       // Load committed snapshot
       const snapshotPath = `releases/planning/committed-snapshot-${version}-${phase}.json`
-      const snapshot = readFromStorage(snapshotPath)
+      const snapshot = await readFromStorage(snapshotPath)
 
       if (!snapshot) {
         return res.status(404).json({ error: `No snapshot found for ${version} ${phase}. Use the "Create Snapshot" button above.` })
       }
 
       // Query Jira directly for current state (independent of delivery analysis cache)
-      const config = getConfig(readFromStorage)
+      const config = await getConfig(readFromStorage)
       const commitmentJql = config.commitmentTrackingJql || 'cf[10855] is not EMPTY'
 
       const projectsFilter = config.jiraAllProjects
@@ -1493,7 +1451,7 @@ module.exports = function registerRoutes(router, context) {
    */
   router.get('/commitment/versions', requireAuth, requireScope('releases:read'), async function(req, res) {
     try {
-      const config = getConfig(readFromStorage)
+      const config = await getConfig(readFromStorage)
       const commitmentJql = config.commitmentTrackingJql || 'cf[10855] is not EMPTY'
 
       // Build project filter
@@ -1603,7 +1561,7 @@ module.exports = function registerRoutes(router, context) {
       }
 
       // Load config for commitment tracking JQL (separate from delivery analysis)
-      const config = getConfig(readFromStorage)
+      const config = await getConfig(readFromStorage)
       const commitmentJql = config.commitmentTrackingJql || 'cf[10855] is not EMPTY'
 
       // Build project filter
@@ -1679,7 +1637,7 @@ module.exports = function registerRoutes(router, context) {
 
       // Write to storage
       const snapshotPath = `releases/planning/committed-snapshot-${version}-${phase}.json`
-      writeToStorage(snapshotPath, snapshotData)
+      await writeToStorage(snapshotPath, snapshotData)
 
       console.log(`[releases/delivery] Created snapshot for ${version} ${phase}: ${seenKeys.size} features`)
 
@@ -1697,7 +1655,7 @@ module.exports = function registerRoutes(router, context) {
   // --- Startup cache seeding ---
   // Warm the cache in the background so the first user request is instant
   if (!DEMO_MODE) {
-    const existing = readFromStorage('releases/delivery/analysis-cache.json')
+    const existing = await readFromStorage('releases/delivery/analysis-cache.json')
     const hasFreshCache = existing?.data && existing.cachedAt &&
       (Date.now() - new Date(existing.cachedAt).getTime()) < CACHE_MAX_AGE_MS
     if (!hasFreshCache) {
@@ -1710,36 +1668,75 @@ module.exports = function registerRoutes(router, context) {
    * @openapi
    * /api/modules/releases/delivery/admin/releases:
    *   post:
-   *     summary: Manually upload release data
+   *     summary: Manually upload release data into the registry
    *     tags: [Releases - Delivery]
    *     responses:
    *       200:
-   *         description: Releases uploaded and analysis triggered
+   *         description: Releases upserted into registry
    */
-  router.post('/admin/releases', requireAdmin, requireScope('releases:write'), function(req, res) {
+  router.post('/admin/releases', requireAdmin, requireScope('releases:write'), async function(req, res) {
     try {
       const releases = Array.isArray(req.body?.releases) ? req.body.releases : null
       if (!releases || releases.length === 0) {
         return res.status(400).json({ error: 'Request must include non-empty releases array' })
       }
-      const normalized = releases.map(r => ({
-        productName: r.productName,
-        releaseNumber: r.releaseNumber,
-        dueDate: toIsoDate(r.dueDate),
-        codeFreezeDate: toIsoDate(r.codeFreezeDate) || null,
-        featureFreezeDate: toIsoDate(r.featureFreezeDate) || null
-      })).filter(r => r.productName && r.releaseNumber && r.dueDate)
-
-      if (normalized.length === 0) {
-        return res.status(400).json({ error: 'No valid releases after normalization' })
+      const valid = releases.filter(r => r.releaseNumber && r.dueDate)
+      if (valid.length === 0) {
+        return res.status(400).json({ error: 'No valid releases after validation' })
       }
 
-      writeToStorage('releases/delivery/product-pages-releases-cache.json', {
-        source: 'manual',
-        fetchedAt: new Date().toISOString(),
-        releases: normalized
-      })
-      res.json({ success: true, count: normalized.length })
+      const registry = await readRegistry(readFromStorage)
+      const existingById = new Map()
+      for (const r of registry.releases) {
+        existingById.set(r.id, r)
+      }
+
+      let created = 0
+      let updated = 0
+      for (const r of valid) {
+        const id = sharedStripZStream(r.releaseNumber).toLowerCase().replace(/\s+/g, '-')
+        if (!/^[a-z0-9][a-z0-9._-]*$/.test(id)) continue
+
+        const milestones = {
+          ga: toIsoDate(r.dueDate) || null,
+          codeFreeze: toIsoDate(r.codeFreezeDate) || null,
+          featureFreeze: toIsoDate(r.featureFreezeDate) || null,
+          planningFreeze: toIsoDate(r.planningFreezeDate) || null
+        }
+
+        const existing = existingById.get(id)
+        if (existing) {
+          existing.milestones = Object.assign({}, existing.milestones, milestones)
+          existing.updatedAt = new Date().toISOString()
+          updated++
+        } else {
+          const release = normalizeRelease({
+            id,
+            displayName: sharedStripZStream(r.releaseNumber),
+            productPagesShortname: r.productName || r.releaseNumber.split('-')[0] || null,
+            productPagesVersion: r.releaseNumber,
+            milestones,
+            source: 'manual',
+            state: 'active'
+          })
+          registry.releases.push(release)
+          existingById.set(id, release)
+          created++
+        }
+      }
+
+      if (created > 0 || updated > 0) {
+        await writeRegistry(writeToStorage, registry)
+        await logAudit(readFromStorage, writeToStorage, {
+          domain: 'registry',
+          action: 'registry_manual_upload',
+          user: req.userEmail || 'unknown',
+          summary: `Manual upload: ${created} created, ${updated} updated`,
+          details: { created, updated }
+        })
+      }
+
+      res.json({ success: true, created, updated })
     } catch (error) {
       console.error('[releases/delivery] save releases error:', error)
       res.status(500).json({ error: error.message })
@@ -1755,7 +1752,7 @@ module.exports = function registerRoutes(router, context) {
   let bugsCache = { data: null, timestamp: 0, projectsKey: '' }
   const BUGS_CACHE_TTL_MS = 5 * 60 * 1000 // 5 minutes
 
-  function loadAllBugs(projects) {
+  async function loadAllBugs(projects) {
     const projectsKey = projects.join(',')
     const now = Date.now()
 
@@ -1771,7 +1768,7 @@ module.exports = function registerRoutes(router, context) {
     // Cache miss or stale - read from storage
     const allBugs = []
     for (const project of projects) {
-      const bugs = readFromStorage(`releases/delivery/quality/bugs-${project}.json`) || []
+      const bugs = await readFromStorage(`releases/delivery/quality/bugs-${project}.json`) || []
       allBugs.push(...bugs)
     }
 
@@ -1790,9 +1787,9 @@ module.exports = function registerRoutes(router, context) {
    *       200:
    *         description: Versions sorted by bug count
    */
-  router.get('/quality/versions', requireAuth, requireScope('releases:read'), function(req, res) {
+  router.get('/quality/versions', requireAuth, requireScope('releases:read'), async function(req, res) {
     try {
-      const versions = readFromStorage('releases/delivery/quality/versions.json') || []
+      const versions = await readFromStorage('releases/delivery/quality/versions.json') || []
 
       const sorted = [...versions].sort((a, b) => (b.bugCount || 0) - (a.bugCount || 0))
 
@@ -1823,9 +1820,9 @@ module.exports = function registerRoutes(router, context) {
    *       200:
    *         description: Chart data with labels and datasets
    */
-  router.get('/quality/bugs', requireAuth, requireScope('releases:read'), function(req, res) {
+  router.get('/quality/bugs', requireAuth, requireScope('releases:read'), async function(req, res) {
     try {
-      const config = getConfig(readFromStorage)
+      const config = await getConfig(readFromStorage)
       const versions = (req.query.versions || '').split(',').filter(Boolean)
       const component = req.query.component || null
 
@@ -1833,7 +1830,7 @@ module.exports = function registerRoutes(router, context) {
         return res.json({ labels: [], datasets: [] })
       }
 
-      const allBugs = loadAllBugs(config.projectKeys)
+      const allBugs = await loadAllBugs(config.projectKeys)
 
       const versionSet = new Set(versions)
       let filteredBugs = allBugs.filter(bug =>
@@ -1846,7 +1843,7 @@ module.exports = function registerRoutes(router, context) {
         )
       }
 
-      const allVersions = readFromStorage('releases/delivery/quality/versions.json') || []
+      const allVersions = await readFromStorage('releases/delivery/quality/versions.json') || []
       const versionReleaseMap = new Map(allVersions.map(v => [v.name, v.releaseDate]))
 
       const chartData = computeCumulativeBugData(filteredBugs, versions, versionReleaseMap)
@@ -1867,10 +1864,10 @@ module.exports = function registerRoutes(router, context) {
    *       200:
    *         description: Components sorted by bug count
    */
-  router.get('/quality/components', requireAuth, requireScope('releases:read'), function(req, res) {
+  router.get('/quality/components', requireAuth, requireScope('releases:read'), async function(req, res) {
     try {
-      const config = getConfig(readFromStorage)
-      const allBugs = loadAllBugs(config.projectKeys)
+      const config = await getConfig(readFromStorage)
+      const allBugs = await loadAllBugs(config.projectKeys)
 
       const componentCounts = {}
       for (const bug of allBugs) {
@@ -1907,7 +1904,7 @@ module.exports = function registerRoutes(router, context) {
       return res.json({ status: 'skipped', message: 'Refresh disabled in demo mode' })
     }
     try {
-      const config = getConfig(readFromStorage)
+      const config = await getConfig(readFromStorage)
       const versions = await fetchQualityVersions(config.projectKeys)
 
       const bugCounts = await fetchBugCounts(config.projectKeys, versions)
@@ -1915,11 +1912,11 @@ module.exports = function registerRoutes(router, context) {
         ...v,
         bugCount: bugCounts.get(v.name) || 0
       }))
-      writeToStorage('releases/delivery/quality/versions.json', versionsWithCounts)
+      await writeToStorage('releases/delivery/quality/versions.json', versionsWithCounts)
 
       for (const project of config.projectKeys) {
         const bugs = await fetchBugs(project, versions)
-        writeToStorage(`releases/delivery/quality/bugs-${project}.json`, bugs)
+        await writeToStorage(`releases/delivery/quality/bugs-${project}.json`, bugs)
       }
 
       bugsCache = { data: null, timestamp: 0, projectsKey: '' }
@@ -1940,10 +1937,10 @@ module.exports = function registerRoutes(router, context) {
    *       200:
    *         description: Diagnostic information about bug data and version matching
    */
-  router.get('/quality/debug', requireAdmin, requireScope('releases:read'), function(req, res) {
+  router.get('/quality/debug', requireAdmin, requireScope('releases:read'), async function(req, res) {
     try {
-      const config = getConfig(readFromStorage)
-      const versions = readFromStorage('releases/delivery/quality/versions.json') || []
+      const config = await getConfig(readFromStorage)
+      const versions = await readFromStorage('releases/delivery/quality/versions.json') || []
 
       const cacheSnapshot = {
         projectsKey: bugsCache.projectsKey,
@@ -1952,11 +1949,11 @@ module.exports = function registerRoutes(router, context) {
         cacheAge: bugsCache.timestamp ? Date.now() - bugsCache.timestamp : null
       }
 
-      const allBugs = loadAllBugs(config.projectKeys)
+      const allBugs = await loadAllBugs(config.projectKeys)
 
       const bugsByProject = {}
       for (const project of config.projectKeys) {
-        const bugs = readFromStorage(`releases/delivery/quality/bugs-${project}.json`) || []
+        const bugs = await readFromStorage(`releases/delivery/quality/bugs-${project}.json`) || []
         bugsByProject[project] = bugs.length
       }
 
@@ -2006,12 +2003,8 @@ module.exports = function registerRoutes(router, context) {
     }
   })
 
-  // Normalize product prefix: rhaiis/RHAIIS -> rhaii, preserve rhoai/rhelai/rhaii
   function normalizeProduct(versionName) {
-    const lower = versionName.toLowerCase()
-    if (lower.startsWith('rhaiis-')) return 'rhaii'
-    const dashIdx = lower.indexOf('-')
-    return dashIdx > 0 ? lower.substring(0, dashIdx) : lower
+    return sharedExtractProduct(versionName) || versionName.toLowerCase()
   }
 
   function compute90DaySummary(configReleases, allBugs, storedVersions) {
@@ -2144,11 +2137,11 @@ module.exports = function registerRoutes(router, context) {
    *       200:
    *         description: Bug counts per product within 90 days of GA for each major release
    */
-  router.get('/quality/90day-summary', requireAuth, requireScope('releases:read'), function(req, res) {
+  router.get('/quality/90day-summary', requireAuth, requireScope('releases:read'), async function(req, res) {
     try {
-      const config = getConfig(readFromStorage)
-      const versions = readFromStorage('releases/delivery/quality/versions.json') || []
-      const allBugs = loadAllBugs(config.projectKeys)
+      const config = await getConfig(readFromStorage)
+      const versions = await readFromStorage('releases/delivery/quality/versions.json') || []
+      const allBugs = await loadAllBugs(config.projectKeys)
       const releases = compute90DaySummary(null, allBugs, versions)
       res.json({ releases: releases })
     } catch (error) {
@@ -2172,11 +2165,11 @@ module.exports = function registerRoutes(router, context) {
    *       200:
    *         description: Bug counts per product within 90 days of GA using provided config
    */
-  router.post('/quality/90day-summary', requireAuth, requireScope('releases:read'), function(req, res) {
+  router.post('/quality/90day-summary', requireAuth, requireScope('releases:read'), async function(req, res) {
     try {
-      const config = getConfig(readFromStorage)
-      const versions = readFromStorage('releases/delivery/quality/versions.json') || []
-      const allBugs = loadAllBugs(config.projectKeys)
+      const config = await getConfig(readFromStorage)
+      const versions = await readFromStorage('releases/delivery/quality/versions.json') || []
+      const allBugs = await loadAllBugs(config.projectKeys)
       const configReleases = req.body && req.body.releases ? req.body.releases : null
       const releases = compute90DaySummary(configReleases, allBugs, versions)
       res.json({ releases: releases })
@@ -2199,7 +2192,7 @@ module.exports = function registerRoutes(router, context) {
    */
   router.post('/discover-releases', requireAdmin, requireScope('releases:write'), async function(req, res) {
     try {
-      const config = getConfig(readFromStorage)
+      const config = await getConfig(readFromStorage)
       const releases = await discoverReleasesFromJira(storage, config)
       res.json({ releases })
     } catch (error) {
@@ -2219,9 +2212,9 @@ module.exports = function registerRoutes(router, context) {
    *       200:
    *         description: Releases metadata object
    */
-  router.get('/releases-metadata', requireAuth, requireScope('releases:read'), function(req, res) {
+  router.get('/releases-metadata', requireAuth, requireScope('releases:read'), async function(req, res) {
     try {
-      const metadata = readFromStorage('releases/delivery/releases-metadata.json') || {}
+      const metadata = await readFromStorage('releases/delivery/releases-metadata.json') || {}
       res.json(metadata)
     } catch (error) {
       console.error('[releases/delivery] Get metadata error:', error)
@@ -2257,13 +2250,13 @@ module.exports = function registerRoutes(router, context) {
    *       200:
    *         description: Metadata saved successfully
    */
-  router.post('/releases-metadata', requireAdmin, requireScope('releases:write'), function(req, res) {
+  router.post('/releases-metadata', requireAdmin, requireScope('releases:write'), async function(req, res) {
     try {
       const metadata = req.body
       if (typeof metadata !== 'object' || Array.isArray(metadata)) {
         return res.status(400).json({ error: 'Metadata must be an object' })
       }
-      writeToStorage('releases/delivery/releases-metadata.json', metadata)
+      await writeToStorage('releases/delivery/releases-metadata.json', metadata)
       res.json({ success: true })
     } catch (error) {
       console.error('[releases/delivery] Save metadata error:', error)
@@ -2282,9 +2275,9 @@ module.exports = function registerRoutes(router, context) {
    *       200:
    *         description: Risk dashboard config object
    */
-  router.get('/risk-dashboard-config', requireAuth, requireScope('releases:read'), function(req, res) {
+  router.get('/risk-dashboard-config', requireAuth, requireScope('releases:read'), async function(req, res) {
     try {
-      const config = readFromStorage('releases/delivery/risk-dashboard-config.json') || { portfolioReleases: [] }
+      const config = await readFromStorage('releases/delivery/risk-dashboard-config.json') || { portfolioReleases: [] }
       res.json(config)
     } catch (error) {
       console.error('[releases/delivery] Get risk-dashboard-config error:', error)
@@ -2337,7 +2330,7 @@ module.exports = function registerRoutes(router, context) {
    *       400:
    *         description: Invalid config
    */
-  router.post('/risk-dashboard-config', requireAdmin, requireScope('releases:write'), function(req, res) {
+  router.post('/risk-dashboard-config', requireAdmin, requireScope('releases:write'), async function(req, res) {
     try {
       const config = req.body
       if (typeof config !== 'object' || Array.isArray(config)) {
@@ -2366,7 +2359,7 @@ module.exports = function registerRoutes(router, context) {
           return res.status(400).json({ error: 'Portfolio "' + p.name + '" dueDate must be a YYYY-MM-DD string or null' })
         }
       }
-      writeToStorage('releases/delivery/risk-dashboard-config.json', config)
+      await writeToStorage('releases/delivery/risk-dashboard-config.json', config)
       res.json({ success: true })
     } catch (error) {
       console.error('[releases/delivery] Save risk-dashboard-config error:', error)

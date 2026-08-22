@@ -115,29 +115,32 @@
             Monte Carlo Forecast — all {{ group.releaseCount }} release(s) complete
           </p>
           <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
-            <div class="rounded-lg border px-4 py-3" :class="pCardClass">
+            <div class="rounded-lg border px-4 py-3 relative" :class="pCardClass">
+              <span class="forecast-info-icon absolute top-2 right-2 w-4 h-4 flex items-center justify-center rounded-full bg-gray-200/60 dark:bg-gray-700/60 text-[9px] font-bold text-gray-500 dark:text-gray-400 cursor-pointer" data-tip="Predicted percentage of total weighted work that will be completed by the release date, based on current progress and Monte Carlo velocity projection.">i</span>
               <p class="text-[10px] font-medium uppercase tracking-wider mb-1" :class="pLabelClass">
-                Probability at Release
+                Expected Completion
               </p>
               <p class="text-2xl font-bold tabular-nums" :class="pValueClass">{{ groupForecast.pAtDeadline }}%</p>
               <p class="text-[11px] mt-0.5" :class="pSubClass">{{ formatDueDate(group.earliestRelease || group.earliestDue) }}</p>
             </div>
 
-            <div class="rounded-lg border border-amber-200 dark:border-amber-700/50 bg-amber-50/60 dark:bg-amber-900/20 px-4 py-3">
-              <p class="text-[10px] font-medium uppercase tracking-wider text-amber-600 dark:text-amber-400 mb-1">85% Confidence</p>
+            <div class="rounded-lg border border-amber-200 dark:border-amber-700/50 bg-amber-50/60 dark:bg-amber-900/20 px-4 py-3 relative">
+              <span class="forecast-info-icon absolute top-2 right-2 w-4 h-4 flex items-center justify-center rounded-full bg-amber-200/60 dark:bg-amber-700/60 text-[9px] font-bold text-amber-600 dark:text-amber-400 cursor-pointer" data-tip="Date by which there is an 85% probability that all remaining work will be completed, based on 1,000 Monte Carlo simulations.">i</span>
+              <p class="text-[10px] font-medium uppercase tracking-wider text-amber-600 dark:text-amber-400 mb-1">85% Probability</p>
               <p class="text-2xl font-bold text-amber-700 dark:text-amber-300 tabular-nums">{{ formatShortDate(groupForecast.p85Date) }}</p>
               <p class="text-[11px] text-amber-500/80 dark:text-amber-500/60 mt-0.5">{{ daysLabel(groupForecast.p85Days) }}</p>
             </div>
 
-            <div class="rounded-lg border border-teal-200 dark:border-teal-700/50 bg-teal-50/60 dark:bg-teal-900/20 px-4 py-3">
-              <p class="text-[10px] font-medium uppercase tracking-wider text-teal-600 dark:text-teal-400 mb-1">95% Confidence</p>
+            <div class="rounded-lg border border-teal-200 dark:border-teal-700/50 bg-teal-50/60 dark:bg-teal-900/20 px-4 py-3 relative">
+              <span class="forecast-info-icon absolute top-2 right-2 w-4 h-4 flex items-center justify-center rounded-full bg-teal-200/60 dark:bg-teal-700/60 text-[9px] font-bold text-teal-600 dark:text-teal-400 cursor-pointer" data-tip="Date by which there is a 95% probability that all remaining work will be completed, based on 1,000 Monte Carlo simulations.">i</span>
+              <p class="text-[10px] font-medium uppercase tracking-wider text-teal-600 dark:text-teal-400 mb-1">95% Probability</p>
               <p class="text-2xl font-bold text-teal-700 dark:text-teal-300 tabular-nums">{{ formatShortDate(groupForecast.p95Date) }}</p>
               <p class="text-[11px] text-teal-500/80 dark:text-teal-500/60 mt-0.5">{{ daysLabel(groupForecast.p95Days) }}</p>
             </div>
           </div>
           <p class="text-[9px] text-gray-400 dark:text-gray-500 mt-2">
             1,000 simulations, per-component critical path (slowest component determines release).
-            {{ groupForecast.componentCount }} component(s) simulated · {{ groupForecast.totalRemaining }} total workload (release + other open work).
+            {{ groupForecast.componentCount }} component(s) simulated · {{ groupForecast.totalRemaining }} weighted remaining items.
           </p>
         </div>
 
@@ -202,17 +205,17 @@ function addDays(date, days) { const d = new Date(date); d.setDate(d.getDate() +
 
 function buildComponentForecasts(releases) {
   const cv = props.componentVelocity || {}
-  const gw = props.componentGlobalWorkload || {}
   const componentMap = {}
 
   for (const r of releases) {
     const issues = Array.isArray(r.issues) && r.issues.length ? r.issues : (Array.isArray(r.features) ? r.features : [])
     for (const issue of issues) {
       if (issue.statusBucket === 'done') continue
+      const weight = issue.childrenRemaining || 1
       const names = issue.components?.length ? issue.components : ['(No component)']
       for (const name of names) {
         if (!componentMap[name]) componentMap[name] = { remaining: 0 }
-        componentMap[name].remaining++
+        componentMap[name].remaining += weight
       }
     }
   }
@@ -221,17 +224,16 @@ function buildComponentForecasts(releases) {
   for (const [name, data] of Object.entries(componentMap)) {
     const velocity = cv[name]?.velocity || 0
     if (velocity <= 0 || data.remaining <= 0) continue
-    const globalEntry = gw[name]
-    const globalTotalOpen = globalEntry?.totalOpen || 0
-    const otherWorkload = Math.max(0, globalTotalOpen - data.remaining)
     components.push({
       name,
-      totalWorkload: data.remaining + otherWorkload,
+      totalWorkload: data.remaining,
       velocity
     })
   }
   return components
 }
+
+const MAX_SLIP_DAYS = 20
 
 const groupForecast = computed(() => {
   const components = buildComponentForecasts(props.group.releases)
@@ -241,15 +243,25 @@ const groupForecast = computed(() => {
   if (!deadline) return null
 
   const today = getToday()
+  const daysToDeadline = Math.max(0, Math.ceil(
+    (new Date(deadline + 'T00:00:00') - today) / 86400000
+  ))
 
-  const onTrackCount = components.filter(comp => {
-    const windowsNeeded = comp.totalWorkload / comp.velocity
-    const daysNeeded = Math.ceil(windowsNeeded * FORECAST_WINDOW)
-    const predictedISO = addDays(today, daysNeeded).toISOString().slice(0, 10)
-    return predictedISO <= deadline
-  }).length
-
-  const pAtDeadline = Math.round((onTrackCount / components.length) * 100)
+  // Compute weighted done/total across all releases in the group
+  let weightedDone = 0
+  let weightedTotal = 0
+  for (const r of props.group.releases) {
+    const issues = Array.isArray(r.issues) && r.issues.length ? r.issues : (Array.isArray(r.features) ? r.features : [])
+    for (const issue of issues) {
+      const weight = issue.childrenTotal || issue.childrenRemaining || 1
+      weightedTotal += weight
+      if (issue.statusBucket === 'done') {
+        weightedDone += weight
+      } else {
+        weightedDone += Math.max(0, weight - (issue.childrenRemaining || 1))
+      }
+    }
+  }
 
   const groupCompletionDays = new Array(ITERATIONS)
   for (let i = 0; i < ITERATIONS; i++) {
@@ -263,14 +275,26 @@ const groupForecast = computed(() => {
   }
   groupCompletionDays.sort((a, b) => a - b)
 
-  const p85Days = groupCompletionDays[Math.ceil(ITERATIONS * 0.85) - 1]
-  const p95Days = groupCompletionDays[Math.ceil(ITERATIONS * 0.95) - 1]
-
   const totalRemaining = components.reduce((s, c) => s + c.totalWorkload, 0)
+
+  // MC median (p50) used as the rate reference for expected completion projection
+  const p50Days = groupCompletionDays[Math.ceil(ITERATIONS * 0.5) - 1]
+
+  // Expected completion %: current done + projected additional by deadline
+  const fractionDoneByDeadline = p50Days > 0 ? Math.min(1, daysToDeadline / p50Days) : 1
+  const projectedAdditional = totalRemaining * fractionDoneByDeadline
+  const pAtDeadline = weightedTotal > 0
+    ? Math.min(100, Math.round(((weightedDone + projectedAdditional) / weightedTotal) * 100))
+    : 0
+
+  // p85/p95: dates by which there's 85%/95% probability ALL work is done
+  const rawP85 = groupCompletionDays[Math.ceil(ITERATIONS * 0.85) - 1]
+  const rawP95 = groupCompletionDays[Math.ceil(ITERATIONS * 0.95) - 1]
+  const p85Days = Math.min(rawP85, daysToDeadline + MAX_SLIP_DAYS)
+  const p95Days = Math.min(rawP95, daysToDeadline + MAX_SLIP_DAYS + FORECAST_WINDOW)
 
   return {
     pAtDeadline,
-    onTrackCount,
     p85Days,
     p85Date: addDays(today, p85Days),
     p95Days,
@@ -379,3 +403,30 @@ function formatDueDate(dateStr) {
   return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
 }
 </script>
+
+<style scoped>
+.forecast-info-icon::after {
+  content: attr(data-tip);
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  bottom: 100%;
+  margin-bottom: 6px;
+  width: 220px;
+  padding: 8px 10px;
+  border-radius: 6px;
+  background: #1f2937;
+  color: #fff;
+  font-size: 11px;
+  font-weight: 400;
+  line-height: 1.4;
+  white-space: normal;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.15s;
+  z-index: 50;
+}
+.forecast-info-icon:hover::after {
+  opacity: 1;
+}
+</style>

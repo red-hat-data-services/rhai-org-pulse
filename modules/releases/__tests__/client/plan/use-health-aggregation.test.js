@@ -151,12 +151,8 @@ describe('useHealthAggregation', function() {
       var result = useHealthAggregation(hd, features, ref([]), ref([]))
       expect(result.rockHealth.value['Rock A'].worstLevel).toBe('yellow')
       expect(result.rockHealth.value['Rock A'].featureCount).toBe(2)
-      expect(result.rockHealth.value['Rock A'].dorPassedCount).toBe(2)
-      expect(result.rockHealth.value['Rock A'].dodPassedCount).toBe(1)
       expect(result.rockHealth.value['Rock B'].worstLevel).toBe('red')
       expect(result.rockHealth.value['Rock B'].featureCount).toBe(1)
-      expect(result.rockHealth.value['Rock B'].dorPassedCount).toBe(1)
-      expect(result.rockHealth.value['Rock B'].dodPassedCount).toBe(0)
     })
 
     it('respects risk overrides for rock health', function() {
@@ -295,8 +291,6 @@ describe('useHealthAggregation', function() {
       expect(rf[0].flagCount).toBe(0)
       expect(rf[0].flagCategories).toEqual([])
       expect(rf[0].summary).toBe('Summary for FEAT-1')
-      expect(rf[0].dorPassed).toBe(true)
-      expect(rf[0].dodPassed).toBe(true)
       expect(rf[0].planningStatus).toBe('ready-for-execution')
       expect(rf[0].deliveryOwner).toBe('Owner of FEAT-1')
       expect(rf[0].jiraUrl).toBe('https://issues.redhat.com/browse/FEAT-1')
@@ -313,8 +307,6 @@ describe('useHealthAggregation', function() {
       expect(rf[1].flagCount).toBe(1)
       expect(rf[1].flagCategories).toEqual(['BLOCKED'])
       expect(rf[1].summary).toBe('Summary for FEAT-2')
-      expect(rf[1].dorPassed).toBe(true)
-      expect(rf[1].dodPassed).toBe(false)
       expect(rf[1].planningStatus).toBe('in-planning')
       expect(rf[1].deliveryOwner).toBe('Owner of FEAT-2')
       expect(rf[1].jiraUrl).toBe('https://issues.redhat.com/browse/FEAT-2')
@@ -327,15 +319,35 @@ describe('useHealthAggregation', function() {
       expect(rf[1].planningChecks).toBe(null)
     })
 
-    it('defaults to green when feature has no health data', function() {
+    it('includes candidates without health data (hybrid Jira-only children)', function() {
       var hd = ref(makeHealthData([]))
       var features = ref([
-        makeFeature('FEAT-1', null, 'Rock A')
+        Object.assign(makeFeature('FEAT-1', null, 'Rock A', 1), {
+          summary: 'Live from Jira',
+          status: 'New',
+          inIndex: false,
+          jiraUrl: 'https://issues.redhat.com/browse/FEAT-1'
+        })
       ])
 
-      // healthByKey will be empty, so rockFeatures should also be empty
       var result = useHealthAggregation(hd, features, ref([]), ref([]))
-      expect(result.rockFeatures.value).toEqual({})
+      expect(result.rockFeatures.value['Rock A']).toHaveLength(1)
+      expect(result.rockFeatures.value['Rock A'][0].key).toBe('FEAT-1')
+      expect(result.rockFeatures.value['Rock A'][0].level).toBe('green')
+      expect(result.rockFeatures.value['Rock A'][0].summary).toBe('Live from Jira')
+      expect(result.rockFeatures.value['Rock A'][0].inIndex).toBe(false)
+    })
+
+    it('skips non-tier-1 features in rock expand list', function() {
+      var hd = ref(makeHealthData([]))
+      var features = ref([
+        makeFeature('FEAT-T1', null, 'Rock A', 1),
+        makeFeature('FEAT-T2', null, 'Rock A', 2)
+      ])
+
+      var result = useHealthAggregation(hd, features, ref([]), ref([]))
+      expect(result.rockFeatures.value['Rock A']).toHaveLength(1)
+      expect(result.rockFeatures.value['Rock A'][0].key).toBe('FEAT-T1')
     })
 
     it('uses overridden level in feature detail', function() {
@@ -369,8 +381,6 @@ describe('useHealthAggregation', function() {
       expect(unknown.flagCount).toBe(0)
       expect(unknown.flagCategories).toEqual([])
       expect(unknown.summary).toBe('')
-      expect(unknown.dorPassed).toBe(null)
-      expect(unknown.dodPassed).toBe(null)
       expect(unknown.planningStatus).toBe('')
       expect(unknown.deliveryOwner).toBe('')
       expect(unknown.jiraUrl).toBe('')

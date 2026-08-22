@@ -332,7 +332,7 @@
     <div class="container">
         <header>
             <h1>Quality Analysis Report</h1>
-            <p class="timestamp">Generated on July 06, 2026 at 04:24 PM</p>
+            <p class="timestamp">Generated on July 20, 2026 at 03:54 PM</p>
             <h2 style="margin-top: 1rem; font-weight: 400;">opendatahub-io/opendatahub-community</h2>
         </header>
 
@@ -344,11 +344,11 @@
                         <circle class="score-arc" cx="100" cy="100" r="90"
                                 stroke="#dc3545"
                                 stroke-dasharray="565.4861999999999"
-                                stroke-dashoffset="407.15006399999993"
+                                stroke-dashoffset="520.247304"
                                 id="scoreArc"></circle>
                     </svg>
                     <div class="score-text">
-                        <div class="score-value">2.8</div>
+                        <div class="score-value">0.8</div>
                         <div class="score-label">Overall Score</div>
                     </div>
                 </div>
@@ -365,47 +365,42 @@
                         <div class="scorecard-item">
                             <h3>Unit Tests</h3>
                             <div class="scorecard-score" style="color: #dc3545;">0.0/10</div>
-                            <div class="scorecard-status">N/A — no source code; pure governance/documentation repository</div>
+                            <div class="scorecard-status">N/A — documentation-only repository with no source code</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Integration/E2E</h3>
                             <div class="scorecard-score" style="color: #dc3545;">0.0/10</div>
-                            <div class="scorecard-status">N/A — no source code to test</div>
+                            <div class="scorecard-status">N/A — no application code to integration-test</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Build Integration</h3>
                             <div class="scorecard-score" style="color: #dc3545;">0.0/10</div>
-                            <div class="scorecard-status">N/A — no build artifacts produced</div>
+                            <div class="scorecard-status">N/A — no build artifacts, Dockerfiles, or Makefiles</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Image Testing</h3>
                             <div class="scorecard-score" style="color: #dc3545;">0.0/10</div>
-                            <div class="scorecard-status">N/A — no container images</div>
+                            <div class="scorecard-status">N/A — no container images produced</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Coverage Tracking</h3>
                             <div class="scorecard-score" style="color: #dc3545;">0.0/10</div>
-                            <div class="scorecard-status">N/A — no code coverage applicable</div>
+                            <div class="scorecard-status">N/A — no code to measure coverage against</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>CI/CD Automation</h3>
                             <div class="scorecard-score" style="color: #dc3545;">2.0/10</div>
-                            <div class="scorecard-status">Issue templates exist but no CI workflows for linting, link checking, or YAML validation</div>
+                            <div class="scorecard-status">Issue templates present but no GitHub Actions workflows for validation</div>
+                        </div>
+                        <div class="scorecard-item">
+                            <h3>Static Analysis</h3>
+                            <div class="scorecard-score" style="color: #dc3545;">1.0/10</div>
+                            <div class="scorecard-status">No markdown linting, link checking, or YAML validation</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Agent Rules</h3>
                             <div class="scorecard-score" style="color: #dc3545;">0.0/10</div>
                             <div class="scorecard-status">No CLAUDE.md, AGENTS.md, or .claude/ directory</div>
-                        </div>
-                        <div class="scorecard-item">
-                            <h3>Documentation Quality</h3>
-                            <div class="scorecard-score" style="color: #28a745;">8.0/10</div>
-                            <div class="scorecard-status">Comprehensive governance, onboarding, feature-dev requirements, and community membership docs</div>
-                        </div>
-                        <div class="scorecard-item">
-                            <h3>Process Maturity</h3>
-                            <div class="scorecard-score" style="color: #ffc107;">7.0/10</div>
-                            <div class="scorecard-status">Well-defined SIG structure, feature lifecycle, and component onboarding with Jira templates</div>
                         </div>
                     </div>
                 </div>
@@ -420,43 +415,27 @@
                 <div class="section-content">
                     <ul class="items-list">
                         
-                        <li class="item-card high">
-                            <div class="item-description">No CI/CD workflows at all</div>
-                            <p>Broken links, stale references, YAML syntax errors, and formatting issues go undetected</p>
+                        <li class="item-card medium">
+                            <div class="item-description">No CI/CD workflows for documentation validation</div>
+                            <p>Broken links, formatting errors, and stale content go undetected until manual review</p>
                             <div class="item-meta">
-                                <span class="meta-tag severity-high">HIGH</span>
+                                <span class="meta-tag severity-medium">MEDIUM</span>
                                 <span class="meta-tag effort-tag">2-4 hours</span>
                             </div>
                         </li>
-                        <li class="item-card high">
-                            <div class="item-description">No automated link checking</div>
-                            <p>Dead URLs accumulate in governance docs read by the entire ODH community</p>
+                        <li class="item-card medium">
+                            <div class="item-description">No markdown linting or link checking</div>
+                            <p>Documentation quality degrades over time with inconsistent formatting and dead links</p>
                             <div class="item-meta">
-                                <span class="meta-tag severity-high">HIGH</span>
+                                <span class="meta-tag severity-medium">MEDIUM</span>
                                 <span class="meta-tag effort-tag">1-2 hours</span>
                             </div>
                         </li>
-                        <li class="item-card medium">
-                            <div class="item-description">No YAML validation for sigs.yaml and membership.yaml</div>
-                            <p>Schema drift or typos in structured governance data go unnoticed</p>
-                            <div class="item-meta">
-                                <span class="meta-tag severity-medium">MEDIUM</span>
-                                <span class="meta-tag effort-tag">2-3 hours</span>
-                            </div>
-                        </li>
                         <li class="item-card high">
-                            <div class="item-description">Placeholder data still present in sigs.yaml</div>
-                            <p>SIG leadership contacts show &#x27;abc&#x27; and &#x27;XYZ&#x27; instead of real names; meeting URLs show &#x27;https://url.here&#x27;</p>
+                            <div class="item-description">Stale SIG/WG metadata — sigs.yaml uses placeholder values</div>
+                            <p>Community members cannot find real meeting links, contacts, or chair information</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-high">HIGH</span>
-                                <span class="meta-tag effort-tag">1 hour</span>
-                            </div>
-                        </li>
-                        <li class="item-card medium">
-                            <div class="item-description">No PR review automation</div>
-                            <p>No CODEOWNERS, no auto-labeling, no required reviewers for governance changes</p>
-                            <div class="item-meta">
-                                <span class="meta-tag severity-medium">MEDIUM</span>
                                 <span class="meta-tag effort-tag">2-3 hours</span>
                             </div>
                         </li>
@@ -474,43 +453,35 @@
                     <ul class="items-list">
                         
                         <li class="item-card ">
-                            <div class="item-description">Add markdownlint workflow</div>
-                            <p>Catch formatting inconsistencies across all governance docs automatically</p>
-                            <div class="item-meta">
-                                
-                                <span class="meta-tag effort-tag">1 hour</span>
-                            </div>
-                        </li>
-                        <li class="item-card ">
-                            <div class="item-description">Add link checker workflow (lychee or markdown-link-check)</div>
-                            <p>Prevent dead links in community-facing documentation</p>
+                            <div class="item-description">Add a markdown lint workflow (markdownlint-cli2)</div>
+                            <p>Catches formatting inconsistencies and enforces style on every PR</p>
                             <div class="item-meta">
                                 
                                 <span class="meta-tag effort-tag">1-2 hours</span>
                             </div>
                         </li>
                         <li class="item-card ">
-                            <div class="item-description">Add CODEOWNERS file</div>
-                            <p>Auto-assign reviewers for governance doc changes, prevent unreviewed modifications</p>
-                            <div class="item-meta">
-                                
-                                <span class="meta-tag effort-tag">30 minutes</span>
-                            </div>
-                        </li>
-                        <li class="item-card ">
-                            <div class="item-description">Fix placeholder data in sigs.yaml</div>
-                            <p>Make SIG directory actually useful for community members seeking contacts</p>
+                            <div class="item-description">Add a link-check workflow (lychee or markdown-link-check)</div>
+                            <p>Automatically detects broken links to external resources, Jira tickets, and Google Docs</p>
                             <div class="item-meta">
                                 
                                 <span class="meta-tag effort-tag">1 hour</span>
                             </div>
                         </li>
                         <li class="item-card ">
-                            <div class="item-description">Add YAML schema validation workflow</div>
-                            <p>Prevent malformed membership or SIG config from merging</p>
+                            <div class="item-description">Add YAML schema validation for sigs.yaml and membership.yaml</div>
+                            <p>Prevents structural errors in machine-readable community metadata</p>
                             <div class="item-meta">
                                 
-                                <span class="meta-tag effort-tag">2 hours</span>
+                                <span class="meta-tag effort-tag">1-2 hours</span>
+                            </div>
+                        </li>
+                        <li class="item-card ">
+                            <div class="item-description">Populate sigs.yaml with real data instead of placeholders</div>
+                            <p>Makes the community metadata actionable for tooling and onboarding</p>
+                            <div class="item-meta">
+                                
+                                <span class="meta-tag effort-tag">2-3 hours</span>
                             </div>
                         </li>
                     </ul>
@@ -527,15 +498,15 @@
                         
                         <div class="rec-priority p0">
                             <h3>Priority 0: Critical</h3>
-                            <ul><li>Add CI workflows for markdown linting, link checking, and YAML validation</li><li>Fix placeholder/template data in sigs.yaml (leadership names, meeting URLs, slack channels)</li></ul>
+                            <ul><li>Add a GitHub Actions workflow with markdownlint and link checking to validate PRs</li><li>Update sigs.yaml with real chair names, meeting links, and contact channels instead of placeholder values</li></ul>
                         </div>
                         <div class="rec-priority p1">
                             <h3>Priority 1: High Value</h3>
-                            <ul><li>Add CODEOWNERS file mapping governance docs to steering committee members</li><li>Add PR template for governance change proposals</li><li>Create a spell-check CI job for community-facing documentation</li></ul>
+                            <ul><li>Add a YAML lint/validation step for sigs.yaml and membership.yaml</li><li>Add a CODEOWNERS file to enforce review on governance-sensitive files</li><li>Consider adding a PR template to standardize community contributions</li></ul>
                         </div>
                         <div class="rec-priority p2">
                             <h3>Priority 2: Nice-to-Have</h3>
-                            <ul><li>Add agent rules (CLAUDE.md) for documentation contribution patterns</li><li>Automate stale-issue/stale-PR labeling and cleanup</li><li>Add a table-of-contents generator for longer docs</li></ul>
+                            <ul><li>Add CLAUDE.md with contribution context for AI-assisted documentation editing</li><li>Add a periodic link-check scheduled workflow to detect link rot</li><li>Consider adding a changelog or ADR (Architecture Decision Record) workflow</li></ul>
                         </div>
                     </div>
                 </div>

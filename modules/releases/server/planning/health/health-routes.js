@@ -11,10 +11,13 @@
 
 const { getConfig } = require('../config')
 const { CACHE_MAX_AGE_MS, VALID_PHASES } = require('../constants')
-const { runHealthPipeline, loadMilestones, backfillFreezeDatesFromSmartsheet, deriveFreezeDates } = require('./health-pipeline')
+const { runHealthPipeline, loadMilestones, derivePlanningStatus } = require('./health-pipeline')
 const { logAudit } = require('../audit-log')
+const { getRegistryReleasesFlat } = require('../../registry')
 var { blockDuringImpersonation } = require('../../../../../shared/server/auth')
 var sharedJira = require('../../../../../shared/server/jira')
+var { computeFPDoRReadiness } = require('../fpdor')
+var { loadFeatureDetail } = require('../cache-reader')
 
 var DATA_PREFIX = 'releases/planning'
 var VERSION_RE = /^[a-zA-Z0-9._-]{1,50}$/
@@ -63,7 +66,7 @@ function getCommittedPhases(planningFreezes) {
  * @param {object} router - Express router (already mounted at /api/modules/releases/planning/)
  * @param {object} context - Module context with storage, auth, refreshStates, etc.
  */
-function healthRoutes(router, context) {
+async function healthRoutes(router, context) {
   var storage = context.storage
   var readFromStorage = storage.readFromStorage
   var writeToStorage = storage.writeToStorage
@@ -73,7 +76,6 @@ function healthRoutes(router, context) {
   var refreshStates = context.refreshStates
   var MAX_CONCURRENT_REFRESHES = context.MAX_CONCURRENT_REFRESHES
   var sendJsonWithETag = context.sendJsonWithETag
-  var smartsheetClient = context.smartsheet || require('../../../../../shared/server/smartsheet')
   var jiraClient = context.jira || null
   var jiraRequest = jiraClient ? jiraClient.jiraRequest : sharedJira.jiraRequest
   var fetchAllJqlResults = jiraClient ? jiraClient.fetchAllJqlResults : sharedJira.fetchAllJqlResults
@@ -133,7 +135,7 @@ function healthRoutes(router, context) {
    *       400:
    *         description: Invalid version or phase
    */
-  router.get('/releases/:version/health', requireAuth, requireScope('releases:read'), function(req, res) {
+  router.get('/releases/:version/health', requireAuth, requireScope('releases:read'), async function(req, res) {
     var version = req.params.version
     var phase = parsePhase(req)
     if (!isValidVersion(version)) {
@@ -152,7 +154,7 @@ function healthRoutes(router, context) {
     }
 
     var pk = phaseKey(phase)
-    var cached = readFromStorage(DATA_PREFIX + '/health-cache-' + version + '-' + pk + '.json')
+    var cached = await readFromStorage(DATA_PREFIX + '/health-cache-' + version + '-' + pk + '.json')
     var hasCachedData = cached && cached.cachedAt
 
     if (hasCachedData) {
@@ -165,7 +167,7 @@ function healthRoutes(router, context) {
 
       var snapshots = {}
       for (var si = 0; si < PHASE_LABELS.length; si++) {
-        var snap = readFromStorage(DATA_PREFIX + '/committed-snapshot-' + version + '-' + PHASE_LABELS[si] + '.json')
+        var snap = await readFromStorage(DATA_PREFIX + '/committed-snapshot-' + version + '-' + PHASE_LABELS[si] + '.json')
         if (snap) {
           snapshots[PHASE_LABELS[si]] = {
             snapshotAt: snap.snapshotAt,
@@ -222,7 +224,7 @@ function healthRoutes(router, context) {
    *       404:
    *         description: No health data available
    */
-  router.get('/releases/:version/health/summary', requireAuth, requireScope('releases:read'), function(req, res) {
+  router.get('/releases/:version/health/summary', requireAuth, requireScope('releases:read'), async function(req, res) {
     var version = req.params.version
     var phase = parsePhase(req)
     if (!isValidVersion(version)) {
@@ -248,7 +250,7 @@ function healthRoutes(router, context) {
     }
 
     var pk = phaseKey(phase)
-    var cached = readFromStorage(DATA_PREFIX + '/health-cache-' + version + '-' + pk + '.json')
+    var cached = await readFromStorage(DATA_PREFIX + '/health-cache-' + version + '-' + pk + '.json')
     if (!cached || !cached.cachedAt) {
       return res.status(404).json({ error: 'No health data available for version ' + version + '. Trigger a health refresh first.' })
     }
@@ -294,7 +296,7 @@ function healthRoutes(router, context) {
    *       404:
    *         description: Feature not found
    */
-  router.get('/releases/:version/health/feature/:key', requireAuth, requireScope('releases:read'), function(req, res) {
+  router.get('/releases/:version/health/feature/:key', requireAuth, requireScope('releases:read'), async function(req, res) {
     var version = req.params.version
     var key = req.params.key
     var phase = parsePhase(req)
@@ -327,7 +329,7 @@ function healthRoutes(router, context) {
     }
 
     var pk = phaseKey(phase)
-    var cached = readFromStorage(DATA_PREFIX + '/health-cache-' + version + '-' + pk + '.json')
+    var cached = await readFromStorage(DATA_PREFIX + '/health-cache-' + version + '-' + pk + '.json')
     if (!cached || !cached.features) {
       return res.status(404).json({ error: 'No health data available for version ' + version })
     }
@@ -342,6 +344,17 @@ function healthRoutes(router, context) {
 
     if (!feature) {
       return res.status(404).json({ error: 'Feature ' + key + ' not found in health data for version ' + version })
+    }
+
+    // Check execution detail for fresher release type and recompute FPDoR if changed
+    var execDetail = await loadFeatureDetail(readFromStorage, key)
+    if (execDetail && execDetail.releaseType) {
+      var cachedReleaseType = feature.releaseType || ''
+      if (execDetail.releaseType !== cachedReleaseType) {
+        feature = Object.assign({}, feature, { releaseType: execDetail.releaseType })
+        feature.fpdor = computeFPDoRReadiness(feature)
+        feature.planningStatus = derivePlanningStatus(feature.fpdor)
+      }
     }
 
     sendJsonWithETag(req, res, feature)
@@ -370,7 +383,7 @@ function healthRoutes(router, context) {
    *       400:
    *         description: Invalid input
    */
-  router.put('/releases/:version/health/override/:featureKey', requirePM, blockDuringImpersonation, requireScope('releases:write'), function(req, res) {
+  router.put('/releases/:version/health/override/:featureKey', requirePM, blockDuringImpersonation, requireScope('releases:write'), async function(req, res) {
     var version = req.params.version
     var featureKey = req.params.featureKey
     if (!isValidVersion(version)) {
@@ -400,7 +413,7 @@ function healthRoutes(router, context) {
     var userEmail = req.userEmail || 'unknown'
 
     // Read existing overrides
-    var overrides = readFromStorage(DATA_PREFIX + '/health-overrides-' + version + '.json') || {
+    var overrides = await readFromStorage(DATA_PREFIX + '/health-overrides-' + version + '.json') || {
       version: version,
       overrides: {}
     }
@@ -414,10 +427,10 @@ function healthRoutes(router, context) {
       updatedAt: now
     }
 
-    writeToStorage(DATA_PREFIX + '/health-overrides-' + version + '.json', overrides)
+    await writeToStorage(DATA_PREFIX + '/health-overrides-' + version + '.json', overrides)
 
     // Audit log
-    logAudit(readFromStorage, writeToStorage, {
+    await logAudit(readFromStorage, writeToStorage, {
       version: version,
       action: 'set_risk_override',
       user: req.auditActor || userEmail,
@@ -457,7 +470,7 @@ function healthRoutes(router, context) {
    *       404:
    *         description: No override found
    */
-  router.delete('/releases/:version/health/override/:featureKey', requirePM, blockDuringImpersonation, requireScope('releases:write'), function(req, res) {
+  router.delete('/releases/:version/health/override/:featureKey', requirePM, blockDuringImpersonation, requireScope('releases:write'), async function(req, res) {
     var version = req.params.version
     var featureKey = req.params.featureKey
     if (!isValidVersion(version)) {
@@ -469,7 +482,7 @@ function healthRoutes(router, context) {
 
     var userEmail = req.userEmail || 'unknown'
 
-    var overrides = readFromStorage(DATA_PREFIX + '/health-overrides-' + version + '.json') || {
+    var overrides = await readFromStorage(DATA_PREFIX + '/health-overrides-' + version + '.json') || {
       version: version,
       overrides: {}
     }
@@ -479,9 +492,9 @@ function healthRoutes(router, context) {
     }
 
     delete overrides.overrides[featureKey]
-    writeToStorage(DATA_PREFIX + '/health-overrides-' + version + '.json', overrides)
+    await writeToStorage(DATA_PREFIX + '/health-overrides-' + version + '.json', overrides)
 
-    logAudit(readFromStorage, writeToStorage, {
+    await logAudit(readFromStorage, writeToStorage, {
       version: version,
       action: 'remove_risk_override',
       user: req.auditActor || userEmail,
@@ -517,7 +530,7 @@ function healthRoutes(router, context) {
    *       404:
    *         description: No snapshot found
    */
-  router.get('/releases/:version/health/snapshot/:phase', requireAuth, requireScope('releases:read'), function(req, res) {
+  router.get('/releases/:version/health/snapshot/:phase', requireAuth, requireScope('releases:read'), async function(req, res) {
     var version = req.params.version
     var phase = (req.params.phase || '').toUpperCase()
     if (!isValidVersion(version)) {
@@ -527,7 +540,7 @@ function healthRoutes(router, context) {
       return res.status(400).json({ error: 'Invalid phase. Must be one of: ' + PHASE_LABELS.join(', ') })
     }
 
-    var snap = readFromStorage(DATA_PREFIX + '/committed-snapshot-' + version + '-' + phase + '.json')
+    var snap = await readFromStorage(DATA_PREFIX + '/committed-snapshot-' + version + '-' + phase + '.json')
     if (!snap) {
       return res.status(404).json({ error: 'No committed snapshot found for ' + version + ' ' + phase })
     }
@@ -560,7 +573,7 @@ function healthRoutes(router, context) {
    *       404:
    *         description: No health cache available
    */
-  router.post('/releases/:version/health/snapshot/:phase', requirePM, blockDuringImpersonation, requireScope('releases:write'), function(req, res) {
+  router.post('/releases/:version/health/snapshot/:phase', requirePM, blockDuringImpersonation, requireScope('releases:write'), async function(req, res) {
     var version = req.params.version
     var phase = (req.params.phase || '').toUpperCase()
     if (!isValidVersion(version)) {
@@ -571,7 +584,7 @@ function healthRoutes(router, context) {
     }
 
     var pk = phaseKey(null)
-    var cached = readFromStorage(DATA_PREFIX + '/health-cache-' + version + '-' + pk + '.json')
+    var cached = await readFromStorage(DATA_PREFIX + '/health-cache-' + version + '-' + pk + '.json')
     if (!cached || !cached.features) {
       return res.status(404).json({ error: 'No health cache available. Run a health refresh first.' })
     }
@@ -599,10 +612,10 @@ function healthRoutes(router, context) {
       features: snapshotFeatures
     }
 
-    writeToStorage(DATA_PREFIX + '/committed-snapshot-' + version + '-' + phase + '.json', snapshotData)
+    await writeToStorage(DATA_PREFIX + '/committed-snapshot-' + version + '-' + phase + '.json', snapshotData)
 
     var user = req.auditActor || req.userEmail || 'unknown'
-    logAudit(readFromStorage, writeToStorage, {
+    await logAudit(readFromStorage, writeToStorage, {
       version: version,
       action: 'committed_snapshot',
       user: user,
@@ -702,7 +715,7 @@ function healthRoutes(router, context) {
 
   // ─── Health refresh helper ───
 
-  function triggerHealthRefresh(version, phase) {
+  async function triggerHealthRefresh(version, phase) {
     var pk = phaseKey(phase)
     var stateKey = 'health:' + version + ':' + pk
     var state = getHealthRefreshState(version, phase)
@@ -712,13 +725,13 @@ function healthRoutes(router, context) {
     refreshStates.forEach(function(s) { if (s.running) runningCount++ })
     if (runningCount >= MAX_CONCURRENT_REFRESHES) return
 
-    var config = getConfig(readFromStorage)
+    var config = await getConfig(readFromStorage)
     var healthConfig = config.healthConfig || {}
     var timeoutMs = healthConfig.healthRefreshTimeoutMs || 480000
 
     // Snapshot old cache for committed-list audit
     var cacheFile = DATA_PREFIX + '/health-cache-' + version + '-' + pk + '.json'
-    var oldCache = readFromStorage(cacheFile)
+    var oldCache = await readFromStorage(cacheFile)
 
     refreshStates.set(stateKey, {
       running: true,
@@ -736,7 +749,7 @@ function healthRoutes(router, context) {
     })
 
     Promise.race([pipeline, timeout])
-      .then(function(result) {
+      .then(async function(result) {
         refreshStates.set(stateKey, {
           running: false,
           lastResult: {
@@ -769,7 +782,7 @@ function healthRoutes(router, context) {
             var removed = oldKeys.filter(function(k) { return !newSet[k] })
 
             if (added.length > 0 || removed.length > 0) {
-              logAudit(readFromStorage, writeToStorage, {
+              await logAudit(readFromStorage, writeToStorage, {
                 version: version,
                 action: 'committed_list_change',
                 user: 'system',
@@ -794,7 +807,7 @@ function healthRoutes(router, context) {
               if (todayStr < freezeDate) continue
 
               var snapshotKey = DATA_PREFIX + '/committed-snapshot-' + version + '-' + sp + '.json'
-              var existingSnapshot = readFromStorage(snapshotKey)
+              var existingSnapshot = await readFromStorage(snapshotKey)
               if (existingSnapshot) continue
 
               var snapshotKeys = getStrictPhaseKeys(newFeatures, version, sp)
@@ -811,7 +824,7 @@ function healthRoutes(router, context) {
                 }
               }
 
-              writeToStorage(snapshotKey, {
+              await writeToStorage(snapshotKey, {
                 version: version,
                 phase: sp,
                 snapshotAt: new Date().toISOString(),
@@ -820,7 +833,7 @@ function healthRoutes(router, context) {
                 features: snapshotFeatures
               })
 
-              logAudit(readFromStorage, writeToStorage, {
+              await logAudit(readFromStorage, writeToStorage, {
                 version: version,
                 action: 'committed_snapshot',
                 user: 'system',
@@ -854,13 +867,13 @@ function healthRoutes(router, context) {
   var FIELD_CACHE_TTL_MS = 60 * 60 * 1000
 
   async function getCachedFieldList() {
-    var cached = readFromStorage(FIELD_CACHE_KEY)
+    var cached = await readFromStorage(FIELD_CACHE_KEY)
     if (cached && cached.fetchedAt) {
       var age = Date.now() - new Date(cached.fetchedAt).getTime()
       if (age < FIELD_CACHE_TTL_MS) return cached.fields
     }
     var fields = await jiraRequest('/rest/api/3/field')
-    writeToStorage(FIELD_CACHE_KEY, { fetchedAt: new Date().toISOString(), fields: fields })
+    await writeToStorage(FIELD_CACHE_KEY, { fetchedAt: new Date().toISOString(), fields: fields })
     return fields
   }
 
@@ -923,8 +936,8 @@ function healthRoutes(router, context) {
    *       200:
    *         description: Config saved
    */
-  router.put('/releases/health-admin/config', requirePM, requireScope('releases:write'), function(req, res) {
-    var config = getConfig(readFromStorage)
+  router.put('/releases/health-admin/config', requirePM, requireScope('releases:write'), async function(req, res) {
+    var config = await getConfig(readFromStorage)
 
     if (req.body.riceScoreField !== undefined) {
       var fieldVal = req.body.riceScoreField || ''
@@ -952,9 +965,9 @@ function healthRoutes(router, context) {
       }
     }
 
-    writeToStorage('releases/planning/config.json', config)
+    await writeToStorage('releases/planning/config.json', config)
 
-    logAudit(readFromStorage, writeToStorage, {
+    await logAudit(readFromStorage, writeToStorage, {
       version: null,
       action: 'update_health_config',
       user: req.auditActor || req.userEmail,
@@ -989,7 +1002,7 @@ function healthRoutes(router, context) {
    *         description: No RICE field IDs configured
    */
   router.post('/releases/health-admin/rice-test', requirePM, requireScope('releases:write'), async function(req, res) {
-    var config = getConfig(readFromStorage)
+    var config = await getConfig(readFromStorage)
     var ids = config.customFieldIds || {}
     var riceScoreField = ids.riceScoreField || ''
 
@@ -1032,8 +1045,8 @@ function healthRoutes(router, context) {
    *       200:
    *         description: Current health admin config
    */
-  router.get('/releases/health-admin/config', requirePM, requireScope('releases:write'), function(req, res) {
-    var config = getConfig(readFromStorage)
+  router.get('/releases/health-admin/config', requirePM, requireScope('releases:write'), async function(req, res) {
+    var config = await getConfig(readFromStorage)
     res.json({
       customFieldIds: config.customFieldIds || {},
       enableRice: config.healthConfig ? !!config.healthConfig.enableRice : false,
@@ -1067,35 +1080,17 @@ function healthRoutes(router, context) {
     }
 
     try {
-      var ppCache = readFromStorage('releases/delivery/product-pages-releases-cache.json')
-      var ppEntries = []
-      if (ppCache && ppCache.releases) {
-        ppEntries = ppCache.releases.filter(function(r) {
-          return (r.releaseNumber || '').indexOf(version) !== -1
-        })
-      }
+      var registryReleases = await getRegistryReleasesFlat(readFromStorage)
+      var matchingEntries = registryReleases.filter(function(r) {
+        return (r.releaseNumber || '').indexOf(version) !== -1
+      })
 
-      var ssData = null
-      if (smartsheetClient.isConfigured()) {
-        try {
-          var releases = await smartsheetClient.discoverReleasesPartial()
-          ssData = releases.filter(function(r) { return r.version === version })
-        } catch (err) {
-          ssData = { error: err.message }
-        }
-      }
-
-      var derived = loadMilestones(readFromStorage, version)
-      var backfilled = await backfillFreezeDatesFromSmartsheet(derived, version)
-      var final = deriveFreezeDates(backfilled.milestones)
+      var milestones = await loadMilestones(readFromStorage, version)
 
       res.json({
         version: version,
-        productPages: ppEntries,
-        smartsheet: ssData,
-        afterLoadMilestones: derived,
-        afterBackfill: { milestones: backfilled.milestones, warnings: backfilled.warnings },
-        afterDerive: { milestones: final.milestones, warnings: final.warnings }
+        registry: matchingEntries,
+        milestones: milestones
       })
     } catch (err) {
       console.error('[health] Milestones debug failed:', err)

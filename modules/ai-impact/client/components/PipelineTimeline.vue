@@ -1,15 +1,31 @@
 <script setup>
+import { computed } from 'vue'
+
 const props = defineProps({
   rfe: { type: Object, default: null },
   feature: { type: Object, default: null },
   testPlan: { type: Object, default: null },
   phases: { type: Array, required: true },
-  jiraHost: { type: String, default: null }
+  jiraHost: { type: String, default: null },
+  signals: { type: Object, default: null }
 })
 
-const emit = defineEmits(['navigateToRFE', 'navigateToFeature', 'navigateToTestPlan'])
+const emit = defineEmits([
+  'navigateToRFE',
+  'navigateToFeature',
+  'navigateToTestPlan',
+  'navigateToDecomposer',
+  'navigateToDocumentation',
+  'navigateToBuildRelease'
+])
 
 function getPhaseSignal(phaseId) {
+  // Server-resolved signals take precedence
+  if (props.signals && props.signals.phases && props.signals.phases[phaseId]) {
+    return props.signals.phases[phaseId]
+  }
+
+  // Legacy inline computation fallback
   if (props.testPlan && !props.rfe && !props.feature) {
     return getTestPlanContextSignal(phaseId)
   }
@@ -129,6 +145,47 @@ function getFeaturePhaseSignal(phaseId) {
       return { completed: false, current: false, aiUsed: null, detail: 'No signals yet' }
   }
 }
+
+const signalMap = computed(() => {
+  const map = {}
+  for (const phase of props.phases) {
+    map[phase.id] = getPhaseSignal(phase.id)
+  }
+  return map
+})
+
+function isClickable(phaseId, signal) {
+  if (!signal.linkedKey) return false
+  const clickablePhases = [
+    'rfe-review', 'feature-review', 'decomposer',
+    'test-plan-review', 'documentation', 'build-release'
+  ]
+  return clickablePhases.includes(phaseId)
+}
+
+function handlePhaseClick(phaseId, signal) {
+  if (!signal.linkedKey) return
+  switch (phaseId) {
+    case 'rfe-review':
+      emit('navigateToRFE', signal.linkedKey)
+      break
+    case 'feature-review':
+      emit('navigateToFeature', signal.linkedKey)
+      break
+    case 'decomposer':
+      emit('navigateToDecomposer', signal.linkedKey)
+      break
+    case 'test-plan-review':
+      emit('navigateToTestPlan', signal.linkedKey)
+      break
+    case 'documentation':
+      emit('navigateToDocumentation', signal.linkedKey)
+      break
+    case 'build-release':
+      emit('navigateToBuildRelease', signal.linkedKey)
+      break
+  }
+}
 </script>
 
 <template>
@@ -147,17 +204,17 @@ function getFeaturePhaseSignal(phaseId) {
           <div
             class="w-8 h-8 rounded-full flex items-center justify-center z-10"
             :class="{
-              'bg-green-500 text-white': getPhaseSignal(phase.id).completed,
-              'bg-blue-500 text-white': getPhaseSignal(phase.id).current && !getPhaseSignal(phase.id).completed,
-              'bg-gray-100 dark:bg-gray-700 text-gray-300 dark:text-gray-600': !getPhaseSignal(phase.id).completed && !getPhaseSignal(phase.id).current
+              'bg-green-500 text-white': signalMap[phase.id].completed,
+              'bg-blue-500 text-white': signalMap[phase.id].current && !signalMap[phase.id].completed,
+              'bg-gray-100 dark:bg-gray-700 text-gray-300 dark:text-gray-600': !signalMap[phase.id].completed && !signalMap[phase.id].current
             }"
           >
             <!-- Checkmark for completed -->
-            <svg v-if="getPhaseSignal(phase.id).completed" class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg v-if="signalMap[phase.id].completed" class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
             </svg>
             <!-- Circle for current phase -->
-            <svg v-else-if="getPhaseSignal(phase.id).current" class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg v-else-if="signalMap[phase.id].current" class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <circle cx="12" cy="12" r="10" stroke-width="2" />
             </svg>
             <!-- Lock for coming-soon -->
@@ -175,12 +232,12 @@ function getFeaturePhaseSignal(phaseId) {
             <div class="flex items-center gap-2">
               <span
                 class="text-sm font-medium dark:text-gray-200"
-                :class="{ 'text-gray-300 dark:text-gray-600': phase.status === 'coming-soon' && phase.id !== 'build-release' }"
+                :class="{ 'text-gray-300 dark:text-gray-600': phase.status === 'coming-soon' }"
               >
                 {{ phase.name }}
               </span>
               <svg
-                v-if="getPhaseSignal(phase.id).aiUsed"
+                v-if="signalMap[phase.id].aiUsed"
                 class="h-3 w-3 text-blue-500 dark:text-blue-400"
                 fill="none" stroke="currentColor" viewBox="0 0 24 24"
               >
@@ -190,78 +247,53 @@ function getFeaturePhaseSignal(phaseId) {
             </div>
 
             <div class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
-              <!-- Source RFE link (feature context) -->
-              <template v-if="getPhaseSignal(phase.id).isSourceRfe && getPhaseSignal(phase.id).linkedKey">
+              <!-- Clickable linked key (for any phase with a linkedKey) -->
+              <template v-if="isClickable(phase.id, signalMap[phase.id])">
                 <button
                   class="text-blue-600 dark:text-blue-400 hover:underline"
-                  @click="emit('navigateToRFE', getPhaseSignal(phase.id).linkedKey)"
+                  @click="handlePhaseClick(phase.id, signalMap[phase.id])"
                 >
-                  {{ getPhaseSignal(phase.id).linkedKey }}
+                  <template v-if="phase.id === 'feature-review' && !signalMap[phase.id].isSourceRfe">
+                    {{ signalMap[phase.id].linkedKey }}
+                  </template>
+                  <template v-else>
+                    {{ signalMap[phase.id].linkedKey }}
+                  </template>
                 </button>
                 <a
-                  v-if="jiraHost"
-                  :href="`${jiraHost}/browse/${getPhaseSignal(phase.id).linkedKey}`"
+                  v-if="jiraHost && !['documentation', 'build-release', 'decomposer'].includes(phase.id)"
+                  :href="`${jiraHost}/browse/${signalMap[phase.id].linkedKey}`"
                   target="_blank"
                   rel="noopener noreferrer"
                   class="ml-1 text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300"
                   title="View in Jira"
+                  @click.stop
                 >
                   <svg class="inline h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
                   </svg>
                 </a>
+                <!-- Detail text after the key for feature-review -->
+                <template v-if="phase.id === 'feature-review' && signalMap[phase.id].detail && !signalMap[phase.id].isSourceRfe">
+                  <span class="ml-1">
+                    - {{ signalMap[phase.id].detail.split(' - ').slice(1).join(' - ') }}
+                  </span>
+                  <span v-if="signalMap[phase.id].fixVersions?.length > 0" class="ml-1">
+                    ({{ signalMap[phase.id].fixVersions.join(', ') }})
+                  </span>
+                </template>
+                <!-- Detail text for other clickable phases -->
+                <template v-else-if="phase.id !== 'rfe-review' && phase.id !== 'feature-review'">
+                  <span class="ml-1">— {{ signalMap[phase.id].detail }}</span>
+                </template>
               </template>
-              <!-- Linked feature link (RFE context) -->
-              <template v-else-if="phase.id === 'feature-review' && getPhaseSignal(phase.id).linkedKey">
-                <button
-                  class="text-blue-600 dark:text-blue-400 hover:underline"
-                  @click="emit('navigateToFeature', getPhaseSignal(phase.id).linkedKey)"
-                >
-                  {{ getPhaseSignal(phase.id).linkedKey }}
-                </button>
-                <a
-                  v-if="jiraHost"
-                  :href="`${jiraHost}/browse/${getPhaseSignal(phase.id).linkedKey}`"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  class="ml-1 text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300"
-                  title="View in Jira"
-                >
-                  <svg class="inline h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
-                  </svg>
-                </a>
-                - {{ getPhaseSignal(phase.id).detail.split(' - ')[1] }}
-                <span v-if="getPhaseSignal(phase.id).fixVersions?.length > 0" class="ml-1">
-                  ({{ getPhaseSignal(phase.id).fixVersions.join(', ') }})
-                </span>
-              </template>
-              <!-- Test plan link (test-plan-review phase) -->
-              <template v-else-if="phase.id === 'test-plan-review' && getPhaseSignal(phase.id).linkedKey && testPlan">
-                <button
-                  class="text-blue-600 dark:text-blue-400 hover:underline"
-                  @click="emit('navigateToTestPlan', getPhaseSignal(phase.id).linkedKey)"
-                >
-                  {{ getPhaseSignal(phase.id).detail }}
-                </button>
-                <a
-                  v-if="testPlan.gitlabPath"
-                  :href="`https://gitlab.com/redhat/rhel-ai/agentic-ci/test-plans-data/-/tree/main/${testPlan.gitlabPath}`"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  class="ml-1 text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300"
-                  title="View test plan in GitLab"
-                >
-                  <svg class="inline h-3 w-3" fill="currentColor" viewBox="0 0 24 24">
-                    <path d="M22.65 14.39L12 22.13 1.35 14.39a.84.84 0 0 1-.3-.94l1.22-3.78 2.44-7.51A.42.42 0 0 1 4.82 2a.43.43 0 0 1 .58 0 .42.42 0 0 1 .11.18l2.44 7.49h8.1l2.44-7.51A.42.42 0 0 1 18.6 2a.43.43 0 0 1 .58 0 .42.42 0 0 1 .11.18l2.44 7.51L23 13.45a.84.84 0 0 1-.35.94z"/>
-                  </svg>
-                </a>
-              </template>
-              <template v-else-if="phase.status === 'coming-soon' && phase.id !== 'feature-review' && phase.id !== 'build-release'">
+              <!-- Coming-soon phases -->
+              <template v-else-if="phase.status === 'coming-soon'">
                 <span class="text-gray-300 dark:text-gray-600">No signals yet</span>
               </template>
+              <!-- Non-clickable phases with detail text -->
               <template v-else>
-                {{ getPhaseSignal(phase.id).detail }}
+                {{ signalMap[phase.id].detail }}
               </template>
             </div>
           </div>

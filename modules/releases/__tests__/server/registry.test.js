@@ -5,42 +5,42 @@ const { readRegistry, writeRegistry, validateRelease, normalizeRelease, migrateN
 function createMockStorage(initial = {}) {
   const store = { ...initial };
   return {
-    readFromStorage(key) { return store[key] ? JSON.parse(JSON.stringify(store[key])) : null; },
-    writeToStorage(key, data) { store[key] = JSON.parse(JSON.stringify(data)); },
+    async readFromStorage(key) { return store[key] ? JSON.parse(JSON.stringify(store[key])) : null; },
+    async writeToStorage(key, data) { store[key] = JSON.parse(JSON.stringify(data)); },
     _store: store
   };
 }
 
 describe('readRegistry', () => {
-  it('returns empty registry when no data exists', () => {
+  it('returns empty registry when no data exists', async () => {
     const storage = createMockStorage();
-    const result = readRegistry(storage.readFromStorage);
+    const result = await readRegistry(storage.readFromStorage);
     expect(result).toEqual({ schemaVersion: 1, releases: [] });
   });
 
-  it('returns stored registry data', () => {
+  it('returns stored registry data', async () => {
     const data = {
       schemaVersion: 1,
       releases: [{ id: 'test-1.0', displayName: 'Test 1.0' }]
     };
     const storage = createMockStorage({ [REGISTRY_FILE]: data });
-    const result = readRegistry(storage.readFromStorage);
+    const result = await readRegistry(storage.readFromStorage);
     expect(result.releases).toHaveLength(1);
     expect(result.releases[0].id).toBe('test-1.0');
   });
 
-  it('returns empty registry for malformed data', () => {
+  it('returns empty registry for malformed data', async () => {
     const storage = createMockStorage({ [REGISTRY_FILE]: { foo: 'bar' } });
-    const result = readRegistry(storage.readFromStorage);
+    const result = await readRegistry(storage.readFromStorage);
     expect(result).toEqual({ schemaVersion: 1, releases: [] });
   });
 });
 
 describe('writeRegistry', () => {
-  it('writes registry to storage', () => {
+  it('writes registry to storage', async () => {
     const storage = createMockStorage();
     const registry = { schemaVersion: 1, releases: [{ id: 'v1' }] };
-    writeRegistry(storage.writeToStorage, registry);
+    await writeRegistry(storage.writeToStorage, registry);
     expect(storage._store[REGISTRY_FILE]).toEqual(registry);
   });
 });

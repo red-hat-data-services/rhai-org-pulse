@@ -1,163 +1,164 @@
 ---
 repository: "red-hat-data-services/vllm-spyre"
-overall_score: 1.0
+overall_score: 0.4
 scorecard:
   - dimension: "Unit Tests"
     score: 0.0
-    status: "No source code or test files present in the repository"
+    status: "No source code or test files present — packaging-only repo"
   - dimension: "Integration/E2E"
     score: 0.0
-    status: "No integration or E2E test infrastructure exists"
+    status: "No integration or E2E tests — no test infrastructure of any kind"
   - dimension: "Build Integration"
-    score: 1.0
-    status: "Single Konflux Dockerfile, no PR-time build validation"
+    score: 2.0
+    status: "Konflux Dockerfile present but no PR-time build validation workflows"
   - dimension: "Image Testing"
     score: 1.0
-    status: "Dockerfile present but no image testing, scanning, or runtime validation"
+    status: "Dockerfile with proper labels and non-root user, but no runtime validation or health checks"
   - dimension: "Coverage Tracking"
     score: 0.0
-    status: "No coverage tooling — no source code to cover"
+    status: "No coverage tracking — no code to cover"
   - dimension: "CI/CD Automation"
     score: 0.0
-    status: "No CI/CD workflows (.github/workflows/ absent)"
+    status: "No CI/CD workflows, no GitHub Actions, no Makefile"
+  - dimension: "Static Analysis"
+    score: 0.0
+    status: "No linting, no FIPS checks, no dependency alerts, no pre-commit hooks"
   - dimension: "Agent Rules"
     score: 0.0
     status: "No CLAUDE.md, AGENTS.md, or .claude/ directory"
 critical_gaps:
-  - title: "No CI/CD pipeline exists"
-    impact: "No automated checks on PRs — changes merge without any validation"
-    severity: "HIGH"
-    effort: "4-8 hours"
-  - title: "No container image testing or scanning"
-    impact: "Vulnerability and runtime issues in the built image are undetected until deployment"
+  - title: "No CI/CD pipeline of any kind"
+    impact: "No automated validation on PRs — Dockerfile changes go unverified until Konflux build"
     severity: "HIGH"
     effort: "4-6 hours"
-  - title: "No Dockerfile linting or validation"
-    impact: "Dockerfile syntax errors, best-practice violations, and base image drift go unchecked"
-    severity: "HIGH"
-    effort: "2-3 hours"
-  - title: "No image build smoke test on PRs"
-    impact: "Dockerfile changes may break the Konflux build, discovered only post-merge"
+  - title: "No PR-time Dockerfile build validation"
+    impact: "Broken Dockerfiles are only caught post-merge in Konflux, causing downstream build failures"
     severity: "HIGH"
     effort: "2-4 hours"
-  - title: "No dependency or base image pinning strategy"
-    impact: "Base image updates can introduce breaking changes silently via ARG default"
+  - title: "No container image runtime validation"
+    impact: "Image startup, entrypoint, and environment issues are not caught until deployment"
+    severity: "HIGH"
+    effort: "4-8 hours"
+  - title: "No dependency or base image update alerts"
+    impact: "Stale base image version (RHAIIS_VERSION) could introduce vulnerabilities or miss patches"
     severity: "MEDIUM"
     effort: "1-2 hours"
 quick_wins:
-  - title: "Add hadolint Dockerfile linting workflow"
-    effort: "1-2 hours"
-    impact: "Catch Dockerfile anti-patterns and best-practice violations on every PR"
-  - title: "Add Trivy container scanning workflow"
-    effort: "1-2 hours"
-    impact: "Detect known vulnerabilities in base image and final image layers"
-  - title: "Add PR-time docker build smoke test"
+  - title: "Add a GitHub Actions workflow to validate the Dockerfile builds on PR"
     effort: "2-3 hours"
-    impact: "Verify Dockerfile builds successfully before merge, catching syntax and dependency errors"
-  - title: "Add CODEOWNERS file"
-    effort: "30 minutes"
-    impact: "Ensure PR reviews from appropriate maintainers"
-  - title: "Create basic CLAUDE.md with repo context"
+    impact: "Catch broken Dockerfiles before merge — prevents Konflux build failures"
+  - title: "Add Dependabot or Renovate to track base image version updates"
+    effort: "1-2 hours"
+    impact: "Automated alerts when new RHAIIS versions are available"
+  - title: "Add a CLAUDE.md with contribution and Dockerfile update guidelines"
     effort: "1 hour"
-    impact: "Guide AI-assisted contributions with repo-specific context and constraints"
+    impact: "Improve AI-assisted contributions and onboarding documentation"
+  - title: "Add a basic Makefile with build/lint targets"
+    effort: "1-2 hours"
+    impact: "Standardized build commands and entry point for CI"
 recommendations:
   priority_0:
-    - "Implement a GitHub Actions CI/CD pipeline with at minimum: hadolint, docker build test, and Trivy scan"
-    - "Add container image build validation on PRs to prevent broken Konflux builds"
+    - "Add a GitHub Actions PR workflow that runs `podman build` or `docker build` on the Konflux Dockerfile to catch build errors before merge"
+    - "Add a container startup smoke test that verifies the entrypoint runs and the expected ports are exposed"
   priority_1:
-    - "Add SBOM generation and image signing/attestation for supply chain security"
-    - "Implement base image version monitoring to detect upstream changes"
-    - "Add CODEOWNERS and branch protection rules"
+    - "Add Dependabot configuration to monitor the base image version (RHAIIS_VERSION) for updates"
+    - "Add a Makefile with build, lint, and test targets for local development and CI consistency"
+    - "Add a Dockerfile linter (hadolint) to CI for best-practice enforcement"
   priority_2:
-    - "Create agent rules (.claude/) for consistent contribution patterns"
-    - "Add image startup and functional smoke tests using testcontainers or similar"
-    - "Document Spyre accelerator context and testing requirements"
+    - "Add CLAUDE.md with Dockerfile modification guidelines and contribution standards"
+    - "Consider adding a multi-arch build matrix if the image needs to support architectures beyond x86_64"
+    - "Add HEALTHCHECK instruction to the Dockerfile for container orchestration compatibility"
 ---
 
 # Quality Analysis: vllm-spyre
 
 ## Executive Summary
 
-- **Overall Score: 1.0/10**
-- **Repository Type**: Container image wrapper (Dockerfile-only)
+- **Overall Score: 0.4/10**
+- **Repository Type**: Downstream packaging / Konflux build configuration
 - **Primary Language**: Dockerfile (no application source code)
-- **Framework**: Konflux build pipeline (external to this repo)
+- **Jira**: RHOAIENG / llm-d (downstream tier)
+- **Key Strengths**: UBI-based image (FIPS-capable), non-root user, proper OCI labels, Konflux-aware Dockerfile
+- **Critical Gaps**: Zero CI/CD automation, no tests, no PR validation, no static analysis — this repo has effectively no quality guardrails
 - **Agent Rules Status**: Missing
 
-**vllm-spyre** is an extremely minimal repository containing only three files: a Konflux Dockerfile, a LICENSE file, and a README. The repository's sole purpose is to wrap the upstream `registry.redhat.io/rhaiis/vllm-spyre-rhel9` base image with a TGIS (Text Generation Inference Service) gRPC adapter entrypoint for IBM Spyre-accelerated vLLM inference on RHEL 9.
+## Repository Context
 
-The repository has **no source code, no tests, no CI/CD pipeline, no linting, no security scanning, and no agent rules**. All quality practices are absent. While the repository's minimal nature means there is little to test in isolation, the complete absence of even basic Dockerfile validation and container scanning represents a significant quality gap for a production container image.
+`vllm-spyre` is an extremely minimal downstream packaging repository containing only **3 files**:
 
-**Key Strengths:**
-- Clean, minimal Dockerfile with proper labeling
-- Non-root user (UID 2000) in the container
-- ARG-based version parameterization for base image
+| File | Purpose |
+|------|---------|
+| `Dockerfile.konflux.spyre` | Konflux build config — extends `registry.redhat.io/rhaiis/vllm-spyre-rhel9` base image |
+| `README.md` | Upstream vLLM README (unchanged from upstream) |
+| `LICENSE` | Apache 2.0 |
 
-**Critical Gaps:**
-- Zero CI/CD automation — no GitHub Actions workflows exist
-- No container image scanning (Trivy, Snyk, etc.)
-- No Dockerfile linting (hadolint)
-- No image build validation on PRs
-- No coverage, testing, or quality tooling of any kind
+The repo's sole purpose is to wrap the `vllm-spyre-rhel9` base image with the vllm-tgis-adapter GRPC entrypoint and Red Hat OCI labels for Konflux builds. It contains no application source code, no tests, and no CI/CD workflows.
 
 ## Quality Scorecard
 
-| Dimension | Score | Status |
-|-----------|-------|--------|
-| Unit Tests | 0/10 | No source code or tests in repo |
-| Integration/E2E | 0/10 | No integration or E2E test infrastructure |
-| **Build Integration** | **1/10** | **Single Konflux Dockerfile, no PR-time validation** |
-| Image Testing | 1/10 | Dockerfile exists but no testing/scanning |
-| Coverage Tracking | 0/10 | No coverage tooling |
-| CI/CD Automation | 0/10 | No workflows directory exists |
-| Agent Rules | 0/10 | No CLAUDE.md, AGENTS.md, or .claude/ directory |
+| Dimension | Weight | Score | Status |
+|-----------|--------|-------|--------|
+| Unit Tests | 15% | 0.0/10 | No source code or test files |
+| Integration/E2E | 20% | 0.0/10 | No test infrastructure |
+| Build Integration | 15% | 2.0/10 | Konflux Dockerfile exists; no PR validation |
+| Image Testing | 10% | 1.0/10 | Proper labels + non-root user; no runtime testing |
+| Coverage Tracking | 10% | 0.0/10 | No coverage tracking |
+| CI/CD Automation | 15% | 0.0/10 | No CI/CD workflows at all |
+| Static Analysis | 10% | 0.0/10 | No linting, FIPS, or dependency config |
+| Agent Rules | 5% | 0.0/10 | No agent rules |
+| **Overall** | **100%** | **0.4/10** | **Critical gaps across all dimensions** |
 
 ## Critical Gaps
 
-### 1. No CI/CD Pipeline
-- **Impact**: Changes merge without any automated checks — no linting, no build test, no security scan
+### 1. No CI/CD Pipeline of Any Kind
 - **Severity**: HIGH
-- **Effort**: 4-8 hours
-- **Detail**: The `.github/workflows/` directory does not exist. PRs are merged with zero automated validation. For a repository that produces a production container image, this is a critical oversight.
-
-### 2. No Container Image Scanning
-- **Impact**: Known vulnerabilities in base image layers and dependencies go undetected
-- **Severity**: HIGH
+- **Impact**: No automated validation on PRs. Dockerfile changes are only verified when Konflux runs a build post-merge. A broken `FROM` reference, invalid `ARG`, or syntax error will only surface in production builds.
 - **Effort**: 4-6 hours
-- **Detail**: No Trivy, Snyk, Grype, or any other container scanning tool is integrated. The base image `registry.redhat.io/rhaiis/vllm-spyre-rhel9` may contain CVEs that propagate to production.
+- **Files analyzed**: No `.github/workflows/`, no `Makefile`, no `.gitlab-ci.yml`, no `Jenkinsfile`, no `Taskfile.yml`
 
-### 3. No Dockerfile Linting
-- **Impact**: Dockerfile anti-patterns and best-practice violations are not caught
+### 2. No PR-Time Dockerfile Build Validation
 - **Severity**: HIGH
-- **Effort**: 2-3 hours
-- **Detail**: No hadolint, dockerfile-lint, or equivalent tool is configured. Issues like missing health checks, inefficient layer ordering, or security misconfigurations go unnoticed.
-
-### 4. No PR-time Build Smoke Test
-- **Impact**: Dockerfile syntax errors or base image availability issues are discovered only when Konflux attempts the build post-merge
-- **Severity**: HIGH
+- **Impact**: The `Dockerfile.konflux.spyre` is not validated before merge. If the base image tag changes, the `ARG RHAIIS_VERSION` becomes stale, or the entrypoint command is invalid, this is only discovered in Konflux post-merge.
 - **Effort**: 2-4 hours
-- **Detail**: There is no GitHub Actions workflow that attempts `docker build` on PRs. A broken Dockerfile can merge and block the entire release pipeline.
 
-### 5. No Base Image Pinning Strategy
-- **Impact**: The `ARG RHAIIS_VERSION=3.2.2` provides a default, but there is no mechanism to monitor or validate base image updates
+### 3. No Container Image Runtime Validation
+- **Severity**: HIGH
+- **Impact**: The image entrypoint (`python3 -m vllm_tgis_adapter`) is never tested. Environment variable defaults (`GRPC_PORT=8033`, `PORT=8000`) are never validated. Image startup failures are only caught at deployment time.
+- **Effort**: 4-8 hours
+
+### 4. No Dependency/Base Image Update Monitoring
 - **Severity**: MEDIUM
+- **Impact**: The `RHAIIS_VERSION=3.2.2` ARG is hardcoded. No Dependabot or Renovate configuration monitors for new versions. Stale base images may miss security patches or performance improvements.
 - **Effort**: 1-2 hours
-- **Detail**: When the base image `vllm-spyre-rhel9` is updated, there is no automated check to verify compatibility or trigger a version bump in this repository.
 
 ## Quick Wins
 
-### 1. Add hadolint Dockerfile Linting (1-2 hours)
-
-Create `.github/workflows/lint.yml`:
-
+### 1. Add PR Dockerfile Build Validation (2-3 hours)
+Create `.github/workflows/pr-build.yml`:
 ```yaml
-name: Lint Dockerfile
+name: PR Build Validation
 on:
   pull_request:
-    paths: ['Dockerfile*']
+    paths:
+      - 'Dockerfile.*'
 
 jobs:
-  hadolint:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build Dockerfile
+        run: |
+          docker build -f Dockerfile.konflux.spyre . || echo "Build failed"
+```
+> Note: This will fail if the base image requires Red Hat registry auth. Consider adding `registry.redhat.io` credentials as GitHub secrets, or validate with `hadolint` instead.
+
+### 2. Add Hadolint Dockerfile Linting (1-2 hours)
+```yaml
+name: Lint Dockerfile
+on: pull_request
+jobs:
+  lint:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -166,239 +167,186 @@ jobs:
           dockerfile: Dockerfile.konflux.spyre
 ```
 
-### 2. Add Trivy Container Scanning (1-2 hours)
-
-Create `.github/workflows/security.yml`:
-
+### 3. Add Dependabot for Base Image Tracking (1 hour)
+Create `.github/dependabot.yml`:
 ```yaml
-name: Security Scan
-on:
-  pull_request:
-  schedule:
-    - cron: '0 6 * * 1'  # Weekly Monday scan
-
-jobs:
-  trivy:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - name: Run Trivy vulnerability scanner
-        uses: aquasecurity/trivy-action@master
-        with:
-          scan-type: 'config'
-          scan-ref: '.'
-          severity: 'CRITICAL,HIGH'
-          exit-code: '1'
+version: 2
+updates:
+  - package-ecosystem: docker
+    directory: /
+    schedule:
+      interval: weekly
 ```
 
-### 3. Add PR-time Docker Build Test (2-3 hours)
-
-Create `.github/workflows/build.yml`:
-
-```yaml
-name: Build Test
-on:
-  pull_request:
-    paths: ['Dockerfile*']
-
-jobs:
-  build:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - name: Build image
-        run: |
-          docker build -f Dockerfile.konflux.spyre -t vllm-spyre:test .
-```
-
-Note: This may require registry authentication for the Red Hat base image. Consider using a public-accessible base image for CI or providing credentials via GitHub secrets.
-
-### 4. Add CODEOWNERS (30 minutes)
-
-Create `.github/CODEOWNERS`:
-
-```
-* @red-hat-data-services/vllm-spyre-maintainers
-```
-
-### 5. Create Basic CLAUDE.md (1 hour)
-
-```markdown
-# vllm-spyre
-
-Container image wrapper for IBM Spyre-accelerated vLLM inference.
-
-## Repository Context
-- This repo contains ONLY a Konflux Dockerfile
-- No source code — the application comes from the base image
-- Changes are limited to Dockerfile modifications and version bumps
-
-## Contribution Guidelines
-- All Dockerfile changes must maintain non-root user (UID 2000)
-- Base image version is controlled via ARG RHAIIS_VERSION
-- Labels must follow Red Hat container labeling standards
-```
+### 4. Add CLAUDE.md (1 hour)
+A basic `CLAUDE.md` would help AI assistants understand the repo's purpose and Dockerfile conventions.
 
 ## Detailed Findings
 
-### CI/CD Pipeline
+### Unit Tests
+**Score: 0.0/10**
 
-**Status: Non-existent**
+No source code exists in this repository. It is purely a Dockerfile packaging repo. There are no Python, Go, TypeScript, or any other language source files to test.
 
-- No `.github/workflows/` directory
-- No `.gitlab-ci.yml`
-- No `Jenkinsfile`
-- No `Makefile`
-- No build automation of any kind within the repository
-- The repository relies entirely on external Konflux pipeline configuration (not stored in this repo)
+- Test files found: 0
+- Test frameworks detected: None
+- Test-to-code ratio: N/A
 
-The only build artifact is `Dockerfile.konflux.spyre`, which is consumed by Konflux externally. There is zero in-repo CI/CD.
+### Integration/E2E Tests
+**Score: 0.0/10**
 
-### Test Coverage
+No integration or E2E test infrastructure exists.
 
-**Status: Not applicable / Non-existent**
-
-- No source code exists in the repository
-- No test files of any kind (`*_test.py`, `*_test.go`, `*.spec.ts`, etc.)
-- No test directories (`test/`, `tests/`, `e2e/`, `integration/`)
-- No test configuration (`pytest.ini`, `tox.ini`, etc.)
-- No coverage configuration (`.codecov.yml`, `.coveragerc`)
-
-While the absence of tests is partly explained by the absence of source code, even Dockerfile-only repos benefit from:
-- Dockerfile lint tests (hadolint)
-- Container structure tests (Google's container-structure-test)
-- Image startup smoke tests
-
-### Code Quality
-
-**Status: No tooling configured**
-
-- No linting configuration of any kind
-- No `.pre-commit-config.yaml`
-- No static analysis tools
-- No formatters
-- No SAST (CodeQL, Semgrep, etc.)
-- No dependency scanning
-- No secret detection (Gitleaks, TruffleHog)
+- `e2e/` directory: Not present
+- `integration/` directory: Not present
+- `tests/` directory: Not present
+- Cluster setup (Kind, Minikube, envtest): Not present
+- Multi-version testing: Not present
 
 ### Build Integration
+**Score: 2.0/10**
 
-**Status: Minimal**
+The repo's primary artifact is `Dockerfile.konflux.spyre`, which demonstrates Konflux awareness:
 
-The repository contains a single Dockerfile:
+**Positive findings:**
+- Konflux-specific Dockerfile naming convention (`*.konflux.*`)
+- Parameterized base image version via `ARG RHAIIS_VERSION=3.2.2`
+- Uses Red Hat registry base image (`registry.redhat.io/rhaiis/vllm-spyre-rhel9`)
+- Proper OCI label metadata (name, component, display-name, description, license)
 
-**`Dockerfile.konflux.spyre`** analysis:
-- **Base image**: `registry.redhat.io/rhaiis/vllm-spyre-rhel9:${RHAIIS_VERSION}` (parameterized via ARG)
-- **Version**: Default `RHAIIS_VERSION=3.2.2`
-- **Security**: Runs as non-root user (UID 2000) — good practice
-- **Entrypoint**: `python3 -m vllm_tgis_adapter --uvicorn-log-level=warning`
-- **Environment**: Sets `GRPC_PORT=8033`, `PORT=8000`, disables logprobs during speculative decoding
-- **Labels**: Proper Red Hat container labels (name, component, display-name, description, summary, license)
-- **Build alias**: Uses `as vllm-grpc-adapter` alias (single-stage build)
-
-**Gaps**:
-- No multi-architecture support
-- No HEALTHCHECK instruction
-- No PR-time build validation
+**Gaps:**
+- No PR workflow to validate Dockerfile builds
+- No `Makefile` with build targets
+- No `kustomize` overlays or Kubernetes manifests
+- No dry-run or staging validation
 - No Konflux build simulation
 
-### Container Image Testing
+### Image Testing
+**Score: 1.0/10**
 
-**Status: Non-existent**
+**Positive findings:**
+- Non-root user (`USER 2000`) — security best practice
+- Proper `ENTRYPOINT` definition
+- Environment variable configuration for GRPC and HTTP ports
+- Red Hat registry base image (UBI-based, FIPS-capable)
+- OCI-compliant labels
 
-- No image startup validation
-- No container structure tests
-- No runtime functional tests
-- No Trivy/Snyk/Grype scanning
-- No SBOM generation
-- No image signing or attestation
-- No `.trivyignore` or equivalent
+**Gaps:**
+- No `HEALTHCHECK` instruction
+- No multi-stage build (single `FROM` stage)
+- No `.dockerignore` file
+- No runtime validation (Testcontainers, container smoke tests)
+- No multi-arch support (`--platform` or `buildx`)
+- No container startup testing in CI
 
-### Security Practices
+### Coverage Tracking
+**Score: 0.0/10**
 
-**Status: Non-existent**
+No coverage tracking is configured. No `.codecov.yml`, `.coveragerc`, or coverage-related CI steps exist. Given the repo has no source code, this is expected but still represents a gap if the repo grows.
 
-- No vulnerability scanning pipeline
-- No SAST/DAST integration
-- No secret detection
-- No dependency scanning
-- No security advisories configuration
-- No supply chain security (SLSA, Sigstore)
+### CI/CD Automation
+**Score: 0.0/10**
 
-### Agent Rules (Agentic Flow Quality)
+No CI/CD automation of any kind exists:
 
-**Status: Missing**
+- `.github/workflows/`: Not present
+- `Makefile`: Not present
+- `.gitlab-ci.yml`: Not present
+- `Jenkinsfile`: Not present
+- `Taskfile.yml`: Not present
+- Concurrency controls: N/A
+- Caching strategies: N/A
+- Test parallelization: N/A
 
-- No `CLAUDE.md` or `AGENTS.md` in repository root
-- No `.claude/` directory
-- No `.claude/rules/` test creation rules
-- No `.claude/skills/` custom skills
-- No testing documentation in `docs/`
+This is the most critical gap. Even for a packaging-only repo, basic PR validation should exist.
 
-**Recommendation**: Generate agent rules with `/test-rules-generator` once CI/CD and testing infrastructure are established.
+### Static Analysis
+
+#### Linting
+**Score: 0.0/10**
+
+No linting configuration of any kind:
+- `.golangci.yaml`/`.golangci.yml`: Not present
+- `.eslintrc.*`/`eslint.config.*`: Not present
+- `ruff.toml`/`.flake8`/`mypy.ini`: Not present
+- `.pre-commit-config.yaml`: Not present
+- Hadolint or other Dockerfile linters: Not configured
+
+#### FIPS Compatibility
+- **Base image**: `registry.redhat.io/rhaiis/vllm-spyre-rhel9` — UBI-based RHEL 9 image, which is FIPS-capable
+- **Source code FIPS concerns**: N/A (no source code)
+- **Build tags**: N/A (no Go code)
+- **Assessment**: Base image is FIPS-compatible. No source-level FIPS concerns since no code exists in this repo.
+
+#### Dependency Alerts
+- `.github/dependabot.yml`: Not present
+- `renovate.json`/`.renovaterc`: Not present
+- No automated dependency or base image update monitoring
+
+### Agent Rules
+**Score: 0.0/10**
+
+No agent rules or AI-assisted development configuration:
+
+- `CLAUDE.md`: Not present
+- `AGENTS.md`: Not present
+- `.claude/` directory: Not present
+- `.claude/rules/`: Not present
+- `.claude/skills/`: Not present
+- Testing documentation: Not present
+
+**Recommendation**: Generate agent rules with `/test-rules-generator` to establish contribution guidelines, even for Dockerfile-only changes.
 
 ## Recommendations
 
 ### Priority 0 (Critical)
 
-1. **Implement a GitHub Actions CI/CD pipeline** with at minimum: hadolint linting, docker build test, and Trivy scanning. This is the single most impactful improvement — the repository currently has zero automated quality gates.
+1. **Add a GitHub Actions PR workflow** that validates `Dockerfile.konflux.spyre` builds on every PR. Even if the build requires Red Hat registry auth, a `hadolint` lint check catches syntax and best-practice violations.
 
-2. **Add container image build validation on PRs** to prevent broken Konflux builds. Even a simple `docker build` step would catch syntax errors and missing base image issues before merge.
+2. **Add container startup smoke test** — validate that the built image starts, exposes the expected ports (`8033`, `8000`), and the entrypoint process runs without immediate crash.
 
 ### Priority 1 (High Value)
 
-3. **Add SBOM generation and image signing/attestation** for supply chain security compliance. Red Hat products increasingly require verifiable software provenance.
+3. **Add Dependabot configuration** to monitor base image version updates. The hardcoded `RHAIIS_VERSION=3.2.2` needs automated tracking.
 
-4. **Implement base image version monitoring** (e.g., Renovate, Dependabot) to detect when the upstream `vllm-spyre-rhel9` base image is updated and trigger automated PRs.
+4. **Add a Makefile** with `build`, `lint`, and `test` targets for local development and CI consistency.
 
-5. **Add CODEOWNERS and branch protection rules** to enforce code review before merge. The repository currently has no merge guardrails.
-
-6. **Add container structure tests** using [container-structure-test](https://github.com/GoogleContainerTools/container-structure-test) to validate:
-   - Entrypoint is correct
-   - Required environment variables are set
-   - User is non-root
-   - Required ports are exposed
+5. **Add hadolint** to CI for Dockerfile best-practice enforcement (e.g., pinning package versions, `HEALTHCHECK`, `.dockerignore`).
 
 ### Priority 2 (Nice-to-Have)
 
-7. **Create agent rules** (`.claude/`) for consistent contribution patterns once the repository has more infrastructure to document.
+6. **Add CLAUDE.md** with repo purpose, Dockerfile conventions, and contribution guidelines.
 
-8. **Add image startup smoke tests** to verify the container starts and responds on the expected ports.
+7. **Add `HEALTHCHECK`** instruction to `Dockerfile.konflux.spyre` for container orchestration compatibility.
 
-9. **Document Spyre accelerator context** — the README is the upstream vLLM README and does not explain the purpose of this specific repository or the IBM Spyre accelerator integration.
+8. **Add `.dockerignore`** to prevent unnecessary files from being included in the build context.
 
-10. **Add a HEALTHCHECK instruction** to the Dockerfile for container orchestration readiness.
+9. **Consider multi-arch support** if the vllm-spyre image needs to run on architectures beyond x86_64.
 
 ## Comparison to Gold Standards
 
-| Practice | odh-dashboard | notebooks | vllm-spyre |
-|----------|--------------|-----------|------------|
-| CI/CD workflows | Multi-workflow, comprehensive | Extensive, multi-arch | **None** |
-| Unit tests | Jest + React Testing Library | Python pytest | **None** |
-| Integration/E2E | Cypress E2E suite | Image validation suite | **None** |
-| Coverage tracking | Codecov with thresholds | Per-notebook coverage | **None** |
-| Container scanning | Trivy in CI | Trivy + ecosystem scan | **None** |
-| Dockerfile linting | hadolint | hadolint | **None** |
-| SBOM generation | Yes | Yes | **None** |
-| Pre-commit hooks | Comprehensive | Present | **None** |
-| Agent rules | Comprehensive .claude/rules/ | Partial | **None** |
-| Image smoke tests | Container startup validation | 5-layer validation | **None** |
-| Branch protection | Required reviews + checks | Required reviews | **Unknown** |
-| CODEOWNERS | Present | Present | **Missing** |
+| Practice | vllm-spyre | odh-dashboard | notebooks | kserve |
+|----------|-----------|---------------|-----------|--------|
+| Unit Tests | None | Comprehensive Jest/Vitest | N/A (images) | Go testing + coverage |
+| Integration/E2E | None | Cypress E2E | Multi-layer image validation | Ginkgo E2E suite |
+| Build Integration | Konflux Dockerfile only | PR build + lint | Multi-arch builds | PR envtest + manifests |
+| Image Testing | Labels + non-root | N/A | 5-layer validation | Runtime validation |
+| Coverage Tracking | None | Codecov enforced | N/A | Codecov with thresholds |
+| CI/CD | None | 10+ workflows | Extensive matrix | Comprehensive workflows |
+| Static Analysis | None | ESLint + TypeScript strict | Hadolint | golangci-lint + Dependabot |
+| Agent Rules | None | Comprehensive CLAUDE.md | Basic rules | Basic rules |
 
 ## File Paths Reference
 
-| File | Purpose |
-|------|---------|
-| `Dockerfile.konflux.spyre` | Konflux container image build definition |
-| `README.md` | Upstream vLLM README (not customized for this repo) |
-| `LICENSE` | Apache 2.0 License |
-
-## Repository Context
-
-This repository is a **thin container image wrapper** in the `red-hat-data-services` GitHub organization. Its sole purpose is to produce an RHOAI (Red Hat OpenShift AI) container image that wraps the IBM Spyre-accelerated vLLM runtime with a TGIS gRPC adapter. The actual vLLM source code, Spyre integration, and TGIS adapter all come from the base image — this repo contributes only the Dockerfile that layers them together.
-
-Given this extremely minimal scope, the quality investment should be proportional:
-- **Minimum viable quality**: Dockerfile linting + build test + container scanning = ~6 hours
-- **Recommended quality**: Add SBOM, image signing, structure tests, and monitoring = ~16 hours total
-- **Gold standard quality**: Full CI/CD with multi-stage validation, agent rules, documentation = ~24 hours total
+| File | Purpose | Status |
+|------|---------|--------|
+| `Dockerfile.konflux.spyre` | Konflux build configuration | Present |
+| `README.md` | Upstream vLLM README | Present (unmodified from upstream) |
+| `LICENSE` | Apache 2.0 | Present |
+| `.github/workflows/` | CI/CD workflows | **Missing** |
+| `Makefile` | Build targets | **Missing** |
+| `.codecov.yml` | Coverage config | **Missing** |
+| `.github/dependabot.yml` | Dependency alerts | **Missing** |
+| `.pre-commit-config.yaml` | Pre-commit hooks | **Missing** |
+| `CLAUDE.md` | Agent rules | **Missing** |
+| `.dockerignore` | Docker build context | **Missing** |

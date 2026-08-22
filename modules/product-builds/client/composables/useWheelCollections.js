@@ -167,6 +167,39 @@ export function useWheelPackageSearch() {
   }
 }
 
+export function useWheelOverrides() {
+  const overrides = ref([])
+  const loading = ref(false)
+  const error = ref(null)
+  const variantFilter = ref('')
+
+  async function load() {
+    loading.value = true
+    error.value = null
+    try {
+      const params = new URLSearchParams()
+      if (variantFilter.value) {
+        params.set('variant', variantFilter.value)
+      }
+      const queryString = params.toString()
+      const url = `${BASE}/wheel-overrides${queryString ? '?' + queryString : ''}`
+      const data = await apiRequest(url)
+      overrides.value = Array.isArray(data) ? data : []
+    } catch (err) {
+      error.value = err.message
+    } finally {
+      loading.value = false
+    }
+  }
+
+  function setVariantFilter(variant) {
+    variantFilter.value = variant
+    load()
+  }
+
+  return { overrides, loading, error, variantFilter, load, setVariantFilter }
+}
+
 export function useWheelFilters() {
   const products = ref([])
   const variants = ref([])

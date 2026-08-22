@@ -284,6 +284,7 @@ import ComponentDetailRow from './ComponentDetailRow.vue'
 import { extractProduct } from '../composables/release-utils'
 
 const FORECAST_WINDOW = 14
+const MAX_SLIP_DAYS = 20
 const STRATEGIC_TYPES = new Set(['feature', 'initiative', 'spike'])
 const BUCKET_ORDER = { to_do: 0, doing: 1, done: 2 }
 
@@ -381,14 +382,15 @@ function computeForecast(remaining, componentNames) {
   }
 }
 
-function computePredictedDate(releaseRemaining, otherWorkload, velocity) {
+function computePredictedDate(releaseRemaining, velocity) {
   if (releaseRemaining === 0) return null
   if (!velocity || velocity <= 0) return null
-  const totalWorkload = releaseRemaining + otherWorkload
-  const windowsNeeded = totalWorkload / velocity
+  const windowsNeeded = releaseRemaining / velocity
   const daysNeeded = Math.ceil(windowsNeeded * FORECAST_WINDOW)
+  const maxDays = daysUntilDeadline() + MAX_SLIP_DAYS
+  const cappedDays = Math.min(daysNeeded, maxDays)
   const predicted = new Date()
-  predicted.setDate(predicted.getDate() + daysNeeded)
+  predicted.setDate(predicted.getDate() + cappedDays)
   return predicted.toISOString().slice(0, 10)
 }
 
@@ -437,7 +439,9 @@ const componentList = computed(() => {
 
   return Object.values(map)
     .map(c => {
-      const remaining = c.issues_to_do + c.issues_doing
+      const remaining = c.allIssues
+        .filter(i => i.statusBucket !== 'done')
+        .reduce((sum, i) => sum + (i.childrenRemaining || 1), 0)
 
       const compStrategic = c.allIssues.filter(i => strategicMap[i.key])
       const compStrategicKeys = new Set(compStrategic.map(i => i.key))
@@ -471,7 +475,7 @@ const componentList = computed(() => {
       const globalOtherWorkload = Math.max(0, globalTotalOpen - currentReleaseOpen)
 
       const forecast = computeForecast(remaining, [c.name])
-      const predictedDate = computePredictedDate(remaining, globalOtherWorkload, forecast.velocity)
+      const predictedDate = computePredictedDate(remaining, forecast.velocity)
 
       return {
         name: c.name,
@@ -519,7 +523,7 @@ const releaseForecast = computed(() => {
   for (const issue of projectFilteredIssues.value) {
     if (seen.has(issue.key)) continue
     seen.add(issue.key)
-    if (issue.statusBucket !== 'done') totalRemaining++
+    if (issue.statusBucket !== 'done') totalRemaining += (issue.childrenRemaining || 1)
   }
   const forecast = computeForecast(totalRemaining, allNames)
 

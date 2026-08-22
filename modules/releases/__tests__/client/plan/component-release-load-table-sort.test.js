@@ -55,7 +55,6 @@ function mountTable(props) {
         makeFeature({ key: 'X-2', priority: 'Major', assignee: 'Bob' })
       ]),
       componentLeads: {},
-      velocity: null,
       initialSort: { column: null, direction: 'asc' }
     }, props || {})
   })
@@ -63,12 +62,12 @@ function mountTable(props) {
 
 describe('ComponentReleaseLoadTable sorting (component)', function () {
   describe('header rendering', function () {
-    it('renders 12 sortable th elements when a component is expanded', async function () {
+    it('renders 14 sortable th elements when a component is expanded', async function () {
       var wrapper = mountTable()
       var groupHeader = wrapper.find('tr.cursor-pointer')
       await groupHeader.trigger('click')
       var ths = wrapper.findAll('th')
-      expect(ths.length).toBe(12)
+      expect(ths.length).toBe(14)
     })
 
     it('all headers have cursor-pointer class', async function () {

@@ -7,6 +7,16 @@
       :loading="loading"
     />
 
+    <div v-if="canManageStrategy && !loading && !error" class="flex justify-end mb-4">
+      <button
+        @click="openAddStrategy"
+        class="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-blue-700 dark:text-blue-300 bg-blue-50 dark:bg-blue-900/30 hover:bg-blue-100 dark:hover:bg-blue-800/40 border border-blue-200 dark:border-blue-800 rounded-lg transition-colors"
+      >
+        <TargetIcon :size="14" :stroke-width="2.5" />
+        Add to Strategy
+      </button>
+    </div>
+
     <!-- Loading -->
     <div v-if="loading">
       <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-3">
@@ -35,7 +45,12 @@
         <TargetIcon :size="28" class="text-gray-400 dark:text-gray-500" />
       </div>
       <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-2">No strategic classifications assigned</h3>
-      <p class="text-sm text-gray-500 dark:text-gray-400 max-w-md mx-auto">Tag organizations in the org registry with strategic participation or leadership goals to track them here.</p>
+      <p v-if="canManageStrategy" class="text-sm text-gray-500 dark:text-gray-400 max-w-md mx-auto mb-4">No strategic classifications yet. Add organizations to start tracking progress.</p>
+      <button v-if="canManageStrategy" @click="openAddStrategy" class="inline-flex items-center gap-1.5 px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-xl transition-colors shadow-sm">
+        <TargetIcon :size="15" />
+        Add to Strategy
+      </button>
+      <p v-else class="text-sm text-gray-500 dark:text-gray-400 max-w-md mx-auto">Tag organizations in the org registry with strategic participation or leadership goals to track them here.</p>
     </div>
 
     <!-- Content -->
@@ -149,7 +164,7 @@
                   <span class="text-sm font-medium text-gray-900 dark:text-gray-100">{{ org.name }}</span>
                 </td>
                 <td class="px-4 py-3">
-                  <div class="flex flex-wrap gap-1">
+                  <div class="flex items-center gap-1.5 group/strategy">
                     <span
                       v-if="org.strategicParticipation"
                       class="inline-flex items-center px-1.5 py-0.5 rounded-full text-[10px] font-medium"
@@ -160,6 +175,14 @@
                       class="inline-flex items-center px-1.5 py-0.5 rounded-full text-[10px] font-medium"
                       :class="getStrategicBadgeClass(org.strategicLeadership)"
                     >{{ getStrategicLabel(org.strategicLeadership) }}</span>
+                    <button
+                      v-if="canManageStrategy"
+                      @click.stop="openEditStrategy(org)"
+                      class="inline-flex items-center gap-1 px-2 py-1 rounded-md text-xs font-medium text-gray-500 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/30 opacity-0 group-hover/strategy:opacity-100 transition-all"
+                    >
+                      <PencilIcon :size="12" />
+                      Edit
+                    </button>
                   </div>
                 </td>
                 <td class="px-4 py-3 text-right">
@@ -221,6 +244,15 @@
         </div>
       </div>
     </template>
+
+    <OrgEditModal
+      :open="showEditModal"
+      :org="editingOrg"
+      :all-orgs="orgs"
+      :mode="modalMode"
+      @close="showEditModal = false"
+      @saved="onStrategySaved"
+    />
   </div>
 </template>
 
@@ -230,19 +262,27 @@ import {
   Target as TargetIcon,
   Crown as CrownIcon,
   Shield as ShieldIcon,
+  Pencil as PencilIcon,
 } from 'lucide-vue-next'
 import { apiRequest } from '@shared/client/services/api'
 import { StatCardSkeleton, TableRowSkeleton } from '../components/SkeletonLoaders.vue'
 import StickyPageHeader from '../components/StickyPageHeader.vue'
+import OrgEditModal from '../components/OrgEditModal.vue'
 import {
   getStrategicTier, TIER_CONFIG,
   getStrategicLabel, getStrategicBadgeClass,
 } from '../composables/useStrategicClassification.js'
+import { useStrategyPermissions } from '../composables/useStrategyPermissions.js'
 
 const nav = inject('moduleNav')
 const MODULE_API = '/modules/upstream-pulse'
 
 const tierOrder = ['increasing', 'sustaining', 'evaluating']
+
+const { canManageStrategy, loadPermissions } = useStrategyPermissions()
+const showEditModal = ref(false)
+const editingOrg = ref(null)
+const modalMode = ref('auto')
 
 const selectedDays = ref('30')
 const selectedTier = ref(null)
@@ -314,6 +354,27 @@ async function loadData() {
   }
 }
 
+function openAddStrategy() {
+  editingOrg.value = null
+  modalMode.value = 'addStrategy'
+  showEditModal.value = true
+}
+
+function openEditStrategy(org) {
+  editingOrg.value = org
+  modalMode.value = 'edit'
+  showEditModal.value = true
+}
+
+function onStrategySaved() {
+  showEditModal.value = false
+  editingOrg.value = null
+  loadData()
+}
+
 watch(selectedDays, () => loadData())
-onMounted(() => loadData())
+onMounted(() => {
+  loadData()
+  loadPermissions()
+})
 </script>

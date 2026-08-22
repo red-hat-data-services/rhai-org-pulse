@@ -289,6 +289,16 @@ test.describe('Feature Pressure - Executive Summary @feature-pressure', () => {
     await expect(page.locator('text=growing').first()).toBeVisible();
     expect(relevantErrors(page)).toHaveLength(0);
   });
+
+  test('should show the snapshot freshness label', async ({ page }) => {
+    await mockAllApis(page);
+    await page.goto('/#/releases/reports?report=feature-pressure');
+    await page.waitForLoadState('networkidle');
+    await page.waitForTimeout(DEFAULT_PAGE_WAIT_TIME);
+
+    await expect(page.locator('text=counts are a snapshot').first()).toBeVisible();
+    expect(relevantErrors(page)).toHaveLength(0);
+  });
 });
 
 test.describe('Feature Pressure - Component Table @feature-pressure', () => {

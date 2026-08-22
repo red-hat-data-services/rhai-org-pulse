@@ -5,6 +5,7 @@ import AssessmentBreakdown from './AssessmentBreakdown.vue'
 import AssessmentHistory from './AssessmentHistory.vue'
 import FeedbackText from './FeedbackText.vue'
 import { useTestPlans } from '../composables/useTestPlans.js'
+import { usePipelineSignals } from '../composables/usePipelineSignals.js'
 
 const props = defineProps({
   show: { type: Boolean, default: false },
@@ -15,7 +16,7 @@ const props = defineProps({
   loadAssessmentDetail: { type: Function, default: null }
 })
 
-const emit = defineEmits(['close', 'navigateToFeature', 'navigateToTestPlan'])
+const emit = defineEmits(['close', 'navigateToFeature', 'navigateToTestPlan', 'navigateToDecomposer', 'navigateToDocumentation', 'navigateToBuildRelease'])
 
 const assessmentDetail = ref(null)
 const detailLoading = ref(false)
@@ -23,20 +24,28 @@ const modalRef = ref(null)
 let previousActiveElement = null
 
 const { loadTestPlanDetail } = useTestPlans()
+const { loadPipelineSignals } = usePipelineSignals()
 const testPlanData = ref(null)
+const pipelineSignals = ref(null)
 
 watch(
   () => props.rfe?.key,
   async (key) => {
     assessmentDetail.value = null
     testPlanData.value = null
+    pipelineSignals.value = null
     if (!props.show || !key || !props.assessment || !props.loadAssessmentDetail) return
     detailLoading.value = true
     try {
       assessmentDetail.value = await props.loadAssessmentDetail(key)
-      // Load test plan for the linked feature (if exists)
       if (props.rfe?.linkedFeature?.key) {
-        testPlanData.value = await loadTestPlanDetail(props.rfe.linkedFeature.key)
+        const featureKey = props.rfe.linkedFeature.key
+        const [tp, signals] = await Promise.allSettled([
+          loadTestPlanDetail(featureKey),
+          loadPipelineSignals(featureKey)
+        ])
+        testPlanData.value = tp.status === 'fulfilled' ? tp.value : null
+        pipelineSignals.value = signals.status === 'fulfilled' ? signals.value : null
       }
     } catch {
       // Silently fail - slim data still shows
@@ -218,7 +227,18 @@ function getInvolvementClass(involvement) {
               </div>
             </div>
 
-            <PipelineTimeline :rfe="rfe" :testPlan="testPlanData?.latest" :phases="phases" :jiraHost="jiraHost" @navigateToFeature="emit('navigateToFeature', $event)" @navigateToTestPlan="emit('navigateToTestPlan', $event)" />
+            <PipelineTimeline
+              :rfe="rfe"
+              :testPlan="testPlanData?.latest"
+              :phases="phases"
+              :jiraHost="jiraHost"
+              :signals="pipelineSignals"
+              @navigateToFeature="emit('navigateToFeature', $event)"
+              @navigateToTestPlan="emit('navigateToTestPlan', $event)"
+              @navigateToDecomposer="emit('navigateToDecomposer', $event)"
+              @navigateToDocumentation="emit('navigateToDocumentation', $event)"
+              @navigateToBuildRelease="emit('navigateToBuildRelease', $event)"
+            />
           </div>
         </div>
       </div>

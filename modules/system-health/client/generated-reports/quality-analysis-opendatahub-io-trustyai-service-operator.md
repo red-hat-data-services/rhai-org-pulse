@@ -1,432 +1,479 @@
 ---
 repository: "opendatahub-io/trustyai-service-operator"
-overall_score: 7.6
+overall_score: 6.4
 scorecard:
   - dimension: "Unit Tests"
-    score: 8.5
-    status: "Excellent test-to-code ratio (1:1) with envtest-backed controller tests across all 6 services"
+    score: 8.0
+    status: "Strong Ginkgo v2 + envtest suite with 53 test files across all 6 controllers"
   - dimension: "Integration/E2E"
-    score: 7.5
-    status: "Kind-based smoke tests on PRs with operator deployment, CR creation, and resource validation"
+    score: 7.0
+    status: "PR-triggered Kind smoke test + operator-chaos shift-left validation, single K8s version"
   - dimension: "Build Integration"
     score: 7.0
-    status: "PR-time Docker build + Kind deploy + smoke, but no Konflux simulation or multi-arch PR validation"
+    status: "PR builds Docker image, deploys to Kind, OPA policy checks on all kustomize targets"
   - dimension: "Image Testing"
     score: 6.0
-    status: "Smoke tests validate image startup but no Trivy image scan, SBOM, or multi-arch testing on PRs"
+    status: "Multi-stage UBI builds with multi-arch support, limited runtime validation"
   - dimension: "Coverage Tracking"
-    score: 4.0
-    status: "Cover.out generated locally via make test but no Codecov/Coveralls integration or PR enforcement"
+    score: 3.0
+    status: "Generates cover.out but no CI reporting, no thresholds, no PR gates"
   - dimension: "CI/CD Automation"
-    score: 9.0
-    status: "11 workflows with tiered naming, OPA policy checks, chaos testing, security scans, and branch sync"
+    score: 6.0
+    status: "14 workflows covering diverse concerns but missing concurrency, caching, and timeouts"
+  - dimension: "Static Analysis"
+    score: 6.0
+    status: "yamllint + OPA policies + Dependabot, but no golangci-lint or pre-commit"
   - dimension: "Agent Rules"
     score: 7.0
-    status: "Comprehensive CLAUDE.md with architecture, build, test, and deployment guidance but no .claude/rules/"
+    status: "Comprehensive 14KB CLAUDE.md with architecture docs, no .claude/rules/ directory"
 critical_gaps:
-  - title: "No coverage tracking or PR enforcement"
-    impact: "Coverage regressions can land without detection; no visibility into coverage trends"
+  - title: "No coverage reporting or enforcement in CI"
+    impact: "Coverage regressions go undetected; no PR gates prevent merging untested code"
     severity: "HIGH"
     effort: "2-4 hours"
-  - title: "No container image vulnerability scanning"
-    impact: "Built images are not scanned for CVEs; Trivy scans source only, not container images"
+  - title: "No golangci-lint configuration"
+    impact: "Only go fmt/vet run; misses dozens of useful lint checks (errcheck, staticcheck, gosimple, etc.)"
     severity: "HIGH"
     effort: "2-3 hours"
-  - title: "No PR-time Konflux build simulation"
-    impact: "Konflux build failures discovered only after merge; multi-stage build issues not caught early"
+  - title: "No concurrency control or caching in CI workflows"
+    impact: "Duplicate workflow runs waste resources; no Go module or build caching slows CI"
     severity: "MEDIUM"
-    effort: "8-12 hours"
-  - title: "Gosec runs with -no-fail flag"
-    impact: "Security findings are uploaded to SARIF but never block PRs, reducing enforcement value"
+    effort: "2-3 hours"
+  - title: "Single K8s version in smoke tests"
+    impact: "Operator compatibility with other K8s/OCP versions is not validated at PR time"
     severity: "MEDIUM"
-    effort: "1 hour"
+    effort: "4-6 hours"
 quick_wins:
-  - title: "Add Codecov integration to controller-tests workflow"
+  - title: "Add Codecov integration with coverage thresholds"
+    effort: "2-4 hours"
+    impact: "Automated coverage reporting on PRs with regression prevention"
+  - title: "Add golangci-lint configuration"
     effort: "2-3 hours"
-    impact: "PR-level coverage reporting, trend tracking, and regression gating"
-  - title: "Remove -no-fail from gosec to enforce security findings"
-    effort: "30 minutes"
-    impact: "Gosec findings will block PRs, forcing security issues to be addressed before merge"
-  - title: "Add container image Trivy scan to smoke workflow"
+    impact: "Catch common Go bugs, code smells, and style issues before merge"
+  - title: "Add concurrency control to PR workflows"
+    effort: "1 hour"
+    impact: "Cancel stale workflow runs when new commits are pushed, saving CI resources"
+  - title: "Add Go module caching to CI workflows"
     effort: "1-2 hours"
-    impact: "Catch CVEs in built container images before merge, not just in source dependencies"
-  - title: "Create .claude/rules/ for test creation patterns"
-    effort: "2-3 hours"
-    impact: "Standardize AI-generated tests across envtest, Ginkgo/Gomega patterns for all controllers"
-  - title: "Pin all GitHub Actions to SHA digests"
-    effort: "1-2 hours"
-    impact: "Prevent supply chain attacks via tag mutation; some workflows already pinned, others not"
+    impact: "Faster CI runs by caching downloaded Go modules"
 recommendations:
   priority_0:
-    - "Add Codecov integration with coverage thresholds to enforce PR-level coverage"
-    - "Add container image scanning (Trivy) to the smoke workflow after image build"
-    - "Remove gosec -no-fail flag to make security findings blocking"
+    - "Add Codecov/Coveralls integration with minimum coverage threshold (e.g., 60%) to prevent regressions"
+    - "Add golangci-lint with a curated set of linters (errcheck, staticcheck, gosimple, unused, govet)"
   priority_1:
-    - "Add Konflux build simulation to PR workflow for early detection of production build issues"
-    - "Create .claude/rules/ with envtest patterns, Ginkgo conventions, and test guidelines"
-    - "Add multi-architecture image build validation on PRs (currently only single-arch)"
-    - "Add golangci-lint workflow for comprehensive static analysis beyond go vet"
+    - "Add concurrency control and Go module caching to all CI workflows"
+    - "Expand smoke tests to cover multiple K8s versions via matrix strategy"
+    - "Add .claude/rules/ directory with test creation patterns for Ginkgo + envtest"
   priority_2:
-    - "Add pre-commit hooks for fmt/vet/lint enforcement locally"
-    - "Add SBOM generation to container image builds"
-    - "Add integration tests for webhook conversion (v1alpha1 to v1)"
-    - "Add performance/load testing for controller reconciliation under scale"
+    - "Add pre-commit hooks for fmt, vet, and lint checks"
+    - "Add Testcontainers-based runtime validation for operator image"
+    - "Add timeout-minutes to all workflow jobs to prevent runaway builds"
 ---
 
 # Quality Analysis: trustyai-service-operator
 
 ## Executive Summary
 
-- **Overall Score: 7.6/10**
-- **Repository Type:** Kubernetes Operator (kubebuilder, controller-runtime v0.17.0)
-- **Language:** Go 1.23
-- **Services Managed:** 6 (TAS, LMES, EvalHub, GORCH, NemoGuardrails, JobMgr)
-
-The trustyai-service-operator is a well-engineered multi-service Kubernetes operator with **exceptionally strong** test coverage, a mature CI/CD pipeline with tiered workflows, and innovative shift-left practices including OPA policy enforcement and operator-chaos upgrade validation. The test-to-code ratio is nearly 1:1 (21,408 test LOC vs 21,502 code LOC), with all 6 controllers having comprehensive envtest-based suites.
-
-**Key Strengths:**
-- Outstanding unit test coverage using Ginkgo/Gomega + envtest across all controllers
-- Tier 1/Tier 2 CI workflow architecture with 11 specialized workflows
-- Innovative OPA/Rego policy checks on rendered kustomize manifests
-- Shift-left upgrade validation via operator-chaos (CRD schema + knowledge model diffing)
-- Kind-based smoke tests deploying the full operator on PRs
-- Dual security scanning (Trivy + Gosec) with SARIF integration
-- Comprehensive CLAUDE.md with detailed architecture and contribution guidance
-
-**Critical Gaps:**
-- No coverage tracking integration (Codecov/Coveralls) — cover.out generated but not reported
-- Container image scanning missing — Trivy scans source filesystem only
-- Gosec configured with `-no-fail`, making security findings non-blocking
-- No `.claude/rules/` directory for standardized test creation patterns
-
-**Agent Rules Status:** Present (CLAUDE.md) — comprehensive architecture/build docs but no rules/ directory
+- **Overall Score: 6.4/10**
+- **Repository Type:** Multi-service Kubernetes operator (kubebuilder)
+- **Primary Language:** Go (187 files)
+- **Jira:** RHOAIENG / AI Safety (midstream tier)
+- **Key Strengths:** Excellent unit test organization with Ginkgo v2 + envtest, comprehensive CLAUDE.md, innovative shift-left testing with operator-chaos and OPA/conftest policies, PR-triggered smoke tests with Kind cluster
+- **Critical Gaps:** No coverage reporting/enforcement, no golangci-lint, no CI caching or concurrency control
+- **Agent Rules Status:** Present — comprehensive CLAUDE.md (14KB), no .claude/rules/
 
 ## Quality Scorecard
 
-| Dimension | Score | Status |
-|-----------|-------|--------|
-| Unit Tests | 8.5/10 | Excellent 1:1 test ratio, envtest + Ginkgo across all 6 controllers |
-| Integration/E2E | 7.5/10 | Kind-based smoke tests on PRs, operator deploy + CR creation validation |
-| **Build Integration** | **7.0/10** | **PR Docker build + Kind deploy, but no Konflux simulation** |
-| Image Testing | 6.0/10 | Startup validation via smoke, no image CVE scan or multi-arch |
-| Coverage Tracking | 4.0/10 | cover.out generated locally, no CI integration or PR enforcement |
-| CI/CD Automation | 9.0/10 | 11 tiered workflows, OPA policies, chaos testing, branch sync |
-| Agent Rules | 7.0/10 | Rich CLAUDE.md, but no .claude/rules/ for test patterns |
+| Dimension | Score | Weight | Weighted | Status |
+|-----------|-------|--------|----------|--------|
+| Unit Tests | 8.0/10 | 15% | 1.20 | Strong Ginkgo v2 + envtest suite across all controllers |
+| Integration/E2E | 7.0/10 | 20% | 1.40 | Kind smoke test + operator-chaos, single K8s version |
+| Build Integration | 7.0/10 | 15% | 1.05 | PR Docker build + Kind deploy + OPA policy checks |
+| Image Testing | 6.0/10 | 10% | 0.60 | Multi-stage UBI builds, limited runtime validation |
+| Coverage Tracking | 3.0/10 | 10% | 0.30 | cover.out generated but no CI reporting or gates |
+| CI/CD Automation | 6.0/10 | 15% | 0.90 | 14 workflows, missing concurrency/caching/timeouts |
+| Static Analysis | 6.0/10 | 10% | 0.60 | yamllint + OPA + Dependabot, no golangci-lint |
+| Agent Rules | 7.0/10 | 5% | 0.35 | Comprehensive CLAUDE.md, no .claude/rules/ |
+| **Overall** | **6.4/10** | **100%** | **6.40** | |
 
 ## Critical Gaps
 
-### 1. No Coverage Tracking or PR Enforcement
-- **Impact:** Coverage regressions can land silently; no trend visibility or minimum thresholds
+### 1. No Coverage Reporting or Enforcement in CI
+- **Impact:** Coverage regressions go undetected; no PR gates prevent merging untested code
 - **Severity:** HIGH
 - **Effort:** 2-4 hours
-- **Current State:** `make test` generates `cover.out` locally but the `controller-tests.yaml` workflow does not upload it anywhere
-- **Recommended Fix:** Add Codecov action after `make test`, configure `.codecov.yml` with thresholds
+- **Details:** The Makefile generates `cover.out` via `--coverprofile`, but this file is never uploaded to Codecov/Coveralls, no thresholds are enforced, and PRs show no coverage delta. There is no `.codecov.yml` configuration.
+- **Fix:** Add `codecov/codecov-action` to `controller-tests.yaml` and create `.codecov.yml` with a minimum threshold.
 
-### 2. No Container Image Vulnerability Scanning
-- **Impact:** Built container images may contain CVEs from base images or runtime dependencies
+### 2. No golangci-lint Configuration
+- **Impact:** Only `go fmt` and `go vet` run; misses dozens of useful lint checks
 - **Severity:** HIGH
 - **Effort:** 2-3 hours
-- **Current State:** Trivy scans the filesystem/source code (security-scan.yaml), but the built Docker image in `smoke.yaml` is never scanned
-- **Recommended Fix:** Add `aquasecurity/trivy-action` with `scan-type: image` after the Docker build step in smoke.yaml
+- **Details:** The project relies solely on `go fmt` and `go vet` for static analysis. golangci-lint would catch common Go bugs via errcheck, staticcheck, gosimple, unused, ineffassign, and many other linters. The gosec workflow exists but only produces SARIF output with `--no-fail` flag.
+- **Fix:** Add `.golangci.yaml` with curated linters and a CI workflow step.
 
-### 3. No PR-time Konflux Build Simulation
-- **Impact:** Konflux-specific build failures (base image differences, build args, layering) are only discovered post-merge
+### 3. No Concurrency Control or Caching in CI
+- **Impact:** Duplicate workflow runs waste resources; slow CI without Go module caching
 - **Severity:** MEDIUM
-- **Effort:** 8-12 hours
-- **Current State:** Standard Docker build in smoke.yaml; no simulation of Konflux/Tekton build pipeline
-- **Recommendation:** Create a Konflux simulation workflow that mirrors production build configuration
+- **Effort:** 2-3 hours
+- **Details:** None of the 14 workflows use `concurrency:` groups to cancel stale runs. No workflow uses `actions/cache` for Go modules or build artifacts.
 
-### 4. Gosec Non-blocking Mode
-- **Impact:** Security findings are uploaded to GitHub Security tab but never block PRs
+### 4. Single K8s Version in Smoke Tests
+- **Impact:** Operator compatibility with other K8s/OCP versions is not validated
 - **Severity:** MEDIUM
-- **Effort:** 30 minutes
-- **Current State:** `args: '-no-fail -fmt sarif -out gosec-results.sarif ./...'` — the `-no-fail` flag prevents pipeline failure
-- **Recommended Fix:** Remove `-no-fail` and add severity filtering (e.g., fail only on HIGH/CRITICAL)
+- **Effort:** 4-6 hours
+- **Details:** Smoke tests use `kindest/node:v1.24.17` only. No matrix strategy for multiple K8s versions.
 
 ## Quick Wins
 
-### 1. Add Codecov Integration (2-3 hours)
-Add to `controller-tests.yaml` after the Test step:
+### 1. Add Codecov Integration (2-4 hours)
+Add coverage uploading and threshold enforcement to CI:
+
 ```yaml
-- name: Upload coverage
+# In .github/workflows/controller-tests.yaml, after 'make test':
+- name: Upload coverage to Codecov
   uses: codecov/codecov-action@v4
   with:
     files: cover.out
-    flags: unittests
-    fail_ci_if_error: false
-  env:
-    CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+    fail_ci_if_error: true
+    token: ${{ secrets.CODECOV_TOKEN }}
 ```
-Create `.codecov.yml`:
+
 ```yaml
+# .codecov.yml
 coverage:
   status:
     project:
       default:
-        target: auto
+        target: 60%
         threshold: 2%
     patch:
       default:
         target: 70%
 ```
 
-### 2. Enforce Gosec Findings (30 minutes)
-Change in `gosec.yaml`:
+### 2. Add golangci-lint (2-3 hours)
+
 ```yaml
-# Before:
-args: '-no-fail -fmt sarif -out gosec-results.sarif ./...'
-# After:
-args: '-severity high -fmt sarif -out gosec-results.sarif ./...'
+# .golangci.yaml
+run:
+  timeout: 5m
+
+linters:
+  enable:
+    - errcheck
+    - staticcheck
+    - gosimple
+    - unused
+    - ineffassign
+    - govet
+    - revive
+    - misspell
+    - gofmt
+    - goimports
+
+linters-settings:
+  revive:
+    rules:
+      - name: exported
+        severity: warning
 ```
 
-### 3. Add Image Trivy Scan (1-2 hours)
-Add to `smoke.yaml` after the Docker build step:
+### 3. Add Concurrency Control (1 hour)
+Add to all PR-triggered workflows:
+
 ```yaml
-- name: Scan operator image for vulnerabilities
-  uses: aquasecurity/trivy-action@latest
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+```
+
+### 4. Add Go Module Caching (1-2 hours)
+Add to workflows that run Go commands:
+
+```yaml
+- name: Setup Go
+  uses: actions/setup-go@v5
   with:
-    image-ref: 'smoke/operator:pr-${{ env.PR_NUMBER }}'
-    format: 'table'
-    severity: 'CRITICAL,HIGH'
-    exit-code: '1'
+    go-version-file: "go.mod"
+    cache: true
 ```
-
-### 4. Create Agent Test Rules (2-3 hours)
-Create `.claude/rules/` with patterns for:
-- Ginkgo/Gomega test structure
-- envtest suite bootstrap
-- Controller reconciliation test patterns
-- CRD validation test patterns
-- Status update assertion patterns
-
-### 5. Pin All GitHub Actions to SHA (1-2 hours)
-Several workflows use tag-based action references (e.g., `@v3`, `@v4`). Standardize to SHA-pinned references like the conftest and operator-chaos workflows already do.
 
 ## Detailed Findings
 
-### CI/CD Pipeline
+### Unit Tests
+
+**Score: 8.0/10**
+
+The project has excellent unit test coverage with 53 test files across 134 source files (ratio: 0.40).
 
 **Strengths:**
-- **Tiered architecture:** 7 Tier 1 (push+PR) and 2 Tier 2 (PR-only) workflows, plus 2 branch sync workflows
-- **Trigger strategy:** Well-organized — Tier 1 runs on all push/PR, Tier 2 (smoke, chaos) runs only on PRs to main/incubation/stable
-- **Path-based filtering:** operator-chaos.yml only triggers on relevant paths (api/, cmd/, config/, controllers/)
-- **OPA/Conftest:** Renders all 7 kustomize overlays and validates against RBAC and selector policies — unique and innovative
-- **operator-chaos:** Shift-left upgrade validation with knowledge model diffing, CRD schema breaking change detection, and upgrade simulation — impressive
-- **Branch sync:** Automated main→incubation→stable promotion with auto-merge for upstream sync PRs
-- **Disconnected readiness:** Automated scoring for air-gapped deployment compatibility
+- **Framework:** Ginkgo v2 + Gomega + controller-runtime envtest — the gold standard for Kubernetes operator testing
+- **Organization:** Each controller has its own `suite_test.go` bootstrapping envtest, with focused test files per concern (e.g., `deployment_test.go`, `config_maps_test.go`, `statuses_test.go`)
+- **Coverage breadth:** All 6 controller domains have tests: TAS (10), EvalHub (16), LMES (5), GORCH (4), NemoGuardrails (3), Module (2), plus utilities and image resolution
+- **Test isolation:** `BeforeEach`/`AfterEach` for setup and cleanup, proper use of Ginkgo's `Describe`/`Context`/`It` BDD structure
+- **envtest integration:** Tests run against a real API server with CRDs loaded from `config/crd/bases/`
 
 **Gaps:**
-- No concurrency control (`concurrency:` key) on any workflow — duplicate runs possible
-- No caching of Go modules in most workflows (only operator-chaos uses `go-version-file`)
-- `controller-tests.yaml` uses old action versions (`actions/checkout@v3`, `actions/setup-go@v4`)
-- No workflow for golangci-lint (only `go fmt` and `go vet` via Makefile)
-- No status check configuration documented
+- No `t.Parallel()` usage (Ginkgo handles parallelism differently via `ginkgo -p`, but not configured in CI)
+- Coverage file generated but not analyzed or gated
 
-**Workflow Inventory:**
+**Key test files:**
+- `controllers/evalhub/` — 16 test files covering controller, deployment, configmap, RBAC, MCP, tenancy, status, and more
+- `controllers/tas/` — 10 test files for TrustyAIService controller
+- `controllers/lmes/` — 5 test files including validation testing
+- `controllers/gorch/` — 4 test files including config generation
+- `controllers/nemo_guardrails/` — 3 test files including MCP gateway
+- `pkg/tls/`, `pkg/configmap/` — utility package tests
 
-| Workflow | Trigger | Tier | Purpose |
-|----------|---------|------|---------|
-| controller-tests.yaml | push, PR | 1 | Run `make test` (unit + envtest) |
-| conftest.yaml | push, PR | 1 | OPA policy validation on kustomize manifests |
-| lint-yaml.yaml | push, PR | 1 | YAML linting on config/ |
-| gosec.yaml | PR | 1 | Go security scanning (SARIF) |
-| security-scan.yaml | PR, push | 1 | Trivy filesystem vulnerability scan |
-| disconnected-readiness.yaml | push, PR | 1 | Air-gapped deployment readiness scoring |
-| auto-merge-upstream-sync.yaml | PR | 1 | Auto-merge pull[bot] sync PRs |
-| smoke.yaml | PR | 2 | Full operator deployment + smoke tests on Kind |
-| operator-chaos.yml | PR (path-filtered) | 2 | CRD schema + knowledge model upgrade validation |
-| sync-branch-incubation.yaml | push (main) | - | Sync main → incubation |
-| sync-branch-stable.yaml | push (incubation) | - | Sync incubation → stable |
+### Integration/E2E Tests
 
-### Test Coverage
+**Score: 7.0/10**
 
 **Strengths:**
-- **Outstanding test ratio:** 21,408 test LOC to 21,502 code LOC (nearly 1:1)
-- **49 test files** covering all 6 controllers plus API, images, utils, and driver
-- **envtest framework:** All controller suites use kubebuilder envtest with real CRDs for integration-style testing
-- **Test patterns:** Ginkgo/Gomega BDD-style with well-structured Describe/Context/It blocks
-- **Comprehensive controller coverage:**
-  - EvalHub: 22 test files covering deployment, RBAC, MCP, configmap, proxy, status, service, build, transport, label normalization
-  - TAS: 10 test files covering config maps, deployment, route, service accounts, storage, statuses, monitoring
-  - LMES: 3 test files with 6,437+ LOC including validation tests
-  - GORCH: 4 test files covering config generation, deployment, controller
-  - NemoGuardrails: 3 test files covering MCP gateway and controller
+- **PR-triggered smoke test** (`smoke.yaml`): Builds Docker image → creates Kind cluster → loads image → installs CRDs → deploys operator via kustomize → creates TrustyAIService CR → verifies PVC, Services, Deployment creation → validates webhook conversion (v1alpha1 → v1) → cleanup. This is a genuine end-to-end deployment validation.
+- **Operator-chaos** (`operator-chaos.yml`): Innovative shift-left upgrade validation that catches breaking CRD schema changes and knowledge model regressions without a cluster. Diffs CRD schemas and knowledge models between base and PR branches.
+- **Conftest/OPA** (`conftest.yaml`): Policy-as-code validation of all kustomize-rendered manifests for RBAC correctness, ClusterRole content, and selector hygiene.
+- **Disconnected readiness** (`disconnected-readiness.yaml`): Validates the operator works in disconnected/air-gapped environments.
 
 **Gaps:**
-- No coverage reporting in CI (cover.out generated but not uploaded)
-- No coverage threshold enforcement
-- No integration tests for CRD webhook conversion (v1alpha1 → v1)
-- No fuzz testing for API types
-- No benchmark tests
+- Smoke tests only use `kindest/node:v1.24.17` — no multi-version K8s testing
+- No matrix strategy for testing across K8s versions
+- E2E tests reference external `trustyai-tests` repo but those are not run in this repo's CI
+- No contract testing between operator and managed services
 
-### Code Quality
+### Build Integration
+
+**Score: 7.0/10**
 
 **Strengths:**
-- `go fmt` and `go vet` run as part of `make test` via Makefile dependencies
-- YAML linting with `.yamllint.yaml` configuration
-- OPA/Rego policies with unit tests (`policy/*_test.rego`) — unique and sophisticated
-- Conftest validates rendered kustomize manifests against policies
+- **PR-time Docker build:** `smoke.yaml` builds the operator image on every PR and loads it into Kind
+- **Kustomize validation:** conftest checks all 9 kustomize entry points (base + 8 overlays)
+- **OPA policies:** Closed-allowlist RBAC validation via `policy/rbac.rego` and `policy/clusterrole.rego` — any unauthorized RBAC resource is denied
+- **CRD installation testing:** Smoke test applies external CRDs and deploys the full operator
+- **Operator manifest testing:** `components-validate` Makefile target builds all component kustomizations
 
 **Gaps:**
-- **No golangci-lint:** Only `go fmt` and `go vet` — missing linters like `errcheck`, `staticcheck`, `gocritic`, `gosimple`, `ineffassign`
-- **No pre-commit hooks:** No `.pre-commit-config.yaml`
-- **No `.golangci.yaml`** configuration file
-- Code formatting only via `go fmt` (no `goimports`, `gofumpt`)
+- No Konflux build simulation — issues may only surface post-merge in Konflux
+- Build validation is only via the testing overlay, not ODH/RHOAI overlays
+- No explicit `kubectl apply --dry-run` validation outside of full deployment
 
-### Container Images
+### Image Testing
+
+**Score: 6.0/10**
 
 **Strengths:**
-- Multi-stage Dockerfile with UBI base images (Red Hat certified)
-- Non-root user (65532:65532) for operator image
-- CGO disabled for minimal attack surface
-- Multi-architecture support configured (`PLATFORMS` in Makefile: arm64, amd64, s390x, ppc64le)
-- `.dockerignore` present
-- 4 Dockerfiles for different components (operator, driver, lmes-job, orchestrator)
-- Proper LABEL metadata for Red Hat container certification
+- **5 Dockerfiles** covering different components: main operator, driver, lmes-job, orchestrator, test
+- **Multi-stage builds:** Separate builder and runtime stages for smaller, secure images
+- **UBI base images:** All production images use `registry.access.redhat.com/ubi*` (FIPS-capable)
+- **Multi-arch support:** TARGETOS/TARGETARCH build args, `docker-buildx` Makefile target
+- **Non-root runtime:** Runs as UID 65532:65532
+- **Health checks:** Liveness (`/healthz`) and readiness (`/readyz`) probes configured in manager manifest
 
 **Gaps:**
-- Built images not scanned for vulnerabilities
-- No SBOM generation
-- No image signing/attestation (cosign)
-- Multi-arch build validation not part of PR CI
-- Orchestrator Dockerfile (Rust-based) has tests/lint/format stages but they're separate multi-stage targets, not run in CI
+- No Testcontainers-based runtime validation
+- No container startup testing beyond the smoke test deployment
+- No explicit image scanning in PR workflow (security-scan runs Trivy but is separate)
+- Dockerfile.orchestrator uses `rust:1.87.0` (non-UBI) as builder — only the final stage uses UBI
 
-### Security
+### Coverage Tracking
+
+**Score: 3.0/10**
 
 **Strengths:**
-- **Trivy filesystem scanning** on PRs and pushes with SARIF upload to GitHub Security tab
-- **Gosec scanning** on PRs with SARIF upload and artifact storage
-- **OPA RBAC policies** enforcing closed allowlists for ClusterRoleBindings and API resource permissions
-- **Dependabot** configured for weekly Go module updates
-- **SHA-pinned actions** in several workflows (conftest, operator-chaos)
-- **persist-credentials: false** in newer workflows for least-privilege checkout
+- `make test` generates `cover.out` via `--coverprofile`
 
 **Gaps:**
-- Gosec configured with `-no-fail` — findings are informational only
-- No secret detection (Gitleaks, TruffleHog)
-- No container image scanning
-- Not all workflows pin actions to SHA digests (controller-tests, lint-yaml use version tags)
-- No CodeQL analysis workflow
-- Trivy exit-code: "0" for full scan means even CRITICAL vulnerabilities don't fail the build (the second check step handles this, but only for CRITICAL+HIGH)
+- No `.codecov.yml` or Codecov/Coveralls integration
+- No coverage thresholds enforced
+- No PR coverage reporting — reviewers cannot see coverage impact
+- `cover.out` file is generated but never uploaded or analyzed in CI
+- No coverage gates to prevent merging code that reduces coverage
 
-### Agent Rules (Agentic Flow Quality)
+### CI/CD Automation
 
-**Status:** Present (CLAUDE.md) — no `.claude/` directory
+**Score: 6.0/10**
+
+**Workflows (14 total):**
+
+| Workflow | Trigger | Purpose |
+|----------|---------|---------|
+| `controller-tests.yaml` | push, PR | Run `make test` (unit tests with envtest) |
+| `smoke.yaml` | PR | Build image + Kind deploy + smoke tests |
+| `operator-chaos.yml` | PR (path-filtered) | Shift-left upgrade validation |
+| `conftest.yaml` | push, PR | OPA manifest policy checks |
+| `lint-yaml.yaml` | push, PR | YAML linting |
+| `gosec.yaml` | PR | Security scanning (SARIF) |
+| `security-scan.yaml` | push, PR | Trivy vulnerability scan |
+| `disconnected-readiness.yaml` | push, PR | Disconnected readiness scoring |
+| `disconnected-readiness.yml` | PR | Reusable disconnected readiness check |
+| `auto-merge-upstream-sync.yaml` | PR | Auto-merge pull[bot] sync PRs |
+| `sync-branch-incubation.yaml` | push (main) | Sync main → incubation branch |
+| `sync-branch-stable.yaml` | push (incubation) | Sync incubation → stable branch |
 
 **Strengths:**
-- **Comprehensive CLAUDE.md** with 246 lines covering:
-  - Build and run commands
-  - Test framework details (Ginkgo v2, Gomega, envtest)
-  - Architecture overview with service registration patterns
-  - Project structure with directory-level descriptions
-  - Key dependencies table
+- Good breadth of PR checks across testing, security, policy, and deployment
+- Tiered naming (Tier 1 / Tier 2) for workflow categorization
+- Path-filtered triggers for operator-chaos (only runs when relevant files change)
+- Branch sync automation (main → incubation → stable)
+
+**Gaps:**
+- **No concurrency control:** Duplicate runs for same PR waste resources
+- **No caching:** Go modules downloaded fresh on every run
+- **No timeout-minutes:** Jobs could run indefinitely
+- **No test parallelization:** All tests run sequentially
+- **Outdated action versions:** Some use `@v2` and `@v3` instead of latest pinned SHAs
+- **gosec runs with `--no-fail`:** Security findings don't fail the build
+
+### Static Analysis
+
+**Score: 6.0/10**
+
+**Strengths:**
+- **YAML linting:** `.yamllint.yaml` configured with custom rules for `config/**/*.yaml`
+- **OPA/Rego policies:** Sophisticated policy-as-code for RBAC validation — this is above average for most repositories
+- **Dependabot:** Configured for `gomod` ecosystem with weekly schedule
+- **FIPS compatibility:** All production Dockerfiles use UBI base images
+- **gosec:** Security scanner configured (though non-blocking)
+
+**Gaps:**
+- **No golangci-lint:** The most impactful missing tool — only `go fmt` and `go vet` are used
+- **No pre-commit hooks:** No `.pre-commit-config.yaml` for local developer enforcement
+- **FIPS build tags:** No `-tags=fips` or `GOEXPERIMENT=boringcrypto` in builds (may be handled downstream)
+- **Dependabot scope:** Only covers `gomod`, not `docker` or `github-actions` ecosystems
+- **math/rand import:** Found in `controllers/lmes/driver/driver_test.go:23` — acceptable in test code but worth noting
+
+### Agent Rules
+
+**Score: 7.0/10**
+
+**Strengths:**
+- **Comprehensive CLAUDE.md (14KB):** One of the most thorough CLAUDE.md files seen across analyzed repositories
+  - Build, test, deploy, and debug instructions
+  - Complete architecture documentation (service registration, reconciliation pattern, scheme registration)
+  - Detailed project structure with file paths
+  - Key dependencies table with versions
   - CI/CD workflow descriptions
-  - Shift-left upgrade validation guidance
-  - Manifest policy documentation (OPA/Conftest)
-- Well-organized with code examples and tables
-- Covers reconciliation patterns and scheme registration
+  - EvalHub-specific architecture (metrics, tenancy, provider/collection ConfigMaps)
+  - Code generation instructions
+  - Manifest policy documentation
+- **Test instructions:** Clear `make test` instructions with envtest details, per-controller test commands
 
 **Gaps:**
-- **No `.claude/` directory** — no rules, skills, or settings
-- **No test creation rules** — no guidance for AI agents on how to write tests
-- **No `.claude/rules/`** for:
-  - Unit test patterns (envtest suite bootstrap, Ginkgo/Gomega conventions)
-  - Controller test patterns (reconciler assertions, status checks)
-  - CRD validation test patterns
-  - Mock/fixture patterns
-- **Recommendation:** Use `/test-rules-generator` to create rules based on existing test patterns
+- **No `.claude/rules/` directory:** No specific test creation rules for AI agents
+- **No AGENTS.md:** Only CLAUDE.md present
+- **No test pattern examples:** CLAUDE.md describes the test framework but doesn't provide templates for writing new tests
+- **Missing:** Rules for Ginkgo test patterns, envtest setup boilerplate, assertion patterns
 
 ## Recommendations
 
 ### Priority 0 (Critical)
 
-1. **Add Codecov integration with coverage thresholds** — cover.out is already generated; upload it and enforce minimum thresholds on PRs
-2. **Add container image scanning** — scan the built Docker image in smoke.yaml with Trivy before deploying to Kind
-3. **Make gosec blocking** — remove `-no-fail` flag; add severity filtering to fail only on HIGH/CRITICAL
+1. **Add Codecov integration with coverage thresholds**
+   - Upload `cover.out` to Codecov in `controller-tests.yaml`
+   - Create `.codecov.yml` with project target ≥60% and patch target ≥70%
+   - This is the highest-ROI improvement — 2-4 hours for permanent regression prevention
+
+2. **Add golangci-lint configuration**
+   - Create `.golangci.yaml` with errcheck, staticcheck, gosimple, unused, revive
+   - Add lint step to CI (or create dedicated `lint.yaml` workflow)
+   - Catches common Go bugs that fmt/vet miss
 
 ### Priority 1 (High Value)
 
-4. **Add golangci-lint workflow** — configure `.golangci.yaml` with errcheck, staticcheck, gocritic, gosimple, ineffassign, and other Go linters
-5. **Create `.claude/rules/` for test automation** — standardize envtest patterns, Ginkgo conventions, and test creation guidelines for AI agents
-6. **Add Konflux build simulation** — mirror production Konflux/Tekton build pipeline in PR CI
-7. **Add concurrency control** — prevent duplicate workflow runs on rapid pushes
-8. **Pin all GitHub Actions to SHA digests** — standardize security posture across all workflows
+3. **Add concurrency control and caching to CI workflows**
+   - Add `concurrency:` groups to all PR-triggered workflows
+   - Use `actions/setup-go@v5` with `cache: true` for Go module caching
+   - Add `timeout-minutes: 30` to all jobs
+
+4. **Expand smoke test to multi-version K8s matrix**
+   - Add matrix strategy testing K8s 1.27, 1.28, 1.29
+   - Validates operator compatibility across versions
+
+5. **Create .claude/rules/ for test automation**
+   - Add `unit-tests.md` with Ginkgo + envtest patterns
+   - Add `e2e-tests.md` with Kind deployment patterns
+   - Include assertion patterns, test isolation patterns, and suite setup boilerplate
 
 ### Priority 2 (Nice-to-Have)
 
-9. **Add pre-commit hooks** — enforce fmt, vet, lint locally before push
-10. **Add SBOM generation** — include `syft` or `trivy` SBOM in image builds
-11. **Add webhook conversion tests** — test v1alpha1 → v1 CRD conversion paths
-12. **Add fuzz testing** — fuzzing for API type validation
-13. **Add secret detection** — integrate Gitleaks or TruffleHog
-14. **Add Go module caching** — add `actions/cache` to workflows for faster CI
+6. **Add pre-commit hooks**
+   - `.pre-commit-config.yaml` with go fmt, go vet, yamllint hooks
+   - Catches issues locally before CI
+
+7. **Expand Dependabot ecosystem coverage**
+   - Add `docker` ecosystem for base image updates
+   - Add `github-actions` ecosystem for action version updates
+
+8. **Add Testcontainers-based image validation**
+   - Runtime validation of operator container startup
+   - Verify health endpoints respond
+
+9. **Make gosec blocking**
+   - Remove `--no-fail` flag from gosec workflow
+   - Or set a severity threshold for failure
 
 ## Comparison to Gold Standards
 
-| Feature | trustyai-service-operator | odh-dashboard | notebooks | kserve |
-|---------|--------------------------|---------------|-----------|--------|
-| Unit Tests | Excellent (1:1 ratio) | Strong | Basic | Strong |
-| envtest | Yes (all controllers) | N/A (frontend) | N/A | Yes |
-| E2E Tests | Kind smoke tests | Cypress E2E | Image pipeline | Full E2E |
-| Coverage CI | Missing | Codecov | Basic | Codecov |
-| Coverage Enforcement | No | Yes (thresholds) | No | Yes |
-| golangci-lint | No | ESLint | N/A | Yes |
-| Trivy (source) | Yes | No | Yes | Yes |
-| Trivy (image) | No | N/A | Yes (5-layer) | No |
-| OPA Policies | Yes (unique!) | No | No | No |
-| Chaos Testing | Yes (operator-chaos) | No | No | No |
-| Secret Detection | No | No | No | No |
-| CLAUDE.md | Yes (comprehensive) | Yes | No | No |
-| .claude/rules/ | No | Yes | No | No |
-| Pre-commit | No | Yes | No | No |
-| Multi-arch CI | No (Makefile only) | No | Yes | No |
+| Practice | trustyai-service-operator | odh-dashboard (gold) | notebooks (gold) | kserve (gold) |
+|----------|--------------------------|---------------------|-------------------|---------------|
+| Unit test framework | Ginkgo v2 + envtest | Jest + RTL | pytest | Go testing + envtest |
+| Test-to-code ratio | 0.40 | ~0.50 | ~0.30 | ~0.45 |
+| Coverage enforcement | No | Yes (Codecov) | Partial | Yes (Codecov) |
+| E2E automation | Kind smoke test | Cypress E2E | Image validation | Kind + Kustomize |
+| Multi-version testing | No | N/A | Matrix builds | Yes |
+| golangci-lint | No | N/A (JS) | N/A | Yes |
+| OPA/Conftest policies | Yes (innovative) | No | No | No |
+| Operator-chaos | Yes (innovative) | No | N/A | No |
+| CLAUDE.md | Yes (14KB, comprehensive) | Partial | No | No |
+| .claude/rules/ | No | No | No | No |
+| Dependabot | gomod only | npm | pip | gomod + docker |
+| CI caching | No | Yes | Yes | Yes |
+| Concurrency control | No | Yes | Yes | Yes |
 
-## Unique Strengths
-
-This repository has several practices that **exceed gold standards** and could be adopted by other repositories:
-
-1. **OPA/Conftest manifest validation** — Rego policies enforce RBAC allowlists and API resource permissions against all rendered kustomize overlays. This catches configuration drift that traditional linters miss.
-
-2. **operator-chaos shift-left upgrade validation** — Catches breaking CRD schema changes and knowledge model regressions at PR time without requiring a cluster. This is an innovative pattern for operator development.
-
-3. **Disconnected readiness scoring** — Automated air-gapped deployment compatibility validation on every push/PR.
-
-4. **Tiered workflow architecture** — Clear Tier 1/Tier 2 separation with descriptive naming makes the CI pipeline easy to understand and maintain.
+**Notable strengths vs gold standards:**
+- OPA/conftest policy validation is unique and above average — this is a practice other repos should adopt
+- operator-chaos shift-left upgrade validation is innovative
+- CLAUDE.md is among the most comprehensive seen
 
 ## File Paths Reference
 
 ### CI/CD
-- `.github/workflows/controller-tests.yaml` — Unit/envtest runner
-- `.github/workflows/conftest.yaml` — OPA manifest policy check
-- `.github/workflows/gosec.yaml` — Go security scanner
-- `.github/workflows/security-scan.yaml` — Trivy filesystem scan
-- `.github/workflows/smoke.yaml` — Kind-based smoke tests
+- `.github/workflows/controller-tests.yaml` — Unit tests
+- `.github/workflows/smoke.yaml` — Smoke tests with Kind
 - `.github/workflows/operator-chaos.yml` — Shift-left upgrade validation
-- `.github/workflows/disconnected-readiness.yaml` — Air-gap readiness
+- `.github/workflows/conftest.yaml` — OPA policy checks
 - `.github/workflows/lint-yaml.yaml` — YAML linting
-- `.github/dependabot.yml` — Dependency automation
+- `.github/workflows/gosec.yaml` — Security scanning
+- `.github/workflows/security-scan.yaml` — Trivy scanning
+- `.github/workflows/disconnected-readiness.yaml` — Disconnected readiness
+- `.github/workflows/auto-merge-upstream-sync.yaml` — Auto-merge upstream sync
+- `.github/workflows/sync-branch-incubation.yaml` — Branch sync main→incubation
+- `.github/workflows/sync-branch-stable.yaml` — Branch sync incubation→stable
 
 ### Testing
-- `controllers/*/suite_test.go` — envtest bootstrap (per controller)
-- `controllers/*/*_test.go` — Controller unit/integration tests (49 files)
-- `tests/smoke/test_smoke.sh` — Shell-based smoke test suite
-- `tests/crds/` — External CRDs for envtest
-
-### Quality
-- `Makefile` — Build, test, lint, deploy targets
-- `.yamllint.yaml` — YAML lint configuration
-- `policy/*.rego` — OPA/Conftest policies
-- `policy/*_test.rego` — OPA policy unit tests
-- `chaos/knowledge/trustyai.yaml` — operator-chaos knowledge model
+- `controllers/tas/*_test.go` — TAS controller tests (10 files)
+- `controllers/evalhub/*_test.go` — EvalHub controller tests (16 files)
+- `controllers/lmes/*_test.go` — LMES controller tests (5 files)
+- `controllers/gorch/*_test.go` — GORCH controller tests (4 files)
+- `controllers/nemo_guardrails/*_test.go` — NemoGuardrails tests (3 files)
+- `controllers/module/*_test.go` — Module controller tests (2 files)
+- `controllers/images/*_test.go` — Image resolver tests (2 files)
+- `controllers/utils/*_test.go` — Utility tests (1 file)
+- `tests/smoke/test_smoke.sh` — Smoke test script
 
 ### Container Images
-- `Dockerfile` — Main operator image
+- `Dockerfile` — Main operator image (UBI9 go-toolset → UBI8 minimal)
 - `Dockerfile.driver` — LMES driver image
-- `Dockerfile.lmes-job` — LMES job image
-- `Dockerfile.orchestrator` — Guardrails orchestrator image
-- `.dockerignore` — Docker build exclusions
+- `Dockerfile.lmes-job` — LMES job image (Python 3.11)
+- `Dockerfile.orchestrator` — Guardrails orchestrator (Rust + UBI)
+- `tests/Dockerfile` — Test container image
 
-### Agent Rules
-- `CLAUDE.md` — Comprehensive operator documentation
-- `ARCHITECTURE.md` — Detailed architecture documentation
-- `CONTRIBUTING.md` — Contribution guidelines
+### Configuration
+- `Makefile` — Build targets including test with coverage
+- `.yamllint.yaml` — YAML lint configuration
+- `.github/dependabot.yml` — Dependency updates (gomod)
+- `policy/*.rego` — OPA/Rego policies for RBAC validation
+- `chaos/knowledge/trustyai.yaml` — Operator-chaos knowledge model
+- `CLAUDE.md` — Agent rules (comprehensive)
+- `config/overlays/` — 8 kustomize overlays (odh, rhoai, testing, etc.)

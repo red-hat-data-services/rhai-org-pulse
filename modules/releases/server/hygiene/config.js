@@ -29,9 +29,9 @@ function getDefaults() {
  * @param {{ readFromStorage: function }} storage - Storage abstraction
  * @returns {{ rules: Record<string, object>, projects: string[], issueTypes: string[] }}
  */
-function loadConfig(storage) {
+async function loadConfig(storage) {
   const defaults = getDefaults()
-  const stored = storage.readFromStorage(STORAGE_KEY)
+  const stored = await storage.readFromStorage(STORAGE_KEY)
 
   if (!stored || typeof stored !== 'object') {
     return defaults
@@ -58,7 +58,7 @@ function loadConfig(storage) {
  * @param {{ writeToStorage: function }} storage - Storage abstraction
  * @param {{ rules?: Record<string, object>, projects?: string[], issueTypes?: string[] }} config - Config to save
  */
-function saveConfig(storage, config) {
+async function saveConfig(storage, config) {
   if (!config || typeof config !== 'object') {
     throw new Error('Config must be an object')
   }
@@ -69,7 +69,7 @@ function saveConfig(storage, config) {
     issueTypes: Array.isArray(config.issueTypes) ? config.issueTypes : DEFAULT_ISSUE_TYPES.slice()
   }
 
-  storage.writeToStorage(STORAGE_KEY, toSave)
+  await storage.writeToStorage(STORAGE_KEY, toSave)
 }
 
 module.exports = {

@@ -9,7 +9,8 @@
 const {
   CUSTOM_FIELDS,
   serializeField,
-  computeRiceStatus
+  computeRiceStatus,
+  numericField
 } = require('../../server/hygiene/jira-fetch');
 const { deriveHumanReviewStatus, extractSignOffInfo } = require('./ai-review-fields');
 
@@ -18,7 +19,7 @@ const THROTTLE_MS = 1000;
 
 // Fields to fetch for enrichment (matches hygiene Pass 1 + priority + parent)
 const ENRICH_FIELDS = [
-  'summary', 'status', 'assignee', 'fixVersions', 'components',
+  'summary', 'status', 'issuetype', 'assignee', 'fixVersions', 'components',
   'labels', 'priority', 'issuelinks', 'created', 'updated', 'parent',
   CUSTOM_FIELDS.team,
   CUSTOM_FIELDS.releaseType,
@@ -192,6 +193,7 @@ function transformForEnrichment(rawIssue) {
   return {
     key: rawIssue.key,
     summary: fields.summary || '',
+    issueType: fields.issuetype ? fields.issuetype.name : null,
     status: fields.status ? fields.status.name : null,
     statusCategory: fields.status && fields.status.statusCategory
       ? fields.status.statusCategory.name
@@ -210,7 +212,7 @@ function transformForEnrichment(rawIssue) {
     components,
     docsRequired: serializeField(fields[CUSTOM_FIELDS.docsRequired]),
     targetEnd: fields[CUSTOM_FIELDS.targetEnd] || null,
-    riceScore: fields[CUSTOM_FIELDS.riceScore] || null,
+    riceScore: numericField(fields[CUSTOM_FIELDS.riceScore]),
     riceStatus: computeRiceStatus(fields),
     isBlocked,
     linkedRfeKey,
@@ -302,7 +304,7 @@ async function fetchSignOffDetails(keys, storage, jiraRequestFn, fetchAllJqlResu
   // Filter to only keys that need sign-off backfill
   const needsSignOff = [];
   for (let i = 0; i < keys.length; i++) {
-    const feature = storage.readFromStorage(DATA_PREFIX + '/features/' + keys[i] + '.json');
+    const feature = await storage.readFromStorage(DATA_PREFIX + '/features/' + keys[i] + '.json');
     if (!feature || !feature.aiReview) continue;
     if (feature.aiReview.humanReviewStatus === 'approved' &&
         !feature.aiReview.approvedBy && !feature.aiReview.approvedAt) {
@@ -359,7 +361,8 @@ async function fetchEpicsForFeatures(featureKeys, jiraRequestFn, fetchAllJqlResu
 
     const batchKeys = batches[bi];
     const keyList = batchKeys.map(k => '"' + k + '"').join(', ');
-    const jql = '("Epic Link" in (' + keyList + ') OR parent in (' + keyList + '))';
+    // Epic type only — matches Confluence Child epics DoR (linked child Epics)
+    const jql = 'issuetype = Epic AND (parent in (' + keyList + ') OR "Epic Link" in (' + keyList + '))';
     const fields = 'summary,status,parent,customfield_10014';
 
     try {

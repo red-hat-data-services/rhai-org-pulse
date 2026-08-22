@@ -5,5 +5,8 @@ metadata:
   labels:
     shard: internal
     paas.redhat.com/appcode: AMBC-001
+  annotations:
+    # Frontend proxies /api; same live Jira paths as the API route
+    haproxy.router.openshift.io/timeout: 120s
 spec:
   host: team-tracker.apps.int.spoke.prod.us-west-2.aws.paas.redhat.com

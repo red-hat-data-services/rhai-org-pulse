@@ -332,7 +332,7 @@
     <div class="container">
         <header>
             <h1>Quality Analysis Report</h1>
-            <p class="timestamp">Generated on July 06, 2026 at 05:05 PM</p>
+            <p class="timestamp">Generated on July 20, 2026 at 07:17 PM</p>
             <h2 style="margin-top: 1rem; font-weight: 400;">red-hat-data-services/MLServer</h2>
         </header>
 
@@ -342,13 +342,13 @@
                     <svg width="200" height="200">
                         <circle class="bg-circle" cx="100" cy="100" r="90"></circle>
                         <circle class="score-arc" cx="100" cy="100" r="90"
-                                stroke="#ffc107"
+                                stroke="#fd7e14"
                                 stroke-dasharray="565.4861999999999"
-                                stroke-dashoffset="186.61044599999997"
+                                stroke-dashoffset="265.778514"
                                 id="scoreArc"></circle>
                     </svg>
                     <div class="score-text">
-                        <div class="score-value">6.7</div>
+                        <div class="score-value">5.3</div>
                         <div class="score-label">Overall Score</div>
                     </div>
                 </div>
@@ -364,38 +364,43 @@
                         
                         <div class="scorecard-item">
                             <h3>Unit Tests</h3>
-                            <div class="scorecard-score" style="color: #28a745;">8.5/10</div>
-                            <div class="scorecard-status">Extensive pytest suite with 450+ test functions across 114 test files; async-first with pytest-asyncio; parallel execution via pytest-xdist</div>
+                            <div class="scorecard-score" style="color: #28a745;">8.0/10</div>
+                            <div class="scorecard-status">Strong pytest suite with 118 test files across core + 10 runtimes, multi-Python matrix</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Integration/E2E</h3>
-                            <div class="scorecard-score" style="color: #ffc107;">7.0/10</div>
-                            <div class="scorecard-status">Good runtime integration tests (9 ML runtimes), Kafka/gRPC/REST server tests, but no E2E cluster deployment testing</div>
+                            <div class="scorecard-score" style="color: #fd7e14;">4.0/10</div>
+                            <div class="scorecard-status">No dedicated E2E or integration test suite; component tests exist but no cluster-level validation</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Build Integration</h3>
-                            <div class="scorecard-score" style="color: #fd7e14;">5.0/10</div>
-                            <div class="scorecard-status">Konflux PR pipeline (Tekton) builds multi-arch images on /build-konflux comment; no automatic PR-time build validation</div>
+                            <div class="scorecard-score" style="color: #fd7e14;">4.0/10</div>
+                            <div class="scorecard-status">Tekton Konflux builds exist but are comment-triggered; no automatic PR-time image build validation</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Image Testing</h3>
-                            <div class="scorecard-score" style="color: #fd7e14;">4.5/10</div>
-                            <div class="scorecard-status">Dockerfiles present with multi-stage builds but no runtime validation, startup testing, or functional image tests</div>
+                            <div class="scorecard-score" style="color: #fd7e14;">4.0/10</div>
+                            <div class="scorecard-status">Multi-stage Dockerfiles with UBI9 base, but no runtime validation, health checks, or multi-arch</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Coverage Tracking</h3>
-                            <div class="scorecard-score" style="color: #dc3545;">2.0/10</div>
-                            <div class="scorecard-status">No coverage tooling — no pytest-cov, no codecov/coveralls integration, no coverage thresholds or PR reporting</div>
+                            <div class="scorecard-score" style="color: #dc3545;">1.0/10</div>
+                            <div class="scorecard-status">No coverage tooling configured — no pytest-cov, no codecov, no thresholds</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>CI/CD Automation</h3>
-                            <div class="scorecard-score" style="color: #28a745;">8.0/10</div>
-                            <div class="scorecard-status">Well-organized workflows: PR tests, security scanning, benchmarks, license checks, requirements regeneration, release automation</div>
+                            <div class="scorecard-score" style="color: #ffc107;">7.0/10</div>
+                            <div class="scorecard-status">Comprehensive PR test matrix (3 Python versions x 9 runtimes) with SHA-pinned actions, but no caching or concurrency controls</div>
+                        </div>
+                        <div class="scorecard-item">
+                            <h3>Static Analysis</h3>
+                            <div class="scorecard-score" style="color: #ffc107;">7.0/10</div>
+                            <div class="scorecard-status">Black + flake8 + mypy linting trio; Dependabot + Renovate for deps; no pre-commit hooks</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Agent Rules</h3>
-                            <div class="scorecard-score" style="color: #ffc107;">7.5/10</div>
-                            <div class="scorecard-status">Comprehensive AGENTS.md with constraints, gotchas, branch strategy, and release process; no .claude/rules/ for test patterns</div>
+                            <div class="scorecard-score" style="color: #28a745;">8.0/10</div>
+                            <div class="scorecard-status">Excellent 12KB AGENTS.md with development constraints, gotchas, boundaries, and release process</div>
                         </div>
                     </div>
                 </div>
@@ -411,43 +416,35 @@
                     <ul class="items-list">
                         
                         <li class="item-card high">
-                            <div class="item-description">No test coverage tracking or enforcement</div>
-                            <p>Cannot measure test coverage, track regressions, or enforce minimum coverage on PRs — blind spot for quality degradation</p>
+                            <div class="item-description">No coverage tracking or enforcement</div>
+                            <p>Impossible to measure test effectiveness or detect coverage regressions on PRs</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-high">HIGH</span>
                                 <span class="meta-tag effort-tag">4-6 hours</span>
                             </div>
                         </li>
                         <li class="item-card high">
-                            <div class="item-description">No container image runtime validation</div>
-                            <p>Image startup failures, missing dependencies, or broken entrypoints not caught until deployment to staging/production</p>
+                            <div class="item-description">No dedicated integration/E2E test suite</div>
+                            <p>Multi-component interactions (REST + gRPC + Kafka + model loading) are not validated end-to-end in a realistic deployment</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-high">HIGH</span>
-                                <span class="meta-tag effort-tag">6-8 hours</span>
-                            </div>
-                        </li>
-                        <li class="item-card medium">
-                            <div class="item-description">No pre-commit hooks</div>
-                            <p>Developers can commit code that fails lint checks (black, flake8, mypy) — caught only at CI time, slowing feedback loop</p>
-                            <div class="item-meta">
-                                <span class="meta-tag severity-medium">MEDIUM</span>
-                                <span class="meta-tag effort-tag">1-2 hours</span>
+                                <span class="meta-tag effort-tag">20-40 hours</span>
                             </div>
                         </li>
                         <li class="item-card high">
-                            <div class="item-description">Security scans gated on SeldonIO/MLServer — not running on forks</div>
-                            <p>Snyk code scan, static analysis, and image scan only run on the upstream SeldonIO repo — all fork PRs (including RHDS) skip security scanning entirely</p>
+                            <div class="item-description">No automatic PR-time image build validation</div>
+                            <p>Dockerfile breakages discovered only after merge in Konflux pipelines</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-high">HIGH</span>
-                                <span class="meta-tag effort-tag">2-4 hours</span>
+                                <span class="meta-tag effort-tag">8-12 hours</span>
                             </div>
                         </li>
                         <li class="item-card medium">
-                            <div class="item-description">No E2E deployment testing</div>
-                            <p>No validation that MLServer actually serves predictions in a KServe/ModelMesh environment before merge</p>
+                            <div class="item-description">No container runtime validation or health checks</div>
+                            <p>Image startup failures and runtime issues not caught until deployment</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-medium">MEDIUM</span>
-                                <span class="meta-tag effort-tag">16-24 hours</span>
+                                <span class="meta-tag effort-tag">6-10 hours</span>
                             </div>
                         </li>
                     </ul>
@@ -465,42 +462,34 @@
                         
                         <li class="item-card ">
                             <div class="item-description">Add pytest-cov and codecov integration</div>
-                            <p>Immediate visibility into test coverage with PR-level reporting and minimum threshold enforcement</p>
+                            <p>Immediate visibility into test coverage with PR-level reporting and threshold enforcement</p>
                             <div class="item-meta">
                                 
                                 <span class="meta-tag effort-tag">4-6 hours</span>
                             </div>
                         </li>
                         <li class="item-card ">
-                            <div class="item-description">Add pre-commit hooks for black, flake8, mypy</div>
-                            <p>Catch formatting and type errors locally before CI — faster developer feedback loop</p>
+                            <div class="item-description">Add pre-commit hooks for black, flake8, and mypy</div>
+                            <p>Catch lint issues before commit, reducing CI failures from formatting/type errors</p>
                             <div class="item-meta">
                                 
                                 <span class="meta-tag effort-tag">1-2 hours</span>
                             </div>
                         </li>
                         <li class="item-card ">
-                            <div class="item-description">Fix security scan conditionals to run on forks</div>
-                            <p>Enable Snyk scanning on red-hat-data-services/MLServer and opendatahub-io/MLServer forks</p>
+                            <div class="item-description">Add concurrency controls to CI workflows</div>
+                            <p>Prevent redundant CI runs on rapid pushes, saving compute resources</p>
                             <div class="item-meta">
                                 
-                                <span class="meta-tag effort-tag">2-3 hours</span>
+                                <span class="meta-tag effort-tag">1 hour</span>
                             </div>
                         </li>
                         <li class="item-card ">
-                            <div class="item-description">Add image startup smoke test to Tekton PR pipeline</div>
-                            <p>Validate the built image can start MLServer and respond to health checks before merge</p>
+                            <div class="item-description">Add HEALTHCHECK to Dockerfiles</div>
+                            <p>Basic container health validation during orchestrator deployments</p>
                             <div class="item-meta">
                                 
-                                <span class="meta-tag effort-tag">3-4 hours</span>
-                            </div>
-                        </li>
-                        <li class="item-card ">
-                            <div class="item-description">Create .claude/rules/ for test creation patterns</div>
-                            <p>Standardize AI-generated tests to match project conventions (async, fixtures, conftest patterns)</p>
-                            <div class="item-meta">
-                                
-                                <span class="meta-tag effort-tag">2-3 hours</span>
+                                <span class="meta-tag effort-tag">1-2 hours</span>
                             </div>
                         </li>
                     </ul>
@@ -517,15 +506,15 @@
                         
                         <div class="rec-priority p0">
                             <h3>Priority 0: Critical</h3>
-                            <ul><li>Add pytest-cov with codecov integration and enforce minimum coverage threshold (e.g., 70%) on PRs</li><li>Fix security.yml conditionals so Snyk scans run on opendatahub-io and red-hat-data-services forks</li><li>Add container runtime smoke test: build image, start MLServer, hit /v2/health/ready endpoint</li></ul>
+                            <ul><li>Add pytest-cov with codecov integration and enforce a coverage threshold (e.g., 60% initially, increasing over time)</li><li>Add PR-triggered Docker build step to tests.yml to catch image build failures before merge</li><li>Create an integration test suite that validates MLServer startup, model loading, and inference end-to-end</li></ul>
                         </div>
                         <div class="rec-priority p1">
                             <h3>Priority 1: High Value</h3>
-                            <ul><li>Add pre-commit hooks (.pre-commit-config.yaml) for black, flake8, mypy</li><li>Add image startup validation to Tekton PR pipeline (health check after build)</li><li>Create .claude/rules/ with test-creation rules matching project patterns (async tests, conftest fixtures, pytest-cases)</li><li>Add contract tests for V2 inference protocol REST and gRPC endpoints</li></ul>
+                            <ul><li>Add HEALTHCHECK instructions to all Dockerfiles for container runtime validation</li><li>Add pre-commit hooks (black, flake8, mypy) to catch issues before CI</li><li>Add concurrency controls and pip caching to CI workflows to reduce build times</li><li>Add multi-architecture build support (amd64 + arm64) for broader platform coverage</li></ul>
                         </div>
                         <div class="rec-priority p2">
                             <h3>Priority 2: Nice-to-Have</h3>
-                            <ul><li>Add E2E deployment testing with Kind/Minikube and KServe InferenceService</li><li>Add performance regression testing comparing benchmark results against baseline</li><li>Add SBOM generation and image signing to container build pipeline</li><li>Add Trivy scanning as alternative/supplement to Snyk for image vulnerability detection</li></ul>
+                            <ul><li>Create .claude/rules/ directory with granular test creation rules per component</li><li>Add contract tests for the V2 Inference Protocol REST/gRPC API surface</li><li>Add performance regression tests integrated into CI (currently benchmarks are nightly-only)</li></ul>
                         </div>
                     </div>
                 </div>

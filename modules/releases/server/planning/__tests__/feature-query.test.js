@@ -1,14 +1,39 @@
 import { describe, it, expect, vi } from 'vitest'
 
-const { fetchFeatures, normalizeIssue, JQL, QUERY_FIELDS } = require('../feature-query')
+const {
+  fetchFeatures,
+  fetchFeaturesWithTimeout,
+  normalizeIssue,
+  enrichChildEpicCounts,
+  JQL,
+  QUERY_FIELDS
+} = require('../feature-query')
 const { CUSTOM_FIELDS } = require('../../hygiene/jira-fetch')
+
+/** Route feature list JQL vs child-epic enrichment JQL. */
+function mockJiraClient(featureIssues, childIssues) {
+  return {
+    fetchAllJqlResults: vi.fn().mockImplementation(function(jql) {
+      if (String(jql).indexOf('issuetype = Epic') !== -1) {
+        return Promise.resolve(childIssues || [])
+      }
+      return Promise.resolve(featureIssues || [])
+    })
+  }
+}
 
 describe('feature-query', function() {
 
   describe('JQL', function() {
-    it('queries RHAISTRAT Features and Initiatives excluding closed statuses', function() {
-      expect(JQL).toContain('project = RHAISTRAT')
+    it('queries RHAISTRAT and AIPCC for Features and Initiatives', function() {
+      expect(JQL).toContain('project IN (RHAISTRAT, AIPCC)')
       expect(JQL).toContain('issuetype IN (Feature, Initiative)')
+      expect(JQL).not.toContain('RHAIENG')
+      expect(JQL).not.toContain('INFERENG')
+      expect(JQL).not.toContain('RHAIRFE')
+    })
+
+    it('excludes Closed, Done, Resolved, and Cancelled at live fetch (open only)', function() {
       expect(JQL).toContain('status NOT IN (Closed, Done, Resolved, Cancelled)')
     })
 
@@ -34,13 +59,30 @@ describe('feature-query', function() {
       expect(QUERY_FIELDS).toContain(CUSTOM_FIELDS.targetVersion)
       expect(QUERY_FIELDS).toContain(CUSTOM_FIELDS.riceScore)
     })
+
+    it('includes project for multi-project Features List filtering', function() {
+      expect(QUERY_FIELDS).toContain('project')
+    })
+
+    it('omits description to keep the Features List request path light', function() {
+      expect(QUERY_FIELDS).not.toContain('description')
+    })
   })
 
   describe('normalizeIssue', function() {
-    it('extracts key and summary', function() {
-      var result = normalizeIssue({ key: 'RHAISTRAT-1', fields: { summary: 'My Feature' } })
-      expect(result.key).toBe('RHAISTRAT-1')
+    it('extracts key, project, and summary', function() {
+      var result = normalizeIssue({
+        key: 'RHAIENG-1',
+        fields: { summary: 'My Feature', project: { key: 'RHAIENG' } }
+      })
+      expect(result.key).toBe('RHAIENG-1')
+      expect(result.project).toBe('RHAIENG')
       expect(result.summary).toBe('My Feature')
+    })
+
+    it('derives project from issue key when project field is missing', function() {
+      var result = normalizeIssue({ key: 'RHELAI-42', fields: { summary: 'RHEL AI feat' } })
+      expect(result.project).toBe('RHELAI')
     })
 
     it('extracts assignee displayName from object', function() {
@@ -133,6 +175,33 @@ describe('feature-query', function() {
       expect(result.targetVersions).toEqual(['rhoai-3.6'])
     })
 
+    it('keeps all Target Versions when Jira returns a multi-value field', function() {
+      var fields = {}
+      fields[CUSTOM_FIELDS.targetVersion] = [
+        { name: '3.6 GA RHOAI RELEASE' },
+        { name: '3.6 EA2 RHOAI RELEASE' },
+        { name: '3.6 EA2 RHOAI RELEASE' }
+      ]
+      var result = normalizeIssue({ key: 'RHAISTRAT-14m', fields: fields })
+      expect(result.targetVersions).toEqual([
+        '3.6 GA RHOAI RELEASE',
+        '3.6 EA2 RHOAI RELEASE'
+      ])
+    })
+
+    it('extracts Target Versions from value objects and plain strings', function() {
+      var fields = {}
+      fields[CUSTOM_FIELDS.targetVersion] = [
+        { value: '3.6 EA2 RHAII RELEASE' },
+        '3.6 EA1 RHOAI RELEASE'
+      ]
+      var result = normalizeIssue({ key: 'RHAISTRAT-14n', fields: fields })
+      expect(result.targetVersions).toEqual([
+        '3.6 EA2 RHAII RELEASE',
+        '3.6 EA1 RHOAI RELEASE'
+      ])
+    })
+
     it('returns empty targetVersions when custom field is null', function() {
       var result = normalizeIssue({ key: 'RHAISTRAT-15', fields: {} })
       expect(result.targetVersions).toEqual([])
@@ -143,6 +212,20 @@ describe('feature-query', function() {
       fields[CUSTOM_FIELDS.riceScore] = 42
       var result = normalizeIssue({ key: 'RHAISTRAT-16', fields: fields })
       expect(result.riceScore).toBe(42)
+    })
+
+    it('unwraps riceScore from Jira object format', function() {
+      var fields = {}
+      fields[CUSTOM_FIELDS.riceScore] = { value: 100.5 }
+      var result = normalizeIssue({ key: 'RHAISTRAT-16b', fields: fields })
+      expect(result.riceScore).toBe(100.5)
+    })
+
+    it('handles riceScore object with null value', function() {
+      var fields = {}
+      fields[CUSTOM_FIELDS.riceScore] = { value: null }
+      var result = normalizeIssue({ key: 'RHAISTRAT-16c', fields: fields })
+      expect(result.riceScore).toBeNull()
     })
 
     it('handles completely empty fields', function() {
@@ -180,12 +263,11 @@ describe('feature-query', function() {
     })
 
     it('calls fetchAllJqlResults with correct JQL and fields', async function() {
-      var mockFetch = vi.fn().mockResolvedValue([])
-      var client = { fetchAllJqlResults: mockFetch }
+      var client = mockJiraClient([])
 
       await fetchFeatures(client)
 
-      expect(mockFetch).toHaveBeenCalledWith(JQL, QUERY_FIELDS, { maxResults: 100 })
+      expect(client.fetchAllJqlResults).toHaveBeenCalledWith(JQL, QUERY_FIELDS, { maxResults: 100 })
     })
 
     it('returns Map keyed by issue key', async function() {
@@ -193,13 +275,14 @@ describe('feature-query', function() {
         { key: 'RHAISTRAT-100', fields: { summary: 'Feature A', status: { name: 'In Progress' } } },
         { key: 'RHAISTRAT-200', fields: { summary: 'Feature B', status: { name: 'New' } } }
       ]
-      var client = { fetchAllJqlResults: vi.fn().mockResolvedValue(issues) }
+      var client = mockJiraClient(issues)
 
       var result = await fetchFeatures(client)
 
       expect(result.size).toBe(2)
       expect(result.get('RHAISTRAT-100').summary).toBe('Feature A')
       expect(result.get('RHAISTRAT-200').summary).toBe('Feature B')
+      expect(result.get('RHAISTRAT-100').epicCount).toBeUndefined()
     })
 
     it('skips issues without a key', async function() {
@@ -208,7 +291,7 @@ describe('feature-query', function() {
         { key: null, fields: { summary: 'No key' } },
         { fields: { summary: 'Also no key' } }
       ]
-      var client = { fetchAllJqlResults: vi.fn().mockResolvedValue(issues) }
+      var client = mockJiraClient(issues)
 
       var result = await fetchFeatures(client)
 
@@ -231,7 +314,7 @@ describe('feature-query', function() {
       fields[CUSTOM_FIELDS.targetVersion] = { name: 'rhoai-3.6' }
       fields[CUSTOM_FIELDS.riceScore] = 150
 
-      var client = { fetchAllJqlResults: vi.fn().mockResolvedValue([{ key: 'RHAISTRAT-300', fields: fields }]) }
+      var client = mockJiraClient([{ key: 'RHAISTRAT-300', fields: fields }])
 
       var result = await fetchFeatures(client)
       var feature = result.get('RHAISTRAT-300')
@@ -247,6 +330,83 @@ describe('feature-query', function() {
       expect(feature.team).toBe('Platform')
       expect(feature.targetVersions).toEqual(['rhoai-3.6'])
       expect(feature.riceScore).toBe(150)
+    })
+
+    it('does not run live child-epic enrichment on the request path', async function() {
+      var features = [
+        { key: 'RHAISTRAT-2198', fields: { summary: 'Validated Models' } }
+      ]
+      var children = [
+        {
+          key: 'RHOAIENG-76148',
+          fields: { parent: { key: 'RHAISTRAT-2198' } }
+        },
+        {
+          key: 'RHOAIENG-76162',
+          fields: { parent: { key: 'RHAISTRAT-2198' } }
+        }
+      ]
+      var client = mockJiraClient(features, children)
+
+      var result = await fetchFeatures(client)
+      expect(result.get('RHAISTRAT-2198').epicCount).toBeUndefined()
+      expect(client.fetchAllJqlResults).toHaveBeenCalledTimes(1)
+      expect(client.fetchAllJqlResults.mock.calls.some(function(c) {
+        return String(c[0]).indexOf('issuetype = Epic') !== -1
+      })).toBe(false)
+    })
+  })
+
+  describe('fetchFeaturesWithTimeout', function() {
+    it('returns null when jiraClient is missing', async function() {
+      expect(await fetchFeaturesWithTimeout(null)).toBeNull()
+    })
+
+    it('returns the feature map when fetch completes in time', async function() {
+      var client = mockJiraClient([
+        { key: 'RHAISTRAT-1', fields: { summary: 'Fast' } }
+      ])
+      var result = await fetchFeaturesWithTimeout(client, 5000)
+      expect(result).toBeInstanceOf(Map)
+      expect(result.get('RHAISTRAT-1').summary).toBe('Fast')
+    })
+
+    it('returns null when the live fetch exceeds the timeout', async function() {
+      var client = {
+        fetchAllJqlResults: vi.fn().mockImplementation(function() {
+          return new Promise(function(resolve) {
+            setTimeout(function() {
+              resolve([{ key: 'RHAISTRAT-SLOW', fields: { summary: 'Late' } }])
+            }, 200)
+          })
+        })
+      }
+      var result = await fetchFeaturesWithTimeout(client, 20)
+      expect(result).toBeNull()
+    })
+  })
+
+  describe('enrichChildEpicCounts', function() {
+    it('counts Epic Link customfield parents via fetchEpicsForFeatures', async function() {
+      var map = new Map([
+        ['RHAISTRAT-1', { key: 'RHAISTRAT-1', epicCount: 0 }]
+      ])
+      var client = {
+        fetchAllJqlResults: vi.fn().mockImplementation(function(jql) {
+          expect(String(jql)).toContain('issuetype = Epic')
+          return Promise.resolve([
+            { key: 'RHOAIENG-1', fields: { customfield_10014: 'RHAISTRAT-1' } }
+          ])
+        })
+      }
+      await enrichChildEpicCounts(client, map)
+      expect(map.get('RHAISTRAT-1').epicCount).toBe(1)
+    })
+
+    it('no-ops on empty map', async function() {
+      var client = { fetchAllJqlResults: vi.fn() }
+      await enrichChildEpicCounts(client, new Map())
+      expect(client.fetchAllJqlResults).not.toHaveBeenCalled()
     })
   })
 })
@@ -331,31 +491,29 @@ describe('expanded custom fields', function() {
     })
 
     it('fetchFeatures includes new fields in returned map entries', async function() {
-      var mockClient = {
-        fetchAllJqlResults: vi.fn().mockResolvedValue([
-          {
-            key: 'RHAISTRAT-NF7',
-            fields: {
-              summary: 'Full Feature',
-              status: { name: 'In Progress' },
-              issuetype: { name: 'Feature' },
-              assignee: { displayName: 'Dev' },
-              fixVersions: [{ name: 'rhoai-3.6' }],
-              components: [{ name: 'API' }],
-              labels: [],
-              priority: { name: 'Major' },
-              [CUSTOM_FIELDS.team]: { value: 'MyTeam' },
-              [CUSTOM_FIELDS.targetVersion]: { value: 'rhoai-3.6' },
-              [CUSTOM_FIELDS.riceScore]: 200,
-              [CUSTOM_FIELDS.statusSummary]: 'Looking good',
-              [CUSTOM_FIELDS.colorStatus]: { value: 'Green' },
-              [CUSTOM_FIELDS.releaseType]: { value: 'GA' },
-              [CUSTOM_FIELDS.docsRequired]: { value: 'Yes' },
-              [CUSTOM_FIELDS.targetEnd]: '2026-10-01'
-            }
+      var mockClient = mockJiraClient([
+        {
+          key: 'RHAISTRAT-NF7',
+          fields: {
+            summary: 'Full Feature',
+            status: { name: 'In Progress' },
+            issuetype: { name: 'Feature' },
+            assignee: { displayName: 'Dev' },
+            fixVersions: [{ name: 'rhoai-3.6' }],
+            components: [{ name: 'API' }],
+            labels: [],
+            priority: { name: 'Major' },
+            [CUSTOM_FIELDS.team]: { value: 'MyTeam' },
+            [CUSTOM_FIELDS.targetVersion]: { value: 'rhoai-3.6' },
+            [CUSTOM_FIELDS.riceScore]: 200,
+            [CUSTOM_FIELDS.statusSummary]: 'Looking good',
+            [CUSTOM_FIELDS.colorStatus]: { value: 'Green' },
+            [CUSTOM_FIELDS.releaseType]: { value: 'GA' },
+            [CUSTOM_FIELDS.docsRequired]: { value: 'Yes' },
+            [CUSTOM_FIELDS.targetEnd]: '2026-10-01'
           }
-        ])
-      }
+        }
+      ])
 
       var result = await fetchFeatures(mockClient)
       expect(result.size).toBe(1)

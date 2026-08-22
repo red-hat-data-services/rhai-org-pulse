@@ -1,6 +1,6 @@
 {
-  "lastSyncedAt": "2026-05-10T18:00:00Z",
-  "lastJiraSyncAt": "2026-05-10T18:05:00Z",
+  "lastSyncedAt": "2026-07-15T00:00:00Z",
+  "lastJiraSyncAt": "2026-07-15T00:00:00Z",
   "totalTestPlans": 7,
   "testPlans": {
     "RHAISTRAT-1168": {
@@ -10,10 +10,22 @@
         "sourceKey": "RHAISTRAT-1168",
         "score": 9,
         "verdict": "Ready",
-        "scores": { "specificity": 2, "grounding": 2, "scope_fidelity": 2, "actionability": 2, "consistency": 1 },
+        "scores": {
+          "specificity": 2,
+          "grounding": 2,
+          "scope_fidelity": 2,
+          "actionability": 2,
+          "consistency": 1
+        },
         "autoRevised": true,
         "beforeScore": 6,
-        "beforeScores": { "specificity": 1, "grounding": 1, "scope_fidelity": 2, "actionability": 1, "consistency": 1 },
+        "beforeScores": {
+          "specificity": 1,
+          "grounding": 1,
+          "scope_fidelity": 2,
+          "actionability": 1,
+          "consistency": 1
+        },
         "criterionNotes": {
           "specificity": "Test steps reference specific API endpoints and expected response codes.",
           "grounding": "All endpoints traced back to source strategy.",
@@ -23,25 +35,39 @@
         },
         "feedback": "Strong test plan. Fix Section 2.3 priority definitions to match Section 4.",
         "error": null,
-        "components": ["dashboard", "model-serving"],
+        "components": [
+          "dashboard",
+          "model-serving"
+        ],
         "testCaseCount": 24,
         "jiraTitle": "GPU-as-a-Service Observability Dashboard",
         "jiraStatus": "In Progress",
         "jiraPriority": "Critical",
-        "labels": ["test-plan-auto-created", "test-plan-auto-revised", "test-plan-rubric-pass", "test-plan-human-sign-off"],
+        "labels": [
+          "test-plan-auto-created",
+          "test-plan-auto-revised",
+          "test-plan-rubric-pass",
+          "test-plan-human-sign-off"
+        ],
         "humanReviewStatus": "approved",
         "approvedBy": "Alice Nguyen",
-        "approvedAt": "2026-05-10T14:30:00Z",
-        "reviewedAt": "2026-05-10T12:00:00Z",
+        "approvedAt": "2026-07-15T00:00:00Z",
+        "reviewedAt": "2026-07-14T00:00:00Z",
         "gitlabPath": "RHAISTRAT/20260510-120000-RHAISTRAT-1168/gpu_observability_dashboard"
       },
       "history": [
         {
-          "scores": { "specificity": 1, "grounding": 1, "scope_fidelity": 2, "actionability": 1, "consistency": 1 },
+          "scores": {
+            "specificity": 1,
+            "grounding": 1,
+            "scope_fidelity": 2,
+            "actionability": 1,
+            "consistency": 1
+          },
           "score": 6,
           "verdict": "Revise",
           "autoRevised": false,
-          "reviewedAt": "2026-05-03T12:00:00Z"
+          "reviewedAt": "2026-07-07T00:00:00Z"
         }
       ]
     },
@@ -52,22 +78,34 @@
         "sourceKey": "RHAISTRAT-1169",
         "score": 5,
         "verdict": "Revise",
-        "scores": { "specificity": 1, "grounding": 1, "scope_fidelity": 2, "actionability": 0, "consistency": 1 },
+        "scores": {
+          "specificity": 1,
+          "grounding": 1,
+          "scope_fidelity": 2,
+          "actionability": 0,
+          "consistency": 1
+        },
         "autoRevised": false,
         "beforeScore": null,
         "beforeScores": null,
         "criterionNotes": {},
-        "feedback": "Actionability is the main gap — test data requirements are too vague for QE to start.",
-        "gapAnalysis": "## Scope & Endpoints\n\n- **Autoscaling metrics API specification (CPU, memory,\n  custom metrics)** — Strategy references CPU/memory-based\n  scaling but does not specify which Prometheus metrics trigger\n  scale-up/down or custom metrics API endpoints. Would be\n  resolved by: API spec or KServe autoscaler design doc.\n- **InferenceService autoscaler configuration schema** — HPA settings (minReplicas, maxReplicas, targetUtilizationPercentage) are mentioned but field names and validation rules not provided. Would be resolved by: KServe CRD specification.\n- **Throughput measurement endpoint** — Strategy requires \"high-throughput inference\" validation but does not specify how requests/second is measured or logged. Would be resolved by: API spec for metrics endpoints.\n\n## Test Strategy & Risks\n\n- **Baseline performance targets** — Strategy requires validating autoscaling improves throughput but does not define baseline latency/throughput SLOs (e.g., \"< 200ms p95 latency at 100 req/s\"). Would be resolved by: NFR specification or feature refinement.\n- **Load pattern specifications** — Test plan needs realistic\n  traffic patterns (burst vs sustained load, request size\n  distribution) but these are not defined. Would be resolved\n  by: Test data specification or design doc.\n- **Scale-down delay configuration** — KServe scale-to-zero behavior impacts testing but cooldown periods and grace periods are not specified. Would be resolved by: Feature refinement or KServe configuration guide.\n\n## Environment & Infrastructure\n\n- **GPU resource requirements** — Strategy implies GPU-accelerated models but does not specify GPU types, memory sizes, or multi-GPU configurations needed for testing. Would be resolved by: Infrastructure requirements doc.\n- **Model artifact specifications** — No sample models specified (framework, size, format). Test plan cannot define model deployment without concrete examples. Would be resolved by: Test data catalog or design doc.\n- **Cluster sizing for realistic load** — Node count, CPU/memory limits, and network bandwidth requirements for load testing are not specified. Would be resolved by: Infrastructure design doc.",
+        "feedback": "Actionability is the main gap \u2014 test data requirements are too vague for QE to start.",
+        "gapAnalysis": "## Scope & Endpoints\n\n- **Autoscaling metrics API specification (CPU, memory,\n  custom metrics)** \u2014 Strategy references CPU/memory-based\n  scaling but does not specify which Prometheus metrics trigger\n  scale-up/down or custom metrics API endpoints. Would be\n  resolved by: API spec or KServe autoscaler design doc.\n- **InferenceService autoscaler configuration schema** \u2014 HPA settings (minReplicas, maxReplicas, targetUtilizationPercentage) are mentioned but field names and validation rules not provided. Would be resolved by: KServe CRD specification.\n- **Throughput measurement endpoint** \u2014 Strategy requires \"high-throughput inference\" validation but does not specify how requests/second is measured or logged. Would be resolved by: API spec for metrics endpoints.\n\n## Test Strategy & Risks\n\n- **Baseline performance targets** \u2014 Strategy requires validating autoscaling improves throughput but does not define baseline latency/throughput SLOs (e.g., \"< 200ms p95 latency at 100 req/s\"). Would be resolved by: NFR specification or feature refinement.\n- **Load pattern specifications** \u2014 Test plan needs realistic\n  traffic patterns (burst vs sustained load, request size\n  distribution) but these are not defined. Would be resolved\n  by: Test data specification or design doc.\n- **Scale-down delay configuration** \u2014 KServe scale-to-zero behavior impacts testing but cooldown periods and grace periods are not specified. Would be resolved by: Feature refinement or KServe configuration guide.\n\n## Environment & Infrastructure\n\n- **GPU resource requirements** \u2014 Strategy implies GPU-accelerated models but does not specify GPU types, memory sizes, or multi-GPU configurations needed for testing. Would be resolved by: Infrastructure requirements doc.\n- **Model artifact specifications** \u2014 No sample models specified (framework, size, format). Test plan cannot define model deployment without concrete examples. Would be resolved by: Test data catalog or design doc.\n- **Cluster sizing for realistic load** \u2014 Node count, CPU/memory limits, and network bandwidth requirements for load testing are not specified. Would be resolved by: Infrastructure design doc.",
         "error": null,
-        "components": ["model-serving", "kserve"],
+        "components": [
+          "model-serving",
+          "kserve"
+        ],
         "testCaseCount": 8,
         "jiraTitle": "Model Serving Autoscaling for High-Throughput Inference",
         "jiraStatus": "Refined",
         "jiraPriority": "Major",
-        "labels": ["test-plan-auto-created", "test-plan-rubric-fail"],
+        "labels": [
+          "test-plan-auto-created",
+          "test-plan-rubric-fail"
+        ],
         "humanReviewStatus": "needs-review",
-        "reviewedAt": "2026-05-09T14:00:00Z"
+        "reviewedAt": "2026-07-07T00:00:00Z"
       },
       "history": []
     },
@@ -78,22 +116,33 @@
         "sourceKey": "RHAISTRAT-1170",
         "score": 3,
         "verdict": "Rework",
-        "scores": { "specificity": 0, "grounding": 1, "scope_fidelity": 1, "actionability": 0, "consistency": 1 },
+        "scores": {
+          "specificity": 0,
+          "grounding": 1,
+          "scope_fidelity": 1,
+          "actionability": 0,
+          "consistency": 1
+        },
         "autoRevised": false,
         "beforeScore": null,
         "beforeScores": null,
         "criterionNotes": {},
-        "feedback": "Test plan is too generic — reads like a template, not a feature-specific plan.",
-        "gapAnalysis": "## Scope & Endpoints\n\n- **Training Operator API extensions for GPU scheduling** — Strategy describes \"GPU scheduling improvements\" but does not reference specific PyTorchJob, TFJob, or MPIJob CRD field changes. Would be resolved by: ADR or Training Operator API specification.\n- **GPU topology awareness implementation** — Strategy mentions topology-aware scheduling but does not specify Kubernetes node labels, device plugin APIs, or scheduler plugin interfaces used. Would be resolved by: Design doc or Kubernetes scheduler integration spec.\n- **Resource quota enforcement mechanism** — Strategy requires multi-tenant GPU sharing but does not specify ResourceQuota or LimitRange configurations or namespace-level enforcement. Would be resolved by: Design doc.\n\n## Test Strategy & Risks\n\n- **Concrete GPU scheduling scenarios** — Test plan lists generic \"verify GPU allocation\" steps without specific node topologies (single-node 8xGPU vs multi-node 4xGPU), affinity rules, or failure modes. Would be resolved by: Feature refinement with concrete use cases.\n- **Scheduler plugin decision points** — Strategy implies custom scheduler logic but does not define scoring/filtering criteria, preemption policies, or fallback behavior. Would be resolved by: Design doc or Kubernetes scheduler plugin specification.\n- **Performance degradation acceptance criteria** — Strategy requires \"no performance regression\" but does not specify job startup latency, scheduling throughput, or GPU utilization targets. Would be resolved by: NFR specification.\n- **Integration with existing GPU device plugins** — Test plan does not specify which NVIDIA device plugin version, driver version, or CUDA runtime is assumed. Would be resolved by: Compatibility matrix or infrastructure requirements.\n\n## Environment & Infrastructure\n\n- **GPU hardware topology configurations** — No specification of test configurations (NVLink vs PCIe, single vs multi-GPU nodes, GPU memory sizes). Would be resolved by: Test environment design doc.\n- **Training Operator version compatibility** — Minimum Training Operator version for this feature not specified. Would be resolved by: Release planning documentation.\n- **Multi-tenant namespace setup** — How many tenants, resource quota values per tenant, and RBAC roles for testing are not defined. Would be resolved by: Test environment setup guide.",
+        "feedback": "Test plan is too generic \u2014 reads like a template, not a feature-specific plan.",
+        "gapAnalysis": "## Scope & Endpoints\n\n- **Training Operator API extensions for GPU scheduling** \u2014 Strategy describes \"GPU scheduling improvements\" but does not reference specific PyTorchJob, TFJob, or MPIJob CRD field changes. Would be resolved by: ADR or Training Operator API specification.\n- **GPU topology awareness implementation** \u2014 Strategy mentions topology-aware scheduling but does not specify Kubernetes node labels, device plugin APIs, or scheduler plugin interfaces used. Would be resolved by: Design doc or Kubernetes scheduler integration spec.\n- **Resource quota enforcement mechanism** \u2014 Strategy requires multi-tenant GPU sharing but does not specify ResourceQuota or LimitRange configurations or namespace-level enforcement. Would be resolved by: Design doc.\n\n## Test Strategy & Risks\n\n- **Concrete GPU scheduling scenarios** \u2014 Test plan lists generic \"verify GPU allocation\" steps without specific node topologies (single-node 8xGPU vs multi-node 4xGPU), affinity rules, or failure modes. Would be resolved by: Feature refinement with concrete use cases.\n- **Scheduler plugin decision points** \u2014 Strategy implies custom scheduler logic but does not define scoring/filtering criteria, preemption policies, or fallback behavior. Would be resolved by: Design doc or Kubernetes scheduler plugin specification.\n- **Performance degradation acceptance criteria** \u2014 Strategy requires \"no performance regression\" but does not specify job startup latency, scheduling throughput, or GPU utilization targets. Would be resolved by: NFR specification.\n- **Integration with existing GPU device plugins** \u2014 Test plan does not specify which NVIDIA device plugin version, driver version, or CUDA runtime is assumed. Would be resolved by: Compatibility matrix or infrastructure requirements.\n\n## Environment & Infrastructure\n\n- **GPU hardware topology configurations** \u2014 No specification of test configurations (NVLink vs PCIe, single vs multi-GPU nodes, GPU memory sizes). Would be resolved by: Test environment design doc.\n- **Training Operator version compatibility** \u2014 Minimum Training Operator version for this feature not specified. Would be resolved by: Release planning documentation.\n- **Multi-tenant namespace setup** \u2014 How many tenants, resource quota values per tenant, and RBAC roles for testing are not defined. Would be resolved by: Test environment setup guide.",
         "error": null,
-        "components": ["training-operator"],
+        "components": [
+          "training-operator"
+        ],
         "testCaseCount": 4,
         "jiraTitle": "Training Operator GPU Scheduling Improvements",
         "jiraStatus": "New",
         "jiraPriority": "Normal",
-        "labels": ["test-plan-auto-created", "test-plan-rubric-fail"],
+        "labels": [
+          "test-plan-auto-created",
+          "test-plan-rubric-fail"
+        ],
         "humanReviewStatus": "needs-review",
-        "reviewedAt": "2026-05-08T10:00:00Z"
+        "reviewedAt": "2026-06-30T00:00:00Z"
       },
       "history": []
     },
@@ -104,7 +153,13 @@
         "sourceKey": "RHAISTRAT-1171",
         "score": 10,
         "verdict": "Ready",
-        "scores": { "specificity": 2, "grounding": 2, "scope_fidelity": 2, "actionability": 2, "consistency": 2 },
+        "scores": {
+          "specificity": 2,
+          "grounding": 2,
+          "scope_fidelity": 2,
+          "actionability": 2,
+          "consistency": 2
+        },
         "autoRevised": false,
         "beforeScore": null,
         "beforeScores": null,
@@ -113,20 +168,26 @@
           "grounding": "All endpoints from the strategy are covered with cross-reference table.",
           "scope_fidelity": "In-scope and out-of-scope perfectly match strategy.",
           "actionability": "Test data, users, and cluster config fully specified.",
-          "consistency": "All sections align — priorities, endpoints, coverage matrix."
+          "consistency": "All sections align \u2014 priorities, endpoints, coverage matrix."
         },
         "feedback": "Exemplary test plan. Ready for test case generation.",
         "error": null,
-        "components": ["model-registry"],
+        "components": [
+          "model-registry"
+        ],
         "testCaseCount": 18,
         "jiraTitle": "Model Registry RBAC and Multi-Tenancy Support",
         "jiraStatus": "In Progress",
         "jiraPriority": "Critical",
-        "labels": ["test-plan-auto-created", "test-plan-rubric-pass", "test-plan-human-sign-off"],
+        "labels": [
+          "test-plan-auto-created",
+          "test-plan-rubric-pass",
+          "test-plan-human-sign-off"
+        ],
         "humanReviewStatus": "approved",
         "approvedBy": "Bob Chen",
-        "approvedAt": "2026-05-10T16:45:00Z",
-        "reviewedAt": "2026-05-10T16:00:00Z"
+        "approvedAt": "2026-06-24T00:00:00Z",
+        "reviewedAt": "2026-06-23T00:00:00Z"
       },
       "history": []
     },
@@ -137,21 +198,33 @@
         "sourceKey": "RHAISTRAT-1172",
         "score": 8,
         "verdict": "Ready",
-        "scores": { "specificity": 2, "grounding": 2, "scope_fidelity": 2, "actionability": 1, "consistency": 1 },
+        "scores": {
+          "specificity": 2,
+          "grounding": 2,
+          "scope_fidelity": 2,
+          "actionability": 1,
+          "consistency": 1
+        },
         "autoRevised": false,
         "beforeScore": null,
         "beforeScores": null,
         "criterionNotes": {},
         "feedback": "Good plan overall. Minor consistency issue in priority assignments.",
         "error": null,
-        "components": ["notebooks", "dashboard"],
+        "components": [
+          "notebooks",
+          "dashboard"
+        ],
         "testCaseCount": 15,
         "jiraTitle": "Notebook Image Lifecycle Management",
         "jiraStatus": "Refined",
         "jiraPriority": "Major",
-        "labels": ["test-plan-auto-created", "test-plan-rubric-pass"],
+        "labels": [
+          "test-plan-auto-created",
+          "test-plan-rubric-pass"
+        ],
         "humanReviewStatus": "awaiting-review",
-        "reviewedAt": "2026-05-10T17:00:00Z"
+        "reviewedAt": "2026-06-16T00:00:00Z"
       },
       "history": []
     },
@@ -162,30 +235,54 @@
         "sourceKey": "RHOAIENG-48676",
         "score": 7,
         "verdict": "Revise",
-        "scores": { "specificity": 2, "grounding": 1, "scope_fidelity": 2, "actionability": 1, "consistency": 1 },
+        "scores": {
+          "specificity": 2,
+          "grounding": 1,
+          "scope_fidelity": 2,
+          "actionability": 1,
+          "consistency": 1
+        },
         "autoRevised": true,
         "beforeScore": 4,
-        "beforeScores": { "specificity": 1, "grounding": 0, "scope_fidelity": 2, "actionability": 0, "consistency": 1 },
+        "beforeScores": {
+          "specificity": 1,
+          "grounding": 0,
+          "scope_fidelity": 2,
+          "actionability": 0,
+          "consistency": 1
+        },
         "criterionNotes": {},
         "feedback": "Grounding improved after auto-revision but still references undocumented retry API.",
-        "gapAnalysis": "## Scope & Endpoints\n\n- **Retry configuration API specification** — Strategy describes \"step-level retry configuration\" but does not provide the PipelineRun or PipelineSpec YAML field names (e.g., retries, backoffLimit, retryStrategy). Would be resolved by: Tekton Pipelines API reference or ADR for RHOAI-specific extensions.\n- **Error recovery trigger conditions** — Strategy states \"automatic error recovery\" but does not specify which exit codes, error types, or condition statuses trigger retry vs fail-fast behavior. Would be resolved by: Feature refinement or design doc.\n- **Retry status observability endpoints** — Test plan needs to verify retry count and backoff state via API, but no .status.retriesAttempted or similar field is documented. Would be resolved by: API spec.\n\n## Test Strategy & Risks\n\n- **Backoff algorithm specification** — Strategy mentions \"exponential backoff\" but does not define initial delay, multiplier, max delay, or jitter parameters. Would be resolved by: Design doc or algorithm specification.\n- **Failure classification logic** — Which failures are retryable (transient network errors, OOMKilled) vs non-retryable (invalid configuration, authentication failures) is not defined. Would be resolved by: Feature refinement or error taxonomy document.\n- **Pipeline state consistency during retry** — How PipelineRun artifacts, workspace state, and downstream steps are affected by mid-pipeline retries is not specified. Would be resolved by: Design doc.\n\n## Environment & Infrastructure\n\n- **Data Science Pipelines version requirements** — Minimum Kubeflow Pipelines / Tekton Pipelines version supporting retry APIs is not specified. Would be resolved by: Compatibility matrix or release planning documentation.\n- **Fault injection tooling** — Test plan requires simulating transient failures (network flakiness, pod evictions) but no tooling or methodology is specified. Would be resolved by: Test infrastructure design doc.",
+        "gapAnalysis": "## Scope & Endpoints\n\n- **Retry configuration API specification** \u2014 Strategy describes \"step-level retry configuration\" but does not provide the PipelineRun or PipelineSpec YAML field names (e.g., retries, backoffLimit, retryStrategy). Would be resolved by: Tekton Pipelines API reference or ADR for RHOAI-specific extensions.\n- **Error recovery trigger conditions** \u2014 Strategy states \"automatic error recovery\" but does not specify which exit codes, error types, or condition statuses trigger retry vs fail-fast behavior. Would be resolved by: Feature refinement or design doc.\n- **Retry status observability endpoints** \u2014 Test plan needs to verify retry count and backoff state via API, but no .status.retriesAttempted or similar field is documented. Would be resolved by: API spec.\n\n## Test Strategy & Risks\n\n- **Backoff algorithm specification** \u2014 Strategy mentions \"exponential backoff\" but does not define initial delay, multiplier, max delay, or jitter parameters. Would be resolved by: Design doc or algorithm specification.\n- **Failure classification logic** \u2014 Which failures are retryable (transient network errors, OOMKilled) vs non-retryable (invalid configuration, authentication failures) is not defined. Would be resolved by: Feature refinement or error taxonomy document.\n- **Pipeline state consistency during retry** \u2014 How PipelineRun artifacts, workspace state, and downstream steps are affected by mid-pipeline retries is not specified. Would be resolved by: Design doc.\n\n## Environment & Infrastructure\n\n- **Data Science Pipelines version requirements** \u2014 Minimum Kubeflow Pipelines / Tekton Pipelines version supporting retry APIs is not specified. Would be resolved by: Compatibility matrix or release planning documentation.\n- **Fault injection tooling** \u2014 Test plan requires simulating transient failures (network flakiness, pod evictions) but no tooling or methodology is specified. Would be resolved by: Test infrastructure design doc.",
         "error": null,
-        "components": ["data-science-pipelines"],
+        "components": [
+          "data-science-pipelines"
+        ],
         "testCaseCount": 11,
         "jiraTitle": "Pipeline Step Retry and Error Recovery",
         "jiraStatus": "In Progress",
         "jiraPriority": "Major",
-        "labels": ["test-plan-auto-created", "test-plan-auto-revised", "test-plan-rubric-fail"],
+        "labels": [
+          "test-plan-auto-created",
+          "test-plan-auto-revised",
+          "test-plan-rubric-fail"
+        ],
         "humanReviewStatus": "needs-review",
-        "reviewedAt": "2026-05-10T15:00:00Z"
+        "reviewedAt": "2026-06-09T00:00:00Z"
       },
       "history": [
         {
-          "scores": { "specificity": 1, "grounding": 0, "scope_fidelity": 2, "actionability": 0, "consistency": 1 },
+          "scores": {
+            "specificity": 1,
+            "grounding": 0,
+            "scope_fidelity": 2,
+            "actionability": 0,
+            "consistency": 1
+          },
           "score": 4,
           "verdict": "Rework",
           "autoRevised": false,
-          "reviewedAt": "2026-05-07T10:00:00Z"
+          "reviewedAt": "2026-06-02T00:00:00Z"
         }
       ]
     },
@@ -196,21 +293,32 @@
         "sourceKey": "RHAISTRAT-1175",
         "score": 6,
         "verdict": "Revise",
-        "scores": { "specificity": 1, "grounding": 2, "scope_fidelity": 1, "actionability": 1, "consistency": 1 },
+        "scores": {
+          "specificity": 1,
+          "grounding": 2,
+          "scope_fidelity": 1,
+          "actionability": 1,
+          "consistency": 1
+        },
         "autoRevised": false,
         "beforeScore": null,
         "beforeScores": null,
         "criterionNotes": {},
         "feedback": "",
         "error": "Review timed out during auto-revision cycle 2. Partial scores retained.",
-        "components": ["ray", "training-operator"],
+        "components": [
+          "ray",
+          "training-operator"
+        ],
         "testCaseCount": 9,
         "jiraTitle": "Distributed Training with Ray on OpenShift AI",
         "jiraStatus": "Closed",
         "jiraPriority": "Minor",
-        "labels": ["test-plan-auto-created"],
+        "labels": [
+          "test-plan-auto-created"
+        ],
         "humanReviewStatus": "awaiting-review",
-        "reviewedAt": "2026-05-09T08:00:00Z"
+        "reviewedAt": "2026-06-02T00:00:00Z"
       },
       "history": []
     }

@@ -332,7 +332,7 @@
     <div class="container">
         <header>
             <h1>Quality Analysis Report</h1>
-            <p class="timestamp">Generated on July 06, 2026 at 03:39 PM</p>
+            <p class="timestamp">Generated on July 21, 2026 at 12:21 PM</p>
             <h2 style="margin-top: 1rem; font-weight: 400;">redhat-openshift-ecosystem/community-operators-prod</h2>
         </header>
 
@@ -342,13 +342,13 @@
                     <svg width="200" height="200">
                         <circle class="bg-circle" cx="100" cy="100" r="90"></circle>
                         <circle class="score-arc" cx="100" cy="100" r="90"
-                                stroke="#fd7e14"
+                                stroke="#dc3545"
                                 stroke-dasharray="565.4861999999999"
-                                stroke-dashoffset="294.052824"
+                                stroke-dashoffset="469.353546"
                                 id="scoreArc"></circle>
                     </svg>
                     <div class="score-text">
-                        <div class="score-value">4.8</div>
+                        <div class="score-value">1.7</div>
                         <div class="score-label">Overall Score</div>
                     </div>
                 </div>
@@ -365,37 +365,42 @@
                         <div class="scorecard-item">
                             <h3>Unit Tests</h3>
                             <div class="scorecard-score" style="color: #dc3545;">1.0/10</div>
-                            <div class="scorecard-status">No unit tests — this is a data/catalog repository, not a software project</div>
+                            <div class="scorecard-status">No source code — repo is a YAML metadata catalog, not a code project</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Integration/E2E</h3>
-                            <div class="scorecard-score" style="color: #ffc107;">7.0/10</div>
-                            <div class="scorecard-status">External Tekton pipeline runs DeployableByOLM, preflight-trigger, dangling bundle checks</div>
+                            <div class="scorecard-score" style="color: #dc3545;">3.0/10</div>
+                            <div class="scorecard-status">External pipeline runs DeployableByOLM and preflight checks; no in-repo test code</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Build Integration</h3>
-                            <div class="scorecard-score" style="color: #ffc107;">6.0/10</div>
-                            <div class="scorecard-status">External pipeline validates bundle builds, index image construction, and FBC catalog generation</div>
+                            <div class="scorecard-score" style="color: #dc3545;">2.0/10</div>
+                            <div class="scorecard-status">3,080 bundle.Dockerfiles exist but no PR-time build validation in-repo</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Image Testing</h3>
-                            <div class="scorecard-score" style="color: #fd7e14;">5.0/10</div>
-                            <div class="scorecard-status">Bundle images built from scratch Dockerfiles; preflight checks run but no runtime validation</div>
+                            <div class="scorecard-score" style="color: #dc3545;">1.0/10</div>
+                            <div class="scorecard-status">Bundle Dockerfiles are FROM scratch metadata-only; no runtime validation</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Coverage Tracking</h3>
-                            <div class="scorecard-score" style="color: #dc3545;">1.0/10</div>
-                            <div class="scorecard-status">No code coverage — N/A for a data repository; no operator manifest coverage metrics</div>
+                            <div class="scorecard-score" style="color: #dc3545;">0.0/10</div>
+                            <div class="scorecard-status">No code coverage tooling — no source code to measure</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>CI/CD Automation</h3>
-                            <div class="scorecard-score" style="color: #ffc107;">6.0/10</div>
-                            <div class="scorecard-status">External Tekton pipeline (operator-hosted-pipeline) handles PR validation and release; only 2 GitHub Actions workflows (stale issues, label commands)</div>
+                            <div class="scorecard-score" style="color: #dc3545;">3.0/10</div>
+                            <div class="scorecard-status">Only 2 lightweight GitHub workflows; main CI runs externally via operator-pipelines</div>
+                        </div>
+                        <div class="scorecard-item">
+                            <h3>Static Analysis</h3>
+                            <div class="scorecard-score" style="color: #dc3545;">1.0/10</div>
+                            <div class="scorecard-status">No linting, no YAML schema validation, no dependency alerts, no pre-commit hooks</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Agent Rules</h3>
                             <div class="scorecard-score" style="color: #dc3545;">0.0/10</div>
-                            <div class="scorecard-status">No CLAUDE.md, AGENTS.md, .claude/ directory, or any AI agent guidance</div>
+                            <div class="scorecard-status">No CLAUDE.md, AGENTS.md, or .claude/ directory</div>
                         </div>
                     </div>
                 </div>
@@ -411,43 +416,35 @@
                     <ul class="items-list">
                         
                         <li class="item-card high">
-                            <div class="item-description">No in-repo CI/CD — entire validation depends on external pipeline</div>
-                            <p>Contributors cannot run validation locally; pipeline failures are opaque; no way to reproduce issues without access to the external Tekton infrastructure</p>
+                            <div class="item-description">No in-repo YAML schema validation for operator bundles</div>
+                            <p>Malformed CSVs, CRDs, or catalog entries can only be caught by external pipeline after PR submission, slowing contributor feedback</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-high">HIGH</span>
-                                <span class="meta-tag effort-tag">40+ hours</span>
+                                <span class="meta-tag effort-tag">8-16 hours</span>
                             </div>
                         </li>
                         <li class="item-card high">
-                            <div class="item-description">No manifest schema validation in-repo</div>
-                            <p>Malformed CSVs, CRDs, or FBC catalog entries are only caught by external pipeline, not locally or in PR checks</p>
+                            <div class="item-description">No PR-time bundle structure validation workflow</div>
+                            <p>Contributors wait for external pipeline to validate bundle structure, increasing PR cycle time</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-high">HIGH</span>
-                                <span class="meta-tag effort-tag">8-12 hours</span>
+                                <span class="meta-tag effort-tag">6-10 hours</span>
                             </div>
                         </li>
                         <li class="item-card medium">
-                            <div class="item-description">No FBC catalog consistency checks</div>
-                            <p>Catalog entries across 11 OCP versions (v4.12-v4.22) can drift; no automated cross-version validation</p>
+                            <div class="item-description">No Dependabot or Renovate for GitHub Actions pinning</div>
+                            <p>Workflows reference unpinned actions (e.g., actions/stale@v3) that could become outdated or compromised</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-medium">MEDIUM</span>
-                                <span class="meta-tag effort-tag">12-16 hours</span>
+                                <span class="meta-tag effort-tag">1-2 hours</span>
                             </div>
                         </li>
-                        <li class="item-card high">
-                            <div class="item-description">No security scanning of contributed operator bundles</div>
-                            <p>Operator images referenced in CSVs are not scanned for vulnerabilities at PR time</p>
+                        <li class="item-card medium">
+                            <div class="item-description">No pre-commit hooks for YAML linting or bundle format checks</div>
+                            <p>Contributors submit malformed YAML that is only caught after PR review</p>
                             <div class="item-meta">
-                                <span class="meta-tag severity-high">HIGH</span>
-                                <span class="meta-tag effort-tag">8-12 hours</span>
-                            </div>
-                        </li>
-                        <li class="item-card low">
-                            <div class="item-description">No agent rules for AI-assisted contributions</div>
-                            <p>AI agents contributing operators have no guidance on bundle structure, required fields, or validation steps</p>
-                            <div class="item-meta">
-                                <span class="meta-tag severity-low">LOW</span>
-                                <span class="meta-tag effort-tag">4-6 hours</span>
+                                <span class="meta-tag severity-medium">MEDIUM</span>
+                                <span class="meta-tag effort-tag">2-4 hours</span>
                             </div>
                         </li>
                     </ul>
@@ -464,43 +461,35 @@
                     <ul class="items-list">
                         
                         <li class="item-card ">
-                            <div class="item-description">Add YAML schema validation GitHub Action for CSVs and annotations</div>
-                            <p>Catch malformed manifests before external pipeline runs, faster feedback for contributors</p>
+                            <div class="item-description">Add Dependabot for GitHub Actions version pinning</div>
+                            <p>Automated security updates for workflow dependencies</p>
                             <div class="item-meta">
                                 
-                                <span class="meta-tag effort-tag">2-4 hours</span>
+                                <span class="meta-tag effort-tag">1 hour</span>
                             </div>
                         </li>
                         <li class="item-card ">
-                            <div class="item-description">Add CODEOWNERS file for operator directories</div>
-                            <p>Automated review routing; each operator&#x27;s ci.yaml already lists reviewers but CODEOWNERS enables GitHub-native enforcement</p>
-                            <div class="item-meta">
-                                
-                                <span class="meta-tag effort-tag">1-2 hours</span>
-                            </div>
-                        </li>
-                        <li class="item-card ">
-                            <div class="item-description">Add basic CLAUDE.md with contribution guidelines for AI agents</div>
-                            <p>Enable AI-assisted operator submissions with correct bundle structure</p>
+                            <div class="item-description">Add a YAML linting pre-commit hook or CI check</div>
+                            <p>Catch YAML syntax errors before PR submission</p>
                             <div class="item-meta">
                                 
                                 <span class="meta-tag effort-tag">2-3 hours</span>
                             </div>
                         </li>
                         <li class="item-card ">
-                            <div class="item-description">Add a pre-commit hook or GitHub Action to validate FBC catalog YAML syntax</div>
-                            <p>Prevent merge of syntactically invalid catalog.yaml files</p>
+                            <div class="item-description">Create CLAUDE.md with contribution guidelines for AI-assisted PRs</div>
+                            <p>Ensure AI agents follow bundle structure conventions when creating operator submissions</p>
                             <div class="item-meta">
                                 
                                 <span class="meta-tag effort-tag">2-3 hours</span>
                             </div>
                         </li>
                         <li class="item-card ">
-                            <div class="item-description">Add opm validate as a PR check</div>
-                            <p>Run OLM&#x27;s own validation tool on bundle content before external pipeline</p>
+                            <div class="item-description">Add a basic PR validation workflow for bundle directory structure</div>
+                            <p>Fast feedback on structural issues without waiting for external pipeline</p>
                             <div class="item-meta">
                                 
-                                <span class="meta-tag effort-tag">3-4 hours</span>
+                                <span class="meta-tag effort-tag">4-6 hours</span>
                             </div>
                         </li>
                     </ul>
@@ -517,15 +506,15 @@
                         
                         <div class="rec-priority p0">
                             <h3>Priority 0: Critical</h3>
-                            <ul><li>Implement in-repo operator-sdk bundle validate as a GitHub Action to catch bundle structure issues before external pipeline</li><li>Add FBC (File-Based Catalog) validation using opm validate for catalog.yaml changes</li><li>Add image reference validation to verify that CSV-referenced images exist and are pullable</li></ul>
+                            <ul><li>Add in-repo YAML schema validation for ClusterServiceVersion and CRD files in a PR-triggered workflow</li><li>Pin GitHub Actions to SHA digests and enable Dependabot for .github/workflows</li></ul>
                         </div>
                         <div class="rec-priority p1">
                             <h3>Priority 1: High Value</h3>
-                            <ul><li>Add cross-version catalog consistency checks (ensure replaces chains are valid across OCP versions)</li><li>Implement Trivy/Grype scanning of referenced operator images at PR time</li><li>Create CLAUDE.md and .claude/rules/ for AI-assisted operator submissions</li></ul>
+                            <ul><li>Add a PR-triggered workflow to validate bundle directory structure (manifests/, metadata/, annotations.yaml)</li><li>Add yamllint or similar YAML schema validation as a pre-commit hook or CI step</li><li>Create CLAUDE.md with operator bundle contribution guidelines</li></ul>
                         </div>
                         <div class="rec-priority p2">
                             <h3>Priority 2: Nice-to-Have</h3>
-                            <ul><li>Add mkdocs CI to validate documentation builds on PR</li><li>Add metrics/dashboards for pipeline pass/fail rates per operator</li><li>Implement a local validation script contributors can run before submitting PRs</li></ul>
+                            <ul><li>Add catalog consistency checks (verify catalog.yaml entries match operator bundles)</li><li>Add a CI workflow to validate ci.yaml reviewer/updateGraph fields</li><li>Consider an in-repo scorecard/preflight dry-run step for faster contributor feedback</li></ul>
                         </div>
                     </div>
                 </div>

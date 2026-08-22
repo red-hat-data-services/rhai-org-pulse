@@ -64,6 +64,7 @@ function closeTooltip() {
 
 <template>
   <div
+    data-testid="hygiene-feature-card"
     class="bg-white dark:bg-gray-800 rounded-md border border-gray-200 dark:border-gray-700 p-3 shadow-sm hover:shadow-md transition-shadow cursor-pointer"
     @click="$emit('click')"
   >
@@ -134,7 +135,7 @@ function closeTooltip() {
         <span class="text-gray-700 dark:text-gray-300 truncate">{{ feature.team || '—' }}</span>
       </div>
       <div v-if="feature.fixVersions && feature.fixVersions.length" class="flex gap-1">
-        <span class="text-gray-400 dark:text-gray-500 w-16 shrink-0">Target:</span>
+        <span class="text-gray-400 dark:text-gray-500 w-16 shrink-0">Fix:</span>
         <span class="text-gray-700 dark:text-gray-300 truncate font-mono text-[10px]">{{ feature.fixVersions.join(', ') }}</span>
       </div>
       <div class="flex gap-1">

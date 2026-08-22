@@ -28,5 +28,41 @@ export const reports = [
     label: 'Release Performance',
     description: 'Cross-releases, and competitive comparisons performance dashboard',
     externalUrl: 'https://aidash.app.intlab.redhat.com/'
+  },
+  {
+    id: 'release-readiness',
+    label: 'RHOAI Release Readiness',
+    description: 'RHOAI Release Readiness and risk highlights.',
+    icon: 'Shield',
+    tags: ['Executive', 'Readiness', 'RAG'],
+    component: defineAsyncComponent(() => import('./ReleaseReadinessDirector.vue'))
+  },
+  {
+    id: 'cve-sustaining',
+    label: 'RHAI Sustaining (CVEs)',
+    description: 'Open CVE tracking across RHAI components and versions — due dates, assignee workload, VEX justifications, and trends.',
+    icon: 'ShieldAlert',
+    tags: ['Security', 'CVE', 'Sustaining'],
+    component: defineAsyncComponent(() => import('./CveSustainingReport.vue'))
+  },
+  {
+    id: 'capacity-commitment',
+    label: 'Program Level Release Report',
+    description: 'Key deadlines, team capacity, and commitment overview for a selected release.',
+    component: defineAsyncComponent(() => import('./CapacityCommitmentReport.vue'))
+  },
+  {
+    id: 'ai-adoption',
+    label: 'AI Adoption Report',
+    description: 'Scorecard tracking AI pipeline adoption across components, with release-over-release trends.',
+    component: defineAsyncComponent(() => import('./AiAdoptionReport.vue'))
+  },
+  {
+    id: 'rhoai-component-architectures',
+    label: 'RHOAI Component Architectures (Multi-Arch)',
+    description: 'Multi-architecture build support matrix for RHOAI components per release branch.',
+    icon: 'Cpu',
+    tags: ['Build', 'Architecture', 'Multi-Arch'],
+    component: defineAsyncComponent(() => import('./RhoaiComponentArchitecturesReport.vue'))
   }
 ]

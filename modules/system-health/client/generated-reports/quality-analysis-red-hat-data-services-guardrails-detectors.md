@@ -1,417 +1,464 @@
 ---
 repository: "red-hat-data-services/guardrails-detectors"
-overall_score: 5.9
+overall_score: 5.5
 scorecard:
   - dimension: "Unit Tests"
     score: 7.5
-    status: "Good test coverage with pytest, 16 test files covering all 3 detector types"
+    status: "Good test suite with 16 test files, strong test-to-code ratio (1.4:1 lines), pytest with parametrized tests"
   - dimension: "Integration/E2E"
     score: 3.0
-    status: "Basic integration test for HF detector lifespan only; no E2E or contract tests"
+    status: "Limited to FastAPI TestClient integration tests; no E2E, cluster, or multi-version testing"
   - dimension: "Build Integration"
-    score: 4.5
-    status: "Konflux/Tekton builds on PR (comment/label-triggered), but no PR-time image validation or smoke tests"
+    score: 7.0
+    status: "Konflux PR builds configured via Tekton for HF and built-in detectors; multi-arch support; no LLM Judge Konflux pipeline"
   - dimension: "Image Testing"
-    score: 3.0
-    status: "5 Dockerfiles exist but no runtime validation, no startup tests, no image scanning in PR workflow"
+    score: 5.0
+    status: "Multiple Dockerfiles with UBI9 base images and multi-arch support; no runtime validation or health checks"
   - dimension: "Coverage Tracking"
     score: 4.0
-    status: "pytest-cov generates terminal reports but no codecov/coveralls integration, no thresholds"
+    status: "pytest-cov runs in CI with term-missing output; no codecov integration, no thresholds, no PR reporting"
   - dimension: "CI/CD Automation"
-    score: 7.0
-    status: "Well-structured component-specific workflows with path filters, reusable composite action, caching, and Trivy scanning"
+    score: 6.0
+    status: "3 test workflows + security scan; path-filtered PR triggers; pip caching via shared action; no concurrency control"
+  - dimension: "Static Analysis"
+    score: 3.5
+    status: "Pre-commit referenced in shared action but no .pre-commit-config.yaml in repo; no linter config; no Dependabot/Renovate"
   - dimension: "Agent Rules"
     score: 0.0
-    status: "No CLAUDE.md, .claude/ directory, or agent rules of any kind"
+    status: "No CLAUDE.md, AGENTS.md, or .claude/ directory present"
 critical_gaps:
-  - title: "No integration or E2E test suite"
-    impact: "API contract violations and detector interoperability issues not caught until deployment"
+  - title: "No coverage threshold enforcement or PR coverage reporting"
+    impact: "Coverage can silently regress without anyone noticing; no gate prevents low-coverage merges"
+    severity: "HIGH"
+    effort: "4-6 hours"
+  - title: "No integration or E2E testing against real services"
+    impact: "Detector behavior with actual HuggingFace models and vLLM endpoints is only validated by basic import checks, not functional tests"
     severity: "HIGH"
     effort: "16-24 hours"
-  - title: "No coverage enforcement or reporting"
-    impact: "Coverage can silently regress; no visibility in PRs"
-    severity: "HIGH"
+  - title: "No linting configuration (ruff, flake8, mypy) defined in repo"
+    impact: "Code style and type safety are not enforced; pre-commit hook references in CI will silently skip when no config exists"
+    severity: "MEDIUM"
     effort: "2-4 hours"
-  - title: "No container image runtime validation"
-    impact: "Image startup failures, missing dependencies, or broken endpoints not caught until deployment"
-    severity: "HIGH"
-    effort: "8-12 hours"
-  - title: "Missing LLM Judge Dockerfile for Konflux"
-    impact: "LLM Judge component lacks a Konflux build pipeline; only builtIn and HF have Konflux Dockerfiles"
+  - title: "No dependency update automation (Dependabot/Renovate)"
+    impact: "Vulnerable or outdated dependencies must be discovered and updated manually"
+    severity: "MEDIUM"
+    effort: "1-2 hours"
+  - title: "Missing .pre-commit-config.yaml despite CI references"
+    impact: "The shared test-setup action tries to run pre-commit but skips silently when config is absent"
+    severity: "MEDIUM"
+    effort: "2-3 hours"
+  - title: "No Konflux build pipeline for LLM Judge detector"
+    impact: "LLM Judge container builds are not validated on PR; build issues discovered post-merge"
     severity: "MEDIUM"
     effort: "4-6 hours"
-  - title: "No pre-commit enforcement"
-    impact: "Linting runs in CI with continue-on-error: true; code quality issues can merge freely"
-    severity: "MEDIUM"
-    effort: "2-3 hours"
 quick_wins:
-  - title: "Add codecov integration and coverage thresholds"
-    effort: "2-4 hours"
-    impact: "Immediate visibility into coverage trends and regressions on every PR"
-  - title: "Enforce pre-commit linting (remove continue-on-error)"
-    effort: "1-2 hours"
-    impact: "Prevent code style/quality issues from merging"
-  - title: "Add container startup smoke test to CI"
-    effort: "3-4 hours"
-    impact: "Catch Dockerfile/dependency issues before merge"
-  - title: "Create basic agent rules for unit test patterns"
+  - title: "Add .codecov.yml with coverage thresholds and PR commenting"
     effort: "2-3 hours"
-    impact: "Improve AI-generated test quality and consistency"
-  - title: "Add Dockerfile hadolint linting"
+    impact: "Automated coverage tracking with regression prevention on every PR"
+  - title: "Enable Dependabot for pip ecosystem"
+    effort: "1 hour"
+    impact: "Automated dependency vulnerability alerts and update PRs"
+  - title: "Add ruff configuration to pyproject.toml"
+    effort: "2 hours"
+    impact: "Fast, comprehensive Python linting with auto-fix capability"
+  - title: "Create .pre-commit-config.yaml with ruff and basic hooks"
     effort: "1-2 hours"
-    impact: "Catch Dockerfile best-practice violations early"
+    impact: "Enforce linting and formatting before code reaches CI"
+  - title: "Add concurrency control to GitHub Actions workflows"
+    effort: "30 minutes"
+    impact: "Prevent redundant CI runs on rapid PR updates"
+  - title: "Create basic CLAUDE.md with test patterns and project context"
+    effort: "2-3 hours"
+    impact: "Improve AI-assisted development consistency and test quality"
 recommendations:
   priority_0:
-    - "Add codecov.yml and upload coverage reports to Codecov with a minimum threshold (e.g., 70%)"
-    - "Create integration/E2E tests that start each detector service and verify API contracts"
-    - "Add container image startup validation tests for all 3 detector types"
+    - "Add codecov integration with minimum coverage thresholds (e.g., 70%) to prevent silent regression"
+    - "Create .pre-commit-config.yaml with ruff linter and add ruff config to pyproject.toml for static analysis enforcement"
+    - "Enable Dependabot for pip dependency monitoring (.github/dependabot.yml)"
   priority_1:
-    - "Create Dockerfile.konflux.judge for LLM Judge to match builtIn and HF patterns"
-    - "Add contract tests verifying detector API schema compliance with the Orchestrator interface"
-    - "Create .claude/rules/ with test creation guidance for all detector types"
-    - "Enforce pre-commit hooks by removing continue-on-error from the composite action"
+    - "Add a Tekton/Konflux PR pipeline for the LLM Judge detector image"
+    - "Implement integration tests that validate detector startup, health endpoints, and basic inference with dummy models inside containers"
+    - "Add concurrency control (concurrency: group/cancel-in-progress) to all GitHub Actions workflows"
+    - "Add .dockerignore to reduce build context size and prevent leaking test data into images"
   priority_2:
-    - "Add multi-architecture image build testing in CI (not just Konflux)"
-    - "Add performance regression testing with benchmarks for built-in detectors"
-    - "Implement SBOM generation and image signing"
-    - "Add Makefile with standard targets (test, lint, build, run)"
+    - "Create CLAUDE.md and .claude/rules/ for AI-assisted test and code generation guidance"
+    - "Add container health checks (HEALTHCHECK instruction) to Dockerfiles"
+    - "Consider adding mypy for type checking (type hints already present in LLM Judge tests)"
+    - "Add performance regression testing CI for detector inference latency"
 ---
 
 # Quality Analysis: guardrails-detectors
 
 ## Executive Summary
 
-- **Overall Score: 5.9/10**
-- **Repository Type**: Python microservices collection (3 detector types: built-in, HuggingFace, LLM Judge)
+- **Overall Score: 5.5/10**
+- **Repository**: `red-hat-data-services/guardrails-detectors` (downstream, AI Safety / RHOAIENG)
+- **Type**: Python library/microservice - collection of AI guardrail detectors (built-in regex/file-type, HuggingFace model-based, LLM Judge)
 - **Primary Language**: Python 3.11+
-- **Framework**: FastAPI (uvicorn), deployed as container images via Konflux/Tekton
-- **Key Strengths**: Well-organized component-specific CI workflows, good unit test coverage with pytest, comprehensive Trivy security scanning, reusable composite GitHub Action, multi-architecture Konflux builds
-- **Critical Gaps**: No integration/E2E tests, no coverage enforcement or reporting, no container runtime validation, missing Konflux Dockerfile for LLM Judge, no agent rules
-- **Agent Rules Status**: Missing (no CLAUDE.md, no .claude/ directory)
+- **Framework**: FastAPI + pytest
+- **Key Strengths**: Good unit test coverage with parametrized tests across all 3 detector types; well-structured Konflux multi-arch build pipelines; UBI9 base images for FIPS-capable builds; reusable GitHub Actions composite action for test setup
+- **Critical Gaps**: No coverage threshold enforcement or PR reporting; no linting configuration despite pre-commit CI references; no Dependabot/Renovate; no E2E or container runtime testing; no agent rules
+- **Agent Rules Status**: Missing
 
 ## Quality Scorecard
 
-| Dimension | Score | Status |
-|-----------|-------|--------|
-| Unit Tests | 7.5/10 | Good test coverage with pytest, 16 test files covering all 3 detector types |
-| Integration/E2E | 3.0/10 | Basic HF lifespan integration test only; no E2E or contract tests |
-| **Build Integration** | **4.5/10** | **Konflux/Tekton builds on PR (comment/label-triggered), no PR-time image validation** |
-| Image Testing | 3.0/10 | 5 Dockerfiles exist but no runtime validation or startup testing |
-| Coverage Tracking | 4.0/10 | pytest-cov terminal output only; no codecov, no thresholds |
-| CI/CD Automation | 7.0/10 | Well-structured workflows with path filters, caching, reusable action |
-| Agent Rules | 0.0/10 | No CLAUDE.md, .claude/ directory, or agent rules |
+| Dimension | Score | Weight | Weighted | Status |
+|-----------|-------|--------|----------|--------|
+| Unit Tests | 7.5/10 | 15% | 1.13 | Good test suite with 16 test files, strong test-to-code ratio |
+| Integration/E2E | 3.0/10 | 20% | 0.60 | Limited to FastAPI TestClient; no real E2E or multi-version testing |
+| Build Integration | 7.0/10 | 15% | 1.05 | Konflux PR builds for 2 of 3 detectors; multi-arch (x86, arm64, ppc64le, s390x) |
+| Image Testing | 5.0/10 | 10% | 0.50 | Multiple Dockerfiles with UBI9; no runtime validation or health checks |
+| Coverage Tracking | 4.0/10 | 10% | 0.40 | pytest-cov in CI but no codecov, no thresholds, no PR reporting |
+| CI/CD Automation | 6.0/10 | 15% | 0.90 | Path-filtered workflows with caching; no concurrency control |
+| Static Analysis | 3.5/10 | 10% | 0.35 | Pre-commit referenced but missing config; no linter; no dependency alerts |
+| Agent Rules | 0.0/10 | 5% | 0.00 | No CLAUDE.md, AGENTS.md, or .claude/ directory |
+| **Overall** | **5.5/10** | **100%** | **4.93** | |
 
 ## Critical Gaps
 
-### 1. No Integration or E2E Test Suite
-- **Impact**: API contract violations, detector interoperability issues, and request/response schema mismatches are not caught until deployment
+### 1. No Coverage Threshold Enforcement or PR Reporting
 - **Severity**: HIGH
-- **Effort**: 16-24 hours
-- **Details**: The only integration test is `test_client_integration.py` for the HF detector (testing FastAPI lifespan context). There are no end-to-end tests that start a detector service, send requests, and validate responses. No contract tests verify compliance with the FMS Guardrails Orchestrator API.
-
-### 2. No Coverage Enforcement or Reporting
-- **Impact**: Coverage can silently regress with no visibility; developers don't see coverage changes in PRs
-- **Severity**: HIGH
-- **Effort**: 2-4 hours
-- **Details**: `pytest-cov` generates terminal output (`--cov-report=term-missing`), but results are not uploaded to Codecov/Coveralls, not reported on PRs, and no minimum thresholds are enforced. Coverage data is ephemeral.
-
-### 3. No Container Image Runtime Validation
-- **Impact**: Broken imports, missing dependencies, or misconfigured entry points not caught until Kubernetes deployment
-- **Severity**: HIGH
-- **Effort**: 8-12 hours
-- **Details**: There are 5 Dockerfiles (3 standard + 2 Konflux), but no CI step builds and smoke-tests the images. The HF workflow has a basic Python import check, but doesn't actually build or start the container.
-
-### 4. Missing Konflux Dockerfile for LLM Judge
-- **Impact**: LLM Judge component doesn't have a hermetic Konflux build pipeline; inconsistency across detector types
-- **Severity**: MEDIUM
+- **Impact**: Coverage can silently regress without anyone noticing. No gate prevents low-coverage code from merging. Current `pytest-cov` output goes to terminal only.
 - **Effort**: 4-6 hours
-- **Details**: `Dockerfile.konflux.builtIn` and `Dockerfile.konflux.hf` exist for Konflux builds, but there is no `Dockerfile.konflux.judge`. The `.tekton/` directory also lacks a pipeline for the LLM Judge component.
+- **Current State**: All 3 test workflows run `pytest --cov=detectors.{component} --cov-report=term-missing` but results are not persisted, uploaded, or enforced.
 
-### 5. No Pre-commit Enforcement
-- **Impact**: Code quality issues can merge; linting is advisory only
+### 2. No Integration or E2E Testing Against Real Services
+- **Severity**: HIGH
+- **Impact**: Detectors are only tested with mocked dependencies. The HuggingFace detector is validated with dummy models via `TestClient`, but there are no tests that deploy a container image and verify end-to-end behavior with real model loading.
+- **Effort**: 16-24 hours
+- **Current State**: `test_client_integration.py` uses FastAPI's `TestClient` (in-process), and `test_llm_judge_detector.py` uses extensive mocking of `vllm_judge.Judge`. No container-based or cluster-based testing.
+
+### 3. No Linting Configuration in Repository
 - **Severity**: MEDIUM
-- **Effort**: 2-3 hours
-- **Details**: The composite action runs pre-commit with `continue-on-error: true`, and only if `.pre-commit-config.yaml` exists (which it doesn't in the repo). Linting is effectively not enforced at all.
+- **Impact**: Code style and type safety are not enforced. The shared `test-setup` action references pre-commit but the check is `continue-on-error: true` and no `.pre-commit-config.yaml` exists.
+- **Effort**: 2-4 hours
+- **Current State**: No ruff, flake8, mypy, pylint, or any linting tool configured. `pyproject.toml` has no `[tool.ruff]`, `[tool.mypy]`, or similar sections.
+
+### 4. No Dependency Update Automation
+- **Severity**: MEDIUM
+- **Impact**: Vulnerable or outdated dependencies (FastAPI, torch, transformers, etc.) must be discovered and updated manually. This is especially critical given pinned versions throughout `pyproject.toml`.
+- **Effort**: 1-2 hours
+- **Current State**: No `.github/dependabot.yml`, `renovate.json`, or equivalent configuration.
+
+### 5. Missing Konflux Pipeline for LLM Judge Detector
+- **Severity**: MEDIUM
+- **Impact**: HF and built-in detectors have Tekton PR pipelines in `.tekton/`, but LLM Judge detector (`Dockerfile.judge`) has no corresponding Konflux build validation.
+- **Effort**: 4-6 hours
 
 ## Quick Wins
 
-### 1. Add Codecov Integration (2-4 hours)
-Upload coverage reports and enforce thresholds:
+### 1. Add Codecov Integration (2-3 hours)
 ```yaml
-# Add to each test workflow after pytest step:
-- name: Upload coverage to Codecov
-  uses: codecov/codecov-action@v4
-  with:
-    flags: builtin  # or huggingface, llm-judge
-    fail_ci_if_error: true
+# .codecov.yml
+coverage:
+  status:
+    project:
+      default:
+        target: 70%
+        threshold: 2%
+    patch:
+      default:
+        target: 80%
+```
+Add `codecov/codecov-action@v4` step to each test workflow after pytest runs.
+
+### 2. Enable Dependabot (1 hour)
+```yaml
+# .github/dependabot.yml
+version: 2
+updates:
+  - package-ecosystem: "pip"
+    directory: "/detectors"
+    schedule:
+      interval: "weekly"
+    open-pull-requests-limit: 10
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
 ```
 
-### 2. Enforce Pre-commit Linting (1-2 hours)
-- Create `.pre-commit-config.yaml` with ruff, black, and mypy
-- Remove `continue-on-error: true` from the composite action
-- Add a dedicated lint job to catch issues early
+### 3. Add Ruff Configuration (2 hours)
+Add to `detectors/pyproject.toml`:
+```toml
+[tool.ruff]
+target-version = "py311"
+line-length = 120
 
-### 3. Add Container Startup Smoke Test (3-4 hours)
-```yaml
-- name: Build and smoke-test image
-  run: |
-    docker build -t test-image -f detectors/Dockerfile.builtIn detectors/
-    docker run -d --name smoke -p 8080:8080 test-image
-    sleep 5
-    curl -f http://localhost:8080/health || exit 1
-    docker stop smoke
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "N", "UP", "B", "A", "SIM"]
 ```
 
-### 4. Create Basic Agent Rules (2-3 hours)
-- Create `.claude/rules/unit-tests.md` with pytest patterns
-- Include detector-specific test patterns (mocking, fixtures, TestClient)
-- Add test naming conventions and coverage expectations
-
-### 5. Add Dockerfile Linting (1-2 hours)
+### 4. Create .pre-commit-config.yaml (1-2 hours)
 ```yaml
-- name: Lint Dockerfiles
-  uses: hadolint/hadolint-action@v3
-  with:
-    dockerfile: detectors/Dockerfile.builtIn
+repos:
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.6.0
+    hooks:
+      - id: ruff
+        args: [--fix]
+      - id: ruff-format
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.6.0
+    hooks:
+      - id: trailing-whitespace
+      - id: end-of-file-fixer
+      - id: check-yaml
+      - id: check-added-large-files
 ```
+
+### 5. Add Concurrency Control (30 minutes)
+Add to each workflow file:
+```yaml
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+```
+
+### 6. Create Basic CLAUDE.md (2-3 hours)
+Use `/test-rules-generator` skill to bootstrap agent rules based on existing test patterns.
 
 ## Detailed Findings
 
-### CI/CD Pipeline
+### Unit Tests
+
+**Score: 7.5/10**
 
 **Strengths:**
-- **Component-specific workflows**: Each detector type (builtIn, HF, LLM Judge) has its own workflow with path filters, ensuring only relevant tests run on changes
-- **Reusable composite action**: `.github/actions/test-setup/action.yaml` standardizes Python setup, caching, and dependency installation across all test workflows
-- **Pip caching**: Cache keys are generated from `pyproject.toml` hash for deterministic caching
-- **Trivy security scanning**: Comprehensive security workflow scans all components individually plus the full repository, with SARIF upload to GitHub Security tab
-- **Scheduled security scans**: Weekly Trivy scans (Mondays 2 AM UTC) for ongoing vulnerability detection
-- **Konflux/Tekton integration**: PR-triggered Konflux builds for builtIn and HF detectors with multi-architecture support (x86_64, arm64, ppc64le, s390x)
-- **Cancel-in-progress**: Tekton pipelines use `cancel-in-progress: "true"` to avoid redundant builds
+- 16 test files covering all 3 detector components (built-in: 4, HuggingFace: 10, LLM Judge: 2)
+- Strong test-to-code ratio: 3,041 lines of test code vs 2,131 lines of source code (1.4:1)
+- Excellent use of `pytest.mark.parametrize` for combinatorial testing (regex patterns, credit card formats, file types)
+- Good test isolation with fixtures and mock patterns
+- Proper use of `unittest.mock.AsyncMock` for async detector testing
+- Dummy models (`tests/dummy_models/bert/`, `tests/dummy_models/gpt2/`) for deterministic HuggingFace testing
+- Approximately 161 test functions total (53 built-in + 81 HuggingFace + 27 LLM Judge)
 
-**Weaknesses:**
-- No Makefile for standardized build/test/lint targets
-- Tekton builds are comment/label-triggered, not automatic on all PRs
-- No GitHub Actions for building Docker images in CI
-- Pre-commit runs with `continue-on-error: true` and config file doesn't exist
-- No workflow for the LLM Judge Konflux build
+**Areas for Improvement:**
+- No explicit `pytest.ini` or `[tool.pytest.ini_options]` in `pyproject.toml` (config lives in `tox.ini`)
+- Test organization by method name (`test_method_process_token_classification.py`) rather than feature/behavior
+- Performance tests (`test_performance.py`) exist but limited to concurrency simulation with mocks
+- `conftest.py` uses `print()` for path setup diagnostics (should use logging)
 
-### Test Coverage
+**Key Files:**
+- `tests/detectors/builtIn/test_regex.py` - 16 parametrized tests covering email, IP, SSN, phone, credit card patterns
+- `tests/detectors/builtIn/test_filetype.py` - 24 tests for file type detection (HTML, JSON, XML, YAML, Markdown, CSV)
+- `tests/detectors/huggingface/test_method_process_token_classification.py` - 33 tests for token classification processing
+- `tests/detectors/llm_judge/test_llm_judge_detector.py` - 24 tests covering content and generation analysis
 
-**Test Inventory (16 test files, ~3,087 lines):**
+### Integration/E2E Tests
 
-| Component | Test Files | Lines | Key Areas |
-|-----------|-----------|-------|-----------|
-| Built-in | 4 | 1,068 | Regex detectors, file-type validation, custom detectors, metrics |
-| HuggingFace | 9 | 1,251 | Device init, model loading, parse output, process classification, integration, metrics |
-| LLM Judge | 2 | 722 | Content/generation analysis, concurrent evaluations, batch processing |
-| Shared | 1 (conftest) | 46 | Path setup, Prometheus temp dir |
+**Score: 3.0/10**
 
-**Test-to-Code Ratio**: 3,087 test lines / 2,131 source lines = **1.45:1** (good)
+**What Exists:**
+- `tests/detectors/huggingface/test_client_integration.py` - FastAPI `TestClient` integration tests (4 tests) that validate lifespan, request handling, multiple requests, and cleanup
+- HF workflow has a "Test model loading capabilities" step that imports and initializes the detector
+- LLM Judge workflow verifies `vllm-judge` import and detector initialization
 
-**Strengths:**
-- Comprehensive unit tests for all three detector types
-- Good use of pytest fixtures, parametrize, and TestClient
-- Performance tests validate concurrent evaluation (LLM Judge)
-- Dummy models for offline HuggingFace testing
-- Well-structured test hierarchy mirroring source layout
+**What's Missing:**
+- No `e2e/` or `integration/` directories
+- No container-based integration tests (no `docker run`, `testcontainers`, or `docker-compose`)
+- No cluster testing (no Kind, Minikube, or envtest)
+- No multi-version testing (single Python 3.11 matrix)
+- No tests that validate detectors against actual external LLM services
+- No API contract tests between detectors and the FMS Guardrails Orchestrator
 
-**Weaknesses:**
-- Only 1 integration test (HF lifespan context)
-- No end-to-end tests starting real services
-- No contract tests for API schema compliance
-- No negative/error path tests for common/scheme.py
-- No tests for `detectors/common/app.py` (the base FastAPI app)
-- No tests for `detectors/common/instrumented_detector.py`
-- Coverage is terminal-only, not tracked or enforced
+### Build Integration
 
-### Code Quality
+**Score: 7.0/10**
 
 **Strengths:**
-- Clean project structure with `pyproject.toml` for dependency management
-- Type hints used throughout (typing module)
-- Pydantic models for request/response schemas
-- Prometheus metrics instrumentation
-- Structured logging configuration (`log_conf.yaml`)
-- Good separation of concerns (common/scheme for shared types)
+- Tekton/Konflux PR pipelines for 2 of 3 detectors:
+  - `odh-guardrails-detector-huggingface-runtime-pull-request.yaml` - multi-arch (x86_64, arm64, ppc64le, s390x)
+  - `odh-built-in-detector-pull-request.yaml` - multi-arch (same 4 platforms)
+- Hermetic builds (`hermetic: true`) for supply chain security
+- Prefetch-input configuration for dependency caching
+- Cancel-in-progress enabled (`pipelinesascode.tekton.dev/cancel-in-progress: "true"`)
+- Label-based and comment-based build triggers (`/build-konflux guardrails-detector-hf-runtime`)
+- `.konflux/base-images.conf` for centralized base image version management
+- Makefile with `uv pip compile` for reproducible, hashed requirements
 
-**Weaknesses:**
-- No `.pre-commit-config.yaml` file exists in the repository
-- No linter configuration (no ruff.toml, .flake8, mypy.ini)
-- No formatter configuration (no black, isort)
-- No static type checking (no mypy, pyright)
-- `tox.ini` exists but no Makefile for additional targets
-- No docstring coverage enforcement
+**Gaps:**
+- No Tekton pipeline for LLM Judge detector (`Dockerfile.judge`)
+- No PR-time unit test execution in Tekton pipelines (tests run only in GitHub Actions)
+- No dry-run or manifest validation steps
 
-### Container Images
+### Image Testing
 
-**Dockerfile Inventory:**
-
-| File | Base Image | Multi-stage | Multi-arch | User |
-|------|-----------|-------------|------------|------|
-| `Dockerfile.builtIn` | ubi9/python-312 | Yes (2 stages) | No | Default (root) |
-| `Dockerfile.hf` | ubi9/python-312 | Yes (2 stages) | No | 1001 |
-| `Dockerfile.judge` | ubi9/python-312 | Yes (2 stages) | No | Default (root) |
-| `Dockerfile.konflux.builtIn` | aipcc/base-images | No | Via Tekton | 1001 |
-| `Dockerfile.konflux.hf` | ubi9/python-312 | Yes (4 stages) | Yes (ppc64le, s390x, arm64) | 1001 |
+**Score: 5.0/10**
 
 **Strengths:**
-- UBI9 base images (Red Hat supported)
-- Multi-stage builds for standard Dockerfiles
-- Complex multi-architecture support in Konflux HF Dockerfile (builds PyTorch from source for ppc64le/s390x)
-- Non-root user in production Dockerfiles (1001)
-- Prometheus multiprocess directory setup
-- Red Hat labels and metadata in Konflux images
+- 5 Dockerfiles covering 3 detector types and 2 build modes (dev/Konflux)
+- UBI9 base images (`registry.access.redhat.com/ubi9/python-312:latest`) for FIPS capability
+- Multi-stage builds in all Dockerfiles
+- Multi-architecture support in Konflux builds (x86_64, arm64, ppc64le, s390x)
+- Non-root user (`USER 1001`) in most Dockerfiles
+- Separate CUDA and CPU base images for HF Konflux builds
 
-**Weaknesses:**
-- `Dockerfile.builtIn` and `Dockerfile.judge` run as root (no USER instruction or USER root without drop)
-- No `.dockerignore` file (entire repo context sent to builder)
-- No health check endpoints in Dockerfiles (HEALTHCHECK instruction)
-- No image scanning in CI for standard Dockerfiles
-- CACHEBUST ARG pattern is unusual and may break layer caching
-- `Dockerfile.judge` lacks Konflux equivalent
-- No SBOM generation or image signing
+**Gaps:**
+- No `.dockerignore` file - build context includes tests, docs, and git history
+- No `HEALTHCHECK` instruction in any Dockerfile
+- No container runtime validation tests (no `docker run` + health check in CI)
+- No image startup testing beyond basic Python import in CI
+- `Dockerfile.hf` and `Dockerfile.builtIn` use `latest` tag (non-deterministic)
+- `Dockerfile.builtIn` runs as root (no explicit `USER` directive after `FROM builder`)
 
-### Security
+### Coverage Tracking
+
+**Score: 4.0/10**
+
+**What Exists:**
+- All 3 test workflows use `pytest-cov`:
+  - `--cov=detectors.built_in` / `--cov=detectors.huggingface` / `--cov=detectors.llm_judge`
+  - `--cov-report=term-missing` for terminal output
+- `tox.ini` configures `--cov=detectors --cov-report=term-missing`
+- `coverage==7.6.1` and `pytest-cov>=4.0` in dev dependencies
+
+**What's Missing:**
+- No `.codecov.yml` or `codecov.yml`
+- No `codecov/codecov-action` in any workflow
+- No coverage threshold enforcement (`--cov-fail-under`)
+- No coverage report upload or PR commenting
+- No XML/JSON/HTML coverage report generation for persistence
+- Coverage reports are terminal-only, lost after CI run completes
+
+### CI/CD Automation
+
+**Score: 6.0/10**
 
 **Strengths:**
-- **Trivy scanning**: Comprehensive per-component filesystem scanning plus repository-wide scan
-- **SARIF upload**: Results integrated into GitHub Security tab
-- **Configuration scanning**: Trivy config scan for misconfigurations
-- **Scheduled scans**: Weekly automated security scans
-- **Pinned action versions**: Trivy action uses SHA-pinned version
-- **Vulnerability and secret scanning**: Both `vuln` and `secret` scanners enabled
+- 4 GitHub Actions workflows:
+  - `test-builtin-detectors.yaml` - PR + push on main/incubation/stable
+  - `test-huggingface-runtime.yaml` - PR + push with timeout controls
+  - `test-llm-judge.yaml` - PR + push with timeout controls
+  - `security-scan.yaml` - PR + push + weekly schedule + manual dispatch
+- Smart path filtering to avoid unnecessary CI runs
+- Reusable composite action (`.github/actions/test-setup/action.yaml`) with pip caching
+- Timeout controls on expensive steps (`timeout-minutes: 20` for HF, `15` for LLM Judge)
+- Matrix strategy (Python 3.11) ready for multi-version expansion
 
-**Weaknesses:**
-- Security scan uses `exit-code: '0'` — vulnerabilities don't fail the build
-- No dependency review action for PR dependency changes
-- No CodeQL/SAST for source code analysis
-- No Gitleaks or TruffleHog for commit-level secret detection
-- No container image scanning (only filesystem scanning)
-- No `.trivyignore` for known false positives management
-- Trivy config scan has `continue-on-error: true`
+**Gaps:**
+- No `concurrency:` block in any workflow - rapid PR updates trigger redundant runs
+- No test parallelization or sharding
+- Only single Python version in matrix (3.11)
+- No separate workflow for PR vs. push (combined in each)
+- `continue-on-error: true` on pre-commit step masks linting failures
+- Security scan uses `exit-code: '0'` which never fails the build on findings
 
-### Agent Rules (Agentic Flow Quality)
+### Static Analysis
+
+**Score: 3.5/10**
+
+#### Linting
+- **No linting configuration found**: No ruff, flake8, pylint, mypy, or any Python linter configured
+- `pyproject.toml` has no `[tool.ruff]`, `[tool.mypy]`, `[tool.flake8]`, or similar sections
+- The shared `test-setup` action checks for `.pre-commit-config.yaml` and runs pre-commit if found, but the file does not exist in the repo
+- `pre-commit==3.8.0` is listed in dev dependencies but unusable without config
+
+#### FIPS Compatibility
+- **Good**: All Dockerfiles use UBI9 base images (`registry.access.redhat.com/ubi9/python-312:latest`)
+- **Good**: Konflux builds use `quay.io/aipcc/base-images/` which are FIPS-capable
+- **Good**: No non-FIPS crypto imports found (no `hashlib.md5`, `crypto/md5`, etc.)
+- **Note**: No explicit FIPS build tags, but Python on UBI9 uses system OpenSSL which is FIPS-validated
+
+#### Dependency Alerts
+- **Missing**: No `.github/dependabot.yml`
+- **Missing**: No `renovate.json` or `.renovaterc`
+- **Risk**: Pinned dependency versions (`torch==2.11.0`, `transformers==4.57.3`, `fastapi==0.136.3`) need manual monitoring for security updates
+
+### Agent Rules
+
+**Score: 0.0/10**
 
 - **Status**: Missing
-- **Coverage**: None — no CLAUDE.md, AGENTS.md, or .claude/ directory
-- **Quality**: N/A
-- **Gaps**: All test types lack agent rules:
-  - No unit test creation rules
-  - No integration test patterns
-  - No detector-specific test guidance
-  - No mocking/fixture patterns documented for agents
-  - No code quality or review rules
-- **Recommendation**: Generate comprehensive agent rules with `/test-rules-generator` covering:
+- **CLAUDE.md**: Not present
+- **AGENTS.md**: Not present
+- **.claude/ directory**: Not present
+- **Coverage**: No test type rules, no framework-specific examples, no quality gate checklists
+- **Recommendation**: Generate rules with `/test-rules-generator` covering:
   - pytest patterns for each detector type
-  - TestClient usage for FastAPI endpoints
-  - Mock patterns for vllm_judge, transformers
-  - Dummy model usage for HuggingFace tests
-  - Coverage expectations and conventions
+  - Mock patterns for vllm_judge, HuggingFace transformers
+  - FastAPI TestClient usage for API testing
+  - Parametrized test patterns for regex/file-type detectors
 
 ## Recommendations
 
 ### Priority 0 (Critical)
 
-1. **Add Codecov integration with coverage thresholds**
-   - Upload coverage from all 3 test workflows
-   - Set minimum threshold at 70% (current likely ~65-75% based on test-to-code ratio)
-   - Configure PR comments for coverage diff
+1. **Add codecov integration with coverage thresholds** - Configure `.codecov.yml` with project target of 70% and patch target of 80%. Add `codecov/codecov-action@v4` to all test workflows. Add `--cov-fail-under=70` to pytest commands.
 
-2. **Create integration/E2E tests**
-   - Start each detector as a FastAPI TestClient
-   - Validate all API endpoints (`/api/v1/text/contents`, `/api/v1/text/doc`, etc.)
-   - Test error handling (invalid payloads, missing params)
-   - Verify Prometheus metrics are exposed correctly
+2. **Create .pre-commit-config.yaml and add ruff configuration** - Add `[tool.ruff]` to `pyproject.toml` with appropriate rule selection. Create `.pre-commit-config.yaml` with ruff hooks. Remove `continue-on-error: true` from pre-commit step in test-setup action.
 
-3. **Add container image startup validation**
-   - Build each Dockerfile in CI
-   - Run container and verify health endpoint responds
-   - Check all expected endpoints are registered
+3. **Enable Dependabot for pip and GitHub Actions ecosystems** - Create `.github/dependabot.yml` covering the `detectors/` directory for pip and root for GitHub Actions.
 
 ### Priority 1 (High Value)
 
-4. **Create `Dockerfile.konflux.judge`** and corresponding Tekton pipeline
-   - Mirror patterns from `Dockerfile.konflux.builtIn`
-   - Add to `konflux-central` repository
+4. **Add Konflux pipeline for LLM Judge detector** - Create `.tekton/odh-llm-judge-detector-pull-request.yaml` mirroring the existing HF and built-in detector pipelines.
 
-5. **Add contract tests** for Orchestrator API compliance
-   - Verify request/response schemas match the FMS Guardrails Orchestrator spec
-   - Test with known-good request payloads from orchestrator
+5. **Implement container-based integration tests** - Add tests that build and run detector containers with `docker-compose` or `testcontainers`, validate health endpoints, and test basic inference with dummy models.
 
-6. **Create comprehensive agent rules** (`.claude/rules/`)
-   - Unit test patterns for each detector type
-   - Mocking guidance for external dependencies
-   - TestClient patterns for FastAPI
-   - Coverage expectations
+6. **Add concurrency control to all workflows** - Add `concurrency: { group: "${{ github.workflow }}-${{ github.ref }}", cancel-in-progress: true }` to prevent redundant CI runs.
 
-7. **Enforce pre-commit hooks**
-   - Create `.pre-commit-config.yaml` with ruff, black, mypy
-   - Remove `continue-on-error: true` from composite action
-   - Make linting a hard gate
+7. **Add .dockerignore file** - Exclude `tests/`, `docs/`, `.github/`, `.tekton/`, `.git/`, `tox.ini` from build context.
 
 ### Priority 2 (Nice-to-Have)
 
-8. **Add a Makefile** with standard targets (`test`, `lint`, `build`, `run`, `clean`)
+8. **Create CLAUDE.md and .claude/rules/** - Document test patterns, project structure, and detector-specific testing guidance for AI-assisted development.
 
-9. **Performance regression testing** — benchmark built-in detectors (regex, filetype) and track over time
+9. **Add HEALTHCHECK to Dockerfiles** - Add `HEALTHCHECK CMD curl -f http://localhost:8000/health || exit 1` (or equivalent health endpoint).
 
-10. **SBOM generation and image signing** for supply chain security
+10. **Add mypy type checking** - Type hints already exist in LLM Judge tests; formalize with mypy configuration in `pyproject.toml`.
 
-11. **Add Dockerfile health checks** (`HEALTHCHECK --interval=30s CMD curl -f http://localhost:8080/health || exit 1`)
+11. **Expand Python version matrix** - Test against Python 3.12 in addition to 3.11 to validate compatibility with Dockerfile base images (UBI9 python-312).
 
-12. **Add `.dockerignore`** to reduce build context size
+12. **Add API contract tests** - Validate detector request/response schemas against the FMS Guardrails Orchestrator specification.
 
 ## Comparison to Gold Standards
 
-| Feature | guardrails-detectors | odh-dashboard | notebooks | kserve |
-|---------|---------------------|---------------|-----------|--------|
-| Unit Tests | Good (16 files) | Excellent (400+) | Good | Excellent |
-| Integration Tests | Minimal (1 file) | Comprehensive | Good | Comprehensive |
-| E2E Tests | None | Cypress + API | Full pipeline | Multi-version |
-| Coverage Tracking | Terminal only | Codecov enforced | Basic | Codecov enforced |
-| Coverage Threshold | None | 80%+ | None | 80%+ |
-| Container Testing | None | Build validation | 5-layer testing | Image validation |
-| Security Scanning | Trivy (non-blocking) | Trivy + Snyk | Trivy | Trivy + CodeQL |
-| Pre-commit | Not configured | Enforced | Basic | Enforced |
-| Agent Rules | None | Comprehensive | None | Partial |
-| CI Path Filters | Yes | Yes | Yes | Yes |
-| Multi-arch | Konflux only | N/A | Yes | Yes |
-| Linting | None enforced | ESLint strict | Basic | golangci-lint |
+| Dimension | guardrails-detectors | odh-dashboard | notebooks | kserve |
+|-----------|---------------------|---------------|-----------|--------|
+| Unit Tests | 7.5 - Good ratio, parametrized | 9.0 - Jest + Cypress | 7.0 - Notebook validation | 8.5 - Go testing + table-driven |
+| Integration/E2E | 3.0 - TestClient only | 9.0 - Multi-layer + contract | 8.0 - Multi-image E2E | 9.0 - envtest + Kind |
+| Build Integration | 7.0 - Konflux for 2/3 detectors | 8.0 - PR builds + federation | 8.5 - Multi-arch + validation | 7.5 - PR image builds |
+| Image Testing | 5.0 - UBI9 but no runtime tests | 7.0 - Container validation | 9.0 - 5-layer validation | 6.0 - Basic image testing |
+| Coverage Tracking | 4.0 - pytest-cov, no enforcement | 8.5 - Codecov with gates | 6.0 - Basic coverage | 8.0 - Codecov enforcement |
+| CI/CD Automation | 6.0 - Path-filtered, cached | 9.0 - Full automation | 8.0 - Comprehensive CI | 8.5 - Matrix + caching |
+| Static Analysis | 3.5 - No linter config | 8.0 - ESLint + Prettier | 6.5 - Basic linting | 8.0 - golangci-lint |
+| Agent Rules | 0.0 - None | 8.0 - Comprehensive | 3.0 - Basic | 2.0 - Minimal |
+| **Overall** | **5.5** | **8.5** | **7.0** | **7.5** |
 
 ## File Paths Reference
 
-### CI/CD
-- `.github/workflows/test-builtin-detectors.yaml` — Built-in detector unit tests
-- `.github/workflows/test-huggingface-runtime.yaml` — HuggingFace runtime unit tests
-- `.github/workflows/test-llm-judge.yaml` — LLM Judge unit tests
-- `.github/workflows/security-scan.yaml` — Trivy security scanning
-- `.github/actions/test-setup/action.yaml` — Reusable composite action
+### CI/CD Configuration
+- `.github/workflows/test-builtin-detectors.yaml` - Built-in detector unit tests
+- `.github/workflows/test-huggingface-runtime.yaml` - HuggingFace detector tests
+- `.github/workflows/test-llm-judge.yaml` - LLM Judge detector tests
+- `.github/workflows/security-scan.yaml` - Trivy security scanning
+- `.github/actions/test-setup/action.yaml` - Reusable composite action
 
 ### Tekton/Konflux
-- `.tekton/odh-built-in-detector-pull-request.yaml` — Konflux PR build for built-in
-- `.tekton/odh-guardrails-detector-huggingface-runtime-pull-request.yaml` — Konflux PR build for HF
-
-### Testing
-- `tests/conftest.py` — Shared fixtures (path setup, Prometheus temp dir)
-- `tests/detectors/builtIn/` — 4 test files for built-in detectors
-- `tests/detectors/huggingface/` — 9 test files for HF runtime
-- `tests/detectors/llm_judge/` — 2 test files for LLM Judge
-- `tests/dummy_models/` — Offline HuggingFace models for testing
-
-### Source Code
-- `detectors/pyproject.toml` — Package definition and dependencies
-- `detectors/common/` — Shared FastAPI app, schema, instrumentation
-- `detectors/built_in/` — Regex, filetype, custom detectors
-- `detectors/huggingface/` — HuggingFace model detector
-- `detectors/llm_judge/` — vLLM Judge detector
+- `.tekton/odh-guardrails-detector-huggingface-runtime-pull-request.yaml`
+- `.tekton/odh-built-in-detector-pull-request.yaml`
+- `.konflux/base-images.conf`
 
 ### Container Images
-- `detectors/Dockerfile.builtIn` — Standard builtIn image
-- `detectors/Dockerfile.hf` — Standard HuggingFace image
-- `detectors/Dockerfile.judge` — Standard LLM Judge image
-- `detectors/Dockerfile.konflux.builtIn` — Hermetic Konflux builtIn build
-- `detectors/Dockerfile.konflux.hf` — Multi-arch Konflux HF build
+- `detectors/Dockerfile.hf` - HuggingFace detector (dev)
+- `detectors/Dockerfile.builtIn` - Built-in detector (dev)
+- `detectors/Dockerfile.judge` - LLM Judge detector (dev)
+- `detectors/Dockerfile.konflux.hf` - HuggingFace detector (Konflux multi-arch)
+- `detectors/Dockerfile.konflux.builtIn` - Built-in detector (Konflux)
 
-### Configuration
-- `tox.ini` — Tox test runner configuration
-- `.gitignore` — Git ignore rules
+### Source Code
+- `detectors/pyproject.toml` - Project configuration and dependencies
+- `detectors/Makefile` - Requirements compilation with uv
+- `detectors/common/` - Shared detector framework (scheme, app, instrumentation)
+- `detectors/built_in/` - Regex, file-type, and custom detectors
+- `detectors/huggingface/` - HuggingFace model-based detector
+- `detectors/llm_judge/` - vLLM Judge-based detector
+
+### Tests
+- `tests/conftest.py` - Shared fixtures (path setup, Prometheus dir)
+- `tests/detectors/builtIn/` - 4 test files (53 tests)
+- `tests/detectors/huggingface/` - 10 test files (81 tests)
+- `tests/detectors/llm_judge/` - 2 test files (27 tests)
+- `tests/dummy_models/` - Dummy BERT and GPT2 models for testing
+- `tox.ini` - Test runner configuration

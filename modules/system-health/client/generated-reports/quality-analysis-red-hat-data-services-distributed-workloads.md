@@ -1,399 +1,479 @@
 ---
 repository: "red-hat-data-services/distributed-workloads"
-overall_score: 6.4
+overall_score: 6.3
 scorecard:
   - dimension: "Unit Tests"
-    score: 5.0
-    status: "Unit tests only cover the shared support library; no unit tests for test logic or utilities"
+    score: 6.0
+    status: "Unit tests for support library using gomega; limited scope since repo is primarily E2E test code"
   - dimension: "Integration/E2E"
-    score: 8.5
-    status: "Comprehensive E2E test suites covering KFTO, Trainer v2, Ray, FMS across GPU/CPU variants"
+    score: 8.0
+    status: "Comprehensive E2E suites across 4 domains with upgrade testing, namespace isolation, and tagging"
   - dimension: "Build Integration"
-    score: 7.0
-    status: "Tekton/Konflux PR pipelines for image builds; no PR-time integration deployment testing"
+    score: 8.0
+    status: "Extensive Konflux/Tekton PR-triggered pipelines for training image builds"
   - dimension: "Image Testing"
-    score: 6.5
-    status: "20+ Dockerfiles with multi-arch support and Konflux builds; limited runtime validation"
+    score: 5.0
+    status: "40+ Dockerfiles with UBI9 base and multi-stage builds, but no runtime validation tests"
   - dimension: "Coverage Tracking"
     score: 1.0
-    status: "No coverage generation, no codecov/coveralls integration, no coverage thresholds"
+    status: "No coverage tracking, no codecov, no coverprofile, no coverage thresholds"
   - dimension: "CI/CD Automation"
-    score: 6.5
-    status: "GitHub Actions for unit tests/vet/imports; E2E tests run externally via Jenkins; Tekton for image builds"
+    score: 7.0
+    status: "11 GHA workflows plus Tekton pipelines; scheduled jobs; missing caching and parallelization"
+  - dimension: "Static Analysis"
+    score: 5.0
+    status: "Minimal golangci-lint (3 linters), pre-commit hooks present, Renovate disabled, no active dependency alerts"
   - dimension: "Agent Rules"
-    score: 8.0
-    status: "Comprehensive AGENTS.md with test patterns, naming conventions, tagging, and detailed writing guidance"
+    score: 9.0
+    status: "Excellent AGENTS.md, 3 Claude skills with actionable examples, PostToolUse hooks configured"
 critical_gaps:
   - title: "No code coverage tracking"
-    impact: "Cannot measure or enforce test coverage; regressions in support library go undetected"
+    impact: "No visibility into which support library code or test infrastructure is itself tested; regressions in shared helpers go undetected"
     severity: "HIGH"
-    effort: "2-4 hours"
-  - title: "Unit tests limited to support library only"
-    impact: "Test helpers, utilities, and resource generators in tests/ have no unit-level validation"
+    effort: "4-6 hours"
+  - title: "No container image runtime validation"
+    impact: "40+ training images built without startup or functional validation; broken images reach production registries"
     severity: "HIGH"
-    effort: "8-16 hours"
-  - title: "No PR-time E2E test execution"
-    impact: "E2E regressions discovered only after merge via external Jenkins runs"
-    severity: "MEDIUM"
-    effort: "16-24 hours"
-  - title: "No container image runtime validation in CI"
-    impact: "Image startup and basic functionality issues not caught until downstream deployment"
-    severity: "MEDIUM"
-    effort: "4-8 hours"
-  - title: "golangci-lint not enforced in CI workflows"
-    impact: "Only go vet runs on PRs; deeper static analysis linting not automated"
+    effort: "8-12 hours"
+  - title: "Renovate disabled and no Dependabot"
+    impact: "No automated dependency update alerts; CVEs in Go modules or Python packages discovered late"
     severity: "MEDIUM"
     effort: "1-2 hours"
+  - title: "Minimal golangci-lint configuration"
+    impact: "Only 3 linters enabled (govet, unused, ineffassign); missing errcheck, staticcheck, gosimple, and other high-value checks"
+    severity: "MEDIUM"
+    effort: "2-4 hours"
 quick_wins:
-  - title: "Add codecov integration with coverage reporting"
+  - title: "Add --coverprofile to unit test CI and upload to codecov"
     effort: "2-4 hours"
-    impact: "Enables coverage tracking, PR comments with coverage deltas, and threshold enforcement"
-  - title: "Add golangci-lint to PR workflow"
+    impact: "Immediate coverage visibility for support library; establishes baseline for coverage tracking"
+  - title: "Enable Renovate or add Dependabot configuration"
     effort: "1-2 hours"
-    impact: "Catches code quality issues (already configured in .golangci.yml) before merge"
-  - title: "Add Trivy container scanning to PR workflow"
-    effort: "1-2 hours"
-    impact: "Supplements Snyk Dockerfile scan with runtime vulnerability detection in built images"
-  - title: "Add basic image smoke test in CI"
-    effort: "2-4 hours"
-    impact: "Validates built test images can start and basic Go test binary executes"
+    impact: "Automated dependency update PRs for Go modules and Python packages"
+  - title: "Expand golangci-lint enabled linters"
+    effort: "2-3 hours"
+    impact: "Catch more bugs with errcheck, staticcheck, gosimple without workflow changes"
+  - title: "Add smoke test for training image startup"
+    effort: "4-6 hours"
+    impact: "Validate images can start and import core packages before pushing to registry"
 recommendations:
   priority_0:
-    - "Implement coverage tracking with codecov for the unit test suite (tests/common/support/)"
-    - "Add golangci-lint as a required PR check (config already exists in .golangci.yml)"
+    - "Add coverage tracking with codecov integration and --coverprofile in unit test workflow"
+    - "Add image startup validation tests for training images before registry push"
   priority_1:
-    - "Expand unit test coverage beyond support library to test utilities and resource generators"
-    - "Add container image runtime validation (smoke test built images in CI)"
-    - "Implement PR-time lightweight E2E smoke tests using Kind/Minikube for basic operator validation"
+    - "Enable Renovate (currently disabled) or configure Dependabot for gomod and pip ecosystems"
+    - "Expand golangci-lint to include errcheck, staticcheck, gosimple, and gocritic"
+    - "Add caching for Go modules in GitHub Actions workflows"
   priority_2:
-    - "Add Trivy scanning alongside existing Snyk for defense-in-depth"
-    - "Enable Renovate for automated dependency updates (currently disabled)"
-    - "Add CodeQL or Semgrep to CI workflow (semgrep.yaml config exists but no CI integration)"
+    - "Add HEALTHCHECK directives to training image Dockerfiles"
+    - "Add multi-architecture build support beyond x86_64 for training images"
+    - "Add test parallelization in unit test workflow for faster feedback"
 ---
 
 # Quality Analysis: distributed-workloads
 
 ## Executive Summary
 
-- **Overall Score: 6.4/10**
-- **Repository Type**: Go E2E test suite + container image definitions for distributed ML workloads on RHOAI
-- **Primary Language**: Go (test framework), Python (training scripts), Dockerfile (images)
-- **Key Strengths**: Comprehensive E2E test suites covering 4 product areas (KFTO, Trainer v2, FMS, ODH), excellent agent rules documentation, robust test infrastructure with shared support library, extensive multi-architecture image matrix
-- **Critical Gaps**: No code coverage tracking, unit tests limited to support library, golangci-lint not in CI, E2E tests run externally (not on PR)
-- **Agent Rules Status**: Present and comprehensive (AGENTS.md / CLAUDE.md symlink)
+- **Overall Score: 6.3/10**
+- **Repository Type**: E2E test suite (Go) for distributed workloads on RHOAI
+- **Primary Language**: Go (gomega assertions)
+- **JIRA**: RHOAIENG / Training Kubeflow / downstream
+- **Key Strengths**: Comprehensive E2E test suites with 4 domains (KFTO, FMS, ODH, Trainer), strong Konflux/Tekton build integration, excellent AI agent rules with 3 actionable skills
+- **Critical Gaps**: Zero coverage tracking, no container image runtime validation, disabled dependency management (Renovate disabled, no Dependabot)
+- **Agent Rules Status**: Excellent - comprehensive AGENTS.md with skills for add-e2e-test, add-benchmark, and update-support-lib
 
 ## Quality Scorecard
 
-| Dimension | Score | Status |
-|-----------|-------|--------|
-| Unit Tests | 5.0/10 | Unit tests only cover shared support library (12 test files); no tests for test utilities |
-| Integration/E2E | 8.5/10 | 29 E2E test files across 4 suites with GPU/CPU variants, upgrade tests, smoke tests |
-| **Build Integration** | **7.0/10** | **Tekton/Konflux PR pipelines for images; no deployment-level integration in CI** |
-| Image Testing | 6.5/10 | 20+ Dockerfiles, multi-arch (amd64/ppc64le/s390x), but no runtime validation in CI |
-| Coverage Tracking | 1.0/10 | No coverage generation, no codecov, no thresholds |
-| CI/CD Automation | 6.5/10 | GitHub Actions for basic checks; E2E and full image testing external |
-| Agent Rules | 8.0/10 | AGENTS.md with test patterns, tagging, naming, cleanup, and notebook conventions |
+| Dimension | Score | Weight | Weighted | Status |
+|-----------|-------|--------|----------|--------|
+| Unit Tests | 6.0/10 | 15% | 0.90 | Unit tests for support library using gomega; limited scope |
+| Integration/E2E | 8.0/10 | 20% | 1.60 | Comprehensive suites across 4 domains with upgrade testing |
+| Build Integration | 8.0/10 | 15% | 1.20 | Extensive Konflux/Tekton PR-triggered build pipelines |
+| Image Testing | 5.0/10 | 10% | 0.50 | 40+ Dockerfiles with UBI9 base, no runtime validation |
+| Coverage Tracking | 1.0/10 | 10% | 0.10 | No coverage tracking at all |
+| CI/CD Automation | 7.0/10 | 15% | 1.05 | 11 GHA workflows + Tekton; missing caching |
+| Static Analysis | 5.0/10 | 10% | 0.50 | Minimal linting, pre-commit present, Renovate disabled |
+| Agent Rules | 9.0/10 | 5% | 0.45 | Excellent AGENTS.md, 3 skills, PostToolUse hooks |
+| **Overall** | **6.3/10** | **100%** | **6.30** | |
 
 ## Critical Gaps
 
 ### 1. No Code Coverage Tracking
-- **Impact**: Cannot measure support library test coverage; no way to detect regressions or enforce minimum coverage on PRs
+- **Impact**: No visibility into support library test coverage; regressions in shared helpers (`tests/common/support/`) go undetected
 - **Severity**: HIGH
-- **Effort**: 2-4 hours
-- **Details**: The `go test ./tests/common/support/...` command runs in CI but does not generate coverage reports. No codecov.yml or coveralls integration exists.
-- **Implementation**:
-  ```yaml
-  # Add to go-unit-test.yml
-  - name: Unit tests with coverage
-    run: go test -coverprofile=coverage.out ./tests/common/support/...
-  - name: Upload coverage
-    uses: codecov/codecov-action@v4
-    with:
-      files: coverage.out
-      token: ${{ secrets.CODECOV_TOKEN }}
-  ```
+- **Effort**: 4-6 hours
+- **Details**: The `go-unit-test.yml` workflow runs `go test ./tests/common/support/...` without `--coverprofile`. No `.codecov.yml`, no coverage thresholds, no PR coverage reporting.
 
-### 2. Unit Tests Limited to Support Library
-- **Impact**: The 38 Go source files in `tests/common/support/` have 12 companion test files (~32% file coverage). The 24 non-support source files across test suites have zero unit tests.
+### 2. No Container Image Runtime Validation
+- **Impact**: 40+ training images (CUDA, ROCm, CPU variants across PyTorch versions) are built and pushed without any startup or functional verification; broken images can reach production registries
 - **Severity**: HIGH
-- **Effort**: 8-16 hours
-- **Details**: Files like `support.go`, `utils/`, and `sdk_tests/` in various test suites have no unit-level validation. The support library tests are well-written (using gomega, table-driven) but coverage is incomplete.
+- **Effort**: 8-12 hours
+- **Details**: Images are built via Tekton pipelines and pushed to quay.io, but there's no `docker run` / `podman run` smoke test, no testcontainers validation, no HEALTHCHECK directives in any Dockerfile.
 
-### 3. No PR-Time E2E Test Execution
-- **Impact**: E2E test regressions are only discovered after merge, when tests run externally via Jenkins on OpenShift clusters
-- **Severity**: MEDIUM
-- **Effort**: 16-24 hours
-- **Details**: This is somewhat inherent to the nature of the tests (requiring OpenShift clusters with GPUs), but a lightweight smoke subset could run in CI using Kind.
-
-### 4. No Container Image Runtime Validation in CI
-- **Impact**: The test image (`images/tests/Dockerfile`) is built and pushed but never validated for basic startup in CI
-- **Severity**: MEDIUM
-- **Effort**: 4-8 hours
-- **Details**: Could add a simple `docker run` step to verify the test binary is accessible and basic imports work.
-
-### 5. golangci-lint Not Enforced in CI
-- **Impact**: `.golangci.yml` exists with 3 linters (govet, unused, ineffassign), but only `go vet` runs in GitHub Actions. Linters like `unused` and `ineffassign` don't run on PRs.
+### 3. Renovate Disabled, No Dependabot
+- **Impact**: No automated dependency update alerts for Go modules or Python packages; CVEs discovered manually and late
 - **Severity**: MEDIUM
 - **Effort**: 1-2 hours
+- **Details**: `renovate.json` exists but contains `{"enabled": false}`. No `.github/dependabot.yml` exists. The repo has complex Python dependency trees across 40+ training images.
+
+### 4. Minimal golangci-lint Configuration
+- **Impact**: Only 3 linters enabled (govet, unused, ineffassign), missing high-value checks like errcheck, staticcheck, gosimple
+- **Severity**: MEDIUM
+- **Effort**: 2-4 hours
+- **Details**: `.golangci.yml` uses `default: none` with only 3 explicit linters. For a test codebase with K8s client operations, errcheck is particularly important to catch ignored error returns.
 
 ## Quick Wins
 
-### 1. Add Codecov Integration (2-4 hours)
-Add coverage generation and upload to the existing unit test workflow. The Go toolchain natively supports `-coverprofile` — just add the flag and a codecov upload step.
-
-### 2. Add golangci-lint to PR Workflow (1-2 hours)
-The `.golangci.yml` config already exists. Add a workflow step:
+### 1. Add Coverage Tracking to Unit Tests (2-4 hours)
+Add `--coverprofile` to the unit test workflow and upload to codecov:
 ```yaml
-- name: golangci-lint
-  uses: golangci/golangci-lint-action@v6
+# In .github/workflows/go-unit-test.yml
+- name: Unit tests
+  run: go test -coverprofile=coverage.out ./tests/common/support/...
+- name: Upload coverage
+  uses: codecov/codecov-action@v4
   with:
-    version: v2.12.1
+    files: coverage.out
+    token: ${{ secrets.CODECOV_TOKEN }}
 ```
 
-### 3. Add Trivy Container Scanning (1-2 hours)
-Supplement the existing Snyk Dockerfile scan with Trivy for runtime vulnerability scanning:
+### 2. Enable Renovate or Add Dependabot (1-2 hours)
+Either update `renovate.json`:
+```json
+{
+  "enabled": true,
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": ["config:base"],
+  "packageRules": [
+    {"matchManagers": ["gomod"], "enabled": true},
+    {"matchManagers": ["pip_requirements"], "enabled": true}
+  ]
+}
+```
+Or add `.github/dependabot.yml`:
 ```yaml
-- name: Run Trivy
-  uses: aquasecurity/trivy-action@master
-  with:
-    image-ref: ${{ env.E2E_TEST_IMAGE }}
-    severity: HIGH,CRITICAL
+version: 2
+updates:
+  - package-ecosystem: gomod
+    directory: /
+    schedule:
+      interval: weekly
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
 ```
 
-### 4. Add Image Smoke Test (2-4 hours)
-After building the test image in CI, run a basic validation:
+### 3. Expand golangci-lint Linters (2-3 hours)
+```yaml
+# .golangci.yml
+version: "2"
+run:
+  allow-parallel-runners: true
+linters:
+  default: none
+  enable:
+    - govet
+    - unused
+    - ineffassign
+    - errcheck
+    - staticcheck
+    - gosimple
+    - gocritic
+    - errorlint
+issues:
+  max-same-issues: 0
+```
+
+### 4. Add Image Startup Smoke Test (4-6 hours)
+Add a CI step after image build to verify training images can start:
 ```yaml
 - name: Smoke test image
   run: |
-    podman run --rm ${E2E_TEST_IMAGE} ls /distributed-workloads/tests/
-    podman run --rm ${E2E_TEST_IMAGE} go version
+    podman run --rm --entrypoint python3 ${IMAGE} -c "import torch; print(f'PyTorch {torch.__version__}')"
 ```
 
 ## Detailed Findings
 
-### CI/CD Pipeline
+### Unit Tests
 
-**GitHub Actions Workflows (11 files)**:
+**Score: 6.0/10**
+
+- **13 unit test files** in `tests/common/support/` testing the shared test infrastructure
+- Framework: Go testing with **gomega** assertions
+- Uses `t.Helper()` for clean stack traces in helpers
+- Test-to-code ratio: 42 test files / 62 source files = 0.68 (note: this repo IS a test repo, so most "source" is also test code)
+- Unit test CI runs on PRs via `go-unit-test.yml` triggered on `.go`, `go.mod`, `go.sum` changes
+- **Key test files**: `batch_test.go`, `core_test.go`, `environment_test.go`, `events_test.go`, `image_test.go`, `ingress_test.go`, `kueue_test.go`, `machine_test.go`, `pytorchjob_test.go`, `ray_test.go`, `rbac_test.go`, `route_test.go`, `test_test.go`
+
+**Strengths**: Good coverage of the shared test infrastructure; tests validate K8s resource parsing and helper functions.
+**Gaps**: No coverage metric tracking; no test-to-code ratio enforcement.
+
+### Integration/E2E Tests
+
+**Score: 8.0/10**
+
+The repo's primary purpose is E2E testing, organized into 4 well-structured suites:
+
+| Suite | Files | Focus |
+|-------|-------|-------|
+| `tests/kfto/` | 8 | KFTO v1 (PyTorchJob) - MNIST, SFT, smoke, upgrade |
+| `tests/fms/` | 4 | fms-hf-tuning GPU fine-tuning (SFT TrainJob, Kueue) |
+| `tests/odh/` | 5 | ODH integration (Ray, RayTune HPO, DeepSpeed) |
+| `tests/trainer/` | 12 | Kubeflow Trainer v2 (smoke, MPI, fashion MNIST, SDK, upgrade) |
+
+**Strengths**:
+- **Namespace isolation**: Every test uses `test.NewTestNamespace()` for dedicated namespaces
+- **Tagging system**: Smoke, Tier1-3, Gpu, MultiGpu, MultiNode tags for selective execution
+- **Upgrade testing**: `kfto_kueue_mnist_upgrade_training_test.go`, `trainer_kueue_upgrade_training_test.go`, `trainer_trainingruntime_upgrade_test.go`
+- **Resource naming**: GenerateName pattern prevents test collisions
+- **Compiled test releases**: `odh-release.yml` workflow compiles tests into release binaries
+
+**Gaps**: Tests require real OpenShift cluster (no local Kind/Minikube option); no test result reporting integration.
+
+### Build Integration
+
+**Score: 8.0/10**
+
+**GitHub Actions (PR-triggered)**:
+- `go-unit-test.yml` - Go unit tests on `.go`/`go.mod` changes
+- `go-vet.yml` - Go vet on `.go`/`go.mod` changes
+- `verify_generated_files.yml` - Import organization and agent config sync verification
+- `build-and-push-osu-benchmark.yml` - Benchmark image builds on PR (path-filtered)
+
+**Tekton/Konflux Pipelines** (26+ pipeline configs in `.tekton/`):
+- PR-triggered builds for each training image variant (CUDA 12.1/12.4/12.8/13.0, ROCm 6.2/6.4, CPU)
+- Label/comment-triggered: `/build-konflux-*` comments, `kfbuild-*` labels
+- Konflux-specific Dockerfiles (`Dockerfile.konflux`, `Dockerfile.konflux.cuda`, `Dockerfile.konflux.cpu`, `Dockerfile.konflux.rocm`)
+- Pipeline timeout: 10 hours for builds, 8 hours for tasks
+- `cancel-in-progress: true` for concurrent PR builds
+- Source image and image index enabled
+
+**Strengths**: Extensive Konflux integration with per-variant PR build validation; production build simulation before merge.
+**Gaps**: No dry-run manifest validation; no cross-image dependency checks.
+
+### Image Testing
+
+**Score: 5.0/10**
+
+**40+ Dockerfiles** across multiple categories:
+
+| Category | Count | Base Images |
+|----------|-------|-------------|
+| Runtime training | ~16 | UBI9 (FIPS-capable) |
+| Universal training | ~6 | UBI9 |
+| Ray runtime | ~7 | UBI9 / ray base images |
+| Ray examples | 4 | Various |
+| Test/benchmark/utility | ~8 | golang, UBI9 |
+
+**Strengths**:
+- UBI9 base images across training variants (FIPS-capable)
+- Multi-stage builds in universal training images (builder -> final)
+- FIPS-friendly documentation in universal image Dockerfiles
+- Separate Konflux-specific Dockerfiles for production builds
+- Clear labeling with `io.k8s.display-name` and `io.k8s.description`
+
+**Gaps**:
+- No runtime validation (no `testcontainers`, no `docker run` smoke tests)
+- No HEALTHCHECK directives
+- No image startup tests in CI
+- Limited multi-arch: only `linux/x86_64` in Tekton pipelines
+- No `.dockerignore` files in image directories
+
+### Coverage Tracking
+
+**Score: 1.0/10**
+
+- **No** `.codecov.yml` or `codecov.yml`
+- **No** `--coverprofile` in any CI workflow
+- **No** coverage thresholds or gates
+- **No** PR coverage reporting
+- **No** `.coveragerc` for Python code
+- The `go-unit-test.yml` runs `go test ./tests/common/support/...` with no coverage flags
+
+This is the most critical gap in the repository. Without coverage tracking, there's no way to measure or enforce quality of the shared test infrastructure.
+
+### CI/CD Automation
+
+**Score: 7.0/10**
+
+**Workflow Inventory (11 GitHub Actions + 26+ Tekton pipelines)**:
 
 | Workflow | Trigger | Purpose |
 |----------|---------|---------|
-| `go-unit-test.yml` | PR + push (Go files) | Unit tests for support library |
-| `go-vet.yml` | PR + push (Go files) | Go vet static analysis |
-| `verify_generated_files.yml` | PR + push (Go files) | Import organization verification |
-| `build-and-push-test-images.yml` | push to main | Build/push E2E test container |
-| `build-and-push-test-images-release-branch.yml` | push to rhoai-* | Build/push release test images |
-| `build-and-push-osu-benchmark.yml` | PR + push (benchmark paths) | Build OSU benchmark images |
-| `snyk-dockerfile-scan.yml` | push to main + nightly + labeled PR | Snyk IaC scan on training Dockerfiles |
-| `sync-main-to-stable.yml` | Every 4 hours | Cherry-pick main→stable with lake-gate PR |
-| `odh-release.yml` | workflow_dispatch | Compile tests and create GitHub release |
-| `notify-autofix-prs.yml` | PR opened + weekday schedule | Slack notifications for jira-autofix PRs |
-
-**Tekton/Konflux Pipelines (27 files)**:
-- PR-triggered pipelines for Ray CPU/CUDA image builds
-- Push pipelines for training images (CUDA 12.1/12.4/12.8/13.0, ROCm 6.2/6.4)
-- Multi-architecture builds (linux/ppc64le)
-- Managed centrally via `konflux-central` repository
+| `go-unit-test.yml` | PR, push (main) | Unit tests for support library |
+| `go-vet.yml` | PR, push (main) | Go vet linting |
+| `verify_generated_files.yml` | PR, push | Import verification + agent config sync |
+| `build-and-push-osu-benchmark.yml` | PR, push | Benchmark image builds |
+| `build-and-push-test-images.yml` | push (main) | Test container image builds |
+| `build-and-push-test-images-release-branch.yml` | push (rhoai-*) | Release branch test images |
+| `odh-release.yml` | manual dispatch | Compiled test binary releases |
+| `snyk-dockerfile-scan.yml` | push, schedule, labeled PR | Dockerfile vulnerability scanning |
+| `sync-main-to-stable.yml` | schedule (4h) | Cherry-pick main -> stable |
+| `universal-image-lockfile-refresh.yaml` | schedule (daily) | Python lockfile updates |
+| `notify-autofix-prs.yml` | PR target, schedule | Slack notifications for autofix PRs |
 
 **Strengths**:
-- Path-based triggers prevent unnecessary CI runs
-- Separate release branch image build workflow
-- Automated main→stable sync with Mergify fast-forward
-- Konflux integration for production image builds
+- Concurrency control in lockfile refresh (`cancel-in-progress`)
+- Tekton pipelines with `cancel-in-progress: true`
+- Mergify for auto-approve/merge lake-gate PRs to stable
+- Scheduled lockfile refresh keeps dependencies current
+- Slack integration for PR notifications
 
 **Gaps**:
-- No concurrency control on GitHub Actions workflows (except Tekton)
-- No caching in Go workflows (setup-go uses go.mod but no explicit cache)
-- E2E tests not integrated into CI (run externally)
-- golangci-lint configured but not in any workflow
+- No Go module caching in GitHub Actions workflows (no `cache:` configuration)
+- No test parallelization (single `go test` invocation)
+- No `timeout-minutes` in GitHub Actions jobs (Tekton has 10h timeout)
 
-### Test Coverage
+### Static Analysis
 
-**Test-to-Code Ratio**: Excellent — 9,940 lines of test code vs. 8,544 lines of production code (1.16:1)
-
-**Unit Tests (12 files in tests/common/support/)**:
-- `batch_test.go`, `core_test.go`, `environment_test.go`, `events_test.go`
-- `image_test.go`, `ingress_test.go`, `kueue_test.go`, `machine_test.go`
-- `pytorchjob_test.go`, `ray_test.go`, `rbac_test.go`, `route_test.go`, `test_test.go`
-- Framework: Go testing + gomega matchers
-- Run via: `go test ./tests/common/support/...`
-
-**E2E Test Suites (29 files)**:
-- `tests/trainer/` (12 files): Kubeflow Trainer v2 — smoke, SFT, MPI, Kueue integration, upgrades, JobSet
-- `tests/kfto/` (8 files): KFTO v1 — PyTorchJob, MNIST, SDK, SFT LLM, Kueue upgrades
-- `tests/fms/` (4 files): FMS HF tuning — SFT TrainJob, GPU tests
-- `tests/odh/` (4 files): ODH integration — Ray, RayTune HPO, DeepSpeed
-- Well-structured with tag system: `Smoke`, `Tier1-Tier3`, `Gpu`, `MultiGpu`, `MultiNode`
-
-**Test Infrastructure Quality**:
-- Shared support library with 38 helper files (clients, conditions, environment, resources)
-- Namespace isolation with automatic cleanup
-- GenerateName for collision avoidance
-- Fake client support (`fakeclient.go`)
-- Gomega-based assertions with `Eventually` for async operations
-
-### Code Quality
+**Score: 5.0/10**
 
 **Linting**:
-- `.golangci.yml`: golangci-lint v2 config with 3 linters (govet, unused, ineffassign)
-- `go vet` runs on PRs via GitHub Actions
-- golangci-lint **not** in CI — significant gap given the config exists
-- `openshift-goimports` for import organization (verified in CI)
+- `golangci-lint` v2.12.1 configured with only 3 linters: `govet`, `unused`, `ineffassign`
+- `go vet` runs on PRs via dedicated workflow
+- Import organization verification via `openshift-goimports`
 
 **Pre-commit Hooks** (`.pre-commit-config.yaml`):
-- `check-yaml`, `check-json`, `end-of-file-fixer`, `trailing-whitespace`, `pretty-format-json`
-- Python: `isort` (profile=black), `black` formatter, `flake8` (max-line-length=88)
-- Covers both Go and Python code hygiene
+- `check-yaml`, `check-json` - file format validation
+- `end-of-file-fixer`, `trailing-whitespace` - formatting
+- `pretty-format-json` - JSON formatting
+- `isort` (Python import ordering), `black` (Python formatting), `flake8` (Python linting)
 
-**Static Analysis**:
-- Semgrep config exists (`semgrep.yaml`) with comprehensive rules for Go, Python, TS, YAML, secrets detection — **but not integrated into CI**
-- Snyk policy (`.snyk`) excludes examples/ and tests/ from scanning
-- Gitleaks config (`.gitleaks.toml`) with comprehensive allowlists for test files
+**FIPS Compatibility**:
+- Universal training images document FIPS-friendly features in Dockerfile comments
+- UBI9 base images across all training variants (FIPS-capable)
+- No `math/rand` usage in test code
+- No non-FIPS crypto imports detected in Go source
 
-### Container Images
+**Dependency Alerts**:
+- `renovate.json` present but **disabled** (`"enabled": false`)
+- No `.github/dependabot.yml`
+- No automated dependency update mechanism active
 
-**Image Matrix** (20+ Dockerfiles):
-- **Training runtime images**: CUDA 12.1/12.4/12.8/13.0, ROCm 6.2/6.4, with PyTorch variants
-- **Universal training images**: CPU/CUDA/ROCm base images
-- **Ray images**: CPU, CUDA, ROCm with Python 3.11/3.12
-- **Example images**: Ray data processing (Docling, RAG), torch (CUDA/ROCm)
-- **Utility images**: dataset (Alpaca), model (Bloom 560M), mc-cli, tests, benchmarks (OSU)
+**Strengths**: Good pre-commit hooks covering Go and Python; FIPS awareness in image builds.
+**Gaps**: Very minimal linting; disabled dependency management; no active vulnerability alerting for dependencies.
 
-**Build Process**:
-- Multi-stage builds in benchmark images
-- UBI/Red Hat base images (`odh-midstream-python-base`)
-- Multi-architecture support (ppc64le via Tekton)
-- Konflux-managed production builds with centralized pipeline definitions
+### Agent Rules
 
-**Security**:
-- Snyk Dockerfile scanning on main push + nightly (HIGH/CRITICAL threshold)
-- PR scanning available via `run-snyk` label
-- No Trivy integration
-- No SBOM generation
-- No image signing/attestation visible
+**Score: 9.0/10**
 
-### Security Practices
+**Documentation**:
+- **AGENTS.md** (4.3 KB): Comprehensive guide covering repository structure, test suites, key paths, running tests, writing tests, lint/format commands, benchmarks, support library, common workflows, CVE fix procedures, and skill management
+- **CLAUDE.md**: Symlinked to AGENTS.md
+- **ARCHITECTURE.md**: Full repository architecture documentation
 
-| Practice | Status | Details |
-|----------|--------|---------|
-| Gitleaks | Configured | `.gitleaks.toml` with comprehensive allowlists |
-| Snyk | Active | Dockerfile scanning on push + nightly schedule |
-| Semgrep | Config only | `semgrep.yaml` with 5 rule categories, not in CI |
-| CodeQL | Missing | No CodeQL integration |
-| Dependency scanning | Limited | Snyk policy exists; Renovate disabled |
-| Secret detection | Configured | Via Gitleaks + Semgrep generic rules (not in CI) |
+**Skills** (3 actionable Claude skills in `.claude/skills/`):
+- **add-e2e-test/SKILL.md**: Detailed guide with test structure template, namespace isolation, resource naming (GenerateName), cleanup, tag system, environment variable patterns, and notebook editing conventions
+- **add-benchmark/SKILL.md**: Guide for adding benchmarks (Dockerfile, ClusterTrainingRuntime, TrainJob, CI workflow)
+- **update-support-lib/SKILL.md**: Guide for modifying shared test infrastructure (getters, condition checkers, client abstraction, option pattern)
 
-### Agent Rules (Agentic Flow Quality)
+**Configuration**:
+- `.claude/settings.json` with PostToolUse hook: auto-runs `openshift-goimports` after Edit/Write on `.go` files
+- AI skills canonical source in `ai/skills/` with sync script (`make sync-agents-config`)
+- CI verification of agent config sync (`verify_generated_files.yml`)
 
-**Status**: Present and comprehensive
-
-**AGENTS.md** (symlinked as CLAUDE.md) — 6KB of detailed guidance:
-- Repository structure overview (tests/, examples/, images/)
-- Test suite descriptions for all 4 suites (kfto, fms, odh, trainer)
-- Key paths for development
-- Running tests with specific examples
-- Prerequisites (OpenShift, RHOAI)
-- Lint/format commands with targeted options
-- **Writing Tests section** — excellent:
-  - Namespace isolation with `test.NewTestNamespace()`
-  - Resource naming with `GenerateName`
-  - Cleanup guidance (namespace-scoped vs cluster-scoped)
-  - Test structure template
-  - Notebook editing conventions (1-space JSON, array-of-lines format)
-  - Environment variable patterns (`environment.go` getters)
-  - Tag system with detailed table (Smoke, Tier1-3, Gpu, MultiGpu, MultiNode variants)
-- CVE fix guidance for Python dependency updates
-
-**Strengths**:
-- Actionable patterns with code examples
-- Covers both Go tests and Python/notebook conventions
-- Tag system documentation enables proper test categorization
-- Environment variable discipline prevents `os.Getenv` scatter
-
-**Gaps**:
-- No `.claude/rules/` directory for structured rule files
-- No separate rules per test type (unit-tests.md, e2e-tests.md)
-- Missing guidance on mocking patterns and fake client usage
-- No quality gate checklist for PR readiness
+**Quality Assessment**:
+- Rules are comprehensive and actionable (not generic "write tests" advice)
+- Framework-specific: gomega assertions, GenerateName patterns, namespace isolation
+- Include concrete code examples and anti-patterns
+- Cover all main repo workflows (E2E tests, benchmarks, support lib)
+- PostToolUse hook ensures code style compliance automatically
 
 ## Recommendations
 
 ### Priority 0 (Critical)
 
-1. **Implement coverage tracking with codecov** — Add `-coverprofile` to the unit test workflow and integrate codecov. Set a baseline threshold (aim for 60%+ on support library). Effort: 2-4 hours.
+1. **Add coverage tracking with codecov integration** (4-6 hours)
+   - Add `--coverprofile=coverage.out` to `go test` in `go-unit-test.yml`
+   - Add codecov upload step
+   - Create `.codecov.yml` with minimum coverage thresholds
+   - Track coverage for `tests/common/support/` package
 
-2. **Add golangci-lint to PR workflow** — The config exists but isn't enforced. Add `golangci/golangci-lint-action@v6` as a required check. Effort: 1-2 hours.
+2. **Add container image runtime validation** (8-12 hours)
+   - Add smoke test step in Tekton pipelines after image build
+   - Verify Python imports (`import torch`, `import transformers`)
+   - Check for expected binaries and library versions
+   - Add basic startup tests before pushing to registry
 
 ### Priority 1 (High Value)
 
-3. **Expand unit test coverage** — Add unit tests for test suite utilities like `support.go`, `utils/`, and SDK test helpers across kfto/trainer/odh suites. Target the support library first (currently ~32% file coverage). Effort: 8-16 hours.
+3. **Enable dependency update automation** (1-2 hours)
+   - Either enable Renovate (`"enabled": true` in `renovate.json`) or add Dependabot
+   - Cover `gomod`, `pip`, and `github-actions` ecosystems
+   - Configure auto-merge for patch updates
 
-4. **Integrate Semgrep into CI** — `semgrep.yaml` with 5 rule categories already exists. Add a workflow:
-   ```yaml
-   - uses: returntocorp/semgrep-action@v1
-     with:
-       config: semgrep.yaml
-   ```
-   Effort: 1-2 hours.
+4. **Expand golangci-lint configuration** (2-4 hours)
+   - Add errcheck, staticcheck, gosimple, gocritic, errorlint
+   - Particularly important for K8s client code where error handling matters
 
-5. **Add container image smoke tests** — After building test images in CI, validate they start and contain expected binaries. Effort: 2-4 hours.
+5. **Add Go module caching to CI workflows** (1-2 hours)
+   - Add `cache: true` to `actions/setup-go@v5` steps or explicit cache action
+   - Will speed up all Go-related CI jobs
 
 ### Priority 2 (Nice-to-Have)
 
-6. **Enable Renovate** — Currently disabled (`"enabled": false`). Enable for automated dependency updates, especially for Go modules and base image versions. Effort: 2-4 hours.
+6. **Add HEALTHCHECK to training Dockerfiles** (2-3 hours)
+   - Add `HEALTHCHECK CMD python3 -c "import torch"` or similar to runtime images
 
-7. **Add structured agent rules** — Create `.claude/rules/` with separate files for each test type (unit-tests.md, e2e-tests.md, image-tests.md) to supplement AGENTS.md. Effort: 2-3 hours.
+7. **Add multi-architecture support** (4-8 hours)
+   - Extend Tekton pipeline build-platforms beyond `linux/x86_64`
+   - Enable `linux/aarch64` for ARM compatibility
 
-8. **Add Trivy scanning** — Defense-in-depth alongside Snyk for container image vulnerability scanning. Effort: 1-2 hours.
-
-9. **Add CodeQL or SAST** — No SAST beyond Snyk IaC scanning. Consider CodeQL for Go and Python analysis. Effort: 2-4 hours.
-
-10. **Implement PR-time lightweight E2E** — Run basic operator smoke tests using Kind in CI to catch regressions before merge. Significant effort given GPU requirements, but CPU-only smoke tests are feasible. Effort: 16-24 hours.
+8. **Add timeout-minutes to GitHub Actions jobs** (30 minutes)
+   - Prevent runaway jobs from consuming CI resources
 
 ## Comparison to Gold Standards
 
-| Dimension | distributed-workloads | odh-dashboard (Gold) | notebooks (Gold) | kserve (Gold) |
-|-----------|----------------------|---------------------|------------------|---------------|
-| Unit Tests | 5.0 — Support library only | 9.0 — Comprehensive with mocks | 7.0 — Image validation | 8.0 — Controller tests |
-| Integration/E2E | 8.5 — 4 full suites | 9.0 — Multi-layer + contracts | 8.0 — 5-layer validation | 9.0 — Multi-version |
-| Build Integration | 7.0 — Tekton PR builds | 8.0 — Module Federation | 7.0 — Multi-arch | 8.0 — CRD validation |
-| Image Testing | 6.5 — Build only | 7.0 — Startup validation | 9.0 — 5-layer runtime | 7.0 — Serving tests |
-| Coverage Tracking | 1.0 — None | 9.0 — Codecov + thresholds | 6.0 — Partial | 8.0 — Enforced |
-| CI/CD Automation | 6.5 — Basic + external | 9.0 — Full PR pipeline | 8.0 — Multi-arch CI | 9.0 — Release automation |
-| Agent Rules | 8.0 — AGENTS.md | 9.0 — Full .claude/rules/ | 5.0 — Minimal | 4.0 — No rules |
+| Practice | distributed-workloads | odh-dashboard (Gold) | notebooks (Gold) | kserve (Gold) |
+|----------|----------------------|---------------------|-------------------|---------------|
+| Unit test coverage | Support lib only | Multi-layer | N/A | Comprehensive |
+| E2E test suites | 4 suites, 29 tests | Cypress + API | Image validation | Multi-version |
+| Coverage tracking | None | Codecov enforced | Basic | Codecov + thresholds |
+| Build integration | Konflux/Tekton | PR builds | PR builds | PR builds |
+| Image testing | Build only | N/A | 5-layer validation | Basic |
+| CI/CD caching | None | Module + build cache | Layer cache | Module cache |
+| Linting depth | 3 linters | Comprehensive ESLint | Basic | 10+ linters |
+| Agent rules | Excellent (9/10) | Comprehensive | Basic | Moderate |
+| Dependency mgmt | Disabled | Renovate active | Dependabot | Renovate |
+| FIPS awareness | UBI9 + documentation | N/A | FIPS-capable images | N/A |
 
 ## File Paths Reference
 
 ### CI/CD
-- `.github/workflows/go-unit-test.yml` — Unit test runner
-- `.github/workflows/go-vet.yml` — Go vet checks
-- `.github/workflows/verify_generated_files.yml` — Import verification
-- `.github/workflows/snyk-dockerfile-scan.yml` — Security scanning
-- `.github/workflows/sync-main-to-stable.yml` — Branch sync automation
-- `.tekton/` — Konflux pipeline runs (managed by konflux-central)
-- `.mergify.yml` — Auto-merge lake-gate PRs
-- `Makefile` — Build and test targets
+- `.github/workflows/go-unit-test.yml` - Unit test workflow
+- `.github/workflows/go-vet.yml` - Go vet workflow
+- `.github/workflows/verify_generated_files.yml` - Import + agent config verification
+- `.github/workflows/build-and-push-osu-benchmark.yml` - Benchmark image builds
+- `.github/workflows/build-and-push-test-images.yml` - Test image builds
+- `.github/workflows/sync-main-to-stable.yml` - Main -> stable sync
+- `.github/workflows/universal-image-lockfile-refresh.yaml` - Python lockfile refresh
+- `.tekton/*.yaml` - 26+ Konflux build pipelines
 
 ### Testing
-- `tests/common/support/` — Shared test infrastructure (38 source + 12 test files)
-- `tests/trainer/` — Kubeflow Trainer v2 E2E tests (12 files)
-- `tests/kfto/` — KFTO v1 E2E tests (8 files)
-- `tests/fms/` — FMS HF tuning E2E tests (4 files)
-- `tests/odh/` — ODH integration E2E tests (4 files)
+- `tests/common/support/*_test.go` - 13 unit test files
+- `tests/kfto/` - KFTO v1 E2E tests (8 files)
+- `tests/fms/` - FMS fine-tuning E2E tests (4 files)
+- `tests/odh/` - ODH integration E2E tests (5 files)
+- `tests/trainer/` - Kubeflow Trainer v2 E2E tests (12 files)
 
 ### Code Quality
-- `.golangci.yml` — golangci-lint v2 config (3 linters)
-- `.pre-commit-config.yaml` — Pre-commit hooks (YAML, JSON, Python formatting)
-- `semgrep.yaml` — Semgrep rules (not in CI)
-- `.gitleaks.toml` — Secret detection config
-- `.snyk` — Snyk policy
+- `.golangci.yml` - golangci-lint config (3 linters)
+- `.pre-commit-config.yaml` - Pre-commit hooks (8 hooks)
+- `renovate.json` - Renovate (disabled)
 
 ### Container Images
-- `images/runtime/training/` — 10 training runtime Dockerfiles (CUDA/ROCm variants)
-- `images/runtime/ray/` — Ray runtime images
-- `images/universal/training/` — 3 universal training base images
-- `images/tests/Dockerfile` — E2E test runner image
-- `benchmarks/osu-benchmarks/Dockerfile` — MPI benchmark images
+- `images/runtime/training/` - Training runtime Dockerfiles (16+ variants)
+- `images/universal/training/` - Universal training Dockerfiles (6 variants)
+- `images/runtime/ray/` - Ray runtime Dockerfiles (7 variants)
+- `images/tests/Dockerfile` - Test container image
+- `benchmarks/osu-benchmarks/Dockerfile*` - Benchmark images
 
 ### Agent Rules
-- `AGENTS.md` — Comprehensive agent guidance (CLAUDE.md symlinks to this)
-- `renovate.json` — Renovate config (disabled)
+- `AGENTS.md` - Comprehensive agent documentation (symlinked as CLAUDE.md)
+- `ARCHITECTURE.md` - Repository architecture guide
+- `.claude/skills/add-e2e-test/SKILL.md` - E2E test writing guide
+- `.claude/skills/add-benchmark/SKILL.md` - Benchmark addition guide
+- `.claude/skills/update-support-lib/SKILL.md` - Support library modification guide
+- `.claude/settings.json` - PostToolUse hooks for goimports
+- `ai/skills/` - Canonical skill source directory

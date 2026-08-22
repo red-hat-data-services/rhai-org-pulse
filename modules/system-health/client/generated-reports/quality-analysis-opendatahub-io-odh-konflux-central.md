@@ -1,467 +1,481 @@
 ---
 repository: "opendatahub-io/odh-konflux-central"
-overall_score: 6.6
+overall_score: 6.7
 scorecard:
   - dimension: "Unit Tests"
-    score: 2.0
-    status: "Minimal — only one CLI arg verification script (verify_cli_args.py); no unit test suite for 6,300+ lines of Python helper code"
+    score: 7.0
+    status: "153 pytest unit tests for olminstall pipeline framework; solid test-to-code ratio"
   - dimension: "Integration/E2E"
-    score: 8.5
-    status: "Strong — 14 component-specific integration test suites, Snapshot-driven olminstall with EaaS, early-gate system"
-  - dimension: "Build Integration"
     score: 8.0
-    status: "Mature Konflux pipelines for container, operator, bundle, and catalog builds with multi-arch support and early-gate PR validation"
+    status: "Massive olminstall E2E framework with EaaS cluster provisioning and 15+ component pipelines"
+  - dimension: "Build Integration"
+    score: 9.0
+    status: "Central Konflux config repo with 5 pipeline types, early-gate system, and automated onboarding"
   - dimension: "Image Testing"
     score: 7.0
-    status: "Clair scan, ClamAV, RPM signature scan, deprecated image check, Snyk SAST — but no container runtime validation tests"
+    status: "15 integration test Dockerfiles on UBI9 base images; automated rebuild on push"
   - dimension: "Coverage Tracking"
-    score: 1.0
-    status: "No coverage tracking, no codecov integration, no coverage thresholds for any code"
+    score: 2.0
+    status: "No coverage tooling — no codecov, no pytest-cov, no coverage thresholds"
   - dimension: "CI/CD Automation"
-    score: 7.5
-    status: "YAML lint + kubeconform on PRs, automated image builds, Renovate for dependency updates, onboarding workflows — but no concurrency control or caching"
+    score: 8.0
+    status: "6 workflows with yamllint, kubeconform, Renovate auto-merge, and path-based triggers"
+  - dimension: "Static Analysis"
+    score: 6.0
+    status: "yamllint + kubeconform + Renovate; missing Python linter for 200+ source files"
   - dimension: "Agent Rules"
-    score: 1.0
-    status: "No CLAUDE.md, no .claude/ directory, no agent rules — CLAUDE.md is in .gitignore"
+    score: 0.0
+    status: "CLAUDE.md explicitly gitignored; no agent rules or test creation guidance"
 critical_gaps:
-  - title: "No unit tests for 6,300+ lines of olminstall Python helpers"
-    impact: "Regressions in CLI parsing, ITS patching, OLM install logic, or Tekton helpers go undetected until integration failures"
-    severity: "HIGH"
-    effort: "16-24 hours"
-  - title: "No code coverage tracking anywhere"
-    impact: "Cannot measure, enforce, or trend test coverage; coverage blindspot across all code"
+  - title: "No code coverage tracking for olminstall Python framework"
+    impact: "200+ Python files with 153 test files but no visibility into which code paths are exercised; regressions hide in untested branches"
     severity: "HIGH"
     effort: "4-6 hours"
-  - title: "No container runtime validation"
-    impact: "Built images pass security scans but may fail at runtime (startup, healthcheck, entrypoint issues) — only discovered during integration tests on ephemeral clusters"
-    severity: "MEDIUM"
-    effort: "8-12 hours"
-  - title: "No linting or static analysis for Python code"
-    impact: "No ruff, mypy, or flake8 for 6,300+ lines of Python helpers — type errors and code quality issues slip through"
-    severity: "MEDIUM"
-    effort: "2-4 hours"
-  - title: "No agent rules for AI-assisted contributions"
-    impact: "AI agents have no guidance on testing patterns, pipeline YAML conventions, or contribution standards"
-    severity: "LOW"
+  - title: "No Python linter for 200+ olminstall source files"
+    impact: "Type errors, import issues, and style inconsistencies go undetected until runtime failures in Tekton pipelines"
+    severity: "HIGH"
     effort: "4-6 hours"
+  - title: "No agent rules or AI-assisted test generation guidance"
+    impact: "AI agents generate tests without knowledge of pytest patterns, conftest fixtures, or olminstall architecture"
+    severity: "MEDIUM"
+    effort: "3-4 hours"
 quick_wins:
-  - title: "Add ruff linting for Python code"
-    effort: "1-2 hours"
-    impact: "Catch type errors, unused imports, and code quality issues in 6,300+ lines of Python helpers"
-  - title: "Add pytest for olminstall helpers with verify_cli_args.py as seed"
-    effort: "4-6 hours"
-    impact: "Cover critical CLI parsing and pipeline logic; verify_cli_args.py already demonstrates the pattern"
-  - title: "Enable concurrency control on GitHub Actions workflows"
-    effort: "30 minutes"
-    impact: "Prevent wasted CI runs on rapid pushes to PRs"
-  - title: "Create CLAUDE.md with contribution and testing guidelines"
+  - title: "Add pytest-cov to the test suite"
     effort: "2-3 hours"
-    impact: "Guide AI agents and new contributors on pipeline YAML patterns, testing conventions, and review expectations"
+    impact: "Immediate visibility into coverage of the olminstall pipeline framework; baseline for enforcement"
+  - title: "Add ruff linter to CI for Python files"
+    effort: "2-3 hours"
+    impact: "Catch type errors, unused imports, and style issues in 200+ Python files before merge"
+  - title: "Add pre-commit hooks configuration"
+    effort: "1-2 hours"
+    impact: "Enforce yamllint + ruff + editorconfig locally before push; reduce CI failures"
 recommendations:
   priority_0:
-    - "Add pytest unit tests for olminstall Python helpers — prioritize cli.py, runner.py, oc_util.py, tekton_util.py (6,300+ lines with zero test coverage)"
-    - "Add ruff and mypy to CI for Python static analysis"
-    - "Implement codecov or similar coverage tracking for Python code"
+    - "Add pytest-cov integration with coverage threshold enforcement for integration-tests/olminstall/"
+    - "Add ruff or flake8 linting for all Python files in integration-tests/olminstall/"
   priority_1:
-    - "Add container runtime validation (startup, healthcheck) for integration test images"
-    - "Add concurrency control to GitHub Actions workflows to prevent redundant runs"
-    - "Create agent rules (.claude/rules/) for pipeline YAML patterns and testing conventions"
-    - "Add pre-commit hooks for YAML lint and Python linting"
+    - "Create CLAUDE.md with repository architecture and contribution guidelines (remove from .gitignore)"
+    - "Add .claude/rules/ with test creation patterns for olminstall unit tests"
+    - "Add concurrency controls to GitHub Actions workflows to prevent parallel onboarder runs"
   priority_2:
-    - "Add Tekton pipeline YAML schema validation via custom CRD schemas (kubeconform currently ignores Tekton CRDs)"
-    - "Add integration tests for the onboarding workflows (odh-konflux-onboarder, odh-early-gate-onboarder)"
-    - "Add SBOM attestation verification in CI"
+    - "Add unit tests for utils/generate_component_map.py"
+    - "Add HEALTHCHECK instructions to integration test Dockerfiles"
+    - "Consider multi-arch builds for integration test images"
 ---
 
 # Quality Analysis: odh-konflux-central
 
 ## Executive Summary
 
-- **Overall Score: 6.6/10**
-- **Repository Type**: Konflux CI/CD configuration monorepo (centralized Tekton pipelines, PipelineRuns, integration tests, and onboarding automation for 59+ OpenDataHub/RHOAI components)
-- **Primary Languages**: YAML (Tekton pipelines), Python (olminstall helpers), Shell (build scripts)
-- **Key Strengths**: Comprehensive Konflux build pipeline coverage across 59+ components with multi-arch support, robust security scanning (Clair, ClamAV, Snyk, RPM signature), innovative early-gate system for pre-merge validation, and well-structured integration test framework with EaaS cluster provisioning
-- **Critical Gaps**: No unit tests for 6,300+ lines of Python helper code, no coverage tracking, no Python linting/static analysis, no agent rules
-- **Agent Rules Status**: Missing — CLAUDE.md is explicitly in .gitignore
+- **Overall Score: 6.7/10**
+- **Repository Type**: Konflux build/release infrastructure (Tekton pipelines, GitOps configs, integration tests)
+- **Primary Language**: Python (olminstall framework), YAML (Tekton pipelines/PipelineRuns)
+- **Jira Component**: RHOAIENG / Build and Release (midstream)
+- **Key Strengths**: Central Konflux build configuration with early-gate system, massive olminstall E2E framework with 153 unit tests, strong YAML validation (yamllint + kubeconform), all Dockerfiles use UBI9 base images
+- **Critical Gaps**: No coverage tracking for the Python framework, no Python linting in CI, no agent rules
+- **Agent Rules Status**: Missing — CLAUDE.md is explicitly in `.gitignore`
 
 ## Quality Scorecard
 
-| Dimension | Score | Status |
-|-----------|-------|--------|
-| Unit Tests | 2.0/10 | Minimal — only verify_cli_args.py for 6,300+ lines of Python |
-| Integration/E2E | 8.5/10 | Strong — 14 component test suites, olminstall EaaS, early-gate |
-| **Build Integration** | **8.0/10** | **Mature multi-arch Konflux pipelines with early-gate PR validation** |
-| Image Testing | 7.0/10 | Security scanning (Clair, ClamAV, Snyk) but no runtime validation |
-| Coverage Tracking | 1.0/10 | No coverage tracking of any kind |
-| CI/CD Automation | 7.5/10 | YAML lint, kubeconform, Renovate, onboarding automation |
-| Agent Rules | 1.0/10 | No agent rules; CLAUDE.md in .gitignore |
+| Dimension | Score | Weight | Status |
+|-----------|-------|--------|--------|
+| Unit Tests | 7/10 | 15% | 153 pytest unit tests covering olminstall pipeline logic |
+| Integration/E2E | 8/10 | 20% | olminstall E2E framework with EaaS clusters; 15+ component pipelines |
+| Build Integration | 9/10 | 15% | Central Konflux config; 5 pipeline types; early-gate system |
+| Image Testing | 7/10 | 10% | 15 UBI9 Dockerfiles; auto-rebuild on push |
+| Coverage Tracking | 2/10 | 10% | No coverage tooling whatsoever |
+| CI/CD Automation | 8/10 | 15% | 6 workflows; Renovate auto-merge; path triggers |
+| Static Analysis | 6/10 | 10% | yamllint + kubeconform; no Python linter |
+| Agent Rules | 0/10 | 5% | CLAUDE.md gitignored; no .claude/ directory |
+| **Overall** | **6.7/10** | | |
 
 ## Critical Gaps
 
-### 1. No Unit Tests for Python Helpers (HIGH)
-- **Impact**: The `integration-tests/olminstall/helpers/` directory contains 6,329 lines of Python across 24 files covering CLI parsing, OLM install logic, Tekton utilities, cluster provisioning, and test orchestration. Only `verify_cli_args.py` exists as a basic arg-parsing smoke test — no pytest suite, no mocking, no assertion-based testing.
-- **Severity**: HIGH
-- **Effort**: 16-24 hours
-- **Key untested files**:
-  - `runner.py` — core OLMInstallRunner orchestration
-  - `cli.py` — argument parsing and validation
-  - `oc_util.py` — OpenShift CLI wrapper functions
-  - `tekton_util.py` — Tekton PipelineRun manipulation
-  - `install_and_verify.py` — OLM installation logic
-  - `tests_plan.py` — test planning and execution
-
-### 2. No Code Coverage Tracking (HIGH)
-- **Impact**: Cannot measure or enforce test coverage for any code in the repository. No codecov, coveralls, or any coverage tool configured.
+### 1. No Code Coverage Tracking (HIGH)
+- **Impact**: The olminstall framework has 200+ Python source files and 153 unit tests, but there is zero visibility into which code paths are exercised. Regressions can hide in untested branches.
 - **Severity**: HIGH
 - **Effort**: 4-6 hours
+- **Files**: No `.codecov.yml`, no `pytest-cov` in `requirements.txt` or `Makefile`
+- **Recommendation**: Add `pytest-cov` to requirements, configure coverage thresholds, and add codecov reporting to a PR-triggered workflow
 
-### 3. No Container Runtime Validation (MEDIUM)
-- **Impact**: Built images undergo security scanning (Clair, ClamAV, Snyk SAST) but no runtime validation (startup test, healthcheck, entrypoint verification). Issues only surface during integration tests on ephemeral clusters, which are expensive and slow.
-- **Severity**: MEDIUM
-- **Effort**: 8-12 hours
-
-### 4. No Python Linting or Static Analysis (MEDIUM)
-- **Impact**: 6,300+ lines of Python with no ruff, mypy, flake8, or any linting. Type errors, unused imports, and code quality issues pass through unchecked.
-- **Severity**: MEDIUM
-- **Effort**: 2-4 hours
-
-### 5. No Agent Rules (LOW)
-- **Impact**: AI agents contributing to this repo have no guidance on pipeline YAML patterns, naming conventions, testing requirements, or security considerations. CLAUDE.md is explicitly listed in `.gitignore`.
-- **Severity**: LOW
+### 2. No Python Linter in CI (HIGH)
+- **Impact**: 200+ Python files in `integration-tests/olminstall/` have no static analysis. Type errors, unused imports, unreachable code, and style inconsistencies go undetected until runtime failures in Tekton pipelines on real clusters.
+- **Severity**: HIGH
 - **Effort**: 4-6 hours
+- **Files**: No `ruff.toml`, `.flake8`, or `mypy.ini` in the repository
+- **Recommendation**: Add `ruff` as a fast linter; add a CI workflow step
+
+### 3. No Agent Rules (MEDIUM)
+- **Impact**: AI agents generating code or tests for this repo have no guidance on olminstall architecture, pytest patterns, conftest fixtures, or pipeline YAML structure.
+- **Severity**: MEDIUM
+- **Effort**: 3-4 hours
+- **Files**: `CLAUDE.md` is in `.gitignore`; no `.claude/` directory
+- **Recommendation**: Remove `CLAUDE.md` from `.gitignore`, create comprehensive agent rules
 
 ## Quick Wins
 
-### 1. Add ruff Linting for Python Code (1-2 hours)
-Add a `ruff.toml` and a GitHub Actions workflow step for Python linting. This catches type errors, unused imports, and style issues across 6,300+ lines.
+### 1. Add pytest-cov to Test Suite (2-3 hours)
+Add coverage tracking with minimal changes:
+```diff
+# requirements.txt
++pytest-cov>=4.0
+```
+```diff
+# Makefile
+test:
+-	$(PYTEST) -q --tb=short
++	$(PYTEST) -q --tb=short --cov=. --cov-report=term-missing --cov-fail-under=60
+```
 
+### 2. Add ruff Linter to CI (2-3 hours)
+Add a ruff check step to the yaml-lint workflow or a new dedicated workflow:
 ```yaml
-# .github/workflows/yaml-lint.yaml — add a job:
-python-lint:
-  runs-on: ubuntu-latest
-  steps:
-    - uses: actions/checkout@v4
-    - uses: astral-sh/setup-uv@v7
-    - run: uv run --with ruff ruff check integration-tests/ utils/
+# ruff.toml
+target-version = "py39"
+line-length = 120
+
+[lint]
+select = ["E", "F", "W", "I", "UP", "B"]
 ```
-
-### 2. Add pytest for olminstall helpers (4-6 hours)
-The existing `verify_cli_args.py` demonstrates the pattern. Expand into a proper pytest suite:
-
-```bash
-# integration-tests/olminstall/tests/test_cli.py
-pytest integration-tests/olminstall/tests/ -v
-```
-
-### 3. Enable Concurrency Control (30 minutes)
-Add concurrency groups to prevent redundant CI runs:
-
 ```yaml
-concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true
+# Add to .github/workflows/yaml-lint.yaml or new workflow
+- name: Run ruff
+  run: uv run --with ruff ruff check integration-tests/olminstall/
 ```
 
-### 4. Create CLAUDE.md (2-3 hours)
-Remove `CLAUDE.md` from `.gitignore` and create it with contribution guidelines.
+### 3. Add Pre-commit Configuration (1-2 hours)
+```yaml
+# .pre-commit-config.yaml
+repos:
+  - repo: https://github.com/adrienverge/yamllint
+    rev: v1.38.0
+    hooks:
+      - id: yamllint
+        args: [-c, .yamllint]
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.8.0
+    hooks:
+      - id: ruff
+        args: [--fix]
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v5.0.0
+    hooks:
+      - id: end-of-file-fixer
+      - id: trailing-whitespace
+```
 
 ## Detailed Findings
 
-### CI/CD Pipeline Analysis
+### Unit Tests
 
-**Workflow Inventory** (5 workflows):
+**Score: 7/10**
+
+The olminstall pipeline framework has a robust unit test suite:
+
+- **153 unit test files** in `integration-tests/olminstall/unit_tests/`
+- **208 Python source files** (non-test, non-init) — test-to-code ratio of ~0.74
+- **Framework**: pytest with proper `conftest.py`, markers (`@pytest.mark.unit`), and fixtures via `olm_cli_fixtures`
+- **Structure**: Tests organized by module — `suite/`, `steps/`, `runners/`, `install/`, `k8s/`, `helpers/`, `components/`
+- **Makefile**: `make test` and `make test-cli` targets for easy local execution
+- **pytest.ini**: Properly configured with `testpaths = unit_tests`, `pythonpath = .`
+
+**Strengths**:
+- Excellent coverage of pipeline logic: catalog parsing, component smoke flags, DSC gates, JUnit handling, snapshot resolution
+- Good test isolation — tests run without cluster access (`no oc / cluster required`)
+- Modular test fixtures via `pytest_plugins`
+
+**Gaps**:
+- No unit tests for `utils/generate_component_map.py` (component map generation utility)
+- No coverage measurement to know actual line/branch coverage percentages
+- Some test files use `unittest.TestCase` style while others use plain pytest functions — minor inconsistency
+
+**Key Test Files**:
+- `integration-tests/olminstall/unit_tests/conftest.py` — Central fixture configuration
+- `integration-tests/olminstall/unit_tests/suite/test_component_catalog_runner.py` — Component catalog parsing tests
+- `integration-tests/olminstall/unit_tests/runners/test_olm_cli.py` — CLI argument parsing tests
+- `integration-tests/olminstall/Makefile` — Test runner targets
+
+### Integration/E2E Tests
+
+**Score: 8/10**
+
+The repository contains a sophisticated integration test framework:
+
+- **olminstall framework**: Full-lifecycle operator testing — EaaS cluster provisioning, OLM installation, DSC configuration, BVT, per-component smoke tests, cleanup
+- **15+ component-specific pipelines**: kserve, kuberay, notebooks, feast, model-registry, odh-model-controller, trainer, distributed-workloads, ai-gateway, models-as-a-service, ogx-core, kubeflow, opendatahub-operator
+- **Multi-version testing**: ITS scenarios for OCP 4.20, 4.21, 4.22 (HyperShift/EaaS)
+- **Trigger types**: Snapshot/ITS-driven (olminstall), PAC-driven (component builds), nightly (CI triggers)
+- **External cluster support**: `--external-kubeconfig` for running against pre-existing clusters
+- **Tekton task generation**: Auto-generated per-component tasks from catalog config
+
+**Strengths**:
+- Comprehensive operator lifecycle testing (install → verify → smoke → cleanup)
+- Multiple runner types: pytest, golang-ginkgo, cypress, pending (stubs)
+- Nightly test pipeline (`trigger-nightly.yaml`)
+- Group testing pipelines for multi-component validation
+- Well-documented contributing guide (`doc/contributing-konflux-testing-rhoai.md`)
+- Architecture Decision Records (ADRs)
+
+**Gaps**:
+- No local mock/envtest cluster option — all integration tests require Konflux + EaaS or external kubeconfig
+- No test execution time tracking or parallelization optimization visible
+- Some component integration tests may be skeletal (only Dockerfile + pipeline YAML, no test logic in this repo)
+
+**Key Files**:
+- `integration-tests/olminstall/olm_pipeline.py` — Main pipeline orchestrator
+- `integration-tests/olminstall/tekton/pipelines/olminstall-pipeline.yaml` — Core Tekton pipeline
+- `integration-tests/olminstall/config/olminstall-components-smoke.yaml` — Component smoke test catalog
+- `integration-tests/olminstall/runners/orchestrator.py` — Test runner orchestration
+
+### Build Integration
+
+**Score: 9/10**
+
+This is the **central Konflux build configuration** repository — build integration is its primary purpose:
+
+- **5 pipeline definitions** in `pipeline/`:
+  - `multi-arch-container-build.yaml` — Multi-architecture container image builds
+  - `multi-arch-operator-build.yaml` — Operator builds with custom prep tasks
+  - `multi-arch-catalog-build.yaml` — OLM file-based catalog builds
+  - `bundle-build.yaml` — Operator bundle builds
+  - `e2e-arch-build.yaml` — E2E test architecture builds
+- **206 PipelineRun definitions** across 59 component directories in `pipelineruns/`
+- **Early-gate system**: Pre-merge build validation via `/early-gate` PR comment trigger
+  - `early-gate/early-gate-ci-build.yaml` — Build pipeline
+  - `early-gate/early-gate-ci-test.yaml` — Test pipeline
+  - `config/early-gate-config.yaml` — Per-repo configuration (10 repos enabled)
+- **Automated onboarding workflows**:
+  - `odh-konflux-onboarder.yml` — Creates Tekton pipelines and PRs for new components
+  - `odh-early-gate-onboarder.yml` — Onboards repos to early-gate system
+- **Template-based approach**: Placeholder substitution (`$$OUTPUT_IMAGE_TAG$$`, `$$TARGET_BRANCH$$`, `$$BUILD_MODE$$`)
+- **CI vs Release separation**: Different tag strategies (`odh-pr` / `odh-stable` for CI; version tags for release)
+- **GitOps configs**: Component definitions, ITS scenarios, release components
+
+**Strengths**:
+- Industry-leading centralized build management for 59+ components
+- Multi-arch support across all pipeline types
+- Trusted artifacts via OCI (no PVCs)
+- kubeconform validation of all pipeline/gitops YAML on PRs
+- Automated component map generation from pipeline metadata
+
+**Gaps**:
+- Early-gate only enabled for 10 of 59+ components — room for expansion
+- No dry-run or simulation mode for testing pipeline template substitution locally
+
+**Key Files**:
+- `pipeline/multi-arch-container-build.yaml` — Primary build pipeline
+- `pipelineruns/template/` — Template PipelineRuns
+- `config/early-gate-config.yaml` — Early-gate per-repo config
+- `config/component_repo_map.json` — Auto-generated component mapping
+
+### Image Testing
+
+**Score: 7/10**
+
+The repository manages 15 integration test toolset Dockerfiles:
+
+- **All use UBI9 base images** (FIPS-capable): `registry.access.redhat.com/ubi9/go-toolset`, `ubi9/python-311`, `ubi9/ubi`
+- **Exception**: `utils/runners/Dockerfile.github-runner` uses `ubuntu:22.04` (runner infrastructure, not product)
+- **Automated rebuild**: `build-integration-images.yml` detects changed Dockerfiles and builds/pushes to `quay.io/rhoai/rhoai-task-toolset`
+- **Multi-stage builds**: `integration-tests/notebooks/Dockerfile.notebooks` uses Go builder stage + Python runtime
+- **One digest-pinned image**: `integration-tests/kubeflow/Dockerfile.kubeflow` pins by SHA256
+
+**Strengths**:
+- Consistent UBI9 base image usage across all product-facing Dockerfiles
+- Automated rebuild pipeline with per-Dockerfile tag derivation
+- Multi-stage build where appropriate (notebooks)
+
+**Gaps**:
+- No `HEALTHCHECK` instructions in any Dockerfile
+- No multi-arch builds for test images (only `x86_64` tooling downloaded in operator Dockerfile)
+- No container runtime validation (testcontainers, startup tests)
+- `Dockerfile.renovate` is a stub (`echo "Hello from renovate"` — only exists for Renovate manager)
+- Some base image versions are unpinned (`ubi9/go-toolset` without version tag)
+
+**Key Files**:
+- `integration-tests/opendatahub-operator/Dockerfile.operator` — Go toolset with oc/kubectl
+- `integration-tests/notebooks/Dockerfile.notebooks` — Multi-stage Go + Python
+- `.github/workflows/build-integration-images.yml` — Auto-build pipeline
+- `Dockerfile.renovate` — Stub for Renovate Dockerfile manager
+
+### Coverage Tracking
+
+**Score: 2/10**
+
+Coverage tracking is essentially absent:
+
+- No `.codecov.yml` or `codecov.yml`
+- No `pytest-cov` in `requirements.txt`
+- No `--cov` or `--coverprofile` flags in Makefile test targets
+- No coverage threshold enforcement
+- No PR coverage reporting or commenting
+- No `.coveragerc` configuration
+
+**Score justification**: The repository gets 2 rather than 0 because the unit test suite is structured in a way that would make adding coverage straightforward (pytest + proper conftest), and the test-to-code ratio suggests reasonable coverage exists — it's just not measured.
+
+### CI/CD Automation
+
+**Score: 8/10**
+
+The repository has well-organized GitHub Actions workflows:
 
 | Workflow | Trigger | Purpose |
 |----------|---------|---------|
-| `yaml-lint.yaml` | push/PR/dispatch | YAML linting + kubeconform schema validation |
-| `build-integration-images.yml` | push (integration-tests/) | Build and push test toolset images to Quay |
-| `generate-component-map.yml` | push/scheduled/dispatch | Auto-generate component→repo mapping JSON |
-| `odh-konflux-onboarder.yml` | dispatch | Onboard components to Konflux CI/Release |
-| `odh-early-gate-onboarder.yml` | dispatch | Onboard components to early-gate system |
+| `yaml-lint.yaml` | push, PR, dispatch | yamllint + kubeconform validation |
+| `build-integration-images.yml` | push (integration-tests/**) | Build/push test toolset images |
+| `generate-component-map.yml` | push, schedule (daily), dispatch | Auto-generate component mapping |
+| `odh-konflux-onboarder.yml` | dispatch | Onboard components to Konflux |
+| `odh-early-gate-onboarder.yml` | dispatch | Onboard repos to early-gate |
+| `renovate.json` | (config) | Automated Tekton task digest updates |
 
 **Strengths**:
-- YAML lint enforces strict mode with custom yamllint config
-- Kubeconform validates Kubernetes manifests (though Tekton CRDs are ignored with `--ignore-missing-schemas`)
-- Renovate configured for automated dependency updates
-- Component map auto-generated daily and on push
-- Onboarding workflows automate the tedious process of setting up new components
+- PR-time YAML validation (yamllint + kubeconform) catches syntax and schema errors
+- Path-based triggers minimize unnecessary CI runs
+- Scheduled daily component map regeneration
+- Renovate configured for Tekton task digest auto-updates with auto-merge (patch only)
+- Secure yamllint execution in network-isolated namespace (see ADR 0002)
+- Proper `permissions` scoping on workflows (`contents: read` on lint)
 
 **Gaps**:
-- No concurrency control on any workflow — rapid pushes waste CI resources
-- No caching strategy (Python deps reinstalled every run)
-- No GitHub Actions status checks required on branch protection
-- Kubeconform misses Tekton CRD validation (Pipeline, PipelineRun, Task)
+- No `concurrency:` controls on any workflow — parallel onboarder runs could conflict
+- No build caching in workflows
+- No test execution in CI (unit tests not run by any GitHub Actions workflow)
+- No workflow for running `make test` on PRs modifying `integration-tests/olminstall/`
 
-### Tekton Pipeline Architecture
+### Static Analysis
 
-**Pipeline Definitions** (5 reusable pipelines in `pipeline/`):
+**Score: 6/10**
 
-| Pipeline | Purpose | Key Features |
-|----------|---------|--------------|
-| `multi-arch-container-build.yaml` | Standard container image build | Multi-arch, OCI trusted artifacts, security scanning |
-| `multi-arch-operator-build.yaml` | Operator image build | Manifest prefetching, build metadata push, bundle trigger |
-| `multi-arch-catalog-build.yaml` | FBC catalog build | OLM catalog fragment construction |
-| `bundle-build.yaml` | Operator bundle build | Single-arch, OLM bundle packaging |
-| `e2e-arch-build.yaml` | E2E test image build | Test image construction |
+#### Linting
+- **yamllint**: Properly configured (`.yamllint`) with sensible rules (disabled line-length, truthy check-keys off for GH workflow `on:` syntax)
+- **kubeconform**: Schema validation for Kubernetes manifests with CRD tolerance (`-ignore-missing-schemas`)
+- **Composite action**: Custom yamllint action with network isolation (`unshare --user --net`) for supply-chain safety
+- **No Python linting**: 200+ Python files in olminstall have no ruff, flake8, mypy, or pylint configuration
 
-**PipelineRun Templates** (202 YAML files across 59 component directories):
-Each component gets pull-request and push PipelineRun templates with parameterized `$$OUTPUT_IMAGE_TAG$$`, `$$TARGET_BRANCH$$`, and `$$BUILD_TYPE$$` placeholders.
+#### FIPS Compatibility
+- **No FIPS issues detected**: No cryptographic imports found in Python source files
+- **All product Dockerfiles use UBI9 base images**: FIPS-capable out of the box
+- **One exception**: `Dockerfile.github-runner` uses `ubuntu:22.04` (runner infrastructure, acceptable)
 
-**Security Scanning Tasks** (built into every pipeline):
-- **Clair scan** — vulnerability scanning (multi-platform)
-- **ClamAV scan** — malware scanning (multi-platform)
-- **SAST Snyk check** — source code SAST
-- **SAST shell check** — shell script analysis
-- **SAST unicode check** — unicode attack detection
-- **RPM signature scan** — RPM provenance verification
-- **Deprecated base image check** — base image freshness
-- **Ecosystem cert preflight** — Red Hat certification checks (currently disabled with `"true" in "false"`)
-- **SBOM generation** — show-sbom in finally block
-
-**Pipeline Features**:
-- Trusted artifacts via OCI storage (not PVCs)
-- Slack failure notifications
-- Group testing trigger (post-build)
-- Early-gate build trigger
-- Operator build metadata push to odh-build-metadata repo
-- Source image generation
-
-### Early-Gate System
-
-A sophisticated pre-merge validation system:
-
-- **Trigger**: `/early-gate` or `/early-gate-build` PR comment
-- **Components**: Build pipeline + test pipeline (separate)
-- **Tasks** (2,758 lines across 10 task files):
-  - `bundle-processor.yaml` — OLM bundle processing
-  - `fbc-processor.yaml` — FBC fragment processing
-  - `check-ongoing-jobs.yaml` — prevent duplicate runs
-  - `check-prerequisites.yaml` — validate requirements
-  - `generate-snapshot-for-group-testing.yaml` — create test snapshots
-  - `monitor-jenkins-job.yaml` — cross-system monitoring (Konflux→Jenkins)
-  - `trigger-test-pipeline.yaml` — launch test pipeline
-  - `post-build-complete-comment.yaml` — PR comment on completion
-  - `prefetch-operand-manifests-oci-ta.yaml` — manifest prefetching
-  - `push-build-metadata.yaml` — build metadata push
-- **Config**: 9 components currently onboarded (kserve, DSP operator, feast, model-registry, trainer, MLServer, models-as-a-service, odh-model-controller, odh-dashboard)
-- **Onboarding**: Automated via `odh-early-gate-onboarder.yml` workflow
-
-### Integration Tests
-
-**14 Component Test Suites** in `integration-tests/`:
-
-| Component | Dockerfile | Pipeline Type |
-|-----------|-----------|---------------|
-| ai-gateway-payload-processing | `Dockerfile.ai-gateway` | PR group testing |
-| distributed-workloads | `Dockerfile.distributed-workloads` | PR testing |
-| feast | `Dockerfile.go-its` | PR group + nightly |
-| kserve | `Dockerfile.kserve` | PR group testing |
-| kubeflow | `Dockerfile.kubeflow` | PR group testing |
-| kuberay | `Dockerfile.kuberay` | PR testing |
-| model-registry | `Dockerfile.model-registry` | PR testing |
-| models-as-a-service | `Dockerfile.maas` | PR group testing |
-| notebooks | `Dockerfile.notebooks` | PR group testing |
-| odh-model-controller | `Dockerfile.model-controller-its` | PR testing |
-| ogx-core | — | PR ITS pipeline |
-| olminstall | — | Snapshot-driven (EaaS) |
-| opendatahub-operator | `Dockerfile.operator` | E2E + PR testing |
-| trainer | `Dockerfile.trainer` | PR testing |
-
-**olminstall** is the most sophisticated suite:
-- 6,329 lines of Python across 24 helper files
-- Snapshot-driven with EaaS ephemeral HyperShift clusters
-- OLM operator install + BVT verification
-- CLI tool (`olm_pipeline.py`) for triggering and watching
-- Cross-system orchestration (Konflux → GitHub Actions → Jenkins)
-- KubeArchive fallback for pruned runs
-
-### Test Coverage Assessment
-
-| Category | Count | Notes |
-|----------|-------|-------|
-| Unit test files | 1 | `verify_cli_args.py` (arg parsing smoke test only) |
-| Integration test suites | 14 | Component-specific Tekton pipelines |
-| Python helper code | 6,329 lines | Zero unit test coverage |
-| Test frameworks | None configured | No pytest, no test runner in CI |
-| Coverage tools | None | No codecov, no coverage thresholds |
-
-### Code Quality Assessment
-
-**Configured**:
-- `.yamllint` — custom YAML lint configuration (strict mode)
-- `.editorconfig` — consistent formatting (2-space indent, UTF-8, LF)
-- Kubeconform — Kubernetes manifest validation (with CRD gaps)
-- Renovate — automated dependency updates
-
-**Missing**:
-- No Python linting (ruff, flake8, mypy)
-- No pre-commit hooks
-- No shell script linting (shellcheck) in CI
-- No SAST for the repository's own code (only for built images)
-- No Gitleaks or secret detection
-- No Tekton CRD schema validation
-
-### Container Image Testing
-
-**Security scanning** is comprehensive and built into every pipeline:
-- Clair vulnerability scanning (per-platform)
-- ClamAV malware scanning (per-platform)
-- SAST via Snyk (source code analysis)
-- SAST shell check (shell script analysis)
-- SAST unicode check (homoglyph/bidi attack detection)
-- RPM signature verification
-- Deprecated base image detection
-- SBOM generation (show-sbom in finally block)
+#### Dependency Alerts
+- **Renovate**: Configured for Tekton task digest updates and Dockerfile base image updates
+  - Auto-merge enabled for patch updates
+  - Major/minor updates disabled (conservative approach)
+  - Two separate configs: `.github/renovate.json` (pipelineruns + dockerfiles) and `.github/workflows/renovate.json` (pipelines only)
+- **No Dependabot**: Not configured (Renovate covers the primary use cases)
+- **CodeRabbit**: AI-powered PR review configured (`.coderabbit.yaml`)
 
 **Gaps**:
-- No container runtime validation (startup, healthcheck, entrypoint)
-- Ecosystem cert preflight is effectively disabled (`"true" in "false"`)
-- No Trivy scanning (uses Clair instead)
-- No image signing/cosign attestation in pipeline
+- No Python linter for the largest code surface (olminstall)
+- No pre-commit hooks (`.pre-commit-config.yaml` absent)
+- No type checking (mypy) for Python code
+- Two separate Renovate configs could drift — consider consolidating
 
-### Security Practices
+### Agent Rules
 
-**Strong**:
-- Multi-layer security scanning in every build pipeline
-- Trusted artifacts via OCI (not PVCs)
-- Hermetic build support
-- Source image generation for supply chain traceability
-- GitHub App tokens for cross-repo operations (not PATs)
-- `persist-credentials: false` on checkout
-- Permissions scoped per workflow
+**Score: 0/10**
 
-**Gaps**:
-- No secret detection (Gitleaks, TruffleHog) for this repo's own code
-- No SAST for Python helpers in this repo
-- No dependency scanning for Python requirements
-- `GITHUB_TOKEN` used with `secrets.QUAY_PASSWORD` — consider OIDC
+- `CLAUDE.md` is listed in `.gitignore` — explicitly excluded from version control
+- No `.claude/` directory
+- No `AGENTS.md`
+- No `.claude/rules/` with test creation guidance
+- No documentation of olminstall testing patterns for AI agents
 
-### Agent Rules (Agentic Flow Quality)
-
-- **Status**: Missing
-- **Coverage**: None — no CLAUDE.md, no .claude/ directory, no AGENTS.md
-- **Notable**: `CLAUDE.md` is explicitly in `.gitignore`, suggesting intentional exclusion
-- **Gaps**: No guidance for AI agents on:
-  - Pipeline YAML naming conventions (pull-request vs push, template variables)
-  - Integration test patterns (Dockerfile naming, pipeline structure)
-  - Python helper coding standards
-  - Security scanning requirements
-  - Early-gate onboarding procedures
-- **Recommendation**: Remove CLAUDE.md from .gitignore and create comprehensive agent rules with `/test-rules-generator`
-
-### Documentation Quality
-
-**Strong**:
-- Architecture Decision Records (ADRs) — 3 documented decisions
-- Comprehensive contributing guide (`doc/contributing-konflux-testing-rhoai.md`) with terms glossary, workflow patterns, and cross-system debugging
-- olminstall README with CLI examples and usage patterns
-- Early-gate user guide and design docs
-
-**Gaps**:
-- Root README is a single line ("odh-konflux-central: To centrally store the Konflux configuration for all the components")
-- No pipeline architecture diagram
-- No component onboarding guide beyond the automated workflows
+This means AI agents working on this repository have no guidance on:
+- olminstall architecture and module organization
+- pytest fixture patterns (`conftest.py`, `olm_cli_fixtures`)
+- Tekton pipeline YAML structure and placeholder conventions
+- Component catalog configuration format
+- Unit test naming and organization conventions
 
 ## Recommendations
 
 ### Priority 0 (Critical)
 
-1. **Add pytest unit tests for olminstall Python helpers** — 6,329 lines of Python with near-zero test coverage. Prioritize:
-   - `cli.py` — argument parsing (extend `verify_cli_args.py` pattern)
-   - `runner.py` — OLMInstallRunner core logic
-   - `oc_util.py` — OpenShift CLI wrappers
-   - `tekton_util.py` — PipelineRun manipulation
-   - `install_and_verify.py` — OLM install logic
+1. **Add pytest-cov for coverage tracking** (4-6 hours)
+   - Add `pytest-cov` to `requirements.txt`
+   - Update `Makefile` test target with `--cov` flags
+   - Set initial threshold at 50%, increase incrementally
+   - Add a GitHub Actions workflow step to run tests + coverage on PRs
 
-2. **Add Python linting to CI** — Configure ruff + mypy for type checking and code quality:
-   ```toml
-   # ruff.toml
-   target-version = "py311"
-   line-length = 120
-   [lint]
-   select = ["E", "F", "W", "I", "UP", "B", "SIM"]
-   ```
-
-3. **Implement coverage tracking** — Add pytest-cov and codecov integration with a minimum threshold (start at 30%, increase over time).
+2. **Add Python linting with ruff** (4-6 hours)
+   - Create `ruff.toml` with appropriate rule selection
+   - Add ruff check to CI (yamllint workflow or dedicated)
+   - Fix existing lint issues in initial PR
+   - Consider adding mypy for type checking as a follow-up
 
 ### Priority 1 (High Value)
 
-4. **Add concurrency control to GitHub Actions** — Prevent wasted CI runs on rapid pushes.
+3. **Create agent rules** (3-4 hours)
+   - Remove `CLAUDE.md` from `.gitignore`
+   - Create `CLAUDE.md` with repository architecture overview
+   - Add `.claude/rules/unit-tests.md` for olminstall pytest patterns
+   - Add `.claude/rules/pipeline-yaml.md` for Tekton pipeline conventions
+   - Use `/test-rules-generator` to bootstrap rules
 
-5. **Add pre-commit hooks** — yamllint, ruff, shellcheck for local validation before push.
+4. **Add CI workflow for Python unit tests** (2-3 hours)
+   - Create workflow triggered on `integration-tests/olminstall/**` changes
+   - Run `make -C integration-tests/olminstall test`
+   - Report coverage
 
-6. **Create CLAUDE.md and agent rules** — Remove from .gitignore, document pipeline patterns and contribution standards.
-
-7. **Add container runtime validation** — Basic startup/healthcheck tests for integration test images before pushing to Quay.
-
-8. **Enable Tekton CRD validation** — Add custom schemas for Pipeline, PipelineRun, Task, and Konflux CRDs to kubeconform.
+5. **Add concurrency controls to workflows** (1 hour)
+   - Add `concurrency:` groups to prevent parallel onboarder conflicts
 
 ### Priority 2 (Nice-to-Have)
 
-9. **Add Gitleaks** — Secret detection for shell scripts and Python code in the repo.
-
-10. **Test onboarding workflows** — Add tests for `odh-konflux-onboarder` and `odh-early-gate-onboarder` (currently only tested manually).
-
-11. **Add SBOM attestation verification** — Verify cosign signatures and SBOM completeness.
-
-12. **Improve root README** — Add pipeline architecture overview, component listing, and contribution quick-start.
+6. **Add unit tests for generate_component_map.py** (2-3 hours)
+7. **Consolidate Renovate configs** (1 hour) — merge `.github/renovate.json` and `.github/workflows/renovate.json`
+8. **Add HEALTHCHECK to integration Dockerfiles** (2 hours)
+9. **Expand early-gate to more components** — only 10/59+ repos enabled
+10. **Pin all base image versions** in Dockerfiles (some use unversioned tags)
 
 ## Comparison to Gold Standards
 
-| Dimension | odh-konflux-central | odh-dashboard (gold) | notebooks (gold) | kserve (gold) |
-|-----------|--------------------|-----------------------|-------------------|---------------|
-| Unit Tests | 2.0 — 1 smoke script | 9.0 — Jest + React Testing Library | 6.0 — Python unit tests | 9.0 — Go tests with envtest |
-| Integration/E2E | 8.5 — 14 suites + EaaS | 9.0 — Cypress E2E + contract | 8.0 — notebook validation | 9.0 — multi-version E2E |
-| Build Integration | 8.0 — early-gate + Konflux | 7.0 — PR builds + Konflux | 7.0 — multi-arch builds | 7.0 — PR builds |
-| Image Testing | 7.0 — Clair+ClamAV+Snyk | 6.0 — basic scanning | 9.0 — 5-layer validation | 7.0 — scanning |
-| Coverage Tracking | 1.0 — none | 8.0 — codecov enforcement | 5.0 — partial | 9.0 — codecov + thresholds |
-| CI/CD Automation | 7.5 — lint+validate+onboard | 9.0 — comprehensive | 8.0 — multi-arch CI | 8.0 — well-organized |
-| Agent Rules | 1.0 — none (in .gitignore) | 8.0 — comprehensive rules | 3.0 — minimal | 4.0 — partial |
+| Dimension | odh-konflux-central | odh-dashboard | notebooks | kserve |
+|-----------|-------------------|---------------|-----------|--------|
+| Unit Tests | 7 — 153 pytest tests, good ratio | 9 — Jest/RTL, contract tests | 6 — Notebook-focused | 8 — envtest, comprehensive |
+| Integration/E2E | 8 — olminstall E2E framework | 9 — Cypress E2E, multi-layer | 7 — Image validation | 9 — Multi-version K8s |
+| Build Integration | 9 — IS the build system | 7 — Konflux-ready | 8 — Multi-arch image builds | 7 — Standard Konflux |
+| Image Testing | 7 — UBI9, auto-rebuild | 6 — Basic image builds | 9 — 5-layer validation | 6 — Standard builds |
+| Coverage Tracking | 2 — None | 8 — Codecov enforced | 5 — Partial | 8 — Threshold enforcement |
+| CI/CD Automation | 8 — Well-organized, Renovate | 9 — Comprehensive workflows | 7 — Standard CI | 8 — Matrix testing |
+| Static Analysis | 6 — YAML only, no Python lint | 8 — ESLint + TypeScript strict | 6 — Basic | 7 — golangci-lint |
+| Agent Rules | 0 — Gitignored | 8 — Comprehensive | 3 — Basic | 4 — Partial |
+| **Overall** | **6.7** | **8.2** | **6.6** | **7.3** |
 
 ## File Paths Reference
 
-### CI/CD Configuration
-- `.github/workflows/yaml-lint.yaml` — YAML lint + kubeconform
-- `.github/workflows/build-integration-images.yml` — Test image builds
-- `.github/workflows/generate-component-map.yml` — Component map generation
-- `.github/workflows/odh-konflux-onboarder.yml` — Component Konflux onboarding
+### CI/CD Workflows
+- `.github/workflows/yaml-lint.yaml` — YAML lint + kubeconform (PR/push)
+- `.github/workflows/build-integration-images.yml` — Test image builder
+- `.github/workflows/generate-component-map.yml` — Daily component map
+- `.github/workflows/odh-konflux-onboarder.yml` — Component onboarding
 - `.github/workflows/odh-early-gate-onboarder.yml` — Early-gate onboarding
-- `.yamllint` — YAML lint configuration
-- `.editorconfig` — Editor configuration
-- `.github/renovate.json` — Renovate dependency updates
+- `.github/actions/action-yamllint/action.yml` — Secure yamllint composite action
 
 ### Tekton Pipelines
-- `pipeline/multi-arch-container-build.yaml` — Standard container build
-- `pipeline/multi-arch-operator-build.yaml` — Operator build
-- `pipeline/multi-arch-catalog-build.yaml` — FBC catalog build
-- `pipeline/bundle-build.yaml` — Operator bundle build
-- `pipeline/e2e-arch-build.yaml` — E2E test image build
-
-### Early-Gate System
-- `early-gate/early-gate-ci-build.yaml` — PR-triggered build
-- `early-gate/early-gate-ci-test.yaml` — PR-triggered test
-- `early-gate/early-gate-component-pipeline.yaml` — Component pipeline
-- `early-gate/early-gate-operator-pipeline.yaml` — Operator pipeline
-- `early-gate/early-gate-test-pipeline.yaml` — Test pipeline
-- `early-gate/tasks/` — 10 task definitions (2,758 lines)
-- `config/early-gate-config.yaml` — Onboarded components
+- `pipeline/multi-arch-container-build.yaml` — Container build pipeline
+- `pipeline/multi-arch-operator-build.yaml` — Operator build pipeline
+- `pipeline/multi-arch-catalog-build.yaml` — FBC catalog build pipeline
+- `pipeline/bundle-build.yaml` — OLM bundle build pipeline
+- `pipeline/e2e-arch-build.yaml` — E2E architecture build pipeline
 
 ### Integration Tests
-- `integration-tests/olminstall/` — Core OLM install + BVT testing (24 Python files, 6,329 lines)
-- `integration-tests/olminstall/olm_pipeline.py` — CLI entrypoint
-- `integration-tests/olminstall/verify_cli_args.py` — Arg parsing verification
-- `integration-tests/*/Dockerfile.*` — Component test images
-- `integration-tests/*/pr-*-pipeline.yaml` — Component PR test pipelines
+- `integration-tests/olminstall/` — Main E2E framework (200+ Python files)
+- `integration-tests/olminstall/unit_tests/` — 153 pytest unit tests
+- `integration-tests/olminstall/Makefile` — Test runner
+- `integration-tests/olminstall/pytest.ini` — pytest configuration
+- `integration-tests/olminstall/requirements.txt` — Python dependencies
 
 ### Configuration
+- `config/early-gate-config.yaml` — Early-gate per-repo config
 - `config/component_repo_map.json` — Auto-generated component mapping
-- `config/early-gate-config.yaml` — Early-gate component configuration
-- `gitops/opendatahub-integration-test-scenarios.yaml` — ITS definitions
-- `gitops/opendatahub-ci-components.yaml` — CI component definitions
-- `its.yaml` — Root IntegrationTestScenario
-- `Dockerfile.renovate` — Renovate container
+- `.yamllint` — yamllint configuration
+- `.github/renovate.json` — Renovate bot configuration
+- `.coderabbit.yaml` — CodeRabbit AI review configuration
+- `.editorconfig` — Editor formatting rules
 
 ### Documentation
 - `doc/contributing-konflux-testing-rhoai.md` — Contributing guide
 - `doc/adr/` — Architecture Decision Records (3 ADRs)
-- `early-gate/docs/` — Early-gate design docs and user guide
+- `README.md` — Repository overview (minimal)

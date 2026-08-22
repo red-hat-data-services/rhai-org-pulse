@@ -19,10 +19,10 @@ const mockFetchArtifacts = vi.fn()
 function makeStorage(data = {}) {
   const store = { ...data }
   return {
-    readFromStorage(key) {
+    async readFromStorage(key) {
       return store[key] ? JSON.parse(JSON.stringify(store[key])) : null
     },
-    writeToStorage(key, value) {
+    async writeToStorage(key, value) {
       store[key] = value
     },
     _store: store
@@ -62,17 +62,17 @@ describe('scheduler', () => {
   })
 
   describe('loadConfig', () => {
-    it('returns DEFAULT_CONFIG when no stored config', () => {
+    it('returns DEFAULT_CONFIG when no stored config', async () => {
       const storage = makeStorage()
-      const config = loadConfig(storage)
+      const config = await loadConfig(storage)
       expect(config).toEqual(DEFAULT_CONFIG)
     })
 
-    it('merges stored config with defaults', () => {
+    it('merges stored config with defaults', async () => {
       const storage = makeStorage({
         'releases/execution/config.json': { projectPath: 'custom/path', enabled: true }
       })
-      const config = loadConfig(storage)
+      const config = await loadConfig(storage)
       expect(config.projectPath).toBe('custom/path')
       expect(config.enabled).toBe(true)
       expect(config.gitlabBaseUrl).toBe('https://gitlab.com')

@@ -1,6 +1,6 @@
-function buildTeamIndex(readFromStorage, version) {
+async function buildTeamIndex(readFromStorage, version) {
   if (!version) return new Map()
-  var hygieneData = readFromStorage('releases/hygiene/features-' + version + '.json')
+  var hygieneData = await readFromStorage('releases/hygiene/features-' + version + '.json')
   if (!hygieneData || !hygieneData.features) return new Map()
   var index = new Map()
   var keys = Object.keys(hygieneData.features)

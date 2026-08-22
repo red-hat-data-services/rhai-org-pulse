@@ -1,0 +1,951 @@
+{
+  "metadata": {
+    "generated_at": "2026-07-27T15:57:48.373Z",
+    "data_timestamp": "2026-07-27T15:57:48.373Z",
+    "releases": [
+      "3.6 GA RHOAI RELEASE",
+      "3.6 GA RHAII RELEASE",
+      "3.6 GA RHELAI RELEASE",
+      "3.6 EA2 RHOAI RELEASE",
+      "3.6 EA2 RHAII RELEASE",
+      "3.6 EA2 RHELAI RELEASE",
+      "3.6 EA1 RHOAI RELEASE",
+      "3.6 EA1 RHAII RELEASE",
+      "3.6 EA1 RHELAI RELEASE",
+      "3.5 GA RHOAI RELEASE",
+      "3.5 GA RHAII RELEASE",
+      "3.5 GA RHELAI RELEASE",
+      "3.5 EA2 RHOAI RELEASE",
+      "3.5 EA2 RHAII RELEASE",
+      "3.5 EA2 RHELAI RELEASE",
+      "3.5 EA1 RHOAI RELEASE",
+      "3.5 EA1 RHAII RELEASE",
+      "3.5 EA1 RHELAI RELEASE"
+    ],
+    "total_features": 37
+  },
+  "executive_summary": [
+    {
+      "release": "3.6 GA RHOAI RELEASE",
+      "total": 8,
+      "aligned_on_time": 4,
+      "aligned_late": 0,
+      "tv_only": 2,
+      "fv_only": 1,
+      "misaligned": 1,
+      "alignment_pct": 50.0,
+      "ga_date": "2026-11-19",
+      "planning_freeze": "2026-09-23"
+    },
+    {
+      "release": "3.6 GA RHAII RELEASE",
+      "total": 0,
+      "aligned_on_time": 0,
+      "aligned_late": 0,
+      "tv_only": 0,
+      "fv_only": 0,
+      "misaligned": 0,
+      "alignment_pct": 0,
+      "ga_date": "2026-11-19",
+      "planning_freeze": "2026-09-23"
+    },
+    {
+      "release": "3.6 GA RHELAI RELEASE",
+      "total": 1,
+      "aligned_on_time": 1,
+      "aligned_late": 0,
+      "tv_only": 0,
+      "fv_only": 0,
+      "misaligned": 0,
+      "alignment_pct": 100.0,
+      "ga_date": "2026-11-19",
+      "planning_freeze": "2026-09-23"
+    },
+    {
+      "release": "3.6 EA2 RHOAI RELEASE",
+      "total": 5,
+      "aligned_on_time": 2,
+      "aligned_late": 0,
+      "tv_only": 1,
+      "fv_only": 1,
+      "misaligned": 1,
+      "alignment_pct": 40.0,
+      "ga_date": "2026-10-15",
+      "planning_freeze": "2026-08-26"
+    },
+    {
+      "release": "3.6 EA2 RHAII RELEASE",
+      "total": 0,
+      "aligned_on_time": 0,
+      "aligned_late": 0,
+      "tv_only": 0,
+      "fv_only": 0,
+      "misaligned": 0,
+      "alignment_pct": 0,
+      "ga_date": "2026-10-15",
+      "planning_freeze": "2026-08-26"
+    },
+    {
+      "release": "3.6 EA2 RHELAI RELEASE",
+      "total": 0,
+      "aligned_on_time": 0,
+      "aligned_late": 0,
+      "tv_only": 0,
+      "fv_only": 0,
+      "misaligned": 0,
+      "alignment_pct": 0,
+      "ga_date": "2026-10-15",
+      "planning_freeze": "2026-08-26"
+    },
+    {
+      "release": "3.6 EA1 RHOAI RELEASE",
+      "total": 8,
+      "aligned_on_time": 3,
+      "aligned_late": 0,
+      "tv_only": 1,
+      "fv_only": 1,
+      "misaligned": 3,
+      "alignment_pct": 37.5,
+      "ga_date": "2026-09-17",
+      "planning_freeze": "2026-07-29"
+    },
+    {
+      "release": "3.6 EA1 RHAII RELEASE",
+      "total": 2,
+      "aligned_on_time": 1,
+      "aligned_late": 0,
+      "tv_only": 1,
+      "fv_only": 0,
+      "misaligned": 0,
+      "alignment_pct": 50.0,
+      "ga_date": "2026-09-17",
+      "planning_freeze": "2026-07-29"
+    },
+    {
+      "release": "3.6 EA1 RHELAI RELEASE",
+      "total": 0,
+      "aligned_on_time": 0,
+      "aligned_late": 0,
+      "tv_only": 0,
+      "fv_only": 0,
+      "misaligned": 0,
+      "alignment_pct": 0,
+      "ga_date": "2026-09-17",
+      "planning_freeze": "2026-07-29"
+    },
+    {
+      "release": "3.5 GA RHOAI RELEASE",
+      "total": 3,
+      "aligned_on_time": 3,
+      "aligned_late": 0,
+      "tv_only": 0,
+      "fv_only": 0,
+      "misaligned": 0,
+      "alignment_pct": 100,
+      "ga_date": "2026-08-19",
+      "planning_freeze": "2026-06-24"
+    },
+    {
+      "release": "3.5 GA RHAII RELEASE",
+      "total": 0,
+      "aligned_on_time": 0,
+      "aligned_late": 0,
+      "tv_only": 0,
+      "fv_only": 0,
+      "misaligned": 0,
+      "alignment_pct": 0,
+      "ga_date": "2026-08-19",
+      "planning_freeze": "2026-06-24"
+    },
+    {
+      "release": "3.5 GA RHELAI RELEASE",
+      "total": 0,
+      "aligned_on_time": 0,
+      "aligned_late": 0,
+      "tv_only": 0,
+      "fv_only": 0,
+      "misaligned": 0,
+      "alignment_pct": 0,
+      "ga_date": "2026-08-19",
+      "planning_freeze": "2026-06-24"
+    },
+    {
+      "release": "3.5 EA2 RHOAI RELEASE",
+      "total": 4,
+      "aligned_on_time": 2,
+      "aligned_late": 0,
+      "tv_only": 1,
+      "fv_only": 1,
+      "misaligned": 0,
+      "alignment_pct": 50,
+      "ga_date": "2026-07-15",
+      "planning_freeze": "2026-05-15"
+    },
+    {
+      "release": "3.5 EA2 RHAII RELEASE",
+      "total": 0,
+      "aligned_on_time": 0,
+      "aligned_late": 0,
+      "tv_only": 0,
+      "fv_only": 0,
+      "misaligned": 0,
+      "alignment_pct": 0,
+      "ga_date": "2026-07-15",
+      "planning_freeze": "2026-05-15"
+    },
+    {
+      "release": "3.5 EA2 RHELAI RELEASE",
+      "total": 0,
+      "aligned_on_time": 0,
+      "aligned_late": 0,
+      "tv_only": 0,
+      "fv_only": 0,
+      "misaligned": 0,
+      "alignment_pct": 0,
+      "ga_date": "2026-07-15",
+      "planning_freeze": "2026-05-15"
+    },
+    {
+      "release": "3.5 EA1 RHOAI RELEASE",
+      "total": 6,
+      "aligned_on_time": 2,
+      "aligned_late": 1,
+      "tv_only": 1,
+      "fv_only": 0,
+      "misaligned": 2,
+      "alignment_pct": 50,
+      "ga_date": "2026-06-17",
+      "planning_freeze": "2026-04-17"
+    },
+    {
+      "release": "3.5 EA1 RHAII RELEASE",
+      "total": 0,
+      "aligned_on_time": 0,
+      "aligned_late": 0,
+      "tv_only": 0,
+      "fv_only": 0,
+      "misaligned": 0,
+      "alignment_pct": 0,
+      "ga_date": "2026-06-17",
+      "planning_freeze": "2026-04-17"
+    },
+    {
+      "release": "3.5 EA1 RHELAI RELEASE",
+      "total": 0,
+      "aligned_on_time": 0,
+      "aligned_late": 0,
+      "tv_only": 0,
+      "fv_only": 0,
+      "misaligned": 0,
+      "alignment_pct": 0,
+      "ga_date": "2026-06-17",
+      "planning_freeze": "2026-04-17"
+    }
+  ],
+  "releases": {
+    "3.6 GA RHOAI RELEASE": {
+      "aligned_on_time": [
+        {
+          "key": "RHAISTRAT-8800",
+          "url": "https://redhat.atlassian.net/browse/RHAISTRAT-8800",
+          "summary": "3.6 GA on-time A",
+          "status": "Done",
+          "color_status": "Green",
+          "product_manager": "PM Alpha",
+          "assignee": "Dev One",
+          "team": "Team A",
+          "component": "Serving",
+          "target_version": "3.6 GA RHOAI RELEASE",
+          "fix_versions": "3.6 GA RHOAI RELEASE"
+        },
+        {
+          "key": "RHAISTRAT-8801",
+          "url": "https://redhat.atlassian.net/browse/RHAISTRAT-8801",
+          "summary": "3.6 GA on-time B",
+          "status": "In Progress",
+          "color_status": "Yellow",
+          "product_manager": "PM Beta",
+          "assignee": "Dev Two",
+          "team": "Team B",
+          "component": "Training",
+          "target_version": "3.6 GA RHOAI RELEASE",
+          "fix_versions": "3.6 GA RHOAI RELEASE"
+        },
+        {
+          "key": "RHAISTRAT-8802",
+          "url": "https://redhat.atlassian.net/browse/RHAISTRAT-8802",
+          "summary": "3.6 GA on-time C",
+          "status": "In Progress",
+          "color_status": "Green",
+          "product_manager": "PM Alpha",
+          "assignee": "Dev Three",
+          "team": "Team A",
+          "component": "Serving",
+          "target_version": "3.6 GA RHOAI RELEASE",
+          "fix_versions": "3.6 GA RHOAI RELEASE"
+        },
+        {
+          "key": "RHAISTRAT-8803",
+          "url": "https://redhat.atlassian.net/browse/RHAISTRAT-8803",
+          "summary": "3.6 GA on-time D",
+          "status": "New",
+          "color_status": "Green",
+          "product_manager": "PM Gamma",
+          "assignee": "Dev Four",
+          "team": "Team C",
+          "component": "Dashboard",
+          "target_version": "3.6 GA RHOAI RELEASE",
+          "fix_versions": "3.6 GA RHOAI RELEASE"
+        }
+      ],
+      "aligned_late": [],
+      "tv_only": [
+        {
+          "key": "RHAISTRAT-8900",
+          "url": "https://redhat.atlassian.net/browse/RHAISTRAT-8900",
+          "summary": "3.6 GA TV-only",
+          "status": "New",
+          "color_status": "Red",
+          "product_manager": "PM Gamma",
+          "assignee": "Dev Four",
+          "team": "Team C",
+          "component": "Dashboard",
+          "target_version": "3.6 GA RHOAI RELEASE",
+          "fix_versions": ""
+        },
+        {
+          "key": "RHAISTRAT-8901",
+          "url": "https://redhat.atlassian.net/browse/RHAISTRAT-8901",
+          "summary": "3.6 GA TV-only B",
+          "status": "Backlog",
+          "color_status": "",
+          "product_manager": "PM Beta",
+          "assignee": "",
+          "team": "Team B",
+          "component": "Training",
+          "target_version": "3.6 GA RHOAI RELEASE",
+          "fix_versions": ""
+        }
+      ],
+      "fv_only": [
+        {
+          "key": "RHAISTRAT-8950",
+          "url": "https://redhat.atlassian.net/browse/RHAISTRAT-8950",
+          "summary": "3.6 GA FV-only",
+          "status": "In Progress",
+          "color_status": "Green",
+          "product_manager": "",
+          "assignee": "Dev Six",
+          "team": "Team D",
+          "component": "Model Registry",
+          "target_version": "",
+          "fix_versions": "3.6 GA RHOAI RELEASE"
+        }
+      ],
+      "misaligned": [
+        {
+          "key": "RHAISTRAT-8970",
+          "url": "https://redhat.atlassian.net/browse/RHAISTRAT-8970",
+          "summary": "3.6 GA misaligned \u2014 different product",
+          "status": "In Progress",
+          "color_status": "Yellow",
+          "product_manager": "PM Alpha",
+          "assignee": "Dev Five",
+          "team": "Team A",
+          "component": "Serving",
+          "target_version": "3.6 GA RHOAI RELEASE",
+          "fix_versions": "3.6 GA RHAII RELEASE"
+        }
+      ]
+    },
+    "3.6 GA RHAII RELEASE": {
+      "aligned_on_time": [],
+      "aligned_late": [],
+      "tv_only": [],
+      "fv_only": [],
+      "misaligned": []
+    },
+    "3.6 GA RHELAI RELEASE": {
+      "aligned_on_time": [
+        {
+          "key": "RHAISTRAT-8810",
+          "url": "https://redhat.atlassian.net/browse/RHAISTRAT-8810",
+          "summary": "3.6 GA RHELAI on-time",
+          "status": "In Progress",
+          "color_status": "Green",
+          "product_manager": "PM Epsilon",
+          "assignee": "Dev Eight",
+          "team": "Team F",
+          "component": "Serving",
+          "target_version": "3.6 GA RHELAI RELEASE",
+          "fix_versions": "3.6 GA RHELAI RELEASE"
+        }
+      ],
+      "aligned_late": [],
+      "tv_only": [],
+      "fv_only": [],
+      "misaligned": []
+    },
+    "3.6 EA2 RHOAI RELEASE": {
+      "aligned_on_time": [
+        {
+          "key": "RHAISTRAT-8400",
+          "url": "https://redhat.atlassian.net/browse/RHAISTRAT-8400",
+          "summary": "3.6 EA2 on-time A",
+          "status": "In Progress",
+          "color_status": "Green",
+          "product_manager": "PM Alpha",
+          "assignee": "Dev One",
+          "team": "Team A",
+          "component": "Serving",
+          "target_version": "3.6 EA2 RHOAI RELEASE",
+          "fix_versions": "3.6 EA2 RHOAI RELEASE"
+        },
+        {
+          "key": "RHAISTRAT-8401",
+          "url": "https://redhat.atlassian.net/browse/RHAISTRAT-8401",
+          "summary": "3.6 EA2 on-time B",
+          "status": "New",
+          "color_status": "",
+          "product_manager": "PM Beta",
+          "assignee": "Dev Two",
+          "team": "Team B",
+          "component": "Notebooks",
+          "target_version": "3.6 EA2 RHOAI RELEASE",
+          "fix_versions": "3.6 EA2 RHOAI RELEASE"
+        }
+      ],
+      "aligned_late": [],
+      "tv_only": [
+        {
+          "key": "RHAISTRAT-8500",
+          "url": "https://redhat.atlassian.net/browse/RHAISTRAT-8500",
+          "summary": "3.6 EA2 TV-only",
+          "status": "Backlog",
+          "color_status": "",
+          "product_manager": "PM Gamma",
+          "assignee": "",
+          "team": "",
+          "component": "Pipelines",
+          "target_version": "3.6 EA2 RHOAI RELEASE",
+          "fix_versions": ""
+        }
+      ],
+      "fv_only": [
+        {
+          "key": "RHAISTRAT-8600",
+          "url": "https://redhat.atlassian.net/browse/RHAISTRAT-8600",
+          "summary": "3.6 EA2 FV-only",
+          "status": "In Progress",
+          "color_status": "Green",
+          "product_manager": "",
+          "assignee": "Dev Six",
+          "team": "Team D",
+          "component": "Model Registry",
+          "target_version": "",
+          "fix_versions": "3.6 EA2 RHOAI RELEASE"
+        }
+      ],
+      "misaligned": [
+        {
+          "key": "RHAISTRAT-8700",
+          "url": "https://redhat.atlassian.net/browse/RHAISTRAT-8700",
+          "summary": "3.6 EA2 misaligned \u2014 FV later while freeze still open",
+          "status": "In Progress",
+          "color_status": "Red",
+          "product_manager": "PM Alpha",
+          "assignee": "Dev Five",
+          "team": "Team A",
+          "component": "Serving",
+          "target_version": "3.6 EA2 RHOAI RELEASE",
+          "fix_versions": "3.6 GA RHOAI RELEASE"
+        }
+      ]
+    },
+    "3.6 EA2 RHAII RELEASE": {
+      "aligned_on_time": [],
+      "aligned_late": [],
+      "tv_only": [],
+      "fv_only": [],
+      "misaligned": []
+    },
+    "3.6 EA2 RHELAI RELEASE": {
+      "aligned_on_time": [],
+      "aligned_late": [],
+      "tv_only": [],
+      "fv_only": [],
+      "misaligned": []
+    },
+    "3.6 EA1 RHOAI RELEASE": {
+      "aligned_on_time": [
+        {
+          "key": "RHAISTRAT-8100",
+          "url": "https://redhat.atlassian.net/browse/RHAISTRAT-8100",
+          "summary": "3.6 EA1 on-time A",
+          "status": "In Progress",
+          "color_status": "Green",
+          "product_manager": "PM Alpha",
+          "assignee": "Dev One",
+          "team": "Team A",
+          "component": "Serving",
+          "target_version": "3.6 EA1 RHOAI RELEASE",
+          "fix_versions": "3.6 EA1 RHOAI RELEASE"
+        },
+        {
+          "key": "RHAISTRAT-8101",
+          "url": "https://redhat.atlassian.net/browse/RHAISTRAT-8101",
+          "summary": "3.6 EA1 on-time B",
+          "status": "New",
+          "color_status": "Yellow",
+          "product_manager": "PM Beta",
+          "assignee": "Dev Two",
+          "team": "Team B",
+          "component": "Training",
+          "target_version": "3.6 EA1 RHOAI RELEASE",
+          "fix_versions": "3.6 EA1 RHOAI RELEASE"
+        },
+        {
+          "key": "RHAISTRAT-8102",
+          "url": "https://redhat.atlassian.net/browse/RHAISTRAT-8102",
+          "summary": "3.6 EA1 on-time C",
+          "status": "In Progress",
+          "color_status": "Green",
+          "product_manager": "PM Alpha",
+          "assignee": "Dev Three",
+          "team": "Team A",
+          "component": "Serving",
+          "target_version": "3.6 EA1 RHOAI RELEASE",
+          "fix_versions": "3.6 EA1 RHOAI RELEASE"
+        }
+      ],
+      "aligned_late": [],
+      "tv_only": [
+        {
+          "key": "RHAISTRAT-8200",
+          "url": "https://redhat.atlassian.net/browse/RHAISTRAT-8200",
+          "summary": "3.6 EA1 TV-only",
+          "status": "New",
+          "color_status": "Red",
+          "product_manager": "PM Gamma",
+          "assignee": "Dev Four",
+          "team": "Team C",
+          "component": "Dashboard",
+          "target_version": "3.6 EA1 RHOAI RELEASE",
+          "fix_versions": ""
+        }
+      ],
+      "fv_only": [
+        {
+          "key": "RHAISTRAT-8250",
+          "url": "https://redhat.atlassian.net/browse/RHAISTRAT-8250",
+          "summary": "3.6 EA1 FV-only",
+          "status": "In Progress",
+          "color_status": "Green",
+          "product_manager": "",
+          "assignee": "Dev Six",
+          "team": "Team D",
+          "component": "Model Registry",
+          "target_version": "",
+          "fix_versions": "3.6 EA1 RHOAI RELEASE"
+        }
+      ],
+      "misaligned": [
+        {
+          "key": "RHAISTRAT-8300",
+          "url": "https://redhat.atlassian.net/browse/RHAISTRAT-8300",
+          "summary": "3.6 EA1 misaligned \u2014 FV later while freeze still open",
+          "status": "In Progress",
+          "color_status": "Yellow",
+          "product_manager": "PM Alpha",
+          "assignee": "Dev Five",
+          "team": "Team A",
+          "component": "Serving, Training",
+          "target_version": "3.6 EA1 RHOAI RELEASE",
+          "fix_versions": "3.6 EA2 RHOAI RELEASE"
+        },
+        {
+          "key": "RHAISTRAT-8301",
+          "url": "https://redhat.atlassian.net/browse/RHAISTRAT-8301",
+          "summary": "3.6 EA1 misaligned \u2014 different product (RHAII)",
+          "status": "In Progress",
+          "color_status": "Red",
+          "product_manager": "PM Beta",
+          "assignee": "Dev Six",
+          "team": "Team B",
+          "component": "Training",
+          "target_version": "3.6 EA1 RHOAI RELEASE",
+          "fix_versions": "3.6 EA1 RHAII RELEASE"
+        },
+        {
+          "key": "RHAISTRAT-8302",
+          "url": "https://redhat.atlassian.net/browse/RHAISTRAT-8302",
+          "summary": "3.6 EA1 misaligned \u2014 FV later to GA while freeze open",
+          "status": "In Progress",
+          "color_status": "Yellow",
+          "product_manager": "PM Alpha",
+          "assignee": "Dev Five",
+          "team": "Team A",
+          "component": "Serving",
+          "target_version": "3.6 EA1 RHOAI RELEASE",
+          "fix_versions": "3.6 GA RHOAI RELEASE"
+        }
+      ]
+    },
+    "3.6 EA1 RHAII RELEASE": {
+      "aligned_on_time": [
+        {
+          "key": "RHAISTRAT-8110",
+          "url": "https://redhat.atlassian.net/browse/RHAISTRAT-8110",
+          "summary": "3.6 EA1 RHAII on-time",
+          "status": "In Progress",
+          "color_status": "Green",
+          "product_manager": "PM Delta",
+          "assignee": "Dev Seven",
+          "team": "Team E",
+          "component": "Serving",
+          "target_version": "3.6 EA1 RHAII RELEASE",
+          "fix_versions": "3.6 EA1 RHAII RELEASE"
+        }
+      ],
+      "aligned_late": [],
+      "tv_only": [
+        {
+          "key": "RHAISTRAT-8210",
+          "url": "https://redhat.atlassian.net/browse/RHAISTRAT-8210",
+          "summary": "3.6 EA1 RHAII TV-only",
+          "status": "Backlog",
+          "color_status": "",
+          "product_manager": "PM Delta",
+          "assignee": "",
+          "team": "Team E",
+          "component": "Serving",
+          "target_version": "3.6 EA1 RHAII RELEASE",
+          "fix_versions": ""
+        }
+      ],
+      "fv_only": [],
+      "misaligned": []
+    },
+    "3.6 EA1 RHELAI RELEASE": {
+      "aligned_on_time": [],
+      "aligned_late": [],
+      "tv_only": [],
+      "fv_only": [],
+      "misaligned": []
+    },
+    "3.5 GA RHOAI RELEASE": {
+      "aligned_on_time": [
+        {
+          "key": "RHAISTRAT-700",
+          "url": "https://redhat.atlassian.net/browse/RHAISTRAT-700",
+          "summary": "GA aligned A",
+          "status": "Done",
+          "color_status": "Green",
+          "product_manager": "PM Alpha",
+          "assignee": "Dev One",
+          "team": "Team A",
+          "component": "Serving",
+          "target_version": "3.5 GA RHOAI RELEASE",
+          "fix_versions": "3.5 GA RHOAI RELEASE"
+        },
+        {
+          "key": "RHAISTRAT-701",
+          "url": "https://redhat.atlassian.net/browse/RHAISTRAT-701",
+          "summary": "GA aligned B",
+          "status": "In Progress",
+          "color_status": "Yellow",
+          "product_manager": "PM Beta",
+          "assignee": "Dev Two",
+          "team": "Team B",
+          "component": "Training",
+          "target_version": "3.5 GA RHOAI RELEASE",
+          "fix_versions": "3.5 GA RHOAI RELEASE"
+        },
+        {
+          "key": "RHAISTRAT-702",
+          "url": "https://redhat.atlassian.net/browse/RHAISTRAT-702",
+          "summary": "GA aligned C",
+          "status": "In Progress",
+          "color_status": "Green",
+          "product_manager": "PM Alpha",
+          "assignee": "Dev Three",
+          "team": "Team A",
+          "component": "Serving",
+          "target_version": "3.5 GA RHOAI RELEASE",
+          "fix_versions": "3.5 GA RHOAI RELEASE"
+        }
+      ],
+      "aligned_late": [],
+      "tv_only": [],
+      "fv_only": [],
+      "misaligned": []
+    },
+    "3.5 GA RHAII RELEASE": {
+      "aligned_on_time": [],
+      "aligned_late": [],
+      "tv_only": [],
+      "fv_only": [],
+      "misaligned": []
+    },
+    "3.5 GA RHELAI RELEASE": {
+      "aligned_on_time": [],
+      "aligned_late": [],
+      "tv_only": [],
+      "fv_only": [],
+      "misaligned": []
+    },
+    "3.5 EA2 RHOAI RELEASE": {
+      "aligned_on_time": [
+        {
+          "key": "RHAISTRAT-400",
+          "url": "https://redhat.atlassian.net/browse/RHAISTRAT-400",
+          "summary": "EA2 aligned A",
+          "status": "In Progress",
+          "color_status": "Green",
+          "product_manager": "PM Alpha",
+          "assignee": "Dev One",
+          "team": "Team A",
+          "component": "Serving",
+          "target_version": "3.5 EA2 RHOAI RELEASE",
+          "fix_versions": "3.5 EA2 RHOAI RELEASE"
+        },
+        {
+          "key": "RHAISTRAT-401",
+          "url": "https://redhat.atlassian.net/browse/RHAISTRAT-401",
+          "summary": "EA2 aligned B",
+          "status": "New",
+          "color_status": "",
+          "product_manager": "PM Beta",
+          "assignee": "Dev Two",
+          "team": "Team B",
+          "component": "Notebooks",
+          "target_version": "3.5 EA2 RHOAI RELEASE",
+          "fix_versions": "3.5 EA2 RHOAI RELEASE"
+        }
+      ],
+      "aligned_late": [],
+      "tv_only": [
+        {
+          "key": "RHAISTRAT-500",
+          "url": "https://redhat.atlassian.net/browse/RHAISTRAT-500",
+          "summary": "EA2 TV-only",
+          "status": "Backlog",
+          "color_status": "",
+          "product_manager": "PM Gamma",
+          "assignee": "",
+          "team": "",
+          "component": "Pipelines",
+          "target_version": "3.5 EA2 RHOAI RELEASE",
+          "fix_versions": ""
+        }
+      ],
+      "fv_only": [
+        {
+          "key": "RHAISTRAT-600",
+          "url": "https://redhat.atlassian.net/browse/RHAISTRAT-600",
+          "summary": "EA2 FV-only",
+          "status": "In Progress",
+          "color_status": "Green",
+          "product_manager": "",
+          "assignee": "Dev Six",
+          "team": "Team D",
+          "component": "Model Registry",
+          "target_version": "",
+          "fix_versions": "3.5 EA2 RHOAI RELEASE"
+        }
+      ],
+      "misaligned": []
+    },
+    "3.5 EA2 RHAII RELEASE": {
+      "aligned_on_time": [],
+      "aligned_late": [],
+      "tv_only": [],
+      "fv_only": [],
+      "misaligned": []
+    },
+    "3.5 EA2 RHELAI RELEASE": {
+      "aligned_on_time": [],
+      "aligned_late": [],
+      "tv_only": [],
+      "fv_only": [],
+      "misaligned": []
+    },
+    "3.5 EA1 RHOAI RELEASE": {
+      "aligned_on_time": [
+        {
+          "key": "RHAISTRAT-100",
+          "url": "https://redhat.atlassian.net/browse/RHAISTRAT-100",
+          "summary": "On-time aligned A",
+          "status": "In Progress",
+          "color_status": "Green",
+          "product_manager": "PM Alpha",
+          "assignee": "Dev One",
+          "team": "Team A",
+          "component": "Serving",
+          "target_version": "3.5 EA1 RHOAI RELEASE",
+          "fix_versions": "3.5 EA1 RHOAI RELEASE"
+        },
+        {
+          "key": "RHAISTRAT-101",
+          "url": "https://redhat.atlassian.net/browse/RHAISTRAT-101",
+          "summary": "On-time aligned B",
+          "status": "New",
+          "color_status": "Yellow",
+          "product_manager": "PM Beta",
+          "assignee": "Dev Two",
+          "team": "Team B",
+          "component": "Training",
+          "target_version": "3.5 EA1 RHOAI RELEASE",
+          "fix_versions": "3.5 EA1 RHOAI RELEASE"
+        }
+      ],
+      "aligned_late": [
+        {
+          "key": "RHAISTRAT-150",
+          "url": "https://redhat.atlassian.net/browse/RHAISTRAT-150",
+          "summary": "Late but aligned (frozen TV)",
+          "status": "In Progress",
+          "color_status": "Yellow",
+          "product_manager": "PM Alpha",
+          "assignee": "Dev Five",
+          "team": "Team A",
+          "component": "Serving",
+          "target_version": "3.5 EA1 RHOAI RELEASE",
+          "fix_versions": "3.5 EA2 RHOAI RELEASE"
+        }
+      ],
+      "tv_only": [
+        {
+          "key": "RHAISTRAT-200",
+          "url": "https://redhat.atlassian.net/browse/RHAISTRAT-200",
+          "summary": "TV-only feature X",
+          "status": "New",
+          "color_status": "Red",
+          "product_manager": "PM Gamma",
+          "assignee": "Dev Four",
+          "team": "Team C",
+          "component": "Dashboard",
+          "target_version": "3.5 EA1 RHOAI RELEASE",
+          "fix_versions": ""
+        }
+      ],
+      "fv_only": [],
+      "misaligned": [
+        {
+          "key": "RHAISTRAT-300",
+          "url": "https://redhat.atlassian.net/browse/RHAISTRAT-300",
+          "summary": "Misaligned \u2014 FV after unfrozen TV",
+          "status": "In Progress",
+          "color_status": "Yellow",
+          "product_manager": "PM Alpha",
+          "assignee": "Dev Five",
+          "team": "Team A",
+          "component": "Serving, Training",
+          "target_version": "3.5 EA1 RHOAI RELEASE",
+          "fix_versions": "3.5 GA RHOAI RELEASE"
+        },
+        {
+          "key": "RHAISTRAT-301",
+          "url": "https://redhat.atlassian.net/browse/RHAISTRAT-301",
+          "summary": "Misaligned \u2014 cross-product",
+          "status": "In Progress",
+          "color_status": "Red",
+          "product_manager": "PM Beta",
+          "assignee": "Dev Six",
+          "team": "Team B",
+          "component": "Training",
+          "target_version": "3.5 EA1 RHOAI RELEASE",
+          "fix_versions": "3.5 EA1 RHAII RELEASE"
+        }
+      ]
+    },
+    "3.5 EA1 RHAII RELEASE": {
+      "aligned_on_time": [],
+      "aligned_late": [],
+      "tv_only": [],
+      "fv_only": [],
+      "misaligned": []
+    },
+    "3.5 EA1 RHELAI RELEASE": {
+      "aligned_on_time": [],
+      "aligned_late": [],
+      "tv_only": [],
+      "fv_only": [],
+      "misaligned": []
+    }
+  },
+  "component_breakdown": [
+    {
+      "component": "Serving",
+      "pm": "PM Alpha",
+      "eng": "Lead One",
+      "total": 12,
+      "aligned_on_time": 6,
+      "aligned_late": 2,
+      "tv_only": 1,
+      "fv_only": 0,
+      "misaligned": 3,
+      "alignment_pct": 66.7
+    },
+    {
+      "component": "Training",
+      "pm": "PM Beta",
+      "eng": "Lead Two",
+      "total": 5,
+      "aligned_on_time": 3,
+      "aligned_late": 0,
+      "tv_only": 1,
+      "fv_only": 0,
+      "misaligned": 1,
+      "alignment_pct": 60.0
+    },
+    {
+      "component": "Dashboard",
+      "pm": "PM Gamma",
+      "eng": "Lead Three",
+      "total": 3,
+      "aligned_on_time": 1,
+      "aligned_late": 0,
+      "tv_only": 2,
+      "fv_only": 0,
+      "misaligned": 0,
+      "alignment_pct": 33.3
+    },
+    {
+      "component": "Model Registry",
+      "pm": "",
+      "eng": "Lead Four",
+      "total": 3,
+      "aligned_on_time": 0,
+      "aligned_late": 0,
+      "tv_only": 0,
+      "fv_only": 3,
+      "misaligned": 0,
+      "alignment_pct": 0.0
+    },
+    {
+      "component": "Pipelines",
+      "pm": "PM Gamma",
+      "eng": "Lead Five",
+      "total": 2,
+      "aligned_on_time": 0,
+      "aligned_late": 1,
+      "tv_only": 1,
+      "fv_only": 0,
+      "misaligned": 0,
+      "alignment_pct": 50.0
+    },
+    {
+      "component": "Notebooks",
+      "pm": "PM Beta",
+      "eng": "Lead Two",
+      "total": 1,
+      "aligned_on_time": 1,
+      "aligned_late": 0,
+      "tv_only": 0,
+      "fv_only": 0,
+      "misaligned": 0,
+      "alignment_pct": 100.0
+    }
+  ]
+}

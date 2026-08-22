@@ -1,25 +1,43 @@
 <script setup>
 import { reactive, computed } from 'vue'
+import { getComponentLeads } from '../../composables/componentLeads'
+import FPDoRPopover from './FPDoRPopover.vue'
+import AlignmentPopover from './AlignmentPopover.vue'
+import AlignmentLegendPopover from './AlignmentLegendPopover.vue'
+import { failedFpdorNames } from '../utils/feature-readiness-export.js'
+import {
+  fpdorItemSeverity,
+  severityChipClass,
+  severityLabel,
+  pathLabel,
+  pathChipClass,
+  pathChipTitle
+} from '../utils/fpdor-severity.js'
+import {
+  docsRequiredState,
+  docsRequiredLabel,
+  docsRequiredTitle,
+  docsRequiredChipClass
+} from '../utils/docs-required-display.js'
+import {
+  worseAlignmentCategory,
+  isAlignedCategory,
+  alignmentCategoryLabel,
+  alignmentCategoryChipClass,
+  ALIGNMENT_DISPLAY_KEYS
+} from '../utils/tv-fv-alignment-display.js'
+import { countAlignment, afterRequestedSplit } from '../utils/alignment-rollup.js'
 
 const props = defineProps({
   groups: { type: Array, default: () => [] },
   componentLeads: { type: Object, default: () => ({}) },
-  velocity: { type: Object, default: null },
   initialSort: { type: Object, default: () => ({ column: null, direction: 'asc' }) }
 })
 
-var emit = defineEmits(['sort-changed'])
-
-function getComponentVelocity(componentName) {
-  if (!props.velocity || !props.velocity.components) return null
-  var comps = props.velocity.components
-  for (var i = 0; i < comps.length; i++) {
-    if (comps[i].component === componentName) return comps[i]
-  }
-  return null
-}
+var emit = defineEmits(['sort-changed', 'select'])
 
 const JIRA_BASE = 'https://redhat.atlassian.net/browse'
+var MAX_VISIBLE_FAIL_CHIPS = 2
 
 const COMP_STYLE = {
   border: 'border-l-primary-500',
@@ -30,11 +48,18 @@ var expandedComponents = reactive({})
 
 // ═══ SORT STATE ═══
 
-var SORT_COLUMNS = ['key', 'summary', 'priority', 'releaseType', 'status', 'colorStatus', 'fixVersion', 'targetVersion', 'blocked', 'riskLevel', 'assignee', 'pmOwner']
+var SORT_COLUMNS = ['key', 'summary', 'priority', 'releaseType', 'status', 'colorStatus', 'fixVersion', 'targetVersion', 'blocked', 'alignmentCategory', 'readiness', 'assignee', 'pmOwner', 'docs']
 
 var PRIORITY_ORDER = { 'Blocker': 0, 'Critical': 1, 'Major': 2, 'Normal': 3 }
 var COLOR_STATUS_ORDER = { 'red': 0, 'yellow': 1, 'green': 2 }
-var RISK_ORDER = { 'high': 0, 'medium': 1, 'low': 2 }
+var ALIGNMENT_SORT_ORDER = {
+  aligned_on_time: 0,
+  aligned_late: 1,
+  fv_only: 2,
+  tv_only: 3,
+  after_requested: 4,
+  misaligned: 5
+}
 
 var sortState = reactive({
   column: SORT_COLUMNS.indexOf(props.initialSort.column) !== -1 ? props.initialSort.column : null,
@@ -77,12 +102,24 @@ function getSortValue(feature, column) {
     return feature.targetVersions && feature.targetVersions.length > 0 ? feature.targetVersions[0] : ''
   }
   if (column === 'blocked') return feature.isBlocked ? 1 : 0
-  if (column === 'riskLevel') {
-    var ro = RISK_ORDER[(feature.riskLevel || '').toLowerCase()]
-    return ro !== undefined ? ro : 99
+  if (column === 'alignmentCategory') {
+    var ao = ALIGNMENT_SORT_ORDER[feature.alignmentCategory]
+    return ao !== undefined ? ao : 99
+  }
+  if (column === 'readiness') {
+    if (!feature.fpdor) return 99
+    if (feature.fpdor.allApplicablePassed) return 0
+    return 1
   }
   if (column === 'assignee') return (feature.assignee || '').toLowerCase()
   if (column === 'pmOwner') return (feature.pmOwner || '').toLowerCase()
+  if (column === 'docs') {
+    var docsState = docsRequiredState(feature)
+    if (docsState === 'yes') return 0
+    if (docsState === 'yes-missing-component') return 1
+    if (docsState === 'no') return 2
+    return 3
+  }
   return ''
 }
 
@@ -104,6 +141,22 @@ function sortFeatures(features) {
 function sortIcon(column) {
   if (sortState.column !== column) return 'none'
   return sortState.direction
+}
+
+function visibleFailChips(feature) {
+  return failedFpdorNames(feature).slice(0, MAX_VISIBLE_FAIL_CHIPS)
+}
+
+function overflowFailCount(feature) {
+  return Math.max(0, failedFpdorNames(feature).length - MAX_VISIBLE_FAIL_CHIPS)
+}
+
+function chipClassForName(name) {
+  return severityChipClass(fpdorItemSeverity(name))
+}
+
+function chipTitleForName(name) {
+  return 'Failed FPDoR (' + severityLabel(fpdorItemSeverity(name)) + '): ' + name
 }
 
 function toggleComponent(component) {
@@ -133,28 +186,16 @@ function collapseAll() {
 }
 
 function getLeads(componentName) {
-  var lower = (componentName || '').toLowerCase()
-  var leads = props.componentLeads
-  if (leads[lower]) return leads[lower]
-  var keys = Object.keys(leads)
-  for (var i = 0; i < keys.length; i++) {
-    if (lower.includes(keys[i]) || keys[i].includes(lower)) return leads[keys[i]]
-  }
-  return null
+  return getComponentLeads(props.componentLeads, componentName)
 }
 
 function extractProduct(versionName) {
   if (!versionName) return versionName
   var lower = versionName.toLowerCase()
-  if (lower.startsWith('rhoai')) return 'RHOAI'
-  if (lower.startsWith('rhelai')) return 'RHELAI'
-  if (lower.startsWith('rhaii')) return 'RHAII'
-  return versionName.split('-')[0] || versionName
-}
-
-function normalizeVersion(v) {
-  if (!v || typeof v !== 'string') return v
-  return v.replace(/^rhoai-/i, '')
+  if (lower.indexOf('rhoai') !== -1) return 'RHOAI'
+  if (lower.indexOf('rhelai') !== -1) return 'RHELAI'
+  if (lower.indexOf('rhaii') !== -1) return 'RHAII'
+  return null
 }
 
 var componentGroups = computed(function() {
@@ -207,6 +248,7 @@ var componentGroups = computed(function() {
           cg.features[feat.key] = {
             key: feat.key,
             summary: feat.summary,
+            title: feat.title || feat.summary || '',
             status: feat.status,
             colorStatus: feat.colorStatus,
             statusSummary: feat.statusSummary,
@@ -214,12 +256,22 @@ var componentGroups = computed(function() {
             priority: feat.priority,
             isBlocked: feat.isBlocked,
             blockedBy: feat.blockedBy || [],
-            riskLevel: feat.riskLevel || 'low',
+            alignmentCategory: feat.alignmentCategory || null,
+            pmDoAligned: feat.alignmentCategory
+              ? isAlignedCategory(feat.alignmentCategory)
+              : !!feat.pmDoAligned,
+            fpdor: feat.fpdor || null,
+            confidence: feat.confidence || null,
+            isAiFirst: !!feat.isAiFirst,
+            labels: feat.labels || [],
+            riceScore: feat.riceScore != null ? feat.riceScore : null,
+            linkedRfeKey: feat.linkedRfeKey || null,
             components: feat.components,
             fixVersions: feat.fixVersions || [],
             targetVersions: feat.targetVersions || [],
             assignee: feat.assignee,
             pmOwner: feat.pmOwner,
+            docsRequired: feat.docsRequired || null,
             products: [],
             versions: [],
             isRequested: false,
@@ -228,6 +280,13 @@ var componentGroups = computed(function() {
         }
 
         var entry = cg.features[feat.key]
+        entry.alignmentCategory = worseAlignmentCategory(
+          entry.alignmentCategory,
+          feat.alignmentCategory || null
+        )
+        entry.pmDoAligned = entry.alignmentCategory
+          ? isAlignedCategory(entry.alignmentCategory)
+          : !!entry.pmDoAligned
         var product = extractProduct(version)
         if (entry.products.indexOf(product) === -1) {
           entry.products.push(product)
@@ -251,12 +310,10 @@ var componentGroups = computed(function() {
     var reqCount = 0
     var comCount = 0
     var blkCount = 0
-    var riskCount = 0
     for (var fli = 0; fli < featureList.length; fli++) {
       if (featureList[fli].isRequested) reqCount++
       if (featureList[fli].isCommitted) comCount++
       if (featureList[fli].isBlocked) blkCount++
-      if (featureList[fli].riskLevel === 'high' || featureList[fli].riskLevel === 'medium') riskCount++
     }
 
     result.push({
@@ -265,7 +322,7 @@ var componentGroups = computed(function() {
       requestedCount: reqCount,
       committedCount: comCount,
       blockedCount: blkCount,
-      atRiskCount: riskCount
+      alignmentCounts: countAlignment(featureList)
     })
   }
 
@@ -298,8 +355,13 @@ defineExpose({ expandAll, collapseAll })
 </script>
 
 <template>
-  <div class="overflow-x-auto rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm">
-    <table class="w-full text-sm border-collapse">
+  <div class="rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm">
+    <div class="flex items-center justify-between gap-2 px-4 py-2 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/80">
+      <span class="text-xs font-semibold text-gray-700 dark:text-gray-200">Component load</span>
+      <AlignmentLegendPopover variant="button" align="right" />
+    </div>
+    <div class="overflow-x-auto overflow-y-auto max-h-[calc(100vh-220px)]">
+    <table class="w-full text-sm border-collapse min-w-[1400px]">
       <tbody>
         <template v-for="comp in componentGroups" :key="comp.component">
           <!-- Component group header -->
@@ -308,8 +370,8 @@ defineExpose({ expandAll, collapseAll })
             :class="COMP_STYLE.border"
             @click="toggleComponent(comp.component)"
           >
-            <td colspan="12" class="px-4 py-3">
-              <div class="flex items-center gap-3">
+            <td colspan="14" class="px-4 py-3">
+              <div class="flex flex-wrap items-center gap-2">
                 <svg
                   class="w-4 h-4 text-gray-400 dark:text-gray-500 transition-transform duration-200 flex-shrink-0"
                   :class="{ 'rotate-90': isComponentExpanded(comp.component) }"
@@ -331,17 +393,29 @@ defineExpose({ expandAll, collapseAll })
                     ? 'bg-red-100 dark:bg-red-800/40 text-red-700 dark:text-red-300'
                     : 'bg-gray-100 dark:bg-gray-700/60 text-gray-400 dark:text-gray-500'"
                 >{{ comp.blockedCount }} blocked</span>
-                <span
-                  class="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-semibold"
-                  :class="comp.atRiskCount > 0
-                    ? 'bg-amber-100 dark:bg-amber-800/40 text-amber-700 dark:text-amber-300'
-                    : 'bg-gray-100 dark:bg-gray-700/60 text-gray-400 dark:text-gray-500'"
-                >{{ comp.atRiskCount }} at risk</span>
-                <span
-                  v-if="getComponentVelocity(comp.component)"
-                  class="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-semibold bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-300"
-                  :title="getComponentVelocity(comp.component).isPartialYear ? 'Less than a year of data' : ''"
-                >{{ getComponentVelocity(comp.component).avgPerRelease }} avg/rel<span v-if="getComponentVelocity(comp.component).isPartialYear" class="ml-0.5 text-gray-400 dark:text-gray-500">*</span></span>
+                <template v-for="cat in ALIGNMENT_DISPLAY_KEYS" :key="cat">
+                  <span
+                    v-if="cat !== 'after_requested'"
+                    class="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-semibold"
+                    :class="comp.alignmentCounts[cat] > 0
+                      ? alignmentCategoryChipClass(cat)
+                      : 'bg-gray-100 dark:bg-gray-700/60 text-gray-400 dark:text-gray-500'"
+                    :title="'Unique features in this component only. Hub tiles above count each issue once across all components.'"
+                  >{{ comp.alignmentCounts[cat] || 0 }} {{ alignmentCategoryLabel(cat) }}</span>
+                  <span
+                    v-else
+                    class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-semibold"
+                    :class="afterRequestedSplit(comp.alignmentCounts).total > 0
+                      ? 'bg-gray-50 dark:bg-gray-800 text-gray-700 dark:text-gray-200'
+                      : 'bg-gray-100 dark:bg-gray-700/60 text-gray-400 dark:text-gray-500'"
+                    title="After requested: yellow until the committed version freeze, then green. Unique features in this component only."
+                  >
+                    <span class="tabular-nums" :class="afterRequestedSplit(comp.alignmentCounts).yellow > 0 ? 'text-amber-700 dark:text-amber-300' : ''">{{ afterRequestedSplit(comp.alignmentCounts).yellow }}</span>
+                    <span>/</span>
+                    <span class="tabular-nums" :class="afterRequestedSplit(comp.alignmentCounts).green > 0 ? 'text-emerald-700 dark:text-emerald-300' : ''">{{ afterRequestedSplit(comp.alignmentCounts).green }}</span>
+                    After requested
+                  </span>
+                </template>
               </div>
               <div v-if="getLeads(comp.component)" class="flex items-center gap-5 mt-2 ml-[38px]">
                 <div v-if="getLeads(comp.component).pmLead" class="flex items-center gap-1.5">
@@ -398,14 +472,24 @@ defineExpose({ expandAll, collapseAll })
             <th class="px-3 py-2 text-center text-[11px] font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider w-16 cursor-pointer select-none hover:text-gray-700 dark:hover:text-gray-200 transition-colors" @click="toggleSort('blocked')">
               <span class="inline-flex items-center gap-1 justify-center">Blocked<SortArrow :direction="sortIcon('blocked')" /></span>
             </th>
-            <th class="px-3 py-2 text-center text-[11px] font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider w-20 cursor-pointer select-none hover:text-gray-700 dark:hover:text-gray-200 transition-colors" @click="toggleSort('riskLevel')">
-              <span class="inline-flex items-center gap-1 justify-center">At Risk<SortArrow :direction="sortIcon('riskLevel')" /></span>
+            <th class="px-3 py-2 text-center text-[11px] font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider w-28 cursor-pointer select-none hover:text-gray-700 dark:hover:text-gray-200 transition-colors" @click="toggleSort('alignmentCategory')" title="TV vs FV Delta category for this release (same rules as Reports → TV vs FV Delta)">
+              <span class="inline-flex items-center gap-1 justify-center">TV/FV Align<SortArrow :direction="sortIcon('alignmentCategory')" /></span>
+            </th>
+            <th class="px-3 py-2 text-left text-[11px] font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider min-w-[10rem] cursor-pointer select-none hover:text-gray-700 dark:hover:text-gray-200 transition-colors" @click="toggleSort('readiness')">
+              <span class="inline-flex items-center gap-1">Readiness<SortArrow :direction="sortIcon('readiness')" /></span>
             </th>
             <th class="px-3 py-2 text-left text-[11px] font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider w-32 cursor-pointer select-none hover:text-gray-700 dark:hover:text-gray-200 transition-colors" @click="toggleSort('assignee')">
               <span class="inline-flex items-center gap-1">Delivery Owner<SortArrow :direction="sortIcon('assignee')" /></span>
             </th>
             <th class="px-3 py-2 text-left text-[11px] font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider w-32 cursor-pointer select-none hover:text-gray-700 dark:hover:text-gray-200 transition-colors" @click="toggleSort('pmOwner')">
               <span class="inline-flex items-center gap-1">PM Owner<SortArrow :direction="sortIcon('pmOwner')" /></span>
+            </th>
+            <th
+              class="px-3 py-2 text-center text-[11px] font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider w-28 cursor-pointer select-none hover:text-gray-700 dark:hover:text-gray-200 transition-colors"
+              @click="toggleSort('docs')"
+              title="Jira Docs Required field. Yes without a Documentation component fails Docs impact readiness."
+            >
+              <span class="inline-flex items-center gap-1 justify-center">Docs Required<SortArrow :direction="sortIcon('docs')" /></span>
             </th>
           </tr>
 
@@ -414,7 +498,12 @@ defineExpose({ expandAll, collapseAll })
             <tr
               v-for="feature in sortFeatures(comp.features)"
               :key="feature.key"
-              class="border-b border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900 hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors"
+              role="button"
+              tabindex="0"
+              class="border-b border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900 hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors cursor-pointer"
+              @click="emit('select', feature)"
+              @keydown.enter.prevent="emit('select', feature)"
+              @keydown.space.prevent="emit('select', feature)"
             >
               <td class="px-3 py-2.5 whitespace-nowrap">
                 <a
@@ -422,6 +511,7 @@ defineExpose({ expandAll, collapseAll })
                   target="_blank"
                   rel="noopener"
                   class="font-mono text-xs font-medium text-primary-600 dark:text-blue-400 hover:underline hover:text-primary-700 dark:hover:text-blue-300 transition-colors"
+                  @click.stop
                 >{{ feature.key }}</a>
               </td>
               <td class="px-3 py-2.5 text-sm text-gray-900 dark:text-gray-100">
@@ -469,7 +559,7 @@ defineExpose({ expandAll, collapseAll })
                     v-for="fv in feature.fixVersions"
                     :key="fv"
                     class="inline-flex items-center px-1.5 py-0.5 rounded text-[9px] font-bold bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-300"
-                  >{{ normalizeVersion(fv) }}</span>
+                  >{{ fv }}</span>
                 </div>
                 <span v-else class="text-gray-300 dark:text-gray-600 text-xs">--</span>
               </td>
@@ -479,7 +569,7 @@ defineExpose({ expandAll, collapseAll })
                     v-for="tv in feature.targetVersions"
                     :key="tv"
                     class="inline-flex items-center px-1.5 py-0.5 rounded text-[9px] font-bold bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300"
-                  >{{ normalizeVersion(tv) }}</span>
+                  >{{ tv }}</span>
                 </div>
                 <span v-else class="text-gray-300 dark:text-gray-600 text-xs">--</span>
               </td>
@@ -498,15 +588,33 @@ defineExpose({ expandAll, collapseAll })
                 </svg>
               </td>
               <td class="px-3 py-2.5 text-center">
-                <span
-                  class="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-semibold"
-                  :class="{
-                    'bg-red-100 dark:bg-red-900/40 text-red-700 dark:text-red-300': feature.riskLevel === 'high',
-                    'bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-300': feature.riskLevel === 'medium',
-                    'bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-300': feature.riskLevel === 'low'
-                  }"
-                  :title="feature.riskLevel === 'high' ? 'Not committed — has target version but no fix version' : feature.riskLevel === 'medium' ? 'Committed but blocked or status is red/yellow' : 'On track'"
-                >{{ feature.riskLevel === 'high' ? 'High' : feature.riskLevel === 'medium' ? 'Medium' : 'Low' }}</span>
+                <AlignmentPopover :feature="feature" />
+              </td>
+              <td class="px-3 py-2.5">
+                <div v-if="feature.fpdor" class="flex flex-wrap items-center gap-1 max-w-[14rem]">
+                  <FPDoRPopover
+                    :fpdor="feature.fpdor"
+                    :confidence="feature.confidence"
+                  />
+                  <span
+                    class="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium"
+                    :class="pathChipClass(feature)"
+                    :title="pathChipTitle(feature)"
+                  >{{ pathLabel(feature) }}</span>
+                  <span
+                    v-for="name in visibleFailChips(feature)"
+                    :key="name"
+                    class="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium"
+                    :class="chipClassForName(name)"
+                    :title="chipTitleForName(name)"
+                  >{{ name }}</span>
+                  <span
+                    v-if="overflowFailCount(feature) > 0"
+                    class="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium text-gray-500 dark:text-gray-400"
+                    :title="failedFpdorNames(feature).slice(MAX_VISIBLE_FAIL_CHIPS).join(', ')"
+                  >+{{ overflowFailCount(feature) }}</span>
+                </div>
+                <span v-else class="text-gray-300 dark:text-gray-600 text-xs">—</span>
               </td>
               <td class="px-3 py-2.5 text-sm text-gray-700 dark:text-gray-300 whitespace-nowrap">
                 {{ feature.assignee || '--' }}
@@ -514,12 +622,24 @@ defineExpose({ expandAll, collapseAll })
               <td class="px-3 py-2.5 text-sm text-gray-700 dark:text-gray-300 whitespace-nowrap">
                 {{ feature.pmOwner || '--' }}
               </td>
+              <td class="px-3 py-2.5 text-center">
+                <span
+                  class="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded text-[10px] font-semibold"
+                  :class="docsRequiredChipClass(feature)"
+                  :title="docsRequiredTitle(feature)"
+                >
+                  <template v-if="docsRequiredState(feature) === 'yes-missing-component'">
+                    Yes<span aria-hidden="true">⚠</span>
+                  </template>
+                  <template v-else>{{ docsRequiredLabel(feature) }}</template>
+                </span>
+              </td>
             </tr>
           </template>
 
           <!-- Empty state -->
           <tr v-if="isComponentExpanded(comp.component) && comp.features.length === 0">
-            <td colspan="12" class="px-8 py-6 text-sm text-gray-400 dark:text-gray-500 italic text-center">
+            <td colspan="14" class="px-8 py-6 text-sm text-gray-400 dark:text-gray-500 italic text-center">
               No features found for {{ comp.component }}
             </td>
           </tr>
@@ -527,11 +647,12 @@ defineExpose({ expandAll, collapseAll })
 
         <!-- No results -->
         <tr v-if="componentGroups.length === 0">
-          <td colspan="12" class="px-8 py-10 text-sm text-gray-400 dark:text-gray-500 italic text-center">
+          <td colspan="14" class="px-8 py-10 text-sm text-gray-400 dark:text-gray-500 italic text-center">
             No features match the current filters.
           </td>
         </tr>
       </tbody>
     </table>
+    </div>
   </div>
 </template>

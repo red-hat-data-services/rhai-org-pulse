@@ -1,207 +1,147 @@
 ---
 repository: "kserve/modelmesh"
-overall_score: 4.9
+overall_score: 4.5
 scorecard:
   - dimension: "Unit Tests"
-    score: 6.5
-    status: "Good test count (41 test classes, ~97 test methods) with JUnit 5; but no coverage tracking or enforcement"
+    score: 7.0
+    status: "Good JUnit 5 test suite with 52 test files and 59 test methods covering diverse scenarios"
   - dimension: "Integration/E2E"
     score: 5.0
-    status: "Tests use real etcd/ZK infrastructure but no Kubernetes-level E2E or integration test suite"
+    status: "Cluster and sidecar integration tests exist but no dedicated E2E suite or multi-version testing"
   - dimension: "Build Integration"
-    score: 3.0
-    status: "No PR-time image validation, no Konflux simulation, no manifest generation testing"
+    score: 5.0
+    status: "Multi-arch Docker builds on PR, Kustomize configs present, but no deployment validation in CI"
   - dimension: "Image Testing"
-    score: 3.5
-    status: "Multi-arch Docker build (4 platforms) but no runtime validation or startup testing"
+    score: 6.0
+    status: "Multi-stage UBI9 Dockerfile with multi-arch support and K8s probes, but no runtime validation tests"
   - dimension: "Coverage Tracking"
     score: 1.0
-    status: "No JaCoCo, no Codecov, no coverage thresholds — zero coverage instrumentation"
+    status: "No coverage tooling — no JaCoCo, no Codecov, no thresholds or PR reporting"
   - dimension: "CI/CD Automation"
-    score: 5.5
-    status: "Two workflows (build + CodeQL); PR tests run but no concurrency control, limited caching"
+    score: 5.0
+    status: "Basic PR and push workflows with Docker cache, but no concurrency control or test parallelization"
+  - dimension: "Static Analysis"
+    score: 2.0
+    status: "No linting tools, no Dependabot/Renovate, FIPS deliberately disabled in runtime image"
   - dimension: "Agent Rules"
     score: 0.0
-    status: "No CLAUDE.md, no .claude/ directory, no agent rules or test automation guidance"
+    status: "No CLAUDE.md, AGENTS.md, or .claude/ directory present"
 critical_gaps:
   - title: "No code coverage tracking or enforcement"
-    impact: "Impossible to measure test coverage or track regressions; changes can silently reduce coverage"
+    impact: "Cannot measure test effectiveness or enforce coverage thresholds on PRs — regressions go undetected"
     severity: "HIGH"
     effort: "4-6 hours"
-  - title: "Repository is archived — no active maintenance"
-    impact: "No new security patches, bug fixes, or dependency updates; stale dependencies accumulate CVEs"
+  - title: "No static analysis or linting configuration"
+    impact: "Code quality issues (unused imports, style violations, potential bugs) not caught automatically"
     severity: "HIGH"
-    effort: "N/A (organizational decision)"
-  - title: "No container image runtime validation"
-    impact: "Built images are never tested for startup or functional correctness before push"
+    effort: "4-8 hours"
+  - title: "No dependency update automation (Dependabot/Renovate)"
+    impact: "Vulnerable or outdated dependencies require manual tracking — security exposure increases over time"
     severity: "HIGH"
-    effort: "4-6 hours"
-  - title: "No linting, static analysis, or pre-commit hooks"
-    impact: "Code quality is not enforced; style drift and common Java mistakes go uncaught"
-    severity: "MEDIUM"
-    effort: "3-4 hours"
-  - title: "No dependency vulnerability scanning (Trivy, Snyk, Dependabot)"
-    impact: "Vulnerable dependencies are not flagged; security issues discovered only via manual audit"
+    effort: "1-2 hours"
+  - title: "FIPS mode deliberately disabled in runtime image"
+    impact: "Deployment in FIPS-required environments (FedRAMP, government) will fail compliance checks"
     severity: "HIGH"
-    effort: "2-3 hours"
-  - title: "No Kubernetes-level E2E tests"
-    impact: "ModelMesh behavior in actual K8s deployments is never validated in CI"
+    effort: "16-40 hours"
+  - title: "No E2E test suite with Kubernetes cluster testing"
+    impact: "Integration issues between modelmesh and K8s orchestration layer not validated before merge"
     severity: "MEDIUM"
     effort: "16-24 hours"
 quick_wins:
-  - title: "Add JaCoCo coverage plugin to Maven build"
-    effort: "2-3 hours"
-    impact: "Immediate visibility into test coverage; enables coverage-gated PRs"
-  - title: "Add Dependabot or Renovate for dependency updates"
-    effort: "1 hour"
-    impact: "Automated security patches and dependency freshness (critical for archived repo)"
-  - title: "Add Trivy container scanning to build workflow"
+  - title: "Add Dependabot configuration for Maven and Docker dependencies"
     effort: "1-2 hours"
-    impact: "Catch CVEs in base images and dependencies at build time"
-  - title: "Add Checkstyle or SpotBugs to Maven build"
+    impact: "Automated security and dependency update PRs for Maven (pom.xml) and Docker base images"
+  - title: "Add JaCoCo Maven plugin for coverage reporting"
+    effort: "2-4 hours"
+    impact: "Visibility into test coverage with per-PR reporting and threshold enforcement"
+  - title: "Add concurrency control to CI workflows"
+    effort: "30 minutes"
+    impact: "Prevent redundant CI runs on rapid PR pushes, reduce GitHub Actions consumption"
+  - title: "Create basic CLAUDE.md with test patterns and contribution guidance"
     effort: "2-3 hours"
-    impact: "Enforce code style consistency and catch common Java bugs"
-  - title: "Create basic CLAUDE.md with test patterns"
-    effort: "2-3 hours"
-    impact: "AI-assisted development follows project conventions for test creation"
+    impact: "Improve AI-assisted development quality and consistency for contributors"
 recommendations:
   priority_0:
-    - "Add JaCoCo coverage plugin with minimum threshold enforcement (e.g., 60% line coverage)"
-    - "Add Trivy or Snyk container scanning to the build workflow"
-    - "Enable Dependabot for automated dependency security updates"
+    - "Add JaCoCo plugin to pom.xml and integrate with Codecov for PR-level coverage reporting and threshold enforcement"
+    - "Configure Dependabot for gomod, maven, and docker ecosystem dependency updates"
+    - "Add a linting/static analysis tool (Checkstyle, SpotBugs, or Error Prone) to the Maven build"
   priority_1:
-    - "Add Checkstyle/SpotBugs/PMD for static analysis in Maven build"
-    - "Add image startup validation in CI (docker run --health-cmd)"
-    - "Create Kubernetes-level E2E tests with Kind for core model serving flows"
-    - "Add concurrency control to GitHub Actions workflows"
+    - "Investigate FIPS compatibility — the runtime image explicitly disables Java FIPS; evaluate if bouncycastle FIPS provider can be used instead"
+    - "Add E2E tests that deploy modelmesh to a Kind cluster and validate gRPC inference flow end-to-end"
+    - "Create comprehensive agent rules (.claude/rules/) for unit test patterns, integration test patterns, and PR review checklists"
   priority_2:
-    - "Create agent rules (.claude/rules/) for test automation guidance"
-    - "Add pre-commit hooks for code formatting and linting"
-    - "Add SBOM generation with Syft or cyclonedx-maven-plugin"
-    - "Add performance regression tests for model load/unload latency"
+    - "Enable test parallelization in Maven Surefire (currently explicitly disabled with forkCount=1)"
+    - "Add pre-commit hooks for code formatting and basic validation"
+    - "Add container runtime validation tests (startup, healthcheck endpoint, gRPC readiness)"
 ---
 
 # Quality Analysis: kserve/modelmesh
 
 ## Executive Summary
 
-- **Overall Score: 4.9/10**
-- **Repository Status**: ARCHIVED — redirects to main kserve/kserve repo
-- **Language**: Java 21 (Maven build, gRPC/Protobuf)
-- **Type**: Model serving management/routing framework (distributed LRU cache for ML models)
+- **Overall Score: 4.5/10**
+- **Repository Type**: Java library/sidecar (distributed LRU cache for serving runtime models)
+- **Primary Language**: Java 21 (Maven build)
+- **Framework**: gRPC-based distributed system with etcd coordination
+- **RHOAI Component**: Model Serving (RHOAIENG)
+- **Tier**: Upstream
 
-### Key Strengths
-- Solid unit test suite with 41 test classes covering core functionality (evictions, clustering, TLS, error propagation, sidecar model mesh, payload processing)
-- Tests use real infrastructure (etcd, ZooKeeper) rather than mocks — high-fidelity integration-style tests
-- Multi-architecture Docker builds (amd64, arm64, ppc64le, s390x) with GHA caching
-- CodeQL SAST scanning enabled on PRs and scheduled runs (Java + Python)
-- Non-root container execution with proper security hardening
+**Key Strengths**: Solid unit test suite with JUnit 5 covering cluster, TLS, sidecar, and error scenarios. Excellent Dockerfile practices with multi-stage UBI9 builds, multi-arch support (4 platforms), and non-root runtime. Kustomize deployment configuration with examples.
 
-### Critical Gaps
-- Zero code coverage tracking — no JaCoCo, Codecov, or any coverage tooling
-- No dependency vulnerability scanning (no Dependabot, Trivy, or Snyk)
-- No linting or static analysis (no Checkstyle, SpotBugs, PMD)
-- No container runtime validation or image startup testing
-- No agent rules or AI-assisted development guidance
-- Repository is archived — no active development or maintenance
+**Critical Gaps**: No code coverage tracking whatsoever. No static analysis or linting. No dependency update automation. FIPS mode deliberately disabled in the runtime image. No agent rules for AI-assisted development.
 
 ## Quality Scorecard
 
-| Dimension | Score | Status |
-|-----------|-------|--------|
-| Unit Tests | 6.5/10 | Good coverage with JUnit 5; no coverage tracking |
-| Integration/E2E | 5.0/10 | Real infra tests (etcd/ZK) but no K8s E2E |
-| **Build Integration** | **3.0/10** | **No PR-time image validation or manifest testing** |
-| Image Testing | 3.5/10 | Multi-arch builds but no runtime validation |
-| Coverage Tracking | 1.0/10 | No JaCoCo, no Codecov, no thresholds |
-| CI/CD Automation | 5.5/10 | Two workflows; basic but functional |
-| Agent Rules | 0.0/10 | No agent rules or test automation guidance |
+| Dimension | Score | Weight | Weighted | Status |
+|-----------|-------|--------|----------|--------|
+| Unit Tests | 7.0/10 | 15% | 1.05 | Good JUnit 5 suite with 52 test files |
+| Integration/E2E | 5.0/10 | 20% | 1.00 | Cluster tests exist, no dedicated E2E |
+| Build Integration | 5.0/10 | 15% | 0.75 | Multi-arch Docker builds, no deployment validation |
+| Image Testing | 6.0/10 | 10% | 0.60 | Strong Dockerfile, no runtime validation |
+| Coverage Tracking | 1.0/10 | 10% | 0.10 | No coverage tooling at all |
+| CI/CD Automation | 5.0/10 | 15% | 0.75 | Basic workflows, missing concurrency control |
+| Static Analysis | 2.0/10 | 10% | 0.20 | No linting, no dependency alerts |
+| Agent Rules | 0.0/10 | 5% | 0.00 | No agent rules present |
+| **Overall** | **4.5/10** | **100%** | **4.45** | |
 
 ## Critical Gaps
 
 ### 1. No Code Coverage Tracking or Enforcement
-- **Impact**: Cannot measure or enforce test coverage; regressions go undetected
 - **Severity**: HIGH
+- **Impact**: Cannot measure test effectiveness. No visibility into which code paths are untested. Coverage regressions go undetected when new code is added without tests.
+- **Current State**: No JaCoCo plugin in `pom.xml`, no `.codecov.yml`, no coverage thresholds, no PR coverage reporting.
 - **Effort**: 4-6 hours
-- **Details**: The `pom.xml` has no JaCoCo plugin configured. The build workflow runs `mvn -B package` which executes tests but generates no coverage reports. No Codecov or Coveralls integration exists. There are no coverage thresholds or PR gates.
-- **Fix**: Add `jacoco-maven-plugin` to pom.xml, configure Codecov GitHub Action in build.yml
+- **Evidence**: `pom.xml` has no JaCoCo or Cobertura plugin. No coverage-related configuration found in CI workflows.
 
-### 2. Repository is Archived — No Active Maintenance
-- **Impact**: No new security patches, bug fixes, or dependency updates
+### 2. No Static Analysis or Linting
 - **Severity**: HIGH
-- **Effort**: N/A (organizational decision)
-- **Details**: The README explicitly states "This repo has been archived. Please check out the main KServe repo." The repo has only 1 commit visible in the shallow clone. Dependencies (Netty 4.1.132, gRPC 1.63.2, Log4j 2.23.1) will accumulate CVEs over time without updates.
+- **Impact**: Code quality issues like unused variables, potential null pointer dereferences, style inconsistencies, and common bug patterns are not caught automatically. Only FindBugs JSR305 annotations (`@Nullable`, `@Nonnull`) are present for compile-time null safety — no analysis tool enforces them.
+- **Current State**: No Checkstyle, SpotBugs, PMD, or Error Prone configured. No `.pre-commit-config.yaml`.
+- **Effort**: 4-8 hours
 
-### 3. No Container Image Runtime Validation
-- **Impact**: Built images may fail at startup; issues caught only in deployment
+### 3. No Dependency Update Automation
 - **Severity**: HIGH
-- **Effort**: 4-6 hours
-- **Details**: The build workflow pushes the Docker image on `push` events without any runtime validation. No `docker run` test, no health check, no container-structure-test. The image could be broken and the CI would still push it.
+- **Impact**: Maven dependencies (gRPC, Netty, Log4j2, Jackson, Bouncy Castle) and Docker base images must be tracked manually. Known vulnerabilities in transitive dependencies may persist.
+- **Current State**: No `.github/dependabot.yml` or `renovate.json`. The project manages 20+ explicit dependencies in `pom.xml`.
+- **Effort**: 1-2 hours
 
-### 4. No Dependency Vulnerability Scanning
-- **Impact**: Vulnerable dependencies go undetected; security posture degrades
+### 4. FIPS Mode Deliberately Disabled
 - **Severity**: HIGH
-- **Effort**: 2-3 hours
-- **Details**: No Dependabot configuration, no Trivy scanning, no Snyk integration. The project uses many dependencies (gRPC, Netty, Guava, Jackson, Log4j, ZooKeeper, BouncyCastle) that have had historical CVEs. CodeQL catches code-level issues but not dependency vulnerabilities.
+- **Impact**: The runtime Dockerfile explicitly disables Java FIPS with `security.useSystemPropertiesFile=false`. Deployments in FIPS-required environments (FedRAMP, government, regulated industries) will fail compliance.
+- **Current State**: `Dockerfile:122` — `sed -i 's/security.useSystemPropertiesFile=true/security.useSystemPropertiesFile=false/g'` with comment referencing FIPS docs. The build stage also modifies `SunPKCS11` security provider configuration.
+- **Effort**: 16-40 hours (requires evaluating BouncyCastle FIPS provider, testing with FIPS-enabled JVM)
 
-### 5. No Linting or Static Analysis
-- **Impact**: Code quality is not enforced; common Java mistakes go uncaught
+### 5. No E2E Kubernetes Cluster Testing
 - **Severity**: MEDIUM
-- **Effort**: 3-4 hours
-- **Details**: No Checkstyle, SpotBugs, PMD, or Error Prone configured. No `.editorconfig` for consistent formatting. Code quality relies entirely on developer discipline and PR review.
-
-### 6. No Kubernetes-Level E2E Tests
-- **Impact**: Model serving behavior in actual K8s deployments is never validated in CI
-- **Severity**: MEDIUM
+- **Impact**: Integration between modelmesh and the Kubernetes orchestration layer (modelmesh-serving, modelmesh-runtime-adapter) is not validated. Deployment manifests, service mesh behavior, and pod lifecycle are untested in CI.
+- **Current State**: Cluster tests use in-process multi-instance gRPC setup with etcd, not actual K8s cluster deployment. No Kind/Minikube setup in CI.
 - **Effort**: 16-24 hours
-- **Details**: Tests exercise the model mesh framework at the Java/gRPC level with etcd/ZooKeeper as the KV store. However, there are no tests that deploy to a Kind/Minikube cluster and validate actual model serving flows through the Kubernetes service mesh.
 
 ## Quick Wins
 
-### 1. Add JaCoCo Coverage Plugin to Maven Build
-- **Effort**: 2-3 hours
-- **Impact**: Immediate visibility into test coverage; enables coverage-gated PRs
-- **Implementation**:
-```xml
-<plugin>
-  <groupId>org.jacoco</groupId>
-  <artifactId>jacoco-maven-plugin</artifactId>
-  <version>0.8.12</version>
-  <executions>
-    <execution>
-      <goals><goal>prepare-agent</goal></goals>
-    </execution>
-    <execution>
-      <id>report</id>
-      <phase>test</phase>
-      <goals><goal>report</goal></goals>
-    </execution>
-    <execution>
-      <id>check</id>
-      <goals><goal>check</goal></goals>
-      <configuration>
-        <rules>
-          <rule>
-            <element>BUNDLE</element>
-            <limits>
-              <limit>
-                <counter>LINE</counter>
-                <value>COVEREDRATIO</value>
-                <minimum>0.60</minimum>
-              </limit>
-            </limits>
-          </rule>
-        </rules>
-      </configuration>
-    </execution>
-  </executions>
-</plugin>
-```
+### 1. Add Dependabot Configuration (1-2 hours)
+Create `.github/dependabot.yml` covering Maven and Docker ecosystems:
 
-### 2. Add Dependabot for Dependency Updates
-- **Effort**: 1 hour
-- **Impact**: Automated security patches for Maven dependencies
-- **Implementation**: Create `.github/dependabot.yml`:
 ```yaml
 version: 2
 updates:
@@ -209,226 +149,292 @@ updates:
     directory: "/"
     schedule:
       interval: "weekly"
-  - package-ecosystem: "github-actions"
-    directory: "/"
-    schedule:
-      interval: "weekly"
+    open-pull-requests-limit: 10
   - package-ecosystem: "docker"
     directory: "/"
     schedule:
       interval: "weekly"
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
 ```
 
-### 3. Add Trivy Container Scanning
-- **Effort**: 1-2 hours
-- **Impact**: Catch CVEs in base images and dependencies at build time
-- **Implementation**: Add to `.github/workflows/build.yml`:
-```yaml
-- name: Run Trivy vulnerability scanner
-  uses: aquasecurity/trivy-action@master
-  with:
-    image-ref: ${{ env.IMAGE_NAME }}:${{ env.VERSION }}
-    format: 'sarif'
-    output: 'trivy-results.sarif'
-    severity: 'CRITICAL,HIGH'
-- name: Upload Trivy scan results
-  uses: github/codeql-action/upload-sarif@v2
-  with:
-    sarif_file: 'trivy-results.sarif'
-```
+### 2. Add JaCoCo Coverage Plugin (2-4 hours)
+Add to `pom.xml` build plugins:
 
-### 4. Add Checkstyle/SpotBugs to Maven Build
-- **Effort**: 2-3 hours
-- **Impact**: Enforce code style and catch common Java bugs
-- **Implementation**:
 ```xml
 <plugin>
-  <groupId>com.github.spotbugs</groupId>
-  <artifactId>spotbugs-maven-plugin</artifactId>
-  <version>4.8.4.0</version>
-  <executions>
-    <execution>
-      <goals><goal>check</goal></goals>
-    </execution>
-  </executions>
+    <groupId>org.jacoco</groupId>
+    <artifactId>jacoco-maven-plugin</artifactId>
+    <version>0.8.12</version>
+    <executions>
+        <execution>
+            <goals>
+                <goal>prepare-agent</goal>
+            </goals>
+        </execution>
+        <execution>
+            <id>report</id>
+            <phase>test</phase>
+            <goals>
+                <goal>report</goal>
+            </goals>
+        </execution>
+    </executions>
 </plugin>
 ```
 
-### 5. Create Basic CLAUDE.md
-- **Effort**: 2-3 hours
-- **Impact**: Improve AI-generated test quality and consistency
-- **Implementation**: Add `CLAUDE.md` documenting test patterns, etcd setup requirements, and the abstract test class hierarchy.
+Then add Codecov action to build workflow and create `.codecov.yml` with thresholds.
+
+### 3. Add Concurrency Control to CI (30 minutes)
+Add to `build.yml`:
+
+```yaml
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+```
+
+### 4. Create Basic CLAUDE.md (2-3 hours)
+Add agent rules documenting test patterns, JUnit 5 conventions, etcd dependency for tests, and coding standards.
 
 ## Detailed Findings
 
-### CI/CD Pipeline
+### Unit Tests
 
-**Workflows**: 2 total
-1. **build.yml** — Triggered on PR, push, schedule (Mon/Thu), and manual dispatch
-   - `test` job: Sets up Java 21, installs etcd, runs `mvn -B package`
-   - `build` job: Multi-arch Docker build with QEMU and Buildx (amd64, arm64, ppc64le, s390x)
-   - Pushes image only on `push` events (not PRs)
-   - Uses GHA cache for Docker layers (`cache-from: type=gha`)
+**Score: 7.0/10**
 
-2. **codeql.yml** — CodeQL SAST for Java and Python
-   - Runs on push to main, PRs to main, and daily schedule
-   - Scans both Java-Kotlin and Python languages
+- **Test Files**: 52 Java test files in `src/test/java/`
+- **Source Files**: 64 Java source files in `src/main/java/`
+- **Test-to-Code Ratio**: 0.81 (strong)
+- **Test Methods**: 59 `@Test` annotations across the test suite
+- **Framework**: JUnit 5 (Jupiter) with `junit-jupiter-api` and `junit-jupiter-engine` v5.10.2
+- **Build Tool**: Maven Surefire Plugin v3.0.0-M5
 
-**Strengths**:
-- Multi-architecture support (4 platforms)
-- Docker layer caching with GHA
-- CodeQL SAST on PRs
-- Scheduled builds for freshness
-
-**Weaknesses**:
-- No concurrency control (`concurrency:` block missing)
-- No test result reporting (no JUnit report action)
-- No build matrix (single Java version only)
-- Actions use outdated versions (v2/v3 instead of v4)
-- No Makefile for local development shortcuts
-
-### Test Coverage
+**Test Categories Observed**:
+- Core model mesh operations: `ModelMeshTest`, `SingleInstanceModelMeshTest`
+- Cluster behavior: `ModelMeshClusterTest` (3-replica), `ModelMeshClusterSeparateServeTest`
+- TLS/Security: `ModelMeshClusterTlsTest`, `ModelMeshClusterTlsClientAuthTest`
+- Sidecar integration: `SidecarModelMeshTest`, `UdsSidecarModelMeshTest`, `ZookeeperSidecarModelMeshTest`
+- Error handling: `ModelMeshErrorPropagationTest`, `ModelMeshFailureExpiryTest`, `ModelMeshLoadFailureTest`
+- Evictions: `ModelMeshEvictionsTest`, `EvictionsModelMeshTest`
+- Metrics: `ModelMeshMetricsTest`
+- Payload processing: `RemotePayloadProcessorTest`, `MatchingPayloadProcessorTest`, `CompositePayloadProcessorTest`, `AsyncPayloadProcessorTest`
+- VModels: `VModelsTest`, `ZookeeperVModelsTest`
+- Protocol: `ProtoSplicerTest`, `LegacyTasProtoTest`, `LegacyAddRemoveProtoTest`
 
 **Test Infrastructure**:
-- **Framework**: JUnit 5 (jupiter 5.10.2)
-- **Test classes**: 41 (including 2 abstract base classes)
-- **Test methods**: ~97 @Test annotations
-- **Source files**: 63 main Java files (39,201 LOC)
-- **Test files**: 52 test Java files (13,387 LOC)
-- **Test-to-code ratio**: 0.34 (test LOC / main LOC) — moderate
+- Abstract base classes: `AbstractModelMeshTest`, `AbstractModelMeshClusterTest` for code reuse
+- Requires etcd as external dependency (started/stopped per test class)
+- Uses `@Timeout(value = 10, unit = TimeUnit.MINUTES)` on base class
+- `@BeforeAll` / `@BeforeEach` lifecycle hooks used appropriately
+- `DummyModelMesh` and `DummyClassifierLoader` test doubles present
 
-**Test Categories**:
-- **Core model mesh**: ModelMeshTest, ModelMeshClusterTest, ModelMeshEvictionsTest
-- **Error handling**: ModelMeshErrorPropagationTest, ModelMeshFailureExpiryTest, ModelMeshEtcdFailFastTest, ModelMeshLoadFailureTest
-- **TLS/Security**: ModelMeshClusterTlsTest, ModelMeshClusterTlsClientAuthTest
-- **Sidecar**: SidecarModelMeshTest, UdsSidecarModelMeshTest, SidecarModelMeshPayloadProcessingTest
-- **Payload processing**: AsyncPayloadProcessorTest, CompositePayloadProcessorTest, MatchingPayloadProcessorTest, RemotePayloadProcessorTest
-- **Protocol**: ProtoSplicerTest, LegacyTasProtoTest, LegacyAddRemoveProtoTest
-- **Virtual models**: VModelsTest, ZookeeperVModelsTest
-- **Metrics**: ModelMeshMetricsTest
-- **Evictions**: EvictionsModelMeshTest, ModelMeshEvictionsTest
-- **Teardown**: ModelMeshTearDownTest
+**Weaknesses**:
+- Test parallelization explicitly disabled (`reuseForks=false`, `forkCount=1`)
+- No parameterized tests observed
+- Tests run serially, which may slow CI feedback
 
-**Test Pattern**: Tests extend `AbstractModelMeshTest` or `AbstractModelMeshClusterTest`, which set up real etcd/ZooKeeper instances. Tests use dummy model loaders (`DummyClassifierLoader`, `DummyModelMesh`) rather than mocks — this is a strong practice for infrastructure testing.
+### Integration/E2E Tests
 
-**Gaps**:
-- No mocking framework (Mockito absent) — limits unit-level isolation
-- No coverage tracking at all
-- No test categories/tags for selective execution
-- No parameterized tests for edge cases
-- Single test execution mode (no parallel/fork options despite `reuseForks: false`)
+**Score: 5.0/10**
 
-### Code Quality
-
-- **Linting**: None (no Checkstyle, PMD, or SpotBugs)
-- **Static Analysis**: CodeQL only (good, but not a substitute for linting)
-- **Pre-commit Hooks**: None
-- **Code Formatting**: None configured
-- **EditorConfig**: None
-- **FindBugs annotations**: `jsr305` is a `provided` dependency — FindBugs annotations used in source but no enforcement
-
-### Container Images
-
-**Dockerfile Analysis**:
-- **Base image**: `registry.access.redhat.com/ubi9/ubi-minimal:latest` (good — UBI9 with security updates)
-- **Multi-stage build**: Yes — `build_base` → `build` → `runtime` (3 stages)
-- **Non-root execution**: Yes — creates `app` user (UID 2000), runs as non-root by default
-- **Platform support**: linux/amd64, linux/arm64/v8, linux/ppc64le, linux/s390x
-- **Cache optimization**: Uses `--mount=type=cache` for microdnf and Maven repos
-- **FIPS handling**: Disables Java FIPS configuration in runtime image
-- **Labels**: Proper OCI labels with version, commit SHA, and build ID
-
-**Gaps**:
-- No container-structure-test
-- No image startup validation
-- No Trivy/Snyk scanning
-- No SBOM generation
-- No image signing/attestation (cosign/sigstore)
-- No `.hadolint.yaml` for Dockerfile linting
-- etcd version mismatch: Dockerfile uses v3.5.4, CI install script uses v3.5.0
-
-### Security
-
-**Present**:
-- CodeQL SAST scanning (Java + Python) on PRs and daily schedule
-- Non-root container execution
-- UBI9 base image (RHEL security patches)
-- SECURITY.md with vulnerability disclosure process
-- FIPS configuration handling
-- TLS test coverage (client auth, cluster TLS)
+- **No dedicated `e2e/` or `integration/` directory**
+- Integration-style tests are co-located with unit tests in `src/test/java/`
+- Cluster tests spin up multiple in-process modelmesh instances with gRPC channels
+- `ModelMeshClusterTest` creates 3 replicas and sends 6000 requests to verify load distribution
+- Sidecar tests validate the sidecar deployment model with UDS (Unix Domain Socket) support
+- Tests require etcd infrastructure (`SetupEtcd.startEtcd()`)
 
 **Missing**:
-- No dependency vulnerability scanning (Dependabot, Trivy, Snyk)
-- No secret detection (gitleaks, trufflehog)
-- No container image scanning
-- No SBOM generation
-- No image signing
-- No OSSF Scorecard
-- No branch protection rules visible
+- No Kubernetes cluster testing (Kind, Minikube, envtest)
+- No multi-version testing (different K8s/OCP versions)
+- No deployment manifest validation in CI
+- No end-to-end inference flow test with actual model runtimes
+- No cross-component testing with `modelmesh-serving` or `modelmesh-runtime-adapter`
 
-### Agent Rules (Agentic Flow Quality)
+### Build Integration
 
-- **Status**: Missing
-- **Coverage**: None — no `.claude/` directory, no `CLAUDE.md`, no `AGENTS.md`
-- **Quality**: N/A
-- **Gaps**: No test automation guidance, no test patterns documentation for AI agents, no project conventions documented
-- **Recommendation**: Generate rules with `/test-rules-generator` covering JUnit 5 patterns, etcd setup requirements, abstract test class hierarchy, and gRPC testing patterns
+**Score: 5.0/10**
+
+**Strengths**:
+- PR workflow runs `mvn -B package` which compiles and runs all tests
+- Docker image build job executes after test job passes (`needs: test`)
+- Multi-arch Docker builds: `linux/amd64,linux/arm64/v8,linux/ppc64le,linux/s390x`
+- GitHub Actions Docker build cache (`type=gha`)
+- Kustomize configuration in `config/base/` with deployment, service, and networkpolicy manifests
+- Multiple example configurations in `config/examples/`
+
+**Weaknesses**:
+- Docker image only pushed on `push` events, not built/tested on PRs (only Maven build + test runs on PR)
+- No Konflux build simulation
+- No `kustomize build` validation in CI
+- No `kubectl apply --dry-run` for manifest validation
+- No operator integration testing
+- No Makefile — build is Maven-only
+
+### Image Testing
+
+**Score: 6.0/10**
+
+**Strengths**:
+- Multi-stage Dockerfile with 3 stages: `build_base`, `build`, `runtime`
+- Enterprise-grade base image: `registry.access.redhat.com/ubi9/ubi-minimal:latest`
+- Multi-architecture support: 4 platforms (amd64, arm64, ppc64le, s390x)
+- Non-root user: `USER 2000` with dedicated app user
+- `.dockerignore` excludes build artifacts, `.git`, IDE files
+- K8s readiness probe: `httpGet /ready:8089`
+- K8s liveness probe defined in `deployment.yaml`
+- Build cache optimization with `--mount=type=cache` for microdnf and Maven (.m2)
+
+**Weaknesses**:
+- No `HEALTHCHECK` instruction in Dockerfile
+- No Testcontainers or container runtime validation tests
+- No image startup testing in CI
+- No container scanning integrated into build workflow
+- No image size optimization analysis
+
+### Coverage Tracking
+
+**Score: 1.0/10**
+
+- **No coverage tooling configured**
+- No JaCoCo plugin in `pom.xml`
+- No Cobertura configuration
+- No `.codecov.yml` or `codecov.yml`
+- No coverage thresholds defined
+- No PR coverage reporting
+- No coverage gates in CI
+- With 59 test methods and 64 source files, actual coverage percentage is unknown
+
+### CI/CD Automation
+
+**Score: 5.0/10**
+
+**Workflow Inventory**:
+| Workflow | Trigger | Purpose |
+|----------|---------|---------|
+| `build.yml` | PR, push, schedule, dispatch | Maven build + test, Docker image build/push |
+| `codeql.yml` | PR (main), push, schedule | Code scanning (Java/Kotlin, Python) |
+
+**Strengths**:
+- PR-triggered builds on `main` and `release-*` branches
+- Scheduled builds: twice weekly (Mon/Thu at midnight Pacific)
+- `paths-ignore` for `.md` files reduces unnecessary CI runs
+- Docker build layer caching with GitHub Actions cache
+- Separate test and build jobs with dependency chain
+- `workflow_dispatch` for manual triggering
+
+**Weaknesses**:
+- No `concurrency:` block — duplicate CI runs stack up on rapid pushes
+- No test matrix (single Java version, single OS)
+- No test parallelization or sharding
+- No timeout on test job (only CodeQL has timeout)
+- No artifact upload for test results
+- Only 2 workflows total — minimal automation
+
+### Static Analysis
+
+**Score: 2.0/10**
+
+**Linting**: None configured. No Checkstyle, SpotBugs, PMD, or Error Prone.
+
+**FIPS Compatibility**:
+- Base images: UBI9 minimal (FIPS-capable) — good
+- Java FIPS: **Explicitly disabled** in `Dockerfile:122`
+  ```
+  sed -i 's/security.useSystemPropertiesFile=true/security.useSystemPropertiesFile=false/g' $JAVA_HOME/conf/security/java.security
+  ```
+- SunPKCS11 security provider is reconfigured in both build and runtime stages
+- Uses BouncyCastle (`bcpkix-jdk18on:1.78`) but as standard provider, not FIPS provider
+- No FIPS build tags (Java project, not applicable)
+- **Risk**: Runtime image cannot pass FIPS compliance checks
+
+**Dependency Alerts**: None. No `.github/dependabot.yml` or `renovate.json`.
+
+**Pre-commit Hooks**: None. No `.pre-commit-config.yaml`.
+
+### Agent Rules
+
+**Score: 0.0/10**
+
+- No `CLAUDE.md` or `AGENTS.md` in repository root
+- No `.claude/` directory
+- No `.claude/rules/` with test creation guidance
+- No `.claude/skills/` with custom skills
+- Developer guide (`developer-guide.md`) exists with build/test instructions but provides no AI agent guidance
 
 ## Recommendations
 
 ### Priority 0 (Critical)
-1. **Add JaCoCo coverage plugin** with minimum threshold enforcement (60% line coverage) — currently zero coverage visibility
-2. **Add Trivy/Snyk container scanning** to build workflow — base image and dependency CVEs go undetected
-3. **Enable Dependabot** for Maven, GitHub Actions, and Docker dependency updates — critical for an archived repo accumulating stale dependencies
+
+1. **Add JaCoCo + Codecov integration** — Configure JaCoCo Maven plugin for coverage reporting, integrate with Codecov GitHub Action, set minimum coverage threshold of 60% with enforcement on PRs.
+
+2. **Configure Dependabot** — Add `.github/dependabot.yml` covering `maven`, `docker`, and `github-actions` ecosystems. Enable auto-merge for patch updates.
+
+3. **Add static analysis tooling** — Configure at least one of: Checkstyle (style), SpotBugs (bugs), or Error Prone (compile-time checks). Integrate into Maven build so violations fail the build.
 
 ### Priority 1 (High Value)
-1. **Add Checkstyle/SpotBugs/PMD** for Java static analysis — enforce code quality beyond CodeQL
-2. **Add image startup validation** in CI — `docker run` with health check before push
-3. **Add concurrency control** to GitHub Actions workflows — prevent redundant builds
-4. **Upgrade GitHub Actions** to latest versions (v3 → v4 for checkout, setup-java, etc.)
-5. **Add JUnit XML reporting** to CI — surface test results in GitHub PR checks
+
+4. **Investigate FIPS compliance path** — The explicit FIPS disable in the Dockerfile is a compliance blocker. Evaluate: (a) BouncyCastle FIPS provider (`bc-fips`), (b) FIPS-enabled OpenJDK, (c) NSS FIPS module. Document the decision and rationale.
+
+5. **Add E2E Kubernetes testing** — Create a CI workflow that deploys modelmesh to a Kind cluster with etcd, registers a model, sends inference requests, and validates responses. Start with a single-node cluster.
+
+6. **Create agent rules** — Add `CLAUDE.md` with JUnit 5 test patterns, etcd test infrastructure notes, gRPC testing conventions, and PR review checklist. Add `.claude/rules/unit-tests.md` with specific patterns from `AbstractModelMeshTest`.
 
 ### Priority 2 (Nice-to-Have)
-1. **Create CLAUDE.md and agent rules** for test automation guidance
-2. **Add pre-commit hooks** for code formatting and linting
-3. **Add SBOM generation** with cyclonedx-maven-plugin
-4. **Add container-structure-test** for Dockerfile validation
-5. **Add Makefile** for common developer workflows (build, test, lint, docker)
-6. **Fix etcd version mismatch** between Dockerfile (v3.5.4) and CI install script (v3.5.0)
+
+7. **Enable test parallelization** — Current Surefire configuration explicitly disables parallel execution (`forkCount=1`, `reuseForks=false`). Evaluate which test classes can run in parallel (those not sharing etcd state).
+
+8. **Add pre-commit hooks** — Configure `.pre-commit-config.yaml` with formatting, license header checks, and basic validation.
+
+9. **Add container runtime validation** — Test that the built image starts successfully, exposes the gRPC port, and responds to health/readiness probes.
+
+10. **Add CI concurrency control and timeouts** — Add `concurrency:` to prevent duplicate runs. Add `timeout-minutes:` to the test job to fail fast on hangs.
 
 ## Comparison to Gold Standards
 
-| Dimension | modelmesh | odh-dashboard | notebooks | kserve |
+| Capability | modelmesh | odh-dashboard | notebooks | kserve |
 |-----------|-----------|---------------|-----------|--------|
-| Unit Tests | 6.5 | 9.0 | 7.0 | 8.5 |
-| Integration/E2E | 5.0 | 9.0 | 8.0 | 9.0 |
-| Build Integration | 3.0 | 7.0 | 8.0 | 6.0 |
-| Image Testing | 3.5 | 6.0 | 9.0 | 7.0 |
-| Coverage Tracking | 1.0 | 8.0 | 5.0 | 8.0 |
-| CI/CD Automation | 5.5 | 9.0 | 8.0 | 9.0 |
-| Agent Rules | 0.0 | 8.0 | 3.0 | 2.0 |
-| **Overall** | **4.9** | **8.5** | **7.5** | **8.0** |
-
-### Key Differences from Gold Standards
-- **vs. odh-dashboard**: Missing coverage enforcement, contract tests, comprehensive CI/CD, agent rules
-- **vs. notebooks**: Missing image testing strategy, multi-arch runtime validation, vulnerability scanning
-- **vs. kserve**: Missing coverage enforcement with Codecov, multi-version testing matrix, E2E with Kind
+| Unit Tests | JUnit 5 (52 files) | Jest + React Testing Library | pytest | Go testing + Ginkgo |
+| Integration/E2E | In-process cluster tests | Cypress E2E | Notebook validation | E2E with Kind |
+| Build Integration | Maven + Docker | Webpack + Docker | Image builds | Go build + Docker |
+| Image Testing | Multi-arch, UBI9 | Single arch | 5-layer validation | Multi-arch |
+| Coverage Tracking | **None** | Codecov + thresholds | Coverage reports | Codecov enforcement |
+| CI/CD | 2 workflows, basic | Comprehensive, matrix | Multi-stage pipeline | Matrix testing |
+| Static Analysis | **None** | ESLint + TypeScript | Linting configured | golangci-lint |
+| Agent Rules | **None** | Comprehensive CLAUDE.md | Present | Present |
+| FIPS | **Disabled** | N/A (frontend) | FIPS-aware images | Partial |
 
 ## File Paths Reference
 
-| Category | File |
-|----------|------|
-| CI Build | `.github/workflows/build.yml` |
-| SAST | `.github/workflows/codeql.yml` |
-| CI Helper | `.github/install-etcd.sh` |
-| PR Template | `.github/pull_request_template.md` |
-| Build Config | `pom.xml` |
-| Dockerfile | `Dockerfile` |
-| Docker Ignore | `.dockerignore` |
-| Dev Guide | `developer-guide.md` |
-| Security Policy | `SECURITY.md` |
-| K8s Config | `config/` |
-| Main Source | `src/main/java/com/ibm/watson/modelmesh/` |
-| Test Source | `src/test/java/com/ibm/watson/modelmesh/` |
-| Proto Definitions | `src/main/proto/current/` |
-| Test Resources | `src/test/resources/` |
+### CI/CD
+- `.github/workflows/build.yml` — Main build and test workflow
+- `.github/workflows/codeql.yml` — Code scanning workflow
+- `.github/install-etcd.sh` — etcd installation script for CI
+
+### Build
+- `pom.xml` — Maven project configuration (Java 21, JUnit 5, gRPC, Netty)
+- `Dockerfile` — Multi-stage container image build (UBI9)
+- `.dockerignore` — Docker build context exclusions
+
+### Tests
+- `src/test/java/com/ibm/watson/modelmesh/` — All test classes (52 files)
+- `src/test/java/com/ibm/watson/modelmesh/AbstractModelMeshTest.java` — Base test class
+- `src/test/java/com/ibm/watson/modelmesh/AbstractModelMeshClusterTest.java` — Cluster test base
+- `src/test/java/com/ibm/watson/modelmesh/payload/` — Payload processor tests
+- `src/test/proto/` — Test protobuf definitions
+- `src/test/resources/` — Test resources
+
+### Kubernetes Config
+- `config/base/kustomization.yaml` — Base Kustomize configuration
+- `config/base/deployment.yaml` — Deployment manifest with probes
+- `config/base/service.yaml` — Service manifest
+- `config/base/networkpolicy.yaml` — Network policy
+- `config/examples/` — Example configurations (custom, mock-runtime, type-constraints)
+
+### Documentation
+- `developer-guide.md` — Build, test, and deployment guide
+- `docs/` — Architecture and metrics documentation
+- `CONTRIBUTING.md` — Contribution guidelines

@@ -1,0 +1,20 @@
+{
+  "type": "module-views",
+  "targetModule": "team-tracker",
+  "navItems": [
+    {
+      "id": "jira-taxonomy",
+      "label": "Jira Taxonomy",
+      "icon": "Layers",
+      "order": 150
+    }
+  ],
+  "client": {
+    "views": {
+      "jira-taxonomy": "./client/JiraTaxonomyView.vue"
+    }
+  },
+  "server": {
+    "entry": "./server/index.js"
+  }
+}

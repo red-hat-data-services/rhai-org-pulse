@@ -332,7 +332,7 @@
     <div class="container">
         <header>
             <h1>Quality Analysis Report</h1>
-            <p class="timestamp">Generated on July 06, 2026 at 05:09 PM</p>
+            <p class="timestamp">Generated on July 20, 2026 at 06:33 PM</p>
             <h2 style="margin-top: 1rem; font-weight: 400;">red-hat-data-services/must-gather</h2>
         </header>
 
@@ -344,11 +344,11 @@
                         <circle class="score-arc" cx="100" cy="100" r="90"
                                 stroke="#dc3545"
                                 stroke-dasharray="565.4861999999999"
-                                stroke-dashoffset="508.93757999999997"
+                                stroke-dashoffset="441.079236"
                                 id="scoreArc"></circle>
                     </svg>
                     <div class="score-text">
-                        <div class="score-value">1.0</div>
+                        <div class="score-value">2.2</div>
                         <div class="score-label">Overall Score</div>
                     </div>
                 </div>
@@ -365,37 +365,42 @@
                         <div class="scorecard-item">
                             <h3>Unit Tests</h3>
                             <div class="scorecard-score" style="color: #dc3545;">0.0/10</div>
-                            <div class="scorecard-status">No tests of any kind exist in the repository</div>
+                            <div class="scorecard-status">No unit tests exist for any of the ~1,000 lines of shell scripts</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Integration/E2E</h3>
                             <div class="scorecard-score" style="color: #dc3545;">0.0/10</div>
-                            <div class="scorecard-status">No integration or E2E tests; no cluster-based validation</div>
+                            <div class="scorecard-status">No integration or E2E test suites; scripts are untested against mock or real clusters</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Build Integration</h3>
-                            <div class="scorecard-score" style="color: #fd7e14;">5.0/10</div>
-                            <div class="scorecard-status">Konflux multi-arch PR builds exist but are label/comment-triggered only</div>
+                            <div class="scorecard-score" style="color: #ffc107;">7.0/10</div>
+                            <div class="scorecard-status">Konflux PR pipeline with multi-arch builds (x86_64, ppc64le, s390x, arm64) and hermetic mode</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Image Testing</h3>
-                            <div class="scorecard-score" style="color: #dc3545;">2.0/10</div>
-                            <div class="scorecard-status">Image is built but no runtime validation, no vulnerability scanning</div>
+                            <div class="scorecard-score" style="color: #dc3545;">3.0/10</div>
+                            <div class="scorecard-status">Dockerfiles present with multi-arch support but no runtime validation or health checks</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Coverage Tracking</h3>
                             <div class="scorecard-score" style="color: #dc3545;">0.0/10</div>
-                            <div class="scorecard-status">No coverage tracking, no coverage tools, no metrics</div>
+                            <div class="scorecard-status">No coverage tooling configured; no thresholds or PR reporting</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>CI/CD Automation</h3>
                             <div class="scorecard-score" style="color: #dc3545;">3.0/10</div>
-                            <div class="scorecard-status">Super-linter for bash on PRs; Konflux build is manual-trigger only</div>
+                            <div class="scorecard-status">Basic Super-Linter for bash on PRs; Tekton Konflux builds; no test automation</div>
+                        </div>
+                        <div class="scorecard-item">
+                            <h3>Static Analysis</h3>
+                            <div class="scorecard-score" style="color: #fd7e14;">4.0/10</div>
+                            <div class="scorecard-status">Super-Linter bash validation and inline ShellCheck directives; Renovate configured; no pre-commit hooks</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Agent Rules</h3>
                             <div class="scorecard-score" style="color: #dc3545;">0.0/10</div>
-                            <div class="scorecard-status">No CLAUDE.md, no .claude directory, no agent rules</div>
+                            <div class="scorecard-status">No CLAUDE.md, AGENTS.md, or .claude/ directory present</div>
                         </div>
                     </div>
                 </div>
@@ -411,43 +416,27 @@
                     <ul class="items-list">
                         
                         <li class="item-card high">
-                            <div class="item-description">Zero test coverage across the entire repository</div>
-                            <p>Shell script regressions in collection logic go undetected until a customer runs must-gather on a broken cluster</p>
+                            <div class="item-description">Zero test coverage across all ~1,000 lines of shell scripts</div>
+                            <p>Regressions in collection scripts go undetected until customer support incidents; broken must-gather output delays troubleshooting</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-high">HIGH</span>
                                 <span class="meta-tag effort-tag">16-24 hours</span>
                             </div>
                         </li>
                         <li class="item-card high">
-                            <div class="item-description">No runtime validation of built container image</div>
-                            <p>Image could ship with missing binaries (kubectl, helm), broken entrypoint, or incompatible base image — only discovered by customers</p>
+                            <div class="item-description">No integration testing against mock clusters</div>
+                            <p>Component gather scripts may silently fail or collect incomplete data without detection</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-high">HIGH</span>
+                                <span class="meta-tag effort-tag">24-40 hours</span>
+                            </div>
+                        </li>
+                        <li class="item-card medium">
+                            <div class="item-description">No image runtime validation</div>
+                            <p>Container startup failures or missing binaries (kubectl, helm, oc) not caught until deployment</p>
+                            <div class="item-meta">
+                                <span class="meta-tag severity-medium">MEDIUM</span>
                                 <span class="meta-tag effort-tag">4-8 hours</span>
-                            </div>
-                        </li>
-                        <li class="item-card high">
-                            <div class="item-description">No security scanning in CI pipeline</div>
-                            <p>Vulnerabilities in base image or installed binaries (kubectl, helm) are not detected before release</p>
-                            <div class="item-meta">
-                                <span class="meta-tag severity-high">HIGH</span>
-                                <span class="meta-tag effort-tag">2-4 hours</span>
-                            </div>
-                        </li>
-                        <li class="item-card medium">
-                            <div class="item-description">No strict mode (set -euo pipefail) in shell scripts</div>
-                            <p>Silent failures in collection scripts can produce incomplete must-gather bundles without any error indication</p>
-                            <div class="item-meta">
-                                <span class="meta-tag severity-medium">MEDIUM</span>
-                                <span class="meta-tag effort-tag">2-4 hours</span>
-                            </div>
-                        </li>
-                        <li class="item-card medium">
-                            <div class="item-description">Konflux PR build is not auto-triggered</div>
-                            <p>Build failures are only caught when someone manually adds a label or comment; easy to skip and merge broken builds</p>
-                            <div class="item-meta">
-                                <span class="meta-tag severity-medium">MEDIUM</span>
-                                <span class="meta-tag effort-tag">1-2 hours</span>
                             </div>
                         </li>
                     </ul>
@@ -464,43 +453,35 @@
                     <ul class="items-list">
                         
                         <li class="item-card ">
-                            <div class="item-description">Add shellcheck CI step with strict validation</div>
-                            <p>Catch common bash pitfalls (unquoted variables, missing error handling) before merge</p>
-                            <div class="item-meta">
-                                
-                                <span class="meta-tag effort-tag">1-2 hours</span>
-                            </div>
-                        </li>
-                        <li class="item-card ">
-                            <div class="item-description">Add Trivy container scanning to PR workflow</div>
-                            <p>Detect CVEs in base image and installed binaries (kubectl, helm) on every PR</p>
-                            <div class="item-meta">
-                                
-                                <span class="meta-tag effort-tag">1-2 hours</span>
-                            </div>
-                        </li>
-                        <li class="item-card ">
-                            <div class="item-description">Add container startup smoke test</div>
-                            <p>Verify image builds correctly, entrypoint works, and required binaries (oc, kubectl, helm) are present</p>
-                            <div class="item-meta">
-                                
-                                <span class="meta-tag effort-tag">2-4 hours</span>
-                            </div>
-                        </li>
-                        <li class="item-card ">
-                            <div class="item-description">Enable set -euo pipefail across all collection scripts</div>
-                            <p>Fail fast on errors instead of silently producing incomplete must-gather bundles</p>
+                            <div class="item-description">Add BATS unit tests for common.sh utility functions</div>
+                            <p>Cover core functions like uniq_list, rhoai_version, get_log_collection_args, detect_k8s_distro with deterministic tests</p>
                             <div class="item-meta">
                                 
                                 <span class="meta-tag effort-tag">4-6 hours</span>
                             </div>
                         </li>
                         <li class="item-card ">
-                            <div class="item-description">Auto-trigger Konflux PR builds on every pull request</div>
-                            <p>Ensure every PR is validated against production build pipeline</p>
+                            <div class="item-description">Add ShellCheck pre-commit hook</div>
+                            <p>Enforce shell script quality before commits, complementing existing CI linting</p>
                             <div class="item-meta">
                                 
-                                <span class="meta-tag effort-tag">1 hour</span>
+                                <span class="meta-tag effort-tag">1-2 hours</span>
+                            </div>
+                        </li>
+                        <li class="item-card ">
+                            <div class="item-description">Add container smoke test to CI</div>
+                            <p>Verify built image starts, entrypoint exists, and required binaries (kubectl, helm) are present</p>
+                            <div class="item-meta">
+                                
+                                <span class="meta-tag effort-tag">2-4 hours</span>
+                            </div>
+                        </li>
+                        <li class="item-card ">
+                            <div class="item-description">Create CLAUDE.md with contribution guidelines</div>
+                            <p>Guide AI-assisted development and ensure consistent script patterns</p>
+                            <div class="item-meta">
+                                
+                                <span class="meta-tag effort-tag">1-2 hours</span>
                             </div>
                         </li>
                     </ul>
@@ -517,15 +498,15 @@
                         
                         <div class="rec-priority p0">
                             <h3>Priority 0: Critical</h3>
-                            <ul><li>Add BATS (Bash Automated Testing System) unit tests for common.sh utility functions and each gather_*.sh script</li><li>Add container image smoke test — verify entrypoint, required binaries (oc, kubectl, helm), and basic gather --help functionality</li><li>Add Trivy vulnerability scanning to the GitHub Actions PR workflow</li></ul>
+                            <ul><li>Introduce BATS (Bash Automated Testing System) for unit testing utility functions in common.sh and xks_util.sh</li><li>Add container smoke tests that verify image startup, entrypoint, and binary availability</li><li>Create integration tests using mocked kubectl/oc commands to validate gather script logic</li></ul>
                         </div>
                         <div class="rec-priority p1">
                             <h3>Priority 1: High Value</h3>
-                            <ul><li>Add integration tests using Kind/Minikube to validate must-gather against a cluster with mock RHOAI CRDs</li><li>Enable strict mode (set -euo pipefail) in all shell scripts with proper error handling</li><li>Auto-trigger Konflux PR builds on every pull request instead of label/comment only</li></ul>
+                            <ul><li>Add .pre-commit-config.yaml with shellcheck and shfmt hooks</li><li>Add BATS tests for each gather_*.sh component script using stubbed kubectl responses</li><li>Implement coverage tracking with kcov or bashcov for shell script coverage</li></ul>
                         </div>
                         <div class="rec-priority p2">
                             <h3>Priority 2: Nice-to-Have</h3>
-                            <ul><li>Create agent rules (.claude/rules/) for shell script development and testing patterns</li><li>Add SBOM generation and image signing to the Konflux pipeline</li><li>Add performance benchmarking for collection time on large clusters</li></ul>
+                            <ul><li>Create CLAUDE.md and .claude/rules/ for shell script development guidelines</li><li>Add Dependabot configuration alongside existing Renovate for broader ecosystem coverage</li><li>Add E2E tests using Kind cluster to validate full must-gather collection flow</li></ul>
                         </div>
                     </div>
                 </div>

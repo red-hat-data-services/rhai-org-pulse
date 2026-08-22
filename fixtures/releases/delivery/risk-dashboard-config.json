@@ -1,0 +1,20 @@
+{
+  "portfolioReleases": [
+    {
+      "id": "pf-demo-35",
+      "name": "RHAI 3.5",
+      "releases": ["3.5", "3.5", "3.5"],
+      "codeFreezeDate": "2026-08-01",
+      "dueDate": "2026-08-15",
+      "enabled": true
+    },
+    {
+      "id": "pf-demo-36",
+      "name": "RHAI 3.6",
+      "releases": ["3.6", "3.6", "3.6"],
+      "codeFreezeDate": "2027-02-15",
+      "dueDate": "2027-03-01",
+      "enabled": true
+    }
+  ]
+}

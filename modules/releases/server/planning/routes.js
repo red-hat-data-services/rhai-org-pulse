@@ -27,15 +27,16 @@ const { logAudit, getAuditLog, computeFieldDiff } = require('./audit-log')
 const { blockDuringImpersonation } = require('../../../../shared/server/auth')
 const healthRoutes = require('./health/health-routes')
 var { buildFeatureReadiness } = require('./feature-readiness')
-var { fetchFeatures } = require('./feature-query')
+var { fetchFeaturesWithTimeout } = require('./feature-query')
+var { extractFirstInProgressAt } = require('./bu-feedback-issue')
+
+const { isValidVersionParam } = require('../version-utils')
 
 const DEMO_MODE = process.env.DEMO_MODE === 'true'
 const DATA_PREFIX = 'releases/planning'
-const VERSION_RE = /^[a-zA-Z0-9._-]{1,50}$/
-const RESERVED_VERSIONS = ['__proto__', 'constructor', 'prototype']
 
 function isValidVersion(version) {
-  return VERSION_RE.test(version) && !RESERVED_VERSIONS.includes(version)
+  return isValidVersionParam(version)
 }
 
 /**
@@ -44,7 +45,7 @@ function isValidVersion(version) {
  * @param {object} router - Express router mounted at /api/modules/releases/planning/
  * @param {object} context - { storage, requireAuth, requireAdmin, requireScope, roleStore, registerDiagnostics }
  */
-module.exports = function registerPlanningRoutes(router, context) {
+module.exports = async function registerPlanningRoutes(router, context) {
   var smartsheetClient = context.smartsheet || require('../../../../shared/server/smartsheet')
   var jiraClient = context.jira || null
 
@@ -53,26 +54,26 @@ module.exports = function registerPlanningRoutes(router, context) {
   const listStorageFiles = storage.listStorageFiles || null
   const deleteFromStorage = storage.deleteFromStorage || null
 
-  migrateConfig(readFromStorage, writeToStorage)
+  await migrateConfig(readFromStorage, writeToStorage)
 
   // ─── PM User Auto-Migration ───
   // Migrate pm-users.json entries to the central planning-manager role.
   // This runs once on module startup; after migration the file is deleted.
   if (context.roleStore) {
     try {
-      var pmData = readFromStorage('releases/planning/pm-users.json')
+      var pmData = await readFromStorage('releases/planning/pm-users.json')
       if (pmData && pmData.emails && pmData.emails.length > 0) {
         var migrated = 0
         for (var mi = 0; mi < pmData.emails.length; mi++) {
           var email = pmData.emails[mi]
-          if (!context.roleStore.hasRole(email, 'planning-manager')) {
-            context.roleStore.assignRole(email, 'planning-manager')
+          if (!(await context.roleStore.hasRole(email, 'planning-manager'))) {
+            await context.roleStore.assignRole(email, 'planning-manager')
             migrated++
           }
         }
         console.log('[releases/planning] Migrated ' + migrated + ' PM user(s) to planning-manager role')
         if (deleteFromStorage) {
-          deleteFromStorage('releases/planning/pm-users.json')
+          await deleteFromStorage('releases/planning/pm-users.json')
           console.log('[releases/planning] Deleted pm-users.json after migration')
         }
       }
@@ -122,7 +123,7 @@ module.exports = function registerPlanningRoutes(router, context) {
     }
   }
 
-  function triggerBackgroundRefresh(version) {
+  async function triggerBackgroundRefresh(version) {
     const state = getRefreshState(version)
     if (state.running) return
 
@@ -137,8 +138,8 @@ module.exports = function registerPlanningRoutes(router, context) {
       lastResult: state.lastResult
     })
 
-    const config = getConfig(readFromStorage)
-    const bigRocks = loadBigRocks(readFromStorage, version)
+    const config = await getConfig(readFromStorage)
+    const bigRocks = await loadBigRocks(readFromStorage, version)
 
     if (!bigRocks.length) {
       refreshStates.set(version, {
@@ -156,14 +157,16 @@ module.exports = function registerPlanningRoutes(router, context) {
     console.log('[releases/planning] Background refresh started for ' + version)
     var refreshStartTime = Date.now()
 
-    function doRefresh(attempt) {
-      const pipeline = new Promise(function(resolve) { resolve(runPipeline(config, bigRocks, version, readFromStorage)) })
+    async function doRefresh(attempt) {
+      const pipeline = runPipeline(config, bigRocks, version, readFromStorage, {
+        jiraClient: jiraClient
+      })
       const timeout = new Promise(function(_, reject) {
         setTimeout(function() { reject(new Error('Refresh timed out after 5 minutes')) }, REFRESH_TIMEOUT_MS)
       })
 
       Promise.race([pipeline, timeout])
-        .then(function(result) {
+        .then(async function(result) {
           // Jira fallback: fetch missing outcome summaries asynchronously
           var fallback
           if (result.missingOutcomes && result.missingOutcomes.length > 0) {
@@ -181,9 +184,9 @@ module.exports = function registerPlanningRoutes(router, context) {
             fallback = Promise.resolve()
           }
 
-          return fallback.then(function() {
+          return fallback.then(async function() {
             const response = buildCandidateResponse(result, version, bigRocks, false)
-            writeToStorage(DATA_PREFIX + '/candidates-cache-' + version + '.json', {
+            await writeToStorage(DATA_PREFIX + '/candidates-cache-' + version + '.json', {
               cachedAt: new Date().toISOString(),
               data: response
             })
@@ -200,7 +203,7 @@ module.exports = function registerPlanningRoutes(router, context) {
             })
           })
         })
-        .catch(function(err) {
+        .catch(async function(err) {
           if (attempt < 3) {
             console.warn('[releases/planning] Refresh attempt ' + attempt + ' failed for ' + version + ', retrying: ' + err.message)
             setTimeout(function() { doRefresh(attempt + 1) }, attempt * 5000)
@@ -210,10 +213,10 @@ module.exports = function registerPlanningRoutes(router, context) {
 
           // Remove _invalidatedAt marker so cache reverts to normal
           // stale-while-revalidate behavior (15-min cycle)
-          var staleCache = readFromStorage(DATA_PREFIX + '/candidates-cache-' + version + '.json')
+          var staleCache = await readFromStorage(DATA_PREFIX + '/candidates-cache-' + version + '.json')
           if (staleCache && staleCache._invalidatedAt) {
             delete staleCache._invalidatedAt
-            writeToStorage(DATA_PREFIX + '/candidates-cache-' + version + '.json', staleCache)
+            await writeToStorage(DATA_PREFIX + '/candidates-cache-' + version + '.json', staleCache)
           }
 
           refreshStates.set(version, {
@@ -255,7 +258,7 @@ module.exports = function registerPlanningRoutes(router, context) {
    *       200:
    *         description: Array of releases with version and bigRockCount
    */
-  router.get('/releases', requireAuth, requireScope('releases:read'), function(req, res) {
+  router.get('/releases', requireAuth, requireScope('releases:read'), async function(req, res) {
     if (DEMO_MODE) {
       const demoConfig = loadFixture('config.json')
       if (demoConfig && demoConfig.releases) {
@@ -270,7 +273,7 @@ module.exports = function registerPlanningRoutes(router, context) {
       return res.json([])
     }
 
-    const releases = getConfiguredReleases(readFromStorage)
+    const releases = await getConfiguredReleases(readFromStorage)
     res.json(releases)
   })
 
@@ -293,7 +296,7 @@ module.exports = function registerPlanningRoutes(router, context) {
    *       200:
    *         description: Candidate features, RFEs, and Big Rocks
    */
-  router.get('/releases/:version/candidates', requireAuth, requireScope('releases:read'), function(req, res) {
+  router.get('/releases/:version/candidates', requireAuth, requireScope('releases:read'), async function(req, res) {
     const version = req.params.version
     if (!isValidVersion(version)) {
       return res.status(400).json({ error: 'Invalid version format' })
@@ -320,7 +323,7 @@ module.exports = function registerPlanningRoutes(router, context) {
       return res.status(404).json({ error: 'Demo data not available' })
     }
 
-    const cached = readFromStorage(`${DATA_PREFIX}/candidates-cache-${version}.json`)
+    const cached = await readFromStorage(`${DATA_PREFIX}/candidates-cache-${version}.json`)
     const hasCachedData = cached && cached.data && cached.cachedAt
 
     if (hasCachedData) {
@@ -448,8 +451,8 @@ module.exports = function registerPlanningRoutes(router, context) {
    *       200:
    *         description: Planning config
    */
-  router.get('/config', requireAdmin, requireScope('releases:write'), function(req, res) {
-    const config = getConfig(readFromStorage)
+  router.get('/config', requireAdmin, requireScope('releases:write'), async function(req, res) {
+    const config = await getConfig(readFromStorage)
     res.json(config)
   })
 
@@ -460,7 +463,10 @@ module.exports = function registerPlanningRoutes(router, context) {
    *     summary: Prioritized feature readiness lists split by readiness status
    *     tags: [releases-planning]
    *     security: [{ bearerAuth: [] }]
-   *     description: Loads data from all configured releases and merges into a single prioritized list.
+   *     description: >
+   *       Prioritized feature readiness for Features List. Live Jira fetch is
+   *       open Features/Initiatives in RHAISTRAT and AIPCC only (timeout budget);
+   *       results are merged with caches and scored via buildCanonicalFeatures.
    *     responses:
    *       200:
    *         description: Feature readiness data with pendingReview and ready arrays
@@ -472,13 +478,12 @@ module.exports = function registerPlanningRoutes(router, context) {
       var jiraFeatures = null
       if (jiraClient) {
         try {
-          jiraFeatures = await fetchFeatures(jiraClient)
-          if (jiraFeatures.size === 0) jiraFeatures = null
+          jiraFeatures = await fetchFeaturesWithTimeout(jiraClient)
         } catch (jiraErr) {
           console.warn('[releases/planning] Jira feature query failed, falling back to execution index:', jiraErr.message)
         }
       }
-      var result = buildFeatureReadiness(readFromStorage, jiraFeatures, listStorageFiles)
+      var result = await buildFeatureReadiness(readFromStorage, jiraFeatures, listStorageFiles)
       res.json(result)
     } catch (err) {
       console.error('[releases/planning] Feature readiness build failed:', err.message)
@@ -493,77 +498,287 @@ module.exports = function registerPlanningRoutes(router, context) {
    *     summary: List field and BU feedback issues from Jira
    *     tags: [releases-planning]
    *     security: [{ bearerAuth: [] }]
-   *     description: Queries Jira for issues labeled AIBU_Feedback or AISSA_Feedback, deduplicated, ordered by creation date descending.
+   *     description: >
+   *       Returns cached BU/SSA feedback issues (AIBU_Feedback / AISSA_Feedback labels).
+   *       Each issue includes resolved (resolutiondate), inProgressAt (first changelog
+   *       transition into an in-progress status) for process-efficiency metrics, and
+   *       hasSfdcCases (boolean, derived via JQL since the field is encrypted at rest).
+   *       Data is cached server-side for 15 minutes. Pass ?refresh=true to force a live
+   *       Jira fetch and update the cache.
+   *     parameters:
+   *       - in: query
+   *         name: refresh
+   *         schema:
+   *           type: string
+   *         description: Set to "true" to bypass cache and fetch live from Jira
    *     responses:
    *       200:
-   *         description: Array of BU feedback issues
+   *         description: Array of BU feedback issues with resolved and inProgressAt timestamps
    *       503:
    *         description: Jira client not configured
    */
+  var BU_FEEDBACK_CACHE_KEY = DATA_PREFIX + '/bu-feedback-cache.json'
+  var SFDC_ISSUES_CACHE_KEY = DATA_PREFIX + '/sfdc-issues-cache.json'
+  var FEEDBACK_LABELS = ['AIBU_Feedback', 'AISSA_Feedback']
+  var SFDC_PROJECTS = [
+    'Red Hat OpenShift AI Engineering',
+    'Red Hat AI Engineering',
+    'Inference Engineering Project',
+    'OpenShift AI Support'
+  ]
+
+  function mapRawIssue(raw, extraFlags) {
+    var f = raw.fields || {}
+    var allLabels = f.labels || []
+    var feedbackLabels = allLabels.filter(function(l) { return FEEDBACK_LABELS.indexOf(l) !== -1 })
+    var issue = {
+      key: raw.key,
+      summary: f.summary || '',
+      issueType: f.issuetype ? f.issuetype.name : '',
+      assignee: f.assignee ? f.assignee.displayName : 'Unassigned',
+      reporter: f.reporter ? f.reporter.displayName : '',
+      priority: f.priority ? f.priority.name : '',
+      status: f.status ? f.status.name : '',
+      statusCategory: f.status && f.status.statusCategory ? f.status.statusCategory.name : '',
+      resolution: f.resolution ? f.resolution.name : 'Unresolved',
+      created: f.created || null,
+      updated: f.updated || null,
+      dueDate: f.duedate || null,
+      resolved: f.resolutiondate || null,
+      inProgressAt: extractFirstInProgressAt(raw.changelog),
+      components: (f.components || []).map(function(c) { return c.name }),
+      fixVersions: (f.fixVersions || []).map(function(v) { return v.name }),
+      labels: allLabels,
+      feedbackLabels: feedbackLabels,
+      url: 'https://issues.redhat.com/browse/' + raw.key
+    }
+    if (extraFlags) Object.assign(issue, extraFlags)
+    return issue
+  }
+
+  function deduplicateRaw(rawIssues) {
+    var seen = {}
+    var result = []
+    for (var i = 0; i < rawIssues.length; i++) {
+      if (!seen[rawIssues[i].key]) {
+        seen[rawIssues[i].key] = true
+        result.push(rawIssues[i])
+      }
+    }
+    return result
+  }
+
+  async function fetchKeySet(jql) {
+    try {
+      var issues = await jiraClient.fetchAllJqlResults(jql, 'key', { maxResults: 500 })
+      var keys = {}
+      for (var i = 0; i < issues.length; i++) keys[issues[i].key] = true
+      return keys
+    } catch (err) {
+      console.warn('[releases/planning] Key-set lookup failed:', err.message)
+      return {}
+    }
+  }
+
+  async function fetchBuFeedbackFromJira() {
+    var jql = 'labels IN ("AIBU_Feedback", "AISSA_Feedback") ORDER BY createdDate DESC'
+    var fields = 'summary,status,issuetype,assignee,reporter,priority,resolution,created,updated,duedate,components,fixVersions,labels,resolutiondate'
+
+    var rawPromise = jiraClient.fetchAllJqlResults(jql, fields, { maxResults: 200, expand: 'changelog' })
+    var sfdcPromise = fetchKeySet('labels IN ("AIBU_Feedback", "AISSA_Feedback") AND SFDC_Cases_Counter > 0')
+    var rawIssues = deduplicateRaw(await rawPromise)
+    var sfdcKeys = await sfdcPromise
+
+    var issues = rawIssues.map(function(raw) {
+      return mapRawIssue(raw, { hasSfdcCases: !!sfdcKeys[raw.key] })
+    })
+
+    var payload = { issues: issues, fetchedAt: new Date().toISOString(), cachedAt: new Date().toISOString() }
+    await writeToStorage(BU_FEEDBACK_CACHE_KEY, payload)
+    return payload
+  }
+
+  var SFDC_COUNT_THRESHOLDS = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 15, 20, 30, 50]
+  var SFDC_COUNT_BATCH_SIZE = 3
+
+  async function fetchSfdcCountMap(scopeJql) {
+    var bucketSets = {}
+
+    for (var i = 0; i < SFDC_COUNT_THRESHOLDS.length; i += SFDC_COUNT_BATCH_SIZE) {
+      var batch = SFDC_COUNT_THRESHOLDS.slice(i, i + SFDC_COUNT_BATCH_SIZE)
+      await Promise.all(batch.map(function(t) {
+        var jql = scopeJql + ' AND SFDC_Cases_Counter >= ' + t
+        return jiraClient.fetchAllJqlResults(jql, 'key', { maxResults: 500 })
+          .then(function(issues) {
+            var set = {}
+            for (var j = 0; j < issues.length; j++) set[issues[j].key] = true
+            bucketSets[t] = set
+          })
+          .catch(function(err) {
+            console.warn('[releases/planning] SFDC count threshold ' + t + ' failed:', err.message)
+            bucketSets[t] = {}
+          })
+      }))
+    }
+
+    var countMap = {}
+    var allKeys = Object.keys(bucketSets[1] || {})
+    for (var k = 0; k < allKeys.length; k++) {
+      var key = allKeys[k]
+      var count = 1
+      for (var ti = 1; ti < SFDC_COUNT_THRESHOLDS.length; ti++) {
+        if (bucketSets[SFDC_COUNT_THRESHOLDS[ti]] && bucketSets[SFDC_COUNT_THRESHOLDS[ti]][key]) {
+          count = SFDC_COUNT_THRESHOLDS[ti]
+        } else {
+          break
+        }
+      }
+      countMap[key] = count
+    }
+    return countMap
+  }
+
+  function enrichSfdcCounts(payload, scopeJql) {
+    fetchSfdcCountMap(scopeJql).then(function(countMap) {
+      var issues = payload.issues
+      for (var i = 0; i < issues.length; i++) {
+        issues[i].sfdcCasesCount = countMap[issues[i].key] || 0
+      }
+      payload.countsResolved = true
+      writeToStorage(SFDC_ISSUES_CACHE_KEY, payload).catch(function() {})
+      console.log('[releases/planning] SFDC counts resolved for ' + Object.keys(countMap).length + ' issues')
+    }).catch(function(err) {
+      console.warn('[releases/planning] Background SFDC count fetch failed:', err.message)
+    })
+  }
+
+  async function fetchSfdcIssuesFromJira() {
+    var projectList = SFDC_PROJECTS.map(function(p) { return '"' + p + '"' }).join(', ')
+    var scopeJql = 'project IN (' + projectList + ') AND SFDC_Cases_Counter > 0'
+    var jql = scopeJql + ' ORDER BY priority DESC, createdDate DESC'
+    var fields = 'summary,status,issuetype,assignee,reporter,priority,resolution,created,updated,duedate,components,fixVersions,labels,resolutiondate'
+
+    var rawPromise = jiraClient.fetchAllJqlResults(jql, fields, { maxResults: 500 })
+    var feedbackPromise = fetchKeySet('labels IN ("AIBU_Feedback", "AISSA_Feedback") AND SFDC_Cases_Counter > 0')
+    var rawIssues = deduplicateRaw(await rawPromise)
+    var feedbackKeys = await feedbackPromise
+
+    var issues = rawIssues.map(function(raw) {
+      return mapRawIssue(raw, {
+        hasSfdcCases: true,
+        hasFeedbackLabel: !!feedbackKeys[raw.key],
+        sfdcCasesCount: 0
+      })
+    })
+
+    var payload = { issues: issues, fetchedAt: new Date().toISOString(), cachedAt: new Date().toISOString(), countsResolved: false }
+    await writeToStorage(SFDC_ISSUES_CACHE_KEY, payload)
+
+    enrichSfdcCounts(payload, scopeJql)
+
+    return payload
+  }
+
   router.get('/bu-feedback', requireAuth, requireScope('releases:read'), async function(req, res) {
     if (!jiraClient) {
       return res.json({ issues: [], fetchedAt: new Date().toISOString(), warning: 'Jira not configured' })
     }
 
-    var FEEDBACK_LABELS = ['AIBU_Feedback', 'AISSA_Feedback']
+    var forceRefresh = req.query.refresh === 'true'
 
     try {
-      var jql = 'labels IN ("AIBU_Feedback", "AISSA_Feedback") ORDER BY createdDate DESC'
-      var fields = 'summary,status,issuetype,assignee,reporter,priority,resolution,created,updated,duedate,components,fixVersions,labels'
-      var rawIssues = await jiraClient.fetchAllJqlResults(jql, fields, { maxResults: 200 })
-
-      var seen = {}
-      var issues = []
-      for (var i = 0; i < rawIssues.length; i++) {
-        var raw = rawIssues[i]
-        if (seen[raw.key]) continue
-        seen[raw.key] = true
-        var f = raw.fields || {}
-        var allLabels = f.labels || []
-        var feedbackLabels = allLabels.filter(function(l) { return FEEDBACK_LABELS.indexOf(l) !== -1 })
-        issues.push({
-          key: raw.key,
-          summary: f.summary || '',
-          issueType: f.issuetype ? f.issuetype.name : '',
-          assignee: f.assignee ? f.assignee.displayName : 'Unassigned',
-          reporter: f.reporter ? f.reporter.displayName : '',
-          priority: f.priority ? f.priority.name : '',
-          status: f.status ? f.status.name : '',
-          statusCategory: f.status && f.status.statusCategory ? f.status.statusCategory.name : '',
-          resolution: f.resolution ? f.resolution.name : 'Unresolved',
-          created: f.created || null,
-          updated: f.updated || null,
-          dueDate: f.duedate || null,
-          components: (f.components || []).map(function(c) { return c.name }),
-          fixVersions: (f.fixVersions || []).map(function(v) { return v.name }),
-          labels: allLabels,
-          feedbackLabels: feedbackLabels,
-          url: 'https://issues.redhat.com/browse/' + raw.key
-        })
+      if (!forceRefresh) {
+        var cached = await readFromStorage(BU_FEEDBACK_CACHE_KEY)
+        if (cached && cached.cachedAt) {
+          var age = Date.now() - new Date(cached.cachedAt).getTime()
+          if (age < CACHE_MAX_AGE_MS) {
+            return res.json(cached)
+          }
+        }
       }
 
-      res.json({ issues: issues, fetchedAt: new Date().toISOString() })
+      var payload = await fetchBuFeedbackFromJira()
+      res.json(payload)
     } catch (err) {
       console.error('[releases/planning] BU feedback query failed:', err.message)
+      var stale = await readFromStorage(BU_FEEDBACK_CACHE_KEY)
+      if (stale && stale.issues) {
+        stale.warning = 'Showing cached data — live refresh failed: ' + err.message
+        return res.json(stale)
+      }
       res.status(500).json({ error: 'Failed to fetch BU feedback issues' })
+    }
+  })
+
+  /**
+   * @openapi
+   * /api/modules/releases/planning/sfdc-issues:
+   *   get:
+   *     summary: List open SFDC-linked issues from AI Engineering projects
+   *     tags: [releases-planning]
+   *     security: [{ bearerAuth: [] }]
+   *     description: >
+   *       Returns issues (any status) with SFDC Cases Counter populated from RHOAIENG,
+   *       RHAIENG, INFERENG, and RHOAISUP projects. Each issue includes hasFeedbackLabel
+   *       (boolean) indicating overlap with the BU feedback report. Cached for 15 minutes.
+   *     parameters:
+   *       - in: query
+   *         name: refresh
+   *         schema:
+   *           type: string
+   *         description: Set to "true" to bypass cache and fetch live from Jira
+   *     responses:
+   *       200:
+   *         description: Array of SFDC-linked issues
+   *       503:
+   *         description: Jira client not configured
+   */
+  router.get('/sfdc-issues', requireAuth, requireScope('releases:read'), async function(req, res) {
+    if (!jiraClient) {
+      return res.json({ issues: [], fetchedAt: new Date().toISOString(), warning: 'Jira not configured' })
+    }
+
+    var forceRefresh = req.query.refresh === 'true'
+
+    try {
+      if (!forceRefresh) {
+        var cached = await readFromStorage(SFDC_ISSUES_CACHE_KEY)
+        if (cached && cached.cachedAt) {
+          var age = Date.now() - new Date(cached.cachedAt).getTime()
+          if (age < CACHE_MAX_AGE_MS) {
+            return res.json(cached)
+          }
+        }
+      }
+
+      var payload = await fetchSfdcIssuesFromJira()
+      res.json(payload)
+    } catch (err) {
+      console.error('[releases/planning] SFDC issues query failed:', err.message)
+      var stale = await readFromStorage(SFDC_ISSUES_CACHE_KEY)
+      if (stale && stale.issues) {
+        stale.warning = 'Showing cached data — live refresh failed: ' + err.message
+        return res.json(stale)
+      }
+      res.status(500).json({ error: 'Failed to fetch SFDC issues' })
     }
   })
 
   // ─── Cache Invalidation Helper ───
 
-  function invalidateCache(version) {
+  async function invalidateCache(version) {
     if (deleteFromStorage) {
       var healthPhases = ['all', 'EA1', 'EA2', 'GA']
       for (var hp = 0; hp < healthPhases.length; hp++) {
-        deleteFromStorage(`${DATA_PREFIX}/health-cache-${version}-${healthPhases[hp]}.json`)
+        await deleteFromStorage(`${DATA_PREFIX}/health-cache-${version}-${healthPhases[hp]}.json`)
       }
-      deleteFromStorage(`${DATA_PREFIX}/outcome-summaries-cache-${version}.json`)
+      await deleteFromStorage(`${DATA_PREFIX}/outcome-summaries-cache-${version}.json`)
     }
 
-    var cached = readFromStorage(`${DATA_PREFIX}/candidates-cache-${version}.json`)
+    var cached = await readFromStorage(`${DATA_PREFIX}/candidates-cache-${version}.json`)
     if (cached) {
       cached._invalidatedAt = new Date().toISOString()
-      writeToStorage(`${DATA_PREFIX}/candidates-cache-${version}.json`, cached)
+      await writeToStorage(`${DATA_PREFIX}/candidates-cache-${version}.json`, cached)
     }
 
     triggerBackgroundRefresh(version)
@@ -592,8 +807,8 @@ module.exports = function registerPlanningRoutes(router, context) {
 
   // ─── Pillar Options Helper ───
 
-  function loadPillarOptions() {
-    var pillarConfig = readFromStorage('releases/pm-hub/pillar-config.json')
+  async function loadPillarOptions() {
+    var pillarConfig = await readFromStorage('releases/pm-hub/pillar-config.json')
     if (pillarConfig && Array.isArray(pillarConfig.pillars)) {
       return pillarConfig.pillars.map(function(p) { return p.name }).filter(Boolean)
     }
@@ -614,8 +829,8 @@ module.exports = function registerPlanningRoutes(router, context) {
    *       200:
    *         description: Array of pillar name strings
    */
-  router.get('/pillar-options', requireAuth, requireScope('releases:read'), function(req, res) {
-    res.json({ options: loadPillarOptions() })
+  router.get('/pillar-options', requireAuth, requireScope('releases:read'), async function(req, res) {
+    res.json({ options: await loadPillarOptions() })
   })
 
   /**
@@ -655,18 +870,18 @@ module.exports = function registerPlanningRoutes(router, context) {
     }
 
     try {
-      var previousOrder = loadBigRocks(readFromStorage, version).map(function(r) { return r.name })
-      const result = await withConfigLock(function() {
-        return reorderBigRocks(readFromStorage, writeToStorage, version, order)
+      var previousOrder = (await loadBigRocks(readFromStorage, version)).map(function(r) { return r.name })
+      const result = await withConfigLock(async function() {
+        return await reorderBigRocks(readFromStorage, writeToStorage, version, order)
       })
-      logAudit(readFromStorage, writeToStorage, {
+      await logAudit(readFromStorage, writeToStorage, {
         version: version,
         action: 'reorder_rocks',
         user: req.auditActor || req.userEmail,
         summary: 'Reordered Big Rocks',
         details: { previousOrder: previousOrder, newOrder: order }
       })
-      invalidateCache(version)
+      await invalidateCache(version)
       res.json(result)
     } catch (err) {
       const status = err.statusCode || 500
@@ -708,12 +923,12 @@ module.exports = function registerPlanningRoutes(router, context) {
 
     try {
       var existingRockSnapshot = null
-      const result = await withConfigLock(function() {
-        const currentConfig = getConfig(readFromStorage)
+      const result = await withConfigLock(async function() {
+        const currentConfig = await getConfig(readFromStorage)
         if (!currentConfig.releases[version]) {
           throw Object.assign(new Error('Release ' + version + ' not found'), { statusCode: 404 })
         }
-        const existingRocks = loadBigRocks(readFromStorage, version)
+        const existingRocks = await loadBigRocks(readFromStorage, version)
         const existingNames = existingRocks.map(function(r) { return r.name })
 
         existingRockSnapshot = existingRocks.find(function(r) { return r.name === name })
@@ -721,7 +936,7 @@ module.exports = function registerPlanningRoutes(router, context) {
           existingRockSnapshot = JSON.parse(JSON.stringify(existingRockSnapshot))
         }
 
-        var pillarOpts = loadPillarOptions()
+        var pillarOpts = await loadPillarOptions()
         const validation = validateBigRock(req.body, {
           existingNames: existingNames,
           originalName: name,
@@ -731,11 +946,11 @@ module.exports = function registerPlanningRoutes(router, context) {
           throw Object.assign(new Error('Validation failed'), { statusCode: 400, fields: validation.errors })
         }
 
-        return saveBigRock(readFromStorage, writeToStorage, version, name, req.body)
+        return await saveBigRock(readFromStorage, writeToStorage, version, name, req.body)
       })
 
       var isRename = req.body.name && req.body.name.trim() !== name
-      logAudit(readFromStorage, writeToStorage, {
+      await logAudit(readFromStorage, writeToStorage, {
         version: version,
         action: 'update_rock',
         user: req.auditActor || req.userEmail,
@@ -744,7 +959,7 @@ module.exports = function registerPlanningRoutes(router, context) {
           : 'Updated Big Rock "' + name + '"',
         details: { rockName: name, newName: isRename ? req.body.name.trim() : undefined, changes: computeFieldDiff(existingRockSnapshot, req.body) }
       })
-      invalidateCache(version)
+      await invalidateCache(version)
       res.json(result)
     } catch (err) {
       const status = err.statusCode || 500
@@ -777,15 +992,15 @@ module.exports = function registerPlanningRoutes(router, context) {
     }
 
     try {
-      const result = await withConfigLock(function() {
-        const currentConfig = getConfig(readFromStorage)
+      const result = await withConfigLock(async function() {
+        const currentConfig = await getConfig(readFromStorage)
         if (!currentConfig.releases[version]) {
           throw Object.assign(new Error('Release ' + version + ' not found'), { statusCode: 404 })
         }
-        const existingRocks = loadBigRocks(readFromStorage, version)
+        const existingRocks = await loadBigRocks(readFromStorage, version)
         const existingNames = existingRocks.map(function(r) { return r.name })
 
-        var pillarOpts = loadPillarOptions()
+        var pillarOpts = await loadPillarOptions()
         const validation = validateBigRock(req.body, {
           existingNames: existingNames,
           pillarOptions: pillarOpts
@@ -794,11 +1009,11 @@ module.exports = function registerPlanningRoutes(router, context) {
           throw Object.assign(new Error('Validation failed'), { statusCode: 400, fields: validation.errors })
         }
 
-        return saveBigRock(readFromStorage, writeToStorage, version, null, req.body)
+        return await saveBigRock(readFromStorage, writeToStorage, version, null, req.body)
       })
 
       const newName = req.body && req.body.name
-      logAudit(readFromStorage, writeToStorage, {
+      await logAudit(readFromStorage, writeToStorage, {
         version: version,
         action: 'create_rock',
         user: req.auditActor || req.userEmail,
@@ -817,7 +1032,7 @@ module.exports = function registerPlanningRoutes(router, context) {
           }
         }
       })
-      invalidateCache(version)
+      await invalidateCache(version)
       res.status(201).json(result)
     } catch (err) {
       const status = err.statusCode || 500
@@ -861,12 +1076,12 @@ module.exports = function registerPlanningRoutes(router, context) {
 
     try {
       var deletedRockSnapshot = null
-      const result = await withConfigLock(function() {
-        const currentConfig = getConfig(readFromStorage)
+      const result = await withConfigLock(async function() {
+        const currentConfig = await getConfig(readFromStorage)
         if (!currentConfig.releases[version]) {
           throw Object.assign(new Error('Release ' + version + ' not found'), { statusCode: 404 })
         }
-        const existingRocks = loadBigRocks(readFromStorage, version)
+        const existingRocks = await loadBigRocks(readFromStorage, version)
         const found = existingRocks.find(function(r) { return r.name === name })
         if (!found) {
           throw Object.assign(new Error("Big Rock '" + name + "' not found for release " + version), { statusCode: 404 })
@@ -881,19 +1096,19 @@ module.exports = function registerPlanningRoutes(router, context) {
           architect: found.architect
         }
 
-        backupConfig(readFromStorage, writeToStorage, listStorageFiles, deleteFromStorage)
+        await backupConfig(readFromStorage, writeToStorage, listStorageFiles, deleteFromStorage)
 
-        return deleteBigRock(readFromStorage, writeToStorage, version, name)
+        return await deleteBigRock(readFromStorage, writeToStorage, version, name)
       })
 
-      logAudit(readFromStorage, writeToStorage, {
+      await logAudit(readFromStorage, writeToStorage, {
         version: version,
         action: 'delete_rock',
         user: req.auditActor || req.userEmail,
         summary: 'Deleted Big Rock "' + name + '"',
         details: { rockName: name, deletedDefinition: deletedRockSnapshot }
       })
-      invalidateCache(version)
+      await invalidateCache(version)
       res.json(result)
     } catch (err) {
       const status = err.statusCode || 500
@@ -936,14 +1151,14 @@ module.exports = function registerPlanningRoutes(router, context) {
     }
 
     try {
-      const result = await withConfigLock(function() {
+      const result = await withConfigLock(async function() {
         if (cloneFrom) {
-          backupConfig(readFromStorage, writeToStorage, listStorageFiles, deleteFromStorage)
-          return cloneRelease(readFromStorage, writeToStorage, version, cloneFrom)
+          await backupConfig(readFromStorage, writeToStorage, listStorageFiles, deleteFromStorage)
+          return await cloneRelease(readFromStorage, writeToStorage, version, cloneFrom)
         }
-        return createRelease(readFromStorage, writeToStorage, version)
+        return await createRelease(readFromStorage, writeToStorage, version)
       })
-      logAudit(readFromStorage, writeToStorage, {
+      await logAudit(readFromStorage, writeToStorage, {
         version: version,
         action: cloneFrom ? 'clone_release' : 'create_release',
         user: req.auditActor || req.userEmail,
@@ -981,12 +1196,12 @@ module.exports = function registerPlanningRoutes(router, context) {
     }
 
     try {
-      const result = await withConfigLock(function() {
-        backupConfig(readFromStorage, writeToStorage, listStorageFiles, deleteFromStorage)
-        return deleteRelease(readFromStorage, writeToStorage, version)
+      const result = await withConfigLock(async function() {
+        await backupConfig(readFromStorage, writeToStorage, listStorageFiles, deleteFromStorage)
+        return await deleteRelease(readFromStorage, writeToStorage, version)
       })
 
-      logAudit(readFromStorage, writeToStorage, {
+      await logAudit(readFromStorage, writeToStorage, {
         version: version,
         action: 'delete_release',
         user: req.auditActor || req.userEmail,
@@ -994,14 +1209,14 @@ module.exports = function registerPlanningRoutes(router, context) {
       })
 
       if (deleteFromStorage) {
-        deleteFromStorage(releaseFilePath(version))
-        deleteFromStorage(DATA_PREFIX + '/candidates-cache-' + version + '.json')
+        await deleteFromStorage(releaseFilePath(version))
+        await deleteFromStorage(DATA_PREFIX + '/candidates-cache-' + version + '.json')
         var delPhases = ['all', 'EA1', 'EA2', 'GA']
         for (var dp = 0; dp < delPhases.length; dp++) {
-          deleteFromStorage(DATA_PREFIX + '/health-cache-' + version + '-' + delPhases[dp] + '.json')
+          await deleteFromStorage(DATA_PREFIX + '/health-cache-' + version + '-' + delPhases[dp] + '.json')
         }
-        deleteFromStorage(DATA_PREFIX + '/dor-state-' + version + '.json')
-        deleteFromStorage(DATA_PREFIX + '/health-overrides-' + version + '.json')
+        await deleteFromStorage(DATA_PREFIX + '/dor-state-' + version + '.json')
+        await deleteFromStorage(DATA_PREFIX + '/health-overrides-' + version + '.json')
       }
 
       res.json(result)
@@ -1032,7 +1247,7 @@ module.exports = function registerPlanningRoutes(router, context) {
    *       200:
    *         description: Validation results
    */
-  router.post('/jira/validate-keys', requireAuth, requireScope('releases:write'), function(req, res) {
+  router.post('/jira/validate-keys', requireAuth, requireScope('releases:write'), async function(req, res) {
     const keys = req.body && req.body.keys
     if (!Array.isArray(keys) || keys.length === 0) {
       return res.status(400).json({ error: 'keys must be a non-empty array' })
@@ -1053,7 +1268,7 @@ module.exports = function registerPlanningRoutes(router, context) {
     }
 
     if (keysToValidate.length > 0) {
-      const index = loadIndex(readFromStorage)
+      const index = await loadIndex(readFromStorage)
       const cacheResults = validateKeysFromCache(index, keysToValidate)
       Object.assign(results, cacheResults)
     }
@@ -1090,7 +1305,7 @@ module.exports = function registerPlanningRoutes(router, context) {
     try {
       const result = await previewDocImport(docId)
 
-      const existingRocks = loadBigRocks(readFromStorage, version)
+      const existingRocks = await loadBigRocks(readFromStorage, version)
       const existingNames = new Set(existingRocks.map(function(r) { return r.name }))
 
       for (let i = 0; i < result.bigRocks.length; i++) {
@@ -1151,17 +1366,17 @@ module.exports = function registerPlanningRoutes(router, context) {
       const parsedDoc = await previewDocImport(docId)
 
       var existingRocksBeforeImport = mode === 'replace'
-        ? loadBigRocks(readFromStorage, version).map(function(r) { return { name: r.name, pillar: r.pillar, jiraKeys: r.jiraKeys } })
+        ? (await loadBigRocks(readFromStorage, version)).map(function(r) { return { name: r.name, pillar: r.pillar, jiraKeys: r.jiraKeys } })
         : undefined
 
-      const result = await withConfigLock(function() {
+      const result = await withConfigLock(async function() {
         if (mode === 'replace') {
-          backupConfig(readFromStorage, writeToStorage, listStorageFiles, deleteFromStorage)
+          await backupConfig(readFromStorage, writeToStorage, listStorageFiles, deleteFromStorage)
         }
-        return executeDocImport(readFromStorage, writeToStorage, version, docId, mode, parsedDoc)
+        return await executeDocImport(readFromStorage, writeToStorage, version, docId, mode, parsedDoc)
       })
 
-      logAudit(readFromStorage, writeToStorage, {
+      await logAudit(readFromStorage, writeToStorage, {
         version: version,
         action: 'import_doc',
         user: req.auditActor || req.userEmail,
@@ -1173,7 +1388,7 @@ module.exports = function registerPlanningRoutes(router, context) {
           replacedRocks: existingRocksBeforeImport
         }
       })
-      invalidateCache(version)
+      await invalidateCache(version)
       res.json(result)
     } catch (err) {
       const status = err.statusCode || 500
@@ -1201,7 +1416,7 @@ module.exports = function registerPlanningRoutes(router, context) {
       }
 
       const releases = await smartsheetClient.discoverReleases()
-      const configuredVersions = getConfiguredReleases(readFromStorage).map(function(r) { return r.version })
+      const configuredVersions = (await getConfiguredReleases(readFromStorage)).map(function(r) { return r.version })
       const configuredSet = new Set(configuredVersions)
 
       const available = releases.map(function(rel) {
@@ -1244,7 +1459,7 @@ module.exports = function registerPlanningRoutes(router, context) {
 
     const versions = Object.keys(config.releases)
     for (let i = 0; i < versions.length; i++) {
-      if (!VERSION_RE.test(versions[i]) || RESERVED_VERSIONS.includes(versions[i])) {
+      if (!isValidVersion(versions[i])) {
         return res.status(400).json({ error: 'Invalid version: ' + versions[i] })
       }
     }
@@ -1270,17 +1485,17 @@ module.exports = function registerPlanningRoutes(router, context) {
     }
 
     try {
-      const result = await withConfigLock(function() {
-        backupConfig(readFromStorage, writeToStorage, listStorageFiles, deleteFromStorage)
+      const result = await withConfigLock(async function() {
+        await backupConfig(readFromStorage, writeToStorage, listStorageFiles, deleteFromStorage)
 
-        const existing = getConfig(readFromStorage)
+        const existing = await getConfig(readFromStorage)
 
         const mergedReleases = { ...existing.releases }
         for (let vi = 0; vi < versions.length; vi++) {
           const ver = versions[vi]
           const rocks = config.releases[ver].bigRocks || []
           mergedReleases[ver] = { release: ver }
-          writeToStorage(releaseFilePath(ver), { release: ver, bigRocks: rocks })
+          await writeToStorage(releaseFilePath(ver), { release: ver, bigRocks: rocks })
         }
 
         const merged = {
@@ -1290,7 +1505,7 @@ module.exports = function registerPlanningRoutes(router, context) {
           customFieldIds: { ...existing.customFieldIds, ...(config.customFieldIds || {}) }
         }
 
-        writeToStorage('releases/planning/config.json', merged)
+        await writeToStorage('releases/planning/config.json', merged)
 
         const seededVersions = versions.map(function(v) {
           return { version: v, bigRockCount: (config.releases[v].bigRocks || []).length }
@@ -1299,7 +1514,7 @@ module.exports = function registerPlanningRoutes(router, context) {
         return { seeded: seededVersions, totalReleases: Object.keys(merged.releases).length }
       })
 
-      logAudit(readFromStorage, writeToStorage, {
+      await logAudit(readFromStorage, writeToStorage, {
         action: 'seed',
         user: req.auditActor || req.userEmail,
         summary: 'Seeded release data for ' + versions.join(', ')
@@ -1354,13 +1569,13 @@ module.exports = function registerPlanningRoutes(router, context) {
    *       200:
    *         description: Audit log entries
    */
-  router.get('/audit-log', requireAuth, requireScope('releases:read'), function(req, res) {
+  router.get('/audit-log', requireAuth, requireScope('releases:read'), async function(req, res) {
     const version = req.query.version || null
     const action = req.query.action || null
     const limit = Math.min(Math.max(parseInt(req.query.limit) || 50, 1), 500)
     const offset = Math.max(parseInt(req.query.offset) || 0, 0)
 
-    const result = getAuditLog(readFromStorage, {
+    const result = await getAuditLog(readFromStorage, {
       version: version,
       action: action,
       limit: limit,
@@ -1373,10 +1588,10 @@ module.exports = function registerPlanningRoutes(router, context) {
   // Diagnostics
   if (context.registerDiagnostics) {
     context.registerDiagnostics(async function() {
-      const releases = getConfiguredReleases(readFromStorage)
+      const releases = await getConfiguredReleases(readFromStorage)
       const cacheFiles = []
       for (const rel of releases) {
-        const cached = readFromStorage(`${DATA_PREFIX}/candidates-cache-${rel.version}.json`)
+        const cached = await readFromStorage(`${DATA_PREFIX}/candidates-cache-${rel.version}.json`)
         cacheFiles.push({
           version: rel.version,
           hasCachedData: !!(cached && cached.data),

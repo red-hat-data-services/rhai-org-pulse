@@ -2,7 +2,9 @@ import { describe, it, expect } from 'vitest'
 import { mount } from '@vue/test-utils'
 import AutofixContent from '../../client/components/AutofixContent.vue'
 
-// Use relative dates so time-window filtering never ages out of the 30-day window
+// Use relative dates so time-window filtering never ages out of the 30-day window.
+// Tests use 'last30' (rolling 30-day window) instead of 'month' (calendar month)
+// to avoid failures near month boundaries when daysAgo() crosses into the prior month.
 const daysAgo = (n) => new Date(Date.now() - n * 24 * 60 * 60 * 1000).toISOString()
 
 const MOCK_DATA = {
@@ -15,7 +17,11 @@ const MOCK_DATA = {
     autofixTotal: 6,
     successRate: 100,
     windowTotal: 10,
-    totalIssues: 10
+    totalIssues: 10,
+    priorityBreakdown: { Major: 1, Normal: 1, Blocker: 1 },
+    medianTimeToFixDays: 2.5,
+    effortBreakdown: { quickWin: 1, standardFix: 1, complexFix: 0 },
+    totalImpactScore: 4
   },
   trendData: [
     { date: daysAgo(7).slice(0, 10), triaged: 3, autofixed: 2, merged: 1, total: 3, review: 1, ciFailing: 0, blocked: 0, maxRetries: 0, missingInfo: 1, stale: 0, external: 0, securityReview: 0 },
@@ -33,10 +39,28 @@ const MOCK_DATA = {
       priority: 'Major',
       created: daysAgo(2),
       updated: daysAgo(1),
-      labels: ['jira-autofix-review'],
+      terminalAt: daysAgo(0),
+      labels: ['jira-autofix-merged'],
       components: ['Model Server'],
       assignee: 'Jane Doe',
-      pipelineState: 'autofix-review'
+      pipelineState: 'autofix-merged',
+      effortScore: 1,
+      effortTier: 'Quick Win'
+    },
+    {
+      key: 'AIPCC-101',
+      summary: 'Fix auth bypass',
+      status: 'Closed',
+      priority: 'Blocker',
+      created: daysAgo(5),
+      updated: daysAgo(1),
+      terminalAt: daysAgo(1),
+      labels: ['jira-autofix-merged'],
+      components: ['Model Server'],
+      assignee: 'John Smith',
+      pipelineState: 'autofix-merged',
+      effortScore: 3,
+      effortTier: 'Standard Fix'
     },
     {
       key: 'RHOAIENG-200',
@@ -45,10 +69,13 @@ const MOCK_DATA = {
       priority: 'Normal',
       created: daysAgo(3),
       updated: daysAgo(3),
+      terminalAt: null,
       labels: ['jira-triage-not-fixable'],
       components: ['Notebooks'],
       assignee: null,
-      pipelineState: 'triage-not-fixable'
+      pipelineState: 'triage-not-fixable',
+      effortScore: null,
+      effortTier: null
     }
   ]
 }
@@ -56,7 +83,7 @@ const MOCK_DATA = {
 describe('AutofixContent', () => {
   it('renders summary stat cards with metric values', () => {
     const wrapper = mount(AutofixContent, {
-      props: { autofixData: MOCK_DATA, loading: false, timeWindow: 'month' }
+      props: { autofixData: MOCK_DATA, loading: false, timeWindow: 'last30' }
     })
     expect(wrapper.text()).toContain('10')
     expect(wrapper.text()).toContain('100%')
@@ -64,7 +91,7 @@ describe('AutofixContent', () => {
 
   it('renders triage outcomes panel', () => {
     const wrapper = mount(AutofixContent, {
-      props: { autofixData: MOCK_DATA, loading: false, timeWindow: 'month' }
+      props: { autofixData: MOCK_DATA, loading: false, timeWindow: 'last30' }
     })
     expect(wrapper.text()).toContain('Triage Outcomes')
     expect(wrapper.text()).toContain('Ready for AI')
@@ -74,7 +101,7 @@ describe('AutofixContent', () => {
 
   it('renders autofix progress panel', () => {
     const wrapper = mount(AutofixContent, {
-      props: { autofixData: MOCK_DATA, loading: false, timeWindow: 'month' }
+      props: { autofixData: MOCK_DATA, loading: false, timeWindow: 'last30' }
     })
     expect(wrapper.text()).toContain('Autofix Progress')
     expect(wrapper.text()).toContain('AI Fix Merged')
@@ -83,7 +110,7 @@ describe('AutofixContent', () => {
 
   it('renders issue table with Jira links', () => {
     const wrapper = mount(AutofixContent, {
-      props: { autofixData: MOCK_DATA, loading: false, timeWindow: 'month' }
+      props: { autofixData: MOCK_DATA, loading: false, timeWindow: 'last30' }
     })
     expect(wrapper.text()).toContain('AIPCC-100')
     expect(wrapper.text()).toContain('Fix null pointer')
@@ -94,14 +121,14 @@ describe('AutofixContent', () => {
 
   it('shows empty state when no data', () => {
     const wrapper = mount(AutofixContent, {
-      props: { autofixData: null, loading: false, timeWindow: 'month' }
+      props: { autofixData: null, loading: false, timeWindow: 'last30' }
     })
     expect(wrapper.text()).toContain('No autofix data yet')
   })
 
   it('shows error state', () => {
     const wrapper = mount(AutofixContent, {
-      props: { autofixData: null, loading: false, error: 'Connection failed', timeWindow: 'month' }
+      props: { autofixData: null, loading: false, error: 'Connection failed', timeWindow: 'last30' }
     })
     expect(wrapper.text()).toContain('Failed to load data')
     expect(wrapper.text()).toContain('Connection failed')
@@ -118,7 +145,7 @@ describe('AutofixContent', () => {
 
   it('filters issues by search query', async () => {
     const wrapper = mount(AutofixContent, {
-      props: { autofixData: MOCK_DATA, loading: false, timeWindow: 'month' }
+      props: { autofixData: MOCK_DATA, loading: false, timeWindow: 'last30' }
     })
     const input = wrapper.find('input[placeholder="Search issues..."]')
     await input.setValue('null pointer')
@@ -129,7 +156,7 @@ describe('AutofixContent', () => {
 
   it('renders new triage states in state filter dropdown', async () => {
     const wrapper = mount(AutofixContent, {
-      props: { autofixData: MOCK_DATA, loading: false, timeWindow: 'month' }
+      props: { autofixData: MOCK_DATA, loading: false, timeWindow: 'last30' }
     })
     const stateBtn = wrapper.findAll('button').find(b => b.text().includes('All States'))
     await stateBtn.trigger('click')
@@ -139,9 +166,44 @@ describe('AutofixContent', () => {
     expect(labelTexts).toContain('Security Review')
   })
 
+  it('renders priority distribution section', () => {
+    const wrapper = mount(AutofixContent, {
+      props: { autofixData: MOCK_DATA, loading: false, timeWindow: 'last30' }
+    })
+    expect(wrapper.text()).toContain('Priority Distribution')
+    expect(wrapper.text()).toContain('Major')
+    expect(wrapper.text()).toContain('Blocker')
+  })
+
+  it('renders effort breakdown section', () => {
+    const wrapper = mount(AutofixContent, {
+      props: { autofixData: MOCK_DATA, loading: false, timeWindow: 'last30' }
+    })
+    expect(wrapper.text()).toContain('Effort Breakdown')
+    expect(wrapper.text()).toContain('Quick Win')
+    expect(wrapper.text()).toContain('Standard Fix')
+  })
+
+  it('renders median time to fix', () => {
+    const wrapper = mount(AutofixContent, {
+      props: { autofixData: MOCK_DATA, loading: false, timeWindow: 'last30' }
+    })
+    expect(wrapper.text()).toContain('Time to Fix')
+    expect(wrapper.text()).toContain('2.5 days')
+    expect(wrapper.text()).toContain('Median Time to Fix')
+  })
+
+  it('renders effort tier badge in issue table', () => {
+    const wrapper = mount(AutofixContent, {
+      props: { autofixData: MOCK_DATA, loading: false, timeWindow: 'last30' }
+    })
+    expect(wrapper.text()).toContain('Quick Win')
+    expect(wrapper.text()).toContain('Standard Fix')
+  })
+
   it('filters issues by state', async () => {
     const wrapper = mount(AutofixContent, {
-      props: { autofixData: MOCK_DATA, loading: false, timeWindow: 'month' }
+      props: { autofixData: MOCK_DATA, loading: false, timeWindow: 'last30' }
     })
     const stateBtn = wrapper.findAll('button').find(b => b.text().includes('All States'))
     await stateBtn.trigger('click')
