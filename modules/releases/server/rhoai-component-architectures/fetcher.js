@@ -1,7 +1,11 @@
 'use strict'
 
-const { Octokit } = require('@octokit/rest')
+const { Octokit: _DefaultOctokit } = require('@octokit/rest')
 const yaml = require('js-yaml')
+const { fetchMaturityMapping, applyMaturityMapping } = require('./maturity-mapping')
+
+let _Octokit = _DefaultOctokit
+function _setOctokit(cls) { _Octokit = cls }
 
 const STORAGE_KEY = 'releases/rhoai-component-architectures/latest.json'
 const REGISTRY_KEY = 'releases/registry.json'
@@ -102,7 +106,7 @@ function registerRhoaiComponentArchitecturesFetcher(router, context) {
       return { status: 'error', message: 'No GITHUB_TOKEN configured' }
     }
 
-    const octokit = new Octokit({ auth: token, request: { timeout: 30000 } })
+    const octokit = new _Octokit({ auth: token, request: { timeout: 30000 } })
 
     const registry = await readFromStorage(REGISTRY_KEY)
     const branches = branchesFromRegistry(registry)
@@ -123,11 +127,71 @@ function registerRhoaiComponentArchitecturesFetcher(router, context) {
       if (i < branches.length - 1) await delay(200)
     }
 
+    const gitlabCeeToken = secrets && secrets.GITLAB_CEE_TOKEN
+    let mapping = null
+    let allProductComponents = []
+    let maturityWarning = null
+
+    if (gitlabCeeToken) {
+      try {
+        console.log('[rhoai-component-architectures] Fetching component maturity mapping from gitlab.cee.redhat.com')
+        const maturityResult = await fetchMaturityMapping(gitlabCeeToken)
+        mapping = maturityResult.mapping
+        allProductComponents = maturityResult.allProductComponents
+        console.log(`[rhoai-component-architectures] Maturity mapping: ${Object.keys(mapping).length} images across ${allProductComponents.length} product components`)
+      } catch (err) {
+        maturityWarning = `Component maturity fetch failed: ${err.message}`
+        console.warn('[rhoai-component-architectures]', maturityWarning)
+      }
+    } else {
+      maturityWarning = 'GITLAB_CEE_TOKEN not configured — skipping component maturity mapping'
+      console.log('[rhoai-component-architectures]', maturityWarning)
+    }
+
+    if (mapping) {
+      for (const branch of Object.values(branchData)) {
+        applyMaturityMapping(branch, mapping)
+      }
+    }
+
     const fetchedAt = new Date().toISOString()
     const result = {
       fetchedAt,
       source: { owner: OWNER, repo: REPO },
-      branches: branchData
+      branches: branchData,
+      maturity: {
+        available: !!mapping,
+        fetchedAt: mapping ? fetchedAt : null,
+        warning: maturityWarning || null,
+        allProductComponents
+      }
+    }
+
+    if (!mapping) {
+      const existing = await readFromStorage(STORAGE_KEY)
+      if (existing && existing.maturity && existing.maturity.available) {
+        result.maturity = {
+          available: true,
+          warning: maturityWarning || null,
+          fetchedAt: existing.maturity.fetchedAt,
+          allProductComponents: existing.maturity.allProductComponents || []
+        }
+        const oldComps = {}
+        for (const branch of Object.values(existing.branches || {})) {
+          for (const comp of (branch.components || [])) {
+            if (comp.imageName && comp.productComponent) {
+              oldComps[comp.imageName] = comp.productComponent
+            }
+          }
+        }
+        for (const branch of Object.values(result.branches)) {
+          for (const comp of (branch.components || [])) {
+            if (comp.imageName && oldComps[comp.imageName]) {
+              comp.productComponent = oldComps[comp.imageName]
+            }
+          }
+        }
+      }
     }
 
     await writeToStorage(STORAGE_KEY, result)
@@ -135,6 +199,7 @@ function registerRhoaiComponentArchitecturesFetcher(router, context) {
     return {
       status: 'ok',
       branches: Object.keys(branchData),
+      maturity: { available: result.maturity.available, warning: result.maturity.warning },
       fetchedAt
     }
   }
@@ -185,5 +250,6 @@ module.exports = {
   registryIdToBranch,
   branchesFromRegistry,
   fetchBranchReport,
-  stripRhelSuffix
+  stripRhelSuffix,
+  _setOctokit
 }

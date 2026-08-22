@@ -71,6 +71,11 @@
         "key": "DRAFT_PLANS_GITLAB_TOKEN",
         "description": "GitLab PAT for draft plans data fetching (overrides GITLAB_TOKEN)",
         "required": false
+      },
+      {
+        "key": "GITLAB_CEE_TOKEN",
+        "description": "GitLab PAT for gitlab.cee.redhat.com (read_api scope). Used to fetch component maturity data.",
+        "required": false
       }
     ]
   },

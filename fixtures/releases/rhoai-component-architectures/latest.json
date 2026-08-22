@@ -33,7 +33,8 @@
               "status": "supported"
             }
           },
-          "pipelineRunFile": "pipelineruns/ai-gateway-operator/.tekton/odh-ai-gateway-operator-v3-5-push.yaml"
+          "pipelineRunFile": "pipelineruns/ai-gateway-operator/.tekton/odh-ai-gateway-operator-v3-5-push.yaml",
+          "productComponent": "Inference Gateway"
         },
         {
           "name": "odh-automl",
@@ -53,7 +54,8 @@
               "status": "supported"
             }
           },
-          "pipelineRunFile": "pipelineruns/pipelines-components/.tekton/odh-automl-v3-5-push.yaml"
+          "pipelineRunFile": "pipelineruns/pipelines-components/.tekton/odh-automl-v3-5-push.yaml",
+          "productComponent": "Training Kubeflow"
         },
         {
           "name": "odh-dashboard",
@@ -73,7 +75,8 @@
               "status": "supported"
             }
           },
-          "pipelineRunFile": "pipelineruns/odh-dashboard/.tekton/odh-dashboard-v3-5-push.yaml"
+          "pipelineRunFile": "pipelineruns/odh-dashboard/.tekton/odh-dashboard-v3-5-push.yaml",
+          "productComponent": "AI Core Dashboard"
         },
         {
           "name": "odh-data-science-pipelines-operator-controller",
@@ -93,7 +96,8 @@
               "status": "not_built"
             }
           },
-          "pipelineRunFile": "pipelineruns/data-science-pipelines-operator/.tekton/odh-data-science-pipelines-operator-controller-v3-5-push.yaml"
+          "pipelineRunFile": "pipelineruns/data-science-pipelines-operator/.tekton/odh-data-science-pipelines-operator-controller-v3-5-push.yaml",
+          "productComponent": "AI Pipelines"
         },
         {
           "name": "odh-kserve-controller",
@@ -113,7 +117,8 @@
               "status": "supported"
             }
           },
-          "pipelineRunFile": "pipelineruns/kserve/.tekton/odh-kserve-controller-v3-5-push.yaml"
+          "pipelineRunFile": "pipelineruns/kserve/.tekton/odh-kserve-controller-v3-5-push.yaml",
+          "productComponent": "Serving Orchestration"
         },
         {
           "name": "odh-ml-pipelines-api-server-v2",
@@ -139,7 +144,8 @@
               "reason": "s390x enablement"
             }
           },
-          "pipelineRunFile": "pipelineruns/data-science-pipelines/.tekton/odh-ml-pipelines-api-server-v2-v3-5-push.yaml"
+          "pipelineRunFile": "pipelineruns/data-science-pipelines/.tekton/odh-ml-pipelines-api-server-v2-v3-5-push.yaml",
+          "productComponent": "AI Pipelines"
         },
         {
           "name": "odh-ml-pipelines-driver",
@@ -165,7 +171,8 @@
               "reason": "s390x enablement"
             }
           },
-          "pipelineRunFile": "pipelineruns/data-science-pipelines/.tekton/odh-ml-pipelines-driver-v3-5-push.yaml"
+          "pipelineRunFile": "pipelineruns/data-science-pipelines/.tekton/odh-ml-pipelines-driver-v3-5-push.yaml",
+          "productComponent": "AI Pipelines"
         },
         {
           "name": "odh-mlmd-grpc-server",
@@ -188,7 +195,8 @@
               "reason": "Not yet implemented"
             }
           },
-          "pipelineRunFile": "pipelineruns/ml-metadata/.tekton/odh-mlmd-grpc-server-v3-5-push.yaml"
+          "pipelineRunFile": "pipelineruns/ml-metadata/.tekton/odh-mlmd-grpc-server-v3-5-push.yaml",
+          "productComponent": "AI Pipelines"
         },
         {
           "name": "odh-model-controller",
@@ -211,7 +219,8 @@
               "reason": "s390x enablement in progress"
             }
           },
-          "pipelineRunFile": "pipelineruns/odh-model-controller/.tekton/odh-model-controller-v3-5-push.yaml"
+          "pipelineRunFile": "pipelineruns/odh-model-controller/.tekton/odh-model-controller-v3-5-push.yaml",
+          "productComponent": "Serving Orchestration"
         },
         {
           "name": "odh-notebook-controller",
@@ -231,7 +240,8 @@
               "status": "supported"
             }
           },
-          "pipelineRunFile": "pipelineruns/kubeflow/.tekton/odh-notebook-controller-v3-5-push.yaml"
+          "pipelineRunFile": "pipelineruns/kubeflow/.tekton/odh-notebook-controller-v3-5-push.yaml",
+          "productComponent": "Notebooks Server"
         },
         {
           "name": "odh-rhel9-operator",
@@ -251,7 +261,8 @@
               "status": "supported"
             }
           },
-          "pipelineRunFile": "pipelineruns/rhods-operator/.tekton/odh-rhel9-operator-v3-5-push.yaml"
+          "pipelineRunFile": "pipelineruns/rhods-operator/.tekton/odh-rhel9-operator-v3-5-push.yaml",
+          "productComponent": null
         },
         {
           "name": "odh-trustyai-service",
@@ -271,7 +282,8 @@
               "status": "supported"
             }
           },
-          "pipelineRunFile": "pipelineruns/trustyai-service/.tekton/odh-trustyai-service-v3-5-push.yaml"
+          "pipelineRunFile": "pipelineruns/trustyai-service/.tekton/odh-trustyai-service-v3-5-push.yaml",
+          "productComponent": null
         },
         {
           "name": "odh-vllm-gaudi",
@@ -294,7 +306,8 @@
               "accelerator": "gaudi"
             }
           },
-          "pipelineRunFile": "pipelineruns/vllm/.tekton/odh-vllm-gaudi-v3-5-push.yaml"
+          "pipelineRunFile": "pipelineruns/vllm/.tekton/odh-vllm-gaudi-v3-5-push.yaml",
+          "productComponent": "Model Runtimes"
         },
         {
           "name": "odh-vllm-rocm",
@@ -317,7 +330,8 @@
               "accelerator": "rocm"
             }
           },
-          "pipelineRunFile": "pipelineruns/vllm/.tekton/odh-vllm-rocm-v3-5-push.yaml"
+          "pipelineRunFile": "pipelineruns/vllm/.tekton/odh-vllm-rocm-v3-5-push.yaml",
+          "productComponent": null
         },
         {
           "name": "odh-workbench-cuda",
@@ -339,7 +353,8 @@
               "accelerator": "cuda"
             }
           },
-          "pipelineRunFile": "pipelineruns/notebooks/.tekton/odh-workbench-cuda-v3-5-push.yaml"
+          "pipelineRunFile": "pipelineruns/notebooks/.tekton/odh-workbench-cuda-v3-5-push.yaml",
+          "productComponent": null
         }
       ],
       "summary": {
@@ -379,7 +394,8 @@
               "status": "supported"
             }
           },
-          "pipelineRunFile": "pipelineruns/ai-gateway-operator/.tekton/odh-ai-gateway-operator-v3-6-ea-1-push.yaml"
+          "pipelineRunFile": "pipelineruns/ai-gateway-operator/.tekton/odh-ai-gateway-operator-v3-6-ea-1-push.yaml",
+          "productComponent": "Inference Gateway"
         },
         {
           "name": "odh-ai-gateway-payload-processing",
@@ -399,7 +415,8 @@
               "status": "supported"
             }
           },
-          "pipelineRunFile": "pipelineruns/ai-gateway-payload-processing/.tekton/odh-ai-gateway-payload-processing-v3-6-ea-1-push.yaml"
+          "pipelineRunFile": "pipelineruns/ai-gateway-payload-processing/.tekton/odh-ai-gateway-payload-processing-v3-6-ea-1-push.yaml",
+          "productComponent": "Inference Gateway"
         },
         {
           "name": "odh-automl",
@@ -419,7 +436,8 @@
               "status": "supported"
             }
           },
-          "pipelineRunFile": "pipelineruns/pipelines-components/.tekton/odh-automl-v3-6-ea-1-push.yaml"
+          "pipelineRunFile": "pipelineruns/pipelines-components/.tekton/odh-automl-v3-6-ea-1-push.yaml",
+          "productComponent": "Training Kubeflow"
         },
         {
           "name": "odh-codeflare-operator",
@@ -439,7 +457,8 @@
               "status": "supported"
             }
           },
-          "pipelineRunFile": "pipelineruns/codeflare-operator/.tekton/odh-codeflare-operator-v3-6-ea-1-push.yaml"
+          "pipelineRunFile": "pipelineruns/codeflare-operator/.tekton/odh-codeflare-operator-v3-6-ea-1-push.yaml",
+          "productComponent": "Workload Orchestration"
         },
         {
           "name": "odh-dashboard",
@@ -459,7 +478,8 @@
               "status": "supported"
             }
           },
-          "pipelineRunFile": "pipelineruns/odh-dashboard/.tekton/odh-dashboard-v3-6-ea-1-push.yaml"
+          "pipelineRunFile": "pipelineruns/odh-dashboard/.tekton/odh-dashboard-v3-6-ea-1-push.yaml",
+          "productComponent": "AI Core Dashboard"
         },
         {
           "name": "odh-data-science-pipelines-argo-workflowcontroller",
@@ -485,7 +505,8 @@
               "reason": "s390x enablement blocked by upstream"
             }
           },
-          "pipelineRunFile": "pipelineruns/data-science-pipelines/.tekton/odh-data-science-pipelines-argo-workflowcontroller-v3-6-ea-1-push.yaml"
+          "pipelineRunFile": "pipelineruns/data-science-pipelines/.tekton/odh-data-science-pipelines-argo-workflowcontroller-v3-6-ea-1-push.yaml",
+          "productComponent": "AI Pipelines"
         },
         {
           "name": "odh-data-science-pipelines-operator-controller",
@@ -505,7 +526,8 @@
               "status": "not_built"
             }
           },
-          "pipelineRunFile": "pipelineruns/data-science-pipelines-operator/.tekton/odh-data-science-pipelines-operator-controller-v3-6-ea-1-push.yaml"
+          "pipelineRunFile": "pipelineruns/data-science-pipelines-operator/.tekton/odh-data-science-pipelines-operator-controller-v3-6-ea-1-push.yaml",
+          "productComponent": "AI Pipelines"
         },
         {
           "name": "odh-feast-operator",
@@ -531,7 +553,8 @@
               "reason": "Feast upstream lacks s390x support"
             }
           },
-          "pipelineRunFile": "pipelineruns/feast/.tekton/odh-feast-operator-v3-6-ea-1-push.yaml"
+          "pipelineRunFile": "pipelineruns/feast/.tekton/odh-feast-operator-v3-6-ea-1-push.yaml",
+          "productComponent": "Feature Store"
         },
         {
           "name": "odh-feature-server",
@@ -557,7 +580,8 @@
               "reason": "Feature server not available on s390x"
             }
           },
-          "pipelineRunFile": "pipelineruns/feast/.tekton/odh-feature-server-v3-6-ea-1-push.yaml"
+          "pipelineRunFile": "pipelineruns/feast/.tekton/odh-feature-server-v3-6-ea-1-push.yaml",
+          "productComponent": "Feature Store"
         },
         {
           "name": "odh-kf-notebook-controller",
@@ -577,7 +601,8 @@
               "status": "supported"
             }
           },
-          "pipelineRunFile": "pipelineruns/kubeflow/.tekton/odh-kf-notebook-controller-v3-6-ea-1-push.yaml"
+          "pipelineRunFile": "pipelineruns/kubeflow/.tekton/odh-kf-notebook-controller-v3-6-ea-1-push.yaml",
+          "productComponent": "Notebooks Server"
         },
         {
           "name": "odh-kserve-controller",
@@ -597,7 +622,8 @@
               "status": "supported"
             }
           },
-          "pipelineRunFile": "pipelineruns/kserve/.tekton/odh-kserve-controller-v3-6-ea-1-push.yaml"
+          "pipelineRunFile": "pipelineruns/kserve/.tekton/odh-kserve-controller-v3-6-ea-1-push.yaml",
+          "productComponent": "Serving Orchestration"
         },
         {
           "name": "odh-kuberay-operator-controller",
@@ -620,7 +646,8 @@
               "reason": "s390x enablement pending"
             }
           },
-          "pipelineRunFile": "pipelineruns/kuberay/.tekton/odh-kuberay-operator-controller-v3-6-ea-1-push.yaml"
+          "pipelineRunFile": "pipelineruns/kuberay/.tekton/odh-kuberay-operator-controller-v3-6-ea-1-push.yaml",
+          "productComponent": "KubeRay"
         },
         {
           "name": "odh-ml-pipelines-api-server-v2",
@@ -646,7 +673,8 @@
               "reason": "s390x enablement"
             }
           },
-          "pipelineRunFile": "pipelineruns/data-science-pipelines/.tekton/odh-ml-pipelines-api-server-v2-v3-6-ea-1-push.yaml"
+          "pipelineRunFile": "pipelineruns/data-science-pipelines/.tekton/odh-ml-pipelines-api-server-v2-v3-6-ea-1-push.yaml",
+          "productComponent": "AI Pipelines"
         },
         {
           "name": "odh-ml-pipelines-driver",
@@ -672,7 +700,8 @@
               "reason": "s390x enablement"
             }
           },
-          "pipelineRunFile": "pipelineruns/data-science-pipelines/.tekton/odh-ml-pipelines-driver-v3-6-ea-1-push.yaml"
+          "pipelineRunFile": "pipelineruns/data-science-pipelines/.tekton/odh-ml-pipelines-driver-v3-6-ea-1-push.yaml",
+          "productComponent": "AI Pipelines"
         },
         {
           "name": "odh-ml-pipelines-launcher",
@@ -698,7 +727,8 @@
               "reason": "s390x enablement"
             }
           },
-          "pipelineRunFile": "pipelineruns/data-science-pipelines/.tekton/odh-ml-pipelines-launcher-v3-6-ea-1-push.yaml"
+          "pipelineRunFile": "pipelineruns/data-science-pipelines/.tekton/odh-ml-pipelines-launcher-v3-6-ea-1-push.yaml",
+          "productComponent": "AI Pipelines"
         },
         {
           "name": "odh-mlmd-grpc-server",
@@ -721,7 +751,8 @@
               "reason": "Not yet implemented"
             }
           },
-          "pipelineRunFile": "pipelineruns/ml-metadata/.tekton/odh-mlmd-grpc-server-v3-6-ea-1-push.yaml"
+          "pipelineRunFile": "pipelineruns/ml-metadata/.tekton/odh-mlmd-grpc-server-v3-6-ea-1-push.yaml",
+          "productComponent": "AI Pipelines"
         },
         {
           "name": "odh-model-controller",
@@ -741,7 +772,8 @@
               "status": "supported"
             }
           },
-          "pipelineRunFile": "pipelineruns/odh-model-controller/.tekton/odh-model-controller-v3-6-ea-1-push.yaml"
+          "pipelineRunFile": "pipelineruns/odh-model-controller/.tekton/odh-model-controller-v3-6-ea-1-push.yaml",
+          "productComponent": "Serving Orchestration"
         },
         {
           "name": "odh-modelmesh-runtime-adapter",
@@ -761,7 +793,8 @@
               "status": "supported"
             }
           },
-          "pipelineRunFile": "pipelineruns/modelmesh-runtime-adapter/.tekton/odh-modelmesh-runtime-adapter-v3-6-ea-1-push.yaml"
+          "pipelineRunFile": "pipelineruns/modelmesh-runtime-adapter/.tekton/odh-modelmesh-runtime-adapter-v3-6-ea-1-push.yaml",
+          "productComponent": null
         },
         {
           "name": "odh-modelmesh-serving-controller",
@@ -781,7 +814,8 @@
               "status": "supported"
             }
           },
-          "pipelineRunFile": "pipelineruns/modelmesh-serving/.tekton/odh-modelmesh-serving-controller-v3-6-ea-1-push.yaml"
+          "pipelineRunFile": "pipelineruns/modelmesh-serving/.tekton/odh-modelmesh-serving-controller-v3-6-ea-1-push.yaml",
+          "productComponent": null
         },
         {
           "name": "odh-notebook-controller",
@@ -801,7 +835,8 @@
               "status": "supported"
             }
           },
-          "pipelineRunFile": "pipelineruns/kubeflow/.tekton/odh-notebook-controller-v3-6-ea-1-push.yaml"
+          "pipelineRunFile": "pipelineruns/kubeflow/.tekton/odh-notebook-controller-v3-6-ea-1-push.yaml",
+          "productComponent": "Notebooks Server"
         },
         {
           "name": "odh-rhel9-operator",
@@ -821,7 +856,8 @@
               "status": "supported"
             }
           },
-          "pipelineRunFile": "pipelineruns/rhods-operator/.tekton/odh-rhel9-operator-v3-6-ea-1-push.yaml"
+          "pipelineRunFile": "pipelineruns/rhods-operator/.tekton/odh-rhel9-operator-v3-6-ea-1-push.yaml",
+          "productComponent": null
         },
         {
           "name": "odh-training-cuda121-torch24-py311",
@@ -843,7 +879,8 @@
               "accelerator": "cuda"
             }
           },
-          "pipelineRunFile": "pipelineruns/distributed-workloads/.tekton/odh-training-cuda121-torch24-py311-v3-6-ea-1-push.yaml"
+          "pipelineRunFile": "pipelineruns/distributed-workloads/.tekton/odh-training-cuda121-torch24-py311-v3-6-ea-1-push.yaml",
+          "productComponent": "Training Kubeflow"
         },
         {
           "name": "odh-training-cuda128-torch29-py312",
@@ -865,7 +902,8 @@
               "accelerator": "cuda"
             }
           },
-          "pipelineRunFile": "pipelineruns/distributed-workloads/.tekton/odh-training-cuda128-torch29-py312-v3-6-ea-1-push.yaml"
+          "pipelineRunFile": "pipelineruns/distributed-workloads/.tekton/odh-training-cuda128-torch29-py312-v3-6-ea-1-push.yaml",
+          "productComponent": "Training Kubeflow"
         },
         {
           "name": "odh-trustyai-service",
@@ -885,7 +923,8 @@
               "status": "supported"
             }
           },
-          "pipelineRunFile": "pipelineruns/trustyai-service/.tekton/odh-trustyai-service-v3-6-ea-1-push.yaml"
+          "pipelineRunFile": "pipelineruns/trustyai-service/.tekton/odh-trustyai-service-v3-6-ea-1-push.yaml",
+          "productComponent": null
         },
         {
           "name": "odh-vllm-cpu",
@@ -905,7 +944,8 @@
               "status": "not_built"
             }
           },
-          "pipelineRunFile": "pipelineruns/vllm/.tekton/odh-vllm-cpu-v3-6-ea-1-push.yaml"
+          "pipelineRunFile": "pipelineruns/vllm/.tekton/odh-vllm-cpu-v3-6-ea-1-push.yaml",
+          "productComponent": null
         },
         {
           "name": "odh-vllm-gaudi",
@@ -928,7 +968,8 @@
               "accelerator": "gaudi"
             }
           },
-          "pipelineRunFile": "pipelineruns/vllm/.tekton/odh-vllm-gaudi-v3-6-ea-1-push.yaml"
+          "pipelineRunFile": "pipelineruns/vllm/.tekton/odh-vllm-gaudi-v3-6-ea-1-push.yaml",
+          "productComponent": "Model Runtimes"
         },
         {
           "name": "odh-vllm-rocm",
@@ -951,7 +992,8 @@
               "accelerator": "rocm"
             }
           },
-          "pipelineRunFile": "pipelineruns/vllm/.tekton/odh-vllm-rocm-v3-6-ea-1-push.yaml"
+          "pipelineRunFile": "pipelineruns/vllm/.tekton/odh-vllm-rocm-v3-6-ea-1-push.yaml",
+          "productComponent": null
         },
         {
           "name": "odh-workbench-cuda",
@@ -973,7 +1015,8 @@
               "accelerator": "cuda"
             }
           },
-          "pipelineRunFile": "pipelineruns/notebooks/.tekton/odh-workbench-cuda-v3-6-ea-1-push.yaml"
+          "pipelineRunFile": "pipelineruns/notebooks/.tekton/odh-workbench-cuda-v3-6-ea-1-push.yaml",
+          "productComponent": null
         }
       ],
       "summary": {
@@ -1013,7 +1056,8 @@
               "status": "supported"
             }
           },
-          "pipelineRunFile": "pipelineruns/pipelines-components/.tekton/odh-automl-v3-4-push.yaml"
+          "pipelineRunFile": "pipelineruns/pipelines-components/.tekton/odh-automl-v3-4-push.yaml",
+          "productComponent": "Training Kubeflow"
         },
         {
           "name": "odh-dashboard",
@@ -1033,7 +1077,8 @@
               "status": "supported"
             }
           },
-          "pipelineRunFile": "pipelineruns/odh-dashboard/.tekton/odh-dashboard-v3-4-push.yaml"
+          "pipelineRunFile": "pipelineruns/odh-dashboard/.tekton/odh-dashboard-v3-4-push.yaml",
+          "productComponent": "AI Core Dashboard"
         },
         {
           "name": "odh-data-science-pipelines-operator-controller",
@@ -1059,7 +1104,8 @@
               "reason": "s390x build dependency missing"
             }
           },
-          "pipelineRunFile": "pipelineruns/data-science-pipelines-operator/.tekton/odh-data-science-pipelines-operator-controller-v3-4-push.yaml"
+          "pipelineRunFile": "pipelineruns/data-science-pipelines-operator/.tekton/odh-data-science-pipelines-operator-controller-v3-4-push.yaml",
+          "productComponent": "AI Pipelines"
         },
         {
           "name": "odh-kserve-controller",
@@ -1079,7 +1125,8 @@
               "status": "not_built"
             }
           },
-          "pipelineRunFile": "pipelineruns/kserve/.tekton/odh-kserve-controller-v3-4-push.yaml"
+          "pipelineRunFile": "pipelineruns/kserve/.tekton/odh-kserve-controller-v3-4-push.yaml",
+          "productComponent": "Serving Orchestration"
         },
         {
           "name": "odh-ml-pipelines-api-server-v2",
@@ -1099,7 +1146,8 @@
               "status": "not_built"
             }
           },
-          "pipelineRunFile": "pipelineruns/data-science-pipelines/.tekton/odh-ml-pipelines-api-server-v2-v3-4-push.yaml"
+          "pipelineRunFile": "pipelineruns/data-science-pipelines/.tekton/odh-ml-pipelines-api-server-v2-v3-4-push.yaml",
+          "productComponent": "AI Pipelines"
         },
         {
           "name": "odh-ml-pipelines-driver",
@@ -1119,7 +1167,8 @@
               "status": "not_built"
             }
           },
-          "pipelineRunFile": "pipelineruns/data-science-pipelines/.tekton/odh-ml-pipelines-driver-v3-4-push.yaml"
+          "pipelineRunFile": "pipelineruns/data-science-pipelines/.tekton/odh-ml-pipelines-driver-v3-4-push.yaml",
+          "productComponent": "AI Pipelines"
         },
         {
           "name": "odh-mlmd-grpc-server",
@@ -1142,7 +1191,8 @@
               "reason": "Not yet implemented"
             }
           },
-          "pipelineRunFile": "pipelineruns/ml-metadata/.tekton/odh-mlmd-grpc-server-v3-4-push.yaml"
+          "pipelineRunFile": "pipelineruns/ml-metadata/.tekton/odh-mlmd-grpc-server-v3-4-push.yaml",
+          "productComponent": "AI Pipelines"
         },
         {
           "name": "odh-model-controller",
@@ -1162,7 +1212,8 @@
               "status": "supported"
             }
           },
-          "pipelineRunFile": "pipelineruns/odh-model-controller/.tekton/odh-model-controller-v3-4-push.yaml"
+          "pipelineRunFile": "pipelineruns/odh-model-controller/.tekton/odh-model-controller-v3-4-push.yaml",
+          "productComponent": "Serving Orchestration"
         },
         {
           "name": "odh-notebook-controller",
@@ -1182,7 +1233,8 @@
               "status": "supported"
             }
           },
-          "pipelineRunFile": "pipelineruns/kubeflow/.tekton/odh-notebook-controller-v3-4-push.yaml"
+          "pipelineRunFile": "pipelineruns/kubeflow/.tekton/odh-notebook-controller-v3-4-push.yaml",
+          "productComponent": "Notebooks Server"
         },
         {
           "name": "odh-rhel9-operator",
@@ -1202,7 +1254,8 @@
               "status": "supported"
             }
           },
-          "pipelineRunFile": "pipelineruns/rhods-operator/.tekton/odh-rhel9-operator-v3-4-push.yaml"
+          "pipelineRunFile": "pipelineruns/rhods-operator/.tekton/odh-rhel9-operator-v3-4-push.yaml",
+          "productComponent": null
         },
         {
           "name": "odh-trustyai-service",
@@ -1222,7 +1275,8 @@
               "status": "not_built"
             }
           },
-          "pipelineRunFile": "pipelineruns/trustyai-service/.tekton/odh-trustyai-service-v3-4-push.yaml"
+          "pipelineRunFile": "pipelineruns/trustyai-service/.tekton/odh-trustyai-service-v3-4-push.yaml",
+          "productComponent": null
         },
         {
           "name": "odh-vllm-gaudi",
@@ -1245,7 +1299,8 @@
               "accelerator": "gaudi"
             }
           },
-          "pipelineRunFile": "pipelineruns/vllm/.tekton/odh-vllm-gaudi-v3-4-push.yaml"
+          "pipelineRunFile": "pipelineruns/vllm/.tekton/odh-vllm-gaudi-v3-4-push.yaml",
+          "productComponent": "Model Runtimes"
         },
         {
           "name": "odh-vllm-rocm",
@@ -1268,7 +1323,8 @@
               "accelerator": "rocm"
             }
           },
-          "pipelineRunFile": "pipelineruns/vllm/.tekton/odh-vllm-rocm-v3-4-push.yaml"
+          "pipelineRunFile": "pipelineruns/vllm/.tekton/odh-vllm-rocm-v3-4-push.yaml",
+          "productComponent": null
         },
         {
           "name": "odh-workbench-cuda",
@@ -1290,7 +1346,8 @@
               "accelerator": "cuda"
             }
           },
-          "pipelineRunFile": "pipelineruns/notebooks/.tekton/odh-workbench-cuda-v3-4-push.yaml"
+          "pipelineRunFile": "pipelineruns/notebooks/.tekton/odh-workbench-cuda-v3-4-push.yaml",
+          "productComponent": null
         }
       ],
       "summary": {
@@ -1322,5 +1379,33 @@
       "components": [],
       "summary": null
     }
-  }
+  },
+  "maturity": {
+    "available": true,
+    "fetchedAt": "2026-08-18T12:00:00.000Z",
+    "warning": null,
+    "allProductComponents": [
+      { "name": "AI Core Dashboard", "owner": null, "team": null },
+      { "name": "AI Core Platform", "owner": null, "team": null },
+      { "name": "AI Hub", "owner": null, "team": null },
+      { "name": "AI Pipelines", "owner": null, "team": null },
+      { "name": "AI Safety", "owner": null, "team": null },
+      { "name": "AgentOps", "owner": null, "team": null },
+      { "name": "Data Connect Hub", "owner": null, "team": null },
+      { "name": "Feature Store", "owner": null, "team": null },
+      { "name": "Inference Gateway", "owner": null, "team": null },
+      { "name": "KubeRay", "owner": null, "team": null },
+      { "name": "Kubeflow Spark Operator", "owner": null, "team": null },
+      { "name": "MLflow", "owner": null, "team": null },
+      { "name": "Model Runtimes", "owner": null, "team": null },
+      { "name": "Model as a Service", "owner": null, "team": null },
+      { "name": "Notebooks Server", "owner": null, "team": null },
+      { "name": "OGX Core", "owner": null, "team": null },
+      { "name": "Serving Orchestration", "owner": "jdoe", "team": "Model Serving" },
+      { "name": "Training Kubeflow", "owner": null, "team": null },
+      { "name": "Workload Orchestration", "owner": null, "team": null },
+      { "name": "llm-d", "owner": null, "team": null }
+    ]
+  },
+  "recommendedBranch": "rhoai-3.5"
 }

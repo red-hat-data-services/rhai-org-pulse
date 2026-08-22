@@ -1777,3 +1777,43 @@ test.describe('Feature Status filtering @releases', () => {
     expect(unexpectedHygieneErrors(page)).toHaveLength(0);
   });
 });
+
+test.describe('RHOAI Component Architectures Report @releases', () => {
+  test.beforeEach(async ({ page }) => {
+    setupErrorTracking(page);
+  });
+
+  test.afterEach(async ({ page }, testInfo) => {
+    logCapturedErrors(page, testInfo);
+  });
+
+  test('component architectures report loads with content', async ({ page }) => {
+    await page.goto('/#/releases/reports?report=rhoai-component-architectures');
+    await page.waitForLoadState('networkidle');
+    await page.waitForTimeout(DEFAULT_PAGE_WAIT_TIME);
+
+    const heading = page.locator('text=RHOAI Component Architectures');
+    await expect(heading.first()).toBeVisible();
+
+    const productComponentHeader = page.locator('th:has-text("Product Component")');
+    await expect(productComponentHeader.first()).toBeVisible();
+
+    const jiraLinks = page.locator('a:has-text("JIRA")');
+    const jiraCount = await jiraLinks.count();
+    expect(jiraCount).toBeGreaterThan(0);
+
+    const maturityLinks = page.locator('a:has-text("Maturity")');
+    const maturityCount = await maturityLinks.count();
+    expect(maturityCount).toBeGreaterThan(0);
+
+    expect(page.errors).toHaveLength(0);
+  });
+
+  test('component architectures API returns data', async ({ request }) => {
+    const res = await request.get('/api/modules/releases/rhoai-component-architectures');
+    expect(res.ok()).toBe(true);
+    const body = await res.json();
+    expect(body).toHaveProperty('branches');
+    expect(body).toHaveProperty('maturity');
+  });
+});

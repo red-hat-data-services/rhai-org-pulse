@@ -1574,6 +1574,16 @@ Multi-architecture build support matrix for RHOAI components across release bran
 {
   "fetchedAt": "2026-08-18T12:00:00.000Z",
   "source": { "owner": "red-hat-data-services", "repo": "konflux-central" },
+  "maturity": {
+    "available": true,
+    "fetchedAt": "2026-08-18T12:00:00.000Z",
+    "warning": null,
+    "allProductComponents": [
+      { "name": "AI Core Dashboard", "owner": null, "team": null },
+      { "name": "AI Pipelines", "owner": null, "team": null },
+      { "name": "Serving Orchestration", "owner": "jdoe", "team": "Model Serving" }
+    ]
+  },
   "branches": {
     "rhoai-3.5": {
       "generatedAt": "2026-08-18T10:00:00.000Z",
@@ -1584,6 +1594,7 @@ Multi-architecture build support matrix for RHOAI components across release bran
           "name": "odh-dashboard",
           "imageName": "odh-dashboard-rhel9",
           "image": "quay.io/rhoai/odh-dashboard-rhel9",
+          "productComponent": "AI Core Dashboard",
           "architectures": {
             "amd64": { "status": "supported" },
             "arm64": { "status": "supported" },
@@ -1612,6 +1623,8 @@ Multi-architecture build support matrix for RHOAI components across release bran
 - `image` is the full Quay.io image reference.
 - Architecture status is one of: `"supported"` (built), `"exception"` (tracked Jira), `"incompatible"` (hardware-dependent), `"not_built"` (gap).
 - `exception` entries include `issueKey`, `issueUrl`, and `reason`. `incompatible` entries include `accelerator`.
+- `productComponent` is the parent product component name from the maturity report (e.g., `"Serving Orchestration"`). `null` when no mapping exists ("unmapped").
+- `maturity` contains metadata about the component maturity mapping from `gitlab.cee.redhat.com/data-hub/component-maturity`. `available` indicates whether the mapping was successfully fetched. `allProductComponents` is the complete sorted list of product component objects from the maturity report: `[{ "name": "...", "owner": "..." or null, "team": "..." or null }]`. Owner and team are extracted defensively from the upstream maturity report (null if absent). For backward compatibility, the frontend also accepts string entries and normalizes them to `{ name: entry, owner: null, team: null }`. `warning` is set when the mapping fetch failed or was skipped.
 - `summary` provides pre-computed counts per branch for the UI summary cards.
 
 ---

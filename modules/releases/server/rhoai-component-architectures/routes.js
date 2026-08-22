@@ -1,6 +1,25 @@
 'use strict'
 
-const { registerRhoaiComponentArchitecturesFetcher, STORAGE_KEY, REGISTRY_KEY, branchesFromRegistry } = require('./fetcher')
+const { registerRhoaiComponentArchitecturesFetcher, STORAGE_KEY, REGISTRY_KEY, branchesFromRegistry, registryIdToBranch } = require('./fetcher')
+
+function pickRecommendedBranch(registry, availableBranches) {
+  if (!registry || !Array.isArray(registry.releases) || !availableBranches.length) return null
+  const now = Date.now()
+  let best = null
+  let bestDist = Infinity
+  for (const release of registry.releases) {
+    const gaDate = release.milestones?.ga
+    if (!gaDate) continue
+    const branch = registryIdToBranch(release.id)
+    if (!branch || !availableBranches.includes(branch)) continue
+    const dist = Math.abs(new Date(gaDate).getTime() - now)
+    if (dist < bestDist) {
+      bestDist = dist
+      best = branch
+    }
+  }
+  return best
+}
 
 /**
  * @param {import('express').Router} router
@@ -36,16 +55,24 @@ function registerRhoaiComponentArchitecturesRoutes(router, context) {
       const registry = await readFromStorage(REGISTRY_KEY)
       const registryBranches = branchesFromRegistry(registry)
 
+      const recommendedBranch = pickRecommendedBranch(registry, registryBranches)
+
       if (!data) {
         const shell = {
           fetchedAt: null,
           source: { owner: 'red-hat-data-services', repo: 'konflux-central' },
-          branches: {}
+          branches: {},
+          maturity: { available: false, fetchedAt: null, warning: null, allProductComponents: [] },
+          recommendedBranch
         }
         for (const branch of registryBranches) {
           shell.branches[branch] = { reportAvailable: false, components: [], summary: null }
         }
         return res.json(shell)
+      }
+
+      if (!data.maturity) {
+        data.maturity = { available: false, fetchedAt: null, warning: null, allProductComponents: [] }
       }
 
       const cachedBranches = data.branches || {}
@@ -54,6 +81,7 @@ function registerRhoaiComponentArchitecturesRoutes(router, context) {
         branches[branch] = cachedBranches[branch] || { reportAvailable: false, components: [], summary: null }
       }
       data.branches = branches
+      data.recommendedBranch = recommendedBranch
 
       if (req.query.branch) {
         const branch = data.branches[req.query.branch]
@@ -72,3 +100,4 @@ function registerRhoaiComponentArchitecturesRoutes(router, context) {
 }
 
 module.exports = registerRhoaiComponentArchitecturesRoutes
+module.exports.pickRecommendedBranch = pickRecommendedBranch
