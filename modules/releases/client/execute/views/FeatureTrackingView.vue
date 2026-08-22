@@ -42,12 +42,14 @@ const {
   selectedStatuses,
   selectedComponents,
   selectedOwners,
+  selectedDocsRequired,
   activeCardFilter,
 
   availableProducts,
   availableStatuses,
   availableComponents,
   availableOwners,
+  availableDocsRequired,
 
   totalFeatures,
   totalAddedCount,
@@ -254,6 +256,12 @@ onMounted(async () => {
         :options="availableOwners"
         placeholder="All Owners"
         @update:modelValue="v => selectedOwners = v"
+      />
+      <HygieneSelect
+        :modelValue="selectedDocsRequired"
+        :options="availableDocsRequired"
+        placeholder="Docs Required"
+        @update:modelValue="v => selectedDocsRequired = v"
       />
       <span
         v-if="isToolbarFiltered"

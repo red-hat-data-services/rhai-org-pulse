@@ -8,6 +8,7 @@ export function useFeatureTrackingFilters(groups, selectedVersion) {
   var selectedStatuses = ref([])
   var selectedComponents = ref([])
   var selectedOwners = ref([])
+  var selectedDocsRequired = ref([])
   var activeCardFilter = ref(null)
 
   // --- Derived option lists from FULL unfiltered groups (Risk 3 mitigation) ---
@@ -88,6 +89,29 @@ export function useFeatureTrackingFilters(groups, selectedVersion) {
     return result
   })
 
+  var availableDocsRequired = computed(function () {
+    var seen = {}
+    var result = []
+    for (var i = 0; i < groups.value.length; i++) {
+      var features = groups.value[i].features || []
+      for (var j = 0; j < features.length; j++) {
+        var val = features[j].docsRequired || null
+        var label = val || 'Not Set'
+        if (!seen[label]) {
+          seen[label] = true
+          result.push(label)
+        }
+      }
+    }
+    var order = { Yes: 0, No: 1, 'Not Set': 2 }
+    result.sort(function (a, b) {
+      var oa = order[a] != null ? order[a] : 99
+      var ob = order[b] != null ? order[b] : 99
+      return oa - ob
+    })
+    return result
+  })
+
   // --- Total (unfiltered) counts for summary cards (Risk 2 mitigation) ---
 
   var totalFeatures = computed(function () {
@@ -150,7 +174,8 @@ export function useFeatureTrackingFilters(groups, selectedVersion) {
     var hasFeatureFilters = searchQuery.value ||
       selectedStatuses.value.length > 0 ||
       selectedComponents.value.length > 0 ||
-      selectedOwners.value.length > 0
+      selectedOwners.value.length > 0 ||
+      selectedDocsRequired.value.length > 0
 
     if (!hasFeatureFilters) return result
 
@@ -182,6 +207,10 @@ export function useFeatureTrackingFilters(groups, selectedVersion) {
           var ownerMatch = (f.assignee && selectedOwners.value.includes(f.assignee)) ||
             (f.pmOwner && selectedOwners.value.includes(f.pmOwner))
           if (!ownerMatch) return false
+        }
+        if (selectedDocsRequired.value.length > 0) {
+          var docVal = f.docsRequired || 'Not Set'
+          if (!selectedDocsRequired.value.includes(docVal)) return false
         }
         return true
       })
@@ -239,7 +268,8 @@ export function useFeatureTrackingFilters(groups, selectedVersion) {
       selectedProducts.value.length > 0 ||
       selectedStatuses.value.length > 0 ||
       selectedComponents.value.length > 0 ||
-      selectedOwners.value.length > 0)
+      selectedOwners.value.length > 0 ||
+      selectedDocsRequired.value.length > 0)
   })
 
   var isFiltered = computed(function () {
@@ -259,6 +289,9 @@ export function useFeatureTrackingFilters(groups, selectedVersion) {
     }
     if (selectedOwners.value.length > 0) {
       labels.push({ type: 'owners', label: 'Owner: ' + selectedOwners.value.join(', ') })
+    }
+    if (selectedDocsRequired.value.length > 0) {
+      labels.push({ type: 'docsRequired', label: 'Docs Required: ' + selectedDocsRequired.value.join(', ') })
     }
     if (searchQuery.value) {
       labels.push({ type: 'search', label: 'Search: "' + searchQuery.value + '"' })
@@ -283,6 +316,7 @@ export function useFeatureTrackingFilters(groups, selectedVersion) {
     else if (type === 'status') selectedStatuses.value = []
     else if (type === 'components') selectedComponents.value = []
     else if (type === 'owners') selectedOwners.value = []
+    else if (type === 'docsRequired') selectedDocsRequired.value = []
     else if (type === 'search') searchQuery.value = ''
     else if (type === 'card') activeCardFilter.value = null
   }
@@ -293,6 +327,7 @@ export function useFeatureTrackingFilters(groups, selectedVersion) {
     selectedStatuses.value = []
     selectedComponents.value = []
     selectedOwners.value = []
+    selectedDocsRequired.value = []
     activeCardFilter.value = null
   }
 
@@ -312,7 +347,8 @@ export function useFeatureTrackingFilters(groups, selectedVersion) {
           selectedProducts: selectedProducts.value,
           selectedStatuses: selectedStatuses.value,
           selectedComponents: selectedComponents.value,
-          selectedOwners: selectedOwners.value
+          selectedOwners: selectedOwners.value,
+          selectedDocsRequired: selectedDocsRequired.value
         })
       )
     } catch { /* quota / private mode */ }
@@ -333,6 +369,7 @@ export function useFeatureTrackingFilters(groups, selectedVersion) {
         var stats = availableStatuses.value
         var comps = availableComponents.value
         var owners = availableOwners.value
+        var docs = availableDocsRequired.value
         if (Array.isArray(saved.selectedProducts)) {
           selectedProducts.value = saved.selectedProducts.filter(function (v) { return prods.includes(v) })
         }
@@ -341,6 +378,9 @@ export function useFeatureTrackingFilters(groups, selectedVersion) {
         }
         if (Array.isArray(saved.selectedComponents)) {
           selectedComponents.value = saved.selectedComponents.filter(function (v) { return comps.includes(v) })
+        }
+        if (Array.isArray(saved.selectedDocsRequired)) {
+          selectedDocsRequired.value = saved.selectedDocsRequired.filter(function (v) { return docs.includes(v) })
         }
         if (Array.isArray(saved.selectedOwners)) {
           selectedOwners.value = saved.selectedOwners.filter(function (v) { return owners.includes(v) })
@@ -357,12 +397,13 @@ export function useFeatureTrackingFilters(groups, selectedVersion) {
     selectedStatuses.value = []
     selectedComponents.value = []
     selectedOwners.value = []
+    selectedDocsRequired.value = []
     activeCardFilter.value = null
     nextTick(function () { _suspendSave = false })
   }
 
   watch(
-    [searchQuery, selectedProducts, selectedStatuses, selectedComponents, selectedOwners],
+    [searchQuery, selectedProducts, selectedStatuses, selectedComponents, selectedOwners, selectedDocsRequired],
     saveFilters,
     { deep: true }
   )
@@ -373,12 +414,14 @@ export function useFeatureTrackingFilters(groups, selectedVersion) {
     selectedStatuses,
     selectedComponents,
     selectedOwners,
+    selectedDocsRequired,
     activeCardFilter,
 
     availableProducts,
     availableStatuses,
     availableComponents,
     availableOwners,
+    availableDocsRequired,
 
     totalFeatures,
     totalAddedCount,

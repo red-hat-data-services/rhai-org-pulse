@@ -87,7 +87,8 @@ const FIELDS_TO_FETCH = [
   CUSTOM_FIELDS.statusSummary,
   CUSTOM_FIELDS.colorStatus,
   CUSTOM_FIELDS.productManager,
-  CUSTOM_FIELDS.blockedDropdown
+  CUSTOM_FIELDS.blockedDropdown,
+  CUSTOM_FIELDS.docsRequired
 ].join(',')
 
 function cacheKey(portfolioVersion) {
@@ -738,7 +739,8 @@ module.exports = async function registerFeatureTrackingRoutes(router, context) {
               team: f.team || null,
               scopeChange: f.scopeChange || null,
               fixVersionAddedAt: f.fixVersionAddedAt || null,
-              fixVersionRemovedAt: f.fixVersionRemovedAt || null
+              fixVersionRemovedAt: f.fixVersionRemovedAt || null,
+              docsRequired: f.docsRequired || null
             }
           })
         })
