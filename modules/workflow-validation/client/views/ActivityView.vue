@@ -1,8 +1,10 @@
 <template>
   <div>
     <div class="mb-4">
-      <h2 class="text-2xl font-bold text-gray-900 dark:text-gray-100">Bugs</h2>
-      <p class="text-sm text-gray-500 dark:text-gray-400 mt-0.5">Defects surfaced by workflow validation, with JIRA links. Filed = we opened it.</p>
+      <h2 class="text-2xl font-bold text-gray-900 dark:text-gray-100">Activity</h2>
+      <p class="text-sm text-gray-500 dark:text-gray-400 mt-0.5">
+        Bugs filed and matched by the RCA agent, with JIRA links. Filed = we opened it.
+      </p>
     </div>
 
     <FilterBar @change="reload" />
@@ -15,57 +17,47 @@
 
     <template v-else>
       <!-- KPIs -->
-      <div class="grid grid-cols-3 gap-4 mb-6">
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
         <MetricCard :value="kpis.total" label="Bug Records" tone="amber" />
         <MetricCard :value="kpis.opened" label="Opened (Filed)" tone="red" />
         <MetricCard :value="kpis.distinctJira" label="Distinct JIRA" tone="teal" />
+        <MetricCard :value="specFixCount" label="Spec Fixes" tone="neutral" />
       </div>
 
-      <!-- Breakdown chips -->
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700/60 p-4">
-          <h3 class="text-xs uppercase tracking-wide font-semibold text-gray-500 dark:text-gray-400 mb-3">By Category</h3>
-          <div class="flex flex-wrap gap-2">
-            <button
-              v-for="c in byCategory"
-              :key="c.category"
-              class="inline-flex items-center gap-1.5 rounded-full transition"
-              :class="filters.category === c.category ? 'ring-2 ring-red-400/50' : ''"
-              @click="toggle('category', c.category)"
-            >
-              <StatusBadge :value="c.category" />
-              <span class="text-xs font-mono text-gray-500 dark:text-gray-400">{{ c.count }}</span>
-            </button>
-          </div>
-        </div>
-        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700/60 p-4">
-          <h3 class="text-xs uppercase tracking-wide font-semibold text-gray-500 dark:text-gray-400 mb-3">By Action</h3>
-          <div class="flex flex-wrap gap-2">
-            <button
-              v-for="a in byAction"
-              :key="a.action"
-              class="inline-flex items-center gap-1.5 rounded-full transition"
-              :class="filters.action === a.action ? 'ring-2 ring-red-400/50' : ''"
-              @click="toggle('action', a.action)"
-            >
-              <StatusBadge :value="a.action" />
-              <span class="text-xs font-mono text-gray-500 dark:text-gray-400">{{ a.count }}</span>
-            </button>
-          </div>
-        </div>
+      <!-- Action filter chips -->
+      <div class="flex flex-wrap items-center gap-2 mb-5">
+        <span class="text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400 mr-1">Activity type</span>
+        <button
+          class="px-3 py-1 rounded-full text-xs font-medium border transition"
+          :class="!filters.action ? 'bg-red-600 text-white border-red-600' : 'bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-300 border-gray-200 dark:border-gray-600'"
+          @click="setAction('')"
+        >All</button>
+        <button
+          v-for="a in byAction"
+          :key="a.action"
+          class="px-3 py-1 rounded-full text-xs font-medium border transition inline-flex items-center gap-1.5"
+          :class="filters.action === a.action ? 'bg-red-600 text-white border-red-600' : 'bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-300 border-gray-200 dark:border-gray-600'"
+          @click="setAction(a.action)"
+        >{{ actionLabel(a.action) }} <span class="opacity-60">{{ a.count }}</span></button>
       </div>
 
-      <!-- Bug list -->
+      <!-- Data-source note -->
+      <div class="bg-blue-50 dark:bg-blue-900/20 border border-blue-100 dark:border-blue-800/60 rounded-lg px-4 py-2.5 mb-6 text-xs text-blue-800 dark:text-blue-300 flex items-start gap-2">
+        <InfoIcon :size="15" class="mt-0.5 shrink-0" />
+        <span>JIRA status shown reflects the value captured at indexing time (no live JIRA call in this POC), and spec-fix merge-request links are not present in the dataset.</span>
+      </div>
+
+      <!-- Activity feed -->
       <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700/60 overflow-hidden">
         <div class="px-6 py-4 border-b border-gray-100 dark:border-gray-700/60 flex items-center justify-between">
-          <h3 class="text-base font-semibold text-gray-900 dark:text-gray-100">Bug Records</h3>
-          <span class="text-xs text-gray-500 dark:text-gray-400">{{ total }} total</span>
+          <h3 class="text-base font-semibold text-gray-900 dark:text-gray-100">Activity Feed</h3>
+          <span class="text-xs text-gray-500 dark:text-gray-400">{{ total }} records</span>
         </div>
-        <div v-if="loading" class="px-6 py-10 text-center text-gray-400 dark:text-gray-500">Loading bugs…</div>
+        <div v-if="loading" class="px-6 py-10 text-center text-gray-400 dark:text-gray-500">Loading activity…</div>
         <div v-else-if="bugs.length" class="divide-y divide-gray-50 dark:divide-gray-700/40">
           <BugRow v-for="b in bugs" :key="b.id" :bug="b" />
         </div>
-        <p v-else class="px-6 py-10 text-center text-sm text-gray-400 dark:text-gray-500">No bugs match the current filters</p>
+        <p v-else class="px-6 py-10 text-center text-sm text-gray-400 dark:text-gray-500">No activity matches the current filters</p>
 
         <div class="flex items-center justify-between px-6 py-3 border-t border-gray-100 dark:border-gray-700/60 text-sm">
           <span class="text-gray-500 dark:text-gray-400">
@@ -84,11 +76,10 @@
 </template>
 
 <script setup>
-import { onMounted, reactive, ref } from 'vue'
-import { ServerCrash as ServerCrashIcon } from 'lucide-vue-next'
+import { computed, onMounted, reactive, ref } from 'vue'
+import { ServerCrash as ServerCrashIcon, Info as InfoIcon } from 'lucide-vue-next'
 import FilterBar from '../components/FilterBar.vue'
 import MetricCard from '../components/MetricCard.vue'
-import StatusBadge from '../components/StatusBadge.vue'
 import BugRow from '../components/BugRow.vue'
 import { filters, useWorkflowValidation } from '../composables/useWorkflowValidation'
 
@@ -101,8 +92,13 @@ const size = ref(50)
 const loading = ref(false)
 const unreachable = ref('')
 const kpis = reactive({ total: 0, opened: 0, distinctJira: 0 })
-const byCategory = ref([])
 const byAction = ref([])
+
+const specFixCount = computed(() => (byAction.value.find((a) => a.action === 'SPEC_FIX') || {}).count || 0)
+
+function actionLabel(a) {
+  return { FILED: 'Filed', MATCH: 'Matched', EXISTING: 'Existing', SPEC_FIX: 'Spec fix', NONE: 'No action' }[a] || a
+}
 
 async function load() {
   loading.value = true
@@ -112,13 +108,12 @@ async function load() {
     bugs.value = data.bugs
     total.value = data.total
     Object.assign(kpis, data.kpis)
-    byCategory.value = data.byCategory
     byAction.value = data.byAction
   } catch (err) {
     if (err.status === 503 || err.data?.code === 'OS_UNREACHABLE') {
       unreachable.value = err.data?.error || err.message
     } else {
-      unreachable.value = err.message || 'Failed to load bugs'
+      unreachable.value = err.message || 'Failed to load activity'
     }
   } finally {
     loading.value = false
@@ -127,10 +122,7 @@ async function load() {
 
 function reload() { page.value = 0; load() }
 function go(p) { page.value = p; load() }
-function toggle(field, value) {
-  filters[field] = filters[field] === value ? '' : value
-  reload()
-}
+function setAction(a) { filters.action = a; reload() }
 
 onMounted(load)
 </script>

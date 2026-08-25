@@ -81,6 +81,13 @@ export function useWorkflowValidation() {
   const getRuns = (page = 0, size = 25) => apiRequest(`${BASE}/runs${buildQuery({ page, size })}`)
   const getRun = (runKey) => apiRequest(`${BASE}/runs/${encodeURIComponent(runKey)}`)
   const getBugs = (page = 0, size = 50) => apiRequest(`${BASE}/bugs${buildQuery({ page, size })}`)
+  const getWorkflows = () => apiRequest(`${BASE}/workflows${buildQuery()}`)
+  const getWorkflowHistory = (workflow) => apiRequest(`${BASE}/workflow-history?workflow=${encodeURIComponent(workflow)}`)
+  const getCiRuns = () => apiRequest(`${BASE}/ci-runs`)
+  const getCompare = (a, b) => apiRequest(`${BASE}/compare?a=${encodeURIComponent(a)}&b=${encodeURIComponent(b)}`)
 
-  return { getStatus, getFilters, getOverview, getCharts, getRuns, getRun, getBugs }
+  return {
+    getStatus, getFilters, getOverview, getCharts, getRuns, getRun, getBugs,
+    getWorkflows, getWorkflowHistory, getCiRuns, getCompare
+  }
 }

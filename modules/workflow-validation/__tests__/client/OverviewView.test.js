@@ -20,10 +20,24 @@ const mockCharts = {
   bugsByAction: [{ action: 'FILED', count: 16 }]
 }
 
+const mockRuns = {
+  total: 1,
+  page: 0,
+  size: 8,
+  runs: [{
+    id: '3.5.18/1/fraud_detection/fraud-detection-tutorial',
+    workflow_label: 'fraud_detection / fraud-detection-tutorial',
+    rhoai_version: '3.5.18', verdict: 'FAIL',
+    tasks_passed: 2, tasks_total: 9, cost_usd: 1.94, bug_count: 1,
+    timestamp: '2026-08-04T20:03:06.825Z'
+  }]
+}
+
 vi.mock('@shared/client/services/api', () => ({
   apiRequest: vi.fn((path) => {
     if (path.includes('/overview')) return Promise.resolve(mockOverview)
     if (path.includes('/charts')) return Promise.resolve(mockCharts)
+    if (path.includes('/runs')) return Promise.resolve(mockRuns)
     if (path.includes('/filters')) return Promise.resolve({ versions: [], providers: [], models: [], workflows: [] })
     return Promise.resolve({})
   })
@@ -39,7 +53,8 @@ describe('Workflow Validation OverviewView', () => {
           moduleNav: { navigateTo: vi.fn(), params: { value: {} } }
         },
         stubs: {
-          RunsOverTimeChart: true,
+          TrendLineChart: true,
+          CategoryDonut: true,
           PassRateByVersionChart: true,
           FilterBar: true
         }
@@ -61,7 +76,8 @@ describe('Workflow Validation OverviewView', () => {
     expect(text).toContain('Bugs Opened')
   })
 
-  it('renders the per-workflow breakdown row', () => {
+  it('renders the recent runs table', () => {
+    expect(wrapper.text()).toContain('Recent Runs')
     expect(wrapper.text()).toContain('fraud_detection')
   })
 })
