@@ -9,12 +9,15 @@
   "client": {
     "entry": "./client/index.js",
     "navItems": [
-      { "id": "overview", "label": "Overview", "icon": "layout-dashboard", "default": true },
-      { "id": "runs", "label": "Test Runs", "icon": "list-checks" },
-      { "id": "bugs", "label": "Bugs", "icon": "bug" }
+      { "id": "overview", "label": "Dashboard", "icon": "LayoutDashboard", "default": true },
+      { "id": "runs", "label": "Runs", "icon": "clipboard-list" },
+      { "id": "workflows", "label": "Workflows", "icon": "Kanban" },
+      { "id": "compare", "label": "Compare", "icon": "git-branch" },
+      { "id": "activity", "label": "Activity", "icon": "activity" }
     ],
     "hiddenRoutes": {
-      "run-detail": "runs"
+      "run-detail": "runs",
+      "workflow-history": "workflows"
     }
   },
   "server": {

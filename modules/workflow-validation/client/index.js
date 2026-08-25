@@ -4,5 +4,8 @@ export const routes = {
   'overview': defineAsyncComponent(() => import('./views/OverviewView.vue')),
   'runs': defineAsyncComponent(() => import('./views/RunsView.vue')),
   'run-detail': defineAsyncComponent(() => import('./views/RunDetailView.vue')),
-  'bugs': defineAsyncComponent(() => import('./views/BugsView.vue'))
+  'compare': defineAsyncComponent(() => import('./views/CompareView.vue')),
+  'workflows': defineAsyncComponent(() => import('./views/WorkflowsView.vue')),
+  'workflow-history': defineAsyncComponent(() => import('./views/WorkflowHistoryView.vue')),
+  'activity': defineAsyncComponent(() => import('./views/ActivityView.vue'))
 }

@@ -361,4 +361,230 @@ module.exports = function registerRoutes(router, context) {
       bugs: (r.hits?.hits || []).map((h) => ({ id: h._id, ...h._source }))
     });
   }));
+
+  /**
+   * @openapi
+   * /api/modules/workflow-validation/workflows:
+   *   get:
+   *     summary: Per-workflow rollup — pass rate, latest result, cost, bugs (respects filters)
+   *     tags: [Workflow Validation]
+   *     parameters:
+   *       - { in: query, name: version, schema: { type: string } }
+   *       - { in: query, name: verdict, schema: { type: string } }
+   *       - { in: query, name: q, schema: { type: string } }
+   *     responses:
+   *       200: { description: Workflow rollup list }
+   */
+  router.get('/workflows', requireAuth, safe(async function (req, res) {
+    const body = {
+      size: 0,
+      query: runFilters(req.query),
+      aggs: {
+        by_workflow: {
+          terms: { field: 'workflow_label', size: 300, order: { runs: 'desc' } },
+          aggs: {
+            runs: { value_count: { field: 'run_key' } },
+            pass_rate: { avg: { field: 'passed_int' } },
+            avg_dur: { avg: { field: 'duration_s' } },
+            ai_cost: { sum: { field: 'cost_usd' } },
+            bugs: { sum: { field: 'bug_count' } },
+            test: { terms: { field: 'test_name', size: 1 } },
+            latest: {
+              top_hits: {
+                size: 1,
+                sort: [{ timestamp: 'desc' }],
+                _source: ['verdict', 'timestamp', 'rhoai_version', 'run_key', 'tasks_passed', 'tasks_total']
+              }
+            }
+          }
+        },
+        tags: { terms: { field: 'test_name', size: 100, order: { _key: 'asc' } } }
+      }
+    };
+    const r = await osSearch(RUNS_INDEX, body);
+    const a = r.aggregations || {};
+    res.json({
+      tags: bucketList(a.tags).map((b) => ({ tag: b.key, count: b.doc_count })),
+      workflows: bucketList(a.by_workflow).map((bkt) => {
+        const latest = bkt.latest?.hits?.hits?.[0]?._source || {};
+        return {
+          workflow: bkt.key,
+          tag: bkt.test?.buckets?.[0]?.key || null,
+          runs: bkt.runs?.value || 0,
+          passRate: bkt.pass_rate?.value ?? null,
+          avgDuration: bkt.avg_dur?.value || 0,
+          aiCost: bkt.ai_cost?.value || 0,
+          bugs: bkt.bugs?.value || 0,
+          latestVerdict: latest.verdict || null,
+          latestVersion: latest.rhoai_version || null,
+          latestTimestamp: latest.timestamp || null,
+          latestRunKey: latest.run_key || null
+        };
+      })
+    });
+  }));
+
+  /**
+   * @openapi
+   * /api/modules/workflow-validation/workflow-history:
+   *   get:
+   *     summary: Full run history + linked bugs for a single workflow
+   *     tags: [Workflow Validation]
+   *     parameters:
+   *       - { in: query, name: workflow, required: true, schema: { type: string } }
+   *     responses:
+   *       200: { description: Workflow history }
+   *       400: { description: Missing workflow param }
+   */
+  router.get('/workflow-history', requireAuth, safe(async function (req, res) {
+    const workflow = req.query.workflow;
+    if (!workflow) return res.status(400).json({ error: 'workflow query param is required' });
+
+    const runR = await osSearch(RUNS_INDEX, {
+      size: 500,
+      query: { term: { workflow_label: workflow } },
+      sort: [{ timestamp: 'asc' }],
+      _source: [
+        'run_key', 'run_id', 'rhoai_version', 'verdict', 'timestamp',
+        'duration_s', 'tasks_total', 'tasks_passed', 'tasks_failed',
+        'cost_usd', 'model', 'cluster_name', 'classification', 'confidence', 'workflow'
+      ]
+    });
+    const runs = (runR.hits?.hits || []).map((h) => ({ id: h._id, ...h._source }));
+
+    // Bug docs key on the SHORT workflow name (e.g. "fraud-detection-tutorial"),
+    // not the workflow_label — collect the short names from the runs to join.
+    const shortNames = [...new Set(runs.map((r) => r.workflow).filter(Boolean))];
+    let bugs = [];
+    if (shortNames.length) {
+      const bugR = await osSearch(BUGS_INDEX, {
+        size: 200,
+        query: {
+          bool: {
+            should: [
+              { terms: { workflow: shortNames } },
+              { terms: { impacted_workflows: shortNames } }
+            ],
+            minimum_should_match: 1
+          }
+        },
+        sort: [{ timestamp: 'desc' }]
+      });
+      bugs = (bugR.hits?.hits || []).map((h) => ({ id: h._id, ...h._source }));
+    }
+
+    const passed = runs.filter((r) => r.verdict === 'PASS').length;
+    const failed = runs.filter((r) => r.verdict === 'FAIL').length;
+    res.json({
+      workflow,
+      summary: {
+        runs: runs.length,
+        passed,
+        failed,
+        passRate: runs.length ? passed / (passed + failed || 1) : null,
+        latestVerdict: runs.length ? runs[runs.length - 1].verdict : null
+      },
+      runs,
+      bugs
+    });
+  }));
+
+  /**
+   * @openapi
+   * /api/modules/workflow-validation/ci-runs:
+   *   get:
+   *     summary: Distinct CI runs (run_id) with version, date, workflow count, pass rate
+   *     tags: [Workflow Validation]
+   *     responses:
+   *       200: { description: CI run list (newest first) }
+   */
+  router.get('/ci-runs', requireAuth, safe(async function (req, res) {
+    const body = {
+      size: 0,
+      aggs: {
+        runs: {
+          terms: { field: 'run_id', size: 100, order: { latest: 'desc' } },
+          aggs: {
+            latest: { max: { field: 'timestamp' } },
+            pass_rate: { avg: { field: 'passed_int' } },
+            ver: { terms: { field: 'rhoai_version', size: 1 } }
+          }
+        }
+      }
+    };
+    const r = await osSearch(RUNS_INDEX, body);
+    res.json({
+      ciRuns: bucketList(r.aggregations?.runs).map((b) => ({
+        runId: b.key,
+        version: b.ver?.buckets?.[0]?.key || null,
+        workflows: b.doc_count,
+        passRate: b.pass_rate?.value ?? null,
+        timestamp: b.latest?.value_as_string || null,
+        timestampMs: b.latest?.value || null
+      }))
+    });
+  }));
+
+  /**
+   * @openapi
+   * /api/modules/workflow-validation/compare:
+   *   get:
+   *     summary: Diff two CI runs by workflow verdict (fixed / regressed / unchanged)
+   *     tags: [Workflow Validation]
+   *     parameters:
+   *       - { in: query, name: a, required: true, schema: { type: string }, description: baseline run_id }
+   *       - { in: query, name: b, required: true, schema: { type: string }, description: target run_id }
+   *     responses:
+   *       200: { description: Comparison result }
+   *       400: { description: Missing run ids }
+   */
+  router.get('/compare', requireAuth, safe(async function (req, res) {
+    const { a, b } = req.query;
+    if (!a || !b) return res.status(400).json({ error: 'Both a and b run ids are required' });
+
+    const fetchRun = async (runId) => {
+      const r = await osSearch(RUNS_INDEX, {
+        size: 300,
+        query: { term: { run_id: runId } },
+        _source: ['workflow_label', 'verdict', 'rhoai_version', 'timestamp', 'run_key', 'duration_s', 'cost_usd', 'tasks_passed', 'tasks_total']
+      });
+      return (r.hits?.hits || []).map((h) => ({ id: h._id, ...h._source }));
+    };
+    const [runsA, runsB] = await Promise.all([fetchRun(a), fetchRun(b)]);
+
+    const meta = (runId, rows) => ({
+      runId,
+      version: rows[0]?.rhoai_version || null,
+      timestamp: rows[0]?.timestamp || null,
+      workflows: rows.length
+    });
+    const mapA = new Map(runsA.map((r) => [r.workflow_label, r]));
+    const mapB = new Map(runsB.map((r) => [r.workflow_label, r]));
+    const keys = [...new Set([...mapA.keys(), ...mapB.keys()])].sort();
+
+    const classify = (va, vb) => {
+      if (va && !vb) return 'removed';
+      if (!va && vb) return 'added';
+      if (va === 'FAIL' && vb === 'PASS') return 'fixed';
+      if (va === 'PASS' && vb === 'FAIL') return 'regressed';
+      if (va === vb) return va === 'PASS' ? 'same-pass' : 'same-fail';
+      return 'changed';
+    };
+
+    const rows = keys.map((wf) => {
+      const ra = mapA.get(wf);
+      const rb = mapB.get(wf);
+      return {
+        workflow: wf,
+        a: ra ? ra.verdict : null,
+        b: rb ? rb.verdict : null,
+        change: classify(ra?.verdict, rb?.verdict),
+        aRunKey: ra?.id || null,
+        bRunKey: rb?.id || null
+      };
+    });
+
+    const tally = rows.reduce((acc, r) => { acc[r.change] = (acc[r.change] || 0) + 1; return acc; }, {});
+    res.json({ a: meta(a, runsA), b: meta(b, runsB), rows, tally });
+  }));
 };
