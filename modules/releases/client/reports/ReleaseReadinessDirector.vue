@@ -736,7 +736,10 @@ function formatDate(iso) {
 
 function formatScheduleDate(dateStr) {
   if (!dateStr) return ''
-  const d = new Date(dateStr + 'T00:00:00')
+  // Handle both YYYY-MM-DD and ISO timestamp formats
+  const dateOnly = dateStr.includes('T') ? dateStr.split('T')[0] : dateStr
+  const d = new Date(dateOnly + 'T00:00:00')
+  if (isNaN(d.getTime())) return ''
   return d.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })
 }
 
@@ -1070,19 +1073,25 @@ const releaseCycleMetrics = computed(() => data.value?.release_cycle_metrics || 
 
 function formatMetricDate(dateStr) {
   if (!dateStr) return '—'
-  const d = new Date(dateStr + 'T00:00:00')
+  // Handle both YYYY-MM-DD and ISO timestamp formats
+  const dateOnly = dateStr.includes('T') ? dateStr.split('T')[0] : dateStr
+  const d = new Date(dateOnly + 'T00:00:00')
+  if (isNaN(d.getTime())) return '—'
   return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
 }
 
 function daysLabel(n) {
-  if (n === null || n === undefined) return '—'
+  if (n === null || n === undefined || isNaN(n)) return '—'
+  if (n < 0) return '—' // Negative days are invalid for "days since" metrics
   if (n === 0) return '0 days'
   return `${n} day${n === 1 ? '' : 's'}`
 }
 
 function daysClass(n, warnAt, alertAt) {
-  if (n === null || n === undefined) return 'text-gray-400 dark:text-gray-500'
-  if (n >= alertAt) return 'text-red-600 dark:text-red-400 font-semibold'
+  if (n === null || n === undefined || isNaN(n) || n < 0) return 'text-gray-400 dark:text-gray-500'
+  // Validate threshold order: alertAt should be >= warnAt
+  const effectiveAlertAt = Math.max(warnAt, alertAt)
+  if (n >= effectiveAlertAt) return 'text-red-600 dark:text-red-400 font-semibold'
   if (n >= warnAt) return 'text-amber-600 dark:text-amber-400 font-semibold'
   return 'text-green-600 dark:text-green-400 font-semibold'
 }
