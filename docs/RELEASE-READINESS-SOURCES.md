@@ -1,10 +1,5 @@
 # Release Readiness Dashboard: Sources and UI Coverage
 
-Temporary source-to-UI reference for Jira ticket `RHOAIENG-76482`.
-The backend extractor is `jira/release-readiness/fetch_release_metrics.py` in
-the `rhods-qe-tools` repository. The frontend is
-`modules/releases/client/reports/ReleaseReadinessDirector.vue`.
-
 ## Source conventions
 
 - `RELEASE_VERSION` is the canonical release name, for example `rhoai-3.5.EA2`.
