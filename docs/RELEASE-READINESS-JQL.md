@@ -19,7 +19,7 @@ The script uses values from `JIRA_VERSIONS` when configured; otherwise it derive
 | Value | Source |
 | --- | --- |
 | Code Freeze | Product Pages API, or local release-variable YAML fallback. No JQL. |
-| RC1/RC2 Build Complete | Test-phase Epic query below; Python classifies RC/build summaries. |
+| RC1/RC2 Build Complete | Product Pages API first; Jira test-phase Epic query below is the fallback. Python classifies RC/build summaries. |
 | Test Started | Same Epic query; uses Epic `updated` as a proxy. |
 | Test Finished | Same Epic query; uses Epic `resolutiondate`, falling back to `updated`. |
 | TFAs Passed | TFA query below; latest `updated` when every task is In Progress or Done. |
@@ -54,7 +54,6 @@ AND (component not in (Documentation, PXE) OR component is EMPTY)
 AND status not in (Closed, Resolved)
 AND ('Release Blocker' != Rejected OR 'Release Blocker' is EMPTY)
 AND <VERSION_CLAUSE>
-AND priority in (Blocker)
 AND priority in (Blocker)
 ```
 
@@ -131,6 +130,87 @@ AND (labels not in (RHOAI-releases, RHOAI-internal, devtestops-service, test-fai
 AND (component not in (Documentation, PXE) OR component is EMPTY)
 AND status not in (Closed, Resolved)
 AND <VERSION_CLAUSE>
+```
+
+## Generated Jira filter links
+
+These JQLs are embedded in dashboard links. They are generated for navigation and are not all executed by the extractor.
+
+Component TFA link:
+
+```jql
+project = RHOAIENG
+AND component = "<COMPONENT>"
+AND <VERSION_CLAUSE>
+AND summary ~ "TFA Sign-Off"
+```
+
+Component failed/skipped links use the same failed/skipped queries above. For mapped components, `<TEAM_OR_COMPONENT_CLAUSE>` is:
+
+```jql
+Team = "<TEAM_UUID>"
+```
+
+For unmapped components it is:
+
+```jql
+component = "<COMPONENT>"
+```
+
+Per-phase component execution link:
+
+```jql
+parent = <PHASE_EPIC_KEY>
+AND component = "<COMPONENT>"
+```
+
+When multiple phase Epics are present, the first clause is instead:
+
+```jql
+parent in (<PHASE_EPIC_KEY_1>, <PHASE_EPIC_KEY_2>, ...)
+```
+
+Overall work filters:
+
+```jql
+(parent IN (<INITIATIVE_KEY_1>, <INITIATIVE_KEY_2>, ...)
+ OR "Epic Link" IN (<INITIATIVE_KEY_1>, <INITIATIVE_KEY_2>, ...))
+```
+
+The work-in-progress and work-done links append, respectively:
+
+```jql
+AND statusCategory = "In Progress"
+```
+
+```jql
+AND statusCategory = "Done"
+```
+
+Linked TFA-in-review and blocker links:
+
+```jql
+key IN (<TFA_KEY_1>, <TFA_KEY_2>, ...)
+AND status = "In Review"
+```
+
+```jql
+key IN (<BLOCKER_KEY_1>, <BLOCKER_KEY_2>, ...)
+AND statusCategory != Done
+```
+
+Gate links for an individual Epic:
+
+```jql
+parent = <EPIC_KEY>
+OR "Epic Link" = <EPIC_KEY>
+```
+
+The Test Execution gate instead uses:
+
+```jql
+parent in (<TEST_PHASE_EPIC_KEY_1>, <TEST_PHASE_EPIC_KEY_2>, ...)
+AND issuetype NOT IN (Epic, Initiative)
 ```
 
 `customfield_10014` is the Epic Link field in the Red Hat Jira instance. Team IDs used by component queries are instance-specific.
