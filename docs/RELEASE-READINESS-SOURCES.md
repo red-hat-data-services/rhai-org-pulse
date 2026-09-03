@@ -1,5 +1,9 @@
 # Release Readiness Dashboard: Sources and UI Coverage
 
+## Dashboard snapshot
+
+![Release Readiness dashboard snapshot](assets/release-readiness-ea2-overview.png)
+
 ## Source conventions
 
 - `RELEASE_VERSION` is the canonical release name, for example `rhoai-3.5.EA2`.

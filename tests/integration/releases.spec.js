@@ -1154,6 +1154,34 @@ test.describe('Releases Release Readiness @releases', () => {
 
     expect(page.errors).toHaveLength(0);
   });
+
+  test('release readiness shows every release-cycle timeline in one table', async ({ page }) => {
+    await page.goto('/#/releases/reports?report=release-readiness&version=rhoai-3.5.EA2');
+    await page.waitForLoadState('networkidle');
+    await page.waitForTimeout(DEFAULT_PAGE_WAIT_TIME);
+
+    for (const phase of [
+      'RC1 Builds Testing',
+      'RC2 Builds Testing',
+      'Nightly Build Wk2 - Jun 22',
+      'Nightly Build Wk1 - Jun 15',
+      'Nightly Build Wk1 - June 1'
+    ]) {
+      await expect(page.getByRole('cell', { name: phase, exact: true })).toBeVisible();
+    }
+
+    const nightlyPhaseButton = page.getByRole('button', { name: 'Nightly Build Wk2 - Jun 22', exact: true });
+    await expect(nightlyPhaseButton).toBeVisible();
+    await nightlyPhaseButton.click();
+    await nightlyPhaseButton.click();
+    await expect(
+      page.locator('span.text-xs.font-bold.uppercase.tracking-wide.text-blue-500')
+        .filter({ hasText: /^Nightly Build Wk2 - Jun 22$/ })
+    ).toBeVisible();
+    await expect(page.getByText('20 components', { exact: true }).first()).toBeVisible();
+
+    expect(page.errors).toHaveLength(0);
+  });
 });
 
 /**
