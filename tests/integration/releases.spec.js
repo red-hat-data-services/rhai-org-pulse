@@ -1160,25 +1160,28 @@ test.describe('Releases Release Readiness @releases', () => {
     await page.waitForLoadState('networkidle');
     await page.waitForTimeout(DEFAULT_PAGE_WAIT_TIME);
 
+    const timelineTable = page.locator('table').filter({
+      has: page.getByRole('columnheader', { name: 'Phase', exact: true })
+    });
+    await expect(timelineTable).toHaveCount(1);
+
     for (const phase of [
-      'RC1 Builds Testing',
-      'RC2 Builds Testing',
-      'Nightly Build Wk2 - Jun 22',
-      'Nightly Build Wk1 - Jun 15',
-      'Nightly Build Wk1 - June 1'
+      'Nightly Demo Cycle',
+      'RC1 Demo Validation',
+      'RC2 Demo Validation'
     ]) {
-      await expect(page.getByRole('cell', { name: phase, exact: true })).toBeVisible();
+      await expect(timelineTable.getByRole('cell', { name: phase, exact: true })).toBeVisible();
     }
 
-    const nightlyPhaseButton = page.getByRole('button', { name: 'Nightly Build Wk2 - Jun 22', exact: true });
+    const nightlyPhaseButton = page.getByRole('button', { name: 'Nightly', exact: true });
     await expect(nightlyPhaseButton).toBeVisible();
     await nightlyPhaseButton.click();
     await nightlyPhaseButton.click();
     await expect(
       page.locator('span.text-xs.font-bold.uppercase.tracking-wide.text-blue-500')
-        .filter({ hasText: /^Nightly Build Wk2 - Jun 22$/ })
+        .filter({ hasText: /^Nightly$/ })
     ).toBeVisible();
-    await expect(page.getByText('20 components', { exact: true }).first()).toBeVisible();
+    await expect(page.getByText('3 components', { exact: true }).first()).toBeVisible();
 
     expect(page.errors).toHaveLength(0);
   });
