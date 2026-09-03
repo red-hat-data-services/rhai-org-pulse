@@ -1126,7 +1126,7 @@ test.describe('Releases Release Readiness @releases', () => {
     expect(body).not.toHaveProperty('director_summary');
   });
 
-  test('release readiness metrics API returns release_cycle_metrics shape', async ({ request }) => {
+  test('release readiness metrics API returns one canonical phase list', async ({ request }) => {
     const res = await request.get('/api/modules/releases/release-readiness?version=rhoai-3.5.EA2');
     if (res.status() === 404) {
       test.skip();
@@ -1135,10 +1135,15 @@ test.describe('Releases Release Readiness @releases', () => {
     expect(res.ok()).toBe(true);
     const body = await res.json();
     expect(body).toHaveProperty('release_cycle_metrics');
-    expect(body.release_cycle_metrics).toHaveProperty('build_milestones');
-    expect(body.release_cycle_metrics).toHaveProperty('test_execution_timelines');
-    expect(Array.isArray(body.release_cycle_metrics.build_milestones)).toBe(true);
-    expect(Array.isArray(body.release_cycle_metrics.test_execution_timelines)).toBe(true);
+    expect(body.release_cycle_metrics).toHaveProperty('phases');
+    expect(Array.isArray(body.release_cycle_metrics.phases)).toBe(true);
+    expect(body.release_cycle_metrics.phases[0]).toMatchObject({
+      phase: 'Nightly Demo Cycle',
+      epic_key: 'DEMO-101',
+      build_ready_date: '2030-01-15',
+      days_since_code_freeze: 3,
+      test_started_date: '2030-01-16'
+    });
   });
 
   test('release readiness report shows Release Cycle Metrics section', async ({ page }) => {

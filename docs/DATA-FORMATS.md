@@ -2334,25 +2334,12 @@ version string (spaces and special chars replaced with `_`).
   },
   "release_cycle_metrics": {
     "code_freeze_date": "2026-02-24",
-    "build_milestones": [
-      {
-        "name": "RC1 Builds Testing",
-        "epic_key": "RHOAIENG-68791",
-        "build_complete_date": "2026-03-03",
-        "days_since_code_freeze": 5
-      },
-      {
-        "name": "RC2 Builds Testing",
-        "epic_key": "RHOAIENG-68813",
-        "build_complete_date": "2026-03-17",
-        "days_since_code_freeze": 15
-      }
-    ],
-    "test_execution_timelines": [
+    "phases": [
       {
         "phase": "RC1 Builds Testing",
         "epic_key": "RHOAIENG-68791",
         "build_ready_date": "2026-03-03",
+        "days_since_code_freeze": 5,
         "test_started_date": "2026-03-04",
         "days_to_test_started": 1,
         "test_finished_date": "2026-03-13",
@@ -2368,6 +2355,7 @@ version string (spaces and special chars replaced with `_`).
         "phase": "RC2 Builds Testing",
         "epic_key": "RHOAIENG-68813",
         "build_ready_date": "2026-03-17",
+        "days_since_code_freeze": 15,
         "test_started_date": "2026-03-18",
         "days_to_test_started": 1,
         "test_finished_date": null,
@@ -2388,30 +2376,27 @@ version string (spaces and special chars replaced with `_`).
 | Field | Type | Description |
 |-------|------|-------------|
 | `release_cycle_metrics.code_freeze_date` | `string \| null` | `YYYY-MM-DD` from Product Pages |
-| `release_cycle_metrics.build_milestones[].name` | `string` | Test-phase Epic summary from Jira (e.g. `"RC1 Builds Testing"`, `"Nightly Build Wk2 - Jun 22"`) |
-| `release_cycle_metrics.build_milestones[].epic_key` | `string` | Jira Epic key (e.g. `"RHOAIENG-68791"`) |
-| `release_cycle_metrics.build_milestones[].build_complete_date` | `string \| null` | `YYYY-MM-DD`; source: PP schedule task matching the RC label, or Jira epic Done date |
-| `release_cycle_metrics.build_milestones[].days_since_code_freeze` | `number \| null` | Working days (Mon–Fri) between `code_freeze_date` and `build_complete_date`; `null` if either is unknown |
-| `release_cycle_metrics.test_execution_timelines[].phase` | `string` | Test-phase Epic summary from Jira (e.g. `"RC1 Builds Testing"`, `"Nightly Build Wk2 - Jun 22"`) |
-| `release_cycle_metrics.test_execution_timelines[].epic_key` | `string` | Jira Epic key (e.g. `"RHOAIENG-68791"`) |
-| `release_cycle_metrics.test_execution_timelines[].build_ready_date` | `string \| null` | Same as `build_milestones` entry for this phase |
-| `release_cycle_metrics.test_execution_timelines[].test_started_date` | `string \| null` | Jira test-phase epic first became active (proxy: `updated` timestamp) |
-| `release_cycle_metrics.test_execution_timelines[].days_to_test_started` | `number \| null` | Working days from `build_ready_date` to `test_started_date` |
-| `release_cycle_metrics.test_execution_timelines[].test_finished_date` | `string \| null` | Jira test-phase epic Done (`resolutiondate` or `updated`) |
-| `release_cycle_metrics.test_execution_timelines[].days_to_test_finished` | `number \| null` | Working days from `build_ready_date` to `test_finished_date` |
-| `release_cycle_metrics.test_execution_timelines[].tfas_passed_date` | `string \| null` | Max `updated` among TFA tasks when ALL reached In Progress or Done; `null` if any still New |
-| `release_cycle_metrics.test_execution_timelines[].days_to_tfas_passed` | `number \| null` | Working days from `build_ready_date` to `tfas_passed_date` |
-| `release_cycle_metrics.test_execution_timelines[].tfas_triaged_date` | `string \| null` | Max `updated` among TFA tasks when ALL reached Done; `null` if any not Done |
-| `release_cycle_metrics.test_execution_timelines[].days_to_tfas_triaged` | `number \| null` | Working days from `build_ready_date` to `tfas_triaged_date` |
-| `release_cycle_metrics.test_execution_timelines[].blockers_resolved_date` | `string \| null` | Max `resolutiondate` across all resolved blockers; `null` if any open blockers remain |
-| `release_cycle_metrics.test_execution_timelines[].days_to_blockers_resolved` | `number \| null` | Working days from `build_ready_date` to `blockers_resolved_date` |
+| `release_cycle_metrics.phases[].phase` | `string` | Test-phase Epic summary from Jira (e.g. `"RC1 Builds Testing"`, `"Nightly Build Wk2 - Jun 22"`) |
+| `release_cycle_metrics.phases[].epic_key` | `string` | Jira Epic key (e.g. `"RHOAIENG-68791"`) |
+| `release_cycle_metrics.phases[].build_ready_date` | `string \| null` | `YYYY-MM-DD`; source: manual override, PP schedule task matching the RC label, or Jira epic Done date |
+| `release_cycle_metrics.phases[].days_since_code_freeze` | `number \| null` | Working days (Mon–Fri) between `code_freeze_date` and `build_ready_date`; `null` if either is unknown |
+| `release_cycle_metrics.phases[].test_started_date` | `string \| null` | Jira test-phase epic first became active (proxy: `updated` timestamp) |
+| `release_cycle_metrics.phases[].days_to_test_started` | `number \| null` | Working days from `build_ready_date` to `test_started_date` |
+| `release_cycle_metrics.phases[].test_finished_date` | `string \| null` | Jira test-phase epic Done (`resolutiondate` or `updated`) |
+| `release_cycle_metrics.phases[].days_to_test_finished` | `number \| null` | Working days from `build_ready_date` to `test_finished_date` |
+| `release_cycle_metrics.phases[].tfas_passed_date` | `string \| null` | Max `updated` among TFA tasks when ALL reached In Progress or Done; `null` if any still New |
+| `release_cycle_metrics.phases[].days_to_tfas_passed` | `number \| null` | Working days from `build_ready_date` to `tfas_passed_date` |
+| `release_cycle_metrics.phases[].tfas_triaged_date` | `string \| null` | Max `updated` among TFA tasks when ALL reached Done; `null` if any not Done |
+| `release_cycle_metrics.phases[].days_to_tfas_triaged` | `number \| null` | Working days from `build_ready_date` to `tfas_triaged_date` |
+| `release_cycle_metrics.phases[].blockers_resolved_date` | `string \| null` | Max `resolutiondate` across all resolved blockers; `null` if any open blockers remain |
+| `release_cycle_metrics.phases[].days_to_blockers_resolved` | `number \| null` | Working days from `build_ready_date` to `blockers_resolved_date` |
 | `release_schedule.rc1_build_date` | `string \| null` | New field added to `release_schedule`; PP schedule task date for RC1 build milestone |
 | `release_schedule.rc2_build_date` | `string \| null` | PP schedule task date for RC2 build milestone |
 
 **Notes:**
 - All day counts use Mon–Fri only (no public holidays excluded).
 - Dates are proxies from Jira `updated` timestamps; they represent when Jira recorded the transition, not the exact moment it occurred.
-- The TFA and blocker dates are release-level (not per-RC); the same date appears in both RC1 and RC2 timelines with different `days_to_*` values.
+- The TFA and blocker dates are release-level (not per-RC); the same date appears in each phase with different `days_to_*` values.
 - `null` means the milestone has not occurred or data is unavailable; the dashboard renders `—` for null.
 
 ---
