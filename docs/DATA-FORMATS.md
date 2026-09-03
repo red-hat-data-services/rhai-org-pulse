@@ -2,21 +2,6 @@
 
 This document describes the JSON structure of all files stored in the `data/` directory (production) and `fixtures/` directory (demo mode). **Demo fixtures must always match production format** — see [Fixture Rules](#fixture-rules) below.
 
-## Jira Autofix — `data/ai-impact/autofix-data.json`
-
-The Autofix snapshot keeps the existing `issues` pipeline-labeled cohort and
-adds `policyEligibleIssues`, the gross Bug cohort returned by the separate
-policy query. The gross query excludes CVE summary or label markers and
-embargoed issues. It does not exclude closed status or mutable opt-out labels.
-`currentPolicyEligibleIssues` is a separate current non-excluded snapshot that
-removes current `no-autofix`, `auto-created`, and `CVE` labels. It is a
-diagnostic snapshot, not a historical eligibility denominator.
-
-`metrics.stageFunnel` reports eligible, analyzed, PR proposed, PR merged,
-abandonment, and conversions. Its `authoritative` flag is true only when
-canonical immutable events from the AIPCC-31384 Autofix outcome contract are
-available. Jira label and Forge-link fallbacks are explicitly non-authoritative.
-
 ## Person Metrics — `data/people/{name}.json`
 
 Filename is the person's display name lowercased with non-alphanumeric chars replaced by `_`.
@@ -1396,31 +1381,6 @@ Admin-configurable settings for GitLab CI artifact fetching and Jira sync.
 - `artifactPath` is the directory prefix stripped from zip entry paths (e.g., `output/index.json` becomes `index.json`).
 - `jiraEnrichment.enabled` enables periodic Jira sync of feature data (12h default cadence). The sync fetches all RHAISTRAT features from Jira as the authoritative source.
 
-## Releases — Feature Tracking Config (`data/releases/execution/feature-tracking-config.json`)
-
-Gear settings for the Execute workspace: portfolio version names, per-product Jira fixVersion strings, and optional planning-freeze overrides.
-
-```json
-{
-  "releases": {
-    "3.5.EA1": {
-      "products": {
-        "rhoai": "rhoai-3.5.EA1",
-        "rhelai": "rhelai-3.5.EA1",
-        "rhaii": "rhaii-3.5.EA1"
-      },
-      "planningFreezeOverride": "2026-04-17"
-    }
-  }
-}
-```
-
-**Notes:**
-- Keys under `releases` are portfolio versions shown as Execute version chips, ordered by planning freeze date (earliest first). User `planningFreezeOverride` wins over Product Pages.
-- `products` maps family (`rhoai` / `rhelai` / `rhaii`) to the Jira fixVersion name used for hygiene and execution lookups.
-- `planningFreezeOverride` is an optional `YYYY-MM-DD` date; when set it wins over Product Pages.
-- Per-version tracking data is cached at `data/releases/execution/tracking-data-<version>.json` (e.g. `tracking-data-3.5.EA1.json`); in demo mode these fixtures back the Execute workspace. Keep the chip versions here aligned with the Schedule-view timeline (`releases/delivery/product-pages-releases-cache.json`) so timeline card deep-links land on a populated Execute pill.
-
 ## Releases — Execution Last Enrichment (`data/releases/execution/last-enrichment.json`)
 
 Metadata from the most recent Jira sync.
@@ -1664,7 +1624,7 @@ Multi-architecture build support matrix for RHOAI components across release bran
 - `image` is the full Quay.io image reference.
 - Architecture status is one of: `"supported"` (built), `"exception"` (tracked Jira), `"incompatible"` (hardware-dependent), `"not_built"` (gap).
 - `exception` entries include `issueKey`, `issueUrl`, and `reason`. `incompatible` entries include `accelerator`.
-- `productComponent` is the parent product component name from the maturity report (e.g., `"Serving Orchestration"`). `null` when no mapping exists ("unmapped"). The mapping is keyed by image short name (last path segment) and built from each maturity component's top-level `images[]` array — the authoritative superset. The maturity report also exposes a narrower `deliverables[].images[]` subset, but images can be accepted at the component level without being wired to a deliverable (the report flags these with an info-level `evaluation-target-not-in-deliverable` mapping problem), so the component-level `images[]` array is the correct source to match against.
+- `productComponent` is the parent product component name from the maturity report (e.g., `"Serving Orchestration"`). `null` when no mapping exists ("unmapped").
 - `maturity` contains metadata about the component maturity mapping from `gitlab.cee.redhat.com/data-hub/component-maturity`. `available` indicates whether the mapping was successfully fetched. `allProductComponents` is the complete sorted list of product component objects from the maturity report: `[{ "name": "...", "owner": "..." or null, "team": "..." or null }]`. Owner and team are extracted defensively from the upstream maturity report (null if absent). For backward compatibility, the frontend also accepts string entries and normalizes them to `{ name: entry, owner: null, team: null }`. `warning` is set when the mapping fetch failed or was skipped.
 - `summary` provides pre-computed counts per branch for the UI summary cards.
 
@@ -2333,6 +2293,126 @@ Synced from a Google Sheet via the ai-catalyst module (showcase feature). Contai
 | `summary.committed` | number | Total committed across all releases |
 | `summary.delivered` | number | Total delivered across all releases |
 | `summary.accuracy` | number | Overall accuracy percentage |
+
+---
+
+## Releases — Release Readiness (`data/releases/release-readiness/{version}.json`)
+
+Produced by `fetch_release_metrics.py` in `rhods-qe-tools`. Pushed to the app
+via `POST /api/modules/releases/release-readiness/upload`. Keyed by sanitized
+version string (spaces and special chars replaced with `_`).
+
+```json
+{
+  "version": "rhoai-3.5.EA2",
+  "generated_at": "2026-07-01T10:00:00Z",
+  "summary": { "total_work": 120, "work_done": 96, "work_in_progress": 15, "work_remaining": 9, "progress_pct": 80 },
+  "director_summary": {
+    "overall_pct": 75,
+    "gate_statuses": [
+      { "gate": "Product Sign Off", "done": 8, "total": 10, "pct": 80, "rag": "AMBER" }
+    ],
+    "test_timeline": [
+      { "epic_key": "RHOAIENG-70001", "name": "Nightly", "done": 12, "total": 12, "pct": 100, "rag": "GREEN" }
+    ]
+  },
+  "component_readiness": { "all_components": ["TestOps"], "phases": [] },
+  "product_blockers": { "total_open": 2, "components": [], "jql_url": "..." },
+  "open_issues_to_validate": { "total": 5, "jql_url": "..." },
+  "tfa_signoff_done": 18,
+  "tfa_signoff_total": 21,
+  "tfa_signoff_jql_url": "...",
+  "version_variants": ["rhoai-3.5.EA2", "3.5 EA2 RHOAI RELEASE"],
+  "release_schedule": {
+    "version": "rhoai-3.5.EA2",
+    "ga_date": "2026-05-01",
+    "code_freeze_date": "2026-02-24",
+    "rc1_build_date": "2026-03-03",
+    "rc2_build_date": "2026-03-17",
+    "status": "Upcoming",
+    "pp_url": "..."
+  },
+  "release_cycle_metrics": {
+    "code_freeze_date": "2026-02-24",
+    "build_milestones": [
+      {
+        "name": "RC1 Builds Testing",
+        "epic_key": "RHOAIENG-68791",
+        "build_complete_date": "2026-03-03",
+        "days_since_code_freeze": 5
+      },
+      {
+        "name": "RC2 Builds Testing",
+        "epic_key": "RHOAIENG-68813",
+        "build_complete_date": "2026-03-17",
+        "days_since_code_freeze": 15
+      }
+    ],
+    "test_execution_timelines": [
+      {
+        "phase": "RC1 Builds Testing",
+        "epic_key": "RHOAIENG-68791",
+        "build_ready_date": "2026-03-03",
+        "test_started_date": "2026-03-04",
+        "days_to_test_started": 1,
+        "test_finished_date": "2026-03-13",
+        "days_to_test_finished": 8,
+        "tfas_passed_date": "2026-03-05",
+        "days_to_tfas_passed": 2,
+        "tfas_triaged_date": "2026-03-11",
+        "days_to_tfas_triaged": 6,
+        "blockers_resolved_date": "2026-03-12",
+        "days_to_blockers_resolved": 7
+      },
+      {
+        "phase": "RC2 Builds Testing",
+        "epic_key": "RHOAIENG-68813",
+        "build_ready_date": "2026-03-17",
+        "test_started_date": "2026-03-18",
+        "days_to_test_started": 1,
+        "test_finished_date": null,
+        "days_to_test_finished": null,
+        "tfas_passed_date": "2026-03-19",
+        "days_to_tfas_passed": 2,
+        "tfas_triaged_date": null,
+        "days_to_tfas_triaged": null,
+        "blockers_resolved_date": null,
+        "days_to_blockers_resolved": null
+      }
+    ]
+  },
+  "breakdowns": {}
+}
+```
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `release_cycle_metrics.code_freeze_date` | `string \| null` | `YYYY-MM-DD` from Product Pages |
+| `release_cycle_metrics.build_milestones[].name` | `string` | Test-phase Epic summary from Jira (e.g. `"RC1 Builds Testing"`, `"Nightly Build Wk2 - Jun 22"`) |
+| `release_cycle_metrics.build_milestones[].epic_key` | `string` | Jira Epic key (e.g. `"RHOAIENG-68791"`) |
+| `release_cycle_metrics.build_milestones[].build_complete_date` | `string \| null` | `YYYY-MM-DD`; source: PP schedule task matching the RC label, or Jira epic Done date |
+| `release_cycle_metrics.build_milestones[].days_since_code_freeze` | `number \| null` | Working days (Mon–Fri) between `code_freeze_date` and `build_complete_date`; `null` if either is unknown |
+| `release_cycle_metrics.test_execution_timelines[].phase` | `string` | Test-phase Epic summary from Jira (e.g. `"RC1 Builds Testing"`, `"Nightly Build Wk2 - Jun 22"`) |
+| `release_cycle_metrics.test_execution_timelines[].epic_key` | `string` | Jira Epic key (e.g. `"RHOAIENG-68791"`) |
+| `release_cycle_metrics.test_execution_timelines[].build_ready_date` | `string \| null` | Same as `build_milestones` entry for this phase |
+| `release_cycle_metrics.test_execution_timelines[].test_started_date` | `string \| null` | Jira test-phase epic first became active (proxy: `updated` timestamp) |
+| `release_cycle_metrics.test_execution_timelines[].days_to_test_started` | `number \| null` | Working days from `build_ready_date` to `test_started_date` |
+| `release_cycle_metrics.test_execution_timelines[].test_finished_date` | `string \| null` | Jira test-phase epic Done (`resolutiondate` or `updated`) |
+| `release_cycle_metrics.test_execution_timelines[].days_to_test_finished` | `number \| null` | Working days from `build_ready_date` to `test_finished_date` |
+| `release_cycle_metrics.test_execution_timelines[].tfas_passed_date` | `string \| null` | Max `updated` among TFA tasks when ALL reached In Progress or Done; `null` if any still New |
+| `release_cycle_metrics.test_execution_timelines[].days_to_tfas_passed` | `number \| null` | Working days from `build_ready_date` to `tfas_passed_date` |
+| `release_cycle_metrics.test_execution_timelines[].tfas_triaged_date` | `string \| null` | Max `updated` among TFA tasks when ALL reached Done; `null` if any not Done |
+| `release_cycle_metrics.test_execution_timelines[].days_to_tfas_triaged` | `number \| null` | Working days from `build_ready_date` to `tfas_triaged_date` |
+| `release_cycle_metrics.test_execution_timelines[].blockers_resolved_date` | `string \| null` | Max `resolutiondate` across all resolved blockers; `null` if any open blockers remain |
+| `release_cycle_metrics.test_execution_timelines[].days_to_blockers_resolved` | `number \| null` | Working days from `build_ready_date` to `blockers_resolved_date` |
+| `release_schedule.rc1_build_date` | `string \| null` | New field added to `release_schedule`; PP schedule task date for RC1 build milestone |
+| `release_schedule.rc2_build_date` | `string \| null` | PP schedule task date for RC2 build milestone |
+
+**Notes:**
+- All day counts use Mon–Fri only (no public holidays excluded).
+- Dates are proxies from Jira `updated` timestamps; they represent when Jira recorded the transition, not the exact moment it occurred.
+- The TFA and blocker dates are release-level (not per-RC); the same date appears in both RC1 and RC2 timelines with different `days_to_*` values.
+- `null` means the milestone has not occurred or data is unavailable; the dashboard renders `—` for null.
 
 ---
 

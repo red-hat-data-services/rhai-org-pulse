@@ -486,7 +486,7 @@
                 </thead>
                 <tbody class="divide-y divide-gray-100 dark:divide-gray-700">
                   <tr v-for="m in releaseCycleMetrics.build_milestones" :key="m.name" class="hover:bg-gray-50 dark:hover:bg-gray-750">
-                    <td class="px-3 py-2 font-medium text-gray-800 dark:text-gray-200">{{ m.name }} Build</td>
+                    <td class="px-3 py-2 font-medium text-gray-800 dark:text-gray-200">{{ m.name }}</td>
                     <td class="px-3 py-2 text-gray-500 dark:text-gray-400">{{ formatMetricDate(releaseCycleMetrics.code_freeze_date) }}</td>
                     <td class="px-3 py-2 text-gray-700 dark:text-gray-300">{{ formatMetricDate(m.build_complete_date) }}</td>
                     <td class="px-3 py-2" :class="daysClass(m.days_since_code_freeze, 5, 10)">{{ daysLabel(m.days_since_code_freeze) }}</td>
