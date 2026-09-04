@@ -15,6 +15,7 @@
       { "id": "base-images", "label": "Base Images", "icon": "PackageOpen" },
       { "id": "builder-images", "label": "Builder Images", "icon": "PackageOpen" },
       { "id": "wheel-collections", "label": "Wheel Collections", "icon": "PackageOpen" },
+      { "id": "package-request", "label": "Request Package", "icon": "FileUp" },
       { "id": "package-analysis", "label": "Package Analysis", "icon": "BarChart3", "separatorBefore": true }
     ],
     "hiddenRoutes": {
