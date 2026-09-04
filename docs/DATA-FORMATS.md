@@ -2321,6 +2321,111 @@ Synced from a Google Sheet via the ai-catalyst module (showcase feature). Contai
 
 ---
 
+## Releases — Release Readiness (`data/releases/release-readiness/{version}.json`)
+
+Produced by `fetch_release_metrics.py` in `rhods-qe-tools`. Pushed to the app
+via `POST /api/modules/releases/release-readiness/upload`. Keyed by sanitized
+version string (spaces and special chars replaced with `_`).
+
+```json
+{
+  "version": "rhoai-3.5.EA2",
+  "generated_at": "2026-07-01T10:00:00Z",
+  "summary": { "total_work": 120, "work_done": 96, "work_in_progress": 15, "work_remaining": 9, "progress_pct": 80 },
+  "director_summary": {
+    "overall_pct": 75,
+    "gate_statuses": [
+      { "gate": "Product Sign Off", "done": 8, "total": 10, "pct": 80, "rag": "AMBER" }
+    ],
+    "test_timeline": [
+      { "epic_key": "RHOAIENG-70001", "name": "Nightly", "done": 12, "total": 12, "pct": 100, "rag": "GREEN" }
+    ]
+  },
+  "component_readiness": { "all_components": ["TestOps"], "phases": [] },
+  "product_blockers": { "total_open": 2, "components": [], "jql_url": "..." },
+  "open_issues_to_validate": { "total": 5, "jql_url": "..." },
+  "tfa_signoff_done": 18,
+  "tfa_signoff_total": 21,
+  "tfa_signoff_jql_url": "...",
+  "version_variants": ["rhoai-3.5.EA2", "3.5 EA2 RHOAI RELEASE"],
+  "release_schedule": {
+    "version": "rhoai-3.5.EA2",
+    "ga_date": "2026-05-01",
+    "code_freeze_date": "2026-02-24",
+    "rc1_build_date": "2026-03-03",
+    "rc2_build_date": "2026-03-17",
+    "status": "Upcoming",
+    "pp_url": "..."
+  },
+  "release_cycle_metrics": {
+    "code_freeze_date": "2026-02-24",
+    "phases": [
+      {
+        "phase": "RC1 Builds Testing",
+        "epic_key": "RHOAIENG-68791",
+        "build_ready_date": "2026-03-03",
+        "days_since_code_freeze": 5,
+        "test_started_date": "2026-03-04",
+        "days_to_test_started": 1,
+        "test_finished_date": "2026-03-13",
+        "days_to_test_finished": 8,
+        "tfas_passed_date": "2026-03-05",
+        "days_to_tfas_passed": 2,
+        "tfas_triaged_date": "2026-03-11",
+        "days_to_tfas_triaged": 6,
+        "blockers_resolved_date": "2026-03-12",
+        "days_to_blockers_resolved": 7
+      },
+      {
+        "phase": "RC2 Builds Testing",
+        "epic_key": "RHOAIENG-68813",
+        "build_ready_date": "2026-03-17",
+        "days_since_code_freeze": 15,
+        "test_started_date": "2026-03-18",
+        "days_to_test_started": 1,
+        "test_finished_date": null,
+        "days_to_test_finished": null,
+        "tfas_passed_date": "2026-03-19",
+        "days_to_tfas_passed": 2,
+        "tfas_triaged_date": null,
+        "days_to_tfas_triaged": null,
+        "blockers_resolved_date": null,
+        "days_to_blockers_resolved": null
+      }
+    ]
+  },
+  "breakdowns": {}
+}
+```
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `release_cycle_metrics.code_freeze_date` | `string \| null` | `YYYY-MM-DD` from Product Pages |
+| `release_cycle_metrics.phases[].phase` | `string` | Test-phase Epic summary from Jira (e.g. `"RC1 Builds Testing"`, `"Nightly Build Wk2 - Jun 22"`) |
+| `release_cycle_metrics.phases[].epic_key` | `string` | Jira Epic key (e.g. `"RHOAIENG-68791"`) |
+| `release_cycle_metrics.phases[].build_ready_date` | `string \| null` | `YYYY-MM-DD`; source: manual override, PP schedule task matching the RC label, or Jira epic Done date |
+| `release_cycle_metrics.phases[].days_since_code_freeze` | `number \| null` | Working days (Mon–Fri) between `code_freeze_date` and `build_ready_date`; `null` if either is unknown |
+| `release_cycle_metrics.phases[].test_started_date` | `string \| null` | Jira test-phase epic first became active (proxy: `updated` timestamp) |
+| `release_cycle_metrics.phases[].days_to_test_started` | `number \| null` | Working days from `build_ready_date` to `test_started_date` |
+| `release_cycle_metrics.phases[].test_finished_date` | `string \| null` | Jira test-phase epic Done (`resolutiondate` or `updated`) |
+| `release_cycle_metrics.phases[].days_to_test_finished` | `number \| null` | Working days from `build_ready_date` to `test_finished_date` |
+| `release_cycle_metrics.phases[].tfas_passed_date` | `string \| null` | Max `updated` among TFA tasks when ALL reached In Progress or Done; `null` if any still New |
+| `release_cycle_metrics.phases[].days_to_tfas_passed` | `number \| null` | Working days from `build_ready_date` to `tfas_passed_date` |
+| `release_cycle_metrics.phases[].tfas_triaged_date` | `string \| null` | Max `updated` among TFA tasks when ALL reached Done; `null` if any not Done |
+| `release_cycle_metrics.phases[].days_to_tfas_triaged` | `number \| null` | Working days from `build_ready_date` to `tfas_triaged_date` |
+| `release_cycle_metrics.phases[].blockers_resolved_date` | `string \| null` | Max `resolutiondate` across all resolved blockers; `null` if any open blockers remain |
+| `release_cycle_metrics.phases[].days_to_blockers_resolved` | `number \| null` | Working days from `build_ready_date` to `blockers_resolved_date` |
+| `release_schedule.rc1_build_date` | `string \| null` | New field added to `release_schedule`; PP schedule task date for RC1 build milestone |
+| `release_schedule.rc2_build_date` | `string \| null` | PP schedule task date for RC2 build milestone |
+
+**Notes:**
+- All day counts use Mon–Fri only (no public holidays excluded).
+- Dates are proxies from Jira `updated` timestamps; they represent when Jira recorded the transition, not the exact moment it occurred.
+- The TFA and blocker dates are release-level (not per-RC); the same date appears in each phase with different `days_to_*` values.
+- `null` means the milestone has not occurred or data is unavailable; the dashboard renders `—` for null.
+
+---
+
 ## Fixture Rules
 
 The `fixtures/` directory provides read-only demo data used when `DEMO_MODE=true`. These rules prevent data format drift:
