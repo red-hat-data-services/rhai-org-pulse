@@ -38,6 +38,27 @@ test.describe('Product Builds Module @product-builds', () => {
     expect(appErrors).toHaveLength(0);
   });
 
+  test('should expose the Request Package navigation item and form', async ({ page }) => {
+    await page.goto('/')
+    await page.waitForLoadState('networkidle')
+    await page.waitForTimeout(DEFAULT_PAGE_WAIT_TIME)
+
+    const requestLink = page.locator('aside').getByText('Request Package', { exact: true })
+    await expect(requestLink).toBeVisible()
+    await page.goto('/#/product-builds/package-request')
+    await page.waitForLoadState('networkidle')
+    await page.waitForTimeout(DEFAULT_PAGE_WAIT_TIME)
+
+    expect(page.url()).toMatch(/product-builds\/package-request/)
+    await expect(page.getByRole('heading', { name: 'Request Package' })).toBeVisible()
+    await expect(page.locator('#req-team')).toBeVisible()
+    await expect(page.locator('#req-package-name')).toBeVisible()
+    await expect(page.getByRole('button', { name: 'Submit request' })).toBeVisible()
+
+    const appErrors = page.errors.filter(e => !/status of (429|404|503)/.test(e.message))
+    expect(appErrors).toHaveLength(0)
+  })
+
   test('should navigate to RHAIIS view', async ({ page }) => {
     await page.goto('/#/product-builds/rhaiis');
     await page.waitForLoadState('networkidle');
