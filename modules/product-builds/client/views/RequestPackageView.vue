@@ -1,5 +1,5 @@
 <script setup>
-import { ref, reactive, computed } from 'vue'
+import { ref, reactive, computed, watch } from 'vue'
 import { apiRequest } from '@shared/client/services/api'
 import { useAuth } from '@shared/client/composables/useAuth'
 
@@ -57,6 +57,31 @@ function defaults() {
 }
 
 const form = reactive(defaults())
+const teamProject = ref('RHAISTRAT')
+const teams = ref([])
+const loadingTeams = ref(false)
+const teamLoadError = ref('')
+let teamLoadId = 0
+
+async function loadTeams() {
+  const loadId = ++teamLoadId
+  form.team = ''
+  teams.value = []
+  teamLoadError.value = ''
+  loadingTeams.value = true
+  try {
+    const data = await apiRequest(`/modules/product-builds/package-requests/teams?project=${teamProject.value}`)
+    if (loadId !== teamLoadId) return
+    teams.value = data
+  } catch {
+    if (loadId !== teamLoadId) return
+    teamLoadError.value = 'Could not load teams. Please try again.'
+  } finally {
+    if (loadId === teamLoadId) loadingTeams.value = false
+  }
+}
+
+watch(teamProject, loadTeams, { immediate: true })
 const fieldErrors = ref({})
 const submitting = ref(false)
 const banner = ref(null) // { type, text } form-level message
@@ -73,7 +98,8 @@ function parseList(raw) {
 
 function validate() {
   const errors = {}
-  if (!form.team.trim()) errors.team = 'Team is required'
+  if (!form.team) errors.team = 'Team is required'
+  else if (!teams.value.some(team => team.value === form.team)) errors.team = 'Select a team from the list'
 
   if (!PACKAGE_NAME_RE.test(form.package_name.trim())) {
     errors.package_name = 'Package name must start with a letter and contain only letters, digits, dots, underscores or dashes'
@@ -220,6 +246,7 @@ function cancelWarning() {
 }
 
 function resetForm() {
+  teamProject.value = 'RHAISTRAT'
   Object.assign(form, defaults())
   fieldErrors.value = {}
   banner.value = null
@@ -398,25 +425,52 @@ function jiraHref(ticket) {
           The request is filed under your signed-in identity. The server treats the authenticated identity as authoritative.
         </p>
 
+        <div>
+          <label for="req-team-project" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Team's Jira project</label>
+          <select
+            id="req-team-project"
+            v-model="teamProject"
+            :disabled="submitting"
+            aria-describedby="req-team-project-hint"
+            class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 text-sm focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+          >
+            <option value="RHAISTRAT">RHAISTRAT</option>
+            <option value="AIPCC">AIPCC</option>
+            <option value="RHAI">RHAI</option>
+          </select>
+          <p id="req-team-project-hint" class="mt-1 text-xs text-gray-500 dark:text-gray-400">Choose the project your team belongs to. Package requests are filed in AIPCC.</p>
+        </div>
+
         <!-- Team + package -->
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
             <label for="req-team" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
               Team <span class="text-red-500" aria-hidden="true">*</span>
             </label>
-            <input
+            <select
               id="req-team"
               v-model="form.team"
-              type="text"
               required
-              autocomplete="off"
-              placeholder="e.g. Platform"
+              :disabled="loadingTeams || !!teamLoadError || !teams.length || submitting"
               aria-required="true"
               :aria-invalid="!!fieldErrors.team"
-              :aria-describedby="fieldErrors.team ? 'req-team-error' : null"
-              class="w-full px-3 py-2 border rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 text-sm focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+              :aria-describedby="fieldErrors.team ? 'req-team-error' : 'req-team-status'"
+              class="w-full px-3 py-2 border rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 text-sm focus:ring-2 focus:ring-primary-500 focus:border-primary-500 disabled:opacity-50"
               :class="fieldErrors.team ? 'border-red-400 dark:border-red-600' : 'border-gray-300 dark:border-gray-600'"
-            />
+            >
+              <option value="" disabled>{{ loadingTeams ? 'Loading teams...' : 'Select a team' }}</option>
+              <option v-for="team in teams" :key="team.value" :value="team.value">{{ team.label }}</option>
+            </select>
+            <div id="req-team-status" class="mt-1 text-xs" aria-live="polite">
+              <p v-if="teamLoadError" class="text-red-600 dark:text-red-400">{{ teamLoadError }}</p>
+              <p v-else-if="!loadingTeams && !teams.length" class="text-gray-500 dark:text-gray-400">No teams are available for this project.</p>
+              <button
+                v-if="teamLoadError || (!loadingTeams && !teams.length)"
+                type="button"
+                class="mt-1 text-primary-600 dark:text-primary-400 underline"
+                @click="loadTeams"
+              >Retry loading teams</button>
+            </div>
             <p v-if="fieldErrors.team" id="req-team-error" class="mt-1 text-xs text-red-600 dark:text-red-400">{{ fieldErrors.team }}</p>
           </div>
 
@@ -685,7 +739,7 @@ function jiraHref(ticket) {
         <div class="flex items-center gap-3 pt-2">
           <button
             type="submit"
-            :disabled="submitting || !!warning"
+            :disabled="submitting || !!warning || loadingTeams || !!teamLoadError || !teams.length"
             class="px-5 py-2 text-sm font-medium text-white bg-gray-900 dark:bg-gray-100 dark:text-gray-900 rounded-lg hover:bg-gray-800 dark:hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
           >
             {{ submitting ? 'Submitting...' : 'Submit request' }}

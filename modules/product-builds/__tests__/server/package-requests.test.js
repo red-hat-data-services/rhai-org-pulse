@@ -12,11 +12,14 @@ const {
   buildEpicFields,
   buildDuplicateJql,
   buildPipelineVariables,
+  getTeamOptions,
   checkPypiPackage,
   getGitlabToken,
   checkRateLimit,
   recordSubmission,
   _lastSubmission,
+  _pendingSubmissions,
+  _teamOptionsCache,
   AIPCC_PROJECT,
   SECURITY_NAME,
   COMPONENT_NAME,
@@ -83,7 +86,10 @@ function makeJira(overrides = {}) {
     jiraRequest: vi.fn(async (path, opts = {}) => {
       const method = (opts.method || 'GET').toUpperCase()
       if (path.startsWith('/rest/api/3/user/search')) {
-        return { users: [{ accountId: 'acc-1', email: 'jane@redhat.com' }] }
+        return [{ accountId: 'acc-1', emailAddress: 'jane@redhat.com' }]
+      }
+      if (path.startsWith('/rest/api/3/project/') && path.endsWith('/components')) {
+        return [{ id: '2', name: 'Vision' }, { id: '1', name: 'AI Core Platform' }]
       }
       if (path === '/rest/api/3/issue' && method === 'POST') {
         return { key: 'AIPCC-999', id: '10999' }
@@ -147,6 +153,14 @@ async function callHandler(router, req) {
   return res
 }
 
+async function callTeamsHandler(router, req = {}) {
+  const handlers = router._routes.get['/package-requests/teams']
+  const handler = handlers[handlers.length - 1]
+  const res = makeRes()
+  await handler({ query: {}, ...req }, res)
+  return res
+}
+
 function adfTextOf(node) {
   if (!node) return ''
   if (typeof node === 'string') return node
@@ -165,6 +179,8 @@ describe('package-requests', () => {
   beforeEach(() => {
     vi.clearAllMocks()
     _lastSubmission.clear()
+    _pendingSubmissions.clear()
+    _teamOptionsCache.clear()
     delete process.env.DEMO_MODE
   })
 
@@ -177,10 +193,19 @@ describe('package-requests', () => {
       expect(typeof handlers[handlers.length - 1]).toBe('function')
     })
 
+    it('registers GET /package-requests/teams with requireAuth as the first middleware', () => {
+      const { router, context } = register()
+      const handlers = router._routes.get['/package-requests/teams']
+      expect(handlers).toBeDefined()
+      expect(handlers[0]).toBe(context.requireAuth)
+      expect(typeof handlers[handlers.length - 1]).toBe('function')
+    })
+
     it('includes a complete @openapi annotation for the endpoint', () => {
       const source = readFileSync(require.resolve('../../server/package-requests.js'), 'utf8')
       expect(source).toContain('@openapi')
       expect(source).toContain('/api/modules/product-builds/package-requests:')
+      expect(source).toContain('/api/modules/product-builds/package-requests/teams:')
       expect(source).toMatch(/post:/)
       for (const field of [
         'team', 'package_name', 'extras', 'package_source', 'source_url', 'version',
@@ -193,6 +218,103 @@ describe('package-requests', () => {
       for (const status of ['200', '201', '400', '401', '409', '422', '429', '502', '503']) {
         expect(source).toContain(status + ':')
       }
+    })
+  })
+
+  describe('team options', () => {
+    it('defaults to RHAISTRAT and returns sorted unique Jira components', async () => {
+      const jira = makeJira({
+        jiraRequest: vi.fn(async (path) => {
+          expect(path).toBe('/rest/api/3/project/RHAISTRAT/components')
+          return [
+            { id: '3', name: 'Vision' },
+            { id: '1', name: 'AIPCC Ecosystems' },
+            { id: '2', name: 'Vision' },
+            { id: '4', name: '  ' }
+          ]
+        })
+      })
+      const { router } = register({ jiraClient: jira })
+
+      const res = await callTeamsHandler(router)
+
+      expect(res._status).toBe(200)
+      expect(res._json).toEqual([
+        { value: 'AIPCC Ecosystems', label: 'AIPCC Ecosystems' },
+        { value: 'Vision', label: 'Vision' }
+      ])
+    })
+
+    it('supports AIPCC and RHAI and caches each project independently', async () => {
+      const jira = makeJira({
+        jiraRequest: vi.fn(async (path) => {
+          const project = path.split('/')[5]
+          return [{ name: project + ' component' }]
+        })
+      })
+      const { router } = register({ jiraClient: jira })
+
+      const aipcc = await callTeamsHandler(router, { query: { project: 'AIPCC' } })
+      const rhai = await callTeamsHandler(router, { query: { project: 'RHAI' } })
+      const cachedAipcc = await callTeamsHandler(router, { query: { project: 'AIPCC' } })
+
+      expect(aipcc._json).toEqual([{ value: 'AIPCC component', label: 'AIPCC component' }])
+      expect(rhai._json).toEqual([{ value: 'RHAI component', label: 'RHAI component' }])
+      expect(cachedAipcc._json).toEqual(aipcc._json)
+      expect(jira.jiraRequest).toHaveBeenCalledTimes(2)
+    })
+
+    it('returns deterministic demo options for every supported project', async () => {
+      const jira = makeJira()
+      const { router } = register({ jiraClient: jira, isDemoMode: true })
+
+      const rhaistrat = await callTeamsHandler(router)
+      const aipcc = await callTeamsHandler(router, { query: { project: 'AIPCC' } })
+      const rhai = await callTeamsHandler(router, { query: { project: 'RHAI' } })
+
+      expect(rhaistrat._json).toContainEqual({ value: 'AI Core Platform', label: 'AI Core Platform' })
+      expect(aipcc._json).toContainEqual({ value: 'AIPCC Ecosystems', label: 'AIPCC Ecosystems' })
+      expect(rhai._json).toContainEqual({ value: 'AIPCC Ecosystems', label: 'AIPCC Ecosystems' })
+      expect(jira.jiraRequest).not.toHaveBeenCalled()
+    })
+
+    it('rejects unsupported projects before calling Jira', async () => {
+      const jira = makeJira()
+      const { router } = register({ jiraClient: jira })
+
+      const res = await callTeamsHandler(router, { query: { project: 'RHOAIENG' } })
+
+      expect(res._status).toBe(400)
+      expect(res._json.message).toContain('RHAISTRAT, AIPCC, RHAI')
+      expect(jira.jiraRequest).not.toHaveBeenCalled()
+    })
+
+    it('returns 503 when Jira is not configured and 502 when Jira fails', async () => {
+      const unconfigured = register({}, { secrets: {} })
+      const missing = await callTeamsHandler(unconfigured.router)
+      expect(missing._status).toBe(503)
+
+      const jira = makeJira({
+        jiraRequest: vi.fn(async () => { throw new Error('Jira unavailable') })
+      })
+      const configured = register({ jiraClient: jira })
+      const failed = await callTeamsHandler(configured.router)
+      expect(failed._status).toBe(502)
+      expect(failed._json.error).toBe('Failed to fetch teams from Jira')
+    })
+
+    it('refreshes cached Jira components after the cache TTL', async () => {
+      const jira = makeJira({
+        jiraRequest: vi.fn(async () => [{ name: 'AIPCC Ecosystems' }])
+      })
+      const first = await getTeamOptions(jira, 'RHAI', 1_000)
+      const cached = await getTeamOptions(jira, 'RHAI', 1_000 + 299_999)
+      const refreshed = await getTeamOptions(jira, 'RHAI', 1_000 + 300_000)
+
+      expect(first).toEqual([{ value: 'AIPCC Ecosystems', label: 'AIPCC Ecosystems' }])
+      expect(cached).toBe(first)
+      expect(refreshed).not.toBe(first)
+      expect(jira.jiraRequest).toHaveBeenCalledTimes(2)
     })
   })
 
@@ -600,13 +722,18 @@ describe('package-requests', () => {
         c => String(c[0]).includes('/api/v4/projects/') && (c[1].method || 'GET') === 'POST'
       )
       expect(pipelineCall).toBeDefined()
-      expect(String(pipelineCall[0])).toContain('/projects/redhat%2Frhel-ai%2Fcore%2Fpackage-onboarding/pipelines')
+      expect(String(pipelineCall[0])).toContain('/projects/redhat%2Frhel-ai%2Fcore%2Fpackage-onboarding/pipeline')
+      expect(String(pipelineCall[0])).not.toContain('/pipelines')
       expect(pipelineCall[1].headers['PRIVATE-TOKEN']).toBe('gitlab-token')
       const pipelineBody = JSON.parse(pipelineCall[1].body)
-      expect(pipelineBody.variables.PACKAGE_NAME).toBe('vllm[cu12]')
-      expect(pipelineBody.variables.JIRA_TICKET_ID).toBe('AIPCC-999')
-      expect(pipelineBody.variables.PACKAGE_VERSION).toBe('2.5.1')
-      expect(pipelineBody.variables.PACKAGE_REQUEST_EPIC).toBeUndefined()
+      expect(pipelineBody).toEqual({
+        ref: 'main',
+        variables: [
+          { key: 'PACKAGE_NAME', value: 'vllm[cu12]' },
+          { key: 'JIRA_TICKET_ID', value: 'AIPCC-999' },
+          { key: 'PACKAGE_VERSION', value: '2.5.1' }
+        ]
+      })
     })
 
     it('still succeeds when the pipeline trigger fails (non-fatal)', async () => {
@@ -625,6 +752,85 @@ describe('package-requests', () => {
       expect(res._json.pipeline.triggered).toBe(false)
       expect(res._json.pipeline.error).toContain('500')
       expect(epicPostCall(jira)).toBeDefined()
+
+      const retry = await callHandler(router, { userEmail: 'jane@redhat.com', body: validBody() })
+      expect(retry._status).toBe(429)
+    })
+
+    it('allows an immediate retry after Jira Epic creation fails', async () => {
+      let createAttempts = 0
+      const jira = makeJira({
+        jiraRequest: vi.fn(async (path, opts = {}) => {
+          const method = (opts.method || 'GET').toUpperCase()
+          if (path.startsWith('/rest/api/3/user/search')) {
+            return [{ accountId: 'acc-1', emailAddress: 'jane@redhat.com' }]
+          }
+          if (path === '/rest/api/3/issue' && method === 'POST') {
+            createAttempts += 1
+            if (createAttempts === 1) throw new Error('temporary Jira failure')
+            return { key: 'AIPCC-999', id: '10999' }
+          }
+          if (method === 'PUT') return {}
+          if (path.startsWith('/rest/api/3/issue/') && path.includes('fields=summary')) {
+            return { key: 'AIPCC-42', fields: { summary: 'Related issue summary' } }
+          }
+          throw new Error('Unexpected jiraRequest in mock: ' + method + ' ' + path)
+        })
+      })
+      const { router } = register({
+        jiraClient: jira,
+        fetch: makeFetch(),
+        fetchIndex: vi.fn(async () => ({ found: false, files: [] }))
+      })
+
+      const failed = await callHandler(router, { userEmail: 'jane@redhat.com', body: validBody() })
+      const retry = await callHandler(router, { userEmail: 'jane@redhat.com', body: validBody() })
+
+      expect(failed._status).toBe(502)
+      expect(retry._status).toBe(201)
+      expect(createAttempts).toBe(2)
+    })
+
+    it('prevents concurrent requests from the same user from creating duplicate Epics', async () => {
+      let markPostStarted
+      let finishPost
+      const postStarted = new Promise(resolve => { markPostStarted = resolve })
+      const postResult = new Promise(resolve => { finishPost = resolve })
+      const jira = makeJira({
+        jiraRequest: vi.fn(async (path, opts = {}) => {
+          const method = (opts.method || 'GET').toUpperCase()
+          if (path.startsWith('/rest/api/3/user/search')) {
+            return [{ accountId: 'acc-1', emailAddress: 'jane@redhat.com' }]
+          }
+          if (path === '/rest/api/3/issue' && method === 'POST') {
+            markPostStarted()
+            return postResult
+          }
+          if (method === 'PUT') return {}
+          if (path.startsWith('/rest/api/3/issue/') && path.includes('fields=summary')) {
+            return { key: 'AIPCC-42', fields: { summary: 'Related issue summary' } }
+          }
+          throw new Error('Unexpected jiraRequest in mock: ' + method + ' ' + path)
+        })
+      })
+      const { router } = register({
+        jiraClient: jira,
+        fetch: makeFetch(),
+        fetchIndex: vi.fn(async () => ({ found: false, files: [] }))
+      })
+
+      const firstPromise = callHandler(router, { userEmail: 'jane@redhat.com', body: validBody() })
+      await postStarted
+      const concurrent = await callHandler(router, { userEmail: 'jane@redhat.com', body: validBody() })
+      finishPost({ key: 'AIPCC-999', id: '10999' })
+      const first = await firstPromise
+
+      expect(first._status).toBe(201)
+      expect(concurrent._status).toBe(429)
+      expect(concurrent._json.error).toContain('already being processed')
+      expect(jira.jiraRequest.mock.calls.filter(
+        c => c[0] === '/rest/api/3/issue' && c[1] && c[1].method === 'POST'
+      )).toHaveLength(1)
     })
 
     it('reports the pipeline as skipped when no GitLab token is configured', async () => {

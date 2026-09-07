@@ -40,8 +40,22 @@ const PACKAGE_SOURCES = ['pypi', 'git', 'other'];
 const MIN_LEAD_TIME_DAYS = 8;
 const DUPLICATE_LOOKBACK_DAYS = 30;
 const RATE_LIMIT_WINDOW_MS = 60_000;
+const TEAM_OPTIONS_CACHE_TTL_MS = 5 * 60_000;
 const EXTERNAL_TIMEOUT_MS = 30_000;
 const PYPI_JSON_BASE = 'https://pypi.org/pypi';
+const TEAM_PROJECTS = ['RHAISTRAT', 'AIPCC', 'RHAI'];
+const AIPCC_TEAM_OPTIONS = [
+  'Accelerator Enablement',
+  'AIPCC Ecosystems',
+  'AIPCC Productization',
+  'Development Platform',
+  'Model Validation'
+].map(name => ({ value: name, label: name }));
+const DEMO_TEAM_OPTIONS = {
+  RHAISTRAT: [{ value: 'AI Core Platform', label: 'AI Core Platform' }],
+  AIPCC: AIPCC_TEAM_OPTIONS,
+  RHAI: AIPCC_TEAM_OPTIONS
+};
 
 // --- Validation ---
 
@@ -373,8 +387,9 @@ async function findReporterAccountId(jira, email) {
   try {
     const params = new URLSearchParams({ query: email, maxResults: '10' });
     const data = await jira.jiraRequest(`/rest/api/3/user/search?${params}`);
-    const users = (data && data.users) || [];
-    const match = users.find(u => u && u.email && u.email.toLowerCase() === email.toLowerCase());
+    const users = Array.isArray(data) ? data : [];
+    const match = users.find(u => u && u.emailAddress &&
+      u.emailAddress.toLowerCase() === email.toLowerCase());
     return match ? match.accountId : null;
   } catch (err) {
     console.warn('[package-requests] Jira user search failed:', err.message);
@@ -489,13 +504,36 @@ function buildPipelineVariables(request, epicKey) {
   return variables;
 }
 
+const _teamOptionsCache = new Map();
+
+async function getTeamOptions(jira, project, now = Date.now()) {
+  const cached = _teamOptionsCache.get(project);
+  if (cached && now - cached.fetchedAt < TEAM_OPTIONS_CACHE_TTL_MS) {
+    return cached.options;
+  }
+
+  const data = await jira.jiraRequest(
+    `/rest/api/3/project/${encodeURIComponent(project)}/components`
+  );
+  const names = new Set();
+  for (const component of Array.isArray(data) ? data : []) {
+    const name = String((component && component.name) || '').trim();
+    if (name) names.add(name);
+  }
+  const options = Array.from(names)
+    .sort((a, b) => a.localeCompare(b))
+    .map(name => ({ value: name, label: name }));
+  _teamOptionsCache.set(project, { fetchedAt: now, options });
+  return options;
+}
+
 /**
  * Trigger the package onboarding GitLab pipeline.
  * @returns {Promise<{triggered: boolean, pipeline_id: number|null, web_url: string|null}>}
  */
 async function triggerOnboardingPipeline({ gitlabBaseUrl, gitlabProject, token, variables, fetchFn }) {
   const fetchImpl = fetchFn || fetch;
-  const url = `${gitlabBaseUrl}/api/v4/projects/${gitlabProject}/pipelines`;
+  const url = `${gitlabBaseUrl}/api/v4/projects/${gitlabProject}/pipeline`;
   const response = await fetchImpl(url, {
     method: 'POST',
     headers: {
@@ -503,7 +541,10 @@ async function triggerOnboardingPipeline({ gitlabBaseUrl, gitlabProject, token, 
       'Content-Type': 'application/json',
       'Accept': 'application/json'
     },
-    body: JSON.stringify({ ref: 'main', variables }),
+    body: JSON.stringify({
+      ref: 'main',
+      variables: Object.entries(variables).map(([key, value]) => ({ key, value }))
+    }),
     signal: AbortSignal.timeout(EXTERNAL_TIMEOUT_MS)
   });
   if (!response.ok) {
@@ -517,6 +558,7 @@ async function triggerOnboardingPipeline({ gitlabBaseUrl, gitlabProject, token, 
 // --- In-memory rate limiting: one submission per user per 60 seconds ---
 
 const _lastSubmission = new Map();
+const _pendingSubmissions = new Set();
 
 function checkRateLimit(email, now = Date.now()) {
   const key = String(email).toLowerCase();
@@ -537,6 +579,17 @@ function recordSubmission(email, now = Date.now()) {
       if (now - ts >= RATE_LIMIT_WINDOW_MS) _lastSubmission.delete(key);
     }
   }
+}
+
+function beginSubmission(email) {
+  const key = String(email).toLowerCase();
+  if (_pendingSubmissions.has(key)) return false;
+  _pendingSubmissions.add(key);
+  return true;
+}
+
+function endSubmission(email) {
+  _pendingSubmissions.delete(String(email).toLowerCase());
 }
 
 function isDemoMode(deps) {
@@ -572,6 +625,74 @@ module.exports = function registerPackageRequestRoutes(router, context, deps = {
 
   /**
    * @openapi
+   * /api/modules/product-builds/package-requests/teams:
+   *   get:
+   *     tags: [Package Requests]
+   *     summary: List Jira component options for package-request teams
+   *     description: >-
+   *       Returns a cached, alphabetically sorted list of Jira project
+   *       components shaped as value/label options. The project defaults to
+   *       RHAISTRAT and is restricted to RHAISTRAT, AIPCC, or RHAI.
+   *     parameters:
+   *       - in: query
+   *         name: project
+   *         schema:
+   *           type: string
+   *           enum: [RHAISTRAT, AIPCC, RHAI]
+   *           default: RHAISTRAT
+   *     responses:
+   *       200:
+   *         description: Sorted Jira component options
+   *         content:
+   *           application/json:
+   *             schema:
+   *               type: array
+   *               items:
+   *                 type: object
+   *                 required: [value, label]
+   *                 properties:
+   *                   value:
+   *                     type: string
+   *                   label:
+   *                     type: string
+   *       400:
+   *         description: Unsupported Jira project
+   *       401:
+   *         description: Unauthenticated
+   *       502:
+   *         description: Jira component lookup failed
+   *       503:
+   *         description: Jira is not configured
+   */
+  router.get('/package-requests/teams', requireAuth, async function(req, res) {
+    const requestedProject = req.query && req.query.project;
+    const project = requestedProject === undefined ? 'RHAISTRAT' : String(requestedProject).trim();
+    if (!TEAM_PROJECTS.includes(project)) {
+      return res.status(400).json({
+        error: 'Invalid project',
+        message: 'Project must be one of: ' + TEAM_PROJECTS.join(', ')
+      });
+    }
+
+    if (isDemoMode(deps)) {
+      return res.json(DEMO_TEAM_OPTIONS[project]);
+    }
+
+    if (!deps.jiraClient && (!secrets.JIRA_EMAIL || !secrets.JIRA_TOKEN)) {
+      return res.status(503).json({ error: 'Jira is not configured (JIRA_EMAIL/JIRA_TOKEN missing)' });
+    }
+
+    try {
+      const options = await getTeamOptions(getJira(), project);
+      return res.json(options);
+    } catch (err) {
+      console.error('[package-requests] Jira component lookup failed:', err.message);
+      return res.status(502).json({ error: 'Failed to fetch teams from Jira' });
+    }
+  });
+
+  /**
+   * @openapi
    * /api/modules/product-builds/package-requests:
    *   post:
    *     tags: [Package Requests]
@@ -585,7 +706,9 @@ module.exports = function registerPackageRequestRoutes(router, context, deps = {
    *       Employee security, and Accelerator Enablement component, sets the
    *       release target field when provided, and triggers the
    *       redhat/rhel-ai/core/package-onboarding GitLab pipeline. Pipeline
-   *       failure is non-fatal.
+   *       failure is non-fatal. The per-user cooldown starts only after Jira
+   *       confirms Epic creation; an in-flight guard prevents concurrent
+   *       requests from the same user from creating duplicate Epics.
    *     requestBody:
    *       required: true
    *       content:
@@ -666,16 +789,17 @@ module.exports = function registerPackageRequestRoutes(router, context, deps = {
    *         description: Validation failed (per-field errors)
    *       429:
    *         description: >-
-   *           Rate limited (one submission per user per 60 seconds). The limit
-   *           slot is only consumed when a submission actually proceeds to Epic
-   *           creation, so a 200 production-presence warning does not block an
-   *           immediate retry with skip_production_check:true.
+   *           A request from this user is already in flight, or the user is
+   *           within the 60-second cooldown after successful Epic creation. A
+   *           failed Jira creation and a 200 production-presence warning do not
+   *           consume the cooldown slot.
    *       502:
    *         description: Jira Epic creation or PyPI validation failed
    *       503:
    *         description: Jira is not configured
    */
   router.post('/package-requests', requireAuth, async function(req, res) {
+    let pendingEmail = null;
     try {
       const email = String(req.userEmail || (req.user && req.user.email) || '').toLowerCase().trim();
       if (!email) {
@@ -695,8 +819,8 @@ module.exports = function registerPackageRequestRoutes(router, context, deps = {
       }
       const request = validation.request;
 
-      // Rate limit gate only. The slot is consumed when the request actually
-      // proceeds to Epic creation (or completes in demo mode), so aborting
+      // Rate limit gate only. The slot is consumed when Jira confirms Epic
+      // creation (or the request completes in demo mode), so aborting
       // responses (422/409/502/503) and the 200 production-presence warning
       // do not block an immediate retry.
       const limit = checkRateLimit(email, Date.now());
@@ -706,6 +830,14 @@ module.exports = function registerPackageRequestRoutes(router, context, deps = {
           retry_after_seconds: limit.retryAfterSeconds
         });
       }
+
+      if (!beginSubmission(email)) {
+        return res.status(429).json({
+          error: 'A package request for this user is already being processed',
+          retry_after_seconds: 1
+        });
+      }
+      pendingEmail = email;
 
       if (isDemoMode(deps)) {
         recordSubmission(email);
@@ -789,9 +921,6 @@ module.exports = function registerPackageRequestRoutes(router, context, deps = {
         }
       }
 
-      // All gates passed; this submission proceeds to Epic creation.
-      recordSubmission(email);
-
       // Resolve the reporter from the authenticated email (non-fatal).
       const reporterAccountId = await findReporterAccountId(jira, email);
 
@@ -805,6 +934,10 @@ module.exports = function registerPackageRequestRoutes(router, context, deps = {
         return res.status(502).json({ error: 'Failed to create Jira Epic: ' + err.message });
       }
       const epicKey = created.key;
+
+      // Jira confirmed creation. Start the cooldown before optional follow-up
+      // work so non-fatal release-target or pipeline failures retain it.
+      recordSubmission(email);
 
       // Set the release target custom field when present (non-fatal).
       let releaseTargetSet = false;
@@ -844,7 +977,7 @@ module.exports = function registerPackageRequestRoutes(router, context, deps = {
         }
       }
 
-      res.status(201).json({
+      return res.status(201).json({
         status: 'created',
         requester: email,
         summary: fields.summary,
@@ -861,6 +994,8 @@ module.exports = function registerPackageRequestRoutes(router, context, deps = {
     } catch (err) {
       console.error('[package-requests] Unexpected error:', err.message);
       res.status(500).json({ error: 'Failed to process package request' });
+    } finally {
+      if (pendingEmail) endSubmission(pendingEmail);
     }
   });
 };
@@ -875,6 +1010,7 @@ module.exports._testExports = {
   buildEpicFields,
   buildDuplicateJql,
   buildPipelineVariables,
+  getTeamOptions,
   checkPypiPackage,
   checkProductionIndexes,
   findDuplicateRequests,
@@ -885,12 +1021,18 @@ module.exports._testExports = {
   getGitlabToken,
   checkRateLimit,
   recordSubmission,
+  beginSubmission,
+  endSubmission,
   isDemoMode,
   _lastSubmission,
+  _pendingSubmissions,
+  _teamOptionsCache,
   AIPCC_PROJECT,
   SECURITY_NAME,
   COMPONENT_NAME,
   EPIC_NAME_FIELD,
   JIRA_KEY_RE,
-  RATE_LIMIT_WINDOW_MS
+  RATE_LIMIT_WINDOW_MS,
+  TEAM_OPTIONS_CACHE_TTL_MS,
+  TEAM_PROJECTS
 };
