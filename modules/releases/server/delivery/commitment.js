@@ -242,7 +242,7 @@ function buildFeatureFromIssue(issue) {
 async function computeCommitment(jiraRequestFn, fetchAllFn, fixVersions, freezeDate, projectKeys, jiraAllProjects) {
   var freezeDateMs = new Date(freezeDate + 'T23:59:59.999Z').getTime()
 
-  var quotedVersions = fixVersions.map(function(v) { return '"' + v.replace(/"/g, '\\"') + '"' })
+  var quotedVersions = fixVersions.map(function(v) { return '"' + v.replace(/\\/g, '\\\\').replace(/"/g, '\\"') + '"' })
   var inClause = quotedVersions.join(', ')
 
   var projectsFilter = ''
@@ -253,7 +253,7 @@ async function computeCommitment(jiraRequestFn, fetchAllFn, fixVersions, freezeD
   var currentJql = projectsFilter + 'issuetype = Feature AND fixVersion in (' + inClause + ') ORDER BY key ASC'
 
   var wasConditions = fixVersions.map(function(v) {
-    return 'fixVersion was "' + v.replace(/"/g, '\\"') + '"'
+    return 'fixVersion was "' + v.replace(/\\/g, '\\\\').replace(/"/g, '\\"') + '"'
   })
   var removedJql = projectsFilter + 'issuetype = Feature AND (' + wasConditions.join(' OR ') + ') AND fixVersion not in (' + inClause + ') ORDER BY key ASC'
 
