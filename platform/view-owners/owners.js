@@ -99,9 +99,13 @@ export const viewOwners = {
   'upstream-pulse/strategy':                       'Dipanshu Gupta',
 
   // workflow-validation
+  'workflow-validation/activity':                  'Adam Drew',
+  'workflow-validation/compare':                   'Adam Drew',
   'workflow-validation/overview':                  'Adam Drew',
   'workflow-validation/run-detail':                'Adam Drew',
   'workflow-validation/runs':                      'Adam Drew',
+  'workflow-validation/workflow-history':          'Adam Drew',
+  'workflow-validation/workflows':                 'Adam Drew',
 
   // ── Sub-tab owners (module/view/tab) ──
   // These override the view-level owner when a specific tab is active.

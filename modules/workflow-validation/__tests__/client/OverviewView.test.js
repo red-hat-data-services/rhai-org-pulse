@@ -6,7 +6,7 @@ const mockOverview = {
   runs: {
     total: 100, passRate: 0.69, passed: 65, failed: 29,
     tasksTotal: 200, tasksPassed: 180, tasksFailed: 20,
-    aiCost: 1180.6, infraCost: 75117.5, avgDuration: 3600,
+    aiCost: 1180.6, infraCost: 9615.34, avgDuration: 3600,
     turns: 5000, workflows: 18, versions: 11
   },
   bugs: { total: 27, opened: 16, distinctJira: 18 }
@@ -17,7 +17,8 @@ const mockCharts = {
   byVersion: [{ version: '3.5.18', runs: 17, passRate: 0.82 }],
   byWorkflow: [{ workflow: 'fraud_detection', runs: 3, passRate: 0.33, aiCost: 55.5, avgDuration: 8600, bugs: 4 }],
   bugsByCategory: [{ category: 'ENVIRONMENT', count: 11 }],
-  bugsByAction: [{ action: 'FILED', count: 16 }]
+  bugsByAction: [{ action: 'FILED', count: 16 }],
+  failedTasks: [{ task: 'ai-execute-journey', count: 11 }]
 }
 
 const mockRuns = {
@@ -71,9 +72,15 @@ describe('Workflow Validation OverviewView', () => {
 
   it('renders KPI values from the overview endpoint', () => {
     const text = wrapper.text()
-    expect(text).toContain('100') // total runs
+    expect(text).toContain('100') // total executions
     expect(text).toContain('69%') // pass rate
     expect(text).toContain('Bugs Opened')
+  })
+
+  it('renders task failure hotspots from the task execution index', () => {
+    expect(wrapper.text()).toContain('Most Frequently Failing Tasks')
+    expect(wrapper.text()).toContain('ai-execute-journey')
+    expect(wrapper.text()).toContain('11 failures')
   })
 
   it('renders the recent runs table', () => {

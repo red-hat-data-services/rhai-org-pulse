@@ -4,7 +4,7 @@
     <div class="mb-4">
       <h2 class="text-2xl font-bold text-gray-900 dark:text-gray-100">Workflow Validation</h2>
       <p class="text-sm text-gray-500 dark:text-gray-400 mt-0.5">
-        AI-driven RHOAI workflow validation — pass/fail, cost, and bugs across releases
+        Workflow executions, task outcomes, cost, and RCA findings across releases
       </p>
     </div>
 
@@ -15,13 +15,13 @@
       <ServerCrashIcon :size="28" class="mx-auto mb-3 text-amber-500" />
       <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-2">OpenSearch is unreachable</h3>
       <p class="text-sm text-gray-600 dark:text-gray-400 max-w-md mx-auto">{{ unreachable }}</p>
-      <p class="text-xs text-gray-500 dark:text-gray-500 mt-3">Expected at <code>http://localhost:9200</code> (indices <code>workflow-runs</code>, <code>workflow-bugs</code>).</p>
+      <p class="text-xs text-gray-500 dark:text-gray-500 mt-3">Expected at <code>http://localhost:9200</code> (execution, task, and root-cause indices).</p>
     </div>
 
     <template v-else>
       <!-- KPI grid -->
       <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-4 mb-6">
-        <MetricCard :value="overview.runs.total" label="Test Runs" />
+        <MetricCard :value="overview.runs.total" label="Executions" />
         <MetricCard :value="formatPercent(overview.runs.passRate)" label="Pass Rate"
           :tone="passTone(overview.runs.passRate)" />
         <MetricCard :value="overview.runs.passed" label="Passed" tone="green" />
@@ -31,7 +31,7 @@
         <MetricCard :value="formatUsd(overview.runs.aiCost)" label="AI Cost" tone="teal" />
         <MetricCard :value="formatUsd(overview.runs.infraCost)" label="Infra Cost" tone="teal" />
         <MetricCard :value="formatDuration(overview.runs.avgDuration)" label="Avg Duration" />
-        <MetricCard :value="overview.bugs.total" label="Bugs" tone="amber" />
+        <MetricCard :value="overview.bugs.total" label="Root Causes" tone="amber" />
         <MetricCard :value="overview.bugs.opened" label="Bugs Opened" tone="red"
           :sub="overview.bugs.distinctJira + ' distinct JIRA'" />
         <MetricCard
@@ -42,7 +42,17 @@
       <!-- Trend line + category donut -->
       <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
         <TrendLineChart title="Pass Rate & Volume Over Time" :data="charts.overTime" />
-        <CategoryDonut title="Bugs by Category" center-label="bugs" :items="donutItems" />
+        <CategoryDonut title="Root Causes by Category" center-label="causes" :items="donutItems" />
+      </div>
+
+      <div v-if="charts.failedTasks.length" class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700/60 p-5 mb-6">
+        <h3 class="text-base font-semibold text-gray-900 dark:text-gray-100 mb-3">Most Frequently Failing Tasks</h3>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-2">
+          <div v-for="task in charts.failedTasks" :key="task.task" class="flex items-center justify-between rounded-lg bg-red-50 dark:bg-red-900/20 px-3 py-2">
+            <span class="text-sm text-gray-800 dark:text-gray-200 truncate mr-3">{{ task.task }}</span>
+            <span class="text-xs font-semibold text-red-700 dark:text-red-300">{{ task.count }} failures</span>
+          </div>
+        </div>
       </div>
 
       <!-- Pass rate by version (bonus) -->
@@ -121,7 +131,7 @@ const overview = reactive({
   runs: { total: 0, passRate: null, passed: 0, failed: 0, tasksTotal: 0, tasksPassed: 0, aiCost: 0, infraCost: 0, avgDuration: 0, workflows: 0, versions: 0 },
   bugs: { total: 0, opened: 0, distinctJira: 0 }
 })
-const charts = reactive({ overTime: [], byVersion: [], byWorkflow: [], bugsByCategory: [], bugsByAction: [] })
+const charts = reactive({ overTime: [], byVersion: [], byWorkflow: [], bugsByCategory: [], bugsByAction: [], failedTasks: [] })
 const recentRuns = ref([])
 
 const donutItems = computed(() => charts.bugsByCategory.map((c) => ({ label: c.category, count: c.count })))
