@@ -345,6 +345,8 @@ async function computeCommitment(jiraRequestFn, fetchAllFn, fixVersions, freezeD
 // ─── Route registration ────────────────────────────────────────────────────────
 
 module.exports = async function registerCommitmentRoutes(router, context) {
+  console.log('[commitment] Registering changelog-based commitment tracking routes')
+
   var storage = context.storage
   var requireAuth = context.requireAuth
   var requireAdmin = context.requireAdmin
