@@ -12,8 +12,9 @@
 
 const OS_URL = (process.env.OPENSEARCH_URL || 'http://localhost:9200').replace(/\/$/, '');
 
-const RUNS_INDEX = 'workflow-runs';
-const BUGS_INDEX = 'workflow-bugs';
+const RUNS_INDEX = 'workflow-executions';
+const TASKS_INDEX = 'workflow-task-executions';
+const BUGS_INDEX = 'workflow-root-causes';
 
 /**
  * Execute a `_search` against an OpenSearch index.
@@ -52,8 +53,10 @@ async function osStatus() {
     const json = await res.json();
     return json.count;
   };
-  const [runs, bugs] = await Promise.all([count(RUNS_INDEX), count(BUGS_INDEX)]);
-  return { url: OS_URL, runs, bugs };
+  const [executions, tasks, rootCauses] = await Promise.all([
+    count(RUNS_INDEX), count(TASKS_INDEX), count(BUGS_INDEX)
+  ]);
+  return { url: OS_URL, executions, tasks, rootCauses };
 }
 
 /**
@@ -103,12 +106,36 @@ function bugFilters(q = {}) {
   return Object.keys(bool).length ? { bool } : { match_all: {} };
 }
 
+/** Filters for independently indexed task executions. */
+function taskFilters(q = {}) {
+  const filter = [];
+  const must = [];
+  if (q.version) filter.push({ term: { rhoai_version: q.version } });
+  if (q.verdict) filter.push({ term: { status: q.verdict } });
+  if (q.provider) filter.push({ term: { inference_provider: q.provider } });
+  if (q.model) filter.push({ term: { model: q.model } });
+  if (q.workflow) filter.push({ term: { workflow_label: q.workflow } });
+  if (q.dateFrom || q.dateTo) {
+    const range = {};
+    if (q.dateFrom) range.gte = q.dateFrom;
+    if (q.dateTo) range.lte = q.dateTo;
+    filter.push({ range: { timestamp: range } });
+  }
+  if (q.q) must.push({ match: { reason: q.q } });
+  const bool = {};
+  if (filter.length) bool.filter = filter;
+  if (must.length) bool.must = must;
+  return Object.keys(bool).length ? { bool } : { match_all: {} };
+}
+
 module.exports = {
   OS_URL,
   RUNS_INDEX,
+  TASKS_INDEX,
   BUGS_INDEX,
   osSearch,
   osStatus,
   runFilters,
+  taskFilters,
   bugFilters
 };

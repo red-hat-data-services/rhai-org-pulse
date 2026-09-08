@@ -3,7 +3,7 @@
     <div class="mb-4">
       <h2 class="text-2xl font-bold text-gray-900 dark:text-gray-100">Activity</h2>
       <p class="text-sm text-gray-500 dark:text-gray-400 mt-0.5">
-        Bugs filed and matched by the RCA agent, with JIRA links. Filed = we opened it.
+        Root causes classified by the RCA agent, including JIRA and spec-fix actions.
       </p>
     </div>
 
@@ -18,7 +18,7 @@
     <template v-else>
       <!-- KPIs -->
       <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-        <MetricCard :value="kpis.total" label="Bug Records" tone="amber" />
+        <MetricCard :value="kpis.total" label="Root Causes" tone="amber" />
         <MetricCard :value="kpis.opened" label="Opened (Filed)" tone="red" />
         <MetricCard :value="kpis.distinctJira" label="Distinct JIRA" tone="teal" />
         <MetricCard :value="specFixCount" label="Spec Fixes" tone="neutral" />

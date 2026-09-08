@@ -1,17 +1,19 @@
 /**
  * Workflow Validation module — server routes.
  *
- * Read-only proxy over the `workflow-runs` and `workflow-bugs` OpenSearch
+ * Read-only proxy over workflow execution, task execution, and root-cause indices.
  * indices. All heavy aggregation happens in OpenSearch; these handlers just
  * shape query bodies and project the response for the UI.
  */
 
 const {
   RUNS_INDEX,
+  TASKS_INDEX,
   BUGS_INDEX,
   osSearch,
   osStatus,
   runFilters,
+  taskFilters,
   bugFilters
 } = require('./opensearch');
 
@@ -99,7 +101,7 @@ module.exports = function registerRoutes(router, context) {
       size: 0,
       query: runFilters(req.query),
       aggs: {
-        runs: { value_count: { field: 'run_key' } },
+        runs: { value_count: { field: 'execution_id' } },
         pass_rate: { avg: { field: 'passed_int' } },
         passed: { filter: { term: { passed: true } } },
         failed: { filter: { term: { passed: false } } },
@@ -107,7 +109,11 @@ module.exports = function registerRoutes(router, context) {
         tasks_passed: { sum: { field: 'tasks_passed' } },
         tasks_failed: { sum: { field: 'tasks_failed' } },
         ai_cost: { sum: { field: 'cost_usd' } },
-        infra_cost: { sum: { field: 'infra_cost_usd' } },
+        invocations: {
+          terms: { field: 'invocation_id', size: 10000 },
+          aggs: { infra_cost: { max: { field: 'infra_cost_usd' } } }
+        },
+        infra_cost: { sum_bucket: { buckets_path: 'invocations>infra_cost' } },
         avg_duration: { avg: { field: 'duration_s' } },
         turns: { sum: { field: 'num_turns' } },
         workflows: { cardinality: { field: 'workflow_label' } },
@@ -118,7 +124,7 @@ module.exports = function registerRoutes(router, context) {
       size: 0,
       query: bugFilters(req.query),
       aggs: {
-        total: { value_count: { field: 'bug_id' } },
+        total: { value_count: { field: 'root_cause_id' } },
         opened: { filter: { term: { opened: true } } },
         distinct_jira: { cardinality: { field: 'bug_key' } }
       }
@@ -179,13 +185,13 @@ module.exports = function registerRoutes(router, context) {
           terms: { field: 'rhoai_version', size: 50, order: { _key: 'asc' } },
           aggs: {
             pass_rate: { avg: { field: 'passed_int' } },
-            runs: { value_count: { field: 'run_key' } }
+            runs: { value_count: { field: 'execution_id' } }
           }
         },
         by_workflow: {
           terms: { field: 'workflow_label', size: 100, order: { runs: 'desc' } },
           aggs: {
-            runs: { value_count: { field: 'run_key' } },
+            runs: { value_count: { field: 'execution_id' } },
             pass_rate: { avg: { field: 'passed_int' } },
             ai_cost: { sum: { field: 'cost_usd' } },
             avg_dur: { avg: { field: 'duration_s' } },
@@ -204,12 +210,24 @@ module.exports = function registerRoutes(router, context) {
         by_component: { terms: { field: 'rhoaieng_component', size: 20 } }
       }
     };
-    const [runsR, bugsR] = await Promise.all([
+    const tasksBody = {
+      size: 0,
+      query: taskFilters(req.query),
+      aggs: {
+        failed_tasks: {
+          filter: { term: { status: 'FAIL' } },
+          aggs: { tasks: { terms: { field: 'task', size: 10 } } }
+        }
+      }
+    };
+    const [runsR, bugsR, tasksR] = await Promise.all([
       osSearch(RUNS_INDEX, runsBody),
-      osSearch(BUGS_INDEX, bugsBody)
+      osSearch(BUGS_INDEX, bugsBody),
+      osSearch(TASKS_INDEX, tasksBody)
     ]);
     const a = runsR.aggregations || {};
     const b = bugsR.aggregations || {};
+    const t = tasksR.aggregations || {};
     res.json({
       overTime: bucketList(a.over_time).map((bkt) => ({
         date: bkt.key_as_string || bkt.key,
@@ -233,7 +251,8 @@ module.exports = function registerRoutes(router, context) {
       byProvider: bucketList(a.by_provider).map((bkt) => ({ provider: bkt.key, runs: bkt.doc_count })),
       bugsByCategory: bucketList(b.by_category).map((bkt) => ({ category: bkt.key, count: bkt.doc_count })),
       bugsByAction: bucketList(b.by_action).map((bkt) => ({ action: bkt.key, count: bkt.doc_count })),
-      bugsByComponent: bucketList(b.by_component).map((bkt) => ({ component: bkt.key, count: bkt.doc_count }))
+      bugsByComponent: bucketList(b.by_component).map((bkt) => ({ component: bkt.key, count: bkt.doc_count })),
+      failedTasks: bucketList(t.failed_tasks?.tasks).map((bkt) => ({ task: bkt.key, count: bkt.doc_count }))
     });
   }));
 
@@ -262,7 +281,7 @@ module.exports = function registerRoutes(router, context) {
       query: runFilters(req.query),
       sort: [{ timestamp: 'desc' }],
       _source: [
-        'run_key', 'run_id', 'workflow_label', 'test_name', 'rhoai_version',
+        'execution_id', 'run_key', 'invocation_id', 'run_id', 'workflow_label', 'test_name', 'rhoai_version',
         'verdict', 'tasks_total', 'tasks_passed', 'tasks_failed',
         'cost_usd', 'infra_cost_usd', 'duration_s', 'num_turns', 'model',
         'inference_provider', 'bug_count', 'timestamp'
@@ -293,7 +312,7 @@ module.exports = function registerRoutes(router, context) {
     const runKey = req.params.runKey;
     const runR = await osSearch(RUNS_INDEX, {
       size: 1,
-      query: { term: { run_key: runKey } }
+      query: { term: { execution_id: runKey } }
     });
     const hit = (runR.hits?.hits || [])[0];
     if (!hit) return res.status(404).json({ error: `Run not found: ${runKey}` });
@@ -338,7 +357,7 @@ module.exports = function registerRoutes(router, context) {
       query,
       sort: [{ timestamp: 'desc' }],
       aggs: {
-        total: { value_count: { field: 'bug_id' } },
+        total: { value_count: { field: 'root_cause_id' } },
         opened: { filter: { term: { opened: true } } },
         distinct_jira: { cardinality: { field: 'bug_key' } },
         by_category: { terms: { field: 'category', size: 20 } },
@@ -383,7 +402,7 @@ module.exports = function registerRoutes(router, context) {
         by_workflow: {
           terms: { field: 'workflow_label', size: 300, order: { runs: 'desc' } },
           aggs: {
-            runs: { value_count: { field: 'run_key' } },
+            runs: { value_count: { field: 'execution_id' } },
             pass_rate: { avg: { field: 'passed_int' } },
             avg_dur: { avg: { field: 'duration_s' } },
             ai_cost: { sum: { field: 'cost_usd' } },
