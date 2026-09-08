@@ -9,7 +9,7 @@ export function useCommitmentTracking() {
   const releases = ref([])
   const releasesLoading = ref(false)
 
-  async function loadCommitment(version, phase) {
+  async function loadCommitment(version, phase, { refresh = false } = {}) {
     if (!version || !phase) {
       error.value = 'Version and phase are required'
       return
@@ -19,7 +19,8 @@ export function useCommitmentTracking() {
     error.value = null
 
     try {
-      const response = await fetch(`${API_BASE}/commitment/${encodeURIComponent(version)}/${encodeURIComponent(phase)}`)
+      const qs = refresh ? '?refresh=true' : ''
+      const response = await fetch(`${API_BASE}/commitment/${encodeURIComponent(version)}/${encodeURIComponent(phase)}${qs}`)
 
       if (!response.ok) {
         if (response.status === 404) {

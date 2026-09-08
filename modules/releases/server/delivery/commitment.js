@@ -14,6 +14,7 @@ const { readRegistry } = require('../registry')
 const { getConfig } = require('./config')
 
 const COMMITMENT_CONFIG_FILE = 'releases/delivery/commitment-config.json'
+const COMMITMENT_CACHE_PREFIX = 'releases/delivery/commitment-cache-'
 const VALID_PHASES = ['EA1', 'EA2', 'GA']
 const DELIVERED_STATUSES = ['Release Pending', 'Closed', 'Done']
 
@@ -288,12 +289,14 @@ async function computeCommitment(jiraRequestFn, fetchAllFn, fixVersions, freezeD
 
     if (analysis.hadAtFreeze) {
       committed.push(feature)
-      var status = feature.status
-      if (DELIVERED_STATUSES.indexOf(status) !== -1) {
+      if (DELIVERED_STATUSES.indexOf(feature.status) !== -1) {
         delivered.push(feature)
       }
     } else {
       added.push(feature)
+      if (DELIVERED_STATUSES.indexOf(feature.status) !== -1) {
+        delivered.push(feature)
+      }
     }
   }
 
@@ -330,6 +333,7 @@ async function computeCommitment(jiraRequestFn, fetchAllFn, fixVersions, freezeD
       notDelivered: notDelivered.length
     },
     features: {
+      committed: committed,
       delivered: delivered,
       added: added,
       removed: removed,
@@ -463,6 +467,7 @@ module.exports = async function registerCommitmentRoutes(router, context) {
     try {
       var version = req.params.version
       var phase = req.params.phase
+      var forceRefresh = req.query.refresh === 'true'
 
       if (VALID_PHASES.indexOf(phase) === -1) {
         return res.status(400).json({ error: 'Invalid phase. Must be one of: ' + VALID_PHASES.join(', ') })
@@ -489,6 +494,17 @@ module.exports = async function registerCommitmentRoutes(router, context) {
         })
       }
 
+      var cacheKey = COMMITMENT_CACHE_PREFIX + version + '-' + phase + '.json'
+      var freezePassed = new Date(freezeDate + 'T23:59:59.999Z').getTime() < Date.now()
+
+      if (freezePassed && !forceRefresh) {
+        var cached = await readFromStorage(cacheKey)
+        if (cached && cached.metrics) {
+          console.log('[commitment] Serving cached data for ' + version + ' ' + phase)
+          return res.json(cached)
+        }
+      }
+
       var deliveryConfig = await getConfig(readFromStorage)
 
       var result = await computeCommitment(
@@ -500,14 +516,22 @@ module.exports = async function registerCommitmentRoutes(router, context) {
         deliveryConfig.jiraAllProjects
       )
 
-      res.json({
+      var response = {
         version: version,
         phase: phase,
         planningFreezeDate: freezeDate,
         fixVersions: phaseConfig.fixVersions,
+        cachedAt: new Date().toISOString(),
         metrics: result.metrics,
         features: result.features
-      })
+      }
+
+      if (freezePassed) {
+        await writeToStorage(cacheKey, response)
+        console.log('[commitment] Cached results for ' + version + ' ' + phase)
+      }
+
+      res.json(response)
     } catch (error) {
       console.error('[commitment] Tracking error:', error)
       res.status(500).json({ error: error.message })

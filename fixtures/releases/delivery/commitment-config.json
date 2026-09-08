@@ -3,25 +3,25 @@
     {
       "version": "3.4",
       "phases": {
-        "EA1": { "fixVersions": ["rhoai-3.4.EA1", "RHAIIS-3.4 EA1", "rhelai-3.4EA1"] },
-        "EA2": { "fixVersions": ["rhoai-3.4.EA2", "RHAIIS-3.4 EA2", "rhelai-3.4EA2"] },
-        "GA":  { "fixVersions": ["rhoai-3.4", "RHAIIS-3.4", "rhelai-3.4"] }
+        "EA1": { "fixVersions": ["rhoai-3.4.EA1", "RHAIIS-3.4 EA1", "rhelai-3.4EA1"], "planningFreezeOverride": "2026-01-24" },
+        "EA2": { "fixVersions": ["rhoai-3.4.EA2", "RHAIIS-3.4 EA2", "rhelai-3.4EA2"], "planningFreezeOverride": "2026-02-14" },
+        "GA":  { "fixVersions": ["rhoai-3.4", "RHAIIS-3.4", "rhelai-3.4"], "planningFreezeOverride": "2026-03-26" }
       }
     },
     {
       "version": "3.5",
       "phases": {
-        "EA1": { "fixVersions": ["3.5 EA1 RHOAI RELEASE", "3.5 EA1 RHAII RELEASE", "3.5 EA1 RHELAI RELEASE"] },
-        "EA2": { "fixVersions": ["3.5 EA2 RHOAI RELEASE", "3.5 EA2 RHAII RELEASE", "3.5 EA2 RHELAI RELEASE"] },
-        "GA":  { "fixVersions": ["3.5 GA RHOAI RELEASE", "3.5 GA RHAII RELEASE", "3.5 GA RHELAI RELEASE"] }
+        "EA1": { "fixVersions": ["3.5 EA1 RHOAI RELEASE", "3.5 EA1 RHAII RELEASE", "3.5 EA1 RHELAI RELEASE"], "planningFreezeOverride": "2026-04-17" },
+        "EA2": { "fixVersions": ["3.5 EA2 RHOAI RELEASE", "3.5 EA2 RHAII RELEASE", "3.5 EA2 RHELAI RELEASE"], "planningFreezeOverride": "2026-05-15" },
+        "GA":  { "fixVersions": ["3.5 GA RHOAI RELEASE", "3.5 GA RHAII RELEASE", "3.5 GA RHELAI RELEASE"], "planningFreezeOverride": "2026-06-24" }
       }
     },
     {
       "version": "3.6",
       "phases": {
-        "EA1": { "fixVersions": ["3.6 EA1 RHOAI RELEASE", "3.6 EA1 RHAII RELEASE", "3.6 EA1 RHELAI RELEASE"] },
-        "EA2": { "fixVersions": ["3.6 EA2 RHOAI RELEASE", "3.6 EA2 RHAII RELEASE", "3.6 EA2 RHELAI RELEASE"] },
-        "GA":  { "fixVersions": ["3.6 GA RHOAI RELEASE", "3.6 GA RHAII RELEASE", "3.6 GA RHELAI RELEASE"] }
+        "EA1": { "fixVersions": ["3.6 EA1 RHOAI RELEASE", "3.6 EA1 RHAII RELEASE", "3.6 EA1 RHELAI RELEASE"], "planningFreezeOverride": "2026-07-29" },
+        "EA2": { "fixVersions": ["3.6 EA2 RHOAI RELEASE", "3.6 EA2 RHAII RELEASE", "3.6 EA2 RHELAI RELEASE"], "planningFreezeOverride": "2026-08-26" },
+        "GA":  { "fixVersions": ["3.6 GA RHOAI RELEASE", "3.6 GA RHAII RELEASE", "3.6 GA RHELAI RELEASE"], "planningFreezeOverride": "2026-09-23" }
       }
     },
     {

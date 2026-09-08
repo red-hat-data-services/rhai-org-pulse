@@ -2,7 +2,8 @@
   <div>
     <!-- Filter bar -->
     <div class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4 mb-6">
-      <div class="flex flex-wrap items-center gap-4">
+      <div class="flex flex-wrap items-center justify-between gap-4">
+        <div class="flex flex-wrap items-center gap-4">
         <div class="flex items-center gap-2">
           <label class="text-sm font-medium text-gray-700 dark:text-gray-300">Release:</label>
           <select
@@ -30,6 +31,17 @@
             <option value="GA">GA</option>
           </select>
         </div>
+        </div>
+        <button
+          v-if="selectedVersion && selectedPhase"
+          @click="handleRefresh"
+          :disabled="loading"
+          class="flex items-center gap-1.5 px-3 py-1.5 text-sm text-gray-600 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 rounded-md hover:bg-gray-200 dark:hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+          title="Refresh data"
+        >
+          <RefreshCw :size="14" :class="{ 'animate-spin': loading }" />
+          Refresh
+        </button>
       </div>
     </div>
 
@@ -79,7 +91,7 @@
           <div class="text-xs text-gray-500 dark:text-gray-400 mt-1">{{ data.metrics.percentDelivered }}% of committed</div>
         </div>
         <div class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4">
-          <div class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase mb-1">Added</div>
+          <div class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase mb-1">Late Added</div>
           <div class="text-2xl font-bold text-blue-600 dark:text-blue-400">{{ data.metrics.added }}</div>
           <div class="text-xs text-gray-500 dark:text-gray-400 mt-1">After freeze</div>
         </div>
@@ -92,6 +104,21 @@
 
       <!-- Feature Changes Tables -->
       <div class="space-y-4">
+        <div v-if="data.features.committed && data.features.committed.length > 0" class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
+          <button @click="toggleSection('committed')" class="w-full px-4 py-3 flex items-center justify-between text-left hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors">
+            <div class="flex items-center gap-2">
+              <component :is="expandedSections.committed ? ChevronDown : ChevronRight" :size="16" class="text-gray-400" />
+              <span class="font-semibold text-gray-900 dark:text-gray-100">Committed Features ({{ data.features.committed.length }})</span>
+            </div>
+            <span class="text-xs text-gray-600 dark:text-gray-400 font-medium">At Planning Freeze</span>
+          </button>
+          <div v-if="expandedSections.committed" class="border-t border-gray-200 dark:border-gray-700 p-4">
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              <FeatureCard v-for="feature in data.features.committed" :key="feature.key" :feature="feature" variant="in-progress" />
+            </div>
+          </div>
+        </div>
+
         <div v-if="data.features.delivered.length > 0" class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
           <button @click="toggleSection('delivered')" class="w-full px-4 py-3 flex items-center justify-between text-left hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors">
             <div class="flex items-center gap-2">
@@ -111,7 +138,7 @@
           <button @click="toggleSection('added')" class="w-full px-4 py-3 flex items-center justify-between text-left hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors">
             <div class="flex items-center gap-2">
               <component :is="expandedSections.added ? ChevronDown : ChevronRight" :size="16" class="text-gray-400" />
-              <span class="font-semibold text-gray-900 dark:text-gray-100">Added Features ({{ data.features.added.length }})</span>
+              <span class="font-semibold text-gray-900 dark:text-gray-100">Late Added Features ({{ data.features.added.length }})</span>
             </div>
             <span class="text-xs text-blue-600 dark:text-blue-400 font-medium">After Freeze</span>
           </button>
@@ -137,20 +164,6 @@
           </div>
         </div>
 
-        <div v-if="data.features.notDelivered && data.features.notDelivered.length > 0" class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
-          <button @click="toggleSection('notDelivered')" class="w-full px-4 py-3 flex items-center justify-between text-left hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors">
-            <div class="flex items-center gap-2">
-              <component :is="expandedSections.notDelivered ? ChevronDown : ChevronRight" :size="16" class="text-gray-400" />
-              <span class="font-semibold text-gray-900 dark:text-gray-100">Not Delivered ({{ data.features.notDelivered.length }})</span>
-            </div>
-            <span class="text-xs text-red-600 dark:text-red-400 font-medium">Committed but not delivered</span>
-          </button>
-          <div v-if="expandedSections.notDelivered" class="border-t border-gray-200 dark:border-gray-700 p-4">
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              <FeatureCard v-for="feature in data.features.notDelivered" :key="feature.key" :feature="feature" variant="not-started" />
-            </div>
-          </div>
-        </div>
       </div>
 
       <!-- Planning freeze metadata -->
@@ -164,7 +177,7 @@
 
 <script setup>
 import { ref, computed, onMounted } from 'vue'
-import { ChevronRight, ChevronDown, CheckCircle, AlertTriangle, XCircle } from 'lucide-vue-next'
+import { ChevronRight, ChevronDown, CheckCircle, AlertTriangle, XCircle, RefreshCw } from 'lucide-vue-next'
 import { useCommitmentTracking } from './useCommitmentTracking'
 import FeatureCard from './FeatureCard.vue'
 
@@ -173,10 +186,10 @@ const { data, loading, error, loadCommitment, releases, loadReleases } = useComm
 const selectedVersion = ref('')
 const selectedPhase = ref('')
 const expandedSections = ref({
+  committed: false,
   delivered: false,
   added: false,
-  removed: false,
-  notDelivered: false
+  removed: false
 })
 
 const okrStatusClass = computed(() => {
@@ -220,6 +233,12 @@ function toggleSection(section) {
 function handleFilterChange() {
   if (selectedVersion.value && selectedPhase.value) {
     loadCommitment(selectedVersion.value, selectedPhase.value)
+  }
+}
+
+function handleRefresh() {
+  if (selectedVersion.value && selectedPhase.value) {
+    loadCommitment(selectedVersion.value, selectedPhase.value, { refresh: true })
   }
 }
 
