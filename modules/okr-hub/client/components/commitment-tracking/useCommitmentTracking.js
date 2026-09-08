@@ -23,7 +23,8 @@ export function useCommitmentTracking() {
 
       if (!response.ok) {
         if (response.status === 404) {
-          throw new Error(`No snapshot found for ${version} ${phase}. Create a snapshot in the Health Dashboard first.`)
+          const errorData = await response.json().catch(() => ({}))
+          throw new Error(errorData.error || `No commitment tracking config found for ${version} ${phase}.`)
         }
         if (response.status === 400) {
           throw new Error('Invalid phase. Must be EA1, EA2, or GA.')

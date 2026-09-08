@@ -160,7 +160,6 @@ describe('health routes', function() {
         'PUT /releases/:version/health/override/:featureKey',
         'DELETE /releases/:version/health/override/:featureKey',
         'GET /releases/:version/health/snapshot/:phase',
-        'POST /releases/:version/health/snapshot/:phase',
         'POST /releases/:version/health/refresh',
         'GET /releases/:version/health/refresh/status',
         'GET /releases/health-admin/jira-fields',
@@ -647,57 +646,6 @@ describe('health routes', function() {
     })
   })
 
-  // ─── POST /releases/:version/health/snapshot/:phase ───
-
-  describe('POST /releases/:version/health/snapshot/:phase', function() {
-    it('returns 400 for invalid version', async function() {
-      var res = await callRoute(router._routes, 'POST', '/releases/:version/health/snapshot/:phase',
-        makeReq({ params: { version: '!bad', phase: 'EA1' } }))
-      expect(res._status).toBe(400)
-    })
-
-    it('returns 400 for invalid phase', async function() {
-      var res = await callRoute(router._routes, 'POST', '/releases/:version/health/snapshot/:phase',
-        makeReq({ params: { version: '3.5', phase: 'WRONG' } }))
-      expect(res._status).toBe(400)
-    })
-
-    it('returns 404 when no health cache exists', async function() {
-      var res = await callRoute(router._routes, 'POST', '/releases/:version/health/snapshot/:phase',
-        makeReq({ params: { version: '3.5', phase: 'EA1' } }))
-      expect(res._status).toBe(404)
-      expect(res._json.error).toContain('No health cache')
-    })
-
-    it('creates snapshot with matching features and writes audit log', async function() {
-      storage._store['releases/planning/health-cache-3.5-all.json'] = freshCache('3.5', {
-        features: [
-          { key: 'T-1', summary: 'F1', status: 'In Progress', fixVersions: 'rhoai-3.5.EA1', components: 'Comp1', deliveryOwner: 'owner1' },
-          { key: 'T-2', summary: 'F2', status: 'New', fixVersions: 'rhoai-3.5.GA', components: 'Comp2', deliveryOwner: 'owner2' },
-          { key: 'T-3', summary: 'F3', status: 'Done', fixVersions: 'rhoai-3.5.EA1, rhoai-3.5.EA2', components: 'Comp3', deliveryOwner: 'owner3' }
-        ]
-      })
-      var res = await callRoute(router._routes, 'POST', '/releases/:version/health/snapshot/:phase',
-        makeReq({ params: { version: '3.5', phase: 'EA1' } }))
-      expect(res._status).toBe(200)
-      expect(res._json.phase).toBe('EA1')
-      expect(res._json.featureCount).toBe(2)
-
-      var snap = storage._store['releases/planning/committed-snapshot-3.5-EA1.json']
-      expect(snap).toBeDefined()
-      expect(snap.snapshotTrigger).toBe('manual')
-      expect(snap.featureKeys).toEqual(['T-1', 'T-3'])
-      expect(snap.features).toHaveLength(2)
-      expect(snap.features[0].key).toBe('T-1')
-
-      var auditLog = storage._store['releases/audit-log.json']
-      expect(auditLog).toBeDefined()
-      var entry = auditLog.entries[auditLog.entries.length - 1]
-      expect(entry.action).toBe('committed_snapshot')
-      expect(entry.details.phase).toBe('EA1')
-    })
-  })
-
   // ─── GET /releases/health-admin/jira-fields ───
 
   describe('GET /releases/health-admin/jira-fields', function() {
@@ -922,22 +870,6 @@ describe('health routes', function() {
       expect(res._json.featureKey).toBe('T-1')
     })
 
-    it('allows non-admin, non-planning-manager to create snapshot', async function() {
-      storage._store['releases/planning/health-cache-3.5-all.json'] = freshCache('3.5', {
-        features: [
-          { key: 'T-1', summary: 'F1', fixVersions: 'rhoai-3.5.EA1', status: 'In Progress', components: 'Comp1', deliveryOwner: 'owner1' }
-        ]
-      })
-      var res = await callRoute(router._routes, 'POST', '/releases/:version/health/snapshot/:phase',
-        makeReq({
-          isAdmin: false,
-          isReleaseManager: false,
-          userEmail: 'user@test.com',
-          params: { version: '3.5', phase: 'EA1' }
-        }))
-      expect(res._status).toBe(200)
-      expect(res._json.phase).toBe('EA1')
-    })
   })
 
   // ─── Impersonation Safety ───
@@ -949,10 +881,6 @@ describe('health routes', function() {
       expect(handlers.length).toBeGreaterThanOrEqual(4)
     })
 
-    it('includes blockDuringImpersonation middleware on POST snapshot', function() {
-      var handlers = router._routes['POST /releases/:version/health/snapshot/:phase']
-      expect(handlers.length).toBeGreaterThanOrEqual(4)
-    })
   })
 
   // ─── Audit Actor ───

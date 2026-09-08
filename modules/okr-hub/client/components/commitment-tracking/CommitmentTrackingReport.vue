@@ -1,8 +1,8 @@
 <template>
   <div>
-    <!-- Filter bar with snapshot creation -->
+    <!-- Filter bar -->
     <div class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4 mb-6">
-      <div class="flex flex-wrap items-center gap-4 mb-3">
+      <div class="flex flex-wrap items-center gap-4">
         <div class="flex items-center gap-2">
           <label class="text-sm font-medium text-gray-700 dark:text-gray-300">Release:</label>
           <select
@@ -29,31 +29,6 @@
             <option value="EA2">EA2</option>
             <option value="GA">GA</option>
           </select>
-        </div>
-      </div>
-
-      <!-- Snapshot creation (always show when version+phase selected) -->
-      <div v-if="selectedVersion && selectedPhase"
-           class="border-t border-gray-200 dark:border-gray-700 pt-3">
-        <div class="flex items-center justify-between">
-          <div>
-            <p v-if="!data && error?.includes('No snapshot')" class="text-sm text-gray-600 dark:text-gray-400">
-              No baseline snapshot exists for <span class="font-medium">{{ selectedVersion }} {{ selectedPhase }}</span>
-            </p>
-            <p v-else class="text-sm text-gray-600 dark:text-gray-400">
-              Create a new baseline snapshot for <span class="font-medium">{{ selectedVersion }} {{ selectedPhase }}</span>
-            </p>
-            <p v-if="snapshotError" class="text-xs text-red-600 dark:text-red-400 mt-1">
-              {{ snapshotError }}
-            </p>
-          </div>
-          <button
-            @click="createSnapshot"
-            :disabled="creatingSnapshot"
-            class="px-3 py-1.5 bg-blue-600 text-white rounded-md text-sm hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            {{ creatingSnapshot ? 'Creating...' : 'Create Snapshot' }}
-          </button>
         </div>
       </div>
     </div>
@@ -162,41 +137,26 @@
           </div>
         </div>
 
-        <div v-if="data.features.inProgress.length > 0" class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
-          <button @click="toggleSection('inProgress')" class="w-full px-4 py-3 flex items-center justify-between text-left hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors">
+        <div v-if="data.features.notDelivered && data.features.notDelivered.length > 0" class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
+          <button @click="toggleSection('notDelivered')" class="w-full px-4 py-3 flex items-center justify-between text-left hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors">
             <div class="flex items-center gap-2">
-              <component :is="expandedSections.inProgress ? ChevronDown : ChevronRight" :size="16" class="text-gray-400" />
-              <span class="font-semibold text-gray-900 dark:text-gray-100">In Progress ({{ data.features.inProgress.length }})</span>
+              <component :is="expandedSections.notDelivered ? ChevronDown : ChevronRight" :size="16" class="text-gray-400" />
+              <span class="font-semibold text-gray-900 dark:text-gray-100">Not Delivered ({{ data.features.notDelivered.length }})</span>
             </div>
-            <span class="text-xs text-yellow-600 dark:text-yellow-400 font-medium">Not Delivered</span>
+            <span class="text-xs text-red-600 dark:text-red-400 font-medium">Committed but not delivered</span>
           </button>
-          <div v-if="expandedSections.inProgress" class="border-t border-gray-200 dark:border-gray-700 p-4">
+          <div v-if="expandedSections.notDelivered" class="border-t border-gray-200 dark:border-gray-700 p-4">
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              <FeatureCard v-for="feature in data.features.inProgress" :key="feature.key" :feature="feature" variant="in-progress" />
-            </div>
-          </div>
-        </div>
-
-        <div v-if="data.features.notStarted.length > 0" class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
-          <button @click="toggleSection('notStarted')" class="w-full px-4 py-3 flex items-center justify-between text-left hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors">
-            <div class="flex items-center gap-2">
-              <component :is="expandedSections.notStarted ? ChevronDown : ChevronRight" :size="16" class="text-gray-400" />
-              <span class="font-semibold text-gray-900 dark:text-gray-100">Not Started ({{ data.features.notStarted.length }})</span>
-            </div>
-            <span class="text-xs text-red-600 dark:text-red-400 font-medium">Not Delivered</span>
-          </button>
-          <div v-if="expandedSections.notStarted" class="border-t border-gray-200 dark:border-gray-700 p-4">
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              <FeatureCard v-for="feature in data.features.notStarted" :key="feature.key" :feature="feature" variant="not-started" />
+              <FeatureCard v-for="feature in data.features.notDelivered" :key="feature.key" :feature="feature" variant="not-started" />
             </div>
           </div>
         </div>
       </div>
 
-      <!-- Snapshot metadata -->
-      <div class="mt-6 text-xs text-gray-500 dark:text-gray-400 text-center">
-        Snapshot created: {{ formatDate(data.snapshot.snapshotAt) }}
-        ({{ data.snapshot.trigger }})
+      <!-- Planning freeze metadata -->
+      <div v-if="data.planningFreezeDate" class="mt-6 text-xs text-gray-500 dark:text-gray-400 text-center">
+        Planning freeze: {{ formatDate(data.planningFreezeDate) }}
+        <span v-if="data.fixVersions" class="ml-2">| Fix versions: {{ data.fixVersions.join(', ') }}</span>
       </div>
     </div>
   </div>
@@ -212,14 +172,11 @@ const { data, loading, error, loadCommitment, releases, loadReleases } = useComm
 
 const selectedVersion = ref('')
 const selectedPhase = ref('')
-const creatingSnapshot = ref(false)
-const snapshotError = ref(null)
 const expandedSections = ref({
   delivered: false,
   added: false,
   removed: false,
-  inProgress: false,
-  notStarted: false
+  notDelivered: false
 })
 
 const okrStatusClass = computed(() => {
@@ -263,27 +220,6 @@ function toggleSection(section) {
 function handleFilterChange() {
   if (selectedVersion.value && selectedPhase.value) {
     loadCommitment(selectedVersion.value, selectedPhase.value)
-  }
-}
-
-async function createSnapshot() {
-  if (!selectedVersion.value || !selectedPhase.value) return
-  creatingSnapshot.value = true
-  snapshotError.value = null
-  try {
-    const response = await fetch(`/api/modules/releases/delivery/commitment/snapshot/${selectedVersion.value}/${selectedPhase.value}`, {
-      method: 'POST'
-    })
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}))
-      throw new Error(errorData.error || `Server error: ${response.status}`)
-    }
-    await loadCommitment(selectedVersion.value, selectedPhase.value)
-  } catch (err) {
-    console.error('[CommitmentTracking] Snapshot creation failed:', err)
-    snapshotError.value = err.message
-  } finally {
-    creatingSnapshot.value = false
   }
 }
 
