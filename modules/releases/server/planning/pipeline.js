@@ -298,13 +298,52 @@ async function runPipeline(config, bigRocks, release, readFromStorage, opts) {
   const allFeatures = tier1Features.concat(tier2Features, tier3Features)
   const allRfes = tier1Rfes.concat(tier2RfesTagged)
 
+  // Count done (Closed/Done/Resolved) features per rock that match the release.
+  // These are filtered out during Tier-1 discovery, so we scan separately.
+  var DONE_STATUSES = ['Closed', 'Done', 'Resolved']
+  var donePerRock = {}
+  for (var dri = 0; dri < rocksWithOutcomes.length; dri++) {
+    var doneRock = rocksWithOutcomes[dri]
+    var doneCount = 0
+
+    if (jiraChildrenByOutcome) {
+      for (var doi = 0; doi < doneRock.outcomeKeys.length; doi++) {
+        var doneChildren = (jiraChildrenByOutcome[doneRock.outcomeKeys[doi]]) || []
+        for (var dci = 0; dci < doneChildren.length; dci++) {
+          var dc = doneChildren[dci]
+          if (!dc || !dc.key) continue
+          var dcTv = dc.targetVersions || []
+          if (dcTv.length === 0) continue
+          if (dcTv[0].indexOf(release) === -1) continue
+          if (DONE_STATUSES.indexOf(dc.status || '') !== -1) doneCount++
+        }
+      }
+    } else {
+      var doneOutcomeSet = new Set(doneRock.outcomeKeys)
+      var indexFeats = index.features || []
+      for (var dfi = 0; dfi < indexFeats.length; dfi++) {
+        var df = indexFeats[dfi]
+        if (!df.parentKey || !doneOutcomeSet.has(df.parentKey)) continue
+        var dfTv = df.targetVersions || []
+        if (dfTv.length === 0) continue
+        if (dfTv[0].indexOf(release) === -1) continue
+        if (DONE_STATUSES.indexOf(df.status || '') !== -1) doneCount++
+      }
+    }
+    donePerRock[doneRock.name] = doneCount
+  }
+
   // Per-rock stats
   const perRockStats = {}
   for (let si = 0; si < rocksWithOutcomes.length; si++) {
     const statRock = rocksWithOutcomes[si]
     const rockFeatures = tier1Features.filter(function(c) { return c.bigRock && c.bigRock.split(', ').includes(statRock.name) }).length
     const rockRfes = tier1Rfes.filter(function(c) { return c.bigRock && c.bigRock.split(', ').includes(statRock.name) }).length
-    perRockStats[statRock.name] = { features: rockFeatures, rfes: rockRfes }
+    perRockStats[statRock.name] = {
+      features: rockFeatures,
+      rfes: rockRfes,
+      doneCount: donePerRock[statRock.name] || 0
+    }
   }
 
   return {
@@ -360,6 +399,11 @@ function buildCandidateResponse(pipelineResult, version, bigRocks, demoMode) {
   }
 
   const rockSummaries = bigRocks.map(function(rock) {
+    var stats = perRockStats[rock.name] || {}
+    var activeFeatures = stats.features || 0
+    var doneCount = stats.doneCount || 0
+    var totalFeatures = activeFeatures + doneCount
+    var completionPct = totalFeatures > 0 ? Math.round((doneCount / totalFeatures) * 100) : 0
     return {
       priority: rock.priority,
       name: rock.name,
@@ -370,8 +414,11 @@ function buildCandidateResponse(pipelineResult, version, bigRocks, demoMode) {
       architect: rock.architect || '',
       outcomeKeys: rock.outcomeKeys,
       outcomeDescriptions: {},
-      featureCount: (perRockStats[rock.name] || {}).features || 0,
-      rfeCount: (perRockStats[rock.name] || {}).rfes || 0,
+      featureCount: activeFeatures,
+      rfeCount: stats.rfes || 0,
+      doneCount: doneCount,
+      totalFeatures: totalFeatures,
+      completionPct: completionPct,
       notes: rock.notes || ''
     }
   })

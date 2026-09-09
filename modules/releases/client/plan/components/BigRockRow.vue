@@ -69,6 +69,18 @@ function handleBadgeKeydown(event) {
     emit('toggle-expand')
   }
 }
+
+var completionPct = computed(function() {
+  return props.rock.completionPct || 0
+})
+
+var completionBarColor = computed(function() {
+  var pct = completionPct.value
+  if (pct >= 90) return 'bg-green-500'
+  if (pct >= 50) return 'bg-blue-500'
+  if (pct > 0) return 'bg-amber-500'
+  return 'bg-gray-300 dark:bg-gray-600'
+})
 </script>
 
 <template>
@@ -194,5 +206,25 @@ function handleBadgeKeydown(event) {
     <span class="mx-1 text-gray-300 dark:text-gray-600">|</span>
     <span class="font-semibold text-gray-700 dark:text-gray-300">{{ rock.rfeCount }}</span>
     <span class="text-xs text-gray-500 dark:text-gray-400 ml-0.5">RFEs</span>
+  </td>
+  <td class="px-3 py-2 text-center border border-gray-300 dark:border-gray-600">
+    <div class="flex flex-col items-center gap-1">
+      <span class="text-xs font-semibold" :class="completionPct >= 90 ? 'text-green-600 dark:text-green-400' : completionPct >= 50 ? 'text-blue-600 dark:text-blue-400' : 'text-gray-600 dark:text-gray-400'">
+        {{ completionPct }}%
+      </span>
+      <div class="w-16 h-1.5 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
+        <div
+          class="h-full rounded-full transition-all"
+          :class="completionBarColor"
+          :style="{ width: completionPct + '%' }"
+          role="progressbar"
+          :aria-valuenow="completionPct"
+          :aria-valuemin="0"
+          :aria-valuemax="100"
+          :aria-label="'Completion for ' + rock.name"
+        />
+      </div>
+      <span class="text-[10px] text-gray-400 dark:text-gray-500">{{ rock.doneCount || 0 }}/{{ rock.totalFeatures || 0 }}</span>
+    </div>
   </td>
 </template>
