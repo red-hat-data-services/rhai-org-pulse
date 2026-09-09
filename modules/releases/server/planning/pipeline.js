@@ -299,36 +299,26 @@ async function runPipeline(config, bigRocks, release, readFromStorage, opts) {
   const allRfes = tier1Rfes.concat(tier2RfesTagged)
 
   // Count done (Closed/Done/Resolved) features per rock that match the release.
-  // These are filtered out during Tier-1 discovery, so we scan separately.
+  // Always use the execution index: jiraChildrenByOutcome excludes done statuses
+  // in its JQL, so it can never contain Closed/Done/Resolved features.
   var DONE_STATUSES = ['Closed', 'Done', 'Resolved']
   var donePerRock = {}
+  var indexFeats = index.features || []
   for (var dri = 0; dri < rocksWithOutcomes.length; dri++) {
     var doneRock = rocksWithOutcomes[dri]
+    var doneOutcomeSet = new Set(doneRock.outcomeKeys)
     var doneCount = 0
-
-    if (jiraChildrenByOutcome) {
-      for (var doi = 0; doi < doneRock.outcomeKeys.length; doi++) {
-        var doneChildren = (jiraChildrenByOutcome[doneRock.outcomeKeys[doi]]) || []
-        for (var dci = 0; dci < doneChildren.length; dci++) {
-          var dc = doneChildren[dci]
-          if (!dc || !dc.key) continue
-          var dcTv = dc.targetVersions || []
-          if (dcTv.length === 0) continue
-          if (dcTv[0].indexOf(release) === -1) continue
-          if (DONE_STATUSES.indexOf(dc.status || '') !== -1) doneCount++
-        }
+    for (var dfi = 0; dfi < indexFeats.length; dfi++) {
+      var df = indexFeats[dfi]
+      if (!df.parentKey || !doneOutcomeSet.has(df.parentKey)) continue
+      var dfTv = df.targetVersions || []
+      if (dfTv.length === 0) continue
+      var dfMatch = false
+      for (var dvi = 0; dvi < dfTv.length; dvi++) {
+        if (dfTv[dvi].indexOf(release) !== -1) { dfMatch = true; break }
       }
-    } else {
-      var doneOutcomeSet = new Set(doneRock.outcomeKeys)
-      var indexFeats = index.features || []
-      for (var dfi = 0; dfi < indexFeats.length; dfi++) {
-        var df = indexFeats[dfi]
-        if (!df.parentKey || !doneOutcomeSet.has(df.parentKey)) continue
-        var dfTv = df.targetVersions || []
-        if (dfTv.length === 0) continue
-        if (dfTv[0].indexOf(release) === -1) continue
-        if (DONE_STATUSES.indexOf(df.status || '') !== -1) doneCount++
-      }
+      if (!dfMatch) continue
+      if (DONE_STATUSES.indexOf(df.status || '') !== -1) doneCount++
     }
     donePerRock[doneRock.name] = doneCount
   }
