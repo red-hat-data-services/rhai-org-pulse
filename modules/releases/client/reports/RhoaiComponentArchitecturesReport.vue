@@ -265,7 +265,10 @@
                       <!-- Component cell -->
                       <td class="px-4 py-2.5 z-10" :class="hasMaturityData ? 'sticky left-[160px]' : 'sticky left-0'" :style="{ backgroundColor: 'inherit' }">
                         <div class="flex items-center gap-2">
-                          <span class="font-medium text-gray-900 dark:text-gray-100">{{ comp.name }}</span>
+                          <span
+                            class="font-medium text-gray-900 dark:text-gray-100"
+                            :title="comp.imageName ? `Matched using: ${comp.imageName}` : undefined"
+                          >{{ comp.name }}</span>
                           <a
                             v-if="comp.image"
                             :href="quayUrl(comp.image)"
@@ -329,7 +332,10 @@
                 >
                   <td class="px-4 py-2.5 sticky left-0 z-10" :style="{ backgroundColor: 'inherit' }">
                     <div class="flex items-center gap-2">
-                      <span class="font-medium text-gray-900 dark:text-gray-100">{{ comp.name }}</span>
+                      <span
+                        class="font-medium text-gray-900 dark:text-gray-100"
+                        :title="comp.imageName ? `Matched using: ${comp.imageName}` : undefined"
+                      >{{ comp.name }}</span>
                       <a
                         v-if="comp.image"
                         :href="quayUrl(comp.image)"
@@ -494,7 +500,10 @@
                 </td>
                 <td class="px-4 py-2.5">
                   <div class="flex items-center gap-2">
-                    <span class="font-medium text-gray-900 dark:text-gray-100">{{ comp.name }}</span>
+                    <span
+                      class="font-medium text-gray-900 dark:text-gray-100"
+                      :title="comp.imageName ? `Attempted match using: ${comp.imageName}` : undefined"
+                    >{{ comp.name }}</span>
                     <a
                       v-if="comp.image"
                       :href="quayUrl(comp.image)"

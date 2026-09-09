@@ -21,37 +21,30 @@ function makeMaturityResponse(components) {
   }
 }
 
+// The mapping is built from the component-level `images` array (the
+// authoritative superset). `deliverables[].images[]` is a subset and is
+// intentionally NOT used for mapping — see maturity-mapping.js for rationale.
 const SAMPLE_COMPONENTS = [
   {
     name: 'Serving Orchestration',
     id: 'serving-orchestration',
-    deliverables: [
-      {
-        images: [
-          'registry.access.redhat.com/rhoai/odh-kserve-controller-rhel9',
-          'quay.io/rhoai/odh-kserve-controller-rhel9',
-          'quay.io/rhoai/odh-model-controller-rhel9'
-        ],
-        shipped: 'shipped'
-      }
+    images: [
+      'registry.access.redhat.com/rhoai/odh-kserve-controller-rhel9',
+      'quay.io/rhoai/odh-kserve-controller-rhel9',
+      'quay.io/rhoai/odh-model-controller-rhel9'
     ]
   },
   {
     name: 'AI Pipelines',
     id: 'ai-pipelines',
-    deliverables: [
-      {
-        images: [
-          'quay.io/rhoai/odh-data-science-pipelines-operator-controller-rhel9'
-        ],
-        shipped: 'shipped'
-      }
+    images: [
+      'quay.io/rhoai/odh-data-science-pipelines-operator-controller-rhel9'
     ]
   },
   {
     name: 'Data Connect Hub',
     id: 'data-connect-hub',
-    deliverables: []
+    images: []
   }
 ]
 
@@ -78,12 +71,12 @@ describe('fetchMaturityMapping', () => {
         id: 'serving',
         owner: 'jdoe',
         team: 'Model Serving',
-        deliverables: [{ images: ['quay.io/rhoai/odh-kserve-controller-rhel9'] }]
+        images: ['quay.io/rhoai/odh-kserve-controller-rhel9']
       },
       {
         name: 'AI Pipelines',
         id: 'pipelines',
-        deliverables: [{ images: ['quay.io/rhoai/odh-dsp-rhel9'] }]
+        images: ['quay.io/rhoai/odh-dsp-rhel9']
       }
     ]))
 
@@ -119,14 +112,36 @@ describe('fetchMaturityMapping', () => {
       {
         name: 'Test Component',
         id: 'test',
-        deliverables: [{
-          images: ['registry.access.redhat.com/rhoai/odh-dashboard-rhel8']
-        }]
+        images: ['registry.access.redhat.com/rhoai/odh-dashboard-rhel8']
       }
     ]))
 
     const result = await fetchMaturityMapping('test-token')
     expect(result.mapping['odh-dashboard-rhel8']).toBe('Test Component')
+  })
+
+  it('maps component-level images not wired to any deliverable', async () => {
+    // Mirrors the real report: "AI Core Platform" lists odh-cli-rhel9 only in
+    // its component-level `images` array, not under any deliverable. The
+    // maturity tool accepts these ("evaluation-target-not-in-deliverable").
+    mockFetch.mockResolvedValueOnce(makeMaturityResponse([
+      {
+        name: 'AI Core Platform',
+        id: 'ai-core-platform',
+        images: [
+          'registry.access.redhat.com/rhoai/odh-kube-auth-proxy-rhel9',
+          'quay.io/rhoai/odh-cli-rhel9'
+        ],
+        // Deliverables intentionally omit odh-cli — proves we do NOT rely on them.
+        deliverables: [
+          { images: ['quay.io/rhoai/odh-kube-auth-proxy-rhel9'], shipped: 'shipped' }
+        ]
+      }
+    ]))
+
+    const result = await fetchMaturityMapping('test-token')
+    expect(result.mapping['odh-cli-rhel9']).toBe('AI Core Platform')
+    expect(result.mapping['odh-kube-auth-proxy-rhel9']).toBe('AI Core Platform')
   })
 
   it('throws on 401 response', async () => {
@@ -153,26 +168,25 @@ describe('fetchMaturityMapping', () => {
     await expect(fetchMaturityMapping('token')).rejects.toThrow('missing components array')
   })
 
-  it('skips malformed deliverables gracefully', async () => {
+  it('skips malformed images gracefully', async () => {
     mockFetch.mockResolvedValueOnce(makeMaturityResponse([
       {
         name: 'Good',
         id: 'good',
-        deliverables: [{ images: ['quay.io/ns/good-image'] }]
-      },
-      {
-        name: 'Bad Deliverables',
-        id: 'bad',
-        deliverables: 'not-an-array'
+        images: ['quay.io/ns/good-image']
       },
       {
         name: 'Bad Images',
-        id: 'bad2',
-        deliverables: [{ images: 'not-an-array' }]
+        id: 'bad',
+        images: 'not-an-array'
+      },
+      {
+        name: 'Missing Images',
+        id: 'bad2'
       },
       {
         name: '',
-        deliverables: [{ images: ['quay.io/ns/unnamed'] }]
+        images: ['quay.io/ns/unnamed']
       }
     ]))
 
@@ -180,9 +194,9 @@ describe('fetchMaturityMapping', () => {
     expect(result.mapping['good-image']).toBe('Good')
     expect(Object.keys(result.mapping)).toHaveLength(1)
     expect(result.allProductComponents).toEqual([
-      { name: 'Bad Deliverables', owner: null, team: null },
       { name: 'Bad Images', owner: null, team: null },
-      { name: 'Good', owner: null, team: null }
+      { name: 'Good', owner: null, team: null },
+      { name: 'Missing Images', owner: null, team: null }
     ])
   })
 })

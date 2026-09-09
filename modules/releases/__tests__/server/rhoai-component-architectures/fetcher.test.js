@@ -78,12 +78,12 @@ const MATURITY_COMPONENTS = [
   {
     name: 'Serving Orchestration',
     id: 'serving',
-    deliverables: [{ images: ['quay.io/rhoai/odh-kserve-controller-rhel9'] }]
+    images: ['quay.io/rhoai/odh-kserve-controller-rhel9']
   },
   {
     name: 'AI Core Dashboard',
     id: 'dashboard',
-    deliverables: [{ images: ['quay.io/rhoai/odh-dashboard-rhel9'] }]
+    images: ['quay.io/rhoai/odh-dashboard-rhel9']
   }
 ]
 
