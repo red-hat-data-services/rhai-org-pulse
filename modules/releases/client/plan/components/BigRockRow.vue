@@ -217,11 +217,8 @@ var completionBarColor = computed(function() {
           class="h-full rounded-full transition-all"
           :class="completionBarColor"
           :style="{ width: completionPct + '%' }"
-          role="progressbar"
-          :aria-valuenow="completionPct"
-          :aria-valuemin="0"
-          :aria-valuemax="100"
-          :aria-label="'Completion for ' + rock.name"
+          data-completion-bar
+          :title="completionPct + '% complete for ' + rock.name"
         />
       </div>
       <span class="text-[10px] text-gray-400 dark:text-gray-500">{{ rock.doneCount || 0 }}/{{ rock.totalFeatures || 0 }}</span>
