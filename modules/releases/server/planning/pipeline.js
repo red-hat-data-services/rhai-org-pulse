@@ -1,4 +1,4 @@
-const { TERMINAL_STATUSES, PRIORITY_ORDER } = require('./constants')
+const { TERMINAL_STATUSES, PRIORITY_ORDER, FEATURES_LIST_HIDDEN_STATUSES } = require('./constants')
 const { OUTCOME_KEY_PATTERN } = require('./validation')
 const {
   loadIndex,
@@ -301,24 +301,23 @@ async function runPipeline(config, bigRocks, release, readFromStorage, opts) {
   // Count done (Closed/Done/Resolved) features per rock that match the release.
   // Always use the execution index: jiraChildrenByOutcome excludes done statuses
   // in its JQL, so it can never contain Closed/Done/Resolved features.
-  var DONE_STATUSES = ['Closed', 'Done', 'Resolved']
-  var donePerRock = {}
-  var indexFeats = index.features || []
-  for (var dri = 0; dri < rocksWithOutcomes.length; dri++) {
-    var doneRock = rocksWithOutcomes[dri]
-    var doneOutcomeSet = new Set(doneRock.outcomeKeys)
-    var doneCount = 0
-    for (var dfi = 0; dfi < indexFeats.length; dfi++) {
-      var df = indexFeats[dfi]
+  const donePerRock = {}
+  const indexFeats = index.features || []
+  for (let dri = 0; dri < rocksWithOutcomes.length; dri++) {
+    const doneRock = rocksWithOutcomes[dri]
+    const doneOutcomeSet = new Set(doneRock.outcomeKeys)
+    let doneCount = 0
+    for (let dfi = 0; dfi < indexFeats.length; dfi++) {
+      const df = indexFeats[dfi]
       if (!df.parentKey || !doneOutcomeSet.has(df.parentKey)) continue
-      var dfTv = df.targetVersions || []
+      const dfTv = df.targetVersions || []
       if (dfTv.length === 0) continue
-      var dfMatch = false
-      for (var dvi = 0; dvi < dfTv.length; dvi++) {
+      let dfMatch = false
+      for (let dvi = 0; dvi < dfTv.length; dvi++) {
         if (dfTv[dvi].indexOf(release) !== -1) { dfMatch = true; break }
       }
       if (!dfMatch) continue
-      if (DONE_STATUSES.indexOf(df.status || '') !== -1) doneCount++
+      if (FEATURES_LIST_HIDDEN_STATUSES.indexOf(df.status || '') !== -1) doneCount++
     }
     donePerRock[doneRock.name] = doneCount
   }
