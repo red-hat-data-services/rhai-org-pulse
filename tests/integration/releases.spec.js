@@ -1055,6 +1055,71 @@ test.describe('Releases Release Readiness @releases', () => {
     const body = await res.json();
     expect(body).not.toHaveProperty('director_summary');
   });
+
+  test('release readiness metrics API returns one canonical phase list', async ({ request }) => {
+    const res = await request.get('/api/modules/releases/release-readiness?version=rhoai-3.5.EA2');
+    if (res.status() === 404) {
+      test.skip();
+      return;
+    }
+    expect(res.ok()).toBe(true);
+    const body = await res.json();
+    expect(body).toHaveProperty('release_cycle_metrics');
+    expect(body.release_cycle_metrics).toHaveProperty('phases');
+    expect(Array.isArray(body.release_cycle_metrics.phases)).toBe(true);
+    expect(body.release_cycle_metrics.phases[0]).toMatchObject({
+      phase: 'Nightly Demo Cycle',
+      epic_key: 'DEMO-101',
+      build_ready_date: '2030-01-15',
+      days_since_code_freeze: 3,
+      test_started_date: '2030-01-16'
+    });
+  });
+
+  test('release readiness report shows Release Cycle Metrics section', async ({ page }) => {
+    await page.goto('/#/releases/reports?report=release-readiness&version=rhoai-3.5.EA2');
+    await page.waitForLoadState('networkidle');
+    await page.waitForTimeout(DEFAULT_PAGE_WAIT_TIME);
+
+    await expect(page.locator('text=Release Cycle Metrics').first()).toBeVisible();
+    await expect(page.locator('text=Build Milestones').first()).toBeVisible();
+    await expect(page.locator('text=Test Execution Timelines').first()).toBeVisible();
+    await expect(page.locator('text=Component Readiness Matrix').first()).toBeVisible();
+    await expect(page.locator('text=Select the Phases above to view component readiness.')).toHaveCount(0);
+
+    expect(page.errors).toHaveLength(0);
+  });
+
+  test('release readiness shows every release-cycle timeline in one table', async ({ page }) => {
+    await page.goto('/#/releases/reports?report=release-readiness&version=rhoai-3.5.EA2');
+    await page.waitForLoadState('networkidle');
+    await page.waitForTimeout(DEFAULT_PAGE_WAIT_TIME);
+
+    const timelineTable = page.locator('table').filter({
+      has: page.getByRole('columnheader', { name: 'Phase', exact: true })
+    });
+    await expect(timelineTable).toHaveCount(1);
+
+    for (const phase of [
+      'Nightly Demo Cycle',
+      'RC1 Demo Validation',
+      'RC2 Demo Validation'
+    ]) {
+      await expect(timelineTable.getByRole('cell', { name: phase, exact: true })).toBeVisible();
+    }
+
+    const nightlyPhaseButton = page.getByRole('button', { name: 'Nightly', exact: true });
+    await expect(nightlyPhaseButton).toBeVisible();
+    await nightlyPhaseButton.click();
+    await nightlyPhaseButton.click();
+    await expect(
+      page.locator('span.text-xs.font-bold.uppercase.tracking-wide.text-blue-500')
+        .filter({ hasText: /^Nightly$/ })
+    ).toBeVisible();
+    await expect(page.getByText('3 components', { exact: true }).first()).toBeVisible();
+
+    expect(page.errors).toHaveLength(0);
+  });
 });
 
 /**

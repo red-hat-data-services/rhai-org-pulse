@@ -8,6 +8,14 @@
     "work_remaining": 9,
     "progress_pct": 80
   },
+  "release_cycle_metrics": {
+    "code_freeze_date": "2030-01-10",
+    "phases": [
+      { "phase": "Nightly Demo Cycle", "epic_key": "DEMO-101", "build_ready_date": "2030-01-15", "days_since_code_freeze": 3, "test_started_date": "2030-01-16", "days_to_test_started": 1, "test_finished_date": "2030-01-18", "days_to_test_finished": 3, "tfas_passed_date": "2030-01-21", "days_to_tfas_passed": 4, "tfas_triaged_date": null, "days_to_tfas_triaged": null, "blockers_resolved_date": null, "days_to_blockers_resolved": null },
+      { "phase": "RC1 Demo Validation", "epic_key": "DEMO-102", "build_ready_date": "2030-01-24", "days_since_code_freeze": 10, "test_started_date": "2030-01-25", "days_to_test_started": 1, "test_finished_date": "2030-01-30", "days_to_test_finished": 4, "tfas_passed_date": "2030-02-01", "days_to_tfas_passed": 6, "tfas_triaged_date": "2030-02-05", "days_to_tfas_triaged": 8, "blockers_resolved_date": null, "days_to_blockers_resolved": null },
+      { "phase": "RC2 Demo Validation", "epic_key": "DEMO-103", "build_ready_date": "2030-02-04", "days_since_code_freeze": 17, "test_started_date": null, "days_to_test_started": null, "test_finished_date": null, "days_to_test_finished": null, "tfas_passed_date": null, "days_to_tfas_passed": null, "tfas_triaged_date": null, "days_to_tfas_triaged": null, "blockers_resolved_date": null, "days_to_blockers_resolved": null }
+    ]
+  },
   "director_summary": {
     "overall_pct": 75,
     "gate_statuses": [
