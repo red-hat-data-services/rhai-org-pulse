@@ -1740,6 +1740,11 @@ this file — the payload itself is produced outside this repo by the external
 `fetch_release_metrics.py` script and pushed via its `POST /upload` endpoint.
 Rendered by `modules/releases/client/reports/ReleaseReadinessDirector.vue`.
 
+The dashboard defaults to the available release with the latest valid
+`release_schedule.ga_date` on or before the current UTC date. Future releases
+and version views without a schedule are available for manual selection but
+are not selected on open. If no release qualifies, no version is selected.
+
 ```json
 {
   "version": "rhoai-3.5.EA2",
@@ -1781,6 +1786,7 @@ Rendered by `modules/releases/client/reports/ReleaseReadinessDirector.vue`.
 - Task objects carry the Jira `status`/`status_category` and `resolution` (same semantics as `resolution` in [Person Metrics](#person-metrics--datapeoplenamejson): the raw Jira resolution name, or `null`/absent while unresolved).
 - The UI renders a task's label as `<Status> - <Resolution>` (e.g. `"Done - Won't Do"`) whenever `resolution` is set, falling back to just `<Status>` otherwise; `resolution` is optional — older payloads without it still render using `status` alone.
 - No-work resolutions (`"Won't Do"`, `"Can't Do"`, `"Obsolete"`, `"Duplicate"`, `"Cannot Reproduce"`) are rendered in a muted/gray style instead of green, even when `status_category` is `"Done"`, since the work itself wasn't completed.
+- When `release_schedule.status` is `"Released"` or `"GA"`, the dashboard displays `Released with Open Tasks` in red if any test-execution task is unfinished. A task is unfinished when its status category is not `"Done"` or it has a no-work resolution. Otherwise, a released release keeps the normal green `Released` presentation.
 
 ## System Health — Disconnected Readiness Reports (`data/system-health/disconnected/reports.json`)
 

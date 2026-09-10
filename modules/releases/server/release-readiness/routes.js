@@ -37,7 +37,7 @@ const STORAGE_PREFIX = 'releases/release-readiness';
  *     summary: List available release readiness versions
  *     responses:
  *       200:
- *         description: Object with versions array and default_version
+ *         description: Object with versions array and default_version (latest GA date on or before today, or null)
  */
 
 /**
@@ -89,7 +89,7 @@ function registerReleaseReadinessRoutes(router, { storage, requireAuth, requireS
       .filter(f => f.endsWith('.json'))
       .map(f => f.replace('.json', '').replace(/_/g, ' '));
 
-    const defaultVersion = findUpcomingVersion(versions, storage);
+    const defaultVersion = await findCurrentVersion(versions, storage);
 
     res.json({ versions, default_version: defaultVersion });
   });
@@ -137,11 +137,11 @@ function sanitizeFilename(version) {
 }
 
 /**
- * Scan stored metrics to find the version with the nearest upcoming GA date.
- * Returns null if no upcoming version is found (falls back to first version
- * on the client side).
+ * Select the latest release whose GA date has arrived (using the UTC day).
+ * Undated version views and future releases remain available for manual selection.
+ * Returns null when no current release can be determined.
  */
-function findUpcomingVersion(versions, storage) {
+async function findCurrentVersion(versions, storage) {
   const today = new Date().toISOString().slice(0, 10);
   let best = null;
   let bestGa = null;
@@ -149,10 +149,13 @@ function findUpcomingVersion(versions, storage) {
   for (const v of versions) {
     try {
       const filename = sanitizeFilename(v);
-      const data = storage.readFromStorage(`${STORAGE_PREFIX}/${filename}.json`);
+      const data = await storage.readFromStorage(`${STORAGE_PREFIX}/${filename}.json`);
       const gaDate = data?.release_schedule?.ga_date;
-      if (gaDate && gaDate >= today) {
-        if (!bestGa || gaDate < bestGa) {
+      const validDate = typeof gaDate === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(gaDate)
+        && Number.isFinite(Date.parse(gaDate))
+        && new Date(gaDate).toISOString().slice(0, 10) === gaDate;
+      if (validDate && gaDate <= today) {
+        if (!bestGa || gaDate > bestGa) {
           bestGa = gaDate;
           best = v;
         }
