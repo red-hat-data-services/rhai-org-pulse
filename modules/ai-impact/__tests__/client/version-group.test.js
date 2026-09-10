@@ -43,11 +43,11 @@ describe('extractVersionGroup', () => {
     expect(extractVersionGroup('EA1')).toBeNull()
   })
 
-  it('recognizes ODH build type values', () => {
-    expect(extractVersionGroup('CI')).toBe('CI')
-    expect(extractVersionGroup('ci')).toBe('CI')
-    expect(extractVersionGroup('Release')).toBe('Release')
-    expect(extractVersionGroup('release')).toBe('Release')
+  it('returns null for ODH YAML build_type values', () => {
+    expect(extractVersionGroup('CI')).toBeNull()
+    expect(extractVersionGroup('ci')).toBeNull()
+    expect(extractVersionGroup('Release')).toBeNull()
+    expect(extractVersionGroup('release')).toBeNull()
   })
 })
 
@@ -61,15 +61,6 @@ describe('collectVersionGroups', () => {
       'rhoai-3.6',
       'rhoai-2.21'
     ])).toEqual(['2.21', '3.5', '3.5.EA1', '3.6'])
-  })
-
-  it('places ODH build types after numeric versions', () => {
-    expect(collectVersionGroups([
-      'CI',
-      'rhoai-3.5',
-      'Release',
-      'rhoai-3.6'
-    ])).toEqual(['3.5', '3.6', 'CI', 'Release'])
   })
 })
 

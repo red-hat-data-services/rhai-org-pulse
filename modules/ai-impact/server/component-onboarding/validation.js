@@ -1,3 +1,5 @@
+const { resolveTargetVersion } = require('./target-version');
+
 const VALID_COMPLETION_STATUSES = ['completed', 'in-progress', 'in_queue'];
 const VALID_PRODUCT_CONTEXTS = ['RHOAI', 'ODH'];
 const VALID_ONBOARDING_METHODS = ['automated', 'manual'];
@@ -217,9 +219,19 @@ function validateComponentOnboarding(body) {
     errors.push('statusCategory must be a string or null');
   }
 
-  // targetVersion: optional string (Jira customfield_10855, e.g. "rhoai-3.6")
+  // targetVersion: optional string (Jira customfield_10855, e.g. "3.6 GA RHOAI RELEASE")
   if (body.targetVersion !== undefined && body.targetVersion !== null && typeof body.targetVersion !== 'string') {
     errors.push('targetVersion must be a string or null');
+  }
+
+  // jiraTargetVersion: optional alias when pipeline sends build_type as targetVersion
+  if (body.jiraTargetVersion !== undefined && body.jiraTargetVersion !== null && typeof body.jiraTargetVersion !== 'string') {
+    errors.push('jiraTargetVersion must be a string or null');
+  }
+
+  // buildType: optional ODH YAML build_type ("CI" / "Release") — not used as targetVersion
+  if (body.buildType !== undefined && body.buildType !== null && typeof body.buildType !== 'string') {
+    errors.push('buildType must be a string or null');
   }
 
   if (errors.length > 0) {
@@ -238,7 +250,8 @@ function validateComponentOnboarding(body) {
         statusCategory: body.statusCategory || null
       }),
       productContext: body.productContext,
-      targetVersion: body.targetVersion?.trim() || null,
+      targetVersion: resolveTargetVersion(body),
+      buildType: body.buildType?.trim() || null,
       statusCategory: body.statusCategory || null,
       syncedAt: body.syncedAt,
       componentName: body.componentName || '',
