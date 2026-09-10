@@ -1,12 +1,12 @@
-const { describe, it, expect } = require('vitest');
-const {
+import { describe, it, expect } from 'vitest';
+import {
   isOdhBuildType,
   resolveTargetVersion,
   extractVersionNameFromJiraField,
   needsTargetVersionEnrichment
-} = require('../../server/component-onboarding/target-version');
-const { validateComponentOnboarding } = require('../../server/component-onboarding/validation');
-const { enrichTargetVersionsFromJira } = require('../../server/component-onboarding/jira-sync');
+} from '../../server/component-onboarding/target-version.js';
+import { validateComponentOnboarding } from '../../server/component-onboarding/validation.js';
+import { enrichTargetVersionsFromJira } from '../../server/component-onboarding/jira-sync.js';
 
 describe('isOdhBuildType', () => {
   it('detects CI and Release build types', () => {
