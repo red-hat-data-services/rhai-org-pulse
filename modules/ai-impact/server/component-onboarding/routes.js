@@ -8,20 +8,102 @@ const {
   projectComponent,
   countHistoryEntries
 } = require('./storage');
+const { syncComponentOnboardingFromJira, enrichTargetVersionsFromJira, acquireLock, releaseLock } = require('./jira-sync');
 
 const DEMO_MODE = process.env.DEMO_MODE === 'true';
 const jsonLimit = express.json({ limit: '10mb' });
 const BULK_CAP = 5000;
+
+const syncState = {
+  running: false,
+  startedAt: null,
+  lastResult: null
+};
+
+/**
+ * Run Jira target-version enrichment in the background.
+ */
+async function runSync(readFromStorage, writeToStorage, jiraRequest) {
+  if (syncState.running) return;
+  if (!jiraRequest) {
+    console.warn('[ai-impact] Component onboarding Jira sync skipped: no Jira client');
+    return;
+  }
+  if (!acquireLock()) {
+    console.warn('[ai-impact] Component onboarding Jira sync skipped: write lock held');
+    return;
+  }
+
+  syncState.running = true;
+  syncState.startedAt = new Date().toISOString();
+
+  try {
+    const result = await syncComponentOnboardingFromJira(readFromStorage, writeToStorage, jiraRequest);
+    syncState.lastResult = {
+      status: result.errors.length > 0 ? 'partial' : 'success',
+      message: `Enriched ${result.updated} of ${result.synced} components from Jira Target Version`,
+      errors: result.errors.length > 0 ? result.errors : undefined,
+      completedAt: new Date().toISOString()
+    };
+  } catch (err) {
+    console.error('[ai-impact] Component onboarding Jira sync failed:', err);
+    syncState.lastResult = {
+      status: 'error',
+      message: err.message,
+      completedAt: new Date().toISOString()
+    };
+  } finally {
+    syncState.running = false;
+    releaseLock();
+  }
+}
 
 /**
  * Register component onboarding routes on the module router.
  * Static routes BEFORE parameterized routes.
  */
 module.exports = function registerComponentOnboardingRoutes(router, context) {
-  const { storage, requireAdmin, requireScope } = context;
+  const { storage, requireAdmin, requireScope, jiraRequest } = context;
   const { readFromStorage, writeToStorage } = storage;
 
   // ─── Static routes first ───
+
+  /**
+   * @openapi
+   * /api/modules/ai-impact/component-onboarding/sync/status:
+   *   get:
+   *     summary: Get component onboarding Jira target-version sync status
+   *     tags: [AI Impact - Component Onboarding]
+   *     security: [{ bearerAuth: [] }]
+   *     responses:
+   *       200:
+   *         description: Sync status
+   */
+  router.get('/component-onboarding/sync/status', requireScope('ai-impact:read'), function(req, res) {
+    res.json(syncState);
+  });
+
+  /**
+   * @openapi
+   * /api/modules/ai-impact/component-onboarding/sync:
+   *   post:
+   *     summary: Enrich component onboarding target versions from Jira
+   *     tags: [AI Impact - Component Onboarding]
+   *     security: [{ bearerAuth: [] }]
+   *     responses:
+   *       200:
+   *         description: Sync started or skipped
+   */
+  router.post('/component-onboarding/sync', requireAdmin, requireScope('ai-impact:write'), async function(req, res) {
+    if (DEMO_MODE) {
+      return res.json({ status: 'skipped', message: 'Component onboarding sync disabled in demo mode' });
+    }
+    if (syncState.running || context.isRefreshRunning()) {
+      return res.json({ status: 'already_running' });
+    }
+    res.json({ status: 'started' });
+    runSync(readFromStorage, writeToStorage, jiraRequest);
+  });
 
   /**
    * @openapi
@@ -90,6 +172,14 @@ module.exports = function registerComponentOnboardingRoutes(router, context) {
     data.fetchedAt = new Date().toISOString();
     data.totalComponents = Object.keys(data.components).length;
 
+    if (jiraRequest && (counts.created > 0 || counts.updated > 0)) {
+      try {
+        await enrichTargetVersionsFromJira(data, jiraRequest);
+      } catch (err) {
+        console.error('[ai-impact] Inline component onboarding target version enrichment failed:', err.message);
+      }
+    }
+
     await writeComponentOnboardingAtomic(writeToStorage, data);
 
     res.json({
@@ -98,6 +188,13 @@ module.exports = function registerComponentOnboardingRoutes(router, context) {
       unchanged: counts.unchanged,
       errors
     });
+
+    if (counts.created > 0 || counts.updated > 0) {
+      setTimeout(() => {
+        console.log('[ai-impact] Triggering post-ingest component onboarding Jira sync');
+        runSync(readFromStorage, writeToStorage, jiraRequest);
+      }, 10000);
+    }
   });
 
   /**
@@ -175,4 +272,16 @@ module.exports = function registerComponentOnboardingRoutes(router, context) {
       history: entry.history
     });
   });
+
+  if (context.registerRefresh) {
+    context.registerRefresh('component-onboarding-sync', {
+      order: 65,
+      timeout: 600000,
+      description: 'Enriches component onboarding target versions from Jira customfield_10855.',
+      handler: async function() {
+        if (DEMO_MODE) return;
+        await runSync(readFromStorage, writeToStorage, jiraRequest);
+      }
+    });
+  }
 };
