@@ -62,7 +62,7 @@ var FIXTURE = {
   },
   audit: [],
   session: {
-    // Plan admin is allowlist-only (emarion@redhat.com / trozell@redhat.com);
+    // Plan admin is allowlist-only (see plan-admins.js DEFAULT_PLAN_ADMIN_EMAILS);
     // simulate a real allowlisted actor rather than the legacy "Admin" sentinel.
     actor: 'Emarion',
     canImpersonate: true,
