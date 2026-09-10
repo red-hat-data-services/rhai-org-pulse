@@ -113,6 +113,50 @@ describe('useDraftPlans', function() {
     })
   })
 
+  it('does not show plan admin before editor session loads', function() {
+    var api = mountComposable()
+    expect(api.admin.value).toBe(false)
+    expect(api.session.value).toBeNull()
+  })
+
+  it('uses server session for plan admin in production (no impersonation)', async function() {
+    mockApiRequest.mockImplementation(function(path) {
+      if (String(path).indexOf('/cycles') !== -1) {
+        return Promise.resolve({
+          product: 'RHOAI',
+          products: ['RHOAI'],
+          defaultVersion: '3.6',
+          cycles: [{ version: '3.6', editorAvailable: true }]
+        })
+      }
+      return Promise.resolve(
+        JSON.parse(
+          JSON.stringify(
+            Object.assign({}, FIXTURE, {
+              session: {
+                actor: 'Arjay Hinek',
+                email: 'ahinek@cluster.local',
+                canImpersonate: false,
+                isPlanAdmin: false,
+                planAdminNames: ['Emarion', 'Tiffany Rozell']
+              },
+              meta: Object.assign({}, FIXTURE.meta, {
+                currentUser: 'Arjay Hinek',
+                isPlanAdmin: false
+              })
+            })
+          )
+        )
+      )
+    })
+    var api = mountComposable()
+    expect(api.admin.value).toBe(false)
+    await api.loadEditor('3.6')
+    await flushPromises()
+    expect(api.admin.value).toBe(false)
+    expect(api.session.value.isPlanAdmin).toBe(false)
+  })
+
   it('loads editor payload into draft and view rows', async function() {
     var api = mountComposable()
     await api.loadEditor('3.6')

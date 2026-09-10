@@ -199,13 +199,10 @@ export function useDraftPlans() {
   })
 
   var planAdminNames = computed(function() {
-    var fromSession =
-      session.value && Array.isArray(session.value.planAdminNames)
-        ? session.value.planAdminNames
-        : []
-    if (fromSession.length) return fromSession.slice()
-    // Fallback when session has not loaded yet (matches server defaults)
-    return ['Emarion', 'Tiffany Rozell']
+    if (session.value && Array.isArray(session.value.planAdminNames)) {
+      return session.value.planAdminNames.slice()
+    }
+    return []
   })
 
   /** Acting-as options: assignees ∪ PMs (plan admins listed separately in the view). */
@@ -266,6 +263,10 @@ export function useDraftPlans() {
   })
 
   var admin = computed(function() {
+    if (!session.value) return false
+    if (session.value.canImpersonate === false) {
+      return session.value.isPlanAdmin === true
+    }
     return isAdmin(editor.value.meta)
   })
 
@@ -317,6 +318,7 @@ export function useDraftPlans() {
     loading.value = true
     error.value = null
     pendingCapacity.value = null
+    session.value = null
     try {
       var ver = version || selectedVersion.value || '3.6'
       selectedVersion.value = ver
