@@ -25,6 +25,7 @@ describe('draft-plans plan-admins email matching', function() {
     expect(isDraftPlansViewerEmail('emarion@redhat.com', DEFAULT_VIEWER_EMAILS)).toBe(true)
     expect(isDraftPlansViewerEmail('emarion@cluster.local', DEFAULT_VIEWER_EMAILS)).toBe(false)
     expect(isPlanAdminEmail('trozell@redhat.com', DEFAULT_PLAN_ADMIN_EMAILS)).toBe(true)
+    expect(isPlanAdminEmail('ahinek@redhat.com', DEFAULT_PLAN_ADMIN_EMAILS)).toBe(true)
   })
 
   it('matches redhat.com allowlist entry against cluster.local session', function() {

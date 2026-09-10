@@ -49,6 +49,12 @@ describe('draft-plans acl', function() {
           jiraDisplayName: 'Emarion'
         },
         {
+          uid: 'ahinek',
+          name: 'Arjay Hinek',
+          email: 'ahinek@redhat.com',
+          jiraDisplayName: 'Arjay Hinek'
+        },
+        {
           uid: 'trozell',
           name: 'Tiffany Rozell',
           email: 'trozell@redhat.com',
@@ -104,6 +110,7 @@ describe('draft-plans acl', function() {
     expect(allowlisted.isPlanAdmin).toBe(true)
     expect(allowlisted.planAdminNames).toContain('Tiffany Rozell')
     expect(allowlisted.planAdminNames).toContain('Emarion')
+    expect(allowlisted.planAdminNames).toContain('Arjay Hinek')
 
     var tiffany = await resolveDraftPlanSession(
       { userEmail: 'trozell@redhat.com' },
@@ -112,7 +119,7 @@ describe('draft-plans acl', function() {
     expect(tiffany.isPlanAdmin).toBe(true)
   })
 
-  it('gates Draft Plans view to viewer allowlist (default: emarion only)', async function() {
+  it('gates Draft Plans view to viewer allowlist (default includes planning stakeholders)', async function() {
     var emarion = await resolveDraftPlanSession(
       { userEmail: 'emarion@redhat.com' },
       makeStorage()
@@ -125,6 +132,13 @@ describe('draft-plans acl', function() {
     )
     expect(tiffany.isPlanAdmin).toBe(true)
     expect(tiffany.canViewDraftPlans).toBe(false)
+
+    var arjay = await resolveDraftPlanSession(
+      { userEmail: 'ahinek@redhat.com' },
+      makeStorage()
+    )
+    expect(arjay.isPlanAdmin).toBe(true)
+    expect(arjay.canViewDraftPlans).toBe(true)
 
     var alice = await resolveDraftPlanSession(
       { userEmail: 'alice@redhat.com' },
@@ -204,7 +218,7 @@ describe('draft-plans acl', function() {
       actor: 'Adam Bellusci',
       isPlanAdmin: false,
       canImpersonate: false,
-      planAdminNames: ['Emarion', 'Tiffany Rozell']
+      planAdminNames: ['Emarion', 'Tiffany Rozell', 'Arjay Hinek']
     }
     var meta = applySessionToMeta(
       { currentUser: 'Admin', isPlanAdmin: true, frozenEvents: {} },
@@ -220,7 +234,7 @@ describe('draft-plans acl', function() {
       actor: 'Adam Bellusci',
       isPlanAdmin: false,
       canImpersonate: true,
-      planAdminNames: ['Emarion', 'Tiffany Rozell']
+      planAdminNames: ['Emarion', 'Tiffany Rozell', 'Arjay Hinek']
     }
     var asTiffany = applySessionToMeta({ frozenEvents: {} }, session, 'Tiffany Rozell')
     expect(asTiffany.currentUser).toBe('Tiffany Rozell')
@@ -239,7 +253,7 @@ describe('draft-plans acl', function() {
       actor: 'Adam Bellusci',
       isPlanAdmin: false,
       canImpersonate: false,
-      planAdminNames: ['Emarion', 'Tiffany Rozell']
+      planAdminNames: ['Emarion', 'Tiffany Rozell', 'Arjay Hinek']
     }
     var draft = {
       candidates: [
@@ -290,7 +304,7 @@ describe('draft-plans acl', function() {
       actor: 'Adam Bellusci',
       isPlanAdmin: false,
       canImpersonate: false,
-      planAdminNames: ['Emarion', 'Tiffany Rozell']
+      planAdminNames: ['Emarion', 'Tiffany Rozell', 'Arjay Hinek']
     }
     var result = authorizeEditorSave(
       session,
