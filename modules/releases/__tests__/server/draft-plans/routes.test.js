@@ -275,6 +275,22 @@ describe('draft-plans routes', () => {
       expect(res._json.projectId).toBe('81798612')
       expect(res._json.tokenConfigured).toBe(true)
       expect(res._json.tokenSource).toBe('GITLAB_TOKEN')
+      expect(res._json.planAdminEmails).toContain('emarion@redhat.com')
+      expect(res._json.defaultPlanAdminEmails).toContain('emarion@redhat.com')
+      expect(res._json.planAdminEmailsOverridden).toBe(false)
+    })
+
+    it('allows platform admins without Draft Plans viewer access', async () => {
+      process.env.DEMO_MODE = 'false'
+      const { router } = await setupRouter()
+      const res = await callRoute(router, 'get', '/config', {
+        isAdmin: true,
+        userEmail: 'ops@cluster.local',
+        userUid: 'ops'
+      })
+
+      expect(res._status).toBe(200)
+      expect(res._json.planAdminEmails.length).toBeGreaterThan(0)
     })
 
     it('reports DRAFT_PLANS_GITLAB_TOKEN as preferred source', async () => {
@@ -305,6 +321,53 @@ describe('draft-plans routes', () => {
       const saved = storage._store[`${DATA_PREFIX}/config.json`]
       expect(saved.projectId).toBe('12345')
       expect(saved.refreshIntervalHours).toBe(12)
+    })
+
+    it('saves planAdminEmails for platform admins', async () => {
+      process.env.DEMO_MODE = 'false'
+      const { router, storage } = await setupRouter()
+      const res = await callRoute(router, 'post', '/config', {
+        isAdmin: true,
+        userEmail: 'emarion@cluster.local',
+        userUid: 'emarion',
+        body: {
+          planAdminEmails: ['emarion@redhat.com', 'ahinek@redhat.com']
+        }
+      })
+
+      expect(res._status).toBe(200)
+      expect(res._json.status).toBe('saved')
+      const saved = storage._store[`${DATA_PREFIX}/config.json`]
+      expect(saved.planAdminEmails).toEqual(['emarion@redhat.com', 'ahinek@redhat.com'])
+    })
+
+    it('rejects invalid planAdminEmails', async () => {
+      const { router } = await setupRouter()
+      const res = await callRoute(router, 'post', '/config', {
+        isAdmin: true,
+        body: { planAdminEmails: ['not-an-email'] }
+      })
+
+      expect(res._status).toBe(400)
+      expect(res._json.message).toMatch(/valid email/i)
+    })
+
+    it('rejects access-list edits from non-admin viewers', async () => {
+      process.env.DEMO_MODE = 'false'
+      const { router } = await setupRouter({
+        [`${DATA_PREFIX}/config.json`]: {
+          draftPlansViewerEmails: ['viewer@redhat.com']
+        }
+      })
+      const res = await callRoute(router, 'post', '/config', {
+        isAdmin: false,
+        userEmail: 'viewer@redhat.com',
+        userUid: 'viewer',
+        body: { planAdminEmails: ['viewer@redhat.com'] }
+      })
+
+      expect(res._status).toBe(403)
+      expect(res._json.error).toMatch(/plan admins/i)
     })
 
     it('auto-fetches when enabling for the first time', async () => {
