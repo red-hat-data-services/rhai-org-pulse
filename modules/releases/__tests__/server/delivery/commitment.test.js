@@ -5,7 +5,8 @@ import {
   resolvePlanningFreezeDate,
   getConfiguredVersions,
   findPhaseConfig,
-  buildFeatureFromIssue
+  buildFeatureFromIssue,
+  loadCommitmentConfig
 } from '../../../server/delivery/commitment.js'
 
 describe('analyzeFixVersionHistory', () => {
@@ -372,6 +373,29 @@ describe('getConfiguredVersions', () => {
       releases: [{ version: '3.4', phases: {} }]
     }
     expect(getConfiguredVersions(config)).toEqual([])
+  })
+})
+
+describe('loadCommitmentConfig', () => {
+  it('uses the persisted config when one exists', async () => {
+    const storedConfig = {
+      releases: [
+        { version: '9.9', phases: { GA: { fixVersions: ['rhoai-9.9'] } } }
+      ]
+    }
+
+    await expect(loadCommitmentConfig(async () => storedConfig)).resolves.toEqual(storedConfig)
+  })
+
+  it('falls back to the bundled release config when storage is empty', async () => {
+    const config = await loadCommitmentConfig(async () => null)
+
+    expect(getConfiguredVersions(config).map(function (entry) { return entry.version })).toEqual([
+      '3.4',
+      '3.5',
+      '3.6',
+      '3.7'
+    ])
   })
 })
 

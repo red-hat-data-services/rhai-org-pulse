@@ -12,6 +12,7 @@
 const sharedJira = require('../../../../shared/server/jira')
 const { readRegistry } = require('../registry')
 const { getConfig } = require('./config')
+const DEFAULT_COMMITMENT_CONFIG = require('../../../../fixtures/releases/delivery/commitment-config.json')
 
 const COMMITMENT_CONFIG_FILE = 'releases/delivery/commitment-config.json'
 const COMMITMENT_CACHE_PREFIX = 'releases/delivery/commitment-cache-'
@@ -23,7 +24,10 @@ const DELIVERED_STATUSES = ['Release Pending', 'Closed', 'Done']
 async function loadCommitmentConfig(readFromStorage) {
   var data = await readFromStorage(COMMITMENT_CONFIG_FILE)
   if (data && Array.isArray(data.releases)) return data
-  return { releases: [] }
+  // Keep the release selector usable on installations whose PVC predates this
+  // config file. A persisted config still takes precedence over the bundled
+  // defaults, so administrators can continue to customize the mappings.
+  return DEFAULT_COMMITMENT_CONFIG
 }
 
 function findPhaseConfig(commitmentConfig, version, phase) {
@@ -548,3 +552,4 @@ module.exports.resolvePlanningFreezeDate = resolvePlanningFreezeDate
 module.exports.getConfiguredVersions = getConfiguredVersions
 module.exports.findPhaseConfig = findPhaseConfig
 module.exports.buildFeatureFromIssue = buildFeatureFromIssue
+module.exports.loadCommitmentConfig = loadCommitmentConfig
