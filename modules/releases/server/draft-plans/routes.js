@@ -7,6 +7,12 @@ const {
   authorizeEditorSave,
   assertCanViewDraftPlans
 } = require('./acl');
+const {
+  loadAdminEmails,
+  loadViewerEmails,
+  DEFAULT_PLAN_ADMIN_EMAILS,
+  DEFAULT_VIEWER_EMAILS
+} = require('./plan-admins');
 const rateLimit = require('express-rate-limit');
 const fs = require('fs');
 const path = require('path');
@@ -146,13 +152,38 @@ module.exports = async function registerDraftPlanRoutes(router, context) {
     return null;
   }
 
+  async function loadRawConfig() {
+    try {
+      return await storage.readFromStorage(DATA_PREFIX + '/config.json');
+    } catch {
+      return null;
+    }
+  }
+
   async function loadConfig() {
-    var stored = await storage.readFromStorage(DATA_PREFIX + '/config.json');
+    var stored = await loadRawConfig();
     return Object.assign({}, DEFAULT_CONFIG, stored || {});
   }
 
   async function saveConfig(config) {
     await storage.writeToStorage(DATA_PREFIX + '/config.json', config);
+  }
+
+  async function buildConfigResponse() {
+    var config = await loadConfig();
+    var raw = (await loadRawConfig()) || {};
+    return Object.assign({}, config, {
+      planAdminEmails: loadAdminEmails(raw),
+      draftPlansViewerEmails: loadViewerEmails(raw),
+      planAdminEmailsOverridden: !!(raw.planAdminEmails && raw.planAdminEmails.length > 0),
+      draftPlansViewerEmailsOverridden: !!(
+        raw.draftPlansViewerEmails && raw.draftPlansViewerEmails.length > 0
+      ),
+      defaultPlanAdminEmails: DEFAULT_PLAN_ADMIN_EMAILS.slice(),
+      defaultDraftPlansViewerEmails: DEFAULT_VIEWER_EMAILS.slice(),
+      tokenConfigured: !!getToken(),
+      tokenSource: getTokenSource()
+    });
   }
 
   async function requireDraftPlansViewer(req, res, next) {
@@ -167,6 +198,62 @@ module.exports = async function registerDraftPlanRoutes(router, context) {
     } catch (err) {
       console.warn('[releases/draft-plans] viewer gate failed:', err.message);
       return res.status(500).json({ error: 'Failed to resolve Draft Plans access' });
+    }
+  }
+
+  /** Settings + fetch config: platform admins, or Draft Plans viewers. */
+  async function requireDraftPlansConfigAccess(req, res, next) {
+    try {
+      var session = await resolveDraftPlanSession(req, storage);
+      req.draftPlanSession = session;
+      if (req.isAdmin) return next();
+      var gate = assertCanViewDraftPlans(session);
+      if (!gate.ok) {
+        return res.status(gate.status).json({ error: gate.error });
+      }
+      next();
+    } catch (err) {
+      console.warn('[releases/draft-plans] config access failed:', err.message);
+      return res.status(500).json({ error: 'Failed to resolve Draft Plans access' });
+    }
+  }
+
+  function requireConfigAclEditor(req, res, next) {
+    var body = req.body || {};
+    var touchesAcl =
+      body.planAdminEmails !== undefined || body.draftPlansViewerEmails !== undefined;
+    if (!touchesAcl) return next();
+    var session = req.draftPlanSession;
+    if (req.isAdmin || (session && session.isPlanAdmin)) return next();
+    return res.status(403).json({
+      error: 'Only platform admins or Draft Plans plan admins can change access lists'
+    });
+  }
+
+  function normalizeEmailList(list) {
+    if (!Array.isArray(list)) return list;
+    return list
+      .map(function(email) {
+        return String(email || '')
+          .trim()
+          .toLowerCase();
+      })
+      .filter(Boolean);
+  }
+
+  function validateEmailListField(fieldName, value) {
+    if (value === undefined) return;
+    if (!Array.isArray(value)) {
+      throw new Error(fieldName + ' must be an array of emails');
+    }
+    for (var i = 0; i < value.length; i++) {
+      if (typeof value[i] !== 'string') {
+        throw new Error(fieldName + ' must be an array of emails');
+      }
+      var trimmed = value[i].trim();
+      if (!trimmed || trimmed.indexOf('@') === -1) {
+        throw new Error(fieldName + ' entries must be valid email addresses');
+      }
     }
   }
 
@@ -223,16 +310,8 @@ module.exports = async function registerDraftPlanRoutes(router, context) {
     if (input.enabled !== undefined && typeof input.enabled !== 'boolean') {
       throw new Error('enabled must be a boolean');
     }
-    if (input.draftPlansViewerEmails !== undefined) {
-      if (!Array.isArray(input.draftPlansViewerEmails)) {
-        throw new Error('draftPlansViewerEmails must be an array of emails');
-      }
-      for (var vi = 0; vi < input.draftPlansViewerEmails.length; vi++) {
-        if (typeof input.draftPlansViewerEmails[vi] !== 'string') {
-          throw new Error('draftPlansViewerEmails must be an array of emails');
-        }
-      }
-    }
+    validateEmailListField('draftPlansViewerEmails', input.draftPlansViewerEmails);
+    validateEmailListField('planAdminEmails', input.planAdminEmails);
   }
 
   async function doFetch() {
@@ -475,17 +554,13 @@ module.exports = async function registerDraftPlanRoutes(router, context) {
    * /api/modules/releases/draft-plans/config:
    *   get:
    *     tags: [Releases]
-   *     summary: Get draft plans fetch configuration
+   *     summary: Get draft plans fetch configuration and access lists
    *     responses:
    *       200:
-   *         description: Current configuration with token status
+   *         description: Current configuration with effective planAdminEmails and draftPlansViewerEmails
    */
-  router.get('/config', requireAuth, requireScope('releases:write'), requireDraftPlansViewer, async function(req, res) {
-    var config = await loadConfig();
-    res.json(Object.assign({}, config, {
-      tokenConfigured: !!getToken(),
-      tokenSource: getTokenSource()
-    }));
+  router.get('/config', requireAuth, requireScope('releases:write'), requireDraftPlansConfigAccess, async function(req, res) {
+    res.json(await buildConfigResponse());
   });
 
   /**
@@ -499,12 +574,27 @@ module.exports = async function registerDraftPlanRoutes(router, context) {
    *         description: Configuration saved (optionally triggers fetch if newly enabled)
    *       400:
    *         description: Invalid configuration values
+   *       403:
+   *         description: Forbidden when changing planAdminEmails or draftPlansViewerEmails without admin rights
    */
-  router.post('/config', requireAuth, requireScope('releases:write'), requireDraftPlansViewer, async function(req, res) {
+  router.post(
+    '/config',
+    requireAuth,
+    requireScope('releases:write'),
+    requireDraftPlansConfigAccess,
+    requireConfigAclEditor,
+    async function(req, res) {
     try {
       validateConfig(req.body);
       var oldConfig = await loadConfig();
-      var config = Object.assign({}, oldConfig, req.body);
+      var patch = Object.assign({}, req.body);
+      if (patch.planAdminEmails !== undefined) {
+        patch.planAdminEmails = normalizeEmailList(patch.planAdminEmails);
+      }
+      if (patch.draftPlansViewerEmails !== undefined) {
+        patch.draftPlansViewerEmails = normalizeEmailList(patch.draftPlansViewerEmails);
+      }
+      var config = Object.assign({}, oldConfig, patch);
       await saveConfig(config);
 
       await logAudit(storage.readFromStorage, storage.writeToStorage, {
@@ -526,10 +616,17 @@ module.exports = async function registerDraftPlanRoutes(router, context) {
 
       res.json({ status: 'saved' });
     } catch (err) {
-      var status = (err.message && (err.message.includes('must be') || err.message.includes('must start'))) ? 400 : 500;
+      var status =
+        err.message &&
+        (err.message.includes('must be') ||
+          err.message.includes('must start') ||
+          err.message.includes('valid email'))
+          ? 400
+          : 500;
       res.status(status).json({ status: 'error', message: err.message });
     }
-  });
+  }
+  );
 
   /**
    * @openapi
