@@ -70,7 +70,7 @@ var FIXTURE = {
     email: 'emarion@redhat.com',
     canImpersonate: true,
     isPlanAdmin: true,
-    planAdminNames: ['Emarion', 'Tiffany Rozell'],
+    planAdminNames: ['Emarion', 'Tiffany Rozell', 'Arjay Hinek'],
     demoMode: true
   }
 }

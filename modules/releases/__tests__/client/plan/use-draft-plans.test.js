@@ -67,7 +67,7 @@ var FIXTURE = {
     actor: 'Emarion',
     canImpersonate: true,
     isPlanAdmin: true,
-    planAdminNames: ['Emarion', 'Tiffany Rozell'],
+    planAdminNames: ['Emarion', 'Tiffany Rozell', 'Arjay Hinek'],
     demoMode: true
   }
 }

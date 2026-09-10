@@ -611,7 +611,7 @@ describe('draft-plans routes', () => {
           meta: { planVersion: '3.6', currentUser: 'Emarion', frozenEvents: {} },
           audit: [{ action: 'decision', detail: 'test' }]
         },
-        // Plan admin is allowlist-only (emarion@redhat.com / trozell@redhat.com);
+        // Plan admin is allowlist-only (see plan-admins.js DEFAULT_PLAN_ADMIN_EMAILS);
         // platform isAdmin alone must not grant it.
         userEmail: 'emarion@redhat.com'
       })
