@@ -55,6 +55,16 @@ test.describe('Releases Module @releases', () => {
 
 });
 
+test.describe('Releases Commitment Tracking @releases', () => {
+  test('exposes the configured release versions', async ({ request }) => {
+    const response = await request.get('/api/modules/releases/delivery/commitment/versions');
+    expect(response.ok()).toBe(true);
+
+    const body = await response.json();
+    expect(body.versions.map(version => version.version)).toEqual(['3.4', '3.5', '3.6', '3.7']);
+  });
+});
+
 /**
  * RICE Config API
  *
