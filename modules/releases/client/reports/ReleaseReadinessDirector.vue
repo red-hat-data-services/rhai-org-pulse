@@ -19,7 +19,7 @@
       <div class="flex flex-wrap items-center justify-between gap-4">
         <div>
           <p class="text-xs font-bold uppercase tracking-widest text-blue-200 mb-1">Viewing Release</p>
-          <h3 class="text-3xl font-extrabold tracking-tight leading-none">{{ selectedVersion }}</h3>
+          <h3 class="text-3xl font-extrabold tracking-tight leading-none">{{ activeVersionDisplay }}</h3>
         </div>
         <div class="flex flex-wrap gap-3">
           <div v-if="releaseSchedule.code_freeze_date" class="flex flex-col items-center bg-white/15 backdrop-blur-sm rounded-xl px-5 py-2.5 min-w-[90px]">
@@ -69,17 +69,23 @@
         <!-- Version + Updated -->
         <div class="flex-1">
           <div class="flex flex-wrap items-center gap-4 mb-3">
-            <div class="flex items-center gap-2">
-              <label class="text-sm font-medium text-gray-700 dark:text-gray-300">Release:</label>
-              <select
-                v-model="selectedVersion"
-                @change="handleVersionChange"
-                class="bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-md px-3 py-1.5 text-sm text-gray-900 dark:text-gray-100 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
-              >
-                <option value="">Select a version...</option>
-                <option v-for="v in versions" :key="v" :value="v">{{ v }}</option>
-              </select>
-            </div>
+            <template v-if="hasSelection">
+              <div class="text-sm text-gray-700 dark:text-gray-300">
+                Viewing <strong>{{ familyNarrative }}</strong> version <strong>{{ selection.version }}</strong>,
+                {{ phaseNarrative }} {{ selection.phases.size === 1 ? 'phase' : 'phases' }}.
+              </div>
+              <button
+                @click="openModal"
+                class="px-3 py-1.5 text-sm font-medium rounded-md bg-blue-600 text-white hover:bg-blue-700 transition-colors"
+              >Change</button>
+            </template>
+            <template v-else>
+              <p class="text-sm text-gray-500 dark:text-gray-400">Select a release to view readiness status.</p>
+              <button
+                @click="openModal"
+                class="px-3 py-1.5 text-sm font-medium rounded-md bg-blue-600 text-white hover:bg-blue-700 transition-colors"
+              >Select Release</button>
+            </template>
             <div v-if="data" class="text-xs text-gray-400">
               Updated {{ formatDate(data.generated_at) }}
             </div>
@@ -104,6 +110,21 @@
             </div>
           </div>
         </div>
+      </div>
+    </div>
+
+    <!-- Phase Tabs -->
+    <div v-if="phaseTabs.length > 1" class="mb-4">
+      <div class="flex border-b border-gray-200 dark:border-gray-700">
+        <button
+          v-for="tab in phaseTabs"
+          :key="tab.id"
+          @click="activeReleaseId = tab.id"
+          class="px-4 py-2 text-sm font-medium transition-colors border-b-2 -mb-px"
+          :class="activeReleaseId === tab.id
+            ? 'text-blue-600 dark:text-blue-400 border-blue-600 dark:border-blue-400'
+            : 'text-gray-500 dark:text-gray-400 border-transparent hover:text-gray-700 dark:hover:text-gray-300 hover:border-gray-300 dark:hover:border-gray-600'"
+        >{{ tab.label }}</button>
       </div>
     </div>
 
@@ -444,54 +465,181 @@
 
 
     </div>
+
+    <!-- Select Release Modal -->
+    <Teleport to="body">
+      <div v-if="modalOpen" class="fixed inset-0 z-50 flex items-center justify-center p-4">
+        <div class="absolute inset-0 bg-black/40 dark:bg-black/60" @click="cancelModal"></div>
+        <div class="relative bg-white dark:bg-gray-800 rounded-xl shadow-xl max-w-md w-full p-6" @keydown.escape="cancelModal">
+          <div class="flex items-center justify-between mb-6">
+            <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100">Select Release</h3>
+            <button @click="cancelModal" class="p-1 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors">
+              <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" /></svg>
+            </button>
+          </div>
+          <div class="mb-5">
+            <label class="block text-[11px] font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-2">Product Family</label>
+            <div class="flex flex-wrap gap-2">
+              <button @click="toggleAllFamilies" class="px-3 py-1.5 rounded-lg text-xs font-medium transition-colors border" :class="isAllFamiliesDraft ? 'bg-blue-600 text-white border-blue-600' : 'bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 border-gray-300 dark:border-gray-600 hover:border-blue-300 dark:hover:border-blue-600'">All</button>
+              <button v-for="f in availableFamilies" :key="f" @click="toggleFamily(f)" class="px-3 py-1.5 rounded-lg text-xs font-medium transition-colors border" :class="draft.families.has(f) ? 'bg-blue-600 text-white border-blue-600' : 'bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 border-gray-300 dark:border-gray-600 hover:border-blue-300 dark:hover:border-blue-600'">{{ f.toUpperCase() }}</button>
+            </div>
+          </div>
+          <div class="mb-5">
+            <label class="block text-[11px] font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-2">Version</label>
+            <div v-if="draftVersions.length > 0" class="flex flex-wrap gap-2">
+              <button v-for="v in draftVersions" :key="v" @click="selectVersion(v)" class="px-3 py-1.5 rounded-lg text-xs font-medium transition-colors border" :class="draft.version === v ? 'bg-blue-600 text-white border-blue-600' : 'bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 border-gray-300 dark:border-gray-600 hover:border-blue-300 dark:hover:border-blue-600'">{{ v }}</button>
+            </div>
+            <p v-else class="text-xs text-gray-400 dark:text-gray-500">Select a product family first.</p>
+          </div>
+          <div class="mb-6">
+            <label class="block text-[11px] font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-2">Phase</label>
+            <div v-if="draftPhases.length > 0" class="flex flex-wrap gap-2">
+              <button v-for="p in draftPhases" :key="p" @click="toggleReleasePhase(p)" class="px-3 py-1.5 rounded-lg text-xs font-medium transition-colors border" :class="draft.phases.has(p) ? 'bg-blue-600 text-white border-blue-600' : 'bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 border-gray-300 dark:border-gray-600 hover:border-blue-300 dark:hover:border-blue-600'">{{ p }}</button>
+            </div>
+            <p v-else class="text-xs text-gray-400 dark:text-gray-500">Select a version first.</p>
+          </div>
+          <div class="flex justify-end gap-3 pt-2 border-t border-gray-200 dark:border-gray-700">
+            <button @click="cancelModal" class="px-4 py-2 text-sm font-medium rounded-md border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">Cancel</button>
+            <button @click="applyModal" :disabled="!canApply" class="px-4 py-2 text-sm font-medium rounded-md bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors">Apply</button>
+          </div>
+        </div>
+      </div>
+    </Teleport>
   </div>
 </template>
 
 <script setup>
-import { ref, reactive, computed, inject, onMounted } from 'vue'
+import { ref, reactive, computed, inject, onMounted, watch } from 'vue'
 import { ArrowLeft, Shield } from 'lucide-vue-next'
 import { useReleaseReadiness } from './composables/useReleaseReadiness'
+import { useReleaseSelector, parseReleaseId } from '../composables/useReleaseSelector.js'
 
 const moduleNav = inject('moduleNav')
+
 const {
-  data,
   loading,
   error,
-  versions,
-  defaultVersion,
-  loadMetrics,
-  loadVersions
+  fetchMetrics,
+  fetchReadinessReleases
 } = useReleaseReadiness()
 
-const selectedVersion = ref('')
+const {
+  modalOpen,
+  selection,
+  draft,
+  availableFamilies,
+  draftVersions,
+  draftPhases,
+  isAllFamiliesDraft,
+  hasSelection,
+  canApply,
+  fetchRegistry,
+  restoreSelection,
+  openModal,
+  cancelModal,
+  applyModal,
+  toggleAllFamilies,
+  toggleFamily,
+  selectVersionDraft: selectVersion,
+  togglePhase: toggleReleasePhase,
+  familyNarrative,
+  phaseNarrative,
+  selectedRegistryIdSet,
+  PHASE_ORDER
+} = useReleaseSelector({
+  storageKey: 'tt_cache:readiness-selection',
+  fetchReleases: fetchReadinessReleases
+})
+
+const phaseDataMap = ref({})
+const activeReleaseId = ref(null)
+const data = computed(() => phaseDataMap.value[activeReleaseId.value] || null)
+
+const activeVersionDisplay = computed(() => {
+  if (!activeReleaseId.value) return ''
+  const parsed = parseReleaseId(activeReleaseId.value)
+  if (!parsed) return activeReleaseId.value
+  return `${parsed.family.toUpperCase()} ${parsed.version} ${parsed.phase}`
+})
+
+const phaseTabs = computed(() => {
+  if (!hasSelection.value) return []
+  const ids = [...selectedRegistryIdSet()]
+  const tabs = ids
+    .map(id => {
+      const parsed = parseReleaseId(id)
+      if (!parsed) return null
+      return { id, family: parsed.family, version: parsed.version, phase: parsed.phase }
+    })
+    .filter(Boolean)
+    .sort((a, b) => {
+      if (a.family !== b.family) return a.family.localeCompare(b.family)
+      return PHASE_ORDER.indexOf(a.phase) - PHASE_ORDER.indexOf(b.phase)
+    })
+  const uniqueFamilies = new Set(tabs.map(t => t.family))
+  return tabs.map(t => ({
+    ...t,
+    label: uniqueFamilies.size > 1 ? `${t.family.toUpperCase()} ${t.phase}` : t.phase
+  }))
+})
+
 const JIRA_HOST = 'https://redhat.atlassian.net'
 const expandedPhases = reactive({})
 
 onMounted(async () => {
-  await loadVersions()
-  if (versions.value.length > 0) {
-    const initial = defaultVersion.value || versions.value[0]
-    selectedVersion.value = initial
-    await loadMetrics(initial)
-    if (data.value && data.value.component_readiness) {
-      selectedComponents.value = [...(data.value.component_readiness.all_components || [])]
-    }
-  }
+  await fetchRegistry()
+  restoreSelection()
 })
 
 function goBack() {
   if (moduleNav && moduleNav.navigateTo) moduleNav.navigateTo('reports')
 }
 
-async function handleVersionChange() {
-  if (selectedVersion.value) {
-    await loadMetrics(selectedVersion.value)
-    if (data.value && data.value.component_readiness) {
+async function loadSelectedPhases() {
+  const ids = [...selectedRegistryIdSet()]
+  if (!ids.length) {
+    phaseDataMap.value = {}
+    activeReleaseId.value = null
+    return
+  }
+
+  loading.value = true
+  error.value = null
+
+  try {
+    const results = await Promise.all(
+      ids.map(id => fetchMetrics(id).then(d => ({ id, data: d })).catch(() => ({ id, data: null })))
+    )
+    const map = {}
+    for (const r of results) {
+      if (r.data) map[r.id] = r.data
+    }
+    phaseDataMap.value = map
+
+    if (!activeReleaseId.value || !map[activeReleaseId.value]) {
+      activeReleaseId.value = ids.find(id => map[id]) || null
+    }
+
+    if (data.value?.component_readiness) {
       selectedComponents.value = [...(data.value.component_readiness.all_components || [])]
       selectedPhases.value = []
     }
+  } catch (err) {
+    error.value = err.message || 'Failed to load release readiness metrics'
+  } finally {
+    loading.value = false
   }
 }
+
+watch(
+  () => {
+    if (!hasSelection.value) return null
+    return `${selection.version}|${[...selection.families].sort()}|${[...selection.phases].sort()}`
+  },
+  (newVal, oldVal) => {
+    if (newVal && newVal !== oldVal) loadSelectedPhases()
+  }
+)
 
 function jiraBrowseUrl(key) {
   return `${JIRA_HOST}/browse/${key}`

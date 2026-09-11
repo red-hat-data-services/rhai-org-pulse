@@ -81,6 +81,22 @@ export function useReleaseReadiness() {
     }
   }
 
+  async function fetchMetrics(version) {
+    const response = await fetch(`${API_BASE}?version=${encodeURIComponent(version)}`)
+    if (!response.ok) {
+      if (response.status === 404) return null
+      throw new Error(`Failed to load delivery metrics: ${response.statusText}`)
+    }
+    return await response.json()
+  }
+
+  async function fetchReadinessReleases() {
+    const response = await fetch(`${API_BASE}/versions`)
+    if (!response.ok) return []
+    const result = await response.json()
+    return result.releases || []
+  }
+
   return {
     data,
     loading,
@@ -91,6 +107,8 @@ export function useReleaseReadiness() {
     refreshing,
     loadMetrics,
     loadVersions,
-    refreshFromJira
+    refreshFromJira,
+    fetchMetrics,
+    fetchReadinessReleases
   }
 }

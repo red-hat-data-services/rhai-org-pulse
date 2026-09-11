@@ -37,7 +37,7 @@ const STORAGE_PREFIX = 'releases/release-readiness';
  *     summary: List available release readiness versions
  *     responses:
  *       200:
- *         description: Object with versions array and default_version
+ *         description: Object with versions array, releases array, and default_version
  */
 
 /**
@@ -85,13 +85,15 @@ function registerReleaseReadinessRoutes(router, { storage, requireAuth, requireS
       return res.json({ versions: [], default_version: null });
     }
 
-    const versions = (files || [])
+    const rawNames = (files || [])
       .filter(f => f.endsWith('.json'))
-      .map(f => f.replace('.json', '').replace(/_/g, ' '));
+      .map(f => f.replace('.json', ''));
 
+    const versions = rawNames.map(n => n.replace(/_/g, ' '));
+    const releases = rawNames.map(name => ({ id: name, state: 'active' }));
     const defaultVersion = findUpcomingVersion(versions, storage);
 
-    res.json({ versions, default_version: defaultVersion });
+    res.json({ versions, releases, default_version: defaultVersion });
   });
 
   router.post('/upload', requireAuth, requireScope('releases:write'), async (req, res) => {
