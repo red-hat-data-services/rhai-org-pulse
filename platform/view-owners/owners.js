@@ -54,6 +54,7 @@ export const viewOwners = {
   'product-builds/drop-detail':                    'Pavol Pitonak',
   'product-builds/overview':                       'Giulia Naponiello',
   'product-builds/package-analysis':               'Einat Pacifici',
+  'product-builds/package-request':                'Andre Lustosa',
   'product-builds/rhaiis':                         'Pavol Pitonak',
   'product-builds/rhel-ai':                        'Pavol Pitonak',
   'product-builds/search':                         'Rishabh Kothari',
@@ -138,7 +139,6 @@ export const viewOwners = {
   'releases/reports/tv-fv-delta':                  'Dimitri Saridakis',
 
   // team-tracker > reports
-  'team-tracker/reports/allocation':               'Alex Corvin',
   'team-tracker/reports/team-comparison':          'Alex Corvin',
   'team-tracker/reports/trends':                   'Alex Corvin',
 }
