@@ -23,11 +23,85 @@ const DELIVERED_STATUSES = ['Release Pending', 'Closed', 'Done']
 
 async function loadCommitmentConfig(readFromStorage) {
   var data = await readFromStorage(COMMITMENT_CONFIG_FILE)
-  if (data && Array.isArray(data.releases)) return data
+  if (data && Array.isArray(data.releases)) return mergeBundledFixVersionAliases(data)
   // Keep the release selector usable on installations whose PVC predates this
-  // config file. A persisted config still takes precedence over the bundled
-  // defaults, so administrators can continue to customize the mappings.
+  // config file.
   return DEFAULT_COMMITMENT_CONFIG
+}
+
+/**
+ * Add bundled compatibility aliases to matching phases in persisted configs.
+ *
+ * Production config lives on a PVC and can predate newly discovered Jira
+ * aliases. A phase is augmented only when it already contains at least one of
+ * the bundled names, preserving unrelated administrator-defined mappings.
+ */
+function mergeBundledFixVersionAliases(config) {
+  var bundledByVersion = {}
+  for (var d = 0; d < DEFAULT_COMMITMENT_CONFIG.releases.length; d++) {
+    var bundledRelease = DEFAULT_COMMITMENT_CONFIG.releases[d]
+    bundledByVersion[bundledRelease.version] = bundledRelease
+  }
+
+  var releases = config.releases.map(function(release) {
+    var bundled = bundledByVersion[release.version]
+    if (!bundled || !release.phases) return release
+
+    var phases = Object.assign({}, release.phases)
+    var phaseNames = Object.keys(phases)
+    var changed = false
+
+    for (var p = 0; p < phaseNames.length; p++) {
+      var phaseName = phaseNames[p]
+      var phase = phases[phaseName]
+      var bundledPhase = bundled.phases && bundled.phases[phaseName]
+      if (!phase || !Array.isArray(phase.fixVersions) || !bundledPhase) continue
+
+      var bundledNames = bundledPhase.fixVersions || []
+      var bundledSet = {}
+      for (var b = 0; b < bundledNames.length; b++) {
+        bundledSet[bundledNames[b].toLowerCase()] = true
+      }
+
+      var matchesBundledPhase = phase.fixVersions.some(function(name) {
+        return bundledSet[String(name).toLowerCase()] === true
+      })
+      if (!matchesBundledPhase) continue
+
+      var mergedNames = phase.fixVersions.slice()
+      var mergedSet = {}
+      for (var m = 0; m < mergedNames.length; m++) {
+        mergedSet[String(mergedNames[m]).toLowerCase()] = true
+      }
+      for (var a = 0; a < bundledNames.length; a++) {
+        var alias = bundledNames[a]
+        if (!mergedSet[alias.toLowerCase()]) {
+          mergedNames.push(alias)
+          mergedSet[alias.toLowerCase()] = true
+          changed = true
+        }
+      }
+      phases[phaseName] = Object.assign({}, phase, { fixVersions: mergedNames })
+    }
+
+    return changed ? Object.assign({}, release, { phases: phases }) : release
+  })
+
+  return Object.assign({}, config, { releases: releases })
+}
+
+function isCommitmentCacheCurrent(cached, fixVersions) {
+  if (!cached || !cached.metrics || !Array.isArray(cached.fixVersions)) return false
+  if (!Array.isArray(fixVersions) || cached.fixVersions.length !== fixVersions.length) return false
+
+  var cachedSet = {}
+  for (var c = 0; c < cached.fixVersions.length; c++) {
+    cachedSet[String(cached.fixVersions[c]).toLowerCase()] = true
+  }
+  for (var f = 0; f < fixVersions.length; f++) {
+    if (!cachedSet[String(fixVersions[f]).toLowerCase()]) return false
+  }
+  return true
 }
 
 function findPhaseConfig(commitmentConfig, version, phase) {
@@ -505,9 +579,12 @@ module.exports = async function registerCommitmentRoutes(router, context) {
 
       if (freezePassed && !forceRefresh) {
         var cached = await readFromStorage(cacheKey)
-        if (cached && cached.metrics) {
+        if (isCommitmentCacheCurrent(cached, phaseConfig.fixVersions)) {
           console.log('[commitment] Serving cached data for ' + version + ' ' + phase)
           return res.json(cached)
+        }
+        if (cached && cached.metrics) {
+          console.log('[commitment] Ignoring stale cache for ' + version + ' ' + phase + ' because fix version mappings changed')
         }
       }
 
@@ -553,3 +630,5 @@ module.exports.getConfiguredVersions = getConfiguredVersions
 module.exports.findPhaseConfig = findPhaseConfig
 module.exports.buildFeatureFromIssue = buildFeatureFromIssue
 module.exports.loadCommitmentConfig = loadCommitmentConfig
+module.exports.mergeBundledFixVersionAliases = mergeBundledFixVersionAliases
+module.exports.isCommitmentCacheCurrent = isCommitmentCacheCurrent

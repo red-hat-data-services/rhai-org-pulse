@@ -63,6 +63,20 @@ test.describe('Releases Commitment Tracking @releases', () => {
     const body = await response.json();
     expect(body.versions.map(version => version.version)).toEqual(['3.4', '3.5', '3.6', '3.7']);
   });
+
+  test('exposes compatibility aliases for the 3.5 EA2 commitment report', async ({ request }) => {
+    const response = await request.get('/api/modules/releases/delivery/commitment/config');
+    expect(response.ok()).toBe(true);
+
+    const body = await response.json();
+    const release = body.releases.find(entry => entry.version === '3.5');
+    expect(release.phases.EA2.fixVersions).toEqual(expect.arrayContaining([
+      '3.5 EA2 RHOAI RELEASE',
+      'rhoai-3.5.EA2',
+      'RHAII-3.5 EA2',
+      'rhelai-3.5 EA2 release'
+    ]));
+  });
 });
 
 /**

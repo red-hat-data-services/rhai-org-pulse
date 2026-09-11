@@ -6,7 +6,8 @@ import {
   getConfiguredVersions,
   findPhaseConfig,
   buildFeatureFromIssue,
-  loadCommitmentConfig
+  loadCommitmentConfig,
+  isCommitmentCacheCurrent
 } from '../../../server/delivery/commitment.js'
 
 describe('analyzeFixVersionHistory', () => {
@@ -396,6 +397,77 @@ describe('loadCommitmentConfig', () => {
       '3.6',
       '3.7'
     ])
+    expect(findPhaseConfig(config, '3.5', 'EA2').fixVersions).toContain('rhoai-3.5.EA2')
+  })
+
+  it('adds bundled aliases to a matching persisted phase', async () => {
+    const storedConfig = {
+      releases: [{
+        version: '3.5',
+        phases: {
+          EA2: {
+            fixVersions: [
+              '3.5 EA2 RHOAI RELEASE',
+              '3.5 EA2 RHAII RELEASE',
+              '3.5 EA2 RHELAI RELEASE'
+            ],
+            planningFreezeOverride: '2026-05-15'
+          }
+        }
+      }]
+    }
+
+    const config = await loadCommitmentConfig(async () => storedConfig)
+    const ea2 = findPhaseConfig(config, '3.5', 'EA2')
+
+    expect(ea2.fixVersions).toEqual([
+      '3.5 EA2 RHOAI RELEASE',
+      '3.5 EA2 RHAII RELEASE',
+      '3.5 EA2 RHELAI RELEASE',
+      'rhoai-3.5.EA2',
+      'RHAII-3.5.EA2',
+      'RHAII-3.5 EA2',
+      'rhelai-3.5EA2',
+      'rhelai-3.5 EA2 release'
+    ])
+    expect(ea2.planningFreezeOverride).toBe('2026-05-15')
+  })
+
+  it('leaves unrelated persisted phase mappings unchanged', async () => {
+    const storedConfig = {
+      releases: [{
+        version: '3.5',
+        phases: { EA2: { fixVersions: ['custom-3.5-ea2'] } }
+      }]
+    }
+
+    await expect(loadCommitmentConfig(async () => storedConfig)).resolves.toEqual(storedConfig)
+  })
+})
+
+describe('isCommitmentCacheCurrent', () => {
+  it('accepts a cache containing the configured fix version set', () => {
+    const cached = {
+      metrics: { committed: 1 },
+      fixVersions: ['RHOAI-3.5.EA2', '3.5 EA2 RHOAI RELEASE']
+    }
+
+    expect(isCommitmentCacheCurrent(cached, [
+      '3.5 EA2 RHOAI RELEASE',
+      'rhoai-3.5.ea2'
+    ])).toBe(true)
+  })
+
+  it('rejects a cache created before an alias was added', () => {
+    const cached = {
+      metrics: { committed: 0 },
+      fixVersions: ['3.5 EA2 RHOAI RELEASE']
+    }
+
+    expect(isCommitmentCacheCurrent(cached, [
+      '3.5 EA2 RHOAI RELEASE',
+      'rhoai-3.5.EA2'
+    ])).toBe(false)
   })
 })
 
