@@ -78,6 +78,16 @@
         "key": "TRACKER_SIZE_FIELD",
         "description": "JIRA custom field ID for size (defaults to customfield_10795)",
         "required": false
+      },
+      {
+        "key": "PACKAGE_REQUEST_JIRA_PROJECT",
+        "description": "Jira project key that receives package request Epics (defaults to AIPCC)",
+        "required": false
+      },
+      {
+        "key": "PACKAGE_ONBOARDING_GITLAB_TOKEN",
+        "description": "GitLab PAT with api scope and Developer access to redhat/rhel-ai/core/package-onboarding, used to trigger the onboarding pipeline. Without it the Epic is still filed and the pipeline is reported as not triggered.",
+        "required": false
       }
     ]
   },

@@ -11,16 +11,18 @@ const {
   buildAdfDescription,
   buildEpicFields,
   buildDuplicateJql,
+  normalizeRequestSummary,
   buildPipelineVariables,
   getTeamOptions,
   checkPypiPackage,
   getGitlabToken,
+  resolveJiraProject,
   checkRateLimit,
   recordSubmission,
   _lastSubmission,
   _pendingSubmissions,
   _teamOptionsCache,
-  AIPCC_PROJECT,
+  DEFAULT_JIRA_PROJECT,
   SECURITY_NAME,
   COMPONENT_NAME,
   EPIC_NAME_FIELD
@@ -130,7 +132,7 @@ function makeContext(overrides = {}) {
     secrets: {
       JIRA_EMAIL: 'svc@redhat.com',
       JIRA_TOKEN: 'jira-token',
-      GITLAB_TOKEN: 'gitlab-token'
+      PACKAGE_ONBOARDING_GITLAB_TOKEN: 'onboarding-token'
     },
     resolveSecret: vi.fn(() => null),
     requireAuth: vi.fn(function (_req, _res, next) { next() }),
@@ -498,7 +500,7 @@ describe('package-requests', () => {
         demo: true,
         requester: 'jane@redhat.com',
         summary: 'vllm[cu12] package update request',
-        jira: { key: 'AIPCC-DEMO', url: null },
+        jira: { key: 'AIPCC-DEMO', url: null, project: 'AIPCC' },
         pipeline: { triggered: false, reason: 'demo mode' }
       })
       // Rate limited on the immediate second submission (still no external calls).
@@ -550,6 +552,56 @@ describe('package-requests', () => {
         }
       ])
       expect(epicPostCall(jira)).toBeUndefined()
+    })
+
+    function jiraWithExistingEpics(summaries) {
+      return makeJira({
+        fetchAllJqlResults: vi.fn(async () => summaries.map((summary, i) => ({
+          key: 'AIPCC-' + (100 + i),
+          fields: { summary, status: { name: 'To Do' }, created: '2026-06-01T00:00:00.000Z' }
+        })))
+      })
+    }
+
+    async function submitAgainst(summaries, bodyOverrides) {
+      const jira = jiraWithExistingEpics(summaries)
+      const { router } = register({ jiraClient: jira, fetch: makeFetch(), fetchIndex: vi.fn(async () => ({ found: false, files: [] })) })
+      const res = await callHandler(router, { userEmail: 'jane@redhat.com', body: validBody(bodyOverrides) })
+      return { res, jira }
+    }
+
+    it('treats different extras of the same package as separate requests', async () => {
+      const { res, jira } = await submitAgainst(
+        ['torch[rocm] package update request'],
+        { package_name: 'torch', extras: ['cuda'] }
+      )
+      expect(res._status).toBe(201)
+      expect(epicPostCall(jira)).toBeDefined()
+    })
+
+    it('does not treat a bare package as a duplicate of one with extras', async () => {
+      const { res } = await submitAgainst(
+        ['torch[cuda] package update request'],
+        { package_name: 'torch', extras: null }
+      )
+      expect(res._status).toBe(201)
+    })
+
+    it('does not treat a package as a duplicate of a longer package name', async () => {
+      const { res } = await submitAgainst(
+        ['torchvision package update request'],
+        { package_name: 'torch', extras: null }
+      )
+      expect(res._status).toBe(201)
+    })
+
+    it('still flags duplicates when extras differ only in case or order', async () => {
+      const { res } = await submitAgainst(
+        ['torch[ROCm,cuda] package update request', 'unrelated Epic'],
+        { package_name: 'torch', extras: ['cuda', 'rocm'] }
+      )
+      expect(res._status).toBe(409)
+      expect(res._json.existing_tickets.map(t => t.key)).toEqual(['AIPCC-100'])
     })
 
     it('proceeds when the duplicate search fails (fail open)', async () => {
@@ -666,7 +718,8 @@ describe('package-requests', () => {
         key: 'AIPCC-999',
         id: '10999',
         url: 'https://redhat.atlassian.net/browse/AIPCC-999',
-        summary: 'vllm[cu12] package update request'
+        summary: 'vllm[cu12] package update request',
+        project: 'AIPCC'
       })
       expect(res._json.release_target_set).toBe(true)
       expect(res._json.pipeline).toEqual({
@@ -679,7 +732,8 @@ describe('package-requests', () => {
       const post = epicPostCall(jira)
       expect(post).toBeDefined()
       const fields = post[1].body.fields
-      expect(fields.project).toEqual({ key: AIPCC_PROJECT })
+      expect(fields.project).toEqual({ key: DEFAULT_JIRA_PROJECT })
+      expect(res._json.jira.project).toBe('AIPCC')
       expect(fields.issuetype).toEqual({ name: 'Epic' })
       expect(fields.summary).toBe('vllm[cu12] package update request')
       expect(fields.labels).toContain('package')
@@ -724,7 +778,7 @@ describe('package-requests', () => {
       expect(pipelineCall).toBeDefined()
       expect(String(pipelineCall[0])).toContain('/projects/redhat%2Frhel-ai%2Fcore%2Fpackage-onboarding/pipeline')
       expect(String(pipelineCall[0])).not.toContain('/pipelines')
-      expect(pipelineCall[1].headers['PRIVATE-TOKEN']).toBe('gitlab-token')
+      expect(pipelineCall[1].headers['PRIVATE-TOKEN']).toBe('onboarding-token')
       const pipelineBody = JSON.parse(pipelineCall[1].body)
       expect(pipelineBody).toEqual({
         ref: 'main',
@@ -843,25 +897,70 @@ describe('package-requests', () => {
       expect(res._json.pipeline).toEqual({ triggered: false, reason: 'gitlab_token_not_configured' })
     })
 
-    it('uses the nightly pipeline token as a fallback', async () => {
+    it('does not fall back to read-only platform or nightly GitLab tokens', async () => {
       const fetchMock = makeFetch()
       const { router } = register(
         { jiraClient: makeJira(), fetch: fetchMock, fetchIndex: vi.fn(async () => ({ found: false, files: [] })) },
-        { secrets: { JIRA_EMAIL: 'svc@redhat.com', JIRA_TOKEN: 'jira-token', NIGHTLY_PIPELINE_GITLAB_TOKEN: 'nightly-token' } }
+        { secrets: {
+          JIRA_EMAIL: 'svc@redhat.com',
+          JIRA_TOKEN: 'jira-token',
+          GITLAB_TOKEN: 'read-only-token',
+          NIGHTLY_PIPELINE_GITLAB_TOKEN: 'nightly-token'
+        } }
       )
       const res = await callHandler(router, { userEmail: 'jane@redhat.com', body: validBody() })
       expect(res._status).toBe(201)
-      expect(res._json.pipeline.triggered).toBe(true)
+      expect(res._json.pipeline).toEqual({ triggered: false, reason: 'gitlab_token_not_configured' })
       const pipelineCall = fetchMock.mock.calls.find(
         c => String(c[0]).includes('/api/v4/projects/') && (c[1].method || 'GET') === 'POST'
       )
-      expect(pipelineCall[1].headers['PRIVATE-TOKEN']).toBe('nightly-token')
+      expect(pipelineCall).toBeUndefined()
     })
 
     it('returns 503 when Jira is not configured', async () => {
       const { router } = register({}, { secrets: {} })
       const res = await callHandler(router, { userEmail: 'jane@redhat.com', body: validBody() })
       expect(res._status).toBe(503)
+    })
+  })
+
+  describe('configurable Jira project', () => {
+    const overrideSecrets = {
+      secrets: {
+        JIRA_EMAIL: 'svc@redhat.com',
+        JIRA_TOKEN: 'jira-token',
+        PACKAGE_ONBOARDING_GITLAB_TOKEN: 'onboarding-token',
+        PACKAGE_REQUEST_JIRA_PROJECT: 'TESTPROJ'
+      }
+    }
+
+    it('files the Epic and searches duplicates in PACKAGE_REQUEST_JIRA_PROJECT', async () => {
+      const jira = makeJira({
+        jiraRequest: vi.fn(async (path, opts = {}) => {
+          const method = (opts.method || 'GET').toUpperCase()
+          if (path.startsWith('/rest/api/3/user/search')) return []
+          if (path === '/rest/api/3/issue' && method === 'POST') return { key: 'TESTPROJ-7', id: '7' }
+          if (method === 'PUT') return {}
+          if (path.startsWith('/rest/api/3/issue/')) return { key: 'AIPCC-42', fields: { summary: 'Related' } }
+          throw new Error('Unexpected ' + method + ' ' + path)
+        })
+      })
+      const { router } = register(
+        { jiraClient: jira, fetch: makeFetch(), fetchIndex: vi.fn(async () => ({ found: false, files: [] })) },
+        overrideSecrets
+      )
+      const res = await callHandler(router, { userEmail: 'jane@redhat.com', body: validBody() })
+      expect(res._status).toBe(201)
+      expect(epicPostCall(jira)[1].body.fields.project).toEqual({ key: 'TESTPROJ' })
+      expect(jira.fetchAllJqlResults.mock.calls[0][0]).toContain('project = TESTPROJ')
+      expect(res._json.jira).toMatchObject({ key: 'TESTPROJ-7', project: 'TESTPROJ' })
+    })
+
+    it('uses the configured project for the demo-mode key', async () => {
+      const { router } = register({ isDemoMode: true }, overrideSecrets)
+      const res = await callHandler(router, { userEmail: 'jane@redhat.com', body: validBody() })
+      expect(res._status).toBe(200)
+      expect(res._json.jira).toEqual({ key: 'TESTPROJ-DEMO', url: null, project: 'TESTPROJ' })
     })
   })
 
@@ -965,9 +1064,10 @@ describe('package-requests', () => {
       expect(buildEpicName('vllm')).toBe('vllm package update request')
     })
 
-    it('buildDuplicateJql targets recent AIPCC package Epics', () => {
+    it('buildDuplicateJql targets recent package Epics in the configured project', () => {
       const jql = buildDuplicateJql('vllm')
       expect(jql).toContain('project = AIPCC')
+      expect(buildDuplicateJql('vllm', 'TESTPROJ')).toContain('project = TESTPROJ')
       expect(jql).toContain('issuetype = Epic')
       expect(jql).toContain('"package", "dashboard-filed"')
       expect(jql).toContain('summary ~ "*vllm*"')
@@ -984,10 +1084,32 @@ describe('package-requests', () => {
       })
     })
 
-    it('getGitlabToken prefers GITLAB_TOKEN over the nightly fallback', () => {
-      expect(getGitlabToken({ GITLAB_TOKEN: 'a', NIGHTLY_PIPELINE_GITLAB_TOKEN: 'b' })).toBe('a')
-      expect(getGitlabToken({ NIGHTLY_PIPELINE_GITLAB_TOKEN: 'b' })).toBe('b')
+    it('getGitlabToken only honours the dedicated onboarding token', () => {
+      expect(getGitlabToken({ PACKAGE_ONBOARDING_GITLAB_TOKEN: 'a', GITLAB_TOKEN: 'b' })).toBe('a')
+      expect(getGitlabToken({ GITLAB_TOKEN: 'b', NIGHTLY_PIPELINE_GITLAB_TOKEN: 'c' })).toBeNull()
       expect(getGitlabToken({})).toBeNull()
+      expect(getGitlabToken(undefined)).toBeNull()
+    })
+
+    it('normalizeRequestSummary keys on package name plus sorted extras', () => {
+      expect(normalizeRequestSummary('torch package update request')).toBe('torch[]')
+      expect(normalizeRequestSummary('Torch[ROCm, cuda] package update request')).toBe('torch[cuda,rocm]')
+      expect(normalizeRequestSummary('torch[cuda] package update request'))
+        .not.toBe(normalizeRequestSummary('torch[rocm] package update request'))
+      expect(normalizeRequestSummary('torchvision package update request')).toBe('torchvision[]')
+      expect(normalizeRequestSummary('something else entirely')).toBeNull()
+      expect(normalizeRequestSummary(null)).toBeNull()
+    })
+
+    it('resolveJiraProject defaults to AIPCC and validates overrides', () => {
+      const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
+      expect(resolveJiraProject({})).toBe('AIPCC')
+      expect(resolveJiraProject(undefined)).toBe('AIPCC')
+      expect(resolveJiraProject({ PACKAGE_REQUEST_JIRA_PROJECT: '' })).toBe('AIPCC')
+      expect(resolveJiraProject({ PACKAGE_REQUEST_JIRA_PROJECT: ' testproj ' })).toBe('TESTPROJ')
+      expect(resolveJiraProject({ PACKAGE_REQUEST_JIRA_PROJECT: 'bad key!' })).toBe('AIPCC')
+      expect(warn).toHaveBeenCalledTimes(1)
+      warn.mockRestore()
     })
 
     it('checkPypiPackage reports found/missing and throws on API errors', async () => {

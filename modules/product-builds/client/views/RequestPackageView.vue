@@ -438,7 +438,7 @@ function jiraHref(ticket) {
             <option value="AIPCC">AIPCC</option>
             <option value="RHAI">RHAI</option>
           </select>
-          <p id="req-team-project-hint" class="mt-1 text-xs text-gray-500 dark:text-gray-400">Choose the project your team belongs to. Package requests are filed in AIPCC.</p>
+          <p id="req-team-project-hint" class="mt-1 text-xs text-gray-500 dark:text-gray-400">Choose the project your team belongs to. This only selects the team list; it does not change where the request is filed.</p>
         </div>
 
         <!-- Team + package -->

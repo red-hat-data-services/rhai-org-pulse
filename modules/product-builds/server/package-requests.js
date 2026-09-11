@@ -4,7 +4,8 @@
  * Authenticated POST endpoint that validates a package update request,
  * verifies the related Jira issue, checks for recent duplicates, validates
  * PyPI sources, warns when the package is already in a production index,
- * files an AIPCC Epic, and triggers the package onboarding GitLab pipeline.
+ * files an Epic in the configured Jira project (PACKAGE_REQUEST_JIRA_PROJECT,
+ * default AIPCC), and triggers the package onboarding GitLab pipeline.
  *
  * All external operations (Jira, PyPI, package indexes, GitLab) go through
  * small module-level functions. The register function accepts an optional
@@ -24,7 +25,8 @@ const {
   MAX_CONCURRENT_FETCHES
 } = require('./package-index');
 
-const AIPCC_PROJECT = 'AIPCC';
+const DEFAULT_JIRA_PROJECT = 'AIPCC';
+const JIRA_PROJECT_KEY_RE = /^[A-Z][A-Z0-9]+$/;
 const EPIC_LABELS = ['package', 'dashboard-filed'];
 const SECURITY_NAME = 'Red Hat Employee';
 const COMPONENT_NAME = 'Accelerator Enablement';
@@ -352,9 +354,9 @@ function buildAdfDescription(request, requesterEmail, jiraHost) {
 /**
  * Build the fields payload for creating the AIPCC Epic.
  */
-function buildEpicFields(request, requesterEmail, { jiraHost, reporterAccountId, epicNameField } = {}) {
+function buildEpicFields(request, requesterEmail, { jiraHost, reporterAccountId, epicNameField, jiraProject } = {}) {
   const fields = {
-    project: { key: AIPCC_PROJECT },
+    project: { key: jiraProject || DEFAULT_JIRA_PROJECT },
     issuetype: { name: 'Epic' },
     summary: buildEpicSummary(request.packageName, request.extras),
     description: buildAdfDescription(request, requesterEmail, jiraHost),
@@ -370,8 +372,8 @@ function buildEpicFields(request, requesterEmail, { jiraHost, reporterAccountId,
   return fields;
 }
 
-function buildDuplicateJql(packageName) {
-  return `project = ${AIPCC_PROJECT} AND issuetype = Epic ` +
+function buildDuplicateJql(packageName, jiraProject = DEFAULT_JIRA_PROJECT) {
+  return `project = ${jiraProject} AND issuetype = Epic ` +
     `AND labels in ("package", "dashboard-filed") ` +
     `AND summary ~ "*${packageName}*" ` +
     `AND created >= -${DUPLICATE_LOOKBACK_DAYS}d AND statusCategory != Done`;
@@ -410,15 +412,42 @@ async function validateRelatedIssue(jira, jiraId) {
 }
 
 /**
- * Search for recent duplicate package update request Epics.
+ * Reduce an Epic summary to a comparable key: lowercase package name plus
+ * sorted, lowercase extras. Returns null when the summary does not follow the
+ * package update request template, so unrelated Epics never count as
+ * duplicates.
  */
-async function findDuplicateRequests(jira, packageName, jiraHost) {
+function normalizeRequestSummary(summary) {
+  const match = String(summary || '').trim()
+    .match(/^([^[\]\s]+)(?:\[([^\]]*)\])?\s+package update request$/i);
+  if (!match) return null;
+  const extras = (match[2] || '')
+    .split(',')
+    .map(e => e.trim().toLowerCase())
+    .filter(Boolean)
+    .sort();
+  return match[1].toLowerCase() + '[' + extras.join(',') + ']';
+}
+
+/**
+ * Search for recent duplicate package update request Epics.
+ *
+ * The JQL wildcard search is broad (it matches any summary containing the
+ * package name), so results are filtered to the exact package + extras
+ * combination. torch[cuda] and torch[rocm] are therefore distinct requests,
+ * and torch does not collide with torchvision.
+ */
+async function findDuplicateRequests(jira, { packageName, extras, jiraHost, jiraProject }) {
   const issues = await jira.fetchAllJqlResults(
-    buildDuplicateJql(packageName),
+    buildDuplicateJql(packageName, jiraProject),
     'key,summary,status,created,updated',
     { maxResults: 50 }
   );
-  return issues.map(issue => ({
+  const target = normalizeRequestSummary(buildEpicSummary(packageName, extras));
+  return issues.filter(issue => {
+    const summary = issue && issue.fields && issue.fields.summary;
+    return normalizeRequestSummary(summary) === target;
+  }).map(issue => ({
     key: issue.key,
     summary: (issue.fields && issue.fields.summary) || '',
     status: (issue.fields && issue.fields.status && issue.fields.status.name) || '',
@@ -488,8 +517,31 @@ function getGitLabConfig() {
   };
 }
 
+/**
+ * Token used to create pipelines in the package-onboarding project. Creating
+ * a pipeline needs a PAT with the `api` scope and Developer access to the
+ * project, which the read-only platform GITLAB_TOKEN does not have, so only
+ * the dedicated secret is honoured. Without it the Epic is still filed and
+ * the pipeline is reported as not triggered.
+ */
 function getGitlabToken(secrets) {
-  return (secrets && (secrets.GITLAB_TOKEN || secrets.NIGHTLY_PIPELINE_GITLAB_TOKEN)) || null;
+  return (secrets && secrets.PACKAGE_ONBOARDING_GITLAB_TOKEN) || null;
+}
+
+/**
+ * Jira project that receives package request Epics. Read from the
+ * PACKAGE_REQUEST_JIRA_PROJECT secret declared in module.json; falls back to
+ * AIPCC when unset or not a valid project key.
+ */
+function resolveJiraProject(secrets) {
+  const raw = secrets && secrets.PACKAGE_REQUEST_JIRA_PROJECT;
+  const value = typeof raw === 'string' ? raw.trim().toUpperCase() : '';
+  if (!value) return DEFAULT_JIRA_PROJECT;
+  if (!JIRA_PROJECT_KEY_RE.test(value)) {
+    console.warn(`[package-requests] Ignoring invalid PACKAGE_REQUEST_JIRA_PROJECT "${raw}"; using ${DEFAULT_JIRA_PROJECT}`);
+    return DEFAULT_JIRA_PROJECT;
+  }
+  return value;
 }
 
 function buildPipelineVariables(request, epicKey) {
@@ -607,6 +659,7 @@ function isDemoMode(deps) {
  */
 module.exports = function registerPackageRequestRoutes(router, context, deps = {}) {
   const secrets = (context && context.secrets) || {};
+  const jiraProject = resolveJiraProject(secrets);
   const fetchImpl = deps.fetch || fetch;
   const noopAuth = function (_req, _res, next) { next(); };
   const requireAuth = (context && context.requireAuth) || noopAuth;
@@ -701,12 +754,16 @@ module.exports = function registerPackageRequestRoutes(router, context, deps = {
    *       Authenticated endpoint that validates a package update request,
    *       verifies the related Jira issue, checks for recent duplicate
    *       requests, validates PyPI sources, and warns when the package is
-   *       already present in a production index. On success it files an AIPCC
-   *       Epic with its required Epic Name field, due date, team label, Red Hat
-   *       Employee security, and Accelerator Enablement component, sets the
+   *       already present in a production index. On success it files an Epic
+   *       in the configured Jira project (PACKAGE_REQUEST_JIRA_PROJECT, default
+   *       AIPCC) with its required Epic Name field, due date, team label, Red
+   *       Hat Employee security, and Accelerator Enablement component, sets the
    *       release target field when provided, and triggers the
-   *       redhat/rhel-ai/core/package-onboarding GitLab pipeline. Pipeline
-   *       failure is non-fatal. The per-user cooldown starts only after Jira
+   *       redhat/rhel-ai/core/package-onboarding GitLab pipeline using
+   *       PACKAGE_ONBOARDING_GITLAB_TOKEN. Pipeline failure, or a missing
+   *       pipeline token, is non-fatal. Duplicate detection compares the full
+   *       package name including extras, so torch[cuda] and torch[rocm] are
+   *       distinct requests. The per-user cooldown starts only after Jira
    *       confirms Epic creation; an in-flight guard prevents concurrent
    *       requests from the same user from creating duplicate Epics.
    *     requestBody:
@@ -846,7 +903,7 @@ module.exports = function registerPackageRequestRoutes(router, context, deps = {
           demo: true,
           requester: email,
           summary: buildEpicSummary(request.packageName, request.extras),
-          jira: { key: 'AIPCC-DEMO', url: null },
+          jira: { key: jiraProject + '-DEMO', url: null, project: jiraProject },
           pipeline: { triggered: false, reason: 'demo mode' }
         });
       }
@@ -874,7 +931,12 @@ module.exports = function registerPackageRequestRoutes(router, context, deps = {
       // Check recent duplicates (fail open on search errors).
       let duplicates = [];
       try {
-        duplicates = await findDuplicateRequests(jira, request.packageName, jiraHost);
+        duplicates = await findDuplicateRequests(jira, {
+          packageName: request.packageName,
+          extras: request.extras,
+          jiraHost,
+          jiraProject
+        });
       } catch (err) {
         console.warn('[package-requests] Duplicate search failed:', err.message);
       }
@@ -924,8 +986,8 @@ module.exports = function registerPackageRequestRoutes(router, context, deps = {
       // Resolve the reporter from the authenticated email (non-fatal).
       const reporterAccountId = await findReporterAccountId(jira, email);
 
-      // Create the AIPCC Epic.
-      const fields = buildEpicFields(request, email, { jiraHost, reporterAccountId });
+      // Create the Epic in the configured Jira project.
+      const fields = buildEpicFields(request, email, { jiraHost, reporterAccountId, jiraProject });
       let created;
       try {
         created = await jira.jiraRequest('/rest/api/3/issue', { method: 'POST', body: { fields } });
@@ -985,7 +1047,8 @@ module.exports = function registerPackageRequestRoutes(router, context, deps = {
           key: epicKey,
           id: created.id || null,
           url: jiraHost + '/browse/' + epicKey,
-          summary: fields.summary
+          summary: fields.summary,
+          project: jiraProject
         },
         related_issue: related,
         release_target_set: releaseTargetSet,
@@ -1009,6 +1072,7 @@ module.exports._testExports = {
   buildAdfDescription,
   buildEpicFields,
   buildDuplicateJql,
+  normalizeRequestSummary,
   buildPipelineVariables,
   getTeamOptions,
   checkPypiPackage,
@@ -1019,6 +1083,7 @@ module.exports._testExports = {
   triggerOnboardingPipeline,
   getGitLabConfig,
   getGitlabToken,
+  resolveJiraProject,
   checkRateLimit,
   recordSubmission,
   beginSubmission,
@@ -1027,7 +1092,7 @@ module.exports._testExports = {
   _lastSubmission,
   _pendingSubmissions,
   _teamOptionsCache,
-  AIPCC_PROJECT,
+  DEFAULT_JIRA_PROJECT,
   SECURITY_NAME,
   COMPONENT_NAME,
   EPIC_NAME_FIELD,
