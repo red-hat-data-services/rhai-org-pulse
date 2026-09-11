@@ -11,9 +11,9 @@
     {
       "version": "3.5",
       "phases": {
-        "EA1": { "fixVersions": ["3.5 EA1 RHOAI RELEASE", "3.5 EA1 RHAII RELEASE", "3.5 EA1 RHELAI RELEASE"], "planningFreezeOverride": "2026-04-17" },
-        "EA2": { "fixVersions": ["3.5 EA2 RHOAI RELEASE", "3.5 EA2 RHAII RELEASE", "3.5 EA2 RHELAI RELEASE"], "planningFreezeOverride": "2026-05-15" },
-        "GA":  { "fixVersions": ["3.5 GA RHOAI RELEASE", "3.5 GA RHAII RELEASE", "3.5 GA RHELAI RELEASE"], "planningFreezeOverride": "2026-06-24" }
+        "EA1": { "fixVersions": ["3.5 EA1 RHOAI RELEASE", "3.5 EA1 RHAII RELEASE", "3.5 EA1 RHELAI RELEASE", "rhoai-3.5.EA1", "RHAII-3.5.EA1", "RHAII-3.5 EA1", "rhelai-3.5EA1", "rhelai-3.5 EA1 release"], "planningFreezeOverride": "2026-04-17" },
+        "EA2": { "fixVersions": ["3.5 EA2 RHOAI RELEASE", "3.5 EA2 RHAII RELEASE", "3.5 EA2 RHELAI RELEASE", "rhoai-3.5.EA2", "RHAII-3.5.EA2", "RHAII-3.5 EA2", "rhelai-3.5EA2", "rhelai-3.5 EA2 release"], "planningFreezeOverride": "2026-05-15" },
+        "GA":  { "fixVersions": ["3.5 GA RHOAI RELEASE", "3.5 GA RHAII RELEASE", "3.5 GA RHELAI RELEASE", "rhoai-3.5", "RHAII-3.5", "RHAIIS-3.5", "rhelai-3.5", "rhelai-3.5 release"], "planningFreezeOverride": "2026-06-24" }
       }
     },
     {
