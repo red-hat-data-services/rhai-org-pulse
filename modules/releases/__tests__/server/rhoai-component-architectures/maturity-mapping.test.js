@@ -154,6 +154,21 @@ describe('fetchMaturityMapping', () => {
     await expect(fetchMaturityMapping('token')).rejects.toThrow('not found')
   })
 
+  it('throws a generic message for other non-200 statuses', async () => {
+    mockFetch.mockResolvedValueOnce({ ok: false, status: 500 })
+    await expect(fetchMaturityMapping('token')).rejects.toThrow('GitLab API returned 500')
+  })
+
+  it('skips non-string entries inside images arrays', async () => {
+    mockFetch.mockResolvedValueOnce(makeMaturityResponse([
+      { name: 'Mixed', id: 'mixed', images: ['quay.io/ns/mixed-rhel9', 42, null] }
+    ]))
+
+    const result = await fetchMaturityMapping('token')
+    expect(Object.keys(result.mapping)).toEqual(['mixed-rhel9'])
+    expect(result.mapping['mixed-rhel9']).toBe('Mixed')
+  })
+
   it('throws on network error', async () => {
     mockFetch.mockRejectedValueOnce(new Error('Network unreachable'))
     await expect(fetchMaturityMapping('token')).rejects.toThrow('Network unreachable')

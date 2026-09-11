@@ -201,14 +201,14 @@
           </span>
         </div>
         <div class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
-        <div class="overflow-auto max-h-[32rem]" style="scrollbar-width: thin">
+        <div class="overflow-x-auto">
           <table class="w-full text-sm">
-            <thead class="sticky top-0 z-30">
+            <thead>
               <tr class="border-b border-gray-200 dark:border-gray-700 bg-gray-200 dark:bg-gray-900/80">
-                <th v-if="hasMaturityData" class="text-left px-4 py-3 font-semibold text-gray-700 dark:text-gray-300 sticky left-0 top-0 bg-gray-200 dark:bg-gray-900/80 z-40 min-w-[160px]">
+                <th v-if="hasMaturityData" class="text-left px-4 py-3 font-semibold text-gray-700 dark:text-gray-300 min-w-[160px]">
                   Product Component
                 </th>
-                <th class="text-left px-4 py-3 font-semibold text-gray-700 dark:text-gray-300 z-40" :class="hasMaturityData ? 'sticky left-[160px] top-0 bg-gray-200 dark:bg-gray-900/80' : 'sticky left-0 top-0 bg-gray-200 dark:bg-gray-900/80'">
+                <th class="text-left px-4 py-3 font-semibold text-gray-700 dark:text-gray-300">
                   <a v-if="hasMaturityData" :href="konfluxBranchUrl" target="_blank" rel="noopener noreferrer"
                      class="text-gray-700 dark:text-gray-300 hover:text-primary-600 dark:hover:text-primary-400 hover:underline"
                      :title="`Browse konflux-central on the ${selectedBranch} branch`">
@@ -216,7 +216,7 @@
                   </a>
                   <span v-else>Component Image</span>
                 </th>
-                <th v-for="arch in ARCHS" :key="arch" class="text-center px-4 py-3 font-semibold text-gray-700 dark:text-gray-300 w-28 sticky top-0 z-20 bg-gray-200 dark:bg-gray-900/80">{{ arch }}</th>
+                <th v-for="arch in ARCHS" :key="arch" class="text-center px-4 py-3 font-semibold text-gray-700 dark:text-gray-300 w-28">{{ arch }}</th>
               </tr>
             </thead>
             <tbody>
@@ -235,8 +235,7 @@
                       <td
                         v-if="compIdx === 0"
                         :rowspan="group.components.length"
-                        class="px-4 py-2.5 align-top sticky left-0 z-20 border-r border-gray-200 dark:border-gray-700"
-                        :style="{ backgroundColor: 'inherit' }"
+                        class="px-4 py-2.5 align-top border-r border-gray-200 dark:border-gray-700"
                       >
                         <div class="flex items-center gap-1.5 flex-wrap">
                           <span class="text-sm font-medium text-gray-700 dark:text-gray-300">{{ group.name }}</span>
@@ -263,7 +262,7 @@
                       </td>
 
                       <!-- Component cell -->
-                      <td class="px-4 py-2.5 z-10" :class="hasMaturityData ? 'sticky left-[160px]' : 'sticky left-0'" :style="{ backgroundColor: 'inherit' }">
+                      <td class="px-4 py-2.5">
                         <div class="flex items-center gap-2">
                           <span
                             class="font-medium text-gray-900 dark:text-gray-100"
@@ -330,7 +329,7 @@
                   :key="comp.name"
                   class="border-b border-gray-100 dark:border-gray-700/50 hover:bg-gray-50 dark:hover:bg-gray-800/80 transition-colors"
                 >
-                  <td class="px-4 py-2.5 sticky left-0 z-10" :style="{ backgroundColor: 'inherit' }">
+                  <td class="px-4 py-2.5">
                     <div class="flex items-center gap-2">
                       <span
                         class="font-medium text-gray-900 dark:text-gray-100"
@@ -397,7 +396,7 @@
       <div v-if="hasMaturityData && emptyProductComponents.length > 0"
            id="not-found-in-konflux"
            class="bg-white dark:bg-gray-800 rounded-lg border border-amber-200 dark:border-amber-800 overflow-hidden">
-        <div class="overflow-auto max-h-[32rem]" style="scrollbar-width: thin">
+        <div class="overflow-x-auto">
           <table class="w-full text-sm">
             <caption class="caption-top text-left px-4 py-3 bg-amber-50 dark:bg-amber-900/20 border-b border-amber-200 dark:border-amber-800">
               <span class="flex items-center gap-2 text-sm font-semibold text-amber-700 dark:text-amber-300">
@@ -405,11 +404,11 @@
                 {{ emptyProductComponentCount }} component{{ emptyProductComponentCount > 1 ? 's' : '' }} not found in Konflux
               </span>
             </caption>
-            <thead class="sticky top-0 z-10">
+            <thead>
               <tr class="border-b border-gray-200 dark:border-gray-700 bg-gray-200 dark:bg-gray-900/80">
-                <th class="text-left px-4 py-2 font-semibold text-gray-700 dark:text-gray-300 min-w-[160px] sticky top-0 z-20 bg-gray-200 dark:bg-gray-900/80">Product Component</th>
-                <th class="text-left px-4 py-2 font-semibold text-gray-700 dark:text-gray-300 sticky top-0 z-20 bg-gray-200 dark:bg-gray-900/80">Component Image</th>
-                <th v-for="arch in ARCHS" :key="arch" class="text-center px-4 py-2 font-semibold text-gray-700 dark:text-gray-300 w-28 sticky top-0 z-20 bg-gray-200 dark:bg-gray-900/80">{{ arch }}</th>
+                <th class="text-left px-4 py-2 font-semibold text-gray-700 dark:text-gray-300 min-w-[160px]">Product Component</th>
+                <th class="text-left px-4 py-2 font-semibold text-gray-700 dark:text-gray-300">Component Image</th>
+                <th v-for="arch in ARCHS" :key="arch" class="text-center px-4 py-2 font-semibold text-gray-700 dark:text-gray-300 w-28">{{ arch }}</th>
               </tr>
             </thead>
             <tbody>
@@ -477,7 +476,7 @@
       <div v-if="hasMaturityData && unmappedComponents.length > 0"
            id="unknown-product-component"
            class="bg-white dark:bg-gray-800 rounded-lg border border-amber-200 dark:border-amber-800 overflow-hidden">
-        <div class="overflow-auto max-h-[32rem]" style="scrollbar-width: thin">
+        <div class="overflow-x-auto">
           <table class="w-full text-sm">
             <caption class="caption-top text-left px-4 py-3 bg-amber-50 dark:bg-amber-900/20 border-b border-amber-200 dark:border-amber-800">
               <span class="flex items-center gap-2 text-sm font-semibold text-amber-700 dark:text-amber-300">
@@ -485,11 +484,11 @@
                 {{ unmappedCount }} Konflux component{{ unmappedCount > 1 ? 's' : '' }} not matched to a Product Component
               </span>
             </caption>
-            <thead class="sticky top-0 z-10">
+            <thead>
               <tr class="border-b border-gray-200 dark:border-gray-700 bg-gray-200 dark:bg-gray-900/80">
-                <th class="text-left px-4 py-2 font-semibold text-gray-700 dark:text-gray-300 min-w-[160px] sticky top-0 z-20 bg-gray-200 dark:bg-gray-900/80">Product Component</th>
-                <th class="text-left px-4 py-2 font-semibold text-gray-700 dark:text-gray-300 sticky top-0 z-20 bg-gray-200 dark:bg-gray-900/80">Component Image</th>
-                <th v-for="arch in ARCHS" :key="arch" class="text-center px-4 py-2 font-semibold text-gray-700 dark:text-gray-300 w-28 sticky top-0 z-20 bg-gray-200 dark:bg-gray-900/80">{{ arch }}</th>
+                <th class="text-left px-4 py-2 font-semibold text-gray-700 dark:text-gray-300 min-w-[160px]">Product Component</th>
+                <th class="text-left px-4 py-2 font-semibold text-gray-700 dark:text-gray-300">Component Image</th>
+                <th v-for="arch in ARCHS" :key="arch" class="text-center px-4 py-2 font-semibold text-gray-700 dark:text-gray-300 w-28">{{ arch }}</th>
               </tr>
             </thead>
             <tbody>
