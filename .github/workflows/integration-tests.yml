@@ -54,6 +54,9 @@ jobs:
               - 'modules/product-builds/client/views/PackageSearchView.vue'
               - 'modules/product-builds/client/composables/usePackageSearch.js'
               - 'tests/integration/package-analysis.spec.js'
+            product-builds:
+              - 'modules/product-builds/**'
+              - 'tests/integration/product-builds.spec.js'
             releases:
               - 'modules/releases/server/execution/**'
               - 'modules/releases/server/planning/**'
@@ -118,7 +121,7 @@ jobs:
           echo "Changed files:"
           echo "$CHANGED"
 
-          ALL_MODULES='["about-tabs", "ai-impact", "catalyst-showcase", "system-health", "upstream-pulse", "package-analysis", "releases", "tv-fv-delta", "feature-pressure", "pm-pipeline", "sotu-dashboard"]'
+          ALL_MODULES='["about-tabs", "ai-impact", "catalyst-showcase", "system-health", "upstream-pulse", "package-analysis", "product-builds", "releases", "tv-fv-delta", "feature-pressure", "pm-pipeline", "sotu-dashboard"]'
 
           # If shared test infrastructure changed, test all modules
           if echo "$CHANGED" | grep -qE '^tests/integration/(constants|helpers)\.js$'; then
@@ -149,6 +152,8 @@ jobs:
             "^(modules/upstream-pulse/|tests/integration/upstream-pulse\.spec\.js)"
           check_module "package-analysis" \
             "^(modules/product-builds/server/(analysis|index)\.js|modules/product-builds/client/views/PackageAnalysisView\.vue|tests/integration/package-analysis\.spec\.js)"
+          check_module "product-builds" \
+            "^(modules/product-builds/|tests/integration/product-builds\.spec\.js)"
           check_module "releases" \
             "^(modules/releases/server/(execution|planning|rhoai-component-architectures)/|modules/releases/client/views/(FeatureDetailView|ScheduleView)\.vue|modules/releases/client/(execute|plan)/|modules/releases/client/components/ReleaseTimeline\.vue|modules/releases/client/reports/RhoaiComponentArchitecturesReport\.vue|tests/integration/(execution-data|releases|release-timeline)\.spec\.js|tests/integration/execute-helpers\.js)"
           check_module "tv-fv-delta" \
@@ -169,7 +174,7 @@ jobs:
           if [ "${{ github.event_name }}" = "merge_group" ]; then
             MODULES='${{ steps.git-filter.outputs.modules }}'
           elif [ "${{ steps.filter.outputs.shared-test-files }}" == "true" ]; then
-            MODULES='["about-tabs", "ai-impact", "catalyst-showcase", "system-health", "upstream-pulse", "package-analysis", "releases", "tv-fv-delta", "feature-pressure", "pm-pipeline", "sotu-dashboard"]'
+            MODULES='["about-tabs", "ai-impact", "catalyst-showcase", "system-health", "upstream-pulse", "package-analysis", "product-builds", "releases", "tv-fv-delta", "feature-pressure", "pm-pipeline", "sotu-dashboard"]'
           else
             # Use the modules that have direct changes
             MODULES='${{ steps.filter.outputs.changes }}'

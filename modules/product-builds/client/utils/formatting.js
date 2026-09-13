@@ -5,6 +5,16 @@ export function formatDate(iso) {
   })
 }
 
+export function formatShortDate(iso) {
+  if (!iso) return ''
+  // Date-only values (YYYY-MM-DD) are calendar dates; format them in UTC so
+  // they do not shift a day in timezones behind UTC.
+  const dateOnly = /^\d{4}-\d{2}-\d{2}$/.test(iso)
+  return new Date(iso).toLocaleDateString('en-US', {
+    month: 'short', day: 'numeric', year: 'numeric', ...(dateOnly ? { timeZone: 'UTC' } : {})
+  })
+}
+
 export function envBadgeClass(env) {
   if (env === 'production') return 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400'
   if (env === 'stage') return 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400'

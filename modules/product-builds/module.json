@@ -10,6 +10,7 @@
     "entry": "./client/index.js",
     "navItems": [
       { "id": "overview", "label": "Overview", "icon": "LayoutDashboard", "default": true },
+      { "id": "channels", "label": "Channels", "icon": "Layers" },
       { "id": "rhaiis", "label": "RHAIIS", "icon": "PackageOpen" },
       { "id": "rhel-ai", "label": "RHEL AI", "icon": "PackageOpen" },
       { "id": "base-images", "label": "Base Images", "icon": "PackageOpen" },
