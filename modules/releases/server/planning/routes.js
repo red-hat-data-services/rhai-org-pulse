@@ -29,6 +29,7 @@ const healthRoutes = require('./health/health-routes')
 var { buildFeatureReadiness } = require('./feature-readiness')
 var { fetchFeaturesWithTimeout } = require('./feature-query')
 var { extractFirstInProgressAt, extractCustomersFromComments } = require('./bu-feedback-issue')
+var { createCustomerPortalClient, extractLinkedCaseNumbers } = require('./customer-portal')
 
 const { isValidVersionParam } = require('../version-utils')
 
@@ -48,6 +49,9 @@ function isValidVersion(version) {
 module.exports = async function registerPlanningRoutes(router, context) {
   var smartsheetClient = context.smartsheet || require('../../../../shared/server/smartsheet')
   var jiraClient = context.jira || null
+  var customerPortalClient = context.customerPortal || createCustomerPortalClient({
+    offlineToken: context.secrets && context.secrets.CUSTOMER_PORTAL_OFFLINE_TOKEN
+  })
 
   const { storage, requireAuth, requireAdmin, requirePlanningManager, requireScope } = context
   const { readFromStorage, writeToStorage } = storage
@@ -505,7 +509,8 @@ module.exports = async function registerPlanningRoutes(router, context) {
    *       affectedVersions (array of version names from Jira's "Affects Version/s" field),
    *       hasSfdcCases (boolean, derived via JQL since the field is encrypted at rest),
    *       and customerAffected (comma-separated customer names extracted from
-   *       "customer: <name>" patterns in issue comments).
+   *       "customer: <name>" patterns in issue comments, falling back to the
+   *       account name on linked Red Hat Customer Portal cases).
    *       Data is cached server-side for 15 minutes. Pass ?refresh=true to force a live
    *       Jira fetch and update the cache.
    *     parameters:
@@ -529,6 +534,34 @@ module.exports = async function registerPlanningRoutes(router, context) {
     'Inference Engineering Project',
     'OpenShift AI Support'
   ]
+  var LINKED_CASES_PROPERTY = 'sfdc-cases-links'
+  var CUSTOMER_LOOKUP_CONCURRENCY = 5
+
+  async function fetchIssuesWithLinkedCases(jql, fields, options) {
+    if (!jiraClient.jiraRequest) {
+      return jiraClient.fetchAllJqlResults(jql, fields, options)
+    }
+
+    var issues = []
+    var nextPageToken = null
+    while (true) {
+      var params = new URLSearchParams({
+        jql: jql,
+        fields: fields,
+        properties: LINKED_CASES_PROPERTY,
+        maxResults: String(options.maxResults || 100)
+      })
+      if (options.expand) params.set('expand', options.expand)
+      if (nextPageToken) params.set('nextPageToken', nextPageToken)
+
+      var data = await jiraClient.jiraRequest('/rest/api/3/search/jql?' + params)
+      if (!data.issues || data.issues.length === 0) break
+      issues.push.apply(issues, data.issues)
+      if (data.isLast !== false || !data.nextPageToken) break
+      nextPageToken = data.nextPageToken
+    }
+    return issues
+  }
 
   function mapRawIssue(raw, extraFlags) {
     var f = raw.fields || {}
@@ -555,10 +588,53 @@ module.exports = async function registerPlanningRoutes(router, context) {
       labels: allLabels,
       feedbackLabels: feedbackLabels,
       customerAffected: extractCustomersFromComments(f.comment),
+      _linkedCaseNumbers: extractLinkedCaseNumbers(raw.properties && raw.properties[LINKED_CASES_PROPERTY]),
       url: 'https://issues.redhat.com/browse/' + raw.key
     }
     if (extraFlags) Object.assign(issue, extraFlags)
     return issue
+  }
+
+  async function enrichCustomerAffectedFromLinkedCases(issues) {
+    var candidates = issues.filter(function(issue) {
+      return !issue.customerAffected && issue._linkedCaseNumbers.length > 0
+    })
+    var nextIndex = 0
+    var failureCount = 0
+    var firstFailure = ''
+
+    async function worker() {
+      while (nextIndex < candidates.length) {
+        var issue = candidates[nextIndex++]
+        var seen = {}
+        var names = []
+        for (var ci = 0; ci < issue._linkedCaseNumbers.length; ci++) {
+          try {
+            var name = await customerPortalClient.getCustomerName(issue._linkedCaseNumbers[ci])
+            if (name && !seen[name.toLowerCase()]) {
+              seen[name.toLowerCase()] = true
+              names.push(name)
+            }
+          } catch (err) {
+            failureCount++
+            if (!firstFailure) firstFailure = err.message
+          }
+        }
+        if (names.length > 0) issue.customerAffected = names.join(', ')
+      }
+    }
+
+    if (customerPortalClient.isConfigured()) {
+      var workerCount = Math.min(CUSTOMER_LOOKUP_CONCURRENCY, candidates.length)
+      var workers = []
+      for (var wi = 0; wi < workerCount; wi++) workers.push(worker())
+      await Promise.all(workers)
+    }
+
+    for (var i = 0; i < issues.length; i++) delete issues[i]._linkedCaseNumbers
+    if (failureCount > 0) {
+      console.warn('[releases/planning] ' + failureCount + ' Customer Portal case lookup(s) failed: ' + firstFailure)
+    }
   }
 
   function deduplicateRaw(rawIssues) {
@@ -589,7 +665,7 @@ module.exports = async function registerPlanningRoutes(router, context) {
     var jql = 'labels IN ("AIBU_Feedback", "AISSA_Feedback") ORDER BY createdDate DESC'
     var fields = 'summary,status,issuetype,assignee,reporter,priority,resolution,created,updated,duedate,components,fixVersions,versions,labels,resolutiondate,comment'
 
-    var rawPromise = jiraClient.fetchAllJqlResults(jql, fields, { maxResults: 200, expand: 'changelog' })
+    var rawPromise = fetchIssuesWithLinkedCases(jql, fields, { maxResults: 200, expand: 'changelog' })
     var sfdcPromise = fetchKeySet('labels IN ("AIBU_Feedback", "AISSA_Feedback") AND SFDC_Cases_Counter > 0')
     var rawIssues = deduplicateRaw(await rawPromise)
     var sfdcKeys = await sfdcPromise
@@ -597,6 +673,7 @@ module.exports = async function registerPlanningRoutes(router, context) {
     var issues = rawIssues.map(function(raw) {
       return mapRawIssue(raw, { hasSfdcCases: !!sfdcKeys[raw.key] })
     })
+    await enrichCustomerAffectedFromLinkedCases(issues)
 
     var payload = { issues: issues, fetchedAt: new Date().toISOString(), cachedAt: new Date().toISOString() }
     await writeToStorage(BU_FEEDBACK_CACHE_KEY, payload)
@@ -663,7 +740,7 @@ module.exports = async function registerPlanningRoutes(router, context) {
     var jql = scopeJql + ' ORDER BY priority DESC, createdDate DESC'
     var fields = 'summary,status,issuetype,assignee,reporter,priority,resolution,created,updated,duedate,components,fixVersions,versions,labels,resolutiondate,comment'
 
-    var rawPromise = jiraClient.fetchAllJqlResults(jql, fields, { maxResults: 500 })
+    var rawPromise = fetchIssuesWithLinkedCases(jql, fields, { maxResults: 500 })
     var feedbackPromise = fetchKeySet('labels IN ("AIBU_Feedback", "AISSA_Feedback") AND SFDC_Cases_Counter > 0')
     var rawIssues = deduplicateRaw(await rawPromise)
     var feedbackKeys = await feedbackPromise
@@ -675,6 +752,7 @@ module.exports = async function registerPlanningRoutes(router, context) {
         sfdcCasesCount: 0
       })
     })
+    await enrichCustomerAffectedFromLinkedCases(issues)
 
     var payload = { issues: issues, fetchedAt: new Date().toISOString(), cachedAt: new Date().toISOString(), countsResolved: false }
     await writeToStorage(SFDC_ISSUES_CACHE_KEY, payload)
@@ -726,7 +804,9 @@ module.exports = async function registerPlanningRoutes(router, context) {
    *       Returns issues (any status) with SFDC Cases Counter populated from RHOAIENG,
    *       RHAIENG, INFERENG, and RHOAISUP projects. Each issue includes hasFeedbackLabel
    *       (boolean) indicating overlap with the BU feedback report, and affectedVersions
-   *       (array of version names from Jira's "Affects Version/s" field). Cached for 15 minutes.
+   *       (array of version names from Jira's "Affects Version/s" field), and customerAffected
+   *       from issue comments or, as a fallback, linked Customer Portal case account names.
+   *       Cached for 15 minutes.
    *     parameters:
    *       - in: query
    *         name: refresh

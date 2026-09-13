@@ -448,7 +448,7 @@ test.describe('Releases Field and BU Feedback @releases', () => {
     expect(page.errors).toHaveLength(0);
   });
 
-  test('bu-feedback API returns issues with resolved and inProgressAt fields', async ({ request }) => {
+  test('bu-feedback API returns issues with process timestamps and customer affected', async ({ request }) => {
     const apiResponse = await request.get('/api/modules/releases/planning/bu-feedback');
     expect(apiResponse.ok()).toBe(true);
     const body = await apiResponse.json();
@@ -457,6 +457,7 @@ test.describe('Releases Field and BU Feedback @releases', () => {
     if (body.issues.length > 0) {
       expect(body.issues[0]).toHaveProperty('resolved');
       expect(body.issues[0]).toHaveProperty('inProgressAt');
+      expect(body.issues[0]).toHaveProperty('customerAffected');
     }
   });
 
@@ -499,7 +500,7 @@ test.describe('Releases Field and BU Feedback @releases', () => {
     expect(page.errors).toHaveLength(0);
   });
 
-  test('sfdc-issues API returns issues with sfdcCasesCount', async ({ request }) => {
+  test('sfdc-issues API returns case counts and customer affected', async ({ request }) => {
     const apiResponse = await request.get('/api/modules/releases/planning/sfdc-issues');
     expect(apiResponse.ok()).toBe(true);
     const body = await apiResponse.json();
@@ -508,6 +509,7 @@ test.describe('Releases Field and BU Feedback @releases', () => {
     if (body.issues.length > 0) {
       expect(body.issues[0]).toHaveProperty('sfdcCasesCount');
       expect(body.issues[0]).toHaveProperty('hasFeedbackLabel');
+      expect(body.issues[0]).toHaveProperty('customerAffected');
     }
   });
 

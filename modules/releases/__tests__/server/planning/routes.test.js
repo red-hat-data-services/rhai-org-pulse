@@ -195,6 +195,83 @@ describe('release-planning routes', function() {
     })
   })
 
+  describe('customer affected fallback', function() {
+    function rawFeedbackIssue(key, commentText, caseNumber) {
+      return {
+        key: key,
+        properties: { 'sfdc-cases-links': { value: caseNumber } },
+        fields: {
+          summary: 'Customer reported issue',
+          labels: ['AIBU_Feedback'],
+          components: [],
+          fixVersions: [],
+          versions: [],
+          comment: commentText
+            ? { comments: [{ body: { type: 'doc', content: [{ type: 'paragraph', content: [{ type: 'text', text: commentText }] }] } }] }
+            : { comments: [] }
+        }
+      }
+    }
+
+    async function registerFeedbackRouter(rawIssues, customerPortal) {
+      var feedbackRouter = makeRouter()
+      var feedbackStorage = makeStorage({
+        'releases/planning/config.json': { releases: {} }
+      })
+      var jira = {
+        jiraRequest: vi.fn().mockResolvedValue({ issues: rawIssues, isLast: true }),
+        fetchAllJqlResults: vi.fn().mockResolvedValue(rawIssues.map(function(issue) { return { key: issue.key } }))
+      }
+      await registerRoutes(feedbackRouter, {
+        storage: feedbackStorage,
+        requireAuth: function(req, res, next) { next() },
+        requireAdmin: function(req, res, next) { next() },
+        requirePlanningManager: function(req, res, next) { next() },
+        requireScope: function() { return function(req, res, next) { next() } },
+        jira: jira,
+        customerPortal: customerPortal,
+        registerDiagnostics: vi.fn()
+      })
+      return { router: feedbackRouter, jira: jira }
+    }
+
+    it('uses linked Customer Portal cases only when BU feedback comments have no customer', async function() {
+      var customerPortal = {
+        isConfigured: vi.fn().mockReturnValue(true),
+        getCustomerName: vi.fn().mockResolvedValue('Canadian Imperial Bank Of Commerce')
+      }
+      var setup = await registerFeedbackRouter([
+        rawFeedbackIssue('RHOAIENG-94280', '', '04523117'),
+        rawFeedbackIssue('RHOAIENG-94281', 'customer: Comment Customer', '04528409')
+      ], customerPortal)
+
+      var res = await callRoute(setup.router._routes, 'GET', '/bu-feedback', makeReq({ query: { refresh: 'true' } }))
+
+      expect(res._json.issues[0].customerAffected).toBe('Canadian Imperial Bank Of Commerce')
+      expect(res._json.issues[1].customerAffected).toBe('Comment Customer')
+      expect(res._json.issues[0]).not.toHaveProperty('_linkedCaseNumbers')
+      expect(customerPortal.getCustomerName).toHaveBeenCalledTimes(1)
+      expect(customerPortal.getCustomerName).toHaveBeenCalledWith('04523117')
+      expect(setup.jira.jiraRequest.mock.calls[0][0]).toContain('properties=sfdc-cases-links')
+    })
+
+    it('applies the same linked-case fallback to the SFDC table', async function() {
+      var customerPortal = {
+        isConfigured: vi.fn().mockReturnValue(true),
+        getCustomerName: vi.fn().mockResolvedValue('Canadian Imperial Bank Of Commerce')
+      }
+      var setup = await registerFeedbackRouter([
+        rawFeedbackIssue('RHOAIENG-94280', '', '04523117')
+      ], customerPortal)
+
+      var res = await callRoute(setup.router._routes, 'GET', '/sfdc-issues', makeReq({ query: { refresh: 'true' } }))
+
+      expect(res._json.issues[0].customerAffected).toBe('Canadian Imperial Bank Of Commerce')
+      expect(res._json.issues[0]).not.toHaveProperty('_linkedCaseNumbers')
+      expect(customerPortal.getCustomerName).toHaveBeenCalledWith('04523117')
+    })
+  })
+
   // ─── Auth Guards ───
 
   describe('auth guards', function() {

@@ -68,6 +68,11 @@
         "required": false
       },
       {
+        "key": "CUSTOMER_PORTAL_OFFLINE_TOKEN",
+        "description": "Red Hat API offline token used to resolve customer names from Jira Linked Cases",
+        "required": false
+      },
+      {
         "key": "DRAFT_PLANS_GITLAB_TOKEN",
         "description": "GitLab PAT for draft plans data fetching (overrides GITLAB_TOKEN)",
         "required": false

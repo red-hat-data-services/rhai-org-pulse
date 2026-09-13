@@ -258,6 +258,7 @@ Secrets are managed via the **Vault Secrets Operator (VSO)**. Each secret is def
 | `PRODUCT_PAGES_CLIENT_ID` | Optional | Product Pages OAuth client ID |
 | `PRODUCT_PAGES_CLIENT_SECRET` | Optional | Product Pages OAuth client secret |
 | `SMARTSHEET_API_TOKEN` | Optional | Release discovery |
+| `CUSTOMER_PORTAL_OFFLINE_TOKEN` | Optional | Resolve customer names from Jira Linked Cases via the Red Hat Support API (v3 with v1 fallback during the CRM transition) |
 | `FEATURE_TRAFFIC_GITLAB_TOKEN` | Optional | Override GitLab token for CI artifacts |
 | `GITLAB_CEE_REDHAT_DOCS_TOKEN` | Optional | Internal GitLab instance token |
 | `GOOGLE_OAUTH_CLIENT_ID` | Optional | Customer insights OAuth |
