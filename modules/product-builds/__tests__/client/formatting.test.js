@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { getRegistryUrl, getQuayDirectTagUrl, getQuayAllTagsUrl, getDigestUrl } from '../../client/utils/formatting.js'
+import { getRegistryUrl, getQuayDirectTagUrl, getQuayAllTagsUrl, getDigestUrl, formatShortDate } from '../../client/utils/formatting.js'
 
 describe('getRegistryUrl', () => {
   it('returns quay tags URL for quay.io keys', () => {
@@ -85,5 +85,14 @@ describe('getDigestUrl', () => {
 
   it('returns null for null artifact', () => {
     expect(getDigestUrl(null)).toBeNull()
+  })
+})
+
+describe('formatShortDate', () => {
+  it('formats timestamps and keeps date-only values on their calendar day', () => {
+    expect(formatShortDate('2026-09-11')).toBe('Sep 11, 2026')
+    expect(formatShortDate('2026-01-01')).toBe('Jan 1, 2026')
+    expect(formatShortDate('2026-09-11T14:12:00Z')).toMatch(/Sep 1[01], 2026/)
+    expect(formatShortDate('')).toBe('')
   })
 })
