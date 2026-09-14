@@ -2,6 +2,9 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { flushPromises, mount } from '@vue/test-utils'
 
 vi.mock('@shared/client/services/api.js', () => ({ apiRequest: vi.fn() }))
+vi.mock('@shared/client/composables/useAuth', () => ({
+  useAuth: () => ({ isAdmin: { value: true } })
+}))
 
 import { apiRequest } from '@shared/client/services/api.js'
 import AipccMilestonesView from '../../client/views/AipccMilestonesView.vue'

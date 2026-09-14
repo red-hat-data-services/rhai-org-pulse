@@ -21,6 +21,7 @@
 
       <div class="flex flex-wrap items-center gap-2">
         <button
+          v-if="isAdmin"
           type="button"
           :disabled="refreshing"
           class="inline-flex items-center gap-2 px-3 py-2 text-sm font-medium rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-50 transition-colors"
@@ -281,12 +282,14 @@
 import { computed, nextTick, onBeforeUnmount, onMounted, ref } from 'vue'
 import { ChevronDown, ExternalLink, RefreshCw } from 'lucide-vue-next'
 import { apiRequest } from '@shared/client/services/api.js'
+import { useAuth } from '@shared/client/composables/useAuth'
 
 const API_PATH = '/modules/releases/aipcc-milestones'
 const DAY_MS = 24 * 60 * 60 * 1000
 const labelWidth = 220
 const RELEASE_COLORS = ['#2a78d6', '#1baf7a', '#eda100', '#008300', '#4a3aa7', '#e34948', '#e87ba4', '#eb6834']
 const dayOptions = [1, 3, 7, 14, 21, 30, 60, 90]
+const { isAdmin } = useAuth()
 
 const loading = ref(true)
 const refreshing = ref(false)
