@@ -78,6 +78,7 @@ modules/              # AI Eng-specific feature modules (auto-discovered via mod
   customer-insights/  # Customer insights (Google Sheets)
   okr-hub/            # OKR tracking & commitment reports
   product-builds/     # Product build tracking
+  workflow-validation/ # Workflow execution telemetry from OpenSearch
 
 platform/             # AI Eng-specific core UI customizations (About page tabs, etc.)
 

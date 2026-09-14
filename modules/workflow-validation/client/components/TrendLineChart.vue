@@ -1,11 +1,16 @@
 <template>
   <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700/60 p-6">
-    <div class="flex items-center justify-between mb-4">
-      <h3 class="text-base font-semibold text-gray-900 dark:text-gray-100">{{ title }}</h3>
-      <div class="flex items-center gap-4 text-xs text-gray-500 dark:text-gray-400">
-        <span class="flex items-center gap-1.5"><span class="w-3 h-0.5 rounded-full bg-blue-600"></span>Pass rate</span>
-        <span class="flex items-center gap-1.5"><span class="w-3 h-2 rounded-sm bg-gray-300 dark:bg-gray-600"></span>Runs</span>
+    <div class="mb-4">
+      <div class="flex items-center justify-between">
+        <h3 class="text-base font-semibold text-gray-900 dark:text-gray-100">{{ title }}</h3>
+        <div class="flex items-center gap-4 text-xs text-gray-500 dark:text-gray-400">
+          <span class="flex items-center gap-1.5"><span class="w-3 h-0.5 rounded-full bg-blue-600"></span>Pass rate</span>
+          <span class="flex items-center gap-1.5"><span class="w-3 h-2 rounded-sm bg-gray-300 dark:bg-gray-600"></span>Executions</span>
+        </div>
       </div>
+      <p class="mt-1.5 text-xs leading-5 text-gray-500 dark:text-gray-400">
+        Each date is one calendar day within the active filters. The blue line is the percentage of executions with a known outcome that passed; gray bars show all executions recorded that day.
+      </p>
     </div>
     <div v-if="data.length" class="relative" style="height: 260px">
       <Line :data="chartData" :options="chartOptions" />
@@ -36,14 +41,17 @@ const labels = computed(() => props.data.map((d) => {
   return dt.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
 }))
 
-const passRatePct = computed(() => props.data.map((d) => d.total ? Math.round((d.pass / d.total) * 100) : 0))
+const passRatePct = computed(() => props.data.map((d) => {
+  const knownOutcomes = d.pass + d.fail
+  return knownOutcomes ? Math.round((d.pass / knownOutcomes) * 100) : null
+}))
 
 const chartData = computed(() => ({
   labels: labels.value,
   datasets: [
     {
       type: 'bar',
-      label: 'Runs',
+      label: 'Executions',
       data: props.data.map((d) => d.total),
       backgroundColor: 'rgba(156,163,175,0.35)',
       borderRadius: 3,
@@ -78,7 +86,7 @@ const chartOptions = {
       callbacks: {
         label: (ctx) => ctx.dataset.label === 'Pass rate'
           ? `Pass rate: ${ctx.parsed.y}%`
-          : `Runs: ${ctx.parsed.y}`
+          : `Executions: ${ctx.parsed.y}`
       }
     }
   },

@@ -1,141 +1,160 @@
-/**
- * OpenSearch access layer for the Workflow Validation module.
- *
- * The app is a display layer: OpenSearch holds the pre-computed run/bug
- * documents (loaded by an external pipeline). We proxy read-only aggregation
- * and search queries server-side so the browser never talks to OpenSearch
- * directly (avoids CORS and keeps the endpoint private).
- *
- * OPENSEARCH_URL is non-secret configuration — the local POC cluster has the
- * security plugin disabled (plain HTTP, no auth).
- */
+/** Read-only OpenSearch client for workflow-validation telemetry. */
 
-const OS_URL = (process.env.OPENSEARCH_URL || 'http://localhost:9200').replace(/\/$/, '');
-
+const DEFAULT_URL = 'http://localhost:9200';
+const DEFAULT_TIMEOUT_MS = 15_000;
 const RUNS_INDEX = 'workflow-executions';
 const TASKS_INDEX = 'workflow-task-executions';
 const BUGS_INDEX = 'workflow-root-causes';
 
-/**
- * Execute a `_search` against an OpenSearch index.
- * @param {string} index
- * @param {object} body Query DSL body
- * @returns {Promise<object>} Parsed response
- */
-async function osSearch(index, body) {
-  let res;
-  try {
-    res = await fetch(`${OS_URL}/${index}/_search`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(body)
-    });
-  } catch (err) {
-    const e = new Error(`Cannot reach OpenSearch at ${OS_URL}: ${err.message}`);
-    e.code = 'OS_UNREACHABLE';
-    throw e;
-  }
-  if (!res.ok) {
-    const text = await res.text().catch(() => '');
-    const e = new Error(`OpenSearch ${res.status} on ${index}: ${text.slice(0, 300)}`);
-    e.code = 'OS_ERROR';
-    e.status = res.status;
-    throw e;
-  }
-  return res.json();
+function getOpenSearchConfig(secrets = {}, env = process.env) {
+  const url = String(env.WORKFLOW_VALIDATION_OPENSEARCH_URL || DEFAULT_URL).replace(/\/+$/, '');
+  const username = secrets.WORKFLOW_VALIDATION_OPENSEARCH_USERNAME || '';
+  const password = secrets.WORKFLOW_VALIDATION_OPENSEARCH_PASSWORD || '';
+  return { url, username, password, authenticated: !!(username && password) };
 }
 
-/** Simple connectivity + doc-count probe. */
-async function osStatus() {
-  const count = async (index) => {
-    const res = await fetch(`${OS_URL}/${index}/_count`);
-    if (!res.ok) throw new Error(`count ${index} -> ${res.status}`);
-    const json = await res.json();
-    return json.count;
-  };
-  const [executions, tasks, rootCauses] = await Promise.all([
-    count(RUNS_INDEX), count(TASKS_INDEX), count(BUGS_INDEX)
-  ]);
-  return { url: OS_URL, executions, tasks, rootCauses };
+function createOpenSearchClient(config = {}, fetchImpl = fetch) {
+  const url = String(config.url || DEFAULT_URL).replace(/\/+$/, '');
+  const username = config.username || '';
+  const password = config.password || '';
+  const timeoutMs = config.timeoutMs || DEFAULT_TIMEOUT_MS;
+  if ((username && !password) || (!username && password)) {
+    throw new Error('OpenSearch username and password must be configured together');
+  }
+
+  function requestHeaders() {
+    const headers = { 'Content-Type': 'application/json', Accept: 'application/json' };
+    if (username && password) {
+      headers.Authorization = `Basic ${Buffer.from(`${username}:${password}`).toString('base64')}`;
+    }
+    return headers;
+  }
+
+  async function request(path, options = {}) {
+    let response;
+    try {
+      response = await fetchImpl(`${url}${path}`, {
+        ...options,
+        headers: { ...requestHeaders(), ...(options.headers || {}) },
+        signal: options.signal || AbortSignal.timeout(timeoutMs)
+      });
+    } catch (err) {
+      const wrapped = new Error(`Cannot reach OpenSearch: ${err.message}`);
+      wrapped.code = 'OS_UNREACHABLE';
+      throw wrapped;
+    }
+    if (!response.ok) {
+      const body = await response.text().catch(() => '');
+      const wrapped = new Error(`OpenSearch request failed with ${response.status}: ${body.slice(0, 300)}`);
+      wrapped.code = response.status === 401 || response.status === 403 ? 'OS_AUTH' : 'OS_ERROR';
+      wrapped.status = response.status;
+      throw wrapped;
+    }
+    return response.json();
+  }
+
+  const search = (index, body) => request(`/${index}/_search`, {
+    method: 'POST', body: JSON.stringify(body)
+  });
+
+  async function status() {
+    const count = async (index) => (await request(`/${index}/_count`)).count;
+    const [executions, tasks, rootCauses] = await Promise.all([
+      count(RUNS_INDEX), count(TASKS_INDEX), count(BUGS_INDEX)
+    ]);
+    return { executions, tasks, rootCauses };
+  }
+
+  return { search, status };
 }
 
-/**
- * Build the shared bool.filter/must clauses for the RUNS index from query params.
- * @param {object} q Express req.query
- */
-function runFilters(q = {}) {
-  const filter = [];
-  const must = [];
-  if (q.version) filter.push({ term: { rhoai_version: q.version } });
-  if (q.verdict) filter.push({ term: { verdict: q.verdict } });
-  if (q.provider) filter.push({ term: { inference_provider: q.provider } });
-  if (q.model) filter.push({ term: { model: q.model } });
-  if (q.workflow) filter.push({ term: { workflow_label: q.workflow } });
-  if (q.dateFrom || q.dateTo) {
-    const range = {};
-    if (q.dateFrom) range.gte = q.dateFrom;
-    if (q.dateTo) range.lte = q.dateTo;
-    filter.push({ range: { timestamp: range } });
-  }
-  if (q.q) must.push({ match: { summary_text: q.q } });
+function boolQuery(filter, must) {
   const bool = {};
   if (filter.length) bool.filter = filter;
   if (must.length) bool.must = must;
   return Object.keys(bool).length ? { bool } : { match_all: {} };
 }
 
-/** Build bool query for the BUGS index (subset of run filters that apply). */
+function timestampRange(q = {}) {
+  if (!q.dateFrom && !q.dateTo) return null;
+  const range = {};
+  if (q.dateFrom) range.gte = q.dateFrom;
+  if (q.dateTo) {
+    range.lte = /^\d{4}-\d{2}-\d{2}$/.test(q.dateTo)
+      ? `${q.dateTo}T23:59:59.999Z`
+      : q.dateTo;
+  }
+  return { range: { timestamp: range } };
+}
+
+function commonFilters(q = {}, { includeVerdict = true } = {}) {
+  const filter = [];
+  const must = [];
+  if (q.version) filter.push({ term: { rhoai_version: q.version } });
+  if (includeVerdict && q.verdict === 'UNSUCCESSFUL') {
+    filter.push({ terms: { verdict: ['FAIL', 'ERROR'] } });
+  } else if (includeVerdict && q.verdict) {
+    filter.push({ term: { verdict: q.verdict } });
+  }
+  if (q.provider) filter.push({ term: { inference_provider: q.provider } });
+  if (q.model) filter.push({ term: { model: q.model } });
+  if (q.workflow) filter.push({ term: { workflow: q.workflow } });
+  const dateFilter = timestampRange(q);
+  if (dateFilter) filter.push(dateFilter);
+  return { filter, must };
+}
+
+function runFilters(q = {}) {
+  const { filter, must } = commonFilters(q);
+  if (q.q) {
+    const value = `*${String(q.q).replace(/[\\*?]/g, '\\$&')}*`;
+    must.push({ bool: { should: [
+      { wildcard: { workflow: { value, case_insensitive: true } } },
+      { wildcard: { workflow_label: { value, case_insensitive: true } } }
+    ], minimum_should_match: 1 } });
+  }
+  return boolQuery(filter, must);
+}
+
 function bugFilters(q = {}) {
   const filter = [];
   const must = [];
   if (q.version) filter.push({ term: { rhoai_version: q.version } });
   if (q.category) filter.push({ term: { category: q.category } });
   if (q.action) filter.push({ term: { action: q.action } });
-  if (q.opened === 'true') filter.push({ term: { opened: true } });
-  if (q.workflow) filter.push({ term: { workflow: q.workflow } });
-  if (q.dateFrom || q.dateTo) {
-    const range = {};
-    if (q.dateFrom) range.gte = q.dateFrom;
-    if (q.dateTo) range.lte = q.dateTo;
-    filter.push({ range: { timestamp: range } });
+  if (q.opened === 'true' || q.opened === 'false') filter.push({ term: { opened: q.opened === 'true' } });
+  if (q.workflow) {
+    filter.push({ bool: { should: [
+      { term: { workflow: q.workflow } },
+      { term: { impacted_workflows: q.workflow } }
+    ], minimum_should_match: 1 } });
   }
-  if (q.q) must.push({ match: { error_summary: q.q } });
-  const bool = {};
-  if (filter.length) bool.filter = filter;
-  if (must.length) bool.must = must;
-  return Object.keys(bool).length ? { bool } : { match_all: {} };
+  const dateFilter = timestampRange(q);
+  if (dateFilter) filter.push(dateFilter);
+  if (q.q) {
+    const value = `*${String(q.q).replace(/[\\*?]/g, '\\$&')}*`;
+    must.push({ bool: { should: [
+      { match: { error_summary: q.q } },
+      { match: { reasoning: q.q } },
+      { wildcard: { bug_key: { value, case_insensitive: true } } },
+      { wildcard: { workflow: { value, case_insensitive: true } } },
+      { wildcard: { component: { value, case_insensitive: true } } },
+      { wildcard: { rhoaieng_component: { value, case_insensitive: true } } }
+    ], minimum_should_match: 1 } });
+  }
+  return boolQuery(filter, must);
 }
 
-/** Filters for independently indexed task executions. */
 function taskFilters(q = {}) {
-  const filter = [];
-  const must = [];
-  if (q.version) filter.push({ term: { rhoai_version: q.version } });
-  if (q.verdict) filter.push({ term: { status: q.verdict } });
-  if (q.provider) filter.push({ term: { inference_provider: q.provider } });
-  if (q.model) filter.push({ term: { model: q.model } });
-  if (q.workflow) filter.push({ term: { workflow_label: q.workflow } });
-  if (q.dateFrom || q.dateTo) {
-    const range = {};
-    if (q.dateFrom) range.gte = q.dateFrom;
-    if (q.dateTo) range.lte = q.dateTo;
-    filter.push({ range: { timestamp: range } });
-  }
+  // A workflow execution verdict is not a task status. The route layer joins
+  // verdict-filtered executions to task documents through execution_id.
+  const { filter, must } = commonFilters(q, { includeVerdict: false });
   if (q.q) must.push({ match: { reason: q.q } });
-  const bool = {};
-  if (filter.length) bool.filter = filter;
-  if (must.length) bool.must = must;
-  return Object.keys(bool).length ? { bool } : { match_all: {} };
+  return boolQuery(filter, must);
 }
 
 module.exports = {
-  OS_URL,
-  RUNS_INDEX,
-  TASKS_INDEX,
-  BUGS_INDEX,
-  osSearch,
-  osStatus,
-  runFilters,
-  taskFilters,
-  bugFilters
+  RUNS_INDEX, TASKS_INDEX, BUGS_INDEX,
+  getOpenSearchConfig, createOpenSearchClient,
+  runFilters, taskFilters, bugFilters, timestampRange
 };

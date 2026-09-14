@@ -2,7 +2,7 @@
   "name": "Workflow Validation",
   "slug": "workflow-validation",
   "description": "AI-driven RHOAI workflow executions, task outcomes, cost, and root causes",
-  "icon": "flask-conical",
+  "icon": "Database",
   "order": 40,
   "defaultEnabled": true,
   "requires": [],
@@ -10,10 +10,10 @@
     "entry": "./client/index.js",
     "navItems": [
       { "id": "overview", "label": "Dashboard", "icon": "LayoutDashboard", "default": true },
-      { "id": "runs", "label": "Runs", "icon": "clipboard-list" },
-      { "id": "workflows", "label": "Workflows", "icon": "Kanban" },
+      { "id": "runs", "label": "Test Results", "icon": "clipboard-list" },
+      { "id": "workflows", "label": "Test Trends", "icon": "Kanban" },
       { "id": "compare", "label": "Compare", "icon": "git-branch" },
-      { "id": "activity", "label": "Activity", "icon": "activity" }
+      { "id": "activity", "label": "Jira", "icon": "activity" }
     ],
     "hiddenRoutes": {
       "run-detail": "runs",
@@ -22,5 +22,21 @@
   },
   "server": {
     "entry": "./server/index.js"
+  },
+  "secrets": {
+    "module": [
+      {
+        "key": "WORKFLOW_VALIDATION_OPENSEARCH_USERNAME",
+        "description": "Read-only OpenSearch HTTP Basic username",
+        "required": false,
+        "group": "opensearch-auth"
+      },
+      {
+        "key": "WORKFLOW_VALIDATION_OPENSEARCH_PASSWORD",
+        "description": "Read-only OpenSearch HTTP Basic password",
+        "required": false,
+        "group": "opensearch-auth"
+      }
+    ]
   }
 }
