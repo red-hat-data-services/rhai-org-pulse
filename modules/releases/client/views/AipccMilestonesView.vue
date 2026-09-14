@@ -2,6 +2,14 @@
   <div class="max-w-[1400px] mx-auto px-4 py-6 lg:px-8">
     <header class="flex flex-wrap items-start justify-between gap-4 mb-8">
       <div>
+        <button
+          type="button"
+          class="mb-3 inline-flex items-center gap-1.5 text-sm font-semibold text-primary-600 hover:underline dark:text-primary-400"
+          @click="emit('show-schedule')"
+        >
+          <ArrowLeft class="h-4 w-4" />
+          Release Schedule
+        </button>
         <h1 class="text-2xl font-bold text-gray-900 dark:text-gray-100">AIPCC Release Milestones</h1>
         <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">AIPCC release milestones and timeline</p>
         <div class="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-gray-400 dark:text-gray-500">
@@ -280,7 +288,7 @@
 
 <script setup>
 import { computed, nextTick, onBeforeUnmount, onMounted, ref } from 'vue'
-import { ChevronDown, ExternalLink, RefreshCw } from 'lucide-vue-next'
+import { ArrowLeft, ChevronDown, ExternalLink, RefreshCw } from 'lucide-vue-next'
 import { apiRequest } from '@shared/client/services/api.js'
 import { useAuth } from '@shared/client/composables/useAuth'
 
@@ -290,6 +298,7 @@ const labelWidth = 220
 const RELEASE_COLORS = ['#2a78d6', '#1baf7a', '#eda100', '#008300', '#4a3aa7', '#e34948', '#e87ba4', '#eb6834']
 const dayOptions = [1, 3, 7, 14, 21, 30, 60, 90]
 const { isAdmin } = useAuth()
+const emit = defineEmits(['show-schedule'])
 
 const loading = ref(true)
 const refreshing = ref(false)

@@ -68,7 +68,7 @@ export const viewOwners = {
   'releases/plan':                                 'Alex Corvin',
   'releases/registry':                             'Alex Corvin',
   'releases/reports':                              'Alex Corvin',
-  'releases/schedule':                             'Einat Pacifici',
+  'releases/schedule':                             'Paul McCarthy',
 
   // system-health
   'system-health/component-maturity':              'Dana Gutride',
@@ -114,9 +114,6 @@ export const viewOwners = {
 
   // releases > registry
   'releases/registry/hygiene':                     'Alex Corvin',
-
-  // releases > schedule
-  'releases/schedule/release-schedule':            'Einat Pacifici',
 
   // system-health > component-maturity
   'system-health/component-maturity/disconnected': 'Ajay Jaganathan',

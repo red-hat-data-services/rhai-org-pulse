@@ -208,13 +208,14 @@ test.describe('Releases Views @releases', () => {
     await testView(page, 'schedule', 'Schedule');
   });
 
-  test('should open AIPCC Milestones from the Schedule tab', async ({ page }) => {
+  test('should open AIPCC Milestones from the Schedule pill', async ({ page }) => {
     await page.goto('/#/releases/schedule');
     await page.waitForLoadState('networkidle');
 
-    const aipccTab = page.getByRole('button', { name: 'AIPCC Milestones' });
-    await expect(aipccTab).toBeVisible();
-    await aipccTab.click();
+    await expect(page.getByRole('button', { name: 'AIPCC Milestones' })).toHaveCount(0);
+    const aipccPill = page.getByRole('button', { name: 'AIPCC', exact: true });
+    await expect(aipccPill).toBeVisible();
+    await aipccPill.click();
 
     await expect(page.getByRole('heading', { name: 'AIPCC Release Milestones' })).toBeVisible();
     await expect(page.getByText('Upcoming Milestones')).toBeVisible();
