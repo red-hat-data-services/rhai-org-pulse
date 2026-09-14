@@ -6,7 +6,7 @@ const { session } = useDraftPlans()
 const iframeRef = ref(null)
 
 // Pinned to specific commit — update via PR to rhai-org-pulse
-const PLANNER_URL = 'https://htmlpreview.github.io/?https://github.com/yuvalluria/rhai-release-planner/blob/aceeae0/index.html'
+const PLANNER_URL = 'https://htmlpreview.github.io/?https://github.com/yuvalluria/rhai-release-planner/blob/9b91bf6/index.html'
 
 function onIframeLoad() {
   const actor = session.value && session.value.actor
