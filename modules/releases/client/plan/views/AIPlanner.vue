@@ -22,7 +22,7 @@ function onIframeLoad() {
       :src="PLANNER_URL"
       style="width: 100%; height: 100%; border: none;"
       title="AI-First Release Planner"
-      sandbox="allow-scripts"
+      sandbox="allow-scripts allow-same-origin"
       @load="onIframeLoad"
     />
   </div>

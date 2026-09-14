@@ -1900,6 +1900,7 @@ test.describe('Releases AI Planner tab @releases', () => {
 
     const iframe = page.locator('iframe[title="AI-First Release Planner"]');
     await expect(iframe).toBeVisible();
+    await expect(iframe).toHaveAttribute('sandbox', 'allow-scripts allow-same-origin');
 
     const src = await iframe.getAttribute('src');
     expect(src).toContain('rhai-release-planner');
