@@ -2,7 +2,7 @@
   <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700/60 p-6">
     <div class="flex items-center justify-between mb-4">
       <h3 class="text-base font-semibold text-gray-900 dark:text-gray-100">Pass Rate by RHOAI Version</h3>
-      <span class="text-xs text-gray-500 dark:text-gray-400">bar height = pass rate · label = run count</span>
+      <span class="text-xs text-gray-500 dark:text-gray-400">bar height = pass rate · label = execution count</span>
     </div>
     <div v-if="data.length" class="relative" style="height: 260px">
       <Bar :data="chartData" :options="chartOptions" />
@@ -55,7 +55,7 @@ const chartOptions = computed(() => ({
       callbacks: {
         label: (ctx) => {
           const d = props.data[ctx.dataIndex]
-          return `${ctx.parsed.y}% pass · ${d.runs} run${d.runs === 1 ? '' : 's'}`
+          return `${ctx.parsed.y}% pass · ${d.runs} execution${d.runs === 1 ? '' : 's'}`
         }
       }
     }

@@ -57,3 +57,4 @@ journal/
 modules/team-tracker
 shared
 src
+.ibis.json

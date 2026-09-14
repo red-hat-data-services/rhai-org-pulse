@@ -1,11 +1,11 @@
 <template>
   <div>
     <div class="mb-4">
-      <h2 class="text-2xl font-bold text-gray-900 dark:text-gray-100">Workflows</h2>
-      <p class="text-sm text-gray-500 dark:text-gray-400 mt-0.5">Every validated workflow with its pass rate and latest result. Click for full history.</p>
+      <h2 class="text-2xl font-bold text-gray-900 dark:text-gray-100">Test Trends</h2>
+      <p class="text-sm text-gray-500 dark:text-gray-400 mt-0.5">Results grouped by test. Select a test to view its execution history and trends.</p>
     </div>
 
-    <FilterBar @change="load" />
+    <FilterBar :show-verdict="false" search-placeholder="Search test names…" @change="load" />
 
     <div v-if="unreachable" class="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-xl p-10 text-center">
       <ServerCrashIcon :size="28" class="mx-auto mb-3 text-amber-500" />
@@ -31,38 +31,57 @@
         >{{ t.tag }} <span class="opacity-60">{{ t.count }}</span></button>
       </div>
 
-      <div v-if="loading" class="text-center py-10 text-gray-400 dark:text-gray-500">Loading workflows…</div>
-
-      <div v-else class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
-        <button
-          v-for="w in filteredWorkflows"
-          :key="w.workflow"
-          class="text-left bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700/60 p-5 hover:shadow-md hover:border-gray-200 dark:hover:border-gray-600 transition"
-          @click="openHistory(w)"
-        >
-          <div class="flex items-start justify-between gap-3 mb-3">
-            <h3 class="font-semibold text-gray-900 dark:text-gray-100 text-sm leading-snug">{{ w.workflow }}</h3>
-            <StatusBadge :value="w.latestVerdict" />
-          </div>
-
-          <div class="flex items-center gap-2 mb-3">
-            <div class="flex-1 h-2 rounded-full bg-gray-100 dark:bg-gray-700 overflow-hidden">
-              <div class="h-full rounded-full" :class="barColor(w.passRate)" :style="{ width: pct(w.passRate) }"></div>
-            </div>
-            <span class="font-mono text-xs text-gray-600 dark:text-gray-300 w-10 text-right">{{ formatPercent(w.passRate) }}</span>
-          </div>
-
-          <div class="flex flex-wrap gap-x-4 gap-y-1 text-xs text-gray-500 dark:text-gray-400">
-            <span>{{ w.runs }} run{{ w.runs === 1 ? '' : 's' }}</span>
-            <span>{{ formatUsd(w.aiCost) }} AI</span>
-            <span>{{ formatDuration(w.avgDuration) }} avg</span>
-            <span v-if="w.bugs" class="text-red-600 dark:text-red-400 font-medium">{{ w.bugs }} bug{{ w.bugs === 1 ? '' : 's' }}</span>
-            <span v-if="w.latestVersion" class="ml-auto font-mono">latest {{ w.latestVersion }}</span>
-          </div>
-        </button>
+      <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700/60 overflow-hidden">
+        <div class="overflow-x-auto">
+          <table class="w-full text-sm">
+            <thead>
+              <tr class="text-left text-xs uppercase tracking-wide text-gray-500 dark:text-gray-400 border-b border-gray-100 dark:border-gray-700/60">
+                <th class="px-5 py-3 font-semibold"><button @click="setSort('workflowLabel')">Test {{ sortMark('workflowLabel') }}</button></th>
+                <th class="px-4 py-3 font-semibold min-w-52"><button @click="setSort('passRate')">Pass rate {{ sortMark('passRate') }}</button></th>
+                <th class="px-4 py-3 font-semibold text-right"><button @click="setSort('runs')">Executions {{ sortMark('runs') }}</button></th>
+                <th class="px-4 py-3 font-semibold"><button @click="setSort('latestVerdict')">Latest result {{ sortMark('latestVerdict') }}</button></th>
+                <th v-if="costsVisible" class="px-4 py-3 font-semibold text-right">AI cost</th>
+                <th class="px-4 py-3 font-semibold min-w-72">Product bugs observed</th>
+                <th class="px-4 py-3 font-semibold"><button @click="setSort('latestVersion')">Latest version {{ sortMark('latestVersion') }}</button></th>
+                <th class="px-4 py-3 font-semibold"><button @click="setSort('latestTimestamp')">Last executed {{ sortMark('latestTimestamp') }}</button></th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr v-if="loading">
+                <td :colspan="costsVisible ? 8 : 7" class="px-5 py-10 text-center text-gray-400 dark:text-gray-500">Loading test trends…</td>
+              </tr>
+              <tr
+                v-for="w in filteredWorkflows"
+                v-else
+                :key="w.workflow"
+                tabindex="0"
+                class="border-b border-gray-50 dark:border-gray-700/40 hover:bg-gray-50 dark:hover:bg-gray-700/30 cursor-pointer"
+                @click="openHistory(w)"
+                @keydown.enter="openHistory(w)"
+              >
+                <td class="px-5 py-3 font-medium text-gray-800 dark:text-gray-200">{{ w.workflowLabel || w.workflow }}</td>
+                <td class="px-4 py-3">
+                  <div class="flex items-center gap-3">
+                    <div class="w-32 h-2 rounded-full bg-gray-100 dark:bg-gray-700 overflow-hidden" aria-hidden="true">
+                      <div class="h-full rounded-full" :class="barColor(w.passRate)" :style="{ width: pct(w.passRate) }"></div>
+                    </div>
+                    <span class="font-mono text-xs text-gray-600 dark:text-gray-300">{{ formatPercent(w.passRate) }}</span>
+                  </div>
+                </td>
+                <td class="px-4 py-3 text-right font-mono text-gray-600 dark:text-gray-300">{{ w.runs }}</td>
+                <td class="px-4 py-3"><StatusBadge :value="w.latestVerdict" /></td>
+                <td v-if="costsVisible" class="px-4 py-3 text-right font-mono text-gray-600 dark:text-gray-300">{{ formatUsd(w.aiCost) }}</td>
+                <td class="px-4 py-3"><ProductBugStatus :findings="w.productBugs" /></td>
+                <td class="px-4 py-3 font-mono text-xs text-gray-600 dark:text-gray-300">{{ w.latestVersion || '—' }}</td>
+                <td class="px-4 py-3 text-xs text-gray-500 dark:text-gray-400 whitespace-nowrap">{{ formatDate(w.latestTimestamp) }}</td>
+              </tr>
+              <tr v-if="!loading && !filteredWorkflows.length">
+                <td :colspan="costsVisible ? 8 : 7" class="px-5 py-10 text-center text-gray-400 dark:text-gray-500">No tests match the current filters</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
       </div>
-
-      <p v-if="!loading && !filteredWorkflows.length" class="text-center py-10 text-gray-400 dark:text-gray-500">No workflows match the current filters</p>
     </template>
   </div>
 </template>
@@ -71,20 +90,27 @@
 import { computed, inject, onMounted, ref } from 'vue'
 import { ServerCrash as ServerCrashIcon } from 'lucide-vue-next'
 import FilterBar from '../components/FilterBar.vue'
+import ProductBugStatus from '../components/ProductBugStatus.vue'
 import StatusBadge from '../components/StatusBadge.vue'
-import { useWorkflowValidation, formatUsd, formatDuration, formatPercent } from '../composables/useWorkflowValidation'
+import { useCostVisibility } from '../composables/useCostVisibility'
+import { compareTableValues, filters, useWorkflowValidation, formatUsd, formatPercent, formatDate } from '../composables/useWorkflowValidation'
 
 const nav = inject('moduleNav')
 const { getWorkflows } = useWorkflowValidation()
+const costsVisible = useCostVisibility()
 
 const workflows = ref([])
 const tags = ref([])
 const activeTag = ref('')
 const loading = ref(false)
 const unreachable = ref('')
+const sortBy = ref('latestTimestamp')
+const sortDir = ref('desc')
 
 const filteredWorkflows = computed(() =>
-  activeTag.value ? workflows.value.filter((w) => w.tag === activeTag.value) : workflows.value
+  (activeTag.value ? workflows.value.filter((w) => (w.tags || []).includes(activeTag.value)) : workflows.value)
+    .slice()
+    .sort((a, b) => compareTableValues(a[sortBy.value], b[sortBy.value], sortDir.value))
 )
 
 function pct(rate) { return (rate == null ? 0 : Math.round(rate * 100)) + '%' }
@@ -93,24 +119,32 @@ function barColor(rate) {
   return rate >= 0.9 ? 'bg-green-500' : rate >= 0.7 ? 'bg-amber-500' : 'bg-red-500'
 }
 function openHistory(w) { nav.navigateTo('workflow-history', { workflow: w.workflow }) }
+function setSort(column) {
+  sortDir.value = sortBy.value === column && sortDir.value === 'desc' ? 'asc' : 'desc'
+  sortBy.value = column
+}
+function sortMark(column) { return sortBy.value === column ? (sortDir.value === 'desc' ? '↓' : '↑') : '' }
 
 async function load() {
   loading.value = true
   unreachable.value = ''
   try {
-    const data = await getWorkflows()
+    const data = await getWorkflows({ verdict: '' })
     workflows.value = data.workflows
     tags.value = data.tags
   } catch (err) {
     if (err.status === 503 || err.data?.code === 'OS_UNREACHABLE') {
       unreachable.value = err.data?.error || err.message
     } else {
-      unreachable.value = err.message || 'Failed to load workflows'
+      unreachable.value = err.message || 'Failed to load test trends'
     }
   } finally {
     loading.value = false
   }
 }
 
-onMounted(load)
+onMounted(() => {
+  filters.q = ''
+  load()
+})
 </script>

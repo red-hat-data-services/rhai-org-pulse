@@ -1,13 +1,13 @@
 <template>
   <div>
     <div class="mb-4">
-      <h2 class="text-2xl font-bold text-gray-900 dark:text-gray-100">Activity</h2>
+      <h2 class="text-2xl font-bold text-gray-900 dark:text-gray-100">Jira</h2>
       <p class="text-sm text-gray-500 dark:text-gray-400 mt-0.5">
-        Root causes classified by the RCA agent, including JIRA and spec-fix actions.
+        Product bug occurrences observed by workflow validation and their linked Jira issues.
       </p>
     </div>
 
-    <FilterBar @change="reload" />
+    <FilterBar :show-verdict="false" show-test search-placeholder="Search Jira keys, tests, components, or bug details…" @change="reload" />
 
     <div v-if="unreachable" class="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-xl p-10 text-center">
       <ServerCrashIcon :size="28" class="mx-auto mb-3 text-amber-500" />
@@ -18,56 +18,33 @@
     <template v-else>
       <!-- KPIs -->
       <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-        <MetricCard :value="kpis.total" label="Root Causes" tone="amber" />
-        <MetricCard :value="kpis.opened" label="Opened (Filed)" tone="red" />
-        <MetricCard :value="kpis.distinctJira" label="Distinct JIRA" tone="teal" />
-        <MetricCard :value="specFixCount" label="Spec Fixes" tone="neutral" />
-      </div>
-
-      <!-- Action filter chips -->
-      <div class="flex flex-wrap items-center gap-2 mb-5">
-        <span class="text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400 mr-1">Activity type</span>
-        <button
-          class="px-3 py-1 rounded-full text-xs font-medium border transition"
-          :class="!filters.action ? 'bg-red-600 text-white border-red-600' : 'bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-300 border-gray-200 dark:border-gray-600'"
-          @click="setAction('')"
-        >All</button>
-        <button
-          v-for="a in byAction"
-          :key="a.action"
-          class="px-3 py-1 rounded-full text-xs font-medium border transition inline-flex items-center gap-1.5"
-          :class="filters.action === a.action ? 'bg-red-600 text-white border-red-600' : 'bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-300 border-gray-200 dark:border-gray-600'"
-          @click="setAction(a.action)"
-        >{{ actionLabel(a.action) }} <span class="opacity-60">{{ a.count }}</span></button>
-      </div>
-
-      <!-- Data-source note -->
-      <div class="bg-blue-50 dark:bg-blue-900/20 border border-blue-100 dark:border-blue-800/60 rounded-lg px-4 py-2.5 mb-6 text-xs text-blue-800 dark:text-blue-300 flex items-start gap-2">
-        <InfoIcon :size="15" class="mt-0.5 shrink-0" />
-        <span>JIRA status shown reflects the value captured at indexing time (no live JIRA call in this POC), and spec-fix merge-request links are not present in the dataset.</span>
+        <MetricCard :value="kpis.total" label="Product Bug Occurrences" tone="amber" />
+        <MetricCard :value="kpis.opened" label="New Jira Issues" tone="red" />
+        <MetricCard :value="kpis.distinctJira" label="Distinct Jira Issues" tone="teal" />
+        <MetricCard :value="existingCount" label="Existing Bug Occurrences" tone="neutral" />
       </div>
 
       <!-- Activity feed -->
       <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700/60 overflow-hidden">
         <div class="px-6 py-4 border-b border-gray-100 dark:border-gray-700/60 flex items-center justify-between">
-          <h3 class="text-base font-semibold text-gray-900 dark:text-gray-100">Activity Feed</h3>
+          <h3 class="text-base font-semibold text-gray-900 dark:text-gray-100">Product Bug Occurrences</h3>
           <span class="text-xs text-gray-500 dark:text-gray-400">{{ total }} records</span>
         </div>
-        <div v-if="loading" class="px-6 py-10 text-center text-gray-400 dark:text-gray-500">Loading activity…</div>
+        <div v-if="loading" class="px-6 py-10 text-center text-gray-400 dark:text-gray-500">Loading product bugs…</div>
         <div v-else-if="bugs.length" class="divide-y divide-gray-50 dark:divide-gray-700/40">
-          <BugRow v-for="b in bugs" :key="b.id" :bug="b" />
+          <BugRow v-for="b in bugs" :key="b.id" :bug="b" @open-test="openTest" />
         </div>
-        <p v-else class="px-6 py-10 text-center text-sm text-gray-400 dark:text-gray-500">No activity matches the current filters</p>
+        <p v-else class="px-6 py-10 text-center text-sm text-gray-400 dark:text-gray-500">No product bugs match the current filters</p>
 
         <div class="flex items-center justify-between px-6 py-3 border-t border-gray-100 dark:border-gray-700/60 text-sm">
           <span class="text-gray-500 dark:text-gray-400">
-            {{ total ? (page * size + 1) : 0 }}–{{ Math.min((page + 1) * size, total) }} of {{ total }}
+            Showing {{ bugs.length }} of {{ total }}
           </span>
           <div class="flex items-center gap-2">
             <button class="px-3 py-1 rounded-lg border border-gray-200 dark:border-gray-600 text-gray-600 dark:text-gray-300 disabled:opacity-40 hover:bg-gray-50 dark:hover:bg-gray-700"
-              :disabled="page === 0 || loading" @click="go(page - 1)">Prev</button>
+              :disabled="!cursorHistory.length || loading" @click="previous">Prev</button>
             <button class="px-3 py-1 rounded-lg border border-gray-200 dark:border-gray-600 text-gray-600 dark:text-gray-300 disabled:opacity-40 hover:bg-gray-50 dark:hover:bg-gray-700"
-              :disabled="(page + 1) * size >= total || loading" @click="go(page + 1)">Next</button>
+              :disabled="!nextCursor || loading" @click="next">Next</button>
           </div>
         </div>
       </div>
@@ -76,53 +53,61 @@
 </template>
 
 <script setup>
-import { computed, onMounted, reactive, ref } from 'vue'
-import { ServerCrash as ServerCrashIcon, Info as InfoIcon } from 'lucide-vue-next'
+import { computed, inject, onMounted, reactive, ref } from 'vue'
+import { ServerCrash as ServerCrashIcon } from 'lucide-vue-next'
 import FilterBar from '../components/FilterBar.vue'
 import MetricCard from '../components/MetricCard.vue'
 import BugRow from '../components/BugRow.vue'
 import { filters, useWorkflowValidation } from '../composables/useWorkflowValidation'
 
 const { getBugs } = useWorkflowValidation()
+const nav = inject('moduleNav')
 
 const bugs = ref([])
 const total = ref(0)
-const page = ref(0)
 const size = ref(50)
+const cursor = ref('')
+const nextCursor = ref(null)
+const cursorHistory = ref([])
 const loading = ref(false)
 const unreachable = ref('')
 const kpis = reactive({ total: 0, opened: 0, distinctJira: 0 })
 const byAction = ref([])
 
-const specFixCount = computed(() => (byAction.value.find((a) => a.action === 'SPEC_FIX') || {}).count || 0)
-
-function actionLabel(a) {
-  return { FILED: 'Filed', MATCH: 'Matched', EXISTING: 'Existing', SPEC_FIX: 'Spec fix', NONE: 'No action' }[a] || a
-}
+const existingCount = computed(() => byAction.value
+  .filter((item) => ['EXISTING', 'MATCH'].includes(item.action))
+  .reduce((total, item) => total + item.count, 0))
 
 async function load() {
+  filters.category = 'PRODUCT_BUG'
+  filters.action = ''
+  filters.verdict = ''
   loading.value = true
   unreachable.value = ''
   try {
-    const data = await getBugs(page.value, size.value)
+    const data = await getBugs(cursor.value, size.value)
     bugs.value = data.bugs
     total.value = data.total
+    nextCursor.value = data.nextCursor
     Object.assign(kpis, data.kpis)
     byAction.value = data.byAction
   } catch (err) {
     if (err.status === 503 || err.data?.code === 'OS_UNREACHABLE') {
       unreachable.value = err.data?.error || err.message
     } else {
-      unreachable.value = err.message || 'Failed to load activity'
+      unreachable.value = err.message || 'Failed to load product bugs'
     }
   } finally {
     loading.value = false
   }
 }
 
-function reload() { page.value = 0; load() }
-function go(p) { page.value = p; load() }
-function setAction(a) { filters.action = a; reload() }
-
-onMounted(load)
+function reload() { cursor.value = ''; cursorHistory.value = []; load() }
+function openTest(executionId) { nav.navigateTo('run-detail', { runKey: executionId }) }
+function next() { cursorHistory.value.push(cursor.value); cursor.value = nextCursor.value; load() }
+function previous() { cursor.value = cursorHistory.value.pop() || ''; load() }
+onMounted(() => {
+  filters.q = ''
+  load()
+})
 </script>

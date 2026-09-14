@@ -65,6 +65,17 @@ oc patch secret team-tracker-secrets \
   -n team-tracker \
   --type merge \
   -p "{\"stringData\":{\"SMARTSHEET_API_TOKEN\":\"$(tr -d '\n' < ~/.your-smartsheet-token)\"}}"
+
+# Optional: Workflow Validation read-only OpenSearch credentials. Copy values
+# from the source namespace without writing them to disk or source control.
+SOURCE_NAMESPACE=workflow-validation-opensearch
+TARGET_NAMESPACE=team-tracker
+WORKFLOW_VALIDATION_OPENSEARCH_USERNAME=$(oc -n "$SOURCE_NAMESPACE" get secret opensearch-reader-credentials -o jsonpath='{.data.username}' | base64 -d)
+WORKFLOW_VALIDATION_OPENSEARCH_PASSWORD=$(oc -n "$SOURCE_NAMESPACE" get secret opensearch-reader-credentials -o jsonpath='{.data.password}' | base64 -d)
+oc patch secret team-tracker-secrets -n "$TARGET_NAMESPACE" --type merge \
+  -p "$(jq -n --arg username "$WORKFLOW_VALIDATION_OPENSEARCH_USERNAME" --arg password "$WORKFLOW_VALIDATION_OPENSEARCH_PASSWORD" \
+    '{stringData:{WORKFLOW_VALIDATION_OPENSEARCH_USERNAME:$username,WORKFLOW_VALIDATION_OPENSEARCH_PASSWORD:$password}}')"
+unset WORKFLOW_VALIDATION_OPENSEARCH_USERNAME WORKFLOW_VALIDATION_OPENSEARCH_PASSWORD
 ```
 
 ## 3. Build container images
