@@ -1,0 +1,24 @@
+{
+  "fetchedAt": "2026-09-14T09:00:00.000Z",
+  "source": {
+    "spreadsheetId": "10OccyDM5P1UZX1ldaoPLVKbL4HKgh7cCY3Oiy_xKcX8",
+    "sheetName": "tpm_source_of_truth",
+    "url": "https://docs.google.com/spreadsheets/d/10OccyDM5P1UZX1ldaoPLVKbL4HKgh7cCY3Oiy_xKcX8/edit#gid=0"
+  },
+  "milestoneCount": 2,
+  "releases": [
+    {
+      "name": "RH AI 3.6 EA1",
+      "type": "ea",
+      "phases": [
+        {
+          "name": "Release",
+          "milestones": [
+            { "name": "Push to stage", "startDate": "2026-09-14", "targetDate": "2026-09-15" },
+            { "name": "Early access", "startDate": null, "targetDate": "2026-09-21" }
+          ]
+        }
+      ]
+    }
+  ]
+}

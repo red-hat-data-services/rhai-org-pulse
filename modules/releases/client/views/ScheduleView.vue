@@ -86,6 +86,11 @@
                 : 'bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-400 border-gray-300 dark:border-gray-600 hover:border-gray-400 dark:hover:border-gray-500'"
             >{{ s }}</button>
           </template>
+          <button
+            type="button"
+            class="px-3 py-1 rounded-full text-xs font-semibold transition-colors border bg-white dark:bg-gray-800 text-violet-700 dark:text-violet-300 border-violet-300 dark:border-violet-600 hover:bg-violet-50 dark:hover:bg-violet-900/30"
+            @click="emit('show-aipcc')"
+          >AIPCC</button>
         </div>
         <label class="flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400 cursor-pointer select-none shrink-0">
           <input type="checkbox" v-model="hideReleased" class="rounded border-gray-300 dark:border-gray-600 text-primary-600 focus:ring-primary-500" />
@@ -227,6 +232,8 @@ import {
 } from '../composables/useScheduleHelpers.js'
 import ReleaseTimeline from '../components/ReleaseTimeline.vue'
 import { parseReleaseName } from '../composables/useReleaseFamily.js'
+
+const emit = defineEmits(['show-aipcc'])
 
 function formatShort(dateStr) {
   return formatShortBase(dateStr, { year: true })

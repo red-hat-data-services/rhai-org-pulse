@@ -36,7 +36,7 @@
     "entry": "./server/index.js"
   },
   "secrets": {
-    "platform": ["jira", "github"],
+    "platform": ["jira", "github", "google"],
     "module": [
       {
         "key": "PRODUCT_PAGES_CLIENT_ID",
@@ -87,6 +87,7 @@
   "export": {
     "files": [
       { "path": "releases/registry.json", "notes": "Canonical release registry" },
+      { "path": "releases/aipcc-milestones.json", "notes": "Cached AIPCC milestone schedule from Google Sheets" },
       { "path": "releases/execution/index.json", "notes": "Feature index with summary metrics" },
       { "path": "releases/execution/features/*.json", "notes": "Per-feature detail files" },
       { "path": "releases/rhoai-component-architectures/latest.json", "notes": "RHOAI component architecture support matrix" }
