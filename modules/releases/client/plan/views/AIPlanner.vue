@@ -11,7 +11,7 @@ const PLANNER_URL = 'https://htmlpreview.github.io/?https://github.com/yuvalluri
 function onIframeLoad() {
   const actor = session.value && session.value.actor
   if (!actor || !iframeRef.value) return
-  iframeRef.value.contentWindow.postMessage({ type: 'pm-user', actor }, '*')
+  iframeRef.value.contentWindow.postMessage({ type: 'pm-user', actor }, 'https://htmlpreview.github.io')
 }
 </script>
 
