@@ -1,18 +1,27 @@
 <script setup>
-import { ref } from 'vue'
+import { ref, onMounted, onUnmounted } from 'vue'
 import { useDraftPlans } from '../composables/useDraftPlans'
 
-const { session } = useDraftPlans()
+const { session, approveFeature, persist } = useDraftPlans()
 const iframeRef = ref(null)
 
-// Pinned to specific commit — update via PR to rhai-org-pulse
-const PLANNER_URL = 'https://htmlpreview.github.io/?https://github.com/yuvalluria/rhai-release-planner/blob/9b91bf6/index.html'
+const PLANNER_URL = 'https://htmlpreview.github.io/?https://github.com/yuvalluria/rhai-release-planner/blob/06f84e5/index.html'
 
 function onIframeLoad() {
   const actor = session.value && session.value.actor
   if (!actor || !iframeRef.value) return
   iframeRef.value.contentWindow.postMessage({ type: 'pm-user', actor }, 'https://htmlpreview.github.io')
 }
+
+function onMessage(e) {
+  if (!e.data || e.data.type !== 'add-to-draft-plan') return
+  const features = e.data.features || []
+  features.forEach(f => approveFeature(f.key, true))
+  if (features.length > 0) persist()
+}
+
+onMounted(() => window.addEventListener('message', onMessage))
+onUnmounted(() => window.removeEventListener('message', onMessage))
 </script>
 
 <template>
