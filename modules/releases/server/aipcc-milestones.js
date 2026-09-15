@@ -1,10 +1,11 @@
 'use strict'
 
-const { createGoogleSheetsClient } = require('../../../shared/server/google-sheets')
+const { createGoogleUserSheetsClient } = require('../../../server/google-user-oauth')
 
 const SPREADSHEET_ID = '10OccyDM5P1UZX1ldaoPLVKbL4HKgh7cCY3Oiy_xKcX8'
 const SHEET_NAME = 'tpm_source_of_truth'
 const STORAGE_KEY = 'releases/aipcc-milestones.json'
+const CREDENTIAL_OWNER_KEY = 'releases/aipcc-milestones-google-user.json'
 const SOURCE_URL = `https://docs.google.com/spreadsheets/d/${SPREADSHEET_ID}/edit#gid=0`
 const CACHE_TTL_MS = 15 * 60 * 1000
 const DAY_MS = 24 * 60 * 60 * 1000
@@ -152,12 +153,16 @@ function countMilestones(releases) {
 
 function createAipccMilestonesService(context) {
   const { storage } = context
-  const sheets = context.googleSheetsClient || createGoogleSheetsClient({
-    keyFile: context.resolveSecret?.('GOOGLE_SERVICE_ACCOUNT_KEY_FILE') || '/etc/secrets/google-sa-key.json'
-  })
   let memoryCache = null
 
-  async function fetchLive() {
+  async function getSheetsClient(userEmail) {
+    if (context.googleSheetsClient) return context.googleSheetsClient
+    if (!userEmail) throw new Error('No Org Pulse Google user is available for the milestone refresh')
+    return createGoogleUserSheetsClient({ secrets: context.secrets, storage, userEmail })
+  }
+
+  async function fetchLive(userEmail) {
+    const sheets = await getSheetsClient(userEmail)
     const { headers, rows } = await sheets.fetchRawSheet(SPREADSHEET_ID, SHEET_NAME)
     const fetchedAt = new Date()
     const releases = parseSpreadsheet([headers, ...rows], fetchedAt)
@@ -171,11 +176,12 @@ function createAipccMilestonesService(context) {
       releases
     }
     await storage.writeToStorage(STORAGE_KEY, result)
+    if (userEmail) await storage.writeToStorage(CREDENTIAL_OWNER_KEY, { userEmail: userEmail.toLowerCase() })
     memoryCache = result
     return result
   }
 
-  async function getData({ force = false } = {}) {
+  async function getData({ force = false, userEmail } = {}) {
     if (!force && memoryCache && Date.now() - new Date(memoryCache.fetchedAt).getTime() < CACHE_TTL_MS) {
       return { ...memoryCache, cacheStatus: 'fresh' }
     }
@@ -185,7 +191,7 @@ function createAipccMilestonesService(context) {
       return { ...stored, cacheStatus: 'fresh' }
     }
     try {
-      const live = await fetchLive()
+      const live = await fetchLive(userEmail)
       return { ...live, cacheStatus: 'refreshed' }
     } catch (error) {
       if (stored) {
@@ -199,7 +205,14 @@ function createAipccMilestonesService(context) {
 
   return {
     getData,
-    refresh: async () => ({ ...await fetchLive(), cacheStatus: 'refreshed' })
+    refresh: async userEmail => {
+      let refreshUser = userEmail
+      if (!refreshUser) {
+        const owner = await storage.readFromStorage(CREDENTIAL_OWNER_KEY)
+        refreshUser = owner?.userEmail
+      }
+      return { ...await fetchLive(refreshUser), cacheStatus: 'refreshed' }
+    }
   }
 }
 
@@ -220,7 +233,7 @@ function registerAipccMilestonesRoutes(router, context) {
    */
   router.get('/aipcc-milestones', context.requireAuth, context.requireScope('releases:read'), async function (req, res) {
     try {
-      res.json(await service.getData())
+      res.json(await service.getData({ userEmail: req.userEmail }))
     } catch (error) {
       console.error('[aipcc-milestones] GET failed:', error.message)
       res.status(503).json({ error: 'AIPCC milestone data is unavailable' })
@@ -241,7 +254,7 @@ function registerAipccMilestonesRoutes(router, context) {
    */
   router.post('/aipcc-milestones/refresh', context.requireAdmin, context.requireScope('releases:write'), async function (req, res) {
     try {
-      res.json(await service.refresh())
+      res.json(await service.refresh(req.userEmail))
     } catch (error) {
       console.error('[aipcc-milestones] refresh failed:', error.message)
       res.status(503).json({ error: 'AIPCC milestone refresh failed' })

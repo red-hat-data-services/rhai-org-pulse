@@ -2340,7 +2340,7 @@ Synced from a Google Sheet via the ai-catalyst module (showcase feature). Contai
 
 Cached AIPCC milestone schedule normalized from the `tpm_source_of_truth` Google Sheet. Each release contains named phases, and each phase contains milestones with ISO `startDate` and `targetDate` values. The file also records `fetchedAt`, source metadata, and the total `milestoneCount`.
 
-The Releases module schedules a refresh every hour and administrators can refresh on demand through `POST /api/modules/releases/aipcc-milestones/refresh`. GET requests use a 15-minute freshness window; after that window they attempt a live refresh. If Google Sheets is temporarily unavailable, the GET endpoint serves the stored copy with `cacheStatus: "stale"`.
+The Releases module reads the sheet through Org Pulse's existing per-user Google OAuth integration. A successful request records the connected user as the credential owner for hourly background refreshes; the resulting cached schedule remains available to all authorized viewers. Administrators can refresh on demand through `POST /api/modules/releases/aipcc-milestones/refresh`. GET requests use a 15-minute freshness window; after that window they attempt a live refresh. If Google Sheets is temporarily unavailable, the GET endpoint serves the stored copy with `cacheStatus: "stale"`.
 
 ---
 

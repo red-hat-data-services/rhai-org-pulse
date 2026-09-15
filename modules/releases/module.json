@@ -81,6 +81,18 @@
         "key": "GITLAB_CEE_TOKEN",
         "description": "GitLab PAT for gitlab.cee.redhat.com (read_api scope). Optional — maturity data is fetched without authentication by default. Provide a token for improved rate limits.",
         "required": false
+      },
+      {
+        "key": "GOOGLE_OAUTH_CLIENT_ID",
+        "description": "Org Pulse Google OAuth client ID used with connected user credentials",
+        "required": false,
+        "group": "google-user-auth"
+      },
+      {
+        "key": "GOOGLE_OAUTH_CLIENT_SECRET",
+        "description": "Org Pulse Google OAuth client secret used with connected user credentials",
+        "required": false,
+        "group": "google-user-auth"
       }
     ]
   },
