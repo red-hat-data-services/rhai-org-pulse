@@ -5,6 +5,7 @@
   "description": "Unified release lifecycle: planning, execution tracking, and delivery readiness",
   "icon": "rocket",
   "order": 3,
+  "requires": ["customer-insights"],
   "client": {
     "entry": "./client/index.js",
     "navItems": [

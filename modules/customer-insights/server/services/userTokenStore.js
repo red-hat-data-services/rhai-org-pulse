@@ -1,9 +1,63 @@
-'use strict'
+/**
+ * User token storage for Google OAuth tokens
+ * Uses storage abstractions to respect demo mode and PVC mounts
+ */
 
-const { createGoogleUserTokenStore } = require('../../../../server/google-user-oauth')
+// Storage will be injected via createUserTokenStore factory
+let storage = null
 
-function createUserTokenStore(storage) {
-  return createGoogleUserTokenStore(storage)
+/**
+ * Create a user token store with the given storage backend
+ * @param {object} storageBackend - { readFromStorage, writeToStorage }
+ * @returns {object} Token store methods
+ */
+function createUserTokenStore(storageBackend) {
+  storage = storageBackend
+  const { readFromStorage, writeToStorage } = storage
+
+  const TOKEN_KEY = 'customer-insights/user-tokens.json'
+
+  /**
+   * Get tokens for a user
+   * @param {string} userEmail
+   * @returns {Promise<object|null>}
+   */
+  async function getTokens(userEmail) {
+    const allTokens = await readFromStorage(TOKEN_KEY) || {}
+    return allTokens[userEmail] || null
+  }
+
+  /**
+   * Save tokens for a user
+   * @param {string} userEmail
+   * @param {object} tokens
+   */
+  async function saveTokens(userEmail, tokens) {
+    const allTokens = await readFromStorage(TOKEN_KEY) || {}
+
+    allTokens[userEmail] = {
+      ...tokens,
+      updatedAt: new Date().toISOString()
+    }
+
+    await writeToStorage(TOKEN_KEY, allTokens)
+  }
+
+  /**
+   * Delete tokens for a user
+   * @param {string} userEmail
+   */
+  async function deleteTokens(userEmail) {
+    const allTokens = await readFromStorage(TOKEN_KEY) || {}
+    delete allTokens[userEmail]
+    await writeToStorage(TOKEN_KEY, allTokens)
+  }
+
+  return {
+    getTokens,
+    saveTokens,
+    deleteTokens
+  }
 }
 
 module.exports = { createUserTokenStore }

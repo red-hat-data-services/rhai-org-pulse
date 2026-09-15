@@ -1,7 +1,6 @@
 const { google } = require('googleapis')
 const crypto = require('crypto')
 const { createUserTokenStore } = require('../services/userTokenStore')
-const { createGoogleOAuthClient } = require('../../../../server/google-user-oauth')
 
 // In-memory state tokens for OAuth (keyed by state token, value is user email)
 const oauthStates = new Map()
@@ -22,9 +21,17 @@ module.exports = function registerGoogleDriveAuthRoutes(router, context) {
 
   // OAuth client configuration
   function getOAuthClient() {
+    const clientId = secrets.GOOGLE_OAUTH_CLIENT_ID
+    const clientSecret = secrets.GOOGLE_OAUTH_CLIENT_SECRET
+
     const callbackUrl = process.env.GOOGLE_OAUTH_CALLBACK_URL ||
                        `${process.env.VITE_API_BASE_URL || 'http://localhost:3001'}/api/modules/customer-insights/auth/google/callback`
-    return createGoogleOAuthClient({ secrets, callbackUrl })
+
+    if (!clientId || !clientSecret) {
+      throw new Error('Google OAuth credentials not configured. Set GOOGLE_OAUTH_CLIENT_ID and GOOGLE_OAUTH_CLIENT_SECRET.')
+    }
+
+    return new google.auth.OAuth2(clientId, clientSecret, callbackUrl)
   }
 
   /**

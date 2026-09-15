@@ -5,6 +5,7 @@ const {
   createAipccMilestonesService,
   STORAGE_KEY
 } = require('../../server/aipcc-milestones')
+const { findUserTokens } = require('../../server/google-user-sheets')
 
 function storageWith(initial = null) {
   let value = initial
@@ -75,5 +76,12 @@ describe('AIPCC milestone service', () => {
     const service = createAipccMilestonesService({ storage: storageWith(stored), secrets: {}, googleSheetsClient: { fetchRawSheet } })
 
     await expect(service.refresh()).rejects.toThrow('offline')
+  })
+})
+
+describe('Org Pulse Google user lookup', () => {
+  it('reuses existing tokens even when a legacy email key has mixed case', () => {
+    const tokens = { refresh_token: 'refresh-token' }
+    expect(findUserTokens({ 'User@RedHat.com': tokens }, 'user@redhat.com')).toBe(tokens)
   })
 })

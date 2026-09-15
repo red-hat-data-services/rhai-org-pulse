@@ -1,6 +1,6 @@
 'use strict'
 
-const { createGoogleUserSheetsClient } = require('../../../server/google-user-oauth')
+const { createGoogleUserSheetsClient } = require('./google-user-sheets')
 
 const SPREADSHEET_ID = '10OccyDM5P1UZX1ldaoPLVKbL4HKgh7cCY3Oiy_xKcX8'
 const SHEET_NAME = 'tpm_source_of_truth'
