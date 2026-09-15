@@ -5,7 +5,12 @@ test.describe('Workflow Validation module @workflow-validation', () => {
     await page.route('**/api/modules/workflow-validation/**', async (route) => {
       const path = new URL(route.request().url()).pathname
       let body = {}
-      if (path.endsWith('/filters')) body = { versions: [], providers: [], models: [], workflows: [], testSuites: [{ value: 'productization', count: 3 }] }
+      if (path.endsWith('/filters')) body = {
+        versions: [{ value: '3.6', count: 3 }, { value: '3.5', count: 2 }],
+        providers: [], models: [],
+        workflows: [{ value: 'live-workflow', label: 'Live workflow', count: 3 }],
+        testSuites: [{ value: 'productization', count: 3 }]
+      }
       if (path.endsWith('/test-suites')) {
         body = { rows: [{ suite: 'productization', invocationId: 'invocation-1', timestamp: '2026-09-15T10:00:00Z', tests: 3, passed: 2, failed: 1, errors: 0, passRate: 2 / 3, rhoaiVersion: '3.6', rhodsOperatorDigest: 'abcdef0123456789', productBugs: [] }] }
       }
@@ -18,7 +23,11 @@ test.describe('Workflow Validation module @workflow-validation', () => {
           bugs: { total: 0, opened: 0, distinctJira: 0 }
         }
       }
-      if (path.endsWith('/charts')) body = { overTime: [], byVersion: [], byWorkflow: [], byProvider: [], bugsByCategory: [], bugsByAction: [], bugsByComponent: [], failedTests: [], recentTests: [], recentProductBugs: [] }
+      if (path.endsWith('/charts')) body = {
+        overTime: [], byVersion: [], byWorkflow: [], byProvider: [], bugsByCategory: [],
+        bugsByAction: [], bugsByComponent: [], failedTests: [], recentProductBugs: [],
+        recentTests: [{ execution_id: 'opaque-id', workflow: 'live-workflow', workflow_label: 'Live workflow', verdict: 'PASS', tasks_passed: 1, tasks_total: 1, productBugs: [] }]
+      }
       if (path.endsWith('/runs')) {
         body = { total: 1, size: 8, nextCursor: null, runs: [{ execution_id: 'opaque-id', workflow: 'live-workflow', workflow_label: 'Live workflow', verdict: 'PASS', tasks_passed: 1, tasks_total: 1, cost_usd: 1, productBugs: [] }] }
       }
@@ -68,7 +77,7 @@ test.describe('Workflow Validation module @workflow-validation', () => {
     await page.goto('/#/workflow-validation/overview')
     await expect(page.getByRole('main').getByRole('heading', { name: 'Workflow Validation' })).toBeVisible()
     await expect(page.getByText('Live workflow')).toBeVisible()
-    expect(requests.some((url) => url.endsWith('/overview'))).toBe(true)
+    expect(requests.some((url) => url.includes('/overview'))).toBe(true)
     expect(requests.every((url) => !url.includes('opensearch-workflow-validation'))).toBe(true)
   })
 
@@ -110,6 +119,36 @@ test.describe('Workflow Validation module @workflow-validation', () => {
     )).toBe(true)
   })
 
+  test('restores filter state from shareable URLs on every filtered top-level view', async ({ page }) => {
+    const requests = []
+    page.on('request', (request) => {
+      if (request.url().includes('/api/modules/workflow-validation/')) requests.push(request.url())
+    })
+
+    await page.goto('/#/workflow-validation/runs?version=3.6&verdict=FAIL&workflow=live-workflow&q=live&testSuite=&invocationId=&dateFrom=2026-09-01&dateTo=2026-09-15')
+    await expect(page.getByRole('combobox', { name: 'Verdict' })).toHaveValue('FAIL')
+    await expect(page.getByLabel('Search test names…')).toHaveValue('live')
+    await expect.poll(() => requests.some((url) =>
+      url.includes('/runs?') && url.includes('version=3.6') && url.includes('workflow=live-workflow') && url.includes('dateFrom=2026-09-01')
+    )).toBe(true)
+
+    await page.goto('/#/workflow-validation/test-suites?suite=productization&datePreset=all&dateFrom=&dateTo=')
+    await expect(page.getByRole('combobox', { name: 'Test suite' })).toHaveValue('productization')
+    await expect(page.getByRole('combobox', { name: 'Date range' })).toHaveValue('all')
+
+    await page.goto('/#/workflow-validation/compare?baseline=3.5&target=3.6&test=')
+    await expect(page.getByLabel('Baseline RHOAI version')).toHaveValue('3.5')
+    await expect(page.getByLabel('Target RHOAI version')).toHaveValue('3.6')
+
+    await page.goto('/#/workflow-validation/activity?version=3.6&workflow=live-workflow&q=timeout&dateFrom=&dateTo=')
+    await expect(page.getByRole('combobox', { name: 'Test' })).toHaveValue('live-workflow')
+    await expect(page.getByLabel('Search Jira keys, tests, components, or bug details…')).toHaveValue('timeout')
+
+    await page.goto('/#/workflow-validation/workflows?version=3.6&q=live&dateFrom=&dateTo=&tag=smoke')
+    await expect(page.getByLabel('Search test names…')).toHaveValue('live')
+    await expect(page).toHaveURL(/tag=smoke/)
+  })
+
   test('is visible in navigation and all primary views render', async ({ page }) => {
     await page.goto('/')
     const moduleButton = page.locator('aside nav button').filter({ hasText: 'Workflow Validation' }).first()
@@ -138,14 +177,14 @@ test.describe('Workflow Validation module @workflow-validation', () => {
     await expect(page.getByRole('columnheader', { name: 'Last executed' })).toBeVisible()
 
     await page.goto('/#/workflow-validation/runs')
-    await expect(page.getByRole('option', { name: 'Error' })).toHaveCount(1)
+    await expect(page.getByRole('option', { name: 'Error', exact: true })).toHaveCount(1)
     await expect(page.getByRole('option', { name: 'Failed or error' })).toHaveCount(1)
     await expect(page.getByRole('button', { name: 'When ↓' })).toBeVisible()
-    await page.getByRole('button', { name: 'Test' }).click()
+    await page.getByRole('button', { name: 'Test', exact: true }).click()
     await expect(page.getByRole('button', { name: 'Test ↓' })).toBeVisible()
 
     await page.goto('/#/workflow-validation/test-suites')
-    await expect(page.getByRole('option', { name: 'Latest' })).toBeVisible()
+    await expect(page.getByRole('option', { name: 'Latest' })).toHaveCount(1)
     await expect(page.getByRole('cell', { name: 'abcdef01' })).toBeVisible()
     await expect(page.getByRole('cell', { name: 'Productization' })).toBeVisible()
   })
@@ -153,7 +192,7 @@ test.describe('Workflow Validation module @workflow-validation', () => {
   test('renders execution and workflow hidden routes from canonical identities', async ({ page }) => {
     await page.goto('/#/workflow-validation/run-detail?runKey=opaque-id')
     await expect(page.getByRole('heading', { name: 'Live workflow' })).toBeVisible()
-    await expect(page.getByRole('button', { name: 'Test Results' })).toBeVisible()
+    await expect(page.getByRole('main').getByRole('button', { name: 'Test Results' })).toBeVisible()
     await expect(page.getByRole('alert')).toContainText('This test is marked passed but with a failed task.')
     await expect(page.getByRole('button', { name: 'View test trend' })).toBeVisible()
     await expect(page.getByRole('strong')).toHaveText('Rendered summary')
@@ -164,7 +203,7 @@ test.describe('Workflow Validation module @workflow-validation', () => {
 
     await page.goto('/#/workflow-validation/workflow-history?workflow=live-workflow')
     await expect(page.getByRole('heading', { name: 'Live workflow' })).toBeVisible()
-    await expect(page.getByRole('button', { name: 'Test Trends' })).toBeVisible()
+    await expect(page.getByRole('main').getByRole('button', { name: 'Test Trends' })).toBeVisible()
     await expect(page.getByRole('heading', { name: 'Execution History' })).toBeVisible()
     await expect(page.getByRole('button', { name: 'Compare this test across versions' })).toBeVisible()
 

@@ -17,19 +17,19 @@
         <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div>
             <label class="block text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400 mb-1.5">Baseline RHOAI version</label>
-            <select v-model="baseline" :class="inputClass" @change="compare">
+            <select v-model="baseline" aria-label="Baseline RHOAI version" :class="inputClass" @change="compare">
               <option v-for="version in versions" :key="version.version" :value="version.version">{{ versionLabel(version) }}</option>
             </select>
           </div>
           <div>
             <label class="block text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400 mb-1.5">Target RHOAI version</label>
-            <select v-model="target" :class="inputClass" @change="compare">
+            <select v-model="target" aria-label="Target RHOAI version" :class="inputClass" @change="compare">
               <option v-for="version in versions" :key="version.version" :value="version.version">{{ versionLabel(version) }}</option>
             </select>
           </div>
           <div>
             <label class="block text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400 mb-1.5">Test</label>
-            <select v-model="selectedTest" :class="inputClass" :disabled="!result">
+            <select v-model="selectedTest" aria-label="Test" :class="inputClass" :disabled="!result" @change="syncComparisonQuery">
               <option value="">All tests</option>
               <option v-for="test in availableTests" :key="test.workflow" :value="test.workflow">{{ test.label }}</option>
             </select>
@@ -102,15 +102,16 @@ import { computed, inject, onMounted, ref } from 'vue'
 import { ServerCrash as ServerCrashIcon } from 'lucide-vue-next'
 import MetricCard from '../components/MetricCard.vue'
 import ProductBugStatus from '../components/ProductBugStatus.vue'
-import { compareTableValues, compareVersionNumbers, filters, formatDate, formatPercent, useWorkflowValidation } from '../composables/useWorkflowValidation'
+import { compareTableValues, compareVersionNumbers, filters, formatDate, formatPercent, syncQueryParams, useWorkflowValidation } from '../composables/useWorkflowValidation'
 
 const nav = inject('moduleNav')
+const initialParams = nav?.params?.value || {}
 const { getCompareVersions, getVersionCompare } = useWorkflowValidation()
 const inputClass = 'w-full text-sm rounded-lg border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-100 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-red-500/40'
 const versions = ref([])
-const baseline = ref('')
-const target = ref('')
-const selectedTest = ref('')
+const baseline = ref(initialParams.baseline || '')
+const target = ref(initialParams.target || '')
+const selectedTest = ref(initialParams.test || initialParams.workflow || '')
 const result = ref(null)
 const loading = ref(false)
 const error = ref('')
@@ -140,6 +141,9 @@ function versionLabel(version) { return `${version.version} · ${version.tests} 
 function cohortLabel(cohort) {
   const unknown = cohort.unknown ? ` · ${cohort.unknown} unknown` : ''
   return `${cohort.passed} passed · ${cohort.executions} executions${unknown}`
+}
+function syncComparisonQuery() {
+  syncQueryParams(nav, { baseline: baseline.value, target: target.value, test: selectedTest.value })
 }
 function formatPointChange(change) { return `${change > 0 ? '+' : ''}${Math.round(change * 100)} percentage points` }
 function openExecutions(row, version) {
@@ -177,6 +181,7 @@ async function compare() {
     const requestedTest = nav.params?.value?.workflow
     if (!selectedTest.value && requestedTest && result.value.rows.some(row => row.workflow === requestedTest)) selectedTest.value = requestedTest
     if (selectedTest.value && !result.value.rows.some(row => row.workflow === selectedTest.value)) selectedTest.value = ''
+    syncComparisonQuery()
   } catch (err) {
     result.value = null
     error.value = err.data?.error || err.message || 'Failed to compare RHOAI versions'
@@ -193,8 +198,11 @@ async function load() {
     const data = await getCompareVersions()
     versions.value = [...(data.versions || [])].sort((a, b) => compareVersionNumbers(b.version, a.version))
     if (versions.value.length >= 2) {
-      target.value = versions.value[0].version
-      baseline.value = versions.value[1].version
+      const available = new Set(versions.value.map((version) => version.version))
+      if (!available.has(target.value)) target.value = versions.value[0].version
+      if (!available.has(baseline.value) || baseline.value === target.value) {
+        baseline.value = versions.value.find((version) => version.version !== target.value)?.version || ''
+      }
       await compare()
     }
   } catch (err) {

@@ -4,6 +4,8 @@ import { apiRequest } from '@shared/client/services/api'
 const BASE = '/modules/workflow-validation'
 const EMPTY_FILTER_OPTIONS = { versions: [], providers: [], models: [], workflows: [], testSuites: [] }
 let filterOptionsPromise
+let explicitVersionSelection = false
+let explicitDateSelection = false
 
 /**
  * Shared, module-wide filter state. Every view reads/writes the same object so
@@ -19,11 +21,14 @@ export const filters = reactive({
   q: '',
   testSuite: '',
   invocationId: '',
+  datePreset: '90',
   dateFrom: '',
   dateTo: ''
 })
 
 export function resetFilters() {
+  explicitVersionSelection = false
+  explicitDateSelection = false
   const dates = defaultDateRange()
   filters.version = ''
   filters.verdict = ''
@@ -33,8 +38,27 @@ export function resetFilters() {
   filters.q = ''
   filters.testSuite = ''
   filters.invocationId = ''
+  filters.datePreset = '90'
   filters.dateFrom = dates.dateFrom
   filters.dateTo = dates.dateTo
+}
+
+export function hydrateFilters(params = {}, keys = []) {
+  for (const key of keys) {
+    if (Object.prototype.hasOwnProperty.call(params, key)) filters[key] = params[key]
+  }
+  if (keys.includes('version') && Object.prototype.hasOwnProperty.call(params, 'version')) explicitVersionSelection = true
+  if (keys.some((key) => ['datePreset', 'dateFrom', 'dateTo'].includes(key)) && (
+    Object.prototype.hasOwnProperty.call(params, 'dateFrom') || Object.prototype.hasOwnProperty.call(params, 'dateTo')
+  )) explicitDateSelection = true
+}
+
+export function syncQueryParams(nav, values) {
+  nav?.updateParams?.(Object.fromEntries(Object.entries(values).map(([key, value]) => [key, value ?? ''])), { push: false })
+}
+
+export function filterQueryValues(keys = []) {
+  return Object.fromEntries(keys.map((key) => [key, filters[key]]))
 }
 
 /** Build a query string from the shared filters plus any extra params. */
@@ -87,8 +111,8 @@ async function initializeVersionFilter() {
   if (!filterOptionsPromise) {
     filterOptionsPromise = apiRequest(`${BASE}/filters`)
       .then((options) => {
-        if (!filters.version) filters.version = highestNumberedVersion(options.versions) || ''
-        if (!filters.dateFrom && !filters.dateTo) Object.assign(filters, defaultDateRange())
+        if (!explicitVersionSelection && !filters.version) filters.version = highestNumberedVersion(options.versions) || ''
+        if (!explicitDateSelection && !filters.dateFrom && !filters.dateTo) Object.assign(filters, defaultDateRange())
         return options
       })
       .catch(() => EMPTY_FILTER_OPTIONS)
@@ -164,7 +188,7 @@ export function useWorkflowValidation() {
   const getFilters = () => initializeVersionFilter()
   const getOverview = (extra = {}) => filteredRequest('overview', ['version', 'dateFrom', 'dateTo', 'testSuite', 'invocationId'], extra)
   const getCharts = (extra = {}) => filteredRequest('charts', ['version', 'dateFrom', 'dateTo', 'testSuite', 'invocationId'], extra)
-  const getRuns = (cursor = '', size = 25, sorting = {}) => filteredRequest('runs', ['version', 'verdict', 'workflow', 'q', 'dateFrom', 'dateTo'], { cursor, size, ...sorting })
+  const getRuns = (cursor = '', size = 25, sorting = {}) => filteredRequest('runs', ['version', 'verdict', 'workflow', 'q', 'testSuite', 'invocationId', 'dateFrom', 'dateTo'], { cursor, size, ...sorting })
   const getRun = (executionId) => apiRequest(`${BASE}/runs/${encodeURIComponent(executionId)}`)
   const getBugs = (cursor = '', size = 50) => filteredRequest('bugs', ['version', 'workflow', 'category', 'action', 'q', 'dateFrom', 'dateTo'], { cursor, size })
   const getWorkflows = (extra = {}) => filteredRequest('workflows', ['version', 'q', 'dateFrom', 'dateTo'], extra)

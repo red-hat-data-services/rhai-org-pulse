@@ -98,7 +98,7 @@ describe('Workflow Validation OverviewView', () => {
     filters.q = 'stale detail search'
     filters.testSuite = ''
     filters.invocationId = ''
-    moduleNav = { navigateTo: vi.fn(), params: { value: {} } }
+    moduleNav = { navigateTo: vi.fn(), updateParams: vi.fn(), params: { value: {} } }
     wrapper = mount(OverviewView, {
       global: {
         provide: {
@@ -189,7 +189,9 @@ describe('Workflow Validation OverviewView', () => {
   it('passes verdict filters to the tests page without changing dashboard state', async () => {
     filters.verdict = 'PASS'
     await wrapper.get('button[aria-label="View all failed tests"]').trigger('click')
-    expect(moduleNav.navigateTo).toHaveBeenCalledWith('runs', { verdict: 'UNSUCCESSFUL', q: '' })
+    expect(moduleNav.navigateTo).toHaveBeenCalledWith('runs', expect.objectContaining({
+      verdict: 'UNSUCCESSFUL', q: '', dateFrom: filters.dateFrom, dateTo: filters.dateTo
+    }))
     expect(filters.verdict).toBe('PASS')
   })
 

@@ -49,7 +49,7 @@
         <option value="ERROR">Error</option>
       </select>
 
-      <select v-if="!showTestSuite || !filters.testSuite" v-model="datePreset" aria-label="Date range" :class="inputClass" @change="applyDatePreset">
+      <select v-if="!showTestSuite || !filters.testSuite" v-model="filters.datePreset" aria-label="Date range" :class="inputClass" @change="applyDatePreset">
         <option value="7">Last 7 days</option>
         <option value="30">Last 30 days</option>
         <option value="90">Last 90 days</option>
@@ -101,11 +101,12 @@
 </template>
 
 <script setup>
-import { computed, onMounted, ref } from 'vue'
+import { computed, inject, onMounted, ref } from 'vue'
 import { Filter as FilterIcon, Search as SearchIcon } from 'lucide-vue-next'
 import { defaultDateRange, filters, formatBuildId, formatDate, formatSuiteName, resetFilters, useWorkflowValidation } from '../composables/useWorkflowValidation'
 
 const emit = defineEmits(['change'])
+const nav = inject('moduleNav', null)
 const { showVerdict, showTest, showTestSuite, showSearch, searchPlaceholder } = defineProps({
   showVerdict: { type: Boolean, default: true },
   showTest: { type: Boolean, default: false },
@@ -118,7 +119,6 @@ const { getFilters, getTestSuites } = useWorkflowValidation()
 const inputClass = 'text-sm rounded-lg border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-100 px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-red-500/40'
 
 const options = ref({ versions: [], providers: [], models: [], workflows: [], testSuites: [] })
-const datePreset = ref('90')
 const suiteExecutions = ref([])
 const loadingSuiteExecutions = ref(false)
 const generalVersion = ref('')
@@ -176,17 +176,17 @@ async function changeVersion() {
 }
 
 function applyDatePreset() {
-  if (datePreset.value === 'all') {
+  if (filters.datePreset === 'all') {
     filters.dateFrom = ''
     filters.dateTo = ''
-  } else if (datePreset.value !== 'custom') {
-    Object.assign(filters, defaultDateRange(Number(datePreset.value)))
+  } else if (filters.datePreset !== 'custom') {
+    Object.assign(filters, defaultDateRange(Number(filters.datePreset)))
   }
   emitChange()
 }
 
 function useCustomDates() {
-  datePreset.value = 'custom'
+  filters.datePreset = 'custom'
   emitChange()
 }
 
@@ -201,14 +201,14 @@ function detectDatePreset() {
 
 function clear() {
   resetFilters()
-  datePreset.value = '90'
+  filters.datePreset = '90'
   emit('change')
 }
 
 onMounted(async () => {
   try {
     options.value = await getFilters()
-    datePreset.value = detectDatePreset()
+    if (!Object.prototype.hasOwnProperty.call(nav?.params?.value || {}, 'datePreset')) filters.datePreset = detectDatePreset()
     if (showTestSuite && filters.testSuite) {
       generalVersion.value = filters.version
       filters.version = ''

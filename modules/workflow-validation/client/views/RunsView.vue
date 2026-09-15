@@ -5,7 +5,7 @@
       <p class="text-sm text-gray-500 dark:text-gray-400 mt-0.5">Individual test executions, newest first. Filter results or select one for task and defect details.</p>
     </div>
 
-    <FilterBar search-placeholder="Search test names…" @change="reload" />
+    <FilterBar show-test-suite search-placeholder="Search test names…" @change="reload" />
 
     <!-- Active workflow chip (set from Overview drill-down) -->
     <div v-if="filters.workflow" class="mb-4 flex items-center gap-2">
@@ -94,10 +94,12 @@ import StatusBadge from '../components/StatusBadge.vue'
 import ProductBugStatus from '../components/ProductBugStatus.vue'
 import { useCostVisibility } from '../composables/useCostVisibility'
 import {
-  filters, useWorkflowValidation, formatUsd, formatDuration, formatDate, formatRatio
+  filterQueryValues, filters, hydrateFilters, syncQueryParams, useWorkflowValidation, formatUsd, formatDuration, formatDate, formatRatio
 } from '../composables/useWorkflowValidation'
 
 const nav = inject('moduleNav')
+const FILTER_KEYS = ['version', 'verdict', 'workflow', 'q', 'testSuite', 'invocationId', 'datePreset', 'dateFrom', 'dateTo']
+hydrateFilters(nav?.params?.value, FILTER_KEYS)
 const { getRuns } = useWorkflowValidation()
 const costsVisible = useCostVisibility()
 
@@ -120,6 +122,7 @@ async function load() {
     runs.value = data.runs
     total.value = data.total
     nextCursor.value = data.nextCursor
+    syncQueryParams(nav, filterQueryValues(FILTER_KEYS))
   } catch (err) {
     if (err.status === 503 || err.data?.code === 'OS_UNREACHABLE') {
       unreachable.value = err.data?.error || err.message
@@ -144,11 +147,6 @@ function setSort(column) {
 function sortMark(column) { return sortBy.value === column ? (sortDir.value === 'desc' ? '↓' : '↑') : '' }
 
 onMounted(() => {
-  const params = nav?.params?.value || {}
-  if (Object.prototype.hasOwnProperty.call(params, 'workflow')) filters.workflow = params.workflow
-  if (Object.prototype.hasOwnProperty.call(params, 'version')) filters.version = params.version
-  if (Object.prototype.hasOwnProperty.call(params, 'verdict')) filters.verdict = params.verdict
-  filters.q = Object.prototype.hasOwnProperty.call(params, 'q') ? params.q : ''
   load()
 })
 </script>

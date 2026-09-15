@@ -62,16 +62,17 @@
 <script setup>
 import { computed, inject, onMounted, ref } from 'vue'
 import ProductBugStatus from '../components/ProductBugStatus.vue'
-import { compareTableValues, defaultDateRange, formatBuildId, formatDate, formatPercent, formatSuiteName, useWorkflowValidation } from '../composables/useWorkflowValidation'
+import { compareTableValues, defaultDateRange, formatBuildId, formatDate, formatPercent, formatSuiteName, syncQueryParams, useWorkflowValidation } from '../composables/useWorkflowValidation'
 
 const nav = inject('moduleNav')
+const initialParams = nav?.params?.value || {}
 const { getFilters, getTestSuites } = useWorkflowValidation()
 const inputClass = 'text-sm rounded-lg border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-100 px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-red-500/40'
 const suites = ref([])
-const selectedSuite = ref('')
-const datePreset = ref('latest')
-const dateFrom = ref('')
-const dateTo = ref('')
+const selectedSuite = ref(initialParams.suite || '')
+const datePreset = ref(initialParams.datePreset || 'latest')
+const dateFrom = ref(initialParams.dateFrom || '')
+const dateTo = ref(initialParams.dateTo || '')
 const rows = ref([])
 const loading = ref(false)
 const error = ref('')
@@ -103,6 +104,12 @@ function applyDatePreset() {
 }
 async function load() {
   if (!selectedSuite.value) return
+  syncQueryParams(nav, {
+    suite: selectedSuite.value,
+    datePreset: datePreset.value,
+    dateFrom: dateFrom.value,
+    dateTo: dateTo.value
+  })
   loading.value = true
   error.value = ''
   try {
@@ -118,7 +125,7 @@ onMounted(async () => {
   try {
     const options = await getFilters()
     suites.value = options.testSuites || []
-    selectedSuite.value = nav.params?.value?.suite || suites.value[0]?.value || ''
+    selectedSuite.value = selectedSuite.value || suites.value[0]?.value || ''
     await load()
   } catch (err) {
     error.value = err.data?.error || err.message || 'Failed to load test suite filters'
