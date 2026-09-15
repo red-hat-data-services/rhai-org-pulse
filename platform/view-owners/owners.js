@@ -68,7 +68,7 @@ export const viewOwners = {
   'releases/plan':                                 'Alex Corvin',
   'releases/registry':                             'Alex Corvin',
   'releases/reports':                              'Alex Corvin',
-  'releases/schedule':                             'Paul McCarthy',
+  'releases/schedule':                             'Einat Pacifici',
 
   // system-health
   'system-health/component-maturity':              'Dana Gutride',
@@ -138,7 +138,6 @@ export const viewOwners = {
   'releases/reports/tv-fv-delta':                  'Dimitri Saridakis',
 
   // team-tracker > reports
-  'team-tracker/reports/allocation':               'Alex Corvin',
   'team-tracker/reports/team-comparison':          'Alex Corvin',
   'team-tracker/reports/trends':                   'Alex Corvin',
 }
