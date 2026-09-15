@@ -53,7 +53,7 @@ async function enrichTargetVersionsFromJira(data, jiraRequest, fetchFn) {
       await new Promise(resolve => setTimeout(resolve, BATCH_DELAY_MS));
     }
 
-    const jql = `key in (${batch.join(',')})`;
+    const jql = `key IN (${batch.map(k => `"${k}"`).join(', ')})`;
     let issues;
     try {
       issues = await doFetch(jiraRequest, jql, TARGET_VERSION_FIELD);
