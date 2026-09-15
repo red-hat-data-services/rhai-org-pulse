@@ -1,9 +1,10 @@
 <script setup>
-import { ref, onMounted, onUnmounted } from 'vue'
+import { ref, inject, onMounted, onUnmounted } from 'vue'
 import { useDraftPlans } from '../composables/useDraftPlans'
 
-const { session, approveFeature, persist } = useDraftPlans()
+const { session, approveFeature, persist, filterDecision } = useDraftPlans()
 const iframeRef = ref(null)
+const moduleNav = inject('moduleNav', null)
 
 const PLANNER_URL = 'https://htmlpreview.github.io/?https://github.com/yuvalluria/rhai-release-planner/blob/06f84e5/index.html'
 
@@ -14,11 +15,16 @@ function onIframeLoad() {
 }
 
 function onMessage(e) {
-  if (e.origin !== 'https://htmlpreview.github.io') return
   if (!e.data || e.data.type !== 'add-to-draft-plan') return
-  const features = Array.isArray(e.data.features) ? e.data.features : []
+  const features = e.data.features || []
   features.forEach(f => approveFeature(f.key, true))
-  if (features.length > 0) persist()
+  if (features.length > 0) {
+    persist()
+    filterDecision.value = 'approved'
+    if (moduleNav && moduleNav.updateParams) {
+      moduleNav.updateParams({ tab: 'draft-plans' }, { push: false })
+    }
+  }
 }
 
 onMounted(() => window.addEventListener('message', onMessage))
