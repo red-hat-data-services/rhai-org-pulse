@@ -73,6 +73,12 @@ Important rules:
 - Dashboard filters default to the highest numerically ordered version and the
   last 90 calendar days. Date presets can select 7, 30, or 90 days, all time,
   or custom inclusive start/end dates.
+- On the dashboard, selecting a Test Suite replaces the date controls with a
+  concrete suite-execution selector, defaulting to its newest invocation. The
+  execution label identifies its RHOAI version and RHODS build when available.
+  Dashboard metrics, tests, and product bugs are
+  then scoped to that one `telemetry_origin` and `invocation_id`; multi-run
+  trend charts are hidden while this scope is active.
 - Test Suites defaults to the most recent invocation for the selected suite and
   can instead show 7, 30, or 90 days, all time, or a custom date range.
 

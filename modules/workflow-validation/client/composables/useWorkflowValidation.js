@@ -17,6 +17,8 @@ export const filters = reactive({
   category: '',
   action: '',
   q: '',
+  testSuite: '',
+  invocationId: '',
   dateFrom: '',
   dateTo: ''
 })
@@ -29,6 +31,8 @@ export function resetFilters() {
   filters.category = ''
   filters.action = ''
   filters.q = ''
+  filters.testSuite = ''
+  filters.invocationId = ''
   filters.dateFrom = dates.dateFrom
   filters.dateTo = dates.dateTo
 }
@@ -158,8 +162,8 @@ export function compareTableValues(left, right, direction = 'asc') {
 export function useWorkflowValidation() {
   const getStatus = () => apiRequest(`${BASE}/status`)
   const getFilters = () => initializeVersionFilter()
-  const getOverview = (extra = {}) => filteredRequest('overview', ['version', 'dateFrom', 'dateTo'], extra)
-  const getCharts = (extra = {}) => filteredRequest('charts', ['version', 'dateFrom', 'dateTo'], extra)
+  const getOverview = (extra = {}) => filteredRequest('overview', ['version', 'dateFrom', 'dateTo', 'testSuite', 'invocationId'], extra)
+  const getCharts = (extra = {}) => filteredRequest('charts', ['version', 'dateFrom', 'dateTo', 'testSuite', 'invocationId'], extra)
   const getRuns = (cursor = '', size = 25, sorting = {}) => filteredRequest('runs', ['version', 'verdict', 'workflow', 'q', 'dateFrom', 'dateTo'], { cursor, size, ...sorting })
   const getRun = (executionId) => apiRequest(`${BASE}/runs/${encodeURIComponent(executionId)}`)
   const getBugs = (cursor = '', size = 50) => filteredRequest('bugs', ['version', 'workflow', 'category', 'action', 'q', 'dateFrom', 'dateTo'], { cursor, size })

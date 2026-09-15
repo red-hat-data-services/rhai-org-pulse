@@ -99,6 +99,8 @@ function commonFilters(q = {}, { includeVerdict = true } = {}) {
   if (q.provider) filter.push({ term: { inference_provider: q.provider } });
   if (q.model) filter.push({ term: { model: q.model } });
   if (q.workflow) filter.push({ term: { workflow: q.workflow } });
+  if (q.testSuite) filter.push({ term: { telemetry_origin: q.testSuite } });
+  if (q.invocationId) filter.push({ term: { invocation_id: q.invocationId } });
   const dateFilter = timestampRange(q);
   if (dateFilter) filter.push(dateFilter);
   return { filter, must };

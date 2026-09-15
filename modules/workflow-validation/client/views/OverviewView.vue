@@ -8,7 +8,7 @@
       </p>
     </div>
 
-    <FilterBar :show-verdict="false" :show-search="false" @change="loadAll" />
+    <FilterBar :show-verdict="false" :show-search="false" show-test-suite @change="loadAll" />
 
     <!-- OpenSearch unreachable -->
     <div v-if="unreachable" class="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-xl p-10 text-center">
@@ -41,8 +41,8 @@
       </div>
 
       <!-- Trend line + recent product bugs -->
-      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-        <TrendLineChart title="Pass Rate & Volume Over Time" :data="charts.overTime" />
+      <div class="grid grid-cols-1 gap-6 mb-6" :class="{ 'lg:grid-cols-2': !filters.testSuite }">
+        <TrendLineChart v-if="!filters.testSuite" title="Pass Rate & Volume Over Time" :data="charts.overTime" />
         <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700/60 p-5">
           <div class="flex items-center justify-between mb-3">
             <h3 class="text-base font-semibold text-gray-900 dark:text-gray-100">Recently Opened Product Bugs</h3>
@@ -71,7 +71,7 @@
         </div>
       </div>
 
-      <div v-if="charts.byVersion.length > 1" class="mb-6">
+      <div v-if="!filters.testSuite && charts.byVersion.length > 1" class="mb-6">
         <PassRateByVersionChart :data="charts.byVersion" />
       </div>
 
@@ -116,7 +116,7 @@ import TrendLineChart from '../components/TrendLineChart.vue'
 import PassRateByVersionChart from '../components/PassRateByVersionChart.vue'
 import { useCostVisibility } from '../composables/useCostVisibility'
 import {
-  useWorkflowValidation,
+  filters, useWorkflowValidation,
   formatUsd, formatDuration, formatPercent, formatDate
 } from '../composables/useWorkflowValidation'
 
@@ -143,7 +143,11 @@ async function loadAll() {
   loading.value = true
   unreachable.value = ''
   try {
-    const dashboardScope = { verdict: '', q: '' }
+    const suiteScoped = Boolean(filters.testSuite)
+    const dashboardScope = {
+      verdict: '', q: '',
+      ...(suiteScoped ? { dateFrom: '', dateTo: '' } : {})
+    }
     const [ov, ch] = await Promise.all([getOverview(dashboardScope), getCharts(dashboardScope)])
     Object.assign(overview, ov)
     Object.assign(charts, ch)

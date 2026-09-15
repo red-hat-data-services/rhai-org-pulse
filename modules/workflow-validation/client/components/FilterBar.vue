@@ -6,10 +6,31 @@
         <span class="text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">Filters</span>
       </div>
 
-      <select v-model="filters.version" :class="inputClass" @change="emitChange">
+      <select v-if="!showTestSuite || !filters.testSuite" v-model="filters.version" :class="inputClass" @change="changeVersion">
         <option value="">All versions</option>
         <option v-for="v in options.versions" :key="v.value" :value="v.value">
           {{ v.value }} ({{ v.count }})
+        </option>
+      </select>
+
+      <select v-if="showTestSuite" v-model="filters.testSuite" aria-label="Test suite" :class="inputClass" @change="changeTestSuite">
+        <option value="">All test suites</option>
+        <option v-for="suite in options.testSuites" :key="suite.value" :value="suite.value">
+          {{ formatSuiteName(suite.value) }}
+        </option>
+      </select>
+
+      <select
+        v-if="showTestSuite && filters.testSuite"
+        v-model="filters.invocationId"
+        aria-label="Suite execution"
+        :class="inputClass"
+        :disabled="loadingSuiteExecutions"
+        @change="emitChange"
+      >
+        <option v-if="loadingSuiteExecutions" value="">Loading executions…</option>
+        <option v-for="execution in suiteExecutions" :key="execution.invocationId" :value="execution.invocationId">
+          {{ suiteExecutionLabel(execution) }}
         </option>
       </select>
 
@@ -28,7 +49,7 @@
         <option value="ERROR">Error</option>
       </select>
 
-      <select v-model="datePreset" aria-label="Date range" :class="inputClass" @change="applyDatePreset">
+      <select v-if="!showTestSuite || !filters.testSuite" v-model="datePreset" aria-label="Date range" :class="inputClass" @change="applyDatePreset">
         <option value="7">Last 7 days</option>
         <option value="30">Last 30 days</option>
         <option value="90">Last 90 days</option>
@@ -37,6 +58,7 @@
       </select>
 
       <input
+        v-if="!showTestSuite || !filters.testSuite"
         v-model="filters.dateFrom"
         type="date"
         aria-label="Start date"
@@ -44,8 +66,9 @@
         :class="inputClass"
         @change="useCustomDates"
       />
-      <span class="text-xs text-gray-400">to</span>
+      <span v-if="!showTestSuite || !filters.testSuite" class="text-xs text-gray-400">to</span>
       <input
+        v-if="!showTestSuite || !filters.testSuite"
         v-model="filters.dateTo"
         type="date"
         aria-label="End date"
@@ -80,28 +103,76 @@
 <script setup>
 import { computed, onMounted, ref } from 'vue'
 import { Filter as FilterIcon, Search as SearchIcon } from 'lucide-vue-next'
-import { defaultDateRange, filters, resetFilters, useWorkflowValidation } from '../composables/useWorkflowValidation'
+import { defaultDateRange, filters, formatBuildId, formatDate, formatSuiteName, resetFilters, useWorkflowValidation } from '../composables/useWorkflowValidation'
 
 const emit = defineEmits(['change'])
-const { showVerdict, showTest, showSearch, searchPlaceholder } = defineProps({
+const { showVerdict, showTest, showTestSuite, showSearch, searchPlaceholder } = defineProps({
   showVerdict: { type: Boolean, default: true },
   showTest: { type: Boolean, default: false },
+  showTestSuite: { type: Boolean, default: false },
   showSearch: { type: Boolean, default: true },
   searchPlaceholder: { type: String, default: 'Search…' }
 })
-const { getFilters } = useWorkflowValidation()
+const { getFilters, getTestSuites } = useWorkflowValidation()
 
 const inputClass = 'text-sm rounded-lg border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-100 px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-red-500/40'
 
-const options = ref({ versions: [], providers: [], models: [], workflows: [] })
+const options = ref({ versions: [], providers: [], models: [], workflows: [], testSuites: [] })
 const datePreset = ref('90')
+const suiteExecutions = ref([])
+const loadingSuiteExecutions = ref(false)
+const generalVersion = ref('')
 
 const hasActive = computed(() =>
-  filters.version || (showTest && filters.workflow) || (showVerdict && filters.verdict) || (showSearch && filters.q) || filters.dateFrom || filters.dateTo
+  filters.version || (showTest && filters.workflow) || (showTestSuite && filters.testSuite) || (showVerdict && filters.verdict) || (showSearch && filters.q) || filters.dateFrom || filters.dateTo
 )
+
+function suiteExecutionLabel(execution) {
+  const details = [execution.rhoaiVersion, formatBuildId(execution.rhodsOperatorDigest)].filter((value) => value && value !== 'Unknown')
+  return `${formatDate(execution.timestamp)}${details.length ? ` · ${details.join(' · ')}` : ''}`
+}
+
+async function loadSuiteExecutions() {
+  if (!filters.testSuite) {
+    suiteExecutions.value = []
+    filters.invocationId = ''
+    return
+  }
+  loadingSuiteExecutions.value = true
+  try {
+    const response = await getTestSuites({ suite: filters.testSuite })
+    suiteExecutions.value = response.rows || []
+    if (!suiteExecutions.value.some((row) => row.invocationId === filters.invocationId)) {
+      filters.invocationId = suiteExecutions.value[0]?.invocationId || ''
+    }
+  } finally {
+    loadingSuiteExecutions.value = false
+  }
+}
+
+async function changeTestSuite() {
+  if (filters.testSuite) {
+    generalVersion.value = filters.version
+    filters.version = ''
+  } else {
+    filters.version = generalVersion.value
+  }
+  filters.invocationId = ''
+  try {
+    await loadSuiteExecutions()
+  } catch {
+    filters.testSuite = ''
+    filters.version = generalVersion.value
+  }
+  emitChange()
+}
 
 function emitChange() {
   emit('change')
+}
+
+async function changeVersion() {
+  emitChange()
 }
 
 function applyDatePreset() {
@@ -138,6 +209,11 @@ onMounted(async () => {
   try {
     options.value = await getFilters()
     datePreset.value = detectDatePreset()
+    if (showTestSuite && filters.testSuite) {
+      generalVersion.value = filters.version
+      filters.version = ''
+      await loadSuiteExecutions()
+    }
   } catch {
     // filter options are best-effort; the bar still works with free text
   }
