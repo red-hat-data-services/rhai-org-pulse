@@ -2,7 +2,7 @@
 import { ref, computed, watch, onMounted } from 'vue'
 import { ExternalLink, RefreshCw, AlertTriangle, Maximize2, Minimize2 } from 'lucide-vue-next'
 
-const S3_DASHBOARD_BASE = 'http://test-reports-dashboard.s3-website-us-east-1.amazonaws.com/dashboard'
+const S3_DASHBOARD_BASE = 'https://test-reports-dashboard.s3.amazonaws.com/dashboard'
 
 const dashboardUrl = ref('')
 const iframeRef = ref(null)
