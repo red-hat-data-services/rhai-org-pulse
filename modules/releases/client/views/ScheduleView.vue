@@ -88,9 +88,9 @@
           </template>
           <button
             type="button"
-            class="px-3 py-1 rounded-full text-xs font-medium transition-colors border bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-400 border-gray-300 dark:border-gray-600 hover:border-gray-400 dark:hover:border-gray-500"
+            class="px-3 py-1 rounded-full text-xs font-normal transition-colors border bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-400 border-gray-300 dark:border-gray-600 hover:border-gray-400 dark:hover:border-gray-500"
             @click="emit('show-aipcc')"
-          >AIPCC</button>
+          >aipcc</button>
         </div>
         <label class="flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400 cursor-pointer select-none shrink-0">
           <input type="checkbox" v-model="hideReleased" class="rounded border-gray-300 dark:border-gray-600 text-primary-600 focus:ring-primary-500" />
