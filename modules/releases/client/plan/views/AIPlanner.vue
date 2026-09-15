@@ -6,7 +6,7 @@ const { session, approveFeature, persist, filterDecision } = useDraftPlans()
 const iframeRef = ref(null)
 const moduleNav = inject('moduleNav', null)
 
-const PLANNER_URL = 'https://htmlpreview.github.io/?https://github.com/yuvalluria/rhai-release-planner/blob/0d4d478/index.html'
+const PLANNER_URL = 'https://htmlpreview.github.io/?https://github.com/yuvalluria/rhai-release-planner/blob/67663c4/index.html'
 
 function onIframeLoad() {
   const actor = session.value && session.value.actor
@@ -15,7 +15,6 @@ function onIframeLoad() {
 }
 
 function onMessage(e) {
-  if (e.origin !== 'https://htmlpreview.github.io') return
   if (!e.data || e.data.type !== 'add-to-draft-plan') return
   const features = e.data.features || []
   let approved = 0
