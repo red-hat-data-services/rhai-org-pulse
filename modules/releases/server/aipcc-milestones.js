@@ -1,6 +1,6 @@
 'use strict'
 
-const { createGoogleUserSheetsClient } = require('./google-user-sheets')
+const { createGoogleUserSheetsClient, listConnectedGoogleUsers } = require('./google-user-sheets')
 
 const SPREADSHEET_ID = '10OccyDM5P1UZX1ldaoPLVKbL4HKgh7cCY3Oiy_xKcX8'
 const SHEET_NAME = 'tpm_source_of_truth'
@@ -155,15 +155,42 @@ function createAipccMilestonesService(context) {
   const { storage } = context
   let memoryCache = null
 
-  async function getSheetsClient(userEmail) {
-    if (context.googleSheetsClient) return context.googleSheetsClient
-    if (!userEmail) throw new Error('No Org Pulse Google user is available for the milestone refresh')
-    return createGoogleUserSheetsClient({ secrets: context.secrets, storage, userEmail })
+  async function readerCandidates(userEmail) {
+    const owner = await storage.readFromStorage(CREDENTIAL_OWNER_KEY)
+    const connectedUsers = await listConnectedGoogleUsers(storage)
+    const candidates = [
+      context.secrets.AIPCC_MILESTONES_GOOGLE_USER,
+      owner?.userEmail,
+      userEmail,
+      ...connectedUsers
+    ].filter(Boolean)
+    return [...new Map(candidates.map(email => [email.toLowerCase(), email])).values()]
   }
 
   async function fetchLive(userEmail) {
-    const sheets = await getSheetsClient(userEmail)
-    const { headers, rows } = await sheets.fetchRawSheet(SPREADSHEET_ID, SHEET_NAME)
+    let rawSheet
+    let successfulReader = userEmail
+    if (context.googleSheetsClient) {
+      rawSheet = await context.googleSheetsClient.fetchRawSheet(SPREADSHEET_ID, SHEET_NAME)
+    } else {
+      const candidates = await readerCandidates(userEmail)
+      if (!candidates.length) throw new Error('No connected Org Pulse Google user is available for the milestone refresh')
+
+      const errors = []
+      for (const candidate of candidates) {
+        try {
+          const sheets = await createGoogleUserSheetsClient({ secrets: context.secrets, storage, userEmail: candidate })
+          rawSheet = await sheets.fetchRawSheet(SPREADSHEET_ID, SHEET_NAME)
+          successfulReader = candidate
+          break
+        } catch (error) {
+          errors.push(`${candidate}: ${error.message}`)
+        }
+      }
+      if (!rawSheet) throw new Error(`No connected Org Pulse Google user could read the milestone sheet (${errors.join('; ')})`)
+    }
+
+    const { headers, rows } = rawSheet
     const fetchedAt = new Date()
     const releases = parseSpreadsheet([headers, ...rows], fetchedAt)
     const milestoneCount = countMilestones(releases)
@@ -176,7 +203,9 @@ function createAipccMilestonesService(context) {
       releases
     }
     await storage.writeToStorage(STORAGE_KEY, result)
-    if (userEmail) await storage.writeToStorage(CREDENTIAL_OWNER_KEY, { userEmail: userEmail.toLowerCase() })
+    if (successfulReader) {
+      await storage.writeToStorage(CREDENTIAL_OWNER_KEY, { userEmail: successfulReader.toLowerCase() })
+    }
     memoryCache = result
     return result
   }
@@ -205,14 +234,7 @@ function createAipccMilestonesService(context) {
 
   return {
     getData,
-    refresh: async userEmail => {
-      let refreshUser = userEmail
-      if (!refreshUser) {
-        const owner = await storage.readFromStorage(CREDENTIAL_OWNER_KEY)
-        refreshUser = owner?.userEmail
-      }
-      return { ...await fetchLive(refreshUser), cacheStatus: 'refreshed' }
-    }
+    refresh: async userEmail => ({ ...await fetchLive(userEmail), cacheStatus: 'refreshed' })
   }
 }
 

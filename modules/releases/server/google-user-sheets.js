@@ -11,6 +11,13 @@ function findUserTokens(allTokens, userEmail) {
     .find(([email]) => email.toLowerCase() === normalizedEmail)?.[1] || null
 }
 
+async function listConnectedGoogleUsers(storage) {
+  const allTokens = await storage.readFromStorage(USER_TOKEN_KEY) || {}
+  return Object.entries(allTokens)
+    .filter(([, tokens]) => tokens?.access_token || tokens?.refresh_token)
+    .map(([email]) => email)
+}
+
 async function createGoogleUserSheetsClient({ secrets, storage, userEmail }) {
   const clientId = secrets.GOOGLE_OAUTH_CLIENT_ID
   const clientSecret = secrets.GOOGLE_OAUTH_CLIENT_SECRET
@@ -41,4 +48,4 @@ async function createGoogleUserSheetsClient({ secrets, storage, userEmail }) {
   }
 }
 
-module.exports = { createGoogleUserSheetsClient, findUserTokens }
+module.exports = { createGoogleUserSheetsClient, findUserTokens, listConnectedGoogleUsers }

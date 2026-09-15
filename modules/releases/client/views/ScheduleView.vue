@@ -88,7 +88,7 @@
           </template>
           <button
             type="button"
-            class="px-3 py-1 rounded-full text-xs font-semibold transition-colors border bg-white dark:bg-gray-800 text-violet-700 dark:text-violet-300 border-violet-300 dark:border-violet-600 hover:bg-violet-50 dark:hover:bg-violet-900/30"
+            class="px-3 py-1 rounded-full text-xs font-medium transition-colors border bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-400 border-gray-300 dark:border-gray-600 hover:border-gray-400 dark:hover:border-gray-500"
             @click="emit('show-aipcc')"
           >AIPCC</button>
         </div>

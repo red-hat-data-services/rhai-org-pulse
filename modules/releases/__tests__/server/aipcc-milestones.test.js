@@ -5,7 +5,7 @@ const {
   createAipccMilestonesService,
   STORAGE_KEY
 } = require('../../server/aipcc-milestones')
-const { findUserTokens } = require('../../server/google-user-sheets')
+const { findUserTokens, listConnectedGoogleUsers } = require('../../server/google-user-sheets')
 
 function storageWith(initial = null) {
   let value = initial
@@ -83,5 +83,19 @@ describe('Org Pulse Google user lookup', () => {
   it('reuses existing tokens even when a legacy email key has mixed case', () => {
     const tokens = { refresh_token: 'refresh-token' }
     expect(findUserTokens({ 'User@RedHat.com': tokens }, 'user@redhat.com')).toBe(tokens)
+  })
+
+  it('lists only Org Pulse users with reusable Google credentials', async () => {
+    const storage = {
+      readFromStorage: vi.fn().mockResolvedValue({
+        'reader@redhat.com': { refresh_token: 'refresh-token' },
+        'expired@redhat.com': {},
+        'viewer@redhat.com': { access_token: 'access-token' }
+      })
+    }
+    await expect(listConnectedGoogleUsers(storage)).resolves.toEqual([
+      'reader@redhat.com',
+      'viewer@redhat.com'
+    ])
   })
 })

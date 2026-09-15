@@ -94,6 +94,12 @@
         "description": "Org Pulse Google OAuth client secret used with connected user credentials",
         "required": false,
         "group": "google-user-auth"
+      },
+      {
+        "key": "AIPCC_MILESTONES_GOOGLE_USER",
+        "description": "Preferred connected Org Pulse Google user for AIPCC milestone refreshes",
+        "required": false,
+        "group": "google-user-auth"
       }
     ]
   },
