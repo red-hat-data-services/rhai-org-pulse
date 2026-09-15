@@ -1,7 +1,7 @@
 <template>
   <div>
     <button class="inline-flex items-center gap-1.5 text-sm text-gray-500 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 mb-4"
-      @click="nav.navigateTo('workflows')">
+      @click="backToTrends">
       <ChevronLeftIcon :size="16" /> Test Trends
     </button>
 
@@ -106,11 +106,13 @@ import {
 } from 'chart.js'
 import MetricCard from '../components/MetricCard.vue'
 import StatusBadge from '../components/StatusBadge.vue'
-import { compareTableValues, useWorkflowValidation, formatDuration, formatPercent, formatDate, formatRatio } from '../composables/useWorkflowValidation'
+import { compareTableValues, filterQueryValues, hydrateFilters, syncQueryParams, useWorkflowValidation, formatDuration, formatPercent, formatDate, formatRatio } from '../composables/useWorkflowValidation'
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, PointElement, LineElement, Tooltip, Legend, Filler)
 
 const nav = inject('moduleNav')
+const FILTER_KEYS = ['version', 'datePreset', 'dateFrom', 'dateTo']
+hydrateFilters(nav?.params?.value, FILTER_KEYS)
 const { getWorkflowHistory } = useWorkflowValidation()
 
 const workflow = ref('')
@@ -138,7 +140,8 @@ const bugsByRun = computed(() => {
   return map
 })
 function bugsForRun(runId) { return bugsByRun.value[runId] || [] }
-function openCompare() { nav.navigateTo('version-compare', { workflow: workflow.value }) }
+function backToTrends() { nav.navigateTo('workflows', filterQueryValues(FILTER_KEYS)) }
+function openCompare() { nav.navigateTo('compare', { test: workflow.value }) }
 function setSort(column) {
   sortDir.value = sortBy.value === column && sortDir.value === 'desc' ? 'asc' : 'desc'
   sortBy.value = column
@@ -203,6 +206,7 @@ async function load() {
     bugs.value = data.bugs
     summary.value = data.summary
     workflowLabel.value = data.workflowLabel || wf
+    syncQueryParams(nav, { workflow: workflow.value, ...filterQueryValues(FILTER_KEYS) })
   } catch (err) {
     error.value = err.data?.error || err.message || 'Failed to load test history'
   } finally {

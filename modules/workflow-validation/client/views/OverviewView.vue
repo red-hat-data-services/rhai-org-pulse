@@ -116,11 +116,13 @@ import TrendLineChart from '../components/TrendLineChart.vue'
 import PassRateByVersionChart from '../components/PassRateByVersionChart.vue'
 import { useCostVisibility } from '../composables/useCostVisibility'
 import {
-  filters, useWorkflowValidation,
+  filterQueryValues, filters, hydrateFilters, syncQueryParams, useWorkflowValidation,
   formatUsd, formatDuration, formatPercent, formatDate
 } from '../composables/useWorkflowValidation'
 
 const nav = inject('moduleNav')
+const FILTER_KEYS = ['version', 'testSuite', 'invocationId', 'datePreset', 'dateFrom', 'dateTo']
+hydrateFilters(nav?.params?.value, FILTER_KEYS)
 const { getOverview, getCharts } = useWorkflowValidation()
 const costsVisible = useCostVisibility()
 
@@ -135,9 +137,9 @@ const charts = reactive({ overTime: [], byVersion: [], byWorkflow: [], bugsByCat
 function passTone(rate) { if (rate == null) return 'neutral'; return rate >= 0.9 ? 'green' : rate >= 0.7 ? 'amber' : 'red' }
 function openTest(test) { nav.navigateTo('run-detail', { runKey: test.execution_id || test.id }) }
 function viewFailedTests() {
-  nav.navigateTo('runs', { verdict: 'UNSUCCESSFUL', q: '' })
+  nav.navigateTo('runs', { ...filterQueryValues(FILTER_KEYS), verdict: 'UNSUCCESSFUL', q: '' })
 }
-function viewRecentTests() { nav.navigateTo('runs', { verdict: '', q: '' }) }
+function viewRecentTests() { nav.navigateTo('runs', { ...filterQueryValues(FILTER_KEYS), verdict: '', q: '' }) }
 
 async function loadAll() {
   loading.value = true
@@ -151,6 +153,7 @@ async function loadAll() {
     const [ov, ch] = await Promise.all([getOverview(dashboardScope), getCharts(dashboardScope)])
     Object.assign(overview, ov)
     Object.assign(charts, ch)
+    syncQueryParams(nav, filterQueryValues(FILTER_KEYS))
   } catch (err) {
     if (err.status === 503 || err.data?.code === 'OS_UNREACHABLE') {
       unreachable.value = err.data?.error || err.message

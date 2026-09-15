@@ -17,6 +17,14 @@ the module reveals them for the lifetime of the loaded SPA. This is a display
 preference, not an authorization boundary: cost fields remain present in the
 authenticated backend responses.
 
+Every user-selectable filter is mirrored in the current view's hash query
+string using Org Pulse module navigation. Views hydrate their filters before
+their first data request and replace the current history entry when filters
+change, so copied URLs reproduce the same scope without making browser Back
+step through each filter edit. Empty values are intentional: they preserve
+explicit choices such as “All versions” and “All time” instead of allowing
+future defaults to change a saved view.
+
 ## Runtime configuration
 
 | Variable | Sensitive | Description |

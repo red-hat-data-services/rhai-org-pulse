@@ -75,4 +75,35 @@ describe('Workflow Validation CompareView', () => {
     expect(wrapper.get('tbody').text()).toContain('Beta test')
     wrapper.unmount()
   })
+
+  it('hydrates every comparison filter from a shared URL and keeps it synchronized', async () => {
+    apiRequest
+      .mockResolvedValueOnce({ versions })
+      .mockResolvedValueOnce({
+        baseline: { version: '3.6', tests: 2 },
+        target: { version: '3.5', tests: 2 },
+        rows: [{
+          workflow: 'beta', workflowLabel: 'Beta test', change: 'same', passRateChange: 0,
+          baseline: { executions: 1, passed: 1, passRate: 1 },
+          target: { executions: 1, passed: 1, passRate: 1, productBugs: [] }
+        }]
+      })
+    const updateParams = vi.fn()
+    const wrapper = mount(CompareView, {
+      global: {
+        provide: { moduleNav: {
+          navigateTo: vi.fn(), updateParams,
+          params: { value: { baseline: '3.6', target: '3.5', test: 'beta' } }
+        } },
+        stubs: { MetricCard: true, StatusBadge: true, ProductBugStatus: true }
+      }
+    })
+    await vi.dynamicImportSettled?.()
+    await wrapper.vm.$nextTick()
+
+    expect(apiRequest).toHaveBeenCalledWith('/modules/workflow-validation/version-compare?baseline=3.6&target=3.5')
+    expect(wrapper.findAll('select').map((select) => select.element.value)).toEqual(['3.6', '3.5', 'beta'])
+    expect(updateParams).toHaveBeenCalledWith({ baseline: '3.6', target: '3.5', test: 'beta' }, { push: false })
+    wrapper.unmount()
+  })
 })

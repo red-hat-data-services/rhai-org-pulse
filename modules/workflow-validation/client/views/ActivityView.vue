@@ -58,10 +58,12 @@ import { ServerCrash as ServerCrashIcon } from 'lucide-vue-next'
 import FilterBar from '../components/FilterBar.vue'
 import MetricCard from '../components/MetricCard.vue'
 import BugRow from '../components/BugRow.vue'
-import { filters, useWorkflowValidation } from '../composables/useWorkflowValidation'
+import { filterQueryValues, filters, hydrateFilters, syncQueryParams, useWorkflowValidation } from '../composables/useWorkflowValidation'
 
 const { getBugs } = useWorkflowValidation()
 const nav = inject('moduleNav')
+const FILTER_KEYS = ['version', 'workflow', 'q', 'datePreset', 'dateFrom', 'dateTo']
+hydrateFilters(nav?.params?.value, FILTER_KEYS)
 
 const bugs = ref([])
 const total = ref(0)
@@ -91,6 +93,7 @@ async function load() {
     nextCursor.value = data.nextCursor
     Object.assign(kpis, data.kpis)
     byAction.value = data.byAction
+    syncQueryParams(nav, filterQueryValues(FILTER_KEYS))
   } catch (err) {
     if (err.status === 503 || err.data?.code === 'OS_UNREACHABLE') {
       unreachable.value = err.data?.error || err.message
@@ -106,8 +109,5 @@ function reload() { cursor.value = ''; cursorHistory.value = []; load() }
 function openTest(executionId) { nav.navigateTo('run-detail', { runKey: executionId }) }
 function next() { cursorHistory.value.push(cursor.value); cursor.value = nextCursor.value; load() }
 function previous() { cursor.value = cursorHistory.value.pop() || ''; load() }
-onMounted(() => {
-  filters.q = ''
-  load()
-})
+onMounted(load)
 </script>

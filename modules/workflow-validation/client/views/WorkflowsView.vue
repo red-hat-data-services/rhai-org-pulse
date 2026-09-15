@@ -20,14 +20,14 @@
         <button
           class="px-3 py-1 rounded-full text-xs font-medium border transition"
           :class="!activeTag ? 'bg-red-600 text-white border-red-600' : 'bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-300 border-gray-200 dark:border-gray-600 hover:border-gray-300'"
-          @click="activeTag = ''"
+          @click="selectTag('')"
         >All</button>
         <button
           v-for="t in tags"
           :key="t.tag"
           class="px-3 py-1 rounded-full text-xs font-medium border transition"
           :class="activeTag === t.tag ? 'bg-red-600 text-white border-red-600' : 'bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-300 border-gray-200 dark:border-gray-600 hover:border-gray-300'"
-          @click="activeTag = activeTag === t.tag ? '' : t.tag"
+          @click="selectTag(activeTag === t.tag ? '' : t.tag)"
         >{{ t.tag }} <span class="opacity-60">{{ t.count }}</span></button>
       </div>
 
@@ -93,15 +93,17 @@ import FilterBar from '../components/FilterBar.vue'
 import ProductBugStatus from '../components/ProductBugStatus.vue'
 import StatusBadge from '../components/StatusBadge.vue'
 import { useCostVisibility } from '../composables/useCostVisibility'
-import { compareTableValues, filters, useWorkflowValidation, formatUsd, formatPercent, formatDate } from '../composables/useWorkflowValidation'
+import { compareTableValues, filterQueryValues, filters, hydrateFilters, syncQueryParams, useWorkflowValidation, formatUsd, formatPercent, formatDate } from '../composables/useWorkflowValidation'
 
 const nav = inject('moduleNav')
+const FILTER_KEYS = ['version', 'q', 'datePreset', 'dateFrom', 'dateTo']
+hydrateFilters(nav?.params?.value, FILTER_KEYS)
 const { getWorkflows } = useWorkflowValidation()
 const costsVisible = useCostVisibility()
 
 const workflows = ref([])
 const tags = ref([])
-const activeTag = ref('')
+const activeTag = ref(nav?.params?.value?.tag || '')
 const loading = ref(false)
 const unreachable = ref('')
 const sortBy = ref('latestTimestamp')
@@ -118,7 +120,18 @@ function barColor(rate) {
   if (rate == null) return 'bg-gray-400'
   return rate >= 0.9 ? 'bg-green-500' : rate >= 0.7 ? 'bg-amber-500' : 'bg-red-500'
 }
-function openHistory(w) { nav.navigateTo('workflow-history', { workflow: w.workflow }) }
+function openHistory(w) {
+  nav.navigateTo('workflow-history', {
+    workflow: w.workflow,
+    version: filters.version,
+    dateFrom: filters.dateFrom,
+    dateTo: filters.dateTo
+  })
+}
+function selectTag(tag) {
+  activeTag.value = tag
+  syncQueryParams(nav, { ...filterQueryValues(FILTER_KEYS), tag: activeTag.value })
+}
 function setSort(column) {
   sortDir.value = sortBy.value === column && sortDir.value === 'desc' ? 'asc' : 'desc'
   sortBy.value = column
@@ -132,6 +145,7 @@ async function load() {
     const data = await getWorkflows({ verdict: '' })
     workflows.value = data.workflows
     tags.value = data.tags
+    syncQueryParams(nav, { ...filterQueryValues(FILTER_KEYS), tag: activeTag.value })
   } catch (err) {
     if (err.status === 503 || err.data?.code === 'OS_UNREACHABLE') {
       unreachable.value = err.data?.error || err.message
@@ -143,8 +157,5 @@ async function load() {
   }
 }
 
-onMounted(() => {
-  filters.q = ''
-  load()
-})
+onMounted(load)
 </script>
