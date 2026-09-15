@@ -442,3 +442,68 @@ test.describe('AI Impact Build & Release @ai-impact', () => {
     expect(page.errors).toHaveLength(0);
   });
 });
+
+/**
+ * Component onboarding API — target version sync endpoints and ingest normalization
+ */
+test.describe('AI Impact Component Onboarding API @ai-impact', () => {
+  test('GET /component-onboarding/sync/status returns sync state', async ({ request }) => {
+    const res = await request.get('/api/modules/ai-impact/component-onboarding/sync/status');
+    expect(res.ok()).toBe(true);
+
+    const body = await res.json();
+    expect(body).toHaveProperty('running');
+    expect(body).toHaveProperty('startedAt');
+    expect(body).toHaveProperty('lastResult');
+  });
+
+  test('POST /component-onboarding/sync returns a known status', async ({ request }) => {
+    const res = await request.post('/api/modules/ai-impact/component-onboarding/sync');
+    expect(res.ok()).toBe(true);
+
+    const body = await res.json();
+    expect(['started', 'already_running', 'skipped']).toContain(body.status);
+  });
+
+  test('GET /component-onboarding excludes YAML build_type target versions', async ({ request }) => {
+    const res = await request.get('/api/modules/ai-impact/component-onboarding');
+    expect(res.ok()).toBe(true);
+
+    const body = await res.json();
+    expect(body.components).toBeDefined();
+
+    for (const comp of Object.values(body.components || {})) {
+      const tv = String(comp.targetVersion || '').toLowerCase();
+      expect(tv).not.toBe('ci');
+      expect(tv).not.toBe('release');
+    }
+  });
+
+  test('Build & Release target version column does not show CI/Release labels', async ({ page }) => {
+    setupErrorTracking(page);
+    await page.addInitScript(() => {
+      localStorage.setItem('ai-impact-guide-dismissed', 'true');
+    });
+    await page.goto('/#/ai-impact/build-release');
+    await page.waitForLoadState('networkidle');
+    await page.waitForTimeout(DEFAULT_PAGE_WAIT_TIME);
+
+    const productSelect = page.locator('select').filter({
+      has: page.locator('option[value="ODH"]')
+    }).first();
+    if (await productSelect.count()) {
+      await productSelect.selectOption('ODH');
+      await page.waitForTimeout(500);
+    }
+
+    const versionCells = page.locator('table tbody tr td:nth-child(5)');
+    const count = await versionCells.count();
+    for (let i = 0; i < count; i++) {
+      const text = (await versionCells.nth(i).innerText()).trim();
+      expect(text).not.toBe('CI');
+      expect(text).not.toBe('Release');
+    }
+
+    expect(page.errors).toHaveLength(0);
+  });
+});

@@ -2,8 +2,10 @@ import { describe, it, expect } from 'vitest';
 import {
   isOdhBuildType,
   resolveTargetVersion,
+  resolveBuildType,
   extractVersionNameFromJiraField,
-  needsTargetVersionEnrichment
+  needsTargetVersionEnrichment,
+  markTargetVersionChecked
 } from '../../server/component-onboarding/target-version.js';
 import { validateComponentOnboarding } from '../../server/component-onboarding/validation.js';
 import { enrichTargetVersionsFromJira } from '../../server/component-onboarding/jira-sync.js';
@@ -34,6 +36,26 @@ describe('resolveTargetVersion', () => {
   });
 });
 
+describe('resolveBuildType', () => {
+  it('derives buildType from legacy targetVersion when explicit buildType is absent', () => {
+    expect(resolveBuildType({ targetVersion: 'CI' })).toBe('CI');
+    expect(resolveBuildType({ targetVersion: 'rhoai-3.5' })).toBeNull();
+  });
+});
+
+describe('needsTargetVersionEnrichment', () => {
+  it('skips components already checked with no Jira target version', () => {
+    expect(needsTargetVersionEnrichment({
+      targetVersion: null,
+      targetVersionCheckedAt: '2026-01-01T00:00:00.000Z'
+    })).toBe(false);
+  });
+
+  it('still enriches legacy CI/Release placeholders', () => {
+    expect(needsTargetVersionEnrichment({ targetVersion: 'CI' })).toBe(true);
+  });
+});
+
 describe('validateComponentOnboarding targetVersion', () => {
   const base = {
     key: 'RHOAIENG-1',
@@ -48,6 +70,7 @@ describe('validateComponentOnboarding targetVersion', () => {
     const result = validateComponentOnboarding({ ...base, targetVersion: 'CI' });
     expect(result.valid).toBe(true);
     expect(result.data.targetVersion).toBeNull();
+    expect(result.data.buildType).toBe('CI');
   });
 
   it('stores Jira target version from jiraTargetVersion alias', () => {
@@ -58,6 +81,7 @@ describe('validateComponentOnboarding targetVersion', () => {
     });
     expect(result.valid).toBe(true);
     expect(result.data.targetVersion).toBe('3.6 GA RHOAI RELEASE');
+    expect(result.data.buildType).toBe('CI');
   });
 });
 
@@ -96,9 +120,32 @@ describe('enrichTargetVersionsFromJira', () => {
     const result = await enrichTargetVersionsFromJira(data, () => {}, fetchFn);
 
     expect(result.updated).toBe(1);
+    expect(result.checked).toBe(0);
     expect(data.components['RHOAIENG-93240'].latest.targetVersion)
       .toBe('3.6 GA RHOAI RELEASE');
     expect(needsTargetVersionEnrichment(data.components['RHOAIENG-93240'].latest)).toBe(false);
+  });
+
+  it('marks components checked when Jira has no target version', async () => {
+    const data = {
+      components: {
+        'RHOAIENG-99999': {
+          latest: { key: 'RHOAIENG-99999', targetVersion: null },
+          history: []
+        }
+      }
+    };
+
+    const fetchFn = async () => ([
+      { key: 'RHOAIENG-99999', fields: { customfield_10855: null } }
+    ]);
+
+    const result = await enrichTargetVersionsFromJira(data, () => {}, fetchFn);
+
+    expect(result.updated).toBe(0);
+    expect(result.checked).toBe(1);
+    expect(data.components['RHOAIENG-99999'].latest.targetVersionCheckedAt).toBeTruthy();
+    expect(needsTargetVersionEnrichment(data.components['RHOAIENG-99999'].latest)).toBe(false);
   });
 
   it('skips components that already have a release targetVersion', async () => {
@@ -116,5 +163,12 @@ describe('enrichTargetVersionsFromJira', () => {
 
     expect(result.synced).toBe(0);
     expect(result.updated).toBe(0);
+  });
+
+  it('does not re-query after markTargetVersionChecked', () => {
+    const component = { key: 'RHOAIENG-1', targetVersion: null };
+    expect(needsTargetVersionEnrichment(component)).toBe(true);
+    markTargetVersionChecked(component);
+    expect(needsTargetVersionEnrichment(component)).toBe(false);
   });
 });

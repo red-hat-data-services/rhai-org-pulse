@@ -1,4 +1,4 @@
-const { resolveTargetVersion } = require('./target-version');
+const { resolveTargetVersion, resolveBuildType } = require('./target-version');
 
 const VALID_COMPLETION_STATUSES = ['completed', 'in-progress', 'in_queue'];
 const VALID_PRODUCT_CONTEXTS = ['RHOAI', 'ODH'];
@@ -251,7 +251,8 @@ function validateComponentOnboarding(body) {
       }),
       productContext: body.productContext,
       targetVersion: resolveTargetVersion(body),
-      buildType: body.buildType?.trim() || null,
+      // Ingest metadata only (YAML build_type); not projected via projectComponent().
+      buildType: resolveBuildType(body),
       statusCategory: body.statusCategory || null,
       syncedAt: body.syncedAt,
       componentName: body.componentName || '',

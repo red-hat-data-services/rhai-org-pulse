@@ -32,6 +32,22 @@ function resolveTargetVersion(body) {
 }
 
 /**
+ * ODH YAML build_type from explicit field or legacy targetVersion ingest.
+ * Stored for ingest audit only — not projected to API clients.
+ * @param {object} body
+ * @returns {string|null}
+ */
+function resolveBuildType(body) {
+  const explicit = typeof body.buildType === 'string' ? body.buildType.trim() : '';
+  if (explicit) return explicit;
+
+  const raw = typeof body.targetVersion === 'string' ? body.targetVersion.trim() : '';
+  if (raw && isOdhBuildType(raw)) return raw;
+
+  return null;
+}
+
+/**
  * @param {*} field - Raw Jira customfield_10855 value
  * @returns {string|null}
  */
@@ -49,9 +65,23 @@ function extractVersionNameFromJiraField(field) {
   return null;
 }
 
+/**
+ * Whether a component should be included in a Jira Target Version enrichment batch.
+ * Skips rows that already have a release version or were checked with no Jira value.
+ * @param {object|null|undefined} component
+ */
 function needsTargetVersionEnrichment(component) {
-  const tv = component?.targetVersion;
-  return !tv || isOdhBuildType(tv);
+  if (!component) return false;
+
+  const tv = component.targetVersion;
+  if (tv && !isOdhBuildType(tv)) return false;
+  if (component.targetVersionCheckedAt) return false;
+
+  return true;
+}
+
+function markTargetVersionChecked(component) {
+  component.targetVersionCheckedAt = new Date().toISOString();
 }
 
 module.exports = {
@@ -59,6 +89,8 @@ module.exports = {
   TARGET_VERSION_FIELD,
   isOdhBuildType,
   resolveTargetVersion,
+  resolveBuildType,
   extractVersionNameFromJiraField,
-  needsTargetVersionEnrichment
+  needsTargetVersionEnrichment,
+  markTargetVersionChecked
 };

@@ -3,7 +3,8 @@ const { readComponentOnboarding, writeComponentOnboardingAtomic } = require('./s
 const {
   TARGET_VERSION_FIELD,
   extractVersionNameFromJiraField,
-  needsTargetVersionEnrichment
+  needsTargetVersionEnrichment,
+  markTargetVersionChecked
 } = require('./target-version');
 
 const BATCH_SIZE = 50;
@@ -28,7 +29,7 @@ function releaseLock() {
  * @param {object} data - Full component onboarding store
  * @param {Function} jiraRequest
  * @param {Function} [fetchFn] - Override for tests
- * @returns {Promise<{ synced: number, updated: number, errors: string[] }>}
+ * @returns {Promise<{ synced: number, updated: number, checked: number, errors: string[] }>}
  */
 async function enrichTargetVersionsFromJira(data, jiraRequest, fetchFn) {
   const doFetch = fetchFn || fetchAllJqlResults;
@@ -39,10 +40,10 @@ async function enrichTargetVersionsFromJira(data, jiraRequest, fetchFn) {
   }
 
   if (keysToEnrich.length === 0) {
-    return { synced: 0, updated: 0, errors: [] };
+    return { synced: 0, updated: 0, checked: 0, errors: [] };
   }
 
-  const counts = { synced: 0, updated: 0 };
+  const counts = { synced: 0, updated: 0, checked: 0 };
   const errors = [];
 
   for (let i = 0; i < keysToEnrich.length; i += BATCH_SIZE) {
@@ -65,21 +66,31 @@ async function enrichTargetVersionsFromJira(data, jiraRequest, fetchFn) {
 
     for (const key of batch) {
       counts.synced++;
+      const entry = data.components[key];
       const issue = issueMap.get(key);
-      if (!issue) continue;
+
+      if (!issue) {
+        markTargetVersionChecked(entry.latest);
+        counts.checked++;
+        continue;
+      }
 
       const tvName = extractVersionNameFromJiraField(issue.fields?.[TARGET_VERSION_FIELD]);
-      if (!tvName) continue;
+      if (!tvName) {
+        markTargetVersionChecked(entry.latest);
+        counts.checked++;
+        continue;
+      }
 
-      const entry = data.components[key];
       if (entry.latest.targetVersion !== tvName) {
         entry.latest.targetVersion = tvName;
+        delete entry.latest.targetVersionCheckedAt;
         counts.updated++;
       }
     }
   }
 
-  return { synced: counts.synced, updated: counts.updated, errors };
+  return { synced: counts.synced, updated: counts.updated, checked: counts.checked, errors };
 }
 
 /**
@@ -89,7 +100,7 @@ async function syncComponentOnboardingFromJira(readFromStorage, writeToStorage, 
   const data = await readComponentOnboarding(readFromStorage);
   const result = await enrichTargetVersionsFromJira(data, jiraRequest, fetchFn);
 
-  if (result.updated > 0) {
+  if (result.updated > 0 || result.checked > 0) {
     await writeComponentOnboardingAtomic(writeToStorage, data);
   }
 

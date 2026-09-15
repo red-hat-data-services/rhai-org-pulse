@@ -41,7 +41,7 @@ async function runSync(readFromStorage, writeToStorage, jiraRequest) {
     const result = await syncComponentOnboardingFromJira(readFromStorage, writeToStorage, jiraRequest);
     syncState.lastResult = {
       status: result.errors.length > 0 ? 'partial' : 'success',
-      message: `Enriched ${result.updated} of ${result.synced} components from Jira Target Version`,
+      message: `Enriched ${result.updated} of ${result.synced} components from Jira Target Version (${result.checked} marked checked with no Jira value)`,
       errors: result.errors.length > 0 ? result.errors : undefined,
       completedAt: new Date().toISOString()
     };
@@ -188,13 +188,6 @@ module.exports = function registerComponentOnboardingRoutes(router, context) {
       unchanged: counts.unchanged,
       errors
     });
-
-    if (counts.created > 0 || counts.updated > 0) {
-      setTimeout(() => {
-        console.log('[ai-impact] Triggering post-ingest component onboarding Jira sync');
-        runSync(readFromStorage, writeToStorage, jiraRequest);
-      }, 10000);
-    }
   });
 
   /**
@@ -276,6 +269,7 @@ module.exports = function registerComponentOnboardingRoutes(router, context) {
   if (context.registerRefresh) {
     context.registerRefresh('component-onboarding-sync', {
       order: 65,
+      cadence: '12h',
       timeout: 600000,
       description: 'Enriches component onboarding target versions from Jira customfield_10855.',
       handler: async function() {
