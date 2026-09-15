@@ -61,8 +61,7 @@
       "customer-insights/interactions.json",
       "customer-insights/rfes.json",
       "customer-insights/roadmap.json",
-      "customer-insights/insights.json",
-      "customer-insights/user-tokens.json"
+      "customer-insights/insights.json"
     ]
   }
 }
