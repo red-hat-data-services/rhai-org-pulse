@@ -213,7 +213,7 @@ test.describe('Releases Views @releases', () => {
     await page.waitForLoadState('networkidle');
 
     await expect(page.getByRole('button', { name: 'AIPCC Milestones' })).toHaveCount(0);
-    const aipccPill = page.getByRole('button', { name: 'AIPCC', exact: true });
+    const aipccPill = page.getByRole('button', { name: 'aipcc', exact: true });
     await expect(aipccPill).toBeVisible();
     await aipccPill.click();
 
