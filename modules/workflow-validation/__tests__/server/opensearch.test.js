@@ -230,6 +230,52 @@ describe('workflow-validation live schema routes', () => {
       .toContainEqual({ terms: { verdict: ['FAIL', 'ERROR'] } })
   })
 
+  it('groups test suite executions by explicit origin and invocation', async () => {
+    vi.stubGlobal('fetch', vi.fn((url, options) => {
+      const body = JSON.parse(options.body)
+      if (url.includes(`/${BUGS_INDEX}/`)) return Promise.resolve(jsonResponse({ hits: { hits: [] } }))
+      expect(body.aggs.suite_runs.composite.sources).toEqual([
+        { suite: { terms: { field: 'telemetry_origin' } } },
+        { invocation: { terms: { field: 'invocation_id' } } }
+      ])
+      return Promise.resolve(jsonResponse({ aggregations: { suite_runs: { buckets: [{
+        key: { suite: 'productization', invocation: 'invocation-1' }, doc_count: 3,
+        pass_rate: { value: 2 / 3 }, passed: { doc_count: 2 }, failed: { doc_count: 1 }, errors: { doc_count: 0 },
+        latest: { hits: { hits: [{ _source: {
+          timestamp: '2026-09-15T10:00:00Z', rhoai_version: '3.6',
+          rhods_operator_digest: 'abcdef0123456789', run_id: 'run-1'
+        } }] } }
+      }] } } }))
+    }))
+    const routes = register()
+    const response = makeResponse()
+    await routes['/test-suites'].at(-1)({ query: { suite: 'productization', latest: 'true' } }, response)
+    expect(response.body.rows).toEqual([expect.objectContaining({
+      suite: 'productization', invocationId: 'invocation-1', tests: 3,
+      passed: 2, failed: 1, passRate: 2 / 3, rhodsOperatorDigest: 'abcdef0123456789'
+    })])
+  })
+
+  it('returns exact tests for one test suite execution', async () => {
+    vi.stubGlobal('fetch', vi.fn((url, options) => {
+      const body = JSON.parse(options.body)
+      if (url.includes(`/${BUGS_INDEX}/`)) return Promise.resolve(jsonResponse({ hits: { hits: [] } }))
+      expect(body.query.bool.filter).toContainEqual({ term: { telemetry_origin: 'productization' } })
+      expect(body.query.bool.filter).toContainEqual({ term: { invocation_id: 'invocation-1' } })
+      return Promise.resolve(jsonResponse({ hits: { hits: [{
+        _id: 'execution-1', _source: {
+          execution_id: 'execution-1', run_id: 'run-1', workflow: 'test-a', verdict: 'PASS',
+          timestamp: '2026-09-15T10:00:00Z', rhoai_version: '3.6', rhods_operator_digest: 'abcdef0123456789'
+        }
+      }] } }))
+    }))
+    const routes = register()
+    const response = makeResponse()
+    await routes['/test-suites/:suite/:invocationId'].at(-1)({ params: { suite: 'productization', invocationId: 'invocation-1' } }, response)
+    expect(response.body.summary).toMatchObject({ tests: 1, passed: 1, failed: 0, errors: 0, passRate: 1 })
+    expect(response.body.tests[0]).toMatchObject({ execution_id: 'execution-1', productBugs: [] })
+  })
+
   it('deduplicates infrastructure cost by run_id and contains no legacy path-derived fields', async () => {
     const bodies = []
     vi.stubGlobal('fetch', vi.fn((url, options) => {

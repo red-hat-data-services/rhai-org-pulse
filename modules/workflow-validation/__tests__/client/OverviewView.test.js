@@ -128,8 +128,8 @@ describe('Workflow Validation OverviewView', () => {
     expect(wrapper.text()).toContain('Fraud Detection Test')
     expect(wrapper.text()).toContain('7 tasks passed')
     expect(wrapper.text()).toContain('2 tasks failed')
-    expect(wrapper.text()).toContain('New product bug RHOAIENG-456 opened.')
-    expect(wrapper.text()).toContain('Pre-existing product bug RHOAIENG-789 detected.')
+    expect(wrapper.text()).toContain('RHOAIENG-456 — New product bug opened.')
+    expect(wrapper.text()).toContain('RHOAIENG-789 — Pre-existing product bug detected.')
     expect(wrapper.text()).toContain('Environmental failure detected. No product bug detected.')
     expect(wrapper.text()).not.toContain('AIPCC-123')
     expect(wrapper.text()).toContain('Existing product bug detected. Jira ID missing.')
@@ -157,7 +157,7 @@ describe('Workflow Validation OverviewView', () => {
   it('renders the recent tests table', () => {
     expect(wrapper.text()).toContain('Recent Tests')
     expect(wrapper.text()).toContain('fraud_detection')
-    expect(wrapper.text()).toContain('Pre-existing product bug RHOAIENG-999 detected.')
+    expect(wrapper.text()).toContain('RHOAIENG-999 — Pre-existing product bug detected.')
   })
 
   it('loads dashboard tests through the charts endpoint', () => {

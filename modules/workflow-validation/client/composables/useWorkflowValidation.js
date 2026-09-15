@@ -2,7 +2,7 @@ import { reactive } from 'vue'
 import { apiRequest } from '@shared/client/services/api'
 
 const BASE = '/modules/workflow-validation'
-const EMPTY_FILTER_OPTIONS = { versions: [], providers: [], models: [], workflows: [] }
+const EMPTY_FILTER_OPTIONS = { versions: [], providers: [], models: [], workflows: [], testSuites: [] }
 let filterOptionsPromise
 
 /**
@@ -134,6 +134,16 @@ export function formatRatio(value, total) {
   return `${value}/${total}`
 }
 
+export function formatSuiteName(value) {
+  if (!value) return 'Unknown test suite'
+  return String(value).replaceAll(/[_-]+/g, ' ').replace(/\b\w/g, (letter) => letter.toUpperCase())
+}
+
+export function formatBuildId(value) {
+  if (!value || String(value).toLowerCase() === 'unknown') return 'Unknown'
+  return String(value).replace(/^sha256:/i, '').slice(0, 8)
+}
+
 export function compareTableValues(left, right, direction = 'asc') {
   const a = left == null ? '' : left
   const b = right == null ? '' : right
@@ -159,10 +169,12 @@ export function useWorkflowValidation() {
   const getCompare = (a, b) => apiRequest(`${BASE}/compare?a=${encodeURIComponent(a)}&b=${encodeURIComponent(b)}`)
   const getCompareVersions = () => apiRequest(`${BASE}/compare-versions`)
   const getVersionCompare = (baseline, target) => apiRequest(`${BASE}/version-compare?baseline=${encodeURIComponent(baseline)}&target=${encodeURIComponent(target)}`)
+  const getTestSuites = (params = {}) => apiRequest(`${BASE}/test-suites${buildQuery(params, {})}`)
+  const getTestSuite = (suite, invocationId) => apiRequest(`${BASE}/test-suites/${encodeURIComponent(suite)}/${encodeURIComponent(invocationId)}`)
 
   return {
     getStatus, getFilters, getOverview, getCharts, getRuns, getRun, getBugs,
     getWorkflows, getWorkflowHistory, getCiRuns, getCompare,
-    getCompareVersions, getVersionCompare
+    getCompareVersions, getVersionCompare, getTestSuites, getTestSuite
   }
 }

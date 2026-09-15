@@ -5,7 +5,13 @@ test.describe('Workflow Validation module @workflow-validation', () => {
     await page.route('**/api/modules/workflow-validation/**', async (route) => {
       const path = new URL(route.request().url()).pathname
       let body = {}
-      if (path.endsWith('/filters')) body = { versions: [], providers: [], models: [], workflows: [] }
+      if (path.endsWith('/filters')) body = { versions: [], providers: [], models: [], workflows: [], testSuites: [{ value: 'productization', count: 3 }] }
+      if (path.endsWith('/test-suites')) {
+        body = { rows: [{ suite: 'productization', invocationId: 'invocation-1', timestamp: '2026-09-15T10:00:00Z', tests: 3, passed: 2, failed: 1, errors: 0, passRate: 2 / 3, rhoaiVersion: '3.6', rhodsOperatorDigest: 'abcdef0123456789', productBugs: [] }] }
+      }
+      if (path.endsWith('/test-suites/productization/invocation-1')) {
+        body = { suite: 'productization', invocationId: 'invocation-1', timestamp: '2026-09-15T10:00:00Z', rhoaiVersion: '3.6', rhodsOperatorDigest: 'abcdef0123456789', clusterName: 'test-cluster', summary: { tests: 1, passed: 1, failed: 0, errors: 0, passRate: 1 }, productBugs: [], tests: [{ execution_id: 'opaque-id', workflow: 'live-workflow', workflow_label: 'Live workflow', verdict: 'PASS', timestamp: '2026-09-15T10:00:00Z', tasks_passed: 1, tasks_total: 1, productBugs: [] }] }
+      }
       if (path.endsWith('/overview')) {
         body = {
           runs: { total: 1, passRate: 1, passed: 1, failed: 0, errors: 0, tasksTotal: 1, tasksPassed: 1, tasksFailed: 0, aiCost: 1, infraCost: 2, avgDuration: 3, turns: 4, workflows: 1, versions: 1 },
@@ -94,6 +100,7 @@ test.describe('Workflow Validation module @workflow-validation', () => {
 
     for (const [view, heading] of [
       ['overview', 'Workflow Validation'],
+      ['test-suites', 'Test Suites'],
       ['runs', 'Test Results'],
       ['workflows', 'Test Trends'],
       ['compare', 'Compare RHOAI Versions'],
@@ -117,12 +124,17 @@ test.describe('Workflow Validation module @workflow-validation', () => {
     await expect(page.getByRole('button', { name: 'When ↓' })).toBeVisible()
     await page.getByRole('button', { name: 'Test' }).click()
     await expect(page.getByRole('button', { name: 'Test ↓' })).toBeVisible()
+
+    await page.goto('/#/workflow-validation/test-suites')
+    await expect(page.getByRole('option', { name: 'Latest' })).toBeVisible()
+    await expect(page.getByRole('cell', { name: 'abcdef01' })).toBeVisible()
+    await expect(page.getByRole('cell', { name: 'Productization' })).toBeVisible()
   })
 
   test('renders execution and workflow hidden routes from canonical identities', async ({ page }) => {
     await page.goto('/#/workflow-validation/run-detail?runKey=opaque-id')
     await expect(page.getByRole('heading', { name: 'Live workflow' })).toBeVisible()
-    await expect(page.getByRole('button', { name: 'Back to test results' })).toBeVisible()
+    await expect(page.getByRole('button', { name: 'Test Results' })).toBeVisible()
     await expect(page.getByRole('alert')).toContainText('This test is marked passed but with a failed task.')
     await expect(page.getByRole('button', { name: 'View test trend' })).toBeVisible()
     await expect(page.getByRole('strong')).toHaveText('Rendered summary')
@@ -133,8 +145,13 @@ test.describe('Workflow Validation module @workflow-validation', () => {
 
     await page.goto('/#/workflow-validation/workflow-history?workflow=live-workflow')
     await expect(page.getByRole('heading', { name: 'Live workflow' })).toBeVisible()
-    await expect(page.getByRole('button', { name: 'Back to Test Trends' })).toBeVisible()
+    await expect(page.getByRole('button', { name: 'Test Trends' })).toBeVisible()
     await expect(page.getByRole('heading', { name: 'Execution History' })).toBeVisible()
     await expect(page.getByRole('button', { name: 'Compare this test across versions' })).toBeVisible()
+
+    await page.goto('/#/workflow-validation/test-suite-detail?suite=productization&invocationId=invocation-1')
+    await expect(page.getByRole('heading', { name: 'Productization' })).toBeVisible()
+    await expect(page.getByText('abcdef01')).toBeVisible()
+    await expect(page.getByRole('heading', { name: 'Tests in this Suite Execution' })).toBeVisible()
   })
 })

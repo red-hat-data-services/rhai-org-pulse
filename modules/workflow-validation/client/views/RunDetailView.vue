@@ -2,7 +2,7 @@
   <div>
     <button class="inline-flex items-center gap-1.5 text-sm text-gray-500 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 mb-4"
       @click="nav.navigateTo('runs')">
-      <ChevronLeftIcon :size="16" /> Back to test results
+      <ChevronLeftIcon :size="16" /> Test Results
     </button>
 
     <div v-if="loading" class="text-gray-400 dark:text-gray-500 py-10 text-center">Loading test…</div>
