@@ -62,7 +62,7 @@
     "puppeteer": "^25.10.0",
     "tailwindcss": "^4.3.3",
     "vite": "^8.2.2",
-    "vitest": "^4.1.11",
+    "vitest": "^5.0.0",
     "xlsx": "^0.18.5"
   },
   "lint-staged": {
