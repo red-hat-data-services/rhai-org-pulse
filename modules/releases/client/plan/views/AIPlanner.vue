@@ -15,6 +15,7 @@ function onIframeLoad() {
 }
 
 function onMessage(e) {
+  if (e.origin !== 'https://htmlpreview.github.io') return
   if (!e.data || e.data.type !== 'add-to-draft-plan') return
   const features = e.data.features || []
   let approved = 0
