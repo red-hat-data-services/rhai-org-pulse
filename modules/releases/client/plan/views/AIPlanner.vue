@@ -15,8 +15,10 @@ function onIframeLoad() {
 }
 
 function onMessage(e) {
+  if (e.origin !== 'https://htmlpreview.github.io') return
   if (!e.data || e.data.type !== 'add-to-draft-plan') return
-  const features = e.data.features || []
+  if (!Array.isArray(e.data.features)) return
+  const features = e.data.features
   features.forEach(f => approveFeature(f.key, true))
   if (features.length > 0) {
     persist()
