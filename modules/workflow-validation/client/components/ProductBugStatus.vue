@@ -33,23 +33,25 @@ import { computed } from 'vue'
 
 const props = defineProps({
   findings: { type: Array, default: () => [] },
-  verdict: { type: String, default: '' }
+  verdict: { type: String, default: '' },
+  neutralMessage: { type: String, default: 'No product bugs observed in the filtered executions.' },
+  neutralTooltip: { type: String, default: 'No product bug was observed for this test in the selected version and date range.' }
 })
 
 const productBugs = computed(() => props.findings.filter((finding) => finding.category === 'PRODUCT_BUG'))
 const unsuccessful = computed(() => ['FAIL', 'ERROR'].includes(String(props.verdict).toUpperCase()))
 const emptyMessage = computed(() => unsuccessful.value
   ? 'Environmental failure detected. No product bug detected.'
-  : 'No product bugs observed in the filtered executions.')
+  : props.neutralMessage)
 const emptyTooltip = computed(() => unsuccessful.value
   ? 'The test failed or was terminated due to a problem in the test execution environment. No product bug was observed.'
-  : 'No product bug was observed for this test in the selected version and date range.')
+  : props.neutralTooltip)
 
 function productBugMessage(issue) {
   if (!issue.bug_key) return 'Existing product bug detected. Jira ID missing.'
-  if (issue.action === 'EXISTING') return `Pre-existing product bug ${issue.bug_key} detected.`
-  if (issue.action === 'FILED' || issue.opened) return `New product bug ${issue.bug_key} opened.`
-  return `Product bug ${issue.bug_key} detected.`
+  if (issue.action === 'EXISTING' || issue.action === 'MATCH') return `${issue.bug_key} — Pre-existing product bug detected.`
+  if (issue.action === 'FILED' || issue.opened) return `${issue.bug_key} — New product bug opened.`
+  return `${issue.bug_key} — Product bug detected.`
 }
 
 function productBugTooltip(issue) {

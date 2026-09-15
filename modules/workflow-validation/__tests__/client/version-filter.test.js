@@ -5,6 +5,8 @@ import {
   compareVersionNumbers,
   defaultDateRange,
   filters,
+  formatBuildId,
+  formatSuiteName,
   highestNumberedVersion,
   resetFilters,
   useWorkflowValidation
@@ -44,6 +46,13 @@ describe('workflow-validation default version filter', () => {
     expect(defaultDateRange(7, new Date(2026, 8, 14, 23, 30))).toEqual({
       dateFrom: '2026-09-08', dateTo: '2026-09-14'
     })
+  })
+
+  it('presents suite and RHODS build identifiers without exposing implementation labels', () => {
+    expect(formatSuiteName('gitlab_mr-validation')).toBe('Gitlab Mr Validation')
+    expect(formatBuildId('sha256:abcdef0123456789')).toBe('abcdef01')
+    expect(formatBuildId('unknown')).toBe('Unknown')
+    expect(formatBuildId(null)).toBe('Unknown')
   })
 
   it('selects the highest numbered version before filtered data is requested', async () => {

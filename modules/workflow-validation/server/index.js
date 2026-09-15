@@ -244,6 +244,7 @@ module.exports = function registerRoutes(router, context) {
         versions: { terms: { field: 'rhoai_version', size: 100 } },
         providers: { terms: { field: 'inference_provider', size: 20 } },
         models: { terms: { field: 'model', size: 30 } },
+        test_suites: { terms: { field: 'telemetry_origin', size: 100, order: { _key: 'asc' } } },
         workflows: {
           terms: { field: 'workflow', size: 100, order: { _key: 'asc' } },
           aggs: { label: { terms: { field: 'workflow_label', size: 1 } } }
@@ -256,11 +257,151 @@ module.exports = function registerRoutes(router, context) {
       versions: bucketList(a.versions).map((b) => ({ value: b.key, count: b.doc_count })),
       providers: bucketList(a.providers).map((b) => ({ value: b.key, count: b.doc_count })),
       models: bucketList(a.models).map((b) => ({ value: b.key, count: b.doc_count })),
+      testSuites: bucketList(a.test_suites).map((b) => ({ value: b.key, count: b.doc_count })),
       workflows: bucketList(a.workflows).map((b) => ({
         value: b.key,
         label: b.label?.buckets?.[0]?.key || b.key,
         count: b.doc_count
       }))
+    });
+  }));
+
+  /**
+   * @openapi
+   * /api/modules/workflow-validation/test-suites:
+   *   get:
+   *     summary: Test suite executions grouped by telemetry origin and invocation
+   *     tags: [Workflow Validation]
+   *     parameters:
+   *       - { in: query, name: suite, schema: { type: string } }
+   *       - { in: query, name: latest, schema: { type: boolean } }
+   *       - { in: query, name: dateFrom, schema: { type: string, format: date } }
+   *       - { in: query, name: dateTo, schema: { type: string, format: date } }
+   *     responses:
+   *       200: { description: Test suite execution rows }
+   */
+  router.get('/test-suites', requireAuth, safe(async function (req, res) {
+    let query = runFilters({ dateFrom: req.query.dateFrom, dateTo: req.query.dateTo });
+    query = addFilter(query, { exists: { field: 'telemetry_origin' } });
+    query = addFilter(query, { exists: { field: 'invocation_id' } });
+    if (req.query.suite) query = addFilter(query, { term: { telemetry_origin: req.query.suite } });
+
+    const buckets = [];
+    let after;
+    do {
+      const response = await osSearch(RUNS_INDEX, {
+        size: 0,
+        query,
+        aggs: {
+          suite_runs: {
+            composite: {
+              size: 500,
+              sources: [
+                { suite: { terms: { field: 'telemetry_origin' } } },
+                { invocation: { terms: { field: 'invocation_id' } } }
+              ],
+              ...(after ? { after } : {})
+            },
+            aggs: {
+              pass_rate: { avg: { field: 'passed_int' } },
+              passed: { filter: { term: { verdict: 'PASS' } } },
+              failed: { filter: { term: { verdict: 'FAIL' } } },
+              errors: { filter: { term: { verdict: 'ERROR' } } },
+              latest: { top_hits: {
+                size: 1,
+                sort: [{ timestamp: 'desc' }, { execution_id: 'asc' }],
+                _source: ['timestamp', 'rhoai_version', 'rhods_operator_digest', 'run_id', 'cluster_name']
+              } }
+            }
+          }
+        }
+      });
+      const aggregation = response.aggregations?.suite_runs;
+      buckets.push(...bucketList(aggregation));
+      after = aggregation?.after_key;
+    } while (after);
+
+    let rows = buckets.map((bucket) => {
+      const latest = bucket.latest?.hits?.hits?.[0]?._source || {};
+      return {
+        suite: bucket.key.suite,
+        invocationId: bucket.key.invocation,
+        timestamp: latest.timestamp || null,
+        tests: bucket.doc_count,
+        passed: bucket.passed?.doc_count || 0,
+        failed: bucket.failed?.doc_count || 0,
+        errors: bucket.errors?.doc_count || 0,
+        passRate: bucket.pass_rate?.value ?? null,
+        rhoaiVersion: latest.rhoai_version || null,
+        rhodsOperatorDigest: latest.rhods_operator_digest || null,
+        runId: latest.run_id || null,
+        clusterName: latest.cluster_name || null
+      };
+    }).sort((a, b) => String(b.timestamp || '').localeCompare(String(a.timestamp || '')));
+
+    if (req.query.latest === 'true' && req.query.suite) rows = rows.slice(0, 1);
+    const findings = await productBugFindings({}, {
+      runIds: [...new Set(rows.map((row) => row.runId).filter(Boolean))]
+    });
+    res.json({
+      rows: rows.map((row) => ({
+        ...row,
+        productBugs: row.runId ? findings.filter((finding) => finding.run_id === row.runId) : []
+      }))
+    });
+  }));
+
+  /**
+   * @openapi
+   * /api/modules/workflow-validation/test-suites/{suite}/{invocationId}:
+   *   get:
+   *     summary: One test suite execution with its tests and product bugs
+   *     tags: [Workflow Validation]
+   *     parameters:
+   *       - { in: path, name: suite, required: true, schema: { type: string } }
+   *       - { in: path, name: invocationId, required: true, schema: { type: string } }
+   *     responses:
+   *       200: { description: Test suite execution detail }
+   *       404: { description: Test suite execution not found }
+   */
+  router.get('/test-suites/:suite/:invocationId', requireAuth, safe(async function (req, res) {
+    const { suite, invocationId } = req.params;
+    const hits = await searchAll(RUNS_INDEX, {
+      query: { bool: { filter: [
+        { term: { telemetry_origin: suite } },
+        { term: { invocation_id: invocationId } }
+      ] } },
+      sort: [{ timestamp: 'desc' }, { execution_id: 'asc' }],
+      _source: [
+        'execution_id', 'run_id', 'workflow', 'workflow_label', 'timestamp', 'verdict',
+        'passed_int', 'tasks_total', 'tasks_passed', 'tasks_failed', 'rhoai_version',
+        'rhods_operator_digest', 'cluster_name', 'duration_s'
+      ]
+    });
+    if (!hits.length) return res.status(404).json({ error: 'Test suite execution not found' });
+    const tests = hits.map((hit) => ({ id: hit._id, ...hit._source }));
+    const runIds = [...new Set(tests.map((test) => test.run_id).filter(Boolean))];
+    const findings = await productBugFindings({}, { runIds });
+    const passed = tests.filter((test) => test.verdict === 'PASS').length;
+    const failed = tests.filter((test) => test.verdict === 'FAIL').length;
+    const errors = tests.filter((test) => test.verdict === 'ERROR').length;
+    const latest = tests[0];
+    res.json({
+      suite,
+      invocationId,
+      timestamp: latest.timestamp || null,
+      rhoaiVersion: latest.rhoai_version || null,
+      rhodsOperatorDigest: latest.rhods_operator_digest || null,
+      clusterName: latest.cluster_name || null,
+      summary: {
+        tests: tests.length,
+        passed,
+        failed,
+        errors,
+        passRate: passed + failed + errors ? passed / (passed + failed + errors) : null
+      },
+      productBugs: findings,
+      tests: tests.map((test) => ({ ...test, productBugs: productBugsForTest(findings, test) }))
     });
   }));
 

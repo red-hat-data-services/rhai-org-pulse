@@ -10,12 +10,14 @@
     "entry": "./client/index.js",
     "navItems": [
       { "id": "overview", "label": "Dashboard", "icon": "LayoutDashboard", "default": true },
+      { "id": "test-suites", "label": "Test Suites", "icon": "layers" },
       { "id": "runs", "label": "Test Results", "icon": "clipboard-list" },
       { "id": "workflows", "label": "Test Trends", "icon": "Kanban" },
       { "id": "compare", "label": "Compare", "icon": "git-branch" },
       { "id": "activity", "label": "Jira", "icon": "activity" }
     ],
     "hiddenRoutes": {
+      "test-suite-detail": "test-suites",
       "run-detail": "runs",
       "workflow-history": "workflows"
     }

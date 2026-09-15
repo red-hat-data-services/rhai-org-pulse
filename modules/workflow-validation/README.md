@@ -55,6 +55,12 @@ Important rules:
   task data through `workflow-task-executions`.
 - `workflow` is the stable grouping/filter/correlation key. `workflow_label` is
   optional display text and must not be used as identity.
+- `telemetry_origin` is the explicit test-suite identity. A suite execution is
+  grouped by `telemetry_origin` and `invocation_id`; the UI presents only the
+  familiar “Test Suite” terminology.
+- `rhods_operator_digest` is displayed as the RHODS Build ID. The UI abbreviates
+  a known SHA digest to eight characters while preserving the complete value as
+  hover text, and reports missing or `unknown` values honestly.
 - Execution verdict filters are joined to tasks by `execution_id` and to root
   causes by `run_id` plus `workflow`; a run verdict is never treated as a task
   status.
@@ -67,6 +73,8 @@ Important rules:
 - Dashboard filters default to the highest numerically ordered version and the
   last 90 calendar days. Date presets can select 7, 30, or 90 days, all time,
   or custom inclusive start/end dates.
+- Test Suites defaults to the most recent invocation for the selected suite and
+  can instead show 7, 30, or 90 days, all time, or a custom date range.
 
 The source mappings maintained by the workflow-validation Director are the
 authoritative schema. When mappings change, update backend queries, this
