@@ -1,0 +1,681 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Component Detail</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<style>
+  *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+  body{background:#0a1929;color:#e0e0e0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;min-height:100vh}
+  a{color:#5ea7ff;text-decoration:none}
+  a:hover{text-decoration:underline}
+
+  .container{max-width:1400px;margin:0 auto;padding:24px 32px}
+
+  /* Back link */
+  .back-link{font-size:13px;margin-bottom:8px;display:inline-block}
+
+  /* Header row */
+  .header-row{display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:16px;margin-bottom:20px}
+  .header-left h1{font-size:24px;font-weight:700;color:#fff;margin-bottom:4px}
+  .header-left p{font-size:13px;color:#8899aa;max-width:700px;line-height:1.5}
+
+  /* Filter bar (compact, right side) */
+  .filter-bar{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+  .filter-group{display:flex;flex-direction:column;gap:2px}
+  .filter-label{font-size:9px;text-transform:uppercase;color:#6b8299;letter-spacing:.5px;font-weight:600}
+  .filter-bar select,
+  .filter-bar input[type="date"]{
+    background:#132f4c;color:#fff;border:1px solid #1e4976;border-radius:4px;
+    padding:5px 8px;font-size:12px;cursor:pointer;outline:none;
+    appearance:auto;-webkit-appearance:auto;min-width:90px;
+  }
+  .filter-bar select:hover,
+  .filter-bar input[type="date"]:hover{border-color:#3a6ea5}
+  .filter-bar input[type="date"]::-webkit-calendar-picker-indicator{filter:invert(1);cursor:pointer}
+  .badge{background:#132f4c;border:1px solid #1e4976;border-radius:4px;padding:5px 12px;font-size:12px;color:#2ed573;font-weight:600}
+  .filter-value{font-size:12px;color:#fff;font-weight:500}
+
+  /* Metric cards */
+  .metrics{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:16px}
+  .metric-card{border-radius:8px;padding:18px 22px;display:flex;flex-direction:column;gap:4px}
+  .metric-card .metric-label{font-size:11px;text-transform:uppercase;letter-spacing:1px;opacity:.8;font-weight:600}
+  .metric-card .metric-value{font-size:36px;font-weight:700;color:#fff}
+  .mc-results{background:#132f4c}
+  .mc-passed{background:#00b894}
+  .mc-failed{background:#ff4757}
+  .mc-skipped{background:#132f4c}
+
+  /* Alert bars */
+  .alerts{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:24px}
+  .alert-bar{border-radius:6px;padding:12px 18px;border-left:4px solid}
+  .alert-failed{background:rgba(255,71,87,.1);border-color:#ff4757}
+  .alert-skipped{background:rgba(255,165,2,.1);border-color:#ffa502}
+  .alert-bar .alert-title{font-size:10px;text-transform:uppercase;letter-spacing:1px;font-weight:700;margin-bottom:4px}
+  .alert-failed .alert-title{color:#ff4757}
+  .alert-skipped .alert-title{color:#ffa502}
+  .alert-bar .alert-count{font-size:28px;font-weight:700;color:#fff}
+  .alert-bar .alert-desc{font-size:12px;color:#8899aa;margin-top:2px}
+
+  /* Two-column layout */
+  .two-col{display:grid;grid-template-columns:1fr 1fr;gap:24px;margin-bottom:32px}
+  @media(max-width:1000px){.two-col{grid-template-columns:1fr}}
+
+  .panel{background:#0d2137;border:1px solid #1e4976;border-radius:8px;padding:20px}
+  .panel h3{font-size:15px;font-weight:600;color:#fff;margin-bottom:4px}
+  .panel .panel-sub{font-size:11px;color:#6b8299;margin-bottom:14px}
+
+  /* Quality gates table */
+  table.qg{width:100%;border-collapse:collapse}
+  table.qg th,table.qg td{padding:7px 6px;text-align:center;border-bottom:1px solid #1e4976;font-size:12px;white-space:nowrap}
+  table.qg th{color:#6b8299;font-weight:600;position:sticky;top:0;background:#0d2137}
+  table.qg th:first-child,table.qg td:first-child{text-align:left;min-width:70px}
+  .qg-passed{color:#2ed573;font-size:16px;margin:0 1px;cursor:pointer}
+  .qg-failed{color:#ff4757;font-size:16px;margin:0 1px;cursor:pointer}
+  .qg-na{color:#4a5568;font-size:12px}
+
+  /* Chart containers */
+  .chart-container{position:relative;width:100%;height:260px}
+  .chart-container canvas{width:100%!important;height:100%!important}
+
+  /* Bottom chart */
+  .bottom-panel{background:#0d2137;border:1px solid #1e4976;border-radius:8px;padding:20px}
+  .bottom-panel h3{font-size:15px;font-weight:600;color:#fff;margin-bottom:4px}
+  .bottom-panel .panel-sub{font-size:11px;color:#6b8299;margin-bottom:14px}
+  .bottom-chart-container{position:relative;width:100%;height:300px}
+  .bottom-chart-container canvas{width:100%!important;height:100%!important}
+
+  /* Loading / error */
+  .loading{text-align:center;padding:60px;color:#6b8299;font-size:16px}
+  .error{text-align:center;padding:60px;color:#ff4757;font-size:15px}
+</style>
+</head>
+<body>
+<div class="container" id="main">
+  <div class="loading">Loading…</div>
+</div>
+
+<script>
+const API_BASE = window.API_BASE || '';
+const DATA_BASE = '/test-dashboard';
+let jiraConfig = null;
+
+// --- Helpers ---
+function qs(id){ return document.getElementById(id) }
+function getParam(name, fallback){
+  return new URLSearchParams(window.location.search).get(name) || fallback;
+}
+function formatDate(d){ return d.toISOString().slice(0,10) }
+function friendlyDate(iso){
+  const d = new Date(iso + 'T00:00:00');
+  const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  return months[d.getMonth()] + ' ' + d.getDate();
+}
+
+// --- Load Jira config ---
+async function loadJiraConfig(){
+  try {
+    const resp = await fetch(`${DATA_BASE}/data/jira_config.json`);
+    if(resp.ok) jiraConfig = await resp.json();
+  } catch(_){}
+}
+
+// --- Build Jira JQL and URL ---
+function buildJiraUrl(componentName, label, version, release){
+  if(!jiraConfig) return null;
+
+  // Find matching release config(s)
+  const releaseKeys = Object.keys(jiraConfig.releases || {});
+  let matchingReleases = [];
+
+  if(version !== 'All' && release !== 'All'){
+    const key = `${version}|${release}`;
+    if(jiraConfig.releases[key]) matchingReleases = [jiraConfig.releases[key]];
+  } else if(version !== 'All'){
+    releaseKeys.filter(k => k.startsWith(version + '|')).forEach(k => matchingReleases.push(jiraConfig.releases[k]));
+  } else if(release !== 'All'){
+    releaseKeys.filter(k => k.endsWith('|' + release)).forEach(k => matchingReleases.push(jiraConfig.releases[k]));
+  } else {
+    // Default to latest releases (3.5, 3.6)
+    ['3.5|GA','3.5|EA1','3.5|EA2','3.6|EA1','3.6|EA2'].forEach(k => {
+      if(jiraConfig.releases[k]) matchingReleases.push(jiraConfig.releases[k]);
+    });
+  }
+
+  if(matchingReleases.length === 0) return null;
+
+  // Collect fix versions and rhoai versions
+  const fixVersions = new Set();
+  matchingReleases.forEach(r => {
+    fixVersions.add(`'${r.rhoai_jira_version}'`);
+    fixVersions.add(`'${r.fix_version}'`);
+  });
+  const fvList = Array.from(fixVersions).join(', ');
+
+  // Find team_code for this component
+  let teamCode = null;
+  const compMap = jiraConfig.component_team_map || {};
+  // Try exact match first, then fuzzy
+  if(compMap[componentName]) teamCode = compMap[componentName];
+  else {
+    const lc = componentName.toLowerCase();
+    for(const [k, v] of Object.entries(compMap)){
+      if(k.toLowerCase().includes(lc) || lc.includes(k.toLowerCase())){
+        teamCode = v; break;
+      }
+    }
+  }
+
+  const project = matchingReleases[0].project || 'RHOAIENG';
+  let jql = `project = ${project}`;
+  if(teamCode) jql += ` AND Team = "${teamCode}"`;
+  jql += ` AND (fixVersion IN (${fvList}) OR affectedVersion IN (${fvList}) OR 'Target Version' IN (${fvList}))`;
+  jql += ` AND labels = "${label}"`;
+
+  return `https://issues.redhat.com/issues/?jql=${encodeURIComponent(jql)}`;
+}
+
+function buildJiraJql(componentName, label, version, release){
+  if(!jiraConfig) return null;
+  const releaseKeys = Object.keys(jiraConfig.releases || {});
+  let matchingReleases = [];
+  if(version !== 'All' && release !== 'All'){
+    const key = `${version}|${release}`;
+    if(jiraConfig.releases[key]) matchingReleases = [jiraConfig.releases[key]];
+  } else if(version !== 'All'){
+    releaseKeys.filter(k => k.startsWith(version + '|')).forEach(k => matchingReleases.push(jiraConfig.releases[k]));
+  } else if(release !== 'All'){
+    releaseKeys.filter(k => k.endsWith('|' + release)).forEach(k => matchingReleases.push(jiraConfig.releases[k]));
+  } else {
+    ['3.5|GA','3.5|EA1','3.5|EA2','3.6|EA1','3.6|EA2'].forEach(k => {
+      if(jiraConfig.releases[k]) matchingReleases.push(jiraConfig.releases[k]);
+    });
+  }
+  if(matchingReleases.length === 0) return null;
+  const fixVersions = new Set();
+  matchingReleases.forEach(r => { fixVersions.add(`'${r.rhoai_jira_version}'`); fixVersions.add(`'${r.fix_version}'`); });
+  const fvList = Array.from(fixVersions).join(', ');
+  let teamCode = null;
+  const compMap = jiraConfig.component_team_map || {};
+  if(compMap[componentName]) teamCode = compMap[componentName];
+  else {
+    const lc = componentName.toLowerCase();
+    for(const [k, v] of Object.entries(compMap)){
+      if(k.toLowerCase().includes(lc) || lc.includes(k.toLowerCase())){ teamCode = v; break; }
+    }
+  }
+  const project = matchingReleases[0].project || 'RHOAIENG';
+  let jql = `project = ${project}`;
+  if(teamCode) jql += ` AND Team = "${teamCode}"`;
+  jql += ` AND (fixVersion IN (${fvList}) OR affectedVersion IN (${fvList}) OR 'Target Version' IN (${fvList}))`;
+  jql += ` AND labels = "${label}"`;
+  return jql;
+}
+
+function currentFilters(){
+  return {
+    environment: getParam('environment','RHOAI'),
+    version:     getParam('version','All'),
+    release:     getParam('release','All'),
+    from_date:   getParam('from_date', formatDate((() => { const d = new Date(); d.setDate(d.getDate()-11); return d })())),
+    to_date:     getParam('to_date', formatDate(new Date())),
+    provider:    getParam('provider','All'),
+    cluster_type: getParam('cluster_type','All'),
+    gate:        getParam('gate','All'),
+  };
+}
+
+function backToHeatmapUrl(){
+  const f = currentFilters();
+  return 'index.html?' + new URLSearchParams(f).toString();
+}
+
+function reloadWithFilters(){
+  const component = getParam('component','');
+  const f = currentFilters();
+  // Read from the current DOM filter controls
+  const env  = document.getElementById('f-env');
+  const ver  = document.getElementById('f-ver');
+  const rel  = document.getElementById('f-rel');
+  const from = document.getElementById('f-from');
+  const to   = document.getElementById('f-to');
+  if(env)  f.environment = env.value || f.environment;
+  if(ver)  f.version = ver.value;
+  if(rel)  f.release = rel.value;
+  if(from) f.from_date = from.value;
+  if(to)   f.to_date = to.value;
+  f.component = component;
+  window.location.search = '?' + new URLSearchParams(f).toString();
+}
+
+// --- Client-side filter for static component data ---
+function filterStaticComponentData(data, filters){
+  const from = filters.from_date;
+  const to = filters.to_date;
+  const version = filters.version || 'All';
+  const release = filters.release || 'All';
+  const filtered = JSON.parse(JSON.stringify(data));
+
+  // Filter daily array by date range
+  if(filtered.daily){
+    filtered.daily = filtered.daily.filter(d => d.date >= from && d.date <= to);
+  }
+  // Recompute overall from filtered daily
+  let tp=0, tf=0, ts=0, tt=0;
+  (filtered.daily || []).forEach(d => {
+    tp += d.passed || 0;
+    tf += d.failed || 0;
+    ts += d.skipped || 0;
+    tt += d.total || 0;
+  });
+  filtered.overall = { total: tt, passed: tp, failed: tf, skipped: ts };
+
+  // Filter quality_gates by date range
+  if(filtered.quality_gates){
+    Object.keys(filtered.quality_gates).forEach(gate => {
+      const days = filtered.quality_gates[gate];
+      Object.keys(days).forEach(date => {
+        if(date < from || date > to) delete days[date];
+      });
+    });
+  }
+  // Filter releases by version/release and daily by date range
+  if(filtered.releases){
+    if(release !== 'All'){
+      filtered.releases = filtered.releases.filter(r => r.release === release);
+    }
+    filtered.releases.forEach(r => {
+      if(r.daily) r.daily = r.daily.filter(d => d.date >= from && d.date <= to);
+    });
+  }
+  return filtered;
+}
+
+// --- Fetch data ---
+async function loadComponent(){
+  const main = qs('main');
+  const componentName = getParam('component','');
+  if(!componentName){
+    main.innerHTML = '<div class="error">No component specified. <a href="index.html">Back to heatmap</a></div>';
+    return;
+  }
+
+  try {
+    let data;
+    const f = currentFilters();
+    f.component = componentName;
+    // Try live API first (honors all filters server-side)
+    try {
+      const params = new URLSearchParams(f).toString();
+      const resp = await fetch(`${API_BASE}/api/v1/component?${params}`);
+      if(resp.ok){
+        const d = await resp.json();
+        if(!d.error) data = d;
+      }
+    } catch(_){}
+    // Fallback: static JSON with client-side date filtering
+    if(!data){
+      try {
+        const staticResp = await fetch(`${DATA_BASE}/data/components.json`);
+        if(staticResp.ok){
+          const all = await staticResp.json();
+          if(all[componentName]){
+            data = filterStaticComponentData(all[componentName], f);
+          }
+        }
+      } catch(_){}
+    }
+    if(!data) throw new Error('No data source available');
+    render(data, componentName);
+  } catch(e){
+    main.innerHTML = `<div class="error">Failed to load component data: ${e.message}<br><a href="${backToHeatmapUrl()}">Back to heatmap</a></div>`;
+  }
+}
+
+// --- Render ---
+function render(data, componentName){
+  const f = currentFilters();
+  const overall = data.overall || {};
+  const daily = (data.daily || []).slice().sort((a,b) => b.date.localeCompare(a.date));
+  const qualityGates = data.quality_gates || {};
+  const releases = data.releases || [];
+  const openFailedJiras = data.open_failed_jiras || {count: 0, description: ''};
+  const openSkippedJiras = data.open_skipped_jiras || {count: 0, description: ''};
+
+  const main = qs('main');
+  main.innerHTML = `
+    <a class="back-link" href="${backToHeatmapUrl()}">← Back to heatmap</a>
+
+    <div class="header-row">
+      <div class="header-left">
+        <h1>${escHtml(componentName)}</h1>
+        <p>Quality-gate results per execution, pass / fail / skip over the selected dates, and a second chart comparing RHOAI 3.4, 3.5, and 3.6.</p>
+      </div>
+      <div class="filter-bar">
+        <div class="filter-group">
+          <span class="filter-label">Environment</span>
+          <span class="filter-value">RHOAI</span>
+        </div>
+        <div class="filter-group">
+          <span class="filter-label">Version</span>
+          <select id="f-ver" onchange="reloadWithFilters()">
+            <option value="All" ${f.version==='All'?'selected':''}>All</option>
+            <option value="2.25" ${f.version==='2.25'?'selected':''}>2.25</option>
+            <option value="3.4" ${f.version==='3.4'?'selected':''}>3.4</option>
+            <option value="3.5" ${f.version==='3.5'?'selected':''}>3.5</option>
+            <option value="3.6" ${f.version==='3.6'?'selected':''}>3.6</option>
+          </select>
+        </div>
+        <div class="filter-group">
+          <span class="filter-label">Release</span>
+          <select id="f-rel" onchange="reloadWithFilters()">
+            <option value="All" ${f.release==='All'?'selected':''}>All</option>
+            <option value="GA" ${f.release==='GA'?'selected':''}>GA</option>
+            <option value="EA1" ${f.release==='EA1'?'selected':''}>EA1</option>
+            <option value="EA2" ${f.release==='EA2'?'selected':''}>EA2</option>
+          </select>
+        </div>
+        <div class="filter-group">
+          <span class="filter-label">From</span>
+          <input type="date" id="f-from" value="${f.from_date}" onchange="reloadWithFilters()">
+        </div>
+        <div class="filter-group">
+          <span class="filter-label">To</span>
+          <input type="date" id="f-to" value="${f.to_date}" onchange="reloadWithFilters()">
+        </div>
+      </div>
+    </div>
+
+    <!-- Metric cards -->
+    <div class="metrics">
+      <div class="metric-card mc-results">
+        <span class="metric-label">Results</span>
+        <span class="metric-value">${overall.total || 0}</span>
+      </div>
+      <div class="metric-card mc-passed">
+        <span class="metric-label">Passed</span>
+        <span class="metric-value">${overall.passed || 0}</span>
+      </div>
+      <div class="metric-card mc-failed">
+        <span class="metric-label">Failed</span>
+        <span class="metric-value">${overall.failed || 0}</span>
+      </div>
+      <div class="metric-card mc-skipped">
+        <span class="metric-label">Skipped</span>
+        <span class="metric-value">${overall.skipped || 0}</span>
+      </div>
+    </div>
+
+    <!-- Alert bars — Jira links -->
+    <div class="alerts" id="jira-alerts"></div>
+
+    <!-- Two-column: Quality Gates + Execution over time -->
+    <div class="two-col">
+      <div class="panel">
+        <h3>Quality gates</h3>
+        <p class="panel-sub">Each row is one execution of that gate (for example 3.4 and 3.6 on the same night are two rows). Green tick = passed, red circle = failed. Click a mark to open that execution.</p>
+        <div id="qg-table-wrap" style="max-height:360px;overflow-y:auto"></div>
+      </div>
+      <div class="panel">
+        <h3>Execution over time</h3>
+        <p class="panel-sub">Pass / fail / skip counts for each UTC day in the selected range. ${escHtml(componentName)} · ${f.environment} · ${f.version} · ${f.from_date} to ${f.to_date} · connected</p>
+        <div class="chart-container">
+          <canvas id="chart-daily"></canvas>
+        </div>
+      </div>
+    </div>
+
+    <!-- Bottom: Execution across releases -->
+    <div class="bottom-panel">
+      <h3>Execution across releases</h3>
+      <p class="panel-sub">Pass / fail / skip trends per release over the selected date range. ${escHtml(componentName)} · ${f.from_date} to ${f.to_date}</p>
+      <div class="bottom-chart-container">
+        <canvas id="chart-releases"></canvas>
+      </div>
+    </div>
+  `;
+
+  document.title = componentName + ' — Test Execution Dashboard';
+  renderJiraAlerts(componentName, f);
+  renderQualityGates(qualityGates, daily);
+  renderDailyChart(daily);
+  renderReleasesChart(releases);
+}
+
+// --- Fetch Jira count from live API proxy or static data ---
+async function fetchJiraCount(jql, componentName, label, version, release){
+  // 1. Try live API proxy
+  try {
+    const resp = await fetch(`${API_BASE}/api/v1/jira-count?jql=${encodeURIComponent(jql)}`);
+    if(resp.ok){
+      const d = await resp.json();
+      if(d.count !== null && d.count !== undefined) return d.count;
+    }
+  } catch(_){}
+  // 2. Try pre-computed counts from jira_config
+  if(jiraConfig && jiraConfig.counts){
+    // Find all matching release keys
+    const countKeys = Object.keys(jiraConfig.counts);
+    let matchKeys = [];
+    if(version !== 'All' && release !== 'All'){
+      matchKeys = [`${version}|${release}`].filter(k => jiraConfig.counts[k]);
+    } else if(version !== 'All'){
+      matchKeys = countKeys.filter(k => k.startsWith(version + '|'));
+    } else if(release !== 'All'){
+      matchKeys = countKeys.filter(k => k.endsWith('|' + release));
+    } else {
+      matchKeys = countKeys;
+    }
+
+    if(matchKeys.length > 0){
+      let total = 0; let found = false;
+      for(const rk of matchKeys){
+        const teamCounts = jiraConfig.counts[rk];
+        for(const [comp, counts] of Object.entries(teamCounts)){
+          if(comp === componentName || comp.toLowerCase().includes(componentName.toLowerCase())
+             || componentName.toLowerCase().includes(comp.toLowerCase())){
+            const v = label === 'test-failed' ? counts.failed : counts.skipped;
+            total += (typeof v === 'number') ? v : 50;
+            found = true;
+          }
+        }
+      }
+      if(found) return total;
+    }
+  }
+  return null;
+}
+
+async function renderJiraAlerts(componentName, filters){
+  const wrap = document.getElementById('jira-alerts');
+  if(!wrap) return;
+
+  const failedUrl = buildJiraUrl(componentName, 'test-failed', filters.version, filters.release);
+  const skippedUrl = buildJiraUrl(componentName, 'test-skipped', filters.version, filters.release);
+  const failedJql = buildJiraJql(componentName, 'test-failed', filters.version, filters.release);
+  const skippedJql = buildJiraJql(componentName, 'test-skipped', filters.version, filters.release);
+
+  const versionLabel = filters.version !== 'All' ? filters.version : '';
+  const releaseLabel = filters.release !== 'All' ? filters.release : '';
+  const filterLabel = [versionLabel, releaseLabel].filter(Boolean).join(' ') || 'All releases';
+
+  // Show placeholder first
+  wrap.innerHTML = renderJiraAlertHtml(failedUrl, skippedUrl, filterLabel, '...', '...');
+
+  // Fetch counts asynchronously
+  const [failedCount, skippedCount] = await Promise.all([
+    failedJql ? fetchJiraCount(failedJql, componentName, 'test-failed', filters.version, filters.release) : null,
+    skippedJql ? fetchJiraCount(skippedJql, componentName, 'test-skipped', filters.version, filters.release) : null,
+  ]);
+  wrap.innerHTML = renderJiraAlertHtml(failedUrl, skippedUrl, filterLabel,
+    failedCount !== null ? failedCount : '–', skippedCount !== null ? skippedCount : '–');
+}
+
+function renderJiraAlertHtml(failedUrl, skippedUrl, filterLabel, failedCount, skippedCount){
+  return `
+    <div class="alert-bar alert-failed">
+      <div class="alert-title">Open Failed Jiras</div>
+      ${failedUrl
+        ? `<div class="alert-count">${failedCount}</div>
+           <div class="alert-desc"><a href="${failedUrl}" target="_blank" rel="noopener" style="color:#ff4757;font-size:12px">🔍 View test-failed issues for ${escHtml(filterLabel)} →</a></div>`
+        : `<div class="alert-count" style="color:#4a5568">–</div>
+           <div class="alert-desc"><span style="color:#6b8299;font-size:12px">Select a version and release to view Jira issues</span></div>`
+      }
+    </div>
+    <div class="alert-bar alert-skipped">
+      <div class="alert-title">Open Skipped Jiras</div>
+      ${skippedUrl
+        ? `<div class="alert-count">${skippedCount}</div>
+           <div class="alert-desc"><a href="${skippedUrl}" target="_blank" rel="noopener" style="color:#ffa502;font-size:12px">🔍 View test-skipped issues for ${escHtml(filterLabel)} →</a></div>`
+        : `<div class="alert-count" style="color:#4a5568">–</div>
+           <div class="alert-desc"><span style="color:#6b8299;font-size:12px">Select a version and release to view Jira issues</span></div>`
+      }
+    </div>
+  `;
+}
+
+function escHtml(s){
+  const d = document.createElement('div');
+  d.textContent = s;
+  return d.innerHTML;
+}
+
+// --- Quality Gates Table ---
+function renderQualityGates(qg, daily){
+  const wrap = document.getElementById('qg-table-wrap');
+  const gateNames = Object.keys(qg);
+  const dates = daily.map(d => d.date).sort((a,b) => b.localeCompare(a));
+
+  if(gateNames.length === 0 || dates.length === 0){
+    wrap.innerHTML = '<p style="color:#6b8299;font-size:13px;padding:8px">No quality gate data available.</p>';
+    return;
+  }
+
+  let html = '<table class="qg"><thead><tr><th>Date</th>';
+  gateNames.forEach(g => { html += `<th>${escHtml(g)}</th>` });
+  html += '</tr></thead><tbody>';
+
+  dates.forEach(date => {
+    html += `<tr><td>${friendlyDate(date)}</td>`;
+    gateNames.forEach(g => {
+      const entry = qg[g] && qg[g][date];
+      if(!entry || (Array.isArray(entry) && entry.length === 0)){
+        html += '<td><span class="qg-na">–</span></td>';
+      } else if(Array.isArray(entry)){
+        // Multiple execution marks per cell
+        const marks = entry.map(ex => {
+          const url = ex.jenkins_url;
+          const mark = ex.state === 'PASSED'
+            ? '<span class="qg-passed">✓</span>'
+            : '<span class="qg-failed">●</span>';
+          return url ? `<a href="${url}" target="_blank" rel="noopener" style="text-decoration:none">${mark}</a>` : mark;
+        }).join('');
+        html += `<td>${marks}</td>`;
+      } else {
+        // Legacy single-mark format
+        if(entry.state === 'PASSED'){
+          html += '<td><span class="qg-passed">✓</span></td>';
+        } else {
+          html += '<td><span class="qg-failed">●</span></td>';
+        }
+      }
+    });
+    html += '</tr>';
+  });
+
+  html += '</tbody></table>';
+  wrap.innerHTML = html;
+}
+
+// --- Daily Line Chart ---
+function renderDailyChart(daily){
+  const sorted = daily.slice().sort((a,b) => a.date.localeCompare(b.date));
+  const labels = sorted.map(d => friendlyDate(d.date));
+  const passed = sorted.map(d => d.passed);
+  const failed = sorted.map(d => d.failed);
+  const skipped = sorted.map(d => d.skipped);
+
+  const ctx = document.getElementById('chart-daily').getContext('2d');
+  new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels,
+      datasets: [
+        { label: 'Passed',  data: passed,  borderColor: '#00b894', backgroundColor: 'rgba(0,184,148,.1)', tension: .3, fill: false, pointRadius: 3, borderWidth: 2 },
+        { label: 'Failed',  data: failed,  borderColor: '#ff4757', backgroundColor: 'rgba(255,71,87,.1)',  tension: .3, fill: false, pointRadius: 3, borderWidth: 2 },
+        { label: 'Skipped', data: skipped, borderColor: '#ffa502', backgroundColor: 'rgba(255,165,2,.1)',  tension: .3, fill: false, pointRadius: 3, borderWidth: 2 },
+      ]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { position: 'bottom', labels: { color: '#8899aa', usePointStyle: true, pointStyle: 'rect', padding: 16, font: { size: 11 } } }
+      },
+      scales: {
+        x: { ticks: { color: '#6b8299', font: { size: 10 } }, grid: { color: 'rgba(30,73,118,.3)' } },
+        y: { ticks: { color: '#6b8299', font: { size: 10 } }, grid: { color: 'rgba(30,73,118,.3)' }, beginAtZero: true }
+      }
+    }
+  });
+}
+
+// --- Releases Line Chart (over time) ---
+function renderReleasesChart(releases){
+  if(!releases || releases.length === 0) return;
+
+  // Collect all unique dates across all releases
+  const allDates = new Set();
+  releases.forEach(r => {
+    (r.daily || []).forEach(d => allDates.add(d.date));
+  });
+  const dates = Array.from(allDates).sort();
+  if(dates.length === 0) return;
+
+  const labels = dates.map(d => friendlyDate(d));
+  const colors = ['#00b894','#3498db','#e17055','#a29bfe','#fdcb6e','#6c5ce7','#00cec9','#fab1a0'];
+
+  const datasets = [];
+  releases.forEach((r, i) => {
+    const c = colors[i % colors.length];
+    const dailyMap = {};
+    (r.daily || []).forEach(d => { dailyMap[d.date] = d.passed; });
+    datasets.push({
+      label: `${r.release} (passed)`,
+      data: dates.map(d => dailyMap[d] || 0),
+      borderColor: c,
+      backgroundColor: c + '22',
+      tension: .3,
+      fill: false,
+      pointRadius: 3,
+      borderWidth: 2,
+    });
+  });
+
+  const ctx = document.getElementById('chart-releases').getContext('2d');
+  new Chart(ctx, {
+    type: 'line',
+    data: { labels, datasets },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { position: 'bottom', labels: { color: '#8899aa', usePointStyle: true, pointStyle: 'rect', padding: 16, font: { size: 11 } } }
+      },
+      scales: {
+        x: { ticks: { color: '#6b8299', font: { size: 10 } }, grid: { color: 'rgba(30,73,118,.2)' } },
+        y: { ticks: { color: '#6b8299', font: { size: 10 } }, grid: { color: 'rgba(30,73,118,.3)' }, beginAtZero: true }
+      }
+    }
+  });
+}
+
+// --- Boot ---
+(async () => {
+  await loadJiraConfig();
+  loadComponent();
+})();
+</script>
+</body>
+</html>
