@@ -130,7 +130,7 @@ module.exports = function registerRoutes(router, context) {
 
   async function rootCauseQuery(q) {
     let query = bugFilters(q);
-    if (q.verdict || q.provider || q.model) {
+    if (q.verdict || q.provider || q.model || q.testSuite || q.invocationId) {
       const links = await executionLinks({ ...q, q: '' });
       const runIds = [...new Set(links.map((link) => link.run_id).filter(Boolean))];
       const workflows = [...new Set(links.map((link) => link.workflow).filter(Boolean))];
@@ -274,6 +274,7 @@ module.exports = function registerRoutes(router, context) {
    *     tags: [Workflow Validation]
    *     parameters:
    *       - { in: query, name: suite, schema: { type: string } }
+   *       - { in: query, name: version, schema: { type: string } }
    *       - { in: query, name: latest, schema: { type: boolean } }
    *       - { in: query, name: dateFrom, schema: { type: string, format: date } }
    *       - { in: query, name: dateTo, schema: { type: string, format: date } }
@@ -281,7 +282,11 @@ module.exports = function registerRoutes(router, context) {
    *       200: { description: Test suite execution rows }
    */
   router.get('/test-suites', requireAuth, safe(async function (req, res) {
-    let query = runFilters({ dateFrom: req.query.dateFrom, dateTo: req.query.dateTo });
+    let query = runFilters({
+      version: req.query.version,
+      dateFrom: req.query.dateFrom,
+      dateTo: req.query.dateTo
+    });
     query = addFilter(query, { exists: { field: 'telemetry_origin' } });
     query = addFilter(query, { exists: { field: 'invocation_id' } });
     if (req.query.suite) query = addFilter(query, { term: { telemetry_origin: req.query.suite } });
@@ -418,6 +423,8 @@ module.exports = function registerRoutes(router, context) {
    *       - { in: query, name: q, schema: { type: string }, description: Partial test or workflow name }
    *       - { in: query, name: dateFrom, schema: { type: string, format: date } }
    *       - { in: query, name: dateTo, schema: { type: string, format: date } }
+   *       - { in: query, name: testSuite, schema: { type: string } }
+   *       - { in: query, name: invocationId, schema: { type: string } }
    *     responses:
    *       200: { description: KPI object }
    */
@@ -501,6 +508,8 @@ module.exports = function registerRoutes(router, context) {
    *       - { in: query, name: provider, schema: { type: string } }
    *       - { in: query, name: dateFrom, schema: { type: string, format: date } }
    *       - { in: query, name: dateTo, schema: { type: string, format: date } }
+   *       - { in: query, name: testSuite, schema: { type: string } }
+   *       - { in: query, name: invocationId, schema: { type: string } }
    *     responses:
    *       200: { description: Chart series }
    */

@@ -91,6 +91,25 @@ test.describe('Workflow Validation module @workflow-validation', () => {
     await expect(page.getByText('$1.00')).toBeVisible()
   })
 
+  test('scopes the dashboard to one selected test suite execution', async ({ page }) => {
+    const dashboardRequests = []
+    page.on('request', (request) => {
+      if (/\/(overview|charts)\?/.test(request.url())) dashboardRequests.push(request.url())
+    })
+
+    await page.goto('/#/workflow-validation/overview')
+    await page.getByRole('combobox', { name: 'Test suite' }).selectOption('productization')
+
+    await expect(page.getByRole('combobox', { name: 'Suite execution' })).toHaveValue('invocation-1')
+    await expect(page.getByRole('combobox', { name: 'Date range' })).toHaveCount(0)
+    await expect.poll(() => dashboardRequests.some((url) =>
+      url.includes('testSuite=productization') &&
+      url.includes('invocationId=invocation-1') &&
+      !url.includes('dateFrom=') &&
+      !url.includes('dateTo=')
+    )).toBe(true)
+  })
+
   test('is visible in navigation and all primary views render', async ({ page }) => {
     await page.goto('/')
     const moduleButton = page.locator('aside nav button').filter({ hasText: 'Workflow Validation' }).first()

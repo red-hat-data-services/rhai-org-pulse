@@ -73,7 +73,16 @@ vi.mock('@shared/client/services/api', () => ({
     if (path.includes('/overview')) return Promise.resolve(mockOverview)
     if (path.includes('/charts')) return Promise.resolve(mockCharts)
     if (path.includes('/runs')) return Promise.resolve({ total: 0, runs: [], nextCursor: null })
-    if (path.includes('/filters')) return Promise.resolve({ versions: [], providers: [], models: [], workflows: [] })
+    if (path.includes('/test-suites')) return Promise.resolve({ rows: [{
+      suite: 'productization', invocationId: 'invocation-2', timestamp: '2026-09-15T12:00:00Z',
+      rhoaiVersion: '3.6.0', rhodsOperatorDigest: 'sha256:abcdef123456'
+    }, {
+      suite: 'productization', invocationId: 'invocation-1', timestamp: '2026-09-14T12:00:00Z'
+    }] })
+    if (path.includes('/filters')) return Promise.resolve({
+      versions: [], providers: [], models: [], workflows: [],
+      testSuites: [{ value: 'productization', count: 20 }]
+    })
     return Promise.resolve({})
   })
 }))
@@ -87,6 +96,8 @@ describe('Workflow Validation OverviewView', () => {
     resetCostVisibility()
     filters.verdict = 'FAIL'
     filters.q = 'stale detail search'
+    filters.testSuite = ''
+    filters.invocationId = ''
     moduleNav = { navigateTo: vi.fn(), params: { value: {} } }
     wrapper = mount(OverviewView, {
       global: {
@@ -109,6 +120,8 @@ describe('Workflow Validation OverviewView', () => {
   afterEach(() => {
     filters.verdict = ''
     filters.q = ''
+    filters.testSuite = ''
+    filters.invocationId = ''
     wrapper.unmount()
   })
 
@@ -186,6 +199,35 @@ describe('Workflow Validation OverviewView', () => {
     expect(filter.find('select[aria-label="Verdict"]').exists()).toBe(false)
     expect(filter.find('input[type="text"]').exists()).toBe(false)
     filter.unmount()
+  })
+
+  it('selects the latest concrete suite execution and replaces date controls', async () => {
+    const filter = mount(FilterBar, { props: { showTestSuite: true } })
+    await vi.dynamicImportSettled?.()
+    await filter.vm.$nextTick()
+
+    await filter.get('select[aria-label="Test suite"]').setValue('productization')
+    await filter.vm.$nextTick()
+
+    expect(filters.invocationId).toBe('invocation-2')
+    expect(filter.get('select[aria-label="Suite execution"]').text()).toContain('Sep 15, 2026')
+    expect(filter.find('select[aria-label="Date range"]').exists()).toBe(false)
+    expect(apiRequest.mock.calls.some(([path]) => path.includes('/test-suites?suite=productization'))).toBe(true)
+    filter.unmount()
+  })
+
+  it('scopes dashboard requests to one suite execution without date bounds', async () => {
+    filters.testSuite = 'productization'
+    filters.invocationId = 'invocation-2'
+    await wrapper.vm.loadAll()
+
+    const dashboardRequests = apiRequest.mock.calls
+      .map(([path]) => path)
+      .filter((path) => path.includes('/overview') || path.includes('/charts'))
+      .slice(-2)
+    expect(dashboardRequests.every((path) => path.includes('testSuite=productization'))).toBe(true)
+    expect(dashboardRequests.every((path) => path.includes('invocationId=invocation-2'))).toBe(true)
+    expect(dashboardRequests.every((path) => !path.includes('dateFrom=') && !path.includes('dateTo='))).toBe(true)
   })
 
   it('applies a navigated verdict on the tests detail page', async () => {

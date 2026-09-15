@@ -129,6 +129,14 @@ describe('workflow-validation live schema routes', () => {
     expect(tasks).not.toContain('status')
   })
 
+  it('scopes executions to a concrete test suite invocation', () => {
+    expect(runFilters({ testSuite: 'productization', invocationId: 'invocation-2' }).bool.filter)
+      .toEqual(expect.arrayContaining([
+        { term: { telemetry_origin: 'productization' } },
+        { term: { invocation_id: 'invocation-2' } }
+      ]))
+  })
+
   it('searches text that is visible in each list', () => {
     const tests = JSON.stringify(runFilters({ q: 'fraud' }))
     expect(tests).toContain('workflow_label')
