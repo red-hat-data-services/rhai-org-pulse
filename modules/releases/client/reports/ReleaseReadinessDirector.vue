@@ -459,7 +459,7 @@
                   <tr class="bg-gray-50 dark:bg-gray-900">
                     <th class="px-3 py-2 text-left font-medium text-gray-600 dark:text-gray-400">Milestone</th>
                     <th class="px-3 py-2 text-left font-medium text-gray-600 dark:text-gray-400">Code Freeze</th>
-                    <th class="px-3 py-2 text-left font-medium text-gray-600 dark:text-gray-400">Build Complete</th>
+                    <th class="px-3 py-2 text-left font-medium text-gray-600 dark:text-gray-400">Build Received</th>
                     <th class="px-3 py-2 text-left font-medium text-gray-600 dark:text-gray-400">Working Days</th>
                   </tr>
                 </thead>
@@ -477,13 +477,13 @@
 
           <!-- Test Execution Timelines -->
           <div v-if="releaseCycleMetrics.phases?.length">
-            <p class="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-2">Test Execution Timelines — working days since build complete</p>
+            <p class="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-2">Test Execution Timelines — working days since build received</p>
             <div class="overflow-x-auto">
               <table class="w-full text-xs border-collapse">
                 <thead>
                   <tr class="bg-gray-50 dark:bg-gray-900">
                     <th class="px-3 py-2 text-left font-medium text-gray-600 dark:text-gray-400">Phase</th>
-                    <th class="px-3 py-2 text-left font-medium text-gray-600 dark:text-gray-400">Build Complete</th>
+                    <th class="px-3 py-2 text-left font-medium text-gray-600 dark:text-gray-400">Build Received</th>
                     <th class="px-3 py-2 text-left font-medium text-gray-600 dark:text-gray-400">Test Started</th>
                     <th class="px-3 py-2 text-left font-medium text-gray-600 dark:text-gray-400">Test Finished</th>
                     <th class="px-3 py-2 text-left font-medium text-gray-600 dark:text-gray-400">TFAs Passed</th>

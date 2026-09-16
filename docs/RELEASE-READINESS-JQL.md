@@ -19,7 +19,7 @@ The script uses values from `JIRA_VERSIONS` when configured; otherwise it derive
 | Value | Source |
 | --- | --- |
 | Code Freeze | Product Pages API, or local release-variable YAML fallback. No JQL. |
-| RC1/RC2 Build Complete | Product Pages API first; Jira test-phase Epic query below is the fallback. Python classifies RC/build summaries. |
+| RC1/RC2 Build Received | Product Pages API first; Jira test-phase Epic query below is the fallback. Python classifies RC/build summaries. |
 | Test Started | Same Epic query; uses Epic `updated` as a proxy. |
 | Test Finished | Same Epic query; uses Epic `resolutiondate`, falling back to `updated`. |
 | TFAs Passed | TFA query below; latest `updated` when every task is In Progress or Done. |

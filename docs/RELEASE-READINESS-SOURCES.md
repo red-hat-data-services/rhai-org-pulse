@@ -383,7 +383,7 @@ executed during extraction.
   - Displays phase name, done/total, percentage, RAG, and expandable tasks.
   - Source: initiative child JQL and task data returned through child queries.
 - Release Cycle Metrics:
-  - Displays code freeze, RC1/RC2 build-complete dates, working-day counts,
+  - Displays code freeze, RC1/RC2 build-received dates, working-day counts,
     test start/finish, TFA milestones, and blocker resolution.
   - Sources: Product Pages plus Jira test-phase/TFA/blocker queries; working-day
     counts are calculated locally.

@@ -1153,6 +1153,7 @@ test.describe('Releases Release Readiness @releases', () => {
 
     await expect(page.locator('text=Release Cycle Metrics').first()).toBeVisible();
     await expect(page.locator('text=Build Milestones').first()).toBeVisible();
+    await expect(page.getByRole('columnheader', { name: 'Build Received', exact: true }).first()).toBeVisible();
     await expect(page.locator('text=Test Execution Timelines').first()).toBeVisible();
     await expect(page.locator('text=Component Readiness Matrix').first()).toBeVisible();
     await expect(page.locator('text=Select the Phases above to view component readiness.')).toHaveCount(0);
