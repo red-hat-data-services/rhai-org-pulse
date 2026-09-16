@@ -62,6 +62,28 @@ test.describe('AI Catalyst Module @ai-catalyst', () => {
     const appErrors = page.errors.filter(e => !/status of (429|404)/.test(e.message));
     expect(appErrors).toHaveLength(0);
   });
+
+  test('should expose the September board and its data science candidates', async ({ page }) => {
+    await page.goto('/#/ai-catalyst/board');
+    await page.waitForLoadState('networkidle');
+    await page.waitForTimeout(DEFAULT_PAGE_WAIT_TIME);
+
+    const heading = page.locator('h1').filter({ hasText: 'Monthly Board' });
+    await expect(heading).toBeVisible();
+
+    const monthSelect = page.locator('select').first();
+    await expect(monthSelect).toHaveValue('2026-09');
+
+    const dataScienceFilter = page.locator('button').filter({ hasText: 'Data Science' }).first();
+    await expect(dataScienceFilter).toBeVisible();
+    await dataScienceFilter.click();
+
+    const cards = page.locator('main .grid h3');
+    await expect(cards).toHaveCount(18);
+
+    const appErrors = page.errors.filter(e => !/status of (429|404)/.test(e.message));
+    expect(appErrors).toHaveLength(0);
+  });
 });
 
 test.describe('AI Catalyst Catalog @ai-catalyst', () => {
@@ -169,6 +191,47 @@ test.describe('AI Catalyst Showcase API @ai-catalyst', () => {
     expect(data.pillars.length).toBeGreaterThan(0);
     console.log(`API returned ${data.totalEntries} entries, ${data.pillars.length} pillars`);
   });
+
+  test('should include the data science pillar metadata', async ({ page }) => {
+    await page.goto('/');
+    await page.waitForLoadState('networkidle');
+
+    const response = await page.request.get('/api/modules/ai-catalyst/showcase/entries');
+    expect(response.ok()).toBe(true);
+
+    const data = await response.json();
+    const pillar = data.pillars.find(p => p.pillarKey === 'data-science-engineering');
+    expect(pillar).toMatchObject({
+      title: 'Data Science & Data Engineering',
+      shortTitle: 'Data Science',
+      sortOrder: 50,
+      color: '#06b6d4'
+    });
+  });
+});
+
+test.describe('AI Catalyst Monthly Board API @ai-catalyst', () => {
+  test('should return the complete September board with data science results', async ({ page }) => {
+    await page.goto('/');
+    await page.waitForLoadState('networkidle');
+
+    const response = await page.request.get('/api/modules/ai-catalyst/boards/2026-09');
+    expect(response.ok()).toBe(true);
+
+    const data = await response.json();
+    expect(data.month).toBe('2026-09');
+    expect(data.total).toBe(145);
+    expect(data.candidates).toHaveLength(145);
+    expect(new Set(data.candidates.map(candidate => candidate.category))).toEqual(new Set([
+      'agentic-ai',
+      'management-observability-security',
+      'model-inference',
+      'model-customization',
+      'data-science-engineering'
+    ]));
+    expect(data.candidates.filter(candidate => candidate.category === 'data-science-engineering')).toHaveLength(18);
+    expect(data.candidates.every(candidate => candidate.impactScore != null)).toBe(true);
+  });
 });
 
 test.describe('AI Catalyst Report @ai-catalyst', () => {
@@ -244,5 +307,33 @@ test.describe('AI Catalyst Report @ai-catalyst', () => {
 
     const appErrors = page.errors.filter(e => !/status of (429|404)/.test(e.message));
     expect(appErrors).toHaveLength(0);
+  });
+
+  test('should label the data science category in the September report', async ({ page }) => {
+    await page.goto('/#/ai-catalyst/report');
+    await page.waitForLoadState('networkidle');
+    await page.waitForTimeout(DEFAULT_PAGE_WAIT_TIME);
+
+    const heading = page.locator('h1').filter({ hasText: 'Monthly Report' });
+    await expect(heading).toBeVisible();
+    await expect(page.locator('select').first()).toHaveValue('2026-09');
+
+    const report = page.locator('main');
+    await expect(report).toContainText('Data Science');
+    await expect(report.locator('[data-testid="category-donut"]')).toBeVisible();
+  });
+});
+
+test.describe('AI Catalyst Catalog pillars @ai-catalyst', () => {
+  test('should expose the new pillar even before showcase entries are added', async ({ page }) => {
+    await page.goto('/#/ai-catalyst/catalog');
+    await page.waitForLoadState('networkidle');
+    await page.waitForTimeout(DEFAULT_PAGE_WAIT_TIME);
+
+    const dataScienceTile = page.locator('button').filter({ hasText: 'Data Science' }).first();
+    await expect(dataScienceTile).toBeVisible();
+
+    await dataScienceTile.click();
+    await expect(page.locator('main')).toContainText('No projects match your filters.');
   });
 });

@@ -1,32 +1,49 @@
 {
-  "fetchedAt": "2026-06-22T10:00:00Z",
+  "fetchedAt": "2026-09-22T10:00:00Z",
   "pillars": [
     {
       "pillarKey": "model-inference",
       "title": "Model Inference",
+      "shortTitle": "Inference",
       "summary": "Scalable serving of AI/ML models in production environments",
       "sortOrder": 1,
+      "color": "#3b82f6",
       "visualUrl": ""
     },
     {
       "pillarKey": "model-customization",
       "title": "Model Customization",
+      "shortTitle": "Customization",
       "summary": "Fine-tuning and adaptation of foundation models for specific use cases",
       "sortOrder": 2,
+      "color": "#a855f7",
       "visualUrl": ""
     },
     {
       "pillarKey": "agentic-ai",
       "title": "Agentic AI",
+      "shortTitle": "Agentic",
       "summary": "Autonomous AI agents and multi-step reasoning orchestration",
       "sortOrder": 3,
+      "color": "#22c55e",
       "visualUrl": ""
     },
     {
       "pillarKey": "management-observability-security",
       "title": "Management, Observability & Security",
+      "shortTitle": "Mgmt & Security",
       "summary": "Platform governance, monitoring, and security for AI workloads",
       "sortOrder": 4,
+      "color": "#f59e0b",
+      "visualUrl": ""
+    },
+    {
+      "pillarKey": "data-science-engineering",
+      "title": "Data Science & Data Engineering",
+      "shortTitle": "Data Science",
+      "summary": "Data, experimentation, and engineering workflows that move AI from notebooks to production",
+      "sortOrder": 50,
+      "color": "#06b6d4",
       "visualUrl": ""
     }
   ],

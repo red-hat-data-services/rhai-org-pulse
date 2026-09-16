@@ -1,5 +1,5 @@
 <template>
-  <span :class="classes">{{ label }}</span>
+  <span :class="classes" :style="color ? { color, backgroundColor: `${color}1f` } : undefined">{{ label }}</span>
 </template>
 
 <script setup>
@@ -8,6 +8,7 @@ import { computed } from 'vue'
 const props = defineProps({
   label: { type: String, required: true },
   variant: { type: String, default: 'default' },
+  color: { type: String, default: '' },
 })
 
 const variantClasses = {

@@ -1,7 +1,7 @@
 <template>
   <div>
-    <div v-if="type === 'pillars'" class="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-6">
-      <div v-for="i in 4" :key="i" class="h-28 bg-gray-200 dark:bg-gray-700 rounded-xl animate-pulse" />
+    <div v-if="type === 'pillars'" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 mb-6">
+      <div v-for="i in pillarCount" :key="i" class="h-28 bg-gray-200 dark:bg-gray-700 rounded-xl animate-pulse" />
     </div>
     <div v-else class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
       <div v-for="i in 6" :key="i" class="bg-white dark:bg-gray-800 rounded-xl border border-gray-100 dark:border-gray-700/60 overflow-hidden">
@@ -23,5 +23,6 @@
 <script setup>
 defineProps({
   type: { type: String, default: 'cards' },
+  pillarCount: { type: Number, default: 5 },
 })
 </script>

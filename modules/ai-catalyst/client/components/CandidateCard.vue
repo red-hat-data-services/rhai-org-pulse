@@ -5,7 +5,8 @@ import CategoryBadge from './CategoryBadge.vue'
 import ScoreGauge from './ScoreGauge.vue'
 
 const props = defineProps({
-  candidate: { type: Object, required: true }
+  candidate: { type: Object, required: true },
+  pillars: { type: Array, default: () => [] }
 })
 
 const emit = defineEmits(['select'])
@@ -32,7 +33,7 @@ const starsDisplay = computed(() => {
       <div class="min-w-0 flex-1">
         <h3 class="text-sm font-semibold text-gray-900 dark:text-gray-100 truncate">{{ candidate.title }}</h3>
         <div class="flex items-center gap-2 mt-1">
-          <CategoryBadge :category="candidate.category" />
+          <CategoryBadge :category="candidate.category" :pillars="pillars" :pillar="candidate.pillar" />
           <span v-if="candidate.itemType === 'trend'" class="text-[10px] px-1.5 py-0.5 rounded bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-400">trend</span>
         </div>
       </div>

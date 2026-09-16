@@ -27,6 +27,14 @@ const MOCK_CANDIDATES = [
   { uniqueId: 'd', title: 'ProjectD', impactScore: 5.0, feasibilityScore: 5.0, category: 'model-customization', source: 'hn', language: 'Go', stars: 300, itemType: 'repo' }
 ]
 
+const MOCK_PILLARS = [
+  { pillarKey: 'model-inference', title: 'Model Inference', shortTitle: 'Inference', color: '#3b82f6', sortOrder: 1 },
+  { pillarKey: 'model-customization', title: 'Model Customization', shortTitle: 'Customization', color: '#a855f7', sortOrder: 2 },
+  { pillarKey: 'agentic-ai', title: 'Agentic AI', shortTitle: 'Agentic', color: '#22c55e', sortOrder: 3 },
+  { pillarKey: 'management-observability-security', title: 'Mgmt & Security', shortTitle: 'Mgmt', color: '#f59e0b', sortOrder: 4 },
+  { pillarKey: 'data-science-engineering', title: 'Data Science & Engineering', shortTitle: 'Data Science', color: '#06b6d4', sortOrder: 5 }
+]
+
 function mountReport() {
   return mount(ReportView, {
     global: {
@@ -103,6 +111,18 @@ describe('ImpactFeasibilityChart', () => {
     expect(wrapper.text()).toContain('Agentic')
     expect(wrapper.text()).toContain('Inference')
   })
+
+  it('renders runtime pillar metadata beyond the default categories', () => {
+    const candidates = [...MOCK_CANDIDATES, {
+      uniqueId: 'e', title: 'DataScienceProject', impactScore: 8, feasibilityScore: 8,
+      category: 'data-science-engineering', source: 'github', language: 'Python', stars: 10
+    }]
+    const wrapper = mount(ImpactFeasibilityChart, {
+      props: { candidates, pillars: MOCK_PILLARS }
+    })
+    expect(wrapper.text()).toContain('Data Science')
+    expect(wrapper.vm.chartData.datasets.map(dataset => dataset.label)).toContain('Data Science')
+  })
 })
 
 describe('ReportHighlightCards', () => {
@@ -158,6 +178,18 @@ describe('CategoryDonutChart', () => {
       props: { candidates: MOCK_CANDIDATES }
     })
     expect(wrapper.text()).toContain('4')
+  })
+
+  it('includes runtime pillars in donut labels and colors', () => {
+    const candidates = [...MOCK_CANDIDATES, {
+      uniqueId: 'e', title: 'DataScienceProject', impactScore: 8, feasibilityScore: 8,
+      category: 'data-science-engineering', source: 'github', language: 'Python', stars: 10
+    }]
+    const wrapper = mount(CategoryDonutChart, {
+      props: { candidates, pillars: MOCK_PILLARS }
+    })
+    expect(wrapper.vm.chartData.labels).toContain('Data Science')
+    expect(wrapper.vm.chartData.datasets[0].backgroundColor).toContain('#06b6d4')
   })
 })
 

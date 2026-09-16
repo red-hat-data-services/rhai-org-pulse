@@ -65,4 +65,34 @@ describe('Board', () => {
     await flushPromises()
     expect(wrapper.text()).toContain('No candidates found')
   })
+
+  it('renders categories from the board pillar registry', async () => {
+    apiRequest
+      .mockResolvedValueOnce({ boards: [{ month: '2026-09', candidateCount: 1 }] })
+      .mockResolvedValueOnce({
+        candidates: [{ uniqueId: 'data-1', title: 'Data Project', category: 'data-science-engineering' }],
+        pillars: [{
+          pillarKey: 'data-science-engineering',
+          title: 'Data Science & Engineering',
+          shortTitle: 'Data Science',
+          color: '#06b6d4'
+        }],
+        total: 1
+      })
+
+    const wrapper = mount(Board, {
+      global: {
+        provide: {
+          moduleNav: {
+            navigateTo: vi.fn(),
+            goBack: vi.fn(),
+            params: { value: {} }
+          }
+        }
+      }
+    })
+
+    await flushPromises()
+    expect(wrapper.text()).toContain('Data Science')
+  })
 })
