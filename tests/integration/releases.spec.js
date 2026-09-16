@@ -1369,6 +1369,9 @@ test.describe('Releases CVE Sustaining Report @releases', () => {
   });
 
   test('applying a filter updates the report', async ({ page }) => {
+    await page.route('**/api/modules/team-tracker/field-options/component', async route => {
+      await route.fulfill({ contentType: 'application/json', body: JSON.stringify({ values: ['KubeRay'] }) });
+    });
     await page.goto('/#/releases/reports?report=cve-sustaining');
     await page.waitForLoadState('networkidle');
     await page.waitForTimeout(DEFAULT_PAGE_WAIT_TIME);
