@@ -188,7 +188,7 @@ function getParam(name, fallback){
 function initFilters(){
   const today = new Date();
   const fromDefault = new Date(today);
-  fromDefault.setDate(today.getDate() - 11);
+  fromDefault.setDate(today.getDate() - 30);
 
   qs('filter-version').value  = getParam('version','All');
   qs('filter-release').value  = getParam('release','All');

@@ -218,7 +218,7 @@ function currentFilters(){
     environment: getParam('environment','RHOAI'),
     version:     getParam('version','All'),
     release:     getParam('release','All'),
-    from_date:   getParam('from_date', formatDate((() => { const d = new Date(); d.setDate(d.getDate()-11); return d })())),
+    from_date:   getParam('from_date', formatDate((() => { const d = new Date(); d.setDate(d.getDate()-30); return d })())),
     to_date:     getParam('to_date', formatDate(new Date())),
     provider:    getParam('provider','All'),
     cluster_type: getParam('cluster_type','All'),
