@@ -2257,8 +2257,10 @@ registry below.
 | `pmDecision` | string | PM decision text; status is derived from `Approve`, `Decline`, `Revisit`, or empty |
 
 `data/ai-catalyst/index.json` contains the available month list and candidate
-counts. Adding a new month adds one board file and one index entry; existing
-months remain immutable snapshots.
+counts. Adding a new month adds one board file and one index entry. A board
+sync refreshes discovered months in place, so the board file and its
+`lastSynced` value represent the latest source-sheet snapshot rather than an
+immutable historical record.
 
 Repository files under `fixtures/ai-catalyst/` are deterministic mock data for
 demo mode and tests; production deployments read the corresponding board rows
@@ -2346,6 +2348,17 @@ a row to the `strategy_pillars` source tab and syncing the fixture or stored
 copy; display titles, short titles, summaries, and colors may change without
 renaming the key. If a board references a key that is not yet in the registry,
 the UI keeps the candidate visible with a generated label and fallback color.
+
+Board and showcase responses intentionally use different pillar scopes:
+
+- A monthly board response includes only pillar keys represented by candidates
+  in that complete board. This catalog is independent of the requested board
+  filters, so filtering candidates never removes a pillar tile needed to
+  describe the selected month.
+- Showcase list and detail responses use the configured pillar catalog, which
+  includes pillars with zero showcase entries. Entry references that arrive
+  before their metadata row are synthesized with a humanized title and a
+  deterministic fallback color.
 
 ---
 

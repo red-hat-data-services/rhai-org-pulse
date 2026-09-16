@@ -19,6 +19,7 @@ const selectedCategory = ref('')
 const selectedStatus = ref('')
 const selectedSource = ref('')
 const selectedSort = ref('impact')
+let candidateRequestId = 0
 
 async function loadBoards() {
   try {
@@ -33,7 +34,16 @@ async function loadBoards() {
 }
 
 async function loadCandidates() {
-  if (!selectedMonth.value) return
+  const requestId = ++candidateRequestId
+  const month = selectedMonth.value
+  if (!month) {
+    candidates.value = []
+    pillars.value = []
+    totalCount.value = 0
+    loading.value = false
+    return
+  }
+
   loading.value = true
   error.value = null
   try {
@@ -43,15 +53,17 @@ async function loadCandidates() {
     if (selectedSource.value) params.set('source', selectedSource.value)
     if (selectedSort.value) params.set('sort', selectedSort.value)
     const qs = params.toString()
-    const data = await apiRequest(`${MODULE_API}/boards/${selectedMonth.value}${qs ? '?' + qs : ''}`)
+    const data = await apiRequest(`${MODULE_API}/boards/${month}${qs ? '?' + qs : ''}`)
+    if (requestId !== candidateRequestId) return
     candidates.value = data.candidates || []
     pillars.value = data.pillars || []
     totalCount.value = data.total || 0
   } catch (err) {
+    if (requestId !== candidateRequestId) return
     error.value = err.message || 'Failed to load candidates'
     candidates.value = []
   } finally {
-    loading.value = false
+    if (requestId === candidateRequestId) loading.value = false
   }
 }
 
@@ -59,14 +71,22 @@ function onSelectCandidate(candidate) {
   nav.navigateTo('candidate-detail', { id: candidate.uniqueId, month: selectedMonth.value })
 }
 
-watch([selectedMonth, selectedCategory, selectedStatus, selectedSource, selectedSort], loadCandidates)
-watch(selectedMonth, (month, previousMonth) => {
-  if (previousMonth && month !== previousMonth) selectedCategory.value = ''
+watch([selectedMonth, selectedCategory, selectedStatus, selectedSource, selectedSort], (values, previousValues) => {
+  const [month, category] = values
+  const [previousMonth] = previousValues || []
+  if (previousMonth && month !== previousMonth) {
+    candidateRequestId += 1
+    pillars.value = []
+    if (category) {
+      selectedCategory.value = ''
+      return
+    }
+  }
+  loadCandidates()
 })
 
 onMounted(async () => {
   await loadBoards()
-  if (selectedMonth.value) await loadCandidates()
 })
 
 const monthLabel = computed(() => {

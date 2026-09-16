@@ -143,6 +143,12 @@ describe('pillar metadata', () => {
     expect(getPillarColor('new-pillar')).toMatch(/^#[0-9a-f]{6}$/);
   });
 
+  it('uses the unsigned hash index shared with the client fallback', () => {
+    // new-pillar hashes to a negative signed 32-bit value. The unsigned
+    // conversion selects the second palette colour, not Math.abs(hash).
+    expect(getPillarColor('new-pillar')).toBe('#a855f7');
+  });
+
   it('merges referenced keys missing from sheet metadata', () => {
     const result = mergePillarMetadata(
       [{ pillarKey: 'model-inference', title: 'Model Inference', sortOrder: 1 }],

@@ -231,6 +231,18 @@ test.describe('AI Catalyst Monthly Board API @ai-catalyst', () => {
     ]));
     expect(data.candidates.filter(candidate => candidate.category === 'data-science-engineering')).toHaveLength(18);
     expect(data.candidates.every(candidate => candidate.impactScore != null)).toBe(true);
+
+    const juneResponse = await page.request.get('/api/modules/ai-catalyst/boards/2026-06');
+    expect(juneResponse.ok()).toBe(true);
+
+    const juneData = await juneResponse.json();
+    expect(new Set(juneData.pillars.map(pillar => pillar.pillarKey))).toEqual(new Set([
+      'agentic-ai',
+      'management-observability-security',
+      'model-inference',
+      'model-customization'
+    ]));
+    expect(juneData.pillars.some(pillar => pillar.pillarKey === 'data-science-engineering')).toBe(false);
   });
 });
 

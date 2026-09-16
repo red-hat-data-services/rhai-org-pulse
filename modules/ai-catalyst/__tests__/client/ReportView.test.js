@@ -51,7 +51,7 @@ function mountReport() {
 
 describe('ReportView', () => {
   beforeEach(() => {
-    vi.clearAllMocks()
+    vi.resetAllMocks()
   })
 
   it('renders header and loading state', () => {
@@ -71,6 +71,7 @@ describe('ReportView', () => {
 
     expect(wrapper.find('select').exists()).toBe(true)
     expect(wrapper.text()).toContain('2026-06')
+    expect(apiRequest).toHaveBeenCalledTimes(2)
   })
 
   it('shows empty state when no candidates', async () => {
@@ -82,6 +83,39 @@ describe('ReportView', () => {
     await flushPromises()
 
     expect(wrapper.text()).toContain('No candidates')
+  })
+
+  it('keeps the newest month data when an older request resolves later', async () => {
+    const requests = []
+    apiRequest.mockImplementation((url) => {
+      if (url.endsWith('/boards')) return Promise.resolve(MOCK_BOARDS)
+      let resolve
+      const promise = new Promise((res) => { resolve = res })
+      requests.push({ url, resolve })
+      return promise
+    })
+
+    const wrapper = mountReport()
+    await flushPromises()
+    expect(requests).toHaveLength(1)
+
+    await wrapper.find('select').setValue('2026-05')
+    await flushPromises()
+    expect(requests).toHaveLength(2)
+
+    requests[1].resolve({
+      candidates: [{ uniqueId: 'new', title: 'May project', impactScore: 8, feasibilityScore: 8, category: 'agentic-ai' }],
+      pillars: [{ pillarKey: 'agentic-ai', title: 'Agentic AI', shortTitle: 'Agentic', color: '#22c55e' }]
+    })
+    await flushPromises()
+    requests[0].resolve({
+      candidates: [{ uniqueId: 'old', title: 'June project', impactScore: 9, feasibilityScore: 9, category: 'model-inference' }],
+      pillars: [{ pillarKey: 'model-inference', title: 'Model Inference', shortTitle: 'Inference', color: '#3b82f6' }]
+    })
+    await flushPromises()
+
+    expect(wrapper.text()).toContain('May project')
+    expect(wrapper.text()).not.toContain('June project')
   })
 })
 
@@ -122,6 +156,17 @@ describe('ImpactFeasibilityChart', () => {
     })
     expect(wrapper.text()).toContain('Data Science')
     expect(wrapper.vm.chartData.datasets.map(dataset => dataset.label)).toContain('Data Science')
+  })
+
+  it('keeps chart legend text neutral while using pillar color for the tint', () => {
+    const wrapper = mount(ImpactFeasibilityChart, {
+      props: { candidates: MOCK_CANDIDATES, pillars: MOCK_PILLARS }
+    })
+    const legendButton = wrapper.findAll('button').find(button => button.text() === 'Data Science')
+
+    expect(legendButton.classes()).toContain('text-gray-700')
+    expect(legendButton.attributes('style')).toContain('background-color: rgba(6, 182, 212, 0.12)')
+    expect(legendButton.attributes('style')).not.toMatch(/(?:^|;)\s*color:/)
   })
 })
 
