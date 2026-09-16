@@ -1,14 +1,13 @@
 <template>
   <div>
     <div class="mb-4">
-      <h2 class="text-2xl font-bold text-gray-900 dark:text-gray-100">Test Suites</h2>
+      <h2 class="text-2xl font-bold text-gray-900 dark:text-gray-100">Test Runs</h2>
       <p class="mt-0.5 text-sm text-gray-500 dark:text-gray-400">Results from groups of tests executed together against RHOAI.</p>
     </div>
 
     <div class="mb-6 rounded-xl border border-gray-100 bg-white p-3 shadow-sm dark:border-gray-700/60 dark:bg-gray-800">
       <div class="flex flex-wrap items-center gap-3">
-        <span class="text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">Filters</span>
-        <select v-model="selectedSuite" aria-label="Test suite" :class="inputClass" @change="load">
+        <select v-model="selectedSuite" aria-label="Test run" :class="inputClass" @change="load">
           <option v-for="suite in suites" :key="suite.value" :value="suite.value">{{ formatSuiteName(suite.value) }}</option>
         </select>
         <select v-model="datePreset" aria-label="Date range" :class="inputClass" @change="applyDatePreset">
@@ -32,7 +31,7 @@
       <div class="overflow-x-auto">
         <table class="w-full text-sm">
           <thead><tr class="border-b border-gray-100 text-left text-xs uppercase tracking-wide text-gray-500 dark:border-gray-700/60 dark:text-gray-400">
-            <th class="px-5 py-3 font-semibold"><button @click="setSort('suite')">Test suite {{ sortMark('suite') }}</button></th>
+            <th class="px-5 py-3 font-semibold"><button @click="setSort('suite')">Test run {{ sortMark('suite') }}</button></th>
             <th class="px-4 py-3 font-semibold"><button @click="setSort('timestamp')">Executed {{ sortMark('timestamp') }}</button></th>
             <th class="px-4 py-3 text-right font-semibold"><button @click="setSort('tests')">Tests {{ sortMark('tests') }}</button></th>
             <th class="px-4 py-3 font-semibold"><button @click="setSort('passRate')">Pass rate {{ sortMark('passRate') }}</button></th>
@@ -41,7 +40,7 @@
             <th class="min-w-72 px-4 py-3 font-semibold">Product bugs</th>
           </tr></thead>
           <tbody>
-            <tr v-if="loading"><td colspan="7" class="px-5 py-10 text-center text-gray-400">Loading test suites…</td></tr>
+            <tr v-if="loading"><td colspan="7" class="px-5 py-10 text-center text-gray-400">Loading test runs…</td></tr>
             <tr v-for="row in sortedRows" v-else :key="`${row.suite}:${row.invocationId}`" tabindex="0" class="cursor-pointer border-b border-gray-50 hover:bg-gray-50 dark:border-gray-700/40 dark:hover:bg-gray-700/30" @click="openSuite(row)" @keydown.enter="openSuite(row)">
               <td class="px-5 py-3 font-medium text-gray-800 dark:text-gray-200">{{ formatSuiteName(row.suite) }}</td>
               <td class="whitespace-nowrap px-4 py-3 text-xs text-gray-500 dark:text-gray-400">{{ formatDate(row.timestamp) }}</td>
@@ -49,9 +48,9 @@
               <td class="px-4 py-3"><span class="font-mono">{{ formatPercent(row.passRate) }}</span><span class="ml-2 text-xs text-gray-500">{{ outcomeSummary(row) }}</span></td>
               <td class="px-4 py-3 font-mono text-xs">{{ row.rhoaiVersion || '—' }}</td>
               <td class="px-4 py-3 font-mono text-xs" :title="row.rhodsOperatorDigest || undefined">{{ formatBuildId(row.rhodsOperatorDigest) }}</td>
-              <td class="px-4 py-3"><ProductBugStatus :findings="row.productBugs" neutral-message="No product bugs observed in this suite execution." neutral-tooltip="No product bug was recorded for this test suite execution." /></td>
+              <td class="px-4 py-3"><ProductBugStatus :findings="row.productBugs" neutral-message="No product bugs observed in this test run." neutral-tooltip="No product bug was recorded for this test run." /></td>
             </tr>
-            <tr v-if="!loading && !rows.length"><td colspan="7" class="px-5 py-10 text-center text-gray-400">No test suite executions match these filters</td></tr>
+            <tr v-if="!loading && !rows.length"><td colspan="7" class="px-5 py-10 text-center text-gray-400">No test runs match these filters</td></tr>
           </tbody>
         </table>
       </div>
@@ -62,7 +61,7 @@
 <script setup>
 import { computed, inject, onMounted, ref } from 'vue'
 import ProductBugStatus from '../components/ProductBugStatus.vue'
-import { compareTableValues, defaultDateRange, formatBuildId, formatDate, formatPercent, formatSuiteName, syncQueryParams, useWorkflowValidation } from '../composables/useWorkflowValidation'
+import { compareTableValues, defaultDateRange, formatBuildId, formatDate, formatPercent, formatSuiteName, runOutcomeCounts, syncQueryParams, useWorkflowValidation } from '../composables/useWorkflowValidation'
 
 const nav = inject('moduleNav')
 const initialParams = nav?.params?.value || {}
@@ -81,9 +80,8 @@ const sortDir = ref('desc')
 const sortedRows = computed(() => [...rows.value].sort((a, b) => compareTableValues(a[sortBy.value], b[sortBy.value], sortDir.value)))
 
 function outcomeSummary(row) {
-  const parts = [`${row.passed} passed`, `${row.failed} failed`]
-  if (row.errors) parts.push(`${row.errors} ${row.errors === 1 ? 'error' : 'errors'}`)
-  return parts.join(' · ')
+  const outcomes = runOutcomeCounts(row)
+  return `${outcomes.pass} passed · ${outcomes.fail} failed · ${outcomes.aborted} aborted`
 }
 function setSort(column) {
   sortDir.value = sortBy.value === column && sortDir.value === 'desc' ? 'asc' : 'desc'
@@ -116,7 +114,7 @@ async function load() {
     const data = await getTestSuites({ suite: selectedSuite.value, latest: datePreset.value === 'latest', dateFrom: dateFrom.value, dateTo: dateTo.value })
     rows.value = data.rows || []
   } catch (err) {
-    error.value = err.data?.error || err.message || 'Failed to load test suites'
+    error.value = err.data?.error || err.message || 'Failed to load test runs'
   } finally {
     loading.value = false
   }
@@ -128,7 +126,7 @@ onMounted(async () => {
     selectedSuite.value = selectedSuite.value || suites.value[0]?.value || ''
     await load()
   } catch (err) {
-    error.value = err.data?.error || err.message || 'Failed to load test suite filters'
+    error.value = err.data?.error || err.message || 'Failed to load test run filters'
   }
 })
 </script>

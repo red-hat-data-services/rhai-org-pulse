@@ -51,7 +51,7 @@
                 class="border-b border-gray-50 dark:border-gray-700/40 hover:bg-gray-50 dark:hover:bg-gray-700/30 cursor-pointer"
                 @click="openRun(r)"
               >
-                <td class="px-5 py-3"><StatusBadge :value="r.verdict" /></td>
+                <td class="px-5 py-3"><StatusBadge :value="displayedTestOutcome(r)" /></td>
                 <td class="px-4 py-3 font-medium text-gray-800 dark:text-gray-200">{{ r.workflow_label || r.workflow || 'Unknown test' }}</td>
                 <td class="px-4 py-3 font-mono text-xs text-gray-600 dark:text-gray-300">{{ r.rhoai_version }}</td>
                 <td class="px-4 py-3 text-right font-mono text-xs text-gray-600 dark:text-gray-300">
@@ -94,7 +94,7 @@ import StatusBadge from '../components/StatusBadge.vue'
 import ProductBugStatus from '../components/ProductBugStatus.vue'
 import { useCostVisibility } from '../composables/useCostVisibility'
 import {
-  filterQueryValues, filters, hydrateFilters, syncQueryParams, useWorkflowValidation, formatUsd, formatDuration, formatDate, formatRatio
+  displayedTestOutcome, filterQueryValues, filters, hydrateFilters, syncQueryParams, useWorkflowValidation, formatUsd, formatDuration, formatDate, formatRatio
 } from '../composables/useWorkflowValidation'
 
 const nav = inject('moduleNav')

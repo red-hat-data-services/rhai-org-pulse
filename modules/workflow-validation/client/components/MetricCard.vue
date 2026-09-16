@@ -1,5 +1,5 @@
 <template>
-  <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700/60 px-5 py-4 text-center">
+  <div :title="title || undefined" class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700/60 px-5 py-4 text-center">
     <div class="text-2xl font-bold font-mono tracking-tight" :class="toneClass">
       {{ value }}
     </div>
@@ -17,6 +17,7 @@ const props = defineProps({
   value: { type: [String, Number], default: '—' },
   label: { type: String, required: true },
   sub: { type: String, default: '' },
+  title: { type: String, default: '' },
   tone: { type: String, default: 'neutral' } // neutral | green | red | teal | amber
 })
 

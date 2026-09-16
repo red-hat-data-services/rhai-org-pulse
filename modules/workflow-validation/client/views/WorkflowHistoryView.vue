@@ -14,7 +14,7 @@
       <div class="mb-4">
         <div class="flex flex-wrap items-start justify-between gap-3">
           <h2 class="text-2xl font-bold text-gray-900 dark:text-gray-100">{{ workflowLabel || workflow }}</h2>
-          <button class="text-sm font-medium text-blue-600 hover:underline dark:text-blue-400" @click="openCompare">Compare this test across versions →</button>
+          <button class="text-sm font-medium text-blue-600 hover:underline dark:text-blue-400" @click="openCompare">Compare this test across runs →</button>
         </div>
         <p class="text-sm text-gray-500 dark:text-gray-400 mt-0.5">Execution history and defect trends for this test</p>
       </div>
@@ -22,11 +22,11 @@
       <!-- Summary -->
       <div class="flex flex-wrap justify-center gap-4 mb-6 [&>*]:min-w-40">
         <MetricCard :value="summary.runs" label="Total Executions" />
-        <MetricCard :value="summary.passed" label="Passed" tone="green" />
-        <MetricCard :value="summary.failed" label="Failed" tone="red" />
-        <MetricCard v-if="summary.errors" :value="summary.errors" label="Errors" tone="amber" />
+        <MetricCard :value="historyOutcomes.pass" label="Passed" tone="green" />
+        <MetricCard :value="historyOutcomes.fail" label="Failed" tone="red" />
+        <MetricCard :value="historyOutcomes.aborted" label="Aborted" tone="amber" />
         <MetricCard :value="formatPercent(summary.passRate)" label="Pass Rate" :tone="passTone(summary.passRate)" />
-        <MetricCard :value="latestBadge" label="Latest Result" :tone="summary.latestVerdict === 'PASS' ? 'green' : summary.latestVerdict === 'FAIL' ? 'red' : 'neutral'" />
+        <MetricCard :value="latestBadge" label="Latest Result" :tone="latestBadge === 'PASS' ? 'green' : latestBadge === 'FAIL' ? 'red' : latestBadge === 'ABORT' ? 'amber' : 'neutral'" />
       </div>
 
       <!-- Charts -->
@@ -74,7 +74,7 @@
                 class="border-b border-gray-50 dark:border-gray-700/40 hover:bg-gray-50 dark:hover:bg-gray-700/30 cursor-pointer align-top"
                 @click="nav.navigateTo('run-detail', { runKey: r.id })"
               >
-                <td class="px-6 py-3"><StatusBadge :value="r.verdict" /></td>
+                <td class="px-6 py-3"><StatusBadge :value="displayedTestOutcome(r)" /></td>
                 <td class="px-4 py-3 font-mono text-xs text-gray-600 dark:text-gray-300">{{ r.rhoai_version }}</td>
                 <td class="px-4 py-3 text-right font-mono text-xs text-gray-600 dark:text-gray-300">{{ formatRatio(r.tasks_passed, r.tasks_total) }}</td>
                 <td class="px-4 py-3 text-right font-mono text-xs text-gray-600 dark:text-gray-300">{{ formatDuration(r.duration_s) }}</td>
@@ -106,7 +106,7 @@ import {
 } from 'chart.js'
 import MetricCard from '../components/MetricCard.vue'
 import StatusBadge from '../components/StatusBadge.vue'
-import { compareTableValues, filterQueryValues, hydrateFilters, syncQueryParams, useWorkflowValidation, formatDuration, formatPercent, formatDate, formatRatio } from '../composables/useWorkflowValidation'
+import { compareTableValues, displayedOutcomeCounts, displayedTestOutcome, filterQueryValues, hydrateFilters, syncQueryParams, useWorkflowValidation, formatDuration, formatPercent, formatDate, formatRatio } from '../composables/useWorkflowValidation'
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, PointElement, LineElement, Tooltip, Legend, Filler)
 
@@ -125,9 +125,14 @@ const error = ref('')
 const sortBy = ref('timestamp')
 const sortDir = ref('desc')
 
-const sortedRuns = computed(() => [...runs.value].sort((a, b) =>
+const runsWithBugs = computed(() => runs.value.map((run) => ({
+  ...run,
+  productBugs: bugs.value.filter((bug) => bug.run_id === run.run_id && bug.category === 'PRODUCT_BUG')
+})))
+const sortedRuns = computed(() => [...runsWithBugs.value].sort((a, b) =>
   compareTableValues(a[sortBy.value], b[sortBy.value], sortDir.value)))
-const latestBadge = computed(() => summary.value.latestVerdict || '—')
+const historyOutcomes = computed(() => displayedOutcomeCounts(runsWithBugs.value))
+const latestBadge = computed(() => runsWithBugs.value.length ? displayedTestOutcome(runsWithBugs.value[runsWithBugs.value.length - 1]) : '—')
 
 function passTone(rate) { if (rate == null) return 'neutral'; return rate >= 0.9 ? 'green' : rate >= 0.7 ? 'amber' : 'red' }
 
@@ -179,7 +184,7 @@ const durationData = computed(() => ({
     borderColor: '#0ea5e9',
     backgroundColor: 'rgba(14,165,233,0.12)',
     borderWidth: 2, pointRadius: 3, pointHoverRadius: 5, tension: 0.3, fill: true,
-    pointBackgroundColor: runs.value.map((r) => r.verdict === 'FAIL' ? '#ef4444' : '#22c55e')
+    pointBackgroundColor: runs.value.map((r) => ({ PASS: '#22c55e', FAIL: '#ef4444', ABORT: '#f97316' })[displayedTestOutcome(r)] || '#94a3b8')
   }]
 }))
 const durationOptions = {
