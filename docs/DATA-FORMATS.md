@@ -2,6 +2,21 @@
 
 This document describes the JSON structure of all files stored in the `data/` directory (production) and `fixtures/` directory (demo mode). **Demo fixtures must always match production format** — see [Fixture Rules](#fixture-rules) below.
 
+## Jira Autofix — `data/ai-impact/autofix-data.json`
+
+The Autofix snapshot keeps the existing `issues` pipeline-labeled cohort and
+adds `policyEligibleIssues`, the gross Bug cohort returned by the separate
+policy query. The gross query excludes CVE summary or label markers and
+embargoed issues. It does not exclude closed status or mutable opt-out labels.
+`currentPolicyEligibleIssues` is a separate current non-excluded snapshot that
+removes current `no-autofix`, `auto-created`, and `CVE` labels. It is a
+diagnostic snapshot, not a historical eligibility denominator.
+
+`metrics.stageFunnel` reports eligible, analyzed, PR proposed, PR merged,
+abandonment, and conversions. Its `authoritative` flag is true only when
+canonical immutable events from the AIPCC-31384 Autofix outcome contract are
+available. Jira label and Forge-link fallbacks are explicitly non-authoritative.
+
 ## Person Metrics — `data/people/{name}.json`
 
 Filename is the person's display name lowercased with non-alphanumeric chars replaced by `_`.
@@ -1381,6 +1396,31 @@ Admin-configurable settings for GitLab CI artifact fetching and Jira sync.
 - `artifactPath` is the directory prefix stripped from zip entry paths (e.g., `output/index.json` becomes `index.json`).
 - `jiraEnrichment.enabled` enables periodic Jira sync of feature data (12h default cadence). The sync fetches all RHAISTRAT features from Jira as the authoritative source.
 
+## Releases — Feature Tracking Config (`data/releases/execution/feature-tracking-config.json`)
+
+Gear settings for the Execute workspace: portfolio version names, per-product Jira fixVersion strings, and optional planning-freeze overrides.
+
+```json
+{
+  "releases": {
+    "3.5.EA1": {
+      "products": {
+        "rhoai": "rhoai-3.5.EA1",
+        "rhelai": "rhelai-3.5.EA1",
+        "rhaii": "rhaii-3.5.EA1"
+      },
+      "planningFreezeOverride": "2026-04-17"
+    }
+  }
+}
+```
+
+**Notes:**
+- Keys under `releases` are portfolio versions shown as Execute version chips, ordered by planning freeze date (earliest first). User `planningFreezeOverride` wins over Product Pages.
+- `products` maps family (`rhoai` / `rhelai` / `rhaii`) to the Jira fixVersion name used for hygiene and execution lookups.
+- `planningFreezeOverride` is an optional `YYYY-MM-DD` date; when set it wins over Product Pages.
+- Per-version tracking data is cached at `data/releases/execution/tracking-data-<version>.json` (e.g. `tracking-data-3.5.EA1.json`); in demo mode these fixtures back the Execute workspace. Keep the chip versions here aligned with the Schedule-view timeline (`releases/delivery/product-pages-releases-cache.json`) so timeline card deep-links land on a populated Execute pill.
+
 ## Releases — Execution Last Enrichment (`data/releases/execution/last-enrichment.json`)
 
 Metadata from the most recent Jira sync.
@@ -1624,7 +1664,7 @@ Multi-architecture build support matrix for RHOAI components across release bran
 - `image` is the full Quay.io image reference.
 - Architecture status is one of: `"supported"` (built), `"exception"` (tracked Jira), `"incompatible"` (hardware-dependent), `"not_built"` (gap).
 - `exception` entries include `issueKey`, `issueUrl`, and `reason`. `incompatible` entries include `accelerator`.
-- `productComponent` is the parent product component name from the maturity report (e.g., `"Serving Orchestration"`). `null` when no mapping exists ("unmapped").
+- `productComponent` is the parent product component name from the maturity report (e.g., `"Serving Orchestration"`). `null` when no mapping exists ("unmapped"). The mapping is keyed by image short name (last path segment) and built from each maturity component's top-level `images[]` array — the authoritative superset. The maturity report also exposes a narrower `deliverables[].images[]` subset, but images can be accepted at the component level without being wired to a deliverable (the report flags these with an info-level `evaluation-target-not-in-deliverable` mapping problem), so the component-level `images[]` array is the correct source to match against.
 - `maturity` contains metadata about the component maturity mapping from `gitlab.cee.redhat.com/data-hub/component-maturity`. `available` indicates whether the mapping was successfully fetched. `allProductComponents` is the complete sorted list of product component objects from the maturity report: `[{ "name": "...", "owner": "..." or null, "team": "..." or null }]`. Owner and team are extracted defensively from the upstream maturity report (null if absent). For backward compatibility, the frontend also accepts string entries and normalizes them to `{ name: entry, owner: null, team: null }`. `warning` is set when the mapping fetch failed or was skipped.
 - `summary` provides pre-computed counts per branch for the UI summary cards.
 
