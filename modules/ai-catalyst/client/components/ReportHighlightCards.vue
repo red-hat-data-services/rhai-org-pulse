@@ -3,12 +3,13 @@ import { computed } from 'vue'
 import { useCategories } from '../composables/useCategories.js'
 
 const props = defineProps({
-  candidates: { type: Array, required: true }
+  candidates: { type: Array, required: true },
+  pillars: { type: Array, default: () => [] }
 })
 
 const emit = defineEmits(['select'])
 
-const { getCategoryMeta } = useCategories()
+const { getCategoryMeta, getPillarRegistry } = useCategories()
 
 const totalCount = computed(() => props.candidates.length)
 
@@ -40,7 +41,8 @@ const dominantCategory = computed(() => {
   for (const [key, count] of Object.entries(counts)) {
     if (count > maxCount) { maxKey = key; maxCount = count }
   }
-  return maxKey ? { key: maxKey, count: maxCount, meta: getCategoryMeta(maxKey) } : null
+  const registry = getPillarRegistry(props.pillars, props.candidates)
+  return maxKey ? { key: maxKey, count: maxCount, meta: getCategoryMeta(maxKey, registry) } : null
 })
 
 const cards = computed(() => [

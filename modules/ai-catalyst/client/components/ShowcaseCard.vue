@@ -33,7 +33,7 @@
       </p>
 
       <div class="flex flex-wrap gap-1.5">
-        <PillBadge v-if="pillarTitle" :label="pillarTitle" variant="strategy" />
+        <PillBadge v-if="pillarTitle" :label="pillarTitle" :color="pillar?.color" variant="strategy" />
         <PillBadge v-if="lineageLabel" :label="lineageLabel" variant="lineage" />
         <PillBadge
           v-if="entry.customerNeedTags && entry.customerNeedTags[0]"
@@ -58,6 +58,7 @@ import PillBadge from './PillBadge.vue'
 const props = defineProps({
   entry: { type: Object, required: true },
   pillarTitle: { type: String, default: '' },
+  pillar: { type: Object, default: null },
   featured: { type: Boolean, default: false },
 })
 

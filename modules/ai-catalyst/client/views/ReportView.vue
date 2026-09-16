@@ -13,6 +13,7 @@ const MODULE_API = '/modules/ai-catalyst'
 const boards = ref([])
 const selectedMonth = ref('')
 const candidates = ref([])
+const pillars = ref([])
 const loading = ref(true)
 const error = ref(null)
 
@@ -35,6 +36,7 @@ async function loadCandidates() {
   try {
     const data = await apiRequest(`${MODULE_API}/boards/${selectedMonth.value}`)
     candidates.value = data.candidates || []
+    pillars.value = data.pillars || []
   } catch (err) {
     error.value = err.message || 'Failed to load candidates'
     candidates.value = []
@@ -104,17 +106,19 @@ const _monthLabel = computed(() => {
     <template v-else>
       <ImpactFeasibilityChart
         :candidates="candidates"
+        :pillars="pillars"
         @select="onSelectCandidate"
       />
 
       <ReportHighlightCards
         :candidates="candidates"
+        :pillars="pillars"
         @select="onSelectCandidate"
       />
 
       <!-- Distribution charts -->
       <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <CategoryDonutChart :candidates="candidates" />
+        <CategoryDonutChart :candidates="candidates" :pillars="pillars" />
         <SourceBarChart :candidates="candidates" />
         <LanguageBarChart :candidates="candidates" />
       </div>

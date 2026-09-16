@@ -10,6 +10,7 @@ const MODULE_API = '/modules/ai-catalyst'
 const boards = ref([])
 const selectedMonth = ref('')
 const candidates = ref([])
+const pillars = ref([])
 const totalCount = ref(0)
 const loading = ref(true)
 const error = ref(null)
@@ -44,6 +45,7 @@ async function loadCandidates() {
     const qs = params.toString()
     const data = await apiRequest(`${MODULE_API}/boards/${selectedMonth.value}${qs ? '?' + qs : ''}`)
     candidates.value = data.candidates || []
+    pillars.value = data.pillars || []
     totalCount.value = data.total || 0
   } catch (err) {
     error.value = err.message || 'Failed to load candidates'
@@ -58,6 +60,9 @@ function onSelectCandidate(candidate) {
 }
 
 watch([selectedMonth, selectedCategory, selectedStatus, selectedSource, selectedSort], loadCandidates)
+watch(selectedMonth, (month, previousMonth) => {
+  if (previousMonth && month !== previousMonth) selectedCategory.value = ''
+})
 
 onMounted(async () => {
   await loadBoards()
@@ -105,6 +110,7 @@ const summaryText = computed(() => {
 
     <!-- Filters -->
     <BoardFilters
+      :pillars="pillars"
       v-model:selected-category="selectedCategory"
       v-model:selected-status="selectedStatus"
       v-model:selected-source="selectedSource"
@@ -139,6 +145,7 @@ const summaryText = computed(() => {
         v-for="candidate in candidates"
         :key="candidate.uniqueId || candidate.link"
         :candidate="candidate"
+        :pillars="pillars"
         @select="onSelectCandidate"
       />
     </div>
