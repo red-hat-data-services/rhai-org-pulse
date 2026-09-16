@@ -215,9 +215,14 @@ function filterQueryString(extra){
 }
 
 // --- Check if a by_vr key matches the selected filters ---
+// by_vr keys look like "3.6-ea.1|EA1", "3.6|GA", "3.5|GA", etc.
+// Version dropdown values are "3.6", "3.5", "2.25" — match the major version prefix.
 function vrKeyMatches(vrKey, version, release){
   const [v, r] = vrKey.split('|');
-  if(version && version !== 'All' && v !== version) return false;
+  if(version && version !== 'All'){
+    const major = v.split('-')[0];  // "3.6-ea.1" -> "3.6", "3.6" -> "3.6"
+    if(major !== version) return false;
+  }
   if(release && release !== 'All' && r !== release) return false;
   return true;
 }
