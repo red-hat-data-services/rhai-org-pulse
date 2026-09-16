@@ -1,8 +1,8 @@
 {
   "AIPipelinesE2ETests": {
     "overall": {
-      "total": 438,
-      "passed": 361,
+      "total": 464,
+      "passed": 387,
       "failed": 2,
       "skipped": 75
     },
@@ -601,22 +601,30 @@
       },
       {
         "date": "2026-09-13",
-        "passed": 12,
+        "passed": 18,
         "failed": 0,
         "skipped": 0,
-        "total": 12,
+        "total": 18,
         "execution_count": 1
       },
       {
         "date": "2026-09-14",
-        "passed": 0,
+        "passed": 10,
         "failed": 0,
         "skipped": 0,
-        "total": 0,
-        "execution_count": 0
+        "total": 10,
+        "execution_count": 1
       },
       {
         "date": "2026-09-15",
+        "passed": 10,
+        "failed": 0,
+        "skipped": 0,
+        "total": 10,
+        "execution_count": 1
+      },
+      {
+        "date": "2026-09-16",
         "passed": 0,
         "failed": 0,
         "skipped": 0,
@@ -881,6 +889,22 @@
             "symbol": "\u2713",
             "jenkins_url": "https://jenkins-csb-rhods-opendatascience.dno.corp.redhat.com/job/rhoai/job/3.5/job/selfmanaged/job/cli/job/aws/job/rhoai-smoke/61/"
           }
+        ],
+        "2026-09-14": [
+          {
+            "state": "PASSED",
+            "color": "green",
+            "symbol": "\u2713",
+            "jenkins_url": "https://jenkins-csb-rhods-opendatascience.dno.corp.redhat.com/job/rhoai/job/3.6-ea.1/job/selfmanaged/job/cli/job/aws/job/rhoai-smoke/25/"
+          }
+        ],
+        "2026-09-15": [
+          {
+            "state": "PASSED",
+            "color": "green",
+            "symbol": "\u2713",
+            "jenkins_url": "https://jenkins-csb-rhods-opendatascience.dno.corp.redhat.com/job/rhoai/job/3.6-ea.1/job/selfmanaged/job/cli/job/azure/job/rhoai-smoke/15/"
+          }
         ]
       },
       "tier1": {
@@ -961,7 +985,7 @@
     "releases": [
       {
         "release": "EA1",
-        "passed": 203,
+        "passed": 229,
         "failed": 2,
         "skipped": 0,
         "daily": [
@@ -1015,7 +1039,19 @@
           },
           {
             "date": "2026-09-13",
-            "passed": 12,
+            "passed": 18,
+            "failed": 0,
+            "skipped": 0
+          },
+          {
+            "date": "2026-09-14",
+            "passed": 10,
+            "failed": 0,
+            "skipped": 0
+          },
+          {
+            "date": "2026-09-15",
+            "passed": 10,
             "failed": 0,
             "skipped": 0
           }
@@ -1113,7 +1149,7 @@
     "component": "AIPipelinesE2ETests",
     "filters": {
       "from": "2026-07-01",
-      "to": "2026-09-15",
+      "to": "2026-09-16",
       "environment": "RHOAI",
       "version": "All",
       "release": "All",
@@ -1746,6 +1782,14 @@
         "skipped": 0,
         "total": 0,
         "execution_count": 0
+      },
+      {
+        "date": "2026-09-16",
+        "passed": 0,
+        "failed": 0,
+        "skipped": 0,
+        "total": 0,
+        "execution_count": 0
       }
     ],
     "quality_gates": {
@@ -1779,7 +1823,7 @@
     "component": "API Tests Suite",
     "filters": {
       "from": "2026-07-01",
-      "to": "2026-09-15",
+      "to": "2026-09-16",
       "environment": "RHOAI",
       "version": "All",
       "release": "All",
@@ -2412,6 +2456,14 @@
         "skipped": 0,
         "total": 0,
         "execution_count": 0
+      },
+      {
+        "date": "2026-09-16",
+        "passed": 0,
+        "failed": 0,
+        "skipped": 0,
+        "total": 0,
+        "execution_count": 0
       }
     ],
     "quality_gates": {
@@ -2445,7 +2497,7 @@
     "component": "Ai Explainability",
     "filters": {
       "from": "2026-07-01",
-      "to": "2026-09-15",
+      "to": "2026-09-16",
       "environment": "RHOAI",
       "version": "All",
       "release": "All",
@@ -2457,10 +2509,10 @@
   },
   "Ai Gateway": {
     "overall": {
-      "total": 1256,
-      "passed": 1120,
-      "failed": 76,
-      "skipped": 60
+      "total": 1364,
+      "passed": 1214,
+      "failed": 86,
+      "skipped": 64
     },
     "daily": [
       {
@@ -3065,14 +3117,22 @@
       },
       {
         "date": "2026-09-14",
-        "passed": 0,
-        "failed": 0,
-        "skipped": 0,
-        "total": 0,
-        "execution_count": 0
+        "passed": 46,
+        "failed": 6,
+        "skipped": 2,
+        "total": 54,
+        "execution_count": 1
       },
       {
         "date": "2026-09-15",
+        "passed": 48,
+        "failed": 4,
+        "skipped": 2,
+        "total": 54,
+        "execution_count": 1
+      },
+      {
+        "date": "2026-09-16",
         "passed": 0,
         "failed": 0,
         "skipped": 0,
@@ -3211,6 +3271,22 @@
             "symbol": "\u25cf",
             "jenkins_url": "https://jenkins-csb-rhods-opendatascience.dno.corp.redhat.com/job/rhoai/job/3.6-ea.1/job/selfmanaged/job/cli/job/azure/job/rhoai-smoke/14/"
           }
+        ],
+        "2026-09-14": [
+          {
+            "state": "FAILED",
+            "color": "red",
+            "symbol": "\u25cf",
+            "jenkins_url": "https://jenkins-csb-rhods-opendatascience.dno.corp.redhat.com/job/rhoai/job/3.6-ea.1/job/selfmanaged/job/cli/job/aws/job/rhoai-smoke/25/"
+          }
+        ],
+        "2026-09-15": [
+          {
+            "state": "FAILED",
+            "color": "red",
+            "symbol": "\u25cf",
+            "jenkins_url": "https://jenkins-csb-rhods-opendatascience.dno.corp.redhat.com/job/rhoai/job/3.6-ea.1/job/selfmanaged/job/cli/job/azure/job/rhoai-smoke/15/"
+          }
         ]
       },
       "tier1": {
@@ -3235,9 +3311,9 @@
     "releases": [
       {
         "release": "EA1",
-        "passed": 970,
-        "failed": 70,
-        "skipped": 54,
+        "passed": 1064,
+        "failed": 80,
+        "skipped": 58,
         "daily": [
           {
             "date": "2026-09-02",
@@ -3286,6 +3362,18 @@
             "passed": 178,
             "failed": 4,
             "skipped": 14
+          },
+          {
+            "date": "2026-09-14",
+            "passed": 46,
+            "failed": 6,
+            "skipped": 2
+          },
+          {
+            "date": "2026-09-15",
+            "passed": 48,
+            "failed": 4,
+            "skipped": 2
           }
         ]
       },
@@ -3307,7 +3395,7 @@
     "component": "Ai Gateway",
     "filters": {
       "from": "2026-07-01",
-      "to": "2026-09-15",
+      "to": "2026-09-16",
       "environment": "RHOAI",
       "version": "All",
       "release": "All",
@@ -3319,8 +3407,8 @@
   },
   "Ai Hub": {
     "overall": {
-      "total": 4257,
-      "passed": 4245,
+      "total": 4323,
+      "passed": 4311,
       "failed": 12,
       "skipped": 0
     },
@@ -3927,6 +4015,14 @@
       },
       {
         "date": "2026-09-14",
+        "passed": 66,
+        "failed": 0,
+        "skipped": 0,
+        "total": 66,
+        "execution_count": 1
+      },
+      {
+        "date": "2026-09-15",
         "passed": 0,
         "failed": 0,
         "skipped": 0,
@@ -3934,7 +4030,7 @@
         "execution_count": 0
       },
       {
-        "date": "2026-09-15",
+        "date": "2026-09-16",
         "passed": 0,
         "failed": 0,
         "skipped": 0,
@@ -4247,6 +4343,14 @@
             "symbol": "\u2713",
             "jenkins_url": "https://jenkins-csb-rhods-opendatascience.dno.corp.redhat.com/job/rhoai/job/3.5/job/selfmanaged/job/cli/job/aws/job/rhoai-smoke/61/"
           }
+        ],
+        "2026-09-14": [
+          {
+            "state": "PASSED",
+            "color": "green",
+            "symbol": "\u2713",
+            "jenkins_url": "https://jenkins-csb-rhods-opendatascience.dno.corp.redhat.com/job/rhoai/job/3.6-ea.1/job/selfmanaged/job/cli/job/aws/job/rhoai-smoke/25/"
+          }
         ]
       },
       "tier1": {
@@ -4305,7 +4409,7 @@
     "releases": [
       {
         "release": "EA1",
-        "passed": 2923,
+        "passed": 2989,
         "failed": 6,
         "skipped": 0,
         "daily": [
@@ -4354,6 +4458,12 @@
           {
             "date": "2026-09-11",
             "passed": 406,
+            "failed": 0,
+            "skipped": 0
+          },
+          {
+            "date": "2026-09-14",
+            "passed": 66,
             "failed": 0,
             "skipped": 0
           }
@@ -4463,7 +4573,7 @@
     "component": "Ai Hub",
     "filters": {
       "from": "2026-07-01",
-      "to": "2026-09-15",
+      "to": "2026-09-16",
       "environment": "RHOAI",
       "version": "All",
       "release": "All",
@@ -5096,6 +5206,14 @@
         "skipped": 0,
         "total": 0,
         "execution_count": 0
+      },
+      {
+        "date": "2026-09-16",
+        "passed": 0,
+        "failed": 0,
+        "skipped": 0,
+        "total": 0,
+        "execution_count": 0
       }
     ],
     "quality_gates": {
@@ -5205,7 +5323,7 @@
     "component": "Ai Safety",
     "filters": {
       "from": "2026-07-01",
-      "to": "2026-09-15",
+      "to": "2026-09-16",
       "environment": "RHOAI",
       "version": "All",
       "release": "All",
@@ -5217,10 +5335,10 @@
   },
   "Ai Safety Evalhub": {
     "overall": {
-      "total": 1817,
-      "passed": 1310,
-      "failed": 471,
-      "skipped": 36
+      "total": 1937,
+      "passed": 1412,
+      "failed": 485,
+      "skipped": 40
     },
     "daily": [
       {
@@ -5825,14 +5943,22 @@
       },
       {
         "date": "2026-09-14",
-        "passed": 0,
-        "failed": 0,
-        "skipped": 0,
-        "total": 0,
-        "execution_count": 0
+        "passed": 50,
+        "failed": 8,
+        "skipped": 2,
+        "total": 60,
+        "execution_count": 1
       },
       {
         "date": "2026-09-15",
+        "passed": 52,
+        "failed": 6,
+        "skipped": 2,
+        "total": 60,
+        "execution_count": 1
+      },
+      {
+        "date": "2026-09-16",
         "passed": 0,
         "failed": 0,
         "skipped": 0,
@@ -6111,6 +6237,22 @@
             "symbol": "\u2713",
             "jenkins_url": "https://jenkins-csb-rhods-opendatascience.dno.corp.redhat.com/job/rhoai/job/3.5/job/selfmanaged/job/cli/job/aws/job/rhoai-smoke/61/"
           }
+        ],
+        "2026-09-14": [
+          {
+            "state": "FAILED",
+            "color": "red",
+            "symbol": "\u25cf",
+            "jenkins_url": "https://jenkins-csb-rhods-opendatascience.dno.corp.redhat.com/job/rhoai/job/3.6-ea.1/job/selfmanaged/job/cli/job/aws/job/rhoai-smoke/25/"
+          }
+        ],
+        "2026-09-15": [
+          {
+            "state": "FAILED",
+            "color": "red",
+            "symbol": "\u25cf",
+            "jenkins_url": "https://jenkins-csb-rhods-opendatascience.dno.corp.redhat.com/job/rhoai/job/3.6-ea.1/job/selfmanaged/job/cli/job/azure/job/rhoai-smoke/15/"
+          }
         ]
       },
       "tier1": {
@@ -6135,9 +6277,9 @@
     "releases": [
       {
         "release": "EA1",
-        "passed": 797,
-        "failed": 349,
-        "skipped": 24,
+        "passed": 899,
+        "failed": 363,
+        "skipped": 28,
         "daily": [
           {
             "date": "2026-09-02",
@@ -6186,6 +6328,18 @@
             "passed": 100,
             "failed": 16,
             "skipped": 4
+          },
+          {
+            "date": "2026-09-14",
+            "passed": 50,
+            "failed": 8,
+            "skipped": 2
+          },
+          {
+            "date": "2026-09-15",
+            "passed": 52,
+            "failed": 6,
+            "skipped": 2
           }
         ]
       },
@@ -6269,7 +6423,7 @@
     "component": "Ai Safety Evalhub",
     "filters": {
       "from": "2026-07-01",
-      "to": "2026-09-15",
+      "to": "2026-09-16",
       "environment": "RHOAI",
       "version": "All",
       "release": "All",
@@ -6281,9 +6435,9 @@
   },
   "Ai Safety Guardrails": {
     "overall": {
-      "total": 426,
-      "passed": 266,
-      "failed": 160,
+      "total": 454,
+      "passed": 282,
+      "failed": 172,
       "skipped": 0
     },
     "daily": [
@@ -6881,22 +7035,30 @@
       },
       {
         "date": "2026-09-13",
-        "passed": 16,
-        "failed": 24,
+        "passed": 24,
+        "failed": 36,
         "skipped": 0,
-        "total": 40,
+        "total": 60,
         "execution_count": 1
       },
       {
         "date": "2026-09-14",
-        "passed": 0,
+        "passed": 4,
         "failed": 0,
         "skipped": 0,
-        "total": 0,
-        "execution_count": 0
+        "total": 4,
+        "execution_count": 1
       },
       {
         "date": "2026-09-15",
+        "passed": 4,
+        "failed": 0,
+        "skipped": 0,
+        "total": 4,
+        "execution_count": 1
+      },
+      {
+        "date": "2026-09-16",
         "passed": 0,
         "failed": 0,
         "skipped": 0,
@@ -7175,6 +7337,22 @@
             "symbol": "\u2713",
             "jenkins_url": "https://jenkins-csb-rhods-opendatascience.dno.corp.redhat.com/job/rhoai/job/3.5/job/selfmanaged/job/cli/job/aws/job/rhoai-smoke/61/"
           }
+        ],
+        "2026-09-14": [
+          {
+            "state": "PASSED",
+            "color": "green",
+            "symbol": "\u2713",
+            "jenkins_url": "https://jenkins-csb-rhods-opendatascience.dno.corp.redhat.com/job/rhoai/job/3.6-ea.1/job/selfmanaged/job/cli/job/aws/job/rhoai-smoke/25/"
+          }
+        ],
+        "2026-09-15": [
+          {
+            "state": "PASSED",
+            "color": "green",
+            "symbol": "\u2713",
+            "jenkins_url": "https://jenkins-csb-rhods-opendatascience.dno.corp.redhat.com/job/rhoai/job/3.6-ea.1/job/selfmanaged/job/cli/job/azure/job/rhoai-smoke/15/"
+          }
         ]
       },
       "tier1": {
@@ -7233,8 +7411,8 @@
     "releases": [
       {
         "release": "EA1",
-        "passed": 186,
-        "failed": 125,
+        "passed": 202,
+        "failed": 137,
         "skipped": 0,
         "daily": [
           {
@@ -7287,8 +7465,20 @@
           },
           {
             "date": "2026-09-13",
-            "passed": 16,
-            "failed": 24,
+            "passed": 24,
+            "failed": 36,
+            "skipped": 0
+          },
+          {
+            "date": "2026-09-14",
+            "passed": 4,
+            "failed": 0,
+            "skipped": 0
+          },
+          {
+            "date": "2026-09-15",
+            "passed": 4,
+            "failed": 0,
             "skipped": 0
           }
         ]
@@ -7373,7 +7563,7 @@
     "component": "Ai Safety Guardrails",
     "filters": {
       "from": "2026-07-01",
-      "to": "2026-09-15",
+      "to": "2026-09-16",
       "environment": "RHOAI",
       "version": "All",
       "release": "All",
@@ -7385,10 +7575,10 @@
   },
   "Ai Safety Lmeval": {
     "overall": {
-      "total": 149,
-      "passed": 94,
-      "failed": 39,
-      "skipped": 16
+      "total": 160,
+      "passed": 98,
+      "failed": 42,
+      "skipped": 20
     },
     "daily": [
       {
@@ -7986,21 +8176,29 @@
       {
         "date": "2026-09-13",
         "passed": 0,
-        "failed": 6,
-        "skipped": 8,
-        "total": 14,
+        "failed": 9,
+        "skipped": 12,
+        "total": 21,
         "execution_count": 1
       },
       {
         "date": "2026-09-14",
-        "passed": 0,
+        "passed": 2,
         "failed": 0,
         "skipped": 0,
-        "total": 0,
-        "execution_count": 0
+        "total": 2,
+        "execution_count": 1
       },
       {
         "date": "2026-09-15",
+        "passed": 2,
+        "failed": 0,
+        "skipped": 0,
+        "total": 2,
+        "execution_count": 1
+      },
+      {
+        "date": "2026-09-16",
         "passed": 0,
         "failed": 0,
         "skipped": 0,
@@ -8271,6 +8469,22 @@
             "symbol": "\u2713",
             "jenkins_url": "https://jenkins-csb-rhods-opendatascience.dno.corp.redhat.com/job/rhoai/job/3.5/job/selfmanaged/job/cli/job/aws/job/rhoai-smoke/61/"
           }
+        ],
+        "2026-09-14": [
+          {
+            "state": "PASSED",
+            "color": "green",
+            "symbol": "\u2713",
+            "jenkins_url": "https://jenkins-csb-rhods-opendatascience.dno.corp.redhat.com/job/rhoai/job/3.6-ea.1/job/selfmanaged/job/cli/job/aws/job/rhoai-smoke/25/"
+          }
+        ],
+        "2026-09-15": [
+          {
+            "state": "PASSED",
+            "color": "green",
+            "symbol": "\u2713",
+            "jenkins_url": "https://jenkins-csb-rhods-opendatascience.dno.corp.redhat.com/job/rhoai/job/3.6-ea.1/job/selfmanaged/job/cli/job/azure/job/rhoai-smoke/15/"
+          }
         ]
       },
       "tier1": {
@@ -8329,9 +8543,9 @@
     "releases": [
       {
         "release": "EA1",
-        "passed": 59,
-        "failed": 32,
-        "skipped": 16,
+        "passed": 63,
+        "failed": 35,
+        "skipped": 20,
         "daily": [
           {
             "date": "2026-09-02",
@@ -8384,8 +8598,20 @@
           {
             "date": "2026-09-13",
             "passed": 0,
-            "failed": 6,
-            "skipped": 8
+            "failed": 9,
+            "skipped": 12
+          },
+          {
+            "date": "2026-09-14",
+            "passed": 2,
+            "failed": 0,
+            "skipped": 0
+          },
+          {
+            "date": "2026-09-15",
+            "passed": 2,
+            "failed": 0,
+            "skipped": 0
           }
         ]
       },
@@ -8463,7 +8689,7 @@
     "component": "Ai Safety Lmeval",
     "filters": {
       "from": "2026-07-01",
-      "to": "2026-09-15",
+      "to": "2026-09-16",
       "environment": "RHOAI",
       "version": "All",
       "release": "All",
@@ -8475,8 +8701,8 @@
   },
   "Ai Safety Trustyai Operator": {
     "overall": {
-      "total": 61,
-      "passed": 61,
+      "total": 65,
+      "passed": 65,
       "failed": 0,
       "skipped": 0
     },
@@ -9083,14 +9309,22 @@
       },
       {
         "date": "2026-09-14",
-        "passed": 0,
+        "passed": 2,
         "failed": 0,
         "skipped": 0,
-        "total": 0,
-        "execution_count": 0
+        "total": 2,
+        "execution_count": 1
       },
       {
         "date": "2026-09-15",
+        "passed": 2,
+        "failed": 0,
+        "skipped": 0,
+        "total": 2,
+        "execution_count": 1
+      },
+      {
+        "date": "2026-09-16",
         "passed": 0,
         "failed": 0,
         "skipped": 0,
@@ -9361,13 +9595,29 @@
             "symbol": "\u2713",
             "jenkins_url": "https://jenkins-csb-rhods-opendatascience.dno.corp.redhat.com/job/rhoai/job/3.5/job/selfmanaged/job/cli/job/aws/job/rhoai-smoke/61/"
           }
+        ],
+        "2026-09-14": [
+          {
+            "state": "PASSED",
+            "color": "green",
+            "symbol": "\u2713",
+            "jenkins_url": "https://jenkins-csb-rhods-opendatascience.dno.corp.redhat.com/job/rhoai/job/3.6-ea.1/job/selfmanaged/job/cli/job/aws/job/rhoai-smoke/25/"
+          }
+        ],
+        "2026-09-15": [
+          {
+            "state": "PASSED",
+            "color": "green",
+            "symbol": "\u2713",
+            "jenkins_url": "https://jenkins-csb-rhods-opendatascience.dno.corp.redhat.com/job/rhoai/job/3.6-ea.1/job/selfmanaged/job/cli/job/azure/job/rhoai-smoke/15/"
+          }
         ]
       }
     },
     "releases": [
       {
         "release": "EA1",
-        "passed": 39,
+        "passed": 43,
         "failed": 0,
         "skipped": 0,
         "daily": [
@@ -9416,6 +9666,18 @@
           {
             "date": "2026-09-11",
             "passed": 4,
+            "failed": 0,
+            "skipped": 0
+          },
+          {
+            "date": "2026-09-14",
+            "passed": 2,
+            "failed": 0,
+            "skipped": 0
+          },
+          {
+            "date": "2026-09-15",
+            "passed": 2,
             "failed": 0,
             "skipped": 0
           }
@@ -9489,7 +9751,7 @@
     "component": "Ai Safety Trustyai Operator",
     "filters": {
       "from": "2026-07-01",
-      "to": "2026-09-15",
+      "to": "2026-09-16",
       "environment": "RHOAI",
       "version": "All",
       "release": "All",
@@ -9501,9 +9763,9 @@
   },
   "Ai Safety Trustyai Service": {
     "overall": {
-      "total": 617,
-      "passed": 451,
-      "failed": 52,
+      "total": 637,
+      "passed": 464,
+      "failed": 59,
       "skipped": 114
     },
     "daily": [
@@ -10101,22 +10363,30 @@
       },
       {
         "date": "2026-09-13",
-        "passed": 2,
-        "failed": 14,
+        "passed": 3,
+        "failed": 21,
         "skipped": 0,
-        "total": 16,
+        "total": 24,
         "execution_count": 1
       },
       {
         "date": "2026-09-14",
-        "passed": 0,
+        "passed": 6,
         "failed": 0,
         "skipped": 0,
-        "total": 0,
-        "execution_count": 0
+        "total": 6,
+        "execution_count": 1
       },
       {
         "date": "2026-09-15",
+        "passed": 6,
+        "failed": 0,
+        "skipped": 0,
+        "total": 6,
+        "execution_count": 1
+      },
+      {
+        "date": "2026-09-16",
         "passed": 0,
         "failed": 0,
         "skipped": 0,
@@ -10387,6 +10657,22 @@
             "symbol": "\u2713",
             "jenkins_url": "https://jenkins-csb-rhods-opendatascience.dno.corp.redhat.com/job/rhoai/job/3.5/job/selfmanaged/job/cli/job/aws/job/rhoai-smoke/61/"
           }
+        ],
+        "2026-09-14": [
+          {
+            "state": "PASSED",
+            "color": "green",
+            "symbol": "\u2713",
+            "jenkins_url": "https://jenkins-csb-rhods-opendatascience.dno.corp.redhat.com/job/rhoai/job/3.6-ea.1/job/selfmanaged/job/cli/job/aws/job/rhoai-smoke/25/"
+          }
+        ],
+        "2026-09-15": [
+          {
+            "state": "PASSED",
+            "color": "green",
+            "symbol": "\u2713",
+            "jenkins_url": "https://jenkins-csb-rhods-opendatascience.dno.corp.redhat.com/job/rhoai/job/3.6-ea.1/job/selfmanaged/job/cli/job/azure/job/rhoai-smoke/15/"
+          }
         ]
       },
       "tier1": {
@@ -10445,8 +10731,8 @@
     "releases": [
       {
         "release": "EA1",
-        "passed": 293,
-        "failed": 48,
+        "passed": 306,
+        "failed": 55,
         "skipped": 76,
         "daily": [
           {
@@ -10499,8 +10785,20 @@
           },
           {
             "date": "2026-09-13",
-            "passed": 2,
-            "failed": 14,
+            "passed": 3,
+            "failed": 21,
+            "skipped": 0
+          },
+          {
+            "date": "2026-09-14",
+            "passed": 6,
+            "failed": 0,
+            "skipped": 0
+          },
+          {
+            "date": "2026-09-15",
+            "passed": 6,
+            "failed": 0,
             "skipped": 0
           }
         ]
@@ -10579,7 +10877,7 @@
     "component": "Ai Safety Trustyai Service",
     "filters": {
       "from": "2026-07-01",
-      "to": "2026-09-15",
+      "to": "2026-09-16",
       "environment": "RHOAI",
       "version": "All",
       "release": "All",
@@ -10591,10 +10889,10 @@
   },
   "Codeflare Sdk": {
     "overall": {
-      "total": 214,
-      "passed": 198,
-      "failed": 8,
-      "skipped": 8
+      "total": 243,
+      "passed": 212,
+      "failed": 19,
+      "skipped": 12
     },
     "daily": [
       {
@@ -11191,22 +11489,30 @@
       },
       {
         "date": "2026-09-13",
-        "passed": 12,
-        "failed": 2,
+        "passed": 18,
+        "failed": 3,
         "skipped": 0,
-        "total": 14,
+        "total": 21,
         "execution_count": 1
       },
       {
         "date": "2026-09-14",
-        "passed": 0,
+        "passed": 4,
         "failed": 0,
         "skipped": 0,
-        "total": 0,
-        "execution_count": 0
+        "total": 4,
+        "execution_count": 1
       },
       {
         "date": "2026-09-15",
+        "passed": 4,
+        "failed": 10,
+        "skipped": 4,
+        "total": 18,
+        "execution_count": 2
+      },
+      {
+        "date": "2026-09-16",
         "passed": 0,
         "failed": 0,
         "skipped": 0,
@@ -11505,6 +11811,22 @@
             "symbol": "\u2713",
             "jenkins_url": "https://jenkins-csb-rhods-opendatascience.dno.corp.redhat.com/job/rhoai/job/3.5/job/selfmanaged/job/cli/job/aws/job/rhoai-smoke/61/"
           }
+        ],
+        "2026-09-14": [
+          {
+            "state": "PASSED",
+            "color": "green",
+            "symbol": "\u2713",
+            "jenkins_url": "https://jenkins-csb-rhods-opendatascience.dno.corp.redhat.com/job/rhoai/job/3.6-ea.1/job/selfmanaged/job/cli/job/aws/job/rhoai-smoke/25/"
+          }
+        ],
+        "2026-09-15": [
+          {
+            "state": "PASSED",
+            "color": "green",
+            "symbol": "\u2713",
+            "jenkins_url": "https://jenkins-csb-rhods-opendatascience.dno.corp.redhat.com/job/rhoai/job/3.6-ea.1/job/selfmanaged/job/cli/job/azure/job/rhoai-smoke/15/"
+          }
         ]
       },
       "tier1": {
@@ -11571,15 +11893,23 @@
             "symbol": "\u25cf",
             "jenkins_url": "https://jenkins-csb-rhods-opendatascience.dno.corp.redhat.com/job/rhoai/job/3.6-ea.1/job/selfmanaged/job/cli/job/aws/job/rhoai-tier1/38/"
           }
+        ],
+        "2026-09-15": [
+          {
+            "state": "FAILED",
+            "color": "red",
+            "symbol": "\u25cf",
+            "jenkins_url": "https://jenkins-csb-rhods-opendatascience.dno.corp.redhat.com/job/rhoai/job/3.6-ea.1/job/selfmanaged/job/cli/job/aws/job/rhoai-tier1/42/"
+          }
         ]
       }
     },
     "releases": [
       {
         "release": "EA1",
-        "passed": 112,
-        "failed": 4,
-        "skipped": 0,
+        "passed": 126,
+        "failed": 15,
+        "skipped": 4,
         "daily": [
           {
             "date": "2026-09-02",
@@ -11631,9 +11961,21 @@
           },
           {
             "date": "2026-09-13",
-            "passed": 12,
-            "failed": 2,
+            "passed": 18,
+            "failed": 3,
             "skipped": 0
+          },
+          {
+            "date": "2026-09-14",
+            "passed": 4,
+            "failed": 0,
+            "skipped": 0
+          },
+          {
+            "date": "2026-09-15",
+            "passed": 4,
+            "failed": 10,
+            "skipped": 4
           }
         ]
       },
@@ -11729,7 +12071,7 @@
     "component": "Codeflare Sdk",
     "filters": {
       "from": "2026-07-01",
-      "to": "2026-09-15",
+      "to": "2026-09-16",
       "environment": "RHOAI",
       "version": "All",
       "release": "All",
@@ -11741,10 +12083,10 @@
   },
   "Dashboard": {
     "overall": {
-      "total": 4478,
-      "passed": 3122,
+      "total": 4673,
+      "passed": 3128,
       "failed": 395,
-      "skipped": 961
+      "skipped": 1150
     },
     "daily": [
       {
@@ -12341,10 +12683,10 @@
       },
       {
         "date": "2026-09-13",
-        "passed": 4,
+        "passed": 6,
         "failed": 0,
-        "skipped": 378,
-        "total": 382,
+        "skipped": 567,
+        "total": 573,
         "execution_count": 2
       },
       {
@@ -12357,6 +12699,14 @@
       },
       {
         "date": "2026-09-15",
+        "passed": 4,
+        "failed": 0,
+        "skipped": 0,
+        "total": 4,
+        "execution_count": 1
+      },
+      {
+        "date": "2026-09-16",
         "passed": 0,
         "failed": 0,
         "skipped": 0,
@@ -12651,6 +13001,14 @@
             "symbol": "\u2713",
             "jenkins_url": "https://jenkins-csb-rhods-opendatascience.dno.corp.redhat.com/job/rhoai/job/3.6-ea.1/job/selfmanaged/job/cli/job/aws/job/rhoai-tier1/40/"
           }
+        ],
+        "2026-09-15": [
+          {
+            "state": "PASSED",
+            "color": "green",
+            "symbol": "\u2713",
+            "jenkins_url": "https://jenkins-csb-rhods-opendatascience.dno.corp.redhat.com/job/rhoai/job/3.6-ea.1/job/selfmanaged/job/cli/job/aws/job/rhoai-tier1/42/"
+          }
         ]
       },
       "tier2": {
@@ -12675,9 +13033,9 @@
     "releases": [
       {
         "release": "EA1",
-        "passed": 2030,
+        "passed": 2036,
         "failed": 241,
-        "skipped": 866,
+        "skipped": 1055,
         "daily": [
           {
             "date": "2026-09-02",
@@ -12729,9 +13087,15 @@
           },
           {
             "date": "2026-09-13",
+            "passed": 6,
+            "failed": 0,
+            "skipped": 567
+          },
+          {
+            "date": "2026-09-15",
             "passed": 4,
             "failed": 0,
-            "skipped": 378
+            "skipped": 0
           }
         ]
       },
@@ -12809,7 +13173,7 @@
     "component": "Dashboard",
     "filters": {
       "from": "2026-07-01",
-      "to": "2026-09-15",
+      "to": "2026-09-16",
       "environment": "RHOAI",
       "version": "All",
       "release": "All",
@@ -13442,6 +13806,14 @@
         "skipped": 0,
         "total": 0,
         "execution_count": 0
+      },
+      {
+        "date": "2026-09-16",
+        "passed": 0,
+        "failed": 0,
+        "skipped": 0,
+        "total": 0,
+        "execution_count": 0
       }
     ],
     "quality_gates": {
@@ -13503,7 +13875,7 @@
     "component": "Data Science Pipelines",
     "filters": {
       "from": "2026-07-01",
-      "to": "2026-09-15",
+      "to": "2026-09-16",
       "environment": "RHOAI",
       "version": "All",
       "release": "All",
@@ -13515,10 +13887,10 @@
   },
   "Demos": {
     "overall": {
-      "total": 95,
-      "passed": 71,
-      "failed": 14,
-      "skipped": 10
+      "total": 119,
+      "passed": 87,
+      "failed": 18,
+      "skipped": 14
     },
     "daily": [
       {
@@ -14123,14 +14495,22 @@
       },
       {
         "date": "2026-09-14",
-        "passed": 8,
-        "failed": 2,
-        "skipped": 2,
-        "total": 12,
+        "passed": 24,
+        "failed": 6,
+        "skipped": 6,
+        "total": 36,
         "execution_count": 1
       },
       {
         "date": "2026-09-15",
+        "passed": 0,
+        "failed": 0,
+        "skipped": 0,
+        "total": 0,
+        "execution_count": 0
+      },
+      {
+        "date": "2026-09-16",
         "passed": 0,
         "failed": 0,
         "skipped": 0,
@@ -14205,9 +14585,9 @@
     "releases": [
       {
         "release": "EA1",
-        "passed": 61,
-        "failed": 13,
-        "skipped": 10,
+        "passed": 77,
+        "failed": 17,
+        "skipped": 14,
         "daily": [
           {
             "date": "2026-09-03",
@@ -14235,9 +14615,9 @@
           },
           {
             "date": "2026-09-14",
-            "passed": 8,
-            "failed": 2,
-            "skipped": 2
+            "passed": 24,
+            "failed": 6,
+            "skipped": 6
           }
         ]
       },
@@ -14259,7 +14639,7 @@
     "component": "Demos",
     "filters": {
       "from": "2026-07-01",
-      "to": "2026-09-15",
+      "to": "2026-09-16",
       "environment": "RHOAI",
       "version": "All",
       "release": "All",
@@ -14271,8 +14651,8 @@
   },
   "Distributed Workloads": {
     "overall": {
-      "total": 99,
-      "passed": 69,
+      "total": 103,
+      "passed": 73,
       "failed": 0,
       "skipped": 30
     },
@@ -14879,14 +15259,22 @@
       },
       {
         "date": "2026-09-14",
-        "passed": 0,
+        "passed": 2,
         "failed": 0,
         "skipped": 0,
-        "total": 0,
-        "execution_count": 0
+        "total": 2,
+        "execution_count": 1
       },
       {
         "date": "2026-09-15",
+        "passed": 2,
+        "failed": 0,
+        "skipped": 0,
+        "total": 2,
+        "execution_count": 1
+      },
+      {
+        "date": "2026-09-16",
         "passed": 0,
         "failed": 0,
         "skipped": 0,
@@ -15189,6 +15577,22 @@
             "symbol": "\u2713",
             "jenkins_url": "https://jenkins-csb-rhods-opendatascience.dno.corp.redhat.com/job/rhoai/job/3.5/job/selfmanaged/job/cli/job/aws/job/rhoai-smoke/61/"
           }
+        ],
+        "2026-09-14": [
+          {
+            "state": "PASSED",
+            "color": "green",
+            "symbol": "\u2713",
+            "jenkins_url": "https://jenkins-csb-rhods-opendatascience.dno.corp.redhat.com/job/rhoai/job/3.6-ea.1/job/selfmanaged/job/cli/job/aws/job/rhoai-smoke/25/"
+          }
+        ],
+        "2026-09-15": [
+          {
+            "state": "PASSED",
+            "color": "green",
+            "symbol": "\u2713",
+            "jenkins_url": "https://jenkins-csb-rhods-opendatascience.dno.corp.redhat.com/job/rhoai/job/3.6-ea.1/job/selfmanaged/job/cli/job/azure/job/rhoai-smoke/15/"
+          }
         ]
       },
       "tier1": {
@@ -15255,7 +15659,7 @@
     "releases": [
       {
         "release": "EA1",
-        "passed": 39,
+        "passed": 43,
         "failed": 0,
         "skipped": 0,
         "daily": [
@@ -15304,6 +15708,18 @@
           {
             "date": "2026-09-11",
             "passed": 4,
+            "failed": 0,
+            "skipped": 0
+          },
+          {
+            "date": "2026-09-14",
+            "passed": 2,
+            "failed": 0,
+            "skipped": 0
+          },
+          {
+            "date": "2026-09-15",
+            "passed": 2,
             "failed": 0,
             "skipped": 0
           }
@@ -15413,7 +15829,7 @@
     "component": "Distributed Workloads",
     "filters": {
       "from": "2026-07-01",
-      "to": "2026-09-15",
+      "to": "2026-09-16",
       "environment": "RHOAI",
       "version": "All",
       "release": "All",
@@ -15425,8 +15841,8 @@
   },
   "Documentation": {
     "overall": {
-      "total": 8,
-      "passed": 4,
+      "total": 10,
+      "passed": 6,
       "failed": 4,
       "skipped": 0
     },
@@ -16033,14 +16449,22 @@
       },
       {
         "date": "2026-09-14",
-        "passed": 1,
+        "passed": 3,
         "failed": 0,
         "skipped": 0,
-        "total": 1,
+        "total": 3,
         "execution_count": 1
       },
       {
         "date": "2026-09-15",
+        "passed": 0,
+        "failed": 0,
+        "skipped": 0,
+        "total": 0,
+        "execution_count": 0
+      },
+      {
+        "date": "2026-09-16",
         "passed": 0,
         "failed": 0,
         "skipped": 0,
@@ -16115,7 +16539,7 @@
     "releases": [
       {
         "release": "EA1",
-        "passed": 3,
+        "passed": 5,
         "failed": 4,
         "skipped": 0,
         "daily": [
@@ -16145,7 +16569,7 @@
           },
           {
             "date": "2026-09-14",
-            "passed": 1,
+            "passed": 3,
             "failed": 0,
             "skipped": 0
           }
@@ -16169,7 +16593,7 @@
     "component": "Documentation",
     "filters": {
       "from": "2026-07-01",
-      "to": "2026-09-15",
+      "to": "2026-09-16",
       "environment": "RHOAI",
       "version": "All",
       "release": "All",
@@ -16181,9 +16605,9 @@
   },
   "E2eautoscaler": {
     "overall": {
-      "total": 36,
-      "passed": 36,
-      "failed": 0,
+      "total": 45,
+      "passed": 39,
+      "failed": 6,
       "skipped": 0
     },
     "daily": [
@@ -16781,10 +17205,10 @@
       },
       {
         "date": "2026-09-13",
-        "passed": 6,
+        "passed": 9,
         "failed": 0,
         "skipped": 0,
-        "total": 6,
+        "total": 9,
         "execution_count": 1
       },
       {
@@ -16797,6 +17221,14 @@
       },
       {
         "date": "2026-09-15",
+        "passed": 0,
+        "failed": 6,
+        "skipped": 0,
+        "total": 6,
+        "execution_count": 1
+      },
+      {
+        "date": "2026-09-16",
         "passed": 0,
         "failed": 0,
         "skipped": 0,
@@ -16877,14 +17309,22 @@
             "symbol": "\u2713",
             "jenkins_url": "https://jenkins-csb-rhods-opendatascience.dno.corp.redhat.com/job/rhoai/job/3.6-ea.1/job/selfmanaged/job/cli/job/aws/job/rhoai-tier1/38/"
           }
+        ],
+        "2026-09-15": [
+          {
+            "state": "FAILED",
+            "color": "red",
+            "symbol": "\u25cf",
+            "jenkins_url": "https://jenkins-csb-rhods-opendatascience.dno.corp.redhat.com/job/rhoai/job/3.6-ea.1/job/selfmanaged/job/cli/job/aws/job/rhoai-tier1/42/"
+          }
         ]
       }
     },
     "releases": [
       {
         "release": "EA1",
-        "passed": 18,
-        "failed": 0,
+        "passed": 21,
+        "failed": 6,
         "skipped": 0,
         "daily": [
           {
@@ -16901,8 +17341,14 @@
           },
           {
             "date": "2026-09-13",
-            "passed": 6,
+            "passed": 9,
             "failed": 0,
+            "skipped": 0
+          },
+          {
+            "date": "2026-09-15",
+            "passed": 0,
+            "failed": 6,
             "skipped": 0
           }
         ]
@@ -16955,7 +17401,7 @@
     "component": "E2eautoscaler",
     "filters": {
       "from": "2026-07-01",
-      "to": "2026-09-15",
+      "to": "2026-09-16",
       "environment": "RHOAI",
       "version": "All",
       "release": "All",
@@ -16967,9 +17413,9 @@
   },
   "E2erayjob": {
     "overall": {
-      "total": 336,
-      "passed": 336,
-      "failed": 0,
+      "total": 378,
+      "passed": 364,
+      "failed": 14,
       "skipped": 0
     },
     "daily": [
@@ -17567,10 +18013,10 @@
       },
       {
         "date": "2026-09-13",
-        "passed": 56,
+        "passed": 84,
         "failed": 0,
         "skipped": 0,
-        "total": 56,
+        "total": 84,
         "execution_count": 1
       },
       {
@@ -17583,6 +18029,14 @@
       },
       {
         "date": "2026-09-15",
+        "passed": 0,
+        "failed": 14,
+        "skipped": 0,
+        "total": 14,
+        "execution_count": 1
+      },
+      {
+        "date": "2026-09-16",
         "passed": 0,
         "failed": 0,
         "skipped": 0,
@@ -17663,14 +18117,22 @@
             "symbol": "\u2713",
             "jenkins_url": "https://jenkins-csb-rhods-opendatascience.dno.corp.redhat.com/job/rhoai/job/3.6-ea.1/job/selfmanaged/job/cli/job/aws/job/rhoai-tier1/38/"
           }
+        ],
+        "2026-09-15": [
+          {
+            "state": "FAILED",
+            "color": "red",
+            "symbol": "\u25cf",
+            "jenkins_url": "https://jenkins-csb-rhods-opendatascience.dno.corp.redhat.com/job/rhoai/job/3.6-ea.1/job/selfmanaged/job/cli/job/aws/job/rhoai-tier1/42/"
+          }
         ]
       }
     },
     "releases": [
       {
         "release": "EA1",
-        "passed": 168,
-        "failed": 0,
+        "passed": 196,
+        "failed": 14,
         "skipped": 0,
         "daily": [
           {
@@ -17687,8 +18149,14 @@
           },
           {
             "date": "2026-09-13",
-            "passed": 56,
+            "passed": 84,
             "failed": 0,
+            "skipped": 0
+          },
+          {
+            "date": "2026-09-15",
+            "passed": 0,
+            "failed": 14,
             "skipped": 0
           }
         ]
@@ -17741,7 +18209,7 @@
     "component": "E2erayjob",
     "filters": {
       "from": "2026-07-01",
-      "to": "2026-09-15",
+      "to": "2026-09-16",
       "environment": "RHOAI",
       "version": "All",
       "release": "All",
@@ -17753,10 +18221,10 @@
   },
   "Feature Store": {
     "overall": {
-      "total": 328,
-      "passed": 257,
-      "failed": 51,
-      "skipped": 20
+      "total": 372,
+      "passed": 287,
+      "failed": 61,
+      "skipped": 24
     },
     "daily": [
       {
@@ -18353,22 +18821,30 @@
       },
       {
         "date": "2026-09-13",
-        "passed": 12,
-        "failed": 16,
-        "skipped": 4,
-        "total": 32,
+        "passed": 18,
+        "failed": 24,
+        "skipped": 6,
+        "total": 48,
         "execution_count": 2
       },
       {
         "date": "2026-09-14",
-        "passed": 0,
+        "passed": 6,
         "failed": 0,
         "skipped": 0,
-        "total": 0,
-        "execution_count": 0
+        "total": 6,
+        "execution_count": 1
       },
       {
         "date": "2026-09-15",
+        "passed": 18,
+        "failed": 2,
+        "skipped": 2,
+        "total": 22,
+        "execution_count": 2
+      },
+      {
+        "date": "2026-09-16",
         "passed": 0,
         "failed": 0,
         "skipped": 0,
@@ -18671,6 +19147,22 @@
             "symbol": "\u2713",
             "jenkins_url": "https://jenkins-csb-rhods-opendatascience.dno.corp.redhat.com/job/rhoai/job/3.5/job/selfmanaged/job/cli/job/aws/job/rhoai-smoke/61/"
           }
+        ],
+        "2026-09-14": [
+          {
+            "state": "PASSED",
+            "color": "green",
+            "symbol": "\u2713",
+            "jenkins_url": "https://jenkins-csb-rhods-opendatascience.dno.corp.redhat.com/job/rhoai/job/3.6-ea.1/job/selfmanaged/job/cli/job/aws/job/rhoai-smoke/25/"
+          }
+        ],
+        "2026-09-15": [
+          {
+            "state": "PASSED",
+            "color": "green",
+            "symbol": "\u2713",
+            "jenkins_url": "https://jenkins-csb-rhods-opendatascience.dno.corp.redhat.com/job/rhoai/job/3.6-ea.1/job/selfmanaged/job/cli/job/azure/job/rhoai-smoke/15/"
+          }
         ]
       },
       "tier1": {
@@ -18773,6 +19265,14 @@
             "symbol": "\u25cf",
             "jenkins_url": "https://jenkins-csb-rhods-opendatascience.dno.corp.redhat.com/job/rhoai/job/3.6-ea.1/job/selfmanaged/job/cli/job/aws/job/rhoai-tier1/40/"
           }
+        ],
+        "2026-09-15": [
+          {
+            "state": "FAILED",
+            "color": "red",
+            "symbol": "\u25cf",
+            "jenkins_url": "https://jenkins-csb-rhods-opendatascience.dno.corp.redhat.com/job/rhoai/job/3.6-ea.1/job/selfmanaged/job/cli/job/aws/job/rhoai-tier1/42/"
+          }
         ]
       },
       "tier3": {
@@ -18789,9 +19289,9 @@
     "releases": [
       {
         "release": "EA1",
-        "passed": 174,
-        "failed": 40,
-        "skipped": 14,
+        "passed": 204,
+        "failed": 50,
+        "skipped": 18,
         "daily": [
           {
             "date": "2026-09-02",
@@ -18843,9 +19343,21 @@
           },
           {
             "date": "2026-09-13",
-            "passed": 12,
-            "failed": 16,
-            "skipped": 4
+            "passed": 18,
+            "failed": 24,
+            "skipped": 6
+          },
+          {
+            "date": "2026-09-14",
+            "passed": 6,
+            "failed": 0,
+            "skipped": 0
+          },
+          {
+            "date": "2026-09-15",
+            "passed": 18,
+            "failed": 2,
+            "skipped": 2
           }
         ]
       },
@@ -18953,7 +19465,7 @@
     "component": "Feature Store",
     "filters": {
       "from": "2026-07-01",
-      "to": "2026-09-15",
+      "to": "2026-09-16",
       "environment": "RHOAI",
       "version": "All",
       "release": "All",
@@ -18965,9 +19477,9 @@
   },
   "Ide": {
     "overall": {
-      "total": 1366,
-      "passed": 986,
-      "failed": 380,
+      "total": 1545,
+      "passed": 1093,
+      "failed": 452,
       "skipped": 0
     },
     "daily": [
@@ -19565,22 +20077,30 @@
       },
       {
         "date": "2026-09-13",
-        "passed": 106,
-        "failed": 76,
+        "passed": 159,
+        "failed": 114,
         "skipped": 0,
-        "total": 182,
+        "total": 273,
         "execution_count": 3
       },
       {
         "date": "2026-09-14",
-        "passed": 0,
-        "failed": 0,
+        "passed": 20,
+        "failed": 2,
         "skipped": 0,
-        "total": 0,
-        "execution_count": 0
+        "total": 22,
+        "execution_count": 1
       },
       {
         "date": "2026-09-15",
+        "passed": 34,
+        "failed": 32,
+        "skipped": 0,
+        "total": 66,
+        "execution_count": 2
+      },
+      {
+        "date": "2026-09-16",
         "passed": 0,
         "failed": 0,
         "skipped": 0,
@@ -19883,6 +20403,22 @@
             "symbol": "\u2713",
             "jenkins_url": "https://jenkins-csb-rhods-opendatascience.dno.corp.redhat.com/job/rhoai/job/3.5/job/selfmanaged/job/cli/job/aws/job/rhoai-smoke/61/"
           }
+        ],
+        "2026-09-14": [
+          {
+            "state": "FAILED",
+            "color": "red",
+            "symbol": "\u25cf",
+            "jenkins_url": "https://jenkins-csb-rhods-opendatascience.dno.corp.redhat.com/job/rhoai/job/3.6-ea.1/job/selfmanaged/job/cli/job/aws/job/rhoai-smoke/25/"
+          }
+        ],
+        "2026-09-15": [
+          {
+            "state": "FAILED",
+            "color": "red",
+            "symbol": "\u25cf",
+            "jenkins_url": "https://jenkins-csb-rhods-opendatascience.dno.corp.redhat.com/job/rhoai/job/3.6-ea.1/job/selfmanaged/job/cli/job/azure/job/rhoai-smoke/15/"
+          }
         ]
       },
       "tier1": {
@@ -19985,6 +20521,14 @@
             "symbol": "\u25cf",
             "jenkins_url": "https://jenkins-csb-rhods-opendatascience.dno.corp.redhat.com/job/rhoai/job/3.6-ea.1/job/selfmanaged/job/cli/job/aws/job/rhoai-tier1/40/"
           }
+        ],
+        "2026-09-15": [
+          {
+            "state": "FAILED",
+            "color": "red",
+            "symbol": "\u25cf",
+            "jenkins_url": "https://jenkins-csb-rhods-opendatascience.dno.corp.redhat.com/job/rhoai/job/3.6-ea.1/job/selfmanaged/job/cli/job/aws/job/rhoai-tier1/42/"
+          }
         ]
       },
       "tier2": {
@@ -20019,8 +20563,8 @@
     "releases": [
       {
         "release": "EA1",
-        "passed": 657,
-        "failed": 268,
+        "passed": 764,
+        "failed": 340,
         "skipped": 0,
         "daily": [
           {
@@ -20073,8 +20617,20 @@
           },
           {
             "date": "2026-09-13",
-            "passed": 106,
-            "failed": 76,
+            "passed": 159,
+            "failed": 114,
+            "skipped": 0
+          },
+          {
+            "date": "2026-09-14",
+            "passed": 20,
+            "failed": 2,
+            "skipped": 0
+          },
+          {
+            "date": "2026-09-15",
+            "passed": 34,
+            "failed": 32,
             "skipped": 0
           }
         ]
@@ -20183,7 +20739,7 @@
     "component": "Ide",
     "filters": {
       "from": "2026-07-01",
-      "to": "2026-09-15",
+      "to": "2026-09-16",
       "environment": "RHOAI",
       "version": "All",
       "release": "All",
@@ -20816,6 +21372,14 @@
         "skipped": 0,
         "total": 0,
         "execution_count": 0
+      },
+      {
+        "date": "2026-09-16",
+        "passed": 0,
+        "failed": 0,
+        "skipped": 0,
+        "total": 0,
+        "execution_count": 0
       }
     ],
     "quality_gates": {
@@ -21057,7 +21621,7 @@
     "component": "Kfto",
     "filters": {
       "from": "2026-07-01",
-      "to": "2026-09-15",
+      "to": "2026-09-16",
       "environment": "RHOAI",
       "version": "All",
       "release": "All",
@@ -21069,8 +21633,8 @@
   },
   "Kuberay": {
     "overall": {
-      "total": 287,
-      "passed": 281,
+      "total": 307,
+      "passed": 301,
       "failed": 6,
       "skipped": 0
     },
@@ -21677,14 +22241,22 @@
       },
       {
         "date": "2026-09-14",
-        "passed": 0,
+        "passed": 10,
         "failed": 0,
         "skipped": 0,
-        "total": 0,
-        "execution_count": 0
+        "total": 10,
+        "execution_count": 1
       },
       {
         "date": "2026-09-15",
+        "passed": 10,
+        "failed": 0,
+        "skipped": 0,
+        "total": 10,
+        "execution_count": 1
+      },
+      {
+        "date": "2026-09-16",
         "passed": 0,
         "failed": 0,
         "skipped": 0,
@@ -21961,13 +22533,29 @@
             "symbol": "\u2713",
             "jenkins_url": "https://jenkins-csb-rhods-opendatascience.dno.corp.redhat.com/job/rhoai/job/3.5/job/selfmanaged/job/cli/job/aws/job/rhoai-smoke/61/"
           }
+        ],
+        "2026-09-14": [
+          {
+            "state": "PASSED",
+            "color": "green",
+            "symbol": "\u2713",
+            "jenkins_url": "https://jenkins-csb-rhods-opendatascience.dno.corp.redhat.com/job/rhoai/job/3.6-ea.1/job/selfmanaged/job/cli/job/aws/job/rhoai-smoke/25/"
+          }
+        ],
+        "2026-09-15": [
+          {
+            "state": "PASSED",
+            "color": "green",
+            "symbol": "\u2713",
+            "jenkins_url": "https://jenkins-csb-rhods-opendatascience.dno.corp.redhat.com/job/rhoai/job/3.6-ea.1/job/selfmanaged/job/cli/job/azure/job/rhoai-smoke/15/"
+          }
         ]
       }
     },
     "releases": [
       {
         "release": "EA1",
-        "passed": 184,
+        "passed": 204,
         "failed": 4,
         "skipped": 0,
         "daily": [
@@ -22016,6 +22604,18 @@
           {
             "date": "2026-09-11",
             "passed": 20,
+            "failed": 0,
+            "skipped": 0
+          },
+          {
+            "date": "2026-09-14",
+            "passed": 10,
+            "failed": 0,
+            "skipped": 0
+          },
+          {
+            "date": "2026-09-15",
+            "passed": 10,
             "failed": 0,
             "skipped": 0
           }
@@ -22089,7 +22689,7 @@
     "component": "Kuberay",
     "filters": {
       "from": "2026-07-01",
-      "to": "2026-09-15",
+      "to": "2026-09-16",
       "environment": "RHOAI",
       "version": "All",
       "release": "All",
@@ -22722,6 +23322,14 @@
         "skipped": 0,
         "total": 0,
         "execution_count": 0
+      },
+      {
+        "date": "2026-09-16",
+        "passed": 0,
+        "failed": 0,
+        "skipped": 0,
+        "total": 0,
+        "execution_count": 0
       }
     ],
     "quality_gates": {
@@ -22803,7 +23411,7 @@
     "component": "Llama Stack",
     "filters": {
       "from": "2026-07-01",
-      "to": "2026-09-15",
+      "to": "2026-09-16",
       "environment": "RHOAI",
       "version": "All",
       "release": "All",
@@ -23436,6 +24044,14 @@
         "skipped": 0,
         "total": 0,
         "execution_count": 0
+      },
+      {
+        "date": "2026-09-16",
+        "passed": 0,
+        "failed": 0,
+        "skipped": 0,
+        "total": 0,
+        "execution_count": 0
       }
     ],
     "quality_gates": {
@@ -23581,7 +24197,7 @@
     "component": "Maas Billing",
     "filters": {
       "from": "2026-07-01",
-      "to": "2026-09-15",
+      "to": "2026-09-16",
       "environment": "RHOAI",
       "version": "All",
       "release": "All",
@@ -23593,8 +24209,8 @@
   },
   "Mcp": {
     "overall": {
-      "total": 8349,
-      "passed": 7998,
+      "total": 8925,
+      "passed": 8574,
       "failed": 1,
       "skipped": 350
     },
@@ -24201,14 +24817,22 @@
       },
       {
         "date": "2026-09-14",
-        "passed": 0,
+        "passed": 288,
         "failed": 0,
         "skipped": 0,
-        "total": 0,
-        "execution_count": 0
+        "total": 288,
+        "execution_count": 1
       },
       {
         "date": "2026-09-15",
+        "passed": 288,
+        "failed": 0,
+        "skipped": 0,
+        "total": 288,
+        "execution_count": 1
+      },
+      {
+        "date": "2026-09-16",
         "passed": 0,
         "failed": 0,
         "skipped": 0,
@@ -24493,13 +25117,29 @@
             "symbol": "\u2713",
             "jenkins_url": "https://jenkins-csb-rhods-opendatascience.dno.corp.redhat.com/job/rhoai/job/3.5/job/selfmanaged/job/cli/job/aws/job/rhoai-smoke/61/"
           }
+        ],
+        "2026-09-14": [
+          {
+            "state": "PASSED",
+            "color": "green",
+            "symbol": "\u2713",
+            "jenkins_url": "https://jenkins-csb-rhods-opendatascience.dno.corp.redhat.com/job/rhoai/job/3.6-ea.1/job/selfmanaged/job/cli/job/aws/job/rhoai-smoke/25/"
+          }
+        ],
+        "2026-09-15": [
+          {
+            "state": "PASSED",
+            "color": "green",
+            "symbol": "\u2713",
+            "jenkins_url": "https://jenkins-csb-rhods-opendatascience.dno.corp.redhat.com/job/rhoai/job/3.6-ea.1/job/selfmanaged/job/cli/job/azure/job/rhoai-smoke/15/"
+          }
         ]
       }
     },
     "releases": [
       {
         "release": "EA1",
-        "passed": 4965,
+        "passed": 5541,
         "failed": 0,
         "skipped": 245,
         "daily": [
@@ -24550,6 +25190,18 @@
             "passed": 390,
             "failed": 0,
             "skipped": 70
+          },
+          {
+            "date": "2026-09-14",
+            "passed": 288,
+            "failed": 0,
+            "skipped": 0
+          },
+          {
+            "date": "2026-09-15",
+            "passed": 288,
+            "failed": 0,
+            "skipped": 0
           }
         ]
       },
@@ -24627,7 +25279,7 @@
     "component": "Mcp",
     "filters": {
       "from": "2026-07-01",
-      "to": "2026-09-15",
+      "to": "2026-09-16",
       "environment": "RHOAI",
       "version": "All",
       "release": "All",
@@ -24639,8 +25291,8 @@
   },
   "Mlflow E2e": {
     "overall": {
-      "total": 4923,
-      "passed": 4910,
+      "total": 5467,
+      "passed": 5454,
       "failed": 13,
       "skipped": 0
     },
@@ -25247,14 +25899,22 @@
       },
       {
         "date": "2026-09-14",
-        "passed": 0,
+        "passed": 272,
         "failed": 0,
         "skipped": 0,
-        "total": 0,
-        "execution_count": 0
+        "total": 272,
+        "execution_count": 1
       },
       {
         "date": "2026-09-15",
+        "passed": 272,
+        "failed": 0,
+        "skipped": 0,
+        "total": 272,
+        "execution_count": 1
+      },
+      {
+        "date": "2026-09-16",
         "passed": 0,
         "failed": 0,
         "skipped": 0,
@@ -25445,13 +26105,29 @@
             "symbol": "\u2713",
             "jenkins_url": "https://jenkins-csb-rhods-opendatascience.dno.corp.redhat.com/job/rhoai/job/3.5/job/selfmanaged/job/cli/job/aws/job/rhoai-smoke/61/"
           }
+        ],
+        "2026-09-14": [
+          {
+            "state": "PASSED",
+            "color": "green",
+            "symbol": "\u2713",
+            "jenkins_url": "https://jenkins-csb-rhods-opendatascience.dno.corp.redhat.com/job/rhoai/job/3.6-ea.1/job/selfmanaged/job/cli/job/aws/job/rhoai-smoke/25/"
+          }
+        ],
+        "2026-09-15": [
+          {
+            "state": "PASSED",
+            "color": "green",
+            "symbol": "\u2713",
+            "jenkins_url": "https://jenkins-csb-rhods-opendatascience.dno.corp.redhat.com/job/rhoai/job/3.6-ea.1/job/selfmanaged/job/cli/job/azure/job/rhoai-smoke/15/"
+          }
         ]
       }
     },
     "releases": [
       {
         "release": "EA1",
-        "passed": 4622,
+        "passed": 5166,
         "failed": 5,
         "skipped": 0,
         "daily": [
@@ -25502,6 +26178,18 @@
             "passed": 544,
             "failed": 0,
             "skipped": 0
+          },
+          {
+            "date": "2026-09-14",
+            "passed": 272,
+            "failed": 0,
+            "skipped": 0
+          },
+          {
+            "date": "2026-09-15",
+            "passed": 272,
+            "failed": 0,
+            "skipped": 0
           }
         ]
       },
@@ -25549,7 +26237,7 @@
     "component": "Mlflow E2e",
     "filters": {
       "from": "2026-07-01",
-      "to": "2026-09-15",
+      "to": "2026-09-16",
       "environment": "RHOAI",
       "version": "All",
       "release": "All",
@@ -25561,9 +26249,9 @@
   },
   "Model Runtime": {
     "overall": {
-      "total": 1686,
-      "passed": 1420,
-      "failed": 258,
+      "total": 1794,
+      "passed": 1524,
+      "failed": 262,
       "skipped": 8
     },
     "daily": [
@@ -26169,14 +26857,22 @@
       },
       {
         "date": "2026-09-14",
-        "passed": 0,
-        "failed": 0,
+        "passed": 52,
+        "failed": 2,
         "skipped": 0,
-        "total": 0,
-        "execution_count": 0
+        "total": 54,
+        "execution_count": 1
       },
       {
         "date": "2026-09-15",
+        "passed": 52,
+        "failed": 2,
+        "skipped": 0,
+        "total": 54,
+        "execution_count": 1
+      },
+      {
+        "date": "2026-09-16",
         "passed": 0,
         "failed": 0,
         "skipped": 0,
@@ -26489,6 +27185,22 @@
             "symbol": "\u25cf",
             "jenkins_url": "https://jenkins-csb-rhods-opendatascience.dno.corp.redhat.com/job/rhoai/job/3.5/job/selfmanaged/job/cli/job/aws/job/rhoai-smoke/61/"
           }
+        ],
+        "2026-09-14": [
+          {
+            "state": "FAILED",
+            "color": "red",
+            "symbol": "\u25cf",
+            "jenkins_url": "https://jenkins-csb-rhods-opendatascience.dno.corp.redhat.com/job/rhoai/job/3.6-ea.1/job/selfmanaged/job/cli/job/aws/job/rhoai-smoke/25/"
+          }
+        ],
+        "2026-09-15": [
+          {
+            "state": "FAILED",
+            "color": "red",
+            "symbol": "\u25cf",
+            "jenkins_url": "https://jenkins-csb-rhods-opendatascience.dno.corp.redhat.com/job/rhoai/job/3.6-ea.1/job/selfmanaged/job/cli/job/azure/job/rhoai-smoke/15/"
+          }
         ]
       },
       "tier1": {
@@ -26537,8 +27249,8 @@
     "releases": [
       {
         "release": "EA1",
-        "passed": 932,
-        "failed": 154,
+        "passed": 1036,
+        "failed": 158,
         "skipped": 0,
         "daily": [
           {
@@ -26587,6 +27299,18 @@
             "date": "2026-09-11",
             "passed": 134,
             "failed": 40,
+            "skipped": 0
+          },
+          {
+            "date": "2026-09-14",
+            "passed": 52,
+            "failed": 2,
+            "skipped": 0
+          },
+          {
+            "date": "2026-09-15",
+            "passed": 52,
+            "failed": 2,
             "skipped": 0
           }
         ]
@@ -26695,7 +27419,7 @@
     "component": "Model Runtime",
     "filters": {
       "from": "2026-07-01",
-      "to": "2026-09-15",
+      "to": "2026-09-16",
       "environment": "RHOAI",
       "version": "All",
       "release": "All",
@@ -26707,10 +27431,10 @@
   },
   "Model Server": {
     "overall": {
-      "total": 1235,
-      "passed": 976,
-      "failed": 253,
-      "skipped": 6
+      "total": 1294,
+      "passed": 1031,
+      "failed": 256,
+      "skipped": 7
     },
     "daily": [
       {
@@ -27307,22 +28031,30 @@
       },
       {
         "date": "2026-09-13",
-        "passed": 30,
-        "failed": 6,
-        "skipped": 2,
-        "total": 38,
+        "passed": 45,
+        "failed": 9,
+        "skipped": 3,
+        "total": 57,
         "execution_count": 1
       },
       {
         "date": "2026-09-14",
-        "passed": 0,
+        "passed": 20,
         "failed": 0,
         "skipped": 0,
-        "total": 0,
-        "execution_count": 0
+        "total": 20,
+        "execution_count": 1
       },
       {
         "date": "2026-09-15",
+        "passed": 20,
+        "failed": 0,
+        "skipped": 0,
+        "total": 20,
+        "execution_count": 1
+      },
+      {
+        "date": "2026-09-16",
         "passed": 0,
         "failed": 0,
         "skipped": 0,
@@ -27635,6 +28367,22 @@
             "symbol": "\u2713",
             "jenkins_url": "https://jenkins-csb-rhods-opendatascience.dno.corp.redhat.com/job/rhoai/job/3.5/job/selfmanaged/job/cli/job/aws/job/rhoai-smoke/61/"
           }
+        ],
+        "2026-09-14": [
+          {
+            "state": "PASSED",
+            "color": "green",
+            "symbol": "\u2713",
+            "jenkins_url": "https://jenkins-csb-rhods-opendatascience.dno.corp.redhat.com/job/rhoai/job/3.6-ea.1/job/selfmanaged/job/cli/job/aws/job/rhoai-smoke/25/"
+          }
+        ],
+        "2026-09-15": [
+          {
+            "state": "PASSED",
+            "color": "green",
+            "symbol": "\u2713",
+            "jenkins_url": "https://jenkins-csb-rhods-opendatascience.dno.corp.redhat.com/job/rhoai/job/3.6-ea.1/job/selfmanaged/job/cli/job/azure/job/rhoai-smoke/15/"
+          }
         ]
       },
       "tier1": {
@@ -27685,9 +28433,9 @@
     "releases": [
       {
         "release": "EA1",
-        "passed": 594,
-        "failed": 168,
-        "skipped": 2,
+        "passed": 649,
+        "failed": 171,
+        "skipped": 3,
         "daily": [
           {
             "date": "2026-09-02",
@@ -27739,9 +28487,21 @@
           },
           {
             "date": "2026-09-13",
-            "passed": 30,
-            "failed": 6,
-            "skipped": 2
+            "passed": 45,
+            "failed": 9,
+            "skipped": 3
+          },
+          {
+            "date": "2026-09-14",
+            "passed": 20,
+            "failed": 0,
+            "skipped": 0
+          },
+          {
+            "date": "2026-09-15",
+            "passed": 20,
+            "failed": 0,
+            "skipped": 0
           }
         ]
       },
@@ -27837,7 +28597,7 @@
     "component": "Model Server",
     "filters": {
       "from": "2026-07-01",
-      "to": "2026-09-15",
+      "to": "2026-09-16",
       "environment": "RHOAI",
       "version": "All",
       "release": "All",
@@ -28470,6 +29230,14 @@
         "skipped": 0,
         "total": 0,
         "execution_count": 0
+      },
+      {
+        "date": "2026-09-16",
+        "passed": 0,
+        "failed": 0,
+        "skipped": 0,
+        "total": 0,
+        "execution_count": 0
       }
     ],
     "quality_gates": {
@@ -28503,7 +29271,7 @@
     "component": "Ods Dashboard",
     "filters": {
       "from": "2026-07-01",
-      "to": "2026-09-15",
+      "to": "2026-09-16",
       "environment": "RHOAI",
       "version": "All",
       "release": "All",
@@ -28515,9 +29283,9 @@
   },
   "Ogx": {
     "overall": {
-      "total": 643,
-      "passed": 415,
-      "failed": 228,
+      "total": 682,
+      "passed": 437,
+      "failed": 245,
       "skipped": 0
     },
     "daily": [
@@ -29115,22 +29883,30 @@
       },
       {
         "date": "2026-09-13",
-        "passed": 4,
-        "failed": 18,
+        "passed": 6,
+        "failed": 27,
         "skipped": 0,
-        "total": 22,
+        "total": 33,
         "execution_count": 1
       },
       {
         "date": "2026-09-14",
-        "passed": 0,
-        "failed": 0,
+        "passed": 10,
+        "failed": 4,
         "skipped": 0,
-        "total": 0,
-        "execution_count": 0
+        "total": 14,
+        "execution_count": 1
       },
       {
         "date": "2026-09-15",
+        "passed": 10,
+        "failed": 4,
+        "skipped": 0,
+        "total": 14,
+        "execution_count": 1
+      },
+      {
+        "date": "2026-09-16",
         "passed": 0,
         "failed": 0,
         "skipped": 0,
@@ -29401,6 +30177,22 @@
             "symbol": "\u25cf",
             "jenkins_url": "https://jenkins-csb-rhods-opendatascience.dno.corp.redhat.com/job/rhoai/job/3.5/job/selfmanaged/job/cli/job/aws/job/rhoai-smoke/61/"
           }
+        ],
+        "2026-09-14": [
+          {
+            "state": "FAILED",
+            "color": "red",
+            "symbol": "\u25cf",
+            "jenkins_url": "https://jenkins-csb-rhods-opendatascience.dno.corp.redhat.com/job/rhoai/job/3.6-ea.1/job/selfmanaged/job/cli/job/aws/job/rhoai-smoke/25/"
+          }
+        ],
+        "2026-09-15": [
+          {
+            "state": "FAILED",
+            "color": "red",
+            "symbol": "\u25cf",
+            "jenkins_url": "https://jenkins-csb-rhods-opendatascience.dno.corp.redhat.com/job/rhoai/job/3.6-ea.1/job/selfmanaged/job/cli/job/azure/job/rhoai-smoke/15/"
+          }
         ]
       },
       "tier1": {
@@ -29459,8 +30251,8 @@
     "releases": [
       {
         "release": "EA1",
-        "passed": 251,
-        "failed": 202,
+        "passed": 273,
+        "failed": 219,
         "skipped": 0,
         "daily": [
           {
@@ -29513,8 +30305,20 @@
           },
           {
             "date": "2026-09-13",
-            "passed": 4,
-            "failed": 18,
+            "passed": 6,
+            "failed": 27,
+            "skipped": 0
+          },
+          {
+            "date": "2026-09-14",
+            "passed": 10,
+            "failed": 4,
+            "skipped": 0
+          },
+          {
+            "date": "2026-09-15",
+            "passed": 10,
+            "failed": 4,
             "skipped": 0
           }
         ]
@@ -29593,7 +30397,7 @@
     "component": "Ogx",
     "filters": {
       "from": "2026-07-01",
-      "to": "2026-09-15",
+      "to": "2026-09-16",
       "environment": "RHOAI",
       "version": "All",
       "release": "All",
@@ -30226,6 +31030,14 @@
         "skipped": 0,
         "total": 0,
         "execution_count": 0
+      },
+      {
+        "date": "2026-09-16",
+        "passed": 0,
+        "failed": 0,
+        "skipped": 0,
+        "total": 0,
+        "execution_count": 0
       }
     ],
     "quality_gates": {
@@ -30331,7 +31143,7 @@
     "component": "Olm",
     "filters": {
       "from": "2026-07-01",
-      "to": "2026-09-15",
+      "to": "2026-09-16",
       "environment": "RHOAI",
       "version": "All",
       "release": "All",
@@ -30343,8 +31155,8 @@
   },
   "Openshift Console": {
     "overall": {
-      "total": 81,
-      "passed": 81,
+      "total": 89,
+      "passed": 89,
       "failed": 0,
       "skipped": 0
     },
@@ -30943,6 +31755,22 @@
       },
       {
         "date": "2026-09-13",
+        "passed": 6,
+        "failed": 0,
+        "skipped": 0,
+        "total": 6,
+        "execution_count": 2
+      },
+      {
+        "date": "2026-09-14",
+        "passed": 2,
+        "failed": 0,
+        "skipped": 0,
+        "total": 2,
+        "execution_count": 1
+      },
+      {
+        "date": "2026-09-15",
         "passed": 4,
         "failed": 0,
         "skipped": 0,
@@ -30950,15 +31778,7 @@
         "execution_count": 2
       },
       {
-        "date": "2026-09-14",
-        "passed": 0,
-        "failed": 0,
-        "skipped": 0,
-        "total": 0,
-        "execution_count": 0
-      },
-      {
-        "date": "2026-09-15",
+        "date": "2026-09-16",
         "passed": 0,
         "failed": 0,
         "skipped": 0,
@@ -31255,6 +32075,22 @@
             "symbol": "\u2713",
             "jenkins_url": "https://jenkins-csb-rhods-opendatascience.dno.corp.redhat.com/job/rhoai/job/3.5/job/selfmanaged/job/cli/job/aws/job/rhoai-smoke/61/"
           }
+        ],
+        "2026-09-14": [
+          {
+            "state": "PASSED",
+            "color": "green",
+            "symbol": "\u2713",
+            "jenkins_url": "https://jenkins-csb-rhods-opendatascience.dno.corp.redhat.com/job/rhoai/job/3.6-ea.1/job/selfmanaged/job/cli/job/aws/job/rhoai-smoke/25/"
+          }
+        ],
+        "2026-09-15": [
+          {
+            "state": "PASSED",
+            "color": "green",
+            "symbol": "\u2713",
+            "jenkins_url": "https://jenkins-csb-rhods-opendatascience.dno.corp.redhat.com/job/rhoai/job/3.6-ea.1/job/selfmanaged/job/cli/job/azure/job/rhoai-smoke/15/"
+          }
         ]
       },
       "tier1": {
@@ -31329,6 +32165,14 @@
             "symbol": "\u2713",
             "jenkins_url": "https://jenkins-csb-rhods-opendatascience.dno.corp.redhat.com/job/rhoai/job/3.6-ea.1/job/selfmanaged/job/cli/job/aws/job/rhoai-tier1/38/"
           }
+        ],
+        "2026-09-15": [
+          {
+            "state": "PASSED",
+            "color": "green",
+            "symbol": "\u2713",
+            "jenkins_url": "https://jenkins-csb-rhods-opendatascience.dno.corp.redhat.com/job/rhoai/job/3.6-ea.1/job/selfmanaged/job/cli/job/aws/job/rhoai-tier1/42/"
+          }
         ]
       },
       "tier2": {
@@ -31353,7 +32197,7 @@
     "releases": [
       {
         "release": "EA1",
-        "passed": 49,
+        "passed": 57,
         "failed": 0,
         "skipped": 0,
         "daily": [
@@ -31407,6 +32251,18 @@
           },
           {
             "date": "2026-09-13",
+            "passed": 6,
+            "failed": 0,
+            "skipped": 0
+          },
+          {
+            "date": "2026-09-14",
+            "passed": 2,
+            "failed": 0,
+            "skipped": 0
+          },
+          {
+            "date": "2026-09-15",
             "passed": 4,
             "failed": 0,
             "skipped": 0
@@ -31511,7 +32367,7 @@
     "component": "Openshift Console",
     "filters": {
       "from": "2026-07-01",
-      "to": "2026-09-15",
+      "to": "2026-09-16",
       "environment": "RHOAI",
       "version": "All",
       "release": "All",
@@ -31523,9 +32379,9 @@
   },
   "Other Components": {
     "overall": {
-      "total": 17,
+      "total": 20,
       "passed": 3,
-      "failed": 14,
+      "failed": 17,
       "skipped": 0
     },
     "daily": [
@@ -32124,9 +32980,9 @@
       {
         "date": "2026-09-13",
         "passed": 0,
-        "failed": 6,
+        "failed": 9,
         "skipped": 0,
-        "total": 6,
+        "total": 9,
         "execution_count": 1
       },
       {
@@ -32139,6 +32995,14 @@
       },
       {
         "date": "2026-09-15",
+        "passed": 0,
+        "failed": 0,
+        "skipped": 0,
+        "total": 0,
+        "execution_count": 0
+      },
+      {
+        "date": "2026-09-16",
         "passed": 0,
         "failed": 0,
         "skipped": 0,
@@ -32212,6 +33076,26 @@
     },
     "releases": [
       {
+        "release": "EA1",
+        "passed": 0,
+        "failed": 15,
+        "skipped": 0,
+        "daily": [
+          {
+            "date": "2026-09-08",
+            "passed": 0,
+            "failed": 6,
+            "skipped": 0
+          },
+          {
+            "date": "2026-09-13",
+            "passed": 0,
+            "failed": 9,
+            "skipped": 0
+          }
+        ]
+      },
+      {
         "release": "GA",
         "passed": 3,
         "failed": 2,
@@ -32248,32 +33132,12 @@
             "skipped": 0
           }
         ]
-      },
-      {
-        "release": "EA1",
-        "passed": 0,
-        "failed": 12,
-        "skipped": 0,
-        "daily": [
-          {
-            "date": "2026-09-08",
-            "passed": 0,
-            "failed": 6,
-            "skipped": 0
-          },
-          {
-            "date": "2026-09-13",
-            "passed": 0,
-            "failed": 6,
-            "skipped": 0
-          }
-        ]
       }
     ],
     "component": "Other Components",
     "filters": {
       "from": "2026-07-01",
-      "to": "2026-09-15",
+      "to": "2026-09-16",
       "environment": "RHOAI",
       "version": "All",
       "release": "All",
@@ -32285,9 +33149,9 @@
   },
   "Pipelines Automl": {
     "overall": {
-      "total": 258,
+      "total": 274,
       "passed": 0,
-      "failed": 250,
+      "failed": 266,
       "skipped": 8
     },
     "daily": [
@@ -32894,13 +33758,21 @@
       {
         "date": "2026-09-14",
         "passed": 0,
-        "failed": 0,
+        "failed": 8,
         "skipped": 0,
-        "total": 0,
-        "execution_count": 0
+        "total": 8,
+        "execution_count": 1
       },
       {
         "date": "2026-09-15",
+        "passed": 0,
+        "failed": 8,
+        "skipped": 0,
+        "total": 8,
+        "execution_count": 1
+      },
+      {
+        "date": "2026-09-16",
         "passed": 0,
         "failed": 0,
         "skipped": 0,
@@ -33179,6 +34051,22 @@
             "symbol": "\u25cf",
             "jenkins_url": "https://jenkins-csb-rhods-opendatascience.dno.corp.redhat.com/job/rhoai/job/3.5/job/selfmanaged/job/cli/job/aws/job/rhoai-smoke/61/"
           }
+        ],
+        "2026-09-14": [
+          {
+            "state": "FAILED",
+            "color": "red",
+            "symbol": "\u25cf",
+            "jenkins_url": "https://jenkins-csb-rhods-opendatascience.dno.corp.redhat.com/job/rhoai/job/3.6-ea.1/job/selfmanaged/job/cli/job/aws/job/rhoai-smoke/25/"
+          }
+        ],
+        "2026-09-15": [
+          {
+            "state": "FAILED",
+            "color": "red",
+            "symbol": "\u25cf",
+            "jenkins_url": "https://jenkins-csb-rhods-opendatascience.dno.corp.redhat.com/job/rhoai/job/3.6-ea.1/job/selfmanaged/job/cli/job/azure/job/rhoai-smoke/15/"
+          }
         ]
       }
     },
@@ -33186,7 +34074,7 @@
       {
         "release": "EA1",
         "passed": 0,
-        "failed": 156,
+        "failed": 172,
         "skipped": 0,
         "daily": [
           {
@@ -33235,6 +34123,18 @@
             "date": "2026-09-11",
             "passed": 0,
             "failed": 16,
+            "skipped": 0
+          },
+          {
+            "date": "2026-09-14",
+            "passed": 0,
+            "failed": 8,
+            "skipped": 0
+          },
+          {
+            "date": "2026-09-15",
+            "passed": 0,
+            "failed": 8,
             "skipped": 0
           }
         ]
@@ -33313,7 +34213,7 @@
     "component": "Pipelines Automl",
     "filters": {
       "from": "2026-07-01",
-      "to": "2026-09-15",
+      "to": "2026-09-16",
       "environment": "RHOAI",
       "version": "All",
       "release": "All",
@@ -33325,9 +34225,9 @@
   },
   "Pipelines Autorag": {
     "overall": {
-      "total": 61,
+      "total": 65,
       "passed": 0,
-      "failed": 61,
+      "failed": 65,
       "skipped": 0
     },
     "daily": [
@@ -33934,13 +34834,21 @@
       {
         "date": "2026-09-14",
         "passed": 0,
-        "failed": 0,
+        "failed": 2,
         "skipped": 0,
-        "total": 0,
-        "execution_count": 0
+        "total": 2,
+        "execution_count": 1
       },
       {
         "date": "2026-09-15",
+        "passed": 0,
+        "failed": 2,
+        "skipped": 0,
+        "total": 2,
+        "execution_count": 1
+      },
+      {
+        "date": "2026-09-16",
         "passed": 0,
         "failed": 0,
         "skipped": 0,
@@ -34211,6 +35119,22 @@
             "symbol": "\u25cf",
             "jenkins_url": "https://jenkins-csb-rhods-opendatascience.dno.corp.redhat.com/job/rhoai/job/3.5/job/selfmanaged/job/cli/job/aws/job/rhoai-smoke/61/"
           }
+        ],
+        "2026-09-14": [
+          {
+            "state": "FAILED",
+            "color": "red",
+            "symbol": "\u25cf",
+            "jenkins_url": "https://jenkins-csb-rhods-opendatascience.dno.corp.redhat.com/job/rhoai/job/3.6-ea.1/job/selfmanaged/job/cli/job/aws/job/rhoai-smoke/25/"
+          }
+        ],
+        "2026-09-15": [
+          {
+            "state": "FAILED",
+            "color": "red",
+            "symbol": "\u25cf",
+            "jenkins_url": "https://jenkins-csb-rhods-opendatascience.dno.corp.redhat.com/job/rhoai/job/3.6-ea.1/job/selfmanaged/job/cli/job/azure/job/rhoai-smoke/15/"
+          }
         ]
       }
     },
@@ -34218,7 +35142,7 @@
       {
         "release": "EA1",
         "passed": 0,
-        "failed": 39,
+        "failed": 43,
         "skipped": 0,
         "daily": [
           {
@@ -34267,6 +35191,18 @@
             "date": "2026-09-11",
             "passed": 0,
             "failed": 4,
+            "skipped": 0
+          },
+          {
+            "date": "2026-09-14",
+            "passed": 0,
+            "failed": 2,
+            "skipped": 0
+          },
+          {
+            "date": "2026-09-15",
+            "passed": 0,
+            "failed": 2,
             "skipped": 0
           }
         ]
@@ -34339,7 +35275,7 @@
     "component": "Pipelines Autorag",
     "filters": {
       "from": "2026-07-01",
-      "to": "2026-09-15",
+      "to": "2026-09-16",
       "environment": "RHOAI",
       "version": "All",
       "release": "All",
@@ -34351,10 +35287,10 @@
   },
   "Platform": {
     "overall": {
-      "total": 29297,
-      "passed": 22302,
-      "failed": 452,
-      "skipped": 6543
+      "total": 32003,
+      "passed": 24325,
+      "failed": 520,
+      "skipped": 7158
     },
     "daily": [
       {
@@ -34951,22 +35887,30 @@
       },
       {
         "date": "2026-09-13",
-        "passed": 890,
-        "failed": 24,
-        "skipped": 398,
-        "total": 1312,
+        "passed": 1335,
+        "failed": 36,
+        "skipped": 597,
+        "total": 1968,
         "execution_count": 3
       },
       {
         "date": "2026-09-14",
-        "passed": 0,
-        "failed": 0,
-        "skipped": 0,
-        "total": 0,
-        "execution_count": 0
+        "passed": 578,
+        "failed": 4,
+        "skipped": 162,
+        "total": 744,
+        "execution_count": 1
       },
       {
         "date": "2026-09-15",
+        "passed": 1000,
+        "failed": 52,
+        "skipped": 254,
+        "total": 1306,
+        "execution_count": 2
+      },
+      {
+        "date": "2026-09-16",
         "passed": 0,
         "failed": 0,
         "skipped": 0,
@@ -35283,6 +36227,22 @@
             "symbol": "\u25cf",
             "jenkins_url": "https://jenkins-csb-rhods-opendatascience.dno.corp.redhat.com/job/rhoai/job/3.5/job/selfmanaged/job/cli/job/aws/job/rhoai-smoke/61/"
           }
+        ],
+        "2026-09-14": [
+          {
+            "state": "FAILED",
+            "color": "red",
+            "symbol": "\u25cf",
+            "jenkins_url": "https://jenkins-csb-rhods-opendatascience.dno.corp.redhat.com/job/rhoai/job/3.6-ea.1/job/selfmanaged/job/cli/job/aws/job/rhoai-smoke/25/"
+          }
+        ],
+        "2026-09-15": [
+          {
+            "state": "FAILED",
+            "color": "red",
+            "symbol": "\u25cf",
+            "jenkins_url": "https://jenkins-csb-rhods-opendatascience.dno.corp.redhat.com/job/rhoai/job/3.6-ea.1/job/selfmanaged/job/cli/job/azure/job/rhoai-smoke/15/"
+          }
         ]
       },
       "tier1": {
@@ -35385,6 +36345,14 @@
             "symbol": "\u25cf",
             "jenkins_url": "https://jenkins-csb-rhods-opendatascience.dno.corp.redhat.com/job/rhoai/job/3.6-ea.1/job/selfmanaged/job/cli/job/aws/job/rhoai-tier1/40/"
           }
+        ],
+        "2026-09-15": [
+          {
+            "state": "FAILED",
+            "color": "red",
+            "symbol": "\u25cf",
+            "jenkins_url": "https://jenkins-csb-rhods-opendatascience.dno.corp.redhat.com/job/rhoai/job/3.6-ea.1/job/selfmanaged/job/cli/job/aws/job/rhoai-tier1/42/"
+          }
         ]
       },
       "tier2": {
@@ -35419,9 +36387,9 @@
     "releases": [
       {
         "release": "EA1",
-        "passed": 13108,
-        "failed": 228,
-        "skipped": 4045,
+        "passed": 15131,
+        "failed": 296,
+        "skipped": 4660,
         "daily": [
           {
             "date": "2026-09-02",
@@ -35473,9 +36441,21 @@
           },
           {
             "date": "2026-09-13",
-            "passed": 890,
-            "failed": 24,
-            "skipped": 398
+            "passed": 1335,
+            "failed": 36,
+            "skipped": 597
+          },
+          {
+            "date": "2026-09-14",
+            "passed": 578,
+            "failed": 4,
+            "skipped": 162
+          },
+          {
+            "date": "2026-09-15",
+            "passed": 1000,
+            "failed": 52,
+            "skipped": 254
           }
         ]
       },
@@ -35589,7 +36569,7 @@
     "component": "Platform",
     "filters": {
       "from": "2026-07-01",
-      "to": "2026-09-15",
+      "to": "2026-09-16",
       "environment": "RHOAI",
       "version": "All",
       "release": "All",
@@ -35601,8 +36581,8 @@
   },
   "Provision Self Managed Cluster": {
     "overall": {
-      "total": 21,
-      "passed": 21,
+      "total": 23,
+      "passed": 23,
       "failed": 0,
       "skipped": 0
     },
@@ -36209,14 +37189,22 @@
       },
       {
         "date": "2026-09-14",
-        "passed": 1,
+        "passed": 3,
         "failed": 0,
         "skipped": 0,
-        "total": 1,
+        "total": 3,
         "execution_count": 1
       },
       {
         "date": "2026-09-15",
+        "passed": 0,
+        "failed": 0,
+        "skipped": 0,
+        "total": 0,
+        "execution_count": 0
+      },
+      {
+        "date": "2026-09-16",
         "passed": 0,
         "failed": 0,
         "skipped": 0,
@@ -36392,6 +37380,56 @@
     },
     "releases": [
       {
+        "release": "EA1",
+        "passed": 12,
+        "failed": 0,
+        "skipped": 0,
+        "daily": [
+          {
+            "date": "2026-08-19",
+            "passed": 1,
+            "failed": 0,
+            "skipped": 0
+          },
+          {
+            "date": "2026-09-01",
+            "passed": 2,
+            "failed": 0,
+            "skipped": 0
+          },
+          {
+            "date": "2026-09-03",
+            "passed": 1,
+            "failed": 0,
+            "skipped": 0
+          },
+          {
+            "date": "2026-09-08",
+            "passed": 1,
+            "failed": 0,
+            "skipped": 0
+          },
+          {
+            "date": "2026-09-09",
+            "passed": 2,
+            "failed": 0,
+            "skipped": 0
+          },
+          {
+            "date": "2026-09-10",
+            "passed": 2,
+            "failed": 0,
+            "skipped": 0
+          },
+          {
+            "date": "2026-09-14",
+            "passed": 3,
+            "failed": 0,
+            "skipped": 0
+          }
+        ]
+      },
+      {
         "release": "GA",
         "passed": 11,
         "failed": 0,
@@ -36458,62 +37496,12 @@
             "skipped": 0
           }
         ]
-      },
-      {
-        "release": "EA1",
-        "passed": 10,
-        "failed": 0,
-        "skipped": 0,
-        "daily": [
-          {
-            "date": "2026-08-19",
-            "passed": 1,
-            "failed": 0,
-            "skipped": 0
-          },
-          {
-            "date": "2026-09-01",
-            "passed": 2,
-            "failed": 0,
-            "skipped": 0
-          },
-          {
-            "date": "2026-09-03",
-            "passed": 1,
-            "failed": 0,
-            "skipped": 0
-          },
-          {
-            "date": "2026-09-08",
-            "passed": 1,
-            "failed": 0,
-            "skipped": 0
-          },
-          {
-            "date": "2026-09-09",
-            "passed": 2,
-            "failed": 0,
-            "skipped": 0
-          },
-          {
-            "date": "2026-09-10",
-            "passed": 2,
-            "failed": 0,
-            "skipped": 0
-          },
-          {
-            "date": "2026-09-14",
-            "passed": 1,
-            "failed": 0,
-            "skipped": 0
-          }
-        ]
       }
     ],
     "component": "Provision Self Managed Cluster",
     "filters": {
       "from": "2026-07-01",
-      "to": "2026-09-15",
+      "to": "2026-09-16",
       "environment": "RHOAI",
       "version": "All",
       "release": "All",
@@ -37146,6 +38134,14 @@
         "skipped": 0,
         "total": 0,
         "execution_count": 0
+      },
+      {
+        "date": "2026-09-16",
+        "passed": 0,
+        "failed": 0,
+        "skipped": 0,
+        "total": 0,
+        "execution_count": 0
       }
     ],
     "quality_gates": {
@@ -37199,7 +38195,7 @@
     "component": "Rhoai Upgrade",
     "filters": {
       "from": "2026-07-01",
-      "to": "2026-09-15",
+      "to": "2026-09-16",
       "environment": "RHOAI",
       "version": "All",
       "release": "All",
@@ -37211,8 +38207,8 @@
   },
   "Rhods Olm": {
     "overall": {
-      "total": 21,
-      "passed": 14,
+      "total": 23,
+      "passed": 16,
       "failed": 7,
       "skipped": 0
     },
@@ -37819,14 +38815,22 @@
       },
       {
         "date": "2026-09-14",
-        "passed": 1,
+        "passed": 3,
         "failed": 0,
         "skipped": 0,
-        "total": 1,
+        "total": 3,
         "execution_count": 1
       },
       {
         "date": "2026-09-15",
+        "passed": 0,
+        "failed": 0,
+        "skipped": 0,
+        "total": 0,
+        "execution_count": 0
+      },
+      {
+        "date": "2026-09-16",
         "passed": 0,
         "failed": 0,
         "skipped": 0,
@@ -37997,7 +39001,7 @@
     "releases": [
       {
         "release": "EA1",
-        "passed": 7,
+        "passed": 9,
         "failed": 3,
         "skipped": 0,
         "daily": [
@@ -38039,7 +39043,7 @@
           },
           {
             "date": "2026-09-14",
-            "passed": 1,
+            "passed": 3,
             "failed": 0,
             "skipped": 0
           }
@@ -38105,7 +39109,7 @@
     "component": "Rhods Olm",
     "filters": {
       "from": "2026-07-01",
-      "to": "2026-09-15",
+      "to": "2026-09-16",
       "environment": "RHOAI",
       "version": "All",
       "release": "All",
@@ -38117,10 +39121,10 @@
   },
   "Spark": {
     "overall": {
-      "total": 3138,
-      "passed": 1961,
-      "failed": 143,
-      "skipped": 1034
+      "total": 3321,
+      "passed": 2079,
+      "failed": 151,
+      "skipped": 1091
     },
     "daily": [
       {
@@ -38717,22 +39721,30 @@
       },
       {
         "date": "2026-09-13",
-        "passed": 60,
-        "failed": 4,
-        "skipped": 42,
-        "total": 106,
+        "passed": 90,
+        "failed": 6,
+        "skipped": 63,
+        "total": 159,
         "execution_count": 2
       },
       {
         "date": "2026-09-14",
-        "passed": 0,
-        "failed": 0,
-        "skipped": 0,
-        "total": 0,
-        "execution_count": 0
+        "passed": 32,
+        "failed": 2,
+        "skipped": 20,
+        "total": 54,
+        "execution_count": 1
       },
       {
         "date": "2026-09-15",
+        "passed": 56,
+        "failed": 4,
+        "skipped": 16,
+        "total": 76,
+        "execution_count": 2
+      },
+      {
+        "date": "2026-09-16",
         "passed": 0,
         "failed": 0,
         "skipped": 0,
@@ -39023,6 +40035,22 @@
             "symbol": "\u25cf",
             "jenkins_url": "https://jenkins-csb-rhods-opendatascience.dno.corp.redhat.com/job/rhoai/job/3.5/job/selfmanaged/job/cli/job/aws/job/rhoai-smoke/61/"
           }
+        ],
+        "2026-09-14": [
+          {
+            "state": "FAILED",
+            "color": "red",
+            "symbol": "\u25cf",
+            "jenkins_url": "https://jenkins-csb-rhods-opendatascience.dno.corp.redhat.com/job/rhoai/job/3.6-ea.1/job/selfmanaged/job/cli/job/aws/job/rhoai-smoke/25/"
+          }
+        ],
+        "2026-09-15": [
+          {
+            "state": "FAILED",
+            "color": "red",
+            "symbol": "\u25cf",
+            "jenkins_url": "https://jenkins-csb-rhods-opendatascience.dno.corp.redhat.com/job/rhoai/job/3.6-ea.1/job/selfmanaged/job/cli/job/azure/job/rhoai-smoke/15/"
+          }
         ]
       },
       "tier1": {
@@ -39097,6 +40125,14 @@
             "symbol": "\u25cf",
             "jenkins_url": "https://jenkins-csb-rhods-opendatascience.dno.corp.redhat.com/job/rhoai/job/3.6-ea.1/job/selfmanaged/job/cli/job/aws/job/rhoai-tier1/38/"
           }
+        ],
+        "2026-09-15": [
+          {
+            "state": "FAILED",
+            "color": "red",
+            "symbol": "\u25cf",
+            "jenkins_url": "https://jenkins-csb-rhods-opendatascience.dno.corp.redhat.com/job/rhoai/job/3.6-ea.1/job/selfmanaged/job/cli/job/aws/job/rhoai-tier1/42/"
+          }
         ]
       },
       "tier2": {
@@ -39121,9 +40157,9 @@
     "releases": [
       {
         "release": "EA1",
-        "passed": 855,
-        "failed": 23,
-        "skipped": 631,
+        "passed": 973,
+        "failed": 31,
+        "skipped": 688,
         "daily": [
           {
             "date": "2026-09-02",
@@ -39175,9 +40211,21 @@
           },
           {
             "date": "2026-09-13",
-            "passed": 60,
+            "passed": 90,
+            "failed": 6,
+            "skipped": 63
+          },
+          {
+            "date": "2026-09-14",
+            "passed": 32,
+            "failed": 2,
+            "skipped": 20
+          },
+          {
+            "date": "2026-09-15",
+            "passed": 56,
             "failed": 4,
-            "skipped": 42
+            "skipped": 16
           }
         ]
       },
@@ -39273,7 +40321,7 @@
     "component": "Spark",
     "filters": {
       "from": "2026-07-01",
-      "to": "2026-09-15",
+      "to": "2026-09-16",
       "environment": "RHOAI",
       "version": "All",
       "release": "All",
@@ -39906,6 +40954,14 @@
         "skipped": 0,
         "total": 0,
         "execution_count": 0
+      },
+      {
+        "date": "2026-09-16",
+        "passed": 0,
+        "failed": 0,
+        "skipped": 0,
+        "total": 0,
+        "execution_count": 0
       }
     ],
     "quality_gates": {
@@ -39939,7 +40995,7 @@
     "component": "Spark Operator Upgrade",
     "filters": {
       "from": "2026-07-01",
-      "to": "2026-09-15",
+      "to": "2026-09-16",
       "environment": "RHOAI",
       "version": "All",
       "release": "All",
@@ -39951,9 +41007,9 @@
   },
   "Trainer": {
     "overall": {
-      "total": 294,
-      "passed": 212,
-      "failed": 82,
+      "total": 328,
+      "passed": 221,
+      "failed": 107,
       "skipped": 0
     },
     "daily": [
@@ -40551,22 +41607,30 @@
       },
       {
         "date": "2026-09-13",
-        "passed": 10,
-        "failed": 14,
+        "passed": 15,
+        "failed": 21,
         "skipped": 0,
-        "total": 24,
+        "total": 36,
         "execution_count": 2
       },
       {
         "date": "2026-09-14",
         "passed": 0,
-        "failed": 0,
+        "failed": 6,
         "skipped": 0,
-        "total": 0,
-        "execution_count": 0
+        "total": 6,
+        "execution_count": 1
       },
       {
         "date": "2026-09-15",
+        "passed": 4,
+        "failed": 12,
+        "skipped": 0,
+        "total": 16,
+        "execution_count": 2
+      },
+      {
+        "date": "2026-09-16",
         "passed": 0,
         "failed": 0,
         "skipped": 0,
@@ -40879,6 +41943,22 @@
             "symbol": "\u2713",
             "jenkins_url": "https://jenkins-csb-rhods-opendatascience.dno.corp.redhat.com/job/rhoai/job/3.5/job/selfmanaged/job/cli/job/aws/job/rhoai-smoke/61/"
           }
+        ],
+        "2026-09-14": [
+          {
+            "state": "FAILED",
+            "color": "red",
+            "symbol": "\u25cf",
+            "jenkins_url": "https://jenkins-csb-rhods-opendatascience.dno.corp.redhat.com/job/rhoai/job/3.6-ea.1/job/selfmanaged/job/cli/job/aws/job/rhoai-smoke/25/"
+          }
+        ],
+        "2026-09-15": [
+          {
+            "state": "FAILED",
+            "color": "red",
+            "symbol": "\u25cf",
+            "jenkins_url": "https://jenkins-csb-rhods-opendatascience.dno.corp.redhat.com/job/rhoai/job/3.6-ea.1/job/selfmanaged/job/cli/job/azure/job/rhoai-smoke/15/"
+          }
         ]
       },
       "tier1": {
@@ -40953,6 +42033,14 @@
             "symbol": "\u25cf",
             "jenkins_url": "https://jenkins-csb-rhods-opendatascience.dno.corp.redhat.com/job/rhoai/job/3.6-ea.1/job/selfmanaged/job/cli/job/aws/job/rhoai-tier1/38/"
           }
+        ],
+        "2026-09-15": [
+          {
+            "state": "FAILED",
+            "color": "red",
+            "symbol": "\u25cf",
+            "jenkins_url": "https://jenkins-csb-rhods-opendatascience.dno.corp.redhat.com/job/rhoai/job/3.6-ea.1/job/selfmanaged/job/cli/job/aws/job/rhoai-tier1/42/"
+          }
         ]
       },
       "tier2": {
@@ -40977,8 +42065,8 @@
     "releases": [
       {
         "release": "EA1",
-        "passed": 125,
-        "failed": 54,
+        "passed": 134,
+        "failed": 79,
         "skipped": 0,
         "daily": [
           {
@@ -41031,8 +42119,20 @@
           },
           {
             "date": "2026-09-13",
-            "passed": 10,
-            "failed": 14,
+            "passed": 15,
+            "failed": 21,
+            "skipped": 0
+          },
+          {
+            "date": "2026-09-14",
+            "passed": 0,
+            "failed": 6,
+            "skipped": 0
+          },
+          {
+            "date": "2026-09-15",
+            "passed": 4,
+            "failed": 12,
             "skipped": 0
           }
         ]
@@ -41135,7 +42235,7 @@
     "component": "Trainer",
     "filters": {
       "from": "2026-07-01",
-      "to": "2026-09-15",
+      "to": "2026-09-16",
       "environment": "RHOAI",
       "version": "All",
       "release": "All",
@@ -41147,10 +42247,10 @@
   },
   "User Journeys": {
     "overall": {
-      "total": 520,
-      "passed": 337,
-      "failed": 23,
-      "skipped": 160
+      "total": 650,
+      "passed": 421,
+      "failed": 29,
+      "skipped": 200
     },
     "daily": [
       {
@@ -41755,14 +42855,22 @@
       },
       {
         "date": "2026-09-14",
-        "passed": 42,
-        "failed": 3,
-        "skipped": 20,
-        "total": 65,
+        "passed": 126,
+        "failed": 9,
+        "skipped": 60,
+        "total": 195,
         "execution_count": 1
       },
       {
         "date": "2026-09-15",
+        "passed": 0,
+        "failed": 0,
+        "skipped": 0,
+        "total": 0,
+        "execution_count": 0
+      },
+      {
+        "date": "2026-09-16",
         "passed": 0,
         "failed": 0,
         "skipped": 0,
@@ -41837,9 +42945,9 @@
     "releases": [
       {
         "release": "EA1",
-        "passed": 294,
-        "failed": 21,
-        "skipped": 140,
+        "passed": 378,
+        "failed": 27,
+        "skipped": 180,
         "daily": [
           {
             "date": "2026-09-03",
@@ -41867,9 +42975,9 @@
           },
           {
             "date": "2026-09-14",
-            "passed": 42,
-            "failed": 3,
-            "skipped": 20
+            "passed": 126,
+            "failed": 9,
+            "skipped": 60
           }
         ]
       },
@@ -41891,7 +42999,7 @@
     "component": "User Journeys",
     "filters": {
       "from": "2026-07-01",
-      "to": "2026-09-15",
+      "to": "2026-09-16",
       "environment": "RHOAI",
       "version": "All",
       "release": "All",
@@ -42524,6 +43632,14 @@
         "skipped": 0,
         "total": 0,
         "execution_count": 0
+      },
+      {
+        "date": "2026-09-16",
+        "passed": 0,
+        "failed": 0,
+        "skipped": 0,
+        "total": 0,
+        "execution_count": 0
       }
     ],
     "quality_gates": {
@@ -42947,7 +44063,7 @@
     "component": "Workbenches",
     "filters": {
       "from": "2026-07-01",
-      "to": "2026-09-15",
+      "to": "2026-09-16",
       "environment": "RHOAI",
       "version": "All",
       "release": "All",
