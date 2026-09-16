@@ -55,7 +55,7 @@
       },
       {
         "key": "NIGHTLY_PIPELINE_SCHEDULE_ID",
-        "description": "GitLab pipeline schedule ID (defaults to 4358047)",
+        "description": "GitLab pipeline schedule ID (defaults to 4426146)",
         "required": false
       },
       {
