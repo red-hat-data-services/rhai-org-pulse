@@ -1381,8 +1381,8 @@ test.describe('Releases CVE Sustaining Report @releases', () => {
     await page.locator('button', { hasText: 'Component' }).first().click();
     await page.waitForTimeout(300);
 
-    // Select "Model Serving" checkbox
-    var checkbox = page.locator('label').filter({ hasText: 'Model Serving' }).locator('input[type="checkbox"]');
+    // Select a component from the Team Tracker catalog
+    var checkbox = page.locator('label').filter({ hasText: 'KubeRay' }).locator('input[type="checkbox"]');
     await checkbox.click();
     await page.waitForTimeout(300);
 
