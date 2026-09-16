@@ -6,7 +6,7 @@ const { session, approveFeature, persist, filterDecision } = useDraftPlans()
 const iframeRef = ref(null)
 const moduleNav = inject('moduleNav', null)
 
-const PLANNER_URL = 'https://htmlpreview.github.io/?https://github.com/yuvalluria/rhai-release-planner/blob/f843164/index.html'
+const PLANNER_URL = 'https://htmlpreview.github.io/?https://github.com/yuvalluria/rhai-release-planner/blob/f0b79e2/index.html'
 
 function onIframeLoad() {
   const actor = session.value && session.value.actor
