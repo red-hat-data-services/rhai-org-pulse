@@ -228,6 +228,13 @@ test.describe('Releases Views @releases', () => {
     await page.waitForLoadState('networkidle');
 
     await expect(page.getByRole('heading', { name: 'AIPCC Release Milestones' })).toBeVisible();
+    const timeline = page.getByTestId('aipcc-timeline-viewport');
+    await expect.poll(() => timeline.evaluate(element => {
+      const marker = element.querySelector('[aria-label^="Selected date:"]');
+      const viewportBounds = element.getBoundingClientRect();
+      const markerBounds = marker.getBoundingClientRect();
+      return markerBounds.left >= viewportBounds.left && markerBounds.right <= viewportBounds.right;
+    })).toBe(true);
     await expect(page).toHaveURL(/#\/releases\/schedule\/aipcc$/);
     expect(page.errors).toHaveLength(0);
   });

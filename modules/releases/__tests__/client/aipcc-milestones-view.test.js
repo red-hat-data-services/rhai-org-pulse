@@ -34,6 +34,9 @@ const response = {
 }
 
 describe('AipccMilestonesView', () => {
+  const originalScrollTo = HTMLElement.prototype.scrollTo
+  const scrollTo = vi.fn()
+
   beforeEach(() => {
     vi.clearAllMocks()
     vi.useFakeTimers()
@@ -43,9 +46,22 @@ describe('AipccMilestonesView', () => {
       observe() {}
       disconnect() {}
     }
+    HTMLElement.prototype.scrollTo = scrollTo
   })
 
-  afterEach(() => vi.useRealTimers())
+  afterEach(() => {
+    HTMLElement.prototype.scrollTo = originalScrollTo
+    vi.useRealTimers()
+  })
+
+  it('opens the timeline at today after the initial render', async () => {
+    const wrapper = mount(AipccMilestonesView)
+    await flushPromises()
+
+    expect(wrapper.find('input[type="date"]').element.value).toBe('2026-09-14')
+    expect(wrapper.find('[aria-label^="Selected date:"]').attributes('aria-label')).toContain('Sep 14, 2026')
+    expect(scrollTo).toHaveBeenCalledWith(expect.objectContaining({ behavior: 'auto' }))
+  })
 
   it('renders the milestone dashboard with a one-day upcoming default', async () => {
     const wrapper = mount(AipccMilestonesView)

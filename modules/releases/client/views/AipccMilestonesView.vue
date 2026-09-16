@@ -186,7 +186,7 @@
           </span>
         </div>
 
-        <div v-if="!timelineCollapsed" ref="timelineViewport" class="max-h-[620px] overflow-auto milestone-scrollbar">
+        <div v-if="!timelineCollapsed" ref="timelineViewport" data-testid="aipcc-timeline-viewport" class="max-h-[620px] overflow-auto milestone-scrollbar">
           <div
             ref="timelineSurface"
             class="relative min-h-24 select-none bg-white dark:bg-gray-900"
@@ -529,10 +529,10 @@ function resetToToday() {
   scrollToCursor()
 }
 
-function scrollToCursor() {
+function scrollToCursor(behavior = 'smooth') {
   nextTick(() => {
     if (!timelineViewport.value) return
-    timelineViewport.value.scrollTo?.({ left: Math.max(0, labelWidth + cursorDay.value * pxPerDay.value - timelineViewport.value.clientWidth / 3), behavior: 'smooth' })
+    timelineViewport.value.scrollTo?.({ left: Math.max(0, labelWidth + cursorDay.value * pxPerDay.value - timelineViewport.value.clientWidth / 3), behavior })
   })
 }
 
@@ -587,9 +587,14 @@ async function refreshData() {
 onMounted(async () => {
   await loadData()
   await nextTick()
+  scrollToCursor('auto')
   resizeObserver = new ResizeObserver(entries => {
     const width = entries[0]?.contentRect.width || 0
-    if (width > labelWidth) pxPerDay.value = Math.max(16, (width - labelWidth) / 45)
+    const nextPxPerDay = Math.max(16, (width - labelWidth) / 45)
+    if (width > labelWidth && nextPxPerDay !== pxPerDay.value) {
+      pxPerDay.value = nextPxPerDay
+      scrollToCursor('auto')
+    }
   })
   if (timelineViewport.value) resizeObserver.observe(timelineViewport.value)
 })
