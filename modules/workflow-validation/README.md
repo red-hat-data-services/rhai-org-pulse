@@ -13,7 +13,7 @@ An external Director/ETL pipeline owns computation and ingestion; Org Pulse
 builds read-only searches and presents their results.
 
 Cost tiles and table cells are hidden by default. Typing `iddqd` anywhere in
-the module reveals them for the lifetime of the loaded SPA. This is a display
+the module toggles their visibility for the lifetime of the loaded SPA. This is a display
 preference, not an authorization boundary: cost fields remain present in the
 authenticated backend responses.
 

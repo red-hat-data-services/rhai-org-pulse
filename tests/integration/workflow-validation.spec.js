@@ -81,7 +81,7 @@ test.describe('Workflow Validation module @workflow-validation', () => {
     expect(requests.every((url) => !url.includes('opensearch-workflow-validation'))).toBe(true)
   })
 
-  test('hides costs by default and reveals them with iddqd across views', async ({ page }) => {
+  test('toggles hidden costs with iddqd across views', async ({ page }) => {
     await page.goto('/#/workflow-validation/overview')
     await expect(page.getByRole('main').getByRole('heading', { name: 'Workflow Validation' })).toBeVisible()
     await expect(page.getByText('AI Cost', { exact: true })).toHaveCount(0)
@@ -98,6 +98,10 @@ test.describe('Workflow Validation module @workflow-validation', () => {
     await page.goto('/#/workflow-validation/workflows')
     await expect(page.getByRole('columnheader', { name: 'AI cost' })).toBeVisible()
     await expect(page.getByText('$1.00')).toBeVisible()
+
+    await page.keyboard.type('iddqd')
+    await expect(page.getByRole('columnheader', { name: 'AI cost' })).toHaveCount(0)
+    await expect(page.getByText('$1.00')).toHaveCount(0)
   })
 
   test('scopes the dashboard to one selected test suite execution', async ({ page }) => {
