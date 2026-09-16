@@ -10,6 +10,10 @@ import {
   ENTRY_COLUMN_MAP,
   PILLAR_COLUMN_MAP,
   PIPE_DELIMITED_FIELDS,
+  getPillarColor,
+  normalizePillar,
+  mergePillarMetadata,
+  normalizeShowcaseData,
 } from '../../server/showcase/sheets-sync.js';
 
 describe('parseArrayField', () => {
@@ -51,14 +55,16 @@ describe('mapRow', () => {
   });
 
   it('maps pillar columns', () => {
-    const headers = ['pillar_key', 'title', 'summary', 'sort_order', 'visual_url'];
-    const row = ['agentic-ai', 'Agentic AI', 'Agent things', '3', 'https://example.com/img.png'];
+    const headers = ['pillar_key', 'title', 'short_title', 'summary', 'sort_order', 'visual_url', 'color'];
+    const row = ['agentic-ai', 'Agentic AI', 'Agentic', 'Agent things', '3', 'https://example.com/img.png', '#22c55e'];
     const result = mapRow(headers, row, PILLAR_COLUMN_MAP);
 
     expect(result.pillarKey).toBe('agentic-ai');
     expect(result.title).toBe('Agentic AI');
+    expect(result.shortTitle).toBe('Agentic');
     expect(result.sortOrder).toBe(3);
     expect(result.visualUrl).toBe('https://example.com/img.png');
+    expect(result.color).toBe('#22c55e');
   });
 
   it('handles missing columns with empty defaults', () => {
@@ -108,5 +114,62 @@ describe('constants', () => {
     expect(PIPE_DELIMITED_FIELDS.has('capabilityTags')).toBe(true);
     expect(PIPE_DELIMITED_FIELDS.has('customerNeedTags')).toBe(true);
     expect(PIPE_DELIMITED_FIELDS.has('githubUrl')).toBe(true);
+  });
+});
+
+describe('pillar metadata', () => {
+  it('fills optional display metadata while preserving explicit values', () => {
+    expect(normalizePillar({ pillarKey: 'data-science-engineering' })).toMatchObject({
+      pillarKey: 'data-science-engineering',
+      title: 'Data Science Engineering',
+      shortTitle: 'Data Science Engineering',
+      color: '#06b6d4',
+    });
+
+    expect(normalizePillar({
+      pillarKey: 'custom-pillar',
+      title: 'Custom Pillar',
+      shortTitle: 'Custom',
+      color: '#ABCDEF',
+    })).toMatchObject({
+      title: 'Custom Pillar',
+      shortTitle: 'Custom',
+      color: '#abcdef',
+    });
+  });
+
+  it('uses a deterministic fallback color for unknown keys', () => {
+    expect(getPillarColor('new-pillar')).toBe(getPillarColor('new-pillar'));
+    expect(getPillarColor('new-pillar')).toMatch(/^#[0-9a-f]{6}$/);
+  });
+
+  it('uses the unsigned hash index shared with the client fallback', () => {
+    // new-pillar hashes to a negative signed 32-bit value. The unsigned
+    // conversion selects the second palette colour, not Math.abs(hash).
+    expect(getPillarColor('new-pillar')).toBe('#a855f7');
+  });
+
+  it('merges referenced keys missing from sheet metadata', () => {
+    const result = mergePillarMetadata(
+      [{ pillarKey: 'model-inference', title: 'Model Inference', sortOrder: 1 }],
+      ['model-inference', 'data-science-engineering'],
+    );
+
+    expect(result.map(p => p.pillarKey)).toEqual(['model-inference', 'data-science-engineering']);
+    expect(result[1]).toMatchObject({
+      title: 'Data Science Engineering',
+      shortTitle: 'Data Science Engineering',
+      color: '#06b6d4',
+    });
+  });
+
+  it('adds metadata for showcase entries whose pillar row is not refreshed yet', () => {
+    const result = normalizeShowcaseData({
+      entries: [{ slug: 'new', strategyPillarKey: 'future-pillar' }],
+      pillars: [],
+    });
+
+    expect(result.pillars).toHaveLength(1);
+    expect(result.pillars[0].pillarKey).toBe('future-pillar');
   });
 });

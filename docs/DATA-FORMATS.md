@@ -2210,6 +2210,64 @@ Each entry has: `dimension` (name), `score` (0-10), `status` (human-readable sum
 
 ---
 
+## AI Catalyst Monthly Board — `data/ai-catalyst/boards/{YYYY-MM}.json`
+
+The monthly board is a JSON array written by the AI Catalyst board sync. Each
+element is one candidate parsed from a `board-YYYY-MM` Google Sheet tab. The
+`category` value is a stable strategy-pillar key, not a display label; clients
+resolve its title, short title, and color from the shared Showcase pillar
+registry below.
+
+```json
+[
+  {
+    "title": "Feast",
+    "uniqueId": "meta-research/feast",
+    "link": "https://github.com/feast-dev/feast",
+    "itemType": "repo",
+    "source": "github",
+    "sources": ["github"],
+    "category": "data-science-engineering",
+    "capabilityLabels": ["feature-store", "mlops"],
+    "impactScore": 8.8,
+    "feasibilityScore": 8.2,
+    "boardFeasibilityScore": 8.2,
+    "boardPassesGate": true,
+    "stars": 5200,
+    "language": "Python",
+    "pmDecision": "Approve(asmith)"
+  }
+]
+```
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `title` | string | Candidate display title |
+| `uniqueId` | string | Stable candidate identifier used by detail routes |
+| `link` | string | Source repository or project URL |
+| `itemType` | string | `repo` or another discovery item type |
+| `source` | string | Primary discovery source (`github`, `hn`, or `reddit`) |
+| `sources` | string[] | All discovery sources for the candidate |
+| `category` | string | Stable strategy-pillar key; must match a pillar key when metadata is available |
+| `capabilityLabels` | string[] | Capability labels parsed from the source sheet |
+| `impactScore` | number/null | Impact score from the board evaluation |
+| `feasibilityScore` | number/null | Original feasibility score |
+| `boardFeasibilityScore` | number/null | Board score used for sorting and display |
+| `boardPassesGate` | boolean | Whether the candidate passes the board gate |
+| `pmDecision` | string | PM decision text; status is derived from `Approve`, `Decline`, `Revisit`, or empty |
+
+`data/ai-catalyst/index.json` contains the available month list and candidate
+counts. Adding a new month adds one board file and one index entry. A board
+sync refreshes discovered months in place, so the board file and its
+`lastSynced` value represent the latest source-sheet snapshot rather than an
+immutable historical record.
+
+Repository files under `fixtures/ai-catalyst/` are deterministic mock data for
+demo mode and tests; production deployments read the corresponding board rows
+from Google Sheets during sync.
+
+---
+
 ## AI Catalyst Showcase Data — `data/ai-catalyst/showcase/showcase-data.json`
 
 Synced from a Google Sheet via the ai-catalyst module (showcase feature). Contains all showcase entries and strategy pillar definitions.
@@ -2221,8 +2279,10 @@ Synced from a Google Sheet via the ai-catalyst module (showcase feature). Contai
     {
       "pillarKey": "model-inference",
       "title": "Model Inference",
+      "shortTitle": "Inference",
       "summary": "Scalable serving of AI/ML models in production",
       "sortOrder": 1,
+      "color": "#3b82f6",
       "visualUrl": ""
     }
   ],
@@ -2262,7 +2322,11 @@ Synced from a Google Sheet via the ai-catalyst module (showcase feature). Contai
 |-------|------|-------------|
 | `fetchedAt` | ISO string | Timestamp of last successful sync |
 | `pillars[].pillarKey` | string | Unique identifier (e.g., `model-inference`, `agentic-ai`) |
+| `pillars[].title` | string | Full display name |
+| `pillars[].shortTitle` | string | Compact label for filters, chart legends, and badges; optional |
+| `pillars[].summary` | string | Description shown on catalog pillar tiles |
 | `pillars[].sortOrder` | number | Display order |
+| `pillars[].color` | string | Optional six-digit hex color used by charts and category indicators |
 | `pillars[].visualUrl` | string | Optional banner image URL |
 | `entries[].slug` | string | URL-safe unique identifier |
 | `entries[].status` | string | `active`, `draft`, or `archived` |
@@ -2277,6 +2341,24 @@ Synced from a Google Sheet via the ai-catalyst module (showcase feature). Contai
 | `entries[].quayUrl` | string | Pipe-separated Quay repo URLs |
 | `entries[].otherResourceUrls` | string | Pipe-separated misc resource URLs |
 | `entries[].mermaidSource` | string | Mermaid diagram source (rendered on detail page) |
+
+Pillar keys are stable identifiers used by both board candidates (`category`)
+and showcase entries (`strategyPillarKey`). New pillars are added by appending
+a row to the `strategy_pillars` source tab and syncing the fixture or stored
+copy; display titles, short titles, summaries, and colors may change without
+renaming the key. If a board references a key that is not yet in the registry,
+the UI keeps the candidate visible with a generated label and fallback color.
+
+Board and showcase responses intentionally use different pillar scopes:
+
+- A monthly board response includes only pillar keys represented by candidates
+  in that complete board. This catalog is independent of the requested board
+  filters, so filtering candidates never removes a pillar tile needed to
+  describe the selected month.
+- Showcase list and detail responses use the configured pillar catalog, which
+  includes pillars with zero showcase entries. Entry references that arrive
+  before their metadata row are synthesized with a humanized title and a
+  deterministic fallback color.
 
 ---
 
