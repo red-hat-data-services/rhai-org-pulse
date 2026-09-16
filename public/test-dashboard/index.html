@@ -296,7 +296,7 @@ async function loadHeatmap(){
     } catch(_){}
     // Fallback: static JSON with client-side date filtering
     try {
-      const staticResp = await fetch(`${DATA_BASE}/data/heatmap.json`);
+      const staticResp = await fetch(`${DATA_BASE}/data/heatmap.json?_=${Date.now()}`);
       if(staticResp.ok){
         const raw = await staticResp.json();
         data = filterStaticData(raw, f);

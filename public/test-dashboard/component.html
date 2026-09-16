@@ -116,7 +116,7 @@ function friendlyDate(iso){
 // --- Load Jira config ---
 async function loadJiraConfig(){
   try {
-    const resp = await fetch(`${DATA_BASE}/data/jira_config.json`);
+    const resp = await fetch(`${DATA_BASE}/data/jira_config.json?_=${Date.now()}`);
     if(resp.ok) jiraConfig = await resp.json();
   } catch(_){}
 }
@@ -317,7 +317,7 @@ async function loadComponent(){
     // Fallback: static JSON with client-side date filtering
     if(!data){
       try {
-        const staticResp = await fetch(`${DATA_BASE}/data/components.json`);
+        const staticResp = await fetch(`${DATA_BASE}/data/components.json?_=${Date.now()}`);
         if(staticResp.ok){
           const all = await staticResp.json();
           if(all[componentName]){
