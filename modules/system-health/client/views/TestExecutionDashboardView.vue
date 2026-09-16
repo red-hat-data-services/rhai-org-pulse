@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed, watch, onMounted } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { ExternalLink, RefreshCw, AlertTriangle, Maximize2, Minimize2 } from 'lucide-vue-next'
 
 const DASHBOARD_BASE = '/test-dashboard'
@@ -10,44 +10,8 @@ const loading = ref(true)
 const error = ref(null)
 const isExpanded = ref(false)
 
-// Filters
-const version = ref('All')
-const release = ref('All')
-const fromDate = ref('')
-const toDate = ref('')
-
-const versionOptions = ['All', '2.25', '3.4', '3.5', '3.6']
-const releaseOptions = ['All', 'GA', 'EA1', 'EA2']
-
 onMounted(() => {
-  const now = new Date()
-  const thirtyDaysAgo = new Date(now)
-  thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30)
-  toDate.value = now.toISOString().split('T')[0]
-  fromDate.value = thirtyDaysAgo.toISOString().split('T')[0]
-  buildUrl()
-})
-
-function buildUrl() {
-  loading.value = true
-  error.value = null
-
-  const params = new URLSearchParams({
-    environment: 'RHOAI',
-    version: version.value,
-    release: release.value,
-    from_date: fromDate.value,
-    to_date: toDate.value,
-    provider: 'All',
-    cluster_type: 'All',
-    gate: 'All',
-  })
-
-  dashboardUrl.value = `${DASHBOARD_BASE}/index.html?${params.toString()}`
-}
-
-watch([version, release, fromDate, toDate], () => {
-  buildUrl()
+  dashboardUrl.value = `${DASHBOARD_BASE}/index.html`
 })
 
 function onIframeLoad() {
@@ -120,54 +84,6 @@ const containerClass = computed(() =>
       </div>
     </div>
 
-    <!-- Filters Bar -->
-    <div
-      class="bg-white dark:bg-gray-800 shadow rounded-lg px-4 py-3"
-      :class="isExpanded ? 'mx-4 mt-2 shrink-0' : ''"
-    >
-      <div class="flex flex-wrap items-center gap-4">
-        <!-- Version -->
-        <div class="flex items-center gap-2">
-          <label class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Version</label>
-          <select
-            v-model="version"
-            class="border border-gray-300 dark:border-gray-600 rounded-md px-3 py-1.5 text-sm bg-white dark:bg-gray-700 dark:text-white"
-          >
-            <option v-for="v in versionOptions" :key="v" :value="v">{{ v }}</option>
-          </select>
-        </div>
-
-        <!-- Release -->
-        <div class="flex items-center gap-2">
-          <label class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Release</label>
-          <select
-            v-model="release"
-            class="border border-gray-300 dark:border-gray-600 rounded-md px-3 py-1.5 text-sm bg-white dark:bg-gray-700 dark:text-white"
-          >
-            <option v-for="r in releaseOptions" :key="r" :value="r">{{ r }}</option>
-          </select>
-        </div>
-
-        <!-- Date Range -->
-        <div class="flex items-center gap-2">
-          <label class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">From</label>
-          <input
-            type="date"
-            v-model="fromDate"
-            class="border border-gray-300 dark:border-gray-600 rounded-md px-2 py-1.5 text-sm bg-white dark:bg-gray-700 dark:text-white"
-          />
-        </div>
-        <div class="flex items-center gap-2">
-          <label class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">To</label>
-          <input
-            type="date"
-            v-model="toDate"
-            class="border border-gray-300 dark:border-gray-600 rounded-md px-2 py-1.5 text-sm bg-white dark:bg-gray-700 dark:text-white"
-          />
-        </div>
-      </div>
-    </div>
-
     <!-- Error State -->
     <div
       v-if="error"
@@ -210,7 +126,7 @@ const containerClass = computed(() =>
         :src="dashboardUrl"
         title="RHOAI Test Execution Dashboard"
         class="w-full border-0 block"
-        :style="isExpanded ? 'height: 100%' : 'min-height: calc(100vh - 14rem)'"
+        :style="isExpanded ? 'height: 100%' : 'min-height: calc(100vh - 10rem)'"
         @load="onIframeLoad"
         @error="onIframeError"
         allow="clipboard-write"
