@@ -97,7 +97,7 @@
 </div>
 
 <script>
-const API_BASE = window.API_BASE || '';
+
 const DATA_BASE = '/test-dashboard';
 let jiraConfig = null;
 
@@ -302,31 +302,13 @@ async function loadComponent(){
   }
 
   try {
-    let data;
     const f = currentFilters();
     f.component = componentName;
-    // Try live API first (honors all filters server-side)
-    try {
-      const params = new URLSearchParams(f).toString();
-      const resp = await fetch(`${API_BASE}/api/v1/component?${params}`);
-      if(resp.ok){
-        const d = await resp.json();
-        if(!d.error) data = d;
-      }
-    } catch(_){}
-    // Fallback: static JSON with client-side date filtering
-    if(!data){
-      try {
-        const staticResp = await fetch(`${DATA_BASE}/data/components.json?_=${Date.now()}`);
-        if(staticResp.ok){
-          const all = await staticResp.json();
-          if(all[componentName]){
-            data = filterStaticComponentData(all[componentName], f);
-          }
-        }
-      } catch(_){}
-    }
-    if(!data) throw new Error('No data source available');
+    const resp = await fetch(`${DATA_BASE}/data/components.json?_=${Date.now()}`);
+    if(!resp.ok) throw new Error(`HTTP ${resp.status}`);
+    const all = await resp.json();
+    if(!all[componentName]) throw new Error(`Component "${componentName}" not found`);
+    const data = filterStaticComponentData(all[componentName], f);
     render(data, componentName);
   } catch(e){
     main.innerHTML = `<div class="error">Failed to load component data: ${e.message}<br><a href="${backToHeatmapUrl()}">Back to heatmap</a></div>`;
@@ -443,17 +425,9 @@ function render(data, componentName){
   renderReleasesChart(releases);
 }
 
-// --- Fetch Jira count from live API proxy or static data ---
+// --- Fetch Jira count from pre-computed static data ---
 async function fetchJiraCount(jql, componentName, label, version, release){
-  // 1. Try live API proxy
-  try {
-    const resp = await fetch(`${API_BASE}/api/v1/jira-count?jql=${encodeURIComponent(jql)}`);
-    if(resp.ok){
-      const d = await resp.json();
-      if(d.count !== null && d.count !== undefined) return d.count;
-    }
-  } catch(_){}
-  // 2. Try pre-computed counts from jira_config
+  // Use pre-computed counts from jira_config
   if(jiraConfig && jiraConfig.counts){
     // Find all matching release keys
     const countKeys = Object.keys(jiraConfig.counts);

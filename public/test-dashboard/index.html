@@ -165,7 +165,6 @@
 </div>
 
 <script>
-const API_BASE = window.API_BASE || '';
 const DATA_BASE = '/test-dashboard';
 
 function qs(id){ return document.getElementById(id) }
@@ -283,35 +282,17 @@ function filterStaticData(data, filters){
   return filtered;
 }
 
-// --- Fetch heatmap (tries live API first, then falls back to static JSON) ---
+// --- Fetch heatmap (static JSON with client-side filtering) ---
 async function loadHeatmap(){
   const content = qs('heatmap-content');
   content.innerHTML = '<div class="loading">Loading…</div>';
   const f = currentFilters();
   try {
-    let data;
-    // Try live API first (honors all filters server-side)
-    try {
-      const params = new URLSearchParams(f).toString();
-      const resp = await fetch(`${API_BASE}/api/v1/heatmap?${params}`);
-      if(resp.ok){
-        data = await resp.json();
-        if(!data.error) { renderHeatmap(data, content); return; }
-      }
-    } catch(_){}
-    // Fallback: static JSON with client-side date filtering
-    try {
-      const staticResp = await fetch(`${DATA_BASE}/data/heatmap.json?_=${Date.now()}`);
-      if(staticResp.ok){
-        const raw = await staticResp.json();
-        data = filterStaticData(raw, f);
-      }
-    } catch(_){}
-    if(data){
-      renderHeatmap(data, content);
-    } else {
-      throw new Error('No data source available');
-    }
+    const resp = await fetch(`${DATA_BASE}/data/heatmap.json?_=${Date.now()}`);
+    if(!resp.ok) throw new Error(`HTTP ${resp.status}`);
+    const raw = await resp.json();
+    const data = filterStaticData(raw, f);
+    renderHeatmap(data, content);
   } catch(e){
     content.innerHTML = `<div class="error">Failed to load heatmap: ${e.message}</div>`;
   }
