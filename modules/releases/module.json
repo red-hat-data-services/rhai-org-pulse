@@ -35,6 +35,7 @@
   "server": {
     "entry": "./server/index.js"
   },
+  "requires": ["team-tracker"],
   "secrets": {
     "platform": ["jira", "github"],
     "module": [

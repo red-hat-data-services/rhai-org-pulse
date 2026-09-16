@@ -435,6 +435,7 @@ import {
   Legend
 } from 'chart.js'
 import { useCveSustaining } from './composables/useCveSustaining'
+import { apiRequest } from '@shared/client/services/api.js'
 import { useReportFilters } from './composables/useReportFilters.js'
 import { useCveAggregation } from './composables/useCveAggregation.js'
 import ReportFilterModal from './components/ReportFilterModal.vue'
@@ -445,6 +446,17 @@ ChartJS.register(CategoryScale, LinearScale, BarElement, PointElement, LineEleme
 
 const nav = inject('moduleNav')
 const { data, loading, error, refreshing, loadData, refresh } = useCveSustaining()
+const catalogComponents = ref([])
+
+async function loadComponentCatalog() {
+  try {
+    const catalog = await apiRequest('/modules/team-tracker/field-options/component') // eslint-disable-line org-pulse/no-cross-module-imports
+    catalogComponents.value = catalog.values || []
+  } catch (err) {
+    console.error('[cve-sustaining] Failed to load component catalog:', err)
+    catalogComponents.value = []
+  }
+}
 
 // ─── Filters ──────────────────────────────────────────────────────────────────
 
@@ -471,7 +483,7 @@ const availableFilterValues = computed(() => {
   const issues = openIssueRecords.value
   if (issues.length === 0) return {}
   return {
-    component: [...new Set(issues.map(i => i.component))].sort(),
+    component: [...new Set(catalogComponents.value)].sort(),
     versions: [...new Set(issues.flatMap(i => i.versions))].sort(),
     assignee: [...new Set(issues.map(i => i.assignee))].sort(),
     status: [...new Set(issues.map(i => i.status))].sort()
@@ -570,6 +582,7 @@ async function handleRefresh() {
 
 onMounted(() => {
   loadData()
+  loadComponentCatalog()
   loadFixAvailability()
 })
 

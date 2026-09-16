@@ -1353,6 +1353,21 @@ test.describe('Releases CVE Sustaining Report @releases', () => {
     expect(page.errors).toHaveLength(0);
   });
 
+  test('component filter uses the Team Tracker component catalog', async ({ page }) => {
+    await page.route('**/api/modules/team-tracker/field-options/component', async route => {
+      await route.fulfill({ contentType: 'application/json', body: JSON.stringify({ values: ['Catalog-only component'] }) });
+    });
+    await page.goto('/#/releases/reports?report=cve-sustaining');
+    await page.waitForLoadState('networkidle');
+    await page.waitForTimeout(DEFAULT_PAGE_WAIT_TIME);
+
+    await page.locator('button', { hasText: 'Manage Filters' }).first().click();
+    await page.locator('button', { hasText: 'Component' }).first().click();
+
+    await expect(page.locator('label', { hasText: 'Catalog-only component' })).toBeVisible();
+    expect(page.errors).toHaveLength(0);
+  });
+
   test('applying a filter updates the report', async ({ page }) => {
     await page.goto('/#/releases/reports?report=cve-sustaining');
     await page.waitForLoadState('networkidle');
