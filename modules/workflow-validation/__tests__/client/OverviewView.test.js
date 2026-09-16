@@ -247,7 +247,7 @@ describe('Workflow Validation OverviewView', () => {
     testsView.unmount()
   })
 
-  it('hides costs until iddqd is typed', async () => {
+  it('toggles costs each time iddqd is typed', async () => {
     expect(wrapper.text()).not.toContain('AI Cost')
     expect(wrapper.text()).not.toContain('Infra Cost')
     expect(wrapper.text()).not.toContain('$1.94')
@@ -258,5 +258,12 @@ describe('Workflow Validation OverviewView', () => {
     expect(wrapper.text()).toContain('AI Cost')
     expect(wrapper.text()).toContain('Infra Cost')
     expect(wrapper.text()).toContain('$1.94')
+
+    for (const key of 'iddqd') window.dispatchEvent(new KeyboardEvent('keydown', { key }))
+    await wrapper.vm.$nextTick()
+
+    expect(wrapper.text()).not.toContain('AI Cost')
+    expect(wrapper.text()).not.toContain('Infra Cost')
+    expect(wrapper.text()).not.toContain('$1.94')
   })
 })
