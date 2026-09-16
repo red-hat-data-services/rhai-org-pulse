@@ -216,9 +216,9 @@ const chartOptions = computed(() => ({
       <button
         v-for="key in categoryKeys"
         :key="key"
-        class="inline-flex items-center gap-1.5 text-xs font-medium px-2.5 py-1 rounded-full border transition-opacity"
+        class="inline-flex items-center gap-1.5 text-xs font-medium px-2.5 py-1 rounded-full border transition-opacity text-gray-700 dark:text-gray-300"
         :class="hiddenCategories.has(key) ? 'opacity-40 border-gray-300 dark:border-gray-600' : 'border-transparent'"
-        :style="{ backgroundColor: colorWithAlpha(getCategoryMeta(key, pillarOptions).color, 0.12), color: getCategoryMeta(key, pillarOptions).color }"
+        :style="{ backgroundColor: colorWithAlpha(getCategoryMeta(key, pillarOptions).color, 0.12) }"
         @click="toggleCategory(key)"
       >
         <span class="w-2 h-2 rounded-full" :style="{ backgroundColor: getCategoryMeta(key, pillarOptions).color }"></span>

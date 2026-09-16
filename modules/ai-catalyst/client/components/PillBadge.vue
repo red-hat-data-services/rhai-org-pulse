@@ -1,15 +1,18 @@
 <template>
-  <span :class="classes" :style="color ? { color, backgroundColor: `${color}1f` } : undefined">{{ label }}</span>
+  <span :class="classes" :style="style">{{ label }}</span>
 </template>
 
 <script setup>
 import { computed } from 'vue'
+import { useCategories } from '../composables/useCategories.js'
 
 const props = defineProps({
   label: { type: String, required: true },
   variant: { type: String, default: 'default' },
   color: { type: String, default: '' },
 })
+
+const { colorWithAlpha } = useCategories()
 
 const variantClasses = {
   strategy: 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300',
@@ -22,6 +25,11 @@ const variantClasses = {
 
 const classes = computed(() => {
   const base = 'inline-flex items-center px-2 py-0.5 rounded text-xs font-medium'
+  if (props.color) return `${base} border text-gray-700 dark:text-gray-300`
   return `${base} ${variantClasses[props.variant] || variantClasses.default}`
 })
+
+const style = computed(() => props.color
+  ? { backgroundColor: colorWithAlpha(props.color, 0.12), borderColor: colorWithAlpha(props.color, 0.45) }
+  : undefined)
 </script>

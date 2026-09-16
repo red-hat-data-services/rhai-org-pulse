@@ -14,8 +14,8 @@ const meta = computed(() => props.pillar ? normalizePillar(props.pillar) : getCa
 
 <template>
   <span
-    :class="['inline-flex items-center gap-1 text-xs font-medium px-2 py-0.5 rounded-full', meta.bgClass, meta.textClass]"
-    :style="{ backgroundColor: colorWithAlpha(meta.color, 0.12), color: meta.color }"
+    class="inline-flex items-center gap-1 text-xs font-medium px-2 py-0.5 rounded-full text-gray-700 dark:text-gray-300"
+    :style="{ backgroundColor: colorWithAlpha(meta.color, 0.12) }"
   >
     <span class="w-1.5 h-1.5 rounded-full" :style="{ backgroundColor: meta.color }"></span>
     {{ meta.shortName }}

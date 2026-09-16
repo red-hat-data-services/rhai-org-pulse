@@ -42,10 +42,18 @@ const COLOR_NAMES = {
   gray: '#6b7280'
 }
 
+const KNOWN_PILLAR_COLORS = {
+  'model-inference': '#3b82f6',
+  'model-customization': '#a855f7',
+  'agentic-ai': '#22c55e',
+  'management-observability-security': '#f59e0b',
+  'data-science-engineering': '#06b6d4'
+}
+
 function hashKey(key) {
   let hash = 0
-  for (let i = 0; i < key.length; i++) hash = ((hash << 5) - hash) + key.charCodeAt(i) | 0
-  return Math.abs(hash)
+  for (let i = 0; i < key.length; i++) hash = ((hash << 5) - hash + key.charCodeAt(i)) | 0
+  return hash >>> 0
 }
 
 function normalizeColor(color, key) {
@@ -57,7 +65,9 @@ function normalizeColor(color, key) {
     }
     if (COLOR_NAMES[trimmed.toLowerCase()]) return COLOR_NAMES[trimmed.toLowerCase()]
   }
-  return FALLBACK_COLORS[hashKey(key || '') % FALLBACK_COLORS.length]
+  const normalizedKey = String(key || '').trim().toLowerCase()
+  if (KNOWN_PILLAR_COLORS[normalizedKey]) return KNOWN_PILLAR_COLORS[normalizedKey]
+  return FALLBACK_COLORS[hashKey(normalizedKey) % FALLBACK_COLORS.length]
 }
 
 function humanizeKey(key) {
@@ -99,7 +109,7 @@ function getPillarRegistry(pillars = [], candidates = []) {
   const registry = supplied.length ? supplied : Object.entries(DEFAULT_CATEGORY_DEFINITIONS).map(([pillarKey, meta], index) => normalizePillar({ pillarKey, ...meta }, index))
   const seen = new Set(registry.map(p => p.pillarKey))
   for (const candidate of (Array.isArray(candidates) ? candidates : [])) {
-    const key = candidate?.category || candidate?.pillarKey
+    const key = candidate?.category || candidate?.pillarKey || candidate?.strategyPillarKey
     if (key && !seen.has(key)) {
       registry.push(normalizePillar({ pillarKey: key }, registry.length))
       seen.add(key)

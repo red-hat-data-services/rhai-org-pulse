@@ -187,10 +187,36 @@ module.exports = function registerRoutes(router, context) {
     }
   }
 
-  function getPillarsForData(candidates, showcaseData) {
+  /**
+   * Resolve the pillar metadata represented by a complete monthly board.
+   *
+   * Board filters only change the candidate list returned to the client; the
+   * pillar catalog must continue to describe the full unfiltered board. Do
+   * not include showcase entry references here because those entries are a
+   * separate catalog and may contain pillars with no board candidates.
+   */
+  function getBoardPillars(candidates, showcaseData) {
+    const referencedKeys = getReferencedPillarKeys([], candidates);
+    const referencedSet = new Set(referencedKeys);
+    const metadata = (showcaseData && Array.isArray(showcaseData.pillars))
+      ? showcaseData.pillars.filter(pillar => pillar && referencedSet.has(pillar.pillarKey))
+      : [];
+
+    return mergePillarMetadata(
+      metadata,
+      referencedKeys,
+    );
+  }
+
+  /**
+   * Resolve the complete showcase pillar catalog, including configured
+   * pillars that currently have no entries. Entry references are synthesized
+   * when a sheet refresh has entries ahead of its pillar metadata row.
+   */
+  function getShowcasePillars(entries, showcaseData) {
     return mergePillarMetadata(
       showcaseData && showcaseData.pillars,
-      getReferencedPillarKeys(showcaseData && showcaseData.entries, candidates),
+      getReferencedPillarKeys(entries, []),
     );
   }
 
@@ -381,7 +407,7 @@ module.exports = function registerRoutes(router, context) {
       month,
       total: candidates.length,
       filtered: filtered.length,
-      pillars: getPillarsForData(candidates, showcaseData),
+      pillars: getBoardPillars(candidates, showcaseData),
       candidates: filtered
     });
   });
@@ -416,7 +442,7 @@ module.exports = function registerRoutes(router, context) {
       const found = candidates.find(c => c.uniqueId === id);
       if (found) {
         const showcaseData = await loadPillarData();
-        const pillar = getPillarsForData([found], showcaseData)
+        const pillar = getBoardPillars([found], showcaseData)
           .find(p => p.pillarKey === found.category) || null;
         return res.json({ ...found, boardMonth: month, pillar });
       }
@@ -589,7 +615,7 @@ module.exports = function registerRoutes(router, context) {
 
       res.json({
         entries,
-        pillars: getPillarsForData([], { ...data, entries }),
+        pillars: getShowcasePillars(entries, data),
         fetchedAt: data.fetchedAt,
         totalEntries: entries.length,
       });
@@ -637,7 +663,7 @@ module.exports = function registerRoutes(router, context) {
         return res.status(404).json({ error: 'Entry not found' });
       }
 
-      const pillar = getPillarsForData([], data).find(function(p) {
+      const pillar = getShowcasePillars(data.entries, data).find(function(p) {
         return p.pillarKey === entry.strategyPillarKey;
       });
 
