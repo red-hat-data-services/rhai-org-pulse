@@ -1,10 +1,5 @@
 <template>
   <div>
-    <button class="inline-flex items-center gap-1.5 text-sm text-gray-500 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 mb-4"
-      @click="nav.navigateTo('runs')">
-      <ChevronLeftIcon :size="16" /> Test Results
-    </button>
-
     <div v-if="loading" class="text-gray-400 dark:text-gray-500 py-10 text-center">Loading test…</div>
     <div v-else-if="error" class="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl p-6 text-center text-red-700 dark:text-red-300">
       {{ error }}
@@ -15,7 +10,7 @@
       <div class="flex items-start justify-between gap-4 mb-4 flex-wrap">
         <div>
           <div class="flex items-center gap-3 mb-1">
-            <StatusBadge :value="run.verdict" />
+            <StatusBadge :value="displayedTestOutcome({ ...run, productBugs: bugs })" />
             <h2 class="text-2xl font-bold text-gray-900 dark:text-gray-100">{{ run.workflow_label || run.workflow || 'Unknown test' }}</h2>
           </div>
           <p class="text-sm text-gray-500 dark:text-gray-400 font-mono break-all">{{ run.execution_id }}</p>
@@ -107,13 +102,13 @@
 
 <script setup>
 import { computed, inject, onMounted, ref, watch } from 'vue'
-import { AlertTriangle as AlertTriangleIcon, ChevronLeft as ChevronLeftIcon } from 'lucide-vue-next'
+import { AlertTriangle as AlertTriangleIcon } from 'lucide-vue-next'
 import MetricCard from '../components/MetricCard.vue'
 import StatusBadge from '../components/StatusBadge.vue'
 import BugRow from '../components/BugRow.vue'
 import MarkdownContent from '../components/MarkdownContent.vue'
 import { useCostVisibility } from '../composables/useCostVisibility'
-import { useWorkflowValidation, formatUsd, formatDuration, formatDate, formatRatio } from '../composables/useWorkflowValidation'
+import { displayedTestOutcome, useWorkflowValidation, formatUsd, formatDuration, formatDate, formatRatio } from '../composables/useWorkflowValidation'
 
 const nav = inject('moduleNav')
 const { getRun } = useWorkflowValidation()

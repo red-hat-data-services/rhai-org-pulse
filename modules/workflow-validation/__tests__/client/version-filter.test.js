@@ -4,6 +4,8 @@ import FilterBar from '../../client/components/FilterBar.vue'
 import {
   compareVersionNumbers,
   defaultDateRange,
+  displayedOutcomeCounts,
+  displayedTestOutcome,
   filters,
   formatBuildId,
   formatSuiteName,
@@ -53,6 +55,17 @@ describe('workflow-validation default version filter', () => {
     expect(formatBuildId('sha256:abcdef0123456789')).toBe('abcdef01')
     expect(formatBuildId('unknown')).toBe('Unknown')
     expect(formatBuildId(null)).toBe('Unknown')
+  })
+
+  it('distinguishes product failures from environment-aborted tests', () => {
+    expect(displayedTestOutcome({ verdict: 'PASS' })).toBe('PASS')
+    expect(displayedTestOutcome({ verdict: 'FAIL', productBugs: [{ category: 'PRODUCT_BUG' }] })).toBe('FAIL')
+    expect(displayedTestOutcome({ verdict: 'ERROR', productBugs: [{ category: 'ENVIRONMENT' }] })).toBe('ABORT')
+    expect(displayedOutcomeCounts([
+      { verdict: 'PASS' },
+      { verdict: 'FAIL', productBugs: [{ category: 'PRODUCT_BUG' }] },
+      { verdict: 'FAIL', productBugs: [] }
+    ])).toEqual({ pass: 1, fail: 1, aborted: 1 })
   })
 
   it('selects the highest numbered version before filtered data is requested', async () => {

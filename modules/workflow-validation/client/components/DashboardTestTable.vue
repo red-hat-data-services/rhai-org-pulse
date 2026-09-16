@@ -19,7 +19,7 @@
           class="border-b border-gray-50 dark:border-gray-700/40 hover:bg-gray-50 dark:hover:bg-gray-700/30 cursor-pointer"
           @click="$emit('select', test)"
         >
-          <td class="px-5 py-3"><StatusBadge :value="test.verdict" /></td>
+          <td class="px-5 py-3"><StatusBadge :value="displayedTestOutcome(test)" /></td>
           <td class="px-4 py-3 font-medium text-gray-800 dark:text-gray-200">{{ test.workflow_label || test.workflow || 'Unknown test' }}</td>
           <td class="px-4 py-3 font-mono text-xs text-gray-600 dark:text-gray-300">{{ test.rhoai_version || '—' }}</td>
           <td class="px-4 py-3 whitespace-nowrap text-xs font-medium">
@@ -45,7 +45,7 @@
 import { computed, ref } from 'vue'
 import StatusBadge from './StatusBadge.vue'
 import ProductBugStatus from './ProductBugStatus.vue'
-import { compareTableValues, formatDate, formatUsd } from '../composables/useWorkflowValidation'
+import { compareTableValues, displayedTestOutcome, formatDate, formatUsd } from '../composables/useWorkflowValidation'
 
 const props = defineProps({
   tests: { type: Array, default: () => [] },
@@ -57,8 +57,10 @@ const props = defineProps({
 defineEmits(['select'])
 const sortBy = ref('timestamp')
 const sortDir = ref('desc')
-const sortedTests = computed(() => [...props.tests].sort((a, b) =>
-  compareTableValues(a[sortBy.value] ?? a.workflow_label, b[sortBy.value] ?? b.workflow_label, sortDir.value)))
+const sortedTests = computed(() => [...props.tests].sort((a, b) => {
+  const value = (test) => sortBy.value === 'verdict' ? displayedTestOutcome(test) : test[sortBy.value] ?? test.workflow_label
+  return compareTableValues(value(a), value(b), sortDir.value)
+}))
 function setSort(column) {
   sortDir.value = sortBy.value === column && sortDir.value === 'desc' ? 'asc' : 'desc'
   sortBy.value = column

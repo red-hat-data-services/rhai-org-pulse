@@ -129,7 +129,7 @@ describe('workflow-validation live schema routes', () => {
     expect(tasks).not.toContain('status')
   })
 
-  it('scopes executions to a concrete test suite invocation', () => {
+  it('scopes executions to a concrete test run invocation', () => {
     expect(runFilters({ testSuite: 'productization', invocationId: 'invocation-2' }).bool.filter)
       .toEqual(expect.arrayContaining([
         { term: { telemetry_origin: 'productization' } },
@@ -197,15 +197,16 @@ describe('workflow-validation live schema routes', () => {
     expect(response.body.run).not.toHaveProperty('tasks_total')
   })
 
-  it('compares aggregate execution pass rates for each test across RHOAI versions', async () => {
+  it('compares execution results for each test across two exact test runs', async () => {
     vi.stubGlobal('fetch', vi.fn((url, options) => {
       const body = JSON.parse(options.body)
       if (url.includes(`/${BUGS_INDEX}/`)) {
         return Promise.resolve(jsonResponse({ hits: { hits: [] } }))
       }
       const serialized = JSON.stringify(body.query)
-      const version = serialized.includes('3.5') ? '3.5' : '3.6'
-      const passed = version === '3.5' ? 1 : 3
+      const invocation = serialized.includes('run-old') ? 'run-old' : 'run-new'
+      const version = invocation === 'run-old' ? '3.5' : '3.6'
+      const passed = invocation === 'run-old' ? 1 : 3
       return Promise.resolve(jsonResponse({ aggregations: { tests: { buckets: [{
         key: { workflow: 'shared-test' },
         doc_count: 4,
@@ -220,10 +221,10 @@ describe('workflow-validation live schema routes', () => {
     const routes = register()
     const response = makeResponse()
 
-    await routes['/version-compare'].at(-1)({ query: { baseline: '3.5', target: '3.6' } }, response)
+    await routes['/run-compare'].at(-1)({ query: { baselineInvocation: 'run-old', targetInvocation: 'run-new', testSuite: 'productization' } }, response)
 
-    expect(response.body.baseline).toEqual({ version: '3.5', tests: 1 })
-    expect(response.body.target).toEqual({ version: '3.6', tests: 1 })
+    expect(response.body.baseline).toEqual({ invocationId: 'run-old', version: '3.5', tests: 1 })
+    expect(response.body.target).toEqual({ invocationId: 'run-new', version: '3.6', tests: 1 })
     expect(response.body.rows[0]).toMatchObject({
       workflow: 'shared-test', change: 'higher', passRateChange: 0.5,
       baseline: { executions: 4, passed: 1, failed: 3, passRate: 0.25, latest: { execution_id: '3.5-latest' } },
@@ -238,7 +239,7 @@ describe('workflow-validation live schema routes', () => {
       .toContainEqual({ terms: { verdict: ['FAIL', 'ERROR'] } })
   })
 
-  it('groups test suite executions by explicit origin and invocation', async () => {
+  it('groups test runs by explicit origin and invocation', async () => {
     vi.stubGlobal('fetch', vi.fn((url, options) => {
       const body = JSON.parse(options.body)
       if (url.includes(`/${BUGS_INDEX}/`)) return Promise.resolve(jsonResponse({ hits: { hits: [] } }))
@@ -249,6 +250,7 @@ describe('workflow-validation live schema routes', () => {
       return Promise.resolve(jsonResponse({ aggregations: { suite_runs: { buckets: [{
         key: { suite: 'productization', invocation: 'invocation-1' }, doc_count: 3,
         pass_rate: { value: 2 / 3 }, passed: { doc_count: 2 }, failed: { doc_count: 1 }, errors: { doc_count: 0 },
+        duration: { value: 180 }, duration_count: { value: 3 },
         latest: { hits: { hits: [{ _source: {
           timestamp: '2026-09-15T10:00:00Z', rhoai_version: '3.6',
           rhods_operator_digest: 'abcdef0123456789', run_id: 'run-1'
@@ -260,11 +262,11 @@ describe('workflow-validation live schema routes', () => {
     await routes['/test-suites'].at(-1)({ query: { suite: 'productization', latest: 'true' } }, response)
     expect(response.body.rows).toEqual([expect.objectContaining({
       suite: 'productization', invocationId: 'invocation-1', tests: 3,
-      passed: 2, failed: 1, passRate: 2 / 3, rhodsOperatorDigest: 'abcdef0123456789'
+      passed: 2, failed: 1, passRate: 2 / 3, duration: 180, rhodsOperatorDigest: 'abcdef0123456789'
     })])
   })
 
-  it('returns exact tests for one test suite execution', async () => {
+  it('returns exact tests for one test run', async () => {
     vi.stubGlobal('fetch', vi.fn((url, options) => {
       const body = JSON.parse(options.body)
       if (url.includes(`/${BUGS_INDEX}/`)) return Promise.resolve(jsonResponse({ hits: { hits: [] } }))
@@ -282,6 +284,43 @@ describe('workflow-validation live schema routes', () => {
     await routes['/test-suites/:suite/:invocationId'].at(-1)({ params: { suite: 'productization', invocationId: 'invocation-1' } }, response)
     expect(response.body.summary).toMatchObject({ tests: 1, passed: 1, failed: 0, errors: 0, passRate: 1 })
     expect(response.body.tests[0]).toMatchObject({ execution_id: 'execution-1', productBugs: [] })
+  })
+
+  it('returns every test and separates new from known product bugs for a test run', async () => {
+    vi.stubGlobal('fetch', vi.fn((url, options) => {
+      const body = JSON.parse(options.body)
+      if (url.includes(`/${RUNS_INDEX}/`) && body._source?.includes('execution_id')) {
+        const dashboardShape = body._source.includes('tasks_passed')
+        return Promise.resolve(jsonResponse({ hits: { hits: dashboardShape ? [{
+          _id: 'execution-a', _source: { execution_id: 'execution-a', run_id: 'run-1', workflow: 'test-a', verdict: 'PASS' }, sort: ['2026-09-16', 'execution-a']
+        }, {
+          _id: 'execution-b', _source: { execution_id: 'execution-b', run_id: 'run-1', workflow: 'test-b', verdict: 'FAIL' }, sort: ['2026-09-16', 'execution-b']
+        }] : [{
+          _source: { execution_id: 'execution-a', run_id: 'run-1', workflow: 'test-a' }, sort: ['2026-09-16', 'execution-a']
+        }, {
+          _source: { execution_id: 'execution-b', run_id: 'run-1', workflow: 'test-b' }, sort: ['2026-09-16', 'execution-b']
+        }] } }))
+      }
+      if (url.includes(`/${RUNS_INDEX}/`)) return Promise.resolve(jsonResponse({ aggregations: {} }))
+      if (body.size === 0) return Promise.resolve(jsonResponse({ aggregations: {} }))
+      return Promise.resolve(jsonResponse({ hits: { hits: [{
+        _id: 'new-bug', _source: { root_cause_id: 'new-bug', run_id: 'run-1', workflow: 'test-a', category: 'PRODUCT_BUG', opened: true, bug_key: 'RHOAIENG-1' }, sort: ['2026-09-16', 'new-bug']
+      }, {
+        _id: 'known-bug', _source: { root_cause_id: 'known-bug', run_id: 'run-1', workflow: 'test-b', category: 'PRODUCT_BUG', opened: false, action: 'EXISTING', bug_key: 'RHOAIENG-2' }, sort: ['2026-09-16', 'known-bug']
+      }] } }))
+    }))
+    const routes = register()
+    const response = makeResponse()
+    await routes['/charts'].at(-1)({ query: {
+      version: '3.6', testSuite: 'productization', invocationId: 'invocation-1'
+    } }, response)
+
+    expect(response.body.tests).toHaveLength(2)
+    expect(response.body.tests[0].productBugs).toEqual([expect.objectContaining({ bug_key: 'RHOAIENG-1' })])
+    expect(response.body.newProductBugs).toEqual([expect.objectContaining({ bug_key: 'RHOAIENG-1' })])
+    expect(response.body.knownProductBugs).toEqual([expect.objectContaining({ bug_key: 'RHOAIENG-2' })])
+    expect(response.body).not.toHaveProperty('failedTests')
+    expect(response.body).not.toHaveProperty('recentTests')
   })
 
   it('deduplicates infrastructure cost by run_id and contains no legacy path-derived fields', async () => {
@@ -353,7 +392,11 @@ describe('workflow-validation live schema routes', () => {
           tasks_passed: { value: 3 }, tasks_passed_count: { value: 1 },
           tasks_failed: { value: 1 }, tasks_failed_count: { value: 1 },
           ai_cost: { value: 2 }, ai_cost_count: { value: 1 },
-          avg_duration: { value: null }, turns: { value: 5 }, turns_count: { value: 1 }
+          avg_duration: { value: null }, turns: { value: 5 }, turns_count: { value: 1 },
+          suite_duration: { value: 60 }, suite_duration_count: { value: 2 },
+          latest_metadata: { hits: { hits: [{ _source: {
+            rhoai_version: '3.6.0-ea.1', rhods_operator_digest: 'abcdef0123456789'
+          } }] } }
         } }))
       }
       return Promise.resolve(jsonResponse({ aggregations: {} }))
@@ -362,7 +405,8 @@ describe('workflow-validation live schema routes', () => {
     await register()['/overview'].at(-1)({ query: {} }, response)
     expect(response.body.runs).toMatchObject({
       total: 2, tasksTotal: null, tasksPassed: null, tasksFailed: null,
-      aiCost: null, infraCost: null, avgDuration: null, turns: null
+      aiCost: null, infraCost: null, avgDuration: null, turns: null,
+      suiteDuration: 60, version: '3.6.0-ea.1', rhodsOperatorDigest: 'abcdef0123456789'
     })
   })
 })

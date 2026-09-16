@@ -63,9 +63,9 @@ Important rules:
   task data through `workflow-task-executions`.
 - `workflow` is the stable grouping/filter/correlation key. `workflow_label` is
   optional display text and must not be used as identity.
-- `telemetry_origin` is the explicit test-suite identity. A suite execution is
+- `telemetry_origin` is the explicit test-run grouping identity. A test run is
   grouped by `telemetry_origin` and `invocation_id`; the UI presents only the
-  familiar “Test Suite” terminology.
+  familiar “Test Run” terminology.
 - `rhods_operator_digest` is displayed as the RHODS Build ID. The UI abbreviates
   a known SHA digest to eight characters while preserving the complete value as
   hover text, and reports missing or `unknown` values honestly.
@@ -78,17 +78,25 @@ Important rules:
 - Root causes may not have a Jira key.
 - Missing fields mean unknown unless their documented business meaning says
   otherwise.
-- Dashboard filters default to the highest numerically ordered version and the
-  last 90 calendar days. Date presets can select 7, 30, or 90 days, all time,
-  or custom inclusive start/end dates.
-- On the dashboard, selecting a Test Suite replaces the date controls with a
-  concrete suite-execution selector, defaulting to its newest invocation. The
-  execution label identifies its RHOAI version and RHODS build when available.
-  Dashboard metrics, tests, and product bugs are
-  then scoped to that one `telemetry_origin` and `invocation_id`; multi-run
-  trend charts are hidden while this scope is active.
-- Test Suites defaults to the most recent invocation for the selected suite and
-  can instead show 7, 30, or 90 days, all time, or a custom date range.
+- The dashboard always presents one bounded test run. It defaults to
+  the highest numerically ordered RHOAI version, then the newest test-run
+  execution recorded for that version. Release, suite, and execution controls
+  can select another cohort; the dashboard never defaults to an aggregation
+  of historical executions.
+- Dashboard metrics and the complete test-results table are scoped to that one
+  `rhoai_version`, `telemetry_origin`, and `invocation_id`. Product bugs from
+  the same execution are separated into newly opened Jira issues and known
+  bugs encountered without opening another issue.
+- Stakeholder-facing test outcomes distinguish `PASS` from product failures
+  (`FAIL`, when a product-bug finding is linked) and environmental failures
+  (`ABORT`, when an unsuccessful test has no product-bug finding). Raw task
+  verdicts remain unchanged.
+- Test Trends defaults to the most recently active run group across all RHOAI
+  versions. It charts pass rate, test volume, newly opened product bugs, and
+  known product bugs per invocation, with version rollups and exact-run links
+  back to the dashboard. Date and release filters remain shareable in the URL.
+- Compare requires a test-run group and two dated invocations. Each side is one
+  exact test run, and product-bug linkage remains constrained to its run IDs.
 
 The source mappings maintained by the workflow-validation Director are the
 authoritative schema. When mappings change, update backend queries, this

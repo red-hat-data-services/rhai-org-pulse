@@ -7,7 +7,7 @@
       </p>
     </div>
 
-    <FilterBar :show-verdict="false" show-test search-placeholder="Search Jira keys, tests, components, or bug details…" @change="reload" />
+    <FilterBar :show-verdict="false" show-labels show-test show-test-suite search-placeholder="Search Jira keys, tests, components, or bug details…" @change="reload" />
 
     <div v-if="unreachable" class="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-xl p-10 text-center">
       <ServerCrashIcon :size="28" class="mx-auto mb-3 text-amber-500" />
@@ -62,7 +62,7 @@ import { filterQueryValues, filters, hydrateFilters, syncQueryParams, useWorkflo
 
 const { getBugs } = useWorkflowValidation()
 const nav = inject('moduleNav')
-const FILTER_KEYS = ['version', 'workflow', 'q', 'datePreset', 'dateFrom', 'dateTo']
+const FILTER_KEYS = ['version', 'testSuite', 'invocationId', 'workflow', 'q', 'datePreset', 'dateFrom', 'dateTo']
 hydrateFilters(nav?.params?.value, FILTER_KEYS)
 
 const bugs = ref([])

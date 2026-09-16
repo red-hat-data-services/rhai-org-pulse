@@ -2,15 +2,22 @@
   <div class="space-y-1 text-xs">
     <template v-if="productBugs.length">
       <template v-for="issue in productBugs" :key="issue.id">
-        <a
-          v-if="issue.jira_url"
-          :href="issue.jira_url"
-          target="_blank"
-          rel="noopener"
+        <span
+          v-if="issue.bug_key"
           :title="productBugTooltip(issue)"
-          class="block font-semibold text-blue-600 dark:text-blue-400 underline decoration-dotted underline-offset-2"
-          @click.stop
-        >{{ productBugMessage(issue) }}</a>
+          class="block font-semibold text-gray-600 dark:text-gray-300"
+        >
+          <a
+            v-if="issue.jira_url"
+            :href="issue.jira_url"
+            target="_blank"
+            rel="noopener"
+            class="text-blue-600 dark:text-blue-400 underline decoration-dotted underline-offset-2"
+            @click.stop
+          >{{ issue.bug_key }}</a>
+          <span v-else class="border-b border-dotted border-gray-400 cursor-help">{{ issue.bug_key }}</span>
+          <span> — {{ productBugDescription(issue) }}</span>
+        </span>
         <span
           v-else
           tabindex="0"
@@ -47,11 +54,14 @@ const emptyTooltip = computed(() => unsuccessful.value
   ? 'The test failed or was terminated due to a problem in the test execution environment. No product bug was observed.'
   : props.neutralTooltip)
 
-function productBugMessage(issue) {
-  if (!issue.bug_key) return 'Existing product bug detected. Jira ID missing.'
-  if (issue.action === 'EXISTING' || issue.action === 'MATCH') return `${issue.bug_key} — Pre-existing product bug detected.`
-  if (issue.action === 'FILED' || issue.opened) return `${issue.bug_key} — New product bug opened.`
-  return `${issue.bug_key} — Product bug detected.`
+function productBugMessage() {
+  return 'Existing product bug detected. Jira ID missing.'
+}
+
+function productBugDescription(issue) {
+  if (issue.action === 'EXISTING' || issue.action === 'MATCH') return 'Pre-existing product bug detected.'
+  if (issue.action === 'FILED' || issue.opened) return 'New product bug opened.'
+  return 'Product bug detected.'
 }
 
 function productBugTooltip(issue) {
