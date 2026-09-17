@@ -6,650 +6,558 @@
 <title>Component Detail</title>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <style>
-  *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-  body{background:#0a1929;color:#e0e0e0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;min-height:100vh}
-  a{color:#5ea7ff;text-decoration:none}
-  a:hover{text-decoration:underline}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{background:#0a1929;color:#e0e0e0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;min-height:100vh}
+a{color:#5ea7ff;text-decoration:none}a:hover{text-decoration:underline}
+.container{max-width:1500px;margin:0 auto;padding:24px 32px}
+.back-link{font-size:13px;margin-bottom:8px;display:inline-block}
 
-  .container{max-width:1400px;margin:0 auto;padding:24px 32px}
+.header-row{display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:16px;margin-bottom:20px}
+.header-left h1{font-size:24px;font-weight:700;color:#fff;margin-bottom:4px}
+.header-left p{font-size:13px;color:#8899aa;max-width:700px;line-height:1.5}
 
-  /* Back link */
-  .back-link{font-size:13px;margin-bottom:8px;display:inline-block}
+.filter-bar{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.filter-group{display:flex;flex-direction:column;gap:2px}
+.filter-label{font-size:9px;text-transform:uppercase;color:#6b8299;letter-spacing:.5px;font-weight:600}
+.filter-value{font-size:12px;color:#fff;font-weight:500}
+.filter-bar select,.filter-bar input[type="date"]{
+  background:#132f4c;color:#fff;border:1px solid #1e4976;border-radius:4px;
+  padding:5px 8px;font-size:12px;cursor:pointer;outline:none;min-width:90px;
+  appearance:auto;-webkit-appearance:auto;
+}
+.filter-bar select:hover,.filter-bar input[type="date"]:hover{border-color:#3a6ea5}
+.filter-bar input[type="date"]::-webkit-calendar-picker-indicator{filter:invert(1);cursor:pointer}
 
-  /* Header row */
-  .header-row{display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:16px;margin-bottom:20px}
-  .header-left h1{font-size:24px;font-weight:700;color:#fff;margin-bottom:4px}
-  .header-left p{font-size:13px;color:#8899aa;max-width:700px;line-height:1.5}
+/* Metric cards */
+.metrics{display:grid;grid-template-columns:repeat(5,1fr);gap:14px;margin-bottom:16px}
+.mc{border-radius:8px;padding:16px 20px;display:flex;flex-direction:column;gap:4px}
+.mc .mc-label{font-size:10px;text-transform:uppercase;letter-spacing:1px;opacity:.8;font-weight:600}
+.mc .mc-value{font-size:32px;font-weight:700;color:#fff}
+.mc-results{background:#132f4c}
+.mc-passed{background:#00b894}
+.mc-failed{background:#ff4757}
+.mc-skipped{background:#132f4c}
+.mc-pct{background:rgba(162,155,254,.15);border:1px solid rgba(162,155,254,.3)}
 
-  /* Filter bar (compact, right side) */
-  .filter-bar{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
-  .filter-group{display:flex;flex-direction:column;gap:2px}
-  .filter-label{font-size:9px;text-transform:uppercase;color:#6b8299;letter-spacing:.5px;font-weight:600}
-  .filter-bar select,
-  .filter-bar input[type="date"]{
-    background:#132f4c;color:#fff;border:1px solid #1e4976;border-radius:4px;
-    padding:5px 8px;font-size:12px;cursor:pointer;outline:none;
-    appearance:auto;-webkit-appearance:auto;min-width:90px;
-  }
-  .filter-bar select:hover,
-  .filter-bar input[type="date"]:hover{border-color:#3a6ea5}
-  .filter-bar input[type="date"]::-webkit-calendar-picker-indicator{filter:invert(1);cursor:pointer}
-  .badge{background:#132f4c;border:1px solid #1e4976;border-radius:4px;padding:5px 12px;font-size:12px;color:#2ed573;font-weight:600}
-  .filter-value{font-size:12px;color:#fff;font-weight:500}
+/* Alert bars */
+.alerts{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:24px}
+.alert-bar{border-radius:6px;padding:12px 18px;border-left:4px solid}
+.alert-failed{background:rgba(255,71,87,.1);border-color:#ff4757}
+.alert-skipped{background:rgba(255,165,2,.1);border-color:#ffa502}
+.alert-bar .alert-title{font-size:10px;text-transform:uppercase;letter-spacing:1px;font-weight:700;margin-bottom:4px}
+.alert-failed .alert-title{color:#ff4757}
+.alert-skipped .alert-title{color:#ffa502}
+.alert-bar .alert-count{font-size:28px;font-weight:700;color:#fff}
+.alert-bar .alert-count a{color:inherit;text-decoration:underline;text-decoration-style:dotted}
+.alert-bar .alert-desc{font-size:12px;color:#8899aa;margin-top:2px}
 
-  /* Metric cards */
-  .metrics{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:16px}
-  .metric-card{border-radius:8px;padding:18px 22px;display:flex;flex-direction:column;gap:4px}
-  .metric-card .metric-label{font-size:11px;text-transform:uppercase;letter-spacing:1px;opacity:.8;font-weight:600}
-  .metric-card .metric-value{font-size:36px;font-weight:700;color:#fff}
-  .mc-results{background:#132f4c}
-  .mc-passed{background:#00b894}
-  .mc-failed{background:#ff4757}
-  .mc-skipped{background:#132f4c}
+/* Grid layouts */
+.two-col{display:grid;grid-template-columns:1fr 1fr;gap:24px;margin-bottom:24px}
+.three-col{display:grid;grid-template-columns:1fr 1fr 1fr;gap:24px;margin-bottom:24px}
+@media(max-width:1000px){.two-col,.three-col{grid-template-columns:1fr}}
 
-  /* Alert bars */
-  .alerts{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:24px}
-  .alert-bar{border-radius:6px;padding:12px 18px;border-left:4px solid}
-  .alert-failed{background:rgba(255,71,87,.1);border-color:#ff4757}
-  .alert-skipped{background:rgba(255,165,2,.1);border-color:#ffa502}
-  .alert-bar .alert-title{font-size:10px;text-transform:uppercase;letter-spacing:1px;font-weight:700;margin-bottom:4px}
-  .alert-failed .alert-title{color:#ff4757}
-  .alert-skipped .alert-title{color:#ffa502}
-  .alert-bar .alert-count{font-size:28px;font-weight:700;color:#fff}
-  .alert-bar .alert-desc{font-size:12px;color:#8899aa;margin-top:2px}
+.panel{background:#0d2137;border:1px solid #1e4976;border-radius:8px;padding:20px}
+.panel h3{font-size:15px;font-weight:600;color:#fff;margin-bottom:4px}
+.panel .panel-sub{font-size:11px;color:#6b8299;margin-bottom:14px}
+.panel-full{grid-column:1/-1}
 
-  /* Two-column layout */
-  .two-col{display:grid;grid-template-columns:1fr 1fr;gap:24px;margin-bottom:32px}
-  @media(max-width:1000px){.two-col{grid-template-columns:1fr}}
+/* Gate heatmap */
+.gate-heatmap-wrap{overflow-x:auto;max-height:400px;overflow-y:auto}
+table.gate-hm{width:100%;border-collapse:collapse}
+table.gate-hm th,table.gate-hm td{padding:6px 5px;text-align:center;border-bottom:1px solid #1e4976;white-space:nowrap;font-size:11px}
+table.gate-hm th{color:#6b8299;font-weight:600;position:sticky;top:0;background:#0d2137;z-index:5}
+table.gate-hm th:first-child,table.gate-hm td:first-child{text-align:left;min-width:80px;font-weight:500}
 
-  .panel{background:#0d2137;border:1px solid #1e4976;border-radius:8px;padding:20px}
-  .panel h3{font-size:15px;font-weight:600;color:#fff;margin-bottom:4px}
-  .panel .panel-sub{font-size:11px;color:#6b8299;margin-bottom:14px}
+.gate-cell{display:inline-block;border-radius:4px;padding:3px 6px;min-width:44px;text-align:center;font-size:10px;font-weight:700}
+.gc-green{background:rgba(46,213,115,.15);color:#2ed573}
+.gc-amber{background:rgba(255,165,2,.12);color:#ffa502}
+.gc-orange{background:rgba(225,112,85,.12);color:#e17055}
+.gc-red{background:rgba(255,71,87,.12);color:#ff4757}
+.gc-na{color:#4a5568}
+.gate-marks{display:flex;gap:2px;justify-content:center;flex-wrap:wrap}
+.gate-mark{cursor:pointer;font-size:14px}
+.gate-mark-p{color:#2ed573}.gate-mark-f{color:#ff4757}
 
-  /* Quality gates table */
-  table.qg{width:100%;border-collapse:collapse}
-  table.qg th,table.qg td{padding:7px 6px;text-align:center;border-bottom:1px solid #1e4976;font-size:12px;white-space:nowrap}
-  table.qg th{color:#6b8299;font-weight:600;position:sticky;top:0;background:#0d2137}
-  table.qg th:first-child,table.qg td:first-child{text-align:left;min-width:70px}
-  .qg-passed{color:#2ed573;font-size:16px;margin:0 1px;cursor:pointer}
-  .qg-failed{color:#ff4757;font-size:16px;margin:0 1px;cursor:pointer}
-  .qg-na{color:#4a5568;font-size:12px}
+/* Charts */
+.chart-container{position:relative;width:100%;height:260px}
+.chart-container canvas{width:100%!important;height:100%!important}
+.chart-lg{height:300px}
 
-  /* Chart containers */
-  .chart-container{position:relative;width:100%;height:260px}
-  .chart-container canvas{width:100%!important;height:100%!important}
+/* TFA legend */
+.tfa-legend{margin-top:12px}
+.tfa-legend-item{display:flex;align-items:center;gap:8px;margin-bottom:4px;font-size:11px;color:#8899aa}
+.tfa-legend-item .dot{width:10px;height:10px;border-radius:50%;flex-shrink:0}
 
-  /* Bottom chart */
-  .bottom-panel{background:#0d2137;border:1px solid #1e4976;border-radius:8px;padding:20px}
-  .bottom-panel h3{font-size:15px;font-weight:600;color:#fff;margin-bottom:4px}
-  .bottom-panel .panel-sub{font-size:11px;color:#6b8299;margin-bottom:14px}
-  .bottom-chart-container{position:relative;width:100%;height:300px}
-  .bottom-chart-container canvas{width:100%!important;height:100%!important}
+/* Version toggles */
+.version-toggles{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:12px}
+.version-toggles label{display:flex;align-items:center;gap:5px;cursor:pointer;font-size:12px;color:#ccc;
+  background:#132f4c;border:1px solid #1e4976;border-radius:4px;padding:4px 10px}
+.version-toggles input[type="checkbox"]{accent-color:#5ea7ff}
 
-  /* Loading / error */
-  .loading{text-align:center;padding:60px;color:#6b8299;font-size:16px}
-  .error{text-align:center;padding:60px;color:#ff4757;font-size:15px}
+/* Help box */
+.help-box{background:rgba(94,167,255,.06);border:1px solid rgba(94,167,255,.15);border-radius:8px;padding:14px 18px;margin-top:12px}
+.help-box h4{font-size:13px;color:#5ea7ff;margin-bottom:6px}
+.help-box p,.help-box li{font-size:12px;color:#8899aa;line-height:1.6}
+.help-box ul{padding-left:18px;margin-top:4px}
+
+.loading{text-align:center;padding:60px;color:#6b8299;font-size:16px}
+.error{text-align:center;padding:60px;color:#ff4757;font-size:15px}
 </style>
 </head>
 <body>
-<div class="container" id="main">
-  <div class="loading">Loading…</div>
-</div>
+<div class="container" id="main"><div class="loading">Loading…</div></div>
 
 <script>
+const $=id=>document.getElementById(id);
+let jiraConfig=null;
 
-const DATA_BASE = '/test-dashboard';
-let jiraConfig = null;
+function getParam(n,fb){return new URLSearchParams(location.search).get(n)||fb}
+function formatDate(d){return d.toISOString().slice(0,10)}
+function friendlyDate(iso){const d=new Date(iso+'T00:00:00');return['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][d.getMonth()]+' '+d.getDate()}
+function escHtml(s){const d=document.createElement('div');d.textContent=s;return d.innerHTML}
+function passPct(p,t){return t>0?Math.round(p/t*100):0}
+function pctColor(pct){if(pct>=95)return'green';if(pct>=80)return'amber';if(pct>=60)return'orange';return'red'}
 
-// --- Helpers ---
-function qs(id){ return document.getElementById(id) }
-function getParam(name, fallback){
-  return new URLSearchParams(window.location.search).get(name) || fallback;
+function currentFilters(){
+  const d30=new Date();d30.setDate(d30.getDate()-30);
+  return{environment:getParam('environment','RHOAI'),version:getParam('version','All'),release:getParam('release','All'),
+    from_date:getParam('from_date',formatDate(d30)),to_date:getParam('to_date',formatDate(new Date())),
+    provider:getParam('provider','All'),cluster_type:getParam('cluster_type','All'),gate:getParam('gate','All')};
 }
-function formatDate(d){ return d.toISOString().slice(0,10) }
-function friendlyDate(iso){
-  const d = new Date(iso + 'T00:00:00');
-  const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-  return months[d.getMonth()] + ' ' + d.getDate();
+function backUrl(){return'index.html?'+new URLSearchParams(currentFilters())}
+
+function reloadWithFilters(){
+  const comp=getParam('component',''),f=currentFilters();
+  ['f-ver','f-rel','f-from','f-to'].forEach(id=>{const el=document.getElementById(id);if(el){
+    const key=({['f-ver']:'version',['f-rel']:'release',['f-from']:'from_date',['f-to']:'to_date'})[id];
+    f[key]=el.value;
+  }});
+  f.component=comp;
+  location.search='?'+new URLSearchParams(f);
 }
 
 // --- Load Jira config ---
 async function loadJiraConfig(){
-  try {
-    const resp = await fetch(`${DATA_BASE}/data/jira_config.json?_=${Date.now()}`);
-    if(resp.ok) jiraConfig = await resp.json();
-  } catch(_){}
+  try{const r=await fetch(`/test-dashboard/data/jira_config.json?_=${Date.now()}`);if(r.ok)jiraConfig=await r.json()}catch(_){}
 }
 
-// --- Build Jira JQL and URL ---
-function buildJiraUrl(componentName, label, version, release){
-  if(!jiraConfig) return null;
+// --- Jira helpers ---
+function buildJiraUrl(comp,label,ver,rel){
+  if(!jiraConfig)return null;
+  const rels=jiraConfig.releases||{};
+  let matching=[];
+  const keys=Object.keys(rels);
+  if(ver!=='All'&&rel!=='All'){const k=`${ver}|${rel}`;if(rels[k])matching=[rels[k]]}
+  else if(ver!=='All') keys.filter(k=>k.startsWith(ver+'|')).forEach(k=>matching.push(rels[k]));
+  else if(rel!=='All') keys.filter(k=>k.endsWith('|'+rel)).forEach(k=>matching.push(rels[k]));
+  else ['3.5|GA','3.5|EA1','3.5|EA2','3.6|EA1','3.6|EA2'].forEach(k=>{if(rels[k])matching.push(rels[k])});
+  if(!matching.length)return null;
+  const fvs=new Set();matching.forEach(r=>{fvs.add(`'${r.rhoai_jira_version}'`);fvs.add(`'${r.fix_version}'`)});
+  const fvList=Array.from(fvs).join(', ');
+  let tc=null;const cm=jiraConfig.component_team_map||{};
+  if(cm[comp])tc=cm[comp];else{const lc=comp.toLowerCase();for(const[k,v]of Object.entries(cm)){if(k.toLowerCase().includes(lc)||lc.includes(k.toLowerCase())){tc=v;break}}}
+  const proj=matching[0].project||'RHOAIENG';
+  let jql=`project = ${proj}`;if(tc)jql+=` AND Team = "${tc}"`;
+  jql+=` AND (fixVersion IN (${fvList}) OR affectedVersion IN (${fvList}) OR 'Target Version' IN (${fvList}))`;
+  jql+=` AND labels = "${label}"`;
+  return`https://issues.redhat.com/issues/?jql=${encodeURIComponent(jql)}`;
+}
 
-  // Find matching release config(s)
-  const releaseKeys = Object.keys(jiraConfig.releases || {});
-  let matchingReleases = [];
-
-  if(version !== 'All' && release !== 'All'){
-    const key = `${version}|${release}`;
-    if(jiraConfig.releases[key]) matchingReleases = [jiraConfig.releases[key]];
-  } else if(version !== 'All'){
-    releaseKeys.filter(k => k.startsWith(version + '|')).forEach(k => matchingReleases.push(jiraConfig.releases[k]));
-  } else if(release !== 'All'){
-    releaseKeys.filter(k => k.endsWith('|' + release)).forEach(k => matchingReleases.push(jiraConfig.releases[k]));
-  } else {
-    // Default to latest releases (3.5, 3.6)
-    ['3.5|GA','3.5|EA1','3.5|EA2','3.6|EA1','3.6|EA2'].forEach(k => {
-      if(jiraConfig.releases[k]) matchingReleases.push(jiraConfig.releases[k]);
-    });
-  }
-
-  if(matchingReleases.length === 0) return null;
-
-  // Collect fix versions and rhoai versions
-  const fixVersions = new Set();
-  matchingReleases.forEach(r => {
-    fixVersions.add(`'${r.rhoai_jira_version}'`);
-    fixVersions.add(`'${r.fix_version}'`);
-  });
-  const fvList = Array.from(fixVersions).join(', ');
-
-  // Find team_code for this component
-  let teamCode = null;
-  const compMap = jiraConfig.component_team_map || {};
-  // Try exact match first, then fuzzy
-  if(compMap[componentName]) teamCode = compMap[componentName];
-  else {
-    const lc = componentName.toLowerCase();
-    for(const [k, v] of Object.entries(compMap)){
-      if(k.toLowerCase().includes(lc) || lc.includes(k.toLowerCase())){
-        teamCode = v; break;
+function getJiraCount(comp,label,ver,rel){
+  if(!jiraConfig||!jiraConfig.counts)return null;
+  const ck=Object.keys(jiraConfig.counts);
+  let mk=[];
+  if(ver!=='All'&&rel!=='All')mk=[`${ver}|${rel}`].filter(k=>jiraConfig.counts[k]);
+  else if(ver!=='All')mk=ck.filter(k=>k.startsWith(ver+'|'));
+  else if(rel!=='All')mk=ck.filter(k=>k.endsWith('|'+rel));
+  else mk=ck;
+  let total=0,found=false;
+  mk.forEach(rk=>{
+    const tc=jiraConfig.counts[rk];
+    Object.entries(tc).forEach(([c,counts])=>{
+      if(c===comp||c.toLowerCase().includes(comp.toLowerCase())||comp.toLowerCase().includes(c.toLowerCase())){
+        total+=(label==='test-failed'?counts.failed:counts.skipped)||0;found=true;
       }
-    }
-  }
-
-  const project = matchingReleases[0].project || 'RHOAIENG';
-  let jql = `project = ${project}`;
-  if(teamCode) jql += ` AND Team = "${teamCode}"`;
-  jql += ` AND (fixVersion IN (${fvList}) OR affectedVersion IN (${fvList}) OR 'Target Version' IN (${fvList}))`;
-  jql += ` AND labels = "${label}"`;
-
-  return `https://issues.redhat.com/issues/?jql=${encodeURIComponent(jql)}`;
-}
-
-function buildJiraJql(componentName, label, version, release){
-  if(!jiraConfig) return null;
-  const releaseKeys = Object.keys(jiraConfig.releases || {});
-  let matchingReleases = [];
-  if(version !== 'All' && release !== 'All'){
-    const key = `${version}|${release}`;
-    if(jiraConfig.releases[key]) matchingReleases = [jiraConfig.releases[key]];
-  } else if(version !== 'All'){
-    releaseKeys.filter(k => k.startsWith(version + '|')).forEach(k => matchingReleases.push(jiraConfig.releases[k]));
-  } else if(release !== 'All'){
-    releaseKeys.filter(k => k.endsWith('|' + release)).forEach(k => matchingReleases.push(jiraConfig.releases[k]));
-  } else {
-    ['3.5|GA','3.5|EA1','3.5|EA2','3.6|EA1','3.6|EA2'].forEach(k => {
-      if(jiraConfig.releases[k]) matchingReleases.push(jiraConfig.releases[k]);
     });
-  }
-  if(matchingReleases.length === 0) return null;
-  const fixVersions = new Set();
-  matchingReleases.forEach(r => { fixVersions.add(`'${r.rhoai_jira_version}'`); fixVersions.add(`'${r.fix_version}'`); });
-  const fvList = Array.from(fixVersions).join(', ');
-  let teamCode = null;
-  const compMap = jiraConfig.component_team_map || {};
-  if(compMap[componentName]) teamCode = compMap[componentName];
-  else {
-    const lc = componentName.toLowerCase();
-    for(const [k, v] of Object.entries(compMap)){
-      if(k.toLowerCase().includes(lc) || lc.includes(k.toLowerCase())){ teamCode = v; break; }
-    }
-  }
-  const project = matchingReleases[0].project || 'RHOAIENG';
-  let jql = `project = ${project}`;
-  if(teamCode) jql += ` AND Team = "${teamCode}"`;
-  jql += ` AND (fixVersion IN (${fvList}) OR affectedVersion IN (${fvList}) OR 'Target Version' IN (${fvList}))`;
-  jql += ` AND labels = "${label}"`;
-  return jql;
-}
-
-function currentFilters(){
-  return {
-    environment: getParam('environment','RHOAI'),
-    version:     getParam('version','All'),
-    release:     getParam('release','All'),
-    from_date:   getParam('from_date', formatDate((() => { const d = new Date(); d.setDate(d.getDate()-30); return d })())),
-    to_date:     getParam('to_date', formatDate(new Date())),
-    provider:    getParam('provider','All'),
-    cluster_type: getParam('cluster_type','All'),
-    gate:        getParam('gate','All'),
-  };
-}
-
-function backToHeatmapUrl(){
-  const f = currentFilters();
-  return 'index.html?' + new URLSearchParams(f).toString();
-}
-
-function reloadWithFilters(){
-  const component = getParam('component','');
-  const f = currentFilters();
-  // Read from the current DOM filter controls
-  const env  = document.getElementById('f-env');
-  const ver  = document.getElementById('f-ver');
-  const rel  = document.getElementById('f-rel');
-  const from = document.getElementById('f-from');
-  const to   = document.getElementById('f-to');
-  if(env)  f.environment = env.value || f.environment;
-  if(ver)  f.version = ver.value;
-  if(rel)  f.release = rel.value;
-  if(from) f.from_date = from.value;
-  if(to)   f.to_date = to.value;
-  f.component = component;
-  window.location.search = '?' + new URLSearchParams(f).toString();
-}
-
-// --- Client-side filter for static component data ---
-function filterStaticComponentData(data, filters){
-  const from = filters.from_date;
-  const to = filters.to_date;
-  const version = filters.version || 'All';
-  const release = filters.release || 'All';
-  const filtered = JSON.parse(JSON.stringify(data));
-
-  // Filter daily array by date range
-  if(filtered.daily){
-    filtered.daily = filtered.daily.filter(d => d.date >= from && d.date <= to);
-  }
-  // Recompute overall from filtered daily
-  let tp=0, tf=0, ts=0, tt=0;
-  (filtered.daily || []).forEach(d => {
-    tp += d.passed || 0;
-    tf += d.failed || 0;
-    ts += d.skipped || 0;
-    tt += d.total || 0;
   });
-  filtered.overall = { total: tt, passed: tp, failed: tf, skipped: ts };
-
-  // Filter quality_gates by date range
-  if(filtered.quality_gates){
-    Object.keys(filtered.quality_gates).forEach(gate => {
-      const days = filtered.quality_gates[gate];
-      Object.keys(days).forEach(date => {
-        if(date < from || date > to) delete days[date];
-      });
-    });
-  }
-  // Filter releases by version/release and daily by date range
-  if(filtered.releases){
-    if(release !== 'All'){
-      filtered.releases = filtered.releases.filter(r => r.release === release);
-    }
-    filtered.releases.forEach(r => {
-      if(r.daily) r.daily = r.daily.filter(d => d.date >= from && d.date <= to);
-    });
-  }
-  return filtered;
+  return found?total:null;
 }
 
-// --- Fetch data ---
-async function loadComponent(){
-  const main = qs('main');
-  const componentName = getParam('component','');
-  if(!componentName){
-    main.innerHTML = '<div class="error">No component specified. <a href="index.html">Back to heatmap</a></div>';
-    return;
-  }
+function getTfaData(comp,ver,rel){
+  if(!jiraConfig||!jiraConfig.tfa)return null;
+  const tk=Object.keys(jiraConfig.tfa);
+  let mk=[];
+  if(ver!=='All'&&rel!=='All')mk=[`${ver}|${rel}`].filter(k=>jiraConfig.tfa[k]);
+  else if(ver!=='All')mk=tk.filter(k=>k.startsWith(ver+'|'));
+  else if(rel!=='All')mk=tk.filter(k=>k.endsWith('|'+rel));
+  else mk=tk;
 
-  try {
-    const f = currentFilters();
-    f.component = componentName;
-    const resp = await fetch(`${DATA_BASE}/data/components.json?_=${Date.now()}`);
-    if(!resp.ok) throw new Error(`HTTP ${resp.status}`);
-    const all = await resp.json();
-    if(!all[componentName]) throw new Error(`Component "${componentName}" not found`);
-    const data = filterStaticComponentData(all[componentName], f);
-    render(data, componentName);
-  } catch(e){
-    main.innerHTML = `<div class="error">Failed to load component data: ${e.message}<br><a href="${backToHeatmapUrl()}">Back to heatmap</a></div>`;
+  const merged={tfa:{},classified:0,unclassified:0,status:{},total_failed:0};
+  mk.forEach(rk=>{
+    const teams=jiraConfig.tfa[rk]||{};
+    Object.entries(teams).forEach(([c,data])=>{
+      if(c===comp||c.toLowerCase().includes(comp.toLowerCase())||comp.toLowerCase().includes(c.toLowerCase())){
+        Object.entries(data.tfa||{}).forEach(([k,v])=>{merged.tfa[k]=(merged.tfa[k]||0)+v});
+        merged.classified+=data.classified||0;
+        merged.unclassified+=data.unclassified||0;
+        merged.total_failed+=data.total_failed||0;
+        Object.entries(data.status||{}).forEach(([s,v])=>{merged.status[s]=(merged.status[s]||0)+v});
+      }
+    });
+  });
+  return merged.total_failed>0?merged:null;
+}
+
+// --- Filter static component data ---
+function filterComponentData(data,f){
+  const{from_date:from,to_date:to,version:ver,release:rel}=f;
+  const d=JSON.parse(JSON.stringify(data));
+  if(d.daily)d.daily=d.daily.filter(x=>x.date>=from&&x.date<=to);
+  let tp=0,tf=0,ts=0,tt=0;
+  (d.daily||[]).forEach(x=>{tp+=x.passed||0;tf+=x.failed||0;ts+=x.skipped||0;tt+=x.total||0});
+  d.overall={total:tt,passed:tp,failed:tf,skipped:ts};
+  if(d.quality_gates)Object.keys(d.quality_gates).forEach(g=>{
+    const days=d.quality_gates[g];Object.keys(days).forEach(dt=>{if(dt<from||dt>to)delete days[dt]})});
+  if(d.releases){
+    if(rel!=='All')d.releases=d.releases.filter(r=>r.release===rel);
+    d.releases.forEach(r=>{if(r.daily)r.daily=r.daily.filter(x=>x.date>=from&&x.date<=to)});
   }
+  return d;
+}
+
+// --- Load component ---
+async function loadComponent(){
+  const main=$('main');
+  const comp=getParam('component','');
+  if(!comp){main.innerHTML='<div class="error">No component specified. <a href="index.html">Back</a></div>';return}
+
+  try{
+    let data;const f=currentFilters();f.component=comp;
+    try{const r=await fetch(`/test-dashboard/data/components.json?${new URLSearchParams(f)}`);if(r.ok){const d=await r.json();if(!d.error)data=d}}catch(_){}
+    if(!data){
+      const r2=await fetch(`/test-dashboard/data/components.json?_=${Date.now()}`);
+      if(r2.ok){const all=await r2.json();if(all[comp])data=filterComponentData(all[comp],f)}
+    }
+    if(!data)throw new Error('No data');
+    render(data,comp);
+  }catch(e){main.innerHTML=`<div class="error">Failed: ${e.message}<br><a href="${backUrl()}">Back</a></div>`}
 }
 
 // --- Render ---
-function render(data, componentName){
-  const f = currentFilters();
-  const overall = data.overall || {};
-  const daily = (data.daily || []).slice().sort((a,b) => b.date.localeCompare(a.date));
-  const qualityGates = data.quality_gates || {};
-  const releases = data.releases || [];
-  const openFailedJiras = data.open_failed_jiras || {count: 0, description: ''};
-  const openSkippedJiras = data.open_skipped_jiras || {count: 0, description: ''};
+function render(data,comp){
+  const f=currentFilters();
+  const ov=data.overall||{};
+  const daily=(data.daily||[]).slice().sort((a,b)=>b.date.localeCompare(a.date));
+  const qg=data.quality_gates||{};
+  const releases=data.releases||[];
+  const pct=passPct(ov.passed||0,ov.total||0);
 
-  const main = qs('main');
-  main.innerHTML = `
-    <a class="back-link" href="${backToHeatmapUrl()}">← Back to heatmap</a>
+  const failedUrl=buildJiraUrl(comp,'test-failed',f.version,f.release);
+  const skippedUrl=buildJiraUrl(comp,'test-skipped',f.version,f.release);
+  const failedCount=getJiraCount(comp,'test-failed',f.version,f.release);
+  const skippedCount=getJiraCount(comp,'test-skipped',f.version,f.release);
+  const tfaData=getTfaData(comp,f.version,f.release);
+  const filterLabel=[f.version!=='All'?f.version:'',f.release!=='All'?f.release:''].filter(Boolean).join(' ')||'All releases';
 
+  $('main').innerHTML=`
+    <a class="back-link" href="${backUrl()}">← Back to heatmap</a>
     <div class="header-row">
       <div class="header-left">
-        <h1>${escHtml(componentName)}</h1>
-        <p>Quality-gate results per execution, pass / fail / skip over the selected dates, and a second chart comparing RHOAI 3.4, 3.5, and 3.6.</p>
+        <h1>${escHtml(comp)}</h1>
+        <p>Quality-gate heatmap, execution trends, and Jira failure analysis for this component.</p>
       </div>
       <div class="filter-bar">
-        <div class="filter-group">
-          <span class="filter-label">Environment</span>
-          <span class="filter-value">RHOAI</span>
-        </div>
-        <div class="filter-group">
-          <span class="filter-label">Version</span>
+        <div class="filter-group"><span class="filter-label">Environment</span><span class="filter-value">RHOAI</span></div>
+        <div class="filter-group"><span class="filter-label">Version</span>
           <select id="f-ver" onchange="reloadWithFilters()">
             <option value="All" ${f.version==='All'?'selected':''}>All</option>
             <option value="2.25" ${f.version==='2.25'?'selected':''}>2.25</option>
             <option value="3.4" ${f.version==='3.4'?'selected':''}>3.4</option>
             <option value="3.5" ${f.version==='3.5'?'selected':''}>3.5</option>
             <option value="3.6" ${f.version==='3.6'?'selected':''}>3.6</option>
-          </select>
-        </div>
-        <div class="filter-group">
-          <span class="filter-label">Release</span>
+          </select></div>
+        <div class="filter-group"><span class="filter-label">Release</span>
           <select id="f-rel" onchange="reloadWithFilters()">
             <option value="All" ${f.release==='All'?'selected':''}>All</option>
             <option value="GA" ${f.release==='GA'?'selected':''}>GA</option>
             <option value="EA1" ${f.release==='EA1'?'selected':''}>EA1</option>
             <option value="EA2" ${f.release==='EA2'?'selected':''}>EA2</option>
-          </select>
-        </div>
-        <div class="filter-group">
-          <span class="filter-label">From</span>
-          <input type="date" id="f-from" value="${f.from_date}" onchange="reloadWithFilters()">
-        </div>
-        <div class="filter-group">
-          <span class="filter-label">To</span>
-          <input type="date" id="f-to" value="${f.to_date}" onchange="reloadWithFilters()">
-        </div>
+          </select></div>
+        <div class="filter-group"><span class="filter-label">From</span>
+          <input type="date" id="f-from" value="${f.from_date}" onchange="reloadWithFilters()"></div>
+        <div class="filter-group"><span class="filter-label">To</span>
+          <input type="date" id="f-to" value="${f.to_date}" onchange="reloadWithFilters()"></div>
       </div>
     </div>
 
     <!-- Metric cards -->
     <div class="metrics">
-      <div class="metric-card mc-results">
-        <span class="metric-label">Results</span>
-        <span class="metric-value">${overall.total || 0}</span>
+      <div class="mc mc-results"><span class="mc-label">Total Tests</span><span class="mc-value">${(ov.total||0).toLocaleString()}</span></div>
+      <div class="mc mc-passed"><span class="mc-label">Passed</span><span class="mc-value">${(ov.passed||0).toLocaleString()}</span></div>
+      <div class="mc mc-failed"><span class="mc-label">Failed</span><span class="mc-value">${(ov.failed||0).toLocaleString()}</span></div>
+      <div class="mc mc-skipped"><span class="mc-label">Skipped</span><span class="mc-value">${(ov.skipped||0).toLocaleString()}</span></div>
+      <div class="mc mc-pct"><span class="mc-label">Pass Rate</span><span class="mc-value">${pct}%</span></div>
+    </div>
+
+    <!-- Jira alerts -->
+    <div class="alerts">
+      <div class="alert-bar alert-failed">
+        <div class="alert-title">Open Failed Jiras</div>
+        <div class="alert-count">${failedUrl?`<a href="${failedUrl}" target="_blank">${failedCount!==null?failedCount:'–'}</a>`:'–'}</div>
+        <div class="alert-desc">${failedUrl?`<a href="${failedUrl}" target="_blank" style="color:#ff4757;font-size:12px">🔍 View test-failed for ${escHtml(filterLabel)} →</a>`:'<span style="color:#6b8299">Select version/release</span>'}</div>
       </div>
-      <div class="metric-card mc-passed">
-        <span class="metric-label">Passed</span>
-        <span class="metric-value">${overall.passed || 0}</span>
-      </div>
-      <div class="metric-card mc-failed">
-        <span class="metric-label">Failed</span>
-        <span class="metric-value">${overall.failed || 0}</span>
-      </div>
-      <div class="metric-card mc-skipped">
-        <span class="metric-label">Skipped</span>
-        <span class="metric-value">${overall.skipped || 0}</span>
+      <div class="alert-bar alert-skipped">
+        <div class="alert-title">Open Skipped Jiras</div>
+        <div class="alert-count">${skippedUrl?`<a href="${skippedUrl}" target="_blank">${skippedCount!==null?skippedCount:'–'}</a>`:'–'}</div>
+        <div class="alert-desc">${skippedUrl?`<a href="${skippedUrl}" target="_blank" style="color:#ffa502;font-size:12px">🔍 View test-skipped for ${escHtml(filterLabel)} →</a>`:'<span style="color:#6b8299">Select version/release</span>'}</div>
       </div>
     </div>
 
-    <!-- Alert bars — Jira links -->
-    <div class="alerts" id="jira-alerts"></div>
-
-    <!-- Two-column: Quality Gates + Execution over time -->
+    <!-- Row 1: Gate heatmap + Daily chart -->
     <div class="two-col">
       <div class="panel">
-        <h3>Quality gates</h3>
-        <p class="panel-sub">Each row is one execution of that gate (for example 3.4 and 3.6 on the same night are two rows). Green tick = passed, red circle = failed. Click a mark to open that execution.</p>
-        <div id="qg-table-wrap" style="max-height:360px;overflow-y:auto"></div>
+        <h3>Quality Gates Heatmap</h3>
+        <p class="panel-sub">Per-gate, per-day results. Color = pass %. Each mark is one execution — click to open Jenkins.</p>
+        <div id="qg-wrap" class="gate-heatmap-wrap"></div>
       </div>
       <div class="panel">
-        <h3>Execution over time</h3>
-        <p class="panel-sub">Pass / fail / skip counts for each UTC day in the selected range. ${escHtml(componentName)} · ${f.environment} · ${f.version} · ${f.from_date} to ${f.to_date} · connected</p>
-        <div class="chart-container">
-          <canvas id="chart-daily"></canvas>
+        <h3>Execution Over Time</h3>
+        <p class="panel-sub">Daily pass / fail / skip counts for ${escHtml(comp)}</p>
+        <div class="chart-container"><canvas id="chart-daily"></canvas></div>
+      </div>
+    </div>
+
+    <!-- Row 2: Release chart -->
+    <div class="panel" style="margin-bottom:24px">
+      <h3>Execution Across Releases</h3>
+      <p class="panel-sub">Pass / fail / skip by release over time for ${escHtml(comp)}. Select versions to compare.</p>
+      <div class="version-toggles" id="ver-toggles"></div>
+      <div class="chart-container chart-lg"><canvas id="chart-releases"></canvas></div>
+      <div class="help-box">
+        <h4>About EA &amp; GA Releases</h4>
+        <ul>
+          <li><strong>GA</strong> — General Availability. Stable, production-ready release.</li>
+          <li><strong>EA1 / EA2</strong> — Early Access milestones. Pre-release validation before GA. EA1 = first milestone, EA2 = closer to GA.</li>
+          <li>EA and GA are combined per version to show the full release lifecycle.</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- Row 3: TFA Classification (pie + bar + status bar) -->
+    <div id="tfa-section" style="display:${tfaData?'block':'none'}">
+      <div class="three-col">
+        <div class="panel">
+          <h3>Failure Classification</h3>
+          <p class="panel-sub">TFA label distribution for test-failed issues</p>
+          <div class="chart-container"><canvas id="chart-tfa-pie"></canvas></div>
+          <div id="tfa-legend" class="tfa-legend"></div>
+        </div>
+        <div class="panel">
+          <h3>Classification Breakdown</h3>
+          <p class="panel-sub">Count per TFA category. Classified vs Unclassified.</p>
+          <div class="chart-container"><canvas id="chart-tfa-bar"></canvas></div>
+        </div>
+        <div class="panel">
+          <h3>Jira Status Distribution</h3>
+          <p class="panel-sub">test-failed issues by current Jira status</p>
+          <div class="chart-container"><canvas id="chart-status-bar"></canvas></div>
         </div>
       </div>
     </div>
-
-    <!-- Bottom: Execution across releases -->
-    <div class="bottom-panel">
-      <h3>Execution across releases</h3>
-      <p class="panel-sub">Pass / fail / skip trends per release over the selected date range. ${escHtml(componentName)} · ${f.from_date} to ${f.to_date}</p>
-      <div class="bottom-chart-container">
-        <canvas id="chart-releases"></canvas>
-      </div>
-    </div>
   `;
 
-  document.title = componentName + ' — Test Execution Dashboard';
-  renderJiraAlerts(componentName, f);
-  renderQualityGates(qualityGates, daily);
+  document.title=comp+' — Test Execution Dashboard';
+  renderGateHeatmap(qg,daily);
   renderDailyChart(daily);
   renderReleasesChart(releases);
+  if(tfaData) renderTfaCharts(tfaData);
 }
 
-// --- Fetch Jira count from pre-computed static data ---
-async function fetchJiraCount(jql, componentName, label, version, release){
-  // Use pre-computed counts from jira_config
-  if(jiraConfig && jiraConfig.counts){
-    // Find all matching release keys
-    const countKeys = Object.keys(jiraConfig.counts);
-    let matchKeys = [];
-    if(version !== 'All' && release !== 'All'){
-      matchKeys = [`${version}|${release}`].filter(k => jiraConfig.counts[k]);
-    } else if(version !== 'All'){
-      matchKeys = countKeys.filter(k => k.startsWith(version + '|'));
-    } else if(release !== 'All'){
-      matchKeys = countKeys.filter(k => k.endsWith('|' + release));
-    } else {
-      matchKeys = countKeys;
-    }
+// --- Gate heatmap ---
+function renderGateHeatmap(qg,daily){
+  const wrap=document.getElementById('qg-wrap');
+  const gates=Object.keys(qg).sort();
+  const dates=daily.map(d=>d.date).sort((a,b)=>b.localeCompare(a));
+  if(!gates.length||!dates.length){wrap.innerHTML='<p style="color:#6b8299;font-size:13px;padding:8px">No quality gate data.</p>';return}
 
-    if(matchKeys.length > 0){
-      let total = 0; let found = false;
-      for(const rk of matchKeys){
-        const teamCounts = jiraConfig.counts[rk];
-        for(const [comp, counts] of Object.entries(teamCounts)){
-          if(comp === componentName || comp.toLowerCase().includes(componentName.toLowerCase())
-             || componentName.toLowerCase().includes(comp.toLowerCase())){
-            const v = label === 'test-failed' ? counts.failed : counts.skipped;
-            total += (typeof v === 'number') ? v : 50;
-            found = true;
-          }
-        }
-      }
-      if(found) return total;
-    }
-  }
-  return null;
-}
+  let html='<table class="gate-hm"><thead><tr><th>Gate</th>';
+  dates.forEach(d=>html+=`<th>${friendlyDate(d)}</th>`);
+  html+='</tr></thead><tbody>';
 
-async function renderJiraAlerts(componentName, filters){
-  const wrap = document.getElementById('jira-alerts');
-  if(!wrap) return;
+  gates.forEach(g=>{
+    html+=`<tr><td>${escHtml(g)}</td>`;
+    dates.forEach(d=>{
+      const execs=qg[g]&&qg[g][d];
+      if(!execs||!execs.length){html+='<td><span class="gc-na">–</span></td>';return}
 
-  const failedUrl = buildJiraUrl(componentName, 'test-failed', filters.version, filters.release);
-  const skippedUrl = buildJiraUrl(componentName, 'test-skipped', filters.version, filters.release);
-  const failedJql = buildJiraJql(componentName, 'test-failed', filters.version, filters.release);
-  const skippedJql = buildJiraJql(componentName, 'test-skipped', filters.version, filters.release);
+      // Aggregate for cell color
+      let tp=0,tf=0;
+      execs.forEach(ex=>{if(ex.state==='PASSED')tp++;else tf++});
+      const pct=passPct(tp,tp+tf);
+      const col=pctColor(pct);
 
-  const versionLabel = filters.version !== 'All' ? filters.version : '';
-  const releaseLabel = filters.release !== 'All' ? filters.release : '';
-  const filterLabel = [versionLabel, releaseLabel].filter(Boolean).join(' ') || 'All releases';
+      // Individual marks
+      const marks=execs.map(ex=>{
+        const cls=ex.state==='PASSED'?'gate-mark-p':'gate-mark-f';
+        const sym=ex.state==='PASSED'?'✓':'●';
+        return ex.jenkins_url?`<a href="${ex.jenkins_url}" target="_blank" class="gate-mark ${cls}" title="${ex.state}">${sym}</a>`
+          :`<span class="gate-mark ${cls}">${sym}</span>`;
+      }).join('');
 
-  // Show placeholder first
-  wrap.innerHTML = renderJiraAlertHtml(failedUrl, skippedUrl, filterLabel, '...', '...');
-
-  // Fetch counts asynchronously
-  const [failedCount, skippedCount] = await Promise.all([
-    failedJql ? fetchJiraCount(failedJql, componentName, 'test-failed', filters.version, filters.release) : null,
-    skippedJql ? fetchJiraCount(skippedJql, componentName, 'test-skipped', filters.version, filters.release) : null,
-  ]);
-  wrap.innerHTML = renderJiraAlertHtml(failedUrl, skippedUrl, filterLabel,
-    failedCount !== null ? failedCount : '–', skippedCount !== null ? skippedCount : '–');
-}
-
-function renderJiraAlertHtml(failedUrl, skippedUrl, filterLabel, failedCount, skippedCount){
-  return `
-    <div class="alert-bar alert-failed">
-      <div class="alert-title">Open Failed Jiras</div>
-      ${failedUrl
-        ? `<div class="alert-count">${failedCount}</div>
-           <div class="alert-desc"><a href="${failedUrl}" target="_blank" rel="noopener" style="color:#ff4757;font-size:12px">🔍 View test-failed issues for ${escHtml(filterLabel)} →</a></div>`
-        : `<div class="alert-count" style="color:#4a5568">–</div>
-           <div class="alert-desc"><span style="color:#6b8299;font-size:12px">Select a version and release to view Jira issues</span></div>`
-      }
-    </div>
-    <div class="alert-bar alert-skipped">
-      <div class="alert-title">Open Skipped Jiras</div>
-      ${skippedUrl
-        ? `<div class="alert-count">${skippedCount}</div>
-           <div class="alert-desc"><a href="${skippedUrl}" target="_blank" rel="noopener" style="color:#ffa502;font-size:12px">🔍 View test-skipped issues for ${escHtml(filterLabel)} →</a></div>`
-        : `<div class="alert-count" style="color:#4a5568">–</div>
-           <div class="alert-desc"><span style="color:#6b8299;font-size:12px">Select a version and release to view Jira issues</span></div>`
-      }
-    </div>
-  `;
-}
-
-function escHtml(s){
-  const d = document.createElement('div');
-  d.textContent = s;
-  return d.innerHTML;
-}
-
-// --- Quality Gates Table ---
-function renderQualityGates(qg, daily){
-  const wrap = document.getElementById('qg-table-wrap');
-  const gateNames = Object.keys(qg);
-  const dates = daily.map(d => d.date).sort((a,b) => b.localeCompare(a));
-
-  if(gateNames.length === 0 || dates.length === 0){
-    wrap.innerHTML = '<p style="color:#6b8299;font-size:13px;padding:8px">No quality gate data available.</p>';
-    return;
-  }
-
-  let html = '<table class="qg"><thead><tr><th>Date</th>';
-  gateNames.forEach(g => { html += `<th>${escHtml(g)}</th>` });
-  html += '</tr></thead><tbody>';
-
-  dates.forEach(date => {
-    html += `<tr><td>${friendlyDate(date)}</td>`;
-    gateNames.forEach(g => {
-      const entry = qg[g] && qg[g][date];
-      if(!entry || (Array.isArray(entry) && entry.length === 0)){
-        html += '<td><span class="qg-na">–</span></td>';
-      } else if(Array.isArray(entry)){
-        // Multiple execution marks per cell
-        const marks = entry.map(ex => {
-          const url = ex.jenkins_url;
-          const mark = ex.state === 'PASSED'
-            ? '<span class="qg-passed">✓</span>'
-            : '<span class="qg-failed">●</span>';
-          return url ? `<a href="${url}" target="_blank" rel="noopener" style="text-decoration:none">${mark}</a>` : mark;
-        }).join('');
-        html += `<td>${marks}</td>`;
-      } else {
-        // Legacy single-mark format
-        if(entry.state === 'PASSED'){
-          html += '<td><span class="qg-passed">✓</span></td>';
-        } else {
-          html += '<td><span class="qg-failed">●</span></td>';
-        }
-      }
+      html+=`<td><div class="gate-cell gc-${col}">${pct}%</div><div class="gate-marks">${marks}</div></td>`;
     });
-    html += '</tr>';
+    html+='</tr>';
   });
-
-  html += '</tbody></table>';
-  wrap.innerHTML = html;
+  html+='</tbody></table>';
+  wrap.innerHTML=html;
 }
 
-// --- Daily Line Chart ---
+// --- Daily chart ---
 function renderDailyChart(daily){
-  const sorted = daily.slice().sort((a,b) => a.date.localeCompare(b.date));
-  const labels = sorted.map(d => friendlyDate(d.date));
-  const passed = sorted.map(d => d.passed);
-  const failed = sorted.map(d => d.failed);
-  const skipped = sorted.map(d => d.skipped);
-
-  const ctx = document.getElementById('chart-daily').getContext('2d');
-  new Chart(ctx, {
-    type: 'line',
-    data: {
-      labels,
-      datasets: [
-        { label: 'Passed',  data: passed,  borderColor: '#00b894', backgroundColor: 'rgba(0,184,148,.1)', tension: .3, fill: false, pointRadius: 3, borderWidth: 2 },
-        { label: 'Failed',  data: failed,  borderColor: '#ff4757', backgroundColor: 'rgba(255,71,87,.1)',  tension: .3, fill: false, pointRadius: 3, borderWidth: 2 },
-        { label: 'Skipped', data: skipped, borderColor: '#ffa502', backgroundColor: 'rgba(255,165,2,.1)',  tension: .3, fill: false, pointRadius: 3, borderWidth: 2 },
+  const sorted=daily.slice().sort((a,b)=>a.date.localeCompare(b.date));
+  const ctx=document.getElementById('chart-daily').getContext('2d');
+  new Chart(ctx,{
+    type:'line',
+    data:{
+      labels:sorted.map(d=>friendlyDate(d.date)),
+      datasets:[
+        {label:'Passed',data:sorted.map(d=>d.passed),borderColor:'#2ed573',backgroundColor:'rgba(46,213,115,.1)',tension:.3,fill:false,pointRadius:2,borderWidth:2},
+        {label:'Failed',data:sorted.map(d=>d.failed),borderColor:'#ff4757',backgroundColor:'rgba(255,71,87,.1)',tension:.3,fill:false,pointRadius:2,borderWidth:2},
+        {label:'Skipped',data:sorted.map(d=>d.skipped),borderColor:'#ffa502',backgroundColor:'rgba(255,165,2,.1)',tension:.3,fill:false,pointRadius:2,borderWidth:2},
       ]
     },
-    options: {
-      responsive: true,
-      maintainAspectRatio: false,
-      plugins: {
-        legend: { position: 'bottom', labels: { color: '#8899aa', usePointStyle: true, pointStyle: 'rect', padding: 16, font: { size: 11 } } }
-      },
-      scales: {
-        x: { ticks: { color: '#6b8299', font: { size: 10 } }, grid: { color: 'rgba(30,73,118,.3)' } },
-        y: { ticks: { color: '#6b8299', font: { size: 10 } }, grid: { color: 'rgba(30,73,118,.3)' }, beginAtZero: true }
-      }
+    options:{responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{position:'bottom',labels:{color:'#8899aa',usePointStyle:true,pointStyle:'rect',padding:14,font:{size:11}}}},
+      scales:{x:{ticks:{color:'#6b8299',font:{size:10}},grid:{color:'rgba(30,73,118,.2)'}},
+        y:{ticks:{color:'#6b8299',font:{size:10}},grid:{color:'rgba(30,73,118,.3)'},beginAtZero:true}}
     }
   });
 }
 
-// --- Releases Line Chart (over time) ---
+// --- Releases chart ---
+let relChart=null;
 function renderReleasesChart(releases){
-  if(!releases || releases.length === 0) return;
+  if(!releases||!releases.length)return;
+  const versions=new Set();
+  releases.forEach(r=>{const m=r.release.match(/^(EA|GA)/);if(m)versions.add(r.release)});
 
-  // Collect all unique dates across all releases
-  const allDates = new Set();
-  releases.forEach(r => {
-    (r.daily || []).forEach(d => allDates.add(d.date));
+  // Build toggles
+  const toggles=document.getElementById('ver-toggles');
+  const allRels=[...new Set(releases.map(r=>r.release))].sort();
+  toggles.innerHTML=allRels.map(r=>`<label><input type="checkbox" value="${r}" checked onchange="updateRelChart()"> ${r}</label>`).join('');
+  window._relData=releases;
+  updateRelChart();
+}
+
+function updateRelChart(){
+  const releases=window._relData||[];
+  const checked=Array.from(document.querySelectorAll('#ver-toggles input:checked')).map(i=>i.value);
+  const filtered=releases.filter(r=>checked.includes(r.release));
+
+  const allDates=new Set();
+  filtered.forEach(r=>(r.daily||[]).forEach(d=>allDates.add(d.date)));
+  const dates=Array.from(allDates).sort();
+  const labels=dates.map(friendlyDate);
+
+  const colors=['#2ed573','#3498db','#e17055','#a29bfe','#fdcb6e','#6c5ce7'];
+  const datasets=[];let ci=0;
+  filtered.forEach(r=>{
+    const dm={};(r.daily||[]).forEach(d=>{dm[d.date]=d});
+    const c=colors[ci%colors.length];ci++;
+    datasets.push({label:`${r.release} passed`,data:dates.map(d=>(dm[d]||{}).passed||0),borderColor:c,tension:.3,fill:false,pointRadius:2,borderWidth:2});
   });
-  const dates = Array.from(allDates).sort();
-  if(dates.length === 0) return;
 
-  const labels = dates.map(d => friendlyDate(d));
-  const colors = ['#00b894','#3498db','#e17055','#a29bfe','#fdcb6e','#6c5ce7','#00cec9','#fab1a0'];
-
-  const datasets = [];
-  releases.forEach((r, i) => {
-    const c = colors[i % colors.length];
-    const dailyMap = {};
-    (r.daily || []).forEach(d => { dailyMap[d.date] = d.passed; });
-    datasets.push({
-      label: `${r.release} (passed)`,
-      data: dates.map(d => dailyMap[d] || 0),
-      borderColor: c,
-      backgroundColor: c + '22',
-      tension: .3,
-      fill: false,
-      pointRadius: 3,
-      borderWidth: 2,
-    });
-  });
-
-  const ctx = document.getElementById('chart-releases').getContext('2d');
-  new Chart(ctx, {
-    type: 'line',
-    data: { labels, datasets },
-    options: {
-      responsive: true,
-      maintainAspectRatio: false,
-      plugins: {
-        legend: { position: 'bottom', labels: { color: '#8899aa', usePointStyle: true, pointStyle: 'rect', padding: 16, font: { size: 11 } } }
-      },
-      scales: {
-        x: { ticks: { color: '#6b8299', font: { size: 10 } }, grid: { color: 'rgba(30,73,118,.2)' } },
-        y: { ticks: { color: '#6b8299', font: { size: 10 } }, grid: { color: 'rgba(30,73,118,.3)' }, beginAtZero: true }
-      }
+  const ctx=document.getElementById('chart-releases').getContext('2d');
+  if(relChart)relChart.destroy();
+  relChart=new Chart(ctx,{
+    type:'line',data:{labels,datasets},
+    options:{responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{position:'bottom',labels:{color:'#8899aa',usePointStyle:true,pointStyle:'rect',padding:14,font:{size:11}}}},
+      scales:{x:{ticks:{color:'#6b8299',font:{size:10}},grid:{color:'rgba(30,73,118,.2)'}},
+        y:{ticks:{color:'#6b8299',font:{size:10}},grid:{color:'rgba(30,73,118,.3)'},beginAtZero:true}}
     }
+  });
+}
+
+// --- TFA Charts ---
+const TFA_COLORS={
+  'tfa-product-bug':'#ff4757','tfa-automation-bug':'#ffa502','tfa-infra-issue':'#3498db',
+  'tfa-env-setup':'#a29bfe','tfa-duplicate':'#6b8299','tfa-known-issue':'#fdcb6e',
+  'tfa-false-positive':'#2ed573','tfa-wrong-assignment':'#e17055'
+};
+const TFA_NAMES={
+  'tfa-product-bug':'Product Bug','tfa-automation-bug':'Automation Bug','tfa-infra-issue':'Infra Issue',
+  'tfa-env-setup':'Env Setup','tfa-duplicate':'Duplicate','tfa-known-issue':'Known Issue',
+  'tfa-false-positive':'False Positive','tfa-wrong-assignment':'Wrong Assignment'
+};
+const TFA_DESC={
+  'tfa-product-bug':'Real product issue found by the test',
+  'tfa-automation-bug':'Test code issue or flaky automation',
+  'tfa-infra-issue':'Infrastructure instability or defect',
+  'tfa-env-setup':'Environment setup issue (e.g., missing dependency)',
+  'tfa-duplicate':'Same root cause as another tracked issue',
+  'tfa-known-issue':'Failure matches an already known and tracked issue',
+  'tfa-false-positive':'Passed on re-run, non-reproducible',
+  'tfa-wrong-assignment':'Failure initially routed to wrong component'
+};
+
+function renderTfaCharts(tfa){
+  // 1. Pie chart — TFA label distribution
+  const tfaEntries=Object.entries(tfa.tfa||{}).filter(([,v])=>v>0).sort((a,b)=>b[1]-a[1]);
+  if(tfaEntries.length>0){
+    const pieCtx=document.getElementById('chart-tfa-pie').getContext('2d');
+    new Chart(pieCtx,{
+      type:'doughnut',
+      data:{
+        labels:tfaEntries.map(([k])=>TFA_NAMES[k]||k),
+        datasets:[{data:tfaEntries.map(([,v])=>v),backgroundColor:tfaEntries.map(([k])=>TFA_COLORS[k]||'#6b8299'),borderColor:'#0d2137',borderWidth:2}]
+      },
+      options:{responsive:true,maintainAspectRatio:false,
+        plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>`${ctx.label}: ${ctx.raw} issues`}}}}
+    });
+    // Legend
+    const legend=document.getElementById('tfa-legend');
+    legend.innerHTML=tfaEntries.map(([k,v])=>`<div class="tfa-legend-item"><span class="dot" style="background:${TFA_COLORS[k]||'#6b8299'}"></span><strong>${TFA_NAMES[k]||k}</strong> (${v}) — ${TFA_DESC[k]||''}</div>`).join('');
+  }
+
+  // 2. Bar chart — Classified vs Unclassified
+  const barCtx=document.getElementById('chart-tfa-bar').getContext('2d');
+  const allLabels=Object.keys(TFA_NAMES);
+  const allValues=allLabels.map(k=>(tfa.tfa||{})[k]||0);
+  new Chart(barCtx,{
+    type:'bar',
+    data:{
+      labels:[...allLabels.map(k=>TFA_NAMES[k]),'Unclassified'],
+      datasets:[{label:'Issues',data:[...allValues,tfa.unclassified||0],
+        backgroundColor:[...allLabels.map(k=>TFA_COLORS[k]),'#4a5568'],borderRadius:4}]
+    },
+    options:{responsive:true,maintainAspectRatio:false,indexAxis:'y',
+      plugins:{legend:{display:false}},
+      scales:{x:{ticks:{color:'#6b8299',font:{size:10}},grid:{color:'rgba(30,73,118,.2)'},beginAtZero:true},
+        y:{ticks:{color:'#ccc',font:{size:10}},grid:{display:false}}}}
+  });
+
+  // 3. Status bar chart
+  const statusCtx=document.getElementById('chart-status-bar').getContext('2d');
+  const statusEntries=Object.entries(tfa.status||{}).sort((a,b)=>b[1]-a[1]);
+  const statusColors={'Open':'#ff4757','In Progress':'#ffa502','To Do':'#a29bfe','In Review':'#3498db',
+    'Closed':'#2ed573','Done':'#2ed573','Resolved':'#00b894'};
+  new Chart(statusCtx,{
+    type:'bar',
+    data:{
+      labels:statusEntries.map(([s])=>s),
+      datasets:[{label:'Issues',data:statusEntries.map(([,v])=>v),
+        backgroundColor:statusEntries.map(([s])=>statusColors[s]||'#6b8299'),borderRadius:4}]
+    },
+    options:{responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{display:false}},
+      scales:{x:{ticks:{color:'#ccc',font:{size:10}},grid:{color:'rgba(30,73,118,.2)'}},
+        y:{ticks:{color:'#6b8299',font:{size:10}},grid:{color:'rgba(30,73,118,.3)'},beginAtZero:true}}}
   });
 }
 
 // --- Boot ---
-(async () => {
-  await loadJiraConfig();
-  loadComponent();
-})();
+(async()=>{await loadJiraConfig();loadComponent()})();
 </script>
 </body>
 </html>

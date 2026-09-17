@@ -4,401 +4,443 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Test Execution Dashboard</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <style>
-  *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-  body{background:#0a1929;color:#e0e0e0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;min-height:100vh}
-  a{color:#5ea7ff;text-decoration:none}
-  a:hover{text-decoration:underline}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{background:#0a1929;color:#e0e0e0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;min-height:100vh}
+a{color:#5ea7ff;text-decoration:none}a:hover{text-decoration:underline}
+.container{max-width:1500px;margin:0 auto;padding:24px 32px}
 
-  .container{max-width:1400px;margin:0 auto;padding:24px 32px}
+/* Header */
+.header{margin-bottom:8px}
+.header h1{font-size:26px;font-weight:700;color:#fff;margin-bottom:4px}
+.header p{font-size:13px;color:#8899aa;line-height:1.5;max-width:900px}
 
-  /* Header */
-  .header{margin-bottom:8px}
-  .header h1{font-size:26px;font-weight:700;color:#fff;margin-bottom:4px}
-  .header p{font-size:13px;color:#8899aa;line-height:1.5;max-width:900px}
+/* Filter bar */
+.filter-bar{display:flex;align-items:center;gap:16px;flex-wrap:wrap;margin:18px 0 24px}
+.filter-group{display:flex;flex-direction:column;gap:3px}
+.filter-label{font-size:10px;text-transform:uppercase;color:#6b8299;letter-spacing:.5px;font-weight:600}
+.filter-value{font-size:13px;color:#fff;font-weight:500}
+.filter-bar select,.filter-bar input[type="date"]{
+  background:#132f4c;color:#fff;border:1px solid #1e4976;border-radius:4px;
+  padding:6px 10px;font-size:13px;cursor:pointer;outline:none;min-width:100px;
+  appearance:auto;-webkit-appearance:auto;
+}
+.filter-bar select:hover,.filter-bar input[type="date"]:hover{border-color:#3a6ea5}
+.filter-bar input[type="date"]::-webkit-calendar-picker-indicator{filter:invert(1);cursor:pointer}
 
-  /* Filter bar */
-  .filter-bar{display:flex;align-items:center;gap:16px;flex-wrap:wrap;margin:18px 0 28px 0}
-  .filter-group{display:flex;flex-direction:column;gap:3px}
-  .filter-label{font-size:10px;text-transform:uppercase;color:#6b8299;letter-spacing:.5px;font-weight:600}
-  .filter-value{font-size:13px;color:#fff;font-weight:500}
-  .filter-bar select,
-  .filter-bar input[type="date"]{
-    background:#132f4c;color:#fff;border:1px solid #1e4976;border-radius:4px;
-    padding:6px 10px;font-size:13px;cursor:pointer;outline:none;
-    appearance:auto;-webkit-appearance:auto;min-width:100px;
-  }
-  .filter-bar select:hover,
-  .filter-bar input[type="date"]:hover{border-color:#3a6ea5}
-  .filter-bar input[type="date"]::-webkit-calendar-picker-indicator{filter:invert(1);cursor:pointer}
-  .badge{background:#132f4c;border:1px solid #1e4976;border-radius:4px;padding:6px 14px;font-size:13px;color:#2ed573;font-weight:600}
+/* Summary cards */
+.summary-cards{display:grid;grid-template-columns:repeat(5,1fr);gap:14px;margin-bottom:20px}
+.sc{background:#0d2137;border:1px solid #1e4976;border-radius:8px;padding:14px 18px}
+.sc-label{font-size:10px;text-transform:uppercase;letter-spacing:1px;color:#6b8299;margin-bottom:6px;font-weight:600}
+.sc-value{font-size:28px;font-weight:700;color:#fff}
+.sc-sub{font-size:11px;color:#6b8299;margin-top:2px}
+.sc-total{border-left:4px solid #3498db}.sc-total .sc-value{color:#3498db}
+.sc-passed{border-left:4px solid #2ed573}.sc-passed .sc-value{color:#2ed573}
+.sc-failed{border-left:4px solid #ff4757}.sc-failed .sc-value{color:#ff4757}
+.sc-skipped{border-left:4px solid #ffa502}.sc-skipped .sc-value{color:#ffa502}
+.sc-pct{border-left:4px solid #a29bfe}.sc-pct .sc-value{color:#a29bfe}
 
-  /* Section title */
-  .section-title{margin-bottom:6px}
-  .section-title h2{font-size:18px;font-weight:600;color:#fff;margin-bottom:2px;
-    background:linear-gradient(90deg,#132f4c 0%,transparent 100%);padding:10px 16px;border-radius:6px}
-  .section-title p{font-size:12px;color:#8899aa;padding-left:16px}
+/* Section title */
+.section-title{margin-bottom:6px}
+.section-title h2{font-size:18px;font-weight:600;color:#fff;margin-bottom:2px;
+  background:linear-gradient(90deg,#132f4c 0%,transparent 100%);padding:10px 16px;border-radius:6px}
+.section-title p{font-size:12px;color:#8899aa;padding-left:16px}
 
-  /* Heatmap table */
-  .heatmap-wrapper{overflow-x:auto;overflow-y:visible;margin-top:16px;position:relative}
-  table.heatmap{width:100%;border-collapse:collapse;min-width:800px}
-  table.heatmap th,table.heatmap td{padding:10px 8px;text-align:center;border-bottom:1px solid #1e4976;white-space:nowrap}
-  table.heatmap th{font-size:12px;color:#8899aa;font-weight:600;position:sticky;top:0;background:#0a1929}
-  table.heatmap th.comp-header{text-align:left;min-width:180px}
-  table.heatmap td.comp-name{text-align:left;font-weight:500}
-  table.heatmap td.comp-name a{color:#5ea7ff;font-size:14px}
-  table.heatmap td.comp-name a:hover{color:#8ec5ff}
-  table.heatmap .date-header{display:flex;flex-direction:column;align-items:center;gap:2px}
-  table.heatmap .jenkins-link{font-size:9px;color:#5ea7ff;opacity:.7}
-  table.heatmap .jenkins-link:hover{opacity:1}
+/* Heatmap table */
+.heatmap-wrapper{overflow-x:auto;overflow-y:visible;margin-top:16px;position:relative}
+table.heatmap{width:100%;border-collapse:collapse;min-width:800px}
+table.heatmap th,table.heatmap td{padding:8px 6px;text-align:center;border-bottom:1px solid #1e4976;white-space:nowrap}
+table.heatmap th{font-size:11px;color:#8899aa;font-weight:600;position:sticky;top:0;background:#0a1929;z-index:10}
+table.heatmap th.comp-header{text-align:left;min-width:180px}
+table.heatmap td.comp-name{text-align:left;font-weight:500}
+table.heatmap td.comp-name a{color:#5ea7ff;font-size:13px}
+table.heatmap td.comp-name a:hover{color:#8ec5ff}
 
-  .mark-passed{color:#2ed573;font-size:18px}
-  .mark-failed{color:#ff4757;font-size:18px}
-  .mark-skipped{color:#ffa502;font-size:18px}
-  .mark-na{color:#4a5568;font-size:14px}
+/* Heatmap cells — color-coded by pass % */
+.cell{border-radius:6px;padding:6px 4px;min-width:60px;display:inline-block;text-align:center;cursor:pointer;position:relative}
+.cell-green{background:rgba(46,213,115,.15);border:1px solid rgba(46,213,115,.3)}
+.cell-amber{background:rgba(255,165,2,.12);border:1px solid rgba(255,165,2,.25)}
+.cell-orange{background:rgba(225,112,85,.12);border:1px solid rgba(225,112,85,.25)}
+.cell-red{background:rgba(255,71,87,.12);border:1px solid rgba(255,71,87,.25)}
+.cell-gray{background:rgba(74,85,104,.1);border:1px solid rgba(74,85,104,.2)}
+.cell-pct{font-size:16px;font-weight:700;line-height:1}
+.cell-pct-green{color:#2ed573}.cell-pct-amber{color:#ffa502}.cell-pct-orange{color:#e17055}.cell-pct-red{color:#ff4757}
+.cell-counts{display:flex;gap:3px;justify-content:center;font-size:9px;font-weight:600;margin-top:3px}
+.cell-counts .cp{color:#2ed573}.cell-counts .cf{color:#ff4757}.cell-counts .cs{color:#ffa502}
+.cell-na{color:#4a5568;font-size:13px}
 
-  .summary-cards{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:20px}
-  .summary-card{background:#0d2137;border:1px solid #1e4976;border-radius:8px;padding:16px 20px}
-  .sc-label{font-size:10px;text-transform:uppercase;letter-spacing:1px;color:#6b8299;margin-bottom:6px;font-weight:600}
-  .sc-value{font-size:32px;font-weight:700;color:#fff}
-  .sc-total{border-left:4px solid #3498db}.sc-total .sc-value{color:#3498db}
-  .sc-passed{border-left:4px solid #2ed573}.sc-passed .sc-value{color:#2ed573}
-  .sc-failed{border-left:4px solid #ff4757}.sc-failed .sc-value{color:#ff4757}
-  .sc-skipped{border-left:4px solid #ffa502}.sc-skipped .sc-value{color:#ffa502}
+/* Hover dropdown for run details */
+.cell-dropdown{display:none;position:absolute;bottom:calc(100% + 6px);left:50%;transform:translateX(-50%);
+  background:#132f4c;border:1px solid #1e4976;border-radius:8px;padding:8px 0;z-index:200;
+  min-width:340px;max-height:360px;overflow-y:auto;box-shadow:0 8px 24px rgba(0,0,0,.6);text-align:left}
+.cell:hover .cell-dropdown{display:block}
+.dd-title{padding:6px 14px 4px;font-size:10px;color:#6b8299;font-weight:700;text-transform:uppercase;letter-spacing:.5px;border-bottom:1px solid #1e4976;margin-bottom:4px}
+.dd-run{padding:5px 14px;border-bottom:1px solid rgba(30,73,118,.3)}
+.dd-run:last-child{border-bottom:none}
+.dd-run-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:2px}
+.dd-run-label{font-size:11px;color:#5ea7ff}
+.dd-run-label a{color:#5ea7ff;font-size:11px}
+.dd-run-counts{font-size:10px;display:flex;gap:6px}
+.dd-pct{font-size:10px;font-weight:700;margin-left:auto}
 
-  .cell-counts{display:flex;gap:4px;justify-content:center;align-items:center;font-size:10px;font-weight:600;margin-top:2px}
-  .cell-counts .cp{color:#2ed573}.cell-counts .cf{color:#ff4757}.cell-counts .cs{color:#ffa502}
-  .cell-link{display:block;text-decoration:none;color:inherit;border-radius:4px;padding:2px}
-  .cell-link:hover{background:rgba(255,255,255,.06)}
+/* Bottom panel: Release chart */
+.bottom-panel{background:#0d2137;border:1px solid #1e4976;border-radius:8px;padding:20px;margin-top:28px}
+.bottom-panel h3{font-size:16px;font-weight:600;color:#fff;margin-bottom:4px}
+.bottom-panel .panel-sub{font-size:12px;color:#8899aa;margin-bottom:14px}
+.chart-container{position:relative;width:100%;height:320px}
+.chart-container canvas{width:100%!important;height:100%!important}
 
-  .builds-cell{position:relative;cursor:pointer;border-radius:4px;padding:2px}
-  .builds-cell:hover{background:rgba(255,255,255,.06)}
-  .builds-badge{display:inline-block;font-size:9px;color:#5ea7ff;margin-top:2px;opacity:.8}
-  .builds-dropdown{display:none;position:absolute;bottom:100%;left:50%;transform:translateX(-50%);
-    background:#132f4c;border:1px solid #1e4976;border-radius:6px;padding:6px 0;z-index:200;
-    min-width:320px;max-width:500px;max-height:300px;overflow-y:auto;box-shadow:0 8px 24px rgba(0,0,0,.5);text-align:left}
-  .builds-cell:hover .builds-dropdown{display:block}
-  .builds-dropdown a{display:block;padding:5px 12px;color:#5ea7ff;font-size:11px;text-decoration:none;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:480px}
-  .builds-dropdown a:hover{background:rgba(255,255,255,.08);color:#8ec5ff}
-  .builds-dropdown .bd-title{padding:5px 12px 4px;font-size:10px;color:#6b8299;font-weight:600;text-transform:uppercase;letter-spacing:.5px}
+/* Version multi-select for chart */
+.version-toggles{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:12px}
+.version-toggles label{display:flex;align-items:center;gap:5px;cursor:pointer;font-size:12px;color:#ccc;
+  background:#132f4c;border:1px solid #1e4976;border-radius:4px;padding:4px 10px}
+.version-toggles label:hover{border-color:#3a6ea5}
+.version-toggles input[type="checkbox"]{accent-color:#5ea7ff}
 
-  /* Loading / error */
-  .loading{text-align:center;padding:60px;color:#6b8299;font-size:16px}
-  .error{text-align:center;padding:60px;color:#ff4757;font-size:15px}
+/* Help box */
+.help-box{background:rgba(94,167,255,.06);border:1px solid rgba(94,167,255,.15);border-radius:8px;padding:14px 18px;margin-top:16px}
+.help-box h4{font-size:13px;color:#5ea7ff;margin-bottom:6px}
+.help-box p,.help-box li{font-size:12px;color:#8899aa;line-height:1.6}
+.help-box ul{padding-left:18px;margin-top:4px}
 
-  /* Tooltip */
-  .cell-wrapper{position:relative;display:inline-block;cursor:default}
-  .cell-wrapper .tooltip{
-    display:none;position:absolute;bottom:calc(100% + 8px);left:50%;transform:translateX(-50%);
-    background:#1a3a5c;border:1px solid #1e4976;border-radius:6px;padding:10px 14px;
-    font-size:12px;color:#ccc;white-space:nowrap;z-index:100;
-    box-shadow:0 4px 12px rgba(0,0,0,.4);pointer-events:none;
-  }
-  .cell-wrapper:hover .tooltip{display:block}
-  .tooltip strong{color:#fff}
-  .tooltip .tp-passed{color:#2ed573}
-  .tooltip .tp-failed{color:#ff4757}
-  .tooltip .tp-skipped{color:#ffa502}
+.loading{text-align:center;padding:60px;color:#6b8299;font-size:16px}
+.error{text-align:center;padding:60px;color:#ff4757;font-size:15px}
 </style>
 </head>
 <body>
 <div class="container">
-  <!-- Header -->
   <div class="header">
     <h1>Test Execution Dashboard</h1>
-    <p>Heatmap rows are components. Click a name for quality gates, failed tests, history, and Jenkins. Dates with a Jenkins link had a nightly. The From date moves back automatically when the last run is older than today.</p>
+    <p>Aggregated view of test execution across components. Each cell shows pass rate, color-coded by percentage. Hover for per-run details. Click a component name for quality-gate breakdown and Jira analysis.</p>
   </div>
 
-  <!-- Filter bar -->
   <div class="filter-bar">
-    <div class="filter-group">
-      <span class="filter-label">Environment</span>
-      <span class="filter-value">RHOAI</span>
+    <div class="filter-group"><span class="filter-label">Environment</span><span class="filter-value">RHOAI</span></div>
+    <div class="filter-group"><span class="filter-label">Version</span>
+      <select id="f-ver"><option value="All">All</option><option value="2.25">2.25</option><option value="3.4">3.4</option><option value="3.5">3.5</option><option value="3.6">3.6</option></select>
     </div>
-    <div class="filter-group">
-      <span class="filter-label">Version</span>
-      <select id="filter-version">
-        <option value="All">All</option>
-        <option value="2.25">2.25</option>
-        <option value="3.4">3.4</option>
-        <option value="3.5">3.5</option>
-        <option value="3.6">3.6</option>
-      </select>
+    <div class="filter-group"><span class="filter-label">Release</span>
+      <select id="f-rel"><option value="All">All</option><option value="GA">GA</option><option value="EA1">EA1</option><option value="EA2">EA2</option></select>
     </div>
-    <div class="filter-group">
-      <span class="filter-label">Release</span>
-      <select id="filter-release">
-        <option value="All">All</option>
-        <option value="GA">GA</option>
-        <option value="EA1">EA1</option>
-        <option value="EA2">EA2</option>
-      </select>
-    </div>
-    <div class="filter-group">
-      <span class="filter-label">From</span>
-      <input type="date" id="filter-from">
-    </div>
-    <div class="filter-group">
-      <span class="filter-label">To</span>
-      <input type="date" id="filter-to">
-    </div>
+    <div class="filter-group"><span class="filter-label">From</span><input type="date" id="f-from"></div>
+    <div class="filter-group"><span class="filter-label">To</span><input type="date" id="f-to"></div>
   </div>
 
-  <!-- Summary cards -->
   <div id="summary-cards" class="summary-cards" style="display:none">
-    <div class="summary-card sc-total"><div class="sc-label">RESULTS</div><div class="sc-value" id="sc-total">0</div></div>
-    <div class="summary-card sc-passed"><div class="sc-label">PASSED</div><div class="sc-value" id="sc-passed">0</div></div>
-    <div class="summary-card sc-failed"><div class="sc-label">FAILED</div><div class="sc-value" id="sc-failed">0</div></div>
-    <div class="summary-card sc-skipped"><div class="sc-label">SKIPPED</div><div class="sc-value" id="sc-skipped">0</div></div>
+    <div class="sc sc-total"><div class="sc-label">Total Tests</div><div class="sc-value" id="sc-total">0</div></div>
+    <div class="sc sc-passed"><div class="sc-label">Passed</div><div class="sc-value" id="sc-passed">0</div></div>
+    <div class="sc sc-failed"><div class="sc-label">Failed</div><div class="sc-value" id="sc-failed">0</div></div>
+    <div class="sc sc-skipped"><div class="sc-label">Skipped</div><div class="sc-value" id="sc-skipped">0</div></div>
+    <div class="sc sc-pct"><div class="sc-label">Pass Rate</div><div class="sc-value" id="sc-pct">0%</div></div>
   </div>
 
-  <!-- Section -->
   <div class="section-title">
-    <h2>Overall Test Execution Summary</h2>
-    <p>Click a component name for quality-gate details. Click a cell to open the Jenkins build. Green ✓ = all passed, red ● = failures present.</p>
+    <h2>Component Heatmap</h2>
+    <p>Color = pass rate: 🟢 ≥95% · 🟡 80–94% · 🟠 60–79% · 🔴 &lt;60%. Hover a cell for all run details (latest on top). Click a component for gate details.</p>
   </div>
 
-  <!-- Heatmap -->
-  <div id="heatmap-content" class="heatmap-wrapper">
-    <div class="loading">Loading…</div>
+  <div id="heatmap-content" class="heatmap-wrapper"><div class="loading">Loading…</div></div>
+
+  <!-- Release trend chart -->
+  <div class="bottom-panel" id="release-panel" style="display:none">
+    <h3>Execution Across Releases</h3>
+    <p class="panel-sub">Aggregated pass / fail / skip trends per release across all components. Select versions to compare.</p>
+    <div class="version-toggles" id="version-toggles"></div>
+    <div class="chart-container"><canvas id="chart-releases"></canvas></div>
+    <div class="help-box">
+      <h4>About Releases</h4>
+      <ul>
+        <li><strong>GA (General Availability)</strong> — The stable, production-ready release (e.g., rhoai/3.5). All quality gates must pass.</li>
+        <li><strong>EA1 / EA2 (Early Access)</strong> — Pre-release milestones (e.g., rhoai/3.6-ea.1). These validate features before GA. EA1 = first milestone, EA2 = second milestone (closer to GA).</li>
+        <li>EA and GA results are combined per version to show the full release lifecycle: EA1 → EA2 → GA.</li>
+      </ul>
+    </div>
   </div>
 </div>
 
 <script>
-const DATA_BASE = '/test-dashboard';
+const $ = id => document.getElementById(id);
 
-function qs(id){ return document.getElementById(id) }
-
-// --- Date helpers ---
 function formatDate(d){ return d.toISOString().slice(0,10) }
 function friendlyDate(iso){
-  const d = new Date(iso + 'T00:00:00');
-  const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-  return months[d.getMonth()] + ' ' + d.getDate();
+  const d = new Date(iso+'T00:00:00');
+  return ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][d.getMonth()]+' '+d.getDate();
+}
+function getParam(n,fb){ return new URLSearchParams(location.search).get(n)||fb }
+function escHtml(s){ const d=document.createElement('div'); d.textContent=s; return d.innerHTML }
+
+function passPct(p,t){ return t>0 ? Math.round(p/t*100) : 0 }
+function pctColor(pct){
+  if(pct>=95) return 'green';
+  if(pct>=80) return 'amber';
+  if(pct>=60) return 'orange';
+  return 'red';
 }
 
-// --- URL param helpers ---
-function getParam(name, fallback){
-  const u = new URLSearchParams(window.location.search);
-  return u.get(name) || fallback;
-}
-
-// --- Init filters from URL or defaults ---
+// --- Init ---
 function initFilters(){
-  const today = new Date();
-  const fromDefault = new Date(today);
-  fromDefault.setDate(today.getDate() - 30);
-
-  qs('filter-version').value  = getParam('version','All');
-  qs('filter-release').value  = getParam('release','All');
-  qs('filter-from').value     = getParam('from_date', formatDate(fromDefault));
-  qs('filter-to').value       = getParam('to_date', formatDate(today));
+  const today = new Date(), from = new Date(today);
+  from.setDate(today.getDate()-30);
+  $('f-ver').value = getParam('version','All');
+  $('f-rel').value = getParam('release','All');
+  $('f-from').value = getParam('from_date', formatDate(from));
+  $('f-to').value = getParam('to_date', formatDate(today));
 }
-
 function currentFilters(){
-  return {
-    environment: 'RHOAI',
-    version: qs('filter-version').value,
-    release: qs('filter-release').value,
-    from_date: qs('filter-from').value,
-    to_date: qs('filter-to').value,
-    provider: 'All',
-    cluster_type: 'All',
-    gate: 'All',
-  };
+  return { environment:'RHOAI', version:$('f-ver').value, release:$('f-rel').value,
+    from_date:$('f-from').value, to_date:$('f-to').value, provider:'All', cluster_type:'All', gate:'All' };
 }
+function filterQS(extra){ return new URLSearchParams({...currentFilters(),...extra}).toString() }
 
-function filterQueryString(extra){
-  const f = {...currentFilters(), ...extra};
-  return new URLSearchParams(f).toString();
-}
-
-// --- Check if a by_vr key matches the selected filters ---
-// by_vr keys look like "3.6-ea.1|EA1", "3.6|GA", "3.5|GA", etc.
-// Version dropdown values are "3.6", "3.5", "2.25" — match the major version prefix.
 function vrKeyMatches(vrKey, version, release){
-  const [v, r] = vrKey.split('|');
-  if(version && version !== 'All'){
-    const major = v.split('-')[0];  // "3.6-ea.1" -> "3.6", "3.6" -> "3.6"
-    if(major !== version) return false;
-  }
-  if(release && release !== 'All' && r !== release) return false;
+  const [v,r] = vrKey.split('|');
+  if(version && version!=='All'){ if(v.split('-')[0]!==version) return false }
+  if(release && release!=='All' && r!==release) return false;
   return true;
 }
 
-// --- Filter static data client-side (date, version, release) ---
-function filterStaticData(data, filters){
-  const from = filters.from_date;
-  const to = filters.to_date;
-  const version = filters.version || 'All';
-  const release = filters.release || 'All';
-  const needsVrFilter = version !== 'All' || release !== 'All';
-
-  const filtered = { components: [] };
-  (data.components || []).forEach(comp => {
-    const newDays = {};
-    if(comp.days){
-      Object.entries(comp.days).forEach(([date, day]) => {
-        if(date < from || date > to) return;
-        if(!needsVrFilter){
-          newDays[date] = day;
-        } else if(day.by_vr){
-          let p=0, f=0, s=0, t=0, urls=[];
-          Object.entries(day.by_vr).forEach(([vrKey, vr]) => {
-            if(vrKeyMatches(vrKey, version, release)){
-              p += vr.passed || 0;
-              f += vr.failed || 0;
-              s += vr.skipped || 0;
-              t += vr.total || 0;
-              urls = urls.concat(vr.jenkins_urls || []);
-            }
-          });
-          if(t > 0){
-            newDays[date] = {
-              passed: p, failed: f, skipped: s, total: t,
-              execution_count: day.execution_count || 0,
-              mark: f > 0 ? {state:'FAILED',color:'red',symbol:'●'} : s > 0 ? {state:'SKIPPED',color:'amber',symbol:'●'} : {state:'PASSED',color:'green',symbol:'✓'},
-              jenkins_url: urls.length === 1 ? urls[0] : null,
-              jenkins_urls: urls,
-            };
-          }
+// --- Filter static data ---
+function filterStatic(data, f){
+  const {from_date:from, to_date:to, version, release} = f;
+  const needsVr = version!=='All'||release!=='All';
+  const out = {components:[]};
+  (data.components||[]).forEach(comp => {
+    const days = {};
+    Object.entries(comp.days||{}).forEach(([date,day]) => {
+      if(date<from||date>to) return;
+      if(!needsVr){ days[date]=day; return }
+      if(!day.by_vr) return;
+      let p=0,f2=0,s=0,t=0,urls=[];
+      Object.entries(day.by_vr).forEach(([k,vr]) => {
+        if(vrKeyMatches(k,version,release)){
+          p+=vr.passed||0; f2+=vr.failed||0; s+=vr.skipped||0; t+=vr.total||0;
+          urls=urls.concat(vr.jenkins_urls||[]);
         }
       });
-    }
-    let tp=0, tf=0, ts=0, tt=0;
-    Object.values(newDays).forEach(d => {
-      tp += d.passed || 0; tf += d.failed || 0;
-      ts += d.skipped || 0; tt += d.total || 0;
+      if(t>0) days[date]={passed:p,failed:f2,skipped:s,total:t,jenkins_urls:urls,by_vr:day.by_vr};
     });
-    if(tt > 0){
-      const mark = tf > 0 ? {state:'FAILED'} : ts > 0 ? {state:'SKIPPED'} : {state:'PASSED'};
-      filtered.components.push({
-        component: comp.component,
-        overall: { total: tt, passed: tp, failed: tf, skipped: ts, mark },
-        days: newDays,
-      });
-    }
+    let tp=0,tf=0,ts=0,tt=0;
+    Object.values(days).forEach(d=>{tp+=d.passed||0;tf+=d.failed||0;ts+=d.skipped||0;tt+=d.total||0});
+    if(tt>0) out.components.push({component:comp.component, overall:{total:tt,passed:tp,failed:tf,skipped:ts}, days});
   });
-  return filtered;
+  return out;
 }
 
-// --- Fetch heatmap (static JSON with client-side filtering) ---
+// --- Load data ---
+let rawHeatmapData = null;
+
 async function loadHeatmap(){
-  const content = qs('heatmap-content');
-  content.innerHTML = '<div class="loading">Loading…</div>';
-  const f = currentFilters();
-  try {
-    const resp = await fetch(`${DATA_BASE}/data/heatmap.json?_=${Date.now()}`);
-    if(!resp.ok) throw new Error(`HTTP ${resp.status}`);
-    const raw = await resp.json();
-    const data = filterStaticData(raw, f);
-    renderHeatmap(data, content);
-  } catch(e){
-    content.innerHTML = `<div class="error">Failed to load heatmap: ${e.message}</div>`;
-  }
+  const content=$('heatmap-content');
+  content.innerHTML='<div class="loading">Loading…</div>';
+  const f=currentFilters();
+  try{
+    // Try live API
+    try{
+      const r=await fetch(`/test-dashboard/data/heatmap.json?${new URLSearchParams(f)}`);
+      if(r.ok){const d=await r.json(); if(!d.error){renderAll(d);return}}
+    }catch(_){}
+    // Static JSON
+    if(!rawHeatmapData){
+      const r2=await fetch(`/test-dashboard/data/heatmap.json?_=${Date.now()}`);
+      if(r2.ok) rawHeatmapData=await r2.json();
+    }
+    if(rawHeatmapData) renderAll(filterStatic(rawHeatmapData,f));
+    else throw new Error('No data');
+  }catch(e){ content.innerHTML=`<div class="error">Failed: ${e.message}</div>` }
 }
 
-// --- Render ---
-function renderMark(mark){
-  if(!mark) return '<span class="mark-na">–</span>';
-  const state = mark.state || 'NA';
-  if(state === 'PASSED')  return '<span class="mark-passed">✓</span>';
-  if(state === 'FAILED')  return '<span class="mark-failed">●</span>';
-  if(state === 'SKIPPED') return '<span class="mark-skipped">●</span>';
-  return '<span class="mark-na">–</span>';
+function renderAll(data){
+  renderSummaryCards(data);
+  renderHeatmap(data,$('heatmap-content'));
+  renderReleaseChart(data);
 }
 
-function buildTooltip(day){
-  if(!day || day.total === 0) return '';
-  return `<div class="tooltip">
-    <strong>${day.total} tests</strong> (${day.execution_count || 0} exec)<br>
-    <span class="tp-passed">✓ ${day.passed} passed</span><br>
-    <span class="tp-failed">● ${day.failed} failed</span><br>
-    <span class="tp-skipped">● ${day.skipped} skipped</span>
-  </div>`;
+// --- Summary cards ---
+function renderSummaryCards(data){
+  let tt=0,tp=0,tf=0,ts=0;
+  (data.components||[]).forEach(c=>{
+    if(c.overall){tt+=c.overall.total||0;tp+=c.overall.passed||0;tf+=c.overall.failed||0;ts+=c.overall.skipped||0}
+  });
+  $('sc-total').textContent=tt.toLocaleString();
+  $('sc-passed').textContent=tp.toLocaleString();
+  $('sc-failed').textContent=tf.toLocaleString();
+  $('sc-skipped').textContent=ts.toLocaleString();
+  $('sc-pct').textContent=passPct(tp,tt)+'%';
+  $('summary-cards').style.display='grid';
 }
 
-function renderHeatmap(data, container){
-  const components = (data.components || []).slice().sort((a,b) => a.component.localeCompare(b.component));
-  if(components.length === 0){
-    container.innerHTML = '<div class="loading">No data available for the selected filters.</div>';
-    document.getElementById('summary-cards').style.display = 'none';
-    return;
-  }
+// --- Render heatmap ---
+function renderHeatmap(data,container){
+  const comps=(data.components||[]).slice().sort((a,b)=>a.component.localeCompare(b.component));
+  if(!comps.length){container.innerHTML='<div class="loading">No data for selected filters.</div>';return}
 
-  // Compute totals for summary cards
-  let totalTests = 0, totalPassed = 0, totalFailed = 0, totalSkipped = 0;
-  components.forEach(c => {
-    if(c.overall){
-      totalTests += c.overall.total || 0;
-      totalPassed += c.overall.passed || 0;
-      totalFailed += c.overall.failed || 0;
-      totalSkipped += c.overall.skipped || 0;
+  const dateSet=new Set();
+  comps.forEach(c=>Object.keys(c.days||{}).forEach(d=>dateSet.add(d)));
+  const dates=Array.from(dateSet).sort((a,b)=>b.localeCompare(a));
+
+  let html='<table class="heatmap"><thead><tr><th class="comp-header">Component</th>';
+  dates.forEach(d=>html+=`<th><div style="display:flex;flex-direction:column;align-items:center;gap:1px"><span>${friendlyDate(d)}</span></div></th>`);
+  html+='</tr></thead><tbody>';
+
+  comps.forEach(comp=>{
+    const fqs=filterQS({component:comp.component});
+    // Overall row stats
+    const ov=comp.overall||{};
+    const rowPct=passPct(ov.passed||0,ov.total||0);
+    html+=`<tr><td class="comp-name"><a href="component.html?${fqs}">${escHtml(comp.component)}</a>
+      <div style="font-size:10px;color:#6b8299">${rowPct}% · ${(ov.total||0).toLocaleString()} tests</div></td>`;
+
+    dates.forEach(d=>{
+      const day=comp.days?comp.days[d]:null;
+      if(!day||!day.total){html+='<td><span class="cell-na">–</span></td>';return}
+
+      const pct=passPct(day.passed,day.total);
+      const col=pctColor(pct);
+      const urls=day.jenkins_urls||[];
+
+      // Build hover dropdown with run details
+      let dropdown='';
+      if(urls.length>0||day.by_vr){
+        dropdown='<div class="cell-dropdown">';
+        dropdown+=`<div class="dd-title">${friendlyDate(d)} · ${urls.length} run${urls.length!==1?'s':''}</div>`;
+
+        // Show per-version/release runs if available
+        if(day.by_vr){
+          const vrEntries=Object.entries(day.by_vr).sort((a,b)=>b[0].localeCompare(a[0]));
+          vrEntries.forEach(([vrKey,vr])=>{
+            const [v,r]=vrKey.split('|');
+            const rpct=passPct(vr.passed||0,vr.total||0);
+            const rcol=pctColor(rpct);
+            const rUrls=vr.jenkins_urls||[];
+            rUrls.forEach((u,i)=>{
+              const label=u.replace('https://jenkins-csb-rhods-opendatascience.dno.corp.redhat.com/job/','').replace(/\/$/,'').replace(/\/job\//g,'/');
+              dropdown+=`<div class="dd-run"><div class="dd-run-header">
+                <a class="dd-run-label" href="${u}" target="_blank">${v} ${r}${rUrls.length>1?' #'+(i+1):''}</a>
+                <span class="dd-pct cell-pct-${rcol}">${rpct}%</span></div>
+                <div class="dd-run-counts"><span class="cp">✓${vr.passed||0}</span><span class="cf">✗${vr.failed||0}</span><span class="cs">⊘${vr.skipped||0}</span></div></div>`;
+            });
+          });
+        } else {
+          urls.forEach((u,i)=>{
+            const label=u.replace('https://jenkins-csb-rhods-opendatascience.dno.corp.redhat.com/job/','').replace(/\/$/,'').replace(/\/job\//g,'/');
+            dropdown+=`<div class="dd-run"><a class="dd-run-label" href="${u}" target="_blank">${label}</a></div>`;
+          });
+        }
+        dropdown+='</div>';
+      }
+
+      html+=`<td><div class="cell cell-${col}" title="${pct}% pass (${day.passed}P ${day.failed}F ${day.skipped}S)">
+        <div class="cell-pct cell-pct-${col}">${pct}%</div>
+        <div class="cell-counts"><span class="cp">${day.passed}</span><span class="cf">${day.failed}</span><span class="cs">${day.skipped}</span></div>
+        ${dropdown}</div></td>`;
+    });
+    html+='</tr>';
+  });
+  html+='</tbody></table>';
+  container.innerHTML=html;
+}
+
+// --- Release trend chart ---
+let releaseChart=null;
+
+function renderReleaseChart(data){
+  const panel=$('release-panel');
+  // Aggregate by version+release across all components per day
+  const vrDayMap={}; // "3.6|EA1" -> { "2026-09-10": {p,f,s} }
+  const versions=new Set();
+
+  (data.components||[]).forEach(comp=>{
+    Object.entries(comp.days||{}).forEach(([date,day])=>{
+      if(!day.by_vr) return;
+      Object.entries(day.by_vr).forEach(([vrKey,vr])=>{
+        const [v]=vrKey.split('|');
+        versions.add(v);
+        if(!vrDayMap[vrKey]) vrDayMap[vrKey]={};
+        if(!vrDayMap[vrKey][date]) vrDayMap[vrKey][date]={p:0,f:0,s:0};
+        vrDayMap[vrKey][date].p+=(vr.passed||0);
+        vrDayMap[vrKey][date].f+=(vr.failed||0);
+        vrDayMap[vrKey][date].s+=(vr.skipped||0);
+      });
+    });
+  });
+
+  if(!Object.keys(vrDayMap).length){panel.style.display='none';return}
+  panel.style.display='block';
+
+  // Version toggles
+  const toggles=$('version-toggles');
+  const sortedVersions=Array.from(versions).sort();
+  toggles.innerHTML=sortedVersions.map(v=>`<label><input type="checkbox" value="${v}" checked onchange="updateReleaseChart()"> ${v}</label>`).join('');
+
+  window._vrDayMap=vrDayMap;
+  updateReleaseChart();
+}
+
+function updateReleaseChart(){
+  const vrDayMap=window._vrDayMap||{};
+  const checked=Array.from(document.querySelectorAll('#version-toggles input:checked')).map(i=>i.value);
+
+  // Aggregate by release type (EA1, EA2, GA) for checked versions
+  const releaseMap={}; // "EA1" -> {date: {p,f,s}}
+  Object.entries(vrDayMap).forEach(([vrKey,dayData])=>{
+    const [v,r]=vrKey.split('|');
+    if(!checked.includes(v)) return;
+    const label=`${v} ${r}`;
+    if(!releaseMap[label]) releaseMap[label]={};
+    Object.entries(dayData).forEach(([date,counts])=>{
+      if(!releaseMap[label][date]) releaseMap[label][date]={p:0,f:0,s:0};
+      releaseMap[label][date].p+=counts.p;
+      releaseMap[label][date].f+=counts.f;
+      releaseMap[label][date].s+=counts.s;
+    });
+  });
+
+  const allDates=new Set();
+  Object.values(releaseMap).forEach(dm=>Object.keys(dm).forEach(d=>allDates.add(d)));
+  const dates=Array.from(allDates).sort();
+  const labels=dates.map(friendlyDate);
+
+  const colors=['#2ed573','#3498db','#e17055','#a29bfe','#fdcb6e','#6c5ce7','#00cec9','#fab1a0','#ff6b81','#70a1ff'];
+  const datasets=[];
+  let ci=0;
+  Object.keys(releaseMap).sort().forEach(label=>{
+    const dm=releaseMap[label];
+    const c=colors[ci%colors.length]; ci++;
+    datasets.push({
+      label:label+' (passed)', data:dates.map(d=>(dm[d]||{}).p||0),
+      borderColor:c, backgroundColor:c+'22', tension:.3, fill:false, pointRadius:2, borderWidth:2
+    });
+  });
+
+  const ctx=$('chart-releases').getContext('2d');
+  if(releaseChart) releaseChart.destroy();
+  releaseChart=new Chart(ctx,{
+    type:'line',
+    data:{labels,datasets},
+    options:{
+      responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{position:'bottom',labels:{color:'#8899aa',usePointStyle:true,pointStyle:'rect',padding:14,font:{size:11}}}},
+      scales:{
+        x:{ticks:{color:'#6b8299',font:{size:10},maxRotation:45},grid:{color:'rgba(30,73,118,.2)'}},
+        y:{ticks:{color:'#6b8299',font:{size:10}},grid:{color:'rgba(30,73,118,.3)'},beginAtZero:true}
+      }
     }
   });
-  document.getElementById('sc-total').textContent = totalTests.toLocaleString();
-  document.getElementById('sc-passed').textContent = totalPassed.toLocaleString();
-  document.getElementById('sc-failed').textContent = totalFailed.toLocaleString();
-  document.getElementById('sc-skipped').textContent = totalSkipped.toLocaleString();
-  document.getElementById('summary-cards').style.display = 'grid';
-
-  // Collect all dates across components, sort descending
-  const dateSet = new Set();
-  components.forEach(c => {
-    if(c.days) Object.keys(c.days).forEach(d => dateSet.add(d));
-  });
-  const dates = Array.from(dateSet).sort((a,b) => b.localeCompare(a));
-
-  let html = '<table class="heatmap"><thead><tr><th class="comp-header">Component</th>';
-  dates.forEach(d => {
-    html += `<th><div class="date-header"><span>${friendlyDate(d)}</span></div></th>`;
-  });
-  html += '</tr></thead><tbody>';
-
-  components.forEach(comp => {
-    const fqs = filterQueryString({component: comp.component});
-    html += `<tr><td class="comp-name"><a href="component.html?${fqs}">${comp.component}</a></td>`;
-    dates.forEach(d => {
-      const day = comp.days ? comp.days[d] : null;
-      const mark = day ? day.mark : null;
-      const urls = (day && day.jenkins_urls) ? day.jenkins_urls : (day && day.jenkins_url ? [day.jenkins_url] : []);
-      if(!day || day.total === 0){
-        html += '<td><span class="mark-na">–</span></td>';
-      } else {
-        const counts = `<div class="cell-counts"><span class="cp">${day.passed}</span><span class="cf">${day.failed}</span><span class="cs">${day.skipped}</span></div>`;
-        if(urls.length >= 1){
-          let dropdown = `<div class="builds-dropdown"><div class="bd-title">${urls.length} Jenkins build${urls.length>1?'s':''}</div>`;
-          urls.forEach((u, i) => {
-            const label = u.replace('https://jenkins-csb-rhods-opendatascience.dno.corp.redhat.com/job/','').replace(/\/$/, '').replace(/\/job\//g, '/');
-            dropdown += `<a href="${u}" target="_blank" rel="noopener">${urls.length>1?(i+1)+'. ':''}${label}</a>`;
-          });
-          dropdown += '</div>';
-          html += `<td><div class="builds-cell">${renderMark(mark)}${counts}<span class="builds-badge">${urls.length} build${urls.length>1?'s':''} ▴</span>${dropdown}</div></td>`;
-        } else {
-          html += `<td>${renderMark(mark)}${counts}</td>`;
-        }
-      }
-    });
-    html += '</tr>';
-  });
-
-  html += '</tbody></table>';
-  container.innerHTML = html;
 }
 
-// --- Event listeners ---
+// --- Events ---
 function onFilterChange(){
-  // Update URL without reload
-  const f = currentFilters();
-  const params = new URLSearchParams(f).toString();
-  history.replaceState(null, '', '?' + params);
-  loadHeatmap();
+  const f=currentFilters();
+  history.replaceState(null,'','?'+new URLSearchParams(f));
+  // Re-filter from cached raw data if available
+  if(rawHeatmapData) renderAll(filterStatic(rawHeatmapData,f));
+  else loadHeatmap();
 }
-
-qs('filter-version').addEventListener('change', onFilterChange);
-qs('filter-release').addEventListener('change', onFilterChange);
-qs('filter-from').addEventListener('change', onFilterChange);
-qs('filter-to').addEventListener('change', onFilterChange);
+$('f-ver').addEventListener('change',onFilterChange);
+$('f-rel').addEventListener('change',onFilterChange);
+$('f-from').addEventListener('change',onFilterChange);
+$('f-to').addEventListener('change',onFilterChange);
 
 // --- Boot ---
 initFilters();
