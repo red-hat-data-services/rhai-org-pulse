@@ -147,7 +147,7 @@
             type="button"
             class="flex items-center gap-2 text-left"
             :aria-expanded="!timelineCollapsed"
-            @click="timelineCollapsed = !timelineCollapsed"
+            @click="toggleTimeline"
           >
             <ChevronDown class="w-4 h-4 transition-transform" :class="timelineCollapsed ? '-rotate-90' : ''" />
             <span>
@@ -163,6 +163,8 @@
               v-for="release in releases"
               :key="release.name"
               type="button"
+              data-testid="timeline-release-filter"
+              :data-release="release.name"
               class="rounded-full border px-2.5 py-1 text-[11px] font-semibold transition-all"
               :class="releasePillClass(release.name)"
               :style="releasePillStyle(release)"
@@ -174,20 +176,37 @@
               type="button"
               class="ml-1 text-[11px] font-semibold text-primary-600 hover:underline dark:text-primary-400"
               @click="selectedReleases = new Set()"
-            >Show all</button>
+            >Clear selection</button>
           </span>
         </div>
 
         <div v-if="!timelineCollapsed" class="flex items-center justify-between gap-4 border-b border-gray-200 bg-white px-4 py-2 text-xs text-gray-500 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400">
-          <span><strong class="font-semibold text-gray-700 dark:text-gray-200">{{ visibleMilestoneCount }}</strong> milestones across {{ visibleReleaseGroups.length }} releases</span>
-          <span class="flex items-center gap-4">
+          <span v-if="selectedReleases.size"><strong class="font-semibold text-gray-700 dark:text-gray-200">{{ visibleMilestoneCount }}</strong> milestones across {{ visibleReleaseCount }} releases</span>
+          <span v-else class="font-semibold text-gray-600 dark:text-gray-300">No releases selected</span>
+          <span class="flex items-center gap-3">
+            <button
+              v-if="visibleMilestoneCount"
+              type="button"
+              data-testid="focus-timeline-date"
+              class="inline-flex items-center gap-1.5 rounded-md border border-red-200 bg-red-50 px-2.5 py-1 font-semibold text-red-700 transition-colors hover:bg-red-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-500 dark:border-red-800 dark:bg-red-950/40 dark:text-red-300 dark:hover:bg-red-900/50"
+              @click="scrollToCursor()"
+            >
+              <LocateFixed class="h-3.5 w-3.5" />
+              {{ focusDateButtonLabel }}
+              <span v-if="selectedDateEventCount" class="rounded-full bg-red-600 px-1.5 text-[10px] leading-4 text-white dark:bg-red-500">{{ selectedDateEventCount }}</span>
+            </button>
             <span class="inline-flex items-center gap-1.5"><i class="h-2.5 w-2.5 rotate-45 rounded-[2px] bg-gray-500" /> Milestone</span>
             <span class="inline-flex items-center gap-1.5"><i class="h-2.5 w-7 rounded-full bg-gray-300 dark:bg-gray-600" /> Duration</span>
           </span>
         </div>
 
         <div v-if="!timelineCollapsed" ref="timelineViewport" data-testid="aipcc-timeline-viewport" class="max-h-[620px] overflow-auto milestone-scrollbar">
+          <div v-if="!selectedReleases.size" data-testid="timeline-empty-selection" class="flex h-48 w-full flex-col items-center justify-center gap-2 border-b border-gray-200 bg-white px-6 text-center dark:border-gray-700 dark:bg-gray-900">
+            <strong class="text-base font-bold text-gray-800 dark:text-gray-100">Click on a release to view schedule</strong>
+            <span class="text-xs text-gray-500 dark:text-gray-400">Select one or more release pills above to compare their milestones.</span>
+          </div>
           <div
+            v-else
             ref="timelineSurface"
             class="relative min-h-24 select-none bg-white dark:bg-gray-900"
             :style="{ width: `${timelineWidth + labelWidth}px` }"
@@ -195,9 +214,9 @@
             @pointerup="stopCursorDrag"
             @pointercancel="stopCursorDrag"
           >
-            <div class="sticky top-0 z-40 h-14 border-b border-gray-200 bg-white/95 shadow-sm backdrop-blur dark:border-gray-700 dark:bg-gray-800/95">
-              <div class="sticky left-0 z-50 flex h-14 w-[220px] items-center border-r border-gray-200 bg-gray-50 px-4 text-[11px] font-bold uppercase tracking-wider text-gray-500 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400">
-                Release / workstream
+            <div class="sticky top-0 z-[90] h-14 border-b border-gray-200 bg-white/95 shadow-sm backdrop-blur dark:border-gray-700 dark:bg-gray-800/95">
+              <div class="sticky left-0 z-[95] flex h-14 w-[180px] items-center border-r border-gray-200 bg-gray-50 px-3 text-[11px] font-bold uppercase tracking-wider text-gray-500 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400">
+                Release
               </div>
               <div
                 v-for="month in timelineConfig.months"
@@ -229,72 +248,100 @@
             />
 
             <div
-              class="absolute inset-y-0 z-[60] w-5 cursor-ew-resize touch-none"
+              class="absolute inset-y-0 z-[100] w-5 cursor-ew-resize touch-none"
               :style="{ left: `${labelWidth + cursorDay * pxPerDay - 10}px` }"
               :aria-label="`Selected date: ${formatMarkerDate(cursorDate)}`"
               @pointerdown="startCursorDrag"
             >
               <span class="absolute inset-y-0 left-1/2 w-0.5 -translate-x-1/2 bg-red-600 dark:bg-red-400" />
-              <span class="absolute top-2 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-md border-2 border-white bg-red-600 px-3 py-1.5 text-xs font-bold text-white shadow-lg dark:border-gray-900 dark:bg-red-500">
+              <span class="sticky top-2 left-1/2 block w-max -translate-x-1/2 whitespace-nowrap rounded-md border-2 border-white bg-red-600 px-3 py-1.5 text-xs font-bold text-white shadow-lg dark:border-gray-900 dark:bg-red-500">
                 {{ formatMarkerDate(cursorDate) }}
               </span>
-              <span class="absolute top-8 left-1/2 h-3 w-3 -translate-x-1/2 rounded-full border-2 border-white bg-red-600 shadow" />
             </div>
 
             <div
-              v-for="release in visibleReleaseGroups"
-              :key="release.name"
-              class="timeline-release-row relative border-b border-gray-200 last:border-b-0 dark:border-gray-700"
-              :style="{ height: `${release.height}px` }"
+              data-testid="aipcc-overlap-timeline"
+              class="relative border-b border-gray-200 dark:border-gray-700"
             >
-              <div class="sticky left-0 z-20 flex h-full w-[220px] items-start gap-3 border-r border-gray-200 bg-white px-4 py-4 dark:border-gray-700 dark:bg-gray-800">
-                <span class="mt-0.5 h-9 w-1 shrink-0 rounded-full" :style="{ backgroundColor: release.color }" />
-                <span class="min-w-0">
-                  <span class="block text-sm font-bold leading-5 text-gray-800 dark:text-gray-100">{{ release.name }}</span>
-                  <span class="mt-1 block text-[11px] text-gray-400 dark:text-gray-500">{{ release.milestones.length }} milestones · {{ release.phases.length }} phases</span>
-                </span>
-              </div>
+              <div
+                v-for="row in timelineEventRows"
+                :key="row.id"
+                data-testid="timeline-event-row"
+                :data-release="row.release"
+                :data-target-date="row.targetDate"
+                :data-selected-date="row.targetDate === selectedDateIso"
+                class="timeline-event-row relative h-8 border-b border-gray-100 last:border-b-0 dark:border-gray-800"
+                :class="{ 'timeline-event-row--selected': row.targetDate === selectedDateIso }"
+              >
+                <div class="sticky left-0 z-[80] flex h-full w-[180px] items-center gap-2 border-r border-gray-200 bg-white px-3 dark:border-gray-700 dark:bg-gray-800">
+                  <span class="h-2.5 w-2.5 shrink-0 rounded-full" :style="{ backgroundColor: row.color }" />
+                  <span v-if="row.showReleaseLabel" data-testid="timeline-release-label" class="truncate text-[11px] font-semibold" :style="{ color: row.color }">{{ row.release }}</span>
+                </div>
 
-              <template v-for="milestone in release.milestones" :key="milestone.id">
+                <div class="absolute right-0 top-1/2 h-px bg-gray-200 dark:bg-gray-700" :style="{ left: `${labelWidth}px` }" />
+
                 <div
-                  v-if="milestone.isRange"
-                  class="timeline-bar absolute z-[5] flex h-9 items-center overflow-hidden rounded-lg border px-3 text-xs font-bold text-white transition-all hover:z-30 hover:-translate-y-0.5 hover:shadow-lg"
-                  :style="rangeStyle(milestone, release)"
-                  :title="tooltipText(milestone)"
+                  v-if="row.start < row.end"
+                  class="timeline-range absolute z-[5] h-2 rounded-full border"
+                  :style="eventRangeStyle(row)"
+                />
+
+                <button
+                  type="button"
+                  data-testid="timeline-date-event"
+                  :data-event-count="row.dateGroup.events.length"
+                  :data-multi-release="row.dateGroup.colors.length > 1"
+                  class="absolute z-[70] h-5 w-5 -translate-x-1/2 rounded-full border-2 border-white shadow-md outline-none transition-transform hover:z-[80] hover:scale-125 focus-visible:z-[80] focus-visible:scale-125 focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 dark:border-gray-900"
+                  :style="eventPointStyle(row)"
+                  :aria-label="`${row.name}, ${formatMarkerDate(parseDate(row.targetDate))}. ${row.dateGroup.events.length} milestone${row.dateGroup.events.length === 1 ? '' : 's'} on this date`"
+                  @pointerenter="showTimelineTooltip($event, row.dateGroup)"
+                  @pointerleave="hideTimelineTooltip"
+                  @focus="showTimelineTooltip($event, row.dateGroup)"
+                  @blur="hideTimelineTooltip"
                 >
-                  <span class="mr-2 h-2 w-2 shrink-0 rounded-full" :style="{ backgroundColor: isActiveAtCursor(milestone) ? 'white' : release.color }" />
-                  <span class="truncate">{{ milestone.name }}</span>
-                </div>
-                <div
-                  v-else
-                  class="group absolute z-[5] flex h-9 items-center hover:z-30"
-                  :style="pointStyle(milestone)"
-                  :title="tooltipText(milestone)"
-                >
-                  <span class="h-3.5 w-3.5 shrink-0 rotate-45 rounded-[3px] border-2 border-white shadow-md transition-transform group-hover:scale-125" :style="{ backgroundColor: release.color, boxShadow: `0 0 0 1px ${release.color}` }" />
-                  <span class="ml-2 max-w-56 rounded-md bg-white px-2 py-1 text-[11px] font-bold text-gray-800 shadow-md ring-1 ring-gray-200 dark:bg-gray-800 dark:text-gray-100 dark:ring-gray-600">
-                    <span class="block truncate">{{ milestone.name }}</span>
-                    <span class="block text-[9px] font-medium text-gray-500 dark:text-gray-400">{{ formatShortDate(milestone.targetDate) }}</span>
-                  </span>
-                </div>
-              </template>
+                  <span
+                    v-if="row.dateIndex === 0 && row.dateGroup.events.length > 1"
+                    class="pointer-events-none absolute -right-2.5 -top-2.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-gray-900 px-1 text-[9px] font-bold leading-none text-white dark:bg-gray-100 dark:text-gray-900"
+                  >{{ row.dateGroup.events.length }}</span>
+                </button>
+              </div>
             </div>
           </div>
         </div>
       </section>
     </template>
   </div>
+
+  <Teleport to="body">
+    <div
+      v-if="activeTimelineDate"
+      role="tooltip"
+      data-testid="timeline-date-tooltip"
+      class="pointer-events-none fixed z-[200] rounded-lg border border-gray-200 bg-white p-3 text-left normal-case shadow-xl dark:border-gray-600 dark:bg-gray-800"
+      :style="timelineTooltipStyle"
+    >
+      <span class="block border-b border-gray-100 pb-2 text-xs font-bold text-gray-900 dark:border-gray-700 dark:text-gray-100">{{ formatMarkerDate(parseDate(activeTimelineDate.date)) }}</span>
+      <span v-for="event in activeTimelineDate.events" :key="event.id" data-testid="timeline-tooltip-event" class="mt-2 flex items-start gap-2 first:mt-0">
+        <i class="mt-1 h-2.5 w-2.5 shrink-0 rounded-full" :style="{ backgroundColor: event.color }" />
+        <span class="min-w-0">
+          <span class="block text-[10px] font-bold uppercase tracking-wide" :style="{ color: event.color }">{{ event.release }}</span>
+          <span class="block text-xs font-semibold leading-4 text-gray-800 dark:text-gray-100">{{ event.name }}</span>
+          <span class="block text-[10px] font-medium leading-4 text-gray-500 dark:text-gray-400">{{ event.phase }} · {{ eventDateDetail(event) }}</span>
+        </span>
+      </span>
+    </div>
+  </Teleport>
 </template>
 
 <script setup>
 import { computed, nextTick, onBeforeUnmount, onMounted, ref } from 'vue'
-import { ArrowLeft, ChevronDown, ExternalLink, RefreshCw } from 'lucide-vue-next'
+import { ArrowLeft, ChevronDown, ExternalLink, LocateFixed, RefreshCw } from 'lucide-vue-next'
 import { apiRequest } from '@shared/client/services/api.js'
 import { useAuth } from '@shared/client/composables/useAuth'
 
 const API_PATH = '/modules/releases/aipcc-milestones'
 const DAY_MS = 24 * 60 * 60 * 1000
-const labelWidth = 220
+const labelWidth = 180
 const RELEASE_COLORS = ['#2a78d6', '#1baf7a', '#eda100', '#008300', '#4a3aa7', '#e34948', '#e87ba4', '#eb6834']
 const dayOptions = [1, 3, 7, 14, 21, 30, 60, 90]
 const { isAdmin } = useAuth()
@@ -317,6 +364,8 @@ const pxPerDay = ref(20)
 const dragging = ref(false)
 const timelineViewport = ref(null)
 const timelineSurface = ref(null)
+const activeTimelineDate = ref(null)
+const timelineTooltipStyle = ref({})
 const today = startOfDay(new Date())
 let resizeObserver = null
 
@@ -386,10 +435,11 @@ function flattenReleases(items) {
 }
 
 const allMilestones = computed(() => flattenReleases(releases.value))
-const isReleaseVisible = name => !selectedReleases.value.size || selectedReleases.value.has(name)
+const isReleaseSelected = name => selectedReleases.value.has(name)
+const isReleaseIncluded = name => !selectedReleases.value.size || selectedReleases.value.has(name)
 
 const upcomingMilestones = computed(() => allMilestones.value
-  .filter(item => isReleaseVisible(item.release))
+  .filter(item => isReleaseIncluded(item.release))
   .filter(item => {
     const days = daysFromToday(item.targetDate)
     return days >= 0 && days <= upcomingDays.value
@@ -442,30 +492,67 @@ const timelineConfig = computed(() => {
 const timelineWidth = computed(() => Math.max(1, timelineConfig.value.totalDays * pxPerDay.value))
 const cursorDate = computed(() => addDays(timelineConfig.value.start, cursorDay.value))
 const todayOffset = computed(() => dayOffset(today, timelineConfig.value.start))
+const selectedDateIso = computed(() => isoDate(cursorDate.value))
+const visibleReleaseNames = computed(() => releases.value.filter(release => isReleaseSelected(release.name)).map(release => release.name))
+const visibleReleaseCount = computed(() => visibleReleaseNames.value.length)
+const visibleMilestones = computed(() => allMilestones.value.filter(item => isReleaseSelected(item.release)))
+const visibleMilestoneCount = computed(() => visibleMilestones.value.length)
+const selectedDateEventCount = computed(() => visibleMilestones.value.filter(item => item.targetDate === selectedDateIso.value).length)
+const focusDateButtonLabel = computed(() => {
+  if (selectedDateIso.value === isoDate(today) && selectedDateEventCount.value) return "Show today's events"
+  if (selectedDateEventCount.value) return `Show ${formatShortDate(cursorDate.value)} events`
+  return `Jump near ${formatShortDate(cursorDate.value)}`
+})
 
-function assignLanes(items) {
-  return [...items].sort((a, b) => (a.startDate || a.targetDate).localeCompare(b.startDate || b.targetDate)).map((item, lane) => {
-    const start = dayOffset(parseDate(item.startDate || item.targetDate), timelineConfig.value.start)
-    const end = dayOffset(parseDate(item.targetDate), timelineConfig.value.start)
-    const width = Math.max((end - start) * pxPerDay.value, 72)
-    return { ...item, lane, start, end, width, isRange: end > start }
-  })
-}
+const timelineDateGroups = computed(() => {
+  const groups = new Map()
+  for (const event of visibleMilestones.value) {
+    if (!groups.has(event.targetDate)) groups.set(event.targetDate, [])
+    groups.get(event.targetDate).push(event)
+  }
+  return [...groups.entries()]
+    .sort(([dateA], [dateB]) => dateA.localeCompare(dateB))
+    .map(([date, events]) => ({
+      date,
+      events: events.sort((a, b) => a.release.localeCompare(b.release) || a.name.localeCompare(b.name)),
+      colors: [...new Set(events.map(event => event.color))],
+      offset: dayOffset(parseDate(date), timelineConfig.value.start)
+    }))
+})
 
-const releaseGroups = computed(() => releases.value.map((release, index) => {
-  const color = RELEASE_COLORS[index % RELEASE_COLORS.length]
-  const milestones = assignLanes(flattenReleases([release]).map(item => ({ ...item, color })))
-  const laneCount = milestones.reduce((max, item) => Math.max(max, item.lane + 1), 1)
-  return { ...release, color, milestones, height: laneCount * 46 + 34 }
-}))
-const visibleReleaseGroups = computed(() => releaseGroups.value.filter(release => isReleaseVisible(release.name)))
-const visibleMilestoneCount = computed(() => visibleReleaseGroups.value.reduce((total, release) => total + release.milestones.length, 0))
+const timelineEventRows = computed(() => {
+  const groups = new Map(timelineDateGroups.value.map(group => [group.date, group]))
+  const dateIndexes = new Map()
+  const labeledReleases = new Set()
+  return [...visibleMilestones.value]
+    .sort((a, b) => a.targetDate.localeCompare(b.targetDate) || a.release.localeCompare(b.release) || a.name.localeCompare(b.name))
+    .map(event => {
+      const dateIndex = dateIndexes.get(event.targetDate) || 0
+      dateIndexes.set(event.targetDate, dateIndex + 1)
+      const showReleaseLabel = !labeledReleases.has(event.release)
+      labeledReleases.add(event.release)
+      return {
+        ...event,
+        start: dayOffset(parseDate(event.startDate || event.targetDate), timelineConfig.value.start),
+        end: dayOffset(parseDate(event.targetDate), timelineConfig.value.start),
+        dateGroup: groups.get(event.targetDate),
+        dateIndex,
+        showReleaseLabel
+      }
+    })
+})
 
 function toggleRelease(name) {
   const next = new Set(selectedReleases.value)
   if (next.has(name)) next.delete(name)
   else next.add(name)
   selectedReleases.value = next
+  scrollToCursor('auto')
+}
+
+function toggleTimeline() {
+  timelineCollapsed.value = !timelineCollapsed.value
+  if (!timelineCollapsed.value) scrollToCursor('auto')
 }
 
 function chipStyle(item) {
@@ -480,13 +567,19 @@ function urgencyClasses(days) {
 }
 
 function releasePillClass(name) {
-  return selectedReleases.value.size && !selectedReleases.value.has(name) ? 'opacity-40 grayscale' : ''
+  return selectedReleases.value.has(name)
+    ? 'shadow-sm ring-1 ring-current ring-offset-1 dark:ring-offset-gray-900'
+    : 'opacity-60 hover:opacity-100'
 }
 
 function releasePillStyle(release) {
   const index = releases.value.findIndex(item => item.name === release.name)
   const color = RELEASE_COLORS[index % RELEASE_COLORS.length]
-  return { color, backgroundColor: `${color}16`, borderColor: `${color}40` }
+  return {
+    color,
+    backgroundColor: selectedReleases.value.has(release.name) ? `${color}16` : 'transparent',
+    borderColor: `${color}55`
+  }
 }
 
 function monthStyle(month) {
@@ -494,27 +587,59 @@ function monthStyle(month) {
 }
 
 function isActiveAtCursor(item) {
-  return cursorDay.value >= item.start && cursorDay.value <= item.end && item.isRange
+  return cursorDay.value >= item.start && cursorDay.value <= item.end
 }
 
-function rangeStyle(item, release) {
+function eventRangeStyle(item) {
   const active = isActiveAtCursor(item)
   return {
-    left: `${labelWidth + item.start * pxPerDay.value}px`, top: `${16 + item.lane * 46}px`, width: `${item.width}px`,
-    borderColor: release.color,
-    backgroundColor: release.color,
-    color: 'white',
-    boxShadow: active ? `0 0 0 3px ${release.color}45, 0 4px 10px rgb(0 0 0 / 0.18)` : '0 2px 5px rgb(0 0 0 / 0.14)'
+    left: `${labelWidth + item.start * pxPerDay.value}px`,
+    top: '12px',
+    width: `${Math.max((item.end - item.start) * pxPerDay.value, 8)}px`,
+    borderColor: item.color,
+    backgroundColor: `${item.color}${active ? 'b8' : '70'}`,
+    boxShadow: active ? `0 0 0 2px ${item.color}45` : 'none'
   }
 }
 
-function pointStyle(item) {
-  return { left: `${labelWidth + item.end * pxPerDay.value - 7}px`, top: `${16 + item.lane * 46}px` }
+function dateGroupBackground(group) {
+  const slice = 360 / group.colors.length
+  return group.colors.length === 1
+    ? group.colors[0]
+    : `conic-gradient(${group.colors.map((color, index) => `${color} ${index * slice}deg ${(index + 1) * slice}deg`).join(', ')})`
 }
 
-function tooltipText(item) {
-  const date = item.startDate ? `${formatShortDate(item.startDate)} – ${formatShortDate(item.targetDate)}` : formatShortDate(item.targetDate)
-  return `${item.name}\n${item.phase} · ${item.release}\n${date}`
+function eventPointStyle(row) {
+  return {
+    left: `${labelWidth + row.end * pxPerDay.value}px`,
+    top: '6px',
+    background: dateGroupBackground(row.dateGroup)
+  }
+}
+
+function showTimelineTooltip(event, group) {
+  const dotBounds = event.currentTarget.getBoundingClientRect()
+  const viewportBounds = timelineViewport.value?.getBoundingClientRect() || { left: 0, right: window.innerWidth }
+  const width = Math.min(384, Math.max(280, viewportBounds.right - viewportBounds.left - 24))
+  const estimatedHeight = 46 + group.events.length * 52
+  const minLeft = Math.max(12, viewportBounds.left + 8)
+  const maxLeft = Math.min(window.innerWidth - width - 12, viewportBounds.right - width - 8)
+  const left = Math.max(minLeft, Math.min(dotBounds.left + dotBounds.width / 2 - width / 2, maxLeft))
+  const top = dotBounds.top - estimatedHeight - 14 >= 12
+    ? dotBounds.top - estimatedHeight - 14
+    : dotBounds.bottom + 14
+  activeTimelineDate.value = group
+  timelineTooltipStyle.value = { left: `${left}px`, top: `${top}px`, width: `${width}px` }
+}
+
+function hideTimelineTooltip() {
+  activeTimelineDate.value = null
+}
+
+function eventDateDetail(event) {
+  return event.startDate
+    ? `${formatShortDate(event.startDate)} – ${formatShortDate(event.targetDate)}`
+    : formatShortDate(event.targetDate)
 }
 
 function navigateToDate() {
@@ -532,7 +657,14 @@ function resetToToday() {
 function scrollToCursor(behavior = 'smooth') {
   nextTick(() => {
     if (!timelineViewport.value) return
-    timelineViewport.value.scrollTo?.({ left: Math.max(0, labelWidth + cursorDay.value * pxPerDay.value - timelineViewport.value.clientWidth / 3), behavior })
+    const selectedDate = isoDate(cursorDate.value)
+    const matchingIndex = timelineEventRows.value.findIndex(row => row.targetDate >= selectedDate)
+    const rowIndex = matchingIndex === -1 ? Math.max(0, timelineEventRows.value.length - 1) : matchingIndex
+    timelineViewport.value.scrollTo?.({
+      left: Math.max(0, labelWidth + cursorDay.value * pxPerDay.value - timelineViewport.value.clientWidth / 3),
+      top: Math.max(0, 56 + (rowIndex - 2) * 32),
+      behavior
+    })
   })
 }
 
@@ -680,15 +812,23 @@ onBeforeUnmount(() => resizeObserver?.disconnect())
   scrollbar-width: thin;
 }
 
-.timeline-release-row:nth-child(even) {
-  background: rgb(249 250 251 / 0.65);
+.timeline-event-row:nth-child(even) {
+  background: rgb(249 250 251 / 0.7);
 }
 
-.timeline-release-row:nth-child(even) > div:first-child {
+.timeline-event-row:nth-child(even) > div:first-child {
   background: rgb(249 250 251);
 }
 
-.timeline-bar {
+.timeline-event-row.timeline-event-row--selected {
+  background: rgb(254 242 242 / 0.9);
+}
+
+.timeline-event-row.timeline-event-row--selected > div:first-child {
+  background: rgb(254 242 242);
+}
+
+.timeline-range {
   box-shadow: 0 1px 2px rgb(0 0 0 / 0.06);
 }
 
@@ -707,12 +847,20 @@ onBeforeUnmount(() => resizeObserver?.disconnect())
   color: rgb(147 197 253);
 }
 
-:global(.dark) .timeline-release-row:nth-child(even) {
+:global(.dark) .timeline-event-row:nth-child(even) {
   background: rgb(17 24 39 / 0.45);
 }
 
-:global(.dark) .timeline-release-row:nth-child(even) > div:first-child {
+:global(.dark) .timeline-event-row:nth-child(even) > div:first-child {
   background: rgb(17 24 39);
+}
+
+:global(.dark) .timeline-event-row.timeline-event-row--selected {
+  background: rgb(127 29 29 / 0.18);
+}
+
+:global(.dark) .timeline-event-row.timeline-event-row--selected > div:first-child {
+  background: rgb(69 10 10);
 }
 
 @media (max-width: 1023px) {

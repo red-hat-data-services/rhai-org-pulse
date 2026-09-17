@@ -228,6 +228,13 @@ test.describe('Releases Views @releases', () => {
     await page.waitForLoadState('networkidle');
 
     await expect(page.getByRole('heading', { name: 'AIPCC Release Milestones' })).toBeVisible();
+    await expect(page.getByTestId('timeline-empty-selection')).toContainText('Click on a release to view schedule');
+    const releaseFilters = page.getByTestId('timeline-release-filter');
+    expect(await releaseFilters.count()).toBeGreaterThan(0);
+    for (const releaseFilter of await releaseFilters.all()) {
+      await expect(releaseFilter).toHaveAttribute('aria-pressed', 'false');
+      await releaseFilter.click();
+    }
     const timeline = page.getByTestId('aipcc-timeline-viewport');
     await expect.poll(() => timeline.evaluate(element => {
       const marker = element.querySelector('[aria-label^="Selected date:"]');
@@ -235,6 +242,32 @@ test.describe('Releases Views @releases', () => {
       const markerBounds = marker.getBoundingClientRect();
       return markerBounds.left >= viewportBounds.left && markerBounds.right <= viewportBounds.right;
     })).toBe(true);
+    await expect(page.getByTestId('aipcc-overlap-timeline')).toBeVisible();
+    const firstEventDate = await page.getByTestId('timeline-event-row').first().getAttribute('data-target-date');
+    await page.locator('input[type="date"]').fill(firstEventDate);
+    await page.getByRole('button', { name: 'Go', exact: true }).click();
+    const focusDateButton = page.getByTestId('focus-timeline-date');
+    await expect(focusDateButton).toContainText('Show');
+    await focusDateButton.click();
+    const selectedDateRow = page.locator('[data-selected-date="true"]').first();
+    await expect(selectedDateRow).toBeVisible();
+    await expect.poll(async () => {
+      const [rowBounds, viewportBounds] = await Promise.all([selectedDateRow.boundingBox(), timeline.boundingBox()]);
+      if (!rowBounds || !viewportBounds) return false;
+      return rowBounds.y >= viewportBounds.y + 56 && rowBounds.y < viewportBounds.y + viewportBounds.height;
+    }).toBe(true);
+    const multiReleaseDate = page.locator('[data-testid="timeline-date-event"][data-multi-release="true"]').first();
+    await expect(multiReleaseDate).toBeVisible();
+    await multiReleaseDate.hover();
+    const tooltip = page.getByTestId('timeline-date-tooltip');
+    await expect(tooltip).toBeVisible();
+    expect(await tooltip.getByTestId('timeline-tooltip-event').count()).toBeGreaterThan(1);
+    await expect.poll(async () => {
+      const [tooltipBounds, viewportBounds] = await Promise.all([tooltip.boundingBox(), timeline.boundingBox()]);
+      if (!tooltipBounds || !viewportBounds) return false;
+      return tooltipBounds.x >= viewportBounds.x
+        && tooltipBounds.x + tooltipBounds.width <= viewportBounds.x + viewportBounds.width;
+    }).toBe(true);
     await expect(page).toHaveURL(/#\/releases\/schedule\/aipcc$/);
     expect(page.errors).toHaveLength(0);
   });
