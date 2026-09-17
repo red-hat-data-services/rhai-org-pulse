@@ -4,6 +4,7 @@ var {
   TOKEN_URL,
   CASE_API_BASE_URL,
   CASE_API_V1_BASE_URL,
+  ACCOUNT_API_V1_BASE_URL,
   extractLinkedCaseNumbers,
   extractCustomerName,
   createCustomerPortalClient
@@ -83,16 +84,16 @@ describe('createCustomerPortalClient', function() {
     expect(fetchImpl.mock.calls[0][1].body.get('grant_type')).toBe('refresh_token')
     expect(fetchImpl.mock.calls[0][1].body.get('client_id')).toBe('rhsm-api')
     expect(fetchImpl.mock.calls[0][1].body.get('refresh_token')).toBe('offline-token')
-    expect(fetchImpl.mock.calls[1][0]).toBe(CASE_API_BASE_URL + '/04523117')
+    expect(fetchImpl.mock.calls[1][0]).toBe(CASE_API_V1_BASE_URL + '/04523117')
     expect(fetchImpl.mock.calls[1][1].headers.Authorization).toBe('Bearer access-token')
   })
 
-  it('falls back to the v1 case API when v3 rejects the valid access token', async function() {
+  it('falls back to the v3 case API when v1 rejects the valid access token', async function() {
     var fetchImpl = vi.fn()
       .mockResolvedValueOnce(jsonResponse(200, { access_token: 'access-token', expires_in: 900 }))
       .mockResolvedValueOnce(jsonResponse(401, {}))
       .mockResolvedValueOnce(jsonResponse(200, {
-        accountName: 'Canadian Imperial Bank Of Commerce'
+        account: { name: 'Canadian Imperial Bank Of Commerce' }
       }))
     var client = createCustomerPortalClient({
       offlineToken: 'offline-token',
@@ -102,8 +103,8 @@ describe('createCustomerPortalClient', function() {
     await expect(client.getCustomerName('04523117')).resolves.toBe('Canadian Imperial Bank Of Commerce')
 
     expect(fetchImpl).toHaveBeenCalledTimes(3)
-    expect(fetchImpl.mock.calls[1][0]).toBe(CASE_API_BASE_URL + '/04523117')
-    expect(fetchImpl.mock.calls[2][0]).toBe(CASE_API_V1_BASE_URL + '/04523117')
+    expect(fetchImpl.mock.calls[1][0]).toBe(CASE_API_V1_BASE_URL + '/04523117')
+    expect(fetchImpl.mock.calls[2][0]).toBe(CASE_API_BASE_URL + '/04523117')
     expect(fetchImpl.mock.calls[2][1].headers.Authorization).toBe('Bearer access-token')
   })
 
@@ -115,6 +116,46 @@ describe('createCustomerPortalClient', function() {
     var client = createCustomerPortalClient({ offlineToken: 'offline-token', fetchImpl: fetchImpl })
 
     await expect(client.getCustomerName('04523117')).resolves.toBe('')
-    expect(fetchImpl.mock.calls[2][0]).toBe(CASE_API_V1_BASE_URL + '/04523117')
+    expect(fetchImpl.mock.calls[1][0]).toBe(CASE_API_V1_BASE_URL + '/04523117')
+    expect(fetchImpl.mock.calls[2][0]).toBe(CASE_API_BASE_URL + '/04523117')
+  })
+
+  it('falls back to the next base URL when a fetch throws (e.g. timeout)', async function() {
+    var fetchImpl = vi.fn()
+      .mockResolvedValueOnce(jsonResponse(200, { access_token: 'access-token', expires_in: 900 }))
+      .mockRejectedValueOnce(new DOMException('The operation was aborted due to timeout', 'TimeoutError'))
+      .mockResolvedValueOnce(jsonResponse(200, {
+        accountName: 'Acme Corp'
+      }))
+    var client = createCustomerPortalClient({
+      offlineToken: 'offline-token',
+      fetchImpl: fetchImpl
+    })
+
+    await expect(client.getCustomerName('04523117')).resolves.toBe('Acme Corp')
+    expect(fetchImpl).toHaveBeenCalledTimes(3)
+    expect(fetchImpl.mock.calls[1][0]).toBe(CASE_API_V1_BASE_URL + '/04523117')
+    expect(fetchImpl.mock.calls[2][0]).toBe(CASE_API_BASE_URL + '/04523117')
+  })
+
+  it('resolves customer name via accounts API when case response has accountNumberRef but no name', async function() {
+    var fetchImpl = vi.fn()
+      .mockResolvedValueOnce(jsonResponse(200, { access_token: 'access-token', expires_in: 900 }))
+      .mockResolvedValueOnce(jsonResponse(200, {
+        caseNumber: '04523117',
+        contactName: 'John Doe',
+        accountNumberRef: '9649082'
+      }))
+      .mockResolvedValueOnce(jsonResponse(200, {
+        name: 'International Business Machines Corporation'
+      }))
+    var client = createCustomerPortalClient({
+      offlineToken: 'offline-token',
+      fetchImpl: fetchImpl
+    })
+
+    await expect(client.getCustomerName('04523117')).resolves.toBe('International Business Machines Corporation')
+    expect(fetchImpl).toHaveBeenCalledTimes(3)
+    expect(fetchImpl.mock.calls[2][0]).toBe(ACCOUNT_API_V1_BASE_URL + '/9649082')
   })
 })

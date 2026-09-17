@@ -595,9 +595,11 @@ module.exports = async function registerPlanningRoutes(router, context) {
     return issue
   }
 
-  async function enrichCustomerAffectedFromLinkedCases(issues) {
+  async function resolveCustomerNames(issues) {
+    if (!customerPortalClient.isConfigured()) return
+
     var candidates = issues.filter(function(issue) {
-      return !issue.customerAffected && issue._linkedCaseNumbers.length > 0
+      return !issue.customerAffected && issue._linkedCaseNumbers && issue._linkedCaseNumbers.length > 0
     })
     var nextIndex = 0
     var failureCount = 0
@@ -624,17 +626,36 @@ module.exports = async function registerPlanningRoutes(router, context) {
       }
     }
 
-    if (customerPortalClient.isConfigured()) {
-      var workerCount = Math.min(CUSTOMER_LOOKUP_CONCURRENCY, candidates.length)
-      var workers = []
-      for (var wi = 0; wi < workerCount; wi++) workers.push(worker())
-      await Promise.all(workers)
-    }
+    var workerCount = Math.min(CUSTOMER_LOOKUP_CONCURRENCY, candidates.length)
+    var workers = []
+    for (var wi = 0; wi < workerCount; wi++) workers.push(worker())
+    await Promise.all(workers)
 
-    for (var i = 0; i < issues.length; i++) delete issues[i]._linkedCaseNumbers
     if (failureCount > 0) {
       console.warn('[releases/planning] ' + failureCount + ' Customer Portal case lookup(s) failed: ' + firstFailure)
     }
+  }
+
+  function stripLinkedCaseNumbers(issues) {
+    for (var i = 0; i < issues.length; i++) delete issues[i]._linkedCaseNumbers
+  }
+
+  function enrichCustomerAffectedInBackground(payload, cacheKey) {
+    if (!customerPortalClient.isConfigured()) {
+      stripLinkedCaseNumbers(payload.issues)
+      return
+    }
+    var issues = payload.issues
+    resolveCustomerNames(issues).then(function() {
+      stripLinkedCaseNumbers(issues)
+      payload.customersResolved = true
+      writeToStorage(cacheKey, payload).catch(function() {})
+      var resolved = issues.filter(function(i) { return !!i.customerAffected }).length
+      console.log('[releases/planning] Customer names resolved for ' + resolved + ' issues')
+    }).catch(function(err) {
+      stripLinkedCaseNumbers(issues)
+      console.warn('[releases/planning] Background customer name enrichment failed:', err.message)
+    })
   }
 
   function deduplicateRaw(rawIssues) {
@@ -673,10 +694,12 @@ module.exports = async function registerPlanningRoutes(router, context) {
     var issues = rawIssues.map(function(raw) {
       return mapRawIssue(raw, { hasSfdcCases: !!sfdcKeys[raw.key] })
     })
-    await enrichCustomerAffectedFromLinkedCases(issues)
 
-    var payload = { issues: issues, fetchedAt: new Date().toISOString(), cachedAt: new Date().toISOString() }
+    var payload = { issues: issues, fetchedAt: new Date().toISOString(), cachedAt: new Date().toISOString(), customersResolved: false }
     await writeToStorage(BU_FEEDBACK_CACHE_KEY, payload)
+
+    enrichCustomerAffectedInBackground(payload, BU_FEEDBACK_CACHE_KEY)
+
     return payload
   }
 
@@ -752,11 +775,11 @@ module.exports = async function registerPlanningRoutes(router, context) {
         sfdcCasesCount: 0
       })
     })
-    await enrichCustomerAffectedFromLinkedCases(issues)
 
-    var payload = { issues: issues, fetchedAt: new Date().toISOString(), cachedAt: new Date().toISOString(), countsResolved: false }
+    var payload = { issues: issues, fetchedAt: new Date().toISOString(), cachedAt: new Date().toISOString(), countsResolved: false, customersResolved: false }
     await writeToStorage(SFDC_ISSUES_CACHE_KEY, payload)
 
+    enrichCustomerAffectedInBackground(payload, SFDC_ISSUES_CACHE_KEY)
     enrichSfdcCounts(payload, scopeJql)
 
     return payload
