@@ -61,22 +61,37 @@ a{color:#5ea7ff;text-decoration:none}a:hover{text-decoration:underline}
 .panel .panel-sub{font-size:11px;color:#6b8299;margin-bottom:14px}
 .panel-full{grid-column:1/-1}
 
-/* Gate heatmap */
-.gate-heatmap-wrap{overflow-x:auto;max-height:400px;overflow-y:auto}
+/* Gate heatmap — matches main dashboard style */
+.gate-heatmap-wrap{overflow-x:auto;overflow-y:visible;position:relative}
 table.gate-hm{width:100%;border-collapse:collapse}
-table.gate-hm th,table.gate-hm td{padding:6px 5px;text-align:center;border-bottom:1px solid #1e4976;white-space:nowrap;font-size:11px}
+table.gate-hm th,table.gate-hm td{padding:6px 5px;text-align:center;border-bottom:1px solid #1e4976;white-space:nowrap;font-size:11px;position:relative}
 table.gate-hm th{color:#6b8299;font-weight:600;position:sticky;top:0;background:#0d2137;z-index:5}
-table.gate-hm th:first-child,table.gate-hm td:first-child{text-align:left;min-width:80px;font-weight:500}
+table.gate-hm th:first-child,table.gate-hm td:first-child{text-align:left;min-width:100px;font-weight:500}
 
-.gate-cell{display:inline-block;border-radius:4px;padding:3px 6px;min-width:44px;text-align:center;font-size:10px;font-weight:700}
-.gc-green{background:rgba(46,213,115,.15);color:#2ed573}
-.gc-amber{background:rgba(255,165,2,.12);color:#ffa502}
-.gc-orange{background:rgba(225,112,85,.12);color:#e17055}
-.gc-red{background:rgba(255,71,87,.12);color:#ff4757}
+.gate-cell{display:inline-block;border-radius:6px;padding:6px 6px 4px;min-width:56px;text-align:center;cursor:pointer;position:relative}
+.gc-green{background:rgba(46,213,115,.15);border:1px solid rgba(46,213,115,.3)}
+.gc-amber{background:rgba(255,165,2,.12);border:1px solid rgba(255,165,2,.25)}
+.gc-orange{background:rgba(225,112,85,.12);border:1px solid rgba(225,112,85,.25)}
+.gc-red{background:rgba(255,71,87,.12);border:1px solid rgba(255,71,87,.25)}
 .gc-na{color:#4a5568}
-.gate-marks{display:flex;gap:2px;justify-content:center;flex-wrap:wrap}
-.gate-mark{cursor:pointer;font-size:14px}
+.gc-pct{font-size:14px;font-weight:700;line-height:1}
+.gc-pct-green{color:#2ed573}.gc-pct-amber{color:#ffa502}.gc-pct-orange{color:#e17055}.gc-pct-red{color:#ff4757}
+.gc-runs{font-size:9px;color:#8899aa;margin-top:2px}
+.gc-marks{display:flex;gap:2px;justify-content:center;flex-wrap:wrap;margin-top:3px}
+.gate-mark{cursor:pointer;font-size:13px}
 .gate-mark-p{color:#2ed573}.gate-mark-f{color:#ff4757}
+
+/* Gate hover dropdown */
+.gc-dropdown{display:none;position:absolute;bottom:calc(100% + 6px);left:50%;transform:translateX(-50%);
+  background:#132f4c;border:1px solid #1e4976;border-radius:8px;padding:8px 0;z-index:200;
+  min-width:280px;max-height:300px;overflow-y:auto;box-shadow:0 8px 24px rgba(0,0,0,.6);text-align:left}
+.gc-dropdown.gc-dd-below{bottom:auto;top:calc(100% + 6px)}
+.gate-cell:hover .gc-dropdown{display:block}
+.gc-dd-title{padding:6px 14px 4px;font-size:10px;color:#6b8299;font-weight:700;text-transform:uppercase;letter-spacing:.5px;border-bottom:1px solid #1e4976;margin-bottom:4px}
+.gc-dd-run{padding:5px 14px;border-bottom:1px solid rgba(30,73,118,.3)}
+.gc-dd-run:last-child{border-bottom:none}
+.gc-dd-run a{color:#5ea7ff;font-size:11px}
+.gc-dd-state{font-size:10px;font-weight:700;margin-left:auto}
 
 /* Charts */
 .chart-container{position:relative;width:100%;height:260px}
@@ -293,6 +308,7 @@ function render(data,comp){
     </div>
 
     <!-- Metric cards -->
+    <div style="font-size:12px;color:#6b8299;margin-bottom:6px">Showing: ${escHtml(filterLabel)} · ${friendlyDate(f.from_date)} – ${friendlyDate(f.to_date)} · ${(daily.filter(d=>(d.total||0)>0).length)} days with data</div>
     <div class="metrics">
       <div class="mc mc-results"><span class="mc-label">Total Tests</span><span class="mc-value">${(ov.total||0).toLocaleString()}</span><span style="font-size:10px;opacity:.7;margin-top:2px">Sum of all test cases</span></div>
       <div class="mc mc-passed"><span class="mc-label">Passed</span><span class="mc-value">${(ov.passed||0).toLocaleString()}</span><span style="font-size:10px;opacity:.7;margin-top:2px">Completed successfully</span></div>
@@ -317,34 +333,34 @@ function render(data,comp){
       </div>
     </div>
 
-    <!-- Row 1: Gate heatmap + Daily chart -->
-    <div class="two-col">
-      <div class="panel">
-        <h3>Quality Gates Heatmap</h3>
-        <p class="panel-sub">Per-gate, per-day results for ${escHtml(comp)}</p>
-        <div id="qg-wrap" class="gate-heatmap-wrap"></div>
-        <div class="help-box">
-          <h4>How to read quality gates</h4>
-          <ul>
-            <li><strong>Rows</strong> = individual quality gates (e.g., rhoai-smoke, rhoai-tier1, rhoai-tier2, rhoai-tier3).</li>
-            <li><strong>Columns</strong> = dates. Each cell shows the pass % across all executions that day.</li>
-            <li><strong>Colored marks</strong> below the percentage: <span style="color:#2ed573">✓</span> = passed, <span style="color:#ff4757">●</span> = failed. Click a mark to open the Jenkins build.</li>
-            <li>Multiple marks on the same day mean the gate ran multiple times (e.g., across different providers or clusters).</li>
-          </ul>
-        </div>
+    <!-- Row 1: Gate heatmap (full width, like main dashboard) -->
+    <div class="panel" style="margin-bottom:24px">
+      <h3>Quality Gates Heatmap</h3>
+      <p class="panel-sub">Per-gate, per-day results for ${escHtml(comp)}. Each cell shows pass %, color-coded like the main heatmap. Hover for Jenkins run details.</p>
+      <div id="qg-wrap" class="gate-heatmap-wrap"></div>
+      <div class="help-box">
+        <h4>How to read quality gates</h4>
+        <ul>
+          <li><strong>Rows</strong> = quality gates (smoke, tier1, tier2, tier3). The gate name shows overall pass % and total runs.</li>
+          <li><strong>Columns</strong> = dates. Each cell shows pass % with color: <span style="color:#2ed573">green ≥95%</span> · <span style="color:#ffa502">amber 80–94%</span> · <span style="color:#e17055">orange 60–79%</span> · <span style="color:#ff4757">red &lt;60%</span>.</li>
+          <li><strong>P/F counts</strong> below the percentage show how many runs passed vs failed that day.</li>
+          <li><strong>Colored marks</strong>: <span style="color:#2ed573">✓</span> = passed, <span style="color:#ff4757">●</span> = failed. Click a mark to open Jenkins. Hover the cell for a dropdown with each run link.</li>
+        </ul>
       </div>
-      <div class="panel">
-        <h3>Execution Over Time</h3>
-        <p class="panel-sub">Daily pass / fail / skip trend for ${escHtml(comp)}</p>
-        <div class="chart-container"><canvas id="chart-daily"></canvas></div>
-        <div class="help-box">
-          <h4>Reading the trend</h4>
-          <ul>
-            <li><span style="color:#2ed573">Green line</span> = passed tests, <span style="color:#ff4757">Red</span> = failed, <span style="color:#ffa502">Yellow</span> = skipped.</li>
-            <li><strong>Stable green line</strong> = healthy component. <strong>Rising red</strong> = potential regression needing investigation.</li>
-            <li>Gaps in the chart mean no Jenkins builds ran for this component on those days.</li>
-          </ul>
-        </div>
+    </div>
+
+    <!-- Row 2: Daily chart (full width) -->
+    <div class="panel" style="margin-bottom:24px">
+      <h3>Execution Over Time</h3>
+      <p class="panel-sub">Daily pass / fail / skip trend for ${escHtml(comp)}</p>
+      <div class="chart-container chart-lg"><canvas id="chart-daily"></canvas></div>
+      <div class="help-box">
+        <h4>Reading the trend</h4>
+        <ul>
+          <li><span style="color:#2ed573">Green line</span> = passed tests, <span style="color:#ff4757">Red</span> = failed, <span style="color:#ffa502">Yellow</span> = skipped.</li>
+          <li><strong>Stable green line</strong> = healthy component. <strong>Rising red</strong> = potential regression needing investigation.</li>
+          <li>Gaps in the chart mean no Jenkins builds ran for this component on those days.</li>
+        </ul>
       </div>
     </div>
 
@@ -368,8 +384,10 @@ function render(data,comp){
     <!-- Row 3: TFA Classification (pie + bar + status bar) -->
     <div id="tfa-section" style="display:${tfaData?'block':'none'}">
       <div class="help-box" style="margin-bottom:16px">
-        <h4>Test Failure Analysis (TFA)</h4>
-        <p>Every failed test tracked in Jira is classified with a <strong>TFA label</strong> to identify the root cause. This helps distinguish real product bugs from environment issues, flaky automation, or known limitations. The charts below show the classification and status distribution for this component.</p>
+        <h4>Test Failure Analysis (TFA) — ${escHtml(filterLabel)}</h4>
+        <p>Every failed test tracked in Jira is classified with a <strong>TFA label</strong> to identify the root cause. The charts below show the classification for <strong>${escHtml(filterLabel)}</strong>.
+        ${tfaData?`<br><strong>Total test-failed Jiras: ${tfaData.total_failed}</strong> · Classified: ${tfaData.classified} · Unclassified: ${tfaData.unclassified}`:''}</p>
+        <p style="margin-top:6px;font-size:11px;color:#6b8299"><em>Note: TFA data is scoped by Version and Release (from Jira fix versions), not by the date range filter. To narrow TFA data, select a specific Version and/or Release above.</em></p>
       </div>
       <div class="three-col">
         <div class="panel">
@@ -429,15 +447,25 @@ function render(data,comp){
 function renderGateHeatmap(qg,daily){
   const wrap=document.getElementById('qg-wrap');
   const gates=Object.keys(qg).sort();
-  const dates=daily.map(d=>d.date).sort((a,b)=>b.localeCompare(a));
-  if(!gates.length||!dates.length){wrap.innerHTML='<p style="color:#6b8299;font-size:13px;padding:8px">No quality gate data.</p>';return}
+  const dates=[...new Set(daily.filter(d=>d.total>0).map(d=>d.date))].sort((a,b)=>b.localeCompare(a));
+  if(!gates.length||!dates.length){wrap.innerHTML='<p style="color:#6b8299;font-size:13px;padding:8px">No quality gate data for this filter.</p>';return}
 
   let html='<table class="gate-hm"><thead><tr><th>Gate</th>';
-  dates.forEach(d=>html+=`<th>${friendlyDate(d)}</th>`);
+  dates.forEach(d=>html+=`<th><div style="display:flex;flex-direction:column;align-items:center;gap:1px"><span>${friendlyDate(d)}</span></div></th>`);
   html+='</tr></thead><tbody>';
 
-  gates.forEach(g=>{
-    html+=`<tr><td>${escHtml(g)}</td>`;
+  gates.forEach((g,gIdx)=>{
+    // Gate-level aggregate
+    let gateTotal=0,gatePass=0;
+    dates.forEach(d=>{const execs=qg[g]&&qg[g][d];if(execs)execs.forEach(ex=>{gateTotal++;if(ex.state==='PASSED')gatePass++})});
+    const gatePct=passPct(gatePass,gateTotal);
+    const gateCol=pctColor(gatePct);
+
+    html+=`<tr><td style="color:#${gateCol==='green'?'2ed573':gateCol==='amber'?'ffa502':gateCol==='orange'?'e17055':'ff4757'};font-weight:600">${escHtml(g)}<div style="font-size:9px;color:#6b8299">${gatePct}% · ${gateTotal} runs</div></td>`;
+
+    // For top rows, dropdown opens below
+    const ddClass=gIdx<2?'gc-dropdown gc-dd-below':'gc-dropdown';
+
     dates.forEach(d=>{
       const execs=qg[g]&&qg[g][d];
       if(!execs||!execs.length){html+='<td><span class="gc-na">–</span></td>';return}
@@ -445,18 +473,35 @@ function renderGateHeatmap(qg,daily){
       // Aggregate for cell color
       let tp=0,tf=0;
       execs.forEach(ex=>{if(ex.state==='PASSED')tp++;else tf++});
-      const pct=passPct(tp,tp+tf);
+      const total=tp+tf;
+      const pct=passPct(tp,total);
       const col=pctColor(pct);
 
       // Individual marks
       const marks=execs.map(ex=>{
         const cls=ex.state==='PASSED'?'gate-mark-p':'gate-mark-f';
         const sym=ex.state==='PASSED'?'✓':'●';
-        return ex.jenkins_url?`<a href="${ex.jenkins_url}" target="_blank" class="gate-mark ${cls}" title="${ex.state}">${sym}</a>`
+        return ex.jenkins_url?`<a href="${ex.jenkins_url}" target="_blank" class="gate-mark ${cls}" title="${ex.state} — click for Jenkins">${sym}</a>`
           :`<span class="gate-mark ${cls}">${sym}</span>`;
       }).join('');
 
-      html+=`<td><div class="gate-cell gc-${col}">${pct}%</div><div class="gate-marks">${marks}</div></td>`;
+      // Build hover dropdown (like main dashboard)
+      let dropdown=`<div class="${ddClass}">`;
+      dropdown+=`<div class="gc-dd-title">${escHtml(g)} · ${friendlyDate(d)} · ${execs.length} run${execs.length!==1?'s':''}</div>`;
+      execs.forEach(ex=>{
+        const stateCol=ex.state==='PASSED'?'#2ed573':'#ff4757';
+        const label=ex.jenkins_url?ex.jenkins_url.replace('https://jenkins-csb-rhods-opendatascience.dno.corp.redhat.com/job/','').replace(/\/$/,'').replace(/\/job\//g,'/'):'Run';
+        dropdown+=`<div class="gc-dd-run" style="display:flex;justify-content:space-between;align-items:center">`;
+        dropdown+=ex.jenkins_url?`<a href="${ex.jenkins_url}" target="_blank">${label}</a>`:`<span>${label}</span>`;
+        dropdown+=`<span class="gc-dd-state" style="color:${stateCol}">${ex.state}</span></div>`;
+      });
+      dropdown+='</div>';
+
+      html+=`<td><div class="gate-cell gc-${col}">
+        <div class="gc-pct gc-pct-${col}">${pct}%</div>
+        <div class="gc-runs">${tp}P ${tf}F</div>
+        <div class="gc-marks">${marks}</div>
+        ${dropdown}</div></td>`;
     });
     html+='</tr>';
   });
