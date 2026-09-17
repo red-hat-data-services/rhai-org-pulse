@@ -641,44 +641,96 @@ const TFA_DESC={
   'tfa-wrong-assignment':'Failure initially routed to wrong component'
 };
 
+// Build JQL for a specific TFA label (or 'unclassified' / 'all-test-failed' / status:XYZ)
+function buildTfaJql(type,value){
+  const comp=window._currentComp;
+  const f=window._currentFilters;
+  if(!comp||!f||!jiraConfig)return null;
+  const rels=jiraConfig.releases||{};
+  let matching=[];const rk=Object.keys(rels);
+  if(f.version!=='All'&&f.release!=='All')matching=[rels[`${f.version}|${f.release}`]].filter(Boolean);
+  else if(f.version!=='All')rk.filter(k=>k.startsWith(f.version+'|')).forEach(k=>matching.push(rels[k]));
+  else if(f.release!=='All')rk.filter(k=>k.endsWith('|'+f.release)).forEach(k=>matching.push(rels[k]));
+  else ['3.5|GA','3.5|EA1','3.5|EA2','3.6|EA1','3.6|EA2'].forEach(k=>{if(rels[k])matching.push(rels[k])});
+  if(!matching.length)return null;
+  const fvs=new Set();matching.forEach(r=>{fvs.add(`'${r.rhoai_jira_version}'`);fvs.add(`'${r.fix_version}'`)});
+  const fvList=Array.from(fvs).join(', ');
+  const cm=jiraConfig.component_team_map||{};
+  let tc=null;
+  if(cm[comp])tc=cm[comp];else{const lc=comp.toLowerCase();for(const[k,v]of Object.entries(cm)){if(k.toLowerCase().includes(lc)||lc.includes(k.toLowerCase())){tc=v;break}}}
+  const proj=matching[0].project||'RHOAIENG';
+  let jql=`project = ${proj}`;if(tc)jql+=` AND Team = "${tc}"`;
+  jql+=` AND (fixVersion IN (${fvList}) OR affectedVersion IN (${fvList}) OR 'Target Version' IN (${fvList}))`;
+  jql+=` AND labels = "test-failed"`;
+  const allTfaLabels='"tfa-product-bug","tfa-automation-bug","tfa-infra-issue","tfa-env-setup","tfa-duplicate","tfa-known-issue","tfa-false-positive","tfa-wrong-assignment"';
+  if(type==='tfa-label')jql+=` AND labels = "${value}"`;
+  else if(type==='classified')jql+=` AND labels IN (${allTfaLabels})`;
+  else if(type==='unclassified')jql+=` AND labels NOT IN (${allTfaLabels})`;
+  else if(type==='status')jql+=` AND status = "${value}"`;
+  return`https://issues.redhat.com/issues/?jql=${encodeURIComponent(jql)}`;
+}
+
 function renderTfaCharts(tfa){
-  // 1. Pie chart — TFA label distribution
+  // All TFA label keys in order
+  const allLabels=Object.keys(TFA_NAMES);
+
+  // 1. Pie chart — TFA label distribution (clickable)
   const tfaEntries=Object.entries(tfa.tfa||{}).filter(([,v])=>v>0).sort((a,b)=>b[1]-a[1]);
   if(tfaEntries.length>0){
-    const pieCtx=document.getElementById('chart-tfa-pie').getContext('2d');
-    new Chart(pieCtx,{
+    const pieCanvas=document.getElementById('chart-tfa-pie');
+    const pieCtx=pieCanvas.getContext('2d');
+    const pieChart=new Chart(pieCtx,{
       type:'doughnut',
       data:{
         labels:tfaEntries.map(([k])=>TFA_NAMES[k]||k),
         datasets:[{data:tfaEntries.map(([,v])=>v),backgroundColor:tfaEntries.map(([k])=>TFA_COLORS[k]||'#6b8299'),borderColor:'#0d2137',borderWidth:2}]
       },
       options:{responsive:true,maintainAspectRatio:false,
-        plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>`${ctx.label}: ${ctx.raw} issues`}}}}
+        onClick:(evt,elems)=>{
+          if(elems.length>0){const idx=elems[0].index;const label=tfaEntries[idx][0];const url=buildTfaJql('tfa-label',label);if(url)window.open(url,'_blank')}
+        },
+        onHover:(evt,elems)=>{pieCanvas.style.cursor=elems.length>0?'pointer':'default'},
+        plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>`${ctx.label}: ${ctx.raw} issues — click to view in Jira`}}}}
     });
-    // Legend
+    // Legend (clickable)
     const legend=document.getElementById('tfa-legend');
-    legend.innerHTML=tfaEntries.map(([k,v])=>`<div class="tfa-legend-item"><span class="dot" style="background:${TFA_COLORS[k]||'#6b8299'}"></span><strong>${TFA_NAMES[k]||k}</strong> (${v}) — ${TFA_DESC[k]||''}</div>`).join('');
+    legend.innerHTML=tfaEntries.map(([k,v])=>{
+      const url=buildTfaJql('tfa-label',k);
+      const link=url?`<a href="${url}" target="_blank" style="color:inherit;text-decoration:none" title="View in Jira">`:'';
+      const linkEnd=url?'</a>':'';
+      return`<div class="tfa-legend-item" style="cursor:${url?'pointer':'default'}">${link}<span class="dot" style="background:${TFA_COLORS[k]||'#6b8299'}"></span><strong>${TFA_NAMES[k]||k}</strong> (${v}) — ${TFA_DESC[k]||''} <span style="font-size:10px;color:#5ea7ff">↗</span>${linkEnd}</div>`;
+    }).join('');
   }
 
-  // 2. Bar chart — Classified vs Unclassified
-  const barCtx=document.getElementById('chart-tfa-bar').getContext('2d');
-  const allLabels=Object.keys(TFA_NAMES);
-  const allValues=allLabels.map(k=>(tfa.tfa||{})[k]||0);
+  // 2. Bar chart — Classified vs Unclassified (clickable)
+  const barCanvas=document.getElementById('chart-tfa-bar');
+  const barCtx=barCanvas.getContext('2d');
+  const barLabelsRaw=[...allLabels,'__unclassified'];
+  const barValues=[...allLabels.map(k=>(tfa.tfa||{})[k]||0),tfa.unclassified||0];
   new Chart(barCtx,{
     type:'bar',
     data:{
       labels:[...allLabels.map(k=>TFA_NAMES[k]),'Unclassified'],
-      datasets:[{label:'Issues',data:[...allValues,tfa.unclassified||0],
+      datasets:[{label:'Issues',data:barValues,
         backgroundColor:[...allLabels.map(k=>TFA_COLORS[k]),'#4a5568'],borderRadius:4}]
     },
     options:{responsive:true,maintainAspectRatio:false,indexAxis:'y',
-      plugins:{legend:{display:false}},
+      onClick:(evt,elems)=>{
+        if(elems.length>0){
+          const idx=elems[0].index;const key=barLabelsRaw[idx];
+          const url=key==='__unclassified'?buildTfaJql('unclassified'):buildTfaJql('tfa-label',key);
+          if(url)window.open(url,'_blank');
+        }
+      },
+      onHover:(evt,elems)=>{barCanvas.style.cursor=elems.length>0?'pointer':'default'},
+      plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>`${ctx.label}: ${ctx.raw} issues — click to view in Jira`}}},
       scales:{x:{ticks:{color:'#6b8299',font:{size:10}},grid:{color:'rgba(30,73,118,.2)'},beginAtZero:true},
         y:{ticks:{color:'#ccc',font:{size:10}},grid:{display:false}}}}
   });
 
-  // 3. Status bar chart
-  const statusCtx=document.getElementById('chart-status-bar').getContext('2d');
+  // 3. Status bar chart (clickable)
+  const statusCanvas=document.getElementById('chart-status-bar');
+  const statusCtx=statusCanvas.getContext('2d');
   const statusEntries=Object.entries(tfa.status||{}).sort((a,b)=>b[1]-a[1]);
   const statusColors={'Open':'#ff4757','In Progress':'#ffa502','To Do':'#a29bfe','In Review':'#3498db',
     'Closed':'#2ed573','Done':'#2ed573','Resolved':'#00b894'};
@@ -690,7 +742,11 @@ function renderTfaCharts(tfa){
         backgroundColor:statusEntries.map(([s])=>statusColors[s]||'#6b8299'),borderRadius:4}]
     },
     options:{responsive:true,maintainAspectRatio:false,
-      plugins:{legend:{display:false}},
+      onClick:(evt,elems)=>{
+        if(elems.length>0){const idx=elems[0].index;const status=statusEntries[idx][0];const url=buildTfaJql('status',status);if(url)window.open(url,'_blank')}
+      },
+      onHover:(evt,elems)=>{statusCanvas.style.cursor=elems.length>0?'pointer':'default'},
+      plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>`${ctx.label}: ${ctx.raw} issues — click to view in Jira`}}},
       scales:{x:{ticks:{color:'#ccc',font:{size:10}},grid:{color:'rgba(30,73,118,.2)'}},
         y:{ticks:{color:'#6b8299',font:{size:10}},grid:{color:'rgba(30,73,118,.3)'},beginAtZero:true}}}
   });
