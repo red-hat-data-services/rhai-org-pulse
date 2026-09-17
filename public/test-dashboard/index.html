@@ -274,7 +274,7 @@ async function loadHeatmap(){
   try{
     // Load static JSON (always, so we can re-filter client-side)
     if(!rawHeatmapData){
-      const r2=await fetch(`/dashboard/data/heatmap.json?_=${Date.now()}`);
+      const r2=await fetch(`data/heatmap.json?_=${Date.now()}`);
       if(r2.ok) rawHeatmapData=await r2.json();
     }
     if(rawHeatmapData) renderAll(filterStatic(rawHeatmapData,f));

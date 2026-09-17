@@ -153,7 +153,7 @@ function reloadWithFilters(){
 
 // --- Load Jira config ---
 async function loadJiraConfig(){
-  try{const r=await fetch(`/dashboard/data/jira_config.json?_=${Date.now()}`);if(r.ok)jiraConfig=await r.json()}catch(_){}
+  try{const r=await fetch(`data/jira_config.json?_=${Date.now()}`);if(r.ok)jiraConfig=await r.json()}catch(_){}
 }
 
 // --- Jira helpers ---
@@ -250,8 +250,8 @@ async function loadComponent(){
     let data;const f=currentFilters();f.component=comp;
     // Load full components JSON and heatmap JSON
     const [r2, r3]=await Promise.all([
-      fetch(`/dashboard/data/components.json?_=${Date.now()}`),
-      fetch(`/dashboard/data/heatmap.json?_=${Date.now()}`)
+      fetch(`data/components.json?_=${Date.now()}`),
+      fetch(`data/heatmap.json?_=${Date.now()}`)
     ]);
     if(r2.ok){const all=await r2.json();if(all[comp])data=filterComponentData(all[comp],f)}
     if(!data)throw new Error('No data for "'+comp+'"');
