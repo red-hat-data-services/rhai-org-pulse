@@ -116,7 +116,7 @@ table.heatmap td{position:relative}
 <body>
 <div class="container">
   <div class="header">
-    <h1>🧪 Test Execution Dashboard</h1>
+    <h1>Test Execution Dashboard</h1>
     <p>Aggregated view of RHOAI test execution across all components, quality gates, and releases. Data is ingested from Jenkins CI builds and indexed in OpenSearch.</p>
   </div>
 
@@ -142,6 +142,7 @@ table.heatmap td{position:relative}
   </div>
 
   <!-- Summary cards -->
+  <div id="summary-range" style="display:none;margin-bottom:6px;font-size:12px;color:#6b8299;padding:0 2px"></div>
   <div id="summary-cards" class="summary-cards" style="display:none">
     <div class="sc sc-total"><div class="sc-label">Total Tests</div><div class="sc-value" id="sc-total">0</div><div class="sc-sub">Sum of all test cases across runs</div></div>
     <div class="sc sc-passed"><div class="sc-label">Passed</div><div class="sc-value" id="sc-passed">0</div><div class="sc-sub">Tests that completed successfully</div></div>
@@ -152,7 +153,7 @@ table.heatmap td{position:relative}
 
   <!-- Heatmap section -->
   <div class="section-title">
-    <h2>📊 Component Heatmap</h2>
+    <h2>Component Heatmap</h2>
   </div>
   <div class="help-box" style="margin-bottom:6px">
     <h4>How to read the heatmap</h4>
@@ -170,7 +171,7 @@ table.heatmap td{position:relative}
 
   <!-- Release trend chart -->
   <div class="bottom-panel" id="release-panel" style="display:none">
-    <h3>📈 Execution Across Releases</h3>
+    <h3>Execution Across Releases</h3>
     <p class="panel-sub">Aggregated passed-test trends per version and release across all components.</p>
     <div class="help-box" style="margin-bottom:14px">
       <h4>How to use this chart</h4>
@@ -271,12 +272,7 @@ async function loadHeatmap(){
   content.innerHTML='<div class="loading">Loading…</div>';
   const f=currentFilters();
   try{
-    // Try live API
-    try{
-      const r=await fetch(`/api/v1/heatmap?${new URLSearchParams(f)}`);
-      if(r.ok){const d=await r.json(); if(!d.error){renderAll(d);return}}
-    }catch(_){}
-    // Static JSON
+    // Load static JSON (always, so we can re-filter client-side)
     if(!rawHeatmapData){
       const r2=await fetch(`/test-dashboard/data/heatmap.json?_=${Date.now()}`);
       if(r2.ok) rawHeatmapData=await r2.json();
@@ -295,6 +291,7 @@ function renderAll(data){
 // --- Summary cards ---
 function renderSummaryCards(data){
   let tt=0,tp=0,tf=0,ts=0;
+  const nComps=(data.components||[]).length;
   (data.components||[]).forEach(c=>{
     if(c.overall){tt+=c.overall.total||0;tp+=c.overall.passed||0;tf+=c.overall.failed||0;ts+=c.overall.skipped||0}
   });
@@ -304,6 +301,17 @@ function renderSummaryCards(data){
   $('sc-skipped').textContent=ts.toLocaleString();
   $('sc-pct').textContent=passPct(tp,tt)+'%';
   $('summary-cards').style.display='grid';
+
+  // Show active filter context
+  const f=currentFilters();
+  const parts=[];
+  if(f.version!=='All')parts.push(`Version: ${f.version}`);
+  if(f.release!=='All')parts.push(`Release: ${f.release}`);
+  parts.push(`${friendlyDate(f.from_date)} – ${friendlyDate(f.to_date)}`);
+  parts.push(`${nComps} components`);
+  const rangeEl=$('summary-range');
+  rangeEl.textContent='Showing: '+parts.join(' · ');
+  rangeEl.style.display='block';
 }
 
 // --- Render heatmap ---

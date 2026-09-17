@@ -261,7 +261,7 @@ function render(data,comp){
     <a class="back-link" href="${backUrl()}">← Back to heatmap</a>
     <div class="header-row">
       <div class="header-left">
-        <h1>🔬 ${escHtml(comp)}</h1>
+        <h1>${escHtml(comp)}</h1>
         <p>Deep-dive into quality gates, execution trends, and Jira failure classification for this component.</p>
       </div>
       <div class="filter-bar">
@@ -320,7 +320,7 @@ function render(data,comp){
     <!-- Row 1: Gate heatmap + Daily chart -->
     <div class="two-col">
       <div class="panel">
-        <h3>🗓️ Quality Gates Heatmap</h3>
+        <h3>Quality Gates Heatmap</h3>
         <p class="panel-sub">Per-gate, per-day results for ${escHtml(comp)}</p>
         <div id="qg-wrap" class="gate-heatmap-wrap"></div>
         <div class="help-box">
@@ -334,7 +334,7 @@ function render(data,comp){
         </div>
       </div>
       <div class="panel">
-        <h3>📈 Execution Over Time</h3>
+        <h3>Execution Over Time</h3>
         <p class="panel-sub">Daily pass / fail / skip trend for ${escHtml(comp)}</p>
         <div class="chart-container"><canvas id="chart-daily"></canvas></div>
         <div class="help-box">
@@ -350,7 +350,7 @@ function render(data,comp){
 
     <!-- Row 2: Release chart -->
     <div class="panel" style="margin-bottom:24px">
-      <h3>📊 Release Trend for ${escHtml(comp)}</h3>
+      <h3>Release Trend for ${escHtml(comp)}</h3>
       <p class="panel-sub">Track how pass counts change across releases for this specific component.</p>
       <div class="help-box" style="margin-bottom:14px">
         <h4>How to use this chart</h4>
@@ -368,12 +368,12 @@ function render(data,comp){
     <!-- Row 3: TFA Classification (pie + bar + status bar) -->
     <div id="tfa-section" style="display:${tfaData?'block':'none'}">
       <div class="help-box" style="margin-bottom:16px">
-        <h4>🏷️ Test Failure Analysis (TFA)</h4>
+        <h4>Test Failure Analysis (TFA)</h4>
         <p>Every failed test tracked in Jira is classified with a <strong>TFA label</strong> to identify the root cause. This helps distinguish real product bugs from environment issues, flaky automation, or known limitations. The charts below show the classification and status distribution for this component.</p>
       </div>
       <div class="three-col">
         <div class="panel">
-          <h3>🍩 Failure Classification</h3>
+          <h3>Failure Classification</h3>
           <p class="panel-sub">Distribution of TFA labels on test-failed Jira issues</p>
           <div class="chart-container"><canvas id="chart-tfa-pie"></canvas></div>
           <div id="tfa-legend" class="tfa-legend"></div>
@@ -392,7 +392,7 @@ function render(data,comp){
           </div>
         </div>
         <div class="panel">
-          <h3>📊 Classification Breakdown</h3>
+          <h3>Classification Breakdown</h3>
           <p class="panel-sub">Count per TFA category — see how many failures are classified vs unclassified</p>
           <div class="chart-container"><canvas id="chart-tfa-bar"></canvas></div>
           <div class="help-box">
@@ -401,7 +401,7 @@ function render(data,comp){
           </div>
         </div>
         <div class="panel">
-          <h3>📋 Jira Status Distribution</h3>
+          <h3>Jira Status Distribution</h3>
           <p class="panel-sub">Current workflow status of test-failed issues in Jira</p>
           <div class="chart-container"><canvas id="chart-status-bar"></canvas></div>
           <div class="help-box">
