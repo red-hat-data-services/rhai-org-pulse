@@ -169,28 +169,28 @@ table.heatmap td{position:relative}
 
   <div id="heatmap-content" class="heatmap-wrapper"><div class="loading">Loading…</div></div>
 
-  <!-- Release trend chart -->
+  <!-- Version trend chart -->
   <div class="bottom-panel" id="release-panel" style="display:none">
-    <h3>Execution Across Releases</h3>
-    <p class="panel-sub">Aggregated passed-test trends per version and release across all components.</p>
+    <h3>Execution Across Versions</h3>
+    <p class="panel-sub">Aggregated passed-test trends per <strong>version</strong> across all components. All release milestones (EA1 + EA2 + GA) within a version are combined.</p>
     <div class="help-box" style="margin-bottom:14px">
       <h4>How to use this chart</h4>
       <ul>
         <li><strong>Version checkboxes</strong> — Toggle which RHOAI versions to show. Enables side-by-side comparison of quality across versions.</li>
-        <li><strong>Each line</strong> represents passed tests for a specific version + release combination (e.g., "3.6 EA1", "3.5 GA").</li>
+        <li><strong>Each line</strong> represents total passed tests for a specific RHOAI version (e.g., "3.5", "3.6"), combining all release milestones (EA1 + EA2 + GA).</li>
         <li><strong>Upward trends</strong> indicate improving test coverage or stability. Sudden drops may signal regressions or infrastructure issues.</li>
-        <li>Use this chart to compare release readiness: a healthy release should show EA1 → EA2 → GA with stable or increasing pass counts.</li>
+        <li>Compare versions side-by-side: newer versions should maintain or exceed the pass counts of older versions.</li>
       </ul>
     </div>
     <div class="version-toggles" id="version-toggles"></div>
     <div class="chart-container"><canvas id="chart-releases"></canvas></div>
     <div class="help-box">
-      <h4>Release lifecycle glossary</h4>
+      <h4>Version lifecycle glossary</h4>
       <ul>
-        <li><strong>EA1 (Early Access 1)</strong> — First pre-release validation milestone. Feature completeness ~70-80%. Tests may still be in development.</li>
-        <li><strong>EA2 (Early Access 2)</strong> — Second milestone, closer to GA. Feature completeness ~90%+. Focus shifts to regression and stability testing.</li>
-        <li><strong>GA (General Availability)</strong> — Production-ready release. All critical quality gates must pass. This is the release customers receive.</li>
-        <li>A typical lifecycle: <code>EA1 → EA2 → GA</code>. Early access catches issues before they reach production.</li>
+        <li><strong>EA1 (Early Access 1)</strong> — First pre-release validation milestone. Feature completeness ~70-80%.</li>
+        <li><strong>EA2 (Early Access 2)</strong> — Second milestone, closer to GA. Feature completeness ~90%+.</li>
+        <li><strong>GA (General Availability)</strong> — Production-ready release. All critical quality gates must pass.</li>
+        <li>Each version combines all milestones (EA1 + EA2 + GA) into one line for a holistic quality view of that version.</li>
       </ul>
     </div>
   </div>
@@ -274,7 +274,7 @@ async function loadHeatmap(){
   try{
     // Load static JSON (always, so we can re-filter client-side)
     if(!rawHeatmapData){
-      const r2=await fetch(`/test-dashboard/data/heatmap.json?_=${Date.now()}`);
+      const r2=await fetch(`/dashboard/data/heatmap.json?_=${Date.now()}`);
       if(r2.ok) rawHeatmapData=await r2.json();
     }
     if(rawHeatmapData) renderAll(filterStatic(rawHeatmapData,f));
@@ -428,35 +428,34 @@ function updateReleaseChart(){
   const vrDayMap=window._vrDayMap||{};
   const checked=Array.from(document.querySelectorAll('#version-toggles input:checked')).map(i=>i.value);
 
-  // Aggregate by release type (EA1, EA2, GA) for checked versions
-  const releaseMap={}; // "EA1" -> {date: {p,f,s}}
+  // Aggregate by VERSION (combining all releases EA1+EA2+GA per version)
+  const versionMap={}; // "3.5" -> {date: {p,f,s}}
   Object.entries(vrDayMap).forEach(([vrKey,dayData])=>{
-    const [v,r]=vrKey.split('|');
+    const [v]=vrKey.split('|');
     if(!checked.includes(v)) return;
-    const label=`${v} ${r}`;
-    if(!releaseMap[label]) releaseMap[label]={};
+    if(!versionMap[v]) versionMap[v]={};
     Object.entries(dayData).forEach(([date,counts])=>{
-      if(!releaseMap[label][date]) releaseMap[label][date]={p:0,f:0,s:0};
-      releaseMap[label][date].p+=counts.p;
-      releaseMap[label][date].f+=counts.f;
-      releaseMap[label][date].s+=counts.s;
+      if(!versionMap[v][date]) versionMap[v][date]={p:0,f:0,s:0};
+      versionMap[v][date].p+=counts.p;
+      versionMap[v][date].f+=counts.f;
+      versionMap[v][date].s+=counts.s;
     });
   });
 
   const allDates=new Set();
-  Object.values(releaseMap).forEach(dm=>Object.keys(dm).forEach(d=>allDates.add(d)));
+  Object.values(versionMap).forEach(dm=>Object.keys(dm).forEach(d=>allDates.add(d)));
   const dates=Array.from(allDates).sort();
   const labels=dates.map(friendlyDate);
 
   const colors=['#2ed573','#3498db','#e17055','#a29bfe','#fdcb6e','#6c5ce7','#00cec9','#fab1a0','#ff6b81','#70a1ff'];
   const datasets=[];
   let ci=0;
-  Object.keys(releaseMap).sort().forEach(label=>{
-    const dm=releaseMap[label];
+  Object.keys(versionMap).sort().forEach(ver=>{
+    const dm=versionMap[ver];
     const c=colors[ci%colors.length]; ci++;
     datasets.push({
-      label:label+' (passed)', data:dates.map(d=>(dm[d]||{}).p||0),
-      borderColor:c, backgroundColor:c+'22', tension:.3, fill:false, pointRadius:2, borderWidth:2
+      label:`Version ${ver} (passed)`, data:dates.map(d=>(dm[d]||{}).p||0),
+      borderColor:c, backgroundColor:c+'22', tension:.3, fill:false, pointRadius:3, borderWidth:2
     });
   });
 

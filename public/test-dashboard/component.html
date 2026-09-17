@@ -153,7 +153,7 @@ function reloadWithFilters(){
 
 // --- Load Jira config ---
 async function loadJiraConfig(){
-  try{const r=await fetch(`/test-dashboard/data/jira_config.json?_=${Date.now()}`);if(r.ok)jiraConfig=await r.json()}catch(_){}
+  try{const r=await fetch(`/dashboard/data/jira_config.json?_=${Date.now()}`);if(r.ok)jiraConfig=await r.json()}catch(_){}
 }
 
 // --- Jira helpers ---
@@ -248,16 +248,22 @@ async function loadComponent(){
 
   try{
     let data;const f=currentFilters();f.component=comp;
-    // Load full components JSON (static file) and extract this component
-    const r2=await fetch(`/test-dashboard/data/components.json?_=${Date.now()}`);
+    // Load full components JSON and heatmap JSON
+    const [r2, r3]=await Promise.all([
+      fetch(`/dashboard/data/components.json?_=${Date.now()}`),
+      fetch(`/dashboard/data/heatmap.json?_=${Date.now()}`)
+    ]);
     if(r2.ok){const all=await r2.json();if(all[comp])data=filterComponentData(all[comp],f)}
     if(!data)throw new Error('No data for "'+comp+'"');
-    render(data,comp);
+    // Extract this component's by_vr data from heatmap for version chart
+    let compHeatmap=null;
+    if(r3.ok){const hm=await r3.json();compHeatmap=(hm.components||[]).find(c=>c.component===comp)}
+    render(data,comp,compHeatmap);
   }catch(e){main.innerHTML=`<div class="error">Failed: ${e.message}<br><a href="${backUrl()}">Back</a></div>`}
 }
 
 // --- Render ---
-function render(data,comp){
+function render(data,comp,compHeatmap){
   const f=currentFilters();
   const ov=data.overall||{};
   const daily=(data.daily||[]).slice().sort((a,b)=>b.date.localeCompare(a.date));
@@ -352,11 +358,12 @@ function render(data,comp){
     <!-- Row 2: Daily chart (full width) -->
     <div class="panel" style="margin-bottom:24px">
       <h3>Execution Over Time</h3>
-      <p class="panel-sub">Daily pass / fail / skip trend for ${escHtml(comp)}</p>
+      <p class="panel-sub">Daily <strong>aggregate</strong> pass / fail / skip for ${escHtml(comp)} — all runs on the same day are summed.</p>
       <div class="chart-container chart-lg"><canvas id="chart-daily"></canvas></div>
       <div class="help-box">
         <h4>Reading the trend</h4>
         <ul>
+          <li>Each data point is the <strong>sum of all runs</strong> on that day (across all providers, clusters, and releases). For example, if 3 Jenkins builds ran on Sep 10, the chart shows the combined pass/fail/skip totals.</li>
           <li><span style="color:#2ed573">Green line</span> = passed tests, <span style="color:#ff4757">Red</span> = failed, <span style="color:#ffa502">Yellow</span> = skipped.</li>
           <li><strong>Stable green line</strong> = healthy component. <strong>Rising red</strong> = potential regression needing investigation.</li>
           <li>Gaps in the chart mean no Jenkins builds ran for this component on those days.</li>
@@ -364,30 +371,40 @@ function render(data,comp){
       </div>
     </div>
 
-    <!-- Row 2: Release chart -->
+    <!-- Row 3: Version trend chart -->
     <div class="panel" style="margin-bottom:24px">
-      <h3>Release Trend for ${escHtml(comp)}</h3>
-      <p class="panel-sub">Track how pass counts change across releases for this specific component.</p>
+      <h3>Version Trend for ${escHtml(comp)}</h3>
+      <p class="panel-sub">Passed test counts per <strong>version</strong> over time. All release milestones (EA1 + EA2 + GA) within a version are combined.</p>
       <div class="help-box" style="margin-bottom:14px">
         <h4>How to use this chart</h4>
         <ul>
-          <li><strong>Checkboxes</strong> — Toggle release types (EA1, EA2, GA) on/off. Compare pass trends across different release milestones.</li>
-          <li>Each line shows the number of <strong>passed tests</strong> per day for that release.</li>
-          <li><strong>Healthy pattern</strong>: EA1 starts with lower pass counts, EA2 improves, GA is highest and most stable.</li>
-          <li>If GA shows lower pass counts than EA, it may indicate regressions introduced late in the cycle.</li>
+          <li><strong>Checkboxes</strong> — Toggle RHOAI versions on/off. Compare quality trends across different product versions side by side.</li>
+          <li>Each line shows the number of <strong>passed tests per day</strong> for that version, combining all release milestones (EA1 + EA2 + GA).</li>
+          <li><strong>Healthy pattern</strong>: newer versions should maintain or exceed the pass counts of older versions. A drop in a newer version signals potential regressions.</li>
         </ul>
       </div>
       <div class="version-toggles" id="ver-toggles"></div>
       <div class="chart-container chart-lg"><canvas id="chart-releases"></canvas></div>
     </div>
 
-    <!-- Row 3: TFA Classification (pie + bar + status bar) -->
+    <!-- Row 4: TFA Classification (pie + bar + status bar) -->
     <div id="tfa-section" style="display:${tfaData?'block':'none'}">
-      <div class="help-box" style="margin-bottom:16px">
-        <h4>Test Failure Analysis (TFA) — ${escHtml(filterLabel)}</h4>
-        <p>Every failed test tracked in Jira is classified with a <strong>TFA label</strong> to identify the root cause. The charts below show the classification for <strong>${escHtml(filterLabel)}</strong>.
-        ${tfaData?`<br><strong>Total test-failed Jiras: ${tfaData.total_failed}</strong> · Classified: ${tfaData.classified} · Unclassified: ${tfaData.unclassified}`:''}</p>
-        <p style="margin-top:6px;font-size:11px;color:#6b8299"><em>Note: TFA data is scoped by Version and Release (from Jira fix versions), not by the date range filter. To narrow TFA data, select a specific Version and/or Release above.</em></p>
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:12px;margin-bottom:16px">
+        <div class="help-box" style="flex:1;min-width:400px;margin:0">
+          <h4>Test Failure Analysis (TFA) — ${escHtml(filterLabel)}</h4>
+          <p>Classification of <strong>test-failed</strong> Jira issues for <strong>${escHtml(filterLabel)}</strong>.
+          ${tfaData?`<br><strong>Total: ${tfaData.total_failed}</strong> · Classified: ${tfaData.classified} · Unclassified: ${tfaData.unclassified}`:''}</p>
+        </div>
+        <div style="background:#0d2137;border:1px solid #1e4976;border-radius:8px;padding:12px 16px;min-width:280px">
+          <div style="font-size:10px;text-transform:uppercase;color:#6b8299;font-weight:600;margin-bottom:6px;letter-spacing:.5px">TFA Triage Date Range</div>
+          <div style="display:flex;gap:8px;align-items:center">
+            <input type="date" id="tfa-from" value="${f.from_date}" style="background:#132f4c;color:#fff;border:1px solid #1e4976;border-radius:4px;padding:5px 8px;font-size:12px;cursor:pointer;outline:none">
+            <span style="color:#6b8299;font-size:12px">to</span>
+            <input type="date" id="tfa-to" value="${f.to_date}" style="background:#132f4c;color:#fff;border:1px solid #1e4976;border-radius:4px;padding:5px 8px;font-size:12px;cursor:pointer;outline:none">
+            <button id="tfa-refresh-btn" onclick="refreshTfaData()" style="background:#1e4976;color:#fff;border:none;border-radius:4px;padding:5px 10px;font-size:12px;cursor:pointer">Apply</button>
+          </div>
+          <div style="font-size:10px;color:#6b8299;margin-top:4px">Filter Jira issues by creation date. Use this to track weekly triage progress.</div>
+        </div>
       </div>
       <div class="three-col">
         <div class="panel">
@@ -439,8 +456,11 @@ function render(data,comp){
   document.title=comp+' — Test Execution Dashboard';
   renderGateHeatmap(qg,daily);
   renderDailyChart(daily);
-  renderReleasesChart(releases);
+  renderVersionChart(compHeatmap,currentFilters());
   if(tfaData) renderTfaCharts(tfaData);
+  // Store for TFA refresh
+  window._currentComp=comp;
+  window._currentFilters=currentFilters();
 }
 
 // --- Gate heatmap ---
@@ -531,37 +551,60 @@ function renderDailyChart(daily){
   });
 }
 
-// --- Releases chart ---
+// --- Version trend chart (groups by version, combines all releases EA1+EA2+GA) ---
 let relChart=null;
-function renderReleasesChart(releases){
-  if(!releases||!releases.length)return;
-  const versions=new Set();
-  releases.forEach(r=>{const m=r.release.match(/^(EA|GA)/);if(m)versions.add(r.release)});
 
-  // Build toggles
+function renderVersionChart(compHeatmap,filters){
   const toggles=document.getElementById('ver-toggles');
-  const allRels=[...new Set(releases.map(r=>r.release))].sort();
-  toggles.innerHTML=allRels.map(r=>`<label><input type="checkbox" value="${r}" checked onchange="updateRelChart()"> ${r}</label>`).join('');
-  window._relData=releases;
-  updateRelChart();
+  if(!compHeatmap||!compHeatmap.days){toggles.innerHTML='<span style="color:#6b8299;font-size:12px">No version data available.</span>';return}
+
+  // Build version→date→{p,f,s} from by_vr keys
+  const verDayMap={}; // "3.5" → { "2026-09-10": {p,f,s} }
+  const versions=new Set();
+  const {from_date:from,to_date:to}=filters;
+
+  Object.entries(compHeatmap.days).forEach(([date,day])=>{
+    if(date<from||date>to) return;
+    if(!day.by_vr) return;
+    Object.entries(day.by_vr).forEach(([vrKey,vr])=>{
+      // Extract major version: "3.5|GA" → "3.5", "3.6-ea.1|EA1" → "3.6"
+      const ver=vrKey.split('|')[0].split('-')[0];
+      versions.add(ver);
+      if(!verDayMap[ver])verDayMap[ver]={};
+      if(!verDayMap[ver][date])verDayMap[ver][date]={p:0,f:0,s:0};
+      verDayMap[ver][date].p+=(vr.passed||0);
+      verDayMap[ver][date].f+=(vr.failed||0);
+      verDayMap[ver][date].s+=(vr.skipped||0);
+    });
+  });
+
+  if(!versions.size){toggles.innerHTML='<span style="color:#6b8299;font-size:12px">No version data for this date range.</span>';return}
+
+  const sortedVer=Array.from(versions).sort();
+  toggles.innerHTML=sortedVer.map(v=>`<label><input type="checkbox" value="${v}" checked onchange="updateVersionChart()"> ${v}</label>`).join('');
+  window._verDayMap=verDayMap;
+  updateVersionChart();
 }
 
-function updateRelChart(){
-  const releases=window._relData||[];
+function updateVersionChart(){
+  const verDayMap=window._verDayMap||{};
   const checked=Array.from(document.querySelectorAll('#ver-toggles input:checked')).map(i=>i.value);
-  const filtered=releases.filter(r=>checked.includes(r.release));
 
   const allDates=new Set();
-  filtered.forEach(r=>(r.daily||[]).forEach(d=>allDates.add(d.date)));
+  checked.forEach(v=>{if(verDayMap[v])Object.keys(verDayMap[v]).forEach(d=>allDates.add(d))});
   const dates=Array.from(allDates).sort();
   const labels=dates.map(friendlyDate);
 
-  const colors=['#2ed573','#3498db','#e17055','#a29bfe','#fdcb6e','#6c5ce7'];
+  const colors=['#2ed573','#3498db','#e17055','#a29bfe','#fdcb6e','#6c5ce7','#00cec9','#fab1a0'];
   const datasets=[];let ci=0;
-  filtered.forEach(r=>{
-    const dm={};(r.daily||[]).forEach(d=>{dm[d.date]=d});
+  checked.forEach(ver=>{
+    const dm=verDayMap[ver]||{};
     const c=colors[ci%colors.length];ci++;
-    datasets.push({label:`${r.release} passed`,data:dates.map(d=>(dm[d]||{}).passed||0),borderColor:c,tension:.3,fill:false,pointRadius:2,borderWidth:2});
+    datasets.push({
+      label:`${ver} (passed)`,
+      data:dates.map(d=>(dm[d]||{}).p||0),
+      borderColor:c, backgroundColor:c+'22', tension:.3, fill:false, pointRadius:3, borderWidth:2
+    });
   });
 
   const ctx=document.getElementById('chart-releases').getContext('2d');
@@ -651,6 +694,86 @@ function renderTfaCharts(tfa){
       scales:{x:{ticks:{color:'#ccc',font:{size:10}},grid:{color:'rgba(30,73,118,.2)'}},
         y:{ticks:{color:'#6b8299',font:{size:10}},grid:{color:'rgba(30,73,118,.3)'},beginAtZero:true}}}
   });
+}
+
+// --- TFA Date Range Refresh ---
+function refreshTfaData(){
+  const comp=window._currentComp;
+  const f=window._currentFilters;
+  if(!comp||!f||!jiraConfig) return;
+
+  const tfaFrom=document.getElementById('tfa-from').value;
+  const tfaTo=document.getElementById('tfa-to').value;
+
+  // Build JQL with creation date filter for each TFA chart
+  const rels=jiraConfig.releases||{};
+  let matchingRels=[];
+  const rk=Object.keys(rels);
+  if(f.version!=='All'&&f.release!=='All')matchingRels=[rels[`${f.version}|${f.release}`]].filter(Boolean);
+  else if(f.version!=='All')rk.filter(k=>k.startsWith(f.version+'|')).forEach(k=>matchingRels.push(rels[k]));
+  else if(f.release!=='All')rk.filter(k=>k.endsWith('|'+f.release)).forEach(k=>matchingRels.push(rels[k]));
+  else ['3.5|GA','3.5|EA1','3.5|EA2','3.6|EA1','3.6|EA2'].forEach(k=>{if(rels[k])matchingRels.push(rels[k])});
+
+  if(!matchingRels.length){alert('No matching release found.');return}
+  const fvs=new Set();matchingRels.forEach(r=>{fvs.add(`'${r.rhoai_jira_version}'`);fvs.add(`'${r.fix_version}'`)});
+  const fvList=Array.from(fvs).join(', ');
+  const cm=jiraConfig.component_team_map||{};
+  let tc=null;
+  if(cm[comp])tc=cm[comp];else{const lc=comp.toLowerCase();for(const[k,v]of Object.entries(cm)){if(k.toLowerCase().includes(lc)||lc.includes(k.toLowerCase())){tc=v;break}}}
+  const proj=matchingRels[0].project||'RHOAIENG';
+
+  let baseJql=`project = ${proj}`;
+  if(tc)baseJql+=` AND Team = "${tc}"`;
+  baseJql+=` AND (fixVersion IN (${fvList}) OR affectedVersion IN (${fvList}) OR 'Target Version' IN (${fvList}))`;
+  baseJql+=` AND labels = "test-failed"`;
+  if(tfaFrom)baseJql+=` AND created >= "${tfaFrom}"`;
+  if(tfaTo)baseJql+=` AND created <= "${tfaTo}"`;
+
+  const filterLabel=[f.version!=='All'?f.version:'',f.release!=='All'?f.release:''].filter(Boolean).join(' ')||'All releases';
+  const dateLabel=`${friendlyDate(tfaFrom)} – ${friendlyDate(tfaTo)}`;
+
+  // Build links for each TFA label
+  const links=[];
+  Object.keys(TFA_NAMES).forEach(label=>{
+    const jql=baseJql+` AND labels = "${label}"`;
+    const url=`https://issues.redhat.com/issues/?jql=${encodeURIComponent(jql)}`;
+    links.push({label,name:TFA_NAMES[label],url,jql});
+  });
+  const allUrl=`https://issues.redhat.com/issues/?jql=${encodeURIComponent(baseJql)}`;
+  const classifiedJql=baseJql+' AND labels in ("tfa-product-bug","tfa-automation-bug","tfa-infra-issue","tfa-env-setup","tfa-duplicate","tfa-known-issue","tfa-false-positive","tfa-wrong-assignment")';
+  const unclassifiedJql=baseJql+' AND labels NOT IN ("tfa-product-bug","tfa-automation-bug","tfa-infra-issue","tfa-env-setup","tfa-duplicate","tfa-known-issue","tfa-false-positive","tfa-wrong-assignment")';
+
+  // Show triage links table
+  const section=document.getElementById('tfa-section');
+  let triageHtml=`<div class="panel" style="margin-top:16px;grid-column:1/-1">
+    <h3>Triage Status: ${escHtml(filterLabel)} · ${dateLabel}</h3>
+    <p class="panel-sub">Click any link below to view the matching Jira issues in your browser. Use this to track weekly triage progress.</p>
+    <table style="width:100%;border-collapse:collapse;margin-top:10px">
+      <tr style="border-bottom:1px solid #1e4976">
+        <td style="padding:8px 12px;font-weight:600;color:#fff"><a href="${allUrl}" target="_blank" style="color:#5ea7ff">All test-failed</a></td>
+        <td style="padding:8px 12px;color:#6b8299;font-size:12px">All test-failed Jiras created ${dateLabel}</td>
+      </tr>
+      <tr style="border-bottom:1px solid #1e4976">
+        <td style="padding:8px 12px;font-weight:600;color:#2ed573"><a href="https://issues.redhat.com/issues/?jql=${encodeURIComponent(classifiedJql)}" target="_blank" style="color:#2ed573">Classified</a></td>
+        <td style="padding:8px 12px;color:#6b8299;font-size:12px">Issues with any TFA label applied</td>
+      </tr>
+      <tr style="border-bottom:1px solid #1e4976">
+        <td style="padding:8px 12px;font-weight:600;color:#ff4757"><a href="https://issues.redhat.com/issues/?jql=${encodeURIComponent(unclassifiedJql)}" target="_blank" style="color:#ff4757">Unclassified</a></td>
+        <td style="padding:8px 12px;color:#6b8299;font-size:12px">Issues still needing triage (no TFA label)</td>
+      </tr>`;
+  links.forEach(l=>{
+    triageHtml+=`<tr style="border-bottom:1px solid rgba(30,73,118,.3)">
+      <td style="padding:6px 12px"><a href="${l.url}" target="_blank" style="color:#5ea7ff;font-size:13px">${l.name}</a></td>
+      <td style="padding:6px 12px;color:#6b8299;font-size:11px">${TFA_DESC[l.label]||''}</td>
+    </tr>`;
+  });
+  triageHtml+='</table></div>';
+
+  // Insert or replace the triage panel
+  let existing=document.getElementById('tfa-triage-panel');
+  if(existing)existing.remove();
+  const div=document.createElement('div');div.id='tfa-triage-panel';div.innerHTML=triageHtml;
+  section.appendChild(div);
 }
 
 // --- Boot ---
