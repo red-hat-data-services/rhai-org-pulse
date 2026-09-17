@@ -263,8 +263,8 @@ function render(data,comp){
     <a class="back-link" href="${backUrl()}">← Back to heatmap</a>
     <div class="header-row">
       <div class="header-left">
-        <h1>${escHtml(comp)}</h1>
-        <p>Quality-gate heatmap, execution trends, and Jira failure analysis for this component.</p>
+        <h1>🔬 ${escHtml(comp)}</h1>
+        <p>Deep-dive into quality gates, execution trends, and Jira failure classification for this component.</p>
       </div>
       <div class="filter-bar">
         <div class="filter-group"><span class="filter-label">Environment</span><span class="filter-value">RHOAI</span></div>
@@ -289,14 +289,18 @@ function render(data,comp){
           <input type="date" id="f-to" value="${f.to_date}" onchange="reloadWithFilters()"></div>
       </div>
     </div>
+    <div class="help-box" style="margin-bottom:16px">
+      <h4>ℹ️ Filters apply to everything on this page</h4>
+      <p>Changing Version, Release, or Date range will reload all data — metric cards, heatmap, charts, and Jira counts will update to match your selection. The filter state is preserved in the URL, so you can bookmark or share specific views.</p>
+    </div>
 
     <!-- Metric cards -->
     <div class="metrics">
-      <div class="mc mc-results"><span class="mc-label">Total Tests</span><span class="mc-value">${(ov.total||0).toLocaleString()}</span></div>
-      <div class="mc mc-passed"><span class="mc-label">Passed</span><span class="mc-value">${(ov.passed||0).toLocaleString()}</span></div>
-      <div class="mc mc-failed"><span class="mc-label">Failed</span><span class="mc-value">${(ov.failed||0).toLocaleString()}</span></div>
-      <div class="mc mc-skipped"><span class="mc-label">Skipped</span><span class="mc-value">${(ov.skipped||0).toLocaleString()}</span></div>
-      <div class="mc mc-pct"><span class="mc-label">Pass Rate</span><span class="mc-value">${pct}%</span></div>
+      <div class="mc mc-results"><span class="mc-label">Total Tests</span><span class="mc-value">${(ov.total||0).toLocaleString()}</span><span style="font-size:10px;opacity:.7;margin-top:2px">Sum of all test cases</span></div>
+      <div class="mc mc-passed"><span class="mc-label">Passed</span><span class="mc-value">${(ov.passed||0).toLocaleString()}</span><span style="font-size:10px;opacity:.7;margin-top:2px">Completed successfully</span></div>
+      <div class="mc mc-failed"><span class="mc-label">Failed</span><span class="mc-value">${(ov.failed||0).toLocaleString()}</span><span style="font-size:10px;opacity:.7;margin-top:2px">Assertion / runtime errors</span></div>
+      <div class="mc mc-skipped"><span class="mc-label">Skipped</span><span class="mc-value">${(ov.skipped||0).toLocaleString()}</span><span style="font-size:10px;opacity:.7;margin-top:2px">Not executed (scope / deps)</span></div>
+      <div class="mc mc-pct"><span class="mc-label">Pass Rate</span><span class="mc-value">${pct}%</span><span style="font-size:10px;opacity:.7;margin-top:2px">Passed ÷ Total × 100</span></div>
     </div>
 
     <!-- Jira alerts -->
@@ -305,62 +309,112 @@ function render(data,comp){
         <div class="alert-title">Open Failed Jiras</div>
         <div class="alert-count">${failedUrl?`<a href="${failedUrl}" target="_blank">${failedCount!==null?failedCount:'–'}</a>`:'–'}</div>
         <div class="alert-desc">${failedUrl?`<a href="${failedUrl}" target="_blank" style="color:#ff4757;font-size:12px">🔍 View test-failed for ${escHtml(filterLabel)} →</a>`:'<span style="color:#6b8299">Select version/release</span>'}</div>
+        <div style="font-size:10px;color:#6b8299;margin-top:6px">Jira issues labeled <code style="background:#1e3a5f;padding:1px 4px;border-radius:3px;font-size:10px">test-failed</code> filed against this component's team. Click the count to view in Jira.</div>
       </div>
       <div class="alert-bar alert-skipped">
         <div class="alert-title">Open Skipped Jiras</div>
         <div class="alert-count">${skippedUrl?`<a href="${skippedUrl}" target="_blank">${skippedCount!==null?skippedCount:'–'}</a>`:'–'}</div>
         <div class="alert-desc">${skippedUrl?`<a href="${skippedUrl}" target="_blank" style="color:#ffa502;font-size:12px">🔍 View test-skipped for ${escHtml(filterLabel)} →</a>`:'<span style="color:#6b8299">Select version/release</span>'}</div>
+        <div style="font-size:10px;color:#6b8299;margin-top:6px">Jira issues labeled <code style="background:#1e3a5f;padding:1px 4px;border-radius:3px;font-size:10px">test-skipped</code>. These track tests intentionally disabled or blocked by known bugs.</div>
       </div>
     </div>
 
     <!-- Row 1: Gate heatmap + Daily chart -->
     <div class="two-col">
       <div class="panel">
-        <h3>Quality Gates Heatmap</h3>
-        <p class="panel-sub">Per-gate, per-day results. Color = pass %. Each mark is one execution — click to open Jenkins.</p>
+        <h3>🗓️ Quality Gates Heatmap</h3>
+        <p class="panel-sub">Per-gate, per-day results for ${escHtml(comp)}</p>
         <div id="qg-wrap" class="gate-heatmap-wrap"></div>
+        <div class="help-box">
+          <h4>How to read quality gates</h4>
+          <ul>
+            <li><strong>Rows</strong> = individual quality gates (e.g., rhoai-smoke, rhoai-tier1, rhoai-tier2, rhoai-tier3).</li>
+            <li><strong>Columns</strong> = dates. Each cell shows the pass % across all executions that day.</li>
+            <li><strong>Colored marks</strong> below the percentage: <span style="color:#2ed573">✓</span> = passed, <span style="color:#ff4757">●</span> = failed. Click a mark to open the Jenkins build.</li>
+            <li>Multiple marks on the same day mean the gate ran multiple times (e.g., across different providers or clusters).</li>
+          </ul>
+        </div>
       </div>
       <div class="panel">
-        <h3>Execution Over Time</h3>
-        <p class="panel-sub">Daily pass / fail / skip counts for ${escHtml(comp)}</p>
+        <h3>📈 Execution Over Time</h3>
+        <p class="panel-sub">Daily pass / fail / skip trend for ${escHtml(comp)}</p>
         <div class="chart-container"><canvas id="chart-daily"></canvas></div>
+        <div class="help-box">
+          <h4>Reading the trend</h4>
+          <ul>
+            <li><span style="color:#2ed573">Green line</span> = passed tests, <span style="color:#ff4757">Red</span> = failed, <span style="color:#ffa502">Yellow</span> = skipped.</li>
+            <li><strong>Stable green line</strong> = healthy component. <strong>Rising red</strong> = potential regression needing investigation.</li>
+            <li>Gaps in the chart mean no Jenkins builds ran for this component on those days.</li>
+          </ul>
+        </div>
       </div>
     </div>
 
     <!-- Row 2: Release chart -->
     <div class="panel" style="margin-bottom:24px">
-      <h3>Execution Across Releases</h3>
-      <p class="panel-sub">Pass / fail / skip by release over time for ${escHtml(comp)}. Select versions to compare.</p>
-      <div class="version-toggles" id="ver-toggles"></div>
-      <div class="chart-container chart-lg"><canvas id="chart-releases"></canvas></div>
-      <div class="help-box">
-        <h4>About EA &amp; GA Releases</h4>
+      <h3>📊 Release Trend for ${escHtml(comp)}</h3>
+      <p class="panel-sub">Track how pass counts change across releases for this specific component.</p>
+      <div class="help-box" style="margin-bottom:14px">
+        <h4>How to use this chart</h4>
         <ul>
-          <li><strong>GA</strong> — General Availability. Stable, production-ready release.</li>
-          <li><strong>EA1 / EA2</strong> — Early Access milestones. Pre-release validation before GA. EA1 = first milestone, EA2 = closer to GA.</li>
-          <li>EA and GA are combined per version to show the full release lifecycle.</li>
+          <li><strong>Checkboxes</strong> — Toggle release types (EA1, EA2, GA) on/off. Compare pass trends across different release milestones.</li>
+          <li>Each line shows the number of <strong>passed tests</strong> per day for that release.</li>
+          <li><strong>Healthy pattern</strong>: EA1 starts with lower pass counts, EA2 improves, GA is highest and most stable.</li>
+          <li>If GA shows lower pass counts than EA, it may indicate regressions introduced late in the cycle.</li>
         </ul>
       </div>
+      <div class="version-toggles" id="ver-toggles"></div>
+      <div class="chart-container chart-lg"><canvas id="chart-releases"></canvas></div>
     </div>
 
     <!-- Row 3: TFA Classification (pie + bar + status bar) -->
     <div id="tfa-section" style="display:${tfaData?'block':'none'}">
+      <div class="help-box" style="margin-bottom:16px">
+        <h4>🏷️ Test Failure Analysis (TFA)</h4>
+        <p>Every failed test tracked in Jira is classified with a <strong>TFA label</strong> to identify the root cause. This helps distinguish real product bugs from environment issues, flaky automation, or known limitations. The charts below show the classification and status distribution for this component.</p>
+      </div>
       <div class="three-col">
         <div class="panel">
-          <h3>Failure Classification</h3>
-          <p class="panel-sub">TFA label distribution for test-failed issues</p>
+          <h3>🍩 Failure Classification</h3>
+          <p class="panel-sub">Distribution of TFA labels on test-failed Jira issues</p>
           <div class="chart-container"><canvas id="chart-tfa-pie"></canvas></div>
           <div id="tfa-legend" class="tfa-legend"></div>
+          <div class="help-box">
+            <h4>TFA Label meanings</h4>
+            <ul>
+              <li><strong>Product Bug</strong> — Real defect in the product code found by the test.</li>
+              <li><strong>Automation Bug</strong> — Test code issue, flaky assertion, or incorrect test logic.</li>
+              <li><strong>Infra Issue</strong> — Cloud/cluster infrastructure instability (e.g., node crash, network timeout).</li>
+              <li><strong>Env Setup</strong> — Missing dependency or incorrect environment configuration.</li>
+              <li><strong>Known Issue</strong> — Matches an already tracked and accepted defect.</li>
+              <li><strong>False Positive</strong> — Non-reproducible failure, passes on retry.</li>
+              <li><strong>Duplicate</strong> — Same root cause as another tracked issue.</li>
+              <li><strong>Wrong Assignment</strong> — Failure routed to the wrong component team.</li>
+            </ul>
+          </div>
         </div>
         <div class="panel">
-          <h3>Classification Breakdown</h3>
-          <p class="panel-sub">Count per TFA category. Classified vs Unclassified.</p>
+          <h3>📊 Classification Breakdown</h3>
+          <p class="panel-sub">Count per TFA category — see how many failures are classified vs unclassified</p>
           <div class="chart-container"><canvas id="chart-tfa-bar"></canvas></div>
+          <div class="help-box">
+            <h4>Classified vs Unclassified</h4>
+            <p><strong>Classified</strong> = a TFA label has been applied. <strong>Unclassified</strong> = the failure has not yet been triaged. A high unclassified count means the team needs to review and categorize open failures. Target: &lt;10% unclassified.</p>
+          </div>
         </div>
         <div class="panel">
-          <h3>Jira Status Distribution</h3>
-          <p class="panel-sub">test-failed issues by current Jira status</p>
+          <h3>📋 Jira Status Distribution</h3>
+          <p class="panel-sub">Current workflow status of test-failed issues in Jira</p>
           <div class="chart-container"><canvas id="chart-status-bar"></canvas></div>
+          <div class="help-box">
+            <h4>Jira status guide</h4>
+            <ul>
+              <li><strong style="color:#ff4757">Open / To Do</strong> — Issue exists but no work has started.</li>
+              <li><strong style="color:#ffa502">In Progress</strong> — Actively being worked on by the team.</li>
+              <li><strong style="color:#3498db">In Review</strong> — Fix is submitted and under code review.</li>
+              <li><strong style="color:#2ed573">Closed / Done / Resolved</strong> — Issue has been fixed and verified.</li>
+            </ul>
+          </div>
         </div>
       </div>
     </div>
