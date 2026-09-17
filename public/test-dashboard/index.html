@@ -109,6 +109,22 @@ table.heatmap td{position:relative}
 .help-box p,.help-box li{font-size:12px;color:#8899aa;line-height:1.6}
 .help-box ul{padding-left:18px;margin-top:4px}
 
+/* TFA component table */
+.tfa-tbl{width:100%;border-collapse:collapse;margin-top:10px}
+.tfa-tbl th{font-size:10px;text-transform:uppercase;color:#6b8299;font-weight:600;padding:8px 10px;text-align:left;border-bottom:2px solid #1e4976;letter-spacing:.5px}
+.tfa-tbl td{padding:7px 10px;font-size:13px;border-bottom:1px solid rgba(30,73,118,.3)}
+.tfa-tbl tr:hover{background:rgba(94,167,255,.04)}
+.tfa-tbl .num{text-align:center;font-weight:600;min-width:60px}
+.tfa-tbl .num a{font-weight:600}
+.tfa-bar{display:inline-block;height:6px;border-radius:3px;vertical-align:middle;margin-left:6px}
+/* TFA summary cards */
+.tfa-sc{background:#0d2137;border:1px solid #1e4976;border-radius:8px;padding:12px 18px;min-width:140px}
+.tfa-sc .tfa-sc-label{font-size:10px;text-transform:uppercase;letter-spacing:.5px;color:#6b8299;font-weight:600;margin-bottom:4px}
+.tfa-sc .tfa-sc-val{font-size:22px;font-weight:700}
+/* TFA legend */
+.tfa-legend-item{display:flex;align-items:center;gap:6px;font-size:11px;color:#ccc;padding:3px 0}
+.tfa-legend-item .dot{width:10px;height:10px;border-radius:50%;flex-shrink:0}
+
 .loading{text-align:center;padding:60px;color:#6b8299;font-size:16px}
 .error{text-align:center;padding:60px;color:#ff4757;font-size:15px}
 </style>
@@ -168,6 +184,22 @@ table.heatmap td{position:relative}
   </div>
 
   <div id="heatmap-content" class="heatmap-wrapper"><div class="loading">Loading…</div></div>
+
+  <!-- TFA Section: All components -->
+  <div id="tfa-all-section" style="display:none;margin-top:28px">
+    <div class="section-title"><h2>Test Failure Analysis (TFA) — All Components</h2></div>
+    <div id="tfa-summary-bar" style="display:flex;gap:14px;flex-wrap:wrap;margin:12px 0 16px"></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;margin-bottom:20px">
+      <div class="bottom-panel" style="margin:0"><h3>Failure Classification</h3><p class="panel-sub">Distribution of TFA labels across all components</p><div style="position:relative;height:260px"><canvas id="tfa-pie-all"></canvas></div><div id="tfa-legend-all" style="margin-top:10px"></div></div>
+      <div class="bottom-panel" style="margin:0"><h3>Classification Breakdown</h3><p class="panel-sub">Count per TFA category</p><div style="position:relative;height:260px"><canvas id="tfa-bar-all"></canvas></div></div>
+      <div class="bottom-panel" style="margin:0"><h3>Jira Status Distribution</h3><p class="panel-sub">Current workflow status of test-failed issues</p><div style="position:relative;height:260px"><canvas id="tfa-status-all"></canvas></div></div>
+    </div>
+    <div class="bottom-panel" style="margin:0">
+      <h3>Per-Component Jira Summary</h3>
+      <p class="panel-sub">Test-failed and test-skipped Jira counts for each component. Click counts to view matching issues in Jira.</p>
+      <div id="tfa-comp-table" style="overflow-x:auto"></div>
+    </div>
+  </div>
 
   <!-- Version trend chart -->
   <div class="bottom-panel" id="release-panel" style="display:none">
@@ -475,13 +507,213 @@ function updateReleaseChart(){
   });
 }
 
+// --- TFA: All components ---
+const TFA_COLORS={'tfa-product-bug':'#ff4757','tfa-automation-bug':'#ffa502','tfa-infra-issue':'#3498db',
+  'tfa-env-setup':'#a29bfe','tfa-duplicate':'#6b8299','tfa-known-issue':'#fdcb6e',
+  'tfa-false-positive':'#2ed573','tfa-wrong-assignment':'#e17055'};
+const TFA_NAMES={'tfa-product-bug':'Product Bug','tfa-automation-bug':'Automation Bug','tfa-infra-issue':'Infra Issue',
+  'tfa-env-setup':'Env Setup','tfa-duplicate':'Duplicate','tfa-known-issue':'Known Issue',
+  'tfa-false-positive':'False Positive','tfa-wrong-assignment':'Wrong Assignment'};
+const STATUS_COLORS={'Open':'#ff4757','In Progress':'#ffa502','To Do':'#a29bfe','In Review':'#3498db',
+  'Closed':'#2ed573','Done':'#2ed573','Resolved':'#00b894'};
+
+let jiraConfig=null;
+async function loadJiraConfig(){
+  try{const r=await fetch(`data/jira_config.json?_=${Date.now()}`);if(r.ok)jiraConfig=await r.json()}catch(_){}
+}
+
+function buildJqlUrl(comp,label,ver,rel){
+  if(!jiraConfig)return null;
+  const rels=jiraConfig.releases||{};
+  let matching=[];const rk=Object.keys(rels);
+  if(ver!=='All'&&rel!=='All')matching=[rels[`${ver}|${rel}`]].filter(Boolean);
+  else if(ver!=='All')rk.filter(k=>k.startsWith(ver+'|')).forEach(k=>matching.push(rels[k]));
+  else if(rel!=='All')rk.filter(k=>k.endsWith('|'+rel)).forEach(k=>matching.push(rels[k]));
+  else rk.forEach(k=>matching.push(rels[k]));
+  if(!matching.length)return null;
+  const fvs=new Set();matching.forEach(r=>{fvs.add(`'${r.rhoai_jira_version}'`);fvs.add(`'${r.fix_version}'`)});
+  const fvList=Array.from(fvs).join(', ');
+  const cm=jiraConfig.component_team_map||{};
+  let tc=null;
+  if(comp){if(cm[comp])tc=cm[comp];else{const lc=comp.toLowerCase();for(const[k,v]of Object.entries(cm)){if(k.toLowerCase().includes(lc)||lc.includes(k.toLowerCase())){tc=v;break}}}}
+  const proj=matching[0].project||'RHOAIENG';
+  let jql=`project = ${proj}`;if(tc)jql+=` AND Team = "${tc}"`;
+  jql+=` AND (fixVersion IN (${fvList}) OR affectedVersion IN (${fvList}) OR 'Target Version' IN (${fvList}))`;
+  jql+=` AND labels = "${label}"`;
+  return`https://issues.redhat.com/issues/?jql=${encodeURIComponent(jql)}`;
+}
+
+function buildTfaJqlAll(type,value,ver,rel){
+  if(!jiraConfig)return null;
+  const rels=jiraConfig.releases||{};
+  let matching=[];const rk=Object.keys(rels);
+  if(ver!=='All'&&rel!=='All')matching=[rels[`${ver}|${rel}`]].filter(Boolean);
+  else if(ver!=='All')rk.filter(k=>k.startsWith(ver+'|')).forEach(k=>matching.push(rels[k]));
+  else if(rel!=='All')rk.filter(k=>k.endsWith('|'+rel)).forEach(k=>matching.push(rels[k]));
+  else rk.forEach(k=>matching.push(rels[k]));
+  if(!matching.length)return null;
+  const fvs=new Set();matching.forEach(r=>{fvs.add(`'${r.rhoai_jira_version}'`);fvs.add(`'${r.fix_version}'`)});
+  const fvList=Array.from(fvs).join(', ');
+  const proj=matching[0].project||'RHOAIENG';
+  let jql=`project = ${proj}`;
+  jql+=` AND (fixVersion IN (${fvList}) OR affectedVersion IN (${fvList}) OR 'Target Version' IN (${fvList}))`;
+  jql+=` AND labels = "test-failed"`;
+  const allTfa='"tfa-product-bug","tfa-automation-bug","tfa-infra-issue","tfa-env-setup","tfa-duplicate","tfa-known-issue","tfa-false-positive","tfa-wrong-assignment"';
+  if(type==='tfa-label')jql+=` AND labels = "${value}"`;
+  else if(type==='classified')jql+=` AND labels IN (${allTfa})`;
+  else if(type==='unclassified')jql+=` AND labels NOT IN (${allTfa})`;
+  else if(type==='status')jql+=` AND status = "${value}"`;
+  return`https://issues.redhat.com/issues/?jql=${encodeURIComponent(jql)}`;
+}
+
+let tfaPieChart=null,tfaBarChart=null,tfaStatusChart=null;
+
+function renderTfaAll(){
+  if(!jiraConfig||!jiraConfig.tfa)return;
+  const f=currentFilters();
+  const ver=f.version,rel=f.release;
+
+  // Aggregate TFA data across all components for matching releases
+  const tk=Object.keys(jiraConfig.tfa);
+  let mk=[];
+  if(ver!=='All'&&rel!=='All')mk=[`${ver}|${rel}`].filter(k=>jiraConfig.tfa[k]);
+  else if(ver!=='All')mk=tk.filter(k=>k.startsWith(ver+'|'));
+  else if(rel!=='All')mk=tk.filter(k=>k.endsWith('|'+rel));
+  else mk=tk;
+
+  const agg={tfa:{},classified:0,unclassified:0,status:{},total_failed:0};
+  const perComp={}; // comp → {failed, skipped, classified, unclassified, tfa}
+
+  mk.forEach(rk=>{
+    const teams=jiraConfig.tfa[rk]||{};
+    Object.entries(teams).forEach(([comp,data])=>{
+      Object.entries(data.tfa||{}).forEach(([k,v])=>{agg.tfa[k]=(agg.tfa[k]||0)+v});
+      agg.classified+=data.classified||0;
+      agg.unclassified+=data.unclassified||0;
+      agg.total_failed+=data.total_failed||0;
+      Object.entries(data.status||{}).forEach(([s,v])=>{agg.status[s]=(agg.status[s]||0)+v});
+      if(!perComp[comp])perComp[comp]={failed:0,skipped:0,classified:0,unclassified:0};
+      perComp[comp].failed+=data.total_failed||0;
+      perComp[comp].classified+=data.classified||0;
+      perComp[comp].unclassified+=data.unclassified||0;
+    });
+  });
+
+  // Also get skipped counts
+  const ck=Object.keys(jiraConfig.counts||{});
+  let cmk=[];
+  if(ver!=='All'&&rel!=='All')cmk=[`${ver}|${rel}`].filter(k=>jiraConfig.counts&&jiraConfig.counts[k]);
+  else if(ver!=='All')cmk=ck.filter(k=>k.startsWith(ver+'|'));
+  else if(rel!=='All')cmk=ck.filter(k=>k.endsWith('|'+rel));
+  else cmk=ck;
+  cmk.forEach(rk=>{
+    const teams=jiraConfig.counts[rk]||{};
+    Object.entries(teams).forEach(([comp,data])=>{
+      if(!perComp[comp])perComp[comp]={failed:0,skipped:0,classified:0,unclassified:0};
+      perComp[comp].skipped+=data.skipped||0;
+    });
+  });
+
+  if(agg.total_failed===0&&Object.keys(perComp).length===0){$('tfa-all-section').style.display='none';return}
+  $('tfa-all-section').style.display='block';
+
+  const filterLabel=[ver!=='All'?ver:'',rel!=='All'?rel:''].filter(Boolean).join(' ')||'All versions/releases';
+
+  // Summary bar
+  const sb=$('tfa-summary-bar');
+  const allUrl=buildTfaJqlAll('all',null,ver,rel);
+  const classUrl=buildTfaJqlAll('classified',null,ver,rel);
+  const unclassUrl=buildTfaJqlAll('unclassified',null,ver,rel);
+  sb.innerHTML=`
+    <div class="tfa-sc"><div class="tfa-sc-label">Scope</div><div style="font-size:13px;color:#ccc;font-weight:500">${escHtml(filterLabel)}</div></div>
+    <div class="tfa-sc" style="border-left:4px solid #ff4757"><div class="tfa-sc-label">Total Test-Failed</div><div class="tfa-sc-val" style="color:#ff4757">${allUrl?`<a href="${allUrl}" target="_blank" style="color:#ff4757">${agg.total_failed}</a>`:agg.total_failed}</div></div>
+    <div class="tfa-sc" style="border-left:4px solid #2ed573"><div class="tfa-sc-label">Classified</div><div class="tfa-sc-val" style="color:#2ed573">${classUrl?`<a href="${classUrl}" target="_blank" style="color:#2ed573">${agg.classified}</a>`:agg.classified}</div></div>
+    <div class="tfa-sc" style="border-left:4px solid #ffa502"><div class="tfa-sc-label">Unclassified</div><div class="tfa-sc-val" style="color:#ffa502">${unclassUrl?`<a href="${unclassUrl}" target="_blank" style="color:#ffa502">${agg.unclassified}</a>`:agg.unclassified}</div></div>
+    <div class="tfa-sc" style="border-left:4px solid #a29bfe"><div class="tfa-sc-label">Triage Rate</div><div class="tfa-sc-val" style="color:#a29bfe">${agg.total_failed>0?Math.round(agg.classified/agg.total_failed*100):0}%</div></div>`;
+
+  // Pie chart
+  const tfaEntries=Object.entries(agg.tfa).filter(([,v])=>v>0).sort((a,b)=>b[1]-a[1]);
+  const pieCanvas=$('tfa-pie-all');
+  if(tfaPieChart)tfaPieChart.destroy();
+  if(tfaEntries.length>0){
+    tfaPieChart=new Chart(pieCanvas.getContext('2d'),{
+      type:'doughnut',
+      data:{labels:tfaEntries.map(([k])=>TFA_NAMES[k]||k),datasets:[{data:tfaEntries.map(([,v])=>v),backgroundColor:tfaEntries.map(([k])=>TFA_COLORS[k]||'#6b8299'),borderColor:'#0d2137',borderWidth:2}]},
+      options:{responsive:true,maintainAspectRatio:false,
+        onClick:(evt,elems)=>{if(elems.length>0){const idx=elems[0].index;const url=buildTfaJqlAll('tfa-label',tfaEntries[idx][0],ver,rel);if(url)window.open(url,'_blank')}},
+        onHover:(evt,elems)=>{pieCanvas.style.cursor=elems.length>0?'pointer':'default'},
+        plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>`${ctx.label}: ${ctx.raw} — click to view in Jira`}}}}
+    });
+    const legend=$('tfa-legend-all');
+    legend.innerHTML=tfaEntries.map(([k,v])=>{
+      const url=buildTfaJqlAll('tfa-label',k,ver,rel);
+      return`<div class="tfa-legend-item">${url?`<a href="${url}" target="_blank" style="color:inherit;text-decoration:none">`:''}<span class="dot" style="background:${TFA_COLORS[k]||'#6b8299'}"></span><strong>${TFA_NAMES[k]||k}</strong> (${v})${url?' ↗</a>':''}</div>`;
+    }).join('');
+  }
+
+  // Bar chart
+  const allLabels=Object.keys(TFA_NAMES);
+  const barCanvas=$('tfa-bar-all');
+  if(tfaBarChart)tfaBarChart.destroy();
+  const barKeys=[...allLabels,'__unclassified'];
+  tfaBarChart=new Chart(barCanvas.getContext('2d'),{
+    type:'bar',
+    data:{labels:[...allLabels.map(k=>TFA_NAMES[k]),'Unclassified'],datasets:[{label:'Issues',data:[...allLabels.map(k=>agg.tfa[k]||0),agg.unclassified],backgroundColor:[...allLabels.map(k=>TFA_COLORS[k]),'#4a5568'],borderRadius:4}]},
+    options:{responsive:true,maintainAspectRatio:false,indexAxis:'y',
+      onClick:(evt,elems)=>{if(elems.length>0){const idx=elems[0].index;const key=barKeys[idx];const url=key==='__unclassified'?buildTfaJqlAll('unclassified',null,ver,rel):buildTfaJqlAll('tfa-label',key,ver,rel);if(url)window.open(url,'_blank')}},
+      onHover:(evt,elems)=>{barCanvas.style.cursor=elems.length>0?'pointer':'default'},
+      plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>`${ctx.label}: ${ctx.raw} — click to view in Jira`}}},
+      scales:{x:{ticks:{color:'#6b8299',font:{size:10}},grid:{color:'rgba(30,73,118,.2)'},beginAtZero:true},y:{ticks:{color:'#ccc',font:{size:10}},grid:{display:false}}}}
+  });
+
+  // Status chart
+  const statusCanvas=$('tfa-status-all');
+  if(tfaStatusChart)tfaStatusChart.destroy();
+  const statusEntries=Object.entries(agg.status).sort((a,b)=>b[1]-a[1]);
+  if(statusEntries.length>0){
+    tfaStatusChart=new Chart(statusCanvas.getContext('2d'),{
+      type:'bar',
+      data:{labels:statusEntries.map(([s])=>s),datasets:[{label:'Issues',data:statusEntries.map(([,v])=>v),backgroundColor:statusEntries.map(([s])=>STATUS_COLORS[s]||'#6b8299'),borderRadius:4}]},
+      options:{responsive:true,maintainAspectRatio:false,
+        onClick:(evt,elems)=>{if(elems.length>0){const idx=elems[0].index;const url=buildTfaJqlAll('status',statusEntries[idx][0],ver,rel);if(url)window.open(url,'_blank')}},
+        onHover:(evt,elems)=>{statusCanvas.style.cursor=elems.length>0?'pointer':'default'},
+        plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>`${ctx.label}: ${ctx.raw} — click to view in Jira`}}},
+        scales:{x:{ticks:{color:'#ccc',font:{size:10}},grid:{color:'rgba(30,73,118,.2)'}},y:{ticks:{color:'#6b8299',font:{size:10}},grid:{color:'rgba(30,73,118,.3)'},beginAtZero:true}}}
+    });
+  }
+
+  // Per-component table
+  const sorted=Object.entries(perComp).sort((a,b)=>b[1].failed-a[1].failed);
+  let thtml=`<table class="tfa-tbl"><thead><tr>
+    <th>Component</th><th class="num">Test-Failed</th><th class="num">Classified</th><th class="num">Unclassified</th><th class="num">Triage %</th><th class="num">Test-Skipped</th><th>Triage Bar</th>
+  </tr></thead><tbody>`;
+  sorted.forEach(([comp,d])=>{
+    const pct=d.failed>0?Math.round(d.classified/d.failed*100):0;
+    const failUrl=buildJqlUrl(comp,'test-failed',ver,rel);
+    const skipUrl=buildJqlUrl(comp,'test-skipped',ver,rel);
+    const barW=Math.min(pct,100);
+    const barCol=pct>=80?'#2ed573':pct>=50?'#ffa502':'#ff4757';
+    thtml+=`<tr>
+      <td><a href="component.html?component=${encodeURIComponent(comp)}&${new URLSearchParams(f)}">${escHtml(comp)}</a></td>
+      <td class="num">${failUrl?`<a href="${failUrl}" target="_blank" style="color:#ff4757">${d.failed}</a>`:`<span style="color:#ff4757">${d.failed}</span>`}</td>
+      <td class="num" style="color:#2ed573">${d.classified}</td>
+      <td class="num" style="color:#ffa502">${d.unclassified}</td>
+      <td class="num" style="color:${barCol};font-weight:700">${pct}%</td>
+      <td class="num">${skipUrl?`<a href="${skipUrl}" target="_blank" style="color:#ffa502">${d.skipped}</a>`:`<span style="color:#ffa502">${d.skipped}</span>`}</td>
+      <td><div style="background:#1e4976;border-radius:3px;height:8px;width:100px;display:inline-block;vertical-align:middle"><div style="background:${barCol};height:100%;width:${barW}%;border-radius:3px"></div></div></td>
+    </tr>`;
+  });
+  thtml+='</tbody></table>';
+  $('tfa-comp-table').innerHTML=thtml;
+}
+
 // --- Events ---
 function onFilterChange(){
   const f=currentFilters();
   history.replaceState(null,'','?'+new URLSearchParams(f));
-  // Re-filter from cached raw data if available
   if(rawHeatmapData) renderAll(filterStatic(rawHeatmapData,f));
   else loadHeatmap();
+  renderTfaAll();
 }
 $('f-ver').addEventListener('change',onFilterChange);
 $('f-rel').addEventListener('change',onFilterChange);
@@ -490,7 +722,11 @@ $('f-to').addEventListener('change',onFilterChange);
 
 // --- Boot ---
 initFilters();
-loadHeatmap();
+(async()=>{
+  await loadJiraConfig();
+  loadHeatmap();
+  renderTfaAll();
+})();
 </script>
 </body>
 </html>
