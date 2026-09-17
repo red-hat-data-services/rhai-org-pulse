@@ -248,13 +248,16 @@
             />
 
             <div
-              class="absolute inset-y-0 z-[100] w-5 cursor-ew-resize touch-none"
+              class="pointer-events-none absolute inset-y-0 z-[100] w-5"
               :style="{ left: `${labelWidth + cursorDay * pxPerDay - 10}px` }"
               :aria-label="`Selected date: ${formatMarkerDate(cursorDate)}`"
-              @pointerdown="startCursorDrag"
             >
               <span class="absolute inset-y-0 left-1/2 w-0.5 -translate-x-1/2 bg-red-600 dark:bg-red-400" />
-              <span class="sticky top-2 left-1/2 block w-max -translate-x-1/2 whitespace-nowrap rounded-md border-2 border-white bg-red-600 px-3 py-1.5 text-xs font-bold text-white shadow-lg dark:border-gray-900 dark:bg-red-500">
+              <span
+                class="pointer-events-auto sticky top-2 left-1/2 block w-max -translate-x-1/2 cursor-ew-resize touch-none whitespace-nowrap rounded-md border-2 border-white bg-red-600 px-3 py-1.5 text-xs font-bold text-white shadow-lg dark:border-gray-900 dark:bg-red-500"
+                title="Drag to select a date"
+                @pointerdown="startCursorDrag"
+              >
                 {{ formatMarkerDate(cursorDate) }}
               </span>
             </div>

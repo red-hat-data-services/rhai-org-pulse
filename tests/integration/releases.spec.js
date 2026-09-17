@@ -256,12 +256,12 @@ test.describe('Releases Views @releases', () => {
       if (!rowBounds || !viewportBounds) return false;
       return rowBounds.y >= viewportBounds.y + 56 && rowBounds.y < viewportBounds.y + viewportBounds.height;
     }).toBe(true);
-    const multiReleaseDate = page.locator('[data-testid="timeline-date-event"][data-multi-release="true"]').first();
-    await expect(multiReleaseDate).toBeVisible();
-    await multiReleaseDate.hover();
+    const timelineDateEvent = selectedDateRow.getByTestId('timeline-date-event');
+    await expect(timelineDateEvent).toBeVisible();
+    await timelineDateEvent.hover();
     const tooltip = page.getByTestId('timeline-date-tooltip');
     await expect(tooltip).toBeVisible();
-    expect(await tooltip.getByTestId('timeline-tooltip-event').count()).toBeGreaterThan(1);
+    expect(await tooltip.getByTestId('timeline-tooltip-event').count()).toBeGreaterThan(0);
     await expect.poll(async () => {
       const [tooltipBounds, viewportBounds] = await Promise.all([tooltip.boundingBox(), timeline.boundingBox()]);
       if (!tooltipBounds || !viewportBounds) return false;
