@@ -653,6 +653,23 @@ module.exports = async function registerPlanningRoutes(router, context) {
     })
   }
 
+  function carryOverCustomerNames(issues, cacheKey) {
+    return readFromStorage(cacheKey).then(function(cached) {
+      if (!cached || !cached.issues) return
+      var map = {}
+      for (var i = 0; i < cached.issues.length; i++) {
+        var ci = cached.issues[i]
+        if (ci.customerAffected) map[ci.key] = ci.customerAffected
+      }
+      if (!Object.keys(map).length) return
+      for (var j = 0; j < issues.length; j++) {
+        if (!issues[j].customerAffected && map[issues[j].key]) {
+          issues[j].customerAffected = map[issues[j].key]
+        }
+      }
+    }).catch(function() {})
+  }
+
   function deduplicateRaw(rawIssues) {
     var seen = {}
     var result = []
@@ -689,6 +706,8 @@ module.exports = async function registerPlanningRoutes(router, context) {
     var issues = rawIssues.map(function(raw) {
       return mapRawIssue(raw, { hasSfdcCases: !!sfdcKeys[raw.key] })
     })
+
+    await carryOverCustomerNames(issues, BU_FEEDBACK_CACHE_KEY)
 
     var payload = { issues: issues, fetchedAt: new Date().toISOString(), cachedAt: new Date().toISOString(), customersResolved: false }
     await writeToStorage(BU_FEEDBACK_CACHE_KEY, payload)
@@ -770,6 +789,8 @@ module.exports = async function registerPlanningRoutes(router, context) {
         sfdcCasesCount: 0
       })
     })
+
+    await carryOverCustomerNames(issues, SFDC_ISSUES_CACHE_KEY)
 
     var payload = { issues: issues, fetchedAt: new Date().toISOString(), cachedAt: new Date().toISOString(), countsResolved: false, customersResolved: false }
     await writeToStorage(SFDC_ISSUES_CACHE_KEY, payload)
