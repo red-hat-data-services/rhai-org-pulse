@@ -374,10 +374,10 @@ function render(data,comp,compHeatmap){
           <div style="font-size:10px;color:#6b8299;margin-top:4px">Filter Jira issues by creation date. Use this to track weekly triage progress.</div>
         </div>
       </div>
-      <div class="three-col">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
         <div class="panel">
           <h3>Failure Classification</h3>
-          <p class="panel-sub">Distribution of TFA labels on test-failed Jira issues</p>
+          <p class="panel-sub">Distribution of TFA labels on test-failed Jira issues. Click a slice or legend item to open matching Jira issues.</p>
           <div class="chart-container"><canvas id="chart-tfa-pie"></canvas></div>
           <div id="tfa-legend" class="tfa-legend"></div>
           <div class="help-box">
@@ -392,15 +392,6 @@ function render(data,comp,compHeatmap){
               <li><strong>Duplicate</strong> — Same root cause as another tracked issue.</li>
               <li><strong>Wrong Assignment</strong> — Failure routed to the wrong component team.</li>
             </ul>
-          </div>
-        </div>
-        <div class="panel">
-          <h3>Classification Breakdown</h3>
-          <p class="panel-sub">Count per TFA category — see how many failures are classified vs unclassified</p>
-          <div class="chart-container"><canvas id="chart-tfa-bar"></canvas></div>
-          <div class="help-box">
-            <h4>Classified vs Unclassified</h4>
-            <p><strong>Classified</strong> = a TFA label has been applied. <strong>Unclassified</strong> = the failure has not yet been triaged. A high unclassified count means the team needs to review and categorize open failures. Target: &lt;10% unclassified.</p>
           </div>
         </div>
         <div class="panel">
@@ -470,47 +461,60 @@ function renderGateHeatmap(qg,daily){
   const dates=[...new Set(daily.filter(d=>d.total>0).map(d=>d.date))].sort((a,b)=>b.localeCompare(a));
   if(!gates.length||!dates.length){wrap.innerHTML='<p style="color:#6b8299;font-size:13px;padding:8px">No quality gate data for this filter.</p>';return}
 
+  // Detect data format: new format has {passed,failed,skipped,total,executions} per day
+  // Old format has just an array of executions per day
+  function getDayData(gateDay){
+    if(!gateDay) return null;
+    if(Array.isArray(gateDay)){
+      // Legacy format: array of execution objects
+      let p=0,f=0,s=0,t=0;
+      gateDay.forEach(ex=>{p+=(ex.passed||0);f+=(ex.failed||0);s+=(ex.skipped||0);t+=(ex.total||0)});
+      return {passed:p,failed:f,skipped:s,total:t,executions:gateDay};
+    }
+    return gateDay;
+  }
+
   let html='<table class="gate-hm"><thead><tr><th>Gate</th>';
   dates.forEach(d=>html+=`<th><div style="display:flex;flex-direction:column;align-items:center;gap:1px"><span>${friendlyDate(d)}</span></div></th>`);
   html+='</tr></thead><tbody>';
 
   gates.forEach((g,gIdx)=>{
-    // Gate-level aggregate
-    let gateTotal=0,gatePass=0;
-    dates.forEach(d=>{const execs=qg[g]&&qg[g][d];if(execs)execs.forEach(ex=>{gateTotal++;if(ex.state==='PASSED')gatePass++})});
-    const gatePct=passPct(gatePass,gateTotal);
+    // Gate-level aggregate (test-level counts)
+    let gateP=0,gateF=0,gateS=0,gateT=0;
+    dates.forEach(d=>{const dd=getDayData(qg[g]&&qg[g][d]);if(dd){gateP+=dd.passed;gateF+=dd.failed;gateS+=dd.skipped;gateT+=dd.total}});
+    const gatePct=passPct(gateP,gateT);
     const gateCol=pctColor(gatePct);
 
-    html+=`<tr><td style="color:#${gateCol==='green'?'2ed573':gateCol==='amber'?'ffa502':gateCol==='orange'?'e17055':'ff4757'};font-weight:600">${escHtml(g)}<div style="font-size:9px;color:#6b8299">${gatePct}% · ${gateTotal} runs</div></td>`;
+    html+=`<tr><td style="color:#${gateCol==='green'?'2ed573':gateCol==='amber'?'ffa502':gateCol==='orange'?'e17055':'ff4757'};font-weight:600">${escHtml(g)}<div style="font-size:9px;color:#6b8299">${gatePct}% · ${gateT.toLocaleString()} tests</div></td>`;
 
     // For top rows, dropdown opens below
     const ddClass=gIdx<2?'gc-dropdown gc-dd-below':'gc-dropdown';
 
     dates.forEach(d=>{
-      const execs=qg[g]&&qg[g][d];
-      if(!execs||!execs.length){html+='<td><span class="gc-na">–</span></td>';return}
+      const dd=getDayData(qg[g]&&qg[g][d]);
+      if(!dd||!dd.total){html+='<td><span class="gc-na">–</span></td>';return}
 
-      let tp=0,tf=0;
-      execs.forEach(ex=>{if(ex.state==='PASSED')tp++;else tf++});
-      const total=tp+tf;
-      const pct=passPct(tp,total);
+      const pct=passPct(dd.passed,dd.total);
       const col=pctColor(pct);
+      const execs=dd.executions||[];
 
-      // Hover dropdown with run details
+      // Hover dropdown with per-run details
       let dropdown=`<div class="${ddClass}">`;
       dropdown+=`<div class="gc-dd-title">${escHtml(g)} · ${friendlyDate(d)} · ${execs.length} run${execs.length!==1?'s':''}</div>`;
       execs.forEach(ex=>{
+        const exPct=ex.total>0?Math.round((ex.passed||0)/ex.total*100):0;
         const stateCol=ex.state==='PASSED'?'#2ed573':'#ff4757';
         const label=ex.jenkins_url?ex.jenkins_url.replace('https://jenkins-csb-rhods-opendatascience.dno.corp.redhat.com/job/','').replace(/\/$/,'').replace(/\/job\//g,'/'):'Run';
-        dropdown+=`<div class="gc-dd-run" style="display:flex;justify-content:space-between;align-items:center">`;
-        dropdown+=ex.jenkins_url?`<a href="${ex.jenkins_url}" target="_blank">${label}</a>`:`<span>${label}</span>`;
-        dropdown+=`<span class="gc-dd-state" style="color:${stateCol}">${ex.state}</span></div>`;
+        dropdown+=`<div class="gc-dd-run" style="display:flex;justify-content:space-between;align-items:center;gap:8px">`;
+        dropdown+=ex.jenkins_url?`<a href="${ex.jenkins_url}" target="_blank" style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis">${label}</a>`:`<span style="flex:1">${label}</span>`;
+        dropdown+=`<span style="white-space:nowrap;font-size:10px"><span style="color:#2ed573">${ex.passed||0}P</span> <span style="color:#ff4757">${ex.failed||0}F</span> <span style="color:#ffa502">${ex.skipped||0}S</span></span>`;
+        dropdown+=`<span class="gc-dd-state" style="color:${stateCol}">${exPct}%</span></div>`;
       });
       dropdown+='</div>';
 
       html+=`<td><div class="gate-cell gc-${col}">
         <div class="gc-pct gc-pct-${col}">${pct}%</div>
-        <div class="gc-runs" style="display:flex;gap:4px;justify-content:center;font-size:9px;font-weight:600;margin-top:2px"><span style="color:#2ed573">${tp}P</span><span style="color:#ff4757">${tf}F</span></div>
+        <div class="gc-runs" style="display:flex;gap:4px;justify-content:center;font-size:9px;font-weight:600;margin-top:2px"><span style="color:#2ed573">${dd.passed}P</span><span style="color:#ff4757">${dd.failed}F</span><span style="color:#ffa502">${dd.skipped}S</span></div>
         ${dropdown}</div></td>`;
     });
     html+='</tr>';
@@ -693,33 +697,7 @@ function renderTfaCharts(tfa){
     }).join('');
   }
 
-  // 2. Bar chart — Classified vs Unclassified (clickable)
-  const barCanvas=document.getElementById('chart-tfa-bar');
-  const barCtx=barCanvas.getContext('2d');
-  const barLabelsRaw=[...allLabels,'__unclassified'];
-  const barValues=[...allLabels.map(k=>(tfa.tfa||{})[k]||0),tfa.unclassified||0];
-  new Chart(barCtx,{
-    type:'bar',
-    data:{
-      labels:[...allLabels.map(k=>TFA_NAMES[k]),'Unclassified'],
-      datasets:[{label:'Issues',data:barValues,
-        backgroundColor:[...allLabels.map(k=>TFA_COLORS[k]),'#4a5568'],borderRadius:4}]
-    },
-    options:{responsive:true,maintainAspectRatio:false,indexAxis:'y',
-      onClick:(evt,elems)=>{
-        if(elems.length>0){
-          const idx=elems[0].index;const key=barLabelsRaw[idx];
-          const url=key==='__unclassified'?buildTfaJql('unclassified'):buildTfaJql('tfa-label',key);
-          if(url)window.open(url,'_blank');
-        }
-      },
-      onHover:(evt,elems)=>{barCanvas.style.cursor=elems.length>0?'pointer':'default'},
-      plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>`${ctx.label}: ${ctx.raw} issues — click to view in Jira`}}},
-      scales:{x:{ticks:{color:'#6b8299',font:{size:10}},grid:{color:'rgba(30,73,118,.2)'},beginAtZero:true},
-        y:{ticks:{color:'#ccc',font:{size:10}},grid:{display:false}}}}
-  });
-
-  // 3. Status bar chart (clickable)
+  // 2. Status bar chart (clickable)
   const statusCanvas=document.getElementById('chart-status-bar');
   const statusCtx=statusCanvas.getContext('2d');
   const statusEntries=Object.entries(tfa.status||{}).sort((a,b)=>b[1]-a[1]);

@@ -189,9 +189,8 @@ table.heatmap td{position:relative}
   <div id="tfa-all-section" style="display:none;margin-top:28px">
     <div class="section-title"><h2>Test Failure Analysis (TFA) — All Components</h2></div>
     <div id="tfa-summary-bar" style="display:flex;gap:14px;flex-wrap:wrap;margin:12px 0 16px"></div>
-    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;margin-bottom:20px">
-      <div class="bottom-panel" style="margin:0"><h3>Failure Classification</h3><p class="panel-sub">Distribution of TFA labels across all components</p><div style="position:relative;height:260px"><canvas id="tfa-pie-all"></canvas></div><div id="tfa-legend-all" style="margin-top:10px"></div></div>
-      <div class="bottom-panel" style="margin:0"><h3>Classification Breakdown</h3><p class="panel-sub">Count per TFA category</p><div style="position:relative;height:260px"><canvas id="tfa-bar-all"></canvas></div></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:20px">
+      <div class="bottom-panel" style="margin:0"><h3>Failure Classification</h3><p class="panel-sub">Distribution of TFA labels across all components. Click a slice to open Jira.</p><div style="position:relative;height:260px"><canvas id="tfa-pie-all"></canvas></div><div id="tfa-legend-all" style="margin-top:10px"></div></div>
       <div class="bottom-panel" style="margin:0"><h3>Jira Status Distribution</h3><p class="panel-sub">Current workflow status of test-failed issues</p><div style="position:relative;height:260px"><canvas id="tfa-status-all"></canvas></div></div>
     </div>
     <div class="bottom-panel" style="margin:0">
@@ -568,7 +567,7 @@ function buildTfaJqlAll(type,value,ver,rel){
   return`https://issues.redhat.com/issues/?jql=${encodeURIComponent(jql)}`;
 }
 
-let tfaPieChart=null,tfaBarChart=null,tfaStatusChart=null;
+let tfaPieChart=null,tfaStatusChart=null;
 
 function renderTfaAll(){
   if(!jiraConfig||!jiraConfig.tfa)return;
@@ -653,22 +652,8 @@ function renderTfaAll(){
     }).join('');
   }
 
-  // Bar chart
-  const allLabels=Object.keys(TFA_NAMES);
-  const barCanvas=$('tfa-bar-all');
-  if(tfaBarChart)tfaBarChart.destroy();
-  const barKeys=[...allLabels,'__unclassified'];
-  tfaBarChart=new Chart(barCanvas.getContext('2d'),{
-    type:'bar',
-    data:{labels:[...allLabels.map(k=>TFA_NAMES[k]),'Unclassified'],datasets:[{label:'Issues',data:[...allLabels.map(k=>agg.tfa[k]||0),agg.unclassified],backgroundColor:[...allLabels.map(k=>TFA_COLORS[k]),'#4a5568'],borderRadius:4}]},
-    options:{responsive:true,maintainAspectRatio:false,indexAxis:'y',
-      onClick:(evt,elems)=>{if(elems.length>0){const idx=elems[0].index;const key=barKeys[idx];const url=key==='__unclassified'?buildTfaJqlAll('unclassified',null,ver,rel):buildTfaJqlAll('tfa-label',key,ver,rel);if(url)window.open(url,'_blank')}},
-      onHover:(evt,elems)=>{barCanvas.style.cursor=elems.length>0?'pointer':'default'},
-      plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>`${ctx.label}: ${ctx.raw} — click to view in Jira`}}},
-      scales:{x:{ticks:{color:'#6b8299',font:{size:10}},grid:{color:'rgba(30,73,118,.2)'},beginAtZero:true},y:{ticks:{color:'#ccc',font:{size:10}},grid:{display:false}}}}
-  });
-
   // Status chart
+  const allLabels=Object.keys(TFA_NAMES);
   const statusCanvas=$('tfa-status-all');
   if(tfaStatusChart)tfaStatusChart.destroy();
   const statusEntries=Object.entries(agg.status).sort((a,b)=>b[1]-a[1]);
