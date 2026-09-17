@@ -801,6 +801,10 @@ function refreshTfaData(){
   if(existing)existing.remove();
   const div=document.createElement('div');div.id='tfa-triage-panel';div.innerHTML=triageHtml;
   section.appendChild(div);
+  div.scrollIntoView({behavior:'smooth',block:'start'});
+  // Flash the Apply button green briefly to confirm
+  const btn=document.getElementById('tfa-refresh-btn');
+  if(btn){btn.style.background='#2ed573';btn.textContent='Applied ✓';setTimeout(()=>{btn.style.background='#1976d2';btn.textContent='Apply'},1500)}
 }
 
 // --- Boot ---
