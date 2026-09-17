@@ -125,9 +125,18 @@ function renderStatusNotes(notes) {
 
 const ownerStatusColor = computed(() => feature.value?.colorStatus || feature.value?.ownerStatusColor || null)
 
-const sourceRfeKey = computed(() => aiReview.value?.latest?.sourceRfe || null)
-
 const featureKey = computed(() => nav.params.value.key)
+
+const aiReviewLatest = computed(() => aiReview.value?.latest || null)
+const sourceRfeKey = computed(() => aiReviewLatest.value?.sourceRfe || null)
+const prdPrUrl = computed(() => aiReviewLatest.value?.prdPrUrl || null)
+const designPrUrl = computed(() => aiReviewLatest.value?.designPrUrl || null)
+
+function navigateToAIReview(view) {
+  const key = featureKey.value || feature.value?.key
+  if (!key) return
+  crossNavigate('ai-impact', view, { select: key })
+}
 
 const validationErrors = computed(() => feature.value?.topology?.validationErrors || [])
 
@@ -399,23 +408,46 @@ onMounted(() => {
               <span v-if="feature.assignee">Owner: <span class="text-gray-700 dark:text-gray-300">{{ feature.assignee.displayName }}</span></span>
               <span v-if="feature.pm">PM: <span class="text-gray-700 dark:text-gray-300">{{ feature.pm.displayName }}</span></span>
               <span v-if="feature.releaseType">Release type: <span class="text-gray-700 dark:text-gray-300">{{ feature.releaseType }}</span></span>
-              <span v-if="sourceRfeKey" class="flex items-center gap-1">
-                Source PRD:
+              <span v-if="prdPrUrl" class="flex items-center gap-1">
+                PRD:
                 <button
                   class="font-mono text-primary-600 dark:text-blue-400 hover:underline"
-                  @click="crossNavigate('ai-impact', 'prd-review', { select: sourceRfeKey })"
-                >{{ sourceRfeKey }}</button>
+                  title="Open PRD Review"
+                  @click="navigateToAIReview('prd-review')"
+                >Review</button>
                 <a
-                  :href="JIRA_BASE + sourceRfeKey"
+                  :href="prdPrUrl"
                   target="_blank"
                   rel="noopener noreferrer"
                   class="text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
-                  title="Open in Jira"
+                  title="View PRD pull request on GitHub"
                 >
                   <svg class="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
                   </svg>
                 </a>
+              </span>
+              <span v-if="designPrUrl" class="flex items-center gap-1">
+                Design:
+                <button
+                  class="font-mono text-primary-600 dark:text-blue-400 hover:underline"
+                  title="Open Design Review"
+                  @click="navigateToAIReview('design-review')"
+                >Review</button>
+                <a
+                  :href="designPrUrl"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  class="text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
+                  title="View design pull request on GitHub"
+                >
+                  <svg class="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                  </svg>
+                </a>
+              </span>
+              <span v-if="sourceRfeKey && !prdPrUrl && !designPrUrl" class="flex items-center gap-1">
+                Source: <span class="font-mono text-gray-700 dark:text-gray-300">{{ sourceRfeKey }}</span>
               </span>
               <span>Created: {{ formatDate(feature.created) }}</span>
               <span>Updated: {{ formatDate(feature.updated) }}</span>

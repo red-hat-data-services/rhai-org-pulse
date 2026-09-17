@@ -127,7 +127,11 @@ function getFeaturePhaseSignal(phaseId) {
         current: false,
         aiUsed: true,
         detail: feature.sourceRfe,
-        linkedKey: feature.sourceRfe,
+        // sourceRfe is an EP identifier (and, when a design exists, usually
+        // the Design PR number), not the key used by the PRD Review route.
+        linkedKey: feature.key,
+        displayKey: feature.sourceRfe || feature.key,
+        prUrl: feature.prdPrUrl || null,
         isSourceRfe: true
       }
     case 'design-review': {
@@ -214,15 +218,15 @@ function getFeaturePhaseSignal(phaseId) {
                   class="text-blue-600 dark:text-blue-400 hover:underline"
                   @click="emit('navigateToRFE', getPhaseSignal(phase.id).linkedKey)"
                 >
-                  {{ getPhaseSignal(phase.id).linkedKey }}
+                  {{ getPhaseSignal(phase.id).displayKey || getPhaseSignal(phase.id).linkedKey }}
                 </button>
                 <a
-                  v-if="jiraHost"
-                  :href="`${jiraHost}/browse/${getPhaseSignal(phase.id).linkedKey}`"
+                  v-if="getPhaseSignal(phase.id).prUrl"
+                  :href="getPhaseSignal(phase.id).prUrl"
                   target="_blank"
                   rel="noopener noreferrer"
                   class="ml-1 text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300"
-                  title="View in Jira"
+                  title="View PRD pull request on GitHub"
                 >
                   <svg class="inline h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />

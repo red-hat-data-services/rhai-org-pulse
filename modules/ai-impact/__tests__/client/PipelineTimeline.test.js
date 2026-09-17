@@ -97,6 +97,25 @@ function makeFeature(overrides = {}) {
 }
 
 describe('PipelineTimeline design-review phase', () => {
+  it('uses the feature key for in-app PRD navigation and the canonical PRD PR URL', async () => {
+    const wrapper = mount(PipelineTimeline, {
+      props: {
+        feature: makeFeature({
+          sourceRfe: 'EP-208',
+          prdPrUrl: 'https://github.com/osac-project/enhancement-proposals/pull/168'
+        }),
+        phases: PHASES
+      }
+    });
+
+    const prdLink = wrapper.find('a');
+    expect(prdLink.attributes('href')).toBe('https://github.com/osac-project/enhancement-proposals/pull/168');
+    expect(prdLink.attributes('title')).toBe('View PRD pull request on GitHub');
+
+    await wrapper.find('button').trigger('click');
+    expect(wrapper.emitted('navigateToRFE')).toEqual([['OSAC-1']]);
+  });
+
   it('shows recommendation and score for a scored Design', () => {
     const wrapper = mount(PipelineTimeline, { props: { feature: makeFeature(), phases: PHASES } });
     expect(wrapper.text()).toContain('approve — 6/8');

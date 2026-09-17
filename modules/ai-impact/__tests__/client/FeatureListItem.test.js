@@ -27,6 +27,23 @@ describe('FeatureListItem Missing Design badge', () => {
     const wrapper = mount(FeatureListItem, { props: { feature } });
     expect(wrapper.text()).not.toContain('Missing Design');
   });
+
+  it('renders separate canonical PRD and Design PR links', () => {
+    const feature = makeFeature({
+      designPrStatus: 'Open',
+      prdPrUrl: 'https://github.com/org/repo/pull/168',
+      designPrUrl: 'https://github.com/org/repo/pull/208'
+    });
+    const wrapper = mount(FeatureListItem, { props: { feature } });
+    const links = wrapper.findAll('a');
+
+    expect(links.map(link => link.attributes('href'))).toEqual([
+      'https://github.com/org/repo/pull/168',
+      'https://github.com/org/repo/pull/208'
+    ]);
+    expect(links[0].attributes('title')).toBe('View PRD pull request on GitHub');
+    expect(links[1].attributes('title')).toBe('View design pull request on GitHub');
+  });
 });
 
 describe('FeatureListItem Review pill (meaningful humanReviewStatus only)', () => {

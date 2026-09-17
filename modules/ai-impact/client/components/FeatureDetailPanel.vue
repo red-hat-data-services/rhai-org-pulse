@@ -196,6 +196,19 @@ const history = computed(() => featureDetail.value?.history || [])
               </div>
               <div class="flex flex-wrap items-center gap-2">
                 <a
+                  v-if="currentData?.prdPrUrl"
+                  :href="currentData.prdPrUrl"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800 hover:bg-blue-100 dark:hover:bg-blue-900/50 transition-colors"
+                  title="View PRD pull request on GitHub"
+                >
+                  <svg class="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10v-4M14 4h6m0 0v6m0-6L10 14" />
+                  </svg>
+                  PRD PR
+                </a>
+                <a
                   v-if="currentData?.designPrUrl"
                   :href="currentData.designPrUrl"
                   target="_blank"
