@@ -247,13 +247,14 @@ describe('release-planning routes', function() {
 
       var res = await callRoute(setup.router._routes, 'GET', '/bu-feedback', makeReq({ query: { refresh: 'true' } }))
 
+      // _linkedCaseNumbers stripped synchronously before response
+      expect(res._json.issues[0]).not.toHaveProperty('_linkedCaseNumbers')
       // Comment-extracted customer names are available immediately
       expect(res._json.issues[1].customerAffected).toBe('Comment Customer')
       // Portal lookups run in the background — flush microtasks to let mocks resolve
       await vi.waitFor(function() {
         expect(res._json.issues[0].customerAffected).toBe('Canadian Imperial Bank Of Commerce')
       })
-      expect(res._json.issues[0]).not.toHaveProperty('_linkedCaseNumbers')
       expect(customerPortal.getCustomerName).toHaveBeenCalledTimes(1)
       expect(customerPortal.getCustomerName).toHaveBeenCalledWith('04523117')
       expect(setup.jira.jiraRequest.mock.calls[0][0]).toContain('properties=sfdc-cases-links')
@@ -270,11 +271,12 @@ describe('release-planning routes', function() {
 
       var res = await callRoute(setup.router._routes, 'GET', '/sfdc-issues', makeReq({ query: { refresh: 'true' } }))
 
+      // _linkedCaseNumbers stripped synchronously before response
+      expect(res._json.issues[0]).not.toHaveProperty('_linkedCaseNumbers')
       // Portal lookups run in the background — flush microtasks to let mocks resolve
       await vi.waitFor(function() {
         expect(res._json.issues[0].customerAffected).toBe('Canadian Imperial Bank Of Commerce')
       })
-      expect(res._json.issues[0]).not.toHaveProperty('_linkedCaseNumbers')
       expect(customerPortal.getCustomerName).toHaveBeenCalledWith('04523117')
     })
   })
