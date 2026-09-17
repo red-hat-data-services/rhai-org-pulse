@@ -56,6 +56,7 @@ table.heatmap th.comp-header{text-align:left;min-width:180px}
 table.heatmap td.comp-name{text-align:left;font-weight:500}
 table.heatmap td.comp-name a{color:#5ea7ff;font-size:13px}
 table.heatmap td.comp-name a:hover{color:#8ec5ff}
+table.heatmap td{position:relative}
 
 /* Heatmap cells — color-coded by pass % */
 .cell{border-radius:6px;padding:6px 4px;min-width:60px;display:inline-block;text-align:center;cursor:pointer;position:relative}
@@ -71,9 +72,13 @@ table.heatmap td.comp-name a:hover{color:#8ec5ff}
 .cell-na{color:#4a5568;font-size:13px}
 
 /* Hover dropdown for run details */
-.cell-dropdown{display:none;position:absolute;bottom:calc(100% + 6px);left:50%;transform:translateX(-50%);
+.cell-dropdown{display:none;position:absolute;left:50%;transform:translateX(-50%);
   background:#132f4c;border:1px solid #1e4976;border-radius:8px;padding:8px 0;z-index:200;
   min-width:340px;max-height:360px;overflow-y:auto;box-shadow:0 8px 24px rgba(0,0,0,.6);text-align:left}
+/* Default: show above */
+.cell-dropdown{bottom:calc(100% + 6px)}
+/* For top rows: show below instead */
+.cell-dropdown.dd-below{bottom:auto;top:calc(100% + 6px)}
 .cell:hover .cell-dropdown{display:block}
 .dd-title{padding:6px 14px 4px;font-size:10px;color:#6b8299;font-weight:700;text-transform:uppercase;letter-spacing:.5px;border-bottom:1px solid #1e4976;margin-bottom:4px}
 .dd-run{padding:5px 14px;border-bottom:1px solid rgba(30,73,118,.3)}
@@ -268,7 +273,7 @@ async function loadHeatmap(){
   try{
     // Try live API
     try{
-      const r=await fetch(`/test-dashboard/data/heatmap.json?${new URLSearchParams(f)}`);
+      const r=await fetch(`/api/v1/heatmap?${new URLSearchParams(f)}`);
       if(r.ok){const d=await r.json(); if(!d.error){renderAll(d);return}}
     }catch(_){}
     // Static JSON
@@ -314,13 +319,16 @@ function renderHeatmap(data,container){
   dates.forEach(d=>html+=`<th><div style="display:flex;flex-direction:column;align-items:center;gap:1px"><span>${friendlyDate(d)}</span></div></th>`);
   html+='</tr></thead><tbody>';
 
-  comps.forEach(comp=>{
+  comps.forEach((comp,rowIdx)=>{
     const fqs=filterQS({component:comp.component});
     // Overall row stats
     const ov=comp.overall||{};
     const rowPct=passPct(ov.passed||0,ov.total||0);
     html+=`<tr><td class="comp-name"><a href="component.html?${fqs}">${escHtml(comp.component)}</a>
       <div style="font-size:10px;color:#6b8299">${rowPct}% · ${(ov.total||0).toLocaleString()} tests</div></td>`;
+
+    // For first 4 rows, dropdown opens below to avoid being cut off at the top
+    const ddClass=rowIdx<4?'cell-dropdown dd-below':'cell-dropdown';
 
     dates.forEach(d=>{
       const day=comp.days?comp.days[d]:null;
@@ -333,7 +341,7 @@ function renderHeatmap(data,container){
       // Build hover dropdown with run details
       let dropdown='';
       if(urls.length>0||day.by_vr){
-        dropdown='<div class="cell-dropdown">';
+        dropdown=`<div class="${ddClass}">`;
         dropdown+=`<div class="dd-title">${friendlyDate(d)} · ${urls.length} run${urls.length!==1?'s':''}</div>`;
 
         // Show per-version/release runs if available

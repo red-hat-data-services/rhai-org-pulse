@@ -233,12 +233,10 @@ async function loadComponent(){
 
   try{
     let data;const f=currentFilters();f.component=comp;
-    try{const r=await fetch(`/test-dashboard/data/components.json?${new URLSearchParams(f)}`);if(r.ok){const d=await r.json();if(!d.error)data=d}}catch(_){}
-    if(!data){
-      const r2=await fetch(`/test-dashboard/data/components.json?_=${Date.now()}`);
-      if(r2.ok){const all=await r2.json();if(all[comp])data=filterComponentData(all[comp],f)}
-    }
-    if(!data)throw new Error('No data');
+    // Load full components JSON (static file) and extract this component
+    const r2=await fetch(`/test-dashboard/data/components.json?_=${Date.now()}`);
+    if(r2.ok){const all=await r2.json();if(all[comp])data=filterComponentData(all[comp],f)}
+    if(!data)throw new Error('No data for "'+comp+'"');
     render(data,comp);
   }catch(e){main.innerHTML=`<div class="error">Failed: ${e.message}<br><a href="${backUrl()}">Back</a></div>`}
 }
