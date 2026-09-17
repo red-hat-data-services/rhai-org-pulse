@@ -165,7 +165,7 @@ function buildJiraUrl(comp,label,ver,rel){
   if(ver!=='All'&&rel!=='All'){const k=`${ver}|${rel}`;if(rels[k])matching=[rels[k]]}
   else if(ver!=='All') keys.filter(k=>k.startsWith(ver+'|')).forEach(k=>matching.push(rels[k]));
   else if(rel!=='All') keys.filter(k=>k.endsWith('|'+rel)).forEach(k=>matching.push(rels[k]));
-  else ['3.5|GA','3.5|EA1','3.5|EA2','3.6|EA1','3.6|EA2'].forEach(k=>{if(rels[k])matching.push(rels[k])});
+  else keys.forEach(k=>matching.push(rels[k]));
   if(!matching.length)return null;
   const fvs=new Set();matching.forEach(r=>{fvs.add(`'${r.rhoai_jira_version}'`);fvs.add(`'${r.fix_version}'`)});
   const fvList=Array.from(fvs).join(', ');
@@ -369,7 +369,7 @@ function render(data,comp,compHeatmap){
             <input type="date" id="tfa-from" value="${f.from_date}" style="background:#132f4c;color:#fff;border:1px solid #1e4976;border-radius:4px;padding:5px 8px;font-size:12px;cursor:pointer;outline:none">
             <span style="color:#6b8299;font-size:12px">to</span>
             <input type="date" id="tfa-to" value="${f.to_date}" style="background:#132f4c;color:#fff;border:1px solid #1e4976;border-radius:4px;padding:5px 8px;font-size:12px;cursor:pointer;outline:none">
-            <button id="tfa-refresh-btn" onclick="refreshTfaData()" style="background:#1e4976;color:#fff;border:none;border-radius:4px;padding:5px 10px;font-size:12px;cursor:pointer">Apply</button>
+            <button id="tfa-refresh-btn" onclick="refreshTfaData()" style="background:#1976d2;color:#fff;border:none;border-radius:6px;padding:6px 16px;font-size:12px;font-weight:600;cursor:pointer;transition:background .2s" onmouseover="this.style.background='#1565c0'" onmouseout="this.style.background='#1976d2'">Apply</button>
           </div>
           <div style="font-size:10px;color:#6b8299;margin-top:4px">Filter Jira issues by creation date. Use this to track weekly triage progress.</div>
         </div>
@@ -490,22 +490,13 @@ function renderGateHeatmap(qg,daily){
       const execs=qg[g]&&qg[g][d];
       if(!execs||!execs.length){html+='<td><span class="gc-na">–</span></td>';return}
 
-      // Aggregate for cell color
       let tp=0,tf=0;
       execs.forEach(ex=>{if(ex.state==='PASSED')tp++;else tf++});
       const total=tp+tf;
       const pct=passPct(tp,total);
       const col=pctColor(pct);
 
-      // Individual marks
-      const marks=execs.map(ex=>{
-        const cls=ex.state==='PASSED'?'gate-mark-p':'gate-mark-f';
-        const sym=ex.state==='PASSED'?'✓':'●';
-        return ex.jenkins_url?`<a href="${ex.jenkins_url}" target="_blank" class="gate-mark ${cls}" title="${ex.state} — click for Jenkins">${sym}</a>`
-          :`<span class="gate-mark ${cls}">${sym}</span>`;
-      }).join('');
-
-      // Build hover dropdown (like main dashboard)
+      // Hover dropdown with run details
       let dropdown=`<div class="${ddClass}">`;
       dropdown+=`<div class="gc-dd-title">${escHtml(g)} · ${friendlyDate(d)} · ${execs.length} run${execs.length!==1?'s':''}</div>`;
       execs.forEach(ex=>{
@@ -519,8 +510,7 @@ function renderGateHeatmap(qg,daily){
 
       html+=`<td><div class="gate-cell gc-${col}">
         <div class="gc-pct gc-pct-${col}">${pct}%</div>
-        <div class="gc-runs">${tp}P ${tf}F</div>
-        <div class="gc-marks">${marks}</div>
+        <div class="gc-runs" style="display:flex;gap:4px;justify-content:center;font-size:9px;font-weight:600;margin-top:2px"><span style="color:#2ed573">${tp}P</span><span style="color:#ff4757">${tf}F</span></div>
         ${dropdown}</div></td>`;
     });
     html+='</tr>';
@@ -567,8 +557,9 @@ function renderVersionChart(compHeatmap,filters){
     if(date<from||date>to) return;
     if(!day.by_vr) return;
     Object.entries(day.by_vr).forEach(([vrKey,vr])=>{
-      // Extract major version: "3.5|GA" → "3.5", "3.6-ea.1|EA1" → "3.6"
-      const ver=vrKey.split('|')[0].split('-')[0];
+      // Normalize version: "3.5.1|GA" → "3.5", "3.6-ea.1|EA1" → "3.6"
+      const rawVer=vrKey.split('|')[0].split('-')[0];
+      const vp=rawVer.split('.');const ver=vp.length>=2?vp[0]+'.'+vp[1]:rawVer;
       versions.add(ver);
       if(!verDayMap[ver])verDayMap[ver]={};
       if(!verDayMap[ver][date])verDayMap[ver][date]={p:0,f:0,s:0};
@@ -651,7 +642,7 @@ function buildTfaJql(type,value){
   if(f.version!=='All'&&f.release!=='All')matching=[rels[`${f.version}|${f.release}`]].filter(Boolean);
   else if(f.version!=='All')rk.filter(k=>k.startsWith(f.version+'|')).forEach(k=>matching.push(rels[k]));
   else if(f.release!=='All')rk.filter(k=>k.endsWith('|'+f.release)).forEach(k=>matching.push(rels[k]));
-  else ['3.5|GA','3.5|EA1','3.5|EA2','3.6|EA1','3.6|EA2'].forEach(k=>{if(rels[k])matching.push(rels[k])});
+  else rk.forEach(k=>matching.push(rels[k]));
   if(!matching.length)return null;
   const fvs=new Set();matching.forEach(r=>{fvs.add(`'${r.rhoai_jira_version}'`);fvs.add(`'${r.fix_version}'`)});
   const fvList=Array.from(fvs).join(', ');
@@ -756,7 +747,9 @@ function renderTfaCharts(tfa){
 function refreshTfaData(){
   const comp=window._currentComp;
   const f=window._currentFilters;
-  if(!comp||!f||!jiraConfig) return;
+  if(!comp){console.error('refreshTfaData: no component set');return}
+  if(!f){console.error('refreshTfaData: no filters set');return}
+  if(!jiraConfig){console.error('refreshTfaData: jiraConfig not loaded');alert('Jira config not loaded. Please wait for data to load.');return}
 
   const tfaFrom=document.getElementById('tfa-from').value;
   const tfaTo=document.getElementById('tfa-to').value;
@@ -768,9 +761,9 @@ function refreshTfaData(){
   if(f.version!=='All'&&f.release!=='All')matchingRels=[rels[`${f.version}|${f.release}`]].filter(Boolean);
   else if(f.version!=='All')rk.filter(k=>k.startsWith(f.version+'|')).forEach(k=>matchingRels.push(rels[k]));
   else if(f.release!=='All')rk.filter(k=>k.endsWith('|'+f.release)).forEach(k=>matchingRels.push(rels[k]));
-  else ['3.5|GA','3.5|EA1','3.5|EA2','3.6|EA1','3.6|EA2'].forEach(k=>{if(rels[k])matchingRels.push(rels[k])});
+  else rk.forEach(k=>matchingRels.push(rels[k]));
 
-  if(!matchingRels.length){alert('No matching release found.');return}
+  if(!matchingRels.length){alert('No matching release found in jira_config.');return}
   const fvs=new Set();matchingRels.forEach(r=>{fvs.add(`'${r.rhoai_jira_version}'`);fvs.add(`'${r.fix_version}'`)});
   const fvList=Array.from(fvs).join(', ');
   const cm=jiraConfig.component_team_map||{};

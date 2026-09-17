@@ -262,9 +262,10 @@ function currentFilters(){
 }
 function filterQS(extra){ return new URLSearchParams({...currentFilters(),...extra}).toString() }
 
+function normalizeVer(v){const b=v.split('-')[0];const p=b.split('.');return p.length>=2?p[0]+'.'+p[1]:b}
 function vrKeyMatches(vrKey, version, release){
   const [v,r] = vrKey.split('|');
-  if(version && version!=='All'){ if(v.split('-')[0]!==version) return false }
+  if(version && version!=='All'){ if(normalizeVer(v)!==version) return false }
   if(release && release!=='All' && r!==release) return false;
   return true;
 }
@@ -433,7 +434,8 @@ function renderReleaseChart(data){
     Object.entries(comp.days||{}).forEach(([date,day])=>{
       if(!day.by_vr) return;
       Object.entries(day.by_vr).forEach(([vrKey,vr])=>{
-        const [v]=vrKey.split('|');
+        const [rawV]=vrKey.split('|');
+        const v=normalizeVer(rawV);
         versions.add(v);
         if(!vrDayMap[vrKey]) vrDayMap[vrKey]={};
         if(!vrDayMap[vrKey][date]) vrDayMap[vrKey][date]={p:0,f:0,s:0};
@@ -463,7 +465,7 @@ function updateReleaseChart(){
   // Aggregate by VERSION (combining all releases EA1+EA2+GA per version)
   const versionMap={}; // "3.5" -> {date: {p,f,s}}
   Object.entries(vrDayMap).forEach(([vrKey,dayData])=>{
-    const [v]=vrKey.split('|');
+    const v=normalizeVer(vrKey.split('|')[0]);
     if(!checked.includes(v)) return;
     if(!versionMap[v]) versionMap[v]={};
     Object.entries(dayData).forEach(([date,counts])=>{
