@@ -10,9 +10,11 @@
 import { computed } from 'vue'
 import { Bar } from 'vue-chartjs'
 import { BarElement, CategoryScale, Chart as ChartJS, Legend, LinearScale, Tooltip } from 'chart.js'
+import { isVisibleProductBug } from '../utils/product-bugs'
 ChartJS.register(CategoryScale, LinearScale, BarElement, Tooltip, Legend)
 const props = defineProps({ runs: { type: Array, default: () => [] } })
-const bugs = (run) => (run.productBugs || []).filter((bug) => bug.category === 'PRODUCT_BUG')
+
+const bugs = (run) => (run.productBugs || []).filter(isVisibleProductBug)
 const versionRows = computed(() => {
   const rows = new Map()
   for (const run of props.runs) {

@@ -477,7 +477,10 @@ module.exports = function registerRoutes(router, context) {
     };
     const bugsBody = {
       size: 0,
-      query: addFilter(await rootCauseQuery(req.query), { term: { category: 'PRODUCT_BUG' } }),
+      query: addFilter(
+        addFilter(await rootCauseQuery(req.query), { term: { category: 'PRODUCT_BUG' } }),
+        { exists: { field: 'bug_key' } }
+      ),
       aggs: {
         total: { value_count: { field: 'root_cause_id' } },
         opened: { filter: { term: { opened: true } } },

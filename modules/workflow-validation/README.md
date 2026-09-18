@@ -80,6 +80,8 @@ Important rules:
 - `infra_cost_usd` can repeat across executions and must be deduplicated by
   `run_id` before summing.
 - Root causes may not have a Jira key.
+- Product-bug findings without a Jira ID are not surfaced in stakeholder-facing
+  bug lists, charts, or counts. Other root-cause categories remain visible.
 - Missing fields mean unknown unless their documented business meaning says
   otherwise.
 - The dashboard always presents one bounded test run. It defaults to

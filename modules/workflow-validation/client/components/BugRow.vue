@@ -1,5 +1,5 @@
 <template>
-  <div class="px-6 py-4 border-l-4" :class="accent">
+  <div v-if="isVisibleFinding(bug)" class="px-6 py-4 border-l-4" :class="accent">
     <div class="flex items-start gap-3 flex-wrap">
       <a
         v-if="safeExternalUrl(bug.jira_url)"
@@ -7,7 +7,8 @@
         target="_blank"
         rel="noopener"
         class="font-mono font-semibold text-sm text-blue-600 dark:text-blue-400 hover:underline shrink-0"
-      >{{ bug.bug_key || 'Jira' }}</a>
+      >{{ bug.bug_key }}</a>
+      <span v-else class="shrink-0 font-mono text-sm font-semibold text-gray-700 dark:text-gray-200">{{ bug.bug_key }}</span>
       <span
         class="inline-block px-2.5 py-0.5 rounded-full text-[0.68rem] font-semibold"
         :class="issueOutcome.tone"
@@ -62,6 +63,7 @@
 <script setup>
 import { computed } from 'vue'
 import { safeExternalUrl } from '../utils/external-url'
+import { isVisibleFinding } from '../utils/product-bugs'
 const props = defineProps({
   bug: { type: Object, required: true }
 })
@@ -77,11 +79,6 @@ const issueOutcome = computed(() => {
     }[props.bug.category] || 'Non-product failure',
     detail: `The RCA classified this finding as ${String(props.bug.category).toLowerCase().replaceAll('_', ' ')} rather than a product bug.`,
     tone: 'bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-200'
-  }
-  if (!props.bug.bug_key) return {
-    label: 'Jira ID missing',
-    detail: 'A Jira issue exists for this product bug, but its ID is missing from Org Pulse. This may indicate a data import problem or a problem publishing the telemetry.',
-    tone: 'bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-300'
   }
   if (props.bug.action === 'FILED' || props.bug.opened) return {
     label: 'New Jira issue opened',
