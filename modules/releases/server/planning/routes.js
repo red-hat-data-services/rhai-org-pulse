@@ -29,7 +29,7 @@ const healthRoutes = require('./health/health-routes')
 var { buildFeatureReadiness } = require('./feature-readiness')
 var { fetchFeaturesWithTimeout } = require('./feature-query')
 var { extractFirstInProgressAt, extractCustomersFromComments } = require('./bu-feedback-issue')
-var { createCustomerPortalClient, extractLinkedCaseNumbers } = require('./customer-portal')
+var { createCustomerPortalClient, extractLinkedCaseNumbers, extractCustomerName } = require('./customer-portal')
 
 const { isValidVersionParam } = require('../version-utils')
 
@@ -887,6 +887,141 @@ module.exports = async function registerPlanningRoutes(router, context) {
       }
       res.status(500).json({ error: 'Failed to fetch SFDC issues' })
     }
+  })
+
+  /**
+   * @openapi
+   * /api/modules/releases/planning/customer-portal-diagnostic:
+   *   get:
+   *     summary: Diagnose Customer Portal API connectivity and token exchange (admin only)
+   *     tags: [releases-planning]
+   *     security: [{ bearerAuth: [] }]
+   *     parameters:
+   *       - in: query
+   *         name: caseNumber
+   *         schema:
+   *           type: string
+   *         description: Optional 8-digit case number to test a live lookup
+   *     responses:
+   *       200:
+   *         description: Diagnostic results
+   */
+  router.get('/customer-portal-diagnostic', requireAdmin, async function(req, res) {
+    var result = {
+      configured: customerPortalClient.isConfigured(),
+      tokenExchange: null,
+      caseLookup: null
+    }
+
+    if (!result.configured) {
+      result.error = 'CUSTOMER_PORTAL_OFFLINE_TOKEN is not set or empty'
+      return res.json(result)
+    }
+
+    var offlineToken = context.secrets && context.secrets.CUSTOMER_PORTAL_OFFLINE_TOKEN
+    var tokenUrl = 'https://sso.redhat.com/auth/realms/redhat-external/protocol/openid-connect/token'
+
+    try {
+      var tokenResponse = await fetch(tokenUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: new URLSearchParams({
+          grant_type: 'refresh_token',
+          client_id: 'rhsm-api',
+          refresh_token: offlineToken
+        }),
+        signal: AbortSignal.timeout(15000)
+      })
+      result.tokenExchange = {
+        status: tokenResponse.status,
+        ok: tokenResponse.ok
+      }
+      if (!tokenResponse.ok) {
+        var tokenBody = await tokenResponse.text()
+        result.tokenExchange.body = tokenBody.substring(0, 500)
+        return res.json(result)
+      }
+      var tokenData = await tokenResponse.json()
+      result.tokenExchange.hasAccessToken = !!tokenData.access_token
+      result.tokenExchange.expiresIn = tokenData.expires_in
+      var accessToken = tokenData.access_token
+    } catch (err) {
+      result.tokenExchange = { error: err.message }
+      return res.json(result)
+    }
+
+    var testCase = req.query.caseNumber
+    if (!testCase) {
+      var cached = await readFromStorage(SFDC_ISSUES_CACHE_KEY)
+      if (cached && cached.issues) {
+        for (var i = 0; i < cached.issues.length; i++) {
+          var issueProps = cached.issues[i]
+          if (issueProps.hasSfdcCases) {
+            testCase = null
+            break
+          }
+        }
+      }
+    }
+
+    if (!testCase) {
+      result.caseLookup = { skipped: 'No caseNumber provided. Pass ?caseNumber=XXXXXXXX to test a lookup.' }
+      return res.json(result)
+    }
+
+    var caseApiUrls = [
+      'https://api.access.redhat.com/support/v1/cases/' + encodeURIComponent(testCase),
+      'https://api.access.redhat.com/support/v3/cases/' + encodeURIComponent(testCase)
+    ]
+
+    result.caseLookup = { caseNumber: testCase, apis: [] }
+    for (var ci = 0; ci < caseApiUrls.length; ci++) {
+      var apiResult = { url: caseApiUrls[ci] }
+      try {
+        var caseResponse = await fetch(caseApiUrls[ci], {
+          headers: { Authorization: 'Bearer ' + accessToken, Accept: 'application/json' },
+          signal: AbortSignal.timeout(15000)
+        })
+        apiResult.status = caseResponse.status
+        apiResult.ok = caseResponse.ok
+        if (caseResponse.ok) {
+          var caseData = await caseResponse.json()
+          apiResult.hasAccountNumberRef = !!caseData.accountNumberRef
+          apiResult.accountNumberRef = caseData.accountNumberRef || null
+          apiResult.extractedName = extractCustomerName(caseData)
+          apiResult.topLevelKeys = Object.keys(caseData).slice(0, 20)
+          if (caseData.accountNumberRef) {
+            try {
+              var acctResponse = await fetch(
+                'https://api.access.redhat.com/support/v1/accounts/' + encodeURIComponent(caseData.accountNumberRef),
+                {
+                  headers: { Authorization: 'Bearer ' + accessToken, Accept: 'application/json' },
+                  signal: AbortSignal.timeout(15000)
+                }
+              )
+              apiResult.accountLookup = {
+                status: acctResponse.status,
+                ok: acctResponse.ok
+              }
+              if (acctResponse.ok) {
+                var acctData = await acctResponse.json()
+                apiResult.accountLookup.name = acctData.name || acctData.accountName || acctData.displayName || ''
+                apiResult.accountLookup.topLevelKeys = Object.keys(acctData).slice(0, 15)
+              }
+            } catch (acctErr) {
+              apiResult.accountLookup = { error: acctErr.message }
+            }
+          }
+        } else {
+          apiResult.body = (await caseResponse.text()).substring(0, 300)
+        }
+      } catch (err) {
+        apiResult.error = err.message
+      }
+      result.caseLookup.apis.push(apiResult)
+    }
+
+    res.json(result)
   })
 
   // ─── Cache Invalidation Helper ───
