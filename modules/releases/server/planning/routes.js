@@ -919,6 +919,16 @@ module.exports = async function registerPlanningRoutes(router, context) {
     }
 
     var offlineToken = context.secrets && context.secrets.CUSTOMER_PORTAL_OFFLINE_TOKEN
+    var trimmedToken = (offlineToken || '').trim()
+    result.tokenFingerprint = {
+      length: offlineToken ? offlineToken.length : 0,
+      trimmedLength: trimmedToken.length,
+      first6: trimmedToken.substring(0, 6),
+      last6: trimmedToken.substring(trimmedToken.length - 6),
+      hasWhitespace: offlineToken !== trimmedToken,
+      hasNewline: /[\r\n]/.test(offlineToken || ''),
+      hasQuotes: /^["']|["']$/.test(offlineToken || '')
+    }
     var tokenUrl = 'https://sso.redhat.com/auth/realms/redhat-external/protocol/openid-connect/token'
 
     try {
@@ -928,17 +938,21 @@ module.exports = async function registerPlanningRoutes(router, context) {
         body: new URLSearchParams({
           grant_type: 'refresh_token',
           client_id: 'rhsm-api',
-          refresh_token: offlineToken
+          refresh_token: trimmedToken
         }),
         signal: AbortSignal.timeout(15000)
       })
       result.tokenExchange = {
         status: tokenResponse.status,
-        ok: tokenResponse.ok
+        ok: tokenResponse.ok,
+        usedTrimmed: offlineToken !== trimmedToken
       }
       if (!tokenResponse.ok) {
         var tokenBody = await tokenResponse.text()
         result.tokenExchange.body = tokenBody.substring(0, 500)
+        if (offlineToken !== trimmedToken) {
+          result.tokenExchange.hint = 'Token has leading/trailing whitespace or newlines — this is likely the cause. Update the secret with the trimmed value.'
+        }
         return res.json(result)
       }
       var tokenData = await tokenResponse.json()
