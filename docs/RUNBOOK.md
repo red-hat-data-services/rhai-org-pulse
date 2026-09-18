@@ -267,6 +267,13 @@ Secrets are managed via the **Vault Secrets Operator (VSO)**. Each secret is def
 | `GOOGLE_SPREADSHEET_ID` | Optional | Google Spreadsheet ID for roster enrichment data |
 | `MODELS_CORP_API_KEY` | Optional | Granite AI (customer insights) |
 | `MODELS_CORP_BASE_URL` | Optional | Granite AI base URL |
+| `WORKFLOW_VALIDATION_OPENSEARCH_USERNAME` | Required for workflow validation | Read-only OpenSearch HTTP Basic username |
+| `WORKFLOW_VALIDATION_OPENSEARCH_PASSWORD` | Required for workflow validation | Read-only OpenSearch HTTP Basic password |
+
+The workflow-validation credentials must be added to the existing
+`rhai-org-pulse-admins/org-pulse` Vault path and included in the
+`team-tracker-secrets` `VaultStaticSecret` definition in the GitOps repository.
+Do not copy the ingest credentials or commit either value to this repository.
 
 ### Other Secrets
 

@@ -302,6 +302,8 @@ Tracks which modules are enabled or disabled. Managed via `POST /api/admin/modul
 - An empty object `{}` is valid — modules fall back to their `defaultEnabled` value from `module.json`.
 - Created on first module enable/disable action; may not exist on fresh deployments.
 - At startup, required dependencies are auto-enabled via `reconcileStartupState()`.
+- The demo fixture explicitly enables modules exercised by integration tests,
+  including modules that are disabled by default in unconfigured deployments.
 
 ## Snapshots — `data/snapshots/{sanitized-teamKey}/{YYYY-MM-DD}.json`
 
