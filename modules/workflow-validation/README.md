@@ -63,9 +63,10 @@ Important rules:
   task data through `workflow-task-executions`.
 - `workflow` is the stable grouping/filter/correlation key. `workflow_label` is
   optional display text and must not be used as identity.
-- `telemetry_origin` is the explicit test-run grouping identity. A test run is
-  grouped by `telemetry_origin` and `invocation_id`; the UI presents only the
-  familiar “Test Run” terminology.
+- `telemetry_suite` is the explicit test-suite identity. A test run is grouped
+  by `telemetry_suite` and `invocation_id`; the UI presents familiar Test Suite
+  and Test Run terminology. `telemetry_origin` records where telemetry was
+  produced and is display-only—not a filter, search, or aggregation field.
 - `rhods_operator_digest` is displayed as the RHODS Build ID. The UI abbreviates
   a known SHA digest to eight characters while preserving the complete value as
   hover text, and reports missing or `unknown` values honestly.
@@ -84,13 +85,15 @@ Important rules:
   can select another cohort; the dashboard never defaults to an aggregation
   of historical executions.
 - Dashboard metrics and the complete test-results table are scoped to that one
-  `rhoai_version`, `telemetry_origin`, and `invocation_id`. Product bugs from
+  `rhoai_version`, `telemetry_suite`, and `invocation_id`. Product bugs from
   the same execution are separated into newly opened Jira issues and known
   bugs encountered without opening another issue.
 - Stakeholder-facing test outcomes distinguish `PASS` from product failures
   (`FAIL`, when a product-bug finding is linked) and environmental failures
-  (`ABORT`, when an unsuccessful test has no product-bug finding). Raw task
+  (`SKIP`, when an unsuccessful test has no product-bug finding). Raw task
   verdicts remain unchanged.
+- Jira defaults to one exact test-suite run and can switch explicitly to all
+  product bugs for a RHOAI release, a date range, or all recorded time.
 - Test Trends defaults to the most recently active run group across all RHOAI
   versions. It charts pass rate, test volume, newly opened product bugs, and
   known product bugs per invocation, with version rollups and exact-run links

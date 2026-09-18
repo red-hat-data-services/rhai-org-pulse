@@ -20,7 +20,10 @@
           @click="$emit('select', test)"
         >
           <td class="px-5 py-3"><StatusBadge :value="displayedTestOutcome(test)" /></td>
-          <td class="px-4 py-3 font-medium text-gray-800 dark:text-gray-200">{{ test.workflow_label || test.workflow || 'Unknown test' }}</td>
+          <td class="px-4 py-3">
+            <div class="font-medium text-gray-800 dark:text-gray-200">{{ test.workflow_label || test.workflow || 'Unknown test' }}</div>
+            <div v-if="test.telemetry_origin" class="mt-0.5 text-xs font-normal text-gray-400 dark:text-gray-500">Origin: {{ test.telemetry_origin }}</div>
+          </td>
           <td class="px-4 py-3 font-mono text-xs text-gray-600 dark:text-gray-300">{{ test.rhoai_version || '—' }}</td>
           <td class="px-4 py-3 whitespace-nowrap text-xs font-medium">
             <span class="text-green-700 dark:text-green-400">{{ test.tasks_passed ?? '—' }} tasks passed</span>

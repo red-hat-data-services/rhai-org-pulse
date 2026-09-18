@@ -57,15 +57,15 @@ describe('workflow-validation default version filter', () => {
     expect(formatBuildId(null)).toBe('Unknown')
   })
 
-  it('distinguishes product failures from environment-aborted tests', () => {
+  it('distinguishes product failures from environment-skipped tests', () => {
     expect(displayedTestOutcome({ verdict: 'PASS' })).toBe('PASS')
     expect(displayedTestOutcome({ verdict: 'FAIL', productBugs: [{ category: 'PRODUCT_BUG' }] })).toBe('FAIL')
-    expect(displayedTestOutcome({ verdict: 'ERROR', productBugs: [{ category: 'ENVIRONMENT' }] })).toBe('ABORT')
+    expect(displayedTestOutcome({ verdict: 'ERROR', productBugs: [{ category: 'ENVIRONMENT' }] })).toBe('SKIP')
     expect(displayedOutcomeCounts([
       { verdict: 'PASS' },
       { verdict: 'FAIL', productBugs: [{ category: 'PRODUCT_BUG' }] },
       { verdict: 'FAIL', productBugs: [] }
-    ])).toEqual({ pass: 1, fail: 1, aborted: 1 })
+    ])).toEqual({ pass: 1, fail: 1, skip: 1 })
   })
 
   it('selects the highest numbered version before filtered data is requested', async () => {

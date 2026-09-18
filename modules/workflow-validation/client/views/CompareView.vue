@@ -75,12 +75,14 @@
                   <td class="px-4 py-3">
                     <button v-if="row.baseline" class="text-left hover:text-blue-600 dark:hover:text-blue-400" @click="openExecutions(row, baseline)">
                       <StatusBadge :value="displayedTestOutcome({ ...row.baseline.latest, productBugs: row.baseline.productBugs })" />
+                      <span v-if="row.baseline.latest?.telemetry_origin" class="mt-1 block text-xs text-gray-400 dark:text-gray-500">Origin: {{ row.baseline.latest.telemetry_origin }}</span>
                     </button>
                     <span v-else class="text-xs text-gray-400">Not run</span>
                   </td>
                   <td class="px-4 py-3">
                     <button v-if="row.target" class="text-left hover:text-blue-600 dark:hover:text-blue-400" @click="openExecutions(row, target)">
                       <StatusBadge :value="displayedTestOutcome({ ...row.target.latest, productBugs: row.target.productBugs })" />
+                      <span v-if="row.target.latest?.telemetry_origin" class="mt-1 block text-xs text-gray-400 dark:text-gray-500">Origin: {{ row.target.latest.telemetry_origin }}</span>
                     </button>
                     <span v-else class="text-xs text-gray-400">Not run</span>
                   </td>

@@ -52,7 +52,10 @@
                 @click="openRun(r)"
               >
                 <td class="px-5 py-3"><StatusBadge :value="displayedTestOutcome(r)" /></td>
-                <td class="px-4 py-3 font-medium text-gray-800 dark:text-gray-200">{{ r.workflow_label || r.workflow || 'Unknown test' }}</td>
+                <td class="px-4 py-3">
+                  <div class="font-medium text-gray-800 dark:text-gray-200">{{ r.workflow_label || r.workflow || 'Unknown test' }}</div>
+                  <div v-if="r.telemetry_origin" class="mt-0.5 text-xs text-gray-400 dark:text-gray-500">Origin: {{ r.telemetry_origin }}</div>
+                </td>
                 <td class="px-4 py-3 font-mono text-xs text-gray-600 dark:text-gray-300">{{ r.rhoai_version }}</td>
                 <td class="px-4 py-3 text-right font-mono text-xs text-gray-600 dark:text-gray-300">
                   {{ formatRatio(r.tasks_passed, r.tasks_total) }}

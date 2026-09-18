@@ -81,7 +81,7 @@ const sortedRows = computed(() => [...rows.value].sort((a, b) => compareTableVal
 
 function outcomeSummary(row) {
   const outcomes = runOutcomeCounts(row)
-  return `${outcomes.pass} passed · ${outcomes.fail} failed · ${outcomes.aborted} aborted`
+  return `${outcomes.pass} passed · ${outcomes.fail} failed · ${outcomes.skip} skipped`
 }
 function setSort(column) {
   sortDir.value = sortBy.value === column && sortDir.value === 'desc' ? 'asc' : 'desc'

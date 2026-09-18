@@ -15,7 +15,7 @@
         <MetricCard :value="formatPercent(data.summary.passRate)" label="Pass Rate" :tone="passTone(data.summary.passRate)" />
         <MetricCard :value="outcomes.pass" label="Passed" tone="green" />
         <MetricCard :value="outcomes.fail" label="Failed" tone="red" />
-        <MetricCard :value="outcomes.aborted" label="Aborted" tone="amber" />
+        <MetricCard :value="outcomes.skip" label="Skipped" tone="amber" />
       </div>
       <div class="mb-6 grid grid-cols-1 gap-2 rounded-xl border border-gray-100 bg-white p-5 text-sm shadow-sm sm:grid-cols-2 lg:grid-cols-4 dark:border-gray-700/60 dark:bg-gray-800">
         <div><span class="text-gray-500">RHOAI version:</span> {{ data.rhoaiVersion || '—' }}</div>
@@ -38,7 +38,10 @@
             <th class="px-4 py-3 font-semibold"><button @click="setSort('timestamp')">Executed {{ sortMark('timestamp') }}</button></th>
           </tr></thead>
           <tbody><tr v-for="test in sortedTests" :key="test.execution_id || test.id" class="cursor-pointer border-b border-gray-50 hover:bg-gray-50 dark:border-gray-700/40 dark:hover:bg-gray-700/30" @click="openTest(test)">
-            <td class="px-5 py-3 font-medium">{{ test.workflow_label || test.workflow }}</td>
+            <td class="px-5 py-3">
+              <div class="font-medium">{{ test.workflow_label || test.workflow }}</div>
+              <div v-if="test.telemetry_origin" class="mt-0.5 text-xs text-gray-400 dark:text-gray-500">Origin: {{ test.telemetry_origin }}</div>
+            </td>
             <td class="px-4 py-3"><StatusBadge :value="displayedTestOutcome(test)" /></td>
             <td class="px-4 py-3 font-mono text-xs">{{ formatRatio(test.tasks_passed, test.tasks_total) }}</td>
             <td class="px-4 py-3"><ProductBugStatus :findings="test.productBugs" :verdict="test.verdict" /></td>

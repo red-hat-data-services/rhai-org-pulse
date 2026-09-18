@@ -19,6 +19,7 @@ export const filters = reactive({
   category: '',
   action: '',
   q: '',
+  jiraScope: '',
   testSuite: '',
   invocationId: '',
   datePreset: '90',
@@ -36,6 +37,7 @@ export function resetFilters() {
   filters.category = ''
   filters.action = ''
   filters.q = ''
+  filters.jiraScope = ''
   filters.testSuite = ''
   filters.invocationId = ''
   filters.datePreset = '90'
@@ -196,16 +198,15 @@ export function displayedTestOutcome(test = {}) {
   if (test.passed === true || verdict === 'PASS') return 'PASS'
   if (!['FAIL', 'ERROR'].includes(verdict) && test.passed !== false) return verdict || 'UNKNOWN'
   const hasProductBug = (test.productBugs || []).some((finding) => finding.category === 'PRODUCT_BUG')
-  return hasProductBug ? 'FAIL' : 'ABORT'
+  return hasProductBug ? 'FAIL' : 'SKIP'
 }
 
 export function displayedOutcomeCounts(tests = []) {
   return tests.reduce((counts, test) => {
-    const displayed = displayedTestOutcome(test)
-    const outcome = displayed === 'ABORT' ? 'aborted' : displayed.toLowerCase()
+    const outcome = displayedTestOutcome(test).toLowerCase()
     if (Object.hasOwn(counts, outcome)) counts[outcome] += 1
     return counts
-  }, { pass: 0, fail: 0, aborted: 0 })
+  }, { pass: 0, fail: 0, skip: 0 })
 }
 
 export function runOutcomeCounts(run = {}) {
@@ -217,7 +218,7 @@ export function runOutcomeCounts(run = {}) {
     .map((finding) => finding.workflow || finding.root_cause_id || finding.id)
     .filter(Boolean)).size
   const fail = Math.min(unsuccessful, productBugTests)
-  return { pass, fail, aborted: Math.max(0, unsuccessful - fail) }
+  return { pass, fail, skip: Math.max(0, unsuccessful - fail) }
 }
 
 // ─── API ───

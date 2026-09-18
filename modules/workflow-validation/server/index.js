@@ -130,7 +130,7 @@ module.exports = function registerRoutes(router, context) {
 
   async function rootCauseQuery(q) {
     let query = bugFilters(q);
-    if (q.verdict || q.provider || q.model || q.testSuite || q.invocationId) {
+    if (q.verdict || q.provider || q.model || q.invocationId) {
       const links = await executionLinks({ ...q, q: '' });
       const runIds = [...new Set(links.map((link) => link.run_id).filter(Boolean))];
       const workflows = [...new Set(links.map((link) => link.workflow).filter(Boolean))];
@@ -247,7 +247,7 @@ module.exports = function registerRoutes(router, context) {
         versions: { terms: { field: 'rhoai_version', size: 100 } },
         providers: { terms: { field: 'inference_provider', size: 20 } },
         models: { terms: { field: 'model', size: 30 } },
-        test_suites: { terms: { field: 'telemetry_origin', size: 100, order: { _key: 'asc' } } },
+        test_suites: { terms: { field: 'telemetry_suite', size: 100, order: { _key: 'asc' } } },
         workflows: {
           terms: { field: 'workflow', size: 100, order: { _key: 'asc' } },
           aggs: { label: { terms: { field: 'workflow_label', size: 1 } } }
@@ -273,7 +273,7 @@ module.exports = function registerRoutes(router, context) {
    * @openapi
    * /api/modules/workflow-validation/test-suites:
    *   get:
-   *     summary: Test runs grouped by telemetry origin and invocation
+   *     summary: Test runs grouped by telemetry suite and invocation
    *     tags: [Workflow Validation]
    *     parameters:
    *       - { in: query, name: suite, schema: { type: string } }
@@ -290,9 +290,9 @@ module.exports = function registerRoutes(router, context) {
       dateFrom: req.query.dateFrom,
       dateTo: req.query.dateTo
     });
-    query = addFilter(query, { exists: { field: 'telemetry_origin' } });
+    query = addFilter(query, { exists: { field: 'telemetry_suite' } });
     query = addFilter(query, { exists: { field: 'invocation_id' } });
-    if (req.query.suite) query = addFilter(query, { term: { telemetry_origin: req.query.suite } });
+    if (req.query.suite) query = addFilter(query, { term: { telemetry_suite: req.query.suite } });
 
     const buckets = [];
     let after;
@@ -305,7 +305,7 @@ module.exports = function registerRoutes(router, context) {
             composite: {
               size: 500,
               sources: [
-                { suite: { terms: { field: 'telemetry_origin' } } },
+                { suite: { terms: { field: 'telemetry_suite' } } },
                 { invocation: { terms: { field: 'invocation_id' } } }
               ],
               ...(after ? { after } : {})
@@ -379,14 +379,14 @@ module.exports = function registerRoutes(router, context) {
     const { suite, invocationId } = req.params;
     const hits = await searchAll(RUNS_INDEX, {
       query: { bool: { filter: [
-        { term: { telemetry_origin: suite } },
+        { term: { telemetry_suite: suite } },
         { term: { invocation_id: invocationId } }
       ] } },
       sort: [{ timestamp: 'desc' }, { execution_id: 'asc' }],
       _source: [
         'execution_id', 'run_id', 'workflow', 'workflow_label', 'timestamp', 'verdict',
         'passed_int', 'tasks_total', 'tasks_passed', 'tasks_failed', 'rhoai_version',
-        'rhods_operator_digest', 'cluster_name', 'duration_s'
+        'rhods_operator_digest', 'cluster_name', 'duration_s', 'telemetry_origin'
       ]
     });
     if (!hits.length) return res.status(404).json({ error: 'Test run not found' });
@@ -579,7 +579,8 @@ module.exports = function registerRoutes(router, context) {
       sort: [{ timestamp: 'desc' }, { execution_id: 'asc' }],
       _source: [
         'execution_id', 'run_id', 'workflow', 'workflow_label', 'rhoai_version',
-        'timestamp', 'verdict', 'tasks_passed', 'tasks_failed', 'duration_s', 'cost_usd'
+        'timestamp', 'verdict', 'tasks_passed', 'tasks_failed', 'duration_s', 'cost_usd',
+        'telemetry_origin'
       ]
     };
     const [runsR, bugsR, dashboardTestHits] = await Promise.all([
@@ -674,7 +675,7 @@ module.exports = function registerRoutes(router, context) {
         'workflow', 'workflow_label', 'rhoai_version',
         'verdict', 'tasks_total', 'tasks_passed', 'tasks_failed',
         'cost_usd', 'infra_cost_usd', 'duration_s', 'num_turns', 'model',
-        'inference_provider', 'bug_count', 'timestamp'
+        'inference_provider', 'bug_count', 'timestamp', 'telemetry_origin'
       ]
     };
     const r = await osSearch(RUNS_INDEX, body);
@@ -921,7 +922,8 @@ module.exports = function registerRoutes(router, context) {
       _source: [
         'execution_id', 'run_id', 'rhoai_version', 'verdict', 'timestamp',
         'duration_s', 'tasks_total', 'tasks_passed', 'tasks_failed',
-        'cost_usd', 'model', 'cluster_name', 'classification', 'confidence', 'workflow', 'workflow_label'
+        'cost_usd', 'model', 'cluster_name', 'classification', 'confidence', 'workflow', 'workflow_label',
+        'telemetry_origin'
       ]
     });
     const runs = runHits.map((h) => ({ id: h._id, ...h._source }));
@@ -1093,7 +1095,7 @@ module.exports = function registerRoutes(router, context) {
                     sort: [{ timestamp: 'desc' }, { execution_id: 'asc' }],
                     _source: [
                       'execution_id', 'run_id', 'workflow', 'workflow_label', 'rhoai_version',
-                      'verdict', 'timestamp', 'tasks_passed', 'tasks_failed'
+                      'verdict', 'timestamp', 'tasks_passed', 'tasks_failed', 'telemetry_origin'
                     ]
                   }
                 }

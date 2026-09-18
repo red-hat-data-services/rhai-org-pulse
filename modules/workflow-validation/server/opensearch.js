@@ -99,7 +99,7 @@ function commonFilters(q = {}, { includeVerdict = true } = {}) {
   if (q.provider) filter.push({ term: { inference_provider: q.provider } });
   if (q.model) filter.push({ term: { model: q.model } });
   if (q.workflow) filter.push({ term: { workflow: q.workflow } });
-  if (q.testSuite) filter.push({ term: { telemetry_origin: q.testSuite } });
+  if (q.testSuite) filter.push({ term: { telemetry_suite: q.testSuite } });
   if (q.invocationId) filter.push({ term: { invocation_id: q.invocationId } });
   const dateFilter = timestampRange(q);
   if (dateFilter) filter.push(dateFilter);
@@ -122,6 +122,7 @@ function bugFilters(q = {}) {
   const filter = [];
   const must = [];
   if (q.version) filter.push({ term: { rhoai_version: q.version } });
+  if (q.testSuite) filter.push({ term: { telemetry_suite: q.testSuite } });
   if (q.category) filter.push({ term: { category: q.category } });
   if (q.action) filter.push({ term: { action: q.action } });
   if (q.opened === 'true' || q.opened === 'false') filter.push({ term: { opened: q.opened === 'true' } });

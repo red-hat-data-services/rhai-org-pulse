@@ -45,6 +45,7 @@
         <div><span class="text-gray-500 dark:text-gray-400">Model:</span> <span class="text-gray-800 dark:text-gray-200">{{ run.model || '—' }}</span></div>
         <div><span class="text-gray-500 dark:text-gray-400">When:</span> <span class="text-gray-800 dark:text-gray-200">{{ formatDate(run.timestamp) }}</span></div>
         <div><span class="text-gray-500 dark:text-gray-400">Cluster:</span> <span class="text-gray-800 dark:text-gray-200 break-all">{{ run.cluster_name || '—' }}</span></div>
+        <div v-if="run.telemetry_origin"><span class="text-gray-500 dark:text-gray-400">Origin:</span> <span class="text-gray-800 dark:text-gray-200">{{ run.telemetry_origin }}</span></div>
         <div v-if="run.classification"><span class="text-gray-500 dark:text-gray-400">RCA:</span> <StatusBadge :value="run.classification" /></div>
         <div v-if="run.rhoaieng_component"><span class="text-gray-500 dark:text-gray-400">Component:</span> <span class="text-gray-800 dark:text-gray-200">{{ run.rhoaieng_component }}</span></div>
       </div>

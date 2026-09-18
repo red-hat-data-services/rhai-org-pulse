@@ -7,7 +7,7 @@
       </p>
     </div>
 
-    <FilterBar :show-verdict="false" show-labels show-test show-test-suite search-placeholder="Search Jira keys, tests, components, or bug details…" @change="reload" />
+    <JiraFilterBar @change="reload" @ready="reload" />
 
     <div v-if="unreachable" class="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-xl p-10 text-center">
       <ServerCrashIcon :size="28" class="mx-auto mb-3 text-amber-500" />
@@ -53,17 +53,21 @@
 </template>
 
 <script setup>
-import { computed, inject, onMounted, reactive, ref } from 'vue'
+import { computed, inject, reactive, ref } from 'vue'
 import { ServerCrash as ServerCrashIcon } from 'lucide-vue-next'
-import FilterBar from '../components/FilterBar.vue'
+import JiraFilterBar from '../components/JiraFilterBar.vue'
 import MetricCard from '../components/MetricCard.vue'
 import BugRow from '../components/BugRow.vue'
 import { filterQueryValues, filters, hydrateFilters, syncQueryParams, useWorkflowValidation } from '../composables/useWorkflowValidation'
 
 const { getBugs } = useWorkflowValidation()
 const nav = inject('moduleNav')
-const FILTER_KEYS = ['version', 'testSuite', 'invocationId', 'workflow', 'q', 'datePreset', 'dateFrom', 'dateTo']
-hydrateFilters(nav?.params?.value, FILTER_KEYS)
+const FILTER_KEYS = ['jiraScope', 'version', 'testSuite', 'invocationId', 'workflow', 'q', 'datePreset', 'dateFrom', 'dateTo']
+const initialParams = nav?.params?.value || {}
+hydrateFilters(initialParams, FILTER_KEYS)
+if (!initialParams.jiraScope) {
+  filters.jiraScope = initialParams.testSuite ? 'suite' : initialParams.version ? 'release' : initialParams.dateFrom || initialParams.dateTo ? 'date' : 'suite'
+}
 
 const bugs = ref([])
 const total = ref(0)
@@ -109,5 +113,4 @@ function reload() { cursor.value = ''; cursorHistory.value = []; load() }
 function openTest(executionId) { nav.navigateTo('run-detail', { runKey: executionId }) }
 function next() { cursorHistory.value.push(cursor.value); cursor.value = nextCursor.value; load() }
 function previous() { cursor.value = cursorHistory.value.pop() || ''; load() }
-onMounted(load)
 </script>
