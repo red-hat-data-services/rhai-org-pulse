@@ -32,7 +32,7 @@
         <MetricCard :value="charts.tests.length" label="Tests" />
         <MetricCard :value="outcomeCounts.pass" label="Passed" tone="green" />
         <MetricCard :value="outcomeCounts.fail" label="Failed" tone="red" />
-        <MetricCard :value="outcomeCounts.aborted" label="Aborted" tone="amber" />
+        <MetricCard :value="outcomeCounts.skip" label="Skipped" tone="amber" />
         <MetricCard :value="formatPercent(dashboardPassRate)" label="Pass Rate"
           :tone="passTone(dashboardPassRate)" />
         <MetricCard :value="selectedSuiteExecution?.rhoaiVersion || overview.runs.version || filters.version || 'Unknown'" label="Version" />

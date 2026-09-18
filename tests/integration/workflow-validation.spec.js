@@ -157,6 +157,34 @@ test.describe('Workflow Validation module @workflow-validation', () => {
     await expect(page.getByRole('combobox', { name: 'Date range' })).toHaveValue('all')
   })
 
+  test('switches Jira between suite, release, date, and all-bug scopes', async ({ page }) => {
+    const bugRequests = []
+    page.on('request', (request) => {
+      if (request.url().includes('/api/modules/workflow-validation/bugs')) bugRequests.push(request.url())
+    })
+
+    await page.goto('/#/workflow-validation/activity')
+    await expect(page.getByLabel('View By')).toHaveValue('suite')
+    await expect(page.getByLabel('Test Suite')).toBeVisible()
+    await expect(page.getByLabel('Test Run')).toBeVisible()
+
+    await page.getByLabel('View By').selectOption('release')
+    await expect(page.getByLabel('RHOAI Version')).toHaveValue('3.6')
+    await expect.poll(() => bugRequests.at(-1)).toContain('version=3.6')
+
+    await page.getByLabel('View By').selectOption('date')
+    await expect(page.getByLabel('Date Range')).toHaveValue('90')
+    await expect(page.getByLabel('Start Date')).toBeVisible()
+    await expect.poll(() => bugRequests.at(-1)).toContain('dateFrom=')
+
+    await page.getByLabel('View By').selectOption('all')
+    await expect(page.getByLabel('Test Suite')).toHaveCount(0)
+    await expect.poll(() => {
+      const url = new URL(bugRequests.at(-1))
+      return ['version', 'testSuite', 'invocationId', 'dateFrom', 'dateTo'].every((key) => !url.searchParams.has(key))
+    }).toBe(true)
+  })
+
   test('is visible in navigation and all primary views render', async ({ page }) => {
     await page.goto('/')
     const moduleButton = page.locator('aside nav button').filter({ hasText: 'Workflow Validation' }).first()

@@ -97,7 +97,7 @@
                 </th>
                 <th class="px-4 py-3 font-semibold">RHODS Build</th>
                 <th class="px-4 py-3 text-right font-semibold">
-                  <button @click="setSort('tests')">Tests passed / failed / aborted {{ sortMark('tests') }}</button>
+                  <button @click="setSort('tests')">Tests passed / failed / skipped {{ sortMark('tests') }}</button>
                 </th>
                 <th class="px-4 py-3 font-semibold">
                   <button @click="setSort('passRate')">Pass rate {{ sortMark('passRate') }}</button>
@@ -128,7 +128,7 @@
                   /
                   <span class="text-red-600 dark:text-red-400">{{ runOutcomeCounts(run).fail }}</span>
                   /
-                  <span class="text-orange-600 dark:text-orange-400">{{ runOutcomeCounts(run).aborted }}</span>
+                  <span class="text-orange-600 dark:text-orange-400">{{ runOutcomeCounts(run).skip }}</span>
                 </td>
                 <td class="px-4 py-3 font-mono">
                   {{ formatPercent(run.passRate) }}

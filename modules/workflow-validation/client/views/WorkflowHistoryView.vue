@@ -24,9 +24,9 @@
         <MetricCard :value="summary.runs" label="Total Executions" />
         <MetricCard :value="historyOutcomes.pass" label="Passed" tone="green" />
         <MetricCard :value="historyOutcomes.fail" label="Failed" tone="red" />
-        <MetricCard :value="historyOutcomes.aborted" label="Aborted" tone="amber" />
+        <MetricCard :value="historyOutcomes.skip" label="Skipped" tone="amber" />
         <MetricCard :value="formatPercent(summary.passRate)" label="Pass Rate" :tone="passTone(summary.passRate)" />
-        <MetricCard :value="latestBadge" label="Latest Result" :tone="latestBadge === 'PASS' ? 'green' : latestBadge === 'FAIL' ? 'red' : latestBadge === 'ABORT' ? 'amber' : 'neutral'" />
+        <MetricCard :value="latestBadge" label="Latest Result" :tone="latestBadge === 'PASS' ? 'green' : latestBadge === 'FAIL' ? 'red' : latestBadge === 'SKIP' ? 'amber' : 'neutral'" />
       </div>
 
       <!-- Charts -->
@@ -75,7 +75,10 @@
                 @click="nav.navigateTo('run-detail', { runKey: r.id })"
               >
                 <td class="px-6 py-3"><StatusBadge :value="displayedTestOutcome(r)" /></td>
-                <td class="px-4 py-3 font-mono text-xs text-gray-600 dark:text-gray-300">{{ r.rhoai_version }}</td>
+                <td class="px-4 py-3">
+                  <div class="font-mono text-xs text-gray-600 dark:text-gray-300">{{ r.rhoai_version }}</div>
+                  <div v-if="r.telemetry_origin" class="mt-0.5 text-xs text-gray-400 dark:text-gray-500">Origin: {{ r.telemetry_origin }}</div>
+                </td>
                 <td class="px-4 py-3 text-right font-mono text-xs text-gray-600 dark:text-gray-300">{{ formatRatio(r.tasks_passed, r.tasks_total) }}</td>
                 <td class="px-4 py-3 text-right font-mono text-xs text-gray-600 dark:text-gray-300">{{ formatDuration(r.duration_s) }}</td>
                 <td class="px-4 py-3 max-w-[340px]">
@@ -184,7 +187,7 @@ const durationData = computed(() => ({
     borderColor: '#0ea5e9',
     backgroundColor: 'rgba(14,165,233,0.12)',
     borderWidth: 2, pointRadius: 3, pointHoverRadius: 5, tension: 0.3, fill: true,
-    pointBackgroundColor: runs.value.map((r) => ({ PASS: '#22c55e', FAIL: '#ef4444', ABORT: '#f97316' })[displayedTestOutcome(r)] || '#94a3b8')
+    pointBackgroundColor: runs.value.map((r) => ({ PASS: '#22c55e', FAIL: '#ef4444', SKIP: '#f97316' })[displayedTestOutcome(r)] || '#94a3b8')
   }]
 }))
 const durationOptions = {

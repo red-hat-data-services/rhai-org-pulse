@@ -37,6 +37,7 @@ const mockCharts = {
   }],
   tests: [{
     id: 'failed-1', execution_id: 'failed-1', workflow_label: 'Fraud Detection Test', verdict: 'FAIL',
+    telemetry_origin: 'gitlab-mr',
     rhoai_version: '3.5.18', tasks_passed: 7, tasks_failed: 2, tasks_total: 9,
     timestamp: '2026-08-04T20:03:06.825Z',
     duration_s: 125,
@@ -150,7 +151,7 @@ describe('Workflow Validation OverviewView', () => {
     const text = wrapper.text()
     expect(text).toContain('5Tests')
     expect(text).toContain('0%Pass Rate')
-    expect(text).toContain('1Aborted')
+    expect(text).toContain('1Skipped')
     expect(text).toContain('3.6.0-ea.1')
     expect(text).toContain('a6b5eb9c')
     expect(text).toContain('Bugs Opened')
@@ -164,6 +165,7 @@ describe('Workflow Validation OverviewView', () => {
   it('renders every test result with task outcomes and product-bug context', () => {
     expect(wrapper.text()).toContain('Test Results')
     expect(wrapper.text()).toContain('Fraud Detection Test')
+    expect(wrapper.text()).toContain('Origin: gitlab-mr')
     expect(wrapper.text()).toContain('7 tasks passed')
     expect(wrapper.text()).toContain('2 tasks failed')
     expect(wrapper.text()).not.toContain('Duration')

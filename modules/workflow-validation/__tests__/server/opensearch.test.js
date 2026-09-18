@@ -132,9 +132,27 @@ describe('workflow-validation live schema routes', () => {
   it('scopes executions to a concrete test run invocation', () => {
     expect(runFilters({ testSuite: 'productization', invocationId: 'invocation-2' }).bool.filter)
       .toEqual(expect.arrayContaining([
-        { term: { telemetry_origin: 'productization' } },
+        { term: { telemetry_suite: 'productization' } },
         { term: { invocation_id: 'invocation-2' } }
       ]))
+  })
+
+  it('uses telemetry_suite, never telemetry_origin, for stakeholder suite filters', async () => {
+    const suiteFilter = JSON.stringify(runFilters({ testSuite: 'release-gate' }))
+    expect(suiteFilter).toContain('telemetry_suite')
+    expect(suiteFilter).not.toContain('telemetry_origin')
+    expect(bugFilters({ testSuite: 'release-gate' }).bool.filter)
+      .toContainEqual({ term: { telemetry_suite: 'release-gate' } })
+
+    vi.stubGlobal('fetch', vi.fn((url, options) => {
+      const body = JSON.parse(options.body)
+      expect(url).toContain(`/${RUNS_INDEX}/`)
+      expect(body.aggs.test_suites.terms.field).toBe('telemetry_suite')
+      expect(JSON.stringify(body)).not.toContain('telemetry_origin')
+      return Promise.resolve(jsonResponse({ aggregations: {} }))
+    }))
+    const routes = register()
+    await routes['/filters'].at(-1)({ query: {} }, makeResponse())
   })
 
   it('searches text that is visible in each list', () => {
@@ -239,12 +257,12 @@ describe('workflow-validation live schema routes', () => {
       .toContainEqual({ terms: { verdict: ['FAIL', 'ERROR'] } })
   })
 
-  it('groups test runs by explicit origin and invocation', async () => {
+  it('groups test runs by explicit suite and invocation', async () => {
     vi.stubGlobal('fetch', vi.fn((url, options) => {
       const body = JSON.parse(options.body)
       if (url.includes(`/${BUGS_INDEX}/`)) return Promise.resolve(jsonResponse({ hits: { hits: [] } }))
       expect(body.aggs.suite_runs.composite.sources).toEqual([
-        { suite: { terms: { field: 'telemetry_origin' } } },
+        { suite: { terms: { field: 'telemetry_suite' } } },
         { invocation: { terms: { field: 'invocation_id' } } }
       ])
       return Promise.resolve(jsonResponse({ aggregations: { suite_runs: { buckets: [{
@@ -270,7 +288,7 @@ describe('workflow-validation live schema routes', () => {
     vi.stubGlobal('fetch', vi.fn((url, options) => {
       const body = JSON.parse(options.body)
       if (url.includes(`/${BUGS_INDEX}/`)) return Promise.resolve(jsonResponse({ hits: { hits: [] } }))
-      expect(body.query.bool.filter).toContainEqual({ term: { telemetry_origin: 'productization' } })
+      expect(body.query.bool.filter).toContainEqual({ term: { telemetry_suite: 'productization' } })
       expect(body.query.bool.filter).toContainEqual({ term: { invocation_id: 'invocation-1' } })
       return Promise.resolve(jsonResponse({ hits: { hits: [{
         _id: 'execution-1', _source: {
