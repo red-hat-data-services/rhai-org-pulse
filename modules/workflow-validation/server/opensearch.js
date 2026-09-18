@@ -7,7 +7,17 @@ const TASKS_INDEX = 'workflow-task-executions';
 const BUGS_INDEX = 'workflow-root-causes';
 
 function getOpenSearchConfig(secrets = {}, env = process.env) {
-  const url = String(env.WORKFLOW_VALIDATION_OPENSEARCH_URL || DEFAULT_URL).replace(/\/+$/, '');
+  const rawUrl = String(env.WORKFLOW_VALIDATION_OPENSEARCH_URL || DEFAULT_URL).replace(/\/+$/, '');
+  let parsedUrl;
+  try {
+    parsedUrl = new URL(rawUrl);
+  } catch {
+    throw new Error('WORKFLOW_VALIDATION_OPENSEARCH_URL must be a valid HTTP(S) URL');
+  }
+  if (!['http:', 'https:'].includes(parsedUrl.protocol) || parsedUrl.username || parsedUrl.password) {
+    throw new Error('WORKFLOW_VALIDATION_OPENSEARCH_URL must be a credential-free HTTP(S) URL');
+  }
+  const url = parsedUrl.href.replace(/\/+$/, '');
   const username = secrets.WORKFLOW_VALIDATION_OPENSEARCH_USERNAME || '';
   const password = secrets.WORKFLOW_VALIDATION_OPENSEARCH_PASSWORD || '';
   return { url, username, password, authenticated: !!(username && password) };

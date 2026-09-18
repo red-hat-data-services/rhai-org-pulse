@@ -5,5 +5,6 @@
   "team-tracker": true,
   "system-health": true,
   "ai-catalyst": true,
-  "pm-pipeline": true
+  "pm-pipeline": true,
+  "workflow-validation": true
 }

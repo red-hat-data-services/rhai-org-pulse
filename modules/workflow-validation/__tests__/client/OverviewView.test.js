@@ -119,9 +119,6 @@ describe('Workflow Validation OverviewView', () => {
           moduleNav
         },
         stubs: {
-          TrendLineChart: true,
-          CategoryDonut: true,
-          PassRateByVersionChart: true,
           FilterBar: {
             template: '<div />',
             emits: ['ready'],
@@ -194,10 +191,6 @@ describe('Workflow Validation OverviewView', () => {
     expect(wrapper.text()).toContain('Previously reported product bugs encountered again during this test run; no new Jira issue was opened.')
     expect(wrapper.text()).toContain('RHOAIENG-789')
     expect(wrapper.text()).not.toContain('Root Causes by Category')
-  })
-
-  it('hides the version chart when only one RHOAI version is present', () => {
-    expect(wrapper.findComponent({ name: 'PassRateByVersionChart' }).exists()).toBe(false)
   })
 
   it('uses one complete suite-execution test table', () => {

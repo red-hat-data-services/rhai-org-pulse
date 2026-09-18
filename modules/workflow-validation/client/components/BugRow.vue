@@ -2,8 +2,8 @@
   <div class="px-6 py-4 border-l-4" :class="accent">
     <div class="flex items-start gap-3 flex-wrap">
       <a
-        v-if="bug.jira_url"
-        :href="bug.jira_url"
+        v-if="safeExternalUrl(bug.jira_url)"
+        :href="safeExternalUrl(bug.jira_url)"
         target="_blank"
         rel="noopener"
         class="font-mono font-semibold text-sm text-blue-600 dark:text-blue-400 hover:underline shrink-0"
@@ -48,8 +48,8 @@
           <p class="mt-1 whitespace-pre-line text-gray-600 dark:text-gray-300">{{ bug.suggested_remediation }}</p>
         </div>
         <a
-          v-if="bug.spec_fix_mr_url"
-          :href="bug.spec_fix_mr_url"
+          v-if="safeExternalUrl(bug.spec_fix_mr_url)"
+          :href="safeExternalUrl(bug.spec_fix_mr_url)"
           target="_blank"
           rel="noopener"
           class="mt-4 inline-block font-medium text-blue-600 hover:underline dark:text-blue-400"
@@ -61,6 +61,7 @@
 
 <script setup>
 import { computed } from 'vue'
+import { safeExternalUrl } from '../utils/external-url'
 const props = defineProps({
   bug: { type: Object, required: true }
 })

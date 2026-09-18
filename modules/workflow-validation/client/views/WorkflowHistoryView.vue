@@ -72,7 +72,7 @@
                 v-for="r in sortedRuns"
                 :key="r.id"
                 class="border-b border-gray-50 dark:border-gray-700/40 hover:bg-gray-50 dark:hover:bg-gray-700/30 cursor-pointer align-top"
-                @click="nav.navigateTo('run-detail', { runKey: r.id })"
+                @click="nav.navigateTo('run-detail', { runKey: r.execution_id || r.id })"
               >
                 <td class="px-6 py-3"><StatusBadge :value="displayedTestOutcome(r)" /></td>
                 <td class="px-4 py-3">

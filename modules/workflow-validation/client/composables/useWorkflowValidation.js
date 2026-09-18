@@ -224,7 +224,6 @@ export function runOutcomeCounts(run = {}) {
 // ─── API ───
 
 export function useWorkflowValidation() {
-  const getStatus = () => apiRequest(`${BASE}/status`)
   const getFilters = () => initializeVersionFilter()
   const getOverview = (extra = {}) => filteredRequest('overview', ['version', 'dateFrom', 'dateTo', 'testSuite', 'invocationId'], extra)
   const getCharts = (extra = {}) => filteredRequest('charts', ['version', 'dateFrom', 'dateTo', 'testSuite', 'invocationId'], extra)
@@ -233,16 +232,14 @@ export function useWorkflowValidation() {
   const getBugs = (cursor = '', size = 50) => filteredRequest('bugs', ['version', 'testSuite', 'invocationId', 'workflow', 'category', 'action', 'q', 'dateFrom', 'dateTo'], { cursor, size })
   const getWorkflows = (extra = {}) => filteredRequest('workflows', ['version', 'q', 'dateFrom', 'dateTo'], extra)
   const getWorkflowHistory = (workflow) => filteredRequest('workflow-history', ['version', 'dateFrom', 'dateTo'], { workflow })
-  const getCiRuns = () => apiRequest(`${BASE}/ci-runs`)
-  const getCompare = (a, b) => apiRequest(`${BASE}/compare?a=${encodeURIComponent(a)}&b=${encodeURIComponent(b)}`)
   const getCompareRuns = (testSuite = '') => apiRequest(`${BASE}/compare-runs${buildQuery({ testSuite }, {})}`)
   const getRunCompare = (baselineInvocation, targetInvocation, testSuite) => apiRequest(`${BASE}/run-compare${buildQuery({ baselineInvocation, targetInvocation, testSuite }, {})}`)
   const getTestSuites = (params = {}) => apiRequest(`${BASE}/test-suites${buildQuery(params, {})}`)
   const getTestSuite = (suite, invocationId) => apiRequest(`${BASE}/test-suites/${encodeURIComponent(suite)}/${encodeURIComponent(invocationId)}`)
 
   return {
-    getStatus, getFilters, getOverview, getCharts, getRuns, getRun, getBugs,
-    getWorkflows, getWorkflowHistory, getCiRuns, getCompare,
+    getFilters, getOverview, getCharts, getRuns, getRun, getBugs,
+    getWorkflows, getWorkflowHistory,
     getCompareRuns, getRunCompare, getTestSuites, getTestSuite
   }
 }

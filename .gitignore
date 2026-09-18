@@ -23,7 +23,6 @@ coverage/
 .idea/
 *.swp
 *.swo
-.codex
 
 # OS
 .DS_Store
@@ -57,4 +56,3 @@ journal/
 modules/team-tracker
 shared
 src
-.ibis.json

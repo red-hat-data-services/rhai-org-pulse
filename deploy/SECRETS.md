@@ -88,7 +88,8 @@ Dynamic secrets: `GITLAB_*_TOKEN` — per-instance GitLab tokens configured via 
 ### workflow-validation
 
 `WORKFLOW_VALIDATION_OPENSEARCH_URL` is non-secret configuration supplied through `.env` or the
-`team-tracker-config` ConfigMap.
+environment-specific `team-tracker-config` ConfigMap. It is intentionally not
+set in the shared AI Engineering overlay.
 
 | Env Var | Required | Description |
 |---------|----------|-------------|

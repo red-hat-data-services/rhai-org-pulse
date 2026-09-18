@@ -58,6 +58,15 @@ describe('OpenSearch runtime client', () => {
       .toBe('https://search.example')
   })
 
+  it('rejects invalid, non-HTTP, and credential-bearing endpoint configuration', () => {
+    expect(() => getOpenSearchConfig({}, { WORKFLOW_VALIDATION_OPENSEARCH_URL: 'not a URL' }))
+      .toThrow(/valid HTTP/)
+    expect(() => getOpenSearchConfig({}, { WORKFLOW_VALIDATION_OPENSEARCH_URL: 'file:///tmp/opensearch' }))
+      .toThrow(/credential-free HTTP/)
+    expect(() => getOpenSearchConfig({}, { WORKFLOW_VALIDATION_OPENSEARCH_URL: 'https://user:secret@search.example' }))
+      .toThrow(/credential-free HTTP/)
+  })
+
   it('adds backend-only Basic authentication without putting credentials in the URL', async () => {
     const request = vi.fn().mockResolvedValue(jsonResponse({ count: 1 }))
     const client = createOpenSearchClient({
@@ -198,7 +207,7 @@ describe('workflow-validation live schema routes', () => {
       expect(url).toContain(`/${BUGS_INDEX}/`)
       expect(JSON.stringify(body.query)).toContain('run-1')
       expect(JSON.stringify(body.query)).toContain('workflow-a')
-      expect(JSON.stringify(body.query)).not.toContain('impacted_workflows')
+      expect(JSON.stringify(body.query)).toContain('impacted_workflows')
       return Promise.resolve(jsonResponse({ hits: { hits: [{
         _id: 'rca-1', _source: { root_cause_id: 'rca-1', run_id: 'run-1', workflow: 'workflow-a' }
       }] } }))
@@ -213,6 +222,62 @@ describe('workflow-validation live schema routes', () => {
     expect(response.body.tasks[0].task_execution_id).toBe('task-1')
     expect(response.body.bugs[0].root_cause_id).toBe('rca-1')
     expect(response.body.run).not.toHaveProperty('tasks_total')
+  })
+
+  it('links workflow history RCAs through workflow or impacted_workflows', async () => {
+    process.env.WORKFLOW_VALIDATION_OPENSEARCH_URL = 'https://search.example'
+    vi.stubGlobal('fetch', vi.fn((url, options) => {
+      const body = JSON.parse(options.body)
+      if (url.includes(`/${RUNS_INDEX}/`)) {
+        return Promise.resolve(jsonResponse({ hits: { hits: [{
+          _id: 'storage-id',
+          _source: { execution_id: 'execution-1', run_id: 'run-1', workflow: 'workflow-a' }
+        }] } }))
+      }
+      expect(url).toContain(`/${BUGS_INDEX}/`)
+      expect(body.query.bool.filter).toContainEqual({ terms: { run_id: ['run-1'] } })
+      expect(body.query.bool.should).toEqual([
+        { term: { workflow: 'workflow-a' } },
+        { term: { impacted_workflows: 'workflow-a' } }
+      ])
+      expect(body.query.bool.minimum_should_match).toBe(1)
+      return Promise.resolve(jsonResponse({ hits: { hits: [{
+        _id: 'rca-1',
+        _source: { root_cause_id: 'rca-1', run_id: 'run-1', impacted_workflows: ['workflow-a'] }
+      }] } }))
+    }))
+    const routes = register()
+    const response = makeResponse()
+
+    await routes['/workflow-history'].at(-1)({ query: { workflow: 'workflow-a' } }, response)
+
+    expect(response.statusCode).toBe(200)
+    expect(response.body.runs[0].execution_id).toBe('execution-1')
+    expect(response.body.bugs[0].root_cause_id).toBe('rca-1')
+  })
+
+  it('correlates filtered Jira occurrences through workflow or impacted_workflows', async () => {
+    process.env.WORKFLOW_VALIDATION_OPENSEARCH_URL = 'https://search.example'
+    vi.stubGlobal('fetch', vi.fn((url, options) => {
+      const body = JSON.parse(options.body)
+      if (url.includes(`/${RUNS_INDEX}/`)) {
+        return Promise.resolve(jsonResponse({ hits: { hits: [{
+          _source: { execution_id: 'execution-1', run_id: 'run-1', workflow: 'workflow-a' }
+        }] } }))
+      }
+      expect(url).toContain(`/${BUGS_INDEX}/`)
+      const workflowCorrelation = body.query.bool.filter.find((filter) => filter.bool?.should)
+      expect(workflowCorrelation.bool.should).toEqual([
+        { terms: { workflow: ['workflow-a'] } },
+        { terms: { impacted_workflows: ['workflow-a'] } }
+      ])
+      return Promise.resolve(jsonResponse({
+        hits: { total: { value: 0 }, hits: [] }, aggregations: {}
+      }))
+    }))
+    const routes = register()
+
+    await routes['/bugs'].at(-1)({ query: { verdict: 'FAIL' } }, makeResponse())
   })
 
   it('compares execution results for each test across two exact test runs', async () => {
@@ -341,6 +406,14 @@ describe('workflow-validation live schema routes', () => {
     expect(response.body).not.toHaveProperty('recentTests')
   })
 
+  it('requires charts to be scoped to one concrete test run', async () => {
+    const routes = register()
+    const response = makeResponse()
+    await routes['/charts'].at(-1)({ query: { testSuite: 'release-gate' } }, response)
+    expect(response.statusCode).toBe(400)
+    expect(response.body.error).toMatch(/test suite and test run/i)
+  })
+
   it('deduplicates infrastructure cost by run_id and contains no legacy path-derived fields', async () => {
     const bodies = []
     vi.stubGlobal('fetch', vi.fn((url, options) => {
@@ -387,9 +460,26 @@ describe('workflow-validation live schema routes', () => {
     await routes['/runs'].at(-1)({ query: { size: '1', sortBy: 'workflow', sortDir: 'asc' } }, sorted)
     expect(requests[2].sort[0]).toEqual({ workflow: { order: 'asc', missing: '_last' } })
 
+    await routes['/runs'].at(-1)({ query: { size: '-10' } }, makeResponse())
+    expect(requests[3].size).toBe(2)
+    await routes['/runs'].at(-1)({ query: { size: '10000' } }, makeResponse())
+    expect(requests[4].size).toBe(201)
+
     const invalid = makeResponse()
     await routes['/runs'].at(-1)({ query: { cursor: 'not-a-cursor' } }, invalid)
     expect(invalid.statusCode).toBe(400)
+  })
+
+  it('clamps bug page sizes to the supported range', async () => {
+    const requests = []
+    vi.stubGlobal('fetch', vi.fn((url, options) => {
+      requests.push(JSON.parse(options.body))
+      return Promise.resolve(jsonResponse({ hits: { total: { value: 0 }, hits: [] }, aggregations: {} }))
+    }))
+    const routes = register()
+    await routes['/bugs'].at(-1)({ query: { size: '-1' } }, makeResponse())
+    await routes['/bugs'].at(-1)({ query: { size: '10000' } }, makeResponse())
+    expect(requests.map((body) => body.size)).toEqual([2, 201])
   })
 
   it('returns null for incomplete optional aggregate metrics', async () => {
