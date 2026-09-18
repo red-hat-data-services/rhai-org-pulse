@@ -1,7 +1,7 @@
 {
-  "generated_at": "2026-09-17T19:51:27.934375+00:00",
+  "generated_at": "2026-09-16T08:23:46.017225+00:00",
   "from_date": "2026-07-01",
-  "to_date": "2026-09-17",
+  "to_date": "2026-09-16",
   "components": [
     "AIPipelinesE2ETests",
     "API Tests Suite",
@@ -20,7 +20,6 @@
     "Demos",
     "Distributed Workloads",
     "Documentation",
-    "Dspa Backend Test End2end",
     "E2eautoscaler",
     "E2erayjob",
     "Feature Store",
@@ -42,7 +41,6 @@
     "Pipelines Autorag",
     "Platform",
     "Provision Self Managed Cluster",
-    "Pytest",
     "Rhoai Upgrade",
     "Rhods Olm",
     "Spark",
