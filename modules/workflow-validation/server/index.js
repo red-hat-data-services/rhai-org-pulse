@@ -52,6 +52,11 @@ function decodeCursor(value) {
   }
 }
 
+function paginationSize(value, fallback) {
+  const parsed = Number.parseInt(value, 10);
+  return Math.min(Math.max(Number.isFinite(parsed) ? parsed : fallback, 1), 200);
+}
+
 const encodeCursor = (sort) => sort ? Buffer.from(JSON.stringify(sort)).toString('base64url') : null;
 
 function addFilter(query, clause) {
@@ -137,7 +142,8 @@ module.exports = function registerRoutes(router, context) {
       const correlation = runIds.length ? { bool: { filter: [
         { terms: { run_id: runIds } },
         ...(workflows.length ? [{ bool: { should: [
-          { terms: { workflow: workflows } }
+          { terms: { workflow: workflows } },
+          { terms: { impacted_workflows: workflows } }
         ], minimum_should_match: 1 } }] : [])
       ] } } : null;
       query = correlation
@@ -154,7 +160,8 @@ module.exports = function registerRoutes(router, context) {
     if (runIds.length) query = addFilter(query, { terms: { run_id: runIds } });
     if (workflows.length) {
       query = addFilter(query, { bool: { should: [
-        { terms: { workflow: workflows } }
+        { terms: { workflow: workflows } },
+        { terms: { impacted_workflows: workflows } }
       ], minimum_should_match: 1 } });
     }
     const hits = await searchAll(BUGS_INDEX, {
@@ -173,7 +180,7 @@ module.exports = function registerRoutes(router, context) {
 
   function productBugsForTest(findings, test) {
     return findings.filter((finding) => (!test.run_id || finding.run_id === test.run_id) && (
-      !test.workflow || finding.workflow === test.workflow
+      !test.workflow || finding.workflow === test.workflow || finding.impacted_workflows?.includes(test.workflow)
     ));
   }
 
@@ -531,8 +538,12 @@ module.exports = function registerRoutes(router, context) {
    *       - { in: query, name: invocationId, schema: { type: string } }
    *     responses:
    *       200: { description: Chart series }
+   *       400: { description: Missing test-suite or test-run scope }
    */
   router.get('/charts', requireAuth, safe(async function (req, res) {
+    if (!req.query.testSuite || !req.query.invocationId) {
+      return res.status(400).json({ error: 'A test suite and test run are required' });
+    }
     const rootCauseFilter = await rootCauseQuery(req.query);
     const runsBody = {
       size: 0,
@@ -599,9 +610,6 @@ module.exports = function registerRoutes(router, context) {
     });
     const a = runsR.aggregations || {};
     const b = bugsR.aggregations || {};
-    const productBugsForTest = (run) => productBugs.filter((issue) => issue.run_id === run.run_id && (
-        !run.workflow || issue.workflow === run.workflow
-      ));
     res.json({
       overTime: bucketList(a.over_time).map((bkt) => ({
         date: bkt.key_as_string || bkt.key,
@@ -630,7 +638,7 @@ module.exports = function registerRoutes(router, context) {
       bugsByComponent: bucketList(b.by_component).map((bkt) => ({ component: bkt.key, count: bkt.doc_count })),
       tests: dashboardTestHits.map((hit) => {
         const test = { id: hit._id, ...hit._source };
-        return { ...test, productBugs: productBugsForTest(test) };
+        return { ...test, productBugs: productBugsForTest(productBugs, test) };
       }),
       newProductBugs: productBugs.filter((bug) => bug.opened === true),
       knownProductBugs: productBugs.filter((bug) => bug.opened !== true)
@@ -647,16 +655,21 @@ module.exports = function registerRoutes(router, context) {
    *       - { in: query, name: version, schema: { type: string } }
    *       - { in: query, name: verdict, schema: { type: string } }
    *       - { in: query, name: provider, schema: { type: string } }
+   *       - { in: query, name: workflow, schema: { type: string } }
+   *       - { in: query, name: testSuite, schema: { type: string } }
+   *       - { in: query, name: invocationId, schema: { type: string } }
    *       - { in: query, name: q, schema: { type: string }, description: Partial test or workflow name }
    *       - { in: query, name: dateFrom, schema: { type: string, format: date } }
    *       - { in: query, name: dateTo, schema: { type: string, format: date } }
    *       - { in: query, name: cursor, schema: { type: string }, description: Opaque search-after cursor }
    *       - { in: query, name: size, schema: { type: integer, default: 25 } }
+   *       - { in: query, name: sortBy, schema: { type: string, enum: [timestamp, verdict, workflow, version, tasks, duration] } }
+   *       - { in: query, name: sortDir, schema: { type: string, enum: [asc, desc], default: desc } }
    *     responses:
    *       200: { description: Runs page }
    */
   router.get('/runs', requireAuth, safe(async function (req, res) {
-    const size = Math.min(parseInt(req.query.size, 10) || 25, 200);
+    const size = paginationSize(req.query.size, 25);
     const searchAfter = decodeCursor(req.query.cursor);
     const sortableFields = {
       timestamp: 'timestamp', verdict: 'verdict', workflow: 'workflow',
@@ -727,7 +740,10 @@ module.exports = function registerRoutes(router, context) {
       const bugHits = await searchAll(BUGS_INDEX, {
         query: { bool: { filter: [
           { term: { run_id: run.run_id } },
-          ...(run.workflow ? [{ term: { workflow: run.workflow } }] : [])
+          ...(run.workflow ? [{ bool: { should: [
+            { term: { workflow: run.workflow } },
+            { term: { impacted_workflows: run.workflow } }
+          ], minimum_should_match: 1 } }] : [])
         ] } },
         sort: [{ timestamp: 'desc' }, { root_cause_id: 'asc' }]
       });
@@ -758,7 +774,7 @@ module.exports = function registerRoutes(router, context) {
    *       200: { description: Bugs page with KPIs }
    */
   router.get('/bugs', requireAuth, safe(async function (req, res) {
-    const size = Math.min(parseInt(req.query.size, 10) || 50, 200);
+    const size = paginationSize(req.query.size, 50);
     const searchAfter = decodeCursor(req.query.cursor);
     const query = await rootCauseQuery(req.query);
     const body = {
@@ -804,7 +820,10 @@ module.exports = function registerRoutes(router, context) {
       byAction: bucketList(a.by_action).map((b) => ({ action: b.key, count: b.doc_count })),
       bugs: pageHits.map((h) => {
         const bug = h._source || {};
-        const executionId = executionByOccurrence.get(`${bug.run_id || ''}\u0000${bug.workflow || ''}`);
+        const candidateWorkflows = [bug.workflow, ...(bug.impacted_workflows || [])].filter(Boolean);
+        const executionId = candidateWorkflows
+          .map((workflow) => executionByOccurrence.get(`${bug.run_id || ''}\u0000${workflow}`))
+          .find(Boolean);
         return { id: h._id, ...bug, ...(executionId ? { execution_id: executionId } : {}) };
       })
     });
@@ -933,10 +952,14 @@ module.exports = function registerRoutes(router, context) {
     if (runIds.length) {
       const bugHits = await searchAll(BUGS_INDEX, {
         query: {
-          bool: { filter: [
-            { terms: { run_id: runIds } },
-            { term: { workflow } }
-          ] }
+          bool: {
+            filter: [{ terms: { run_id: runIds } }],
+            should: [
+              { term: { workflow } },
+              { term: { impacted_workflows: workflow } }
+            ],
+            minimum_should_match: 1
+          }
         },
         sort: [{ timestamp: 'desc' }, { root_cause_id: 'asc' }]
       });
@@ -960,52 +983,6 @@ module.exports = function registerRoutes(router, context) {
       },
       runs,
       bugs
-    });
-  }));
-
-  /**
-   * @openapi
-   * /api/modules/workflow-validation/ci-runs:
-   *   get:
-   *     summary: Distinct CI runs (run_id) with version, date, workflow count, pass rate
-   *     tags: [Workflow Validation]
-   *     responses:
-   *       200: { description: CI run list (newest first) }
-   */
-  router.get('/ci-runs', requireAuth, safe(async function (req, res) {
-    const buckets = [];
-    let after;
-    do {
-      const response = await osSearch(RUNS_INDEX, {
-        size: 0,
-        aggs: {
-          runs: {
-            composite: {
-              size: 200,
-              sources: [{ runId: { terms: { field: 'run_id' } } }],
-              ...(after ? { after } : {})
-            },
-            aggs: {
-              latest: { max: { field: 'timestamp' } },
-              pass_rate: { avg: { field: 'passed_int' } },
-              ver: { terms: { field: 'rhoai_version', size: 1 } }
-            }
-          }
-        }
-      });
-      const aggregation = response.aggregations?.runs;
-      buckets.push(...bucketList(aggregation));
-      after = aggregation?.after_key;
-    } while (after);
-    res.json({
-      ciRuns: buckets.map((b) => ({
-        runId: b.key.runId,
-        version: b.ver?.buckets?.[0]?.key || null,
-        workflows: b.doc_count,
-        passRate: b.pass_rate?.value ?? null,
-        timestamp: b.latest?.value_as_string || null,
-        timestampMs: b.latest?.value ?? null
-      })).sort((a, b) => (b.timestampMs || 0) - (a.timestampMs || 0))
     });
   }));
 
@@ -1177,67 +1154,4 @@ module.exports = function registerRoutes(router, context) {
     });
   }));
 
-  /**
-   * @openapi
-   * /api/modules/workflow-validation/compare:
-   *   get:
-   *     summary: Diff two CI runs by workflow verdict (fixed / regressed / unchanged)
-   *     tags: [Workflow Validation]
-   *     parameters:
-   *       - { in: query, name: a, required: true, schema: { type: string }, description: baseline run_id }
-   *       - { in: query, name: b, required: true, schema: { type: string }, description: target run_id }
-   *     responses:
-   *       200: { description: Comparison result }
-   *       400: { description: Missing run ids }
-   */
-  router.get('/compare', requireAuth, safe(async function (req, res) {
-    const { a, b } = req.query;
-    if (!a || !b) return res.status(400).json({ error: 'Both a and b run ids are required' });
-
-    const fetchRun = async (runId) => {
-      const hits = await searchAll(RUNS_INDEX, {
-        query: { term: { run_id: runId } },
-        sort: [{ timestamp: 'asc' }, { execution_id: 'asc' }],
-        _source: ['execution_id', 'workflow', 'workflow_label', 'verdict', 'rhoai_version', 'timestamp', 'duration_s', 'cost_usd', 'tasks_passed', 'tasks_total']
-      });
-      return hits.map((h) => ({ id: h._id, ...h._source }));
-    };
-    const [runsA, runsB] = await Promise.all([fetchRun(a), fetchRun(b)]);
-
-    const meta = (runId, rows) => ({
-      runId,
-      version: rows[0]?.rhoai_version || null,
-      timestamp: rows[0]?.timestamp || null,
-      workflows: rows.length
-    });
-    const mapA = new Map(runsA.map((r) => [r.workflow, r]));
-    const mapB = new Map(runsB.map((r) => [r.workflow, r]));
-    const keys = [...new Set([...mapA.keys(), ...mapB.keys()])].sort();
-
-    const classify = (va, vb) => {
-      if (va && !vb) return 'removed';
-      if (!va && vb) return 'added';
-      if (va === 'FAIL' && vb === 'PASS') return 'fixed';
-      if (va === 'PASS' && vb === 'FAIL') return 'regressed';
-      if (va === vb) return va === 'PASS' ? 'same-pass' : 'same-fail';
-      return 'changed';
-    };
-
-    const rows = keys.map((wf) => {
-      const ra = mapA.get(wf);
-      const rb = mapB.get(wf);
-      return {
-        workflow: wf,
-        workflowLabel: rb?.workflow_label || ra?.workflow_label || wf,
-        a: ra ? ra.verdict : null,
-        b: rb ? rb.verdict : null,
-        change: classify(ra?.verdict, rb?.verdict),
-        aRunKey: ra?.id || null,
-        bRunKey: rb?.id || null
-      };
-    });
-
-    const tally = rows.reduce((acc, r) => { acc[r.change] = (acc[r.change] || 0) + 1; return acc; }, {});
-    res.json({ a: meta(a, runsA), b: meta(b, runsB), rows, tally });
-  }));
 };

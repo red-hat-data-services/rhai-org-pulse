@@ -66,16 +66,19 @@ oc patch secret team-tracker-secrets \
   --type merge \
   -p "{\"stringData\":{\"SMARTSHEET_API_TOKEN\":\"$(tr -d '\n' < ~/.your-smartsheet-token)\"}}"
 
-# Optional: Workflow Validation read-only OpenSearch credentials. Copy values
-# from the source namespace without writing them to disk or source control.
-SOURCE_NAMESPACE=workflow-validation-opensearch
-TARGET_NAMESPACE=team-tracker
-WORKFLOW_VALIDATION_OPENSEARCH_USERNAME=$(oc -n "$SOURCE_NAMESPACE" get secret opensearch-reader-credentials -o jsonpath='{.data.username}' | base64 -d)
-WORKFLOW_VALIDATION_OPENSEARCH_PASSWORD=$(oc -n "$SOURCE_NAMESPACE" get secret opensearch-reader-credentials -o jsonpath='{.data.password}' | base64 -d)
-oc patch secret team-tracker-secrets -n "$TARGET_NAMESPACE" --type merge \
-  -p "$(jq -n --arg username "$WORKFLOW_VALIDATION_OPENSEARCH_USERNAME" --arg password "$WORKFLOW_VALIDATION_OPENSEARCH_PASSWORD" \
-    '{stringData:{WORKFLOW_VALIDATION_OPENSEARCH_USERNAME:$username,WORKFLOW_VALIDATION_OPENSEARCH_PASSWORD:$password}}')"
-unset WORKFLOW_VALIDATION_OPENSEARCH_USERNAME WORKFLOW_VALIDATION_OPENSEARCH_PASSWORD
+# Workflow Validation is configured by the environment's GitOps repository:
+#
+# 1. Store WORKFLOW_VALIDATION_OPENSEARCH_USERNAME and
+#    WORKFLOW_VALIDATION_OPENSEARCH_PASSWORD in the environment's approved
+#    Vault path using the read-only OpenSearch account.
+# 2. Add both keys to the team-tracker-secrets VaultStaticSecret mapping.
+# 3. Set WORKFLOW_VALIDATION_OPENSEARCH_URL in the environment overlay's
+#    team-tracker-config ConfigMap. The URL is configuration, not a secret.
+# 4. Enable the workflow-validation module only after its diagnostics report
+#    that all three read-only indexes are reachable.
+#
+# Never commit credentials, copy ingest/admin credentials, or place Basic
+# authentication values in WORKFLOW_VALIDATION_OPENSEARCH_URL.
 ```
 
 ## 3. Build container images

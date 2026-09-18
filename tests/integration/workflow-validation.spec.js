@@ -37,12 +37,6 @@ test.describe('Workflow Validation module @workflow-validation', () => {
       if (path.endsWith('/workflows')) {
         body = { tags: [], workflows: [{ workflow: 'live-workflow', workflowLabel: 'Live workflow', tags: [], runs: 1, passRate: 1, aiCost: 1, avgDuration: 3, productBugs: [], latestVerdict: 'PASS' }] }
       }
-      if (path.endsWith('/ci-runs')) {
-        body = { ciRuns: [{ runId: 'run-1', version: '3.6', workflows: 1, passRate: 1, timestamp: '2026-09-10T00:00:00Z' }] }
-      }
-      if (path.endsWith('/compare')) {
-        body = { a: { runId: 'run-1', workflows: 1 }, b: { runId: 'run-1', workflows: 1 }, rows: [], tally: {} }
-      }
       if (path.includes('/compare-runs')) {
         body = { runs: [{ invocationId: 'invocation-1', version: '3.6', latestTimestamp: '2026-09-15T10:00:00Z', tests: 1, executions: 1 }, { invocationId: 'invocation-0', version: '3.5', latestTimestamp: '2026-09-01T10:00:00Z', tests: 1, executions: 1 }] }
       }
@@ -62,7 +56,7 @@ test.describe('Workflow Validation module @workflow-validation', () => {
         }
       }
       if (path.endsWith('/workflow-history')) {
-        body = { workflow: 'live-workflow', workflowLabel: 'Live workflow', summary: { runs: 1, passed: 1, failed: 0, passRate: 1, latestVerdict: 'PASS' }, runs: [], bugs: [] }
+        body = { workflow: 'live-workflow', workflowLabel: 'Live workflow', summary: { runs: 1, passed: 1, failed: 0, passRate: 1, latestVerdict: 'PASS' }, runs: [{ id: 'different-opensearch-id', execution_id: 'opaque-id', run_id: 'run-1', workflow: 'live-workflow', workflow_label: 'Live workflow', rhoai_version: '3.6', verdict: 'PASS', timestamp: '2026-09-15T10:00:00Z', tasks_passed: 1, tasks_total: 1 }], bugs: [] }
       }
       await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(body) })
     })
@@ -134,10 +128,6 @@ test.describe('Workflow Validation module @workflow-validation', () => {
     await expect.poll(() => requests.some((url) =>
       url.includes('/runs?') && url.includes('version=3.6') && url.includes('workflow=live-workflow') && url.includes('dateFrom=2026-09-01')
     )).toBe(true)
-
-    await page.goto('/#/workflow-validation/test-suites?suite=productization&datePreset=all&dateFrom=&dateTo=')
-    await expect(page.getByRole('combobox', { name: 'Test run' })).toHaveValue('productization')
-    await expect(page.getByRole('combobox', { name: 'Date range' })).toHaveValue('all')
 
     await page.goto('/#/workflow-validation/compare?testRun=productization&baselineInvocation=invocation-0&targetInvocation=invocation-1&test=')
     await expect(page.getByLabel('Test Suite', { exact: true })).toHaveValue('productization')
@@ -219,10 +209,6 @@ test.describe('Workflow Validation module @workflow-validation', () => {
     await page.getByRole('button', { name: 'Test', exact: true }).click()
     await expect(page.getByRole('button', { name: 'Test ↓' })).toBeVisible()
 
-    await page.goto('/#/workflow-validation/test-suites')
-    await expect(page.getByRole('option', { name: 'Latest' })).toHaveCount(1)
-    await expect(page.getByRole('cell', { name: 'abcdef01' })).toBeVisible()
-    await expect(page.getByRole('cell', { name: 'Productization' })).toBeVisible()
   })
 
   test('renders execution and workflow hidden routes from canonical identities', async ({ page }) => {
@@ -242,10 +228,9 @@ test.describe('Workflow Validation module @workflow-validation', () => {
     await expect(page.getByRole('main').getByRole('button', { name: 'Test Trends' })).toBeVisible()
     await expect(page.getByRole('heading', { name: 'Execution History' })).toBeVisible()
     await expect(page.getByRole('button', { name: 'Compare this test across runs' })).toBeVisible()
+    await page.getByRole('row', { name: /PASS.*3\.6/ }).click()
+    await expect(page).toHaveURL(/runKey=opaque-id/)
+    await expect(page.getByRole('heading', { name: 'Live workflow' })).toBeVisible()
 
-    await page.goto('/#/workflow-validation/test-suite-detail?suite=productization&invocationId=invocation-1')
-    await expect(page.getByRole('heading', { name: 'Productization' })).toBeVisible()
-    await expect(page.getByText('abcdef01')).toBeVisible()
-    await expect(page.getByRole('heading', { name: 'Tests in this Run' })).toBeVisible()
   })
 })

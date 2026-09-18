@@ -101,6 +101,10 @@ jobs:
               - 'modules/releases/client/components/MonthlyFlowChart.vue'
               - 'modules/releases/client/components/ClickableCount.vue'
               - 'tests/integration/feature-pressure.spec.js'
+            workflow-validation:
+              - 'modules/workflow-validation/**'
+              - 'tests/integration/workflow-validation.spec.js'
+
       # For merge_group events, dorny/paths-filter doesn't support this event type.
       # Use git diff directly, mirroring the filter definitions above.
       - name: Detect changes via git diff
@@ -117,7 +121,7 @@ jobs:
           echo "Changed files:"
           echo "$CHANGED"
 
-          ALL_MODULES='["about-tabs", "ai-impact", "ai-catalyst", "catalyst-showcase", "system-health", "upstream-pulse", "package-analysis", "releases", "tv-fv-delta", "feature-pressure", "sotu-dashboard"]'
+          ALL_MODULES='["about-tabs", "ai-impact", "ai-catalyst", "catalyst-showcase", "system-health", "upstream-pulse", "package-analysis", "releases", "tv-fv-delta", "feature-pressure", "workflow-validation", "sotu-dashboard"]'
 
           # If shared test infrastructure changed, test all modules
           if echo "$CHANGED" | grep -qE '^tests/integration/(constants|helpers)\.js$'; then
@@ -156,6 +160,8 @@ jobs:
             "^(modules/releases/server/(tv-fv-delta/|index\.js)|modules/releases/client/views/TvFvDeltaView\.vue|modules/releases/client/composables/use.*(TvFv|ReleasePicker|ComponentBreakdown)\.js|modules/releases/client/components/(FeatureTable|ClickableCount)\.vue|tests/integration/tv-fv-delta\.spec\.js)"
           check_module "feature-pressure" \
             "^(modules/releases/server/(feature-pressure/|index\.js)|modules/releases/client/views/FeaturePressureView\.vue|modules/releases/client/composables/use(FeaturePressureData|ComponentPressure)\.js|modules/releases/client/components/(PressureHeatmap|MonthlyFlowChart|ClickableCount)\.vue|tests/integration/feature-pressure\.spec\.js)"
+          check_module "workflow-validation" \
+            "^(modules/workflow-validation/|tests/integration/workflow-validation\.spec\.js)"
           check_module "sotu-dashboard" \
             "^(modules/.*/client/widgets/|modules/.*/module\.json|tests/integration/sotu-dashboard\.spec\.js)"
 
@@ -168,7 +174,7 @@ jobs:
           if [ "${{ github.event_name }}" = "merge_group" ]; then
             MODULES='${{ steps.git-filter.outputs.modules }}'
           elif [ "${{ steps.filter.outputs.shared-test-files }}" == "true" ]; then
-            MODULES='["about-tabs", "ai-impact", "ai-catalyst", "catalyst-showcase", "system-health", "upstream-pulse", "package-analysis", "releases", "tv-fv-delta", "feature-pressure", "sotu-dashboard"]'
+            MODULES='["about-tabs", "ai-impact", "ai-catalyst", "catalyst-showcase", "system-health", "upstream-pulse", "package-analysis", "releases", "tv-fv-delta", "feature-pressure", "workflow-validation", "sotu-dashboard"]'
           else
             # Use the modules that have direct changes
             MODULES='${{ steps.filter.outputs.changes }}'

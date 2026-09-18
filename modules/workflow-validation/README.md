@@ -35,8 +35,11 @@ future defaults to change a saved view.
 
 The credentials are declared in `module.json` and read from `context.secrets`.
 For OpenShift, the deployment maps them from `team-tracker-secrets`; production
-values are supplied by the Vault Secrets Operator. `WORKFLOW_VALIDATION_OPENSEARCH_URL` is supplied
-by the `team-tracker-config` ConfigMap.
+values are supplied by the Vault Secrets Operator. Each environment supplies
+`WORKFLOW_VALIDATION_OPENSEARCH_URL` through its own `team-tracker-config`
+ConfigMap; the shared overlay intentionally does not select an OpenSearch
+deployment. The module is disabled by default so an unconfigured Org Pulse
+installation does not expose a broken dashboard.
 
 Local authenticated development can load the variables into `.env`. To use an
 unauthenticated local POC, set only:
@@ -94,7 +97,7 @@ Important rules:
   verdicts remain unchanged.
 - Jira defaults to one exact test-suite run and can switch explicitly to all
   product bugs for a RHOAI release, a date range, or all recorded time.
-- Test Trends defaults to the most recently active run group across all RHOAI
+- Trends defaults to the most recently active test suite across all RHOAI
   versions. It charts pass rate, test volume, newly opened product bugs, and
   known product bugs per invocation, with version rollups and exact-run links
   back to the dashboard. Date and release filters remain shareable in the URL.

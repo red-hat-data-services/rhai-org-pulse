@@ -4,7 +4,7 @@
   "description": "AI-driven RHOAI workflow executions, task outcomes, cost, and root causes",
   "icon": "Database",
   "order": 40,
-  "defaultEnabled": true,
+  "defaultEnabled": false,
   "requires": [],
   "client": {
     "entry": "./client/index.js",
@@ -15,7 +15,7 @@
       { "id": "activity", "label": "Jira", "icon": "activity" }
     ],
     "hiddenRoutes": {
-      "test-suite-detail": "overview",
+      "runs": "compare",
       "run-detail": "overview",
       "workflow-history": "workflows"
     }

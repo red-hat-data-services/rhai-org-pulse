@@ -61,9 +61,8 @@ endpoints.
 Only create a new module when it has a genuinely distinct domain with no
 conceptual home in an existing module. If a feature is a new way to look at
 data that relates to an existing module's purpose, add it as a view there.
-Current modules: ai-catalyst, ai-impact, customer-insights, okr-hub,
-pm-pipeline, product-builds, releases, system-health, team-tracker,
-upstream-pulse, workflow-validation.
+Current modules: ai-impact, releases, system-health, team-tracker,
+upstream-pulse.
 
 ### 5. Platform extensions are not modules
 

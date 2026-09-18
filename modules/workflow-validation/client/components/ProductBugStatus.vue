@@ -8,8 +8,8 @@
           class="block font-semibold text-gray-600 dark:text-gray-300"
         >
           <a
-            v-if="issue.jira_url"
-            :href="issue.jira_url"
+            v-if="safeExternalUrl(issue.jira_url)"
+            :href="safeExternalUrl(issue.jira_url)"
             target="_blank"
             rel="noopener"
             class="text-blue-600 dark:text-blue-400 underline decoration-dotted underline-offset-2"
@@ -37,6 +37,7 @@
 
 <script setup>
 import { computed } from 'vue'
+import { safeExternalUrl } from '../utils/external-url'
 
 const props = defineProps({
   findings: { type: Array, default: () => [] },

@@ -101,8 +101,6 @@ export const viewOwners = {
   'workflow-validation/overview':                  'Adam Drew',
   'workflow-validation/run-detail':                'Adam Drew',
   'workflow-validation/runs':                      'Adam Drew',
-  'workflow-validation/test-suite-detail':         'Adam Drew',
-  'workflow-validation/test-suites':               'Adam Drew',
   'workflow-validation/workflow-history':          'Adam Drew',
   'workflow-validation/workflows':                 'Adam Drew',
 
