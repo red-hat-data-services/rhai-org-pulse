@@ -906,7 +906,7 @@ module.exports = async function registerPlanningRoutes(router, context) {
    *       200:
    *         description: Diagnostic results
    */
-  router.get('/customer-portal-diagnostic', requireAdmin, async function(req, res) {
+  router.get('/customer-portal-diagnostic', requireAdmin, requireScope('releases:read'), async function(req, res) {
     var result = {
       configured: customerPortalClient.isConfigured(),
       tokenExchange: null,
