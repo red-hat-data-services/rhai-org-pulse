@@ -951,21 +951,8 @@ module.exports = async function registerPlanningRoutes(router, context) {
     }
 
     var testCase = req.query.caseNumber
-    if (!testCase) {
-      var cached = await readFromStorage(SFDC_ISSUES_CACHE_KEY)
-      if (cached && cached.issues) {
-        for (var i = 0; i < cached.issues.length; i++) {
-          var issueProps = cached.issues[i]
-          if (issueProps.hasSfdcCases) {
-            testCase = null
-            break
-          }
-        }
-      }
-    }
-
-    if (!testCase) {
-      result.caseLookup = { skipped: 'No caseNumber provided. Pass ?caseNumber=XXXXXXXX to test a lookup.' }
+    if (!testCase || !/^\d{8}$/.test(testCase)) {
+      result.caseLookup = { skipped: 'Pass ?caseNumber=XXXXXXXX (8-digit case number) to test a lookup.' }
       return res.json(result)
     }
 
