@@ -10,10 +10,12 @@
 import { computed } from 'vue'
 import { Bar } from 'vue-chartjs'
 import { BarElement, CategoryScale, Chart as ChartJS, Legend, LinearScale, Tooltip } from 'chart.js'
+import { isVisibleProductBug } from '../utils/product-bugs'
 ChartJS.register(CategoryScale, LinearScale, BarElement, Tooltip, Legend)
 const props = defineProps({ runs: { type: Array, default: () => [] } })
 const emit = defineEmits(['select'])
-const bugs = (run) => (run.productBugs || []).filter((bug) => bug.category === 'PRODUCT_BUG')
+
+const bugs = (run) => (run.productBugs || []).filter(isVisibleProductBug)
 const labels = computed(() => props.runs.map((run) => [
   new Date(run.timestamp).toLocaleString('en-US', { month: 'short', day: 'numeric', hour: 'numeric' }),
   run.rhoaiVersion || 'Unknown'

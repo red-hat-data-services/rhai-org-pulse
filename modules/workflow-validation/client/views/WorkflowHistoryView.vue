@@ -109,6 +109,7 @@ import {
 } from 'chart.js'
 import MetricCard from '../components/MetricCard.vue'
 import StatusBadge from '../components/StatusBadge.vue'
+import { isVisibleFinding } from '../utils/product-bugs'
 import { compareTableValues, displayedOutcomeCounts, displayedTestOutcome, filterQueryValues, hydrateFilters, syncQueryParams, useWorkflowValidation, formatDuration, formatPercent, formatDate, formatRatio } from '../composables/useWorkflowValidation'
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, PointElement, LineElement, Tooltip, Legend, Filler)
@@ -141,7 +142,7 @@ function passTone(rate) { if (rate == null) return 'neutral'; return rate >= 0.9
 
 const bugsByRun = computed(() => {
   const map = {}
-  for (const b of bugs.value) {
+  for (const b of bugs.value.filter(isVisibleFinding)) {
     if (!b.run_id) continue
     ;(map[b.run_id] = map[b.run_id] || []).push(b)
   }

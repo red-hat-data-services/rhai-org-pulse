@@ -177,6 +177,14 @@ describe('workflow-validation live schema routes', () => {
     expect(activity).not.toContain('workaround')
   })
 
+  it('requires a Jira ID when listing product bugs', () => {
+    expect(bugFilters({ category: 'PRODUCT_BUG' }).bool.filter).toContainEqual({
+      exists: { field: 'bug_key' }
+    })
+    expect(bugFilters({ category: 'ENVIRONMENT' }).bool.filter)
+      .not.toContainEqual({ exists: { field: 'bug_key' } })
+  })
+
   it('applies the same inclusive date range to execution, task, and RCA queries', () => {
     const dates = { dateFrom: '2026-09-01', dateTo: '2026-09-14' }
     const expected = { range: { timestamp: {

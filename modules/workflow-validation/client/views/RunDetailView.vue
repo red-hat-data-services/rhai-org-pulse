@@ -54,10 +54,10 @@
       <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700/60 overflow-hidden mb-6">
           <div class="px-6 py-4 border-b border-gray-100 dark:border-gray-700/60 flex items-center justify-between">
             <h3 class="text-base font-semibold text-gray-900 dark:text-gray-100">Root Cause Analysis</h3>
-            <span class="text-xs text-gray-500 dark:text-gray-400">{{ bugs.length }} finding{{ bugs.length === 1 ? '' : 's' }}</span>
+            <span class="text-xs text-gray-500 dark:text-gray-400">{{ visibleBugs.length }} finding{{ visibleBugs.length === 1 ? '' : 's' }}</span>
           </div>
-          <div v-if="bugs.length" class="divide-y divide-gray-50 dark:divide-gray-700/40">
-            <BugRow v-for="b in bugs" :key="b.id" :bug="b" />
+          <div v-if="visibleBugs.length" class="divide-y divide-gray-50 dark:divide-gray-700/40">
+            <BugRow v-for="b in visibleBugs" :key="b.id" :bug="b" />
           </div>
           <div v-else class="px-6 py-10 text-center">
             <p class="text-sm text-gray-500 dark:text-gray-400">
@@ -108,6 +108,7 @@ import MetricCard from '../components/MetricCard.vue'
 import StatusBadge from '../components/StatusBadge.vue'
 import BugRow from '../components/BugRow.vue'
 import MarkdownContent from '../components/MarkdownContent.vue'
+import { isVisibleFinding } from '../utils/product-bugs'
 import { useCostVisibility } from '../composables/useCostVisibility'
 import { displayedTestOutcome, useWorkflowValidation, formatUsd, formatDuration, formatDate, formatRatio } from '../composables/useWorkflowValidation'
 
@@ -117,6 +118,7 @@ const costsVisible = useCostVisibility()
 
 const run = ref(null)
 const bugs = ref([])
+const visibleBugs = computed(() => bugs.value.filter(isVisibleFinding))
 const tasks = ref([])
 const loading = ref(false)
 const error = ref('')

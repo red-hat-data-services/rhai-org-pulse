@@ -134,6 +134,7 @@ function bugFilters(q = {}) {
   if (q.version) filter.push({ term: { rhoai_version: q.version } });
   if (q.testSuite) filter.push({ term: { telemetry_suite: q.testSuite } });
   if (q.category) filter.push({ term: { category: q.category } });
+  if (q.category === 'PRODUCT_BUG') filter.push({ exists: { field: 'bug_key' } });
   if (q.action) filter.push({ term: { action: q.action } });
   if (q.opened === 'true' || q.opened === 'false') filter.push({ term: { opened: q.opened === 'true' } });
   if (q.workflow) {

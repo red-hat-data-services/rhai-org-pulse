@@ -159,6 +159,7 @@ import { computed, inject, onMounted, ref } from 'vue'
 import TestRunBugChart from '../components/TestRunBugChart.vue'
 import TestRunBugVersionChart from '../components/TestRunBugVersionChart.vue'
 import TestRunOutcomeChart from '../components/TestRunOutcomeChart.vue'
+import { isVisibleProductBug } from '../utils/product-bugs'
 import { compareTableValues, defaultDateRange, formatBuildId, formatDate, formatDuration, formatPercent, formatSuiteName, runOutcomeCounts, syncQueryParams, useWorkflowValidation } from '../composables/useWorkflowValidation'
 const nav = inject('moduleNav')
 const urlParams = new URLSearchParams(window.location.hash.split('?')[1] || '')
@@ -177,7 +178,7 @@ const error = ref('')
 const sortBy = ref('timestamp')
 const sortDir = ref('desc')
 function bugCounts(run) {
-  const bugs = (run.productBugs || []).filter((bug) => bug.category === 'PRODUCT_BUG')
+  const bugs = (run.productBugs || []).filter(isVisibleProductBug)
   return {
     new: bugs.filter((bug) => bug.opened === true).length,
     known: bugs.filter((bug) => bug.opened !== true).length,

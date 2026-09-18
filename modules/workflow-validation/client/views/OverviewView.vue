@@ -43,8 +43,8 @@
           sub="Build ID"
           :title="buildDigest"
         />
-        <MetricCard :value="charts.newProductBugs.length" label="Bugs Opened" tone="red" />
-        <MetricCard :value="charts.knownProductBugs.length" label="Existing Bugs Encountered" tone="amber" />
+        <MetricCard :value="visibleNewProductBugs.length" label="Bugs Opened" tone="red" />
+        <MetricCard :value="visibleKnownProductBugs.length" label="Existing Bugs Encountered" tone="amber" />
         <MetricCard v-if="costsVisible" :value="formatUsd(overview.runs.aiCost)" label="AI Cost" tone="teal" />
         <MetricCard v-if="costsVisible" :value="formatUsd(overview.runs.infraCost)" label="Infra Cost" tone="teal" />
       </div>
@@ -55,8 +55,8 @@
             <h3 class="text-base font-semibold text-gray-900 dark:text-gray-100">New Product Bugs Opened</h3>
             <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">Product bugs first reported and filed as new Jira issues during this test run.</p>
           </div>
-          <div v-if="charts.newProductBugs.length" class="divide-y divide-gray-100 dark:divide-gray-700/60">
-            <BugRow v-for="bug in charts.newProductBugs" :key="bug.id" :bug="bug" />
+          <div v-if="visibleNewProductBugs.length" class="divide-y divide-gray-100 dark:divide-gray-700/60">
+            <BugRow v-for="bug in visibleNewProductBugs" :key="bug.id" :bug="bug" />
           </div>
           <p v-else class="px-6 py-10 text-center text-sm text-gray-400 dark:text-gray-500">No new product bugs were opened during this test run.</p>
         </div>
@@ -65,8 +65,8 @@
             <h3 class="text-base font-semibold text-gray-900 dark:text-gray-100">Known Product Bugs Encountered</h3>
             <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">Previously reported product bugs encountered again during this test run; no new Jira issue was opened.</p>
           </div>
-          <div v-if="charts.knownProductBugs.length" class="divide-y divide-gray-100 dark:divide-gray-700/60">
-            <BugRow v-for="bug in charts.knownProductBugs" :key="bug.id" :bug="bug" />
+          <div v-if="visibleKnownProductBugs.length" class="divide-y divide-gray-100 dark:divide-gray-700/60">
+            <BugRow v-for="bug in visibleKnownProductBugs" :key="bug.id" :bug="bug" />
           </div>
           <p v-else class="px-6 py-10 text-center text-sm text-gray-400 dark:text-gray-500">No known product bugs were encountered during this test run.</p>
         </div>
@@ -98,6 +98,7 @@ import FilterBar from '../components/FilterBar.vue'
 import MetricCard from '../components/MetricCard.vue'
 import DashboardTestTable from '../components/DashboardTestTable.vue'
 import BugRow from '../components/BugRow.vue'
+import { isVisibleProductBug } from '../utils/product-bugs'
 import { useCostVisibility } from '../composables/useCostVisibility'
 import {
   displayedOutcomeCounts, filterQueryValues, filters, hydrateFilters, syncQueryParams, useWorkflowValidation,
@@ -118,6 +119,8 @@ const overview = reactive({
   bugs: { total: 0, opened: 0, distinctJira: 0 }
 })
 const charts = reactive({ tests: [], newProductBugs: [], knownProductBugs: [] })
+const visibleNewProductBugs = computed(() => charts.newProductBugs.filter(isVisibleProductBug))
+const visibleKnownProductBugs = computed(() => charts.knownProductBugs.filter(isVisibleProductBug))
 const outcomeCounts = computed(() => displayedOutcomeCounts(charts.tests))
 const dashboardPassRate = computed(() => charts.tests.length ? outcomeCounts.value.pass / charts.tests.length : null)
 const buildDigest = computed(() => {
