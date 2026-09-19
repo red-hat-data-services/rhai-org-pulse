@@ -295,4 +295,340 @@ module.exports = function registerQualityRoutes(router, context) {
       history: entry.history
     });
   });
+
+  /**
+   * @openapi
+   * /api/modules/system-health/quality/jira-count:
+   *   get:
+   *     summary: Get Jira issue count for a JQL query
+   *     tags: [System Health - Quality Reports]
+   *     parameters:
+   *       - name: jql
+   *         in: query
+   *         required: true
+   *         schema:
+   *           type: string
+   *         description: JQL query string
+   *     responses:
+   *       200:
+   *         description: Issue count
+   *         content:
+   *           application/json:
+   *             schema:
+   *               type: object
+   *               properties:
+   *                 count:
+   *                   type: number
+   *       400:
+   *         description: Missing JQL parameter
+   */
+  router.get('/jira-count', requireAuth, requireScope('system-health:read'), async function(req, res) {
+    const jql = req.query.jql;
+    if (!jql) {
+      return res.status(400).json({ error: 'Missing jql parameter' });
+    }
+
+    try {
+      const { createJiraClient } = require('@shared/jira');
+      const jiraClient = createJiraClient(context.secrets);
+      const result = await jiraClient.search(jql, { maxResults: 0 });
+      res.json({ count: result.total || 0 });
+    } catch (error) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  /**
+   * @openapi
+   * /api/modules/system-health/quality/tfa-charts:
+   *   get:
+   *     summary: Get TFA (Test Failure Analysis) chart data for a version and release
+   *     tags: [System Health - Quality Reports]
+   *     parameters:
+   *       - name: version
+   *         in: query
+   *         required: true
+   *         schema:
+   *           type: string
+   *         description: RHOAI version (e.g., "3.5", "3.6") or "All"
+   *       - name: release
+   *         in: query
+   *         required: true
+   *         schema:
+   *           type: string
+   *         description: Release type (e.g., "EA1", "GA") or "All"
+   *       - name: from_date
+   *         in: query
+   *         required: false
+   *         schema:
+   *           type: string
+   *         description: Start date (YYYY-MM-DD format)
+   *       - name: to_date
+   *         in: query
+   *         required: false
+   *         schema:
+   *           type: string
+   *         description: End date (YYYY-MM-DD format)
+   *       - name: component
+   *         in: query
+   *         required: false
+   *         schema:
+   *           type: string
+   *         description: Component name to filter by (e.g., "AI Hub", "AI Pipelines")
+   *     responses:
+   *       200:
+   *         description: TFA chart data with classification breakdown, per-component data, and status distribution
+   *       400:
+   *         description: Missing or invalid parameters
+   *       500:
+   *         description: Jira query failed
+   */
+  router.get('/tfa-charts', requireAuth, requireScope('system-health:read'), async function(req, res) {
+    const { version, release, from_date, to_date, component } = req.query;
+
+    console.log('[system-health/quality] tfa-charts request:', { version, release, from_date, to_date, component });
+
+    if (!version || !release) {
+      console.log('[system-health/quality] Missing version or release');
+      return res.status(400).json({ error: 'Missing version or release parameter' });
+    }
+
+    try {
+      // For demo mode, return demo data
+      if (DEMO_MODE) {
+        console.log('[system-health/quality] Demo mode - returning demo data');
+        return res.json({
+          version,
+          release,
+          perComponentData: [
+            { component: 'AI Hub', failed: 24, classified: 18, unclassified: 6 },
+            { component: 'AI Pipelines', failed: 18, classified: 15, unclassified: 3 },
+            { component: 'Model Server', failed: 12, classified: 10, unclassified: 2 },
+            { component: 'Training', failed: 15, classified: 11, unclassified: 4 },
+            { component: 'IDE', failed: 9, classified: 7, unclassified: 2 }
+          ],
+          classificationBreakdown: [
+            { label: 'tfa-product-bug', name: 'Product Bug', count: 31 },
+            { label: 'tfa-automation-bug', name: 'Automation Bug', count: 18 },
+            { label: 'tfa-infra-issue', name: 'Infrastructure', count: 14 },
+            { label: 'tfa-env-setup', name: 'Env Setup', count: 8 },
+            { label: 'unclassified', name: 'Unclassified', count: 17 }
+          ],
+          statusDistribution: [
+            { status: 'Open', count: 45 },
+            { status: 'In Progress', count: 18 },
+            { status: 'On Hold', count: 5 },
+            { status: 'Resolved', count: 20 }
+          ],
+          totals: {
+            total_failed: 88,
+            classified: 61,
+            unclassified: 27
+          }
+        });
+      }
+
+      // Try to initialize Jira client
+      let jiraClient;
+      try {
+        const { createJiraClient } = require('@shared/jira');
+        jiraClient = createJiraClient(context.secrets);
+        console.log('[system-health/quality] Jira client initialized');
+      } catch (err) {
+        console.warn('[system-health/quality] Jira client initialization failed:', err.message);
+        // Fall back to mock data if Jira client fails
+        return res.json({
+          version,
+          release,
+          perComponentData: [],
+          classificationBreakdown: [],
+          statusDistribution: [],
+          totals: {
+            total_failed: 0,
+            classified: 0,
+            unclassified: 0
+          }
+        });
+      }
+
+      // Build base JQL - filter by component if provided
+      let baseJql = 'project = RHOAIENG AND labels = "test-failed"';
+      if (component) {
+        baseJql += ` AND component = "${component}"`;
+      }
+      baseJql += ` AND status NOT IN ("Closed","Resolved")`; // Only open issues
+
+      // Add version/release filtering
+      if (version !== 'All' || release !== 'All') {
+        baseJql += ` AND (fixVersion ~ "${version}" OR 'Target Version' ~ "${version}")`;
+      }
+
+      // Add date range if provided
+      if (from_date) {
+        baseJql += ` AND created >= "${from_date}"`;
+      }
+      if (to_date) {
+        baseJql += ` AND created <= "${to_date}"`;
+      }
+
+      console.log('[system-health/quality] Executing JQL:', baseJql.substring(0, 100) + '...');
+
+      // Query for all test-failed issues with a timeout
+      let allIssues;
+      try {
+        allIssues = await Promise.race([
+          jiraClient.search(baseJql, {
+            maxResults: 1000,
+            fields: ['labels', 'status', 'components', 'created']
+          }),
+          new Promise((_, reject) => setTimeout(() => reject(new Error('Jira query timeout')), 10000))
+        ]);
+        console.log('[system-health/quality] JQL query succeeded, got', allIssues?.issues?.length || 0, 'issues');
+      } catch (err) {
+        console.warn('[system-health/quality] Jira search failed:', err.message);
+        // Return empty data instead of error
+        return res.json({
+          version,
+          release,
+          perComponentData: [],
+          classificationBreakdown: [],
+          statusDistribution: [],
+          totals: {
+            total_failed: 0,
+            classified: 0,
+            unclassified: 0
+          }
+        });
+      }
+
+      // Define TFA labels
+      const TFA_LABELS = [
+        'tfa-product-bug',
+        'tfa-automation-bug',
+        'tfa-infra-issue',
+        'tfa-env-setup',
+        'tfa-duplicate',
+        'tfa-known-issue',
+        'tfa-false-positive',
+        'tfa-wrong-assignment'
+      ];
+
+      const TFA_NAMES = {
+        'tfa-product-bug': 'Product Bug',
+        'tfa-automation-bug': 'Automation Bug',
+        'tfa-infra-issue': 'Infrastructure',
+        'tfa-env-setup': 'Environment Setup',
+        'tfa-duplicate': 'Duplicate',
+        'tfa-known-issue': 'Known Issue',
+        'tfa-false-positive': 'False Positive',
+        'tfa-wrong-assignment': 'Wrong Assignment'
+      };
+
+      // Aggregate data
+      const perComponentMap = {};
+      const classificationCounts = {};
+      const statusCounts = {};
+      let totalFailed = 0;
+      let totalClassified = 0;
+
+      if (allIssues && allIssues.issues) {
+        allIssues.issues.forEach(issue => {
+          totalFailed++;
+          const labels = issue.fields.labels || [];
+          const status = issue.fields.status?.name || 'Unknown';
+
+          // Count by status
+          statusCounts[status] = (statusCounts[status] || 0) + 1;
+
+          // Check if classified
+          let isClassified = false;
+          TFA_LABELS.forEach(tfaLabel => {
+            if (labels.includes(tfaLabel)) {
+              isClassified = true;
+              classificationCounts[tfaLabel] = (classificationCounts[tfaLabel] || 0) + 1;
+            }
+          });
+
+          if (!isClassified) {
+            classificationCounts['unclassified'] = (classificationCounts['unclassified'] || 0) + 1;
+          } else {
+            totalClassified++;
+          }
+
+          // Aggregate by component
+          const components = issue.fields.components || [];
+          if (components.length === 0) {
+            components.push({ name: '(No component)' });
+          }
+
+          components.forEach(comp => {
+            const compName = comp.name;
+            if (!perComponentMap[compName]) {
+              perComponentMap[compName] = { failed: 0, classified: 0, unclassified: 0 };
+            }
+            perComponentMap[compName].failed++;
+
+            if (isClassified) {
+              perComponentMap[compName].classified++;
+            } else {
+              perComponentMap[compName].unclassified++;
+            }
+          });
+        });
+      }
+
+      // Build response
+      const perComponentData = Object.entries(perComponentMap)
+        .map(([component, data]) => ({ component, ...data }))
+        .sort((a, b) => b.failed - a.failed);
+
+      const classificationBreakdown = Object.entries(classificationCounts)
+        .map(([label, count]) => ({
+          label,
+          name: TFA_NAMES[label] || label,
+          count
+        }))
+        .sort((a, b) => b.count - a.count);
+
+      const statusDistribution = Object.entries(statusCounts)
+        .map(([status, count]) => ({ status, count }))
+        .sort((a, b) => b.count - a.count);
+
+      const responseData = {
+        version,
+        release,
+        perComponentData,
+        classificationBreakdown,
+        statusDistribution,
+        totals: {
+          total_failed: totalFailed,
+          classified: totalClassified,
+          unclassified: totalFailed - totalClassified
+        }
+      };
+
+      console.log('[system-health/quality] Returning response:', {
+        totalFailed,
+        totalClassified,
+        componentsCount: perComponentData.length
+      });
+
+      res.json(responseData);
+    } catch (error) {
+      console.error('[system-health/quality] Unexpected error in tfa-charts:', error);
+      // Return graceful empty response instead of error
+      res.json({
+        version,
+        release,
+        perComponentData: [],
+        classificationBreakdown: [],
+        statusDistribution: [],
+        totals: {
+          total_failed: 0,
+          classified: 0,
+          unclassified: 0
+        }
+      });
+    }
+  });
 };

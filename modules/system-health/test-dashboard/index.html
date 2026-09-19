@@ -1,0 +1,593 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Test Execution Statistics (Beta)</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{background:#0a1929;color:#e0e0e0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;min-height:100vh}
+a{color:#5ea7ff;text-decoration:none}a:hover{text-decoration:underline}
+.container{max-width:1500px;margin:0 auto;padding:24px 32px}
+
+/* Header */
+.header{margin-bottom:8px}
+.header h1{font-size:26px;font-weight:700;color:#fff;margin-bottom:4px}
+.header p{font-size:13px;color:#8899aa;line-height:1.5;max-width:900px}
+
+/* Filter bar */
+.filter-bar{display:flex;align-items:center;gap:16px;flex-wrap:wrap;margin:18px 0 24px}
+.filter-group{display:flex;flex-direction:column;gap:3px}
+.filter-label{font-size:10px;text-transform:uppercase;color:#6b8299;letter-spacing:.5px;font-weight:600}
+.filter-value{font-size:13px;color:#fff;font-weight:500}
+.filter-bar select,.filter-bar input[type="date"]{
+  background:#132f4c;color:#fff;border:1px solid #1e4976;border-radius:4px;
+  padding:6px 10px;font-size:13px;cursor:pointer;outline:none;min-width:100px;
+  appearance:auto;-webkit-appearance:auto;
+}
+.filter-bar select:hover,.filter-bar input[type="date"]:hover{border-color:#3a6ea5}
+.filter-bar input[type="date"]::-webkit-calendar-picker-indicator{filter:invert(1);cursor:pointer}
+
+/* Summary cards */
+.summary-cards{display:grid;grid-template-columns:repeat(5,1fr);gap:14px;margin-bottom:20px}
+.sc{background:#0d2137;border:1px solid #1e4976;border-radius:8px;padding:14px 18px}
+.sc-label{font-size:10px;text-transform:uppercase;letter-spacing:1px;color:#6b8299;margin-bottom:6px;font-weight:600}
+.sc-value{font-size:28px;font-weight:700;color:#fff}
+.sc-sub{font-size:11px;color:#6b8299;margin-top:2px}
+.sc-total{border-left:4px solid #3498db}.sc-total .sc-value{color:#3498db}
+.sc-passed{border-left:4px solid #2ed573}.sc-passed .sc-value{color:#2ed573}
+.sc-failed{border-left:4px solid #ff4757}.sc-failed .sc-value{color:#ff4757}
+.sc-skipped{border-left:4px solid #ffa502}.sc-skipped .sc-value{color:#ffa502}
+.sc-pct{border-left:4px solid #a29bfe}.sc-pct .sc-value{color:#a29bfe}
+
+/* Section title */
+.section-title{margin-bottom:6px}
+.section-title h2{font-size:18px;font-weight:600;color:#fff;margin-bottom:2px;
+  background:linear-gradient(90deg,#132f4c 0%,transparent 100%);padding:10px 16px;border-radius:6px}
+.section-title p{font-size:12px;color:#8899aa;padding-left:16px}
+
+/* Heatmap table */
+.heatmap-wrapper{overflow-x:auto;overflow-y:visible;margin-top:16px;position:relative}
+table.heatmap{width:100%;border-collapse:collapse;min-width:800px}
+table.heatmap th,table.heatmap td{padding:8px 6px;text-align:center;border-bottom:1px solid #1e4976;white-space:nowrap}
+table.heatmap th{font-size:11px;color:#8899aa;font-weight:600;position:sticky;top:0;background:#0a1929;z-index:10}
+table.heatmap th.comp-header{text-align:left;min-width:180px}
+table.heatmap td.comp-name{text-align:left;font-weight:500}
+table.heatmap td.comp-name a{color:#5ea7ff;font-size:13px}
+table.heatmap td.comp-name a:hover{color:#8ec5ff}
+table.heatmap td{position:relative}
+
+/* Heatmap cells — color-coded by pass % */
+.cell{border-radius:6px;padding:6px 4px;min-width:60px;display:inline-block;text-align:center;cursor:pointer;position:relative}
+.cell-green{background:rgba(46,213,115,.15);border:1px solid rgba(46,213,115,.3)}
+.cell-amber{background:rgba(255,165,2,.12);border:1px solid rgba(255,165,2,.25)}
+.cell-orange{background:rgba(225,112,85,.12);border:1px solid rgba(225,112,85,.25)}
+.cell-red{background:rgba(255,71,87,.12);border:1px solid rgba(255,71,87,.25)}
+.cell-gray{background:rgba(74,85,104,.1);border:1px solid rgba(74,85,104,.2)}
+.cell-pct{font-size:16px;font-weight:700;line-height:1}
+.cell-pct-green{color:#2ed573}.cell-pct-amber{color:#ffa502}.cell-pct-orange{color:#e17055}.cell-pct-red{color:#ff4757}
+.cell-counts{display:flex;gap:3px;justify-content:center;font-size:9px;font-weight:600;margin-top:3px}
+.cell-counts .cp{color:#2ed573}.cell-counts .cf{color:#ff4757}.cell-counts .cs{color:#ffa502}
+.cell-na{color:#4a5568;font-size:13px}
+
+/* Hover dropdown for run details */
+.cell-dropdown{display:none;position:absolute;left:50%;transform:translateX(-50%);
+  background:#132f4c;border:1px solid #1e4976;border-radius:8px;padding:8px 0;z-index:200;
+  min-width:340px;max-height:360px;overflow-y:auto;box-shadow:0 8px 24px rgba(0,0,0,.6);text-align:left}
+/* Default: show above */
+.cell-dropdown{bottom:calc(100% + 6px)}
+/* For top rows: show below instead */
+.cell-dropdown.dd-below{bottom:auto;top:calc(100% + 6px)}
+.cell:hover .cell-dropdown{display:block}
+.dd-title{padding:6px 14px 4px;font-size:10px;color:#6b8299;font-weight:700;text-transform:uppercase;letter-spacing:.5px;border-bottom:1px solid #1e4976;margin-bottom:4px}
+.dd-run{padding:5px 14px;border-bottom:1px solid rgba(30,73,118,.3)}
+.dd-run:last-child{border-bottom:none}
+.dd-run-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:2px}
+.dd-run-label{font-size:11px;color:#5ea7ff}
+.dd-run-label a{color:#5ea7ff;font-size:11px}
+.dd-run-counts{font-size:10px;display:flex;gap:6px}
+.dd-pct{font-size:10px;font-weight:700;margin-left:auto}
+
+/* Bottom panel: Release chart */
+.bottom-panel{background:#0d2137;border:1px solid #1e4976;border-radius:8px;padding:20px;margin-top:28px}
+.bottom-panel h3{font-size:16px;font-weight:600;color:#fff;margin-bottom:4px}
+.bottom-panel .panel-sub{font-size:12px;color:#8899aa;margin-bottom:14px}
+.chart-container{position:relative;width:100%;height:320px}
+.chart-container canvas{width:100%!important;height:100%!important}
+
+/* Version multi-select for chart */
+.version-toggles{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:12px}
+.version-toggles label{display:flex;align-items:center;gap:5px;cursor:pointer;font-size:12px;color:#ccc;
+  background:#132f4c;border:1px solid #1e4976;border-radius:4px;padding:4px 10px}
+.version-toggles label:hover{border-color:#3a6ea5}
+.version-toggles input[type="checkbox"]{accent-color:#5ea7ff}
+
+/* Help box */
+.help-box{background:rgba(94,167,255,.06);border:1px solid rgba(94,167,255,.15);border-radius:8px;padding:14px 18px;margin-top:16px}
+.help-box h4{font-size:13px;color:#5ea7ff;margin-bottom:6px}
+.help-box p,.help-box li{font-size:12px;color:#8899aa;line-height:1.6}
+.help-box ul{padding-left:18px;margin-top:4px}
+
+/* TFA component table */
+.tfa-tbl{width:100%;border-collapse:collapse;margin-top:10px}
+.tfa-tbl th{font-size:10px;text-transform:uppercase;color:#6b8299;font-weight:600;padding:8px 10px;text-align:left;border-bottom:2px solid #1e4976;letter-spacing:.5px}
+.tfa-tbl td{padding:7px 10px;font-size:13px;border-bottom:1px solid rgba(30,73,118,.3)}
+.tfa-tbl tr:hover{background:rgba(94,167,255,.04)}
+.tfa-tbl .num{text-align:center;font-weight:600;min-width:60px}
+.tfa-tbl .num a{font-weight:600}
+.tfa-bar{display:inline-block;height:6px;border-radius:3px;vertical-align:middle;margin-left:6px}
+/* TFA summary cards */
+.tfa-sc{background:#0d2137;border:1px solid #1e4976;border-radius:8px;padding:12px 18px;min-width:140px}
+.tfa-sc .tfa-sc-label{font-size:10px;text-transform:uppercase;letter-spacing:.5px;color:#6b8299;font-weight:600;margin-bottom:4px}
+.tfa-sc .tfa-sc-val{font-size:22px;font-weight:700}
+/* TFA legend */
+.tfa-legend-item{display:flex;align-items:center;gap:6px;font-size:11px;color:#ccc;padding:3px 0}
+.tfa-legend-item .dot{width:10px;height:10px;border-radius:50%;flex-shrink:0}
+
+.loading{text-align:center;padding:60px;color:#6b8299;font-size:16px}
+.error{text-align:center;padding:60px;color:#ff4757;font-size:15px}
+</style>
+</head>
+<body>
+<div class="container">
+  <div class="header">
+    <h1>Test Execution Statistics <span style="font-size:14px;color:#ffa502;font-weight:500;vertical-align:middle">(Beta)</span></h1>
+    <p>Aggregated view of RHOAI test execution across all components, quality gates, and releases. Data is ingested from Jenkins CI builds and indexed in OpenSearch.</p>
+  </div>
+
+  <!-- Filters -->
+  <div class="filter-bar">
+    <div class="filter-group"><span class="filter-label">Environment</span><span class="filter-value">RHOAI</span></div>
+    <div class="filter-group"><span class="filter-label">Version</span>
+      <select id="f-ver"><option value="All">All</option><option value="2.25">2.25</option><option value="3.4">3.4</option><option value="3.5">3.5</option><option value="3.6">3.6</option></select>
+    </div>
+    <div class="filter-group"><span class="filter-label">Release</span>
+      <select id="f-rel"><option value="All">All</option><option value="GA">GA</option><option value="EA1">EA1</option><option value="EA2">EA2</option></select>
+    </div>
+    <div class="filter-group" style="border-left:1px solid #1e4976;padding-left:12px;margin-left:4px">
+      <span class="filter-label">Date Range</span>
+      <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:11px;color:#ccc">
+        <input type="checkbox" id="f-use-date" checked style="accent-color:#5ea7ff;width:14px;height:14px">
+        <span>Enable</span>
+      </label>
+    </div>
+    <div class="filter-group" id="date-inputs-wrap">
+      <span class="filter-label">From</span>
+      <input type="date" id="f-from">
+    </div>
+    <div class="filter-group">
+      <span class="filter-label">To</span>
+      <input type="date" id="f-to">
+    </div>
+  </div>
+  <div class="help-box" style="margin-bottom:20px">
+    <h4>ℹ️ How to use filters</h4>
+    <ul>
+      <li><strong>Version</strong> — Select a specific RHOAI version (e.g., 3.5, 3.6) or "All" to view all versions combined.</li>
+      <li><strong>Release</strong> — Filter by release milestone: <strong>GA</strong> (General Availability, production-ready), <strong>EA1</strong> (1st Early Access), <strong>EA2</strong> (2nd Early Access, closer to GA), or "All" for the complete picture.</li>
+      <li><strong>Date Range</strong> — Enable the checkbox to filter by date window. When disabled, all data for selected Version/Release is shown regardless of dates.</li>
+      <li><strong>Filter precedence</strong>: Version &amp; Release filter the data first. If Date Range is enabled, it further narrows the window.</li>
+    </ul>
+  </div>
+
+  <!-- Summary cards -->
+  <div id="summary-range" style="display:none;margin-bottom:6px;font-size:12px;color:#6b8299;padding:0 2px"></div>
+  <div id="summary-cards" class="summary-cards" style="display:none">
+    <div class="sc sc-total"><div class="sc-label">Total Tests</div><div class="sc-value" id="sc-total">0</div><div class="sc-sub">Sum of all test cases across runs</div></div>
+    <div class="sc sc-passed"><div class="sc-label">Passed</div><div class="sc-value" id="sc-passed">0</div><div class="sc-sub">Tests that completed successfully</div></div>
+    <div class="sc sc-failed"><div class="sc-label">Failed</div><div class="sc-value" id="sc-failed">0</div><div class="sc-sub">Tests with assertion failures or errors</div></div>
+    <div class="sc sc-skipped"><div class="sc-label">Skipped</div><div class="sc-value" id="sc-skipped">0</div><div class="sc-sub">Tests skipped (dependency / scope / disabled)</div></div>
+    <div class="sc sc-pct"><div class="sc-label">Pass Rate</div><div class="sc-value" id="sc-pct">0%</div><div class="sc-sub">Passed ÷ Total × 100</div></div>
+  </div>
+
+  <!-- Heatmap section -->
+  <div class="section-title">
+    <h2>Component Heatmap</h2>
+  </div>
+  <div class="help-box" style="margin-bottom:6px">
+    <h4>How to read the heatmap</h4>
+    <ul>
+      <li><strong>Each row</strong> is a test component (e.g., Platform, Workbenches, Model Server).</li>
+      <li><strong>Each column</strong> is a calendar date. Dates with no executions show "–".</li>
+      <li><strong>Cell color</strong> indicates pass rate: <span style="color:#2ed573">🟢 ≥95%</span> · <span style="color:#ffa502">🟡 80–94%</span> · <span style="color:#e17055">🟠 60–79%</span> · <span style="color:#ff4757">🔴 &lt;60%</span>.</li>
+      <li><strong>Cell content</strong> shows the pass percentage, plus pass/fail/skip counts below it.</li>
+      <li><strong>Hover</strong> over a cell to see a dropdown with every individual Jenkins run (latest on top), each showing version, release, pass %, and a link to Jenkins.</li>
+      <li><strong>Click a component name</strong> to navigate to its detail page with quality-gate heatmap, trend charts, and Jira analysis.</li>
+    </ul>
+  </div>
+
+  <div id="heatmap-content" class="heatmap-wrapper"><div class="loading">Loading…</div></div>
+
+
+  <!-- Version trend chart -->
+  <div class="bottom-panel" id="release-panel" style="display:none">
+    <h3>Execution Across Versions</h3>
+    <p class="panel-sub">Aggregated passed-test trends per <strong>version</strong> across all components. All release milestones (EA1 + EA2 + GA) within a version are combined.</p>
+    <div class="help-box" style="margin-bottom:14px">
+      <h4>How to use this chart</h4>
+      <ul>
+        <li><strong>Version checkboxes</strong> — Toggle which RHOAI versions to show. Enables side-by-side comparison of quality across versions.</li>
+        <li><strong>Each line</strong> represents total passed tests for a specific RHOAI version (e.g., "3.5", "3.6"), combining all release milestones (EA1 + EA2 + GA).</li>
+        <li><strong>Upward trends</strong> indicate improving test coverage or stability. Sudden drops may signal regressions or infrastructure issues.</li>
+        <li>Compare versions side-by-side: newer versions should maintain or exceed the pass counts of older versions.</li>
+      </ul>
+    </div>
+    <div class="version-toggles" id="version-toggles"></div>
+    <div class="chart-container"><canvas id="chart-releases"></canvas></div>
+    <div class="help-box">
+      <h4>Version lifecycle glossary</h4>
+      <ul>
+        <li><strong>EA1 (Early Access 1)</strong> — First pre-release validation milestone. Feature completeness ~70-80%.</li>
+        <li><strong>EA2 (Early Access 2)</strong> — Second milestone, closer to GA. Feature completeness ~90%+.</li>
+        <li><strong>GA (General Availability)</strong> — Production-ready release. All critical quality gates must pass.</li>
+        <li>Each version combines all milestones (EA1 + EA2 + GA) into one line for a holistic quality view of that version.</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<script>
+const $ = id => document.getElementById(id);
+
+function formatDate(d){ return d.toISOString().slice(0,10) }
+function friendlyDate(iso){
+  const d = new Date(iso+'T00:00:00');
+  return ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][d.getMonth()]+' '+d.getDate();
+}
+function getParam(n,fb){ return new URLSearchParams(location.search).get(n)||fb }
+function escHtml(s){ const d=document.createElement('div'); d.textContent=s; return d.innerHTML }
+
+function passPct(p,t){ return t>0 ? Math.round(p/t*100) : 0 }
+function pctColor(pct){
+  if(pct>=95) return 'green';
+  if(pct>=80) return 'amber';
+  if(pct>=60) return 'orange';
+  return 'red';
+}
+
+// --- Init ---
+function initFilters(){
+  const today = new Date(), from = new Date(today);
+  from.setDate(today.getDate()-30);
+  $('f-ver').value = getParam('version','All');
+  $('f-rel').value = getParam('release','All');
+  $('f-from').value = getParam('from_date', formatDate(from));
+  $('f-to').value = getParam('to_date', formatDate(today));
+  const useDr = getParam('use_date_range','true')==='true';
+  $('f-use-date').checked = useDr;
+  updateDateInputsState();
+}
+function updateDateInputsState(){
+  const enabled = $('f-use-date').checked;
+  $('f-from').disabled = !enabled;
+  $('f-to').disabled = !enabled;
+  const wrap = $('date-inputs-wrap');
+  if(wrap) wrap.style.opacity = enabled?1:0.4;
+  $('f-from').parentElement.style.opacity = enabled?1:0.4;
+  $('f-to').parentElement.style.opacity = enabled?1:0.4;
+  $('f-from').parentElement.style.pointerEvents = enabled?'auto':'none';
+  $('f-to').parentElement.style.pointerEvents = enabled?'auto':'none';
+}
+function currentFilters(){
+  return { environment:'RHOAI', version:$('f-ver').value, release:$('f-rel').value,
+    from_date:$('f-from').value, to_date:$('f-to').value, use_date_range:$('f-use-date').checked,
+    provider:'All', cluster_type:'All', gate:'All' };
+}
+function filterQS(extra){ return new URLSearchParams({...currentFilters(),...extra}).toString() }
+
+function normalizeVer(v){const b=v.split('-')[0];const p=b.split('.');return p.length>=2?p[0]+'.'+p[1]:b}
+function vrKeyMatches(vrKey, version, release){
+  const [v,r] = vrKey.split('|');
+  if(version && version!=='All'){ if(normalizeVer(v)!==version) return false }
+  if(release && release!=='All' && r!==release) return false;
+  return true;
+}
+
+// --- Filter static data ---
+function filterStatic(data, f){
+  const {from_date:from, to_date:to, version, release, use_date_range} = f;
+  const needsVr = version!=='All'||release!=='All';
+  const applyDateRange = use_date_range !== false; // default true if undefined
+  const out = {components:[]};
+  (data.components||[]).forEach(comp => {
+    const days = {};
+    Object.entries(comp.days||{}).forEach(([date,day]) => {
+      if(applyDateRange && (date<from||date>to)) return;
+      if(!needsVr){ days[date]=day; return }
+      if(!day.by_vr) return;
+      let p=0,f2=0,s=0,t=0,urls=[];
+      Object.entries(day.by_vr).forEach(([k,vr]) => {
+        if(vrKeyMatches(k,version,release)){
+          p+=vr.passed||0; f2+=vr.failed||0; s+=vr.skipped||0; t+=vr.total||0;
+          urls=urls.concat(vr.jenkins_urls||[]);
+        }
+      });
+      // Only include matching by_vr entries in filtered data
+      const filteredByVr = {};
+      Object.entries(day.by_vr).forEach(([k,vr]) => {
+        if(vrKeyMatches(k,version,release)) filteredByVr[k] = vr;
+      });
+      if(t>0) days[date]={passed:p,failed:f2,skipped:s,total:t,jenkins_urls:urls,by_vr:filteredByVr};
+    });
+    let tp=0,tf=0,ts=0,tt=0;
+    Object.values(days).forEach(d=>{tp+=d.passed||0;tf+=d.failed||0;ts+=d.skipped||0;tt+=d.total||0});
+    if(tt>0) out.components.push({component:comp.component, overall:{total:tt,passed:tp,failed:tf,skipped:ts}, days});
+  });
+  return out;
+}
+
+// --- Load data ---
+let rawHeatmapData = null;
+
+async function loadHeatmap(){
+  const content=$('heatmap-content');
+  content.innerHTML='<div class="loading">Loading…</div>';
+  const f=currentFilters();
+  try{
+    // Load static JSON (always, so we can re-filter client-side)
+    if(!rawHeatmapData){
+      const r2=await fetch(`data/heatmap.json?_=${Date.now()}`);
+      if(r2.ok) rawHeatmapData=await r2.json();
+    }
+    if(rawHeatmapData) renderAll(filterStatic(rawHeatmapData,f));
+    else throw new Error('No data');
+  }catch(e){ content.innerHTML=`<div class="error">Failed: ${e.message}</div>` }
+}
+
+function renderAll(data){
+  renderSummaryCards(data);
+  renderHeatmap(data,$('heatmap-content'));
+  renderReleaseChart(data);
+}
+
+// --- Summary cards ---
+function renderSummaryCards(data){
+  let tt=0,tp=0,tf=0,ts=0;
+  const nComps=(data.components||[]).length;
+  (data.components||[]).forEach(c=>{
+    if(c.overall){tt+=c.overall.total||0;tp+=c.overall.passed||0;tf+=c.overall.failed||0;ts+=c.overall.skipped||0}
+  });
+  $('sc-total').textContent=tt.toLocaleString();
+  $('sc-passed').textContent=tp.toLocaleString();
+  $('sc-failed').textContent=tf.toLocaleString();
+  $('sc-skipped').textContent=ts.toLocaleString();
+  $('sc-pct').textContent=passPct(tp,tt)+'%';
+  $('summary-cards').style.display='grid';
+
+  // Show active filter context
+  const f=currentFilters();
+  const parts=[];
+  if(f.version!=='All')parts.push(`Version: ${f.version}`);
+  if(f.release!=='All')parts.push(`Release: ${f.release}`);
+  if(f.use_date_range!==false) parts.push(`${friendlyDate(f.from_date)} – ${friendlyDate(f.to_date)}`);
+  else parts.push('All dates');
+  parts.push(`${nComps} components`);
+  const rangeEl=$('summary-range');
+  rangeEl.textContent='Showing: '+parts.join(' · ');
+  rangeEl.style.display='block';
+}
+
+// --- Render heatmap ---
+function renderHeatmap(data,container){
+  const comps=(data.components||[]).slice().sort((a,b)=>a.component.localeCompare(b.component));
+  if(!comps.length){container.innerHTML='<div class="loading">No data for selected filters.</div>';return}
+
+  const dateSet=new Set();
+  comps.forEach(c=>Object.keys(c.days||{}).forEach(d=>dateSet.add(d)));
+  const dates=Array.from(dateSet).sort((a,b)=>b.localeCompare(a));
+
+  let html='<table class="heatmap"><thead><tr><th class="comp-header">Component</th>';
+  dates.forEach(d=>html+=`<th><div style="display:flex;flex-direction:column;align-items:center;gap:1px"><span>${friendlyDate(d)}</span></div></th>`);
+  html+='</tr></thead><tbody>';
+
+  comps.forEach((comp,rowIdx)=>{
+    const fqs=filterQS({component:comp.component});
+    // Overall row stats
+    const ov=comp.overall||{};
+    const rowPct=passPct(ov.passed||0,ov.total||0);
+    html+=`<tr><td class="comp-name"><a href="component.html?${fqs}">${escHtml(comp.component)}</a>
+      <div style="font-size:10px;color:#6b8299">${rowPct}% · ${(ov.total||0).toLocaleString()} tests</div></td>`;
+
+    // For first 4 rows, dropdown opens below to avoid being cut off at the top
+    const ddClass=rowIdx<4?'cell-dropdown dd-below':'cell-dropdown';
+
+    dates.forEach(d=>{
+      const day=comp.days?comp.days[d]:null;
+      if(!day||!day.total){html+='<td><span class="cell-na">–</span></td>';return}
+
+      const pct=passPct(day.passed,day.total);
+      const col=pctColor(pct);
+      const urls=day.jenkins_urls||[];
+
+      // Build hover dropdown with run details
+      let dropdown='';
+      if(urls.length>0||day.by_vr){
+        dropdown=`<div class="${ddClass}">`;
+        dropdown+=`<div class="dd-title">${friendlyDate(d)} · ${urls.length} run${urls.length!==1?'s':''}</div>`;
+
+        // Show per-version/release runs if available
+        if(day.by_vr){
+          const vrEntries=Object.entries(day.by_vr).sort((a,b)=>b[0].localeCompare(a[0]));
+          vrEntries.forEach(([vrKey,vr])=>{
+            const [v,r]=vrKey.split('|');
+            const rpct=passPct(vr.passed||0,vr.total||0);
+            const rcol=pctColor(rpct);
+            const rUrls=vr.jenkins_urls||[];
+            rUrls.forEach((u,i)=>{
+              const label=u.replace('https://jenkins-csb-rhods-opendatascience.dno.corp.redhat.com/job/','').replace(/\/$/,'').replace(/\/job\//g,'/');
+              dropdown+=`<div class="dd-run"><div class="dd-run-header">
+                <a class="dd-run-label" href="${u}" target="_blank">${v} ${r}${rUrls.length>1?' #'+(i+1):''}</a>
+                <span class="dd-pct cell-pct-${rcol}">${rpct}%</span></div>
+                <div class="dd-run-counts"><span class="cp">✓${vr.passed||0}</span><span class="cf">✗${vr.failed||0}</span><span class="cs">⊘${vr.skipped||0}</span></div></div>`;
+            });
+          });
+        } else {
+          urls.forEach((u,i)=>{
+            const label=u.replace('https://jenkins-csb-rhods-opendatascience.dno.corp.redhat.com/job/','').replace(/\/$/,'').replace(/\/job\//g,'/');
+            dropdown+=`<div class="dd-run"><a class="dd-run-label" href="${u}" target="_blank">${label}</a></div>`;
+          });
+        }
+        dropdown+='</div>';
+      }
+
+      html+=`<td><div class="cell cell-${col}" title="${pct}% pass (${day.passed}P ${day.failed}F ${day.skipped}S)">
+        <div class="cell-pct cell-pct-${col}">${pct}%</div>
+        <div class="cell-counts"><span class="cp">${day.passed}</span><span class="cf">${day.failed}</span><span class="cs">${day.skipped}</span></div>
+        ${dropdown}</div></td>`;
+    });
+    html+='</tr>';
+  });
+  html+='</tbody></table>';
+  container.innerHTML=html;
+}
+
+// --- Release trend chart ---
+let releaseChart=null;
+
+function renderReleaseChart(data){
+  const panel=$('release-panel');
+  // Aggregate by version+release across all components per day
+  const vrDayMap={}; // "3.6|EA1" -> { "2026-09-10": {p,f,s} }
+  const versions=new Set();
+
+  (data.components||[]).forEach(comp=>{
+    Object.entries(comp.days||{}).forEach(([date,day])=>{
+      if(!day.by_vr) return;
+      Object.entries(day.by_vr).forEach(([vrKey,vr])=>{
+        const [rawV]=vrKey.split('|');
+        const v=normalizeVer(rawV);
+        versions.add(v);
+        if(!vrDayMap[vrKey]) vrDayMap[vrKey]={};
+        if(!vrDayMap[vrKey][date]) vrDayMap[vrKey][date]={p:0,f:0,s:0};
+        vrDayMap[vrKey][date].p+=(vr.passed||0);
+        vrDayMap[vrKey][date].f+=(vr.failed||0);
+        vrDayMap[vrKey][date].s+=(vr.skipped||0);
+      });
+    });
+  });
+
+  if(!Object.keys(vrDayMap).length){panel.style.display='none';return}
+  panel.style.display='block';
+
+  // Version toggles
+  const toggles=$('version-toggles');
+  const sortedVersions=Array.from(versions).sort();
+  toggles.innerHTML=sortedVersions.map(v=>`<label><input type="checkbox" value="${v}" checked onchange="updateReleaseChart()"> ${v}</label>`).join('');
+
+  window._vrDayMap=vrDayMap;
+  updateReleaseChart();
+}
+
+function updateReleaseChart(){
+  const vrDayMap=window._vrDayMap||{};
+  const checked=Array.from(document.querySelectorAll('#version-toggles input:checked')).map(i=>i.value);
+
+  // Aggregate by VERSION (combining all releases EA1+EA2+GA per version)
+  const versionMap={}; // "3.5" -> {date: {p,f,s}}
+  Object.entries(vrDayMap).forEach(([vrKey,dayData])=>{
+    const v=normalizeVer(vrKey.split('|')[0]);
+    if(!checked.includes(v)) return;
+    if(!versionMap[v]) versionMap[v]={};
+    Object.entries(dayData).forEach(([date,counts])=>{
+      if(!versionMap[v][date]) versionMap[v][date]={p:0,f:0,s:0};
+      versionMap[v][date].p+=counts.p;
+      versionMap[v][date].f+=counts.f;
+      versionMap[v][date].s+=counts.s;
+    });
+  });
+
+  const allDates=new Set();
+  Object.values(versionMap).forEach(dm=>Object.keys(dm).forEach(d=>allDates.add(d)));
+  const dates=Array.from(allDates).sort();
+  const labels=dates.map(friendlyDate);
+
+  const colors=['#2ed573','#3498db','#e17055','#a29bfe','#fdcb6e','#6c5ce7','#00cec9','#fab1a0','#ff6b81','#70a1ff'];
+  const datasets=[];
+  let ci=0;
+  Object.keys(versionMap).sort().forEach(ver=>{
+    const dm=versionMap[ver];
+    const c=colors[ci%colors.length]; ci++;
+    datasets.push({
+      label:`Version ${ver} (passed)`, data:dates.map(d=>(dm[d]||{}).p||0),
+      borderColor:c, backgroundColor:c+'22', tension:.3, fill:false, pointRadius:3, borderWidth:2
+    });
+  });
+
+  const ctx=$('chart-releases').getContext('2d');
+  if(releaseChart) releaseChart.destroy();
+  releaseChart=new Chart(ctx,{
+    type:'line',
+    data:{labels,datasets},
+    options:{
+      responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{position:'bottom',labels:{color:'#8899aa',usePointStyle:true,pointStyle:'rect',padding:14,font:{size:11}}}},
+      scales:{
+        x:{ticks:{color:'#6b8299',font:{size:10},maxRotation:45},grid:{color:'rgba(30,73,118,.2)'}},
+        y:{ticks:{color:'#6b8299',font:{size:10}},grid:{color:'rgba(30,73,118,.3)'},beginAtZero:true}
+      }
+    }
+  });
+}
+
+// --- TFA: All components ---
+const TFA_COLORS={'tfa-product-bug':'#ff4757','tfa-automation-bug':'#ffa502','tfa-infra-issue':'#3498db',
+  'tfa-env-setup':'#a29bfe','tfa-duplicate':'#6b8299','tfa-known-issue':'#fdcb6e',
+  'tfa-false-positive':'#2ed573','tfa-wrong-assignment':'#e17055'};
+const TFA_NAMES={'tfa-product-bug':'Product Bug','tfa-automation-bug':'Automation Bug','tfa-infra-issue':'Infra Issue',
+  'tfa-env-setup':'Env Setup','tfa-duplicate':'Duplicate','tfa-known-issue':'Known Issue',
+  'tfa-false-positive':'False Positive','tfa-wrong-assignment':'Wrong Assignment'};
+const STATUS_COLORS={'Open':'#ff4757','In Progress':'#ffa502','To Do':'#a29bfe','In Review':'#3498db',
+  'Closed':'#2ed573','Done':'#2ed573','Resolved':'#00b894'};
+
+let jiraConfig=null;
+async function loadJiraConfig(){
+  try{const r=await fetch(`data/jira_config.json?_=${Date.now()}`);if(r.ok)jiraConfig=await r.json()}catch(_){}
+}
+
+function buildJqlUrl(comp,label,ver,rel){
+  if(!jiraConfig)return null;
+  const rels=jiraConfig.releases||{};
+  let matching=[];const rk=Object.keys(rels);
+  if(ver!=='All'&&rel!=='All')matching=[rels[`${ver}|${rel}`]].filter(Boolean);
+  else if(ver!=='All')rk.filter(k=>k.startsWith(ver+'|')).forEach(k=>matching.push(rels[k]));
+  else if(rel!=='All')rk.filter(k=>k.endsWith('|'+rel)).forEach(k=>matching.push(rels[k]));
+  else rk.forEach(k=>matching.push(rels[k]));
+  if(!matching.length)return null;
+  const fvs=new Set();matching.forEach(r=>{fvs.add(`'${r.rhoai_jira_version}'`);fvs.add(`'${r.fix_version}'`)});
+  const fvList=Array.from(fvs).join(', ');
+  const cm=jiraConfig.component_team_map||{};
+  let tc=null;
+  if(comp){if(cm[comp])tc=cm[comp];else{const lc=comp.toLowerCase();for(const[k,v]of Object.entries(cm)){if(k.toLowerCase().includes(lc)||lc.includes(k.toLowerCase())){tc=v;break}}}}
+  const proj=matching[0].project||'RHOAIENG';
+  let jql=`project = ${proj}`;if(tc)jql+=` AND Team = "${tc}"`;
+  jql+=` AND (fixVersion IN (${fvList}) OR affectedVersion IN (${fvList}) OR 'Target Version' IN (${fvList}))`;
+  jql+=` AND labels = "${label}"`;
+  return`https://issues.redhat.com/issues/?jql=${encodeURIComponent(jql)}`;
+}
+
+
+// --- Events ---
+function onFilterChange(){
+  location.search = '?' + filterQS();
+}
+
+$('f-ver').addEventListener('change',onFilterChange);
+$('f-rel').addEventListener('change',onFilterChange);
+$('f-from').addEventListener('change',onFilterChange);
+$('f-to').addEventListener('change',onFilterChange);
+$('f-use-date').addEventListener('change',()=>{updateDateInputsState();onFilterChange();});
+
+// Stub TFA functions (TFA is now only in component.html)
+function renderTfaAll(){}
+function applyTfaDateRange(){}
+
+// --- Boot ---
+initFilters();
+(async()=>{
+  await loadJiraConfig();
+  loadHeatmap();
+})();
+</script>
+</body>
+</html>
