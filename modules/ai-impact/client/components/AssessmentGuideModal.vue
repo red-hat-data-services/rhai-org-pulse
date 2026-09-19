@@ -2,6 +2,7 @@
 import { ref, watch } from 'vue'
 import { Video, Presentation, StickyNote, Play, ExternalLink } from 'lucide-vue-next'
 import { getAIImpactEnablementCategories } from '../enablement-links.js'
+import { trackRefs } from '../composables/useUsageTracking.js'
 
 const iconMap = { Video, Presentation, StickyNote, Play }
 function resolveIcon(name) { return iconMap[name] || Video }
@@ -16,6 +17,7 @@ const props = defineProps({
 const emit = defineEmits(['close'])
 
 const activeTab = ref('scoring')
+trackRefs({ tab: activeTab })
 const dontShowAgain = ref(false)
 
 watch(() => props.show, (visible) => {

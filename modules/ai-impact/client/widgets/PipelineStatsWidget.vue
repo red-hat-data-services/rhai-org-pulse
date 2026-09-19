@@ -7,6 +7,7 @@ import { useForYou } from '../composables/useForYou.js'
 import { useForYouPreferences } from '../composables/useForYouPreferences.js'
 import { useFieldDefinitions } from '@shared/client/composables/useFieldDefinitions.js'
 import ForYouSettings from '../components/ForYouSettings.vue'
+import { useUsageTracking } from '../composables/useUsageTracking.js'
 
 defineProps({
   size: { type: String, default: 'half' }
@@ -22,6 +23,8 @@ const { mode, manualComponents } = useForYouPreferences()
 
 const loading = computed(() => rfeLoading.value || featureLoading.value || assessmentLoading.value)
 const showSettings = ref(false)
+
+useUsageTracking({ page: 'ai-impact::sotu/pipeline-stats', open: { settings: showSettings } })
 
 const availableComponents = computed(() => {
   const fields = definitions.value?.personFields || []
