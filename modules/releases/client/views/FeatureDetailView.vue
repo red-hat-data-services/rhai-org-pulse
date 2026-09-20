@@ -174,7 +174,6 @@ const fromPlan = computed(() => nav.params.value.from === 'plan')
 const fromPlanFeatures = computed(() => nav.params.value.from === 'plan-features')
 const fromFeatureStatus = computed(() => nav.params.value.from === 'feature-status')
 const fromExecute = computed(() => nav.params.value.from === 'execute' || fromFeatureStatus.value)
-const fromHygieneReport = computed(() => nav.params.value.from === 'hygiene-report')
 const fromCapacityReport = computed(() => nav.params.value.from === 'capacity-report')
 const fromForYou = computed(() => nav.params.value.from === 'sotu' || nav.params.value.from === 'state-of-the-union')
 
@@ -191,11 +190,6 @@ function goBack() {
     nav.navigateTo('plan', { tab: 'feature-readiness' })
   } else if (fromPlan.value) {
     nav.navigateTo('plan')
-  } else if (fromHygieneReport.value) {
-    const params = { report: 'program-hygiene' }
-    if (nav.params.value.product) params.product = nav.params.value.product
-    if (nav.params.value.version) params.version = nav.params.value.version
-    nav.navigateTo('reports', params)
   } else if (fromCapacityReport.value) {
     const params = { report: 'capacity-commitment' }
     if (nav.params.value.modalStatus) params.modalStatus = nav.params.value.modalStatus
@@ -419,7 +413,7 @@ onMounted(() => {
       class="text-sm text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white flex items-center gap-1"
       @click="goBack"
     >
-      &larr; {{ fromForYou ? 'Back to State of the Union' : fromRfe ? 'Back to RFE Review' : fromFeatureReview ? 'Back to Feature Review' : fromDecomposer ? 'Back to Feature Decomposer' : fromPlanFeatures ? 'Back to Features List' : fromPlan ? 'Back to Plan' : fromHygieneReport ? 'Back to Hygiene Report' : fromCapacityReport ? 'Back to Program Level Release Report' : fromExecute ? 'Back to Execute' : 'Back to Execute' }}
+      &larr; {{ fromForYou ? 'Back to State of the Union' : fromRfe ? 'Back to RFE Review' : fromFeatureReview ? 'Back to Feature Review' : fromDecomposer ? 'Back to Feature Decomposer' : fromPlanFeatures ? 'Back to Features List' : fromPlan ? 'Back to Plan' : fromCapacityReport ? 'Back to Program Level Release Report' : fromExecute ? 'Back to Execute' : 'Back to Execute' }}
     </button>
 
     <!-- Loading -->

@@ -6,12 +6,6 @@ import { defineAsyncComponent } from 'vue'
 
 export const reports = [
   {
-    id: 'program-hygiene',
-    label: 'Program Hygiene Report',
-    description: 'Cross-version hygiene summary with violation breakdowns by rule, team, and version. Designed for program-level reporting.',
-    component: defineAsyncComponent(() => import('./ProgramHygieneReport.vue'))
-  },
-  {
     id: 'tv-fv-delta',
     label: 'TV vs FV Delta',
     description: 'Target Version (PM intent) vs Fix Version (engineering commitment) — alignment, mismatches, and component breakdown.',

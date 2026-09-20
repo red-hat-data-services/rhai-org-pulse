@@ -20,6 +20,7 @@ import FeatureTrackingTable from '../components/FeatureTrackingTable.vue'
 import FeatureTrackingSettingsPanel from '../components/FeatureTrackingSettingsPanel.vue'
 import FeatureSignalsBoard from '../components/FeatureSignalsBoard.vue'
 import HygieneSelect from '../components/hygiene/HygieneSelect.vue'
+import HygieneAnalyticsPanel from '../components/hygiene/HygieneAnalyticsPanel.vue'
 
 const props = defineProps({
   viewMode: { type: String, default: 'table' }
@@ -58,6 +59,7 @@ const selectedVersion = ref('')
 const selectedProducts = ref([])
 const refreshing = ref(false)
 const settingsOpen = ref(false)
+const hygieneCollapsed = ref(true)
 const trackingConfig = ref({ releases: {} })
 
 const freezeDatesByVersion = ref({})
@@ -744,6 +746,12 @@ onMounted(loadRuleCategories)
         <div class="text-[10px] text-gray-400">{{ kpi.totalViolations }} total · {{ kpi.avgCompletion }}% avg · {{ kpi.done }} done · {{ kpi.inProgress }} active</div>
       </button>
     </div>
+
+    <HygieneAnalyticsPanel
+      v-if="hasSelection && viewMode !== 'signals'"
+      :features="liveOverlayFeatures"
+      v-model:collapsed="hygieneCollapsed"
+    />
 
     <div v-if="!hasSelection" class="text-center py-10 text-sm text-gray-500 dark:text-gray-400">
       Open settings (gear) to add a release.

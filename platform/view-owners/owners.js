@@ -132,7 +132,6 @@ export const viewOwners = {
   'releases/reports/capacity-commitment':          'Alex Corvin',
   'releases/reports/cve-sustaining':               'Saiesh Prabhu',
   'releases/reports/feature-pressure':             'Dimitri Saridakis',
-  'releases/reports/program-hygiene':              'Alex Corvin',
   'releases/reports/release-readiness':            'Arthy Loganathan',
   'releases/reports/rhoai-component-architectures': 'Waldemar Znoinski',
   'releases/reports/tv-fv-delta':                  'Dimitri Saridakis',
