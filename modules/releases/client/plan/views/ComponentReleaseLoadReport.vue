@@ -370,6 +370,21 @@
         </div>
       </div>
 
+      <!--
+        Embeds the full, unmodified TV vs FV Delta report (see TvFvDeltaPanel.vue /
+        TvFvDeltaView.vue) — this is Phase 1 of eventually retiring the standalone
+        `Reports > TV vs FV Delta` entry (releases-report-consolidation-proposal.md,
+        "Engineering Intelligence Report"). Do not remove the standalone entry
+        (reports/registry.js) until, in a follow-up PR:
+          1. This panel has soaked and covers the standalone report's use cases.
+          2. Deep links / back-nav referencing `report=tv-fv-delta` are audited
+             and redirected (see ReportsView.vue's URL param sync).
+          3. tests/integration/releases.spec.js's standalone-report test block
+             is removed (server routes in tv-fv-delta/routes.js stay — only the
+             standalone client entry point goes).
+      -->
+      <TvFvDeltaPanel v-model:collapsed="tvFvDeltaCollapsed" :synced-versions="tvFvSyncedVersions" />
+
       <div class="flex items-center gap-2">
         <span class="text-[11px] font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider">TV/FV Align</span>
         <AlignmentLegendPopover variant="button" />
@@ -499,6 +514,7 @@ import AlignmentRollupTable from '../components/AlignmentRollupTable.vue'
 import AlignmentLegendPopover from '../components/AlignmentLegendPopover.vue'
 import PillarConfigPanel from '../components/PillarConfigPanel.vue'
 import FeatureReadinessDrawer from '../components/FeatureReadinessDrawer.vue'
+import TvFvDeltaPanel from '../components/TvFvDeltaPanel.vue'
 import { toDrawerFeature } from '../utils/feature-readiness-drawer-model.js'
 import {
   ALIGNMENT_DISPLAY_KEYS,
@@ -538,6 +554,7 @@ var AUTO_REFRESH_MS = 5 * 60 * 1000
 var selectedPillars = ref([])
 var selectedComponents = ref([])
 var selectedVersions = ref([])
+var tvFvDeltaCollapsed = ref(true)
 
 var pillarSearch = ref('')
 var componentSearch = ref('')
@@ -992,6 +1009,15 @@ function resolveJiraVersions(selectedLabels) {
   }
   return result
 }
+
+/**
+ * Jira version names to sync onto the embedded TV vs FV Delta panel.
+ * Null when PM Hub has no version filter set — the panel then falls back to
+ * its own standalone defaults, matching its behavior on the Reports page.
+ */
+var tvFvSyncedVersions = computed(function() {
+  return selectedVersions.value.length ? resolveJiraVersions(selectedVersions.value) : null
+})
 
 var pillarNames = computed(function() {
   return pillarConfig.value.pillars.map(function(p) { return p.name })

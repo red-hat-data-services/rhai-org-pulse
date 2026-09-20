@@ -477,6 +477,52 @@ test.describe('Releases PM Hub @releases', () => {
     expect(body.pillars[0]).toHaveProperty('name');
     expect(body.pillars[0]).toHaveProperty('components');
   });
+
+  test('embeds a collapsed-by-default TV vs FV Delta panel between the KPI tiles and TV/FV Align', async ({ page }) => {
+    // Seed a version filter so PM Hub auto-loads data (hasFetched=true) without needing
+    // to pick a component from a live dropdown — same setup as the auto-load test above.
+    await page.addInitScript(`
+      localStorage.setItem('pm-hub-filters', JSON.stringify({
+        components: [],
+        pillars: [],
+        versions: ['3.5']
+      }));
+    `);
+
+    await page.goto('/#/releases/plan');
+    await page.waitForLoadState('networkidle');
+    await page.waitForTimeout(DEFAULT_PAGE_WAIT_TIME);
+
+    await page.locator('button', { hasText: 'PM Hub' }).click();
+    await page.waitForTimeout(DEFAULT_PAGE_WAIT_TIME);
+
+    const reportCard = page.locator('.cursor-pointer', { hasText: 'Component Release Load Tracking' });
+    await reportCard.first().click();
+    await page.waitForLoadState('networkidle');
+    await page.waitForTimeout(DEFAULT_PAGE_WAIT_TIME);
+
+    const panel = page.locator('[data-testid="tv-fv-delta-panel"]');
+    const panelHeader = panel.locator('button', { hasText: 'TV vs FV Delta' });
+    await expect(panelHeader).toBeVisible();
+
+    // Collapsed by default — the full embedded report body must not be rendered yet.
+    await expect(page.getByText('Executive Summary')).toHaveCount(0);
+
+    // Positioned between the KPI tiles (Requested/Committed/Delivered/Blocked) and TV/FV Align.
+    const requestedBox = await page.locator('text=Requested').first().boundingBox();
+    const panelBox = await panelHeader.boundingBox();
+    const alignBox = await page.locator('text=TV/FV Align').first().boundingBox();
+    expect(requestedBox.y).toBeLessThan(panelBox.y);
+    expect(panelBox.y).toBeLessThan(alignBox.y);
+
+    // Expand — the full, unmodified TV vs FV Delta report renders (own header + Executive Summary).
+    await panelHeader.click();
+    await page.waitForTimeout(DEFAULT_PAGE_WAIT_TIME);
+    await expect(page.getByText('Executive Summary').first()).toBeVisible();
+    await expect(page.getByText('Target Version (PM intent) vs Fix Version (engineering commitment)').first()).toBeVisible();
+
+    expect(page.errors).toHaveLength(0);
+  });
 });
 
 /**

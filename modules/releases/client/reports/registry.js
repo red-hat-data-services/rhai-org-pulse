@@ -6,6 +6,13 @@ import { defineAsyncComponent } from 'vue'
 
 export const reports = [
   {
+    // NOTE: This report is also embedded as a collapsible panel in PM Hub
+    // (plan/components/TvFvDeltaPanel.vue), synced to PM Hub's version filter.
+    // Once that embed has soaked and covers this report's use cases, this
+    // standalone entry is slated for removal — see the removal checklist
+    // called out where TvFvDeltaPanel.vue is mounted in
+    // ComponentReleaseLoadReport.vue. Until then this entry stays as-is so
+    // both surfaces are reachable in parallel.
     id: 'tv-fv-delta',
     label: 'TV vs FV Delta',
     description: 'Target Version (PM intent) vs Fix Version (engineering commitment) — alignment, mismatches, and component breakdown.',

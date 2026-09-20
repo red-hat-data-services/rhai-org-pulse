@@ -11,6 +11,18 @@ import { mergeReleaseDetails } from '../composables/mergeReleaseDetails'
 import { buildKeysJqlUrl } from '../composables/jiraKeysJql'
 import { DEFAULT_SELECTED_VERSIONS } from '../composables/tvFvDeltaDefaults'
 
+const props = defineProps({
+  /**
+   * External version sync (e.g. an embedding page's global version filter),
+   * as Jira version names — e.g. "3.6 GA RHOAI RELEASE". When provided and
+   * non-empty, this seeds and keeps `chosenVersionNames` in sync instead of
+   * `DEFAULT_SELECTED_VERSIONS`. When null/omitted (standalone Reports
+   * usage), behavior is 100% unchanged — the manual release picker still
+   * works exactly as before.
+   */
+  syncedVersions: { type: Array, default: null },
+})
+
 const FEATURE_COLS = [
   'key', 'summary', 'target_version', 'fix_versions',
   'status', 'color_status', 'product_manager', 'assignee', 'team', 'component',
@@ -236,16 +248,29 @@ watch(chosenVersionNames, (names) => {
 onMounted(async () => {
   document.addEventListener('click', handleClickOutside)
   await Promise.all([fetchRegistry(), fetchVersions()])
-  // Pre-populate with the default 3.5/3.6 product-family versions (users can add/remove after load)
+  // Pre-populate with the synced versions (if embedded with an external filter),
+  // else the default 3.5/3.6 product-family versions. Users can still add/remove after load.
+  const initialVersions = props.syncedVersions?.length ? props.syncedVersions : DEFAULT_SELECTED_VERSIONS
   if (!chosenVersionNames.value.size) {
-    chosenVersionNames.value = new Set(DEFAULT_SELECTED_VERSIONS)
+    chosenVersionNames.value = new Set(initialVersions)
   }
   await fetchData()
   // Prefer a default version that already has detail data in the cache
   if (data.value?.releases) {
-    const firstWithDetail = DEFAULT_SELECTED_VERSIONS.find(v => data.value.releases[v])
+    const firstWithDetail = initialVersions.find(v => data.value.releases[v])
     if (firstWithDetail) selectedRelease.value = firstWithDetail
   }
+})
+
+// Keep the release picker in sync with an embedding page's global filter.
+// A no-op when syncedVersions is null/empty (standalone Reports usage never
+// passes this prop, and an embedder with no active filter should leave the
+// picker as-is rather than clearing it) — matches the onMounted fallback above.
+watch(() => props.syncedVersions, (versions) => {
+  if (!versions?.length) return
+  chosenVersionNames.value = new Set(versions)
+  selectedMilestoneKey.value = null
+  selectedRelease.value = versions.find(v => data.value?.releases?.[v]) || versions[0] || null
 })
 
 onBeforeUnmount(() => {

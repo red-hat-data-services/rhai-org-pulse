@@ -67,7 +67,7 @@ var PILLAR_CONFIG = {
   ],
 }
 
-async function mountView(extraData) {
+async function mountView(extraData, props) {
   var testData = makeTestData()
   if (extraData) {
     Object.assign(testData, extraData)
@@ -84,6 +84,7 @@ async function mountView(extraData) {
   })
 
   var wrapper = mount(TvFvDeltaView, {
+    props: props || {},
     global: {
       stubs: {
         ClickableCount: {
@@ -96,6 +97,13 @@ async function mountView(extraData) {
 
   await flushPromises()
   return wrapper
+}
+
+/** Version-picker chips (exclude cycle filter pills, which have no Remove control) */
+function pickerChips(wrapper) {
+  return wrapper.findAll('button').filter(function (b) {
+    return b.find('span[title="Remove"]').exists()
+  })
 }
 
 /** Find the executive summary table (first table in the view) */
@@ -462,5 +470,84 @@ describe('TvFvDeltaView component breakdown PM/ENG columns', function () {
       return r.text().includes('Unknown Comp')
     })
     expect(unknownRow.text()).toContain('—')
+  })
+})
+
+describe('TvFvDeltaView syncedVersions prop (PM Hub embed)', function () {
+  beforeEach(function () {
+    mockApiRequest.mockReset()
+  })
+
+  it('falls back to DEFAULT_SELECTED_VERSIONS when the prop is absent — standalone behavior unchanged', async function () {
+    var wrapper = await mountView()
+    var chips = pickerChips(wrapper)
+    expect(chips.length).toBe(DEFAULT_SELECTED_VERSIONS.length)
+  })
+
+  it('falls back to DEFAULT_SELECTED_VERSIONS when the prop is explicitly null', async function () {
+    var wrapper = await mountView(null, { syncedVersions: null })
+    var chips = pickerChips(wrapper)
+    expect(chips.length).toBe(DEFAULT_SELECTED_VERSIONS.length)
+  })
+
+  it('pre-selects the synced versions instead of the defaults when provided', async function () {
+    var synced = ['3.6 GA RHOAI RELEASE', '3.6 GA RHAII RELEASE']
+    var wrapper = await mountView(null, { syncedVersions: synced })
+    var chips = pickerChips(wrapper)
+    expect(chips.length).toBe(synced.length)
+    synced.forEach(function (v) {
+      expect(chips.some(function (b) { return b.text().includes(v) })).toBe(true)
+    })
+    // Defaults that are not part of the synced set must not be pre-selected
+    expect(chips.some(function (b) { return b.text().includes('3.5 GA RHOAI RELEASE') })).toBe(false)
+  })
+
+  it('treats an empty synced array the same as null — falls back to defaults on mount', async function () {
+    // Embedders (e.g. PM Hub) collapse "no active filter" to null before passing the prop,
+    // but the view itself treats [] the same way for robustness: no external versions to
+    // sync onto, so it falls back to its own defaults rather than showing an empty picker.
+    var wrapper = await mountView(null, { syncedVersions: [] })
+    var chips = pickerChips(wrapper)
+    expect(chips.length).toBe(DEFAULT_SELECTED_VERSIONS.length)
+  })
+
+  it('re-syncs the picker when the syncedVersions prop changes after mount', async function () {
+    var wrapper = await mountView(null, { syncedVersions: ['3.6 GA RHOAI RELEASE'] })
+    expect(pickerChips(wrapper).length).toBe(1)
+
+    await wrapper.setProps({ syncedVersions: ['3.6 EA1 RHOAI RELEASE', '3.6 EA2 RHOAI RELEASE'] })
+    await flushPromises()
+
+    var chips = pickerChips(wrapper)
+    expect(chips.length).toBe(2)
+    expect(chips.some(function (b) { return b.text().includes('3.6 EA1 RHOAI RELEASE') })).toBe(true)
+    expect(chips.some(function (b) { return b.text().includes('3.6 EA2 RHOAI RELEASE') })).toBe(true)
+    expect(chips.some(function (b) { return b.text().includes('3.6 GA RHOAI RELEASE') })).toBe(false)
+  })
+
+  it('leaves the picker unchanged when the syncedVersions prop changes to an empty array', async function () {
+    var wrapper = await mountView(null, { syncedVersions: ['3.6 GA RHOAI RELEASE'] })
+    expect(pickerChips(wrapper).length).toBe(1)
+
+    // e.g. PM Hub's version filter is cleared while the panel is open — the embedded
+    // report should keep the last synced selection rather than clearing the picker.
+    await wrapper.setProps({ syncedVersions: [] })
+    await flushPromises()
+
+    var chips = pickerChips(wrapper)
+    expect(chips.length).toBe(1)
+    expect(chips[0].text()).toContain('3.6 GA RHOAI RELEASE')
+  })
+
+  it('leaves manual picker selection alone when syncedVersions is not provided at all', async function () {
+    var wrapper = await mountView()
+    var initialCount = pickerChips(wrapper).length
+
+    // Manually remove one version via the picker (simulates standalone-page user interaction)
+    var removeBtn = pickerChips(wrapper)[0].find('span[title="Remove"]')
+    await removeBtn.trigger('click')
+    await flushPromises()
+
+    expect(pickerChips(wrapper).length).toBe(initialCount - 1)
   })
 })
