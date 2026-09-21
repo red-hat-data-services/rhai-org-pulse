@@ -9,6 +9,8 @@ const config = createViteConfig();
 
 const MIME = { '.html': 'text/html', '.json': 'application/json', '.css': 'text/css', '.js': 'application/javascript' };
 
+// Vite dev server middleware for test-dashboard (development only)
+// Production serving is handled by Express in modules/system-health/server/index.js
 config.plugins.push({
   name: 'serve-test-dashboard',
   configureServer(server) {

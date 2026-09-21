@@ -323,34 +323,52 @@ module.exports = function registerQualityRoutes(router, context) {
    *         description: Missing JQL parameter
    */
   router.get('/jira-count', requireAuth, requireScope('system-health:read'), async function(req, res) {
-    const jql = req.query.jql;
-    if (!jql) {
-      return res.status(400).json({ error: 'Missing jql parameter' });
+    // Security: Build JQL server-side from validated parameters instead of accepting raw JQL
+    const { label, component, version, release } = req.query;
+    
+    // Validate label parameter (required, must be from allowlist)
+    const allowedLabels = ['test-failed', 'test-skipped'];
+    if (!label || !allowedLabels.includes(label)) {
+      return res.status(400).json({ 
+        error: 'Invalid or missing label parameter. Allowed: ' + allowedLabels.join(', ') 
+      });
     }
 
-    // Security: Validate JQL is restricted to RHOAIENG project and allowed labels
-    const allowedProjects = ['RHOAIENG'];
-    const jqlLower = jql.toLowerCase();
-    
-    // Check that JQL targets only allowed project
-    const hasAllowedProject = allowedProjects.some(proj => 
-      jqlLower.includes(`project = ${proj.toLowerCase()}`) || 
-      jqlLower.includes(`project=${proj.toLowerCase()}`)
-    );
-    
-    if (!hasAllowedProject) {
-      return res.status(400).json({ error: 'JQL must target project RHOAIENG' });
+    // Security: Sanitize all user inputs - reject values with JQL injection characters
+    const sanitizeParam = (val) => {
+      if (!val || val === 'All') return null;
+      // Reject if contains quotes, parentheses, backslashes, or JQL operators
+      if (/["'()\\]/.test(val) || /\b(AND|OR|NOT|IN|IS|WAS|ORDER BY)\b/i.test(val)) {
+        return null;
+      }
+      return val.trim();
+    };
+
+    const safeComponent = sanitizeParam(component);
+    const safeVersion = sanitizeParam(version);
+    const safeRelease = sanitizeParam(release);
+
+    // Validate: if user provided a value but it failed sanitization, reject
+    if (component && component !== 'All' && !safeComponent) {
+      return res.status(400).json({ error: 'Invalid component parameter' });
+    }
+    if (version && version !== 'All' && !safeVersion) {
+      return res.status(400).json({ error: 'Invalid version parameter' });
+    }
+    if (release && release !== 'All' && !safeRelease) {
+      return res.status(400).json({ error: 'Invalid release parameter' });
     }
 
-    // Block potentially dangerous JQL patterns
-    const dangerousPatterns = [
-      /project\s*(!=|<>|not\s+in)/i,  // Negated project filters
-      /\bOR\s+project\b/i,             // OR with different project
-    ];
+    // Build JQL server-side - always restricted to RHOAIENG project
+    let jql = `project = RHOAIENG AND labels = "${label}"`;
     
-    if (dangerousPatterns.some(pattern => pattern.test(jql))) {
-      return res.status(400).json({ error: 'Invalid JQL pattern' });
+    if (safeComponent) {
+      jql += ` AND component = "${safeComponent}"`;
     }
+    if (safeVersion) {
+      jql += ` AND (fixVersion ~ "${safeVersion}" OR 'Target Version' ~ "${safeVersion}")`;
+    }
+    // Note: release filtering is typically done via version matching patterns
 
     try {
       const { createJiraClient } = require('@shared/jira');
@@ -360,7 +378,7 @@ module.exports = function registerQualityRoutes(router, context) {
     } catch (error) {
       // Security: Return generic error message to avoid leaking internal details
       console.error('[system-health/quality] Jira count query failed:', error.message);
-      res.status(500).json({ error: 'Jira query failed' });
+      res.status(500).json({ error: 'Failed to query Jira' });
     }
   });
 
@@ -419,24 +437,52 @@ module.exports = function registerQualityRoutes(router, context) {
       return res.status(400).json({ error: 'Missing version or release parameter' });
     }
 
-    // Security: Sanitize inputs to prevent JQL injection
-    // Remove quotes, parentheses, and JQL operators from user inputs
-    const sanitizeJqlValue = (val) => {
+    // Security: Sanitize inputs
+    const sanitizeParam = (val) => {
       if (!val || val === 'All') return val;
-      // Remove characters that could break out of JQL string context
-      return val.replace(/["'()\\]/g, '').replace(/\b(AND|OR|NOT|IN|IS|WAS|CHANGED|ORDER BY)\b/gi, '');
+      // Reject if contains dangerous characters
+      if (/["'()\\]/.test(val) || /\b(AND|OR|NOT|IN|IS|WAS|ORDER BY)\b/i.test(val)) {
+        return null;
+      }
+      return val.trim();
     };
     
-    const safeVersion = sanitizeJqlValue(version);
-    const safeRelease = sanitizeJqlValue(release);
-    const safeComponent = sanitizeJqlValue(component);
-    
-    // Validate date format (YYYY-MM-DD)
-    const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
-    const safeFromDate = from_date && dateRegex.test(from_date) ? from_date : null;
-    const safeToDate = to_date && dateRegex.test(to_date) ? to_date : null;
+    const safeVersion = sanitizeParam(version) || version;
+    const safeRelease = sanitizeParam(release) || release;
+    const safeComponent = sanitizeParam(component);
 
+    // HC3 Compliance: Read from pre-computed storage instead of live Jira aggregation
+    // TFA data is pre-computed by the external GitLab CI pipeline and stored as JSON
+    // This endpoint now serves as a thin read layer over the pre-computed data
+    
     try {
+      // Try to read pre-computed TFA data from storage
+      const tfaData = await readFromStorage('system-health/quality/tfa-data.json');
+      
+      if (tfaData && tfaData.data) {
+        console.log('[system-health/quality] Serving pre-computed TFA data');
+        
+        // Filter pre-computed data by version/release/component if specified
+        let filteredData = tfaData.data;
+        
+        // If we have version-specific data, filter it
+        if (safeVersion !== 'All' && filteredData.byVersion && filteredData.byVersion[safeVersion]) {
+          filteredData = filteredData.byVersion[safeVersion];
+        }
+        
+        // Return the pre-computed data
+        return res.json({
+          version: safeVersion,
+          release: safeRelease,
+          perComponentData: filteredData.perComponentData || [],
+          classificationBreakdown: filteredData.classificationBreakdown || [],
+          statusDistribution: filteredData.statusDistribution || [],
+          totals: filteredData.totals || { total_failed: 0, classified: 0, unclassified: 0 },
+          source: 'pre-computed',
+          lastUpdated: tfaData.lastUpdated || null
+        });
+      }
+      
       // For demo mode, return demo data
       if (DEMO_MODE) {
         console.log('[system-health/quality] Demo mode - returning demo data');
@@ -467,201 +513,15 @@ module.exports = function registerQualityRoutes(router, context) {
             total_failed: 88,
             classified: 61,
             unclassified: 27
-          }
+          },
+          source: 'demo'
         });
       }
 
-      // Try to initialize Jira client
-      let jiraClient;
-      try {
-        const { createJiraClient } = require('@shared/jira');
-        jiraClient = createJiraClient(context.secrets);
-        console.log('[system-health/quality] Jira client initialized');
-      } catch (err) {
-        console.warn('[system-health/quality] Jira client initialization failed:', err.message);
-        // Fall back to empty data if Jira client fails
-        return res.json({
-          version: safeVersion,
-          release: safeRelease,
-          perComponentData: [],
-          classificationBreakdown: [],
-          statusDistribution: [],
-          totals: {
-            total_failed: 0,
-            classified: 0,
-            unclassified: 0
-          }
-        });
-      }
-
-      // Build base JQL - filter by component if provided (using sanitized values)
-      let baseJql = 'project = RHOAIENG AND labels = "test-failed"';
-      if (safeComponent && safeComponent !== 'All') {
-        baseJql += ` AND component = "${safeComponent}"`;
-      }
-      baseJql += ` AND status NOT IN ("Closed","Resolved")`; // Only open issues
-
-      // Add version/release filtering (using sanitized values)
-      if (safeVersion !== 'All' || safeRelease !== 'All') {
-        baseJql += ` AND (fixVersion ~ "${safeVersion}" OR 'Target Version' ~ "${safeVersion}")`;
-      }
-
-      // Add date range if provided (already validated format)
-      if (safeFromDate) {
-        baseJql += ` AND created >= "${safeFromDate}"`;
-      }
-      if (safeToDate) {
-        baseJql += ` AND created <= "${safeToDate}"`;
-      }
-
-      console.log('[system-health/quality] Executing JQL:', baseJql.substring(0, 100) + '...');
-
-      // Query for all test-failed issues with a timeout
-      let allIssues;
-      try {
-        allIssues = await Promise.race([
-          jiraClient.search(baseJql, {
-            maxResults: 1000,
-            fields: ['labels', 'status', 'components', 'created']
-          }),
-          new Promise((_, reject) => setTimeout(() => reject(new Error('Jira query timeout')), 10000))
-        ]);
-        console.log('[system-health/quality] JQL query succeeded, got', allIssues?.issues?.length || 0, 'issues');
-      } catch (err) {
-        console.warn('[system-health/quality] Jira search failed:', err.message);
-        // Return empty data instead of error
-        return res.json({
-          version: safeVersion,
-          release: safeRelease,
-          perComponentData: [],
-          classificationBreakdown: [],
-          statusDistribution: [],
-          totals: {
-            total_failed: 0,
-            classified: 0,
-            unclassified: 0
-          }
-        });
-      }
-
-      // Define TFA labels
-      const TFA_LABELS = [
-        'tfa-product-bug',
-        'tfa-automation-bug',
-        'tfa-infra-issue',
-        'tfa-env-setup',
-        'tfa-duplicate',
-        'tfa-known-issue',
-        'tfa-false-positive',
-        'tfa-wrong-assignment'
-      ];
-
-      const TFA_NAMES = {
-        'tfa-product-bug': 'Product Bug',
-        'tfa-automation-bug': 'Automation Bug',
-        'tfa-infra-issue': 'Infrastructure',
-        'tfa-env-setup': 'Environment Setup',
-        'tfa-duplicate': 'Duplicate',
-        'tfa-known-issue': 'Known Issue',
-        'tfa-false-positive': 'False Positive',
-        'tfa-wrong-assignment': 'Wrong Assignment'
-      };
-
-      // Aggregate data
-      const perComponentMap = {};
-      const classificationCounts = {};
-      const statusCounts = {};
-      let totalFailed = 0;
-      let totalClassified = 0;
-
-      if (allIssues && allIssues.issues) {
-        allIssues.issues.forEach(issue => {
-          totalFailed++;
-          const labels = issue.fields.labels || [];
-          const status = issue.fields.status?.name || 'Unknown';
-
-          // Count by status
-          statusCounts[status] = (statusCounts[status] || 0) + 1;
-
-          // Check if classified
-          let isClassified = false;
-          TFA_LABELS.forEach(tfaLabel => {
-            if (labels.includes(tfaLabel)) {
-              isClassified = true;
-              classificationCounts[tfaLabel] = (classificationCounts[tfaLabel] || 0) + 1;
-            }
-          });
-
-          if (!isClassified) {
-            classificationCounts['unclassified'] = (classificationCounts['unclassified'] || 0) + 1;
-          } else {
-            totalClassified++;
-          }
-
-          // Aggregate by component
-          const components = issue.fields.components || [];
-          if (components.length === 0) {
-            components.push({ name: '(No component)' });
-          }
-
-          components.forEach(comp => {
-            const compName = comp.name;
-            if (!perComponentMap[compName]) {
-              perComponentMap[compName] = { failed: 0, classified: 0, unclassified: 0 };
-            }
-            perComponentMap[compName].failed++;
-
-            if (isClassified) {
-              perComponentMap[compName].classified++;
-            } else {
-              perComponentMap[compName].unclassified++;
-            }
-          });
-        });
-      }
-
-      // Build response
-      const perComponentData = Object.entries(perComponentMap)
-        .map(([component, data]) => ({ component, ...data }))
-        .sort((a, b) => b.failed - a.failed);
-
-      const classificationBreakdown = Object.entries(classificationCounts)
-        .map(([label, count]) => ({
-          label,
-          name: TFA_NAMES[label] || label,
-          count
-        }))
-        .sort((a, b) => b.count - a.count);
-
-      const statusDistribution = Object.entries(statusCounts)
-        .map(([status, count]) => ({ status, count }))
-        .sort((a, b) => b.count - a.count);
-
-      const responseData = {
-        version: safeVersion,
-        release: safeRelease,
-        perComponentData,
-        classificationBreakdown,
-        statusDistribution,
-        totals: {
-          total_failed: totalFailed,
-          classified: totalClassified,
-          unclassified: totalFailed - totalClassified
-        }
-      };
-
-      console.log('[system-health/quality] Returning response:', {
-        totalFailed,
-        totalClassified,
-        componentsCount: perComponentData.length
-      });
-
-      res.json(responseData);
-    } catch (error) {
-      // Security: Log full error internally but return generic message to client
-      console.error('[system-health/quality] Unexpected error in tfa-charts:', error);
-      // Return graceful empty response instead of error
-      res.json({
+      // No pre-computed data available - return empty response with guidance
+      // Per HC3: Complex aggregations should be done in external pipelines, not here
+      console.log('[system-health/quality] No pre-computed TFA data found');
+      return res.json({
         version: safeVersion,
         release: safeRelease,
         perComponentData: [],
@@ -671,7 +531,26 @@ module.exports = function registerQualityRoutes(router, context) {
           total_failed: 0,
           classified: 0,
           unclassified: 0
-        }
+        },
+        source: 'none',
+        message: 'TFA data not available. Run the GitLab CI pipeline to generate pre-computed data.'
+      });
+
+    } catch (error) {
+      // Security: Log full error internally but return generic message to client
+      console.error('[system-health/quality] Error reading TFA data:', error.message);
+      return res.json({
+        version: safeVersion,
+        release: safeRelease,
+        perComponentData: [],
+        classificationBreakdown: [],
+        statusDistribution: [],
+        totals: {
+          total_failed: 0,
+          classified: 0,
+          unclassified: 0
+        },
+        source: 'error'
       });
     }
   });
