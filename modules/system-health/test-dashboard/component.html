@@ -4,8 +4,8 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Component Detail</title>
-<!-- Chart.js v4.4.7 - pinned version with SRI hash for security -->
-<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js" integrity="sha384-EpDBR+c1FT3vaKPLAulYdB3r0FYiVoSt6CXLtdNEuMGtWSK4QoyPCwpf1dt1WNKD" crossorigin="anonymous"></script>
+<!-- Chart.js v4 -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4"></script>
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 body{background:#0a1929;color:#e0e0e0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;min-height:100vh}
@@ -176,6 +176,22 @@ a.qsr-tree-count:hover{background:rgba(94,167,255,.15);text-decoration:underline
 <div class="container" id="main"><div class="loading">Loading…</div></div>
 
 <script>
+// --- Ensure Chart.js is loaded before we try to use it ---
+if (typeof Chart === 'undefined') {
+  console.error('Chart.js failed to load from CDN. Retrying...');
+  // Fallback: Try loading from another CDN
+  const script = document.createElement('script');
+  script.src = 'https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.min.js';
+  document.head.appendChild(script);
+}
+
+// --- Determine correct data base path ---
+function getDataBasePath() {
+  return './data'
+}
+
+const DATA_PATH = getDataBasePath()
+
 const $=id=>document.getElementById(id);
 let jiraConfig=null;
 
@@ -210,7 +226,7 @@ function reloadWithFilters(){
 
 // --- Load Jira config ---
 async function loadJiraConfig(){
-  try{const r=await fetch(`data/jira_config.json?_=${Date.now()}`);if(r.ok)jiraConfig=await r.json()}catch(_){}
+  try{const r=await fetch(`${DATA_PATH}/jira_config.json?_=${Date.now()}`);if(r.ok)jiraConfig=await r.json()}catch(e){console.warn('Failed to load Jira config:',e)}}
 }
 
 // --- Jira helpers ---
@@ -344,8 +360,8 @@ async function loadComponent(){
     let data;const f=currentFilters();f.component=comp;
     // Load full components JSON and heatmap JSON
     const [r2, r3]=await Promise.all([
-      fetch(`data/components.json?_=${Date.now()}`),
-      fetch(`data/heatmap.json?_=${Date.now()}`)
+      fetch(`${DATA_PATH}/components.json?_=${Date.now()}`),
+      fetch(`${DATA_PATH}/heatmap.json?_=${Date.now()}`)
     ]);
     if(r2.ok){const all=await r2.json();if(all[comp])data=filterComponentData(all[comp],f)}
     if(!data)throw new Error('No data for "'+comp+'"');
