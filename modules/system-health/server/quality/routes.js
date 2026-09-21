@@ -462,10 +462,7 @@ module.exports = function registerQualityRoutes(router, context) {
   router.get('/tfa-charts', requireAuth, requireScope('system-health:read'), async function(req, res) {
     const { version, release, from_date, to_date, component } = req.query;
 
-    console.log('[system-health/quality] tfa-charts request:', { version, release, from_date, to_date, component });
-
     if (!version || !release) {
-      console.log('[system-health/quality] Missing version or release');
       return res.status(400).json({ error: 'Missing version or release parameter' });
     }
 
@@ -492,8 +489,6 @@ module.exports = function registerQualityRoutes(router, context) {
       const tfaData = await readFromStorage('system-health/quality/tfa-data.json');
       
       if (tfaData && tfaData.data) {
-        console.log('[system-health/quality] Serving pre-computed TFA data');
-        
         // Filter pre-computed data by version/release/component if specified
         let filteredData = tfaData.data;
         
@@ -517,7 +512,6 @@ module.exports = function registerQualityRoutes(router, context) {
       
       // For demo mode, return demo data
       if (DEMO_MODE) {
-        console.log('[system-health/quality] Demo mode - returning demo data');
         return res.json({
           version: safeVersion,
           release: safeRelease,
@@ -552,7 +546,6 @@ module.exports = function registerQualityRoutes(router, context) {
 
       // No pre-computed data available - return empty response with guidance
       // Per HC3: Complex aggregations should be done in external pipelines, not here
-      console.log('[system-health/quality] No pre-computed TFA data found');
       return res.json({
         version: safeVersion,
         release: safeRelease,
