@@ -11,6 +11,15 @@ const {
   writeHtmlReport
 } = require('./storage');
 
+// Jira client - loaded at module level for consistency
+let createJiraClient;
+try {
+  createJiraClient = require('@shared/jira').createJiraClient;
+} catch (err) {
+  // Jira client may not be available in all environments
+  createJiraClient = null;
+}
+
 const DEMO_MODE = process.env.DEMO_MODE === 'true';
 const jsonLimit = express.json({ limit: '50mb' });
 const BULK_CAP = 5000;
@@ -300,15 +309,34 @@ module.exports = function registerQualityRoutes(router, context) {
    * @openapi
    * /api/modules/system-health/quality/jira-count:
    *   get:
-   *     summary: Get Jira issue count for a JQL query
+   *     summary: Get Jira issue count for test-failed or test-skipped labels
    *     tags: [System Health - Quality Reports]
    *     parameters:
-   *       - name: jql
+   *       - name: label
    *         in: query
    *         required: true
    *         schema:
    *           type: string
-   *         description: JQL query string
+   *           enum: [test-failed, test-skipped]
+   *         description: Jira label to count (test-failed or test-skipped)
+   *       - name: component
+   *         in: query
+   *         required: false
+   *         schema:
+   *           type: string
+   *         description: Optional component name filter
+   *       - name: version
+   *         in: query
+   *         required: false
+   *         schema:
+   *           type: string
+   *         description: Optional version filter (e.g., "3.5", "3.6")
+   *       - name: release
+   *         in: query
+   *         required: false
+   *         schema:
+   *           type: string
+   *         description: Optional release filter (e.g., "EA1", "GA")
    *     responses:
    *       200:
    *         description: Issue count
@@ -320,7 +348,7 @@ module.exports = function registerQualityRoutes(router, context) {
    *                 count:
    *                   type: number
    *       400:
-   *         description: Missing JQL parameter
+   *         description: Invalid or missing parameters
    */
   router.get('/jira-count', requireAuth, requireScope('system-health:read'), async function(req, res) {
     // Security: Build JQL server-side from validated parameters instead of accepting raw JQL
@@ -370,8 +398,12 @@ module.exports = function registerQualityRoutes(router, context) {
     }
     // Note: release filtering is typically done via version matching patterns
 
+    // Check if Jira client is available
+    if (!createJiraClient) {
+      return res.status(503).json({ error: 'Jira client not available' });
+    }
+
     try {
-      const { createJiraClient } = require('@shared/jira');
       const jiraClient = createJiraClient(context.secrets);
       const result = await jiraClient.search(jql, { maxResults: 0 });
       res.json({ count: result.total || 0 });

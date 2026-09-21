@@ -1,6 +1,4 @@
 const express = require('express');
-const path = require('path');
-const fs = require('fs');
 const registerDisconnectedRoutes = require('./disconnected/routes');
 const disconnectedScheduler = require('./disconnected/scheduler');
 const registerQualityRoutes = require('./quality/routes');
@@ -12,49 +10,10 @@ const blockerJiras = require('./odh-e2e-health/blocker-jiras');
 module.exports = function registerRoutes(router, context) {
   const { storage, requireAuth, requireAdmin, requireScope } = context;
 
-  // ─── Static file serving for test-dashboard (production) ───
-  // This serves the standalone HTML dashboard files in production (Express)
-  // In development, Vite's configureServer handles this via vite.config.mjs
-  const testDashboardRoot = path.resolve(__dirname, '../test-dashboard');
-  const MIME_TYPES = { 
-    '.html': 'text/html', 
-    '.json': 'application/json', 
-    '.css': 'text/css', 
-    '.js': 'application/javascript' 
-  };
-  
-  router.use('/test-dashboard', (req, res, next) => {
-    // Security: Decode and sanitize the path
-    const reqPath = decodeURIComponent(req.path.split('?')[0]);
-    let filePath = path.join(testDashboardRoot, reqPath === '/' ? 'index.html' : reqPath);
-    
-    // Security: Prevent path traversal - ensure file is within root directory
-    if (!filePath.startsWith(testDashboardRoot + path.sep) && filePath !== testDashboardRoot) {
-      return next();
-    }
-    
-    // Check if file exists
-    if (!fs.existsSync(filePath)) {
-      return next();
-    }
-    
-    // If it's a directory, try to serve index.html
-    const stat = fs.statSync(filePath);
-    if (stat.isDirectory()) {
-      const indexPath = path.join(filePath, 'index.html');
-      if (fs.existsSync(indexPath)) {
-        filePath = indexPath;
-      } else {
-        return next();
-      }
-    }
-    
-    const ext = path.extname(filePath);
-    res.setHeader('Content-Type', MIME_TYPES[ext] || 'application/octet-stream');
-    res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate');
-    res.setHeader('Pragma', 'no-cache');
-    fs.createReadStream(filePath).pipe(res);
-  });
+  // Note: test-dashboard static files are served via:
+  // - Development: Vite dev server middleware (vite.config.mjs)
+  // - Production: Vite build copies files to dist/test-dashboard/ which Express serves at root level
+  // The module router prefix (/api/modules/system-health/) doesn't apply to static file serving.
 
   disconnectedScheduler.init(context.secrets);
   qualityScheduler.init(context.secrets);

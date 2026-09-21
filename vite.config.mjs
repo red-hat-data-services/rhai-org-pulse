@@ -9,10 +9,11 @@ const config = createViteConfig();
 
 const MIME = { '.html': 'text/html', '.json': 'application/json', '.css': 'text/css', '.js': 'application/javascript' };
 
-// Vite dev server middleware for test-dashboard (development only)
-// Production serving is handled by Express in modules/system-health/server/index.js
+// Test dashboard serving plugin - handles both development and production
 config.plugins.push({
   name: 'serve-test-dashboard',
+  
+  // Development: Vite dev server middleware
   configureServer(server) {
     const root = path.resolve(__dirname, 'modules/system-health/test-dashboard');
     server.middlewares.use('/test-dashboard', (req, res, next) => {
@@ -25,6 +26,38 @@ config.plugins.push({
       res.setHeader('Pragma', 'no-cache');
       fs.createReadStream(file).pipe(res);
     });
+  },
+  
+  // Production: Copy test-dashboard to dist/ during build
+  closeBundle() {
+    const src = path.resolve(__dirname, 'modules/system-health/test-dashboard');
+    const dest = path.resolve(__dirname, 'dist/test-dashboard');
+    
+    if (!fs.existsSync(src)) {
+      console.log('[serve-test-dashboard] No test-dashboard source found, skipping copy');
+      return;
+    }
+    
+    // Recursively copy directory
+    function copyDir(srcDir, destDir) {
+      fs.mkdirSync(destDir, { recursive: true });
+      for (const entry of fs.readdirSync(srcDir, { withFileTypes: true })) {
+        const srcPath = path.join(srcDir, entry.name);
+        const destPath = path.join(destDir, entry.name);
+        if (entry.isDirectory()) {
+          copyDir(srcPath, destPath);
+        } else {
+          fs.copyFileSync(srcPath, destPath);
+        }
+      }
+    }
+    
+    try {
+      copyDir(src, dest);
+      console.log('[serve-test-dashboard] Copied test-dashboard to dist/');
+    } catch (err) {
+      console.error('[serve-test-dashboard] Failed to copy:', err.message);
+    }
   }
 });
 
