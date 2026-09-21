@@ -2,6 +2,7 @@ const { test, expect } = require('@playwright/test');
 const { DEFAULT_PAGE_WAIT_TIME } = require('./constants');
 const { setupErrorTracking, logCapturedErrors } = require('./helpers');
 const { unexpectedDemoResourceErrors, dismissHygieneWelcome } = require('./execute-helpers');
+const cveSustainingFixture = require('../../fixtures/releases/cve-sustaining/latest.json');
 
 /**
  * Integration tests for Releases module
@@ -1577,6 +1578,52 @@ test.describe('Releases CVE Sustaining Report @releases', () => {
     // Issue keys should be clickable links
     var issueLink = page.locator('a[href*="/browse/"]').first();
     await expect(issueLink).toBeVisible();
+
+    expect(page.errors).toHaveLength(0);
+  });
+
+  test('Security component issues show the frontend-only owner override', async ({ page }) => {
+    var body = JSON.parse(JSON.stringify(cveSustainingFixture));
+    var originalAssignee;
+    var issue = body.openIssueRecords.find(record => record.key === 'RHAIENG-1001');
+    originalAssignee = issue.assignee;
+    issue.component = 'Security';
+    issue.components = ['Security'];
+
+    await page.route('**/api/modules/releases/cve-sustaining', async route => {
+      await route.fulfill({ json: body });
+    });
+    await page.route('**/api/modules/team-tracker/field-options/component', async route => {
+      await route.fulfill({ json: { values: ['Model Serving', 'Security'] } });
+    });
+
+    await page.goto('/#/releases/reports?report=cve-sustaining');
+    await page.waitForLoadState('networkidle');
+    await page.waitForTimeout(DEFAULT_PAGE_WAIT_TIME);
+
+    var assigneeSection = page.locator('section').filter({ hasText: 'CVEs by Assignee' });
+    await expect(assigneeSection.getByText('No Owner', { exact: true })).toBeVisible();
+    await expect(page.getByTestId('cve-security-owner-note')).toHaveText('(Coming from Security Component)');
+    await expect(assigneeSection.locator('thead th').nth(1)).toContainText('No Owner');
+
+    var versionMatrix = page.locator('section').filter({ hasText: 'CVEs across all versions' });
+    await expect(versionMatrix.getByTestId('cve-security-component-label')).toHaveText('No Owner');
+    await expect(versionMatrix.getByText('Security', { exact: true })).toHaveCount(0);
+    await expect(versionMatrix.locator('tbody tr').first().getByTestId('cve-security-component-label')).toHaveText('No Owner');
+
+    await page.locator('button', { hasText: 'Due Date Passed' }).click();
+
+    var owner = page.getByTestId('cve-owner-RHAIENG-1001');
+    var component = page.getByTestId('cve-component-RHAIENG-1001');
+    var componentLabel = page.getByTestId('cve-component-label-RHAIENG-1001');
+    await expect(owner).toContainText('No Owner');
+    await expect(owner).toContainText('(Coming from Security Component)');
+    await expect(owner).not.toContainText('Alice');
+    await expect(component).toContainText('No Owner');
+    await expect(component).toContainText('(Coming from Security Component)');
+    await expect(componentLabel).toHaveText('No Owner');
+    expect(issue.assignee).toBe(originalAssignee);
+    expect(issue.component).toBe('Security');
 
     expect(page.errors).toHaveLength(0);
   });
