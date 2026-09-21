@@ -15,7 +15,7 @@ const {
 let createJiraClient;
 try {
   createJiraClient = require('@shared/jira').createJiraClient;
-} catch (err) {
+} catch (_err) {
   // Jira client may not be available in all environments
   createJiraClient = null;
 }
@@ -460,7 +460,9 @@ module.exports = function registerQualityRoutes(router, context) {
    *         description: Jira query failed
    */
   router.get('/tfa-charts', requireAuth, requireScope('system-health:read'), async function(req, res) {
-    const { version, release, from_date, to_date, component } = req.query;
+    // Note: from_date, to_date, component are accepted for API compatibility but
+    // filtering is done client-side from pre-computed data (HC3 compliance)
+    const { version, release, from_date: _fromDate, to_date: _toDate, component: _component } = req.query;
 
     if (!version || !release) {
       return res.status(400).json({ error: 'Missing version or release parameter' });
@@ -478,7 +480,6 @@ module.exports = function registerQualityRoutes(router, context) {
     
     const safeVersion = sanitizeParam(version) || version;
     const safeRelease = sanitizeParam(release) || release;
-    const safeComponent = sanitizeParam(component);
 
     // HC3 Compliance: Read from pre-computed storage instead of live Jira aggregation
     // TFA data is pre-computed by the external GitLab CI pipeline and stored as JSON
