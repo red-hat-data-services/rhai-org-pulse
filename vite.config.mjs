@@ -55,8 +55,8 @@ config.plugins.push({
     try {
       copyDir(src, dest);
       console.log('[serve-test-dashboard] Copied test-dashboard to dist/');
-    } catch (err) {
-      console.error('[serve-test-dashboard] Failed to copy:', err.message);
+    } catch (copyErr) {
+      console.error('[serve-test-dashboard] Failed to copy:', copyErr.message);
     }
   }
 });

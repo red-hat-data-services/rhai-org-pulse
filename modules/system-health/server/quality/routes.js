@@ -15,7 +15,7 @@ const {
 let createJiraClient;
 try {
   createJiraClient = require('@shared/jira').createJiraClient;
-} catch (_err) {
+} catch {
   // Jira client may not be available in all environments
   createJiraClient = null;
 }

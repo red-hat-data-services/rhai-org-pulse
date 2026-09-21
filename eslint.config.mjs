@@ -5,10 +5,6 @@ const require = createRequire(import.meta.url)
 const noModuleProcessEnv = require('./eslint-rules/no-module-process-env.js')
 
 export default createEslintConfig({
-  // Ignore vendored third-party libraries
-  ignores: [
-    'modules/**/vendor/**',
-  ],
   additionalConfigs: [
     {
       // Override no-module-process-env with AI Eng extended ALLOWED set
