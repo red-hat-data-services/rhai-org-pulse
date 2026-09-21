@@ -328,13 +328,39 @@ module.exports = function registerQualityRoutes(router, context) {
       return res.status(400).json({ error: 'Missing jql parameter' });
     }
 
+    // Security: Validate JQL is restricted to RHOAIENG project and allowed labels
+    const allowedProjects = ['RHOAIENG'];
+    const jqlLower = jql.toLowerCase();
+    
+    // Check that JQL targets only allowed project
+    const hasAllowedProject = allowedProjects.some(proj => 
+      jqlLower.includes(`project = ${proj.toLowerCase()}`) || 
+      jqlLower.includes(`project=${proj.toLowerCase()}`)
+    );
+    
+    if (!hasAllowedProject) {
+      return res.status(400).json({ error: 'JQL must target project RHOAIENG' });
+    }
+
+    // Block potentially dangerous JQL patterns
+    const dangerousPatterns = [
+      /project\s*(!=|<>|not\s+in)/i,  // Negated project filters
+      /\bOR\s+project\b/i,             // OR with different project
+    ];
+    
+    if (dangerousPatterns.some(pattern => pattern.test(jql))) {
+      return res.status(400).json({ error: 'Invalid JQL pattern' });
+    }
+
     try {
       const { createJiraClient } = require('@shared/jira');
       const jiraClient = createJiraClient(context.secrets);
       const result = await jiraClient.search(jql, { maxResults: 0 });
       res.json({ count: result.total || 0 });
     } catch (error) {
-      res.status(500).json({ error: error.message });
+      // Security: Return generic error message to avoid leaking internal details
+      console.error('[system-health/quality] Jira count query failed:', error.message);
+      res.status(500).json({ error: 'Jira query failed' });
     }
   });
 
@@ -393,13 +419,30 @@ module.exports = function registerQualityRoutes(router, context) {
       return res.status(400).json({ error: 'Missing version or release parameter' });
     }
 
+    // Security: Sanitize inputs to prevent JQL injection
+    // Remove quotes, parentheses, and JQL operators from user inputs
+    const sanitizeJqlValue = (val) => {
+      if (!val || val === 'All') return val;
+      // Remove characters that could break out of JQL string context
+      return val.replace(/["'()\\]/g, '').replace(/\b(AND|OR|NOT|IN|IS|WAS|CHANGED|ORDER BY)\b/gi, '');
+    };
+    
+    const safeVersion = sanitizeJqlValue(version);
+    const safeRelease = sanitizeJqlValue(release);
+    const safeComponent = sanitizeJqlValue(component);
+    
+    // Validate date format (YYYY-MM-DD)
+    const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
+    const safeFromDate = from_date && dateRegex.test(from_date) ? from_date : null;
+    const safeToDate = to_date && dateRegex.test(to_date) ? to_date : null;
+
     try {
       // For demo mode, return demo data
       if (DEMO_MODE) {
         console.log('[system-health/quality] Demo mode - returning demo data');
         return res.json({
-          version,
-          release,
+          version: safeVersion,
+          release: safeRelease,
           perComponentData: [
             { component: 'AI Hub', failed: 24, classified: 18, unclassified: 6 },
             { component: 'AI Pipelines', failed: 18, classified: 15, unclassified: 3 },
@@ -436,10 +479,10 @@ module.exports = function registerQualityRoutes(router, context) {
         console.log('[system-health/quality] Jira client initialized');
       } catch (err) {
         console.warn('[system-health/quality] Jira client initialization failed:', err.message);
-        // Fall back to mock data if Jira client fails
+        // Fall back to empty data if Jira client fails
         return res.json({
-          version,
-          release,
+          version: safeVersion,
+          release: safeRelease,
           perComponentData: [],
           classificationBreakdown: [],
           statusDistribution: [],
@@ -451,24 +494,24 @@ module.exports = function registerQualityRoutes(router, context) {
         });
       }
 
-      // Build base JQL - filter by component if provided
+      // Build base JQL - filter by component if provided (using sanitized values)
       let baseJql = 'project = RHOAIENG AND labels = "test-failed"';
-      if (component) {
-        baseJql += ` AND component = "${component}"`;
+      if (safeComponent && safeComponent !== 'All') {
+        baseJql += ` AND component = "${safeComponent}"`;
       }
       baseJql += ` AND status NOT IN ("Closed","Resolved")`; // Only open issues
 
-      // Add version/release filtering
-      if (version !== 'All' || release !== 'All') {
-        baseJql += ` AND (fixVersion ~ "${version}" OR 'Target Version' ~ "${version}")`;
+      // Add version/release filtering (using sanitized values)
+      if (safeVersion !== 'All' || safeRelease !== 'All') {
+        baseJql += ` AND (fixVersion ~ "${safeVersion}" OR 'Target Version' ~ "${safeVersion}")`;
       }
 
-      // Add date range if provided
-      if (from_date) {
-        baseJql += ` AND created >= "${from_date}"`;
+      // Add date range if provided (already validated format)
+      if (safeFromDate) {
+        baseJql += ` AND created >= "${safeFromDate}"`;
       }
-      if (to_date) {
-        baseJql += ` AND created <= "${to_date}"`;
+      if (safeToDate) {
+        baseJql += ` AND created <= "${safeToDate}"`;
       }
 
       console.log('[system-health/quality] Executing JQL:', baseJql.substring(0, 100) + '...');
@@ -488,8 +531,8 @@ module.exports = function registerQualityRoutes(router, context) {
         console.warn('[system-health/quality] Jira search failed:', err.message);
         // Return empty data instead of error
         return res.json({
-          version,
-          release,
+          version: safeVersion,
+          release: safeRelease,
           perComponentData: [],
           classificationBreakdown: [],
           statusDistribution: [],
@@ -595,8 +638,8 @@ module.exports = function registerQualityRoutes(router, context) {
         .sort((a, b) => b.count - a.count);
 
       const responseData = {
-        version,
-        release,
+        version: safeVersion,
+        release: safeRelease,
         perComponentData,
         classificationBreakdown,
         statusDistribution,
@@ -615,11 +658,12 @@ module.exports = function registerQualityRoutes(router, context) {
 
       res.json(responseData);
     } catch (error) {
+      // Security: Log full error internally but return generic message to client
       console.error('[system-health/quality] Unexpected error in tfa-charts:', error);
       // Return graceful empty response instead of error
       res.json({
-        version,
-        release,
+        version: safeVersion,
+        release: safeRelease,
         perComponentData: [],
         classificationBreakdown: [],
         statusDistribution: [],

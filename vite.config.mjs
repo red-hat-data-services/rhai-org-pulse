@@ -16,7 +16,8 @@ config.plugins.push({
     server.middlewares.use('/test-dashboard', (req, res, next) => {
       const reqPath = decodeURIComponent(req.url.split('?')[0]);
       const file = path.join(root, reqPath === '/' ? 'index.html' : reqPath);
-      if (!file.startsWith(root) || !fs.existsSync(file) || fs.statSync(file).isDirectory()) return next();
+      // Security: Use root + path.sep to prevent path traversal to sibling directories
+      if (!file.startsWith(root + path.sep) && file !== root || !fs.existsSync(file) || fs.statSync(file).isDirectory()) return next();
       res.setHeader('Content-Type', MIME[path.extname(file)] || 'application/octet-stream');
       res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate');
       res.setHeader('Pragma', 'no-cache');
