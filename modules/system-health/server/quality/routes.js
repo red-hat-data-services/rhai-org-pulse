@@ -727,23 +727,27 @@ module.exports = function registerQualityRoutes(router, context) {
   router.get('/test-execution/html/:page', requireAuth, requireScope('system-health:read'), async function(req, res) {
     const { page } = req.params;
     const validPages = ['index', 'component'];
-    
+
     if (!validPages.includes(page)) {
       return res.status(404).json({ error: 'Page not found. Valid pages: ' + validPages.join(', ') });
     }
-    
-    const basePath = 'system-health/test-execution';
-    const html = await readFromStorage(`${basePath}/${page}.html`);
-    
-    if (!html) {
-      return res.status(404).json({ error: `${page}.html not found in storage. Upload HTML files first.` });
+
+    try {
+      const basePath = 'system-health/test-execution';
+      const html = await readFromStorage(`${basePath}/${page}.html`);
+
+      if (!html) {
+        return res.status(404).json({ error: `${page}.html not found in storage. Upload HTML files first.` });
+      }
+
+      res.type('html');
+      res.set('Cache-Control', 'no-cache, no-store, must-revalidate');
+      res.set('Content-Security-Policy', "default-src 'self'; script-src 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com; style-src 'unsafe-inline'; connect-src 'self'; img-src 'self' data:; frame-ancestors 'self';");
+      return res.send(html);
+    } catch (error) {
+      console.error('[system-health/quality] Error reading HTML:', error.message);
+      return res.status(500).json({ error: 'Failed to read HTML page' });
     }
-    
-    res.type('html');
-    res.set('Cache-Control', 'no-cache, no-store, must-revalidate');
-    // Security: CSP to restrict scripts to known CDNs, connections to same-origin, prevent external framing
-    res.set('Content-Security-Policy', "default-src 'self'; script-src 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com; style-src 'unsafe-inline'; connect-src 'self'; img-src 'self' data:; frame-ancestors 'self';");
-    return res.send(html);
   });
 
   /**

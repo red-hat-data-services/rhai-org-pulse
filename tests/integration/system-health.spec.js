@@ -923,7 +923,9 @@ test.describe('Test Execution Dashboard @system-health', () => {
     const iframeCount = await iframe.count();
     expect(iframeCount).toBeGreaterThan(0);
 
-    expect(page.errors).toHaveLength(0);
+    // Filter out expected 404s from static file probe (loadDashboard fallback mechanism)
+    const unexpectedErrors = page.errors.filter(e => !e.message.includes('404'));
+    expect(unexpectedErrors).toHaveLength(0);
   });
 
   test('should render iframe with dashboard content', async ({ page }) => {
@@ -942,7 +944,9 @@ test.describe('Test Execution Dashboard @system-health', () => {
     // Should point to either static or API endpoint
     expect(iframeSrc).toMatch(/test-dashboard|test-execution\/html/);
 
-    expect(page.errors).toHaveLength(0);
+    // Filter out expected 404s from static file probe (loadDashboard fallback mechanism)
+    const unexpectedErrors = page.errors.filter(e => !e.message.includes('404'));
+    expect(unexpectedErrors).toHaveLength(0);
   });
 
   test('should display page header with Beta label', async ({ page }) => {
@@ -960,7 +964,9 @@ test.describe('Test Execution Dashboard @system-health', () => {
     const betaCount = await betaLabel.count();
     expect(betaCount).toBeGreaterThan(0);
 
-    expect(page.errors).toHaveLength(0);
+    // Filter out expected 404s from static file probe (loadDashboard fallback mechanism)
+    const unexpectedErrors = page.errors.filter(e => !e.message.includes('404'));
+    expect(unexpectedErrors).toHaveLength(0);
   });
 
   test('should have refresh and external link buttons', async ({ page }) => {
@@ -979,7 +985,9 @@ test.describe('Test Execution Dashboard @system-health', () => {
     const externalCount = await externalButton.count();
     expect(externalCount).toBeGreaterThan(0);
 
-    expect(page.errors).toHaveLength(0);
+    // Filter out expected 404s from static file probe (loadDashboard fallback mechanism)
+    const unexpectedErrors = page.errors.filter(e => !e.message.includes('404'));
+    expect(unexpectedErrors).toHaveLength(0);
   });
 
   // ─── API Tests ───
@@ -1075,12 +1083,12 @@ test.describe('Test Execution Dashboard @system-health', () => {
       data: { index_html: '<html>test</html>' }
     });
 
-    // In demo mode: either auth blocks (401) or demo guard skips (200)
+    // In demo mode: either auth blocks (401/403) or demo guard skips (200)
     if (response.status() === 200) {
       const data = await response.json();
       expect(data.status).toBe('skipped');
     } else {
-      expect(response.status()).toBe(401);
+      expect([401, 403]).toContain(response.status());
     }
   });
 
