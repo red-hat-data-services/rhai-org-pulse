@@ -50,6 +50,7 @@ export const viewOwners = {
   'product-builds/overview':                       'Giulia Naponiello',
   'product-builds/package-analysis':               'Einat Pacifici',
   'product-builds/package-request':                'André Lustosa',
+  'product-builds/release-status':                 'Giulia Naponiello',
   'product-builds/rhaiis':                         'Pavol Pitonak',
   'product-builds/rhel-ai':                        'Pavol Pitonak',
   'product-builds/search':                         'Rishabh Kothari',
