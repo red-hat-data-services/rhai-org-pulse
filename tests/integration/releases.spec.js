@@ -943,6 +943,18 @@ test.describe('Releases FPDoR Readiness @releases', () => {
     expect(page.errors).toHaveLength(0);
   });
 
+  test('PM Pipeline is not exposed in the UI or API', async ({ page, request }) => {
+    await page.goto('/');
+    await page.waitForLoadState('networkidle');
+    await page.waitForTimeout(DEFAULT_PAGE_WAIT_TIME);
+
+    const moduleNav = page.locator('aside nav').getByText('PM Pipeline', { exact: true });
+    await expect(moduleNav).toHaveCount(0);
+
+    const apiResponse = await request.get('/api/modules/pm-pipeline/resources');
+    expect(apiResponse.status()).toBe(404);
+  });
+
   test('Feature List view loads under Plan tab', async ({ page }) => {
     await page.goto('/#/releases/plan?tab=feature-readiness');
     await page.waitForLoadState('networkidle');

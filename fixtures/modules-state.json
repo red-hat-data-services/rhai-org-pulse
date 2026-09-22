@@ -4,6 +4,5 @@
   "releases": true,
   "team-tracker": true,
   "system-health": true,
-  "ai-catalyst": true,
-  "pm-pipeline": true
+  "ai-catalyst": true
 }

@@ -42,11 +42,6 @@ export const viewOwners = {
   'okr-hub/reports':                               'Saiesh Prabhu',
   'okr-hub/timeline':                              'Saiesh Prabhu',
 
-  // pm-pipeline
-  'pm-pipeline/learn':                             'Jen Albertson',
-  'pm-pipeline/my-pipeline':                       'Jen Albertson',
-  'pm-pipeline/planning-prep':                     'Jen Albertson',
-
   // product-builds
   'product-builds/artifact-detail':                'Pavol Pitonak',
   'product-builds/base-images':                    'Pavol Pitonak',
