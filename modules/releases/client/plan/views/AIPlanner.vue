@@ -153,7 +153,7 @@ onMounted(async () => {
               <td class="px-4 py-2 text-xs dark:text-gray-400">
                 <div class="flex flex-wrap gap-1">
                   <span v-for="c in f.Components" :key="c" class="inline-block px-2 py-1 rounded bg-gray-200 dark:bg-gray-600 text-xs">
-                    {{ getSeverityIcon(c) }}
+                    {{ getSeverityIcon(c) }} {{ c }}
                   </span>
                 </div>
               </td>
@@ -164,7 +164,7 @@ onMounted(async () => {
                   {{ f.Confidence }}
                 </span>
               </td>
-              <td class="px-4 py-2 text-center text-xs dark:text-gray-300">{{ f.XTeam === 'yes' ? '✓ Yes' : '✓ No' }}</td>
+              <td class="px-4 py-2 text-center text-xs dark:text-gray-300">{{ f.XTeam === 'yes' ? '✓ Yes' : '— No' }}</td>
               <td class="px-4 py-2 text-center">
                 <button @click="addToDraftPlan(f)" class="px-2 py-1 text-xs rounded bg-blue-600 hover:bg-blue-700 text-white">Add</button>
               </td>
