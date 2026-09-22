@@ -273,6 +273,23 @@ test.describe('Releases Views @releases', () => {
     expect(page.errors).toHaveLength(0);
   });
 
+  test('should render AIPCC Milestones surfaces correctly in dark mode', async ({ page }) => {
+    await page.addInitScript(() => localStorage.setItem('tt_theme', 'dark'));
+    await page.goto('/#/releases/schedule/aipcc');
+    await page.waitForLoadState('networkidle');
+
+    await expect(page.locator('html')).toHaveClass(/dark/);
+    await expect(page.locator('.dashboard-card').first()).toHaveCSS('background-color', 'rgb(31, 41, 55)');
+    await expect(page.locator('.section-heading').last()).toHaveCSS('background-color', 'rgba(17, 24, 39, 0.45)');
+    expect(await page.getByTestId('timeline-empty-selection').evaluate(element => getComputedStyle(element).backgroundColor)).not.toBe('rgb(255, 255, 255)');
+
+    const firstRelease = page.getByTestId('timeline-release-filter').first();
+    await firstRelease.click();
+    await expect(firstRelease).toHaveAttribute('aria-pressed', 'true');
+    await expect(page.getByTestId('timeline-event-row').first()).toBeVisible();
+    expect(page.errors).toHaveLength(0);
+  });
+
   test('should reflect selected product pills in the Schedule URL', async ({ page }) => {
     await page.goto('/#/releases/schedule');
     await page.waitForLoadState('networkidle');
