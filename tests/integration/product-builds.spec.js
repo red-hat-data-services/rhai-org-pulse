@@ -128,6 +128,18 @@ test.describe('Product Builds Module @product-builds', () => {
     expect(appErrors).toHaveLength(0);
   });
 
+  test('should navigate to release status view', async ({ page }) => {
+    await page.goto('/#/product-builds/release-status');
+    await page.waitForLoadState('networkidle');
+    await page.waitForTimeout(DEFAULT_PAGE_WAIT_TIME);
+
+    expect(page.url()).toMatch(/product-builds\/release-status/);
+    await expect(page.locator('h1')).toContainText('Release status');
+
+    const appErrors = page.errors.filter(e => !/status of (429|404|503)/.test(e.message));
+    expect(appErrors).toHaveLength(0);
+  });
+
   test('should show CHI column header in artifacts tab', async ({ page }) => {
     await page.goto('/#/product-builds/rhaiis');
     await page.waitForLoadState('networkidle');

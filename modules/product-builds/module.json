@@ -10,6 +10,7 @@
     "entry": "./client/index.js",
     "navItems": [
       { "id": "overview", "label": "Overview", "icon": "LayoutDashboard", "default": true },
+      { "id": "release-status", "label": "Release Status", "icon": "GitPullRequest" },
       { "id": "rhaiis", "label": "RHAIIS", "icon": "PackageOpen" },
       { "id": "rhel-ai", "label": "RHEL AI", "icon": "PackageOpen" },
       { "id": "base-images", "label": "Base Images", "icon": "PackageOpen" },
