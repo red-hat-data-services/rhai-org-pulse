@@ -323,6 +323,7 @@ test.describe('Releases PM Hub @releases', () => {
     const reportCard = page.locator('text=Component Release Load Tracking');
     await expect(reportCard.first()).toBeVisible();
     await expect(page.getByRole('button', { name: 'Historic Feature Pressure', exact: true })).toBeVisible();
+    await expect(page.getByRole('button', { name: 'TV vs FV Delta', exact: true })).toBeVisible();
 
     expect(page.errors).toHaveLength(0);
   });
@@ -351,6 +352,34 @@ test.describe('Releases PM Hub @releases', () => {
     await page.waitForLoadState('networkidle');
     await page.waitForTimeout(DEFAULT_PAGE_WAIT_TIME);
     await expect(page.getByRole('button', { name: 'Historic Feature Pressure', exact: true })).toHaveCount(0);
+
+    expect(page.errors).toHaveLength(0);
+  });
+
+  test('places TV vs FV Delta next to Historic Feature Pressure and removes it from Reports', async ({ page }) => {
+    await page.goto('/#/releases/plan?tab=pm-hub');
+    await page.waitForLoadState('networkidle');
+    await page.waitForTimeout(DEFAULT_PAGE_WAIT_TIME);
+
+    const featurePressureTile = page.getByRole('button', { name: 'Historic Feature Pressure', exact: true });
+    const tvFvDeltaTile = page.getByRole('button', { name: 'TV vs FV Delta', exact: true });
+    await expect(featurePressureTile).toBeVisible();
+    await expect(tvFvDeltaTile).toBeVisible();
+
+    const adjacentTiles = page.locator(
+      'button[aria-label="Historic Feature Pressure"] + button[aria-label="TV vs FV Delta"]'
+    );
+    await expect(adjacentTiles).toHaveCount(1);
+
+    const featurePressureBox = await featurePressureTile.boundingBox();
+    const tvFvDeltaBox = await tvFvDeltaTile.boundingBox();
+    expect(Math.abs(featurePressureBox.y - tvFvDeltaBox.y)).toBeLessThan(5);
+    expect(tvFvDeltaBox.x).toBeGreaterThan(featurePressureBox.x);
+
+    await page.goto('/#/releases/reports');
+    await page.waitForLoadState('networkidle');
+    await page.waitForTimeout(DEFAULT_PAGE_WAIT_TIME);
+    await expect(page.getByRole('button', { name: 'TV vs FV Delta', exact: true })).toHaveCount(0);
 
     expect(page.errors).toHaveLength(0);
   });

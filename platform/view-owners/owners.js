@@ -130,7 +130,6 @@ export const viewOwners = {
   'releases/reports/cve-sustaining':               'Saiesh Prabhu',
   'releases/reports/release-readiness':            'Arthy Loganathan',
   'releases/reports/rhoai-component-architectures': 'Waldemar Znoinski',
-  'releases/reports/tv-fv-delta':                  'Dimitri Saridakis',
 
   // team-tracker > reports
   'team-tracker/reports/team-comparison':          'Alex Corvin',

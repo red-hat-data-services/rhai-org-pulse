@@ -372,16 +372,8 @@
 
       <!--
         Embeds the full, unmodified TV vs FV Delta report (see TvFvDeltaPanel.vue /
-        TvFvDeltaView.vue) — this is Phase 1 of eventually retiring the standalone
-        `Reports > TV vs FV Delta` entry (releases-report-consolidation-proposal.md,
-        "Engineering Intelligence Report"). Do not remove the standalone entry
-        (reports/registry.js) until, in a follow-up PR:
-          1. This panel has soaked and covers the standalone report's use cases.
-          2. Deep links / back-nav referencing `report=tv-fv-delta` are audited
-             and redirected (see ReportsView.vue's URL param sync).
-          3. tests/integration/releases.spec.js's standalone-report test block
-             is removed (server routes in tv-fv-delta/routes.js stay — only the
-             standalone client entry point goes).
+        TvFvDeltaView.vue). The same unmodified view is also available from the
+        sibling TV vs FV Delta tile on the PM Hub landing page.
       -->
       <TvFvDeltaPanel v-model:collapsed="tvFvDeltaCollapsed" :synced-versions="tvFvSyncedVersions" />
 
