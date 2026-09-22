@@ -179,7 +179,34 @@ describe('constants', () => {
 
   it('exports expected release groups', () => {
     const names = RELEASE_GROUPS.map(g => g.name);
-    expect(names).toEqual(['3.4 GA', '3.5 EA1', '3.5 EA2', '3.5 GA']);
+    expect(names).toEqual([
+      '3.4 GA',
+      '3.5 EA1',
+      '3.5 EA2',
+      '3.5 GA',
+      '3.6 EA1',
+      '3.6 EA2',
+      '3.6 GA'
+    ]);
+  });
+
+  it('maps 3.6 release groups to the expected Jira fix versions', () => {
+    const groups = Object.fromEntries(RELEASE_GROUPS.map(group => [group.name, group.fixVersions]));
+    expect(groups['3.6 EA1']).toEqual([
+      '3.6 EA1 RHOAI RELEASE',
+      '3.6 EA1 RHAII RELEASE',
+      '3.6 EA1 RHELAI RELEASE'
+    ]);
+    expect(groups['3.6 EA2']).toEqual([
+      '3.6 EA2 RHOAI RELEASE',
+      '3.6 EA2 RHAII RELEASE',
+      '3.6 EA2 RHELAI RELEASE'
+    ]);
+    expect(groups['3.6 GA']).toEqual([
+      '3.6 GA RHOAI RELEASE',
+      '3.6 GA RHAII RELEASE',
+      '3.6 GA RHELAI RELEASE'
+    ]);
   });
 
   it('exports expected projects', () => {
@@ -236,7 +263,7 @@ describe('fetchAiAdoptionData', () => {
   it('returns empty results for no issues', async () => {
     const jira = makeMockJira({});
     const results = await fetchAiAdoptionData(jira);
-    expect(results).toHaveLength(4);
+    expect(results).toHaveLength(7);
     for (const r of results) {
       expect(r.totalFeatures).toBe(0);
       expect(r.aiTouchedFeatures).toBe(0);
@@ -246,9 +273,24 @@ describe('fetchAiAdoptionData', () => {
 
   it('filters by releaseGroup option', async () => {
     const jira = makeMockJira({});
-    const results = await fetchAiAdoptionData(jira, { releaseGroup: '3.5 GA' });
+    const results = await fetchAiAdoptionData(jira, { releaseGroup: '3.6 GA' });
     expect(results).toHaveLength(1);
-    expect(results[0].releaseGroup).toBe('3.5 GA');
+    expect(results[0].releaseGroup).toBe('3.6 GA');
+  });
+
+  it.each([
+    ['3.6 EA1', ['3.6 EA1 RHOAI RELEASE', '3.6 EA1 RHAII RELEASE', '3.6 EA1 RHELAI RELEASE']],
+    ['3.6 EA2', ['3.6 EA2 RHOAI RELEASE', '3.6 EA2 RHAII RELEASE', '3.6 EA2 RHELAI RELEASE']],
+    ['3.6 GA', ['3.6 GA RHOAI RELEASE', '3.6 GA RHAII RELEASE', '3.6 GA RHELAI RELEASE']]
+  ])('queries all configured fix versions for %s', async (releaseGroup, fixVersions) => {
+    const jira = makeMockJira({});
+    await fetchAiAdoptionData(jira, { releaseGroup });
+
+    expect(jira.fetchAllJqlResults).toHaveBeenCalledTimes(1);
+    const jql = jira.fetchAllJqlResults.mock.calls[0][0];
+    for (const fixVersion of fixVersions) {
+      expect(jql).toContain(`"${fixVersion}"`);
+    }
   });
 
   it('counts AI-touched features and component pipelines', async () => {

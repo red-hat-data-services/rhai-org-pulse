@@ -1230,6 +1230,92 @@ test.describe('Releases FPDoR Readiness @releases', () => {
 });
 
 /**
+ * AI Adoption Report
+ *
+ * Verify release filtering and scorecard coverage includes the complete 3.6
+ * release train without changing the existing report behavior.
+ */
+test.describe('Releases AI Adoption Report @releases', () => {
+  test.beforeEach(async ({ page }) => {
+    setupErrorTracking(page);
+
+    const releaseNames = [
+      '3.4 GA',
+      '3.5 EA1',
+      '3.5 EA2',
+      '3.5 GA',
+      '3.6 EA1',
+      '3.6 EA2',
+      '3.6 GA'
+    ];
+    const pipelineCounts = {
+      stratCreator: 1,
+      rfeCreator: 1,
+      testPlan: 0,
+      qg1: 0,
+      aiDoc: 0,
+      uxdAgentic: 0,
+      epicCreator: 0
+    };
+    const groups = releaseNames.map((releaseGroup, index) => ({
+      releaseGroup,
+      totalFeatures: 10 + index,
+      aiTouchedFeatures: 2 + index,
+      pipelines: { ...pipelineCounts },
+      firstPass: {},
+      components: [],
+      effortSignal: 'children',
+      aggregateEffort: 10 + index,
+      avgEffort: 1
+    }));
+
+    await page.route('**/api/modules/releases/ai-adoption**', async route => {
+      const releaseGroup = new URL(route.request().url()).searchParams.get('releaseGroup');
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({
+          releaseGroups: releaseGroup
+            ? groups.filter(group => group.releaseGroup === releaseGroup)
+            : groups,
+          fetchedAt: '2026-09-22T12:00:00.000Z'
+        })
+      });
+    });
+  });
+
+  test.afterEach(async ({ page }, testInfo) => {
+    logCapturedErrors(page, testInfo);
+  });
+
+  test('shows the 3.6 releases in the filter and scorecard', async ({ page }) => {
+    await page.goto('/#/releases/reports?report=ai-adoption');
+    await page.waitForLoadState('networkidle');
+
+    await expect(page.getByRole('heading', { name: 'AI Adoption Report', exact: true })).toBeVisible();
+
+    const releaseFilter = page.locator('select').nth(1);
+    await expect(releaseFilter.locator('option')).toHaveText([
+      'All Releases',
+      '3.4 GA',
+      '3.5 EA1',
+      '3.5 EA2',
+      '3.5 GA',
+      '3.6 EA1',
+      '3.6 EA2',
+      '3.6 GA'
+    ]);
+
+    for (const release of ['3.6 EA1', '3.6 EA2', '3.6 GA']) {
+      await expect(page.locator('th', { hasText: release }).first()).toBeVisible();
+    }
+    await expect(page.getByText('between 3.4 GA and 3.6 GA.', { exact: false }).first()).toBeVisible();
+
+    expect(page.errors).toHaveLength(0);
+  });
+});
+
+/**
  * RHOAI Release Readiness Dashboard
  *
  * Verify the release readiness report card is visible, clickable, and renders
