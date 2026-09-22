@@ -699,4 +699,107 @@ module.exports = function registerQualityRoutes(router, context) {
       return res.status(500).json({ error: 'Failed to read data' });
     }
   });
+
+  /**
+   * @openapi
+   * /api/modules/system-health/quality/test-execution/html/{page}:
+   *   get:
+   *     summary: Serve test execution dashboard HTML pages
+   *     description: |
+   *       Serves the dashboard HTML files (index.html, component.html) from storage.
+   *       This provides a reliable way to serve the dashboard when static file serving
+   *       is not available (e.g., when SPA fallback intercepts /test-dashboard/ requests).
+   *     tags: [System Health - Test Execution]
+   *     parameters:
+   *       - name: page
+   *         in: path
+   *         required: true
+   *         schema: { type: string, enum: [index, component] }
+   *     responses:
+   *       200:
+   *         description: HTML dashboard page
+   *         content:
+   *           text/html:
+   *             schema: { type: string }
+   *       404:
+   *         description: Page not found
+   */
+  router.get('/test-execution/html/:page', requireAuth, requireScope('system-health:read'), async function(req, res) {
+    const { page } = req.params;
+    const validPages = ['index', 'component'];
+    
+    if (!validPages.includes(page)) {
+      return res.status(404).json({ error: 'Page not found. Valid pages: ' + validPages.join(', ') });
+    }
+    
+    const basePath = 'system-health/test-execution';
+    const html = await readFromStorage(`${basePath}/${page}.html`);
+    
+    if (!html) {
+      return res.status(404).json({ error: `${page}.html not found in storage. Upload HTML files first.` });
+    }
+    
+    res.type('html');
+    res.set('Cache-Control', 'no-cache, no-store, must-revalidate');
+    // Security: CSP to restrict scripts to known CDNs, connections to same-origin, prevent external framing
+    res.set('Content-Security-Policy', "default-src 'self'; script-src 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com; style-src 'unsafe-inline'; connect-src 'self'; img-src 'self' data:; frame-ancestors 'self';");
+    return res.send(html);
+  });
+
+  /**
+   * @openapi
+   * /api/modules/system-health/quality/test-execution/html-upload:
+   *   post:
+   *     summary: Upload test execution dashboard HTML files
+   *     description: Admin-only endpoint to upload dashboard HTML files from CI pipeline
+   *     tags: [System Health - Test Execution]
+   *     security:
+   *       - bearerAuth: []
+   *     requestBody:
+   *       required: true
+   *       content:
+   *         application/json:
+   *           schema:
+   *             type: object
+   *             properties:
+   *               index_html: { type: string, description: "Content of index.html" }
+   *               component_html: { type: string, description: "Content of component.html" }
+   *     responses:
+   *       200:
+   *         description: HTML files uploaded
+   *       401:
+   *         description: Unauthorized
+   *       403:
+   *         description: Admin access required
+   */
+  router.post('/test-execution/html-upload', requireAdmin, requireScope('system-health:write'), jsonLimit, async function(req, res) {
+    if (DEMO_MODE) {
+      return res.json({ status: 'skipped', message: 'HTML upload disabled in demo mode' });
+    }
+    try {
+      const { index_html, component_html } = req.body;
+      const basePath = 'system-health/test-execution';
+      const results = {};
+
+      if (index_html && typeof index_html === 'string') {
+        await writeToStorage(`${basePath}/index.html`, index_html);
+        results.index_html = 'uploaded';
+      }
+      if (component_html && typeof component_html === 'string') {
+        await writeToStorage(`${basePath}/component.html`, component_html);
+        results.component_html = 'uploaded';
+      }
+
+      if (Object.keys(results).length === 0) {
+        return res.status(400).json({ error: 'No HTML content provided. Expected index_html or component_html.' });
+      }
+
+      console.log(`[system-health/quality] Test execution HTML uploaded: ${Object.keys(results).join(', ')}`);
+      return res.json({ success: true, uploaded: results, timestamp: new Date().toISOString() });
+
+    } catch (error) {
+      console.error('[system-health/quality] Error uploading HTML:', error.message);
+      return res.status(500).json({ error: 'Failed to upload HTML' });
+    }
+  });
 };

@@ -4,7 +4,6 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Test Execution Statistics (Beta)</title>
-<!-- Chart.js v4 -->
 <!-- Chart.js v4.4.7 - pinned version with SRI hash for security -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js" integrity="sha384-vsrfeLOOY6KuIYKDlmVH5UiBmgIdB1oEf7p01YgWHuqmOHfZr374+odEv96n9tNC" crossorigin="anonymous"></script>
 <style>
@@ -235,7 +234,7 @@ const $ = id => document.getElementById(id);
 // --- API Configuration ---
 // When embedded in org-pulse, use the API endpoint; fallback to static files for standalone
 const API_BASE = '/api/modules/system-health/quality/test-execution/data';
-const USE_API = window.location.pathname.includes('/test-dashboard') || window.parent !== window;
+const USE_API = window.location.pathname.includes('/test-dashboard') || window.location.pathname.includes('/test-execution') || window.parent !== window;
 
 async function fetchData(file) {
   const url = USE_API 
@@ -341,7 +340,7 @@ async function loadHeatmap(){
   content.innerHTML='<div class="loading">Loading…</div>';
   const f=currentFilters();
   try{
-    // Load heatmap data (always, so we can re-filter client-side)
+    // Load data using API or static files depending on context
     if(!rawHeatmapData){
       rawHeatmapData = await fetchData('heatmap');
     }
@@ -557,7 +556,7 @@ const STATUS_COLORS={'Open':'#ff4757','In Progress':'#ffa502','To Do':'#a29bfe',
 
 let jiraConfig=null;
 async function loadJiraConfig(){
-  try{ jiraConfig = await fetchData('jira_config'); }catch(_){}
+  try{jiraConfig = await fetchData('jira_config')}catch(_){}
 }
 
 function buildJqlUrl(comp,label,ver,rel){

@@ -2,16 +2,45 @@
 import { ref, computed, onMounted } from 'vue'
 import { ExternalLink, RefreshCw, AlertTriangle, Maximize2, Minimize2 } from 'lucide-vue-next'
 
-const DASHBOARD_BASE = '/test-dashboard'
+// Try static files first (works in development), fall back to API (works in production)
+const DASHBOARD_STATIC = '/test-dashboard/index.html'
+const DASHBOARD_API = '/api/modules/system-health/quality/test-execution/html/index'
 
 const dashboardUrl = ref('')
 const iframeRef = ref(null)
 const loading = ref(true)
 const error = ref(null)
 const isExpanded = ref(false)
+const usingApi = ref(false)
+
+async function loadDashboard() {
+  loading.value = true
+  error.value = null
+  
+  // Try static path first with single GET request
+  // Check if response contains dashboard marker (not SPA fallback)
+  try {
+    const response = await fetch(DASHBOARD_STATIC, { credentials: 'include' })
+    if (response.ok) {
+      const text = await response.text()
+      // Verify it's the actual dashboard, not SPA fallback
+      if (text.includes('Test Execution Statistics') || text.includes('test-exec-heatmap')) {
+        dashboardUrl.value = DASHBOARD_STATIC
+        usingApi.value = false
+        return
+      }
+    }
+  } catch {
+    // Static file not available, try API
+  }
+  
+  // Fall back to API endpoint
+  dashboardUrl.value = DASHBOARD_API
+  usingApi.value = true
+}
 
 onMounted(() => {
-  dashboardUrl.value = `${DASHBOARD_BASE}/index.html`
+  loadDashboard()
 })
 
 function onIframeLoad() {
@@ -20,18 +49,23 @@ function onIframeLoad() {
 
 function onIframeError() {
   loading.value = false
-  error.value = 'Failed to load the Test Execution Dashboard (Beta).'
+  error.value = 'Failed to load the Test Execution Dashboard (Beta). Please ensure the dashboard data has been uploaded.'
 }
 
 function openInNewTab() {
-  window.open(dashboardUrl.value, '_blank')
+  window.open(usingApi.value ? DASHBOARD_API : DASHBOARD_STATIC, '_blank')
 }
 
 function refreshDashboard() {
   loading.value = true
-  if (iframeRef.value) {
-    iframeRef.value.src = dashboardUrl.value
-  }
+  error.value = null
+  loadDashboard().then(() => {
+    if (iframeRef.value) {
+      // Force reload by adding timestamp
+      const baseUrl = dashboardUrl.value.split('?')[0]
+      iframeRef.value.src = `${baseUrl}?_=${Date.now()}`
+    }
+  })
 }
 
 function toggleExpand() {
@@ -127,6 +161,7 @@ const containerClass = computed(() =>
         title="RHOAI Test Execution Dashboard (Beta)"
         class="w-full border-0 block"
         :style="isExpanded ? 'height: 100%' : 'min-height: calc(100vh - 10rem)'"
+        sandbox="allow-scripts allow-same-origin"
         @load="onIframeLoad"
         @error="onIframeError"
         allow="clipboard-write"
