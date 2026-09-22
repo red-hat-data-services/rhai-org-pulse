@@ -1,5 +1,7 @@
 {
+  "lastSyncedAt": "2026-09-22T00:00:00.000Z",
   "dataDate": "2026-09-22",
+  "featureCount": 1148,
   "features": [
     {
       "Key": "RHAISTRAT-1001",
@@ -19561,6 +19563,8 @@
       "critical": 2
     }
   ],
-  "source": "csv-export",
-  "version": "1.0"
+  "metadata": {
+    "source": "csv-export",
+    "version": "1.0"
+  }
 }

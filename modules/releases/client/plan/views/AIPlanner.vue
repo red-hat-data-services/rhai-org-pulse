@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed, inject, onMounted } from 'vue'
+import { ref, computed, inject, watch, onMounted } from 'vue'
 import { apiRequest } from '@shared/client/services/api'
 import { useDraftPlans } from '../composables/useDraftPlans'
 
@@ -35,6 +35,8 @@ const filteredFeatures = computed(() => {
     return !q || f.Key.toLowerCase().includes(q) || f.Summary.toLowerCase().includes(q)
   })
 })
+
+watch([selectedPlan, searchQuery], () => { currentPage.value = 1 })
 
 const totalPages = computed(() => Math.ceil(filteredFeatures.value.length / PAGE_SIZE))
 const pagedFeatures = computed(() => {
@@ -116,7 +118,7 @@ onMounted(async () => {
       <div class="px-6 py-3 border-b border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 flex gap-4 items-center">
         <div class="flex gap-2 items-center">
           <label for="plan-select" class="text-sm font-medium dark:text-gray-300">Plan:</label>
-          <select v-model="selectedPlan" class="px-3 py-1 rounded border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-200 text-sm">
+          <select id="plan-select" v-model="selectedPlan" class="px-3 py-1 rounded border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-200 text-sm">
             <option>3.6 GA</option>
             <option>3.7 EA1</option>
             <option>3.7 GA</option>
