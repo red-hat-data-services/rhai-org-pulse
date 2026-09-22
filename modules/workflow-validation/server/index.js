@@ -1116,11 +1116,15 @@ module.exports = function registerRoutes(router, context) {
     const workflows = [...new Set([...mapA.keys(), ...mapB.keys()])].sort();
     const [baselineProductBugs, targetProductBugs] = await Promise.all([
       productBugFindings({}, {
-        runIds: [...new Set(baselineRows.flatMap((row) => row.runIds))],
+        // RCA documents use the invocation ID as run_id even when the
+        // execution documents omit run_id. Always include the exact selected
+        // invocation so a comparison cannot fall back to historical matches
+        // based only on a shared workflow name.
+        runIds: [...new Set([baselineInvocation, ...baselineRows.flatMap((row) => row.runIds)])],
         workflows: [...mapA.keys()]
       }),
       productBugFindings({}, {
-        runIds: [...new Set(targetRows.flatMap((row) => row.runIds))],
+        runIds: [...new Set([targetInvocation, ...targetRows.flatMap((row) => row.runIds)])],
         workflows: [...mapB.keys()]
       })
     ]);

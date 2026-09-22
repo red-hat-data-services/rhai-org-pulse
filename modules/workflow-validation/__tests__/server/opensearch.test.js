@@ -289,9 +289,11 @@ describe('workflow-validation live schema routes', () => {
   })
 
   it('compares execution results for each test across two exact test runs', async () => {
+    const bugQueries = []
     vi.stubGlobal('fetch', vi.fn((url, options) => {
       const body = JSON.parse(options.body)
       if (url.includes(`/${BUGS_INDEX}/`)) {
+        bugQueries.push(body.query)
         return Promise.resolve(jsonResponse({ hits: { hits: [] } }))
       }
       const serialized = JSON.stringify(body.query)
@@ -321,6 +323,9 @@ describe('workflow-validation live schema routes', () => {
       baseline: { executions: 4, passed: 1, failed: 3, passRate: 0.25, latest: { execution_id: '3.5-latest' } },
       target: { executions: 4, passed: 3, failed: 1, passRate: 0.75, latest: { execution_id: '3.6-latest' }, productBugs: [] }
     })
+    expect(bugQueries).toHaveLength(2)
+    expect(bugQueries[0].bool.filter).toContainEqual({ terms: { run_id: ['run-old'] } })
+    expect(bugQueries[1].bool.filter).toContainEqual({ terms: { run_id: ['run-new'] } })
   })
 
   it('treats errors as unsuccessful without collapsing them into failed verdicts', () => {
