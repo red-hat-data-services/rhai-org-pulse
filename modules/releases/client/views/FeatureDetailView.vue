@@ -191,11 +191,11 @@ function goBack() {
   } else if (fromPlan.value) {
     nav.navigateTo('plan')
   } else if (fromCapacityReport.value) {
-    const params = { report: 'capacity-commitment' }
+    const params = { tab: 'program-level-release' }
     if (nav.params.value.modalStatus) params.modalStatus = nav.params.value.modalStatus
     if (nav.params.value.modalPhase) params.modalPhase = nav.params.value.modalPhase
     if (nav.params.value.modalField) params.modalField = nav.params.value.modalField
-    nav.navigateTo('reports', params)
+    nav.navigateTo('deliver', params)
   } else if (fromExecute.value) {
     const params = {}
     const view = nav.params.value.view || (fromFeatureStatus.value ? 'board' : undefined)

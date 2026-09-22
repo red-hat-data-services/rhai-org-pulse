@@ -1285,6 +1285,72 @@ test.describe('Releases Release Readiness @releases', () => {
 });
 
 /**
+ * Program Level Release Report (Deliver tab)
+ *
+ * Verify the report is directly beside Risk Dashboard, retains its standalone
+ * view, does not inherit Deliver's shared release chip filters, and no longer
+ * appears in the Reports hub.
+ */
+test.describe('Program Level Release Report in Deliver @releases', () => {
+  test.beforeEach(async ({ page }) => {
+    setupErrorTracking(page);
+    await page.route('**/api/modules/releases/execution/features', route => {
+      route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ features: [] }) });
+    });
+    await page.route('**/api/modules/team-tracker/field-options/component', route => {
+      route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ values: [] }) });
+    });
+    await page.route('**/api/modules/team-tracker/field-options/jiraTeam', route => {
+      route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ values: [] }) });
+    });
+    await page.route('**/api/modules/releases/delivery/analysis*', route => {
+      route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ releases: [] }) });
+    });
+    await page.route('**/api/modules/releases/delivery/conforma/releases', route => {
+      route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ releases: [] }) });
+    });
+  });
+
+  test.afterEach(async ({ page }, testInfo) => {
+    logCapturedErrors(page, testInfo);
+  });
+
+  test('is directly beside Risk Dashboard and opens without shared Deliver filters', async ({ page }) => {
+    await page.goto('/#/releases/deliver');
+    await page.waitForLoadState('networkidle');
+    await page.waitForTimeout(DEFAULT_PAGE_WAIT_TIME);
+
+    const deliverTabs = page.locator('nav[aria-label="Deliver sub-tabs"] > button');
+    await expect(deliverTabs.nth(0)).toHaveText('Risk Dashboard');
+    await expect(deliverTabs.nth(1)).toHaveText('Program Level Release Report');
+
+    await deliverTabs.nth(1).click();
+    await page.waitForTimeout(DEFAULT_PAGE_WAIT_TIME);
+
+    await expect(page).toHaveURL(/#\/releases\/deliver\?tab=program-level-release/);
+    await expect(page.getByRole('heading', { name: 'Program Level Release Report', exact: true })).toBeVisible();
+    await expect(page.getByTestId('deliver-release-chip-bar')).toHaveCount(0);
+
+    await page.goto('/#/releases/reports');
+    await page.waitForLoadState('networkidle');
+    await page.waitForTimeout(DEFAULT_PAGE_WAIT_TIME);
+    await expect(page.getByRole('button', { name: 'Program Level Release Report', exact: true })).toHaveCount(0);
+
+    expect(page.errors).toHaveLength(0);
+  });
+
+  test('loads directly from its Deliver tab URL', async ({ page }) => {
+    await page.goto('/#/releases/deliver?tab=program-level-release');
+    await page.waitForLoadState('networkidle');
+    await page.waitForTimeout(DEFAULT_PAGE_WAIT_TIME);
+
+    await expect(page.getByRole('heading', { name: 'Program Level Release Report', exact: true })).toBeVisible();
+    await expect(page.getByTestId('deliver-release-chip-bar')).toHaveCount(0);
+    expect(page.errors).toHaveLength(0);
+  });
+});
+
+/**
  * Release Blockers (Deliver tab)
  *
  * Verify the Release Blockers sub-tab is visible and clickable in the Deliver

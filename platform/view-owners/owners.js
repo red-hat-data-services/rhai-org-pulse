@@ -98,6 +98,9 @@ export const viewOwners = {
   // ── Sub-tab owners (module/view/tab) ──
   // These override the view-level owner when a specific tab is active.
 
+  // releases > deliver
+  'releases/deliver/program-level-release':        'Alex Corvin',
+
   // releases > execute
   'releases/execute/board':                        'Saiesh Prabhu',
   'releases/execute/signals':                      'Alex Corvin',
@@ -126,7 +129,6 @@ export const viewOwners = {
 
   // releases > reports
   'releases/reports/ai-adoption':                  'Saiesh Prabhu',
-  'releases/reports/capacity-commitment':          'Alex Corvin',
   'releases/reports/cve-sustaining':               'Saiesh Prabhu',
   'releases/reports/release-readiness':            'Arthy Loganathan',
   'releases/reports/rhoai-component-architectures': 'Waldemar Znoinski',
