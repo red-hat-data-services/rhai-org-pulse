@@ -2073,7 +2073,7 @@ test.describe('RHOAI Component Architectures Report @releases', () => {
  * AI Planner tab (Plan view)
  *
  * Verify the AI Planner tab is visible in the Plan sub-nav, becomes active
- * on click, and renders the iframe that embeds the release planning dashboard.
+ * on click, and renders the native release planning workspace.
  */
 test.describe('Releases AI Planner tab @releases', () => {
   test.beforeEach(async ({ page }) => {
@@ -2095,7 +2095,7 @@ test.describe('Releases AI Planner tab @releases', () => {
     expect(page.errors).toHaveLength(0);
   });
 
-  test('clicking AI Planner tab renders the iframe', async ({ page }) => {
+  test('clicking AI Planner tab renders the native planner', async ({ page }) => {
     await page.goto('/#/releases/plan');
     await page.waitForLoadState('networkidle');
     await page.waitForTimeout(DEFAULT_PAGE_WAIT_TIME);
@@ -2104,15 +2104,12 @@ test.describe('Releases AI Planner tab @releases', () => {
     await aiPlannerTab.click();
     await page.waitForTimeout(DEFAULT_PAGE_WAIT_TIME);
 
-    const iframe = page.locator('iframe[title="AI-First Release Planner"]');
-    await expect(iframe).toBeVisible();
-    await expect(iframe).toHaveAttribute('sandbox', 'allow-scripts allow-same-origin');
+    await expect(page.getByRole('heading', { name: 'AI-First Release Planner' })).toBeVisible();
+    await expect(page.locator('#plan-select')).toHaveValue('3.6 GA');
+    await expect(page.getByPlaceholder('Search by Key or Summary...')).toBeVisible();
+    await expect(page.getByRole('columnheader', { name: 'RICE' })).toBeVisible();
 
-    const src = await iframe.getAttribute('src');
-    expect(src).toContain('rhai-release-planner');
-
-    const errors = page.errors.filter(e => !e.message.includes('cross-origin subframe'));
-    expect(errors).toHaveLength(0);
+    expect(page.errors).toHaveLength(0);
   });
 
   test('AI Planner deep link activates the tab', async ({ page }) => {
@@ -2120,11 +2117,23 @@ test.describe('Releases AI Planner tab @releases', () => {
     await page.waitForLoadState('networkidle');
     await page.waitForTimeout(DEFAULT_PAGE_WAIT_TIME);
 
-    const iframe = page.locator('iframe[title="AI-First Release Planner"]');
-    await expect(iframe).toBeVisible();
+    const aiPlannerTab = page.locator('button', { hasText: 'AI Planner' });
+    await expect(aiPlannerTab).toHaveClass(/border-primary-500/);
+    await expect(page.getByRole('heading', { name: 'AI-First Release Planner' })).toBeVisible();
 
-    const errors = page.errors.filter(e => !e.message.includes('cross-origin subframe'));
-    expect(errors).toHaveLength(0);
+    expect(page.errors).toHaveLength(0);
+  });
+
+  test('AI Planner API returns the native snapshot', async ({ request }) => {
+    const res = await request.get('/api/modules/releases/planning/ai-planner');
+    expect(res.ok()).toBe(true);
+
+    const body = await res.json();
+    expect(typeof body.featureCount).toBe('number');
+    expect(Array.isArray(body.features)).toBe(true);
+    expect(body.features).toHaveLength(body.featureCount);
+    expect(Array.isArray(body.bugQueue)).toBe(true);
+    expect(body).toHaveProperty('metadata');
   });
 });
 
