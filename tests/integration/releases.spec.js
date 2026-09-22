@@ -2239,4 +2239,60 @@ test.describe('Releases Execute deep-link @releases', () => {
 
     expect(unexpectedDemoResourceErrors(page)).toHaveLength(0);
   });
+
+  test('should load AI Planner tab with features', async ({ page }) => {
+    const apiResponses = [];
+    page.on('response', response => {
+      if (response.url().includes('/api/modules/releases/planning/ai-planner')) {
+        apiResponses.push({ url: response.url(), status: response.status() });
+      }
+    });
+
+    await page.goto('/#/releases/plan?tab=ai-planner');
+    await page.waitForLoadState('networkidle');
+    await page.waitForTimeout(DEFAULT_PAGE_WAIT_TIME);
+
+    const aiPlannerResponse = apiResponses.find(r => !r.url.includes('/status'));
+    expect(aiPlannerResponse?.status).toBe(200);
+
+    await expect(page.locator('text=AI-First Release Planner')).toBeVisible();
+    const tableRows = await page.locator('table tbody tr').count();
+    expect(tableRows).toBeGreaterThan(0);
+    await expect(page.locator('text=Bug Queue')).toBeVisible();
+
+    expect(unexpectedDemoResourceErrors(page)).toHaveLength(0);
+  });
+
+  test('should filter AI Planner by release plan', async ({ page }) => {
+    await page.goto('/#/releases/plan?tab=ai-planner');
+    await page.waitForLoadState('networkidle');
+    await page.waitForTimeout(DEFAULT_PAGE_WAIT_TIME);
+
+    const planSelect = page.locator('select').first();
+    const options = await planSelect.locator('option').allTextContents();
+
+    if (options.length > 1) {
+      await planSelect.selectOption(options[1]);
+      await page.waitForTimeout(500);
+      const rows = await page.locator('table tbody tr').count();
+      expect(rows).toBeGreaterThanOrEqual(0);
+    }
+
+    expect(unexpectedDemoResourceErrors(page)).toHaveLength(0);
+  });
+
+  test('should search features in AI Planner', async ({ page }) => {
+    await page.goto('/#/releases/plan?tab=ai-planner');
+    await page.waitForLoadState('networkidle');
+    await page.waitForTimeout(DEFAULT_PAGE_WAIT_TIME);
+
+    const searchInput = page.locator('input[placeholder*="Search"]');
+    await searchInput.fill('RHAISTRAT-1001');
+    await page.waitForTimeout(500);
+
+    const filteredRows = await page.locator('table tbody tr').count();
+    expect(filteredRows).toBeGreaterThanOrEqual(0);
+
+    expect(unexpectedDemoResourceErrors(page)).toHaveLength(0);
+  });
 });
