@@ -297,8 +297,8 @@ test.describe('Releases Views @releases', () => {
 /**
  * PM Hub
  *
- * Verify the PM Hub tab loads under Plan, the Component Release Load Tracking
- * report card is visible and clickable, and the PM Hub API endpoints respond.
+ * Verify the PM Hub tab loads under Plan, its report cards are visible and
+ * clickable, and the PM Hub API endpoints respond.
  */
 test.describe('Releases PM Hub @releases', () => {
   test.beforeEach(async ({ page }) => {
@@ -309,7 +309,7 @@ test.describe('Releases PM Hub @releases', () => {
     logCapturedErrors(page, testInfo);
   });
 
-  test('should show PM Hub tab under Plan and load report card', async ({ page }) => {
+  test('should show PM Hub tab under Plan and load report cards', async ({ page }) => {
     await page.goto('/#/releases/plan');
     await page.waitForLoadState('networkidle');
     await page.waitForTimeout(DEFAULT_PAGE_WAIT_TIME);
@@ -322,6 +322,35 @@ test.describe('Releases PM Hub @releases', () => {
 
     const reportCard = page.locator('text=Component Release Load Tracking');
     await expect(reportCard.first()).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Historic Feature Pressure', exact: true })).toBeVisible();
+
+    expect(page.errors).toHaveLength(0);
+  });
+
+  test('places Historic Feature Pressure next to Component Release Load and removes it from Reports', async ({ page }) => {
+    await page.goto('/#/releases/plan?tab=pm-hub');
+    await page.waitForLoadState('networkidle');
+    await page.waitForTimeout(DEFAULT_PAGE_WAIT_TIME);
+
+    const componentLoadTile = page.getByRole('button', { name: 'Component Release Load Tracking', exact: true });
+    const featurePressureTile = page.getByRole('button', { name: 'Historic Feature Pressure', exact: true });
+    await expect(componentLoadTile).toBeVisible();
+    await expect(featurePressureTile).toBeVisible();
+
+    const adjacentTiles = page.locator(
+      'button[aria-label="Component Release Load Tracking"] + button[aria-label="Historic Feature Pressure"]'
+    );
+    await expect(adjacentTiles).toHaveCount(1);
+
+    const componentLoadBox = await componentLoadTile.boundingBox();
+    const featurePressureBox = await featurePressureTile.boundingBox();
+    expect(Math.abs(componentLoadBox.y - featurePressureBox.y)).toBeLessThan(5);
+    expect(featurePressureBox.x).toBeGreaterThan(componentLoadBox.x);
+
+    await page.goto('/#/releases/reports');
+    await page.waitForLoadState('networkidle');
+    await page.waitForTimeout(DEFAULT_PAGE_WAIT_TIME);
+    await expect(page.getByRole('button', { name: 'Historic Feature Pressure', exact: true })).toHaveCount(0);
 
     expect(page.errors).toHaveLength(0);
   });

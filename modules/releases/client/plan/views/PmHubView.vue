@@ -44,6 +44,12 @@ const reports = [
     label: 'Component Release Load Tracking',
     description: 'Track component workload distribution across releases to identify capacity risks and balance engineering load.',
     component: defineAsyncComponent(() => import('./ComponentReleaseLoadReport.vue'))
+  },
+  {
+    id: 'feature-pressure',
+    label: 'Historic Feature Pressure',
+    description: 'RHAI-wide feature pressure by component, with RFE pipeline and risk scorecard',
+    component: defineAsyncComponent(() => import('../../views/FeaturePressureView.vue'))
   }
 ]
 
