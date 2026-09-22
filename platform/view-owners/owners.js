@@ -130,6 +130,7 @@ export const viewOwners = {
 
   // releases > reports
   'releases/reports/ai-adoption':                  'Saiesh Prabhu',
+  'releases/reports/cve-action-report':            'Doug Hellmann',
   'releases/reports/cve-sustaining':               'Saiesh Prabhu',
   'releases/reports/pre-release-cve':              'Moulali Shikalwadi',
   'releases/reports/release-readiness':            'Arthy Loganathan',

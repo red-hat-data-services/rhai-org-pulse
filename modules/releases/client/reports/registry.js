@@ -28,6 +28,14 @@ export const reports = [
     component: defineAsyncComponent(() => import('./CveSustainingReport.vue'))
   },
   {
+    id: 'cve-action-report',
+    label: 'CVE Action Report',
+    description: 'Component-owned CVE work queue with due dates, review outcomes, intake, and age.',
+    icon: 'ShieldAlert',
+    tags: ['Security', 'CVE', 'Action'],
+    component: defineAsyncComponent(() => import('./CveActionReport.vue'))
+  },
+  {
     id: 'ai-adoption',
     label: 'AI Adoption Report',
     description: 'Scorecard tracking AI pipeline adoption across components, with release-over-release trends.',
