@@ -1,4 +1,5 @@
 const yaml = require('js-yaml');
+const { createJiraClient } = require('../../../shared/server/jira');
 
 // Keep these queries aligned with readiness-detector/constants.py.
 const SCAN_JQL = 'project = AIPCC AND issuetype = Epic AND labels = release-automation AND status != Closed';
@@ -146,11 +147,9 @@ module.exports = function registerReleaseStatusRoutes(router, context) {
   let jira;
   function getJira() {
     if (!jira) {
-      const { createJiraClient } = require('../../../shared/server/jira');
       jira = createJiraClient({
         email: (context.secrets && context.secrets.JIRA_EMAIL) || '',
         token: (context.secrets && context.secrets.JIRA_TOKEN) || '',
-        host: process.env.JIRA_HOST,
       });
     }
     return jira;
