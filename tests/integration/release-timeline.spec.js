@@ -103,6 +103,52 @@ test.describe('Release Timeline @release-timeline @releases', () => {
     expect(page.errors).toHaveLength(0);
   });
 
+  test('can pan backward through at least 30 days of schedule history', async ({ page }) => {
+    await page.goto('/#/releases/schedule?e2e=1');
+    await page.waitForLoadState('networkidle');
+    await page.waitForTimeout(DEFAULT_PAGE_WAIT_TIME);
+
+    // The integration fixtures can all be historical relative to the runtime
+    // clock. Include released versions so the timeline remains available and
+    // its historical pan behavior can be exercised deterministically.
+    var hideReleased = page.getByLabel('Hide released');
+    if (await hideReleased.isChecked()) {
+      await hideReleased.uncheck();
+      await page.waitForTimeout(500);
+    }
+
+    var canvas = page.locator('canvas');
+    await expect(canvas).toBeVisible();
+    var box = await canvas.boundingBox();
+    var DAY_MS = 86400000;
+    var today = new Date();
+    today.setHours(0, 0, 0, 0);
+    var historyBoundary = today.getTime() - 30 * DAY_MS;
+
+    var timelineBefore = await page.evaluate(() => window.__releaseTimeline);
+    expect(timelineBefore).toBeTruthy();
+    expect(timelineBefore.fullRange.min).toBeLessThanOrEqual(historyBoundary);
+    expect(timelineBefore.range.min).toBeGreaterThan(historyBoundary);
+
+    // Drag right repeatedly to move the visible schedule backward in time.
+    var startX = box.x + box.width * 0.2;
+    var endX = box.x + box.width * 0.8;
+    var cy = box.y + box.height * 0.5;
+    for (var i = 0; i < 5; i++) {
+      await page.mouse.move(startX, cy);
+      await page.mouse.down();
+      await page.mouse.move(endX, cy, { steps: 10 });
+      await page.mouse.up();
+      await page.waitForTimeout(150);
+    }
+
+    await expect.poll(async () => {
+      return page.evaluate(() => window.__releaseTimeline.range.min);
+    }).toBeLessThanOrEqual(historyBoundary);
+    await expect(page.getByText('30-day history')).toBeVisible();
+    expect(page.errors).toHaveLength(0);
+  });
+
   test('timeline renders milestone cards above and below axis', async ({ page }) => {
     await page.goto('/#/releases/schedule');
     await page.waitForLoadState('networkidle');

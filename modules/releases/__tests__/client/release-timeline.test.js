@@ -844,6 +844,28 @@ describe('ReleaseTimeline', () => {
     }
   })
 
+  it('allows panning at least 30 days into history without changing the default window', () => {
+    vi.useFakeTimers()
+    vi.setSystemTime(new Date('2026-09-21T00:00:00'))
+    try {
+      var DAY_MS = 86400000
+      var todayTs = new Date('2026-09-21T00:00:00').getTime()
+      var releases = [
+        makeRelease('rhoai-3.6', {
+          displayName: 'rhoai-3.6', shortname: 'rhoai',
+          planningFreeze: '2026-10-16', ga: '2026-11-18'
+        })
+      ]
+      var wrapper = mount(ReleaseTimeline, { props: { releases, hidePast: true } })
+
+      expect(wrapper.vm.fullRange.min).toBeLessThanOrEqual(todayTs - 30 * DAY_MS)
+      expect((wrapper.vm.defaultRange.max - wrapper.vm.defaultRange.min) / DAY_MS)
+        .toBeCloseTo(29, 0)
+    } finally {
+      vi.useRealTimers()
+    }
+  })
+
   it('single dataset when all nodes are past or future (no today marker)', () => {
     var releases = [
       makeRelease('rhoai-3.5', { displayName: 'rhoai-3.5', shortname: 'rhoai', ga: '2090-06-17' })
@@ -1805,13 +1827,13 @@ describe('ReleaseTimeline', () => {
     expect(wrapper.vm.isOverCard).toBe(false)
   })
 
-  it('cursor style reflects isOverCard state', async () => {
+  it('cursor advertises panning and switches for milestone cards', async () => {
     var releases = [
       makeRelease('rhoai-3.5', { displayName: 'rhoai-3.5', shortname: 'rhoai', ga: '2026-06-17' })
     ]
     var wrapper = mount(ReleaseTimeline, { props: { releases } })
     var div = wrapper.find('.relative')
-    expect(div.attributes('style')).toContain('default')
+    expect(div.attributes('style')).toContain('grab')
 
     wrapper.vm.isOverCard = true
     await wrapper.vm.$nextTick()

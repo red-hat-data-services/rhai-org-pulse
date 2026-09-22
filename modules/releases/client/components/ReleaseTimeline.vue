@@ -400,6 +400,10 @@ onUnmounted(function () { if (_observer) _observer.disconnect() })
 var zoomMin = ref(null)
 var zoomMax = ref(null)
 
+var DAY_MS = 86400000
+var HISTORICAL_SCROLL_DAYS = 30
+var DEFAULT_WINDOW_DAYS = 29
+
 // Today pulse overlay position (set by afterDraw)
 var _todayPx = ref(null)
 
@@ -415,12 +419,11 @@ var fullRange = computed(function () {
   var minTs = Math.min(first.getTime(), todayTs)
   var maxTs = Math.max(last.getTime(), todayTs)
   var range = maxTs - minTs
-  var pad = Math.max(range * 0.05, 86400000 * 7)
-  return { min: minTs - pad, max: maxTs + pad }
+  var pad = Math.max(range * 0.05, DAY_MS * 7)
+  var historicalMin = todayTs - HISTORICAL_SCROLL_DAYS * DAY_MS
+  return { min: Math.min(minTs - pad, historicalMin), max: maxTs + pad }
 })
 
-var DAY_MS = 86400000
-var DEFAULT_WINDOW_DAYS = 29
 // Max manual zoom-out window (scroll wheel / pinch). Wide enough to comfortably
 // take in a whole release cluster (planning freeze through GA) at once. The
 // auto-fit is deliberately NOT bound by this — it must be free to widen the view
@@ -1619,6 +1622,8 @@ var timelinePlugin = {
         (import.meta.env.VITE_DEMO_MODE === 'true' ||
          /[?&]e2e=1\b/.test(window.location.hash + window.location.search))) {
       window.__releaseTimeline = {
+        range: { min: xRange.value.min, max: xRange.value.max },
+        fullRange: { min: fullRange.value.min, max: fullRange.value.max },
         cards: _cardHitBoxes.map(function (b) {
           return {
             version: versionForNode(b.nd),
@@ -1643,7 +1648,7 @@ var timelinePlugin = {
           Distances
         </label>
         <span class="text-[10px] text-gray-400 dark:text-gray-500">
-          Scroll to zoom · Drag to pan
+          Scroll to zoom · Drag to pan · 30-day history
         </span>
         <button
           v-if="isZoomed"
@@ -1653,7 +1658,7 @@ var timelinePlugin = {
       </div>
       <div
         class="relative"
-        :style="{ height: chartHeight + 'px', cursor: isOverCard ? 'pointer' : (isZoomed ? 'grab' : 'default') }"
+        :style="{ height: chartHeight + 'px', cursor: isOverCard ? 'pointer' : 'grab' }"
         @wheel="onWheel"
         @pointerdown="onPointerDown"
         @pointermove="onPointerMove"
