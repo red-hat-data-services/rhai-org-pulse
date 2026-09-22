@@ -1655,7 +1655,7 @@ test.describe('Releases CVE Sustaining Report @releases', () => {
     await expect(page.getByRole('table', { name: 'Upcoming SLA deadlines until 2026-12-21' })).toBeVisible();
     await expect(page.getByText('Vulnerabilities created and closed weekly')).toBeVisible();
     await expect(page.getByText('Open action cohort age by outcome')).toBeVisible();
-    await expect(page.locator('a[target="_blank"]').count()).toBeGreaterThan(0);
+    expect(await page.locator('a[target="_blank"]').count()).toBeGreaterThan(0);
     expect(page.errors).toHaveLength(0);
   });
 
