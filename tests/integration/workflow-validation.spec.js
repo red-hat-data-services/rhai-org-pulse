@@ -82,10 +82,12 @@ test.describe('Workflow Validation module @workflow-validation', () => {
     expect(requests.every((url) => !url.includes('opensearch-workflow-validation'))).toBe(true)
   })
 
-  test('does not expose Workflow Validation connection settings to non-admins', async ({ page }) => {
+  test('shows the admin-only Workflow Validation connection settings', async ({ page }) => {
     await page.goto('/#/settings?tab=workflow-validation')
-    await expect(page.getByRole('heading', { name: 'Workflow Validation connection' })).toHaveCount(0)
-    await expect(page.getByLabel('OpenSearch URL')).toHaveCount(0)
+    await expect(page.getByRole('heading', { name: 'Workflow Validation connection' })).toBeVisible()
+    await expect(page.getByLabel('OpenSearch URL')).toBeVisible()
+    await expect(page.getByText(/credentials remain managed in Vault/i)).toBeVisible()
+    await expect(page.getByText(/only to backend requests from Workflow Validation/i)).toBeVisible()
   })
 
   test('toggles hidden costs with iddqd across views', async ({ page }) => {
