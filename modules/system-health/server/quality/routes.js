@@ -725,7 +725,8 @@ module.exports = function registerQualityRoutes(router, context) {
    *         description: Page not found
    */
   router.get('/test-execution/html/:page', requireAuth, requireScope('system-health:read'), async function(req, res) {
-    const { page } = req.params;
+    // Strip .html extension if present (allows both /html/component and /html/component.html)
+    const page = req.params.page.replace(/\.html$/, '');
     const validPages = ['index', 'component'];
 
     if (!validPages.includes(page)) {
