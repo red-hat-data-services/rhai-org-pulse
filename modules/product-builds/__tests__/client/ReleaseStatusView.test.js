@@ -1,5 +1,6 @@
 import { describe, it, expect, vi } from 'vitest'
 import { mount, flushPromises } from '@vue/test-utils'
+import { nextTick } from 'vue'
 import ReleaseStatusView from '../../client/views/ReleaseStatusView.vue'
 
 vi.mock('@shared/client/services/api', () => ({
@@ -56,6 +57,18 @@ describe('ReleaseStatusView', () => {
     expect(wrapper.get('[data-status-badge="AIPCC-100"]').classes()).toContain('bg-emerald-50')
     expect(wrapper.get('[data-status-badge="AIPCC-101"]').classes()).toContain('bg-blue-50')
     expect(wrapper.get('[data-tree-child="AIPCC-101"] a').attributes('href')).toBe('https://redhat.atlassian.net/browse/AIPCC-101')
+
+    const epicRoot = wrapper.get('[data-tree-root="AIPCC-100"]')
+    const branch = wrapper.get('[data-tree-branch]')
+    expect(epicRoot.attributes('aria-expanded')).toBe('true')
+    await epicRoot.trigger('click')
+    await nextTick()
+    expect(branch.attributes('style')).toContain('display: none')
+    expect(epicRoot.attributes('aria-expanded')).toBe('false')
+    await epicRoot.trigger('click')
+    await nextTick()
+    expect(branch.attributes('style')).not.toContain('display: none')
+    expect(wrapper.find('[data-tree-child="AIPCC-101"]').exists()).toBe(true)
   })
 
   it('uses lifecycle labels before Jira status and maps each lifecycle color', async () => {
@@ -64,7 +77,7 @@ describe('ReleaseStatusView', () => {
       ['triggered', 'To Do', 'bg-emerald-50'],
        ['released', 'Done', 'bg-violet-50'],
       ['failed', 'Done', 'bg-red-50'],
-       ['skip', 'In Progress', 'bg-gray-100'],
+       ['skip', 'Closed', 'bg-gray-100'],
     ]
     apiRequest.mockResolvedValue(response([{
       key: 'AIPCC-200',
@@ -86,6 +99,7 @@ describe('ReleaseStatusView', () => {
 
     expect(wrapper.get('[data-status-badge="AIPCC-200"]').classes()).toContain('bg-blue-50')
     expect(wrapper.get('[data-tree-child="AIPCC-203"]').attributes('data-completed')).toBe('true')
+    expect(wrapper.get('[data-tree-child="AIPCC-205"]').attributes('data-completed')).toBe('true')
     for (const [label, , expectedClass] of states) {
       const key = `AIPCC-${201 + states.findIndex(([state]) => state === label)}`
        expect(wrapper.get(`[data-tree-child="${key}"]`).attributes('data-status-state')).toBe(label === 'skip' ? 'skipped' : label)

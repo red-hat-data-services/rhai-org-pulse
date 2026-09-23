@@ -61,14 +61,19 @@ describe('release status', () => {
   })
 
   it('uses the readiness detector queries and Jira issue shape', async () => {
+    const queries = []
     const jira = {
-      fetchAllJqlResults: async (jql) => jql === SCAN_JQL
-        ? [epic('AIPCC-1', 'rhaiis'), epic('AIPCC-9', 'other')]
-        : [child('AIPCC-2', 'Ready', ['ready'])],
+      fetchAllJqlResults: async (jql) => {
+        queries.push(jql)
+        return jql === SCAN_JQL
+          ? [epic('AIPCC-1', 'rhaiis'), epic('AIPCC-9', 'other')]
+          : [child('AIPCC-2', 'Ready', ['ready'])]
+      },
     }
 
     const result = await buildReleaseStatus(jira)
     expect(result.total).toBe(1)
+    expect(queries[0]).toContain('project in (AIPCC, RHAI)')
     expect(result.groups[0].epics[0]).toMatchObject({
       key: 'AIPCC-1',
       status: { name: 'In Progress' },
@@ -76,7 +81,8 @@ describe('release status', () => {
       children: [{ key: 'AIPCC-2', labels: ['ready'] }],
     })
     expect(ALL_CHILD_TASKS_JQL('AIPCC-1')).toBe(
-      'project = AIPCC AND issuetype = Task AND (parent = AIPCC-1 OR "Epic Link" = AIPCC-1)'
+      'project in (AIPCC, RHAI) AND issuetype = Task AND (parent = AIPCC-1 OR "Epic Link" = AIPCC-1)'
     )
+    expect(queries[1]).toContain('project in (AIPCC, RHAI)')
   })
 })
