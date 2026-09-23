@@ -33,6 +33,12 @@ future defaults to change a saved view.
 | `WORKFLOW_VALIDATION_OPENSEARCH_USERNAME` | Yes | HTTP Basic username for a read-only account. |
 | `WORKFLOW_VALIDATION_OPENSEARCH_PASSWORD` | Yes | HTTP Basic password for the same account. |
 
+Authorized administrators may override the non-secret OpenSearch URL and optional
+`HTTP_PROXY` / `HTTPS_PROXY` in **Settings → Workflow Validation**. The saved
+values take precedence for this module only; deployment environment values remain
+fallback defaults. Proxy and endpoint URLs must be credential-free. Username and
+password remain Vault/OpenShift-secret-only and are never displayed in the UI.
+
 The credentials are declared in `module.json` and read from `context.secrets`.
 For OpenShift, the deployment maps them from `team-tracker-secrets`; production
 values are supplied by the Vault Secrets Operator. Each environment supplies

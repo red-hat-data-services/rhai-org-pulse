@@ -72,8 +72,10 @@ oc patch secret team-tracker-secrets \
 #    WORKFLOW_VALIDATION_OPENSEARCH_PASSWORD in the environment's approved
 #    Vault path using the read-only OpenSearch account.
 # 2. Add both keys to the team-tracker-secrets VaultStaticSecret mapping.
-# 3. Set WORKFLOW_VALIDATION_OPENSEARCH_URL in the environment overlay's
-#    team-tracker-config ConfigMap. The URL is configuration, not a secret.
+# 3. Optionally set WORKFLOW_VALIDATION_OPENSEARCH_URL, HTTP_PROXY, and
+#    HTTPS_PROXY in the environment overlay's team-tracker-config ConfigMap.
+#    They remain deployment defaults. An authorized Org Pulse administrator can
+#    override these non-secret values in Settings > Workflow Validation.
 # 4. Enable the workflow-validation module only after its diagnostics report
 #    that all three read-only indexes are reachable.
 #

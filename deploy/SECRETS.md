@@ -91,6 +91,12 @@ Dynamic secrets: `GITLAB_*_TOKEN` — per-instance GitLab tokens configured via 
 environment-specific `team-tracker-config` ConfigMap. It is intentionally not
 set in the shared AI Engineering overlay.
 
+Authorized Org Pulse administrators can override the non-secret OpenSearch URL and
+the module-scoped `HTTP_PROXY` / `HTTPS_PROXY` values in **Settings → Workflow
+Validation**. GitOps values remain the fallback defaults. Proxy values apply only
+to Workflow Validation's backend OpenSearch requests, never globally. Do not put
+credentials in URLs or proxies; OpenSearch username and password remain Vault-only.
+
 | Env Var | Required | Description |
 |---------|----------|-------------|
 | `WORKFLOW_VALIDATION_OPENSEARCH_USERNAME` | Production | Read-only OpenSearch HTTP Basic username; omit only for an unauthenticated local POC |
