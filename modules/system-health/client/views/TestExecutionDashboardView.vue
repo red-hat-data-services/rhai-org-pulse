@@ -188,16 +188,5 @@ const containerClass = computed(() =>
         allow="clipboard-write"
       />
     </div>
-
-    <!-- Helpful info when dashboard is not available -->
-    <div
-      v-if="!dashboardUrl && !loading && !error"
-      class="rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 p-8 text-center"
-      :class="isExpanded ? 'mx-4 mb-4' : ''"
-    >
-      <p class="text-gray-600 dark:text-gray-400">
-        Dashboard is being loaded...
-      </p>
-    </div>
   </div>
 </template>
