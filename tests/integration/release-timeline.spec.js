@@ -188,9 +188,13 @@ test.describe('Release Timeline @release-timeline @releases', () => {
     for (var i = 0; i < 10; i++) {
       await page.evaluate(({ x, y }) => {
         var canvas = document.querySelector('canvas');
-        canvas.dispatchEvent(new WheelEvent('wheel', {
+        // The Vue @wheel listener is attached to the canvas wrapper, not the
+        // canvas itself. Dispatch directly on that wrapper so this test does
+        // not depend on event bubbling through the Chart.js canvas element.
+        var target = canvas.parentElement;
+        target.dispatchEvent(new WheelEvent('wheel', {
           clientX: x, clientY: y, deltaX: 0, deltaY: -200,
-          bubbles: true, cancelable: true
+          bubbles: true, cancelable: true, composed: true
         }));
       }, { x: cx, y: cy });
       await page.waitForTimeout(50);
@@ -226,9 +230,10 @@ test.describe('Release Timeline @release-timeline @releases', () => {
     for (var i = 0; i < 10; i++) {
       await page.evaluate(({ x, y }) => {
         var canvas = document.querySelector('canvas');
-        canvas.dispatchEvent(new WheelEvent('wheel', {
+        var target = canvas.parentElement;
+        target.dispatchEvent(new WheelEvent('wheel', {
           clientX: x, clientY: y, deltaX: 0, deltaY: -200,
-          bubbles: true, cancelable: true
+          bubbles: true, cancelable: true, composed: true
         }));
       }, { x: cx, y: cy });
       await page.waitForTimeout(50);
@@ -419,11 +424,13 @@ test.describe('Release Timeline @release-timeline @releases', () => {
     // The component exposes card hit-boxes on window in demo mode (canvas-relative
     // centres). Pick the first card that resolves to a version AND a product so we
     // can assert the product is carried through to the Execute page.
-    var card = await page.evaluate(() => {
+    var findCard = () => page.evaluate(() => {
       var tl = window.__releaseTimeline;
       if (!tl || !tl.cards) return null;
       return tl.cards.find(function (c) { return c.version && c.products && c.products.length; }) || null;
     });
+    await expect.poll(findCard, { timeout: 10000 }).not.toBeNull();
+    var card = await findCard();
     expect(card).not.toBeNull();
 
     // Click the card centre (canvas origin + canvas-relative centre).
@@ -475,11 +482,13 @@ test.describe('Release Timeline @release-timeline @releases', () => {
     var canvas = page.locator('canvas');
     var box = await canvas.boundingBox();
 
-    var card = await page.evaluate(() => {
+    var findCard = () => page.evaluate(() => {
       var tl = window.__releaseTimeline;
       if (!tl || !tl.cards) return null;
       return tl.cards.find(function (c) { return c.version; }) || null;
     });
+    await expect.poll(findCard, { timeout: 10000 }).not.toBeNull();
+    var card = await findCard();
     expect(card).not.toBeNull();
 
     // Press on the card and drag well past the 4px threshold, then release.

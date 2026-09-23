@@ -4,7 +4,7 @@ import { countUniqueCategoryTotals } from './mergeReleaseDetails'
 // ═══ RELEASE NAME PARSING ═══
 
 /** Legacy: rhoai-3.6.EA1, RHELAI-3.2 */
-var LEGACY_PATTERN = /^(rhoai|rhelai|rhaii|rhai)[- _](\d+)\.(\d+)(?:\.EA(\d+))?$/i
+var LEGACY_PATTERN = /^(rhoai|rhelai|rhaii|rhai)[- _](\d+)\.(\d+)(?:\.z)?(?:\.EA(\d+))?$/i
 
 /** Product-family Jira names: "3.6 EA1 RHOAI RELEASE", "3.5 GA RHELAI RELEASE" */
 var PRODUCT_FAMILY_PATTERN = /^(\d+)\.(\d+)\s+(EA(\d+)|GA)\s+(RHOAI|RHAII|RHELAI|RHAI)\s+RELEASE$/i
