@@ -972,7 +972,8 @@ component-scoped CVE Action Report. The existing sustaining metrics and
       {
         "key": "RHAIENG-123",
         "components": ["Model Serving"],
-        "slaDate": "2026-10-02",
+        "slaDate": "2026-10-16",
+        "dueDate": "2026-10-02",
         "created": "2026-08-12T14:30:00.000Z",
         "resolved": null,
         "labels": ["rhai-cve-review-needs-action"],
@@ -991,19 +992,23 @@ component-scoped CVE Action Report. The existing sustaining metrics and
 }
 ```
 
-`open` is the current open Vulnerability cohort used for overdue, due-date,
+`open` is the current open Vulnerability cohort used for SLA-breach, due-date,
 review-outcome, and age metrics. `all` is the all-status cohort used for the
 90-day intake history. Each record has a Jira `key`, all assigned Jira
 `components`, an ISO `created` timestamp, and `resolved` (the Jira
 `resolutiondate` timestamp or `null`). Open records additionally have
-`slaDate` (ISO date or `null`), Jira `labels`, and `cvss` (a canonical
-one-decimal string or `null`). `slaDate` is normalized from the UTC
-`issue.properties["rh-sla-dt"].value` value supplied by the Red Hat Forge SLA
-Date field; it must not be derived from Jira `duedate` or its opaque stored
-custom-field value. CVSS is sourced from Jira
-`customfield_10859`, whose value is a string beginning with the base score
-(for example, `"7.5 CVSS:3.1/..."`). Missing or malformed values are `null`
-and display as **Unspecified** in score breakdowns.
+`slaDate` and `dueDate` (ISO dates or `null`), Jira `labels`, and `cvss` (a
+canonical one-decimal string or `null`). `slaDate` is normalized from the UTC
+`issue.properties["rh-sla-dt"].value` supplied by the Red Hat Forge SLA Date
+field and determines whether an issue has breached SLA. `dueDate` is sourced
+from Jira `duedate` and drives the work timeline. Non-breached issues with a
+past Due Date remain in that timeline with `isPastDue: true`. Dates from the
+report's `asOfDate` through seven calendar days later, inclusive, have
+`upcomingDueDate: true`; other rows have it set to `false`. Future dates are
+included through the 90-day window. CVSS is sourced from Jira
+`customfield_10859`, whose value is a string beginning with the base score (for
+example, `"7.5 CVSS:3.1/..."`). Missing or malformed values are `null` and
+display as **Unspecified** in score breakdowns.
 
 Older snapshots may omit `actionReportRecords`; the API treats that as an
 empty projection and the report remains unavailable until the next sustaining
