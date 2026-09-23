@@ -201,13 +201,8 @@ onMounted(async () => {
               <td class="px-4 py-2 text-xs dark:text-gray-300">{{ f.Summary }}</td>
               <td class="px-4 py-2 text-xs dark:text-gray-400">
                 <div class="flex flex-wrap gap-1">
-<<<<<<< HEAD
                   <span v-for="c in f.Components" :key="c" class="inline-block px-2 py-1 rounded bg-gray-200 dark:bg-gray-600 text-xs" :title="c">
-                    {{ getSeverityIcon(c) }} {{ c.split(' ')[0] }}
-=======
-                  <span v-for="c in f.Components" :key="c" class="inline-block px-2 py-1 rounded bg-gray-200 dark:bg-gray-600 text-xs">
                     {{ getSeverityIcon(c) }} {{ c }}
->>>>>>> 36d13d8e01aafaa91ae370542b190c3805111866
                   </span>
                 </div>
               </td>
