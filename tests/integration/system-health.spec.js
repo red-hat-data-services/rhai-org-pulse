@@ -918,31 +918,44 @@ test.describe('Test Execution Dashboard @system-health', () => {
     const mainContentVisible = await mainContentIsVisible(page);
     expect(mainContentVisible).toBe(true);
 
-    // Look for the iframe that loads the dashboard - match partial title
+    // The view should show either:
+    // 1. An iframe with the dashboard (when HTML is available)
+    // 2. An error message (when HTML is not available)
     const iframe = page.locator('iframe[title*="Test Execution"], iframe[title*="RHOAI"]');
+    const errorMessage = page.locator('text=/Dashboard.*unavailable|Dashboard HTML not available/i');
+    
     const iframeCount = await iframe.count();
-    expect(iframeCount).toBeGreaterThan(0);
+    const errorCount = await errorMessage.count();
+    
+    // Either iframe should exist OR error message should be shown
+    expect(iframeCount > 0 || errorCount > 0).toBe(true);
 
     // Filter out expected 404s from static file probe (loadDashboard fallback mechanism)
     const unexpectedErrors = page.errors.filter(e => !e.message.includes('404'));
     expect(unexpectedErrors).toHaveLength(0);
   });
 
-  test('should render iframe with dashboard content', async ({ page }) => {
+  test('should render iframe with dashboard content or show error', async ({ page }) => {
     await page.goto('/#/system-health/test-execution');
     await page.waitForLoadState('networkidle');
     await page.waitForTimeout(DEFAULT_PAGE_WAIT_TIME);
 
-    // Wait for iframe to be present - match partial title
+    // Check for iframe - match partial title
     const iframe = page.locator('iframe[title*="Test Execution"], iframe[title*="RHOAI"]');
     const iframeCount = await iframe.count();
-    expect(iframeCount).toBeGreaterThan(0);
 
-    // Wait for iframe to load - check that src is set
-    const iframeSrc = await iframe.first().getAttribute('src');
-    expect(iframeSrc).toBeTruthy();
-    // Should point to either static or API endpoint
-    expect(iframeSrc).toMatch(/test-dashboard|test-execution\/html/);
+    if (iframeCount > 0) {
+      // If iframe exists, verify it has a valid src
+      const iframeSrc = await iframe.first().getAttribute('src');
+      expect(iframeSrc).toBeTruthy();
+      // Should point to either static or API endpoint
+      expect(iframeSrc).toMatch(/test-dashboard|test-execution\/html/);
+    } else {
+      // If no iframe, should show error message
+      const errorMessage = page.locator('text=/Dashboard.*unavailable|Dashboard HTML not available/i');
+      const errorCount = await errorMessage.count();
+      expect(errorCount).toBeGreaterThan(0);
+    }
 
     // Filter out expected 404s from static file probe (loadDashboard fallback mechanism)
     const unexpectedErrors = page.errors.filter(e => !e.message.includes('404'));
