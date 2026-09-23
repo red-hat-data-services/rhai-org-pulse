@@ -18,7 +18,8 @@
       "runs": "compare",
       "run-detail": "overview",
       "workflow-history": "workflows"
-    }
+    },
+    "settingsComponent": "./client/components/WorkflowValidationSettings.vue"
   },
   "server": {
     "entry": "./server/index.js"

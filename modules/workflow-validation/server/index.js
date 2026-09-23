@@ -15,6 +15,7 @@ const {
   runFilters,
   bugFilters
 } = require('./opensearch');
+const { getEffectiveSettings, getSavedSettings, saveSettings } = require('./config');
 
 /** Wrap an async handler so OpenSearch connectivity errors become clean HTTP responses. */
 function safe(handler) {
@@ -68,15 +69,38 @@ function addFilter(query, clause) {
 }
 
 module.exports = function registerRoutes(router, context) {
-  const { requireAuth } = context;
-  const openSearchConfig = getOpenSearchConfig(context.secrets);
-  const openSearch = createOpenSearchClient(openSearchConfig);
-  const osSearch = openSearch.search;
+  const { requireAuth, requireAdmin } = context;
+  const { readFromStorage, writeToStorage } = context.storage || {};
+  let cachedClient;
+  let cachedSignature;
+
+  async function getRuntimeClient() {
+    const settings = await getEffectiveSettings(readFromStorage);
+    const config = getOpenSearchConfig(context.secrets, process.env, settings);
+    const runtime = { config, settings };
+    const signature = JSON.stringify({
+      url: config.url,
+      httpProxy: config.httpProxy,
+      httpsProxy: config.httpsProxy,
+      authenticated: config.authenticated,
+      authenticationValid: config.authenticationValid
+    });
+    if (!cachedClient || cachedSignature !== signature) {
+      cachedClient = createOpenSearchClient(config);
+      cachedSignature = signature;
+    }
+    runtime.client = cachedClient;
+    return runtime;
+  }
+
+  const osSearch = async function(...args) {
+    return (await getRuntimeClient()).client.search(...args);
+  };
 
   if (context.registerSecretValidator) {
     context.registerSecretValidator('WORKFLOW_VALIDATION_OPENSEARCH_PASSWORD', async function() {
       try {
-        await openSearch.status();
+        await (await getRuntimeClient()).client.status();
         return { valid: true, message: 'Read-only OpenSearch indices are reachable' };
       } catch (err) {
         const message = err.code === 'OS_AUTH'
@@ -89,24 +113,100 @@ module.exports = function registerRoutes(router, context) {
 
   if (context.registerDiagnostics) {
     context.registerDiagnostics(async function() {
+      let runtime;
       try {
-        const counts = await openSearch.status();
+        const settings = await getEffectiveSettings(readFromStorage);
+        const config = getOpenSearchConfig(context.secrets, process.env, settings);
+        runtime = { config, settings };
+        runtime = await getRuntimeClient();
+        const counts = await runtime.client.status();
         return {
           status: 'ok',
-          endpoint: openSearchConfig.url,
-          authenticationConfigured: openSearchConfig.authenticated,
+          endpoint: runtime.config.url,
+          endpointValid: true,
+          authenticationConfigured: runtime.config.authenticated,
+          authenticationValid: runtime.config.authenticationValid,
+          proxy: {
+            httpConfigured: Boolean(runtime.config.httpProxy),
+            httpsConfigured: Boolean(runtime.config.httpsProxy),
+            httpValid: true,
+            httpsValid: true
+          },
           indices: counts
         };
       } catch (err) {
         return {
           status: 'unavailable',
-          endpoint: openSearchConfig.url,
-          authenticationConfigured: openSearchConfig.authenticated,
+          endpoint: runtime?.config?.url || null,
+          endpointValid: !/OPENSEARCH_URL/.test(err.message),
+          authenticationConfigured: runtime?.config?.authenticated || false,
+          authenticationValid: runtime?.config?.authenticationValid || false,
+          proxy: {
+            httpConfigured: Boolean(runtime?.config?.httpProxy),
+            httpsConfigured: Boolean(runtime?.config?.httpsProxy),
+            httpValid: !/HTTP_PROXY/.test(err.message),
+            httpsValid: !/HTTPS_PROXY/.test(err.message)
+          },
           errorCode: err.code || 'OS_ERROR'
         };
       }
     });
   }
+
+  /**
+   * @openapi
+   * /api/modules/workflow-validation/config:
+   *   get:
+   *     tags: [Workflow Validation]
+   *     summary: Get non-secret Workflow Validation connection settings (admin)
+   *     responses:
+   *       200: { description: Effective non-secret connection settings and their sources }
+   */
+  router.get('/config', requireAdmin, async function(req, res) {
+    const [saved, effective] = await Promise.all([
+      getSavedSettings(readFromStorage), getEffectiveSettings(readFromStorage)
+    ]);
+    res.json({
+      url: effective.url,
+      httpProxy: effective.httpProxy,
+      httpsProxy: effective.httpsProxy,
+      sources: effective.sources,
+      overrides: saved
+    });
+  });
+
+  /**
+   * @openapi
+   * /api/modules/workflow-validation/config:
+   *   post:
+   *     tags: [Workflow Validation]
+   *     summary: Save non-secret Workflow Validation connection settings (admin)
+   *     requestBody:
+   *       required: true
+   *       content:
+   *         application/json:
+   *           schema:
+   *             type: object
+   *             properties:
+   *               url: { type: string, description: Credential-free OpenSearch HTTP(S) URL }
+   *               httpProxy: { type: string, description: Credential-free HTTP proxy URL for HTTP OpenSearch requests }
+   *               httpsProxy: { type: string, description: Credential-free HTTPS proxy URL for HTTPS OpenSearch requests }
+   *     responses:
+   *       200: { description: Settings saved }
+   *       400: { description: Invalid URL or proxy value }
+   */
+  router.post('/config', requireAdmin, async function(req, res) {
+    try {
+      if (!writeToStorage) throw new Error('Configuration storage is unavailable');
+      const overrides = await saveSettings(writeToStorage, req.body);
+      cachedClient = null;
+      cachedSignature = null;
+      const effective = await getEffectiveSettings(readFromStorage);
+      res.json({ status: 'saved', overrides, ...effective });
+    } catch (err) {
+      res.status(400).json({ error: err.message });
+    }
+  });
 
   async function searchAll(index, body, pageSize = 500) {
     const hits = [];
@@ -234,7 +334,7 @@ module.exports = function registerRoutes(router, context) {
    *       503: { description: OpenSearch unreachable }
    */
   router.get('/status', requireAuth, safe(async function (req, res) {
-    const status = await openSearch.status();
+    const status = await (await getRuntimeClient()).client.status();
     res.json({ ok: true, ...status });
   }));
 

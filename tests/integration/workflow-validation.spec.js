@@ -5,6 +5,10 @@ test.describe('Workflow Validation module @workflow-validation', () => {
     await page.route('**/api/modules/workflow-validation/**', async (route) => {
       const path = new URL(route.request().url()).pathname
       let body = {}
+      if (path.endsWith('/config')) body = {
+        url: 'https://search.example', httpProxy: '', httpsProxy: '',
+        overrides: {}, sources: { url: 'environment', httpProxy: 'none', httpsProxy: 'none' }
+      }
       if (path.endsWith('/filters')) body = {
         versions: [{ value: '3.6', count: 3 }, { value: '3.5', count: 2 }],
         providers: [], models: [],
@@ -76,6 +80,14 @@ test.describe('Workflow Validation module @workflow-validation', () => {
     await expect(page.getByRole('heading', { name: 'Test Results', exact: true })).toBeVisible()
     expect(requests.some((url) => url.includes('/overview'))).toBe(true)
     expect(requests.every((url) => !url.includes('opensearch-workflow-validation'))).toBe(true)
+  })
+
+  test('shows the admin-only Workflow Validation connection settings', async ({ page }) => {
+    await page.goto('/#/settings?tab=workflow-validation')
+    await expect(page.getByRole('heading', { name: 'Workflow Validation connection' })).toBeVisible()
+    await expect(page.getByLabel('OpenSearch URL')).toBeVisible()
+    await expect(page.getByText(/credentials remain managed in Vault/i)).toBeVisible()
+    await expect(page.getByText(/only to backend requests from Workflow Validation/i)).toBeVisible()
   })
 
   test('toggles hidden costs with iddqd across views', async ({ page }) => {

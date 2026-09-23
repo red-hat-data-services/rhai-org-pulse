@@ -24,6 +24,7 @@ function makeRouter() {
   const routes = {}
   return {
     get(path, ...handlers) { routes[path] = handlers },
+    post(path, ...handlers) { routes[path] = handlers },
     routes
   }
 }
@@ -52,7 +53,7 @@ afterEach(() => {
 describe('OpenSearch runtime client', () => {
   it('uses runtime URL configuration and preserves the local POC default', () => {
     expect(getOpenSearchConfig({}, {})).toEqual({
-      url: 'http://localhost:9200', username: '', password: '', authenticated: false
+      url: 'http://localhost:9200', httpProxy: '', httpsProxy: '', username: '', password: '', authenticated: false, authenticationValid: true
     })
     expect(getOpenSearchConfig({}, { WORKFLOW_VALIDATION_OPENSEARCH_URL: 'https://search.example/' }).url)
       .toBe('https://search.example')

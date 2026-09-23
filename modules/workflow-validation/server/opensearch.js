@@ -1,26 +1,21 @@
 /** Read-only OpenSearch client for workflow-validation telemetry. */
 
-const DEFAULT_URL = 'http://localhost:9200';
+const { ProxyAgent } = require('undici');
+const { DEFAULT_URL, validateHttpUrl } = require('./config');
 const DEFAULT_TIMEOUT_MS = 15_000;
 const RUNS_INDEX = 'workflow-executions';
 const TASKS_INDEX = 'workflow-task-executions';
 const BUGS_INDEX = 'workflow-root-causes';
 
-function getOpenSearchConfig(secrets = {}, env = process.env) {
-  const rawUrl = String(env.WORKFLOW_VALIDATION_OPENSEARCH_URL || DEFAULT_URL).replace(/\/+$/, '');
-  let parsedUrl;
-  try {
-    parsedUrl = new URL(rawUrl);
-  } catch {
-    throw new Error('WORKFLOW_VALIDATION_OPENSEARCH_URL must be a valid HTTP(S) URL');
-  }
-  if (!['http:', 'https:'].includes(parsedUrl.protocol) || parsedUrl.username || parsedUrl.password) {
-    throw new Error('WORKFLOW_VALIDATION_OPENSEARCH_URL must be a credential-free HTTP(S) URL');
-  }
-  const url = parsedUrl.href.replace(/\/+$/, '');
+function getOpenSearchConfig(secrets = {}, env = process.env, settings = {}) {
+  const url = validateHttpUrl(settings.url || env.WORKFLOW_VALIDATION_OPENSEARCH_URL || DEFAULT_URL,
+    'WORKFLOW_VALIDATION_OPENSEARCH_URL', { required: true });
+  const httpProxy = validateHttpUrl(settings.httpProxy || env.HTTP_PROXY, 'HTTP_PROXY');
+  const httpsProxy = validateHttpUrl(settings.httpsProxy || env.HTTPS_PROXY, 'HTTPS_PROXY');
   const username = secrets.WORKFLOW_VALIDATION_OPENSEARCH_USERNAME || '';
   const password = secrets.WORKFLOW_VALIDATION_OPENSEARCH_PASSWORD || '';
-  return { url, username, password, authenticated: !!(username && password) };
+  const authenticationValid = Boolean(username) === Boolean(password);
+  return { url, httpProxy, httpsProxy, username, password, authenticated: !!(username && password), authenticationValid };
 }
 
 function createOpenSearchClient(config = {}, fetchImpl = fetch) {
@@ -28,6 +23,10 @@ function createOpenSearchClient(config = {}, fetchImpl = fetch) {
   const username = config.username || '';
   const password = config.password || '';
   const timeoutMs = config.timeoutMs || DEFAULT_TIMEOUT_MS;
+  const proxyUrl = url.startsWith('https:') ? config.httpsProxy : config.httpProxy;
+  // This dispatcher is passed only to this client's requests. Do not set an
+  // Undici global dispatcher: proxy settings must not affect other backend I/O.
+  const dispatcher = proxyUrl ? new ProxyAgent(proxyUrl) : undefined;
   if ((username && !password) || (!username && password)) {
     throw new Error('OpenSearch username and password must be configured together');
   }
@@ -46,6 +45,7 @@ function createOpenSearchClient(config = {}, fetchImpl = fetch) {
       response = await fetchImpl(`${url}${path}`, {
         ...options,
         headers: { ...requestHeaders(), ...(options.headers || {}) },
+        ...(dispatcher ? { dispatcher } : {}),
         signal: options.signal || AbortSignal.timeout(timeoutMs)
       });
     } catch (err) {
