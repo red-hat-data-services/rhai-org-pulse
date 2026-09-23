@@ -35,7 +35,7 @@
     "@vue-flow/minimap": "^1.5.4",
     "@vueuse/core": "^14.3.0",
     "adm-zip": "^0.6.1",
-    "dompurify": "^3.4.13",
+    "dompurify": "^3.4.15",
     "express": "^5.2.1",
     "express-rate-limit": "^8.7.0",
     "js-yaml": "^5.4.2",
