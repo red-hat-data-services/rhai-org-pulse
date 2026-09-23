@@ -55,7 +55,7 @@
       "XTeam": "yes"
     },
     {
-      "Key": "RHAISTRAT-1004",
+      "Key": "RHAISTRAT-1281",
       "Summary": "Trustworthy AI validation",
       "Components": [
         "vLLM Runtime",

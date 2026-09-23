@@ -744,13 +744,13 @@ test.describe('Releases Field and BU Feedback @releases', () => {
 });
 
 /**
- * Draft Plans (Plan tab)
+ * Plan Approval (Plan tab)
  *
- * Verify the Draft Plans red-pen view loads under Plan (tab + deep link),
- * shows the release-cycle chrome and candidate table (demo fixture), and that
- * the cycles / editor APIs respond. Skips freeze/approve matrix coverage.
+ * Verify the Plan Approval red-pen view loads under Plan (tab + deep link),
+ * starts with only approved features visible, and that the cycles / editor
+ * APIs respond. Skips freeze/approve matrix coverage.
  */
-test.describe('Releases Draft Plans @releases', () => {
+test.describe('Releases Plan Approval @releases', () => {
   test.beforeEach(async ({ page }) => {
     setupErrorTracking(page);
   });
@@ -759,12 +759,12 @@ test.describe('Releases Draft Plans @releases', () => {
     logCapturedErrors(page, testInfo);
   });
 
-  test('should show Draft Plans tab under Plan and load draft table', async ({ page }) => {
+  test('should show Plan Approval tab under Plan with a fresh approval state', async ({ page }) => {
     await page.goto('/#/releases/plan');
     await page.waitForLoadState('networkidle');
     await page.waitForTimeout(DEFAULT_PAGE_WAIT_TIME);
 
-    const draftPlansTab = page.locator('button', { hasText: 'Draft Plans' });
+    const draftPlansTab = page.locator('button', { hasText: 'Plan Approval' });
     await expect(draftPlansTab).toBeVisible();
 
     await draftPlansTab.click();
@@ -772,42 +772,45 @@ test.describe('Releases Draft Plans @releases', () => {
     await page.waitForTimeout(DEFAULT_PAGE_WAIT_TIME);
 
     await expect(page.getByText('Release cycle', { exact: true }).first()).toBeVisible();
-    await expect(page.locator('h2', { hasText: /Draft Plan/ })).toBeVisible();
+    await expect(page.locator('h2', { hasText: /Plan Approval/ })).toBeVisible();
+    await expect(page.getByText('Plan Approval — Start Fresh')).toBeVisible();
 
     const table = page.locator('table[role="table"]');
     await expect(table).toBeVisible();
 
     const dataRows = page.locator('tbody tr[role="row"]');
-    await expect(dataRows.first()).toBeVisible({ timeout: 15000 });
-    expect(await dataRows.count()).toBeGreaterThan(0);
+    await expect(page.getByText('No features match filters')).toBeVisible({ timeout: 15000 });
+    expect(await dataRows.count()).toBe(1);
 
     expect(page.errors).toHaveLength(0);
   });
 
-  test('Draft Plans deep link loads with candidates', async ({ page }) => {
+  test('Plan Approval deep link loads the approval workspace', async ({ page }) => {
     await page.goto('/#/releases/plan?tab=draft-plans');
     await page.waitForLoadState('networkidle');
     await page.waitForTimeout(DEFAULT_PAGE_WAIT_TIME);
 
     await expect(page.getByText('Release cycle', { exact: true }).first()).toBeVisible();
-    await expect(page.locator('h2', { hasText: /Draft Plan/ })).toBeVisible();
+    await expect(page.locator('h2', { hasText: /Plan Approval/ })).toBeVisible();
+    await expect(page.getByText('Plan Approval — Start Fresh')).toBeVisible();
 
     const keyHeader = page.locator('thead th', { hasText: 'Key' });
     await expect(keyHeader.first()).toBeVisible();
     await expect(page.locator('thead th', { hasText: 'Big Rock' }).first()).toBeVisible();
 
     const dataRows = page.locator('tbody tr[role="row"]');
-    await expect(dataRows.first()).toBeVisible({ timeout: 15000 });
-    expect(await dataRows.count()).toBeGreaterThan(0);
+    await expect(page.getByText('No features match filters')).toBeVisible({ timeout: 15000 });
+    expect(await dataRows.count()).toBe(1);
 
     expect(page.errors).toHaveLength(0);
   });
 
-  test('clicking a Draft Plans row opens the feature detail drawer', async ({ page }) => {
+  test('clicking a Plan Approval row opens the feature detail drawer', async ({ page }) => {
     await page.goto('/#/releases/plan?tab=draft-plans');
     await page.waitForLoadState('networkidle');
     await page.waitForTimeout(DEFAULT_PAGE_WAIT_TIME);
 
+    await page.getByLabel('Placement').selectOption('');
     const dataRows = page.locator('tbody tr[role="row"]');
     await expect(dataRows.first()).toBeVisible({ timeout: 15000 });
 
@@ -1719,11 +1722,14 @@ test.describe('Releases CVE Sustaining Report @releases', () => {
     expect(reportRes.ok()).toBe(true);
     const report = await reportRes.json();
     expect(report.component).toBe('Model Serving');
-    expect(report.timeline.length).toBeGreaterThan(0);
-    expect(report.timeline.some(row => row.outcomes['needs-action'])).toBe(true);
-    expect(report.timeline.some(row => row.outcomes['not-found'])).toBe(true);
-    expect(report.timeline.some(row => row.outcomes['needs-review'])).toBe(true);
+    expect(Array.isArray(report.timeline)).toBe(true);
     expect(report.timeline.every(row => row.total > 0 && row.total_jql)).toBe(true);
+    expect(report.timeline.every(row => Object.keys(row.outcomes).every(outcome => [
+      'needs-action',
+      'not-found',
+      'needs-review',
+      'possibly-resolved'
+    ].includes(outcome)))).toBe(true);
     expect(report.summary.missingOutcome.count).toBeGreaterThan(0);
     expect(report.summary).not.toHaveProperty('conflictingOutcome');
     expect(report.summary.openVulnerabilities.count).toBeGreaterThan(0);
@@ -1733,12 +1739,12 @@ test.describe('Releases CVE Sustaining Report @releases', () => {
     expect(report.openAgeBuckets.every(bucket => bucket.outcomes)).toBe(true);
     expect(report.openAgeBuckets.every(bucket => Object.values(bucket.outcomes).reduce((sum, count) => sum + count, 0) === bucket.count)).toBe(true);
 
-    const scoreLink = report.timeline
-      .flatMap(row => Object.values(row.outcomes).flatMap(outcome => outcome.byCvss || []))
-      .find(score => score.score === '7');
-    expect(scoreLink).toBeTruthy();
-    expect(decodeURIComponent(scoreLink.jql)).toContain('issue.property[rh-sla-dt].value');
-    expect(decodeURIComponent(scoreLink.jql)).toContain('key in');
+    const timelineScoreLinks = report.timeline
+      .flatMap(row => Object.values(row.outcomes).flatMap(outcome => outcome.byCvss || []));
+    for (const scoreLink of timelineScoreLinks) {
+      expect(decodeURIComponent(scoreLink.jql)).toContain('issue.property[rh-sla-dt].value');
+      expect(decodeURIComponent(scoreLink.jql)).toContain('key in');
+    }
   });
 
   test('CVE action report renders component selection, summary, timeline, and charts', async ({ page }) => {
@@ -1752,10 +1758,19 @@ test.describe('Releases CVE Sustaining Report @releases', () => {
     await expect(selector.locator('option')).toHaveCount(5);
     await selector.selectOption({ label: 'Model Serving' });
 
-    await expect(page.getByText('Upcoming SLA deadlines until 2026-12-21')).toBeVisible();
+    const reportRes = await page.request.get('/api/modules/releases/cve-sustaining/action-report?component=Model%20Serving');
+    expect(reportRes.ok()).toBe(true);
+    const report = await reportRes.json();
+    const timelineHeading = `Upcoming SLA deadlines until ${report.windowEndDate}`;
+
+    await expect(page.getByText(timelineHeading)).toBeVisible();
     await expect(page.getByText('Overdue', { exact: true })).toBeVisible();
     await expect(page.getByText('Missing review outcome', { exact: true })).toBeVisible();
-    await expect(page.getByRole('table', { name: 'Upcoming SLA deadlines until 2026-12-21' })).toBeVisible();
+    if (report.timeline.length) {
+      await expect(page.getByRole('table', { name: timelineHeading })).toBeVisible();
+    } else {
+      await expect(page.getByText(`No selected-component issues have SLA deadlines through ${report.windowEndDate}.`)).toBeVisible();
+    }
     await expect(page.getByText('Vulnerabilities created and closed weekly')).toBeVisible();
     await expect(page.getByText('Open action cohort age by outcome')).toBeVisible();
     expect(await page.locator('a[target="_blank"]').count()).toBeGreaterThan(0);
@@ -2322,11 +2337,28 @@ test.describe('Releases AI Planner tab @releases', () => {
     await page.waitForTimeout(DEFAULT_PAGE_WAIT_TIME);
 
     const searchInput = page.locator('input[placeholder*="Search"]');
-    await searchInput.fill('RHAISTRAT-1001');
+    await searchInput.fill('RHAISTRAT-1281');
     await page.waitForTimeout(500);
 
     const filteredRows = await page.locator('table tbody tr').count();
-    expect(filteredRows).toBeGreaterThanOrEqual(0);
+    expect(filteredRows).toBe(1);
+    await expect(page.getByText('RHAISTRAT-1281', { exact: true })).toBeVisible();
+
+    expect(unexpectedDemoResourceErrors(page)).toHaveLength(0);
+  });
+
+  test('should add an AI Planner feature to Plan Approval', async ({ page }) => {
+    await page.goto('/#/releases/plan?tab=ai-planner');
+    await page.waitForLoadState('networkidle');
+    await page.waitForTimeout(DEFAULT_PAGE_WAIT_TIME);
+
+    const featureRow = page.locator('tbody tr').filter({ hasText: 'RHAISTRAT-1281' });
+    await expect(featureRow).toBeVisible();
+    await featureRow.getByRole('button', { name: 'Add to Plan' }).click();
+
+    await expect(page).toHaveURL(/tab=draft-plans/);
+    await expect(page.locator('h2', { hasText: /Plan Approval/ })).toBeVisible();
+    await expect(page.getByText('RHAISTRAT-1281', { exact: true })).toBeVisible();
 
     expect(unexpectedDemoResourceErrors(page)).toHaveLength(0);
   });

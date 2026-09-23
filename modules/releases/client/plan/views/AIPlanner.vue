@@ -3,11 +3,20 @@ import { ref, computed, inject, watch, onMounted } from 'vue'
 import { apiRequest } from '@shared/client/services/api'
 import { useDraftPlans } from '../composables/useDraftPlans'
 
-const { approveFeature, persist, filterDecision } = useDraftPlans()
+const {
+  draft,
+  selectedVersion,
+  filterEvent,
+  loadCycles,
+  loadEditor,
+  approveFeature,
+  persist
+} = useDraftPlans()
 const moduleNav = inject('moduleNav', null)
 
 const loading = ref(true)
 const error = ref(null)
+const actionError = ref(null)
 const snapshot = ref(null)
 const searchQuery = ref('')
 const selectedPlan = ref('3.6 GA')
@@ -65,18 +74,41 @@ function getConfidenceBg(confidence) {
   return map[confidence] || 'bg-gray-100 dark:bg-gray-700'
 }
 
+async function ensureDraftPlanLoaded() {
+  if (draft.value && draft.value.version === selectedVersion.value) return true
+
+  try {
+    await loadCycles('RHOAI')
+    await loadEditor(selectedVersion.value)
+  } catch {
+    return false
+  }
+
+  return !!draft.value
+}
+
 async function addToDraftPlan(feature) {
+  actionError.value = null
+
+  if (!await ensureDraftPlanLoaded()) {
+    actionError.value = 'Plan Approval data is unavailable. Please try again.'
+    return
+  }
+
   const result = approveFeature(feature.Key, true)
-  if (result && result.ok) {
-    try {
-      await persist()
-      filterDecision.value = 'approved'
-      if (moduleNav && moduleNav.updateParams) {
-        moduleNav.updateParams({ tab: 'draft-plans' }, { push: false })
-      }
-    } catch (e) {
-      error.value = 'Failed to save draft plan: ' + e.message
+  if (!result || !result.ok) {
+    actionError.value = 'Feature is not available in the current Plan Approval candidate set.'
+    return
+  }
+
+  try {
+    await persist()
+    filterEvent.value = '__approved__'
+    if (moduleNav && moduleNav.updateParams) {
+      moduleNav.updateParams({ tab: 'draft-plans' }, { push: false })
     }
+  } catch (e) {
+    actionError.value = 'Failed to save draft plan: ' + e.message
   }
 }
 
@@ -120,6 +152,14 @@ onMounted(async () => {
     </div>
 
     <div v-else class="flex-1 overflow-y-auto">
+      <div
+        v-if="actionError"
+        role="alert"
+        class="mx-6 mt-4 rounded-lg border border-red-200 dark:border-red-700 bg-red-50 dark:bg-red-900/20 px-4 py-3 text-sm text-red-700 dark:text-red-400"
+      >
+        {{ actionError }}
+      </div>
+
       <!-- Bug Queue Panel -->
       <div v-if="snapshot.bugQueue && snapshot.bugQueue.length" class="px-6 py-4 bg-red-50 dark:bg-red-900/20 border-b border-red-200 dark:border-red-800">
         <h2 class="text-sm font-semibold text-red-900 dark:text-red-300 mb-2">🚨 Bug Queue (Top 6)</h2>
@@ -219,7 +259,7 @@ onMounted(async () => {
               </td>
               <td class="px-4 py-2 text-center text-xs dark:text-gray-300">{{ f.XTeam === 'yes' ? '✓ Yes' : '— No' }}</td>
               <td class="px-4 py-2 text-center">
-                <button @click="addToDraftPlan(f)" class="px-2 py-1 text-xs rounded bg-blue-600 hover:bg-blue-700 text-white">Add</button>
+                <button @click="addToDraftPlan(f)" class="px-2 py-1 text-xs rounded bg-blue-600 hover:bg-blue-700 text-white">Add to Plan</button>
               </td>
             </tr>
           </tbody>

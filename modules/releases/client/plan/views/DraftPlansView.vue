@@ -187,11 +187,15 @@ onMounted(async function() {
   try {
     await loadCycles('RHOAI')
   } catch {
-    // Cycles load may fail in some envs; continue with empty draft
+    // The editor request below provides the actionable error state.
   }
-  // Plan Approval tab starts empty — users add features via "Add to Plan" from AI Planner.
-  // This keeps approval workflow separate from candidate planning in AI Planner.
-  // No await here; editor initializes with empty state immediately.
+  if (!draft.value || draft.value.version !== selectedVersion.value) {
+    await loadEditor(selectedVersion.value)
+  }
+  // Plan Approval starts with only AI Planner-approved features visible while
+  // retaining the full candidate set for approvals, editing, and audit history.
+  filterEvent.value = '__approved__'
+  filterDecision.value = ''
 })
 </script>
 
@@ -444,7 +448,7 @@ onMounted(async function() {
 
     <!-- Empty state: Plan Approval starts fresh -->
     <div
-      v-if="!draft && !loading && !error"
+      v-if="!loading && !error && (!draft || (filterEvent === '__approved__' && filteredRows.length === 0))"
       class="mx-4 mt-3 rounded-lg border border-blue-200 dark:border-blue-500/30 bg-blue-50 dark:bg-blue-500/10 px-4 py-6 text-center text-sm text-blue-800 dark:text-blue-300"
     >
       <p class="font-semibold mb-2">Plan Approval — Start Fresh</p>

@@ -53,23 +53,23 @@ describe('PlanView Draft Plans gate', function() {
     vi.clearAllMocks()
   })
 
-  it('hides Draft Plans tab when access is denied', async function() {
+  it('hides Plan Approval tab when access is denied', async function() {
     apiRequest.mockResolvedValue({ canViewDraftPlans: false })
     var wrapper = mountPlanView()
     await flushPromises()
     await nextTick()
 
-    expect(wrapper.text()).not.toContain('Draft Plans')
+    expect(wrapper.text()).not.toContain('Plan Approval')
     expect(apiRequest).toHaveBeenCalledWith('/modules/releases/draft-plans/access')
   })
 
-  it('shows Draft Plans tab when access is allowed', async function() {
+  it('shows Plan Approval tab when access is allowed', async function() {
     apiRequest.mockResolvedValue({ canViewDraftPlans: true })
     var wrapper = mountPlanView()
     await flushPromises()
     await nextTick()
 
-    expect(wrapper.text()).toContain('Draft Plans')
+    expect(wrapper.text()).toContain('Plan Approval')
   })
 
   it('does not deep-link into Draft Plans when gated', async function() {

@@ -405,6 +405,13 @@ test.describe('Release Timeline @release-timeline @releases', () => {
     await page.waitForLoadState('networkidle');
     await page.waitForTimeout(DEFAULT_PAGE_WAIT_TIME);
 
+    // Include released milestones and focus a stable fixture release. Relying
+    // on whichever cards happen to be near "today" makes this test expire as
+    // the calendar advances.
+    await page.getByLabel('Hide released').uncheck();
+    await page.locator('button').filter({ hasText: /^3\.6 EA1$/ }).click();
+    await page.waitForTimeout(DEFAULT_PAGE_WAIT_TIME);
+
     var canvas = page.locator('canvas');
     await expect(canvas).toBeVisible();
     var box = await canvas.boundingBox();
@@ -458,6 +465,11 @@ test.describe('Release Timeline @release-timeline @releases', () => {
   test('dragging over a milestone card pans instead of navigating', async ({ page }) => {
     await page.goto('/#/releases/schedule?e2e=1');
     await page.waitForLoadState('networkidle');
+    await page.waitForTimeout(DEFAULT_PAGE_WAIT_TIME);
+
+    // Keep the drag target stable over time by fitting a known fixture release.
+    await page.getByLabel('Hide released').uncheck();
+    await page.locator('button').filter({ hasText: /^3\.6 EA1$/ }).click();
     await page.waitForTimeout(DEFAULT_PAGE_WAIT_TIME);
 
     var canvas = page.locator('canvas');
