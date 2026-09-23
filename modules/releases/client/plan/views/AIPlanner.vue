@@ -13,6 +13,8 @@ const searchQuery = ref('')
 const selectedPlan = ref('3.6 GA')
 const currentPage = ref(1)
 const PAGE_SIZE = 50
+const selectedBugComponent = ref(null)
+const showBugModal = ref(false)
 
 const bugComponentMap = computed(() => {
   const map = {}
@@ -72,6 +74,18 @@ function addToDraftPlan(feature) {
   }
 }
 
+function showBugBreakdown(component) {
+  selectedBugComponent.value = component
+  showBugModal.value = true
+}
+
+const featuresInComponent = computed(() => {
+  if (!selectedBugComponent.value || !snapshot.value?.features) return []
+  return snapshot.value.features.filter(f =>
+    (f.Components || '').includes(selectedBugComponent.value)
+  ).slice(0, 10)
+})
+
 onMounted(async () => {
   try {
     snapshot.value = await apiRequest('/modules/releases/planning/ai-planner')
@@ -104,11 +118,46 @@ onMounted(async () => {
       <div v-if="snapshot.bugQueue && snapshot.bugQueue.length" class="px-6 py-4 bg-red-50 dark:bg-red-900/20 border-b border-red-200 dark:border-red-800">
         <h2 class="text-sm font-semibold text-red-900 dark:text-red-300 mb-2">🚨 Bug Queue (Top 6)</h2>
         <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-2">
-          <div v-for="b in snapshot.bugQueue.slice(0, 6)" :key="b.component" class="text-xs">
+          <div v-for="b in snapshot.bugQueue.slice(0, 6)" :key="b.component"
+            @click="showBugBreakdown(b.component)"
+            class="cursor-pointer p-3 bg-white rounded-lg border border-red-300 hover:shadow-md transition-all hover:scale-105 text-xs">
             <div class="font-mono font-bold">{{ getSeverityIcon(b.component) }} {{ b.component }}</div>
             <div class="text-red-700 dark:text-red-300">🔴 {{ b.blocker }} blocker</div>
             <div class="text-orange-700 dark:text-orange-300">🟠 {{ b.critical }} critical</div>
+            <div class="text-gray-500 text-xs mt-2">click for details →</div>
           </div>
+        </div>
+      </div>
+
+      <!-- Bug Detail Modal -->
+      <div v-if="showBugModal" class="fixed inset-0 bg-black/50 flex items-center justify-center z-50" @click.self="showBugModal = false">
+        <div class="bg-white dark:bg-gray-800 rounded-lg p-6 max-w-lg max-h-80vh overflow-y-auto shadow-xl">
+          <h3 class="text-lg font-bold mb-4 text-gray-900 dark:text-gray-100">{{ selectedBugComponent }}</h3>
+          <div v-if="selectedBugComponent && snapshot.bugQueue" class="mb-4">
+            <div class="bg-red-50 dark:bg-red-900/30 p-4 rounded-lg">
+              <div class="text-sm mb-2"><span class="font-bold">🔴 Blocker:</span> {{ snapshot.bugQueue.find(b => b.component === selectedBugComponent)?.blocker || 0 }} issues</div>
+              <div class="text-sm mb-2"><span class="font-bold">🟠 Critical:</span> {{ snapshot.bugQueue.find(b => b.component === selectedBugComponent)?.critical || 0 }} issues</div>
+              <div class="text-sm"><span class="font-bold">📊 Total:</span> {{ snapshot.bugQueue.find(b => b.component === selectedBugComponent)?.total || 0 }} issues</div>
+            </div>
+          </div>
+
+          <div class="mb-4">
+            <div class="text-sm font-bold text-gray-900 dark:text-gray-100 mb-2">Features in this component:</div>
+            <div class="max-h-40 overflow-y-auto border border-gray-200 dark:border-gray-600 rounded p-2 bg-gray-50 dark:bg-gray-900">
+              <div v-if="featuresInComponent.length === 0" class="text-xs text-gray-500">No features found</div>
+              <div v-for="f in featuresInComponent" :key="f.Key" class="mb-2 text-xs">
+                <a :href="`https://redhat.atlassian.net/browse/${f.Key}`" target="_blank" class="text-blue-600 dark:text-blue-400 font-semibold hover:underline">{{ f.Key }}</a>
+                <div class="text-gray-600 dark:text-gray-400 text-xs">{{ (f.Summary || f.Title || '').slice(0, 50) }}{{ (f.Summary || f.Title || '').length > 50 ? '...' : '' }}</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="text-xs text-gray-600 dark:text-gray-400 mb-4 p-2 bg-gray-100 dark:bg-gray-700 rounded">
+            <strong>Impact:</strong> Features lose confidence due to bug load.<br>
+            <strong>Action:</strong> Prioritize bug fixes or add team capacity.
+          </div>
+
+          <button @click="showBugModal = false" class="w-full py-2 bg-gray-200 dark:bg-gray-600 text-gray-900 dark:text-gray-100 rounded font-semibold hover:bg-gray-300 dark:hover:bg-gray-500">Close</button>
         </div>
       </div>
 
