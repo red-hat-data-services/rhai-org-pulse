@@ -757,7 +757,7 @@ function registerReleaseEpicRoutes(router, context, deps = {}) {
    *             type: object
    *             required: [product, version, branch, advisory_type]
    *             properties:
-             *               product: {type: string, enum: [agentic-base-images, ai-hub, base-images, docling, guidellm, rhaiis, rhelai, torch]}
+   *               product: {type: string, enum: [agentic-base-images, ai-hub, base-images, docling, guidellm, rhaiis, rhelai, torch]}
    *               version: {type: string}
    *               branch: {type: string}
    *               release_type: {type: string, enum: [GA, EA]}
@@ -767,8 +767,8 @@ function registerReleaseEpicRoutes(router, context, deps = {}) {
    *         description: Release Epic and checklist cards created
    *       409:
    *         description: Duplicate or Feature choice requires confirmation
-   *       401:
-   *         description: Authenticated dashboard identity is unavailable
+   *       403:
+   *         description: Not authorized to create release epics for this product
    */
   router.post('/release-epic', requireAuth, blockDuringImpersonation, async function(req, res) {
     let createdKeys = [];
