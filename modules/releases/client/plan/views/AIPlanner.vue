@@ -65,13 +65,17 @@ function getConfidenceBg(confidence) {
   return map[confidence] || 'bg-gray-100 dark:bg-gray-700'
 }
 
-function addToDraftPlan(feature) {
+async function addToDraftPlan(feature) {
   const result = approveFeature(feature.Key, true)
   if (result && result.ok) {
-    persist()
-    filterDecision.value = 'approved'
-    if (moduleNav && moduleNav.updateParams) {
-      moduleNav.updateParams({ tab: 'draft-plans' }, { push: false })
+    try {
+      await persist()
+      filterDecision.value = 'approved'
+      if (moduleNav && moduleNav.updateParams) {
+        moduleNav.updateParams({ tab: 'draft-plans' }, { push: false })
+      }
+    } catch (e) {
+      error.value = 'Failed to save draft plan: ' + e.message
     }
   }
 }
@@ -84,7 +88,7 @@ function showBugBreakdown(component) {
 const featuresInComponent = computed(() => {
   if (!selectedBugComponent.value || !snapshot.value?.features) return []
   return snapshot.value.features.filter(f =>
-    (f.Components || '').includes(selectedBugComponent.value)
+    (f.Components || []).includes(selectedBugComponent.value)
   ).slice(0, 10)
 })
 
