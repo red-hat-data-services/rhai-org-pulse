@@ -1,7 +1,13 @@
 {
+<<<<<<< HEAD
   "lastSyncedAt": null,
   "dataDate": "2026-09-22",
   "featureCount": 100,
+=======
+  "lastSyncedAt": "2026-09-22T00:00:00.000Z",
+  "dataDate": "2026-09-22",
+  "featureCount": 1148,
+>>>>>>> 36d13d8e01aafaa91ae370542b190c3805111866
   "features": [
     {
       "Key": "RHAISTRAT-1001",
