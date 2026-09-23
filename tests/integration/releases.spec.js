@@ -1796,6 +1796,71 @@ test.describe('Releases CVE Sustaining Report @releases', () => {
     expect(page.errors).toHaveLength(0);
   });
 
+  test('CVE action report recovers when the refresh request times out at the gateway', async ({ page }) => {
+    const components = { availableComponents: ['Dashboard', 'Model Serving', 'None', 'Pipelines'] };
+    const cachedReport = {
+      component: 'Model Serving',
+      asOfDate: '2026-09-23',
+      windowEndDate: '2026-12-22',
+      summary: {
+        openVulnerabilities: { count: 1, jql: 'https://jira.example/open', byCvss: [] },
+        slaBreached: { count: 0, jql: 'https://jira.example/sla-breached', byCvss: [] },
+        noSlaDate: { count: 0, jql: 'https://jira.example/no-sla', byCvss: [] }
+      },
+      timeline: [],
+      createdWeekly: [],
+      openAgeBuckets: []
+    };
+    let componentsRequestCount = 0;
+    let reportRequestCount = 0;
+
+    await page.route('**/api/modules/releases/cve-sustaining/action-report/components', async route => {
+      componentsRequestCount++;
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({
+          ...components,
+          lastRefreshed: componentsRequestCount > 1
+            ? '2026-09-23T13:00:00.000Z'
+            : '2026-09-23T12:00:00.000Z'
+        })
+      });
+    });
+    await page.route('**/api/modules/releases/cve-sustaining/action-report?component=*', async route => {
+      reportRequestCount++;
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({
+          ...cachedReport,
+          windowEndDate: reportRequestCount > 1 ? '2099-12-31' : cachedReport.windowEndDate,
+          lastRefreshed: reportRequestCount > 1
+            ? '2026-09-23T13:00:00.000Z'
+            : '2026-09-23T12:00:00.000Z'
+        })
+      });
+    });
+    await page.route('**/api/modules/releases/cve-sustaining/refresh', async route => {
+      await route.fulfill({ status: 502, contentType: 'text/plain', body: 'Bad Gateway' });
+    });
+
+    await page.goto('/#/releases/reports?report=cve-action-report');
+    await page.waitForLoadState('networkidle');
+    const selector = page.locator('#cve-action-component');
+    await selector.selectOption({ label: 'Model Serving' });
+    await expect(page.getByText(`Upcoming due dates until ${cachedReport.windowEndDate}`)).toBeVisible();
+
+    await page.getByRole('button', { name: 'Refresh from Jira' }).click();
+    await expect(page.getByRole('button', { name: 'Refreshing...' })).toBeDisabled();
+    await expect(page.getByText(`Upcoming due dates until ${cachedReport.windowEndDate}`)).toBeVisible();
+    await expect(page.getByText('Upcoming due dates until 2099-12-31')).toBeVisible({ timeout: 10000 });
+
+    await expect(page.getByRole('button', { name: 'Refresh from Jira' })).toBeEnabled();
+    await expect(page.locator('[role="alert"]')).toHaveCount(0);
+    expect(page.errors.filter(error => !error.message.includes('status of 502'))).toHaveLength(0);
+  });
+
   test('filter bar is visible and shows default state', async ({ page }) => {
     await page.goto('/#/releases/reports?report=cve-sustaining');
     await page.waitForLoadState('networkidle');

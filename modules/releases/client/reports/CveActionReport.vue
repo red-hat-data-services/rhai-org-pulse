@@ -27,6 +27,8 @@
       </select>
     </section>
 
+    <div v-if="refreshError" class="rounded-lg border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800 dark:border-amber-800 dark:bg-amber-900/20 dark:text-amber-300" role="alert">{{ refreshError }}</div>
+
     <div v-if="loading" class="py-20 text-center text-sm text-gray-500">Loading CVE action report…</div>
     <div v-else-if="error" class="rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-700 dark:border-red-800 dark:bg-red-900/20 dark:text-red-300" role="alert">{{ error }}</div>
     <div v-else-if="!selected" class="py-20 text-center text-sm text-gray-500">Choose a component to see its CVE action queue.</div>
@@ -64,7 +66,7 @@
 </template>
 
 <script setup>
-import { computed, h, inject, onMounted, ref, watch } from 'vue'
+import { computed, h, inject, onMounted, onUnmounted, ref, watch } from 'vue'
 import { ExternalLink, RefreshCw } from 'lucide-vue-next'
 import { Bar } from 'vue-chartjs'
 import { BarElement, CategoryScale, Chart as ChartJS, LinearScale, Tooltip, Legend } from 'chart.js'
@@ -72,7 +74,7 @@ import { useCveActionReport } from './composables/useCveActionReport.js'
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, Tooltip, Legend)
 const nav = inject('moduleNav', null)
-const { data, availableComponents, selectedComponent, loading, error, refreshing, loadComponents, loadReport, refresh } = useCveActionReport()
+const { data, availableComponents, selectedComponent, loading, error, refreshError, refreshing, loadComponents, loadReport, refresh, cleanup } = useCveActionReport()
 const selected = ref('')
 const outcomes = [
   { key: 'needs-action', label: 'Needs action' }, { key: 'not-found', label: 'Not found' },
@@ -105,8 +107,12 @@ const ageChart = computed(() => ({
   }))
 }))
 function formatDate(value) { return value ? new Date(value).toLocaleString() : 'unknown' }
-async function handleRefresh() { await refresh() }
+async function handleRefresh() {
+  await refresh()
+  if (selected.value !== selectedComponent.value) selected.value = selectedComponent.value
+}
 onMounted(async () => { await loadComponents(nav?.params?.value?.component || ''); selected.value = selectedComponent.value })
+onUnmounted(cleanup)
 watch(selected, value => { if (value) { nav?.updateParams?.({ component: value }); loadReport(value) } else { nav?.updateParams?.({ component: undefined }) } })
 
 const SummaryCard = (props) => {
