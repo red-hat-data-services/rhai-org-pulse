@@ -137,7 +137,7 @@ onMounted(async () => {
 
       <!-- Bug Detail Modal -->
       <div v-if="showBugModal" class="fixed inset-0 bg-black/50 flex items-center justify-center z-50" @click.self="showBugModal = false">
-        <div class="bg-white dark:bg-gray-800 rounded-lg p-6 max-w-lg max-h-80vh overflow-y-auto shadow-xl">
+        <div class="bg-white dark:bg-gray-800 rounded-lg p-6 max-w-lg max-h-[80vh] overflow-y-auto shadow-xl">
           <h3 class="text-lg font-bold mb-4 text-gray-900 dark:text-gray-100">{{ selectedBugComponent }}</h3>
           <div v-if="selectedBugComponent && snapshot.bugQueue" class="mb-4">
             <div class="bg-red-50 dark:bg-red-900/30 p-4 rounded-lg">
