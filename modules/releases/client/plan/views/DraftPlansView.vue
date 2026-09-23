@@ -187,9 +187,11 @@ onMounted(async function() {
   try {
     await loadCycles('RHOAI')
   } catch {
-    // loadEditor still tries demo/editor path
+    // Cycles load may fail in some envs; continue with empty draft
   }
-  await loadEditor(selectedVersion.value)
+  // Plan Approval tab starts empty — users add features via "Add to Plan" from AI Planner.
+  // This keeps approval workflow separate from candidate planning in AI Planner.
+  // No await here; editor initializes with empty state immediately.
 })
 </script>
 
@@ -438,6 +440,15 @@ onMounted(async function() {
       class="mx-4 mt-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-700 rounded-lg p-4 text-sm text-red-700 dark:text-red-400"
     >
       {{ error }}
+    </div>
+
+    <!-- Empty state: Plan Approval starts fresh -->
+    <div
+      v-if="!draft && !loading && !error"
+      class="mx-4 mt-3 rounded-lg border border-blue-200 dark:border-blue-500/30 bg-blue-50 dark:bg-blue-500/10 px-4 py-6 text-center text-sm text-blue-800 dark:text-blue-300"
+    >
+      <p class="font-semibold mb-2">Plan Approval — Start Fresh</p>
+      <p>Use the <strong>AI Planner</strong> tab to review features and add them to this plan with the "Add to Plan" button.</p>
     </div>
 
     <!-- Table + sticky audit panel (mirrors red-pen panel-grid) -->
