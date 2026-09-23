@@ -50,6 +50,7 @@ export const viewOwners = {
   'product-builds/overview':                       'Giulia Naponiello',
   'product-builds/package-analysis':               'Einat Pacifici',
   'product-builds/package-request':                'André Lustosa',
+  'product-builds/release-status':                 'Giulia Naponiello',
   'product-builds/rhaiis':                         'Pavol Pitonak',
   'product-builds/rhel-ai':                        'Pavol Pitonak',
   'product-builds/search':                         'Rishabh Kothari',
@@ -95,6 +96,15 @@ export const viewOwners = {
   'upstream-pulse/project-detail':                 'Dipanshu Gupta',
   'upstream-pulse/strategy':                       'Dipanshu Gupta',
 
+  // workflow-validation
+  'workflow-validation/activity':                  'Adam Drew',
+  'workflow-validation/compare':                   'Adam Drew',
+  'workflow-validation/overview':                  'Adam Drew',
+  'workflow-validation/run-detail':                'Adam Drew',
+  'workflow-validation/runs':                      'Adam Drew',
+  'workflow-validation/workflow-history':          'Adam Drew',
+  'workflow-validation/workflows':                 'Adam Drew',
+
   // ── Sub-tab owners (module/view/tab) ──
   // These override the view-level owner when a specific tab is active.
 
@@ -129,6 +139,7 @@ export const viewOwners = {
 
   // releases > reports
   'releases/reports/ai-adoption':                  'Saiesh Prabhu',
+  'releases/reports/cve-action-report':            'Doug Hellmann',
   'releases/reports/cve-sustaining':               'Saiesh Prabhu',
   'releases/reports/pre-release-cve':              'Moulali Shikalwadi',
   'releases/reports/release-readiness':            'Arthy Loganathan',

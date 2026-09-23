@@ -2,9 +2,9 @@ const yaml = require('js-yaml');
 const { createJiraClient } = require('../../../shared/server/jira');
 
 // Keep these queries aligned with readiness-detector/constants.py.
-const SCAN_JQL = 'project = AIPCC AND issuetype = Epic AND labels = release-automation AND status != Closed';
+const SCAN_JQL = 'project in (AIPCC, RHAI) AND issuetype = Epic AND labels = release-automation AND status != Closed';
 const ALL_CHILD_TASKS_JQL = epicKey => (
-  `project = AIPCC AND issuetype = Task AND (parent = ${epicKey} OR "Epic Link" = ${epicKey})`
+  `project in (AIPCC, RHAI) AND issuetype = Task AND (parent = ${epicKey} OR "Epic Link" = ${epicKey})`
 );
 
 const EPIC_FIELDS = 'key,summary,status,labels,description,assignee,created,updated';

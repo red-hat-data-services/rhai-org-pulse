@@ -1230,6 +1230,92 @@ test.describe('Releases FPDoR Readiness @releases', () => {
 });
 
 /**
+ * AI Adoption Report
+ *
+ * Verify release filtering and scorecard coverage includes the complete 3.6
+ * release train without changing the existing report behavior.
+ */
+test.describe('Releases AI Adoption Report @releases', () => {
+  test.beforeEach(async ({ page }) => {
+    setupErrorTracking(page);
+
+    const releaseNames = [
+      '3.4 GA',
+      '3.5 EA1',
+      '3.5 EA2',
+      '3.5 GA',
+      '3.6 EA1',
+      '3.6 EA2',
+      '3.6 GA'
+    ];
+    const pipelineCounts = {
+      stratCreator: 1,
+      rfeCreator: 1,
+      testPlan: 0,
+      qg1: 0,
+      aiDoc: 0,
+      uxdAgentic: 0,
+      epicCreator: 0
+    };
+    const groups = releaseNames.map((releaseGroup, index) => ({
+      releaseGroup,
+      totalFeatures: 10 + index,
+      aiTouchedFeatures: 2 + index,
+      pipelines: { ...pipelineCounts },
+      firstPass: {},
+      components: [],
+      effortSignal: 'children',
+      aggregateEffort: 10 + index,
+      avgEffort: 1
+    }));
+
+    await page.route('**/api/modules/releases/ai-adoption**', async route => {
+      const releaseGroup = new URL(route.request().url()).searchParams.get('releaseGroup');
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({
+          releaseGroups: releaseGroup
+            ? groups.filter(group => group.releaseGroup === releaseGroup)
+            : groups,
+          fetchedAt: '2026-09-22T12:00:00.000Z'
+        })
+      });
+    });
+  });
+
+  test.afterEach(async ({ page }, testInfo) => {
+    logCapturedErrors(page, testInfo);
+  });
+
+  test('shows the 3.6 releases in the filter and scorecard', async ({ page }) => {
+    await page.goto('/#/releases/reports?report=ai-adoption');
+    await page.waitForLoadState('networkidle');
+
+    await expect(page.getByRole('heading', { name: 'AI Adoption Report', exact: true })).toBeVisible();
+
+    const releaseFilter = page.locator('select').nth(1);
+    await expect(releaseFilter.locator('option')).toHaveText([
+      'All Releases',
+      '3.4 GA',
+      '3.5 EA1',
+      '3.5 EA2',
+      '3.5 GA',
+      '3.6 EA1',
+      '3.6 EA2',
+      '3.6 GA'
+    ]);
+
+    for (const release of ['3.6 EA1', '3.6 EA2', '3.6 GA']) {
+      await expect(page.locator('th', { hasText: release }).first()).toBeVisible();
+    }
+    await expect(page.getByText('between 3.4 GA and 3.6 GA.', { exact: false }).first()).toBeVisible();
+
+    expect(page.errors).toHaveLength(0);
+  });
+});
+
+/**
  * RHOAI Release Readiness Dashboard
  *
  * Verify the release readiness report card is visible, clickable, and renders
@@ -1621,6 +1707,59 @@ test.describe('Releases CVE Sustaining Report @releases', () => {
     expect(record).toHaveProperty('versions');
     expect(record).toHaveProperty('status');
     expect(record).toHaveProperty('assignee');
+  });
+
+  test('CVE action report API exposes cached components and scoped report data', async ({ request }) => {
+    const componentsRes = await request.get('/api/modules/releases/cve-sustaining/action-report/components');
+    expect(componentsRes.ok()).toBe(true);
+    const components = await componentsRes.json();
+    expect(components.availableComponents).toEqual(['Dashboard', 'Model Serving', 'None', 'Pipelines']);
+
+    const reportRes = await request.get('/api/modules/releases/cve-sustaining/action-report?component=Model%20Serving');
+    expect(reportRes.ok()).toBe(true);
+    const report = await reportRes.json();
+    expect(report.component).toBe('Model Serving');
+    expect(report.timeline.length).toBeGreaterThan(0);
+    expect(report.timeline.some(row => row.outcomes['needs-action'])).toBe(true);
+    expect(report.timeline.some(row => row.outcomes['not-found'])).toBe(true);
+    expect(report.timeline.some(row => row.outcomes['needs-review'])).toBe(true);
+    expect(report.timeline.every(row => row.total > 0 && row.total_jql)).toBe(true);
+    expect(report.summary.missingOutcome.count).toBeGreaterThan(0);
+    expect(report.summary).not.toHaveProperty('conflictingOutcome');
+    expect(report.summary.openVulnerabilities.count).toBeGreaterThan(0);
+    expect(report.summary.openVulnerabilities.byCvss.length).toBeGreaterThan(0);
+    expect(report.createdWeekly.length).toBeGreaterThan(0);
+    expect(report.openAgeBuckets).toHaveLength(5);
+    expect(report.openAgeBuckets.every(bucket => bucket.outcomes)).toBe(true);
+    expect(report.openAgeBuckets.every(bucket => Object.values(bucket.outcomes).reduce((sum, count) => sum + count, 0) === bucket.count)).toBe(true);
+
+    const scoreLink = report.timeline
+      .flatMap(row => Object.values(row.outcomes).flatMap(outcome => outcome.byCvss || []))
+      .find(score => score.score === '7');
+    expect(scoreLink).toBeTruthy();
+    expect(decodeURIComponent(scoreLink.jql)).toContain('issue.property[rh-sla-dt].value');
+    expect(decodeURIComponent(scoreLink.jql)).toContain('key in');
+  });
+
+  test('CVE action report renders component selection, summary, timeline, and charts', async ({ page }) => {
+    await page.goto('/#/releases/reports?report=cve-action-report');
+    await page.waitForLoadState('networkidle');
+    await page.waitForTimeout(DEFAULT_PAGE_WAIT_TIME);
+
+    const selector = page.locator('#cve-action-component');
+    await expect(selector).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Refresh from Jira' })).toBeVisible();
+    await expect(selector.locator('option')).toHaveCount(5);
+    await selector.selectOption({ label: 'Model Serving' });
+
+    await expect(page.getByText('Upcoming SLA deadlines until 2026-12-21')).toBeVisible();
+    await expect(page.getByText('Overdue', { exact: true })).toBeVisible();
+    await expect(page.getByText('Missing review outcome', { exact: true })).toBeVisible();
+    await expect(page.getByRole('table', { name: 'Upcoming SLA deadlines until 2026-12-21' })).toBeVisible();
+    await expect(page.getByText('Vulnerabilities created and closed weekly')).toBeVisible();
+    await expect(page.getByText('Open action cohort age by outcome')).toBeVisible();
+    expect(await page.locator('a[target="_blank"]').count()).toBeGreaterThan(0);
+    expect(page.errors).toHaveLength(0);
   });
 
   test('filter bar is visible and shows default state', async ({ page }) => {

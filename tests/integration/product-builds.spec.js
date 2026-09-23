@@ -111,6 +111,7 @@ test.describe('Product Builds Module @product-builds', () => {
     await expect(page.getByRole('link', { name: 'View pipeline' })).toBeVisible()
     expect(submissions).toHaveLength(2)
     expect(submissions[0].team).toBe(option)
+    expect(submissions[0].project).toBe('RHAI')
     expect(submissions[1]).toEqual(submissions[0])
   })
 

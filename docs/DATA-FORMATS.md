@@ -302,6 +302,8 @@ Tracks which modules are enabled or disabled. Managed via `POST /api/admin/modul
 - An empty object `{}` is valid — modules fall back to their `defaultEnabled` value from `module.json`.
 - Created on first module enable/disable action; may not exist on fresh deployments.
 - At startup, required dependencies are auto-enabled via `reconcileStartupState()`.
+- The demo fixture explicitly enables modules exercised by integration tests,
+  including modules that are disabled by default in unconfigured deployments.
 
 ## Snapshots — `data/snapshots/{sanitized-teamKey}/{YYYY-MM-DD}.json`
 
@@ -956,6 +958,61 @@ Admin-configurable settings for the AI Impact module.
 - `lookbackMonths` must be an integer between 1 and 120
 - `trendThresholdPp` is the percentage-point threshold for classifying trends as "growing" or "declining" (0-50)
 - Defaults are used when no config file exists
+
+## Releases — CVE Sustaining Action Records (`data/releases/cve-sustaining/latest.json`)
+
+The CVE sustaining snapshot may include `actionReportRecords` for the
+component-scoped CVE Action Report. The existing sustaining metrics and
+`openIssueRecords` fields remain unchanged.
+
+```json
+{
+  "actionReportRecords": {
+    "open": [
+      {
+        "key": "RHAIENG-123",
+        "components": ["Model Serving"],
+        "slaDate": "2026-10-02",
+        "created": "2026-08-12T14:30:00.000Z",
+        "resolved": null,
+        "labels": ["rhai-cve-review-needs-action"],
+        "cvss": "7.5"
+      }
+    ],
+    "all": [
+      {
+        "key": "RHAIENG-123",
+        "components": ["Model Serving"],
+        "created": "2026-08-12T14:30:00.000Z",
+        "resolved": "2026-09-10T11:20:00.000Z"
+      }
+    ]
+  }
+}
+```
+
+`open` is the current open Vulnerability cohort used for overdue, due-date,
+review-outcome, and age metrics. `all` is the all-status cohort used for the
+90-day intake history. Each record has a Jira `key`, all assigned Jira
+`components`, an ISO `created` timestamp, and `resolved` (the Jira
+`resolutiondate` timestamp or `null`). Open records additionally have
+`slaDate` (ISO date or `null`), Jira `labels`, and `cvss` (a canonical
+one-decimal string or `null`). `slaDate` is normalized from the UTC
+`issue.properties["rh-sla-dt"].value` value supplied by the Red Hat Forge SLA
+Date field; it must not be derived from Jira `duedate` or its opaque stored
+custom-field value. CVSS is sourced from Jira
+`customfield_10859`, whose value is a string beginning with the base score
+(for example, `"7.5 CVSS:3.1/..."`). Missing or malformed values are `null`
+and display as **Unspecified** in score breakdowns.
+
+Older snapshots may omit `actionReportRecords`; the API treats that as an
+empty projection and the report remains unavailable until the next sustaining
+refresh. Extra record fields are ignored, and missing optional values are
+treated as empty/null for backward-compatible reads. Component membership is
+preserved as an array because an issue is counted once in each assigned
+component's report.
+
+---
 
 ## Releases — Delivery Config (`data/releases/delivery/config.json`)
 

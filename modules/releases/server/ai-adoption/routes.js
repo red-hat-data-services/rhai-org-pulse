@@ -8,9 +8,18 @@
  * Mount: /api/modules/releases/ai-adoption/
  */
 
-const { fetchAiAdoptionData } = require('./pipeline');
+const { fetchAiAdoptionData, RELEASE_GROUPS } = require('./pipeline');
 
 const STORAGE_KEY = 'releases/ai-adoption/latest.json';
+const RELEASE_CONFIG_VERSION = 2;
+
+function hasCurrentReleaseConfig(cached) {
+  if (!cached || cached.releaseConfigVersion !== RELEASE_CONFIG_VERSION) return false;
+  const cachedNames = (cached.releaseGroups || []).map(group => group.releaseGroup);
+  const configuredNames = RELEASE_GROUPS.map(group => group.name);
+  return cachedNames.length === configuredNames.length &&
+    cachedNames.every((name, index) => name === configuredNames[index]);
+}
 
 /**
  * Apply optional filters to the cached full dataset.
@@ -61,7 +70,7 @@ function applyFilters(cached, { releaseGroup, component }) {
  *         name: releaseGroup
  *         schema:
  *           type: string
- *           enum: ['3.4 GA', '3.5 EA1', '3.5 EA2', '3.5 GA']
+ *           enum: ['3.4 GA', '3.5 EA1', '3.5 EA2', '3.5 GA', '3.6 EA1', '3.6 EA2', '3.6 GA']
  *         description: Filter to a single release group (omit for all)
  *       - in: query
  *         name: component
@@ -93,11 +102,18 @@ function applyFilters(cached, { releaseGroup, component }) {
  */
 
 function registerAiAdoptionRoutes(router, { storage, requireAuth, requireScope, jira }) {
-  async function fetchAndCache() {
-    const data = await fetchAiAdoptionData(jira);
+  async function fetchAndCache({ rejectOnFetchError = false } = {}) {
+    let fetchError = null;
+    const data = await fetchAiAdoptionData(jira, {
+      onFetchError: rejectOnFetchError
+        ? err => { if (!fetchError) fetchError = err; }
+        : null
+    });
+    if (fetchError) throw fetchError;
     const payload = {
       releaseGroups: data,
-      fetchedAt: new Date().toISOString()
+      fetchedAt: new Date().toISOString(),
+      releaseConfigVersion: RELEASE_CONFIG_VERSION
     };
     await storage.writeToStorage(STORAGE_KEY, payload);
     return payload;
@@ -115,6 +131,12 @@ function registerAiAdoptionRoutes(router, { storage, requireAuth, requireScope, 
           return res.status(503).json({ error: 'Jira client not configured and no cached data available' });
         }
         cached = await fetchAndCache();
+      } else if (!hasCurrentReleaseConfig(cached) && jira) {
+        try {
+          cached = await fetchAndCache({ rejectOnFetchError: true });
+        } catch (refreshErr) {
+          console.warn(`[ai-adoption] Cache upgrade failed; serving existing data: ${refreshErr.message}`);
+        }
       }
 
       const result = applyFilters(cached, { releaseGroup, component });

@@ -16,7 +16,11 @@ const {
   getTeamOptions,
   checkPypiPackage,
   getGitlabToken,
+  getGitLabConfig,
   resolveJiraProject,
+  resolveJiraProjectConfig,
+  selectFilingProject,
+  triggerOnboardingPipeline,
   checkRateLimit,
   recordSubmission,
   _lastSubmission,
@@ -776,7 +780,7 @@ describe('package-requests', () => {
         c => String(c[0]).includes('/api/v4/projects/') && (c[1].method || 'GET') === 'POST'
       )
       expect(pipelineCall).toBeDefined()
-      expect(String(pipelineCall[0])).toContain('/projects/redhat%2Frhel-ai%2Fcore%2Fpackage-onboarding/pipeline')
+      expect(String(pipelineCall[0])).toContain('/projects/78041351/pipeline')
       expect(String(pipelineCall[0])).not.toContain('/pipelines')
       expect(pipelineCall[1].headers['PRIVATE-TOKEN']).toBe('onboarding-token')
       const pipelineBody = JSON.parse(pipelineCall[1].body)
@@ -921,6 +925,66 @@ describe('package-requests', () => {
       const { router } = register({}, { secrets: {} })
       const res = await callHandler(router, { userEmail: 'jane@redhat.com', body: validBody() })
       expect(res._status).toBe(503)
+    })
+  })
+
+  describe('project chosen in the form', () => {
+    function jiraCreating(keyPrefix) {
+      return makeJira({
+        jiraRequest: vi.fn(async (path, opts = {}) => {
+          const method = (opts.method || 'GET').toUpperCase()
+          if (path.startsWith('/rest/api/3/user/search')) return []
+          if (path === '/rest/api/3/issue' && method === 'POST') return { key: keyPrefix + '-7', id: '7' }
+          if (method === 'PUT') return {}
+          if (path.startsWith('/rest/api/3/issue/')) return { key: 'AIPCC-42', fields: { summary: 'Related' } }
+          throw new Error('Unexpected ' + method + ' ' + path)
+        })
+      })
+    }
+
+    it('files the Epic and searches duplicates in the selected project', async () => {
+      const jira = jiraCreating('RHAI')
+      const { router } = register({ jiraClient: jira, fetch: makeFetch(), fetchIndex: vi.fn(async () => ({ found: false, files: [] })) })
+      const res = await callHandler(router, { userEmail: 'jane@redhat.com', body: validBody({ project: 'RHAI' }) })
+      expect(res._status).toBe(201)
+      expect(epicPostCall(jira)[1].body.fields.project).toEqual({ key: 'RHAI' })
+      expect(jira.fetchAllJqlResults.mock.calls[0][0]).toContain('project = RHAI')
+      expect(res._json.jira).toMatchObject({ key: 'RHAI-7', project: 'RHAI' })
+    })
+
+    it('falls back to AIPCC for RHAISTRAT, which has no Epic type', async () => {
+      const jira = jiraCreating('AIPCC')
+      const { router } = register({ jiraClient: jira, fetch: makeFetch(), fetchIndex: vi.fn(async () => ({ found: false, files: [] })) })
+      const res = await callHandler(router, { userEmail: 'jane@redhat.com', body: validBody({ project: 'RHAISTRAT' }) })
+      expect(res._status).toBe(201)
+      expect(epicPostCall(jira)[1].body.fields.project).toEqual({ key: 'AIPCC' })
+      expect(res._json.jira.project).toBe('AIPCC')
+    })
+
+    it('uses the selected project for the demo-mode key and accepts lowercase input', async () => {
+      const { router } = register({ isDemoMode: true })
+      const res = await callHandler(router, { userEmail: 'jane@redhat.com', body: validBody({ project: 'rhai' }) })
+      expect(res._status).toBe(200)
+      expect(res._json.jira).toEqual({ key: 'RHAI-DEMO', url: null, project: 'RHAI' })
+    })
+
+    it('rejects an unknown project with 422', async () => {
+      const { router } = register({ jiraClient: makeJira(), fetch: makeFetch() })
+      const res = await callHandler(router, { userEmail: 'jane@redhat.com', body: validBody({ project: 'NOPE' }) })
+      expect(res._status).toBe(422)
+      expect(res._json.fields.project).toContain('RHAISTRAT, AIPCC, RHAI')
+    })
+
+    it('keeps the pinned PACKAGE_REQUEST_JIRA_PROJECT even when the form picks another project', async () => {
+      const jira = jiraCreating('TESTPROJ')
+      const { router } = register(
+        { jiraClient: jira, fetch: makeFetch(), fetchIndex: vi.fn(async () => ({ found: false, files: [] })) },
+        { secrets: { JIRA_EMAIL: 'svc@redhat.com', JIRA_TOKEN: 'jira-token', PACKAGE_REQUEST_JIRA_PROJECT: 'TESTPROJ' } }
+      )
+      const res = await callHandler(router, { userEmail: 'jane@redhat.com', body: validBody({ project: 'RHAI' }) })
+      expect(res._status).toBe(201)
+      expect(epicPostCall(jira)[1].body.fields.project).toEqual({ key: 'TESTPROJ' })
+      expect(res._json.jira.project).toBe('TESTPROJ')
     })
   })
 
@@ -1099,6 +1163,41 @@ describe('package-requests', () => {
       expect(normalizeRequestSummary('torchvision package update request')).toBe('torchvision[]')
       expect(normalizeRequestSummary('something else entirely')).toBeNull()
       expect(normalizeRequestSummary(null)).toBeNull()
+    })
+
+    it('getGitLabConfig defaults to the package-onboarding id and accepts id or path overrides', () => {
+      expect(getGitLabConfig({}).gitlabProject).toBe('78041351')
+      expect(getGitLabConfig(undefined).gitlabProject).toBe('78041351')
+      expect(getGitLabConfig({ PACKAGE_ONBOARDING_GITLAB_PROJECT: ' 4242 ' }).gitlabProject).toBe('4242')
+      expect(getGitLabConfig({ PACKAGE_ONBOARDING_GITLAB_PROJECT: 'redhat/rhel-ai/core/package-onboarding' }).gitlabProject)
+        .toBe('redhat%2Frhel-ai%2Fcore%2Fpackage-onboarding')
+      expect(getGitLabConfig({ PACKAGE_ONBOARDING_GITLAB_PROJECT: 'redhat%2Frhel-ai%2Fcore%2Fpackage-onboarding' }).gitlabProject)
+        .toBe('redhat%2Frhel-ai%2Fcore%2Fpackage-onboarding')
+      expect(getGitLabConfig({}).gitlabBaseUrl).toBe('https://gitlab.com')
+    })
+
+    it('triggerOnboardingPipeline explains a 404 as missing project access', async () => {
+      const fetchFn = vi.fn(async () => ({ ok: false, status: 404, text: async () => '{"message":"404 Project Not Found"}' }))
+      await expect(triggerOnboardingPipeline({
+        gitlabBaseUrl: 'https://gitlab.com', gitlabProject: '78041351', token: 't', variables: {}, fetchFn
+      })).rejects.toThrow(/failed \(404\): \{"message":"404 Project Not Found"\}\. GitLab hides private projects .* Developer access to project 78041351/)
+      const other = vi.fn(async () => ({ ok: false, status: 403, text: async () => 'forbidden' }))
+      await expect(triggerOnboardingPipeline({
+        gitlabBaseUrl: 'https://gitlab.com', gitlabProject: '78041351', token: 't', variables: {}, fetchFn: other
+      })).rejects.toThrow(/^GitLab pipeline trigger failed \(403\): forbidden$/)
+    })
+
+    it('selectFilingProject honours the form choice unless the project is pinned', () => {
+      const unlocked = { project: 'AIPCC', locked: false }
+      expect(selectFilingProject('RHAI', unlocked)).toBe('RHAI')
+      expect(selectFilingProject('AIPCC', unlocked)).toBe('AIPCC')
+      expect(selectFilingProject('RHAISTRAT', unlocked)).toBe('AIPCC')
+      expect(selectFilingProject(null, unlocked)).toBe('AIPCC')
+      expect(selectFilingProject('RHAI', { project: 'TESTPROJ', locked: true })).toBe('TESTPROJ')
+      expect(selectFilingProject('RHAI', undefined)).toBe('RHAI')
+      expect(selectFilingProject(undefined, undefined)).toBe('AIPCC')
+      expect(resolveJiraProjectConfig({})).toEqual({ project: 'AIPCC', locked: false })
+      expect(resolveJiraProjectConfig({ PACKAGE_REQUEST_JIRA_PROJECT: 'aipcc' })).toEqual({ project: 'AIPCC', locked: true })
     })
 
     it('resolveJiraProject defaults to AIPCC and validates overrides', () => {

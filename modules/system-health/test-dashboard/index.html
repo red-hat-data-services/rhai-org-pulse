@@ -4,7 +4,6 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Test Execution Statistics (Beta)</title>
-<!-- Chart.js v4 -->
 <!-- Chart.js v4.4.7 - pinned version with SRI hash for security -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js" integrity="sha384-vsrfeLOOY6KuIYKDlmVH5UiBmgIdB1oEf7p01YgWHuqmOHfZr374+odEv96n9tNC" crossorigin="anonymous"></script>
 <style>
@@ -235,7 +234,7 @@ const $ = id => document.getElementById(id);
 // --- API Configuration ---
 // When embedded in org-pulse, use the API endpoint; fallback to static files for standalone
 const API_BASE = '/api/modules/system-health/quality/test-execution/data';
-const USE_API = window.location.pathname.includes('/test-dashboard') || window.parent !== window;
+const USE_API = window.location.pathname.includes('/test-dashboard') || window.location.pathname.includes('/test-execution') || window.parent !== window;
 
 async function fetchData(file) {
   const url = USE_API 
@@ -253,6 +252,16 @@ function friendlyDate(iso){
 }
 function getParam(n,fb){ return new URLSearchParams(location.search).get(n)||fb }
 function escHtml(s){ const d=document.createElement('div'); d.textContent=s; return d.innerHTML }
+
+// Generate component detail URL - works with both static files and API
+function componentUrl(queryString) {
+  if (USE_API) {
+    // When served via API, use the API endpoint
+    return `/api/modules/system-health/quality/test-execution/html/component?${queryString}`;
+  }
+  // Static file mode
+  return `component.html?${queryString}`;
+}
 
 function passPct(p,t){ return t>0 ? Math.round(p/t*100) : 0 }
 function pctColor(pct){
@@ -341,7 +350,7 @@ async function loadHeatmap(){
   content.innerHTML='<div class="loading">Loading…</div>';
   const f=currentFilters();
   try{
-    // Load heatmap data (always, so we can re-filter client-side)
+    // Load data using API or static files depending on context
     if(!rawHeatmapData){
       rawHeatmapData = await fetchData('heatmap');
     }
@@ -401,7 +410,7 @@ function renderHeatmap(data,container){
     // Overall row stats
     const ov=comp.overall||{};
     const rowPct=passPct(ov.passed||0,ov.total||0);
-    html+=`<tr><td class="comp-name"><a href="component.html?${fqs}">${escHtml(comp.component)}</a>
+    html+=`<tr><td class="comp-name"><a href="${componentUrl(fqs)}">${escHtml(comp.component)}</a>
       <div style="font-size:10px;color:#6b8299">${rowPct}% · ${(ov.total||0).toLocaleString()} tests</div></td>`;
 
     // For first 4 rows, dropdown opens below to avoid being cut off at the top
@@ -557,7 +566,7 @@ const STATUS_COLORS={'Open':'#ff4757','In Progress':'#ffa502','To Do':'#a29bfe',
 
 let jiraConfig=null;
 async function loadJiraConfig(){
-  try{ jiraConfig = await fetchData('jira_config'); }catch(_){}
+  try{jiraConfig = await fetchData('jira_config')}catch(_){}
 }
 
 function buildJqlUrl(comp,label,ver,rel){

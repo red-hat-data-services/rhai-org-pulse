@@ -1,8 +1,20 @@
 <script setup>
-import { onMounted } from 'vue'
+import { onMounted, ref } from 'vue'
 import { useReleaseStatus } from '../composables/useReleaseStatus'
 
 const { data, loading, error, load } = useReleaseStatus()
+const collapsedEpics = ref(new Set())
+
+function isEpicExpanded(key) {
+  return !collapsedEpics.value.has(key)
+}
+
+function toggleEpic(key) {
+  const next = new Set(collapsedEpics.value)
+  if (next.has(key)) next.delete(key)
+  else next.add(key)
+  collapsedEpics.value = next
+}
 
 onMounted(load)
 
@@ -83,7 +95,9 @@ function statusDotClass(item) {
 }
 
 function isCompleted(item) {
-  return statusState(item) === 'released'
+  const statusName = normalize(item?.status?.name)
+  return ['released', 'completed', 'done', 'closed'].includes(statusName)
+    || normalize(item?.status?.category) === 'done'
 }
 
 function statusLabel(item) {
@@ -152,12 +166,23 @@ function formatDate(value) {
         </div>
 
         <div v-for="epic in group.epics" :key="epic.key" class="border-b last:border-b-0 border-gray-200 p-4 sm:p-5 dark:border-gray-700">
-          <div :data-tree-root="epic.key" :data-status-state="statusState(epic)" class="relative rounded-xl border border-gray-200 bg-gradient-to-br from-white to-gray-50/80 p-4 shadow-sm dark:border-gray-700 dark:from-gray-800 dark:to-gray-900/50">
+          <div
+            :data-tree-root="epic.key"
+            :data-status-state="statusState(epic)"
+            :role="epic.children.length > 0 ? 'button' : undefined"
+            :tabindex="epic.children.length > 0 ? 0 : undefined"
+            :aria-expanded="epic.children.length > 0 ? isEpicExpanded(epic.key) : undefined"
+            :aria-controls="epic.children.length > 0 ? `release-cards-${epic.key}` : undefined"
+            class="relative cursor-pointer rounded-xl border border-gray-200 bg-gradient-to-br from-white to-gray-50/80 p-4 shadow-sm transition hover:border-gray-300 hover:shadow-md focus:outline-none focus:ring-2 focus:ring-primary-500 dark:border-gray-700 dark:from-gray-800 dark:to-gray-900/50 dark:hover:border-gray-600"
+            @click="epic.children.length > 0 && toggleEpic(epic.key)"
+            @keydown.enter.prevent="epic.children.length > 0 && toggleEpic(epic.key)"
+            @keydown.space.prevent="epic.children.length > 0 && toggleEpic(epic.key)"
+          >
             <span :class="statusDotClass(epic)" class="absolute -left-1.5 top-5 h-3 w-3 rounded-full ring-4 ring-white dark:ring-gray-800"></span>
             <div class="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
               <div class="min-w-0">
                 <div class="flex flex-wrap items-center gap-x-2 gap-y-1">
-                  <a :href="jiraUrl(epic.key)" target="_blank" rel="noopener" class="font-semibold text-primary-600 dark:text-blue-400 hover:underline">
+                  <a :href="jiraUrl(epic.key)" target="_blank" rel="noopener" class="font-semibold text-primary-600 dark:text-blue-400 hover:underline" @click.stop>
                     {{ epic.key }}
                   </a>
                   <span class="text-gray-900 dark:text-gray-100">{{ epic.summary }}</span>
@@ -168,9 +193,14 @@ function formatDate(value) {
                   <span>Updated {{ formatDate(epic.updated) }}</span>
                 </div>
               </div>
-              <span :data-status-badge="epic.key" class="inline-flex shrink-0 items-center self-start rounded-full border px-2.5 py-1 text-xs font-semibold" :class="statusClass(epic)" :data-status-category="epic.status.category">
-                {{ statusLabel(epic) }}
-              </span>
+              <div class="flex shrink-0 items-center gap-2 self-start">
+                <span v-if="epic.children.length > 0" :data-epic-toggle="epic.key" aria-hidden="true" class="text-lg font-semibold leading-none text-gray-400 dark:text-gray-500">
+                  {{ isEpicExpanded(epic.key) ? '-' : '+' }}
+                </span>
+                <span :data-status-badge="epic.key" class="inline-flex items-center rounded-full border px-2.5 py-1 text-xs font-semibold" :class="statusClass(epic)" :data-status-category="epic.status.category">
+                  {{ statusLabel(epic) }}
+                </span>
+              </div>
             </div>
             <div v-if="visibleLabels(epic.labels).length" class="mt-3 flex flex-wrap gap-1.5">
               <span v-for="label in visibleLabels(epic.labels)" :key="label" class="inline-flex items-center rounded-full bg-gray-100 px-2 py-0.5 text-[10px] text-gray-600 dark:bg-gray-700 dark:text-gray-300">
@@ -179,10 +209,10 @@ function formatDate(value) {
             </div>
           </div>
 
-          <div v-if="epic.children.length === 0" class="ml-3 mt-4 text-sm text-gray-500 dark:text-gray-400">
+          <div v-if="isEpicExpanded(epic.key) && epic.children.length === 0" class="ml-3 mt-4 text-sm text-gray-500 dark:text-gray-400">
             No child cards found.
           </div>
-          <div v-else class="relative ml-3 mt-4 space-y-3 border-l-2 border-gray-200 pl-5 dark:border-gray-700 sm:ml-5 sm:pl-7" data-tree-branch>
+          <div v-show="isEpicExpanded(epic.key) && epic.children.length > 0" :id="`release-cards-${epic.key}`" class="relative ml-3 mt-4 space-y-3 border-l-2 border-gray-200 pl-5 dark:border-gray-700 sm:ml-5 sm:pl-7" data-tree-branch>
             <div
               v-for="child in epic.children"
               :key="child.key"

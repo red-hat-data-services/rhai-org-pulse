@@ -107,6 +107,19 @@ describe('RequestPackageView', () => {
     expect(fetchTeams).toHaveBeenCalledWith('/modules/product-builds/package-requests/teams?project=RHAI')
   })
 
+  it('sends the selected project and explains where the request is filed', async () => {
+    const wrapper = mount(RequestPackageView)
+    await flushPromises()
+    expect(wrapper.find('#req-team-project-hint').text()).toContain('RHAISTRAT has no Epic type, so the request is filed in AIPCC')
+    await wrapper.find('#req-team-project').setValue('RHAI')
+    await flushPromises()
+    expect(wrapper.find('#req-team-project-hint').text()).toContain('The request is filed in RHAI')
+    await fillValidForm(wrapper)
+    await wrapper.find('form').trigger('submit')
+    await flushPromises()
+    expect(JSON.parse(submitRequest.mock.calls[0][1].body).project).toBe('RHAI')
+  })
+
   it('resets the team project and selection to the original defaults', async () => {
     const wrapper = mount(RequestPackageView)
     await flushPromises()
@@ -201,6 +214,7 @@ describe('RequestPackageView', () => {
     expect(submitRequest.mock.calls[0][0]).toBe('/modules/product-builds/package-requests')
     expect(payload).toMatchObject({
       team: 'Platform',
+      project: 'RHAISTRAT',
       package_name: 'vllm',
       extras: ['cu12', 'dev'],
       package_source: 'pypi',

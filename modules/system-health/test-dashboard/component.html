@@ -4,7 +4,6 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Component Detail</title>
-<!-- Chart.js v4 -->
 <!-- Chart.js v4.4.7 - pinned version with SRI hash for security -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js" integrity="sha384-vsrfeLOOY6KuIYKDlmVH5UiBmgIdB1oEf7p01YgWHuqmOHfZr374+odEv96n9tNC" crossorigin="anonymous"></script>
 <style>
@@ -177,19 +176,12 @@ a.qsr-tree-count:hover{background:rgba(94,167,255,.15);text-decoration:underline
 <div class="container" id="main"><div class="loading">Loading…</div></div>
 
 <script>
-// --- Ensure Chart.js is loaded before we try to use it ---
-if (typeof Chart === 'undefined') {
-  console.error('Chart.js failed to load from CDN. Retrying...');
-  // Fallback: Try loading from another CDN
-  const script = document.createElement('script');
-  script.src = 'https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.min.js';
-  document.head.appendChild(script);
-}
+const $=id=>document.getElementById(id);
 
 // --- API Configuration ---
 // When embedded in org-pulse, use the API endpoint; fallback to static files for standalone
 const API_BASE = '/api/modules/system-health/quality/test-execution/data';
-const USE_API = window.location.pathname.includes('/test-dashboard') || window.parent !== window;
+const USE_API = window.location.pathname.includes('/test-dashboard') || window.location.pathname.includes('/test-execution') || window.parent !== window;
 
 async function fetchData(file) {
   const url = USE_API 
@@ -200,10 +192,6 @@ async function fetchData(file) {
   return response.json();
 }
 
-// Legacy path for backward compatibility
-const DATA_PATH = './data';
-
-const $=id=>document.getElementById(id);
 let jiraConfig=null;
 
 function getParam(n,fb){return new URLSearchParams(location.search).get(n)||fb}
@@ -220,7 +208,14 @@ function currentFilters(){
     use_date_range:getParam('use_date_range','false'),
     provider:getParam('provider','All'),cluster_type:getParam('cluster_type','All'),gate:getParam('gate','All')};
 }
-function backUrl(){return'index.html?'+new URLSearchParams(currentFilters())}
+// Generate index page URL - works with both static files and API
+function indexUrl(queryString) {
+  if (USE_API) {
+    return `/api/modules/system-health/quality/test-execution/html/index?${queryString}`;
+  }
+  return `index.html?${queryString}`;
+}
+function backUrl(){return indexUrl(new URLSearchParams(currentFilters()).toString())}
 
 function reloadWithFilters(){
   const comp=getParam('component',''),f=currentFilters();
@@ -237,7 +232,7 @@ function reloadWithFilters(){
 
 // --- Load Jira config ---
 async function loadJiraConfig(){
-  try{ jiraConfig = await fetchData('jira_config'); }catch(e){console.warn('Failed to load Jira config:',e)}
+  try{jiraConfig = await fetchData('jira_config')}catch(_){}
 }
 
 // --- Jira helpers ---
@@ -365,20 +360,20 @@ function filterComponentData(data,f){
 async function loadComponent(){
   const main=$('main');
   const comp=getParam('component','');
-  if(!comp){main.innerHTML='<div class="error">No component specified. <a href="index.html">Back</a></div>';return}
+  if(!comp){main.innerHTML=`<div class="error">No component specified. <a href="${indexUrl('')}">Back</a></div>`;return}
 
   try{
     let data;const f=currentFilters();f.component=comp;
     // Load full components JSON and heatmap JSON
-    const [componentsData, heatmapData] = await Promise.all([
+    const [componentsData, heatmapData]=await Promise.all([
       fetchData('components'),
       fetchData('heatmap')
     ]);
-    if(componentsData && componentsData[comp]) data = filterComponentData(componentsData[comp], f);
+    if(componentsData && componentsData[comp])data=filterComponentData(componentsData[comp],f);
     if(!data)throw new Error('No data for "'+comp+'"');
     // Extract this component's by_vr data from heatmap for version chart
     let compHeatmap=null;
-    if(heatmapData) compHeatmap = (heatmapData.components||[]).find(c=>c.component===comp);
+    if(heatmapData)compHeatmap=(heatmapData.components||[]).find(c=>c.component===comp);
     render(data,comp,compHeatmap);
   }catch(e){main.innerHTML=`<div class="error">Failed: ${e.message}<br><a href="${backUrl()}">Back</a></div>`}
 }

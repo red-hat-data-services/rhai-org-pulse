@@ -32,7 +32,10 @@ const SECURITY_NAME = 'Red Hat Employee';
 const COMPONENT_NAME = 'Accelerator Enablement';
 const EPIC_NAME_FIELD = 'customfield_10011';
 const DEFAULT_TARGET_VERSION_FIELD = 'customfield_10855';
-const PACKAGE_ONBOARDING_PROJECT = 'redhat%2Frhel-ai%2Fcore%2Fpackage-onboarding';
+// Numeric id of redhat/rhel-ai/core/package-onboarding. GitLab answers 404 for
+// private projects the token cannot see, so a 404 here means the token owner
+// is not a member rather than a wrong path.
+const PACKAGE_ONBOARDING_PROJECT = '78041351';
 const PACKAGE_ONBOARDING_BASE_URL = 'https://gitlab.com';
 
 const JIRA_KEY_RE = /^[A-Z][A-Z0-9]+-\d+$/;
@@ -46,6 +49,9 @@ const TEAM_OPTIONS_CACHE_TTL_MS = 5 * 60_000;
 const EXTERNAL_TIMEOUT_MS = 30_000;
 const PYPI_JSON_BASE = 'https://pypi.org/pypi';
 const TEAM_PROJECTS = ['RHAISTRAT', 'AIPCC', 'RHAI'];
+// Projects that expose the Epic issue type on their create screen. RHAISTRAT
+// does not, so requests for RHAISTRAT teams fall back to the default project.
+const FILING_PROJECTS = ['AIPCC', 'RHAI'];
 const AIPCC_TEAM_OPTIONS = [
   'Accelerator Enablement',
   'AIPCC Ecosystems',
@@ -82,6 +88,15 @@ function validateRequest(body, opts = {}) {
   const team = typeof body.team === 'string' ? body.team.trim() : '';
   if (!team) {
     errors.team = 'Team is required';
+  }
+
+  let project = null;
+  if (body.project !== null && body.project !== undefined && body.project !== '') {
+    project = typeof body.project === 'string' ? body.project.trim().toUpperCase() : '';
+    if (!TEAM_PROJECTS.includes(project)) {
+      errors.project = 'Project must be one of: ' + TEAM_PROJECTS.join(', ');
+      project = null;
+    }
   }
 
   const packageName = typeof body.package_name === 'string' ? body.package_name.trim() : '';
@@ -196,6 +211,7 @@ function validateRequest(body, opts = {}) {
     errors,
     request: {
       team,
+      project,
       packageName,
       extras,
       source,
@@ -510,10 +526,21 @@ async function checkProductionIndexes(packageName, opts = {}) {
   return results.filter(Boolean);
 }
 
-function getGitLabConfig() {
+/**
+ * GitLab project that receives the onboarding pipeline. Defaults to the
+ * numeric id of redhat/rhel-ai/core/package-onboarding; an explicit
+ * PACKAGE_ONBOARDING_GITLAB_PROJECT may be a numeric id or a namespace path,
+ * which is URL-encoded for the API.
+ */
+function getGitLabConfig(secrets) {
+  const raw = secrets && secrets.PACKAGE_ONBOARDING_GITLAB_PROJECT;
+  const value = typeof raw === 'string' ? raw.trim() : '';
+  const gitlabProject = !value
+    ? PACKAGE_ONBOARDING_PROJECT
+    : (/^\d+$/.test(value) ? value : encodeURIComponent(decodeURIComponent(value)));
   return {
     gitlabBaseUrl: PACKAGE_ONBOARDING_BASE_URL,
-    gitlabProject: PACKAGE_ONBOARDING_PROJECT
+    gitlabProject
   };
 }
 
@@ -533,15 +560,32 @@ function getGitlabToken(secrets) {
  * PACKAGE_REQUEST_JIRA_PROJECT secret declared in module.json; falls back to
  * AIPCC when unset or not a valid project key.
  */
-function resolveJiraProject(secrets) {
+function resolveJiraProjectConfig(secrets) {
   const raw = secrets && secrets.PACKAGE_REQUEST_JIRA_PROJECT;
   const value = typeof raw === 'string' ? raw.trim().toUpperCase() : '';
-  if (!value) return DEFAULT_JIRA_PROJECT;
+  if (!value) return { project: DEFAULT_JIRA_PROJECT, locked: false };
   if (!JIRA_PROJECT_KEY_RE.test(value)) {
     console.warn(`[package-requests] Ignoring invalid PACKAGE_REQUEST_JIRA_PROJECT "${raw}"; using ${DEFAULT_JIRA_PROJECT}`);
-    return DEFAULT_JIRA_PROJECT;
+    return { project: DEFAULT_JIRA_PROJECT, locked: false };
   }
-  return value;
+  // An explicit value pins every request to that project (test projects,
+  // reorganisations) regardless of the project chosen in the form.
+  return { project: value, locked: true };
+}
+
+function resolveJiraProject(secrets) {
+  return resolveJiraProjectConfig(secrets).project;
+}
+
+/**
+ * Pick the project an Epic is filed in: the operator-pinned project when
+ * PACKAGE_REQUEST_JIRA_PROJECT is set, otherwise the project chosen in the
+ * form when it can hold Epics, otherwise the default.
+ */
+function selectFilingProject(requestProject, config) {
+  if (config && config.locked) return config.project;
+  if (requestProject && FILING_PROJECTS.includes(requestProject)) return requestProject;
+  return (config && config.project) || DEFAULT_JIRA_PROJECT;
 }
 
 function buildPipelineVariables(request, epicKey) {
@@ -601,7 +645,11 @@ async function triggerOnboardingPipeline({ gitlabBaseUrl, gitlabProject, token, 
   });
   if (!response.ok) {
     const text = await response.text().catch(() => '');
-    throw new Error(`GitLab pipeline trigger failed (${response.status}): ${text.slice(0, 200)}`);
+    let message = `GitLab pipeline trigger failed (${response.status}): ${text.slice(0, 200)}`;
+    if (response.status === 404) {
+      message += `. GitLab hides private projects from tokens without access, so the token owner likely lacks Developer access to project ${gitlabProject}`;
+    }
+    throw new Error(message);
   }
   const data = await response.json();
   return { triggered: true, pipeline_id: data.id || null, web_url: data.web_url || null };
@@ -659,7 +707,7 @@ function isDemoMode(deps) {
  */
 module.exports = function registerPackageRequestRoutes(router, context, deps = {}) {
   const secrets = (context && context.secrets) || {};
-  const jiraProject = resolveJiraProject(secrets);
+  const jiraProjectConfig = resolveJiraProjectConfig(secrets);
   const fetchImpl = deps.fetch || fetch;
   const noopAuth = function (_req, _res, next) { next(); };
   const requireAuth = (context && context.requireAuth) || noopAuth;
@@ -755,8 +803,9 @@ module.exports = function registerPackageRequestRoutes(router, context, deps = {
    *       verifies the related Jira issue, checks for recent duplicate
    *       requests, validates PyPI sources, and warns when the package is
    *       already present in a production index. On success it files an Epic
-   *       in the configured Jira project (PACKAGE_REQUEST_JIRA_PROJECT, default
-   *       AIPCC) with its required Epic Name field, due date, team label, Red
+   *       in the project chosen in the form (AIPCC or RHAI; RHAISTRAT falls back
+   *       to the default), or in PACKAGE_REQUEST_JIRA_PROJECT when that is set,
+   *       with its required Epic Name field, due date, team label, Red
    *       Hat Employee security, and Accelerator Enablement component, sets the
    *       release target field when provided, and triggers the
    *       redhat/rhel-ai/core/package-onboarding GitLab pipeline using
@@ -777,6 +826,15 @@ module.exports = function registerPackageRequestRoutes(router, context, deps = {
    *               team:
    *                 type: string
    *                 description: Requesting team name
+   *               project:
+   *                 type: string
+   *                 enum: [RHAISTRAT, AIPCC, RHAI]
+   *                 nullable: true
+   *                 description: >-
+   *                   Jira project chosen in the form. AIPCC and RHAI receive the
+   *                   Epic directly; RHAISTRAT has no Epic type, so its requests
+   *                   are filed in the default project. Ignored when
+   *                   PACKAGE_REQUEST_JIRA_PROJECT pins a project.
    *               package_name:
    *                 type: string
    *                 description: Python package name
@@ -875,6 +933,7 @@ module.exports = function registerPackageRequestRoutes(router, context, deps = {
         return res.status(422).json({ error: 'Validation failed', fields: validation.errors });
       }
       const request = validation.request;
+      const jiraProject = selectFilingProject(request.project, jiraProjectConfig);
 
       // Rate limit gate only. The slot is consumed when Jira confirms Epic
       // creation (or the request completes in demo mode), so aborting
@@ -1024,7 +1083,7 @@ module.exports = function registerPackageRequestRoutes(router, context, deps = {
       if (!gitlabToken) {
         pipeline = { triggered: false, reason: 'gitlab_token_not_configured' };
       } else {
-        const gitlab = getGitLabConfig();
+        const gitlab = getGitLabConfig(secrets);
         try {
           pipeline = await triggerOnboardingPipeline({
             gitlabBaseUrl: gitlab.gitlabBaseUrl,
@@ -1084,6 +1143,8 @@ module.exports._testExports = {
   getGitLabConfig,
   getGitlabToken,
   resolveJiraProject,
+  resolveJiraProjectConfig,
+  selectFilingProject,
   checkRateLimit,
   recordSubmission,
   beginSubmission,
@@ -1099,5 +1160,7 @@ module.exports._testExports = {
   JIRA_KEY_RE,
   RATE_LIMIT_WINDOW_MS,
   TEAM_OPTIONS_CACHE_TTL_MS,
-  TEAM_PROJECTS
+  TEAM_PROJECTS,
+  FILING_PROJECTS,
+  PACKAGE_ONBOARDING_PROJECT
 };
