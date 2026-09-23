@@ -253,6 +253,16 @@ function friendlyDate(iso){
 function getParam(n,fb){ return new URLSearchParams(location.search).get(n)||fb }
 function escHtml(s){ const d=document.createElement('div'); d.textContent=s; return d.innerHTML }
 
+// Generate component detail URL - works with both static files and API
+function componentUrl(queryString) {
+  if (USE_API) {
+    // When served via API, use the API endpoint
+    return `/api/modules/system-health/quality/test-execution/html/component?${queryString}`;
+  }
+  // Static file mode
+  return `component.html?${queryString}`;
+}
+
 function passPct(p,t){ return t>0 ? Math.round(p/t*100) : 0 }
 function pctColor(pct){
   if(pct>=95) return 'green';
@@ -400,7 +410,7 @@ function renderHeatmap(data,container){
     // Overall row stats
     const ov=comp.overall||{};
     const rowPct=passPct(ov.passed||0,ov.total||0);
-    html+=`<tr><td class="comp-name"><a href="component.html?${fqs}">${escHtml(comp.component)}</a>
+    html+=`<tr><td class="comp-name"><a href="${componentUrl(fqs)}">${escHtml(comp.component)}</a>
       <div style="font-size:10px;color:#6b8299">${rowPct}% · ${(ov.total||0).toLocaleString()} tests</div></td>`;
 
     // For first 4 rows, dropdown opens below to avoid being cut off at the top

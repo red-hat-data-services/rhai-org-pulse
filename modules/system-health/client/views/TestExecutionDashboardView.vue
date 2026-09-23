@@ -182,7 +182,7 @@ const containerClass = computed(() =>
         title="RHOAI Test Execution Dashboard (Beta)"
         class="w-full border-0 block"
         :style="isExpanded ? 'height: 100%' : 'min-height: calc(100vh - 10rem)'"
-        sandbox="allow-scripts allow-same-origin"
+        sandbox="allow-scripts allow-same-origin allow-top-navigation-by-user-activation allow-popups allow-popups-to-escape-sandbox"
         @load="onIframeLoad"
         @error="onIframeError"
         allow="clipboard-write"

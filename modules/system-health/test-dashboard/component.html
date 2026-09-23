@@ -208,7 +208,14 @@ function currentFilters(){
     use_date_range:getParam('use_date_range','false'),
     provider:getParam('provider','All'),cluster_type:getParam('cluster_type','All'),gate:getParam('gate','All')};
 }
-function backUrl(){return'index.html?'+new URLSearchParams(currentFilters())}
+// Generate index page URL - works with both static files and API
+function indexUrl(queryString) {
+  if (USE_API) {
+    return `/api/modules/system-health/quality/test-execution/html/index?${queryString}`;
+  }
+  return `index.html?${queryString}`;
+}
+function backUrl(){return indexUrl(new URLSearchParams(currentFilters()).toString())}
 
 function reloadWithFilters(){
   const comp=getParam('component',''),f=currentFilters();
@@ -353,7 +360,7 @@ function filterComponentData(data,f){
 async function loadComponent(){
   const main=$('main');
   const comp=getParam('component','');
-  if(!comp){main.innerHTML='<div class="error">No component specified. <a href="index.html">Back</a></div>';return}
+  if(!comp){main.innerHTML=`<div class="error">No component specified. <a href="${indexUrl('')}">Back</a></div>`;return}
 
   try{
     let data;const f=currentFilters();f.component=comp;
