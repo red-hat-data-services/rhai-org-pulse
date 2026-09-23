@@ -1751,13 +1751,28 @@ test.describe('Releases CVE Sustaining Report @releases', () => {
     expect(report.openAgeBuckets.every(bucket => bucket.outcomes)).toBe(true);
     expect(report.openAgeBuckets.every(bucket => Object.values(bucket.outcomes).reduce((sum, count) => sum + count, 0) === bucket.count)).toBe(true);
 
-    const scoreLink = report.timeline
-      .flatMap(row => Object.values(row.outcomes).flatMap(outcome => outcome.byCvss || []))
-      .find(score => score.score === '5');
-    expect(scoreLink).toBeTruthy();
-    expect(decodeURIComponent(scoreLink.jql)).toContain('duedate');
-    expect(decodeURIComponent(scoreLink.jql)).not.toContain('issue.property[rh-sla-dt].value');
-    expect(decodeURIComponent(scoreLink.jql)).toContain('key in');
+    const outcome = report.timeline
+      .flatMap(row => Object.values(row.outcomes || {}))
+      .find(item => item?.byCvss?.length);
+    const row = report.timeline.find(item => item.total > 0);
+    const renderedLinkFamilies = {
+      summaryTotal: report.summary.openVulnerabilities.jql,
+      summaryCvss: report.summary.openVulnerabilities.byCvss[0].jql,
+      outcomeTotal: outcome.jql,
+      outcomeCvss: outcome.byCvss[0].jql,
+      timelineTotal: row.total_jql
+    };
+
+    Object.entries(renderedLinkFamilies).forEach(([family, url]) => {
+      const jql = decodeURIComponent(url);
+      expect(jql, family).toContain('component = "Model Serving"');
+      expect(jql, family).not.toContain('key in');
+    });
+
+    expect(decodeURIComponent(renderedLinkFamilies.summaryCvss)).toContain('cf[10859] ~');
+    expect(decodeURIComponent(renderedLinkFamilies.outcomeTotal)).toContain('labels =');
+    expect(decodeURIComponent(renderedLinkFamilies.outcomeCvss)).toContain('cf[10859] ~');
+    expect(decodeURIComponent(renderedLinkFamilies.timelineTotal)).toContain('duedate');
   });
 
   test('CVE action report renders component selection, summary, timeline, and charts', async ({ page }) => {
