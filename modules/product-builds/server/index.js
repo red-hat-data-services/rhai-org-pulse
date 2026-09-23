@@ -1019,6 +1019,9 @@ module.exports = function registerRoutes(router, context) {
   // --- Live Release Status ---
   require('./release-status')(router, context);
 
+  // --- PMC-backed Release Epic Workflow ---
+  require('./release-epic')(router, context);
+
   // --- Version Map ---
   require('./version-map')(router, context);
 

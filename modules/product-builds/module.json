@@ -94,6 +94,26 @@
         "key": "PACKAGE_ONBOARDING_GITLAB_TOKEN",
         "description": "GitLab PAT with api scope and Developer access to redhat/rhel-ai/core/package-onboarding, used to trigger the onboarding pipeline. Without it the Epic is still filed and the pipeline is reported as not triggered.",
         "required": false
+      },
+      {
+        "key": "PMC_GITLAB_TOKEN",
+        "description": "Server-only GitLab read token for the product-management-configs repository (preferred over GITLAB_TOKEN; the platform token is used as fallback)",
+        "required": false
+      },
+      {
+        "key": "PMC_GITLAB_BASE_URL",
+        "description": "GitLab host for PMC reads (defaults to https://gitlab.com)",
+        "required": false
+      },
+      {
+        "key": "PMC_GITLAB_PROJECT",
+        "description": "GitLab PMC project path, for example redhat/rhel-ai/ci-cd/aipcc-product-management-configs",
+        "required": true
+      },
+      {
+        "key": "PMC_GITLAB_REF",
+        "description": "PMC branch or tag to resolve before reading the configuration snapshot (defaults to main)",
+        "required": false
       }
     ]
   },
