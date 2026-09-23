@@ -42,10 +42,268 @@ function makeRelease(id, opts = {}) {
   }
 }
 
+function makeCanvasContext() {
+  var ctx = {
+    canvas: { width: 1200, height: 450 },
+    fillTextCalls: [],
+    measureText: function (text) { return { width: String(text).length * 7 } },
+    createLinearGradient: function () { return { addColorStop: function () {} } }
+  }
+  var methods = [
+    'save', 'restore', 'beginPath', 'closePath', 'moveTo', 'lineTo', 'quadraticCurveTo',
+    'stroke', 'fill', 'fillRect', 'strokeRect', 'arc', 'rect', 'clip', 'fillText', 'setLineDash'
+  ]
+  methods.forEach(function (name) { ctx[name] = function () {} })
+  ctx.fillText = function (text, x, y) { ctx.fillTextCalls.push({ text: text, x: x, y: y }) }
+  return ctx
+}
+
+function makeTimelineChart(wrapper, ctx, opts = {}) {
+  var range = wrapper.vm.xRange
+  var left = opts.left || 80
+  var right = opts.right || 1120
+  var top = opts.top || 10
+  var bottom = opts.bottom || 440
+  var span = range.max - range.min || 1
+  var canvas = {
+    getBoundingClientRect: function () { return { left: 0, top: 0 } }
+  }
+  return {
+    ctx: ctx,
+    canvas: canvas,
+    draw: function () {},
+    chartArea: { left: left, right: right, top: top, bottom: bottom },
+    scales: {
+      x: {
+        getPixelForValue: function (value) { return left + ((value - range.min) / span) * (right - left) },
+        getValueForPixel: function (pixel) { return range.min + ((pixel - left) / (right - left)) * span }
+      },
+      y: { getPixelForValue: function (value) { return value === 0 ? 300 : value * 100 } }
+    }
+  }
+}
+
 describe('ReleaseTimeline', () => {
   it('renders nothing when releases array is empty', () => {
     var wrapper = mount(ReleaseTimeline, { props: { releases: [] } })
     expect(wrapper.find('.mb-6').exists()).toBe(false)
+  })
+
+  it('executes the canvas renderer for both timeline sides and display modes', () => {
+    vi.useFakeTimers()
+    vi.setSystemTime(new Date('2026-09-21T00:00:00'))
+    var hadDark = document.documentElement.classList.contains('dark')
+    document.documentElement.classList.add('dark')
+    try {
+      var releases = [
+        makeRelease('rhoai-3.5', {
+          displayName: 'rhoai-3.5', shortname: 'rhoai',
+          planningFreeze: '2026-08-01', featureFreeze: '2026-08-10',
+          codeFreeze: '2026-08-20', ga: '2026-09-01'
+        }),
+        makeRelease('rhelai-3.6', {
+          displayName: 'rhelai-3.6', shortname: 'rhelai',
+          planningFreeze: '2026-09-23', featureFreeze: '2026-10-01',
+          codeFreeze: '2026-10-10', ga: '2026-10-20'
+        }),
+        makeRelease('rhaii-3.6', {
+          displayName: 'rhaii-3.6', shortname: 'rhaii',
+          planningFreeze: '2026-09-23', featureFreeze: '2026-10-01',
+          codeFreeze: '2026-10-10', ga: '2026-10-20'
+        }),
+        makeRelease('Infrastructure Refresh', {
+          displayName: 'Infrastructure Refresh', shortname: 'infra',
+          ga: '2026-10-15'
+        })
+      ]
+      var navigateTo = vi.fn()
+      var wrapper = mount(ReleaseTimeline, {
+        props: { releases },
+        global: { provide: { moduleNav: { navigateTo: navigateTo } } }
+      })
+      var ctx = makeCanvasContext()
+      var chart = makeTimelineChart(wrapper, ctx)
+
+      wrapper.vm.timelinePlugin.beforeDatasetsDraw(chart)
+      wrapper.vm.timelinePlugin.afterDraw(chart)
+      expect(wrapper.vm._todayPx).not.toBe(null)
+
+      var canvasTarget = {
+        querySelector: function () { return chart.canvas },
+        style: {}
+      }
+      var firstCard = wrapper.vm._cardHitBoxes[0]
+      wrapper.vm.onCardHover({
+        clientX: firstCard.x + firstCard.w / 2,
+        clientY: firstCard.y + firstCard.h / 2,
+        currentTarget: canvasTarget
+      })
+      wrapper.vm.timelinePlugin.afterDraw(chart)
+      wrapper.vm.onCanvasClick({
+        clientX: firstCard.x + firstCard.w / 2,
+        clientY: firstCard.y + firstCard.h / 2,
+        currentTarget: canvasTarget
+      })
+      expect(navigateTo).toHaveBeenCalled()
+
+      wrapper.vm.showDimLines = false
+      wrapper.vm.timelinePlugin.afterDraw(chart)
+      expect(wrapper.vm._todayPx).not.toBe(null)
+
+      document.documentElement.classList.remove('dark')
+      wrapper.vm.showDimLines = true
+      wrapper.vm.timelinePlugin.beforeDatasetsDraw(chart)
+      wrapper.vm.timelinePlugin.afterDraw(chart)
+      expect(wrapper.vm._todayPx).not.toBe(null)
+
+      wrapper.vm.zoomMin = new Date('2026-10-01').getTime()
+      wrapper.vm.zoomMax = new Date('2026-10-20').getTime()
+      wrapper.vm.timelinePlugin.afterDraw(makeTimelineChart(wrapper, ctx))
+      expect(wrapper.vm._todayPx).toBe(null)
+
+      window.history.pushState({}, '', '/?e2e=1')
+      wrapper.vm.timelinePlugin.afterDraw(makeTimelineChart(wrapper, ctx, { left: 300, right: 340 }))
+      expect(window.__releaseTimeline.cards).toBeDefined()
+      window.history.pushState({}, '', '/')
+
+      wrapper.vm.timelinePlugin.beforeDatasetsDraw({ ctx: ctx, chartArea: null })
+      wrapper.vm.timelinePlugin.afterDraw({ ctx: ctx, chartArea: null })
+    } finally {
+      window.history.pushState({}, '', '/')
+      if (!hadDark) document.documentElement.classList.remove('dark')
+      vi.useRealTimers()
+    }
+  })
+
+  it('puts same-side distance labels on separate cycle rows', () => {
+    vi.useFakeTimers()
+    vi.setSystemTime(new Date('2026-09-21T00:00:00'))
+    try {
+      var releases = [
+        makeRelease('rhoai-3.5', {
+          displayName: 'rhoai-3.5', shortname: 'rhoai',
+          planningFreeze: '2026-09-25', ga: '2026-10-01'
+        }),
+        makeRelease('rhoai-3.6', {
+          displayName: 'rhoai-3.6', shortname: 'rhoai',
+          planningFreeze: '2026-11-01', ga: '2026-11-15'
+        }),
+        makeRelease('rhoai-3.7', {
+          displayName: 'rhoai-3.7', shortname: 'rhoai',
+          planningFreeze: '2026-12-01', ga: '2026-12-15'
+        })
+      ]
+      var wrapper = mount(ReleaseTimeline, { props: { releases: releases } })
+      wrapper.vm.zoomMin = new Date('2026-09-21').getTime()
+      wrapper.vm.zoomMax = new Date('2026-12-20').getTime()
+      var ctx = makeCanvasContext()
+      wrapper.vm.timelinePlugin.afterDraw(makeTimelineChart(wrapper, ctx))
+
+      var distanceYs = ctx.fillTextCalls
+        .filter(function (call) { return /^\d+d(?: \(|$)/.test(call.text) && call.y < 300 })
+        .map(function (call) { return call.y })
+      expect(new Set(distanceYs).size).toBeGreaterThan(1)
+      expect(ctx.fillTextCalls.some(function (call) {
+        return call.text.indexOf('|a|') !== -1 || call.text.indexOf('|b|') !== -1
+      })).toBe(false)
+    } finally {
+      vi.useRealTimers()
+    }
+  })
+
+  it('covers timeline interaction guards and hit-test paths', () => {
+    var releases = [
+      makeRelease('rhoai-3.6', { displayName: 'rhoai-3.6', shortname: 'rhoai', ga: '2026-09-23' }),
+      makeRelease('rhelai-3.6', { displayName: 'rhelai-3.6', shortname: 'rhelai', ga: '2026-10-01' })
+    ]
+    var wrapper = mount(ReleaseTimeline, { props: { releases } })
+    var ctx = makeCanvasContext()
+    var chart = makeTimelineChart(wrapper, ctx)
+    wrapper.vm.timelinePlugin.afterDraw(chart)
+    var canvas = chart.canvas
+    var target = {
+      style: {},
+      querySelector: function () { return canvas },
+      setPointerCapture: function () {}
+    }
+    var setupState = wrapper.vm.$.setupState
+    var cards = setupState._cardHitBoxes
+    var dots = setupState._dotHitBoxes
+    var stems = setupState._stemHitBoxes
+    expect(cards.length).toBeGreaterThan(0)
+    wrapper.vm.onWheel({ clientX: 0, deltaY: 1, preventDefault: function () {} })
+    wrapper.vm.onWheel({ clientX: 400, deltaY: 1, preventDefault: function () {} })
+    wrapper.vm.onWheel({ clientX: 400, deltaY: -1, preventDefault: function () {} })
+    wrapper.vm.onPointerDown({ button: 1, clientX: 400, pointerId: 1, currentTarget: target })
+    wrapper.vm.onPointerDown({ button: 0, clientX: 0, pointerId: 1, currentTarget: target })
+    wrapper.vm.onPointerDown({ button: 0, clientX: 400, pointerId: 1, currentTarget: target })
+    wrapper.vm.onPointerMove({ clientX: 401 })
+    wrapper.vm.onPointerMove({ clientX: 450 })
+    wrapper.vm.onPointerUp({ currentTarget: target })
+    wrapper.vm.onPointerMove({ clientX: 450 })
+    wrapper.vm.onPointerUp({ currentTarget: target })
+
+    var card = cards[0]
+    wrapper.vm.onCardHover({
+      clientX: card.x + card.w / 2, clientY: card.y + card.h / 2,
+      currentTarget: target
+    })
+    if (dots.length) {
+      wrapper.vm.onCardHover({
+        clientX: dots[0].x, clientY: dots[0].y, currentTarget: target
+      })
+    }
+    if (stems.length) {
+      wrapper.vm.onCardHover({
+        clientX: stems[0].x, clientY: stems[0].y + stems[0].h / 2, currentTarget: target
+      })
+    }
+    var milestoneX = chart.scales.x.getPixelForValue(new Date('2026-09-23').getTime())
+    for (var y = 20; y <= 420; y += 20) {
+      wrapper.vm.onCardHover({
+        clientX: milestoneX, clientY: y, currentTarget: target
+      })
+    }
+    wrapper.vm.onCardHover({ clientX: 1, clientY: 1, currentTarget: target })
+    wrapper.vm.onCardHover({ clientX: 1, clientY: 1, currentTarget: { querySelector: function () { return null } } })
+    wrapper.vm.onCanvasClick({ clientX: 1, clientY: 1, currentTarget: target })
+    expect(wrapper.vm.isOverCard).toBe(false)
+  })
+
+  it('covers interaction guards before a chart or canvas is available', () => {
+    var wrapper = mount(ReleaseTimeline, {
+      props: { releases: [makeRelease('rhoai-3.6', { ga: '2026-10-01' })] }
+    })
+    var event = {
+      button: 0,
+      clientX: 100,
+      clientY: 100,
+      pointerId: 1,
+      deltaY: 1,
+      preventDefault: vi.fn(),
+      currentTarget: { style: {}, setPointerCapture: vi.fn(), querySelector: function () { return null } }
+    }
+
+    wrapper.vm.onWheel(event)
+    wrapper.vm.onPointerDown(event)
+    wrapper.vm.onPointerMove(event)
+    wrapper.vm.onPointerUp(event)
+    wrapper.vm.onCardHover(event)
+    wrapper.vm.onCanvasClick(event)
+
+    expect(event.preventDefault).not.toHaveBeenCalled()
+    expect(wrapper.vm.isOverCard).toBe(false)
+  })
+
+  it('uses safe layout fallbacks for invalid milestone dates', () => {
+    var wrapper = mount(ReleaseTimeline, {
+      props: { releases: [makeRelease('rhoai-3.6', { ga: 'not-a-date' })] }
+    })
+
+    expect(wrapper.vm.nodes).toHaveLength(1)
+    expect(wrapper.vm.layoutMetrics.aboveSpace).toBe(134)
+    expect(wrapper.vm.layoutMetrics.belowSpace).toBe(60)
+    expect(wrapper.vm.chartData.datasets[0].data).toEqual([])
   })
 
   it('creates separate nodes for each milestone date', () => {
@@ -2173,6 +2431,11 @@ describe('ReleaseTimeline → Execute deep-link', () => {
     var gaNode = nodeWithLabel(wrapper, /3\.6/)
     expect(gaNode).toBeTruthy()
     expect(wrapper.vm.versionForNode(gaNode)).toBe('3.6')
+  })
+
+  it('versionForNode falls back to the normalized label when source releases are absent', () => {
+    var wrapper = mount(ReleaseTimeline, { props: { releases: [] } })
+    expect(wrapper.vm.versionForNode({ groupLabel: 'RHAII 3.6-GA' })).toBe('3.6')
   })
 
   it('versionForNode returns null for a node with no parseable releases', () => {
