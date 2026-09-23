@@ -1708,32 +1708,38 @@
     {
       "component": "AI Core Dashboard",
       "blocker": 12,
-      "critical": 8
+      "critical": 8,
+      "total": 20
     },
     {
       "component": "Gen AI Studio",
       "blocker": 8,
-      "critical": 15
+      "critical": 15,
+      "total": 23
     },
     {
       "component": "Serving Orchestration",
       "blocker": 6,
-      "critical": 9
+      "critical": 9,
+      "total": 15
     },
     {
       "component": "Model as a Service",
       "blocker": 5,
-      "critical": 7
+      "critical": 7,
+      "total": 12
     },
     {
       "component": "vLLM Runtime",
       "blocker": 4,
-      "critical": 6
+      "critical": 6,
+      "total": 10
     },
     {
       "component": "AI Hub",
       "blocker": 3,
-      "critical": 4
+      "critical": 4,
+      "total": 7
     }
   ],
   "metadata": {
