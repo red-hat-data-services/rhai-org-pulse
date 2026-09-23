@@ -1694,10 +1694,17 @@ test.describe('Releases CVE Sustaining Report @releases', () => {
     expect(body).toHaveProperty('unresolved');
     expect(body).toHaveProperty('falsePositivesTrend');
     expect(body).toHaveProperty('openIssueRecords');
+    expect(body).toHaveProperty('actionReportRecords');
     expect(body).toHaveProperty('jiraSearchBase');
 
     expect(Array.isArray(body.openIssueRecords)).toBe(true);
     expect(body.openIssueRecords.length).toBeGreaterThan(0);
+    expect(body.openIssueRecords).toHaveLength(body.totalOpen);
+    expect(body.openIssueRecords.every(issue => !['Closed', 'Resolved'].includes(issue.status))).toBe(true);
+    expect(body.actionReportRecords.open.map(issue => issue.key)).toEqual(
+      body.openIssueRecords.map(issue => issue.key)
+    );
+    expect(body.totalAll).toBeGreaterThanOrEqual(body.totalOpen);
 
     var record = body.openIssueRecords[0];
     expect(record).toHaveProperty('key');
