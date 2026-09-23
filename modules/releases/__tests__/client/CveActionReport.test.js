@@ -63,4 +63,32 @@ describe('CveActionReport', () => {
     expect(wrapper.text()).not.toContain('Conflicting outcomes')
     expect(wrapper.findAll('a').some(link => link.attributes('aria-label') === 'All open vulnerabilities, CVSS 9: 2 issues')).toBe(true)
   })
+
+  it('keeps the report visible when a refresh returns an application error', async () => {
+    vi.stubGlobal('fetch', vi.fn(url => {
+      if (url === '/api/modules/releases/cve-sustaining/action-report/components') {
+        return Promise.resolve({ ok: true, json: async () => ({ availableComponents: ['Alpha'], lastRefreshed: '2026-09-22T12:00:00Z' }) })
+      }
+      if (url === '/api/modules/releases/cve-sustaining/refresh') {
+        return Promise.resolve({ ok: false, status: 500, statusText: 'Internal Server Error', json: async () => ({ error: 'Refresh failed: Jira is unavailable' }) })
+      }
+      return Promise.resolve({ ok: true, json: async () => report })
+    }))
+    const wrapper = mount(CveActionReport, {
+      global: {
+        provide: {
+          moduleNav: { params: ref({ component: 'Alpha' }), updateParams: vi.fn() }
+        }
+      }
+    })
+    await flushPromises()
+    await flushPromises()
+
+    await wrapper.get('button').trigger('click')
+    await flushPromises()
+
+    expect(wrapper.get('[role="alert"]').text()).toBe('Refresh failed: Jira is unavailable')
+    expect(wrapper.text()).toContain('All open vulnerabilities')
+    expect(wrapper.findAll('.bar-chart')).toHaveLength(2)
+  })
 })
