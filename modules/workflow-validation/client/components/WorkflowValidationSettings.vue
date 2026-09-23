@@ -1,5 +1,5 @@
 <script setup>
-import { onMounted, ref } from 'vue'
+import { ref, watch } from 'vue'
 import { apiRequest } from '@shared/client/services/api.js'
 import { useAuth } from '@shared/client/composables/useAuth.js'
 
@@ -52,9 +52,9 @@ async function save() {
   }
 }
 
-onMounted(function() {
-  if (isAdmin.value) load()
-})
+watch(isAdmin, function(admin) {
+  if (admin) load()
+}, { immediate: true })
 </script>
 
 <template>
