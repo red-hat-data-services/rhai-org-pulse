@@ -1083,12 +1083,13 @@ test.describe('Test Execution Dashboard @system-health', () => {
       data: { index_html: '<html>test</html>' }
     });
 
-    // In demo mode: either auth blocks (401/403) or demo guard skips (200)
+    // In demo mode: either auth blocks (401) or demo guard skips (200)
+    // Note: This endpoint uses requireAuth (not requireAdmin), so only 401 is expected
     if (response.status() === 200) {
       const data = await response.json();
       expect(data.status).toBe('skipped');
     } else {
-      expect([401, 403]).toContain(response.status());
+      expect(response.status()).toBe(401);
     }
   });
 
@@ -1097,11 +1098,12 @@ test.describe('Test Execution Dashboard @system-health', () => {
       data: {}
     });
 
+    // Note: This endpoint uses requireAuth (not requireAdmin), so only 401 is expected for unauth
     if (response.status() === 200) {
       const data = await response.json();
       expect(data.status).toBe('skipped');
     } else {
-      expect([401, 403]).toContain(response.status());
+      expect(response.status()).toBe(401);
     }
   });
 });
