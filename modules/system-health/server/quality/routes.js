@@ -773,8 +773,10 @@ module.exports = function registerQualityRoutes(router, context) {
    *         description: HTML files uploaded
    *       401:
    *         description: Unauthorized
+   *       403:
+   *         description: Admin access required
    */
-  router.post('/test-execution/html-upload', requireAuth, requireScope('system-health:write'), jsonLimit, async function(req, res) {
+  router.post('/test-execution/html-upload', requireAdmin, requireScope('system-health:write'), jsonLimit, async function(req, res) {
     if (DEMO_MODE) {
       return res.json({ status: 'skipped', message: 'HTML upload disabled in demo mode' });
     }
