@@ -34,20 +34,23 @@
     <template v-else>
       <p class="text-xs text-gray-500 dark:text-gray-400">As of {{ data.asOfDate }} · Window ends {{ data.windowEndDate }} · Last refreshed {{ formatDate(data.lastRefreshed) }}</p>
 
-      <section class="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
-        <SummaryCard label="All open vulnerabilities" :item="data.summary?.openVulnerabilities" primary />
-        <SummaryCard label="Overdue" :item="data.summary?.overdue" emphasis />
-        <SummaryCard label="No SLA date" :item="data.summary?.noSlaDate" warning />
-        <SummaryCard label="Missing review outcome" :item="data.summary?.missingOutcome" warning />
+      <section class="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+        <SummaryCard label="All open vulnerabilities" :item="data.summary?.openVulnerabilities" />
+        <SummaryCard label="SLA breached" :item="data.summary?.slaBreached" :emphasis="true" />
+        <SummaryCard label="No SLA date" :item="data.summary?.noSlaDate" />
       </section>
 
       <section class="rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-4">
-        <h3 class="mb-3 text-sm font-semibold text-gray-900 dark:text-gray-100">Upcoming SLA deadlines until {{ data.windowEndDate }}</h3>
-        <div v-if="!data.timeline?.length" class="py-10 text-center text-sm text-gray-500">No selected-component issues have SLA deadlines through {{ data.windowEndDate }}.</div>
+        <h3 class="mb-2 text-sm font-semibold text-gray-900 dark:text-gray-100">Upcoming due dates until {{ data.windowEndDate }}</h3>
+        <ul class="mb-3 flex flex-wrap items-center gap-x-4 gap-y-2 text-xs text-gray-600 dark:text-gray-300" aria-label="Due date color legend">
+          <li class="inline-flex items-center gap-1.5"><span aria-hidden="true" class="h-3 w-3 rounded-sm border border-red-200 bg-red-50 dark:border-red-800 dark:bg-red-900/20"></span>Past due</li>
+          <li class="inline-flex items-center gap-1.5"><span aria-hidden="true" class="h-3 w-3 rounded-sm border border-amber-200 bg-amber-50 dark:border-amber-800 dark:bg-amber-900/20"></span>Due within 7 days</li>
+        </ul>
+        <div v-if="!data.timeline?.length" class="py-10 text-center text-sm text-gray-500">No selected-component issues have due dates through {{ data.windowEndDate }}.</div>
         <div v-else class="overflow-x-auto">
-          <table class="min-w-[900px] w-full text-left text-sm" :aria-label="`Upcoming SLA deadlines until ${data.windowEndDate}`">
-            <thead><tr class="border-b border-gray-200 text-xs uppercase tracking-wide text-gray-500 dark:border-gray-700"><th class="p-2">SLA date</th><th v-for="outcome in outcomes" :key="outcome.key" class="p-2">{{ outcome.label }}</th><th class="p-2">Total</th></tr></thead>
-            <tbody><tr v-for="row in data.timeline" :key="row.slaDate" class="border-b border-gray-100 dark:border-gray-700/60"><th class="whitespace-nowrap p-2 font-medium text-gray-700 dark:text-gray-300">{{ row.slaDate }}</th><td v-for="outcome in outcomes" :key="outcome.key" class="p-2 align-top"><OutcomeCell :item="row.outcomes?.[outcome.key]" :label="outcome.label" /></td><td class="p-2 align-top"><TimelineTotalCell :item="row" /></td></tr></tbody>
+          <table class="min-w-[900px] w-full text-left text-sm" :aria-label="`Upcoming due dates until ${data.windowEndDate}`">
+            <thead><tr class="border-b border-gray-200 text-xs uppercase tracking-wide text-gray-500 dark:border-gray-700"><th class="p-2">Due date</th><th v-for="outcome in outcomes" :key="outcome.key" class="p-2">{{ outcome.label }}</th><th class="p-2">Total</th></tr></thead>
+            <tbody><tr v-for="row in data.timeline" :key="row.dueDate" class="border-b border-gray-100 dark:border-gray-700/60" :class="{ 'bg-red-50 dark:bg-red-900/20': row.isPastDue, 'bg-amber-50 dark:bg-amber-900/20': !row.isPastDue && row.upcomingDueDate }"><th class="whitespace-nowrap p-2 font-medium text-gray-700 dark:text-gray-300">{{ row.dueDate }}</th><td v-for="outcome in outcomes" :key="outcome.key" class="p-2 align-top"><OutcomeCell :item="row.outcomes?.[outcome.key]" :label="outcome.label" /></td><td class="p-2 align-top"><TimelineTotalCell :item="row" /></td></tr></tbody>
           </table>
         </div>
       </section>
@@ -81,8 +84,7 @@ const ageOutcomes = [
   { key: 'needs-action', label: 'Needs action', color: '#2563eb' },
   { key: 'not-found', label: 'Not found', color: '#ef4444' },
   { key: 'needs-review', label: 'Needs review', color: '#f59e0b' },
-  { key: 'possibly-resolved', label: 'Possibly resolved', color: '#10b981' },
-  { key: 'missing-outcome', label: 'Missing outcome', color: '#6b7280' }
+  { key: 'possibly-resolved', label: 'Possibly resolved', color: '#10b981' }
 ]
 const ageChartOptions = {
   ...chartOptions,
@@ -109,6 +111,11 @@ watch(selected, value => { if (value) { nav?.updateParams?.({ component: value }
 
 const SummaryCard = (props) => {
   const item = props.item || {}
+  const emphasized = props.emphasis && item.count > 0
+  const cardTone = emphasized
+    ? 'border-red-300 bg-red-50 dark:border-red-800 dark:bg-red-900/20'
+    : 'border-gray-200 bg-white dark:border-gray-700 dark:bg-gray-800'
+  const dividerTone = emphasized ? 'border-red-200 dark:border-red-800' : 'border-gray-200 dark:border-gray-700'
   const scoreLinks = (item.byCvss || []).map(score => h('a', {
     key: score.score,
     href: score.jql,
@@ -117,10 +124,10 @@ const SummaryCard = (props) => {
     class: 'inline-flex items-center gap-0.5 font-semibold text-primary-600 underline decoration-primary-300 underline-offset-2 hover:text-primary-800 focus:outline-none focus:ring-2 focus:ring-primary-500 dark:text-primary-400 dark:hover:text-primary-200',
     'aria-label': `${props.label}, CVSS ${score.score}: ${score.count} issues`
   }, [`CVSS ${score.score}: ${score.count}`, h(ExternalLink, { size: 11, 'aria-hidden': 'true' })]))
-  return h('section', { class: `rounded-lg border p-4 ${props.primary ? 'border-blue-300 bg-blue-50 dark:border-blue-800 dark:bg-blue-900/20' : props.emphasis ? 'border-red-300 bg-red-50 dark:bg-red-900/20' : 'border-amber-200 bg-amber-50 dark:bg-amber-900/20'}` }, [
+  return h('section', { class: `rounded-lg border p-4 ${cardTone}` }, [
     h('div', { class: 'text-xs font-semibold uppercase tracking-wide text-gray-600 dark:text-gray-300' }, props.label),
     item.count ? h('a', { href: item.jql, target: '_blank', rel: 'noopener noreferrer', class: 'mt-1 inline-block text-3xl font-extrabold text-primary-700 underline decoration-primary-300 underline-offset-4 hover:text-primary-900 focus:outline-none focus:ring-2 focus:ring-primary-500 dark:text-primary-300 dark:hover:text-primary-100', 'aria-label': `${props.label}: ${item.count} issues` }, String(item.count)) : h('div', { class: 'mt-1 text-3xl font-extrabold text-gray-900 dark:text-gray-100' }, '0'),
-    scoreLinks.length ? h('div', { class: `mt-3 border-t pt-2 text-xs ${props.primary ? 'border-blue-200 dark:border-blue-800' : props.emphasis ? 'border-red-200 dark:border-red-800' : 'border-amber-200 dark:border-amber-800'}` }, [h('div', { class: 'mb-1 font-medium text-gray-600 dark:text-gray-300' }, 'By CVSS score'), h('div', { class: 'flex flex-wrap gap-x-3 gap-y-1' }, scoreLinks)]) : null
+    scoreLinks.length ? h('div', { class: `mt-3 border-t pt-2 text-xs ${dividerTone}` }, [h('div', { class: 'mb-1 font-medium text-gray-600 dark:text-gray-300' }, 'By CVSS score'), h('div', { class: 'flex flex-wrap gap-x-3 gap-y-1' }, scoreLinks)]) : null
   ])
 }
 const OutcomeCell = (props) => props.item?.count ? h('div', { class: 'space-y-1' }, [h('a', { href: props.item.jql, target: '_blank', rel: 'noopener noreferrer', class: 'font-semibold text-primary-600 underline decoration-primary-300 underline-offset-2 hover:text-primary-800 focus:outline-none focus:ring-2 focus:ring-primary-500 dark:text-primary-400 dark:hover:text-primary-200', 'aria-label': `${props.label}: ${props.item.count} issues` }, String(props.item.count)), h('div', { class: 'flex flex-wrap gap-x-3 gap-y-1 text-xs' }, (props.item.byCvss || []).map(score => h('a', { key: score.score, href: score.jql, target: '_blank', rel: 'noopener noreferrer', class: 'inline-flex items-center gap-0.5 font-semibold text-primary-600 underline decoration-primary-300 underline-offset-2 hover:text-primary-800 focus:outline-none focus:ring-2 focus:ring-primary-500 dark:text-primary-400 dark:hover:text-primary-200', 'aria-label': `${props.label}, CVSS ${score.score}: ${score.count} issues` }, [`CVSS ${score.score}: ${score.count}`, h(ExternalLink, { size: 11, 'aria-hidden': 'true' })])))]) : h('span', { class: 'text-gray-300 dark:text-gray-600' }, '—')

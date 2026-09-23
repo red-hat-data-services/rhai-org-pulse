@@ -1729,7 +1729,10 @@ test.describe('Releases CVE Sustaining Report @releases', () => {
     expect(reportRes.ok()).toBe(true);
     const report = await reportRes.json();
     expect(report.component).toBe('Model Serving');
-    expect(Array.isArray(report.timeline)).toBe(true);
+    expect(report.timeline.length).toBeGreaterThan(0);
+    expect(report.timeline.some(row => row.outcomes['needs-review'])).toBe(true);
+    expect(report.timeline.some(row => row.isPastDue)).toBe(true);
+    expect(report.timeline.some(row => row.upcomingDueDate)).toBe(true);
     expect(report.timeline.every(row => row.total > 0 && row.total_jql)).toBe(true);
     expect(report.timeline.every(row => Object.keys(row.outcomes).every(outcome => [
       'needs-action',
@@ -1737,6 +1740,8 @@ test.describe('Releases CVE Sustaining Report @releases', () => {
       'needs-review',
       'possibly-resolved'
     ].includes(outcome)))).toBe(true);
+    expect(report.summary.slaBreached.count).toBeGreaterThan(0);
+    expect(report.summary.noSlaDate.count).toBeGreaterThan(0);
     expect(report.summary.missingOutcome.count).toBeGreaterThan(0);
     expect(report.summary).not.toHaveProperty('conflictingOutcome');
     expect(report.summary.openVulnerabilities.count).toBeGreaterThan(0);
@@ -1746,12 +1751,13 @@ test.describe('Releases CVE Sustaining Report @releases', () => {
     expect(report.openAgeBuckets.every(bucket => bucket.outcomes)).toBe(true);
     expect(report.openAgeBuckets.every(bucket => Object.values(bucket.outcomes).reduce((sum, count) => sum + count, 0) === bucket.count)).toBe(true);
 
-    const timelineScoreLinks = report.timeline
-      .flatMap(row => Object.values(row.outcomes).flatMap(outcome => outcome.byCvss || []));
-    for (const scoreLink of timelineScoreLinks) {
-      expect(decodeURIComponent(scoreLink.jql)).toContain('issue.property[rh-sla-dt].value');
-      expect(decodeURIComponent(scoreLink.jql)).toContain('key in');
-    }
+    const scoreLink = report.timeline
+      .flatMap(row => Object.values(row.outcomes).flatMap(outcome => outcome.byCvss || []))
+      .find(score => score.score === '5');
+    expect(scoreLink).toBeTruthy();
+    expect(decodeURIComponent(scoreLink.jql)).toContain('duedate');
+    expect(decodeURIComponent(scoreLink.jql)).not.toContain('issue.property[rh-sla-dt].value');
+    expect(decodeURIComponent(scoreLink.jql)).toContain('key in');
   });
 
   test('CVE action report renders component selection, summary, timeline, and charts', async ({ page }) => {
@@ -1768,16 +1774,22 @@ test.describe('Releases CVE Sustaining Report @releases', () => {
     const reportRes = await page.request.get('/api/modules/releases/cve-sustaining/action-report?component=Model%20Serving');
     expect(reportRes.ok()).toBe(true);
     const report = await reportRes.json();
-    const timelineHeading = `Upcoming SLA deadlines until ${report.windowEndDate}`;
+    const timelineHeading = `Upcoming due dates until ${report.windowEndDate}`;
 
     await expect(page.getByText(timelineHeading)).toBeVisible();
-    await expect(page.getByText('Overdue', { exact: true })).toBeVisible();
-    await expect(page.getByText('Missing review outcome', { exact: true })).toBeVisible();
-    if (report.timeline.length) {
-      await expect(page.getByRole('table', { name: timelineHeading })).toBeVisible();
-    } else {
-      await expect(page.getByText(`No selected-component issues have SLA deadlines through ${report.windowEndDate}.`)).toBeVisible();
-    }
+    const dueDateLegend = page.locator('[aria-label="Due date color legend"]');
+    await expect(dueDateLegend).toContainText('Past due');
+    await expect(dueDateLegend).toContainText('Due within 7 days');
+    await expect(page.getByText('SLA breached', { exact: true })).toBeVisible();
+    await expect(page.getByText('All open vulnerabilities', { exact: true }).locator('..')).toHaveClass(/bg-white/);
+    await expect(page.getByText('SLA breached', { exact: true }).locator('..')).toHaveClass(/bg-red-50/);
+    await expect(page.getByText('No SLA date', { exact: true }).locator('..')).toHaveClass(/bg-white/);
+    await expect(page.getByText('Missing review outcome', { exact: true })).toHaveCount(0);
+    const pastDueRow = page.locator('tbody tr', { hasText: '2026-08-20' });
+    await expect(pastDueRow).toHaveClass(/bg-red-50/);
+    await expect(pastDueRow).not.toContainText('Past due');
+    await expect(page.locator('tbody tr', { hasText: '2026-09-29' })).toHaveClass(/bg-amber-50/);
+    await expect(page.getByRole('table', { name: timelineHeading })).toBeVisible();
     await expect(page.getByText('Vulnerabilities created and closed weekly')).toBeVisible();
     await expect(page.getByText('Open action cohort age by outcome')).toBeVisible();
     expect(await page.locator('a[target="_blank"]').count()).toBeGreaterThan(0);
