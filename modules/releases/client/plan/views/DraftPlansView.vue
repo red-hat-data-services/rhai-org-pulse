@@ -202,7 +202,7 @@ onMounted(async function() {
       <div class="flex flex-wrap items-center gap-3 min-w-0">
         <div class="min-w-0">
           <p class="text-[10px] font-semibold uppercase tracking-wide text-gray-400 dark:text-gray-500">Release cycle</p>
-          <h2 class="text-sm font-semibold text-gray-900 dark:text-gray-100 truncate">{{ cycleLabel }} Draft Plan</h2>
+          <h2 class="text-sm font-semibold text-gray-900 dark:text-gray-100 truncate">{{ cycleLabel }} Plan Approval</h2>
         </div>
         <label class="text-sm font-medium text-gray-700 dark:text-gray-300 flex items-center gap-2">
           Cycle
