@@ -256,6 +256,17 @@ jobs:
                conventions) and `.github/instructions/review.instructions.md`
                (review checklist and verdict rules). Apply all criteria from both.
 
+            **Test-coverage review is mandatory:** For every changed or new
+            module, identify each changed functional path and the exact test
+            assertion that covers it. Distinguish UI/fixture coverage from
+            backend coverage. A blanket interception of
+            `**/api/modules/<slug>/**` is UI/fixture coverage only; it cannot
+            establish coverage for changed server routes, runtime dependencies,
+            configuration wiring, or external-service clients. If the PR lacks
+            the coverage required by the review instructions, report an
+            unfixed blocking issue with category `test-adequacy` and set the
+            verdict to `FAIL`.
+
             3. **Fix** any issues you find by editing the files directly:
                - Use Edit/Write tools to modify the source files
                - Fix all issues you're confident about: bugs, style, security, performance
@@ -322,6 +333,17 @@ jobs:
             2. **Review** the diff. Read `AGENTS.md` (hard constraints and
                conventions) and `.github/instructions/review.instructions.md`
                (review checklist and verdict rules). Apply all criteria from both.
+
+            **Test-coverage review is mandatory:** For every changed or new
+            module, identify each changed functional path and the exact test
+            assertion that covers it. Distinguish UI/fixture coverage from
+            backend coverage. A blanket interception of
+            `**/api/modules/<slug>/**` is UI/fixture coverage only; it cannot
+            establish coverage for changed server routes, runtime dependencies,
+            configuration wiring, or external-service clients. If the PR lacks
+            the coverage required by the review instructions, report an
+            unfixed blocking issue with category `test-adequacy` and set the
+            verdict to `FAIL`.
 
             3. **Report** your findings:
                - Use inline comments for specific issues in the diff
