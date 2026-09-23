@@ -34,9 +34,26 @@ async function loadDashboard() {
     // Static file not available, try API
   }
   
-  // Fall back to API endpoint
-  dashboardUrl.value = DASHBOARD_API
-  usingApi.value = true
+  // Try API endpoint - but validate it returns actual HTML, not an error JSON
+  try {
+    const apiResponse = await fetch(DASHBOARD_API, { credentials: 'include' })
+    if (apiResponse.ok) {
+      const text = await apiResponse.text()
+      // Check if it's valid HTML (not a JSON error response)
+      if (text.includes('<!DOCTYPE html') || text.includes('<html')) {
+        dashboardUrl.value = DASHBOARD_API
+        usingApi.value = true
+        return
+      }
+    }
+    // API returned an error or non-HTML content
+    throw new Error('HTML not available')
+  } catch {
+    // Both static and API failed - show error
+    loading.value = false
+    error.value = 'Dashboard HTML not available. An admin needs to upload the dashboard files, or check that the static files are deployed correctly.'
+    dashboardUrl.value = ''
+  }
 }
 
 onMounted(() => {
@@ -53,7 +70,9 @@ function onIframeError() {
 }
 
 function openInNewTab() {
-  window.open(usingApi.value ? DASHBOARD_API : DASHBOARD_STATIC, '_blank')
+  if (dashboardUrl.value) {
+    window.open(dashboardUrl.value, '_blank')
+  }
 }
 
 function refreshDashboard() {
@@ -110,7 +129,8 @@ const containerClass = computed(() =>
         <button
           type="button"
           @click="openInNewTab"
-          class="inline-flex items-center px-3 py-2 border border-gray-300 dark:border-gray-600 shadow-sm text-sm font-medium rounded-md text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700"
+          :disabled="!dashboardUrl"
+          class="inline-flex items-center px-3 py-2 border border-gray-300 dark:border-gray-600 shadow-sm text-sm font-medium rounded-md text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed"
           title="Open in new tab"
         >
           <ExternalLink class="h-4 w-4" />
@@ -152,6 +172,7 @@ const containerClass = computed(() =>
 
     <!-- iframe Dashboard -->
     <div
+      v-if="dashboardUrl"
       class="rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden bg-white dark:bg-gray-900 shadow-sm"
       :class="isExpanded ? 'mx-4 mb-4 flex-1 min-h-0' : ''"
     >
@@ -166,6 +187,17 @@ const containerClass = computed(() =>
         @error="onIframeError"
         allow="clipboard-write"
       />
+    </div>
+
+    <!-- Helpful info when dashboard is not available -->
+    <div
+      v-if="!dashboardUrl && !loading && !error"
+      class="rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 p-8 text-center"
+      :class="isExpanded ? 'mx-4 mb-4' : ''"
+    >
+      <p class="text-gray-600 dark:text-gray-400">
+        Dashboard is being loaded...
+      </p>
     </div>
   </div>
 </template>
