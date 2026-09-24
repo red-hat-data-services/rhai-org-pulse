@@ -285,10 +285,10 @@
             <tr v-for="row in sortedVersionTableRows" :key="row.component" class="border-b border-gray-100 dark:border-gray-700/50 hover:bg-gray-50 dark:hover:bg-gray-700/30">
               <td class="py-1.5 pr-3 text-gray-800 dark:text-gray-200 sticky left-0 bg-white dark:bg-gray-800 z-10">
                 <template v-if="isSecurityComponentName(row.component)">
-                  <div data-testid="cve-security-component-label" class="font-medium">{{ SECURITY_OWNER_LABEL }}</div>
+                  <a :href="cveActionReportHref(row.component)" data-testid="cve-security-component-label" class="font-medium text-primary-600 underline decoration-primary-300 underline-offset-2 hover:text-primary-800 dark:text-primary-400 dark:hover:text-primary-200">{{ SECURITY_OWNER_LABEL }}</a>
                   <div class="text-[10px] text-gray-500 dark:text-gray-400">{{ SECURITY_OWNER_NOTE }}</div>
                 </template>
-                <template v-else>{{ row.component }}</template>
+                <a v-else :href="cveActionReportHref(row.component)" class="text-primary-600 underline decoration-primary-300 underline-offset-2 hover:text-primary-800 dark:text-primary-400 dark:hover:text-primary-200">{{ row.component }}</a>
               </td>
               <td v-for="ver in agg.cvesAcrossVersions.value.versions" :key="ver" class="text-right py-1.5 px-2 tabular-nums">
                 <button v-if="row.cells[ver]" class="font-semibold text-blue-600 dark:text-blue-400 underline decoration-dotted hover:decoration-solid cursor-pointer" @click="drillDownByMatrixCell(row.component, ver, row.cellJqls[ver])">{{ row.cells[ver] }}</button>
@@ -467,6 +467,10 @@ ChartJS.register(CategoryScale, LinearScale, BarElement, PointElement, LineEleme
 const nav = inject('moduleNav')
 const { data, loading, error, refreshing, loadData, refresh } = useCveSustaining()
 const catalogComponents = ref([])
+
+function cveActionReportHref(component) {
+  return `#/releases/reports?report=cve-action-report&component=${encodeURIComponent(component)}`
+}
 
 async function loadComponentCatalog() {
   try {
