@@ -1,25 +1,7 @@
 {
-  "generated_at": "2026-09-22T18:08:51.970590+00:00",
-  "from_date": "2026-07-01",
-  "to_date": "2026-09-22",
-  "components": [
-    "AI Hub",
-    "AI Pipelines",
-    "AI Safety",
-    "Dashboard",
-    "Demos",
-    "Distributed Workloads",
-    "Feature Store",
-    "KubeRay",
-    "Llama Stack",
-    "MLflow",
-    "MaaS Billing",
-    "Model Serving",
-    "OGX",
-    "Other",
-    "Platform",
-    "Training",
-    "Workbenches"
-  ],
+  "generated_at": "2026-09-17T00:00:00+00:00",
+  "from_date": "2026-09-15",
+  "to_date": "2026-09-17",
+  "components": ["AI Hub", "AI Safety"],
   "data_mode": "static"
 }
