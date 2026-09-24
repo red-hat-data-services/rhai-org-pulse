@@ -26,14 +26,9 @@
             <span class="text-[10px] font-semibold uppercase tracking-wider text-blue-200 mb-0.5">Code Freeze</span>
             <span class="text-sm font-bold">{{ formatScheduleDate(releaseSchedule.code_freeze_date) }}</span>
           </div>
-          <div v-if="releaseSchedule.ga_date" class="flex flex-col items-center bg-white/15 backdrop-blur-sm rounded-xl px-5 py-2.5 min-w-[90px]">
+          <div class="flex flex-col items-center bg-white/15 backdrop-blur-sm rounded-xl px-5 py-2.5 min-w-[90px]">
             <span class="text-[10px] font-semibold uppercase tracking-wider text-blue-200 mb-0.5">GA Date</span>
-            <span class="text-sm font-bold">{{ formatScheduleDate(releaseSchedule.ga_date) }}</span>
-          </div>
-          <div class="flex flex-col items-center rounded-xl px-5 py-2.5 min-w-[90px]"
-            :class="scheduleStatusClass">
-            <span class="text-[10px] font-semibold uppercase tracking-wider text-blue-200 mb-0.5">Status</span>
-            <span class="text-sm font-bold">{{ scheduleStatusLabel }}</span>
+            <span class="text-sm font-bold">{{ releaseSchedule.ga_date ? formatScheduleDate(releaseSchedule.ga_date) : 'TBD' }}</span>
           </div>
         </div>
       </div>
@@ -835,35 +830,6 @@ const releaseSchedule = computed(() => {
   return data.value.release_schedule
 })
 
-// Normalize the schedule status for display. Older/legacy payloads (and any
-// release where Product Pages could not resolve a GA date) store "Unknown",
-// which is not useful on the status bar. Fall back to a phase derived from the
-// available dates and the EA/GA nature of the version so the bar is always
-// meaningful.
-const scheduleStatusLabel = computed(() => {
-  const sched = releaseSchedule.value
-  if (!sched) return ''
-  const raw = (sched.status || '').trim()
-  if (raw && raw.toLowerCase() !== 'unknown') return raw
-
-  const today = new Date().toISOString().slice(0, 10)
-  if (sched.ga_date && sched.ga_date <= today) return 'Released'
-  if (sched.code_freeze_date && sched.code_freeze_date <= today) return 'Testing'
-  if (/\.EA\d+/i.test(sched.version || data.value?.version || '')) return 'Early Access'
-  if (sched.code_freeze_date) return 'Planning'
-  return 'Upcoming'
-})
-
-// Color the status chip by lifecycle phase rather than only greening "Released".
-const scheduleStatusClass = computed(() => {
-  const s = scheduleStatusLabel.value.toLowerCase()
-  if (s === 'released') return 'bg-emerald-500/30'
-  if (s === 'testing') return 'bg-blue-500/30'
-  if (s === 'early access') return 'bg-violet-500/30'
-  if (s === 'planning' || s === 'upcoming') return 'bg-amber-500/30'
-  return 'bg-amber-500/30'
-})
-
 const openIssuesToValidate = computed(() => {
   if (!data.value || !data.value.open_issues_to_validate) return null
   return data.value.open_issues_to_validate
@@ -1001,9 +967,9 @@ const testExecPct = computed(() => {
 // --- Release Decision Status ---
 
 const releaseStatuses = [
-  { id: 'not-ready', label: 'Not Ready', activeClass: 'bg-red-600 text-white border-red-600', tooltip: 'Multiple gates below 50%. Open blockers present. Not all sign-offs complete.' },
+  { id: 'not-ready', label: 'Not Ready', activeClass: 'bg-red-600 text-white border-red-600', tooltip: 'Multiple gates below 50%, or open blockers with overall completion under 50%. Not all sign-offs complete.' },
   { id: 'in-progress', label: 'In Progress', activeClass: 'bg-blue-600 text-white border-blue-600', tooltip: 'Testing started but gates are below 80% completion. Work is actively progressing.' },
-  { id: 'at-risk', label: 'At Risk', activeClass: 'bg-amber-500 text-white border-amber-500', tooltip: 'Some gates above 50% but open blockers or sign-offs pending. Timeline may slip.' },
+  { id: 'at-risk', label: 'At Risk', activeClass: 'bg-amber-500 text-white border-amber-500', tooltip: 'Progress above 50% but open blockers, a lagging gate, or GA date imminent. Timeline may slip.' },
   { id: 'on-track', label: 'On Track', activeClass: 'bg-emerald-500 text-white border-emerald-500', tooltip: 'All gates above 80%. No critical blockers. Sign-offs progressing on schedule.' },
   { id: 'ready-to-ship', label: 'Ready to Ship', activeClass: 'bg-green-600 text-white border-green-600', tooltip: 'All gates at 100%. All sign-offs done. Zero open blockers. Go for release.' },
 ]
@@ -1013,40 +979,100 @@ const hasInitiativeData = computed(() => {
   return director.value.gate_statuses && director.value.gate_statuses.length > 0
 })
 
+// All decision gates: the director gate_statuses plus the TFA (Test Plan) sign
+// off, each carried as done/total so completion is a true weighted percentage
+// of real work rather than an average of a couple of gate percentages.
+const decisionGates = computed(() => {
+  const gates = (director.value?.gate_statuses || []).map(g => ({
+    name: g.gate,
+    done: Number(g.done) || 0,
+    total: Number(g.total) || 0,
+  }))
+  // Include TFA / Test Plan Sign Off as a gate when the payload carries it and
+  // the director gates don't already include it.
+  const hasTfaGate = gates.some(g => /tfa|test plan sign off/i.test(g.name))
+  if (!hasTfaGate && testSignOffTotal.value > 0) {
+    gates.push({ name: 'TFA Sign Off', done: testSignOffDone.value, total: testSignOffTotal.value })
+  }
+  return gates.filter(g => g.total > 0)
+})
+
+// Weighted completion across every gate: total done / total items. Reflects the
+// real percentage of release work completed.
+const releaseCompletionPct = computed(() => {
+  const gates = decisionGates.value
+  const total = gates.reduce((s, g) => s + g.total, 0)
+  if (!total) return 0
+  const done = gates.reduce((s, g) => s + g.done, 0)
+  return Math.round((done / total) * 100)
+})
+
+// Whole days from today until the GA date (negative once GA has passed).
+// null when the schedule has no GA date, so any GA-based rule degrades to a
+// no-op rather than firing on missing data (common for EA milestones).
+const daysToGa = computed(() => {
+  const gaDate = releaseSchedule.value?.ga_date
+  if (!gaDate) return null
+  const ga = new Date(`${gaDate}T00:00:00Z`)
+  if (isNaN(ga.getTime())) return null
+  const today = new Date(`${new Date().toISOString().slice(0, 10)}T00:00:00Z`)
+  return Math.round((ga - today) / 86400000)
+})
+
+// Schedule risk: GA is imminent (within 3 days, and not already past) but the
+// release is not yet 80% complete. Used to escalate the decision to At Risk.
+const GA_NEAR_DAYS = 3
+const gaScheduleRisk = computed(() => {
+  const d = daysToGa.value
+  return d !== null && d >= 0 && d <= GA_NEAR_DAYS && releaseCompletionPct.value < 80
+})
+
 const releaseDecision = computed(() => {
-  if (!director.value) return 'not-ready'
-  const gates = director.value.gate_statuses || []
+  const gates = decisionGates.value
   if (!gates.length) return 'not-ready'
 
-  const avgPct = gates.reduce((s, g) => s + g.pct, 0) / gates.length
+  const gatePct = g => (g.total > 0 ? (g.done / g.total) * 100 : 0)
   const openBlockers = productBlockers.value?.total_open || 0
-  const gatesBelow50 = gates.filter(g => g.pct < 50).length
-  const allGatesAbove80 = gates.every(g => g.pct >= 80)
-  const allGates100 = gates.every(g => g.pct >= 100)
+  const completion = releaseCompletionPct.value // weighted, real completion
+  const gatesBelow50 = gates.filter(g => gatePct(g) < 50).length
+  const allGatesAbove80 = gates.every(g => gatePct(g) >= 80)
+  const allGates100 = gates.every(g => gatePct(g) >= 100)
 
-  // Evaluate from best to worst so the strongest matching state wins.
+  // Base decision from gates + blockers, evaluated best to worst; the strongest
+  // fully-satisfied state wins.
+  const base = (() => {
+    // Ready to Ship: every gate 100% complete and zero open blockers.
+    if (allGates100 && openBlockers === 0) return 'ready-to-ship'
 
-  // Ready to Ship: everything complete, no blockers.
-  if (allGates100 && openBlockers === 0) return 'ready-to-ship'
+    // On Track: every gate at/above 80% and no open blockers.
+    if (allGatesAbove80 && openBlockers === 0) return 'on-track'
 
-  // On Track: all gates >= 80% and no critical blockers.
-  if (allGatesAbove80 && openBlockers === 0) return 'on-track'
+    // Not Ready: two or more gates below 50%, OR open blockers while overall
+    // completion is still low. A stalled/early release is not ready regardless
+    // of whether blockers have been filed yet.
+    if (gatesBelow50 >= 2 || (openBlockers > 0 && completion < 50)) return 'not-ready'
 
-  // Not Ready: multiple gates still below 50% (early/stalled). This is the
-  // dominant signal per the tooltip — a release with several gates under 50%
-  // is not ready regardless of whether blockers have been filed yet.
-  if (gatesBelow50 >= 2) return 'not-ready'
+    // At Risk: meaningful progress (>= 50% overall) but something is
+    // jeopardizing the timeline — an open blocker or a single lagging gate.
+    if (completion >= 50 && (openBlockers > 0 || gatesBelow50 >= 1)) return 'at-risk'
 
-  // At Risk: progress is underway (some gates above 50%) but open blockers or
-  // a below-50% gate put the timeline at risk.
-  if ((avgPct >= 50 || gatesBelow50 <= 1) && (openBlockers > 0 || gatesBelow50 >= 1)) return 'at-risk'
+    // In Progress: work has started and gates are progressing (below 80%) with
+    // nothing actively putting the release at risk.
+    if (completion > 0) return 'in-progress'
 
-  // In Progress: testing has started and gates are progressing (below 80%),
-  // no blockers holding it back.
-  if (avgPct > 0) return 'in-progress'
+    // Nothing started.
+    return 'not-ready'
+  })()
 
-  // Nothing started.
-  return 'not-ready'
+  // Schedule-risk overlay: if GA is within 3 days and the release is under 80%
+  // complete, escalate to At Risk. Only escalate — never soften an already
+  // worse state (e.g. Not Ready stays Not Ready). Has no effect when the GA
+  // date is missing, so EA releases without a GA date are unaffected.
+  if (gaScheduleRisk.value && (base === 'in-progress' || base === 'on-track')) {
+    return 'at-risk'
+  }
+
+  return base
 })
 
 // --- Component Filter ---
