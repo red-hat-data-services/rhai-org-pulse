@@ -2420,7 +2420,7 @@ The dataset is four separate JSON files under `data/system-health/test-execution
 |--------|------|------|---------|
 | `GET` | `/api/modules/system-health/quality/test-execution/data` | `system-health:read` | Combined `{ heatmap, components, jira_config, meta, lastUpload }`; `?file=<name>` for a single payload |
 | `GET` | `/api/modules/system-health/quality/test-execution/status` | `system-health:read` | Last upload receipt |
-| `POST` | `/api/modules/system-health/quality/test-execution/bulk` | admin, `system-health:write` | Push any subset of `heatmap`/`components`/`jira_config`/`meta` from the pipeline |
+| `POST` | `/api/modules/system-health/quality/test-execution/bulk` | `system-health:write` | Push any subset of `heatmap`/`components`/`jira_config`/`meta` from the pipeline |
 
 **Upload receipt:** `data/system-health/test-execution/last-upload.json` records `{ uploadedAt, uploadedBy, files }` after each bulk write.
 

@@ -726,7 +726,12 @@ module.exports = function registerQualityRoutes(router, context) {
    *         description: Last upload metadata
    */
   router.get('/test-execution/status', requireAuth, requireScope('system-health:read'), async function(req, res) {
-    const lastUpload = await readFromStorage(`${TEST_EXEC_BASE}/last-upload.json`);
-    return res.json(lastUpload || { uploadedAt: null, files: [] });
+    try {
+      const lastUpload = await readFromStorage(`${TEST_EXEC_BASE}/last-upload.json`);
+      return res.json(lastUpload || { uploadedAt: null, files: [] });
+    } catch (error) {
+      console.error('[system-health/quality] Error reading test execution status:', error.message);
+      return res.status(500).json({ error: 'Failed to read status' });
+    }
   });
 };
