@@ -1031,6 +1031,7 @@ window.addEventListener('message', function(e) {
   if(e.origin !== window.location.origin) return;
   if(e.data?.type === 'ai-planner-data') {
     liveData = e.data;
+    applyLiveData(liveData);
     console.log('Received live data from Org Pulse:', liveData);
   }
 });
@@ -2823,6 +2824,77 @@ function detectEvt(s){
 // ── STATE ─────────────────────────────────────────────────────────────────────
 let allData=[], sortCol='Rank', sortAsc=true;
 
+function normalizeLiveFeature(feature, index){
+  const components=Array.isArray(feature.Components)?feature.Components:[];
+  const targetVersion=feature.PlannedFor||feature['Target Versions']||'';
+  const confidence=feature.Confidence||'not-ready';
+  const confidenceScore=typeof confidence==='number'?confidence:
+    ({ready:90,committed:90,likely:70,'likely-plus':80,'not-ready':30}[String(confidence).toLowerCase()]||0);
+  const fpdor=feature.FPDoR||'0/17';
+  const fpdorNumerator=parseInt(String(fpdor).split('/')[0],10)||0;
+  const placement=feature.Placement||(
+    /EA1/i.test(targetVersion)?'EA1':/EA2/i.test(targetVersion)?'EA2':/GA/i.test(targetVersion)?'GA':'No'
+  );
+  return {
+    Rank: index+1,
+    Key: feature.Key||'',
+    Title: feature.Summary||feature.Title||'',
+    Score: feature.RICE||0,
+    FPDoR: fpdor,
+    'Failed FPDoR Items': '',
+    Outcome: feature.Outcome||'',
+    'Target Versions': targetVersion,
+    'Fix Version': feature['Fix Version']||targetVersion,
+    Components: components.join('; '),
+    Team: feature.Team||feature.DeliveryOwner||'',
+    Assignee: feature.DeliveryOwner||'',
+    Status: feature.Status||'',
+    Priority: feature.Priority||'',
+    Confidence: confidence,
+    Labels: feature.Labels||'',
+    'Release Type': feature['Release Type']||'',
+    _conf: confidenceScore,
+    _rawMlScore: confidenceScore,
+    _place: placement,
+    _riskLevel: feature.riskLevel||'MEDIUM',
+    _riskFails: {},
+    _failedItems: [],
+    _wFPDoR: Math.round(fpdorNumerator/17*100),
+    _featureSize: 'M',
+    _featurePts: 0,
+    _comps: components,
+    _teams: [],
+    _bigRocks: [],
+    _isBigRock: false,
+    _path: 'legacy',
+    _hasLabelData: false,
+    _mlType: null,
+    _reason: '',
+    _tv: targetVersion,
+    _committed: confidence==='committed'
+  };
+}
+
+function applyLiveData(data){
+  if(!data||!Array.isArray(data.features)) return;
+  allData=data.features.map(normalizeLiveFeature);
+  schedule(allData);
+  window._buFeedbackByComponent={};
+  (Array.isArray(data.bugQueue)?data.bugQueue:[]).forEach(b=>{
+    window._buFeedbackByComponent[b.component]={blocker:b.blocker||0,critical:b.critical||0,open:b.total||0};
+  });
+  window._buFeedbackTotal=(Array.isArray(data.bugQueue)?data.bugQueue:[]).reduce((sum,b)=>sum+(b.total||0),0);
+  const status=document.getElementById('data-status');
+  if(status) status.textContent=`Live Org Pulse data (${allData.length} features)`;
+  const refreshed=document.getElementById('last-refreshed');
+  if(refreshed&&data.lastSyncedAt) refreshed.textContent=`Last refreshed: ${data.lastSyncedAt}`;
+  if(!document.getElementById('pm-tbl-wrap')) return;
+  populateFilters();
+  run();
+  displayBugQueue();
+  renderApprovedBadge();
+}
+
 function saveBannerText(){
   const el = document.getElementById('planning-banner-text');
   if(el) localStorage.setItem('planningBannerText', el.innerHTML);
@@ -2902,6 +2974,7 @@ window.onload=()=>{
   run();
   displayBugQueue();
   renderApprovedBadge();
+  if(liveData.features.length) applyLiveData(liveData);
   // Restore compact column preference
   if(localStorage.getItem('_col_compact')){
     document.getElementById('pm-tbl-wrap')?.classList.add('cols-compact');

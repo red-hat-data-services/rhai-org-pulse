@@ -2467,6 +2467,12 @@ test.describe('Releases AI Planner tab @releases', () => {
       }
     });
 
+    const snapshotResponse = await page.request.get('/api/modules/releases/planning/ai-planner');
+    expect(snapshotResponse.ok()).toBe(true);
+    const snapshot = await snapshotResponse.json();
+    const liveFeatureKey = snapshot.features[0]?.Key;
+    expect(liveFeatureKey).toBeTruthy();
+
     await page.goto('/#/releases/plan?tab=ai-planner');
     await page.waitForLoadState('networkidle');
     await page.waitForTimeout(DEFAULT_PAGE_WAIT_TIME);
@@ -2482,6 +2488,7 @@ test.describe('Releases AI Planner tab @releases', () => {
     const plannerFrame = page.frameLocator('iframe[title="AI-First Release Planner"]');
     const tableRows = await plannerFrame.locator('#pm-tbl-wrap tbody tr').count();
     expect(tableRows).toBeGreaterThan(0);
+    await expect(plannerFrame.locator('#pm-tbl-wrap tbody tr').filter({ hasText: liveFeatureKey })).toBeVisible();
 
     expect(unexpectedDemoResourceErrors(page)).toHaveLength(0);
   });

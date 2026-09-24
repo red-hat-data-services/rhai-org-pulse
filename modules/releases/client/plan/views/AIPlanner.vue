@@ -160,9 +160,15 @@ async function handleIframeMessage(e) {
       return
     }
     const features = e.data.features
+    const failedFeatures = []
     features.forEach(f => {
-      approveFeature(f.key, true)
+      const result = approveFeature(f.key, true)
+      if (!result || !result.ok) failedFeatures.push(f.key)
     })
+    if (failedFeatures.length) {
+      actionError.value = 'Some selected features are not available in the current Plan Approval candidate set.'
+      return
+    }
     try {
       await persist()
       filterEvent.value = '__approved__'
