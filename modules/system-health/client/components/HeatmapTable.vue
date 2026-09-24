@@ -276,6 +276,10 @@ table.heatmap th {
 }
 
 /* Hover dropdown */
+.cell:hover .cell-dropdown {
+  display: block;
+}
+
 .cell-dropdown {
   display: none;
   position: absolute;

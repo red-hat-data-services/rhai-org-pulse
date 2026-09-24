@@ -681,7 +681,7 @@ module.exports = function registerQualityRoutes(router, context) {
    *       400:
    *         description: Invalid file parameter
    */
-  router.get('/test-execution/data', requireScope('system-health:read'), async function(req, res) {
+  router.get('/test-execution/data', requireAuth, requireScope('system-health:read'), async function(req, res) {
     try {
       const { file } = req.query;
 
@@ -725,7 +725,7 @@ module.exports = function registerQualityRoutes(router, context) {
    *       200:
    *         description: Last upload metadata
    */
-  router.get('/test-execution/status', requireScope('system-health:read'), async function(req, res) {
+  router.get('/test-execution/status', requireAuth, requireScope('system-health:read'), async function(req, res) {
     const lastUpload = await readFromStorage(`${TEST_EXEC_BASE}/last-upload.json`);
     return res.json(lastUpload || { uploadedAt: null, files: [] });
   });

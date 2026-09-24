@@ -302,6 +302,8 @@ Tracks which modules are enabled or disabled. Managed via `POST /api/admin/modul
 - An empty object `{}` is valid — modules fall back to their `defaultEnabled` value from `module.json`.
 - Created on first module enable/disable action; may not exist on fresh deployments.
 - At startup, required dependencies are auto-enabled via `reconcileStartupState()`.
+- The demo fixture explicitly enables modules exercised by integration tests,
+  including modules that are disabled by default in unconfigured deployments.
 
 ## Snapshots — `data/snapshots/{sanitized-teamKey}/{YYYY-MM-DD}.json`
 
@@ -957,6 +959,66 @@ Admin-configurable settings for the AI Impact module.
 - `trendThresholdPp` is the percentage-point threshold for classifying trends as "growing" or "declining" (0-50)
 - Defaults are used when no config file exists
 
+## Releases — CVE Sustaining Action Records (`data/releases/cve-sustaining/latest.json`)
+
+The CVE sustaining snapshot may include `actionReportRecords` for the
+component-scoped CVE Action Report. The existing sustaining metrics and
+`openIssueRecords` fields remain unchanged.
+
+```json
+{
+  "actionReportRecords": {
+    "open": [
+      {
+        "key": "RHAIENG-123",
+        "components": ["Model Serving"],
+        "slaDate": "2026-10-16",
+        "dueDate": "2026-10-02",
+        "created": "2026-08-12T14:30:00.000Z",
+        "resolved": null,
+        "labels": ["rhai-cve-review-needs-action"],
+        "cvss": "7.5"
+      }
+    ],
+    "all": [
+      {
+        "key": "RHAIENG-123",
+        "components": ["Model Serving"],
+        "created": "2026-08-12T14:30:00.000Z",
+        "resolved": "2026-09-10T11:20:00.000Z"
+      }
+    ]
+  }
+}
+```
+
+`open` is the current open Vulnerability cohort used for SLA-breach, due-date,
+review-outcome, and age metrics. `all` is the all-status cohort used for the
+90-day intake history. Each record has a Jira `key`, all assigned Jira
+`components`, an ISO `created` timestamp, and `resolved` (the Jira
+`resolutiondate` timestamp or `null`). Open records additionally have
+`slaDate` and `dueDate` (ISO dates or `null`), Jira `labels`, and `cvss` (a
+canonical one-decimal string or `null`). `slaDate` is normalized from the UTC
+`issue.properties["rh-sla-dt"].value` supplied by the Red Hat Forge SLA Date
+field and determines whether an issue has breached SLA. `dueDate` is sourced
+from Jira `duedate` and drives the work timeline. Non-breached issues with a
+past Due Date remain in that timeline with `isPastDue: true`. Dates from the
+report's `asOfDate` through seven calendar days later, inclusive, have
+`upcomingDueDate: true`; other rows have it set to `false`. Future dates are
+included through the 90-day window. CVSS is sourced from Jira
+`customfield_10859`, whose value is a string beginning with the base score (for
+example, `"7.5 CVSS:3.1/..."`). Missing or malformed values are `null` and
+display as **Unspecified** in score breakdowns.
+
+Older snapshots may omit `actionReportRecords`; the API treats that as an
+empty projection and the report remains unavailable until the next sustaining
+refresh. Extra record fields are ignored, and missing optional values are
+treated as empty/null for backward-compatible reads. Component membership is
+preserved as an array because an issue is counted once in each assigned
+component's report.
+
+---
+
 ## Releases — Delivery Config (`data/releases/delivery/config.json`)
 
 Admin-configurable settings for the Releases module delivery domain (formerly Release Analysis).
@@ -1460,6 +1522,85 @@ Metadata from the most recent fetch attempt.
 - `warnings` is only present when there were non-fatal issues (e.g., unparseable JSON files)
 - On error: `{ "status": "error", "message": "...", "timestamp": "..." }`
 - On artifact expiration: `{ "status": "artifact_expired", "message": "...", "timestamp": "..." }`
+
+---
+
+## Releases — AI Planner Snapshot (`data/releases/planning/ai-planner.json`)
+
+Feature-level release planning data pushed via CSV export. The AI Planner tab
+displays features with RICE scores, FPDoR pass/fail, confidence levels, and a
+bug queue panel showing component-level severity. Follows the same push/GET
+pattern as the AI Impact decomposer.
+
+### Stored snapshot
+
+```json
+{
+  "lastSyncedAt": "2026-09-22T00:00:00.000Z",
+  "dataDate": "2026-09-22",
+  "featureCount": 100,
+  "features": [
+    {
+      "Key": "RHAISTRAT-1001",
+      "Summary": "Model serving optimization",
+      "Components": ["Serving Orchestration", "Gen AI Studio"],
+      "RICE": 173,
+      "PlannedFor": "3.7 EA1",
+      "Status": "In Progress",
+      "PM": "pm-1@redhat.com",
+      "DeliveryOwner": "owner-1@redhat.com",
+      "Priority": "P1",
+      "FPDoR": "16/17",
+      "Confidence": "likely",
+      "XTeam": "no"
+    }
+  ],
+  "bugQueue": [
+    {
+      "component": "vLLM Runtime",
+      "blocker": 3,
+      "critical": 7,
+      "total": 10
+    }
+  ],
+  "metadata": {
+    "source": "csv-export",
+    "version": "1.0"
+  }
+}
+```
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `lastSyncedAt` | ISO 8601 string | When the snapshot was last pushed |
+| `dataDate` | `YYYY-MM-DD` or null | Date of the source data |
+| `featureCount` | number | Length of `features` array |
+| `features[].Key` | string (required) | Jira issue key |
+| `features[].Summary` | string (required) | Feature title |
+| `features[].Components` | string[] | Jira component names |
+| `features[].RICE` | number | RICE prioritization score |
+| `features[].PlannedFor` | string | Release milestone (e.g. `"3.7 EA1"`) |
+| `features[].Confidence` | string | `"ready"`, `"likely"`, `"likely-plus"`, or `"not-ready"` |
+| `features[].XTeam` | string | Cross-team dependency: `"yes"` or `"no"` |
+| `bugQueue[].component` | string | Component name |
+| `bugQueue[].blocker` | number | Blocker-severity bug count |
+| `bugQueue[].critical` | number | Critical-severity bug count |
+| `bugQueue[].total` | number | Sum of blocker + critical |
+
+### API
+
+| Method | Path | Auth | Purpose |
+|--------|------|------|---------|
+| `GET` | `/api/modules/releases/planning/ai-planner` | `releases:read` | Full snapshot for the AI Planner tab. |
+| `GET` | `/api/modules/releases/planning/ai-planner/status` | `releases:read` | `{ lastSyncedAt, featureCount, dataDate }`. |
+| `POST` | `/api/modules/releases/planning/ai-planner` | admin, `releases:write` | Push a new snapshot (validates features have Key+Summary). No-op in demo mode. |
+| `DELETE` | `/api/modules/releases/planning/ai-planner` | admin, `releases:write` | Clears the snapshot (writes the empty skeleton). No-op in demo mode. |
+
+**Notes:**
+- Demo fixture at `fixtures/releases/planning/ai-planner.json` is served
+  transparently by demo-storage — no explicit `loadFixture()` needed.
+- POST validates that every feature has non-empty string `Key` and `Summary`
+  fields; rejects with 400 after 5 validation errors.
 
 ---
 
@@ -2285,6 +2426,64 @@ The dataset is four separate JSON files under `data/system-health/test-execution
 
 ---
 
+## AI Catalyst Monthly Board — `data/ai-catalyst/boards/{YYYY-MM}.json`
+
+The monthly board is a JSON array written by the AI Catalyst board sync. Each
+element is one candidate parsed from a `board-YYYY-MM` Google Sheet tab. The
+`category` value is a stable strategy-pillar key, not a display label; clients
+resolve its title, short title, and color from the shared Showcase pillar
+registry below.
+
+```json
+[
+  {
+    "title": "Feast",
+    "uniqueId": "meta-research/feast",
+    "link": "https://github.com/feast-dev/feast",
+    "itemType": "repo",
+    "source": "github",
+    "sources": ["github"],
+    "category": "data-science-engineering",
+    "capabilityLabels": ["feature-store", "mlops"],
+    "impactScore": 8.8,
+    "feasibilityScore": 8.2,
+    "boardFeasibilityScore": 8.2,
+    "boardPassesGate": true,
+    "stars": 5200,
+    "language": "Python",
+    "pmDecision": "Approve(asmith)"
+  }
+]
+```
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `title` | string | Candidate display title |
+| `uniqueId` | string | Stable candidate identifier used by detail routes |
+| `link` | string | Source repository or project URL |
+| `itemType` | string | `repo` or another discovery item type |
+| `source` | string | Primary discovery source (`github`, `hn`, or `reddit`) |
+| `sources` | string[] | All discovery sources for the candidate |
+| `category` | string | Stable strategy-pillar key; must match a pillar key when metadata is available |
+| `capabilityLabels` | string[] | Capability labels parsed from the source sheet |
+| `impactScore` | number/null | Impact score from the board evaluation |
+| `feasibilityScore` | number/null | Original feasibility score |
+| `boardFeasibilityScore` | number/null | Board score used for sorting and display |
+| `boardPassesGate` | boolean | Whether the candidate passes the board gate |
+| `pmDecision` | string | PM decision text; status is derived from `Approve`, `Decline`, `Revisit`, or empty |
+
+`data/ai-catalyst/index.json` contains the available month list and candidate
+counts. Adding a new month adds one board file and one index entry. A board
+sync refreshes discovered months in place, so the board file and its
+`lastSynced` value represent the latest source-sheet snapshot rather than an
+immutable historical record.
+
+Repository files under `fixtures/ai-catalyst/` are deterministic mock data for
+demo mode and tests; production deployments read the corresponding board rows
+from Google Sheets during sync.
+
+---
+
 ## AI Catalyst Showcase Data — `data/ai-catalyst/showcase/showcase-data.json`
 
 Synced from a Google Sheet via the ai-catalyst module (showcase feature). Contains all showcase entries and strategy pillar definitions.
@@ -2296,8 +2495,10 @@ Synced from a Google Sheet via the ai-catalyst module (showcase feature). Contai
     {
       "pillarKey": "model-inference",
       "title": "Model Inference",
+      "shortTitle": "Inference",
       "summary": "Scalable serving of AI/ML models in production",
       "sortOrder": 1,
+      "color": "#3b82f6",
       "visualUrl": ""
     }
   ],
@@ -2337,7 +2538,11 @@ Synced from a Google Sheet via the ai-catalyst module (showcase feature). Contai
 |-------|------|-------------|
 | `fetchedAt` | ISO string | Timestamp of last successful sync |
 | `pillars[].pillarKey` | string | Unique identifier (e.g., `model-inference`, `agentic-ai`) |
+| `pillars[].title` | string | Full display name |
+| `pillars[].shortTitle` | string | Compact label for filters, chart legends, and badges; optional |
+| `pillars[].summary` | string | Description shown on catalog pillar tiles |
 | `pillars[].sortOrder` | number | Display order |
+| `pillars[].color` | string | Optional six-digit hex color used by charts and category indicators |
 | `pillars[].visualUrl` | string | Optional banner image URL |
 | `entries[].slug` | string | URL-safe unique identifier |
 | `entries[].status` | string | `active`, `draft`, or `archived` |
@@ -2352,6 +2557,24 @@ Synced from a Google Sheet via the ai-catalyst module (showcase feature). Contai
 | `entries[].quayUrl` | string | Pipe-separated Quay repo URLs |
 | `entries[].otherResourceUrls` | string | Pipe-separated misc resource URLs |
 | `entries[].mermaidSource` | string | Mermaid diagram source (rendered on detail page) |
+
+Pillar keys are stable identifiers used by both board candidates (`category`)
+and showcase entries (`strategyPillarKey`). New pillars are added by appending
+a row to the `strategy_pillars` source tab and syncing the fixture or stored
+copy; display titles, short titles, summaries, and colors may change without
+renaming the key. If a board references a key that is not yet in the registry,
+the UI keeps the candidate visible with a generated label and fallback color.
+
+Board and showcase responses intentionally use different pillar scopes:
+
+- A monthly board response includes only pillar keys represented by candidates
+  in that complete board. This catalog is independent of the requested board
+  filters, so filtering candidates never removes a pillar tile needed to
+  describe the selected month.
+- Showcase list and detail responses use the configured pillar catalog, which
+  includes pillars with zero showcase entries. Entry references that arrive
+  before their metadata row are synthesized with a humanized title and a
+  deterministic fallback color.
 
 ---
 
