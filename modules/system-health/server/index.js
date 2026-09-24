@@ -10,6 +10,11 @@ const blockerJiras = require('./odh-e2e-health/blocker-jiras');
 module.exports = function registerRoutes(router, context) {
   const { storage, requireAuth, requireAdmin, requireScope } = context;
 
+  // Note: test-dashboard static files are served via:
+  // - Development: Vite dev server middleware (vite.config.mjs)
+  // - Production: Vite build copies files to dist/test-dashboard/ which Express serves at root level
+  // The module router prefix (/api/modules/system-health/) doesn't apply to static file serving.
+
   disconnectedScheduler.init(context.secrets);
   qualityScheduler.init(context.secrets);
 

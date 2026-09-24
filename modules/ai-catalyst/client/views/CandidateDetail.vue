@@ -109,7 +109,7 @@ function goBack() {
           <div class="flex-1 min-w-0">
             <h1 class="text-xl font-bold text-gray-900 dark:text-gray-100">{{ candidate.title }}</h1>
             <div class="flex items-center gap-2 mt-2 flex-wrap">
-              <CategoryBadge :category="candidate.category" />
+              <CategoryBadge :category="candidate.category" :pillar="candidate.pillar" />
               <span class="text-xs text-gray-500 dark:text-gray-400">{{ getSourceLabel(candidate.source) }}</span>
               <span v-if="candidate.itemType === 'trend'" class="text-xs px-1.5 py-0.5 rounded bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-400">trend</span>
               <span v-if="candidate.classification" class="text-xs px-1.5 py-0.5 rounded bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-400">{{ candidate.classification }}</span>

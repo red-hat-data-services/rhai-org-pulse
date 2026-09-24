@@ -1,0 +1,70 @@
+{
+  "version": "rhoai-3.6.EA2",
+  "generated_at": "2026-08-28T10:00:00Z",
+  "summary": {
+    "total_work": 80,
+    "work_done": 20,
+    "work_in_progress": 30,
+    "work_remaining": 30,
+    "progress_pct": 25
+  },
+  "release_schedule": {
+    "code_freeze_date": "2026-10-15",
+    "ga_date": "2026-10-30",
+    "status": "Execution"
+  },
+  "director_summary": {
+    "overall_pct": 20,
+    "gate_statuses": [
+      { "gate": "Product Sign Off", "done": 2, "total": 10, "pct": 20, "rag": "RED" },
+      { "gate": "Test Execution", "done": 5, "total": 24, "pct": 21, "rag": "RED", "initiative_key": "RHOAIENG-90001" }
+    ],
+    "test_timeline": [
+      { "epic_key": "RHOAIENG-90101", "name": "Nightly", "done": 5, "total": 12, "pct": 42, "rag": "AMBER" },
+      { "epic_key": "RHOAIENG-90102", "name": "RC1", "done": 0, "total": 12, "pct": 0, "rag": "RED" }
+    ]
+  },
+  "component_readiness": {
+    "all_components": ["TestOps", "ModelServing", "Dashboard"],
+    "phases": [
+      {
+        "phase": "Nightly",
+        "tiles": [
+          {
+            "component": "TestOps",
+            "tfa": { "done": 3, "total": 12 },
+            "execution": { "done": 5, "total": 22, "done_pct": 23, "jql_url": "https://redhat.atlassian.net/issues/?jql=parent%3DRHOAIENG-90001" },
+            "failed_breakdown": { "new": 4, "in_progress": 2, "done": 1, "total": 7 },
+            "failed_jql_url": "https://redhat.atlassian.net/issues/?jql=project%3DRHOAIENG",
+            "skipped_breakdown": { "new": 2, "in_progress": 1, "done": 0, "total": 3 },
+            "skipped_jql_url": "https://redhat.atlassian.net/issues/?jql=project%3DRHOAIENG"
+          },
+          {
+            "component": "ModelServing",
+            "tfa": { "done": 1, "total": 5 },
+            "failed_breakdown": { "new": 2, "in_progress": 0, "done": 0, "total": 2 },
+            "failed_jql_url": "https://redhat.atlassian.net/issues/?jql=project%3DRHOAIENG",
+            "skipped_breakdown": { "new": 0, "in_progress": 0, "done": 0, "total": 0 },
+            "skipped_jql_url": "https://redhat.atlassian.net/issues/?jql=project%3DRHOAIENG"
+          },
+          {
+            "component": "Dashboard",
+            "tfa": { "done": 0, "total": 4 },
+            "failed_breakdown": { "new": 1, "in_progress": 0, "done": 0, "total": 1 },
+            "failed_jql_url": "https://redhat.atlassian.net/issues/?jql=project%3DRHOAIENG",
+            "skipped_breakdown": { "new": 0, "in_progress": 0, "done": 0, "total": 0 },
+            "skipped_jql_url": "https://redhat.atlassian.net/issues/?jql=project%3DRHOAIENG"
+          }
+        ]
+      }
+    ]
+  },
+  "product_blockers": {
+    "total_open": 0,
+    "issues": [],
+    "components": []
+  },
+  "tfa_signoff_done": 4,
+  "tfa_signoff_total": 21,
+  "breakdowns": {}
+}

@@ -164,6 +164,7 @@ function validate() {
 function buildPayload(skipProductionCheck) {
   const payload = {
     team: form.team.trim(),
+    project: teamProject.value,
     package_name: form.package_name.trim(),
     extras: parseList(form.extras),
     package_source: form.package_source,
@@ -438,7 +439,11 @@ function jiraHref(ticket) {
             <option value="AIPCC">AIPCC</option>
             <option value="RHAI">RHAI</option>
           </select>
-          <p id="req-team-project-hint" class="mt-1 text-xs text-gray-500 dark:text-gray-400">Choose the project your team belongs to. This only selects the team list; it does not change where the request is filed.</p>
+          <p id="req-team-project-hint" class="mt-1 text-xs text-gray-500 dark:text-gray-400">
+            Choose the project your team belongs to.
+            <template v-if="teamProject === 'RHAISTRAT'">RHAISTRAT has no Epic type, so the request is filed in AIPCC.</template>
+            <template v-else>The request is filed in {{ teamProject }}.</template>
+          </p>
         </div>
 
         <!-- Team + package -->

@@ -13,19 +13,16 @@ import { useCategories } from '../composables/useCategories.js'
 ChartJS.register(LinearScale, PointElement, Tooltip, Legend)
 
 const props = defineProps({
-  candidates: { type: Array, required: true }
+  candidates: { type: Array, required: true },
+  pillars: { type: Array, default: () => [] }
 })
 
 const emit = defineEmits(['select'])
 
-const { CATEGORY_KEYS, getCategoryMeta } = useCategories()
+const { getCategoryMeta, getPillarRegistry, colorWithAlpha } = useCategories()
 
-const CATEGORY_COLORS = {
-  'model-inference': '#3b82f6',
-  'model-customization': '#a855f7',
-  'agentic-ai': '#22c55e',
-  'management-observability-security': '#f59e0b'
-}
+const pillarOptions = computed(() => getPillarRegistry(props.pillars, props.candidates))
+const categoryKeys = computed(() => pillarOptions.value.map(p => p.pillarKey))
 
 const hiddenCategories = ref(new Set())
 
@@ -65,13 +62,13 @@ const dataRange = computed(() => {
 
 const chartData = computed(() => {
   const datasetMap = {}
-  for (const key of CATEGORY_KEYS) {
+  for (const key of categoryKeys.value) {
     datasetMap[key] = []
   }
 
   for (let i = 0; i < validCandidates.value.length; i++) {
     const c = validCandidates.value[i]
-    const cat = c.category || 'agentic-ai'
+    const cat = c.category || 'unknown'
     if (!datasetMap[cat]) datasetMap[cat] = []
     const starVal = c.stars || 0
     const radius = starVal > 0 ? Math.max(3, Math.min(12, 3 + Math.log10(starVal + 1) * 2)) : 3
@@ -88,13 +85,13 @@ const chartData = computed(() => {
   }
 
   return {
-    datasets: CATEGORY_KEYS
+    datasets: categoryKeys.value
       .filter(key => !hiddenCategories.value.has(key))
       .map(key => ({
-        label: getCategoryMeta(key).shortName,
+        label: getCategoryMeta(key, pillarOptions.value).shortName,
         data: datasetMap[key] || [],
-        backgroundColor: CATEGORY_COLORS[key] + '80',
-        borderColor: CATEGORY_COLORS[key],
+        backgroundColor: colorWithAlpha(getCategoryMeta(key, pillarOptions.value).color, 0.5),
+        borderColor: getCategoryMeta(key, pillarOptions.value).color,
         borderWidth: 1,
         pointRadius: (ctx) => ctx.raw?.r || 3,
         pointHoverRadius: (ctx) => (ctx.raw?.r || 3) + 3,
@@ -193,7 +190,7 @@ const chartOptions = computed(() => ({
           if (!c) return ''
           const lines = [
             `Impact: ${c.impactScore}  ·  Feasibility: ${c.feasibilityScore}`,
-            `Category: ${getCategoryMeta(c.category).name}`
+            `Category: ${getCategoryMeta(c.category || 'unknown', pillarOptions.value).name}`
           ]
           if (c.stars) lines.push(`Stars: ${c.stars.toLocaleString()}`)
           if (c.source) lines.push(`Source: ${c.source}`)
@@ -217,15 +214,15 @@ const chartOptions = computed(() => ({
     <!-- Category legend -->
     <div class="flex flex-wrap gap-2 mb-4">
       <button
-        v-for="key in CATEGORY_KEYS"
+        v-for="key in categoryKeys"
         :key="key"
-        class="inline-flex items-center gap-1.5 text-xs font-medium px-2.5 py-1 rounded-full border transition-opacity"
+        class="inline-flex items-center gap-1.5 text-xs font-medium px-2.5 py-1 rounded-full border transition-opacity text-gray-700 dark:text-gray-300"
         :class="hiddenCategories.has(key) ? 'opacity-40 border-gray-300 dark:border-gray-600' : 'border-transparent'"
-        :style="{ backgroundColor: CATEGORY_COLORS[key] + '20', color: CATEGORY_COLORS[key] }"
+        :style="{ backgroundColor: colorWithAlpha(getCategoryMeta(key, pillarOptions).color, 0.12) }"
         @click="toggleCategory(key)"
       >
-        <span class="w-2 h-2 rounded-full" :style="{ backgroundColor: CATEGORY_COLORS[key] }"></span>
-        {{ getCategoryMeta(key).shortName }}
+        <span class="w-2 h-2 rounded-full" :style="{ backgroundColor: getCategoryMeta(key, pillarOptions).color }"></span>
+        {{ getCategoryMeta(key, pillarOptions).shortName }}
       </button>
     </div>
 

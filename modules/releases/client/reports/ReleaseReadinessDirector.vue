@@ -186,16 +186,26 @@
       </div>
 
       <!-- Open Issues to Validate -->
-      <div class="mb-6">
+      <div class="mb-6 flex flex-col sm:flex-row gap-3">
         <a
           :href="openIssuesToValidate?.jql_url || '#'"
           target="_blank"
-          class="flex items-center gap-2 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg px-4 py-3 hover:border-blue-400 dark:hover:border-blue-600 transition-colors"
+          class="flex-1 flex items-center gap-2 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg px-4 py-3 hover:border-blue-400 dark:hover:border-blue-600 transition-colors"
         >
           <h3 class="text-sm font-semibold text-blue-700 dark:text-blue-400">Open Issues to Validate</h3>
           <span v-if="openIssuesToValidate" class="text-xs px-2 py-0.5 rounded-full bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 font-medium">{{ openIssuesToValidate.total }} open ↗</span>
           <span v-else class="text-xs text-blue-500 dark:text-blue-400">View in Jira ↗</span>
         </a>
+
+        <!-- Pre-release CVEs to Resolve -->
+        <button
+          @click="navigateToPreReleaseCve"
+          class="flex-1 flex items-center gap-2 bg-orange-50 dark:bg-orange-900/20 border border-orange-200 dark:border-orange-800 rounded-lg px-4 py-3 hover:border-orange-400 dark:hover:border-orange-600 transition-colors text-left"
+        >
+          <h3 class="text-sm font-semibold text-orange-700 dark:text-orange-400">Critical CVEs (Fix Available)</h3>
+          <span v-if="preReleaseCveCount !== null" class="text-xs px-2 py-0.5 rounded-full bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-400 font-medium">{{ preReleaseCveCount }} to resolve →</span>
+          <span v-else class="text-xs text-orange-500 dark:text-orange-400">View report →</span>
+        </button>
       </div>
 
       <!-- Initiative not found warning -->
@@ -209,7 +219,27 @@
       <!-- Section 2: Overall Summary -->
       <div v-if="hasInitiativeData" class="mb-6">
         <h3 class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">Overall Summary</h3>
-        <div class="grid grid-cols-2 lg:grid-cols-5 gap-4">
+        <div class="grid grid-cols-2 lg:grid-cols-6 gap-4">
+          <!-- Pre-release Critical CVEs summary tile -->
+          <button
+            @click="navigateToPreReleaseCve"
+            class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4 block transition-shadow hover:shadow-md hover:border-orange-300 dark:hover:border-orange-600 text-left"
+          >
+            <div class="flex items-center justify-between mb-2">
+              <p class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide leading-tight">Critical CVEs</p>
+              <span v-if="preReleaseCveCount !== null" :class="preReleaseCveCount === 0 ? 'bg-green-500' : 'bg-red-500'" class="w-3 h-3 rounded-full inline-block"></span>
+              <span v-else class="bg-gray-300 dark:bg-gray-600 w-3 h-3 rounded-full inline-block"></span>
+            </div>
+            <p class="text-xl font-bold text-gray-900 dark:text-gray-100">{{ preReleaseCveCount !== null ? preReleaseCveCount : '—' }}</p>
+            <div v-if="preReleaseCveCount !== null" class="w-full h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden mt-2">
+              <div :class="preReleaseCveCount === 0 ? 'bg-green-500' : 'bg-orange-500'" class="h-full transition-all duration-500" style="width: 100%"></div>
+            </div>
+            <div v-else class="w-full h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden mt-2"></div>
+            <div class="flex items-center justify-between mt-1">
+              <p class="text-xs text-gray-400 dark:text-gray-500">Fix available</p>
+              <span class="text-xs text-orange-500 dark:text-orange-400">View report →</span>
+            </div>
+          </button>
           <!-- TFA Sign Offs summary tile -->
           <a
             :href="data.tfa_signoff_jql_url || '#'"
@@ -531,6 +561,30 @@ import ReportFilterNarrative from './components/ReportFilterNarrative.vue'
 
 const moduleNav = inject('moduleNav')
 
+// ─── Pre-release CVE summary ─────────────────────────────────────────────────
+const preReleaseCveCount = ref(null)
+
+async function loadPreReleaseCveSummary() {
+  try {
+    const res = await fetch('/api/modules/releases/pre-release-cve')
+    if (!res.ok) return
+    const payload = await res.json()
+    if (payload?.releases?.length) {
+      let count = 0
+      for (const release of payload.releases) {
+        for (const r of (release.records || [])) {
+          if (r.severity === 'Critical' && r.fixStatus === 'Fix Available' && r.status !== 'Resolved') count++
+        }
+      }
+      preReleaseCveCount.value = count
+    }
+  } catch { /* data not available */ }
+}
+
+function navigateToPreReleaseCve() {
+  moduleNav.navigateTo('reports', { report: 'pre-release-cve' })
+}
+
 const {
   loading,
   error,
@@ -624,6 +678,7 @@ onMounted(async () => {
   document.addEventListener('keydown', handleEscape)
   await fetchRegistry()
   restoreSelection()
+  loadPreReleaseCveSummary()
 })
 
 onUnmounted(() => {

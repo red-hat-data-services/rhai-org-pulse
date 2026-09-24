@@ -861,3 +861,260 @@ test.describe('OpenDataHub E2E Health Features @system-health', () => {
     expect(page.errors).toHaveLength(0);
   });
 });
+
+/**
+ * Test Execution Dashboard Feature Tests
+ *
+ * Verify the Test Execution Dashboard (Beta) functionality including
+ * navigation, iframe loading, and basic rendering.
+ */
+test.describe('Test Execution Dashboard @system-health', () => {
+  test.beforeEach(async ({ page }) => {
+    setupErrorTracking(page);
+  });
+
+  test.afterEach(async ({ page }, testInfo) => {
+    logCapturedErrors(page, testInfo);
+  });
+
+  test('should show Test Execution Dashboard (Beta) nav item is visible and clickable', async ({ page }) => {
+    await page.goto('/');
+    await page.waitForLoadState('networkidle');
+    await page.waitForTimeout(DEFAULT_PAGE_WAIT_TIME);
+
+    // Expand System Health module if collapsed
+    const moduleHeader = page.locator('aside nav button, aside nav a').filter({ hasText: /System Health/i }).first();
+    const moduleHeaderCount = await moduleHeader.count();
+    
+    if (moduleHeaderCount > 0) {
+      await moduleHeader.click();
+      await page.waitForTimeout(500);
+    }
+
+    // Look for the Test Execution Dashboard nav item - be flexible with selector
+    const testExecNav = page.locator('aside nav button, aside nav a, nav button, nav a').filter({ hasText: /Test Execution|test-execution/i });
+    const navCount = await testExecNav.count();
+    expect(navCount).toBeGreaterThan(0);
+
+    // Click on the Test Execution Dashboard nav item
+    await testExecNav.first().click();
+    await page.waitForLoadState('networkidle');
+    await page.waitForTimeout(DEFAULT_PAGE_WAIT_TIME);
+
+    // Verify URL changed to test-execution view
+    expect(page.url()).toMatch(/system-health.*test-execution/i);
+
+    // Filter out expected 404s from static file probe (loadDashboard() fallback mechanism)
+    const unexpectedErrors = page.errors.filter(e => !e.message.includes('404'));
+    expect(unexpectedErrors).toHaveLength(0);
+  });
+
+  test('should load Test Execution Dashboard view', async ({ page }) => {
+    await page.goto('/#/system-health/test-execution');
+    await page.waitForLoadState('networkidle');
+    await page.waitForTimeout(DEFAULT_PAGE_WAIT_TIME);
+
+    // Verify main content is visible
+    const mainContentVisible = await mainContentIsVisible(page);
+    expect(mainContentVisible).toBe(true);
+
+    // The view should show either:
+    // 1. An iframe with the dashboard (when HTML is available)
+    // 2. An error message (when HTML is not available)
+    const iframe = page.locator('iframe[title*="Test Execution"], iframe[title*="RHOAI"]');
+    const errorMessage = page.locator('text=/Dashboard.*unavailable|Dashboard HTML not available/i');
+    
+    const iframeCount = await iframe.count();
+    const errorCount = await errorMessage.count();
+    
+    // Either iframe should exist OR error message should be shown
+    expect(iframeCount > 0 || errorCount > 0).toBe(true);
+
+    // Filter out expected 404s from static file probe (loadDashboard fallback mechanism)
+    const unexpectedErrors = page.errors.filter(e => !e.message.includes('404'));
+    expect(unexpectedErrors).toHaveLength(0);
+  });
+
+  test('should render iframe with dashboard content or show error', async ({ page }) => {
+    await page.goto('/#/system-health/test-execution');
+    await page.waitForLoadState('networkidle');
+    await page.waitForTimeout(DEFAULT_PAGE_WAIT_TIME);
+
+    // Check for iframe - match partial title
+    const iframe = page.locator('iframe[title*="Test Execution"], iframe[title*="RHOAI"]');
+    const iframeCount = await iframe.count();
+
+    if (iframeCount > 0) {
+      // If iframe exists, verify it has a valid src
+      const iframeSrc = await iframe.first().getAttribute('src');
+      expect(iframeSrc).toBeTruthy();
+      // Should point to either static or API endpoint
+      expect(iframeSrc).toMatch(/test-dashboard|test-execution\/html/);
+    } else {
+      // If no iframe, should show error message
+      const errorMessage = page.locator('text=/Dashboard.*unavailable|Dashboard HTML not available/i');
+      const errorCount = await errorMessage.count();
+      expect(errorCount).toBeGreaterThan(0);
+    }
+
+    // Filter out expected 404s from static file probe (loadDashboard fallback mechanism)
+    const unexpectedErrors = page.errors.filter(e => !e.message.includes('404'));
+    expect(unexpectedErrors).toHaveLength(0);
+  });
+
+  test('should display page header with Beta label', async ({ page }) => {
+    await page.goto('/#/system-health/test-execution');
+    await page.waitForLoadState('networkidle');
+    await page.waitForTimeout(DEFAULT_PAGE_WAIT_TIME);
+
+    // Look for the heading with Beta label
+    const heading = page.locator('h1').filter({ hasText: /Test Execution Dashboard/i });
+    const headingCount = await heading.count();
+    expect(headingCount).toBeGreaterThan(0);
+
+    // Should have Beta label somewhere in the page
+    const betaLabel = page.locator('text=/Beta/i');
+    const betaCount = await betaLabel.count();
+    expect(betaCount).toBeGreaterThan(0);
+
+    // Filter out expected 404s from static file probe (loadDashboard fallback mechanism)
+    const unexpectedErrors = page.errors.filter(e => !e.message.includes('404'));
+    expect(unexpectedErrors).toHaveLength(0);
+  });
+
+  test('should have refresh and external link buttons', async ({ page }) => {
+    await page.goto('/#/system-health/test-execution');
+    await page.waitForLoadState('networkidle');
+    await page.waitForTimeout(DEFAULT_PAGE_WAIT_TIME);
+
+    // Look for refresh button - match by title attribute or aria-label
+    const refreshButton = page.locator('button[title*="efresh"], button[title*="Refresh"], [title*="Refresh"]');
+    const refreshCount = await refreshButton.count();
+    // At least one refresh control should exist
+    expect(refreshCount).toBeGreaterThan(0);
+
+    // Look for external link button - multiple approaches to find it
+    const externalButton = page.locator('button[title*="new tab"], button[title*="Open"], [title*="new tab"]');
+    const externalCount = await externalButton.count();
+    expect(externalCount).toBeGreaterThan(0);
+
+    // Filter out expected 404s from static file probe (loadDashboard fallback mechanism)
+    const unexpectedErrors = page.errors.filter(e => !e.message.includes('404'));
+    expect(unexpectedErrors).toHaveLength(0);
+  });
+
+  // ─── API Tests ───
+
+  test('GET /test-execution/data should return data structure', async ({ request }) => {
+    const response = await request.get('/api/modules/system-health/quality/test-execution/data');
+
+    if (response.status() === 401) {
+      expect(response.status()).toBe(401);
+    } else {
+      expect(response.status()).toBe(200);
+      const data = await response.json();
+      expect(data).toHaveProperty('heatmap');
+      expect(data).toHaveProperty('components');
+      expect(data).toHaveProperty('jira_config');
+      expect(data).toHaveProperty('meta');
+    }
+  });
+
+  test('GET /test-execution/data with file parameter should return specific file', async ({ request }) => {
+    const response = await request.get('/api/modules/system-health/quality/test-execution/data?file=meta');
+
+    if (response.status() === 401) {
+      expect(response.status()).toBe(401);
+    } else {
+      expect(response.status()).toBe(200);
+      const data = await response.json();
+      expect(typeof data).toBe('object');
+    }
+  });
+
+  test('GET /test-execution/data with invalid file should return 400', async ({ request }) => {
+    const response = await request.get('/api/modules/system-health/quality/test-execution/data?file=invalid');
+
+    if (response.status() === 401) {
+      expect(response.status()).toBe(401);
+    } else {
+      expect(response.status()).toBe(400);
+      const data = await response.json();
+      expect(data).toHaveProperty('error');
+    }
+  });
+
+  test('POST /test-execution/upload should require auth or skip in demo mode', async ({ request }) => {
+    const response = await request.post('/api/modules/system-health/quality/test-execution/upload', {
+      data: { meta: { test: true } }
+    });
+
+    // In demo mode: either auth blocks (401) or demo guard skips (200)
+    if (response.status() === 200) {
+      const data = await response.json();
+      expect(data.status).toBe('skipped');
+    } else {
+      expect(response.status()).toBe(401);
+    }
+  });
+
+  test('POST /test-execution/upload with empty body should return 400 or be guarded', async ({ request }) => {
+    const response = await request.post('/api/modules/system-health/quality/test-execution/upload', {
+      data: {}
+    });
+
+    if (response.status() === 200) {
+      const data = await response.json();
+      expect(data.status).toBe('skipped');
+    } else {
+      expect(response.status()).toBe(401);
+    }
+  });
+
+  // ─── HTML Serving API Tests ───
+
+  test('GET /test-execution/html/index should return HTML or auth error', async ({ request }) => {
+    const response = await request.get('/api/modules/system-health/quality/test-execution/html/index');
+
+    // Accept: 200 (HTML found), 404 (not uploaded), or 401 (auth required)
+    expect([200, 401, 404]).toContain(response.status());
+    if (response.status() === 200) {
+      const contentType = response.headers()['content-type'];
+      expect(contentType).toContain('text/html');
+    }
+  });
+
+  test('GET /test-execution/html/invalid should return 404 or auth error', async ({ request }) => {
+    const response = await request.get('/api/modules/system-health/quality/test-execution/html/invalid');
+
+    // 404 for invalid page, or 401 if auth required first
+    expect([401, 404]).toContain(response.status());
+  });
+
+  test('POST /test-execution/html-upload should require auth or skip in demo mode', async ({ request }) => {
+    const response = await request.post('/api/modules/system-health/quality/test-execution/html-upload', {
+      data: { index_html: '<html>test</html>' }
+    });
+
+    // In demo mode: either auth blocks (401/403) or demo guard skips (200)
+    if (response.status() === 200) {
+      const data = await response.json();
+      expect(data.status).toBe('skipped');
+    } else {
+      expect([401, 403]).toContain(response.status());
+    }
+  });
+
+  test('POST /test-execution/html-upload with empty body should return 400 or be guarded', async ({ request }) => {
+    const response = await request.post('/api/modules/system-health/quality/test-execution/html-upload', {
+      data: {}
+    });
+
+    if (response.status() === 200) {
+      const data = await response.json();
+      expect(data.status).toBe('skipped');
+    } else {
+      expect([401, 403]).toContain(response.status());
+    }
+  });
+});

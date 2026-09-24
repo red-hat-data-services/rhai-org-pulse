@@ -6,25 +6,6 @@ import { defineAsyncComponent } from 'vue'
 
 export const reports = [
   {
-    // NOTE: This report is also embedded as a collapsible panel in PM Hub
-    // (plan/components/TvFvDeltaPanel.vue), synced to PM Hub's version filter.
-    // Once that embed has soaked and covers this report's use cases, this
-    // standalone entry is slated for removal — see the removal checklist
-    // called out where TvFvDeltaPanel.vue is mounted in
-    // ComponentReleaseLoadReport.vue. Until then this entry stays as-is so
-    // both surfaces are reachable in parallel.
-    id: 'tv-fv-delta',
-    label: 'TV vs FV Delta',
-    description: 'Target Version (PM intent) vs Fix Version (engineering commitment) — alignment, mismatches, and component breakdown.',
-    component: defineAsyncComponent(() => import('../views/TvFvDeltaView.vue'))
-  },
-  {
-    id: 'feature-pressure',
-    label: 'Feature Pressure',
-    description: 'Where feature inflow exceeds capacity to burn down — RHAI-wide pressure by component, with RFE pipeline and risk scorecard.',
-    component: defineAsyncComponent(() => import('../views/FeaturePressureView.vue'))
-  },
-  {
     id: 'release-performance',
     label: 'Release Performance',
     description: 'Cross-releases, and competitive comparisons performance dashboard',
@@ -47,10 +28,12 @@ export const reports = [
     component: defineAsyncComponent(() => import('./CveSustainingReport.vue'))
   },
   {
-    id: 'capacity-commitment',
-    label: 'Program Level Release Report',
-    description: 'Key deadlines, team capacity, and commitment overview for a selected release.',
-    component: defineAsyncComponent(() => import('./CapacityCommitmentReport.vue'))
+    id: 'cve-action-report',
+    label: 'CVE Action Report',
+    description: 'Component-owned CVE work queue with due dates, review outcomes, intake, and age.',
+    icon: 'ShieldAlert',
+    tags: ['Security', 'CVE', 'Action'],
+    component: defineAsyncComponent(() => import('./CveActionReport.vue'))
   },
   {
     id: 'ai-adoption',
@@ -65,5 +48,13 @@ export const reports = [
     icon: 'Cpu',
     tags: ['Build', 'Architecture', 'Multi-Arch'],
     component: defineAsyncComponent(() => import('./RhoaiComponentArchitecturesReport.vue'))
+  },
+  {
+    id: 'pre-release-cve',
+    label: 'Pre-Release CVE Report',
+    description: 'Pre-release CVE blockers grouped by package and component, sourced from the Google Sheets validation tracker.',
+    icon: 'ShieldCheck',
+    tags: ['Security', 'CVE', 'Pre-Release'],
+    component: defineAsyncComponent(() => import('./PreReleaseCveReport.vue'))
   }
 ]

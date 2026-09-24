@@ -1,7 +1,7 @@
 {
   "name": "org-pulse-ai-eng",
   "private": true,
-  "version": "1.0.444",
+  "version": "1.0.469",
   "engines": {
     "node": ">=22"
   },
@@ -35,9 +35,11 @@
     "@vue-flow/minimap": "^1.5.4",
     "@vueuse/core": "^14.3.0",
     "adm-zip": "^0.6.1",
+    "dompurify": "^3.4.13",
     "express": "^5.2.1",
     "express-rate-limit": "^8.7.0",
     "js-yaml": "^5.4.2",
+    "marked": "^18.0.13",
     "mermaid": "^11.17.2",
     "xml2js": "^0.6.2"
   },
@@ -47,12 +49,12 @@
     "@playwright/test": "1.60.0",
     "@tailwindcss/postcss": "^4.3.3",
     "@tailwindcss/typography": "^0.5.20",
-    "@vitejs/plugin-vue": "^6.0.8",
+    "@vitejs/plugin-vue": "^6.0.9",
     "@vitest/coverage-v8": "^4.1.11",
     "@vue/test-utils": "^2.5.0",
     "concurrently": "^10.0.5",
     "dotenv": "^17.4.2",
-    "eslint": "^10.10.0",
+    "eslint": "^10.11.0",
     "eslint-plugin-vue": "^10.11.0",
     "globals": "^17.12.0",
     "husky": "^9.1.7",

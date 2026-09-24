@@ -2,6 +2,7 @@ const { test, expect } = require('@playwright/test');
 const { DEFAULT_PAGE_WAIT_TIME } = require('./constants');
 const { setupErrorTracking, logCapturedErrors } = require('./helpers');
 const { unexpectedDemoResourceErrors, dismissHygieneWelcome } = require('./execute-helpers');
+const cveSustainingFixture = require('../../fixtures/releases/cve-sustaining/latest.json');
 
 /**
  * Integration tests for Releases module
@@ -272,6 +273,23 @@ test.describe('Releases Views @releases', () => {
     expect(page.errors).toHaveLength(0);
   });
 
+  test('should render AIPCC Milestones surfaces correctly in dark mode', async ({ page }) => {
+    await page.addInitScript(() => localStorage.setItem('tt_theme', 'dark'));
+    await page.goto('/#/releases/schedule/aipcc');
+    await page.waitForLoadState('networkidle');
+
+    await expect(page.locator('html')).toHaveClass(/dark/);
+    await expect(page.locator('.dashboard-card').first()).toHaveCSS('background-color', 'rgb(31, 41, 55)');
+    await expect(page.locator('.section-heading').last()).toHaveCSS('background-color', 'rgba(17, 24, 39, 0.45)');
+    expect(await page.getByTestId('timeline-empty-selection').evaluate(element => getComputedStyle(element).backgroundColor)).not.toBe('rgb(255, 255, 255)');
+
+    const firstRelease = page.getByTestId('timeline-release-filter').first();
+    await firstRelease.click();
+    await expect(firstRelease).toHaveAttribute('aria-pressed', 'true');
+    await expect(page.getByTestId('timeline-event-row').first()).toBeVisible();
+    expect(page.errors).toHaveLength(0);
+  });
+
   test('should reflect selected product pills in the Schedule URL', async ({ page }) => {
     await page.goto('/#/releases/schedule');
     await page.waitForLoadState('networkidle');
@@ -296,8 +314,8 @@ test.describe('Releases Views @releases', () => {
 /**
  * PM Hub
  *
- * Verify the PM Hub tab loads under Plan, the Component Release Load Tracking
- * report card is visible and clickable, and the PM Hub API endpoints respond.
+ * Verify the PM Hub tab loads under Plan, its report cards are visible and
+ * clickable, and the PM Hub API endpoints respond.
  */
 test.describe('Releases PM Hub @releases', () => {
   test.beforeEach(async ({ page }) => {
@@ -308,7 +326,7 @@ test.describe('Releases PM Hub @releases', () => {
     logCapturedErrors(page, testInfo);
   });
 
-  test('should show PM Hub tab under Plan and load report card', async ({ page }) => {
+  test('should show PM Hub tab under Plan and load report cards', async ({ page }) => {
     await page.goto('/#/releases/plan');
     await page.waitForLoadState('networkidle');
     await page.waitForTimeout(DEFAULT_PAGE_WAIT_TIME);
@@ -321,6 +339,64 @@ test.describe('Releases PM Hub @releases', () => {
 
     const reportCard = page.locator('text=Component Release Load Tracking');
     await expect(reportCard.first()).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Historic Feature Pressure', exact: true })).toBeVisible();
+    await expect(page.getByRole('button', { name: 'TV vs FV Delta', exact: true })).toBeVisible();
+
+    expect(page.errors).toHaveLength(0);
+  });
+
+  test('places Historic Feature Pressure next to Component Release Load and removes it from Reports', async ({ page }) => {
+    await page.goto('/#/releases/plan?tab=pm-hub');
+    await page.waitForLoadState('networkidle');
+    await page.waitForTimeout(DEFAULT_PAGE_WAIT_TIME);
+
+    const componentLoadTile = page.getByRole('button', { name: 'Component Release Load Tracking', exact: true });
+    const featurePressureTile = page.getByRole('button', { name: 'Historic Feature Pressure', exact: true });
+    await expect(componentLoadTile).toBeVisible();
+    await expect(featurePressureTile).toBeVisible();
+
+    const adjacentTiles = page.locator(
+      'button[aria-label="Component Release Load Tracking"] + button[aria-label="Historic Feature Pressure"]'
+    );
+    await expect(adjacentTiles).toHaveCount(1);
+
+    const componentLoadBox = await componentLoadTile.boundingBox();
+    const featurePressureBox = await featurePressureTile.boundingBox();
+    expect(Math.abs(componentLoadBox.y - featurePressureBox.y)).toBeLessThan(5);
+    expect(featurePressureBox.x).toBeGreaterThan(componentLoadBox.x);
+
+    await page.goto('/#/releases/reports');
+    await page.waitForLoadState('networkidle');
+    await page.waitForTimeout(DEFAULT_PAGE_WAIT_TIME);
+    await expect(page.getByRole('button', { name: 'Historic Feature Pressure', exact: true })).toHaveCount(0);
+
+    expect(page.errors).toHaveLength(0);
+  });
+
+  test('places TV vs FV Delta next to Historic Feature Pressure and removes it from Reports', async ({ page }) => {
+    await page.goto('/#/releases/plan?tab=pm-hub');
+    await page.waitForLoadState('networkidle');
+    await page.waitForTimeout(DEFAULT_PAGE_WAIT_TIME);
+
+    const featurePressureTile = page.getByRole('button', { name: 'Historic Feature Pressure', exact: true });
+    const tvFvDeltaTile = page.getByRole('button', { name: 'TV vs FV Delta', exact: true });
+    await expect(featurePressureTile).toBeVisible();
+    await expect(tvFvDeltaTile).toBeVisible();
+
+    const adjacentTiles = page.locator(
+      'button[aria-label="Historic Feature Pressure"] + button[aria-label="TV vs FV Delta"]'
+    );
+    await expect(adjacentTiles).toHaveCount(1);
+
+    const featurePressureBox = await featurePressureTile.boundingBox();
+    const tvFvDeltaBox = await tvFvDeltaTile.boundingBox();
+    expect(Math.abs(featurePressureBox.y - tvFvDeltaBox.y)).toBeLessThan(5);
+    expect(tvFvDeltaBox.x).toBeGreaterThan(featurePressureBox.x);
+
+    await page.goto('/#/releases/reports');
+    await page.waitForLoadState('networkidle');
+    await page.waitForTimeout(DEFAULT_PAGE_WAIT_TIME);
+    await expect(page.getByRole('button', { name: 'TV vs FV Delta', exact: true })).toHaveCount(0);
 
     expect(page.errors).toHaveLength(0);
   });
@@ -668,13 +744,13 @@ test.describe('Releases Field and BU Feedback @releases', () => {
 });
 
 /**
- * Draft Plans (Plan tab)
+ * Plan Approval (Plan tab)
  *
- * Verify the Draft Plans red-pen view loads under Plan (tab + deep link),
- * shows the release-cycle chrome and candidate table (demo fixture), and that
- * the cycles / editor APIs respond. Skips freeze/approve matrix coverage.
+ * Verify the Plan Approval red-pen view loads under Plan (tab + deep link),
+ * starts with only approved features visible, and that the cycles / editor
+ * APIs respond. Skips freeze/approve matrix coverage.
  */
-test.describe('Releases Draft Plans @releases', () => {
+test.describe('Releases Plan Approval @releases', () => {
   test.beforeEach(async ({ page }) => {
     setupErrorTracking(page);
   });
@@ -683,12 +759,12 @@ test.describe('Releases Draft Plans @releases', () => {
     logCapturedErrors(page, testInfo);
   });
 
-  test('should show Draft Plans tab under Plan and load draft table', async ({ page }) => {
+  test('should show Plan Approval tab under Plan with a fresh approval state', async ({ page }) => {
     await page.goto('/#/releases/plan');
     await page.waitForLoadState('networkidle');
     await page.waitForTimeout(DEFAULT_PAGE_WAIT_TIME);
 
-    const draftPlansTab = page.locator('button', { hasText: 'Draft Plans' });
+    const draftPlansTab = page.locator('button', { hasText: 'Plan Approval' });
     await expect(draftPlansTab).toBeVisible();
 
     await draftPlansTab.click();
@@ -696,42 +772,45 @@ test.describe('Releases Draft Plans @releases', () => {
     await page.waitForTimeout(DEFAULT_PAGE_WAIT_TIME);
 
     await expect(page.getByText('Release cycle', { exact: true }).first()).toBeVisible();
-    await expect(page.locator('h2', { hasText: /Draft Plan/ })).toBeVisible();
+    await expect(page.locator('h2', { hasText: /Plan Approval/ })).toBeVisible();
+    await expect(page.getByText('Plan Approval — Start Fresh')).toBeVisible();
 
     const table = page.locator('table[role="table"]');
     await expect(table).toBeVisible();
 
     const dataRows = page.locator('tbody tr[role="row"]');
-    await expect(dataRows.first()).toBeVisible({ timeout: 15000 });
-    expect(await dataRows.count()).toBeGreaterThan(0);
+    await expect(page.getByText('No features match filters')).toBeVisible({ timeout: 15000 });
+    expect(await dataRows.count()).toBe(1);
 
     expect(page.errors).toHaveLength(0);
   });
 
-  test('Draft Plans deep link loads with candidates', async ({ page }) => {
+  test('Plan Approval deep link loads the approval workspace', async ({ page }) => {
     await page.goto('/#/releases/plan?tab=draft-plans');
     await page.waitForLoadState('networkidle');
     await page.waitForTimeout(DEFAULT_PAGE_WAIT_TIME);
 
     await expect(page.getByText('Release cycle', { exact: true }).first()).toBeVisible();
-    await expect(page.locator('h2', { hasText: /Draft Plan/ })).toBeVisible();
+    await expect(page.locator('h2', { hasText: /Plan Approval/ })).toBeVisible();
+    await expect(page.getByText('Plan Approval — Start Fresh')).toBeVisible();
 
     const keyHeader = page.locator('thead th', { hasText: 'Key' });
     await expect(keyHeader.first()).toBeVisible();
     await expect(page.locator('thead th', { hasText: 'Big Rock' }).first()).toBeVisible();
 
     const dataRows = page.locator('tbody tr[role="row"]');
-    await expect(dataRows.first()).toBeVisible({ timeout: 15000 });
-    expect(await dataRows.count()).toBeGreaterThan(0);
+    await expect(page.getByText('No features match filters')).toBeVisible({ timeout: 15000 });
+    expect(await dataRows.count()).toBe(1);
 
     expect(page.errors).toHaveLength(0);
   });
 
-  test('clicking a Draft Plans row opens the feature detail drawer', async ({ page }) => {
+  test('clicking a Plan Approval row opens the feature detail drawer', async ({ page }) => {
     await page.goto('/#/releases/plan?tab=draft-plans');
     await page.waitForLoadState('networkidle');
     await page.waitForTimeout(DEFAULT_PAGE_WAIT_TIME);
 
+    await page.getByLabel('Placement').selectOption('');
     const dataRows = page.locator('tbody tr[role="row"]');
     await expect(dataRows.first()).toBeVisible({ timeout: 15000 });
 
@@ -942,6 +1021,18 @@ test.describe('Releases FPDoR Readiness @releases', () => {
     expect(page.errors).toHaveLength(0);
   });
 
+  test('PM Pipeline is not exposed in the UI or API', async ({ page, request }) => {
+    await page.goto('/');
+    await page.waitForLoadState('networkidle');
+    await page.waitForTimeout(DEFAULT_PAGE_WAIT_TIME);
+
+    const moduleNav = page.locator('aside nav').getByText('PM Pipeline', { exact: true });
+    await expect(moduleNav).toHaveCount(0);
+
+    const apiResponse = await request.get('/api/modules/pm-pipeline/resources');
+    expect(apiResponse.status()).toBe(404);
+  });
+
   test('Feature List view loads under Plan tab', async ({ page }) => {
     await page.goto('/#/releases/plan?tab=feature-readiness');
     await page.waitForLoadState('networkidle');
@@ -1142,6 +1233,92 @@ test.describe('Releases FPDoR Readiness @releases', () => {
 });
 
 /**
+ * AI Adoption Report
+ *
+ * Verify release filtering and scorecard coverage includes the complete 3.6
+ * release train without changing the existing report behavior.
+ */
+test.describe('Releases AI Adoption Report @releases', () => {
+  test.beforeEach(async ({ page }) => {
+    setupErrorTracking(page);
+
+    const releaseNames = [
+      '3.4 GA',
+      '3.5 EA1',
+      '3.5 EA2',
+      '3.5 GA',
+      '3.6 EA1',
+      '3.6 EA2',
+      '3.6 GA'
+    ];
+    const pipelineCounts = {
+      stratCreator: 1,
+      rfeCreator: 1,
+      testPlan: 0,
+      qg1: 0,
+      aiDoc: 0,
+      uxdAgentic: 0,
+      epicCreator: 0
+    };
+    const groups = releaseNames.map((releaseGroup, index) => ({
+      releaseGroup,
+      totalFeatures: 10 + index,
+      aiTouchedFeatures: 2 + index,
+      pipelines: { ...pipelineCounts },
+      firstPass: {},
+      components: [],
+      effortSignal: 'children',
+      aggregateEffort: 10 + index,
+      avgEffort: 1
+    }));
+
+    await page.route('**/api/modules/releases/ai-adoption**', async route => {
+      const releaseGroup = new URL(route.request().url()).searchParams.get('releaseGroup');
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({
+          releaseGroups: releaseGroup
+            ? groups.filter(group => group.releaseGroup === releaseGroup)
+            : groups,
+          fetchedAt: '2026-09-22T12:00:00.000Z'
+        })
+      });
+    });
+  });
+
+  test.afterEach(async ({ page }, testInfo) => {
+    logCapturedErrors(page, testInfo);
+  });
+
+  test('shows the 3.6 releases in the filter and scorecard', async ({ page }) => {
+    await page.goto('/#/releases/reports?report=ai-adoption');
+    await page.waitForLoadState('networkidle');
+
+    await expect(page.getByRole('heading', { name: 'AI Adoption Report', exact: true })).toBeVisible();
+
+    const releaseFilter = page.locator('select').nth(1);
+    await expect(releaseFilter.locator('option')).toHaveText([
+      'All Releases',
+      '3.4 GA',
+      '3.5 EA1',
+      '3.5 EA2',
+      '3.5 GA',
+      '3.6 EA1',
+      '3.6 EA2',
+      '3.6 GA'
+    ]);
+
+    for (const release of ['3.6 EA1', '3.6 EA2', '3.6 GA']) {
+      await expect(page.locator('th', { hasText: release }).first()).toBeVisible();
+    }
+    await expect(page.getByText('between 3.4 GA and 3.6 GA.', { exact: false }).first()).toBeVisible();
+
+    expect(page.errors).toHaveLength(0);
+  });
+});
+
+/**
  * RHOAI Release Readiness Dashboard
  *
  * Verify the release readiness report card is visible, clickable, and renders
@@ -1210,6 +1387,72 @@ test.describe('Releases Release Readiness @releases', () => {
     const res = await request.post('/api/modules/releases/release-readiness/refresh?version=rhoai-3.5.EA2');
     const body = await res.json();
     expect(body).not.toHaveProperty('director_summary');
+  });
+});
+
+/**
+ * Program Level Release Report (Deliver tab)
+ *
+ * Verify the report is directly beside Risk Dashboard, retains its standalone
+ * view, does not inherit Deliver's shared release chip filters, and no longer
+ * appears in the Reports hub.
+ */
+test.describe('Program Level Release Report in Deliver @releases', () => {
+  test.beforeEach(async ({ page }) => {
+    setupErrorTracking(page);
+    await page.route('**/api/modules/releases/execution/features', route => {
+      route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ features: [] }) });
+    });
+    await page.route('**/api/modules/team-tracker/field-options/component', route => {
+      route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ values: [] }) });
+    });
+    await page.route('**/api/modules/team-tracker/field-options/jiraTeam', route => {
+      route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ values: [] }) });
+    });
+    await page.route('**/api/modules/releases/delivery/analysis*', route => {
+      route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ releases: [] }) });
+    });
+    await page.route('**/api/modules/releases/delivery/conforma/releases', route => {
+      route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ releases: [] }) });
+    });
+  });
+
+  test.afterEach(async ({ page }, testInfo) => {
+    logCapturedErrors(page, testInfo);
+  });
+
+  test('is directly beside Risk Dashboard and opens without shared Deliver filters', async ({ page }) => {
+    await page.goto('/#/releases/deliver');
+    await page.waitForLoadState('networkidle');
+    await page.waitForTimeout(DEFAULT_PAGE_WAIT_TIME);
+
+    const deliverTabs = page.locator('nav[aria-label="Deliver sub-tabs"] > button');
+    await expect(deliverTabs.nth(0)).toHaveText('Risk Dashboard');
+    await expect(deliverTabs.nth(1)).toHaveText('Program Level Release Report');
+
+    await deliverTabs.nth(1).click();
+    await page.waitForTimeout(DEFAULT_PAGE_WAIT_TIME);
+
+    await expect(page).toHaveURL(/#\/releases\/deliver\?tab=program-level-release/);
+    await expect(page.getByRole('heading', { name: 'Program Level Release Report', exact: true })).toBeVisible();
+    await expect(page.getByTestId('deliver-release-chip-bar')).toHaveCount(0);
+
+    await page.goto('/#/releases/reports');
+    await page.waitForLoadState('networkidle');
+    await page.waitForTimeout(DEFAULT_PAGE_WAIT_TIME);
+    await expect(page.getByRole('button', { name: 'Program Level Release Report', exact: true })).toHaveCount(0);
+
+    expect(page.errors).toHaveLength(0);
+  });
+
+  test('loads directly from its Deliver tab URL', async ({ page }) => {
+    await page.goto('/#/releases/deliver?tab=program-level-release');
+    await page.waitForLoadState('networkidle');
+    await page.waitForTimeout(DEFAULT_PAGE_WAIT_TIME);
+
+    await expect(page.getByRole('heading', { name: 'Program Level Release Report', exact: true })).toBeVisible();
+    await expect(page.getByTestId('deliver-release-chip-bar')).toHaveCount(0);
+    expect(page.errors).toHaveLength(0);
   });
 });
 
@@ -1454,10 +1697,17 @@ test.describe('Releases CVE Sustaining Report @releases', () => {
     expect(body).toHaveProperty('unresolved');
     expect(body).toHaveProperty('falsePositivesTrend');
     expect(body).toHaveProperty('openIssueRecords');
+    expect(body).toHaveProperty('actionReportRecords');
     expect(body).toHaveProperty('jiraSearchBase');
 
     expect(Array.isArray(body.openIssueRecords)).toBe(true);
     expect(body.openIssueRecords.length).toBeGreaterThan(0);
+    expect(body.openIssueRecords).toHaveLength(body.totalOpen);
+    expect(body.openIssueRecords.every(issue => !['Closed', 'Resolved'].includes(issue.status))).toBe(true);
+    expect(body.actionReportRecords.open.map(issue => issue.key)).toEqual(
+      body.openIssueRecords.map(issue => issue.key)
+    );
+    expect(body.totalAll).toBeGreaterThanOrEqual(body.totalOpen);
 
     var record = body.openIssueRecords[0];
     expect(record).toHaveProperty('key');
@@ -1467,6 +1717,163 @@ test.describe('Releases CVE Sustaining Report @releases', () => {
     expect(record).toHaveProperty('versions');
     expect(record).toHaveProperty('status');
     expect(record).toHaveProperty('assignee');
+  });
+
+  test('CVE action report API exposes cached components and scoped report data', async ({ request }) => {
+    const componentsRes = await request.get('/api/modules/releases/cve-sustaining/action-report/components');
+    expect(componentsRes.ok()).toBe(true);
+    const components = await componentsRes.json();
+    expect(components.availableComponents).toEqual(['Dashboard', 'Model Serving', 'None', 'Pipelines']);
+
+    const reportRes = await request.get('/api/modules/releases/cve-sustaining/action-report?component=Model%20Serving');
+    expect(reportRes.ok()).toBe(true);
+    const report = await reportRes.json();
+    expect(report.component).toBe('Model Serving');
+    expect(report.timeline.length).toBeGreaterThan(0);
+    expect(report.timeline.some(row => row.outcomes['needs-review'])).toBe(true);
+    expect(report.timeline.some(row => row.isPastDue)).toBe(true);
+    expect(report.timeline.some(row => row.upcomingDueDate)).toBe(true);
+    expect(report.timeline.every(row => row.total > 0 && row.total_jql)).toBe(true);
+    expect(report.timeline.every(row => Object.keys(row.outcomes).every(outcome => [
+      'needs-action',
+      'not-found',
+      'needs-review',
+      'possibly-resolved'
+    ].includes(outcome)))).toBe(true);
+    expect(report.summary.slaBreached.count).toBeGreaterThan(0);
+    expect(report.summary.noSlaDate.count).toBeGreaterThan(0);
+    expect(report.summary.missingOutcome.count).toBeGreaterThan(0);
+    expect(report.summary).not.toHaveProperty('conflictingOutcome');
+    expect(report.summary.openVulnerabilities.count).toBeGreaterThan(0);
+    expect(report.summary.openVulnerabilities.byCvss.length).toBeGreaterThan(0);
+    expect(report.createdWeekly.length).toBeGreaterThan(0);
+    expect(report.openAgeBuckets).toHaveLength(5);
+    expect(report.openAgeBuckets.every(bucket => bucket.outcomes)).toBe(true);
+    expect(report.openAgeBuckets.every(bucket => Object.values(bucket.outcomes).reduce((sum, count) => sum + count, 0) === bucket.count)).toBe(true);
+
+    const outcome = report.timeline
+      .flatMap(row => Object.values(row.outcomes || {}))
+      .find(item => item?.byCvss?.length);
+    const row = report.timeline.find(item => item.total > 0);
+    const renderedLinkFamilies = {
+      summaryTotal: report.summary.openVulnerabilities.jql,
+      summaryCvss: report.summary.openVulnerabilities.byCvss[0].jql,
+      outcomeTotal: outcome.jql,
+      outcomeCvss: outcome.byCvss[0].jql,
+      timelineTotal: row.total_jql
+    };
+
+    Object.entries(renderedLinkFamilies).forEach(([family, url]) => {
+      const jql = decodeURIComponent(url);
+      expect(jql, family).toContain('component = "Model Serving"');
+      expect(jql, family).not.toContain('key in');
+    });
+
+    expect(decodeURIComponent(renderedLinkFamilies.summaryCvss)).toContain('cf[10859] ~');
+    expect(decodeURIComponent(renderedLinkFamilies.outcomeTotal)).toContain('labels =');
+    expect(decodeURIComponent(renderedLinkFamilies.outcomeCvss)).toContain('cf[10859] ~');
+    expect(decodeURIComponent(renderedLinkFamilies.timelineTotal)).toContain('duedate');
+  });
+
+  test('CVE action report renders component selection, summary, timeline, and charts', async ({ page }) => {
+    await page.goto('/#/releases/reports?report=cve-action-report');
+    await page.waitForLoadState('networkidle');
+    await page.waitForTimeout(DEFAULT_PAGE_WAIT_TIME);
+
+    const selector = page.locator('#cve-action-component');
+    await expect(selector).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Refresh from Jira' })).toBeVisible();
+    await expect(selector.locator('option')).toHaveCount(5);
+    await selector.selectOption({ label: 'Model Serving' });
+
+    const reportRes = await page.request.get('/api/modules/releases/cve-sustaining/action-report?component=Model%20Serving');
+    expect(reportRes.ok()).toBe(true);
+    const report = await reportRes.json();
+    const timelineHeading = `Upcoming due dates until ${report.windowEndDate}`;
+
+    await expect(page.getByText(timelineHeading)).toBeVisible();
+    const dueDateLegend = page.locator('[aria-label="Due date color legend"]');
+    await expect(dueDateLegend).toContainText('Past due');
+    await expect(dueDateLegend).toContainText('Due within 7 days');
+    await expect(page.getByText('SLA breached', { exact: true })).toBeVisible();
+    await expect(page.getByText('All open vulnerabilities', { exact: true }).locator('..')).toHaveClass(/bg-white/);
+    await expect(page.getByText('SLA breached', { exact: true }).locator('..')).toHaveClass(/bg-red-50/);
+    await expect(page.getByText('No SLA date', { exact: true }).locator('..')).toHaveClass(/bg-white/);
+    await expect(page.getByText('Missing review outcome', { exact: true })).toHaveCount(0);
+    const pastDueRow = page.locator('tbody tr', { hasText: '2026-08-20' });
+    await expect(pastDueRow).toHaveClass(/bg-red-50/);
+    await expect(pastDueRow).not.toContainText('Past due');
+    await expect(page.locator('tbody tr', { hasText: '2026-09-29' })).toHaveClass(/bg-amber-50/);
+    await expect(page.getByRole('table', { name: timelineHeading })).toBeVisible();
+    await expect(page.getByText('Vulnerabilities created and closed weekly')).toBeVisible();
+    await expect(page.getByText('Open action cohort age by outcome')).toBeVisible();
+    expect(await page.locator('a[target="_blank"]').count()).toBeGreaterThan(0);
+    expect(page.errors).toHaveLength(0);
+  });
+
+  test('CVE action report recovers when the refresh request times out at the gateway', async ({ page }) => {
+    const components = { availableComponents: ['Dashboard', 'Model Serving', 'None', 'Pipelines'] };
+    const cachedReport = {
+      component: 'Model Serving',
+      asOfDate: '2026-09-23',
+      windowEndDate: '2026-12-22',
+      summary: {
+        openVulnerabilities: { count: 1, jql: 'https://jira.example/open', byCvss: [] },
+        slaBreached: { count: 0, jql: 'https://jira.example/sla-breached', byCvss: [] },
+        noSlaDate: { count: 0, jql: 'https://jira.example/no-sla', byCvss: [] }
+      },
+      timeline: [],
+      createdWeekly: [],
+      openAgeBuckets: []
+    };
+    let componentsRequestCount = 0;
+    let reportRequestCount = 0;
+
+    await page.route('**/api/modules/releases/cve-sustaining/action-report/components', async route => {
+      componentsRequestCount++;
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({
+          ...components,
+          lastRefreshed: componentsRequestCount > 1
+            ? '2026-09-23T13:00:00.000Z'
+            : '2026-09-23T12:00:00.000Z'
+        })
+      });
+    });
+    await page.route('**/api/modules/releases/cve-sustaining/action-report?component=*', async route => {
+      reportRequestCount++;
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({
+          ...cachedReport,
+          windowEndDate: reportRequestCount > 1 ? '2099-12-31' : cachedReport.windowEndDate,
+          lastRefreshed: reportRequestCount > 1
+            ? '2026-09-23T13:00:00.000Z'
+            : '2026-09-23T12:00:00.000Z'
+        })
+      });
+    });
+    await page.route('**/api/modules/releases/cve-sustaining/refresh', async route => {
+      await route.fulfill({ status: 502, contentType: 'text/plain', body: 'Bad Gateway' });
+    });
+
+    await page.goto('/#/releases/reports?report=cve-action-report');
+    await page.waitForLoadState('networkidle');
+    const selector = page.locator('#cve-action-component');
+    await selector.selectOption({ label: 'Model Serving' });
+    await expect(page.getByText(`Upcoming due dates until ${cachedReport.windowEndDate}`)).toBeVisible();
+
+    await page.getByRole('button', { name: 'Refresh from Jira' }).click();
+    await expect(page.getByRole('button', { name: 'Refreshing...' })).toBeDisabled();
+    await expect(page.getByText(`Upcoming due dates until ${cachedReport.windowEndDate}`)).toBeVisible();
+    await expect(page.getByText('Upcoming due dates until 2099-12-31')).toBeVisible({ timeout: 10000 });
+
+    await expect(page.getByRole('button', { name: 'Refresh from Jira' })).toBeEnabled();
+    await expect(page.locator('[role="alert"]')).toHaveCount(0);
+    expect(page.errors.filter(error => !error.message.includes('status of 502'))).toHaveLength(0);
   });
 
   test('filter bar is visible and shows default state', async ({ page }) => {
@@ -1577,6 +1984,52 @@ test.describe('Releases CVE Sustaining Report @releases', () => {
     // Issue keys should be clickable links
     var issueLink = page.locator('a[href*="/browse/"]').first();
     await expect(issueLink).toBeVisible();
+
+    expect(page.errors).toHaveLength(0);
+  });
+
+  test('Security component issues show the frontend-only owner override', async ({ page }) => {
+    var body = JSON.parse(JSON.stringify(cveSustainingFixture));
+    var originalAssignee;
+    var issue = body.openIssueRecords.find(record => record.key === 'RHAIENG-1001');
+    originalAssignee = issue.assignee;
+    issue.component = 'Security';
+    issue.components = ['Security'];
+
+    await page.route('**/api/modules/releases/cve-sustaining', async route => {
+      await route.fulfill({ json: body });
+    });
+    await page.route('**/api/modules/team-tracker/field-options/component', async route => {
+      await route.fulfill({ json: { values: ['Model Serving', 'Security'] } });
+    });
+
+    await page.goto('/#/releases/reports?report=cve-sustaining');
+    await page.waitForLoadState('networkidle');
+    await page.waitForTimeout(DEFAULT_PAGE_WAIT_TIME);
+
+    var assigneeSection = page.locator('section').filter({ hasText: 'CVEs by Assignee' });
+    await expect(assigneeSection.getByText('No Owner', { exact: true })).toBeVisible();
+    await expect(page.getByTestId('cve-security-owner-note')).toHaveText('(Coming from Security Component)');
+    await expect(assigneeSection.locator('thead th').nth(1)).toContainText('No Owner');
+
+    var versionMatrix = page.locator('section').filter({ hasText: 'CVEs across all versions' });
+    await expect(versionMatrix.getByTestId('cve-security-component-label')).toHaveText('No Owner');
+    await expect(versionMatrix.getByText('Security', { exact: true })).toHaveCount(0);
+    await expect(versionMatrix.locator('tbody tr').first().getByTestId('cve-security-component-label')).toHaveText('No Owner');
+
+    await page.locator('button', { hasText: 'Due Date Passed' }).click();
+
+    var owner = page.getByTestId('cve-owner-RHAIENG-1001');
+    var component = page.getByTestId('cve-component-RHAIENG-1001');
+    var componentLabel = page.getByTestId('cve-component-label-RHAIENG-1001');
+    await expect(owner).toContainText('No Owner');
+    await expect(owner).toContainText('(Coming from Security Component)');
+    await expect(owner).not.toContainText('Alice');
+    await expect(component).toContainText('No Owner');
+    await expect(component).toContainText('(Coming from Security Component)');
+    await expect(componentLabel).toHaveText('No Owner');
+    expect(issue.assignee).toBe(originalAssignee);
+    expect(issue.component).toBe('Security');
 
     expect(page.errors).toHaveLength(0);
   });
@@ -1873,7 +2326,7 @@ test.describe('RHOAI Component Architectures Report @releases', () => {
  * AI Planner tab (Plan view)
  *
  * Verify the AI Planner tab is visible in the Plan sub-nav, becomes active
- * on click, and renders the iframe that embeds the release planning dashboard.
+ * on click, and renders the native release planning workspace.
  */
 test.describe('Releases AI Planner tab @releases', () => {
   test.beforeEach(async ({ page }) => {
@@ -1895,7 +2348,7 @@ test.describe('Releases AI Planner tab @releases', () => {
     expect(page.errors).toHaveLength(0);
   });
 
-  test('clicking AI Planner tab renders the iframe', async ({ page }) => {
+  test('clicking AI Planner tab renders the native planner', async ({ page }) => {
     await page.goto('/#/releases/plan');
     await page.waitForLoadState('networkidle');
     await page.waitForTimeout(DEFAULT_PAGE_WAIT_TIME);
@@ -1904,15 +2357,12 @@ test.describe('Releases AI Planner tab @releases', () => {
     await aiPlannerTab.click();
     await page.waitForTimeout(DEFAULT_PAGE_WAIT_TIME);
 
-    const iframe = page.locator('iframe[title="AI-First Release Planner"]');
-    await expect(iframe).toBeVisible();
-    await expect(iframe).toHaveAttribute('sandbox', 'allow-scripts allow-same-origin');
+    await expect(page.getByRole('heading', { name: 'AI-First Release Planner' })).toBeVisible();
+    await expect(page.locator('#plan-select')).toHaveValue('3.6 GA');
+    await expect(page.getByPlaceholder('Search by Key or Summary...')).toBeVisible();
+    await expect(page.getByRole('columnheader', { name: 'RICE' })).toBeVisible();
 
-    const src = await iframe.getAttribute('src');
-    expect(src).toContain('rhai-release-planner');
-
-    const errors = page.errors.filter(e => !e.message.includes('cross-origin subframe'));
-    expect(errors).toHaveLength(0);
+    expect(page.errors).toHaveLength(0);
   });
 
   test('AI Planner deep link activates the tab', async ({ page }) => {
@@ -1920,11 +2370,96 @@ test.describe('Releases AI Planner tab @releases', () => {
     await page.waitForLoadState('networkidle');
     await page.waitForTimeout(DEFAULT_PAGE_WAIT_TIME);
 
-    const iframe = page.locator('iframe[title="AI-First Release Planner"]');
-    await expect(iframe).toBeVisible();
+    const aiPlannerTab = page.locator('button', { hasText: 'AI Planner' });
+    await expect(aiPlannerTab).toHaveClass(/border-primary-500/);
+    await expect(page.getByRole('heading', { name: 'AI-First Release Planner' })).toBeVisible();
 
-    const errors = page.errors.filter(e => !e.message.includes('cross-origin subframe'));
-    expect(errors).toHaveLength(0);
+    expect(page.errors).toHaveLength(0);
+  });
+
+  test('AI Planner API returns the native snapshot', async ({ request }) => {
+    const res = await request.get('/api/modules/releases/planning/ai-planner');
+    expect(res.ok()).toBe(true);
+
+    const body = await res.json();
+    expect(typeof body.featureCount).toBe('number');
+    expect(Array.isArray(body.features)).toBe(true);
+    expect(body.features).toHaveLength(body.featureCount);
+    expect(Array.isArray(body.bugQueue)).toBe(true);
+    expect(body).toHaveProperty('metadata');
+  });
+
+  test('should load AI Planner tab with features', async ({ page }) => {
+    const apiResponses = [];
+    page.on('response', response => {
+      if (response.url().includes('/api/modules/releases/planning/ai-planner')) {
+        apiResponses.push({ url: response.url(), status: response.status() });
+      }
+    });
+
+    await page.goto('/#/releases/plan?tab=ai-planner');
+    await page.waitForLoadState('networkidle');
+    await page.waitForTimeout(DEFAULT_PAGE_WAIT_TIME);
+
+    const aiPlannerResponse = apiResponses.find(r => !r.url.includes('/status'));
+    expect(aiPlannerResponse?.status).toBe(200);
+
+    await expect(page.locator('text=AI-First Release Planner')).toBeVisible();
+    const tableRows = await page.locator('table tbody tr').count();
+    expect(tableRows).toBeGreaterThan(0);
+    await expect(page.locator('text=Bug Queue')).toBeVisible();
+
+    expect(unexpectedDemoResourceErrors(page)).toHaveLength(0);
+  });
+
+  test('should filter AI Planner by release plan', async ({ page }) => {
+    await page.goto('/#/releases/plan?tab=ai-planner');
+    await page.waitForLoadState('networkidle');
+    await page.waitForTimeout(DEFAULT_PAGE_WAIT_TIME);
+
+    const planSelect = page.locator('select').first();
+    const options = await planSelect.locator('option').allTextContents();
+
+    if (options.length > 1) {
+      await planSelect.selectOption(options[1]);
+      await page.waitForTimeout(500);
+      const rows = await page.locator('table tbody tr').count();
+      expect(rows).toBeGreaterThanOrEqual(0);
+    }
+
+    expect(unexpectedDemoResourceErrors(page)).toHaveLength(0);
+  });
+
+  test('should search features in AI Planner', async ({ page }) => {
+    await page.goto('/#/releases/plan?tab=ai-planner');
+    await page.waitForLoadState('networkidle');
+    await page.waitForTimeout(DEFAULT_PAGE_WAIT_TIME);
+
+    const searchInput = page.locator('input[placeholder*="Search"]');
+    await searchInput.fill('RHAISTRAT-1281');
+    await page.waitForTimeout(500);
+
+    const filteredRows = await page.locator('table tbody tr').count();
+    expect(filteredRows).toBe(1);
+    await expect(page.getByText('RHAISTRAT-1281', { exact: true })).toBeVisible();
+
+    expect(unexpectedDemoResourceErrors(page)).toHaveLength(0);
+  });
+
+  test('should add an AI Planner feature to Plan Approval', async ({ page }) => {
+    await page.goto('/#/releases/plan?tab=ai-planner');
+    await page.waitForLoadState('networkidle');
+    await page.waitForTimeout(DEFAULT_PAGE_WAIT_TIME);
+
+    const featureRow = page.locator('tbody tr').filter({ hasText: 'RHAISTRAT-1281' });
+    await expect(featureRow).toBeVisible();
+    await featureRow.getByRole('button', { name: 'Add to Plan' }).click();
+
+    await expect(page).toHaveURL(/tab=draft-plans/);
+    await expect(page.locator('h2', { hasText: /Plan Approval/ })).toBeVisible();
+    await expect(page.getByText('RHAISTRAT-1281', { exact: true })).toBeVisible();
+
+    expect(unexpectedDemoResourceErrors(page)).toHaveLength(0);
   });
 });
 

@@ -1016,6 +1016,9 @@ module.exports = function registerRoutes(router, context) {
   // --- Nightly Pipeline Analysis ---
   require('./nightly-pipeline')(router, context);
 
+  // --- Live Release Status ---
+  require('./release-status')(router, context);
+
   // --- Version Map ---
   require('./version-map')(router, context);
 

@@ -283,7 +283,13 @@
           </thead>
           <tbody>
             <tr v-for="row in sortedVersionTableRows" :key="row.component" class="border-b border-gray-100 dark:border-gray-700/50 hover:bg-gray-50 dark:hover:bg-gray-700/30">
-              <td class="py-1.5 pr-3 text-gray-800 dark:text-gray-200 sticky left-0 bg-white dark:bg-gray-800 z-10">{{ row.component }}</td>
+              <td class="py-1.5 pr-3 text-gray-800 dark:text-gray-200 sticky left-0 bg-white dark:bg-gray-800 z-10">
+                <template v-if="isSecurityComponentName(row.component)">
+                  <div data-testid="cve-security-component-label" class="font-medium">{{ SECURITY_OWNER_LABEL }}</div>
+                  <div class="text-[10px] text-gray-500 dark:text-gray-400">{{ SECURITY_OWNER_NOTE }}</div>
+                </template>
+                <template v-else>{{ row.component }}</template>
+              </td>
               <td v-for="ver in agg.cvesAcrossVersions.value.versions" :key="ver" class="text-right py-1.5 px-2 tabular-nums">
                 <button v-if="row.cells[ver]" class="font-semibold text-blue-600 dark:text-blue-400 underline decoration-dotted hover:decoration-solid cursor-pointer" @click="drillDownByMatrixCell(row.component, ver, row.cellJqls[ver])">{{ row.cells[ver] }}</button>
                 <span v-else class="text-gray-400 dark:text-gray-500">0</span>
@@ -320,7 +326,14 @@
           <thead>
             <tr class="border-b border-gray-200 dark:border-gray-700">
               <th class="text-left py-2 pr-3 font-semibold text-gray-700 dark:text-gray-300 sticky left-0 bg-white dark:bg-gray-800 z-10">Status</th>
-              <th v-for="a in agg.cvesByAssigneeStatus.value.assignees" :key="a" class="text-right py-2 px-2 font-semibold text-gray-700 dark:text-gray-300 whitespace-nowrap">{{ a }}</th>
+              <th v-for="a in assigneeColumns" :key="a" class="text-right py-2 px-2 font-semibold text-gray-700 dark:text-gray-300 whitespace-nowrap">
+                <div>{{ a }}</div>
+                <div
+                  v-if="a === SECURITY_OWNER_LABEL"
+                  data-testid="cve-security-owner-note"
+                  class="text-[10px] font-normal text-gray-500 dark:text-gray-400"
+                >{{ SECURITY_OWNER_NOTE }}</div>
+              </th>
               <th class="text-right py-2 pl-3 font-bold text-gray-900 dark:text-gray-100">Total</th>
             </tr>
           </thead>
@@ -331,7 +344,7 @@
                   {{ row.status }}
                 </span>
               </td>
-              <td v-for="a in agg.cvesByAssigneeStatus.value.assignees" :key="a" class="text-right py-1.5 px-2 tabular-nums">
+              <td v-for="a in assigneeColumns" :key="a" class="text-right py-1.5 px-2 tabular-nums">
                 <button v-if="row.cells[a]" class="font-semibold text-blue-600 dark:text-blue-400 underline decoration-dotted hover:decoration-solid cursor-pointer" @click="drillDownByAssigneeStatus(row.status, a, row.cellJqls[a])">{{ row.cells[a] }}</button>
                 <span v-else class="text-gray-400 dark:text-gray-500">0</span>
               </td>
@@ -344,7 +357,7 @@
           <tfoot>
             <tr class="border-t-2 border-gray-300 dark:border-gray-600">
               <td class="py-2 pr-3 font-bold text-gray-900 dark:text-gray-100 sticky left-0 bg-white dark:bg-gray-800 z-10">Total</td>
-              <td v-for="a in agg.cvesByAssigneeStatus.value.assignees" :key="a" class="text-right py-2 px-2 font-bold tabular-nums">
+              <td v-for="a in assigneeColumns" :key="a" class="text-right py-2 px-2 font-bold tabular-nums">
                 <button v-if="agg.cvesByAssigneeStatus.value.columnTotals[a]" class="font-semibold text-blue-600 dark:text-blue-400 underline decoration-dotted hover:decoration-solid cursor-pointer" @click="drillDownByAssignee(a, agg.cvesByAssigneeStatus.value.columnJqls[a])">{{ agg.cvesByAssigneeStatus.value.columnTotals[a] }}</button>
                 <span v-else class="font-semibold text-gray-600 dark:text-gray-400">0</span>
               </td>
@@ -441,6 +454,13 @@ import { useCveAggregation } from './composables/useCveAggregation.js'
 import ReportFilterModal from './components/ReportFilterModal.vue'
 import ReportFilterNarrative from './components/ReportFilterNarrative.vue'
 import CveIssueListModal from './components/CveIssueListModal.vue'
+import {
+  SECURITY_OWNER_LABEL,
+  SECURITY_OWNER_NOTE,
+  applySecurityOwnerDisplayOverride,
+  isSecurityComponentName,
+  securityComponentDisplayLabel
+} from './utils/cve-owner-display.js'
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, PointElement, LineElement, ArcElement, Filler, Tooltip, Legend)
 
@@ -475,7 +495,11 @@ const filters = useReportFilters({
 const openIssueRecords = computed(() => data.value?.openIssueRecords || [])
 const jiraSearchBase = computed(() => data.value?.jiraSearchBase || '')
 
-const filteredIssues = computed(() => filters.filterItems(openIssueRecords.value))
+const displayIssueRecords = computed(() => {
+  return openIssueRecords.value.map(applySecurityOwnerDisplayOverride)
+})
+
+const filteredIssues = computed(() => filters.filterItems(displayIssueRecords.value))
 
 const agg = useCveAggregation(filteredIssues, jiraSearchBase, filters.activeFilterDisplay)
 
@@ -485,7 +509,7 @@ const availableFilterValues = computed(() => {
   return {
     component: [...new Set(catalogComponents.value)].sort(),
     versions: [...new Set(issues.flatMap(i => i.versions))].sort(),
-    assignee: [...new Set(issues.map(i => i.assignee))].sort(),
+    assignee: [...new Set(displayIssueRecords.value.map(i => i.assignee))].sort(),
     status: [...new Set(issues.map(i => i.status))].sort()
   }
 })
@@ -505,7 +529,7 @@ function closeDrillDown() {
 function drillDownByComponent(componentName) {
   const issues = filteredIssues.value.filter(i => i.component === componentName || (componentName === 'None' && i.component === 'None'))
   const item = agg.openCvesByComponent.value.find(c => c.component === componentName)
-  openDrillDown(componentName, issues, item?.jql)
+  openDrillDown(securityComponentDisplayLabel(componentName), issues, item?.jql)
 }
 
 function drillDownByVersion(versionName) {
@@ -533,12 +557,12 @@ function drillDownByMatrixCell(componentName, versionName, jql) {
   const issues = filteredIssues.value.filter(i =>
     i.components.includes(componentName) && i.versions.includes(versionName)
   )
-  openDrillDown(`${componentName} / ${versionName}`, issues, jql)
+  openDrillDown(`${securityComponentDisplayLabel(componentName)} / ${versionName}`, issues, jql)
 }
 
 function drillDownByMatrixRow(componentName, jql) {
   const issues = filteredIssues.value.filter(i => i.components.includes(componentName))
-  openDrillDown(componentName, issues, jql)
+  openDrillDown(securityComponentDisplayLabel(componentName), issues, jql)
 }
 
 function drillDownByMatrixColumn(versionName, jql) {
@@ -650,9 +674,22 @@ const sortedVersionTableRows = computed(() => {
   const col = versionTableSort.value.column
   const dir = versionTableSort.value.direction === 'asc' ? 1 : -1
   return [...raw].sort((a, b) => {
+    const aIsNoOwner = isSecurityComponentName(a.component)
+    const bIsNoOwner = isSecurityComponentName(b.component)
+    if (aIsNoOwner !== bIsNoOwner) return aIsNoOwner ? -1 : 1
     if (col === 'component') return dir * a.component.localeCompare(b.component)
     if (col === 'total') return dir * (a.total - b.total)
     return dir * ((a.cells[col] || 0) - (b.cells[col] || 0))
+  })
+})
+
+const assigneeColumns = computed(() => {
+  const assignees = agg.cvesByAssigneeStatus.value.assignees || []
+  return [...assignees].sort((a, b) => {
+    const aIsNoOwner = a === SECURITY_OWNER_LABEL
+    const bIsNoOwner = b === SECURITY_OWNER_LABEL
+    if (aIsNoOwner !== bIsNoOwner) return aIsNoOwner ? -1 : 1
+    return a.localeCompare(b)
   })
 })
 
@@ -723,7 +760,9 @@ const openCvesChartData = computed(() => {
   const items = agg.openCvesByComponent.value
   const top = items.slice(0, 20)
   return {
-    labels: top.map(i => truncateLabel(i.component, 18)),
+    labels: top.map(i => isSecurityComponentName(i.component)
+      ? [SECURITY_OWNER_LABEL, SECURITY_OWNER_NOTE]
+      : truncateLabel(i.component, 18)),
     datasets: [{
       label: 'Issue Count',
       data: top.map(i => i.count),

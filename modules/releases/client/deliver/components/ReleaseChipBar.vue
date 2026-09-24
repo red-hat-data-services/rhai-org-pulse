@@ -1,5 +1,5 @@
 <template>
-  <div class="space-y-2 px-4 py-3 bg-white dark:bg-gray-800 border-b border-gray-200
+  <div data-testid="deliver-release-chip-bar" class="space-y-2 px-4 py-3 bg-white dark:bg-gray-800 border-b border-gray-200
               dark:border-gray-700">
     <!-- Product row -->
     <div class="flex items-center gap-2">

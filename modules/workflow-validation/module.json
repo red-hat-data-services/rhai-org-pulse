@@ -1,0 +1,43 @@
+{
+  "name": "Workflow Validation",
+  "slug": "workflow-validation",
+  "description": "AI-driven RHOAI workflow executions, task outcomes, cost, and root causes",
+  "icon": "Database",
+  "order": 40,
+  "defaultEnabled": false,
+  "requires": [],
+  "client": {
+    "entry": "./client/index.js",
+    "navItems": [
+      { "id": "overview", "label": "Dashboard", "icon": "LayoutDashboard", "default": true },
+      { "id": "workflows", "label": "Trends", "icon": "Kanban" },
+      { "id": "compare", "label": "Compare", "icon": "git-branch" },
+      { "id": "activity", "label": "Jira", "icon": "activity" }
+    ],
+    "hiddenRoutes": {
+      "runs": "compare",
+      "run-detail": "overview",
+      "workflow-history": "workflows"
+    },
+    "settingsComponent": "./client/components/WorkflowValidationSettings.vue"
+  },
+  "server": {
+    "entry": "./server/index.js"
+  },
+  "secrets": {
+    "module": [
+      {
+        "key": "WORKFLOW_VALIDATION_OPENSEARCH_USERNAME",
+        "description": "Read-only OpenSearch HTTP Basic username",
+        "required": false,
+        "group": "opensearch-auth"
+      },
+      {
+        "key": "WORKFLOW_VALIDATION_OPENSEARCH_PASSWORD",
+        "description": "Read-only OpenSearch HTTP Basic password",
+        "required": false,
+        "group": "opensearch-auth"
+      }
+    ]
+  }
+}

@@ -1,16 +1,20 @@
 <script setup>
+import { computed } from 'vue'
 import { useCategories } from '../composables/useCategories.js'
 
-defineProps({
+const emit = defineEmits(['update:selectedCategory', 'update:selectedStatus', 'update:selectedSource', 'update:selectedSort'])
+
+const props = defineProps({
+  pillars: { type: Array, default: () => [] },
   selectedCategory: { type: String, default: '' },
   selectedStatus: { type: String, default: '' },
   selectedSource: { type: String, default: '' },
   selectedSort: { type: String, default: 'impact' }
 })
 
-const emit = defineEmits(['update:selectedCategory', 'update:selectedStatus', 'update:selectedSource', 'update:selectedSort'])
+const { DECISION_STATUSES, SOURCE_LABELS, getPillarRegistry } = useCategories()
 
-const { CATEGORIES, CATEGORY_KEYS, DECISION_STATUSES, SOURCE_LABELS } = useCategories()
+const categoryOptions = computed(() => getPillarRegistry(props.pillars))
 
 const sortOptions = [
   { value: 'impact', label: 'Impact Score' },
@@ -23,7 +27,7 @@ const sortOptions = [
 <template>
   <div class="flex flex-wrap items-center gap-3">
     <!-- Category tabs -->
-    <div class="flex items-center gap-1 bg-gray-100 dark:bg-gray-800 rounded-lg p-0.5">
+    <div class="flex flex-wrap items-center gap-1 bg-gray-100 dark:bg-gray-800 rounded-lg p-0.5">
       <button
         :class="[
           'px-3 py-1.5 text-xs font-medium rounded-md transition-colors',
@@ -34,15 +38,15 @@ const sortOptions = [
         All
       </button>
       <button
-        v-for="key in CATEGORY_KEYS"
-        :key="key"
+        v-for="pillar in categoryOptions"
+        :key="pillar.pillarKey"
         :class="[
           'px-3 py-1.5 text-xs font-medium rounded-md transition-colors',
-          selectedCategory === key ? 'bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 shadow-sm' : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200'
+          selectedCategory === pillar.pillarKey ? 'bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 shadow-sm' : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200'
         ]"
-        @click="emit('update:selectedCategory', key)"
+        @click="emit('update:selectedCategory', pillar.pillarKey)"
       >
-        {{ CATEGORIES[key].shortName }}
+        {{ pillar.shortName }}
       </button>
     </div>
 

@@ -3,10 +3,10 @@ const { DEFAULT_PAGE_WAIT_TIME } = require('./constants');
 const { setupErrorTracking, logCapturedErrors } = require('./helpers');
 
 /**
- * Integration tests for Feature Pressure view (Releases module -> Reports hub)
+ * Integration tests for Feature Pressure view (Releases module -> Plan -> PM Hub)
  *
  * Tests verify:
- * - View loads via Reports hub (/#/releases/reports?report=feature-pressure)
+ * - View loads via PM Hub (/#/releases/plan?tab=pm-hub&report=feature-pressure)
  * - Executive summary cards render with correct data
  * - Monthly flow chart renders
  * - Component pressure table renders with sortable columns
@@ -194,7 +194,7 @@ test.describe('Feature Pressure - View Loading @feature-pressure', () => {
 
   test('should load the view without JavaScript errors', async ({ page }) => {
     await mockAllApis(page);
-    await page.goto('/#/releases/reports?report=feature-pressure');
+    await page.goto('/#/releases/plan?tab=pm-hub&report=feature-pressure');
     await page.waitForLoadState('networkidle');
     await page.waitForTimeout(DEFAULT_PAGE_WAIT_TIME);
     expect(relevantErrors(page)).toHaveLength(0);
@@ -202,11 +202,11 @@ test.describe('Feature Pressure - View Loading @feature-pressure', () => {
 
   test('should render the page heading and subtitle', async ({ page }) => {
     await mockAllApis(page);
-    await page.goto('/#/releases/reports?report=feature-pressure');
+    await page.goto('/#/releases/plan?tab=pm-hub&report=feature-pressure');
     await page.waitForLoadState('networkidle');
     await page.waitForTimeout(DEFAULT_PAGE_WAIT_TIME);
 
-    const heading = page.getByRole('heading', { name: 'Feature Pressure' });
+    const heading = page.getByRole('heading', { name: 'Historic Feature Pressure' });
     await expect(heading).toBeVisible();
 
     const subtitle = page.locator('text=Where feature inflow exceeds capacity to burn down');
@@ -216,7 +216,7 @@ test.describe('Feature Pressure - View Loading @feature-pressure', () => {
 
   test('should render metadata line with timestamps', async ({ page }) => {
     await mockAllApis(page);
-    await page.goto('/#/releases/reports?report=feature-pressure');
+    await page.goto('/#/releases/plan?tab=pm-hub&report=feature-pressure');
     await page.waitForLoadState('networkidle');
     await page.waitForTimeout(DEFAULT_PAGE_WAIT_TIME);
 
@@ -235,7 +235,7 @@ test.describe('Feature Pressure - View Loading @feature-pressure', () => {
       route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(FIXTURE_DATA) });
     });
 
-    await page.goto('/#/releases/reports?report=feature-pressure');
+    await page.goto('/#/releases/plan?tab=pm-hub&report=feature-pressure');
     await page.waitForLoadState('networkidle');
     await page.waitForTimeout(DEFAULT_PAGE_WAIT_TIME);
     expect(apiCalled).toBe(true);
@@ -253,7 +253,7 @@ test.describe('Feature Pressure - Executive Summary @feature-pressure', () => {
 
   test('should render summary cards', async ({ page }) => {
     await mockAllApis(page);
-    await page.goto('/#/releases/reports?report=feature-pressure');
+    await page.goto('/#/releases/plan?tab=pm-hub&report=feature-pressure');
     await page.waitForLoadState('networkidle');
     await page.waitForTimeout(DEFAULT_PAGE_WAIT_TIME);
 
@@ -269,7 +269,7 @@ test.describe('Feature Pressure - Executive Summary @feature-pressure', () => {
 
   test('should render counts as clickable Jira links', async ({ page }) => {
     await mockAllApis(page);
-    await page.goto('/#/releases/reports?report=feature-pressure');
+    await page.goto('/#/releases/plan?tab=pm-hub&report=feature-pressure');
     await page.waitForLoadState('networkidle');
     await page.waitForTimeout(DEFAULT_PAGE_WAIT_TIME);
 
@@ -282,7 +282,7 @@ test.describe('Feature Pressure - Executive Summary @feature-pressure', () => {
 
   test('should show backlog trend', async ({ page }) => {
     await mockAllApis(page);
-    await page.goto('/#/releases/reports?report=feature-pressure');
+    await page.goto('/#/releases/plan?tab=pm-hub&report=feature-pressure');
     await page.waitForLoadState('networkidle');
     await page.waitForTimeout(DEFAULT_PAGE_WAIT_TIME);
 
@@ -292,7 +292,7 @@ test.describe('Feature Pressure - Executive Summary @feature-pressure', () => {
 
   test('should show the snapshot freshness label', async ({ page }) => {
     await mockAllApis(page);
-    await page.goto('/#/releases/reports?report=feature-pressure');
+    await page.goto('/#/releases/plan?tab=pm-hub&report=feature-pressure');
     await page.waitForLoadState('networkidle');
     await page.waitForTimeout(DEFAULT_PAGE_WAIT_TIME);
 
@@ -312,7 +312,7 @@ test.describe('Feature Pressure - Component Table @feature-pressure', () => {
 
   test('should render component pressure table', async ({ page }) => {
     await mockAllApis(page);
-    await page.goto('/#/releases/reports?report=feature-pressure');
+    await page.goto('/#/releases/plan?tab=pm-hub&report=feature-pressure');
     await page.waitForLoadState('networkidle');
     await page.waitForTimeout(DEFAULT_PAGE_WAIT_TIME);
 
@@ -326,7 +326,7 @@ test.describe('Feature Pressure - Component Table @feature-pressure', () => {
 
   test('should render column headers', async ({ page }) => {
     await mockAllApis(page);
-    await page.goto('/#/releases/reports?report=feature-pressure');
+    await page.goto('/#/releases/plan?tab=pm-hub&report=feature-pressure');
     await page.waitForLoadState('networkidle');
     await page.waitForTimeout(DEFAULT_PAGE_WAIT_TIME);
 
@@ -338,7 +338,7 @@ test.describe('Feature Pressure - Component Table @feature-pressure', () => {
 
   test('should filter components when typing in search', async ({ page }) => {
     await mockAllApis(page);
-    await page.goto('/#/releases/reports?report=feature-pressure');
+    await page.goto('/#/releases/plan?tab=pm-hub&report=feature-pressure');
     await page.waitForLoadState('networkidle');
     await page.waitForTimeout(DEFAULT_PAGE_WAIT_TIME);
 
@@ -365,7 +365,7 @@ test.describe('Feature Pressure - Scorecard @feature-pressure', () => {
 
   test('should render risk scorecard section', async ({ page }) => {
     await mockAllApis(page);
-    await page.goto('/#/releases/reports?report=feature-pressure');
+    await page.goto('/#/releases/plan?tab=pm-hub&report=feature-pressure');
     await page.waitForLoadState('networkidle');
     await page.waitForTimeout(DEFAULT_PAGE_WAIT_TIME);
 
@@ -387,7 +387,7 @@ test.describe('Feature Pressure - Refresh @feature-pressure', () => {
 
   test('should show refresh button', async ({ page }) => {
     await mockAllApis(page);
-    await page.goto('/#/releases/reports?report=feature-pressure');
+    await page.goto('/#/releases/plan?tab=pm-hub&report=feature-pressure');
     await page.waitForLoadState('networkidle');
     await page.waitForTimeout(DEFAULT_PAGE_WAIT_TIME);
 
@@ -398,7 +398,7 @@ test.describe('Feature Pressure - Refresh @feature-pressure', () => {
 
   test('should show lookback period selector', async ({ page }) => {
     await mockAllApis(page);
-    await page.goto('/#/releases/reports?report=feature-pressure');
+    await page.goto('/#/releases/plan?tab=pm-hub&report=feature-pressure');
     await page.waitForLoadState('networkidle');
     await page.waitForTimeout(DEFAULT_PAGE_WAIT_TIME);
 
@@ -422,7 +422,7 @@ test.describe('Feature Pressure - Refresh @feature-pressure', () => {
     });
 
     setupErrorTracking(page);
-    await page.goto('/#/releases/reports?report=feature-pressure');
+    await page.goto('/#/releases/plan?tab=pm-hub&report=feature-pressure');
     await page.waitForLoadState('networkidle');
     await page.waitForTimeout(DEFAULT_PAGE_WAIT_TIME);
 
@@ -450,7 +450,7 @@ test.describe('Feature Pressure - No Data State @feature-pressure', () => {
       route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(FIXTURE_DATA) });
     });
 
-    await page.goto('/#/releases/reports?report=feature-pressure');
+    await page.goto('/#/releases/plan?tab=pm-hub&report=feature-pressure');
     await page.waitForTimeout(500);
 
     // Should show loading indicator

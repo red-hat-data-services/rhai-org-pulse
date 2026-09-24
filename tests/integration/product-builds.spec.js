@@ -111,6 +111,7 @@ test.describe('Product Builds Module @product-builds', () => {
     await expect(page.getByRole('link', { name: 'View pipeline' })).toBeVisible()
     expect(submissions).toHaveLength(2)
     expect(submissions[0].team).toBe(option)
+    expect(submissions[0].project).toBe('RHAI')
     expect(submissions[1]).toEqual(submissions[0])
   })
 
@@ -123,6 +124,18 @@ test.describe('Product Builds Module @product-builds', () => {
 
     const mainContentVisible = await mainContentIsVisible(page);
     expect(mainContentVisible).toBe(true);
+
+    const appErrors = page.errors.filter(e => !/status of (429|404|503)/.test(e.message));
+    expect(appErrors).toHaveLength(0);
+  });
+
+  test('should navigate to release status view', async ({ page }) => {
+    await page.goto('/#/product-builds/release-status');
+    await page.waitForLoadState('networkidle');
+    await page.waitForTimeout(DEFAULT_PAGE_WAIT_TIME);
+
+    expect(page.url()).toMatch(/product-builds\/release-status/);
+    await expect(page.locator('h1')).toContainText('Release status');
 
     const appErrors = page.errors.filter(e => !/status of (429|404|503)/.test(e.message));
     expect(appErrors).toHaveLength(0);

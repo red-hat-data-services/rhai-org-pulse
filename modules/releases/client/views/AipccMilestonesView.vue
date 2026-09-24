@@ -165,7 +165,7 @@
               type="button"
               data-testid="timeline-release-filter"
               :data-release="release.name"
-              class="rounded-full border px-2.5 py-1 text-[11px] font-semibold transition-all"
+              class="release-filter-pill rounded-full border px-2.5 py-1 text-[11px] font-semibold transition-all"
               :class="releasePillClass(release.name)"
               :style="releasePillStyle(release)"
               :aria-pressed="selectedReleases.has(release.name)"
@@ -278,7 +278,7 @@
               >
                 <div class="sticky left-0 z-[80] flex h-full w-[180px] items-center gap-2 border-r border-gray-200 bg-white px-3 dark:border-gray-700 dark:bg-gray-800">
                   <span class="h-2.5 w-2.5 shrink-0 rounded-full" :style="{ backgroundColor: row.color }" />
-                  <span v-if="row.showReleaseLabel" data-testid="timeline-release-label" class="truncate text-[11px] font-semibold" :style="{ color: row.color }">{{ row.release }}</span>
+                  <span v-if="row.showReleaseLabel" data-testid="timeline-release-label" class="release-color-text truncate text-[11px] font-semibold" :style="{ '--release-color': row.color }">{{ row.release }}</span>
                 </div>
 
                 <div class="absolute right-0 top-1/2 h-px bg-gray-200 dark:bg-gray-700" :style="{ left: `${labelWidth}px` }" />
@@ -327,7 +327,7 @@
       <span v-for="event in activeTimelineDate.events" :key="event.id" data-testid="timeline-tooltip-event" class="mt-2 flex items-start gap-2 first:mt-0">
         <i class="mt-1 h-2.5 w-2.5 shrink-0 rounded-full" :style="{ backgroundColor: event.color }" />
         <span class="min-w-0">
-          <span class="block text-[10px] font-bold uppercase tracking-wide" :style="{ color: event.color }">{{ event.release }}</span>
+          <span class="release-color-text block text-[10px] font-bold uppercase tracking-wide" :style="{ '--release-color': event.color }">{{ event.release }}</span>
           <span class="block text-xs font-semibold leading-4 text-gray-800 dark:text-gray-100">{{ event.name }}</span>
           <span class="block text-[10px] font-medium leading-4 text-gray-500 dark:text-gray-400">{{ event.phase }} · {{ eventDateDetail(event) }}</span>
         </span>
@@ -559,7 +559,7 @@ function toggleTimeline() {
 }
 
 function chipStyle(item) {
-  return { color: item.color, backgroundColor: `${item.color}18`, borderColor: `${item.color}40` }
+  return { '--release-color': item.color }
 }
 
 function urgencyClasses(days) {
@@ -571,18 +571,14 @@ function urgencyClasses(days) {
 
 function releasePillClass(name) {
   return selectedReleases.value.has(name)
-    ? 'shadow-sm ring-1 ring-current ring-offset-1 dark:ring-offset-gray-900'
+    ? 'release-filter-pill--selected shadow-sm ring-1 ring-current ring-offset-1 dark:ring-offset-gray-900'
     : 'opacity-60 hover:opacity-100'
 }
 
 function releasePillStyle(release) {
   const index = releases.value.findIndex(item => item.name === release.name)
   const color = RELEASE_COLORS[index % RELEASE_COLORS.length]
-  return {
-    color,
-    backgroundColor: selectedReleases.value.has(release.name) ? `${color}16` : 'transparent',
-    borderColor: `${color}55`
-  }
+  return { '--release-color': color }
 }
 
 function monthStyle(month) {
@@ -808,6 +804,23 @@ onBeforeUnmount(() => resizeObserver?.disconnect())
   padding: 0.15rem 0.55rem;
   font-size: 0.6875rem;
   font-weight: 600;
+  color: var(--release-color);
+  background: color-mix(in srgb, var(--release-color) 9%, transparent);
+  border-color: color-mix(in srgb, var(--release-color) 30%, transparent);
+}
+
+.release-filter-pill {
+  color: var(--release-color);
+  background: transparent;
+  border-color: color-mix(in srgb, var(--release-color) 40%, transparent);
+}
+
+.release-filter-pill--selected {
+  background: color-mix(in srgb, var(--release-color) 9%, transparent);
+}
+
+.release-color-text {
+  color: var(--release-color);
 }
 
 .milestone-scrollbar {
@@ -835,34 +848,53 @@ onBeforeUnmount(() => resizeObserver?.disconnect())
   box-shadow: 0 1px 2px rgb(0 0 0 / 0.06);
 }
 
-:global(.dark) .dashboard-card {
+.dark .dashboard-card {
   border-color: rgb(55 65 81 / 0.7);
   background: rgb(31 41 55);
 }
 
-:global(.dark) .section-heading {
+.dark .section-heading {
   background: rgb(17 24 39 / 0.45);
   border-color: rgb(55 65 81 / 0.7);
 }
 
-:global(.dark) .count-badge {
+.dark .count-badge {
   background: rgb(30 58 138 / 0.35);
   color: rgb(147 197 253);
 }
 
-:global(.dark) .timeline-event-row:nth-child(even) {
+.dark .release-chip,
+.dark .release-filter-pill,
+.dark .release-color-text {
+  color: color-mix(in srgb, var(--release-color) 62%, white);
+}
+
+.dark .release-chip {
+  background: color-mix(in srgb, var(--release-color) 15%, rgb(17 24 39));
+  border-color: color-mix(in srgb, var(--release-color) 45%, rgb(75 85 99));
+}
+
+.dark .release-filter-pill {
+  border-color: color-mix(in srgb, var(--release-color) 65%, rgb(75 85 99));
+}
+
+.dark .release-filter-pill--selected {
+  background: color-mix(in srgb, var(--release-color) 18%, rgb(17 24 39));
+}
+
+.dark .timeline-event-row:nth-child(even) {
   background: rgb(17 24 39 / 0.45);
 }
 
-:global(.dark) .timeline-event-row:nth-child(even) > div:first-child {
+.dark .timeline-event-row:nth-child(even) > div:first-child {
   background: rgb(17 24 39);
 }
 
-:global(.dark) .timeline-event-row.timeline-event-row--selected {
+.dark .timeline-event-row.timeline-event-row--selected {
   background: rgb(127 29 29 / 0.18);
 }
 
-:global(.dark) .timeline-event-row.timeline-event-row--selected > div:first-child {
+.dark .timeline-event-row.timeline-event-row--selected > div:first-child {
   background: rgb(69 10 10);
 }
 

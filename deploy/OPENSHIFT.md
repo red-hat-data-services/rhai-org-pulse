@@ -65,6 +65,22 @@ oc patch secret team-tracker-secrets \
   -n team-tracker \
   --type merge \
   -p "{\"stringData\":{\"SMARTSHEET_API_TOKEN\":\"$(tr -d '\n' < ~/.your-smartsheet-token)\"}}"
+
+# Workflow Validation is configured by the environment's GitOps repository:
+#
+# 1. Store WORKFLOW_VALIDATION_OPENSEARCH_USERNAME and
+#    WORKFLOW_VALIDATION_OPENSEARCH_PASSWORD in the environment's approved
+#    Vault path using the read-only OpenSearch account.
+# 2. Add both keys to the team-tracker-secrets VaultStaticSecret mapping.
+# 3. Optionally set WORKFLOW_VALIDATION_OPENSEARCH_URL, HTTP_PROXY, and
+#    HTTPS_PROXY in the environment overlay's team-tracker-config ConfigMap.
+#    They remain deployment defaults. An authorized Org Pulse administrator can
+#    override these non-secret values in Settings > Workflow Validation.
+# 4. Enable the workflow-validation module only after its diagnostics report
+#    that all three read-only indexes are reachable.
+#
+# Never commit credentials, copy ingest/admin credentials, or place Basic
+# authentication values in WORKFLOW_VALIDATION_OPENSEARCH_URL.
 ```
 
 ## 3. Build container images
