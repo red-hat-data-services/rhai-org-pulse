@@ -967,9 +967,9 @@ const testExecPct = computed(() => {
 // --- Release Decision Status ---
 
 const releaseStatuses = [
-  { id: 'not-ready', label: 'Not Ready', activeClass: 'bg-red-600 text-white border-red-600', tooltip: 'Multiple gates below 50%. Open blockers present. Not all sign-offs complete.' },
+  { id: 'not-ready', label: 'Not Ready', activeClass: 'bg-red-600 text-white border-red-600', tooltip: 'Multiple gates below 50%, or open blockers with overall completion under 50%. Not all sign-offs complete.' },
   { id: 'in-progress', label: 'In Progress', activeClass: 'bg-blue-600 text-white border-blue-600', tooltip: 'Testing started but gates are below 80% completion. Work is actively progressing.' },
-  { id: 'at-risk', label: 'At Risk', activeClass: 'bg-amber-500 text-white border-amber-500', tooltip: 'Some gates above 50% but open blockers or sign-offs pending. Timeline may slip.' },
+  { id: 'at-risk', label: 'At Risk', activeClass: 'bg-amber-500 text-white border-amber-500', tooltip: 'Progress above 50% but open blockers, a lagging gate, or GA date imminent. Timeline may slip.' },
   { id: 'on-track', label: 'On Track', activeClass: 'bg-emerald-500 text-white border-emerald-500', tooltip: 'All gates above 80%. No critical blockers. Sign-offs progressing on schedule.' },
   { id: 'ready-to-ship', label: 'Ready to Ship', activeClass: 'bg-green-600 text-white border-green-600', tooltip: 'All gates at 100%. All sign-offs done. Zero open blockers. Go for release.' },
 ]
