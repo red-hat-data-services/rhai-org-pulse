@@ -147,9 +147,12 @@ onMounted(async () => {
     // Listen for "Add to Plan" messages from iframe
     window.addEventListener('message', (e) => {
       if (e.origin !== window.location.origin) return
-      if (e.data?.action === 'addFeature') {
-        // Wire selected feature to Plan Approval
-        approveFeature(e.data.feature.key, true)
+      if (e.data?.type === 'add-to-draft-plan' && e.data?.features) {
+        // Wire selected features to Plan Approval
+        const features = e.data.features
+        features.forEach(f => {
+          approveFeature(f.key, true)
+        })
         filterEvent.value = '__approved__'
         if (moduleNav && moduleNav.updateParams) {
           moduleNav.updateParams({ tab: 'draft-plans' }, { push: false })
