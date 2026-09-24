@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed, inject, watch, onMounted } from 'vue'
+import { ref, computed, inject, watch, onMounted, onBeforeUnmount } from 'vue'
 import { apiRequest } from '@shared/client/services/api'
 import { useDraftPlans } from '../composables/useDraftPlans'
 
@@ -127,55 +127,60 @@ const featuresInComponent = computed(() => {
   ).slice(0, 10)
 })
 
+function sendDataToIframe() {
+  const iframe = iframeRef.value
+  if (iframe && iframe.contentWindow && snapshot.value) {
+    iframe.contentWindow.postMessage({
+      type: 'ai-planner-data',
+      features: snapshot.value.features || [],
+      bugQueue: snapshot.value.bugQueue || [],
+      capacity: snapshot.value.capacity || {},
+      cveReserve: snapshot.value.cveReserve || {},
+      lastSyncedAt: snapshot.value.lastSyncedAt || new Date().toISOString()
+    }, window.location.origin)
+  }
+}
+
+function handleIframeMessage(e) {
+  if (e.origin !== window.location.origin) return
+  if (e.data?.type === 'add-to-draft-plan' && e.data?.features) {
+    const features = e.data.features
+    features.forEach(f => {
+      approveFeature(f.key, true)
+    })
+    filterEvent.value = '__approved__'
+    if (moduleNav && moduleNav.updateParams) {
+      moduleNav.updateParams({ tab: 'draft-plans' }, { push: false })
+    }
+  }
+}
+
 onMounted(async () => {
+  window.addEventListener('message', handleIframeMessage)
   try {
     snapshot.value = await apiRequest('/modules/releases/planning/ai-planner')
-
-    // Send live data to iframe via postMessage
-    const iframe = iframeRef.value
-    if (iframe && iframe.contentWindow) {
-      iframe.contentWindow.postMessage({
-        type: 'ai-planner-data',
-        features: snapshot.value.features || [],
-        bugQueue: snapshot.value.bugQueue || [],
-        capacity: snapshot.value.capacity || {},
-        cveReserve: snapshot.value.cveReserve || {},
-        lastSyncedAt: snapshot.value.lastSyncedAt || new Date().toISOString()
-      }, window.location.origin)
-    }
-
-    // Listen for "Add to Plan" messages from iframe
-    window.addEventListener('message', (e) => {
-      if (e.origin !== window.location.origin) return
-      if (e.data?.type === 'add-to-draft-plan' && e.data?.features) {
-        // Wire selected features to Plan Approval
-        const features = e.data.features
-        features.forEach(f => {
-          approveFeature(f.key, true)
-        })
-        filterEvent.value = '__approved__'
-        if (moduleNav && moduleNav.updateParams) {
-          moduleNav.updateParams({ tab: 'draft-plans' }, { push: false })
-        }
-      }
-    })
   } catch (e) {
     error.value = e.message
   } finally {
     loading.value = false
   }
 })
+
+onBeforeUnmount(() => {
+  window.removeEventListener('message', handleIframeMessage)
+})
 </script>
 
 <template>
   <!-- IFRAME MODE: Shows complete demo with live data from backend -->
-  <div v-if="iframeRef !== null && !loading" class="h-full w-full bg-gray-50 dark:bg-gray-900">
+  <div v-if="!loading && !error" class="h-full w-full bg-gray-50 dark:bg-gray-900">
     <iframe
       ref="iframeRef"
       :src="DEMO_URL"
       class="w-full h-full border-none rounded"
       title="AI-First Release Planner"
       sandbox="allow-same-origin allow-scripts allow-popups allow-forms"
+      @load="sendDataToIframe"
     />
   </div>
 
