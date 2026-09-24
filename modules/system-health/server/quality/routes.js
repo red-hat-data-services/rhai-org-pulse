@@ -582,14 +582,25 @@ module.exports = function registerQualityRoutes(router, context) {
   });
 
   // ─── Test Execution Dashboard Data API ───
-  // Allows GitLab CI to upload dashboard data directly to org-pulse storage
+  // Display-layer only (HC3): an external pipeline (test-reports-opensearch)
+  // pre-computes the dashboard JSON and pushes it here via the bulk endpoint.
+  // The app just stores and serves it. See docs/DATA-FORMATS.md.
+
+  const TEST_EXEC_BASE = 'system-health/test-execution';
+  const TEST_EXEC_FILES = ['heatmap', 'components', 'jira_config', 'meta'];
 
   /**
    * @openapi
-   * /api/modules/system-health/quality/test-execution/upload:
+   * /api/modules/system-health/quality/test-execution/bulk:
    *   post:
-   *     summary: Upload test execution dashboard data
-   *     description: Accepts heatmap, components, jira_config, and meta JSON data from CI pipeline
+   *     summary: Bulk-upload test execution dashboard data
+   *     description: |
+   *       Ingest endpoint for the external test-reports pipeline to push
+   *       pre-computed dashboard JSON. Requires the `system-health:write` scope
+   *       (a scoped pipeline token, not an interactive admin). Accepts any
+   *       subset of `heatmap`, `components`, `jira_config`, and `meta`; each
+   *       provided key is written to storage atomically and an upload receipt
+   *       is recorded.
    *     tags: [System Health - Test Execution]
    *     security:
    *       - bearerAuth: []
@@ -600,60 +611,53 @@ module.exports = function registerQualityRoutes(router, context) {
    *           schema:
    *             type: object
    *             properties:
-   *               heatmap: { type: object }
-   *               components: { type: object }
-   *               jira_config: { type: object }
-   *               meta: { type: object }
+   *               heatmap: { type: object, description: "{ components: [...] } heatmap payload" }
+   *               components: { type: object, description: "Per-component daily + quality-gate detail" }
+   *               jira_config: { type: object, description: "Release/team JQL configuration" }
+   *               meta: { type: object, description: "Generation metadata (dates, component list)" }
    *     responses:
    *       200:
-   *         description: Data uploaded successfully
-   *       401:
-   *         description: Unauthorized
+   *         description: Upload result with the list of stored files
+   *       400:
+   *         description: No recognized payload keys provided
+   *       403:
+   *         description: Missing required scope (system-health:write)
    */
-  router.post('/test-execution/upload', requireAuth, requireScope('system-health:write'), jsonLimit, async function(req, res) {
+  router.post('/test-execution/bulk', requireAuth, requireScope('system-health:write'), jsonLimit, async function(req, res) {
     if (DEMO_MODE) {
-      return res.json({ status: 'skipped', message: 'Test execution upload disabled in demo mode' });
+      return res.json({ status: 'skipped', message: 'Test execution ingest disabled in demo mode' });
     }
-    try {
-      const { heatmap, components, jira_config, meta } = req.body;
 
-      if (!heatmap && !components && !jira_config && !meta) {
-        return res.status(400).json({ error: 'No data provided. Expected heatmap, components, jira_config, or meta.' });
-      }
+    const body = req.body || {};
+    const provided = TEST_EXEC_FILES.filter((key) => body[key] !== undefined && body[key] !== null);
 
-      const results = {};
-      const basePath = 'system-health/test-execution';
-
-      if (heatmap) {
-        await writeToStorage(`${basePath}/heatmap.json`, heatmap);
-        results.heatmap = 'uploaded';
-      }
-      if (components) {
-        await writeToStorage(`${basePath}/components.json`, components);
-        results.components = 'uploaded';
-      }
-      if (jira_config) {
-        await writeToStorage(`${basePath}/jira_config.json`, jira_config);
-        results.jira_config = 'uploaded';
-      }
-      if (meta) {
-        await writeToStorage(`${basePath}/meta.json`, meta);
-        results.meta = 'uploaded';
-      }
-
-      await writeToStorage(`${basePath}/last-upload.json`, {
-        uploadedAt: new Date().toISOString(),
-        uploadedBy: req.user?.email || 'api',
-        files: Object.keys(results)
-      });
-
-      console.log(`[system-health/quality] Test execution data uploaded: ${Object.keys(results).join(', ')}`);
-      return res.json({ success: true, uploaded: results, timestamp: new Date().toISOString() });
-
-    } catch (error) {
-      console.error('[system-health/quality] Error uploading test execution data:', error.message);
-      return res.status(500).json({ error: 'Failed to upload data' });
+    if (provided.length === 0) {
+      return res.status(400).json({ error: `No data provided. Expected one or more of: ${TEST_EXEC_FILES.join(', ')}` });
     }
+
+    // Lightweight shape validation — reject obviously malformed payloads.
+    if (body.heatmap !== undefined) {
+      const hm = body.heatmap;
+      const isArrayShape = Array.isArray(hm);
+      const isWrappedShape = hm && typeof hm === 'object' && Array.isArray(hm.components);
+      if (!isArrayShape && !isWrappedShape) {
+        return res.status(400).json({ error: 'heatmap must be an array of components or an object with a components array' });
+      }
+    }
+
+    const stored = [];
+    for (const key of provided) {
+      await writeToStorage(`${TEST_EXEC_BASE}/${key}.json`, body[key]);
+      stored.push(key);
+    }
+
+    await writeToStorage(`${TEST_EXEC_BASE}/last-upload.json`, {
+      uploadedAt: new Date().toISOString(),
+      uploadedBy: req.user?.email || 'pipeline',
+      files: stored
+    });
+
+    return res.json({ status: 'ok', stored, uploadedAt: new Date().toISOString() });
   });
 
   /**
@@ -661,39 +665,49 @@ module.exports = function registerQualityRoutes(router, context) {
    * /api/modules/system-health/quality/test-execution/data:
    *   get:
    *     summary: Get test execution dashboard data
+   *     description: |
+   *       Returns the stored dashboard payloads. With no query params, returns a
+   *       combined object `{ heatmap, components, jira_config, meta, lastUpload }`.
+   *       Pass `?file=<name>` to fetch a single payload.
    *     tags: [System Health - Test Execution]
    *     parameters:
    *       - name: file
    *         in: query
+   *         required: false
    *         schema: { type: string, enum: [heatmap, components, jira_config, meta] }
    *     responses:
    *       200:
    *         description: Dashboard data
+   *       400:
+   *         description: Invalid file parameter
    */
-  router.get('/test-execution/data', requireAuth, requireScope('system-health:read'), async function(req, res) {
+  router.get('/test-execution/data', requireScope('system-health:read'), async function(req, res) {
     try {
       const { file } = req.query;
-      const basePath = 'system-health/test-execution';
 
       if (file) {
-        const validFiles = ['heatmap', 'components', 'jira_config', 'meta'];
-        if (!validFiles.includes(file)) {
-          return res.status(400).json({ error: `Invalid file. Valid: ${validFiles.join(', ')}` });
+        if (!TEST_EXEC_FILES.includes(file)) {
+          return res.status(400).json({ error: `Invalid file. Valid: ${TEST_EXEC_FILES.join(', ')}` });
         }
-        const data = await readFromStorage(`${basePath}/${file}.json`);
+        const data = await readFromStorage(`${TEST_EXEC_BASE}/${file}.json`);
         return res.json(data || {});
       }
 
       const [heatmap, components, jira_config, meta, lastUpload] = await Promise.all([
-        readFromStorage(`${basePath}/heatmap.json`),
-        readFromStorage(`${basePath}/components.json`),
-        readFromStorage(`${basePath}/jira_config.json`),
-        readFromStorage(`${basePath}/meta.json`),
-        readFromStorage(`${basePath}/last-upload.json`)
+        readFromStorage(`${TEST_EXEC_BASE}/heatmap.json`),
+        readFromStorage(`${TEST_EXEC_BASE}/components.json`),
+        readFromStorage(`${TEST_EXEC_BASE}/jira_config.json`),
+        readFromStorage(`${TEST_EXEC_BASE}/meta.json`),
+        readFromStorage(`${TEST_EXEC_BASE}/last-upload.json`)
       ]);
 
-      return res.json({ heatmap: heatmap || {}, components: components || {}, jira_config: jira_config || {}, meta: meta || {}, lastUpload });
-
+      return res.json({
+        heatmap: heatmap || null,
+        components: components || null,
+        jira_config: jira_config || null,
+        meta: meta || null,
+        lastUpload: lastUpload || null
+      });
     } catch (error) {
       console.error('[system-health/quality] Error reading test execution data:', error.message);
       return res.status(500).json({ error: 'Failed to read data' });
@@ -702,109 +716,17 @@ module.exports = function registerQualityRoutes(router, context) {
 
   /**
    * @openapi
-   * /api/modules/system-health/quality/test-execution/html/{page}:
+   * /api/modules/system-health/quality/test-execution/status:
    *   get:
-   *     summary: Serve test execution dashboard HTML pages
-   *     description: |
-   *       Serves the dashboard HTML files (index.html, component.html) from storage.
-   *       This provides a reliable way to serve the dashboard when static file serving
-   *       is not available (e.g., when SPA fallback intercepts /test-dashboard/ requests).
+   *     summary: Test execution data freshness
+   *     description: Returns the last upload receipt for admin/settings visibility.
    *     tags: [System Health - Test Execution]
-   *     parameters:
-   *       - name: page
-   *         in: path
-   *         required: true
-   *         schema: { type: string, enum: [index, component] }
    *     responses:
    *       200:
-   *         description: HTML dashboard page
-   *         content:
-   *           text/html:
-   *             schema: { type: string }
-   *       404:
-   *         description: Page not found
+   *         description: Last upload metadata
    */
-  router.get('/test-execution/html/:page', requireAuth, requireScope('system-health:read'), async function(req, res) {
-    // Strip .html extension if present (allows both /html/component and /html/component.html)
-    const page = req.params.page.replace(/\.html$/, '');
-    const validPages = ['index', 'component'];
-
-    if (!validPages.includes(page)) {
-      return res.status(404).json({ error: 'Page not found. Valid pages: ' + validPages.join(', ') });
-    }
-
-    try {
-      const basePath = 'system-health/test-execution';
-      const html = await readFromStorage(`${basePath}/${page}.html`);
-
-      if (!html) {
-        return res.status(404).json({ error: `${page}.html not found in storage. Upload HTML files first.` });
-      }
-
-      res.type('html');
-      res.set('Cache-Control', 'no-cache, no-store, must-revalidate');
-      res.set('Content-Security-Policy', "default-src 'self'; script-src 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com; style-src 'unsafe-inline'; connect-src 'self'; img-src 'self' data:; frame-ancestors 'self';");
-      return res.send(html);
-    } catch (error) {
-      console.error('[system-health/quality] Error reading HTML:', error.message);
-      return res.status(500).json({ error: 'Failed to read HTML page' });
-    }
-  });
-
-  /**
-   * @openapi
-   * /api/modules/system-health/quality/test-execution/html-upload:
-   *   post:
-   *     summary: Upload test execution dashboard HTML files
-   *     description: Admin-only endpoint to upload dashboard HTML files from CI pipeline
-   *     tags: [System Health - Test Execution]
-   *     security:
-   *       - bearerAuth: []
-   *     requestBody:
-   *       required: true
-   *       content:
-   *         application/json:
-   *           schema:
-   *             type: object
-   *             properties:
-   *               index_html: { type: string, description: "Content of index.html" }
-   *               component_html: { type: string, description: "Content of component.html" }
-   *     responses:
-   *       200:
-   *         description: HTML files uploaded
-   *       401:
-   *         description: Unauthorized
-   *       403:
-   *         description: Admin access required
-   */
-  router.post('/test-execution/html-upload', requireAdmin, requireScope('system-health:write'), jsonLimit, async function(req, res) {
-    if (DEMO_MODE) {
-      return res.json({ status: 'skipped', message: 'HTML upload disabled in demo mode' });
-    }
-    try {
-      const { index_html, component_html } = req.body;
-      const basePath = 'system-health/test-execution';
-      const results = {};
-
-      if (index_html && typeof index_html === 'string') {
-        await writeToStorage(`${basePath}/index.html`, index_html);
-        results.index_html = 'uploaded';
-      }
-      if (component_html && typeof component_html === 'string') {
-        await writeToStorage(`${basePath}/component.html`, component_html);
-        results.component_html = 'uploaded';
-      }
-
-      if (Object.keys(results).length === 0) {
-        return res.status(400).json({ error: 'No HTML content provided. Expected index_html or component_html.' });
-      }
-
-      console.log(`[system-health/quality] Test execution HTML uploaded: ${Object.keys(results).join(', ')}`);
-      return res.json({ success: true, uploaded: results, timestamp: new Date().toISOString() });
-
-    } catch (error) {
-      console.error('[system-health/quality] Error uploading HTML:', error.message);
-      return res.status(500).json({ error: 'Failed to upload HTML' });
-    }
+  router.get('/test-execution/status', requireScope('system-health:read'), async function(req, res) {
+    const lastUpload = await readFromStorage(`${TEST_EXEC_BASE}/last-upload.json`);
+    return res.json(lastUpload || { uploadedAt: null, files: [] });
   });
 };
