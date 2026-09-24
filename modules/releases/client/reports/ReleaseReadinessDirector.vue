@@ -30,11 +30,6 @@
             <span class="text-[10px] font-semibold uppercase tracking-wider text-blue-200 mb-0.5">GA Date</span>
             <span class="text-sm font-bold">{{ releaseSchedule.ga_date ? formatScheduleDate(releaseSchedule.ga_date) : 'TBD' }}</span>
           </div>
-          <div class="flex flex-col items-center rounded-xl px-5 py-2.5 min-w-[90px]"
-            :class="scheduleStatusClass">
-            <span class="text-[10px] font-semibold uppercase tracking-wider text-blue-200 mb-0.5">Status</span>
-            <span class="text-sm font-bold">{{ scheduleStatusLabel }}</span>
-          </div>
         </div>
       </div>
     </div>
@@ -833,35 +828,6 @@ const overallPct = computed(() => {
 const releaseSchedule = computed(() => {
   if (!data.value || !data.value.release_schedule) return null
   return data.value.release_schedule
-})
-
-// Normalize the schedule status for display. Older/legacy payloads (and any
-// release where Product Pages could not resolve a GA date) store "Unknown",
-// which is not useful on the status bar. Fall back to a phase derived from the
-// available dates and the EA/GA nature of the version so the bar is always
-// meaningful.
-const scheduleStatusLabel = computed(() => {
-  const sched = releaseSchedule.value
-  if (!sched) return ''
-  const raw = (sched.status || '').trim()
-  if (raw && raw.toLowerCase() !== 'unknown') return raw
-
-  const today = new Date().toISOString().slice(0, 10)
-  if (sched.ga_date && sched.ga_date <= today) return 'Released'
-  if (sched.code_freeze_date && sched.code_freeze_date <= today) return 'Testing'
-  if (/\.EA\d+/i.test(sched.version || data.value?.version || '')) return 'Early Access'
-  if (sched.code_freeze_date) return 'Planning'
-  return 'Upcoming'
-})
-
-// Color the status chip by lifecycle phase rather than only greening "Released".
-const scheduleStatusClass = computed(() => {
-  const s = scheduleStatusLabel.value.toLowerCase()
-  if (s === 'released') return 'bg-emerald-500/30'
-  if (s === 'testing') return 'bg-blue-500/30'
-  if (s === 'early access') return 'bg-violet-500/30'
-  if (s === 'planning' || s === 'upcoming') return 'bg-amber-500/30'
-  return 'bg-amber-500/30'
 })
 
 const openIssuesToValidate = computed(() => {
