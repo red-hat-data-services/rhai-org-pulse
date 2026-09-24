@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed, inject, watch, onMounted } from 'vue'
+import { ref, computed, inject, watch, onMounted, onBeforeUnmount } from 'vue'
 import { apiRequest } from '@shared/client/services/api'
 import { useDraftPlans } from '../composables/useDraftPlans'
 
@@ -13,6 +13,9 @@ const {
   persist
 } = useDraftPlans()
 const moduleNav = inject('moduleNav', null)
+
+const iframeRef = ref(null)
+const DEMO_URL = '/ai-first-scheduler/index.html'
 
 const loading = ref(true)
 const error = ref(null)
@@ -124,7 +127,62 @@ const featuresInComponent = computed(() => {
   ).slice(0, 10)
 })
 
+function sendDataToIframe() {
+  const iframe = iframeRef.value
+  if (iframe && iframe.contentWindow && snapshot.value) {
+    // `snapshot` is wrapped by Vue's ref and nested values may be reactive
+    // proxies. The structured-clone algorithm used by postMessage rejects
+    // those proxies, so send a plain JSON-compatible snapshot to the iframe.
+    const cloneForIframe = (value, fallback) => {
+      try {
+        return JSON.parse(JSON.stringify(value ?? fallback))
+      } catch {
+        return fallback
+      }
+    }
+    iframe.contentWindow.postMessage({
+      type: 'ai-planner-data',
+      features: cloneForIframe(snapshot.value.features, []),
+      bugQueue: cloneForIframe(snapshot.value.bugQueue, []),
+      capacity: cloneForIframe(snapshot.value.capacity, {}),
+      cveReserve: cloneForIframe(snapshot.value.cveReserve, {}),
+      lastSyncedAt: snapshot.value.lastSyncedAt || new Date().toISOString()
+    }, window.location.origin)
+  }
+}
+
+async function handleIframeMessage(e) {
+  if (e.origin !== window.location.origin) return
+  if (e.data?.type === 'add-to-draft-plan' && e.data?.features) {
+    actionError.value = null
+    if (!await ensureDraftPlanLoaded()) {
+      actionError.value = 'Plan Approval data is unavailable. Please try again.'
+      return
+    }
+    const features = e.data.features
+    const failedFeatures = []
+    features.forEach(f => {
+      const result = approveFeature(f.key, true)
+      if (!result || !result.ok) failedFeatures.push(f.key)
+    })
+    if (failedFeatures.length) {
+      actionError.value = 'Some selected features are not available in the current Plan Approval candidate set.'
+      return
+    }
+    try {
+      await persist()
+      filterEvent.value = '__approved__'
+      if (moduleNav && moduleNav.updateParams) {
+        moduleNav.updateParams({ tab: 'draft-plans' }, { push: false })
+      }
+    } catch (err) {
+      actionError.value = 'Failed to save draft plan: ' + err.message
+    }
+  }
+}
+
 onMounted(async () => {
+  window.addEventListener('message', handleIframeMessage)
   try {
     snapshot.value = await apiRequest('/modules/releases/planning/ai-planner')
   } catch (e) {
@@ -133,10 +191,27 @@ onMounted(async () => {
     loading.value = false
   }
 })
+
+onBeforeUnmount(() => {
+  window.removeEventListener('message', handleIframeMessage)
+})
 </script>
 
 <template>
-  <div class="flex flex-col h-full bg-gray-50 dark:bg-gray-900">
+  <!-- IFRAME MODE: Shows complete demo with live data from backend -->
+  <div v-if="!loading && !error" class="h-full w-full bg-gray-50 dark:bg-gray-900">
+    <iframe
+      ref="iframeRef"
+      :src="DEMO_URL"
+      class="w-full h-full border-none rounded"
+      title="AI-First Release Planner"
+      sandbox="allow-same-origin allow-scripts allow-popups allow-forms"
+      @load="sendDataToIframe"
+    />
+  </div>
+
+  <!-- FALLBACK: Show loading/error while iframe starts -->
+  <div v-else class="flex flex-col h-full bg-gray-50 dark:bg-gray-900">
     <!-- Header -->
     <div class="px-6 py-4 border-b border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800">
       <h1 class="text-xl font-semibold dark:text-gray-100">AI-First Release Planner</h1>
@@ -213,9 +288,9 @@ onMounted(async () => {
           <label for="plan-select" class="text-sm font-medium dark:text-gray-300">Plan:</label>
           <select id="plan-select" v-model="selectedPlan" class="px-3 py-1 rounded border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-200 text-sm">
             <option>3.6 GA</option>
-            <option>3.7 EA1</option>
+            <option>3.7 EA</option>
             <option>3.7 GA</option>
-            <option>3.8 EA1</option>
+            <option>3.8 EA</option>
           </select>
         </div>
         <div class="flex-1 relative">

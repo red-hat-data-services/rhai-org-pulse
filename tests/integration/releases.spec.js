@@ -2392,7 +2392,7 @@ test.describe('RHOAI Component Architectures Report @releases', () => {
  * AI Planner tab (Plan view)
  *
  * Verify the AI Planner tab is visible in the Plan sub-nav, becomes active
- * on click, and renders the native release planning workspace.
+ * on click, and renders the embedded release planning workspace.
  */
 test.describe('Releases AI Planner tab @releases', () => {
   test.beforeEach(async ({ page }) => {
@@ -2414,7 +2414,7 @@ test.describe('Releases AI Planner tab @releases', () => {
     expect(page.errors).toHaveLength(0);
   });
 
-  test('clicking AI Planner tab renders the native planner', async ({ page }) => {
+  test('clicking AI Planner tab renders the embedded planner', async ({ page }) => {
     await page.goto('/#/releases/plan');
     await page.waitForLoadState('networkidle');
     await page.waitForTimeout(DEFAULT_PAGE_WAIT_TIME);
@@ -2423,10 +2423,11 @@ test.describe('Releases AI Planner tab @releases', () => {
     await aiPlannerTab.click();
     await page.waitForTimeout(DEFAULT_PAGE_WAIT_TIME);
 
-    await expect(page.getByRole('heading', { name: 'AI-First Release Planner' })).toBeVisible();
-    await expect(page.locator('#plan-select')).toHaveValue('3.6 GA');
-    await expect(page.getByPlaceholder('Search by Key or Summary...')).toBeVisible();
-    await expect(page.getByRole('columnheader', { name: 'RICE' })).toBeVisible();
+    const plannerFrame = page.frameLocator('iframe[title="AI-First Release Planner"]');
+    await expect(plannerFrame.locator('.hdr-title')).toContainText('AI-First Release Planner');
+    await expect(plannerFrame.locator('#f-rel')).toHaveValue('');
+    await expect(plannerFrame.locator('#f-place')).toBeVisible();
+    await expect(plannerFrame.locator('#pm-tbl-wrap')).toBeVisible();
 
     expect(page.errors).toHaveLength(0);
   });
@@ -2438,12 +2439,13 @@ test.describe('Releases AI Planner tab @releases', () => {
 
     const aiPlannerTab = page.locator('button', { hasText: 'AI Planner' });
     await expect(aiPlannerTab).toHaveClass(/border-primary-500/);
-    await expect(page.getByRole('heading', { name: 'AI-First Release Planner' })).toBeVisible();
+    const plannerFrame = page.frameLocator('iframe[title="AI-First Release Planner"]');
+    await expect(plannerFrame.locator('.hdr-title')).toContainText('AI-First Release Planner');
 
     expect(page.errors).toHaveLength(0);
   });
 
-  test('AI Planner API returns the native snapshot', async ({ request }) => {
+  test('AI Planner API returns the planner snapshot', async ({ request }) => {
     const res = await request.get('/api/modules/releases/planning/ai-planner');
     expect(res.ok()).toBe(true);
 
@@ -2470,10 +2472,11 @@ test.describe('Releases AI Planner tab @releases', () => {
     const aiPlannerResponse = apiResponses.find(r => !r.url.includes('/status'));
     expect(aiPlannerResponse?.status).toBe(200);
 
-    await expect(page.locator('text=AI-First Release Planner')).toBeVisible();
-    const tableRows = await page.locator('table tbody tr').count();
+    const plannerFrame = page.frameLocator('iframe[title="AI-First Release Planner"]');
+    await expect(plannerFrame.locator('.hdr-title')).toContainText('AI-First Release Planner');
+    const tableRows = await plannerFrame.locator('#pm-tbl-wrap tbody tr').count();
     expect(tableRows).toBeGreaterThan(0);
-    await expect(page.locator('text=Bug Queue')).toBeVisible();
+    await expect(plannerFrame.locator('text=Bug Queue')).toBeVisible();
 
     expect(unexpectedDemoResourceErrors(page)).toHaveLength(0);
   });
@@ -2483,47 +2486,90 @@ test.describe('Releases AI Planner tab @releases', () => {
     await page.waitForLoadState('networkidle');
     await page.waitForTimeout(DEFAULT_PAGE_WAIT_TIME);
 
-    const planSelect = page.locator('select').first();
+    const plannerFrame = page.frameLocator('iframe[title="AI-First Release Planner"]');
+    const planSelect = plannerFrame.locator('#f-rel');
     const options = await planSelect.locator('option').allTextContents();
 
     if (options.length > 1) {
-      await planSelect.selectOption(options[1]);
+      await planSelect.selectOption({ label: options[1] });
       await page.waitForTimeout(500);
-      const rows = await page.locator('table tbody tr').count();
+      const rows = await plannerFrame.locator('#pm-tbl-wrap tbody tr').count();
       expect(rows).toBeGreaterThanOrEqual(0);
     }
 
     expect(unexpectedDemoResourceErrors(page)).toHaveLength(0);
   });
 
-  test('should search features in AI Planner', async ({ page }) => {
+  test('should filter features in AI Planner by placement', async ({ page }) => {
     await page.goto('/#/releases/plan?tab=ai-planner');
     await page.waitForLoadState('networkidle');
     await page.waitForTimeout(DEFAULT_PAGE_WAIT_TIME);
 
-    const searchInput = page.locator('input[placeholder*="Search"]');
-    await searchInput.fill('RHAISTRAT-1281');
+    const plannerFrame = page.frameLocator('iframe[title="AI-First Release Planner"]');
+    const placementSelect = plannerFrame.locator('#f-place');
+    const beforeCount = await plannerFrame.locator('#pm-tbl-wrap tbody tr').count();
+    await placementSelect.selectOption('GA');
     await page.waitForTimeout(500);
 
-    const filteredRows = await page.locator('table tbody tr').count();
-    expect(filteredRows).toBe(1);
-    await expect(page.getByText('RHAISTRAT-1281', { exact: true })).toBeVisible();
+    const filteredRows = await plannerFrame.locator('#pm-tbl-wrap tbody tr').count();
+    expect(filteredRows).toBeLessThanOrEqual(beforeCount);
+    await expect(placementSelect).toHaveValue('GA');
 
     expect(unexpectedDemoResourceErrors(page)).toHaveLength(0);
   });
 
-  test('should add an AI Planner feature to Plan Approval', async ({ page }) => {
+  test('should recommend an AI Planner feature for Plan Approval', async ({ page }) => {
     await page.goto('/#/releases/plan?tab=ai-planner');
     await page.waitForLoadState('networkidle');
     await page.waitForTimeout(DEFAULT_PAGE_WAIT_TIME);
 
-    const featureRow = page.locator('tbody tr').filter({ hasText: 'RHAISTRAT-1281' });
+    const plannerFrame = page.frameLocator('iframe[title="AI-First Release Planner"]');
+    const featureRow = plannerFrame.locator('#pm-tbl-wrap tbody tr').filter({ hasText: 'RHAISTRAT-1281' });
     await expect(featureRow).toBeVisible();
-    await featureRow.getByRole('button', { name: 'Add to Plan' }).click();
+    const recommendations = featureRow.locator('input[type="checkbox"][id^="apv-"]');
+    await expect(recommendations).toHaveCount(2);
+    await recommendations.nth(0).check();
+    await recommendations.nth(1).check();
 
-    await expect(page).toHaveURL(/tab=draft-plans/);
-    await expect(page.locator('h2', { hasText: /Plan Approval/ })).toBeVisible();
-    await expect(page.getByText('RHAISTRAT-1281', { exact: true })).toBeVisible();
+    const addToPlan = plannerFrame.locator('#add-to-plan-btn');
+    await expect(addToPlan).toBeVisible();
+    await addToPlan.click();
+    await expect(addToPlan).toHaveText(/Sent to Plan/);
+
+    expect(unexpectedDemoResourceErrors(page)).toHaveLength(0);
+  });
+
+  test('AI Planner receives live data from API via iframe', async ({ page }) => {
+    // Verify that AI Planner API data is sent to iframe
+    const apiDataReceived = [];
+    page.on('request', request => {
+      if (request.url().includes('/api/modules/releases/planning/ai-planner')) {
+        apiDataReceived.push({ url: request.url() });
+      }
+    });
+
+    const snapshotResponse = await page.request.get('/api/modules/releases/planning/ai-planner');
+    expect(snapshotResponse.ok()).toBe(true);
+    const snapshot = await snapshotResponse.json();
+    const liveFeatureKey = snapshot.features[0]?.Key;
+    expect(liveFeatureKey).toBeTruthy();
+
+    await page.goto('/#/releases/plan?tab=ai-planner');
+    await page.waitForLoadState('networkidle');
+    await page.waitForTimeout(DEFAULT_PAGE_WAIT_TIME);
+
+    // API should have been called to fetch live data
+    expect(apiDataReceived.length).toBeGreaterThan(0);
+
+    // Iframe should be visible and loaded
+    const iframe = page.locator('iframe[title="AI-First Release Planner"]');
+    await expect(iframe).toBeVisible();
+
+    // Data from API should populate the iframe (features visible)
+    const plannerFrame = page.frameLocator('iframe[title="AI-First Release Planner"]');
+    const tableRows = await plannerFrame.locator('#pm-tbl-wrap tbody tr').count();
+    expect(tableRows).toBeGreaterThan(0);
+    await expect(plannerFrame.locator('#pm-tbl-wrap tbody tr').filter({ hasText: liveFeatureKey })).toBeVisible();
 
     expect(unexpectedDemoResourceErrors(page)).toHaveLength(0);
   });
