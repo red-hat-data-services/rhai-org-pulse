@@ -39,6 +39,10 @@ const PACKAGE_ONBOARDING_PROJECT = '78041351';
 const PACKAGE_ONBOARDING_BASE_URL = 'https://gitlab.com';
 
 const JIRA_KEY_RE = /^[A-Z][A-Z0-9]+-\d+$/;
+// Jira accounts are keyed by @redhat.com. The OAuth proxy may present the
+// requester under AUTH_EMAIL_DOMAIN (e.g. user@cluster.local), so the local
+// part is re-homed onto this domain before any Jira lookup.
+const JIRA_EMAIL_DOMAIN = 'redhat.com';
 const SAFE_IDENTIFIER_RE = /^[a-zA-Z0-9][a-zA-Z0-9._-]*$/;
 const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
 const PACKAGE_SOURCES = ['pypi', 'git', 'other'];
@@ -398,21 +402,53 @@ function buildDuplicateJql(packageName, jiraProject = DEFAULT_JIRA_PROJECT) {
 // --- External operations (injectable for tests) ---
 
 /**
+ * Map an authenticated identity onto the Jira email domain.
+ * user@cluster.local (AUTH_EMAIL_DOMAIN) becomes user@redhat.com; addresses
+ * already on the Jira domain are returned lowercased and trimmed.
+ */
+function normalizeRequesterEmail(email) {
+  const value = String(email || '').toLowerCase().trim();
+  const at = value.indexOf('@');
+  if (at <= 0) return value;
+  const local = value.slice(0, at);
+  const domain = value.slice(at + 1);
+  if (!domain || domain === JIRA_EMAIL_DOMAIN) return value;
+  return local + '@' + JIRA_EMAIL_DOMAIN;
+}
+
+/**
  * Resolve the requester's Jira accountId via user search.
- * Non-fatal: returns null when the user cannot be resolved.
+ * Matches on emailAddress when Jira exposes it; when the profile hides the
+ * address and the search returns exactly one Atlassian account, that account
+ * is used. Non-fatal: returns null when the user cannot be resolved.
  */
 async function findReporterAccountId(jira, email) {
   try {
     const params = new URLSearchParams({ query: email, maxResults: '10' });
     const data = await jira.jiraRequest(`/rest/api/3/user/search?${params}`);
-    const users = Array.isArray(data) ? data : [];
-    const match = users.find(u => u && u.emailAddress &&
+    const users = (Array.isArray(data) ? data : []).filter(u => u && u.accountId);
+    const match = users.find(u => u.emailAddress &&
       u.emailAddress.toLowerCase() === email.toLowerCase());
-    return match ? match.accountId : null;
+    if (match) return match.accountId;
+    const candidates = users.filter(u => u.accountType === 'atlassian' && u.active !== false);
+    if (candidates.length === 1 && !candidates[0].emailAddress) {
+      return candidates[0].accountId;
+    }
+    console.warn(`[package-requests] No Jira account matched requester ${email}; Epic will use the default reporter`);
+    return null;
   } catch (err) {
     console.warn('[package-requests] Jira user search failed:', err.message);
     return null;
   }
+}
+
+/**
+ * True when Jira rejected issue creation because of the reporter field
+ * (typically the service account lacks the Modify Reporter permission).
+ */
+function isReporterRejection(err) {
+  const msg = String((err && err.message) || '');
+  return /Jira API error \(400\)/.test(msg) && /"reporter"/i.test(msg);
 }
 
 /**
@@ -893,7 +929,12 @@ module.exports = function registerPackageRequestRoutes(router, context, deps = {
    *       200:
    *         description: Warning when the package is already in a production index (no Epic created), or deterministic demo-mode success
    *       201:
-   *         description: Epic created; onboarding pipeline triggered (or failure reported non-fatally)
+   *         description: >-
+   *           Epic created; onboarding pipeline triggered (or failure reported
+   *           non-fatally). reporter_set reports whether the Epic reporter was
+   *           set to the requester. The requester is mapped onto @redhat.com
+   *           before the Jira user lookup, so identities presented under
+   *           AUTH_EMAIL_DOMAIN (e.g. user@cluster.local) still resolve.
    *       400:
    *         description: Request body is not a JSON object
    *       401:
@@ -916,10 +957,14 @@ module.exports = function registerPackageRequestRoutes(router, context, deps = {
   router.post('/package-requests', requireAuth, async function(req, res) {
     let pendingEmail = null;
     try {
-      const email = String(req.userEmail || (req.user && req.user.email) || '').toLowerCase().trim();
-      if (!email) {
+      const authEmail = String(req.userEmail || (req.user && req.user.email) || '').toLowerCase().trim();
+      if (!authEmail) {
         return res.status(401).json({ error: 'Authentication required. No user email available.' });
       }
+      // The normalized email is used for everything that follows: rate
+      // limiting, Jira lookups, and the Epic description. Mapping onto the Jira
+      // domain also keeps one person on one cooldown regardless of domain.
+      const email = normalizeRequesterEmail(authEmail);
 
       if (req.body !== undefined && req.body !== null &&
           (typeof req.body !== 'object' || Array.isArray(req.body))) {
@@ -963,6 +1008,7 @@ module.exports = function registerPackageRequestRoutes(router, context, deps = {
           requester: email,
           summary: buildEpicSummary(request.packageName, request.extras),
           jira: { key: jiraProject + '-DEMO', url: null, project: jiraProject },
+          reporter_set: false,
           pipeline: { triggered: false, reason: 'demo mode' }
         });
       }
@@ -1042,19 +1088,32 @@ module.exports = function registerPackageRequestRoutes(router, context, deps = {
         }
       }
 
-      // Resolve the reporter from the authenticated email (non-fatal).
+      // Resolve the reporter from the requester email (non-fatal).
       const reporterAccountId = await findReporterAccountId(jira, email);
 
-      // Create the Epic in the configured Jira project.
-      const fields = buildEpicFields(request, email, { jiraHost, reporterAccountId, jiraProject });
+      // Create the Epic in the configured Jira project. If Jira rejects the
+      // reporter field, retry once without it so the request is still filed.
+      let fields = buildEpicFields(request, email, { jiraHost, reporterAccountId, jiraProject });
       let created;
       try {
         created = await jira.jiraRequest('/rest/api/3/issue', { method: 'POST', body: { fields } });
       } catch (err) {
-        console.error('[package-requests] Jira Epic creation failed:', err.message);
-        return res.status(502).json({ error: 'Failed to create Jira Epic: ' + err.message });
+        if (fields.reporter && isReporterRejection(err)) {
+          console.warn('[package-requests] Jira rejected the reporter field; retrying without it:', err.message);
+          fields = buildEpicFields(request, email, { jiraHost, jiraProject });
+          try {
+            created = await jira.jiraRequest('/rest/api/3/issue', { method: 'POST', body: { fields } });
+          } catch (retryErr) {
+            console.error('[package-requests] Jira Epic creation failed:', retryErr.message);
+            return res.status(502).json({ error: 'Failed to create Jira Epic: ' + retryErr.message });
+          }
+        } else {
+          console.error('[package-requests] Jira Epic creation failed:', err.message);
+          return res.status(502).json({ error: 'Failed to create Jira Epic: ' + err.message });
+        }
       }
       const epicKey = created.key;
+      const reporterSet = Boolean(fields.reporter);
 
       // Jira confirmed creation. Start the cooldown before optional follow-up
       // work so non-fatal release-target or pipeline failures retain it.
@@ -1110,6 +1169,7 @@ module.exports = function registerPackageRequestRoutes(router, context, deps = {
           project: jiraProject
         },
         related_issue: related,
+        reporter_set: reporterSet,
         release_target_set: releaseTargetSet,
         pipeline
       });
@@ -1139,6 +1199,8 @@ module.exports._testExports = {
   findDuplicateRequests,
   validateRelatedIssue,
   findReporterAccountId,
+  normalizeRequesterEmail,
+  isReporterRejection,
   triggerOnboardingPipeline,
   getGitLabConfig,
   getGitlabToken,
