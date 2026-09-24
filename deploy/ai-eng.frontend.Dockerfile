@@ -17,9 +17,7 @@ COPY platform/ ./platform/
 # Add all non-core modules (core builder already has team-tracker)
 COPY modules/ ./modules/
 
-# Include AI Eng static assets in the production bundle. The base builder's
-# public directory only contains core assets, so module-owned public pages
-# would otherwise be missing from the nginx image.
+# Add public assets (includes AI-First scheduler demo)
 COPY public/ ./public/
 
 RUN npm run build
