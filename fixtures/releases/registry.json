@@ -9,7 +9,8 @@
       "productPagesShortname": "rhoai",
       "milestones": {
         "ga": "2026-03-21",
-        "codeFreeze": "2026-02-21"
+        "codeFreeze": "2026-02-21",
+        "planningFreeze": "2026-01-24"
       },
       "state": "archived",
       "fixVersions": [
@@ -22,7 +23,8 @@
       "productPagesShortname": "rhoai",
       "milestones": {
         "ga": "2026-04-24",
-        "codeFreeze": "2026-03-14"
+        "codeFreeze": "2026-03-14",
+        "planningFreeze": "2026-02-14"
       },
       "state": "archived",
       "fixVersions": [
@@ -35,7 +37,8 @@
       "productPagesShortname": "rhoai",
       "milestones": {
         "ga": "2026-08-12",
-        "codeFreeze": "2026-07-28"
+        "codeFreeze": "2026-07-28",
+        "planningFreeze": "2026-06-26"
       },
       "state": "archived",
       "fixVersions": [

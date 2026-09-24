@@ -44,15 +44,21 @@ async function fetchMaturityMapping(token) {
       })
     }
 
-    if (!Array.isArray(component.deliverables)) continue
-    for (const deliverable of component.deliverables) {
-      if (!Array.isArray(deliverable.images)) continue
-      for (const image of deliverable.images) {
-        if (typeof image !== 'string') continue
-        const shortName = image.split('/').pop()
-        if (shortName) {
-          mapping[shortName] = component.name
-        }
+    // Map from the component-level `images` array. This is the authoritative
+    // superset: the maturity tool accepts images at the component level even
+    // when they are not wired to a specific deliverable (it flags these with a
+    // "evaluation-target-not-in-deliverable / accepted at component level"
+    // info-level mapping_problem). Reading only `deliverables[].images[]` would
+    // miss those component-level-only images (e.g. odh-cli-rhel9 under
+    // "AI Core Platform"), leaving their Konflux components unmatched.
+    const images = Array.isArray(component.images)
+      ? component.images
+      : []
+    for (const image of images) {
+      if (typeof image !== 'string') continue
+      const shortName = image.split('/').pop()
+      if (shortName) {
+        mapping[shortName] = component.name
       }
     }
   }

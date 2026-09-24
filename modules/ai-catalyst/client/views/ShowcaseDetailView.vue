@@ -111,7 +111,7 @@
       <div class="mb-6">
         <h2 class="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-2">Tags</h2>
         <div class="flex flex-wrap gap-2">
-          <PillBadge v-if="pillar" :label="pillar.title" variant="strategy" />
+          <PillBadge v-if="pillar" :label="pillar.title" :color="pillar.color" variant="strategy" />
           <PillBadge v-if="lineageLabel" :label="lineageLabel" variant="lineage" />
           <PillBadge v-for="tag in entry.customerNeedTags" :key="'n-' + tag" :label="tag" variant="need" />
           <PillBadge v-for="tag in entry.capabilityTags" :key="'c-' + tag" :label="tag" variant="capability" />

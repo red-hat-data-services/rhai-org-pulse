@@ -92,8 +92,8 @@ export var OKR_DATA = {
           measure: '',
           quarters: { Q1: emptyQuarter(), Q2: emptyQuarter(), Q3: emptyQuarter(), Q4: emptyQuarter() },
           keyResults: [
-            { id: 'kr-iqu-1', label: 'KR1', description: '90% reduction in bugs (Functional, UX, Regressions) discovered post-release by the field', quarters: { Q1: emptyQuarter(), Q2: emptyQuarter(), Q3: emptyQuarter(), Q4: emptyQuarter() } },
-            { id: 'kr-iqu-2', label: 'KR2', description: '>90% of planned features for a release are delivered in the target release', quarters: { Q1: emptyQuarter(), Q2: emptyQuarter(), Q3: emptyQuarter(), Q4: emptyQuarter() } }
+            { id: 'kr-iqu-1', label: 'KR1', description: '90% reduction in bugs (Functional, UX, Regressions) discovered post-release by the field', editable: true, quarters: { Q1: emptyQuarter(), Q2: emptyQuarter(), Q3: emptyQuarter(), Q4: emptyQuarter() } },
+            { id: 'kr-iqu-2', label: 'KR2', description: '>90% of planned features for a release are delivered in the target release', editable: true, quarters: { Q1: emptyQuarter(), Q2: emptyQuarter(), Q3: emptyQuarter(), Q4: emptyQuarter() } }
           ]
         },
         {

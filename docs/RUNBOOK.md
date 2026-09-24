@@ -258,6 +258,7 @@ Secrets are managed via the **Vault Secrets Operator (VSO)**. Each secret is def
 | `PRODUCT_PAGES_CLIENT_ID` | Optional | Product Pages OAuth client ID |
 | `PRODUCT_PAGES_CLIENT_SECRET` | Optional | Product Pages OAuth client secret |
 | `SMARTSHEET_API_TOKEN` | Optional | Release discovery |
+| `CUSTOMER_PORTAL_OFFLINE_TOKEN` | Optional | Resolve customer names from Jira Linked Cases via the Red Hat Support API (v3 with v1 fallback during the CRM transition) |
 | `FEATURE_TRAFFIC_GITLAB_TOKEN` | Optional | Override GitLab token for CI artifacts |
 | `GITLAB_CEE_REDHAT_DOCS_TOKEN` | Optional | Internal GitLab instance token |
 | `GOOGLE_OAUTH_CLIENT_ID` | Optional | Customer insights OAuth |
@@ -266,6 +267,13 @@ Secrets are managed via the **Vault Secrets Operator (VSO)**. Each secret is def
 | `GOOGLE_SPREADSHEET_ID` | Optional | Google Spreadsheet ID for roster enrichment data |
 | `MODELS_CORP_API_KEY` | Optional | Granite AI (customer insights) |
 | `MODELS_CORP_BASE_URL` | Optional | Granite AI base URL |
+| `WORKFLOW_VALIDATION_OPENSEARCH_USERNAME` | Required for workflow validation | Read-only OpenSearch HTTP Basic username |
+| `WORKFLOW_VALIDATION_OPENSEARCH_PASSWORD` | Required for workflow validation | Read-only OpenSearch HTTP Basic password |
+
+The workflow-validation credentials must be added to the existing
+`rhai-org-pulse-admins/org-pulse` Vault path and included in the
+`team-tracker-secrets` `VaultStaticSecret` definition in the GitOps repository.
+Do not copy the ingest credentials or commit either value to this repository.
 
 ### Other Secrets
 

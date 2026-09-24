@@ -861,3 +861,211 @@ test.describe('OpenDataHub E2E Health Features @system-health', () => {
     expect(page.errors).toHaveLength(0);
   });
 });
+
+/**
+ * Test Execution Dashboard Feature Tests
+ *
+ * The Test Execution Dashboard is a Vue-rendered view (no iframe) fed by JSON
+ * that an external pipeline pushes to the org-pulse API. These tests verify:
+ *   - the "Test Execution Dashboard (Beta)" nav item is visible and clickable
+ *   - the dashboard view loads and renders (heatmap / empty state)
+ *   - component drill-down navigation reaches the detail route
+ *   - the JSON API endpoints (/test-execution/data, /test-execution/status)
+ *     return the expected data / status
+ */
+test.describe('Test Execution Dashboard @system-health', () => {
+  test.beforeEach(async ({ page }) => {
+    setupErrorTracking(page);
+  });
+
+  test.afterEach(async ({ page }, testInfo) => {
+    logCapturedErrors(page, testInfo);
+  });
+
+  test('should show Test Execution Dashboard (Beta) nav item is visible and clickable', async ({ page }) => {
+    await page.goto('/');
+    await page.waitForLoadState('networkidle');
+    await page.waitForTimeout(DEFAULT_PAGE_WAIT_TIME);
+
+    // Expand the System Health module if it is collapsed
+    const moduleHeader = page.locator('aside nav button, aside nav a').filter({ hasText: /System Health/i }).first();
+    if (await moduleHeader.count() > 0) {
+      await moduleHeader.click();
+      await page.waitForTimeout(500);
+    }
+
+    // The nav item should be present and labelled "Test Execution Dashboard (Beta)"
+    const testExecNav = page.locator('aside nav button, aside nav a').filter({ hasText: /Test Execution/i });
+    expect(await testExecNav.count()).toBeGreaterThan(0);
+    await expect(testExecNav.first()).toBeVisible();
+
+    // Clicking it routes to the test-execution view
+    await testExecNav.first().click();
+    await page.waitForLoadState('networkidle');
+    await page.waitForTimeout(DEFAULT_PAGE_WAIT_TIME);
+    expect(page.url()).toMatch(/system-health.*test-execution/i);
+
+    expect(page.errors).toHaveLength(0);
+  });
+
+  test('should load the Test Execution Dashboard view', async ({ page }) => {
+    await page.goto('/#/system-health/test-execution');
+    await page.waitForLoadState('networkidle');
+    await page.waitForTimeout(DEFAULT_PAGE_WAIT_TIME);
+
+    // Main content renders
+    expect(await mainContentIsVisible(page)).toBe(true);
+
+    // Header with the Beta label is always present
+    const heading = page.locator('h1').filter({ hasText: /Test Execution/i });
+    expect(await heading.count()).toBeGreaterThan(0);
+    expect(await page.locator('text=/Beta/i').count()).toBeGreaterThan(0);
+
+    // It is a Vue view, NOT the old iframe dashboard
+    expect(await page.locator('iframe').count()).toBe(0);
+
+    // Loading spinner must not be stuck
+    expect(await pageLoadComplete(page)).toBe(true);
+
+    expect(page.errors).toHaveLength(0);
+  });
+
+  test('should render heatmap data or a clear empty state', async ({ page }) => {
+    await page.goto('/#/system-health/test-execution');
+    await page.waitForLoadState('networkidle');
+    await page.waitForTimeout(DEFAULT_PAGE_WAIT_TIME);
+
+    // With data → the component heatmap table renders; without data → the
+    // view shows its "no data" message. Either is a valid, non-broken render.
+    const hasTable = await page.locator('table').count() > 0;
+    const hasEmptyState = await page.locator('text=/No test execution data|No data available/i').count() > 0;
+    expect(hasTable || hasEmptyState).toBe(true);
+
+    expect(page.errors).toHaveLength(0);
+  });
+
+  test('should navigate to a component detail view when a component is clicked', async ({ page }) => {
+    await page.goto('/#/system-health/test-execution');
+    await page.waitForLoadState('networkidle');
+    await page.waitForTimeout(DEFAULT_PAGE_WAIT_TIME);
+
+    // Component names are rendered as links in the heatmap's first column.
+    const componentLink = page.locator('table a, table tbody tr td:first-child a').first();
+    if (await componentLink.count() === 0) {
+      console.log('No component rows present (no data uploaded) — skipping drill-down navigation check');
+      return;
+    }
+
+    await componentLink.click();
+    await page.waitForLoadState('networkidle');
+    await page.waitForTimeout(DEFAULT_PAGE_WAIT_TIME);
+
+    // Drill-down routes to the hidden test-execution-detail view with a component param
+    expect(page.url()).toMatch(/test-execution-detail/i);
+    expect(await mainContentIsVisible(page)).toBe(true);
+
+    expect(page.errors).toHaveLength(0);
+  });
+
+  test('should load the component detail view directly with a component param', async ({ page }) => {
+    await page.goto('/#/system-health/test-execution-detail?component=AI%20Hub');
+    await page.waitForLoadState('networkidle');
+    await page.waitForTimeout(DEFAULT_PAGE_WAIT_TIME);
+
+    // Renders without error; either the detail content or a graceful no-data
+    // message for that component is acceptable.
+    expect(await mainContentIsVisible(page)).toBe(true);
+    const hasBack = await page.locator('text=/Back to heatmap|Back/i').count() > 0;
+    const hasHeading = await page.locator('h1, h2, h3').count() > 0;
+    expect(hasBack || hasHeading).toBe(true);
+
+    expect(page.errors).toHaveLength(0);
+  });
+
+  // ─── JSON API tests (current endpoints) ───
+
+  test('GET /test-execution/data should return the combined data structure', async ({ request }) => {
+    const response = await request.get('/api/modules/system-health/quality/test-execution/data');
+
+    // 200 (served) or 401 (auth required in some environments)
+    if (response.status() === 401) {
+      expect(response.status()).toBe(401);
+      return;
+    }
+    expect(response.status()).toBe(200);
+    const data = await response.json();
+    // Combined payload exposes these keys (values may be null before first upload)
+    expect(data).toHaveProperty('heatmap');
+    expect(data).toHaveProperty('components');
+    expect(data).toHaveProperty('jira_config');
+    expect(data).toHaveProperty('meta');
+  });
+
+  test('GET /test-execution/data?file=meta should return a single payload', async ({ request }) => {
+    const response = await request.get('/api/modules/system-health/quality/test-execution/data?file=meta');
+
+    if (response.status() === 401) {
+      expect(response.status()).toBe(401);
+      return;
+    }
+    expect(response.status()).toBe(200);
+    const data = await response.json();
+    expect(typeof data).toBe('object');
+  });
+
+  test('GET /test-execution/data with an invalid file should return 400', async ({ request }) => {
+    const response = await request.get('/api/modules/system-health/quality/test-execution/data?file=invalid');
+
+    if (response.status() === 401) {
+      expect(response.status()).toBe(401);
+      return;
+    }
+    expect(response.status()).toBe(400);
+    const data = await response.json();
+    expect(data).toHaveProperty('error');
+  });
+
+  test('GET /test-execution/status should return the upload receipt shape', async ({ request }) => {
+    const response = await request.get('/api/modules/system-health/quality/test-execution/status');
+
+    if (response.status() === 401) {
+      expect(response.status()).toBe(401);
+      return;
+    }
+    expect(response.status()).toBe(200);
+    const data = await response.json();
+    // Always an object; after an upload it carries { uploadedAt, files, ... }
+    expect(typeof data).toBe('object');
+    expect(data).toHaveProperty('files');
+  });
+
+  test('POST /test-execution/bulk should require the write scope or skip in demo mode', async ({ request }) => {
+    const response = await request.post('/api/modules/system-health/quality/test-execution/bulk', {
+      data: { meta: { test: true } }
+    });
+
+    // Demo mode → guarded skip (200); otherwise scope enforcement (401/403);
+    // or accepted (200 ok) when the caller is authorized.
+    if (response.status() === 200) {
+      const data = await response.json();
+      expect(['skipped', 'ok']).toContain(data.status);
+    } else {
+      expect([401, 403]).toContain(response.status());
+    }
+  });
+
+  test('POST /test-execution/bulk with an empty body should be rejected or guarded', async ({ request }) => {
+    const response = await request.post('/api/modules/system-health/quality/test-execution/bulk', {
+      data: {}
+    });
+
+    if (response.status() === 200) {
+      // Demo-mode guard short-circuits before validation
+      const data = await response.json();
+      expect(data.status).toBe('skipped');
+    } else {
+      // Auth/scope (401/403) or the handler's "no data provided" validation (400)
+      expect([400, 401, 403]).toContain(response.status());
+    }
+  });
+});

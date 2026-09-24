@@ -223,7 +223,7 @@ describe('RhoaiComponentArchitecturesReport', () => {
     }
   })
 
-  it('every table header cell is sticky so headers follow while scrolling', async () => {
+  it('table headers are not sticky — tables render as regular full-height HTML tables', async () => {
     const components = [
       makeComp('odh-kserve-controller', 'Serving Orchestration'),
       makeComp('odh-unknown', null)
@@ -235,13 +235,12 @@ describe('RhoaiComponentArchitecturesReport', () => {
     const wrapper = mountReport()
     await flushPromises()
 
-    // Sticky must be on the <th> cells (browsers do not reliably honor sticky on
-    // <thead>), so guard that every header cell in every table carries it.
+    // The tables are regular HTML tables: headers must not float/follow while
+    // scrolling, so no header cell in any table may carry sticky positioning.
     const ths = wrapper.findAll('table thead th')
     expect(ths.length).toBeGreaterThan(0)
     for (const th of ths) {
-      expect(th.classes()).toContain('sticky')
-      expect(th.classes()).toContain('top-0')
+      expect(th.classes()).not.toContain('sticky')
     }
   })
 
@@ -848,7 +847,7 @@ describe('RhoaiComponentArchitecturesReport', () => {
     expect(gap).toBeGreaterThanOrEqual(10)
   })
 
-  it('main table thead has sticky positioning', async () => {
+  it('main table thead is not sticky (regular HTML table header)', async () => {
     mockData.value = makeData([makeComp('odh-kserve-controller', 'Serving')], {
       allProductComponents: [pcObj('Serving')]
     })
@@ -856,15 +855,17 @@ describe('RhoaiComponentArchitecturesReport', () => {
     await flushPromises()
 
     const thead = wrapper.find('table thead')
-    expect(thead.classes()).toContain('sticky')
-    expect(thead.classes()).toContain('top-0')
+    expect(thead.exists()).toBe(true)
+    expect(thead.classes()).not.toContain('sticky')
+    expect(thead.classes()).not.toContain('top-0')
   })
 
-  it('every table scroll container caps height with a fixed rem so it reliably scrolls internally', async () => {
-    // Regression: a viewport-relative cap (max-h-[calc(100vh-16rem)]) is huge on
-    // large monitors, so short tables never scrolled internally and their sticky
-    // headers (scoped to this box) never pinned. A fixed rem cap guarantees the
-    // box scrolls once the table exceeds it, so headers actually follow.
+  it('tables have no height cap or vertical scroll box so they render as regular full-height tables', async () => {
+    // The tables used to sit in max-h-[32rem] scroll boxes so their sticky
+    // headers could pin. They are now regular HTML tables: the wrapper must not
+    // cap the height or scroll vertically, so the table grows with its content
+    // and the header scrolls away with the page (only horizontal overflow on
+    // narrow screens is allowed).
     const components = [
       makeComp('odh-kserve-controller', 'Serving Orchestration'),
       makeComp('odh-unknown', null)
@@ -878,14 +879,12 @@ describe('RhoaiComponentArchitecturesReport', () => {
     const scrollDivs = wrapper.findAll('table').map(t => t.element.parentElement)
     expect(scrollDivs.length).toBeGreaterThan(0)
     for (const scrollDiv of scrollDivs) {
-      expect(scrollDiv.className).toContain('overflow-auto')
-      // Fixed rem cap (e.g. max-h-[32rem]) — never a viewport-relative calc.
-      expect(scrollDiv.className).toMatch(/max-h-\[\d+rem\]/)
-      expect(scrollDiv.className).not.toMatch(/max-h-\[calc\(100vh/)
+      expect(scrollDiv.className).not.toMatch(/max-h-\[/)
+      expect(scrollDiv.className).not.toContain('overflow-auto')
     }
   })
 
-  it('corner header cells have dual-axis sticky when maturity data exists', async () => {
+  it('corner header cells are not sticky when maturity data exists', async () => {
     mockData.value = makeData([makeComp('odh-kserve-controller', 'Serving')], {
       allProductComponents: [pcObj('Serving')]
     })
@@ -893,10 +892,229 @@ describe('RhoaiComponentArchitecturesReport', () => {
     await flushPromises()
 
     const ths = wrapper.findAll('table thead th')
-    expect(ths[0].classes()).toContain('sticky')
-    expect(ths[0].classes()).toContain('left-0')
-    expect(ths[0].classes()).toContain('top-0')
-    expect(ths[1].classes()).toContain('sticky')
-    expect(ths[1].classes()).toContain('top-0')
+    expect(ths.length).toBeGreaterThan(1)
+    expect(ths[0].classes()).not.toContain('sticky')
+    expect(ths[1].classes()).not.toContain('sticky')
+  })
+
+  it('handles loading, error, and missing branch data states', async () => {
+    mockLoading.value = true
+    const loadingWrapper = mountReport()
+    expect(loadingWrapper.find('.animate-spin').exists()).toBe(true)
+
+    mockLoading.value = false
+    mockError.value = 'Unable to fetch report'
+    const errorWrapper = mountReport()
+    expect(errorWrapper.text()).toContain('Unable to fetch report')
+
+    mockError.value = null
+    mockData.value = { source: null, branches: null, maturity: null }
+    const emptyWrapper = mountReport()
+    await flushPromises()
+    expect(emptyWrapper.find('table').exists()).toBe(true)
+    expect(emptyWrapper.findAll('tbody tr')).toHaveLength(0)
+  })
+
+  it('sorts and falls back safely for non-release branch names', async () => {
+    const branch = {
+      reportAvailable: true,
+      components: [makeComp('odh-kserve-controller', null)],
+      summary: { totalComponents: 1, fullMultiArch: 0, withExceptions: 0, withIncompatible: 0, withNotBuilt: 1 }
+    }
+    mockData.value = {
+      source: { owner: 'red-hat-data-services', repo: 'konflux-central' },
+      branches: { main: branch, 'rhoai-3.5': branch },
+      maturity: { available: false, allProductComponents: [] }
+    }
+    const wrapper = mountReport()
+    await flushPromises()
+    expect(wrapper.findAll('select option').map(option => option.text())).toEqual(['rhoai-3.5', 'main'])
+  })
+
+  it('invokes back and refresh actions from the report header', async () => {
+    mockData.value = makeData([makeComp('odh-kserve-controller', null)], {
+      maturityAvailable: false,
+      allProductComponents: []
+    })
+    const wrapper = mountReport()
+    await flushPromises()
+
+    await wrapper.find('button[title="Back to Reports"]').trigger('click')
+    expect(wrapper.vm.nav.navigateTo).toHaveBeenCalledWith('reports')
+    await wrapper.findAll('button').find(button => button.text().includes('Refresh')).trigger('click')
+    expect(mockRefresh).toHaveBeenCalledTimes(1)
+  })
+
+  it('scrolls to mismatch cards when summary tiles are activated', async () => {
+    const components = [
+      makeComp('odh-kserve-controller', 'Serving Orchestration'),
+      makeComp('odh-unknown', null)
+    ]
+    mockData.value = makeData(components, {
+      allProductComponents: [pcObj('Data Connect Hub'), pcObj('Serving Orchestration')]
+    })
+    const wrapper = mountReport()
+    await flushPromises()
+
+    const scrollIntoView = vi.fn()
+    const originalGetElementById = document.getElementById
+    document.getElementById = vi.fn(() => ({ scrollIntoView }))
+    try {
+      const tiles = wrapper.findAll('div[role="link"]')
+      await tiles.find(tile => tile.text().includes('Missing in Konflux')).trigger('click')
+      await tiles.find(tile => tile.text().includes('Unknown Product Component')).trigger('keydown.enter')
+      expect(scrollIntoView).toHaveBeenCalledWith({ behavior: 'smooth', block: 'start' })
+    } finally {
+      document.getElementById = originalGetElementById
+    }
+  })
+
+  it('filters empty and unmapped sections by search text', async () => {
+    const components = [makeComp('odh-kserve-controller', 'Serving Orchestration'), makeComp('odh-dashboard', null)]
+    mockData.value = makeData(components, {
+      allProductComponents: [pcObj('Data Connect Hub'), pcObj('Serving Orchestration')]
+    })
+    const wrapper = mountReport()
+    await flushPromises()
+
+    await wrapper.find('input[type="text"]').setValue('does-not-match')
+    await flushPromises()
+    expect(wrapper.find('#not-found-in-konflux').exists()).toBe(false)
+    expect(wrapper.find('#unknown-product-component').exists()).toBe(false)
+  })
+
+  it('covers branch selection and report URL helper fallbacks', async () => {
+    const mapped = makeComp('odh-kserve-controller', 'Serving Orchestration')
+    mapped.pipelineRunFile = 'pipelines/odh-kserve.yaml'
+    mockData.value = makeData([mapped, makeComp('z-unmapped', null), makeComp('a-unmapped', null)], {
+      allProductComponents: [pcObj('Serving Orchestration')]
+    })
+    const wrapper = mountReport()
+    await flushPromises()
+
+    const select = wrapper.find('select')
+    await select.setValue('rhoai-3.5')
+    expect(select.element.value).toBe('rhoai-3.5')
+    expect(wrapper.vm.quayUrl()).toBe('#')
+    expect(wrapper.vm.quayUrl('registry.example/image')).toContain('registry.example/image')
+    expect(wrapper.vm.pipelineRunUrl({})).toBe('#')
+    expect(wrapper.vm.pipelineRunUrl({ pipelineRunFile: 'pipelines/test.yaml' })).toContain('pipelines/test.yaml')
+    wrapper.vm.selectedBranch = null
+    expect(wrapper.vm.pipelineRunUrl({ pipelineRunFile: 'pipelines/test.yaml' })).toBe('#')
+    expect(wrapper.vm.jiraSearchUrl()).toBeNull()
+    expect(wrapper.vm.jiraSearchUrl('Serving Orchestration')).toContain('component')
+    expect(wrapper.vm.formatDate()).toBe('')
+  })
+
+  it('refresh button in the empty state triggers a refresh', async () => {
+    mockData.value = null
+    const wrapper = mountReport()
+    await flushPromises()
+
+    const emptyState = wrapper.find('.py-24')
+    expect(emptyState.exists()).toBe(true)
+    await emptyState.findAll('button').find(button => button.text().includes('Refresh')).trigger('click')
+    expect(mockRefresh).toHaveBeenCalledTimes(1)
+  })
+
+  it('error state offers a Try refreshing action', async () => {
+    mockError.value = 'Unable to fetch report'
+    const wrapper = mountReport()
+
+    await wrapper.findAll('button').find(button => button.text().includes('Try refreshing')).trigger('click')
+    expect(mockRefresh).toHaveBeenCalledTimes(1)
+  })
+
+  it('tolerates a missing section element when scrolling', async () => {
+    mockData.value = makeData([makeComp('odh-unknown', null)])
+    const wrapper = mountReport()
+    await flushPromises()
+
+    const originalGetElementById = document.getElementById
+    document.getElementById = vi.fn(() => null)
+    try {
+      expect(() => wrapper.vm.scrollToSection('does-not-exist')).not.toThrow()
+    } finally {
+      document.getElementById = originalGetElementById
+    }
+  })
+
+  it('konflux branch url falls back to the repo root without a selected branch', async () => {
+    mockData.value = makeData([makeComp('odh-x', null)], { maturityAvailable: false })
+    const wrapper = mountReport()
+    await flushPromises()
+
+    expect(wrapper.vm.konfluxBranchUrl).toContain('rhoai-3.5')
+    wrapper.vm.selectedBranch = null
+    expect(wrapper.vm.konfluxBranchUrl).toBe('https://github.com/red-hat-data-services/konflux-central')
+  })
+
+  it('covers architecture status fallbacks and flat-table branches', async () => {
+    const mapped = makeComp('odh-statuses', 'Serving', {
+      amd64: { status: 'incompatible' },
+      arm64: { status: 'exception' },
+      ppc64le: { status: 'supported' },
+      s390x: { status: 'not_built' }
+    })
+    const unmapped = makeComp('odh-tracked-exception', null, {
+      amd64: { status: 'exception', issueUrl: 'https://issues.example/123', reason: 'Temporary waiver', issueKey: 'RHOAI-123' },
+      arm64: { status: 'incompatible', accelerator: 'GPU' },
+      ppc64le: { status: 'supported' },
+      s390x: { status: 'not_built' }
+    })
+    const unmappedFallback = makeComp('odh-untracked-exception', null, {
+      amd64: { status: 'exception' }
+    })
+    mapped.image = null
+    mapped.pipelineRunFile = 'pipelines/statuses.yaml'
+    mockData.value = makeData([mapped, unmapped, unmappedFallback], {
+      allProductComponents: ['Serving']
+    })
+
+    const wrapper = mountReport()
+    await flushPromises()
+
+    expect(wrapper.text()).toContain('N/A')
+    expect(wrapper.text()).toContain('EXC')
+    expect(wrapper.text()).toContain('RHOAI-123')
+    expect(wrapper.find('#unknown-product-component').exists()).toBe(true)
+    expect(wrapper.vm.allProductComponentMap.get('Serving').name).toBe('Serving')
+
+    // Force the computed-only fallback paths used when maturity data is absent.
+    const flat = makeComp('odh-flat-statuses', null, {
+      amd64: { status: 'incompatible' },
+      arm64: { status: 'exception' },
+      ppc64le: { status: 'supported' },
+      s390x: { status: 'not_built' }
+    })
+    flat.pipelineRunFile = 'pipelines/flat-statuses.yaml'
+    mockData.value = makeData([flat], { maturityAvailable: false })
+    await flushPromises()
+    expect(wrapper.vm.displayGroups).toEqual([])
+    expect(wrapper.vm.emptyProductComponents).toEqual([])
+    expect(wrapper.text()).toContain('odh-flat-statuses')
+
+    wrapper.vm.selectedBranch = null
+    expect(wrapper.vm.emptyProductComponents).toEqual([])
+
+    mockData.value = { source: null, branches: null, maturity: undefined }
+    await flushPromises()
+    expect(wrapper.vm.allProductComponentMap.size).toBe(0)
+  })
+
+  it('renders the singular mismatch caption and refreshing states', async () => {
+    mockData.value = makeData([makeComp('odh-only', 'Serving')], {
+      allProductComponents: [pcObj('Serving'), pcObj('Missing', 'Owner')]
+    })
+    mockRefreshing.value = true
+    const dataWrapper = mountReport()
+    await flushPromises()
+    expect(dataWrapper.text()).toContain('Refreshing...')
+    expect(dataWrapper.find('#not-found-in-konflux').text()).toContain('1 component not found')
+
+    mockData.value = null
+    const emptyWrapper = mountReport()
+    await flushPromises()
+    expect(emptyWrapper.text()).toContain('Loading...')
   })
 })

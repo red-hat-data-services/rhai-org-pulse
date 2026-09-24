@@ -6,7 +6,7 @@ kind: Kustomization
 # (ai-eng-dev, ai-eng-preprod, ai-eng-prod) extend this.
 
 resources:
-  - https://github.com/red-hat-data-services/org-pulse-core//deploy/openshift/base?ref=v2.0.79
+  - https://github.com/red-hat-data-services/org-pulse-core//deploy/openshift/base?ref=v2.0.83
 
 patches:
   - path: backend-secrets-patch.yaml
@@ -36,6 +36,7 @@ configMapGenerator:
     literals:
       - ADMIN_EMAILS=acorvin@redhat.com,acorvin@cluster.local,jalberts@redhat.com
       - CRON_ADMIN_EMAIL=acorvin@redhat.com
+      - PMC_GITLAB_PROJECT=redhat/rhel-ai/ci-cd/aipcc-product-management-configs
       - GITHUB_APP_ID=3263553
       - GITHUB_APP_INSTALLATION_ID=121149773
 

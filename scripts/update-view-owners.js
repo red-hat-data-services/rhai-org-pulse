@@ -426,7 +426,7 @@ function writeSection(lines, entries, isSub) {
 
 const MODULE_ORDER = [
   'ai-catalyst', 'ai-impact', 'customer-insights', 'okr-hub',
-  'pm-pipeline', 'product-builds', 'releases', 'system-health',
+  'product-builds', 'releases', 'system-health',
   'team-tracker', 'upstream-pulse'
 ]
 

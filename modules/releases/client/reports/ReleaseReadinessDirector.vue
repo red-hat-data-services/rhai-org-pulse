@@ -19,21 +19,23 @@
       <div class="flex flex-wrap items-center justify-between gap-4">
         <div>
           <p class="text-xs font-bold uppercase tracking-widest text-blue-200 mb-1">Viewing Release</p>
-          <h3 class="text-3xl font-extrabold tracking-tight leading-none">{{ selectedVersion }}</h3>
+          <h3 class="text-3xl font-extrabold tracking-tight leading-none">{{ activeVersionDisplay }}</h3>
         </div>
         <div class="flex flex-wrap gap-3">
           <div v-if="releaseSchedule.code_freeze_date" class="flex flex-col items-center bg-white/15 backdrop-blur-sm rounded-xl px-5 py-2.5 min-w-[90px]">
             <span class="text-[10px] font-semibold uppercase tracking-wider text-blue-200 mb-0.5">Code Freeze</span>
             <span class="text-sm font-bold">{{ formatScheduleDate(releaseSchedule.code_freeze_date) }}</span>
           </div>
-          <div v-if="releaseSchedule.ga_date" class="flex flex-col items-center bg-white/15 backdrop-blur-sm rounded-xl px-5 py-2.5 min-w-[90px]">
+          <div class="flex flex-col items-center bg-white/15 backdrop-blur-sm rounded-xl px-5 py-2.5 min-w-[90px]">
             <span class="text-[10px] font-semibold uppercase tracking-wider text-blue-200 mb-0.5">GA Date</span>
-            <span class="text-sm font-bold">{{ formatScheduleDate(releaseSchedule.ga_date) }}</span>
+            <span class="text-sm font-bold">{{ releaseSchedule.ga_date ? formatScheduleDate(releaseSchedule.ga_date) : 'TBD' }}</span>
           </div>
-          <div class="flex flex-col items-center rounded-xl px-5 py-2.5 min-w-[90px]"
+          <div
+            class="flex flex-col items-center rounded-xl px-5 py-2.5 min-w-[90px]"
             :class="releaseDisplayStatus(data) === 'Released with Open Tasks'
               ? 'bg-red-500/30'
-              : isReleasedStatus(releaseSchedule.status) ? 'bg-emerald-500/30' : 'bg-amber-500/30'">
+              : isReleasedStatus(releaseSchedule.status) ? 'bg-emerald-500/30' : 'bg-amber-500/30'"
+          >
             <span class="text-[10px] font-semibold uppercase tracking-wider text-blue-200 mb-0.5">Status</span>
             <span class="text-sm font-bold">{{ releaseDisplayStatus(data) }}</span>
           </div>
@@ -71,17 +73,23 @@
         <!-- Version + Updated -->
         <div class="flex-1">
           <div class="flex flex-wrap items-center gap-4 mb-3">
-            <div class="flex items-center gap-2">
-              <label class="text-sm font-medium text-gray-700 dark:text-gray-300">Release:</label>
-              <select
-                v-model="selectedVersion"
-                @change="handleVersionChange"
-                class="bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-md px-3 py-1.5 text-sm text-gray-900 dark:text-gray-100 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
-              >
-                <option value="">Select a version...</option>
-                <option v-for="v in versions" :key="v" :value="v">{{ v }}</option>
-              </select>
-            </div>
+            <template v-if="hasSelection">
+              <div class="text-sm text-gray-700 dark:text-gray-300">
+                Viewing <strong>{{ familyNarrative }}</strong> version <strong>{{ selection.version }}</strong>,
+                {{ phaseNarrative }} {{ selection.phases.size === 1 ? 'phase' : 'phases' }}.
+              </div>
+              <button
+                @click="openModal"
+                class="px-3 py-1.5 text-sm font-medium rounded-md bg-blue-600 text-white hover:bg-blue-700 transition-colors"
+              >Change</button>
+            </template>
+            <template v-else>
+              <p class="text-sm text-gray-500 dark:text-gray-400">Select a release to view readiness status.</p>
+              <button
+                @click="openModal"
+                class="px-3 py-1.5 text-sm font-medium rounded-md bg-blue-600 text-white hover:bg-blue-700 transition-colors"
+              >Select Release</button>
+            </template>
             <div v-if="data" class="text-xs text-gray-400">
               Updated {{ formatDate(data.generated_at) }}
             </div>
@@ -106,6 +114,21 @@
             </div>
           </div>
         </div>
+      </div>
+    </div>
+
+    <!-- Phase Tabs -->
+    <div v-if="phaseTabs.length > 1" class="mb-4">
+      <div class="flex border-b border-gray-200 dark:border-gray-700">
+        <button
+          v-for="tab in phaseTabs"
+          :key="tab.id"
+          @click="activeReleaseId = tab.id"
+          class="px-4 py-2 text-sm font-medium transition-colors border-b-2 -mb-px"
+          :class="activeReleaseId === tab.id
+            ? 'text-blue-600 dark:text-blue-400 border-blue-600 dark:border-blue-400'
+            : 'text-gray-500 dark:text-gray-400 border-transparent hover:text-gray-700 dark:hover:text-gray-300 hover:border-gray-300 dark:hover:border-gray-600'"
+        >{{ tab.label }}</button>
       </div>
     </div>
 
@@ -158,16 +181,26 @@
       </div>
 
       <!-- Open Issues to Validate -->
-      <div class="mb-6">
+      <div class="mb-6 flex flex-col sm:flex-row gap-3">
         <a
           :href="openIssuesToValidate?.jql_url || '#'"
           target="_blank"
-          class="flex items-center gap-2 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg px-4 py-3 hover:border-blue-400 dark:hover:border-blue-600 transition-colors"
+          class="flex-1 flex items-center gap-2 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg px-4 py-3 hover:border-blue-400 dark:hover:border-blue-600 transition-colors"
         >
           <h3 class="text-sm font-semibold text-blue-700 dark:text-blue-400">Open Issues to Validate</h3>
           <span v-if="openIssuesToValidate" class="text-xs px-2 py-0.5 rounded-full bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 font-medium">{{ openIssuesToValidate.total }} open ↗</span>
           <span v-else class="text-xs text-blue-500 dark:text-blue-400">View in Jira ↗</span>
         </a>
+
+        <!-- Pre-release CVEs to Resolve -->
+        <button
+          @click="navigateToPreReleaseCve"
+          class="flex-1 flex items-center gap-2 bg-orange-50 dark:bg-orange-900/20 border border-orange-200 dark:border-orange-800 rounded-lg px-4 py-3 hover:border-orange-400 dark:hover:border-orange-600 transition-colors text-left"
+        >
+          <h3 class="text-sm font-semibold text-orange-700 dark:text-orange-400">Critical CVEs (Fix Available)</h3>
+          <span v-if="preReleaseCveCount !== null" class="text-xs px-2 py-0.5 rounded-full bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-400 font-medium">{{ preReleaseCveCount }} to resolve →</span>
+          <span v-else class="text-xs text-orange-500 dark:text-orange-400">View report →</span>
+        </button>
       </div>
 
       <!-- Initiative not found warning -->
@@ -181,9 +214,30 @@
       <!-- Section 2: Overall Summary -->
       <div v-if="hasInitiativeData" class="mb-6">
         <h3 class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">Overall Summary</h3>
-        <div class="grid grid-cols-2 lg:grid-cols-5 gap-4">
-          <!-- TFA Sign Offs summary tile -->
+        <div class="grid grid-cols-2 lg:grid-cols-6 gap-4">
+          <!-- Pre-release Critical CVEs summary tile -->
+          <button
+            @click="navigateToPreReleaseCve"
+            class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4 block transition-shadow hover:shadow-md hover:border-orange-300 dark:hover:border-orange-600 text-left"
+          >
+            <div class="flex items-center justify-between mb-2">
+              <p class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide leading-tight">Critical CVEs</p>
+              <span v-if="preReleaseCveCount !== null" :class="preReleaseCveCount === 0 ? 'bg-green-500' : 'bg-red-500'" class="w-3 h-3 rounded-full inline-block"></span>
+              <span v-else class="bg-gray-300 dark:bg-gray-600 w-3 h-3 rounded-full inline-block"></span>
+            </div>
+            <p class="text-xl font-bold text-gray-900 dark:text-gray-100">{{ preReleaseCveCount !== null ? preReleaseCveCount : '—' }}</p>
+            <div v-if="preReleaseCveCount !== null" class="w-full h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden mt-2">
+              <div :class="preReleaseCveCount === 0 ? 'bg-green-500' : 'bg-orange-500'" class="h-full transition-all duration-500" style="width: 100%"></div>
+            </div>
+            <div v-else class="w-full h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden mt-2"></div>
+            <div class="flex items-center justify-between mt-1">
+              <p class="text-xs text-gray-400 dark:text-gray-500">Fix available</p>
+              <span class="text-xs text-orange-500 dark:text-orange-400">View report →</span>
+            </div>
+          </button>
+          <!-- TFA Sign Offs summary tile (legacy layout: <= 3.6.EA1) -->
           <a
+            v-if="!useNewReadinessLayout"
             :href="data.tfa_signoff_jql_url || '#'"
             target="_blank"
             class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4 block transition-shadow hover:shadow-md hover:border-blue-300 dark:hover:border-blue-600"
@@ -301,8 +355,8 @@
                     <span :class="ragDotSmall(tileOverallRag(tile))"></span>
                   </div>
 
-                  <!-- Line 1: Test Plan Sign Off + Jira key -->
-                  <div class="flex items-center justify-between mb-1.5">
+                  <!-- Line 1: Test Plan Sign Off + Jira key (legacy layout: <= 3.6.EA1) -->
+                  <div v-if="!useNewReadinessLayout" class="flex items-center justify-between mb-1.5">
                     <span class="text-xs text-gray-400">Test Plan Sign Off</span>
                     <a v-if="tile.tfa?.key" :href="jiraBrowseUrl(tile.tfa.key)" target="_blank" class="text-xs text-blue-400 font-mono hover:underline">{{ tile.tfa.key }}</a>
                   </div>
@@ -343,9 +397,9 @@
                     <p class="text-xs text-gray-500 mt-0.5">{{ tile.execution.done }}/{{ tile.execution.total }} tasks done</p>
                   </div>
 
-                  <!-- TFA / Failed / Skipped as stacked bars -->
+                  <!-- TFA (legacy only) / Failed Tests / Skipped as stacked bars -->
                   <div class="pt-3 border-t border-gray-200 dark:border-gray-700 space-y-2">
-                    <a :href="tile.tfa?.jql_url || '#'" target="_blank" class="flex items-center gap-2 hover:opacity-80 transition-opacity">
+                    <a v-if="!useNewReadinessLayout" :href="tile.tfa?.jql_url || '#'" target="_blank" class="flex items-center gap-2 hover:opacity-80 transition-opacity">
                       <span class="text-xs text-gray-400 w-16">TFA ↗</span>
                       <div class="flex-1 h-6 bg-gray-200 dark:bg-gray-800 rounded overflow-hidden flex">
                         <div v-if="tfaBd(tile).done" class="h-full bg-green-500 flex items-center justify-center text-xs font-bold text-white" :style="{ width: tfaBdPct(tile, 'done') + '%', minWidth: '24px' }">{{ tfaBd(tile).done }}</div>
@@ -354,7 +408,7 @@
                       </div>
                     </a>
                     <a :href="tile.failed_jql_url || '#'" target="_blank" class="flex items-center gap-2 hover:opacity-80 transition-opacity">
-                      <span class="text-xs text-gray-400 w-16">Failed ↗</span>
+                      <span class="text-xs text-gray-400" :class="useNewReadinessLayout ? 'w-20' : 'w-16'">{{ useNewReadinessLayout ? 'Failed Tests ↗' : 'Failed ↗' }}</span>
                       <div class="flex-1 h-6 bg-gray-200 dark:bg-gray-800 rounded overflow-hidden flex">
                         <template v-if="failedBd(tile).total > 0">
                           <div v-if="failedBd(tile).done" class="h-full bg-green-500 flex items-center justify-center text-xs font-bold text-white" :style="{ width: bdPct(failedBd(tile), 'done') + '%', minWidth: '24px' }">{{ failedBd(tile).done }}</div>
@@ -445,58 +499,284 @@
       </div>
 
 
+      <!-- Section 5: Release Cycle Metrics -->
+      <div v-if="releaseCycleMetrics" class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden mb-6">
+        <div class="px-4 py-3 border-b border-gray-200 dark:border-gray-700">
+          <h3 class="text-sm font-semibold text-gray-700 dark:text-gray-300">Release Cycle Metrics</h3>
+          <p class="text-xs text-gray-400 dark:text-gray-500 mt-0.5">Working days between key milestones (Mon–Fri, excluding weekends)</p>
+        </div>
+
+        <div class="p-4 space-y-6">
+          <!-- Build Milestones -->
+          <div v-if="releaseCycleMetrics.phases?.length">
+            <p class="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-2">Build Milestones — days since code freeze</p>
+            <div class="overflow-x-auto">
+              <table class="w-full text-xs border-collapse">
+                <thead>
+                  <tr class="bg-gray-50 dark:bg-gray-900">
+                    <th class="px-3 py-2 text-left font-medium text-gray-600 dark:text-gray-400">Milestone</th>
+                    <th class="px-3 py-2 text-left font-medium text-gray-600 dark:text-gray-400">Code Freeze</th>
+                    <th class="px-3 py-2 text-left font-medium text-gray-600 dark:text-gray-400">Build Received</th>
+                    <th class="px-3 py-2 text-left font-medium text-gray-600 dark:text-gray-400">Working Days</th>
+                  </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-100 dark:divide-gray-700">
+                  <tr v-for="phase in releaseCycleMetrics.phases" :key="phase.epic_key || phase.phase" class="hover:bg-gray-50 dark:hover:bg-gray-750">
+                    <td class="px-3 py-2 font-medium text-gray-800 dark:text-gray-200">{{ phase.phase }}</td>
+                    <td class="px-3 py-2 text-gray-500 dark:text-gray-400">{{ formatMetricDate(releaseCycleMetrics.code_freeze_date) }}</td>
+                    <td class="px-3 py-2 text-gray-700 dark:text-gray-300">{{ formatMetricDate(phase.build_ready_date) }}</td>
+                    <td class="px-3 py-2" :class="daysClass(phase.days_since_code_freeze, 5, 10)">{{ daysLabel(phase.days_since_code_freeze) }}</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- Test Execution Timelines -->
+          <div v-if="releaseCycleMetrics.phases?.length">
+            <p class="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-2">Test Execution Timelines — working days since build received</p>
+            <div class="overflow-x-auto">
+              <table class="w-full text-xs border-collapse">
+                <thead>
+                  <tr class="bg-gray-50 dark:bg-gray-900">
+                    <th class="px-3 py-2 text-left font-medium text-gray-600 dark:text-gray-400">Phase</th>
+                    <th class="px-3 py-2 text-left font-medium text-gray-600 dark:text-gray-400">Build Received</th>
+                    <th class="px-3 py-2 text-left font-medium text-gray-600 dark:text-gray-400">Test Started</th>
+                    <th class="px-3 py-2 text-left font-medium text-gray-600 dark:text-gray-400">Test Finished</th>
+                    <th class="px-3 py-2 text-left font-medium text-gray-600 dark:text-gray-400">TFAs Passed</th>
+                    <th class="px-3 py-2 text-left font-medium text-gray-600 dark:text-gray-400">TFAs Triaged</th>
+                    <th class="px-3 py-2 text-left font-medium text-gray-600 dark:text-gray-400">Blockers Resolved</th>
+                  </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-100 dark:divide-gray-700">
+                  <tr v-for="phase in releaseCycleMetrics.phases" :key="phase.epic_key || phase.phase" class="hover:bg-gray-50 dark:hover:bg-gray-750">
+                    <td class="px-3 py-2 font-medium text-gray-800 dark:text-gray-200">{{ phase.phase }}</td>
+                    <td class="px-3 py-2 text-gray-500 dark:text-gray-400">{{ formatMetricDate(phase.build_ready_date) }}</td>
+                    <td class="px-3 py-2" :class="daysClass(phase.days_to_test_started, 3, 7)">{{ formatMetricDate(phase.test_started_date) }} {{ daysLabel(phase.days_to_test_started) }}</td>
+                    <td class="px-3 py-2" :class="daysClass(phase.days_to_test_finished, 8, 15)">{{ formatMetricDate(phase.test_finished_date) }} {{ daysLabel(phase.days_to_test_finished) }}</td>
+                    <td class="px-3 py-2" :class="daysClass(phase.days_to_tfas_passed, 3, 7)">{{ formatMetricDate(phase.tfas_passed_date) }} {{ daysLabel(phase.days_to_tfas_passed) }}</td>
+                    <td class="px-3 py-2" :class="daysClass(phase.days_to_tfas_triaged, 5, 10)">{{ formatMetricDate(phase.tfas_triaged_date) }} {{ daysLabel(phase.days_to_tfas_triaged) }}</td>
+                    <td class="px-3 py-2" :class="daysClass(phase.days_to_blockers_resolved, 5, 12)">{{ formatMetricDate(phase.blockers_resolved_date) }} {{ daysLabel(phase.days_to_blockers_resolved) }}</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+
     </div>
+
+    <!-- Select Release Modal -->
+    <Teleport to="body">
+      <div v-if="modalOpen" class="fixed inset-0 z-50 flex items-center justify-center p-4">
+        <div class="absolute inset-0 bg-black/40 dark:bg-black/60" @click="cancelModal"></div>
+        <div class="relative bg-white dark:bg-gray-800 rounded-xl shadow-xl max-w-md w-full p-6" @keydown.escape="cancelModal">
+          <div class="flex items-center justify-between mb-6">
+            <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100">Select Release</h3>
+            <button @click="cancelModal" class="p-1 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors">
+              <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" /></svg>
+            </button>
+          </div>
+          <div class="mb-5">
+            <label class="block text-[11px] font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-2">Product Family</label>
+            <div class="flex flex-wrap gap-2">
+              <button @click="toggleAllFamilies" class="px-3 py-1.5 rounded-lg text-xs font-medium transition-colors border" :class="isAllFamiliesDraft ? 'bg-blue-600 text-white border-blue-600' : 'bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 border-gray-300 dark:border-gray-600 hover:border-blue-300 dark:hover:border-blue-600'">All</button>
+              <button v-for="f in availableFamilies" :key="f" @click="toggleFamily(f)" class="px-3 py-1.5 rounded-lg text-xs font-medium transition-colors border" :class="draft.families.has(f) ? 'bg-blue-600 text-white border-blue-600' : 'bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 border-gray-300 dark:border-gray-600 hover:border-blue-300 dark:hover:border-blue-600'">{{ f.toUpperCase() }}</button>
+            </div>
+          </div>
+          <div class="mb-5">
+            <label class="block text-[11px] font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-2">Version</label>
+            <div v-if="draftVersions.length > 0" class="flex flex-wrap gap-2">
+              <button v-for="v in draftVersions" :key="v" @click="selectVersion(v)" class="px-3 py-1.5 rounded-lg text-xs font-medium transition-colors border" :class="draft.version === v ? 'bg-blue-600 text-white border-blue-600' : 'bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 border-gray-300 dark:border-gray-600 hover:border-blue-300 dark:hover:border-blue-600'">{{ v }}</button>
+            </div>
+            <p v-else class="text-xs text-gray-400 dark:text-gray-500">Select a product family first.</p>
+          </div>
+          <div class="mb-6">
+            <label class="block text-[11px] font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-2">Phase</label>
+            <div v-if="draftPhases.length > 0" class="flex flex-wrap gap-2">
+              <button v-for="p in draftPhases" :key="p" @click="toggleReleasePhase(p)" class="px-3 py-1.5 rounded-lg text-xs font-medium transition-colors border" :class="draft.phases.has(p) ? 'bg-blue-600 text-white border-blue-600' : 'bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 border-gray-300 dark:border-gray-600 hover:border-blue-300 dark:hover:border-blue-600'">{{ p }}</button>
+            </div>
+            <p v-else class="text-xs text-gray-400 dark:text-gray-500">Select a version first.</p>
+          </div>
+          <div class="flex justify-end gap-3 pt-2 border-t border-gray-200 dark:border-gray-700">
+            <button @click="cancelModal" class="px-4 py-2 text-sm font-medium rounded-md border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">Cancel</button>
+            <button @click="applyModal" :disabled="!canApply" class="px-4 py-2 text-sm font-medium rounded-md bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors">Apply</button>
+          </div>
+        </div>
+      </div>
+    </Teleport>
   </div>
 </template>
 
 <script setup>
-import { ref, reactive, computed, inject, onMounted } from 'vue'
+import { ref, reactive, computed, inject, onMounted, watch } from 'vue'
 import { ArrowLeft, Shield } from 'lucide-vue-next'
 import { useReleaseReadiness } from './composables/useReleaseReadiness'
-import { isNoWorkResolution, isReleasedStatus, releaseDisplayStatus } from './release-readiness-status'
+import { useReleaseSelector, parseReleaseId } from '../composables/useReleaseSelector.js'
+import { isNoWorkResolution, isReleasedStatus, releaseDisplayStatus } from './release-readiness-status.js'
 
 const moduleNav = inject('moduleNav')
+const props = defineProps({
+  initialVersion: { type: String, default: null }
+})
+
+// ─── Pre-release CVE summary ─────────────────────────────────────────────────
+const preReleaseCveCount = ref(null)
+
+async function loadPreReleaseCveSummary() {
+  try {
+    const res = await fetch('/api/modules/releases/pre-release-cve')
+    if (!res.ok) return
+    const payload = await res.json()
+    if (payload?.releases?.length) {
+      let count = 0
+      for (const release of payload.releases) {
+        for (const r of (release.records || [])) {
+          if (r.severity === 'Critical' && r.fixStatus === 'Fix Available' && r.status !== 'Resolved') count++
+        }
+      }
+      preReleaseCveCount.value = count
+    }
+  } catch { /* data not available */ }
+}
+
+function navigateToPreReleaseCve() {
+  moduleNav.navigateTo('reports', { report: 'pre-release-cve' })
+}
+
 const {
-  data,
   loading,
   error,
-  versions,
-  defaultVersion,
-  loadMetrics,
-  loadVersions
+  fetchMetrics,
+  fetchReadinessReleases
 } = useReleaseReadiness()
 
-const selectedVersion = ref('')
+const {
+  releases,
+  modalOpen,
+  selection,
+  draft,
+  availableFamilies,
+  draftVersions,
+  draftPhases,
+  isAllFamiliesDraft,
+  hasSelection,
+  canApply,
+  fetchRegistry,
+  restoreSelection,
+  applySelection,
+  openModal,
+  cancelModal,
+  applyModal,
+  toggleAllFamilies,
+  toggleFamily,
+  selectVersionDraft: selectVersion,
+  togglePhase: toggleReleasePhase,
+  familyNarrative,
+  phaseNarrative,
+  selectedRegistryIdSet,
+  PHASE_ORDER
+} = useReleaseSelector({
+  storageKey: 'tt_cache:readiness-selection',
+  fetchReleases: fetchReadinessReleases
+})
+
+const phaseDataMap = ref({})
+const activeReleaseId = ref(null)
+const data = computed(() => phaseDataMap.value[activeReleaseId.value] || null)
+
+const activeVersionDisplay = computed(() => {
+  if (!activeReleaseId.value) return ''
+  const parsed = parseReleaseId(activeReleaseId.value)
+  if (!parsed) return activeReleaseId.value
+  return `${parsed.family.toUpperCase()} ${parsed.version} ${parsed.phase}`
+})
+
+const phaseTabs = computed(() => {
+  if (!hasSelection.value) return []
+  const ids = [...selectedRegistryIdSet()]
+  const tabs = ids
+    .map(id => {
+      const parsed = parseReleaseId(id)
+      if (!parsed) return null
+      return { id, family: parsed.family, version: parsed.version, phase: parsed.phase }
+    })
+    .filter(Boolean)
+    .sort((a, b) => {
+      if (a.family !== b.family) return a.family.localeCompare(b.family)
+      return PHASE_ORDER.indexOf(a.phase) - PHASE_ORDER.indexOf(b.phase)
+    })
+  const uniqueFamilies = new Set(tabs.map(t => t.family))
+  return tabs.map(t => ({
+    ...t,
+    label: uniqueFamilies.size > 1 ? `${t.family.toUpperCase()} ${t.phase}` : t.phase
+  }))
+})
+
 const JIRA_HOST = 'https://redhat.atlassian.net'
 const expandedPhases = reactive({})
 
 onMounted(async () => {
-  data.value = null
-  error.value = null
-  await loadVersions()
-  if (defaultVersion.value && versions.value.includes(defaultVersion.value)) {
-    const initial = defaultVersion.value
-    selectedVersion.value = initial
-    await loadMetrics(initial)
-    if (data.value && data.value.component_readiness) {
-      selectedComponents.value = [...(data.value.component_readiness.all_components || [])]
-    }
+  await fetchRegistry()
+  const initial = parseReleaseId(props.initialVersion || '')
+  if (initial && releases.value.some(r => r.id === props.initialVersion)) {
+    applySelection(initial.version, new Set([initial.family]), new Set([initial.phase]))
+  } else {
+    restoreSelection()
   }
+  loadPreReleaseCveSummary()
 })
 
 function goBack() {
   if (moduleNav && moduleNav.navigateTo) moduleNav.navigateTo('reports')
 }
 
-async function handleVersionChange() {
-  if (selectedVersion.value) {
-    await loadMetrics(selectedVersion.value)
-    if (data.value && data.value.component_readiness) {
-      selectedComponents.value = [...(data.value.component_readiness.all_components || [])]
-      selectedPhases.value = []
+async function loadSelectedPhases() {
+  const ids = [...selectedRegistryIdSet()]
+  if (!ids.length) {
+    phaseDataMap.value = {}
+    activeReleaseId.value = null
+    return
+  }
+
+  loading.value = true
+  error.value = null
+
+  try {
+    const results = await Promise.all(
+      ids.map(id => fetchMetrics(id).then(d => ({ id, data: d })).catch(() => ({ id, data: null })))
+    )
+    const map = {}
+    for (const r of results) {
+      if (r.data) map[r.id] = r.data
     }
+    phaseDataMap.value = map
+
+    if (!activeReleaseId.value || !map[activeReleaseId.value]) {
+      activeReleaseId.value = ids.find(id => map[id]) || null
+    }
+
+    if (data.value?.component_readiness) {
+      selectedComponents.value = [...(data.value.component_readiness.all_components || [])]
+      selectedPhases.value = [...availablePhases.value]
+    }
+  } catch (err) {
+    error.value = err.message || 'Failed to load release readiness metrics'
+  } finally {
+    loading.value = false
   }
 }
+
+watch(
+  () => {
+    if (!hasSelection.value) return null
+    return `${selection.version}|${[...selection.families].sort()}|${[...selection.phases].sort()}`
+  },
+  (newVal, oldVal) => {
+    if (newVal && newVal !== oldVal) loadSelectedPhases()
+  }
+)
 
 function jiraBrowseUrl(key) {
   return `${JIRA_HOST}/browse/${key}`
@@ -520,6 +800,32 @@ function togglePhase(epicKey) {
 
 const director = computed(() => {
   return data.value && data.value.director_summary ? data.value.director_summary : null
+})
+
+// Rank a release id/version into a comparable number so we can gate UI changes
+// by release. Format: rhoai-<major>.<minor>[.EA<n>|.GA]. GA sorts after any EA
+// of the same minor. Returns null if unparseable.
+function releaseRank(versionOrId) {
+  if (!versionOrId) return null
+  const m = String(versionOrId).match(/(\d+)\.(\d+)(?:\.(EA)(\d+)|\.(GA))?/i)
+  if (!m) return null
+  const major = Number(m[1])
+  const minor = Number(m[2])
+  const isGa = !!m[5] || (!m[3] && !m[5]) // explicit GA, or no suffix => GA
+  // EA phases rank 1..n; GA ranks higher than any EA (use 99).
+  const phaseRank = isGa ? 99 : Number(m[4] || 0)
+  return major * 1_000_000 + minor * 1_000 + phaseRank
+}
+
+// The Overall Summary TFA Sign Offs tile, the per-tile TFA row, and the older
+// "Failed" label are retained for releases up to and including 3.6.EA1, and
+// dropped from 3.6.EA2 onwards. Older releases render unchanged.
+const TFA_LAYOUT_CUTOFF_RANK = releaseRank('3.6.EA2')
+
+const useNewReadinessLayout = computed(() => {
+  const rank = releaseRank(data.value?.version || activeReleaseId.value)
+  if (rank === null) return false // unknown version -> keep legacy layout
+  return rank >= TFA_LAYOUT_CUTOFF_RANK
 })
 
 const overallPct = computed(() => {
@@ -671,9 +977,9 @@ const testExecPct = computed(() => {
 // --- Release Decision Status ---
 
 const releaseStatuses = [
-  { id: 'not-ready', label: 'Not Ready', activeClass: 'bg-red-600 text-white border-red-600', tooltip: 'Multiple gates below 50%. Open blockers present. Not all sign-offs complete.' },
+  { id: 'not-ready', label: 'Not Ready', activeClass: 'bg-red-600 text-white border-red-600', tooltip: 'Multiple gates below 50%, or open blockers with overall completion under 50%. Not all sign-offs complete.' },
   { id: 'in-progress', label: 'In Progress', activeClass: 'bg-blue-600 text-white border-blue-600', tooltip: 'Testing started but gates are below 80% completion. Work is actively progressing.' },
-  { id: 'at-risk', label: 'At Risk', activeClass: 'bg-amber-500 text-white border-amber-500', tooltip: 'Some gates above 50% but open blockers or sign-offs pending. Timeline may slip.' },
+  { id: 'at-risk', label: 'At Risk', activeClass: 'bg-amber-500 text-white border-amber-500', tooltip: 'Progress above 50% but open blockers, a lagging gate, or GA date imminent. Timeline may slip.' },
   { id: 'on-track', label: 'On Track', activeClass: 'bg-emerald-500 text-white border-emerald-500', tooltip: 'All gates above 80%. No critical blockers. Sign-offs progressing on schedule.' },
   { id: 'ready-to-ship', label: 'Ready to Ship', activeClass: 'bg-green-600 text-white border-green-600', tooltip: 'All gates at 100%. All sign-offs done. Zero open blockers. Go for release.' },
 ]
@@ -683,19 +989,100 @@ const hasInitiativeData = computed(() => {
   return director.value.gate_statuses && director.value.gate_statuses.length > 0
 })
 
-const releaseDecision = computed(() => {
-  if (!director.value) return 'not-ready'
-  const gates = director.value.gate_statuses || []
-  const avgPct = gates.length ? gates.reduce((s, g) => s + g.pct, 0) / gates.length : 0
-  const openBlockers = productBlockers.value?.total_open || 0
-  const allGatesAbove80 = gates.every(g => g.pct >= 80)
-  const allGates100 = gates.every(g => g.pct >= 100)
+// All decision gates: the director gate_statuses plus the TFA (Test Plan) sign
+// off, each carried as done/total so completion is a true weighted percentage
+// of real work rather than an average of a couple of gate percentages.
+const decisionGates = computed(() => {
+  const gates = (director.value?.gate_statuses || []).map(g => ({
+    name: g.gate,
+    done: Number(g.done) || 0,
+    total: Number(g.total) || 0,
+  }))
+  // Include TFA / Test Plan Sign Off as a gate when the payload carries it and
+  // the director gates don't already include it.
+  const hasTfaGate = gates.some(g => /tfa|test plan sign off/i.test(g.name))
+  if (!hasTfaGate && testSignOffTotal.value > 0) {
+    gates.push({ name: 'TFA Sign Off', done: testSignOffDone.value, total: testSignOffTotal.value })
+  }
+  return gates.filter(g => g.total > 0)
+})
 
-  if (allGates100 && openBlockers === 0) return 'ready-to-ship'
-  if (allGatesAbove80 && openBlockers <= 2) return 'on-track'
-  if (avgPct >= 50 && openBlockers > 0) return 'at-risk'
-  if (avgPct > 0) return 'in-progress'
-  return 'not-ready'
+// Weighted completion across every gate: total done / total items. Reflects the
+// real percentage of release work completed.
+const releaseCompletionPct = computed(() => {
+  const gates = decisionGates.value
+  const total = gates.reduce((s, g) => s + g.total, 0)
+  if (!total) return 0
+  const done = gates.reduce((s, g) => s + g.done, 0)
+  return Math.round((done / total) * 100)
+})
+
+// Whole days from today until the GA date (negative once GA has passed).
+// null when the schedule has no GA date, so any GA-based rule degrades to a
+// no-op rather than firing on missing data (common for EA milestones).
+const daysToGa = computed(() => {
+  const gaDate = releaseSchedule.value?.ga_date
+  if (!gaDate) return null
+  const ga = new Date(`${gaDate}T00:00:00Z`)
+  if (isNaN(ga.getTime())) return null
+  const today = new Date(`${new Date().toISOString().slice(0, 10)}T00:00:00Z`)
+  return Math.round((ga - today) / 86400000)
+})
+
+// Schedule risk: GA is imminent (within 3 days, and not already past) but the
+// release is not yet 80% complete. Used to escalate the decision to At Risk.
+const GA_NEAR_DAYS = 3
+const gaScheduleRisk = computed(() => {
+  const d = daysToGa.value
+  return d !== null && d >= 0 && d <= GA_NEAR_DAYS && releaseCompletionPct.value < 80
+})
+
+const releaseDecision = computed(() => {
+  const gates = decisionGates.value
+  if (!gates.length) return 'not-ready'
+
+  const gatePct = g => (g.total > 0 ? (g.done / g.total) * 100 : 0)
+  const openBlockers = productBlockers.value?.total_open || 0
+  const completion = releaseCompletionPct.value // weighted, real completion
+  const gatesBelow50 = gates.filter(g => gatePct(g) < 50).length
+  const allGatesAbove80 = gates.every(g => gatePct(g) >= 80)
+  const allGates100 = gates.every(g => gatePct(g) >= 100)
+
+  // Base decision from gates + blockers, evaluated best to worst; the strongest
+  // fully-satisfied state wins.
+  const base = (() => {
+    // Ready to Ship: every gate 100% complete and zero open blockers.
+    if (allGates100 && openBlockers === 0) return 'ready-to-ship'
+
+    // On Track: every gate at/above 80% and no open blockers.
+    if (allGatesAbove80 && openBlockers === 0) return 'on-track'
+
+    // Not Ready: two or more gates below 50%, OR open blockers while overall
+    // completion is still low. A stalled/early release is not ready regardless
+    // of whether blockers have been filed yet.
+    if (gatesBelow50 >= 2 || (openBlockers > 0 && completion < 50)) return 'not-ready'
+
+    // At Risk: meaningful progress (>= 50% overall) but something is
+    // jeopardizing the timeline — an open blocker or a single lagging gate.
+    if (completion >= 50 && (openBlockers > 0 || gatesBelow50 >= 1)) return 'at-risk'
+
+    // In Progress: work has started and gates are progressing (below 80%) with
+    // nothing actively putting the release at risk.
+    if (completion > 0) return 'in-progress'
+
+    // Nothing started.
+    return 'not-ready'
+  })()
+
+  // Schedule-risk overlay: if GA is within 3 days and the release is under 80%
+  // complete, escalate to At Risk. Only escalate — never soften an already
+  // worse state (e.g. Not Ready stays Not Ready). Has no effect when the GA
+  // date is missing, so EA releases without a GA date are unaffected.
+  if (gaScheduleRisk.value && (base === 'in-progress' || base === 'on-track')) {
+    return 'at-risk'
+  }
+
+  return base
 })
 
 // --- Component Filter ---
@@ -826,5 +1213,33 @@ function phaseBarColor(rag) {
 
 function phasePct(phase) {
   return phase.total > 0 ? Math.round((phase.done / phase.total) * 100) : 0
+}
+// --- Release Cycle Metrics ---
+
+const releaseCycleMetrics = computed(() => data.value?.release_cycle_metrics || null)
+
+function formatMetricDate(dateStr) {
+  if (!dateStr) return '—'
+  // Handle both YYYY-MM-DD and ISO timestamp formats
+  const dateOnly = dateStr.includes('T') ? dateStr.split('T')[0] : dateStr
+  const d = new Date(dateOnly + 'T00:00:00')
+  if (isNaN(d.getTime())) return '—'
+  return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+}
+
+function daysLabel(n) {
+  if (n === null || n === undefined || isNaN(n)) return '—'
+  if (n < 0) return '—' // Negative days are invalid for "days since" metrics
+  if (n === 0) return '0 days'
+  return `${n} day${n === 1 ? '' : 's'}`
+}
+
+function daysClass(n, warnAt, alertAt) {
+  if (n === null || n === undefined || isNaN(n) || n < 0) return 'text-gray-400 dark:text-gray-500'
+  // Validate threshold order: alertAt should be >= warnAt
+  const effectiveAlertAt = Math.max(warnAt, alertAt)
+  if (n >= effectiveAlertAt) return 'text-red-600 dark:text-red-400 font-semibold'
+  if (n >= warnAt) return 'text-amber-600 dark:text-amber-400 font-semibold'
+  return 'text-green-600 dark:text-green-400 font-semibold'
 }
 </script>

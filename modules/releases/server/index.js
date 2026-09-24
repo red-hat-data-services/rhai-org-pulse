@@ -21,6 +21,8 @@ const registerReleaseReadinessRoutes = require('./release-readiness/routes');
 const { registerCveSustainingRoutes, registerFixAvailabilityRoutes } = require('./cve-sustaining/routes');
 const registerAiAdoptionRoutes = require('./ai-adoption/routes');
 const registerRhoaiComponentArchitecturesRoutes = require('./rhoai-component-architectures/routes');
+const registerPreReleaseCveRoutes = require('./pre-release-cve/routes');
+const registerAipccMilestonesRoutes = require('./aipcc-milestones');
 const { getAuditLog } = require('./planning/audit-log');
 
 /**
@@ -193,6 +195,7 @@ module.exports = async function registerRoutes(router, context) {
 
   // Registry routes (top-level under /api/modules/releases/)
   registerRegistryRoutes(router, { storage, requireAuth, requirePlanningManager, requireScope, registerRefresh: context.registerRefresh || null, isRefreshRunning: context.isRefreshRunning || null });
+  registerAipccMilestonesRoutes(router, context);
 
   // Planning sub-router (mounted at /api/modules/releases/planning/)
   var planningRouter = express.Router();
@@ -348,6 +351,17 @@ module.exports = async function registerRoutes(router, context) {
     isRefreshRunning: context.isRefreshRunning || null
   });
   router.use('/rhoai-component-architectures', rhoaiCompArchRouter);
+
+  // Pre-Release CVE sub-router (mounted at /api/modules/releases/pre-release-cve/)
+  const preReleaseCveRouter = express.Router();
+  registerPreReleaseCveRoutes(preReleaseCveRouter, {
+    storage,
+    requireAuth,
+    requireScope,
+    registerRefresh: context.registerRefresh || null,
+    resolveSecret: context.resolveSecret || null
+  });
+  router.use('/pre-release-cve', preReleaseCveRouter);
 
   // ─── Unified Audit Routes ───
 

@@ -48,3 +48,16 @@ export function pointInCircle(px, py, cx, cy, r) {
   var dy = py - cy
   return dx * dx + dy * dy <= r * r
 }
+
+// Dimension lines must stay within one product's timeline. The display label
+// intentionally omits the product (for example, every product has "3.6 GA"),
+// so it cannot be used as the complete grouping key.
+export function timelineDimensionGroupKey(node, above) {
+  var products = node && Array.isArray(node.productList) ? node.productList : []
+  return (node && node.groupLabel ? node.groupLabel : '') + '|' +
+    (above ? 'a' : 'b') + '|' + products.join(',')
+}
+
+export function timelineDimensionRowKey(groupLabel, above) {
+  return (groupLabel || '') + (above ? '-a' : '-b')
+}

@@ -23,7 +23,7 @@ const hasHealth = computed(function() {
 })
 
 const expandedColspan = computed(function() {
-  var base = hasHealth.value ? 9 : 6   // base columns (no drag, no actions)
+  var base = hasHealth.value ? 10 : 7   // base columns + % Complete (no drag, no actions)
   if (props.canReorder) base++          // drag handle column
   if (props.canEdit || props.canDelete) base++  // actions column
   return base
@@ -210,6 +210,7 @@ function handleDeleteClick(event, rock) {
             <th scope="col" class="px-3 py-2 text-left text-gray-700 dark:text-gray-200 font-semibold uppercase text-xs tracking-wide border border-gray-300 dark:border-gray-600 bg-gray-100 dark:bg-gray-900/80">Owners</th>
             <th v-if="hasHealth" scope="col" class="px-3 py-2 text-center text-gray-700 dark:text-gray-200 font-semibold uppercase text-xs tracking-wide border border-gray-300 dark:border-gray-600 bg-gray-100 dark:bg-gray-900/80">Versions</th>
             <th scope="col" class="px-3 py-2 text-center text-gray-700 dark:text-gray-200 font-semibold uppercase text-xs tracking-wide border border-gray-300 dark:border-gray-600 bg-gray-100 dark:bg-gray-900/80">Features / RFEs</th>
+            <th scope="col" class="px-3 py-2 text-center text-gray-700 dark:text-gray-200 font-semibold uppercase text-xs tracking-wide border border-gray-300 dark:border-gray-600 bg-gray-100 dark:bg-gray-900/80">% Complete</th>
             <th v-if="canEdit || canDelete" scope="col" class="px-2 py-2 w-8 border border-gray-300 dark:border-gray-600 bg-gray-100 dark:bg-gray-900/80"><span class="sr-only">Actions</span></th>
           </tr>
         </thead>

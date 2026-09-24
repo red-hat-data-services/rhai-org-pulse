@@ -1,5 +1,12 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 
+const mockAppendAuditEntry = vi.fn()
+vi.mock('../../../../shared/server/audit-log', () => ({
+  createAuditLog: vi.fn(() => ({
+    appendAuditEntry: mockAppendAuditEntry
+  }))
+}))
+
 const mockFetch = vi.fn()
 vi.stubGlobal('fetch', mockFetch)
 

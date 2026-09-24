@@ -35,8 +35,9 @@
   "server": {
     "entry": "./server/index.js"
   },
+  "requires": ["team-tracker"],
   "secrets": {
-    "platform": ["jira", "github"],
+    "platform": ["jira", "github", "google"],
     "module": [
       {
         "key": "PRODUCT_PAGES_CLIENT_ID",
@@ -68,6 +69,11 @@
         "required": false
       },
       {
+        "key": "CUSTOMER_PORTAL_OFFLINE_TOKEN",
+        "description": "Red Hat API offline token used to resolve customer names from Jira Linked Cases",
+        "required": false
+      },
+      {
         "key": "DRAFT_PLANS_GITLAB_TOKEN",
         "description": "GitLab PAT for draft plans data fetching (overrides GITLAB_TOKEN)",
         "required": false
@@ -82,6 +88,7 @@
   "export": {
     "files": [
       { "path": "releases/registry.json", "notes": "Canonical release registry" },
+      { "path": "releases/aipcc-milestones.json", "notes": "Cached AIPCC milestone schedule from Google Sheets" },
       { "path": "releases/execution/index.json", "notes": "Feature index with summary metrics" },
       { "path": "releases/execution/features/*.json", "notes": "Per-feature detail files" },
       { "path": "releases/rhoai-component-architectures/latest.json", "notes": "RHOAI component architecture support matrix" }

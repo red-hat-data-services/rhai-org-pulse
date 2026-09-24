@@ -1,6 +1,6 @@
 <template>
   <div class="mb-6">
-    <div class="grid grid-cols-2 lg:grid-cols-5 gap-3">
+    <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3">
       <button
         class="rounded-xl border-2 px-4 py-3 text-left transition-all duration-150"
         :class="!selectedPillar
@@ -19,6 +19,7 @@
         :class="selectedPillar === pillar.pillarKey
           ? 'border-primary-500 bg-primary-50 dark:bg-primary-900/20'
           : 'border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 hover:border-gray-300 dark:hover:border-gray-600'"
+        :style="selectedPillar === pillar.pillarKey ? { borderColor: getPillarMeta(pillar).color } : undefined"
         @click="$emit('update:selectedPillar', selectedPillar === pillar.pillarKey ? null : pillar.pillarKey)"
       >
         <div
@@ -27,7 +28,7 @@
             ? 'text-primary-700 dark:text-primary-300'
             : 'text-gray-900 dark:text-gray-100'"
         >
-          {{ pillar.title }}
+          {{ getPillarMeta(pillar).title }}
         </div>
         <div
           class="text-xs mt-0.5 line-clamp-2"
@@ -35,7 +36,7 @@
             ? 'text-primary-600 dark:text-primary-400'
             : 'text-gray-500 dark:text-gray-400'"
         >
-          {{ pillar.summary }}
+          {{ getPillarMeta(pillar).summary }}
         </div>
       </button>
     </div>
@@ -43,6 +44,8 @@
 </template>
 
 <script setup>
+import { useCategories } from '../composables/useCategories.js'
+
 defineProps({
   pillars: { type: Array, required: true },
   selectedPillar: { type: String, default: null },
@@ -50,4 +53,9 @@ defineProps({
 })
 
 defineEmits(['update:selectedPillar'])
+
+const { getCategoryMeta } = useCategories()
+function getPillarMeta(pillar) {
+  return getCategoryMeta(pillar.pillarKey, [pillar])
+}
 </script>

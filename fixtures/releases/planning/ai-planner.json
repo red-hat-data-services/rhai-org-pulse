@@ -1,0 +1,1749 @@
+{
+  "lastSyncedAt": "2026-09-22T00:00:00.000Z",
+  "dataDate": "2026-09-22",
+  "featureCount": 100,
+  "features": [
+    {
+      "Key": "RHAISTRAT-1001",
+      "Summary": "Model serving optimization",
+      "Components": [
+        "Serving Orchestration",
+        "Gen AI Studio"
+      ],
+      "RICE": 173,
+      "PlannedFor": "3.7 EA1",
+      "Status": "In Progress",
+      "PM": "pm-1@redhat.com",
+      "DeliveryOwner": "owner-1@redhat.com",
+      "Priority": "P1",
+      "FPDoR": "16/17",
+      "Confidence": "likely",
+      "XTeam": "no"
+    },
+    {
+      "Key": "RHAISTRAT-1002",
+      "Summary": "Data pipeline enhancement",
+      "Components": [
+        "vLLM Runtime",
+        "Serving Orchestration",
+        "Model as a Service"
+      ],
+      "RICE": 246,
+      "PlannedFor": "3.7 GA",
+      "Status": "Ready",
+      "PM": "pm-2@redhat.com",
+      "DeliveryOwner": "owner-2@redhat.com",
+      "Priority": "P2",
+      "FPDoR": "15/17",
+      "Confidence": "likely-plus",
+      "XTeam": "no"
+    },
+    {
+      "Key": "RHAISTRAT-1003",
+      "Summary": "Dashboard UI refresh",
+      "Components": [
+        "Model as a Service"
+      ],
+      "RICE": 319,
+      "PlannedFor": "3.8 EA1",
+      "Status": "Blocked",
+      "PM": "pm-3@redhat.com",
+      "DeliveryOwner": "owner-3@redhat.com",
+      "Priority": "P3",
+      "FPDoR": "14/17",
+      "Confidence": "not-ready",
+      "XTeam": "yes"
+    },
+    {
+      "Key": "RHAISTRAT-1281",
+      "Summary": "Trustworthy AI validation",
+      "Components": [
+        "vLLM Runtime",
+        "AI Hub"
+      ],
+      "RICE": 392,
+      "PlannedFor": "3.6 GA",
+      "Status": "Backlog",
+      "PM": "pm-4@redhat.com",
+      "DeliveryOwner": "owner-4@redhat.com",
+      "Priority": "P0",
+      "FPDoR": "Not Assessed",
+      "Confidence": "ready",
+      "XTeam": "no"
+    },
+    {
+      "Key": "RHAISTRAT-1005",
+      "Summary": "Notebook kernel upgrade",
+      "Components": [
+        "AI Hub",
+        "AutoML",
+        "Documentation"
+      ],
+      "RICE": 465,
+      "PlannedFor": "3.7 EA1",
+      "Status": "In Progress",
+      "PM": "pm-5@redhat.com",
+      "DeliveryOwner": "owner-5@redhat.com",
+      "Priority": "P1",
+      "FPDoR": "17/17",
+      "Confidence": "likely",
+      "XTeam": "no"
+    },
+    {
+      "Key": "RHAISTRAT-1006",
+      "Summary": "GenAI Studio MCP discovery",
+      "Components": [
+        "Documentation"
+      ],
+      "RICE": 538,
+      "PlannedFor": "3.7 GA",
+      "Status": "Ready",
+      "PM": "pm-6@redhat.com",
+      "DeliveryOwner": "owner-6@redhat.com",
+      "Priority": "P2",
+      "FPDoR": "16/17",
+      "Confidence": "likely-plus",
+      "XTeam": "yes"
+    },
+    {
+      "Key": "RHAISTRAT-1007",
+      "Summary": "Model serving optimization",
+      "Components": [
+        "AutoML",
+        "MLflow"
+      ],
+      "RICE": 611,
+      "PlannedFor": "3.8 EA1",
+      "Status": "Blocked",
+      "PM": "pm-7@redhat.com",
+      "DeliveryOwner": "owner-7@redhat.com",
+      "Priority": "P3",
+      "FPDoR": "15/17",
+      "Confidence": "not-ready",
+      "XTeam": "no"
+    },
+    {
+      "Key": "RHAISTRAT-1008",
+      "Summary": "Data pipeline enhancement",
+      "Components": [
+        "Data Pipeline",
+        "Notebooks",
+        "MLflow"
+      ],
+      "RICE": 684,
+      "PlannedFor": "3.6 GA",
+      "Status": "Backlog",
+      "PM": "pm-0@redhat.com",
+      "DeliveryOwner": "owner-8@redhat.com",
+      "Priority": "P0",
+      "FPDoR": "14/17",
+      "Confidence": "ready",
+      "XTeam": "no"
+    },
+    {
+      "Key": "RHAISTRAT-1009",
+      "Summary": "Dashboard UI refresh",
+      "Components": [
+        "Data Pipeline"
+      ],
+      "RICE": 757,
+      "PlannedFor": "3.7 EA1",
+      "Status": "In Progress",
+      "PM": "pm-1@redhat.com",
+      "DeliveryOwner": "owner-9@redhat.com",
+      "Priority": "P1",
+      "FPDoR": "Not Assessed",
+      "Confidence": "likely",
+      "XTeam": "yes"
+    },
+    {
+      "Key": "RHAISTRAT-1010",
+      "Summary": "Trustworthy AI validation",
+      "Components": [
+        "Trustworthy AI",
+        "Notebooks"
+      ],
+      "RICE": 830,
+      "PlannedFor": "3.7 GA",
+      "Status": "Ready",
+      "PM": "pm-2@redhat.com",
+      "DeliveryOwner": "owner-0@redhat.com",
+      "Priority": "P2",
+      "FPDoR": "17/17",
+      "Confidence": "likely-plus",
+      "XTeam": "no"
+    },
+    {
+      "Key": "RHAISTRAT-1011",
+      "Summary": "Notebook kernel upgrade",
+      "Components": [
+        "AI Core Dashboard",
+        "Trustworthy AI",
+        "Gen AI Studio"
+      ],
+      "RICE": 103,
+      "PlannedFor": "3.8 EA1",
+      "Status": "Blocked",
+      "PM": "pm-3@redhat.com",
+      "DeliveryOwner": "owner-1@redhat.com",
+      "Priority": "P3",
+      "FPDoR": "16/17",
+      "Confidence": "not-ready",
+      "XTeam": "no"
+    },
+    {
+      "Key": "RHAISTRAT-1012",
+      "Summary": "GenAI Studio MCP discovery",
+      "Components": [
+        "AI Core Dashboard"
+      ],
+      "RICE": 176,
+      "PlannedFor": "3.6 GA",
+      "Status": "Backlog",
+      "PM": "pm-4@redhat.com",
+      "DeliveryOwner": "owner-2@redhat.com",
+      "Priority": "P0",
+      "FPDoR": "15/17",
+      "Confidence": "ready",
+      "XTeam": "yes"
+    },
+    {
+      "Key": "RHAISTRAT-1013",
+      "Summary": "Model serving optimization",
+      "Components": [
+        "Serving Orchestration",
+        "Gen AI Studio"
+      ],
+      "RICE": 249,
+      "PlannedFor": "3.7 EA1",
+      "Status": "In Progress",
+      "PM": "pm-5@redhat.com",
+      "DeliveryOwner": "owner-3@redhat.com",
+      "Priority": "P1",
+      "FPDoR": "14/17",
+      "Confidence": "likely",
+      "XTeam": "no"
+    },
+    {
+      "Key": "RHAISTRAT-1014",
+      "Summary": "Data pipeline enhancement",
+      "Components": [
+        "vLLM Runtime",
+        "Serving Orchestration",
+        "Model as a Service"
+      ],
+      "RICE": 322,
+      "PlannedFor": "3.7 GA",
+      "Status": "Ready",
+      "PM": "pm-6@redhat.com",
+      "DeliveryOwner": "owner-4@redhat.com",
+      "Priority": "P2",
+      "FPDoR": "Not Assessed",
+      "Confidence": "likely-plus",
+      "XTeam": "no"
+    },
+    {
+      "Key": "RHAISTRAT-1015",
+      "Summary": "Dashboard UI refresh",
+      "Components": [
+        "Model as a Service"
+      ],
+      "RICE": 395,
+      "PlannedFor": "3.8 EA1",
+      "Status": "Blocked",
+      "PM": "pm-7@redhat.com",
+      "DeliveryOwner": "owner-5@redhat.com",
+      "Priority": "P3",
+      "FPDoR": "17/17",
+      "Confidence": "not-ready",
+      "XTeam": "yes"
+    },
+    {
+      "Key": "RHAISTRAT-1016",
+      "Summary": "Trustworthy AI validation",
+      "Components": [
+        "vLLM Runtime",
+        "AI Hub"
+      ],
+      "RICE": 468,
+      "PlannedFor": "3.6 GA",
+      "Status": "Backlog",
+      "PM": "pm-0@redhat.com",
+      "DeliveryOwner": "owner-6@redhat.com",
+      "Priority": "P0",
+      "FPDoR": "16/17",
+      "Confidence": "ready",
+      "XTeam": "no"
+    },
+    {
+      "Key": "RHAISTRAT-1017",
+      "Summary": "Notebook kernel upgrade",
+      "Components": [
+        "AI Hub",
+        "AutoML",
+        "Documentation"
+      ],
+      "RICE": 541,
+      "PlannedFor": "3.7 EA1",
+      "Status": "In Progress",
+      "PM": "pm-1@redhat.com",
+      "DeliveryOwner": "owner-7@redhat.com",
+      "Priority": "P1",
+      "FPDoR": "15/17",
+      "Confidence": "likely",
+      "XTeam": "no"
+    },
+    {
+      "Key": "RHAISTRAT-1018",
+      "Summary": "GenAI Studio MCP discovery",
+      "Components": [
+        "Documentation"
+      ],
+      "RICE": 614,
+      "PlannedFor": "3.7 GA",
+      "Status": "Ready",
+      "PM": "pm-2@redhat.com",
+      "DeliveryOwner": "owner-8@redhat.com",
+      "Priority": "P2",
+      "FPDoR": "14/17",
+      "Confidence": "likely-plus",
+      "XTeam": "yes"
+    },
+    {
+      "Key": "RHAISTRAT-1019",
+      "Summary": "Model serving optimization",
+      "Components": [
+        "AutoML",
+        "MLflow"
+      ],
+      "RICE": 687,
+      "PlannedFor": "3.8 EA1",
+      "Status": "Blocked",
+      "PM": "pm-3@redhat.com",
+      "DeliveryOwner": "owner-9@redhat.com",
+      "Priority": "P3",
+      "FPDoR": "Not Assessed",
+      "Confidence": "not-ready",
+      "XTeam": "no"
+    },
+    {
+      "Key": "RHAISTRAT-1020",
+      "Summary": "Data pipeline enhancement",
+      "Components": [
+        "Data Pipeline",
+        "Notebooks",
+        "MLflow"
+      ],
+      "RICE": 760,
+      "PlannedFor": "3.6 GA",
+      "Status": "Backlog",
+      "PM": "pm-4@redhat.com",
+      "DeliveryOwner": "owner-0@redhat.com",
+      "Priority": "P0",
+      "FPDoR": "17/17",
+      "Confidence": "ready",
+      "XTeam": "no"
+    },
+    {
+      "Key": "RHAISTRAT-1021",
+      "Summary": "Dashboard UI refresh",
+      "Components": [
+        "Data Pipeline"
+      ],
+      "RICE": 833,
+      "PlannedFor": "3.7 EA1",
+      "Status": "In Progress",
+      "PM": "pm-5@redhat.com",
+      "DeliveryOwner": "owner-1@redhat.com",
+      "Priority": "P1",
+      "FPDoR": "16/17",
+      "Confidence": "likely",
+      "XTeam": "yes"
+    },
+    {
+      "Key": "RHAISTRAT-1022",
+      "Summary": "Trustworthy AI validation",
+      "Components": [
+        "Trustworthy AI",
+        "Notebooks"
+      ],
+      "RICE": 106,
+      "PlannedFor": "3.7 GA",
+      "Status": "Ready",
+      "PM": "pm-6@redhat.com",
+      "DeliveryOwner": "owner-2@redhat.com",
+      "Priority": "P2",
+      "FPDoR": "15/17",
+      "Confidence": "likely-plus",
+      "XTeam": "no"
+    },
+    {
+      "Key": "RHAISTRAT-1023",
+      "Summary": "Notebook kernel upgrade",
+      "Components": [
+        "AI Core Dashboard",
+        "Trustworthy AI",
+        "Gen AI Studio"
+      ],
+      "RICE": 179,
+      "PlannedFor": "3.8 EA1",
+      "Status": "Blocked",
+      "PM": "pm-7@redhat.com",
+      "DeliveryOwner": "owner-3@redhat.com",
+      "Priority": "P3",
+      "FPDoR": "14/17",
+      "Confidence": "not-ready",
+      "XTeam": "no"
+    },
+    {
+      "Key": "RHAISTRAT-1024",
+      "Summary": "GenAI Studio MCP discovery",
+      "Components": [
+        "AI Core Dashboard"
+      ],
+      "RICE": 252,
+      "PlannedFor": "3.6 GA",
+      "Status": "Backlog",
+      "PM": "pm-0@redhat.com",
+      "DeliveryOwner": "owner-4@redhat.com",
+      "Priority": "P0",
+      "FPDoR": "Not Assessed",
+      "Confidence": "ready",
+      "XTeam": "yes"
+    },
+    {
+      "Key": "RHAISTRAT-1025",
+      "Summary": "Model serving optimization",
+      "Components": [
+        "Serving Orchestration",
+        "Gen AI Studio"
+      ],
+      "RICE": 325,
+      "PlannedFor": "3.7 EA1",
+      "Status": "In Progress",
+      "PM": "pm-1@redhat.com",
+      "DeliveryOwner": "owner-5@redhat.com",
+      "Priority": "P1",
+      "FPDoR": "17/17",
+      "Confidence": "likely",
+      "XTeam": "no"
+    },
+    {
+      "Key": "RHAISTRAT-1026",
+      "Summary": "Data pipeline enhancement",
+      "Components": [
+        "vLLM Runtime",
+        "Serving Orchestration",
+        "Model as a Service"
+      ],
+      "RICE": 398,
+      "PlannedFor": "3.7 GA",
+      "Status": "Ready",
+      "PM": "pm-2@redhat.com",
+      "DeliveryOwner": "owner-6@redhat.com",
+      "Priority": "P2",
+      "FPDoR": "16/17",
+      "Confidence": "likely-plus",
+      "XTeam": "no"
+    },
+    {
+      "Key": "RHAISTRAT-1027",
+      "Summary": "Dashboard UI refresh",
+      "Components": [
+        "Model as a Service"
+      ],
+      "RICE": 471,
+      "PlannedFor": "3.8 EA1",
+      "Status": "Blocked",
+      "PM": "pm-3@redhat.com",
+      "DeliveryOwner": "owner-7@redhat.com",
+      "Priority": "P3",
+      "FPDoR": "15/17",
+      "Confidence": "not-ready",
+      "XTeam": "yes"
+    },
+    {
+      "Key": "RHAISTRAT-1028",
+      "Summary": "Trustworthy AI validation",
+      "Components": [
+        "vLLM Runtime",
+        "AI Hub"
+      ],
+      "RICE": 544,
+      "PlannedFor": "3.6 GA",
+      "Status": "Backlog",
+      "PM": "pm-4@redhat.com",
+      "DeliveryOwner": "owner-8@redhat.com",
+      "Priority": "P0",
+      "FPDoR": "14/17",
+      "Confidence": "ready",
+      "XTeam": "no"
+    },
+    {
+      "Key": "RHAISTRAT-1029",
+      "Summary": "Notebook kernel upgrade",
+      "Components": [
+        "AI Hub",
+        "AutoML",
+        "Documentation"
+      ],
+      "RICE": 617,
+      "PlannedFor": "3.7 EA1",
+      "Status": "In Progress",
+      "PM": "pm-5@redhat.com",
+      "DeliveryOwner": "owner-9@redhat.com",
+      "Priority": "P1",
+      "FPDoR": "Not Assessed",
+      "Confidence": "likely",
+      "XTeam": "no"
+    },
+    {
+      "Key": "RHAISTRAT-1030",
+      "Summary": "GenAI Studio MCP discovery",
+      "Components": [
+        "Documentation"
+      ],
+      "RICE": 690,
+      "PlannedFor": "3.7 GA",
+      "Status": "Ready",
+      "PM": "pm-6@redhat.com",
+      "DeliveryOwner": "owner-0@redhat.com",
+      "Priority": "P2",
+      "FPDoR": "17/17",
+      "Confidence": "likely-plus",
+      "XTeam": "yes"
+    },
+    {
+      "Key": "RHAISTRAT-1031",
+      "Summary": "Model serving optimization",
+      "Components": [
+        "AutoML",
+        "MLflow"
+      ],
+      "RICE": 763,
+      "PlannedFor": "3.8 EA1",
+      "Status": "Blocked",
+      "PM": "pm-7@redhat.com",
+      "DeliveryOwner": "owner-1@redhat.com",
+      "Priority": "P3",
+      "FPDoR": "16/17",
+      "Confidence": "not-ready",
+      "XTeam": "no"
+    },
+    {
+      "Key": "RHAISTRAT-1032",
+      "Summary": "Data pipeline enhancement",
+      "Components": [
+        "Data Pipeline",
+        "Notebooks",
+        "MLflow"
+      ],
+      "RICE": 836,
+      "PlannedFor": "3.6 GA",
+      "Status": "Backlog",
+      "PM": "pm-0@redhat.com",
+      "DeliveryOwner": "owner-2@redhat.com",
+      "Priority": "P0",
+      "FPDoR": "15/17",
+      "Confidence": "ready",
+      "XTeam": "no"
+    },
+    {
+      "Key": "RHAISTRAT-1033",
+      "Summary": "Dashboard UI refresh",
+      "Components": [
+        "Data Pipeline"
+      ],
+      "RICE": 109,
+      "PlannedFor": "3.7 EA1",
+      "Status": "In Progress",
+      "PM": "pm-1@redhat.com",
+      "DeliveryOwner": "owner-3@redhat.com",
+      "Priority": "P1",
+      "FPDoR": "14/17",
+      "Confidence": "likely",
+      "XTeam": "yes"
+    },
+    {
+      "Key": "RHAISTRAT-1034",
+      "Summary": "Trustworthy AI validation",
+      "Components": [
+        "Trustworthy AI",
+        "Notebooks"
+      ],
+      "RICE": 182,
+      "PlannedFor": "3.7 GA",
+      "Status": "Ready",
+      "PM": "pm-2@redhat.com",
+      "DeliveryOwner": "owner-4@redhat.com",
+      "Priority": "P2",
+      "FPDoR": "Not Assessed",
+      "Confidence": "likely-plus",
+      "XTeam": "no"
+    },
+    {
+      "Key": "RHAISTRAT-1035",
+      "Summary": "Notebook kernel upgrade",
+      "Components": [
+        "AI Core Dashboard",
+        "Trustworthy AI",
+        "Gen AI Studio"
+      ],
+      "RICE": 255,
+      "PlannedFor": "3.8 EA1",
+      "Status": "Blocked",
+      "PM": "pm-3@redhat.com",
+      "DeliveryOwner": "owner-5@redhat.com",
+      "Priority": "P3",
+      "FPDoR": "17/17",
+      "Confidence": "not-ready",
+      "XTeam": "no"
+    },
+    {
+      "Key": "RHAISTRAT-1036",
+      "Summary": "GenAI Studio MCP discovery",
+      "Components": [
+        "AI Core Dashboard"
+      ],
+      "RICE": 328,
+      "PlannedFor": "3.6 GA",
+      "Status": "Backlog",
+      "PM": "pm-4@redhat.com",
+      "DeliveryOwner": "owner-6@redhat.com",
+      "Priority": "P0",
+      "FPDoR": "16/17",
+      "Confidence": "ready",
+      "XTeam": "yes"
+    },
+    {
+      "Key": "RHAISTRAT-1037",
+      "Summary": "Model serving optimization",
+      "Components": [
+        "Serving Orchestration",
+        "Gen AI Studio"
+      ],
+      "RICE": 401,
+      "PlannedFor": "3.7 EA1",
+      "Status": "In Progress",
+      "PM": "pm-5@redhat.com",
+      "DeliveryOwner": "owner-7@redhat.com",
+      "Priority": "P1",
+      "FPDoR": "15/17",
+      "Confidence": "likely",
+      "XTeam": "no"
+    },
+    {
+      "Key": "RHAISTRAT-1038",
+      "Summary": "Data pipeline enhancement",
+      "Components": [
+        "vLLM Runtime",
+        "Serving Orchestration",
+        "Model as a Service"
+      ],
+      "RICE": 474,
+      "PlannedFor": "3.7 GA",
+      "Status": "Ready",
+      "PM": "pm-6@redhat.com",
+      "DeliveryOwner": "owner-8@redhat.com",
+      "Priority": "P2",
+      "FPDoR": "14/17",
+      "Confidence": "likely-plus",
+      "XTeam": "no"
+    },
+    {
+      "Key": "RHAISTRAT-1039",
+      "Summary": "Dashboard UI refresh",
+      "Components": [
+        "Model as a Service"
+      ],
+      "RICE": 547,
+      "PlannedFor": "3.8 EA1",
+      "Status": "Blocked",
+      "PM": "pm-7@redhat.com",
+      "DeliveryOwner": "owner-9@redhat.com",
+      "Priority": "P3",
+      "FPDoR": "Not Assessed",
+      "Confidence": "not-ready",
+      "XTeam": "yes"
+    },
+    {
+      "Key": "RHAISTRAT-1040",
+      "Summary": "Trustworthy AI validation",
+      "Components": [
+        "vLLM Runtime",
+        "AI Hub"
+      ],
+      "RICE": 620,
+      "PlannedFor": "3.6 GA",
+      "Status": "Backlog",
+      "PM": "pm-0@redhat.com",
+      "DeliveryOwner": "owner-0@redhat.com",
+      "Priority": "P0",
+      "FPDoR": "17/17",
+      "Confidence": "ready",
+      "XTeam": "no"
+    },
+    {
+      "Key": "RHAISTRAT-1041",
+      "Summary": "Notebook kernel upgrade",
+      "Components": [
+        "AI Hub",
+        "AutoML",
+        "Documentation"
+      ],
+      "RICE": 693,
+      "PlannedFor": "3.7 EA1",
+      "Status": "In Progress",
+      "PM": "pm-1@redhat.com",
+      "DeliveryOwner": "owner-1@redhat.com",
+      "Priority": "P1",
+      "FPDoR": "16/17",
+      "Confidence": "likely",
+      "XTeam": "no"
+    },
+    {
+      "Key": "RHAISTRAT-1042",
+      "Summary": "GenAI Studio MCP discovery",
+      "Components": [
+        "Documentation"
+      ],
+      "RICE": 766,
+      "PlannedFor": "3.7 GA",
+      "Status": "Ready",
+      "PM": "pm-2@redhat.com",
+      "DeliveryOwner": "owner-2@redhat.com",
+      "Priority": "P2",
+      "FPDoR": "15/17",
+      "Confidence": "likely-plus",
+      "XTeam": "yes"
+    },
+    {
+      "Key": "RHAISTRAT-1043",
+      "Summary": "Model serving optimization",
+      "Components": [
+        "AutoML",
+        "MLflow"
+      ],
+      "RICE": 839,
+      "PlannedFor": "3.8 EA1",
+      "Status": "Blocked",
+      "PM": "pm-3@redhat.com",
+      "DeliveryOwner": "owner-3@redhat.com",
+      "Priority": "P3",
+      "FPDoR": "14/17",
+      "Confidence": "not-ready",
+      "XTeam": "no"
+    },
+    {
+      "Key": "RHAISTRAT-1044",
+      "Summary": "Data pipeline enhancement",
+      "Components": [
+        "Data Pipeline",
+        "Notebooks",
+        "MLflow"
+      ],
+      "RICE": 112,
+      "PlannedFor": "3.6 GA",
+      "Status": "Backlog",
+      "PM": "pm-4@redhat.com",
+      "DeliveryOwner": "owner-4@redhat.com",
+      "Priority": "P0",
+      "FPDoR": "Not Assessed",
+      "Confidence": "ready",
+      "XTeam": "no"
+    },
+    {
+      "Key": "RHAISTRAT-1045",
+      "Summary": "Dashboard UI refresh",
+      "Components": [
+        "Data Pipeline"
+      ],
+      "RICE": 185,
+      "PlannedFor": "3.7 EA1",
+      "Status": "In Progress",
+      "PM": "pm-5@redhat.com",
+      "DeliveryOwner": "owner-5@redhat.com",
+      "Priority": "P1",
+      "FPDoR": "17/17",
+      "Confidence": "likely",
+      "XTeam": "yes"
+    },
+    {
+      "Key": "RHAISTRAT-1046",
+      "Summary": "Trustworthy AI validation",
+      "Components": [
+        "Trustworthy AI",
+        "Notebooks"
+      ],
+      "RICE": 258,
+      "PlannedFor": "3.7 GA",
+      "Status": "Ready",
+      "PM": "pm-6@redhat.com",
+      "DeliveryOwner": "owner-6@redhat.com",
+      "Priority": "P2",
+      "FPDoR": "16/17",
+      "Confidence": "likely-plus",
+      "XTeam": "no"
+    },
+    {
+      "Key": "RHAISTRAT-1047",
+      "Summary": "Notebook kernel upgrade",
+      "Components": [
+        "AI Core Dashboard",
+        "Trustworthy AI",
+        "Gen AI Studio"
+      ],
+      "RICE": 331,
+      "PlannedFor": "3.8 EA1",
+      "Status": "Blocked",
+      "PM": "pm-7@redhat.com",
+      "DeliveryOwner": "owner-7@redhat.com",
+      "Priority": "P3",
+      "FPDoR": "15/17",
+      "Confidence": "not-ready",
+      "XTeam": "no"
+    },
+    {
+      "Key": "RHAISTRAT-1048",
+      "Summary": "GenAI Studio MCP discovery",
+      "Components": [
+        "AI Core Dashboard"
+      ],
+      "RICE": 404,
+      "PlannedFor": "3.6 GA",
+      "Status": "Backlog",
+      "PM": "pm-0@redhat.com",
+      "DeliveryOwner": "owner-8@redhat.com",
+      "Priority": "P0",
+      "FPDoR": "14/17",
+      "Confidence": "ready",
+      "XTeam": "yes"
+    },
+    {
+      "Key": "RHAISTRAT-1049",
+      "Summary": "Model serving optimization",
+      "Components": [
+        "Serving Orchestration",
+        "Gen AI Studio"
+      ],
+      "RICE": 477,
+      "PlannedFor": "3.7 EA1",
+      "Status": "In Progress",
+      "PM": "pm-1@redhat.com",
+      "DeliveryOwner": "owner-9@redhat.com",
+      "Priority": "P1",
+      "FPDoR": "Not Assessed",
+      "Confidence": "likely",
+      "XTeam": "no"
+    },
+    {
+      "Key": "RHAISTRAT-1050",
+      "Summary": "Data pipeline enhancement",
+      "Components": [
+        "vLLM Runtime",
+        "Serving Orchestration",
+        "Model as a Service"
+      ],
+      "RICE": 550,
+      "PlannedFor": "3.7 GA",
+      "Status": "Ready",
+      "PM": "pm-2@redhat.com",
+      "DeliveryOwner": "owner-0@redhat.com",
+      "Priority": "P2",
+      "FPDoR": "17/17",
+      "Confidence": "likely-plus",
+      "XTeam": "no"
+    },
+    {
+      "Key": "RHAISTRAT-1051",
+      "Summary": "Dashboard UI refresh",
+      "Components": [
+        "Model as a Service"
+      ],
+      "RICE": 623,
+      "PlannedFor": "3.8 EA1",
+      "Status": "Blocked",
+      "PM": "pm-3@redhat.com",
+      "DeliveryOwner": "owner-1@redhat.com",
+      "Priority": "P3",
+      "FPDoR": "16/17",
+      "Confidence": "not-ready",
+      "XTeam": "yes"
+    },
+    {
+      "Key": "RHAISTRAT-1052",
+      "Summary": "Trustworthy AI validation",
+      "Components": [
+        "vLLM Runtime",
+        "AI Hub"
+      ],
+      "RICE": 696,
+      "PlannedFor": "3.6 GA",
+      "Status": "Backlog",
+      "PM": "pm-4@redhat.com",
+      "DeliveryOwner": "owner-2@redhat.com",
+      "Priority": "P0",
+      "FPDoR": "15/17",
+      "Confidence": "ready",
+      "XTeam": "no"
+    },
+    {
+      "Key": "RHAISTRAT-1053",
+      "Summary": "Notebook kernel upgrade",
+      "Components": [
+        "AI Hub",
+        "AutoML",
+        "Documentation"
+      ],
+      "RICE": 769,
+      "PlannedFor": "3.7 EA1",
+      "Status": "In Progress",
+      "PM": "pm-5@redhat.com",
+      "DeliveryOwner": "owner-3@redhat.com",
+      "Priority": "P1",
+      "FPDoR": "14/17",
+      "Confidence": "likely",
+      "XTeam": "no"
+    },
+    {
+      "Key": "RHAISTRAT-1054",
+      "Summary": "GenAI Studio MCP discovery",
+      "Components": [
+        "Documentation"
+      ],
+      "RICE": 842,
+      "PlannedFor": "3.7 GA",
+      "Status": "Ready",
+      "PM": "pm-6@redhat.com",
+      "DeliveryOwner": "owner-4@redhat.com",
+      "Priority": "P2",
+      "FPDoR": "Not Assessed",
+      "Confidence": "likely-plus",
+      "XTeam": "yes"
+    },
+    {
+      "Key": "RHAISTRAT-1055",
+      "Summary": "Model serving optimization",
+      "Components": [
+        "AutoML",
+        "MLflow"
+      ],
+      "RICE": 115,
+      "PlannedFor": "3.8 EA1",
+      "Status": "Blocked",
+      "PM": "pm-7@redhat.com",
+      "DeliveryOwner": "owner-5@redhat.com",
+      "Priority": "P3",
+      "FPDoR": "17/17",
+      "Confidence": "not-ready",
+      "XTeam": "no"
+    },
+    {
+      "Key": "RHAISTRAT-1056",
+      "Summary": "Data pipeline enhancement",
+      "Components": [
+        "Data Pipeline",
+        "Notebooks",
+        "MLflow"
+      ],
+      "RICE": 188,
+      "PlannedFor": "3.6 GA",
+      "Status": "Backlog",
+      "PM": "pm-0@redhat.com",
+      "DeliveryOwner": "owner-6@redhat.com",
+      "Priority": "P0",
+      "FPDoR": "16/17",
+      "Confidence": "ready",
+      "XTeam": "no"
+    },
+    {
+      "Key": "RHAISTRAT-1057",
+      "Summary": "Dashboard UI refresh",
+      "Components": [
+        "Data Pipeline"
+      ],
+      "RICE": 261,
+      "PlannedFor": "3.7 EA1",
+      "Status": "In Progress",
+      "PM": "pm-1@redhat.com",
+      "DeliveryOwner": "owner-7@redhat.com",
+      "Priority": "P1",
+      "FPDoR": "15/17",
+      "Confidence": "likely",
+      "XTeam": "yes"
+    },
+    {
+      "Key": "RHAISTRAT-1058",
+      "Summary": "Trustworthy AI validation",
+      "Components": [
+        "Trustworthy AI",
+        "Notebooks"
+      ],
+      "RICE": 334,
+      "PlannedFor": "3.7 GA",
+      "Status": "Ready",
+      "PM": "pm-2@redhat.com",
+      "DeliveryOwner": "owner-8@redhat.com",
+      "Priority": "P2",
+      "FPDoR": "14/17",
+      "Confidence": "likely-plus",
+      "XTeam": "no"
+    },
+    {
+      "Key": "RHAISTRAT-1059",
+      "Summary": "Notebook kernel upgrade",
+      "Components": [
+        "AI Core Dashboard",
+        "Trustworthy AI",
+        "Gen AI Studio"
+      ],
+      "RICE": 407,
+      "PlannedFor": "3.8 EA1",
+      "Status": "Blocked",
+      "PM": "pm-3@redhat.com",
+      "DeliveryOwner": "owner-9@redhat.com",
+      "Priority": "P3",
+      "FPDoR": "Not Assessed",
+      "Confidence": "not-ready",
+      "XTeam": "no"
+    },
+    {
+      "Key": "RHAISTRAT-1060",
+      "Summary": "GenAI Studio MCP discovery",
+      "Components": [
+        "AI Core Dashboard"
+      ],
+      "RICE": 480,
+      "PlannedFor": "3.6 GA",
+      "Status": "Backlog",
+      "PM": "pm-4@redhat.com",
+      "DeliveryOwner": "owner-0@redhat.com",
+      "Priority": "P0",
+      "FPDoR": "17/17",
+      "Confidence": "ready",
+      "XTeam": "yes"
+    },
+    {
+      "Key": "RHAISTRAT-1061",
+      "Summary": "Model serving optimization",
+      "Components": [
+        "Serving Orchestration",
+        "Gen AI Studio"
+      ],
+      "RICE": 553,
+      "PlannedFor": "3.7 EA1",
+      "Status": "In Progress",
+      "PM": "pm-5@redhat.com",
+      "DeliveryOwner": "owner-1@redhat.com",
+      "Priority": "P1",
+      "FPDoR": "16/17",
+      "Confidence": "likely",
+      "XTeam": "no"
+    },
+    {
+      "Key": "RHAISTRAT-1062",
+      "Summary": "Data pipeline enhancement",
+      "Components": [
+        "vLLM Runtime",
+        "Serving Orchestration",
+        "Model as a Service"
+      ],
+      "RICE": 626,
+      "PlannedFor": "3.7 GA",
+      "Status": "Ready",
+      "PM": "pm-6@redhat.com",
+      "DeliveryOwner": "owner-2@redhat.com",
+      "Priority": "P2",
+      "FPDoR": "15/17",
+      "Confidence": "likely-plus",
+      "XTeam": "no"
+    },
+    {
+      "Key": "RHAISTRAT-1063",
+      "Summary": "Dashboard UI refresh",
+      "Components": [
+        "Model as a Service"
+      ],
+      "RICE": 699,
+      "PlannedFor": "3.8 EA1",
+      "Status": "Blocked",
+      "PM": "pm-7@redhat.com",
+      "DeliveryOwner": "owner-3@redhat.com",
+      "Priority": "P3",
+      "FPDoR": "14/17",
+      "Confidence": "not-ready",
+      "XTeam": "yes"
+    },
+    {
+      "Key": "RHAISTRAT-1064",
+      "Summary": "Trustworthy AI validation",
+      "Components": [
+        "vLLM Runtime",
+        "AI Hub"
+      ],
+      "RICE": 772,
+      "PlannedFor": "3.6 GA",
+      "Status": "Backlog",
+      "PM": "pm-0@redhat.com",
+      "DeliveryOwner": "owner-4@redhat.com",
+      "Priority": "P0",
+      "FPDoR": "Not Assessed",
+      "Confidence": "ready",
+      "XTeam": "no"
+    },
+    {
+      "Key": "RHAISTRAT-1065",
+      "Summary": "Notebook kernel upgrade",
+      "Components": [
+        "AI Hub",
+        "AutoML",
+        "Documentation"
+      ],
+      "RICE": 845,
+      "PlannedFor": "3.7 EA1",
+      "Status": "In Progress",
+      "PM": "pm-1@redhat.com",
+      "DeliveryOwner": "owner-5@redhat.com",
+      "Priority": "P1",
+      "FPDoR": "17/17",
+      "Confidence": "likely",
+      "XTeam": "no"
+    },
+    {
+      "Key": "RHAISTRAT-1066",
+      "Summary": "GenAI Studio MCP discovery",
+      "Components": [
+        "Documentation"
+      ],
+      "RICE": 118,
+      "PlannedFor": "3.7 GA",
+      "Status": "Ready",
+      "PM": "pm-2@redhat.com",
+      "DeliveryOwner": "owner-6@redhat.com",
+      "Priority": "P2",
+      "FPDoR": "16/17",
+      "Confidence": "likely-plus",
+      "XTeam": "yes"
+    },
+    {
+      "Key": "RHAISTRAT-1067",
+      "Summary": "Model serving optimization",
+      "Components": [
+        "AutoML",
+        "MLflow"
+      ],
+      "RICE": 191,
+      "PlannedFor": "3.8 EA1",
+      "Status": "Blocked",
+      "PM": "pm-3@redhat.com",
+      "DeliveryOwner": "owner-7@redhat.com",
+      "Priority": "P3",
+      "FPDoR": "15/17",
+      "Confidence": "not-ready",
+      "XTeam": "no"
+    },
+    {
+      "Key": "RHAISTRAT-1068",
+      "Summary": "Data pipeline enhancement",
+      "Components": [
+        "Data Pipeline",
+        "Notebooks",
+        "MLflow"
+      ],
+      "RICE": 264,
+      "PlannedFor": "3.6 GA",
+      "Status": "Backlog",
+      "PM": "pm-4@redhat.com",
+      "DeliveryOwner": "owner-8@redhat.com",
+      "Priority": "P0",
+      "FPDoR": "14/17",
+      "Confidence": "ready",
+      "XTeam": "no"
+    },
+    {
+      "Key": "RHAISTRAT-1069",
+      "Summary": "Dashboard UI refresh",
+      "Components": [
+        "Data Pipeline"
+      ],
+      "RICE": 337,
+      "PlannedFor": "3.7 EA1",
+      "Status": "In Progress",
+      "PM": "pm-5@redhat.com",
+      "DeliveryOwner": "owner-9@redhat.com",
+      "Priority": "P1",
+      "FPDoR": "Not Assessed",
+      "Confidence": "likely",
+      "XTeam": "yes"
+    },
+    {
+      "Key": "RHAISTRAT-1070",
+      "Summary": "Trustworthy AI validation",
+      "Components": [
+        "Trustworthy AI",
+        "Notebooks"
+      ],
+      "RICE": 410,
+      "PlannedFor": "3.7 GA",
+      "Status": "Ready",
+      "PM": "pm-6@redhat.com",
+      "DeliveryOwner": "owner-0@redhat.com",
+      "Priority": "P2",
+      "FPDoR": "17/17",
+      "Confidence": "likely-plus",
+      "XTeam": "no"
+    },
+    {
+      "Key": "RHAISTRAT-1071",
+      "Summary": "Notebook kernel upgrade",
+      "Components": [
+        "AI Core Dashboard",
+        "Trustworthy AI",
+        "Gen AI Studio"
+      ],
+      "RICE": 483,
+      "PlannedFor": "3.8 EA1",
+      "Status": "Blocked",
+      "PM": "pm-7@redhat.com",
+      "DeliveryOwner": "owner-1@redhat.com",
+      "Priority": "P3",
+      "FPDoR": "16/17",
+      "Confidence": "not-ready",
+      "XTeam": "no"
+    },
+    {
+      "Key": "RHAISTRAT-1072",
+      "Summary": "GenAI Studio MCP discovery",
+      "Components": [
+        "AI Core Dashboard"
+      ],
+      "RICE": 556,
+      "PlannedFor": "3.6 GA",
+      "Status": "Backlog",
+      "PM": "pm-0@redhat.com",
+      "DeliveryOwner": "owner-2@redhat.com",
+      "Priority": "P0",
+      "FPDoR": "15/17",
+      "Confidence": "ready",
+      "XTeam": "yes"
+    },
+    {
+      "Key": "RHAISTRAT-1073",
+      "Summary": "Model serving optimization",
+      "Components": [
+        "Serving Orchestration",
+        "Gen AI Studio"
+      ],
+      "RICE": 629,
+      "PlannedFor": "3.7 EA1",
+      "Status": "In Progress",
+      "PM": "pm-1@redhat.com",
+      "DeliveryOwner": "owner-3@redhat.com",
+      "Priority": "P1",
+      "FPDoR": "14/17",
+      "Confidence": "likely",
+      "XTeam": "no"
+    },
+    {
+      "Key": "RHAISTRAT-1074",
+      "Summary": "Data pipeline enhancement",
+      "Components": [
+        "vLLM Runtime",
+        "Serving Orchestration",
+        "Model as a Service"
+      ],
+      "RICE": 702,
+      "PlannedFor": "3.7 GA",
+      "Status": "Ready",
+      "PM": "pm-2@redhat.com",
+      "DeliveryOwner": "owner-4@redhat.com",
+      "Priority": "P2",
+      "FPDoR": "Not Assessed",
+      "Confidence": "likely-plus",
+      "XTeam": "no"
+    },
+    {
+      "Key": "RHAISTRAT-1075",
+      "Summary": "Dashboard UI refresh",
+      "Components": [
+        "Model as a Service"
+      ],
+      "RICE": 775,
+      "PlannedFor": "3.8 EA1",
+      "Status": "Blocked",
+      "PM": "pm-3@redhat.com",
+      "DeliveryOwner": "owner-5@redhat.com",
+      "Priority": "P3",
+      "FPDoR": "17/17",
+      "Confidence": "not-ready",
+      "XTeam": "yes"
+    },
+    {
+      "Key": "RHAISTRAT-1076",
+      "Summary": "Trustworthy AI validation",
+      "Components": [
+        "vLLM Runtime",
+        "AI Hub"
+      ],
+      "RICE": 848,
+      "PlannedFor": "3.6 GA",
+      "Status": "Backlog",
+      "PM": "pm-4@redhat.com",
+      "DeliveryOwner": "owner-6@redhat.com",
+      "Priority": "P0",
+      "FPDoR": "16/17",
+      "Confidence": "ready",
+      "XTeam": "no"
+    },
+    {
+      "Key": "RHAISTRAT-1077",
+      "Summary": "Notebook kernel upgrade",
+      "Components": [
+        "AI Hub",
+        "AutoML",
+        "Documentation"
+      ],
+      "RICE": 121,
+      "PlannedFor": "3.7 EA1",
+      "Status": "In Progress",
+      "PM": "pm-5@redhat.com",
+      "DeliveryOwner": "owner-7@redhat.com",
+      "Priority": "P1",
+      "FPDoR": "15/17",
+      "Confidence": "likely",
+      "XTeam": "no"
+    },
+    {
+      "Key": "RHAISTRAT-1078",
+      "Summary": "GenAI Studio MCP discovery",
+      "Components": [
+        "Documentation"
+      ],
+      "RICE": 194,
+      "PlannedFor": "3.7 GA",
+      "Status": "Ready",
+      "PM": "pm-6@redhat.com",
+      "DeliveryOwner": "owner-8@redhat.com",
+      "Priority": "P2",
+      "FPDoR": "14/17",
+      "Confidence": "likely-plus",
+      "XTeam": "yes"
+    },
+    {
+      "Key": "RHAISTRAT-1079",
+      "Summary": "Model serving optimization",
+      "Components": [
+        "AutoML",
+        "MLflow"
+      ],
+      "RICE": 267,
+      "PlannedFor": "3.8 EA1",
+      "Status": "Blocked",
+      "PM": "pm-7@redhat.com",
+      "DeliveryOwner": "owner-9@redhat.com",
+      "Priority": "P3",
+      "FPDoR": "Not Assessed",
+      "Confidence": "not-ready",
+      "XTeam": "no"
+    },
+    {
+      "Key": "RHAISTRAT-1080",
+      "Summary": "Data pipeline enhancement",
+      "Components": [
+        "Data Pipeline",
+        "Notebooks",
+        "MLflow"
+      ],
+      "RICE": 340,
+      "PlannedFor": "3.6 GA",
+      "Status": "Backlog",
+      "PM": "pm-0@redhat.com",
+      "DeliveryOwner": "owner-0@redhat.com",
+      "Priority": "P0",
+      "FPDoR": "17/17",
+      "Confidence": "ready",
+      "XTeam": "no"
+    },
+    {
+      "Key": "RHAISTRAT-1081",
+      "Summary": "Dashboard UI refresh",
+      "Components": [
+        "Data Pipeline"
+      ],
+      "RICE": 413,
+      "PlannedFor": "3.7 EA1",
+      "Status": "In Progress",
+      "PM": "pm-1@redhat.com",
+      "DeliveryOwner": "owner-1@redhat.com",
+      "Priority": "P1",
+      "FPDoR": "16/17",
+      "Confidence": "likely",
+      "XTeam": "yes"
+    },
+    {
+      "Key": "RHAISTRAT-1082",
+      "Summary": "Trustworthy AI validation",
+      "Components": [
+        "Trustworthy AI",
+        "Notebooks"
+      ],
+      "RICE": 486,
+      "PlannedFor": "3.7 GA",
+      "Status": "Ready",
+      "PM": "pm-2@redhat.com",
+      "DeliveryOwner": "owner-2@redhat.com",
+      "Priority": "P2",
+      "FPDoR": "15/17",
+      "Confidence": "likely-plus",
+      "XTeam": "no"
+    },
+    {
+      "Key": "RHAISTRAT-1083",
+      "Summary": "Notebook kernel upgrade",
+      "Components": [
+        "AI Core Dashboard",
+        "Trustworthy AI",
+        "Gen AI Studio"
+      ],
+      "RICE": 559,
+      "PlannedFor": "3.8 EA1",
+      "Status": "Blocked",
+      "PM": "pm-3@redhat.com",
+      "DeliveryOwner": "owner-3@redhat.com",
+      "Priority": "P3",
+      "FPDoR": "14/17",
+      "Confidence": "not-ready",
+      "XTeam": "no"
+    },
+    {
+      "Key": "RHAISTRAT-1084",
+      "Summary": "GenAI Studio MCP discovery",
+      "Components": [
+        "AI Core Dashboard"
+      ],
+      "RICE": 632,
+      "PlannedFor": "3.6 GA",
+      "Status": "Backlog",
+      "PM": "pm-4@redhat.com",
+      "DeliveryOwner": "owner-4@redhat.com",
+      "Priority": "P0",
+      "FPDoR": "Not Assessed",
+      "Confidence": "ready",
+      "XTeam": "yes"
+    },
+    {
+      "Key": "RHAISTRAT-1085",
+      "Summary": "Model serving optimization",
+      "Components": [
+        "Serving Orchestration",
+        "Gen AI Studio"
+      ],
+      "RICE": 705,
+      "PlannedFor": "3.7 EA1",
+      "Status": "In Progress",
+      "PM": "pm-5@redhat.com",
+      "DeliveryOwner": "owner-5@redhat.com",
+      "Priority": "P1",
+      "FPDoR": "17/17",
+      "Confidence": "likely",
+      "XTeam": "no"
+    },
+    {
+      "Key": "RHAISTRAT-1086",
+      "Summary": "Data pipeline enhancement",
+      "Components": [
+        "vLLM Runtime",
+        "Serving Orchestration",
+        "Model as a Service"
+      ],
+      "RICE": 778,
+      "PlannedFor": "3.7 GA",
+      "Status": "Ready",
+      "PM": "pm-6@redhat.com",
+      "DeliveryOwner": "owner-6@redhat.com",
+      "Priority": "P2",
+      "FPDoR": "16/17",
+      "Confidence": "likely-plus",
+      "XTeam": "no"
+    },
+    {
+      "Key": "RHAISTRAT-1087",
+      "Summary": "Dashboard UI refresh",
+      "Components": [
+        "Model as a Service"
+      ],
+      "RICE": 851,
+      "PlannedFor": "3.8 EA1",
+      "Status": "Blocked",
+      "PM": "pm-7@redhat.com",
+      "DeliveryOwner": "owner-7@redhat.com",
+      "Priority": "P3",
+      "FPDoR": "15/17",
+      "Confidence": "not-ready",
+      "XTeam": "yes"
+    },
+    {
+      "Key": "RHAISTRAT-1088",
+      "Summary": "Trustworthy AI validation",
+      "Components": [
+        "vLLM Runtime",
+        "AI Hub"
+      ],
+      "RICE": 124,
+      "PlannedFor": "3.6 GA",
+      "Status": "Backlog",
+      "PM": "pm-0@redhat.com",
+      "DeliveryOwner": "owner-8@redhat.com",
+      "Priority": "P0",
+      "FPDoR": "14/17",
+      "Confidence": "ready",
+      "XTeam": "no"
+    },
+    {
+      "Key": "RHAISTRAT-1089",
+      "Summary": "Notebook kernel upgrade",
+      "Components": [
+        "AI Hub",
+        "AutoML",
+        "Documentation"
+      ],
+      "RICE": 197,
+      "PlannedFor": "3.7 EA1",
+      "Status": "In Progress",
+      "PM": "pm-1@redhat.com",
+      "DeliveryOwner": "owner-9@redhat.com",
+      "Priority": "P1",
+      "FPDoR": "Not Assessed",
+      "Confidence": "likely",
+      "XTeam": "no"
+    },
+    {
+      "Key": "RHAISTRAT-1090",
+      "Summary": "GenAI Studio MCP discovery",
+      "Components": [
+        "Documentation"
+      ],
+      "RICE": 270,
+      "PlannedFor": "3.7 GA",
+      "Status": "Ready",
+      "PM": "pm-2@redhat.com",
+      "DeliveryOwner": "owner-0@redhat.com",
+      "Priority": "P2",
+      "FPDoR": "17/17",
+      "Confidence": "likely-plus",
+      "XTeam": "yes"
+    },
+    {
+      "Key": "RHAISTRAT-1091",
+      "Summary": "Model serving optimization",
+      "Components": [
+        "AutoML",
+        "MLflow"
+      ],
+      "RICE": 343,
+      "PlannedFor": "3.8 EA1",
+      "Status": "Blocked",
+      "PM": "pm-3@redhat.com",
+      "DeliveryOwner": "owner-1@redhat.com",
+      "Priority": "P3",
+      "FPDoR": "16/17",
+      "Confidence": "not-ready",
+      "XTeam": "no"
+    },
+    {
+      "Key": "RHAISTRAT-1092",
+      "Summary": "Data pipeline enhancement",
+      "Components": [
+        "Data Pipeline",
+        "Notebooks",
+        "MLflow"
+      ],
+      "RICE": 416,
+      "PlannedFor": "3.6 GA",
+      "Status": "Backlog",
+      "PM": "pm-4@redhat.com",
+      "DeliveryOwner": "owner-2@redhat.com",
+      "Priority": "P0",
+      "FPDoR": "15/17",
+      "Confidence": "ready",
+      "XTeam": "no"
+    },
+    {
+      "Key": "RHAISTRAT-1093",
+      "Summary": "Dashboard UI refresh",
+      "Components": [
+        "Data Pipeline"
+      ],
+      "RICE": 489,
+      "PlannedFor": "3.7 EA1",
+      "Status": "In Progress",
+      "PM": "pm-5@redhat.com",
+      "DeliveryOwner": "owner-3@redhat.com",
+      "Priority": "P1",
+      "FPDoR": "14/17",
+      "Confidence": "likely",
+      "XTeam": "yes"
+    },
+    {
+      "Key": "RHAISTRAT-1094",
+      "Summary": "Trustworthy AI validation",
+      "Components": [
+        "Trustworthy AI",
+        "Notebooks"
+      ],
+      "RICE": 562,
+      "PlannedFor": "3.7 GA",
+      "Status": "Ready",
+      "PM": "pm-6@redhat.com",
+      "DeliveryOwner": "owner-4@redhat.com",
+      "Priority": "P2",
+      "FPDoR": "Not Assessed",
+      "Confidence": "likely-plus",
+      "XTeam": "no"
+    },
+    {
+      "Key": "RHAISTRAT-1095",
+      "Summary": "Notebook kernel upgrade",
+      "Components": [
+        "AI Core Dashboard",
+        "Trustworthy AI",
+        "Gen AI Studio"
+      ],
+      "RICE": 635,
+      "PlannedFor": "3.8 EA1",
+      "Status": "Blocked",
+      "PM": "pm-7@redhat.com",
+      "DeliveryOwner": "owner-5@redhat.com",
+      "Priority": "P3",
+      "FPDoR": "17/17",
+      "Confidence": "not-ready",
+      "XTeam": "no"
+    },
+    {
+      "Key": "RHAISTRAT-1096",
+      "Summary": "GenAI Studio MCP discovery",
+      "Components": [
+        "AI Core Dashboard"
+      ],
+      "RICE": 708,
+      "PlannedFor": "3.6 GA",
+      "Status": "Backlog",
+      "PM": "pm-0@redhat.com",
+      "DeliveryOwner": "owner-6@redhat.com",
+      "Priority": "P0",
+      "FPDoR": "16/17",
+      "Confidence": "ready",
+      "XTeam": "yes"
+    },
+    {
+      "Key": "RHAISTRAT-1097",
+      "Summary": "Model serving optimization",
+      "Components": [
+        "Serving Orchestration",
+        "Gen AI Studio"
+      ],
+      "RICE": 781,
+      "PlannedFor": "3.7 EA1",
+      "Status": "In Progress",
+      "PM": "pm-1@redhat.com",
+      "DeliveryOwner": "owner-7@redhat.com",
+      "Priority": "P1",
+      "FPDoR": "15/17",
+      "Confidence": "likely",
+      "XTeam": "no"
+    },
+    {
+      "Key": "RHAISTRAT-1098",
+      "Summary": "Data pipeline enhancement",
+      "Components": [
+        "vLLM Runtime",
+        "Serving Orchestration",
+        "Model as a Service"
+      ],
+      "RICE": 854,
+      "PlannedFor": "3.7 GA",
+      "Status": "Ready",
+      "PM": "pm-2@redhat.com",
+      "DeliveryOwner": "owner-8@redhat.com",
+      "Priority": "P2",
+      "FPDoR": "14/17",
+      "Confidence": "likely-plus",
+      "XTeam": "no"
+    },
+    {
+      "Key": "RHAISTRAT-1099",
+      "Summary": "Dashboard UI refresh",
+      "Components": [
+        "Model as a Service"
+      ],
+      "RICE": 127,
+      "PlannedFor": "3.8 EA1",
+      "Status": "Blocked",
+      "PM": "pm-3@redhat.com",
+      "DeliveryOwner": "owner-9@redhat.com",
+      "Priority": "P3",
+      "FPDoR": "Not Assessed",
+      "Confidence": "not-ready",
+      "XTeam": "yes"
+    },
+    {
+      "Key": "RHAISTRAT-1100",
+      "Summary": "Trustworthy AI validation",
+      "Components": [
+        "vLLM Runtime",
+        "AI Hub"
+      ],
+      "RICE": 200,
+      "PlannedFor": "3.6 GA",
+      "Status": "Backlog",
+      "PM": "pm-4@redhat.com",
+      "DeliveryOwner": "owner-0@redhat.com",
+      "Priority": "P0",
+      "FPDoR": "17/17",
+      "Confidence": "ready",
+      "XTeam": "no"
+    }
+  ],
+  "bugQueue": [
+    {
+      "component": "AI Core Dashboard",
+      "blocker": 12,
+      "critical": 8,
+      "total": 20
+    },
+    {
+      "component": "Gen AI Studio",
+      "blocker": 8,
+      "critical": 15,
+      "total": 23
+    },
+    {
+      "component": "Serving Orchestration",
+      "blocker": 6,
+      "critical": 9,
+      "total": 15
+    },
+    {
+      "component": "Model as a Service",
+      "blocker": 5,
+      "critical": 7,
+      "total": 12
+    },
+    {
+      "component": "vLLM Runtime",
+      "blocker": 4,
+      "critical": 6,
+      "total": 10
+    },
+    {
+      "component": "AI Hub",
+      "blocker": 3,
+      "critical": 4,
+      "total": 7
+    }
+  ],
+  "metadata": {
+    "source": "csv-export",
+    "version": "1.0"
+  }
+}

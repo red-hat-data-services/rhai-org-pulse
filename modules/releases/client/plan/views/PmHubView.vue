@@ -44,6 +44,18 @@ const reports = [
     label: 'Component Release Load Tracking',
     description: 'Track component workload distribution across releases to identify capacity risks and balance engineering load.',
     component: defineAsyncComponent(() => import('./ComponentReleaseLoadReport.vue'))
+  },
+  {
+    id: 'feature-pressure',
+    label: 'Historic Feature Pressure',
+    description: 'RHAI-wide feature pressure by component, with RFE pipeline and risk scorecard',
+    component: defineAsyncComponent(() => import('../../views/FeaturePressureView.vue'))
+  },
+  {
+    id: 'tv-fv-delta',
+    label: 'TV vs FV Delta',
+    description: 'Target Version (PM intent) vs Fix Version (engineering commitment) — alignment, mismatches, and component breakdown.',
+    component: defineAsyncComponent(() => import('../../views/TvFvDeltaView.vue'))
   }
 ]
 
