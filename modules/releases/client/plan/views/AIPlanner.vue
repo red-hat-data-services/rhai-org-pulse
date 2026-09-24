@@ -130,12 +130,22 @@ const featuresInComponent = computed(() => {
 function sendDataToIframe() {
   const iframe = iframeRef.value
   if (iframe && iframe.contentWindow && snapshot.value) {
+    // `snapshot` is wrapped by Vue's ref and nested values may be reactive
+    // proxies. The structured-clone algorithm used by postMessage rejects
+    // those proxies, so send a plain JSON-compatible snapshot to the iframe.
+    const cloneForIframe = (value, fallback) => {
+      try {
+        return JSON.parse(JSON.stringify(value ?? fallback))
+      } catch {
+        return fallback
+      }
+    }
     iframe.contentWindow.postMessage({
       type: 'ai-planner-data',
-      features: snapshot.value.features || [],
-      bugQueue: snapshot.value.bugQueue || [],
-      capacity: snapshot.value.capacity || {},
-      cveReserve: snapshot.value.cveReserve || {},
+      features: cloneForIframe(snapshot.value.features, []),
+      bugQueue: cloneForIframe(snapshot.value.bugQueue, []),
+      capacity: cloneForIframe(snapshot.value.capacity, {}),
+      cveReserve: cloneForIframe(snapshot.value.cveReserve, {}),
       lastSyncedAt: snapshot.value.lastSyncedAt || new Date().toISOString()
     }, window.location.origin)
   }

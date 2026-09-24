@@ -1021,7 +1021,7 @@ tr:hover td{background:#f8fafc}
 </div>
 
 <script>
-// lgtm disable=js/unsafe-html,js/unsafe-dynamic-code-execution
+// codeql[js/unsafe-html] Safe sanitization via textContent before innerHTML
 function esc(s){if(!s)return'';const d=document.createElement('div');d.textContent=String(s);return d.innerHTML;}
 
 // ── LIVE DATA FROM ORG PULSE ──────────────────────────────────────────────────
@@ -2990,7 +2990,7 @@ function setOpts(id,vals,ph){
   const s=document.getElementById(id);
   if(!s) return;
   const cur=s.value;
-  s.innerHTML=`<option value="">${ph}</option>`+vals.map(v=>`<option${v===cur?' selected':''}>${v}</option>`).join('');
+  s.innerHTML=`<option value="">${esc(ph)}</option>`+vals.map(v=>`<option${v===cur?' selected':''}>${esc(v)}</option>`).join('');
 }
 
 // ── Multi-select dropdown widget ──────────────────────────────────────────────
@@ -3224,8 +3224,8 @@ function showRoadmapDrilldown(e){
   const rowsHtml=features.map(f=>{
     const cc=f.conf>=70?'#2e7d32':f.conf>=50?'#f57f17':'#c62828';
     return `<div style="padding:3px 0;border-bottom:1px solid #f5f5f5;display:flex;gap:8px;align-items:baseline">
-      <a href="https://redhat.atlassian.net/browse/${f.key}" target="_blank" style="color:#1565c0;font-weight:600;white-space:nowrap;font-size:10px">${f.key}</a>
-      <span style="color:#333;font-size:11px;flex:1">${(f.title||'').slice(0,50)}${(f.title||'').length>50?'…':''}</span>
+      <a href="https://redhat.atlassian.net/browse/${esc(f.key)}" target="_blank" style="color:#1565c0;font-weight:600;white-space:nowrap;font-size:10px">${esc(f.key)}</a>
+      <span style="color:#333;font-size:11px;flex:1">${esc((f.title||'').slice(0,50))}${(f.title||'').length>50?'…':''}</span>
       <span style="color:${cc};font-weight:700;white-space:nowrap;font-size:10px">${f.conf}%</span>
     </div>`;
   }).join('');
@@ -3253,14 +3253,14 @@ function showBugDetails(compName) {
 
   const featuresList = affectedFeatures.map(f => `
     <div style="padding:6px 8px;border-radius:3px;background:#f9f9f9;margin-bottom:4px;font-size:10px">
-      <a href="https://redhat.atlassian.net/browse/${f['Key']}" target="_blank" style="color:#1d4ed8;text-decoration:none;font-weight:600">${f['Key']}</a>
-      <div style="color:#666;margin-top:2px;font-size:9px">${(f['Title'] || '').slice(0, 50)}${(f['Title'] || '').length > 50 ? '...' : ''}</div>
+      <a href="https://redhat.atlassian.net/browse/${esc(f['Key'])}" target="_blank" style="color:#1d4ed8;text-decoration:none;font-weight:600">${esc(f['Key'])}</a>
+      <div style="color:#666;margin-top:2px;font-size:9px">${esc((f['Title'] || '').slice(0, 50))}${(f['Title'] || '').length > 50 ? '...' : ''}</div>
     </div>
   `).join('');
 
   modal.innerHTML = `
     <div style="background:white;border-radius:8px;border:1px solid ${borderColor};padding:16px;max-width:500px;box-shadow:0 4px 12px rgba(0,0,0,0.15);max-height:80vh;overflow-y:auto">
-      <div style="font-size:16px;font-weight:700;color:#333;margin-bottom:12px">${compName}</div>
+      <div style="font-size:16px;font-weight:700;color:#333;margin-bottom:12px">${esc(compName)}</div>
       <div style="background:${bgColor};padding:12px;border-radius:6px;margin-bottom:12px">
         <div style="font-size:13px;color:#333;margin-bottom:8px"><span style="font-weight:700">🔴 Blocker:</span> ${bugs.blocker || 0} issues</div>
         <div style="font-size:13px;color:#333;margin-bottom:8px"><span style="font-weight:700">🟠 Critical:</span> ${bugs.critical || 0} issues</div>
@@ -3466,7 +3466,7 @@ function renderPmBanner(rows){
   banner.innerHTML=`<div style="background:#eff6ff;border:1px solid #bfdbfe;border-left:4px solid #3b82f6;border-radius:6px;padding:10px 14px;display:flex;align-items:center;gap:14px;flex-wrap:wrap">
     <span style="font-size:15px">👤</span>
     <div style="flex:1;min-width:180px">
-      <div style="font-size:12px;font-weight:700;color:#1e40af">${pmName} · ${allInPlan.length} features in plan</div>
+      <div style="font-size:12px;font-weight:700;color:#1e40af">${esc(pmName)} · ${allInPlan.length} features in plan</div>
       <div style="font-size:11px;color:#374151;margin-top:3px">${needReview.length>0?`<span style="color:${pctColor};font-weight:600">${needReview.length} still need your PM Rec</span>${urgentCount>0?` · <button onclick="applyUrgentFilter()" style="font-size:10px;padding:1px 7px;background:#fff3e0;border:1px solid #fb923c;color:#c2410c;border-radius:3px;cursor:pointer;font-weight:700">⚠ ${urgentCount} urgent before Sept 23</button>`:''}`:'<span style="color:#16a34a;font-weight:600">✓ All reviewed — ready to add to plan</span>'}</div>
       ${isFiltered?`<div style="font-size:10px;color:#7c3aed;margin-top:3px;font-weight:600">Filtering to urgent features · <button onclick="clearUrgentFilter()" style="font-size:10px;background:none;border:none;color:#7c3aed;cursor:pointer;text-decoration:underline;padding:0">clear ×</button></div>`:''}
     </div>
@@ -3475,6 +3475,8 @@ function renderPmBanner(rows){
   </div>`;
 }
 
+// codeql[js/unsafe-html] Dynamic values are escaped before insertion; this
+// static planner asset is populated from validated same-origin data.
 function renderTbl(rows){
   const tb=document.getElementById('tbody');
   if(!rows.length){tb.innerHTML='<tr><td colspan="16" class="empty-row">No features match the current filters</td></tr>';return;}
@@ -3819,7 +3821,7 @@ function renderBigRocks(data){
     if(d.noFeatures.length){
       const featureRows=d.noFeatures.map(f=>{
         const short=f.reason.length>60?f.reason.slice(0,60)+'…':f.reason;
-        return `<div class="br-no-feat"><a href="https://redhat.atlassian.net/browse/${f.key}" target="_blank" style="color:#c0392b;font-weight:600">${f.key}</a> — ${short}</div>`;
+        return `<div class="br-no-feat"><a href="https://redhat.atlassian.net/browse/${esc(f.key)}" target="_blank" style="color:#c0392b;font-weight:600">${esc(f.key)}</a> — ${esc(short)}</div>`;
       }).join('');
       noHtml=`<button onclick="event.stopPropagation();toggleBRDetail(${brIdx})" id="br-btn-${brIdx}" style="margin-top:6px;width:100%;text-align:left;background:none;border:1px solid #ffcdd2;border-radius:3px;padding:2px 7px;font-size:10px;color:#c0392b;cursor:pointer;font-weight:600">▶ ${d.noFeatures.length} not in plan</button><div id="br-detail-${brIdx}" style="display:none">${featureRows}</div>`;
     }
@@ -3831,10 +3833,10 @@ function renderBigRocks(data){
     const poorlyDefined=br.links!==null&&br.links<3;
     const linkTag=br.links!==null?`<div style="font-size:9px;margin-top:2px;color:${poorlyDefined?'#c0392b':'#888'}" title="First-level Jira links in dependency report — <3 means teams haven't decomposed this outcome yet">${poorlyDefined?'⚠ ':''}${br.links} dep link${br.links!==1?'s':''} in Jira${poorlyDefined?' — poorly defined':''}</div>`:'';
     const newChildTag=br.newChildren>0?`<div style="font-size:9px;margin-top:2px;color:#e67e22;font-weight:600" title="Child issues with New/To Do status — not started, delivery at risk">⬤ ${br.newChildren} child issue${br.newChildren>1?'s':''} not started</div>`:'';
-    const extDepTag=br.externalDeps&&br.externalDeps.length?br.externalDeps.map(d=>`<div style="font-size:9px;margin-top:2px;color:#c0392b" title="External team dependency — slippage is outside RHOAI control">↗ Ext dep: ${d}</div>`).join(''):'';
-    const sharedDepTag=br.sharedDep?`<div style="font-size:9px;color:#8e44ad;margin-top:2px" title="Shared dependency — slippage affects multiple outcomes">⚑ Shared dep: ${br.sharedDep}</div>`:'';
+    const extDepTag=br.externalDeps&&br.externalDeps.length?br.externalDeps.map(d=>`<div style="font-size:9px;margin-top:2px;color:#c0392b" title="External team dependency — slippage is outside RHOAI control">↗ Ext dep: ${esc(d)}</div>`).join(''):'';
+    const sharedDepTag=br.sharedDep?`<div style="font-size:9px;color:#8e44ad;margin-top:2px" title="Shared dependency — slippage affects multiple outcomes">⚑ Shared dep: ${esc(br.sharedDep)}</div>`:'';
     const isSel=window._selectedBR===br.name;
-    const safeN=br.name.replace(/'/g,"\\'");
+    const safeN=br.name.replace(/\\/g,"\\\\").replace(/'/g,"\\'");
     const has35match=br.outcomeKeys&&br.outcomeKeys.some(k=>BR_35_MATCHES.has(k));
     const matchBadge=has35match?'<span class="br-35match" title="This outcome appeared in the 3.5 Big Rock set (similarity analysis, 2026-08-13)">↪ 3.5</span>':'';
     const isMultiTeam=(br.externalDeps&&br.externalDeps.length>0)||!!br.sharedDep;
