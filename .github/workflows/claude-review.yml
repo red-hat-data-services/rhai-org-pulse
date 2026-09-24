@@ -376,8 +376,15 @@ jobs:
         if: steps.check-paths.outputs.needs_review == 'true' && steps.fork-guard.outputs.is_fork != 'true'
         env:
           STRUCTURED_OUTPUT: ${{ steps.claude-review.outputs.structured_output || steps.claude-review-fork.outputs.structured_output }}
+          CLAUDE_OUTCOME: ${{ steps.claude-review.outcome || steps.claude-review-fork.outcome }}
         run: |
           set -euo pipefail
+
+          if [ "$CLAUDE_OUTCOME" = "skipped" ]; then
+            echo "::error::Claude review was skipped, likely because the workflow differs from the default branch."
+            echo "::error::Merge the workflow changes into the default branch, then rerun this workflow."
+            exit 1
+          fi
 
           if [ -z "${STRUCTURED_OUTPUT:-}" ] || [ "$STRUCTURED_OUTPUT" = "null" ]; then
             echo "::error::Claude completed without structured review output"
