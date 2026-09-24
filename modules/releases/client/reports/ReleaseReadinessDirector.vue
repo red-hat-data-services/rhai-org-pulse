@@ -31,9 +31,9 @@
             <span class="text-sm font-bold">{{ formatScheduleDate(releaseSchedule.ga_date) }}</span>
           </div>
           <div class="flex flex-col items-center rounded-xl px-5 py-2.5 min-w-[90px]"
-            :class="releaseSchedule.status === 'Released' ? 'bg-emerald-500/30' : 'bg-amber-500/30'">
+            :class="scheduleStatusClass">
             <span class="text-[10px] font-semibold uppercase tracking-wider text-blue-200 mb-0.5">Status</span>
-            <span class="text-sm font-bold">{{ releaseSchedule.status }}</span>
+            <span class="text-sm font-bold">{{ scheduleStatusLabel }}</span>
           </div>
         </div>
       </div>
@@ -231,8 +231,9 @@
               <span class="text-xs text-orange-500 dark:text-orange-400">View report →</span>
             </div>
           </button>
-          <!-- TFA Sign Offs summary tile -->
+          <!-- TFA Sign Offs summary tile (legacy layout: <= 3.6.EA1) -->
           <a
+            v-if="!useNewReadinessLayout"
             :href="data.tfa_signoff_jql_url || '#'"
             target="_blank"
             class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4 block transition-shadow hover:shadow-md hover:border-blue-300 dark:hover:border-blue-600"
@@ -350,8 +351,8 @@
                     <span :class="ragDotSmall(tileOverallRag(tile))"></span>
                   </div>
 
-                  <!-- Line 1: Test Plan Sign Off + Jira key -->
-                  <div class="flex items-center justify-between mb-1.5">
+                  <!-- Line 1: Test Plan Sign Off + Jira key (legacy layout: <= 3.6.EA1) -->
+                  <div v-if="!useNewReadinessLayout" class="flex items-center justify-between mb-1.5">
                     <span class="text-xs text-gray-400">Test Plan Sign Off</span>
                     <a v-if="tile.tfa?.key" :href="jiraBrowseUrl(tile.tfa.key)" target="_blank" class="text-xs text-blue-400 font-mono hover:underline">{{ tile.tfa.key }}</a>
                   </div>
@@ -392,9 +393,9 @@
                     <p class="text-xs text-gray-500 mt-0.5">{{ tile.execution.done }}/{{ tile.execution.total }} tasks done</p>
                   </div>
 
-                  <!-- TFA / Failed / Skipped as stacked bars -->
+                  <!-- TFA (legacy only) / Failed Tests / Skipped as stacked bars -->
                   <div class="pt-3 border-t border-gray-200 dark:border-gray-700 space-y-2">
-                    <a :href="tile.tfa?.jql_url || '#'" target="_blank" class="flex items-center gap-2 hover:opacity-80 transition-opacity">
+                    <a v-if="!useNewReadinessLayout" :href="tile.tfa?.jql_url || '#'" target="_blank" class="flex items-center gap-2 hover:opacity-80 transition-opacity">
                       <span class="text-xs text-gray-400 w-16">TFA ↗</span>
                       <div class="flex-1 h-6 bg-gray-200 dark:bg-gray-800 rounded overflow-hidden flex">
                         <div v-if="tfaBd(tile).done" class="h-full bg-green-500 flex items-center justify-center text-xs font-bold text-white" :style="{ width: tfaBdPct(tile, 'done') + '%', minWidth: '24px' }">{{ tfaBd(tile).done }}</div>
@@ -403,7 +404,7 @@
                       </div>
                     </a>
                     <a :href="tile.failed_jql_url || '#'" target="_blank" class="flex items-center gap-2 hover:opacity-80 transition-opacity">
-                      <span class="text-xs text-gray-400 w-16">Failed ↗</span>
+                      <span class="text-xs text-gray-400" :class="useNewReadinessLayout ? 'w-20' : 'w-16'">{{ useNewReadinessLayout ? 'Failed Tests ↗' : 'Failed ↗' }}</span>
                       <div class="flex-1 h-6 bg-gray-200 dark:bg-gray-800 rounded overflow-hidden flex">
                         <template v-if="failedBd(tile).total > 0">
                           <div v-if="failedBd(tile).done" class="h-full bg-green-500 flex items-center justify-center text-xs font-bold text-white" :style="{ width: bdPct(failedBd(tile), 'done') + '%', minWidth: '24px' }">{{ failedBd(tile).done }}</div>
@@ -796,6 +797,32 @@ const director = computed(() => {
   return data.value && data.value.director_summary ? data.value.director_summary : null
 })
 
+// Rank a release id/version into a comparable number so we can gate UI changes
+// by release. Format: rhoai-<major>.<minor>[.EA<n>|.GA]. GA sorts after any EA
+// of the same minor. Returns null if unparseable.
+function releaseRank(versionOrId) {
+  if (!versionOrId) return null
+  const m = String(versionOrId).match(/(\d+)\.(\d+)(?:\.(EA)(\d+)|\.(GA))?/i)
+  if (!m) return null
+  const major = Number(m[1])
+  const minor = Number(m[2])
+  const isGa = !!m[5] || (!m[3] && !m[5]) // explicit GA, or no suffix => GA
+  // EA phases rank 1..n; GA ranks higher than any EA (use 99).
+  const phaseRank = isGa ? 99 : Number(m[4] || 0)
+  return major * 1_000_000 + minor * 1_000 + phaseRank
+}
+
+// The Overall Summary TFA Sign Offs tile, the per-tile TFA row, and the older
+// "Failed" label are retained for releases up to and including 3.6.EA1, and
+// dropped from 3.6.EA2 onwards. Older releases render unchanged.
+const TFA_LAYOUT_CUTOFF_RANK = releaseRank('3.6.EA2')
+
+const useNewReadinessLayout = computed(() => {
+  const rank = releaseRank(data.value?.version || activeReleaseId.value)
+  if (rank === null) return false // unknown version -> keep legacy layout
+  return rank >= TFA_LAYOUT_CUTOFF_RANK
+})
+
 const overallPct = computed(() => {
   if (!director.value || !director.value.gate_statuses) return 0
   const gates = director.value.gate_statuses
@@ -806,6 +833,35 @@ const overallPct = computed(() => {
 const releaseSchedule = computed(() => {
   if (!data.value || !data.value.release_schedule) return null
   return data.value.release_schedule
+})
+
+// Normalize the schedule status for display. Older/legacy payloads (and any
+// release where Product Pages could not resolve a GA date) store "Unknown",
+// which is not useful on the status bar. Fall back to a phase derived from the
+// available dates and the EA/GA nature of the version so the bar is always
+// meaningful.
+const scheduleStatusLabel = computed(() => {
+  const sched = releaseSchedule.value
+  if (!sched) return ''
+  const raw = (sched.status || '').trim()
+  if (raw && raw.toLowerCase() !== 'unknown') return raw
+
+  const today = new Date().toISOString().slice(0, 10)
+  if (sched.ga_date && sched.ga_date <= today) return 'Released'
+  if (sched.code_freeze_date && sched.code_freeze_date <= today) return 'Testing'
+  if (/\.EA\d+/i.test(sched.version || data.value?.version || '')) return 'Early Access'
+  if (sched.code_freeze_date) return 'Planning'
+  return 'Upcoming'
+})
+
+// Color the status chip by lifecycle phase rather than only greening "Released".
+const scheduleStatusClass = computed(() => {
+  const s = scheduleStatusLabel.value.toLowerCase()
+  if (s === 'released') return 'bg-emerald-500/30'
+  if (s === 'testing') return 'bg-blue-500/30'
+  if (s === 'early access') return 'bg-violet-500/30'
+  if (s === 'planning' || s === 'upcoming') return 'bg-amber-500/30'
+  return 'bg-amber-500/30'
 })
 
 const openIssuesToValidate = computed(() => {
@@ -960,15 +1016,36 @@ const hasInitiativeData = computed(() => {
 const releaseDecision = computed(() => {
   if (!director.value) return 'not-ready'
   const gates = director.value.gate_statuses || []
-  const avgPct = gates.length ? gates.reduce((s, g) => s + g.pct, 0) / gates.length : 0
+  if (!gates.length) return 'not-ready'
+
+  const avgPct = gates.reduce((s, g) => s + g.pct, 0) / gates.length
   const openBlockers = productBlockers.value?.total_open || 0
+  const gatesBelow50 = gates.filter(g => g.pct < 50).length
   const allGatesAbove80 = gates.every(g => g.pct >= 80)
   const allGates100 = gates.every(g => g.pct >= 100)
 
+  // Evaluate from best to worst so the strongest matching state wins.
+
+  // Ready to Ship: everything complete, no blockers.
   if (allGates100 && openBlockers === 0) return 'ready-to-ship'
-  if (allGatesAbove80 && openBlockers <= 2) return 'on-track'
-  if (avgPct >= 50 && openBlockers > 0) return 'at-risk'
+
+  // On Track: all gates >= 80% and no critical blockers.
+  if (allGatesAbove80 && openBlockers === 0) return 'on-track'
+
+  // Not Ready: multiple gates still below 50% (early/stalled). This is the
+  // dominant signal per the tooltip — a release with several gates under 50%
+  // is not ready regardless of whether blockers have been filed yet.
+  if (gatesBelow50 >= 2) return 'not-ready'
+
+  // At Risk: progress is underway (some gates above 50%) but open blockers or
+  // a below-50% gate put the timeline at risk.
+  if ((avgPct >= 50 || gatesBelow50 <= 1) && (openBlockers > 0 || gatesBelow50 >= 1)) return 'at-risk'
+
+  // In Progress: testing has started and gates are progressing (below 80%),
+  // no blockers holding it back.
   if (avgPct > 0) return 'in-progress'
+
+  // Nothing started.
   return 'not-ready'
 })
 
