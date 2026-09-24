@@ -16,7 +16,7 @@ let _supportedVariantsCacheTime = 0;
 const DEFAULTS = {
   gitlabBaseUrl: 'https://gitlab.com',
   gitlabProject: 'redhat%2Frhel-ai%2Fwheels%2Ffondue',
-  scheduleId: '4358047',
+  scheduleId: '4426146',
   rcaProject: 'redhat%2Frhel-ai%2Fagentic-ci%2Fpipeline-failure-analyzer',
 };
 

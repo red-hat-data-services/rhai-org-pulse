@@ -40,7 +40,7 @@ var ALL_TABS = [
   { id: 'outcomes', label: 'Big Rocks' },
   { id: 'pm-hub', label: 'PM Hub' },
   { id: 'feature-readiness', label: 'Features List (1-n)' },
-  { id: 'draft-plans', label: 'Draft Plans' },
+  { id: 'draft-plans', label: 'Plan Approval' },
   { id: 'bu-feedback', label: 'Field and BU Feedback' },
   { id: 'ai-planner', label: 'AI Planner' },
 ]

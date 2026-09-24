@@ -85,6 +85,23 @@ Dynamic secrets: `GITLAB_*_TOKEN` — per-instance GitLab tokens configured via 
 |---------|----------|-------------|
 | `GITLAB_CEE_REDHAT_DOCS_TOKEN` | No | GitLab PAT for internal documentation instance |
 
+### workflow-validation
+
+`WORKFLOW_VALIDATION_OPENSEARCH_URL` is non-secret configuration supplied through `.env` or the
+environment-specific `team-tracker-config` ConfigMap. It is intentionally not
+set in the shared AI Engineering overlay.
+
+Authorized Org Pulse administrators can override the non-secret OpenSearch URL and
+the module-scoped `HTTP_PROXY` / `HTTPS_PROXY` values in **Settings → Workflow
+Validation**. GitOps values remain the fallback defaults. Proxy values apply only
+to Workflow Validation's backend OpenSearch requests, never globally. Do not put
+credentials in URLs or proxies; OpenSearch username and password remain Vault-only.
+
+| Env Var | Required | Description |
+|---------|----------|-------------|
+| `WORKFLOW_VALIDATION_OPENSEARCH_USERNAME` | Production | Read-only OpenSearch HTTP Basic username; omit only for an unauthenticated local POC |
+| `WORKFLOW_VALIDATION_OPENSEARCH_PASSWORD` | Production | Read-only OpenSearch HTTP Basic password; omit only for an unauthenticated local POC |
+
 ## OpenShift Deployment
 
 All secrets are stored in a single `team-tracker-secrets` Secret object. See `deploy/OPENSHIFT.md` for creation commands.
@@ -119,7 +136,7 @@ The backend deployment (`deploy/openshift/base/backend-deployment.yaml`) maps ea
 
 These are non-sensitive configuration values that remain as plain env vars (in ConfigMap or `.env`). They are **not** managed by the secrets system:
 
-`DEMO_MODE`, `NODE_ENV`, `API_PORT`, `JIRA_HOST`, `GITLAB_BASE_URL`, `JIRA_STORY_POINTS_FIELD`, `PRODUCT_PAGES_BASE_URL`, `SMARTSHEET_SHEET_ID`, `UPSTREAM_PULSE_API_URL`, `PRODUCT_BUILDS_API_URL`, `AUTH_EMAIL_DOMAIN`, `ADMIN_EMAILS`, `GITHUB_APP_ID`, `GITHUB_APP_INSTALLATION_ID`
+`DEMO_MODE`, `NODE_ENV`, `API_PORT`, `JIRA_HOST`, `GITLAB_BASE_URL`, `JIRA_STORY_POINTS_FIELD`, `PRODUCT_PAGES_BASE_URL`, `SMARTSHEET_SHEET_ID`, `UPSTREAM_PULSE_API_URL`, `PRODUCT_BUILDS_API_URL`, `WORKFLOW_VALIDATION_OPENSEARCH_URL`, `AUTH_EMAIL_DOMAIN`, `ADMIN_EMAILS`, `GITHUB_APP_ID`, `GITHUB_APP_INSTALLATION_ID`
 
 ## Diagnostics
 

@@ -34,9 +34,9 @@ function getReleaseRows(wrapper) {
 
 describe('ScheduleView', () => {
   beforeEach(() => {
+    vi.useFakeTimers()
+    vi.setSystemTime(new Date(2026, 8, 1, 12))
     vi.clearAllMocks()
-    vi.useFakeTimers({ toFake: ['Date'] })
-    vi.setSystemTime(new Date('2026-09-01T12:00:00'))
   })
 
   afterEach(() => {

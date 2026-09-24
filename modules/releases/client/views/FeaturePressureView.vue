@@ -127,7 +127,7 @@ onBeforeUnmount(() => { cleanup() })
     <!-- Header -->
     <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
       <div>
-        <h1 class="text-2xl font-bold text-gray-900 dark:text-gray-100">Feature Pressure</h1>
+        <h1 class="text-2xl font-bold text-gray-900 dark:text-gray-100">Historic Feature Pressure</h1>
         <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">
           Where feature inflow exceeds capacity to burn down — RHAI-wide, by component.
         </p>

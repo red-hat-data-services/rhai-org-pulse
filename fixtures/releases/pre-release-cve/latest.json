@@ -1,0 +1,1098 @@
+{
+  "fetchedAt": "2026-09-22T08:30:00.000Z",
+  "source": {
+    "spreadsheetId": "1NXoy5JgYVgSF4noW6252BfQMD7Qlp72YNyMGUzRDI9s",
+    "url": "https://docs.google.com/spreadsheets/d/1NXoy5JgYVgSF4noW6252BfQMD7Qlp72YNyMGUzRDI9s/edit#gid=0"
+  },
+  "releases": [
+    {
+      "version": "RHOAI 3.6-EA2",
+      "records": [
+        {
+          "package": "aiohttp",
+          "component": "odh-autorag-v3-6-ea-2",
+          "cvesFixAvailable": [
+            "GHSA-cq5v-8q36-5273",
+            "PYSEC-2026-3545"
+          ],
+          "cvesFixNotAvailable": [],
+          "cveCountFixAvailable": 2,
+          "cveCountFixNotAvailable": 0,
+          "totalCveCount": 2,
+          "fixStatus": "Fix Available",
+          "currentVersion": "3.14.1",
+          "fixedIn": "fixed=3.14.3",
+          "githubRepo": "https://github.com/red-hat-data-services/pipelines-components",
+          "severity": "High",
+          "status": "Resolved",
+          "runDate": "2026-09-10",
+          "jiraUrl": "",
+          "jiraStatus": "",
+          "jiraResolution": ""
+        },
+        {
+          "package": "aiohttp",
+          "component": "odh-kserve-autogluon-server-v3-6-ea-2",
+          "cvesFixAvailable": [
+            "GHSA-cq5v-8q36-5273",
+            "PYSEC-2026-3545"
+          ],
+          "cvesFixNotAvailable": [],
+          "cveCountFixAvailable": 2,
+          "cveCountFixNotAvailable": 0,
+          "totalCveCount": 2,
+          "fixStatus": "Fix Available",
+          "currentVersion": "3.14.1",
+          "fixedIn": "fixed=3.14.3",
+          "githubRepo": "https://github.com/red-hat-data-services/kserve",
+          "severity": "High",
+          "status": "Resolved",
+          "runDate": "2026-09-19",
+          "jiraUrl": "",
+          "jiraStatus": "",
+          "jiraResolution": ""
+        },
+        {
+          "package": "aiohttp",
+          "component": "odh-kserve-storage-initializer-v3-6-ea-2",
+          "cvesFixAvailable": [
+            "GHSA-cq5v-8q36-5273",
+            "PYSEC-2026-3545"
+          ],
+          "cvesFixNotAvailable": [],
+          "cveCountFixAvailable": 2,
+          "cveCountFixNotAvailable": 0,
+          "totalCveCount": 2,
+          "fixStatus": "Fix Available",
+          "currentVersion": "3.14.1",
+          "fixedIn": "fixed=3.14.3",
+          "githubRepo": "https://github.com/red-hat-data-services/kserve",
+          "severity": "High",
+          "status": "Resolved",
+          "runDate": "2026-09-10",
+          "jiraUrl": "",
+          "jiraStatus": "",
+          "jiraResolution": ""
+        },
+        {
+          "package": "aiohttp",
+          "component": "odh-mlflow-v3-6-ea-2",
+          "cvesFixAvailable": [
+            "GHSA-cq5v-8q36-5273",
+            "PYSEC-2026-2104",
+            "PYSEC-2026-237",
+            "PYSEC-2026-3545"
+          ],
+          "cvesFixNotAvailable": [],
+          "cveCountFixAvailable": 4,
+          "cveCountFixNotAvailable": 0,
+          "totalCveCount": 4,
+          "fixStatus": "Fix Available",
+          "currentVersion": "3.13.5",
+          "fixedIn": "fixed=3.14.3",
+          "githubRepo": "https://github.com/red-hat-data-services/mlflow",
+          "severity": "High",
+          "status": "Resolved",
+          "runDate": "2026-09-18",
+          "jiraUrl": "",
+          "jiraStatus": "",
+          "jiraResolution": ""
+        },
+        {
+          "package": "aiohttp",
+          "component": "odh-ta-lmes-job-v3-6-ea-2",
+          "cvesFixAvailable": [
+            "GHSA-cq5v-8q36-5273",
+            "PYSEC-2026-2095",
+            "PYSEC-2026-237",
+            "PYSEC-2026-3545"
+          ],
+          "cvesFixNotAvailable": [],
+          "cveCountFixAvailable": 4,
+          "cveCountFixNotAvailable": 0,
+          "totalCveCount": 4,
+          "fixStatus": "Fix Available",
+          "currentVersion": "3.13.3",
+          "fixedIn": "fixed=3.14.3",
+          "githubRepo": "https://github.com/red-hat-data-services/lm-evaluation-harness",
+          "severity": "High",
+          "status": "New",
+          "runDate": "2026-09-07",
+          "jiraUrl": "",
+          "jiraStatus": "",
+          "jiraResolution": ""
+        },
+        {
+          "package": "aiohttp",
+          "component": "odh-trustyai-nemo-guardrails-server-v3-6-ea-2",
+          "cvesFixAvailable": [
+            "GHSA-cq5v-8q36-5273",
+            "PYSEC-2026-3545"
+          ],
+          "cvesFixNotAvailable": [],
+          "cveCountFixAvailable": 2,
+          "cveCountFixNotAvailable": 0,
+          "totalCveCount": 2,
+          "fixStatus": "Fix Available",
+          "currentVersion": "3.14.1",
+          "fixedIn": "fixed=3.14.3",
+          "githubRepo": "https://github.com/red-hat-data-services/NeMo-Guardrails",
+          "severity": "High",
+          "status": "New",
+          "runDate": "2026-09-07",
+          "jiraUrl": "",
+          "jiraStatus": "",
+          "jiraResolution": ""
+        },
+        {
+          "package": "chromadb",
+          "component": "odh-autorag-v3-6-ea-2",
+          "cvesFixAvailable": [
+            "GHSA-f4j7-r4q5-qw2c",
+            "PYSEC-2026-311"
+          ],
+          "cvesFixNotAvailable": [],
+          "cveCountFixAvailable": 2,
+          "cveCountFixNotAvailable": 0,
+          "totalCveCount": 2,
+          "fixStatus": "Fix Available",
+          "currentVersion": "1.5.9",
+          "fixedIn": "introduced=1.0.0&lastAffected=1.5.9",
+          "githubRepo": "https://github.com/red-hat-data-services/pipelines-components",
+          "severity": "Critical",
+          "status": "Resolved",
+          "runDate": "2026-09-18",
+          "jiraUrl": "https://redhat.atlassian.net/browse/RHOAIENG-94984",
+          "jiraStatus": "Resolved",
+          "jiraResolution": "Done"
+        },
+        {
+          "package": "com.fasterxml.jackson.core:jackson-core",
+          "component": "odh-spark-operator-v3-6-ea-2",
+          "cvesFixAvailable": [
+            "GHSA-r7wm-3cxj-wff9",
+            "GHSA-h46c-h94j-95f3"
+          ],
+          "cvesFixNotAvailable": [],
+          "cveCountFixAvailable": 2,
+          "cveCountFixNotAvailable": 0,
+          "totalCveCount": 2,
+          "fixStatus": "Fix Available",
+          "currentVersion": "2.18.1",
+          "fixedIn": "fixed=2.15.0",
+          "githubRepo": "https://github.com/red-hat-data-services/spark-operator",
+          "severity": "High",
+          "status": "New",
+          "runDate": "2026-09-07",
+          "jiraUrl": "",
+          "jiraStatus": "",
+          "jiraResolution": ""
+        },
+        {
+          "package": "com.fasterxml.jackson.core:jackson-core",
+          "component": "odh-th-torch-cpu-py312-v3-6-ea-2",
+          "cvesFixAvailable": [
+            "GHSA-r7wm-3cxj-wff9"
+          ],
+          "cvesFixNotAvailable": [],
+          "cveCountFixAvailable": 1,
+          "cveCountFixNotAvailable": 0,
+          "totalCveCount": 1,
+          "fixStatus": "Fix Available",
+          "currentVersion": "2.21.2",
+          "fixedIn": "fixed=2.18.8",
+          "githubRepo": "https://github.com/red-hat-data-services/distributed-workloads",
+          "severity": "High",
+          "status": "New",
+          "runDate": "2026-09-07",
+          "jiraUrl": "",
+          "jiraStatus": "",
+          "jiraResolution": ""
+        },
+        {
+          "package": "com.fasterxml.jackson.core:jackson-databind",
+          "component": "odh-spark-operator-v3-6-ea-2",
+          "cvesFixAvailable": [
+            "GHSA-j3rv-43j4-c7qm",
+            "GHSA-rmj7-2vxq-3g9f"
+          ],
+          "cvesFixNotAvailable": [],
+          "cveCountFixAvailable": 2,
+          "cveCountFixNotAvailable": 0,
+          "totalCveCount": 2,
+          "fixStatus": "Fix Available",
+          "currentVersion": "2.18.1",
+          "fixedIn": "fixed=2.18.8&introduced=2.10.0",
+          "githubRepo": "https://github.com/red-hat-data-services/spark-operator",
+          "severity": "High",
+          "status": "New",
+          "runDate": "2026-09-07",
+          "jiraUrl": "",
+          "jiraStatus": "",
+          "jiraResolution": ""
+        },
+        {
+          "package": "commons-beanutils:commons-beanutils",
+          "component": "odh-spark-operator-v3-6-ea-2",
+          "cvesFixAvailable": [
+            "GHSA-wxr5-93ph-8wr9"
+          ],
+          "cvesFixNotAvailable": [],
+          "cveCountFixAvailable": 1,
+          "cveCountFixNotAvailable": 0,
+          "totalCveCount": 1,
+          "fixStatus": "Fix Available",
+          "currentVersion": "1.9.4",
+          "fixedIn": "fixed=1.11.0&introduced=1.0",
+          "githubRepo": "https://github.com/red-hat-data-services/spark-operator",
+          "severity": "High",
+          "status": "New",
+          "runDate": "2026-09-07",
+          "jiraUrl": "",
+          "jiraStatus": "",
+          "jiraResolution": ""
+        },
+        {
+          "package": "cryptography",
+          "component": "odh-automl-v3-6-ea-2",
+          "cvesFixAvailable": [
+            "GHSA-g6cj-pr64-35w5",
+            "PYSEC-2026-3552"
+          ],
+          "cvesFixNotAvailable": [],
+          "cveCountFixAvailable": 2,
+          "cveCountFixNotAvailable": 0,
+          "totalCveCount": 2,
+          "fixStatus": "Fix Available",
+          "currentVersion": "49.0.0",
+          "fixedIn": "fixed=50.0.0&introduced=44.0.0",
+          "githubRepo": "https://github.com/red-hat-data-services/pipelines-components",
+          "severity": "High",
+          "status": "Resolved",
+          "runDate": "2026-09-11",
+          "jiraUrl": "",
+          "jiraStatus": "",
+          "jiraResolution": ""
+        },
+        {
+          "package": "cryptography",
+          "component": "odh-mlflow-v3-6-ea-2",
+          "cvesFixAvailable": [
+            "GHSA-537c-gmf6-5ccf",
+            "GHSA-g6cj-pr64-35w5",
+            "GHSA-jwv3-5hgf-82ww",
+            "PYSEC-2026-3552",
+            "PYSEC-2026-3553"
+          ],
+          "cvesFixNotAvailable": [],
+          "cveCountFixAvailable": 5,
+          "cveCountFixNotAvailable": 0,
+          "totalCveCount": 5,
+          "fixStatus": "Fix Available",
+          "currentVersion": "46.0.7",
+          "fixedIn": "fixed=49.0.0",
+          "githubRepo": "https://github.com/red-hat-data-services/mlflow",
+          "severity": "High",
+          "status": "New",
+          "runDate": "2026-09-07",
+          "jiraUrl": "",
+          "jiraStatus": "",
+          "jiraResolution": ""
+        },
+        {
+          "package": "cryptography",
+          "component": "odh-trustyai-nemo-guardrails-server-v3-6-ea-2",
+          "cvesFixAvailable": [
+            "GHSA-537c-gmf6-5ccf",
+            "GHSA-g6cj-pr64-35w5",
+            "GHSA-jwv3-5hgf-82ww",
+            "PYSEC-2026-3552",
+            "PYSEC-2026-3553"
+          ],
+          "cvesFixNotAvailable": [],
+          "cveCountFixAvailable": 5,
+          "cveCountFixNotAvailable": 0,
+          "totalCveCount": 5,
+          "fixStatus": "Fix Available",
+          "currentVersion": "46.0.7",
+          "fixedIn": "fixed=49.0.0",
+          "githubRepo": "https://github.com/red-hat-data-services/NeMo-Guardrails",
+          "severity": "High",
+          "status": "New",
+          "runDate": "2026-09-07",
+          "jiraUrl": "",
+          "jiraStatus": "",
+          "jiraResolution": ""
+        },
+        {
+          "package": "curl-minimal",
+          "component": "odh-ai-gateway-operator-v3-6-ea-2",
+          "cvesFixAvailable": [],
+          "cvesFixNotAvailable": [
+            "CVE-2026-8458",
+            "CVE-2026-8927"
+          ],
+          "cveCountFixAvailable": 0,
+          "cveCountFixNotAvailable": 2,
+          "totalCveCount": 2,
+          "fixStatus": "Not Available",
+          "currentVersion": "7.76.1-40.el9_8.5",
+          "fixedIn": "-",
+          "githubRepo": "https://github.com/red-hat-data-services/ai-gateway-operator",
+          "severity": "High",
+          "status": "New",
+          "runDate": "2026-09-07",
+          "jiraUrl": "",
+          "jiraStatus": "",
+          "jiraResolution": ""
+        },
+        {
+          "package": "curl-minimal",
+          "component": "odh-core-bff-v3-6-ea-2",
+          "cvesFixAvailable": [],
+          "cvesFixNotAvailable": [
+            "CVE-2026-8458",
+            "CVE-2026-8927"
+          ],
+          "cveCountFixAvailable": 0,
+          "cveCountFixNotAvailable": 2,
+          "totalCveCount": 2,
+          "fixStatus": "Not Available",
+          "currentVersion": "7.76.1-40.el9_8.5",
+          "fixedIn": "-",
+          "githubRepo": "https://github.com/red-hat-data-services/odh-dashboard",
+          "severity": "High",
+          "status": "Resolved",
+          "runDate": "2026-09-18",
+          "jiraUrl": "",
+          "jiraStatus": "",
+          "jiraResolution": ""
+        },
+        {
+          "package": "curl-minimal",
+          "component": "odh-data-connect-hub-flight-v3-6-ea-2",
+          "cvesFixAvailable": [],
+          "cvesFixNotAvailable": [
+            "CVE-2026-8458",
+            "CVE-2026-8927"
+          ],
+          "cveCountFixAvailable": 0,
+          "cveCountFixNotAvailable": 2,
+          "totalCveCount": 2,
+          "fixStatus": "Not Available",
+          "currentVersion": "7.76.1-40.el9_8.5",
+          "fixedIn": "-",
+          "githubRepo": "https://github.com/red-hat-data-services/data-connect-hub",
+          "severity": "High",
+          "status": "New",
+          "runDate": "2026-09-07",
+          "jiraUrl": "",
+          "jiraStatus": "",
+          "jiraResolution": ""
+        },
+        {
+          "package": "curl-minimal",
+          "component": "odh-data-science-pipelines-argo-argoexec-v3-6-ea-2",
+          "cvesFixAvailable": [],
+          "cvesFixNotAvailable": [
+            "CVE-2026-8458",
+            "CVE-2026-8927"
+          ],
+          "cveCountFixAvailable": 0,
+          "cveCountFixNotAvailable": 2,
+          "totalCveCount": 2,
+          "fixStatus": "Not Available",
+          "currentVersion": "7.76.1-40.el9_8.5",
+          "fixedIn": "-",
+          "githubRepo": "https://github.com/red-hat-data-services/argo-workflows",
+          "severity": "High",
+          "status": "New",
+          "runDate": "2026-09-07",
+          "jiraUrl": "",
+          "jiraStatus": "",
+          "jiraResolution": ""
+        },
+        {
+          "package": "golang.org/x/crypto",
+          "component": "odh-kserve-controller-v3-6-ea-2",
+          "cvesFixAvailable": [
+            "GHSA-868x-77cj-grfc"
+          ],
+          "cvesFixNotAvailable": [],
+          "cveCountFixAvailable": 1,
+          "cveCountFixNotAvailable": 0,
+          "totalCveCount": 1,
+          "fixStatus": "Fix Available",
+          "currentVersion": "0.38.0",
+          "fixedIn": "fixed=0.35.0",
+          "githubRepo": "https://github.com/red-hat-data-services/kserve",
+          "severity": "Medium",
+          "status": "New",
+          "runDate": "2026-09-07",
+          "jiraUrl": "",
+          "jiraStatus": "",
+          "jiraResolution": ""
+        },
+        {
+          "package": "golang.org/x/crypto",
+          "component": "odh-kserve-router-v3-6-ea-2",
+          "cvesFixAvailable": [
+            "GHSA-868x-77cj-grfc"
+          ],
+          "cvesFixNotAvailable": [],
+          "cveCountFixAvailable": 1,
+          "cveCountFixNotAvailable": 0,
+          "totalCveCount": 1,
+          "fixStatus": "Fix Available",
+          "currentVersion": "0.38.0",
+          "fixedIn": "fixed=0.35.0",
+          "githubRepo": "https://github.com/red-hat-data-services/kserve",
+          "severity": "Medium",
+          "status": "New",
+          "runDate": "2026-09-07",
+          "jiraUrl": "",
+          "jiraStatus": "",
+          "jiraResolution": ""
+        },
+        {
+          "package": "golang.org/x/crypto",
+          "component": "odh-model-registry-v3-6-ea-2",
+          "cvesFixAvailable": [
+            "GHSA-868x-77cj-grfc"
+          ],
+          "cvesFixNotAvailable": [],
+          "cveCountFixAvailable": 1,
+          "cveCountFixNotAvailable": 0,
+          "totalCveCount": 1,
+          "fixStatus": "Fix Available",
+          "currentVersion": "0.38.0",
+          "fixedIn": "fixed=0.35.0",
+          "githubRepo": "https://github.com/red-hat-data-services/model-registry",
+          "severity": "Medium",
+          "status": "New",
+          "runDate": "2026-09-07",
+          "jiraUrl": "",
+          "jiraStatus": "",
+          "jiraResolution": ""
+        },
+        {
+          "package": "scipy",
+          "component": "odh-automl-v3-6-ea-2",
+          "cvesFixAvailable": [
+            "GHSA-hm2x-9x4j-hcqg"
+          ],
+          "cvesFixNotAvailable": [],
+          "cveCountFixAvailable": 1,
+          "cveCountFixNotAvailable": 0,
+          "totalCveCount": 1,
+          "fixStatus": "Fix Available",
+          "currentVersion": "1.13.1",
+          "fixedIn": "fixed=1.14.0",
+          "githubRepo": "https://github.com/red-hat-data-services/pipelines-components",
+          "severity": "Low",
+          "status": "Resolved",
+          "runDate": "2026-09-11",
+          "jiraUrl": "",
+          "jiraStatus": "",
+          "jiraResolution": ""
+        },
+        {
+          "package": "scipy",
+          "component": "odh-workbench-jupyter-trustyai-cpu-py312-v3-6-ea-2",
+          "cvesFixAvailable": [
+            "GHSA-hm2x-9x4j-hcqg"
+          ],
+          "cvesFixNotAvailable": [],
+          "cveCountFixAvailable": 1,
+          "cveCountFixNotAvailable": 0,
+          "totalCveCount": 1,
+          "fixStatus": "Fix Available",
+          "currentVersion": "1.14.0",
+          "fixedIn": "fixed=1.14.0",
+          "githubRepo": "https://github.com/red-hat-data-services/notebooks",
+          "severity": "Low",
+          "status": "New",
+          "runDate": "2026-09-07",
+          "jiraUrl": "",
+          "jiraStatus": "",
+          "jiraResolution": ""
+        }
+      ],
+      "aggregation": {
+        "totalRecords": 23,
+        "uniqueCvesFixAvailable": 19,
+        "uniqueCvesFixNotAvailable": 2,
+        "totalUniqueCves": 21,
+        "byPackage": [
+          {
+            "package": "aiohttp",
+            "count": 6,
+            "pct": 26.1
+          },
+          {
+            "package": "curl-minimal",
+            "count": 4,
+            "pct": 17.4
+          },
+          {
+            "package": "cryptography",
+            "count": 3,
+            "pct": 13
+          },
+          {
+            "package": "golang.org/x/crypto",
+            "count": 3,
+            "pct": 13
+          },
+          {
+            "package": "com.fasterxml.jackson.core:jackson-core",
+            "count": 2,
+            "pct": 8.7
+          },
+          {
+            "package": "scipy",
+            "count": 2,
+            "pct": 8.7
+          },
+          {
+            "package": "chromadb",
+            "count": 1,
+            "pct": 4.3
+          },
+          {
+            "package": "com.fasterxml.jackson.core:jackson-databind",
+            "count": 1,
+            "pct": 4.3
+          },
+          {
+            "package": "commons-beanutils:commons-beanutils",
+            "count": 1,
+            "pct": 4.3
+          }
+        ],
+        "byComponent": [
+          {
+            "component": "odh-spark-operator-v3-6-ea-2",
+            "count": 3,
+            "pct": 13
+          },
+          {
+            "component": "odh-autorag-v3-6-ea-2",
+            "count": 2,
+            "pct": 8.7
+          },
+          {
+            "component": "odh-mlflow-v3-6-ea-2",
+            "count": 2,
+            "pct": 8.7
+          },
+          {
+            "component": "odh-trustyai-nemo-guardrails-server-v3-6-ea-2",
+            "count": 2,
+            "pct": 8.7
+          },
+          {
+            "component": "odh-automl-v3-6-ea-2",
+            "count": 2,
+            "pct": 8.7
+          },
+          {
+            "component": "odh-kserve-autogluon-server-v3-6-ea-2",
+            "count": 1,
+            "pct": 4.3
+          },
+          {
+            "component": "odh-kserve-storage-initializer-v3-6-ea-2",
+            "count": 1,
+            "pct": 4.3
+          },
+          {
+            "component": "odh-ta-lmes-job-v3-6-ea-2",
+            "count": 1,
+            "pct": 4.3
+          },
+          {
+            "component": "odh-th-torch-cpu-py312-v3-6-ea-2",
+            "count": 1,
+            "pct": 4.3
+          },
+          {
+            "component": "odh-ai-gateway-operator-v3-6-ea-2",
+            "count": 1,
+            "pct": 4.3
+          },
+          {
+            "component": "odh-core-bff-v3-6-ea-2",
+            "count": 1,
+            "pct": 4.3
+          },
+          {
+            "component": "odh-data-connect-hub-flight-v3-6-ea-2",
+            "count": 1,
+            "pct": 4.3
+          },
+          {
+            "component": "odh-data-science-pipelines-argo-argoexec-v3-6-ea-2",
+            "count": 1,
+            "pct": 4.3
+          },
+          {
+            "component": "odh-kserve-controller-v3-6-ea-2",
+            "count": 1,
+            "pct": 4.3
+          },
+          {
+            "component": "odh-kserve-router-v3-6-ea-2",
+            "count": 1,
+            "pct": 4.3
+          },
+          {
+            "component": "odh-model-registry-v3-6-ea-2",
+            "count": 1,
+            "pct": 4.3
+          },
+          {
+            "component": "odh-workbench-jupyter-trustyai-cpu-py312-v3-6-ea-2",
+            "count": 1,
+            "pct": 4.3
+          }
+        ],
+        "bySeverity": [
+          {
+            "severity": "High",
+            "count": 17,
+            "pct": 73.9
+          },
+          {
+            "severity": "Medium",
+            "count": 3,
+            "pct": 13
+          },
+          {
+            "severity": "Low",
+            "count": 2,
+            "pct": 8.7
+          },
+          {
+            "severity": "Critical",
+            "count": 1,
+            "pct": 4.3
+          }
+        ],
+        "byStatus": [
+          {
+            "status": "New",
+            "count": 15,
+            "pct": 65.2
+          },
+          {
+            "status": "Resolved",
+            "count": 8,
+            "pct": 34.8
+          }
+        ],
+        "byFixStatus": [
+          {
+            "fixStatus": "Fix Available",
+            "count": 19,
+            "pct": 82.6
+          },
+          {
+            "fixStatus": "Not Available",
+            "count": 4,
+            "pct": 17.4
+          }
+        ],
+        "byGithubRepo": [
+          {
+            "repo": "https://github.com/red-hat-data-services/pipelines-components",
+            "count": 4,
+            "pct": 17.4
+          },
+          {
+            "repo": "https://github.com/red-hat-data-services/kserve",
+            "count": 4,
+            "pct": 17.4
+          },
+          {
+            "repo": "https://github.com/red-hat-data-services/spark-operator",
+            "count": 3,
+            "pct": 13
+          },
+          {
+            "repo": "https://github.com/red-hat-data-services/mlflow",
+            "count": 2,
+            "pct": 8.7
+          },
+          {
+            "repo": "https://github.com/red-hat-data-services/NeMo-Guardrails",
+            "count": 2,
+            "pct": 8.7
+          },
+          {
+            "repo": "https://github.com/red-hat-data-services/lm-evaluation-harness",
+            "count": 1,
+            "pct": 4.3
+          },
+          {
+            "repo": "https://github.com/red-hat-data-services/distributed-workloads",
+            "count": 1,
+            "pct": 4.3
+          },
+          {
+            "repo": "https://github.com/red-hat-data-services/ai-gateway-operator",
+            "count": 1,
+            "pct": 4.3
+          },
+          {
+            "repo": "https://github.com/red-hat-data-services/odh-dashboard",
+            "count": 1,
+            "pct": 4.3
+          },
+          {
+            "repo": "https://github.com/red-hat-data-services/data-connect-hub",
+            "count": 1,
+            "pct": 4.3
+          },
+          {
+            "repo": "https://github.com/red-hat-data-services/argo-workflows",
+            "count": 1,
+            "pct": 4.3
+          },
+          {
+            "repo": "https://github.com/red-hat-data-services/model-registry",
+            "count": 1,
+            "pct": 4.3
+          },
+          {
+            "repo": "https://github.com/red-hat-data-services/notebooks",
+            "count": 1,
+            "pct": 4.3
+          }
+        ]
+      },
+      "severityPackageMatrix": {
+        "packages": [
+          "aiohttp",
+          "chromadb",
+          "com.fasterxml.jackson.core:jackson-core",
+          "com.fasterxml.jackson.core:jackson-databind",
+          "commons-beanutils:commons-beanutils",
+          "cryptography",
+          "curl-minimal",
+          "golang.org/x/crypto",
+          "scipy"
+        ],
+        "rows": [
+          {
+            "severity": "Critical",
+            "cells": {
+              "aiohttp": 0,
+              "chromadb": 1,
+              "com.fasterxml.jackson.core:jackson-core": 0,
+              "com.fasterxml.jackson.core:jackson-databind": 0,
+              "commons-beanutils:commons-beanutils": 0,
+              "cryptography": 0,
+              "curl-minimal": 0,
+              "golang.org/x/crypto": 0,
+              "scipy": 0
+            },
+            "total": 1
+          },
+          {
+            "severity": "High",
+            "cells": {
+              "aiohttp": 6,
+              "chromadb": 0,
+              "com.fasterxml.jackson.core:jackson-core": 2,
+              "com.fasterxml.jackson.core:jackson-databind": 1,
+              "commons-beanutils:commons-beanutils": 1,
+              "cryptography": 3,
+              "curl-minimal": 4,
+              "golang.org/x/crypto": 0,
+              "scipy": 0
+            },
+            "total": 17
+          },
+          {
+            "severity": "Medium",
+            "cells": {
+              "aiohttp": 0,
+              "chromadb": 0,
+              "com.fasterxml.jackson.core:jackson-core": 0,
+              "com.fasterxml.jackson.core:jackson-databind": 0,
+              "commons-beanutils:commons-beanutils": 0,
+              "cryptography": 0,
+              "curl-minimal": 0,
+              "golang.org/x/crypto": 3,
+              "scipy": 0
+            },
+            "total": 3
+          },
+          {
+            "severity": "Low",
+            "cells": {
+              "aiohttp": 0,
+              "chromadb": 0,
+              "com.fasterxml.jackson.core:jackson-core": 0,
+              "com.fasterxml.jackson.core:jackson-databind": 0,
+              "commons-beanutils:commons-beanutils": 0,
+              "cryptography": 0,
+              "curl-minimal": 0,
+              "golang.org/x/crypto": 0,
+              "scipy": 2
+            },
+            "total": 2
+          }
+        ],
+        "columnTotals": {
+          "aiohttp": 6,
+          "chromadb": 1,
+          "com.fasterxml.jackson.core:jackson-core": 2,
+          "com.fasterxml.jackson.core:jackson-databind": 1,
+          "commons-beanutils:commons-beanutils": 1,
+          "cryptography": 3,
+          "curl-minimal": 4,
+          "golang.org/x/crypto": 3,
+          "scipy": 2
+        },
+        "grandTotal": 23
+      }
+    },
+    {
+      "version": "RHOAI 3.6",
+      "records": [
+        {
+          "package": "aiohttp",
+          "component": "odh-autorag-v3-6",
+          "cvesFixAvailable": [
+            "GHSA-cq5v-8q36-5273"
+          ],
+          "cvesFixNotAvailable": [],
+          "cveCountFixAvailable": 1,
+          "cveCountFixNotAvailable": 0,
+          "totalCveCount": 1,
+          "fixStatus": "Fix Available",
+          "currentVersion": "3.14.1",
+          "fixedIn": "fixed=3.14.3",
+          "githubRepo": "https://github.com/red-hat-data-services/pipelines-components",
+          "severity": "High",
+          "status": "New",
+          "runDate": "2026-09-20",
+          "jiraUrl": "",
+          "jiraStatus": "",
+          "jiraResolution": ""
+        },
+        {
+          "package": "cryptography",
+          "component": "odh-mlflow-v3-6",
+          "cvesFixAvailable": [
+            "GHSA-g6cj-pr64-35w5",
+            "PYSEC-2026-3552"
+          ],
+          "cvesFixNotAvailable": [],
+          "cveCountFixAvailable": 2,
+          "cveCountFixNotAvailable": 0,
+          "totalCveCount": 2,
+          "fixStatus": "Fix Available",
+          "currentVersion": "49.0.0",
+          "fixedIn": "fixed=50.0.0",
+          "githubRepo": "https://github.com/red-hat-data-services/mlflow",
+          "severity": "High",
+          "status": "New",
+          "runDate": "2026-09-20",
+          "jiraUrl": "",
+          "jiraStatus": "",
+          "jiraResolution": ""
+        },
+        {
+          "package": "curl-minimal",
+          "component": "odh-core-bff-v3-6",
+          "cvesFixAvailable": [],
+          "cvesFixNotAvailable": [
+            "CVE-2026-8458",
+            "CVE-2026-8927"
+          ],
+          "cveCountFixAvailable": 0,
+          "cveCountFixNotAvailable": 2,
+          "totalCveCount": 2,
+          "fixStatus": "Not Available",
+          "currentVersion": "7.76.1-40.el9_8.5",
+          "fixedIn": "-",
+          "githubRepo": "https://github.com/red-hat-data-services/odh-dashboard",
+          "severity": "High",
+          "status": "New",
+          "runDate": "2026-09-20",
+          "jiraUrl": "",
+          "jiraStatus": "",
+          "jiraResolution": ""
+        },
+        {
+          "package": "golang.org/x/crypto",
+          "component": "odh-kserve-controller-v3-6",
+          "cvesFixAvailable": [
+            "GHSA-868x-77cj-grfc"
+          ],
+          "cvesFixNotAvailable": [],
+          "cveCountFixAvailable": 1,
+          "cveCountFixNotAvailable": 0,
+          "totalCveCount": 1,
+          "fixStatus": "Fix Available",
+          "currentVersion": "0.38.0",
+          "fixedIn": "fixed=0.35.0",
+          "githubRepo": "https://github.com/red-hat-data-services/kserve",
+          "severity": "Medium",
+          "status": "New",
+          "runDate": "2026-09-20",
+          "jiraUrl": "",
+          "jiraStatus": "",
+          "jiraResolution": ""
+        }
+      ],
+      "aggregation": {
+        "totalRecords": 4,
+        "uniqueCvesFixAvailable": 4,
+        "uniqueCvesFixNotAvailable": 2,
+        "totalUniqueCves": 6,
+        "byPackage": [
+          {
+            "package": "aiohttp",
+            "count": 1,
+            "pct": 25
+          },
+          {
+            "package": "cryptography",
+            "count": 1,
+            "pct": 25
+          },
+          {
+            "package": "curl-minimal",
+            "count": 1,
+            "pct": 25
+          },
+          {
+            "package": "golang.org/x/crypto",
+            "count": 1,
+            "pct": 25
+          }
+        ],
+        "byComponent": [
+          {
+            "component": "odh-autorag-v3-6",
+            "count": 1,
+            "pct": 25
+          },
+          {
+            "component": "odh-mlflow-v3-6",
+            "count": 1,
+            "pct": 25
+          },
+          {
+            "component": "odh-core-bff-v3-6",
+            "count": 1,
+            "pct": 25
+          },
+          {
+            "component": "odh-kserve-controller-v3-6",
+            "count": 1,
+            "pct": 25
+          }
+        ],
+        "bySeverity": [
+          {
+            "severity": "High",
+            "count": 3,
+            "pct": 75
+          },
+          {
+            "severity": "Medium",
+            "count": 1,
+            "pct": 25
+          }
+        ],
+        "byStatus": [
+          {
+            "status": "New",
+            "count": 4,
+            "pct": 100
+          }
+        ],
+        "byFixStatus": [
+          {
+            "fixStatus": "Fix Available",
+            "count": 3,
+            "pct": 75
+          },
+          {
+            "fixStatus": "Not Available",
+            "count": 1,
+            "pct": 25
+          }
+        ],
+        "byGithubRepo": [
+          {
+            "repo": "https://github.com/red-hat-data-services/pipelines-components",
+            "count": 1,
+            "pct": 25
+          },
+          {
+            "repo": "https://github.com/red-hat-data-services/mlflow",
+            "count": 1,
+            "pct": 25
+          },
+          {
+            "repo": "https://github.com/red-hat-data-services/odh-dashboard",
+            "count": 1,
+            "pct": 25
+          },
+          {
+            "repo": "https://github.com/red-hat-data-services/kserve",
+            "count": 1,
+            "pct": 25
+          }
+        ]
+      },
+      "severityPackageMatrix": {
+        "packages": [
+          "aiohttp",
+          "cryptography",
+          "curl-minimal",
+          "golang.org/x/crypto"
+        ],
+        "rows": [
+          {
+            "severity": "High",
+            "cells": {
+              "aiohttp": 1,
+              "cryptography": 1,
+              "curl-minimal": 1,
+              "golang.org/x/crypto": 0
+            },
+            "total": 3
+          },
+          {
+            "severity": "Medium",
+            "cells": {
+              "aiohttp": 0,
+              "cryptography": 0,
+              "curl-minimal": 0,
+              "golang.org/x/crypto": 1
+            },
+            "total": 1
+          }
+        ],
+        "columnTotals": {
+          "aiohttp": 1,
+          "cryptography": 1,
+          "curl-minimal": 1,
+          "golang.org/x/crypto": 1
+        },
+        "grandTotal": 4
+      }
+    }
+  ],
+  "availableVersions": [
+    "RHOAI 3.6-EA2",
+    "RHOAI 3.6"
+  ]
+}

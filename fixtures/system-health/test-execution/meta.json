@@ -1,0 +1,7 @@
+{
+  "generated_at": "2026-09-17T00:00:00+00:00",
+  "from_date": "2026-09-15",
+  "to_date": "2026-09-17",
+  "components": ["AI Hub", "AI Safety"],
+  "data_mode": "static"
+}

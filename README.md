@@ -56,7 +56,17 @@ GITHUB_TOKEN=your-github-classic-pat   # Classic PAT with read:user scope
 
 # Optional — automated roster sync from Google Sheets
 GOOGLE_SERVICE_ACCOUNT_KEY_FILE=./secrets/google-sa-key.json
+
+# Optional — Workflow Validation (backend only; read-only account)
+WORKFLOW_VALIDATION_OPENSEARCH_URL=https://your-opensearch-api.example.com
+WORKFLOW_VALIDATION_OPENSEARCH_USERNAME=your-read-only-username
+WORKFLOW_VALIDATION_OPENSEARCH_PASSWORD=your-read-only-password
 ```
+
+OpenSearch credentials are consumed only by the Express backend. The Vue app
+calls the module API and must never receive or query OpenSearch with them. An
+unauthenticated local POC remains available by setting only
+`WORKFLOW_VALIDATION_OPENSEARCH_URL=http://localhost:9200`.
 
 **Jira API Token:** Go to https://id.atlassian.com/manage-profile/security/api-tokens, click "Create API token", and paste the value as `JIRA_TOKEN`.
 

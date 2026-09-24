@@ -370,6 +370,13 @@
         </div>
       </div>
 
+      <!--
+        Embeds the full, unmodified TV vs FV Delta report (see TvFvDeltaPanel.vue /
+        TvFvDeltaView.vue). The same unmodified view is also available from the
+        sibling TV vs FV Delta tile on the PM Hub landing page.
+      -->
+      <TvFvDeltaPanel v-model:collapsed="tvFvDeltaCollapsed" :synced-versions="tvFvSyncedVersions" />
+
       <div class="flex items-center gap-2">
         <span class="text-[11px] font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider">TV/FV Align</span>
         <AlignmentLegendPopover variant="button" />
@@ -499,6 +506,7 @@ import AlignmentRollupTable from '../components/AlignmentRollupTable.vue'
 import AlignmentLegendPopover from '../components/AlignmentLegendPopover.vue'
 import PillarConfigPanel from '../components/PillarConfigPanel.vue'
 import FeatureReadinessDrawer from '../components/FeatureReadinessDrawer.vue'
+import TvFvDeltaPanel from '../components/TvFvDeltaPanel.vue'
 import { toDrawerFeature } from '../utils/feature-readiness-drawer-model.js'
 import {
   ALIGNMENT_DISPLAY_KEYS,
@@ -538,6 +546,7 @@ var AUTO_REFRESH_MS = 5 * 60 * 1000
 var selectedPillars = ref([])
 var selectedComponents = ref([])
 var selectedVersions = ref([])
+var tvFvDeltaCollapsed = ref(true)
 
 var pillarSearch = ref('')
 var componentSearch = ref('')
@@ -992,6 +1001,15 @@ function resolveJiraVersions(selectedLabels) {
   }
   return result
 }
+
+/**
+ * Jira version names to sync onto the embedded TV vs FV Delta panel.
+ * Null when PM Hub has no version filter set — the panel then falls back to
+ * its own standalone defaults, matching its behavior on the Reports page.
+ */
+var tvFvSyncedVersions = computed(function() {
+  return selectedVersions.value.length ? resolveJiraVersions(selectedVersions.value) : null
+})
 
 var pillarNames = computed(function() {
   return pillarConfig.value.pillars.map(function(p) { return p.name })

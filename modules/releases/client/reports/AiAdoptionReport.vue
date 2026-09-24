@@ -31,7 +31,10 @@ const RELEASE_OPTIONS = [
   { value: '3.4 GA', label: '3.4 GA' },
   { value: '3.5 EA1', label: '3.5 EA1' },
   { value: '3.5 EA2', label: '3.5 EA2' },
-  { value: '3.5 GA', label: '3.5 GA' }
+  { value: '3.5 GA', label: '3.5 GA' },
+  { value: '3.6 EA1', label: '3.6 EA1' },
+  { value: '3.6 EA2', label: '3.6 EA2' },
+  { value: '3.6 GA', label: '3.6 GA' }
 ]
 const BASELINE_NAME = '3.4 GA'
 

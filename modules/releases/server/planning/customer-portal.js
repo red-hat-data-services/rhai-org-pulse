@@ -9,6 +9,7 @@
 var TOKEN_URL = 'https://sso.redhat.com/auth/realms/redhat-external/protocol/openid-connect/token'
 var CASE_API_V3_BASE_URL = 'https://api.access.redhat.com/support/v3/cases'
 var CASE_API_V1_BASE_URL = 'https://api.access.redhat.com/support/v1/cases'
+var ACCOUNT_API_V1_BASE_URL = 'https://api.access.redhat.com/support/v1/accounts'
 var TOKEN_EXPIRY_SKEW_MS = 30 * 1000
 var CASE_CACHE_TTL_MS = 6 * 60 * 60 * 1000
 
@@ -107,7 +108,7 @@ function createCustomerPortalClient(options) {
   var tokenUrl = options.tokenUrl || TOKEN_URL
   var configuredCaseApiBaseUrls = options.caseApiBaseUrls || (options.caseApiBaseUrl
     ? [options.caseApiBaseUrl]
-    : [CASE_API_V3_BASE_URL, CASE_API_V1_BASE_URL])
+    : [CASE_API_V1_BASE_URL, CASE_API_V3_BASE_URL])
   var caseApiBaseUrls = configuredCaseApiBaseUrls.map(function(baseUrl) {
     return baseUrl.replace(/\/$/, '')
   })
@@ -155,23 +156,51 @@ function createCustomerPortalClient(options) {
     return pendingTokenRequest
   }
 
+  async function fetchAccountName(token, accountRef) {
+    try {
+      var response = await fetchImpl(
+        ACCOUNT_API_V1_BASE_URL + '/' + encodeURIComponent(accountRef),
+        {
+          headers: { Authorization: 'Bearer ' + token, Accept: 'application/json' },
+          signal: AbortSignal.timeout(15000)
+        }
+      )
+      if (!response.ok) return ''
+      var data = await response.json()
+      return firstNonEmptyString([data.name, data.accountName, data.displayName]) || ''
+    } catch {
+      return ''
+    }
+  }
+
   async function fetchCustomerName(caseNumber) {
     var token = await getAccessToken()
     if (!token) return ''
 
     for (var i = 0; i < caseApiBaseUrls.length; i++) {
-      var response = await fetchImpl(caseApiBaseUrls[i] + '/' + encodeURIComponent(caseNumber), {
-        headers: {
-          Authorization: 'Bearer ' + token,
-          Accept: 'application/json'
-        },
-        signal: AbortSignal.timeout(15000)
-      })
       var hasFallback = i < caseApiBaseUrls.length - 1
+      var response
+      try {
+        response = await fetchImpl(caseApiBaseUrls[i] + '/' + encodeURIComponent(caseNumber), {
+          headers: {
+            Authorization: 'Bearer ' + token,
+            Accept: 'application/json'
+          },
+          signal: AbortSignal.timeout(15000)
+        })
+      } catch (err) {
+        if (hasFallback) continue
+        throw err
+      }
       if (hasFallback && (response.status === 401 || response.status === 404)) continue
       if (response.status === 404) return ''
       if (!response.ok) throw new Error('Customer Portal case request failed (' + response.status + ')')
-      return extractCustomerName(await response.json())
+      var caseData = await response.json()
+      var name = extractCustomerName(caseData)
+      if (!name && caseData && caseData.accountNumberRef) {
+        name = await fetchAccountName(token, caseData.accountNumberRef)
+      }
+      return name
     }
 
     return ''
@@ -201,6 +230,7 @@ module.exports = {
   CASE_API_BASE_URL: CASE_API_V3_BASE_URL,
   CASE_API_V3_BASE_URL,
   CASE_API_V1_BASE_URL,
+  ACCOUNT_API_V1_BASE_URL,
   extractLinkedCaseNumbers,
   extractCustomerName,
   createCustomerPortalClient

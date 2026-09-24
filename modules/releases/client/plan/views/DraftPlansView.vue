@@ -187,9 +187,15 @@ onMounted(async function() {
   try {
     await loadCycles('RHOAI')
   } catch {
-    // loadEditor still tries demo/editor path
+    // The editor request below provides the actionable error state.
   }
-  await loadEditor(selectedVersion.value)
+  if (!draft.value || draft.value.version !== selectedVersion.value) {
+    await loadEditor(selectedVersion.value)
+  }
+  // Plan Approval starts with only AI Planner-approved features visible while
+  // retaining the full candidate set for approvals, editing, and audit history.
+  filterEvent.value = '__approved__'
+  filterDecision.value = ''
 })
 </script>
 
@@ -200,7 +206,7 @@ onMounted(async function() {
       <div class="flex flex-wrap items-center gap-3 min-w-0">
         <div class="min-w-0">
           <p class="text-[10px] font-semibold uppercase tracking-wide text-gray-400 dark:text-gray-500">Release cycle</p>
-          <h2 class="text-sm font-semibold text-gray-900 dark:text-gray-100 truncate">{{ cycleLabel }} Draft Plan</h2>
+          <h2 class="text-sm font-semibold text-gray-900 dark:text-gray-100 truncate">{{ cycleLabel }} Plan Approval</h2>
         </div>
         <label class="text-sm font-medium text-gray-700 dark:text-gray-300 flex items-center gap-2">
           Cycle
@@ -438,6 +444,15 @@ onMounted(async function() {
       class="mx-4 mt-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-700 rounded-lg p-4 text-sm text-red-700 dark:text-red-400"
     >
       {{ error }}
+    </div>
+
+    <!-- Empty state: Plan Approval starts fresh -->
+    <div
+      v-if="!loading && !error && (!draft || (filterEvent === '__approved__' && filteredRows.length === 0))"
+      class="mx-4 mt-3 rounded-lg border border-blue-200 dark:border-blue-500/30 bg-blue-50 dark:bg-blue-500/10 px-4 py-6 text-center text-sm text-blue-800 dark:text-blue-300"
+    >
+      <p class="font-semibold mb-2">Plan Approval — Start Fresh</p>
+      <p>Use the <strong>AI Planner</strong> tab to review features and add them to this plan with the "Add to Plan" button.</p>
     </div>
 
     <!-- Table + sticky audit panel (mirrors red-pen panel-grid) -->

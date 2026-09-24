@@ -1,5 +1,13 @@
 const { createGoogleSheetsClient } = require('../../../shared/server/google-sheets');
-const { getShowcaseData, fetchShowcaseData, clearCache: clearShowcaseCache, STORAGE_KEY: SHOWCASE_STORAGE_KEY } = require('./showcase/sheets-sync');
+const {
+  getShowcaseData,
+  fetchShowcaseData,
+  clearCache: clearShowcaseCache,
+  STORAGE_KEY: SHOWCASE_STORAGE_KEY,
+  getReferencedPillarKeys,
+  mergePillarMetadata,
+  normalizeShowcaseData,
+} = require('./showcase/sheets-sync');
 const { getConfig: getShowcaseConfig, saveConfig: saveShowcaseConfig } = require('./showcase/config');
 const { getConfig: getBoardConfig, saveConfig: saveBoardConfig } = require('./board-config');
 
@@ -179,6 +187,39 @@ module.exports = function registerRoutes(router, context) {
     }
   }
 
+  /**
+   * Resolve the pillar metadata represented by a complete monthly board.
+   *
+   * Board filters only change the candidate list returned to the client; the
+   * pillar catalog must continue to describe the full unfiltered board. Do
+   * not include showcase entry references here because those entries are a
+   * separate catalog and may contain pillars with no board candidates.
+   */
+  function getBoardPillars(candidates, showcaseData) {
+    const referencedKeys = getReferencedPillarKeys([], candidates);
+    const referencedSet = new Set(referencedKeys);
+    const metadata = (showcaseData && Array.isArray(showcaseData.pillars))
+      ? showcaseData.pillars.filter(pillar => pillar && referencedSet.has(pillar.pillarKey))
+      : [];
+
+    return mergePillarMetadata(
+      metadata,
+      referencedKeys,
+    );
+  }
+
+  /**
+   * Resolve the complete showcase pillar catalog, including configured
+   * pillars that currently have no entries. Entry references are synthesized
+   * when a sheet refresh has entries ahead of its pillar metadata row.
+   */
+  function getShowcasePillars(entries, showcaseData) {
+    return mergePillarMetadata(
+      showcaseData && showcaseData.pillars,
+      getReferencedPillarKeys(entries, []),
+    );
+  }
+
   // --- Sync logic ---
 
   async function syncBoards() {
@@ -343,7 +384,7 @@ module.exports = function registerRoutes(router, context) {
    *         description: Sort order (default impact)
    *     responses:
    *       200:
-   *         description: Filtered and sorted candidates
+   *         description: Filtered and sorted candidates with the pillar metadata referenced by the board
    *       400:
    *         description: Invalid month format
    *       404:
@@ -361,10 +402,12 @@ module.exports = function registerRoutes(router, context) {
     }
 
     const filtered = filterCandidates(candidates, req.query);
+    const showcaseData = await loadPillarData();
     res.json({
       month,
       total: candidates.length,
       filtered: filtered.length,
+      pillars: getBoardPillars(candidates, showcaseData),
       candidates: filtered
     });
   });
@@ -384,7 +427,7 @@ module.exports = function registerRoutes(router, context) {
    *         description: Candidate unique_id
    *     responses:
    *       200:
-   *         description: Candidate details
+   *         description: Candidate details with the resolved strategy pillar metadata
    *       404:
    *         description: Candidate not found
    */
@@ -398,7 +441,10 @@ module.exports = function registerRoutes(router, context) {
       if (!Array.isArray(candidates)) continue;
       const found = candidates.find(c => c.uniqueId === id);
       if (found) {
-        return res.json({ ...found, boardMonth: month });
+        const showcaseData = await loadPillarData();
+        const pillar = getBoardPillars([found], showcaseData)
+          .find(p => p.pillarKey === found.category) || null;
+        return res.json({ ...found, boardMonth: month, pillar });
       }
     }
     res.status(404).json({ error: `Candidate not found: ${id}` });
@@ -469,7 +515,41 @@ module.exports = function registerRoutes(router, context) {
   const showcaseKeyFile = context.resolveSecret('GOOGLE_SERVICE_ACCOUNT_KEY_FILE') || '/etc/secrets/google-sa-key.json';
 
   async function loadShowcaseDemoData() {
-    return (await readFromStorage(SHOWCASE_STORAGE_KEY)) || { entries: [], pillars: [], fetchedAt: null };
+    return normalizeShowcaseData(
+      (await readFromStorage(SHOWCASE_STORAGE_KEY)) || { entries: [], pillars: [], fetchedAt: null },
+    );
+  }
+
+  // Board and showcase data are synced independently. Prefer the cached
+  // showcase catalog so board requests remain available when Google Sheets is
+  // temporarily unreachable, and synthesize metadata for any category that
+  // has arrived in a board before its pillar row has been refreshed.
+  async function loadPillarData() {
+    try {
+      const stored = await readFromStorage(SHOWCASE_STORAGE_KEY);
+      if (stored) return normalizeShowcaseData(stored);
+    } catch (err) {
+      console.error('[ai-catalyst:showcase] Failed to read pillar cache:', err.message);
+    }
+
+    if (DEMO_MODE) {
+      return loadShowcaseDemoData();
+    }
+
+    try {
+      // The board and showcase settings normally point at the same workbook,
+      // but use the board workbook as a compatibility fallback for deployments
+      // that only configured the monthly board.
+      const showcaseSheetId = (await getShowcaseConfig(readFromStorage)).sheetId;
+      const sheetId = showcaseSheetId || await getSheetId();
+      if (sheetId) {
+        return normalizeShowcaseData(await getShowcaseData(sheetId, showcaseKeyFile, storage));
+      }
+    } catch (err) {
+      console.error('[ai-catalyst:showcase] Failed to load pillar metadata:', err.message);
+    }
+
+    return normalizeShowcaseData({ entries: [], pillars: [], fetchedAt: null });
   }
 
   /**
@@ -527,13 +607,15 @@ module.exports = function registerRoutes(router, context) {
         data = await getShowcaseData(sheetId, showcaseKeyFile, storage);
       }
 
+      data = normalizeShowcaseData(data);
+
       const entries = (data.entries || []).filter(function(e) {
         return e.status !== 'draft';
       });
 
       res.json({
         entries,
-        pillars: data.pillars || [],
+        pillars: getShowcasePillars(entries, data),
         fetchedAt: data.fetchedAt,
         totalEntries: entries.length,
       });
@@ -571,6 +653,8 @@ module.exports = function registerRoutes(router, context) {
         data = await getShowcaseData(sheetId, showcaseKeyFile, storage);
       }
 
+      data = normalizeShowcaseData(data);
+
       const entry = (data.entries || []).find(function(e) {
         return e.slug === req.params.slug;
       });
@@ -579,7 +663,7 @@ module.exports = function registerRoutes(router, context) {
         return res.status(404).json({ error: 'Entry not found' });
       }
 
-      const pillar = (data.pillars || []).find(function(p) {
+      const pillar = getShowcasePillars(data.entries, data).find(function(p) {
         return p.pillarKey === entry.strategyPillarKey;
       });
 

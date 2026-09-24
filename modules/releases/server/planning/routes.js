@@ -29,7 +29,7 @@ const healthRoutes = require('./health/health-routes')
 var { buildFeatureReadiness } = require('./feature-readiness')
 var { fetchFeaturesWithTimeout } = require('./feature-query')
 var { extractFirstInProgressAt, extractCustomersFromComments } = require('./bu-feedback-issue')
-var { createCustomerPortalClient, extractLinkedCaseNumbers } = require('./customer-portal')
+var { createCustomerPortalClient, extractLinkedCaseNumbers, extractCustomerName } = require('./customer-portal')
 
 const { isValidVersionParam } = require('../version-utils')
 
@@ -595,22 +595,19 @@ module.exports = async function registerPlanningRoutes(router, context) {
     return issue
   }
 
-  async function enrichCustomerAffectedFromLinkedCases(issues) {
-    var candidates = issues.filter(function(issue) {
-      return !issue.customerAffected && issue._linkedCaseNumbers.length > 0
-    })
+  async function resolveCustomerNames(candidates) {
     var nextIndex = 0
     var failureCount = 0
     var firstFailure = ''
 
     async function worker() {
       while (nextIndex < candidates.length) {
-        var issue = candidates[nextIndex++]
+        var entry = candidates[nextIndex++]
         var seen = {}
         var names = []
-        for (var ci = 0; ci < issue._linkedCaseNumbers.length; ci++) {
+        for (var ci = 0; ci < entry.caseNumbers.length; ci++) {
           try {
-            var name = await customerPortalClient.getCustomerName(issue._linkedCaseNumbers[ci])
+            var name = await customerPortalClient.getCustomerName(entry.caseNumbers[ci])
             if (name && !seen[name.toLowerCase()]) {
               seen[name.toLowerCase()] = true
               names.push(name)
@@ -620,21 +617,57 @@ module.exports = async function registerPlanningRoutes(router, context) {
             if (!firstFailure) firstFailure = err.message
           }
         }
-        if (names.length > 0) issue.customerAffected = names.join(', ')
+        if (names.length > 0) entry.issue.customerAffected = names.join(', ')
       }
     }
 
-    if (customerPortalClient.isConfigured()) {
-      var workerCount = Math.min(CUSTOMER_LOOKUP_CONCURRENCY, candidates.length)
-      var workers = []
-      for (var wi = 0; wi < workerCount; wi++) workers.push(worker())
-      await Promise.all(workers)
-    }
+    var workerCount = Math.min(CUSTOMER_LOOKUP_CONCURRENCY, candidates.length)
+    var workers = []
+    for (var wi = 0; wi < workerCount; wi++) workers.push(worker())
+    await Promise.all(workers)
 
-    for (var i = 0; i < issues.length; i++) delete issues[i]._linkedCaseNumbers
     if (failureCount > 0) {
       console.warn('[releases/planning] ' + failureCount + ' Customer Portal case lookup(s) failed: ' + firstFailure)
     }
+  }
+
+  function enrichCustomerAffectedInBackground(payload, cacheKey) {
+    var issues = payload.issues
+    var candidates = []
+    for (var i = 0; i < issues.length; i++) {
+      if (!issues[i].customerAffected && issues[i]._linkedCaseNumbers && issues[i]._linkedCaseNumbers.length > 0) {
+        candidates.push({ issue: issues[i], caseNumbers: issues[i]._linkedCaseNumbers })
+      }
+      delete issues[i]._linkedCaseNumbers
+    }
+
+    if (!customerPortalClient.isConfigured() || candidates.length === 0) return
+
+    resolveCustomerNames(candidates).then(function() {
+      payload.customersResolved = true
+      writeToStorage(cacheKey, payload).catch(function() {})
+      var resolved = issues.filter(function(i) { return !!i.customerAffected }).length
+      console.log('[releases/planning] Customer names resolved for ' + resolved + ' issues')
+    }).catch(function(err) {
+      console.warn('[releases/planning] Background customer name enrichment failed:', err.message)
+    })
+  }
+
+  function carryOverCustomerNames(issues, cacheKey) {
+    return readFromStorage(cacheKey).then(function(cached) {
+      if (!cached || !cached.issues) return
+      var map = {}
+      for (var i = 0; i < cached.issues.length; i++) {
+        var ci = cached.issues[i]
+        if (ci.customerAffected) map[ci.key] = ci.customerAffected
+      }
+      if (!Object.keys(map).length) return
+      for (var j = 0; j < issues.length; j++) {
+        if (!issues[j].customerAffected && map[issues[j].key]) {
+          issues[j].customerAffected = map[issues[j].key]
+        }
+      }
+    }).catch(function() {})
   }
 
   function deduplicateRaw(rawIssues) {
@@ -673,10 +706,14 @@ module.exports = async function registerPlanningRoutes(router, context) {
     var issues = rawIssues.map(function(raw) {
       return mapRawIssue(raw, { hasSfdcCases: !!sfdcKeys[raw.key] })
     })
-    await enrichCustomerAffectedFromLinkedCases(issues)
 
-    var payload = { issues: issues, fetchedAt: new Date().toISOString(), cachedAt: new Date().toISOString() }
+    await carryOverCustomerNames(issues, BU_FEEDBACK_CACHE_KEY)
+
+    var payload = { issues: issues, fetchedAt: new Date().toISOString(), cachedAt: new Date().toISOString(), customersResolved: false }
     await writeToStorage(BU_FEEDBACK_CACHE_KEY, payload)
+
+    enrichCustomerAffectedInBackground(payload, BU_FEEDBACK_CACHE_KEY)
+
     return payload
   }
 
@@ -752,11 +789,13 @@ module.exports = async function registerPlanningRoutes(router, context) {
         sfdcCasesCount: 0
       })
     })
-    await enrichCustomerAffectedFromLinkedCases(issues)
 
-    var payload = { issues: issues, fetchedAt: new Date().toISOString(), cachedAt: new Date().toISOString(), countsResolved: false }
+    await carryOverCustomerNames(issues, SFDC_ISSUES_CACHE_KEY)
+
+    var payload = { issues: issues, fetchedAt: new Date().toISOString(), cachedAt: new Date().toISOString(), countsResolved: false, customersResolved: false }
     await writeToStorage(SFDC_ISSUES_CACHE_KEY, payload)
 
+    enrichCustomerAffectedInBackground(payload, SFDC_ISSUES_CACHE_KEY)
     enrichSfdcCounts(payload, scopeJql)
 
     return payload
@@ -848,6 +887,128 @@ module.exports = async function registerPlanningRoutes(router, context) {
       }
       res.status(500).json({ error: 'Failed to fetch SFDC issues' })
     }
+  })
+
+  /**
+   * @openapi
+   * /api/modules/releases/planning/customer-portal-diagnostic:
+   *   get:
+   *     summary: Diagnose Customer Portal API connectivity and token exchange (admin only)
+   *     tags: [releases-planning]
+   *     security: [{ bearerAuth: [] }]
+   *     parameters:
+   *       - in: query
+   *         name: caseNumber
+   *         schema:
+   *           type: string
+   *         description: Optional 8-digit case number to test a live lookup
+   *     responses:
+   *       200:
+   *         description: Diagnostic results
+   */
+  router.get('/customer-portal-diagnostic', requireAdmin, requireScope('releases:read'), async function(req, res) {
+    var result = {
+      configured: customerPortalClient.isConfigured(),
+      tokenExchange: null,
+      caseLookup: null
+    }
+
+    if (!result.configured) {
+      result.error = 'CUSTOMER_PORTAL_OFFLINE_TOKEN is not set or empty'
+      return res.json(result)
+    }
+
+    var offlineToken = context.secrets && context.secrets.CUSTOMER_PORTAL_OFFLINE_TOKEN
+    var tokenUrl = 'https://sso.redhat.com/auth/realms/redhat-external/protocol/openid-connect/token'
+
+    try {
+      var tokenResponse = await fetch(tokenUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: new URLSearchParams({
+          grant_type: 'refresh_token',
+          client_id: 'rhsm-api',
+          refresh_token: offlineToken
+        }),
+        signal: AbortSignal.timeout(15000)
+      })
+      result.tokenExchange = {
+        status: tokenResponse.status,
+        ok: tokenResponse.ok
+      }
+      if (!tokenResponse.ok) {
+        var tokenBody = await tokenResponse.text()
+        result.tokenExchange.body = tokenBody.substring(0, 500)
+        return res.json(result)
+      }
+      var tokenData = await tokenResponse.json()
+      result.tokenExchange.hasAccessToken = !!tokenData.access_token
+      result.tokenExchange.expiresIn = tokenData.expires_in
+      var accessToken = tokenData.access_token
+    } catch (err) {
+      result.tokenExchange = { error: err.message }
+      return res.json(result)
+    }
+
+    var testCase = req.query.caseNumber
+    if (!testCase || !/^\d{8}$/.test(testCase)) {
+      result.caseLookup = { skipped: 'Pass ?caseNumber=XXXXXXXX (8-digit case number) to test a lookup.' }
+      return res.json(result)
+    }
+
+    var caseApiUrls = [
+      'https://api.access.redhat.com/support/v1/cases/' + encodeURIComponent(testCase),
+      'https://api.access.redhat.com/support/v3/cases/' + encodeURIComponent(testCase)
+    ]
+
+    result.caseLookup = { caseNumber: testCase, apis: [] }
+    for (var ci = 0; ci < caseApiUrls.length; ci++) {
+      var apiResult = { url: caseApiUrls[ci] }
+      try {
+        var caseResponse = await fetch(caseApiUrls[ci], {
+          headers: { Authorization: 'Bearer ' + accessToken, Accept: 'application/json' },
+          signal: AbortSignal.timeout(15000)
+        })
+        apiResult.status = caseResponse.status
+        apiResult.ok = caseResponse.ok
+        if (caseResponse.ok) {
+          var caseData = await caseResponse.json()
+          apiResult.hasAccountNumberRef = !!caseData.accountNumberRef
+          apiResult.accountNumberRef = caseData.accountNumberRef || null
+          apiResult.extractedName = extractCustomerName(caseData)
+          apiResult.topLevelKeys = Object.keys(caseData).slice(0, 20)
+          if (caseData.accountNumberRef) {
+            try {
+              var acctResponse = await fetch(
+                'https://api.access.redhat.com/support/v1/accounts/' + encodeURIComponent(caseData.accountNumberRef),
+                {
+                  headers: { Authorization: 'Bearer ' + accessToken, Accept: 'application/json' },
+                  signal: AbortSignal.timeout(15000)
+                }
+              )
+              apiResult.accountLookup = {
+                status: acctResponse.status,
+                ok: acctResponse.ok
+              }
+              if (acctResponse.ok) {
+                var acctData = await acctResponse.json()
+                apiResult.accountLookup.name = acctData.name || acctData.accountName || acctData.displayName || ''
+                apiResult.accountLookup.topLevelKeys = Object.keys(acctData).slice(0, 15)
+              }
+            } catch (acctErr) {
+              apiResult.accountLookup = { error: acctErr.message }
+            }
+          }
+        } else {
+          apiResult.body = (await caseResponse.text()).substring(0, 300)
+        }
+      } catch (err) {
+        apiResult.error = err.message
+      }
+      result.caseLookup.apis.push(apiResult)
+    }
+
+    res.json(result)
   })
 
   // ─── Cache Invalidation Helper ───
@@ -1697,4 +1858,8 @@ module.exports = async function registerPlanningRoutes(router, context) {
       }
     })
   }
+
+  // ─── AI Planner Routes ───
+  const registerAIPlannerRoutes = require('./ai-planner/routes');
+  registerAIPlannerRoutes(router, context);
 }

@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { clampStemToCard, pointInCircle } from '../timeline-geometry.js'
+import { clampStemToCard, pointInCircle, timelineDimensionGroupKey, timelineDimensionRowKey } from '../timeline-geometry.js'
 
 // Mirrors the pixel geometry used in ReleaseTimeline.vue:
 //   above node: stem top = yMid - stemLen - 8, card bottom = yMid - stemLen - 4
@@ -46,6 +46,12 @@ describe('clampStemToCard', function () {
       var ends = clampStemToCard(stem, card, false)
       expect(ends.bottom).toBeLessThanOrEqual(card.y)
     })
+
+    it('leaves a below-axis stem unchanged when it already meets the card edge', function () {
+      var flush = { top: 306, bottom: 368 }
+      var ends = clampStemToCard(flush, card, false)
+      expect(ends.bottom).toBe(368)
+    })
   })
 
   it('never produces an inverted line when the card fully covers the stem', function () {
@@ -82,5 +88,40 @@ describe('pointInCircle (milestone-dot hit test)', function () {
   it('misses just outside the radius', function () {
     expect(pointInCircle(cx + 11, cy, cx, cy, r)).toBe(false)
     expect(pointInCircle(cx + 8, cy + 8, cx, cy, r)).toBe(false) // dist ≈ 11.3
+  })
+})
+
+describe('timelineDimensionGroupKey', function () {
+  it('keeps same-label distance lines separate by product', function () {
+    var rhai = { groupLabel: '3.6 GA', productList: ['rhai'] }
+    var rhelai = { groupLabel: '3.6 GA', productList: ['rhelai'] }
+
+    expect(timelineDimensionGroupKey(rhai, true))
+      .not.toBe(timelineDimensionGroupKey(rhelai, true))
+  })
+
+  it('keeps distance row lookup independent from product grouping', function () {
+    var group = timelineDimensionGroupKey({ groupLabel: '3.6 EA2', productList: ['rhelai'] }, true)
+    var rowKey = timelineDimensionRowKey('3.6 EA2', true)
+    expect(group).not.toBe(rowKey)
+    expect(rowKey).toBe('3.6 EA2-a')
+  })
+
+  it('keeps the above and below rows separate', function () {
+    var node = { groupLabel: '3.6 GA', productList: ['rhai'] }
+
+    expect(timelineDimensionGroupKey(node, true))
+      .not.toBe(timelineDimensionGroupKey(node, false))
+  })
+
+  it('handles missing product metadata deterministically', function () {
+    expect(timelineDimensionGroupKey({ groupLabel: '3.6 GA' }, true))
+      .toBe('3.6 GA|a|')
+  })
+
+  it('handles null nodes and non-array product metadata', function () {
+    expect(timelineDimensionGroupKey(null, false)).toBe('|b|')
+    expect(timelineDimensionGroupKey({ groupLabel: '3.6 GA', productList: 'rhai' }, false))
+      .toBe('3.6 GA|b|')
   })
 })

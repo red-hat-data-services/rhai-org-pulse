@@ -13,8 +13,10 @@ const MODULE_API = '/modules/ai-catalyst'
 const boards = ref([])
 const selectedMonth = ref('')
 const candidates = ref([])
+const pillars = ref([])
 const loading = ref(true)
 const error = ref(null)
+let candidateRequestId = 0
 
 async function loadBoards() {
   try {
@@ -29,17 +31,29 @@ async function loadBoards() {
 }
 
 async function loadCandidates() {
-  if (!selectedMonth.value) return
+  const requestId = ++candidateRequestId
+  const month = selectedMonth.value
+  if (!month) {
+    candidates.value = []
+    pillars.value = []
+    loading.value = false
+    return
+  }
+
   loading.value = true
   error.value = null
+  pillars.value = []
   try {
-    const data = await apiRequest(`${MODULE_API}/boards/${selectedMonth.value}`)
+    const data = await apiRequest(`${MODULE_API}/boards/${month}`)
+    if (requestId !== candidateRequestId) return
     candidates.value = data.candidates || []
+    pillars.value = data.pillars || []
   } catch (err) {
+    if (requestId !== candidateRequestId) return
     error.value = err.message || 'Failed to load candidates'
     candidates.value = []
   } finally {
-    loading.value = false
+    if (requestId === candidateRequestId) loading.value = false
   }
 }
 
@@ -47,11 +61,13 @@ function onSelectCandidate(candidate) {
   nav.navigateTo('candidate-detail', { id: candidate.uniqueId, month: selectedMonth.value })
 }
 
-watch(selectedMonth, loadCandidates)
+watch(selectedMonth, (month, previousMonth) => {
+  if (previousMonth && month !== previousMonth) pillars.value = []
+  loadCandidates()
+})
 
 onMounted(async () => {
   await loadBoards()
-  if (selectedMonth.value) await loadCandidates()
 })
 
 const _monthLabel = computed(() => {
@@ -104,17 +120,19 @@ const _monthLabel = computed(() => {
     <template v-else>
       <ImpactFeasibilityChart
         :candidates="candidates"
+        :pillars="pillars"
         @select="onSelectCandidate"
       />
 
       <ReportHighlightCards
         :candidates="candidates"
+        :pillars="pillars"
         @select="onSelectCandidate"
       />
 
       <!-- Distribution charts -->
       <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <CategoryDonutChart :candidates="candidates" />
+        <CategoryDonutChart :candidates="candidates" :pillars="pillars" />
         <SourceBarChart :candidates="candidates" />
         <LanguageBarChart :candidates="candidates" />
       </div>

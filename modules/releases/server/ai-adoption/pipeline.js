@@ -23,6 +23,18 @@ const RELEASE_GROUPS = [
   {
     name: '3.5 GA',
     fixVersions: ['3.5 GA RHOAI Release', '3.5 GA RHELAI RELEASE', '3.5 GA RHAII RELEASE']
+  },
+  {
+    name: '3.6 EA1',
+    fixVersions: ['3.6 EA1 RHOAI RELEASE', '3.6 EA1 RHAII RELEASE', '3.6 EA1 RHELAI RELEASE']
+  },
+  {
+    name: '3.6 EA2',
+    fixVersions: ['3.6 EA2 RHOAI RELEASE', '3.6 EA2 RHAII RELEASE', '3.6 EA2 RHELAI RELEASE']
+  },
+  {
+    name: '3.6 GA',
+    fixVersions: ['3.6 GA RHOAI RELEASE', '3.6 GA RHAII RELEASE', '3.6 GA RHELAI RELEASE']
   }
 ];
 
@@ -222,6 +234,7 @@ async function fetchChildRollups(jiraClient, parentKeys) {
  * @param {object} [options]
  * @param {string} [options.releaseGroup] - single release group name to filter
  * @param {string} [options.component] - component name filter
+ * @param {(error: Error, releaseGroup: string) => void} [options.onFetchError] - optional fetch failure observer
  * @returns {Promise<object[]>} array of release group results
  */
 async function fetchAiAdoptionData(jiraClient, options = {}) {
@@ -242,6 +255,7 @@ async function fetchAiAdoptionData(jiraClient, options = {}) {
       issues = await jiraClient.fetchAllJqlResults(jql, fields, { maxResults: 200 });
     } catch (err) {
       console.warn(`[ai-adoption] Jira fetch failed for ${group.name}: ${err.message}`);
+      if (typeof options.onFetchError === 'function') options.onFetchError(err, group.name);
       issues = [];
     }
 

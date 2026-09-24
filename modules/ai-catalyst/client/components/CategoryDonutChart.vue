@@ -11,23 +11,20 @@ import { useCategories } from '../composables/useCategories.js'
 ChartJS.register(ArcElement, Tooltip)
 
 const props = defineProps({
-  candidates: { type: Array, required: true }
+  candidates: { type: Array, required: true },
+  pillars: { type: Array, default: () => [] }
 })
 
-const { CATEGORY_KEYS, getCategoryMeta } = useCategories()
+const { getCategoryMeta, getPillarRegistry } = useCategories()
 
-const COLORS = {
-  'model-inference': '#3b82f6',
-  'model-customization': '#a855f7',
-  'agentic-ai': '#22c55e',
-  'management-observability-security': '#f59e0b'
-}
+const pillarOptions = computed(() => getPillarRegistry(props.pillars, props.candidates))
+const categoryKeys = computed(() => pillarOptions.value.map(p => p.pillarKey))
 
 const categoryCounts = computed(() => {
   const counts = {}
-  for (const key of CATEGORY_KEYS) counts[key] = 0
+  for (const key of categoryKeys.value) counts[key] = 0
   for (const c of props.candidates) {
-    const cat = c.category || 'agentic-ai'
+    const cat = c.category || 'unknown'
     if (counts[cat] !== undefined) counts[cat]++
     else counts[cat] = 1
   }
@@ -35,10 +32,10 @@ const categoryCounts = computed(() => {
 })
 
 const chartData = computed(() => ({
-  labels: CATEGORY_KEYS.map(k => getCategoryMeta(k).shortName),
+  labels: categoryKeys.value.map(k => getCategoryMeta(k, pillarOptions.value).shortName),
   datasets: [{
-    data: CATEGORY_KEYS.map(k => categoryCounts.value[k] || 0),
-    backgroundColor: CATEGORY_KEYS.map(k => COLORS[k]),
+    data: categoryKeys.value.map(k => categoryCounts.value[k] || 0),
+    backgroundColor: categoryKeys.value.map(k => getCategoryMeta(k, pillarOptions.value).color),
     borderWidth: 0,
     hoverOffset: 6
   }]
@@ -67,9 +64,9 @@ const chartOptions = {
 }
 
 const legendItems = computed(() =>
-  CATEGORY_KEYS.map(k => ({
-    label: getCategoryMeta(k).shortName,
-    color: COLORS[k],
+  categoryKeys.value.map(k => ({
+    label: getCategoryMeta(k, pillarOptions.value).shortName,
+    color: getCategoryMeta(k, pillarOptions.value).color,
     count: categoryCounts.value[k] || 0
   }))
 )
