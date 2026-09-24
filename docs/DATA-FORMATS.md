@@ -2351,6 +2351,81 @@ Each entry has: `dimension` (name), `score` (0-10), `status` (human-readable sum
 
 ---
 
+## System Health — Test Execution Dashboard (`data/system-health/test-execution/`)
+
+Aggregated RHOAI test execution statistics shown on the "Test Execution Dashboard (Beta)" view. This is a **display-layer** feature (HC3): an external pipeline (`test-reports-opensearch`) queries Jenkins/OpenSearch, pre-computes the dashboard payloads, and pushes them via the bulk API. The app only stores and serves the JSON — it performs no aggregation.
+
+The dataset is four separate JSON files under `data/system-health/test-execution/`:
+
+| File | Purpose |
+|------|---------|
+| `heatmap.json` | Primary payload: per-component daily pass/fail/skip totals with a version\|release breakdown. Drives the heatmap table and the version trend chart. |
+| `components.json` | Per-component daily series plus quality-gate execution detail (used by component drill-downs). |
+| `jira_config.json` | Release → team/JQL configuration used to build Jira links. |
+| `meta.json` | Generation metadata (date window, component list, data mode). |
+
+### `heatmap.json`
+
+```json
+{
+  "components": [
+    {
+      "component": "AI Hub",
+      "overall": { "execution_count": 102, "total": 6678, "passed": 6639, "failed": 39, "skipped": 0,
+        "mark": { "state": "FAILED", "color": "red", "symbol": "●" } },
+      "days": {
+        "2026-09-16": {
+          "execution_count": 8, "total": 912, "passed": 912, "failed": 0, "skipped": 0,
+          "jenkins_urls": ["https://jenkins.../rhoai-smoke/65/"],
+          "by_vr": {
+            "3.6|EA1": { "passed": 727, "failed": 0, "skipped": 0, "total": 727,
+              "jenkins_urls": ["https://jenkins.../rhoai-tier1/44/"] }
+          },
+          "mark": { "state": "PASSED", "color": "green", "symbol": "✓" }
+        }
+      }
+    }
+  ]
+}
+```
+
+**Fields:**
+- `components[]`: one entry per test component.
+  - `component`: display name (matches an entry in `meta.components`).
+  - `overall`: summed `total`/`passed`/`failed`/`skipped` plus `execution_count` and an optional `mark`.
+  - `days`: map keyed by ISO date (`YYYY-MM-DD`). Each day has `total`/`passed`/`failed`/`skipped`, `execution_count`, an optional `jenkins_urls` array, an optional `mark`, and `by_vr`.
+  - `by_vr`: map keyed by `"<version>|<release>"` (e.g. `"3.6|EA1"`). Each value has `passed`/`failed`/`skipped`/`total` and optional `jenkins_urls`. This drives version/release filtering and the version trend chart.
+
+> The endpoint also accepts a bare array (the `components` array on its own); the client normalizes both shapes.
+
+### `meta.json`
+
+```json
+{
+  "generated_at": "2026-09-22T18:08:51.970590+00:00",
+  "from_date": "2026-07-01",
+  "to_date": "2026-09-22",
+  "components": ["AI Hub", "AI Pipelines", "..."],
+  "data_mode": "static"
+}
+```
+
+### `components.json` and `jira_config.json`
+
+`components.json` is a map keyed by component name with `overall`, a `daily[]` array, and a `quality_gates` object (per-gate, per-date execution lists). `jira_config.json` is a map with a `releases` object keyed by `"<version>|<release>"`, each carrying `fix_version`, `rhoai_jira_version`, `project`, and a `teams` map. These are stored verbatim and passed through to the client; they are consumed opportunistically for drill-downs and Jira links.
+
+**API:**
+
+| Method | Path | Auth | Purpose |
+|--------|------|------|---------|
+| `GET` | `/api/modules/system-health/quality/test-execution/data` | `system-health:read` | Combined `{ heatmap, components, jira_config, meta, lastUpload }`; `?file=<name>` for a single payload |
+| `GET` | `/api/modules/system-health/quality/test-execution/status` | `system-health:read` | Last upload receipt |
+| `POST` | `/api/modules/system-health/quality/test-execution/bulk` | `system-health:write` | Push any subset of `heatmap`/`components`/`jira_config`/`meta` from the pipeline |
+
+**Upload receipt:** `data/system-health/test-execution/last-upload.json` records `{ uploadedAt, uploadedBy, files }` after each bulk write.
+
+---
+
 ## AI Catalyst Monthly Board — `data/ai-catalyst/boards/{YYYY-MM}.json`
 
 The monthly board is a JSON array written by the AI Catalyst board sync. Each
