@@ -262,9 +262,9 @@ onBeforeUnmount(() => {
           <label for="plan-select" class="text-sm font-medium dark:text-gray-300">Plan:</label>
           <select id="plan-select" v-model="selectedPlan" class="px-3 py-1 rounded border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-200 text-sm">
             <option>3.6 GA</option>
-            <option>3.7 EA1</option>
+            <option>3.7 EA</option>
             <option>3.7 GA</option>
-            <option>3.8 EA1</option>
+            <option>3.8 EA</option>
           </select>
         </div>
         <div class="flex-1 relative">
