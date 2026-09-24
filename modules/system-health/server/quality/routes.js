@@ -645,19 +645,24 @@ module.exports = function registerQualityRoutes(router, context) {
       }
     }
 
-    const stored = [];
-    for (const key of provided) {
-      await writeToStorage(`${TEST_EXEC_BASE}/${key}.json`, body[key]);
-      stored.push(key);
+    try {
+      const stored = [];
+      for (const key of provided) {
+        await writeToStorage(`${TEST_EXEC_BASE}/${key}.json`, body[key]);
+        stored.push(key);
+      }
+
+      await writeToStorage(`${TEST_EXEC_BASE}/last-upload.json`, {
+        uploadedAt: new Date().toISOString(),
+        uploadedBy: req.user?.email || 'pipeline',
+        files: stored
+      });
+
+      return res.json({ status: 'ok', stored, uploadedAt: new Date().toISOString() });
+    } catch (error) {
+      console.error('[system-health/quality] Error writing test execution data:', error.message);
+      return res.status(500).json({ error: 'Failed to store data' });
     }
-
-    await writeToStorage(`${TEST_EXEC_BASE}/last-upload.json`, {
-      uploadedAt: new Date().toISOString(),
-      uploadedBy: req.user?.email || 'pipeline',
-      files: stored
-    });
-
-    return res.json({ status: 'ok', stored, uploadedAt: new Date().toISOString() });
   });
 
   /**
