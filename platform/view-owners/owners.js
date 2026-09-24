@@ -74,6 +74,7 @@ export const viewOwners = {
   'system-health/odh-e2e-health':                  'Ajay Jaganathan',
   'system-health/quality-analysis':                'Dana Gutride',
   'system-health/test-execution':                  'Arthy Loganathan',
+  'system-health/test-execution-detail':           'Arthy Loganathan',
 
   // team-tracker
   'team-tracker/home':                             'Dipanshu Gupta',

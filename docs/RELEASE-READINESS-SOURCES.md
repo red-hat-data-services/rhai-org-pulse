@@ -133,12 +133,12 @@ The Product Pages client performs these calls:
 
 ### 5. Failed test counts by component/team
 
-- Function: `fetch_component_readiness()`
-- Mapped component JQL:
+- Function: `fetch_component_readiness()` via `_build_failure_scope_clause()`
+- Mapped component JQL (unions Team and component):
 
   ```jql
   project = RHOAIENG
-  AND Team = "<TEAM_UUID>"
+  AND (Team = "<TEAM_UUID>" OR component = "<COMPONENT>")
   AND <VERSION_CLAUSE>
   AND labels = "test-failed"
   ```
@@ -153,6 +153,10 @@ The Product Pages client performs these calls:
   ```
 
 - Requests `status`; feeds each matrix tile's Failed bar and status breakdown.
+- The tile's failed **count** and its failed **Jira link** are built from the
+  exact same scope clause, so the displayed number always matches the linked
+  query. The Team+component union avoids undercounting (previously to zero)
+  when a test-failed issue carries a component but no Team field.
 
 ### 6. Skipped test counts by component/team
 
@@ -363,6 +367,14 @@ executed during extraction.
   - Displays release version, `release_schedule.code_freeze_date`,
     `release_schedule.ga_date`, and `release_schedule.status`.
   - Source: Product Pages, with local YAML code-freeze fallback.
+  - `status` is derived by `_derive_schedule_status()` from the GA and
+    code-freeze dates plus the EA/GA nature of the version:
+    `Released` (GA date passed), `Testing` (past code freeze, GA still ahead),
+    `Early Access` (an `EAn` milestone with no resolved GA date), `Planning`
+    (code freeze known and still ahead), else `Upcoming`. Early Access
+    milestones rarely carry a Product Pages `ga` flag, so the value is never
+    left as `Unknown`. The frontend additionally maps any legacy `Unknown`/empty
+    value to the same derived phase.
 - Product Release Blockers:
   - Displays `product_blockers.total_open` and open component counts.
   - Source: open blocker JQL, with Jira links from generated blocker queries.
@@ -373,10 +385,21 @@ executed during extraction.
   - Displays TFA Sign Offs, Test Plan Sign Off, Test Execution, Product Sign
     Off, and Documentation Sign Off as `done/total`, percentage, and RAG.
   - Sources: TFA JQL plus initiative child/phase data.
+  - The TFA Sign Offs tile is shown only for releases up to and including
+    `rhoai-3.6.EA1`; it is hidden from `rhoai-3.6.EA2` onwards (see version gate
+    below).
 - Component Readiness Matrix:
   - Displays component tiles by Nightly/RC1/RC2/RC3.
   - Each tile displays TFA, Product Sign Off, Documentation Sign Off, TestOps
     execution, failed tests, skipped-test state, and Jira links.
+  - The TFA row (Test Plan Sign Off key and TFA bar) is shown only for releases
+    up to and including `rhoai-3.6.EA1` and hidden from `rhoai-3.6.EA2` onwards.
+    The failed-tests bar is labelled `Failed` on legacy releases and
+    `Failed Tests` from `rhoai-3.6.EA2` onwards.
+  - Version gate: `useNewReadinessLayout` in `ReleaseReadinessDirector.vue`
+    ranks the active version (`major.minor` plus EA/GA phase, GA ranking above
+    any EA of the same minor) and applies the new layout at or above the
+    `3.6.EA2` threshold. Unparseable versions fall back to the legacy layout.
   - Sources: initiative child JQL, component TFA JQL, Team/component failure
     and skipped JQLs, and phase-parent links.
 - Test Execution Phases:
