@@ -37,7 +37,7 @@ const STORAGE_PREFIX = 'releases/release-readiness';
  *     summary: List available release readiness versions
  *     responses:
  *       200:
- *         description: Object with versions array, releases array, and default_version
+ *         description: Object with versions array, releases array, and default_version (latest GA date on or before today, or null)
  */
 
 /**

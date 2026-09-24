@@ -1366,7 +1366,7 @@ test.describe('Releases Release Readiness @releases', () => {
     expect(Array.isArray(body.versions)).toBe(true);
   });
 
-  test('release readiness selector opens a release and allows manual switching', async ({ page }) => {
+  test('release readiness opens on the current release and allows manual switching', async ({ page }) => {
     const current = 'rhoai-3.5.EA1';
     const future = 'rhoai-3.6.EA1';
     await page.route('**/api/modules/releases/release-readiness/versions', route => route.fulfill({
@@ -1387,11 +1387,39 @@ test.describe('Releases Release Readiness @releases', () => {
       }
     }));
 
-    await page.goto('/#/releases/reports?report=release-readiness&version=3.5&families=rhoai&phases=ea1');
+    await page.goto('/#/releases/reports?report=release-readiness');
     await expect(page.getByRole('heading', { name: 'RHOAI 3.5 EA1', exact: true })).toBeVisible();
 
     await page.getByRole('button', { name: 'Change', exact: true }).click();
     await page.getByRole('button', { name: '3.6', exact: true }).click();
+    await page.getByRole('button', { name: 'Apply', exact: true }).click();
+    await expect(page.getByRole('heading', { name: 'RHOAI 3.6 EA1', exact: true })).toBeVisible();
+  });
+
+  test('release readiness leaves selection empty when no current release is available', async ({ page }) => {
+    await page.route('**/api/modules/releases/release-readiness/versions', route => route.fulfill({
+      json: {
+        versions: ['rhoai-3.6.EA1'],
+        releases: [{ id: 'rhoai-3.6.EA1', state: 'active' }],
+        default_version: null
+      }
+    }));
+    await page.route('**/api/modules/releases/release-readiness?version=*', route => route.fulfill({
+      json: {
+        version: 'rhoai-3.6.EA1',
+        release_schedule: { ga_date: '2026-11-15', status: 'Planning' },
+        director_summary: { gate_statuses: [], test_timeline: [] },
+        component_readiness: { all_components: [], phases: [] },
+        product_blockers: { total_open: 0, components: [] },
+        breakdowns: {}
+      }
+    }));
+    await page.goto('/#/releases/reports?report=release-readiness');
+    await expect(page.getByText('Select a release version to view readiness status')).toBeVisible();
+    await page.getByRole('button', { name: 'Select Release', exact: true }).click();
+    await page.getByRole('button', { name: 'RHOAI', exact: true }).click();
+    await page.getByRole('button', { name: '3.6', exact: true }).click();
+    await page.getByRole('button', { name: 'EA1', exact: true }).click();
     await page.getByRole('button', { name: 'Apply', exact: true }).click();
     await expect(page.getByRole('heading', { name: 'RHOAI 3.6 EA1', exact: true })).toBeVisible();
   });
@@ -1429,7 +1457,7 @@ test.describe('Releases Release Readiness @releases', () => {
       return route.fulfill({ json: payload(version, tasks) });
     });
 
-    await page.goto('/#/releases/reports?report=release-readiness&version=3.5&families=rhoai&phases=ea1');
+    await page.goto('/#/releases/reports?report=release-readiness');
     const status = page.getByText('Released with Open Tasks', { exact: true });
     await expect(status).toBeVisible();
     await expect(status.locator('..')).toHaveClass(/bg-red-500\/30/);

@@ -648,6 +648,7 @@ function navigateToPreReleaseCve() {
 const {
   loading,
   error,
+  defaultVersion,
   fetchMetrics,
   fetchReadinessReleases
 } = useReleaseReadiness()
@@ -722,8 +723,11 @@ onMounted(async () => {
   const initial = parseReleaseId(props.initialVersion || '')
   if (initial && releases.value.some(r => r.id === props.initialVersion)) {
     applySelection(initial.version, new Set([initial.family]), new Set([initial.phase]))
-  } else {
-    restoreSelection()
+  } else if (!restoreSelection({ allowFallback: false }) && defaultVersion.value) {
+    const current = parseReleaseId(defaultVersion.value)
+    if (current && releases.value.some(r => r.id === defaultVersion.value)) {
+      applySelection(current.version, new Set([current.family]), new Set([current.phase]))
+    }
   }
   loadPreReleaseCveSummary()
 })

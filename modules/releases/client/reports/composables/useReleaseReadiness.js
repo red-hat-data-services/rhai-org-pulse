@@ -92,8 +92,12 @@ export function useReleaseReadiness() {
 
   async function fetchReadinessReleases() {
     const response = await fetch(`${API_BASE}/versions`)
-    if (!response.ok) return []
+    if (!response.ok) {
+      defaultVersion.value = null
+      return []
+    }
     const result = await response.json()
+    defaultVersion.value = result.default_version || null
     return result.releases || []
   }
 
