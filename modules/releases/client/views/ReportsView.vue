@@ -45,15 +45,13 @@ function clearReport() {
 // Sync report selection with URL params
 watch(() => nav.params.value, (params) => {
   const reportId = params?.report
-  if (reportId && !selectedReport.value) {
-    const report = reports.find(r => r.id === reportId)
-    if (report) {
-      updatingFromUrl = true
-      initialProduct.value = params.product || null
-      initialVersion.value = params.version || null
-      selectedReport.value = report
-      nextTick(() => { updatingFromUrl = false })
-    }
+  const report = reportId ? reports.find(r => r.id === reportId) : null
+  if (report && selectedReport.value?.id !== reportId) {
+    updatingFromUrl = true
+    initialProduct.value = params.product || null
+    initialVersion.value = params.version || null
+    selectedReport.value = report
+    nextTick(() => { updatingFromUrl = false })
   } else if (!reportId && selectedReport.value) {
     updatingFromUrl = true
     selectedReport.value = null
