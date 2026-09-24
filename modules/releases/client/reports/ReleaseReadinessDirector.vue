@@ -90,6 +90,15 @@
               Updated {{ formatDate(data.generated_at) }}
             </div>
           </div>
+          <!-- Filter narrative -->
+          <div v-if="hasSelection && hasInitiativeData" class="mb-3">
+            <ReportFilterNarrative
+              :filters="filters"
+              no-filter-text="Showing all components."
+              filter-prefix="Showing components filtered by"
+            />
+          </div>
+
           <!-- Release Decision Status Buttons -->
           <div v-if="director && hasInitiativeData" class="flex flex-wrap gap-2">
             <div
@@ -308,7 +317,7 @@
               <span class="text-xs text-gray-500 dark:text-gray-400">Components:</span>
               <button
                 @click="toggleAllComponents"
-                :class="selectedComponents.length === allComponents.length
+                :class="!filters.activeFilters.component || filters.activeFilters.component.length === 0
                   ? 'bg-blue-600 text-white border-blue-600'
                   : 'bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-400 border-gray-300 dark:border-gray-600 hover:border-blue-400'"
                 class="text-xs px-2 py-0.5 rounded border font-medium transition-colors"
@@ -316,9 +325,9 @@
               <button
                 v-for="comp in allComponents"
                 :key="comp"
-                @click="toggleComponentFilter(comp)"
+                @click="filters.toggleFilterValue('component', comp)"
                 :class="[
-                  selectedComponents.includes(comp) ? componentStatusClass(comp) : 'bg-gray-100 dark:bg-gray-800 text-gray-500 border-gray-300 dark:border-gray-700 opacity-50',
+                  isComponentActive(comp) ? componentStatusClass(comp) : 'bg-gray-100 dark:bg-gray-800 text-gray-500 border-gray-300 dark:border-gray-700 opacity-50',
                   'text-xs px-2 py-0.5 rounded border font-medium transition-colors'
                 ]"
               >{{ comp }}</button>
@@ -496,6 +505,9 @@
 
     </div>
 
+    <!-- Filter modal -->
+    <ReportFilterModal :filters="filters" :available-filter-values="availableFilterValues" />
+
     <!-- Select Release Modal -->
     <Teleport to="body">
       <div v-if="modalOpen" class="fixed inset-0 z-50 flex items-center justify-center p-4">
@@ -539,10 +551,13 @@
 </template>
 
 <script setup>
-import { ref, reactive, computed, inject, onMounted, watch } from 'vue'
+import { ref, reactive, computed, inject, onMounted, onUnmounted, watch } from 'vue'
 import { ArrowLeft, Shield } from 'lucide-vue-next'
 import { useReleaseReadiness } from './composables/useReleaseReadiness'
 import { useReleaseSelector, parseReleaseId } from '../composables/useReleaseSelector.js'
+import { useReportFilters } from './composables/useReportFilters.js'
+import ReportFilterModal from './components/ReportFilterModal.vue'
+import ReportFilterNarrative from './components/ReportFilterNarrative.vue'
 
 const moduleNav = inject('moduleNav')
 
@@ -605,6 +620,17 @@ const {
   fetchReleases: fetchReadinessReleases
 })
 
+// ── Report filters (component filter with presets) ──
+
+const FILTER_FIELDS = [
+  { key: 'component', label: 'Component' }
+]
+
+const filters = useReportFilters({
+  storageKeyPrefix: 'readiness-report',
+  filterFields: FILTER_FIELDS
+})
+
 const phaseDataMap = ref({})
 const activeReleaseId = ref(null)
 const data = computed(() => phaseDataMap.value[activeReleaseId.value] || null)
@@ -640,10 +666,23 @@ const phaseTabs = computed(() => {
 const JIRA_HOST = 'https://redhat.atlassian.net'
 const expandedPhases = reactive({})
 
+// ── Escape handler ──
+
+function handleEscape(e) {
+  if (e.key !== 'Escape') return
+  if (filters.filterModalOpen.value) { filters.closeFilterModal(); return }
+  if (modalOpen.value) cancelModal()
+}
+
 onMounted(async () => {
+  document.addEventListener('keydown', handleEscape)
   await fetchRegistry()
   restoreSelection()
   loadPreReleaseCveSummary()
+})
+
+onUnmounted(() => {
+  document.removeEventListener('keydown', handleEscape)
 })
 
 function goBack() {
@@ -676,7 +715,6 @@ async function loadSelectedPhases() {
     }
 
     if (data.value?.component_readiness) {
-      selectedComponents.value = [...(data.value.component_readiness.all_components || [])]
       selectedPhases.value = []
     }
   } catch (err) {
@@ -903,30 +941,22 @@ const allComponents = computed(() => {
   return data.value.component_readiness.all_components || []
 })
 
-const selectedComponents = ref([])
+const availableFilterValues = computed(() => ({
+  component: allComponents.value
+}))
 
-function toggleComponentFilter(comp) {
-  const idx = selectedComponents.value.indexOf(comp)
-  if (idx >= 0) {
-    selectedComponents.value.splice(idx, 1)
-  } else {
-    selectedComponents.value.push(comp)
-  }
+function isComponentActive(comp) {
+  const active = filters.activeFilters.component
+  if (!active || active.length === 0) return true
+  return active.includes(comp)
 }
 
 function toggleAllComponents() {
-  if (selectedComponents.value.length === allComponents.value.length) {
-    selectedComponents.value = []
-  } else {
-    selectedComponents.value = [...allComponents.value]
-  }
+  filters.clearAllFilters()
 }
 
 function filteredPhaseTiles(phase) {
-  if (!selectedComponents.value.length || selectedComponents.value.length === allComponents.value.length) {
-    return phase.tiles
-  }
-  return phase.tiles.filter(t => selectedComponents.value.includes(t.component))
+  return filters.filterItems(phase.tiles)
 }
 
 function componentStatusClass(comp) {

@@ -146,6 +146,7 @@ export const viewOwners = {
   'releases/reports/rhoai-component-architectures': 'Waldemar Znoinski',
 
   // team-tracker > reports
+  'team-tracker/reports/allocation':               'Alex Corvin',
   'team-tracker/reports/team-comparison':          'Alex Corvin',
   'team-tracker/reports/trends':                   'Alex Corvin',
 }
