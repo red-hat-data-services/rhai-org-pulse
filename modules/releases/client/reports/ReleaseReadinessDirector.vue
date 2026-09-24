@@ -518,6 +518,9 @@ import { ArrowLeft, Shield } from 'lucide-vue-next'
 import { useReleaseReadiness } from './composables/useReleaseReadiness'
 
 const moduleNav = inject('moduleNav')
+const props = defineProps({
+  initialVersion: { type: String, default: null }
+})
 const {
   data,
   loading,
@@ -535,7 +538,9 @@ const expandedPhases = reactive({})
 onMounted(async () => {
   await loadVersions()
   if (versions.value.length > 0) {
-    const initial = defaultVersion.value || versions.value[0]
+    const initial = versions.value.includes(props.initialVersion)
+      ? props.initialVersion
+      : defaultVersion.value || versions.value[0]
     selectedVersion.value = initial
     await loadMetrics(initial)
     if (data.value && data.value.component_readiness) {

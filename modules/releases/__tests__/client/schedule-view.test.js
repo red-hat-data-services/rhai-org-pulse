@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { mount, flushPromises } from '@vue/test-utils'
 
 vi.mock('@shared/client/services/api.js', () => ({
@@ -35,6 +35,12 @@ function getReleaseRows(wrapper) {
 describe('ScheduleView', () => {
   beforeEach(() => {
     vi.clearAllMocks()
+    vi.useFakeTimers({ toFake: ['Date'] })
+    vi.setSystemTime(new Date('2026-09-01T12:00:00'))
+  })
+
+  afterEach(() => {
+    vi.useRealTimers()
   })
 
   it('renders loading state initially', () => {
