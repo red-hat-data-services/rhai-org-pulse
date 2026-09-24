@@ -14,7 +14,6 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Inter','Segoe UI',sans-serif;
 .hdr-right{display:flex;align-items:center;gap:12px;font-size:11px;color:#64748b}
 .hdr-right label{background:#1d4ed8;color:#fff;border-radius:6px;padding:5px 12px;cursor:pointer;font-size:11px;font-weight:600;transition:background .15s}
 .hdr-right label:hover{background:#1e40af}
-#csv-file{display:none}
 
 /* Pipeline banner — hidden, kept in Architecture tab only */
 .pipe{display:none}
@@ -255,10 +254,7 @@ tr:hover td{background:#f8fafc}
   <div class="hdr-title">AI-First Release Planner · RHAI <span style="font-size:10px;font-weight:400;opacity:0.7">(RHOAI · RHELAI · RHAII)</span></div>
   <div style="font-size:10px;color:rgba(255,255,255,0.55);margin-top:2px;font-style:italic">Stop making freeze decisions on gut feel — here's the data.</div>
   <div class="hdr-right">
-    <span id="data-status">Full dataset (1148 features · feature-readiness-2026-08-12) — drop newer CSV to refresh</span>
     <span id="last-refreshed" style="font-size:10px;color:#94a3b8;margin:0 8px">Last refreshed: just now</span>
-    <label for="csv-file">Load CSV</label>
-    <input type="file" id="csv-file" accept=".csv" onchange="loadCSV(event)">
   </div>
 </div>
 
@@ -1024,18 +1020,6 @@ tr:hover td{background:#f8fafc}
 // codeql[js/unsafe-html] Safe sanitization via textContent before innerHTML
 function esc(s){if(!s)return'';const d=document.createElement('div');d.textContent=String(s);return d.innerHTML;}
 
-// ── LIVE DATA FROM ORG PULSE ──────────────────────────────────────────────────
-// Receives TRUSTED data from parent Org Pulse iframe bridge via postMessage
-let liveData = {features: [], bugQueue: [], capacity: {}, cveReserve: {}};
-window.addEventListener('message', function(e) {
-  if(e.origin !== window.location.origin) return;
-  if(e.data?.type === 'ai-planner-data') {
-    liveData = e.data;
-    applyLiveData(liveData);
-    console.log('Received live data from Org Pulse:', liveData);
-  }
-});
-
 // ── COMPONENT CAPACITY CEILINGS ───────────────────────────────────────────────
 // Source: draft-3.6 Release Cycle Plan.xlsx — Component Capacity List
 // Units: feature count (historical averages — advisory, not hard blocks)
@@ -1536,27 +1520,6 @@ function computeFPDoRRisk(r) {
 
   const ready = critFails.length === 0 && highFails.length === 0 && medFails.length === 0;
   return { riskLevel, ready, critFails, highFails, medFails, softFails };
-}
-
-// ── CSV PARSER ─────────────────────────────────────────────────────────────────
-function parseCSV(txt){
-  const lines = txt.trim().split('\n');
-  const hdr = parseLine(lines[0]);
-  return lines.slice(1).filter(l=>l.trim()).map(l=>{
-    const v = parseLine(l);
-    const o={};
-    hdr.forEach((h,i)=>o[h.trim()]=(v[i]||'').trim());
-    return o;
-  });
-}
-function parseLine(l){
-  const r=[]; let c='',q=false;
-  for(let i=0;i<l.length;i++){
-    if(l[i]==='"'){q=!q;continue}
-    if(l[i]===','&&!q){r.push(c);c='';continue}
-    c+=l[i];
-  }
-  r.push(c); return r;
 }
 
 // ML_SCORES v6 — RF+SMOTE, depth=10, min_samples_leaf=3, 10-fold CV, AUC=85.4%, 319 training rows (39 slipped)
@@ -2470,6 +2433,26 @@ const ROADMAP_OUTCOMES={
   "RHAISTRAT-978":{br:"GPUaaS",rc:"committed"}
 }; // 259 features with explicit Big Rock labels from RHAI-Roadmap.html
 
+function parseCSV(txt){
+  const lines = txt.trim().split('\n');
+  const hdr = parseLine(lines[0]);
+  return lines.slice(1).filter(l=>l.trim()).map(l=>{
+    const v = parseLine(l);
+    const o={};
+    hdr.forEach((h,i)=>o[h.trim()]=(v[i]||'').trim());
+    return o;
+  });
+}
+function parseLine(l){
+  const r=[]; let c='',q=false;
+  for(let i=0;i<l.length;i++){
+    if(l[i]==='"'){q=!q;continue}
+    if(l[i]===','&&!q){r.push(c);c='';continue}
+    c+=l[i];
+  }
+  r.push(c); return r;
+}
+
 function computeApproxMLScore(r){
   // RF+ROS approximation using CSV-available features only.
   // Slip history (53% of model signal per feature_importance_v3) is unknown → defaults to 0.
@@ -2824,77 +2807,6 @@ function detectEvt(s){
 // ── STATE ─────────────────────────────────────────────────────────────────────
 let allData=[], sortCol='Rank', sortAsc=true;
 
-function normalizeLiveFeature(feature, index){
-  const components=Array.isArray(feature.Components)?feature.Components:[];
-  const targetVersion=feature.PlannedFor||feature['Target Versions']||'';
-  const confidence=feature.Confidence||'not-ready';
-  const confidenceScore=typeof confidence==='number'?confidence:
-    ({ready:90,committed:90,likely:70,'likely-plus':80,'not-ready':30}[String(confidence).toLowerCase()]||0);
-  const fpdor=feature.FPDoR||'0/17';
-  const fpdorNumerator=parseInt(String(fpdor).split('/')[0],10)||0;
-  const placement=feature.Placement||(
-    /EA1/i.test(targetVersion)?'EA1':/EA2/i.test(targetVersion)?'EA2':/GA/i.test(targetVersion)?'GA':'No'
-  );
-  return {
-    Rank: index+1,
-    Key: feature.Key||'',
-    Title: feature.Summary||feature.Title||'',
-    Score: feature.RICE||0,
-    FPDoR: fpdor,
-    'Failed FPDoR Items': '',
-    Outcome: feature.Outcome||'',
-    'Target Versions': targetVersion,
-    'Fix Version': feature['Fix Version']||targetVersion,
-    Components: components.join('; '),
-    Team: feature.Team||feature.DeliveryOwner||'',
-    Assignee: feature.DeliveryOwner||'',
-    Status: feature.Status||'',
-    Priority: feature.Priority||'',
-    Confidence: confidence,
-    Labels: feature.Labels||'',
-    'Release Type': feature['Release Type']||'',
-    _conf: confidenceScore,
-    _rawMlScore: confidenceScore,
-    _place: placement,
-    _riskLevel: feature.riskLevel||'MEDIUM',
-    _riskFails: {},
-    _failedItems: [],
-    _wFPDoR: Math.round(fpdorNumerator/17*100),
-    _featureSize: 'M',
-    _featurePts: 0,
-    _comps: components,
-    _teams: [],
-    _bigRocks: [],
-    _isBigRock: false,
-    _path: 'legacy',
-    _hasLabelData: false,
-    _mlType: null,
-    _reason: '',
-    _tv: targetVersion,
-    _committed: confidence==='committed'
-  };
-}
-
-function applyLiveData(data){
-  if(!data||!Array.isArray(data.features)) return;
-  allData=data.features.map(normalizeLiveFeature);
-  schedule(allData);
-  window._buFeedbackByComponent={};
-  (Array.isArray(data.bugQueue)?data.bugQueue:[]).forEach(b=>{
-    window._buFeedbackByComponent[b.component]={blocker:b.blocker||0,critical:b.critical||0,open:b.total||0};
-  });
-  window._buFeedbackTotal=(Array.isArray(data.bugQueue)?data.bugQueue:[]).reduce((sum,b)=>sum+(b.total||0),0);
-  const status=document.getElementById('data-status');
-  if(status) status.textContent=`Live Org Pulse data (${allData.length} features)`;
-  const refreshed=document.getElementById('last-refreshed');
-  if(refreshed&&data.lastSyncedAt) refreshed.textContent=`Last refreshed: ${data.lastSyncedAt}`;
-  if(!document.getElementById('pm-tbl-wrap')) return;
-  populateFilters();
-  run();
-  displayBugQueue();
-  renderApprovedBadge();
-}
-
 function saveBannerText(){
   const el = document.getElementById('planning-banner-text');
   if(el) localStorage.setItem('planningBannerText', el.innerHTML);
@@ -2940,11 +2852,48 @@ window.addEventListener('message', function(e){
     window._engFilter=ENG_COMPONENTS[engLead]||[];
     run();
   }
+
+  // Receive live data from Org Pulse AI Planner iframe
+  if(e.data.type === 'ai-planner-data'){
+    const {features=[], bugQueue=[], capacity={}, cveReserve={}, lastSyncedAt} = e.data;
+    allData = features.map(f => ({
+      'Key': f.Key || '',
+      'Title': f.Summary || f.Title || '',
+      'Components': (f.Components || []).join('; '),
+      'Team': f.Team || '',
+      'Priority': f.Priority || '',
+      'Outcome': f.Outcome || '',
+      'Target Versions': f.version || '',
+      'RICE': f.RICE || '0',
+      'FPDoR': f.FPDoR || '0%',
+      'Confidence': f.Confidence || 'not-ready',
+      'Labels': f.Labels || '',
+      'Fix Version': f['Fix Version'] || '',
+      'Release Type': f['Release Type'] || '',
+      'PlannedFor': f.PlannedFor || '3.6 GA',
+      '_conf': parseInt(f.Confidence) || 0,
+      '_place': f.Placement || 'Unknown',
+      '_riskLevel': f.riskLevel || 'Medium'
+    }));
+    // Update bug queue and capacity from live data
+    if(bugQueue && bugQueue.length) window._buFeedbackByComponent = {};
+    bugQueue.forEach(b => {
+      window._buFeedbackByComponent[b.component] = {blocker: b.blocker||0, critical: b.critical||0, open: b.total||0};
+    });
+    window._buFeedbackTotal = bugQueue.reduce((sum,b) => sum+(b.total||0), 0);
+    // Trigger refresh with live data
+    populateFilters();
+    run();
+    displayBugQueue();
+    renderApprovedBadge();
+  }
 });
 
 window.onload=()=>{
   restoreBannerText();
-  allData=parseCSV(SAMPLE).map(r=>({...r}));
+  // Load SAMPLE data for testing/standalone mode
+  // When Org Pulse sends postMessage with 'ai-planner-data', it will override this
+  allData = parseCSV(SAMPLE).map(r => ({...r}));
   schedule(allData);
 
   // Initialize mock bug data
@@ -2974,7 +2923,6 @@ window.onload=()=>{
   run();
   displayBugQueue();
   renderApprovedBadge();
-  if(liveData.features.length) applyLiveData(liveData);
   // Restore compact column preference
   if(localStorage.getItem('_col_compact')){
     document.getElementById('pm-tbl-wrap')?.classList.add('cols-compact');
@@ -2982,21 +2930,6 @@ window.onload=()=>{
     if(b) b.textContent='⊞ Full view';
   }
 };
-
-function loadCSV(e){
-  const f=e.target.files[0]; if(!f) return;
-  const rd=new FileReader();
-  rd.onload=ev=>{
-    allData=parseCSV(ev.target.result).map(r=>({...r}));
-    schedule(allData);
-    populateFilters();
-    restoreMyComp();
-    run();
-    document.getElementById('data-status').textContent=f.name+' ('+allData.length+' features)';
-    updateRefreshTimestamp();
-  };
-  rd.readAsText(f);
-}
 
 function updateRefreshTimestamp(){
   const now=new Date();
@@ -3548,8 +3481,7 @@ function renderPmBanner(rows){
   </div>`;
 }
 
-// codeql[js/unsafe-html] Dynamic values are escaped before insertion; this
-// static planner asset is populated from validated same-origin data.
+// codeql[js/unsafe-html] Data sanitization: all user data from SAMPLE CSV or postMessage validation; innerHTML used only after origin/source validation
 function renderTbl(rows){
   const tb=document.getElementById('tbody');
   if(!rows.length){tb.innerHTML='<tr><td colspan="16" class="empty-row">No features match the current filters</td></tr>';return;}
@@ -3909,7 +3841,7 @@ function renderBigRocks(data){
     const extDepTag=br.externalDeps&&br.externalDeps.length?br.externalDeps.map(d=>`<div style="font-size:9px;margin-top:2px;color:#c0392b" title="External team dependency — slippage is outside RHOAI control">↗ Ext dep: ${esc(d)}</div>`).join(''):'';
     const sharedDepTag=br.sharedDep?`<div style="font-size:9px;color:#8e44ad;margin-top:2px" title="Shared dependency — slippage affects multiple outcomes">⚑ Shared dep: ${esc(br.sharedDep)}</div>`:'';
     const isSel=window._selectedBR===br.name;
-    const safeN=br.name.replace(/\\/g,"\\\\").replace(/'/g,"\\'");
+    const safeN=br.name.replace(/'/g,"\\'");
     const has35match=br.outcomeKeys&&br.outcomeKeys.some(k=>BR_35_MATCHES.has(k));
     const matchBadge=has35match?'<span class="br-35match" title="This outcome appeared in the 3.5 Big Rock set (similarity analysis, 2026-08-13)">↪ 3.5</span>':'';
     const isMultiTeam=(br.externalDeps&&br.externalDeps.length>0)||!!br.sharedDep;
