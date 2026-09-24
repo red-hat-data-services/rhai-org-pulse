@@ -63,7 +63,7 @@
             >{{ p }}</button>
             <button
               v-if="selectedProducts.length > 0"
-              @click="selectedProducts = []"
+              @click="clearProducts"
               class="px-3 py-1 rounded-full text-xs font-medium text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
             >Clear</button>
           </template>
@@ -86,6 +86,11 @@
                 : 'bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-400 border-gray-300 dark:border-gray-600 hover:border-gray-400 dark:hover:border-gray-500'"
             >{{ s }}</button>
           </template>
+          <button
+            type="button"
+            class="px-3 py-1 rounded-full text-xs font-normal transition-colors border bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-400 border-gray-300 dark:border-gray-600 hover:border-gray-400 dark:hover:border-gray-500"
+            @click="emit('show-aipcc')"
+          >aipcc</button>
         </div>
         <label class="flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400 cursor-pointer select-none shrink-0">
           <input type="checkbox" v-model="hideReleased" class="rounded border-gray-300 dark:border-gray-600 text-primary-600 focus:ring-primary-500" />
@@ -228,6 +233,11 @@ import {
 import ReleaseTimeline from '../components/ReleaseTimeline.vue'
 import { parseReleaseName } from '../composables/useReleaseFamily.js'
 
+const props = defineProps({
+  initialProducts: { type: Array, default: () => [] }
+})
+const emit = defineEmits(['products-change', 'show-aipcc'])
+
 function formatShort(dateStr) {
   return formatShortBase(dateStr, { year: true })
 }
@@ -237,7 +247,7 @@ function formatShort(dateStr) {
 const releases = ref([])
 const loading = ref(true)
 const error = ref(null)
-const selectedProducts = ref([])
+const selectedProducts = ref(props.initialProducts.slice())
 const selectedStream = ref(null)
 const hideReleased = ref(true)
 const selectedVersions = ref([])
@@ -278,7 +288,17 @@ function toggleProduct(p) {
   } else {
     selectedProducts.value = selectedProducts.value.filter(function (x) { return x !== p })
   }
+  emit('products-change', selectedProducts.value)
 }
+
+function clearProducts() {
+  selectedProducts.value = []
+  emit('products-change', [])
+}
+
+watch(() => props.initialProducts, function (products) {
+  selectedProducts.value = products.slice()
+})
 
 function versionHasReleased(v) {
   return releases.value.some(function (r) {

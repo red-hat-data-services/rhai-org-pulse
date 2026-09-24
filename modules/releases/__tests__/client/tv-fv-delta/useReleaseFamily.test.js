@@ -40,6 +40,14 @@ describe('parseReleaseName', function () {
     })
   })
 
+  it('parses rhoai z-stream EA1 as its base release', function () {
+    var r = parseReleaseName('rhoai-3.6.z.EA1')
+    expect(r).toEqual({
+      product: 'rhoai', major: 3, minor: 6,
+      milestone: 'EA1', milestoneOrder: 1, raw: 'rhoai-3.6.z.EA1',
+    })
+  })
+
   it('parses product-family GA name', function () {
     var r = parseReleaseName('3.6 GA RHOAI RELEASE')
     expect(r).toEqual({

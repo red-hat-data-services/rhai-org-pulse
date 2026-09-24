@@ -2,10 +2,14 @@
 import { computed, ref, watch, nextTick, onMounted, onUnmounted, inject } from 'vue'
 import { Scatter } from 'vue-chartjs'
 import { Chart as ChartJS, LinearScale, PointElement, Tooltip } from 'chart.js'
-import { parseReleaseName, extractCycle, productLabel } from '../composables/useReleaseFamily.js'
-import { parseDate, daysFromNow, formatShort, getProduct } from '../composables/useScheduleHelpers.js'
+import { parseReleaseName, productLabel } from '../composables/useReleaseFamily.js'
+import { parseDate, daysFromNow, formatShort } from '../composables/useScheduleHelpers.js'
 import { PRODUCT_HEX, DEFAULT_HEX } from '../composables/useProductColors.js'
-import { clampStemToCard, pointInCircle } from './timeline-geometry.js'
+import { clampStemToCard, pointInCircle, timelineDimensionGroupKey, timelineDimensionRowKey } from './timeline-geometry.js'
+import { buildTimelineNodes, cycleFromGroupLabel } from './timeline-model.js'
+import { computeFullRange, computeDefaultRange, focusTimestamps as getFocusTimestamps, computeFocusRange } from './timeline-range.js'
+import { computeWheelRange, computePanRange } from './timeline-interactions.js'
+import { hoverDaysLabel, clampBadgePosition, buildDimensionRowMap } from './timeline-rendering.js'
 
 ChartJS.register(LinearScale, PointElement, Tooltip)
 
@@ -22,132 +26,7 @@ const props = defineProps({
 
 const nav = inject('moduleNav', null)
 
-var MILESTONE_KEYS = [
-  { key: 'planningFreeze', label: 'Planning Freeze' },
-  { key: 'featureFreeze', label: 'Feature Freeze' },
-  { key: 'codeFreeze', label: 'Code Freeze' },
-  { key: 'ga', label: 'Generally Available' }
-]
-
-function groupKey(release) {
-  var names = [release.displayName, release.id]
-  for (var i = 0; i < names.length; i++) {
-    if (!names[i]) continue
-    var parsed = parseReleaseName(names[i])
-    if (parsed) return parsed.product + '-' + parsed.major + '.' + parsed.minor + '-' + parsed.milestone
-  }
-  var cycle = extractCycle(release.id) || extractCycle(release.displayName)
-  if (cycle) {
-    var eaMatch = (release.id || '').match(/ea(\d+)/i)
-    var milestone = eaMatch ? 'EA' + eaMatch[1] : 'GA'
-    var product = getProduct(release)
-    return (product ? product + '-' : '') + cycle + '-' + milestone
-  }
-  return release.displayName || release.id || 'other'
-}
-
-function cycleFromGroupLabel(label) {
-  var m = /^(\d+\.\d+)\s/.exec(label)
-  return m ? m[1] : label
-}
-
-function groupLabelFromKey(key) {
-  var m = /^(?:[a-z]+-)?(\d+\.\d+)-(EA\d+|GA)$/i.exec(key)
-  if (m) return m[1] + ' ' + m[2]
-  return key
-}
-
-function earlierDate(a, b) {
-  if (!a) return b
-  if (!b) return a
-  var da = parseDate(a)
-  var db = parseDate(b)
-  if (!da) return b
-  if (!db) return a
-  return da.getTime() <= db.getTime() ? a : b
-}
-
-var allNodes = computed(function () {
-  var map = {}
-  for (var i = 0; i < props.releases.length; i++) {
-    var r = props.releases[i]
-    var key = groupKey(r)
-    if (!map[key]) {
-      map[key] = {
-        label: groupLabelFromKey(key),
-        milestones: { planningFreeze: null, featureFreeze: null, codeFreeze: null, ga: null },
-        products: {}
-      }
-    }
-    var g = map[key]
-    var ms = r.milestones || {}
-    g.milestones.planningFreeze = earlierDate(g.milestones.planningFreeze, ms.planningFreeze)
-    g.milestones.featureFreeze = earlierDate(g.milestones.featureFreeze, ms.featureFreeze)
-    g.milestones.codeFreeze = earlierDate(g.milestones.codeFreeze, ms.codeFreeze)
-    g.milestones.ga = earlierDate(g.milestones.ga, ms.ga)
-    var product = getProduct(r)
-    if (product) g.products[product] = true
-    if (!g.sourceReleases) g.sourceReleases = []
-    g.sourceReleases.push(r)
-  }
-
-  var list = []
-  var keys = Object.keys(map)
-  for (var j = 0; j < keys.length; j++) {
-    var grp = map[keys[j]]
-    var productList = Object.keys(grp.products).sort()
-    for (var k = 0; k < MILESTONE_KEYS.length; k++) {
-      var msKey = MILESTONE_KEYS[k]
-      var date = grp.milestones[msKey.key]
-      if (!date) continue
-      var days = daysFromNow(date)
-      list.push({
-        key: keys[j] + '-' + msKey.key,
-        groupLabel: grp.label,
-        msLabel: msKey.label,
-        date: date,
-        isPast: days !== null && days < 0,
-        isGa: msKey.key === 'ga',
-        productList: productList,
-        releases: grp.sourceReleases
-      })
-    }
-  }
-
-  // Merge nodes from the same release that share a date.
-  var merged = {}
-  for (var mi = 0; mi < list.length; mi++) {
-    var node = list[mi]
-    var mergeKey = node.groupLabel + '|' + node.productList.join(',') + '|' + node.date
-    if (!merged[mergeKey]) {
-      merged[mergeKey] = node
-    } else {
-      var existing = merged[mergeKey]
-      if (node.isGa && !existing.isGa) {
-        node.productList = existing.productList.concat(node.productList)
-          .filter(function (v, i, a) { return a.indexOf(v) === i }).sort()
-        node.releases = (existing.releases || []).concat(node.releases || [])
-        merged[mergeKey] = node
-      } else {
-        existing.productList = existing.productList.concat(node.productList)
-          .filter(function (v, i, a) { return a.indexOf(v) === i }).sort()
-        existing.releases = (existing.releases || []).concat(node.releases || [])
-      }
-    }
-  }
-  list = Object.keys(merged).map(function (k) { return merged[k] })
-
-  list.sort(function (a, b) {
-    var da = parseDate(a.date)
-    var db = parseDate(b.date)
-    if (!da && !db) return 0
-    if (!da) return 1
-    if (!db) return -1
-    return da.getTime() - db.getTime()
-  })
-
-  return list
-})
+var allNodes = computed(function () { return buildTimelineNodes(props.releases) })
 
 var nodes = computed(function () {
   if (props.hidePast) {
@@ -400,27 +279,21 @@ onUnmounted(function () { if (_observer) _observer.disconnect() })
 var zoomMin = ref(null)
 var zoomMax = ref(null)
 
+var DAY_MS = 86400000
+var HISTORICAL_SCROLL_DAYS = 30
+var DEFAULT_WINDOW_DAYS = 29
+
 // Today pulse overlay position (set by afterDraw)
 var _todayPx = ref(null)
 
 var fullRange = computed(function () {
-  var n = nodes.value
-  if (n.length === 0) return { min: 0, max: 1 }
-  var first = parseDate(n[0].date)
-  var last = parseDate(n[n.length - 1].date)
-  if (!first || !last) return { min: 0, max: 1 }
   var today = new Date()
   today.setHours(0, 0, 0, 0)
-  var todayTs = today.getTime()
-  var minTs = Math.min(first.getTime(), todayTs)
-  var maxTs = Math.max(last.getTime(), todayTs)
-  var range = maxTs - minTs
-  var pad = Math.max(range * 0.05, 86400000 * 7)
-  return { min: minTs - pad, max: maxTs + pad }
+  var range = computeFullRange(nodes.value, today.getTime(), DAY_MS)
+  var historicalMin = today.getTime() - HISTORICAL_SCROLL_DAYS * DAY_MS
+  return { min: Math.min(range.min, historicalMin), max: range.max }
 })
 
-var DAY_MS = 86400000
-var DEFAULT_WINDOW_DAYS = 29
 // Max manual zoom-out window (scroll wheel / pinch). Wide enough to comfortably
 // take in a whole release cluster (planning freeze through GA) at once. The
 // auto-fit is deliberately NOT bound by this — it must be free to widen the view
@@ -431,43 +304,13 @@ var MAX_VISIBLE_DAYS = 180
 var FOCUS_FIT_RIGHT_PAD_DAYS = 3
 var FOCUS_FIT_LEFT_PAD_DAYS = 7
 
-function capRange(range, full) {
-  var maxSpan = MAX_VISIBLE_DAYS * DAY_MS
-  var span = range.max - range.min
-  if (span <= maxSpan) return range
-  var center = (range.min + range.max) / 2
-  var min = Math.max(center - maxSpan / 2, full.min)
-  var max = min + maxSpan
-  if (max > full.max) { max = full.max; min = max - maxSpan }
-  if (min < full.min) min = full.min
-  return { min: min, max: max }
-}
-
 var defaultRange = computed(function () {
   var today = new Date()
   today.setHours(0, 0, 0, 0)
-  var todayTs = today.getTime()
-  var full = fullRange.value
-  var _halfWindow = DEFAULT_WINDOW_DAYS / 2 * DAY_MS
-
-  if (props.hidePast) {
-    var padLeft = 1.5 * DAY_MS
-    var windowSpan = DEFAULT_WINDOW_DAYS * DAY_MS
-    var min = todayTs - padLeft
-    var max = min + windowSpan
-    if (max > full.max) { max = full.max; min = max - windowSpan }
-    if (min > todayTs - padLeft) min = todayTs - padLeft
-    if (max <= min) return capRange(full, full)
-    return { min: min, max: max }
-  }
-
-  // Position today ~1/3 from left (more space for upcoming milestones on the right)
-  var leftDays = Math.round(DEFAULT_WINDOW_DAYS * 0.3) * DAY_MS
-  var rightDays = DEFAULT_WINDOW_DAYS * DAY_MS - leftDays
-  var centeredMin = Math.max(todayTs - leftDays, full.min)
-  var centeredMax = Math.min(todayTs + rightDays, full.max)
-  if (centeredMax <= centeredMin) return capRange(full, full)
-  return { min: centeredMin, max: centeredMax }
+  return computeDefaultRange(fullRange.value, today.getTime(), props.hidePast, {
+    windowDays: DEFAULT_WINDOW_DAYS,
+    maxVisibleDays: MAX_VISIBLE_DAYS
+  }, DAY_MS)
 })
 
 var xRange = computed(function () {
@@ -480,20 +323,6 @@ var xRange = computed(function () {
 var visibleDays = computed(function () {
   var r = xRange.value
   return Math.round((r.max - r.min) / DAY_MS)
-})
-
-var _visibleNodeCount = computed(function () {
-  var r = xRange.value
-  var count = 0
-  var n = nodes.value
-  for (var i = 0; i < n.length; i++) {
-    var d = parseDate(n[i].date)
-    if (d) {
-      var ts = d.getTime()
-      if (ts >= r.min && ts <= r.max) count++
-    }
-  }
-  return count
 })
 
 var isZoomed = computed(function () {
@@ -510,32 +339,16 @@ watch(function () { return props.hidePast }, resetZoom)
 // ── Auto-fit to a focused (newest selected) version ──
 // Milestone timestamps of the currently-rendered nodes that belong to a focused release.
 function focusTimestamps() {
-  var ids = props.focusReleaseIds
-  if (!ids || !ids.length) return []
-  var idSet = {}
-  for (var i = 0; i < ids.length; i++) idSet[ids[i]] = true
-  var out = []
-  var n = nodes.value
-  for (var j = 0; j < n.length; j++) {
-    var rels = n[j].releases || []
-    var match = false
-    for (var k = 0; k < rels.length; k++) {
-      if (rels[k] && idSet[rels[k].id]) { match = true; break }
-    }
-    if (!match) continue
-    var d = parseDate(n[j].date)
-    if (d) out.push(d.getTime())
-  }
-  return out
+  return getFocusTimestamps(nodes.value, props.focusReleaseIds)
 }
 
 // How many of the focused version's milestone cards fall inside the current view.
 function focusVisibleCount() {
-  var ts = focusTimestamps()
-  var r = xRange.value
+  var timestamps = focusTimestamps()
+  var range = xRange.value
   var count = 0
-  for (var i = 0; i < ts.length; i++) {
-    if (ts[i] >= r.min && ts[i] <= r.max) count++
+  for (var i = 0; i < timestamps.length; i++) {
+    if (timestamps[i] >= range.min && timestamps[i] <= range.max) count++
   }
   return count
 }
@@ -549,23 +362,15 @@ function focusVisibleCount() {
 // NOT width-capped — capping would drop either the version or the today marker.
 function fitToFocus() {
   var ts = focusTimestamps()
-  if (!ts.length) return
-  ts.sort(function (a, b) { return a - b })
   var today = new Date()
   today.setHours(0, 0, 0, 0)
-  var todayTs = today.getTime()
-  var full = fullRange.value
-  var rightPad = FOCUS_FIT_RIGHT_PAD_DAYS * DAY_MS
-  var leftPad = FOCUS_FIT_LEFT_PAD_DAYS * DAY_MS
-  var lo = Math.min(ts[0], todayTs) // earliest of the cluster and today
-  var hi = Math.max(ts[ts.length - 1], todayTs) // latest of GA and today
-  var min = lo - leftPad
-  var max = hi + rightPad
-  if (max > full.max) max = full.max
-  if (min < full.min) min = full.min
-  if (max <= min) return
-  zoomMin.value = min
-  zoomMax.value = max
+  var range = computeFocusRange(ts, today.getTime(), fullRange.value, {
+    left: FOCUS_FIT_LEFT_PAD_DAYS,
+    right: FOCUS_FIT_RIGHT_PAD_DAYS
+  }, DAY_MS)
+  if (!range) return
+  zoomMin.value = range.min
+  zoomMax.value = range.max
 }
 
 // When the user focuses a version (released or upcoming) and none of its cards are
@@ -595,34 +400,10 @@ function onWheel(event) {
   event.preventDefault()
   var xScale = chart.scales.x
   var pivot = xScale.getValueForPixel(mouseX)
-  var curMin = xRange.value.min
-  var curMax = xRange.value.max
-  var range = curMax - curMin
-
-  var zoomFactor = event.deltaY > 0 ? 1.15 : 0.87
-  var newRange = range * zoomFactor
-  var full = fullRange.value
-  var maxRange = Math.min(full.max - full.min, MAX_VISIBLE_DAYS * DAY_MS)
-
-  if (newRange >= maxRange) {
-    var center = (curMin + curMax) / 2
-    zoomMin.value = Math.max(center - maxRange / 2, full.min)
-    zoomMax.value = Math.min(center + maxRange / 2, full.max)
-    return
-  }
-
-  var minRange = maxRange * 0.01
-  if (newRange < minRange) newRange = minRange
-
-  var ratio = (pivot - curMin) / range
-  var newMin = pivot - newRange * ratio
-  var newMax = pivot - newRange * ratio + newRange
-
-  if (newMin < full.min) { newMin = full.min; newMax = newMin + newRange }
-  if (newMax > full.max) { newMax = full.max; newMin = newMax - newRange }
-
-  zoomMin.value = newMin
-  zoomMax.value = newMax
+  var nextRange = computeWheelRange(xRange.value, fullRange.value, pivot,
+    event.deltaY <= 0, MAX_VISIBLE_DAYS, DAY_MS)
+  zoomMin.value = nextRange.min
+  zoomMax.value = nextRange.max
 }
 
 // Drag-to-pan
@@ -651,19 +432,9 @@ function onPointerMove(event) {
   if (!area) return
   var dx = event.clientX - _dragStart.clientX
   if (Math.abs(dx) > 4) _moved = true
-  var pxRange = area.right - area.left
-  var dataRange = _dragStart.max - _dragStart.min
-  var shift = -(dx / pxRange) * dataRange
-
-  var full = fullRange.value
-  var newMin = _dragStart.min + shift
-  var newMax = _dragStart.max + shift
-
-  if (newMin < full.min) { newMin = full.min; newMax = newMin + dataRange }
-  if (newMax > full.max) { newMax = full.max; newMin = newMax - dataRange }
-
-  zoomMin.value = newMin
-  zoomMax.value = newMax
+  var nextRange = computePanRange(_dragStart, dx, area.right - area.left, fullRange.value)
+  zoomMin.value = nextRange.min
+  zoomMax.value = nextRange.max
 }
 
 function onPointerUp(event) {
@@ -743,13 +514,21 @@ function onCardHover(e) {
 // Map a timeline node to the Execute-page version pill (e.g. "3.5.EA1" / "3.5").
 // Server pill format = version + (phase ? '.' + phase : ''); GA is stripped.
 function versionForNode(nd) {
-  if (!nd || !nd.releases) return null
-  for (var i = 0; i < nd.releases.length; i++) {
-    var parsed = parseReleaseName(nd.releases[i].displayName) || parseReleaseName(nd.releases[i].id)
+  if (!nd) return null
+  var releases = nd.releases || []
+  for (var i = 0; i < releases.length; i++) {
+    var parsed = parseReleaseName(releases[i].displayName) || parseReleaseName(releases[i].id)
     if (parsed) {
       var base = parsed.major + '.' + parsed.minor
       return (parsed.milestone && parsed.milestone !== 'GA') ? base + '.' + parsed.milestone : base
     }
+  }
+  // Some registry entries use product-family names that do not match the
+  // source release parser. The timeline has already normalized those entries
+  // into a stable cycle/milestone label, which is sufficient for Execute.
+  var labelMatch = /(\d+\.\d+)(?:[.\s-]+(EA\d+|GA))?/i.exec(nd.groupLabel || '')
+  if (labelMatch) {
+    return labelMatch[1] + (labelMatch[2] && labelMatch[2] !== 'GA' ? '.' + labelMatch[2] : '')
   }
   return null
 }
@@ -1011,9 +790,11 @@ var timelinePlugin = {
     var _haloPad = 3
 
     ctx.save()
-    _cardHitBoxes = []
-    _stemHitBoxes = []
-    _dotHitBoxes = []
+    // Keep the hit-box arrays stable across redraws so event handlers and
+    // test consumers always observe the current geometry.
+    _cardHitBoxes.length = 0
+    _stemHitBoxes.length = 0
+    _dotHitBoxes.length = 0
 
     // Redraw arrowhead zone to cover any Chart.js dots near the right edge
     var bgColor = dark ? '#1f2937' : '#ffffff'
@@ -1349,8 +1130,15 @@ var timelinePlugin = {
         if (!/^\d+\.\d+$/.test(cycleFromGroupLabel(dl.nd.groupLabel))) continue
         var dDate = parseDate(dl.nd.date)
         if (!dDate) continue
-        var dimKey = dl.nd.groupLabel + (dl.above ? '-a' : '-b')
-        if (!dimGroups[dimKey]) dimGroups[dimKey] = { points: [], above: dl.above, productList: dl.nd.productList || [] }
+        var dimKey = timelineDimensionGroupKey(dl.nd, dl.above)
+        if (!dimGroups[dimKey]) {
+          dimGroups[dimKey] = {
+            points: [],
+            above: dl.above,
+            groupLabel: dl.nd.groupLabel,
+            productList: dl.nd.productList || []
+          }
+        }
         dimGroups[dimKey].points.push({ x: dl.x, ts: dDate.getTime() })
       }
 
@@ -1362,6 +1150,11 @@ var timelinePlugin = {
       }
 
       var dimGroupKeys = Object.keys(dimGroups)
+      var dimensionRowMap = buildDimensionRowMap(
+        dimGroups,
+        stableCycleRowMap.value,
+        timelineDimensionRowKey
+      )
 
       // Build all segments from viewport-filtered dim groups
       var allDimSegs = []
@@ -1401,7 +1194,11 @@ var timelinePlugin = {
       for (var sri = 0; sri < allDimSegs.length; sri++) {
         var seg = allDimSegs[sri]
         var srDgKey = dimGroupKeys[seg.gi]
-        var srRowIdx = stableCycleRowMap.value[srDgKey] || 0
+        var srDg = dimGroups[srDgKey]
+        // Dimension groups include product in their identity, while the stable
+        // row map intentionally assigns one row per cycle and side. Use the
+        // row-map key shape here instead of the product-specific group key.
+        var srRowIdx = dimensionRowMap[srDgKey] || 0
         var srYOff = 36 + srRowIdx * 14
         var srLineY = seg.above ? yMid - srYOff : yMid + srYOff
         ctx.globalAlpha = 1.0
@@ -1414,9 +1211,9 @@ var timelinePlugin = {
         var srShortLabel = seg.diffDays + 'd'
         var srFullLabel = srShortLabel
         if (seg.needsLabel) {
-          var srProducts = dimGroups[srDgKey].productList.filter(function (p) { return productLabel(p) !== p })
+          var srProducts = srDg.productList.filter(function (p) { return productLabel(p) !== p })
           var srProductPrefix = srProducts.length ? srProducts.map(productLabel).join('/') + ' ' : ''
-          srFullLabel += ' (' + srProductPrefix + srDgKey.replace(/-[ab]$/, '') + ')'
+          srFullLabel += ' (' + srProductPrefix + srDg.groupLabel + ')'
         }
         var srLabelX = (seg.left + seg.right) / 2
         var segWidth = seg.right - seg.left
@@ -1583,20 +1380,21 @@ var timelinePlugin = {
       }
 
       var hoverDays = daysFromNow(_hoveredBox.nd.date)
-      var hoverDaysText = hoverDays === null ? null
-        : hoverDays === 0 ? 'today'
-        : hoverDays > 0 ? 'in ' + hoverDays + 'd'
-        : Math.abs(hoverDays) + 'd ago'
+      var hoverDaysText = hoverDaysLabel(hoverDays)
       if (hoverDaysText) {
         ctx.save()
         ctx.font = 'bold 10px ' + FONT
         var badgeW = ctx.measureText(hoverDaysText).width + 8
         var badgeH = 16
-        var badgeX = _hoveredBox.x - badgeW / 2
-        var badgeY = _hoveredBox.y - badgeH / 2
-        if (badgeX < area.left) badgeX = area.left
-        if (badgeX + badgeW > area.right) badgeX = area.right - badgeW
-        if (badgeY < area.top) badgeY = area.top
+        var badgePosition = clampBadgePosition(
+          _hoveredBox.x - badgeW / 2,
+          _hoveredBox.y - badgeH / 2,
+          badgeW,
+          badgeH,
+          area
+        )
+        var badgeX = badgePosition.x
+        var badgeY = badgePosition.y
         var badgeColor = hoverHex || (dark ? '#60a5fa' : '#3b82f6')
         drawRoundedRect(ctx, badgeX, badgeY, badgeW, badgeH, 8)
         ctx.fillStyle = badgeColor
@@ -1619,6 +1417,8 @@ var timelinePlugin = {
         (import.meta.env.VITE_DEMO_MODE === 'true' ||
          /[?&]e2e=1\b/.test(window.location.hash + window.location.search))) {
       window.__releaseTimeline = {
+        range: { min: xRange.value.min, max: xRange.value.max },
+        fullRange: { min: fullRange.value.min, max: fullRange.value.max },
         cards: _cardHitBoxes.map(function (b) {
           return {
             version: versionForNode(b.nd),
@@ -1643,7 +1443,7 @@ var timelinePlugin = {
           Distances
         </label>
         <span class="text-[10px] text-gray-400 dark:text-gray-500">
-          Scroll to zoom · Drag to pan
+          Scroll to zoom · Drag to pan · 30-day history
         </span>
         <button
           v-if="isZoomed"
@@ -1653,7 +1453,7 @@ var timelinePlugin = {
       </div>
       <div
         class="relative"
-        :style="{ height: chartHeight + 'px', cursor: isOverCard ? 'pointer' : (isZoomed ? 'grab' : 'default') }"
+        :style="{ height: chartHeight + 'px', cursor: isOverCard ? 'pointer' : 'grab' }"
         @wheel="onWheel"
         @pointerdown="onPointerDown"
         @pointermove="onPointerMove"

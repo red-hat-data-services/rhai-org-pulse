@@ -12,7 +12,7 @@ vi.mock('@shared/client/services/api', function() {
 })
 
 import DraftPlansView from '../../../client/plan/views/DraftPlansView.vue'
-import { _resetDraftPlansForTests } from '../../../client/plan/composables/useDraftPlans.js'
+import { useDraftPlans, _resetDraftPlansForTests } from '../../../client/plan/composables/useDraftPlans.js'
 
 var FIXTURE = {
   draft: {
@@ -64,13 +64,13 @@ var FIXTURE = {
   },
   audit: [],
   session: {
-    // Plan admin is allowlist-only (emarion@redhat.com / trozell@redhat.com);
+    // Plan admin is allowlist-only (see plan-admins.js DEFAULT_PLAN_ADMIN_EMAILS);
     // simulate a real allowlisted actor rather than the legacy "Admin" sentinel.
     actor: 'Emarion',
     email: 'emarion@redhat.com',
     canImpersonate: true,
     isPlanAdmin: true,
-    planAdminNames: ['Emarion', 'Tiffany Rozell'],
+    planAdminNames: ['Emarion', 'Tiffany Rozell', 'Arjay Hinek'],
     demoMode: true
   }
 }
@@ -84,6 +84,11 @@ function mountView() {
       }
     }
   })
+}
+
+async function showAllCandidates() {
+  useDraftPlans().filterEvent.value = ''
+  await flushPromises()
 }
 
 describe('DraftPlansView', function() {
@@ -122,8 +127,9 @@ describe('DraftPlansView', function() {
   it('keeps red-pen controls in the table and details in the drawer', async function() {
     var wrapper = mountView()
     await flushPromises()
+    await showAllCandidates()
 
-    expect(wrapper.text()).toContain('RHOAI + RHAII 3.6 Draft Plan')
+    expect(wrapper.text()).toContain('RHOAI + RHAII 3.6 Plan Approval')
     expect(wrapper.text()).toContain('Acting as')
     expect(wrapper.text()).toContain('RHAISTRAT-1')
     expect(wrapper.text()).toContain('Descope')
@@ -158,6 +164,7 @@ describe('DraftPlansView', function() {
   it('shows capacity dialog on over-ceiling Move from the table', async function() {
     var wrapper = mountView()
     await flushPromises()
+    await showAllCandidates()
 
     var moveSelect = wrapper.find('select[aria-label="Move RHAISTRAT-2"]')
     expect(moveSelect.exists()).toBe(true)
@@ -171,6 +178,17 @@ describe('DraftPlansView', function() {
     await moveAnyway.trigger('click')
     await flushPromises()
     expect(wrapper.text()).toContain('Unsaved')
+    wrapper.unmount()
+  })
+
+  it('starts with only AI Planner-approved features visible', async function() {
+    var wrapper = mountView()
+    await flushPromises()
+
+    expect(wrapper.text()).toContain('Plan Approval — Start Fresh')
+    expect(wrapper.text()).toContain('Use the AI Planner tab')
+    expect(wrapper.findAll('tbody tr[role="row"]')).toHaveLength(1)
+    expect(wrapper.text()).toContain('No features match filters')
     wrapper.unmount()
   })
 

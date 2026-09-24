@@ -192,7 +192,7 @@ const headers = [
   { id: 'h-outcome',    label: 'Outcome',         scope: 'col', sortKey: 'outcome' },
   { id: 'h-target',     label: 'Target Version',  scope: 'col', sortKey: 'targetVersion', info: 'The release version that PM is targeting for this feature to be delivered in.' },
   { id: 'h-fixver',     label: 'Fix Version',     scope: 'col', sortKey: 'fixVersion', info: 'The release version that engineering has committed to delivering this feature in.' },
-  { id: 'h-align',      label: 'TV/FV Align',     scope: 'col', sortKey: 'alignment', info: 'Same categories as Reports → TV vs FV Delta (worst across Target/Fix Versions on the issue). Early or as requested and green After requested count as aligned.' },
+  { id: 'h-align',      label: 'TV/FV Align',     scope: 'col', sortKey: 'alignment', info: 'Same categories as PM Hub → TV vs FV Delta (worst across Target/Fix Versions on the issue). Early or as requested and green After requested count as aligned.' },
   { id: 'h-comp',       label: 'Components',      scope: 'col', sortKey: 'components' },
   { id: 'h-team',       label: 'Team',            scope: 'col', sortKey: 'team' },
   { id: 'h-rubric',     label: 'Rubric',          scope: 'col', sortKey: 'rubric' },

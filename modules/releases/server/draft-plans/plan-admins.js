@@ -10,7 +10,11 @@
 
 var { normalizeEmail: normalizeEmailForAuth } = require('../../../../shared/server/role-store')
 
-var DEFAULT_PLAN_ADMIN_EMAILS = ['emarion@redhat.com', 'trozell@redhat.com']
+var DEFAULT_PLAN_ADMIN_EMAILS = [
+  'emarion@redhat.com',
+  'trozell@redhat.com',
+  'ahinek@redhat.com'
+]
 
 /** Preview gate: who can see the Draft Plans tab and call draft-plans APIs. */
 var DEFAULT_VIEWER_EMAILS = [
@@ -22,7 +26,8 @@ var DEFAULT_VIEWER_EMAILS = [
 
 var DEFAULT_PLAN_ADMIN_NAMES_BY_EMAIL = {
   'emarion@redhat.com': 'Emarion',
-  'trozell@redhat.com': 'Tiffany Rozell'
+  'trozell@redhat.com': 'Tiffany Rozell',
+  'ahinek@redhat.com': 'Arjay Hinek'
 }
 
 /**

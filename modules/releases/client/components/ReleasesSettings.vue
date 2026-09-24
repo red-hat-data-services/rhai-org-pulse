@@ -3,6 +3,7 @@ import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { apiRequest } from '@shared/client/services/api.js'
 import ExecutionSettings from '../execute/components/ExecutionSettings.vue'
 import DeliverySettings from '../deliver/components/DeliverySettings.vue'
+import DraftPlansAccessSettings from '../plan/components/DraftPlansAccessSettings.vue'
 
 const domains = [
   { id: 'execution', label: 'Execution', description: 'Feature traffic from GitLab CI pipeline', refreshUrl: '/modules/releases/execution/refresh', statusUrl: '/modules/releases/execution/status', async: false },
@@ -203,6 +204,12 @@ onUnmounted(() => {
     <div class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4">
       <h3 class="text-sm font-semibold text-gray-900 dark:text-gray-100 mb-2">Delivery</h3>
       <DeliverySettings />
+    </div>
+
+    <!-- Draft Plans access -->
+    <div class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4">
+      <h3 class="text-sm font-semibold text-gray-900 dark:text-gray-100 mb-2">Draft Plans access</h3>
+      <DraftPlansAccessSettings />
     </div>
   </div>
 </template>

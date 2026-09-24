@@ -59,6 +59,6 @@ describe('release readiness default release', () => {
   })
 
   it('returns no default when storage is empty', async () => {
-    expect(await getVersions({})).toEqual({ versions: [], default_version: null })
+    expect(await getVersions({})).toEqual({ versions: [], releases: [], default_version: null })
   })
 })

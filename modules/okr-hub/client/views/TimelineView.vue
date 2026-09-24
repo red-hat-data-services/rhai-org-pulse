@@ -137,7 +137,39 @@
                   </td>
                   <td v-for="q in quarters" :key="q" class="px-3 py-3 text-center">
                     <div
-                      v-if="kr.quarters && kr.quarters[q]"
+                      v-if="kr.editable && canEdit"
+                      class="rounded-lg px-2 py-2"
+                      :class="kr.quarters[q] && kr.quarters[q].status !== 'not-started' ? statusConfig[kr.quarters[q].status].bg : 'bg-gray-50 dark:bg-gray-800/30'"
+                      @click.stop
+                    >
+                      <div v-if="editableFocus[kr.id + '-' + q]" class="flex items-center gap-1 mb-1.5 justify-center">
+                        <button
+                          v-for="s in editableStatuses"
+                          :key="s.key"
+                          class="w-4 h-4 rounded-full border-2 transition-all"
+                          :class="[
+                            s.dot,
+                            (kr.quarters[q] && kr.quarters[q].status === s.key) || (!kr.quarters[q] && s.key === 'not-started')
+                              ? 'border-gray-800 dark:border-white scale-110 ring-1 ring-gray-400'
+                              : 'border-transparent opacity-60 hover:opacity-100'
+                          ]"
+                          :title="s.label"
+                          @mousedown.prevent="updateEditableKeyResultStatus(kr.id, q, s.key)"
+                        />
+                      </div>
+                      <textarea
+                        data-editable-status
+                        :value="kr.quarters[q] ? kr.quarters[q].summary : ''"
+                        @input="updateEditableKeyResultQuarter(kr.id, q, $event.target.value); autoResize($event.target)"
+                        @focus="editableFocus[kr.id + '-' + q] = true"
+                        @blur="editableFocus[kr.id + '-' + q] = false; saveEditableData()"
+                        class="w-full text-[11px] leading-relaxed text-gray-700 dark:text-gray-300 bg-transparent border border-gray-200 dark:border-gray-700 rounded-lg px-2.5 py-2 min-h-[3rem] resize-none focus:ring-1 focus:ring-primary-500 focus:border-primary-500"
+                        style="word-wrap: break-word; overflow-wrap: break-word; white-space: pre-wrap; overflow: hidden;"
+                        placeholder="Enter status..."
+                      />
+                    </div>
+                    <div
+                      v-else-if="kr.quarters && kr.quarters[q]"
                       class="rounded-lg px-2 py-2 min-h-[3rem] flex items-center justify-center"
                       :class="[statusConfig[kr.quarters[q].status].bg, reportMap[obj.id] ? 'cursor-pointer hover:ring-2 hover:ring-primary-400 transition-all' : '']"
                       @click.stop="reportMap[obj.id] ? navigateToReport(reportMap[obj.id]) : null"
@@ -235,6 +267,21 @@ function updateEditableStatus(objId, q, statusKey) {
   saveEditableData()
 }
 
+function updateEditableKeyResultQuarter(krId, q, text) {
+  var kr = findKeyResult(krId)
+  if (!kr) return
+  if (!kr.quarters[q]) kr.quarters[q] = { status: 'not-started', summary: '' }
+  kr.quarters[q].summary = text
+}
+
+function updateEditableKeyResultStatus(krId, q, statusKey) {
+  var kr = findKeyResult(krId)
+  if (!kr) return
+  if (!kr.quarters[q]) kr.quarters[q] = { status: 'not-started', summary: '' }
+  kr.quarters[q].status = statusKey
+  saveEditableData()
+}
+
 function autoResize(el) {
   if (!el.value) {
     el.style.height = ''
@@ -266,13 +313,28 @@ function collectEditableEntries() {
     var cat = data.categories[ci]
     for (var oi = 0; oi < cat.objectives.length; oi++) {
       var obj = cat.objectives[oi]
-      if (!obj.editable) continue
-      for (var qi = 0; qi < quarters.length; qi++) {
-        var q = quarters[qi]
-        var qd = obj.quarters[q]
-        if (qd && (qd.summary || qd.status !== 'not-started')) {
-          var key = obj.id + '|' + q
-          entries[key] = { status: qd.status, summary: qd.summary }
+      if (obj.editable) {
+        for (var qi = 0; qi < quarters.length; qi++) {
+          var q = quarters[qi]
+          var qd = obj.quarters[q]
+          if (qd && (qd.summary || qd.status !== 'not-started')) {
+            var key = obj.id + '|' + q
+            entries[key] = { status: qd.status, summary: qd.summary }
+          }
+        }
+      }
+      if (obj.keyResults) {
+        for (var kri = 0; kri < obj.keyResults.length; kri++) {
+          var kr = obj.keyResults[kri]
+          if (!kr.editable) continue
+          for (var krqi = 0; krqi < quarters.length; krqi++) {
+            var krq = quarters[krqi]
+            var krqd = kr.quarters[krq]
+            if (krqd && (krqd.summary || krqd.status !== 'not-started')) {
+              var krKey = kr.id + '|' + krq
+              entries[krKey] = { status: krqd.status, summary: krqd.summary }
+            }
+          }
         }
       }
     }
@@ -310,6 +372,13 @@ async function loadEditableData() {
         if (!obj.quarters[q]) obj.quarters[q] = { status: 'not-started', summary: '' }
         obj.quarters[q].status = entry.status || 'not-started'
         obj.quarters[q].summary = entry.summary || ''
+      } else {
+        var kr = findKeyResult(objId)
+        if (kr && kr.editable) {
+          if (!kr.quarters[q]) kr.quarters[q] = { status: 'not-started', summary: '' }
+          kr.quarters[q].status = entry.status || 'not-started'
+          kr.quarters[q].summary = entry.summary || ''
+        }
       }
     }
     resizeAllTextareas()
@@ -323,6 +392,19 @@ function findObjective(id) {
     var cat = data.categories[ci]
     for (var oi = 0; oi < cat.objectives.length; oi++) {
       if (cat.objectives[oi].id === id) return cat.objectives[oi]
+    }
+  }
+  return null
+}
+
+function findKeyResult(id) {
+  for (var ci = 0; ci < data.categories.length; ci++) {
+    var cat = data.categories[ci]
+    for (var oi = 0; oi < cat.objectives.length; oi++) {
+      var keyResults = cat.objectives[oi].keyResults || []
+      for (var ki = 0; ki < keyResults.length; ki++) {
+        if (keyResults[ki].id === id) return keyResults[ki]
+      }
     }
   }
   return null

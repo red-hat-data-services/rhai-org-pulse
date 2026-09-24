@@ -103,6 +103,52 @@ test.describe('Release Timeline @release-timeline @releases', () => {
     expect(page.errors).toHaveLength(0);
   });
 
+  test('can pan backward through at least 30 days of schedule history', async ({ page }) => {
+    await page.goto('/#/releases/schedule?e2e=1');
+    await page.waitForLoadState('networkidle');
+    await page.waitForTimeout(DEFAULT_PAGE_WAIT_TIME);
+
+    // The integration fixtures can all be historical relative to the runtime
+    // clock. Include released versions so the timeline remains available and
+    // its historical pan behavior can be exercised deterministically.
+    var hideReleased = page.getByLabel('Hide released');
+    if (await hideReleased.isChecked()) {
+      await hideReleased.uncheck();
+      await page.waitForTimeout(500);
+    }
+
+    var canvas = page.locator('canvas');
+    await expect(canvas).toBeVisible();
+    var box = await canvas.boundingBox();
+    var DAY_MS = 86400000;
+    var today = new Date();
+    today.setHours(0, 0, 0, 0);
+    var historyBoundary = today.getTime() - 30 * DAY_MS;
+
+    var timelineBefore = await page.evaluate(() => window.__releaseTimeline);
+    expect(timelineBefore).toBeTruthy();
+    expect(timelineBefore.fullRange.min).toBeLessThanOrEqual(historyBoundary);
+    expect(timelineBefore.range.min).toBeGreaterThan(historyBoundary);
+
+    // Drag right repeatedly to move the visible schedule backward in time.
+    var startX = box.x + box.width * 0.2;
+    var endX = box.x + box.width * 0.8;
+    var cy = box.y + box.height * 0.5;
+    for (var i = 0; i < 5; i++) {
+      await page.mouse.move(startX, cy);
+      await page.mouse.down();
+      await page.mouse.move(endX, cy, { steps: 10 });
+      await page.mouse.up();
+      await page.waitForTimeout(150);
+    }
+
+    await expect.poll(async () => {
+      return page.evaluate(() => window.__releaseTimeline.range.min);
+    }).toBeLessThanOrEqual(historyBoundary);
+    await expect(page.getByText('30-day history')).toBeVisible();
+    expect(page.errors).toHaveLength(0);
+  });
+
   test('timeline renders milestone cards above and below axis', async ({ page }) => {
     await page.goto('/#/releases/schedule');
     await page.waitForLoadState('networkidle');
@@ -142,9 +188,13 @@ test.describe('Release Timeline @release-timeline @releases', () => {
     for (var i = 0; i < 10; i++) {
       await page.evaluate(({ x, y }) => {
         var canvas = document.querySelector('canvas');
-        canvas.dispatchEvent(new WheelEvent('wheel', {
+        // The Vue @wheel listener is attached to the canvas wrapper, not the
+        // canvas itself. Dispatch directly on that wrapper so this test does
+        // not depend on event bubbling through the Chart.js canvas element.
+        var target = canvas.parentElement;
+        target.dispatchEvent(new WheelEvent('wheel', {
           clientX: x, clientY: y, deltaX: 0, deltaY: -200,
-          bubbles: true, cancelable: true
+          bubbles: true, cancelable: true, composed: true
         }));
       }, { x: cx, y: cy });
       await page.waitForTimeout(50);
@@ -180,9 +230,10 @@ test.describe('Release Timeline @release-timeline @releases', () => {
     for (var i = 0; i < 10; i++) {
       await page.evaluate(({ x, y }) => {
         var canvas = document.querySelector('canvas');
-        canvas.dispatchEvent(new WheelEvent('wheel', {
+        var target = canvas.parentElement;
+        target.dispatchEvent(new WheelEvent('wheel', {
           clientX: x, clientY: y, deltaX: 0, deltaY: -200,
-          bubbles: true, cancelable: true
+          bubbles: true, cancelable: true, composed: true
         }));
       }, { x: cx, y: cy });
       await page.waitForTimeout(50);
@@ -359,6 +410,13 @@ test.describe('Release Timeline @release-timeline @releases', () => {
     await page.waitForLoadState('networkidle');
     await page.waitForTimeout(DEFAULT_PAGE_WAIT_TIME);
 
+    // Include released milestones and focus a stable fixture release. Relying
+    // on whichever cards happen to be near "today" makes this test expire as
+    // the calendar advances.
+    await page.getByLabel('Hide released').uncheck();
+    await page.locator('button').filter({ hasText: /^3\.6 EA1$/ }).click();
+    await page.waitForTimeout(DEFAULT_PAGE_WAIT_TIME);
+
     var canvas = page.locator('canvas');
     await expect(canvas).toBeVisible();
     var box = await canvas.boundingBox();
@@ -366,11 +424,13 @@ test.describe('Release Timeline @release-timeline @releases', () => {
     // The component exposes card hit-boxes on window in demo mode (canvas-relative
     // centres). Pick the first card that resolves to a version AND a product so we
     // can assert the product is carried through to the Execute page.
-    var card = await page.evaluate(() => {
+    var findCard = () => page.evaluate(() => {
       var tl = window.__releaseTimeline;
       if (!tl || !tl.cards) return null;
       return tl.cards.find(function (c) { return c.version && c.products && c.products.length; }) || null;
     });
+    await expect.poll(findCard, { timeout: 10000 }).not.toBeNull();
+    var card = await findCard();
     expect(card).not.toBeNull();
 
     // Click the card centre (canvas origin + canvas-relative centre).
@@ -414,14 +474,21 @@ test.describe('Release Timeline @release-timeline @releases', () => {
     await page.waitForLoadState('networkidle');
     await page.waitForTimeout(DEFAULT_PAGE_WAIT_TIME);
 
+    // Keep the drag target stable over time by fitting a known fixture release.
+    await page.getByLabel('Hide released').uncheck();
+    await page.locator('button').filter({ hasText: /^3\.6 EA1$/ }).click();
+    await page.waitForTimeout(DEFAULT_PAGE_WAIT_TIME);
+
     var canvas = page.locator('canvas');
     var box = await canvas.boundingBox();
 
-    var card = await page.evaluate(() => {
+    var findCard = () => page.evaluate(() => {
       var tl = window.__releaseTimeline;
       if (!tl || !tl.cards) return null;
       return tl.cards.find(function (c) { return c.version; }) || null;
     });
+    await expect.poll(findCard, { timeout: 10000 }).not.toBeNull();
+    var card = await findCard();
     expect(card).not.toBeNull();
 
     // Press on the card and drag well past the 4px threshold, then release.

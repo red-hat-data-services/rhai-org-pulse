@@ -3,7 +3,7 @@
  * Production: actor is the signed-in user (roster-resolved); no impersonation.
  * DEMO_MODE: keep Acting-as impersonation for local review; UI/API visible to all.
  * Plan admin (freeze / Final GA / reset): allowlisted emails only.
- * Viewer preview gate: draftPlansViewerEmails (default: emarion only) when not DEMO_MODE.
+ * Viewer preview gate: draftPlansViewerEmails (default list in plan-admins.js) when not DEMO_MODE.
  */
 
 const roster = require('../../../../shared/server/roster')

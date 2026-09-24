@@ -1,14 +1,16 @@
 <template>
   <div>
     <!-- Cold-start loading bar (no data yet, polling for first build) -->
-    <div v-if="loading && !analysis"
+    <div v-if="activeTab !== 'program-level-release' && loading && !analysis"
          class="px-4 py-8 text-center text-sm text-gray-500 dark:text-gray-400">
       <div class="animate-pulse mb-2">Generating release analysis data...</div>
       <p class="text-xs">This may take a few minutes on first load.</p>
     </div>
 
-    <!-- Chip bar (visible once analysis has data, hidden on Risk Dashboard which uses gear config only) -->
-    <ReleaseChipBar v-if="allReleases.length && activeTab !== 'risk-dashboard'" />
+    <!-- Shared Deliver filters; hidden on tabs that provide independent controls -->
+    <ReleaseChipBar
+      v-if="allReleases.length && activeTab !== 'risk-dashboard' && activeTab !== 'program-level-release'"
+    />
 
     <div class="border-b border-gray-200 dark:border-gray-700">
       <nav class="flex -mb-px px-4" aria-label="Deliver sub-tabs">
@@ -39,6 +41,7 @@ import { useConformaExceptions } from '../deliver/composables/useConformaExcepti
 import ReleaseChipBar from '../deliver/components/ReleaseChipBar.vue'
 
 const RiskDashboard = defineAsyncComponent(() => import('../deliver/views/MainView.vue'))
+const ProgramLevelReleaseReport = defineAsyncComponent(() => import('../reports/CapacityCommitmentReport.vue'))
 const ReleaseBlockers = defineAsyncComponent(() => import('../deliver/views/ReleaseBlockersView.vue'))
 const ConformaInsights = defineAsyncComponent(() => import('../deliver/views/ConformaExceptionsView.vue'))
 
@@ -63,6 +66,7 @@ provide('conformaState', conformaState)
 
 const tabs = [
   { id: 'risk-dashboard', label: 'Risk Dashboard' },
+  { id: 'program-level-release', label: 'Program Level Release Report' },
   { id: 'release-blockers', label: 'Release Blockers' },
   { id: 'conforma-insights', label: 'Conforma Insights' },
 ]
@@ -94,6 +98,7 @@ if (moduleNav && moduleNav.params) {
 
 const componentMap = {
   'risk-dashboard': RiskDashboard,
+  'program-level-release': ProgramLevelReleaseReport,
   'release-blockers': ReleaseBlockers,
   'conforma-insights': ConformaInsights,
 }

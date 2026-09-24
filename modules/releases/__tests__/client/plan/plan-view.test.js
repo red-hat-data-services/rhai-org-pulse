@@ -25,7 +25,7 @@ vi.mock('../../../client/plan/views/PmHubView.vue', function() {
   return { default: { name: 'PmHubView', template: '<div>PM Hub</div>' } }
 })
 vi.mock('../../../client/plan/views/AIPlanner.vue', function() {
-  return { default: { name: 'AIPlanner', template: '<div><iframe title="AI-First Release Planner" src="https://htmlpreview.github.io/?https://github.com/yuvalluria/rhai-release-planner/blob/main/index.html" /></div>' } }
+  return { default: { name: 'AIPlanner', template: '<div data-testid="ai-planner">AI-First Release Planner</div>' } }
 })
 
 import { apiRequest } from '@shared/client/services/api'
@@ -53,23 +53,23 @@ describe('PlanView Draft Plans gate', function() {
     vi.clearAllMocks()
   })
 
-  it('hides Draft Plans tab when access is denied', async function() {
+  it('hides Plan Approval tab when access is denied', async function() {
     apiRequest.mockResolvedValue({ canViewDraftPlans: false })
     var wrapper = mountPlanView()
     await flushPromises()
     await nextTick()
 
-    expect(wrapper.text()).not.toContain('Draft Plans')
+    expect(wrapper.text()).not.toContain('Plan Approval')
     expect(apiRequest).toHaveBeenCalledWith('/modules/releases/draft-plans/access')
   })
 
-  it('shows Draft Plans tab when access is allowed', async function() {
+  it('shows Plan Approval tab when access is allowed', async function() {
     apiRequest.mockResolvedValue({ canViewDraftPlans: true })
     var wrapper = mountPlanView()
     await flushPromises()
     await nextTick()
 
-    expect(wrapper.text()).toContain('Draft Plans')
+    expect(wrapper.text()).toContain('Plan Approval')
   })
 
   it('does not deep-link into Draft Plans when gated', async function() {
@@ -107,7 +107,7 @@ describe('PlanView AI Planner tab', function() {
     await flushPromises()
     await nextTick()
 
-    expect(wrapper.find('iframe[title="AI-First Release Planner"]').exists()).toBe(true)
+    expect(wrapper.find('[data-testid="ai-planner"]').exists()).toBe(true)
   })
 
   it('switches to AI Planner when tab button is clicked', async function() {
@@ -123,6 +123,6 @@ describe('PlanView AI Planner tab', function() {
     await aiPlannerBtn.trigger('click')
     await nextTick()
 
-    expect(wrapper.find('iframe[title="AI-First Release Planner"]').exists()).toBe(true)
+    expect(wrapper.find('[data-testid="ai-planner"]').exists()).toBe(true)
   })
 })

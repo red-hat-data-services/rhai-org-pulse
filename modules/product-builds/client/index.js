@@ -5,6 +5,7 @@ const ProductView = defineAsyncComponent(() => import('./views/ProductView.vue')
 export const routes = {
   'overview': defineAsyncComponent(() => import('./views/OverviewView.vue')),
   'search': defineAsyncComponent(() => import('./views/SearchResultsView.vue')),
+  'release-status': defineAsyncComponent(() => import('./views/ReleaseStatusView.vue')),
   'rhaiis': ProductView,
   'rhel-ai': ProductView,
   'base-images': ProductView,
@@ -14,4 +15,5 @@ export const routes = {
   'drop-detail': defineAsyncComponent(() => import('./views/DropDetailView.vue')),
   'artifact-detail': defineAsyncComponent(() => import('./views/ArtifactDetailView.vue')),
   'package-analysis': defineAsyncComponent(() => import('./views/PackageAnalysisView.vue')),
+  'package-request': defineAsyncComponent(() => import('./views/RequestPackageView.vue')),
 }

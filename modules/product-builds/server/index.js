@@ -1016,11 +1016,20 @@ module.exports = function registerRoutes(router, context) {
   // --- Nightly Pipeline Analysis ---
   require('./nightly-pipeline')(router, context);
 
+  // --- Live Release Status ---
+  require('./release-status')(router, context);
+
+  // --- PMC-backed Release Epic Workflow ---
+  require('./release-epic')(router, context);
+
   // --- Version Map ---
   require('./version-map')(router, context);
 
   // --- Package Tracker ---
   require('./package-tracker')(router, context);
+
+  // --- Package Requests ---
+  require('./package-requests')(router, context);
 
   if (context.registerDiagnostics) {
     context.registerDiagnostics(async function() {

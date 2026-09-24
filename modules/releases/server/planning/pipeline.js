@@ -1,4 +1,4 @@
-const { TERMINAL_STATUSES, PRIORITY_ORDER } = require('./constants')
+const { TERMINAL_STATUSES, PRIORITY_ORDER, FEATURES_LIST_HIDDEN_STATUSES } = require('./constants')
 const { OUTCOME_KEY_PATTERN } = require('./validation')
 const {
   loadIndex,
@@ -298,13 +298,41 @@ async function runPipeline(config, bigRocks, release, readFromStorage, opts) {
   const allFeatures = tier1Features.concat(tier2Features, tier3Features)
   const allRfes = tier1Rfes.concat(tier2RfesTagged)
 
+  // Count done (Closed/Done/Resolved) features per rock that match the release.
+  // Always use the execution index: jiraChildrenByOutcome excludes done statuses
+  // in its JQL, so it can never contain Closed/Done/Resolved features.
+  const donePerRock = {}
+  const indexFeats = index.features || []
+  for (let dri = 0; dri < rocksWithOutcomes.length; dri++) {
+    const doneRock = rocksWithOutcomes[dri]
+    const doneOutcomeSet = new Set(doneRock.outcomeKeys)
+    let doneCount = 0
+    for (let dfi = 0; dfi < indexFeats.length; dfi++) {
+      const df = indexFeats[dfi]
+      if (!df.parentKey || !doneOutcomeSet.has(df.parentKey)) continue
+      const dfTv = df.targetVersions || []
+      if (dfTv.length === 0) continue
+      let dfMatch = false
+      for (let dvi = 0; dvi < dfTv.length; dvi++) {
+        if (dfTv[dvi].indexOf(release) !== -1) { dfMatch = true; break }
+      }
+      if (!dfMatch) continue
+      if (FEATURES_LIST_HIDDEN_STATUSES.indexOf(df.status || '') !== -1) doneCount++
+    }
+    donePerRock[doneRock.name] = doneCount
+  }
+
   // Per-rock stats
   const perRockStats = {}
   for (let si = 0; si < rocksWithOutcomes.length; si++) {
     const statRock = rocksWithOutcomes[si]
     const rockFeatures = tier1Features.filter(function(c) { return c.bigRock && c.bigRock.split(', ').includes(statRock.name) }).length
     const rockRfes = tier1Rfes.filter(function(c) { return c.bigRock && c.bigRock.split(', ').includes(statRock.name) }).length
-    perRockStats[statRock.name] = { features: rockFeatures, rfes: rockRfes }
+    perRockStats[statRock.name] = {
+      features: rockFeatures,
+      rfes: rockRfes,
+      doneCount: donePerRock[statRock.name] || 0
+    }
   }
 
   return {
@@ -360,6 +388,11 @@ function buildCandidateResponse(pipelineResult, version, bigRocks, demoMode) {
   }
 
   const rockSummaries = bigRocks.map(function(rock) {
+    var stats = perRockStats[rock.name] || {}
+    var activeFeatures = stats.features || 0
+    var doneCount = stats.doneCount || 0
+    var totalFeatures = activeFeatures + doneCount
+    var completionPct = totalFeatures > 0 ? Math.round((doneCount / totalFeatures) * 100) : 0
     return {
       priority: rock.priority,
       name: rock.name,
@@ -370,8 +403,11 @@ function buildCandidateResponse(pipelineResult, version, bigRocks, demoMode) {
       architect: rock.architect || '',
       outcomeKeys: rock.outcomeKeys,
       outcomeDescriptions: {},
-      featureCount: (perRockStats[rock.name] || {}).features || 0,
-      rfeCount: (perRockStats[rock.name] || {}).rfes || 0,
+      featureCount: activeFeatures,
+      rfeCount: stats.rfes || 0,
+      doneCount: doneCount,
+      totalFeatures: totalFeatures,
+      completionPct: completionPct,
       notes: rock.notes || ''
     }
   })

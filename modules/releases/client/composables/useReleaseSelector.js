@@ -6,7 +6,7 @@ const PHASE_ORDER = ['EA1', 'EA2', 'GA']
 // Z-stream releases (e.g. rhoai-3.6.z) are intentionally excluded — they are
 // separate registry entries with distinct schedules and should not appear in the
 // family/version/phase selector alongside standard milestones.
-function parseReleaseId(id) {
+export function parseReleaseId(id) {
   const match = id.match(/^([a-z]+)-(\d+\.\d+)(?:\.(ea\d?))?$/i)
   if (!match) return null
   return { family: match[1].toLowerCase(), version: match[2], phase: match[3] ? match[3].toUpperCase() : 'GA' }
@@ -23,7 +23,7 @@ function parseReleaseId(id) {
  * @param {object} options
  * @param {string} options.storageKey  localStorage key for persisting selection
  */
-export function useReleaseSelector({ storageKey }) {
+export function useReleaseSelector({ storageKey, fetchReleases: customFetch }) {
   const nav = inject('moduleNav')
 
   const releases = ref([])
@@ -73,13 +73,17 @@ export function useReleaseSelector({ storageKey }) {
   // ── Data loading ──
 
   async function fetchRegistry() {
-    const data = await apiRequest('/modules/releases/registry')
-    releases.value = data.releases || []
+    if (customFetch) {
+      releases.value = await customFetch()
+    } else {
+      const data = await apiRequest('/modules/releases/registry')
+      releases.value = data.releases || []
+    }
   }
 
   // ── Selection management ──
 
-  function restoreSelection() {
+  function restoreSelection({ allowFallback = true } = {}) {
     const params = nav?.params?.value || {}
     if (params.version) {
       const families = params.families
@@ -91,7 +95,7 @@ export function useReleaseSelector({ storageKey }) {
 
       if (families.length > 0 && phases.length > 0) {
         applySelection(params.version, new Set(families), new Set(phases))
-        return
+        return true
       }
     }
 
@@ -104,19 +108,24 @@ export function useReleaseSelector({ storageKey }) {
           const validPhases = parsed.phases.filter(p => PHASE_ORDER.includes(p))
           if (validFamilies.length > 0 && validPhases.length > 0) {
             applySelection(parsed.version, new Set(validFamilies), new Set(validPhases))
-            return
+            return true
           }
         }
       }
     } catch { /* ignore */ }
+
+    if (!allowFallback) return false
 
     if (availableFamilies.value.length > 0) {
       const allVersions = [...new Set(parsedReleases.value.map(r => r.version))].sort()
       const latestVersion = pickDefaultVersion(allVersions)
       if (latestVersion) {
         applySelection(latestVersion, new Set(availableFamilies.value), new Set(['GA']))
+        return true
       }
     }
+
+    return false
   }
 
   function pickDefaultVersion(versions) {

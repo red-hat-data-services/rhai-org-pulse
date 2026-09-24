@@ -1,0 +1,42 @@
+{
+  "releases": {
+    "3.5|GA": { "fix_version": "rhoai-3.5", "rhoai_jira_version": "rhoai-3.5", "project": "RHOAIENG", "teams": { "TestOps": { "team_code": "4162", "team_name": "RHOAI DevOps", "project": "RHOAIENG" } } },
+    "3.6|EA1": { "fix_version": "3.6 EA1 RHOAI RELEASE", "rhoai_jira_version": "rhoai-3.6.EA1", "project": "RHOAIENG", "teams": { "TestOps": { "team_code": "4162", "team_name": "RHOAI DevOps", "project": "RHOAIENG" } } }
+  },
+  "component_team_map": {
+    "AI Hub": "4154",
+    "AI Safety": "4157"
+  },
+  "counts": {
+    "3.5|GA": {
+      "AI Hub": { "failed": 1, "skipped": 0 },
+      "AI Safety": { "failed": 20, "skipped": 0 }
+    },
+    "3.6|EA1": {
+      "AI Hub": { "failed": 2, "skipped": 0 },
+      "AI Safety": { "failed": 34, "skipped": 0 }
+    }
+  },
+  "tfa": {
+    "3.6|EA1": {
+      "AI Hub": {
+        "tfa": { "tfa-product-bug": 1, "tfa-automation-bug": 1, "tfa-infra-issue": 0, "tfa-env-setup": 0, "tfa-duplicate": 0, "tfa-known-issue": 0, "tfa-false-positive": 0, "tfa-wrong-assignment": 0 },
+        "classified": 2, "unclassified": 0, "status": { "Closed": 2 }, "total_failed": 2
+      },
+      "AI Safety": {
+        "tfa": { "tfa-product-bug": 6, "tfa-automation-bug": 8, "tfa-infra-issue": 3, "tfa-env-setup": 2, "tfa-duplicate": 1, "tfa-known-issue": 2, "tfa-false-positive": 1, "tfa-wrong-assignment": 0 },
+        "classified": 23, "unclassified": 11, "status": { "Closed": 12, "In Progress": 6, "New": 5 }, "total_failed": 34
+      }
+    }
+  },
+  "tfa_descriptions": {
+    "tfa-product-bug": "Real product issue found by the test",
+    "tfa-automation-bug": "Test code issue or flaky automation",
+    "tfa-infra-issue": "Infrastructure instability or defect",
+    "tfa-env-setup": "Environment setup issue (e.g., missing dependency)",
+    "tfa-duplicate": "Same root cause as another tracked issue",
+    "tfa-known-issue": "Failure matches an already known and tracked issue",
+    "tfa-false-positive": "Passed on re-run, non-reproducible",
+    "tfa-wrong-assignment": "Failure initially routed to wrong component"
+  }
+}

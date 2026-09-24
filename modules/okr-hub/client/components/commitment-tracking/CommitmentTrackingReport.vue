@@ -1,8 +1,9 @@
 <template>
   <div>
-    <!-- Filter bar with snapshot creation -->
+    <!-- Filter bar -->
     <div class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4 mb-6">
-      <div class="flex flex-wrap items-center gap-4 mb-3">
+      <div class="flex flex-wrap items-center justify-between gap-4">
+        <div class="flex flex-wrap items-center gap-4">
         <div class="flex items-center gap-2">
           <label class="text-sm font-medium text-gray-700 dark:text-gray-300">Release:</label>
           <select
@@ -30,31 +31,17 @@
             <option value="GA">GA</option>
           </select>
         </div>
-      </div>
-
-      <!-- Snapshot creation (always show when version+phase selected) -->
-      <div v-if="selectedVersion && selectedPhase"
-           class="border-t border-gray-200 dark:border-gray-700 pt-3">
-        <div class="flex items-center justify-between">
-          <div>
-            <p v-if="!data && error?.includes('No snapshot')" class="text-sm text-gray-600 dark:text-gray-400">
-              No baseline snapshot exists for <span class="font-medium">{{ selectedVersion }} {{ selectedPhase }}</span>
-            </p>
-            <p v-else class="text-sm text-gray-600 dark:text-gray-400">
-              Create a new baseline snapshot for <span class="font-medium">{{ selectedVersion }} {{ selectedPhase }}</span>
-            </p>
-            <p v-if="snapshotError" class="text-xs text-red-600 dark:text-red-400 mt-1">
-              {{ snapshotError }}
-            </p>
-          </div>
-          <button
-            @click="createSnapshot"
-            :disabled="creatingSnapshot"
-            class="px-3 py-1.5 bg-blue-600 text-white rounded-md text-sm hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            {{ creatingSnapshot ? 'Creating...' : 'Create Snapshot' }}
-          </button>
         </div>
+        <button
+          v-if="selectedVersion && selectedPhase"
+          @click="handleRefresh"
+          :disabled="loading"
+          class="flex items-center gap-1.5 px-3 py-1.5 text-sm text-gray-600 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 rounded-md hover:bg-gray-200 dark:hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+          title="Refresh data"
+        >
+          <RefreshCw :size="14" :class="{ 'animate-spin': loading }" />
+          Refresh
+        </button>
       </div>
     </div>
 
@@ -104,7 +91,7 @@
           <div class="text-xs text-gray-500 dark:text-gray-400 mt-1">{{ data.metrics.percentDelivered }}% of committed</div>
         </div>
         <div class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4">
-          <div class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase mb-1">Added</div>
+          <div class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase mb-1">Late Added</div>
           <div class="text-2xl font-bold text-blue-600 dark:text-blue-400">{{ data.metrics.added }}</div>
           <div class="text-xs text-gray-500 dark:text-gray-400 mt-1">After freeze</div>
         </div>
@@ -117,6 +104,21 @@
 
       <!-- Feature Changes Tables -->
       <div class="space-y-4">
+        <div v-if="data.features.committed && data.features.committed.length > 0" class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
+          <button @click="toggleSection('committed')" class="w-full px-4 py-3 flex items-center justify-between text-left hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors">
+            <div class="flex items-center gap-2">
+              <component :is="expandedSections.committed ? ChevronDown : ChevronRight" :size="16" class="text-gray-400" />
+              <span class="font-semibold text-gray-900 dark:text-gray-100">Committed Features ({{ data.features.committed.length }})</span>
+            </div>
+            <span class="text-xs text-gray-600 dark:text-gray-400 font-medium">At Planning Freeze</span>
+          </button>
+          <div v-if="expandedSections.committed" class="border-t border-gray-200 dark:border-gray-700 p-4">
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              <FeatureCard v-for="feature in data.features.committed" :key="feature.key" :feature="feature" variant="in-progress" />
+            </div>
+          </div>
+        </div>
+
         <div v-if="data.features.delivered.length > 0" class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
           <button @click="toggleSection('delivered')" class="w-full px-4 py-3 flex items-center justify-between text-left hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors">
             <div class="flex items-center gap-2">
@@ -136,7 +138,7 @@
           <button @click="toggleSection('added')" class="w-full px-4 py-3 flex items-center justify-between text-left hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors">
             <div class="flex items-center gap-2">
               <component :is="expandedSections.added ? ChevronDown : ChevronRight" :size="16" class="text-gray-400" />
-              <span class="font-semibold text-gray-900 dark:text-gray-100">Added Features ({{ data.features.added.length }})</span>
+              <span class="font-semibold text-gray-900 dark:text-gray-100">Late Added Features ({{ data.features.added.length }})</span>
             </div>
             <span class="text-xs text-blue-600 dark:text-blue-400 font-medium">After Freeze</span>
           </button>
@@ -162,41 +164,12 @@
           </div>
         </div>
 
-        <div v-if="data.features.inProgress.length > 0" class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
-          <button @click="toggleSection('inProgress')" class="w-full px-4 py-3 flex items-center justify-between text-left hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors">
-            <div class="flex items-center gap-2">
-              <component :is="expandedSections.inProgress ? ChevronDown : ChevronRight" :size="16" class="text-gray-400" />
-              <span class="font-semibold text-gray-900 dark:text-gray-100">In Progress ({{ data.features.inProgress.length }})</span>
-            </div>
-            <span class="text-xs text-yellow-600 dark:text-yellow-400 font-medium">Not Delivered</span>
-          </button>
-          <div v-if="expandedSections.inProgress" class="border-t border-gray-200 dark:border-gray-700 p-4">
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              <FeatureCard v-for="feature in data.features.inProgress" :key="feature.key" :feature="feature" variant="in-progress" />
-            </div>
-          </div>
-        </div>
-
-        <div v-if="data.features.notStarted.length > 0" class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
-          <button @click="toggleSection('notStarted')" class="w-full px-4 py-3 flex items-center justify-between text-left hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors">
-            <div class="flex items-center gap-2">
-              <component :is="expandedSections.notStarted ? ChevronDown : ChevronRight" :size="16" class="text-gray-400" />
-              <span class="font-semibold text-gray-900 dark:text-gray-100">Not Started ({{ data.features.notStarted.length }})</span>
-            </div>
-            <span class="text-xs text-red-600 dark:text-red-400 font-medium">Not Delivered</span>
-          </button>
-          <div v-if="expandedSections.notStarted" class="border-t border-gray-200 dark:border-gray-700 p-4">
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              <FeatureCard v-for="feature in data.features.notStarted" :key="feature.key" :feature="feature" variant="not-started" />
-            </div>
-          </div>
-        </div>
       </div>
 
-      <!-- Snapshot metadata -->
-      <div class="mt-6 text-xs text-gray-500 dark:text-gray-400 text-center">
-        Snapshot created: {{ formatDate(data.snapshot.snapshotAt) }}
-        ({{ data.snapshot.trigger }})
+      <!-- Planning freeze metadata -->
+      <div v-if="data.planningFreezeDate" class="mt-6 text-xs text-gray-500 dark:text-gray-400 text-center">
+        Planning freeze: {{ formatDate(data.planningFreezeDate) }}
+        <span v-if="data.fixVersions" class="ml-2">| Fix versions: {{ data.fixVersions.join(', ') }}</span>
       </div>
     </div>
   </div>
@@ -204,7 +177,7 @@
 
 <script setup>
 import { ref, computed, onMounted } from 'vue'
-import { ChevronRight, ChevronDown, CheckCircle, AlertTriangle, XCircle } from 'lucide-vue-next'
+import { ChevronRight, ChevronDown, CheckCircle, AlertTriangle, XCircle, RefreshCw } from 'lucide-vue-next'
 import { useCommitmentTracking } from './useCommitmentTracking'
 import FeatureCard from './FeatureCard.vue'
 
@@ -212,14 +185,11 @@ const { data, loading, error, loadCommitment, releases, loadReleases } = useComm
 
 const selectedVersion = ref('')
 const selectedPhase = ref('')
-const creatingSnapshot = ref(false)
-const snapshotError = ref(null)
 const expandedSections = ref({
+  committed: false,
   delivered: false,
   added: false,
-  removed: false,
-  inProgress: false,
-  notStarted: false
+  removed: false
 })
 
 const okrStatusClass = computed(() => {
@@ -266,24 +236,9 @@ function handleFilterChange() {
   }
 }
 
-async function createSnapshot() {
-  if (!selectedVersion.value || !selectedPhase.value) return
-  creatingSnapshot.value = true
-  snapshotError.value = null
-  try {
-    const response = await fetch(`/api/modules/releases/delivery/commitment/snapshot/${selectedVersion.value}/${selectedPhase.value}`, {
-      method: 'POST'
-    })
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}))
-      throw new Error(errorData.error || `Server error: ${response.status}`)
-    }
-    await loadCommitment(selectedVersion.value, selectedPhase.value)
-  } catch (err) {
-    console.error('[CommitmentTracking] Snapshot creation failed:', err)
-    snapshotError.value = err.message
-  } finally {
-    creatingSnapshot.value = false
+function handleRefresh() {
+  if (selectedVersion.value && selectedPhase.value) {
+    loadCommitment(selectedVersion.value, selectedPhase.value, { refresh: true })
   }
 }
 

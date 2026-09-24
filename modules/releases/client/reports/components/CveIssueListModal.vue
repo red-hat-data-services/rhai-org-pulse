@@ -77,7 +77,19 @@
                   </span>
                 </td>
                 <td class="py-2 px-4 text-gray-900 dark:text-gray-100">{{ issue.summary || '—' }}</td>
-                <td class="py-2 px-4 text-gray-600 dark:text-gray-400 whitespace-nowrap">{{ issue.component || '—' }}</td>
+                <td
+                  class="py-2 px-4 text-gray-600 dark:text-gray-400 whitespace-nowrap"
+                  :data-testid="'cve-component-' + issue.key"
+                >
+                  <template v-if="isSecurityComponentName(issue.component)">
+                    <div
+                      :data-testid="'cve-component-label-' + issue.key"
+                      class="font-medium text-gray-700 dark:text-gray-300"
+                    >{{ SECURITY_OWNER_LABEL }}</div>
+                    <div class="text-xs text-gray-500 dark:text-gray-400">{{ SECURITY_OWNER_NOTE }}</div>
+                  </template>
+                  <template v-else>{{ issue.component || '—' }}</template>
+                </td>
                 <td class="py-2 px-4 text-gray-600 dark:text-gray-400 whitespace-nowrap">{{ (issue.versions || []).join(', ') || '—' }}</td>
                 <td class="py-2 px-4">
                   <span
@@ -85,7 +97,16 @@
                     :class="statusBadgeClass(issue.status)"
                   >{{ issue.status }}</span>
                 </td>
-                <td class="py-2 px-4 text-gray-600 dark:text-gray-400 whitespace-nowrap">{{ issue.assignee || '—' }}</td>
+                <td
+                  class="py-2 px-4 text-gray-600 dark:text-gray-400 whitespace-nowrap"
+                  :data-testid="'cve-owner-' + issue.key"
+                >
+                  <template v-if="isSecurityComponentIssue(issue)">
+                    <div class="font-medium text-gray-700 dark:text-gray-300">{{ SECURITY_OWNER_LABEL }}</div>
+                    <div class="text-xs text-gray-500 dark:text-gray-400">{{ SECURITY_OWNER_NOTE }}</div>
+                  </template>
+                  <template v-else>{{ issue.assignee || '—' }}</template>
+                </td>
                 <td class="py-2 px-4 text-gray-600 dark:text-gray-400 whitespace-nowrap">{{ formatDueDate(issue.duedate) }}</td>
               </tr>
             </tbody>
@@ -97,6 +118,13 @@
 </template>
 
 <script setup>
+import {
+  SECURITY_OWNER_LABEL,
+  SECURITY_OWNER_NOTE,
+  isSecurityComponentName,
+  isSecurityComponentIssue
+} from '../utils/cve-owner-display.js'
+
 const props = defineProps({
   visible: { type: Boolean, default: false },
   title: { type: String, default: '' },

@@ -90,7 +90,8 @@
           v-for="entry in filteredEntries"
           :key="entry.slug"
           :entry="entry"
-          :pillar-title="pillarMap[entry.strategyPillarKey] || ''"
+          :pillar-title="pillarMap[entry.strategyPillarKey]?.title || ''"
+          :pillar="pillarMap[entry.strategyPillarKey]"
           :featured="entry.sortOrder === 1"
           @click="nav.navigateTo('showcase-detail', { slug: entry.slug })"
         />
@@ -112,9 +113,11 @@ import { useShowcase } from '../composables/useShowcase.js'
 import ShowcaseCard from '../components/ShowcaseCard.vue'
 import PillarFilterTiles from '../components/PillarFilterTiles.vue'
 import ShowcaseSkeleton from '../components/ShowcaseSkeleton.vue'
+import { useCategories } from '../composables/useCategories.js'
 
 const nav = inject('moduleNav')
 const { entries, pillars, loading, error, loadEntries } = useShowcase()
+const { getPillarRegistry } = useCategories()
 
 const selectedPillar = ref(null)
 const searchInput = ref('')
@@ -133,8 +136,8 @@ onUnmounted(() => clearTimeout(searchTimer))
 
 const pillarMap = computed(() => {
   const map = {}
-  for (const p of pillars.value) {
-    map[p.pillarKey] = p.title
+  for (const p of getPillarRegistry(pillars.value, entries.value)) {
+    map[p.pillarKey] = p
   }
   return map
 })

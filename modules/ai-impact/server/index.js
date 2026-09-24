@@ -51,7 +51,7 @@ module.exports = function registerRoutes(router, context) {
 
   // Component onboarding routes (Build & Release)
   const registerComponentOnboardingRoutes = require('./component-onboarding/routes');
-  registerComponentOnboardingRoutes(router, context);
+  registerComponentOnboardingRoutes(router, { ...context, jiraRequest });
 
   // Feature Decomposer routes (epic-decomposer pipeline snapshot push)
   const registerDecomposerRoutes = require('./decomposer/routes');
