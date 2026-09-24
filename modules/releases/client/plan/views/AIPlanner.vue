@@ -14,6 +14,9 @@ const {
 } = useDraftPlans()
 const moduleNav = inject('moduleNav', null)
 
+const iframeRef = ref(null)
+const DEMO_URL = '/ai-first-scheduler/index.html'
+
 const loading = ref(true)
 const error = ref(null)
 const actionError = ref(null)
@@ -127,6 +130,32 @@ const featuresInComponent = computed(() => {
 onMounted(async () => {
   try {
     snapshot.value = await apiRequest('/modules/releases/planning/ai-planner')
+
+    // Send live data to iframe via postMessage
+    const iframe = iframeRef.value
+    if (iframe && iframe.contentWindow) {
+      iframe.contentWindow.postMessage({
+        type: 'ai-planner-data',
+        features: snapshot.value.features || [],
+        bugQueue: snapshot.value.bugQueue || [],
+        capacity: snapshot.value.capacity || {},
+        cveReserve: snapshot.value.cveReserve || {},
+        lastSyncedAt: snapshot.value.lastSyncedAt || new Date().toISOString()
+      }, window.location.origin)
+    }
+
+    // Listen for "Add to Plan" messages from iframe
+    window.addEventListener('message', (e) => {
+      if (e.origin !== window.location.origin) return
+      if (e.data?.action === 'addFeature') {
+        // Wire selected feature to Plan Approval
+        approveFeature(e.data.feature.key, true)
+        filterEvent.value = '__approved__'
+        if (moduleNav && moduleNav.updateParams) {
+          moduleNav.updateParams({ tab: 'draft-plans' }, { push: false })
+        }
+      }
+    })
   } catch (e) {
     error.value = e.message
   } finally {
@@ -136,7 +165,19 @@ onMounted(async () => {
 </script>
 
 <template>
-  <div class="flex flex-col h-full bg-gray-50 dark:bg-gray-900">
+  <!-- IFRAME MODE: Shows complete demo with live data from backend -->
+  <div v-if="iframeRef !== null && !loading" class="h-full w-full bg-gray-50 dark:bg-gray-900">
+    <iframe
+      ref="iframeRef"
+      :src="DEMO_URL"
+      class="w-full h-full border-none rounded"
+      title="AI-First Release Planner"
+      sandbox="allow-same-origin allow-scripts allow-popups allow-forms"
+    />
+  </div>
+
+  <!-- FALLBACK: Show loading/error while iframe starts -->
+  <div v-else class="flex flex-col h-full bg-gray-50 dark:bg-gray-900">
     <!-- Header -->
     <div class="px-6 py-4 border-b border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800">
       <h1 class="text-xl font-semibold dark:text-gray-100">AI-First Release Planner</h1>
