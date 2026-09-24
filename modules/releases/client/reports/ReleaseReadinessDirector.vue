@@ -1041,6 +1041,26 @@ const releaseCompletionPct = computed(() => {
   return Math.round((done / total) * 100)
 })
 
+// Whole days from today until the GA date (negative once GA has passed).
+// null when the schedule has no GA date, so any GA-based rule degrades to a
+// no-op rather than firing on missing data (common for EA milestones).
+const daysToGa = computed(() => {
+  const gaDate = releaseSchedule.value?.ga_date
+  if (!gaDate) return null
+  const ga = new Date(`${gaDate}T00:00:00Z`)
+  if (isNaN(ga.getTime())) return null
+  const today = new Date(`${new Date().toISOString().slice(0, 10)}T00:00:00Z`)
+  return Math.round((ga - today) / 86400000)
+})
+
+// Schedule risk: GA is imminent (within 3 days, and not already past) but the
+// release is not yet 80% complete. Used to escalate the decision to At Risk.
+const GA_NEAR_DAYS = 3
+const gaScheduleRisk = computed(() => {
+  const d = daysToGa.value
+  return d !== null && d >= 0 && d <= GA_NEAR_DAYS && releaseCompletionPct.value < 80
+})
+
 const releaseDecision = computed(() => {
   const gates = decisionGates.value
   if (!gates.length) return 'not-ready'
@@ -1052,29 +1072,41 @@ const releaseDecision = computed(() => {
   const allGatesAbove80 = gates.every(g => gatePct(g) >= 80)
   const allGates100 = gates.every(g => gatePct(g) >= 100)
 
-  // Evaluate from best to worst; the strongest fully-satisfied state wins.
+  // Base decision from gates + blockers, evaluated best to worst; the strongest
+  // fully-satisfied state wins.
+  const base = (() => {
+    // Ready to Ship: every gate 100% complete and zero open blockers.
+    if (allGates100 && openBlockers === 0) return 'ready-to-ship'
 
-  // Ready to Ship: every gate 100% complete and zero open blockers.
-  if (allGates100 && openBlockers === 0) return 'ready-to-ship'
+    // On Track: every gate at/above 80% and no open blockers.
+    if (allGatesAbove80 && openBlockers === 0) return 'on-track'
 
-  // On Track: every gate at/above 80% and no open blockers.
-  if (allGatesAbove80 && openBlockers === 0) return 'on-track'
+    // Not Ready: two or more gates below 50%, OR open blockers while overall
+    // completion is still low. A stalled/early release is not ready regardless
+    // of whether blockers have been filed yet.
+    if (gatesBelow50 >= 2 || (openBlockers > 0 && completion < 50)) return 'not-ready'
 
-  // Not Ready: two or more gates below 50%, OR open blockers while overall
-  // completion is still low. A stalled/early release is not ready regardless
-  // of whether blockers have been filed yet.
-  if (gatesBelow50 >= 2 || (openBlockers > 0 && completion < 50)) return 'not-ready'
+    // At Risk: meaningful progress (>= 50% overall) but something is
+    // jeopardizing the timeline — an open blocker or a single lagging gate.
+    if (completion >= 50 && (openBlockers > 0 || gatesBelow50 >= 1)) return 'at-risk'
 
-  // At Risk: meaningful progress (>= 50% overall) but something is jeopardizing
-  // the timeline — an open blocker or a single lagging (< 50%) gate.
-  if (completion >= 50 && (openBlockers > 0 || gatesBelow50 >= 1)) return 'at-risk'
+    // In Progress: work has started and gates are progressing (below 80%) with
+    // nothing actively putting the release at risk.
+    if (completion > 0) return 'in-progress'
 
-  // In Progress: work has started and gates are progressing (below 80%) with
-  // nothing actively putting the release at risk.
-  if (completion > 0) return 'in-progress'
+    // Nothing started.
+    return 'not-ready'
+  })()
 
-  // Nothing started.
-  return 'not-ready'
+  // Schedule-risk overlay: if GA is within 3 days and the release is under 80%
+  // complete, escalate to At Risk. Only escalate — never soften an already
+  // worse state (e.g. Not Ready stays Not Ready). Has no effect when the GA
+  // date is missing, so EA releases without a GA date are unaffected.
+  if (gaScheduleRisk.value && (base === 'in-progress' || base === 'on-track')) {
+    return 'at-risk'
+  }
+
+  return base
 })
 
 // --- Component Filter ---
