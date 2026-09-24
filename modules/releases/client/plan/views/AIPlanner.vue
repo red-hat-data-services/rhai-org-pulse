@@ -141,16 +141,26 @@ function sendDataToIframe() {
   }
 }
 
-function handleIframeMessage(e) {
+async function handleIframeMessage(e) {
   if (e.origin !== window.location.origin) return
   if (e.data?.type === 'add-to-draft-plan' && e.data?.features) {
+    actionError.value = null
+    if (!await ensureDraftPlanLoaded()) {
+      actionError.value = 'Plan Approval data is unavailable. Please try again.'
+      return
+    }
     const features = e.data.features
     features.forEach(f => {
       approveFeature(f.key, true)
     })
-    filterEvent.value = '__approved__'
-    if (moduleNav && moduleNav.updateParams) {
-      moduleNav.updateParams({ tab: 'draft-plans' }, { push: false })
+    try {
+      await persist()
+      filterEvent.value = '__approved__'
+      if (moduleNav && moduleNav.updateParams) {
+        moduleNav.updateParams({ tab: 'draft-plans' }, { push: false })
+      }
+    } catch (err) {
+      actionError.value = 'Failed to save draft plan: ' + err.message
     }
   }
 }
