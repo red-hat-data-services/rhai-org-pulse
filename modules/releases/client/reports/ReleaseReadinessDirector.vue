@@ -26,9 +26,9 @@
             <span class="text-[10px] font-semibold uppercase tracking-wider text-blue-200 mb-0.5">Code Freeze</span>
             <span class="text-sm font-bold">{{ formatScheduleDate(releaseSchedule.code_freeze_date) }}</span>
           </div>
-          <div v-if="releaseSchedule.ga_date" class="flex flex-col items-center bg-white/15 backdrop-blur-sm rounded-xl px-5 py-2.5 min-w-[90px]">
+          <div class="flex flex-col items-center bg-white/15 backdrop-blur-sm rounded-xl px-5 py-2.5 min-w-[90px]">
             <span class="text-[10px] font-semibold uppercase tracking-wider text-blue-200 mb-0.5">GA Date</span>
-            <span class="text-sm font-bold">{{ formatScheduleDate(releaseSchedule.ga_date) }}</span>
+            <span class="text-sm font-bold">{{ releaseSchedule.ga_date ? formatScheduleDate(releaseSchedule.ga_date) : 'TBD' }}</span>
           </div>
           <div class="flex flex-col items-center rounded-xl px-5 py-2.5 min-w-[90px]"
             :class="scheduleStatusClass">
@@ -1013,37 +1013,65 @@ const hasInitiativeData = computed(() => {
   return director.value.gate_statuses && director.value.gate_statuses.length > 0
 })
 
+// All decision gates: the director gate_statuses plus the TFA (Test Plan) sign
+// off, each carried as done/total so completion is a true weighted percentage
+// of real work rather than an average of a couple of gate percentages.
+const decisionGates = computed(() => {
+  const gates = (director.value?.gate_statuses || []).map(g => ({
+    name: g.gate,
+    done: Number(g.done) || 0,
+    total: Number(g.total) || 0,
+  }))
+  // Include TFA / Test Plan Sign Off as a gate when the payload carries it and
+  // the director gates don't already include it.
+  const hasTfaGate = gates.some(g => /tfa|test plan sign off/i.test(g.name))
+  if (!hasTfaGate && testSignOffTotal.value > 0) {
+    gates.push({ name: 'TFA Sign Off', done: testSignOffDone.value, total: testSignOffTotal.value })
+  }
+  return gates.filter(g => g.total > 0)
+})
+
+// Weighted completion across every gate: total done / total items. Reflects the
+// real percentage of release work completed.
+const releaseCompletionPct = computed(() => {
+  const gates = decisionGates.value
+  const total = gates.reduce((s, g) => s + g.total, 0)
+  if (!total) return 0
+  const done = gates.reduce((s, g) => s + g.done, 0)
+  return Math.round((done / total) * 100)
+})
+
 const releaseDecision = computed(() => {
-  if (!director.value) return 'not-ready'
-  const gates = director.value.gate_statuses || []
+  const gates = decisionGates.value
   if (!gates.length) return 'not-ready'
 
-  const avgPct = gates.reduce((s, g) => s + g.pct, 0) / gates.length
+  const gatePct = g => (g.total > 0 ? (g.done / g.total) * 100 : 0)
   const openBlockers = productBlockers.value?.total_open || 0
-  const gatesBelow50 = gates.filter(g => g.pct < 50).length
-  const allGatesAbove80 = gates.every(g => g.pct >= 80)
-  const allGates100 = gates.every(g => g.pct >= 100)
+  const completion = releaseCompletionPct.value // weighted, real completion
+  const gatesBelow50 = gates.filter(g => gatePct(g) < 50).length
+  const allGatesAbove80 = gates.every(g => gatePct(g) >= 80)
+  const allGates100 = gates.every(g => gatePct(g) >= 100)
 
-  // Evaluate from best to worst so the strongest matching state wins.
+  // Evaluate from best to worst; the strongest fully-satisfied state wins.
 
-  // Ready to Ship: everything complete, no blockers.
+  // Ready to Ship: every gate 100% complete and zero open blockers.
   if (allGates100 && openBlockers === 0) return 'ready-to-ship'
 
-  // On Track: all gates >= 80% and no critical blockers.
+  // On Track: every gate at/above 80% and no open blockers.
   if (allGatesAbove80 && openBlockers === 0) return 'on-track'
 
-  // Not Ready: multiple gates still below 50% (early/stalled). This is the
-  // dominant signal per the tooltip — a release with several gates under 50%
-  // is not ready regardless of whether blockers have been filed yet.
-  if (gatesBelow50 >= 2) return 'not-ready'
+  // Not Ready: two or more gates below 50%, OR open blockers while overall
+  // completion is still low. A stalled/early release is not ready regardless
+  // of whether blockers have been filed yet.
+  if (gatesBelow50 >= 2 || (openBlockers > 0 && completion < 50)) return 'not-ready'
 
-  // At Risk: progress is underway (some gates above 50%) but open blockers or
-  // a below-50% gate put the timeline at risk.
-  if ((avgPct >= 50 || gatesBelow50 <= 1) && (openBlockers > 0 || gatesBelow50 >= 1)) return 'at-risk'
+  // At Risk: meaningful progress (>= 50% overall) but something is jeopardizing
+  // the timeline — an open blocker or a single lagging (< 50%) gate.
+  if (completion >= 50 && (openBlockers > 0 || gatesBelow50 >= 1)) return 'at-risk'
 
-  // In Progress: testing has started and gates are progressing (below 80%),
-  // no blockers holding it back.
-  if (avgPct > 0) return 'in-progress'
+  // In Progress: work has started and gates are progressing (below 80%) with
+  // nothing actively putting the release at risk.
+  if (completion > 0) return 'in-progress'
 
   // Nothing started.
   return 'not-ready'
