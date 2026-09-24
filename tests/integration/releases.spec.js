@@ -1745,6 +1745,47 @@ test.describe('Releases CVE Sustaining Report @releases', () => {
     expect(page.errors).toHaveLength(0);
   });
 
+  test('CVE sustaining component names link to the matching CVE action report', async ({ page }) => {
+    await page.goto('/#/releases/reports?report=cve-sustaining');
+    await page.waitForLoadState('networkidle');
+    await page.waitForTimeout(DEFAULT_PAGE_WAIT_TIME);
+
+    const componentTable = page
+      .getByRole('heading', { name: 'CVEs across all versions', exact: true })
+      .locator('..')
+      .getByRole('table');
+    const componentLink = componentTable.locator('a:not([data-testid="cve-security-component-label"])').first();
+    const componentName = await componentLink.innerText();
+
+    await expect(componentLink).toHaveAttribute(
+      'href',
+      `#/releases/reports?report=cve-action-report&component=${encodeURIComponent(componentName)}`
+    );
+
+    const securityLink = componentTable.locator('[data-testid="cve-security-component-label"]');
+    if (await securityLink.count()) {
+      await expect(securityLink).toHaveAttribute(
+        'href',
+        '#/releases/reports?report=cve-action-report&component=Security'
+      );
+    }
+  });
+
+  test('CVE sustaining component links navigate to the CVE action report', async ({ page }) => {
+    await page.goto('/#/releases/reports?report=cve-sustaining');
+    await page.waitForLoadState('networkidle');
+    await page.waitForTimeout(DEFAULT_PAGE_WAIT_TIME);
+
+    const componentTable = page
+      .getByRole('heading', { name: 'CVEs across all versions', exact: true })
+      .locator('..')
+      .getByRole('table');
+    await componentTable.locator('a:not([data-testid="cve-security-component-label"])').first().click();
+
+    await expect(page).toHaveURL(/#\/releases\/reports\?report=cve-action-report&component=/);
+    await expect(page.getByRole('heading', { name: 'CVE Action Report', exact: true })).toBeVisible();
+  });
+
   test('CVE sustaining API returns cached fixture data', async ({ request }) => {
     var res = await request.get('/api/modules/releases/cve-sustaining');
     expect(res.ok()).toBe(true);
