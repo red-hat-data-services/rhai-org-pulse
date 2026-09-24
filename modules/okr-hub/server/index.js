@@ -893,19 +893,21 @@ function parsePct(val) {
 function getSampleContentData() {
   var teamData = [
     { name: "Steven's Directs", associates: 14, completed: 1, pct: 7, status: 'Started', performance: 'Behind (43% to go)', q1: 7, q2: 7 },
-    { name: 'Cat Agentics & AI Eng Tooling', associates: 58, completed: 19, pct: 33, status: 'Started', performance: 'Behind (17% to go)', q1: 6, q2: 31 },
-    { name: 'Sherard AI Platform', associates: 192, completed: 34, pct: 18, status: 'Started', performance: 'Behind (32% to go)', q1: 6, q2: 18 },
-    { name: 'Taneem Inf Engineering', associates: 59, completed: 21, pct: 36, status: 'Started', performance: 'Behind (14% to go)', q1: 7, q2: 36 },
+    { name: 'Cat Agentics & AI Eng Tooling', associates: 58, completed: 19, pct: 42, status: 'Started', performance: 'Behind (17% to go)', q1: 6, q2: 31 },
+    { name: 'Sherard AI Platform', associates: 192, completed: 34, pct: 21, status: 'Started', performance: 'Behind (32% to go)', q1: 6, q2: 18 },
+    { name: 'Taneem Inf Engineering', associates: 59, completed: 21, pct: 46, status: 'Started', performance: 'Behind (14% to go)', q1: 7, q2: 36 },
     { name: 'Kai AI Innovation', associates: 13, completed: 2, pct: 15, status: 'Started', performance: 'Behind (35% to go)', q1: 0, q2: 15 },
-    { name: 'Tom AIPCC', associates: 147, completed: 19, pct: 13, status: 'Started', performance: 'Behind (37% to go)', q1: 6, q2: 13 },
-    { name: 'Monica watsonx', associates: 48, completed: 18, pct: 38, status: 'Started', performance: 'Behind (13% to go)', q1: 10, q2: 38 }
+    { name: 'Tom AIPCC', associates: 147, completed: 19, pct: 22, status: 'Started', performance: 'Behind (37% to go)', q1: 6, q2: 13 },
+    { name: 'Monica watsonx', associates: 48, completed: 18, pct: 46, status: 'Started', performance: 'Behind (13% to go)', q1: 10, q2: 38 }
   ]
 
   function buildQuarter(qKey, qNum) {
     var teams = []
     for (var i = 0; i < teamData.length; i++) {
       var t = teamData[i]
-      var qPct = t[qKey] != null ? t[qKey] : 0
+      // The fallback sheet has no dedicated Q3 column. Use the current
+      // Percentage Completed value as the Q3 progress snapshot.
+      var qPct = qKey === 'q3' ? t.pct : (t[qKey] != null ? t[qKey] : 0)
       var qCompleted = Math.round(t.associates * qPct / 100)
       teams.push({ name: t.name, associates: t.associates, completed: qCompleted, pct: qPct, status: t.status, performance: t.performance, endQPct: qPct })
     }
@@ -916,7 +918,7 @@ function getSampleContentData() {
     return { label: 'Q' + qNum + ' 2026', teams: teams, total: { associates: tA, completed: tC, pct: tPct, endQPct: tPct }, targetDate: endMonths[qNum] + '/2026' }
   }
 
-  var quarters = [buildQuarter('q1', 1), buildQuarter('q2', 2)]
+  var quarters = [buildQuarter('q1', 1), buildQuarter('q2', 2), buildQuarter('q3', 3)]
 
   var tA = 0; var tC = 0
   for (var i = 0; i < teamData.length; i++) { tA += teamData[i].associates; tC += teamData[i].completed }
@@ -947,6 +949,14 @@ function getSampleTechVisData() {
     { weekOf: '2026-06-11', count: 2, met: false }, { weekOf: '2026-06-18', count: 5, met: true },
     { weekOf: '2026-06-25', count: 3, met: false }
   ]
+  var q3Weeks = [
+    { weekOf: '2026-07-02', count: 1, met: false }, { weekOf: '2026-07-09', count: 4, met: false },
+    { weekOf: '2026-07-16', count: 6, met: true }, { weekOf: '2026-07-23', count: 4, met: false },
+    { weekOf: '2026-07-30', count: 3, met: false }, { weekOf: '2026-08-06', count: 2, met: false },
+    { weekOf: '2026-08-13', count: 3, met: false }, { weekOf: '2026-08-20', count: 4, met: false },
+    { weekOf: '2026-08-27', count: 0, met: false }, { weekOf: '2026-09-03', count: 6, met: true },
+    { weekOf: '2026-09-10', count: 3, met: false }
+  ]
 
   function buildQ(weeks, label) {
     var m = 0
@@ -954,7 +964,7 @@ function getSampleTechVisData() {
     return { label: label, weeks: weeks, weeksMet: m, totalWeeks: weeks.length, pct: Math.round((m / weeks.length) * 100) }
   }
 
-  var allQ = [buildQ(q1Weeks, 'Q1 2026'), buildQ(q2Weeks, 'Q2 2026')]
+  var allQ = [buildQ(q1Weeks, 'Q1 2026'), buildQ(q2Weeks, 'Q2 2026'), buildQ(q3Weeks, 'Q3 2026')]
   var totalMet = 0; var totalWeeks = 0
   for (var i = 0; i < allQ.length; i++) { totalMet += allQ[i].weeksMet; totalWeeks += allQ[i].totalWeeks }
 
