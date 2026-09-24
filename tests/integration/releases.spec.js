@@ -2446,6 +2446,34 @@ test.describe('Releases AI Planner tab @releases', () => {
 
     expect(unexpectedDemoResourceErrors(page)).toHaveLength(0);
   });
+
+  test('AI Planner receives live data from API via iframe', async ({ page }) => {
+    // Verify that AI Planner API data is sent to iframe
+    const apiDataReceived = [];
+    page.on('request', request => {
+      if (request.url().includes('/api/modules/releases/planning/ai-planner')) {
+        apiDataReceived.push({ url: request.url() });
+      }
+    });
+
+    await page.goto('/#/releases/plan?tab=ai-planner');
+    await page.waitForLoadState('networkidle');
+    await page.waitForTimeout(DEFAULT_PAGE_WAIT_TIME);
+
+    // API should have been called to fetch live data
+    expect(apiDataReceived.length).toBeGreaterThan(0);
+
+    // Iframe should be visible and loaded
+    const iframe = page.locator('iframe[title="AI-First Release Planner"]');
+    await expect(iframe).toBeVisible();
+
+    // Data from API should populate the iframe (features visible)
+    const iframeContent = iframe.contentFrame();
+    const tableRows = await iframeContent.locator('tbody tr').count();
+    expect(tableRows).toBeGreaterThan(0);
+
+    expect(unexpectedDemoResourceErrors(page)).toHaveLength(0);
+  });
 });
 
 /**
