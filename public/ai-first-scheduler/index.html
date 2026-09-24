@@ -3841,7 +3841,7 @@ function renderBigRocks(data){
     const extDepTag=br.externalDeps&&br.externalDeps.length?br.externalDeps.map(d=>`<div style="font-size:9px;margin-top:2px;color:#c0392b" title="External team dependency — slippage is outside RHOAI control">↗ Ext dep: ${esc(d)}</div>`).join(''):'';
     const sharedDepTag=br.sharedDep?`<div style="font-size:9px;color:#8e44ad;margin-top:2px" title="Shared dependency — slippage affects multiple outcomes">⚑ Shared dep: ${esc(br.sharedDep)}</div>`:'';
     const isSel=window._selectedBR===br.name;
-    const safeN=br.name.replace(/'/g,"\\'");
+    const safeN=br.name.replace(/\\/g,"\\\\").replace(/'/g,"\\'");
     const has35match=br.outcomeKeys&&br.outcomeKeys.some(k=>BR_35_MATCHES.has(k));
     const matchBadge=has35match?'<span class="br-35match" title="This outcome appeared in the 3.5 Big Rock set (similarity analysis, 2026-08-13)">↪ 3.5</span>':'';
     const isMultiTeam=(br.externalDeps&&br.externalDeps.length>0)||!!br.sharedDep;
