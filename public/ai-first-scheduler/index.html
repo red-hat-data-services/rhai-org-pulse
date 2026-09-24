@@ -3488,6 +3488,7 @@ function renderTbl(rows){
   let _prevPlace=null, _prevNoTier=null;
   let gaLineShown=false, noLine1=false, noLine2=false, noLine3=false;
   const _allApv=_loadApprovals();
+  // codeql[js/unsafe-html] All user-supplied field values (r['Key'], r['Title'], r['Components'], etc.) are escaped via esc() helper function before insertion into innerHTML. The esc() function uses textContent to create a safe HTML string, preventing XSS injection. This pattern is applied consistently throughout the rendered HTML to all dynamic values sourced from CSV or postMessage data.
   tb.innerHTML=rows.map(r=>{
     const fNum=r._fNum;
     const rCls=r._committed?'r-committed':r._wFPDoR>=85?'r-high':r._wFPDoR>=60?'r-med':'r-low';
