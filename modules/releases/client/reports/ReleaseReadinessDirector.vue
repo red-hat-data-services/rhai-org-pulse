@@ -494,6 +494,72 @@
       </div>
 
 
+      <!-- Section 5: Release Cycle Metrics -->
+      <div v-if="releaseCycleMetrics" class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden mb-6">
+        <div class="px-4 py-3 border-b border-gray-200 dark:border-gray-700">
+          <h3 class="text-sm font-semibold text-gray-700 dark:text-gray-300">Release Cycle Metrics</h3>
+          <p class="text-xs text-gray-400 dark:text-gray-500 mt-0.5">Working days between key milestones (Mon–Fri, excluding weekends)</p>
+        </div>
+
+        <div class="p-4 space-y-6">
+          <!-- Build Milestones -->
+          <div v-if="releaseCycleMetrics.phases?.length">
+            <p class="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-2">Build Milestones — days since code freeze</p>
+            <div class="overflow-x-auto">
+              <table class="w-full text-xs border-collapse">
+                <thead>
+                  <tr class="bg-gray-50 dark:bg-gray-900">
+                    <th class="px-3 py-2 text-left font-medium text-gray-600 dark:text-gray-400">Milestone</th>
+                    <th class="px-3 py-2 text-left font-medium text-gray-600 dark:text-gray-400">Code Freeze</th>
+                    <th class="px-3 py-2 text-left font-medium text-gray-600 dark:text-gray-400">Build Received</th>
+                    <th class="px-3 py-2 text-left font-medium text-gray-600 dark:text-gray-400">Working Days</th>
+                  </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-100 dark:divide-gray-700">
+                  <tr v-for="phase in releaseCycleMetrics.phases" :key="phase.epic_key || phase.phase" class="hover:bg-gray-50 dark:hover:bg-gray-750">
+                    <td class="px-3 py-2 font-medium text-gray-800 dark:text-gray-200">{{ phase.phase }}</td>
+                    <td class="px-3 py-2 text-gray-500 dark:text-gray-400">{{ formatMetricDate(releaseCycleMetrics.code_freeze_date) }}</td>
+                    <td class="px-3 py-2 text-gray-700 dark:text-gray-300">{{ formatMetricDate(phase.build_ready_date) }}</td>
+                    <td class="px-3 py-2" :class="daysClass(phase.days_since_code_freeze, 5, 10)">{{ daysLabel(phase.days_since_code_freeze) }}</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- Test Execution Timelines -->
+          <div v-if="releaseCycleMetrics.phases?.length">
+            <p class="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-2">Test Execution Timelines — working days since build received</p>
+            <div class="overflow-x-auto">
+              <table class="w-full text-xs border-collapse">
+                <thead>
+                  <tr class="bg-gray-50 dark:bg-gray-900">
+                    <th class="px-3 py-2 text-left font-medium text-gray-600 dark:text-gray-400">Phase</th>
+                    <th class="px-3 py-2 text-left font-medium text-gray-600 dark:text-gray-400">Build Received</th>
+                    <th class="px-3 py-2 text-left font-medium text-gray-600 dark:text-gray-400">Test Started</th>
+                    <th class="px-3 py-2 text-left font-medium text-gray-600 dark:text-gray-400">Test Finished</th>
+                    <th class="px-3 py-2 text-left font-medium text-gray-600 dark:text-gray-400">TFAs Passed</th>
+                    <th class="px-3 py-2 text-left font-medium text-gray-600 dark:text-gray-400">TFAs Triaged</th>
+                    <th class="px-3 py-2 text-left font-medium text-gray-600 dark:text-gray-400">Blockers Resolved</th>
+                  </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-100 dark:divide-gray-700">
+                  <tr v-for="phase in releaseCycleMetrics.phases" :key="phase.epic_key || phase.phase" class="hover:bg-gray-50 dark:hover:bg-gray-750">
+                    <td class="px-3 py-2 font-medium text-gray-800 dark:text-gray-200">{{ phase.phase }}</td>
+                    <td class="px-3 py-2 text-gray-500 dark:text-gray-400">{{ formatMetricDate(phase.build_ready_date) }}</td>
+                    <td class="px-3 py-2" :class="daysClass(phase.days_to_test_started, 3, 7)">{{ formatMetricDate(phase.test_started_date) }} {{ daysLabel(phase.days_to_test_started) }}</td>
+                    <td class="px-3 py-2" :class="daysClass(phase.days_to_test_finished, 8, 15)">{{ formatMetricDate(phase.test_finished_date) }} {{ daysLabel(phase.days_to_test_finished) }}</td>
+                    <td class="px-3 py-2" :class="daysClass(phase.days_to_tfas_passed, 3, 7)">{{ formatMetricDate(phase.tfas_passed_date) }} {{ daysLabel(phase.days_to_tfas_passed) }}</td>
+                    <td class="px-3 py-2" :class="daysClass(phase.days_to_tfas_triaged, 5, 10)">{{ formatMetricDate(phase.tfas_triaged_date) }} {{ daysLabel(phase.days_to_tfas_triaged) }}</td>
+                    <td class="px-3 py-2" :class="daysClass(phase.days_to_blockers_resolved, 5, 12)">{{ formatMetricDate(phase.blockers_resolved_date) }} {{ daysLabel(phase.days_to_blockers_resolved) }}</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+
     </div>
 
     <!-- Select Release Modal -->
@@ -545,6 +611,9 @@ import { useReleaseReadiness } from './composables/useReleaseReadiness'
 import { useReleaseSelector, parseReleaseId } from '../composables/useReleaseSelector.js'
 
 const moduleNav = inject('moduleNav')
+const props = defineProps({
+  initialVersion: { type: String, default: null }
+})
 
 // ─── Pre-release CVE summary ─────────────────────────────────────────────────
 const preReleaseCveCount = ref(null)
@@ -578,6 +647,7 @@ const {
 } = useReleaseReadiness()
 
 const {
+  releases,
   modalOpen,
   selection,
   draft,
@@ -589,6 +659,7 @@ const {
   canApply,
   fetchRegistry,
   restoreSelection,
+  applySelection,
   openModal,
   cancelModal,
   applyModal,
@@ -642,7 +713,12 @@ const expandedPhases = reactive({})
 
 onMounted(async () => {
   await fetchRegistry()
-  restoreSelection()
+  const initial = parseReleaseId(props.initialVersion || '')
+  if (initial && releases.value.some(r => r.id === props.initialVersion)) {
+    applySelection(initial.version, new Set([initial.family]), new Set([initial.phase]))
+  } else {
+    restoreSelection()
+  }
   loadPreReleaseCveSummary()
 })
 
@@ -677,7 +753,7 @@ async function loadSelectedPhases() {
 
     if (data.value?.component_readiness) {
       selectedComponents.value = [...(data.value.component_readiness.all_components || [])]
-      selectedPhases.value = []
+      selectedPhases.value = [...availablePhases.value]
     }
   } catch (err) {
     error.value = err.message || 'Failed to load release readiness metrics'
@@ -1032,5 +1108,33 @@ function phaseBarColor(rag) {
 
 function phasePct(phase) {
   return phase.total > 0 ? Math.round((phase.done / phase.total) * 100) : 0
+}
+// --- Release Cycle Metrics ---
+
+const releaseCycleMetrics = computed(() => data.value?.release_cycle_metrics || null)
+
+function formatMetricDate(dateStr) {
+  if (!dateStr) return '—'
+  // Handle both YYYY-MM-DD and ISO timestamp formats
+  const dateOnly = dateStr.includes('T') ? dateStr.split('T')[0] : dateStr
+  const d = new Date(dateOnly + 'T00:00:00')
+  if (isNaN(d.getTime())) return '—'
+  return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+}
+
+function daysLabel(n) {
+  if (n === null || n === undefined || isNaN(n)) return '—'
+  if (n < 0) return '—' // Negative days are invalid for "days since" metrics
+  if (n === 0) return '0 days'
+  return `${n} day${n === 1 ? '' : 's'}`
+}
+
+function daysClass(n, warnAt, alertAt) {
+  if (n === null || n === undefined || isNaN(n) || n < 0) return 'text-gray-400 dark:text-gray-500'
+  // Validate threshold order: alertAt should be >= warnAt
+  const effectiveAlertAt = Math.max(warnAt, alertAt)
+  if (n >= effectiveAlertAt) return 'text-red-600 dark:text-red-400 font-semibold'
+  if (n >= warnAt) return 'text-amber-600 dark:text-amber-400 font-semibold'
+  return 'text-green-600 dark:text-green-400 font-semibold'
 }
 </script>
