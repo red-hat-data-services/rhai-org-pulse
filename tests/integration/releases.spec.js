@@ -2538,6 +2538,41 @@ test.describe('Releases AI Planner tab @releases', () => {
 
     expect(unexpectedDemoResourceErrors(page)).toHaveLength(0);
   });
+
+  test('AI Planner receives live data from API via iframe', async ({ page }) => {
+    // Verify that AI Planner API data is sent to iframe
+    const apiDataReceived = [];
+    page.on('request', request => {
+      if (request.url().includes('/api/modules/releases/planning/ai-planner')) {
+        apiDataReceived.push({ url: request.url() });
+      }
+    });
+
+    const snapshotResponse = await page.request.get('/api/modules/releases/planning/ai-planner');
+    expect(snapshotResponse.ok()).toBe(true);
+    const snapshot = await snapshotResponse.json();
+    const liveFeatureKey = snapshot.features[0]?.Key;
+    expect(liveFeatureKey).toBeTruthy();
+
+    await page.goto('/#/releases/plan?tab=ai-planner');
+    await page.waitForLoadState('networkidle');
+    await page.waitForTimeout(DEFAULT_PAGE_WAIT_TIME);
+
+    // API should have been called to fetch live data
+    expect(apiDataReceived.length).toBeGreaterThan(0);
+
+    // Iframe should be visible and loaded
+    const iframe = page.locator('iframe[title="AI-First Release Planner"]');
+    await expect(iframe).toBeVisible();
+
+    // Data from API should populate the iframe (features visible)
+    const plannerFrame = page.frameLocator('iframe[title="AI-First Release Planner"]');
+    const tableRows = await plannerFrame.locator('#pm-tbl-wrap tbody tr').count();
+    expect(tableRows).toBeGreaterThan(0);
+    await expect(plannerFrame.locator('#pm-tbl-wrap tbody tr').filter({ hasText: liveFeatureKey })).toBeVisible();
+
+    expect(unexpectedDemoResourceErrors(page)).toHaveLength(0);
+  });
 });
 
 /**
