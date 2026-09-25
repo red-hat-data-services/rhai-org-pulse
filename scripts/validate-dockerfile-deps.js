@@ -35,13 +35,18 @@ const aiEngDeps = new Set(
 function parseDockerfileDeps(filepath) {
   const content = fs.readFileSync(filepath, 'utf8');
   const deps = new Set();
+  const packageName = (spec) => {
+    if (!spec.startsWith('@')) return spec.split('@')[0];
+    const versionSeparator = spec.indexOf('@', 1);
+    return versionSeparator === -1 ? spec : spec.slice(0, versionSeparator);
+  };
   // Match: RUN npm install --no-save pkg1 pkg2 ...
   // Handles line continuations with backslash
   const joined = content.replace(/\\\n/g, ' ');
   const match = joined.match(/npm install --no-save\s+(.+)/);
   if (match) {
     match[1].trim().split(/\s+/).forEach(pkg => {
-      if (pkg && !pkg.startsWith('-')) deps.add(pkg);
+      if (pkg && !pkg.startsWith('-')) deps.add(packageName(pkg));
     });
   }
   return deps;

@@ -66,6 +66,15 @@ test.describe('Workflow Validation module @workflow-validation', () => {
     })
   })
 
+  test('loads the real backend router in the production image', async ({ request }) => {
+    const response = await request.get('/api/modules/workflow-validation/status')
+
+    // OpenSearch is intentionally not configured in the integration image, so
+    // the module may report that its dependency is unavailable. A 404 means
+    // the module loader failed before it could mount the router.
+    expect([200, 502, 503]).toContain(response.status())
+  })
+
   test('loads live-schema execution data through the Org Pulse backend', async ({ page }) => {
     const requests = []
     page.on('request', (request) => {
