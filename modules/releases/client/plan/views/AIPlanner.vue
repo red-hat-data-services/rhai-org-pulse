@@ -68,11 +68,11 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <div class="h-full w-full bg-gray-50 dark:bg-gray-900">
+  <div class="w-full h-screen flex flex-col bg-gray-50 dark:bg-gray-900">
     <iframe
       ref="iframeRef"
       :src="DEMO_URL"
-      class="w-full h-full border-none rounded"
+      class="flex-1 w-full border-none"
       title="AI-First Release Planner"
       sandbox="allow-same-origin allow-scripts allow-popups allow-forms"
     />
