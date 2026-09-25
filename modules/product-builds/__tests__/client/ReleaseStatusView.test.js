@@ -55,7 +55,7 @@ describe('ReleaseStatusView', () => {
     expect(wrapper.get('[data-release-action="create-epic"]').text()).toContain('Create release epic')
     expect(wrapper.get('[data-release-action="create-epic"]').element.disabled).toBe(false)
     expect(wrapper.get('[data-release-action="trigger-release"]').text()).toContain('Trigger release')
-    expect(wrapper.get('[data-release-action="trigger-release"]').element.disabled).toBe(true)
+    expect(wrapper.get('[data-release-action="trigger-release"]').element.disabled).toBe(false)
     expect(wrapper.text()).toContain('AIPCC-100')
     expect(wrapper.text()).toContain('AIPCC-101')
     expect(wrapper.text()).not.toContain('release-automation')
@@ -124,16 +124,101 @@ describe('ReleaseStatusView', () => {
     expect(wrapper.find('[data-release-form="create-epic"]').exists()).toBe(false)
   })
 
-  it('keeps the trigger release action disabled until it is implemented', async () => {
+  it('opens the trigger release form and loads its options', async () => {
     apiRequest.mockResolvedValue(response([]))
 
     const wrapper = mount(ReleaseStatusView)
     await flushPromises()
-    expect(wrapper.get('[data-release-action="trigger-release"]').attributes('aria-disabled')).toBe('true')
     await wrapper.get('[data-release-action="trigger-release"]').trigger('click')
-    expect(wrapper.find('[data-release-form="trigger-release"]').exists()).toBe(false)
+    await flushPromises()
+    expect(apiRequest).toHaveBeenCalledWith('/modules/product-builds/release-trigger/options')
+    expect(wrapper.find('[data-release-form="trigger-release"]').exists()).toBe(true)
     expect(wrapper.get('[data-release-action="create-epic"]')).toBeTruthy()
     expect(wrapper.get('[data-release-action="trigger-release"]')).toBeTruthy()
+  })
+
+  it('selects a readiness card and submits PMC fields with read-only card metadata', async () => {
+    const options = {
+      sha: 'a'.repeat(40),
+      cards: [{
+        key: 'AIPCC-101',
+        summary: 'Release rhaiis 3.6.0 (prod): cuda',
+        state: 'planned',
+        target: 'prod',
+        parent: {
+          key: 'AIPCC-100', application: 'rhaiis', product: 'rhaiis', version: '3.6.0',
+          branch: '3.6', release_type: 'GA', advisory_type: 'RHSA',
+        },
+      }],
+    }
+    apiRequest.mockImplementation((path, request) => {
+      if (path === '/modules/product-builds/release-status') return Promise.resolve(response([]))
+      if (path === '/modules/product-builds/release-trigger/options') return Promise.resolve(options)
+      if (request?.method === 'POST') return Promise.resolve({ tasks: [{ key: 'AIPCC-101', operation: 'updated', state: 'ready' }] })
+      return Promise.resolve(response([]))
+    })
+
+    const wrapper = mount(ReleaseStatusView)
+    await flushPromises()
+    await wrapper.get('[data-release-action="trigger-release"]').trigger('click')
+    await flushPromises()
+
+    const form = wrapper.get('[data-release-form="trigger-release"]')
+    expect(form.text()).toContain('Application: rhaiis')
+    expect(form.text()).toContain('Target: prod')
+    const cveList = form.get('textarea[placeholder="CVE-YYYY-NNNN (one per line)"]')
+    expect(cveList.attributes('required')).toBeDefined()
+    const skippedComponents = form.get('textarea[placeholder="cuda, rocm, model-opt"]')
+    await skippedComponents.setValue('rocm')
+    expect(form.text()).toContain('Put accelerator-specific CVE mapping here.')
+    expect(form.text()).toContain('Use Ready components for accelerators ready to be released.')
+    expect(form.text()).toContain('If an accelerator is not ready but should be released later, leave it out of both fields; it will remain planned.')
+    expect(form.text()).not.toContain('accelerator-to-CVE mapping')
+    await form.get('textarea[placeholder="all or cuda, rocm, model-opt"]').setValue('all')
+    await form.get('textarea[placeholder="Additional context or special instructions for the AI agent"]').setValue('Only CUDA is affected.')
+    await cveList.setValue('CVE-2026-1234')
+    await form.get('textarea[placeholder="v3.5.0"]').setValue('3.6.0')
+    await form.trigger('submit')
+    await flushPromises()
+
+    const post = apiRequest.mock.calls.find(([path, request]) => path === '/modules/product-builds/release-trigger' && request?.method === 'POST')
+    const body = JSON.parse(post[1].body)
+    expect(body.card_key).toBe('AIPCC-101')
+    expect(body.target).toBe('prod')
+    expect(body.components).toBe('all')
+    expect(body.skipped_components).toBe('rocm')
+    expect(body.user_prompt).toBe('Only CUDA is affected.')
+    expect(body.cve_list).toBe('CVE-2026-1234')
+    expect(form.text()).toContain('Updated release readiness:')
+  })
+
+  it('hides the CVE list for non-RHSA cards', async () => {
+    const options = {
+      sha: 'a'.repeat(40),
+      cards: [{
+        key: 'AIPCC-102',
+        summary: 'Release rhaiis 3.6.0 (prod): cuda',
+        state: 'planned',
+        target: 'prod',
+        parent: {
+          key: 'AIPCC-103', application: 'rhaiis', product: 'rhaiis', version: '3.6.0',
+          branch: '3.6', release_type: 'GA', advisory_type: 'RHEA',
+        },
+      }],
+    }
+    apiRequest.mockImplementation((path) => {
+      if (path === '/modules/product-builds/release-trigger/options') return Promise.resolve(options)
+      return Promise.resolve(response([]))
+    })
+
+    const wrapper = mount(ReleaseStatusView)
+    await flushPromises()
+    await wrapper.get('[data-release-action="trigger-release"]').trigger('click')
+    await flushPromises()
+
+    const form = wrapper.get('[data-release-form="trigger-release"]')
+    expect(form.find('textarea[placeholder="CVE-YYYY-NNNN (one per line)"]').exists()).toBe(false)
+    expect(form.text()).not.toContain('CVE list')
   })
 
   it('uses lifecycle labels before Jira status and maps each lifecycle color', async () => {
