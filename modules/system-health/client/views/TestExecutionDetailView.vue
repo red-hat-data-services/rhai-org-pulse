@@ -387,19 +387,16 @@ import {
   Chart as ChartJS,
   CategoryScale,
   LinearScale,
-  PointElement,
-  LineElement,
   BarElement,
   ArcElement,
   Title,
   Tooltip,
-  Legend,
-  Filler
+  Legend
 } from 'chart.js'
 import { fetchComponentDetail } from '../composables/useTestDashboard'
 import TrendChart from '../components/TrendChart.vue'
 
-ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, BarElement, ArcElement, Title, Tooltip, Legend, Filler)
+ChartJS.register(CategoryScale, LinearScale, BarElement, ArcElement, Title, Tooltip, Legend)
 
 const JIRA_BASE = 'https://issues.redhat.com/issues/?jql='
 // Test-failed/-skipped issues span both Jira projects (RHOAIENG + RHAI).
@@ -676,8 +673,7 @@ const jql = computed(() => {
     infraEnv: buildTfaGroupJql(['tfa-infra-issue', 'tfa-env-setup']),
     testDefects: buildTfaGroupJql(['tfa-automation-bug', 'tfa-false-positive', 'tfa-duplicate', 'tfa-wrong-assignment']),
     knownIssues: buildTfaGroupJql(['tfa-known-issue']),
-    unclassified: buildUnclassifiedJql(),
-    skipped: buildJql('test-skipped', null)
+    unclassified: buildUnclassifiedJql()
   }
 })
 
@@ -859,7 +855,7 @@ function buildOpenFailedJql() {
   const base = buildJql('test-failed')
   if (!base) return null
   const decoded = decodeURIComponent(base.slice(JIRA_BASE.length))
-  return JIRA_BASE + encodeURIComponent(`${decoded} AND status NOT IN (Closed, Resolved)`)
+  return JIRA_BASE + encodeURIComponent(`${decoded} AND status NOT IN (Closed, Resolved, Done)`)
 }
 
 // Jira link for a Classification Bridge group (one or more TFA labels, OR'd),
@@ -1015,12 +1011,6 @@ a.tfa-tile:hover { border-color: #3a6ea5; }
 .qsr-tree-count { font-size: 14px; font-weight: 700; min-width: 50px; text-align: right; text-decoration: none; }
 a.qsr-tree-count { text-decoration: underline; text-underline-offset: 2px; }
 .qsr-tree-pct { font-size: 10px; color: #6b8299; min-width: 40px; text-align: right; }
-
-.qsr-skipped { margin-top: 16px; padding-top: 16px; border-top: 1px solid #1e4976; }
-.qsr-skipped-title { font-size: 12px; color: #ffa502; font-weight: 600; margin-bottom: 8px; }
-.qsr-skipped-title a { color: #a29bfe; text-decoration: none; }
-.qsr-skipped-row { display: flex; align-items: center; gap: 8px; font-size: 11px; color: #8899aa; padding: 4px 0; }
-.qsr-skipped-row .count { min-width: 40px; font-weight: 600; }
 
 .qsr-summary { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; margin-top: 20px; padding-top: 20px; border-top: 1px solid #1e4976; }
 .qsr-summary-item { text-align: center; padding: 12px; background: #0a1929; border-radius: 8px; }
