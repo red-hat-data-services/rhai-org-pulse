@@ -51,7 +51,7 @@
     "@tailwindcss/typography": "^0.5.20",
     "@vitejs/plugin-vue": "^6.0.9",
     "@vitest/coverage-v8": "^4.1.11",
-    "@vue/test-utils": "^2.5.0",
+    "@vue/test-utils": "^2.5.1",
     "concurrently": "^10.0.5",
     "dotenv": "^17.4.2",
     "eslint": "^10.11.0",
