@@ -99,6 +99,7 @@
             <div v-if="hasTfa" class="qsr-meta">
               <div>Based on {{ tfa.total_failed.toLocaleString() }} Jira issues</div>
               <div>{{ tfa.classified.toLocaleString() }} classified · {{ tfa.unclassified.toLocaleString() }} pending triage</div>
+              <a v-if="jql.openFailed" :href="jql.openFailed" target="_blank" class="open-failed-btn">🔍 Open Failed Jiras ↗</a>
             </div>
           </div>
 
@@ -111,6 +112,38 @@
           </div>
 
           <template v-else>
+            <!-- TFA header: triage progress bar + headline tiles -->
+            <div class="tfa-hdr">
+              <div class="tfa-hdr-title">Test Failure Analysis (TFA) — {{ filterLabel }}</div>
+              <div class="tfa-progress">
+                <div class="tfa-progress-fill" :class="{ 'fully-triaged': tfa.unclassified === 0 }" :style="{ width: qsr.triagePct + '%' }"></div>
+                <span class="tfa-progress-label">{{ qsr.triagePct }}% Triaged</span>
+                <span class="tfa-progress-count" :class="{ 'c-quality': tfa.unclassified === 0 }">{{ tfa.classified }} / {{ tfa.total_failed }}</span>
+              </div>
+              <div class="tfa-tiles">
+                <component :is="jql.all ? 'a' : 'div'" :href="jql.all || undefined" :target="jql.all ? '_blank' : undefined" class="tfa-tile">
+                  <div class="tfa-tile-label">Total Failed</div>
+                  <div class="tfa-tile-value c-failed">{{ tfa.total_failed }} <span v-if="jql.all" class="tfa-tile-arrow">↗</span></div>
+                </component>
+                <component :is="jql.openFailed ? 'a' : 'div'" :href="jql.openFailed || undefined" :target="jql.openFailed ? '_blank' : undefined" class="tfa-tile">
+                  <div class="tfa-tile-label">Open Failed</div>
+                  <div class="tfa-tile-value c-failed">{{ openFailedCount }} <span v-if="jql.openFailed" class="tfa-tile-arrow">↗</span></div>
+                </component>
+                <component :is="jql.classified ? 'a' : 'div'" :href="jql.classified || undefined" :target="jql.classified ? '_blank' : undefined" class="tfa-tile">
+                  <div class="tfa-tile-label">Classified</div>
+                  <div class="tfa-tile-value c-quality">{{ tfa.classified }} <span v-if="jql.classified" class="tfa-tile-arrow">↗</span></div>
+                </component>
+                <component :is="jql.unclassified ? 'a' : 'div'" :href="jql.unclassified || undefined" :target="jql.unclassified ? '_blank' : undefined" class="tfa-tile">
+                  <div class="tfa-tile-label">Unclassified</div>
+                  <div class="tfa-tile-value c-warn2">{{ tfa.unclassified }} <span v-if="jql.unclassified" class="tfa-tile-arrow">↗</span></div>
+                </component>
+                <div class="tfa-tile">
+                  <div class="tfa-tile-label">Triage Rate</div>
+                  <div class="tfa-tile-value c-triage">{{ qsr.triagePct }}%</div>
+                </div>
+              </div>
+            </div>
+
             <!-- Three headline metrics -->
             <div class="qsr-metrics">
               <div class="qsr-card exec">
@@ -179,19 +212,22 @@
                 <div class="qsr-tree-item">
                   <span class="qsr-tree-dot" style="background:#3498db"></span>
                   <span class="qsr-tree-label"><strong>Infrastructure / Environment</strong> — CI instability, env setup issues</span>
-                  <span class="qsr-tree-count" style="color:#3498db">{{ qsr.infraEnvTotal }}</span>
+                  <a v-if="jql.infraEnv" :href="jql.infraEnv" target="_blank" class="qsr-tree-count" style="color:#3498db">{{ qsr.infraEnvTotal }}</a>
+                  <span v-else class="qsr-tree-count" style="color:#3498db">{{ qsr.infraEnvTotal }}</span>
                   <span class="qsr-tree-pct">{{ pctOf(qsr.infraEnvTotal) }}%</span>
                 </div>
                 <div class="qsr-tree-item">
                   <span class="qsr-tree-dot" style="background:#ffa502"></span>
                   <span class="qsr-tree-label"><strong>Test Automation Defects</strong> — Flaky tests, test code bugs, false positives</span>
-                  <span class="qsr-tree-count" style="color:#ffa502">{{ qsr.testDefects }}</span>
+                  <a v-if="jql.testDefects" :href="jql.testDefects" target="_blank" class="qsr-tree-count" style="color:#ffa502">{{ qsr.testDefects }}</a>
+                  <span v-else class="qsr-tree-count" style="color:#ffa502">{{ qsr.testDefects }}</span>
                   <span class="qsr-tree-pct">{{ pctOf(qsr.testDefects) }}%</span>
                 </div>
                 <div class="qsr-tree-item">
                   <span class="qsr-tree-dot" style="background:#fdcb6e"></span>
                   <span class="qsr-tree-label"><strong>Known Issues</strong> — Matches already tracked and accepted issues</span>
-                  <span class="qsr-tree-count" style="color:#fdcb6e">{{ qsr.knownIssues }}</span>
+                  <a v-if="jql.knownIssues" :href="jql.knownIssues" target="_blank" class="qsr-tree-count" style="color:#fdcb6e">{{ qsr.knownIssues }}</a>
+                  <span v-else class="qsr-tree-count" style="color:#fdcb6e">{{ qsr.knownIssues }}</span>
                   <span class="qsr-tree-pct">{{ pctOf(qsr.knownIssues) }}%</span>
                 </div>
                 <div v-if="tfa.unclassified > 0" class="qsr-tree-item pending">
@@ -203,15 +239,6 @@
                 </div>
               </div>
 
-              <div class="qsr-skipped">
-                <div class="qsr-skipped-title">
-                  Skipped Tests:
-                  <a v-if="jql.skipped" :href="jql.skipped" target="_blank">{{ overall.skipped.toLocaleString() }} ↗</a>
-                  <span v-else>{{ overall.skipped.toLocaleString() }}</span>
-                </div>
-                <div class="qsr-skipped-row"><span class="count c-quality">✓ {{ qsr.approvedSkips }}</span><span>Approved skips — Known issues, intentionally disabled</span></div>
-                <div class="qsr-skipped-row"><span class="count c-failed">? {{ qsr.unapprovedSkips }}</span><span>Unapproved skips — Need investigation (estimated)</span></div>
-              </div>
             </div>
 
             <!-- Leadership summary -->
@@ -267,7 +294,7 @@
 
           <div class="panel">
             <h3>Jira Status Distribution</h3>
-            <p class="panel-sub">Workflow status of test-failed issues (from last data sync).</p>
+            <p class="panel-sub">Workflow status of test-failed issues. Click a bar or a status below to open the matching Jira query.</p>
             <div v-if="hasStatus" class="chart-container">
               <Bar :data="statusChart" :options="statusChartOptions" />
             </div>
@@ -275,6 +302,20 @@
               <div class="chart-empty-icon">📈</div>
               <div class="chart-empty-title">No Status Data</div>
               <div class="chart-empty-sub">Jira status was not captured for these issues.</div>
+            </div>
+            <div v-if="hasStatus" class="tfa-legend">
+              <component
+                :is="row.url ? 'a' : 'div'"
+                v-for="row in statusLinks"
+                :key="row.status"
+                :href="row.url || undefined"
+                :target="row.url ? '_blank' : undefined"
+                class="tfa-legend-item"
+              >
+                <span class="dot" :style="{ background: row.color }"></span>
+                <strong>{{ row.status }}</strong> ({{ row.count }})
+                <span v-if="row.url" class="legend-arrow">↗</span>
+              </component>
             </div>
           </div>
         </div>
@@ -299,25 +340,36 @@
                   </td>
                   <td v-for="d in gateDates" :key="`${row.gate}-${d}`">
                     <span v-if="!row.days[d] || !row.days[d].total" class="gc-na">–</span>
-                    <span v-else class="gate-cell" :class="`gc-${pctColor(passPct(row.days[d].passed, row.days[d].total))}`">
+                    <span
+                      v-else
+                      class="gate-cell"
+                      :class="`gc-${pctColor(passPct(row.days[d].passed, row.days[d].total))}`"
+                      @mouseenter="activeGateCell = `${row.gate}-${d}`"
+                      @mouseleave="activeGateCell = null"
+                    >
                       <span class="gc-pct" :class="`gc-pct-${pctColor(passPct(row.days[d].passed, row.days[d].total))}`">
                         {{ passPct(row.days[d].passed, row.days[d].total) }}%
                       </span>
                       <span class="gc-runs">{{ row.days[d].passed }}P {{ row.days[d].failed }}F</span>
+
+                      <!-- Hover dropdown: per-run Jenkins test-result links for this gate/day -->
+                      <span v-if="activeGateCell === `${row.gate}-${d}` && (row.days[d].executions || []).length" class="gc-dd">
+                        <span class="gc-dd-title">{{ row.gate }} · {{ friendlyDate(d) }} · {{ row.days[d].executions.length }} run(s)</span>
+                        <span v-for="(ex, i) in row.days[d].executions" :key="i" class="gc-dd-run">
+                          <a v-if="ex.jenkins_url" :href="testReportUrl(ex.jenkins_url)" target="_blank" class="gc-dd-link">{{ jenkinsLabel(ex.jenkins_url) }} · test report ↗</a>
+                          <span v-else class="gc-dd-link">Run {{ i + 1 }}</span>
+                          <span class="gc-dd-nums">
+                            <span class="cp">{{ ex.passed || 0 }}P</span>
+                            <span class="cf">{{ ex.failed || 0 }}F</span>
+                            <span class="cs">{{ ex.skipped || 0 }}S</span>
+                          </span>
+                        </span>
+                      </span>
                     </span>
                   </td>
                 </tr>
               </tbody>
             </table>
-          </div>
-        </div>
-
-        <!-- Daily execution trend -->
-        <div v-if="dailyChart.labels.length" class="panel">
-          <h3>Daily Execution Trend</h3>
-          <p class="panel-sub">Passed / failed / skipped test counts per day for {{ componentName }}.</p>
-          <div class="chart-container">
-            <Line :data="dailyChart" :options="dailyChartOptions" />
           </div>
         </div>
 
@@ -330,26 +382,25 @@
 
 <script setup>
 import { ref, computed, inject, watch } from 'vue'
-import { Line, Doughnut, Bar } from 'vue-chartjs'
+import { Doughnut, Bar } from 'vue-chartjs'
 import {
   Chart as ChartJS,
   CategoryScale,
   LinearScale,
-  PointElement,
-  LineElement,
   BarElement,
   ArcElement,
   Title,
   Tooltip,
-  Legend,
-  Filler
+  Legend
 } from 'chart.js'
 import { fetchComponentDetail } from '../composables/useTestDashboard'
 import TrendChart from '../components/TrendChart.vue'
 
-ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, BarElement, ArcElement, Title, Tooltip, Legend, Filler)
+ChartJS.register(CategoryScale, LinearScale, BarElement, ArcElement, Title, Tooltip, Legend)
 
 const JIRA_BASE = 'https://issues.redhat.com/issues/?jql='
+// Test-failed/-skipped issues span both Jira projects (RHOAIENG + RHAI).
+const PROJECT_CLAUSE = 'project IN (RHOAIENG, RHAI)'
 
 // TFA label → display name, color, description (mirrors reference component.html)
 const TFA_NAMES = {
@@ -395,6 +446,7 @@ const nav = inject('moduleNav', null)
 const loading = ref(false)
 const error = ref(null)
 const detail = ref(null)
+const activeGateCell = ref(null)
 const heatmapEntry = ref(null)
 const jiraConfig = ref(null)
 
@@ -517,12 +569,34 @@ const gateRows = computed(() => {
       if (!dateInRange(date)) return
       const p = d.passed || 0, f = d.failed || 0, s = d.skipped || 0
       const t = d.total || (p + f + s)
-      normDays[date] = { passed: p, failed: f, skipped: s, total: t }
+      // Carry the per-run executions (each has jenkins_url) so the gate cell can
+      // link to the component-specific Jenkins test result.
+      const executions = Array.isArray(d.executions) ? d.executions : []
+      normDays[date] = { passed: p, failed: f, skipped: s, total: t, executions }
       passed += p; failed += f; skipped += s; total += t
     })
     return { gate, days: normDays, passed, failed, skipped, total }
   }).filter((r) => r.total > 0)
 })
+
+// Shorten a Jenkins URL into a readable run label for the dropdown.
+function jenkinsLabel(url) {
+  if (!url) return 'Run'
+  return url
+    .replace('https://jenkins-csb-rhods-opendatascience.dno.corp.redhat.com/job/', '')
+    .replace(/\/$/, '')
+    .replace(/\/job\//g, '/')
+}
+
+// Deep-link a Jenkins build URL to its test-results page (…/testReport/) rather
+// than the build root, so the link lands on the run's test report. Note: a
+// single Jenkins run covers multiple components, so this is the whole run's
+// report — component-specific evidence is the Jira "Open Failed Jiras" link.
+function testReportUrl(url) {
+  if (!url) return url
+  const base = url.endsWith('/') ? url : url + '/'
+  return `${base}testReport/`
+}
 
 const gateDates = computed(() => {
   const set = new Set()
@@ -530,31 +604,6 @@ const gateDates = computed(() => {
   return Array.from(set).sort((a, b) => b.localeCompare(a))
 })
 
-// ── Daily execution trend (date-filtered) ──
-const dailyChart = computed(() => {
-  const daily = ((detail.value && detail.value.daily) || [])
-    .filter((d) => (d.total || 0) > 0 && dateInRange(d.date))
-    .slice()
-    .sort((a, b) => a.date.localeCompare(b.date))
-  return {
-    labels: daily.map((d) => friendlyDate(d.date)),
-    datasets: [
-      { label: 'Passed', data: daily.map((d) => d.passed || 0), borderColor: '#2ed573', backgroundColor: '#2ed57322', tension: 0.3, fill: false, pointRadius: 2, borderWidth: 2 },
-      { label: 'Failed', data: daily.map((d) => d.failed || 0), borderColor: '#ff4757', backgroundColor: '#ff475722', tension: 0.3, fill: false, pointRadius: 2, borderWidth: 2 },
-      { label: 'Skipped', data: daily.map((d) => d.skipped || 0), borderColor: '#ffa502', backgroundColor: '#ffa50222', tension: 0.3, fill: false, pointRadius: 2, borderWidth: 2 }
-    ]
-  }
-})
-
-const dailyChartOptions = {
-  responsive: true,
-  maintainAspectRatio: false,
-  plugins: { legend: { position: 'bottom', labels: { color: '#8899aa', usePointStyle: true, pointStyle: 'rect', padding: 14, font: { size: 11 } } } },
-  scales: {
-    x: { ticks: { color: '#6b8299', font: { size: 10 }, maxRotation: 45 }, grid: { color: 'rgba(30,73,118,.2)' } },
-    y: { ticks: { color: '#6b8299', font: { size: 10 } }, grid: { color: 'rgba(30,73,118,.3)' }, beginAtZero: true }
-  }
-}
 
 // ── TFA aggregation from jira_config.tfa[vr][component], version/release-filtered ──
 const tfa = computed(() => {
@@ -578,6 +627,16 @@ const tfa = computed(() => {
 
 const hasTfa = computed(() => tfa.value.total_failed > 0)
 
+// Open failed count = test-failed issues whose Jira status is NOT a
+// closed/resolved state, derived from the pre-computed status breakdown so it
+// matches the "Open Failed Jiras" JQL (status NOT IN (Closed, Resolved)).
+const CLOSED_STATUSES = ['Closed', 'Resolved', 'Done']
+const openFailedCount = computed(() =>
+  Object.entries(tfa.value.status || {})
+    .filter(([s]) => !CLOSED_STATUSES.includes(s))
+    .reduce((sum, [, v]) => sum + v, 0)
+)
+
 const qsr = computed(() => {
   const o = overall.value
   const t = tfa.value
@@ -585,8 +644,6 @@ const qsr = computed(() => {
   const infraEnvTotal = (t.tfa['tfa-infra-issue'] || 0) + (t.tfa['tfa-env-setup'] || 0)
   const testDefects = (t.tfa['tfa-automation-bug'] || 0) + (t.tfa['tfa-false-positive'] || 0) + (t.tfa['tfa-duplicate'] || 0) + (t.tfa['tfa-wrong-assignment'] || 0)
   const knownIssues = t.tfa['tfa-known-issue'] || 0
-  const approvedSkips = knownIssues + (t.tfa['tfa-duplicate'] || 0)
-  const unapprovedSkips = Math.max(0, o.skipped - approvedSkips)
 
   const rawPassRate = (o.passed + o.failed) > 0 ? round1(o.passed / (o.passed + o.failed) * 100) : 0
   const triageComplete = t.unclassified === 0
@@ -597,7 +654,7 @@ const qsr = computed(() => {
   const validatedCoverage = o.total > 0 ? round1((o.passed + t.classified) / o.total * 100) : 0
 
   return {
-    productBugs, infraEnvTotal, testDefects, knownIssues, approvedSkips, unapprovedSkips,
+    productBugs, infraEnvTotal, testDefects, knownIssues,
     rawPassRate, triageComplete, bestCaseQuality, worstCaseQuality, triagePct, validatedCoverage
   }
 })
@@ -608,9 +665,15 @@ const jql = computed(() => {
   if (!cfg) return {}
   return {
     all: buildJql('test-failed', null),
+    // "Open Failed Jiras" link — failed tests still open (not Closed/Resolved).
+    openFailed: buildOpenFailedJql(),
+    classified: buildTfaGroupJql(['tfa-product-bug', 'tfa-automation-bug', 'tfa-infra-issue', 'tfa-env-setup', 'tfa-duplicate', 'tfa-known-issue', 'tfa-false-positive', 'tfa-wrong-assignment']),
     productBug: buildTfaJql('tfa-product-bug'),
-    unclassified: buildUnclassifiedJql(),
-    skipped: buildJql('test-skipped', null)
+    // Classification Bridge groups — same label groupings as the qsr computed.
+    infraEnv: buildTfaGroupJql(['tfa-infra-issue', 'tfa-env-setup']),
+    testDefects: buildTfaGroupJql(['tfa-automation-bug', 'tfa-false-positive', 'tfa-duplicate', 'tfa-wrong-assignment']),
+    knownIssues: buildTfaGroupJql(['tfa-known-issue']),
+    unclassified: buildUnclassifiedJql()
   }
 })
 
@@ -683,15 +746,36 @@ const statusChart = computed(() => ({
 const statusChartOptions = {
   responsive: true,
   maintainAspectRatio: false,
+  onClick: (evt, elems) => {
+    if (elems.length > 0) {
+      const [status] = statusEntries.value[elems[0].index]
+      const url = buildStatusJql(status)
+      if (url) window.open(url, '_blank')
+    }
+  },
+  onHover: (evt, elems) => {
+    if (evt?.native?.target) evt.native.target.style.cursor = elems.length ? 'pointer' : 'default'
+  },
   plugins: {
     legend: { display: false },
-    tooltip: { callbacks: { label: (ctx) => `${ctx.label}: ${ctx.raw} issues` } }
+    tooltip: { callbacks: { label: (ctx) => `${ctx.label}: ${ctx.raw} issues — click to open in Jira` } }
   },
   scales: {
     x: { ticks: { color: '#6b8299', font: { size: 10 } }, grid: { color: 'rgba(30,73,118,.2)' } },
     y: { ticks: { color: '#6b8299', font: { size: 10 } }, grid: { color: 'rgba(30,73,118,.3)' }, beginAtZero: true }
   }
 }
+
+// Per-status entries with their Jira query link (for an accessible list of
+// evidence links below the chart, so every status is clickable, not just bars).
+const statusLinks = computed(() =>
+  statusEntries.value.map(([status, count]) => ({
+    status,
+    count,
+    color: STATUS_COLORS[status] || '#6b8299',
+    url: buildStatusJql(status)
+  }))
+)
 
 function matchingVrKeys(keys) {
   const { version, release } = filters.value
@@ -707,15 +791,12 @@ function componentMatches(comp) {
   return c === target || c.includes(target) || target.includes(c)
 }
 
-function resolveTeamCode() {
+function resolveJiraComponent() {
+  // Map the dashboard component name -> exact Jira component name. Fall back to
+  // the component's own name when it isn't in the map.
   const cfg = jiraConfig.value
-  const map = (cfg && cfg.component_team_map) || {}
-  if (map[componentName.value]) return map[componentName.value]
-  const lc = componentName.value.toLowerCase()
-  for (const [k, v] of Object.entries(map)) {
-    if (k.toLowerCase().includes(lc) || lc.includes(k.toLowerCase())) return v
-  }
-  return null
+  const map = (cfg && cfg.component_jira_map) || {}
+  return map[componentName.value] || componentName.value
 }
 
 function matchingReleases() {
@@ -732,13 +813,23 @@ function buildJql(label) {
   const fvs = new Set()
   matching.forEach((r) => { fvs.add(`'${r.rhoai_jira_version}'`); fvs.add(`'${r.fix_version}'`) })
   const fvList = Array.from(fvs).join(', ')
-  const teamCode = resolveTeamCode()
-  const proj = matching[0].project || 'RHOAIENG'
-  let q = `project = ${proj}`
-  if (teamCode) q += ` AND Team = "${teamCode}"`
+  const jiraComponent = resolveJiraComponent()
+  // Scope to both Jira projects (some components, e.g. "AI Testing + Workflow
+  // Validation", live in RHAI rather than RHOAIENG).
+  let q = `${PROJECT_CLAUSE}`
+  if (jiraComponent) q += ` AND component = "${jiraComponent}"`
   q += ` AND (fixVersion IN (${fvList}) OR affectedVersion IN (${fvList}) OR 'Target Version' IN (${fvList}))`
   q += ` AND labels = "${label}"`
   return JIRA_BASE + encodeURIComponent(q)
+}
+
+// Jira query link for a single workflow status in the Status Distribution chart:
+// the failed-tests query for this component/version, narrowed to one status.
+function buildStatusJql(status) {
+  const base = buildJql('test-failed')
+  if (!base || !status) return null
+  const decoded = decodeURIComponent(base.slice(JIRA_BASE.length))
+  return JIRA_BASE + encodeURIComponent(`${decoded} AND status = "${status}"`)
 }
 
 function buildTfaJql(tfaLabel) {
@@ -756,6 +847,25 @@ function buildUnclassifiedJql() {
   const decoded = decodeURIComponent(base.slice(JIRA_BASE.length))
   const notClause = tfaLabels.map((l) => `labels != "${l}"`).join(' AND ')
   return JIRA_BASE + encodeURIComponent(`${decoded} AND ${notClause}`)
+}
+
+// "Open Failed Jiras" link: the component's failed-tests query, restricted to
+// issues that are still open (not Closed/Resolved).
+function buildOpenFailedJql() {
+  const base = buildJql('test-failed')
+  if (!base) return null
+  const decoded = decodeURIComponent(base.slice(JIRA_BASE.length))
+  return JIRA_BASE + encodeURIComponent(`${decoded} AND status NOT IN (Closed, Resolved, Done)`)
+}
+
+// Jira link for a Classification Bridge group (one or more TFA labels, OR'd),
+// intersected with the component's failed-tests query.
+function buildTfaGroupJql(labels) {
+  const base = buildJql('test-failed')
+  if (!base || !labels || !labels.length) return null
+  const decoded = decodeURIComponent(base.slice(JIRA_BASE.length))
+  const inList = labels.map((l) => `"${l}"`).join(', ')
+  return JIRA_BASE + encodeURIComponent(`${decoded} AND labels IN (${inList})`)
 }
 
 // ── helpers ──
@@ -799,8 +909,10 @@ function goBack() {
 
 .container { max-width: 1500px; margin: 0 auto; padding: 24px 32px; }
 
-.back-link { font-size: 13px; margin-bottom: 8px; display: inline-block; color: #5ea7ff; text-decoration: none; }
+.back-link { font-size: 13px; display: inline-block; margin-bottom: 8px; color: #5ea7ff; text-decoration: none; }
 .back-link:hover { text-decoration: underline; }
+.open-failed-btn { display: inline-block; margin-top: 6px; font-size: 12px; font-weight: 600; color: #ff6b7a; text-decoration: none; background: rgba(255,71,87,.12); border: 1px solid rgba(255,71,87,.35); border-radius: 6px; padding: 4px 10px; }
+.open-failed-btn:hover { background: rgba(255,71,87,.2); }
 
 .header-row { display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 16px; margin: 8px 0 12px; }
 .header-left h1 { font-size: 24px; font-weight: 700; color: #fff; margin-bottom: 4px; }
@@ -839,6 +951,22 @@ function goBack() {
 .mc-pct { background: rgba(162, 155, 254, 0.15); border: 1px solid rgba(162, 155, 254, 0.3); }
 
 /* QSR */
+/* TFA header: triage progress + tiles */
+.tfa-hdr { margin-bottom: 20px; }
+.tfa-hdr-title { font-size: 15px; font-weight: 700; color: #fff; margin-bottom: 12px; }
+.tfa-progress { position: relative; height: 26px; background: #0d2137; border: 1px solid #1e4976; border-radius: 6px; overflow: hidden; display: flex; align-items: center; }
+.tfa-progress-fill { position: absolute; left: 0; top: 0; bottom: 0; background: linear-gradient(90deg, #ff4757, #ff6b7a); border-radius: 6px 0 0 6px; }
+.tfa-progress-fill.fully-triaged { background: linear-gradient(90deg, #7bed9f, #a8f0bd); border-radius: 6px; }
+.tfa-progress-label { position: absolute; left: 50%; transform: translateX(-50%); font-size: 12px; font-weight: 700; color: #fff; text-shadow: 0 1px 3px rgba(0,0,0,.6); }
+.tfa-progress-count { position: absolute; right: 10px; font-size: 12px; font-weight: 700; color: #ff6b7a; }
+.tfa-tiles { display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; margin-top: 10px; }
+.tfa-tile { background: #0d2137; border: 1px solid #1e4976; border-radius: 8px; padding: 10px 14px; text-decoration: none; display: block; }
+a.tfa-tile:hover { border-color: #3a6ea5; }
+.tfa-tile-label { font-size: 10px; text-transform: uppercase; letter-spacing: .5px; color: #6b8299; margin-bottom: 4px; }
+.tfa-tile-value { font-size: 20px; font-weight: 700; }
+.tfa-tile-arrow { font-size: 12px; }
+.c-triage { color: #a29bfe; }
+
 .qsr-container { background: linear-gradient(135deg, #0d2137 0%, #132f4c 100%); border: 2px solid #1e4976; border-radius: 12px; padding: 24px; margin-bottom: 24px; }
 .qsr-container.empty { opacity: 0.65; }
 .qsr-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 12px; }
@@ -884,12 +1012,6 @@ function goBack() {
 a.qsr-tree-count { text-decoration: underline; text-underline-offset: 2px; }
 .qsr-tree-pct { font-size: 10px; color: #6b8299; min-width: 40px; text-align: right; }
 
-.qsr-skipped { margin-top: 16px; padding-top: 16px; border-top: 1px solid #1e4976; }
-.qsr-skipped-title { font-size: 12px; color: #ffa502; font-weight: 600; margin-bottom: 8px; }
-.qsr-skipped-title a { color: #a29bfe; text-decoration: none; }
-.qsr-skipped-row { display: flex; align-items: center; gap: 8px; font-size: 11px; color: #8899aa; padding: 4px 0; }
-.qsr-skipped-row .count { min-width: 40px; font-weight: 600; }
-
 .qsr-summary { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; margin-top: 20px; padding-top: 20px; border-top: 1px solid #1e4976; }
 .qsr-summary-item { text-align: center; padding: 12px; background: #0a1929; border-radius: 8px; }
 .qsr-summary-label { font-size: 10px; text-transform: uppercase; color: #6b8299; letter-spacing: 0.5px; margin-bottom: 4px; }
@@ -915,7 +1037,16 @@ table.gate-hm th, table.gate-hm td { padding: 6px 5px; text-align: center; borde
 table.gate-hm th { color: #6b8299; font-weight: 600; }
 table.gate-hm th:first-child, table.gate-hm td:first-child { text-align: left; min-width: 110px; font-weight: 500; }
 .gate-sub { font-size: 10px; color: #6b8299; margin-top: 2px; }
-.gate-cell { display: inline-block; border-radius: 6px; padding: 6px 6px 4px; min-width: 56px; text-align: center; }
+.gate-cell { display: inline-block; border-radius: 6px; padding: 6px 6px 4px; min-width: 56px; text-align: center; position: relative; cursor: pointer; }
+.gc-dd { position: absolute; top: 100%; left: 50%; transform: translateX(-50%); margin-top: 4px; z-index: 50; background: #0a1929; border: 1px solid #1e4976; border-radius: 8px; padding: 8px; min-width: 240px; max-width: 360px; box-shadow: 0 8px 24px rgba(0,0,0,.5); text-align: left; white-space: normal; }
+.gc-dd-title { display: block; font-size: 10px; font-weight: 600; color: #8899aa; margin-bottom: 6px; }
+.gc-dd-run { display: flex; justify-content: space-between; align-items: center; gap: 8px; padding: 3px 0; }
+.gc-dd-link { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 10px; color: #5ea7ff; text-decoration: none; }
+.gc-dd-link:hover { text-decoration: underline; }
+.gc-dd-nums { white-space: nowrap; font-size: 10px; }
+.gc-dd-nums .cp { color: #2ed573; margin-left: 4px; }
+.gc-dd-nums .cf { color: #ff4757; margin-left: 4px; }
+.gc-dd-nums .cs { color: #ffa502; margin-left: 4px; }
 .gc-green { background: rgba(46, 213, 115, 0.15); border: 1px solid rgba(46, 213, 115, 0.3); }
 .gc-amber { background: rgba(255, 165, 2, 0.12); border: 1px solid rgba(255, 165, 2, 0.25); }
 .gc-orange { background: rgba(225, 112, 85, 0.12); border: 1px solid rgba(225, 112, 85, 0.25); }
