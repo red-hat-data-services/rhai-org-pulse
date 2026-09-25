@@ -45,6 +45,12 @@ module.exports = function registerRoutes(router, context) {
   const { storage, requireAdmin, RefreshSkip } = context;
   const { readFromStorage, writeToStorage } = storage;
 
+  if (context.registerScopes) {
+    context.registerScopes([
+      { key: 'product-builds:release', label: 'Product Builds (Release)', description: 'Create and update component readiness release Tasks', category: 'Product Builds' },
+    ]);
+  }
+
   // --- Config routes (admin) ---
 
   /**

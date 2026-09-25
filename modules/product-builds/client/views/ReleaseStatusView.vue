@@ -27,14 +27,110 @@ const createAdvisoryType = ref('RHEA')
 const createFeatureMode = ref('auto')
 const createFeatureKey = ref('')
 const createFeatureSummary = ref('')
-const triggerAction = ref('planned')
-const triggerInputType = ref('image-list')
+const triggerInputType = ref('git-tag')
 const releaseEpicOptions = ref(null)
 const releaseEpicLoading = ref(false)
 const releaseEpicOptionsError = ref(null)
 const releaseEpicOptionsCacheKey = 'product-builds:release-epic-options:v2'
 const releaseEpicOptionsCacheTtl = 300000
 const releaseEpicState = ref({ loading: false, error: null, duplicates: [], features: [], result: null, createdKeys: [] })
+const triggerOptions = ref(null)
+const triggerOptionsLoading = ref(false)
+const triggerOptionsError = ref(null)
+const triggerCardKey = ref('')
+const triggerTarget = ref('')
+const triggerComponents = ref('')
+const triggerSkippedComponents = ref('')
+const triggerCveList = ref('')
+const triggerUserPrompt = ref('')
+const triggerInputValue = ref('')
+const triggerDecision = ref(null)
+const triggerState = ref({ loading: false, error: null, result: null, decision: null, createdKeys: [] })
+
+function selectedTriggerCard() {
+  return triggerOptions.value?.cards?.find(card => card.key === triggerCardKey.value) || null
+}
+
+function resetTriggerForm(card = selectedTriggerCard()) {
+  triggerComponents.value = card?.pipeline_components || 'all'
+  triggerSkippedComponents.value = ''
+  triggerCveList.value = String(card?.cve_list || '').split(/[\s,;]+/).filter(Boolean).join('\n')
+  triggerUserPrompt.value = card?.user_prompt || ''
+  triggerInputType.value = card?.input_type || 'git-tag'
+  triggerInputValue.value = card?.input_value || ''
+  triggerDecision.value = null
+  triggerState.value = { loading: false, error: null, result: null, decision: null, createdKeys: [] }
+}
+
+async function loadTriggerOptions(force = false, resetForm = true) {
+  if (triggerOptions.value && !force) return
+  triggerOptionsLoading.value = true
+  triggerOptionsError.value = null
+  try {
+    triggerOptions.value = await apiRequest('/modules/product-builds/release-trigger/options')
+    if (!triggerCardKey.value && triggerOptions.value.cards?.length) triggerCardKey.value = triggerOptions.value.cards[0].key
+    triggerTarget.value = selectedTriggerCard()?.target || ''
+    if (resetForm) resetTriggerForm()
+  } catch (err) {
+    triggerOptionsError.value = err.message || 'Unable to load release trigger options.'
+  } finally {
+    triggerOptionsLoading.value = false
+  }
+}
+
+function selectTriggerCard() {
+  triggerTarget.value = selectedTriggerCard()?.target || ''
+  resetTriggerForm()
+}
+
+async function submitTriggerRelease() {
+  const body = {
+    card_key: triggerCardKey.value,
+    target: triggerTarget.value,
+    input_type: triggerInputType.value,
+    input_value: triggerInputValue.value,
+    components: triggerComponents.value,
+    skipped_components: triggerSkippedComponents.value,
+    cve_list: triggerCveList.value,
+    user_prompt: triggerUserPrompt.value,
+    pmc_sha: triggerOptions.value?.sha || '',
+  }
+  const decision = triggerDecision.value
+  if (decision) body.decision = decision
+  triggerState.value = { ...triggerState.value, loading: true, error: null, decision: null, createdKeys: [] }
+  try {
+    const result = await apiRequest('/modules/product-builds/release-trigger', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+    })
+    triggerState.value = { loading: false, error: null, result, decision: null, createdKeys: [] }
+    triggerDecision.value = null
+    await Promise.all([load(), loadTriggerOptions(true, false)])
+  } catch (err) {
+    const data = err.data || {}
+    triggerState.value = {
+      loading: false,
+      error: err.message || 'Release readiness update failed.',
+      result: null,
+      decision: data.decisions || null,
+      createdKeys: data.created_keys || [],
+    }
+    if (data.code === 'stale-pmc') await loadTriggerOptions(true)
+  }
+}
+
+function chooseTriggerCandidate(key) {
+  triggerDecision.value = { ...(triggerDecision.value || {}), type: 'candidate', task_key: key }
+}
+
+function chooseTriggerSplit(choice) {
+  triggerDecision.value = { ...(triggerDecision.value || {}), type: 'split', choice }
+}
+
+function confirmTriggerDecision(type) {
+  triggerDecision.value = { ...(triggerDecision.value || {}), type, confirm: true }
+}
 
 function selectedProductMetadata() {
   return releaseEpicOptions.value?.products?.find(product => product.key === createProduct.value) || null
@@ -80,9 +176,32 @@ function selectCreateProduct() {
   createVersion.value = ''
 }
 
-function selectCreateBranch() {
+async function selectCreateBranch() {
   resetFeatureSelection()
   createVersion.value = ''
+  if (!createProduct.value || !createBranch.value) return
+  releaseEpicLoading.value = true
+  releaseEpicOptionsError.value = null
+  try {
+    const query = new URLSearchParams({ product: createProduct.value, branch: createBranch.value })
+    const selected = await apiRequest(`/modules/product-builds/release-epic/options?${query}`)
+    const selectedProduct = selected.products?.find(product => product.key === createProduct.value)
+    const selectedBranch = selectedProduct?.branches?.find(branch => branch.branch === createBranch.value)
+    if (!selectedBranch) throw new Error('The selected PMC branch is no longer available.')
+    releaseEpicOptions.value = {
+      ...(releaseEpicOptions.value || {}),
+      sha: selected.sha,
+      ref: selected.ref,
+      products: (releaseEpicOptions.value?.products || []).map(product => product.key === createProduct.value
+        ? { ...product, branches: product.branches.map(branch => branch.branch === createBranch.value ? selectedBranch : branch) }
+        : product),
+    }
+    window.localStorage.setItem(releaseEpicOptionsCacheKey, JSON.stringify({ savedAt: Date.now(), data: releaseEpicOptions.value }))
+  } catch (err) {
+    releaseEpicOptionsError.value = err.message || 'Unable to load the selected PMC branch.'
+  } finally {
+    releaseEpicLoading.value = false
+  }
 }
 
 watch([createProduct, createBranch, createVersion], () => {
@@ -157,6 +276,7 @@ async function submitCreateEpic(event) {
 function toggleAction(action) {
   activeAction.value = activeAction.value === action ? null : action
   if (action === 'create-epic') loadReleaseEpicOptions()
+  if (action === 'trigger-release') loadTriggerOptions()
 }
 
 function closeAction() {
@@ -303,23 +423,20 @@ function formatDate(value) {
         >
           Create release epic
         </button>
-        <span class="group relative inline-flex" tabindex="0" aria-describedby="trigger-release-tooltip" title="Trigger release is not ready yet. It will be available soon.">
+        <span class="group relative inline-flex" tabindex="0">
           <button
             type="button"
             data-release-action="trigger-release"
-            disabled
-            aria-disabled="true"
             :aria-expanded="activeAction === 'trigger-release'"
             :aria-pressed="activeAction === 'trigger-release'"
             @click="toggleAction('trigger-release')"
-            class="rounded-lg px-5 py-3 text-sm font-semibold shadow-sm transition focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60 dark:focus:ring-offset-gray-900"
+            class="rounded-lg px-5 py-3 text-sm font-semibold shadow-sm transition focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 dark:focus:ring-offset-gray-900"
             :class="!activeAction || activeAction === 'trigger-release'
               ? 'bg-emerald-600 text-white hover:bg-emerald-700 dark:bg-emerald-500 dark:hover:bg-emerald-400'
               : 'bg-gray-100 text-gray-500 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600'"
           >
             Trigger release
           </button>
-          <span id="trigger-release-tooltip" role="tooltip" class="pointer-events-none absolute bottom-full left-1/2 z-10 mb-2 w-52 -translate-x-1/2 rounded-md bg-gray-900 px-3 py-2 text-center text-xs font-normal text-white opacity-0 shadow-lg transition-opacity group-focus:opacity-100 group-hover:opacity-100 dark:bg-gray-100 dark:text-gray-900">Trigger release is not ready yet. It will be available soon.</span>
         </span>
       </div>
 
@@ -455,7 +572,7 @@ function formatDate(value) {
           v-if="activeAction === 'trigger-release'"
           data-release-form="trigger-release"
           class="mx-auto mt-6 max-w-3xl text-left"
-          @submit.prevent
+          @submit.prevent="submitTriggerRelease"
         >
           <div class="mb-4 flex justify-end">
             <button
@@ -467,58 +584,70 @@ function formatDate(value) {
               Close
             </button>
           </div>
-          <div class="grid gap-4 sm:grid-cols-2">
-            <label class="text-sm font-medium text-gray-700 dark:text-gray-300">
-              Product <span class="text-red-600 dark:text-red-400" aria-hidden="true">*</span>
-              <select name="product" required class="mt-1.5 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm font-normal text-gray-900 outline-none transition focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100">
-                <option value="" disabled>Choose a product</option>
-                <option v-for="product in products" :key="product" :value="product">{{ product }}</option>
-              </select>
-            </label>
-            <label class="text-sm font-medium text-gray-700 dark:text-gray-300">
-              Version <span class="text-red-600 dark:text-red-400" aria-hidden="true">*</span>
-              <input name="version" type="text" required placeholder="Exact release version, for example 3.5.0" class="mt-1.5 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm font-normal text-gray-900 outline-none transition focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100" />
-            </label>
-            <label class="text-sm font-medium text-gray-700 dark:text-gray-300">
-              Target <span class="text-red-600 dark:text-red-400" aria-hidden="true">*</span>
-              <select name="target" required class="mt-1.5 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm font-normal text-gray-900 outline-none transition focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100">
-                <option value="" disabled>Choose a target</option>
-                <option value="stage-rc">stage-rc</option>
-                <option value="prod">prod</option>
-              </select>
-            </label>
-            <label class="text-sm font-medium text-gray-700 dark:text-gray-300">
-              Action
-              <select v-model="triggerAction" name="action" class="mt-1.5 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm font-normal text-gray-900 outline-none transition focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100">
-                <option value="planned">planned</option>
-                <option value="ready">ready</option>
-                <option value="skip">skip</option>
-              </select>
-            </label>
-            <label class="text-sm font-medium text-gray-700 dark:text-gray-300 sm:col-span-2">
-              Components <span class="text-red-600 dark:text-red-400" aria-hidden="true">*</span>
-              <textarea name="components" required rows="4" placeholder="One component per line: name or name=pullspec" class="mt-1.5 w-full resize-y rounded-md border border-gray-300 bg-white px-3 py-2 text-sm font-normal text-gray-900 outline-none transition focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100"></textarea>
-              <span class="mt-1 block text-xs font-normal text-gray-500 dark:text-gray-400">One per line: name for planned, name=pullspec for ready, or name — reason for skip. Pullspecs are optional for planned and skip.</span>
-            </label>
-            <label class="text-sm font-medium text-gray-700 dark:text-gray-300">
-              Input type
-              <select v-model="triggerInputType" name="input-type" class="mt-1.5 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm font-normal text-gray-900 outline-none transition focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100">
-                <option value="image-list">image-list</option>
-                <option value="git-tag">git-tag</option>
-              </select>
-            </label>
-            <label v-if="triggerInputType === 'git-tag'" class="text-sm font-medium text-gray-700 dark:text-gray-300">
-              Git tag <span class="text-red-600 dark:text-red-400" aria-hidden="true">*</span>
-              <input name="input-value" type="text" required placeholder="v3.5.0" class="mt-1.5 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm font-normal text-gray-900 outline-none transition focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100" />
-            </label>
-            <label class="text-sm font-medium text-gray-700 dark:text-gray-300 sm:col-span-2">
-              Notes <span class="font-normal text-gray-500 dark:text-gray-400">(optional)</span>
-              <textarea name="notes" rows="3" placeholder="Optional build or release notes" class="mt-1.5 w-full resize-y rounded-md border border-gray-300 bg-white px-3 py-2 text-sm font-normal text-gray-900 outline-none transition focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100"></textarea>
-            </label>
+           <div v-if="triggerOptionsLoading" class="rounded-md border border-blue-200 bg-blue-50 p-3 text-sm text-blue-800 dark:border-blue-800 dark:bg-blue-900/20 dark:text-blue-200">Loading authorized readiness cards...</div>
+          <div v-else-if="triggerOptionsError" class="rounded-md border border-red-200 bg-red-50 p-3 text-sm text-red-700 dark:border-red-800 dark:bg-red-900/20 dark:text-red-300">{{ triggerOptionsError }} <button type="button" class="font-semibold underline" @click="loadTriggerOptions(true)">Retry</button></div>
+          <fieldset v-else :disabled="triggerState.loading || !triggerOptions" class="space-y-4">
+            <div class="grid gap-4 sm:grid-cols-2">
+               <label class="text-sm font-medium text-gray-700 dark:text-gray-300 sm:col-span-2">
+                 Readiness card <span class="text-red-600 dark:text-red-400" aria-hidden="true">*</span>
+                 <select v-model="triggerCardKey" required class="mt-1.5 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm font-normal text-gray-900 outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100" @change="selectTriggerCard">
+                   <option value="" disabled>Choose a planned or failed readiness card</option>
+                   <option v-for="card in (triggerOptions?.cards || [])" :key="card.key" :value="card.key">{{ card.key }} — {{ card.summary }} ({{ card.state }})</option>
+                 </select>
+               </label>
+               <div v-if="selectedTriggerCard()" class="grid gap-2 rounded-md border border-gray-200 bg-gray-50/70 p-3 text-xs text-gray-600 dark:border-gray-700 dark:bg-gray-900/30 dark:text-gray-300 sm:col-span-2 sm:grid-cols-2">
+                 <div><span class="font-semibold">Parent Epic:</span> <a :href="jiraUrl(selectedTriggerCard().parent.key)" target="_blank" rel="noopener" class="underline">{{ selectedTriggerCard().parent.key }}</a></div>
+                 <div><span class="font-semibold">Application:</span> {{ selectedTriggerCard().parent.application }}</div>
+                 <div><span class="font-semibold">Version:</span> {{ selectedTriggerCard().parent.version }}</div>
+                 <div><span class="font-semibold">Branch:</span> {{ selectedTriggerCard().parent.branch }}</div>
+                 <div><span class="font-semibold">Target:</span> {{ selectedTriggerCard().target }}</div>
+                  <div><span class="font-semibold">Release type:</span> {{ selectedTriggerCard().parent.advisory_type }} <span class="text-gray-400">({{ selectedTriggerCard().parent.release_type }})</span></div>
+               </div>
+               <label class="text-sm font-medium text-gray-700 dark:text-gray-300">
+                 Input type
+                <select v-model="triggerInputType" class="mt-1.5 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm font-normal text-gray-900 outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100">
+                  <option value="image-list">image-list</option><option value="git-tag">git-tag</option><option value="commit-sha">commit-sha</option>
+                </select>
+              </label>
+               <label class="text-sm font-medium text-gray-700 dark:text-gray-300">
+                 Input value <span class="text-red-600 dark:text-red-400" aria-hidden="true">*</span>
+                 <textarea v-model="triggerInputValue" required rows="3" :placeholder="triggerInputType === 'git-tag' ? 'v3.5.0' : triggerInputType === 'commit-sha' ? 'full or abbreviated SHA' : 'image URLs, one per line'" class="mt-1.5 w-full resize-y rounded-md border border-gray-300 bg-white px-3 py-2 text-sm font-normal text-gray-900 outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100"></textarea>
+               </label>
+            </div>
+              <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                 Ready components <span class="text-red-600 dark:text-red-400" aria-hidden="true">*</span>
+                 <textarea v-model="triggerComponents" required rows="2" placeholder="all or cuda, rocm, model-opt" class="mt-1.5 w-full resize-y rounded-md border border-gray-300 bg-white px-3 py-2 text-sm font-normal text-gray-900 outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100"></textarea>
+                 <span class="mt-1 block text-xs font-normal text-gray-500 dark:text-gray-400">Use PMC component names such as <code>all</code> or <code>cuda, rocm, model-opt</code>. Names are interpreted by Claudio according to the selected product config.</span>
+              </label>
+              <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                 Skipped components <span class="font-normal text-gray-500 dark:text-gray-400">(optional)</span>
+                 <textarea v-model="triggerSkippedComponents" rows="2" placeholder="cuda, rocm, model-opt" class="mt-1.5 w-full resize-y rounded-md border border-gray-300 bg-white px-3 py-2 text-sm font-normal text-gray-900 outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100"></textarea>
+                 <span class="mt-2 block rounded-md border border-red-200 bg-red-50 px-3 py-2 text-xs font-normal text-red-800 dark:border-red-800 dark:bg-red-900/20 dark:text-red-200">Use Ready components for accelerators ready to be released. Use Skipped components for accelerators that will not be included in this release. If an accelerator is not ready but should be released later, leave it out of both fields; it will remain planned.</span>
+              </label>
+              <label v-if="selectedTriggerCard()?.parent.advisory_type === 'RHSA'" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                CVE list <span class="text-red-600 dark:text-red-400" aria-hidden="true">*</span>
+                <textarea v-model="triggerCveList" required rows="3" placeholder="CVE-YYYY-NNNN (one per line)" class="mt-1.5 w-full resize-y rounded-md border border-gray-300 bg-white px-3 py-2 text-sm font-normal text-gray-900 outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100"></textarea>
+                <span class="mt-1 block text-xs font-normal text-gray-500 dark:text-gray-400">One CVE per line.</span>
+              </label>
+             <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">
+               Additional context <span class="font-normal text-gray-500 dark:text-gray-400">(optional)</span>
+               <textarea v-model="triggerUserPrompt" rows="3" placeholder="Additional context or special instructions for the AI agent" class="mt-1.5 w-full resize-y rounded-md border border-gray-300 bg-white px-3 py-2 text-sm font-normal text-gray-900 outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100"></textarea>
+                <span class="mt-1 block text-xs font-normal text-gray-500 dark:text-gray-400">Additional context or special instructions for the AI agent. Put accelerator-specific CVE mapping here.</span>
+             </label>
+          </fieldset>
+          <div v-if="triggerState.error" class="mt-4 rounded-md border border-red-200 bg-red-50 p-3 text-sm text-red-700 dark:border-red-800 dark:bg-red-900/20 dark:text-red-300">
+            {{ triggerState.error }}
+            <span v-if="triggerState.createdKeys?.length" class="mt-2 block">Created before the failure: {{ triggerState.createdKeys.join(', ') }}</span>
           </div>
-          <button type="submit" class="mt-5 rounded-md bg-emerald-100 px-4 py-2 text-sm font-semibold text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300">
-            Trigger release (placeholder)
-          </button>
+          <div v-if="triggerState.decision" class="mt-4 rounded-md border border-amber-200 bg-amber-50 p-3 text-sm text-amber-800 dark:border-amber-800 dark:bg-amber-900/20 dark:text-amber-200">
+            <div v-if="triggerState.decision.type === 'candidate'"><p class="font-semibold">Choose the readiness card to use:</p><label v-for="candidate in triggerState.decision.candidates" :key="candidate.key" class="mt-2 block"><input type="radio" name="trigger-candidate" :value="candidate.key" @change="chooseTriggerCandidate(candidate.key)" /> <a :href="jiraUrl(candidate.key)" target="_blank" rel="noopener" class="underline">{{ candidate.key }}</a> — {{ candidate.summary }} ({{ candidate.state }})</label></div>
+             <div v-else-if="triggerState.decision.type === 'split'"><p class="font-semibold">The selected card contains more components than this request.</p><button type="button" class="mr-2 mt-2 rounded border border-amber-500 px-2 py-1 font-semibold" @click="chooseTriggerSplit('split')">Split selected subset</button><button type="button" class="mt-2 rounded border border-amber-500 px-2 py-1 font-semibold" @click="chooseTriggerSplit('whole')">Use whole card</button></div>
+              <div v-else-if="triggerState.decision.type === 'blocked-candidates'"><p>The selected cards still overlap. Resolve the component overlap in Jira before continuing.</p></div>
+             <div v-else-if="['triggered', 'skip-duplicate'].includes(triggerState.decision.type)"><p>This action cannot continue because the selected components are already {{ triggerState.decision.type === 'triggered' ? 'in flight' : 'recorded as skipped' }}. Resolve the existing Jira card first.</p></div>
+             <div v-else><p>{{ triggerState.decision.task?.comment || 'This action affects an existing readiness card.' }}</p><button type="button" class="mt-2 rounded border border-amber-500 px-2 py-1 font-semibold" @click="confirmTriggerDecision(triggerState.decision.type)">Confirm and continue</button></div>
+          </div>
+           <div v-if="triggerState.result" class="mt-4 rounded-md border border-green-200 bg-green-50 p-3 text-sm text-green-800 dark:border-green-800 dark:bg-green-900/20 dark:text-green-200">Updated release readiness: <span v-for="(task, index) in triggerState.result.tasks" :key="`${task.key}-${task.operation}-${task.state}-${index}`" class="mr-2"><a :href="jiraUrl(task.key)" target="_blank" rel="noopener" class="font-semibold underline">{{ task.key }}</a> ({{ task.operation }})</span></div>
+            <button type="submit" :disabled="triggerState.loading || !triggerOptions" class="mt-5 rounded-md bg-emerald-600 px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-700 disabled:cursor-wait disabled:opacity-60">{{ triggerState.loading ? 'Updating readiness...' : 'Apply release readiness' }}</button>
         </form>
       </Transition>
     </section>
