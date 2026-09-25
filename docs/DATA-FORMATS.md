@@ -959,14 +959,42 @@ Admin-configurable settings for the AI Impact module.
 - `trendThresholdPp` is the percentage-point threshold for classifying trends as "growing" or "declining" (0-50)
 - Defaults are used when no config file exists
 
-## Releases — CVE Sustaining Action Records (`data/releases/cve-sustaining/latest.json`)
+## Releases — CVE Sustaining Snapshot (`data/releases/cve-sustaining/latest.json`)
 
-The CVE sustaining snapshot may include `actionReportRecords` for the
-component-scoped CVE Action Report. The existing sustaining metrics and
-`openIssueRecords` fields remain unchanged.
+The CVE sustaining snapshot may include `slaCompliance` for quarterly SLA
+metrics and `actionReportRecords` for the component-scoped CVE Action Report.
+The existing sustaining metrics and `openIssueRecords` fields remain unchanged.
 
 ```json
 {
+  "slaCompliance": {
+    "quarters": [
+      {
+        "label": "Q3 2026",
+        "quarterStart": "2026-07-01",
+        "quarterEnd": "2026-09-30",
+        "resolvedCount": 4,
+        "newOpenCount": 3,
+        "noSlaDate": 1,
+        "total": 3,
+        "metSla": 2,
+        "missedSla": 1,
+        "pct": 67,
+        "breachedIssues": [
+          {
+            "key": "RHAIENG-456",
+            "summary": "CVE-2026-0456 in example package",
+            "component": "Model Serving",
+            "versions": ["rhoai-2.17"],
+            "status": "Resolved",
+            "assignee": "Alice Example",
+            "slaDate": "2026-09-20",
+            "resolved": "2026-09-21T12:00:00.000Z"
+          }
+        ]
+      }
+    ]
+  },
   "actionReportRecords": {
     "open": [
       {
@@ -991,6 +1019,26 @@ component-scoped CVE Action Report. The existing sustaining metrics and
   }
 }
 ```
+
+`slaCompliance.quarters` contains the current quarter and previous three
+quarters. `resolvedCount` includes all closed or resolved vulnerabilities with
+a resolution date in the quarter. `noSlaDate` counts those without a usable SLA
+Date, and `total` is the subset with an SLA Date. Therefore,
+`resolvedCount = noSlaDate + total`. `metSla` counts tickets resolved on or
+before their SLA Date, and `missedSla` counts tickets resolved after it. `pct`
+is `metSla / total`, rounded to an integer, or zero when no tickets have an SLA
+Date. `newOpenCount` counts issues open in the current snapshot whose Jira
+created date falls between `quarterStart` and `quarterEnd`, inclusive. An open
+ticket created in an earlier quarter is not included in this count.
+`breachedIssues` contains the ticket-level report for the quarter. Each record
+includes the Jira key, summary, component, target versions, status, assignee,
+SLA Date, and resolution timestamp. The quarter's Breached count opens this
+report inline in the dashboard; ticket keys link to their Jira issues.
+
+Older cached snapshots may contain SLA metrics calculated from Jira Due Date
+or query-based outcome links, and lack `resolvedCount`, `newOpenCount`,
+`noSlaDate`, or `breachedIssues`. The report prompts the user to refresh from
+Jira before showing current SLA details from those snapshots.
 
 `open` is the current open Vulnerability cohort used for SLA-breach, due-date,
 review-outcome, and age metrics. `all` is the all-status cohort used for the

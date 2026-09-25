@@ -1849,6 +1849,102 @@ test.describe('Releases CVE Sustaining Report @releases', () => {
     expect(page.errors).toHaveLength(0);
   });
 
+  test('SLA quarter opens an inline report containing breached vulnerabilities only', async ({ page }) => {
+    const body = JSON.parse(JSON.stringify(cveSustainingFixture));
+    body.slaCompliance = {
+      quarters: [{
+        label: 'Q3 2026',
+        quarterStart: '2026-07-01',
+        quarterEnd: '2026-09-30',
+        total: 3,
+        resolvedCount: 4,
+        newOpenCount: 3,
+        noSlaDate: 1,
+        metSla: 2,
+        missedSla: 1,
+        pct: 67,
+        breachedIssues: [{
+          key: 'RHAIENG-9001',
+          summary: 'CVE-2026-9001 in example package',
+          component: 'Model Serving',
+          status: 'Resolved',
+          assignee: 'Alice Example',
+          slaDate: '2026-09-20',
+          resolved: '2026-09-21T12:00:00.000Z'
+        }]
+      }]
+    };
+    await page.route('**/api/modules/releases/cve-sustaining', async route => {
+      await route.fulfill({ json: body });
+    });
+    await page.route('**/api/modules/team-tracker/field-options/component', async route => {
+      await route.fulfill({ json: { values: ['Model Serving', 'Dashboard', 'Pipelines'] } });
+    });
+
+    await page.goto('/#/releases/reports?report=cve-sustaining');
+    await page.waitForLoadState('networkidle');
+    await page.waitForTimeout(DEFAULT_PAGE_WAIT_TIME);
+
+    const slaSection = page.locator('section').filter({ hasText: 'CVE SLA Compliance' });
+    const firstQuarterMetrics = slaSection.getByTestId('sla-quarter-metrics').first();
+    await expect(firstQuarterMetrics.getByTestId('sla-quarter-metric-label')).toHaveText([
+      'Breached:', 'Met:', 'Resolved overall:', 'New this quarter and still open:', 'No SLA Date:'
+    ]);
+    await expect(slaSection.locator('a')).toHaveCount(0);
+
+    const summaryValues = firstQuarterMetrics.getByTestId('sla-quarter-metric-value');
+    await expect(summaryValues).toHaveCount(5);
+    await expect(summaryValues).toHaveText(['1', '2', '4', '3', '1']);
+    const valueBounds = await summaryValues.evaluateAll(elements => elements.map(element => {
+      const { right } = element.getBoundingClientRect();
+      return right;
+    }));
+    expect(Math.max(...valueBounds) - Math.min(...valueBounds)).toBeLessThanOrEqual(1);
+
+    await slaSection.getByRole('button', { name: 'Breached: 1' }).click();
+    const report = slaSection.getByRole('region', { name: 'Q3 2026 SLA breach report' });
+    await expect(report).toBeVisible();
+    await expect(report.getByRole('table')).toContainText('RHAIENG-9001');
+    await expect(report.getByRole('table')).toContainText('CVE-2026-9001 in example package');
+    await expect(report.getByRole('table')).toContainText('Sep 20, 2026');
+    await expect(report.getByRole('table')).toContainText('Sep 21, 2026');
+    await expect(report.getByRole('link', { name: 'RHAIENG-9001' })).toHaveAttribute(
+      'href', 'https://redhat.atlassian.net/browse/RHAIENG-9001'
+    );
+    expect(page.errors).toHaveLength(0);
+  });
+
+  test('legacy SLA snapshots prompt a Jira refresh before showing compliance', async ({ page }) => {
+    const body = JSON.parse(JSON.stringify(cveSustainingFixture));
+    body.slaCompliance = {
+      quarters: [{
+        label: 'Q3 2026',
+        total: 3,
+        metSla: 2,
+        missedSla: 1,
+        pct: 67,
+        total_jql: 'https://jira.example/issues/?jql=legacy-total',
+        metSla_queries: [{ jql: 'https://jira.example/issues/?jql=legacy-met', count: 2 }],
+        missedSla_queries: [{ jql: 'https://jira.example/issues/?jql=legacy-breached', count: 1 }]
+      }]
+    };
+    await page.route('**/api/modules/releases/cve-sustaining', async route => {
+      await route.fulfill({ json: body });
+    });
+    await page.route('**/api/modules/team-tracker/field-options/component', async route => {
+      await route.fulfill({ json: { values: ['Model Serving', 'Dashboard', 'Pipelines'] } });
+    });
+
+    await page.goto('/#/releases/reports?report=cve-sustaining');
+    await page.waitForLoadState('networkidle');
+    await page.waitForTimeout(DEFAULT_PAGE_WAIT_TIME);
+
+    const slaSection = page.locator('section').filter({ hasText: 'CVE SLA Compliance' });
+    await expect(slaSection).toContainText('Refresh from Jira to load ticket-level breach reports and current open counts');
+    await expect(slaSection.getByText('67%', { exact: true })).toHaveCount(0);
+    expect(page.errors).toHaveLength(0);
+  });
+
   test('CVE sustaining component names link to the matching CVE action report', async ({ page }) => {
     await page.goto('/#/releases/reports?report=cve-sustaining');
     await page.waitForLoadState('networkidle');
@@ -1907,6 +2003,7 @@ test.describe('Releases CVE Sustaining Report @releases', () => {
     expect(body).toHaveProperty('createdVsResolved');
     expect(body).toHaveProperty('unresolved');
     expect(body).toHaveProperty('falsePositivesTrend');
+    expect(body).toHaveProperty('slaCompliance');
     expect(body).toHaveProperty('openIssueRecords');
     expect(body).toHaveProperty('actionReportRecords');
     expect(body).toHaveProperty('jiraSearchBase');
@@ -1919,6 +2016,12 @@ test.describe('Releases CVE Sustaining Report @releases', () => {
       body.openIssueRecords.map(issue => issue.key)
     );
     expect(body.totalAll).toBeGreaterThanOrEqual(body.totalOpen);
+    expect(body.slaCompliance.quarters).toHaveLength(4);
+    // Cached payloads can predate this field; the report prompts users to refresh them.
+    expect(body.slaCompliance.quarters.every(quarter =>
+      (quarter.newOpenCount === undefined || Number.isInteger(quarter.newOpenCount)) &&
+      Array.isArray(quarter.breachedIssues) && quarter.breachedIssues.length === quarter.missedSla
+    )).toBe(true);
 
     var record = body.openIssueRecords[0];
     expect(record).toHaveProperty('key');

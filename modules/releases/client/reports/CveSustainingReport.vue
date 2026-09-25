@@ -103,14 +103,16 @@
       <section v-if="slaQuarters.length" class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-5">
         <div class="mb-4">
           <h3 class="text-sm font-semibold text-gray-900 dark:text-gray-100">CVE SLA Compliance</h3>
-          <p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">Resolved on or before due date. Only CVEs with both a due date and resolution date are evaluated.</p>
+          <p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">Resolved on or before SLA Date. Tickets without an SLA Date are listed separately and excluded from compliance. New this quarter and still open counts current open tickets created during each quarter.</p>
         </div>
-        <div class="grid grid-cols-2 lg:grid-cols-4 gap-3">
-          <a v-for="(q, idx) in slaQuarters" :key="q.label"
-            :href="q.total_jql" target="_blank" rel="noopener noreferrer"
-            class="rounded-lg border hover:shadow-md transition-shadow cursor-pointer flex overflow-hidden"
-            :class="slaCardClasses(q.pct)"
-            :title="`${q.label}: ${q.metSla} / ${q.total} CVEs met SLA — click to view in Jira`">
+        <p v-if="!slaDataReady" class="text-sm text-amber-700 dark:text-amber-300">
+          This cached snapshot does not include quarterly SLA details. Refresh from Jira to load ticket-level breach reports and current open counts.
+        </p>
+        <div v-else class="grid grid-cols-2 lg:grid-cols-4 gap-3">
+          <div v-for="(q, idx) in slaQuarters" :key="q.label"
+            class="rounded-lg border flex overflow-hidden"
+            data-testid="sla-quarter-card"
+            :class="slaCardClasses(q.pct)">
             <div class="flex items-center justify-center px-3 bg-black/5 dark:bg-white/5 border-r border-current/10 min-w-[60px]">
               <p class="text-xs font-bold uppercase tracking-wide opacity-70 text-center leading-tight">{{ q.label }}</p>
             </div>
@@ -122,9 +124,94 @@
                 </span>
               </div>
               <p class="text-xs mt-1 opacity-60">{{ q.metSla }} / {{ q.total }} met SLA</p>
+              <div class="mt-3 space-y-1 text-left text-xs" data-testid="sla-quarter-metrics">
+                <button
+                  type="button"
+                  class="flex w-full items-center justify-between gap-3 cursor-pointer font-semibold underline decoration-dotted hover:decoration-solid"
+                  :aria-expanded="selectedSlaBreachQuarter?.label === q.label"
+                  aria-controls="sla-breach-report"
+                  :title="`Show the ${q.label} breached ticket report`"
+                  @click="toggleSlaBreachReport(q)"
+                >
+                  <span data-testid="sla-quarter-metric-label">Breached:</span>
+                  <span data-testid="sla-quarter-metric-value">{{ q.missedSla }}</span>
+                </button>
+                <div class="flex items-center justify-between gap-3 font-semibold">
+                  <span data-testid="sla-quarter-metric-label">Met:</span>
+                  <span data-testid="sla-quarter-metric-value">{{ q.metSla }}</span>
+                </div>
+                <div class="flex items-center justify-between gap-3 font-semibold">
+                  <span data-testid="sla-quarter-metric-label">Resolved overall:</span>
+                  <span data-testid="sla-quarter-metric-value">{{ q.resolvedCount }}</span>
+                </div>
+                <div class="flex items-center justify-between gap-3 font-semibold"
+                  title="Currently open tickets created during this quarter">
+                  <span data-testid="sla-quarter-metric-label">New this quarter and still open:</span>
+                  <span data-testid="sla-quarter-metric-value">{{ q.newOpenCount }}</span>
+                </div>
+                <div class="flex items-center justify-between gap-3 font-semibold text-gray-600 dark:text-gray-300">
+                  <span data-testid="sla-quarter-metric-label">No SLA Date:</span>
+                  <span data-testid="sla-quarter-metric-value">{{ q.noSlaDate }}</span>
+                </div>
+              </div>
             </div>
-          </a>
+          </div>
         </div>
+        <section
+          v-if="selectedSlaBreachQuarter"
+          id="sla-breach-report"
+          class="mt-5 rounded-lg border border-red-200 dark:border-red-900/60 overflow-hidden"
+          :aria-label="`${selectedSlaBreachQuarter.label} SLA breach report`"
+        >
+          <div class="flex items-center justify-between gap-3 px-4 py-3 bg-red-50 dark:bg-red-900/20 border-b border-red-200 dark:border-red-900/60">
+            <div>
+              <h4 class="text-sm font-semibold text-gray-900 dark:text-gray-100">
+                {{ selectedSlaBreachQuarter.label }} SLA breach report
+              </h4>
+              <p class="text-xs text-gray-600 dark:text-gray-400 mt-0.5">
+                {{ selectedSlaBreachQuarter.breachedIssues.length }} tickets resolved after their SLA Date
+              </p>
+            </div>
+            <button
+              type="button"
+              class="text-xs font-medium text-gray-600 dark:text-gray-300 underline decoration-dotted hover:decoration-solid"
+              @click="selectedSlaBreachQuarterLabel = null"
+            >Close report</button>
+          </div>
+          <p v-if="selectedSlaBreachQuarter.breachedIssues.length === 0" class="p-4 text-sm text-gray-500 dark:text-gray-400">
+            No tickets breached their SLA in this quarter.
+          </p>
+          <div v-else class="overflow-x-auto">
+            <table class="min-w-full text-sm">
+              <thead class="bg-gray-50 dark:bg-gray-800/80">
+                <tr class="border-b border-gray-200 dark:border-gray-700">
+                  <th class="text-left py-2.5 px-4 text-[11px] font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Key</th>
+                  <th class="text-left py-2.5 px-4 text-[11px] font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider min-w-64">Summary</th>
+                  <th class="text-left py-2.5 px-4 text-[11px] font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Component</th>
+                  <th class="text-left py-2.5 px-4 text-[11px] font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Target Version</th>
+                  <th class="text-left py-2.5 px-4 text-[11px] font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Status</th>
+                  <th class="text-left py-2.5 px-4 text-[11px] font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Assignee</th>
+                  <th class="text-left py-2.5 px-4 text-[11px] font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider whitespace-nowrap">SLA Date</th>
+                  <th class="text-left py-2.5 px-4 text-[11px] font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider whitespace-nowrap">Resolved</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr v-for="issue in selectedSlaBreachQuarter.breachedIssues" :key="issue.key" class="border-b border-gray-100 dark:border-gray-800 last:border-0 hover:bg-red-50/50 dark:hover:bg-red-900/10">
+                  <td class="py-2 px-4 whitespace-nowrap">
+                    <a :href="jiraIssueUrl(issue.key)" target="_blank" rel="noopener noreferrer" class="text-primary-600 dark:text-primary-400 hover:underline font-medium">{{ issue.key }}</a>
+                  </td>
+                  <td class="py-2 px-4 text-gray-900 dark:text-gray-100">{{ issue.summary || '—' }}</td>
+                  <td class="py-2 px-4 text-gray-600 dark:text-gray-400 whitespace-nowrap">{{ issue.component || '—' }}</td>
+                  <td class="py-2 px-4 text-gray-600 dark:text-gray-400 whitespace-nowrap">{{ (issue.versions || []).join(', ') || '—' }}</td>
+                  <td class="py-2 px-4 text-gray-600 dark:text-gray-400 whitespace-nowrap">{{ issue.status || '—' }}</td>
+                  <td class="py-2 px-4 text-gray-600 dark:text-gray-400 whitespace-nowrap">{{ issue.assignee || '—' }}</td>
+                  <td class="py-2 px-4 text-gray-600 dark:text-gray-400 whitespace-nowrap">{{ formatSlaReportDate(issue.slaDate) }}</td>
+                  <td class="py-2 px-4 text-gray-600 dark:text-gray-400 whitespace-nowrap">{{ formatSlaReportDate(issue.resolved) }}</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
       </section>
 
       <!-- Fix Availability at Release -->
@@ -714,6 +801,30 @@ const dueDateBuckets = computed(() => {
 // ─── SLA Compliance ──────────────────────────────────────────────────────────
 
 const slaQuarters = computed(() => data.value?.slaCompliance?.quarters || [])
+const selectedSlaBreachQuarterLabel = ref(null)
+const selectedSlaBreachQuarter = computed(() =>
+  slaQuarters.value.find(q => q.label === selectedSlaBreachQuarterLabel.value) || null
+)
+const slaDataReady = computed(() => slaQuarters.value.every(q =>
+  Number.isInteger(q.resolvedCount) && Number.isInteger(q.newOpenCount) && Number.isInteger(q.noSlaDate) &&
+  Array.isArray(q.breachedIssues) && q.breachedIssues.length === q.missedSla
+))
+
+function toggleSlaBreachReport(quarter) {
+  selectedSlaBreachQuarterLabel.value = selectedSlaBreachQuarterLabel.value === quarter.label ? null : quarter.label
+}
+
+function jiraIssueUrl(key) {
+  const jiraBase = (data.value?.jiraSearchBase || '').split('/issues/')[0].replace(/\/+$/, '') || 'https://issues.redhat.com'
+  return `${jiraBase}/browse/${encodeURIComponent(key)}`
+}
+
+function formatSlaReportDate(value) {
+  if (!value) return '—'
+  const date = new Date(value)
+  if (Number.isNaN(date.getTime())) return value
+  return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric', timeZone: 'UTC' })
+}
 
 const slaDelta = computed(() => {
   const q = slaQuarters.value
