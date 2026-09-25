@@ -2863,24 +2863,26 @@ window.addEventListener('message', function(e){
       'Team': f.Team || '',
       'Priority': f.Priority || '',
       'Outcome': f.Outcome || '',
-      'Target Versions': f.version || '',
-      'RICE': f.RICE || '0',
-      'FPDoR': f.FPDoR || '0%',
+      'Target Versions': f.PlannedFor || '',
+      'RICE': f.Score || 0,
+      'FPDoR': f.FPDoR || '0/17',
       'Confidence': f.Confidence || 'not-ready',
       'Labels': f.Labels || '',
       'Fix Version': f['Fix Version'] || '',
       'Release Type': f['Release Type'] || '',
       'PlannedFor': f.PlannedFor || '3.6 GA',
       '_conf': parseInt(f.Confidence) || 0,
-      '_place': f.Placement || 'Unknown',
+      '_place': f.PlannedFor || 'Unknown',
       '_riskLevel': f.riskLevel || 'Medium'
     }));
-    // Update bug queue and capacity from live data
-    if(bugQueue && bugQueue.length) window._buFeedbackByComponent = {};
+    // Clear mock bug data before applying live queue
+    window._buFeedbackByComponent = {};
     bugQueue.forEach(b => {
       window._buFeedbackByComponent[b.component] = {blocker: b.blocker||0, critical: b.critical||0, open: b.total||0};
     });
     window._buFeedbackTotal = bugQueue.reduce((sum,b) => sum+(b.total||0), 0);
+    // Run schedule initialization for live API rows to calculate derived fields
+    schedule(allData);
     // Trigger refresh with live data
     populateFilters();
     run();
