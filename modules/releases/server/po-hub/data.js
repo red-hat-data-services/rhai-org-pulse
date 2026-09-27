@@ -93,28 +93,6 @@ function createPoHubService(jira) {
     return null
   }
 
-  // Fetches children with grandchildren (two levels deep). Used for Features and Packages.
-  async function fetchChildrenDeep(parentKey) {
-    const childIssues = await fetchAllJql(`parent = ${parentKey}`, 'key,summary,status,issuetype,assignee')
-    const children = []
-    for (const c of childIssues) {
-      const gcIssues = await fetchAllJql(`parent = ${c.key}`, 'key,summary,status,issuetype,assignee')
-      const grandchildren = gcIssues.map(gc => ({
-        key: gc.key, summary: gc.fields?.summary || '', status: gc.fields?.status?.name || 'New',
-        type: gc.fields?.issuetype?.name || 'Story', assignee: username(gc.fields?.assignee),
-      }))
-      grandchildren.sort((a, b) => (STATUS_ORDER[a.status] ?? 99) - (STATUS_ORDER[b.status] ?? 99))
-      children.push({
-        key: c.key, summary: c.fields?.summary || '', status: c.fields?.status?.name || 'New',
-        type: c.fields?.issuetype?.name || 'Epic', assignee: username(c.fields?.assignee),
-        children: grandchildren,
-        progress: { total: grandchildren.length, closed: grandchildren.filter(gc => gc.status === 'Closed').length },
-      })
-    }
-    children.sort((a, b) => (STATUS_ORDER[a.status] ?? 99) - (STATUS_ORDER[b.status] ?? 99))
-    return children
-  }
-
   // Fetch direct children in batches instead of issuing one Jira search per parent.
   async function fetchChildrenForParents(parentKeys) {
     const keys = [...new Set(parentKeys)].filter(key => /^[A-Z][A-Z0-9]+-\d+$/.test(key))
@@ -131,14 +109,37 @@ function createPoHubService(jira) {
   }
 
   // Direct children only (one level), preserving the source view's status ordering.
-  function fetchChildrenShallow(parentKey, byParent) {
+  function fetchChildrenShallow(parentKey, byParent, defaultType = 'Epic') {
     const childIssues = byParent.get(parentKey) || []
     const children = childIssues.map(c => ({
       key: c.key, summary: c.fields?.summary || '', status: c.fields?.status?.name || 'New',
-      type: c.fields?.issuetype?.name || 'Epic', assignee: username(c.fields?.assignee),
+      type: c.fields?.issuetype?.name || defaultType, assignee: username(c.fields?.assignee),
     }))
     children.sort((a, b) => (STATUS_ORDER[a.status] ?? 99) - (STATUS_ORDER[b.status] ?? 99))
     return children
+  }
+
+  // Fetch two levels for a cohort of Features or Packages in one batch per level.
+  async function fetchChildrenDeepForParents(parentKeys) {
+    const childrenByParent = await fetchChildrenForParents(parentKeys)
+    const childKeys = [...childrenByParent.values()].flatMap(issues => issues.map(issue => issue.key))
+    const grandchildrenByParent = await fetchChildrenForParents(childKeys)
+    const deepChildrenByParent = new Map()
+
+    for (const [parentKey, childIssues] of childrenByParent) {
+      const children = childIssues.map(child => {
+        const grandchildren = fetchChildrenShallow(child.key, grandchildrenByParent, 'Story')
+        return {
+          key: child.key, summary: child.fields?.summary || '', status: child.fields?.status?.name || 'New',
+          type: child.fields?.issuetype?.name || 'Epic', assignee: username(child.fields?.assignee),
+          children: grandchildren,
+          progress: { total: grandchildren.length, closed: grandchildren.filter(gc => gc.status === 'Closed').length },
+        }
+      })
+      children.sort((a, b) => (STATUS_ORDER[a.status] ?? 99) - (STATUS_ORDER[b.status] ?? 99))
+      deepChildrenByParent.set(parentKey, children)
+    }
+    return deepChildrenByParent
   }
 
   async function buildBacklogData() {
@@ -166,6 +167,7 @@ function createPoHubService(jira) {
     for (const ver of RELEASE_VERSIONS) releaseMap[ver] = { name: ver, features: [], packages: [], reviewReadyPackages: [], initiatives: [], strategies: [], epics: [], rfes: [], totalEpics: 0, closedEpics: 0 }
     releaseMap[OTHER_RELEASE_KEY] = { name: 'Other releases', features: [], packages: [], reviewReadyPackages: [], initiatives: [], strategies: [], epics: [], rfes: [], totalEpics: 0, closedEpics: 0 }
     releaseMap['unversioned'] = { name: 'Unversioned / Cross-Release', features: [], packages: [], reviewReadyPackages: [], initiatives: [], strategies: [], epics: [], rfes: [], totalEpics: 0, closedEpics: 0 }
+    const featureChildrenByParent = await fetchChildrenDeepForParents(features.map(issue => issue.key))
 
     for (const issue of features) {
       const f = issue.fields || {}
@@ -175,7 +177,7 @@ function createPoHubService(jira) {
       const inferredVersion = inferVersion(summary) || 'unversioned'
       const version = releaseMap[inferredVersion] ? inferredVersion : OTHER_RELEASE_KEY
 
-      const children = await fetchChildrenDeep(key)
+      const children = featureChildrenByParent.get(key) || []
       const total = children.length, closed = children.filter(c => c.status === 'Closed').length
 
       releaseMap[version].features.push({
@@ -195,10 +197,11 @@ function createPoHubService(jira) {
         `project = "AIPCC" AND component = "AIPCC Ecosystems" AND issuetype = Epic AND status != Closed AND labels in (dashboard-filed, package, package-automation-onboard) AND "Target Version[version picker (multiple versions)]" = "${ver}"`,
         'key,summary,status,priority,assignee,labels,duedate'
       )
+      const packageChildrenByParent = await fetchChildrenDeepForParents(pkgIssues.map(issue => issue.key))
       const pkgs = []
       for (const p of pkgIssues) {
         const f = p.fields || {}, labels = f.labels || []
-        const children = await fetchChildrenDeep(p.key)
+        const children = packageChildrenByParent.get(p.key) || []
         pkgs.push({
           key: p.key, name: (f.summary || '').replace(' package update request', '').trim(),
           summary: f.summary || '', status: f.status?.name || 'New', priority: f.priority?.name || 'Undefined',

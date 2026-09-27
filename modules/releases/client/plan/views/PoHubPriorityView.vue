@@ -73,17 +73,6 @@ const PROJECT_STYLE = {
   RHAI: 'bg-cyan-50 text-cyan-700 dark:bg-cyan-900/20 dark:text-cyan-300',
 }
 
-const SQUAD_LABELS = {
-  'NVIDIA CUDA': 'CUDA (lead: Pavan Kalyan Reddy Cherupally)',
-  'Google TPU': 'TPU (lead: Aparna Ayikkara)',
-  'AMD ROCm': 'ROCm (lead: Percy Mattsson)',
-  'Intel Gaudi': 'Gaudi (lead: Martin Prpič)',
-  'IBM Spyre': 'Spyre (lead: Lance Barto)',
-  'AWS Neuron': 'Neuron (lead: Koushik; took over from Andre Lustosa Cabral de Paula Motta)',
-  'CPU': 'CPU (lead: Frantisek Zatloukal)',
-  'Tooling': 'Tooling (lead: Rohan Devasthale)',
-}
-
 const SQUAD_PATHS = {
   'NVIDIA CUDA': 'cuda',
   'Google TPU': 'tpu',
@@ -99,7 +88,7 @@ const SQUAD_PATHS = {
 const SQUADS_BY_PATH = Object.fromEntries(Object.entries(SQUAD_PATHS).map(([squad, path]) => [path, squad]))
 
 function squadLabel(squad) {
-  return squad === '__no_squad__' ? 'No Squad' : (SQUAD_LABELS[squad] || squad)
+  return squad === '__no_squad__' ? 'No Squad' : squad
 }
 
 function normalizeRfe(rfe) {

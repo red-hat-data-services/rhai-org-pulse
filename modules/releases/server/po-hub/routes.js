@@ -1,7 +1,7 @@
 const { createPoHubService } = require('./data')
 
 const DEMO_MODE = process.env.DEMO_MODE === 'true'
-const demoBacklog = require('../../../../fixtures/releases/po-hub/backlog.json')
+const demoBacklog = DEMO_MODE ? require('../../../../fixtures/releases/po-hub/backlog.json') : null
 
 module.exports = function registerPoHubRoutes(router, context) {
   const { requireAuth, requireScope, jira } = context
