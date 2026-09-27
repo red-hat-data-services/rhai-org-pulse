@@ -273,11 +273,11 @@ function resolveTabComponents(src, dir) {
     return map
   }
 
-  const condRe = /(?:v-if|v-else-if)="activeTab\s*===\s*'([^']+)'"[\s\S]*?<(\w+)/g
+  const condRe = /<(\w+)\b[^>]*?\b(?:v-if|v-else-if)="activeTab\s*===\s*'([^']+)'"/g
   let m
   while ((m = condRe.exec(src)) !== null) {
-    const tabId = m[1]
-    const compName = m[2]
+    const compName = m[1]
+    const tabId = m[2]
     if (compName[0] !== compName[0].toUpperCase()) continue
     const file = resolveImportedComponent(src, compName, dir)
     if (file) map[tabId] = file
@@ -288,7 +288,8 @@ function resolveTabComponents(src, dir) {
 
 function resolveImportedComponent(src, componentName, dir) {
   const importRe = new RegExp(`import\\s+${componentName}\\s+from\\s+'([^']+)'`)
-  const m = importRe.exec(src)
+  const asyncRe = new RegExp(`const\\s+${componentName}\\s*=\\s*defineAsyncComponent\\(\\(\\)\\s*=>\\s*import\\('([^']+)'\\)\\)`)
+  const m = importRe.exec(src) || asyncRe.exec(src)
   if (!m) return null
   let filePath = path.resolve(dir, m[1])
   if (!filePath.endsWith('.vue')) filePath += '.vue'

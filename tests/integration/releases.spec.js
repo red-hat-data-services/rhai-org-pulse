@@ -3,6 +3,7 @@ const { DEFAULT_PAGE_WAIT_TIME } = require('./constants');
 const { setupErrorTracking, logCapturedErrors } = require('./helpers');
 const { unexpectedDemoResourceErrors, dismissHygieneWelcome } = require('./execute-helpers');
 const cveSustainingFixture = require('../../fixtures/releases/cve-sustaining/latest.json');
+const poHubBacklogFixture = require('../../fixtures/releases/po-hub/backlog.json');
 
 /**
  * Integration tests for Releases module
@@ -54,6 +55,45 @@ test.describe('Releases Module @releases', () => {
     expect(unexpectedDemoResourceErrors(page)).toHaveLength(0);
   });
 
+});
+
+test.describe('Releases PO Hub @releases', () => {
+  test.beforeEach(async ({ page }) => { setupErrorTracking(page); });
+  test.afterEach(async ({ page }, testInfo) => { logCapturedErrors(page, testInfo); });
+
+  test('loads the PO Hub backlog as the last Plan tab', async ({ page }) => {
+    await page.route('**/api/modules/releases/po-hub/backlog', route => route.fulfill({ json: poHubBacklogFixture }));
+    await page.goto('/#/releases/plan?tab=po-hub');
+    await expect(page.getByRole('heading', { name: 'PO Hub' })).toBeVisible();
+    const planTabs = await page.getByRole('navigation', { name: 'Plan sub-tabs' }).getByRole('button').allTextContents();
+    expect(planTabs.slice(-2).map(label => label.trim())).toEqual(['AI Planner', 'PO Hub']);
+    await expect(page.getByRole('tablist', { name: 'PO Hub views' })).toHaveCount(0);
+    await expect(page.getByText('No releases are selected.')).toBeVisible();
+
+    await page.getByRole('button', { name: 'Red Hat AI 3.6 EA2' }).click();
+    await expect(page.getByText('Total Items')).toHaveCount(0);
+    await expect(page.getByRole('button', { name: 'Unassigned' })).toBeVisible();
+    await expect(page.getByText('AIPCC package requests ready to close')).toBeVisible();
+    await expect(page.getByRole('link', { name: 'AIPCC-900001' }).first()).toBeVisible();
+    await page.getByRole('button', { name: 'Show JQL' }).click();
+    await expect(page.getByText('RHAISTRAT Strategies')).toBeVisible();
+    await page.getByRole('button', { name: 'Red Hat AI 3.6 EA2', exact: true }).click();
+    await page.getByRole('button', { name: 'Other releases', exact: true }).click();
+    await page.getByText('RHAISTRAT', { exact: true }).click();
+    await expect(page.getByRole('link', { name: 'RHAISTRAT-900002' })).toBeVisible();
+    expect(page.errors).toHaveLength(0);
+  });
+
+  test('serves the backlog response through the Releases API', async ({ request }) => {
+    const response = await request.get('/api/modules/releases/po-hub/backlog');
+    expect(response.ok()).toBe(true);
+    const body = await response.json();
+    expect(body.releases.map(release => release.name)).toEqual(poHubBacklogFixture.releases.map(release => release.name));
+    expect(body.jql).toHaveProperty('reviewReadyPackages');
+
+    const removedPortfolio = await request.get('/api/modules/releases/po-hub/portfolio');
+    expect(removedPortfolio.status()).toBe(404);
+  });
 });
 
 test.describe('Releases Commitment Tracking @releases', () => {

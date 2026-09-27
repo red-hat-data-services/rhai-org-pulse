@@ -2,6 +2,28 @@
 
 This document describes the JSON structure of all files stored in the `data/` directory (production) and `fixtures/` directory (demo mode). **Demo fixtures must always match production format** — see [Fixture Rules](#fixture-rules) below.
 
+## Releases — PO Hub API Responses
+
+The Releases → Plan → PO Hub page reads `GET /api/modules/releases/po-hub/backlog`.
+The corresponding `/refresh` POST route bypasses the five-minute Jira response
+cache. The response is held in memory; no production data file is written.
+The demo response lives in `fixtures/releases/po-hub/backlog.json`.
+
+`backlog` has `lastUpdated`, `summary`, `jql`, and `releases`. The `jql` object
+contains `strategies`, `epics`, and `reviewReadyPackages`, so the UI discloses
+the actual source queries. Each release has `name`, `features`, `packages`,
+`reviewReadyPackages`, `initiatives`, `strategies`, `epics`, `rfes`, `totalEpics`,
+and `closedEpics`. Strategy and Epic rows carry `targetVersions` and
+`fixVersions`; grouping uses Target Version when present and Fix Version as a
+fallback. A release can contain the same issue as another release when its
+version field names both. Issues with a version outside the named release lanes
+appear in `Other releases`; issues without a version appear in
+`Unversioned / Cross-Release`. Features and Initiatives use release names
+in their summaries for grouping, with recognized releases outside the named
+lanes also appearing in `Other releases`. `reviewReadyPackages` contains AIPCC
+package Epics in Review whose direct Story children are all Closed, with a
+`progress` object containing `total` and `closed`.
+
 ## Jira Autofix — `data/ai-impact/autofix-data.json`
 
 The Autofix snapshot keeps the existing `issues` pipeline-labeled cohort and

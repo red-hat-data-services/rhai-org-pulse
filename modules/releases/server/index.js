@@ -16,6 +16,7 @@ const registerHygieneRoutes = require('./hygiene/routes');
 const registerTvFvDeltaRoutes = require('./tv-fv-delta/routes');
 const registerFeaturePressureRoutes = require('./feature-pressure/routes');
 const registerPmHubRoutes = require('./pm-hub/routes');
+const registerPoHubRoutes = require('./po-hub/routes');
 const registerDraftPlanRoutes = require('./draft-plans/routes');
 const registerReleaseReadinessRoutes = require('./release-readiness/routes');
 const { registerCveSustainingRoutes, registerFixAvailabilityRoutes } = require('./cve-sustaining/routes');
@@ -291,6 +292,11 @@ module.exports = async function registerRoutes(router, context) {
     storage
   });
   router.use('/pm-hub', pmHubRouter);
+
+  // PO Hub: AIPCC Ecosystems single backlog.
+  const poHubRouter = express.Router();
+  registerPoHubRoutes(poHubRouter, { requireAuth, requireScope, jira });
+  router.use('/po-hub', poHubRouter);
 
   // Draft Plans sub-router (mounted at /api/modules/releases/draft-plans/)
   var draftPlansRouter = express.Router();

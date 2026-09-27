@@ -1,0 +1,67 @@
+{
+  "lastUpdated": "2026-09-27T12:00:00.000Z",
+  "summary": { "blocked": 0, "unassigned": 0, "stalled": 0, "readyForReview": 1 },
+  "epicJql": "project = AIPCC AND issuetype = Epic",
+  "jql": {
+    "strategies": "project = RHAISTRAT AND issuetype = Feature",
+    "epics": "project = AIPCC AND issuetype = Epic",
+    "reviewReadyPackages": "project = AIPCC AND issuetype = Epic AND status = Review"
+  },
+  "releases": [
+    {
+      "name": "rhoai-3.5.EA2", "features": [], "packages": [], "reviewReadyPackages": [],
+      "initiatives": [], "strategies": [], "epics": [], "rfes": [], "totalEpics": 0, "closedEpics": 0
+    },
+    {
+      "name": "rhoai-3.6.EA2", "features": [], "packages": [],
+      "reviewReadyPackages": [
+        {
+          "key": "AIPCC-900001", "name": "Example package", "summary": "Example package update request",
+          "status": "Review", "priority": "Normal", "assignee": "demo", "duedate": null,
+          "squad": "CPU", "pipelineStage": [], "targetVersions": ["3.6 EA2 RHOAI RELEASE"],
+          "children": [{ "key": "AIPCC-900002", "summary": "Build example", "status": "Closed", "type": "Story", "assignee": "demo" }],
+          "progress": { "total": 1, "closed": 1 }
+        }
+      ],
+      "initiatives": [],
+      "strategies": [
+        {
+          "order": 1, "key": "RHAISTRAT-900001", "summary": "Example 3.6 EA2 strategy",
+          "status": "In Progress", "priority": "Normal", "assignee": "demo",
+          "targetVersions": ["3.6 EA2 RHOAI RELEASE"], "fixVersions": [], "products": ["RHOAI"],
+          "squad": "CPU", "children": [], "_isStrategy": true
+        }
+      ],
+      "epics": [
+        {
+          "order": 1, "key": "AIPCC-900001", "summary": "Example package update request",
+          "project": "AIPCC", "status": "Review", "priority": "Normal", "assignee": "demo",
+          "parent": null, "labels": ["package"], "targetVersions": ["3.6 EA2 RHOAI RELEASE"],
+          "fixVersions": [], "squad": "CPU", "_isEpic": true
+        }
+      ],
+      "rfes": [], "totalEpics": 0, "closedEpics": 0
+    },
+    {
+      "name": "rhoai-3.6.GA", "features": [], "packages": [], "reviewReadyPackages": [],
+      "initiatives": [], "strategies": [], "epics": [], "rfes": [], "totalEpics": 0, "closedEpics": 0
+    },
+    {
+      "name": "Other releases", "features": [], "packages": [], "reviewReadyPackages": [],
+      "initiatives": [],
+      "strategies": [
+        {
+          "order": 2, "key": "RHAISTRAT-900002", "summary": "Example 3.6 EA1 strategy",
+          "status": "In Progress", "priority": "Normal", "assignee": "demo",
+          "targetVersions": ["3.6 EA1 RHOAI RELEASE"], "fixVersions": [], "products": ["RHOAI"],
+          "squad": "CPU", "children": [], "_isStrategy": true
+        }
+      ],
+      "epics": [], "rfes": [], "totalEpics": 0, "closedEpics": 0
+    },
+    {
+      "name": "Unversioned / Cross-Release", "features": [], "packages": [], "reviewReadyPackages": [],
+      "initiatives": [], "strategies": [], "epics": [], "rfes": [], "totalEpics": 0, "closedEpics": 0
+    }
+  ]
+}

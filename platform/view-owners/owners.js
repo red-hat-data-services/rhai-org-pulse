@@ -110,7 +110,10 @@ export const viewOwners = {
   // These override the view-level owner when a specific tab is active.
 
   // releases > deliver
+  'releases/deliver/conforma-insights':            'Deepak Chourasia',
   'releases/deliver/program-level-release':        'Alex Corvin',
+  'releases/deliver/release-blockers':             'srija-ganguly',
+  'releases/deliver/risk-dashboard':               'Saiesh Prabhu',
 
   // releases > execute
   'releases/execute/board':                        'Saiesh Prabhu',
@@ -118,10 +121,12 @@ export const viewOwners = {
   'releases/execute/table':                        'Alex Corvin',
 
   // releases > plan
+  'releases/plan/ai-planner':                      'yuvalluria',
   'releases/plan/bu-feedback':                     'Saiesh Prabhu',
   'releases/plan/feature-readiness':               'Erle Marion',
-  'releases/plan/outcomes':                        'Erle Marion',
-  'releases/plan/pm-hub':                          'yuvalluria',
+  'releases/plan/outcomes':                        'Jen Albertson',
+  'releases/plan/pm-hub':                          'Saiesh Prabhu',
+  'releases/plan/po-hub':                          'Einat Pacifici',
 
   // releases > registry
   'releases/registry/hygiene':                     'Alex Corvin',
@@ -131,6 +136,7 @@ export const viewOwners = {
 
   // team-tracker > manage
   'team-tracker/manage/data-quality':              'Alex Corvin',
+  'team-tracker/manage/exceptions':                'Alex Corvin',
   'team-tracker/manage/field-options':             'Alex Corvin',
   'team-tracker/manage/fields':                    'Alex Corvin',
   'team-tracker/manage/teams':                     'Alex Corvin',
