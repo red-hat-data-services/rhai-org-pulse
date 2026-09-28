@@ -6,6 +6,7 @@ import {
   X, Filter, RefreshCw, Search, FileDown, Code2,
 } from 'lucide-vue-next'
 import { usePoHubBacklogData } from '../composables/usePoHubBacklogData'
+import { buildPoHubJqlSections } from '../utils/po-hub-jql'
 
 const { data, loading, error, load, refresh } = usePoHubBacklogData()
 
@@ -20,19 +21,7 @@ watch(error, (val) => { if (val) onDataError() })
 
 const selectedReleases = ref([])
 const showJql = ref(false)
-const jqlSections = computed(() => {
-  if (selectedReleases.value.length === 0) return []
-  const queries = data.value?.jql || {}
-  return [
-    { title: 'Plan ranking', query: queries.rank, note: 'Orders Features and Initiatives.' },
-    { title: 'Features', query: queries.features },
-    ...Object.entries(queries.packageRequests || {}).filter(([release]) => selectedReleases.value.includes(release)).map(([release, query]) => ({ title: `${release} package requests`, query })),
-    { title: '3.6 EA2 packages ready to close', query: selectedReleases.value.includes('rhoai-3.6.EA2') ? queries.reviewReadyPackages : null, note: 'Keeps Epics with the exact package label, at least one direct Story, and all direct Stories Closed.' },
-    { title: 'Initiatives', query: queries.initiatives },
-    { title: 'RHAISTRAT Strategies', query: queries.strategies },
-    { title: 'AIPCC and PACKAGE Epics', query: queries.epics || data.value?.epicJql, note: 'Epics with the exact package label appear under PACKAGE; all other results appear under AIPCC.' },
-  ].filter(section => section.query)
-})
+const jqlSections = computed(() => buildPoHubJqlSections(data.value?.jql || {}, selectedReleases.value, data.value?.releases || []))
 const activeFilter = ref(null)
 const searchQuery = ref('')
 const sortState = ref({ key: null, dir: 'asc' })
@@ -578,9 +567,9 @@ const REVIEW_READY_PACKAGE_COLS = [
     <section v-if="showJql && selectedReleases.length > 0" id="release-jql-panel" class="rounded-xl border border-slate-200 bg-slate-50 p-5 shadow-sm dark:border-slate-700 dark:bg-slate-900/40" aria-labelledby="release-jql-title">
       <div class="mb-4 flex items-start justify-between gap-4">
         <div>
-          <h2 id="release-jql-title" class="text-sm font-semibold text-gray-900 dark:text-gray-100">JQL used to build PO Hub</h2>
+          <h2 id="release-jql-title" class="text-sm font-semibold text-gray-900 dark:text-gray-100">JQL for selected releases</h2>
           <p class="mt-1 text-xs font-medium text-gray-700 dark:text-gray-300" aria-live="polite">Selected releases: {{ selectedReleaseLabel }}</p>
-          <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">These source queries feed the selected release lanes. Features and Initiatives use release names in their summaries; Strategies and Epics use Target Version, then Fix Version, to select release lanes.</p>
+          <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">These searches narrow PO Hub's broader source queries to the selected lanes. Named releases use Target Version with a Fix Version fallback; Other releases use loaded issue keys, and Unversioned checks that both fields are empty. Features and Initiatives use loaded issue keys because their lanes are inferred from summaries.</p>
         </div>
         <button type="button" class="rounded p-1 text-gray-400 transition-colors hover:bg-gray-200 hover:text-gray-700 dark:hover:bg-gray-700 dark:hover:text-gray-200" aria-label="Hide JQL" @click="showJql = false">
           <X :size="16" />

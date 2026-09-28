@@ -15,10 +15,17 @@ contains the exact top-level Jira searches run by the server: `rank`,
 `reviewReadyPackages`, `initiatives`, `strategies`, and `epics`. Direct child
 searches use batches of up to 50 parent keys, so their JQL changes with each
 refresh. The legacy `epicJql` field mirrors `jql.epics`. The demo fixture uses
-the same queries as production. Each release has `name`, `features`, `packages`,
-`reviewReadyPackages`, `initiatives`, `strategies`, `epics`, `rfes`, `totalEpics`,
-and `closedEpics`. Strategy and Epic rows carry `targetVersions` and
-`fixVersions`; grouping uses Target Version when present and Fix Version as a
+the same queries as production. The PO Hub JQL panel derives release-scoped Jira
+searches from these source queries when a release is selected. Named release
+Strategies and Epics use Target Version with a Fix Version fallback; Features
+and Initiatives use keys from the loaded release because their lanes are
+inferred from summaries. `Other releases` uses keys from the loaded snapshot.
+These panel queries are for inspecting a selected release in Jira; the server
+continues to fetch the broad source queries. Each release has `name`,
+`features`, `packages`, `reviewReadyPackages`, `initiatives`, `strategies`,
+`epics`, `rfes`, `totalEpics`, and `closedEpics`. Strategy and Epic rows carry
+`targetVersions` and `fixVersions`; grouping uses Target Version when present
+and Fix Version as a
 fallback. A release can contain the same issue as another release when its
 version field names both. Issues with a version outside the named release lanes
 appear in `Other releases`; issues without a version appear in
