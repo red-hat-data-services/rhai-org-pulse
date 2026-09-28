@@ -38,6 +38,12 @@
           "project": "AIPCC", "status": "Review", "priority": "Normal", "assignee": "demo",
           "parent": null, "labels": ["package"], "targetVersions": ["3.6 EA2 RHOAI RELEASE"],
           "fixVersions": [], "squad": "CPU", "_isEpic": true
+        },
+        {
+          "order": 2, "key": "AIPCC-900003", "summary": "Package coordination for model delivery",
+          "project": "AIPCC", "status": "In Progress", "priority": "Normal", "assignee": "demo",
+          "parent": null, "labels": ["aipcc-ecosystems-portfolio-tracking"],
+          "targetVersions": ["3.6 EA2 RHOAI RELEASE"], "fixVersions": [], "squad": "CPU", "_isEpic": true
         }
       ],
       "rfes": [], "totalEpics": 0, "closedEpics": 0

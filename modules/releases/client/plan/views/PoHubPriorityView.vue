@@ -100,9 +100,7 @@ function normalizeStrategy(strategy) {
 }
 
 function isPackageEpic(epic) {
-  return Boolean(epic.isPackage) ||
-    (epic.labels || []).includes('package') ||
-    /\bpackages?\b/i.test(epic.summary || '')
+  return (epic.labels || []).includes('package')
 }
 
 function normalizeEpic(epic) {
@@ -408,8 +406,9 @@ function laneStrategies(release) {
   return applyFilters((release.strategies || []).map(normalizeStrategy), true)
 }
 
-function laneEpics(release) {
-  return applyFilters((release.epics || []).map(normalizeEpic), true)
+function laneEpics(release, group) {
+  const packageGroup = group === 'package'
+  return applyFilters((release.epics || []).filter(epic => isPackageEpic(epic) === packageGroup).map(normalizeEpic), true)
 }
 
 const RFE_PRODUCTS = ['combined']
@@ -504,6 +503,10 @@ const EPIC_COLS = [
   { key: 'status', label: 'Status' },
   { key: 'assignee', label: 'Assignee' },
 ]
+const EPIC_GROUPS = [
+  { id: 'aipcc', label: 'AIPCC', itemLabel: 'Epic' },
+  { id: 'package', label: 'PACKAGE', itemLabel: 'Package' },
+]
 const REVIEW_READY_PACKAGE_COLS = [
   { key: 'key', label: 'Key' },
   { key: 'summary', label: 'Package request' },
@@ -531,7 +534,7 @@ const REVIEW_READY_PACKAGE_COLS = [
       <div class="flex flex-wrap items-center gap-3">
         <div class="mr-2">
           <h2 id="release-selector-title" class="text-sm font-semibold text-gray-900 dark:text-gray-100">Select releases</h2>
-          <p class="text-xs text-gray-400">Choose one or more releases to view their RHAISTRAT and AIPCC lists.</p>
+          <p class="text-xs text-gray-400">Choose one or more releases to view their RHAISTRAT, AIPCC, and PACKAGE lists.</p>
         </div>
         <div class="flex flex-wrap gap-2" role="group" aria-label="Releases">
           <button v-for="release in RELEASE_ORDER" :key="release" type="button"
@@ -559,7 +562,7 @@ const REVIEW_READY_PACKAGE_COLS = [
       <div class="mb-4 flex items-start justify-between gap-4">
         <div>
           <h2 id="release-jql-title" class="text-sm font-semibold text-gray-900 dark:text-gray-100">JQL used for the release lists</h2>
-          <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">The server runs these queries, then the selected pills match Target Version, falling back to Fix Version.</p>
+          <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">The server runs these queries, then the selected pills match Target Version, falling back to Fix Version. Epics with the Jira label "package" appear under PACKAGE.</p>
         </div>
         <button type="button" class="rounded p-1 text-gray-400 transition-colors hover:bg-gray-200 hover:text-gray-700 dark:hover:bg-gray-700 dark:hover:text-gray-200" aria-label="Hide JQL" @click="showJql = false">
           <X :size="16" />
@@ -571,7 +574,7 @@ const REVIEW_READY_PACKAGE_COLS = [
           <pre class="max-h-72 overflow-auto whitespace-pre-wrap rounded-lg border border-gray-200 bg-white p-3 text-xs leading-relaxed text-gray-700 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300"><code>{{ data.jql?.strategies || 'JQL unavailable until the next data refresh.' }}</code></pre>
         </article>
         <article>
-          <h3 class="mb-1.5 text-xs font-semibold uppercase tracking-wider text-amber-700 dark:text-amber-300">AIPCC Epics</h3>
+          <h3 class="mb-1.5 text-xs font-semibold uppercase tracking-wider text-amber-700 dark:text-amber-300">AIPCC and PACKAGE Epics</h3>
           <pre class="max-h-72 overflow-auto whitespace-pre-wrap rounded-lg border border-gray-200 bg-white p-3 text-xs leading-relaxed text-gray-700 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300"><code>{{ data.jql?.epics || data.epicJql || 'JQL unavailable until the next data refresh.' }}</code></pre>
         </article>
         <article v-if="data.jql?.reviewReadyPackages" class="xl:col-span-2">
@@ -1024,16 +1027,17 @@ const REVIEW_READY_PACKAGE_COLS = [
                 </div>
               </div>
 
-              <!-- ── AIPCC subsection (Epics grouped into this release) ── -->
-              <div>
+              <!-- ── AIPCC and PACKAGE subsections, split by the Jira package label ── -->
+              <section v-for="epicGroup in EPIC_GROUPS" :key="epicGroup.id" :aria-label="`${epicGroup.label} issues`">
                 <button class="flex w-full cursor-pointer items-center gap-2 border-b border-amber-200 bg-amber-50 px-5 py-2 transition-colors hover:bg-amber-100 dark:border-amber-800/30 dark:bg-amber-900/10 dark:hover:bg-amber-900/20"
-                        @click="toggleLane('aipcc-' + relName)">
-                  <component :is="expandedLanes.has('aipcc-' + relName) ? ChevronDown : ChevronRight" :size="14" class="text-amber-500" />
+                        :aria-expanded="expandedLanes.has(epicGroup.id + '-' + relName)"
+                        @click="toggleLane(epicGroup.id + '-' + relName)">
+                  <component :is="expandedLanes.has(epicGroup.id + '-' + relName) ? ChevronDown : ChevronRight" :size="14" class="text-amber-500" />
                   <div class="h-4 w-1.5 rounded-full bg-amber-500" />
-                  <span class="text-xs font-semibold uppercase tracking-wider text-amber-700 dark:text-amber-300">AIPCC</span>
-                  <span class="text-[11px] text-amber-600 dark:text-amber-400">({{ laneEpics(data.releases.find(r => r.name === relName)).length }})</span>
+                  <span class="text-xs font-semibold uppercase tracking-wider text-amber-700 dark:text-amber-300">{{ epicGroup.label }}</span>
+                  <span class="text-[11px] text-amber-600 dark:text-amber-400">({{ laneEpics(data.releases.find(r => r.name === relName), epicGroup.id).length }})</span>
                 </button>
-                <div v-if="expandedLanes.has('aipcc-' + relName)" class="overflow-x-auto bg-amber-50/20 dark:bg-amber-900/5">
+                <div v-if="expandedLanes.has(epicGroup.id + '-' + relName)" class="overflow-x-auto bg-amber-50/20 dark:bg-amber-900/5">
                   <table class="min-w-full">
                     <thead class="border-b border-amber-200 bg-amber-50/80 dark:border-amber-800/40 dark:bg-amber-900/10">
                       <tr>
@@ -1048,12 +1052,12 @@ const REVIEW_READY_PACKAGE_COLS = [
                       </tr>
                     </thead>
                     <tbody>
-                      <tr v-for="item in laneEpics(data.releases.find(r => r.name === relName))" :key="item.key + '-' + relName"
+                      <tr v-for="item in laneEpics(data.releases.find(r => r.name === relName), epicGroup.id)" :key="item.key + '-' + relName"
                           class="border-b border-amber-100 transition-colors last:border-0 hover:bg-amber-50/50 dark:border-amber-900/20 dark:hover:bg-amber-900/10">
                         <td class="px-4 py-3 text-center text-xs font-semibold text-gray-400">{{ item.order }}</td>
                         <td class="whitespace-nowrap px-4 py-3">
                           <div class="flex items-center gap-2">
-                            <span :class="item.isPackage ? TYPE_STYLE.package : TYPE_STYLE.epic" class="rounded px-1.5 py-0.5 text-[10px] font-semibold uppercase">{{ item.isPackage ? 'Package' : 'Epic' }}</span>
+                            <span :class="item.isPackage ? TYPE_STYLE.package : TYPE_STYLE.epic" class="rounded px-1.5 py-0.5 text-[10px] font-semibold uppercase">{{ epicGroup.itemLabel }}</span>
                             <a :href="JIRA + item.key" target="_blank" rel="noreferrer" class="text-sm font-semibold text-blue-600 hover:underline dark:text-blue-400">{{ item.key }}</a>
                           </div>
                         </td>
@@ -1068,13 +1072,13 @@ const REVIEW_READY_PACKAGE_COLS = [
                         <td class="whitespace-nowrap px-4 py-3"><span :class="STATUS_STYLE[item.status] || 'bg-gray-100 text-gray-600'" class="rounded px-2 py-0.5 text-xs font-medium">{{ item.status }}</span></td>
                         <td class="whitespace-nowrap px-4 py-3 text-sm text-gray-700 dark:text-gray-300"><span v-if="item.assignee">{{ item.assignee }}</span><span v-else class="text-xs font-medium text-red-500">— unassigned</span></td>
                       </tr>
-                      <tr v-if="laneEpics(data.releases.find(r => r.name === relName)).length === 0">
-                        <td :colspan="EPIC_COLS.length" class="px-6 py-8 text-center text-sm text-gray-400">No AIPCC Epics match this release and the current filters.</td>
+                      <tr v-if="laneEpics(data.releases.find(r => r.name === relName), epicGroup.id).length === 0">
+                        <td :colspan="EPIC_COLS.length" class="px-6 py-8 text-center text-sm text-gray-400">No {{ epicGroup.label }} Epics match this release and the current filters.</td>
                       </tr>
                     </tbody>
                   </table>
                 </div>
-              </div>
+              </section>
 
               <!-- ── RFEs subsection (collapsible, sub-grouped by product) ── -->
               <div v-if="laneRfes(data.releases.find(r => r.name === relName)).length > 0">

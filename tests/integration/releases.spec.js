@@ -75,6 +75,14 @@ test.describe('Releases PO Hub @releases', () => {
     await expect(page.getByRole('button', { name: 'Unassigned' })).toBeVisible();
     await expect(page.getByText('AIPCC package requests ready to close')).toBeVisible();
     await expect(page.getByRole('link', { name: 'AIPCC-900001' }).first()).toBeVisible();
+    const aipccGroup = page.getByRole('region', { name: 'AIPCC issues' });
+    const packageGroup = page.getByRole('region', { name: 'PACKAGE issues' });
+    await aipccGroup.getByRole('button', { name: 'AIPCC (1)' }).click();
+    await packageGroup.getByRole('button', { name: 'PACKAGE (1)' }).click();
+    await expect(aipccGroup.getByRole('link', { name: 'AIPCC-900003' })).toBeVisible();
+    await expect(aipccGroup.getByRole('link', { name: 'AIPCC-900001' })).toHaveCount(0);
+    await expect(packageGroup.getByRole('link', { name: 'AIPCC-900001' })).toBeVisible();
+    await expect(packageGroup.getByRole('link', { name: 'AIPCC-900003' })).toHaveCount(0);
     await page.getByRole('button', { name: 'Show JQL' }).click();
     await expect(page.getByText('RHAISTRAT Strategies')).toBeVisible();
     await page.getByRole('button', { name: 'Red Hat AI 3.6 EA2', exact: true }).click();

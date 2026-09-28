@@ -20,9 +20,12 @@ version field names both. Issues with a version outside the named release lanes
 appear in `Other releases`; issues without a version appear in
 `Unversioned / Cross-Release`. Features and Initiatives use release names
 in their summaries for grouping, with recognized releases outside the named
-lanes also appearing in `Other releases`. `reviewReadyPackages` contains AIPCC
-package Epics in Review whose direct Story children are all Closed, with a
-`progress` object containing `total` and `closed`.
+lanes also appearing in `Other releases`. Within each release, PO Hub displays
+Epics with the exact Jira label `package` under PACKAGE and all other Epics
+under AIPCC; both groups come from the same `epics` array.
+`reviewReadyPackages` contains AIPCC package Epics in Review whose direct
+Story children are all Closed, with a `progress` object containing `total` and
+`closed`.
 
 ## Jira Autofix — `data/ai-impact/autofix-data.json`
 
