@@ -10,8 +10,12 @@ cache. The response is held in memory; no production data file is written.
 The demo response lives in `fixtures/releases/po-hub/backlog.json`.
 
 `backlog` has `lastUpdated`, `summary`, `jql`, and `releases`. The `jql` object
-contains `strategies`, `epics`, and `reviewReadyPackages`, so the UI discloses
-the actual source queries. Each release has `name`, `features`, `packages`,
+contains the exact top-level Jira searches run by the server: `rank`,
+`features`, `packageRequests` (an object keyed by release),
+`reviewReadyPackages`, `initiatives`, `strategies`, and `epics`. Direct child
+searches use batches of up to 50 parent keys, so their JQL changes with each
+refresh. The legacy `epicJql` field mirrors `jql.epics`. The demo fixture uses
+the same queries as production. Each release has `name`, `features`, `packages`,
 `reviewReadyPackages`, `initiatives`, `strategies`, `epics`, `rfes`, `totalEpics`,
 and `closedEpics`. Strategy and Epic rows carry `targetVersions` and
 `fixVersions`; grouping uses Target Version when present and Fix Version as a

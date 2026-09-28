@@ -1,11 +1,17 @@
 {
   "lastUpdated": "2026-09-27T12:00:00.000Z",
   "summary": { "blocked": 0, "unassigned": 0, "stalled": 0, "readyForReview": 1 },
-  "epicJql": "project = AIPCC AND issuetype = Epic",
+  "epicJql": "((project = RHAI and issuetype = Epic and component IN (\"AIPCC Productization\", \"AIPCC Ecosystems\") and status != Closed and (labels IN (\"aipcc-ecosystems-portfolio-tracking\", \"package\") or parent is empty)) or (project = AIPCC and issuetype = Epic and labels IN (\"aipcc-ecosystems-portfolio-tracking\", \"package\") and status != Closed)) and (labels is empty or labels != \"do-not-track\") ORDER BY \"cf[10855]\" ASC, Rank ASC",
   "jql": {
-    "strategies": "project = RHAISTRAT AND issuetype = Feature",
-    "epics": "project = AIPCC AND issuetype = Epic",
-    "reviewReadyPackages": "project = AIPCC AND issuetype = Epic AND status = Review"
+    "rank": "project = \"AIPCC\" AND issuetype in (Initiative, Feature) AND status != Closed ORDER BY Rank ASC",
+    "features": "project = \"AIPCC\" AND component = \"AIPCC Ecosystems\" AND issuetype = Feature AND status != Closed",
+    "packageRequests": {
+      "rhoai-3.5.EA2": "project = \"AIPCC\" AND component = \"AIPCC Ecosystems\" AND issuetype = Epic AND status != Closed AND labels in (dashboard-filed, package, package-automation-onboard) AND \"Target Version[version picker (multiple versions)]\" = \"rhoai-3.5.EA2\""
+    },
+    "reviewReadyPackages": "project = AIPCC\nAND issuetype = Epic\nAND status = Review\nAND \"Target Version\" in (\"3.6 EA2 RHOAI RELEASE\", \"3.6 EA2 RHAII RELEASE\", \"3.6 EA2 RHELAI RELEASE\")\nORDER BY Rank ASC",
+    "initiatives": "project = \"AIPCC\" AND component = \"AIPCC Ecosystems\" AND issuetype = Initiative AND status != Closed",
+    "strategies": "project = RHAISTRAT AND issuetype = Feature AND component IN (\"AIPCC Productization\", \"AIPCC Ecosystems\") AND status != Closed AND (labels is EMPTY OR labels != \"do-not-track\") ORDER BY \"cf[10855]\" ASC, Rank ASC",
+    "epics": "((project = RHAI and issuetype = Epic and component IN (\"AIPCC Productization\", \"AIPCC Ecosystems\") and status != Closed and (labels IN (\"aipcc-ecosystems-portfolio-tracking\", \"package\") or parent is empty)) or (project = AIPCC and issuetype = Epic and labels IN (\"aipcc-ecosystems-portfolio-tracking\", \"package\") and status != Closed)) and (labels is empty or labels != \"do-not-track\") ORDER BY \"cf[10855]\" ASC, Rank ASC"
   },
   "releases": [
     {

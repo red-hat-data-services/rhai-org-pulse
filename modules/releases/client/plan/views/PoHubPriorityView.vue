@@ -20,6 +20,18 @@ watch(error, (val) => { if (val) onDataError() })
 
 const selectedReleases = ref([])
 const showJql = ref(false)
+const jqlSections = computed(() => {
+  const queries = data.value?.jql || {}
+  return [
+    { title: 'Plan ranking', query: queries.rank, note: 'Orders Features and Initiatives.' },
+    { title: 'Features', query: queries.features },
+    ...Object.entries(queries.packageRequests || {}).map(([release, query]) => ({ title: `${release} package requests`, query })),
+    { title: '3.6 EA2 packages ready to close', query: queries.reviewReadyPackages, note: 'Keeps Epics with the exact package label, at least one direct Story, and all direct Stories Closed.' },
+    { title: 'Initiatives', query: queries.initiatives },
+    { title: 'RHAISTRAT Strategies', query: queries.strategies },
+    { title: 'AIPCC and PACKAGE Epics', query: queries.epics || data.value?.epicJql, note: 'Epics with the exact package label appear under PACKAGE; all other results appear under AIPCC.' },
+  ].filter(section => section.query)
+})
 const activeFilter = ref(null)
 const searchQuery = ref('')
 const sortState = ref({ key: null, dir: 'asc' })
@@ -561,27 +573,22 @@ const REVIEW_READY_PACKAGE_COLS = [
     <section v-if="showJql" id="release-jql-panel" class="rounded-xl border border-slate-200 bg-slate-50 p-5 shadow-sm dark:border-slate-700 dark:bg-slate-900/40" aria-labelledby="release-jql-title">
       <div class="mb-4 flex items-start justify-between gap-4">
         <div>
-          <h2 id="release-jql-title" class="text-sm font-semibold text-gray-900 dark:text-gray-100">JQL used for the release lists</h2>
-          <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">The server runs these queries, then the selected pills match Target Version, falling back to Fix Version. Epics with the Jira label "package" appear under PACKAGE.</p>
+          <h2 id="release-jql-title" class="text-sm font-semibold text-gray-900 dark:text-gray-100">JQL used to build PO Hub</h2>
+          <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">These are the top-level Jira searches. Features and Initiatives use release names in their summaries; Strategies and Epics use Target Version, then Fix Version, to select release lanes.</p>
         </div>
         <button type="button" class="rounded p-1 text-gray-400 transition-colors hover:bg-gray-200 hover:text-gray-700 dark:hover:bg-gray-700 dark:hover:text-gray-200" aria-label="Hide JQL" @click="showJql = false">
           <X :size="16" />
         </button>
       </div>
       <div class="grid gap-4 xl:grid-cols-2">
-        <article>
-          <h3 class="mb-1.5 text-xs font-semibold uppercase tracking-wider text-indigo-700 dark:text-indigo-300">RHAISTRAT Strategies</h3>
-          <pre class="max-h-72 overflow-auto whitespace-pre-wrap rounded-lg border border-gray-200 bg-white p-3 text-xs leading-relaxed text-gray-700 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300"><code>{{ data.jql?.strategies || 'JQL unavailable until the next data refresh.' }}</code></pre>
+        <article v-for="section in jqlSections" :key="section.title">
+          <h3 class="mb-1.5 text-xs font-semibold uppercase tracking-wider text-gray-700 dark:text-gray-300">{{ section.title }}</h3>
+          <pre class="max-h-72 overflow-auto whitespace-pre-wrap rounded-lg border border-gray-200 bg-white p-3 text-xs leading-relaxed text-gray-700 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300"><code>{{ section.query }}</code></pre>
+          <p v-if="section.note" class="mt-1.5 text-xs text-gray-500 dark:text-gray-400">{{ section.note }}</p>
         </article>
-        <article>
-          <h3 class="mb-1.5 text-xs font-semibold uppercase tracking-wider text-amber-700 dark:text-amber-300">AIPCC and PACKAGE Epics</h3>
-          <pre class="max-h-72 overflow-auto whitespace-pre-wrap rounded-lg border border-gray-200 bg-white p-3 text-xs leading-relaxed text-gray-700 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300"><code>{{ data.jql?.epics || data.epicJql || 'JQL unavailable until the next data refresh.' }}</code></pre>
-        </article>
-        <article v-if="data.jql?.reviewReadyPackages" class="xl:col-span-2">
-          <h3 class="mb-1.5 text-xs font-semibold uppercase tracking-wider text-green-700 dark:text-green-300">3.6 EA2 packages ready to close</h3>
-          <pre class="max-h-72 overflow-auto whitespace-pre-wrap rounded-lg border border-gray-200 bg-white p-3 text-xs leading-relaxed text-gray-700 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300"><code>{{ data.jql.reviewReadyPackages }}</code></pre>
-        </article>
+        <p v-if="jqlSections.length === 0" class="text-xs text-gray-500 dark:text-gray-400">JQL unavailable until the next data refresh.</p>
       </div>
+      <p class="mt-4 text-xs text-gray-500 dark:text-gray-400">Direct children are fetched separately in batches of up to 50 parent keys using <code>parent IN (...) ORDER BY Rank ASC</code>. The keys vary with each refresh.</p>
     </section>
 
     <div v-if="selectedReleases.length === 0" class="rounded-xl border border-dashed border-gray-300 bg-gray-50 px-6 py-16 text-center dark:border-gray-600 dark:bg-gray-800/60">

@@ -84,7 +84,18 @@ test.describe('Releases PO Hub @releases', () => {
     await expect(packageGroup.getByRole('link', { name: 'AIPCC-900001' })).toBeVisible();
     await expect(packageGroup.getByRole('link', { name: 'AIPCC-900003' })).toHaveCount(0);
     await page.getByRole('button', { name: 'Show JQL' }).click();
-    await expect(page.getByText('RHAISTRAT Strategies')).toBeVisible();
+    const jqlPanel = page.getByRole('region', { name: 'JQL used to build PO Hub' });
+    await expect(jqlPanel.getByRole('heading', { name: 'RHAISTRAT Strategies' })).toBeVisible();
+    expect(await jqlPanel.locator('pre code').allTextContents()).toEqual([
+      poHubBacklogFixture.jql.rank,
+      poHubBacklogFixture.jql.features,
+      ...Object.values(poHubBacklogFixture.jql.packageRequests),
+      poHubBacklogFixture.jql.reviewReadyPackages,
+      poHubBacklogFixture.jql.initiatives,
+      poHubBacklogFixture.jql.strategies,
+      poHubBacklogFixture.jql.epics,
+    ]);
+    await expect(jqlPanel.getByText('Epics with the exact package label appear under PACKAGE; all other results appear under AIPCC.')).toBeVisible();
     await page.getByRole('button', { name: 'Red Hat AI 3.6 EA2', exact: true }).click();
     await page.getByRole('button', { name: 'Other releases', exact: true }).click();
     await page.getByText('RHAISTRAT', { exact: true }).click();
@@ -97,7 +108,7 @@ test.describe('Releases PO Hub @releases', () => {
     expect(response.ok()).toBe(true);
     const body = await response.json();
     expect(body.releases.map(release => release.name)).toEqual(poHubBacklogFixture.releases.map(release => release.name));
-    expect(body.jql).toHaveProperty('reviewReadyPackages');
+    expect(body.jql).toEqual(poHubBacklogFixture.jql);
 
     const removedPortfolio = await request.get('/api/modules/releases/po-hub/portfolio');
     expect(removedPortfolio.status()).toBe(404);

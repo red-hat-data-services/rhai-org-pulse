@@ -1,20 +1,21 @@
 import { describe, expect, it, vi } from 'vitest'
 
-const { createPoHubService, STRATEGY_JQL, EPIC_JQL, REVIEW_READY_PACKAGE_JQL } = require('../../../server/po-hub/data')
+const { createPoHubService, STRATEGY_JQL, EPIC_JQL, REVIEW_READY_PACKAGE_JQL, PO_HUB_JQL } = require('../../../server/po-hub/data')
+const poHubBacklogFixture = require('../../../../../fixtures/releases/po-hub/backlog.json')
 
 function issue(key, fields) { return { key, fields } }
 function version(name) { return { name } }
 
 function fakeJira() {
   const fetchAllJqlResults = vi.fn(async jql => {
-    if (jql === 'project = "AIPCC" AND component = "AIPCC Ecosystems" AND issuetype = Feature AND status != Closed') return [
+    if (jql === PO_HUB_JQL.features) return [
       issue('AIPCC-10', { summary: '3.6 EA1 feature', status: { name: 'New' } }),
       issue('AIPCC-12', { summary: '3.6 EA1 second feature', status: { name: 'New' } })
     ]
-    if (jql.includes('labels in (dashboard-filed, package, package-automation-onboard)')) return [
+    if (Object.values(PO_HUB_JQL.packageRequests).includes(jql)) return [
       issue('AIPCC-30', { summary: 'CPU package update request', status: { name: 'In Progress' }, labels: ['package'] })
     ]
-    if (jql === 'project = "AIPCC" AND component = "AIPCC Ecosystems" AND issuetype = Initiative AND status != Closed') return [
+    if (jql === PO_HUB_JQL.initiatives) return [
       issue('AIPCC-11', { summary: '3.6 EA1 initiative', status: { name: 'New' } })
     ]
     if (jql === STRATEGY_JQL) return [
@@ -90,7 +91,19 @@ describe('PO Hub Jira data', () => {
     expect(ea2.epics.map(item => item.key)).toEqual(['AIPCC-20'])
     expect(ea2.reviewReadyPackages.map(item => item.key)).toEqual(['AIPCC-20'])
     expect(ea2.reviewReadyPackages[0].progress).toEqual({ total: 1, closed: 1 })
-    expect(data.jql).toEqual({ strategies: STRATEGY_JQL, epics: EPIC_JQL, reviewReadyPackages: REVIEW_READY_PACKAGE_JQL })
+    expect(data.jql).toEqual(PO_HUB_JQL)
+    expect(data.jql).toEqual(poHubBacklogFixture.jql)
+    expect(data.epicJql).toBe(poHubBacklogFixture.epicJql)
+    const topLevelQueries = jira.fetchAllJqlResults.mock.calls.map(([jql]) => jql).filter(jql => !jql.startsWith('parent IN ('))
+    expect(topLevelQueries).toEqual([
+      data.jql.rank,
+      data.jql.features,
+      ...Object.values(data.jql.packageRequests),
+      data.jql.reviewReadyPackages,
+      data.jql.initiatives,
+      data.jql.strategies,
+      data.jql.epics,
+    ])
     const parentQueries = jira.fetchAllJqlResults.mock.calls.map(([jql]) => jql).filter(jql => jql.startsWith('parent IN ('))
     expect(parentQueries).toContain('parent IN (AIPCC-10, AIPCC-12) ORDER BY Rank ASC')
     expect(parentQueries).toContain('parent IN (AIPCC-101, AIPCC-121) ORDER BY Rank ASC')

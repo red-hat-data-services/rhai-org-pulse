@@ -2,6 +2,13 @@ const PACKAGE_RELEASE_VERSIONS = ['rhoai-3.5.EA2']
 const RELEASE_VERSIONS = [...PACKAGE_RELEASE_VERSIONS, 'rhoai-3.6.EA2', 'rhoai-3.6.GA']
 const OTHER_RELEASE_KEY = 'other-releases'
 const REVIEW_READY_PACKAGE_RELEASE = 'rhoai-3.6.EA2'
+const PLAN_RANK_JQL = 'project = "AIPCC" AND issuetype in (Initiative, Feature) AND status != Closed ORDER BY Rank ASC'
+const FEATURE_JQL = 'project = "AIPCC" AND component = "AIPCC Ecosystems" AND issuetype = Feature AND status != Closed'
+const INITIATIVE_JQL = 'project = "AIPCC" AND component = "AIPCC Ecosystems" AND issuetype = Initiative AND status != Closed'
+const PACKAGE_REQUEST_JQL_BY_RELEASE = Object.fromEntries(PACKAGE_RELEASE_VERSIONS.map(version => [
+  version,
+  `project = "AIPCC" AND component = "AIPCC Ecosystems" AND issuetype = Epic AND status != Closed AND labels in (dashboard-filed, package, package-automation-onboard) AND "Target Version[version picker (multiple versions)]" = "${version}"`,
+]))
 const REVIEW_READY_PACKAGE_JQL = `project = AIPCC
 AND issuetype = Epic
 AND status = Review
@@ -9,6 +16,15 @@ AND "Target Version" in ("3.6 EA2 RHOAI RELEASE", "3.6 EA2 RHAII RELEASE", "3.6 
 ORDER BY Rank ASC`
 const STRATEGY_JQL = `project = RHAISTRAT AND issuetype = Feature AND component IN ("AIPCC Productization", "AIPCC Ecosystems") AND status != Closed AND (labels is EMPTY OR labels != "do-not-track") ORDER BY "cf[10855]" ASC, Rank ASC`
 const EPIC_JQL = `((project = RHAI and issuetype = Epic and component IN ("AIPCC Productization", "AIPCC Ecosystems") and status != Closed and (labels IN ("aipcc-ecosystems-portfolio-tracking", "package") or parent is empty)) or (project = AIPCC and issuetype = Epic and labels IN ("aipcc-ecosystems-portfolio-tracking", "package") and status != Closed)) and (labels is empty or labels != "do-not-track") ORDER BY "cf[10855]" ASC, Rank ASC`
+const PO_HUB_JQL = {
+  rank: PLAN_RANK_JQL,
+  features: FEATURE_JQL,
+  packageRequests: PACKAGE_REQUEST_JQL_BY_RELEASE,
+  reviewReadyPackages: REVIEW_READY_PACKAGE_JQL,
+  initiatives: INITIATIVE_JQL,
+  strategies: STRATEGY_JQL,
+  epics: EPIC_JQL,
+}
 const STATUS_ORDER = { 'Blocked': 0, 'In Progress': 1, 'Approved': 2, 'Review': 2, 'Refinement': 3, 'To Do': 4, 'New': 5, 'Closed': 6 }
 const CACHE_TTL = 5 * 60 * 1000
 
@@ -151,7 +167,7 @@ function createPoHubService(jira) {
     // Fetch combined rank for all Initiatives + Features (matches JIRA Plan ordering)
     console.log('[releases/po-hub] Fetching plan rank...')
     const rankedIssues = await fetchAllJql(
-      'project = "AIPCC" AND issuetype in (Initiative, Feature) AND status != Closed ORDER BY Rank ASC',
+      PLAN_RANK_JQL,
       'key'
     )
     const rankMap = {}
@@ -159,7 +175,7 @@ function createPoHubService(jira) {
     console.log(`[releases/po-hub] Ranked ${rankedIssues.length} items`)
 
     const features = await fetchAllJql(
-      'project = "AIPCC" AND component = "AIPCC Ecosystems" AND issuetype = Feature AND status != Closed',
+      FEATURE_JQL,
       'key,summary,status,priority,assignee,duedate'
     )
 
@@ -194,7 +210,7 @@ function createPoHubService(jira) {
 
     for (const ver of PACKAGE_RELEASE_VERSIONS) {
       const pkgIssues = await fetchAllJql(
-        `project = "AIPCC" AND component = "AIPCC Ecosystems" AND issuetype = Epic AND status != Closed AND labels in (dashboard-filed, package, package-automation-onboard) AND "Target Version[version picker (multiple versions)]" = "${ver}"`,
+        PACKAGE_REQUEST_JQL_BY_RELEASE[ver],
         'key,summary,status,priority,assignee,labels,duedate'
       )
       const packageChildrenByParent = await fetchChildrenDeepForParents(pkgIssues.map(issue => issue.key))
@@ -249,7 +265,7 @@ function createPoHubService(jira) {
 
     console.log('[releases/po-hub] Fetching Initiatives...')
     const initiatives = await fetchAllJql(
-      'project = "AIPCC" AND component = "AIPCC Ecosystems" AND issuetype = Initiative AND status != Closed',
+      INITIATIVE_JQL,
       'key,summary,status,priority,assignee,duedate'
     )
     const initiativeChildrenByParent = await fetchChildrenForParents(initiatives.map(issue => issue.key))
@@ -368,11 +384,7 @@ function createPoHubService(jira) {
       lastUpdated: new Date().toISOString(),
       summary: { blocked, unassigned, stalled: 0, readyForReview },
       epicJql: EPIC_JQL,
-      jql: {
-        strategies: STRATEGY_JQL,
-        epics: EPIC_JQL,
-        reviewReadyPackages: REVIEW_READY_PACKAGE_JQL,
-      },
+      jql: PO_HUB_JQL,
       releases: [releaseMap['rhoai-3.5.EA2'], releaseMap['rhoai-3.6.EA2'], releaseMap['rhoai-3.6.GA'], releaseMap[OTHER_RELEASE_KEY], releaseMap['unversioned']],
     }
 
@@ -393,4 +405,4 @@ function createPoHubService(jira) {
   return { fetchBacklogData, clearCache }
 }
 
-module.exports = { createPoHubService, STRATEGY_JQL, EPIC_JQL, REVIEW_READY_PACKAGE_JQL }
+module.exports = { createPoHubService, STRATEGY_JQL, EPIC_JQL, REVIEW_READY_PACKAGE_JQL, PO_HUB_JQL }
