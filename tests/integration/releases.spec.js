@@ -69,6 +69,8 @@ test.describe('Releases PO Hub @releases', () => {
     expect(planTabs.slice(-2).map(label => label.trim())).toEqual(['AI Planner', 'PO Hub']);
     await expect(page.getByRole('tablist', { name: 'PO Hub views' })).toHaveCount(0);
     await expect(page.getByText('No releases are selected.')).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Show JQL' })).toBeDisabled();
+    await expect(page.getByRole('region', { name: 'JQL used to build PO Hub' })).toHaveCount(0);
 
     await page.getByRole('button', { name: 'Red Hat AI 3.6 EA2' }).click();
     await expect(page.getByText('Total Items')).toHaveCount(0);
@@ -86,17 +88,34 @@ test.describe('Releases PO Hub @releases', () => {
     await page.getByRole('button', { name: 'Show JQL' }).click();
     const jqlPanel = page.getByRole('region', { name: 'JQL used to build PO Hub' });
     await expect(jqlPanel.getByRole('heading', { name: 'RHAISTRAT Strategies' })).toBeVisible();
+    await expect(jqlPanel.getByText('Selected releases: Red Hat AI 3.6 EA2')).toBeVisible();
+    await expect(jqlPanel.getByRole('heading', { name: 'rhoai-3.5.EA2 package requests' })).toHaveCount(0);
     expect(await jqlPanel.locator('pre code').allTextContents()).toEqual([
       poHubBacklogFixture.jql.rank,
       poHubBacklogFixture.jql.features,
-      ...Object.values(poHubBacklogFixture.jql.packageRequests),
       poHubBacklogFixture.jql.reviewReadyPackages,
       poHubBacklogFixture.jql.initiatives,
       poHubBacklogFixture.jql.strategies,
       poHubBacklogFixture.jql.epics,
     ]);
     await expect(jqlPanel.getByText('Epics with the exact package label appear under PACKAGE; all other results appear under AIPCC.')).toBeVisible();
+    await page.getByRole('button', { name: 'RHOAI 3.5 EA2', exact: true }).click();
+    await expect(jqlPanel.getByText('Selected releases: RHOAI 3.5 EA2, Red Hat AI 3.6 EA2')).toBeVisible();
+    await expect(jqlPanel.getByRole('heading', { name: 'rhoai-3.5.EA2 package requests' })).toBeVisible();
     await page.getByRole('button', { name: 'Red Hat AI 3.6 EA2', exact: true }).click();
+    await expect(jqlPanel.getByText('Selected releases: RHOAI 3.5 EA2')).toBeVisible();
+    await expect(jqlPanel.getByRole('heading', { name: '3.6 EA2 packages ready to close' })).toHaveCount(0);
+    expect(await jqlPanel.locator('pre code').allTextContents()).toEqual([
+      poHubBacklogFixture.jql.rank,
+      poHubBacklogFixture.jql.features,
+      poHubBacklogFixture.jql.packageRequests['rhoai-3.5.EA2'],
+      poHubBacklogFixture.jql.initiatives,
+      poHubBacklogFixture.jql.strategies,
+      poHubBacklogFixture.jql.epics,
+    ]);
+    await page.getByRole('button', { name: 'RHOAI 3.5 EA2', exact: true }).click();
+    await expect(jqlPanel).toHaveCount(0);
+    await expect(page.getByRole('button', { name: 'Show JQL' })).toBeDisabled();
     await page.getByRole('button', { name: 'Other releases', exact: true }).click();
     await page.getByText('RHAISTRAT', { exact: true }).click();
     await expect(page.getByRole('link', { name: 'RHAISTRAT-900002' })).toBeVisible();
