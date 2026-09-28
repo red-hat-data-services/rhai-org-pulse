@@ -1,6 +1,15 @@
 const { test, expect } = require('@playwright/test');
+const { setupErrorTracking, logCapturedErrors } = require('./helpers');
 
 test.describe('OKR Hub timeline @okr-hub', function () {
+  test.beforeEach(async ({ page }) => {
+    setupErrorTracking(page);
+  });
+
+  test.afterEach(async ({ page }, testInfo) => {
+    logCapturedErrors(page, testInfo);
+  });
+
   test('shows support-case snapshot dates in every Q1-Q3 product cell', async function ({ page }) {
     await page.route('**/api/modules/okr-hub/editable-status', async function (route) {
       await route.fulfill({ json: { entries: {} } });
