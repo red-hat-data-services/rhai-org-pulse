@@ -133,7 +133,10 @@
                     <span class="font-semibold text-gray-900 dark:text-gray-100 text-sm">{{ obj.name }}</span>
                   </td>
                   <td class="px-4 py-3 text-xs text-gray-600 dark:text-gray-400 leading-relaxed">
-                    {{ kr.description }}
+                    <p>{{ kr.description }}</p>
+                    <p v-if="obj.measure" class="mt-1.5 text-[11px] whitespace-pre-line text-gray-500 dark:text-gray-500">
+                      {{ obj.measure }}
+                    </p>
                   </td>
                   <td v-for="q in quarters" :key="q" class="px-3 py-3 text-center">
                     <div
@@ -177,6 +180,14 @@
                       <span v-if="kr.quarters[q].summary" class="text-[11px] font-medium leading-tight whitespace-pre-line" :class="statusConfig[kr.quarters[q].status].text">{{ kr.quarters[q].summary }}</span>
                       <span v-else class="text-xs text-gray-300 dark:text-gray-600">—</span>
                     </div>
+                    <p
+                      v-if="obj.id === 'support-cases' && supportCaseDataAsOf[q]"
+                      data-testid="support-case-data-as-of"
+                      :data-quarter="q"
+                      class="mt-1.5 text-[9px] leading-tight text-gray-400 dark:text-gray-500"
+                    >
+                      {{ supportCaseDataAsOf[q] }}
+                    </p>
                   </td>
                 </tr>
               </template>
@@ -235,6 +246,12 @@ var reportMap = {
   'cve-sla': 'cve-sla',
   'support-cases': 'support-cases',
   'tech-visibility': 'tech-visibility'
+}
+
+var supportCaseDataAsOf = {
+  Q1: 'Data as of April 1, 2026',
+  Q2: 'Data as of July 1, 2026',
+  Q3: 'Data as of Oct 1, 2026'
 }
 
 function navigateToReport(reportId) {
