@@ -1985,6 +1985,45 @@ test.describe('Releases CVE Sustaining Report @releases', () => {
     expect(page.errors).toHaveLength(0);
   });
 
+  test('CVE sustaining report recovers when the refresh request times out at the gateway', async ({ page }) => {
+    const cached = {
+      ...cveSustainingFixture,
+      lastRefreshed: '2026-09-23T12:00:00.000Z'
+    };
+    const refreshed = {
+      ...cveSustainingFixture,
+      lastRefreshed: '2099-09-23T13:00:00.000Z'
+    };
+    let cacheRequestCount = 0;
+
+    await page.route('**/api/modules/releases/cve-sustaining', async route => {
+      cacheRequestCount++;
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify(cacheRequestCount > 1 ? refreshed : cached)
+      });
+    });
+    await page.route('**/api/modules/releases/cve-sustaining/refresh', async route => {
+      await route.fulfill({ status: 502, contentType: 'text/plain', body: 'Bad Gateway' });
+    });
+    await page.route('**/api/modules/team-tracker/field-options/component', async route => {
+      await route.fulfill({ json: { values: ['Model Serving', 'Dashboard', 'Pipelines'] } });
+    });
+
+    await page.goto('/#/releases/reports?report=cve-sustaining');
+    await expect(page.getByRole('heading', { name: 'RHAI Sustaining (CVEs)' })).toBeVisible();
+
+    await page.getByRole('button', { name: 'Refresh from Jira' }).click();
+    await expect(page.getByRole('button', { name: 'Refreshing...' })).toBeDisabled();
+    await expect(page.getByRole('heading', { name: 'CVE SLA Compliance' })).toBeVisible();
+    await expect(page.getByText(/Last refreshed:.*2099/)).toBeVisible({ timeout: 10000 });
+
+    await expect(page.getByRole('button', { name: 'Refresh from Jira' })).toBeEnabled();
+    await expect(page.locator('[role="alert"]')).toHaveCount(0);
+    expect(page.errors.filter(error => !error.message.includes('status of 502'))).toHaveLength(0);
+  });
+
   test('CVE sustaining component names link to the matching CVE action report', async ({ page }) => {
     await page.goto('/#/releases/reports?report=cve-sustaining');
     await page.waitForLoadState('networkidle');

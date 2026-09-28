@@ -37,6 +37,10 @@
       </button>
     </div>
 
+    <div v-if="refreshError" class="mb-4 rounded-lg border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800 dark:border-amber-800 dark:bg-amber-900/20 dark:text-amber-300" role="alert">
+      {{ refreshError }}
+    </div>
+
     <!-- Loading -->
     <div v-if="loading" class="flex justify-center items-center py-24">
       <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-500"></div>
@@ -552,7 +556,7 @@ import {
 ChartJS.register(CategoryScale, LinearScale, BarElement, PointElement, LineElement, ArcElement, Filler, Tooltip, Legend)
 
 const nav = inject('moduleNav')
-const { data, loading, error, refreshing, loadData, refresh } = useCveSustaining()
+const { data, loading, error, refreshError, refreshing, loadData, refresh, cleanup } = useCveSustaining()
 const catalogComponents = ref([])
 
 function cveActionReportHref(component) {
@@ -683,7 +687,10 @@ function handleEscape(e) {
 }
 
 onMounted(() => document.addEventListener('keydown', handleEscape))
-onUnmounted(() => document.removeEventListener('keydown', handleEscape))
+onUnmounted(() => {
+  document.removeEventListener('keydown', handleEscape)
+  cleanup()
+})
 
 // ─── Navigation & data ────────────────────────────────────────────────────────
 
