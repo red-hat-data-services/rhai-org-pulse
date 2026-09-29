@@ -30,6 +30,16 @@ const handleIframeMessage = async (event) => {
   if (event.origin !== window.location.origin) return
 
   if (event.data.type === 'add-to-draft-plan') {
+    // If iframe specifies a version, load that version first
+    if (event.data.version && event.data.version !== selectedVersion.value) {
+      try {
+        await loadEditor(event.data.version)
+      } catch (e) {
+        console.warn(`Could not load version ${event.data.version}:`, e)
+        return
+      }
+    }
+
     if (!await ensureDraftPlanLoaded()) {
       console.warn('Plan Approval data is unavailable')
       return
