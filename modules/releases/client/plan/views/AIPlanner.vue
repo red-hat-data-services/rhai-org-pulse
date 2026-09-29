@@ -7,22 +7,37 @@ const iframeRef = ref(null)
 const DEMO_URL = '/ai-first-scheduler/index.html'
 
 const {
+  draft,
+  selectedVersion,
   approveFeature,
+  loadCycles,
+  loadEditor,
   persist
 } = useDraftPlans()
 
-// Handle postMessage from iframe when user adds features to Plan Approval
+async function ensureDraftPlanLoaded() {
+  if (draft.value && draft.value.version === selectedVersion.value) return true
+  try {
+    await loadCycles('RHOAI')
+    await loadEditor(selectedVersion.value)
+  } catch {
+    return false
+  }
+  return !!draft.value
+}
+
 const handleIframeMessage = async (event) => {
-  // Validate origin
   if (event.origin !== window.location.origin) return
 
   if (event.data.type === 'add-to-draft-plan') {
+    if (!await ensureDraftPlanLoaded()) {
+      console.warn('Plan Approval data is unavailable')
+      return
+    }
     try {
-      // Each feature in the message
       const features = event.data.features || []
       let anyApproved = false
       for (const feature of features) {
-        // Add to draft plan
         const result = approveFeature(feature.key, true)
         if (!result || !result.ok) {
           console.warn(`Could not add feature ${feature.key} to Plan Approval`)
@@ -30,10 +45,8 @@ const handleIframeMessage = async (event) => {
           anyApproved = true
         }
       }
-      // Persist the changes to Plan Approval only if any features were approved
       if (anyApproved) {
         await persist()
-        console.log('Features added to Plan Approval')
       }
     } catch (e) {
       console.error('Failed to add features to Plan Approval:', e)
