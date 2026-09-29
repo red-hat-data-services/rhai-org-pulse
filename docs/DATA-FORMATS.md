@@ -2,42 +2,6 @@
 
 This document describes the JSON structure of all files stored in the `data/` directory (production) and `fixtures/` directory (demo mode). **Demo fixtures must always match production format** — see [Fixture Rules](#fixture-rules) below.
 
-## Releases — PO Hub API Responses
-
-The Releases → Plan → PO Hub page reads `GET /api/modules/releases/po-hub/backlog`.
-The corresponding `/refresh` POST route bypasses the five-minute Jira response
-cache. The response is held in memory; no production data file is written.
-The demo response lives in `fixtures/releases/po-hub/backlog.json`.
-
-`backlog` has `lastUpdated`, `summary`, `jql`, and `releases`. The `jql` object
-contains the exact top-level Jira searches run by the server: `rank`,
-`features`, `packageRequests` (an object keyed by release),
-`reviewReadyPackages`, `initiatives`, `strategies`, and `epics`. Direct child
-searches use batches of up to 50 parent keys, so their JQL changes with each
-refresh. The legacy `epicJql` field mirrors `jql.epics`. The demo fixture uses
-the same queries as production. The PO Hub JQL panel derives release-scoped Jira
-searches from these source queries when a release is selected. Named release
-Strategies and Epics use Target Version with a Fix Version fallback; Features
-and Initiatives use keys from the loaded release because their lanes are
-inferred from summaries. `Other releases` uses keys from the loaded snapshot.
-These panel queries are for inspecting a selected release in Jira; the server
-continues to fetch the broad source queries. Each release has `name`,
-`features`, `packages`, `reviewReadyPackages`, `initiatives`, `strategies`,
-`epics`, `rfes`, `totalEpics`, and `closedEpics`. Strategy and Epic rows carry
-`targetVersions` and `fixVersions`; grouping uses Target Version when present
-and Fix Version as a
-fallback. A release can contain the same issue as another release when its
-version field names both. Issues with a version outside the named release lanes
-appear in `Other releases`; issues without a version appear in
-`Unversioned / Cross-Release`. Features and Initiatives use release names
-in their summaries for grouping, with recognized releases outside the named
-lanes also appearing in `Other releases`. Within each release, PO Hub displays
-Epics with the exact Jira label `package` under PACKAGE and all other Epics
-under AIPCC; both groups come from the same `epics` array.
-`reviewReadyPackages` contains AIPCC package Epics in Review whose direct
-Story children are all Closed, with a `progress` object containing `total` and
-`closed`.
-
 ## Jira Autofix — `data/ai-impact/autofix-data.json`
 
 The Autofix snapshot keeps the existing `issues` pipeline-labeled cohort and
