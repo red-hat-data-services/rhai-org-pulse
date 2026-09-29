@@ -20,45 +20,48 @@ const handleIframeMessage = async (event) => {
     try {
       // Each feature in the message
       const features = event.data.features || []
+      let anyApproved = false
       for (const feature of features) {
         // Add to draft plan
         const result = approveFeature(feature.key, true)
         if (!result || !result.ok) {
           console.warn(`Could not add feature ${feature.key} to Plan Approval`)
+        } else {
+          anyApproved = true
         }
       }
-      // Persist the changes to Plan Approval
-      await persist()
-      console.log('Features added to Plan Approval')
+      // Persist the changes to Plan Approval only if any features were approved
+      if (anyApproved) {
+        await persist()
+        console.log('Features added to Plan Approval')
+      }
     } catch (e) {
       console.error('Failed to add features to Plan Approval:', e)
     }
   }
 }
 
-onMounted(async () => {
-  // Wait for iframe to load, then fetch data and send via postMessage
+// Send data to iframe via postMessage
+const sendDataToIframe = async () => {
   if (!iframeRef.value) return
+  try {
+    const snapshot = await apiRequest('/modules/releases/planning/ai-planner')
+    iframeRef.value.contentWindow.postMessage({
+      type: 'ai-planner-data',
+      features: snapshot.features || [],
+      bugQueue: snapshot.bugQueue || [],
+      capacity: snapshot.capacity || {},
+      cveReserve: snapshot.cveReserve || {},
+      lastSyncedAt: snapshot.lastSyncedAt || new Date().toISOString()
+    }, window.location.origin)
+  } catch (e) {
+    console.error('Failed to load AI Planner data:', e)
+  }
+}
 
+onMounted(() => {
   // Listen for messages from the iframe
   window.addEventListener('message', handleIframeMessage)
-
-  iframeRef.value.onload = async () => {
-    try {
-      const snapshot = await apiRequest('/modules/releases/planning/ai-planner')
-      // Send data to iframe via postMessage
-      iframeRef.value.contentWindow.postMessage({
-        type: 'ai-planner-data',
-        features: snapshot.features || [],
-        bugQueue: snapshot.bugQueue || [],
-        capacity: snapshot.capacity || {},
-        cveReserve: snapshot.cveReserve || {},
-        lastSyncedAt: snapshot.lastSyncedAt || new Date().toISOString()
-      }, window.location.origin)
-    } catch (e) {
-      console.error('Failed to load AI Planner data:', e)
-    }
-  }
 })
 
 onUnmounted(() => {
@@ -75,6 +78,7 @@ onUnmounted(() => {
       class="flex-1 w-full border-none"
       title="AI-First Release Planner"
       sandbox="allow-same-origin allow-scripts allow-popups allow-forms"
+      @load="sendDataToIframe"
     />
   </div>
 </template>
