@@ -3118,7 +3118,8 @@ function addToPlan(){
     components:esc(r['Components'])||'',
     version:(esc(r['Target Versions'])||r['Target Version']||'').trim(),
   }));
-  window.parent.postMessage({type:'add-to-draft-plan',features:recommended},window.location.origin);
+  const currentRelease = document.getElementById('f-rel') ? document.getElementById('f-rel').value || '' : '';
+  window.parent.postMessage({type:'add-to-draft-plan',features:recommended,version:currentRelease},window.location.origin);
   const btn=document.getElementById('add-to-plan-btn');
   if(btn){const orig=btn.textContent;btn.textContent='✓ Sent to Plan';btn.style.background='#15803d';setTimeout(()=>{btn.textContent=orig;btn.style.background='#16a34a';},2000);}
   // Closing moment — update PM banner to confirm features landed
