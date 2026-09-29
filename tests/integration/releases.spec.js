@@ -3,7 +3,6 @@ const { DEFAULT_PAGE_WAIT_TIME } = require('./constants');
 const { setupErrorTracking, logCapturedErrors } = require('./helpers');
 const { unexpectedDemoResourceErrors, dismissHygieneWelcome } = require('./execute-helpers');
 const cveSustainingFixture = require('../../fixtures/releases/cve-sustaining/latest.json');
-const poHubBacklogFixture = require('../../fixtures/releases/po-hub/backlog.json');
 
 /**
  * Integration tests for Releases module
@@ -55,84 +54,6 @@ test.describe('Releases Module @releases', () => {
     expect(unexpectedDemoResourceErrors(page)).toHaveLength(0);
   });
 
-});
-
-test.describe('Releases PO Hub @releases', () => {
-  test.beforeEach(async ({ page }) => { setupErrorTracking(page); });
-  test.afterEach(async ({ page }, testInfo) => { logCapturedErrors(page, testInfo); });
-
-  test('loads the PO Hub backlog as the last Plan tab', async ({ page }) => {
-    await page.route('**/api/modules/releases/po-hub/backlog', route => route.fulfill({ json: poHubBacklogFixture }));
-    await page.goto('/#/releases/plan?tab=po-hub');
-    await expect(page.getByRole('heading', { name: 'PO Hub' })).toBeVisible();
-    const planTabs = await page.getByRole('navigation', { name: 'Plan sub-tabs' }).getByRole('button').allTextContents();
-    expect(planTabs.slice(-2).map(label => label.trim())).toEqual(['AI Planner', 'PO Hub']);
-    await expect(page.getByRole('tablist', { name: 'PO Hub views' })).toHaveCount(0);
-    await expect(page.getByText('No releases are selected.')).toBeVisible();
-    await expect(page.getByRole('button', { name: 'Show JQL' })).toBeDisabled();
-    await expect(page.getByRole('region', { name: 'JQL for selected releases' })).toHaveCount(0);
-
-    await page.getByRole('button', { name: 'Red Hat AI 3.6 EA2' }).click();
-    await expect(page.getByText('Total Items')).toHaveCount(0);
-    await expect(page.getByRole('button', { name: 'Unassigned' })).toBeVisible();
-    await expect(page.getByText('AIPCC package requests ready to close')).toBeVisible();
-    await expect(page.getByRole('link', { name: 'AIPCC-900001' }).first()).toBeVisible();
-    const aipccGroup = page.getByRole('region', { name: 'AIPCC issues' });
-    const packageGroup = page.getByRole('region', { name: 'PACKAGE issues' });
-    await aipccGroup.getByRole('button', { name: 'AIPCC (1)' }).click();
-    await packageGroup.getByRole('button', { name: 'PACKAGE (1)' }).click();
-    await expect(aipccGroup.getByRole('link', { name: 'AIPCC-900003' })).toBeVisible();
-    await expect(aipccGroup.getByRole('link', { name: 'AIPCC-900001' })).toHaveCount(0);
-    await expect(packageGroup.getByRole('link', { name: 'AIPCC-900001' })).toBeVisible();
-    await expect(packageGroup.getByRole('link', { name: 'AIPCC-900003' })).toHaveCount(0);
-    await page.getByRole('button', { name: 'Show JQL' }).click();
-    const jqlPanel = page.getByRole('region', { name: 'JQL for selected releases' });
-    await expect(jqlPanel.getByRole('heading', { name: 'RHAISTRAT Strategies' })).toBeVisible();
-    await expect(jqlPanel.getByText('Selected releases: Red Hat AI 3.6 EA2')).toBeVisible();
-    await expect(jqlPanel.getByRole('heading', { name: 'rhoai-3.5.EA2 package requests' })).toHaveCount(0);
-    const strategyJql = jqlPanel.getByRole('heading', { name: 'RHAISTRAT Strategies' }).locator('..').locator('pre code');
-    const epicJql = jqlPanel.getByRole('heading', { name: 'AIPCC and PACKAGE Epics' }).locator('..').locator('pre code');
-    await expect(strategyJql).toContainText('"Target Version" in ("3.6 EA2 RHOAI RELEASE"');
-    await expect(strategyJql).toContainText('"Target Version" is EMPTY AND fixVersion in ("3.6 EA2 RHOAI RELEASE"');
-    await expect(epicJql).toContainText('"Target Version" in ("3.6 EA2 RHOAI RELEASE"');
-    await expect(jqlPanel.getByRole('heading', { name: '3.6 EA2 packages ready to close' })).toBeVisible();
-    await expect(jqlPanel.getByText('Epics with the exact package label appear under PACKAGE; all other results appear under AIPCC.')).toBeVisible();
-    await page.getByRole('button', { name: 'RHOAI 3.5 EA2', exact: true }).click();
-    await expect(jqlPanel.getByText('Selected releases: RHOAI 3.5 EA2, Red Hat AI 3.6 EA2')).toBeVisible();
-    await expect(jqlPanel.getByRole('heading', { name: 'rhoai-3.5.EA2 package requests' })).toBeVisible();
-    await expect(strategyJql).toContainText('3.5 EA2 RHOAI RELEASE');
-    await expect(strategyJql).toContainText('3.6 EA2 RHOAI RELEASE');
-    await page.getByRole('button', { name: 'Red Hat AI 3.6 EA2', exact: true }).click();
-    await expect(jqlPanel.getByText('Selected releases: RHOAI 3.5 EA2')).toBeVisible();
-    await expect(jqlPanel.getByRole('heading', { name: '3.6 EA2 packages ready to close' })).toHaveCount(0);
-    await expect(strategyJql).not.toContainText('3.6 EA2 RHOAI RELEASE');
-    await page.getByRole('button', { name: 'Red Hat AI 3.6 GA', exact: true }).click();
-    await page.getByRole('button', { name: 'RHOAI 3.5 EA2', exact: true }).click();
-    await expect(jqlPanel.getByText('Selected releases: Red Hat AI 3.6 GA')).toBeVisible();
-    await expect(strategyJql).toContainText('"Target Version" in ("3.6 GA RHOAI RELEASE", "3.6 GA RHAII RELEASE", "3.6 GA RHELAI RELEASE")');
-    await expect(strategyJql).not.toContainText('3.5 EA2 RHOAI RELEASE');
-    await page.getByRole('button', { name: 'Red Hat AI 3.6 GA', exact: true }).click();
-    await expect(jqlPanel).toHaveCount(0);
-    await expect(page.getByRole('button', { name: 'Show JQL' })).toBeDisabled();
-    await page.getByRole('button', { name: 'Other releases', exact: true }).click();
-    await page.getByRole('button', { name: 'Show JQL' }).click();
-    await expect(strategyJql).toContainText('key in (RHAISTRAT-900002)');
-    await jqlPanel.getByRole('button', { name: 'Hide JQL' }).click();
-    await page.getByText('RHAISTRAT', { exact: true }).click();
-    await expect(page.getByRole('link', { name: 'RHAISTRAT-900002' })).toBeVisible();
-    expect(page.errors).toHaveLength(0);
-  });
-
-  test('serves the backlog response through the Releases API', async ({ request }) => {
-    const response = await request.get('/api/modules/releases/po-hub/backlog');
-    expect(response.ok()).toBe(true);
-    const body = await response.json();
-    expect(body.releases.map(release => release.name)).toEqual(poHubBacklogFixture.releases.map(release => release.name));
-    expect(body.jql).toEqual(poHubBacklogFixture.jql);
-
-    const removedPortfolio = await request.get('/api/modules/releases/po-hub/portfolio');
-    expect(removedPortfolio.status()).toBe(404);
-  });
 });
 
 test.describe('Releases Commitment Tracking @releases', () => {

@@ -22,13 +22,12 @@
       <BuFeedbackView v-else-if="activeTab === 'bu-feedback'" />
       <PmHubView v-else-if="activeTab === 'pm-hub'" />
       <AIPlanner v-else-if="activeTab === 'ai-planner'" />
-      <PoHubView v-else-if="activeTab === 'po-hub'" />
     </div>
   </div>
 </template>
 
 <script setup>
-import { ref, computed, defineAsyncComponent, inject, watch, onMounted } from 'vue'
+import { ref, computed, inject, watch, onMounted } from 'vue'
 import { apiRequest } from '@shared/client/services/api'
 import DashboardView from '../plan/views/DashboardView.vue'
 import FeatureReadinessView from '../plan/views/FeatureReadinessView.vue'
@@ -37,8 +36,6 @@ import BuFeedbackView from '../plan/views/BuFeedbackView.vue'
 import PmHubView from '../plan/views/PmHubView.vue'
 import AIPlanner from '../plan/views/AIPlanner.vue'
 
-const PoHubView = defineAsyncComponent(() => import('../plan/views/PoHubView.vue'))
-
 var ALL_TABS = [
   { id: 'outcomes', label: 'Big Rocks' },
   { id: 'pm-hub', label: 'PM Hub' },
@@ -46,7 +43,6 @@ var ALL_TABS = [
   { id: 'draft-plans', label: 'Plan Approval' },
   { id: 'bu-feedback', label: 'Field and BU Feedback' },
   { id: 'ai-planner', label: 'AI Planner' },
-  { id: 'po-hub', label: 'PO Hub' },
 ]
 
 var canViewDraftPlans = ref(false)
