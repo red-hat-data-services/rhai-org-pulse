@@ -3,6 +3,7 @@ const { DEFAULT_PAGE_WAIT_TIME } = require('./constants');
 const { setupErrorTracking, logCapturedErrors } = require('./helpers');
 const { unexpectedDemoResourceErrors, dismissHygieneWelcome } = require('./execute-helpers');
 const cveSustainingFixture = require('../../fixtures/releases/cve-sustaining/latest.json');
+const poHubBacklogFixture = require('../../fixtures/releases/po-hub/backlog.json');
 
 /**
  * Integration tests for Releases module
@@ -54,6 +55,84 @@ test.describe('Releases Module @releases', () => {
     expect(unexpectedDemoResourceErrors(page)).toHaveLength(0);
   });
 
+});
+
+test.describe('Releases PO Hub @releases', () => {
+  test.beforeEach(async ({ page }) => { setupErrorTracking(page); });
+  test.afterEach(async ({ page }, testInfo) => { logCapturedErrors(page, testInfo); });
+
+  test('loads the PO Hub backlog as the last Plan tab', async ({ page }) => {
+    await page.route('**/api/modules/releases/po-hub/backlog', route => route.fulfill({ json: poHubBacklogFixture }));
+    await page.goto('/#/releases/plan?tab=po-hub');
+    await expect(page.getByRole('heading', { name: 'PO Hub' })).toBeVisible();
+    const planTabs = await page.getByRole('navigation', { name: 'Plan sub-tabs' }).getByRole('button').allTextContents();
+    expect(planTabs.slice(-2).map(label => label.trim())).toEqual(['AI Planner', 'PO Hub']);
+    await expect(page.getByRole('tablist', { name: 'PO Hub views' })).toHaveCount(0);
+    await expect(page.getByText('No releases are selected.')).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Show JQL' })).toBeDisabled();
+    await expect(page.getByRole('region', { name: 'JQL for selected releases' })).toHaveCount(0);
+
+    await page.getByRole('button', { name: 'Red Hat AI 3.6 EA2' }).click();
+    await expect(page.getByText('Total Items')).toHaveCount(0);
+    await expect(page.getByRole('button', { name: 'Unassigned' })).toBeVisible();
+    await expect(page.getByText('AIPCC package requests ready to close')).toBeVisible();
+    await expect(page.getByRole('link', { name: 'AIPCC-900001' }).first()).toBeVisible();
+    const aipccGroup = page.getByRole('region', { name: 'AIPCC issues' });
+    const packageGroup = page.getByRole('region', { name: 'PACKAGE issues' });
+    await aipccGroup.getByRole('button', { name: 'AIPCC (1)' }).click();
+    await packageGroup.getByRole('button', { name: 'PACKAGE (1)' }).click();
+    await expect(aipccGroup.getByRole('link', { name: 'AIPCC-900003' })).toBeVisible();
+    await expect(aipccGroup.getByRole('link', { name: 'AIPCC-900001' })).toHaveCount(0);
+    await expect(packageGroup.getByRole('link', { name: 'AIPCC-900001' })).toBeVisible();
+    await expect(packageGroup.getByRole('link', { name: 'AIPCC-900003' })).toHaveCount(0);
+    await page.getByRole('button', { name: 'Show JQL' }).click();
+    const jqlPanel = page.getByRole('region', { name: 'JQL for selected releases' });
+    await expect(jqlPanel.getByRole('heading', { name: 'RHAISTRAT Strategies' })).toBeVisible();
+    await expect(jqlPanel.getByText('Selected releases: Red Hat AI 3.6 EA2')).toBeVisible();
+    await expect(jqlPanel.getByRole('heading', { name: 'rhoai-3.5.EA2 package requests' })).toHaveCount(0);
+    const strategyJql = jqlPanel.getByRole('heading', { name: 'RHAISTRAT Strategies' }).locator('..').locator('pre code');
+    const epicJql = jqlPanel.getByRole('heading', { name: 'AIPCC and PACKAGE Epics' }).locator('..').locator('pre code');
+    await expect(strategyJql).toContainText('"Target Version" in ("3.6 EA2 RHOAI RELEASE"');
+    await expect(strategyJql).toContainText('"Target Version" is EMPTY AND fixVersion in ("3.6 EA2 RHOAI RELEASE"');
+    await expect(epicJql).toContainText('"Target Version" in ("3.6 EA2 RHOAI RELEASE"');
+    await expect(jqlPanel.getByRole('heading', { name: '3.6 EA2 packages ready to close' })).toBeVisible();
+    await expect(jqlPanel.getByText('Epics with the exact package label appear under PACKAGE; all other results appear under AIPCC.')).toBeVisible();
+    await page.getByRole('button', { name: 'RHOAI 3.5 EA2', exact: true }).click();
+    await expect(jqlPanel.getByText('Selected releases: RHOAI 3.5 EA2, Red Hat AI 3.6 EA2')).toBeVisible();
+    await expect(jqlPanel.getByRole('heading', { name: 'rhoai-3.5.EA2 package requests' })).toBeVisible();
+    await expect(strategyJql).toContainText('3.5 EA2 RHOAI RELEASE');
+    await expect(strategyJql).toContainText('3.6 EA2 RHOAI RELEASE');
+    await page.getByRole('button', { name: 'Red Hat AI 3.6 EA2', exact: true }).click();
+    await expect(jqlPanel.getByText('Selected releases: RHOAI 3.5 EA2')).toBeVisible();
+    await expect(jqlPanel.getByRole('heading', { name: '3.6 EA2 packages ready to close' })).toHaveCount(0);
+    await expect(strategyJql).not.toContainText('3.6 EA2 RHOAI RELEASE');
+    await page.getByRole('button', { name: 'Red Hat AI 3.6 GA', exact: true }).click();
+    await page.getByRole('button', { name: 'RHOAI 3.5 EA2', exact: true }).click();
+    await expect(jqlPanel.getByText('Selected releases: Red Hat AI 3.6 GA')).toBeVisible();
+    await expect(strategyJql).toContainText('"Target Version" in ("3.6 GA RHOAI RELEASE", "3.6 GA RHAII RELEASE", "3.6 GA RHELAI RELEASE")');
+    await expect(strategyJql).not.toContainText('3.5 EA2 RHOAI RELEASE');
+    await page.getByRole('button', { name: 'Red Hat AI 3.6 GA', exact: true }).click();
+    await expect(jqlPanel).toHaveCount(0);
+    await expect(page.getByRole('button', { name: 'Show JQL' })).toBeDisabled();
+    await page.getByRole('button', { name: 'Other releases', exact: true }).click();
+    await page.getByRole('button', { name: 'Show JQL' }).click();
+    await expect(strategyJql).toContainText('key in (RHAISTRAT-900002)');
+    await jqlPanel.getByRole('button', { name: 'Hide JQL' }).click();
+    await page.getByText('RHAISTRAT', { exact: true }).click();
+    await expect(page.getByRole('link', { name: 'RHAISTRAT-900002' })).toBeVisible();
+    expect(page.errors).toHaveLength(0);
+  });
+
+  test('serves the backlog response through the Releases API', async ({ request }) => {
+    const response = await request.get('/api/modules/releases/po-hub/backlog');
+    expect(response.ok()).toBe(true);
+    const body = await response.json();
+    expect(body.releases.map(release => release.name)).toEqual(poHubBacklogFixture.releases.map(release => release.name));
+    expect(body.jql).toEqual(poHubBacklogFixture.jql);
+
+    const removedPortfolio = await request.get('/api/modules/releases/po-hub/portfolio');
+    expect(removedPortfolio.status()).toBe(404);
+  });
 });
 
 test.describe('Releases Commitment Tracking @releases', () => {
@@ -1366,6 +1445,110 @@ test.describe('Releases Release Readiness @releases', () => {
     expect(Array.isArray(body.versions)).toBe(true);
   });
 
+  test('release readiness opens on the current release and allows manual switching', async ({ page }) => {
+    const current = 'rhoai-3.5.EA1';
+    const future = 'rhoai-3.6.EA1';
+    await page.route('**/api/modules/releases/release-readiness/versions', route => route.fulfill({
+      json: {
+        versions: [future, 'rhoai-3.5.EA2', current],
+        releases: [future, 'rhoai-3.5.EA2', current].map(id => ({ id, state: 'active' })),
+        default_version: current
+      }
+    }));
+    await page.route('**/api/modules/releases/release-readiness?version=*', route => route.fulfill({
+      json: {
+        version: new URL(route.request().url()).searchParams.get('version'),
+        release_schedule: { ga_date: '2026-11-15', status: 'Planning' },
+        director_summary: { gate_statuses: [], test_timeline: [] },
+        component_readiness: { all_components: [], phases: [] },
+        product_blockers: { total_open: 0, components: [] },
+        breakdowns: {}
+      }
+    }));
+
+    await page.goto('/#/releases/reports?report=release-readiness');
+    await expect(page.getByRole('heading', { name: 'RHOAI 3.5 EA1', exact: true })).toBeVisible();
+
+    await page.getByRole('button', { name: 'Change', exact: true }).click();
+    await page.getByRole('button', { name: '3.6', exact: true }).click();
+    await page.getByRole('button', { name: 'Apply', exact: true }).click();
+    await expect(page.getByRole('heading', { name: 'RHOAI 3.6 EA1', exact: true })).toBeVisible();
+  });
+
+  test('release readiness leaves selection empty when no current release is available', async ({ page }) => {
+    await page.route('**/api/modules/releases/release-readiness/versions', route => route.fulfill({
+      json: {
+        versions: ['rhoai-3.6.EA1'],
+        releases: [{ id: 'rhoai-3.6.EA1', state: 'active' }],
+        default_version: null
+      }
+    }));
+    await page.route('**/api/modules/releases/release-readiness?version=*', route => route.fulfill({
+      json: {
+        version: 'rhoai-3.6.EA1',
+        release_schedule: { ga_date: '2026-11-15', status: 'Planning' },
+        director_summary: { gate_statuses: [], test_timeline: [] },
+        component_readiness: { all_components: [], phases: [] },
+        product_blockers: { total_open: 0, components: [] },
+        breakdowns: {}
+      }
+    }));
+    await page.goto('/#/releases/reports?report=release-readiness');
+    await expect(page.getByText('Select a release version to view readiness status')).toBeVisible();
+    await page.getByRole('button', { name: 'Select Release', exact: true }).click();
+    await page.getByRole('button', { name: 'RHOAI', exact: true }).click();
+    await page.getByRole('button', { name: '3.6', exact: true }).click();
+    await page.getByRole('button', { name: 'EA1', exact: true }).click();
+    await page.getByRole('button', { name: 'Apply', exact: true }).click();
+    await expect(page.getByRole('heading', { name: 'RHOAI 3.6 EA1', exact: true })).toBeVisible();
+  });
+
+  test('release readiness flags released releases with unfinished tasks in red', async ({ page }) => {
+    const openVersion = 'rhoai-3.5.EA1';
+    const cleanVersion = 'rhoai-3.5.EA2';
+    const payload = (version, tasks) => ({
+      version,
+      generated_at: '2026-09-07T10:00:00Z',
+      release_schedule: { ga_date: '2026-05-01', status: 'Released' },
+      director_summary: {
+        gate_statuses: [{ gate: 'Test Execution', done: 1, total: 1, pct: 100, rag: 'GREEN' }],
+        test_timeline: []
+      },
+      breakdowns: {
+        initiative: { test_execution: { phases: [{ epic_key: 'phase-1', tasks }] } }
+      },
+      component_readiness: { all_components: [], phases: [] },
+      product_blockers: { total_open: 0, components: [] }
+    });
+
+    await page.route('**/api/modules/releases/release-readiness/versions', route => route.fulfill({
+      json: {
+        versions: [openVersion, cleanVersion],
+        releases: [openVersion, cleanVersion].map(id => ({ id, state: 'active' })),
+        default_version: openVersion
+      }
+    }));
+    await page.route('**/api/modules/releases/release-readiness?version=*', route => {
+      const version = new URL(route.request().url()).searchParams.get('version');
+      const tasks = version === openVersion
+        ? [{ key: 'RHOAIENG-82501', status: 'In Progress', status_category: 'In Progress', resolution: null }]
+        : [{ key: 'RHOAIENG-82502', status: 'Done', status_category: 'Done', resolution: 'Done' }];
+      return route.fulfill({ json: payload(version, tasks) });
+    });
+
+    await page.goto('/#/releases/reports?report=release-readiness');
+    const status = page.getByText('Released with Open Tasks', { exact: true });
+    await expect(status).toBeVisible();
+    await expect(status.locator('..')).toHaveClass(/bg-red-500\/30/);
+
+    await page.getByRole('button', { name: 'Change', exact: true }).click();
+    await page.getByRole('button', { name: 'EA2', exact: true }).click();
+    await page.getByRole('button', { name: 'EA1', exact: true }).click();
+    await page.getByRole('button', { name: 'Apply', exact: true }).click();
+    await expect(page.getByText('Released', { exact: true })).toBeVisible();
+    await expect(page.getByText('Released with Open Tasks', { exact: true })).toHaveCount(0);
+  });
+
   test('release readiness metrics API returns data for fixture version', async ({ request }) => {
     const res = await request.get('/api/modules/releases/release-readiness?version=rhoai-3.5.EA2');
     if (res.status() === 404) {
@@ -1410,7 +1593,7 @@ test.describe('Releases Release Readiness @releases', () => {
   });
 
   test('release readiness report shows Release Cycle Metrics section', async ({ page }) => {
-    await page.goto('/#/releases/reports?report=release-readiness&version=rhoai-3.5.EA2');
+    await page.goto('/#/releases/reports?report=release-readiness&version=3.5&families=rhoai&phases=ea2');
     await page.waitForLoadState('networkidle');
     await page.waitForTimeout(DEFAULT_PAGE_WAIT_TIME);
 
@@ -1425,7 +1608,7 @@ test.describe('Releases Release Readiness @releases', () => {
   });
 
   test('release readiness shows every release-cycle timeline in one table', async ({ page }) => {
-    await page.goto('/#/releases/reports?report=release-readiness&version=rhoai-3.5.EA2');
+    await page.goto('/#/releases/reports?report=release-readiness&version=3.5&families=rhoai&phases=ea2');
     await page.waitForLoadState('networkidle');
     await page.waitForTimeout(DEFAULT_PAGE_WAIT_TIME);
 
@@ -1745,6 +1928,182 @@ test.describe('Releases CVE Sustaining Report @releases', () => {
     expect(page.errors).toHaveLength(0);
   });
 
+  test('SLA quarter opens an inline report containing breached vulnerabilities only', async ({ page }) => {
+    const body = JSON.parse(JSON.stringify(cveSustainingFixture));
+    body.slaCompliance = {
+      quarters: [{
+        label: 'Q3 2026',
+        quarterStart: '2026-07-01',
+        quarterEnd: '2026-09-30',
+        total: 3,
+        resolvedCount: 4,
+        newOpenCount: 3,
+        noSlaDate: 1,
+        metSla: 2,
+        missedSla: 1,
+        pct: 67,
+        breachedIssues: [{
+          key: 'RHAIENG-9001',
+          summary: 'CVE-2026-9001 in example package',
+          component: 'Model Serving',
+          status: 'Resolved',
+          assignee: 'Alice Example',
+          slaDate: '2026-09-20',
+          resolved: '2026-09-21T12:00:00.000Z'
+        }]
+      }]
+    };
+    await page.route('**/api/modules/releases/cve-sustaining', async route => {
+      await route.fulfill({ json: body });
+    });
+    await page.route('**/api/modules/team-tracker/field-options/component', async route => {
+      await route.fulfill({ json: { values: ['Model Serving', 'Dashboard', 'Pipelines'] } });
+    });
+
+    await page.goto('/#/releases/reports?report=cve-sustaining');
+    await page.waitForLoadState('networkidle');
+    await page.waitForTimeout(DEFAULT_PAGE_WAIT_TIME);
+
+    const slaSection = page.locator('section').filter({ hasText: 'CVE SLA Compliance' });
+    const firstQuarterMetrics = slaSection.getByTestId('sla-quarter-metrics').first();
+    await expect(firstQuarterMetrics.getByTestId('sla-quarter-metric-label')).toHaveText([
+      'Breached:', 'Met:', 'Resolved overall:', 'New this quarter and still open:', 'No SLA Date:'
+    ]);
+    await expect(slaSection.locator('a')).toHaveCount(0);
+
+    const summaryValues = firstQuarterMetrics.getByTestId('sla-quarter-metric-value');
+    await expect(summaryValues).toHaveCount(5);
+    await expect(summaryValues).toHaveText(['1', '2', '4', '3', '1']);
+    const valueBounds = await summaryValues.evaluateAll(elements => elements.map(element => {
+      const { right } = element.getBoundingClientRect();
+      return right;
+    }));
+    expect(Math.max(...valueBounds) - Math.min(...valueBounds)).toBeLessThanOrEqual(1);
+
+    await slaSection.getByRole('button', { name: 'Breached: 1' }).click();
+    const report = slaSection.getByRole('region', { name: 'Q3 2026 SLA breach report' });
+    await expect(report).toBeVisible();
+    await expect(report.getByRole('table')).toContainText('RHAIENG-9001');
+    await expect(report.getByRole('table')).toContainText('CVE-2026-9001 in example package');
+    await expect(report.getByRole('table')).toContainText('Sep 20, 2026');
+    await expect(report.getByRole('table')).toContainText('Sep 21, 2026');
+    await expect(report.getByRole('link', { name: 'RHAIENG-9001' })).toHaveAttribute(
+      'href', 'https://redhat.atlassian.net/browse/RHAIENG-9001'
+    );
+    expect(page.errors).toHaveLength(0);
+  });
+
+  test('legacy SLA snapshots prompt a Jira refresh before showing compliance', async ({ page }) => {
+    const body = JSON.parse(JSON.stringify(cveSustainingFixture));
+    body.slaCompliance = {
+      quarters: [{
+        label: 'Q3 2026',
+        total: 3,
+        metSla: 2,
+        missedSla: 1,
+        pct: 67,
+        total_jql: 'https://jira.example/issues/?jql=legacy-total',
+        metSla_queries: [{ jql: 'https://jira.example/issues/?jql=legacy-met', count: 2 }],
+        missedSla_queries: [{ jql: 'https://jira.example/issues/?jql=legacy-breached', count: 1 }]
+      }]
+    };
+    await page.route('**/api/modules/releases/cve-sustaining', async route => {
+      await route.fulfill({ json: body });
+    });
+    await page.route('**/api/modules/team-tracker/field-options/component', async route => {
+      await route.fulfill({ json: { values: ['Model Serving', 'Dashboard', 'Pipelines'] } });
+    });
+
+    await page.goto('/#/releases/reports?report=cve-sustaining');
+    await page.waitForLoadState('networkidle');
+    await page.waitForTimeout(DEFAULT_PAGE_WAIT_TIME);
+
+    const slaSection = page.locator('section').filter({ hasText: 'CVE SLA Compliance' });
+    await expect(slaSection).toContainText('Refresh from Jira to load ticket-level breach reports and current open counts');
+    await expect(slaSection.getByText('67%', { exact: true })).toHaveCount(0);
+    expect(page.errors).toHaveLength(0);
+  });
+
+  test('CVE sustaining report recovers when the refresh request times out at the gateway', async ({ page }) => {
+    const cached = {
+      ...cveSustainingFixture,
+      lastRefreshed: '2026-09-23T12:00:00.000Z'
+    };
+    const refreshed = {
+      ...cveSustainingFixture,
+      lastRefreshed: '2099-09-23T13:00:00.000Z'
+    };
+    let cacheRequestCount = 0;
+
+    await page.route('**/api/modules/releases/cve-sustaining', async route => {
+      cacheRequestCount++;
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify(cacheRequestCount > 1 ? refreshed : cached)
+      });
+    });
+    await page.route('**/api/modules/releases/cve-sustaining/refresh', async route => {
+      await route.fulfill({ status: 502, contentType: 'text/plain', body: 'Bad Gateway' });
+    });
+    await page.route('**/api/modules/team-tracker/field-options/component', async route => {
+      await route.fulfill({ json: { values: ['Model Serving', 'Dashboard', 'Pipelines'] } });
+    });
+
+    await page.goto('/#/releases/reports?report=cve-sustaining');
+    await expect(page.getByRole('heading', { name: 'RHAI Sustaining (CVEs)' })).toBeVisible();
+
+    await page.getByRole('button', { name: 'Refresh from Jira' }).click();
+    await expect(page.getByRole('button', { name: 'Refreshing...' })).toBeDisabled();
+    await expect(page.getByRole('heading', { name: 'CVE SLA Compliance' })).toBeVisible();
+    await expect(page.getByText(/Last refreshed:.*2099/)).toBeVisible({ timeout: 10000 });
+
+    await expect(page.getByRole('button', { name: 'Refresh from Jira' })).toBeEnabled();
+    await expect(page.locator('[role="alert"]')).toHaveCount(0);
+    expect(page.errors.filter(error => !error.message.includes('status of 502'))).toHaveLength(0);
+  });
+
+  test('CVE sustaining component names link to the matching CVE action report', async ({ page }) => {
+    await page.goto('/#/releases/reports?report=cve-sustaining');
+    await page.waitForLoadState('networkidle');
+    await page.waitForTimeout(DEFAULT_PAGE_WAIT_TIME);
+
+    const componentTable = page
+      .getByRole('heading', { name: 'CVEs across all versions', exact: true })
+      .locator('..')
+      .getByRole('table');
+    const componentLink = componentTable.locator('a:not([data-testid="cve-security-component-label"])').first();
+    const componentName = await componentLink.innerText();
+
+    await expect(componentLink).toHaveAttribute(
+      'href',
+      `#/releases/reports?report=cve-action-report&component=${encodeURIComponent(componentName)}`
+    );
+
+    const securityLink = componentTable.locator('[data-testid="cve-security-component-label"]');
+    if (await securityLink.count()) {
+      await expect(securityLink).toHaveAttribute(
+        'href',
+        '#/releases/reports?report=cve-action-report&component=Security'
+      );
+    }
+  });
+
+  test('CVE sustaining component links navigate to the CVE action report', async ({ page }) => {
+    await page.goto('/#/releases/reports?report=cve-sustaining');
+    await page.waitForLoadState('networkidle');
+    await page.waitForTimeout(DEFAULT_PAGE_WAIT_TIME);
+
+    const componentTable = page
+      .getByRole('heading', { name: 'CVEs across all versions', exact: true })
+      .locator('..')
+      .getByRole('table');
+    await componentTable.locator('a:not([data-testid="cve-security-component-label"])').first().click();
+
+    await expect(page).toHaveURL(/#\/releases\/reports\?report=cve-action-report&component=/);
+    await expect(page.getByRole('heading', { name: 'CVE Action Report', exact: true })).toBeVisible();
+  });
+
   test('CVE sustaining API returns cached fixture data', async ({ request }) => {
     var res = await request.get('/api/modules/releases/cve-sustaining');
     expect(res.ok()).toBe(true);
@@ -1762,6 +2121,7 @@ test.describe('Releases CVE Sustaining Report @releases', () => {
     expect(body).toHaveProperty('createdVsResolved');
     expect(body).toHaveProperty('unresolved');
     expect(body).toHaveProperty('falsePositivesTrend');
+    expect(body).toHaveProperty('slaCompliance');
     expect(body).toHaveProperty('openIssueRecords');
     expect(body).toHaveProperty('actionReportRecords');
     expect(body).toHaveProperty('jiraSearchBase');
@@ -1774,6 +2134,12 @@ test.describe('Releases CVE Sustaining Report @releases', () => {
       body.openIssueRecords.map(issue => issue.key)
     );
     expect(body.totalAll).toBeGreaterThanOrEqual(body.totalOpen);
+    expect(body.slaCompliance.quarters).toHaveLength(4);
+    // Cached payloads can predate this field; the report prompts users to refresh them.
+    expect(body.slaCompliance.quarters.every(quarter =>
+      (quarter.newOpenCount === undefined || Number.isInteger(quarter.newOpenCount)) &&
+      Array.isArray(quarter.breachedIssues) && quarter.breachedIssues.length === quarter.missedSla
+    )).toBe(true);
 
     var record = body.openIssueRecords[0];
     expect(record).toHaveProperty('key');
@@ -2535,6 +2901,41 @@ test.describe('Releases AI Planner tab @releases', () => {
     await expect(addToPlan).toBeVisible();
     await addToPlan.click();
     await expect(addToPlan).toHaveText(/Sent to Plan/);
+
+    expect(unexpectedDemoResourceErrors(page)).toHaveLength(0);
+  });
+
+  test('AI Planner receives live data from API via iframe', async ({ page }) => {
+    // Verify that AI Planner API data is sent to iframe
+    const apiDataReceived = [];
+    page.on('request', request => {
+      if (request.url().includes('/api/modules/releases/planning/ai-planner')) {
+        apiDataReceived.push({ url: request.url() });
+      }
+    });
+
+    const snapshotResponse = await page.request.get('/api/modules/releases/planning/ai-planner');
+    expect(snapshotResponse.ok()).toBe(true);
+    const snapshot = await snapshotResponse.json();
+    const liveFeatureKey = snapshot.features[0]?.Key;
+    expect(liveFeatureKey).toBeTruthy();
+
+    await page.goto('/#/releases/plan?tab=ai-planner');
+    await page.waitForLoadState('networkidle');
+    await page.waitForTimeout(DEFAULT_PAGE_WAIT_TIME);
+
+    // API should have been called to fetch live data
+    expect(apiDataReceived.length).toBeGreaterThan(0);
+
+    // Iframe should be visible and loaded
+    const iframe = page.locator('iframe[title="AI-First Release Planner"]');
+    await expect(iframe).toBeVisible();
+
+    // Data from API should populate the iframe (features visible)
+    const plannerFrame = page.frameLocator('iframe[title="AI-First Release Planner"]');
+    const tableRows = await plannerFrame.locator('#pm-tbl-wrap tbody tr').count();
+    expect(tableRows).toBeGreaterThan(0);
+    await expect(plannerFrame.locator('#pm-tbl-wrap tbody tr').filter({ hasText: liveFeatureKey })).toBeVisible();
 
     expect(unexpectedDemoResourceErrors(page)).toHaveLength(0);
   });
