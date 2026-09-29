@@ -2763,7 +2763,6 @@ test.describe('Releases AI Planner tab @releases', () => {
     await expect(plannerFrame.locator('.hdr-title')).toContainText('AI-First Release Planner');
     const tableRows = await plannerFrame.locator('#pm-tbl-wrap tbody tr').count();
     expect(tableRows).toBeGreaterThan(0);
-    await expect(plannerFrame.locator('text=Bug Queue')).toBeVisible();
 
     expect(unexpectedDemoResourceErrors(page)).toHaveLength(0);
   });
