@@ -10,10 +10,10 @@ const jsonLimit = express.json({ limit: '25mb' });
  * Mirrors the epic-decomposer push/GET pattern.
  *
  * @param {import('express').Router} router
- * @param {object} context - { storage, requireAuth, requireAdmin, requireScope }
+ * @param {object} context - { storage, requireAuth, requireAdmin, requireScope, buildFeatureReadiness, listStorageFiles }
  */
 module.exports = function registerAIPlannerRoutes(router, context) {
-  const { storage, requireAuth, requireAdmin, requireScope } = context;
+  const { storage, requireAuth, requireAdmin, requireScope, buildFeatureReadiness, listStorageFiles } = context;
   const { readFromStorage, writeToStorage } = storage;
 
   /**
@@ -101,14 +101,57 @@ module.exports = function registerAIPlannerRoutes(router, context) {
    * @openapi
    * /api/modules/releases/planning/ai-planner:
    *   get:
-   *     summary: AI Planner snapshot for the tab
+   *     summary: AI Planner snapshot for the tab (live data from feature-readiness)
    *     tags: [releases-planning]
    *     responses:
    *       200:
-   *         description: Features, bug queue, and metadata
+   *         description: Live features, bug queue, and metadata
    */
   router.get('/ai-planner', requireAuth, requireScope('releases:read'), async function(req, res) {
-    const data = await readAIPlanner(readFromStorage);
-    res.json(data);
+    try {
+      const readiness = await buildFeatureReadiness(readFromStorage, null, listStorageFiles);
+
+      const allFeatures = (readiness.pendingReview || []).concat(readiness.ready || []);
+
+      // Map to iframe expectations (index.html lines 2863-2869)
+      const features = allFeatures.map(f => ({
+        Key: f.key,
+        Summary: f.title,
+        Components: f.components || [],
+        Team: f.team || '',
+        Priority: f.priority || '',
+        Outcome: f.bigRock || '',
+        PlannedFor: (f.targetVersions && f.targetVersions[0]) || '',
+        Score: f.riceScore || 0,
+        // FPDoR is an object {passedCount, totalCount} - convert to string format
+        FPDoR: f.fpdor ? (f.fpdor.passedCount + '/' + f.fpdor.totalCount) : '0/17',
+        Confidence: f.confidence || 'not-ready',
+        Labels: (f.labels || []).join(', '),
+        'Fix Version': f.fixVersion || '',
+        'Release Type': f.releaseType || '',
+        Status: f.status || '',
+        PM: f.pmOwner || '',
+        DeliveryOwner: f.deliveryOwner || ''
+      }));
+
+      // bugQueue comes from CSV upload; for live-only mode, return empty
+      // (buildFeatureReadiness doesn't include component bug data)
+      const bugQueue = [];
+
+      res.json({
+        features: features,
+        bugQueue: bugQueue,
+        featureCount: features.length,
+        lastSyncedAt: (readiness.meta && readiness.meta.lastSyncedAt) || new Date().toISOString(),
+        metadata: {
+          source: 'live',
+          generatedAt: new Date().toISOString(),
+          version: '1.0'
+        }
+      });
+    } catch (err) {
+      console.error('AI Planner GET error:', err);
+      res.status(500).json({ error: err.message });
+    }
   });
 };

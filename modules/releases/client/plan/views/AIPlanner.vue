@@ -84,7 +84,7 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <div class="w-full h-screen flex flex-col bg-gray-50 dark:bg-gray-900">
+  <div class="w-full h-full flex flex-col bg-gray-50 dark:bg-gray-900" style="min-height: 600px">
     <iframe
       ref="iframeRef"
       :src="DEMO_URL"

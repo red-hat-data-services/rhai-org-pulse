@@ -456,10 +456,6 @@ tr:hover td{background:#f8fafc}
       <button id="add-to-plan-btn" onclick="addToPlan()" style="display:none;background:#16a34a;color:#fff;border:none;border-radius:6px;padding:3px 10px;font-size:11px;font-weight:700;cursor:pointer">⬆ Add to Plan</button>
     </div>
   </div>
-  <div id="bug-queue-panel" style="margin-bottom:10px;padding:12px 14px;background:#fef2f2;border:1px solid #fca5a5;border-radius:8px;display:block">
-    <div style="font-size:11px;font-weight:700;color:#c62828;margin-bottom:8px;letter-spacing:.05em">🐛 BUG QUEUE — COMPONENT LOAD</div>
-    <div id="bug-queue-list" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px;font-size:10px"></div>
-  </div>
   <div id="bug-detail-modal" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.5);z-index:1000;align-items:center;justify-content:center" onclick="if(event.target===this)this.style.display='none'"></div>
   <div id="mix-panel" class="mix-panel" style="display:none"></div>
   <div id="capacity-panel" style="margin-top:10px;padding:10px 16px;background:#0d1a2a;border-radius:8px;border:1px solid #1e3a5f;display:none">
@@ -2582,7 +2578,8 @@ function schedule(rows){
     r._comps = (esc(r['Components'])||'').split(';').map(x=>x.trim()).filter(Boolean);
     r._team  = (esc(r['Team'])||'').trim();
     r._teams = FEATURE_TEAM_LOOKUP[esc(r['Key'])] || null; // Erle's capacity-dataset: Jira Team field teams
-    r._fNum  = parseInt((r['FPDoR']||'0').split('/')[0])||0;
+    const fpdorStr = typeof r['FPDoR'] === 'string' ? r['FPDoR'] : (r['FPDoR']?.passedCount + '/' + r['FPDoR']?.totalCount || '0/17');
+    r._fNum  = parseInt((fpdorStr||'0').split('/')[0])||0;
     r._score = parseInt(r['Score'])||0;
     r._committed = (r['Confidence']||'').toLowerCase()==='committed';
     r._tv = (esc(r['Target Versions'])||'').trim();
@@ -2780,7 +2777,8 @@ function schedule(rows){
       } else {
         // FPDoR-completeness penalty: restores differentiation erased by the 85% cap.
         // Features with incomplete FPDoR (e.g. 9/17) score below the cap even when raw ML >= 85.
-        const fpdorDen=parseInt((r['FPDoR']||'0/17').split('/')[1])||17;
+        const fpdorStr2 = typeof r['FPDoR'] === 'string' ? r['FPDoR'] : (r['FPDoR']?.passedCount + '/' + r['FPDoR']?.totalCount || '0/17');
+        const fpdorDen=parseInt((fpdorStr2||'0/17').split('/')[1])||17;
         const fpdorRatio=fpdorDen>0?r._fNum/fpdorDen:1;
         const fpdorPenalty=Math.round((1-fpdorRatio)*15);
         r._conf=Math.max(Math.min(85,r._rawMlScore)-fpdorPenalty,20);
@@ -2875,18 +2873,11 @@ window.addEventListener('message', function(e){
       '_place': f.PlannedFor || 'Unknown',
       '_riskLevel': f.riskLevel || 'Medium'
     }));
-    // Clear mock bug data before applying live queue
-    window._buFeedbackByComponent = {};
-    bugQueue.forEach(b => {
-      window._buFeedbackByComponent[b.component] = {blocker: b.blocker||0, critical: b.critical||0, open: b.total||0};
-    });
-    window._buFeedbackTotal = bugQueue.reduce((sum,b) => sum+(b.total||0), 0);
     // Run schedule initialization for live API rows to calculate derived fields
     schedule(allData);
     // Trigger refresh with live data
     populateFilters();
     run();
-    displayBugQueue();
     renderApprovedBadge();
   }
 });
@@ -2923,7 +2914,6 @@ window.onload=()=>{
   populatePmSelect();
   applyUrlUserParam() || restoreMyComp();
   run();
-  displayBugQueue();
   renderApprovedBadge();
   // Restore compact column preference
   if(localStorage.getItem('_col_compact')){
@@ -3290,39 +3280,6 @@ function showBugDetails(compName) {
   modal.style.display = 'flex';
 }
 
-function displayBugQueue() {
-  const panel = document.getElementById('bug-queue-panel');
-  const list = document.getElementById('bug-queue-list');
-  if (!panel || !window._buFeedbackByComponent) return;
-
-  const componentBugs = Object.entries(window._buFeedbackByComponent)
-    .sort((a, b) => ((b[1].critical || 0) + (b[1].blocker || 0)) - ((a[1].critical || 0) + (a[1].blocker || 0)))
-    .slice(0, 6);
-
-  if (componentBugs.length === 0) {
-    panel.style.display = 'none';
-    return;
-  }
-
-  list.innerHTML = componentBugs.map(([comp, bugs]) => {
-    const urgentCount = (bugs.blocker || 0) + (bugs.critical || 0);
-    const severity = urgentCount >= 10 ? 'high' : urgentCount >= 5 ? 'medium' : 'low';
-    const icon = severity === 'high' ? '🔴' : severity === 'medium' ? '🟠' : '🟡';
-    const bgColor = severity === 'high' ? '#fee2e2' : severity === 'medium' ? '#fef3c7' : '#f0fdf4';
-    const borderColor = severity === 'high' ? '#fca5a5' : severity === 'medium' ? '#fcd34d' : '#86efac';
-    const textColor = severity === 'high' ? '#7f1d1d' : severity === 'medium' ? '#854d0e' : '#166534';
-
-    return `<div style="background:${bgColor};border:1px solid ${borderColor};border-radius:6px;padding:8px;color:${textColor};cursor:pointer;transition:all 0.2s" onmouseover="this.style.opacity='0.8';this.style.transform='scale(1.02)'" onmouseout="this.style.opacity='1';this.style.transform='scale(1)'" onclick="showBugDetails('${comp}')">
-      <div style="font-weight:700;margin-bottom:4px">${icon} ${comp}</div>
-      <div>${bugs.blocker || 0} blocker · ${bugs.critical || 0} critical</div>
-      <div style="font-size:9px;color:#666;margin-top:3px">${bugs.open || 0} total issues</div>
-      <div style="font-size:8px;margin-top:4px;opacity:0.7">click for details →</div>
-    </div>`;
-  }).join('');
-
-  panel.style.display = 'block';
-}
-
 function run(){
   const rel   = v('f-rel'), read  = v('f-read'), place = v('f-place');
   const out   = v('f-outcome');
@@ -3360,7 +3317,11 @@ function run(){
   rows=rows.slice().sort((a,b)=>{
     let va=a[sortCol],vb=b[sortCol];
     if(sortCol==='Score'||sortCol==='Rank'){va=+va;vb=+vb;}
-    else if(sortCol==='FPDoR'){va=parseInt((va||'0').split('/')[0]);vb=parseInt((vb||'0').split('/')[0]);}
+    else if(sortCol==='FPDoR'){
+      const vaStr = typeof va === 'string' ? va : (va?.passedCount + '/' + va?.totalCount || '0');
+      const vbStr = typeof vb === 'string' ? vb : (vb?.passedCount + '/' + vb?.totalCount || '0');
+      va=parseInt((vaStr||'0').split('/')[0]);vb=parseInt((vbStr||'0').split('/')[0]);
+    }
     return sortAsc?(va>vb?1:-1):(va<vb?1:-1);
   });
   // Always group by placement first (EA1→EA2→GA→No), then by confidence within each group
