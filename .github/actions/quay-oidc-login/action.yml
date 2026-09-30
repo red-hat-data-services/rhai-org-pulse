@@ -1,0 +1,29 @@
+name: Login to Quay with GitHub OIDC
+description: Exchange the GitHub Actions OIDC token for a short-lived Quay robot token and log Docker in.
+
+inputs:
+  robot-username:
+    description: Fully qualified Quay robot username.
+    required: true
+
+runs:
+  using: composite
+  steps:
+    - name: Exchange GitHub OIDC token for Quay token
+      shell: bash
+      env:
+        QUAY_ROBOT_USER: ${{ inputs.robot-username }}
+      run: |
+        set -euo pipefail
+        OIDC_TOKEN="$(curl --fail --silent --show-error \
+          -H "Authorization: bearer ${ACTIONS_ID_TOKEN_REQUEST_TOKEN}" \
+          "${ACTIONS_ID_TOKEN_REQUEST_URL}" | jq --raw-output '.value')"
+        test -n "${OIDC_TOKEN}" && test "${OIDC_TOKEN}" != "null"
+        echo "::add-mask::${OIDC_TOKEN}"
+
+        QUAY_TOKEN="$(curl --fail --silent --show-error \
+          --user "${QUAY_ROBOT_USER}:${OIDC_TOKEN}" \
+          "https://quay.io/oauth2/federation/robot/token" | jq --raw-output '.token')"
+        test -n "${QUAY_TOKEN}" && test "${QUAY_TOKEN}" != "null"
+        echo "::add-mask::${QUAY_TOKEN}"
+        echo "${QUAY_TOKEN}" | docker login quay.io --username "${QUAY_ROBOT_USER}" --password-stdin
