@@ -7,8 +7,8 @@
 /server/           @red-hat-data-services/org-pulse-maintainers
 /deploy/           @red-hat-data-services/org-pulse-maintainers
 # Deployment promotion manifests are intentionally unowned.
-/deploy/openshift/overlays/prod/kustomization.yaml
-/deploy/openshift/overlays/preprod/kustomization.yaml
+/deploy/openshift/overlays/ai-eng-prod/kustomization.yaml
+/deploy/openshift/overlays/ai-eng-preprod/kustomization.yaml
 /scripts/          @red-hat-data-services/org-pulse-maintainers
 /eslint-rules/     @red-hat-data-services/org-pulse-maintainers
 /package.json      @red-hat-data-services/org-pulse-maintainers
