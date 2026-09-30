@@ -141,6 +141,10 @@ make test-module MODULE=<name>  # Run integration tests for a module
 
 Deployed to OpenShift via ArgoCD. AI Eng images extend core images from `@org-pulse/core`. See [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md) for the full deployment guide.
 
+## AI Assistant
+
+The Org Pulse dashboard includes an AI chat assistant for querying team roster, Jira metrics, and contribution data in natural language. See the [AI Assistant User Guide](docs/CHATBOT-USER-GUIDE.md) for capabilities, limitations, and compliance information.
+
 ## Contributing
 
 See [CONTRIBUTING.md](CONTRIBUTING.md) for development workflow, project structure, and code style guidelines.
