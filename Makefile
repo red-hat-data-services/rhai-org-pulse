@@ -33,7 +33,8 @@ CONTAINER_FLAGS := --rm -t \
 
 # Smoke tests setup command: install dependencies in container
 # Note: npm ci inherently replaces node_modules with Linux packages via bind mount
-SETUP_CMD := mkdir -p /tmp/.cache /tmp/.npm && npm ci --silent --engine-strict=false
+# Install git first (required by some npm packages with git dependencies)
+SETUP_CMD := apt-get update && apt-get install -y --no-install-recommends git && mkdir -p /tmp/.cache /tmp/.npm && npm ci --silent --engine-strict=false
 
 # Helper function to start a frontend or backend container for smoke testing,
 # then wait for the health check to pass

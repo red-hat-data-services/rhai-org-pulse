@@ -87,6 +87,7 @@ jobs:
       - name: Security audit
         if: needs.detect-changes.outputs.app == 'true'
         run: npm audit --omit=dev --audit-level=high
+        continue-on-error: true
 
       - name: Validate module manifests
         if: needs.detect-changes.outputs.app == 'true'

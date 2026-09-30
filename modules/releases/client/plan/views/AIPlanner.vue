@@ -30,6 +30,18 @@ const handleIframeMessage = async (event) => {
   if (event.origin !== window.location.origin) return
 
   if (event.data.type === 'add-to-draft-plan') {
+    // If iframe specifies a version, load that version first
+    // Uses feature's Target Version if "All Releases" was selected (version is feature.version)
+    const targetVersion = event.data.version || (event.data.features?.[0]?.version)
+    if (targetVersion && targetVersion !== selectedVersion.value) {
+      try {
+        await loadEditor(targetVersion)
+      } catch (e) {
+        console.warn(`Could not load version ${targetVersion}:`, e)
+        return
+      }
+    }
+
     if (!await ensureDraftPlanLoaded()) {
       console.warn('Plan Approval data is unavailable')
       return
@@ -84,7 +96,7 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <div class="w-full h-screen flex flex-col bg-gray-50 dark:bg-gray-900">
+  <div class="w-full h-full flex flex-col bg-gray-50 dark:bg-gray-900" style="min-height: 600px">
     <iframe
       ref="iframeRef"
       :src="DEMO_URL"

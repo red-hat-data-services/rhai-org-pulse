@@ -1,0 +1,21 @@
+{
+  "features": [
+    {
+      "key": "RHOAI-2026",
+      "title": "Release Planning Timeline Q1 2026",
+      "version": "3.6 EA1",
+      "releaseDate": "2026-09-29",
+      "status": "needs-action",
+      "priority": "high",
+      "owner": "Release Engineering",
+      "outcome": "Critical Planning Milestone"
+    }
+  ],
+  "timeline": [
+    {
+      "date": "2026-09-29",
+      "status": "needs-action",
+      "cssClass": "bg-amber-50"
+    }
+  ]
+}
