@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed, onMounted, watch } from 'vue'
+import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
 import { useDraftPlans } from '../composables/useDraftPlans'
 import DraftPlanRow from '../components/DraftPlanRow.vue'
 import DraftPlanDrawer from '../components/DraftPlanDrawer.vue'
@@ -196,6 +196,31 @@ onMounted(async function() {
   // retaining the full candidate set for approvals, editing, and audit history.
   filterEvent.value = '__approved__'
   filterDecision.value = ''
+
+  // Listen for features added from AI Planner iframe and auto-load correct cycle
+  const handleIframeMessage = async (event) => {
+    if (event.origin !== window.location.origin) return
+    if (event.data.type === 'add-to-draft-plan') {
+      const targetVersion = event.data.version || (event.data.features?.[0]?.version)
+      if (targetVersion && targetVersion !== selectedVersion.value) {
+        try {
+          await loadEditor(targetVersion)
+        } catch (e) {
+          console.warn(`Could not load version ${targetVersion}:`, e)
+        }
+      }
+    }
+  }
+  window.addEventListener('message', handleIframeMessage)
+
+  // Store reference for cleanup
+  window.__planApprovalMessageHandler = handleIframeMessage
+})
+
+onUnmounted(() => {
+  if (window.__planApprovalMessageHandler) {
+    window.removeEventListener('message', window.__planApprovalMessageHandler)
+  }
 })
 </script>
 
