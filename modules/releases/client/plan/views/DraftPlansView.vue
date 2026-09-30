@@ -65,6 +65,7 @@ var {
 
 var selectedFeatureKey = ref(null)
 var filterPlacements = PLACEMENTS.concat(['Descope'])
+var iframeMessageHandler = null
 
 var selectedFeature = computed(function() {
   if (!selectedFeatureKey.value) return null
@@ -197,29 +198,24 @@ onMounted(async function() {
   filterEvent.value = '__approved__'
   filterDecision.value = ''
 
-  // Listen for features added from AI Planner iframe and auto-load correct cycle
-  const handleIframeMessage = async (event) => {
+  iframeMessageHandler = async function(event) {
     if (event.origin !== window.location.origin) return
-    if (event.data.type === 'add-to-draft-plan') {
-      const targetVersion = event.data.version || (event.data.features?.[0]?.version)
-      if (targetVersion && targetVersion !== selectedVersion.value) {
-        try {
-          await loadEditor(targetVersion)
-        } catch (e) {
-          console.warn(`Could not load version ${targetVersion}:`, e)
-        }
+    if (!event.data || event.data.type !== 'add-to-draft-plan') return
+    var targetVersion = event.data.version || (event.data.features && event.data.features[0] && event.data.features[0].version)
+    if (targetVersion && targetVersion !== selectedVersion.value) {
+      try {
+        await loadEditor(targetVersion)
+      } catch (e) {
+        console.warn('Could not load version ' + targetVersion + ':', e)
       }
     }
   }
-  window.addEventListener('message', handleIframeMessage)
-
-  // Store reference for cleanup
-  window.__planApprovalMessageHandler = handleIframeMessage
+  window.addEventListener('message', iframeMessageHandler)
 })
 
-onUnmounted(() => {
-  if (window.__planApprovalMessageHandler) {
-    window.removeEventListener('message', window.__planApprovalMessageHandler)
+onUnmounted(function() {
+  if (iframeMessageHandler) {
+    window.removeEventListener('message', iframeMessageHandler)
   }
 })
 </script>
