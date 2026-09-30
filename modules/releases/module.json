@@ -91,7 +91,8 @@
       { "path": "releases/aipcc-milestones.json", "notes": "Cached AIPCC milestone schedule from Google Sheets" },
       { "path": "releases/execution/index.json", "notes": "Feature index with summary metrics" },
       { "path": "releases/execution/features/*.json", "notes": "Per-feature detail files" },
-      { "path": "releases/rhoai-component-architectures/latest.json", "notes": "RHOAI component architecture support matrix" }
+      { "path": "releases/rhoai-component-architectures/latest.json", "notes": "RHOAI component architecture support matrix" },
+      { "path": "releases/chi-hierarchy/latest.json", "notes": "Stage/Prod Container Health Index hierarchy snapshot" }
     ]
   }
 }

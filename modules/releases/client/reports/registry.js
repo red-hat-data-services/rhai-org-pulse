@@ -20,6 +20,14 @@ export const reports = [
     component: defineAsyncComponent(() => import('./ReleaseReadinessDirector.vue'))
   },
   {
+    id: 'container-health-index',
+    label: 'Container Health Index',
+    description: 'Stage/Prod CHI hierarchy by product version → components → images, with grade and last-updated age.',
+    icon: 'Shield',
+    tags: ['Security', 'CHI', 'Containers'],
+    component: defineAsyncComponent(() => import('./ChiHierarchyReport.vue'))
+  },
+  {
     id: 'cve-sustaining',
     label: 'RHAI Sustaining (CVEs)',
     description: 'Open CVE tracking across RHAI components and versions — due dates, assignee workload, VEX justifications, and trends.',

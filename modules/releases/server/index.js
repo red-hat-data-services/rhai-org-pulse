@@ -23,6 +23,7 @@ const registerAiAdoptionRoutes = require('./ai-adoption/routes');
 const registerRhoaiComponentArchitecturesRoutes = require('./rhoai-component-architectures/routes');
 const registerPreReleaseCveRoutes = require('./pre-release-cve/routes');
 const registerAipccMilestonesRoutes = require('./aipcc-milestones');
+const { registerChiHierarchyRoutes } = require('./chi-hierarchy/routes');
 const { getAuditLog } = require('./planning/audit-log');
 
 /**
@@ -362,6 +363,15 @@ module.exports = async function registerRoutes(router, context) {
     resolveSecret: context.resolveSecret || null
   });
   router.use('/pre-release-cve', preReleaseCveRouter);
+
+  // CHI Hierarchy sub-router (mounted at /api/modules/releases/chi-hierarchy/)
+  const chiHierarchyRouter = express.Router();
+  registerChiHierarchyRoutes(chiHierarchyRouter, {
+    storage,
+    requireAuth,
+    requireScope
+  });
+  router.use('/chi-hierarchy', chiHierarchyRouter);
 
   // ─── Unified Audit Routes ───
 
