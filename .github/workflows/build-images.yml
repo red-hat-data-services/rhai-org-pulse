@@ -30,6 +30,7 @@ on:
 
 permissions:
   contents: read
+  id-token: write
 
 concurrency:
   group: build-images-${{ github.ref_name }}
@@ -242,12 +243,10 @@ jobs:
           fi
           docker stop backend-smoke
 
-      - name: Login to Quay.io
-        uses: docker/login-action@v4
+      - name: Login to Quay.io with OIDC
+        uses: ./.github/actions/quay-oidc-login
         with:
-          registry: quay.io
-          username: ${{ secrets.QUAY_USERNAME }}
-          password: ${{ secrets.QUAY_PASSWORD }}
+          robot-username: org-pulse+ci_push
 
       - name: Push image
         run: |
@@ -299,12 +298,10 @@ jobs:
       - name: Run frontend smoke tests with Playwright
         run: make smoke-test CONTAINER_RUNTIME=docker FRONTEND_IMAGE=${{ env.FRONTEND_IMAGE }}:${BUILD_SHA} BACKEND_IMAGE=${{ env.BACKEND_IMAGE }}:${BUILD_SHA}
 
-      - name: Login to Quay.io
-        uses: docker/login-action@v4
+      - name: Login to Quay.io with OIDC
+        uses: ./.github/actions/quay-oidc-login
         with:
-          registry: quay.io
-          username: ${{ secrets.QUAY_USERNAME }}
-          password: ${{ secrets.QUAY_PASSWORD }}
+          robot-username: org-pulse+ci_push
 
       - name: Push image
         run: |
