@@ -2796,6 +2796,18 @@ test.describe('Releases AI Planner tab @releases', () => {
     await expect(page.getByText(/Nothing was added to Plan Approval/i)).toBeVisible();
   });
 
+  test('AI Planner API exposes failed FPDoR items', async ({ request }) => {
+    const res = await request.get('/api/modules/releases/planning/ai-planner');
+    expect(res.ok()).toBe(true);
+
+    const body = await res.json();
+    expect(body.features.length).toBeGreaterThan(0);
+    expect(body.features.every(f => typeof f['Failed FPDoR Items'] === 'string')).toBe(true);
+    // Without real failures the planner weights every feature as a clean pass,
+    // which is what produced w:100 and LOW risk across the whole table.
+    expect(body.features.some(f => f['Failed FPDoR Items'].length > 0)).toBe(true);
+  });
+
   test('AI Planner API returns the planner snapshot', async ({ request }) => {
     const res = await request.get('/api/modules/releases/planning/ai-planner');
     expect(res.ok()).toBe(true);
