@@ -112,7 +112,11 @@
                     v-else-if="obj.quarters[q]"
                     class="rounded-lg px-2 py-2 min-h-[3rem] flex items-center justify-center"
                     :class="[statusConfig[obj.quarters[q].status].bg, reportMap[obj.id] ? 'cursor-pointer hover:ring-2 hover:ring-primary-400 transition-all' : '']"
+                    :role="reportMap[obj.id] ? 'link' : undefined"
+                    :tabindex="reportMap[obj.id] ? 0 : undefined"
                     @click.stop="reportMap[obj.id] ? navigateToReport(reportMap[obj.id]) : null"
+                    @keydown.enter.stop="reportMap[obj.id] ? navigateToReport(reportMap[obj.id]) : null"
+                    @keydown.space.prevent.stop="reportMap[obj.id] ? navigateToReport(reportMap[obj.id]) : null"
                   >
                     <span v-if="obj.quarters[q].summary" class="text-[11px] font-medium leading-tight whitespace-pre-line" :class="statusConfig[obj.quarters[q].status].text">{{ obj.quarters[q].summary }}</span>
                     <span v-else class="text-xs text-gray-300 dark:text-gray-600">—</span>
@@ -175,7 +179,11 @@
                       v-else-if="kr.quarters && kr.quarters[q]"
                       class="rounded-lg px-2 py-2 min-h-[3rem] flex items-center justify-center"
                       :class="[statusConfig[kr.quarters[q].status].bg, reportMap[obj.id] ? 'cursor-pointer hover:ring-2 hover:ring-primary-400 transition-all' : '']"
+                      :role="reportMap[obj.id] ? 'link' : undefined"
+                      :tabindex="reportMap[obj.id] ? 0 : undefined"
                       @click.stop="reportMap[obj.id] ? navigateToReport(reportMap[obj.id]) : null"
+                      @keydown.enter.stop="reportMap[obj.id] ? navigateToReport(reportMap[obj.id]) : null"
+                      @keydown.space.prevent.stop="reportMap[obj.id] ? navigateToReport(reportMap[obj.id]) : null"
                     >
                       <span v-if="kr.quarters[q].summary" class="text-[11px] font-medium leading-tight whitespace-pre-line" :class="statusConfig[kr.quarters[q].status].text">{{ kr.quarters[q].summary }}</span>
                       <span v-else class="text-xs text-gray-300 dark:text-gray-600">—</span>
@@ -243,7 +251,7 @@ function hasMultiKrRows(obj) {
 
 var reportMap = {
   'on-time-releases': 'on-time-releases',
-  'cve-sla': 'cve-sla',
+  'cve-sla': 'cve-sustaining',
   'support-cases': 'support-cases',
   'tech-visibility': 'tech-visibility'
 }
@@ -255,6 +263,10 @@ var supportCaseDataAsOf = {
 }
 
 function navigateToReport(reportId) {
+  if (reportId === 'cve-sustaining') {
+    window.location.hash = '#/releases/reports?report=cve-sustaining'
+    return
+  }
   if (nav) nav.navigateTo('reports', { report: reportId })
 }
 

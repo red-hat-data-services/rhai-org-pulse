@@ -43,7 +43,7 @@ test.describe('OKR Hub timeline @okr-hub', function () {
       await route.fulfill({ json: { quarters: [] } });
     });
     await page.route('**/api/modules/okr-hub/reports/content-contributions', async function (route) {
-      await route.fulfill({ json: { quarters: [] } });
+      await route.fulfill({ json: { quarters: [], overall: { associates: 0, completed: 0, pct: 0 } } });
     });
 
     await page.goto('/#/okr-hub/timeline');
@@ -57,5 +57,115 @@ test.describe('OKR Hub timeline @okr-hub', function () {
     await expect(page.locator('[data-testid="support-case-data-as-of"][data-quarter="Q3"]')).toHaveCount(3);
     await expect(page.getByText('Data as of Oct 1, 2026', { exact: true })).toHaveCount(3);
     await expect(page.locator('[data-testid="support-case-data-as-of"][data-quarter="Q4"]')).toHaveCount(0);
+  });
+
+  test('opens RHAI Sustaining when a CVE SLA quarter cell is selected', async function ({ page }) {
+    await page.route('**/api/modules/okr-hub/editable-status', async function (route) {
+      await route.fulfill({ json: { entries: {} } });
+    });
+    await page.route('**/api/modules/okr-hub/reports/on-time-releases', async function (route) {
+      await route.fulfill({ json: { releases: [] } });
+    });
+    await page.route('**/api/modules/releases/cve-sustaining', async function (route) {
+      await route.fulfill({
+        json: {
+          slaCompliance: {
+            quarters: [
+              { label: 'Q1 2026', pct: 79, metSla: 1840, missedSla: 477, total: 2317 },
+              { label: 'Q2 2026', pct: 74, metSla: 1375, missedSla: 481, total: 1856 },
+              { label: 'Q3 2026', pct: 67, metSla: 4738, missedSla: 2350, total: 7088 }
+            ]
+          }
+        }
+      });
+    });
+    await page.route('**/api/modules/okr-hub/reports/support-cases', async function (route) {
+      await route.fulfill({ json: { products: [], quarters: {} } });
+    });
+    await page.route('**/api/modules/okr-hub/reports/tech-visibility', async function (route) {
+      await route.fulfill({ json: { quarters: [], overall: { weeksMet: 0, totalWeeks: 0, pct: 0 } } });
+    });
+    await page.route('**/api/modules/okr-hub/reports/content-contributions', async function (route) {
+      await route.fulfill({ json: { quarters: [], overall: { associates: 0, completed: 0, pct: 0 } } });
+    });
+
+    await page.goto('/#/okr-hub/timeline');
+
+    var cveRow = page.getByRole('row').filter({ hasText: 'CVE SLA Compliance' });
+    await expect(cveRow.getByRole('link')).toHaveCount(4);
+    await cveRow.getByRole('link').filter({ hasText: '79%' }).click();
+    await expect(page).toHaveURL(/#\/releases\/reports\?report=cve-sustaining$/);
+  });
+
+  test('shows the updated Q3 associate content snapshot', async function ({ page }) {
+    await page.route('**/api/modules/okr-hub/reports/tech-visibility', async function (route) {
+      await route.fulfill({ json: { quarters: [], overall: { weeksMet: 0, totalWeeks: 0, pct: 0 }, target: 5 } });
+    });
+    await page.route('**/api/modules/okr-hub/reports/content-contributions', async function (route) {
+      await route.fulfill({
+        json: {
+          quarters: [{
+            label: 'Q3 2026',
+            teams: [
+              { name: "Steven's Directs", associates: 14, completed: 1, pct: 7, performance: 'Behind (43% to go)', endQPct: 7 },
+              { name: 'Cat Agentics & AI Eng Tooling', associates: 58, completed: 30, pct: 52, performance: 'On Track', endQPct: 52 },
+              { name: 'Sherard AI Platform', associates: 192, completed: 40, pct: 21, performance: 'Behind (29% to go)', endQPct: 21 },
+              { name: 'Taneem Inf Engineering', associates: 59, completed: 27, pct: 45, performance: 'Behind (5% to go)', endQPct: 45 },
+              { name: 'Kai AI Innovation', associates: 13, completed: 2, pct: 15, performance: 'Behind (35% to go)', endQPct: 15 },
+              { name: 'Tom AIPCC', associates: 147, completed: 32, pct: 22, performance: 'Behind (28% to go)', endQPct: 22 },
+              { name: 'Monica watsonx', associates: 48, completed: 22, pct: 46, performance: 'Behind (4% to go)', endQPct: 46 }
+            ],
+            total: { associates: 531, completed: 154, pct: 29, performance: 'Behind (21% to go)', endQPct: 29 },
+            targetDate: '12/31/2026'
+          }],
+          overall: { associates: 531, completed: 154, pct: 29 },
+          target: '1 piece of content per associate',
+          fetchedAt: '2026-09-30T12:00:00.000Z'
+        }
+      });
+    });
+
+    await page.goto('/#/okr-hub/reports?report=tech-visibility');
+    await page.getByRole('button', { name: /KR2: Associate Content Contributions/ }).click();
+
+    await expect(page.getByRole('button', { name: /Q3 2026 154 of 531 associates completed 29%/ })).toBeVisible();
+    var catRow = page.getByRole('row').filter({ hasText: 'Cat Agentics & AI Eng Tooling' });
+    await expect(catRow).toContainText('30');
+    await expect(catRow).toContainText('On Track');
+    await expect(catRow).toContainText('12/31/2026');
+    await expect(catRow.getByText('52%', { exact: true })).toHaveCount(2);
+    var totalRow = page.getByRole('row').filter({ hasText: 'TOTAL' });
+    await expect(totalRow).toContainText('Behind (21% to go)');
+  });
+
+  test('shows the September 25 KR1 fallback entry', async function ({ page }) {
+    await page.route('**/api/modules/okr-hub/reports/tech-visibility', async function (route) {
+      await route.fulfill({
+        json: {
+          quarters: [{
+            label: 'Q3 2026',
+            weeks: [{ weekOf: '2026-09-25', count: 0, met: false }],
+            weeksMet: 2,
+            totalWeeks: 12,
+            pct: 17
+          }],
+          overall: { weeksMet: 9, totalWeeks: 37, pct: 24 },
+          target: 5,
+          source: '(sample data)',
+          fetchedAt: '2026-09-30T12:00:00.000Z'
+        }
+      });
+    });
+    await page.route('**/api/modules/okr-hub/reports/content-contributions', async function (route) {
+      await route.fulfill({ json: { quarters: [], overall: { associates: 0, completed: 0, pct: 0 } } });
+    });
+
+    await page.goto('/#/okr-hub/reports?report=tech-visibility');
+    await page.getByRole('button', { name: /KR1: Weekly Posts/ }).click();
+    await expect(page.getByRole('button', { name: /Q3 2026 2 of 12 weeks met 17%/ })).toBeVisible();
+
+    var septemberRow = page.getByRole('row').filter({ hasText: 'Sep 25, 2026' });
+    await expect(septemberRow).toContainText('0');
+    await expect(septemberRow).toContainText('Missed');
   });
 });
