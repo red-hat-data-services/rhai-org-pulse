@@ -47,6 +47,9 @@ var filterBigRock = ref('')
 var filterPm = ref('')
 var filterText = ref('')
 var session = ref(null)
+// Keys approved from the AI Planner in this browser session, so the planner's
+// additions can be isolated from approvals already saved on the cycle.
+var sessionAdded = ref([])
 
 export function useDraftPlans() {
   var candidates = computed(function() {
@@ -105,6 +108,8 @@ export function useDraftPlans() {
         if (!row.changed) return false
       } else if (ev === '__approved__') {
         if (!row.approved) return false
+      } else if (ev === '__session__') {
+        if (sessionAdded.value.indexOf(row.key) === -1) return false
       } else if (ev && row.event !== ev) {
         return false
       }
@@ -467,6 +472,14 @@ export function useDraftPlans() {
     return result
   }
 
+  function markSessionAdded(keys) {
+    var next = sessionAdded.value.slice()
+    for (var i = 0; i < keys.length; i++) {
+      if (next.indexOf(keys[i]) === -1) next.push(keys[i])
+    }
+    sessionAdded.value = next
+  }
+
   function freeze(eventName) {
     var result = freezeEvent(editor.value, candidates.value, eventName)
     if (result.ok) markDirty()
@@ -578,6 +591,8 @@ export function useDraftPlans() {
     descopeFeature,
     undescopeFeature,
     approveFeature,
+    sessionAdded,
+    markSessionAdded,
     freeze,
     unfreeze,
     unfreezeAll,

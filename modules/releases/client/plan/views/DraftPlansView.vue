@@ -54,6 +54,7 @@ var {
   descopeFeature,
   undescopeFeature,
   approveFeature,
+  sessionAdded,
   freeze,
   unfreeze,
   unfreezeAll,
@@ -194,7 +195,9 @@ onMounted(async function() {
   }
   // Plan Approval starts with only AI Planner-approved features visible while
   // retaining the full candidate set for approvals, editing, and audit history.
-  filterEvent.value = '__approved__'
+  // After an Add to Plan, narrow further to just that batch so it isn't lost
+  // among approvals already saved on the cycle.
+  filterEvent.value = sessionAdded.value.length ? '__session__' : '__approved__'
   filterDecision.value = ''
 })
 </script>
@@ -363,6 +366,7 @@ onMounted(async function() {
           <option v-for="p in filterPlacements" :key="p" :value="p">{{ p }}</option>
           <option value="__changed__">Changed</option>
           <option value="__approved__">Approved</option>
+          <option value="__session__">Added from AI Planner</option>
         </select>
       </label>
       <label class="text-xs text-gray-500 dark:text-gray-400">
@@ -448,7 +452,7 @@ onMounted(async function() {
 
     <!-- Empty state: Plan Approval starts fresh -->
     <div
-      v-if="!loading && !error && (!draft || (filterEvent === '__approved__' && filteredRows.length === 0))"
+      v-if="!loading && !error && (!draft || ((filterEvent === '__approved__' || filterEvent === '__session__') && filteredRows.length === 0))"
       class="mx-4 mt-3 rounded-lg border border-blue-200 dark:border-blue-500/30 bg-blue-50 dark:bg-blue-500/10 px-4 py-6 text-center text-sm text-blue-800 dark:text-blue-300"
     >
       <p class="font-semibold mb-2">Plan Approval — Start Fresh</p>
