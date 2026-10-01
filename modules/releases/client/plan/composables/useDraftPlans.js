@@ -628,4 +628,5 @@ export function _resetDraftPlansForTests() {
   filterPm.value = ''
   filterText.value = ''
   session.value = null
+  sessionAdded.value = []
 }
