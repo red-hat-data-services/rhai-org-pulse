@@ -125,6 +125,12 @@ module.exports = function registerAIPlannerRoutes(router, context) {
         Score: f.riceScore || 0,
         // FPDoR is an object {passedCount, totalCount} - convert to string format
         FPDoR: f.fpdor ? (f.fpdor.passedCount + '/' + f.fpdor.totalCount) : '0/17',
+        // The planner weights risk and confidence off the failed item names; without
+        // them every feature scores as a clean pass (w:100, LOW risk, 95% confidence).
+        'Failed FPDoR Items': ((f.fpdor && f.fpdor.items) || [])
+          .filter(item => item.pass === false)
+          .map(item => item.name)
+          .join('; '),
         Confidence: f.confidence || 'not-ready',
         Labels: (f.labels || []).join(', '),
         'Fix Version': f.fixVersion || '',
