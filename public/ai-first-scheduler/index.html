@@ -3296,7 +3296,7 @@ function run(){
     if(!r._bigRocks) return;
     r._bigRocks.forEach(name=>{if(r._place==='No') window._brGapMap[name]=(window._brGapMap[name]||0)+1;});
   });
-  renderTbl(rows); renderPmBanner(rows); renderCards(allData); renderCapacityMix(allData); renderBigRocks(allData); renderAppendix(allData);
+  renderTbl(rows); renderPmBanner(rows); renderCards(rows); renderCapacityMix(allData); renderBigRocks(allData); renderAppendix(allData);
   if(document.getElementById('tab-roadmap')?.classList.contains('active')) renderRoadmapTimeline(allData);
   if(document.getElementById('tab-executive')?.classList.contains('active')) renderExecView();
 }
