@@ -2768,6 +2768,23 @@ test.describe('Releases AI Planner tab @releases', () => {
     expect(page.errors).toHaveLength(0);
   });
 
+  test('AI Planner keeps its filters when another Plan tab is visited', async ({ page }) => {
+    await page.goto('/#/releases/plan?tab=ai-planner');
+    await page.waitForLoadState('networkidle');
+    await page.waitForTimeout(DEFAULT_PAGE_WAIT_TIME);
+
+    const planner = page.frameLocator('iframe[title="AI-First Release Planner"]');
+    await planner.locator('#f-place').selectOption('EA1');
+    await expect(planner.locator('#f-place')).toHaveValue('EA1');
+
+    await page.locator('button', { hasText: 'Big Rocks' }).first().click();
+    await page.waitForTimeout(DEFAULT_PAGE_WAIT_TIME);
+    await page.locator('button', { hasText: 'AI Planner' }).first().click();
+    await page.waitForTimeout(DEFAULT_PAGE_WAIT_TIME);
+
+    await expect(planner.locator('#f-place')).toHaveValue('EA1');
+  });
+
   test('AI Planner iframe is addressed with the signed-in user', async ({ page }) => {
     await page.goto('/#/releases/plan?tab=ai-planner');
     await page.waitForLoadState('networkidle');
