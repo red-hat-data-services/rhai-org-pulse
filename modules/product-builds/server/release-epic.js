@@ -276,12 +276,22 @@ function buildEpicAdf(input, components) {
   };
 }
 
-function variantList(components) {
+const MAX_JIRA_SUMMARY_LENGTH = 255;
+
+function variantList(components, maxLength) {
   const values = components.map(component => component.variant || component.name);
-  const limit = 12;
-  return values.length > limit
-    ? `${values.slice(0, limit).join(', ')}... (+${values.length - limit} more)`
-    : values.join(', ');
+  for (let visibleCount = Math.min(values.length, 12); visibleCount >= 0; visibleCount -= 1) {
+    const remaining = values.length - visibleCount;
+    const suffix = remaining ? `... (+${remaining} more)` : '';
+    const list = `${values.slice(0, visibleCount).join(', ')}${suffix}`;
+    if (list.length <= maxLength) return list || 'all configured components';
+  }
+  return `${values.length} configured components`;
+}
+
+function releaseCardSummary(input, target, components) {
+  const prefix = `Release ${input.product} ${input.version} (${target}): `;
+  return `${prefix}${variantList(components, MAX_JIRA_SUMMARY_LENGTH - prefix.length)}`;
 }
 
 function isZStream(version) {
@@ -295,19 +305,20 @@ function checklistPlan(input, components) {
   const hasProd = plans.some(plan => /-prod$/.test(plan));
   const cards = [];
   const notCreated = [];
-  const variants = variantList(components);
+  const stageSummary = releaseCardSummary(input, 'stage-rc', components);
+  const prodSummary = releaseCardSummary(input, 'prod', components);
   if (hasStage) cards.push({
     kind: 'release', target: 'stage-rc', labels: ['planned'],
-    summary: `Release ${input.product} ${input.version} (stage-rc): ${variants}`,
+    summary: stageSummary,
     adf: buildReadinessAdf(input, components, 'stage-rc'),
   });
-  else notCreated.push({ summary: `Release ${input.product} ${input.version} (stage-rc): ${variants}`, reason: 'no release_plan entry ending in -stage' });
+  else notCreated.push({ summary: stageSummary, reason: 'no release_plan entry ending in -stage' });
   if (hasProd) cards.push({
     kind: 'release', target: 'prod', labels: ['planned'],
-    summary: `Release ${input.product} ${input.version} (prod): ${variants}`,
+    summary: prodSummary,
     adf: buildReadinessAdf(input, components, 'prod'),
   });
-  else notCreated.push({ summary: `Release ${input.product} ${input.version} (prod): ${variants}`, reason: 'no release_plan entry ending in -prod' });
+  else notCreated.push({ summary: prodSummary, reason: 'no release_plan entry ending in -prod' });
 
   if (input.advisory_type === 'RHSA' || isZStream(input.version)) cards.push({
     kind: 'checklist', labels: [],
@@ -804,6 +815,11 @@ async function createReleaseEpic(jira, input, components, body) {
       createdKeys.push(created.key);
       cards.push({ key: created.key, summary: card.summary, labels: card.labels });
     } catch (err) {
+      console.warn('[release-epic] Checklist card creation failed', {
+        epicKey: epic.key,
+        summary: card.summary,
+        error: err.message,
+      });
       failures.push({ summary: card.summary, error: err.message });
     }
   }
@@ -1146,9 +1162,21 @@ function componentMatchesToken(expectedComponents, token) {
   const separator = normalized.includes(':') ? ':' : normalized.includes('/') ? '/' : null;
   if (separator) {
     const [base, family] = normalized.split(separator, 2);
-    return expectedComponents.filter(component => (
-      componentTokenAliases(component).some(alias => alias === base || alias.startsWith(`${base}-`))
-      && (component.config_family || '—').toLowerCase() === family
+    const exactNames = expectedComponents.filter(component => component.name.toLowerCase() === base);
+    if (exactNames.length) {
+      return exactNames.filter(component => (
+        (component.config_family || '—').toLowerCase() === family
+      ));
+    }
+    const familyComponents = expectedComponents.filter(component => (
+      (component.config_family || '—').toLowerCase() === family
+    ));
+    const exactAliases = familyComponents.filter(component => (
+      componentTokenAliases(component).some(alias => alias === base)
+    ));
+    if (exactAliases.length) return exactAliases;
+    return familyComponents.filter(component => (
+      componentTokenAliases(component).some(alias => alias.startsWith(`${base}-`))
     ));
   }
   return expectedComponents.filter(component => componentTokenAliases(component)
@@ -1163,19 +1191,36 @@ function componentTokenAliases(component) {
   return [...new Set([name, shortName, String(component.variant || '').toLowerCase()].filter(Boolean))];
 }
 
-function resolveCardComponentTokens(expectedComponents, value) {
+function resolveComponentTokenList(expectedComponents, value, label) {
   const tokens = String(value || '').split(/[\s,]+/).map(token => token.trim()).filter(Boolean);
   if (tokens.some(token => token.toLowerCase() === 'all')) {
-    if (tokens.length !== 1) throw new Error('components cannot combine all with other component names');
+    if (tokens.length !== 1) throw new Error(`${label} cannot combine all with other component names`);
     return expectedComponents.map(component => ({ ...component }));
   }
   const result = [];
   const seen = new Set();
   for (const token of tokens) {
     const matches = componentMatchesToken(expectedComponents, token);
-    if (!matches.length) throw new Error(`Unknown components name or variant: ${token}`);
+    if (!matches.length) {
+      const description = label === 'components' ? 'components name or variant' : `${label} component or variant`;
+      const baseToken = token.split(/[:/]/, 1)[0];
+      const related = baseToken === token ? [] : componentMatchesToken(expectedComponents, baseToken);
+      const examples = (related.length ? related : expectedComponents)
+        .slice(0, 5)
+        .map(component => `${component.name}:${component.config_family || '—'}`);
+      const choices = examples.length
+        ? `${related.length ? 'Matching config-family choices' : 'Configured examples'}: ${examples.join(', ')}.`
+        : 'The selected product has no configured components.';
+      throw new Error(`Unknown ${description}: ${token}. Use a PMC component or variant name; qualify ambiguous names as <component-name>:<config_family>. ${choices}`);
+    }
     const families = new Set(matches.map(component => component.config_family || '—'));
-    if (families.size > 1) throw new Error(`Component name or variant is ambiguous: ${token}; specify the config family`);
+    if (families.size > 1) {
+      const description = label === 'components' ? 'Component name or variant' : `${label} component or variant`;
+      const examples = [...new Set(matches.map(component => `${component.name}:${component.config_family || '—'}`))]
+        .slice(0, 3)
+        .join(', ');
+      throw new Error(`${description} is ambiguous: ${token}; qualify it as <component-name>:<config_family>, for example ${examples}`);
+    }
     for (const component of matches) {
       const key = taskComponentKey(component);
       if (seen.has(key)) continue;
@@ -1186,27 +1231,12 @@ function resolveCardComponentTokens(expectedComponents, value) {
   return result;
 }
 
+function resolveCardComponentTokens(expectedComponents, value) {
+  return resolveComponentTokenList(expectedComponents, value, 'components');
+}
+
 function resolveComponentTokens(expectedComponents, value, label) {
-  const tokens = String(value || '').split(/[\s,]+/).map(token => token.trim()).filter(Boolean);
-  if (tokens.some(token => token.toLowerCase() === 'all')) {
-    if (tokens.length !== 1) throw new Error(`${label} cannot combine all with other component names`);
-    return expectedComponents.map(component => ({ ...component }));
-  }
-  const result = [];
-  const seen = new Set();
-  for (const token of tokens) {
-    const matches = componentMatchesToken(expectedComponents, token);
-    if (!matches.length) throw new Error(`Unknown ${label} component or variant: ${token}`);
-    const families = new Set(matches.map(component => component.config_family || '—'));
-    if (families.size > 1) throw new Error(`${label} component or variant is ambiguous: ${token}`);
-    for (const component of matches) {
-      const key = taskComponentKey(component);
-      if (seen.has(key)) continue;
-      seen.add(key);
-      result.push({ ...component });
-    }
-  }
-  return result;
+  return resolveComponentTokenList(expectedComponents, value, label);
 }
 
 function parseImageListInput(value, readyComponents) {
@@ -1228,7 +1258,18 @@ function parseImageListInput(value, readyComponents) {
         component.stage_repository && component.stage_repository.replace(/\/$/, '') === parsed.repository
       ));
       if (matches.length !== 1) {
-        if (readyComponents.length !== 1) throw new Error('A raw image-list pullspec is accepted only when it maps unambiguously to one ready component');
+        if (readyComponents.length !== 1) {
+          if (!matches.length) {
+            const selectedMappings = readyComponents.slice(0, 5)
+              .map(component => `${component.name}=${component.stage_repository || '(no PMC stage_repository)'}`)
+              .join(', ');
+            const remaining = readyComponents.length - Math.min(readyComponents.length, 5);
+            const suffix = remaining > 0 ? `, and ${remaining} more` : '';
+            throw new Error(`Pullspec repository ${parsed.repository} matches no ready component's PMC stage_repository. Ready mappings: ${selectedMappings}${suffix}. Use <component-name>=<pullspec> to map it explicitly; the repository must still match PMC.`);
+          }
+          const componentNames = matches.map(component => component.name).join(', ');
+          throw new Error(`Pullspec repository ${parsed.repository} matches multiple ready components: ${componentNames}. Use <component-name>=<pullspec> to disambiguate.`);
+        }
         [token] = readyComponents;
       } else {
         [token] = matches;

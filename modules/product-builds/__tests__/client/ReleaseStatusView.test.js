@@ -135,6 +135,64 @@ describe('ReleaseStatusView', () => {
     expect(wrapper.find('[data-release-form="trigger-release"]').exists()).toBe(true)
     expect(wrapper.get('[data-release-action="create-epic"]')).toBeTruthy()
     expect(wrapper.get('[data-release-action="trigger-release"]')).toBeTruthy()
+    const form = wrapper.get('[data-release-form="trigger-release"]')
+    await form.findAll('select')[1].setValue('image-list')
+    const instructions = form.findAll('details')
+    expect(instructions).toHaveLength(2)
+    expect(instructions[0].attributes('open')).toBeUndefined()
+    await instructions[0].get('summary').trigger('click')
+    expect(instructions[0].attributes('open')).toBeDefined()
+    expect(form.text()).toContain('cuda, rocm')
+    expect(form.text()).toContain('cuda rocm')
+    expect(form.text()).toContain('cuda, rocm model-opt')
+    expect(form.text()).toContain('bootc-gaudi:containers')
+    expect(form.text()).toContain('quay.io/aipcc/rhaiis/rocm-ubi9@sha256:0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef')
+    expect(form.text()).toContain('bootc-gaudi:containers=<pullspec>')
+    expect(form.text()).toContain('rocm=quay.io/aipcc/rhaiis/rocm-ubi9:3.6.0-fast.2-1790234469')
+    await instructions[1].get('summary').trigger('click')
+    expect(instructions[1].attributes('open')).toBeDefined()
+    expect(form.text()).toContain('bootc-gaudi-qcow2-disk-image:disk-images')
+    await form.findAll('select')[1].setValue('git-tag')
+    expect(form.text()).toContain('Git tag')
+    expect(form.text()).toContain('3.6.0-fast.2')
+    await form.findAll('select')[1].setValue('commit-sha')
+    expect(form.text()).toContain('Commit SHA')
+    expect(form.text()).toContain('Use 7–64 hexadecimal characters.')
+    expect(form.text()).toContain('488e59cf0fdce2ab17f0358fd71cc8136d14aa94')
+  })
+
+  it('shows which component each image-list pullspec was mapped to', async () => {
+    const pullspec = 'quay.io/aipcc/rhaiis/rocm-ubi9:3.6.0-fast.2-1790234469'
+    const options = {
+      sha: 'a'.repeat(40),
+      cards: [{
+        key: 'RHAI-1912', summary: 'Release rhaiis 3.6.0-fast.2 (stage-rc)', state: 'planned', target: 'stage-rc',
+        input_type: 'image-list', input_value: '', pipeline_components: 'all',
+        parent: { key: 'RHAI-1910', application: 'rhaiis-3-6-fast2', product: 'rhaiis', version: '3.6.0-fast.2', branch: '3.6-fast2', release_type: 'EA', advisory_type: 'RHEA' },
+      }],
+    }
+    apiRequest.mockImplementation((path, request) => {
+      if (path === '/modules/product-builds/release-status') return Promise.resolve(response([]))
+      if (path === '/modules/product-builds/release-trigger/options') return Promise.resolve(options)
+      if (request?.method === 'POST') return Promise.resolve({ tasks: [{
+        key: 'RHAI-1912', operation: 'updated', state: 'ready',
+        components: [{ name: 'rocm', variant: 'rocm', pullspec }],
+      }] })
+      return Promise.resolve(response([]))
+    })
+
+    const wrapper = mount(ReleaseStatusView)
+    await flushPromises()
+    await wrapper.get('[data-release-action="trigger-release"]').trigger('click')
+    await flushPromises()
+
+    const form = wrapper.get('[data-release-form="trigger-release"]')
+    await form.get('textarea[placeholder="all or cuda, rocm, model-opt"]').setValue('rocm')
+    await form.get('textarea[placeholder="pullspecs or component=pullspec, one per line"]').setValue(`rocm=${pullspec}`)
+    await form.trigger('submit')
+    await flushPromises()
+
+    expect(form.text()).toContain(`Mapped ${pullspec} to rocm`)
   })
 
   it('selects a readiness card and submits PMC fields with read-only card metadata', async () => {
@@ -171,13 +229,13 @@ describe('ReleaseStatusView', () => {
     const skippedComponents = form.get('textarea[placeholder="cuda, rocm, model-opt"]')
     await skippedComponents.setValue('rocm')
     expect(form.text()).toContain('Put accelerator-specific CVE mapping here.')
-    expect(form.text()).toContain('Use Ready components for accelerators ready to be released.')
-    expect(form.text()).toContain('If an accelerator is not ready but should be released later, leave it out of both fields; it will remain planned.')
+    expect(form.text()).toContain('Ready components')
+    expect(form.text()).toContain('Skipped components')
     expect(form.text()).not.toContain('accelerator-to-CVE mapping')
     await form.get('textarea[placeholder="all or cuda, rocm, model-opt"]').setValue('all')
     await form.get('textarea[placeholder="Additional context or special instructions for the AI agent"]').setValue('Only CUDA is affected.')
     await cveList.setValue('CVE-2026-1234')
-    await form.get('textarea[placeholder="v3.5.0"]').setValue('3.6.0')
+    await form.get('textarea[placeholder="exact configured Git tag"]').setValue('3.6.0')
     await form.trigger('submit')
     await flushPromises()
 
@@ -370,6 +428,50 @@ describe('ReleaseStatusView', () => {
     const posts = apiRequest.mock.calls.filter(([path, options]) => path === '/modules/product-builds/release-epic' && options?.method === 'POST')
     expect(JSON.parse(posts.at(-1)[1].body).confirm_duplicates).toBe(true)
     expect(wrapper.text()).toContain('RHAI-11')
+  })
+
+  it('shows each checklist-card creation error and where to find further diagnostics', async () => {
+    const result = {
+      epic: { key: 'RHAI-4333', summary: 'Release rhelai 3.4.5 GA' },
+      cards: [{ key: 'RHAI-4334', summary: 'Release rhelai 3.4.5 (prod): bootc-gaudi' }],
+      not_created: [],
+      failures: [{
+        summary: 'Release rhelai 3.4.5 (stage-rc): bootc-gaudi',
+        error: 'Jira rejected the stage-rc card: required field is missing',
+      }],
+      warnings: ['Some checklist cards failed to create; see failures.'],
+      created_keys: ['RHAI-4333', 'RHAI-4334'],
+    }
+    const options = {
+      sha: 'a'.repeat(40),
+      products: [{ key: 'rhelai', branches: [{ branch: '3.4', configured_versions: ['3.4.5'] }] }],
+    }
+    apiRequest.mockImplementation((path, request) => {
+      if (path === '/modules/product-builds/release-status') return Promise.resolve(response([]))
+      if (path.startsWith('/modules/product-builds/release-epic/options')) return Promise.resolve(options)
+      if (request?.method === 'POST') return Promise.resolve(result)
+      return Promise.resolve(response([]))
+    })
+
+    const wrapper = mount(ReleaseStatusView)
+    await flushPromises()
+    await wrapper.get('[data-release-action="create-epic"]').trigger('click')
+    const form = wrapper.get('[data-release-form="create-epic"]')
+    await form.get('select[name="product"]').setValue('rhelai')
+    await form.get('select[name="branch"]').setValue('3.4')
+    await flushPromises()
+    await form.get('select[name="version"]').setValue('3.4.5')
+    await form.get('select[name="feature-mode"]').setValue('none')
+    await form.trigger('submit')
+    await flushPromises()
+
+    expect(form.text()).toContain('Created release Epic RHAI-4333')
+    expect(form.text()).toContain('Checklist cards that failed to create:')
+    expect(form.text()).toContain('Release rhelai 3.4.5 (stage-rc): bootc-gaudi')
+    expect(form.text()).toContain('Jira rejected the stage-rc card: required field is missing')
+    expect(form.text()).toContain('[release-epic] Checklist card creation failed')
+    expect(form.text()).toContain('application logs')
+    expect(form.text()).not.toContain('at createReleaseEpic')
   })
 
   it('renders returned Feature choices for explicit selection or skip', async () => {
