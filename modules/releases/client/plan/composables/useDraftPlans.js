@@ -644,6 +644,7 @@ export function _resetDraftPlansForTests() {
   pendingCapacity.value = null
   selectedProduct.value = ''
   selectedVersion.value = '3.6'
+  selectedTargetVersion.value = ''
   availableProducts.value = ['RHOAI', 'RHAII']
   availableCycles.value = []
   filterEvent.value = ''
