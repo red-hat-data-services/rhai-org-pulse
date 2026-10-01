@@ -3311,7 +3311,12 @@ function renderCards(rows){
     document.getElementById('cnt-'+k).textContent=c[key]||0;
   });
   const inPlan=(c.EA1||0)+(c.EA2||0)+(c.GA||0);
-  document.getElementById('st-total').textContent=rows.length+' features';
+  // Show the unfiltered total whenever something is narrowing the table. Several
+  // filters (PM components, Big Rock drill-down, urgent review) have no visible
+  // control, so the bare count otherwise looks like the whole data set.
+  const totalLoaded=(allData||[]).length;
+  document.getElementById('st-total').textContent=
+    rows.length===totalLoaded?rows.length+' features':rows.length+' of '+totalLoaded+' features';
   document.getElementById('st-in').textContent=inPlan+' in-plan';
   document.getElementById('st-no').textContent=(c.No||0)+' no';
   // Keep cards-rel-sel in sync with the main release selector
