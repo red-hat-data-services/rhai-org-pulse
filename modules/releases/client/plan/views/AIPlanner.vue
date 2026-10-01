@@ -30,7 +30,9 @@ const TAB_GUTTER = 24
 let layoutObserver = null
 
 function syncContainerHeight() {
-  if (!containerRef.value) return
+  // offsetParent is null while another Plan tab is showing; measuring then would
+  // read a top of 0 and leave an oversized frame behind when the tab returns.
+  if (!containerRef.value || containerRef.value.offsetParent === null) return
   const top = containerRef.value.getBoundingClientRect().top
   containerHeight.value = Math.max(400, window.innerHeight - top - TAB_GUTTER) + 'px'
 }
@@ -183,6 +185,9 @@ onMounted(() => {
   // which is what otherwise surfaces as a ResizeObserver loop error.
   layoutObserver = new ResizeObserver(() => requestAnimationFrame(syncContainerHeight))
   layoutObserver.observe(document.body)
+  // Also watch the container itself, so returning to the tab re-measures once it
+  // is laid out again.
+  if (containerRef.value) layoutObserver.observe(containerRef.value)
 })
 
 onUnmounted(() => {
