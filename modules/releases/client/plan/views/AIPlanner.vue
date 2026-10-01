@@ -26,6 +26,7 @@ const {
   availableCycles,
   approveFeature,
   markSessionAdded,
+  selectedTargetVersion,
   loadCycles,
   loadEditor,
   persist
@@ -100,10 +101,15 @@ async function addFeaturesToPlan(features) {
 
   if (added.length) {
     markSessionAdded(added)
-    // Leave Plan Approval pointing at the cycle we just populated.
+    // Leave Plan Approval pointing at the cycle we just populated, narrowed to the
+    // feature's own target version when the batch shares one.
     if (lastPopulatedCycle && selectedVersion.value !== lastPopulatedCycle) {
       await loadEditor(lastPopulatedCycle)
     }
+    const addedVersions = [...new Set(
+      features.filter(f => added.indexOf(f.key) !== -1).map(f => String(f.version || '').trim())
+    )].filter(Boolean)
+    selectedTargetVersion.value = addedVersions.length === 1 ? addedVersions[0] : ''
   }
 
   const problems = []

@@ -805,6 +805,23 @@ test.describe('Releases Plan Approval @releases', () => {
     expect(page.errors).toHaveLength(0);
   });
 
+  test('Plan Approval lists one cycle per target version', async ({ page }) => {
+    await page.goto('/#/releases/plan?tab=draft-plans');
+    await page.waitForLoadState('networkidle');
+    await page.waitForTimeout(DEFAULT_PAGE_WAIT_TIME);
+
+    const cycle = page.locator('select').filter({
+      has: page.locator('option[value="3.6 EA1 RHOAI RELEASE"]')
+    }).first();
+    await expect(cycle).toBeVisible();
+    for (const targetVersion of ['3.6 EA1 RHOAI RELEASE', '3.6 EA2 RHOAI RELEASE', '3.6 GA RHOAI RELEASE']) {
+      await expect(cycle.locator(`option[value="${targetVersion}"]`)).toHaveCount(1);
+    }
+
+    await cycle.selectOption('3.6 EA1 RHOAI RELEASE');
+    await expect(cycle).toHaveValue('3.6 EA1 RHOAI RELEASE');
+  });
+
   test('Plan Approval can isolate features added from the AI Planner', async ({ page }) => {
     await page.goto('/#/releases/plan?tab=draft-plans');
     await page.waitForLoadState('networkidle');

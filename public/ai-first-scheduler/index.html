@@ -402,7 +402,7 @@ tr:hover td{background:#f8fafc}
     <button class="main-tab" data-tab="roadmap" onclick="switchTab('roadmap')">📅 Roadmap</button>
     <button class="main-tab" data-tab="executive" onclick="switchTab('executive')">📊 Executive</button>
     <div style="margin-left:auto;display:flex;align-items:center;gap:8px;padding:4px 12px">
-      <select id="f-rel" onchange="run()" style="font-size:11px"><option value="">All Releases</option><option>3.5</option><option>3.6</option></select>
+      <select id="f-rel" onchange="run()" style="font-size:11px"><option value="">All Releases</option><option>3.5</option><option>3.6</option><option>3.7</option><option>3.8</option></select>
       <span id="st-total" style="color:#666;font-size:11px">— features</span>
       <span style="color:#ccc">·</span>
       <span id="st-in" style="color:#1a7f37;font-weight:600;font-size:11px">— in-plan</span>
@@ -580,7 +580,7 @@ tr:hover td{background:#f8fafc}
   <div id="cards-rel-note" style="font-size:11px;color:#64748b;margin-bottom:6px;display:flex;align-items:center;gap:6px">
     <span>Showing for:</span>
     <select onchange="document.getElementById('f-rel').value=this.value;run()" id="cards-rel-sel" style="font-size:11px;border:1px solid #e2e8f0;border-radius:6px;padding:2px 8px;background:#fff;color:#1d4ed8;font-weight:600;cursor:pointer">
-      <option value="">All Releases</option><option>3.5</option><option>3.6</option>
+      <option value="">All Releases</option><option>3.5</option><option>3.6</option><option>3.7</option><option>3.8</option>
     </select>
     <span id="cards-rel-hint" style="color:#94a3b8">· feature counts below reflect active filters</span>
   </div>

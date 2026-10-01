@@ -19,7 +19,8 @@ var {
   selectedProduct,
   selectedVersion,
   availableProducts,
-  availableCycles,
+  selectedTargetVersion,
+  availableTargetVersions,
   cycleLabel,
   activeCycleMeta,
   filterEvent,
@@ -170,13 +171,6 @@ function onProductChange(product) {
   setProductFilter(product)
 }
 
-async function onVersionChange(version) {
-  if (version === selectedVersion.value) return
-  if (dirty.value && !window.confirm('Discard unsaved changes and switch cycle?')) return
-  selectedFeatureKey.value = null
-  await loadEditor(version)
-}
-
 function formatTs(ts) {
   if (!ts) return ''
   var d = new Date(ts)
@@ -215,13 +209,12 @@ onMounted(async function() {
           Cycle
           <select
             class="bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-md px-3 py-1.5 text-sm text-gray-900 dark:text-gray-100 focus:outline-none focus:border-primary-500 focus:ring-1 focus:ring-primary-500"
-            :value="selectedVersion"
-            :disabled="loading || saving || availableCycles.length === 0"
-            @change="onVersionChange($event.target.value)"
+            :value="selectedTargetVersion"
+            :disabled="loading || saving || availableTargetVersions.length === 0"
+            @change="selectedTargetVersion = $event.target.value"
           >
-            <option v-for="c in availableCycles" :key="c.version" :value="c.version">
-              {{ c.version }}{{ c.demoMode ? ' (demo)' : '' }}
-            </option>
+            <option value="">All of {{ selectedVersion }}{{ activeCycleMeta && activeCycleMeta.demoMode ? ' (demo)' : '' }}</option>
+            <option v-for="tv in availableTargetVersions" :key="tv" :value="tv">{{ tv }}</option>
           </select>
         </label>
         <label class="text-sm font-medium text-gray-700 dark:text-gray-300 flex items-center gap-2">
