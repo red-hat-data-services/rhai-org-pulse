@@ -8,6 +8,20 @@ const iframeRef = ref(null)
 const containerRef = ref(null)
 const containerHeight = ref('600px')
 const DEMO_URL = '/ai-first-scheduler/index.html'
+// The planner reads ?user= and preselects that person in its PM filter, so a PM
+// lands on their own features instead of All PMs.
+const plannerUrl = ref('')
+
+async function resolvePlannerUrl() {
+  let uid = ''
+  try {
+    const access = await apiRequest('/modules/releases/draft-plans/access')
+    uid = (access && access.session && access.session.uid) || ''
+  } catch {
+    // Signed-in identity is unavailable; fall back to the unfiltered planner.
+  }
+  plannerUrl.value = uid ? DEMO_URL + '?user=' + encodeURIComponent(uid) : DEMO_URL
+}
 
 // The Plan tab wraps its content in a height-less div, so h-full collapses and the iframe is
 // left at whatever min-height we give it — half a screen on a 1080p display. Measure the space
@@ -161,6 +175,7 @@ const sendDataToIframe = async () => {
 onMounted(() => {
   // Listen for messages from the iframe
   window.addEventListener('message', handleIframeMessage)
+  resolvePlannerUrl()
   syncContainerHeight()
   window.addEventListener('resize', syncContainerHeight)
   // Banners above the tab can be dismissed at runtime, which shifts the container upwards.
@@ -181,8 +196,9 @@ onUnmounted(() => {
 <template>
   <div ref="containerRef" class="w-full flex flex-col bg-gray-50 dark:bg-gray-900" :style="{ height: containerHeight }">
     <iframe
+      v-if="plannerUrl"
       ref="iframeRef"
-      :src="DEMO_URL"
+      :src="plannerUrl"
       class="flex-1 w-full border-none"
       title="AI-First Release Planner"
       sandbox="allow-same-origin allow-scripts allow-popups allow-forms"

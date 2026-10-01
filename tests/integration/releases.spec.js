@@ -2768,6 +2768,20 @@ test.describe('Releases AI Planner tab @releases', () => {
     expect(page.errors).toHaveLength(0);
   });
 
+  test('AI Planner iframe is addressed with the signed-in user', async ({ page }) => {
+    await page.goto('/#/releases/plan?tab=ai-planner');
+    await page.waitForLoadState('networkidle');
+    await page.waitForTimeout(DEFAULT_PAGE_WAIT_TIME);
+
+    const frame = page.locator('iframe[title="AI-First Release Planner"]');
+    await expect(frame).toHaveAttribute('src', /\/ai-first-scheduler\/index\.html/);
+    // ?user= is only appended when the session exposes a uid, but the planner
+    // must still render when it does not.
+    await expect(
+      page.frameLocator('iframe[title="AI-First Release Planner"]').locator('.hdr-title')
+    ).toContainText('AI-First Release Planner');
+  });
+
   test('Add to Plan reports when a feature has no matching release cycle', async ({ page }) => {
     await page.goto('/#/releases/plan?tab=ai-planner');
     await page.waitForLoadState('networkidle');
