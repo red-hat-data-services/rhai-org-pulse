@@ -4,7 +4,21 @@ import { apiRequest } from '@shared/client/services/api'
 import { useDraftPlans } from '../composables/useDraftPlans'
 
 const iframeRef = ref(null)
+const containerRef = ref(null)
+const containerHeight = ref('600px')
 const DEMO_URL = '/ai-first-scheduler/index.html'
+
+// The Plan tab wraps its content in a height-less div, so h-full collapses and the iframe is
+// left at whatever min-height we give it — half a screen on a 1080p display. Measure the space
+// actually remaining below the container instead. TAB_GUTTER matches that wrapper's p-6 padding.
+const TAB_GUTTER = 24
+let layoutObserver = null
+
+function syncContainerHeight() {
+  if (!containerRef.value) return
+  const top = containerRef.value.getBoundingClientRect().top
+  containerHeight.value = Math.max(400, window.innerHeight - top - TAB_GUTTER) + 'px'
+}
 
 const {
   draft,
@@ -85,16 +99,25 @@ const sendDataToIframe = async () => {
 onMounted(() => {
   // Listen for messages from the iframe
   window.addEventListener('message', handleIframeMessage)
+  syncContainerHeight()
+  window.addEventListener('resize', syncContainerHeight)
+  // Banners above the tab can be dismissed at runtime, which shifts the container upwards.
+  // Resize on the next frame so the write lands outside the observer's delivery cycle,
+  // which is what otherwise surfaces as a ResizeObserver loop error.
+  layoutObserver = new ResizeObserver(() => requestAnimationFrame(syncContainerHeight))
+  layoutObserver.observe(document.body)
 })
 
 onUnmounted(() => {
   // Clean up message listener
   window.removeEventListener('message', handleIframeMessage)
+  window.removeEventListener('resize', syncContainerHeight)
+  if (layoutObserver) layoutObserver.disconnect()
 })
 </script>
 
 <template>
-  <div class="w-full h-full flex flex-col bg-gray-50 dark:bg-gray-900" style="min-height: 600px">
+  <div ref="containerRef" class="w-full flex flex-col bg-gray-50 dark:bg-gray-900" :style="{ height: containerHeight }">
     <iframe
       ref="iframeRef"
       :src="DEMO_URL"
