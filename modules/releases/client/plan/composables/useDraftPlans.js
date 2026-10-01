@@ -47,6 +47,12 @@ var filterBigRock = ref('')
 var filterPm = ref('')
 var filterText = ref('')
 var session = ref(null)
+// Keys approved from the AI Planner in this browser session, so the planner's
+// additions can be isolated from approvals already saved on the cycle.
+var sessionAdded = ref([])
+// Cycles are presented per target version ("3.6 EA1 RHOAI RELEASE"), which is how
+// planning talks about them, while the draft itself is still stored per release.
+var selectedTargetVersion = ref('')
 
 export function useDraftPlans() {
   var candidates = computed(function() {
@@ -91,6 +97,27 @@ export function useDraftPlans() {
     })
   })
 
+  var availableTargetVersions = computed(function() {
+    var seen = {}
+    var list = []
+    var rows = candidates.value
+    for (var i = 0; i < rows.length; i++) {
+      var versions = rows[i].targetVersions || []
+      for (var j = 0; j < versions.length; j++) {
+        var version = String(versions[j] || '').trim()
+        if (!version || seen[version]) continue
+        seen[version] = true
+        list.push(version)
+      }
+    }
+    return list.sort()
+  })
+
+  function rowHasTargetVersion(row, version) {
+    var versions = row.targetVersions || []
+    return versions.indexOf(version) !== -1
+  }
+
   var filteredRows = computed(function() {
     var q = String(filterText.value || '').trim().toLowerCase()
     var ev = filterEvent.value
@@ -98,13 +125,18 @@ export function useDraftPlans() {
     // Acting-as only changes permissions (see canEditRow/ownsRow in
     // draft-plan-model.js) — it never hides rows. Everyone sees the full
     // product-scoped table; only per-row editability differs.
+    var targetVersion = selectedTargetVersion.value
     return productScopedRows.value.filter(function(row) {
+      if (targetVersion && !rowHasTargetVersion(row, targetVersion)) return false
+
       if (ev === '__scheduled__') {
         if (!(row.event === 'EA1' || row.event === 'EA2' || row.event === 'GA')) return false
       } else if (ev === '__changed__') {
         if (!row.changed) return false
       } else if (ev === '__approved__') {
         if (!row.approved) return false
+      } else if (ev === '__session__') {
+        if (sessionAdded.value.indexOf(row.key) === -1) return false
       } else if (ev && row.event !== ev) {
         return false
       }
@@ -467,6 +499,14 @@ export function useDraftPlans() {
     return result
   }
 
+  function markSessionAdded(keys) {
+    var next = sessionAdded.value.slice()
+    for (var i = 0; i < keys.length; i++) {
+      if (next.indexOf(keys[i]) === -1) next.push(keys[i])
+    }
+    sessionAdded.value = next
+  }
+
   function freeze(eventName) {
     var result = freezeEvent(editor.value, candidates.value, eventName)
     if (result.ok) markDirty()
@@ -578,6 +618,10 @@ export function useDraftPlans() {
     descopeFeature,
     undescopeFeature,
     approveFeature,
+    sessionAdded,
+    markSessionAdded,
+    selectedTargetVersion,
+    availableTargetVersions,
     freeze,
     unfreeze,
     unfreezeAll,
@@ -600,6 +644,7 @@ export function _resetDraftPlansForTests() {
   pendingCapacity.value = null
   selectedProduct.value = ''
   selectedVersion.value = '3.6'
+  selectedTargetVersion.value = ''
   availableProducts.value = ['RHOAI', 'RHAII']
   availableCycles.value = []
   filterEvent.value = ''
@@ -613,4 +658,5 @@ export function _resetDraftPlansForTests() {
   filterPm.value = ''
   filterText.value = ''
   session.value = null
+  sessionAdded.value = []
 }

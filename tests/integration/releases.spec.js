@@ -805,6 +805,36 @@ test.describe('Releases Plan Approval @releases', () => {
     expect(page.errors).toHaveLength(0);
   });
 
+  test('Plan Approval lists one cycle per target version', async ({ page }) => {
+    await page.goto('/#/releases/plan?tab=draft-plans');
+    await page.waitForLoadState('networkidle');
+    await page.waitForTimeout(DEFAULT_PAGE_WAIT_TIME);
+
+    const cycle = page.locator('select').filter({
+      has: page.locator('option[value="3.6 EA1 RHOAI RELEASE"]')
+    }).first();
+    await expect(cycle).toBeVisible();
+    for (const targetVersion of ['3.6 EA1 RHOAI RELEASE', '3.6 EA2 RHOAI RELEASE', '3.6 GA RHOAI RELEASE']) {
+      await expect(cycle.locator(`option[value="${targetVersion}"]`)).toHaveCount(1);
+    }
+
+    await cycle.selectOption('3.6 EA1 RHOAI RELEASE');
+    await expect(cycle).toHaveValue('3.6 EA1 RHOAI RELEASE');
+  });
+
+  test('Plan Approval can isolate features added from the AI Planner', async ({ page }) => {
+    await page.goto('/#/releases/plan?tab=draft-plans');
+    await page.waitForLoadState('networkidle');
+    await page.waitForTimeout(DEFAULT_PAGE_WAIT_TIME);
+
+    const placement = page.locator('select').filter({ has: page.locator('option[value="__session__"]') });
+    await expect(placement.first()).toBeVisible();
+    await placement.first().selectOption('__session__');
+
+    // Nothing was added from the planner in this session, so the start-fresh state stands.
+    await expect(page.getByText('Plan Approval — Start Fresh')).toBeVisible();
+  });
+
   test('clicking a Plan Approval row opens the feature detail drawer', async ({ page }) => {
     await page.goto('/#/releases/plan?tab=draft-plans');
     await page.waitForLoadState('networkidle');
@@ -2736,6 +2766,20 @@ test.describe('Releases AI Planner tab @releases', () => {
     await expect(plannerFrame.locator('.hdr-title')).toContainText('AI-First Release Planner');
 
     expect(page.errors).toHaveLength(0);
+  });
+
+  test('Add to Plan reports when a feature has no matching release cycle', async ({ page }) => {
+    await page.goto('/#/releases/plan?tab=ai-planner');
+    await page.waitForLoadState('networkidle');
+    await page.waitForTimeout(DEFAULT_PAGE_WAIT_TIME);
+
+    // 3.7 has no cycle in the catalog, so this must surface rather than fail silently.
+    await page.evaluate(() => window.postMessage({
+      type: 'add-to-draft-plan',
+      features: [{ key: 'RHAISTRAT-2426', version: '3.7 GA RHOAI RELEASE' }]
+    }, window.location.origin));
+
+    await expect(page.getByText(/Nothing was added to Plan Approval/i)).toBeVisible();
   });
 
   test('AI Planner API returns the planner snapshot', async ({ request }) => {
