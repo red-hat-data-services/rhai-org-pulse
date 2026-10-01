@@ -194,7 +194,7 @@
                     <td class="px-4 py-2.5 text-center tabular-nums" :class="pctColorClass(q.total.pct)">{{ q.total.pct }}%</td>
                     <td class="px-4 py-2.5" />
                     <td class="px-4 py-2.5" />
-                    <td class="px-4 py-2.5" />
+                    <td class="px-4 py-2.5 text-xs text-gray-600 dark:text-gray-400">{{ q.total.performance || '' }}</td>
                     <td class="px-4 py-2.5">
                       <div class="w-full h-3 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
                         <div class="h-full rounded-full transition-all duration-300" :class="progressBarClass(q.total.pct)" :style="{ width: Math.min(q.total.pct, 100) + '%' }" />
