@@ -73,7 +73,8 @@ test.describe('OKR Hub timeline @okr-hub', function () {
             quarters: [
               { label: 'Q1 2026', pct: 79, metSla: 1840, missedSla: 477, total: 2317 },
               { label: 'Q2 2026', pct: 74, metSla: 1375, missedSla: 481, total: 1856 },
-              { label: 'Q3 2026', pct: 67, metSla: 4738, missedSla: 2350, total: 7088 }
+              { label: 'Q3 2026', pct: 67, metSla: 4738, missedSla: 2350, total: 7088 },
+              { label: 'Q4 2026', pct: 88, metSla: 88, missedSla: 12, total: 100 }
             ]
           }
         }
@@ -93,6 +94,8 @@ test.describe('OKR Hub timeline @okr-hub', function () {
 
     var cveRow = page.getByRole('row').filter({ hasText: 'CVE SLA Compliance' });
     await expect(cveRow.getByRole('link')).toHaveCount(4);
+    await expect(cveRow).not.toContainText('88%');
+    await expect(cveRow.getByRole('link').nth(3)).toHaveText('—');
     await cveRow.getByRole('link').filter({ hasText: '79%' }).click();
     await expect(page).toHaveURL(/#\/releases\/reports\?report=cve-sustaining$/);
   });

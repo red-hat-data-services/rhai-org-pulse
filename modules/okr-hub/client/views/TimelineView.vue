@@ -262,6 +262,10 @@ var supportCaseDataAsOf = {
   Q3: 'Data as of Oct 1, 2026'
 }
 
+var hiddenCveSlaQuarters = {
+  Q4: true
+}
+
 function navigateToReport(reportId) {
   if (reportId === 'cve-sustaining') {
     window.location.hash = '#/releases/reports?report=cve-sustaining'
@@ -502,6 +506,7 @@ async function fetchCveSla() {
       if (!match) continue
       if (match[2] !== targetYear) continue
       var qKey = 'Q' + match[1]
+      if (hiddenCveSlaQuarters[qKey]) continue
       if (sq.total > 0) {
         obj.quarters[qKey] = {
           status: pctToStatus(sq.pct),
