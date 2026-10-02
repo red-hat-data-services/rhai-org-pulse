@@ -2802,6 +2802,9 @@ function schedule(rows){
 function detectEvt(s){
   if(s.includes('ea1')) return 'EA1';
   if(s.includes('ea2')) return 'EA2';
+  // 3.7 onwards ships a single EA rather than EA1/EA2. Word-bounded so the "ea"
+  // inside "release" cannot match. Treated as the first early-access checkpoint.
+  if(/\bea\b/.test(s)) return 'EA1';
   if(/ ga /.test(s)||s.endsWith(' ga')||s.includes('ga release')||s.includes('ga rhaii')||s.includes('ga rhelai')) return 'GA';
   return null;
 }
