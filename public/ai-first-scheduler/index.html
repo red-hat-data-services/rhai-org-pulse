@@ -512,7 +512,7 @@ tr:hover td{background:#f8fafc}
         <th onclick="sort('Rank')"># ↕</th>
         <th onclick="sort('Score')" id="th-score" class="score-col" style="display:none">SCORE ↕</th>
         <th onclick="sort('FPDoR')">FPDOR ↕</th>
-        <th><span class="tip">RISK ⓘ<span class="tip-box">🔴 HIGH: any Critical field missing (Components, Target Version, Delivery Owner) or 2+ High fields missing.<br>🟡 MEDIUM: exactly 1 High field missing, or Feature Sign-Off absent.<br>🟢 LOW: all Critical/High/Medium items pass.</span></span></th>
+        <th><span class="tip">RISK ⓘ<span class="tip-box">🔴 HIGH: any Critical field missing (Components, Target Version, Fix Version, PM, Delivery Owner) or 2+ High fields missing.<br>🟡 MEDIUM: exactly 1 High field missing, or Feature Sign-Off absent.<br>🟢 LOW: all Critical/High/Medium items pass.</span></span></th>
         <th><span class="tip">CONFIDENCE ⓘ<span class="tip-box">How likely this feature ships as planned. High = 8–9 of 10 similar features shipped on time. Medium = 5–7 of 10. Low = 3–5 of 10.<br><br>Based on: shipping history, FPDoR completeness, component velocity, RICE. Hover the confidence bar for feature-specific detail.</span></span></th>
         <th onclick="sort('Priority')">PRIORITY ↕</th>
         <th>KEY</th>
@@ -1479,6 +1479,9 @@ function computeFPDoRRisk(r) {
   const priority  = (esc(r['Priority']) || '').trim();
   const docsField = (r['Product Documentation Required'] || '').trim().toLowerCase();
   const assignee  = r['Assignee'] !== undefined ? (r['Assignee'] || '').trim() : null;
+  // null when the source has no such column, so CSV rows are not penalised for a
+  // field they never carried.
+  const pm        = r['PM'] !== undefined ? (r['PM'] || '').trim() : null;
   const fv        = (esc(r['Fix Version']) || r['Fix Versions'] || '').trim();
 
   // CRITICAL — any fail = HIGH risk
@@ -1487,6 +1490,7 @@ function computeFPDoRRisk(r) {
   if (!tv)                             critFails.push('Target Version');
   if (!fv)                             critFails.push('Fix Version');
   if (assignee !== null && !assignee)  critFails.push('Delivery Owner');
+  if (pm !== null && !pm)              critFails.push('PM');
 
   // HIGH — 2+ fails = HIGH; 1 fail = MEDIUM
   const highFails = [];
@@ -2869,6 +2873,10 @@ window.addEventListener('message', function(e){
       'Labels': f.Labels || '',
       'Fix Version': f['Fix Version'] || '',
       'Release Type': f['Release Type'] || '',
+      // Risk scoring treats a missing owner as critical; without these the PM and
+      // Delivery Owner checks silently never fire on live data.
+      'PM': f.PM || '',
+      'Assignee': f.DeliveryOwner || '',
       'PlannedFor': f.PlannedFor || '3.6 GA',
       '_conf': parseInt(f.Confidence) || 0,
       '_place': f.PlannedFor || 'Unknown',
