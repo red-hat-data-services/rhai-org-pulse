@@ -161,13 +161,20 @@ function editFingerprint(edit) {
 
 var APPROVAL_FIELDS = ['approved', 'approvedBy', 'approvedAt']
 
-/** Fingerprint of everything except the approval flags. */
+/**
+ * Fingerprint of everything except the approval flags. Empty values are skipped and
+ * keys sorted, so an edit that only carries the nulls ensureEdit() initialises still
+ * compares equal to no edit at all.
+ */
 function nonApprovalFingerprint(edit) {
-  if (!edit) return JSON.stringify(null)
   var rest = {}
-  var keys = Object.keys(edit)
+  var keys = Object.keys(edit || {}).sort()
   for (var i = 0; i < keys.length; i++) {
-    if (APPROVAL_FIELDS.indexOf(keys[i]) === -1) rest[keys[i]] = edit[keys[i]]
+    var key = keys[i]
+    if (APPROVAL_FIELDS.indexOf(key) !== -1) continue
+    var value = edit[key]
+    if (value === null || value === undefined || value === '') continue
+    rest[key] = value
   }
   return JSON.stringify(rest)
 }
