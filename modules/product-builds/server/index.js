@@ -1037,6 +1037,9 @@ module.exports = function registerRoutes(router, context) {
   // --- Package Requests ---
   require('./package-requests')(router, context);
 
+  // --- Quay Image Tags ---
+  require('./quay-images')(router, context);
+
   if (context.registerDiagnostics) {
     context.registerDiagnostics(async function() {
       const index = await readFromStorage(PKG_INDEX_PATH);
