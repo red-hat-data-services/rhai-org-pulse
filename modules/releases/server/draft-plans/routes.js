@@ -788,6 +788,10 @@ module.exports = async function registerDraftPlanRoutes(router, context) {
       draft = loadDemoFixture();
     }
 
+    // Same refresh as the GET: the save is authorised against candidate ownership,
+    // so it has to see the live owners too or it rejects what the UI just allowed.
+    await applyLiveOwnership(draft, storage.readFromStorage);
+
     var authz = authorizeEditorSave(session, draft, previous, body);
     if (!authz.ok) {
       return res.status(authz.status).json({ error: authz.error });
