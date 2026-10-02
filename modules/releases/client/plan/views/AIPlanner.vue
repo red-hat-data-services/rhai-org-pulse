@@ -89,6 +89,7 @@ async function addFeaturesToPlan(features) {
 
   const added = []
   const notCandidates = []
+  const notOwned = []
   let saveFailed = false
   let lastPopulatedCycle = ''
 
@@ -103,6 +104,9 @@ async function addFeaturesToPlan(features) {
     for (const feature of cycleFeatures) {
       const result = approveFeature(feature.key, true)
       if (result && result.ok) approvedHere.push(feature.key)
+      // A missing candidate and a refused edit both return ok:false; only the
+      // latter carries a reason, and they need different wording to be actionable.
+      else if (result && result.reason === 'forbidden') notOwned.push(feature.key)
       else notCandidates.push(feature.key)
     }
     if (!approvedHere.length) continue
@@ -135,6 +139,11 @@ async function addFeaturesToPlan(features) {
     )
   }
   if (notCandidates.length) problems.push(`${notCandidates.length} not in this cycle's candidates`)
+  if (notOwned.length) {
+    problems.push(
+      `${notOwned.length} you cannot approve — only the feature's PM or Delivery Owner can, or a plan admin (${notOwned.slice(0, 3).join(', ')})`
+    )
+  }
   if (saveFailed) problems.push('saving failed')
 
   if (added.length && !problems.length) {
