@@ -255,6 +255,24 @@ describe('draft-plan-model', function() {
     expect(canEditRow(draft.candidates[1], {}, meta)).toBe(true)
   })
 
+  it('lets any planner approve a feature they do not own, but not move or descope it', function() {
+    var draft = sampleDraft()
+    var state = { edits: {}, meta: { currentUser: 'Someone Unrelated', isPlanAdmin: false, frozenEvents: {}, finalGaFrozen: false }, audit: [] }
+    var foreign = draft.candidates[1]
+
+    // Add to Plan is the one write a non-owner may make.
+    expect(setApproved(state, foreign, true).ok).toBe(true)
+    expect(state.edits[foreign.key].approved).toBe(true)
+    expect(state.edits[foreign.key].approvedBy).toBe('Someone Unrelated')
+
+    // Placement still belongs to the owner.
+    expect(canEditRow(foreign, state.edits, state.meta)).toBe(false)
+
+    // A freeze stops the approval too.
+    state.meta.finalGaFrozen = true
+    expect(setApproved(state, draft.candidates[0], true).ok).toBe(false)
+  })
+
   it('summaryCounts mirrors the red-pen editor stat bar', function() {
     var draft = sampleDraft()
     var state = emptyEditorState('3.6', draft.generatedAt)

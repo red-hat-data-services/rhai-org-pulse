@@ -159,6 +159,19 @@ function editFingerprint(edit) {
   return JSON.stringify(edit || null)
 }
 
+var APPROVAL_FIELDS = ['approved', 'approvedBy', 'approvedAt']
+
+/** Fingerprint of everything except the approval flags. */
+function nonApprovalFingerprint(edit) {
+  if (!edit) return JSON.stringify(null)
+  var rest = {}
+  var keys = Object.keys(edit)
+  for (var i = 0; i < keys.length; i++) {
+    if (APPROVAL_FIELDS.indexOf(keys[i]) === -1) rest[keys[i]] = edit[keys[i]]
+  }
+  return JSON.stringify(rest)
+}
+
 /**
  * Validate a PUT payload against session ACL.
  * Mutates payload.meta to bind identity.
@@ -209,6 +222,12 @@ function authorizeEditorSave(session, draft, previousEnvelope, payload) {
       var row = byKey[key]
       if (!row) {
         return { ok: false, status: 403, error: 'Cannot edit unknown feature ' + key }
+      }
+      // Adding a feature to the plan only flips the approval flags, and that call is
+      // made in the joint planning session rather than by the feature's Jira owner.
+      // Moving, descoping or changing a fix version still belongs to the owner.
+      if (nonApprovalFingerprint(prevEdits[key]) === nonApprovalFingerprint(nextEdits[key])) {
+        continue
       }
       var owns =
         namesMatch(row.assignee, meta.currentUser) || namesMatch(row.pm, meta.currentUser)
