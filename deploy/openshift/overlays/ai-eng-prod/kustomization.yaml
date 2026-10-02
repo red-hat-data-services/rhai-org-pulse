@@ -12,6 +12,7 @@ configMapGenerator:
   - API_PUBLIC_URL=https://api-team-tracker.apps.int.spoke.prod.us-west-2.aws.paas.redhat.com
   - AUTH_EMAIL_DOMAIN=cluster.local
   - GOOGLE_OAUTH_CALLBACK_URL=https://team-tracker.apps.int.spoke.prod.us-west-2.aws.paas.redhat.com/api/modules/customer-insights/auth/google/callback
+  - WORKFLOW_VALIDATION_OPENSEARCH_URL=https://search-workflow-validation-prod-7ceovjjyz762jeayr44zues3ie.us-east-1.es.amazonaws.com
   name: team-tracker-config
 
 patches:
