@@ -3481,7 +3481,13 @@ function renderTbl(rows){
     const _isAbove=r._place!=='No';
     const _needsAction=_isAbove&&!rowApv.pm;
     const _bothDone=rowApv.pm&&rowApv.do;
-    const trStyle=_bothDone?'opacity:0.55;background:#f9fafb;':_needsAction?'border-left:3px solid #f59e0b;background:'+(isSwing?'#fffde7':'#fffbeb')+';':isSwing?'background:#fffde7;':'';
+    // In-plan rows read green; below-the-line rows stay neutral because the separator
+    // headers already carry the band colour. "Awaiting your PM Rec" keeps the amber
+    // left border, so the two signals no longer compete for the same background.
+    const _bandBg=_isAbove?'#f4fbf6':'';
+    const trStyle=_bothDone
+      ?'opacity:0.55;background:#f9fafb;'
+      :(_needsAction?'border-left:3px solid #f59e0b;':'')+(isSwing?'background:#fff8e1;':_bandBg?'background:'+_bandBg+';':'');
     return cutLine+`<tr id="apv-row-${esc(r['Key'])}" style="${trStyle}" title="${isSwing?'Swing feature — confidence borderline (50–69%), worth discussing at freeze':''}">
       <td style="color:#bbb">${r['Rank']||'—'}</td>
       <td class="score-col" style="display:none"><span class="score">${esc(r['Score'])}</span></td>
