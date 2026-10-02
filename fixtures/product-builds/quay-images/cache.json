@@ -1,0 +1,123 @@
+{
+  "repos": [
+    {
+      "namespace": "opendatahub",
+      "repo": "odh-openshell-gateway",
+      "component": "OpenShell",
+      "stream": "ODH",
+      "pullspec": "quay.io/opendatahub/odh-openshell-gateway",
+      "quay_url": "https://quay.io/repository/opendatahub/odh-openshell-gateway?tab=tags",
+      "tags": [
+        { "name": "latest", "manifest_digest": "sha256:a1b2c3d4e5f60001", "size": 245000000, "last_modified": "2026-09-30T14:23:00Z", "is_manifest_list": true },
+        { "name": "v0.22.0", "manifest_digest": "sha256:a1b2c3d4e5f60002", "size": 245000000, "last_modified": "2026-09-28T10:15:00Z", "is_manifest_list": true },
+        { "name": "v0.21.1", "manifest_digest": "sha256:a1b2c3d4e5f60003", "size": 240000000, "last_modified": "2026-09-20T08:30:00Z", "is_manifest_list": true }
+      ],
+      "has_additional": true,
+      "error": null,
+      "fetched_at": "2026-10-01T12:00:00Z"
+    },
+    {
+      "namespace": "opendatahub",
+      "repo": "odh-openshell-supervisor",
+      "component": "OpenShell",
+      "stream": "ODH",
+      "pullspec": "quay.io/opendatahub/odh-openshell-supervisor",
+      "quay_url": "https://quay.io/repository/opendatahub/odh-openshell-supervisor?tab=tags",
+      "tags": [
+        { "name": "latest", "manifest_digest": "sha256:b2c3d4e5f6700001", "size": 198000000, "last_modified": "2026-09-30T14:25:00Z", "is_manifest_list": true },
+        { "name": "v0.22.0", "manifest_digest": "sha256:b2c3d4e5f6700002", "size": 198000000, "last_modified": "2026-09-28T10:18:00Z", "is_manifest_list": true }
+      ],
+      "has_additional": true,
+      "error": null,
+      "fetched_at": "2026-10-01T12:00:00Z"
+    },
+    {
+      "namespace": "opendatahub",
+      "repo": "odh-openshell-sandbox",
+      "component": "OpenShell",
+      "stream": "ODH",
+      "pullspec": "quay.io/opendatahub/odh-openshell-sandbox",
+      "quay_url": "https://quay.io/repository/opendatahub/odh-openshell-sandbox?tab=tags",
+      "tags": [
+        { "name": "latest", "manifest_digest": "sha256:c3d4e5f670800001", "size": 312000000, "last_modified": "2026-09-30T14:20:00Z", "is_manifest_list": true },
+        { "name": "v0.22.0", "manifest_digest": "sha256:c3d4e5f670800002", "size": 312000000, "last_modified": "2026-09-28T10:12:00Z", "is_manifest_list": true }
+      ],
+      "has_additional": true,
+      "error": null,
+      "fetched_at": "2026-10-01T12:00:00Z"
+    },
+    {
+      "namespace": "opendatahub",
+      "repo": "odh-openshell-cli",
+      "component": "OpenShell",
+      "stream": "ODH",
+      "pullspec": "quay.io/opendatahub/odh-openshell-cli",
+      "quay_url": "https://quay.io/repository/opendatahub/odh-openshell-cli?tab=tags",
+      "tags": [
+        { "name": "latest", "manifest_digest": "sha256:d4e5f67809000001", "size": 85000000, "last_modified": "2026-09-30T14:22:00Z", "is_manifest_list": false },
+        { "name": "v0.22.0", "manifest_digest": "sha256:d4e5f67809000002", "size": 85000000, "last_modified": "2026-09-28T10:10:00Z", "is_manifest_list": false }
+      ],
+      "has_additional": true,
+      "error": null,
+      "fetched_at": "2026-10-01T12:00:00Z"
+    },
+    {
+      "namespace": "rhoai",
+      "repo": "odh-openshell-gateway-rhel9",
+      "component": "OpenShell",
+      "stream": "RHOAI",
+      "pullspec": "quay.io/rhoai/odh-openshell-gateway-rhel9",
+      "quay_url": "https://quay.io/repository/rhoai/odh-openshell-gateway-rhel9?tab=tags",
+      "tags": [
+        { "name": "rhoai-3.6", "manifest_digest": "sha256:e5f6789010000001", "size": 260000000, "last_modified": "2026-09-29T16:45:00Z", "is_manifest_list": true },
+        { "name": "rhoai-3.5", "manifest_digest": "sha256:e5f6789010000002", "size": 255000000, "last_modified": "2026-09-15T11:30:00Z", "is_manifest_list": true }
+      ],
+      "has_additional": false,
+      "error": null,
+      "fetched_at": "2026-10-01T12:00:00Z"
+    },
+    {
+      "namespace": "rhoai",
+      "repo": "odh-openshell-supervisor-rhel9",
+      "component": "OpenShell",
+      "stream": "RHOAI",
+      "pullspec": "quay.io/rhoai/odh-openshell-supervisor-rhel9",
+      "quay_url": "https://quay.io/repository/rhoai/odh-openshell-supervisor-rhel9?tab=tags",
+      "tags": [
+        { "name": "rhoai-3.6", "manifest_digest": "sha256:f6789010100000001", "size": 210000000, "last_modified": "2026-09-29T16:48:00Z", "is_manifest_list": true }
+      ],
+      "has_additional": false,
+      "error": null,
+      "fetched_at": "2026-10-01T12:00:00Z"
+    },
+    {
+      "namespace": "rhoai",
+      "repo": "odh-openshell-sandbox-rhel9",
+      "component": "OpenShell",
+      "stream": "RHOAI",
+      "pullspec": "quay.io/rhoai/odh-openshell-sandbox-rhel9",
+      "quay_url": "https://quay.io/repository/rhoai/odh-openshell-sandbox-rhel9?tab=tags",
+      "tags": [
+        { "name": "rhoai-3.6", "manifest_digest": "sha256:g789010110000001", "size": 325000000, "last_modified": "2026-09-29T16:50:00Z", "is_manifest_list": true }
+      ],
+      "has_additional": false,
+      "error": null,
+      "fetched_at": "2026-10-01T12:00:00Z"
+    },
+    {
+      "namespace": "rhoai",
+      "repo": "odh-openshell-cli-rhel9",
+      "component": "OpenShell",
+      "stream": "RHOAI",
+      "pullspec": "quay.io/rhoai/odh-openshell-cli-rhel9",
+      "quay_url": "https://quay.io/repository/rhoai/odh-openshell-cli-rhel9?tab=tags",
+      "tags": [
+        { "name": "rhoai-3.6", "manifest_digest": "sha256:h89010111000001", "size": 90000000, "last_modified": "2026-09-29T16:42:00Z", "is_manifest_list": false }
+      ],
+      "has_additional": false,
+      "error": null,
+      "fetched_at": "2026-10-01T12:00:00Z"
+    }
+  ],
+  "refreshed_at": "2026-10-01T12:00:00Z"
+}
