@@ -134,10 +134,11 @@ tr:hover td{background:#f8fafc}
 
 .score{font-weight:700;font-size:14px}
 .rp{display:inline-block;padding:2px 6px;border-radius:9px;font-size:11px;font-weight:600;white-space:nowrap}
-.r-committed{background:#e8f5e9;color:#2e7d32}
-.r-high{background:#fff3e0;color:#e65100}
-.r-med{background:#fce4ec;color:#c62828}
-.r-low{background:#f3e5f5;color:#6a1b9a}
+/* Readiness pill tracks the cut line: green above it, red below, so the colour
+   never contradicts where the row actually sits. */
+.r-committed{background:#e8f5e9;color:#1b5e20}
+.r-above{background:#e8f5e9;color:#2e7d32}
+.r-below{background:#ffebee;color:#c62828}
 
 .fpdor-cell{display:flex;flex-direction:column;gap:2px}
 .fpdor-w{font-size:11px;color:#666;margin-top:2px;font-weight:500}
@@ -3398,7 +3399,7 @@ function renderTbl(rows){
   // codeql[js/unsafe-html] All user-supplied field values are escaped via esc() helper function before insertion into innerHTML. The esc() function (line 1021) uses textContent to safely convert user values: esc(s) creates a div, sets textContent to the user value, then returns innerHTML. This prevents XSS by converting special characters to entities. Applied to: Key, Title, Components, Priority, Outcome, Target Versions, Team, Score, FPDoR, Risk, and all other CSV-derived or API-derived fields in renderTbl and other rendering functions.
   tb.innerHTML=rows.map(r=>{
     const fNum=r._fNum;
-    const rCls=r._committed?'r-committed':r._wFPDoR>=85?'r-high':r._wFPDoR>=60?'r-med':'r-low';
+    const rCls=r._committed?'r-committed':r._place==='No'?'r-below':'r-above';
     // FPDoR breakdown: tooltip with full tier breakdown, inline for Critical/High fails only
     const failedSet=new Set(r._failedItems);
     const hasCrossTeamDep=failedSet.has('Cross-team deps');
