@@ -146,3 +146,4 @@ Deployed to OpenShift via ArgoCD. AI Eng images extend core images from `@org-pu
 See [CONTRIBUTING.md](CONTRIBUTING.md) for development workflow, project structure, and code style guidelines.
 
 Architecture and deployment details are in [`.claude/CLAUDE.md`](.claude/CLAUDE.md) — Claude Code reads this automatically.
+✅ Claude Code Review Workflow Test - Sept 29, 2026
