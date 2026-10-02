@@ -51,6 +51,10 @@ function selectedTriggerCard() {
   return triggerOptions.value?.cards?.find(card => card.key === triggerCardKey.value) || null
 }
 
+function mappedPullspecs(task) {
+  return (task.components || []).filter(component => component.pullspec)
+}
+
 function resetTriggerForm(card = selectedTriggerCard()) {
   triggerComponents.value = card?.pipeline_components || 'all'
   triggerSkippedComponents.value = ''
@@ -559,7 +563,16 @@ function formatDate(value) {
             </ul>
             <p v-if="releaseEpicState.result.warnings?.length" class="mt-2 font-semibold">{{ releaseEpicState.result.warnings.join(' ') }}</p>
             <p v-if="releaseEpicState.result.not_created?.length" class="mt-2">Not created by rule: {{ releaseEpicState.result.not_created.map(card => card.summary).join('; ') }}</p>
-            <p v-if="releaseEpicState.result.failures?.length" class="mt-2 text-red-700 dark:text-red-300">Failed cards: {{ releaseEpicState.result.failures.map(card => card.summary).join('; ') }}</p>
+            <div v-if="releaseEpicState.result.failures?.length" class="mt-3 text-red-700 dark:text-red-300">
+              <p class="font-semibold">Checklist cards that failed to create:</p>
+              <ul class="mt-1 list-disc space-y-2 pl-5">
+                <li v-for="failure in releaseEpicState.result.failures" :key="failure.summary">
+                  <span class="font-medium">{{ failure.summary }}</span>
+                  <span class="block">{{ failure.error || 'No error detail was returned.' }}</span>
+                </li>
+              </ul>
+              <p class="mt-2">For further diagnostics, ask an Org Pulse administrator to check the application logs for <code>[release-epic] Checklist card creation failed</code> and Epic {{ releaseEpicState.result.epic.key }}.</p>
+            </div>
           </div>
           <button type="submit" :disabled="releaseEpicState.loading || releaseEpicLoading || !releaseEpicOptions" class="mt-5 rounded-md bg-primary-600 px-4 py-2 text-sm font-semibold text-white hover:bg-primary-700 disabled:cursor-wait disabled:opacity-60">
             {{ releaseEpicState.loading ? 'Creating release epic...' : releaseEpicState.duplicates.length ? 'Confirm and create release epic' : 'Create release epic' }}
@@ -603,27 +616,65 @@ function formatDate(value) {
                  <div><span class="font-semibold">Target:</span> {{ selectedTriggerCard().target }}</div>
                   <div><span class="font-semibold">Release type:</span> {{ selectedTriggerCard().parent.advisory_type }} <span class="text-gray-400">({{ selectedTriggerCard().parent.release_type }})</span></div>
                </div>
-               <label class="text-sm font-medium text-gray-700 dark:text-gray-300">
-                 Input type
-                <select v-model="triggerInputType" class="mt-1.5 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm font-normal text-gray-900 outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100">
-                  <option value="image-list">image-list</option><option value="git-tag">git-tag</option><option value="commit-sha">commit-sha</option>
-                </select>
-              </label>
-               <label class="text-sm font-medium text-gray-700 dark:text-gray-300">
-                 Input value <span class="text-red-600 dark:text-red-400" aria-hidden="true">*</span>
-                 <textarea v-model="triggerInputValue" required rows="3" :placeholder="triggerInputType === 'git-tag' ? 'v3.5.0' : triggerInputType === 'commit-sha' ? 'full or abbreviated SHA' : 'image URLs, one per line'" class="mt-1.5 w-full resize-y rounded-md border border-gray-300 bg-white px-3 py-2 text-sm font-normal text-gray-900 outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100"></textarea>
-               </label>
-            </div>
-              <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                 Ready components <span class="text-red-600 dark:text-red-400" aria-hidden="true">*</span>
-                 <textarea v-model="triggerComponents" required rows="2" placeholder="all or cuda, rocm, model-opt" class="mt-1.5 w-full resize-y rounded-md border border-gray-300 bg-white px-3 py-2 text-sm font-normal text-gray-900 outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100"></textarea>
-                 <span class="mt-1 block text-xs font-normal text-gray-500 dark:text-gray-400">Use PMC component names such as <code>all</code> or <code>cuda, rocm, model-opt</code>. Names are interpreted by Claudio according to the selected product config.</span>
-              </label>
-              <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                 Skipped components <span class="font-normal text-gray-500 dark:text-gray-400">(optional)</span>
-                 <textarea v-model="triggerSkippedComponents" rows="2" placeholder="cuda, rocm, model-opt" class="mt-1.5 w-full resize-y rounded-md border border-gray-300 bg-white px-3 py-2 text-sm font-normal text-gray-900 outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100"></textarea>
-                 <span class="mt-2 block rounded-md border border-red-200 bg-red-50 px-3 py-2 text-xs font-normal text-red-800 dark:border-red-800 dark:bg-red-900/20 dark:text-red-200">Use Ready components for accelerators ready to be released. Use Skipped components for accelerators that will not be included in this release. If an accelerator is not ready but should be released later, leave it out of both fields; it will remain planned.</span>
-              </label>
+                <label class="text-sm font-medium text-gray-700 dark:text-gray-300 sm:col-span-2">
+                  Input type
+                  <select v-model="triggerInputType" class="mt-1.5 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm font-normal text-gray-900 outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100">
+                    <option value="image-list">image-list</option><option value="git-tag">git-tag</option><option value="commit-sha">commit-sha</option>
+                  </select>
+                </label>
+                <div class="text-sm font-medium text-gray-700 dark:text-gray-300 sm:col-span-2">
+                  <label for="trigger-input-value">Input value <span class="text-red-600 dark:text-red-400" aria-hidden="true">*</span></label>
+                  <textarea id="trigger-input-value" v-model="triggerInputValue" required rows="3" :placeholder="triggerInputType === 'git-tag' ? 'exact configured Git tag' : triggerInputType === 'commit-sha' ? 'full or abbreviated SHA' : 'pullspecs or component=pullspec, one per line'" class="mt-1.5 w-full resize-y rounded-md border border-gray-300 bg-white px-3 py-2 text-sm font-normal text-gray-900 outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100"></textarea>
+                  <details class="mt-2 rounded-md border border-gray-200 bg-gray-50 text-xs font-normal text-gray-700 dark:border-gray-700 dark:bg-gray-900/40 dark:text-gray-300">
+                    <summary class="cursor-pointer select-none px-3 py-2 font-medium">How to fill the input value</summary>
+                    <div class="space-y-3 border-t border-gray-200 px-3 py-3 dark:border-gray-700">
+                      <template v-if="triggerInputType === 'image-list'">
+                        <div class="grid gap-3">
+                          <div class="space-y-1">
+                            <p class="font-semibold">Raw pullspecs</p>
+                            <p>Use when each repository matches one Ready component. Enter one per line or comma-separated.</p>
+                            <pre class="overflow-x-auto rounded bg-white p-2 text-[11px] dark:bg-gray-800"><code>quay.io/aipcc/rhaiis/rocm-ubi9:3.6.0-fast.2-1790234469</code></pre>
+                            <pre class="overflow-x-auto rounded bg-white p-2 text-[11px] dark:bg-gray-800"><code>quay.io/aipcc/rhaiis/rocm-ubi9@sha256:0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef</code></pre>
+                          </div>
+                          <div class="space-y-1">
+                            <p class="font-semibold">Explicit component mappings</p>
+                            <p>Use when you want to name the component; add its family if the name is ambiguous.</p>
+                            <pre class="overflow-x-auto rounded bg-white p-2 text-[11px] dark:bg-gray-800"><code>rocm=quay.io/aipcc/rhaiis/rocm-ubi9:3.6.0-fast.2-1790234469
+bootc-gaudi:containers=&lt;pullspec&gt;</code></pre>
+                          </div>
+                        </div>
+                      </template>
+                      <template v-else-if="triggerInputType === 'git-tag'">
+                        <p class="font-semibold">Git tag</p>
+                        <p>Use one exact tag without spaces.</p>
+                        <pre class="overflow-x-auto rounded bg-white p-2 text-[11px] dark:bg-gray-800"><code>3.6.0-fast.2</code></pre>
+                      </template>
+                      <template v-else>
+                        <p class="font-semibold">Commit SHA</p>
+                        <p>Use 7–64 hexadecimal characters.</p>
+                        <pre class="overflow-x-auto rounded bg-white p-2 text-[11px] dark:bg-gray-800"><code>488e59cf0fdce2ab17f0358fd71cc8136d14aa94</code></pre>
+                      </template>
+                    </div>
+                  </details>
+                </div>
+                <div class="text-sm font-medium text-gray-700 dark:text-gray-300">
+                  <label for="trigger-components">Ready components <span class="text-red-600 dark:text-red-400" aria-hidden="true">*</span></label>
+                  <textarea id="trigger-components" v-model="triggerComponents" required rows="2" placeholder="all or cuda, rocm, model-opt" class="mt-1.5 w-full resize-y rounded-md border border-gray-300 bg-white px-3 py-2 text-sm font-normal text-gray-900 outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100"></textarea>
+                </div>
+                <div class="text-sm font-medium text-gray-700 dark:text-gray-300">
+                  <label for="trigger-skipped-components">Skipped components <span class="font-normal text-gray-500 dark:text-gray-400">(optional)</span></label>
+                  <textarea id="trigger-skipped-components" v-model="triggerSkippedComponents" rows="2" placeholder="cuda, rocm, model-opt" class="mt-1.5 w-full resize-y rounded-md border border-gray-300 bg-white px-3 py-2 text-sm font-normal text-gray-900 outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100"></textarea>
+                </div>
+                <details class="w-full rounded-md border border-gray-200 bg-gray-50 text-xs font-normal text-gray-700 dark:border-gray-700 dark:bg-gray-900/40 dark:text-gray-300 sm:col-span-2">
+                  <summary class="cursor-pointer select-none px-3 py-2 font-medium">Component list examples</summary>
+                  <div class="space-y-3 border-t border-gray-200 px-3 py-3 dark:border-gray-700">
+                    <p class="font-semibold">Ready</p>
+                    <div class="flex flex-wrap gap-2"><code>all</code><code>cuda, rocm</code><code>cuda rocm</code><code>cuda, rocm model-opt</code><code>bootc-gaudi:containers</code></div>
+                    <p class="font-semibold">Skipped</p>
+                    <div class="flex flex-wrap gap-2"><code>bootc-gaudi:containers</code><code>bootc-gaudi-iso-disk-image:disk-images</code><code>bootc-gaudi-qcow2-disk-image:disk-images</code></div>
+                  </div>
+                </details>
+              </div>
               <label v-if="selectedTriggerCard()?.parent.advisory_type === 'RHSA'" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
                 CVE list <span class="text-red-600 dark:text-red-400" aria-hidden="true">*</span>
                 <textarea v-model="triggerCveList" required rows="3" placeholder="CVE-YYYY-NNNN (one per line)" class="mt-1.5 w-full resize-y rounded-md border border-gray-300 bg-white px-3 py-2 text-sm font-normal text-gray-900 outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100"></textarea>
@@ -646,7 +697,15 @@ function formatDate(value) {
              <div v-else-if="['triggered', 'skip-duplicate'].includes(triggerState.decision.type)"><p>This action cannot continue because the selected components are already {{ triggerState.decision.type === 'triggered' ? 'in flight' : 'recorded as skipped' }}. Resolve the existing Jira card first.</p></div>
              <div v-else><p>{{ triggerState.decision.task?.comment || 'This action affects an existing readiness card.' }}</p><button type="button" class="mt-2 rounded border border-amber-500 px-2 py-1 font-semibold" @click="confirmTriggerDecision(triggerState.decision.type)">Confirm and continue</button></div>
           </div>
-           <div v-if="triggerState.result" class="mt-4 rounded-md border border-green-200 bg-green-50 p-3 text-sm text-green-800 dark:border-green-800 dark:bg-green-900/20 dark:text-green-200">Updated release readiness: <span v-for="(task, index) in triggerState.result.tasks" :key="`${task.key}-${task.operation}-${task.state}-${index}`" class="mr-2"><a :href="jiraUrl(task.key)" target="_blank" rel="noopener" class="font-semibold underline">{{ task.key }}</a> ({{ task.operation }})</span></div>
+            <div v-if="triggerState.result" class="mt-4 rounded-md border border-green-200 bg-green-50 p-3 text-sm text-green-800 dark:border-green-800 dark:bg-green-900/20 dark:text-green-200">
+              <p>Updated release readiness:</p>
+              <span v-for="(task, index) in triggerState.result.tasks" :key="`${task.key}-${task.operation}-${task.state}-${index}`" class="mr-2">
+                <a :href="jiraUrl(task.key)" target="_blank" rel="noopener" class="font-semibold underline">{{ task.key }}</a> ({{ task.operation }})
+                <span v-for="component in mappedPullspecs(task)" :key="`${task.key}-${component.name}`" class="mt-1 block text-xs">
+                  Mapped <code>{{ component.pullspec }}</code> to <code>{{ component.name }}</code>
+                </span>
+              </span>
+            </div>
             <button type="submit" :disabled="triggerState.loading || !triggerOptions" class="mt-5 rounded-md bg-emerald-600 px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-700 disabled:cursor-wait disabled:opacity-60">{{ triggerState.loading ? 'Updating readiness...' : 'Apply release readiness' }}</button>
         </form>
       </Transition>
