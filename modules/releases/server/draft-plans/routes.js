@@ -1,5 +1,6 @@
 const { fetchDraftPlans, DATA_PREFIX, DEFAULT_CONFIG, KNOWN_PRODUCTS } = require('./fetch');
 const { logAudit } = require('../planning/audit-log');
+const { loadIndex } = require('../planning/cache-reader');
 const { normalizeDraft } = require('./normalize');
 const {
   resolveDraftPlanSession,
@@ -28,6 +29,34 @@ function loadDemoFixture() {
   } catch (err) {
     console.warn('[releases/draft-plans] Failed to load demo fixture:', err.message);
     return null;
+  }
+}
+
+/**
+ * Who may approve a feature is decided by its PM and Delivery Owner, but the draft is a
+ * pipeline snapshot that can be weeks old. Refresh those two fields from the live feature
+ * index so an owner assigned since the snapshot is not locked out of their own feature.
+ */
+async function applyLiveOwnership(draft, readFromStorage) {
+  if (!draft || !Array.isArray(draft.candidates)) return;
+  var index;
+  try {
+    index = await loadIndex(readFromStorage);
+  } catch (err) {
+    console.warn('[releases/draft-plans] live ownership lookup failed:', err.message);
+    return;
+  }
+  var live = new Map();
+  var rows = (index && index.features) || [];
+  for (var i = 0; i < rows.length; i++) {
+    if (rows[i] && rows[i].key) live.set(rows[i].key, rows[i]);
+  }
+  for (var c = 0; c < draft.candidates.length; c++) {
+    var candidate = draft.candidates[c];
+    var row = live.get(candidate.key);
+    if (!row) continue;
+    if (row.pm) candidate.pm = row.pm;
+    if (row.assignee) candidate.assignee = row.assignee;
   }
 }
 
@@ -672,6 +701,8 @@ module.exports = async function registerDraftPlanRoutes(router, context) {
     if (!draft || !draft.candidates || draft.candidates.length === 0) {
       return res.status(404).json({ error: 'No draft plan data found for version ' + version });
     }
+
+    await applyLiveOwnership(draft, storage.readFromStorage);
 
     var editorKey = DATA_PREFIX + '/editor/' + product + '/' + version + '.json';
     var stored = await storage.readFromStorage(editorKey);
