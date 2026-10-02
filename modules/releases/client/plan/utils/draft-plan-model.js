@@ -205,6 +205,15 @@ function ownsRow(row, user) {
   return namesMatch(row && row.assignee, user) || namesMatch(row && row.pm, user)
 }
 
+/**
+ * Adding a feature to the plan is agreed in the joint planning session, so it is not
+ * limited to the feature's Jira owner — only a freeze stops it. Placement and descope
+ * changes still go through canEditRow. Mirrors authorizeEditorSave on the server.
+ */
+function canApproveRow(row, edits, meta) {
+  return !rowFrozen(row, edits, meta)
+}
+
 function canEditRow(row, edits, meta) {
   if (rowFrozen(row, edits, meta)) return false
   if (isAdmin(meta)) return true
@@ -518,7 +527,7 @@ function clearDescope(state, row) {
 function setApproved(state, row, approved) {
   var edits = state.edits
   var meta = state.meta
-  if (!canEditRow(row, edits, meta)) return { ok: false, reason: 'forbidden' }
+  if (!canApproveRow(row, edits, meta)) return { ok: false, reason: 'forbidden' }
   var e = ensureEdit(edits, row.key)
   var was = !!e.approved
   if (was === !!approved) return { ok: true, noop: true }
@@ -734,6 +743,7 @@ export {
   canEditRow,
   canReverseDescope,
   ownsRow,
+  canApproveRow,
   isAdmin,
   isFinalFrozen,
   eventFrozen,
