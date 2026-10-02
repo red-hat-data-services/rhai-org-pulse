@@ -2861,7 +2861,7 @@ window.addEventListener('message', function(e){
   // Receive live data from Org Pulse AI Planner iframe
   if(e.data.type === 'ai-planner-data'){
     const {features=[], bugQueue=[], capacity={}, cveReserve={}, lastSyncedAt} = e.data;
-    allData = features.map(f => ({
+    const mapped = features.map(f => ({
       'Key': f.Key || '',
       'Title': f.Summary || f.Title || '',
       'Components': (f.Components || []).join('; '),
@@ -2885,9 +2885,15 @@ window.addEventListener('message', function(e){
       '_place': f.PlannedFor || 'Unknown',
       '_riskLevel': f.riskLevel || 'Medium'
     }));
-    // Run schedule initialization for live API rows to calculate derived fields
-    schedule(allData);
-    // Trigger refresh with live data
+    // Derive placement, sizing and weighted readiness. If this throws, the rows are
+    // left half-built — every later render would then show the mapping defaults
+    // (undefined size, blank w:, 0 in-plan), so keep the last good dataset instead.
+    try {
+      schedule(mapped);
+      allData = mapped;
+    } catch (err) {
+      console.error('AI Planner: could not schedule live data, keeping previous rows', err);
+    }
     populateFilters();
     run();
     renderApprovedBadge();
