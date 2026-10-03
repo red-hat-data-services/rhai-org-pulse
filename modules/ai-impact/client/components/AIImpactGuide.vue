@@ -1,6 +1,7 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import AssessmentGuideModal from './AssessmentGuideModal.vue'
+import { trackUsage } from '@shared/client/services/usageTracking.js'
 
 const props = defineProps({
   defaultTab: { type: String, default: null }
@@ -27,6 +28,7 @@ function closeGuide(dismiss) {
 }
 
 function openGuide(tab) {
+  trackUsage('open', 'assessment-guide')
   initialTab.value = tab || null
   showGuideModal.value = true
 }

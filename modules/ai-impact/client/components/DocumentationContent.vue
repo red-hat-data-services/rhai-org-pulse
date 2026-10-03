@@ -14,6 +14,7 @@ import {
 } from 'chart.js'
 import LoadingOverlay from '@shared/client/components/LoadingOverlay.vue'
 import MrKpiCharts from './MrKpiCharts.vue'
+import { trackRefs } from '../composables/useUsageTracking.js'
 
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, BarElement, Filler, Tooltip, Legend)
 
@@ -42,6 +43,8 @@ const emit = defineEmits(['retry'])
 
 const searchQuery = ref('')
 const docFilter = ref('all')
+
+trackRefs({ filter: { docStatus: docFilter }, search: searchQuery })
 
 const jiraHost = computed(() => props.docData?.jiraHost || 'https://redhat.atlassian.net')
 const isEmpty = computed(() => !props.docData?.fetchedAt)

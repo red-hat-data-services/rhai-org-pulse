@@ -5,6 +5,7 @@ import OnboardingCharts from './OnboardingCharts.vue'
 import ComponentOnboardingTable from './ComponentOnboardingTable.vue'
 import MultiSelectDropdown from './MultiSelectDropdown.vue'
 import { collectVersionGroups, matchesVersionGroups, formatVersionGroupLabel } from '../utils/version-group.js'
+import { trackRefs } from '../composables/useUsageTracking.js'
 import {
   filterChipVersionClass,
   filterChipRemoveClass
@@ -22,6 +23,8 @@ const emit = defineEmits(['loadDetail', 'retry'])
 const chartsExpanded = ref(true)
 // Empty = all versions; otherwise match any selected version.
 const versionFilter = ref([])
+
+trackRefs({ filter: { version: versionFilter }, toggle: { charts: chartsExpanded } })
 
 const allComponents = computed(() => props.data?.components ?? {})
 

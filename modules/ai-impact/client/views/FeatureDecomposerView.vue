@@ -5,6 +5,7 @@ import { useModuleLink } from '@shared/client/composables/useModuleLink.js'
 import { PHASES } from '../constants.js'
 import DecomposerContent from '../components/DecomposerContent.vue'
 import DecomposerDetailPanel from '../components/DecomposerDetailPanel.vue'
+import { useUsageTracking } from '../composables/useUsageTracking.js'
 
 const moduleNav = inject('moduleNav')
 const { navigateTo: crossNavigate } = useModuleLink()
@@ -12,6 +13,8 @@ const { navigateTo: crossNavigate } = useModuleLink()
 const { snapshot, loading, error, load } = useDecomposer()
 
 const selectedStrategy = ref(null)
+
+useUsageTracking({ open: { strategy: selectedStrategy } })
 
 function handleSelectStrategy(strategy) {
   selectedStrategy.value = strategy
