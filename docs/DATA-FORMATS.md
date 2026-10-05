@@ -1796,6 +1796,75 @@ JSON Lines format (one JSON object per line). Partitioned by month for efficient
 
 ---
 
+## Releases — CHI Hierarchy (`data/releases/chi-hierarchy/latest.json`)
+
+Pre-computed Container Health Index hierarchy for Org Pulse (RHOAIENG-97404). Dual-environment snapshot: **Prod** from `catalog.redhat.com`, **Stage** from `pyxis.stage.engineering.redhat.com` (Kerberos in the collector). Hierarchy: Product version → Components → Images.
+
+Fixture: `fixtures/releases/chi-hierarchy/latest.json`.
+
+```json
+{
+  "fetchedAt": "2026-09-30T18:00:00.000Z",
+  "activeStreams": ["rhoai-2.25", "rhoai-3.3", "rhoai-3.4", "rhoai-3.5"],
+  "environments": {
+    "prod": {
+      "fetchedAt": "2026-09-30T18:00:00.000Z",
+      "source": "catalog.redhat.com",
+      "versions": [{
+        "id": "rhoai-3.5",
+        "tag": "v3.5",
+        "summary": {
+          "imageCount": 3,
+          "gradeDistribution": { "A": 1, "B": 1, "D": 1 },
+          "critical": 0,
+          "important": 14,
+          "staleImageCount": 1
+        },
+        "components": [{
+          "name": "AI Core Dashboard",
+          "summary": {
+            "imageCount": 1,
+            "worstGrade": "B",
+            "critical": 0,
+            "important": 11,
+            "oldestImageAgeDays": 9
+          },
+          "images": [{
+            "name": "odh-dashboard-rhel9",
+            "grade": "B",
+            "gradeDate": "2026-09-21",
+            "vulnerabilityCount": 21,
+            "advisories": { "Critical": 0, "Important": 11, "Moderate": 9, "Low": 1 },
+            "catalogUrl": "https://catalog.redhat.com/software/containers/rhoai/odh-dashboard-rhel9",
+            "lastUpdated": "2026-09-21",
+            "ageDays": 9
+          }]
+        }]
+      }]
+    },
+    "stage": {
+      "fetchedAt": "2026-09-30T17:30:00.000Z",
+      "source": "pyxis.stage.engineering.redhat.com",
+      "versions": []
+    }
+  }
+}
+```
+
+| Method | Path | Auth | Purpose |
+|--------|------|------|---------|
+| GET | `/api/modules/releases/chi-hierarchy/data` | `releases:read` | Full dual-env snapshot |
+| GET | `/api/modules/releases/chi-hierarchy/status` | `releases:read` | Upload / env summary |
+| POST | `/api/modules/releases/chi-hierarchy/bulk` | `releases:write` | Pipeline ingest (skipped in `DEMO_MODE`) |
+
+Image staleness: `ageDays > 14` is treated as stale in the UI. `grade` / `gradeDate` / `vulnerabilityCount` align with legacy AIPCC `HealthIndex`.
+
+**Collector / join:** External CHI pipeline (`generate_chi_report.py` + `build_chi_hierarchy.py`) joins catalog/Stage Pyxis images to ProdSec `openshift-ai` `components.override` (strip `rhoai/`). See CHI repo `PIPELINE.md`. Org Pulse does not call Pyxis or ps_modules at runtime.
+
+**Onboarding new versions:** See [CHI-HIERARCHY.md](./CHI-HIERARCHY.md) — versions come from ProdSec `active_ps_update_streams`; no Org Pulse code change is needed when the stream and catalog tags exist.
+
+---
+
 ## Releases — RHOAI Component Architectures (`data/releases/rhoai-component-architectures/latest.json`)
 
 Multi-architecture build support matrix for RHOAI components across release branches. Fetched from pre-generated `multi-arch-report.yaml` files in the `red-hat-data-services/konflux-central` repo.

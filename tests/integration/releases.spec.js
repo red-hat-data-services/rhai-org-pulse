@@ -2712,6 +2712,96 @@ test.describe('RHOAI Component Architectures Report @releases', () => {
 });
 
 /**
+ * Container Health Index hierarchy (RHOAIENG-97404)
+ *
+ * Stage/Prod toggle, version selector, component → image drill-down with
+ * grade / last-updated / age from the CHI hierarchy fixture.
+ */
+test.describe('Releases CHI Hierarchy Report @releases', () => {
+  test.beforeEach(async ({ page }) => {
+    setupErrorTracking(page);
+  });
+
+  test.afterEach(async ({ page }, testInfo) => {
+    logCapturedErrors(page, testInfo);
+  });
+
+  test('CHI hierarchy report card is visible in Reports hub', async ({ page }) => {
+    await page.goto('/#/releases/reports');
+    await page.waitForLoadState('networkidle');
+    await page.waitForTimeout(DEFAULT_PAGE_WAIT_TIME);
+
+    await expect(page.getByRole('button', { name: 'Container Health Index' })).toBeVisible();
+    expect(page.errors).toHaveLength(0);
+  });
+
+  test('CHI hierarchy API returns dual-env fixture', async ({ request }) => {
+    const res = await request.get('/api/modules/releases/chi-hierarchy/data');
+    expect(res.ok()).toBe(true);
+    const body = await res.json();
+    expect(body.activeStreams).toEqual(expect.arrayContaining(['rhoai-3.5']));
+    expect(body.environments.prod).toBeTruthy();
+    expect(body.environments.stage).toBeTruthy();
+    expect(body.environments.prod.versions.length).toBeGreaterThan(0);
+  });
+
+  test('CHI hierarchy report loads Prod summary and versions', async ({ page }) => {
+    await page.goto('/#/releases/reports?report=container-health-index');
+    await page.waitForLoadState('networkidle');
+    await page.waitForTimeout(DEFAULT_PAGE_WAIT_TIME);
+
+    await expect(page.getByRole('heading', { name: 'Container Health Index' })).toBeVisible();
+    await expect(page.getByText('catalog.redhat.com').first()).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Prod', exact: true })).toHaveAttribute('aria-pressed', 'true');
+    await expect(page.locator('#chi-version')).toBeVisible();
+    await expect(page.getByText('AI Core Dashboard').first()).toBeVisible();
+    expect(page.errors).toHaveLength(0);
+  });
+
+  test('Stage toggle changes CHI source summary', async ({ page }) => {
+    await page.goto('/#/releases/reports?report=container-health-index');
+    await page.waitForLoadState('networkidle');
+    await page.waitForTimeout(DEFAULT_PAGE_WAIT_TIME);
+
+    await page.getByRole('button', { name: 'Stage', exact: true }).click();
+    await page.waitForTimeout(500);
+
+    await expect(page.getByRole('button', { name: 'Stage', exact: true })).toHaveAttribute('aria-pressed', 'true');
+    await expect(page.getByText('pyxis.stage.engineering.redhat.com').first()).toBeVisible();
+    await expect(page.getByText('AI Core Dashboard').first()).toBeVisible();
+    expect(page.errors).toHaveLength(0);
+  });
+
+  test('expanding a component shows image grade and age', async ({ page }) => {
+    await page.goto('/#/releases/reports?report=container-health-index');
+    await page.waitForLoadState('networkidle');
+    await page.waitForTimeout(DEFAULT_PAGE_WAIT_TIME);
+
+    await page.getByRole('button', { name: /AI Core Dashboard/ }).first().click();
+    await page.waitForTimeout(300);
+
+    await expect(page.getByRole('link', { name: 'odh-dashboard-rhel9' })).toBeVisible();
+    await expect(page.getByText('Grade date').first()).toBeVisible();
+    await expect(page.getByText('Last updated').first()).toBeVisible();
+    await expect(page.getByText(/\d+d/).first()).toBeVisible();
+    expect(page.errors).toHaveLength(0);
+  });
+
+  test('stale images are flagged when ageDays > 14', async ({ page }) => {
+    await page.goto('/#/releases/reports?report=container-health-index');
+    await page.waitForLoadState('networkidle');
+    await page.waitForTimeout(DEFAULT_PAGE_WAIT_TIME);
+
+    await page.getByRole('button', { name: /Unmapped/ }).first().click();
+    await page.waitForTimeout(300);
+
+    await expect(page.getByText('odh-example-stale-rhel9').first()).toBeVisible();
+    await expect(page.getByText('stale').first()).toBeVisible();
+    expect(page.errors).toHaveLength(0);
+  });
+});
+
+/**
  * AI Planner tab (Plan view)
  *
  * Verify the AI Planner tab is visible in the Plan sub-nav, becomes active

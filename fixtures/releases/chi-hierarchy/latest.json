@@ -1,0 +1,189 @@
+{
+  "fetchedAt": "2026-09-30T18:00:00.000Z",
+  "activeStreams": ["rhoai-2.25", "rhoai-3.3", "rhoai-3.4", "rhoai-3.5"],
+  "environments": {
+    "prod": {
+      "fetchedAt": "2026-09-30T18:00:00.000Z",
+      "source": "catalog.redhat.com",
+      "versions": [
+        {
+          "id": "rhoai-3.5",
+          "tag": "v3.5",
+          "summary": {
+            "imageCount": 3,
+            "gradeDistribution": { "A": 1, "B": 1, "D": 1 },
+            "critical": 0,
+            "important": 14,
+            "staleImageCount": 1
+          },
+          "components": [
+            {
+              "name": "AI Core Dashboard",
+              "summary": {
+                "imageCount": 1,
+                "worstGrade": "B",
+                "critical": 0,
+                "important": 11,
+                "oldestImageAgeDays": 9
+              },
+              "images": [
+                {
+                  "name": "odh-dashboard-rhel9",
+                  "grade": "B",
+                  "gradeDate": "2026-09-21",
+                  "vulnerabilityCount": 21,
+                  "advisories": { "Critical": 0, "Important": 11, "Moderate": 9, "Low": 1 },
+                  "catalogUrl": "https://catalog.redhat.com/software/containers/rhoai/odh-dashboard-rhel9",
+                  "lastUpdated": "2026-09-21",
+                  "ageDays": 9
+                }
+              ]
+            },
+            {
+              "name": "AI Core Platform",
+              "summary": {
+                "imageCount": 1,
+                "worstGrade": "A",
+                "critical": 0,
+                "important": 0,
+                "oldestImageAgeDays": 5
+              },
+              "images": [
+                {
+                  "name": "odh-rhel9-operator",
+                  "grade": "A",
+                  "gradeDate": "2026-09-25",
+                  "vulnerabilityCount": 2,
+                  "advisories": { "Critical": 0, "Important": 0, "Moderate": 2, "Low": 0 },
+                  "catalogUrl": "https://catalog.redhat.com/software/containers/rhoai/odh-rhel9-operator",
+                  "lastUpdated": "2026-09-25",
+                  "ageDays": 5
+                }
+              ]
+            },
+            {
+              "name": "Unmapped",
+              "summary": {
+                "imageCount": 1,
+                "worstGrade": "D",
+                "critical": 0,
+                "important": 3,
+                "oldestImageAgeDays": 40
+              },
+              "images": [
+                {
+                  "name": "odh-example-stale-rhel9",
+                  "grade": "D",
+                  "gradeDate": "2026-08-01",
+                  "vulnerabilityCount": 8,
+                  "advisories": { "Critical": 0, "Important": 3, "Moderate": 4, "Low": 1 },
+                  "catalogUrl": "https://catalog.redhat.com/software/containers/rhoai/odh-example-stale-rhel9",
+                  "lastUpdated": "2026-08-21",
+                  "ageDays": 40
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "rhoai-2.25",
+          "tag": "v2.25",
+          "summary": {
+            "imageCount": 1,
+            "gradeDistribution": { "C": 1 },
+            "critical": 0,
+            "important": 2,
+            "staleImageCount": 0
+          },
+          "components": [
+            {
+              "name": "AI Core Dashboard",
+              "summary": {
+                "imageCount": 1,
+                "worstGrade": "C",
+                "critical": 0,
+                "important": 2,
+                "oldestImageAgeDays": 12
+              },
+              "images": [
+                {
+                  "name": "odh-dashboard-rhel9",
+                  "grade": "C",
+                  "gradeDate": "2026-09-18",
+                  "vulnerabilityCount": 5,
+                  "advisories": { "Critical": 0, "Important": 2, "Moderate": 3, "Low": 0 },
+                  "catalogUrl": "https://catalog.redhat.com/software/containers/rhoai/odh-dashboard-rhel9",
+                  "lastUpdated": "2026-09-18",
+                  "ageDays": 12
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    "stage": {
+      "fetchedAt": "2026-09-30T17:30:00.000Z",
+      "source": "pyxis.stage.engineering.redhat.com",
+      "versions": [
+        {
+          "id": "rhoai-3.5",
+          "tag": "v3.5",
+          "summary": {
+            "imageCount": 2,
+            "gradeDistribution": { "B": 2 },
+            "critical": 0,
+            "important": 6,
+            "staleImageCount": 0
+          },
+          "components": [
+            {
+              "name": "AI Core Dashboard",
+              "summary": {
+                "imageCount": 1,
+                "worstGrade": "B",
+                "critical": 0,
+                "important": 6,
+                "oldestImageAgeDays": 10
+              },
+              "images": [
+                {
+                  "name": "odh-dashboard-rhel9",
+                  "grade": "B",
+                  "gradeDate": "2026-09-20",
+                  "vulnerabilityCount": 8,
+                  "advisories": { "Critical": 0, "Important": 6, "Moderate": 2, "Low": 0 },
+                  "catalogUrl": "https://catalog.redhat.com/software/containers/rhoai/odh-dashboard-rhel9",
+                  "lastUpdated": "2026-09-20",
+                  "ageDays": 10
+                }
+              ]
+            },
+            {
+              "name": "AI Core Platform",
+              "summary": {
+                "imageCount": 1,
+                "worstGrade": "B",
+                "critical": 0,
+                "important": 0,
+                "oldestImageAgeDays": 7
+              },
+              "images": [
+                {
+                  "name": "odh-rhel9-operator",
+                  "grade": "B",
+                  "gradeDate": "2026-09-23",
+                  "vulnerabilityCount": 1,
+                  "advisories": { "Critical": 0, "Important": 0, "Moderate": 1, "Low": 0 },
+                  "catalogUrl": "https://catalog.redhat.com/software/containers/rhoai/odh-rhel9-operator",
+                  "lastUpdated": "2026-09-23",
+                  "ageDays": 7
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  }
+}
