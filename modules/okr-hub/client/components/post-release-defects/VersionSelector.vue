@@ -18,6 +18,28 @@
       </span>
     </div>
 
+    <!-- Quick version group selectors -->
+    <div class="mb-3">
+      <div class="text-xs font-medium text-gray-500 dark:text-gray-400 mb-2">Quick select</div>
+      <div class="flex flex-wrap gap-2">
+        <button
+          v-for="group in quickVersionGroups"
+          :key="group.label"
+          type="button"
+          :disabled="group.names.length === 0 || (!isQuickGroupSelected(group) && !canSelectGroup(group))"
+          :aria-pressed="isQuickGroupSelected(group)"
+          :title="group.names.length === 0 ? 'No matching Jira versions found' : undefined"
+          class="px-3 py-1.5 rounded-full border text-xs font-medium transition-colors"
+          :class="isQuickGroupSelected(group)
+            ? 'bg-blue-600 border-blue-600 text-white'
+            : 'bg-blue-50 border-blue-200 text-blue-700 hover:bg-blue-100 dark:bg-blue-900/30 dark:border-blue-700 dark:text-blue-200 dark:hover:bg-blue-900/50 disabled:opacity-50 disabled:cursor-not-allowed'"
+          @click="toggleQuickGroup(group)"
+        >
+          {{ group.label }}
+        </button>
+      </div>
+    </div>
+
     <!-- Dropdown with search -->
     <div class="relative">
       <input
@@ -73,6 +95,25 @@ const emit = defineEmits(['update:modelValue']);
 const searchQuery = ref('');
 const isOpen = ref(false);
 
+const quickVersionDefinitions = [
+  { label: '3.4 GA', names: ['rhoai-3.4', 'rhelai-3.4'], aliases: ['RHAIIS-3.4', 'RHAII-3.4'] },
+  { label: '3.5 EA1', names: ['3.5 EA1 RHOAI RELEASE', '3.5 EA1 RHELAI RELEASE', '3.5 EA1 RHAII RELEASE'] },
+  { label: '3.5 EA2', names: ['3.5 EA2 RHOAI RELEASE', '3.5 EA2 RHELAI RELEASE', '3.5 EA2 RHAII RELEASE'] },
+  { label: '3.5 GA', names: ['3.5 GA RHOAI RELEASE', '3.5 GA RHELAI RELEASE', '3.5 GA RHAII RELEASE'] },
+  { label: '3.6 EA1', names: ['3.6 EA1 RHOAI RELEASE', '3.6 EA1 RHELAI RELEASE', '3.6 EA1 RHAII RELEASE'] },
+  { label: '3.6 EA2', names: ['3.6 EA2 RHOAI RELEASE', '3.6 EA2 RHELAI RELEASE', '3.6 EA2 RHAII RELEASE'] },
+  { label: '3.6 GA', names: ['3.6 GA RHOAI RELEASE', '3.6 GA RHELAI RELEASE', '3.6 GA RHAII RELEASE'] }
+];
+
+const quickVersionGroups = computed(() => quickVersionDefinitions.map(group => {
+  const availableNames = group.names.filter(name => props.versions.some(version => version.name === name));
+  if (group.aliases) {
+    const availableAlias = group.aliases.find(name => props.versions.some(version => version.name === name));
+    if (availableAlias) availableNames.push(availableAlias);
+  }
+  return { ...group, names: availableNames };
+}));
+
 const filteredVersions = computed(() => {
   if (!searchQuery.value) {
     return props.versions.filter(v => !props.modelValue.includes(v.name));
@@ -95,6 +136,31 @@ function addVersion(versionName) {
 
 function removeVersion(versionName) {
   emit('update:modelValue', props.modelValue.filter(v => v !== versionName));
+}
+
+function isQuickGroupSelected(group) {
+  return group.names.length > 0 && group.names.every(name => props.modelValue.includes(name));
+}
+
+function canSelectGroup(group) {
+  const missingNames = group.names.filter(name => !props.modelValue.includes(name));
+  return props.modelValue.length + missingNames.length <= props.maxSelections;
+}
+
+function toggleQuickGroup(group) {
+  if (group.names.length === 0) return;
+
+  if (isQuickGroupSelected(group)) {
+    emit('update:modelValue', props.modelValue.filter(name => !group.names.includes(name)));
+    return;
+  }
+
+  if (!canSelectGroup(group)) return;
+  const next = [...props.modelValue];
+  for (const name of group.names) {
+    if (!next.includes(name)) next.push(name);
+  }
+  emit('update:modelValue', next);
 }
 
 function handleBlur() {
