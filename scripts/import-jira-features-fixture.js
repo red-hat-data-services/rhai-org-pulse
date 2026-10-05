@@ -145,7 +145,7 @@ function main() {
       status: feature.status,
       statusCategory: feature.statusCategory,
       priority: feature.priority,
-      assignee: feature.assignee,
+      assignee: feature.assignee ? feature.assignee.displayName || '' : '',
       fixVersions: feature.fixVersions,
       labels: feature.labels,
       targetVersions: feature.targetVersions,
