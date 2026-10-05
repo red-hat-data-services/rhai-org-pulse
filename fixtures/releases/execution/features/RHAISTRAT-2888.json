@@ -1,0 +1,26 @@
+{
+  "key": "RHAISTRAT-2888",
+  "summary": "[DRAFT] Extend HiSparse KV Cache Offloading -Disagg and GLM-5.3-Flash, DeepSeek V4.1, and DeepSeek V4.1-Flash",
+  "status": "New",
+  "statusCategory": "To Do",
+  "priority": "Major",
+  "components": [
+    "INFERENG Midstream"
+  ],
+  "targetVersions": [
+    "3.7 EA RHOAI RELEASE"
+  ],
+  "fixVersions": [],
+  "pm": "",
+  "assignee": {
+    "displayName": "",
+    "accountId": ""
+  },
+  "labels": [],
+  "created": "2026/10/02 6:16 AM",
+  "updated": "2026/10/02 7:37 AM",
+  "architect": null,
+  "parentKey": null,
+  "colorStatus": null,
+  "ownerStatusColor": null
+}

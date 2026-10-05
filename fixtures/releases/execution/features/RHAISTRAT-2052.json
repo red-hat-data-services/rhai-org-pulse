@@ -1,0 +1,27 @@
+{
+  "key": "RHAISTRAT-2052",
+  "summary": "Agent Configuration Comparison in Gen AI Studio Chat Compare",
+  "status": "New",
+  "statusCategory": "To Do",
+  "priority": "Major",
+  "components": [
+    "AI Core Dashboard",
+    "Gen AI Studio"
+  ],
+  "targetVersions": [
+    "3.7 EA RHOAI RELEASE"
+  ],
+  "fixVersions": [],
+  "pm": "Peter Double",
+  "assignee": {
+    "displayName": "Christopher Jones",
+    "accountId": "712020:ca78d649-ed04-4b14-b43e-0e302bac24de"
+  },
+  "labels": [],
+  "created": "2026/06/18 4:09 PM",
+  "updated": "2026/09/02 7:33 PM",
+  "architect": null,
+  "parentKey": null,
+  "colorStatus": null,
+  "ownerStatusColor": null
+}

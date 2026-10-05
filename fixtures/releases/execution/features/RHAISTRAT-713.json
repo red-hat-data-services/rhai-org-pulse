@@ -1,0 +1,26 @@
+{
+  "key": "RHAISTRAT-713",
+  "summary": "Expose Kueue information via codeflare-sdk",
+  "status": "New",
+  "statusCategory": "To Do",
+  "priority": "Normal",
+  "components": [
+    "KubeRay"
+  ],
+  "targetVersions": [
+    "3.7 GA RHOAI RELEASE"
+  ],
+  "fixVersions": [],
+  "pm": "Christoph Goern",
+  "assignee": {
+    "displayName": "Bryan Keane",
+    "accountId": "61f29f5525edab006a256a0a"
+  },
+  "labels": [],
+  "created": "2024/01/30 2:15 PM",
+  "updated": "2026/09/28 2:38 PM",
+  "architect": null,
+  "parentKey": null,
+  "colorStatus": null,
+  "ownerStatusColor": null
+}

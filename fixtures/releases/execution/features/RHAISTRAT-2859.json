@@ -1,0 +1,29 @@
+{
+  "key": "RHAISTRAT-2859",
+  "summary": "[DRAFT] CLONE - Validate MCP servers using the GenAI playground in RHOAI on IBM Power",
+  "status": "New",
+  "statusCategory": "To Do",
+  "priority": "Normal",
+  "components": [
+    "Gen AI Studio",
+    "IBM P"
+  ],
+  "targetVersions": [
+    "3.7 EA RHOAI RELEASE"
+  ],
+  "fixVersions": [
+    "3.7 EA RHOAI RELEASE"
+  ],
+  "pm": "",
+  "assignee": {
+    "displayName": "",
+    "accountId": ""
+  },
+  "labels": [],
+  "created": "2026/09/24 6:10 AM",
+  "updated": "2026/09/29 2:57 AM",
+  "architect": null,
+  "parentKey": null,
+  "colorStatus": null,
+  "ownerStatusColor": null
+}

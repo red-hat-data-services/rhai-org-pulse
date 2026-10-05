@@ -1,0 +1,26 @@
+{
+  "key": "RHAISTRAT-1793",
+  "summary": "GPU Resource Visibility and Quota Management via Project Navigator",
+  "status": "New",
+  "statusCategory": "To Do",
+  "priority": "Normal",
+  "components": [
+    "AI Navigator"
+  ],
+  "targetVersions": [
+    "3.7 GA RHOAI RELEASE"
+  ],
+  "fixVersions": [],
+  "pm": "Suhas Kashyap",
+  "assignee": {
+    "displayName": "",
+    "accountId": ""
+  },
+  "labels": [],
+  "created": "2026/05/19 2:10 PM",
+  "updated": "2026/09/28 2:38 PM",
+  "architect": null,
+  "parentKey": null,
+  "colorStatus": null,
+  "ownerStatusColor": null
+}

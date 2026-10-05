@@ -1,0 +1,26 @@
+{
+  "key": "RHAISTRAT-2040",
+  "summary": "[GA] Contextual Retrieval for AutoRAG",
+  "status": "Backlog",
+  "statusCategory": "To Do",
+  "priority": "Major",
+  "components": [
+    "AutoRAG"
+  ],
+  "targetVersions": [
+    "3.7 EA RHOAI RELEASE"
+  ],
+  "fixVersions": [],
+  "pm": "Suhas Kashyap",
+  "assignee": {
+    "displayName": "Daniel Ryszka",
+    "accountId": "712020:456909bf-a7c9-40b8-8f28-212fbfbf495a"
+  },
+  "labels": [],
+  "created": "2026/06/17 1:38 PM",
+  "updated": "2026/09/17 11:12 AM",
+  "architect": null,
+  "parentKey": null,
+  "colorStatus": null,
+  "ownerStatusColor": null
+}

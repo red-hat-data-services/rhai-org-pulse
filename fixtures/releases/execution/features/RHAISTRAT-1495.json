@@ -1,0 +1,29 @@
+{
+  "key": "RHAISTRAT-1495",
+  "summary": "Supported REST API for Accessing Pipeline Task Output Artifacts and S3 URIs",
+  "status": "In Progress",
+  "statusCategory": "In Progress",
+  "priority": "Critical",
+  "components": [
+    "AI Core Platform",
+    "AI Pipelines"
+  ],
+  "targetVersions": [
+    "3.7 EA RHOAI RELEASE"
+  ],
+  "fixVersions": [
+    "3.7 EA RHOAI RELEASE"
+  ],
+  "pm": "Myriam Fentanes Gutierrez",
+  "assignee": {
+    "displayName": "Vani Haripriya Mudadla",
+    "accountId": "712020:15870fbf-e4db-48fa-b4ad-3dfb7f112eb4"
+  },
+  "labels": [],
+  "created": "2026/04/15 3:59 PM",
+  "updated": "2026/10/01 8:55 AM",
+  "architect": null,
+  "parentKey": null,
+  "colorStatus": null,
+  "ownerStatusColor": null
+}

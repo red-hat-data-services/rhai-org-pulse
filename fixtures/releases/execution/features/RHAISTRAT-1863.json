@@ -1,0 +1,26 @@
+{
+  "key": "RHAISTRAT-1863",
+  "summary": "(feat) Agent Attack Library: OWASP ASI-Tagged Curated Attack Catalog - Clone RHAIRFE-2298",
+  "status": "New",
+  "statusCategory": "To Do",
+  "priority": "Critical",
+  "components": [
+    "AI Safety"
+  ],
+  "targetVersions": [
+    "3.7 GA RHOAI RELEASE"
+  ],
+  "fixVersions": [],
+  "pm": "William Caban Babilonia",
+  "assignee": {
+    "displayName": "",
+    "accountId": ""
+  },
+  "labels": [],
+  "created": "2026/06/03 3:01 PM",
+  "updated": "2026/09/28 2:38 PM",
+  "architect": null,
+  "parentKey": null,
+  "colorStatus": null,
+  "ownerStatusColor": null
+}

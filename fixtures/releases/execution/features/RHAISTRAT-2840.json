@@ -1,0 +1,26 @@
+{
+  "key": "RHAISTRAT-2840",
+  "summary": "[DRAFT] Browser-client support for the MaaS gateway: configurable CORS and preflight handling for OpenAI-compatible callers",
+  "status": "New",
+  "statusCategory": "To Do",
+  "priority": "Major",
+  "components": [
+    "Model as a Service"
+  ],
+  "targetVersions": [
+    "3.7 GA RHOAI RELEASE"
+  ],
+  "fixVersions": [],
+  "pm": "",
+  "assignee": {
+    "displayName": "",
+    "accountId": ""
+  },
+  "labels": [],
+  "created": "2026/09/23 12:11 AM",
+  "updated": "2026/09/28 2:11 PM",
+  "architect": null,
+  "parentKey": null,
+  "colorStatus": null,
+  "ownerStatusColor": null
+}

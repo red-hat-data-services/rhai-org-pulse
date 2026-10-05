@@ -1,0 +1,26 @@
+{
+  "key": "RHAISTRAT-2876",
+  "summary": "[AutoML] Parallel model fitting with Ray (fit_strategy=parallel)",
+  "status": "New",
+  "statusCategory": "To Do",
+  "priority": "Major",
+  "components": [
+    "AutoML"
+  ],
+  "targetVersions": [
+    "3.7 EA RHOAI RELEASE"
+  ],
+  "fixVersions": [],
+  "pm": "",
+  "assignee": {
+    "displayName": "Daniel Ryszka",
+    "accountId": "712020:456909bf-a7c9-40b8-8f28-212fbfbf495a"
+  },
+  "labels": [],
+  "created": "2026/10/01 6:41 AM",
+  "updated": "2026/10/01 6:42 AM",
+  "architect": null,
+  "parentKey": null,
+  "colorStatus": null,
+  "ownerStatusColor": null
+}

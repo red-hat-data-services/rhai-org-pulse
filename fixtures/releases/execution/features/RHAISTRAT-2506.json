@@ -1,0 +1,28 @@
+{
+  "key": "RHAISTRAT-2506",
+  "summary": "OLS Guardrails UC3: Context Manipulation Detection via Pod Log Content — OpenAI GPT-5.4/5.5 via Chat Completions API (English)",
+  "status": "New",
+  "statusCategory": "To Do",
+  "priority": "Major",
+  "components": [
+    "AI Guardrails",
+    "AI Safety",
+    "AI Safety Orchestration"
+  ],
+  "targetVersions": [
+    "3.7 GA RHOAI RELEASE"
+  ],
+  "fixVersions": [],
+  "pm": "",
+  "assignee": {
+    "displayName": "",
+    "accountId": ""
+  },
+  "labels": [],
+  "created": "2026/07/31 12:11 PM",
+  "updated": "2026/09/28 2:37 PM",
+  "architect": null,
+  "parentKey": null,
+  "colorStatus": null,
+  "ownerStatusColor": null
+}

@@ -1,0 +1,26 @@
+{
+  "key": "RHAISTRAT-2554",
+  "summary": "Org hierarchy  and tenant definition as a first-class resource",
+  "status": "In Progress",
+  "statusCategory": "In Progress",
+  "priority": "Critical",
+  "components": [
+    "AI Core Platform"
+  ],
+  "targetVersions": [
+    "3.7 GA RHOAI RELEASE"
+  ],
+  "fixVersions": [],
+  "pm": "",
+  "assignee": {
+    "displayName": "Lindani Phiri",
+    "accountId": "70121:f3dfd35d-9dbc-4225-9e98-a28612802cc7"
+  },
+  "labels": [],
+  "created": "2026/08/13 12:09 AM",
+  "updated": "2026/09/20 12:00 PM",
+  "architect": null,
+  "parentKey": null,
+  "colorStatus": null,
+  "ownerStatusColor": null
+}

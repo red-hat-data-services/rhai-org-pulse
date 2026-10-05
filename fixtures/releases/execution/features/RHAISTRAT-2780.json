@@ -1,0 +1,27 @@
+{
+  "key": "RHAISTRAT-2780",
+  "summary": "[DRAFT] Migrate /v1/files API from OGX to Praxis-Native Implementation (3.7)",
+  "status": "New",
+  "statusCategory": "To Do",
+  "priority": "Major",
+  "components": [
+    "Agentic API",
+    "OGX Core"
+  ],
+  "targetVersions": [
+    "3.7 EA RHOAI RELEASE"
+  ],
+  "fixVersions": [],
+  "pm": "",
+  "assignee": {
+    "displayName": "",
+    "accountId": ""
+  },
+  "labels": [],
+  "created": "2026/09/17 12:12 AM",
+  "updated": "2026/09/17 2:03 AM",
+  "architect": null,
+  "parentKey": null,
+  "colorStatus": null,
+  "ownerStatusColor": null
+}

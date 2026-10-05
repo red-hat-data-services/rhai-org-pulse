@@ -1,0 +1,28 @@
+{
+  "key": "RHAISTRAT-2610",
+  "summary": "[DRAFT] Red Hat-supported MLflow MCP server for RHOAI with authenticated, attributable access to the RHOAI MLflow tracking server",
+  "status": "Refinement",
+  "statusCategory": "To Do",
+  "priority": "Critical",
+  "components": [
+    "AI Hub",
+    "Documentation",
+    "MLflow"
+  ],
+  "targetVersions": [
+    "3.7 GA RHOAI RELEASE"
+  ],
+  "fixVersions": [],
+  "pm": "Peter Double",
+  "assignee": {
+    "displayName": "Matthew Prahl",
+    "accountId": "70121:d5f614be-2bc2-42b1-8bbe-d39e6d10ce68"
+  },
+  "labels": [],
+  "created": "2026/08/23 6:11 PM",
+  "updated": "2026/09/23 4:43 PM",
+  "architect": null,
+  "parentKey": null,
+  "colorStatus": null,
+  "ownerStatusColor": null
+}

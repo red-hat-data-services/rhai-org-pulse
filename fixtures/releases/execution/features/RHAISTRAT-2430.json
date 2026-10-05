@@ -1,0 +1,28 @@
+{
+  "key": "RHAISTRAT-2430",
+  "summary": "Add Plugin Admin Enablement Checkbox to RHOAI Admin Settings",
+  "status": "Backlog",
+  "statusCategory": "To Do",
+  "priority": "Major",
+  "components": [
+    "AI Core Dashboard",
+    "Documentation",
+    "UXD"
+  ],
+  "targetVersions": [
+    "3.7 GA RHOAI RELEASE"
+  ],
+  "fixVersions": [],
+  "pm": "Jenny Yi",
+  "assignee": {
+    "displayName": "Andy Stoneberg",
+    "accountId": "712020:65df811d-ba95-41c2-8458-58eadd63c7e2"
+  },
+  "labels": [],
+  "created": "2026/07/28 12:14 AM",
+  "updated": "2026/10/02 6:45 AM",
+  "architect": null,
+  "parentKey": null,
+  "colorStatus": null,
+  "ownerStatusColor": null
+}

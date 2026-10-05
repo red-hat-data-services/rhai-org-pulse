@@ -1,0 +1,26 @@
+{
+  "key": "RHAISTRAT-2813",
+  "summary": "[DRAFT] NeMo Gym ATIF v1.7 cross-producer validation for EvalHub",
+  "status": "New",
+  "statusCategory": "To Do",
+  "priority": "Major",
+  "components": [
+    "AI Evaluations"
+  ],
+  "targetVersions": [
+    "3.7 GA RHOAI RELEASE"
+  ],
+  "fixVersions": [],
+  "pm": "",
+  "assignee": {
+    "displayName": "",
+    "accountId": ""
+  },
+  "labels": [],
+  "created": "2026/09/19 12:09 PM",
+  "updated": "2026/09/28 2:37 PM",
+  "architect": null,
+  "parentKey": null,
+  "colorStatus": null,
+  "ownerStatusColor": null
+}

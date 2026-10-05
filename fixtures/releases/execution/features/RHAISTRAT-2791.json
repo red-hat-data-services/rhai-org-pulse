@@ -1,0 +1,27 @@
+{
+  "key": "RHAISTRAT-2791",
+  "summary": "[DRAFT] One-click install of the MCP server for Red Hat OpenShift with its gateway and guardrails from the AI Hub",
+  "status": "New",
+  "statusCategory": "To Do",
+  "priority": "Major",
+  "components": [
+    "AI Core Dashboard",
+    "AI Hub"
+  ],
+  "targetVersions": [
+    "3.7 GA RHOAI RELEASE"
+  ],
+  "fixVersions": [],
+  "pm": "",
+  "assignee": {
+    "displayName": "",
+    "accountId": ""
+  },
+  "labels": [],
+  "created": "2026/09/17 6:12 AM",
+  "updated": "2026/09/17 7:07 AM",
+  "architect": null,
+  "parentKey": null,
+  "colorStatus": null,
+  "ownerStatusColor": null
+}

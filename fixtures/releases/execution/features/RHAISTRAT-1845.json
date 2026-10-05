@@ -1,0 +1,27 @@
+{
+  "key": "RHAISTRAT-1845",
+  "summary": "OpenClaw: Validated agent images and starter kit for RHOAI",
+  "status": "New",
+  "statusCategory": "To Do",
+  "priority": "Major",
+  "components": [
+    "AgentDev",
+    "Documentation"
+  ],
+  "targetVersions": [
+    "3.7 GA RHOAI RELEASE"
+  ],
+  "fixVersions": [],
+  "pm": "Adel Zaalouk",
+  "assignee": {
+    "displayName": "Justin Sun",
+    "accountId": "712020:b52b1774-aa43-43a2-84eb-9d72df202a7d"
+  },
+  "labels": [],
+  "created": "2026/06/02 12:15 AM",
+  "updated": "2026/09/30 4:35 PM",
+  "architect": null,
+  "parentKey": null,
+  "colorStatus": null,
+  "ownerStatusColor": null
+}

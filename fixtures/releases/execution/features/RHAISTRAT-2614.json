@@ -1,0 +1,24 @@
+{
+  "key": "RHAISTRAT-2614",
+  "summary": "Package Request for EU AI Act Art. 50(2) Watermarking & Content Provenance Libraries",
+  "status": "New",
+  "statusCategory": "To Do",
+  "priority": "Critical",
+  "components": [],
+  "targetVersions": [
+    "3.7 GA RHOAI RELEASE"
+  ],
+  "fixVersions": [],
+  "pm": "",
+  "assignee": {
+    "displayName": "",
+    "accountId": ""
+  },
+  "labels": [],
+  "created": "2026/08/24 12:11 PM",
+  "updated": "2026/09/28 2:37 PM",
+  "architect": null,
+  "parentKey": null,
+  "colorStatus": null,
+  "ownerStatusColor": null
+}

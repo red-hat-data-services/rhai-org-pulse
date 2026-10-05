@@ -1,0 +1,28 @@
+{
+  "key": "RHAISTRAT-728",
+  "summary": "inject auth info of user from workbench or pipeline into ray cluster/codeflare sdk",
+  "status": "New",
+  "statusCategory": "To Do",
+  "priority": "Major",
+  "components": [
+    "AI Pipelines",
+    "KubeRay",
+    "Notebooks Server"
+  ],
+  "targetVersions": [
+    "3.7 GA RHOAI RELEASE"
+  ],
+  "fixVersions": [],
+  "pm": "",
+  "assignee": {
+    "displayName": "Laura Fitzgerald",
+    "accountId": "5cc0716350ff750e510131cf"
+  },
+  "labels": [],
+  "created": "2024/06/07 10:29 AM",
+  "updated": "2026/09/28 2:38 PM",
+  "architect": null,
+  "parentKey": null,
+  "colorStatus": null,
+  "ownerStatusColor": null
+}

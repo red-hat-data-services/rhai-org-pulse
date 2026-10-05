@@ -1,0 +1,27 @@
+{
+  "key": "RHAISTRAT-2243",
+  "summary": "Document how to do selective mirroring of images for RHOAI disconnected installs",
+  "status": "New",
+  "statusCategory": "To Do",
+  "priority": "Critical",
+  "components": [
+    "Documentation",
+    "TestOps"
+  ],
+  "targetVersions": [
+    "3.7 GA RHOAI RELEASE"
+  ],
+  "fixVersions": [],
+  "pm": "",
+  "assignee": {
+    "displayName": "",
+    "accountId": ""
+  },
+  "labels": [],
+  "created": "2026/07/15 6:08 PM",
+  "updated": "2026/09/28 2:38 PM",
+  "architect": null,
+  "parentKey": null,
+  "colorStatus": null,
+  "ownerStatusColor": null
+}

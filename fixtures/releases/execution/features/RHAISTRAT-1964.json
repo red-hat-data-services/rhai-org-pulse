@@ -1,0 +1,29 @@
+{
+  "key": "RHAISTRAT-1964",
+  "summary": "Auto ML Multivariate Time Series Support",
+  "status": "To Do",
+  "statusCategory": "To Do",
+  "priority": "Minor",
+  "components": [
+    "AutoML",
+    "Documentation"
+  ],
+  "targetVersions": [
+    "3.7 EA RHOAI RELEASE"
+  ],
+  "fixVersions": [
+    "3.7 EA RHOAI RELEASE"
+  ],
+  "pm": "Aditi Saluja",
+  "assignee": {
+    "displayName": "Daniel Ryszka",
+    "accountId": "712020:456909bf-a7c9-40b8-8f28-212fbfbf495a"
+  },
+  "labels": [],
+  "created": "2026/06/12 4:11 PM",
+  "updated": "2026/09/23 2:02 PM",
+  "architect": null,
+  "parentKey": null,
+  "colorStatus": null,
+  "ownerStatusColor": null
+}

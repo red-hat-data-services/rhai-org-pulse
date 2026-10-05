@@ -1,0 +1,26 @@
+{
+  "key": "RHAISTRAT-2634",
+  "summary": "Platform skills so coding and non-coding agent harnesses can discover, key, deploy, and swap models from inside the harness on day-1",
+  "status": "Refinement",
+  "statusCategory": "To Do",
+  "priority": "Major",
+  "components": [
+    "Tooling Experience"
+  ],
+  "targetVersions": [
+    "3.7 EA RHOAI RELEASE"
+  ],
+  "fixVersions": [],
+  "pm": "Jehlum Vitasta Pandit",
+  "assignee": {
+    "displayName": "Nick Ommen",
+    "accountId": "712020:4d8ab7b7-4491-490a-b85b-8246663b9db3"
+  },
+  "labels": [],
+  "created": "2026/08/25 6:16 PM",
+  "updated": "2026/09/22 3:56 PM",
+  "architect": null,
+  "parentKey": null,
+  "colorStatus": null,
+  "ownerStatusColor": null
+}

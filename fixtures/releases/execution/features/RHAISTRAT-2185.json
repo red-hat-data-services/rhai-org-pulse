@@ -1,0 +1,27 @@
+{
+  "key": "RHAISTRAT-2185",
+  "summary": "OpenShell protocol-aware inbound policy enforcement for A2A and MCP traffic",
+  "status": "New",
+  "statusCategory": "To Do",
+  "priority": "Major",
+  "components": [
+    "AgentOps",
+    "Documentation"
+  ],
+  "targetVersions": [
+    "3.7 EA RHOAI RELEASE"
+  ],
+  "fixVersions": [],
+  "pm": "",
+  "assignee": {
+    "displayName": "Dimitri Saridakis",
+    "accountId": "712020:b8bad4dd-5c44-48f6-8461-81327a1e18c9"
+  },
+  "labels": [],
+  "created": "2026/07/06 12:12 PM",
+  "updated": "2026/09/22 2:38 PM",
+  "architect": null,
+  "parentKey": null,
+  "colorStatus": null,
+  "ownerStatusColor": null
+}

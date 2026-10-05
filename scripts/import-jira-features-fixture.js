@@ -128,8 +128,15 @@ function main() {
     if (dryRun && added === 0 && !byKey.has(key)) {
       console.log('first parsed feature:\n' + JSON.stringify(feature, null, 2));
     }
+    // Merge rather than replace: existing fixtures carry derived and relational
+    // fields (epics, metrics, bigRock, topology) the export knows nothing about.
+    const featurePath = path.join(FEATURES_DIR, key + '.json');
+    let merged = feature;
+    if (fs.existsSync(featurePath)) {
+      merged = Object.assign(JSON.parse(fs.readFileSync(featurePath, 'utf8')), feature);
+    }
     if (!dryRun) {
-      fs.writeFileSync(path.join(FEATURES_DIR, key + '.json'), JSON.stringify(feature, null, 2) + '\n');
+      fs.writeFileSync(featurePath, JSON.stringify(merged, null, 2) + '\n');
     }
 
     const entry = {

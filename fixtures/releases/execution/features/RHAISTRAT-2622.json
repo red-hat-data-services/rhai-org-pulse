@@ -1,0 +1,30 @@
+{
+  "key": "RHAISTRAT-2622",
+  "summary": "Data Connect Hub UI: out-of-the-box connection types",
+  "status": "New",
+  "statusCategory": "To Do",
+  "priority": "Major",
+  "components": [
+    "AI Core Dashboard",
+    "Data Connect Hub",
+    "UXD"
+  ],
+  "targetVersions": [
+    "3.7 EA RHOAI RELEASE"
+  ],
+  "fixVersions": [
+    "3.7 EA RHOAI RELEASE"
+  ],
+  "pm": "Jehlum Vitasta Pandit",
+  "assignee": {
+    "displayName": "Gustavo Murcia",
+    "accountId": "712020:f5b20ac9-29f1-4b8d-85d1-d8fb4111a5b8"
+  },
+  "labels": [],
+  "created": "2026/08/25 12:11 AM",
+  "updated": "2026/09/22 9:40 AM",
+  "architect": null,
+  "parentKey": null,
+  "colorStatus": null,
+  "ownerStatusColor": null
+}

@@ -1,0 +1,27 @@
+{
+  "key": "RHAISTRAT-2705",
+  "summary": "[DRAFT] [TP] Reranker Model Serving via MaaS Governance",
+  "status": "New",
+  "statusCategory": "To Do",
+  "priority": "Major",
+  "components": [
+    "Inference Gateway",
+    "Model as a Service"
+  ],
+  "targetVersions": [
+    "3.7 GA RHOAI RELEASE"
+  ],
+  "fixVersions": [],
+  "pm": "",
+  "assignee": {
+    "displayName": "",
+    "accountId": ""
+  },
+  "labels": [],
+  "created": "2026/09/08 12:11 PM",
+  "updated": "2026/09/19 4:27 PM",
+  "architect": null,
+  "parentKey": null,
+  "colorStatus": null,
+  "ownerStatusColor": null
+}

@@ -1,0 +1,28 @@
+{
+  "key": "RHAISTRAT-1968",
+  "summary": "Stage-level status reporting for Data Science Pipelines components",
+  "status": "New",
+  "statusCategory": "To Do",
+  "priority": "Normal",
+  "components": [
+    "AI Pipelines",
+    "AutoML",
+    "AutoRAG"
+  ],
+  "targetVersions": [
+    "3.7 GA RHOAI RELEASE"
+  ],
+  "fixVersions": [],
+  "pm": "",
+  "assignee": {
+    "displayName": "Filip Komarzyniec",
+    "accountId": "712020:4e4bbcd4-7762-42d1-ba6d-9eb5c85ef475"
+  },
+  "labels": [],
+  "created": "2026/06/12 6:08 PM",
+  "updated": "2026/09/17 11:11 AM",
+  "architect": null,
+  "parentKey": null,
+  "colorStatus": null,
+  "ownerStatusColor": null
+}

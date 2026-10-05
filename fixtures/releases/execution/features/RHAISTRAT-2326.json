@@ -1,0 +1,33 @@
+{
+  "key": "RHAISTRAT-2326",
+  "summary": "GA Support for MCP Gateway Content Guardrailing",
+  "status": "In Progress",
+  "statusCategory": "In Progress",
+  "priority": "Major",
+  "components": [
+    "AI Guardrails",
+    "AI Safety",
+    "Documentation"
+  ],
+  "targetVersions": [
+    "3.3.7 GA RHOAI",
+    "3.6 EA2 RHOAI RELEASE",
+    "3.6 GA RHOAI RELEASE",
+    "3.7 EA RHOAI RELEASE"
+  ],
+  "fixVersions": [
+    "3.6 GA RHOAI RELEASE"
+  ],
+  "pm": "William Caban Babilonia",
+  "assignee": {
+    "displayName": "Christina Xu",
+    "accountId": "629f49a5451c00006965394c"
+  },
+  "labels": [],
+  "created": "2026/07/22 6:13 PM",
+  "updated": "2026/09/29 9:25 AM",
+  "architect": null,
+  "parentKey": null,
+  "colorStatus": null,
+  "ownerStatusColor": null
+}

@@ -1,0 +1,27 @@
+{
+  "key": "RHAISTRAT-2607",
+  "summary": "Secure Custom Scorer Execution for MLflow",
+  "status": "Backlog",
+  "statusCategory": "To Do",
+  "priority": "Major",
+  "components": [
+    "Documentation",
+    "MLflow"
+  ],
+  "targetVersions": [
+    "3.7 GA RHOAI RELEASE"
+  ],
+  "fixVersions": [],
+  "pm": "",
+  "assignee": {
+    "displayName": "",
+    "accountId": ""
+  },
+  "labels": [],
+  "created": "2026/08/21 3:44 PM",
+  "updated": "2026/09/15 10:22 AM",
+  "architect": null,
+  "parentKey": null,
+  "colorStatus": null,
+  "ownerStatusColor": null
+}

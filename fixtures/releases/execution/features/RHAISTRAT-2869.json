@@ -1,0 +1,27 @@
+{
+  "key": "RHAISTRAT-2869",
+  "summary": "[DRAFT] Configurable Content-Safe Logging for NeMo Guardrails on OpenShift AI",
+  "status": "New",
+  "statusCategory": "To Do",
+  "priority": "Normal",
+  "components": [
+    "AI Safety"
+  ],
+  "targetVersions": [
+    "3.6 GA RHOAI RELEASE",
+    "3.7 GA RHOAI RELEASE"
+  ],
+  "fixVersions": [],
+  "pm": "",
+  "assignee": {
+    "displayName": "",
+    "accountId": ""
+  },
+  "labels": [],
+  "created": "2026/09/29 12:12 AM",
+  "updated": "2026/09/29 11:45 PM",
+  "architect": null,
+  "parentKey": null,
+  "colorStatus": null,
+  "ownerStatusColor": null
+}

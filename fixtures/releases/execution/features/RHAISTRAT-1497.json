@@ -1,0 +1,26 @@
+{
+  "key": "RHAISTRAT-1497",
+  "summary": "Support for Postgres in AI pipelines",
+  "status": "Refinement",
+  "statusCategory": "To Do",
+  "priority": "Critical",
+  "components": [
+    "AI Pipelines"
+  ],
+  "targetVersions": [
+    "3.7 EA RHOAI RELEASE"
+  ],
+  "fixVersions": [],
+  "pm": "Myriam Fentanes Gutierrez",
+  "assignee": {
+    "displayName": "",
+    "accountId": ""
+  },
+  "labels": [],
+  "created": "2026/04/15 4:04 PM",
+  "updated": "2026/09/14 9:50 AM",
+  "architect": null,
+  "parentKey": null,
+  "colorStatus": null,
+  "ownerStatusColor": null
+}

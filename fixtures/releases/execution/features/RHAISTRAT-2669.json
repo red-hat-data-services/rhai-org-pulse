@@ -1,0 +1,27 @@
+{
+  "key": "RHAISTRAT-2669",
+  "summary": "[DRAFT] Jupyter AI extension in RHOAI workbenches for AI-assisted coding",
+  "status": "New",
+  "statusCategory": "To Do",
+  "priority": "Normal",
+  "components": [
+    "Notebooks Extensions",
+    "Notebooks Server"
+  ],
+  "targetVersions": [
+    "3.7 EA RHOAI RELEASE"
+  ],
+  "fixVersions": [],
+  "pm": "",
+  "assignee": {
+    "displayName": "",
+    "accountId": ""
+  },
+  "labels": [],
+  "created": "2026/08/27 12:10 AM",
+  "updated": "2026/09/22 12:23 PM",
+  "architect": null,
+  "parentKey": null,
+  "colorStatus": null,
+  "ownerStatusColor": null
+}

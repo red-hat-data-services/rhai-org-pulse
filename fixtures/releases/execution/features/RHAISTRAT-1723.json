@@ -1,0 +1,29 @@
+{
+  "key": "RHAISTRAT-1723",
+  "summary": "RHAII MaaS Consumer Self-Service Portal for xKS",
+  "status": "Refinement",
+  "statusCategory": "To Do",
+  "priority": "Critical",
+  "components": [
+    "AI Core Dashboard",
+    "Documentation",
+    "Model as a Service",
+    "UXD"
+  ],
+  "targetVersions": [
+    "3.7 EA RHOAI RELEASE"
+  ],
+  "fixVersions": [],
+  "pm": "Jenny Yi",
+  "assignee": {
+    "displayName": "Andy Stoneberg",
+    "accountId": "712020:65df811d-ba95-41c2-8458-58eadd63c7e2"
+  },
+  "labels": [],
+  "created": "2026/05/05 12:13 PM",
+  "updated": "2026/09/18 7:38 AM",
+  "architect": null,
+  "parentKey": null,
+  "colorStatus": null,
+  "ownerStatusColor": null
+}

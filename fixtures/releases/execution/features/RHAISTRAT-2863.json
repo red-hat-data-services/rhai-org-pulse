@@ -1,0 +1,24 @@
+{
+  "key": "RHAISTRAT-2863",
+  "summary": "[DRAFT] Support NVIDIA Nemotron 3 VoiceChat in Red Hat AI Inference",
+  "status": "New",
+  "statusCategory": "To Do",
+  "priority": "Major",
+  "components": [],
+  "targetVersions": [
+    "3.7 EA RHOAI RELEASE"
+  ],
+  "fixVersions": [],
+  "pm": "",
+  "assignee": {
+    "displayName": "",
+    "accountId": ""
+  },
+  "labels": [],
+  "created": "2026/09/25 12:09 AM",
+  "updated": "2026/09/25 12:31 AM",
+  "architect": null,
+  "parentKey": null,
+  "colorStatus": null,
+  "ownerStatusColor": null
+}

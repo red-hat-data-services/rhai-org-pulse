@@ -1,0 +1,30 @@
+{
+  "key": "RHAISTRAT-2719",
+  "summary": "AutoML UI - Experiment Tracking Results in the RHOAI Dashboard",
+  "status": "New",
+  "statusCategory": "To Do",
+  "priority": "Normal",
+  "components": [
+    "AI Core Dashboard",
+    "AutoML",
+    "Documentation"
+  ],
+  "targetVersions": [
+    "3.7 GA RHOAI RELEASE"
+  ],
+  "fixVersions": [
+    "3.7 GA RHOAI RELEASE"
+  ],
+  "pm": "Aditi Saluja",
+  "assignee": {
+    "displayName": "Christopher Jones",
+    "accountId": "712020:ca78d649-ed04-4b14-b43e-0e302bac24de"
+  },
+  "labels": [],
+  "created": "2026/09/12 12:11 AM",
+  "updated": "2026/09/23 4:33 PM",
+  "architect": null,
+  "parentKey": null,
+  "colorStatus": null,
+  "ownerStatusColor": null
+}

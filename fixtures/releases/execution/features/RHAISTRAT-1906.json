@@ -1,0 +1,29 @@
+{
+  "key": "RHAISTRAT-1906",
+  "summary": "Sandboxed Containers API and Shell Tool for Agent Code Execution",
+  "status": "In Progress",
+  "statusCategory": "In Progress",
+  "priority": "Major",
+  "components": [
+    "Agentic API",
+    "Documentation",
+    "Inference Gateway",
+    "OGX Core"
+  ],
+  "targetVersions": [
+    "3.7 EA RHOAI RELEASE"
+  ],
+  "fixVersions": [],
+  "pm": "",
+  "assignee": {
+    "displayName": "Charlie Doern",
+    "accountId": "712020:5b597ed8-66ee-4cb5-aab8-4cce3ed47ee8"
+  },
+  "labels": [],
+  "created": "2026/06/10 6:10 AM",
+  "updated": "2026/09/16 4:51 AM",
+  "architect": null,
+  "parentKey": null,
+  "colorStatus": null,
+  "ownerStatusColor": null
+}

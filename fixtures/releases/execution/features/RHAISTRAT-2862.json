@@ -1,0 +1,27 @@
+{
+  "key": "RHAISTRAT-2862",
+  "summary": "[DRAFT] Use-case Python package collections for flexible workbench customization",
+  "status": "New",
+  "statusCategory": "To Do",
+  "priority": "Major",
+  "components": [
+    "Documentation",
+    "Notebooks Images"
+  ],
+  "targetVersions": [
+    "3.7 EA RHOAI RELEASE"
+  ],
+  "fixVersions": [],
+  "pm": "",
+  "assignee": {
+    "displayName": "",
+    "accountId": ""
+  },
+  "labels": [],
+  "created": "2026/09/24 6:10 PM",
+  "updated": "2026/09/25 9:33 AM",
+  "architect": null,
+  "parentKey": null,
+  "colorStatus": null,
+  "ownerStatusColor": null
+}

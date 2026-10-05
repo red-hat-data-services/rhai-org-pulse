@@ -1,0 +1,26 @@
+{
+  "key": "RHAISTRAT-2864",
+  "summary": "[DRAFT] Structured Generation (Jev) Mode for DiffusionGemma on RHOAI",
+  "status": "New",
+  "statusCategory": "To Do",
+  "priority": "Major",
+  "components": [
+    "vLLM Runtime"
+  ],
+  "targetVersions": [
+    "3.7 EA RHOAI RELEASE"
+  ],
+  "fixVersions": [],
+  "pm": "",
+  "assignee": {
+    "displayName": "",
+    "accountId": ""
+  },
+  "labels": [],
+  "created": "2026/09/25 12:09 AM",
+  "updated": "2026/09/25 12:40 AM",
+  "architect": null,
+  "parentKey": null,
+  "colorStatus": null,
+  "ownerStatusColor": null
+}

@@ -1,0 +1,29 @@
+{
+  "key": "RHAISTRAT-1509",
+  "summary": "Support Google Interactions API as a front-end protocol",
+  "status": "Refinement",
+  "statusCategory": "To Do",
+  "priority": "Major",
+  "components": [
+    "Agentic API",
+    "Documentation",
+    "Inference Gateway",
+    "OGX Core"
+  ],
+  "targetVersions": [
+    "3.7 GA RHOAI RELEASE"
+  ],
+  "fixVersions": [],
+  "pm": "",
+  "assignee": {
+    "displayName": "Adel Zaalouk",
+    "accountId": "70121:60857a87-9351-4d38-bd27-75488f0f04de"
+  },
+  "labels": [],
+  "created": "2026/04/17 10:47 AM",
+  "updated": "2026/09/22 6:56 AM",
+  "architect": null,
+  "parentKey": null,
+  "colorStatus": null,
+  "ownerStatusColor": null
+}

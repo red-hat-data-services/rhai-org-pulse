@@ -1,0 +1,27 @@
+{
+  "key": "RHAISTRAT-2661",
+  "summary": "Remove deprecated FMS Guardrails ecosystem from RHOAI to establish NeMo Guardrails as the supported path",
+  "status": "New",
+  "statusCategory": "To Do",
+  "priority": "Critical",
+  "components": [
+    "AI Guardrails",
+    "AI Safety"
+  ],
+  "targetVersions": [
+    "3.7 GA RHOAI RELEASE"
+  ],
+  "fixVersions": [],
+  "pm": "William Caban Babilonia",
+  "assignee": {
+    "displayName": "Rob Geada",
+    "accountId": "5e258328a7b9540e76f44821"
+  },
+  "labels": [],
+  "created": "2026/08/26 12:20 PM",
+  "updated": "2026/10/01 6:02 AM",
+  "architect": null,
+  "parentKey": null,
+  "colorStatus": null,
+  "ownerStatusColor": null
+}

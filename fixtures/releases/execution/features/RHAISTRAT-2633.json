@@ -1,0 +1,26 @@
+{
+  "key": "RHAISTRAT-2633",
+  "summary": "[DRAFT] Kale needs broader Kubeflow platform access beyond pipelines",
+  "status": "New",
+  "statusCategory": "To Do",
+  "priority": "Normal",
+  "components": [
+    "Notebooks Extensions"
+  ],
+  "targetVersions": [
+    "3.7 EA RHOAI RELEASE"
+  ],
+  "fixVersions": [],
+  "pm": "Kezia Cook",
+  "assignee": {
+    "displayName": "",
+    "accountId": ""
+  },
+  "labels": [],
+  "created": "2026/08/25 6:16 PM",
+  "updated": "2026/09/22 12:22 PM",
+  "architect": null,
+  "parentKey": null,
+  "colorStatus": null,
+  "ownerStatusColor": null
+}

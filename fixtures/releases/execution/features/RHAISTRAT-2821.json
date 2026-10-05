@@ -1,0 +1,24 @@
+{
+  "key": "RHAISTRAT-2821",
+  "summary": "Model Serving on Intel Crescent Island — RHOAI",
+  "status": "New",
+  "statusCategory": "To Do",
+  "priority": "Undefined",
+  "components": [],
+  "targetVersions": [
+    "3.7 GA RHOAI RELEASE"
+  ],
+  "fixVersions": [],
+  "pm": "",
+  "assignee": {
+    "displayName": "",
+    "accountId": ""
+  },
+  "labels": [],
+  "created": "2026/09/21 10:44 AM",
+  "updated": "2026/09/24 5:36 AM",
+  "architect": null,
+  "parentKey": null,
+  "colorStatus": null,
+  "ownerStatusColor": null
+}

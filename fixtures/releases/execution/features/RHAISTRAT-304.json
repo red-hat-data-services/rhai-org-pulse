@@ -1,0 +1,28 @@
+{
+  "key": "RHAISTRAT-304",
+  "summary": "Better access to the backend Logs and Events of the pods backing the Kserve models",
+  "status": "Backlog",
+  "statusCategory": "To Do",
+  "priority": "Major",
+  "components": [
+    "AI Core Dashboard",
+    "Model Runtimes",
+    "UXD"
+  ],
+  "targetVersions": [
+    "3.7 EA RHOAI RELEASE"
+  ],
+  "fixVersions": [],
+  "pm": "Jenny Yi",
+  "assignee": {
+    "displayName": "Andrew Ballantyne",
+    "accountId": "5fdb88f09edf280075ce339d"
+  },
+  "labels": [],
+  "created": "2025/11/21 11:24 AM",
+  "updated": "2026/10/02 9:07 AM",
+  "architect": null,
+  "parentKey": null,
+  "colorStatus": null,
+  "ownerStatusColor": null
+}

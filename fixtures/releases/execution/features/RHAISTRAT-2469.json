@@ -1,0 +1,28 @@
+{
+  "key": "RHAISTRAT-2469",
+  "summary": "KV Offload Back-Pressure Detection in vLLM",
+  "status": "Closed",
+  "statusCategory": "Done",
+  "priority": "Major",
+  "components": [
+    "vLLM Runtime"
+  ],
+  "targetVersions": [
+    "3.7 EA RHOAI RELEASE"
+  ],
+  "fixVersions": [
+    "3.7 EA RHOAI RELEASE"
+  ],
+  "pm": "Yuchen Fama",
+  "assignee": {
+    "displayName": "Bill Nell",
+    "accountId": "712020:3a6b479c-1351-4caf-9006-2d9ae4b2e112"
+  },
+  "labels": [],
+  "created": "2026/07/29 12:14 AM",
+  "updated": "2026/09/24 1:17 PM",
+  "architect": null,
+  "parentKey": null,
+  "colorStatus": null,
+  "ownerStatusColor": null
+}

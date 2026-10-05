@@ -1,0 +1,28 @@
+{
+  "key": "RHAISTRAT-2858",
+  "summary": "[DRAFT] Multimodal-Aware Prefix Cache Routing in llm-d - GA",
+  "status": "New",
+  "statusCategory": "To Do",
+  "priority": "Critical",
+  "components": [
+    "Documentation",
+    "llm-d"
+  ],
+  "targetVersions": [
+    "3.7 GA  RHAII RELEASE",
+    "3.7 GA RHOAI RELEASE"
+  ],
+  "fixVersions": [],
+  "pm": "",
+  "assignee": {
+    "displayName": "",
+    "accountId": ""
+  },
+  "labels": [],
+  "created": "2026/09/24 12:11 AM",
+  "updated": "2026/09/24 12:30 AM",
+  "architect": null,
+  "parentKey": null,
+  "colorStatus": null,
+  "ownerStatusColor": null
+}

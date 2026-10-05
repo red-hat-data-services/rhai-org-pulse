@@ -1,0 +1,28 @@
+{
+  "key": "RHAISTRAT-2710",
+  "summary": "[DRAFT] Dashboard UI for Confidential Model Serving Configuration",
+  "status": "New",
+  "statusCategory": "To Do",
+  "priority": "Critical",
+  "components": [
+    "AI Core Dashboard",
+    "Documentation",
+    "UXD"
+  ],
+  "targetVersions": [
+    "3.7 EA RHOAI RELEASE"
+  ],
+  "fixVersions": [],
+  "pm": "Adam Bellusci",
+  "assignee": {
+    "displayName": "Andrew Ballantyne",
+    "accountId": "5fdb88f09edf280075ce339d"
+  },
+  "labels": [],
+  "created": "2026/09/09 12:19 PM",
+  "updated": "2026/09/22 12:42 PM",
+  "architect": null,
+  "parentKey": null,
+  "colorStatus": null,
+  "ownerStatusColor": null
+}

@@ -1,0 +1,30 @@
+{
+  "key": "RHAISTRAT-1141",
+  "summary": "Python Index Setting",
+  "status": "New",
+  "statusCategory": "To Do",
+  "priority": "Major",
+  "components": [
+    "AI Core Dashboard",
+    "Documentation",
+    "Notebooks Images",
+    "Notebooks Server",
+    "UXD"
+  ],
+  "targetVersions": [
+    "3.7 GA RHOAI RELEASE"
+  ],
+  "fixVersions": [],
+  "pm": "Kezia Cook",
+  "assignee": {
+    "displayName": "Bob Gregor",
+    "accountId": "712020:6933584a-f175-48eb-84b9-47f7bb496833"
+  },
+  "labels": [],
+  "created": "2026/01/20 8:36 AM",
+  "updated": "2026/09/28 9:26 AM",
+  "architect": null,
+  "parentKey": null,
+  "colorStatus": null,
+  "ownerStatusColor": null
+}
