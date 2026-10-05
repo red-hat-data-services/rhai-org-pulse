@@ -136,7 +136,9 @@ module.exports = function registerAIPlannerRoutes(router, context) {
         'Fix Version': f.fixVersion || '',
         'Release Type': f.releaseType || '',
         Status: f.status || '',
-        PM: f.pmOwner || '',
+        // pmOwner is a {displayName} object on the Jira path and a string elsewhere;
+        // the planner contract is a string, so flatten before it leaves the API.
+        PM: (f.pmOwner && typeof f.pmOwner === 'object' ? f.pmOwner.displayName : f.pmOwner) || '',
         DeliveryOwner: f.deliveryOwner || ''
       }));
 

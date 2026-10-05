@@ -1481,7 +1481,11 @@ function computeFPDoRRisk(r) {
   const assignee  = r['Assignee'] !== undefined ? (r['Assignee'] || '').trim() : null;
   // null when the source has no such column, so CSV rows are not penalised for a
   // field they never carried.
-  const pm        = r['PM'] !== undefined ? (r['PM'] || '').trim() : null;
+  // Jira hands back a {displayName} object for some features and a bare string for
+  // others; calling .trim() on the object threw and took the whole schedule with it.
+  const pmRaw     = r['PM'];
+  const pmName    = pmRaw && typeof pmRaw === 'object' ? (pmRaw.displayName || '') : (pmRaw || '');
+  const pm        = pmRaw !== undefined ? String(pmName).trim() : null;
   const fv        = (esc(r['Fix Version']) || r['Fix Versions'] || '').trim();
 
   // CRITICAL — any fail = HIGH risk
