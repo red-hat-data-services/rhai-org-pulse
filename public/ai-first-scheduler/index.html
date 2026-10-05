@@ -403,7 +403,7 @@ tr:hover td{background:#f8fafc}
     <button class="main-tab" data-tab="roadmap" onclick="switchTab('roadmap')">📅 Roadmap</button>
     <button class="main-tab" data-tab="executive" onclick="switchTab('executive')">📊 Executive</button>
     <div style="margin-left:auto;display:flex;align-items:center;gap:8px;padding:4px 12px">
-      <select id="f-rel" onchange="run()" style="font-size:11px"><option value="">All Releases</option><option>3.5</option><option>3.6</option><option>3.7</option><option>3.8</option></select>
+      <select id="f-rel" onchange="run()" style="font-size:11px"><option value="">All Releases</option></select>
       <span id="st-total" style="color:#666;font-size:11px">— features</span>
       <span style="color:#ccc">·</span>
       <span id="st-in" style="color:#1a7f37;font-weight:600;font-size:11px">— in-plan</span>
@@ -581,7 +581,7 @@ tr:hover td{background:#f8fafc}
   <div id="cards-rel-note" style="font-size:11px;color:#64748b;margin-bottom:6px;display:flex;align-items:center;gap:6px">
     <span>Showing for:</span>
     <select onchange="document.getElementById('f-rel').value=this.value;run()" id="cards-rel-sel" style="font-size:11px;border:1px solid #e2e8f0;border-radius:6px;padding:2px 8px;background:#fff;color:#1d4ed8;font-weight:600;cursor:pointer">
-      <option value="">All Releases</option><option>3.5</option><option>3.6</option><option>3.7</option><option>3.8</option>
+      <option value="">All Releases</option>
     </select>
     <span id="cards-rel-hint" style="color:#94a3b8">· feature counts below reflect active filters</span>
   </div>
@@ -2811,6 +2811,9 @@ function detectEvt(s){
 
 // ── STATE ─────────────────────────────────────────────────────────────────────
 let allData=[], sortCol='Rank', sortAsc=true;
+// 'demo' until a live payload schedules successfully. Surfaced next to the feature
+// count, because a stale embedded dataset is indistinguishable from real data.
+let dataSource='demo';
 
 function saveBannerText(){
   const el = document.getElementById('planning-banner-text');
@@ -2891,6 +2894,7 @@ window.addEventListener('message', function(e){
     try {
       schedule(mapped);
       allData = mapped;
+      dataSource = 'live';
     } catch (err) {
       console.error('AI Planner: could not schedule live data, keeping previous rows', err);
     }
@@ -2949,6 +2953,14 @@ function populateFilters(){
     if(cW)cW.appendChild(msCreate('f-comp','All Components'));
     const tW=document.getElementById('ms-wrap-f-team');
     if(tW)tW.appendChild(msCreate('f-team','All Teams'));
+  }
+  // Release numbers come from the target versions actually present, so a new
+  // release shows up on its own rather than waiting for a hardcoded option.
+  const releaseNums=[...new Set(standardTVs.map(v=>(String(v).match(/(\d+\.\d+)/)||[])[1]).filter(Boolean))]
+    .sort((a,b)=>parseFloat(a)-parseFloat(b));
+  if(releaseNums.length){
+    setOpts('f-rel',releaseNums,'All Releases');
+    setOpts('cards-rel-sel',releaseNums,'All Releases');
   }
   msSetOpts('f-tv',standardTVs.filter(Boolean),'All Versions');
   msSetOpts('f-comp',comps,'All Components');
@@ -3329,7 +3341,7 @@ function renderCards(rows){
     document.getElementById('cnt-'+k).textContent=c[key]||0;
   });
   const inPlan=(c.EA1||0)+(c.EA2||0)+(c.GA||0);
-  document.getElementById('st-total').textContent=rows.length+' features';
+  document.getElementById('st-total').textContent=rows.length+' features'+(dataSource==='live'?'':' (demo data)');
   document.getElementById('st-in').textContent=inPlan+' in-plan';
   document.getElementById('st-no').textContent=(c.No||0)+' no';
   // Keep cards-rel-sel in sync with the main release selector
