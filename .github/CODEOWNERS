@@ -16,12 +16,12 @@
 /*config.*         @red-hat-data-services/org-pulse-maintainers
 
 # Functional modules.
-/modules/ai-catalyst/         @natifridman
-/modules/ai-impact/           @accorvin
-/modules/customer-insights/   @epacific1
-/modules/okr-hub/             @saprabhu05
+/modules/ai-catalyst/         @natifridman @red-hat-data-services/org-pulse-maintainers
+/modules/ai-impact/           @accorvin @red-hat-data-services/org-pulse-maintainers
+/modules/customer-insights/   @epacific1 @red-hat-data-services/org-pulse-maintainers
+/modules/okr-hub/             @saprabhu05 @red-hat-data-services/org-pulse-maintainers
 /modules/product-builds/      @epacific1 @gnaponie @andre-motta
 /modules/releases/            @saprabhu05 @wznoinsk @epacific1
 /modules/system-health/       @aloganat @AjayJagan
-/modules/upstream-pulse/      @dpanshug
-/modules/workflow-validation/ @accorvin
+/modules/upstream-pulse/      @dpanshug @red-hat-data-services/org-pulse-maintainers
+/modules/workflow-validation/ @accorvin @red-hat-data-services/org-pulse-maintainers
