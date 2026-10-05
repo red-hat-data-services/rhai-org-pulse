@@ -1,28 +1,27 @@
-# Platform / Shell (core team)
-/src/                           @accorvin
-/server/dev-server.js           @accorvin
-/server/module-loader.js        @accorvin
-/server/modules/                @accorvin
-/shared/                        @accorvin
-/deploy/                        @accorvin
-# Automated image tag updates — no code owner required (allows CI auto-merge)
-/deploy/openshift/overlays/prod/kustomization.yaml
-/deploy/openshift/overlays/preprod/kustomization.yaml
-/.github/                       @accorvin
-/package.json                   @accorvin
-/vite.config.mjs                @accorvin
-/CODEOWNERS                     @accorvin
-/scripts/                       @accorvin
+# Default ownership for repository-wide and unclassified changes.
+* @red-hat-data-services/org-pulse-maintainers
 
-# Per-module ownership (add new modules here)
-/modules/team-tracker/          @accorvin
-/modules/ai-impact/             @accorvin
-/modules/org-roster/            @accorvin
-/modules/ai-catalyst/           @natifridman
-/modules/releases/              @saprabhu05
-# /modules/search/              @search-team-lead
-# /modules/dashboards/          @dashboards-team-lead
+# Shared platform, deployment, automation, and governance.
+/.github/          @red-hat-data-services/org-pulse-maintainers
+/platform/         @red-hat-data-services/org-pulse-maintainers
+/server/           @red-hat-data-services/org-pulse-maintainers
+/deploy/           @red-hat-data-services/org-pulse-maintainers
+# Deployment promotion manifests are intentionally unowned.
+/deploy/openshift/overlays/ai-eng-prod/kustomization.yaml
+/deploy/openshift/overlays/ai-eng-preprod/kustomization.yaml
+/scripts/          @red-hat-data-services/org-pulse-maintainers
+/eslint-rules/     @red-hat-data-services/org-pulse-maintainers
+/package.json      @red-hat-data-services/org-pulse-maintainers
+/package-lock.json @red-hat-data-services/org-pulse-maintainers
+/*config.*         @red-hat-data-services/org-pulse-maintainers
 
-# Module manifests affect shell behavior -> core review ALWAYS required
-# This rule MUST come AFTER per-module rules (last match wins in GitHub CODEOWNERS)
-/modules/*/module.json          @accorvin
+# Functional modules.
+/modules/ai-catalyst/         @natifridman
+/modules/ai-impact/           @accorvin
+/modules/customer-insights/   @epacific1
+/modules/okr-hub/             @saprabhu05
+/modules/product-builds/      @epacific1 @gnaponie @andre-motta
+/modules/releases/            @saprabhu05 @wznoinsk @epacific1
+/modules/system-health/       @aloganat @AjayJagan
+/modules/upstream-pulse/      @dpanshug
+/modules/workflow-validation/ @accorvin
