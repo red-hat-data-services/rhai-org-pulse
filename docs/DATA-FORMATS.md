@@ -1861,6 +1861,8 @@ Image staleness: `ageDays > 14` is treated as stale in the UI. `grade` / `gradeD
 
 **Collector / join:** External CHI pipeline (`generate_chi_report.py` + `build_chi_hierarchy.py`) joins catalog/Stage Pyxis images to ProdSec `openshift-ai` `components.override` (strip `rhoai/`). See CHI repo `PIPELINE.md`. Org Pulse does not call Pyxis or ps_modules at runtime.
 
+**Onboarding new versions:** See [CHI-HIERARCHY.md](./CHI-HIERARCHY.md) — versions come from ProdSec `active_ps_update_streams`; no Org Pulse code change is needed when the stream and catalog tags exist.
+
 ---
 
 ## Releases — RHOAI Component Architectures (`data/releases/rhoai-component-architectures/latest.json`)
