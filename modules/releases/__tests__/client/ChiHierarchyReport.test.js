@@ -39,7 +39,7 @@ const fixture = {
                   vulnerabilityCount: 21,
                   lastUpdated: '2026-09-21',
                   ageDays: 9,
-                  catalogUrl: 'https://catalog.redhat.com/software/containers/rhoai/odh-dashboard-rhel9'
+                  catalogUrl: 'https://catalog.redhat.com/en/software/containers/rhoai/odh-dashboard-rhel9/680cdd696ed1cf1f6cf2a587'
                 }
               ]
             },

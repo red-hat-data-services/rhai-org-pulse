@@ -33,7 +33,7 @@
                   "gradeDate": "2026-09-21",
                   "vulnerabilityCount": 21,
                   "advisories": { "Critical": 0, "Important": 11, "Moderate": 9, "Low": 1 },
-                  "catalogUrl": "https://catalog.redhat.com/software/containers/rhoai/odh-dashboard-rhel9",
+                  "catalogUrl": "https://catalog.redhat.com/en/software/containers/rhoai/odh-dashboard-rhel9/680cdd696ed1cf1f6cf2a587",
                   "lastUpdated": "2026-09-21",
                   "ageDays": 9
                 }
@@ -55,7 +55,7 @@
                   "gradeDate": "2026-09-25",
                   "vulnerabilityCount": 2,
                   "advisories": { "Critical": 0, "Important": 0, "Moderate": 2, "Low": 0 },
-                  "catalogUrl": "https://catalog.redhat.com/software/containers/rhoai/odh-rhel9-operator",
+                  "catalogUrl": "https://catalog.redhat.com/en/software/containers/rhoai/odh-rhel9-operator/680ce32408fd86ade181bbcb",
                   "lastUpdated": "2026-09-25",
                   "ageDays": 5
                 }
@@ -77,7 +77,7 @@
                   "gradeDate": "2026-08-01",
                   "vulnerabilityCount": 8,
                   "advisories": { "Critical": 0, "Important": 3, "Moderate": 4, "Low": 1 },
-                  "catalogUrl": "https://catalog.redhat.com/software/containers/rhoai/odh-example-stale-rhel9",
+                  "catalogUrl": "https://catalog.redhat.com/en/software/containers/rhoai/odh-example-stale-rhel9/000000000000000000000000",
                   "lastUpdated": "2026-08-21",
                   "ageDays": 40
                 }
@@ -112,7 +112,7 @@
                   "gradeDate": "2026-09-18",
                   "vulnerabilityCount": 5,
                   "advisories": { "Critical": 0, "Important": 2, "Moderate": 3, "Low": 0 },
-                  "catalogUrl": "https://catalog.redhat.com/software/containers/rhoai/odh-dashboard-rhel9",
+                  "catalogUrl": "https://catalog.redhat.com/en/software/containers/rhoai/odh-dashboard-rhel9/680cdd696ed1cf1f6cf2a587",
                   "lastUpdated": "2026-09-18",
                   "ageDays": 12
                 }
@@ -153,7 +153,7 @@
                   "gradeDate": "2026-09-20",
                   "vulnerabilityCount": 8,
                   "advisories": { "Critical": 0, "Important": 6, "Moderate": 2, "Low": 0 },
-                  "catalogUrl": "https://catalog.redhat.com/software/containers/rhoai/odh-dashboard-rhel9",
+                  "catalogUrl": "https://catalog.redhat.com/en/software/containers/rhoai/odh-dashboard-rhel9/680cdd696ed1cf1f6cf2a587",
                   "lastUpdated": "2026-09-20",
                   "ageDays": 10
                 }
@@ -175,7 +175,7 @@
                   "gradeDate": "2026-09-23",
                   "vulnerabilityCount": 1,
                   "advisories": { "Critical": 0, "Important": 0, "Moderate": 1, "Low": 0 },
-                  "catalogUrl": "https://catalog.redhat.com/software/containers/rhoai/odh-rhel9-operator",
+                  "catalogUrl": "https://catalog.redhat.com/en/software/containers/rhoai/odh-rhel9-operator/680ce32408fd86ade181bbcb",
                   "lastUpdated": "2026-09-23",
                   "ageDays": 7
                 }

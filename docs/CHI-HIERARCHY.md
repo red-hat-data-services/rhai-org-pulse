@@ -103,6 +103,22 @@ consistency.
 - Images with no override entry roll into **Unmapped** (still visible, with
   worst-grade rollup).
 
+## Catalog links
+
+Each image’s `catalogUrl` must end with the Pyxis **repository** `_id`
+(not the per-architecture image id):
+
+```
+https://catalog.redhat.com/en/software/containers/rhoai/<name>/<repo_id>
+```
+
+Example:
+`https://catalog.redhat.com/en/software/containers/rhoai/odh-codeflare-operator-rhel9/680cdcf66ed1cf1f6cf2a3aa`
+
+Without that final segment, catalog.redhat.com returns **404**. The CHI
+collector (`generate_chi_report.py`) reads `_id` from the Pyxis repositories
+API when building `catalogUrl`.
+
 ---
 
 ## Local smoke (non-demo)

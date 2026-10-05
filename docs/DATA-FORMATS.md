@@ -1835,7 +1835,7 @@ Fixture: `fixtures/releases/chi-hierarchy/latest.json`.
             "gradeDate": "2026-09-21",
             "vulnerabilityCount": 21,
             "advisories": { "Critical": 0, "Important": 11, "Moderate": 9, "Low": 1 },
-            "catalogUrl": "https://catalog.redhat.com/software/containers/rhoai/odh-dashboard-rhel9",
+            "catalogUrl": "https://catalog.redhat.com/en/software/containers/rhoai/odh-dashboard-rhel9/680cdd696ed1cf1f6cf2a587",
             "lastUpdated": "2026-09-21",
             "ageDays": 9
           }]
@@ -1858,6 +1858,8 @@ Fixture: `fixtures/releases/chi-hierarchy/latest.json`.
 | POST | `/api/modules/releases/chi-hierarchy/bulk` | `releases:write` | Pipeline ingest (skipped in `DEMO_MODE`) |
 
 Image staleness: `ageDays > 14` is treated as stale in the UI. `grade` / `gradeDate` / `vulnerabilityCount` align with legacy AIPCC `HealthIndex`.
+
+`catalogUrl` must include the Pyxis repository `_id` final path segment (e.g. `…/odh-dashboard-rhel9/680cdd696ed1cf1f6cf2a587`); without it catalog.redhat.com returns 404.
 
 **Collector / join:** External CHI pipeline (`generate_chi_report.py` + `build_chi_hierarchy.py`) joins catalog/Stage Pyxis images to ProdSec `openshift-ai` `components.override` (strip `rhoai/`). See CHI repo `PIPELINE.md`. Org Pulse does not call Pyxis or ps_modules at runtime.
 
