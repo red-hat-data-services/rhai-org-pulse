@@ -2811,6 +2811,9 @@ function detectEvt(s){
 
 // ── STATE ─────────────────────────────────────────────────────────────────────
 let allData=[], sortCol='Rank', sortAsc=true;
+// 'demo' until a live payload schedules successfully. Surfaced next to the feature
+// count, because a stale embedded dataset is indistinguishable from real data.
+let dataSource='demo';
 
 function saveBannerText(){
   const el = document.getElementById('planning-banner-text');
@@ -2891,6 +2894,7 @@ window.addEventListener('message', function(e){
     try {
       schedule(mapped);
       allData = mapped;
+      dataSource = 'live';
     } catch (err) {
       console.error('AI Planner: could not schedule live data, keeping previous rows', err);
     }
@@ -2950,6 +2954,11 @@ function populateFilters(){
     const tW=document.getElementById('ms-wrap-f-team');
     if(tW)tW.appendChild(msCreate('f-team','All Teams'));
   }
+  // Release numbers come from the target versions actually present, so a new
+  // release shows up on its own rather than waiting for a hardcoded option.
+  const releaseNums=[...new Set(standardTVs.map(v=>(String(v).match(/(\d+\.\d+)/)||[])[1]).filter(Boolean))]
+    .sort((a,b)=>parseFloat(a)-parseFloat(b));
+  if(releaseNums.length) setOpts('f-rel',releaseNums,'All Releases');
   msSetOpts('f-tv',standardTVs.filter(Boolean),'All Versions');
   msSetOpts('f-comp',comps,'All Components');
   msSetOpts('f-team',uniq('Team').filter(Boolean),'All Teams');
@@ -3329,7 +3338,7 @@ function renderCards(rows){
     document.getElementById('cnt-'+k).textContent=c[key]||0;
   });
   const inPlan=(c.EA1||0)+(c.EA2||0)+(c.GA||0);
-  document.getElementById('st-total').textContent=rows.length+' features';
+  document.getElementById('st-total').textContent=rows.length+' features'+(dataSource==='live'?'':' (demo data)');
   document.getElementById('st-in').textContent=inPlan+' in-plan';
   document.getElementById('st-no').textContent=(c.No||0)+' no';
   // Keep cards-rel-sel in sync with the main release selector
