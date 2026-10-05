@@ -7,9 +7,10 @@ export async function getVersions() {
   return apiRequest(`${BASE}/versions`);
 }
 
-export async function getBugData(versions, component = null) {
+export async function getBugData(versions, components = [], priorities = []) {
   const params = new URLSearchParams({ versions: versions.join(',') });
-  if (component) params.set('component', component);
+  if (components.length > 0) params.set('component', components.join(','));
+  if (priorities.length > 0) params.set('priority', priorities.join(','));
   return apiRequest(`${BASE}/bugs?${params}`);
 }
 
@@ -17,19 +18,21 @@ export async function getComponents() {
   return apiRequest(`${BASE}/components`);
 }
 
+export async function getPriorities() {
+  return apiRequest(`${BASE}/priorities`);
+}
+
 export async function refreshData() {
   return apiRequest(`${BASE}/refresh`, { method: 'POST' });
 }
 
 export async function get90DaySummary(config = null) {
-  if (config && config.releases && config.releases.length > 0) {
-    return apiRequest(`${BASE}/90day-summary`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(config)
-    });
-  }
-  return apiRequest(`${BASE}/90day-summary`);
+  const payload = config && Array.isArray(config.releases) ? config : { releases: [] };
+  return apiRequest(`${BASE}/90day-summary`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload)
+  });
 }
 
 export async function get90DayTrackingConfig() {

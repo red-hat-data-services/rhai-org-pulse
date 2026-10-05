@@ -171,4 +171,167 @@ test.describe('OKR Hub timeline @okr-hub', function () {
     await expect(septemberRow).toContainText('0');
     await expect(septemberRow).toContainText('Missed');
   });
+
+  test('filters post-release defects by Jira component and priority', async function ({ page }) {
+    var bugRequests = [];
+    var summaryRequests = [];
+
+    await page.route('**/api/modules/releases/delivery/quality/versions', async function (route) {
+      await route.fulfill({
+        json: [
+          { name: 'rhoai-3.4', releaseDate: '2026-03-20', released: true, bugCount: 2 },
+          { name: 'rhelai-3.4', releaseDate: '2026-03-20', released: true, bugCount: 1 },
+          { name: 'RHAII-3.4', releaseDate: '2026-03-20', released: true, bugCount: 1 },
+          { name: '3.6 GA RHOAI RELEASE', releaseDate: '2026-11-18', released: false, bugCount: 0 },
+          { name: '3.6 GA RHELAI RELEASE', releaseDate: '2026-11-24', released: false, bugCount: 0 },
+          { name: '3.6 GA RHAII RELEASE', releaseDate: '2026-11-05', released: false, bugCount: 0 },
+          { name: 'rhoai-3.3', releaseDate: '2026-01-15', bugCount: 1 }
+        ]
+      });
+    });
+    await page.route('**/api/modules/releases/delivery/quality/components', async function (route) {
+      await route.fulfill({ json: [
+        { name: 'Dashboard', count: 2 },
+        { name: 'Model Serving', count: 1 }
+      ] });
+    });
+    await page.route('**/api/modules/releases/delivery/quality/priorities', async function (route) {
+      await route.fulfill({
+        json: [
+          { name: 'Critical', count: 2 },
+          { name: 'Major', count: 1 }
+        ]
+      });
+    });
+    await page.route('**/api/modules/releases/delivery/quality/bugs**', async function (route) {
+      bugRequests.push(route.request().url());
+      await route.fulfill({
+        json: {
+          labels: [0, 1],
+          datasets: [{ label: 'rhoai-3.4', data: [0, 1] }]
+        }
+      });
+    });
+    await page.route('**/api/modules/okr-hub/reports/90day-tracking-config', async function (route) {
+      await route.fulfill({ json: { releases: [] } });
+    });
+    await page.route('**/api/modules/releases/delivery/quality/90day-summary', async function (route) {
+      summaryRequests.push(route.request().method());
+      await route.fulfill({ json: { releases: [] } });
+    });
+
+    await page.goto('/#/okr-hub/reports?report=post-release-defects');
+
+    var quickGroup = page.getByRole('button', { name: '3.4 GA', exact: true });
+    await expect(quickGroup).toBeVisible();
+    await expect(quickGroup).toHaveAttribute('aria-pressed', 'false');
+    await expect(page.getByText('Select versions to view cumulative bug trends')).toBeVisible();
+    expect(summaryRequests).toEqual([]);
+    await expect(page.locator('#post-release-component')).toHaveText('All Components');
+    await expect(page.locator('#post-release-priority')).toHaveText('All Priorities');
+
+    await quickGroup.click();
+    await expect(quickGroup).toHaveAttribute('aria-pressed', 'true');
+    await expect(page.getByRole('heading', { name: 'Priority' })).toBeVisible();
+    await expect(page.locator('#post-release-component')).toHaveText('All Components');
+    await expect(page.locator('#post-release-priority')).toHaveText('All Priorities');
+
+    var componentRequest = page.waitForRequest(function (request) {
+      var url = new URL(request.url());
+      return url.pathname.endsWith('/api/modules/releases/delivery/quality/bugs') && url.searchParams.get('component') === 'Dashboard,Model Serving';
+    });
+    await page.locator('#post-release-component').click();
+    await page.getByRole('option', { name: /Dashboard\s+2/ }).click();
+    await page.getByRole('option', { name: /Model Serving\s+1/ }).click();
+    await componentRequest;
+    await expect(page.locator('#post-release-component')).toHaveText('2 components selected');
+
+    var priorityRequest = page.waitForRequest(function (request) {
+      var url = new URL(request.url());
+      return url.pathname.endsWith('/api/modules/releases/delivery/quality/bugs') && url.searchParams.get('priority') === 'Critical,Major';
+    });
+    await page.locator('#post-release-priority').click();
+    await page.getByRole('option', { name: /Critical\s+2/ }).click();
+    await page.getByRole('option', { name: /Major\s+1/ }).click();
+    await priorityRequest;
+    await expect(page.locator('#post-release-priority')).toHaveText('2 priorities selected');
+    expect(bugRequests.some(function (url) {
+      return new URL(url).searchParams.get('priority') === 'Critical,Major';
+    })).toBe(true);
+
+    await page.getByRole('button', { name: '3.6 GA', exact: true }).click();
+    await expect(page.getByText('Unreleased versions are excluded from the graph: 3.6 GA RHOAI RELEASE, 3.6 GA RHELAI RELEASE, 3.6 GA RHAII RELEASE.')).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Cumulative Bug Count vs Days Since Release' })).toBeVisible();
+    expect(summaryRequests).toEqual([]);
+
+    await page.getByRole('button', { name: '3.4 GA', exact: true }).click();
+    await expect(page.getByText('3.6 GA RHOAI RELEASE, 3.6 GA RHELAI RELEASE, 3.6 GA RHAII RELEASE have not been released yet.')).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Cumulative Bug Count vs Days Since Release' })).toHaveCount(0);
+  });
+
+  test('uses saved 90-day release configuration and can delete a release chart', async function ({ page }) {
+    var savedConfig = {
+      releases: [{
+        version: '3.6',
+        products: [{ name: 'rhoai-3.6', gaDate: '2026-09-01' }]
+      }]
+    };
+
+    await page.route('**/api/modules/releases/delivery/quality/versions', async function (route) {
+      await route.fulfill({ json: [] });
+    });
+    await page.route('**/api/modules/releases/delivery/quality/components', async function (route) {
+      await route.fulfill({ json: [] });
+    });
+    await page.route('**/api/modules/releases/delivery/quality/priorities', async function (route) {
+      await route.fulfill({ json: [] });
+    });
+    await page.route('**/api/modules/releases/delivery/quality/bugs**', async function (route) {
+      await route.fulfill({ json: { labels: [], datasets: [] } });
+    });
+    await page.route('**/api/modules/okr-hub/reports/90day-tracking-config', async function (route) {
+      if (route.request().method() === 'GET') {
+        await route.fulfill({ json: savedConfig });
+        return;
+      }
+
+      savedConfig = JSON.parse(route.request().postData());
+      await route.fulfill({ json: { ok: true } });
+    });
+    await page.route('**/api/modules/releases/delivery/quality/90day-summary', async function (route) {
+      var body = JSON.parse(route.request().postData() || '{}');
+      if (!body.releases || body.releases.length === 0) {
+        await route.fulfill({ json: { releases: [] } });
+        return;
+      }
+
+      await route.fulfill({
+        json: {
+          releases: [{
+            version: '3.6',
+            products: [{
+              name: 'rhoai-3.6',
+              bugCount: 1,
+              daysElapsed: 34,
+              isComplete: false,
+              releaseDate: '2026-09-01'
+            }],
+            total: 1
+          }]
+        }
+      });
+    });
+
+    await page.goto('/#/okr-hub/reports?report=post-release-defects');
+
+    await expect(page.getByRole('heading', { name: 'Bug Trend Filters' })).toBeVisible();
+    await expect(page.getByText('Release 3.6', { exact: true })).toBeVisible();
+    await expect(page.getByText('rhoai-3.6', { exact: true })).toBeVisible();
+    await expect(page.getByTitle('Delete this release chart')).toBeVisible();
+
+    await page.getByTitle('Delete this release chart').click();
+
+    await expect(page.getByText('No release data available.', { exact: true })).toBeVisible();
+    expect(savedConfig).toEqual({ releases: [] });
+  });
 });

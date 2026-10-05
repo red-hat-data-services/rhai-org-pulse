@@ -1123,7 +1123,7 @@ All fix versions with release dates from tracked projects (RHOAIENG, AIPCC, RHAI
 
 ## Releases — Quality Bugs (`data/releases/delivery/quality/bugs-{PROJECT}.json`)
 
-Blocker/Critical/Major bugs with affected versions, per project. Only bugs created >= version release date (post-release discovery).
+Jira bugs with affected versions, per project. Only bugs created >= version release date (post-release discovery).
 
 ```json
 [
@@ -1144,7 +1144,7 @@ Blocker/Critical/Major bugs with affected versions, per project. Only bugs creat
 **Fields:**
 - `key` (string): Jira issue key
 - `summary` (string): Issue summary
-- `priority` (string): Priority name (Blocker, Critical, or Major)
+- `priority` (string): Jira priority name (for example, Blocker, Critical, Major, or Minor)
 - `status` (string): Current Jira status
 - `affectedVersions` (string[]): Array of version names this bug affects
 - `components` (string[]): Array of component names
@@ -1164,6 +1164,8 @@ Blocker/Critical/Major bugs with affected versions, per project. Only bugs creat
 
 **Note:** Components are computed dynamically from bug files by the `GET /api/modules/releases/delivery/quality/components` endpoint. No stored `components.json` file exists.
 
+The quality bugs endpoint accepts a comma-separated `component` query parameter. When multiple component names are supplied, a bug is included when it belongs to at least one selected component.
+
 The API response format:
 
 ```json
@@ -1181,9 +1183,31 @@ The API response format:
 
 ---
 
+## Releases — Quality Priorities (API Response)
+
+**Note:** Priorities are computed dynamically from the Jira bug cache by the
+`GET /api/modules/releases/delivery/quality/priorities` endpoint. The endpoint
+returns the priority names currently present in the cached Jira issues so the
+post-release defects report can filter by the same values.
+
+```json
+[
+  { "name": "Critical", "count": 28 },
+  { "name": "Major", "count": 17 },
+  { "name": "Blocker", "count": 3 }
+]
+```
+
+**Fields:**
+- `name` (string): Jira priority name
+- `count` (number): Number of cached bugs with that priority
+- Sorted by count descending, then name ascending
+
+---
+
 ## Releases — Quality 90-Day Summary (API Response)
 
-**Note:** Computed dynamically by the `GET /api/modules/releases/delivery/quality/90day-summary` endpoint from stored versions and bug files. No stored file — data is derived at request time.
+**Note:** Computed dynamically by the `POST /api/modules/releases/delivery/quality/90day-summary` endpoint from the user-saved version names and released dates in `okr-hub/90day-tracking-config.json` plus the cached bug files. No automatic Jira version discovery is used.
 
 The API response format:
 
@@ -1233,7 +1257,37 @@ The API response format:
 - `isComplete` (boolean): Whether the 90-day tracking window has closed
 - `releaseDate` (string): ISO date (YYYY-MM-DD) of the GA release
 
-Releases are sorted descending by version number (newest first). Only major versions (X.X) are included; z-stream versions (e.g., 3.3.1) are excluded.
+The release groups and product/version names are entirely user-configured. Each configured version is tracked for 90 days from its supplied released date; `daysElapsed` is capped at 90 and `isComplete` becomes true at the end of that window.
+
+---
+
+## OKR Hub — 90-Day Tracking Configuration (`data/okr-hub/90day-tracking-config.json`)
+
+Stores the release charts shown in the OKR Hub post-release bug report. Users
+configure each release group, the exact Jira `affectedVersion` names to track,
+and each version's released date. A removed release group is no longer shown
+in the report; there is no automatic Jira-version fallback.
+
+```json
+{
+  "releases": [
+    {
+      "version": "3.6",
+      "products": [
+        { "name": "rhoai-3.6", "gaDate": "2026-09-12" },
+        { "name": "rhelai-3.6", "gaDate": "2026-09-12" }
+      ]
+    }
+  ]
+}
+```
+
+**Fields:**
+- `releases` (array): User-defined release chart groups
+- `version` (string): Display name for the release group
+- `products` (array): Exact Jira affected-version entries included in the group
+- `products[].name` (string): Jira `affectedVersion` name
+- `products[].gaDate` (string): Released date in ISO format (`YYYY-MM-DD`)
 
 ---
 

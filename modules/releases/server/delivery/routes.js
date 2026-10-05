@@ -10,7 +10,7 @@ const registerBlockerRoutes = require('./blockers')
 const registerTfaRiskRoutes = require('./tfa-risk')
 const registerCommitmentRoutes = require('./commitment')
 const { logAudit } = require('../planning/audit-log')
-const { stripZStream: sharedStripZStream, normalizeVersionName, extractProduct: sharedExtractProduct } = require('../version-utils')
+const { stripZStream: sharedStripZStream, normalizeVersionName } = require('../version-utils')
 
 const DEMO_MODE = process.env.DEMO_MODE === 'true'
 
@@ -1391,7 +1391,11 @@ module.exports = async function registerRoutes(router, context) {
    *       - in: query
    *         name: component
    *         schema: { type: string }
-   *         description: Filter by component
+   *         description: Comma-separated Jira component names to include
+   *       - in: query
+   *         name: priority
+   *         schema: { type: string }
+   *         description: Comma-separated Jira priorities to include
    *     responses:
    *       200:
    *         description: Chart data with labels and datasets
@@ -1400,7 +1404,8 @@ module.exports = async function registerRoutes(router, context) {
     try {
       const config = await getConfig(readFromStorage)
       const versions = (req.query.versions || '').split(',').filter(Boolean)
-      const component = req.query.component || null
+      const components = (req.query.component || '').split(',').filter(Boolean)
+      const priorities = (req.query.priority || '').split(',').filter(Boolean)
 
       if (versions.length === 0) {
         return res.json({ labels: [], datasets: [] })
@@ -1413,10 +1418,16 @@ module.exports = async function registerRoutes(router, context) {
         bug.affectedVersions.some(v => versionSet.has(v))
       )
 
-      if (component) {
+      if (components.length > 0) {
+        const componentSet = new Set(components)
         filteredBugs = filteredBugs.filter(bug =>
-          bug.components.includes(component)
+          bug.components.some(component => componentSet.has(component))
         )
+      }
+
+      if (priorities.length > 0) {
+        const prioritySet = new Set(priorities)
+        filteredBugs = filteredBugs.filter(bug => prioritySet.has(bug.priority))
       }
 
       const allVersions = await readFromStorage('releases/delivery/quality/versions.json') || []
@@ -1459,6 +1470,38 @@ module.exports = async function registerRoutes(router, context) {
       res.json(componentsWithCounts)
     } catch (error) {
       console.error('[releases/quality] Read components error:', error)
+      res.status(500).json({ error: 'Internal server error' })
+    }
+  })
+
+  /**
+   * @openapi
+   * /api/modules/releases/delivery/quality/priorities:
+   *   get:
+   *     tags: ['Releases: Quality']
+   *     summary: List Jira bug priorities with counts
+   *     responses:
+   *       200:
+   *         description: Priorities sorted by bug count
+   */
+  router.get('/quality/priorities', requireAuth, requireScope('releases:read'), async function(req, res) {
+    try {
+      const config = await getConfig(readFromStorage)
+      const allBugs = await loadAllBugs(config.projectKeys)
+
+      const priorityCounts = {}
+      for (const bug of allBugs) {
+        const priority = bug.priority || 'Unknown'
+        priorityCounts[priority] = (priorityCounts[priority] || 0) + 1
+      }
+
+      const priorities = Object.entries(priorityCounts)
+        .map(([name, count]) => ({ name, count }))
+        .sort((a, b) => b.count - a.count || a.name.localeCompare(b.name))
+
+      res.json(priorities)
+    } catch (error) {
+      console.error('[releases/quality] Read priorities error:', error)
       res.status(500).json({ error: 'Internal server error' })
     }
   })
@@ -1579,11 +1622,7 @@ module.exports = async function registerRoutes(router, context) {
     }
   })
 
-  function normalizeProduct(versionName) {
-    return sharedExtractProduct(versionName) || versionName.toLowerCase()
-  }
-
-  function compute90DaySummary(configReleases, allBugs, storedVersions) {
+  function compute90DaySummary(configReleases, allBugs) {
     const now = Date.now()
     const MS_PER_DAY = 86400000
     const TRACKING_DAYS = 90
@@ -1598,108 +1637,39 @@ module.exports = async function registerRoutes(router, context) {
       }
     }
 
-    if (configReleases && configReleases.length > 0) {
-      // Config-driven mode: use exact version names and GA dates from config
-      const releases = []
-      for (const rel of configReleases) {
-        const products = []
-        var familyTotal = 0
-        for (const p of (rel.products || [])) {
-          if (!p.name || !p.gaDate) continue
-          const relDate = new Date(p.gaDate + 'T00:00:00Z')
-          const daysSince = Math.floor((now - relDate.getTime()) / MS_PER_DAY)
-          const daysElapsed = Math.min(TRACKING_DAYS, Math.max(0, daysSince))
-          const isComplete = daysSince >= TRACKING_DAYS
-          const cutoff = new Date(relDate.getTime() + TRACKING_DAYS * MS_PER_DAY)
+    if (!configReleases || configReleases.length === 0) return []
 
-          const vBugs = bugsByVersion[p.name] || []
-          var bugCount = 0
-          for (const bug of vBugs) {
-            const created = new Date(bug.created)
-            if (created >= relDate && created <= cutoff) bugCount++
-          }
-
-          familyTotal += bugCount
-          products.push({
-            name: p.name,
-            bugCount: bugCount,
-            daysElapsed: daysElapsed,
-            isComplete: isComplete,
-            releaseDate: p.gaDate
-          })
-        }
-        releases.push({ version: rel.version, products: products, total: familyTotal })
-      }
-      return releases
-    }
-
-    // Auto-detect mode: group from stored versions.json
-    const familyMap = {}
-    for (const v of storedVersions) {
-      if (!v.releaseDate) continue
-      const match = v.name.match(/-(\d+\.\d+)$/)
-      if (!match) continue
-      const familyNum = match[1]
-      if (parseFloat(familyNum) < 3.0) continue
-      const product = normalizeProduct(v.name)
-      const key = product + '-' + familyNum
-      if (!familyMap[familyNum]) familyMap[familyNum] = {}
-      if (!familyMap[familyNum][key]) {
-        familyMap[familyNum][key] = { product: product, familyNum: familyNum, rawVersions: [] }
-      }
-      familyMap[familyNum][key].rawVersions.push(v)
-    }
-
+    // Config-driven mode: use exact version names and released dates from config.
     const releases = []
-    const familyKeys = Object.keys(familyMap).sort(function(a, b) {
-      return parseFloat(b) - parseFloat(a)
-    })
-
-    for (const familyNum of familyKeys) {
-      const productEntries = familyMap[familyNum]
+    for (const rel of configReleases) {
       const products = []
-      let familyTotal = 0
-
-      for (const key of Object.keys(productEntries)) {
-        const entry = productEntries[key]
-        let earliestDate = null
-        for (const v of entry.rawVersions) {
-          const d = new Date(v.releaseDate + 'T00:00:00Z')
-          if (!earliestDate || d < earliestDate) earliestDate = d
-        }
-
-        const daysSince = Math.floor((now - earliestDate.getTime()) / MS_PER_DAY)
+      var familyTotal = 0
+      for (const p of (rel.products || [])) {
+        if (!p.name || !p.gaDate) continue
+        const relDate = new Date(p.gaDate + 'T00:00:00Z')
+        const daysSince = Math.floor((now - relDate.getTime()) / MS_PER_DAY)
         const daysElapsed = Math.min(TRACKING_DAYS, Math.max(0, daysSince))
         const isComplete = daysSince >= TRACKING_DAYS
-        const cutoff = new Date(earliestDate.getTime() + TRACKING_DAYS * MS_PER_DAY)
+        const cutoff = new Date(relDate.getTime() + TRACKING_DAYS * MS_PER_DAY)
 
-        const seen = new Set()
-        let bugCount = 0
-        for (const v of entry.rawVersions) {
-          const vBugs = bugsByVersion[v.name] || []
-          for (const bug of vBugs) {
-            if (seen.has(bug.key)) continue
-            seen.add(bug.key)
-            const created = new Date(bug.created)
-            if (created >= earliestDate && created <= cutoff) bugCount++
-          }
+        const vBugs = bugsByVersion[p.name] || []
+        var bugCount = 0
+        for (const bug of vBugs) {
+          const created = new Date(bug.created)
+          if (created >= relDate && created <= cutoff) bugCount++
         }
 
         familyTotal += bugCount
-        const displayName = entry.product + '-' + familyNum
         products.push({
-          name: displayName,
+          name: p.name,
           bugCount: bugCount,
           daysElapsed: daysElapsed,
           isComplete: isComplete,
-          releaseDate: earliestDate.toISOString().split('T')[0]
+          releaseDate: p.gaDate
         })
       }
-
-      products.sort(function(a, b) { return a.name.localeCompare(b.name) })
-      releases.push({ version: familyNum, products: products, total: familyTotal })
+      releases.push({ version: rel.version, products: products, total: familyTotal })
     }
-
     return releases
   }
 
@@ -1708,18 +1678,16 @@ module.exports = async function registerRoutes(router, context) {
    * /api/modules/releases/delivery/quality/90day-summary:
    *   get:
    *     tags: ['Releases: Quality']
-   *     summary: 90-day post-release bug summary grouped by release family (auto-detected)
+   *     summary: 90-day post-release bug summary using saved user configuration
    *     responses:
    *       200:
    *         description: Bug counts per product within 90 days of GA for each major release
    */
-  router.get('/quality/90day-summary', requireAuth, requireScope('releases:read'), async function(req, res) {
+  router.get('/quality/90day-summary', requireAuth, requireScope('releases:read'), async function(_req, res) {
     try {
-      const config = await getConfig(readFromStorage)
-      const versions = await readFromStorage('releases/delivery/quality/versions.json') || []
-      const allBugs = await loadAllBugs(config.projectKeys)
-      const releases = compute90DaySummary(null, allBugs, versions)
-      res.json({ releases: releases })
+      // The report uses the POST endpoint with the saved user configuration.
+      // Keep GET side-effect free and do not fall back to Jira version discovery.
+      res.json({ releases: [] })
     } catch (error) {
       console.error('[releases/quality] 90day-summary error:', error)
       res.status(500).json({ error: error.message })
@@ -1744,10 +1712,9 @@ module.exports = async function registerRoutes(router, context) {
   router.post('/quality/90day-summary', requireAuth, requireScope('releases:read'), async function(req, res) {
     try {
       const config = await getConfig(readFromStorage)
-      const versions = await readFromStorage('releases/delivery/quality/versions.json') || []
       const allBugs = await loadAllBugs(config.projectKeys)
-      const configReleases = req.body && req.body.releases ? req.body.releases : null
-      const releases = compute90DaySummary(configReleases, allBugs, versions)
+      const configReleases = req.body && Array.isArray(req.body.releases) ? req.body.releases : []
+      const releases = compute90DaySummary(configReleases, allBugs)
       res.json({ releases: releases })
     } catch (error) {
       console.error('[releases/quality] 90day-summary error:', error)
