@@ -1454,9 +1454,9 @@ const FPDOR_MANDATORY_HARD = ['Release Type'];
 
 // Tier groupings used for the FPDoR breakdown column in the table
 const FPDOR_TIERS_DISPLAY = [
-  { label:'Critical', cls:'fd-crit', items:['Components','Child epics','Target Version','Delivery Owner'] },
+  { label:'Critical', cls:'fd-crit', items:['Components','Child epics','Target Version','Delivery Owner','PM'] },
   { label:'High',     cls:'fd-high', items:['Release Type','Priority','RICE','Docs impact'] },
-  { label:'Medium',   cls:'fd-med',  items:['Cross-team deps','PM','Feature human sign-off','Requirements clarity','Acceptance criteria','Risks & assumptions','Architectural alignment'] },
+  { label:'Medium',   cls:'fd-med',  items:['Cross-team deps','Feature human sign-off','Requirements clarity','Acceptance criteria','Risks & assumptions','Architectural alignment'] },
   { label:'Soft',     cls:'fd-soft', items:['UXD','Source RFE / AI SDLC'] },
 ];
 
@@ -3423,12 +3423,18 @@ function renderTbl(rows){
     const rowApv=_allApv[esc(r['Key'])]||{pm:false,do:false};
     const hasFpdorData=r['FPDoR']&&r['FPDoR']!=='—';
     const tooltipLines=['Weighted FPDoR: '+r._wFPDoR+'/100 (Erle\'s tier weights)',''];
+    // Only the failures are listed. Printing a tier's passes as well split each tier
+    // across two lines, and "passed" there also swept up N/A items, so the lines never
+    // added up to the N/17 badge — that badge counts outright passes only.
     FPDOR_TIERS_DISPLAY.forEach(t=>{
       const fails=t.items.filter(i=>failedSet.has(i));
-      const passes=hasFpdorData?t.items.filter(i=>!failedSet.has(i)):[];
-      if(fails.length) tooltipLines.push('✗ '+t.label+': '+fails.join(', '));
-      if(passes.length) tooltipLines.push('✓ '+t.label+': '+passes.join(', '));
+      if(fails.length) tooltipLines.push('\u2717 '+t.label+': '+fails.join(', '));
     });
+    if(hasFpdorData){
+      tooltipLines.push('', failedSet.size
+        ? esc(r['FPDoR'])+' passed \u00b7 '+failedSet.size+' failing \u00b7 remainder not applicable'
+        : esc(r['FPDoR'])+' passed \u00b7 nothing failing');
+    }
     const fpdorTooltip=tooltipLines.join('\n');
     const critFails=FPDOR_TIERS_DISPLAY[0].items.filter(i=>failedSet.has(i));
     const highFails=FPDOR_TIERS_DISPLAY[1].items.filter(i=>failedSet.has(i));
