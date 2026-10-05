@@ -1,0 +1,27 @@
+{
+  "key": "RHAISTRAT-2542",
+  "summary": "[DRAFT] BFCLv4 Provider — Function-Calling and Tool-Use Evaluation in EvalHub",
+  "status": "New",
+  "statusCategory": "To Do",
+  "priority": "Normal",
+  "components": [
+    "AI Evaluations",
+    "AI Safety"
+  ],
+  "targetVersions": [
+    "3.7 GA RHOAI RELEASE"
+  ],
+  "fixVersions": [],
+  "pm": "",
+  "assignee": {
+    "displayName": "Prabhu Padashetty",
+    "accountId": "712020:6558af4f-f52e-4eb8-b552-8e0c5027ba10"
+  },
+  "labels": [],
+  "created": "2026/08/11 12:20 PM",
+  "updated": "2026/09/28 2:37 PM",
+  "architect": null,
+  "parentKey": null,
+  "colorStatus": null,
+  "ownerStatusColor": null
+}

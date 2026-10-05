@@ -1,0 +1,27 @@
+{
+  "key": "RHAISTRAT-1729",
+  "summary": "Autoscaling Configuration for Model Serving in the Dashboard UI",
+  "status": "Backlog",
+  "statusCategory": "To Do",
+  "priority": "Critical",
+  "components": [
+    "AI Core Dashboard",
+    "UXD"
+  ],
+  "targetVersions": [
+    "3.7 EA RHOAI RELEASE"
+  ],
+  "fixVersions": [],
+  "pm": "Jenny Yi",
+  "assignee": {
+    "displayName": "Andrew Ballantyne",
+    "accountId": "5fdb88f09edf280075ce339d"
+  },
+  "labels": [],
+  "created": "2026/05/06 4:34 PM",
+  "updated": "2026/09/22 12:39 PM",
+  "architect": null,
+  "parentKey": null,
+  "colorStatus": null,
+  "ownerStatusColor": null
+}

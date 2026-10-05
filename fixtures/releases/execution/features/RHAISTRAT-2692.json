@@ -1,0 +1,29 @@
+{
+  "key": "RHAISTRAT-2692",
+  "summary": "[DRAFT] EvalHub UI: Side-by-Side Comparison of Time-Series and Latency Results Across Evaluation Runs",
+  "status": "New",
+  "statusCategory": "To Do",
+  "priority": "Normal",
+  "components": [
+    "AI Core Dashboard",
+    "AI Evaluations",
+    "AI Safety",
+    "UXD"
+  ],
+  "targetVersions": [
+    "3.7 GA RHOAI RELEASE"
+  ],
+  "fixVersions": [],
+  "pm": "",
+  "assignee": {
+    "displayName": "Dana Gutride",
+    "accountId": "557058:efe08183-3afa-43a2-ab14-e67f7f3de55a"
+  },
+  "labels": [],
+  "created": "2026/09/01 6:11 PM",
+  "updated": "2026/09/28 2:37 PM",
+  "architect": null,
+  "parentKey": null,
+  "colorStatus": null,
+  "ownerStatusColor": null
+}

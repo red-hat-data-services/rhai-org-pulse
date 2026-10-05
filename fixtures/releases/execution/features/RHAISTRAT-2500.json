@@ -14,11 +14,13 @@
     "Model Runtimes",
     "Serving Orchestration"
   ],
-  "created": "2026-01-01T00:00:00.000+0000",
-  "updated": "2026-08-31T16:20:03.495606+00:00",
+  "created": "2026/07/31 12:11 PM",
+  "updated": "2026/09/28 2:37 PM",
   "statusNotes": null,
   "issueLinks": [],
-  "targetVersions": null,
+  "targetVersions": [
+    "3.7 GA RHOAI RELEASE"
+  ],
   "pm": "",
   "architect": null,
   "parentKey": null,
@@ -48,8 +50,8 @@
     "pipeline": "2026-08-31T16:20:03.495606+00:00",
     "mlModel": "rhai-release-planner v9 (RF+XGBoost+LR ensemble, AUC 83.7%)"
   },
-  "colorStatus": "Red",
-  "ownerStatusColor": "Red",
+  "colorStatus": null,
+  "ownerStatusColor": null,
   "priorityScore": 0.212,
   "basePlacement": "Below cut",
   "rank": 462,

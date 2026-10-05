@@ -1,0 +1,29 @@
+{
+  "key": "RHAISTRAT-1780",
+  "summary": "Skills Library: Discovery and Acquisition of AI Skills and Skill Packages in RHOAI",
+  "status": "Refinement",
+  "statusCategory": "To Do",
+  "priority": "Critical",
+  "components": [
+    "AI Core Dashboard",
+    "AI Hub",
+    "Documentation",
+    "UXD"
+  ],
+  "targetVersions": [
+    "3.7 EA RHOAI RELEASE"
+  ],
+  "fixVersions": [],
+  "pm": "Peter Double",
+  "assignee": {
+    "displayName": "Andrew Ballantyne",
+    "accountId": "5fdb88f09edf280075ce339d"
+  },
+  "labels": [],
+  "created": "2026/05/18 2:10 PM",
+  "updated": "2026/09/28 10:41 AM",
+  "architect": null,
+  "parentKey": null,
+  "colorStatus": null,
+  "ownerStatusColor": null
+}

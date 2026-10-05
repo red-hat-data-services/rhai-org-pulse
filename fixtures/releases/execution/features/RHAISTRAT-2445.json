@@ -11,11 +11,13 @@
   "fixVersions": [],
   "labels": [],
   "components": [],
-  "created": "2026-01-01T00:00:00.000+0000",
-  "updated": "2026-08-31T16:20:03.495606+00:00",
+  "created": "2026/07/28 6:12 AM",
+  "updated": "2026/09/28 2:38 PM",
   "statusNotes": null,
   "issueLinks": [],
-  "targetVersions": null,
+  "targetVersions": [
+    "3.7 GA RHOAI RELEASE"
+  ],
   "pm": "",
   "architect": null,
   "parentKey": null,
@@ -45,8 +47,8 @@
     "pipeline": "2026-08-31T16:20:03.495606+00:00",
     "mlModel": "rhai-release-planner v9 (RF+XGBoost+LR ensemble, AUC 83.7%)"
   },
-  "colorStatus": "Red",
-  "ownerStatusColor": "Red",
+  "colorStatus": null,
+  "ownerStatusColor": null,
   "priorityScore": 0.219,
   "basePlacement": "Below cut",
   "rank": 458,

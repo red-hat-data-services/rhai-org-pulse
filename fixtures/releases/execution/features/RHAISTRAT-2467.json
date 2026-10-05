@@ -1,0 +1,29 @@
+{
+  "key": "RHAISTRAT-2467",
+  "summary": "Administration UI for setting up governed agent execution environments with workspace, policy, and credential management",
+  "status": "In Progress",
+  "statusCategory": "In Progress",
+  "priority": "Critical",
+  "components": [
+    "AgentOps",
+    "AI Core Dashboard",
+    "Documentation",
+    "UXD"
+  ],
+  "targetVersions": [
+    "3.7 GA RHOAI RELEASE"
+  ],
+  "fixVersions": [],
+  "pm": "Adel Zaalouk",
+  "assignee": {
+    "displayName": "Gage Krumbach",
+    "accountId": "70121:6ffe4358-1556-4a4e-a0d8-1f2593d39f68"
+  },
+  "labels": [],
+  "created": "2026/07/28 6:18 PM",
+  "updated": "2026/10/01 2:12 PM",
+  "architect": null,
+  "parentKey": null,
+  "colorStatus": null,
+  "ownerStatusColor": null
+}

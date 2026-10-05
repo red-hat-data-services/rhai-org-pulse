@@ -1,0 +1,26 @@
+{
+  "key": "RHAISTRAT-2641",
+  "summary": "[DRAFT] Volume and CA bundle mounting parity on Workbenches 2.0",
+  "status": "New",
+  "statusCategory": "To Do",
+  "priority": "Blocker",
+  "components": [
+    "Notebooks Server"
+  ],
+  "targetVersions": [
+    "3.7 EA RHOAI RELEASE"
+  ],
+  "fixVersions": [],
+  "pm": "",
+  "assignee": {
+    "displayName": "Adriel Paredes",
+    "accountId": "557058:8123280f-6f48-4b0f-8728-019c7db73f87"
+  },
+  "labels": [],
+  "created": "2026/08/26 12:11 AM",
+  "updated": "2026/09/17 3:04 PM",
+  "architect": null,
+  "parentKey": null,
+  "colorStatus": null,
+  "ownerStatusColor": null
+}

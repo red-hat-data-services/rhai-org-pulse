@@ -1,0 +1,26 @@
+{
+  "key": "RHAISTRAT-2525",
+  "summary": "Comparative distributed-training performance benchmark: RHOAI (Kubeflow Training) vs. bare-metal Slurm",
+  "status": "New",
+  "statusCategory": "To Do",
+  "priority": "Major",
+  "components": [
+    "Training Kubeflow"
+  ],
+  "targetVersions": [
+    "3.7 EA RHOAI RELEASE"
+  ],
+  "fixVersions": [],
+  "pm": "",
+  "assignee": {
+    "displayName": "",
+    "accountId": ""
+  },
+  "labels": [],
+  "created": "2026/08/06 12:12 PM",
+  "updated": "2026/09/17 7:31 AM",
+  "architect": null,
+  "parentKey": null,
+  "colorStatus": null,
+  "ownerStatusColor": null
+}

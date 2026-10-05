@@ -1,0 +1,27 @@
+{
+  "key": "RHAISTRAT-1500",
+  "summary": "OpenShift disconnected installations mirror to include all necessary images for OpenShift AI",
+  "status": "New",
+  "statusCategory": "To Do",
+  "priority": "Critical",
+  "components": [
+    "DevOps",
+    "TestOps"
+  ],
+  "targetVersions": [
+    "3.7 GA RHOAI RELEASE"
+  ],
+  "fixVersions": [],
+  "pm": "Myriam Fentanes Gutierrez",
+  "assignee": {
+    "displayName": "Len DiMaggio",
+    "accountId": "557058:069d71ce-813c-4fb5-a97f-e6a873b20884"
+  },
+  "labels": [],
+  "created": "2026/04/16 9:16 AM",
+  "updated": "2026/09/28 2:38 PM",
+  "architect": null,
+  "parentKey": null,
+  "colorStatus": null,
+  "ownerStatusColor": null
+}

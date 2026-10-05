@@ -1,0 +1,29 @@
+{
+  "key": "RHAISTRAT-1996",
+  "summary": "LoRA Adapter Lifecycle Management in Distributed inference with llm-d",
+  "status": "Refinement",
+  "statusCategory": "To Do",
+  "priority": "Major",
+  "components": [
+    "Documentation",
+    "llm-d",
+    "Serving Orchestration"
+  ],
+  "targetVersions": [
+    "3.7 GA  RHAII RELEASE",
+    "3.7 GA RHOAI RELEASE"
+  ],
+  "fixVersions": [],
+  "pm": "Naina Singh",
+  "assignee": {
+    "displayName": "Bartosz Majsak",
+    "accountId": "712020:4c6605d1-3c01-4e9e-b605-f994b3ea1a57"
+  },
+  "labels": [],
+  "created": "2026/06/15 2:13 AM",
+  "updated": "2026/09/29 6:41 PM",
+  "architect": null,
+  "parentKey": null,
+  "colorStatus": null,
+  "ownerStatusColor": null
+}

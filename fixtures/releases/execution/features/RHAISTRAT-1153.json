@@ -1,0 +1,29 @@
+{
+  "key": "RHAISTRAT-1153",
+  "summary": "Feature Store: Real-Time Feature Monitoring & Distribution Visualization",
+  "status": "Backlog",
+  "statusCategory": "To Do",
+  "priority": "Major",
+  "components": [
+    "AI Core Dashboard",
+    "Documentation",
+    "Feature Store",
+    "UXD"
+  ],
+  "targetVersions": [
+    "3.7 GA RHOAI RELEASE"
+  ],
+  "fixVersions": [],
+  "pm": "Jonathan Zarecki",
+  "assignee": {
+    "displayName": "Jitendra Yejare",
+    "accountId": "70121:477befce-5ca3-4a68-84b6-49b07964a721"
+  },
+  "labels": [],
+  "created": "2026/01/23 4:06 AM",
+  "updated": "2026/09/28 2:38 PM",
+  "architect": null,
+  "parentKey": null,
+  "colorStatus": null,
+  "ownerStatusColor": null
+}

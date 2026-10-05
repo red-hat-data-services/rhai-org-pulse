@@ -1,0 +1,25 @@
+{
+  "key": "RHAISTRAT-2819",
+  "summary": "vLLM Runtime on Intel Crescent Island (CRI)",
+  "status": "New",
+  "statusCategory": "To Do",
+  "priority": "Undefined",
+  "components": [],
+  "targetVersions": [
+    "3.7 GA  RHAII RELEASE",
+    "3.7 GA RHOAI RELEASE"
+  ],
+  "fixVersions": [],
+  "pm": "",
+  "assignee": {
+    "displayName": "Erwan Gallen",
+    "accountId": "62d879bb278161644007f05a"
+  },
+  "labels": [],
+  "created": "2026/09/21 10:44 AM",
+  "updated": "2026/09/24 5:35 AM",
+  "architect": null,
+  "parentKey": null,
+  "colorStatus": null,
+  "ownerStatusColor": null
+}

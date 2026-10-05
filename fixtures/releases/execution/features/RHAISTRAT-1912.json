@@ -1,0 +1,26 @@
+{
+  "key": "RHAISTRAT-1912",
+  "summary": "[Feat] Model Recommendation API in RHOAI AI Hub",
+  "status": "Refinement",
+  "statusCategory": "To Do",
+  "priority": "Major",
+  "components": [
+    "AI Hub"
+  ],
+  "targetVersions": [
+    "3.7 EA RHOAI RELEASE"
+  ],
+  "fixVersions": [],
+  "pm": "Adam Bellusci",
+  "assignee": {
+    "displayName": "",
+    "accountId": ""
+  },
+  "labels": [],
+  "created": "2026/06/10 1:31 PM",
+  "updated": "2026/09/28 11:11 AM",
+  "architect": null,
+  "parentKey": null,
+  "colorStatus": null,
+  "ownerStatusColor": null
+}

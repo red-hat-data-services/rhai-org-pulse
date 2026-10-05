@@ -1,0 +1,27 @@
+{
+  "key": "RHAISTRAT-2861",
+  "summary": "[DRAFT] [GA] General Model Infernece API Path Passthrough",
+  "status": "New",
+  "statusCategory": "To Do",
+  "priority": "Major",
+  "components": [
+    "Inference Gateway",
+    "Model as a Service"
+  ],
+  "targetVersions": [
+    "3.7 GA RHOAI RELEASE"
+  ],
+  "fixVersions": [],
+  "pm": "",
+  "assignee": {
+    "displayName": "",
+    "accountId": ""
+  },
+  "labels": [],
+  "created": "2026/09/24 12:11 PM",
+  "updated": "2026/09/24 12:31 PM",
+  "architect": null,
+  "parentKey": null,
+  "colorStatus": null,
+  "ownerStatusColor": null
+}

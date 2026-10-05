@@ -1,0 +1,26 @@
+{
+  "key": "RHAISTRAT-2390",
+  "summary": "PyTorch AMD MI455X enablement",
+  "status": "New",
+  "statusCategory": "To Do",
+  "priority": "Undefined",
+  "components": [
+    "PyTorch"
+  ],
+  "targetVersions": [
+    "3.7 GA  RHAII RELEASE"
+  ],
+  "fixVersions": [],
+  "pm": "Harshal Ghodmare",
+  "assignee": {
+    "displayName": "Joseph Groenenboom",
+    "accountId": "712020:c49017ab-8938-46cb-918e-5c92c38a20f7"
+  },
+  "labels": [],
+  "created": "2026/07/26 3:03 PM",
+  "updated": "2026/09/22 8:53 AM",
+  "architect": null,
+  "parentKey": null,
+  "colorStatus": null,
+  "ownerStatusColor": null
+}

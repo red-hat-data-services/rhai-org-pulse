@@ -1,0 +1,27 @@
+{
+  "key": "RHAISTRAT-2629",
+  "summary": "[DRAFT] PII detection and redaction as a gateway-level guardrail for model serving on OpenShift AI",
+  "status": "New",
+  "statusCategory": "To Do",
+  "priority": "Critical",
+  "components": [
+    "AI Safety",
+    "Tooling Experience"
+  ],
+  "targetVersions": [
+    "3.7 GA RHOAI RELEASE"
+  ],
+  "fixVersions": [],
+  "pm": "",
+  "assignee": {
+    "displayName": "",
+    "accountId": ""
+  },
+  "labels": [],
+  "created": "2026/08/25 6:16 PM",
+  "updated": "2026/09/28 2:37 PM",
+  "architect": null,
+  "parentKey": null,
+  "colorStatus": null,
+  "ownerStatusColor": null
+}

@@ -1,0 +1,29 @@
+{
+  "key": "RHAISTRAT-2657",
+  "summary": "[DRAFT] Per-Tenant GPU Usage Export",
+  "status": "New",
+  "statusCategory": "To Do",
+  "priority": "Critical",
+  "components": [
+    "AI Core Dashboard",
+    "AI Core Platform",
+    "AI Core Platform Security",
+    "Documentation"
+  ],
+  "targetVersions": [
+    "3.7 EA RHOAI RELEASE"
+  ],
+  "fixVersions": [],
+  "pm": "Christoph Goern",
+  "assignee": {
+    "displayName": "Andy Stoneberg",
+    "accountId": "712020:65df811d-ba95-41c2-8458-58eadd63c7e2"
+  },
+  "labels": [],
+  "created": "2026/08/26 12:20 PM",
+  "updated": "2026/09/24 4:27 PM",
+  "architect": null,
+  "parentKey": null,
+  "colorStatus": null,
+  "ownerStatusColor": null
+}

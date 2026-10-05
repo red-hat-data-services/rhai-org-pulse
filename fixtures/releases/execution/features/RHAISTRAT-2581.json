@@ -1,0 +1,27 @@
+{
+  "key": "RHAISTRAT-2581",
+  "summary": "[DRAFT] Sandbox entry point declaration and auto-restart",
+  "status": "New",
+  "statusCategory": "To Do",
+  "priority": "Critical",
+  "components": [
+    "AgentOps",
+    "Documentation"
+  ],
+  "targetVersions": [
+    "3.7 EA RHOAI RELEASE"
+  ],
+  "fixVersions": [],
+  "pm": "",
+  "assignee": {
+    "displayName": "",
+    "accountId": ""
+  },
+  "labels": [],
+  "created": "2026/08/17 6:16 AM",
+  "updated": "2026/09/22 3:30 PM",
+  "architect": null,
+  "parentKey": null,
+  "colorStatus": null,
+  "ownerStatusColor": null
+}

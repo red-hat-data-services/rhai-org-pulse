@@ -1,0 +1,26 @@
+{
+  "key": "RHAISTRAT-2784",
+  "summary": "[DRAFT] Enable Simplified and Traditional Chinese Language Support in AutoRAG",
+  "status": "New",
+  "statusCategory": "To Do",
+  "priority": "Major",
+  "components": [
+    "AutoRAG"
+  ],
+  "targetVersions": [
+    "3.7 EA RHOAI RELEASE"
+  ],
+  "fixVersions": [],
+  "pm": "",
+  "assignee": {
+    "displayName": "",
+    "accountId": ""
+  },
+  "labels": [],
+  "created": "2026/09/17 12:12 AM",
+  "updated": "2026/09/17 3:27 AM",
+  "architect": null,
+  "parentKey": null,
+  "colorStatus": null,
+  "ownerStatusColor": null
+}

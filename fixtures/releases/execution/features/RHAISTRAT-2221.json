@@ -1,0 +1,31 @@
+{
+  "key": "RHAISTRAT-2221",
+  "summary": "ToolEval Provider/ToolBench: Tool-Use Sequencing and Multi-Step Planning Evaluation in EvalHub",
+  "status": "To Do",
+  "statusCategory": "To Do",
+  "priority": "Major",
+  "components": [
+    "AI Evaluations",
+    "AI Safety"
+  ],
+  "targetVersions": [
+    "3.6 EA2 RHOAI RELEASE",
+    "3.6 GA RHOAI RELEASE",
+    "3.7 GA RHOAI RELEASE"
+  ],
+  "fixVersions": [
+    "3.6 GA RHOAI RELEASE"
+  ],
+  "pm": "William Caban Babilonia",
+  "assignee": {
+    "displayName": "Rui Vieira",
+    "accountId": "70121:5a9a760a-598b-49c2-af0e-60c52f76c598"
+  },
+  "labels": [],
+  "created": "2026/07/11 6:10 AM",
+  "updated": "2026/09/24 12:20 AM",
+  "architect": null,
+  "parentKey": null,
+  "colorStatus": null,
+  "ownerStatusColor": null
+}

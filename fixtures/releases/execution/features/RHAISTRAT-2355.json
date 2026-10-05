@@ -1,0 +1,27 @@
+{
+  "key": "RHAISTRAT-2355",
+  "summary": "[UID] EvalHub Reports — Shareable Report Access: External Read-Only Access via Report ID and Token",
+  "status": "New",
+  "statusCategory": "To Do",
+  "priority": "Major",
+  "components": [
+    "AI Core Dashboard",
+    "AI Evaluations"
+  ],
+  "targetVersions": [
+    "3.7 GA RHOAI RELEASE"
+  ],
+  "fixVersions": [],
+  "pm": "",
+  "assignee": {
+    "displayName": "Nick Mazzitelli",
+    "accountId": "712020:bc222714-c05b-4701-bd06-f13523f97cfa"
+  },
+  "labels": [],
+  "created": "2026/07/24 6:10 AM",
+  "updated": "2026/09/28 2:38 PM",
+  "architect": null,
+  "parentKey": null,
+  "colorStatus": null,
+  "ownerStatusColor": null
+}

@@ -1,0 +1,26 @@
+{
+  "key": "RHAISTRAT-1657",
+  "summary": "[GA] vLLM Runtime in MaaS",
+  "status": "New",
+  "statusCategory": "To Do",
+  "priority": "Critical",
+  "components": [
+    "Model as a Service"
+  ],
+  "targetVersions": [
+    "3.7 GA RHOAI RELEASE"
+  ],
+  "fixVersions": [],
+  "pm": "",
+  "assignee": {
+    "displayName": "Jamie Land",
+    "accountId": "557058:c0e6ed42-7d3b-4863-b463-215f84b9c1c8"
+  },
+  "labels": [],
+  "created": "2026/04/27 3:45 AM",
+  "updated": "2026/09/28 2:38 PM",
+  "architect": null,
+  "parentKey": null,
+  "colorStatus": null,
+  "ownerStatusColor": null
+}

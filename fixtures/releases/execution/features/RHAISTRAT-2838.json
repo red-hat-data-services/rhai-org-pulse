@@ -1,0 +1,34 @@
+{
+  "key": "RHAISTRAT-2838",
+  "summary": "[RHAII] vLLM Rust front-end for high-throughput low-latency inference (GA)",
+  "status": "New",
+  "statusCategory": "To Do",
+  "priority": "Critical",
+  "components": [
+    "AIPCC Ecosystems",
+    "INFERENG Midstream",
+    "Model Runtimes",
+    "vLLM",
+    "vLLM Runtime"
+  ],
+  "targetVersions": [
+    "3.7 GA  RHAII RELEASE",
+    "3.7 GA RHOAI RELEASE"
+  ],
+  "fixVersions": [
+    "3.7 GA  RHAII RELEASE",
+    "3.7 GA RHOAI RELEASE"
+  ],
+  "pm": "Erwan Gallen",
+  "assignee": {
+    "displayName": "Selbi Siddiqi",
+    "accountId": "70121:0d27b449-e70b-4a5a-819c-628f2b5a8499"
+  },
+  "labels": [],
+  "created": "2026/09/22 1:57 PM",
+  "updated": "2026/09/22 2:17 PM",
+  "architect": null,
+  "parentKey": null,
+  "colorStatus": null,
+  "ownerStatusColor": null
+}

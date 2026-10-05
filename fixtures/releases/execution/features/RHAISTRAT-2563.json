@@ -1,0 +1,26 @@
+{
+  "key": "RHAISTRAT-2563",
+  "summary": "Advanced Trace Archival: Full trace metadata offload from tracking database for archived traces",
+  "status": "Refinement",
+  "statusCategory": "To Do",
+  "priority": "Normal",
+  "components": [
+    "MLflow"
+  ],
+  "targetVersions": [
+    "3.7 EA RHOAI RELEASE"
+  ],
+  "fixVersions": [],
+  "pm": "",
+  "assignee": {
+    "displayName": "Humair Khan",
+    "accountId": "70121:a92aeb7c-74b4-4be9-9564-79c4b3078dea"
+  },
+  "labels": [],
+  "created": "2026/08/13 6:09 PM",
+  "updated": "2026/09/04 10:20 AM",
+  "architect": null,
+  "parentKey": null,
+  "colorStatus": null,
+  "ownerStatusColor": null
+}

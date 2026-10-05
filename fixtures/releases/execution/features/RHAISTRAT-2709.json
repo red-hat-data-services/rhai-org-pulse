@@ -1,0 +1,28 @@
+{
+  "key": "RHAISTRAT-2709",
+  "summary": "Top-level Kueue support for Workbenches",
+  "status": "New",
+  "statusCategory": "To Do",
+  "priority": "Critical",
+  "components": [
+    "AI Core Platform",
+    "Documentation",
+    "Notebooks Server"
+  ],
+  "targetVersions": [
+    "3.7 GA RHOAI RELEASE"
+  ],
+  "fixVersions": [],
+  "pm": "Myriam Fentanes Gutierrez",
+  "assignee": {
+    "displayName": "Andrea Tarocchi",
+    "accountId": "557058:332cb20a-7e1e-4e31-8c71-7a9262811282"
+  },
+  "labels": [],
+  "created": "2026/09/09 10:32 AM",
+  "updated": "2026/09/29 8:00 AM",
+  "architect": null,
+  "parentKey": null,
+  "colorStatus": null,
+  "ownerStatusColor": null
+}

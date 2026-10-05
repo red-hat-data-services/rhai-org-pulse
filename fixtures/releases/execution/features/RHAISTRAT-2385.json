@@ -1,0 +1,26 @@
+{
+  "key": "RHAISTRAT-2385",
+  "summary": "AMD MI455X support for RHAII inference runtime with upgrade to ROCm 7.10.1",
+  "status": "New",
+  "statusCategory": "To Do",
+  "priority": "Undefined",
+  "components": [
+    "INFERENG Midstream"
+  ],
+  "targetVersions": [
+    "3.7 GA  RHAII RELEASE"
+  ],
+  "fixVersions": [],
+  "pm": "",
+  "assignee": {
+    "displayName": "Selbi Siddiqi",
+    "accountId": "70121:0d27b449-e70b-4a5a-819c-628f2b5a8499"
+  },
+  "labels": [],
+  "created": "2026/07/26 3:03 PM",
+  "updated": "2026/09/22 5:40 PM",
+  "architect": null,
+  "parentKey": null,
+  "colorStatus": null,
+  "ownerStatusColor": null
+}

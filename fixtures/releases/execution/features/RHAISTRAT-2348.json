@@ -1,0 +1,27 @@
+{
+  "key": "RHAISTRAT-2348",
+  "summary": "Per-Tenant Cost Event Webhook",
+  "status": "New",
+  "statusCategory": "To Do",
+  "priority": "Undefined",
+  "components": [
+    "llm-d",
+    "Model as a Service"
+  ],
+  "targetVersions": [
+    "3.7 GA RHOAI RELEASE"
+  ],
+  "fixVersions": [],
+  "pm": "",
+  "assignee": {
+    "displayName": "",
+    "accountId": ""
+  },
+  "labels": [],
+  "created": "2026/07/23 6:11 PM",
+  "updated": "2026/09/28 2:38 PM",
+  "architect": null,
+  "parentKey": null,
+  "colorStatus": null,
+  "ownerStatusColor": null
+}

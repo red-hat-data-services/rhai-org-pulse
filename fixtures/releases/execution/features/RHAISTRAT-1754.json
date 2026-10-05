@@ -1,0 +1,28 @@
+{
+  "key": "RHAISTRAT-1754",
+  "summary": "Allow users to manage `spec.model.name` through Dashboard for LLM-D",
+  "status": "New",
+  "statusCategory": "To Do",
+  "priority": "Normal",
+  "components": [
+    "AI Core Dashboard",
+    "llm-d",
+    "Serving Orchestration"
+  ],
+  "targetVersions": [
+    "3.7 EA RHOAI RELEASE"
+  ],
+  "fixVersions": [],
+  "pm": "",
+  "assignee": {
+    "displayName": "Andrew Ballantyne",
+    "accountId": "5fdb88f09edf280075ce339d"
+  },
+  "labels": [],
+  "created": "2026/05/10 8:11 AM",
+  "updated": "2026/10/02 9:07 AM",
+  "architect": null,
+  "parentKey": null,
+  "colorStatus": null,
+  "ownerStatusColor": null
+}

@@ -1,0 +1,30 @@
+{
+  "key": "RHAISTRAT-2237",
+  "summary": "Snapshot Restore for llm-d",
+  "status": "New",
+  "statusCategory": "To Do",
+  "priority": "Major",
+  "components": [
+    "Documentation",
+    "llm-d",
+    "Serving Orchestration",
+    "vLLM",
+    "vLLM Runtime"
+  ],
+  "targetVersions": [
+    "3.7 GA RHOAI RELEASE"
+  ],
+  "fixVersions": [],
+  "pm": "Naina Singh",
+  "assignee": {
+    "displayName": "Omer Aplatony",
+    "accountId": "712020:ef626f78-443a-41a0-b90c-b6e85bd9294d"
+  },
+  "labels": [],
+  "created": "2026/07/14 3:56 PM",
+  "updated": "2026/09/23 2:56 PM",
+  "architect": null,
+  "parentKey": null,
+  "colorStatus": null,
+  "ownerStatusColor": null
+}

@@ -1,0 +1,27 @@
+{
+  "key": "RHAISTRAT-1993",
+  "summary": "MCP Registry General Availability",
+  "status": "Refinement",
+  "statusCategory": "To Do",
+  "priority": "Critical",
+  "components": [
+    "AI Core Dashboard",
+    "AI Hub"
+  ],
+  "targetVersions": [
+    "3.7 EA RHOAI RELEASE"
+  ],
+  "fixVersions": [],
+  "pm": "Peter Double",
+  "assignee": {
+    "displayName": "",
+    "accountId": ""
+  },
+  "labels": [],
+  "created": "2026/06/15 12:10 AM",
+  "updated": "2026/09/22 8:50 AM",
+  "architect": null,
+  "parentKey": null,
+  "colorStatus": null,
+  "ownerStatusColor": null
+}

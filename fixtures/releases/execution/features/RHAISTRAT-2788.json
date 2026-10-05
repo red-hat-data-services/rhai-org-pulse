@@ -1,0 +1,28 @@
+{
+  "key": "RHAISTRAT-2788",
+  "summary": "[DRAFT] Non-skill plugin components are visible to governance",
+  "status": "New",
+  "statusCategory": "To Do",
+  "priority": "Normal",
+  "components": [
+    "AI Core Dashboard",
+    "AI Hub",
+    "MLflow"
+  ],
+  "targetVersions": [
+    "3.7 GA RHOAI RELEASE"
+  ],
+  "fixVersions": [],
+  "pm": "",
+  "assignee": {
+    "displayName": "",
+    "accountId": ""
+  },
+  "labels": [],
+  "created": "2026/09/17 12:12 AM",
+  "updated": "2026/09/17 4:47 AM",
+  "architect": null,
+  "parentKey": null,
+  "colorStatus": null,
+  "ownerStatusColor": null
+}

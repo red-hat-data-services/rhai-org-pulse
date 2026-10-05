@@ -1,0 +1,27 @@
+{
+  "key": "RHAISTRAT-2341",
+  "summary": "EvalHub Reports — Report Spec./Template: User-Defined Evaluation Report Specification API Object",
+  "status": "New",
+  "statusCategory": "To Do",
+  "priority": "Major",
+  "components": [
+    "AI Core Dashboard",
+    "AI Evaluations"
+  ],
+  "targetVersions": [
+    "3.7 GA RHOAI RELEASE"
+  ],
+  "fixVersions": [],
+  "pm": "William Caban Babilonia",
+  "assignee": {
+    "displayName": "Prabhu Padashetty",
+    "accountId": "712020:6558af4f-f52e-4eb8-b552-8e0c5027ba10"
+  },
+  "labels": [],
+  "created": "2026/07/23 12:10 PM",
+  "updated": "2026/09/28 2:38 PM",
+  "architect": null,
+  "parentKey": null,
+  "colorStatus": null,
+  "ownerStatusColor": null
+}

@@ -1,0 +1,27 @@
+{
+  "key": "RHAISTRAT-2201",
+  "summary": "[Phase 2] Benchmarking Model as a Service with Multiple vLLM Instances via llm-d for Model Validation Teams",
+  "status": "New",
+  "statusCategory": "To Do",
+  "priority": "Normal",
+  "components": [
+    "Model as a Service",
+    "Model Validation"
+  ],
+  "targetVersions": [
+    "3.7 GA RHOAI RELEASE"
+  ],
+  "fixVersions": [],
+  "pm": "Rob Greenberg",
+  "assignee": {
+    "displayName": "Mark Vaykhansky",
+    "accountId": "712020:b6ae79e4-1561-4377-9f24-6fe7d4181c90"
+  },
+  "labels": [],
+  "created": "2026/07/08 12:14 AM",
+  "updated": "2026/09/22 3:23 PM",
+  "architect": null,
+  "parentKey": null,
+  "colorStatus": null,
+  "ownerStatusColor": null
+}

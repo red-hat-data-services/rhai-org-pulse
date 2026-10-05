@@ -1,0 +1,31 @@
+{
+  "key": "RHAISTRAT-2412",
+  "summary": "[RHAII GA] vLLM Omni for Productized Serving and Voice Agent Quality",
+  "status": "In Progress",
+  "statusCategory": "In Progress",
+  "priority": "Major",
+  "components": [
+    "AIPCC Productization",
+    "INFERENG Midstream",
+    "vLLM Runtime"
+  ],
+  "targetVersions": [
+    "3.7 GA  RHAII RELEASE"
+  ],
+  "fixVersions": [
+    "3.7 GA  RHAII RELEASE",
+    "3.7 GA RHOAI RELEASE"
+  ],
+  "pm": "Erwan Gallen",
+  "assignee": {
+    "displayName": "Selbi Siddiqi",
+    "accountId": "70121:0d27b449-e70b-4a5a-819c-628f2b5a8499"
+  },
+  "labels": [],
+  "created": "2026/07/27 2:22 PM",
+  "updated": "2026/09/26 8:00 PM",
+  "architect": null,
+  "parentKey": null,
+  "colorStatus": null,
+  "ownerStatusColor": null
+}

@@ -1,0 +1,27 @@
+{
+  "key": "RHAISTRAT-2785",
+  "summary": "[DRAFT] Report prefill and decode latency separately in Model Catalog performance benchmarks",
+  "status": "New",
+  "statusCategory": "To Do",
+  "priority": "Major",
+  "components": [
+    "AI Hub",
+    "Model Validation"
+  ],
+  "targetVersions": [
+    "3.7 GA RHOAI RELEASE"
+  ],
+  "fixVersions": [],
+  "pm": "",
+  "assignee": {
+    "displayName": "",
+    "accountId": ""
+  },
+  "labels": [],
+  "created": "2026/09/17 12:12 AM",
+  "updated": "2026/09/17 3:44 AM",
+  "architect": null,
+  "parentKey": null,
+  "colorStatus": null,
+  "ownerStatusColor": null
+}

@@ -1,0 +1,27 @@
+{
+  "key": "RHAISTRAT-2603",
+  "summary": "[DRAFT] Tenant context switching for multi-tenant MaaS Dashboard",
+  "status": "New",
+  "statusCategory": "To Do",
+  "priority": "Critical",
+  "components": [
+    "AI Core Dashboard",
+    "UXD"
+  ],
+  "targetVersions": [
+    "3.7 EA RHOAI RELEASE"
+  ],
+  "fixVersions": [],
+  "pm": "",
+  "assignee": {
+    "displayName": "",
+    "accountId": ""
+  },
+  "labels": [],
+  "created": "2026/08/20 12:09 PM",
+  "updated": "2026/09/22 1:08 PM",
+  "architect": null,
+  "parentKey": null,
+  "colorStatus": null,
+  "ownerStatusColor": null
+}

@@ -1,0 +1,26 @@
+{
+  "key": "RHAISTRAT-2391",
+  "summary": "AMD MI455X support for llm-d",
+  "status": "New",
+  "statusCategory": "To Do",
+  "priority": "Undefined",
+  "components": [
+    "llm-d"
+  ],
+  "targetVersions": [
+    "3.7 GA  RHAII RELEASE"
+  ],
+  "fixVersions": [],
+  "pm": "",
+  "assignee": {
+    "displayName": "",
+    "accountId": ""
+  },
+  "labels": [],
+  "created": "2026/07/26 3:03 PM",
+  "updated": "2026/09/22 5:40 PM",
+  "architect": null,
+  "parentKey": null,
+  "colorStatus": null,
+  "ownerStatusColor": null
+}
