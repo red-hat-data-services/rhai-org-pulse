@@ -1,4 +1,5 @@
-import { expect, test } from 'vitest';
+import assert from 'node:assert/strict';
+import test from 'node:test';
 
 import {
   MAINTAINER_TEAM,
@@ -6,7 +7,7 @@ import {
   evaluateOwnership,
   ownersForPath,
   parseCodeowners
-} from '../scripts/ownership-gate.mjs';
+} from './ownership-gate.mjs';
 
 const CODEOWNERS = `
 * @red-hat-data-services/org-pulse-maintainers
@@ -32,9 +33,10 @@ function evaluate({ authorLogin, changedFiles, approvedReviewers = [] }) {
 
 test('the final CODEOWNERS match preserves an explicit no-owner exception', () => {
   const entries = parseCodeowners(CODEOWNERS);
-  expect(
-    ownersForPath(entries, 'deploy/openshift/overlays/ai-eng-prod/kustomization.yaml')
-  ).toEqual([]);
+  assert.deepEqual(
+    ownersForPath(entries, 'deploy/openshift/overlays/ai-eng-prod/kustomization.yaml'),
+    []
+  );
 });
 
 test('an individual code owner can merge their own module change', () => {
@@ -43,8 +45,8 @@ test('an individual code owner can merge their own module change', () => {
     changedFiles: ['modules/okr-hub/client/Dashboard.vue']
   });
 
-  expect(result.passed).toBe(true);
-  expect(result.areas[0].authorOwns).toBe(true);
+  assert.equal(result.passed, true);
+  assert.equal(result.areas[0].authorOwns, true);
 });
 
 test('a non-owner needs approval from a matching owner', () => {
@@ -52,15 +54,15 @@ test('a non-owner needs approval from a matching owner', () => {
     authorLogin: 'accorvin',
     changedFiles: ['modules/okr-hub/client/Dashboard.vue']
   });
-  expect(blocked.passed).toBe(false);
+  assert.equal(blocked.passed, false);
 
   const approved = evaluate({
     authorLogin: 'accorvin',
     changedFiles: ['modules/okr-hub/client/Dashboard.vue'],
     approvedReviewers: ['saprabhu05']
   });
-  expect(approved.passed).toBe(true);
-  expect(approved.areas[0].approver).toBe('saprabhu05');
+  assert.equal(approved.passed, true);
+  assert.equal(approved.areas[0].approver, 'saprabhu05');
 });
 
 test('an approval from a different ownership area does not satisfy the gate', () => {
@@ -70,7 +72,7 @@ test('an approval from a different ownership area does not satisfy the gate', ()
     approvedReviewers: ['wznoinsk']
   });
 
-  expect(result.passed).toBe(false);
+  assert.equal(result.passed, false);
 });
 
 test('an owner spanning all changed modules needs no approval', () => {
@@ -82,8 +84,8 @@ test('an owner spanning all changed modules needs no approval', () => {
     ]
   });
 
-  expect(result.passed).toBe(true);
-  expect(result.areas.every(area => area.authorOwns)).toBe(true);
+  assert.equal(result.passed, true);
+  assert.ok(result.areas.every(area => area.authorOwns));
 });
 
 test('a maintainer owns shared fallback areas', () => {
@@ -92,7 +94,7 @@ test('a maintainer owns shared fallback areas', () => {
     changedFiles: ['server/index.js']
   });
 
-  expect(result.passed).toBe(true);
+  assert.equal(result.passed, true);
 });
 
 test('policy files require an independent maintainer approval', () => {
@@ -100,15 +102,15 @@ test('policy files require an independent maintainer approval', () => {
     authorLogin: 'accorvin',
     changedFiles: ['.github/CODEOWNERS']
   });
-  expect(blocked.passed).toBe(false);
-  expect(blocked.areas[0].kind).toBe('policy');
+  assert.equal(blocked.passed, false);
+  assert.equal(blocked.areas[0].kind, 'policy');
 
   const approved = evaluate({
     authorLogin: 'accorvin',
     changedFiles: ['.github/CODEOWNERS'],
     approvedReviewers: ['saprabhu05']
   });
-  expect(approved.passed).toBe(true);
+  assert.equal(approved.passed, true);
 });
 
 test('intentionally unowned deployment paths require an independent maintainer approval', () => {
@@ -116,15 +118,15 @@ test('intentionally unowned deployment paths require an independent maintainer a
     authorLogin: 'accorvin',
     changedFiles: ['deploy/openshift/overlays/ai-eng-prod/kustomization.yaml']
   });
-  expect(blocked.passed).toBe(false);
-  expect(blocked.areas[0].kind).toBe('unowned');
+  assert.equal(blocked.passed, false);
+  assert.equal(blocked.areas[0].kind, 'unowned');
 
   const approved = evaluate({
     authorLogin: 'accorvin',
     changedFiles: ['deploy/openshift/overlays/ai-eng-prod/kustomization.yaml'],
     approvedReviewers: ['saprabhu05']
   });
-  expect(approved.passed).toBe(true);
+  assert.equal(approved.passed, true);
 });
 
 test('only current-head approvals are eligible', () => {
@@ -152,7 +154,7 @@ test('only current-head approvals are eligible', () => {
     authorLogin: 'accorvin'
   });
 
-  expect(approvers).toEqual(['wznoinsk']);
+  assert.deepEqual(approvers, ['wznoinsk']);
 });
 
 test('a later non-approval on the current head supersedes an earlier approval', () => {
@@ -174,5 +176,5 @@ test('a later non-approval on the current head supersedes an earlier approval', 
     authorLogin: 'accorvin'
   });
 
-  expect(approvers).toEqual([]);
+  assert.deepEqual(approvers, []);
 });
