@@ -1123,7 +1123,7 @@ All fix versions with release dates from tracked projects (RHOAIENG, AIPCC, RHAI
 
 ## Releases — Quality Bugs (`data/releases/delivery/quality/bugs-{PROJECT}.json`)
 
-Blocker/Critical/Major bugs with affected versions, per project. Only bugs created >= version release date (post-release discovery).
+Jira bugs with affected versions, per project. Only bugs created >= version release date (post-release discovery).
 
 ```json
 [
@@ -1144,7 +1144,7 @@ Blocker/Critical/Major bugs with affected versions, per project. Only bugs creat
 **Fields:**
 - `key` (string): Jira issue key
 - `summary` (string): Issue summary
-- `priority` (string): Priority name (Blocker, Critical, or Major)
+- `priority` (string): Jira priority name (for example, Blocker, Critical, Major, or Minor)
 - `status` (string): Current Jira status
 - `affectedVersions` (string[]): Array of version names this bug affects
 - `components` (string[]): Array of component names
@@ -1164,6 +1164,8 @@ Blocker/Critical/Major bugs with affected versions, per project. Only bugs creat
 
 **Note:** Components are computed dynamically from bug files by the `GET /api/modules/releases/delivery/quality/components` endpoint. No stored `components.json` file exists.
 
+The quality bugs endpoint accepts a comma-separated `component` query parameter. When multiple component names are supplied, a bug is included when it belongs to at least one selected component.
+
 The API response format:
 
 ```json
@@ -1181,9 +1183,31 @@ The API response format:
 
 ---
 
+## Releases — Quality Priorities (API Response)
+
+**Note:** Priorities are computed dynamically from the Jira bug cache by the
+`GET /api/modules/releases/delivery/quality/priorities` endpoint. The endpoint
+returns the priority names currently present in the cached Jira issues so the
+post-release defects report can filter by the same values.
+
+```json
+[
+  { "name": "Critical", "count": 28 },
+  { "name": "Major", "count": 17 },
+  { "name": "Blocker", "count": 3 }
+]
+```
+
+**Fields:**
+- `name` (string): Jira priority name
+- `count` (number): Number of cached bugs with that priority
+- Sorted by count descending, then name ascending
+
+---
+
 ## Releases — Quality 90-Day Summary (API Response)
 
-**Note:** Computed dynamically by the `GET /api/modules/releases/delivery/quality/90day-summary` endpoint from stored versions and bug files. No stored file — data is derived at request time.
+**Note:** Computed dynamically by the `POST /api/modules/releases/delivery/quality/90day-summary` endpoint from the user-saved version names and released dates in `okr-hub/90day-tracking-config.json` plus the cached bug files. No automatic Jira version discovery is used.
 
 The API response format:
 
@@ -1233,7 +1257,37 @@ The API response format:
 - `isComplete` (boolean): Whether the 90-day tracking window has closed
 - `releaseDate` (string): ISO date (YYYY-MM-DD) of the GA release
 
-Releases are sorted descending by version number (newest first). Only major versions (X.X) are included; z-stream versions (e.g., 3.3.1) are excluded.
+The release groups and product/version names are entirely user-configured. Each configured version is tracked for 90 days from its supplied released date; `daysElapsed` is capped at 90 and `isComplete` becomes true at the end of that window.
+
+---
+
+## OKR Hub — 90-Day Tracking Configuration (`data/okr-hub/90day-tracking-config.json`)
+
+Stores the release charts shown in the OKR Hub post-release bug report. Users
+configure each release group, the exact Jira `affectedVersion` names to track,
+and each version's released date. A removed release group is no longer shown
+in the report; there is no automatic Jira-version fallback.
+
+```json
+{
+  "releases": [
+    {
+      "version": "3.6",
+      "products": [
+        { "name": "rhoai-3.6", "gaDate": "2026-09-12" },
+        { "name": "rhelai-3.6", "gaDate": "2026-09-12" }
+      ]
+    }
+  ]
+}
+```
+
+**Fields:**
+- `releases` (array): User-defined release chart groups
+- `version` (string): Display name for the release group
+- `products` (array): Exact Jira affected-version entries included in the group
+- `products[].name` (string): Jira `affectedVersion` name
+- `products[].gaDate` (string): Released date in ISO format (`YYYY-MM-DD`)
 
 ---
 
@@ -1793,6 +1847,75 @@ JSON Lines format (one JSON object per line). Partitioned by month for efficient
   "emails": ["user-who-opted-out@redhat.com"]
 }
 ```
+
+---
+
+## Releases — CHI Hierarchy (`data/releases/chi-hierarchy/latest.json`)
+
+Pre-computed Container Health Index hierarchy for Org Pulse (RHOAIENG-97404). Dual-environment snapshot: **Prod** from `catalog.redhat.com`, **Stage** from `pyxis.stage.engineering.redhat.com` (Kerberos in the collector). Hierarchy: Product version → Components → Images.
+
+Fixture: `fixtures/releases/chi-hierarchy/latest.json`.
+
+```json
+{
+  "fetchedAt": "2026-09-30T18:00:00.000Z",
+  "activeStreams": ["rhoai-2.25", "rhoai-3.3", "rhoai-3.4", "rhoai-3.5"],
+  "environments": {
+    "prod": {
+      "fetchedAt": "2026-09-30T18:00:00.000Z",
+      "source": "catalog.redhat.com",
+      "versions": [{
+        "id": "rhoai-3.5",
+        "tag": "v3.5",
+        "summary": {
+          "imageCount": 3,
+          "gradeDistribution": { "A": 1, "B": 1, "D": 1 },
+          "critical": 0,
+          "important": 14,
+          "staleImageCount": 1
+        },
+        "components": [{
+          "name": "AI Core Dashboard",
+          "summary": {
+            "imageCount": 1,
+            "worstGrade": "B",
+            "critical": 0,
+            "important": 11,
+            "oldestImageAgeDays": 9
+          },
+          "images": [{
+            "name": "odh-dashboard-rhel9",
+            "grade": "B",
+            "gradeDate": "2026-09-21",
+            "vulnerabilityCount": 21,
+            "advisories": { "Critical": 0, "Important": 11, "Moderate": 9, "Low": 1 },
+            "catalogUrl": "https://catalog.redhat.com/software/containers/rhoai/odh-dashboard-rhel9",
+            "lastUpdated": "2026-09-21",
+            "ageDays": 9
+          }]
+        }]
+      }]
+    },
+    "stage": {
+      "fetchedAt": "2026-09-30T17:30:00.000Z",
+      "source": "pyxis.stage.engineering.redhat.com",
+      "versions": []
+    }
+  }
+}
+```
+
+| Method | Path | Auth | Purpose |
+|--------|------|------|---------|
+| GET | `/api/modules/releases/chi-hierarchy/data` | `releases:read` | Full dual-env snapshot |
+| GET | `/api/modules/releases/chi-hierarchy/status` | `releases:read` | Upload / env summary |
+| POST | `/api/modules/releases/chi-hierarchy/bulk` | `releases:write` | Pipeline ingest (skipped in `DEMO_MODE`) |
+
+Image staleness: `ageDays > 14` is treated as stale in the UI. `grade` / `gradeDate` / `vulnerabilityCount` align with legacy AIPCC `HealthIndex`.
+
+**Collector / join:** External CHI pipeline (`generate_chi_report.py` + `build_chi_hierarchy.py`) joins catalog/Stage Pyxis images to ProdSec `openshift-ai` `components.override` (strip `rhoai/`). See CHI repo `PIPELINE.md`. Org Pulse does not call Pyxis or ps_modules at runtime.
+
+**Onboarding new versions:** See [CHI-HIERARCHY.md](./CHI-HIERARCHY.md) — versions come from ProdSec `active_ps_update_streams`; no Org Pulse code change is needed when the stream and catalog tags exist.
 
 ---
 

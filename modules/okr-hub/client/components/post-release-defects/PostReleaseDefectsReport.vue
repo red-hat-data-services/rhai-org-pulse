@@ -23,7 +23,11 @@
     <template v-else>
       <!-- Stepped Filter Interface - Horizontal -->
       <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6 mb-6">
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div class="mb-5">
+          <h2 class="text-lg font-semibold" id="bug-trend-filters-heading">Bug Trend Filters</h2>
+          <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">These filters apply only to the cumulative bug trend and summary statistics. They do not change the 90-day post-release tracking below.</p>
+        </div>
+        <div class="grid grid-cols-1 lg:grid-cols-4 gap-6">
           <!-- Step 1: Product Selection -->
           <div class="relative">
             <div class="flex items-center gap-2 mb-3">
@@ -67,7 +71,7 @@
           </div>
 
           <!-- Step 3: Component Filter (optional) -->
-          <div v-if="selectedVersions.length > 0 || selectedComponent" class="relative">
+          <div class="relative">
             <div class="flex items-center gap-2 mb-3">
               <div class="flex items-center justify-center w-7 h-7 rounded-full bg-gray-400 dark:bg-gray-600 text-white text-sm font-semibold flex-shrink-0">
                 3
@@ -76,15 +80,43 @@
             </div>
             <div class="pl-9">
               <ComponentFilter
-                v-model="selectedComponent"
+                v-model="selectedComponents"
                 :components="allComponents"
+              />
+            </div>
+          </div>
+
+          <!-- Step 4: Priority Filter (optional) -->
+          <div class="relative">
+            <div class="flex items-center gap-2 mb-3">
+              <div class="flex items-center justify-center w-7 h-7 rounded-full bg-gray-400 dark:bg-gray-600 text-white text-sm font-semibold flex-shrink-0">
+                4
+              </div>
+              <h3 class="text-base font-semibold">Priority <span class="text-xs font-normal text-gray-500">(optional)</span></h3>
+            </div>
+            <div class="pl-9">
+              <PriorityFilter
+                v-model="selectedPriorities"
+                :priorities="allPriorities"
               />
             </div>
           </div>
         </div>
       </div>
 
-      <div v-if="selectedVersions.length > 0" class="bg-white dark:bg-gray-800 rounded-lg shadow p-6 mb-6">
+      <div v-if="selectedVersions.length > 0 && selectedReleasedVersions.length === 0 && selectedUnreleasedVersions.length > 0" class="bg-white dark:bg-gray-800 rounded-lg shadow p-6 mb-6">
+        <h2 class="text-lg font-semibold mb-4">Release data not available yet</h2>
+        <div class="rounded-lg border border-amber-200 bg-amber-50 dark:border-amber-800 dark:bg-amber-900/20 px-4 py-4 text-sm text-amber-800 dark:text-amber-200">
+          <p class="font-medium">{{ selectedUnreleasedVersions.join(', ') }} {{ selectedUnreleasedVersions.length === 1 ? 'has' : 'have' }} not been released yet.</p>
+          <p class="mt-1">Cumulative bug trends and summary statistics will appear after the release.</p>
+        </div>
+      </div>
+
+      <div v-else-if="selectedVersions.length > 0" class="bg-white dark:bg-gray-800 rounded-lg shadow p-6 mb-6">
+        <div v-if="selectedUnreleasedVersions.length > 0" class="mb-4 rounded-lg border border-amber-200 bg-amber-50 dark:border-amber-800 dark:bg-amber-900/20 px-4 py-3 text-sm text-amber-800 dark:text-amber-200">
+          <p class="font-medium">Unreleased versions are excluded from the graph: {{ selectedUnreleasedVersions.join(', ') }}.</p>
+          <p class="mt-1">Their cumulative bug trends will appear after the release.</p>
+        </div>
         <h2 class="text-lg font-semibold mb-4">Cumulative Bug Count vs Days Since Release</h2>
         <div class="h-96">
           <CumulativeBugChart
@@ -94,11 +126,11 @@
         </div>
       </div>
 
-      <div v-else class="text-center py-12 text-gray-500 dark:text-gray-400">
+      <div v-else-if="selectedVersions.length === 0" class="text-center py-12 text-gray-500 dark:text-gray-400">
         <p>Select versions to view cumulative bug trends</p>
       </div>
 
-      <div v-if="selectedVersions.length > 0" class="bg-white dark:bg-gray-800 rounded-lg shadow p-6 mb-6">
+      <div v-if="selectedReleasedVersions.length > 0" class="bg-white dark:bg-gray-800 rounded-lg shadow p-6 mb-6">
         <h2 class="text-lg font-semibold mb-4">Summary Statistics</h2>
         <table class="w-full">
           <thead>
@@ -134,7 +166,7 @@
             </svg>
           </button>
         </div>
-        <p class="text-xs text-gray-500 dark:text-gray-400 mb-5">Bugs created within 90 days of each version's GA date. Versions under 90 days show elapsed days.</p>
+        <p class="text-xs text-gray-500 dark:text-gray-400 mb-5">Bugs created within 90 days of each configured version's release date. This section is independent of the filters above; use the gear icon to manage its version names and release dates.</p>
 
         <!-- Settings Panel -->
         <div v-if="showTrackingSettings" class="mb-6 border border-blue-200 dark:border-blue-800 rounded-lg bg-blue-50/50 dark:bg-blue-900/10 p-4">
@@ -204,7 +236,7 @@
           </div>
 
           <div v-if="editableConfig.length === 0" class="text-center py-4 text-sm text-gray-500 dark:text-gray-400">
-            No release configuration. Click "+ Add Release" to get started, or close settings to use auto-detected versions.
+            No release configuration. Click "+ Add Release" to define a version name and released date.
           </div>
 
           <div class="mt-3 flex items-center justify-between">
@@ -212,9 +244,9 @@
               v-if="editableConfig.length > 0"
               @click="clearConfig"
               class="px-3 py-1.5 text-xs text-gray-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded transition-colors"
-            >Clear All (use auto-detected)</button>
+            >Clear All</button>
             <span v-else></span>
-            <span class="text-xs text-gray-400">Version names map to Jira affectedVersion field</span>
+            <span class="text-xs text-gray-400">Version names map to Jira affectedVersion field; dates define the 90-day window.</span>
           </div>
         </div>
 
@@ -224,23 +256,32 @@
 
         <div v-else class="space-y-3">
           <div v-for="rel in trackingData" :key="rel.version" class="border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden">
-            <button
-              class="w-full flex items-center justify-between px-4 py-3 bg-gray-50 dark:bg-gray-800/60 hover:bg-gray-100 dark:hover:bg-gray-700/50 transition-colors text-left"
-              @click="toggleTracking(rel.version)"
-            >
-              <div class="flex items-center gap-2">
-                <svg
-                  class="w-4 h-4 text-gray-400 transition-transform duration-200"
-                  :class="{ 'rotate-90': isTrackingOpen(rel.version) }"
-                  fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"
-                >
-                  <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7" />
-                </svg>
-                <span class="font-semibold text-sm text-gray-900 dark:text-gray-100">Release {{ rel.version }}</span>
-                <span v-if="!rel.isAllComplete" class="text-xs text-amber-600 dark:text-amber-400 font-medium">({{ rel.maxDaysElapsed }} days)</span>
-              </div>
-              <span class="text-sm font-bold" :class="rel.total > 0 ? 'text-red-600 dark:text-red-400' : 'text-emerald-600 dark:text-emerald-400'">{{ rel.total }} bugs</span>
-            </button>
+            <div class="flex items-stretch bg-gray-50 dark:bg-gray-800/60">
+              <button
+                class="flex-1 flex items-center justify-between px-4 py-3 hover:bg-gray-100 dark:hover:bg-gray-700/50 transition-colors text-left"
+                @click="toggleTracking(rel.version)"
+              >
+                <div class="flex items-center gap-2">
+                  <svg
+                    class="w-4 h-4 text-gray-400 transition-transform duration-200"
+                    :class="{ 'rotate-90': isTrackingOpen(rel.version) }"
+                    fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"
+                  >
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7" />
+                  </svg>
+                  <span class="font-semibold text-sm text-gray-900 dark:text-gray-100">Release {{ rel.version }}</span>
+                  <span v-if="!rel.isAllComplete" class="text-xs text-amber-600 dark:text-amber-400 font-medium">({{ rel.maxDaysElapsed }} days)</span>
+                </div>
+                <span class="text-sm font-bold" :class="rel.total > 0 ? 'text-red-600 dark:text-red-400' : 'text-emerald-600 dark:text-emerald-400'">{{ rel.total }} bugs</span>
+              </button>
+              <button
+                v-if="canEdit"
+                type="button"
+                class="px-4 text-xs text-red-500 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
+                title="Delete this release chart"
+                @click="deleteReleaseChart(rel.version)"
+              >Delete</button>
+            </div>
 
             <div v-show="isTrackingOpen(rel.version)">
               <table class="w-full text-sm">
@@ -286,8 +327,9 @@ import { useAuth } from '@shared/client/composables/useAuth';
 import { useOkrPermissions } from '../../composables/useOkrPermissions';
 import VersionSelector from './VersionSelector.vue';
 import ComponentFilter from './ComponentFilter.vue';
+import PriorityFilter from './PriorityFilter.vue';
 import CumulativeBugChart from './CumulativeBugChart.vue';
-import { getVersions, getBugData, getComponents, refreshData, get90DaySummary, get90DayTrackingConfig, save90DayTrackingConfig } from './api';
+import { getVersions, getBugData, getComponents, getPriorities, refreshData, get90DaySummary, get90DayTrackingConfig, save90DayTrackingConfig } from './api';
 import { extractProduct } from './release-utils';
 
 const { isAdmin } = useAuth();
@@ -295,9 +337,11 @@ const { canEdit } = useOkrPermissions();
 
 const versions = ref([]);
 const allComponents = ref([]);
+const allPriorities = ref([]);
 const selectedProduct = ref('');
 const selectedVersions = ref([]);
-const selectedComponent = ref(null);
+const selectedComponents = ref([]);
+const selectedPriorities = ref([]);
 const chartData = ref({ labels: [], datasets: [] });
 const loading = ref(true);
 const refreshing = ref(false);
@@ -313,6 +357,12 @@ const trackingConfig = ref(null);
 const editableConfig = ref([]);
 const savingConfig = ref(false);
 const configError = ref(null);
+
+const selectedUnreleasedVersions = computed(() => versions.value
+  .filter(version => selectedVersions.value.includes(version.name) && version.released === false)
+  .map(version => version.name));
+const selectedReleasedVersions = computed(() => selectedVersions.value
+  .filter(versionName => !selectedUnreleasedVersions.value.includes(versionName)));
 
 const products = computed(() => {
   const productSet = new Set();
@@ -332,7 +382,8 @@ const filteredVersions = computed(() => {
 
 watch(selectedProduct, () => {
   selectedVersions.value = [];
-  selectedComponent.value = null;
+  selectedComponents.value = [];
+  selectedPriorities.value = [];
 });
 
 onMounted(async () => {
@@ -340,13 +391,15 @@ onMounted(async () => {
     error.value = null;
     loading.value = true;
 
-    allComponents.value = await getComponents();
-    versions.value = await getVersions();
+    const [components, priorityOptions, releaseVersions] = await Promise.all([
+      getComponents(),
+      getPriorities(),
+      getVersions()
+    ]);
+    allComponents.value = components;
+    allPriorities.value = priorityOptions;
+    versions.value = releaseVersions;
 
-    const versionsWithBugs = versions.value.filter(v => v.bugCount > 0);
-    if (versionsWithBugs.length > 0) {
-      selectedVersions.value = versionsWithBugs.slice(0, 3).map(v => v.name);
-    }
   } catch (err) {
     console.error('[quality] Failed to load initial data:', err);
     error.value = err.message || 'Failed to load quality metrics data';
@@ -366,17 +419,21 @@ async function load90DayTracking() {
     try {
       const cfg = await get90DayTrackingConfig();
       trackingConfig.value = cfg;
-      if (cfg && cfg.releases && cfg.releases.length > 0) {
-        editableConfig.value = JSON.parse(JSON.stringify(cfg.releases));
-      }
+      editableConfig.value = cfg && Array.isArray(cfg.releases)
+        ? JSON.parse(JSON.stringify(cfg.releases))
+        : [];
     } catch (cfgErr) { // eslint-disable-line no-unused-vars
       trackingConfig.value = null;
+      editableConfig.value = [];
     }
 
-    const configToSend = trackingConfig.value && trackingConfig.value.releases && trackingConfig.value.releases.length > 0
-      ? trackingConfig.value
-      : null;
-    const result = await get90DaySummary(configToSend);
+    if (!trackingConfig.value || !Array.isArray(trackingConfig.value.releases) || trackingConfig.value.releases.length === 0) {
+      trackingData.value = [];
+      openTrackingSections.value = {};
+      return;
+    }
+
+    const result = await get90DaySummary(trackingConfig.value);
     const releases = result.releases || [];
     for (const rel of releases) {
       rel.isAllComplete = rel.products.every(function(p) { return p.isComplete; });
@@ -415,6 +472,13 @@ function addRelease() {
 
 function removeRelease(ri) {
   editableConfig.value.splice(ri, 1);
+}
+
+async function deleteReleaseChart(version) {
+  const index = editableConfig.value.findIndex(function(rel) { return rel.version === version; });
+  if (index < 0) return;
+  editableConfig.value.splice(index, 1);
+  await saveTrackingConfig();
 }
 
 function addProduct(ri) {
@@ -470,26 +534,30 @@ async function clearConfig() {
   }
 }
 
-watch(selectedComponent, async () => {
+async function loadChartData() {
   try {
     error.value = null;
 
-    if (selectedVersions.value.length > 0) {
-      const response = await getBugData(selectedVersions.value, selectedComponent.value);
+    if (selectedReleasedVersions.value.length > 0) {
+      const response = await getBugData(selectedReleasedVersions.value, selectedComponents.value, selectedPriorities.value);
       chartData.value = { labels: response.labels, datasets: response.datasets };
+    } else {
+      chartData.value = { labels: [], datasets: [] };
     }
   } catch (err) {
-    console.error('[quality] Failed to filter by component:', err);
-    error.value = err.message || 'Failed to filter chart data by component';
+    console.error('[quality] Failed to filter bug data:', err);
+    error.value = err.message || 'Failed to filter chart data';
   }
-});
+}
+
+watch([selectedComponents, selectedPriorities], loadChartData, { deep: true });
 
 watch(selectedVersions, async () => {
   try {
     error.value = null;
 
-    if (selectedVersions.value.length > 0) {
-      const response = await getBugData(selectedVersions.value, selectedComponent.value);
+    if (selectedReleasedVersions.value.length > 0) {
+      const response = await getBugData(selectedReleasedVersions.value, selectedComponents.value, selectedPriorities.value);
       chartData.value = { labels: response.labels, datasets: response.datasets };
     } else {
       chartData.value = { labels: [], datasets: [] };
@@ -521,12 +589,20 @@ async function handleRefresh() {
 
     await refreshData();
 
-    allComponents.value = await getComponents();
-    versions.value = await getVersions();
+    const [components, priorityOptions, releaseVersions] = await Promise.all([
+      getComponents(),
+      getPriorities(),
+      getVersions()
+    ]);
+    allComponents.value = components;
+    allPriorities.value = priorityOptions;
+    versions.value = releaseVersions;
 
-    if (selectedVersions.value.length > 0) {
-      const response = await getBugData(selectedVersions.value, selectedComponent.value);
+    if (selectedReleasedVersions.value.length > 0) {
+      const response = await getBugData(selectedReleasedVersions.value, selectedComponents.value, selectedPriorities.value);
       chartData.value = { labels: response.labels, datasets: response.datasets };
+    } else {
+      chartData.value = { labels: [], datasets: [] };
     }
 
     load90DayTracking();

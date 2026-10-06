@@ -18,9 +18,10 @@ configMapGenerator:
 patches:
 - path: route-patch.yaml
 - path: api-route-patch.yaml
+- path: backend-memory-patch.yaml
 
 images:
 - name: quay.io/org-pulse/team-tracker-backend
-  newTag: 8a814c17a692105053375e88337e88e11593411f
+  newTag: e0cab0cbe7287a9b328dadbd68447c61666fd20f
 - name: quay.io/org-pulse/team-tracker-frontend
-  newTag: 96af3b0ebfe65051b6ebc7c4f63d71cb41ffcb88
+  newTag: e0cab0cbe7287a9b328dadbd68447c61666fd20f
