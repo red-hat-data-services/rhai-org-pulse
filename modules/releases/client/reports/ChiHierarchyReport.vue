@@ -161,7 +161,9 @@
             <span
               class="inline-flex items-center justify-center w-6 h-6 rounded text-xs font-bold"
               :class="chiGradeBadgeClass(grade)"
-            >{{ grade }}</span>
+              :title="grade"
+              :aria-label="grade"
+            >{{ chiGradeChipLabel(grade) }}</span>
             × {{ count }}
           </span>
         </div>
@@ -283,7 +285,7 @@ const CHI_GRADE_CLASSES = {
   D: 'bg-orange-500 text-white',
   E: 'bg-amber-600 text-white',
   F: 'bg-red-700 text-white',
-  Unknown: 'bg-gray-400 text-white'
+  Unknown: 'bg-gray-200 dark:bg-gray-600 text-gray-700 dark:text-gray-200 ring-1 ring-inset ring-gray-400/80 dark:ring-gray-500'
 }
 
 const nav = inject('moduleNav')
@@ -293,7 +295,13 @@ const selectedEnv = ref('prod')
 const selectedVersionId = ref('')
 const expanded = ref({})
 
+const GRADE_SORT = ['A', 'B', 'C', 'D', 'E', 'F', 'Unknown']
 const envKeys = ['prod', 'stage', 'latest']
+
+function chiGradeChipLabel(grade) {
+  if (!grade) return '—'
+  return grade === 'Unknown' ? '?' : grade
+}
 const ENV_LABELS = { prod: 'Prod', stage: 'Stage', latest: 'Latest' }
 
 function envLabel(key) {
@@ -321,7 +329,9 @@ const currentVersion = computed(() => {
 
 const gradeDistributionEntries = computed(() => {
   const dist = currentVersion.value?.summary?.gradeDistribution || {}
-  return Object.entries(dist).sort((a, b) => a[0].localeCompare(b[0]))
+  return Object.entries(dist).sort(
+    (a, b) => GRADE_SORT.indexOf(a[0]) - GRADE_SORT.indexOf(b[0])
+  )
 })
 
 watch(versionOptions, (opts) => {

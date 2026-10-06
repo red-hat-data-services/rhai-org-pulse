@@ -107,7 +107,7 @@ const fixture = {
           tag: 'v2.25',
           summary: {
             imageCount: 1,
-            gradeDistribution: { A: 1 },
+            gradeDistribution: { A: 1, Unknown: 2 },
             critical: 0,
             important: 0,
             staleImageCount: 0
@@ -225,5 +225,8 @@ describe('ChiHierarchyReport', () => {
     expect(wrapper.text()).toContain('konflux-clair-scan')
     expect(wrapper.text()).toContain('rhel-vex')
     expect(wrapper.text()).toContain('How grades are calculated')
+    const unknownChip = wrapper.find('[aria-label="Unknown"]')
+    expect(unknownChip.exists()).toBe(true)
+    expect(unknownChip.text()).toBe('?')
   })
 })
