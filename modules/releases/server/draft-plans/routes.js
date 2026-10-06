@@ -37,6 +37,52 @@ function loadDemoFixture() {
  * pipeline snapshot that can be weeks old. Refresh those two fields from the live feature
  * index so an owner assigned since the snapshot is not locked out of their own feature.
  */
+var ADDED_CANDIDATE_FIELDS = [
+  'key', 'summary', 'basePlacement', 'priority', 'component', 'engComponents',
+  'assignee', 'pm', 'currentTV', 'targetVersions', 'productFamily', 'status',
+  'ready', 'readyBool', 'featureSize', 'cycleBudget', 'bigRock', 'outcomeKey',
+  'releaseType', 'rank'
+];
+var MAX_ADDED_CANDIDATES = 500;
+
+/**
+ * Keep only known fields off the wire. Ownership (pm/assignee) is accepted here
+ * but overwritten by applyLiveOwnership before any authorization runs, so a
+ * forged owner cannot buy edit rights.
+ */
+function sanitizeAddedCandidates(input) {
+  if (!Array.isArray(input)) return [];
+  var out = [];
+  var seen = {};
+  for (var i = 0; i < input.length && out.length < MAX_ADDED_CANDIDATES; i++) {
+    var raw = input[i];
+    if (!raw || typeof raw !== 'object') continue;
+    var key = String(raw.key || '').trim();
+    if (!key || seen[key]) continue;
+    seen[key] = true;
+    var clean = { addedByPlanner: true };
+    for (var f = 0; f < ADDED_CANDIDATE_FIELDS.length; f++) {
+      var field = ADDED_CANDIDATE_FIELDS[f];
+      if (raw[field] !== undefined) clean[field] = raw[field];
+    }
+    clean.key = key;
+    if (!Array.isArray(clean.targetVersions)) clean.targetVersions = [];
+    out.push(clean);
+  }
+  return out;
+}
+
+/** Pipeline candidates win on key collision; the planner never shadows them. */
+function mergeAddedCandidates(draft, added) {
+  if (!draft || !Array.isArray(added) || !added.length) return;
+  if (!Array.isArray(draft.candidates)) draft.candidates = [];
+  var have = {};
+  for (var i = 0; i < draft.candidates.length; i++) have[draft.candidates[i].key] = true;
+  for (var a = 0; a < added.length; a++) {
+    if (!have[added[a].key]) draft.candidates.push(added[a]);
+  }
+}
+
 async function applyLiveOwnership(draft, readFromStorage) {
   if (!draft || !Array.isArray(draft.candidates)) return;
   var index;
@@ -63,6 +109,10 @@ async function applyLiveOwnership(draft, readFromStorage) {
 function emptyEditorEnvelope(planVersion, baseGeneratedAt) {
   return {
     edits: {},
+    // Features the planner injected. The pipeline draft only carries what it
+    // proposed, so without these a PM can never plan a release the pipeline
+    // has not published a candidate set for.
+    addedCandidates: [],
     meta: {
       planVersion: planVersion || null,
       baseGeneratedAt: baseGeneratedAt || null,
@@ -107,6 +157,34 @@ async function listCyclesForProduct(storage, product) {
       }
     } catch (err) {
       console.warn('[releases/draft-plans] list drafts failed:', err.message);
+    }
+  }
+
+  // Versions the planner created by injecting features. The pipeline has no draft
+  // for these, so without this pass they vanish from the cycle list on reload.
+  if (storage.listStorageFiles) {
+    try {
+      var editorFiles = await storage.listStorageFiles(DATA_PREFIX + '/editor/' + product);
+      for (var e = 0; e < editorFiles.length; e++) {
+        if (!editorFiles[e].endsWith('.json')) continue;
+        var ev = editorFiles[e].replace(/\.json$/, '');
+        if (byVersion[ev]) continue;
+        var env = await storage.readFromStorage(DATA_PREFIX + '/editor/' + product + '/' + editorFiles[e]);
+        var injected = env && Array.isArray(env.addedCandidates) ? env.addedCandidates.length : 0;
+        if (!injected) continue;
+        byVersion[ev] = {
+          version: ev,
+          product: product,
+          label: product + ' ' + ev,
+          source: 'planner',
+          demoMode: false,
+          generatedAt: env.savedAt || null,
+          candidateCount: injected,
+          editorAvailable: true
+        };
+      }
+    } catch (err) {
+      console.warn('[releases/draft-plans] list planner cycles failed:', err.message);
     }
   }
 
@@ -698,15 +776,25 @@ module.exports = async function registerDraftPlanRoutes(router, context) {
       }
     }
 
-    if (!draft || !draft.candidates || draft.candidates.length === 0) {
-      return res.status(404).json({ error: 'No draft plan data found for version ' + version });
-    }
-
-    await applyLiveOwnership(draft, storage.readFromStorage);
-
     var editorKey = DATA_PREFIX + '/editor/' + product + '/' + version + '.json';
     var stored = await storage.readFromStorage(editorKey);
-    var envelope = emptyEditorEnvelope(draft.version, draft.generatedAt);
+    var storedAdded = sanitizeAddedCandidates(stored && stored.addedCandidates);
+
+    // A version the pipeline has never published is still a valid cycle once the
+    // planner has put something in it, so an empty draft is a real state here.
+    if (!draft || !draft.candidates || draft.candidates.length === 0) {
+      if (!storedAdded.length) {
+        return res.status(404).json({ error: 'No draft plan data found for version ' + version });
+      }
+      draft = draft || { version: version, candidates: [] };
+      if (!Array.isArray(draft.candidates)) draft.candidates = [];
+    }
+
+    mergeAddedCandidates(draft, storedAdded);
+    await applyLiveOwnership(draft, storage.readFromStorage);
+
+    var envelope = emptyEditorEnvelope(draft.version || version, draft.generatedAt);
+    envelope.addedCandidates = storedAdded;
     if (stored && typeof stored === 'object') {
       if (stored.edits && typeof stored.edits === 'object') envelope.edits = stored.edits;
       if (stored.meta && typeof stored.meta === 'object') {
@@ -726,6 +814,7 @@ module.exports = async function registerDraftPlanRoutes(router, context) {
       draft: draft,
       ceilingsByComponent: draft.ceilingsByComponent || {},
       edits: envelope.edits,
+      addedCandidates: envelope.addedCandidates,
       meta: envelope.meta,
       audit: envelope.audit,
       session: sessionPayload(session)
@@ -790,6 +879,11 @@ module.exports = async function registerDraftPlanRoutes(router, context) {
 
     // Same refresh as the GET: the save is authorised against candidate ownership,
     // so it has to see the live owners too or it rejects what the UI just allowed.
+    // Merge first: an injected feature has to be a candidate before authorization,
+    // and applyLiveOwnership then replaces any ownership the client claimed.
+    var addedCandidates = sanitizeAddedCandidates(body.addedCandidates);
+    if (!draft) draft = { version: version, candidates: [] };
+    mergeAddedCandidates(draft, addedCandidates);
     await applyLiveOwnership(draft, storage.readFromStorage);
 
     var authz = authorizeEditorSave(session, draft, previous, body);
@@ -799,6 +893,7 @@ module.exports = async function registerDraftPlanRoutes(router, context) {
 
     var payload = {
       edits: body.edits,
+      addedCandidates: addedCandidates,
       meta: authz.meta,
       audit: Array.isArray(body.audit) ? body.audit.slice(0, 500) : [],
       savedAt: new Date().toISOString()
@@ -815,6 +910,7 @@ module.exports = async function registerDraftPlanRoutes(router, context) {
       summary: 'Saved draft plan editor state for ' + product + ' ' + version,
       details: {
         editCount: Object.keys(payload.edits).length,
+        addedCandidateCount: payload.addedCandidates.length,
         auditCount: payload.audit.length,
         finalGaFrozen: !!(payload.meta && payload.meta.finalGaFrozen),
         actor: session.actor,
