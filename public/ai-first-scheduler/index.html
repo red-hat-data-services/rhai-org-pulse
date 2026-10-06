@@ -2818,6 +2818,9 @@ let allData=[], sortCol='Rank', sortAsc=true;
 // 'demo' until a live payload schedules successfully. Surfaced next to the feature
 // count, because a stale embedded dataset is indistinguishable from real data.
 let dataSource='demo';
+// CVE load per owner, from the Org Pulse CVE report. Null until that report has
+// been refreshed, which is a normal state and must not blank the Executive tab.
+let cveReserveData=null;
 
 function saveBannerText(){
   const el = document.getElementById('planning-banner-text');
@@ -2867,7 +2870,8 @@ window.addEventListener('message', function(e){
 
   // Receive live data from Org Pulse AI Planner iframe
   if(e.data.type === 'ai-planner-data'){
-    const {features=[], bugQueue=[], capacity={}, cveReserve={}, lastSyncedAt} = e.data;
+    const {features=[], bugQueue=[], capacity={}, cveReserve=null, lastSyncedAt} = e.data;
+    cveReserveData = cveReserve;
     const mapped = features.map(f => ({
       'Key': f.Key || '',
       'Title': f.Summary || f.Title || '',
@@ -3854,6 +3858,50 @@ function toggleBRDetail(idx){
 let _execViewOpen=false;
 function toggleExecView(){ switchTab('executive'); }
 
+/**
+ * CVE load per owning PM, over the throughput window.
+ *
+ * Shown per PM rather than per component because capacity is argued per team and
+ * one PM owns several components. Counts are what teams resolved, not what is
+ * open: the backlog is dominated by scanner output and would overstate the load
+ * several times over.
+ */
+function renderCveReserve(){
+  const d=cveReserveData;
+  if(!d||!d.byPmLead||!d.byPmLead.length) return '';
+
+  const rows=d.byPmLead.map(r=>`<tr>
+    <td style="padding:5px 10px;font-weight:600">${esc(r.pmLead)}</td>
+    <td style="padding:5px 10px;color:#64748b">${esc(r.pillar||'')}</td>
+    <td style="padding:5px 10px;color:#64748b;font-size:10px">${esc(r.components.join(', '))}</td>
+    <td style="padding:5px 10px;text-align:right;font-weight:700">${r.resolved}</td>
+    <td style="padding:5px 10px;text-align:right">${r.perWeek}</td>
+    <td style="padding:5px 10px;text-align:right;font-weight:600">${Math.round(r.share*100)}%</td>
+  </tr>`).join('');
+
+  const unmapped=d.unmapped&&d.unmapped.length
+    ? `<div style="font-size:10px;color:#b45309;margin-top:6px">⚠ ${d.unmapped.length} component${d.unmapped.length===1?'':'s'} not in the pillar config, so not attributed to anyone: ${esc(d.unmapped.slice(0,6).map(u=>u.component+' ('+u.resolved+')').join(', '))}</div>`
+    : '';
+
+  return `<div style="background:#fff;border:1px solid #e2e8f0;border-radius:8px;padding:12px 14px;margin-bottom:14px">
+    <div style="font-size:13px;font-weight:700;color:#0f172a">🛡 CVE load by owner</div>
+    <div style="font-size:11px;color:#64748b;margin:2px 0 8px">
+      Resolved CVEs over ${d.windowWeeks} weeks (${esc(d.windowStart)} → ${esc(d.windowEnd)}) ·
+      ${d.resolvedIssues} issues · source: Org Pulse CVE report ·
+      <strong>share drives the capacity reserve</strong>
+    </div>
+    <table style="width:100%;border-collapse:collapse;font-size:11px">
+      <thead><tr style="border-bottom:1px solid #e2e8f0;color:#64748b;text-align:left">
+        <th style="padding:5px 10px">PM</th><th style="padding:5px 10px">Pillar</th>
+        <th style="padding:5px 10px">Components</th>
+        <th style="padding:5px 10px;text-align:right">Resolved</th>
+        <th style="padding:5px 10px;text-align:right">/week</th>
+        <th style="padding:5px 10px;text-align:right">Share</th>
+      </tr></thead><tbody>${rows}</tbody>
+    </table>${unmapped}
+  </div>`;
+}
+
 function renderExecView(){
   const el=document.getElementById('exec-view');
   if(!el||!allData.length) return;
@@ -3944,6 +3992,7 @@ function renderExecView(){
   }).join('');
 
   el.innerHTML=`
+  ${renderCveReserve()}
   <div style="background:linear-gradient(135deg,#1a1a2e 0%,#16213e 100%);border-radius:10px;padding:20px 24px;margin-bottom:18px;color:#fff">
     <div style="font-size:13px;font-weight:700;color:#7ec8e3;letter-spacing:.08em;margin-bottom:16px">RHAI 3.6 — EXECUTIVE DELIVERY SUMMARY</div>
     <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:16px">
