@@ -95,7 +95,7 @@ function registerChiHierarchyRoutes(router, context) {
    *     tags: [Releases - CHI Hierarchy]
    *     responses:
    *       200:
-   *         description: Dual-env Product → Components → Images CHI snapshot
+   *         description: Multi-env Product → Components → Images CHI snapshot
    *       404:
    *         description: No CHI hierarchy data available
    */
@@ -115,7 +115,7 @@ function registerChiHierarchyRoutes(router, context) {
    *   post:
    *     summary: Bulk ingest CHI hierarchy snapshot
    *     description: |
-   *       Pipeline ingest for pre-computed Stage/Prod CHI hierarchy JSON.
+   *       Pipeline ingest for pre-computed Prod/Stage/Latest CHI hierarchy JSON.
    *       Requires `releases:write`. Skipped in DEMO_MODE.
    *     tags: [Releases - CHI Hierarchy]
    *     security:
