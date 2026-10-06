@@ -3,10 +3,10 @@
 Org Pulse report under **Releases → Reports → Container Health Index**
 ([RHOAIENG-97404](https://redhat.atlassian.net/browse/RHOAIENG-97404)).
 
-The app is a **display layer**: an external CHI collector builds a dual-env
-snapshot (Prod + Stage) and POSTs it to
-`/api/modules/releases/chi-hierarchy/bulk`. Org Pulse does not call Pyxis or
-ProdSec at runtime.
+The app is a **display layer**: an external CHI collector builds a snapshot
+(Prod + Stage + Latest) and POSTs it to
+`/api/modules/releases/chi-hierarchy/bulk`. Org Pulse does not call Pyxis,
+Konflux, or ProdSec at runtime.
 
 | Piece | Location |
 |---|---|
@@ -56,6 +56,7 @@ Images under `rhoai/` must carry the matching tag (`v3.6`) in:
 |---|---|
 | Prod | `catalog.redhat.com` (public Pyxis) |
 | Stage | `pyxis.stage.engineering.redhat.com` (Kerberos) |
+| Latest | Konflux clair-scan via KubeArchive (`OC_TOKEN`) |
 
 Do **not** use `catalog.stage.redhat.com` (403).
 
@@ -72,7 +73,7 @@ In the [CHI repository](https://gitlab.cee.redhat.com/sustaining-engineering/rho
 - **Local:** follow `PIPELINE.md` — collect Prod (+ Stage if Kerberos works),
   run `build_chi_hierarchy.py`, POST to Org Pulse bulk.
 
-After upload, open **Container Health Index**, pick Prod/Stage, and confirm the
+After upload, open **Container Health Index**, pick Prod/Stage/Latest, and confirm the
 new version appears in the dropdown with component → image rows.
 
 ### 4. Org Pulse changes (usually none)
@@ -95,6 +96,15 @@ consistency.
 
 ---
 
+## Grading
+
+Hover the help icon next to **Container Health Index**.
+
+- **Prod / Stage:** catalog HealthIndex ([article 2803031](https://access.redhat.com/articles/2803031)).
+- **Latest:** same article, computed from the latest green Konflux clair-scan. Letter is the age of the oldest **rhel-vex** patched Critical/Important (High → Important). Unpatched Clair findings and `osv/go` / `osv/pypi` do not change the letter. Zero such findings → A. Unknown means missing pipeline or scan. Latest will not match Prod for the same image name.
+
+---
+
 ## Component mapping notes
 
 - Override keys look like `rhoai/odh-dashboard-rhel9` → component name
@@ -102,6 +112,18 @@ consistency.
 - Join key: strip `rhoai/`, match CHI `images[].name`.
 - Images with no override entry roll into **Unmapped** (still visible, with
   worst-grade rollup).
+
+## Catalog links
+
+Each image’s `catalogUrl` must end with the Pyxis **repository** `_id`
+(not the per-architecture image id):
+
+```
+https://catalog.redhat.com/en/software/containers/rhoai/<name>/<repo_id>
+```
+
+Without that final segment, catalog.redhat.com returns **404**. Latest images
+use `konfluxUrl` (PipelineRun) instead.
 
 ---
 

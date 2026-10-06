@@ -12,7 +12,7 @@ function validatePayload(body) {
   }
   var envs = body.environments
   var hasEnv = false
-  for (var key of ['prod', 'stage']) {
+  for (var key of ['prod', 'stage', 'latest']) {
     if (envs[key] == null) continue
     hasEnv = true
     var env = envs[key]
@@ -23,7 +23,7 @@ function validatePayload(body) {
       return 'environments.' + key + '.versions must be an array'
     }
   }
-  if (!hasEnv) return 'environments must include prod and/or stage'
+  if (!hasEnv) return 'environments must include prod, stage, and/or latest'
   return null
 }
 
@@ -73,6 +73,13 @@ function registerChiHierarchyRoutes(router, context) {
               fetchedAt: envs.stage.fetchedAt || null,
               source: envs.stage.source || null,
               versionCount: Array.isArray(envs.stage.versions) ? envs.stage.versions.length : 0
+            }
+          : null,
+        latest: envs.latest
+          ? {
+              fetchedAt: envs.latest.fetchedAt || null,
+              source: envs.latest.source || null,
+              versionCount: Array.isArray(envs.latest.versions) ? envs.latest.versions.length : 0
             }
           : null
       },

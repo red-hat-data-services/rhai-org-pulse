@@ -97,6 +97,40 @@ const fixture = {
           ]
         }
       ]
+    },
+    latest: {
+      fetchedAt: '2026-10-06T09:00:00.000Z',
+      source: 'konflux-clair-scan',
+      versions: [
+        {
+          id: 'rhoai-2.25',
+          tag: 'v2.25',
+          summary: {
+            imageCount: 1,
+            gradeDistribution: { A: 1 },
+            critical: 0,
+            important: 0,
+            staleImageCount: 0
+          },
+          components: [
+            {
+              name: 'AI Core Dashboard',
+              summary: { imageCount: 1, worstGrade: 'A', oldestImageAgeDays: 0 },
+              images: [
+                {
+                  name: 'odh-dashboard-rhel9',
+                  grade: 'A',
+                  gradeDate: '2026-10-06',
+                  vulnerabilityCount: 0,
+                  lastUpdated: '2026-10-06',
+                  ageDays: 0,
+                  konfluxUrl: 'https://konflux.example/pr/dash'
+                }
+              ]
+            }
+          ]
+        }
+      ]
     }
   }
 }
@@ -110,7 +144,8 @@ function mountReport() {
       stubs: {
         ArrowLeft: true,
         ChevronRight: true,
-        Shield: true
+        Shield: true,
+        HelpCircle: true
       }
     }
   })
@@ -176,5 +211,19 @@ describe('ChiHierarchyReport', () => {
     expect(wrapper.text()).toContain('odh-example-stale-rhel9')
     expect(wrapper.text()).toContain('stale')
     expect(wrapper.text()).toContain('40d')
+  })
+
+  it('toggles Latest and shows Konflux source plus rhel-vex grading copy', async () => {
+    const wrapper = mountReport()
+    await flushPromises()
+
+    const latestBtn = wrapper.findAll('button').find(b => b.text() === 'Latest')
+    expect(latestBtn).toBeTruthy()
+    await latestBtn.trigger('click')
+    await flushPromises()
+
+    expect(wrapper.text()).toContain('konflux-clair-scan')
+    expect(wrapper.text()).toContain('rhel-vex')
+    expect(wrapper.text()).toContain('How grades are calculated')
   })
 })
