@@ -567,7 +567,8 @@ async function runMergeGroupGate(api, mergeGroupSha, baseSha) {
     throw new Error('MERGE_GROUP_BASE_SHA is required for merge-queue evaluation.');
   }
 
-  const queuedPullRequests = await api.getPullRequestsForCommit(mergeGroupSha);
+  const queuedPullRequests = (await api.getPullRequestsForCommit(mergeGroupSha))
+    .filter(pullRequest => pullRequest.state === 'open');
   if (!queuedPullRequests.length) {
     throw new Error(`No pull requests are associated with merge group ${mergeGroupSha}.`);
   }
