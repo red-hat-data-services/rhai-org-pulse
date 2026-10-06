@@ -510,7 +510,18 @@ export function useDraftPlans() {
    */
   function addCandidate(candidate) {
     if (!candidate || !candidate.key) return { ok: false, reason: 'invalid' }
-    if (!draft.value) return { ok: false, reason: 'no-draft' }
+    if (!draft.value) {
+      // Bootstrap an empty draft so the first feature can be injected into a
+      // version the pipeline has never published.  The server's GET returns 404
+      // for unknown versions (no pipeline draft, no stored addedCandidates),
+      // which loadEditor swallows — leaving draft.value null.  Creating a
+      // minimal local draft here breaks the chicken-and-egg: persist() will PUT
+      // the addedCandidates, and subsequent GETs will find them.
+      var ver = selectedVersion.value || ''
+      if (!ver) return { ok: false, reason: 'no-draft' }
+      draft.value = { version: ver, candidates: [] }
+      editor.value = emptyEditorState(ver, null)
+    }
     if (findBase(candidate.key)) return { ok: false, reason: 'exists' }
 
     var entry = Object.assign({}, candidate, { addedByPlanner: true })
