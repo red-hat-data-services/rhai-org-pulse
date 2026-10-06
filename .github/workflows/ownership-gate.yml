@@ -84,4 +84,5 @@ jobs:
           GH_TOKEN: ${{ steps.app-token.outputs.token }}
           MERGE_GROUP_SHA: ${{ github.event.merge_group.head_sha }}
           MERGE_GROUP_BASE_SHA: ${{ github.event.merge_group.base_sha }}
+          MERGE_GROUP_HEAD_REF: ${{ github.event.merge_group.head_ref }}
         run: node scripts/ownership-gate.mjs

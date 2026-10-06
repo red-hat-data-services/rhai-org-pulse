@@ -6,7 +6,8 @@ import {
   currentApprovers,
   evaluateOwnership,
   ownersForPath,
-  parseCodeowners
+  parseCodeowners,
+  pullRequestNumbersFromMergeGroupRef
 } from './ownership-gate.mjs';
 
 const CODEOWNERS = `
@@ -37,6 +38,22 @@ test('the final CODEOWNERS match preserves an explicit no-owner exception', () =
     ownersForPath(entries, 'deploy/openshift/overlays/ai-eng-prod/kustomization.yaml'),
     []
   );
+});
+
+test('merge-queue refs identify every queued pull request without synthetic-SHA lookup', () => {
+  assert.deepEqual(
+    pullRequestNumbersFromMergeGroupRef(
+      'gh-readonly-queue/main/pr-1710-8da093f12b64bdd3af25397a0846d6b7c604a133'
+    ),
+    [1710]
+  );
+  assert.deepEqual(
+    pullRequestNumbersFromMergeGroupRef(
+      'gh-readonly-queue/main/pr-1710-8da093f/pr-1711-0123456789abcdef'
+    ),
+    [1710, 1711]
+  );
+  assert.deepEqual(pullRequestNumbersFromMergeGroupRef('gh-readonly-queue/main/no-pr'), []);
 });
 
 test('an individual code owner can merge their own module change', () => {
