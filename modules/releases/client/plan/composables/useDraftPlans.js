@@ -686,4 +686,5 @@ export function _resetDraftPlansForTests() {
   filterText.value = ''
   session.value = null
   sessionAdded.value = []
+  addedCandidates.value = []
 }

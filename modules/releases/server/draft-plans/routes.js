@@ -32,11 +32,6 @@ function loadDemoFixture() {
   }
 }
 
-/**
- * Who may approve a feature is decided by its PM and Delivery Owner, but the draft is a
- * pipeline snapshot that can be weeks old. Refresh those two fields from the live feature
- * index so an owner assigned since the snapshot is not locked out of their own feature.
- */
 var ADDED_CANDIDATE_FIELDS = [
   'key', 'summary', 'basePlacement', 'priority', 'component', 'engComponents',
   'assignee', 'pm', 'currentTV', 'targetVersions', 'productFamily', 'status',
@@ -83,6 +78,11 @@ function mergeAddedCandidates(draft, added) {
   }
 }
 
+/**
+ * Who may approve a feature is decided by its PM and Delivery Owner, but the draft is a
+ * pipeline snapshot that can be weeks old. Refresh those two fields from the live feature
+ * index so an owner assigned since the snapshot is not locked out of their own feature.
+ */
 async function applyLiveOwnership(draft, readFromStorage) {
   if (!draft || !Array.isArray(draft.candidates)) return;
   var index;
