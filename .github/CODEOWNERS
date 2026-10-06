@@ -21,7 +21,7 @@
 /modules/customer-insights/   @epacific1
 /modules/okr-hub/             @saprabhu05
 /modules/product-builds/      @epacific1 @gnaponie @andre-motta
-/modules/releases/            @saprabhu05 @wznoinsk @epacific1
+/modules/releases/            @saprabhu05
 /modules/system-health/       @aloganat @AjayJagan
 /modules/upstream-pulse/      @dpanshug
 /modules/workflow-validation/ @accorvin
