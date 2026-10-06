@@ -131,6 +131,8 @@ PRs receive an automated Claude code review that can fix minor issues directly.
 The review criteria are defined in
 [`.github/instructions/review.instructions.md`](.github/instructions/review.instructions.md).
 
+Ownership requirements are described in [Ownership Gate](docs/OWNERSHIP-GATE.md).
+
 ### Code style & conventions
 
 See [`AGENTS.md`](AGENTS.md) for the full list of code style conventions and

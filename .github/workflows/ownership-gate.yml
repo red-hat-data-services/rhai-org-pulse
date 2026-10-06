@@ -1,0 +1,87 @@
+# Enforces ownership policy without GitHub's native code-owner review rule.
+#
+# This workflow is intentionally evaluated from the default branch via
+# pull_request_target and never checks out or executes pull-request code. It
+# reads changed paths, CODEOWNERS at the PR base SHA, and review metadata only
+# through the GitHub API using the existing rhai-org-pulse GitHub App token.
+
+name: Ownership Gate
+
+on:
+  pull_request_target:
+    branches: [main]
+    types:
+      - opened
+      - reopened
+      - synchronize
+      - ready_for_review
+      - converted_to_draft
+  pull_request_review:
+    branches: [main]
+    types:
+      - submitted
+      - dismissed
+      - edited
+  merge_group:
+    types: [checks_requested]
+
+permissions:
+  contents: read
+
+jobs:
+  evaluate:
+    if: github.event_name != 'merge_group'
+    name: Evaluate ownership
+    runs-on: ubuntu-latest
+    steps:
+      - name: Generate GitHub App token
+        id: app-token
+        uses: actions/create-github-app-token@v3
+        with:
+          app-id: ${{ secrets.APP_ID }}
+          private-key: ${{ secrets.APP_PRIVATE_KEY }}
+
+      # Always use the trusted default-branch policy implementation. Do not
+      # check out the pull request's head ref in this privileged workflow.
+      - name: Check out trusted policy code
+        uses: actions/checkout@v7
+        with:
+          ref: ${{ github.event.repository.default_branch }}
+          fetch-depth: 1
+          persist-credentials: false
+
+      - name: Evaluate ownership policy
+        env:
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          OWNERSHIP_GATE_BOT_LOGIN: rhai-org-pulse[bot]
+        run: node scripts/ownership-gate.mjs
+
+  merge-queue-status:
+    if: github.event_name == 'merge_group'
+    name: Evaluate merge queue ownership
+    runs-on: ubuntu-latest
+    steps:
+      - name: Generate GitHub App token
+        id: app-token
+        uses: actions/create-github-app-token@v3
+        with:
+          app-id: ${{ secrets.APP_ID }}
+          private-key: ${{ secrets.APP_PRIVATE_KEY }}
+
+      # Re-evaluate every PR in the group against the group base SHA. This
+      # prevents a policy change on main from being bypassed by an older
+      # successful PR status.
+      - name: Check out trusted policy code
+        uses: actions/checkout@v7
+        with:
+          ref: ${{ github.event.repository.default_branch }}
+          fetch-depth: 1
+          persist-credentials: false
+
+      - name: Evaluate merge-queue ownership policy
+        env:
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
+          MERGE_GROUP_SHA: ${{ github.event.merge_group.head_sha }}
+          MERGE_GROUP_BASE_SHA: ${{ github.event.merge_group.base_sha }}
+        run: node scripts/ownership-gate.mjs
