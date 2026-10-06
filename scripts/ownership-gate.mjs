@@ -378,6 +378,10 @@ class GitHubApi {
     return this.paginated(`/repos/${this.repository}/pulls/${number}/reviews`);
   }
 
+  async getPullRequestsForCommit(sha) {
+    return this.paginated(`/repos/${this.repository}/commits/${sha}/pulls`);
+  }
+
   async getTeamMembers(owner) {
     const [organization, teamSlug] = owner.slice(1).split('/');
     const members = await this.paginated(
@@ -476,35 +480,14 @@ function targetUrl() {
   return runId ? `${server}/${process.env.GITHUB_REPOSITORY}/actions/runs/${runId}` : undefined;
 }
 
-async function main() {
-  const repository = process.env.GITHUB_REPOSITORY;
-  const prNumber = process.env.PR_NUMBER;
-  const token = process.env.GH_TOKEN || process.env.GITHUB_TOKEN;
-  if (!repository || !prNumber || !token) {
-    throw new Error('GITHUB_REPOSITORY, PR_NUMBER, and GH_TOKEN are required.');
-  }
-
-  const api = new GitHubApi({
-    token,
-    repository,
-    apiUrl: process.env.GITHUB_API_URL
-  });
+async function evaluatePullRequest(api, prNumber, { codeownersRef } = {}) {
   const pullRequest = await api.getPullRequest(prNumber);
   const headSha = pullRequest.head.sha;
-  process.env.OWNERSHIP_GATE_HEAD_SHA = headSha;
   const authorLogin = normalizeLogin(pullRequest.user.login);
 
-  if (pullRequest.draft) {
-    await api.setStatus(headSha, {
-      state: 'pending',
-      description: 'Draft pull request',
-      targetUrl: targetUrl()
-    });
-    console.log('Ownership Gate is pending because this pull request is a draft.');
-    return;
-  }
-
-  const entries = parseCodeowners(await api.getCodeowners(pullRequest.base.sha));
+  const entries = parseCodeowners(
+    await api.getCodeowners(codeownersRef || pullRequest.base.sha)
+  );
   const changedFiles = changedPathNames(await api.getChangedFiles(prNumber));
   const teamMembers = new Map();
   for (const team of allTeamOwners(entries, MAINTAINER_TEAM)) {
@@ -523,13 +506,22 @@ async function main() {
     }
   }
 
-  const result = evaluateOwnership({
-    entries,
-    changedFiles,
+  return {
+    pullRequest,
+    headSha,
     authorLogin,
-    approvedReviewers,
-    teamMembers
-  });
+    result: evaluateOwnership({
+      entries,
+      changedFiles,
+      authorLogin,
+      approvedReviewers,
+      teamMembers
+    })
+  };
+}
+
+async function publishPullRequestResult(api, prNumber, evaluation) {
+  const { headSha, authorLogin, result } = evaluation;
   const status = statusDetails(result);
   await api.setStatus(headSha, {
     ...status,
@@ -549,6 +541,85 @@ async function main() {
   }
 
   console.log(renderComment(result, authorLogin, headSha));
+}
+
+async function runPullRequestGate(api, prNumber) {
+  const evaluation = await evaluatePullRequest(api, prNumber);
+  const { pullRequest, headSha } = evaluation;
+  process.env.OWNERSHIP_GATE_HEAD_SHA = headSha;
+
+  if (pullRequest.draft) {
+    await api.setStatus(headSha, {
+      state: 'pending',
+      description: 'Draft pull request',
+      targetUrl: targetUrl()
+    });
+    console.log('Ownership Gate is pending because this pull request is a draft.');
+    return;
+  }
+
+  await publishPullRequestResult(api, prNumber, evaluation);
+}
+
+async function runMergeGroupGate(api, mergeGroupSha, baseSha) {
+  process.env.OWNERSHIP_GATE_HEAD_SHA = mergeGroupSha;
+  if (!baseSha) {
+    throw new Error('MERGE_GROUP_BASE_SHA is required for merge-queue evaluation.');
+  }
+
+  const queuedPullRequests = await api.getPullRequestsForCommit(mergeGroupSha);
+  if (!queuedPullRequests.length) {
+    throw new Error(`No pull requests are associated with merge group ${mergeGroupSha}.`);
+  }
+
+  const evaluations = [];
+  for (const pullRequest of queuedPullRequests) {
+    const evaluation = await evaluatePullRequest(api, pullRequest.number, {
+      codeownersRef: baseSha
+    });
+    if (evaluation.pullRequest.draft) {
+      throw new Error(`Draft PR #${pullRequest.number} appeared in the merge queue.`);
+    }
+    evaluations.push({ number: pullRequest.number, evaluation });
+  }
+
+  const failed = evaluations.filter(({ evaluation }) => !evaluation.result.passed);
+  await api.setStatus(mergeGroupSha, {
+    state: failed.length ? 'failure' : 'success',
+    description: failed.length
+      ? `Approval required for ${failed.length} queued pull request${failed.length === 1 ? '' : 's'}`
+      : 'Ownership policy satisfied for merge group',
+    targetUrl: targetUrl()
+  });
+
+  for (const { number, evaluation } of evaluations) {
+    console.log(`Merge queue evaluation for PR #${number}:`);
+    console.log(renderComment(evaluation.result, evaluation.authorLogin, evaluation.headSha));
+  }
+}
+
+async function main() {
+  const repository = process.env.GITHUB_REPOSITORY;
+  const prNumber = process.env.PR_NUMBER;
+  const mergeGroupSha = process.env.MERGE_GROUP_SHA;
+  const token = process.env.GH_TOKEN || process.env.GITHUB_TOKEN;
+  if (!repository || !token) {
+    throw new Error('GITHUB_REPOSITORY and GH_TOKEN are required.');
+  }
+
+  const api = new GitHubApi({
+    token,
+    repository,
+    apiUrl: process.env.GITHUB_API_URL
+  });
+  if (mergeGroupSha) {
+    await runMergeGroupGate(api, mergeGroupSha, process.env.MERGE_GROUP_BASE_SHA);
+    return;
+  }
+  if (!prNumber) {
+    throw new Error('PR_NUMBER is required outside a merge-group event.');
+  }
+  await runPullRequestGate(api, prNumber);
 }
 
 async function reportFatalError(error) {

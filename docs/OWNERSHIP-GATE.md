@@ -31,9 +31,9 @@ the base-branch `CODEOWNERS` file, changed paths, reviews, team membership, and
 repository permissions. It never checks out or executes pull-request code.
 
 It uses the existing `rhai-org-pulse` GitHub App to read team membership and
-write the `Ownership Gate` commit status. The merge queue receives the same
-App-owned status on its synthetic merge-group commit after a PR has passed the
-gate.
+write the `Ownership Gate` commit status. The merge queue re-evaluates every
+queued PR against the merge group's current base SHA before publishing the
+same App-owned status on its synthetic commit.
 
 The evaluator supports the CODEOWNERS pattern forms currently used in this
 repository, including root paths, directories, `*`, `**`, and `?`. Unsupported
