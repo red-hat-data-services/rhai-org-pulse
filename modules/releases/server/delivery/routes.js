@@ -1322,7 +1322,7 @@ module.exports = async function registerRoutes(router, context) {
   // --- Quality (Post-Release Defects) routes ---
 
   const { fetchVersions: fetchQualityVersions, fetchBugs, fetchBugCounts } = require('./quality/data-fetcher.js')
-  const { computeCumulativeBugData } = require('./quality/calculations.js')
+  const { computeCumulativeBugData, computeStatusBreakdownData } = require('./quality/calculations.js')
 
   // In-memory cache for loadAllBugs() with 5-minute TTL
   let bugsCache = { data: null, timestamp: 0, projectsKey: '' }
@@ -1381,7 +1381,7 @@ module.exports = async function registerRoutes(router, context) {
    * /api/modules/releases/delivery/quality/bugs:
    *   get:
    *     tags: ['Releases: Quality']
-   *     summary: Get cumulative bug data for selected versions
+   *     summary: Get cumulative bug data and Jira status breakdown for selected versions
    *     parameters:
    *       - in: query
    *         name: versions
@@ -1398,7 +1398,7 @@ module.exports = async function registerRoutes(router, context) {
    *         description: Comma-separated Jira priorities to include
    *     responses:
    *       200:
-   *         description: Chart data with labels and datasets
+   *         description: Cumulative chart data plus current Jira status counts by selected version
    */
   router.get('/quality/bugs', requireAuth, requireScope('releases:read'), async function(req, res) {
     try {
@@ -1434,7 +1434,8 @@ module.exports = async function registerRoutes(router, context) {
       const versionReleaseMap = new Map(allVersions.map(v => [v.name, v.releaseDate]))
 
       const chartData = computeCumulativeBugData(filteredBugs, versions, versionReleaseMap)
-      res.json(chartData)
+      const statusData = computeStatusBreakdownData(filteredBugs, versions, versionReleaseMap)
+      res.json({ ...chartData, statusData })
     } catch (error) {
       console.error('[releases/quality] Read bugs error:', error)
       res.status(500).json({ error: 'Internal server error' })
