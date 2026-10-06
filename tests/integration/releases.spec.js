@@ -2904,7 +2904,6 @@ test.describe('Releases AI Planner tab @releases', () => {
     await expect(page.getByText(/added to Plan Approval \(3\.7\)/i)).toBeVisible();
   });
 
-
   test('AI Planner API exposes failed FPDoR items', async ({ request }) => {
     const res = await request.get('/api/modules/releases/planning/ai-planner');
     expect(res.ok()).toBe(true);
