@@ -2889,19 +2889,21 @@ test.describe('Releases AI Planner tab @releases', () => {
     ).toContainText('AI-First Release Planner');
   });
 
-  test('Add to Plan reports when a feature has no matching release cycle', async ({ page }) => {
+  test('Add to Plan creates a cycle the pipeline never published', async ({ page }) => {
     await page.goto('/#/releases/plan?tab=ai-planner');
     await page.waitForLoadState('networkidle');
     await page.waitForTimeout(DEFAULT_PAGE_WAIT_TIME);
 
-    // 3.7 has no cycle in the catalog, so this must surface rather than fail silently.
+    // The pipeline publishes no 3.7 candidates, so this only works because the
+    // planner injects the feature and the cycle comes into being around it.
     await page.evaluate(() => window.postMessage({
       type: 'add-to-draft-plan',
       features: [{ key: 'RHAISTRAT-2426', version: '3.7 GA RHOAI RELEASE' }]
     }, window.location.origin));
 
-    await expect(page.getByText(/Nothing was added to Plan Approval/i)).toBeVisible();
+    await expect(page.getByText(/added to Plan Approval \(3\.7\)/i)).toBeVisible();
   });
+
 
   test('AI Planner API exposes failed FPDoR items', async ({ request }) => {
     const res = await request.get('/api/modules/releases/planning/ai-planner');
