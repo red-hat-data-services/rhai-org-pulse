@@ -135,7 +135,7 @@ test.describe('Product Builds Module @product-builds', () => {
     await page.waitForTimeout(DEFAULT_PAGE_WAIT_TIME);
 
     expect(page.url()).toMatch(/product-builds\/release-status/);
-    await expect(page.locator('h1')).toContainText('Release status');
+    await expect(page.getByRole('heading', { name: 'Release status' })).toBeVisible();
     const triggerRelease = page.getByRole('button', { name: 'Trigger release', exact: true });
     await expect(triggerRelease).toBeEnabled();
     await triggerRelease.click();
@@ -146,6 +146,100 @@ test.describe('Product Builds Module @product-builds', () => {
     const appErrors = page.errors.filter(e => !/status of (429|404|503)/.test(e.message));
     expect(appErrors).toHaveLength(0);
   });
+
+  test('should submit config-family-qualified release readiness components', async ({ page }) => {
+    const submissions = []
+    await page.route('**/api/modules/product-builds/release-status', route => route.fulfill({ json: { total: 0, groups: [] } }))
+    await page.route('**/api/modules/product-builds/release-trigger/options', route => route.fulfill({ json: {
+      sha: 'a'.repeat(40),
+      cards: [{
+        key: 'RHAI-925', summary: 'RHEL AI 3.4.5 production readiness', state: 'planned', target: 'prod',
+        input_type: 'git-tag', input_value: '3.4.5', pipeline_components: 'all',
+        parent: { key: 'RHAI-924', application: 'rhelai', product: 'rhelai', version: '3.4.5', branch: '3.4', release_type: 'GA', advisory_type: 'RHEA' },
+      }],
+    } }))
+    await page.route('**/api/modules/product-builds/release-trigger', async route => {
+      submissions.push(route.request().postDataJSON())
+      await route.fulfill({ json: { tasks: [
+        { key: 'RHAI-925', operation: 'updated', state: 'planned' },
+        { key: 'RHAI-926', operation: 'created', state: 'ready' },
+        { key: 'RHAI-927', operation: 'created', state: 'skip' },
+      ] } })
+    })
+
+    await page.goto('/#/product-builds/release-status')
+    await page.getByRole('button', { name: 'Trigger release', exact: true }).click()
+    const form = page.locator('[data-release-form="trigger-release"]')
+    await form.getByText('Component list examples').click()
+    await expect(form.getByText('bootc-gaudi:containers', { exact: false }).first()).toBeVisible()
+    await form.getByPlaceholder('all or cuda, rocm, model-opt').fill('bootc-gaudi:containers')
+    await form.locator('textarea[placeholder="cuda, rocm, model-opt"]').fill('bootc-gaudi-iso-disk-image:disk-images,bootc-gaudi-qcow2-disk-image:disk-images')
+    await form.getByRole('button', { name: 'Apply release readiness' }).click()
+    await expect(form.getByText('Updated release readiness:')).toBeVisible()
+
+    expect(submissions).toHaveLength(1)
+    expect(submissions[0].components).toBe('bootc-gaudi:containers')
+    expect(submissions[0].skipped_components).toBe('bootc-gaudi-iso-disk-image:disk-images,bootc-gaudi-qcow2-disk-image:disk-images')
+    const appErrors = page.errors.filter(e => !/status of (429|404|503)/.test(e.message))
+    expect(appErrors).toHaveLength(0)
+  })
+
+  test('should explain image-list pullspec mapping formats', async ({ page }) => {
+    await page.route('**/api/modules/product-builds/release-status', route => route.fulfill({ json: { total: 0, groups: [] } }))
+    await page.route('**/api/modules/product-builds/release-trigger/options', route => route.fulfill({ json: {
+      sha: 'c'.repeat(40),
+      cards: [{
+        key: 'RHAI-1912', summary: 'Release rhaiis 3.6.0-fast.2 (stage-rc)', state: 'planned', target: 'stage-rc',
+        input_type: 'image-list', input_value: '', pipeline_components: 'all',
+        parent: { key: 'RHAI-1910', application: 'rhaiis-3-6-fast2', product: 'rhaiis', version: '3.6.0-fast.2', branch: '3.6-fast2', release_type: 'EA', advisory_type: 'RHEA' },
+      }],
+    } }))
+
+    await page.goto('/#/product-builds/release-status')
+    await page.getByRole('button', { name: 'Trigger release', exact: true }).click()
+    const form = page.locator('[data-release-form="trigger-release"]')
+    await form.getByText('How to fill the input value').click()
+    await expect(form.getByPlaceholder('pullspecs or component=pullspec, one per line')).toBeVisible()
+    await expect(form.getByText('Raw pullspecs', { exact: false })).toBeVisible()
+    await expect(form.getByText('Explicit component mappings', { exact: false })).toBeVisible()
+    await expect(form.getByText('bootc-gaudi:containers=<pullspec>', { exact: false })).toBeVisible()
+    await expect(form.getByText('rocm=quay.io/aipcc/rhaiis/rocm-ubi9:3.6.0-fast.2-1790234469', { exact: false })).toBeVisible()
+    const appErrors = page.errors.filter(e => !/status of (429|404|503)/.test(e.message))
+    expect(appErrors).toHaveLength(0)
+  })
+
+  test('should show actionable errors for checklist cards that failed to create', async ({ page }) => {
+    const result = {
+      epic: { key: 'RHAI-4333', summary: 'Release rhelai 3.4.5 GA' },
+      cards: [{ key: 'RHAI-4334', summary: 'Production release checklist' }],
+      not_created: [],
+      failures: [{ summary: 'Release rhelai 3.4.5 (stage-rc): bootc-gaudi', error: 'Jira rejected the stage-rc card: required field is missing' }],
+      warnings: ['Some checklist cards failed to create; see failures.'],
+      created_keys: ['RHAI-4333', 'RHAI-4334'],
+    }
+    await page.route('**/api/modules/product-builds/release-status', route => route.fulfill({ json: { total: 0, groups: [] } }))
+    await page.route('**/api/modules/product-builds/release-epic/options**', route => route.fulfill({ json: {
+      sha: 'b'.repeat(40),
+      products: [{ key: 'rhelai', branches: [{ branch: '3.4', configured_versions: ['3.4.5'] }] }],
+    } }))
+    await page.route('**/api/modules/product-builds/release-epic', route => route.fulfill({ status: 201, json: result }))
+
+    await page.goto('/#/product-builds/release-status')
+    await page.getByRole('button', { name: 'Create release epic', exact: true }).click()
+    const form = page.locator('[data-release-form="create-epic"]')
+    await form.locator('select[name="product"]').selectOption('rhelai')
+    await form.locator('select[name="branch"]').selectOption('3.4')
+    await form.locator('select[name="version"]').selectOption('3.4.5')
+    await form.locator('select[name="feature-mode"]').selectOption('none')
+    await form.getByRole('button', { name: 'Create release epic', exact: true }).click()
+
+    await expect(form.getByText('Jira rejected the stage-rc card: required field is missing')).toBeVisible()
+    await expect(form.getByText('[release-epic] Checklist card creation failed', { exact: false })).toBeVisible()
+    await expect(form.getByRole('link', { name: 'RHAI-4333' })).toBeVisible()
+    await expect(form.getByText('at createReleaseEpic')).toHaveCount(0)
+    const appErrors = page.errors.filter(e => !/status of (429|404|503)/.test(e.message))
+    expect(appErrors).toHaveLength(0)
+  })
 
   test('should show CHI column header in artifacts tab', async ({ page }) => {
     await page.goto('/#/product-builds/rhaiis');

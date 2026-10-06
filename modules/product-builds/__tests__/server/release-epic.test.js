@@ -134,6 +134,98 @@ describe('release epic workflow', () => {
     expect(plan.notCreated.map(item => item.summary)).toContain('Bump base-images 3.6.0 version tags for next z-stream')
   })
 
+  it('returns actionable details when some checklist cards fail after Epic creation', async () => {
+    const input = {
+      product: 'rhelai', version: '3.4.5', branch: '3.4', release_type: 'GA', advisory_type: 'RHEA',
+      metadata: { tenant: 'ai-tenant', application: 'rhelai-3-4', release_plans: ['rhelai-stage', 'rhelai-prod'], tags: ['3.4.5'] },
+    }
+    const components = [{ name: 'bootc-gaudi', variant: 'gaudi', tech_preview: false, config_family: 'containers' }]
+    let taskNumber = 0
+    const jira = {
+      jiraRequest: vi.fn(async (path, options) => {
+        if (path === '/rest/api/3/search/jql') return { issues: [] }
+        if (path.startsWith('/rest/api/3/issue/RHAI-4333?')) {
+          return { fields: { description: workflow.buildEpicAdf(input, components) } }
+        }
+        if (path === '/rest/api/3/issue' && options.method === 'POST') {
+          if (options.body.fields.issuetype.name === 'Epic') return { key: 'RHAI-4333' }
+          if (options.body.fields.summary.includes('(stage-rc)')) {
+            throw new Error('Jira rejected the stage-rc card: required field is missing')
+          }
+          taskNumber += 1
+          return { key: `RHAI-${4333 + taskNumber}` }
+        }
+        return {}
+      }),
+    }
+    const log = vi.spyOn(console, 'warn').mockImplementation(() => {})
+
+    const result = await workflow.createReleaseEpic(jira, input, components, { feature_mode: 'none' })
+
+    expect(result.epic.key).toBe('RHAI-4333')
+    expect(result.failures).toEqual([{
+      summary: expect.stringContaining('(stage-rc)'),
+      error: 'Jira rejected the stage-rc card: required field is missing',
+    }])
+    expect(result.cards.length).toBeGreaterThan(0)
+    expect(log).toHaveBeenCalledWith('[release-epic] Checklist card creation failed', {
+      epicKey: 'RHAI-4333',
+      summary: result.failures[0].summary,
+      error: result.failures[0].error,
+    })
+    log.mockRestore()
+  })
+
+  it('creates RHEL AI 3.4.5 release cards when Jira enforces its summary length limit', async () => {
+    const names = [
+      'bootc-cuda', 'bootc-rocm', 'bootc-rocm-azure', 'bootc-cuda-aws', 'bootc-cuda-azure', 'bootc-cuda-gcp',
+      'bootc-cuda-iso-disk-image', 'bootc-cuda-iso-disk-image-aarch64', 'bootc-cuda-qcow2-disk-image',
+      'bootc-cuda-qcow2-disk-image-aarch64', 'bootc-cuda-aws-disk-image', 'bootc-cuda-azure-disk-image',
+      'bootc-cuda-gcp-disk-image', 'bootc-rocm-iso-disk-image', 'bootc-rocm-qcow2-disk-image',
+      'bootc-rocm-azure-disk-image', 'bootc-cuda-disk-image-container',
+    ]
+    const components = names.map(name => ({
+      name,
+      variant: '',
+      config_family: name === 'bootc-cuda-disk-image-container'
+        ? 'disk-image-containers'
+        : name.includes('disk-image') ? 'disk-images' : 'containers',
+    }))
+    const input = {
+      product: 'rhelai', version: '3.4.5', branch: '3.4', release_type: 'GA', advisory_type: 'RHEA',
+      metadata: { tenant: 'rhel-ai-tenant', application: 'rhelai-bootc-3-4', release_plans: ['rhelai-stage', 'rhelai-prod'], tags: ['3.4.5'] },
+    }
+    const createdTasks = []
+    let taskNumber = 4095
+    const jira = {
+      jiraRequest: vi.fn(async (path, options) => {
+        if (path === '/rest/api/3/search/jql') return { issues: [] }
+        if (path.startsWith('/rest/api/3/issue/RHAI-4094?')) {
+          return { fields: { description: workflow.buildEpicAdf(input, components) } }
+        }
+        if (path === '/rest/api/3/issue' && options.method === 'POST') {
+          if (options.body.fields.issuetype.name === 'Epic') return { key: 'RHAI-4094' }
+          const fields = options.body.fields
+          if (fields.summary.length > 255) {
+            throw new Error(`Jira summary exceeds 255 characters (${fields.summary.length})`)
+          }
+          createdTasks.push(fields)
+          taskNumber += 1
+          return { key: `RHAI-${taskNumber}` }
+        }
+        return {}
+      }),
+    }
+
+    const result = await workflow.createReleaseEpic(jira, input, components, { feature_mode: 'none' })
+
+    const releaseTasks = createdTasks.filter(task => task.summary.includes('(stage-rc)') || task.summary.includes('(prod)'))
+    expect(result.failures).toEqual([])
+    expect(releaseTasks).toHaveLength(2)
+    expect(releaseTasks.every(task => task.summary.length <= 255)).toBe(true)
+    expect(releaseTasks.every(task => JSON.stringify(task.description).includes(names.at(-1)))).toBe(true)
+  })
+
   it('stops before creation when a duplicate needs confirmation', async () => {
     const input = {
       product: 'rhaiis', version: '3.6.0-fast.1', branch: '3.6-fast1', release_type: 'EA', advisory_type: 'RHEA',
@@ -289,6 +381,20 @@ describe('release epic workflow', () => {
     )
 
     expect(result.components[0].config_family).toBe('containers')
+  })
+
+  it('explains raw image-list repository mismatches and accepts explicit component mappings', () => {
+    const ready = [
+      { name: 'cpu', variant: 'cpu', stage_repository: 'quay.io/aipcc/rhaiis/cpu-ubi9' },
+      { name: 'gaudi', variant: 'gaudi', stage_repository: 'quay.io/aipcc/rhaiis/gaudi-ubi9' },
+    ]
+    const rocmPullspec = 'quay.io/aipcc/rhaiis/rocm-ubi9:3.6.0-fast.2-1790234469'
+
+    expect(() => workflow.parseImageListInput(rocmPullspec, ready)).toThrow(
+      "Pullspec repository quay.io/aipcc/rhaiis/rocm-ubi9 matches no ready component's PMC stage_repository. Ready mappings: cpu=quay.io/aipcc/rhaiis/cpu-ubi9, gaudi=quay.io/aipcc/rhaiis/gaudi-ubi9. Use <component-name>=<pullspec> to map it explicitly; the repository must still match PMC.",
+    )
+    expect([...workflow.parseImageListInput(`gaudi=${ready[1].stage_repository}:3.6.0-fast.2-1790087978`, [ready[1]]).values()])
+      .toEqual([`${ready[1].stage_repository}:3.6.0-fast.2-1790087978`])
   })
 
   it('normalizes legacy card families before checking array submissions', async () => {
@@ -808,5 +914,110 @@ describe('release epic workflow', () => {
     expect(workflow.canonicalComponentTokens(components)).toContain('cuda:disk-images')
     expect(() => workflow.resolveComponentTokens(components, 'cuda', 'ready')).toThrow(/ambiguous/)
     expect(workflow.resolveComponentTokens(components, 'cuda:disk-images', 'ready')).toEqual([components[1]])
+  })
+
+  it('accepts comma, whitespace, and mixed separators in ready and skipped component lists', () => {
+    const components = [
+      { name: 'cuda', variant: 'cuda', config_family: 'containers' },
+      { name: 'rocm', variant: 'rocm', config_family: 'containers' },
+      { name: 'model-opt', variant: 'model-opt', config_family: 'containers' },
+    ]
+    const input = 'cuda rocm, model-opt'
+
+    expect(workflow.resolveComponentTokens(components, input, 'ready')).toEqual(components)
+    expect(workflow.resolveComponentTokens(components, input, 'skipped')).toEqual(components)
+    expect(() => workflow.resolveComponentTokens(components, 'cuda;rocm', 'ready'))
+      .toThrow(/Unknown ready component or variant/)
+  })
+
+  it('prefers an exact variant alias over longer family-qualified prefixes', () => {
+    const components = [
+      { name: 'bootc-gaudi', variant: 'gaudi', config_family: 'containers' },
+      { name: 'bootc-gaudi-container-tools', variant: 'gaudi-tools', config_family: 'containers' },
+    ]
+
+    expect(workflow.resolveCardComponentTokens(components, 'gaudi:containers')).toEqual([components[0]])
+  })
+
+  it('suggests matching config families when a qualified component uses the wrong family', () => {
+    const components = [
+      { name: 'bootc-gaudi', variant: 'gaudi', config_family: 'containers' },
+      { name: 'bootc-gaudi-iso-disk-image', variant: 'gaudi-iso', config_family: 'disk-images' },
+    ]
+
+    expect(() => workflow.resolveComponentTokens(components, 'bootc-gaudi:wrong-family', 'skipped'))
+      .toThrow(/Matching config-family choices: bootc-gaudi:containers/)
+  })
+
+  it('rejects an exact component name qualified with a different existing family', () => {
+    const components = [
+      { name: 'bootc-gaudi', variant: 'gaudi', config_family: 'containers' },
+      { name: 'bootc-gaudi-iso-disk-image', variant: 'gaudi-iso', config_family: 'disk-images' },
+      { name: 'bootc-gaudi-qcow2-disk-image', variant: 'gaudi-qcow2', config_family: 'disk-images' },
+    ]
+
+    expect(() => workflow.resolveComponentTokens(components, 'bootc-gaudi:disk-images', 'ready'))
+      .toThrow(/Matching config-family choices: bootc-gaudi:containers/)
+  })
+
+  it('shows configured examples when a component name is unknown', () => {
+    const components = [
+      { name: 'bootc-gaudi', variant: 'gaudi', config_family: 'containers' },
+    ]
+
+    expect(() => workflow.resolveComponentTokens(components, 'bootc-mystery', 'skipped'))
+      .toThrow(/Use a PMC component or variant name.*Configured examples: bootc-gaudi:containers/)
+  })
+
+  it('resolves RHEL AI components by exact name and config family in validation and card updates', async () => {
+    const components = [
+      { name: 'bootc-gaudi', variant: 'gaudi', config_family: 'containers' },
+      { name: 'bootc-gaudi-iso-disk-image', variant: 'gaudi-iso', config_family: 'disk-images' },
+      { name: 'bootc-gaudi-qcow2-disk-image', variant: 'gaudi-qcow2', config_family: 'disk-images' },
+      { name: 'bootc-neuron', variant: 'neuron', config_family: 'containers' },
+    ]
+    const selected = 'bootc-gaudi:containers,bootc-gaudi-iso-disk-image:disk-images,bootc-gaudi-qcow2-disk-image:disk-images'
+    expect(workflow.resolveComponentTokens(components, selected, 'ready')).toEqual(components.slice(0, 3))
+    expect(workflow.resolveCardComponentTokens(components, selected)).toEqual(components.slice(0, 3))
+    expect(() => workflow.resolveComponentTokens(components, 'bootc-gaudi', 'skipped'))
+      .toThrow(/qualify it as <component-name>:<config_family>, for example bootc-gaudi:containers/)
+
+    const input = {
+      product: 'rhelai', version: '3.4.5', branch: '3.4', release_type: 'GA', advisory_type: 'RHEA',
+      metadata: { tenant: 'ai-tenant', application: 'rhelai-3-4', release_plans: ['rhelai-prod'], tags: ['3.4.5'] },
+    }
+    const epicIssue = {
+      key: 'RHAI-924',
+      fields: { summary: 'Release RHEL AI 3.4.5 GA', labels: ['release-automation'], description: workflow.buildEpicAdf(input, components) },
+    }
+    const cardDescription = workflow.triggerAdf(input, 'prod', 'planned', components, 'git-tag', '3.4.5', { pipelineComponents: 'all' })
+    const jira = {
+      fetchAllJqlResults: vi.fn(async () => [{
+        key: 'RHAI-925',
+        fields: { summary: 'Production readiness', labels: ['planned'], status: { name: 'To Do' }, description: cardDescription, parent: { key: 'RHAI-924' } },
+      }]),
+      jiraRequest: vi.fn(async (path, options) => options?.method === 'POST' ? { key: `RHAI-${925 + jira.jiraRequest.mock.calls.filter(([, request]) => request?.method === 'POST').length}` } : {}),
+    }
+    const pmc = {
+      sha: '4'.repeat(40),
+      products: [{ key: 'rhelai', branches: [{
+        branch: '3.4', configured_versions: ['3.4.5'], release_plans: ['rhelai-prod'], components,
+      }] }],
+    }
+
+    const result = await workflow.mutateTriggerRelease(jira, pmc, epicIssue, {
+      card_key: 'RHAI-925', target: 'prod', input_type: 'git-tag', input_value: '3.4.5',
+      components: 'bootc-gaudi:containers',
+      skipped_components: 'bootc-gaudi-iso-disk-image:disk-images,bootc-gaudi-qcow2-disk-image:disk-images',
+    })
+
+    expect(result.tasks.map(task => task.state)).toEqual(['planned', 'ready', 'skip'])
+    const update = jira.jiraRequest.mock.calls.find(([path, options]) => path === '/rest/api/3/issue/RHAI-925' && options.method === 'PUT')
+    const creates = jira.jiraRequest.mock.calls.filter(([path, options]) => path === '/rest/api/3/issue' && options.method === 'POST')
+    expect(update[1].body.fields.description.content[0].content[0].text).toContain('name: bootc-neuron')
+    expect(creates[0][1].body.fields.description.content[0].content[0].text).toContain('name: bootc-gaudi')
+    expect(creates[0][1].body.fields.description.content[0].content[0].text).toContain('config_family: "containers"')
+    expect(creates[1][1].body.fields.description.content[0].content[0].text).toContain('name: bootc-gaudi-iso-disk-image')
+    expect(creates[1][1].body.fields.description.content[0].content[0].text).toContain('name: bootc-gaudi-qcow2-disk-image')
   })
 })
