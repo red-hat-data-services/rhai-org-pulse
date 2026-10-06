@@ -166,6 +166,25 @@ export function ownersForPath(entries, filePath) {
   return winner ? [...winner.owners] : null;
 }
 
+/**
+ * GitHub's merge-queue commits are synthetic and are not associated with the
+ * source PRs by the commits API. The queue ref is the stable association:
+ *
+ *   gh-readonly-queue/main/pr-123-<sha>
+ *
+ * Parse every `pr-<number>-<sha>` component present in the ref so each
+ * represented queued PR is evaluated against the current merge-group base
+ * policy.
+ */
+export function pullRequestNumbersFromMergeGroupRef(headRef) {
+  const numbers = new Set();
+  const pattern = /(?:^|\/)pr-(\d+)-[0-9a-f]{7,40}(?=$|\/)/gi;
+  for (const match of String(headRef || '').matchAll(pattern)) {
+    numbers.add(Number(match[1]));
+  }
+  return [...numbers];
+}
+
 function teamHasMember(teamMembers, owner, login) {
   const members = teamMembers instanceof Map ? teamMembers.get(owner) : teamMembers?.[owner];
   return Boolean(members && new Set(members).has(normalizeLogin(login)));
@@ -378,10 +397,6 @@ class GitHubApi {
     return this.paginated(`/repos/${this.repository}/pulls/${number}/reviews`);
   }
 
-  async getPullRequestsForCommit(sha) {
-    return this.paginated(`/repos/${this.repository}/commits/${sha}/pulls`);
-  }
-
   async getTeamMembers(owner) {
     const [organization, teamSlug] = owner.slice(1).split('/');
     const members = await this.paginated(
@@ -561,27 +576,29 @@ async function runPullRequestGate(api, prNumber) {
   await publishPullRequestResult(api, prNumber, evaluation);
 }
 
-async function runMergeGroupGate(api, mergeGroupSha, baseSha) {
+async function runMergeGroupGate(api, mergeGroupSha, baseSha, headRef) {
   process.env.OWNERSHIP_GATE_HEAD_SHA = mergeGroupSha;
   if (!baseSha) {
     throw new Error('MERGE_GROUP_BASE_SHA is required for merge-queue evaluation.');
   }
 
-  const queuedPullRequests = (await api.getPullRequestsForCommit(mergeGroupSha))
-    .filter(pullRequest => pullRequest.state === 'open');
-  if (!queuedPullRequests.length) {
-    throw new Error(`No pull requests are associated with merge group ${mergeGroupSha}.`);
+  const queuedPullRequestNumbers = pullRequestNumbersFromMergeGroupRef(headRef);
+  if (!queuedPullRequestNumbers.length) {
+    throw new Error(`No pull request numbers found in merge-group ref ${headRef || '(missing)'}.`);
   }
 
   const evaluations = [];
-  for (const pullRequest of queuedPullRequests) {
-    const evaluation = await evaluatePullRequest(api, pullRequest.number, {
+  for (const prNumber of queuedPullRequestNumbers) {
+    const evaluation = await evaluatePullRequest(api, prNumber, {
       codeownersRef: baseSha
     });
-    if (evaluation.pullRequest.draft) {
-      throw new Error(`Draft PR #${pullRequest.number} appeared in the merge queue.`);
+    if (evaluation.pullRequest.state !== 'open') {
+      throw new Error(`Closed PR #${prNumber} appeared in the merge queue.`);
     }
-    evaluations.push({ number: pullRequest.number, evaluation });
+    if (evaluation.pullRequest.draft) {
+      throw new Error(`Draft PR #${prNumber} appeared in the merge queue.`);
+    }
+    evaluations.push({ number: prNumber, evaluation });
   }
 
   const failed = evaluations.filter(({ evaluation }) => !evaluation.result.passed);
@@ -614,7 +631,12 @@ async function main() {
     apiUrl: process.env.GITHUB_API_URL
   });
   if (mergeGroupSha) {
-    await runMergeGroupGate(api, mergeGroupSha, process.env.MERGE_GROUP_BASE_SHA);
+    await runMergeGroupGate(
+      api,
+      mergeGroupSha,
+      process.env.MERGE_GROUP_BASE_SHA,
+      process.env.MERGE_GROUP_HEAD_REF
+    );
     return;
   }
   if (!prNumber) {
