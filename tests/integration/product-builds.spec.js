@@ -55,7 +55,7 @@ test.describe('Product Builds Module @product-builds', () => {
     const team = page.getByRole('combobox', { name: 'Team', exact: true })
     await expect(team).toBeVisible()
     await expect(team).toBeEnabled()
-    for (const project of ['AIPCC', 'RHAI']) {
+    for (const project of ['RHAI', 'RHAISTRAT']) {
       const responsePromise = page.waitForResponse(response => response.url().includes(`/package-requests/teams?project=${project}`))
       await page.locator('#req-team-project').selectOption(project)
       const response = await responsePromise
