@@ -1,0 +1,28 @@
+{
+  "key": "RHAISTRAT-1711",
+  "summary": "Top-level Kueue support for InferenceService and LLMInferenceService",
+  "status": "New",
+  "statusCategory": "To Do",
+  "priority": "Critical",
+  "components": [
+    "AI Core Platform",
+    "Documentation",
+    "llm-d"
+  ],
+  "targetVersions": [
+    "3.7 GA RHOAI RELEASE"
+  ],
+  "fixVersions": [],
+  "pm": "Myriam Fentanes Gutierrez",
+  "assignee": {
+    "displayName": "Vivek Karunai Kiri Ragavan",
+    "accountId": "712020:9b64d35b-54b0-477d-ad8c-6a4270afb113"
+  },
+  "labels": [],
+  "created": "2026/05/04 10:36 AM",
+  "updated": "2026/09/15 5:42 PM",
+  "architect": null,
+  "parentKey": null,
+  "colorStatus": null,
+  "ownerStatusColor": null
+}

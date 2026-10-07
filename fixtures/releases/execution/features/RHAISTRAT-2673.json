@@ -1,0 +1,26 @@
+{
+  "key": "RHAISTRAT-2673",
+  "summary": "[DRAFT] Add dflash speculator models to RHOAI Model Catalog for 3.6 GA [3.6 Target]",
+  "status": "Refinement",
+  "statusCategory": "To Do",
+  "priority": "Major",
+  "components": [
+    "AI Hub"
+  ],
+  "targetVersions": [
+    "3.7 EA RHOAI RELEASE"
+  ],
+  "fixVersions": [],
+  "pm": "",
+  "assignee": {
+    "displayName": "",
+    "accountId": ""
+  },
+  "labels": [],
+  "created": "2026/08/28 12:14 PM",
+  "updated": "2026/09/28 11:11 AM",
+  "architect": null,
+  "parentKey": null,
+  "colorStatus": null,
+  "ownerStatusColor": null
+}

@@ -16,7 +16,8 @@
     ],
     "hiddenRoutes": {
       "disconnected-repo-detail": "component-maturity",
-      "e2e-run-detail": "odh-e2e-health"
+      "e2e-run-detail": "odh-e2e-health",
+      "test-execution-detail": "test-execution"
     }
   },
   "server": {
@@ -28,7 +29,11 @@
   "export": {
     "files": [
       { "path": "system-health/disconnected/reports.json", "notes": "Disconnected readiness reports with history for all tracked repos" },
-      { "path": "system-health/quality/reports.json", "notes": "Quality analysis reports with history for tracked repos" }
+      { "path": "system-health/quality/reports.json", "notes": "Quality analysis reports with history for tracked repos" },
+      { "path": "system-health/test-execution/heatmap.json", "notes": "Test execution heatmap: per-component daily pass/fail/skip totals with version|release breakdown, pushed by the external test-reports pipeline" },
+      { "path": "system-health/test-execution/components.json", "notes": "Per-component daily series and quality-gate execution detail for the test execution dashboard" },
+      { "path": "system-health/test-execution/jira_config.json", "notes": "Release/team JQL configuration used to build Jira links from the test execution dashboard" },
+      { "path": "system-health/test-execution/meta.json", "notes": "Test execution dashboard generation metadata (date window, component list, data mode)" }
     ]
   }
 }

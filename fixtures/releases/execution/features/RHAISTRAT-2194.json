@@ -1,0 +1,29 @@
+{
+  "key": "RHAISTRAT-2194",
+  "summary": "[RHOAI][3.x] vLLM Pod-level observability for inference request timeouts",
+  "status": "New",
+  "statusCategory": "To Do",
+  "priority": "Major",
+  "components": [
+    "OpenShift AI Productization",
+    "Serving Orchestration",
+    "vLLM",
+    "vLLM Runtime"
+  ],
+  "targetVersions": [
+    "3.7 GA RHOAI RELEASE"
+  ],
+  "fixVersions": [],
+  "pm": "Adam Bellusci",
+  "assignee": {
+    "displayName": "Mariah Holder",
+    "accountId": "712020:191303da-bbd8-40ff-ac91-3a4e5e27f619"
+  },
+  "labels": [],
+  "created": "2026/07/07 6:10 PM",
+  "updated": "2026/09/28 2:38 PM",
+  "architect": null,
+  "parentKey": null,
+  "colorStatus": null,
+  "ownerStatusColor": null
+}

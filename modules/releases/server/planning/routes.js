@@ -1861,5 +1861,5 @@ module.exports = async function registerPlanningRoutes(router, context) {
 
   // ─── AI Planner Routes ───
   const registerAIPlannerRoutes = require('./ai-planner/routes');
-  registerAIPlannerRoutes(router, context);
+  registerAIPlannerRoutes(router, { ...context, buildFeatureReadiness, listStorageFiles });
 }

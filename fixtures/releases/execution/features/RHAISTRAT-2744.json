@@ -1,0 +1,29 @@
+{
+  "key": "RHAISTRAT-2744",
+  "summary": "Model lifecycle management via /v1/omni/sleep and /v1/omni/wakeup",
+  "status": "New",
+  "statusCategory": "To Do",
+  "priority": "Normal",
+  "components": [
+    "vLLM Runtime"
+  ],
+  "targetVersions": [
+    "3.7 GA  RHAII RELEASE",
+    "3.7 GA RHOAI RELEASE"
+  ],
+  "fixVersions": [
+    "3.7 EA RHOAI RELEASE"
+  ],
+  "pm": "Yuchen Fama",
+  "assignee": {
+    "displayName": "Ricardo Noriega",
+    "accountId": "70121:0d429d58-22f3-4b48-8140-33be919aedb5"
+  },
+  "labels": [],
+  "created": "2026/09/15 12:12 AM",
+  "updated": "2026/09/22 7:44 AM",
+  "architect": null,
+  "parentKey": null,
+  "colorStatus": null,
+  "ownerStatusColor": null
+}

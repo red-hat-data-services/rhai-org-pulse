@@ -1,0 +1,28 @@
+{
+  "key": "RHAISTRAT-2654",
+  "summary": "Logging Collection for infrastructure related logs of RH AI inference components (vLLM, llm-d, MaaS, KServe)",
+  "status": "New",
+  "statusCategory": "To Do",
+  "priority": "Critical",
+  "components": [
+    "AI Core Platform",
+    "Model and Agent Observability",
+    "Serving Orchestration"
+  ],
+  "targetVersions": [
+    "3.7 GA RHOAI RELEASE"
+  ],
+  "fixVersions": [],
+  "pm": "Jehlum Vitasta Pandit",
+  "assignee": {
+    "displayName": "Kevin Howell",
+    "accountId": "70121:9b26500c-6ffe-42f2-bf41-fcf3a5849077"
+  },
+  "labels": [],
+  "created": "2026/08/26 8:57 AM",
+  "updated": "2026/09/23 11:21 AM",
+  "architect": null,
+  "parentKey": null,
+  "colorStatus": null,
+  "ownerStatusColor": null
+}

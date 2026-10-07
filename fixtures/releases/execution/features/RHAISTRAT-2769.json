@@ -1,0 +1,27 @@
+{
+  "key": "RHAISTRAT-2769",
+  "summary": "[DRAFT] Multi-Provider Validation Matrix for Responses API",
+  "status": "New",
+  "statusCategory": "To Do",
+  "priority": "Major",
+  "components": [
+    "Agentic API",
+    "OGX Core"
+  ],
+  "targetVersions": [
+    "3.7 EA RHOAI RELEASE"
+  ],
+  "fixVersions": [],
+  "pm": "",
+  "assignee": {
+    "displayName": "",
+    "accountId": ""
+  },
+  "labels": [],
+  "created": "2026/09/16 6:12 PM",
+  "updated": "2026/09/16 7:30 PM",
+  "architect": null,
+  "parentKey": null,
+  "colorStatus": null,
+  "ownerStatusColor": null
+}

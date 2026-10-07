@@ -1,0 +1,29 @@
+# This deliberately runs untrusted pull-request code without secrets. The
+# privileged ownership-gate workflow uses pull_request_target and only ever
+# executes the trusted default-branch evaluator.
+name: Ownership Gate Tests
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - '.github/CODEOWNERS'
+      - '.github/workflows/ownership-gate.yml'
+      - '.github/workflows/ownership-gate-tests.yml'
+      - 'scripts/ownership-gate.mjs'
+      - 'scripts/ownership-gate.test.mjs'
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    name: Test ownership evaluator
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '22'
+      - run: node --check scripts/ownership-gate.mjs
+      - run: node --test scripts/ownership-gate.test.mjs

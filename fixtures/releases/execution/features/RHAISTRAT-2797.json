@@ -1,0 +1,25 @@
+{
+  "key": "RHAISTRAT-2797",
+  "summary": "RHEL 10 Migration for Red Hat AI Base Images (RHOAI & RHAIIS)",
+  "status": "New",
+  "statusCategory": "To Do",
+  "priority": "Undefined",
+  "components": [],
+  "targetVersions": [
+    "3.7 EA RHOAI RELEASE",
+    "3.7 GA  RHAII RELEASE"
+  ],
+  "fixVersions": [],
+  "pm": "",
+  "assignee": {
+    "displayName": "Emilien Macchi",
+    "accountId": "712020:9b576bd5-a4e5-4820-9ab7-330e04045afd"
+  },
+  "labels": [],
+  "created": "2026/09/18 12:13 PM",
+  "updated": "2026/09/29 6:00 AM",
+  "architect": null,
+  "parentKey": null,
+  "colorStatus": null,
+  "ownerStatusColor": null
+}

@@ -1,0 +1,29 @@
+{
+  "key": "RHAISTRAT-2421",
+  "summary": "DCGM GPU metrics collection and validation for the RHOAI monitoring stack",
+  "status": "In Progress",
+  "statusCategory": "In Progress",
+  "priority": "Critical",
+  "components": [
+    "Documentation",
+    "Model and Agent Observability"
+  ],
+  "targetVersions": [
+    "3.7 EA RHOAI RELEASE"
+  ],
+  "fixVersions": [
+    "3.6 GA RHOAI RELEASE"
+  ],
+  "pm": "Suhas Kashyap",
+  "assignee": {
+    "displayName": "Adrian Sanz Gomiz",
+    "accountId": "62385c0994742a00683c6f7b"
+  },
+  "labels": [],
+  "created": "2026/07/27 4:05 PM",
+  "updated": "2026/09/26 8:00 PM",
+  "architect": null,
+  "parentKey": null,
+  "colorStatus": null,
+  "ownerStatusColor": null
+}

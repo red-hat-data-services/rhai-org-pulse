@@ -1,0 +1,30 @@
+{
+  "key": "RHAISTRAT-2117",
+  "summary": "Wire ModelCar security scan data into the AI Hub library",
+  "status": "Refinement",
+  "statusCategory": "To Do",
+  "priority": "Normal",
+  "components": [
+    "AI Evaluations",
+    "AI Hub",
+    "AI Safety",
+    "Model Validation",
+    "UXD"
+  ],
+  "targetVersions": [
+    "3.7 EA RHOAI RELEASE"
+  ],
+  "fixVersions": [],
+  "pm": "Adam Bellusci",
+  "assignee": {
+    "displayName": "Christopher Jones",
+    "accountId": "712020:ca78d649-ed04-4b14-b43e-0e302bac24de"
+  },
+  "labels": [],
+  "created": "2026/06/24 2:10 PM",
+  "updated": "2026/09/16 3:18 PM",
+  "architect": null,
+  "parentKey": null,
+  "colorStatus": null,
+  "ownerStatusColor": null
+}

@@ -1,0 +1,26 @@
+{
+  "key": "RHAISTRAT-2269",
+  "summary": "[GA] [Navigator] Intelligent Model Recommendation Engine",
+  "status": "New",
+  "statusCategory": "To Do",
+  "priority": "Critical",
+  "components": [
+    "AI Navigator"
+  ],
+  "targetVersions": [
+    "3.7 GA RHOAI RELEASE"
+  ],
+  "fixVersions": [],
+  "pm": "Suhas Kashyap",
+  "assignee": {
+    "displayName": "Amit Oren",
+    "accountId": "712020:cf4164d3-b212-4e8d-bb1f-21d5719ffa0c"
+  },
+  "labels": [],
+  "created": "2026/07/17 12:09 PM",
+  "updated": "2026/09/28 2:38 PM",
+  "architect": null,
+  "parentKey": null,
+  "colorStatus": null,
+  "ownerStatusColor": null
+}

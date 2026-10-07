@@ -1,0 +1,29 @@
+{
+  "key": "RHAISTRAT-1456",
+  "summary": "AI Gateway Support for OpenAI Codex Agent SDK",
+  "status": "New",
+  "statusCategory": "To Do",
+  "priority": "Critical",
+  "components": [
+    "Agentic API",
+    "Documentation",
+    "Inference Gateway",
+    "OGX Core"
+  ],
+  "targetVersions": [
+    "3.7 EA RHOAI RELEASE"
+  ],
+  "fixVersions": [],
+  "pm": "Rob Greenberg",
+  "assignee": {
+    "displayName": "Sumanth Kamenani",
+    "accountId": "712020:b84bf70f-721b-43f1-be72-30992d134f3a"
+  },
+  "labels": [],
+  "created": "2026/04/08 1:09 PM",
+  "updated": "2026/09/16 5:10 AM",
+  "architect": null,
+  "parentKey": null,
+  "colorStatus": null,
+  "ownerStatusColor": null
+}

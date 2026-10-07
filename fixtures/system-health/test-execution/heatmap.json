@@ -1,0 +1,66 @@
+{
+  "generated_at": "2026-09-17T00:00:00+00:00",
+  "filters": { "from": "2026-09-15", "to": "2026-09-17" },
+  "components": [
+    {
+      "component": "AI Hub",
+      "overall": { "execution_count": 6, "total": 300, "passed": 297, "failed": 3, "skipped": 0, "mark": { "state": "PASSED", "color": "green", "symbol": "✓" } },
+      "days": {
+        "2026-09-15": {
+          "execution_count": 2, "total": 100, "passed": 99, "failed": 1, "skipped": 0,
+          "jenkins_urls": ["https://jenkins.example.com/job/rhoai/job/3.5/job/rhoai-smoke/1/"],
+          "by_vr": {
+            "3.5|GA": { "passed": 99, "failed": 1, "skipped": 0, "total": 100, "jenkins_urls": ["https://jenkins.example.com/job/rhoai/job/3.5/job/rhoai-smoke/1/"] }
+          },
+          "mark": { "state": "PASSED", "color": "green", "symbol": "✓" }
+        },
+        "2026-09-16": {
+          "execution_count": 2, "total": 100, "passed": 100, "failed": 0, "skipped": 0,
+          "jenkins_urls": ["https://jenkins.example.com/job/rhoai/job/3.6-ea.1/job/rhoai-smoke/2/"],
+          "by_vr": {
+            "3.6|EA1": { "passed": 100, "failed": 0, "skipped": 0, "total": 100, "jenkins_urls": ["https://jenkins.example.com/job/rhoai/job/3.6-ea.1/job/rhoai-smoke/2/"] }
+          },
+          "mark": { "state": "PASSED", "color": "green", "symbol": "✓" }
+        },
+        "2026-09-17": {
+          "execution_count": 2, "total": 100, "passed": 98, "failed": 2, "skipped": 0,
+          "jenkins_urls": ["https://jenkins.example.com/job/rhoai/job/3.6-ea.1/job/rhoai-smoke/3/"],
+          "by_vr": {
+            "3.6|EA1": { "passed": 98, "failed": 2, "skipped": 0, "total": 100, "jenkins_urls": ["https://jenkins.example.com/job/rhoai/job/3.6-ea.1/job/rhoai-smoke/3/"] }
+          },
+          "mark": { "state": "PASSED", "color": "green", "symbol": "✓" }
+        }
+      }
+    },
+    {
+      "component": "AI Safety",
+      "overall": { "execution_count": 6, "total": 300, "passed": 246, "failed": 54, "skipped": 0, "mark": { "state": "FAILED", "color": "red", "symbol": "●" } },
+      "days": {
+        "2026-09-15": {
+          "execution_count": 2, "total": 100, "passed": 80, "failed": 20, "skipped": 0,
+          "jenkins_urls": ["https://jenkins.example.com/job/rhoai/job/3.5/job/rhoai-tier1/1/"],
+          "by_vr": {
+            "3.5|GA": { "passed": 80, "failed": 20, "skipped": 0, "total": 100, "jenkins_urls": ["https://jenkins.example.com/job/rhoai/job/3.5/job/rhoai-tier1/1/"] }
+          },
+          "mark": { "state": "FAILED", "color": "red", "symbol": "●" }
+        },
+        "2026-09-16": {
+          "execution_count": 2, "total": 100, "passed": 84, "failed": 16, "skipped": 0,
+          "jenkins_urls": ["https://jenkins.example.com/job/rhoai/job/3.6-ea.1/job/rhoai-tier1/2/"],
+          "by_vr": {
+            "3.6|EA1": { "passed": 84, "failed": 16, "skipped": 0, "total": 100, "jenkins_urls": ["https://jenkins.example.com/job/rhoai/job/3.6-ea.1/job/rhoai-tier1/2/"] }
+          },
+          "mark": { "state": "FAILED", "color": "red", "symbol": "●" }
+        },
+        "2026-09-17": {
+          "execution_count": 2, "total": 100, "passed": 82, "failed": 18, "skipped": 0,
+          "jenkins_urls": ["https://jenkins.example.com/job/rhoai/job/3.6-ea.1/job/rhoai-tier1/3/"],
+          "by_vr": {
+            "3.6|EA1": { "passed": 82, "failed": 18, "skipped": 0, "total": 100, "jenkins_urls": ["https://jenkins.example.com/job/rhoai/job/3.6-ea.1/job/rhoai-tier1/3/"] }
+          },
+          "mark": { "state": "FAILED", "color": "red", "symbol": "●" }
+        }
+      }
+    }
+  ]
+}

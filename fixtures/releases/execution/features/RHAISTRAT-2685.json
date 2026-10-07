@@ -1,0 +1,28 @@
+{
+  "key": "RHAISTRAT-2685",
+  "summary": "[DRAFT] EvalHub UI : Import Evaluation Collections from Git Repository",
+  "status": "New",
+  "statusCategory": "To Do",
+  "priority": "Major",
+  "components": [
+    "AI Core Dashboard",
+    "AI Evaluations",
+    "UXD"
+  ],
+  "targetVersions": [
+    "3.7 GA RHOAI RELEASE"
+  ],
+  "fixVersions": [],
+  "pm": "",
+  "assignee": {
+    "displayName": "Nick Mazzitelli",
+    "accountId": "712020:bc222714-c05b-4701-bd06-f13523f97cfa"
+  },
+  "labels": [],
+  "created": "2026/09/01 12:10 PM",
+  "updated": "2026/09/28 2:37 PM",
+  "architect": null,
+  "parentKey": null,
+  "colorStatus": null,
+  "ownerStatusColor": null
+}

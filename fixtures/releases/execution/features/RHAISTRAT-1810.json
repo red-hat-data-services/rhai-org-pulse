@@ -1,0 +1,27 @@
+{
+  "key": "RHAISTRAT-1810",
+  "summary": "AI Gateway: Full API Fidelity for Tool-Calling Clients",
+  "status": "New",
+  "statusCategory": "To Do",
+  "priority": "Major",
+  "components": [
+    "Inference Gateway",
+    "vLLM Runtime"
+  ],
+  "targetVersions": [
+    "3.7 EA RHOAI RELEASE"
+  ],
+  "fixVersions": [],
+  "pm": "",
+  "assignee": {
+    "displayName": "",
+    "accountId": ""
+  },
+  "labels": [],
+  "created": "2026/05/21 12:11 PM",
+  "updated": "2026/09/10 4:26 AM",
+  "architect": null,
+  "parentKey": null,
+  "colorStatus": null,
+  "ownerStatusColor": null
+}

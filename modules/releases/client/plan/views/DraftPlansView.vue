@@ -19,7 +19,8 @@ var {
   selectedProduct,
   selectedVersion,
   availableProducts,
-  availableCycles,
+  selectedTargetVersion,
+  availableTargetVersions,
   cycleLabel,
   activeCycleMeta,
   filterEvent,
@@ -54,6 +55,7 @@ var {
   descopeFeature,
   undescopeFeature,
   approveFeature,
+  sessionAdded,
   freeze,
   unfreeze,
   unfreezeAll,
@@ -169,13 +171,6 @@ function onProductChange(product) {
   setProductFilter(product)
 }
 
-async function onVersionChange(version) {
-  if (version === selectedVersion.value) return
-  if (dirty.value && !window.confirm('Discard unsaved changes and switch cycle?')) return
-  selectedFeatureKey.value = null
-  await loadEditor(version)
-}
-
 function formatTs(ts) {
   if (!ts) return ''
   var d = new Date(ts)
@@ -194,7 +189,9 @@ onMounted(async function() {
   }
   // Plan Approval starts with only AI Planner-approved features visible while
   // retaining the full candidate set for approvals, editing, and audit history.
-  filterEvent.value = '__approved__'
+  // After an Add to Plan, narrow further to just that batch so it isn't lost
+  // among approvals already saved on the cycle.
+  filterEvent.value = sessionAdded.value.length ? '__session__' : '__approved__'
   filterDecision.value = ''
 })
 </script>
@@ -212,13 +209,12 @@ onMounted(async function() {
           Cycle
           <select
             class="bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-md px-3 py-1.5 text-sm text-gray-900 dark:text-gray-100 focus:outline-none focus:border-primary-500 focus:ring-1 focus:ring-primary-500"
-            :value="selectedVersion"
-            :disabled="loading || saving || availableCycles.length === 0"
-            @change="onVersionChange($event.target.value)"
+            :value="selectedTargetVersion"
+            :disabled="loading || saving || availableTargetVersions.length === 0"
+            @change="selectedTargetVersion = $event.target.value"
           >
-            <option v-for="c in availableCycles" :key="c.version" :value="c.version">
-              {{ c.version }}{{ c.demoMode ? ' (demo)' : '' }}
-            </option>
+            <option value="">All of {{ selectedVersion }}{{ activeCycleMeta && activeCycleMeta.demoMode ? ' (demo)' : '' }}</option>
+            <option v-for="tv in availableTargetVersions" :key="tv" :value="tv">{{ tv }}</option>
           </select>
         </label>
         <label class="text-sm font-medium text-gray-700 dark:text-gray-300 flex items-center gap-2">
@@ -363,6 +359,7 @@ onMounted(async function() {
           <option v-for="p in filterPlacements" :key="p" :value="p">{{ p }}</option>
           <option value="__changed__">Changed</option>
           <option value="__approved__">Approved</option>
+          <option value="__session__">Added from AI Planner</option>
         </select>
       </label>
       <label class="text-xs text-gray-500 dark:text-gray-400">
@@ -448,7 +445,7 @@ onMounted(async function() {
 
     <!-- Empty state: Plan Approval starts fresh -->
     <div
-      v-if="!loading && !error && (!draft || (filterEvent === '__approved__' && filteredRows.length === 0))"
+      v-if="!loading && !error && (!draft || ((filterEvent === '__approved__' || filterEvent === '__session__') && filteredRows.length === 0))"
       class="mx-4 mt-3 rounded-lg border border-blue-200 dark:border-blue-500/30 bg-blue-50 dark:bg-blue-500/10 px-4 py-6 text-center text-sm text-blue-800 dark:text-blue-300"
     >
       <p class="font-semibold mb-2">Plan Approval — Start Fresh</p>

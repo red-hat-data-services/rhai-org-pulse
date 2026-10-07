@@ -1,0 +1,28 @@
+{
+  "key": "RHAISTRAT-1499",
+  "summary": "Code Interpreter Tool Type for the Responses API",
+  "status": "Refinement",
+  "statusCategory": "To Do",
+  "priority": "Normal",
+  "components": [
+    "Agentic API",
+    "Inference Gateway",
+    "OGX Core"
+  ],
+  "targetVersions": [
+    "3.7 EA RHOAI RELEASE"
+  ],
+  "fixVersions": [],
+  "pm": "",
+  "assignee": {
+    "displayName": "Sumanth Kamenani",
+    "accountId": "712020:b84bf70f-721b-43f1-be72-30992d134f3a"
+  },
+  "labels": [],
+  "created": "2026/04/16 6:46 AM",
+  "updated": "2026/09/16 4:51 AM",
+  "architect": null,
+  "parentKey": null,
+  "colorStatus": null,
+  "ownerStatusColor": null
+}

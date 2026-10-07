@@ -21,7 +21,9 @@
       <DraftPlansView v-else-if="activeTab === 'draft-plans' && canViewDraftPlans" />
       <BuFeedbackView v-else-if="activeTab === 'bu-feedback'" />
       <PmHubView v-else-if="activeTab === 'pm-hub'" />
-      <AIPlanner v-else-if="activeTab === 'ai-planner'" />
+      <!-- Kept mounted once opened. Unmounting destroys the planner's iframe, which
+           resets its filters and selection every time the user visits another tab. -->
+      <AIPlanner v-if="plannerOpened" v-show="activeTab === 'ai-planner'" />
     </div>
   </div>
 </template>
@@ -69,6 +71,12 @@ function getTabFromParams() {
 }
 
 const activeTab = ref('outcomes')
+
+// Latches on first visit so the planner is not loaded for people who never open it.
+const plannerOpened = ref(false)
+watch(activeTab, function(tab) {
+  if (tab === 'ai-planner') plannerOpened.value = true
+}, { immediate: true })
 
 function syncActiveTab() {
   var tab = getTabFromParams()

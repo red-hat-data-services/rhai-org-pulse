@@ -1,0 +1,28 @@
+{
+  "key": "RHAISTRAT-1940",
+  "summary": "Pre-loaded skills in skills library for out-of-box agent development value",
+  "status": "Refinement",
+  "statusCategory": "To Do",
+  "priority": "Major",
+  "components": [
+    "AgentDev",
+    "AI Hub",
+    "Documentation"
+  ],
+  "targetVersions": [
+    "3.7 GA RHOAI RELEASE"
+  ],
+  "fixVersions": [],
+  "pm": "Peter Double",
+  "assignee": {
+    "displayName": "Andrew Ballantyne",
+    "accountId": "5fdb88f09edf280075ce339d"
+  },
+  "labels": [],
+  "created": "2026/06/11 10:11 PM",
+  "updated": "2026/09/22 8:14 AM",
+  "architect": null,
+  "parentKey": null,
+  "colorStatus": null,
+  "ownerStatusColor": null
+}

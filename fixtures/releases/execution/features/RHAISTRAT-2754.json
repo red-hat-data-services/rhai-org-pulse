@@ -1,0 +1,27 @@
+{
+  "key": "RHAISTRAT-2754",
+  "summary": "Add Tool-Calling Validated Models to AI Hub for 3.6 GA",
+  "status": "New",
+  "statusCategory": "To Do",
+  "priority": "Major",
+  "components": [
+    "AI Hub",
+    "Model Validation"
+  ],
+  "targetVersions": [
+    "3.7 GA RHOAI RELEASE"
+  ],
+  "fixVersions": [],
+  "pm": "Rob Greenberg",
+  "assignee": {
+    "displayName": "Adysen Rothman",
+    "accountId": "712020:98117d7a-0c0f-4353-90b9-04395ed37db7"
+  },
+  "labels": [],
+  "created": "2026/09/15 2:59 PM",
+  "updated": "2026/09/28 2:37 PM",
+  "architect": null,
+  "parentKey": null,
+  "colorStatus": null,
+  "ownerStatusColor": null
+}

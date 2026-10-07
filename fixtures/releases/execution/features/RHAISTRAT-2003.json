@@ -1,0 +1,27 @@
+{
+  "key": "RHAISTRAT-2003",
+  "summary": "Self-Service Gateway Creation for llm-d Deployments",
+  "status": "New",
+  "statusCategory": "To Do",
+  "priority": "Major",
+  "components": [
+    "AI Core Dashboard",
+    "llm-d"
+  ],
+  "targetVersions": [
+    "3.7 EA RHOAI RELEASE"
+  ],
+  "fixVersions": [],
+  "pm": "Naina Singh",
+  "assignee": {
+    "displayName": "",
+    "accountId": ""
+  },
+  "labels": [],
+  "created": "2026/06/15 12:10 PM",
+  "updated": "2026/09/22 8:07 PM",
+  "architect": null,
+  "parentKey": null,
+  "colorStatus": null,
+  "ownerStatusColor": null
+}

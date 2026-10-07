@@ -507,13 +507,11 @@ module.exports = function registerRoutes(router, context) {
         }
         var totalQPct = totalRow.qPcts[sqk] != null ? totalRow.qPcts[sqk] : 0
         var totalQCompleted = totalRow.associates > 0 ? Math.round(totalRow.associates * totalQPct / 100) : 0
-        var qNum = sqk.replace('Q', '')
-        var endMonths = { '1': '03/31', '2': '06/30', '3': '09/30', '4': '12/31' }
         quarters.push({
           label: sqk + ' 2026',
           teams: qTeams,
           total: { associates: totalRow.associates, completed: totalQCompleted, pct: totalQPct, endQPct: totalQPct },
-          targetDate: (endMonths[qNum] || '12/31') + '/2026'
+          targetDate: '12/31/2026'
         })
       }
 
@@ -892,13 +890,13 @@ function parsePct(val) {
 
 function getSampleContentData() {
   var teamData = [
-    { name: "Steven's Directs", associates: 14, completed: 1, pct: 7, status: 'Started', performance: 'Behind (43% to go)', q1: 7, q2: 7 },
-    { name: 'Cat Agentics & AI Eng Tooling', associates: 58, completed: 19, pct: 33, status: 'Started', performance: 'Behind (17% to go)', q1: 6, q2: 31 },
-    { name: 'Sherard AI Platform', associates: 192, completed: 34, pct: 18, status: 'Started', performance: 'Behind (32% to go)', q1: 6, q2: 18 },
-    { name: 'Taneem Inf Engineering', associates: 59, completed: 21, pct: 36, status: 'Started', performance: 'Behind (14% to go)', q1: 7, q2: 36 },
-    { name: 'Kai AI Innovation', associates: 13, completed: 2, pct: 15, status: 'Started', performance: 'Behind (35% to go)', q1: 0, q2: 15 },
-    { name: 'Tom AIPCC', associates: 147, completed: 19, pct: 13, status: 'Started', performance: 'Behind (37% to go)', q1: 6, q2: 13 },
-    { name: 'Monica watsonx', associates: 48, completed: 18, pct: 38, status: 'Started', performance: 'Behind (13% to go)', q1: 10, q2: 38 }
+    { name: "Steven's Directs", associates: 14, completed: 1, pct: 7, status: 'Started', performance: 'Behind (43% to go)', q1: 7, q2: 7, q3: 7, q3Performance: 'Behind (43% to go)' },
+    { name: 'Cat Agentics & AI Eng Tooling', associates: 58, completed: 30, pct: 52, status: 'Started', performance: 'Behind (17% to go)', q1: 6, q2: 31, q3: 52, q3Performance: 'On Track' },
+    { name: 'Sherard AI Platform', associates: 192, completed: 40, pct: 21, status: 'Started', performance: 'Behind (32% to go)', q1: 6, q2: 18, q3: 21, q3Performance: 'Behind (29% to go)' },
+    { name: 'Taneem Inf Engineering', associates: 59, completed: 27, pct: 45, status: 'Started', performance: 'Behind (14% to go)', q1: 7, q2: 36, q3: 45, q3Performance: 'Behind (5% to go)' },
+    { name: 'Kai AI Innovation', associates: 13, completed: 2, pct: 15, status: 'Started', performance: 'Behind (35% to go)', q1: 0, q2: 15, q3: 15, q3Performance: 'Behind (35% to go)' },
+    { name: 'Tom AIPCC', associates: 147, completed: 32, pct: 22, status: 'Started', performance: 'Behind (37% to go)', q1: 6, q2: 13, q3: 22, q3Performance: 'Behind (28% to go)' },
+    { name: 'Monica watsonx', associates: 48, completed: 22, pct: 46, status: 'Started', performance: 'Behind (13% to go)', q1: 10, q2: 38, q3: 46, q3Performance: 'Behind (4% to go)' }
   ]
 
   function buildQuarter(qKey, qNum) {
@@ -907,16 +905,17 @@ function getSampleContentData() {
       var t = teamData[i]
       var qPct = t[qKey] != null ? t[qKey] : 0
       var qCompleted = Math.round(t.associates * qPct / 100)
-      teams.push({ name: t.name, associates: t.associates, completed: qCompleted, pct: qPct, status: t.status, performance: t.performance, endQPct: qPct })
+      var performance = qKey === 'q3' ? t.q3Performance : t.performance
+      teams.push({ name: t.name, associates: t.associates, completed: qCompleted, pct: qPct, status: t.status, performance: performance, endQPct: qPct })
     }
     var tA = 0; var tC = 0
     for (var j = 0; j < teams.length; j++) { tA += teams[j].associates; tC += teams[j].completed }
     var tPct = tA > 0 ? Math.round((tC / tA) * 100) : 0
-    var endMonths = { 1: '03/31', 2: '06/30', 3: '09/30', 4: '12/31' }
-    return { label: 'Q' + qNum + ' 2026', teams: teams, total: { associates: tA, completed: tC, pct: tPct, endQPct: tPct }, targetDate: endMonths[qNum] + '/2026' }
+    var totalPerformance = qKey === 'q3' ? 'Behind (21% to go)' : ''
+    return { label: 'Q' + qNum + ' 2026', teams: teams, total: { associates: tA, completed: tC, pct: tPct, performance: totalPerformance, endQPct: tPct }, targetDate: '12/31/2026' }
   }
 
-  var quarters = [buildQuarter('q1', 1), buildQuarter('q2', 2)]
+  var quarters = [buildQuarter('q1', 1), buildQuarter('q2', 2), buildQuarter('q3', 3)]
 
   var tA = 0; var tC = 0
   for (var i = 0; i < teamData.length; i++) { tA += teamData[i].associates; tC += teamData[i].completed }
@@ -928,6 +927,8 @@ function getSampleContentData() {
     fetchedAt: new Date().toISOString()
   }
 }
+
+module.exports.getSampleContentData = getSampleContentData
 
 function getSampleTechVisData() {
   var q1Weeks = [
@@ -947,6 +948,14 @@ function getSampleTechVisData() {
     { weekOf: '2026-06-11', count: 2, met: false }, { weekOf: '2026-06-18', count: 5, met: true },
     { weekOf: '2026-06-25', count: 3, met: false }
   ]
+  var q3Weeks = [
+    { weekOf: '2026-07-02', count: 1, met: false }, { weekOf: '2026-07-09', count: 4, met: false },
+    { weekOf: '2026-07-16', count: 6, met: true }, { weekOf: '2026-07-23', count: 4, met: false },
+    { weekOf: '2026-07-30', count: 3, met: false }, { weekOf: '2026-08-06', count: 2, met: false },
+    { weekOf: '2026-08-13', count: 3, met: false }, { weekOf: '2026-08-20', count: 4, met: false },
+    { weekOf: '2026-08-27', count: 0, met: false }, { weekOf: '2026-09-03', count: 6, met: true },
+    { weekOf: '2026-09-10', count: 3, met: false }, { weekOf: '2026-09-25', count: 0, met: false }
+  ]
 
   function buildQ(weeks, label) {
     var m = 0
@@ -954,7 +963,7 @@ function getSampleTechVisData() {
     return { label: label, weeks: weeks, weeksMet: m, totalWeeks: weeks.length, pct: Math.round((m / weeks.length) * 100) }
   }
 
-  var allQ = [buildQ(q1Weeks, 'Q1 2026'), buildQ(q2Weeks, 'Q2 2026')]
+  var allQ = [buildQ(q1Weeks, 'Q1 2026'), buildQ(q2Weeks, 'Q2 2026'), buildQ(q3Weeks, 'Q3 2026')]
   var totalMet = 0; var totalWeeks = 0
   for (var i = 0; i < allQ.length; i++) { totalMet += allQ[i].weeksMet; totalWeeks += allQ[i].totalWeeks }
 
@@ -966,6 +975,8 @@ function getSampleTechVisData() {
     fetchedAt: new Date().toISOString()
   }
 }
+
+module.exports.getSampleTechVisData = getSampleTechVisData
 
 function getDefaultSupportCaseData() {
   var emptyProduct = { totalCases: null, defects: null, casesClosed: null, bugsEng: null, rfe: null, supportEx: null, other: null, avgResolutionDays: null, medianResolutionDays: null }

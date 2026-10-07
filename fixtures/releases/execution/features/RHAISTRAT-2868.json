@@ -1,0 +1,27 @@
+{
+  "key": "RHAISTRAT-2868",
+  "summary": "[DRAFT] Power customers need supported MuleSoft MCP integration in GenAI playground for enterprise integration workflows",
+  "status": "New",
+  "statusCategory": "To Do",
+  "priority": "Normal",
+  "components": [
+    "Gen AI Studio",
+    "IBM P"
+  ],
+  "targetVersions": [
+    "3.7 EA RHOAI RELEASE"
+  ],
+  "fixVersions": [],
+  "pm": "",
+  "assignee": {
+    "displayName": "",
+    "accountId": ""
+  },
+  "labels": [],
+  "created": "2026/09/28 6:12 AM",
+  "updated": "2026/09/28 7:03 AM",
+  "architect": null,
+  "parentKey": null,
+  "colorStatus": null,
+  "ownerStatusColor": null
+}

@@ -1,0 +1,26 @@
+{
+  "key": "RHAISTRAT-2608",
+  "summary": "[DRAFT] Add speech, TTS and omni-modal to the Model Catalog",
+  "status": "To Do",
+  "statusCategory": "To Do",
+  "priority": "Major",
+  "components": [
+    "Model Validation"
+  ],
+  "targetVersions": [
+    "3.7 GA RHOAI RELEASE"
+  ],
+  "fixVersions": [],
+  "pm": "Rob Greenberg",
+  "assignee": {
+    "displayName": "Shani Alisar",
+    "accountId": "712020:84a5ee62-9a2b-4023-984d-0fec20a75a62"
+  },
+  "labels": [],
+  "created": "2026/08/22 12:15 AM",
+  "updated": "2026/09/28 2:37 PM",
+  "architect": null,
+  "parentKey": null,
+  "colorStatus": null,
+  "ownerStatusColor": null
+}

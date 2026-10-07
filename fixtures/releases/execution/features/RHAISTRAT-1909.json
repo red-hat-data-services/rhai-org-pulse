@@ -1,0 +1,24 @@
+{
+  "key": "RHAISTRAT-1909",
+  "summary": "Native MLFlow Model Serving Integration",
+  "status": "New",
+  "statusCategory": "To Do",
+  "priority": "Major",
+  "components": [],
+  "targetVersions": [
+    "3.7 GA RHOAI RELEASE"
+  ],
+  "fixVersions": [],
+  "pm": "",
+  "assignee": {
+    "displayName": "",
+    "accountId": ""
+  },
+  "labels": [],
+  "created": "2026/06/10 12:38 PM",
+  "updated": "2026/09/28 2:38 PM",
+  "architect": null,
+  "parentKey": null,
+  "colorStatus": null,
+  "ownerStatusColor": null
+}

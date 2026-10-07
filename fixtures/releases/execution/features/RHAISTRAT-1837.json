@@ -1,0 +1,29 @@
+{
+  "key": "RHAISTRAT-1837",
+  "summary": "Model Security & Governance: Risk Detection and Policy Enforcement",
+  "status": "Refinement",
+  "statusCategory": "To Do",
+  "priority": "Critical",
+  "components": [
+    "AI Core Dashboard",
+    "AI Hub",
+    "Model Runtimes",
+    "Serving Orchestration"
+  ],
+  "targetVersions": [
+    "3.7 EA RHOAI RELEASE"
+  ],
+  "fixVersions": [],
+  "pm": "Adam Bellusci",
+  "assignee": {
+    "displayName": "",
+    "accountId": ""
+  },
+  "labels": [],
+  "created": "2026/05/29 9:02 AM",
+  "updated": "2026/10/02 9:07 AM",
+  "architect": null,
+  "parentKey": null,
+  "colorStatus": null,
+  "ownerStatusColor": null
+}

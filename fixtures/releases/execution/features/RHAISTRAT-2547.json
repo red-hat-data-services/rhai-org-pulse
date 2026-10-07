@@ -1,0 +1,26 @@
+{
+  "key": "RHAISTRAT-2547",
+  "summary": "[DRAFT] Selective layer download support in Clair Action for large Modelcars",
+  "status": "New",
+  "statusCategory": "To Do",
+  "priority": "Critical",
+  "components": [
+    "Model Validation"
+  ],
+  "targetVersions": [
+    "3.7 GA RHOAI RELEASE"
+  ],
+  "fixVersions": [],
+  "pm": "Rob Greenberg",
+  "assignee": {
+    "displayName": "Shubham Bansal",
+    "accountId": "712020:1117cd10-1326-4e0e-841e-a6a13ff6f8b3"
+  },
+  "labels": [],
+  "created": "2026/08/12 12:09 AM",
+  "updated": "2026/09/28 2:37 PM",
+  "architect": null,
+  "parentKey": null,
+  "colorStatus": null,
+  "ownerStatusColor": null
+}

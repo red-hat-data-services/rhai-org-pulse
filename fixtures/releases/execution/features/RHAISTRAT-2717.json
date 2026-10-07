@@ -1,0 +1,26 @@
+{
+  "key": "RHAISTRAT-2717",
+  "summary": "Downstream OpenShell images must meet FIPS 140-3 compliance requirements for deployment in FIPS-mandated environments",
+  "status": "In Progress",
+  "statusCategory": "In Progress",
+  "priority": "Critical",
+  "components": [
+    "AgentOps"
+  ],
+  "targetVersions": [
+    "3.7 EA RHOAI RELEASE"
+  ],
+  "fixVersions": [],
+  "pm": "Adel Zaalouk",
+  "assignee": {
+    "displayName": "Dimitri Saridakis",
+    "accountId": "712020:b8bad4dd-5c44-48f6-8461-81327a1e18c9"
+  },
+  "labels": [],
+  "created": "2026/09/12 12:11 AM",
+  "updated": "2026/09/30 9:50 AM",
+  "architect": null,
+  "parentKey": null,
+  "colorStatus": null,
+  "ownerStatusColor": null
+}

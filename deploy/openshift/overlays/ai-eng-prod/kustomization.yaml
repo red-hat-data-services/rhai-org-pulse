@@ -12,14 +12,16 @@ configMapGenerator:
   - API_PUBLIC_URL=https://api-team-tracker.apps.int.spoke.prod.us-west-2.aws.paas.redhat.com
   - AUTH_EMAIL_DOMAIN=cluster.local
   - GOOGLE_OAUTH_CALLBACK_URL=https://team-tracker.apps.int.spoke.prod.us-west-2.aws.paas.redhat.com/api/modules/customer-insights/auth/google/callback
+  - WORKFLOW_VALIDATION_OPENSEARCH_URL=https://search-workflow-validation-prod-7ceovjjyz762jeayr44zues3ie.us-east-1.es.amazonaws.com
   name: team-tracker-config
 
 patches:
 - path: route-patch.yaml
 - path: api-route-patch.yaml
+- path: backend-memory-patch.yaml
 
 images:
 - name: quay.io/org-pulse/team-tracker-backend
-  newTag: 98f1447134605b4f6ca2e7b87805f60e5c3fff86
+  newTag: ce4e378400bee74472d8c448a9db01ebaa2b536a
 - name: quay.io/org-pulse/team-tracker-frontend
-  newTag: a260156bf3b932bfc677b0bf8e1d0b8c4d88316c
+  newTag: ce4e378400bee74472d8c448a9db01ebaa2b536a

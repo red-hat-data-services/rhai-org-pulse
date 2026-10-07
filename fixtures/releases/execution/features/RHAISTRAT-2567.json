@@ -1,0 +1,27 @@
+{
+  "key": "RHAISTRAT-2567",
+  "summary": "[DRAFT] OpenShell: governed multi-model selection for agent harnesses",
+  "status": "New",
+  "statusCategory": "To Do",
+  "priority": "Major",
+  "components": [
+    "AgentOps",
+    "Documentation"
+  ],
+  "targetVersions": [
+    "3.7 EA RHOAI RELEASE"
+  ],
+  "fixVersions": [],
+  "pm": "",
+  "assignee": {
+    "displayName": "",
+    "accountId": ""
+  },
+  "labels": [],
+  "created": "2026/08/15 3:37 PM",
+  "updated": "2026/09/22 3:15 PM",
+  "architect": null,
+  "parentKey": null,
+  "colorStatus": null,
+  "ownerStatusColor": null
+}

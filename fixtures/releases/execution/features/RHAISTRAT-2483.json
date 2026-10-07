@@ -1,0 +1,24 @@
+{
+  "key": "RHAISTRAT-2483",
+  "summary": "AMD Helios Rackscale Inference with llm-d and Infinity Fabric",
+  "status": "New",
+  "statusCategory": "To Do",
+  "priority": "Undefined",
+  "components": [],
+  "targetVersions": [
+    "3.7 GA  RHAII RELEASE"
+  ],
+  "fixVersions": [],
+  "pm": "",
+  "assignee": {
+    "displayName": "",
+    "accountId": ""
+  },
+  "labels": [],
+  "created": "2026/07/29 8:15 PM",
+  "updated": "2026/09/21 5:26 PM",
+  "architect": null,
+  "parentKey": null,
+  "colorStatus": null,
+  "ownerStatusColor": null
+}

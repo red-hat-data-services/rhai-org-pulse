@@ -1,0 +1,30 @@
+{
+  "key": "RHAISTRAT-2507",
+  "summary": "MCP Catalog (Dev Preview) — IBM Power (ppc64le) Architecture Parity",
+  "status": "In Progress",
+  "statusCategory": "In Progress",
+  "priority": "Major",
+  "components": [
+    "AI Hub",
+    "Documentation",
+    "IBM P"
+  ],
+  "targetVersions": [
+    "3.7 EA RHOAI RELEASE"
+  ],
+  "fixVersions": [
+    "3.7 EA RHOAI RELEASE"
+  ],
+  "pm": "Peter Double",
+  "assignee": {
+    "displayName": "Aaruni Aggarwal",
+    "accountId": "712020:f7be67d8-56e3-4957-a3f1-74d8eee80ba3"
+  },
+  "labels": [],
+  "created": "2026/07/31 12:11 PM",
+  "updated": "2026/09/24 7:38 AM",
+  "architect": null,
+  "parentKey": null,
+  "colorStatus": null,
+  "ownerStatusColor": null
+}

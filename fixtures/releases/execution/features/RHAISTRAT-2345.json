@@ -1,0 +1,27 @@
+{
+  "key": "RHAISTRAT-2345",
+  "summary": "Tenant Identity Contract for Multi-Tenant Inference",
+  "status": "New",
+  "statusCategory": "To Do",
+  "priority": "Major",
+  "components": [
+    "Documentation",
+    "llm-d"
+  ],
+  "targetVersions": [
+    "3.7 GA RHOAI RELEASE"
+  ],
+  "fixVersions": [],
+  "pm": "Naina Singh",
+  "assignee": {
+    "displayName": "Madhu Goutham Reddy Ambati",
+    "accountId": "712020:f4940ced-9dc4-4e40-9dc5-590b49fc3a65"
+  },
+  "labels": [],
+  "created": "2026/07/23 6:10 PM",
+  "updated": "2026/09/26 1:06 PM",
+  "architect": null,
+  "parentKey": null,
+  "colorStatus": null,
+  "ownerStatusColor": null
+}

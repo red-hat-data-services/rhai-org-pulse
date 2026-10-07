@@ -1,0 +1,24 @@
+{
+  "key": "RHAISTRAT-2794",
+  "summary": "[DRAFT] OpenAI-compatible content_filter in finish_reason for /chat/completions response",
+  "status": "New",
+  "statusCategory": "To Do",
+  "priority": "Major",
+  "components": [],
+  "targetVersions": [
+    "3.7 EA RHOAI RELEASE"
+  ],
+  "fixVersions": [],
+  "pm": "",
+  "assignee": {
+    "displayName": "",
+    "accountId": ""
+  },
+  "labels": [],
+  "created": "2026/09/17 6:09 PM",
+  "updated": "2026/09/17 8:28 PM",
+  "architect": null,
+  "parentKey": null,
+  "colorStatus": null,
+  "ownerStatusColor": null
+}

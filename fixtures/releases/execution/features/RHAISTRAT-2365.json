@@ -1,0 +1,27 @@
+{
+  "key": "RHAISTRAT-2365",
+  "summary": "[TP] Custom-Field (Team/Application/Project) Attribution for MaaS Usage and Showback",
+  "status": "New",
+  "statusCategory": "To Do",
+  "priority": "Major",
+  "components": [
+    "Documentation",
+    "Model as a Service"
+  ],
+  "targetVersions": [
+    "3.7 GA RHOAI RELEASE"
+  ],
+  "fixVersions": [],
+  "pm": "Jonathan Zarecki",
+  "assignee": {
+    "displayName": "Jamie Land",
+    "accountId": "557058:c0e6ed42-7d3b-4863-b463-215f84b9c1c8"
+  },
+  "labels": [],
+  "created": "2026/07/24 3:05 PM",
+  "updated": "2026/09/28 2:38 PM",
+  "architect": null,
+  "parentKey": null,
+  "colorStatus": null,
+  "ownerStatusColor": null
+}

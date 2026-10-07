@@ -661,6 +661,35 @@ describe('draft-plans routes', () => {
       expect(res._json.draft.candidates[0].key).toBe('RHAISTRAT-1')
       expect(res._json.ceilingsByComponent.KubeRay.EA1).toBe(2)
     })
+
+    it('refreshes candidate ownership from the live feature index', async () => {
+      const { router } = await setupRouter({
+        [`${DATA_PREFIX}/drafts/RHOAI/3.6.json`]: {
+          version: '3.6',
+          generatedAt: '2026-07-15T00:00:00Z',
+          candidates: [
+            { key: 'RHAISTRAT-1', summary: 'Stale owners', basePlacement: 'EA1', component: 'KubeRay' },
+            { key: 'RHAISTRAT-2', summary: 'Not indexed', basePlacement: 'EA1', component: 'KubeRay', pm: 'Snapshot PM' }
+          ]
+        },
+        'releases/execution/index.json': {
+          features: [{ key: 'RHAISTRAT-1', pm: 'Adam Bellusci', assignee: 'Jane Smith' }]
+        }
+      })
+
+      const res = await callRoute(router, 'get', '/editor/:version', {
+        params: { version: '3.6' },
+        query: { product: 'RHOAI' }
+      })
+
+      const byKey = {}
+      for (const c of res._json.draft.candidates) byKey[c.key] = c
+      // Snapshot had no owner; the live index does, so the real PM can approve.
+      expect(byKey['RHAISTRAT-1'].pm).toBe('Adam Bellusci')
+      expect(byKey['RHAISTRAT-1'].assignee).toBe('Jane Smith')
+      // Absent from the index, so the snapshot value is left alone.
+      expect(byKey['RHAISTRAT-2'].pm).toBe('Snapshot PM')
+    })
   })
 
   describe('PUT /editor/:version', () => {
@@ -759,6 +788,40 @@ describe('draft-plans routes', () => {
       const stored = storage._store[`${DATA_PREFIX}/editor/RHOAI/3.6.json`]
       expect(stored.meta.currentUser).toBe('abellusci')
       expect(stored.edits['F-2'].placement).toBe('EA2')
+    })
+
+    it('allows a non-owner to approve but still blocks descoping someone else\'s row', async () => {
+      process.env.DEMO_MODE = 'false'
+      process.env.VITE_DEMO_MODE = 'false'
+      const { router } = await setupRouter({
+        [`${DATA_PREFIX}/config.json`]: { draftPlansViewerEmails: ['abellusci@redhat.com'] },
+        [`${DATA_PREFIX}/drafts/RHOAI/3.6.json`]: {
+          version: '3.6',
+          candidates: [
+            { key: 'F-1', summary: 'Alice feature', basePlacement: 'EA1', assignee: 'Alice', component: 'KubeRay' }
+          ],
+          ceilingsByComponent: { KubeRay: { EA1: 5, EA2: 5, GA: 5 } }
+        }
+      })
+      const save = (edits) => callRoute(router, 'put', '/editor/:version', {
+        params: { version: '3.6' },
+        query: { product: 'RHOAI' },
+        userEmail: 'abellusci@redhat.com',
+        userUid: 'abellusci',
+        isAdmin: false,
+        body: { edits, meta: { currentUser: 'abellusci', frozenEvents: {} }, audit: [] }
+      })
+
+      // Add to Plan: approval flags only, on a row this user does not own.
+      const approved = await save({
+        'F-1': { decision: null, placement: null, approved: true, approvedBy: 'abellusci', approvedAt: '2026-10-02T00:00:00Z' }
+      })
+      expect(approved._status).toBe(200)
+
+      // Descope on the same foreign row still requires ownership.
+      const descoped = await save({ 'F-1': { decision: 'descope', placement: null } })
+      expect(descoped._status).toBe(403)
+      expect(descoped._json.error).toMatch(/assignee or PM/i)
     })
 
     it('rate-limits excessive editor saves', async () => {

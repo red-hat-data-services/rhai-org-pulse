@@ -1,0 +1,27 @@
+{
+  "key": "RHAISTRAT-2664",
+  "summary": "[DRAFT] Cross-workspace MLflow asset copying for fork-and-iterate workflows",
+  "status": "Refinement",
+  "statusCategory": "To Do",
+  "priority": "Normal",
+  "components": [
+    "AI Core Dashboard",
+    "MLflow"
+  ],
+  "targetVersions": [
+    "3.7 EA RHOAI RELEASE"
+  ],
+  "fixVersions": [],
+  "pm": "Myriam Fentanes Gutierrez",
+  "assignee": {
+    "displayName": "Alessio Pragliola",
+    "accountId": "712020:9fc499a3-48c0-4be3-bc6f-181b871af3d4"
+  },
+  "labels": [],
+  "created": "2026/08/26 6:09 PM",
+  "updated": "2026/09/23 9:35 AM",
+  "architect": null,
+  "parentKey": null,
+  "colorStatus": null,
+  "ownerStatusColor": null
+}

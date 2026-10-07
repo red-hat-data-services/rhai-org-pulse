@@ -1,0 +1,29 @@
+{
+  "key": "RHAISTRAT-2799",
+  "summary": "[DRAFT] llm-d: Hierarchical KV Cache Tiering (GPU → CPU → POSIX File System)- GA",
+  "status": "New",
+  "statusCategory": "To Do",
+  "priority": "Critical",
+  "components": [
+    "llm-d",
+    "vLLM",
+    "vLLM Runtime"
+  ],
+  "targetVersions": [
+    "3.7 GA  RHAII RELEASE",
+    "3.7 GA RHOAI RELEASE"
+  ],
+  "fixVersions": [],
+  "pm": "",
+  "assignee": {
+    "displayName": "",
+    "accountId": ""
+  },
+  "labels": [],
+  "created": "2026/09/18 12:13 PM",
+  "updated": "2026/09/18 2:39 PM",
+  "architect": null,
+  "parentKey": null,
+  "colorStatus": null,
+  "ownerStatusColor": null
+}

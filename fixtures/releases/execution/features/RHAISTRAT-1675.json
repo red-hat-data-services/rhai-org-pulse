@@ -1,0 +1,26 @@
+{
+  "key": "RHAISTRAT-1675",
+  "summary": "Qdrant Support for AutoRAG",
+  "status": "New",
+  "statusCategory": "To Do",
+  "priority": "Normal",
+  "components": [
+    "AutoRAG"
+  ],
+  "targetVersions": [
+    "3.7 GA RHOAI RELEASE"
+  ],
+  "fixVersions": [],
+  "pm": "Suhas Kashyap",
+  "assignee": {
+    "displayName": "Daniel Ryszka",
+    "accountId": "712020:456909bf-a7c9-40b8-8f28-212fbfbf495a"
+  },
+  "labels": [],
+  "created": "2026/04/27 12:10 PM",
+  "updated": "2026/09/17 11:07 AM",
+  "architect": null,
+  "parentKey": null,
+  "colorStatus": null,
+  "ownerStatusColor": null
+}

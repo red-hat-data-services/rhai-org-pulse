@@ -1,0 +1,28 @@
+{
+  "key": "RHAISTRAT-2750",
+  "summary": "Headless stages — run individual pipeline stages in separate pods",
+  "status": "New",
+  "statusCategory": "To Do",
+  "priority": "Major",
+  "components": [
+    "vLLM Runtime"
+  ],
+  "targetVersions": [
+    "3.7 EA RHOAI RELEASE"
+  ],
+  "fixVersions": [
+    "3.7 EA RHOAI RELEASE"
+  ],
+  "pm": "Yuchen Fama",
+  "assignee": {
+    "displayName": "Rishabh Saini",
+    "accountId": "62b083999abb660ab149aeb6"
+  },
+  "labels": [],
+  "created": "2026/09/15 6:10 AM",
+  "updated": "2026/10/02 9:08 AM",
+  "architect": null,
+  "parentKey": null,
+  "colorStatus": null,
+  "ownerStatusColor": null
+}

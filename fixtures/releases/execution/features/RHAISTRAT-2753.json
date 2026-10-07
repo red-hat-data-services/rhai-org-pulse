@@ -1,0 +1,27 @@
+{
+  "key": "RHAISTRAT-2753",
+  "summary": "[DRAFT] Dashboard UI for ModelCar Import and PVC-Backed Model Serving",
+  "status": "New",
+  "statusCategory": "To Do",
+  "priority": "Critical",
+  "components": [
+    "AI Core Dashboard",
+    "Documentation"
+  ],
+  "targetVersions": [
+    "3.7 EA RHOAI RELEASE"
+  ],
+  "fixVersions": [],
+  "pm": "Adam Bellusci",
+  "assignee": {
+    "displayName": "",
+    "accountId": ""
+  },
+  "labels": [],
+  "created": "2026/09/15 12:17 PM",
+  "updated": "2026/09/22 12:49 PM",
+  "architect": null,
+  "parentKey": null,
+  "colorStatus": null,
+  "ownerStatusColor": null
+}

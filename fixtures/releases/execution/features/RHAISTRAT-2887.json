@@ -1,0 +1,29 @@
+{
+  "key": "RHAISTRAT-2887",
+  "summary": "[DRAFT] Expose text watermarking metrics and observability in vLLM",
+  "status": "New",
+  "statusCategory": "To Do",
+  "priority": "Major",
+  "components": [
+    "INFERENG Midstream",
+    "vLLM Runtime"
+  ],
+  "targetVersions": [
+    "3.7 EA RHOAI RELEASE"
+  ],
+  "fixVersions": [
+    "3.7 EA RHAII RELEASE"
+  ],
+  "pm": "",
+  "assignee": {
+    "displayName": "Simon Veitner",
+    "accountId": "712020:111d23b2-dc5b-4fac-b2a4-db8bd0f52e45"
+  },
+  "labels": [],
+  "created": "2026/10/02 6:16 AM",
+  "updated": "2026/10/02 11:08 AM",
+  "architect": null,
+  "parentKey": null,
+  "colorStatus": null,
+  "ownerStatusColor": null
+}

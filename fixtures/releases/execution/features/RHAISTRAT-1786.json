@@ -1,0 +1,27 @@
+{
+  "key": "RHAISTRAT-1786",
+  "summary": "Continuous indexing and enrichment pipeline reference architecture for agent & RAG knowledge bases",
+  "status": "Refinement",
+  "statusCategory": "To Do",
+  "priority": "Major",
+  "components": [
+    "Data Processing",
+    "KubeRay"
+  ],
+  "targetVersions": [
+    "3.7 GA RHOAI RELEASE"
+  ],
+  "fixVersions": [],
+  "pm": "Adel Zaalouk",
+  "assignee": {
+    "displayName": "",
+    "accountId": ""
+  },
+  "labels": [],
+  "created": "2026/05/19 9:44 AM",
+  "updated": "2026/09/28 2:38 PM",
+  "architect": null,
+  "parentKey": null,
+  "colorStatus": null,
+  "ownerStatusColor": null
+}

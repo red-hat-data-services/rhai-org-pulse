@@ -1,0 +1,27 @@
+{
+  "key": "RHAISTRAT-2779",
+  "summary": "[DRAFT] Per-service configuration of the model-server transport contract for LLMInferenceService",
+  "status": "New",
+  "statusCategory": "To Do",
+  "priority": "Critical",
+  "components": [
+    "llm-d",
+    "Serving Orchestration"
+  ],
+  "targetVersions": [
+    "3.7 EA RHOAI RELEASE"
+  ],
+  "fixVersions": [],
+  "pm": "",
+  "assignee": {
+    "displayName": "",
+    "accountId": ""
+  },
+  "labels": [],
+  "created": "2026/09/17 12:12 AM",
+  "updated": "2026/09/22 7:40 AM",
+  "architect": null,
+  "parentKey": null,
+  "colorStatus": null,
+  "ownerStatusColor": null
+}

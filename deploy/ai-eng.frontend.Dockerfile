@@ -17,6 +17,9 @@ COPY platform/ ./platform/
 # Add all non-core modules (core builder already has team-tracker)
 COPY modules/ ./modules/
 
+# Add public assets (includes AI-First scheduler demo)
+COPY public/ ./public/
+
 RUN npm run build
 
 # Stage 2: Serve with hardened nginx

@@ -1,0 +1,27 @@
+{
+  "key": "RHAISTRAT-2578",
+  "summary": "[UI] EvalHub Reports — ODH Dashboard Integration: Specification Library, Authoring, and Report Generation",
+  "status": "New",
+  "statusCategory": "To Do",
+  "priority": "Major",
+  "components": [
+    "AI Core Dashboard",
+    "AI Evaluations"
+  ],
+  "targetVersions": [
+    "3.7 GA RHOAI RELEASE"
+  ],
+  "fixVersions": [],
+  "pm": "William Caban Babilonia",
+  "assignee": {
+    "displayName": "Nick Mazzitelli",
+    "accountId": "712020:bc222714-c05b-4701-bd06-f13523f97cfa"
+  },
+  "labels": [],
+  "created": "2026/08/16 9:06 PM",
+  "updated": "2026/09/28 2:37 PM",
+  "architect": null,
+  "parentKey": null,
+  "colorStatus": null,
+  "ownerStatusColor": null
+}

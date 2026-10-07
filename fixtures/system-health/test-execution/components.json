@@ -1,0 +1,54 @@
+{
+  "AI Hub": {
+    "overall": { "total": 300, "passed": 297, "failed": 3, "skipped": 0 },
+    "daily": [
+      { "date": "2026-09-15", "passed": 99, "failed": 1, "skipped": 0, "total": 100, "execution_count": 2 },
+      { "date": "2026-09-16", "passed": 100, "failed": 0, "skipped": 0, "total": 100, "execution_count": 2 },
+      { "date": "2026-09-17", "passed": 98, "failed": 2, "skipped": 0, "total": 100, "execution_count": 2 }
+    ],
+    "quality_gates": {
+      "smoke": {
+        "2026-09-16": {
+          "passed": 50, "failed": 0, "skipped": 0, "total": 50,
+          "executions": [
+            { "passed": 50, "failed": 0, "skipped": 0, "total": 50, "state": "PASSED", "color": "green", "symbol": "✓", "jenkins_url": "https://jenkins.example.com/job/rhoai/job/3.6-ea.1/job/rhoai-smoke/2/" }
+          ]
+        }
+      },
+      "tier1": {
+        "2026-09-17": {
+          "passed": 48, "failed": 2, "skipped": 0, "total": 50,
+          "executions": [
+            { "passed": 48, "failed": 2, "skipped": 0, "total": 50, "state": "FAILED", "color": "red", "symbol": "●", "jenkins_url": "https://jenkins.example.com/job/rhoai/job/3.6-ea.1/job/rhoai-tier1/3/" }
+          ]
+        }
+      }
+    }
+  },
+  "AI Safety": {
+    "overall": { "total": 300, "passed": 246, "failed": 54, "skipped": 0 },
+    "daily": [
+      { "date": "2026-09-15", "passed": 80, "failed": 20, "skipped": 0, "total": 100, "execution_count": 2 },
+      { "date": "2026-09-16", "passed": 84, "failed": 16, "skipped": 0, "total": 100, "execution_count": 2 },
+      { "date": "2026-09-17", "passed": 82, "failed": 18, "skipped": 0, "total": 100, "execution_count": 2 }
+    ],
+    "quality_gates": {
+      "smoke": {
+        "2026-09-16": {
+          "passed": 42, "failed": 8, "skipped": 0, "total": 50,
+          "executions": [
+            { "passed": 42, "failed": 8, "skipped": 0, "total": 50, "state": "FAILED", "color": "red", "symbol": "●", "jenkins_url": "https://jenkins.example.com/job/rhoai/job/3.6-ea.1/job/rhoai-smoke/2/" }
+          ]
+        }
+      },
+      "tier1": {
+        "2026-09-17": {
+          "passed": 40, "failed": 10, "skipped": 0, "total": 50,
+          "executions": [
+            { "passed": 40, "failed": 10, "skipped": 0, "total": 50, "state": "FAILED", "color": "red", "symbol": "●", "jenkins_url": "https://jenkins.example.com/job/rhoai/job/3.6-ea.1/job/rhoai-tier1/3/" }
+          ]
+        }
+      }
+    }
+  }
+}

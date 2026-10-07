@@ -1,0 +1,32 @@
+{
+  "key": "RHAISTRAT-2816",
+  "summary": "Intel Crescent Island GPU Support for Red Hat AI",
+  "status": "New",
+  "statusCategory": "To Do",
+  "priority": "Major",
+  "components": [
+    "Accelerator Enablement",
+    "llm-d",
+    "Notebooks Images",
+    "OpenShift AI Productization",
+    "vLLM Runtime",
+    "Workbenches/IDE"
+  ],
+  "targetVersions": [
+    "3.7 GA  RHAII RELEASE",
+    "3.7 GA RHOAI RELEASE"
+  ],
+  "fixVersions": [],
+  "pm": "Erwan Gallen",
+  "assignee": {
+    "displayName": "Erwan Gallen",
+    "accountId": "62d879bb278161644007f05a"
+  },
+  "labels": [],
+  "created": "2026/09/20 5:24 PM",
+  "updated": "2026/09/29 6:11 AM",
+  "architect": null,
+  "parentKey": null,
+  "colorStatus": null,
+  "ownerStatusColor": null
+}

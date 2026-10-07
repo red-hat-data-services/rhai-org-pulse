@@ -1,0 +1,28 @@
+{
+  "key": "RHAISTRAT-2346",
+  "summary": "Per-Tenant Capacity Tracking for Multi-Tenant Inference",
+  "status": "New",
+  "statusCategory": "To Do",
+  "priority": "Major",
+  "components": [
+    "llm-d"
+  ],
+  "targetVersions": [
+    "3.7 GA RHOAI RELEASE"
+  ],
+  "fixVersions": [
+    "3.7 GA RHOAI RELEASE"
+  ],
+  "pm": "Naina Singh",
+  "assignee": {
+    "displayName": "Madhu Goutham Reddy Ambati",
+    "accountId": "712020:f4940ced-9dc4-4e40-9dc5-590b49fc3a65"
+  },
+  "labels": [],
+  "created": "2026/07/23 6:11 PM",
+  "updated": "2026/10/02 10:56 AM",
+  "architect": null,
+  "parentKey": null,
+  "colorStatus": null,
+  "ownerStatusColor": null
+}

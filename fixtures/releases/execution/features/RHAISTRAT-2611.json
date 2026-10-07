@@ -1,0 +1,28 @@
+{
+  "key": "RHAISTRAT-2611",
+  "summary": "[DRAFT] MLflow MCP server listed in the RHOAI MCP Catalog as a Red Hat server and deployable from it",
+  "status": "Refinement",
+  "statusCategory": "To Do",
+  "priority": "Critical",
+  "components": [
+    "AI Core Dashboard",
+    "AI Hub",
+    "MLflow"
+  ],
+  "targetVersions": [
+    "3.7 EA RHOAI RELEASE"
+  ],
+  "fixVersions": [],
+  "pm": "Peter Double",
+  "assignee": {
+    "displayName": "",
+    "accountId": ""
+  },
+  "labels": [],
+  "created": "2026/08/23 6:11 PM",
+  "updated": "2026/09/23 2:42 PM",
+  "architect": null,
+  "parentKey": null,
+  "colorStatus": null,
+  "ownerStatusColor": null
+}

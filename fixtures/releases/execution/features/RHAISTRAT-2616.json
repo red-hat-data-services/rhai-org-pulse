@@ -1,0 +1,27 @@
+{
+  "key": "RHAISTRAT-2616",
+  "summary": "[DRAFT] NeMo Guardrails: OpenAI content_filter Response Compatibility",
+  "status": "New",
+  "statusCategory": "To Do",
+  "priority": "Critical",
+  "components": [
+    "AI Safety"
+  ],
+  "targetVersions": [
+    "3.6 GA RHOAI RELEASE",
+    "3.7 EA RHOAI RELEASE"
+  ],
+  "fixVersions": [],
+  "pm": "William Caban Babilonia",
+  "assignee": {
+    "displayName": "Rob Geada",
+    "accountId": "5e258328a7b9540e76f44821"
+  },
+  "labels": [],
+  "created": "2026/08/24 12:11 PM",
+  "updated": "2026/10/02 8:01 AM",
+  "architect": null,
+  "parentKey": null,
+  "colorStatus": null,
+  "ownerStatusColor": null
+}

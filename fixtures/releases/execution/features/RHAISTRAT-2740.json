@@ -1,0 +1,29 @@
+{
+  "key": "RHAISTRAT-2740",
+  "summary": "llm-d and gateway Batch TTS support",
+  "status": "New",
+  "statusCategory": "To Do",
+  "priority": "Critical",
+  "components": [
+    "Documentation",
+    "vLLM Runtime"
+  ],
+  "targetVersions": [
+    "3.7 EA RHOAI RELEASE"
+  ],
+  "fixVersions": [
+    "3.7 EA RHOAI RELEASE"
+  ],
+  "pm": "Yuchen Fama",
+  "assignee": {
+    "displayName": "Will Eaton",
+    "accountId": "5e3336d0fae00f0cb3ad180f"
+  },
+  "labels": [],
+  "created": "2026/09/15 12:12 AM",
+  "updated": "2026/09/24 10:36 AM",
+  "architect": null,
+  "parentKey": null,
+  "colorStatus": null,
+  "ownerStatusColor": null
+}

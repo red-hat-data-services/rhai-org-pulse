@@ -1,0 +1,28 @@
+{
+  "key": "RHAISTRAT-408",
+  "summary": "Enhanced Resource Management: Idle GPU Reclaim",
+  "status": "New",
+  "statusCategory": "To Do",
+  "priority": "Major",
+  "components": [
+    "KubeRay"
+  ],
+  "targetVersions": [
+    "3.7 EA RHOAI RELEASE"
+  ],
+  "fixVersions": [
+    "3.6 GA RHOAI RELEASE"
+  ],
+  "pm": "Christoph Goern",
+  "assignee": {
+    "displayName": "Luca Burgazzoli",
+    "accountId": "5b335d1d2975df4c55ea6f83"
+  },
+  "labels": [],
+  "created": "2024/06/04 3:02 AM",
+  "updated": "2026/09/23 9:55 AM",
+  "architect": null,
+  "parentKey": null,
+  "colorStatus": null,
+  "ownerStatusColor": null
+}

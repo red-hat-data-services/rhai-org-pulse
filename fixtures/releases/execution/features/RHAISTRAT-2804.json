@@ -1,0 +1,27 @@
+{
+  "key": "RHAISTRAT-2804",
+  "summary": "[DRAFT] Multilingual Collection Launch — MMLU-ProX and TyDiQA Adapters",
+  "status": "In Progress",
+  "statusCategory": "In Progress",
+  "priority": "Major",
+  "components": [
+    "AI Evaluations"
+  ],
+  "targetVersions": [
+    "3.6 GA RHOAI RELEASE",
+    "3.7 GA RHOAI RELEASE"
+  ],
+  "fixVersions": [],
+  "pm": "",
+  "assignee": {
+    "displayName": "Jooyeon Mok",
+    "accountId": "712020:7ad67159-1fb3-470c-bf60-537ba5e73cfd"
+  },
+  "labels": [],
+  "created": "2026/09/19 6:10 AM",
+  "updated": "2026/09/24 12:21 AM",
+  "architect": null,
+  "parentKey": null,
+  "colorStatus": null,
+  "ownerStatusColor": null
+}

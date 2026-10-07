@@ -26,14 +26,18 @@
             <span class="text-[10px] font-semibold uppercase tracking-wider text-blue-200 mb-0.5">Code Freeze</span>
             <span class="text-sm font-bold">{{ formatScheduleDate(releaseSchedule.code_freeze_date) }}</span>
           </div>
-          <div v-if="releaseSchedule.ga_date" class="flex flex-col items-center bg-white/15 backdrop-blur-sm rounded-xl px-5 py-2.5 min-w-[90px]">
+          <div class="flex flex-col items-center bg-white/15 backdrop-blur-sm rounded-xl px-5 py-2.5 min-w-[90px]">
             <span class="text-[10px] font-semibold uppercase tracking-wider text-blue-200 mb-0.5">GA Date</span>
-            <span class="text-sm font-bold">{{ formatScheduleDate(releaseSchedule.ga_date) }}</span>
+            <span class="text-sm font-bold">{{ releaseSchedule.ga_date ? formatScheduleDate(releaseSchedule.ga_date) : 'TBD' }}</span>
           </div>
-          <div class="flex flex-col items-center rounded-xl px-5 py-2.5 min-w-[90px]"
-            :class="releaseSchedule.status === 'Released' ? 'bg-emerald-500/30' : 'bg-amber-500/30'">
+          <div
+            class="flex flex-col items-center rounded-xl px-5 py-2.5 min-w-[90px]"
+            :class="releaseDisplayStatus(data) === 'Released with Open Tasks'
+              ? 'bg-red-500/30'
+              : isReleasedStatus(releaseSchedule.status) ? 'bg-emerald-500/30' : 'bg-amber-500/30'"
+          >
             <span class="text-[10px] font-semibold uppercase tracking-wider text-blue-200 mb-0.5">Status</span>
-            <span class="text-sm font-bold">{{ releaseSchedule.status }}</span>
+            <span class="text-sm font-bold">{{ releaseDisplayStatus(data) }}</span>
           </div>
         </div>
       </div>
@@ -240,8 +244,9 @@
               <span class="text-xs text-orange-500 dark:text-orange-400">View report →</span>
             </div>
           </button>
-          <!-- TFA Sign Offs summary tile -->
+          <!-- TFA Sign Offs summary tile (legacy layout: <= 3.6.EA1) -->
           <a
+            v-if="!useNewReadinessLayout"
             :href="data.tfa_signoff_jql_url || '#'"
             target="_blank"
             class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4 block transition-shadow hover:shadow-md hover:border-blue-300 dark:hover:border-blue-600"
@@ -359,8 +364,8 @@
                     <span :class="ragDotSmall(tileOverallRag(tile))"></span>
                   </div>
 
-                  <!-- Line 1: Test Plan Sign Off + Jira key -->
-                  <div class="flex items-center justify-between mb-1.5">
+                  <!-- Line 1: Test Plan Sign Off + Jira key (legacy layout: <= 3.6.EA1) -->
+                  <div v-if="!useNewReadinessLayout" class="flex items-center justify-between mb-1.5">
                     <span class="text-xs text-gray-400">Test Plan Sign Off</span>
                     <a v-if="tile.tfa?.key" :href="jiraBrowseUrl(tile.tfa.key)" target="_blank" class="text-xs text-blue-400 font-mono hover:underline">{{ tile.tfa.key }}</a>
                   </div>
@@ -401,9 +406,9 @@
                     <p class="text-xs text-gray-500 mt-0.5">{{ tile.execution.done }}/{{ tile.execution.total }} tasks done</p>
                   </div>
 
-                  <!-- TFA / Failed / Skipped as stacked bars -->
+                  <!-- TFA (legacy only) / Failed Tests / Skipped as stacked bars -->
                   <div class="pt-3 border-t border-gray-200 dark:border-gray-700 space-y-2">
-                    <a :href="tile.tfa?.jql_url || '#'" target="_blank" class="flex items-center gap-2 hover:opacity-80 transition-opacity">
+                    <a v-if="!useNewReadinessLayout" :href="tile.tfa?.jql_url || '#'" target="_blank" class="flex items-center gap-2 hover:opacity-80 transition-opacity">
                       <span class="text-xs text-gray-400 w-16">TFA ↗</span>
                       <div class="flex-1 h-6 bg-gray-200 dark:bg-gray-800 rounded overflow-hidden flex">
                         <div v-if="tfaBd(tile).done" class="h-full bg-green-500 flex items-center justify-center text-xs font-bold text-white" :style="{ width: tfaBdPct(tile, 'done') + '%', minWidth: '24px' }">{{ tfaBd(tile).done }}</div>
@@ -412,7 +417,7 @@
                       </div>
                     </a>
                     <a :href="tile.failed_jql_url || '#'" target="_blank" class="flex items-center gap-2 hover:opacity-80 transition-opacity">
-                      <span class="text-xs text-gray-400 w-16">Failed ↗</span>
+                      <span class="text-xs text-gray-400" :class="useNewReadinessLayout ? 'w-20' : 'w-16'">{{ useNewReadinessLayout ? 'Failed Tests ↗' : 'Failed ↗' }}</span>
                       <div class="flex-1 h-6 bg-gray-200 dark:bg-gray-800 rounded overflow-hidden flex">
                         <template v-if="failedBd(tile).total > 0">
                           <div v-if="failedBd(tile).done" class="h-full bg-green-500 flex items-center justify-center text-xs font-bold text-white" :style="{ width: bdPct(failedBd(tile), 'done') + '%', minWidth: '24px' }">{{ failedBd(tile).done }}</div>
@@ -503,6 +508,72 @@
       </div>
 
 
+      <!-- Section 5: Release Cycle Metrics -->
+      <div v-if="releaseCycleMetrics" class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden mb-6">
+        <div class="px-4 py-3 border-b border-gray-200 dark:border-gray-700">
+          <h3 class="text-sm font-semibold text-gray-700 dark:text-gray-300">Release Cycle Metrics</h3>
+          <p class="text-xs text-gray-400 dark:text-gray-500 mt-0.5">Working days between key milestones (Mon–Fri, excluding weekends)</p>
+        </div>
+
+        <div class="p-4 space-y-6">
+          <!-- Build Milestones -->
+          <div v-if="releaseCycleMetrics.phases?.length">
+            <p class="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-2">Build Milestones — days since code freeze</p>
+            <div class="overflow-x-auto">
+              <table class="w-full text-xs border-collapse">
+                <thead>
+                  <tr class="bg-gray-50 dark:bg-gray-900">
+                    <th class="px-3 py-2 text-left font-medium text-gray-600 dark:text-gray-400">Milestone</th>
+                    <th class="px-3 py-2 text-left font-medium text-gray-600 dark:text-gray-400">Code Freeze</th>
+                    <th class="px-3 py-2 text-left font-medium text-gray-600 dark:text-gray-400">Build Received</th>
+                    <th class="px-3 py-2 text-left font-medium text-gray-600 dark:text-gray-400">Working Days</th>
+                  </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-100 dark:divide-gray-700">
+                  <tr v-for="phase in releaseCycleMetrics.phases" :key="phase.epic_key || phase.phase" class="hover:bg-gray-50 dark:hover:bg-gray-750">
+                    <td class="px-3 py-2 font-medium text-gray-800 dark:text-gray-200">{{ phase.phase }}</td>
+                    <td class="px-3 py-2 text-gray-500 dark:text-gray-400">{{ formatMetricDate(releaseCycleMetrics.code_freeze_date) }}</td>
+                    <td class="px-3 py-2 text-gray-700 dark:text-gray-300">{{ formatMetricDate(phase.build_ready_date) }}</td>
+                    <td class="px-3 py-2" :class="daysClass(phase.days_since_code_freeze, 5, 10)">{{ daysLabel(phase.days_since_code_freeze) }}</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- Test Execution Timelines -->
+          <div v-if="releaseCycleMetrics.phases?.length">
+            <p class="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-2">Test Execution Timelines — working days since build received</p>
+            <div class="overflow-x-auto">
+              <table class="w-full text-xs border-collapse">
+                <thead>
+                  <tr class="bg-gray-50 dark:bg-gray-900">
+                    <th class="px-3 py-2 text-left font-medium text-gray-600 dark:text-gray-400">Phase</th>
+                    <th class="px-3 py-2 text-left font-medium text-gray-600 dark:text-gray-400">Build Received</th>
+                    <th class="px-3 py-2 text-left font-medium text-gray-600 dark:text-gray-400">Test Started</th>
+                    <th class="px-3 py-2 text-left font-medium text-gray-600 dark:text-gray-400">Test Finished</th>
+                    <th class="px-3 py-2 text-left font-medium text-gray-600 dark:text-gray-400">TFAs Passed</th>
+                    <th class="px-3 py-2 text-left font-medium text-gray-600 dark:text-gray-400">TFAs Triaged</th>
+                    <th class="px-3 py-2 text-left font-medium text-gray-600 dark:text-gray-400">Blockers Resolved</th>
+                  </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-100 dark:divide-gray-700">
+                  <tr v-for="phase in releaseCycleMetrics.phases" :key="phase.epic_key || phase.phase" class="hover:bg-gray-50 dark:hover:bg-gray-750">
+                    <td class="px-3 py-2 font-medium text-gray-800 dark:text-gray-200">{{ phase.phase }}</td>
+                    <td class="px-3 py-2 text-gray-500 dark:text-gray-400">{{ formatMetricDate(phase.build_ready_date) }}</td>
+                    <td class="px-3 py-2" :class="daysClass(phase.days_to_test_started, 3, 7)">{{ formatMetricDate(phase.test_started_date) }} {{ daysLabel(phase.days_to_test_started) }}</td>
+                    <td class="px-3 py-2" :class="daysClass(phase.days_to_test_finished, 8, 15)">{{ formatMetricDate(phase.test_finished_date) }} {{ daysLabel(phase.days_to_test_finished) }}</td>
+                    <td class="px-3 py-2" :class="daysClass(phase.days_to_tfas_passed, 3, 7)">{{ formatMetricDate(phase.tfas_passed_date) }} {{ daysLabel(phase.days_to_tfas_passed) }}</td>
+                    <td class="px-3 py-2" :class="daysClass(phase.days_to_tfas_triaged, 5, 10)">{{ formatMetricDate(phase.tfas_triaged_date) }} {{ daysLabel(phase.days_to_tfas_triaged) }}</td>
+                    <td class="px-3 py-2" :class="daysClass(phase.days_to_blockers_resolved, 5, 12)">{{ formatMetricDate(phase.blockers_resolved_date) }} {{ daysLabel(phase.days_to_blockers_resolved) }}</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+
     </div>
 
     <!-- Filter modal -->
@@ -558,8 +629,12 @@ import { useReleaseSelector, parseReleaseId } from '../composables/useReleaseSel
 import { useReportFilters } from './composables/useReportFilters.js'
 import ReportFilterModal from './components/ReportFilterModal.vue'
 import ReportFilterNarrative from './components/ReportFilterNarrative.vue'
+import { isNoWorkResolution, isReleasedStatus, releaseDisplayStatus } from './release-readiness-status.js'
 
 const moduleNav = inject('moduleNav')
+const props = defineProps({
+  initialVersion: { type: String, default: null }
+})
 
 // ─── Pre-release CVE summary ─────────────────────────────────────────────────
 const preReleaseCveCount = ref(null)
@@ -588,11 +663,13 @@ function navigateToPreReleaseCve() {
 const {
   loading,
   error,
+  defaultVersion,
   fetchMetrics,
   fetchReadinessReleases
 } = useReleaseReadiness()
 
 const {
+  releases,
   modalOpen,
   selection,
   draft,
@@ -604,6 +681,7 @@ const {
   canApply,
   fetchRegistry,
   restoreSelection,
+  applySelection,
   openModal,
   cancelModal,
   applyModal,
@@ -677,7 +755,15 @@ function handleEscape(e) {
 onMounted(async () => {
   document.addEventListener('keydown', handleEscape)
   await fetchRegistry()
-  restoreSelection()
+  const initial = parseReleaseId(props.initialVersion || '')
+  if (initial && releases.value.some(r => r.id === props.initialVersion)) {
+    applySelection(initial.version, new Set([initial.family]), new Set([initial.phase]))
+  } else if (!restoreSelection({ allowFallback: false }) && defaultVersion.value) {
+    const current = parseReleaseId(defaultVersion.value)
+    if (current && releases.value.some(r => r.id === defaultVersion.value)) {
+      applySelection(current.version, new Set([current.family]), new Set([current.phase]))
+    }
+  }
   loadPreReleaseCveSummary()
 })
 
@@ -756,6 +842,32 @@ function togglePhase(epicKey) {
 
 const director = computed(() => {
   return data.value && data.value.director_summary ? data.value.director_summary : null
+})
+
+// Rank a release id/version into a comparable number so we can gate UI changes
+// by release. Format: rhoai-<major>.<minor>[.EA<n>|.GA]. GA sorts after any EA
+// of the same minor. Returns null if unparseable.
+function releaseRank(versionOrId) {
+  if (!versionOrId) return null
+  const m = String(versionOrId).match(/(\d+)\.(\d+)(?:\.(EA)(\d+)|\.(GA))?/i)
+  if (!m) return null
+  const major = Number(m[1])
+  const minor = Number(m[2])
+  const isGa = !!m[5] || (!m[3] && !m[5]) // explicit GA, or no suffix => GA
+  // EA phases rank 1..n; GA ranks higher than any EA (use 99).
+  const phaseRank = isGa ? 99 : Number(m[4] || 0)
+  return major * 1_000_000 + minor * 1_000 + phaseRank
+}
+
+// The Overall Summary TFA Sign Offs tile, the per-tile TFA row, and the older
+// "Failed" label are retained for releases up to and including 3.6.EA1, and
+// dropped from 3.6.EA2 onwards. Older releases render unchanged.
+const TFA_LAYOUT_CUTOFF_RANK = releaseRank('3.6.EA2')
+
+const useNewReadinessLayout = computed(() => {
+  const rank = releaseRank(data.value?.version || activeReleaseId.value)
+  if (rank === null) return false // unknown version -> keep legacy layout
+  return rank >= TFA_LAYOUT_CUTOFF_RANK
 })
 
 const overallPct = computed(() => {
@@ -907,9 +1019,9 @@ const testExecPct = computed(() => {
 // --- Release Decision Status ---
 
 const releaseStatuses = [
-  { id: 'not-ready', label: 'Not Ready', activeClass: 'bg-red-600 text-white border-red-600', tooltip: 'Multiple gates below 50%. Open blockers present. Not all sign-offs complete.' },
+  { id: 'not-ready', label: 'Not Ready', activeClass: 'bg-red-600 text-white border-red-600', tooltip: 'Multiple gates below 50%, or open blockers with overall completion under 50%. Not all sign-offs complete.' },
   { id: 'in-progress', label: 'In Progress', activeClass: 'bg-blue-600 text-white border-blue-600', tooltip: 'Testing started but gates are below 80% completion. Work is actively progressing.' },
-  { id: 'at-risk', label: 'At Risk', activeClass: 'bg-amber-500 text-white border-amber-500', tooltip: 'Some gates above 50% but open blockers or sign-offs pending. Timeline may slip.' },
+  { id: 'at-risk', label: 'At Risk', activeClass: 'bg-amber-500 text-white border-amber-500', tooltip: 'Progress above 50% but open blockers, a lagging gate, or GA date imminent. Timeline may slip.' },
   { id: 'on-track', label: 'On Track', activeClass: 'bg-emerald-500 text-white border-emerald-500', tooltip: 'All gates above 80%. No critical blockers. Sign-offs progressing on schedule.' },
   { id: 'ready-to-ship', label: 'Ready to Ship', activeClass: 'bg-green-600 text-white border-green-600', tooltip: 'All gates at 100%. All sign-offs done. Zero open blockers. Go for release.' },
 ]
@@ -919,19 +1031,100 @@ const hasInitiativeData = computed(() => {
   return director.value.gate_statuses && director.value.gate_statuses.length > 0
 })
 
-const releaseDecision = computed(() => {
-  if (!director.value) return 'not-ready'
-  const gates = director.value.gate_statuses || []
-  const avgPct = gates.length ? gates.reduce((s, g) => s + g.pct, 0) / gates.length : 0
-  const openBlockers = productBlockers.value?.total_open || 0
-  const allGatesAbove80 = gates.every(g => g.pct >= 80)
-  const allGates100 = gates.every(g => g.pct >= 100)
+// All decision gates: the director gate_statuses plus the TFA (Test Plan) sign
+// off, each carried as done/total so completion is a true weighted percentage
+// of real work rather than an average of a couple of gate percentages.
+const decisionGates = computed(() => {
+  const gates = (director.value?.gate_statuses || []).map(g => ({
+    name: g.gate,
+    done: Number(g.done) || 0,
+    total: Number(g.total) || 0,
+  }))
+  // Include TFA / Test Plan Sign Off as a gate when the payload carries it and
+  // the director gates don't already include it.
+  const hasTfaGate = gates.some(g => /tfa|test plan sign off/i.test(g.name))
+  if (!hasTfaGate && testSignOffTotal.value > 0) {
+    gates.push({ name: 'TFA Sign Off', done: testSignOffDone.value, total: testSignOffTotal.value })
+  }
+  return gates.filter(g => g.total > 0)
+})
 
-  if (allGates100 && openBlockers === 0) return 'ready-to-ship'
-  if (allGatesAbove80 && openBlockers <= 2) return 'on-track'
-  if (avgPct >= 50 && openBlockers > 0) return 'at-risk'
-  if (avgPct > 0) return 'in-progress'
-  return 'not-ready'
+// Weighted completion across every gate: total done / total items. Reflects the
+// real percentage of release work completed.
+const releaseCompletionPct = computed(() => {
+  const gates = decisionGates.value
+  const total = gates.reduce((s, g) => s + g.total, 0)
+  if (!total) return 0
+  const done = gates.reduce((s, g) => s + g.done, 0)
+  return Math.round((done / total) * 100)
+})
+
+// Whole days from today until the GA date (negative once GA has passed).
+// null when the schedule has no GA date, so any GA-based rule degrades to a
+// no-op rather than firing on missing data (common for EA milestones).
+const daysToGa = computed(() => {
+  const gaDate = releaseSchedule.value?.ga_date
+  if (!gaDate) return null
+  const ga = new Date(`${gaDate}T00:00:00Z`)
+  if (isNaN(ga.getTime())) return null
+  const today = new Date(`${new Date().toISOString().slice(0, 10)}T00:00:00Z`)
+  return Math.round((ga - today) / 86400000)
+})
+
+// Schedule risk: GA is imminent (within 3 days, and not already past) but the
+// release is not yet 80% complete. Used to escalate the decision to At Risk.
+const GA_NEAR_DAYS = 3
+const gaScheduleRisk = computed(() => {
+  const d = daysToGa.value
+  return d !== null && d >= 0 && d <= GA_NEAR_DAYS && releaseCompletionPct.value < 80
+})
+
+const releaseDecision = computed(() => {
+  const gates = decisionGates.value
+  if (!gates.length) return 'not-ready'
+
+  const gatePct = g => (g.total > 0 ? (g.done / g.total) * 100 : 0)
+  const openBlockers = productBlockers.value?.total_open || 0
+  const completion = releaseCompletionPct.value // weighted, real completion
+  const gatesBelow50 = gates.filter(g => gatePct(g) < 50).length
+  const allGatesAbove80 = gates.every(g => gatePct(g) >= 80)
+  const allGates100 = gates.every(g => gatePct(g) >= 100)
+
+  // Base decision from gates + blockers, evaluated best to worst; the strongest
+  // fully-satisfied state wins.
+  const base = (() => {
+    // Ready to Ship: every gate 100% complete and zero open blockers.
+    if (allGates100 && openBlockers === 0) return 'ready-to-ship'
+
+    // On Track: every gate at/above 80% and no open blockers.
+    if (allGatesAbove80 && openBlockers === 0) return 'on-track'
+
+    // Not Ready: two or more gates below 50%, OR open blockers while overall
+    // completion is still low. A stalled/early release is not ready regardless
+    // of whether blockers have been filed yet.
+    if (gatesBelow50 >= 2 || (openBlockers > 0 && completion < 50)) return 'not-ready'
+
+    // At Risk: meaningful progress (>= 50% overall) but something is
+    // jeopardizing the timeline — an open blocker or a single lagging gate.
+    if (completion >= 50 && (openBlockers > 0 || gatesBelow50 >= 1)) return 'at-risk'
+
+    // In Progress: work has started and gates are progressing (below 80%) with
+    // nothing actively putting the release at risk.
+    if (completion > 0) return 'in-progress'
+
+    // Nothing started.
+    return 'not-ready'
+  })()
+
+  // Schedule-risk overlay: if GA is within 3 days and the release is under 80%
+  // complete, escalate to At Risk. Only escalate — never soften an already
+  // worse state (e.g. Not Ready stays Not Ready). Has no effect when the GA
+  // date is missing, so EA releases without a GA date are unaffected.
+  if (gaScheduleRisk.value && (base === 'in-progress' || base === 'on-track')) {
+    return 'at-risk'
+  }
+
+  return base
 })
 
 // --- Component Filter ---
@@ -1023,14 +1216,6 @@ function ragBarClass(rag) {
   return 'bg-gray-400'
 }
 
-// Resolutions that mean the item was closed without completing the work
-// (mirrors the no-work resolutions excluded from person-metrics, see docs/DATA-FORMATS.md)
-const NO_WORK_RESOLUTIONS = ["Won't Do", "Can't Do", 'Obsolete', 'Duplicate', 'Cannot Reproduce']
-
-function isNoWorkResolution(resolution) {
-  return !!resolution && NO_WORK_RESOLUTIONS.includes(resolution)
-}
-
 function statusResolutionLabel(status, resolution) {
   return resolution ? `${status} - ${resolution}` : status
 }
@@ -1062,5 +1247,33 @@ function phaseBarColor(rag) {
 
 function phasePct(phase) {
   return phase.total > 0 ? Math.round((phase.done / phase.total) * 100) : 0
+}
+// --- Release Cycle Metrics ---
+
+const releaseCycleMetrics = computed(() => data.value?.release_cycle_metrics || null)
+
+function formatMetricDate(dateStr) {
+  if (!dateStr) return '—'
+  // Handle both YYYY-MM-DD and ISO timestamp formats
+  const dateOnly = dateStr.includes('T') ? dateStr.split('T')[0] : dateStr
+  const d = new Date(dateOnly + 'T00:00:00')
+  if (isNaN(d.getTime())) return '—'
+  return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+}
+
+function daysLabel(n) {
+  if (n === null || n === undefined || isNaN(n)) return '—'
+  if (n < 0) return '—' // Negative days are invalid for "days since" metrics
+  if (n === 0) return '0 days'
+  return `${n} day${n === 1 ? '' : 's'}`
+}
+
+function daysClass(n, warnAt, alertAt) {
+  if (n === null || n === undefined || isNaN(n) || n < 0) return 'text-gray-400 dark:text-gray-500'
+  // Validate threshold order: alertAt should be >= warnAt
+  const effectiveAlertAt = Math.max(warnAt, alertAt)
+  if (n >= effectiveAlertAt) return 'text-red-600 dark:text-red-400 font-semibold'
+  if (n >= warnAt) return 'text-amber-600 dark:text-amber-400 font-semibold'
+  return 'text-green-600 dark:text-green-400 font-semibold'
 }
 </script>

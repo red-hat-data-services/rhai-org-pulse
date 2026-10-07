@@ -1,0 +1,28 @@
+{
+  "key": "RHAISTRAT-2386",
+  "summary": "AMD MI455X support for vLLM runtime",
+  "status": "New",
+  "statusCategory": "To Do",
+  "priority": "Undefined",
+  "components": [
+    "vLLM Runtime"
+  ],
+  "targetVersions": [
+    "3.7 GA  RHAII RELEASE"
+  ],
+  "fixVersions": [
+    "3.7 GA  RHAII RELEASE"
+  ],
+  "pm": "Erwan Gallen",
+  "assignee": {
+    "displayName": "Ashraf Bhuiyan",
+    "accountId": "712020:6ca76c79-1f31-4874-b1c4-c31726149a34"
+  },
+  "labels": [],
+  "created": "2026/07/26 3:03 PM",
+  "updated": "2026/09/21 5:22 PM",
+  "architect": null,
+  "parentKey": null,
+  "colorStatus": null,
+  "ownerStatusColor": null
+}

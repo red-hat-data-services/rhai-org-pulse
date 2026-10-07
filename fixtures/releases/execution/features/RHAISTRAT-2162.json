@@ -1,0 +1,27 @@
+{
+  "key": "RHAISTRAT-2162",
+  "summary": "KALE Sample Notebook Catalog in JupyterLab Launcher",
+  "status": "In Progress",
+  "statusCategory": "In Progress",
+  "priority": "Normal",
+  "components": [
+    "Notebooks Extensions",
+    "Notebooks Server"
+  ],
+  "targetVersions": [
+    "3.7 EA RHOAI RELEASE"
+  ],
+  "fixVersions": [],
+  "pm": "",
+  "assignee": {
+    "displayName": "rhoaieng automationbot",
+    "accountId": "712020:9efc6a2a-8d76-4879-b330-502b84a3e040"
+  },
+  "labels": [],
+  "created": "2026/07/02 12:10 AM",
+  "updated": "2026/09/28 10:04 AM",
+  "architect": null,
+  "parentKey": null,
+  "colorStatus": null,
+  "ownerStatusColor": null
+}

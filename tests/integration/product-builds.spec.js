@@ -136,6 +136,12 @@ test.describe('Product Builds Module @product-builds', () => {
 
     expect(page.url()).toMatch(/product-builds\/release-status/);
     await expect(page.locator('h1')).toContainText('Release status');
+    const triggerRelease = page.getByRole('button', { name: 'Trigger release', exact: true });
+    await expect(triggerRelease).toBeEnabled();
+    await triggerRelease.click();
+    const triggerForm = page.locator('[data-release-form="trigger-release"]');
+    await expect(triggerForm).toBeVisible();
+    await expect(triggerForm.getByText('Readiness card', { exact: false })).toBeVisible();
 
     const appErrors = page.errors.filter(e => !/status of (429|404|503)/.test(e.message));
     expect(appErrors).toHaveLength(0);

@@ -1,0 +1,28 @@
+{
+  "key": "RHAISTRAT-2498",
+  "summary": "OLS Guardrails UC1: Kubernetes Credential and Secret Pattern Redaction Rail (All Models, All Endpoints, Stateless)",
+  "status": "New",
+  "statusCategory": "To Do",
+  "priority": "Major",
+  "components": [
+    "AI Guardrails",
+    "AI Safety",
+    "AI Safety Orchestration"
+  ],
+  "targetVersions": [
+    "3.7 GA RHOAI RELEASE"
+  ],
+  "fixVersions": [],
+  "pm": "William Caban Babilonia",
+  "assignee": {
+    "displayName": "",
+    "accountId": ""
+  },
+  "labels": [],
+  "created": "2026/07/31 12:13 AM",
+  "updated": "2026/09/28 2:37 PM",
+  "architect": null,
+  "parentKey": null,
+  "colorStatus": null,
+  "ownerStatusColor": null
+}

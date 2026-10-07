@@ -1,0 +1,29 @@
+{
+  "key": "RHAISTRAT-1724",
+  "summary": "AutoRAG Pattern Integration with GenAI Studio/Playground",
+  "status": "New",
+  "statusCategory": "To Do",
+  "priority": "Normal",
+  "components": [
+    "AI Core Dashboard",
+    "AutoRAG",
+    "Gen AI Studio",
+    "UXD"
+  ],
+  "targetVersions": [
+    "3.7 EA RHOAI RELEASE"
+  ],
+  "fixVersions": [],
+  "pm": "",
+  "assignee": {
+    "displayName": "David Tam",
+    "accountId": "712020:7c27708d-5dea-459a-a695-d0cfc6e36a1b"
+  },
+  "labels": [],
+  "created": "2026/05/05 2:10 PM",
+  "updated": "2026/09/17 11:09 AM",
+  "architect": null,
+  "parentKey": null,
+  "colorStatus": null,
+  "ownerStatusColor": null
+}

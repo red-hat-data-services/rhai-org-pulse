@@ -1,0 +1,27 @@
+{
+  "key": "RHAISTRAT-2860",
+  "summary": "Praxis AI Gateway: post-3.6 Responses, identity, and pipeline work",
+  "status": "New",
+  "statusCategory": "To Do",
+  "priority": "Major",
+  "components": [
+    "Agentic API",
+    "OGX Core"
+  ],
+  "targetVersions": [
+    "3.7 GA RHOAI RELEASE"
+  ],
+  "fixVersions": [],
+  "pm": "",
+  "assignee": {
+    "displayName": "",
+    "accountId": ""
+  },
+  "labels": [],
+  "created": "2026/09/24 8:10 AM",
+  "updated": "2026/09/30 10:23 AM",
+  "architect": null,
+  "parentKey": null,
+  "colorStatus": null,
+  "ownerStatusColor": null
+}

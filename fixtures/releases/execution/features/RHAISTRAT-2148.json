@@ -1,0 +1,29 @@
+{
+  "key": "RHAISTRAT-2148",
+  "summary": "Configure and Deploy Agents into Secure Execution Environments",
+  "status": "New",
+  "statusCategory": "To Do",
+  "priority": "Critical",
+  "components": [
+    "AgentOps",
+    "Documentation"
+  ],
+  "targetVersions": [
+    "3.7 EA RHOAI RELEASE"
+  ],
+  "fixVersions": [
+    "rhai-3.7"
+  ],
+  "pm": "",
+  "assignee": {
+    "displayName": "Dimitri Saridakis",
+    "accountId": "712020:b8bad4dd-5c44-48f6-8461-81327a1e18c9"
+  },
+  "labels": [],
+  "created": "2026/06/30 12:10 PM",
+  "updated": "2026/09/22 2:31 PM",
+  "architect": null,
+  "parentKey": null,
+  "colorStatus": null,
+  "ownerStatusColor": null
+}

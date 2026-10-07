@@ -959,14 +959,42 @@ Admin-configurable settings for the AI Impact module.
 - `trendThresholdPp` is the percentage-point threshold for classifying trends as "growing" or "declining" (0-50)
 - Defaults are used when no config file exists
 
-## Releases — CVE Sustaining Action Records (`data/releases/cve-sustaining/latest.json`)
+## Releases — CVE Sustaining Snapshot (`data/releases/cve-sustaining/latest.json`)
 
-The CVE sustaining snapshot may include `actionReportRecords` for the
-component-scoped CVE Action Report. The existing sustaining metrics and
-`openIssueRecords` fields remain unchanged.
+The CVE sustaining snapshot may include `slaCompliance` for quarterly SLA
+metrics and `actionReportRecords` for the component-scoped CVE Action Report.
+The existing sustaining metrics and `openIssueRecords` fields remain unchanged.
 
 ```json
 {
+  "slaCompliance": {
+    "quarters": [
+      {
+        "label": "Q3 2026",
+        "quarterStart": "2026-07-01",
+        "quarterEnd": "2026-09-30",
+        "resolvedCount": 4,
+        "newOpenCount": 3,
+        "noSlaDate": 1,
+        "total": 3,
+        "metSla": 2,
+        "missedSla": 1,
+        "pct": 67,
+        "breachedIssues": [
+          {
+            "key": "RHAIENG-456",
+            "summary": "CVE-2026-0456 in example package",
+            "component": "Model Serving",
+            "versions": ["rhoai-2.17"],
+            "status": "Resolved",
+            "assignee": "Alice Example",
+            "slaDate": "2026-09-20",
+            "resolved": "2026-09-21T12:00:00.000Z"
+          }
+        ]
+      }
+    ]
+  },
   "actionReportRecords": {
     "open": [
       {
@@ -991,6 +1019,26 @@ component-scoped CVE Action Report. The existing sustaining metrics and
   }
 }
 ```
+
+`slaCompliance.quarters` contains the current quarter and previous three
+quarters. `resolvedCount` includes all closed or resolved vulnerabilities with
+a resolution date in the quarter. `noSlaDate` counts those without a usable SLA
+Date, and `total` is the subset with an SLA Date. Therefore,
+`resolvedCount = noSlaDate + total`. `metSla` counts tickets resolved on or
+before their SLA Date, and `missedSla` counts tickets resolved after it. `pct`
+is `metSla / total`, rounded to an integer, or zero when no tickets have an SLA
+Date. `newOpenCount` counts issues open in the current snapshot whose Jira
+created date falls between `quarterStart` and `quarterEnd`, inclusive. An open
+ticket created in an earlier quarter is not included in this count.
+`breachedIssues` contains the ticket-level report for the quarter. Each record
+includes the Jira key, summary, component, target versions, status, assignee,
+SLA Date, and resolution timestamp. The quarter's Breached count opens this
+report inline in the dashboard; ticket keys link to their Jira issues.
+
+Older cached snapshots may contain SLA metrics calculated from Jira Due Date
+or query-based outcome links, and lack `resolvedCount`, `newOpenCount`,
+`noSlaDate`, or `breachedIssues`. The report prompts the user to refresh from
+Jira before showing current SLA details from those snapshots.
 
 `open` is the current open Vulnerability cohort used for SLA-breach, due-date,
 review-outcome, and age metrics. `all` is the all-status cohort used for the
@@ -1075,7 +1123,7 @@ All fix versions with release dates from tracked projects (RHOAIENG, AIPCC, RHAI
 
 ## Releases — Quality Bugs (`data/releases/delivery/quality/bugs-{PROJECT}.json`)
 
-Blocker/Critical/Major bugs with affected versions, per project. Only bugs created >= version release date (post-release discovery).
+Jira bugs with affected versions, per project. Only bugs created >= version release date (post-release discovery).
 
 ```json
 [
@@ -1096,7 +1144,7 @@ Blocker/Critical/Major bugs with affected versions, per project. Only bugs creat
 **Fields:**
 - `key` (string): Jira issue key
 - `summary` (string): Issue summary
-- `priority` (string): Priority name (Blocker, Critical, or Major)
+- `priority` (string): Jira priority name (for example, Blocker, Critical, Major, or Minor)
 - `status` (string): Current Jira status
 - `affectedVersions` (string[]): Array of version names this bug affects
 - `components` (string[]): Array of component names
@@ -1116,6 +1164,8 @@ Blocker/Critical/Major bugs with affected versions, per project. Only bugs creat
 
 **Note:** Components are computed dynamically from bug files by the `GET /api/modules/releases/delivery/quality/components` endpoint. No stored `components.json` file exists.
 
+The quality bugs endpoint accepts a comma-separated `component` query parameter. When multiple component names are supplied, a bug is included when it belongs to at least one selected component.
+
 The API response format:
 
 ```json
@@ -1133,9 +1183,31 @@ The API response format:
 
 ---
 
+## Releases — Quality Priorities (API Response)
+
+**Note:** Priorities are computed dynamically from the Jira bug cache by the
+`GET /api/modules/releases/delivery/quality/priorities` endpoint. The endpoint
+returns the priority names currently present in the cached Jira issues so the
+post-release defects report can filter by the same values.
+
+```json
+[
+  { "name": "Critical", "count": 28 },
+  { "name": "Major", "count": 17 },
+  { "name": "Blocker", "count": 3 }
+]
+```
+
+**Fields:**
+- `name` (string): Jira priority name
+- `count` (number): Number of cached bugs with that priority
+- Sorted by count descending, then name ascending
+
+---
+
 ## Releases — Quality 90-Day Summary (API Response)
 
-**Note:** Computed dynamically by the `GET /api/modules/releases/delivery/quality/90day-summary` endpoint from stored versions and bug files. No stored file — data is derived at request time.
+**Note:** Computed dynamically by the `POST /api/modules/releases/delivery/quality/90day-summary` endpoint from the user-saved version names and released dates in `okr-hub/90day-tracking-config.json` plus the cached bug files. No automatic Jira version discovery is used.
 
 The API response format:
 
@@ -1185,7 +1257,37 @@ The API response format:
 - `isComplete` (boolean): Whether the 90-day tracking window has closed
 - `releaseDate` (string): ISO date (YYYY-MM-DD) of the GA release
 
-Releases are sorted descending by version number (newest first). Only major versions (X.X) are included; z-stream versions (e.g., 3.3.1) are excluded.
+The release groups and product/version names are entirely user-configured. Each configured version is tracked for 90 days from its supplied released date; `daysElapsed` is capped at 90 and `isComplete` becomes true at the end of that window.
+
+---
+
+## OKR Hub — 90-Day Tracking Configuration (`data/okr-hub/90day-tracking-config.json`)
+
+Stores the release charts shown in the OKR Hub post-release bug report. Users
+configure each release group, the exact Jira `affectedVersion` names to track,
+and each version's released date. A removed release group is no longer shown
+in the report; there is no automatic Jira-version fallback.
+
+```json
+{
+  "releases": [
+    {
+      "version": "3.6",
+      "products": [
+        { "name": "rhoai-3.6", "gaDate": "2026-09-12" },
+        { "name": "rhelai-3.6", "gaDate": "2026-09-12" }
+      ]
+    }
+  ]
+}
+```
+
+**Fields:**
+- `releases` (array): User-defined release chart groups
+- `version` (string): Display name for the release group
+- `products` (array): Exact Jira affected-version entries included in the group
+- `products[].name` (string): Jira `affectedVersion` name
+- `products[].gaDate` (string): Released date in ISO format (`YYYY-MM-DD`)
 
 ---
 
@@ -1748,6 +1850,75 @@ JSON Lines format (one JSON object per line). Partitioned by month for efficient
 
 ---
 
+## Releases — CHI Hierarchy (`data/releases/chi-hierarchy/latest.json`)
+
+Pre-computed Container Health Index hierarchy for Org Pulse (RHOAIENG-97404). Dual-environment snapshot: **Prod** from `catalog.redhat.com`, **Stage** from `pyxis.stage.engineering.redhat.com` (Kerberos in the collector). Hierarchy: Product version → Components → Images.
+
+Fixture: `fixtures/releases/chi-hierarchy/latest.json`.
+
+```json
+{
+  "fetchedAt": "2026-09-30T18:00:00.000Z",
+  "activeStreams": ["rhoai-2.25", "rhoai-3.3", "rhoai-3.4", "rhoai-3.5"],
+  "environments": {
+    "prod": {
+      "fetchedAt": "2026-09-30T18:00:00.000Z",
+      "source": "catalog.redhat.com",
+      "versions": [{
+        "id": "rhoai-3.5",
+        "tag": "v3.5",
+        "summary": {
+          "imageCount": 3,
+          "gradeDistribution": { "A": 1, "B": 1, "D": 1 },
+          "critical": 0,
+          "important": 14,
+          "staleImageCount": 1
+        },
+        "components": [{
+          "name": "AI Core Dashboard",
+          "summary": {
+            "imageCount": 1,
+            "worstGrade": "B",
+            "critical": 0,
+            "important": 11,
+            "oldestImageAgeDays": 9
+          },
+          "images": [{
+            "name": "odh-dashboard-rhel9",
+            "grade": "B",
+            "gradeDate": "2026-09-21",
+            "vulnerabilityCount": 21,
+            "advisories": { "Critical": 0, "Important": 11, "Moderate": 9, "Low": 1 },
+            "catalogUrl": "https://catalog.redhat.com/software/containers/rhoai/odh-dashboard-rhel9",
+            "lastUpdated": "2026-09-21",
+            "ageDays": 9
+          }]
+        }]
+      }]
+    },
+    "stage": {
+      "fetchedAt": "2026-09-30T17:30:00.000Z",
+      "source": "pyxis.stage.engineering.redhat.com",
+      "versions": []
+    }
+  }
+}
+```
+
+| Method | Path | Auth | Purpose |
+|--------|------|------|---------|
+| GET | `/api/modules/releases/chi-hierarchy/data` | `releases:read` | Full dual-env snapshot |
+| GET | `/api/modules/releases/chi-hierarchy/status` | `releases:read` | Upload / env summary |
+| POST | `/api/modules/releases/chi-hierarchy/bulk` | `releases:write` | Pipeline ingest (skipped in `DEMO_MODE`) |
+
+Image staleness: `ageDays > 14` is treated as stale in the UI. `grade` / `gradeDate` / `vulnerabilityCount` align with legacy AIPCC `HealthIndex`.
+
+**Collector / join:** External CHI pipeline (`generate_chi_report.py` + `build_chi_hierarchy.py`) joins catalog/Stage Pyxis images to ProdSec `openshift-ai` `components.override` (strip `rhoai/`). See CHI repo `PIPELINE.md`. Org Pulse does not call Pyxis or ps_modules at runtime.
+
+**Onboarding new versions:** See [CHI-HIERARCHY.md](./CHI-HIERARCHY.md) — versions come from ProdSec `active_ps_update_streams`; no Org Pulse code change is needed when the stream and catalog tags exist.
+
+---
+
 ## Releases — RHOAI Component Architectures (`data/releases/rhoai-component-architectures/latest.json`)
 
 Multi-architecture build support matrix for RHOAI components across release branches. Fetched from pre-generated `multi-arch-report.yaml` files in the `red-hat-data-services/konflux-central` repo.
@@ -1881,6 +2052,11 @@ this file — the payload itself is produced outside this repo by the external
 `fetch_release_metrics.py` script and pushed via its `POST /upload` endpoint.
 Rendered by `modules/releases/client/reports/ReleaseReadinessDirector.vue`.
 
+The dashboard defaults to the available release with the latest valid
+`release_schedule.ga_date` on or before the current UTC date. Future releases
+and version views without a schedule are available for manual selection but
+are not selected on open. If no release qualifies, no version is selected.
+
 ```json
 {
   "version": "rhoai-3.5.EA2",
@@ -1922,6 +2098,7 @@ Rendered by `modules/releases/client/reports/ReleaseReadinessDirector.vue`.
 - Task objects carry the Jira `status`/`status_category` and `resolution` (same semantics as `resolution` in [Person Metrics](#person-metrics--datapeoplenamejson): the raw Jira resolution name, or `null`/absent while unresolved).
 - The UI renders a task's label as `<Status> - <Resolution>` (e.g. `"Done - Won't Do"`) whenever `resolution` is set, falling back to just `<Status>` otherwise; `resolution` is optional — older payloads without it still render using `status` alone.
 - No-work resolutions (`"Won't Do"`, `"Can't Do"`, `"Obsolete"`, `"Duplicate"`, `"Cannot Reproduce"`) are rendered in a muted/gray style instead of green, even when `status_category` is `"Done"`, since the work itself wasn't completed.
+- When `release_schedule.status` is `"Released"` or `"GA"`, the dashboard displays `Released with Open Tasks` in red if any test-execution task is unfinished. A task is unfinished when its status category is not `"Done"` or it has a no-work resolution. Otherwise, a released release keeps the normal green `Released` presentation.
 
 ## System Health — Disconnected Readiness Reports (`data/system-health/disconnected/reports.json`)
 
@@ -2351,6 +2528,81 @@ Each entry has: `dimension` (name), `score` (0-10), `status` (human-readable sum
 
 ---
 
+## System Health — Test Execution Dashboard (`data/system-health/test-execution/`)
+
+Aggregated RHOAI test execution statistics shown on the "Test Execution Dashboard (Beta)" view. This is a **display-layer** feature (HC3): an external pipeline (`test-reports-opensearch`) queries Jenkins/OpenSearch, pre-computes the dashboard payloads, and pushes them via the bulk API. The app only stores and serves the JSON — it performs no aggregation.
+
+The dataset is four separate JSON files under `data/system-health/test-execution/`:
+
+| File | Purpose |
+|------|---------|
+| `heatmap.json` | Primary payload: per-component daily pass/fail/skip totals with a version\|release breakdown. Drives the heatmap table and the version trend chart. |
+| `components.json` | Per-component daily series plus quality-gate execution detail (used by component drill-downs). |
+| `jira_config.json` | Release → team/JQL configuration used to build Jira links. |
+| `meta.json` | Generation metadata (date window, component list, data mode). |
+
+### `heatmap.json`
+
+```json
+{
+  "components": [
+    {
+      "component": "AI Hub",
+      "overall": { "execution_count": 102, "total": 6678, "passed": 6639, "failed": 39, "skipped": 0,
+        "mark": { "state": "FAILED", "color": "red", "symbol": "●" } },
+      "days": {
+        "2026-09-16": {
+          "execution_count": 8, "total": 912, "passed": 912, "failed": 0, "skipped": 0,
+          "jenkins_urls": ["https://jenkins.../rhoai-smoke/65/"],
+          "by_vr": {
+            "3.6|EA1": { "passed": 727, "failed": 0, "skipped": 0, "total": 727,
+              "jenkins_urls": ["https://jenkins.../rhoai-tier1/44/"] }
+          },
+          "mark": { "state": "PASSED", "color": "green", "symbol": "✓" }
+        }
+      }
+    }
+  ]
+}
+```
+
+**Fields:**
+- `components[]`: one entry per test component.
+  - `component`: display name (matches an entry in `meta.components`).
+  - `overall`: summed `total`/`passed`/`failed`/`skipped` plus `execution_count` and an optional `mark`.
+  - `days`: map keyed by ISO date (`YYYY-MM-DD`). Each day has `total`/`passed`/`failed`/`skipped`, `execution_count`, an optional `jenkins_urls` array, an optional `mark`, and `by_vr`.
+  - `by_vr`: map keyed by `"<version>|<release>"` (e.g. `"3.6|EA1"`). Each value has `passed`/`failed`/`skipped`/`total` and optional `jenkins_urls`. This drives version/release filtering and the version trend chart.
+
+> The endpoint also accepts a bare array (the `components` array on its own); the client normalizes both shapes.
+
+### `meta.json`
+
+```json
+{
+  "generated_at": "2026-09-22T18:08:51.970590+00:00",
+  "from_date": "2026-07-01",
+  "to_date": "2026-09-22",
+  "components": ["AI Hub", "AI Pipelines", "..."],
+  "data_mode": "static"
+}
+```
+
+### `components.json` and `jira_config.json`
+
+`components.json` is a map keyed by component name with `overall`, a `daily[]` array, and a `quality_gates` object (per-gate, per-date execution lists). `jira_config.json` is a map with a `releases` object keyed by `"<version>|<release>"`, each carrying `fix_version`, `rhoai_jira_version`, `project`, and a `teams` map. These are stored verbatim and passed through to the client; they are consumed opportunistically for drill-downs and Jira links.
+
+**API:**
+
+| Method | Path | Auth | Purpose |
+|--------|------|------|---------|
+| `GET` | `/api/modules/system-health/quality/test-execution/data` | `system-health:read` | Combined `{ heatmap, components, jira_config, meta, lastUpload }`; `?file=<name>` for a single payload |
+| `GET` | `/api/modules/system-health/quality/test-execution/status` | `system-health:read` | Last upload receipt |
+| `POST` | `/api/modules/system-health/quality/test-execution/bulk` | `system-health:write` | Push any subset of `heatmap`/`components`/`jira_config`/`meta` from the pipeline |
+
+**Upload receipt:** `data/system-health/test-execution/last-upload.json` records `{ uploadedAt, uploadedBy, files }` after each bulk write.
+
+---
+
 ## AI Catalyst Monthly Board — `data/ai-catalyst/boards/{YYYY-MM}.json`
 
 The monthly board is a JSON array written by the AI Catalyst board sync. Each
@@ -2556,6 +2808,111 @@ Board and showcase responses intentionally use different pillar scopes:
 | `summary.committed` | number | Total committed across all releases |
 | `summary.delivered` | number | Total delivered across all releases |
 | `summary.accuracy` | number | Overall accuracy percentage |
+
+---
+
+## Releases — Release Readiness (`data/releases/release-readiness/{version}.json`)
+
+Produced by `fetch_release_metrics.py` in `rhods-qe-tools`. Pushed to the app
+via `POST /api/modules/releases/release-readiness/upload`. Keyed by sanitized
+version string (spaces and special chars replaced with `_`).
+
+```json
+{
+  "version": "rhoai-3.5.EA2",
+  "generated_at": "2026-07-01T10:00:00Z",
+  "summary": { "total_work": 120, "work_done": 96, "work_in_progress": 15, "work_remaining": 9, "progress_pct": 80 },
+  "director_summary": {
+    "overall_pct": 75,
+    "gate_statuses": [
+      { "gate": "Product Sign Off", "done": 8, "total": 10, "pct": 80, "rag": "AMBER" }
+    ],
+    "test_timeline": [
+      { "epic_key": "RHOAIENG-70001", "name": "Nightly", "done": 12, "total": 12, "pct": 100, "rag": "GREEN" }
+    ]
+  },
+  "component_readiness": { "all_components": ["TestOps"], "phases": [] },
+  "product_blockers": { "total_open": 2, "components": [], "jql_url": "..." },
+  "open_issues_to_validate": { "total": 5, "jql_url": "..." },
+  "tfa_signoff_done": 18,
+  "tfa_signoff_total": 21,
+  "tfa_signoff_jql_url": "...",
+  "version_variants": ["rhoai-3.5.EA2", "3.5 EA2 RHOAI RELEASE"],
+  "release_schedule": {
+    "version": "rhoai-3.5.EA2",
+    "ga_date": "2026-05-01",
+    "code_freeze_date": "2026-02-24",
+    "rc1_build_date": "2026-03-03",
+    "rc2_build_date": "2026-03-17",
+    "status": "Upcoming",
+    "pp_url": "..."
+  },
+  "release_cycle_metrics": {
+    "code_freeze_date": "2026-02-24",
+    "phases": [
+      {
+        "phase": "RC1 Builds Testing",
+        "epic_key": "RHOAIENG-68791",
+        "build_ready_date": "2026-03-03",
+        "days_since_code_freeze": 5,
+        "test_started_date": "2026-03-04",
+        "days_to_test_started": 1,
+        "test_finished_date": "2026-03-13",
+        "days_to_test_finished": 8,
+        "tfas_passed_date": "2026-03-05",
+        "days_to_tfas_passed": 2,
+        "tfas_triaged_date": "2026-03-11",
+        "days_to_tfas_triaged": 6,
+        "blockers_resolved_date": "2026-03-12",
+        "days_to_blockers_resolved": 7
+      },
+      {
+        "phase": "RC2 Builds Testing",
+        "epic_key": "RHOAIENG-68813",
+        "build_ready_date": "2026-03-17",
+        "days_since_code_freeze": 15,
+        "test_started_date": "2026-03-18",
+        "days_to_test_started": 1,
+        "test_finished_date": null,
+        "days_to_test_finished": null,
+        "tfas_passed_date": "2026-03-19",
+        "days_to_tfas_passed": 2,
+        "tfas_triaged_date": null,
+        "days_to_tfas_triaged": null,
+        "blockers_resolved_date": null,
+        "days_to_blockers_resolved": null
+      }
+    ]
+  },
+  "breakdowns": {}
+}
+```
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `release_cycle_metrics.code_freeze_date` | `string \| null` | `YYYY-MM-DD` from Product Pages |
+| `release_cycle_metrics.phases[].phase` | `string` | Test-phase Epic summary from Jira (e.g. `"RC1 Builds Testing"`, `"Nightly Build Wk2 - Jun 22"`) |
+| `release_cycle_metrics.phases[].epic_key` | `string` | Jira Epic key (e.g. `"RHOAIENG-68791"`) |
+| `release_cycle_metrics.phases[].build_ready_date` | `string \| null` | `YYYY-MM-DD`; source: manual override, PP schedule task matching the RC label, or Jira epic Done date |
+| `release_cycle_metrics.phases[].days_since_code_freeze` | `number \| null` | Working days (Mon–Fri) between `code_freeze_date` and `build_ready_date`; `null` if either is unknown |
+| `release_cycle_metrics.phases[].test_started_date` | `string \| null` | Jira test-phase epic first became active (proxy: `updated` timestamp) |
+| `release_cycle_metrics.phases[].days_to_test_started` | `number \| null` | Working days from `build_ready_date` to `test_started_date` |
+| `release_cycle_metrics.phases[].test_finished_date` | `string \| null` | Jira test-phase epic Done (`resolutiondate` or `updated`) |
+| `release_cycle_metrics.phases[].days_to_test_finished` | `number \| null` | Working days from `build_ready_date` to `test_finished_date` |
+| `release_cycle_metrics.phases[].tfas_passed_date` | `string \| null` | Max `updated` among TFA tasks when ALL reached In Progress or Done; `null` if any still New |
+| `release_cycle_metrics.phases[].days_to_tfas_passed` | `number \| null` | Working days from `build_ready_date` to `tfas_passed_date` |
+| `release_cycle_metrics.phases[].tfas_triaged_date` | `string \| null` | Max `updated` among TFA tasks when ALL reached Done; `null` if any not Done |
+| `release_cycle_metrics.phases[].days_to_tfas_triaged` | `number \| null` | Working days from `build_ready_date` to `tfas_triaged_date` |
+| `release_cycle_metrics.phases[].blockers_resolved_date` | `string \| null` | Max `resolutiondate` across all resolved blockers; `null` if any open blockers remain |
+| `release_cycle_metrics.phases[].days_to_blockers_resolved` | `number \| null` | Working days from `build_ready_date` to `blockers_resolved_date` |
+| `release_schedule.rc1_build_date` | `string \| null` | New field added to `release_schedule`; PP schedule task date for RC1 build milestone |
+| `release_schedule.rc2_build_date` | `string \| null` | PP schedule task date for RC2 build milestone |
+
+**Notes:**
+- All day counts use Mon–Fri only (no public holidays excluded).
+- Dates are proxies from Jira `updated` timestamps; they represent when Jira recorded the transition, not the exact moment it occurred.
+- The TFA and blocker dates are release-level (not per-RC); the same date appears in each phase with different `days_to_*` values.
+- `null` means the milestone has not occurred or data is unavailable; the dashboard renders `—` for null.
 
 ---
 

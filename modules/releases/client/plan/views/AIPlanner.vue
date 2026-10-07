@@ -1,279 +1,254 @@
 <script setup>
-import { ref, computed, inject, watch, onMounted } from 'vue'
+import { ref, onMounted, onUnmounted } from 'vue'
 import { apiRequest } from '@shared/client/services/api'
+import Toast from '@shared/client/components/Toast.vue'
 import { useDraftPlans } from '../composables/useDraftPlans'
 
+const iframeRef = ref(null)
+const containerRef = ref(null)
+const containerHeight = ref('600px')
+const DEMO_URL = '/ai-first-scheduler/index.html'
+// The planner reads ?user= and preselects that person in its PM filter, so a PM
+// lands on their own features instead of All PMs.
+const plannerUrl = ref('')
+
+async function resolvePlannerUrl() {
+  let uid = ''
+  try {
+    const access = await apiRequest('/modules/releases/draft-plans/access')
+    uid = (access && access.session && access.session.uid) || ''
+  } catch {
+    // Signed-in identity is unavailable; fall back to the unfiltered planner.
+  }
+  plannerUrl.value = uid ? DEMO_URL + '?user=' + encodeURIComponent(uid) : DEMO_URL
+}
+
+// The Plan tab wraps its content in a height-less div, so h-full collapses and the iframe is
+// left at whatever min-height we give it — half a screen on a 1080p display. Measure the space
+// actually remaining below the container instead. TAB_GUTTER matches that wrapper's p-6 padding.
+const TAB_GUTTER = 24
+let layoutObserver = null
+
+function syncContainerHeight() {
+  // offsetParent is null while another Plan tab is showing; measuring then would
+  // read a top of 0 and leave an oversized frame behind when the tab returns.
+  if (!containerRef.value || containerRef.value.offsetParent === null) return
+  const top = containerRef.value.getBoundingClientRect().top
+  containerHeight.value = Math.max(400, window.innerHeight - top - TAB_GUTTER) + 'px'
+}
+
 const {
-  draft,
   selectedVersion,
-  filterEvent,
+  approveFeature,
+  addCandidate,
+  markSessionAdded,
+  selectedTargetVersion,
   loadCycles,
   loadEditor,
-  approveFeature,
   persist
 } = useDraftPlans()
-const moduleNav = inject('moduleNav', null)
 
-const loading = ref(true)
-const error = ref(null)
-const actionError = ref(null)
-const snapshot = ref(null)
-const searchQuery = ref('')
-const selectedPlan = ref('3.6 GA')
-const currentPage = ref(1)
-const PAGE_SIZE = 50
-const selectedBugComponent = ref(null)
-const showBugModal = ref(false)
+const toastMessage = ref('')
+const toastType = ref('success')
+const showToast = ref(false)
 
-const bugComponentMap = computed(() => {
-  const map = {}
-  if (snapshot.value && snapshot.value.bugQueue) {
-    snapshot.value.bugQueue.forEach(b => {
-      map[b.component] = { blocker: b.blocker, critical: b.critical, total: b.total }
-    })
-  }
-  return map
-})
-
-const plannedFeatures = computed(() => {
-  if (!snapshot.value || !snapshot.value.features) return []
-  return snapshot.value.features.filter(f => f.PlannedFor === selectedPlan.value)
-})
-
-const filteredFeatures = computed(() => {
-  const q = searchQuery.value.toLowerCase()
-  return plannedFeatures.value.filter(f => {
-    return !q || f.Key.toLowerCase().includes(q) || f.Summary.toLowerCase().includes(q)
-  })
-})
-
-watch([selectedPlan, searchQuery], () => { currentPage.value = 1 })
-
-const totalPages = computed(() => Math.ceil(filteredFeatures.value.length / PAGE_SIZE))
-const pagedFeatures = computed(() => {
-  const start = (currentPage.value - 1) * PAGE_SIZE
-  return filteredFeatures.value.slice(start, start + PAGE_SIZE)
-})
-
-function getSeverityIcon(component) {
-  const bugs = bugComponentMap.value[component]
-  if (!bugs) return '⚪'
-  const urgent = bugs.blocker + bugs.critical
-  if (urgent >= 10) return '🔴'
-  if (urgent >= 5) return '🟠'
-  return '🟡'
+function notify(message, type) {
+  toastMessage.value = message
+  toastType.value = type || 'success'
+  showToast.value = true
 }
 
-function getConfidenceBg(confidence) {
-  const map = {
-    'ready': 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300',
-    'likely': 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300',
-    'likely-plus': 'bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300',
-    'not-ready': 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300'
+// Features carry a target version ("3.6 EA1 RHOAI RELEASE"); Plan Approval is keyed by the
+// release cycle ("3.6"), with EA1/EA2/GA being placements inside it.
+/**
+ * The planner speaks in display rows; Plan Approval speaks in candidates. Only the
+ * fields the approval table actually renders are carried across.
+ */
+function candidateFromPlannerRow(feature) {
+  const version = String(feature.version || '').trim()
+  const components = String(feature.components || '')
+  return {
+    key: feature.key,
+    summary: feature.summary || '',
+    basePlacement: feature.placement && feature.placement !== 'No' ? feature.placement : '',
+    priority: feature.priority || '',
+    component: components.split(';')[0].trim(),
+    engComponents: components,
+    currentTV: version,
+    targetVersions: version ? [version] : [],
+    productFamily: /RHAII/i.test(version) ? 'RHAII' : 'RHOAI',
+    status: feature.status || '',
+    featureSize: feature.size || '',
+    bigRock: feature.outcome || '',
+    ready: ''
   }
-  return map[confidence] || 'bg-gray-100 dark:bg-gray-700'
 }
 
-async function ensureDraftPlanLoaded() {
-  if (draft.value && draft.value.version === selectedVersion.value) return true
+function cycleForTargetVersion(targetVersion) {
+  const match = String(targetVersion || '').match(/\d+\.\d+/)
+  return match ? match[0] : ''
+}
 
+async function addFeaturesToPlan(features) {
   try {
     await loadCycles('RHOAI')
-    await loadEditor(selectedVersion.value)
   } catch {
-    return false
-  }
-
-  return !!draft.value
-}
-
-async function addToDraftPlan(feature) {
-  actionError.value = null
-
-  if (!await ensureDraftPlanLoaded()) {
-    actionError.value = 'Plan Approval data is unavailable. Please try again.'
+    notify('Plan Approval is unavailable right now, so nothing was added.', 'error')
     return
   }
 
-  const result = approveFeature(feature.Key, true)
-  if (!result || !result.ok) {
-    actionError.value = 'Feature is not available in the current Plan Approval candidate set.'
-    return
-  }
+  // A cycle no longer has to exist up front: a feature carries its own release, and
+  // injecting it is what brings that cycle into being.
+  const byCycle = new Map()
+  const noCycle = []
 
-  try {
-    await persist()
-    filterEvent.value = '__approved__'
-    if (moduleNav && moduleNav.updateParams) {
-      moduleNav.updateParams({ tab: 'draft-plans' }, { push: false })
+  for (const feature of features) {
+    const cycle = cycleForTargetVersion(feature.version) || selectedVersion.value
+    if (!cycle) {
+      noCycle.push(feature)
+      continue
     }
-  } catch (e) {
-    actionError.value = 'Failed to save draft plan: ' + e.message
+    if (!byCycle.has(cycle)) byCycle.set(cycle, [])
+    byCycle.get(cycle).push(feature)
+  }
+
+  const added = []
+  const notCandidates = []
+  const notOwned = []
+  let saveFailed = false
+  let lastPopulatedCycle = ''
+
+  for (const [cycle, cycleFeatures] of byCycle) {
+    try {
+      await loadEditor(cycle)
+    } catch {
+      saveFailed = true
+      continue
+    }
+    const approvedHere = []
+    for (const feature of cycleFeatures) {
+      // Only the pipeline's own candidates can be approved directly; anything else
+      // has to be put into the plan first.
+      addCandidate(candidateFromPlannerRow(feature))
+      const result = approveFeature(feature.key, true)
+      if (result && result.ok) approvedHere.push(feature.key)
+      // A missing candidate and a refused edit both return ok:false; only the
+      // latter carries a reason, and they need different wording to be actionable.
+      else if (result && result.reason === 'forbidden') notOwned.push(feature.key)
+      else notCandidates.push(feature.key)
+    }
+    if (!approvedHere.length) continue
+    try {
+      await persist()
+      added.push(...approvedHere)
+      lastPopulatedCycle = cycle
+    } catch {
+      saveFailed = true
+    }
+  }
+
+  if (added.length) {
+    markSessionAdded(added)
+    // Leave Plan Approval pointing at the cycle we just populated, narrowed to the
+    // feature's own target version when the batch shares one.
+    if (lastPopulatedCycle && selectedVersion.value !== lastPopulatedCycle) {
+      await loadEditor(lastPopulatedCycle)
+    }
+    const addedVersions = [...new Set(
+      features.filter(f => added.indexOf(f.key) !== -1).map(f => String(f.version || '').trim())
+    )].filter(Boolean)
+    selectedTargetVersion.value = addedVersions.length === 1 ? addedVersions[0] : ''
+  }
+
+  const problems = []
+  if (noCycle.length) {
+    problems.push(`${noCycle.length} have no target version, so there is no cycle to put them in`)
+  }
+  if (notCandidates.length) problems.push(`${notCandidates.length} not in this cycle's candidates`)
+  if (notOwned.length) {
+    problems.push(
+      `${notOwned.length} you cannot approve — only the feature's PM or Delivery Owner can, or a plan admin (${notOwned.slice(0, 3).join(', ')})`
+    )
+  }
+  if (saveFailed) problems.push('saving failed')
+
+  if (added.length && !problems.length) {
+    notify(`${added.length} feature${added.length === 1 ? '' : 's'} added to Plan Approval (${lastPopulatedCycle}).`)
+  } else if (added.length) {
+    notify(`${added.length} added to Plan Approval; ${problems.join('; ')}.`, 'error')
+  } else {
+    notify(`Nothing was added to Plan Approval — ${problems.join('; ') || 'no features selected'}.`, 'error')
   }
 }
 
-function showBugBreakdown(component) {
-  selectedBugComponent.value = component
-  showBugModal.value = true
+const handleIframeMessage = async (event) => {
+  if (event.origin !== window.location.origin) return
+
+  if (event.data.type === 'add-to-draft-plan') {
+    const features = event.data.features || []
+    if (!features.length) return
+    await addFeaturesToPlan(features)
+  }
 }
 
-const featuresInComponent = computed(() => {
-  if (!selectedBugComponent.value || !snapshot.value?.features) return []
-  return snapshot.value.features.filter(f =>
-    (f.Components || []).includes(selectedBugComponent.value)
-  ).slice(0, 10)
+// Send data to iframe via postMessage
+const sendDataToIframe = async () => {
+  if (!iframeRef.value) return
+  try {
+    const snapshot = await apiRequest('/modules/releases/planning/ai-planner')
+    iframeRef.value.contentWindow.postMessage({
+      type: 'ai-planner-data',
+      features: snapshot.features || [],
+      bugQueue: snapshot.bugQueue || [],
+      capacity: snapshot.capacity || {},
+      cveReserve: snapshot.cveReserve || {},
+      lastSyncedAt: snapshot.lastSyncedAt || new Date().toISOString()
+    }, window.location.origin)
+  } catch (e) {
+    console.error('Failed to load AI Planner data:', e)
+  }
+}
+
+onMounted(() => {
+  // Listen for messages from the iframe
+  window.addEventListener('message', handleIframeMessage)
+  resolvePlannerUrl()
+  syncContainerHeight()
+  window.addEventListener('resize', syncContainerHeight)
+  // Banners above the tab can be dismissed at runtime, which shifts the container upwards.
+  // Resize on the next frame so the write lands outside the observer's delivery cycle,
+  // which is what otherwise surfaces as a ResizeObserver loop error.
+  layoutObserver = new ResizeObserver(() => requestAnimationFrame(syncContainerHeight))
+  layoutObserver.observe(document.body)
+  // Also watch the container itself, so returning to the tab re-measures once it
+  // is laid out again.
+  if (containerRef.value) layoutObserver.observe(containerRef.value)
 })
 
-onMounted(async () => {
-  try {
-    snapshot.value = await apiRequest('/modules/releases/planning/ai-planner')
-  } catch (e) {
-    error.value = e.message
-  } finally {
-    loading.value = false
-  }
+onUnmounted(() => {
+  // Clean up message listener
+  window.removeEventListener('message', handleIframeMessage)
+  window.removeEventListener('resize', syncContainerHeight)
+  if (layoutObserver) layoutObserver.disconnect()
 })
 </script>
 
 <template>
-  <div class="flex flex-col h-full bg-gray-50 dark:bg-gray-900">
-    <!-- Header -->
-    <div class="px-6 py-4 border-b border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800">
-      <h1 class="text-xl font-semibold dark:text-gray-100">AI-First Release Planner</h1>
-      <p class="text-sm text-gray-500 dark:text-gray-400">{{ snapshot?.featureCount || 0 }} features · Last updated {{ snapshot?.lastSyncedAt?.split('T')[0] }}</p>
-    </div>
-
-    <div v-if="loading" class="flex-1 flex items-center justify-center">
-      <p class="text-gray-500 dark:text-gray-400">Loading planner data...</p>
-    </div>
-
-    <div v-else-if="error" class="flex-1 flex items-center justify-center">
-      <p class="text-red-600 dark:text-red-400">Error loading planner: {{ error }}</p>
-    </div>
-
-    <div v-else class="flex-1 overflow-y-auto">
-      <div
-        v-if="actionError"
-        role="alert"
-        class="mx-6 mt-4 rounded-lg border border-red-200 dark:border-red-700 bg-red-50 dark:bg-red-900/20 px-4 py-3 text-sm text-red-700 dark:text-red-400"
-      >
-        {{ actionError }}
-      </div>
-
-      <!-- Bug Queue Panel -->
-      <div v-if="snapshot.bugQueue && snapshot.bugQueue.length" class="px-6 py-4 bg-red-50 dark:bg-red-900/20 border-b border-red-200 dark:border-red-800">
-        <h2 class="text-sm font-semibold text-red-900 dark:text-red-300 mb-2">🚨 Bug Queue (Top 6)</h2>
-        <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-2">
-          <div v-for="b in snapshot.bugQueue.slice(0, 6)" :key="b.component"
-            @click="showBugBreakdown(b.component)"
-            class="cursor-pointer p-3 bg-white rounded-lg border border-red-300 hover:shadow-md transition-all hover:scale-105 text-xs">
-            <div class="font-mono font-bold">{{ getSeverityIcon(b.component) }} {{ b.component }}</div>
-            <div class="text-red-700 dark:text-red-300">🔴 {{ b.blocker }} blocker</div>
-            <div class="text-orange-700 dark:text-orange-300">🟠 {{ b.critical }} critical</div>
-            <div class="text-gray-500 text-xs mt-2">click for details →</div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Bug Detail Modal -->
-      <div v-if="showBugModal" class="fixed inset-0 bg-black/50 flex items-center justify-center z-50" @click.self="showBugModal = false">
-        <div class="bg-white dark:bg-gray-800 rounded-lg p-6 max-w-lg max-h-[80vh] overflow-y-auto shadow-xl">
-          <h3 class="text-lg font-bold mb-4 text-gray-900 dark:text-gray-100">{{ selectedBugComponent }}</h3>
-          <div v-if="selectedBugComponent && snapshot.bugQueue" class="mb-4">
-            <div class="bg-red-50 dark:bg-red-900/30 p-4 rounded-lg">
-              <div class="text-sm mb-2"><span class="font-bold">🔴 Blocker:</span> {{ snapshot.bugQueue.find(b => b.component === selectedBugComponent)?.blocker || 0 }} issues</div>
-              <div class="text-sm mb-2"><span class="font-bold">🟠 Critical:</span> {{ snapshot.bugQueue.find(b => b.component === selectedBugComponent)?.critical || 0 }} issues</div>
-              <div class="text-sm"><span class="font-bold">📊 Total:</span> {{ snapshot.bugQueue.find(b => b.component === selectedBugComponent)?.total || 0 }} issues</div>
-            </div>
-          </div>
-
-          <div class="mb-4">
-            <div class="text-sm font-bold text-gray-900 dark:text-gray-100 mb-2">Features in this component:</div>
-            <div class="max-h-40 overflow-y-auto border border-gray-200 dark:border-gray-600 rounded p-2 bg-gray-50 dark:bg-gray-900">
-              <div v-if="featuresInComponent.length === 0" class="text-xs text-gray-500">No features found</div>
-              <div v-for="f in featuresInComponent" :key="f.Key" class="mb-2 text-xs">
-                <a :href="`https://redhat.atlassian.net/browse/${f.Key}`" target="_blank" class="text-blue-600 dark:text-blue-400 font-semibold hover:underline">{{ f.Key }}</a>
-                <div class="text-gray-600 dark:text-gray-400 text-xs">{{ (f.Summary || f.Title || '').slice(0, 50) }}{{ (f.Summary || f.Title || '').length > 50 ? '...' : '' }}</div>
-              </div>
-            </div>
-          </div>
-
-          <div class="text-xs text-gray-600 dark:text-gray-400 mb-4 p-2 bg-gray-100 dark:bg-gray-700 rounded">
-            <strong>Impact:</strong> Features lose confidence due to bug load.<br>
-            <strong>Action:</strong> Prioritize bug fixes or add team capacity.
-          </div>
-
-          <button @click="showBugModal = false" class="w-full py-2 bg-gray-200 dark:bg-gray-600 text-gray-900 dark:text-gray-100 rounded font-semibold hover:bg-gray-300 dark:hover:bg-gray-500">Close</button>
-        </div>
-      </div>
-
-      <!-- Filters -->
-      <div class="px-6 py-3 border-b border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 flex gap-4 items-center">
-        <div class="flex gap-2 items-center">
-          <label for="plan-select" class="text-sm font-medium dark:text-gray-300">Plan:</label>
-          <select id="plan-select" v-model="selectedPlan" class="px-3 py-1 rounded border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-200 text-sm">
-            <option>3.6 GA</option>
-            <option>3.7 EA1</option>
-            <option>3.7 GA</option>
-            <option>3.8 EA1</option>
-          </select>
-        </div>
-        <div class="flex-1 relative">
-          <input v-model="searchQuery" type="text" placeholder="Search by Key or Summary..." class="w-full px-3 py-1 rounded border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-200 text-sm" />
-        </div>
-        <div class="text-xs text-gray-500 dark:text-gray-400">{{ filteredFeatures.length }} features</div>
-      </div>
-
-      <!-- Features Table -->
-      <div class="overflow-x-auto">
-        <table class="w-full text-sm border-collapse">
-          <thead class="bg-gray-100 dark:bg-gray-800 sticky top-0">
-            <tr class="border-b border-gray-200 dark:border-gray-700">
-              <th class="px-4 py-2 text-left text-xs font-semibold text-gray-600 dark:text-gray-400">Key</th>
-              <th class="px-4 py-2 text-left text-xs font-semibold text-gray-600 dark:text-gray-400">Summary</th>
-              <th class="px-4 py-2 text-center text-xs font-semibold text-gray-600 dark:text-gray-400">Components</th>
-              <th class="px-4 py-2 text-right text-xs font-semibold text-gray-600 dark:text-gray-400">RICE</th>
-              <th class="px-4 py-2 text-center text-xs font-semibold text-gray-600 dark:text-gray-400">FPDoR</th>
-              <th class="px-4 py-2 text-center text-xs font-semibold text-gray-600 dark:text-gray-400">Confidence</th>
-              <th class="px-4 py-2 text-center text-xs font-semibold text-gray-600 dark:text-gray-400">X-Team</th>
-              <th class="px-4 py-2 text-center text-xs font-semibold text-gray-600 dark:text-gray-400">Action</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr v-for="f in pagedFeatures" :key="f.Key" class="border-b border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800">
-              <td class="px-4 py-2 font-mono text-xs text-blue-600 dark:text-blue-400">{{ f.Key }}</td>
-              <td class="px-4 py-2 text-xs dark:text-gray-300">{{ f.Summary }}</td>
-              <td class="px-4 py-2 text-xs dark:text-gray-400">
-                <div class="flex flex-wrap gap-1">
-                  <span v-for="c in f.Components" :key="c" class="inline-block px-2 py-1 rounded bg-gray-200 dark:bg-gray-600 text-xs" :title="c">
-                    {{ getSeverityIcon(c) }} {{ c }}
-                  </span>
-                </div>
-              </td>
-              <td class="px-4 py-2 text-right text-xs dark:text-gray-300">{{ f.RICE }}</td>
-              <td class="px-4 py-2 text-center text-xs dark:text-gray-300">{{ f.FPDoR }}</td>
-              <td class="px-4 py-2 text-center">
-                <span class="inline-block px-2 py-1 rounded text-xs font-medium" :class="getConfidenceBg(f.Confidence)">
-                  {{ f.Confidence }}
-                </span>
-              </td>
-              <td class="px-4 py-2 text-center text-xs dark:text-gray-300">{{ f.XTeam === 'yes' ? '✓ Yes' : '— No' }}</td>
-              <td class="px-4 py-2 text-center">
-                <button @click="addToDraftPlan(f)" class="px-2 py-1 text-xs rounded bg-blue-600 hover:bg-blue-700 text-white">Add to Plan</button>
-              </td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-
-      <!-- Pagination -->
-      <div v-if="totalPages > 1" class="px-6 py-3 border-t border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 flex items-center justify-between">
-        <span class="text-xs text-gray-600 dark:text-gray-400">Page {{ currentPage }} of {{ totalPages }}</span>
-        <div class="flex gap-2">
-          <button @click="currentPage = Math.max(1, currentPage - 1)" :disabled="currentPage === 1" class="px-3 py-1 rounded border border-gray-300 dark:border-gray-600 text-xs disabled:opacity-50 hover:bg-gray-100 dark:hover:bg-gray-700">Prev</button>
-          <button @click="currentPage = Math.min(totalPages, currentPage + 1)" :disabled="currentPage === totalPages" class="px-3 py-1 rounded border border-gray-300 dark:border-gray-600 text-xs disabled:opacity-50 hover:bg-gray-100 dark:hover:bg-gray-700">Next</button>
-        </div>
-      </div>
-    </div>
+  <div ref="containerRef" class="w-full flex flex-col bg-gray-50 dark:bg-gray-900" :style="{ height: containerHeight }">
+    <iframe
+      v-if="plannerUrl"
+      ref="iframeRef"
+      :src="plannerUrl"
+      class="flex-1 w-full border-none"
+      title="AI-First Release Planner"
+      sandbox="allow-same-origin allow-scripts allow-popups allow-forms"
+      @load="sendDataToIframe"
+    />
+    <Toast
+      v-if="showToast"
+      :message="toastMessage"
+      :type="toastType"
+      @close="showToast = false"
+    />
   </div>
 </template>

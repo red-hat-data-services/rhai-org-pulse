@@ -1,0 +1,26 @@
+{
+  "key": "RHAISTRAT-2314",
+  "summary": "Autoscaling for canary rollouts in RawDeployment",
+  "status": "New",
+  "statusCategory": "To Do",
+  "priority": "Major",
+  "components": [
+    "Serving Orchestration"
+  ],
+  "targetVersions": [
+    "3.7 GA RHOAI RELEASE"
+  ],
+  "fixVersions": [],
+  "pm": "",
+  "assignee": {
+    "displayName": "Mahmoud Alhaj",
+    "accountId": "712020:32edded2-aff1-454d-9734-0a31f9cd4a00"
+  },
+  "labels": [],
+  "created": "2026/07/21 12:09 PM",
+  "updated": "2026/09/28 2:38 PM",
+  "architect": null,
+  "parentKey": null,
+  "colorStatus": null,
+  "ownerStatusColor": null
+}

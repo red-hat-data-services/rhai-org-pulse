@@ -112,7 +112,11 @@
                     v-else-if="obj.quarters[q]"
                     class="rounded-lg px-2 py-2 min-h-[3rem] flex items-center justify-center"
                     :class="[statusConfig[obj.quarters[q].status].bg, reportMap[obj.id] ? 'cursor-pointer hover:ring-2 hover:ring-primary-400 transition-all' : '']"
+                    :role="reportMap[obj.id] ? 'link' : undefined"
+                    :tabindex="reportMap[obj.id] ? 0 : undefined"
                     @click.stop="reportMap[obj.id] ? navigateToReport(reportMap[obj.id]) : null"
+                    @keydown.enter.stop="reportMap[obj.id] ? navigateToReport(reportMap[obj.id]) : null"
+                    @keydown.space.prevent.stop="reportMap[obj.id] ? navigateToReport(reportMap[obj.id]) : null"
                   >
                     <span v-if="obj.quarters[q].summary" class="text-[11px] font-medium leading-tight whitespace-pre-line" :class="statusConfig[obj.quarters[q].status].text">{{ obj.quarters[q].summary }}</span>
                     <span v-else class="text-xs text-gray-300 dark:text-gray-600">—</span>
@@ -133,18 +137,65 @@
                     <span class="font-semibold text-gray-900 dark:text-gray-100 text-sm">{{ obj.name }}</span>
                   </td>
                   <td class="px-4 py-3 text-xs text-gray-600 dark:text-gray-400 leading-relaxed">
-                    {{ kr.description }}
+                    <p>{{ kr.description }}</p>
+                    <p v-if="obj.measure" class="mt-1.5 text-[11px] whitespace-pre-line text-gray-500 dark:text-gray-500">
+                      {{ obj.measure }}
+                    </p>
                   </td>
                   <td v-for="q in quarters" :key="q" class="px-3 py-3 text-center">
                     <div
-                      v-if="kr.quarters && kr.quarters[q]"
+                      v-if="kr.editable && canEdit"
+                      class="rounded-lg px-2 py-2"
+                      :class="kr.quarters[q] && kr.quarters[q].status !== 'not-started' ? statusConfig[kr.quarters[q].status].bg : 'bg-gray-50 dark:bg-gray-800/30'"
+                      @click.stop
+                    >
+                      <div v-if="editableFocus[kr.id + '-' + q]" class="flex items-center gap-1 mb-1.5 justify-center">
+                        <button
+                          v-for="s in editableStatuses"
+                          :key="s.key"
+                          class="w-4 h-4 rounded-full border-2 transition-all"
+                          :class="[
+                            s.dot,
+                            (kr.quarters[q] && kr.quarters[q].status === s.key) || (!kr.quarters[q] && s.key === 'not-started')
+                              ? 'border-gray-800 dark:border-white scale-110 ring-1 ring-gray-400'
+                              : 'border-transparent opacity-60 hover:opacity-100'
+                          ]"
+                          :title="s.label"
+                          @mousedown.prevent="updateEditableKeyResultStatus(kr.id, q, s.key)"
+                        />
+                      </div>
+                      <textarea
+                        data-editable-status
+                        :value="kr.quarters[q] ? kr.quarters[q].summary : ''"
+                        @input="updateEditableKeyResultQuarter(kr.id, q, $event.target.value); autoResize($event.target)"
+                        @focus="editableFocus[kr.id + '-' + q] = true"
+                        @blur="editableFocus[kr.id + '-' + q] = false; saveEditableData()"
+                        class="w-full text-[11px] leading-relaxed text-gray-700 dark:text-gray-300 bg-transparent border border-gray-200 dark:border-gray-700 rounded-lg px-2.5 py-2 min-h-[3rem] resize-none focus:ring-1 focus:ring-primary-500 focus:border-primary-500"
+                        style="word-wrap: break-word; overflow-wrap: break-word; white-space: pre-wrap; overflow: hidden;"
+                        placeholder="Enter status..."
+                      />
+                    </div>
+                    <div
+                      v-else-if="kr.quarters && kr.quarters[q]"
                       class="rounded-lg px-2 py-2 min-h-[3rem] flex items-center justify-center"
                       :class="[statusConfig[kr.quarters[q].status].bg, reportMap[obj.id] ? 'cursor-pointer hover:ring-2 hover:ring-primary-400 transition-all' : '']"
+                      :role="reportMap[obj.id] ? 'link' : undefined"
+                      :tabindex="reportMap[obj.id] ? 0 : undefined"
                       @click.stop="reportMap[obj.id] ? navigateToReport(reportMap[obj.id]) : null"
+                      @keydown.enter.stop="reportMap[obj.id] ? navigateToReport(reportMap[obj.id]) : null"
+                      @keydown.space.prevent.stop="reportMap[obj.id] ? navigateToReport(reportMap[obj.id]) : null"
                     >
                       <span v-if="kr.quarters[q].summary" class="text-[11px] font-medium leading-tight whitespace-pre-line" :class="statusConfig[kr.quarters[q].status].text">{{ kr.quarters[q].summary }}</span>
                       <span v-else class="text-xs text-gray-300 dark:text-gray-600">—</span>
                     </div>
+                    <p
+                      v-if="obj.id === 'support-cases' && supportCaseDataAsOf[q]"
+                      data-testid="support-case-data-as-of"
+                      :data-quarter="q"
+                      class="mt-1.5 text-[9px] leading-tight text-gray-400 dark:text-gray-500"
+                    >
+                      {{ supportCaseDataAsOf[q] }}
+                    </p>
                   </td>
                 </tr>
               </template>
@@ -200,12 +251,26 @@ function hasMultiKrRows(obj) {
 
 var reportMap = {
   'on-time-releases': 'on-time-releases',
-  'cve-sla': 'cve-sla',
+  'cve-sla': 'cve-sustaining',
   'support-cases': 'support-cases',
   'tech-visibility': 'tech-visibility'
 }
 
+var supportCaseDataAsOf = {
+  Q1: 'Data as of April 1, 2026',
+  Q2: 'Data as of July 1, 2026',
+  Q3: 'Data as of Oct 1, 2026'
+}
+
+var hiddenCveSlaQuarters = {
+  Q4: true
+}
+
 function navigateToReport(reportId) {
+  if (reportId === 'cve-sustaining') {
+    window.location.hash = '#/releases/reports?report=cve-sustaining'
+    return
+  }
   if (nav) nav.navigateTo('reports', { report: reportId })
 }
 
@@ -232,6 +297,21 @@ function updateEditableStatus(objId, q, statusKey) {
   if (!obj) return
   if (!obj.quarters[q]) obj.quarters[q] = { status: 'not-started', summary: '' }
   obj.quarters[q].status = statusKey
+  saveEditableData()
+}
+
+function updateEditableKeyResultQuarter(krId, q, text) {
+  var kr = findKeyResult(krId)
+  if (!kr) return
+  if (!kr.quarters[q]) kr.quarters[q] = { status: 'not-started', summary: '' }
+  kr.quarters[q].summary = text
+}
+
+function updateEditableKeyResultStatus(krId, q, statusKey) {
+  var kr = findKeyResult(krId)
+  if (!kr) return
+  if (!kr.quarters[q]) kr.quarters[q] = { status: 'not-started', summary: '' }
+  kr.quarters[q].status = statusKey
   saveEditableData()
 }
 
@@ -266,13 +346,28 @@ function collectEditableEntries() {
     var cat = data.categories[ci]
     for (var oi = 0; oi < cat.objectives.length; oi++) {
       var obj = cat.objectives[oi]
-      if (!obj.editable) continue
-      for (var qi = 0; qi < quarters.length; qi++) {
-        var q = quarters[qi]
-        var qd = obj.quarters[q]
-        if (qd && (qd.summary || qd.status !== 'not-started')) {
-          var key = obj.id + '|' + q
-          entries[key] = { status: qd.status, summary: qd.summary }
+      if (obj.editable) {
+        for (var qi = 0; qi < quarters.length; qi++) {
+          var q = quarters[qi]
+          var qd = obj.quarters[q]
+          if (qd && (qd.summary || qd.status !== 'not-started')) {
+            var key = obj.id + '|' + q
+            entries[key] = { status: qd.status, summary: qd.summary }
+          }
+        }
+      }
+      if (obj.keyResults) {
+        for (var kri = 0; kri < obj.keyResults.length; kri++) {
+          var kr = obj.keyResults[kri]
+          if (!kr.editable) continue
+          for (var krqi = 0; krqi < quarters.length; krqi++) {
+            var krq = quarters[krqi]
+            var krqd = kr.quarters[krq]
+            if (krqd && (krqd.summary || krqd.status !== 'not-started')) {
+              var krKey = kr.id + '|' + krq
+              entries[krKey] = { status: krqd.status, summary: krqd.summary }
+            }
+          }
         }
       }
     }
@@ -310,6 +405,13 @@ async function loadEditableData() {
         if (!obj.quarters[q]) obj.quarters[q] = { status: 'not-started', summary: '' }
         obj.quarters[q].status = entry.status || 'not-started'
         obj.quarters[q].summary = entry.summary || ''
+      } else {
+        var kr = findKeyResult(objId)
+        if (kr && kr.editable) {
+          if (!kr.quarters[q]) kr.quarters[q] = { status: 'not-started', summary: '' }
+          kr.quarters[q].status = entry.status || 'not-started'
+          kr.quarters[q].summary = entry.summary || ''
+        }
       }
     }
     resizeAllTextareas()
@@ -323,6 +425,19 @@ function findObjective(id) {
     var cat = data.categories[ci]
     for (var oi = 0; oi < cat.objectives.length; oi++) {
       if (cat.objectives[oi].id === id) return cat.objectives[oi]
+    }
+  }
+  return null
+}
+
+function findKeyResult(id) {
+  for (var ci = 0; ci < data.categories.length; ci++) {
+    var cat = data.categories[ci]
+    for (var oi = 0; oi < cat.objectives.length; oi++) {
+      var keyResults = cat.objectives[oi].keyResults || []
+      for (var ki = 0; ki < keyResults.length; ki++) {
+        if (keyResults[ki].id === id) return keyResults[ki]
+      }
     }
   }
   return null
@@ -391,6 +506,7 @@ async function fetchCveSla() {
       if (!match) continue
       if (match[2] !== targetYear) continue
       var qKey = 'Q' + match[1]
+      if (hiddenCveSlaQuarters[qKey]) continue
       if (sq.total > 0) {
         obj.quarters[qKey] = {
           status: pctToStatus(sq.pct),

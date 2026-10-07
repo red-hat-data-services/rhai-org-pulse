@@ -1,0 +1,26 @@
+{
+  "key": "RHAISTRAT-2474",
+  "summary": "Safe and reliable error handling for NeMo Guardrails transparent proxy APIs",
+  "status": "New",
+  "statusCategory": "To Do",
+  "priority": "Normal",
+  "components": [
+    "AI Safety"
+  ],
+  "targetVersions": [
+    "3.7 GA RHOAI RELEASE"
+  ],
+  "fixVersions": [],
+  "pm": "William Caban Babilonia",
+  "assignee": {
+    "displayName": "Mac Misiura",
+    "accountId": "712020:acf2fa28-2ea6-4914-bc4b-eccbb9fd008d"
+  },
+  "labels": [],
+  "created": "2026/07/29 6:12 AM",
+  "updated": "2026/09/28 2:38 PM",
+  "architect": null,
+  "parentKey": null,
+  "colorStatus": null,
+  "ownerStatusColor": null
+}

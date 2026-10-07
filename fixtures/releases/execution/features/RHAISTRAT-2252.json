@@ -1,0 +1,29 @@
+{
+  "key": "RHAISTRAT-2252",
+  "summary": "Productize RHAII Model Deployment UI for xKS",
+  "status": "In Progress",
+  "statusCategory": "In Progress",
+  "priority": "Critical",
+  "components": [
+    "AI Core Dashboard",
+    "AI Core Platform",
+    "Documentation",
+    "UXD"
+  ],
+  "targetVersions": [
+    "3.7 EA RHOAI RELEASE"
+  ],
+  "fixVersions": [],
+  "pm": "Jenny Yi",
+  "assignee": {
+    "displayName": "Paulo Rego",
+    "accountId": "557058:c0e8a8ae-edad-44fc-80f7-e5e25f081245"
+  },
+  "labels": [],
+  "created": "2026/07/17 12:10 AM",
+  "updated": "2026/09/30 10:37 AM",
+  "architect": null,
+  "parentKey": null,
+  "colorStatus": null,
+  "ownerStatusColor": null
+}

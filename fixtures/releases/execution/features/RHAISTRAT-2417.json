@@ -1,0 +1,27 @@
+{
+  "key": "RHAISTRAT-2417",
+  "summary": "Operator reconciliation log standardization with structured resource context",
+  "status": "In Progress",
+  "statusCategory": "In Progress",
+  "priority": "Major",
+  "components": [
+    "AI Core Platform",
+    "Model and Agent Observability"
+  ],
+  "targetVersions": [
+    "3.7 GA RHOAI RELEASE"
+  ],
+  "fixVersions": [],
+  "pm": "Suhas Kashyap",
+  "assignee": {
+    "displayName": "Denis Moskalenko",
+    "accountId": "61f2995c632452006b7e200a"
+  },
+  "labels": [],
+  "created": "2026/07/27 4:05 PM",
+  "updated": "2026/09/23 11:19 AM",
+  "architect": null,
+  "parentKey": null,
+  "colorStatus": null,
+  "ownerStatusColor": null
+}

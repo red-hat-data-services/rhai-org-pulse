@@ -1,0 +1,31 @@
+{
+  "key": "RHAISTRAT-2834",
+  "summary": "lm-d support for Vera Rubin, ConnectX-9 with Spectrum-X multi-plane",
+  "status": "New",
+  "statusCategory": "To Do",
+  "priority": "Major",
+  "components": [
+    "Documentation",
+    "llm-d"
+  ],
+  "targetVersions": [
+    "3.7 GA  RHAII RELEASE",
+    "3.7 GA RHOAI RELEASE"
+  ],
+  "fixVersions": [
+    "3.6 EA2 RHAII RELEASE",
+    "3.6 EA2 RHOAI RELEASE"
+  ],
+  "pm": "Naina Singh",
+  "assignee": {
+    "displayName": "Will Eaton",
+    "accountId": "5e3336d0fae00f0cb3ad180f"
+  },
+  "labels": [],
+  "created": "2026/09/22 7:53 AM",
+  "updated": "2026/09/24 9:52 AM",
+  "architect": null,
+  "parentKey": null,
+  "colorStatus": null,
+  "ownerStatusColor": null
+}

@@ -1,0 +1,28 @@
+{
+  "key": "RHAISTRAT-1436",
+  "summary": "Agent Registry Backend: Metadata, Lifecycle, and Governance for RHOAI",
+  "status": "Backlog",
+  "statusCategory": "To Do",
+  "priority": "Major",
+  "components": [
+    "AgentDev",
+    "Documentation",
+    "MLflow"
+  ],
+  "targetVersions": [
+    "3.7 EA RHOAI RELEASE"
+  ],
+  "fixVersions": [],
+  "pm": "Peter Double",
+  "assignee": {
+    "displayName": "Justin Sun",
+    "accountId": "712020:b52b1774-aa43-43a2-84eb-9d72df202a7d"
+  },
+  "labels": [],
+  "created": "2026/04/04 7:37 AM",
+  "updated": "2026/09/16 2:52 PM",
+  "architect": null,
+  "parentKey": null,
+  "colorStatus": null,
+  "ownerStatusColor": null
+}

@@ -1,0 +1,30 @@
+{
+  "key": "RHAISTRAT-2107",
+  "summary": "[Rust Frontend] Graduate existing Rust tool parsers to production by model family",
+  "status": "New",
+  "statusCategory": "To Do",
+  "priority": "Undefined",
+  "components": [
+    "vLLM Runtime"
+  ],
+  "targetVersions": [
+    "3.7 GA  RHAII RELEASE",
+    "3.7 GA RHOAI RELEASE"
+  ],
+  "fixVersions": [
+    "3.7 GA  RHAII RELEASE",
+    "3.7 GA RHOAI RELEASE"
+  ],
+  "pm": "Yuchen Fama",
+  "assignee": {
+    "displayName": "Sida Feng",
+    "accountId": "712020:66926ca7-cab4-4e90-9968-83d2e986e8fc"
+  },
+  "labels": [],
+  "created": "2026/06/24 12:10 AM",
+  "updated": "2026/09/01 2:11 PM",
+  "architect": null,
+  "parentKey": null,
+  "colorStatus": null,
+  "ownerStatusColor": null
+}

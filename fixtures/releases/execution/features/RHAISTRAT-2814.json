@@ -1,0 +1,27 @@
+{
+  "key": "RHAISTRAT-2814",
+  "summary": "[DRAFT] NeMo Gym safety evaluation environments as EvalHub collections",
+  "status": "New",
+  "statusCategory": "To Do",
+  "priority": "Major",
+  "components": [
+    "AI Evaluations",
+    "AI Safety"
+  ],
+  "targetVersions": [
+    "3.7 GA RHOAI RELEASE"
+  ],
+  "fixVersions": [],
+  "pm": "",
+  "assignee": {
+    "displayName": "",
+    "accountId": ""
+  },
+  "labels": [],
+  "created": "2026/09/19 12:09 PM",
+  "updated": "2026/09/19 1:03 PM",
+  "architect": null,
+  "parentKey": null,
+  "colorStatus": null,
+  "ownerStatusColor": null
+}

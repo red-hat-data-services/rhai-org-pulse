@@ -1,0 +1,26 @@
+{
+  "key": "RHAISTRAT-1898",
+  "summary": "[Feat] Extensible metrics visualization for custom serving runtimes",
+  "status": "New",
+  "statusCategory": "To Do",
+  "priority": "Major",
+  "components": [
+    "Model Runtimes"
+  ],
+  "targetVersions": [
+    "3.7 GA RHOAI RELEASE"
+  ],
+  "fixVersions": [],
+  "pm": "",
+  "assignee": {
+    "displayName": "Imran Khalidi",
+    "accountId": "5fd451a591bb2e0108e2514b"
+  },
+  "labels": [],
+  "created": "2026/06/09 7:01 PM",
+  "updated": "2026/09/28 2:38 PM",
+  "architect": null,
+  "parentKey": null,
+  "colorStatus": null,
+  "ownerStatusColor": null
+}

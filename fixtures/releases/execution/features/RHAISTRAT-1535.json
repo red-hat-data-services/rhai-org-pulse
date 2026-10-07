@@ -1,0 +1,29 @@
+{
+  "key": "RHAISTRAT-1535",
+  "summary": "YAML Editor GA — Bi-Directional UI/YAML Toggle in Model Serving",
+  "status": "Backlog",
+  "statusCategory": "To Do",
+  "priority": "Critical",
+  "components": [
+    "AI Core Dashboard",
+    "UXD"
+  ],
+  "targetVersions": [
+    "3.7 EA RHOAI RELEASE"
+  ],
+  "fixVersions": [
+    "3.7 EA RHOAI RELEASE"
+  ],
+  "pm": "Jenny Yi",
+  "assignee": {
+    "displayName": "Emily Samoylov",
+    "accountId": "712020:e3a4c327-b8f2-4fdf-9129-2a16a72d689d"
+  },
+  "labels": [],
+  "created": "2026/04/22 11:52 AM",
+  "updated": "2026/09/23 2:08 PM",
+  "architect": null,
+  "parentKey": null,
+  "colorStatus": null,
+  "ownerStatusColor": null
+}

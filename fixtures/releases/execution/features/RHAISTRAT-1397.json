@@ -1,0 +1,28 @@
+{
+  "key": "RHAISTRAT-1397",
+  "summary": "CLONE - Server-Side Conversation Compaction API",
+  "status": "New",
+  "statusCategory": "To Do",
+  "priority": "Major",
+  "components": [
+    "Agentic API",
+    "Inference Gateway",
+    "OGX Core"
+  ],
+  "targetVersions": [
+    "3.7 EA RHOAI RELEASE"
+  ],
+  "fixVersions": [],
+  "pm": "",
+  "assignee": {
+    "displayName": "Francisco Arceo",
+    "accountId": "712020:a8b965fb-1129-4541-8501-10ba2e01c8fd"
+  },
+  "labels": [],
+  "created": "2026/03/25 10:47 AM",
+  "updated": "2026/09/16 4:50 AM",
+  "architect": null,
+  "parentKey": null,
+  "colorStatus": null,
+  "ownerStatusColor": null
+}

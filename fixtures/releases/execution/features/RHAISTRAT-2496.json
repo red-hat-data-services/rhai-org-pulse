@@ -1,0 +1,28 @@
+{
+  "key": "RHAISTRAT-2496",
+  "summary": "OLS Guardrails Foundation: Empirical Per-Model Attack Surface Data for OCP MCP Server (All 7 Models)",
+  "status": "New",
+  "statusCategory": "To Do",
+  "priority": "Critical",
+  "components": [
+    "AI Guardrails",
+    "AI Safety",
+    "AI Safety Orchestration"
+  ],
+  "targetVersions": [
+    "3.7 GA RHOAI RELEASE"
+  ],
+  "fixVersions": [],
+  "pm": "William Caban Babilonia",
+  "assignee": {
+    "displayName": "",
+    "accountId": ""
+  },
+  "labels": [],
+  "created": "2026/07/31 12:13 AM",
+  "updated": "2026/09/28 2:38 PM",
+  "architect": null,
+  "parentKey": null,
+  "colorStatus": null,
+  "ownerStatusColor": null
+}

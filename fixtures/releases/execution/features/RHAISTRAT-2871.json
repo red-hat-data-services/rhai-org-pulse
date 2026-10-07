@@ -1,0 +1,26 @@
+{
+  "key": "RHAISTRAT-2871",
+  "summary": "[DRAFT] Cybersecurity AI Evaluation Collection for EvalHub",
+  "status": "New",
+  "statusCategory": "To Do",
+  "priority": "Major",
+  "components": [
+    "AI Evaluations"
+  ],
+  "targetVersions": [
+    "3.7 GA RHOAI RELEASE"
+  ],
+  "fixVersions": [],
+  "pm": "",
+  "assignee": {
+    "displayName": "",
+    "accountId": ""
+  },
+  "labels": [],
+  "created": "2026/09/29 12:13 AM",
+  "updated": "2026/09/29 1:06 AM",
+  "architect": null,
+  "parentKey": null,
+  "colorStatus": null,
+  "ownerStatusColor": null
+}

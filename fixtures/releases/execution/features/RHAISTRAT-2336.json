@@ -1,0 +1,29 @@
+{
+  "key": "RHAISTRAT-2336",
+  "summary": "[TP] Feature Store Dashboard — OpenLineage Lineage Views",
+  "status": "Refinement",
+  "statusCategory": "To Do",
+  "priority": "Major",
+  "components": [
+    "AI Core Dashboard",
+    "Documentation",
+    "Feature Store",
+    "UXD"
+  ],
+  "targetVersions": [
+    "3.7 GA RHOAI RELEASE"
+  ],
+  "fixVersions": [],
+  "pm": "Jonathan Zarecki",
+  "assignee": {
+    "displayName": "Nikhil Kathole",
+    "accountId": "70121:1052a58b-2d69-4663-b865-ce2f8db94c68"
+  },
+  "labels": [],
+  "created": "2026/07/23 6:14 AM",
+  "updated": "2026/09/28 2:38 PM",
+  "architect": null,
+  "parentKey": null,
+  "colorStatus": null,
+  "ownerStatusColor": null
+}

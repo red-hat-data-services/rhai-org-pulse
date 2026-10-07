@@ -82,12 +82,14 @@ describe('product-builds routes', () => {
       expect(paths).toContain('/package-reports/latest')
       expect(paths).toContain('/package-reports/onboarded')
       expect(paths).toContain('/package-reports/:date')
+      expect(paths).toContain('/release-epic/options')
     })
 
     it('registers POST routes', () => {
       const paths = Object.keys(router._routes.post)
       expect(paths).toContain('/config')
       expect(paths).toContain('/package-reports/generate')
+      expect(paths).toContain('/release-epic')
     })
 
     it('protects config routes with requireAdmin', () => {

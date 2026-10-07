@@ -15,6 +15,9 @@ const {
   buildPipelineVariables,
   getTeamOptions,
   checkPypiPackage,
+  findReporterAccountId,
+  normalizeRequesterEmail,
+  isReporterRejection,
   getGitlabToken,
   getGitLabConfig,
   resolveJiraProject,
@@ -357,6 +360,16 @@ describe('package-requests', () => {
       expect(res._json.requester).toBe('bob@redhat.com')
     })
 
+    it('maps an AUTH_EMAIL_DOMAIN identity onto @redhat.com', async () => {
+      const { router } = register({ isDemoMode: true })
+      const res = await callHandler(router, {
+        userEmail: 'GNaponie@cluster.local',
+        body: validBody()
+      })
+      expect(res._status).toBe(200)
+      expect(res._json.requester).toBe('gnaponie@redhat.com')
+    })
+
     it('ignores a requester value in the JSON body', async () => {
       const { router } = register({ isDemoMode: true })
       const res = await callHandler(router, {
@@ -505,6 +518,7 @@ describe('package-requests', () => {
         requester: 'jane@redhat.com',
         summary: 'vllm[cu12] package update request',
         jira: { key: 'AIPCC-DEMO', url: null, project: 'AIPCC' },
+        reporter_set: false,
         pipeline: { triggered: false, reason: 'demo mode' }
       })
       // Rate limited on the immediate second submission (still no external calls).
@@ -749,6 +763,7 @@ describe('package-requests', () => {
       expect(fields[EPIC_NAME_FIELD]).toBe('vllm package update request')
       expect(fields[EPIC_NAME_FIELD]).not.toBe('Platform')
       expect(fields.reporter).toEqual({ accountId: 'acc-1' })
+      expect(res._json.reporter_set).toBe(true)
 
       // ADF description contains every request field
       const descText = adfTextOf(fields.description)
@@ -985,6 +1000,124 @@ describe('package-requests', () => {
       expect(res._status).toBe(201)
       expect(epicPostCall(jira)[1].body.fields.project).toEqual({ key: 'TESTPROJ' })
       expect(res._json.jira.project).toBe('TESTPROJ')
+    })
+  })
+
+  describe('reporter resolution', () => {
+    function jiraCapturingSearch(searchResult, createImpl) {
+      return makeJira({
+        jiraRequest: vi.fn(async (path, opts = {}) => {
+          const method = (opts.method || 'GET').toUpperCase()
+          if (path.startsWith('/rest/api/3/user/search')) return searchResult(path)
+          if (path === '/rest/api/3/issue' && method === 'POST') return createImpl(opts)
+          if (method === 'PUT') return {}
+          if (path.startsWith('/rest/api/3/issue/')) return { key: 'AIPCC-42', fields: { summary: 'Related' } }
+          throw new Error('Unexpected ' + method + ' ' + path)
+        })
+      })
+    }
+
+    it('searches Jira with the @redhat.com address for a cluster.local requester', async () => {
+      const searched = []
+      const jira = jiraCapturingSearch(
+        (path) => {
+          searched.push(decodeURIComponent(path))
+          return [{ accountId: 'acc-g', emailAddress: 'gnaponie@redhat.com', accountType: 'atlassian' }]
+        },
+        () => ({ key: 'AIPCC-500', id: '500' })
+      )
+      const { router } = register({ jiraClient: jira, fetch: makeFetch(), fetchIndex: vi.fn(async () => ({ found: false, files: [] })) })
+      const res = await callHandler(router, { userEmail: 'gnaponie@cluster.local', body: validBody() })
+      expect(res._status).toBe(201)
+      expect(searched).toHaveLength(1)
+      expect(searched[0]).toContain('query=gnaponie@redhat.com')
+      expect(epicPostCall(jira)[1].body.fields.reporter).toEqual({ accountId: 'acc-g' })
+      expect(adfTextOf(epicPostCall(jira)[1].body.fields.description)).toContain('Requester: gnaponie@redhat.com')
+      expect(res._json.requester).toBe('gnaponie@redhat.com')
+      expect(res._json.reporter_set).toBe(true)
+    })
+
+    it('retries Epic creation without the reporter when Jira rejects the field', async () => {
+      const attempts = []
+      const jira = jiraCapturingSearch(
+        () => [{ accountId: 'acc-1', emailAddress: 'jane@redhat.com', accountType: 'atlassian' }],
+        (opts) => {
+          attempts.push(opts.body.fields)
+          if (opts.body.fields.reporter) {
+            throw new Error('Jira API error (400): {"errorMessages":[],"errors":{"reporter":"Field \'reporter\' cannot be set. It is not on the appropriate screen, or unknown."}}')
+          }
+          return { key: 'AIPCC-501', id: '501' }
+        }
+      )
+      const { router } = register({ jiraClient: jira, fetch: makeFetch(), fetchIndex: vi.fn(async () => ({ found: false, files: [] })) })
+      const res = await callHandler(router, { userEmail: 'jane@redhat.com', body: validBody() })
+      expect(res._status).toBe(201)
+      expect(attempts).toHaveLength(2)
+      expect(attempts[0].reporter).toEqual({ accountId: 'acc-1' })
+      expect(attempts[1].reporter).toBeUndefined()
+      expect(res._json.jira.key).toBe('AIPCC-501')
+      expect(res._json.reporter_set).toBe(false)
+    })
+
+    it('does not retry when creation fails for another reason', async () => {
+      const attempts = []
+      const jira = jiraCapturingSearch(
+        () => [{ accountId: 'acc-1', emailAddress: 'jane@redhat.com', accountType: 'atlassian' }],
+        (opts) => {
+          attempts.push(opts.body.fields)
+          throw new Error('Jira API error (400): {"errors":{"customfield_10011":"Epic Name is required."}}')
+        }
+      )
+      const { router } = register({ jiraClient: jira, fetch: makeFetch(), fetchIndex: vi.fn(async () => ({ found: false, files: [] })) })
+      const res = await callHandler(router, { userEmail: 'jane@redhat.com', body: validBody() })
+      expect(res._status).toBe(502)
+      expect(attempts).toHaveLength(1)
+    })
+
+    it('reports reporter_set false when the requester cannot be resolved', async () => {
+      const jira = jiraCapturingSearch(() => [], () => ({ key: 'AIPCC-502', id: '502' }))
+      const { router } = register({ jiraClient: jira, fetch: makeFetch(), fetchIndex: vi.fn(async () => ({ found: false, files: [] })) })
+      const res = await callHandler(router, { userEmail: 'ghost@cluster.local', body: validBody() })
+      expect(res._status).toBe(201)
+      expect(epicPostCall(jira)[1].body.fields.reporter).toBeUndefined()
+      expect(res._json.reporter_set).toBe(false)
+    })
+
+    it('normalizeRequesterEmail re-homes non-redhat domains and preserves redhat addresses', () => {
+      expect(normalizeRequesterEmail('gnaponie@cluster.local')).toBe('gnaponie@redhat.com')
+      expect(normalizeRequesterEmail(' Jane@RedHat.com ')).toBe('jane@redhat.com')
+      expect(normalizeRequesterEmail('jane@example.org')).toBe('jane@redhat.com')
+      expect(normalizeRequesterEmail('no-at-sign')).toBe('no-at-sign')
+      expect(normalizeRequesterEmail('')).toBe('')
+      expect(normalizeRequesterEmail(null)).toBe('')
+    })
+
+    it('findReporterAccountId matches emailAddress, then a lone Atlassian account with a hidden email', async () => {
+      const search = (users) => ({ jiraRequest: vi.fn(async () => users) })
+      await expect(findReporterAccountId(search([
+        { accountId: 'a', emailAddress: 'other@redhat.com', accountType: 'atlassian' },
+        { accountId: 'b', emailAddress: 'Jane@redhat.com', accountType: 'atlassian' }
+      ]), 'jane@redhat.com')).resolves.toBe('b')
+      await expect(findReporterAccountId(search([
+        { accountId: 'hidden', accountType: 'atlassian', active: true }
+      ]), 'jane@redhat.com')).resolves.toBe('hidden')
+      await expect(findReporterAccountId(search([
+        { accountId: 'h1', accountType: 'atlassian' },
+        { accountId: 'h2', accountType: 'atlassian' }
+      ]), 'jane@redhat.com')).resolves.toBeNull()
+      await expect(findReporterAccountId(search([
+        { accountId: 'bot', accountType: 'app' }
+      ]), 'jane@redhat.com')).resolves.toBeNull()
+      await expect(findReporterAccountId(search('not-an-array'), 'jane@redhat.com')).resolves.toBeNull()
+      await expect(findReporterAccountId({ jiraRequest: vi.fn(async () => { throw new Error('boom') }) }, 'jane@redhat.com')).resolves.toBeNull()
+    })
+
+    it('isReporterRejection only matches 400 responses that name the reporter field', () => {
+      expect(isReporterRejection(new Error('Jira API error (400): {"errors":{"reporter":"nope"}}'))).toBe(true)
+      expect(isReporterRejection(new Error('Jira API error (400): {"errors":{"summary":"nope"}}'))).toBe(false)
+      expect(isReporterRejection(new Error('Jira API error (403): {"errors":{"reporter":"nope"}}'))).toBe(false)
+      expect(isReporterRejection(new Error('network down'))).toBe(false)
+      expect(isReporterRejection(null)).toBe(false)
     })
   })
 

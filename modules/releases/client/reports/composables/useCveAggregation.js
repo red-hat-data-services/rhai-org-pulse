@@ -3,7 +3,7 @@ import { computed } from 'vue'
 // ─── JQL constants (mirrored from server) ───────────────────────────────────
 
 const BASE_JQL = [
-  'project in (RHAIENG, RHOAIENG, INFERENG, AIPCC)',
+  'project in (RHAI, RHAIENG, RHOAIENG, INFERENG, AIPCC)',
   '(labels not in (RHOAI-releases, RHOAI-internal, devtestops-service) OR labels is EMPTY)',
   'component not in (Documentation, PXE, Devops, testops)',
   'issuetype in (vulnerability)',

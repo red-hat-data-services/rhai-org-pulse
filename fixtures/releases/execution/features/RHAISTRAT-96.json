@@ -1,0 +1,26 @@
+{
+  "key": "RHAISTRAT-96",
+  "summary": "Installer for RH AI",
+  "status": "New",
+  "statusCategory": "To Do",
+  "priority": "Normal",
+  "components": [
+    "AI Core Platform"
+  ],
+  "targetVersions": [
+    "3.7 EA RHOAI RELEASE"
+  ],
+  "fixVersions": [],
+  "pm": "Myriam Fentanes",
+  "assignee": {
+    "displayName": "Luca Burgazzoli",
+    "accountId": "5b335d1d2975df4c55ea6f83"
+  },
+  "labels": [],
+  "created": "2025/09/25 6:44 AM",
+  "updated": "2026/09/21 3:21 PM",
+  "architect": null,
+  "parentKey": null,
+  "colorStatus": null,
+  "ownerStatusColor": null
+}

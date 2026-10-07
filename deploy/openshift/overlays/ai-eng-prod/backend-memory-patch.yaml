@@ -1,0 +1,17 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: backend
+spec:
+  template:
+    spec:
+      containers:
+        - name: backend
+          resources:
+            requests:
+              memory: "512Mi"
+            limits:
+              memory: "2Gi"
+          env:
+            - name: NODE_OPTIONS
+              value: "--max-old-space-size=1024"
