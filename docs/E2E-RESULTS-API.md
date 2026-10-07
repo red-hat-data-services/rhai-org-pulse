@@ -108,3 +108,22 @@ preserves its agent analysis.
 
 The full request schemas and responses are available in the Org Pulse OpenAPI
 documentation at `/api/docs`.
+
+## Try the publisher locally
+
+Start the API with `npm run dev:server` (or `npm run dev:full`), then create a
+local API token in Settings → API Tokens with only the `releases:e2e:write`
+scope. Save that token in a private file and run the standalone Groovy
+simulator:
+
+```bash
+ORG_PULSE_URL=http://127.0.0.1:3001 \
+ORG_PULSE_API_TOKEN_FILE=/path/to/local-token \
+groovy scripts/simulate-e2e-publisher.groovy
+```
+
+This needs a Groovy runtime and does not contact Jenkins. It posts a clearly
+synthetic failed release run, posts unverified agent analysis, and retries the
+base run to check idempotency. The default run key ends in `#900001`; override
+it with `SIM_BUILD_NUMBER` to create another record. The saved record is in
+local storage at `data/releases/build-health/runs.json`.
