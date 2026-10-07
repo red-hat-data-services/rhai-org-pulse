@@ -2,6 +2,29 @@
 
 This document describes the JSON structure of all files stored in the `data/` directory (production) and `fixtures/` directory (demo mode). **Demo fixtures must always match production format** — see [Fixture Rules](#fixture-rules) below.
 
+## Releases E2E Results — `data/releases/build-health/runs.json`
+
+The E2E publisher stores completed Jenkins runs in a bounded `runs` array,
+upserted by Jenkins instance, full job path, and build number. The top-level
+file has `schemaVersion`, `updatedAt`, and `runs`. See the matching
+[`fixtures/releases/build-health/runs.json`](../fixtures/releases/build-health/runs.json)
+for complete example records and [E2E Results API](E2E-RESULTS-API.md) for
+request bodies and authentication.
+
+Each stored run contains `runKey`, `jenkins`, `reporting.stream`, `run`,
+`release`, `environment`, `trigger`, `stages`, `tests`, `agentAnalysis`, and
+`receivedAt`. The stream is `odh-nightly`, `rhoai-nightly`, or `release`.
+RHOAI runs need a canonical `release.version`; ODH nightly can have no release
+version. `release.installedVersion` and `release.imageDigest` preserve the
+observed product version and catalog identity without changing the version
+used for filtering. Missing test counts remain `null`, not zero.
+
+The later analysis POST updates only `agentAnalysis` and preserves the base
+run. Its `findings` can suggest a category, team, Jira issue, and related
+failed test cases. The server marks it `reviewStatus: "unverified"`; machine
+suggestions are not human-confirmed ownership. Retrying the base run keeps
+the latest analysis. At most 2,000 runs and 50 failed cases per run are kept.
+
 ## Jira Autofix — `data/ai-impact/autofix-data.json`
 
 The Autofix snapshot keeps the existing `issues` pipeline-labeled cohort and
