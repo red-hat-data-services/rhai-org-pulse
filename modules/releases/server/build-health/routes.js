@@ -25,8 +25,24 @@ function releaseVersion(release) {
   const colon = withoutDigest.lastIndexOf(':')
   if (colon < 0) return null
   const tag = withoutDigest.slice(colon + 1)
-  const match = tag.match(/(?:^|-)rhoai-(\d+\.\d+(?:[-.]?[A-Za-z0-9]+)*)$/i)
-  return match ? match[1].replace(/\.(?=ea\.|rc\.)/gi, '-') : null
+  const marker = tag.toLowerCase().lastIndexOf('rhoai-')
+  if (marker < 0 || (marker > 0 && tag[marker - 1] !== '-')) return null
+  const version = tag.slice(marker + 'rhoai-'.length)
+  const numericPrefix = /^\d+\.\d+/.exec(version)
+  if (!numericPrefix) return null
+  let afterSeparator = false
+  for (const char of version.slice(numericPrefix[0].length)) {
+    if (char === '-' || char === '.') {
+      if (afterSeparator) return null
+      afterSeparator = true
+    } else if (/^[A-Za-z0-9]$/.test(char)) {
+      afterSeparator = false
+    } else {
+      return null
+    }
+  }
+  if (afterSeparator) return null
+  return version.replace(/\.(?=ea\.|rc\.)/gi, '-')
 }
 
 function validatePayload(body) {
