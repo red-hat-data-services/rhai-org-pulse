@@ -54,7 +54,7 @@
     "@vitest/coverage-v8": "^4.1.11",
     "@vue/test-utils": "^2.5.1",
     "concurrently": "^10.0.5",
-    "dotenv": "^17.4.2",
+    "dotenv": "^18.0.5",
     "eslint": "^10.11.0",
     "eslint-plugin-vue": "^10.11.0",
     "globals": "^17.12.0",
