@@ -3,6 +3,94 @@ const { validateSnapshot } = require('./validation');
 const { readAIPlanner, writeAIPlanner, projectSnapshot, emptySnapshot } = require('./storage');
 
 const DEMO_MODE = process.env.DEMO_MODE === 'true';
+
+const CVE_METRICS_KEY = 'releases/cve-sustaining/latest.json';
+const PILLAR_CONFIG_KEY = 'releases/pm-hub/pillar-config.json';
+
+/**
+ * CVE load per owner, for the capacity reserve.
+ *
+ * CVEs are tracked per Jira component, but capacity is argued per team, and the
+ * two do not line up: AI Core Dashboard alone appears under eight teams in the
+ * feature data, so a component cannot simply be inverted into a team. The pillar
+ * config is the one place that says who owns a component, so it is the join.
+ *
+ * Components the pillar config does not cover are returned separately rather
+ * than dropped — a silent omission here understates somebody's load.
+ */
+async function buildCveReserve(readFromStorage) {
+  var metrics = await readFromStorage(CVE_METRICS_KEY);
+  var throughput = metrics && metrics.throughputByComponent;
+  if (!throughput || !Array.isArray(throughput.components)) return null;
+
+  var config = await readFromStorage(PILLAR_CONFIG_KEY);
+  var owners = {};
+  var pillars = (config && config.pillars) || [];
+  for (var p = 0; p < pillars.length; p++) {
+    var comps = pillars[p].components || [];
+    for (var c = 0; c < comps.length; c++) {
+      var comp = typeof comps[c] === 'string' ? { name: comps[c] } : comps[c];
+      if (!comp || !comp.name) continue;
+      owners[comp.name] = {
+        pillar: pillars[p].name,
+        pmLead: comp.pmLead || null,
+        engLead: comp.engLead || null
+      };
+    }
+  }
+
+  var byPmLead = {};
+  var byPillar = {};
+  var unmapped = [];
+  var mappedTotal = 0;
+
+  for (var i = 0; i < throughput.components.length; i++) {
+    var row = throughput.components[i];
+    var owner = owners[row.component];
+    if (!owner) {
+      unmapped.push({ component: row.component, resolved: row.resolved });
+      continue;
+    }
+    mappedTotal += row.resolved;
+
+    var pmKey = owner.pmLead || 'Unassigned';
+    if (!byPmLead[pmKey]) {
+      byPmLead[pmKey] = { pmLead: pmKey, pillar: owner.pillar, engLeads: [], components: [], resolved: 0 };
+    }
+    byPmLead[pmKey].components.push(row.component);
+    byPmLead[pmKey].resolved += row.resolved;
+    if (owner.engLead && byPmLead[pmKey].engLeads.indexOf(owner.engLead) === -1) {
+      byPmLead[pmKey].engLeads.push(owner.engLead);
+    }
+
+    if (!byPillar[owner.pillar]) byPillar[owner.pillar] = { pillar: owner.pillar, resolved: 0 };
+    byPillar[owner.pillar].resolved += row.resolved;
+  }
+
+  // Share is of mapped work only, so the percentages a reader sees add to 100
+  // rather than quietly leaving the unmapped remainder unaccounted for.
+  var withShare = function(rows) {
+    return rows
+      .map(function(r) {
+        return Object.assign({}, r, {
+          perWeek: Number((r.resolved / throughput.weeks).toFixed(2)),
+          share: mappedTotal > 0 ? Number((r.resolved / mappedTotal).toFixed(4)) : 0
+        });
+      })
+      .sort(function(a, b) { return b.resolved - a.resolved; });
+  };
+
+  return {
+    windowWeeks: throughput.weeks,
+    windowStart: throughput.windowStart,
+    windowEnd: throughput.windowEnd,
+    resolvedIssues: throughput.resolvedIssues,
+    mappedToOwners: mappedTotal,
+    byPmLead: withShare(Object.keys(byPmLead).map(function(k) { return byPmLead[k]; })),
+    byPillar: withShare(Object.keys(byPillar).map(function(k) { return byPillar[k]; })),
+    unmapped: unmapped.sort(function(a, b) { return b.resolved - a.resolved; })
+  };
+}
 const jsonLimit = express.json({ limit: '25mb' });
 
 /**
@@ -146,9 +234,18 @@ module.exports = function registerAIPlannerRoutes(router, context) {
       // (buildFeatureReadiness doesn't include component bug data)
       const bugQueue = [];
 
+      var cveReserve = null;
+      try {
+        cveReserve = await buildCveReserve(readFromStorage);
+      } catch (err) {
+        // The planner is useful without it; a missing reserve must not blank the tab.
+        console.error('AI Planner: could not build CVE reserve', err);
+      }
+
       res.json({
         features: features,
         bugQueue: bugQueue,
+        cveReserve: cveReserve,
         featureCount: features.length,
         lastSyncedAt: (readiness.meta && readiness.meta.lastSyncedAt) || new Date().toISOString(),
         metadata: {
@@ -163,3 +260,6 @@ module.exports = function registerAIPlannerRoutes(router, context) {
     }
   });
 };
+
+// Exposed for tests; registration stays the default export.
+module.exports.buildCveReserve = buildCveReserve;
