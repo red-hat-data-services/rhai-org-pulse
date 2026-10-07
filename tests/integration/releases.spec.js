@@ -2780,15 +2780,15 @@ test.describe('Releases CHI Hierarchy Report @releases', () => {
     expect(page.errors).toHaveLength(0);
   });
 
-  test('Latest toggle shows Konflux source and grading tip mentions rhel-vex', async ({ page }) => {
+  test('Konflux builds toggle shows Konflux source and grading tip mentions rhel-vex', async ({ page }) => {
     await page.goto('/#/releases/reports?report=container-health-index');
     await page.waitForLoadState('networkidle');
     await page.waitForTimeout(DEFAULT_PAGE_WAIT_TIME);
 
-    await page.getByRole('button', { name: 'Latest', exact: true }).click();
+    await page.getByRole('button', { name: 'Konflux builds', exact: true }).click();
     await page.waitForTimeout(500);
 
-    await expect(page.getByRole('button', { name: 'Latest', exact: true })).toHaveAttribute('aria-pressed', 'true');
+    await expect(page.getByRole('button', { name: 'Konflux builds', exact: true })).toHaveAttribute('aria-pressed', 'true');
     await expect(page.getByText('konflux-clair-scan').first()).toBeVisible();
     await expect(page.getByText('rhel-vex').first()).toBeAttached();
     expect(page.errors).toHaveLength(0);
