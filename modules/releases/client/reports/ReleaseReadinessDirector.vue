@@ -801,7 +801,7 @@ async function loadSelectedPhases() {
     }
 
     if (data.value?.component_readiness) {
-      selectedPhases.value = []
+      selectedPhases.value = [...availablePhases.value]
     }
   } catch (err) {
     error.value = err.message || 'Failed to load release readiness metrics'
