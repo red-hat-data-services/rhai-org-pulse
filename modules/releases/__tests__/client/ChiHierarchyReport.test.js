@@ -213,11 +213,11 @@ describe('ChiHierarchyReport', () => {
     expect(wrapper.text()).toContain('40d')
   })
 
-  it('toggles Latest and shows Konflux source plus rhel-vex grading copy', async () => {
+  it('toggles Konflux builds and shows Konflux source plus rhel-vex grading copy', async () => {
     const wrapper = mountReport()
     await flushPromises()
 
-    const latestBtn = wrapper.findAll('button').find(b => b.text() === 'Latest')
+    const latestBtn = wrapper.findAll('button').find(b => b.text() === 'Konflux builds')
     expect(latestBtn).toBeTruthy()
     await latestBtn.trigger('click')
     await flushPromises()
@@ -225,6 +225,7 @@ describe('ChiHierarchyReport', () => {
     expect(wrapper.text()).toContain('konflux-clair-scan')
     expect(wrapper.text()).toContain('rhel-vex')
     expect(wrapper.text()).toContain('How grades are calculated')
+    expect(wrapper.text()).toContain('Konflux builds uses official')
     const unknownChip = wrapper.find('[aria-label="Unknown"]')
     expect(unknownChip.exists()).toBe(true)
     expect(unknownChip.text()).toBe('?')

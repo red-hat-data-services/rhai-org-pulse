@@ -25,9 +25,10 @@
               <p class="font-semibold mb-1.5">How grades are calculated</p>
               <template v-if="selectedEnv === 'latest'">
                 <p class="mb-1.5">
-                  Latest uses official
+                  Konflux builds uses official
                   <span class="underline">Container Health Index</span>
-                  (Red Hat article 2803031) from the latest green Konflux clair-scan, not catalog HealthIndex. Latest will not match Prod for the same image.
+                  (Red Hat article 2803031) from the newest green Konflux clair-scan, not catalog HealthIndex and not a
+                  <code class="text-[0.7rem]">latest</code> image tag. Grades will not match Prod for the same image.
                 </p>
                 <p class="mb-1.5">
                   The letter is the age of the oldest <strong>rhel-vex</strong> patched Critical/Important finding (Clair High → Important). Unpatched Clair findings and osv/go or osv/pypi (even when SCAN_OUTPUT lists them as patched) do not change the letter.
@@ -119,7 +120,7 @@
         </div>
 
         <p v-if="!currentEnv" class="text-sm text-amber-600 dark:text-amber-400">
-          No {{ selectedEnv }} snapshot in this payload.
+          No {{ envLabel(selectedEnv) }} snapshot in this payload.
         </p>
       </div>
 
@@ -173,7 +174,7 @@
         v-else-if="currentEnv"
         class="text-center py-12 text-sm text-gray-500 dark:text-gray-400"
       >
-        No versions available for {{ selectedEnv }}.
+        No versions available for {{ envLabel(selectedEnv) }}.
       </div>
 
       <section v-if="currentVersion" class="space-y-3">
@@ -302,7 +303,7 @@ function chiGradeChipLabel(grade) {
   if (!grade) return '—'
   return grade === 'Unknown' ? '?' : grade
 }
-const ENV_LABELS = { prod: 'Prod', stage: 'Stage', latest: 'Latest' }
+const ENV_LABELS = { prod: 'Prod', stage: 'Stage', latest: 'Konflux builds' }
 
 function envLabel(key) {
   return ENV_LABELS[key] || key
