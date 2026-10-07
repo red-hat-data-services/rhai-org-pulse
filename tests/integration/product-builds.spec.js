@@ -129,6 +129,19 @@ test.describe('Product Builds Module @product-builds', () => {
     expect(appErrors).toHaveLength(0);
   });
 
+  test('should show Package Analysis tracking AIPCC and RHAI Epics', async ({ page }) => {
+    await page.goto('/#/product-builds/package-analysis');
+    await page.waitForLoadState('networkidle');
+    await page.waitForTimeout(DEFAULT_PAGE_WAIT_TIME);
+
+    expect(page.url()).toMatch(/product-builds\/package-analysis/);
+    await expect(page.getByRole('heading', { name: 'Package Analysis' })).toBeVisible();
+    await expect(page.getByText('Package EPIC analysis for AIPCC and RHAI', { exact: false })).toBeVisible();
+
+    const appErrors = page.errors.filter(e => !/status of (429|404|503)/.test(e.message));
+    expect(appErrors).toHaveLength(0);
+  });
+
   test('should navigate to release status view', async ({ page }) => {
     await page.goto('/#/product-builds/release-status');
     await page.waitForLoadState('networkidle');
