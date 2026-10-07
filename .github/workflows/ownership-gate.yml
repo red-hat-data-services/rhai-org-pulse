@@ -2,7 +2,7 @@
 #
 # This workflow is intentionally evaluated from the default branch via
 # pull_request_target and never checks out or executes pull-request code. It
-# reads changed paths, CODEOWNERS at the PR base SHA, and review metadata only
+# reads changed paths, CODEOWNERS at the PR base SHA, reviews, and PR comments only
 # through the GitHub API using the existing rhai-org-pulse GitHub App token.
 
 name: Ownership Gate
@@ -22,6 +22,11 @@ on:
       - submitted
       - dismissed
       - edited
+  issue_comment:
+    types:
+      - created
+      - edited
+      - deleted
   merge_group:
     types: [checks_requested]
 
@@ -30,7 +35,7 @@ permissions:
 
 jobs:
   evaluate:
-    if: github.event_name != 'merge_group'
+    if: github.event_name != 'merge_group' && (github.event_name != 'issue_comment' || github.event.issue.pull_request != null)
     name: Evaluate ownership
     runs-on: ubuntu-latest
     steps:
@@ -53,7 +58,7 @@ jobs:
       - name: Evaluate ownership policy
         env:
           GH_TOKEN: ${{ steps.app-token.outputs.token }}
-          PR_NUMBER: ${{ github.event.pull_request.number }}
+          PR_NUMBER: ${{ github.event.pull_request.number || github.event.issue.number }}
           OWNERSHIP_GATE_BOT_LOGIN: rhai-org-pulse[bot]
         run: node scripts/ownership-gate.mjs
 
