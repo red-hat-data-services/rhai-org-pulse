@@ -294,10 +294,6 @@ describe('package-requests', () => {
         expect(res._status).toBe(400)
         expect(res._json.message).toContain('RHAISTRAT, RHAI')
       }
-      const res = await callTeamsHandler(router, { query: { project: 'RHOAIENG' } })
-
-      expect(res._status).toBe(400)
-      expect(res._json.message).toContain('RHAISTRAT, RHAI')
       expect(jira.jiraRequest).not.toHaveBeenCalled()
     })
 
