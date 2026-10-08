@@ -47,6 +47,7 @@ export const viewOwners = {
   'product-builds/base-images':                    'Pavol Pitonak',
   'product-builds/builder-images':                 'Pavol Pitonak',
   'product-builds/drop-detail':                    'Pavol Pitonak',
+  'product-builds/openshell':                      'Pavol Pitonak',
   'product-builds/overview':                       'Giulia Naponiello',
   'product-builds/package-analysis':               'Einat Pacifici',
   'product-builds/package-request':                'André Lustosa',
@@ -153,7 +154,6 @@ export const viewOwners = {
   'releases/reports/rhoai-component-architectures': 'Waldemar Znoinski',
 
   // team-tracker > reports
-  'team-tracker/reports/allocation':               'Alex Corvin',
   'team-tracker/reports/team-comparison':          'Alex Corvin',
   'team-tracker/reports/trends':                   'Alex Corvin',
 }

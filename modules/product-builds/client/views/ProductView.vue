@@ -13,6 +13,7 @@ const PRODUCT_CONFIGS = {
   'rhel-ai':           { key: 'rhel-ai',       artifactType: 'containers' },
   'base-images':       { key: 'base-images',   artifactType: 'containers' },
   'builder-images':    { key: 'builder-images', artifactType: 'containers' },
+  'openshell':         { key: 'openshell',     artifactType: 'containers' },
   'wheel-collections': { key: 'rhai',          artifactType: 'wheels-collections', label: 'Wheel Collections' },
 }
 function getConfigFromHash() {
