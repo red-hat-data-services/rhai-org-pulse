@@ -20,7 +20,7 @@ const PRIORITY_OUTCOMES = [
   'RHAISTRAT-1981', // Outcome: Platform Experience for llm-d
   'RHAISTRAT-1680', // Parent Outcome: Unified Red Hat AI Inference (formerly MaaS/llm-d on xKS)
   'RHAISTRAT-1312', // Gen AI Studio
-  'RHAISTRAT-155',  // Secure Agent Onboarding: Security-First Agent Engineering
+  'RHAISTRAT-155',  // Secure Agent Onboarding / BYOA
   'RHAISTRAT-1357', // Tool Calling
   'RHAISTRAT-1971', // (Tool Calling related)
   'RHAISTRAT-1354', // From Tools to Swarms (MCP)
@@ -29,7 +29,6 @@ const PRIORITY_OUTCOMES = [
   'RHAISTRAT-1498', // Eval Hub
   'RHAISTRAT-1339', // AI Hub incl MCP
   'RHAISTRAT-1066', // Multitenancy
-  // RHAISTRAT-155 already listed above (Secure Agent Onboarding)
   'RHAISTRAT-2875', // AI Grid MVP
   'RHAISTRAT-1088', // vLLM Omni
   'RHAISTRAT-2604', // (check for exact key)

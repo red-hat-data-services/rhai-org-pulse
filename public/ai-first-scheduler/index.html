@@ -511,7 +511,7 @@ tr:hover td{background:#f8fafc}
       <thead><tr>
         <th onclick="sort('Rank')"># ↕</th>
         <th onclick="sort('Score')" id="th-score" class="score-col" style="display:none">SCORE ↕</th>
-        <th onclick="sort('FPDoR')" style="cursor:pointer"><a href="https://redhat.atlassian.net/wiki/spaces/RHAI/pages/453312634/Feature+Planning+Definition+of+Ready+and+Checklist+for+Planning+DoD" target="_blank" rel="noopener noreferrer" style="color:inherit;text-decoration:none" title="Click to open FPDOR guide">FPDOR ↕</a></th>
+        <th onclick="sort('FPDoR')" style="cursor:pointer"><a href="https://redhat.atlassian.net/wiki/spaces/RHAI/pages/453312634/Feature+Planning+Definition+of+Ready+and+Checklist+for+Planning+DoD" target="_blank" style="color:inherit;text-decoration:none" title="Click to open FPDOR guide">FPDOR ↕</a></th>
         <th><span class="tip">RISK ⓘ<span class="tip-box">🔴 HIGH: any Critical field missing (Components, Target Version, Fix Version, PM, Delivery Owner) or 2+ High fields missing.<br>🟡 MEDIUM: exactly 1 High field missing, or Feature Sign-Off absent.<br>🟢 LOW: all Critical/High/Medium items pass.</span></span></th>
         <th><span class="tip">CONFIDENCE ⓘ<span class="tip-box">How likely this feature ships as planned. High = 8–9 of 10 similar features shipped on time. Medium = 5–7 of 10. Low = 3–5 of 10.<br><br>Based on: shipping history, FPDoR completeness, component velocity, RICE. Hover the confidence bar for feature-specific detail.</span></span></th>
         <th onclick="sort('Priority')">PRIORITY ↕</th>
@@ -2919,6 +2919,9 @@ window.onload=()=>{
   allData = parseCSV(SAMPLE).map(r => ({...r}));
   schedule(allData);
 
+  // Fetch 22 prioritized outcomes from API (replaces hardcoded BIG_ROCKS)
+  fetchOutcomes();
+
   // Role-based tab defaults (Sept 18 update): PM → Features, Delivery lead → Roadmap, ENG lead → default components
   const userRole = localStorage.getItem('userRole') || 'pm'; // 'pm', 'delivery', or 'eng'
   const engLead = localStorage.getItem('engLead') || null; // engineering lead name
@@ -3764,6 +3767,32 @@ function toggleCapacityMix(){
 function renderBigRocks(data){
   const panel=document.getElementById('br-panel');
   if(!panel) return;
+
+  // Use outcomes from API if available (22 outcomes), otherwise fall back to BIG_ROCKS (18)
+  const outcomes = outcomeData && outcomeData.outcomes && outcomeData.outcomes.length > 0
+    ? outcomeData.outcomes
+    : null;
+
+  if (outcomes) {
+    // Render outcomes from API
+    const items = outcomes.map((outcome, idx) => {
+      let cls = 'br-ok', icon = '✓';
+      if (outcome.total === 0) { cls = ''; icon = '—'; }
+      else if (outcome.inPlan === 0) { cls = 'br-miss'; icon = '✗'; }
+      else if (outcome.inPlan < outcome.total) { cls = 'br-warn'; icon = '⚠'; }
+
+      const confColor = outcome.confidence >= 70 ? '#2e7d32' : outcome.confidence >= 40 ? '#f57f17' : '#c62828';
+      const confLabel = outcome.inPlan === 0 ? 'No features in plan' : outcome.confidence >= 70 ? '✓ Confident' : outcome.confidence >= 40 ? '⚠ Lagging' : '✗ At Risk';
+
+      return `<div class="br-item br-clickable ${cls}" title="Click to filter table to ${outcome.title}"><div class="br-name">${icon} ${outcome.key} ${outcome.title}</div><div style="font-size:13px;font-weight:700;color:${confColor};margin:4px 0 2px">${outcome.confidence}%</div><div style="font-size:10px;font-weight:600;color:${confColor};margin-bottom:3px">${confLabel}</div><div style="font-size:10px;color:#777">${outcome.inPlan}/${outcome.total} in-plan (${outcome.percentComplete}%)</div></div>`;
+    }).join('');
+
+    panel.style.display = '';
+    panel.innerHTML = `<div class="br-title">🎯 Outcomes — 3.6 <span style="font-size:11px;color:#94a3b8;font-weight:400;margin-left:6px">22 prioritized from Jira plan view 7384</span></div><div class="br-grid">${items}</div>`;
+    return;
+  }
+
+  // Fall back to original BIG_ROCKS rendering
   const s={};
   BIG_ROCKS.forEach(br=>{s[br.name]={inPlan:0,total:0,confSum:0,atRisk:0,noFeatures:[]};});
   data.forEach(r=>{
@@ -3861,6 +3890,24 @@ function toggleBRDetail(idx){
 
 let _execViewOpen=false;
 function toggleExecView(){ switchTab('executive'); }
+
+var outcomeData = null;
+async function fetchOutcomes() {
+  try {
+    const res = await fetch('/api/modules/releases/planning/ai-planner/outcomes');
+    if (!res.ok) {
+      console.error('Outcomes fetch failed:', res.status);
+      return;
+    }
+    const data = await res.json();
+    if (data && data.outcomes && data.outcomes.length > 0) {
+      outcomeData = data;
+      run();
+    }
+  } catch (err) {
+    console.error('Failed to fetch outcomes:', err);
+  }
+}
 
 /**
  * CVE load per owning PM, over the throughput window.
