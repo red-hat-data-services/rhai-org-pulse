@@ -314,7 +314,7 @@ onMounted(() => {
       <h1 class="text-2xl font-bold text-gray-900 dark:text-white">Package Analysis</h1>
       <div class="flex items-center gap-3 mt-1">
         <p class="text-sm text-gray-500 dark:text-gray-400">
-          AIPCC package EPIC analysis — tracks open EPICs with labels <code class="text-xs bg-gray-100 dark:bg-gray-700 px-1 rounded">dashboard-filed</code> and <code class="text-xs bg-gray-100 dark:bg-gray-700 px-1 rounded">package</code>
+          Package EPIC analysis for AIPCC and RHAI: tracks open EPICs with labels <code class="text-xs bg-gray-100 dark:bg-gray-700 px-1 rounded">dashboard-filed</code> and <code class="text-xs bg-gray-100 dark:bg-gray-700 px-1 rounded">package</code>
         </p>
         <span v-if="lastReportDate" class="text-xs text-gray-400 dark:text-gray-500 flex-shrink-0">
           Last report: {{ lastReportDate }}

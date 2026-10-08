@@ -82,7 +82,7 @@
       },
       {
         "key": "PACKAGE_REQUEST_JIRA_PROJECT",
-        "description": "Pins the Jira project that receives package request Epics, overriding the project chosen in the form (unset: AIPCC or RHAI per the form, RHAISTRAT falls back to AIPCC)",
+        "description": "Pins the Jira project that receives package request Epics, overriding the project chosen in the form (unset: RHAI, which RHAISTRAT requests also fall back to)",
         "required": false
       },
       {
