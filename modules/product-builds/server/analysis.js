@@ -2,13 +2,17 @@ const INACTIVE_THRESHOLD_DAYS = 5
 const CRITICAL_THRESHOLD_DAYS = 30
 const CONCURRENCY = 5
 
+// Package request Epics were filed in AIPCC until it was deprecated; new
+// requests go to RHAI, so both projects are tracked.
+const PACKAGE_EPICS_PROJECTS = 'project in (AIPCC, RHAI)'
+
 const OPEN_EPICS_JQL =
-  'project = AIPCC AND issuetype = Epic ' +
+  PACKAGE_EPICS_PROJECTS + ' AND issuetype = Epic ' +
   'AND labels in ("dashboard-filed", "package") ' +
   'AND status not in (Closed, Done)'
 
 const ALL_EPICS_JQL =
-  'project = AIPCC AND issuetype = Epic ' +
+  PACKAGE_EPICS_PROJECTS + ' AND issuetype = Epic ' +
   'AND labels in ("dashboard-filed", "package")'
 
 function extractAdfText(node) {
@@ -287,7 +291,7 @@ async function buildReport(jira, options = {}) {
 function onboardedJql(days) {
   const safeDays = Math.floor(Math.max(1, Math.min(90, Number(days) || 7)))
   return (
-    'project = AIPCC AND issuetype = Epic ' +
+    PACKAGE_EPICS_PROJECTS + ' AND issuetype = Epic ' +
     'AND labels in ("dashboard-filed", "package") ' +
     'AND status in (Closed, Done) ' +
     `AND status changed to (Closed, Done) AFTER -${safeDays}d ` +

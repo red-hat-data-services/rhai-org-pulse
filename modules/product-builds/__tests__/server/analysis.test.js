@@ -1,9 +1,12 @@
-import { describe, it, expect } from 'vitest'
+import { describe, it, expect, vi } from 'vitest'
 
 const {
   extractAdfText,
   classifyEpic,
   buildInsight,
+  getOpenEpics,
+  getTotalCount,
+  getPackagesOnboarded,
   INACTIVE_THRESHOLD_DAYS,
   CRITICAL_THRESHOLD_DAYS,
 } = require('../../server/analysis')
@@ -193,5 +196,28 @@ describe('buildInsight', () => {
     const insight = buildInsight(epic)
     expect(insight).toContain('Status: Review')
     expect(insight).toContain('Dan')
+  })
+})
+
+describe('package Epic queries', () => {
+  const projectClause = 'project in (AIPCC, RHAI) AND issuetype = Epic'
+
+  it('tracks open Epics in AIPCC and RHAI', async () => {
+    const jira = { fetchAllJqlResults: vi.fn(async () => []) }
+    await getOpenEpics(jira)
+    expect(jira.fetchAllJqlResults.mock.calls[0][0]).toContain(projectClause)
+  })
+
+  it('counts all Epics in AIPCC and RHAI', async () => {
+    const jira = { jiraRequest: vi.fn(async () => ({ total: 3 })) }
+    expect(await getTotalCount(jira)).toBe(3)
+    const params = new URLSearchParams(jira.jiraRequest.mock.calls[0][0].split('?')[1])
+    expect(params.get('jql')).toContain(projectClause)
+  })
+
+  it('reports onboarded packages from AIPCC and RHAI', async () => {
+    const jira = { fetchAllJqlResults: vi.fn(async () => []) }
+    await getPackagesOnboarded(jira, 7)
+    expect(jira.fetchAllJqlResults.mock.calls[0][0]).toContain(projectClause)
   })
 })
