@@ -66,8 +66,8 @@
           <div class="flex flex-wrap items-center gap-4 mb-3">
             <template v-if="hasSelection">
               <div class="text-sm text-gray-700 dark:text-gray-300">
-                Viewing <strong>{{ familyNarrative }}</strong> version <strong>{{ selection.version }}</strong>,
-                {{ phaseNarrative }} {{ selection.phases.size === 1 ? 'phase' : 'phases' }}.
+                Viewing <strong>{{ familyNarrative }}</strong> version <strong>{{ selection.version }}</strong><template v-if="availablePhases.length > 1">,
+                {{ phaseNarrative }} {{ selection.phases.size === 1 ? 'phase' : 'phases' }}</template>.
               </div>
               <button
                 @click="openModal"
@@ -280,7 +280,7 @@
       </div>
 
       <!-- Section 3: Component Readiness Matrix -->
-      <div v-if="hasInitiativeData && readinessPhases.length" class="mb-6">
+      <div v-if="hasInitiativeData && (readinessPhases.length || allComponents.length)" class="mb-6">
         <div class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
           <div class="px-4 py-3 border-b border-gray-200 dark:border-gray-700 space-y-3">
             <div class="flex items-center justify-between flex-wrap gap-3">
@@ -293,7 +293,8 @@
                   <span class="flex items-center gap-1"><span class="w-2.5 h-2.5 rounded-full bg-gray-300 dark:bg-gray-600 inline-block"></span> Not started</span>
                 </div>
               </div>
-              <div class="flex items-center gap-2">
+              <!-- Phase filter: only show when more than one phase -->
+              <div v-if="availablePhases.length > 1" class="flex items-center gap-2">
                 <span class="text-xs text-gray-500 dark:text-gray-400">Phase:</span>
                 <div class="flex gap-1">
                   <button
@@ -330,15 +331,43 @@
             </div>
           </div>
 
-          <!-- No phase selected message -->
-          <div v-if="!selectedPhases.length" class="p-8 text-center">
+          <!-- No phase selected message (only when multiple phases exist) -->
+          <div v-if="availablePhases.length > 1 && !selectedPhases.length" class="p-8 text-center">
             <p class="text-sm text-gray-500 dark:text-gray-400">Select the Phases above to view component readiness.</p>
           </div>
 
+          <!-- Fallback: Show component tiles when no phases data but components exist -->
+          <div v-else-if="!availablePhases.length && fallbackComponentTiles.length" class="p-4">
+            <div class="flex items-center gap-2 mb-3">
+              <span class="text-xs font-bold uppercase tracking-wide text-gray-500">Components</span>
+              <span class="flex-1 h-px bg-gray-200 dark:bg-gray-700"></span>
+              <span class="text-xs text-gray-400">{{ fallbackComponentTiles.length }} components</span>
+            </div>
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+              <div
+                v-for="tile in fallbackComponentTiles"
+                :key="tile.component"
+                class="bg-white dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-700 p-4"
+              >
+                <div class="flex items-center justify-between mb-3">
+                  <h4 class="text-sm font-semibold text-gray-900 dark:text-white truncate">{{ tile.component }}</h4>
+                  <span class="w-3 h-3 rounded-full bg-gray-300 dark:bg-gray-600 inline-block"></span>
+                </div>
+                <div v-if="tile.blockers > 0" class="flex items-center justify-between text-xs">
+                  <span class="text-red-500">Blockers</span>
+                  <a v-if="tile.blockers_jql_url" :href="tile.blockers_jql_url" target="_blank" class="text-red-500 font-bold hover:underline">{{ tile.blockers }} open ↗</a>
+                  <span v-else class="text-red-500 font-bold">{{ tile.blockers }} open</span>
+                </div>
+                <div v-else class="text-xs text-gray-400">No blockers</div>
+              </div>
+            </div>
+          </div>
+
           <!-- Per-phase sections -->
-          <div v-else class="p-4 space-y-6">
+          <div v-else-if="selectedPhases.length" class="p-4 space-y-6">
             <div v-for="phase in visiblePhases" :key="phase.phase">
-              <div class="flex items-center gap-2 mb-3">
+              <!-- Phase header: only show when more than one phase -->
+              <div v-if="availablePhases.length > 1" class="flex items-center gap-2 mb-3">
                 <span class="text-xs font-bold uppercase tracking-wide text-blue-500">{{ phase.phase }}</span>
                 <span class="flex-1 h-px bg-gray-200 dark:bg-gray-700"></span>
                 <span class="text-xs text-gray-400">{{ filteredPhaseTiles(phase).length }} components</span>
@@ -937,7 +966,7 @@ const testSignOffRag = computed(() => {
 // --- Phase filter ---
 
 const availablePhases = computed(() => {
-  if (!data.value || !data.value.component_readiness) return []
+  if (!data.value || !data.value.component_readiness || !data.value.component_readiness.phases) return []
   return data.value.component_readiness.phases.map(p => p.phase)
 })
 
@@ -953,7 +982,7 @@ function togglePhaseFilter(phase) {
 }
 
 const readinessPhases = computed(() => {
-  if (!data.value || !data.value.component_readiness) return []
+  if (!data.value || !data.value.component_readiness || !data.value.component_readiness.phases) return []
   return data.value.component_readiness.phases
 })
 
@@ -1150,18 +1179,46 @@ function toggleAllComponents() {
 }
 
 function filteredPhaseTiles(phase) {
-  return filters.filterItems(phase.tiles)
+  return filters.filterItems(phase.tiles || [])
 }
+
+// Fallback tiles when phases data is missing but components are available
+const fallbackComponentTiles = computed(() => {
+  if (!allComponents.value.length) return []
+  const activeComps = filters.activeFilters.component
+  const compsToShow = (activeComps && activeComps.length > 0) ? activeComps : allComponents.value
+  
+  // Get blocker info from product_blockers
+  const blockersByComponent = {}
+  if (productBlockers.value?.components) {
+    for (const c of productBlockers.value.components) {
+      blockersByComponent[c.component] = c
+    }
+  }
+  
+  return compsToShow.map(comp => ({
+    component: comp,
+    blockers: blockersByComponent[comp]?.open || 0,
+    blockers_jql_url: blockersByComponent[comp]?.jql_url || null,
+    // Empty placeholders for missing data
+    tfa_breakdown: null,
+    execution: null,
+    failed_breakdown: null,
+    skipped_breakdown: null,
+    product_signoff: null
+  }))
+})
 
 function componentStatusClass(comp) {
   if (!data.value || !data.value.component_readiness) return 'bg-gray-600 text-white border-gray-600'
-  const phases = data.value.component_readiness.phases
+  const phases = data.value.component_readiness.phases || []
+  if (!phases.length) return 'bg-gray-600 text-white border-gray-600'
   let failedOpen = 0
   let tfaOpen = 0
   let tfaTotal = 0
   let allProductDone = true
   for (const p of phases) {
-    const tile = p.tiles.find(t => t.component === comp)
+    const tile = (p.tiles || []).find(t => t.component === comp)
     if (!tile) continue
     failedOpen += (tile.failed_breakdown?.new || 0) + (tile.failed_breakdown?.in_progress || 0)
     if (tile.tfa_breakdown) {
