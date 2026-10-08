@@ -1,6 +1,7 @@
 const express = require('express');
 const { validateSnapshot } = require('./validation');
 const { readAIPlanner, writeAIPlanner, projectSnapshot, emptySnapshot } = require('./storage');
+
 const DEMO_MODE = process.env.DEMO_MODE === 'true';
 
 const CVE_METRICS_KEY = 'releases/cve-sustaining/latest.json';
@@ -127,7 +128,7 @@ module.exports = function registerAIPlannerRoutes(router, context) {
    * @openapi
    * /api/modules/releases/planning/ai-planner/outcomes:
    *   get:
-   *     summary: Fetch 22 prioritized outcomes from Jira plan with in-plan feature counts
+   *     summary: Fetch prioritized outcomes from Jira plan with in-plan feature counts
    *     tags: [releases-planning]
    *     responses:
    *       200:
