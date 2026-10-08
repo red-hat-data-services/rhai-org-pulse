@@ -1,7 +1,7 @@
 const express = require('express');
 const { validateSnapshot } = require('./validation');
 const { readAIPlanner, writeAIPlanner, projectSnapshot, emptySnapshot } = require('./storage');
-const { PRIORITY_OUTCOMES: _PRIORITY_OUTCOMES, fetchOutcomesFromJira: _fetchOutcomesFromJira, calculateOutcomeMetrics: _calculateOutcomeMetrics } = require('./outcomes-integration');
+const { PRIORITY_OUTCOMES, fetchOutcomesFromJira, calculateOutcomeMetrics } = require('./outcomes-integration');
 
 const DEMO_MODE = process.env.DEMO_MODE === 'true';
 
@@ -102,7 +102,7 @@ const jsonLimit = express.json({ limit: '25mb' });
  * @param {object} context - { storage, requireAuth, requireAdmin, requireScope, buildFeatureReadiness, listStorageFiles }
  */
 module.exports = function registerAIPlannerRoutes(router, context) {
-  const { storage, requireAuth, requireAdmin, requireScope, buildFeatureReadiness, listStorageFiles } = context;
+  const { storage, requireAuth, requireAdmin, requireScope, buildFeatureReadiness, listStorageFiles, jira } = context;
   const { readFromStorage, writeToStorage } = storage;
 
   /**
@@ -136,12 +136,25 @@ module.exports = function registerAIPlannerRoutes(router, context) {
    */
   router.get('/ai-planner/outcomes', requireAuth, requireScope('releases:read'), async function(req, res) {
     try {
-      const outcomes = [];
+      const readiness = await buildFeatureReadiness(readFromStorage, null, listStorageFiles);
+      const allFeatures = (readiness.pendingReview || []).concat(readiness.ready || []);
+      const inPlanFeatures = allFeatures
+        .filter(f => f.status !== 'No' && f.targetVersions && f.targetVersions.some(v => v.includes('3.6')))
+        .map(f => f.key);
+
+      // Fetch outcomes from Jira if client is available
+      let outcomes = [];
+      if (jira) {
+        const jiraOutcomes = await fetchOutcomesFromJira(jira, PRIORITY_OUTCOMES);
+        outcomes = calculateOutcomeMetrics(jiraOutcomes, inPlanFeatures, allFeatures);
+      }
 
       res.json({
         outcomes: outcomes,
         generatedAt: new Date().toISOString(),
-        version: '3.6'
+        version: '3.6',
+        featureCount: allFeatures.length,
+        inPlanCount: inPlanFeatures.length
       });
     } catch (err) {
       console.error('Outcomes fetch error:', err);
