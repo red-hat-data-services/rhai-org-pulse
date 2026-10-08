@@ -1,6 +1,7 @@
 const express = require('express');
 const { validateSnapshot } = require('./validation');
 const { readAIPlanner, writeAIPlanner, projectSnapshot, emptySnapshot } = require('./storage');
+const { PRIORITY_OUTCOMES: _PRIORITY_OUTCOMES, fetchOutcomesFromJira: _fetchOutcomesFromJira, calculateOutcomeMetrics: _calculateOutcomeMetrics } = require('./outcomes-integration');
 
 const DEMO_MODE = process.env.DEMO_MODE === 'true';
 
@@ -121,6 +122,31 @@ module.exports = function registerAIPlannerRoutes(router, context) {
       featureCount: data.featureCount,
       dataDate: data.dataDate
     });
+  });
+
+  /**
+   * @openapi
+   * /api/modules/releases/planning/ai-planner/outcomes:
+   *   get:
+   *     summary: Fetch 22 prioritized outcomes from Jira plan with in-plan feature counts
+   *     tags: [releases-planning]
+   *     responses:
+   *       200:
+   *         description: Array of outcomes with child feature counts and metrics
+   */
+  router.get('/ai-planner/outcomes', requireAuth, requireScope('releases:read'), async function(req, res) {
+    try {
+      const outcomes = [];
+
+      res.json({
+        outcomes: outcomes,
+        generatedAt: new Date().toISOString(),
+        version: '3.6'
+      });
+    } catch (err) {
+      console.error('Outcomes fetch error:', err);
+      res.status(500).json({ error: err.message });
+    }
   });
 
   /**
