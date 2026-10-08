@@ -92,6 +92,7 @@ async function buildCveReserve(readFromStorage) {
     unmapped: unmapped.sort(function(a, b) { return b.resolved - a.resolved; })
   };
 }
+
 const jsonLimit = express.json({ limit: '25mb' });
 
 /**
@@ -128,7 +129,7 @@ module.exports = function registerAIPlannerRoutes(router, context) {
    * @openapi
    * /api/modules/releases/planning/ai-planner/outcomes:
    *   get:
-   *     summary: Fetch 22 prioritized outcomes from Jira plan with in-plan feature counts
+   *     summary: Fetch prioritized outcomes from Jira plan with in-plan feature counts
    *     tags: [releases-planning]
    *     responses:
    *       200:
@@ -222,32 +223,6 @@ module.exports = function registerAIPlannerRoutes(router, context) {
 
     await writeAIPlanner(writeToStorage, { ...emptySnapshot(), lastSyncedAt: new Date().toISOString() });
     res.json({ status: 'cleared' });
-  });
-
-  /**
-   * @openapi
-   * /api/modules/releases/planning/ai-planner/outcomes:
-   *   get:
-   *     summary: Fetch 22 prioritized outcomes from Jira plan with in-plan feature counts
-   *     tags: [releases-planning]
-   *     responses:
-   *       200:
-   *         description: Array of outcomes with child feature counts and metrics
-   */
-  router.get('/ai-planner/outcomes', requireAuth, requireScope('releases:read'), async function(req, res) {
-    try {
-      // For now, return empty outcomes — Jira integration pending
-      // Will fetch from plan view 7384 and calculate in-plan metrics
-      const outcomes = [];
-
-      res.json({
-        outcomes: outcomes,
-        generatedAt: new Date().toISOString()
-      });
-    } catch (err) {
-      console.error('Outcomes fetch error:', err);
-      res.status(500).json({ error: err.message });
-    }
   });
 
   /**
