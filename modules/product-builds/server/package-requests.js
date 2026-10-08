@@ -5,7 +5,7 @@
  * verifies the related Jira issue, checks for recent duplicates, validates
  * PyPI sources, warns when the package is already in a production index,
  * files an Epic in the configured Jira project (PACKAGE_REQUEST_JIRA_PROJECT,
- * default AIPCC), and triggers the package onboarding GitLab pipeline.
+ * default RHAI), and triggers the package onboarding GitLab pipeline.
  *
  * All external operations (Jira, PyPI, package indexes, GitLab) go through
  * small module-level functions. The register function accepts an optional
@@ -25,7 +25,7 @@ const {
   MAX_CONCURRENT_FETCHES
 } = require('./package-index');
 
-const DEFAULT_JIRA_PROJECT = 'AIPCC';
+const DEFAULT_JIRA_PROJECT = 'RHAI';
 const JIRA_PROJECT_KEY_RE = /^[A-Z][A-Z0-9]+$/;
 const EPIC_LABELS = ['package', 'dashboard-filed'];
 const SECURITY_NAME = 'Red Hat Employee';
@@ -52,11 +52,11 @@ const RATE_LIMIT_WINDOW_MS = 60_000;
 const TEAM_OPTIONS_CACHE_TTL_MS = 5 * 60_000;
 const EXTERNAL_TIMEOUT_MS = 30_000;
 const PYPI_JSON_BASE = 'https://pypi.org/pypi';
-const TEAM_PROJECTS = ['RHAISTRAT', 'AIPCC', 'RHAI'];
+const TEAM_PROJECTS = ['RHAISTRAT', 'RHAI'];
 // Projects that expose the Epic issue type on their create screen. RHAISTRAT
 // does not, so requests for RHAISTRAT teams fall back to the default project.
-const FILING_PROJECTS = ['AIPCC', 'RHAI'];
-const AIPCC_TEAM_OPTIONS = [
+const FILING_PROJECTS = ['RHAI'];
+const RHAI_TEAM_OPTIONS = [
   'Accelerator Enablement',
   'AIPCC Ecosystems',
   'AIPCC Productization',
@@ -65,8 +65,7 @@ const AIPCC_TEAM_OPTIONS = [
 ].map(name => ({ value: name, label: name }));
 const DEMO_TEAM_OPTIONS = {
   RHAISTRAT: [{ value: 'AI Core Platform', label: 'AI Core Platform' }],
-  AIPCC: AIPCC_TEAM_OPTIONS,
-  RHAI: AIPCC_TEAM_OPTIONS
+  RHAI: RHAI_TEAM_OPTIONS
 };
 
 // --- Validation ---
@@ -372,7 +371,7 @@ function buildAdfDescription(request, requesterEmail, jiraHost) {
 }
 
 /**
- * Build the fields payload for creating the AIPCC Epic.
+ * Build the fields payload for creating the package request Epic.
  */
 function buildEpicFields(request, requesterEmail, { jiraHost, reporterAccountId, epicNameField, jiraProject } = {}) {
   const fields = {
@@ -594,7 +593,7 @@ function getGitlabToken(secrets) {
 /**
  * Jira project that receives package request Epics. Read from the
  * PACKAGE_REQUEST_JIRA_PROJECT secret declared in module.json; falls back to
- * AIPCC when unset or not a valid project key.
+ * RHAI when unset or not a valid project key.
  */
 function resolveJiraProjectConfig(secrets) {
   const raw = secrets && secrets.PACKAGE_REQUEST_JIRA_PROJECT;
@@ -769,13 +768,13 @@ module.exports = function registerPackageRequestRoutes(router, context, deps = {
    *     description: >-
    *       Returns a cached, alphabetically sorted list of Jira project
    *       components shaped as value/label options. The project defaults to
-   *       RHAISTRAT and is restricted to RHAISTRAT, AIPCC, or RHAI.
+   *       RHAISTRAT and is restricted to RHAISTRAT or RHAI.
    *     parameters:
    *       - in: query
    *         name: project
    *         schema:
    *           type: string
-   *           enum: [RHAISTRAT, AIPCC, RHAI]
+   *           enum: [RHAISTRAT, RHAI]
    *           default: RHAISTRAT
    *     responses:
    *       200:
@@ -839,8 +838,8 @@ module.exports = function registerPackageRequestRoutes(router, context, deps = {
    *       verifies the related Jira issue, checks for recent duplicate
    *       requests, validates PyPI sources, and warns when the package is
    *       already present in a production index. On success it files an Epic
-   *       in the project chosen in the form (AIPCC or RHAI; RHAISTRAT falls back
-   *       to the default), or in PACKAGE_REQUEST_JIRA_PROJECT when that is set,
+   *       in the project chosen in the form (RHAI; RHAISTRAT falls back to the
+   *       default), or in PACKAGE_REQUEST_JIRA_PROJECT when that is set,
    *       with its required Epic Name field, due date, team label, Red
    *       Hat Employee security, and Accelerator Enablement component, sets the
    *       release target field when provided, and triggers the
@@ -864,11 +863,11 @@ module.exports = function registerPackageRequestRoutes(router, context, deps = {
    *                 description: Requesting team name
    *               project:
    *                 type: string
-   *                 enum: [RHAISTRAT, AIPCC, RHAI]
+   *                 enum: [RHAISTRAT, RHAI]
    *                 nullable: true
    *                 description: >-
-   *                   Jira project chosen in the form. AIPCC and RHAI receive the
-   *                   Epic directly; RHAISTRAT has no Epic type, so its requests
+   *                   Jira project chosen in the form. RHAI receives the Epic
+   *                   directly; RHAISTRAT has no Epic type, so its requests
    *                   are filed in the default project. Ignored when
    *                   PACKAGE_REQUEST_JIRA_PROJECT pins a project.
    *               package_name:

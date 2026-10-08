@@ -55,7 +55,7 @@ test.describe('Product Builds Module @product-builds', () => {
     const team = page.getByRole('combobox', { name: 'Team', exact: true })
     await expect(team).toBeVisible()
     await expect(team).toBeEnabled()
-    for (const project of ['AIPCC', 'RHAI']) {
+    for (const project of ['RHAI', 'RHAISTRAT']) {
       const responsePromise = page.waitForResponse(response => response.url().includes(`/package-requests/teams?project=${project}`))
       await page.locator('#req-team-project').selectOption(project)
       const response = await responsePromise
@@ -124,6 +124,19 @@ test.describe('Product Builds Module @product-builds', () => {
 
     const mainContentVisible = await mainContentIsVisible(page);
     expect(mainContentVisible).toBe(true);
+
+    const appErrors = page.errors.filter(e => !/status of (429|404|503)/.test(e.message));
+    expect(appErrors).toHaveLength(0);
+  });
+
+  test('should show Package Analysis tracking AIPCC and RHAI Epics', async ({ page }) => {
+    await page.goto('/#/product-builds/package-analysis');
+    await page.waitForLoadState('networkidle');
+    await page.waitForTimeout(DEFAULT_PAGE_WAIT_TIME);
+
+    expect(page.url()).toMatch(/product-builds\/package-analysis/);
+    await expect(page.getByRole('heading', { name: 'Package Analysis' })).toBeVisible();
+    await expect(page.getByText('Package EPIC analysis for AIPCC and RHAI', { exact: false })).toBeVisible();
 
     const appErrors = page.errors.filter(e => !/status of (429|404|503)/.test(e.message));
     expect(appErrors).toHaveLength(0);

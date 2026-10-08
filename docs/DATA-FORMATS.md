@@ -2,6 +2,29 @@
 
 This document describes the JSON structure of all files stored in the `data/` directory (production) and `fixtures/` directory (demo mode). **Demo fixtures must always match production format** — see [Fixture Rules](#fixture-rules) below.
 
+## Releases E2E Results — `data/releases/build-health/runs.json`
+
+The E2E publisher stores completed Jenkins runs in a bounded `runs` array,
+upserted by Jenkins instance, full job path, and build number. The top-level
+file has `schemaVersion`, `updatedAt`, and `runs`. See the matching
+[`fixtures/releases/build-health/runs.json`](../fixtures/releases/build-health/runs.json)
+for complete example records and [E2E Results API](E2E-RESULTS-API.md) for
+request bodies and authentication.
+
+Each stored run contains `runKey`, `jenkins`, `reporting.stream`, `run`,
+`release`, `environment`, `trigger`, `stages`, `tests`, `agentAnalysis`, and
+`receivedAt`. The stream is `odh-nightly`, `rhoai-nightly`, or `release`.
+RHOAI runs need a canonical `release.version`; ODH nightly can have no release
+version. `release.installedVersion` and `release.imageDigest` preserve the
+observed product version and catalog identity without changing the version
+used for filtering. Missing test counts remain `null`, not zero.
+
+The later analysis POST updates only `agentAnalysis` and preserves the base
+run. Its `findings` can suggest a category, team, Jira issue, and related
+failed test cases. The server marks it `reviewStatus: "unverified"`; machine
+suggestions are not human-confirmed ownership. Retrying the base run keeps
+the latest analysis. At most 2,000 runs and 50 failed cases per run are kept.
+
 ## Jira Autofix — `data/ai-impact/autofix-data.json`
 
 The Autofix snapshot keeps the existing `issues` pipeline-labeled cohort and
@@ -1852,7 +1875,7 @@ JSON Lines format (one JSON object per line). Partitioned by month for efficient
 
 ## Releases — CHI Hierarchy (`data/releases/chi-hierarchy/latest.json`)
 
-Pre-computed Container Health Index hierarchy for Org Pulse (RHOAIENG-97404). Dual-environment snapshot: **Prod** from `catalog.redhat.com`, **Stage** from `pyxis.stage.engineering.redhat.com` (Kerberos in the collector). Hierarchy: Product version → Components → Images.
+Pre-computed Container Health Index hierarchy for Org Pulse (RHOAIENG-97404). Environments: **Prod** (`catalog.redhat.com`), **Stage** (Stage Pyxis), **Latest** (Konflux clair-scan via KubeArchive). Hierarchy: Product version → Components → Images.
 
 Fixture: `fixtures/releases/chi-hierarchy/latest.json`.
 
@@ -1900,6 +1923,29 @@ Fixture: `fixtures/releases/chi-hierarchy/latest.json`.
       "fetchedAt": "2026-09-30T17:30:00.000Z",
       "source": "pyxis.stage.engineering.redhat.com",
       "versions": []
+    },
+    "latest": {
+      "fetchedAt": "2026-10-06T09:00:00.000Z",
+      "source": "konflux-clair-scan",
+      "versions": [{
+        "id": "rhoai-2.25",
+        "tag": "v2.25",
+        "summary": { "imageCount": 1, "gradeDistribution": { "A": 1 }, "critical": 0, "important": 0, "staleImageCount": 0 },
+        "components": [{
+          "name": "AI Core Dashboard",
+          "summary": { "imageCount": 1, "worstGrade": "A", "critical": 0, "important": 0, "oldestImageAgeDays": 0 },
+          "images": [{
+            "name": "odh-dashboard-rhel9",
+            "grade": "A",
+            "gradeDate": "2026-10-06",
+            "vulnerabilityCount": 0,
+            "advisories": { "Critical": 0, "Important": 0, "Moderate": 0, "Low": 0 },
+            "konfluxUrl": "https://konflux-ui.apps.example.com/ns/rhoai-tenant/applications/rhoai-v2-25/pipelineruns/odh-dashboard-v2-25-on-push-t77q6",
+            "lastUpdated": "2026-10-06",
+            "ageDays": 0
+          }]
+        }]
+      }]
     }
   }
 }
@@ -1911,9 +1957,11 @@ Fixture: `fixtures/releases/chi-hierarchy/latest.json`.
 | GET | `/api/modules/releases/chi-hierarchy/status` | `releases:read` | Upload / env summary |
 | POST | `/api/modules/releases/chi-hierarchy/bulk` | `releases:write` | Pipeline ingest (skipped in `DEMO_MODE`) |
 
-Image staleness: `ageDays > 14` is treated as stale in the UI. `grade` / `gradeDate` / `vulnerabilityCount` align with legacy AIPCC `HealthIndex`.
+Image staleness: `ageDays > 14` is treated as stale in the UI. Prod/Stage `grade` / `gradeDate` / `vulnerabilityCount` align with catalog HealthIndex. Latest grades are official CHI from rhel-vex patched Critical/Important (see the in-page grading tip). Latest images use `konfluxUrl` instead of `catalogUrl`.
 
-**Collector / join:** External CHI pipeline (`generate_chi_report.py` + `build_chi_hierarchy.py`) joins catalog/Stage Pyxis images to ProdSec `openshift-ai` `components.override` (strip `rhoai/`). See CHI repo `PIPELINE.md`. Org Pulse does not call Pyxis or ps_modules at runtime.
+`catalogUrl` must include the Pyxis repository `_id` final path segment (e.g. `…/odh-dashboard-rhel9/680cdd696ed1cf1f6cf2a587`); without it catalog.redhat.com returns 404.
+
+**Collector / join:** External CHI pipeline (`generate_chi_report.py` + `generate_konflux_chi_report.py` + `build_chi_hierarchy.py --latest-chi`) joins catalog/Stage/Konflux images to ProdSec `openshift-ai` `components.override` (strip `rhoai/`). See CHI repo `PIPELINE.md`. Org Pulse does not call Pyxis, Konflux, or ps_modules at runtime.
 
 **Onboarding new versions:** See [CHI-HIERARCHY.md](./CHI-HIERARCHY.md) — versions come from ProdSec `active_ps_update_streams`; no Org Pulse code change is needed when the stream and catalog tags exist.
 
