@@ -3902,11 +3902,26 @@ async function fetchOutcomes() {
     const data = await res.json();
     if (data && data.outcomes && data.outcomes.length > 0) {
       outcomeData = data;
+      populateOutcomeDropdown();
       run();
     }
   } catch (err) {
     console.error('Failed to fetch outcomes:', err);
   }
+}
+
+function populateOutcomeDropdown() {
+  if (!outcomeData || !outcomeData.outcomes) return;
+  const sel = document.getElementById('f-outcome');
+  if (!sel) return;
+
+  sel.innerHTML = '<option value="">All Outcomes</option>';
+  outcomeData.outcomes.forEach(function(o) {
+    const opt = document.createElement('option');
+    opt.value = o.key + ' ' + o.title;
+    opt.textContent = o.key + ' ' + o.title;
+    sel.appendChild(opt);
+  });
 }
 
 /**

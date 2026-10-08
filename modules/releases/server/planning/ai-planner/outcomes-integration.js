@@ -20,7 +20,7 @@ const PRIORITY_OUTCOMES = [
   'RHAISTRAT-1981', // Outcome: Platform Experience for llm-d
   'RHAISTRAT-1680', // Parent Outcome: Unified Red Hat AI Inference (formerly MaaS/llm-d on xKS)
   'RHAISTRAT-1312', // Gen AI Studio
-  'RHAISTRAT-155',  // Secure Agent Onboarding / BYOA
+  'RHAISTRAT-155',  // Secure Agent Onboarding: Security-First Agent Engineering
   'RHAISTRAT-1357', // Tool Calling
   'RHAISTRAT-1971', // (Tool Calling related)
   'RHAISTRAT-1354', // From Tools to Swarms (MCP)
