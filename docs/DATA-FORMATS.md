@@ -2962,6 +2962,8 @@ version string (spaces and special chars replaced with `_`).
 - The TFA and blocker dates are release-level (not per-RC); the same date appears in each phase with different `days_to_*` values.
 - `null` means the milestone has not occurred or its date is unavailable. The dashboard omits phases with no recorded milestone at all. For an active phase, it renders a state such as `Not started`, `In progress`, the current TFA count, or the number of open blockers instead of a wall of dashes.
 
+_This section was updated with assistance from Codex._
+
 ---
 
 ### `releases/aipcc-milestones.json`
