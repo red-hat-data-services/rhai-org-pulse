@@ -3,7 +3,7 @@ import { describe, it, expect, vi } from 'vitest'
 const registerRoutes = require('../../server/package-tracker')
 const {
   extractAdfText, extractJiraLinks, parseDescriptionFields,
-  computeRisk, computeLeadTime, extractTargetVersions,
+  computeRisk, computeLeadTime, extractTargetVersions, buildReleaseTracker,
 } = registerRoutes._testExports
 
 describe('package-tracker', () => {
@@ -187,6 +187,29 @@ describe('package-tracker', () => {
 
     it('filters empty names', () => {
       expect(extractTargetVersions([{ name: '' }, { name: '3.5' }])).toEqual(['3.5'])
+    })
+  })
+
+  describe('buildReleaseTracker', () => {
+    it('queries package epics in AIPCC and RHAI with the tracker exclusions', async () => {
+      const jira = {
+        fetchAllJqlResults: vi.fn()
+          .mockResolvedValueOnce([
+            { key: 'AIPCC-123', fields: { summary: 'AIPCC package' } },
+            { key: 'RHAI-456', fields: { summary: 'RHAI package' } },
+          ])
+          .mockResolvedValue([]),
+      }
+
+      const result = await buildReleaseTracker(jira)
+
+      expect(jira.fetchAllJqlResults.mock.calls[0][0]).toBe(
+        'project IN (AIPCC, RHAI) AND issuetype = Epic AND labels = package ' +
+        'AND status NOT IN (Closed, Review) ' +
+        'AND (labels NOT IN (package-in-test-repo) OR labels = package-autoqa-failed)'
+      )
+      expect(result.total).toBe(2)
+      expect(result.packages.map(pkg => pkg.key)).toEqual(['AIPCC-123', 'RHAI-456'])
     })
   })
 
