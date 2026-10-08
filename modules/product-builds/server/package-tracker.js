@@ -4,9 +4,15 @@ const DEFAULTS = {
   targetVersionField: 'customfield_10855',
   sizeField: 'customfield_10795',
   cacheTtl: 3_600_000,
-  jiraProject: 'AIPCC',
-  epicLabels: ['dashboard-filed', 'package'],
 };
+
+const TRACKER_JQL = [
+  'project IN (AIPCC, RHAI)',
+  'issuetype = Epic',
+  'labels = package',
+  'status NOT IN (Closed, Review)',
+  '(labels NOT IN (package-in-test-repo) OR labels = package-autoqa-failed)',
+].join(' AND ');
 
 let _cfg = { ...DEFAULTS };
 let _cache = null;
@@ -127,15 +133,13 @@ const CHILDREN_CONCURRENCY = 10;
 const JIRA_KEY_RE = /^[A-Z]+-\d+$/;
 
 async function buildReleaseTracker(jira) {
-  const labels = _cfg.epicLabels.map(l => `"${l}"`).join(', ');
-  const jql = `project = ${_cfg.jiraProject} AND issuetype = Epic AND labels in (${labels}) AND status not in (Closed, Done)`;
   const fields = [
     'key', 'summary', 'status', 'assignee', 'description',
     'duedate', 'created', 'fixVersions',
     _cfg.targetVersionField, _cfg.sizeField,
   ].join(',');
 
-  const epics = await jira.fetchAllJqlResults(jql, fields);
+  const epics = await jira.fetchAllJqlResults(TRACKER_JQL, fields);
 
   const childrenJql = key => `"Epic Link" = ${key}`;
   const childFields = 'key,summary,status';
@@ -242,7 +246,7 @@ module.exports = function registerPackageTrackerRoutes(router, context) {
    *   get:
    *     tags: [Package Tracker]
    *     summary: Get package release tracker data
-   *     description: Returns all open AIPCC package EPICs with risk assessment, due dates, release versions, and child issues. Cached for 1 hour.
+   *     description: Returns matching AIPCC and RHAI package epics with risk assessment, due dates, release versions, and child issues. Cached for 1 hour.
    *     parameters:
    *       - name: refresh
    *         in: query
@@ -303,5 +307,5 @@ module.exports = function registerPackageTrackerRoutes(router, context) {
 
 module.exports._testExports = {
   extractAdfText, extractJiraLinks, parseDescriptionFields,
-  computeRisk, computeLeadTime, extractTargetVersions,
+  computeRisk, computeLeadTime, extractTargetVersions, buildReleaseTracker,
 };

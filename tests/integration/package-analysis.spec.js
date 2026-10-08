@@ -101,6 +101,34 @@ test.describe('Package Analysis @package-analysis', () => {
     expect(appErrors).toHaveLength(0);
   });
 
+  test('should load RHAI package epics in the Tracker tab', async ({ page }) => {
+    await page.route('**/api/modules/product-builds/package-tracker', route => route.fulfill({
+      status: 200,
+      json: {
+        total: 1,
+        overdue: 0,
+        at_risk: 0,
+        on_track: 0,
+        no_date: 1,
+        packages: [{
+          key: 'RHAI-456',
+          package: 'example package update request',
+          status: 'In Progress',
+          status_category: 'indeterminate',
+          assignee: 'Package Owner',
+          risk: 'no_date',
+          children: [],
+        }],
+      },
+    }));
+
+    await page.goto('/#/product-builds/package-analysis?tab=tracker');
+
+    await expect(page.getByRole('button', { name: 'Tracker' })).toBeVisible();
+    await expect(page.getByRole('link', { name: 'RHAI-456' })).toBeVisible();
+    await expect(page.getByText('example package update request')).toBeVisible();
+  });
+
   test('should switch to Package Search tab and show form', async ({ page }) => {
     await page.goto('/#/product-builds/package-analysis');
     await page.waitForLoadState('networkidle');
