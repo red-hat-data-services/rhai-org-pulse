@@ -23,6 +23,7 @@ const registerAiAdoptionRoutes = require('./ai-adoption/routes');
 const registerRhoaiComponentArchitecturesRoutes = require('./rhoai-component-architectures/routes');
 const registerPreReleaseCveRoutes = require('./pre-release-cve/routes');
 const registerAipccMilestonesRoutes = require('./aipcc-milestones');
+const registerBuildHealthRoutes = require('./build-health/routes');
 const { registerChiHierarchyRoutes } = require('./chi-hierarchy/routes');
 const { getAuditLog } = require('./planning/audit-log');
 
@@ -145,7 +146,8 @@ module.exports = async function registerRoutes(router, context) {
   // Register module scopes
   context.registerScopes([
     { key: 'releases:read', label: 'Releases (Read)', description: 'Read release planning, execution, and delivery data', category: 'Releases' },
-    { key: 'releases:write', label: 'Releases (Write)', description: 'Mutate release planning, execution, and delivery data', category: 'Releases' }
+    { key: 'releases:write', label: 'Releases (Write)', description: 'Mutate release planning, execution, and delivery data', category: 'Releases' },
+    { key: 'releases:e2e:write', label: 'E2E Results (Write)', description: 'Publish completed E2E runs and agent analysis', category: 'Releases' }
   ]);
 
   // ─── Role Migration: release-manager → planning-manager ───
@@ -197,6 +199,7 @@ module.exports = async function registerRoutes(router, context) {
   // Registry routes (top-level under /api/modules/releases/)
   registerRegistryRoutes(router, { storage, requireAuth, requirePlanningManager, requireScope, registerRefresh: context.registerRefresh || null, isRefreshRunning: context.isRefreshRunning || null });
   registerAipccMilestonesRoutes(router, context);
+  registerBuildHealthRoutes(router, { storage, requireAuth, requireScope });
 
   // Planning sub-router (mounted at /api/modules/releases/planning/)
   var planningRouter = express.Router();
