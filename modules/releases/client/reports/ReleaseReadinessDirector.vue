@@ -30,15 +30,6 @@
             <span class="text-[10px] font-semibold uppercase tracking-wider text-blue-200 mb-0.5">GA Date</span>
             <span class="text-sm font-bold">{{ releaseSchedule.ga_date ? formatScheduleDate(releaseSchedule.ga_date) : 'TBD' }}</span>
           </div>
-          <div
-            class="flex flex-col items-center rounded-xl px-5 py-2.5 min-w-[90px]"
-            :class="releaseDisplayStatus(data) === 'Released with Open Tasks'
-              ? 'bg-red-500/30'
-              : isReleasedStatus(releaseSchedule.status) ? 'bg-emerald-500/30' : 'bg-amber-500/30'"
-          >
-            <span class="text-[10px] font-semibold uppercase tracking-wider text-blue-200 mb-0.5">Status</span>
-            <span class="text-sm font-bold">{{ releaseDisplayStatus(data) }}</span>
-          </div>
         </div>
       </div>
     </div>
@@ -629,7 +620,7 @@ import { useReleaseSelector, parseReleaseId } from '../composables/useReleaseSel
 import { useReportFilters } from './composables/useReportFilters.js'
 import ReportFilterModal from './components/ReportFilterModal.vue'
 import ReportFilterNarrative from './components/ReportFilterNarrative.vue'
-import { isNoWorkResolution, isReleasedStatus, releaseDisplayStatus } from './release-readiness-status.js'
+import { isNoWorkResolution } from './release-readiness-status.js'
 
 const moduleNav = inject('moduleNav')
 const props = defineProps({
@@ -893,15 +884,26 @@ const productBlockers = computed(() => {
 
   const openComponents = (raw.components || [])
     .filter(c => {
-      const openIssues = (c.issues || []).filter(i => i.status_category !== 'Done')
-      return openIssues.length > 0
+      // Support both formats: issues array or pre-computed open count
+      if (c.issues && c.issues.length > 0) {
+        const openIssues = c.issues.filter(i => i.status_category !== 'Done')
+        return openIssues.length > 0
+      }
+      // Fallback to pre-computed open count (from external scripts)
+      return (c.open || 0) > 0
     })
     .map(c => {
-      const openIssues = (c.issues || []).filter(i => i.status_category !== 'Done')
-      return { ...c, open: openIssues.length, issues: openIssues }
+      // Support both formats: issues array or pre-computed open count
+      if (c.issues && c.issues.length > 0) {
+        const openIssues = c.issues.filter(i => i.status_category !== 'Done')
+        return { ...c, open: openIssues.length, issues: openIssues }
+      }
+      // Fallback to pre-computed open count (from external scripts)
+      return { ...c, open: c.open || 0, issues: [] }
     })
 
-  const totalOpen = openComponents.reduce((sum, c) => sum + c.open, 0)
+  // Use raw total_open if provided, otherwise compute from components
+  const totalOpen = raw.total_open ?? openComponents.reduce((sum, c) => sum + c.open, 0)
 
   let jqlUrl = raw.jql_url || ''
   if (jqlUrl && !jqlUrl.includes('statusCategory')) {
@@ -1019,8 +1021,8 @@ const testExecPct = computed(() => {
 // --- Release Decision Status ---
 
 const releaseStatuses = [
-  { id: 'not-ready', label: 'Not Ready', activeClass: 'bg-red-600 text-white border-red-600', tooltip: 'Multiple gates below 50%, or open blockers with overall completion under 50%. Not all sign-offs complete.' },
-  { id: 'in-progress', label: 'In Progress', activeClass: 'bg-blue-600 text-white border-blue-600', tooltip: 'Testing started but gates are below 80% completion. Work is actively progressing.' },
+  { id: 'not-ready', label: 'Not Ready', activeClass: 'bg-red-600 text-white border-red-600', tooltip: 'Any gate below 10%, or open blockers with overall completion under 10%. Release work has not meaningfully started.' },
+  { id: 'in-progress', label: 'In Progress', activeClass: 'bg-blue-600 text-white border-blue-600', tooltip: 'All gates above 10%, or completion above 10% with open blockers. Work is actively progressing.' },
   { id: 'at-risk', label: 'At Risk', activeClass: 'bg-amber-500 text-white border-amber-500', tooltip: 'Progress above 50% but open blockers, a lagging gate, or GA date imminent. Timeline may slip.' },
   { id: 'on-track', label: 'On Track', activeClass: 'bg-emerald-500 text-white border-emerald-500', tooltip: 'All gates above 80%. No critical blockers. Sign-offs progressing on schedule.' },
   { id: 'ready-to-ship', label: 'Ready to Ship', activeClass: 'bg-green-600 text-white border-green-600', tooltip: 'All gates at 100%. All sign-offs done. Zero open blockers. Go for release.' },
@@ -1089,6 +1091,8 @@ const releaseDecision = computed(() => {
   const gatesBelow50 = gates.filter(g => gatePct(g) < 50).length
   const allGatesAbove80 = gates.every(g => gatePct(g) >= 80)
   const allGates100 = gates.every(g => gatePct(g) >= 100)
+  const allGatesAbove10 = gates.every(g => gatePct(g) > 10)
+  const anyGateBelow10 = gates.some(g => gatePct(g) < 10)
 
   // Base decision from gates + blockers, evaluated best to worst; the strongest
   // fully-satisfied state wins.
@@ -1099,20 +1103,17 @@ const releaseDecision = computed(() => {
     // On Track: every gate at/above 80% and no open blockers.
     if (allGatesAbove80 && openBlockers === 0) return 'on-track'
 
-    // Not Ready: two or more gates below 50%, OR open blockers while overall
-    // completion is still low. A stalled/early release is not ready regardless
-    // of whether blockers have been filed yet.
-    if (gatesBelow50 >= 2 || (openBlockers > 0 && completion < 50)) return 'not-ready'
+    // Not Ready: any gate below 10%, OR open blockers AND overall completion < 10%.
+    if (anyGateBelow10 || (openBlockers > 0 && completion < 10)) return 'not-ready'
 
     // At Risk: meaningful progress (>= 50% overall) but something is
     // jeopardizing the timeline — an open blocker or a single lagging gate.
     if (completion >= 50 && (openBlockers > 0 || gatesBelow50 >= 1)) return 'at-risk'
 
-    // In Progress: work has started and gates are progressing (below 80%) with
-    // nothing actively putting the release at risk.
-    if (completion > 0) return 'in-progress'
+    // In Progress: gates above 10%, OR completion > 10% AND open blockers.
+    if (allGatesAbove10 || (completion > 10 && openBlockers > 0)) return 'in-progress'
 
-    // Nothing started.
+    // Nothing started or very early stage.
     return 'not-ready'
   })()
 
