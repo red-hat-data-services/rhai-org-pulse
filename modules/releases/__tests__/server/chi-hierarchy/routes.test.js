@@ -80,7 +80,7 @@ describe('chi-hierarchy routes', () => {
   it('validatePayload rejects missing environments', async () => {
     const { validatePayload } = await import('../../../server/chi-hierarchy/routes.js')
     expect(validatePayload({})).toMatch(/environments/)
-    expect(validatePayload({ environments: {} })).toMatch(/prod and\/or stage/)
+    expect(validatePayload({ environments: {} })).toMatch(/prod, stage, and\/or latest/)
     expect(validatePayload(SAMPLE)).toBeNull()
   })
 
@@ -111,6 +111,13 @@ describe('chi-hierarchy routes', () => {
     expect(res._body.status).toBe('ok')
     expect(res._body.environments.prod.versionCount).toBe(1)
     expect(res._body.environments.stage.versionCount).toBe(0)
+  })
+
+  it('validatePayload accepts latest-only', async () => {
+    const { validatePayload } = await import('../../../server/chi-hierarchy/routes.js')
+    expect(validatePayload({
+      environments: { latest: { versions: [] } }
+    })).toBeNull()
   })
 
   it('POST /bulk rejects malformed payload', async () => {

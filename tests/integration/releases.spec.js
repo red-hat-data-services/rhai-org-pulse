@@ -2745,6 +2745,14 @@ test.describe('Releases CHI Hierarchy Report @releases', () => {
     expect(body.environments.prod.versions.length).toBeGreaterThan(0);
   });
 
+  test('CHI hierarchy API includes latest Konflux env in fixture', async ({ request }) => {
+    const res = await request.get('/api/modules/releases/chi-hierarchy/data');
+    expect(res.ok()).toBe(true);
+    const body = await res.json();
+    expect(body.environments.latest).toBeTruthy();
+    expect(body.environments.latest.source).toBe('konflux-clair-scan');
+  });
+
   test('CHI hierarchy report loads Prod summary and versions', async ({ page }) => {
     await page.goto('/#/releases/reports?report=container-health-index');
     await page.waitForLoadState('networkidle');
@@ -2769,6 +2777,20 @@ test.describe('Releases CHI Hierarchy Report @releases', () => {
     await expect(page.getByRole('button', { name: 'Stage', exact: true })).toHaveAttribute('aria-pressed', 'true');
     await expect(page.getByText('pyxis.stage.engineering.redhat.com').first()).toBeVisible();
     await expect(page.getByText('AI Core Dashboard').first()).toBeVisible();
+    expect(page.errors).toHaveLength(0);
+  });
+
+  test('Konflux builds toggle shows Konflux source and grading tip mentions rhel-vex', async ({ page }) => {
+    await page.goto('/#/releases/reports?report=container-health-index');
+    await page.waitForLoadState('networkidle');
+    await page.waitForTimeout(DEFAULT_PAGE_WAIT_TIME);
+
+    await page.getByRole('button', { name: 'Konflux builds', exact: true }).click();
+    await page.waitForTimeout(500);
+
+    await expect(page.getByRole('button', { name: 'Konflux builds', exact: true })).toHaveAttribute('aria-pressed', 'true');
+    await expect(page.getByText('konflux-clair-scan').first()).toBeVisible();
+    await expect(page.getByText('rhel-vex').first()).toBeAttached();
     expect(page.errors).toHaveLength(0);
   });
 
@@ -2889,18 +2911,19 @@ test.describe('Releases AI Planner tab @releases', () => {
     ).toContainText('AI-First Release Planner');
   });
 
-  test('Add to Plan reports when a feature has no matching release cycle', async ({ page }) => {
+  test('Add to Plan creates a cycle the pipeline never published', async ({ page }) => {
     await page.goto('/#/releases/plan?tab=ai-planner');
     await page.waitForLoadState('networkidle');
     await page.waitForTimeout(DEFAULT_PAGE_WAIT_TIME);
 
-    // 3.7 has no cycle in the catalog, so this must surface rather than fail silently.
+    // The pipeline publishes no 3.7 candidates, so this only works because the
+    // planner injects the feature and the cycle comes into being around it.
     await page.evaluate(() => window.postMessage({
       type: 'add-to-draft-plan',
       features: [{ key: 'RHAISTRAT-2426', version: '3.7 GA RHOAI RELEASE' }]
     }, window.location.origin));
 
-    await expect(page.getByText(/Nothing was added to Plan Approval/i)).toBeVisible();
+    await expect(page.getByText(/added to Plan Approval \(3\.7\)/i)).toBeVisible();
   });
 
   test('AI Planner API exposes failed FPDoR items', async ({ request }) => {

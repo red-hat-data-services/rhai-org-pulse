@@ -13,8 +13,12 @@ but deliberately does not use GitHub's native required Code Owner review.
   they own all of them.
 - An owner can be an individual GitHub user or a member of a GitHub team named
   in `CODEOWNERS`.
-- Only `APPROVED` reviews made on the current PR head count. A force-push,
-  rebase, or later change request invalidates the approval for this gate.
+- An eligible owner with repository write access can approve by leaving a
+  standalone `/lgtm` or `/approve` comment on the PR, or by submitting an
+  `APPROVED` review. The PR author and bot accounts cannot approve.
+- Only approvals made on the current PR head count. A push or rebase requires
+  a new comment or review. A later change request from the same owner revokes
+  their earlier approval.
 - Changes to `CODEOWNERS`, this workflow, or its evaluator always need an
   independent `org-pulse-maintainers` approval.
 - The intentionally unowned deployment-promotion manifests require an
@@ -22,13 +26,14 @@ but deliberately does not use GitHub's native required Code Owner review.
   image-promotion automation continues to update them directly.
 
 The status comment lists the changed ownership areas and the owners who can
-satisfy any outstanding requirement.
+satisfy any outstanding requirement. It also explains both comment commands.
 
 ## Implementation and trust boundary
 
 The workflow runs on `pull_request_target` and reads only GitHub API metadata:
-the base-branch `CODEOWNERS` file, changed paths, reviews, team membership, and
-repository permissions. It never checks out or executes pull-request code.
+the base-branch `CODEOWNERS` file, changed paths, reviews, PR comments and
+timeline, team membership, and repository permissions. It never checks out or
+executes pull-request code.
 
 It uses the existing `rhai-org-pulse` GitHub App to read team membership and
 write the `Ownership Gate` commit status. The merge queue re-evaluates every
