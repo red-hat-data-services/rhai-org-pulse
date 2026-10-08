@@ -511,7 +511,7 @@ tr:hover td{background:#f8fafc}
       <thead><tr>
         <th onclick="sort('Rank')"># ↕</th>
         <th onclick="sort('Score')" id="th-score" class="score-col" style="display:none">SCORE ↕</th>
-        <th onclick="sort('FPDoR')" style="cursor:pointer"><a href="https://redhat.atlassian.net/wiki/spaces/RHAI/pages/453312634/Feature+Planning+Definition+of+Ready+and+Checklist+for+Planning+DoD" target="_blank" style="color:inherit;text-decoration:none" title="Click to open FPDOR guide">FPDOR ↕</a></th>
+        <th onclick="sort('FPDoR')" style="cursor:pointer"><a href="https://redhat.atlassian.net/wiki/spaces/RHAI/pages/453312634/Feature+Planning+Definition+of+Ready+and+Checklist+for+Planning+DoD" target="_blank" rel="noopener noreferrer" style="color:inherit;text-decoration:none" title="Click to open FPDOR guide">FPDOR ↕</a></th>
         <th><span class="tip">RISK ⓘ<span class="tip-box">🔴 HIGH: any Critical field missing (Components, Target Version, Fix Version, PM, Delivery Owner) or 2+ High fields missing.<br>🟡 MEDIUM: exactly 1 High field missing, or Feature Sign-Off absent.<br>🟢 LOW: all Critical/High/Medium items pass.</span></span></th>
         <th><span class="tip">CONFIDENCE ⓘ<span class="tip-box">How likely this feature ships as planned. High = 8–9 of 10 similar features shipped on time. Medium = 5–7 of 10. Low = 3–5 of 10.<br><br>Based on: shipping history, FPDoR completeness, component velocity, RICE. Hover the confidence bar for feature-specific detail.</span></span></th>
         <th onclick="sort('Priority')">PRIORITY ↕</th>
@@ -3278,7 +3278,7 @@ function run(){
     if(read==='committed'&&r['Confidence']!=='committed') return false;
     if(read==='not-ready') {
       const fpdor = r['FPDoR'];
-      const fpdorStr = typeof fpdor === 'string' ? fpdor : (fpdor?.passedCount + '/' + fpdor?.totalCount || '0/0');
+      const fpdorStr = typeof fpdor === 'string' ? fpdor : ((fpdor?.passedCount ?? 0) + '/' + (fpdor?.totalCount ?? 0));
       if(fpdorStr === '17/17') return false;
     }
     if(place==='EA1+EA2'){if(r._place!=='EA1'&&r._place!=='EA2') return false;}
