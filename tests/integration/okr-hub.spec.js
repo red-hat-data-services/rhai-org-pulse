@@ -208,7 +208,11 @@ test.describe('OKR Hub timeline @okr-hub', function () {
       await route.fulfill({
         json: {
           labels: [0, 1],
-          datasets: [{ label: 'rhoai-3.4', data: [0, 1] }]
+          datasets: [{ label: 'rhoai-3.4', data: [0, 1] }],
+          statusData: {
+            labels: ['Open', 'In Progress'],
+            datasets: [{ label: 'rhoai-3.4', data: [1, 1] }]
+          }
         }
       });
     });
@@ -262,6 +266,7 @@ test.describe('OKR Hub timeline @okr-hub', function () {
     await page.getByRole('button', { name: '3.6 GA', exact: true }).click();
     await expect(page.getByText('Unreleased versions are excluded from the graph: 3.6 GA RHOAI RELEASE, 3.6 GA RHELAI RELEASE, 3.6 GA RHAII RELEASE.')).toBeVisible();
     await expect(page.getByRole('heading', { name: 'Cumulative Bug Count vs Days Since Release' })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Post-Release Bugs by Jira Status' })).toBeVisible();
     expect(summaryRequests).toEqual([]);
 
     await page.getByRole('button', { name: '3.4 GA', exact: true }).click();

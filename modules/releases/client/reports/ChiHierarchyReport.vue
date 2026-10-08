@@ -10,7 +10,48 @@
         <ArrowLeft :size="18" />
       </button>
       <div class="flex-1 min-w-0">
-        <h2 class="text-xl font-bold text-gray-900 dark:text-gray-100">Container Health Index</h2>
+        <div class="flex items-center gap-2 min-w-0">
+          <h2 class="text-xl font-bold text-gray-900 dark:text-gray-100">Container Health Index</h2>
+          <span class="relative group flex-shrink-0">
+            <HelpCircle
+              :size="16"
+              class="text-gray-400 dark:text-gray-500 cursor-help"
+              aria-label="How grades are calculated"
+            />
+            <div
+              class="absolute left-0 top-full mt-1.5 w-[22rem] sm:w-[26rem] p-3 text-xs leading-relaxed text-white bg-gray-900 dark:bg-gray-700 rounded-lg shadow-lg opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 transition-opacity pointer-events-none z-30"
+              role="tooltip"
+            >
+              <p class="font-semibold mb-1.5">How grades are calculated</p>
+              <template v-if="selectedEnv === 'latest'">
+                <p class="mb-1.5">
+                  Konflux builds uses official
+                  <span class="underline">Container Health Index</span>
+                  (Red Hat article 2803031) from the newest green Konflux clair-scan, not catalog HealthIndex and not a
+                  <code class="text-[0.7rem]">latest</code> image tag. Grades will not match Prod for the same image.
+                </p>
+                <p class="mb-1.5">
+                  The letter is the age of the oldest <strong>rhel-vex</strong> patched Critical/Important finding (Clair High → Important). Unpatched Clair findings and osv/go or osv/pypi (even when SCAN_OUTPUT lists them as patched) do not change the letter.
+                </p>
+                <ul class="list-disc pl-4 space-y-0.5 mb-1.5">
+                  <li>A — no rhel-vex patched Critical/Important</li>
+                  <li>B — oldest Critical ≤ 7d and Important ≤ 30d</li>
+                  <li>C — ≤ 30d / ≤ 90d</li>
+                  <li>D — ≤ 90d / ≤ 365d</li>
+                  <li>E — both ≤ 365d</li>
+                  <li>F — older than that</li>
+                </ul>
+                <p>Unknown: no succeeded on-push run, no clair-scan (for example FBC), or patched SCAN_OUTPUT with no Clair log. Multi-arch images use the worst A–F among clair-scan TaskRuns.</p>
+              </template>
+              <template v-else>
+                <p class="mb-1.5">
+                  Prod and Stage show Red Hat Container Health Index as published on the catalog (article 2803031), from catalog.redhat.com or Stage Pyxis.
+                </p>
+                <p>Advisory counts and grade dates come from that catalog snapshot. Image staleness is last-updated age over 14 days.</p>
+              </template>
+            </div>
+          </span>
+        </div>
         <p v-if="data?.fetchedAt" class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
           Snapshot: {{ formatDateTime(data.fetchedAt) }}
           <template v-if="currentEnv?.source">
@@ -61,7 +102,7 @@
             :aria-pressed="selectedEnv === envKey"
             @click="selectedEnv = envKey"
           >
-            {{ envKey === 'prod' ? 'Prod' : 'Stage' }}
+            {{ envLabel(envKey) }}
           </button>
         </div>
 
@@ -79,7 +120,7 @@
         </div>
 
         <p v-if="!currentEnv" class="text-sm text-amber-600 dark:text-amber-400">
-          No {{ selectedEnv }} snapshot in this payload.
+          No {{ envLabel(selectedEnv) }} snapshot in this payload.
         </p>
       </div>
 
@@ -121,7 +162,9 @@
             <span
               class="inline-flex items-center justify-center w-6 h-6 rounded text-xs font-bold"
               :class="chiGradeBadgeClass(grade)"
-            >{{ grade }}</span>
+              :title="grade"
+              :aria-label="grade"
+            >{{ chiGradeChipLabel(grade) }}</span>
             × {{ count }}
           </span>
         </div>
@@ -131,7 +174,7 @@
         v-else-if="currentEnv"
         class="text-center py-12 text-sm text-gray-500 dark:text-gray-400"
       >
-        No versions available for {{ selectedEnv }}.
+        No versions available for {{ envLabel(selectedEnv) }}.
       </div>
 
       <section v-if="currentVersion" class="space-y-3">
@@ -190,8 +233,8 @@
                 >
                   <td class="px-4 py-2">
                     <a
-                      v-if="image.catalogUrl"
-                      :href="image.catalogUrl"
+                      v-if="imageLink(image)"
+                      :href="imageLink(image)"
                       target="_blank"
                       rel="noopener noreferrer"
                       class="text-primary-600 dark:text-primary-400 hover:underline font-medium"
@@ -231,7 +274,7 @@
 
 <script setup>
 import { computed, inject, onMounted, ref, watch } from 'vue'
-import { ArrowLeft, ChevronRight, Shield } from 'lucide-vue-next'
+import { ArrowLeft, ChevronRight, HelpCircle, Shield } from 'lucide-vue-next'
 import { useChiHierarchy } from './composables/useChiHierarchy'
 
 const STALE_AGE_DAYS = 14
@@ -243,7 +286,7 @@ const CHI_GRADE_CLASSES = {
   D: 'bg-orange-500 text-white',
   E: 'bg-amber-600 text-white',
   F: 'bg-red-700 text-white',
-  Unknown: 'bg-gray-400 text-white'
+  Unknown: 'bg-gray-200 dark:bg-gray-600 text-gray-700 dark:text-gray-200 ring-1 ring-inset ring-gray-400/80 dark:ring-gray-500'
 }
 
 const nav = inject('moduleNav')
@@ -253,7 +296,22 @@ const selectedEnv = ref('prod')
 const selectedVersionId = ref('')
 const expanded = ref({})
 
-const envKeys = ['prod', 'stage']
+const GRADE_SORT = ['A', 'B', 'C', 'D', 'E', 'F', 'Unknown']
+const envKeys = ['prod', 'stage', 'latest']
+
+function chiGradeChipLabel(grade) {
+  if (!grade) return '—'
+  return grade === 'Unknown' ? '?' : grade
+}
+const ENV_LABELS = { prod: 'Prod', stage: 'Stage', latest: 'Konflux builds' }
+
+function envLabel(key) {
+  return ENV_LABELS[key] || key
+}
+
+function imageLink(image) {
+  return image?.catalogUrl || image?.konfluxUrl || ''
+}
 
 const currentEnv = computed(() => data.value?.environments?.[selectedEnv.value] || null)
 
@@ -272,7 +330,9 @@ const currentVersion = computed(() => {
 
 const gradeDistributionEntries = computed(() => {
   const dist = currentVersion.value?.summary?.gradeDistribution || {}
-  return Object.entries(dist).sort((a, b) => a[0].localeCompare(b[0]))
+  return Object.entries(dist).sort(
+    (a, b) => GRADE_SORT.indexOf(a[0]) - GRADE_SORT.indexOf(b[0])
+  )
 })
 
 watch(versionOptions, (opts) => {

@@ -1,6 +1,6 @@
 # Prevents unauthorized changes to AI agent configs (AGENTS.md, .claude/, etc.)
 # and this workflow file itself. Uses the commit status API so that multiple
-# workflow runs (pull_request_target + pull_request_review) update a single
+# workflow runs (pull_request_target + pull_request_review + issue_comment) update a single
 # status rather than creating separate check runs. Add "AI Config Guard" as a
 # required status check in branch protection to enforce.
 #
@@ -26,6 +26,11 @@ on:
       - opened
       - synchronize
       - reopened
+  issue_comment:
+    types:
+      - created  # Count owner approval comments on PRs
+      - edited   # Re-evaluate if an approval command is changed
+      - deleted  # Re-evaluate if an approval command is removed
   merge_group:
 
 jobs:
@@ -51,7 +56,7 @@ jobs:
             -f description="Merge queue — already verified on PR"
 
   check-ai-configs:
-    if: github.event_name != 'merge_group'
+    if: github.event_name != 'merge_group' && (github.event_name != 'issue_comment' || github.event.issue.pull_request != null)
     runs-on: ubuntu-latest
     permissions:
       pull-requests: write  # To post comments and read reviews
@@ -70,12 +75,19 @@ jobs:
           EVENT_NAME: ${{ github.event_name }}
           PR_NUMBER_PR: ${{ github.event.pull_request.number }}
           PR_NUMBER_REVIEW: ${{ github.event.review.pull_request.number }}
+          PR_NUMBER_COMMENT: ${{ github.event.issue.number }}
           HEAD_SHA_PR: ${{ github.event.pull_request.head.sha }}
           HEAD_SHA_REVIEW: ${{ github.event.review.pull_request.head.sha }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REPO: ${{ github.repository }}
         run: |
           if [ "$EVENT_NAME" = "pull_request_review" ]; then
             echo "pr_number=${PR_NUMBER_PR:-$PR_NUMBER_REVIEW}" >> $GITHUB_OUTPUT
             echo "head_sha=${HEAD_SHA_PR:-$HEAD_SHA_REVIEW}" >> $GITHUB_OUTPUT
+          elif [ "$EVENT_NAME" = "issue_comment" ]; then
+            COMMENT_HEAD_SHA=$(gh api "repos/${REPO}/pulls/${PR_NUMBER_COMMENT}" --jq '.head.sha')
+            echo "pr_number=$PR_NUMBER_COMMENT" >> $GITHUB_OUTPUT
+            echo "head_sha=$COMMENT_HEAD_SHA" >> $GITHUB_OUTPUT
           else
             echo "pr_number=$PR_NUMBER_PR" >> $GITHUB_OUTPUT
             echo "head_sha=$HEAD_SHA_PR" >> $GITHUB_OUTPUT
@@ -113,11 +125,11 @@ jobs:
             echo "EOF" >> $GITHUB_OUTPUT
           fi
 
-      # On pull_request_review, the status was already set by the earlier
+      # On review and comment events, the status was already set by the earlier
       # pull_request_target run. Skip to avoid 403 on fork PRs where the
       # GITHUB_TOKEN lacks statuses:write on the base repo.
       - name: Set status — no sensitive files changed
-        if: steps.check_sensitive_files.outputs.detected != 'true' && github.event_name != 'pull_request_review'
+        if: steps.check_sensitive_files.outputs.detected != 'true' && github.event_name == 'pull_request_target'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           HEAD_SHA: ${{ steps.metadata.outputs.head_sha }}
@@ -136,17 +148,19 @@ jobs:
           PR_NUMBER: ${{ steps.metadata.outputs.pr_number }}
           MODIFIED_FILES_LIST: ${{ steps.check_sensitive_files.outputs.modified_files }}
         run: |
-          COMMENT_EXISTS=$(gh pr view "$PR_NUMBER" --repo "$REPO" --json comments -q '.comments[] | select(.author.login=="github-actions") | select(.body | contains("AI Configuration Guard")) | .id' | head -1)
-          if [ -z "$COMMENT_EXISTS" ]; then
-            COMMENT_BODY=$(printf "**AI Configuration Guard**\n\nThis PR modifies sensitive AI configuration files or workflows that require approval from a member of: **@%s**\n\nThe following sensitive files were detected:\n%s\nAn approval from an authorized team member is required before this PR can be merged." "${ALLOWED_APPROVER_TEAM}" "${MODIFIED_FILES_LIST}")
+          COMMENT_BODY=$(printf "**AI Configuration Guard**\n\nThis PR modifies sensitive AI configuration files or workflows that require approval from a member of: **@%s**\n\nThe following sensitive files were detected:\n%s\nAn authorized team member can approve by leaving a standalone \`/lgtm\` or \`/approve\` comment on this PR, or by submitting an approving review." "${ALLOWED_APPROVER_TEAM}" "${MODIFIED_FILES_LIST}")
+          COMMENT_ID=$(gh api "repos/${REPO}/issues/${PR_NUMBER}/comments" --paginate --jq '.[] | select(.user.login == "github-actions[bot]" or .user.login == "github-actions") | select((.body // "") | startswith("**AI Configuration Guard**")) | .id' | sed -n '1p')
+          if [ -z "$COMMENT_ID" ]; then
             gh pr comment "$PR_NUMBER" --repo "$REPO" --body "$COMMENT_BODY"
+          elif [ "$(gh api "repos/${REPO}/issues/comments/${COMMENT_ID}" --jq '.body')" != "$COMMENT_BODY" ]; then
+            gh api "repos/${REPO}/issues/comments/${COMMENT_ID}" -X PATCH -f body="$COMMENT_BODY"
           else
-            echo "Comment already exists (ID: $COMMENT_EXISTS), skipping duplicate."
+            echo "Guard comment is current (ID: $COMMENT_ID)."
           fi
 
-      # Generates "APP_TOKEN" to verify the reviewer belongs to the team of
+      # Generates "APP_TOKEN" to verify the approver belongs to the team of
       # approvers AND to write commit statuses. The GITHUB_TOKEN on
-      # pull_request_review events lacks statuses:write for fork PRs, so the
+      # review and comment events lacks statuses:write for fork PRs, so the
       # App token is used for all status writes in the sensitive-files path.
       - name: Generate GitHub App token
         id: app-token
@@ -156,7 +170,7 @@ jobs:
           app-id: ${{ secrets.APP_ID }}
           private-key: ${{ secrets.APP_PRIVATE_KEY }}
 
-      - name: Check for team approval and set status
+      - name: Check for team review or comment approval and set status
         if: steps.check_sensitive_files.outputs.detected == 'true'
         env:
           GH_TOKEN: ${{ steps.app-token.outputs.token }}
@@ -169,25 +183,27 @@ jobs:
             exit 1
           fi
 
-          # App token is used for all calls: team membership, PR reviews, and
-          # commit status writes. This ensures fork PRs work (GITHUB_TOKEN on
-          # pull_request_review lacks statuses:write for forks).
-          REVIEWS=$(gh pr view "$PR_NUMBER" --repo "$REPO" --json reviews -q '.reviews[] | select(.state=="APPROVED") | .author.login')
+          # App token is used for team membership, PR reviews and comments,
+          # and commit status writes. This ensures fork PRs work (GITHUB_TOKEN
+          # on review and comment events lacks statuses:write for forks).
+          REVIEWS=$(gh api "repos/${REPO}/pulls/${PR_NUMBER}/reviews" --paginate --jq '.[] | select(.state == "APPROVED") | .user.login')
+          # Only a standalone command counts; text mentioning the command does not.
+          COMMENT_APPROVERS=$(gh api "repos/${REPO}/issues/${PR_NUMBER}/comments" --paginate --jq '.[] | select((.body // "") | test("^[[:space:]]*/(lgtm|approve)[[:space:]]*$"; "i")) | .user.login')
 
           ORG=$(echo "${ALLOWED_APPROVER_TEAM}" | cut -d'/' -f1)
           TEAM_SLUG=$(echo "${ALLOWED_APPROVER_TEAM}" | cut -d'/' -f2)
-          TEAM_MEMBERS=$(gh api "/orgs/${ORG}/teams/${TEAM_SLUG}/members" -q '.[].login')
+          TEAM_MEMBERS=$(gh api "/orgs/${ORG}/teams/${TEAM_SLUG}/members" --paginate -q '.[].login')
 
           APPROVED=false
           APPROVER=""
-          while IFS= read -r reviewer; do
-            [ -z "$reviewer" ] && continue
-            if echo "$TEAM_MEMBERS" | grep -qx "$reviewer"; then
+          while IFS= read -r approver; do
+            [ -z "$approver" ] && continue
+            if echo "$TEAM_MEMBERS" | grep -Fqix -- "$approver"; then
               APPROVED=true
-              APPROVER="$reviewer"
+              APPROVER="$approver"
               break
             fi
-          done <<< "$REVIEWS"
+          done <<< "$REVIEWS"$'\n'"$COMMENT_APPROVERS"
 
           if [ "$APPROVED" = true ]; then
             echo "Approved by @$APPROVER (member of ${ALLOWED_APPROVER_TEAM})."
@@ -196,9 +212,9 @@ jobs:
               -f context="${STATUS_CONTEXT}" \
               -f description="Approved by @${APPROVER}"
           else
-            echo "No approval from ${ALLOWED_APPROVER_TEAM} yet."
+            echo "No review or /lgtm or /approve comment from ${ALLOWED_APPROVER_TEAM} yet."
             gh api "repos/${REPO}/statuses/${HEAD_SHA}" \
               -f state=failure \
               -f context="${STATUS_CONTEXT}" \
-              -f description="Requires approval from ${ALLOWED_APPROVER_TEAM}"
+              -f description="Requires owner review or /lgtm or /approve comment"
           fi
