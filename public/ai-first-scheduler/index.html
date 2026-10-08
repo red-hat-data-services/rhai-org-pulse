@@ -3902,12 +3902,25 @@ async function fetchOutcomes() {
     const data = await res.json();
     if (data && data.outcomes && data.outcomes.length > 0) {
       outcomeData = data;
+      mapFeaturesToOutcomes();
       populateOutcomeDropdown();
       run();
     }
   } catch (err) {
     console.error('Failed to fetch outcomes:', err);
   }
+}
+
+function mapFeaturesToOutcomes() {
+  if (!outcomeData || !outcomeData.featureOutcomeMap) return;
+
+  // Apply outcome mapping to all features
+  allData.forEach(feature => {
+    const key = feature['Key'];
+    if (key && outcomeData.featureOutcomeMap[key]) {
+      feature['Outcome'] = outcomeData.featureOutcomeMap[key];
+    }
+  });
 }
 
 function populateOutcomeDropdown() {
