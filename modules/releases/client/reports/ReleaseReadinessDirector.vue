@@ -1218,7 +1218,7 @@ function componentStatusClass(comp) {
   let tfaTotal = 0
   let allProductDone = true
   for (const p of phases) {
-    const tile = p.tiles.find(t => t.component === comp)
+    const tile = (p.tiles || []).find(t => t.component === comp)
     if (!tile) continue
     failedOpen += (tile.failed_breakdown?.new || 0) + (tile.failed_breakdown?.in_progress || 0)
     if (tile.tfa_breakdown) {
