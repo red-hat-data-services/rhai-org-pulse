@@ -29,7 +29,7 @@ const PRIORITY_OUTCOMES = [
   'RHAISTRAT-1498', // Eval Hub
   'RHAISTRAT-1339', // AI Hub incl MCP
   'RHAISTRAT-1066', // Multitenancy
-  'RHAISTRAT-155',  // (BYOA — Bring Your Own Agent)
+  // RHAISTRAT-155 already listed above (Secure Agent Onboarding)
   'RHAISTRAT-2875', // AI Grid MVP
   'RHAISTRAT-1088', // vLLM Omni
   'RHAISTRAT-2604', // (check for exact key)
