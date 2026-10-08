@@ -508,7 +508,7 @@
 
         <div class="p-4 space-y-6">
           <!-- Build Milestones -->
-          <div v-if="releaseCycleMetrics.phases?.length">
+          <div v-if="releaseCyclePhases.length">
             <p class="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-2">Build Milestones — days since code freeze</p>
             <div class="overflow-x-auto">
               <table class="w-full text-xs border-collapse">
@@ -521,11 +521,11 @@
                   </tr>
                 </thead>
                 <tbody class="divide-y divide-gray-100 dark:divide-gray-700">
-                  <tr v-for="phase in releaseCycleMetrics.phases" :key="phase.epic_key || phase.phase" class="hover:bg-gray-50 dark:hover:bg-gray-750">
+                  <tr v-for="phase in releaseCyclePhases" :key="phase.epic_key || phase.phase" class="hover:bg-gray-50 dark:hover:bg-gray-750">
                     <td class="px-3 py-2 font-medium text-gray-800 dark:text-gray-200">{{ phase.phase }}</td>
                     <td class="px-3 py-2 text-gray-500 dark:text-gray-400">{{ formatMetricDate(releaseCycleMetrics.code_freeze_date) }}</td>
-                    <td class="px-3 py-2 text-gray-700 dark:text-gray-300">{{ formatMetricDate(phase.build_ready_date) }}</td>
-                    <td class="px-3 py-2" :class="daysClass(phase.days_since_code_freeze, 5, 10)">{{ daysLabel(phase.days_since_code_freeze) }}</td>
+                    <td class="px-3 py-2 text-gray-700 dark:text-gray-300">{{ phase.build_ready_date ? formatMetricDate(phase.build_ready_date) : missingMetricLabel('build_received', phase) }}</td>
+                    <td class="px-3 py-2" :class="daysClass(phase.days_since_code_freeze, 5, 10)">{{ phase.build_ready_date ? daysLabel(phase.days_since_code_freeze) : 'Pending' }}</td>
                   </tr>
                 </tbody>
               </table>
@@ -533,7 +533,7 @@
           </div>
 
           <!-- Test Execution Timelines -->
-          <div v-if="releaseCycleMetrics.phases?.length">
+          <div v-if="releaseCyclePhases.length">
             <p class="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-2">Test Execution Timelines — working days since build received</p>
             <div class="overflow-x-auto">
               <table class="w-full text-xs border-collapse">
@@ -549,14 +549,14 @@
                   </tr>
                 </thead>
                 <tbody class="divide-y divide-gray-100 dark:divide-gray-700">
-                  <tr v-for="phase in releaseCycleMetrics.phases" :key="phase.epic_key || phase.phase" class="hover:bg-gray-50 dark:hover:bg-gray-750">
+                  <tr v-for="phase in releaseCyclePhases" :key="phase.epic_key || phase.phase" class="hover:bg-gray-50 dark:hover:bg-gray-750">
                     <td class="px-3 py-2 font-medium text-gray-800 dark:text-gray-200">{{ phase.phase }}</td>
-                    <td class="px-3 py-2 text-gray-500 dark:text-gray-400">{{ formatMetricDate(phase.build_ready_date) }}</td>
-                    <td class="px-3 py-2" :class="daysClass(phase.days_to_test_started, 3, 7)">{{ formatMetricDate(phase.test_started_date) }} {{ daysLabel(phase.days_to_test_started) }}</td>
-                    <td class="px-3 py-2" :class="daysClass(phase.days_to_test_finished, 8, 15)">{{ formatMetricDate(phase.test_finished_date) }} {{ daysLabel(phase.days_to_test_finished) }}</td>
-                    <td class="px-3 py-2" :class="daysClass(phase.days_to_tfas_passed, 3, 7)">{{ formatMetricDate(phase.tfas_passed_date) }} {{ daysLabel(phase.days_to_tfas_passed) }}</td>
-                    <td class="px-3 py-2" :class="daysClass(phase.days_to_tfas_triaged, 5, 10)">{{ formatMetricDate(phase.tfas_triaged_date) }} {{ daysLabel(phase.days_to_tfas_triaged) }}</td>
-                    <td class="px-3 py-2" :class="daysClass(phase.days_to_blockers_resolved, 5, 12)">{{ formatMetricDate(phase.blockers_resolved_date) }} {{ daysLabel(phase.days_to_blockers_resolved) }}</td>
+                    <td class="px-3 py-2 text-gray-500 dark:text-gray-400">{{ phase.build_ready_date ? formatMetricDate(phase.build_ready_date) : missingMetricLabel('build_received', phase) }}</td>
+                    <td class="px-3 py-2" :class="daysClass(phase.days_to_test_started, 3, 7)">{{ phase.test_started_date ? metricDateAndDays(phase.test_started_date, phase.days_to_test_started) : missingMetricLabel('test_started', phase) }}</td>
+                    <td class="px-3 py-2" :class="daysClass(phase.days_to_test_finished, 8, 15)">{{ phase.test_finished_date ? metricDateAndDays(phase.test_finished_date, phase.days_to_test_finished) : missingMetricLabel('test_finished', phase) }}</td>
+                    <td class="px-3 py-2" :class="daysClass(phase.days_to_tfas_passed, 3, 7)">{{ phase.tfas_passed_date ? metricDateAndDays(phase.tfas_passed_date, phase.days_to_tfas_passed) : missingMetricLabel('tfas_passed', phase) }}</td>
+                    <td class="px-3 py-2" :class="daysClass(phase.days_to_tfas_triaged, 5, 10)">{{ phase.tfas_triaged_date ? metricDateAndDays(phase.tfas_triaged_date, phase.days_to_tfas_triaged) : missingMetricLabel('tfas_triaged', phase) }}</td>
+                    <td class="px-3 py-2" :class="daysClass(phase.days_to_blockers_resolved, 5, 12)">{{ phase.blockers_resolved_date ? metricDateAndDays(phase.blockers_resolved_date, phase.days_to_blockers_resolved) : missingMetricLabel('blockers_resolved', phase) }}</td>
                   </tr>
                 </tbody>
               </table>
@@ -615,6 +615,7 @@ import { ArrowLeft, Shield } from 'lucide-vue-next'
 import { useReleaseReadiness } from './composables/useReleaseReadiness'
 import { useReleaseSelector, parseReleaseId } from '../composables/useReleaseSelector.js'
 import { isNoWorkResolution, isReleasedStatus, releaseDisplayStatus } from './release-readiness-status.js'
+import { missingMilestoneLabel, visibleReleaseCyclePhases } from './release-cycle-metrics.js'
 
 const moduleNav = inject('moduleNav')
 const props = defineProps({
@@ -1221,6 +1222,22 @@ function phasePct(phase) {
 // --- Release Cycle Metrics ---
 
 const releaseCycleMetrics = computed(() => data.value?.release_cycle_metrics || null)
+const releaseCyclePhases = computed(() => visibleReleaseCyclePhases(releaseCycleMetrics.value?.phases || []))
+
+const releaseCycleContext = computed(() => ({
+  tfaDone: testSignOffDone.value,
+  tfaTotal: testSignOffTotal.value,
+  blockersOpen: productBlockers.value?.total_open || 0
+}))
+
+function missingMetricLabel(kind, phase) {
+  return missingMilestoneLabel(kind, phase, releaseCycleContext.value)
+}
+
+function metricDateAndDays(date, days) {
+  const dayText = daysLabel(days)
+  return dayText === '—' ? formatMetricDate(date) : `${formatMetricDate(date)} ${dayText}`
+}
 
 function formatMetricDate(dateStr) {
   if (!dateStr) return '—'

@@ -3,6 +3,7 @@ const { DEFAULT_PAGE_WAIT_TIME } = require('./constants');
 const { setupErrorTracking, logCapturedErrors } = require('./helpers');
 const { unexpectedDemoResourceErrors, dismissHygieneWelcome } = require('./execute-helpers');
 const cveSustainingFixture = require('../../fixtures/releases/cve-sustaining/latest.json');
+const releaseReadinessFixture = require('../../fixtures/releases/release-readiness/rhoai-3.5.EA2.json');
 
 /**
  * Integration tests for Releases module
@@ -1560,7 +1561,18 @@ test.describe('Releases Release Readiness @releases', () => {
     expect(page.errors).toHaveLength(0);
   });
 
-  test('release readiness shows every release-cycle timeline in one table', async ({ page }) => {
+  test('release readiness shows active timelines with meaningful pending states', async ({ page }) => {
+    await page.route('**/api/modules/releases/release-readiness/versions', route => route.fulfill({
+      json: {
+        versions: [releaseReadinessFixture.version],
+        releases: [{ id: releaseReadinessFixture.version, state: 'active' }],
+        default_version: releaseReadinessFixture.version
+      }
+    }));
+    await page.route('**/api/modules/releases/release-readiness?version=*', route => route.fulfill({
+      json: releaseReadinessFixture
+    }));
+
     await page.goto('/#/releases/reports?report=release-readiness&version=3.5&families=rhoai&phases=ea2');
     await page.waitForLoadState('networkidle');
     await page.waitForTimeout(DEFAULT_PAGE_WAIT_TIME);
@@ -1577,6 +1589,11 @@ test.describe('Releases Release Readiness @releases', () => {
     ]) {
       await expect(timelineTable.getByRole('cell', { name: phase, exact: true })).toBeVisible();
     }
+
+    await expect(timelineTable.getByRole('cell', { name: 'Future Demo Validation', exact: true })).toHaveCount(0);
+    await expect(timelineTable.getByText('Not started', { exact: true }).first()).toBeVisible();
+    await expect(timelineTable.getByText('18 / 21 done', { exact: true }).first()).toBeVisible();
+    await expect(timelineTable.getByText('2 open', { exact: true }).first()).toBeVisible();
 
     const nightlyPhaseButton = page.getByRole('button', { name: 'Nightly', exact: true });
     await expect(nightlyPhaseButton).toBeVisible();

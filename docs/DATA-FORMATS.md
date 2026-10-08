@@ -2941,9 +2941,9 @@ version string (spaces and special chars replaced with `_`).
 | `release_cycle_metrics.code_freeze_date` | `string \| null` | `YYYY-MM-DD` from Product Pages |
 | `release_cycle_metrics.phases[].phase` | `string` | Test-phase Epic summary from Jira (e.g. `"RC1 Builds Testing"`, `"Nightly Build Wk2 - Jun 22"`) |
 | `release_cycle_metrics.phases[].epic_key` | `string` | Jira Epic key (e.g. `"RHOAIENG-68791"`) |
-| `release_cycle_metrics.phases[].build_ready_date` | `string \| null` | `YYYY-MM-DD`; source: manual override, PP schedule task matching the RC label, or Jira epic Done date |
+| `release_cycle_metrics.phases[].build_ready_date` | `string \| null` | `YYYY-MM-DD`; source order: exact manual override, matching Product Pages RHOAI RC build task, confirmed local `rcN_build_received_date`, Jira `RCn Push to Stage` resolution, then Jira `Prepare RCn` resolution. Candidates outside Code Freeze → Test Started are rejected. |
 | `release_cycle_metrics.phases[].days_since_code_freeze` | `number \| null` | Working days (Mon–Fri) between `code_freeze_date` and `build_ready_date`; `null` if either is unknown |
-| `release_cycle_metrics.phases[].test_started_date` | `string \| null` | Jira test-phase epic first became active (proxy: `updated` timestamp) |
+| `release_cycle_metrics.phases[].test_started_date` | `string \| null` | First Jira transition of the test-phase Epic to In Progress, provided the Epic is still In Progress or Done; reverted transitions are ignored |
 | `release_cycle_metrics.phases[].days_to_test_started` | `number \| null` | Working days from `build_ready_date` to `test_started_date` |
 | `release_cycle_metrics.phases[].test_finished_date` | `string \| null` | Jira test-phase epic Done (`resolutiondate` or `updated`) |
 | `release_cycle_metrics.phases[].days_to_test_finished` | `number \| null` | Working days from `build_ready_date` to `test_finished_date` |
@@ -2958,9 +2958,11 @@ version string (spaces and special chars replaced with `_`).
 
 **Notes:**
 - All day counts use Mon–Fri only (no public holidays excluded).
-- Dates are proxies from Jira `updated` timestamps; they represent when Jira recorded the transition, not the exact moment it occurred.
+- Jira `updated` is used only for the explicitly documented completion fallbacks; Test Started comes from changelog status history.
 - The TFA and blocker dates are release-level (not per-RC); the same date appears in each phase with different `days_to_*` values.
-- `null` means the milestone has not occurred or data is unavailable; the dashboard renders `—` for null.
+- `null` means the milestone has not occurred or its date is unavailable. The dashboard omits phases with no recorded milestone at all. For an active phase, it renders a state such as `Not started`, `In progress`, the current TFA count, or the number of open blockers instead of a wall of dashes.
+
+_This section was updated with assistance from Codex._
 
 ---
 
