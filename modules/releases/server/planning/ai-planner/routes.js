@@ -213,24 +213,6 @@ module.exports = function registerAIPlannerRoutes(router, context) {
 
   /**
    * @openapi
-   * /api/modules/releases/planning/ai-planner/outcomes:
-   *   get:
-   *     summary: Fetch 22 prioritized outcomes from Jira plan with in-plan feature counts
-   *     tags: [releases-planning]
-   *     responses:
-   *       200:
-   *         description: Array of outcomes with child feature counts and metrics
-   */
-  router.get('/ai-planner/outcomes', requireAuth, requireScope('releases:read'), async function(req, res) {
-    res.json({
-      outcomes: [],
-      generatedAt: new Date().toISOString(),
-      version: '3.6'
-    });
-  });
-
-  /**
-   * @openapi
    * /api/modules/releases/planning/ai-planner:
    *   get:
    *     summary: AI Planner snapshot for the tab (live data from feature-readiness)
