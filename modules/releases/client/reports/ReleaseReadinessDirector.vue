@@ -1080,16 +1080,6 @@ const decisionGates = computed(() => {
   return gates.filter(g => g.total > 0)
 })
 
-// Weighted completion across every gate: total done / total items. Reflects the
-// real percentage of release work completed.
-const releaseCompletionPct = computed(() => {
-  const gates = decisionGates.value
-  const total = gates.reduce((s, g) => s + g.total, 0)
-  if (!total) return 0
-  const done = gates.reduce((s, g) => s + g.done, 0)
-  return Math.round((done / total) * 100)
-})
-
 // Whole days from today until the GA date (negative once GA has passed).
 // null when the schedule has no GA date, so any GA-based rule degrades to a
 // no-op rather than firing on missing data (common for EA milestones).
@@ -1102,59 +1092,63 @@ const daysToGa = computed(() => {
   return Math.round((ga - today) / 86400000)
 })
 
-// Schedule risk: GA is imminent (within 3 days, and not already past) but the
-// release is not yet 80% complete. Used to escalate the decision to At Risk.
-const GA_NEAR_DAYS = 3
-const gaScheduleRisk = computed(() => {
-  const d = daysToGa.value
-  return d !== null && d >= 0 && d <= GA_NEAR_DAYS && releaseCompletionPct.value < 80
-})
-
+// Release decision is computed locally using decision_config from the pipeline.
+// This allows real-time updates and keeps all decision logic in one place.
+// Config from pipeline controls which gates to use for early states (Not Ready / In Progress).
 const releaseDecision = computed(() => {
+  const config = director.value?.decision_config || {
+    early_state_gates: ['Test Execution', 'Test Plan Sign Off'],
+    ga_proximity_days: 3
+  }
   const gates = decisionGates.value
   if (!gates.length) return 'not-ready'
 
   const gatePct = g => (g.total > 0 ? (g.done / g.total) * 100 : 0)
   const openBlockers = productBlockers.value?.total_open || 0
-  const completion = releaseCompletionPct.value // weighted, real completion
+
+  // Filter gates based on config for early states (Not Ready / In Progress)
+  const earlyGates = gates.filter(g => config.early_state_gates.includes(g.name))
+  const hasEarlyGates = earlyGates.length > 0
+
+  // Metrics for early state gates
+  const earlyTotal = earlyGates.reduce((s, g) => s + g.total, 0)
+  const earlyDone = earlyGates.reduce((s, g) => s + g.done, 0)
+  const earlyCompletion = earlyTotal > 0 ? (earlyDone / earlyTotal) * 100 : 0
+  const earlyAnyBelow10 = hasEarlyGates ? earlyGates.some(g => gatePct(g) < 10) : true
+  const earlyAllAbove10 = hasEarlyGates ? earlyGates.every(g => gatePct(g) > 10) : false
+
+  // Metrics for ALL gates (used for advanced states)
+  const allTotal = gates.reduce((s, g) => s + g.total, 0)
+  const allDone = gates.reduce((s, g) => s + g.done, 0)
+  const allCompletion = allTotal > 0 ? (allDone / allTotal) * 100 : 0
   const gatesBelow50 = gates.filter(g => gatePct(g) < 50).length
   const allGatesAbove80 = gates.every(g => gatePct(g) >= 80)
   const allGates100 = gates.every(g => gatePct(g) >= 100)
-  const allGatesAbove10 = gates.every(g => gatePct(g) > 10)
-  const anyGateBelow10 = gates.some(g => gatePct(g) < 10)
 
-  // Base decision from gates + blockers, evaluated best to worst; the strongest
-  // fully-satisfied state wins.
-  const base = (() => {
-    // Ready to Ship: every gate 100% complete and zero open blockers.
-    if (allGates100 && openBlockers === 0) return 'ready-to-ship'
+  // Days to GA for blocker proximity check
+  const d = daysToGa.value
+  const gaProximityDays = config.ga_proximity_days || 3
 
-    // On Track: every gate at/above 80% and no open blockers.
-    if (allGatesAbove80 && openBlockers === 0) return 'on-track'
+  // Evaluate from best to worst state
+  // Ready to Ship: ALL gates 100% AND no blockers
+  if (allGates100 && openBlockers === 0) return 'ready-to-ship'
 
-    // Not Ready: any gate below 10%, OR open blockers AND overall completion < 10%.
-    if (anyGateBelow10 || (openBlockers > 0 && completion < 10)) return 'not-ready'
+  // On Track: ALL gates >= 80% AND no blockers
+  if (allGatesAbove80 && openBlockers === 0) return 'on-track'
 
-    // At Risk: meaningful progress (>= 50% overall) but something is
-    // jeopardizing the timeline — an open blocker or a single lagging gate.
-    if (completion >= 50 && (openBlockers > 0 || gatesBelow50 >= 1)) return 'at-risk'
+  // At Risk: blockers > 0 AND within GA proximity days (regardless of completion)
+  if (openBlockers > 0 && d !== null && d >= 0 && d <= gaProximityDays) return 'at-risk'
 
-    // In Progress: gates above 10%, OR completion > 10% AND open blockers.
-    if (allGatesAbove10 || (completion > 10 && openBlockers > 0)) return 'in-progress'
+  // At Risk: meaningful progress (>= 50%) but blockers or lagging gate
+  if (allCompletion >= 50 && (openBlockers > 0 || gatesBelow50 >= 1)) return 'at-risk'
 
-    // Nothing started or very early stage.
-    return 'not-ready'
-  })()
+  // Not Ready: any early gate below 10%, OR blockers with < 10% early completion
+  if (earlyAnyBelow10 || (openBlockers > 0 && earlyCompletion < 10)) return 'not-ready'
 
-  // Schedule-risk overlay: if GA is within 3 days and the release is under 80%
-  // complete, escalate to At Risk. Only escalate — never soften an already
-  // worse state (e.g. Not Ready stays Not Ready). Has no effect when the GA
-  // date is missing, so EA releases without a GA date are unaffected.
-  if (gaScheduleRisk.value && (base === 'in-progress' || base === 'on-track')) {
-    return 'at-risk'
-  }
+  // In Progress: all early gates > 10%, OR early completion > 10% with blockers
+  if (earlyAllAbove10 || (earlyCompletion > 10 && openBlockers > 0)) return 'in-progress'
 
-  return base
+  return 'not-ready'
 })
 
 // --- Component Filter ---
