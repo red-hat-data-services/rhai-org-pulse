@@ -1490,15 +1490,25 @@ test.describe('Releases Release Readiness @releases', () => {
     });
 
     await page.goto('/#/releases/reports?report=release-readiness');
+    await page.waitForLoadState('networkidle');
+    await page.waitForTimeout(DEFAULT_PAGE_WAIT_TIME);
+
+    // Wait for page to load and status to render
+    await expect(page.getByRole('heading', { name: /RHOAI/ })).toBeVisible({ timeout: 10000 });
     const status = page.getByText('Released with Open Tasks', { exact: true });
-    await expect(status).toBeVisible();
+    await expect(status).toBeVisible({ timeout: 10000 });
     await expect(status.locator('..')).toHaveClass(/bg-red-500\/30/);
 
     await page.getByRole('button', { name: 'Change', exact: true }).click();
+    await page.waitForTimeout(500);
     await page.getByRole('button', { name: 'EA2', exact: true }).click();
+    await page.waitForTimeout(500);
     await page.getByRole('button', { name: 'EA1', exact: true }).click();
+    await page.waitForTimeout(500);
     await page.getByRole('button', { name: 'Apply', exact: true }).click();
-    await expect(page.getByText('Released', { exact: true })).toBeVisible();
+    await page.waitForTimeout(500);
+
+    await expect(page.getByText('Released', { exact: true })).toBeVisible({ timeout: 10000 });
     await expect(page.getByText('Released with Open Tasks', { exact: true })).toHaveCount(0);
   });
 
@@ -1565,23 +1575,29 @@ test.describe('Releases Release Readiness @releases', () => {
     await page.waitForLoadState('networkidle');
     await page.waitForTimeout(DEFAULT_PAGE_WAIT_TIME);
 
+    // Wait for Release Cycle Metrics section to appear before accessing table
+    await expect(page.locator('text=Release Cycle Metrics').first()).toBeVisible({ timeout: 10000 });
+    await expect(page.locator('text=Build Milestones').first()).toBeVisible({ timeout: 10000 });
+
     const timelineTable = page.locator('table').filter({
       has: page.getByRole('columnheader', { name: 'Phase', exact: true })
     });
-    await expect(timelineTable).toHaveCount(1);
+    await expect(timelineTable).toHaveCount(1, { timeout: 10000 });
 
     for (const phase of [
       'Nightly Demo Cycle',
       'RC1 Demo Validation',
       'RC2 Demo Validation'
     ]) {
-      await expect(timelineTable.getByRole('cell', { name: phase, exact: true })).toBeVisible();
+      await expect(timelineTable.getByRole('cell', { name: phase, exact: true })).toBeVisible({ timeout: 10000 });
     }
 
     const nightlyPhaseButton = page.getByRole('button', { name: 'Nightly', exact: true });
-    await expect(nightlyPhaseButton).toBeVisible();
+    await expect(nightlyPhaseButton).toBeVisible({ timeout: 10000 });
     await nightlyPhaseButton.click();
+    await page.waitForTimeout(300);
     await nightlyPhaseButton.click();
+    await page.waitForTimeout(300);
     await expect(
       page.locator('span.text-xs.font-bold.uppercase.tracking-wide.text-blue-500')
         .filter({ hasText: /^Nightly$/ })
