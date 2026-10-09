@@ -47,6 +47,7 @@ export const viewOwners = {
   'product-builds/base-images':                    'Pavol Pitonak',
   'product-builds/builder-images':                 'Pavol Pitonak',
   'product-builds/drop-detail':                    'Pavol Pitonak',
+  'product-builds/openshell':                      'Dimitri Saridakis',
   'product-builds/overview':                       'Giulia Naponiello',
   'product-builds/package-analysis':               'Einat Pacifici',
   'product-builds/package-request':                'André Lustosa',
