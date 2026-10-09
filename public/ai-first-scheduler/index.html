@@ -3281,7 +3281,7 @@ function run(){
     if(read==='committed'&&r['Confidence']!=='committed') return false;
     if(read==='not-ready') {
       const fpdor = r['FPDoR'];
-      const fpdorStr = typeof fpdor === 'string' ? fpdor : (fpdor?.passedCount + '/' + fpdor?.totalCount || '0/0');
+      const fpdorStr = typeof fpdor === 'string' ? fpdor : ((fpdor?.passedCount ?? 0) + '/' + (fpdor?.totalCount ?? 0));
       if(fpdorStr === '17/17') return false;
     }
     if(place==='EA1+EA2'){if(r._place!=='EA1'&&r._place!=='EA2') return false;}
@@ -3925,12 +3925,10 @@ function mapFeaturesToOutcomes() {
 
 function populateOutcomeDropdown() {
   if (!outcomeData || !outcomeData.outcomes) return;
-  const dropdown = document.getElementById('f-outcome');
-  if (!dropdown) return;
-
-  const outcomeNames = outcomeData.outcomes.map(o => `${o.key} ${o.title}`);
   const sel = document.getElementById('f-outcome');
   if (!sel) return;
+
+  const outcomeNames = outcomeData.outcomes.map(o => `${o.key} ${o.title}`);
 
   sel.innerHTML = '<option value="">All Outcomes</option>';
   outcomeNames.forEach(name => {
