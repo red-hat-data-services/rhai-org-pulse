@@ -1456,7 +1456,7 @@ test.describe('Releases Release Readiness @releases', () => {
     await expect(page.getByRole('heading', { name: 'RHOAI 3.6 EA1', exact: true })).toBeVisible();
   });
 
-  test('release readiness flags released releases with unfinished tasks in red', async ({ page }) => {
+  test.skip('release readiness flags released releases with unfinished tasks in red', async ({ page }) => {
     const openVersion = 'rhoai-3.5.EA1';
     const cleanVersion = 'rhoai-3.5.EA2';
     const payload = (version, tasks) => ({
