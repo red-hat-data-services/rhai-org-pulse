@@ -1,0 +1,152 @@
+{
+  "schemaVersion": 1,
+  "updatedAt": "2026-10-07T10:35:00.000Z",
+  "runs": [
+    {
+      "schemaVersion": 1,
+      "runKey": "jenkins.example.com/components/dashboard/dashboard-e2e-tests#101",
+      "jenkins": {
+        "instance": "jenkins.example.com",
+        "job": "components/dashboard/dashboard-e2e-tests",
+        "buildNumber": 101,
+        "buildUrl": "https://jenkins.example.com/job/components/job/dashboard/job/dashboard-e2e-tests/101/"
+      },
+      "run": {
+        "result": "SUCCESS",
+        "displayName": "ODH nightly #101",
+        "startedAt": "2026-10-07T10:00:00.000Z",
+        "completedAt": "2026-10-07T10:30:00.000Z",
+        "durationMs": 1800000
+      },
+      "reporting": {
+        "stream": "odh-nightly"
+      },
+      "release": {
+        "product": "ODH",
+        "version": null,
+        "channel": null,
+        "deploymentType": null,
+        "imageRef": null,
+        "imageDigest": null,
+        "installedVersion": null,
+        "rawVersion": null
+      },
+      "environment": {
+        "name": "GCP",
+        "clusterName": "dash-e2e-rhoai",
+        "platform": "stage",
+        "clusterType": "selfmanaged",
+        "architecture": "amd64"
+      },
+      "trigger": {
+        "causes": [],
+        "repository": null,
+        "branch": null,
+        "commit": null,
+        "pullRequest": null
+      },
+      "stages": [],
+      "tests": {
+        "collectionState": "complete",
+        "suiteCount": 1,
+        "counts": {
+          "passed": 132,
+          "failed": 0,
+          "skipped": 0
+        },
+        "failedCases": [],
+        "failedCasesTruncated": false
+      },
+      "agentAnalysis": null,
+      "receivedAt": "2026-10-07T10:35:00.000Z"
+    },
+    {
+      "schemaVersion": 1,
+      "runKey": "jenkins.example.com/components/dashboard/dashboard-e2e-tests#100",
+      "jenkins": {
+        "instance": "jenkins.example.com",
+        "job": "components/dashboard/dashboard-e2e-tests",
+        "buildNumber": 100,
+        "buildUrl": "https://jenkins.example.com/job/components/job/dashboard/job/dashboard-e2e-tests/100/"
+      },
+      "run": {
+        "result": "UNSTABLE",
+        "displayName": "RHOAI 3.6 #100",
+        "startedAt": "2026-10-07T09:00:00.000Z",
+        "completedAt": "2026-10-07T09:35:00.000Z",
+        "durationMs": 2100000
+      },
+      "reporting": {
+        "stream": "release"
+      },
+      "release": {
+        "product": "RHOAI",
+        "version": "3.6",
+        "channel": null,
+        "deploymentType": null,
+        "imageRef": "quay.io/rhoai/rhoai-fbc-fragment:rhoai-3.6",
+        "imageDigest": null,
+        "installedVersion": "3.6.0",
+        "rawVersion": "3.6"
+      },
+      "environment": {
+        "name": "IBM",
+        "clusterName": "dash-e2e-rhoai",
+        "platform": "stage",
+        "clusterType": "selfmanaged",
+        "architecture": "amd64"
+      },
+      "trigger": {
+        "causes": [],
+        "repository": null,
+        "branch": null,
+        "commit": null,
+        "pullRequest": null
+      },
+      "stages": [],
+      "tests": {
+        "collectionState": "complete",
+        "suiteCount": 1,
+        "counts": {
+          "passed": 131,
+          "failed": 1,
+          "skipped": 0
+        },
+        "failedCases": [
+          {
+            "suite": "model-serving",
+            "name": "deploys a model",
+            "status": "FAILED",
+            "component": "Model Serving",
+            "ownership": null
+          }
+        ],
+        "failedCasesTruncated": false
+      },
+      "agentAnalysis": {
+        "source": "agent",
+        "reviewStatus": "unverified",
+        "producedAt": "2026-10-07T09:50:00.000Z",
+        "summary": "Model deployment failed.",
+        "url": "https://jenkins.example.com/job/analysis/200/",
+        "findings": [
+          {
+            "id": "serving-deployment",
+            "category": "product-defect",
+            "suggestedTeam": "Model Serving",
+            "jiraIssue": null,
+            "explanation": "The deployment API returned an error.",
+            "failedCases": [
+              {
+                "suite": "model-serving",
+                "name": "deploys a model"
+              }
+            ]
+          }
+        ],
+        "receivedAt": "2026-10-07T09:51:00.000Z"
+      },
+      "receivedAt": "2026-10-07T09:40:00.000Z"
+    }
+  ]
+}

@@ -50,6 +50,9 @@ var session = ref(null)
 // Keys approved from the AI Planner in this browser session, so the planner's
 // additions can be isolated from approvals already saved on the cycle.
 var sessionAdded = ref([])
+// Features the planner injected into this plan. Held separately from the draft so
+// they survive a pipeline refresh overwriting the candidate set.
+var addedCandidates = ref([])
 // Cycles are presented per target version ("3.6 EA1 RHOAI RELEASE"), which is how
 // planning talks about them, while the draft itself is still stored per release.
 var selectedTargetVersion = ref('')
@@ -365,6 +368,7 @@ export function useDraftPlans() {
         state.meta = Object.assign({}, state.meta, data.meta)
       }
       if (Array.isArray(data.audit)) state.audit = data.audit
+      addedCandidates.value = Array.isArray(data.addedCandidates) ? data.addedCandidates : []
       if (data.session && typeof data.session === 'object') {
         session.value = data.session
       } else {
@@ -421,6 +425,7 @@ export function useDraftPlans() {
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             edits: editor.value.edits,
+            addedCandidates: addedCandidates.value,
             meta: editor.value.meta,
             audit: editor.value.audit
           })
@@ -497,6 +502,37 @@ export function useDraftPlans() {
     var result = setApproved(editor.value, row, approved)
     if (result.ok && !result.noop) markDirty()
     return result
+  }
+
+  /**
+   * Put a feature into the plan that the pipeline never proposed. Returns ok:false
+   * when it is already a candidate, so callers can skip straight to approving.
+   */
+  function addCandidate(candidate) {
+    if (!candidate || !candidate.key) return { ok: false, reason: 'invalid' }
+    if (!draft.value) {
+      // Bootstrap an empty draft so the first feature can be injected into a
+      // version the pipeline has never published.  The server's GET returns 404
+      // for unknown versions (no pipeline draft, no stored addedCandidates),
+      // which loadEditor swallows — leaving draft.value null.  Creating a
+      // minimal local draft here breaks the chicken-and-egg: persist() will PUT
+      // the addedCandidates, and subsequent GETs will find them.
+      var ver = selectedVersion.value || ''
+      if (!ver) return { ok: false, reason: 'no-draft' }
+      draft.value = { version: ver, candidates: [] }
+      editor.value = emptyEditorState(ver, null)
+    }
+    if (findBase(candidate.key)) return { ok: false, reason: 'exists' }
+
+    var entry = Object.assign({}, candidate, { addedByPlanner: true })
+    if (!Array.isArray(entry.targetVersions)) {
+      entry.targetVersions = entry.currentTV ? [entry.currentTV] : []
+    }
+    if (!Array.isArray(draft.value.candidates)) draft.value.candidates = []
+    draft.value.candidates.push(entry)
+    addedCandidates.value = addedCandidates.value.concat([entry])
+    markDirty()
+    return { ok: true }
   }
 
   function markSessionAdded(keys) {
@@ -622,6 +658,8 @@ export function useDraftPlans() {
     markSessionAdded,
     selectedTargetVersion,
     availableTargetVersions,
+    addedCandidates,
+    addCandidate,
     freeze,
     unfreeze,
     unfreezeAll,
@@ -659,4 +697,5 @@ export function _resetDraftPlansForTests() {
   filterText.value = ''
   session.value = null
   sessionAdded.value = []
+  addedCandidates.value = []
 }

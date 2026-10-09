@@ -1,7 +1,7 @@
 {
   "name": "org-pulse-ai-eng",
   "private": true,
-  "version": "1.0.521",
+  "version": "1.0.544",
   "engines": {
     "node": ">=22"
   },
@@ -40,8 +40,8 @@
     "express-rate-limit": "^8.7.0",
     "js-yaml": "^5.4.2",
     "marked": "^18.0.13",
-    "mermaid": "^11.17.2",
-    "undici": "^7.29.1",
+    "mermaid": "^12.1.0",
+    "undici": "^8.11.2",
     "xml2js": "^0.6.2"
   },
   "devDependencies": {
@@ -54,17 +54,17 @@
     "@vitest/coverage-v8": "^4.1.11",
     "@vue/test-utils": "^2.5.1",
     "concurrently": "^10.0.5",
-    "dotenv": "^17.4.2",
-    "eslint": "^10.11.0",
-    "eslint-plugin-vue": "^10.11.0",
-    "globals": "^17.12.0",
+    "dotenv": "^18.0.5",
+    "eslint": "^10.12.0",
+    "eslint-plugin-vue": "^10.11.1",
+    "globals": "^17.13.0",
     "husky": "^9.1.7",
-    "jsdom": "^30.0.1",
+    "jsdom": "^30.1.2",
     "lint-staged": "^17.6.0",
     "postcss": "^8.5.28",
     "puppeteer": "^25.12.0",
     "tailwindcss": "^4.3.3",
-    "vite": "^8.3.1",
+    "vite": "^8.3.2",
     "vitest": "^4.1.11",
     "xlsx": "^0.18.5"
   },

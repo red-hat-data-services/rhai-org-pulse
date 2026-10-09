@@ -92,7 +92,7 @@ describe('RequestPackageView', () => {
     await wrapper.find('#req-team').setValue('Platform')
     let finishOldLoad
     fetchTeams.mockImplementationOnce(() => new Promise(resolve => { finishOldLoad = resolve }))
-    await wrapper.find('#req-team-project').setValue('AIPCC')
+    await wrapper.find('#req-team-project').setValue('RHAI')
     expect(wrapper.find('#req-team').element.value).toBe('')
     expect(wrapper.find('#req-team').element.disabled).toBe(true)
     fetchTeams.mockResolvedValueOnce([{ value: 'Agentic', label: 'Agentic' }])
@@ -101,16 +101,19 @@ describe('RequestPackageView', () => {
     finishOldLoad([{ value: 'Accelerator Enablement', label: 'Accelerator Enablement' }])
     await flushPromises()
     expect(wrapper.findAll('#req-team option').map(option => option.text())).toEqual(['Select a team', 'Agentic'])
-    expect(fetchTeams).toHaveBeenCalledWith('/modules/product-builds/package-requests/teams?project=AIPCC')
-    await wrapper.find('#req-team-project').setValue('RHAI')
-    await flushPromises()
     expect(fetchTeams).toHaveBeenCalledWith('/modules/product-builds/package-requests/teams?project=RHAI')
+  })
+
+  it('offers only RHAISTRAT and RHAI now that AIPCC is deprecated', async () => {
+    const wrapper = mount(RequestPackageView)
+    await flushPromises()
+    expect(wrapper.findAll('#req-team-project option').map(option => option.element.value)).toEqual(['RHAISTRAT', 'RHAI'])
   })
 
   it('sends the selected project and explains where the request is filed', async () => {
     const wrapper = mount(RequestPackageView)
     await flushPromises()
-    expect(wrapper.find('#req-team-project-hint').text()).toContain('RHAISTRAT has no Epic type, so the request is filed in AIPCC')
+    expect(wrapper.find('#req-team-project-hint').text()).toContain('RHAISTRAT has no Epic type, so the request is filed in RHAI')
     await wrapper.find('#req-team-project').setValue('RHAI')
     await flushPromises()
     expect(wrapper.find('#req-team-project-hint').text()).toContain('The request is filed in RHAI')

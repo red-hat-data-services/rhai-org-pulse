@@ -18,6 +18,7 @@ export const POLICY_PATHS = new Set([
 
 const COMMENT_MARKER = '<!-- ownership-gate -->';
 const WRITE_PERMISSIONS = new Set(['admin', 'maintain', 'write']);
+const APPROVAL_COMMAND = /^\s*\/(?:lgtm|approve)\s*$/i;
 
 function normalizePath(path) {
   return String(path || '').replace(/^\/+/, '').replace(/\\/g, '/');
@@ -227,11 +228,30 @@ function policyForPath(entries, filePath, maintainerTeam) {
   };
 }
 
-/**
- * Keep only approvals made on the PR's current head. A new push therefore
- * always requires any needed owner approval to be refreshed.
- */
-export function currentApprovers(reviews, { headSha, authorLogin }) {
+/** A live approval comment must follow the current head's timeline entry. */
+export function currentHeadApprovalComments(timeline, comments, headSha) {
+  let headIndex = -1;
+  let foundHead = false;
+  for (const [index, event] of timeline.entries()) {
+    if (event.event === 'committed' && event.sha === headSha) {
+      foundHead = true;
+      headIndex = index;
+    } else if (event.event === 'head_ref_force_pushed') {
+      headIndex = index;
+    }
+  }
+  if (!foundHead) {
+    return [];
+  }
+  const liveComments = new Map(comments.map(comment => [comment.id, comment]));
+  return timeline.slice(headIndex + 1)
+    .filter(event => event.event === 'commented')
+    .map(event => liveComments.get(event.id))
+    .filter(comment => comment && APPROVAL_COMMAND.test(comment.body || ''));
+}
+
+/** Keep only approvals made on the PR's current head. */
+export function currentApprovers(reviews, { headSha, authorLogin, comments = [] }) {
   const latestByReviewer = new Map();
   for (const review of reviews) {
     const reviewer = review.user;
@@ -247,6 +267,20 @@ export function currentApprovers(reviews, { headSha, authorLogin }) {
     const currentSubmittedAt = Date.parse(current?.submitted_at || 0) || 0;
     if (!current || submittedAt >= currentSubmittedAt) {
       latestByReviewer.set(login, review);
+    }
+  }
+
+  for (const comment of comments) {
+    const user = comment.user;
+    const login = normalizeLogin(user?.login);
+    if (!login || login === normalizeLogin(authorLogin) || isBot(user)) {
+      continue;
+    }
+    const submittedAt = comment.updated_at || comment.created_at;
+    const current = latestByReviewer.get(login);
+    const currentSubmittedAt = Date.parse(current?.submitted_at || 0) || 0;
+    if (!current || (Date.parse(submittedAt || 0) || 0) > currentSubmittedAt) {
+      latestByReviewer.set(login, { state: 'APPROVED', submitted_at: submittedAt });
     }
   }
 
@@ -333,7 +367,11 @@ export function renderComment(result, authorLogin, headSha) {
     }
   }
 
-  lines.push('', '> Only approvals on the current PR head count.');
+  lines.push(
+    '',
+    '> An eligible owner with repository write access can leave a standalone `/lgtm` or `/approve` PR comment, or submit an approving review. The PR author cannot self-approve.',
+    '> Post a new approval after each push; only approvals on the current PR head count.'
+  );
   return `${lines.join('\n')}\n`;
 }
 
@@ -397,6 +435,14 @@ class GitHubApi {
     return this.paginated(`/repos/${this.repository}/pulls/${number}/reviews`);
   }
 
+  async getTimeline(number) {
+    return this.paginated(`/repos/${this.repository}/issues/${number}/timeline`);
+  }
+
+  async getComments(number) {
+    return this.paginated(`/repos/${this.repository}/issues/${number}/comments`);
+  }
+
   async getTeamMembers(owner) {
     const [organization, teamSlug] = owner.slice(1).split('/');
     const members = await this.paginated(
@@ -432,13 +478,14 @@ class GitHubApi {
   }
 
   async updateComment(prNumber, body, botLogin) {
-    const comments = await this.paginated(
-      `/repos/${this.repository}/issues/${prNumber}/comments`
-    );
+    const comments = await this.getComments(prNumber);
     const existing = comments.find(comment =>
       comment.user?.login === botLogin && comment.body?.includes(COMMENT_MARKER)
     );
     if (existing) {
+      if (existing.body === body) {
+        return existing;
+      }
       return this.request(`/repos/${this.repository}/issues/comments/${existing.id}`, {
         method: 'PATCH',
         body: { body }
@@ -509,9 +556,15 @@ async function evaluatePullRequest(api, prNumber, { codeownersRef } = {}) {
     teamMembers.set(team, await api.getTeamMembers(team));
   }
 
+  const [timeline, liveComments] = await Promise.all([
+    api.getTimeline(prNumber),
+    api.getComments(prNumber)
+  ]);
+  const comments = currentHeadApprovalComments(timeline, liveComments, headSha);
   const reviewers = currentApprovers(await api.getReviews(prNumber), {
     headSha,
-    authorLogin
+    authorLogin,
+    comments
   });
   const approvedReviewers = [];
   for (const reviewer of reviewers) {

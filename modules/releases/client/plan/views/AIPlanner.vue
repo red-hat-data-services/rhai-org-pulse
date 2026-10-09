@@ -39,8 +39,8 @@ function syncContainerHeight() {
 
 const {
   selectedVersion,
-  availableCycles,
   approveFeature,
+  addCandidate,
   markSessionAdded,
   selectedTargetVersion,
   loadCycles,
@@ -60,6 +60,30 @@ function notify(message, type) {
 
 // Features carry a target version ("3.6 EA1 RHOAI RELEASE"); Plan Approval is keyed by the
 // release cycle ("3.6"), with EA1/EA2/GA being placements inside it.
+/**
+ * The planner speaks in display rows; Plan Approval speaks in candidates. Only the
+ * fields the approval table actually renders are carried across.
+ */
+function candidateFromPlannerRow(feature) {
+  const version = String(feature.version || '').trim()
+  const components = String(feature.components || '')
+  return {
+    key: feature.key,
+    summary: feature.summary || '',
+    basePlacement: feature.placement && feature.placement !== 'No' ? feature.placement : '',
+    priority: feature.priority || '',
+    component: components.split(';')[0].trim(),
+    engComponents: components,
+    currentTV: version,
+    targetVersions: version ? [version] : [],
+    productFamily: /RHAII/i.test(version) ? 'RHAII' : 'RHOAI',
+    status: feature.status || '',
+    featureSize: feature.size || '',
+    bigRock: feature.outcome || '',
+    ready: ''
+  }
+}
+
 function cycleForTargetVersion(targetVersion) {
   const match = String(targetVersion || '').match(/\d+\.\d+/)
   return match ? match[0] : ''
@@ -73,13 +97,14 @@ async function addFeaturesToPlan(features) {
     return
   }
 
-  const knownCycles = (availableCycles.value || []).map(cycle => cycle.version)
+  // A cycle no longer has to exist up front: a feature carries its own release, and
+  // injecting it is what brings that cycle into being.
   const byCycle = new Map()
   const noCycle = []
 
   for (const feature of features) {
     const cycle = cycleForTargetVersion(feature.version) || selectedVersion.value
-    if (knownCycles.indexOf(cycle) === -1) {
+    if (!cycle) {
       noCycle.push(feature)
       continue
     }
@@ -102,6 +127,9 @@ async function addFeaturesToPlan(features) {
     }
     const approvedHere = []
     for (const feature of cycleFeatures) {
+      // Only the pipeline's own candidates can be approved directly; anything else
+      // has to be put into the plan first.
+      addCandidate(candidateFromPlannerRow(feature))
       const result = approveFeature(feature.key, true)
       if (result && result.ok) approvedHere.push(feature.key)
       // A missing candidate and a refused edit both return ok:false; only the
@@ -134,9 +162,7 @@ async function addFeaturesToPlan(features) {
 
   const problems = []
   if (noCycle.length) {
-    problems.push(
-      `no ${[...new Set(noCycle.map(f => cycleForTargetVersion(f.version) || 'unknown'))].join(', ')} cycle exists`
-    )
+    problems.push(`${noCycle.length} have no target version, so there is no cycle to put them in`)
   }
   if (notCandidates.length) problems.push(`${notCandidates.length} not in this cycle's candidates`)
   if (notOwned.length) {

@@ -78,4 +78,59 @@ function computeCumulativeBugData(bugs, versions, versionReleaseMap, options) {
   return { labels, datasets };
 }
 
-module.exports = { computeCumulativeBugData };
+/**
+ * Compute the current Jira status breakdown for post-release bugs.
+ *
+ * A bug that affects more than one selected version is counted once for each
+ * version, matching the cumulative chart's per-version behavior. Statuses are
+ * kept as Jira reports them rather than collapsed into status categories.
+ *
+ * @param {Array} bugs - Filtered bug objects
+ * @param {string[]} versions - Selected version names
+ * @param {Map} versionReleaseMap - Map of version name to release date string
+ * @returns {Object} - { labels: [status names], datasets: [{ label, data }, ...] }
+ */
+function computeStatusBreakdownData(bugs, versions, versionReleaseMap) {
+  const countsByVersion = new Map()
+  const statuses = new Set()
+
+  for (const version of versions) {
+    const releaseDate = versionReleaseMap.get(version)
+    const releaseDateMs = releaseDate ? new Date(releaseDate).getTime() : NaN
+    const statusCounts = new Map()
+
+    for (const bug of bugs) {
+      if (!bug.affectedVersions?.includes(version)) continue
+      const createdMs = new Date(bug.created).getTime()
+      if (!Number.isFinite(releaseDateMs) || !Number.isFinite(createdMs) || createdMs < releaseDateMs) continue
+
+      const status = bug.status || 'Unknown'
+      statusCounts.set(status, (statusCounts.get(status) || 0) + 1)
+      statuses.add(status)
+    }
+
+    countsByVersion.set(version, statusCounts)
+  }
+
+  const statusOrder = ['New', 'Open', 'To Do', 'In Progress', 'Review', 'Resolved', 'Closed']
+  const labels = [...statuses].sort((left, right) => {
+    const leftIndex = statusOrder.indexOf(left)
+    const rightIndex = statusOrder.indexOf(right)
+    if (leftIndex !== -1 || rightIndex !== -1) {
+      if (leftIndex === -1) return 1
+      if (rightIndex === -1) return -1
+      if (leftIndex !== rightIndex) return leftIndex - rightIndex
+    }
+    return left.localeCompare(right)
+  })
+
+  return {
+    labels,
+    datasets: versions.map(version => ({
+      label: version,
+      data: labels.map(status => countsByVersion.get(version)?.get(status) || 0)
+    }))
+  }
+}
+
+module.exports = { computeCumulativeBugData, computeStatusBreakdownData };

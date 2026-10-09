@@ -47,25 +47,36 @@ AND issuetype NOT IN (Epic, Initiative)
 Open blockers, used before calculating the resolved date:
 
 ```jql
-project in (RHAIENG, RHOAIENG)
+project in (RHAI, RHAIENG, RHOAIENG)
 AND (labels not in (RHOAI-releases, RHOAI-internal, devtestops-service, test-failed, test-skipped)
      OR labels IS EMPTY)
 AND (component not in (Documentation, PXE) OR component is EMPTY)
 AND status not in (Closed, Resolved)
 AND ('Release Blocker' != Rejected OR 'Release Blocker' is EMPTY)
-AND <VERSION_CLAUSE>
+AND <BLOCKER_VERSION_CLAUSE>
 AND priority in (Blocker)
+AND (labels IS EMPTY OR labels not in (prerelease-cve-remediation))
+```
+
+Where `<BLOCKER_VERSION_CLAUSE>` is:
+
+```jql
+(fixVersion IN ('rhoai-3.5.EA2', '3.5 EA2 RHOAI RELEASE')
+ OR 'Target Version' IN ('rhoai-3.5.EA2', '3.5 EA2 RHOAI RELEASE')
+ OR (affectedVersion IN ('rhoai-3.5.EA2', '3.5 EA2 RHOAI RELEASE')
+     AND fixVersion IS EMPTY AND 'Target Version' IS EMPTY))
 ```
 
 Resolved blockers:
 
 ```jql
-project in (RHAIENG, RHOAIENG)
+project in (RHAI, RHAIENG, RHOAIENG)
 AND (labels not in (RHOAI-releases, RHOAI-internal, devtestops-service, test-failed, test-skipped)
      OR labels IS EMPTY)
 AND (component not in (Documentation, PXE) OR component is EMPTY)
-AND <VERSION_CLAUSE>
+AND <BLOCKER_VERSION_CLAUSE>
 AND priority in (Blocker)
+AND (labels IS EMPTY OR labels not in (prerelease-cve-remediation))
 AND statusCategory = Done
 ```
 
@@ -106,8 +117,8 @@ AND issuetype NOT IN (Epic, Initiative)
 Failed tests:
 
 ```jql
-project = RHOAIENG
-AND <TEAM_OR_COMPONENT_CLAUSE>
+project in (RHAI, RHOAIENG)
+AND component = "<COMPONENT>"
 AND <VERSION_CLAUSE>
 AND labels = "test-failed"
 ```
@@ -115,8 +126,8 @@ AND labels = "test-failed"
 Skipped tests:
 
 ```jql
-project = RHOAIENG
-AND <TEAM_OR_COMPONENT_CLAUSE>
+project in (RHAI, RHOAIENG)
+AND component = "<COMPONENT>"
 AND <VERSION_CLAUSE>
 AND labels = "test-skipped"
 ```
@@ -124,12 +135,22 @@ AND labels = "test-skipped"
 Open issues to validate:
 
 ```jql
-project in (RHAIENG, RHOAIENG)
+project in (RHAI, RHAIENG, RHOAIENG)
 AND (labels not in (RHOAI-releases, RHOAI-internal, devtestops-service, test-failed, test-skipped)
      OR labels IS EMPTY)
 AND (component not in (Documentation, PXE) OR component is EMPTY)
 AND status not in (Closed, Resolved)
-AND <VERSION_CLAUSE>
+AND ('Release Blocker' != Rejected OR 'Release Blocker' is EMPTY)
+AND <OPEN_ISSUES_VERSION_CLAUSE>
+```
+
+Where `<OPEN_ISSUES_VERSION_CLAUSE>` is:
+
+```jql
+(fixVersion IN ('rhoai-3.5.EA2', '3.5 EA2 RHOAI RELEASE')
+ OR 'Target Version' IN ('rhoai-3.5.EA2', '3.5 EA2 RHOAI RELEASE'))
+AND ('Target Version' IS EMPTY
+     OR 'Target Version' IN ('rhoai-3.5.EA2', '3.5 EA2 RHOAI RELEASE'))
 ```
 
 ## Generated Jira filter links
@@ -145,29 +166,17 @@ AND <VERSION_CLAUSE>
 AND summary ~ "TFA Sign-Off"
 ```
 
-Component failed/skipped links use the same failed/skipped queries above. For mapped components, `<TEAM_OR_COMPONENT_CLAUSE>` is:
-
-```jql
-Team = "<TEAM_UUID>"
-```
-
-For unmapped components it is:
+Component failed/skipped links use the same failed/skipped queries above, scoped by component:
 
 ```jql
 component = "<COMPONENT>"
 ```
 
-Per-phase component execution link:
+Component execution link (aggregated across all test phases):
 
 ```jql
-parent = <PHASE_EPIC_KEY>
+parent in (<TEST_EXECUTION_EPIC_KEY_1>, <TEST_EXECUTION_EPIC_KEY_2>, ...)
 AND component = "<COMPONENT>"
-```
-
-When multiple phase Epics are present, the first clause is instead:
-
-```jql
-parent in (<PHASE_EPIC_KEY_1>, <PHASE_EPIC_KEY_2>, ...)
 ```
 
 Overall work filters:
