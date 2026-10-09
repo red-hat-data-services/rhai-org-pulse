@@ -4205,24 +4205,6 @@ function closeHamburger(){
   const m=document.getElementById('hamburger-menu');
   if(m) m.style.display='none';
 }
-function filterToOutcome(outcomeName){
-  const sel=document.getElementById('f-outcome');
-  if(sel){
-    const needle=(outcomeName||'').toLowerCase().trim();
-    let found=false;
-    for(let i=0;i<sel.options.length;i++){
-      const txt=(sel.options[i].text||'').toLowerCase().trim();
-      const val=(sel.options[i].value||'').toLowerCase().trim();
-      // exact match first, then partial (handles "P2 MaaS" vs "MaaS" mismatches)
-      if(txt===needle||val===needle||txt.includes(needle)||needle.includes(txt.replace(/^p\d+\s*/,''))){
-        sel.selectedIndex=i;found=true;break;
-      }
-    }
-    if(!found) sel.selectedIndex=0; // fallback: show all
-  }
-  switchTab('features');
-  setTimeout(run,80);
-}
 function showTab(t){
   document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
   document.getElementById('tab-'+t).classList.add('active');
