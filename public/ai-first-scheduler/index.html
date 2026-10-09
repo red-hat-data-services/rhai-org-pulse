@@ -3896,31 +3896,39 @@ async function fetchOutcomes() {
   try {
     const res = await fetch('/api/modules/releases/planning/ai-planner/outcomes');
     if (!res.ok) {
-      console.error('Outcomes fetch failed:', res.status);
+      console.warn('Outcomes fetch returned status:', res.status);
       return;
     }
     const data = await res.json();
-    if (data && data.outcomes && data.outcomes.length > 0) {
+    if (data && data.outcomes && Array.isArray(data.outcomes)) {
       outcomeData = data;
-      mapFeaturesToOutcomes();
-      populateOutcomeDropdown();
+      if (data.featureOutcomeMap && typeof data.featureOutcomeMap === 'object') {
+        mapFeaturesToOutcomes();
+      }
+      if (data.outcomes.length > 0) {
+        populateOutcomeDropdown();
+      }
       run();
     }
   } catch (err) {
-    console.error('Failed to fetch outcomes:', err);
+    console.warn('Failed to fetch outcomes (non-blocking):', err);
   }
 }
 
 function mapFeaturesToOutcomes() {
-  if (!outcomeData || !outcomeData.featureOutcomeMap) return;
+  if (!outcomeData || !outcomeData.featureOutcomeMap || typeof outcomeData.featureOutcomeMap !== 'object') return;
 
   // Apply outcome mapping to all features
-  allData.forEach(feature => {
-    const key = feature['Key'];
-    if (key && outcomeData.featureOutcomeMap[key]) {
-      feature['Outcome'] = outcomeData.featureOutcomeMap[key];
-    }
-  });
+  try {
+    allData.forEach(feature => {
+      const key = feature['Key'];
+      if (key && outcomeData.featureOutcomeMap[key]) {
+        feature['Outcome'] = outcomeData.featureOutcomeMap[key];
+      }
+    });
+  } catch (err) {
+    console.error('Error mapping features to outcomes:', err);
+  }
 }
 
 function populateOutcomeDropdown() {
