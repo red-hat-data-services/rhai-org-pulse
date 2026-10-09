@@ -3281,7 +3281,7 @@ function run(){
     if(read==='committed'&&r['Confidence']!=='committed') return false;
     if(read==='not-ready') {
       const fpdor = r['FPDoR'];
-      const fpdorStr = typeof fpdor === 'string' ? fpdor : (fpdor?.passedCount + '/' + fpdor?.totalCount || '0/0');
+      const fpdorStr = typeof fpdor === 'string' ? fpdor : ((fpdor?.passedCount ?? 0) + '/' + (fpdor?.totalCount ?? 0));
       if(fpdorStr === '17/17') return false;
     }
     if(place==='EA1+EA2'){if(r._place!=='EA1'&&r._place!=='EA2') return false;}
@@ -3912,18 +3912,14 @@ async function fetchOutcomes() {
 
 function populateOutcomeDropdown() {
   if (!outcomeData || !outcomeData.outcomes) return;
-  const dropdown = document.getElementById('f-outcome');
-  if (!dropdown) return;
-
-  const outcomeNames = outcomeData.outcomes.map(o => `${o.key} ${o.title}`);
   const sel = document.getElementById('f-outcome');
   if (!sel) return;
 
   sel.innerHTML = '<option value="">All Outcomes</option>';
-  outcomeNames.forEach(name => {
+  outcomeData.outcomes.forEach(function(o) {
     const opt = document.createElement('option');
-    opt.value = name;
-    opt.textContent = name;
+    opt.value = o.key + ' ' + o.title;
+    opt.textContent = o.key + ' ' + o.title;
     sel.appendChild(opt);
   });
 }
@@ -4038,10 +4034,10 @@ function renderExecView(){
         const pillarColor = { 'Platform': '#6a1b9a', 'Inference': '#1565c0', 'Agents': '#2e7d32', 'Data': '#b8860b' }[br.pillar] || '#888';
         const pctDone = d.total > 0 ? Math.round(d.inPlan / d.total * 100) : 0;
         const pctColor = pctDone >= 80 ? '#2e7d32' : pctDone >= 50 ? '#f57f17' : '#c62828';
-        return `<tr style="border-bottom:1px solid #f0f0f0;cursor:pointer" data-outcome="${br.name}" onmouseover="this.style.background='#f8fafc'" onmouseout="this.style.background=''">
+        return `<tr style="border-bottom:1px solid #f0f0f0;cursor:pointer" data-outcome="${br.name}" onclick="filterToOutcome(this.dataset.outcome)" onmouseover="this.style.background='#f8fafc'" onmouseout="this.style.background=''">
           <td style="padding:6px 10px;font-size:13px;font-weight:700;color:${statusColor}">${statusIcon}</td>
           <td style="padding:6px 10px;font-size:10px;font-weight:700;color:${pillarColor}">${br.pillar}</td>
-          <td style="padding:6px 10px;font-size:11px;font-weight:600">P${br.priority} ${br.name}</td>
+          <td style="padding:6px 10px;font-size:11px;font-weight:600">P${br.priority} ${br.name}<span style="font-size:9px;color:#1d4ed8;margin-left:6px;cursor:pointer;font-weight:600" onclick="event.stopPropagation();filterToOutcome(this.parentElement.parentElement.dataset.outcome)">→ view features</span></td>
           <td style="padding:6px 10px;font-size:11px;text-align:center">${d.inPlan}/${d.total}</td>
           <td style="padding:6px 10px;min-width:80px">
             <div style="font-size:11px;font-weight:700;color:${pctColor};text-align:center;margin-bottom:3px">${pctDone}%</div>

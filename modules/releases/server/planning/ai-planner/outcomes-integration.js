@@ -1,5 +1,5 @@
 /**
- * Fetch 22 prioritized outcomes from Jira plan view 7384 and calculate in-plan metrics.
+ * Fetch prioritized outcomes from Jira plan view 7384 and calculate in-plan metrics.
  *
  * Outcomes are parent work items (RHAISTRAT-* issues) with child features.
  * For each outcome, count how many children are in the current draft-plan.
@@ -8,7 +8,7 @@
 const OUTCOME_KEY_PATTERN = /^RHAISTRAT-\d+$/;
 
 /**
- * The 22 prioritized outcomes from Jira plan view 7384 (Racer Strat).
+ * The 21 prioritized outcomes from Jira plan view 7384 (Racer Strat).
  * Order matches Jira plan priority.
  */
 const PRIORITY_OUTCOMES = [
@@ -29,7 +29,6 @@ const PRIORITY_OUTCOMES = [
   'RHAISTRAT-1498', // Eval Hub
   'RHAISTRAT-1339', // AI Hub incl MCP
   'RHAISTRAT-1066', // Multitenancy
-  'RHAISTRAT-155',  // (BYOA — Bring Your Own Agent)
   'RHAISTRAT-2875', // AI Grid MVP
   'RHAISTRAT-1088', // vLLM Omni
   'RHAISTRAT-2604', // (check for exact key)
