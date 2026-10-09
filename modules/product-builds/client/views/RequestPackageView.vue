@@ -142,7 +142,7 @@ function validate() {
   }
 
   if (!JIRA_KEY_RE.test(form.jira_id.trim())) {
-    errors.jira_id = 'Jira key must match the PROJECT-123 format (e.g. AIPCC-1234)'
+    errors.jira_id = 'Jira key must match the PROJECT-123 format (e.g. RHAI-1234)'
   }
 
   if (!form.justification.trim()) errors.justification = 'Business justification is required'
@@ -436,12 +436,11 @@ function jiraHref(ticket) {
             class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 text-sm focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
           >
             <option value="RHAISTRAT">RHAISTRAT</option>
-            <option value="AIPCC">AIPCC</option>
             <option value="RHAI">RHAI</option>
           </select>
           <p id="req-team-project-hint" class="mt-1 text-xs text-gray-500 dark:text-gray-400">
             Choose the project your team belongs to.
-            <template v-if="teamProject === 'RHAISTRAT'">RHAISTRAT has no Epic type, so the request is filed in AIPCC.</template>
+            <template v-if="teamProject === 'RHAISTRAT'">RHAISTRAT has no Epic type, so the request is filed in RHAI.</template>
             <template v-else>The request is filed in {{ teamProject }}.</template>
           </p>
         </div>
@@ -635,7 +634,7 @@ function jiraHref(ticket) {
               type="text"
               required
               autocomplete="off"
-              placeholder="e.g. AIPCC-1234"
+              placeholder="e.g. RHAI-1234"
               aria-required="true"
               :aria-invalid="!!fieldErrors.jira_id"
               :aria-describedby="fieldErrors.jira_id ? 'req-jira-id-error' : null"

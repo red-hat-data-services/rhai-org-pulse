@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { computeCumulativeBugData } from '../../../server/delivery/quality/calculations.js'
+import { computeCumulativeBugData, computeStatusBreakdownData } from '../../../server/delivery/quality/calculations.js'
 
 describe('computeCumulativeBugData', () => {
   it('returns empty datasets when no bugs', () => {
@@ -234,5 +234,29 @@ describe('computeCumulativeBugData', () => {
     // v-new: released Jan 18, elapsed=3, maxDays=5 → cap=3
     // BUG-1 at day 1 (Jan 19 - Jan 18), days 4-5 should be null
     expect(vNew.data).toEqual([0, 1, 1, 1, null, null])
+  })
+})
+
+describe('computeStatusBreakdownData', () => {
+  it('groups current Jira statuses by selected version and excludes pre-release bugs', () => {
+    const bugs = [
+      { key: 'BUG-1', affectedVersions: ['rhoai-3.4'], created: '2026-03-21T10:00:00.000Z', status: 'Open' },
+      { key: 'BUG-2', affectedVersions: ['rhoai-3.4'], created: '2026-03-22T10:00:00.000Z', status: 'In Progress' },
+      { key: 'BUG-3', affectedVersions: ['rhoai-3.4'], created: '2026-03-19T10:00:00.000Z', status: 'Resolved' },
+      { key: 'BUG-4', affectedVersions: ['rhelai-3.4'], created: '2026-03-21T10:00:00.000Z', status: 'Closed' }
+    ]
+    const versions = ['rhoai-3.4', 'rhelai-3.4']
+    const versionReleaseMap = new Map([
+      ['rhoai-3.4', '2026-03-20'],
+      ['rhelai-3.4', '2026-03-20']
+    ])
+
+    const result = computeStatusBreakdownData(bugs, versions, versionReleaseMap)
+
+    expect(result.labels).toEqual(['Open', 'In Progress', 'Closed'])
+    expect(result.datasets).toEqual([
+      { label: 'rhoai-3.4', data: [1, 1, 0] },
+      { label: 'rhelai-3.4', data: [0, 0, 1] }
+    ])
   })
 })

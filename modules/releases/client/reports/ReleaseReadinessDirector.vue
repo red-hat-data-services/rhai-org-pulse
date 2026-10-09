@@ -30,15 +30,6 @@
             <span class="text-[10px] font-semibold uppercase tracking-wider text-blue-200 mb-0.5">GA Date</span>
             <span class="text-sm font-bold">{{ releaseSchedule.ga_date ? formatScheduleDate(releaseSchedule.ga_date) : 'TBD' }}</span>
           </div>
-          <div
-            class="flex flex-col items-center rounded-xl px-5 py-2.5 min-w-[90px]"
-            :class="releaseDisplayStatus(data) === 'Released with Open Tasks'
-              ? 'bg-red-500/30'
-              : isReleasedStatus(releaseSchedule.status) ? 'bg-emerald-500/30' : 'bg-amber-500/30'"
-          >
-            <span class="text-[10px] font-semibold uppercase tracking-wider text-blue-200 mb-0.5">Status</span>
-            <span class="text-sm font-bold">{{ releaseDisplayStatus(data) }}</span>
-          </div>
         </div>
       </div>
     </div>
@@ -75,8 +66,8 @@
           <div class="flex flex-wrap items-center gap-4 mb-3">
             <template v-if="hasSelection">
               <div class="text-sm text-gray-700 dark:text-gray-300">
-                Viewing <strong>{{ familyNarrative }}</strong> version <strong>{{ selection.version }}</strong>,
-                {{ phaseNarrative }} {{ selection.phases.size === 1 ? 'phase' : 'phases' }}.
+                Viewing <strong>{{ familyNarrative }}</strong> version <strong>{{ selection.version }}</strong><template v-if="availablePhases.length > 1">,
+                {{ phaseNarrative }} {{ selection.phases.size === 1 ? 'phase' : 'phases' }}</template>.
               </div>
               <button
                 @click="openModal"
@@ -94,6 +85,15 @@
               Updated {{ formatDate(data.generated_at) }}
             </div>
           </div>
+          <!-- Filter narrative -->
+          <div v-if="hasSelection && hasInitiativeData" class="mb-3">
+            <ReportFilterNarrative
+              :filters="filters"
+              no-filter-text="Showing all components."
+              filter-prefix="Showing components filtered by"
+            />
+          </div>
+
           <!-- Release Decision Status Buttons -->
           <div v-if="director && hasInitiativeData" class="flex flex-wrap gap-2">
             <div
@@ -280,7 +280,7 @@
       </div>
 
       <!-- Section 3: Component Readiness Matrix -->
-      <div v-if="hasInitiativeData && readinessPhases.length" class="mb-6">
+      <div v-if="hasInitiativeData && (readinessPhases.length || allComponents.length)" class="mb-6">
         <div class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
           <div class="px-4 py-3 border-b border-gray-200 dark:border-gray-700 space-y-3">
             <div class="flex items-center justify-between flex-wrap gap-3">
@@ -293,7 +293,8 @@
                   <span class="flex items-center gap-1"><span class="w-2.5 h-2.5 rounded-full bg-gray-300 dark:bg-gray-600 inline-block"></span> Not started</span>
                 </div>
               </div>
-              <div class="flex items-center gap-2">
+              <!-- Phase filter: only show when more than one phase -->
+              <div v-if="availablePhases.length > 1" class="flex items-center gap-2">
                 <span class="text-xs text-gray-500 dark:text-gray-400">Phase:</span>
                 <div class="flex gap-1">
                   <button
@@ -313,7 +314,7 @@
               <span class="text-xs text-gray-500 dark:text-gray-400">Components:</span>
               <button
                 @click="toggleAllComponents"
-                :class="selectedComponents.length === allComponents.length
+                :class="!filters.activeFilters.component || filters.activeFilters.component.length === 0
                   ? 'bg-blue-600 text-white border-blue-600'
                   : 'bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-400 border-gray-300 dark:border-gray-600 hover:border-blue-400'"
                 class="text-xs px-2 py-0.5 rounded border font-medium transition-colors"
@@ -321,24 +322,52 @@
               <button
                 v-for="comp in allComponents"
                 :key="comp"
-                @click="toggleComponentFilter(comp)"
+                @click="filters.toggleFilterValue('component', comp)"
                 :class="[
-                  selectedComponents.includes(comp) ? componentStatusClass(comp) : 'bg-gray-100 dark:bg-gray-800 text-gray-500 border-gray-300 dark:border-gray-700 opacity-50',
+                  isComponentActive(comp) ? componentStatusClass(comp) : 'bg-gray-100 dark:bg-gray-800 text-gray-500 border-gray-300 dark:border-gray-700 opacity-50',
                   'text-xs px-2 py-0.5 rounded border font-medium transition-colors'
                 ]"
               >{{ comp }}</button>
             </div>
           </div>
 
-          <!-- No phase selected message -->
-          <div v-if="!selectedPhases.length" class="p-8 text-center">
+          <!-- No phase selected message (only when multiple phases exist) -->
+          <div v-if="availablePhases.length > 1 && !selectedPhases.length" class="p-8 text-center">
             <p class="text-sm text-gray-500 dark:text-gray-400">Select the Phases above to view component readiness.</p>
           </div>
 
+          <!-- Fallback: Show component tiles when no phases data but components exist -->
+          <div v-else-if="!availablePhases.length && fallbackComponentTiles.length" class="p-4">
+            <div class="flex items-center gap-2 mb-3">
+              <span class="text-xs font-bold uppercase tracking-wide text-gray-500">Components</span>
+              <span class="flex-1 h-px bg-gray-200 dark:bg-gray-700"></span>
+              <span class="text-xs text-gray-400">{{ fallbackComponentTiles.length }} components</span>
+            </div>
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+              <div
+                v-for="tile in fallbackComponentTiles"
+                :key="tile.component"
+                class="bg-white dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-700 p-4"
+              >
+                <div class="flex items-center justify-between mb-3">
+                  <h4 class="text-sm font-semibold text-gray-900 dark:text-white truncate">{{ tile.component }}</h4>
+                  <span class="w-3 h-3 rounded-full bg-gray-300 dark:bg-gray-600 inline-block"></span>
+                </div>
+                <div v-if="tile.blockers > 0" class="flex items-center justify-between text-xs">
+                  <span class="text-red-500">Blockers</span>
+                  <a v-if="tile.blockers_jql_url" :href="tile.blockers_jql_url" target="_blank" class="text-red-500 font-bold hover:underline">{{ tile.blockers }} open ↗</a>
+                  <span v-else class="text-red-500 font-bold">{{ tile.blockers }} open</span>
+                </div>
+                <div v-else class="text-xs text-gray-400">No blockers</div>
+              </div>
+            </div>
+          </div>
+
           <!-- Per-phase sections -->
-          <div v-else class="p-4 space-y-6">
+          <div v-else-if="selectedPhases.length" class="p-4 space-y-6">
             <div v-for="phase in visiblePhases" :key="phase.phase">
-              <div class="flex items-center gap-2 mb-3">
+              <!-- Phase header: only show when more than one phase -->
+              <div v-if="availablePhases.length > 1" class="flex items-center gap-2 mb-3">
                 <span class="text-xs font-bold uppercase tracking-wide text-blue-500">{{ phase.phase }}</span>
                 <span class="flex-1 h-px bg-gray-200 dark:bg-gray-700"></span>
                 <span class="text-xs text-gray-400">{{ filteredPhaseTiles(phase).length }} components</span>
@@ -567,6 +596,9 @@
 
     </div>
 
+    <!-- Filter modal -->
+    <ReportFilterModal :filters="filters" :available-filter-values="availableFilterValues" />
+
     <!-- Select Release Modal -->
     <Teleport to="body">
       <div v-if="modalOpen" class="fixed inset-0 z-50 flex items-center justify-center p-4">
@@ -610,11 +642,14 @@
 </template>
 
 <script setup>
-import { ref, reactive, computed, inject, onMounted, watch } from 'vue'
+import { ref, reactive, computed, inject, onMounted, onUnmounted, watch } from 'vue'
 import { ArrowLeft, Shield } from 'lucide-vue-next'
 import { useReleaseReadiness } from './composables/useReleaseReadiness'
 import { useReleaseSelector, parseReleaseId } from '../composables/useReleaseSelector.js'
-import { isNoWorkResolution, isReleasedStatus, releaseDisplayStatus } from './release-readiness-status.js'
+import { useReportFilters } from './composables/useReportFilters.js'
+import ReportFilterModal from './components/ReportFilterModal.vue'
+import ReportFilterNarrative from './components/ReportFilterNarrative.vue'
+import { isNoWorkResolution } from './release-readiness-status.js'
 
 const moduleNav = inject('moduleNav')
 const props = defineProps({
@@ -683,6 +718,17 @@ const {
   fetchReleases: fetchReadinessReleases
 })
 
+// ── Report filters (component filter with presets) ──
+
+const FILTER_FIELDS = [
+  { key: 'component', label: 'Component' }
+]
+
+const filters = useReportFilters({
+  storageKeyPrefix: 'readiness-report',
+  filterFields: FILTER_FIELDS
+})
+
 const phaseDataMap = ref({})
 const activeReleaseId = ref(null)
 const data = computed(() => phaseDataMap.value[activeReleaseId.value] || null)
@@ -718,7 +764,16 @@ const phaseTabs = computed(() => {
 const JIRA_HOST = 'https://redhat.atlassian.net'
 const expandedPhases = reactive({})
 
+// ── Escape handler ──
+
+function handleEscape(e) {
+  if (e.key !== 'Escape') return
+  if (filters.filterModalOpen.value) { filters.closeFilterModal(); return }
+  if (modalOpen.value) cancelModal()
+}
+
 onMounted(async () => {
+  document.addEventListener('keydown', handleEscape)
   await fetchRegistry()
   const initial = parseReleaseId(props.initialVersion || '')
   if (initial && releases.value.some(r => r.id === props.initialVersion)) {
@@ -730,6 +785,10 @@ onMounted(async () => {
     }
   }
   loadPreReleaseCveSummary()
+})
+
+onUnmounted(() => {
+  document.removeEventListener('keydown', handleEscape)
 })
 
 function goBack() {
@@ -762,7 +821,6 @@ async function loadSelectedPhases() {
     }
 
     if (data.value?.component_readiness) {
-      selectedComponents.value = [...(data.value.component_readiness.all_components || [])]
       selectedPhases.value = [...availablePhases.value]
     }
   } catch (err) {
@@ -855,15 +913,26 @@ const productBlockers = computed(() => {
 
   const openComponents = (raw.components || [])
     .filter(c => {
-      const openIssues = (c.issues || []).filter(i => i.status_category !== 'Done')
-      return openIssues.length > 0
+      // Support both formats: issues array or pre-computed open count
+      if (c.issues && c.issues.length > 0) {
+        const openIssues = c.issues.filter(i => i.status_category !== 'Done')
+        return openIssues.length > 0
+      }
+      // Fallback to pre-computed open count (from external scripts)
+      return (c.open || 0) > 0
     })
     .map(c => {
-      const openIssues = (c.issues || []).filter(i => i.status_category !== 'Done')
-      return { ...c, open: openIssues.length, issues: openIssues }
+      // Support both formats: issues array or pre-computed open count
+      if (c.issues && c.issues.length > 0) {
+        const openIssues = c.issues.filter(i => i.status_category !== 'Done')
+        return { ...c, open: openIssues.length, issues: openIssues }
+      }
+      // Fallback to pre-computed open count (from external scripts)
+      return { ...c, open: c.open || 0, issues: [] }
     })
 
-  const totalOpen = openComponents.reduce((sum, c) => sum + c.open, 0)
+  // Use raw total_open if provided, otherwise compute from components
+  const totalOpen = raw.total_open ?? openComponents.reduce((sum, c) => sum + c.open, 0)
 
   let jqlUrl = raw.jql_url || ''
   if (jqlUrl && !jqlUrl.includes('statusCategory')) {
@@ -897,7 +966,7 @@ const testSignOffRag = computed(() => {
 // --- Phase filter ---
 
 const availablePhases = computed(() => {
-  if (!data.value || !data.value.component_readiness) return []
+  if (!data.value || !data.value.component_readiness || !data.value.component_readiness.phases) return []
   return data.value.component_readiness.phases.map(p => p.phase)
 })
 
@@ -913,7 +982,7 @@ function togglePhaseFilter(phase) {
 }
 
 const readinessPhases = computed(() => {
-  if (!data.value || !data.value.component_readiness) return []
+  if (!data.value || !data.value.component_readiness || !data.value.component_readiness.phases) return []
   return data.value.component_readiness.phases
 })
 
@@ -981,8 +1050,8 @@ const testExecPct = computed(() => {
 // --- Release Decision Status ---
 
 const releaseStatuses = [
-  { id: 'not-ready', label: 'Not Ready', activeClass: 'bg-red-600 text-white border-red-600', tooltip: 'Multiple gates below 50%, or open blockers with overall completion under 50%. Not all sign-offs complete.' },
-  { id: 'in-progress', label: 'In Progress', activeClass: 'bg-blue-600 text-white border-blue-600', tooltip: 'Testing started but gates are below 80% completion. Work is actively progressing.' },
+  { id: 'not-ready', label: 'Not Ready', activeClass: 'bg-red-600 text-white border-red-600', tooltip: 'Any gate below 10%, or open blockers with overall completion under 10%. Release work has not meaningfully started.' },
+  { id: 'in-progress', label: 'In Progress', activeClass: 'bg-blue-600 text-white border-blue-600', tooltip: 'All gates above 10%, or completion above 10% with open blockers. Work is actively progressing.' },
   { id: 'at-risk', label: 'At Risk', activeClass: 'bg-amber-500 text-white border-amber-500', tooltip: 'Progress above 50% but open blockers, a lagging gate, or GA date imminent. Timeline may slip.' },
   { id: 'on-track', label: 'On Track', activeClass: 'bg-emerald-500 text-white border-emerald-500', tooltip: 'All gates above 80%. No critical blockers. Sign-offs progressing on schedule.' },
   { id: 'ready-to-ship', label: 'Ready to Ship', activeClass: 'bg-green-600 text-white border-green-600', tooltip: 'All gates at 100%. All sign-offs done. Zero open blockers. Go for release.' },
@@ -1011,16 +1080,6 @@ const decisionGates = computed(() => {
   return gates.filter(g => g.total > 0)
 })
 
-// Weighted completion across every gate: total done / total items. Reflects the
-// real percentage of release work completed.
-const releaseCompletionPct = computed(() => {
-  const gates = decisionGates.value
-  const total = gates.reduce((s, g) => s + g.total, 0)
-  if (!total) return 0
-  const done = gates.reduce((s, g) => s + g.done, 0)
-  return Math.round((done / total) * 100)
-})
-
 // Whole days from today until the GA date (negative once GA has passed).
 // null when the schedule has no GA date, so any GA-based rule degrades to a
 // no-op rather than firing on missing data (common for EA milestones).
@@ -1033,60 +1092,63 @@ const daysToGa = computed(() => {
   return Math.round((ga - today) / 86400000)
 })
 
-// Schedule risk: GA is imminent (within 3 days, and not already past) but the
-// release is not yet 80% complete. Used to escalate the decision to At Risk.
-const GA_NEAR_DAYS = 3
-const gaScheduleRisk = computed(() => {
-  const d = daysToGa.value
-  return d !== null && d >= 0 && d <= GA_NEAR_DAYS && releaseCompletionPct.value < 80
-})
-
+// Release decision is computed locally using decision_config from the pipeline.
+// This allows real-time updates and keeps all decision logic in one place.
+// Config from pipeline controls which gates to use for early states (Not Ready / In Progress).
 const releaseDecision = computed(() => {
+  const config = director.value?.decision_config || {
+    early_state_gates: ['Test Execution', 'Test Plan Sign Off'],
+    ga_proximity_days: 3
+  }
   const gates = decisionGates.value
   if (!gates.length) return 'not-ready'
 
   const gatePct = g => (g.total > 0 ? (g.done / g.total) * 100 : 0)
   const openBlockers = productBlockers.value?.total_open || 0
-  const completion = releaseCompletionPct.value // weighted, real completion
+
+  // Filter gates based on config for early states (Not Ready / In Progress)
+  const earlyGates = gates.filter(g => config.early_state_gates.includes(g.name))
+  const hasEarlyGates = earlyGates.length > 0
+
+  // Metrics for early state gates
+  const earlyTotal = earlyGates.reduce((s, g) => s + g.total, 0)
+  const earlyDone = earlyGates.reduce((s, g) => s + g.done, 0)
+  const earlyCompletion = earlyTotal > 0 ? (earlyDone / earlyTotal) * 100 : 0
+  const earlyAnyBelow10 = hasEarlyGates ? earlyGates.some(g => gatePct(g) < 10) : true
+  const earlyAllAbove10 = hasEarlyGates ? earlyGates.every(g => gatePct(g) > 10) : false
+
+  // Metrics for ALL gates (used for advanced states)
+  const allTotal = gates.reduce((s, g) => s + g.total, 0)
+  const allDone = gates.reduce((s, g) => s + g.done, 0)
+  const allCompletion = allTotal > 0 ? (allDone / allTotal) * 100 : 0
   const gatesBelow50 = gates.filter(g => gatePct(g) < 50).length
   const allGatesAbove80 = gates.every(g => gatePct(g) >= 80)
   const allGates100 = gates.every(g => gatePct(g) >= 100)
 
-  // Base decision from gates + blockers, evaluated best to worst; the strongest
-  // fully-satisfied state wins.
-  const base = (() => {
-    // Ready to Ship: every gate 100% complete and zero open blockers.
-    if (allGates100 && openBlockers === 0) return 'ready-to-ship'
+  // Days to GA for blocker proximity check
+  const d = daysToGa.value
+  const gaProximityDays = config.ga_proximity_days || 3
 
-    // On Track: every gate at/above 80% and no open blockers.
-    if (allGatesAbove80 && openBlockers === 0) return 'on-track'
+  // Evaluate from best to worst state
+  // Ready to Ship: ALL gates 100% AND no blockers
+  if (allGates100 && openBlockers === 0) return 'ready-to-ship'
 
-    // Not Ready: two or more gates below 50%, OR open blockers while overall
-    // completion is still low. A stalled/early release is not ready regardless
-    // of whether blockers have been filed yet.
-    if (gatesBelow50 >= 2 || (openBlockers > 0 && completion < 50)) return 'not-ready'
+  // On Track: ALL gates >= 80% AND no blockers
+  if (allGatesAbove80 && openBlockers === 0) return 'on-track'
 
-    // At Risk: meaningful progress (>= 50% overall) but something is
-    // jeopardizing the timeline — an open blocker or a single lagging gate.
-    if (completion >= 50 && (openBlockers > 0 || gatesBelow50 >= 1)) return 'at-risk'
+  // At Risk: blockers > 0 AND within GA proximity days (regardless of completion)
+  if (openBlockers > 0 && d !== null && d >= 0 && d <= gaProximityDays) return 'at-risk'
 
-    // In Progress: work has started and gates are progressing (below 80%) with
-    // nothing actively putting the release at risk.
-    if (completion > 0) return 'in-progress'
+  // At Risk: meaningful progress (>= 50%) but blockers or lagging gate
+  if (allCompletion >= 50 && (openBlockers > 0 || gatesBelow50 >= 1)) return 'at-risk'
 
-    // Nothing started.
-    return 'not-ready'
-  })()
+  // Not Ready: any early gate below 10%, OR blockers with < 10% early completion
+  if (earlyAnyBelow10 || (openBlockers > 0 && earlyCompletion < 10)) return 'not-ready'
 
-  // Schedule-risk overlay: if GA is within 3 days and the release is under 80%
-  // complete, escalate to At Risk. Only escalate — never soften an already
-  // worse state (e.g. Not Ready stays Not Ready). Has no effect when the GA
-  // date is missing, so EA releases without a GA date are unaffected.
-  if (gaScheduleRisk.value && (base === 'in-progress' || base === 'on-track')) {
-    return 'at-risk'
-  }
+  // In Progress: all early gates > 10%, OR early completion > 10% with blockers
+  if (earlyAllAbove10 || (earlyCompletion > 10 && openBlockers > 0)) return 'in-progress'
 
-  return base
+  return 'not-ready'
 })
 
 // --- Component Filter ---
@@ -1096,41 +1158,61 @@ const allComponents = computed(() => {
   return data.value.component_readiness.all_components || []
 })
 
-const selectedComponents = ref([])
+const availableFilterValues = computed(() => ({
+  component: allComponents.value
+}))
 
-function toggleComponentFilter(comp) {
-  const idx = selectedComponents.value.indexOf(comp)
-  if (idx >= 0) {
-    selectedComponents.value.splice(idx, 1)
-  } else {
-    selectedComponents.value.push(comp)
-  }
+function isComponentActive(comp) {
+  const active = filters.activeFilters.component
+  if (!active || active.length === 0) return true
+  return active.includes(comp)
 }
 
 function toggleAllComponents() {
-  if (selectedComponents.value.length === allComponents.value.length) {
-    selectedComponents.value = []
-  } else {
-    selectedComponents.value = [...allComponents.value]
-  }
+  filters.clearAllFilters()
 }
 
 function filteredPhaseTiles(phase) {
-  if (!selectedComponents.value.length || selectedComponents.value.length === allComponents.value.length) {
-    return phase.tiles
-  }
-  return phase.tiles.filter(t => selectedComponents.value.includes(t.component))
+  return filters.filterItems(phase.tiles || [])
 }
+
+// Fallback tiles when phases data is missing but components are available
+const fallbackComponentTiles = computed(() => {
+  if (!allComponents.value.length) return []
+  const activeComps = filters.activeFilters.component
+  const compsToShow = (activeComps && activeComps.length > 0) ? activeComps : allComponents.value
+  
+  // Get blocker info from product_blockers
+  const blockersByComponent = {}
+  if (productBlockers.value?.components) {
+    for (const c of productBlockers.value.components) {
+      blockersByComponent[c.component] = c
+    }
+  }
+  
+  return compsToShow.map(comp => ({
+    component: comp,
+    blockers: blockersByComponent[comp]?.open || 0,
+    blockers_jql_url: blockersByComponent[comp]?.jql_url || null,
+    // Empty placeholders for missing data
+    tfa_breakdown: null,
+    execution: null,
+    failed_breakdown: null,
+    skipped_breakdown: null,
+    product_signoff: null
+  }))
+})
 
 function componentStatusClass(comp) {
   if (!data.value || !data.value.component_readiness) return 'bg-gray-600 text-white border-gray-600'
-  const phases = data.value.component_readiness.phases
+  const phases = data.value.component_readiness.phases || []
+  if (!phases.length) return 'bg-gray-600 text-white border-gray-600'
   let failedOpen = 0
   let tfaOpen = 0
   let tfaTotal = 0
   let allProductDone = true
   for (const p of phases) {
-    const tile = p.tiles.find(t => t.component === comp)
+    const tile = (p.tiles || []).find(t => t.component === comp)
     if (!tile) continue
     failedOpen += (tile.failed_breakdown?.new || 0) + (tile.failed_breakdown?.in_progress || 0)
     if (tile.tfa_breakdown) {

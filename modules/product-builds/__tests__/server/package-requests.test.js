@@ -77,7 +77,7 @@ function validBody(overrides = {}) {
     version: '2.5.1',
     other_hardware: '',
     hardware_defaults_acknowledged: true,
-    jira_id: 'AIPCC-42',
+    jira_id: 'RHAI-42',
     justification: 'Needed for CUDA wheel builds',
     delivery_timeline: isoDaysFromNow(30),
     release_target: ['3.4'],
@@ -101,7 +101,7 @@ function makeJira(overrides = {}) {
         return [{ id: '2', name: 'Vision' }, { id: '1', name: 'AI Core Platform' }]
       }
       if (path === '/rest/api/3/issue' && method === 'POST') {
-        return { key: 'AIPCC-999', id: '10999' }
+        return { key: 'RHAI-999', id: '10999' }
       }
       if (method === 'PUT') {
         return {}
@@ -254,7 +254,7 @@ describe('package-requests', () => {
       ])
     })
 
-    it('supports AIPCC and RHAI and caches each project independently', async () => {
+    it('supports RHAISTRAT and RHAI and caches each project independently', async () => {
       const jira = makeJira({
         jiraRequest: vi.fn(async (path) => {
           const project = path.split('/')[5]
@@ -263,13 +263,13 @@ describe('package-requests', () => {
       })
       const { router } = register({ jiraClient: jira })
 
-      const aipcc = await callTeamsHandler(router, { query: { project: 'AIPCC' } })
+      const rhaistrat = await callTeamsHandler(router, { query: { project: 'RHAISTRAT' } })
       const rhai = await callTeamsHandler(router, { query: { project: 'RHAI' } })
-      const cachedAipcc = await callTeamsHandler(router, { query: { project: 'AIPCC' } })
+      const cachedRhai = await callTeamsHandler(router, { query: { project: 'RHAI' } })
 
-      expect(aipcc._json).toEqual([{ value: 'AIPCC component', label: 'AIPCC component' }])
+      expect(rhaistrat._json).toEqual([{ value: 'RHAISTRAT component', label: 'RHAISTRAT component' }])
       expect(rhai._json).toEqual([{ value: 'RHAI component', label: 'RHAI component' }])
-      expect(cachedAipcc._json).toEqual(aipcc._json)
+      expect(cachedRhai._json).toEqual(rhai._json)
       expect(jira.jiraRequest).toHaveBeenCalledTimes(2)
     })
 
@@ -278,23 +278,22 @@ describe('package-requests', () => {
       const { router } = register({ jiraClient: jira, isDemoMode: true })
 
       const rhaistrat = await callTeamsHandler(router)
-      const aipcc = await callTeamsHandler(router, { query: { project: 'AIPCC' } })
       const rhai = await callTeamsHandler(router, { query: { project: 'RHAI' } })
 
       expect(rhaistrat._json).toContainEqual({ value: 'AI Core Platform', label: 'AI Core Platform' })
-      expect(aipcc._json).toContainEqual({ value: 'AIPCC Ecosystems', label: 'AIPCC Ecosystems' })
       expect(rhai._json).toContainEqual({ value: 'AIPCC Ecosystems', label: 'AIPCC Ecosystems' })
       expect(jira.jiraRequest).not.toHaveBeenCalled()
     })
 
-    it('rejects unsupported projects before calling Jira', async () => {
+    it('rejects unsupported projects, including the deprecated AIPCC, before calling Jira', async () => {
       const jira = makeJira()
       const { router } = register({ jiraClient: jira })
 
-      const res = await callTeamsHandler(router, { query: { project: 'RHOAIENG' } })
-
-      expect(res._status).toBe(400)
-      expect(res._json.message).toContain('RHAISTRAT, AIPCC, RHAI')
+      for (const project of ['RHOAIENG', 'AIPCC']) {
+        const res = await callTeamsHandler(router, { query: { project } })
+        expect(res._status).toBe(400)
+        expect(res._json.message).toContain('RHAISTRAT, RHAI')
+      }
       expect(jira.jiraRequest).not.toHaveBeenCalled()
     })
 
@@ -425,7 +424,7 @@ describe('package-requests', () => {
     it('rejects invalid Jira keys', async () => {
       await expect422(validBody({ jira_id: 'aipcc-42' }), 'jira_id')
       await expect422(validBody({ jira_id: 'A-42' }), 'jira_id')
-      await expect422(validBody({ jira_id: 'AIPCC-42-' }), 'jira_id')
+      await expect422(validBody({ jira_id: 'RHAI-42-' }), 'jira_id')
       await expect422(validBody({ jira_id: '' }), 'jira_id')
     })
 
@@ -517,7 +516,7 @@ describe('package-requests', () => {
         demo: true,
         requester: 'jane@redhat.com',
         summary: 'vllm[cu12] package update request',
-        jira: { key: 'AIPCC-DEMO', url: null, project: 'AIPCC' },
+        jira: { key: 'RHAI-DEMO', url: null, project: 'RHAI' },
         reporter_set: false,
         pipeline: { triggered: false, reason: 'demo mode' }
       })
@@ -544,10 +543,10 @@ describe('package-requests', () => {
     it('returns 409 with existing tickets when a recent duplicate Epic exists', async () => {
       const jira = makeJira({
         fetchAllJqlResults: vi.fn(async (jql) => {
-          expect(jql).toContain('project = AIPCC')
+          expect(jql).toContain('project = RHAI')
           expect(jql).toContain('issuetype = Epic')
           return [{
-            key: 'AIPCC-100',
+            key: 'RHAI-100',
             fields: {
               summary: 'vllm[cu12] package update request',
               status: { name: 'To Do' },
@@ -562,11 +561,11 @@ describe('package-requests', () => {
       expect(res._status).toBe(409)
       expect(res._json.existing_tickets).toEqual([
         {
-          key: 'AIPCC-100',
+          key: 'RHAI-100',
           summary: 'vllm[cu12] package update request',
           status: 'To Do',
           created: '2026-06-01T00:00:00.000Z',
-          url: 'https://redhat.atlassian.net/browse/AIPCC-100'
+          url: 'https://redhat.atlassian.net/browse/RHAI-100'
         }
       ])
       expect(epicPostCall(jira)).toBeUndefined()
@@ -575,7 +574,7 @@ describe('package-requests', () => {
     function jiraWithExistingEpics(summaries) {
       return makeJira({
         fetchAllJqlResults: vi.fn(async () => summaries.map((summary, i) => ({
-          key: 'AIPCC-' + (100 + i),
+          key: 'RHAI-' + (100 + i),
           fields: { summary, status: { name: 'To Do' }, created: '2026-06-01T00:00:00.000Z' }
         })))
       })
@@ -619,7 +618,7 @@ describe('package-requests', () => {
         { package_name: 'torch', extras: ['cuda', 'rocm'] }
       )
       expect(res._status).toBe(409)
-      expect(res._json.existing_tickets.map(t => t.key)).toEqual(['AIPCC-100'])
+      expect(res._json.existing_tickets.map(t => t.key)).toEqual(['RHAI-100'])
     })
 
     it('proceeds when the duplicate search fails (fail open)', async () => {
@@ -645,7 +644,7 @@ describe('package-requests', () => {
       const { router } = register({ jiraClient: jira, fetch: makeFetch(), fetchIndex: vi.fn(async () => ({ found: false, files: [] })) })
       const res = await callHandler(router, { userEmail: 'jane@redhat.com', body: validBody() })
       expect(res._status).toBe(422)
-      expect(res._json.fields.jira_id).toContain('AIPCC-42')
+      expect(res._json.fields.jira_id).toContain('RHAI-42')
     })
   })
 
@@ -685,7 +684,7 @@ describe('package-requests', () => {
         body: validBody({ skip_production_check: true })
       })
       expect(retry._status).toBe(201)
-      expect(retry._json.jira.key).toBe('AIPCC-999')
+      expect(retry._json.jira.key).toBe('RHAI-999')
     })
 
     it('skips the production check when skip_production_check is true', async () => {
@@ -718,7 +717,7 @@ describe('package-requests', () => {
   })
 
   describe('successful creation', () => {
-    it('creates the AIPCC Epic, sets release target, and triggers the pipeline', async () => {
+    it('creates the RHAI Epic, sets release target, and triggers the pipeline', async () => {
       const jira = makeJira()
       const fetchMock = makeFetch()
       const fetchIndex = vi.fn(async () => ({ found: false, files: [] }))
@@ -733,11 +732,11 @@ describe('package-requests', () => {
       expect(res._json.status).toBe('created')
       expect(res._json.requester).toBe('jane@redhat.com')
       expect(res._json.jira).toEqual({
-        key: 'AIPCC-999',
+        key: 'RHAI-999',
         id: '10999',
-        url: 'https://redhat.atlassian.net/browse/AIPCC-999',
+        url: 'https://redhat.atlassian.net/browse/RHAI-999',
         summary: 'vllm[cu12] package update request',
-        project: 'AIPCC'
+        project: 'RHAI'
       })
       expect(res._json.release_target_set).toBe(true)
       expect(res._json.pipeline).toEqual({
@@ -751,7 +750,7 @@ describe('package-requests', () => {
       expect(post).toBeDefined()
       const fields = post[1].body.fields
       expect(fields.project).toEqual({ key: DEFAULT_JIRA_PROJECT })
-      expect(res._json.jira.project).toBe('AIPCC')
+      expect(res._json.jira.project).toBe('RHAI')
       expect(fields.issuetype).toEqual({ name: 'Epic' })
       expect(fields.summary).toBe('vllm[cu12] package update request')
       expect(fields.labels).toContain('package')
@@ -775,7 +774,7 @@ describe('package-requests', () => {
       expect(descText).toContain('Hardware defaults acknowledged: yes')
       expect(descText).toContain('Justification: Needed for CUDA wheel builds')
       expect(descText).toContain('Target Date: ' + isoDaysFromNow(30))
-      expect(descText).toContain('Related Jira Ticket: AIPCC-42')
+      expect(descText).toContain('Related Jira Ticket: RHAI-42')
       expect(descText).toContain('Release Commitment: 3.4 GA')
       expect(descText).toContain('Testing requirements: N/A')
       expect(descText).toContain('Testing defaults acknowledged: yes')
@@ -783,7 +782,7 @@ describe('package-requests', () => {
 
       // Release target custom field update (non-fatal path succeeded)
       const put = jira.jiraRequest.mock.calls.find(
-        c => c[0] === '/rest/api/3/issue/AIPCC-999' && c[1] && c[1].method === 'PUT'
+        c => c[0] === '/rest/api/3/issue/RHAI-999' && c[1] && c[1].method === 'PUT'
       )
       expect(put).toBeDefined()
       expect(put[1].body.fields).toEqual({
@@ -803,7 +802,7 @@ describe('package-requests', () => {
         ref: 'main',
         variables: [
           { key: 'PACKAGE_NAME', value: 'vllm[cu12]' },
-          { key: 'JIRA_TICKET_ID', value: 'AIPCC-999' },
+          { key: 'JIRA_TICKET_ID', value: 'RHAI-999' },
           { key: 'PACKAGE_VERSION', value: '2.5.1' }
         ]
       })
@@ -821,7 +820,7 @@ describe('package-requests', () => {
 
       const res = await callHandler(router, { userEmail: 'jane@redhat.com', body: validBody() })
       expect(res._status).toBe(201)
-      expect(res._json.jira.key).toBe('AIPCC-999')
+      expect(res._json.jira.key).toBe('RHAI-999')
       expect(res._json.pipeline.triggered).toBe(false)
       expect(res._json.pipeline.error).toContain('500')
       expect(epicPostCall(jira)).toBeDefined()
@@ -841,11 +840,11 @@ describe('package-requests', () => {
           if (path === '/rest/api/3/issue' && method === 'POST') {
             createAttempts += 1
             if (createAttempts === 1) throw new Error('temporary Jira failure')
-            return { key: 'AIPCC-999', id: '10999' }
+            return { key: 'RHAI-999', id: '10999' }
           }
           if (method === 'PUT') return {}
           if (path.startsWith('/rest/api/3/issue/') && path.includes('fields=summary')) {
-            return { key: 'AIPCC-42', fields: { summary: 'Related issue summary' } }
+            return { key: 'RHAI-42', fields: { summary: 'Related issue summary' } }
           }
           throw new Error('Unexpected jiraRequest in mock: ' + method + ' ' + path)
         })
@@ -881,7 +880,7 @@ describe('package-requests', () => {
           }
           if (method === 'PUT') return {}
           if (path.startsWith('/rest/api/3/issue/') && path.includes('fields=summary')) {
-            return { key: 'AIPCC-42', fields: { summary: 'Related issue summary' } }
+            return { key: 'RHAI-42', fields: { summary: 'Related issue summary' } }
           }
           throw new Error('Unexpected jiraRequest in mock: ' + method + ' ' + path)
         })
@@ -895,7 +894,7 @@ describe('package-requests', () => {
       const firstPromise = callHandler(router, { userEmail: 'jane@redhat.com', body: validBody() })
       await postStarted
       const concurrent = await callHandler(router, { userEmail: 'jane@redhat.com', body: validBody() })
-      finishPost({ key: 'AIPCC-999', id: '10999' })
+      finishPost({ key: 'RHAI-999', id: '10999' })
       const first = await firstPromise
 
       expect(first._status).toBe(201)
@@ -951,7 +950,7 @@ describe('package-requests', () => {
           if (path.startsWith('/rest/api/3/user/search')) return []
           if (path === '/rest/api/3/issue' && method === 'POST') return { key: keyPrefix + '-7', id: '7' }
           if (method === 'PUT') return {}
-          if (path.startsWith('/rest/api/3/issue/')) return { key: 'AIPCC-42', fields: { summary: 'Related' } }
+          if (path.startsWith('/rest/api/3/issue/')) return { key: 'RHAI-42', fields: { summary: 'Related' } }
           throw new Error('Unexpected ' + method + ' ' + path)
         })
       })
@@ -967,13 +966,13 @@ describe('package-requests', () => {
       expect(res._json.jira).toMatchObject({ key: 'RHAI-7', project: 'RHAI' })
     })
 
-    it('falls back to AIPCC for RHAISTRAT, which has no Epic type', async () => {
-      const jira = jiraCreating('AIPCC')
+    it('falls back to RHAI for RHAISTRAT, which has no Epic type', async () => {
+      const jira = jiraCreating('RHAI')
       const { router } = register({ jiraClient: jira, fetch: makeFetch(), fetchIndex: vi.fn(async () => ({ found: false, files: [] })) })
       const res = await callHandler(router, { userEmail: 'jane@redhat.com', body: validBody({ project: 'RHAISTRAT' }) })
       expect(res._status).toBe(201)
-      expect(epicPostCall(jira)[1].body.fields.project).toEqual({ key: 'AIPCC' })
-      expect(res._json.jira.project).toBe('AIPCC')
+      expect(epicPostCall(jira)[1].body.fields.project).toEqual({ key: 'RHAI' })
+      expect(res._json.jira.project).toBe('RHAI')
     })
 
     it('uses the selected project for the demo-mode key and accepts lowercase input', async () => {
@@ -983,11 +982,14 @@ describe('package-requests', () => {
       expect(res._json.jira).toEqual({ key: 'RHAI-DEMO', url: null, project: 'RHAI' })
     })
 
-    it('rejects an unknown project with 422', async () => {
+    it('rejects an unknown or deprecated project with 422', async () => {
       const { router } = register({ jiraClient: makeJira(), fetch: makeFetch() })
+      const deprecated = await callHandler(router, { userEmail: 'jane@redhat.com', body: validBody({ project: 'AIPCC' }) })
+      expect(deprecated._status).toBe(422)
+      expect(deprecated._json.fields.project).toContain('RHAISTRAT, RHAI')
       const res = await callHandler(router, { userEmail: 'jane@redhat.com', body: validBody({ project: 'NOPE' }) })
       expect(res._status).toBe(422)
-      expect(res._json.fields.project).toContain('RHAISTRAT, AIPCC, RHAI')
+      expect(res._json.fields.project).toContain('RHAISTRAT, RHAI')
     })
 
     it('keeps the pinned PACKAGE_REQUEST_JIRA_PROJECT even when the form picks another project', async () => {
@@ -1011,7 +1013,7 @@ describe('package-requests', () => {
           if (path.startsWith('/rest/api/3/user/search')) return searchResult(path)
           if (path === '/rest/api/3/issue' && method === 'POST') return createImpl(opts)
           if (method === 'PUT') return {}
-          if (path.startsWith('/rest/api/3/issue/')) return { key: 'AIPCC-42', fields: { summary: 'Related' } }
+          if (path.startsWith('/rest/api/3/issue/')) return { key: 'RHAI-42', fields: { summary: 'Related' } }
           throw new Error('Unexpected ' + method + ' ' + path)
         })
       })
@@ -1024,7 +1026,7 @@ describe('package-requests', () => {
           searched.push(decodeURIComponent(path))
           return [{ accountId: 'acc-g', emailAddress: 'gnaponie@redhat.com', accountType: 'atlassian' }]
         },
-        () => ({ key: 'AIPCC-500', id: '500' })
+        () => ({ key: 'RHAI-500', id: '500' })
       )
       const { router } = register({ jiraClient: jira, fetch: makeFetch(), fetchIndex: vi.fn(async () => ({ found: false, files: [] })) })
       const res = await callHandler(router, { userEmail: 'gnaponie@cluster.local', body: validBody() })
@@ -1046,7 +1048,7 @@ describe('package-requests', () => {
           if (opts.body.fields.reporter) {
             throw new Error('Jira API error (400): {"errorMessages":[],"errors":{"reporter":"Field \'reporter\' cannot be set. It is not on the appropriate screen, or unknown."}}')
           }
-          return { key: 'AIPCC-501', id: '501' }
+          return { key: 'RHAI-501', id: '501' }
         }
       )
       const { router } = register({ jiraClient: jira, fetch: makeFetch(), fetchIndex: vi.fn(async () => ({ found: false, files: [] })) })
@@ -1055,7 +1057,7 @@ describe('package-requests', () => {
       expect(attempts).toHaveLength(2)
       expect(attempts[0].reporter).toEqual({ accountId: 'acc-1' })
       expect(attempts[1].reporter).toBeUndefined()
-      expect(res._json.jira.key).toBe('AIPCC-501')
+      expect(res._json.jira.key).toBe('RHAI-501')
       expect(res._json.reporter_set).toBe(false)
     })
 
@@ -1075,7 +1077,7 @@ describe('package-requests', () => {
     })
 
     it('reports reporter_set false when the requester cannot be resolved', async () => {
-      const jira = jiraCapturingSearch(() => [], () => ({ key: 'AIPCC-502', id: '502' }))
+      const jira = jiraCapturingSearch(() => [], () => ({ key: 'RHAI-502', id: '502' }))
       const { router } = register({ jiraClient: jira, fetch: makeFetch(), fetchIndex: vi.fn(async () => ({ found: false, files: [] })) })
       const res = await callHandler(router, { userEmail: 'ghost@cluster.local', body: validBody() })
       expect(res._status).toBe(201)
@@ -1138,7 +1140,7 @@ describe('package-requests', () => {
           if (path.startsWith('/rest/api/3/user/search')) return []
           if (path === '/rest/api/3/issue' && method === 'POST') return { key: 'TESTPROJ-7', id: '7' }
           if (method === 'PUT') return {}
-          if (path.startsWith('/rest/api/3/issue/')) return { key: 'AIPCC-42', fields: { summary: 'Related' } }
+          if (path.startsWith('/rest/api/3/issue/')) return { key: 'RHAI-42', fields: { summary: 'Related' } }
           throw new Error('Unexpected ' + method + ' ' + path)
         })
       })
@@ -1263,7 +1265,7 @@ describe('package-requests', () => {
 
     it('buildDuplicateJql targets recent package Epics in the configured project', () => {
       const jql = buildDuplicateJql('vllm')
-      expect(jql).toContain('project = AIPCC')
+      expect(jql).toContain('project = RHAI')
       expect(buildDuplicateJql('vllm', 'TESTPROJ')).toContain('project = TESTPROJ')
       expect(jql).toContain('issuetype = Epic')
       expect(jql).toContain('"package", "dashboard-filed"')
@@ -1273,10 +1275,10 @@ describe('package-requests', () => {
 
     it('buildPipelineVariables carries the request into pipeline variables', () => {
       const request = validateRequest(validBody()).request
-      const vars = buildPipelineVariables(request, 'AIPCC-999')
+      const vars = buildPipelineVariables(request, 'RHAI-999')
       expect(vars).toEqual({
         PACKAGE_NAME: 'vllm[cu12]',
-        JIRA_TICKET_ID: 'AIPCC-999',
+        JIRA_TICKET_ID: 'RHAI-999',
         PACKAGE_VERSION: '2.5.1'
       })
     })
@@ -1321,25 +1323,25 @@ describe('package-requests', () => {
     })
 
     it('selectFilingProject honours the form choice unless the project is pinned', () => {
-      const unlocked = { project: 'AIPCC', locked: false }
+      const unlocked = { project: 'RHAI', locked: false }
       expect(selectFilingProject('RHAI', unlocked)).toBe('RHAI')
-      expect(selectFilingProject('AIPCC', unlocked)).toBe('AIPCC')
-      expect(selectFilingProject('RHAISTRAT', unlocked)).toBe('AIPCC')
-      expect(selectFilingProject(null, unlocked)).toBe('AIPCC')
+      expect(selectFilingProject('AIPCC', unlocked)).toBe('RHAI')
+      expect(selectFilingProject('RHAISTRAT', unlocked)).toBe('RHAI')
+      expect(selectFilingProject(null, unlocked)).toBe('RHAI')
       expect(selectFilingProject('RHAI', { project: 'TESTPROJ', locked: true })).toBe('TESTPROJ')
       expect(selectFilingProject('RHAI', undefined)).toBe('RHAI')
-      expect(selectFilingProject(undefined, undefined)).toBe('AIPCC')
-      expect(resolveJiraProjectConfig({})).toEqual({ project: 'AIPCC', locked: false })
-      expect(resolveJiraProjectConfig({ PACKAGE_REQUEST_JIRA_PROJECT: 'aipcc' })).toEqual({ project: 'AIPCC', locked: true })
+      expect(selectFilingProject(undefined, undefined)).toBe('RHAI')
+      expect(resolveJiraProjectConfig({})).toEqual({ project: 'RHAI', locked: false })
+      expect(resolveJiraProjectConfig({ PACKAGE_REQUEST_JIRA_PROJECT: 'rhai' })).toEqual({ project: 'RHAI', locked: true })
     })
 
-    it('resolveJiraProject defaults to AIPCC and validates overrides', () => {
+    it('resolveJiraProject defaults to RHAI and validates overrides', () => {
       const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
-      expect(resolveJiraProject({})).toBe('AIPCC')
-      expect(resolveJiraProject(undefined)).toBe('AIPCC')
-      expect(resolveJiraProject({ PACKAGE_REQUEST_JIRA_PROJECT: '' })).toBe('AIPCC')
+      expect(resolveJiraProject({})).toBe('RHAI')
+      expect(resolveJiraProject(undefined)).toBe('RHAI')
+      expect(resolveJiraProject({ PACKAGE_REQUEST_JIRA_PROJECT: '' })).toBe('RHAI')
       expect(resolveJiraProject({ PACKAGE_REQUEST_JIRA_PROJECT: ' testproj ' })).toBe('TESTPROJ')
-      expect(resolveJiraProject({ PACKAGE_REQUEST_JIRA_PROJECT: 'bad key!' })).toBe('AIPCC')
+      expect(resolveJiraProject({ PACKAGE_REQUEST_JIRA_PROJECT: 'bad key!' })).toBe('RHAI')
       expect(warn).toHaveBeenCalledTimes(1)
       warn.mockRestore()
     })

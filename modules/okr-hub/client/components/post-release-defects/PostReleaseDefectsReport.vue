@@ -126,6 +126,18 @@
         </div>
       </div>
 
+      <div v-if="selectedReleasedVersions.length > 0" class="bg-white dark:bg-gray-800 rounded-lg shadow p-6 mb-6">
+        <h2 class="text-lg font-semibold mb-1">Post-Release Bugs by Jira Status</h2>
+        <p class="text-xs text-gray-500 dark:text-gray-400 mb-4">Current Jira status of post-release bugs for the selected versions, using the same component and priority filters.</p>
+        <div v-if="statusChartData.labels.length > 0" class="h-[28rem]">
+          <BugStatusChart
+            :labels="statusChartData.labels"
+            :datasets="statusChartData.datasets"
+          />
+        </div>
+        <p v-else class="py-12 text-center text-sm text-gray-500 dark:text-gray-400">No post-release bugs found for the selected filters.</p>
+      </div>
+
       <div v-else-if="selectedVersions.length === 0" class="text-center py-12 text-gray-500 dark:text-gray-400">
         <p>Select versions to view cumulative bug trends</p>
       </div>
@@ -329,6 +341,7 @@ import VersionSelector from './VersionSelector.vue';
 import ComponentFilter from './ComponentFilter.vue';
 import PriorityFilter from './PriorityFilter.vue';
 import CumulativeBugChart from './CumulativeBugChart.vue';
+import BugStatusChart from './BugStatusChart.vue';
 import { getVersions, getBugData, getComponents, getPriorities, refreshData, get90DaySummary, get90DayTrackingConfig, save90DayTrackingConfig } from './api';
 import { extractProduct } from './release-utils';
 
@@ -343,6 +356,7 @@ const selectedVersions = ref([]);
 const selectedComponents = ref([]);
 const selectedPriorities = ref([]);
 const chartData = ref({ labels: [], datasets: [] });
+const statusChartData = ref({ labels: [], datasets: [] });
 const loading = ref(true);
 const refreshing = ref(false);
 const error = ref(null);
@@ -540,14 +554,20 @@ async function loadChartData() {
 
     if (selectedReleasedVersions.value.length > 0) {
       const response = await getBugData(selectedReleasedVersions.value, selectedComponents.value, selectedPriorities.value);
-      chartData.value = { labels: response.labels, datasets: response.datasets };
+      applyBugChartData(response);
     } else {
       chartData.value = { labels: [], datasets: [] };
+      statusChartData.value = { labels: [], datasets: [] };
     }
   } catch (err) {
     console.error('[quality] Failed to filter bug data:', err);
     error.value = err.message || 'Failed to filter chart data';
   }
+}
+
+function applyBugChartData(response) {
+  chartData.value = { labels: response.labels || [], datasets: response.datasets || [] };
+  statusChartData.value = response.statusData || { labels: [], datasets: [] };
 }
 
 watch([selectedComponents, selectedPriorities], loadChartData, { deep: true });
@@ -558,9 +578,10 @@ watch(selectedVersions, async () => {
 
     if (selectedReleasedVersions.value.length > 0) {
       const response = await getBugData(selectedReleasedVersions.value, selectedComponents.value, selectedPriorities.value);
-      chartData.value = { labels: response.labels, datasets: response.datasets };
+      applyBugChartData(response);
     } else {
       chartData.value = { labels: [], datasets: [] };
+      statusChartData.value = { labels: [], datasets: [] };
     }
   } catch (err) {
     console.error('[quality] Failed to load bug data:', err);
@@ -600,9 +621,10 @@ async function handleRefresh() {
 
     if (selectedReleasedVersions.value.length > 0) {
       const response = await getBugData(selectedReleasedVersions.value, selectedComponents.value, selectedPriorities.value);
-      chartData.value = { labels: response.labels, datasets: response.datasets };
+      applyBugChartData(response);
     } else {
       chartData.value = { labels: [], datasets: [] };
+      statusChartData.value = { labels: [], datasets: [] };
     }
 
     load90DayTracking();

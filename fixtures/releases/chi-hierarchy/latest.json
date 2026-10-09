@@ -184,6 +184,47 @@
           ]
         }
       ]
+    },
+    "latest": {
+      "fetchedAt": "2026-10-06T09:00:00.000Z",
+      "source": "konflux-clair-scan",
+      "versions": [
+        {
+          "id": "rhoai-2.25",
+          "tag": "v2.25",
+          "summary": {
+            "imageCount": 1,
+            "gradeDistribution": { "A": 1 },
+            "critical": 0,
+            "important": 0,
+            "staleImageCount": 0
+          },
+          "components": [
+            {
+              "name": "AI Core Dashboard",
+              "summary": {
+                "imageCount": 1,
+                "worstGrade": "A",
+                "critical": 0,
+                "important": 0,
+                "oldestImageAgeDays": 0
+              },
+              "images": [
+                {
+                  "name": "odh-dashboard-rhel9",
+                  "grade": "A",
+                  "gradeDate": "2026-10-06",
+                  "vulnerabilityCount": 0,
+                  "advisories": { "Critical": 0, "Important": 0, "Moderate": 0, "Low": 0 },
+                  "konfluxUrl": "https://konflux-ui.apps.example.com/ns/rhoai-tenant/applications/rhoai-v2-25/pipelineruns/odh-dashboard-v2-25-on-push-t77q6",
+                  "lastUpdated": "2026-10-06",
+                  "ageDays": 0
+                }
+              ]
+            }
+          ]
+        }
+      ]
     }
   }
 }
