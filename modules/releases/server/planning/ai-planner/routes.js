@@ -129,7 +129,7 @@ module.exports = function registerAIPlannerRoutes(router, context) {
    * @openapi
    * /api/modules/releases/planning/ai-planner/outcomes:
    *   get:
-   *     summary: Fetch prioritized outcomes from Jira plan with in-plan feature counts
+   *     summary: Fetch 22 prioritized outcomes from Jira plan with in-plan feature counts
    *     tags: [releases-planning]
    *     responses:
    *       200:
@@ -145,13 +145,25 @@ module.exports = function registerAIPlannerRoutes(router, context) {
 
       // Fetch outcomes from Jira if client is available
       let outcomes = [];
+      const featureOutcomeMap = {};
       if (jira) {
         const jiraOutcomes = await fetchOutcomesFromJira(jira, PRIORITY_OUTCOMES);
         outcomes = calculateOutcomeMetrics(jiraOutcomes, inPlanFeatures, allFeatures);
+
+        // Build feature→outcome mapping for dropdown filtering
+        for (const outcome of outcomes) {
+          const outcomeName = `${outcome.key} ${outcome.title}`;
+          if (outcome.children && Array.isArray(outcome.children)) {
+            for (const childKey of outcome.children) {
+              featureOutcomeMap[childKey] = outcomeName;
+            }
+          }
+        }
       }
 
       res.json({
         outcomes: outcomes,
+        featureOutcomeMap: featureOutcomeMap,
         generatedAt: new Date().toISOString(),
         version: '3.6',
         featureCount: allFeatures.length,
