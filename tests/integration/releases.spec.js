@@ -1463,6 +1463,13 @@ test.describe('Releases Release Readiness @releases', () => {
       version,
       generated_at: '2026-09-07T10:00:00Z',
       release_schedule: { ga_date: '2026-05-01', status: 'Released' },
+      summary: {
+        total_work: 100,
+        work_done: tasks.length > 0 && tasks[0].status_category === 'Done' ? 100 : 50,
+        work_in_progress: tasks.length > 0 && tasks[0].status_category === 'In Progress' ? 50 : 0,
+        work_remaining: tasks.length > 0 && tasks[0].status_category === 'In Progress' ? 50 : 0,
+        progress_pct: tasks.length > 0 && tasks[0].status_category === 'Done' ? 100 : 50
+      },
       director_summary: {
         gate_statuses: [{ gate: 'Test Execution', done: 1, total: 1, pct: 100, rag: 'GREEN' }],
         test_timeline: []
