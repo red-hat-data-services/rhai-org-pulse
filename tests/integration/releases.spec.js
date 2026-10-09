@@ -2832,6 +2832,19 @@ test.describe('Releases CHI Hierarchy Report @releases', () => {
 test.describe('Releases AI Planner tab @releases', () => {
   test.beforeEach(async ({ page }) => {
     setupErrorTracking(page);
+    // Mock outcomes endpoint for all AI Planner tests (non-blocking, so empty is fine)
+    await page.route('**/api/modules/releases/planning/ai-planner/outcomes', route =>
+      route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({
+          outcomes: [],
+          featureOutcomeMap: {},
+          generatedAt: new Date().toISOString(),
+          version: '3.6'
+        })
+      })
+    );
   });
 
   test.afterEach(async ({ page }, testInfo) => {
@@ -2850,6 +2863,7 @@ test.describe('Releases AI Planner tab @releases', () => {
   });
 
   test('clicking AI Planner tab renders the embedded planner', async ({ page }) => {
+
     await page.goto('/#/releases/plan');
     await page.waitForLoadState('networkidle');
     await page.waitForTimeout(DEFAULT_PAGE_WAIT_TIME);
