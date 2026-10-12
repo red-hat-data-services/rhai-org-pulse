@@ -45,7 +45,7 @@
               <li><strong>Each column</strong> is a calendar date. Dates with no executions show "–".</li>
               <li><strong>Cell color</strong> indicates pass rate: <span class="color-green">🟢 ≥95%</span> · <span class="color-amber">🟡 80–94%</span> · <span class="color-orange">🟠 60–79%</span> · <span class="color-red">🔴 &lt;60%</span>.</li>
               <li><strong>Cell content</strong> shows the pass percentage, plus pass/fail/skip counts below it.</li>
-              <li><strong>Hover</strong> over a cell to see a dropdown with every individual test run details (Work in Progress).</li>
+              <li><strong>Hover details</strong> — per-run breakdown with test run details coming soon (Work in Progress).</li>
             </ul>
           </div>
 
