@@ -77,7 +77,7 @@ function extractOutcomesFromFeatures(allFeatures) {
 /**
  * Calculate in-plan metrics for outcomes.
  *
- * @param {Object} outcomes - Map from fetchOutcomesFromJira
+ * @param {Array} outcomes - Array of outcome objects from extractOutcomesFromFeatures
  * @param {Array} inPlanFeatures - Array of feature keys currently in draft-plan
  * @param {Array} allFeatures - All features (for confidence aggregation)
  * @returns {Array} Array of outcome objects with metrics
