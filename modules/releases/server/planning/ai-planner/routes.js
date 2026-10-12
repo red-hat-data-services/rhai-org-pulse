@@ -143,9 +143,10 @@ module.exports = function registerAIPlannerRoutes(router, context) {
         .filter(f => f.status !== 'No' && f.targetVersions && f.targetVersions.some(v => v.includes('3.6')))
         .map(f => f.key);
 
-      // Fetch outcomes from Jira if client is available
+      // Fetch outcomes from Jira if client is available, else provide demo data
       let outcomes = [];
       const featureOutcomeMap = {};
+
       if (jira) {
         const jiraOutcomes = await fetchOutcomesFromJira(jira, PRIORITY_OUTCOMES);
         outcomes = calculateOutcomeMetrics(jiraOutcomes, inPlanFeatures, allFeatures);
@@ -159,6 +160,32 @@ module.exports = function registerAIPlannerRoutes(router, context) {
             }
           }
         }
+      } else {
+        // Demo mode: provide fixture outcomes with all 22 keys
+        const demoOutcomes = [
+          { key: 'RHAISTRAT-2046', title: 'AIPCC Security Policy Compliance Directive', children: [] },
+          { key: 'RHAISTRAT-2129', title: 'Outcome: RHAIE Platform Stabilization', children: [] },
+          { key: 'RHAISTRAT-1513', title: 'MaaS — 3.5 Deliverables', children: [] },
+          { key: 'RHAISTRAT-2125', title: 'OCP 5 release and impact on RH AI', children: [] },
+          { key: 'RHAISTRAT-1979', title: 'Outcome: Production Resilience', children: [] },
+          { key: 'RHAISTRAT-1981', title: 'Outcome: Platform Experience for llm-d', children: [] },
+          { key: 'RHAISTRAT-1680', title: 'Parent Outcome: Unified Red Hat AI Inference', children: [] },
+          { key: 'RHAISTRAT-1312', title: 'Gen AI Studio', children: [] },
+          { key: 'RHAISTRAT-155', title: 'Secure Agent Onboarding: Security-First Agent Engineering', children: [] },
+          { key: 'RHAISTRAT-1357', title: 'Tool Calling', children: [] },
+          { key: 'RHAISTRAT-1971', title: 'Tool Calling related', children: [] },
+          { key: 'RHAISTRAT-1354', title: 'From Tools to Swarms (MCP)', children: [] },
+          { key: 'RHAISTRAT-1355', title: 'MCP related', children: [] },
+          { key: 'RHAISTRAT-932', title: 'MCP Connectivity', children: [] },
+          { key: 'RHAISTRAT-1498', title: 'Eval Hub', children: [] },
+          { key: 'RHAISTRAT-1339', title: 'AI Hub incl MCP', children: [] },
+          { key: 'RHAISTRAT-1066', title: 'Multitenancy', children: [] },
+          { key: 'RHAISTRAT-2875', title: 'AI Grid MVP', children: [] },
+          { key: 'RHAISTRAT-1088', title: 'vLLM Omni', children: [] },
+          { key: 'RHAISTRAT-2604', title: 'AutoML related', children: [] },
+          { key: 'RHAISTRAT-188', title: 'AutoRAG', children: [] }
+        ];
+        outcomes = calculateOutcomeMetrics(demoOutcomes, inPlanFeatures, allFeatures);
       }
 
       res.json({
