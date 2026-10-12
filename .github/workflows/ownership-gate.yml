@@ -1,9 +1,10 @@
 # Enforces ownership policy without GitHub's native code-owner review rule.
 #
 # This workflow is intentionally evaluated from the default branch via
-# pull_request_target and never checks out or executes pull-request code. It
-# reads changed paths, CODEOWNERS at the PR base SHA, reviews, and PR comments only
-# through the GitHub API using the existing rhai-org-pulse GitHub App token.
+# pull_request_target or workflow_run and never checks out or executes
+# pull-request code. It reads changed paths, CODEOWNERS at the PR base SHA,
+# reviews, and PR comments only through the GitHub API using the existing
+# rhai-org-pulse GitHub App token.
 
 name: Ownership Gate
 
@@ -16,22 +17,20 @@ on:
       - synchronize
       - ready_for_review
       - converted_to_draft
-  pull_request_review:
-    branches: [main]
-    types:
-      - submitted
-      - dismissed
-      - edited
   issue_comment:
     types:
       - created
       - edited
       - deleted
+  workflow_run:
+    workflows: [Ownership Review Signal]
+    types: [completed]
   merge_group:
     types: [checks_requested]
 
 permissions:
   contents: read
+  actions: read
 
 jobs:
   evaluate:
@@ -55,10 +54,35 @@ jobs:
           fetch-depth: 1
           persist-credentials: false
 
+      - name: Download review signal
+        if: github.event_name == 'workflow_run'
+        uses: actions/download-artifact@v4
+        with:
+          name: ownership-review-signal
+          path: signal
+          run-id: ${{ github.event.workflow_run.id }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Resolve review signal
+        if: github.event_name == 'workflow_run'
+        id: review-signal
+        env:
+          EXPECTED_HEAD_SHA: ${{ github.event.workflow_run.head_sha }}
+        run: |
+          pr_number="$(tr -d '\n' < signal/pr-number)"
+          head_sha="$(tr -d '\n' < signal/head-sha)"
+          if [[ ! "$pr_number" =~ ^[0-9]+$ ]] ||
+             [[ ! "$head_sha" =~ ^[0-9a-f]{40}$ ]] ||
+             [[ "$head_sha" != "$EXPECTED_HEAD_SHA" ]]; then
+            echo "::error::Ownership review signal did not match workflow_run head"
+            exit 1
+          fi
+          echo "pr-number=$pr_number" >> "$GITHUB_OUTPUT"
+
       - name: Evaluate ownership policy
         env:
           GH_TOKEN: ${{ steps.app-token.outputs.token }}
-          PR_NUMBER: ${{ github.event.pull_request.number || github.event.issue.number }}
+          PR_NUMBER: ${{ github.event.pull_request.number || github.event.issue.number || steps.review-signal.outputs.pr-number }}
           OWNERSHIP_GATE_BOT_LOGIN: rhai-org-pulse[bot]
         run: node scripts/ownership-gate.mjs
 

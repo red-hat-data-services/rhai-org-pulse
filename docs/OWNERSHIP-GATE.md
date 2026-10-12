@@ -30,10 +30,20 @@ satisfy any outstanding requirement. It also explains both comment commands.
 
 ## Implementation and trust boundary
 
-The workflow runs on `pull_request_target` and reads only GitHub API metadata:
-the base-branch `CODEOWNERS` file, changed paths, reviews, PR comments and
-timeline, team membership, and repository permissions. It never checks out or
-executes pull-request code.
+The workflow runs on `pull_request_target`, `issue_comment`, or
+`workflow_run`, and reads only GitHub API metadata: the base-branch
+`CODEOWNERS` file, changed paths, reviews, PR comments and timeline, team
+membership, and repository permissions. It never checks out or executes
+pull-request code.
+
+Review events use a two-stage trigger. `Ownership Review Signal` runs on
+`pull_request_review` in an unprivileged context, records the PR number and
+head SHA in an artifact, and uses no secrets. When that signal workflow
+finishes, `Ownership Gate` runs on `workflow_run` in the default-branch
+context, downloads the signal artifact, verifies its head SHA, and performs the
+privileged evaluation. This bridge is necessary because review events from
+fork pull requests do not receive repository secrets, while `workflow_run`
+events do.
 
 It uses the existing `rhai-org-pulse` GitHub App to read team membership and
 write the `Ownership Gate` commit status. The merge queue re-evaluates every

@@ -1,0 +1,38 @@
+# Records review events so Ownership Gate can re-evaluate them in a
+# privileged workflow_run context. This workflow intentionally uses no secrets
+# and never checks out pull-request code.
+
+name: Ownership Review Signal
+
+on:
+  pull_request_review:
+    branches: [main]
+    types:
+      - submitted
+      - dismissed
+      - edited
+
+permissions:
+  contents: read
+
+jobs:
+  signal:
+    name: Record review signal
+    runs-on: ubuntu-latest
+    steps:
+      - name: Record pull request context
+        env:
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: |
+          mkdir -p signal
+          printf '%s\n' "$PR_NUMBER" > signal/pr-number
+          printf '%s\n' "$HEAD_SHA" > signal/head-sha
+
+      - name: Upload review signal
+        uses: actions/upload-artifact@v4
+        with:
+          name: ownership-review-signal
+          path: signal/
+          retention-days: 1
+          if-no-files-found: error
