@@ -58,27 +58,15 @@ function extractOutcomesFromFeatures(allFeatures) {
   });
 
   // Scan features for their parent outcome links
-  // Features store parent in: f.parent (direct parent key like "RHAISTRAT-2046")
+  // Features store parent outcome in: f.parentKey (e.g., "RHAISTRAT-2046")
   allFeatures.forEach(feature => {
     const featureKey = feature.key;
 
-    // Check for direct parent link (main parent field)
-    if (feature.parent && OUTCOME_KEY_PATTERN.test(feature.parent)) {
-      const parentKey = feature.parent;
+    // Check for direct parent link (Jira parent field)
+    if (feature.parentKey && OUTCOME_KEY_PATTERN.test(feature.parentKey)) {
+      const parentKey = feature.parentKey;
       if (outcomes[parentKey]) {
         outcomes[parentKey].children.push(featureKey);
-        // Capture outcome title from first child's parent link context
-        if (!outcomes[parentKey].title && feature.parentTitle) {
-          outcomes[parentKey].title = feature.parentTitle;
-        }
-      }
-    }
-
-    // Also check epic link field if parent not found
-    if (!feature.parent && feature.epicLink && OUTCOME_KEY_PATTERN.test(feature.epicLink)) {
-      const epicKey = feature.epicLink;
-      if (outcomes[epicKey]) {
-        outcomes[epicKey].children.push(featureKey);
       }
     }
   });
