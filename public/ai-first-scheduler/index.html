@@ -3301,7 +3301,7 @@ function run(){
 
   rows=rows.slice().sort((a,b)=>{
     let va=a[sortCol],vb=b[sortCol];
-    if(sortCol==='Score'||sortCol==='Rank'){va=+va;vb=+vb;}
+    if(sortCol==='Score'||sortCol==='Rank'||sortCol==='OutcomeNumber'){va=+va||Infinity;vb=+vb||Infinity;}
     else if(sortCol==='FPDoR'){
       const vaStr = typeof va === 'string' ? va : (va?.passedCount + '/' + va?.totalCount || '0');
       const vbStr = typeof vb === 'string' ? vb : (vb?.passedCount + '/' + vb?.totalCount || '0');
@@ -3915,8 +3915,8 @@ function mapFeaturesToOutcomes() {
 
   // Create outcome key → number mapping (1-22)
   const outcomeKeyToNumber = {};
-  outcomeData.outcomes.forEach((outcome, index) => {
-    outcomeKeyToNumber[outcome.key] = index + 1; // 1-based numbering
+  outcomeData.outcomes.forEach((outcome) => {
+    outcomeKeyToNumber[outcome.key] = outcome.outcomeNumber || '—';
   });
 
   // Apply outcome mapping to all features
