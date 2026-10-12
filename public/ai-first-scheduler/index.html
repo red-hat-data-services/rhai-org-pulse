@@ -522,7 +522,6 @@ tr:hover td{background:#f8fafc}
         <th title="Target Version — the planned release milestone for this feature">TARGET VERSION</th>
         <th>COMPONENTS</th>
         <th><span class="tip">SIZE ⓘ<span class="tip-box">Feature size from Arjay's capacity model:<br>S=3pts (1 comp) · M=5pts (1 comp) · L=8pts (2 comps) · XL=13pts (3+ comps)<br>Ceiling: 140pts / release (90% CI, 41 releases)</span></span></th>
-        <th></th>
         <th>TEAM</th>
       </tr></thead>
       <tbody id="tbody"></tbody>
@@ -3433,7 +3432,7 @@ function renderPmBanner(rows){
 // codeql[js/unsafe-html] Data sanitization: all user data from SAMPLE CSV or postMessage validation; innerHTML used only after origin/source validation
 function renderTbl(rows){
   const tb=document.getElementById('tbody');
-  if(!rows.length){tb.innerHTML='<tr><td colspan="11" class="empty-row">No features match the current filters</td></tr>';return;}
+  if(!rows.length){tb.innerHTML='<tr><td colspan="14" class="empty-row">No features match the current filters</td></tr>';return;}
   let _prevPlace=null, _prevNoTier=null;
   let gaLineShown=false, noLine1=false, noLine2=false, noLine3=false;
   const _allApv=_loadApprovals();
@@ -3494,18 +3493,18 @@ function renderTbl(rows){
     let cutLine='';
     if(_prevPlace!==null){
       if(r._place==='GA'&&!gaLineShown&&_prevPlace!=='GA'){
-        cutLine=`<tr><td colspan="11" style="padding:5px 12px;background:#e8f5e9;border-top:2px solid #81c784;border-bottom:1px solid #c8e6c9;font-size:10px;font-weight:700;color:#1a6b3c;text-align:center;letter-spacing:.04em">▼ Committed for 3.6 GA · Nov 19 — Planning Freeze Sept 23</td></tr>`;
+        cutLine=`<tr><td colspan="14" style="padding:5px 12px;background:#e8f5e9;border-top:2px solid #81c784;border-bottom:1px solid #c8e6c9;font-size:10px;font-weight:700;color:#1a6b3c;text-align:center;letter-spacing:.04em">▼ Committed for 3.6 GA · Nov 19 — Planning Freeze Sept 23</td></tr>`;
         gaLineShown=true;
       } else if(r._place==='No'){
         const t=r._noTier||1;
         if(t===1&&!noLine1){
-          cutLine=`<tr><td colspan="11" style="padding:6px 12px;background:#fffde7;border-top:2px solid #fbbf24;border-bottom:1px solid #fde68a;font-size:10px;font-weight:700;color:#92400e;text-align:center;letter-spacing:.04em">▼ Items below this line may be good release candidates but are missing information for a full analysis</td></tr>`;
+          cutLine=`<tr><td colspan="14" style="padding:6px 12px;background:#fffde7;border-top:2px solid #fbbf24;border-bottom:1px solid #fde68a;font-size:10px;font-weight:700;color:#92400e;text-align:center;letter-spacing:.04em">▼ Items below this line may be good release candidates but are missing information for a full analysis</td></tr>`;
           noLine1=true;
         } else if(t===2&&!noLine2){
-          cutLine=`<tr><td colspan="11" style="padding:6px 12px;background:#ffebee;border-top:2px solid #f87171;border-bottom:1px solid #fecaca;font-size:10px;font-weight:700;color:#c62828;text-align:center;letter-spacing:.04em">▼ Items below this line pose significant capacity, dependency, or historical release risks</td></tr>`;
+          cutLine=`<tr><td colspan="14" style="padding:6px 12px;background:#ffebee;border-top:2px solid #f87171;border-bottom:1px solid #fecaca;font-size:10px;font-weight:700;color:#c62828;text-align:center;letter-spacing:.04em">▼ Items below this line pose significant capacity, dependency, or historical release risks</td></tr>`;
           noLine2=true;
         } else if(t===3&&!noLine3){
-          cutLine=`<tr><td colspan="11" style="padding:6px 12px;background:#f1f5f9;border-top:2px solid #94a3b8;border-bottom:1px solid #e2e8f0;font-size:10px;font-weight:700;color:#475569;text-align:center;letter-spacing:.04em">▼ Items below this line lack sufficient information to be analyzed and cannot be considered for a release</td></tr>`;
+          cutLine=`<tr><td colspan="14" style="padding:6px 12px;background:#f1f5f9;border-top:2px solid #94a3b8;border-bottom:1px solid #e2e8f0;font-size:10px;font-weight:700;color:#475569;text-align:center;letter-spacing:.04em">▼ Items below this line lack sufficient information to be analyzed and cannot be considered for a release</td></tr>`;
           noLine3=true;
         }
       }
@@ -3542,9 +3541,9 @@ function renderTbl(rows){
       })()}</td>
       ${(()=>{const reasonTooltip=[isPrecomp?`AI Delivery Signal: ${conf}% · ${freqOf10} similar features shipped on time\nTrained on RHOAI 3.4+3.5 history (134 committed · 122 shipped / 12 slipped). Includes prior slip record.`:isMl?`AI Delivery Signal: ${conf}% · ${freqOf10} similar features shipped on time\nApprox — no prior slip record available. Based on FPDoR completeness + priority + RICE.`:`Readiness estimate: ${conf}%\nBased on FPDoR completeness, labels, and component capacity.`,cleanReason,counterfactual?`→ ${counterfactual}`:'',isMl?(isPrecomp?'🤖 AI Signal — ML training (Random Forest)':'~🤖 No shipping history — capped at 85%'):'',r._teams?`Teams: ${r._teams.join(', ')}`:''].filter(Boolean).join('\n\n');return `<td><div class="cbar-wrap" title="${reasonTooltip.replace(/"/g,"'")}"><div class="cbar"><div class="cfill ${cCls}" style="width:${Math.min(conf,100)}%"></div></div><span class="cnum" style="font-weight:700">${confBand}</span><span class="cnum" style="color:#999;font-size:10px;margin-left:3px">${conf}%</span>${isPrecomp?'<span style="font-size:9px;font-weight:700;color:#7b1fa2;margin-left:4px" title="AI Delivery Signal — trained on 3.4+3.5 historical outcomes (includes slip record)">🤖</span>':isMl?'<span style="font-size:9px;font-weight:700;color:#9c27b0;margin-left:4px" title="AI Delivery Signal (approx) — FPDoR+priority+RICE only, no slip record">~🤖</span>':''}</div><div class="compact-freq">${freqOf10} similar shipped on time</div>${r._place==='No'?`<div style="font-size:9px;color:#1565c0;margin-top:3px">${(()=>{const h=[];if(!(esc(r['Fix Version'])||'').trim())h.push('Set Fix Version');if(!(esc(r['Target Versions'])||'').trim())h.push('Set Target Version');if(!(esc(r['Release Type'])||'').trim()&&!(esc(r['Labels'])||'').toLowerCase().includes('release-type'))h.push('Add Release Type');return h.length?'→ To qualify: '+h.join(' · '):'';})()}</div>`:''}</td>`;})()}
       <td style="white-space:nowrap;text-align:center">${(()=>{const p=(esc(r['Priority'])||'').trim();if(!p)return '<span style="color:#bbb">—</span>';const pc={'Blocker':'#c62828','Critical':'#c62828','Major':'#e65100','Normal':'#1565c0','Minor':'#4caf50','Undefined':'#9e9e9e'};const color=pc[p]||'#555';return '<span style="font-size:10px;font-weight:700;color:'+color+'">'+p+'</span>';})()}</td>
+      <td style="text-align:center;font-weight:600;color:#1565c0">${r['OutcomeNumber']||'—'}</td>
       <td><a class="klink" href="https://redhat.atlassian.net/browse/${esc(r['Key'])}" target="_blank">${esc(r['Key'])}</a></td>
       <td style="max-width:220px;overflow:hidden;text-overflow:ellipsis" title="${esc(r['Title'])}">${hasCrossTeamDep?'<span style="font-size:9px;font-weight:700;color:#7c3aed;background:#f3e8ff;border:1px solid #c4b5fd;border-radius:3px;padding:1px 4px;margin-right:3px;white-space:nowrap" title="Cross-team dependency flagged — external teams involved; slippage risk outside RHOAI control">⚑ deps</span>':''}${esc(r['Title'])}<div class="compact-key-link"><a href="https://redhat.atlassian.net/browse/${esc(r['Key'])}" target="_blank" style="color:#94a3b8;text-decoration:none">${esc(r['Key'])}</a></div></td>
-      <td style="text-align:center;font-weight:600;color:#1565c0">${r['OutcomeNumber']||'—'}</td>
       <td style="max-width:140px;white-space:normal;line-height:1.4">${r._isBigRock?'<span class="br-badge">🪨 BR</span>':''}${brGapHtml}${esc(r['Outcome'])?`<a href="https://redhat.atlassian.net/browse/${esc(r['Outcome'])}" target="_blank" style="color:#1565c0;text-decoration:none;font-weight:600" onmouseover="this.style.textDecoration='underline'" onmouseout="this.style.textDecoration='none'">${esc(r['Outcome'])}</a>`:'<span style="color:#bbb">—</span>'}</td>
       <td style="white-space:nowrap;font-size:11px;color:#555">${(esc(r['Target Versions'])||'').trim()||'—'}</td>
       <td title="${esc(r['Components'])}" style="max-width:160px;color:#444">${compsStr||'—'}${r._complexityWarn?`<div style="font-size:9px;color:#e65100;font-weight:700;margin-top:1px" title="${esc(String(r._comps.length))} components — cross-team delivery risk (spec: 6+ = complexity flag)">⚠ ${esc(String(r._comps.length))} comps</div>`:''}</td>
