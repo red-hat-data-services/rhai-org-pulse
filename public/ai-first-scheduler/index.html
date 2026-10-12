@@ -3301,7 +3301,8 @@ function run(){
 
   rows=rows.slice().sort((a,b)=>{
     let va=a[sortCol],vb=b[sortCol];
-    if(sortCol==='Score'||sortCol==='Rank'||sortCol==='OutcomeNumber'){va=+va||Infinity;vb=+vb||Infinity;}
+    if(sortCol==='Score'||sortCol==='Rank'){va=+va;vb=+vb;}
+    else if(sortCol==='OutcomeNumber'){va=+va||Infinity;vb=+vb||Infinity;}
     else if(sortCol==='FPDoR'){
       const vaStr = typeof va === 'string' ? va : (va?.passedCount + '/' + va?.totalCount || '0');
       const vbStr = typeof vb === 'string' ? vb : (vb?.passedCount + '/' + vb?.totalCount || '0');

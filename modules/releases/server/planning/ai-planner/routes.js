@@ -1,7 +1,7 @@
 const express = require('express');
 const { validateSnapshot } = require('./validation');
 const { readAIPlanner, writeAIPlanner, projectSnapshot, emptySnapshot } = require('./storage');
-const { extractOutcomesFromFeatures, calculateOutcomeMetrics } = require('./outcomes-integration');
+const { PRIORITY_OUTCOMES, extractOutcomesFromFeatures, calculateOutcomeMetrics } = require('./outcomes-integration');
 
 const DEMO_MODE = process.env.DEMO_MODE === 'true';
 
@@ -148,8 +148,7 @@ module.exports = function registerAIPlannerRoutes(router, context) {
       const outcomeMap = extractOutcomesFromFeatures(allFeatures);
 
       // Convert to ordered array matching PRIORITY_OUTCOMES order
-      const { PRIORITY_OUTCOMES: priorityKeys } = require('./outcomes-integration');
-      const outcomes = priorityKeys
+      const outcomes = PRIORITY_OUTCOMES
         .map(key => outcomeMap[key])
         .filter(outcome => outcome && outcome.children.length > 0);
 
