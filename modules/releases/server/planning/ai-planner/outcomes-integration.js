@@ -1,89 +1,87 @@
 /**
- * Fetch 22 prioritized outcomes from Jira plan view 7384 and calculate in-plan metrics.
+ * Build outcomes from live Jira feature data (already synced every 12h).
+ * Features contain parent links; we extract and organize them by outcome.
  *
  * Outcomes are parent work items (RHAISTRAT-* issues) with child features.
- * For each outcome, count how many children are in the current draft-plan.
+ * The 22 priority order matches Jira plan view 7384 (Racer Strat).
  */
 
 const OUTCOME_KEY_PATTERN = /^RHAISTRAT-\d+$/;
 
 /**
  * The 22 prioritized outcomes from Jira plan view 7384 (Racer Strat).
- * Order matches Jira plan priority.
+ * Order matches Jira plan priority. Features' parent fields reference these.
  */
 const PRIORITY_OUTCOMES = [
-  'RHAISTRAT-2046', // AIPCC Security Policy Compliance Directive
-  'RHAISTRAT-2129', // Outcome: RHAIE Platform Stabilization
-  'RHAISTRAT-1513', // MaaS — 3.5 Deliverables
-  'RHAISTRAT-2125', // OCP 5 release and impact on RH AI
-  'RHAISTRAT-1979', // Outcome: Production Resilience
-  'RHAISTRAT-1981', // Outcome: Platform Experience for llm-d
-  'RHAISTRAT-1680', // Parent Outcome: Unified Red Hat AI Inference (formerly MaaS/llm-d on xKS)
-  'RHAISTRAT-1312', // Gen AI Studio
-  'RHAISTRAT-155',  // Secure Agent Onboarding: Security-First Agent Engineering
-  'RHAISTRAT-1357', // Tool Calling
-  'RHAISTRAT-1971', // (Tool Calling related)
-  'RHAISTRAT-1354', // From Tools to Swarms (MCP)
-  'RHAISTRAT-1355', // (MCP related)
-  'RHAISTRAT-932',  // MCP Connectivity
-  'RHAISTRAT-1498', // Eval Hub
-  'RHAISTRAT-1339', // AI Hub incl MCP
-  'RHAISTRAT-1066', // Multitenancy
-  'RHAISTRAT-155',  // (BYOA — Bring Your Own Agent)
-  'RHAISTRAT-2875', // AI Grid MVP
-  'RHAISTRAT-1088', // vLLM Omni
-  'RHAISTRAT-2604', // (check for exact key)
-  'RHAISTRAT-188'   // AutoRAG
+  'RHAISTRAT-2046', // 1: AIPCC Security Policy Compliance Directive
+  'RHAISTRAT-2129', // 2: Outcome: RHAIE Platform Stabilization
+  'RHAISTRAT-1513', // 3: MaaS — 3.5 Deliverables
+  'RHAISTRAT-2125', // 4: OCP 5 release and impact on RH AI
+  'RHAISTRAT-1979', // 5: Outcome: Production Resilience
+  'RHAISTRAT-1981', // 6: Outcome: Platform Experience for llm-d
+  'RHAISTRAT-1680', // 7: Parent Outcome: Unified Red Hat AI Inference
+  'RHAISTRAT-1312', // 8: Gen AI Studio
+  'RHAISTRAT-155',  // 9: Secure Agent Onboarding: Security-First Agent Engineering
+  'RHAISTRAT-1357', // 10: Tool Calling
+  'RHAISTRAT-1971', // 11: Tool Calling related
+  'RHAISTRAT-1354', // 12: From Tools to Swarms (MCP)
+  'RHAISTRAT-1355', // 13: MCP related
+  'RHAISTRAT-932',  // 14: MCP Connectivity
+  'RHAISTRAT-1498', // 15: Eval Hub
+  'RHAISTRAT-1339', // 16: AI Hub incl MCP
+  'RHAISTRAT-1066', // 17: Multitenancy
+  'RHAISTRAT-155',  // 18: BYOA — Bring Your Own Agent
+  'RHAISTRAT-2875', // 19: AI Grid MVP
+  'RHAISTRAT-1088', // 20: vLLM Omni
+  'RHAISTRAT-2604', // 21: (exact key)
+  'RHAISTRAT-188'   // 22: AutoRAG
 ];
 
 /**
- * Fetch outcome summaries and child features from Jira.
+ * Extract outcomes from live feature data (already from Jira 12h sync).
+ * Build map of outcome key → { key, title, children }.
  *
- * @param {object|null} jiraClient - { fetchAllJqlResults, request }
- * @param {string[]} outcomeKeys - List of outcome RHAISTRAT keys
- * @returns {Promise<Object>} Map of outcomeKey -> { key, title, children: [...child keys...] }
+ * @param {Array} allFeatures - Features from buildFeatureReadiness (includes parent links from Jira)
+ * @returns {Object} Map of outcomeKey -> { key, title, children: [...feature keys...], outcomeNumber: 1-22 }
  */
-async function fetchOutcomesFromJira(jiraClient, outcomeKeys) {
-  if (!jiraClient) return {};
-
+function extractOutcomesFromFeatures(allFeatures) {
   const outcomes = {};
 
-  // Fetch summaries for all outcomes
-  const jql = 'key in (' + outcomeKeys.filter(k => OUTCOME_KEY_PATTERN.test(k)).join(', ') + ')';
-  const fields = 'summary';
-  const params = new URLSearchParams({ jql, fields, maxResults: '100' });
+  // Initialize all outcomes (1-22)
+  PRIORITY_OUTCOMES.forEach((outcomeKey, index) => {
+    outcomes[outcomeKey] = {
+      key: outcomeKey,
+      title: '', // Will be populated from features below
+      outcomeNumber: index + 1,
+      children: []
+    };
+  });
 
-  try {
-    const result = await jiraClient.request('/rest/api/3/search/jql?' + params);
-    if (result && result.issues) {
-      result.issues.forEach(issue => {
-        outcomes[issue.key] = {
-          key: issue.key,
-          title: issue.fields?.summary || '',
-          children: []
-        };
-      });
-    }
-  } catch (err) {
-    console.error('[ai-planner] Failed to fetch outcome summaries from Jira:', err.message);
-    return {};
-  }
+  // Scan features for their parent outcome links
+  // Features store parent in: f.parent (direct parent key like "RHAISTRAT-2046")
+  allFeatures.forEach(feature => {
+    const featureKey = feature.key;
 
-  // Fetch child features for each outcome
-  for (const outcomeKey of Object.keys(outcomes)) {
-    try {
-      const childJql = `(parent = ${outcomeKey} OR "Epic Link" = ${outcomeKey}) AND issuetype in (Feature, Initiative)`;
-      const childFields = 'key,summary';
-      const childParams = new URLSearchParams({ jql: childJql, fields: childFields, maxResults: '100' });
-
-      const childResult = await jiraClient.request('/rest/api/3/search/jql?' + childParams);
-      if (childResult && childResult.issues) {
-        outcomes[outcomeKey].children = childResult.issues.map(issue => issue.key);
+    // Check for direct parent link (main parent field)
+    if (feature.parent && OUTCOME_KEY_PATTERN.test(feature.parent)) {
+      const parentKey = feature.parent;
+      if (outcomes[parentKey]) {
+        outcomes[parentKey].children.push(featureKey);
+        // Capture outcome title from first child's parent link context
+        if (!outcomes[parentKey].title && feature.parentTitle) {
+          outcomes[parentKey].title = feature.parentTitle;
+        }
       }
-    } catch (err) {
-      console.error(`[ai-planner] Failed to fetch children for ${outcomeKey}:`, err.message);
     }
-  }
+
+    // Also check epic link field if parent not found
+    if (!feature.parent && feature.epicLink && OUTCOME_KEY_PATTERN.test(feature.epicLink)) {
+      const epicKey = feature.epicLink;
+      if (outcomes[epicKey]) {
+        outcomes[epicKey].children.push(featureKey);
+      }
+    }
+  });
 
   return outcomes;
 }
@@ -128,6 +126,7 @@ function calculateOutcomeMetrics(outcomes, inPlanFeatures, allFeatures) {
     return {
       key: outcome.key,
       title: outcome.title,
+      outcomeNumber: outcome.outcomeNumber,
       inPlan,
       total,
       percentComplete,
@@ -140,6 +139,6 @@ function calculateOutcomeMetrics(outcomes, inPlanFeatures, allFeatures) {
 
 module.exports = {
   PRIORITY_OUTCOMES,
-  fetchOutcomesFromJira,
+  extractOutcomesFromFeatures,
   calculateOutcomeMetrics
 };

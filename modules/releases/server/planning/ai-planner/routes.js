@@ -1,7 +1,7 @@
 const express = require('express');
 const { validateSnapshot } = require('./validation');
 const { readAIPlanner, writeAIPlanner, projectSnapshot, emptySnapshot } = require('./storage');
-const { PRIORITY_OUTCOMES, fetchOutcomesFromJira, calculateOutcomeMetrics } = require('./outcomes-integration');
+const { extractOutcomesFromFeatures, calculateOutcomeMetrics } = require('./outcomes-integration');
 
 const DEMO_MODE = process.env.DEMO_MODE === 'true';
 
@@ -103,7 +103,7 @@ const jsonLimit = express.json({ limit: '25mb' });
  * @param {object} context - { storage, requireAuth, requireAdmin, requireScope, buildFeatureReadiness, listStorageFiles }
  */
 module.exports = function registerAIPlannerRoutes(router, context) {
-  const { storage, requireAuth, requireAdmin, requireScope, buildFeatureReadiness, listStorageFiles, jira } = context;
+  const { storage, requireAuth, requireAdmin, requireScope, buildFeatureReadiness, listStorageFiles } = context;
   const { readFromStorage, writeToStorage } = storage;
 
   /**
@@ -137,43 +137,45 @@ module.exports = function registerAIPlannerRoutes(router, context) {
    */
   router.get('/ai-planner/outcomes', requireAuth, requireScope('releases:read'), async function(req, res) {
     try {
+      // Build outcomes from live feature data (already synced from Jira every 12h)
       const readiness = await buildFeatureReadiness(readFromStorage, null, listStorageFiles);
       const allFeatures = (readiness.pendingReview || []).concat(readiness.ready || []);
       const inPlanFeatures = allFeatures
         .filter(f => f.status !== 'No' && f.targetVersions && f.targetVersions.some(v => v.includes('3.6')))
         .map(f => f.key);
 
-      // Fetch outcomes from Jira API
-      let outcomes = [];
-      const featureOutcomeMap = {};
+      // Extract outcomes from live feature parent links (100% from Jira, same 12h sync as features)
+      const outcomeMap = extractOutcomesFromFeatures(allFeatures);
 
-      if (!jira) {
-        return res.status(503).json({
-          error: 'Jira client not configured',
-          message: 'Outcomes API requires JIRA_EMAIL and JIRA_TOKEN environment variables'
-        });
-      }
+      // Convert to ordered array matching PRIORITY_OUTCOMES order
+      const { PRIORITY_OUTCOMES: priorityKeys } = require('./outcomes-integration');
+      const outcomes = priorityKeys
+        .map(key => outcomeMap[key])
+        .filter(outcome => outcome && outcome.children.length > 0);
 
-      const jiraOutcomes = await fetchOutcomesFromJira(jira, PRIORITY_OUTCOMES);
-      outcomes = calculateOutcomeMetrics(jiraOutcomes, inPlanFeatures, allFeatures);
+      // Calculate metrics (in-plan count, % complete, confidence, status)
+      const outcomesWithMetrics = calculateOutcomeMetrics(outcomes, inPlanFeatures, allFeatures);
 
       // Build feature→outcome mapping for dropdown filtering
-      for (const outcome of outcomes) {
+      const featureOutcomeMap = {};
+      outcomesWithMetrics.forEach(outcome => {
         const outcomeName = `${outcome.key} ${outcome.title}`;
         if (outcome.children && Array.isArray(outcome.children)) {
-          for (const childKey of outcome.children) {
+          outcome.children.forEach(childKey => {
             featureOutcomeMap[childKey] = outcomeName;
-          }
+          });
         }
-      }
+      });
 
       res.json({
-        outcomes: outcomes,
+        outcomes: outcomesWithMetrics,
         featureOutcomeMap: featureOutcomeMap,
         generatedAt: new Date().toISOString(),
         version: '3.6',
+        lastSyncedAt: readiness.meta?.lastSyncedAt || new Date().toISOString(),
         featureCount: allFeatures.length,
-        inPlanCount: inPlanFeatures.length
+        inPlanCount: inPlanFeatures.length,
+        source: 'live-jira-12h-sync'
       });
     } catch (err) {
       console.error('Outcomes fetch error:', err);
