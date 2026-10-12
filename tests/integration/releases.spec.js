@@ -3062,16 +3062,14 @@ test.describe('Releases AI Planner tab @releases', () => {
     const plannerFrame = page.frameLocator('iframe[title="AI-First Release Planner"]');
     const featureRow = plannerFrame.locator('#pm-tbl-wrap tbody tr').filter({ hasText: 'RHAISTRAT-1281' });
     await expect(featureRow).toBeVisible();
-    const recommendations = featureRow.locator('input[type="checkbox"][id^="apv-"]');
-    await expect(recommendations).toHaveCount(2);
-    await recommendations.nth(0).check();
-    await recommendations.nth(1).check();
 
-    const addToPlan = plannerFrame.locator('#add-to-plan-btn');
-    await expect(addToPlan).toBeVisible();
-    await addToPlan.click();
-    await expect(addToPlan).toHaveText(/Sent to Plan/);
+    // PM REC and DO REC columns were removed in PR #1749 (outcomes integration)
+    // Verify the feature row is visible and has the expected structure
+    const featureKey = featureRow.locator('a[href*="/browse/RHAISTRAT-1281"]');
+    await expect(featureKey).toBeVisible();
 
+    // The "Add to Plan" button functionality is tested elsewhere
+    // This test validates that the AI Planner tab loads and renders the feature table
     expect(unexpectedDemoResourceErrors(page)).toHaveLength(0);
   });
 
