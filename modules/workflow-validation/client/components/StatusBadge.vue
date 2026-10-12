@@ -27,6 +27,7 @@ const MAP = {
   SKIP: 'bg-orange-100 text-orange-800 dark:bg-orange-900/40 dark:text-orange-300',
   // bug categories
   PRODUCT_BUG: 'bg-red-100 text-red-800 dark:bg-red-900/40 dark:text-red-300',
+  UX_DEFECT: 'bg-fuchsia-100 text-fuchsia-800 dark:bg-fuchsia-900/40 dark:text-fuchsia-300',
   ENVIRONMENT: 'bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-300',
   SPEC_DEFECT: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/40 dark:text-yellow-300',
   AUTOMATION_BUG: 'bg-purple-100 text-purple-800 dark:bg-purple-900/40 dark:text-purple-300',

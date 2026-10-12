@@ -212,62 +212,72 @@ describe('ReleaseTimeline', () => {
   })
 
   it('covers timeline interaction guards and hit-test paths', () => {
-    var releases = [
-      makeRelease('rhoai-3.6', { displayName: 'rhoai-3.6', shortname: 'rhoai', ga: '2026-09-23' }),
-      makeRelease('rhelai-3.6', { displayName: 'rhelai-3.6', shortname: 'rhelai', ga: '2026-10-01' })
-    ]
-    var wrapper = mount(ReleaseTimeline, { props: { releases } })
-    var ctx = makeCanvasContext()
-    var chart = makeTimelineChart(wrapper, ctx)
-    wrapper.vm.timelinePlugin.afterDraw(chart)
-    var canvas = chart.canvas
-    var target = {
-      style: {},
-      querySelector: function () { return canvas },
-      setPointerCapture: function () {}
-    }
-    var setupState = wrapper.vm.$.setupState
-    var cards = setupState._cardHitBoxes
-    var dots = setupState._dotHitBoxes
-    var stems = setupState._stemHitBoxes
-    expect(cards.length).toBeGreaterThan(0)
-    wrapper.vm.onWheel({ clientX: 0, deltaY: 1, preventDefault: function () {} })
-    wrapper.vm.onWheel({ clientX: 400, deltaY: 1, preventDefault: function () {} })
-    wrapper.vm.onWheel({ clientX: 400, deltaY: -1, preventDefault: function () {} })
-    wrapper.vm.onPointerDown({ button: 1, clientX: 400, pointerId: 1, currentTarget: target })
-    wrapper.vm.onPointerDown({ button: 0, clientX: 0, pointerId: 1, currentTarget: target })
-    wrapper.vm.onPointerDown({ button: 0, clientX: 400, pointerId: 1, currentTarget: target })
-    wrapper.vm.onPointerMove({ clientX: 401 })
-    wrapper.vm.onPointerMove({ clientX: 450 })
-    wrapper.vm.onPointerUp({ currentTarget: target })
-    wrapper.vm.onPointerMove({ clientX: 450 })
-    wrapper.vm.onPointerUp({ currentTarget: target })
+    // The default timeline window is anchored to the current date, so both
+    // fixture releases (GA 2026-09-23 and 2026-10-01) drift out of view once
+    // the wall clock passes them. Pin the clock or no cards render and the
+    // hit-box assertions below expire.
+    vi.useFakeTimers()
+    vi.setSystemTime(new Date('2026-09-21T00:00:00'))
+    try {
+      var releases = [
+        makeRelease('rhoai-3.6', { displayName: 'rhoai-3.6', shortname: 'rhoai', ga: '2026-09-23' }),
+        makeRelease('rhelai-3.6', { displayName: 'rhelai-3.6', shortname: 'rhelai', ga: '2026-10-01' })
+      ]
+      var wrapper = mount(ReleaseTimeline, { props: { releases } })
+      var ctx = makeCanvasContext()
+      var chart = makeTimelineChart(wrapper, ctx)
+      wrapper.vm.timelinePlugin.afterDraw(chart)
+      var canvas = chart.canvas
+      var target = {
+        style: {},
+        querySelector: function () { return canvas },
+        setPointerCapture: function () {}
+      }
+      var setupState = wrapper.vm.$.setupState
+      var cards = setupState._cardHitBoxes
+      var dots = setupState._dotHitBoxes
+      var stems = setupState._stemHitBoxes
+      expect(cards.length).toBeGreaterThan(0)
+      wrapper.vm.onWheel({ clientX: 0, deltaY: 1, preventDefault: function () {} })
+      wrapper.vm.onWheel({ clientX: 400, deltaY: 1, preventDefault: function () {} })
+      wrapper.vm.onWheel({ clientX: 400, deltaY: -1, preventDefault: function () {} })
+      wrapper.vm.onPointerDown({ button: 1, clientX: 400, pointerId: 1, currentTarget: target })
+      wrapper.vm.onPointerDown({ button: 0, clientX: 0, pointerId: 1, currentTarget: target })
+      wrapper.vm.onPointerDown({ button: 0, clientX: 400, pointerId: 1, currentTarget: target })
+      wrapper.vm.onPointerMove({ clientX: 401 })
+      wrapper.vm.onPointerMove({ clientX: 450 })
+      wrapper.vm.onPointerUp({ currentTarget: target })
+      wrapper.vm.onPointerMove({ clientX: 450 })
+      wrapper.vm.onPointerUp({ currentTarget: target })
 
-    var card = cards[0]
-    wrapper.vm.onCardHover({
-      clientX: card.x + card.w / 2, clientY: card.y + card.h / 2,
-      currentTarget: target
-    })
-    if (dots.length) {
+      var card = cards[0]
       wrapper.vm.onCardHover({
-        clientX: dots[0].x, clientY: dots[0].y, currentTarget: target
+        clientX: card.x + card.w / 2, clientY: card.y + card.h / 2,
+        currentTarget: target
       })
+      if (dots.length) {
+        wrapper.vm.onCardHover({
+          clientX: dots[0].x, clientY: dots[0].y, currentTarget: target
+        })
+      }
+      if (stems.length) {
+        wrapper.vm.onCardHover({
+          clientX: stems[0].x, clientY: stems[0].y + stems[0].h / 2, currentTarget: target
+        })
+      }
+      var milestoneX = chart.scales.x.getPixelForValue(new Date('2026-09-23').getTime())
+      for (var y = 20; y <= 420; y += 20) {
+        wrapper.vm.onCardHover({
+          clientX: milestoneX, clientY: y, currentTarget: target
+        })
+      }
+      wrapper.vm.onCardHover({ clientX: 1, clientY: 1, currentTarget: target })
+      wrapper.vm.onCardHover({ clientX: 1, clientY: 1, currentTarget: { querySelector: function () { return null } } })
+      wrapper.vm.onCanvasClick({ clientX: 1, clientY: 1, currentTarget: target })
+      expect(wrapper.vm.isOverCard).toBe(false)
+    } finally {
+      vi.useRealTimers()
     }
-    if (stems.length) {
-      wrapper.vm.onCardHover({
-        clientX: stems[0].x, clientY: stems[0].y + stems[0].h / 2, currentTarget: target
-      })
-    }
-    var milestoneX = chart.scales.x.getPixelForValue(new Date('2026-09-23').getTime())
-    for (var y = 20; y <= 420; y += 20) {
-      wrapper.vm.onCardHover({
-        clientX: milestoneX, clientY: y, currentTarget: target
-      })
-    }
-    wrapper.vm.onCardHover({ clientX: 1, clientY: 1, currentTarget: target })
-    wrapper.vm.onCardHover({ clientX: 1, clientY: 1, currentTarget: { querySelector: function () { return null } } })
-    wrapper.vm.onCanvasClick({ clientX: 1, clientY: 1, currentTarget: target })
-    expect(wrapper.vm.isOverCard).toBe(false)
   })
 
   it('covers interaction guards before a chart or canvas is available', () => {

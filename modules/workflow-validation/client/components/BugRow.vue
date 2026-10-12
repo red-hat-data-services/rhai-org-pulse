@@ -63,14 +63,14 @@
 <script setup>
 import { computed } from 'vue'
 import { safeExternalUrl } from '../utils/external-url'
-import { isVisibleFinding } from '../utils/product-bugs'
+import { isProductIssueCategory, isVisibleFinding } from '../utils/product-bugs'
 const props = defineProps({
   bug: { type: Object, required: true }
 })
 defineEmits(['open-test'])
 
 const issueOutcome = computed(() => {
-  if (props.bug.category && props.bug.category !== 'PRODUCT_BUG') return {
+  if (props.bug.category && !isProductIssueCategory(props.bug.category)) return {
     label: {
       ENVIRONMENT: 'Environment failure',
       SPEC_DEFECT: 'Test specification defect',
@@ -82,12 +82,12 @@ const issueOutcome = computed(() => {
   }
   if (props.bug.action === 'FILED' || props.bug.opened) return {
     label: 'New Jira issue opened',
-    detail: `${props.bug.bug_key} was opened for this newly detected product bug.`,
+    detail: `${props.bug.bug_key} was opened for this newly detected ${props.bug.category === 'UX_DEFECT' ? 'UX defect' : 'product bug'}.`,
     tone: 'bg-blue-100 text-blue-800 dark:bg-blue-900/40 dark:text-blue-300'
   }
   if (props.bug.action === 'EXISTING' || props.bug.action === 'MATCH') return {
     label: 'Existing Jira issue encountered',
-    detail: `This occurrence matched the previously reported product bug ${props.bug.bug_key}; no new issue was opened.`,
+    detail: `This occurrence matched the previously reported ${props.bug.category === 'UX_DEFECT' ? 'UX defect' : 'product bug'} ${props.bug.bug_key}; no new issue was opened.`,
     tone: 'bg-teal-100 text-teal-800 dark:bg-teal-900/40 dark:text-teal-300'
   }
   return {
@@ -112,7 +112,7 @@ const hasDetails = computed(() => detailFacts.value.length > 0 || Boolean(
 // Left accent echoes the report's priority stripe, keyed off category.
 const accent = computed(() => {
   const c = String(props.bug.category || '').toUpperCase()
-  if (c === 'PRODUCT_BUG' || c === 'CREDENTIAL_EXPOSURE') return 'border-red-500'
+  if (c === 'PRODUCT_BUG' || c === 'UX_DEFECT' || c === 'CREDENTIAL_EXPOSURE') return 'border-red-500'
   if (c === 'ENVIRONMENT') return 'border-amber-500'
   if (c === 'SPEC_DEFECT') return 'border-yellow-500'
   if (c === 'AUTOMATION_BUG') return 'border-purple-500'

@@ -3,7 +3,7 @@
     <div class="mb-4">
       <h2 class="text-2xl font-bold text-gray-900 dark:text-gray-100">Jira</h2>
       <p class="text-sm text-gray-500 dark:text-gray-400 mt-0.5">
-        Product bug occurrences observed by workflow validation and their linked Jira issues.
+        Product bugs and UX defects observed by workflow validation and their linked Jira issues.
       </p>
     </div>
 
@@ -18,23 +18,23 @@
     <template v-else>
       <!-- KPIs -->
       <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-        <MetricCard :value="kpis.total" label="Product Bug Occurrences" tone="amber" />
+        <MetricCard :value="kpis.total" label="Product and UX Issues" tone="amber" />
         <MetricCard :value="kpis.opened" label="New Jira Issues" tone="red" />
         <MetricCard :value="kpis.distinctJira" label="Distinct Jira Issues" tone="teal" />
-        <MetricCard :value="existingCount" label="Existing Bug Occurrences" tone="neutral" />
+        <MetricCard :value="existingCount" label="Existing Issue Occurrences" tone="neutral" />
       </div>
 
       <!-- Activity feed -->
       <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700/60 overflow-hidden">
         <div class="px-6 py-4 border-b border-gray-100 dark:border-gray-700/60 flex items-center justify-between">
-          <h3 class="text-base font-semibold text-gray-900 dark:text-gray-100">Product Bug Occurrences</h3>
+          <h3 class="text-base font-semibold text-gray-900 dark:text-gray-100">Product and UX Issue Occurrences</h3>
           <span class="text-xs text-gray-500 dark:text-gray-400">{{ total }} records</span>
         </div>
-        <div v-if="loading" class="px-6 py-10 text-center text-gray-400 dark:text-gray-500">Loading product bugs…</div>
+        <div v-if="loading" class="px-6 py-10 text-center text-gray-400 dark:text-gray-500">Loading product and UX issues…</div>
         <div v-else-if="bugs.length" class="divide-y divide-gray-50 dark:divide-gray-700/40">
           <BugRow v-for="b in bugs" :key="b.id" :bug="b" @open-test="openTest" />
         </div>
-        <p v-else class="px-6 py-10 text-center text-sm text-gray-400 dark:text-gray-500">No product bugs match the current filters</p>
+        <p v-else class="px-6 py-10 text-center text-sm text-gray-400 dark:text-gray-500">No product or UX issues match the current filters</p>
 
         <div class="flex items-center justify-between px-6 py-3 border-t border-gray-100 dark:border-gray-700/60 text-sm">
           <span class="text-gray-500 dark:text-gray-400">
@@ -85,7 +85,7 @@ const existingCount = computed(() => byAction.value
   .reduce((total, item) => total + item.count, 0))
 
 async function load() {
-  filters.category = 'PRODUCT_BUG'
+  filters.category = 'PRODUCT_BUG,UX_DEFECT'
   filters.action = ''
   filters.verdict = ''
   loading.value = true
@@ -102,7 +102,7 @@ async function load() {
     if (err.status === 503 || err.data?.code === 'OS_UNREACHABLE') {
       unreachable.value = err.data?.error || err.message
     } else {
-      unreachable.value = err.message || 'Failed to load product bugs'
+      unreachable.value = err.message || 'Failed to load product and UX issues'
     }
   } finally {
     loading.value = false

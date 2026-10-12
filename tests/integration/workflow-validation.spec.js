@@ -29,8 +29,21 @@ test.describe('Workflow Validation module @workflow-validation', () => {
       }
       if (path.endsWith('/charts')) body = {
         overTime: [], byVersion: [], byWorkflow: [], byProvider: [], bugsByCategory: [],
-        bugsByAction: [], bugsByComponent: [], newProductBugs: [], knownProductBugs: [],
-        tests: [{ execution_id: 'opaque-id', workflow: 'live-workflow', workflow_label: 'Live workflow', verdict: 'PASS', tasks_passed: 1, tasks_total: 1, productBugs: [] }]
+        bugsByAction: [], bugsByComponent: [], newProductBugs: [{
+          id: 'ux-finding-1', root_cause_id: 'invocation-1/jira-RHOAIENG-99762',
+          run_id: 'invocation-1', workflow: 'ux-workflow', category: 'UX_DEFECT',
+          action: 'FILED', opened: true, bug_key: 'RHOAIENG-99762',
+          jira_url: 'https://redhat.atlassian.net/browse/RHOAIENG-99762',
+          error_summary: 'API key form hides subscription model scope'
+        }], knownProductBugs: [],
+        tests: [
+          { execution_id: 'opaque-id', invocation_id: 'invocation-1', workflow: 'live-workflow', workflow_label: 'Live workflow', verdict: 'PASS', tasks_passed: 1, tasks_total: 1, productBugs: [] },
+          { execution_id: 'ux-id', invocation_id: 'invocation-1', workflow: 'ux-workflow', workflow_label: 'UX workflow', verdict: 'FAIL', tasks_passed: 0, tasks_failed: 1, tasks_total: 1, productBugs: [{
+            id: 'ux-finding-1', run_id: 'invocation-1', workflow: 'ux-workflow', category: 'UX_DEFECT',
+            action: 'FILED', opened: true, bug_key: 'RHOAIENG-99762',
+            jira_url: 'https://redhat.atlassian.net/browse/RHOAIENG-99762'
+          }] }
+        ]
       }
       if (path.endsWith('/runs')) {
         body = { total: 1, size: 8, nextCursor: null, runs: [{ execution_id: 'opaque-id', workflow: 'live-workflow', workflow_label: 'Live workflow', verdict: 'PASS', tasks_passed: 1, tasks_total: 1, cost_usd: 1, productBugs: [] }] }
@@ -59,6 +72,19 @@ test.describe('Workflow Validation module @workflow-validation', () => {
           }]
         }
       }
+      if (path.endsWith('/runs/ux-id')) {
+        body = {
+          run: { execution_id: 'ux-id', invocation_id: 'invocation-1', workflow: 'ux-workflow', workflow_label: 'UX workflow', verdict: 'FAIL', tasks_failed: 1 },
+          tasks: [{ task_execution_id: 'ux-id/000', execution_id: 'ux-id', task: 'Validate API key form', status: 'FAIL', passed: false }],
+          bugs: [{
+            id: 'ux-finding-1', root_cause_id: 'invocation-1/jira-RHOAIENG-99762',
+            run_id: 'invocation-1', workflow: 'ux-workflow', category: 'UX_DEFECT',
+            action: 'FILED', opened: true, bug_key: 'RHOAIENG-99762',
+            jira_url: 'https://redhat.atlassian.net/browse/RHOAIENG-99762',
+            error_summary: 'API key form hides subscription model scope'
+          }]
+        }
+      }
       if (path.endsWith('/workflow-history')) {
         body = { workflow: 'live-workflow', workflowLabel: 'Live workflow', summary: { runs: 1, passed: 1, failed: 0, passRate: 1, latestVerdict: 'PASS' }, runs: [{ id: 'different-opensearch-id', execution_id: 'opaque-id', run_id: 'run-1', workflow: 'live-workflow', workflow_label: 'Live workflow', rhoai_version: '3.6', verdict: 'PASS', timestamp: '2026-09-15T10:00:00Z', tasks_passed: 1, tasks_total: 1 }], bugs: [] }
       }
@@ -84,11 +110,33 @@ test.describe('Workflow Validation module @workflow-validation', () => {
     await page.goto('/#/workflow-validation/overview')
     await expect(page.getByRole('main').getByRole('heading', { name: 'Workflow Validation' })).toBeVisible()
     await expect(page.getByText('Live workflow')).toBeVisible()
-    await expect(page.getByRole('heading', { name: 'New Product Bugs Opened' })).toBeVisible()
-    await expect(page.getByRole('heading', { name: 'Known Product Bugs Encountered' })).toBeVisible()
+    await expect(page.getByRole('heading', { name: 'New Product and UX Issues Opened' })).toBeVisible()
+    await expect(page.getByRole('heading', { name: 'Known Product and UX Issues Encountered' })).toBeVisible()
     await expect(page.getByRole('heading', { name: 'Test Results', exact: true })).toBeVisible()
     expect(requests.some((url) => url.includes('/overview'))).toBe(true)
     expect(requests.every((url) => !url.includes('opensearch-workflow-validation'))).toBe(true)
+  })
+
+  test('links an invocation-scoped UX defect from the dashboard to its test execution', async ({ page }) => {
+    const requests = []
+    page.on('request', (request) => {
+      if (request.url().includes('/api/modules/workflow-validation/')) requests.push(request.url())
+    })
+
+    await page.goto('/#/workflow-validation/overview?version=3.6&testSuite=productization&invocationId=invocation-1')
+
+    await expect(page.getByText('New UX defect opened.', { exact: false })).toBeVisible()
+    await expect(page.getByRole('link', { name: 'RHOAIENG-99762' }).first()).toHaveAttribute(
+      'href', 'https://redhat.atlassian.net/browse/RHOAIENG-99762'
+    )
+    await expect(page.getByText('UX workflow', { exact: true })).toBeVisible()
+    await page.getByText('UX workflow', { exact: true }).click()
+
+    await expect(page).toHaveURL(/run-detail\?runKey=ux-id/)
+    await expect(page.getByRole('heading', { name: 'UX workflow' })).toBeVisible()
+    await expect(page.getByText('API key form hides subscription model scope')).toBeVisible()
+    expect(requests.some((url) => url.includes('/charts?') && url.includes('invocationId=invocation-1'))).toBe(true)
+    expect(requests.some((url) => url.endsWith('/runs/ux-id'))).toBe(true)
   })
 
   test('does not expose Workflow Validation connection settings to non-admins', async ({ page }) => {

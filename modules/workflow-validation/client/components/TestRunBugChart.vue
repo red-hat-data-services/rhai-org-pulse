@@ -3,7 +3,7 @@
     <h3 class="font-semibold text-gray-900 dark:text-gray-100">Bug Occurrences Over Time</h3>
     <p class="mt-1 text-xs leading-5 text-gray-500 dark:text-gray-400">Each group is one run. Red bars are new bugs opened; amber bars are known bugs encountered. The release appears beneath each date.</p>
     <div v-if="runs.length" class="relative mt-4 h-72"><Bar :data="chartData" :options="chartOptions" /></div>
-    <div v-else class="py-16 text-center text-sm text-gray-400">No product-bug history for these filters</div>
+    <div v-else class="py-16 text-center text-sm text-gray-400">No product or UX issue history for these filters</div>
   </div>
 </template>
 <script setup>

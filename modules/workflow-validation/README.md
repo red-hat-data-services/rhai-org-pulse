@@ -60,9 +60,9 @@ The module reads three strict-mapping indices:
 
 | Index | Identity | Correlation |
 |-------|----------|-------------|
-| `workflow-executions` | `execution_id` | `run_id`, `invocation_id`, `workflow` |
+| `workflow-executions` | `execution_id` | Test runs group by `invocation_id`; tests within them use `workflow` |
 | `workflow-task-executions` | `task_execution_id` | Join to an execution using `execution_id` |
-| `workflow-root-causes` | `root_cause_id` | Correlate using `run_id` and `workflow`/`impacted_workflows` |
+| `workflow-root-causes` | `root_cause_id` | `run_id` joins to execution `invocation_id`, then `workflow`/`impacted_workflows` |
 
 Important rules:
 
@@ -79,15 +79,20 @@ Important rules:
 - `rhods_operator_digest` is displayed as the RHODS Build ID. The UI abbreviates
   a known SHA digest to eight characters while preserving the complete value as
   hover text, and reports missing or `unknown` values honestly.
-- Execution verdict filters are joined to tasks by `execution_id` and to root
-  causes by `run_id` plus `workflow`; a run verdict is never treated as a task
-  status.
+- Execution verdict filters are joined to tasks by `execution_id`. RCA uses an
+  unfortunate naming mismatch: root-cause `run_id` joins to execution
+  `invocation_id`, then `workflow`/`impacted_workflows` narrows the affected
+  tests. Execution `run_id` is obsolete historical ETL data, is no longer
+  published, and is never used for RCA correlation. A run verdict is never
+  treated as a task status.
 - `cost_usd` is per execution and may be summed normally.
-- `infra_cost_usd` can repeat across executions and must be deduplicated by
-  `run_id` before summing.
+- `infra_cost_usd` can repeat across executions and is deduplicated by
+  `invocation_id` before summing. Historical ETL documents fall back to
+  `run_id` only when `invocation_id` is absent.
 - Root causes may not have a Jira key.
-- Product-bug findings without a Jira ID are not surfaced in stakeholder-facing
-  bug lists, charts, or counts. Other root-cause categories remain visible.
+- Product-bug and UX-defect findings without a Jira ID are not surfaced in
+  stakeholder-facing issue lists, charts, counts, or outcome classification.
+  Other root-cause categories remain visible.
 - Missing fields mean unknown unless their documented business meaning says
   otherwise.
 - The dashboard always presents one bounded test run. It defaults to
@@ -96,21 +101,21 @@ Important rules:
   can select another cohort; the dashboard never defaults to an aggregation
   of historical executions.
 - Dashboard metrics and the complete test-results table are scoped to that one
-  `rhoai_version`, `telemetry_suite`, and `invocation_id`. Product bugs from
-  the same execution are separated into newly opened Jira issues and known
-  bugs encountered without opening another issue.
-- Stakeholder-facing test outcomes distinguish `PASS` from product failures
-  (`FAIL`, when a product-bug finding is linked) and environmental failures
-  (`SKIP`, when an unsuccessful test has no product-bug finding). Raw task
+  `rhoai_version`, `telemetry_suite`, and `invocation_id`. Product bugs and UX
+  defects from the same execution are separated into newly opened Jira issues
+  and known issues encountered without opening another issue.
+- Stakeholder-facing test outcomes distinguish `PASS` from product or UX failures
+  (`FAIL`, when a Jira-linked `PRODUCT_BUG` or `UX_DEFECT` finding is linked) and environmental failures
+  (`SKIP`, when an unsuccessful test has no product or UX issue finding). Raw task
   verdicts remain unchanged.
 - Jira defaults to one exact test-suite run and can switch explicitly to all
-  product bugs for a RHOAI release, a date range, or all recorded time.
+  product bugs and UX defects for a RHOAI release, a date range, or all recorded time.
 - Trends defaults to the most recently active test suite across all RHOAI
-  versions. It charts pass rate, test volume, newly opened product bugs, and
-  known product bugs per invocation, with version rollups and exact-run links
+  versions. It charts pass rate, test volume, newly opened product or UX issues,
+  and known issues per invocation, with version rollups and exact-run links
   back to the dashboard. Date and release filters remain shareable in the URL.
 - Compare requires a test-run group and two dated invocations. Each side is one
-  exact test run, and product-bug linkage remains constrained to its run IDs.
+  exact test run, and product/UX issue linkage remains constrained to its run IDs.
 
 The source mappings maintained by the workflow-validation Director are the
 authoritative schema. When mappings change, update backend queries, this

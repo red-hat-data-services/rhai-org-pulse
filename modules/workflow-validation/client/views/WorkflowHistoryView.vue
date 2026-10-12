@@ -82,8 +82,8 @@
                 <td class="px-4 py-3 text-right font-mono text-xs text-gray-600 dark:text-gray-300">{{ formatRatio(r.tasks_passed, r.tasks_total) }}</td>
                 <td class="px-4 py-3 text-right font-mono text-xs text-gray-600 dark:text-gray-300">{{ formatDuration(r.duration_s) }}</td>
                 <td class="px-4 py-3 max-w-[340px]">
-                  <div v-if="bugsForRun(r.run_id).length" class="space-y-1">
-                    <div v-for="b in bugsForRun(r.run_id)" :key="b.id" class="flex items-start gap-1.5">
+                  <div v-if="bugsForInvocation(r.invocation_id).length" class="space-y-1">
+                    <div v-for="b in bugsForInvocation(r.invocation_id)" :key="b.id" class="flex items-start gap-1.5">
                       <StatusBadge :value="b.category" />
                       <span class="text-xs text-gray-600 dark:text-gray-400 leading-snug">{{ b.error_summary }}</span>
                     </div>
@@ -109,7 +109,7 @@ import {
 } from 'chart.js'
 import MetricCard from '../components/MetricCard.vue'
 import StatusBadge from '../components/StatusBadge.vue'
-import { isVisibleFinding } from '../utils/product-bugs'
+import { isProductIssueCategory, isVisibleFinding } from '../utils/product-bugs'
 import { compareTableValues, displayedOutcomeCounts, displayedTestOutcome, filterQueryValues, hydrateFilters, syncQueryParams, useWorkflowValidation, formatDuration, formatPercent, formatDate, formatRatio } from '../composables/useWorkflowValidation'
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, PointElement, LineElement, Tooltip, Legend, Filler)
@@ -131,7 +131,9 @@ const sortDir = ref('desc')
 
 const runsWithBugs = computed(() => runs.value.map((run) => ({
   ...run,
-  productBugs: bugs.value.filter((bug) => bug.run_id === run.run_id && bug.category === 'PRODUCT_BUG')
+  // RCA run_id stores execution invocation_id; execution.run_id is obsolete
+  // legacy ETL data and is never the RCA join key.
+  productBugs: bugs.value.filter((bug) => bug.run_id === run.invocation_id && isProductIssueCategory(bug.category))
 })))
 const sortedRuns = computed(() => [...runsWithBugs.value].sort((a, b) =>
   compareTableValues(a[sortBy.value], b[sortBy.value], sortDir.value)))
@@ -140,7 +142,7 @@ const latestBadge = computed(() => runsWithBugs.value.length ? displayedTestOutc
 
 function passTone(rate) { if (rate == null) return 'neutral'; return rate >= 0.9 ? 'green' : rate >= 0.7 ? 'amber' : 'red' }
 
-const bugsByRun = computed(() => {
+const bugsByInvocation = computed(() => {
   const map = {}
   for (const b of bugs.value.filter(isVisibleFinding)) {
     if (!b.run_id) continue
@@ -148,7 +150,8 @@ const bugsByRun = computed(() => {
   }
   return map
 })
-function bugsForRun(runId) { return bugsByRun.value[runId] || [] }
+// RCA calls the Director invocation ID run_id; execution.run_id is obsolete ETL data.
+function bugsForInvocation(invocationId) { return bugsByInvocation.value[invocationId] || [] }
 function backToTrends() { nav.navigateTo('workflows', filterQueryValues(FILTER_KEYS)) }
 function openCompare() { nav.navigateTo('compare', { test: workflow.value }) }
 function setSort(column) {

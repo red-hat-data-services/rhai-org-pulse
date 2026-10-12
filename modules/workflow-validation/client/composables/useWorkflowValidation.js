@@ -1,5 +1,6 @@
 import { reactive } from 'vue'
 import { apiRequest } from '@shared/client/services/api'
+import { isVisibleProductBug } from '../utils/product-bugs'
 
 const BASE = '/modules/workflow-validation'
 const EMPTY_FILTER_OPTIONS = { versions: [], providers: [], models: [], workflows: [], testSuites: [] }
@@ -197,7 +198,7 @@ export function displayedTestOutcome(test = {}) {
   const verdict = String(test.verdict || '').toUpperCase()
   if (test.passed === true || verdict === 'PASS') return 'PASS'
   if (!['FAIL', 'ERROR'].includes(verdict) && test.passed !== false) return verdict || 'UNKNOWN'
-  const hasProductBug = (test.productBugs || []).some((finding) => finding.category === 'PRODUCT_BUG')
+  const hasProductBug = (test.productBugs || []).some(isVisibleProductBug)
   return hasProductBug ? 'FAIL' : 'SKIP'
 }
 
@@ -214,7 +215,7 @@ export function runOutcomeCounts(run = {}) {
   const pass = Number(run.passed) || 0
   const unsuccessful = (Number(run.failed) || 0) + (Number(run.errors) || 0)
   const productBugTests = new Set((run.productBugs || [])
-    .filter((finding) => finding.category === 'PRODUCT_BUG')
+    .filter(isVisibleProductBug)
     .map((finding) => finding.workflow || finding.root_cause_id || finding.id)
     .filter(Boolean)).size
   const fail = Math.min(unsuccessful, productBugTests)

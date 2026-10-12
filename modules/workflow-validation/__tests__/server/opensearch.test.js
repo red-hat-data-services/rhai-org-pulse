@@ -186,6 +186,13 @@ describe('workflow-validation live schema routes', () => {
       .not.toContainEqual({ exists: { field: 'bug_key' } })
   })
 
+  it('filters product and UX issues together while requiring a Jira ID', () => {
+    expect(bugFilters({ category: 'PRODUCT_BUG,UX_DEFECT' }).bool.filter).toEqual(expect.arrayContaining([
+      { terms: { category: ['PRODUCT_BUG', 'UX_DEFECT'] } },
+      { exists: { field: 'bug_key' } }
+    ]))
+  })
+
   it('applies the same inclusive date range to execution, task, and RCA queries', () => {
     const dates = { dateFrom: '2026-09-01', dateTo: '2026-09-14' }
     const expected = { range: { timestamp: {
@@ -197,14 +204,17 @@ describe('workflow-validation live schema routes', () => {
     }
   })
 
-  it('links independent task documents by execution_id and RCAs by run_id plus workflow', async () => {
+  it('links tasks by execution_id and RCAs by invocation_id to run_id plus workflow', async () => {
     process.env.WORKFLOW_VALIDATION_OPENSEARCH_URL = 'https://search.example'
     const fetchMock = vi.fn((url, options) => {
       const body = JSON.parse(options.body)
       if (url.includes(`/${RUNS_INDEX}/`)) {
         return Promise.resolve(jsonResponse({ hits: { hits: [{
           _id: 'opaque-execution',
-          _source: { execution_id: 'opaque-execution', run_id: 'run-1', workflow: 'workflow-a' }
+          _source: {
+            execution_id: 'opaque-execution', invocation_id: 'invocation-1',
+            workflow: 'workflow-a'
+          }
         }] } }))
       }
       if (url.includes(`/${TASKS_INDEX}/`)) {
@@ -214,11 +224,11 @@ describe('workflow-validation live schema routes', () => {
         }] } }))
       }
       expect(url).toContain(`/${BUGS_INDEX}/`)
-      expect(JSON.stringify(body.query)).toContain('run-1')
+      expect(body.query.bool.filter).toContainEqual({ term: { run_id: 'invocation-1' } })
       expect(JSON.stringify(body.query)).toContain('workflow-a')
       expect(JSON.stringify(body.query)).toContain('impacted_workflows')
       return Promise.resolve(jsonResponse({ hits: { hits: [{
-        _id: 'rca-1', _source: { root_cause_id: 'rca-1', run_id: 'run-1', workflow: 'workflow-a' }
+        _id: 'rca-1', _source: { root_cause_id: 'rca-1', run_id: 'invocation-1', workflow: 'workflow-a' }
       }] } }))
     })
     vi.stubGlobal('fetch', fetchMock)
@@ -240,11 +250,14 @@ describe('workflow-validation live schema routes', () => {
       if (url.includes(`/${RUNS_INDEX}/`)) {
         return Promise.resolve(jsonResponse({ hits: { hits: [{
           _id: 'storage-id',
-          _source: { execution_id: 'execution-1', run_id: 'run-1', workflow: 'workflow-a' }
+          _source: {
+            execution_id: 'execution-1', invocation_id: 'invocation-1',
+            workflow: 'workflow-a'
+          }
         }] } }))
       }
       expect(url).toContain(`/${BUGS_INDEX}/`)
-      expect(body.query.bool.filter).toContainEqual({ terms: { run_id: ['run-1'] } })
+      expect(body.query.bool.filter).toContainEqual({ terms: { run_id: ['invocation-1'] } })
       expect(body.query.bool.should).toEqual([
         { term: { workflow: 'workflow-a' } },
         { term: { impacted_workflows: 'workflow-a' } }
@@ -252,7 +265,7 @@ describe('workflow-validation live schema routes', () => {
       expect(body.query.bool.minimum_should_match).toBe(1)
       return Promise.resolve(jsonResponse({ hits: { hits: [{
         _id: 'rca-1',
-        _source: { root_cause_id: 'rca-1', run_id: 'run-1', impacted_workflows: ['workflow-a'] }
+        _source: { root_cause_id: 'rca-1', run_id: 'invocation-1', impacted_workflows: ['workflow-a'] }
       }] } }))
     }))
     const routes = register()
@@ -271,10 +284,14 @@ describe('workflow-validation live schema routes', () => {
       const body = JSON.parse(options.body)
       if (url.includes(`/${RUNS_INDEX}/`)) {
         return Promise.resolve(jsonResponse({ hits: { hits: [{
-          _source: { execution_id: 'execution-1', run_id: 'run-1', workflow: 'workflow-a' }
+          _source: {
+            execution_id: 'execution-1', invocation_id: 'invocation-1',
+            workflow: 'workflow-a'
+          }
         }] } }))
       }
       expect(url).toContain(`/${BUGS_INDEX}/`)
+      expect(body.query.bool.filter).toContainEqual({ terms: { run_id: ['invocation-1'] } })
       const workflowCorrelation = body.query.bool.filter.find((filter) => filter.bool?.should)
       expect(workflowCorrelation.bool.should).toEqual([
         { terms: { workflow: ['workflow-a'] } },
@@ -308,7 +325,7 @@ describe('workflow-validation live schema routes', () => {
         failed: { doc_count: 4 - passed },
         latest: { hits: { hits: [{
           _id: `${version}-latest`,
-          _source: { execution_id: `${version}-latest`, run_id: `${version}-run`, workflow: 'shared-test', rhoai_version: version }
+          _source: { execution_id: `${version}-latest`, invocation_id: invocation, workflow: 'shared-test', rhoai_version: version }
         }] } }
       }] } } }))
     }))
@@ -350,7 +367,7 @@ describe('workflow-validation live schema routes', () => {
         duration: { value: 180 }, duration_count: { value: 3 },
         latest: { hits: { hits: [{ _source: {
           timestamp: '2026-09-15T10:00:00Z', rhoai_version: '3.6',
-          rhods_operator_digest: 'abcdef0123456789', run_id: 'run-1'
+          rhods_operator_digest: 'abcdef0123456789'
         } }] } }
       }] } } }))
     }))
@@ -371,7 +388,8 @@ describe('workflow-validation live schema routes', () => {
       expect(body.query.bool.filter).toContainEqual({ term: { invocation_id: 'invocation-1' } })
       return Promise.resolve(jsonResponse({ hits: { hits: [{
         _id: 'execution-1', _source: {
-          execution_id: 'execution-1', run_id: 'run-1', workflow: 'test-a', verdict: 'PASS',
+          execution_id: 'execution-1', invocation_id: 'invocation-1',
+          workflow: 'test-a', verdict: 'PASS',
           timestamp: '2026-09-15T10:00:00Z', rhoai_version: '3.6', rhods_operator_digest: 'abcdef0123456789'
         }
       }] } }))
@@ -384,26 +402,30 @@ describe('workflow-validation live schema routes', () => {
   })
 
   it('returns every test and separates new from known product bugs for a test run', async () => {
+    const rootCauseQueries = []
     vi.stubGlobal('fetch', vi.fn((url, options) => {
       const body = JSON.parse(options.body)
       if (url.includes(`/${RUNS_INDEX}/`) && body._source?.includes('execution_id')) {
         const dashboardShape = body._source.includes('tasks_passed')
         return Promise.resolve(jsonResponse({ hits: { hits: dashboardShape ? [{
-          _id: 'execution-a', _source: { execution_id: 'execution-a', run_id: 'run-1', workflow: 'test-a', verdict: 'PASS' }, sort: ['2026-09-16', 'execution-a']
+          _id: 'execution-a', _source: { execution_id: 'execution-a', invocation_id: 'invocation-1', workflow: 'test-a', verdict: 'PASS' }, sort: ['2026-09-16', 'execution-a']
         }, {
-          _id: 'execution-b', _source: { execution_id: 'execution-b', run_id: 'run-1', workflow: 'test-b', verdict: 'FAIL' }, sort: ['2026-09-16', 'execution-b']
+          _id: 'execution-b', _source: { execution_id: 'execution-b', invocation_id: 'invocation-1', workflow: 'test-b', verdict: 'FAIL' }, sort: ['2026-09-16', 'execution-b']
         }] : [{
-          _source: { execution_id: 'execution-a', run_id: 'run-1', workflow: 'test-a' }, sort: ['2026-09-16', 'execution-a']
+          _source: { execution_id: 'execution-a', invocation_id: 'invocation-1', workflow: 'test-a' }, sort: ['2026-09-16', 'execution-a']
         }, {
-          _source: { execution_id: 'execution-b', run_id: 'run-1', workflow: 'test-b' }, sort: ['2026-09-16', 'execution-b']
+          _source: { execution_id: 'execution-b', invocation_id: 'invocation-1', workflow: 'test-b' }, sort: ['2026-09-16', 'execution-b']
         }] } }))
       }
       if (url.includes(`/${RUNS_INDEX}/`)) return Promise.resolve(jsonResponse({ aggregations: {} }))
+      if (url.includes(`/${BUGS_INDEX}/`)) rootCauseQueries.push(body.query)
       if (body.size === 0) return Promise.resolve(jsonResponse({ aggregations: {} }))
       return Promise.resolve(jsonResponse({ hits: { hits: [{
-        _id: 'new-bug', _source: { root_cause_id: 'new-bug', run_id: 'run-1', workflow: 'test-a', category: 'PRODUCT_BUG', opened: true, bug_key: 'RHOAIENG-1' }, sort: ['2026-09-16', 'new-bug']
+        _id: 'new-bug', _source: { root_cause_id: 'new-bug', run_id: 'invocation-1', workflow: 'test-a', category: 'PRODUCT_BUG', opened: true, bug_key: 'RHOAIENG-1' }, sort: ['2026-09-16', 'new-bug']
       }, {
-        _id: 'known-bug', _source: { root_cause_id: 'known-bug', run_id: 'run-1', workflow: 'test-b', category: 'PRODUCT_BUG', opened: false, action: 'EXISTING', bug_key: 'RHOAIENG-2' }, sort: ['2026-09-16', 'known-bug']
+        _id: 'known-bug', _source: { root_cause_id: 'known-bug', run_id: 'invocation-1', workflow: 'test-b', category: 'PRODUCT_BUG', opened: false, action: 'EXISTING', bug_key: 'RHOAIENG-2' }, sort: ['2026-09-16', 'known-bug']
+      }, {
+        _id: 'ux-defect', _source: { root_cause_id: 'ux-defect', run_id: 'invocation-1', workflow: 'test-a', category: 'UX_DEFECT', opened: true, action: 'FILED', bug_key: 'RHOAIENG-3' }, sort: ['2026-09-16', 'ux-defect']
       }] } }))
     }))
     const routes = register()
@@ -413,11 +435,22 @@ describe('workflow-validation live schema routes', () => {
     } }, response)
 
     expect(response.body.tests).toHaveLength(2)
-    expect(response.body.tests[0].productBugs).toEqual([expect.objectContaining({ bug_key: 'RHOAIENG-1' })])
-    expect(response.body.newProductBugs).toEqual([expect.objectContaining({ bug_key: 'RHOAIENG-1' })])
+    expect(response.body.tests[0].productBugs).toEqual(expect.arrayContaining([
+      expect.objectContaining({ bug_key: 'RHOAIENG-1', category: 'PRODUCT_BUG' }),
+      expect.objectContaining({ bug_key: 'RHOAIENG-3', category: 'UX_DEFECT' })
+    ]))
+    expect(response.body.newProductBugs).toEqual(expect.arrayContaining([
+      expect.objectContaining({ bug_key: 'RHOAIENG-1', category: 'PRODUCT_BUG' }),
+      expect.objectContaining({ bug_key: 'RHOAIENG-3', category: 'UX_DEFECT' })
+    ]))
     expect(response.body.knownProductBugs).toEqual([expect.objectContaining({ bug_key: 'RHOAIENG-2' })])
     expect(response.body).not.toHaveProperty('failedTests')
     expect(response.body).not.toHaveProperty('recentTests')
+    expect(rootCauseQueries.length).toBeGreaterThan(0)
+    expect(rootCauseQueries.every((query) => !JSON.stringify(query).includes('telemetry_suite'))).toBe(true)
+    expect(rootCauseQueries.some((query) => JSON.stringify(query).includes('invocation-1'))).toBe(true)
+    expect(rootCauseQueries.some((query) => JSON.stringify(query).includes('UX_DEFECT'))).toBe(true)
+    expect(rootCauseQueries.some((query) => JSON.stringify(query).includes('bug_key'))).toBe(true)
   })
 
   it('requires charts to be scoped to one concrete test run', async () => {
@@ -428,7 +461,7 @@ describe('workflow-validation live schema routes', () => {
     expect(response.body.error).toMatch(/test suite and test run/i)
   })
 
-  it('deduplicates infrastructure cost by run_id and contains no legacy path-derived fields', async () => {
+  it('deduplicates infrastructure cost by invocation_id with a legacy run_id fallback', async () => {
     const bodies = []
     vi.stubGlobal('fetch', vi.fn((url, options) => {
       bodies.push(JSON.parse(options.body))
@@ -439,10 +472,14 @@ describe('workflow-validation live schema routes', () => {
 
     await routes['/overview'].at(-1)({ query: {} }, response)
 
-    const infraQuery = bodies.find((body) => body.aggs?.runs?.composite)
-    expect(infraQuery.aggs.runs.composite.sources)
-      .toEqual([{ runId: { terms: { field: 'run_id' } } }])
-    expect(infraQuery.aggs.runs.aggs.infraCost.max.field).toBe('infra_cost_usd')
+    const infraQueries = bodies.filter((body) => body.aggs?.runs?.composite)
+    expect(infraQueries).toHaveLength(2)
+    expect(infraQueries[0].aggs.runs.composite.sources)
+      .toEqual([{ correlationId: { terms: { field: 'invocation_id' } } }])
+    expect(infraQueries[1].aggs.runs.composite.sources)
+      .toEqual([{ correlationId: { terms: { field: 'run_id' } } }])
+    expect(JSON.stringify(infraQueries[1].query)).toContain('must_not')
+    expect(infraQueries.every((body) => body.aggs.runs.aggs.infraCost.max.field === 'infra_cost_usd')).toBe(true)
     expect(JSON.stringify(bodies)).not.toMatch(/run_key|test_name|spec_path|artifact_dir|playwright_project/)
   })
 

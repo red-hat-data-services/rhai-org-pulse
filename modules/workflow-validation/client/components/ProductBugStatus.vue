@@ -33,32 +33,35 @@ import { isVisibleProductBug } from '../utils/product-bugs'
 const props = defineProps({
   findings: { type: Array, default: () => [] },
   verdict: { type: String, default: '' },
-  neutralMessage: { type: String, default: 'No product bugs observed in the filtered executions.' },
-  neutralTooltip: { type: String, default: 'No product bug was observed for this test in the selected version and date range.' }
+  neutralMessage: { type: String, default: 'No product or UX issues observed in the filtered executions.' },
+  neutralTooltip: { type: String, default: 'No product bug or UX defect was observed for this test in the selected version and date range.' }
 })
 
 const productBugs = computed(() => props.findings.filter(isVisibleProductBug))
 const unsuccessful = computed(() => ['FAIL', 'ERROR'].includes(String(props.verdict).toUpperCase()))
 const emptyMessage = computed(() => unsuccessful.value
-  ? 'Environmental failure detected. No product bug detected.'
+  ? 'Environmental failure detected. No product or UX issue detected.'
   : props.neutralMessage)
 const emptyTooltip = computed(() => unsuccessful.value
-  ? 'The test failed or was terminated due to a problem in the test execution environment. No product bug was observed.'
+  ? 'The test failed or was terminated due to a problem in the test execution environment. No product bug or UX defect was observed.'
   : props.neutralTooltip)
 
 function productBugDescription(issue) {
-  if (issue.action === 'EXISTING' || issue.action === 'MATCH') return 'Pre-existing product bug detected.'
-  if (issue.action === 'FILED' || issue.opened) return 'New product bug opened.'
-  return 'Product bug detected.'
+  const name = issue.category === 'UX_DEFECT' ? 'UX defect' : 'product bug'
+  if (issue.action === 'EXISTING' || issue.action === 'MATCH') return `Pre-existing ${name} detected.`
+  if (issue.action === 'FILED' || issue.opened) return `New ${name} opened.`
+  return `${name[0].toUpperCase()}${name.slice(1)} detected.`
 }
 
 function productBugTooltip(issue) {
   if (issue.action === 'EXISTING') {
-    return 'The test failed after encountering an already reported bug. No new issue was opened, but a new occurrence was logged and the issue was updated.'
+    return issue.category === 'UX_DEFECT'
+      ? 'The test failed after encountering an already reported UX defect. No new issue was opened, but a new occurrence was logged and the issue was updated.'
+      : 'The test failed after encountering an already reported bug. No new issue was opened, but a new occurrence was logged and the issue was updated.'
   }
   if (issue.action === 'FILED' || issue.opened) {
-    return `A new product bug was detected. ${issue.bug_key} has been opened.`
+    return `A new ${issue.category === 'UX_DEFECT' ? 'UX defect' : 'product bug'} was detected. ${issue.bug_key} has been opened.`
   }
-  return 'A product bug was detected, but its issue-handling status is unavailable.'
+  return `A ${issue.category === 'UX_DEFECT' ? 'UX defect' : 'product bug'} was detected, but its issue-handling status is unavailable.`
 }
 </script>

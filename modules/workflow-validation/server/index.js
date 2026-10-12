@@ -39,6 +39,7 @@ function safe(handler) {
 
 const bucketList = (agg) => (agg && agg.buckets ? agg.buckets : []);
 const valueOrNull = (agg) => agg?.value ?? null;
+const STAKEHOLDER_ISSUE_CATEGORIES = ['PRODUCT_BUG', 'UX_DEFECT'];
 
 function decodeCursor(value) {
   if (!value) return null;
@@ -228,19 +229,23 @@ module.exports = function registerRoutes(router, context) {
     const hits = await searchAll(RUNS_INDEX, {
       query: runFilters(q),
       sort: [{ timestamp: 'asc' }, { execution_id: 'asc' }],
-      _source: ['execution_id', 'run_id', 'workflow']
+      _source: ['execution_id', 'invocation_id', 'workflow']
     });
     return hits.map((hit) => hit._source || {});
   }
 
   async function rootCauseQuery(q) {
-    let query = bugFilters(q);
-    if (q.verdict || q.provider || q.model || q.invocationId) {
+    // telemetry_suite belongs to executions, not RCA documents. Resolve any
+    // execution-scoped filters before joining invocation_id to RCA run_id.
+    let query = bugFilters({ ...q, testSuite: '' });
+    if (q.verdict || q.provider || q.model || q.testSuite || q.invocationId) {
       const links = await executionLinks({ ...q, q: '' });
-      const runIds = [...new Set(links.map((link) => link.run_id).filter(Boolean))];
+      // Naming mismatch: RCA run_id stores the execution invocation_id.
+      // Execution run_id is obsolete legacy ETL data and is never this join key.
+      const invocationIds = [...new Set(links.map((link) => link.invocation_id).filter(Boolean))];
       const workflows = [...new Set(links.map((link) => link.workflow).filter(Boolean))];
-      const correlation = runIds.length ? { bool: { filter: [
-        { terms: { run_id: runIds } },
+      const correlation = invocationIds.length ? { bool: { filter: [
+        { terms: { run_id: invocationIds } },
         ...(workflows.length ? [{ bool: { should: [
           { terms: { workflow: workflows } },
           { terms: { impacted_workflows: workflows } }
@@ -253,11 +258,18 @@ module.exports = function registerRoutes(router, context) {
     return query;
   }
 
-  async function productBugFindings(q, { runIds = [], workflows = [] } = {}) {
-    if (!runIds.length && !workflows.length) return [];
-    const bugParams = { ...q, q: '', category: '', action: '', opened: '' };
-    let query = addFilter(bugFilters(bugParams), { term: { category: 'PRODUCT_BUG' } });
-    if (runIds.length) query = addFilter(query, { terms: { run_id: runIds } });
+  async function productBugFindings(q, { invocationIds = [], workflows = [] } = {}) {
+    if (!invocationIds.length && !workflows.length) return [];
+    // Test suite is execution metadata; the invocationIds argument carries
+    // that scope across the execution invocation_id -> RCA run_id join.
+    const bugParams = { ...q, q: '', category: '', action: '', opened: '', testSuite: '' };
+    let query = addFilter(bugFilters(bugParams), { terms: { category: STAKEHOLDER_ISSUE_CATEGORIES } });
+    // Stakeholder issue surfaces intentionally hide telemetry findings that
+    // cannot link to Jira; those findings must not influence visible outcomes.
+    query = addFilter(query, { exists: { field: 'bug_key' } });
+    // Naming mismatch: RCA run_id stores the Director invocation_id.
+    // Execution run_id is obsolete legacy ETL data and is never this join key.
+    if (invocationIds.length) query = addFilter(query, { terms: { run_id: invocationIds } });
     if (workflows.length) {
       query = addFilter(query, { bool: { should: [
         { terms: { workflow: workflows } },
@@ -279,41 +291,56 @@ module.exports = function registerRoutes(router, context) {
   }
 
   function productBugsForTest(findings, test) {
-    return findings.filter((finding) => (!test.run_id || finding.run_id === test.run_id) && (
+    // Naming mismatch: RCA run_id matches execution invocation_id.
+    // Execution run_id is obsolete legacy ETL data and is never this join key.
+    return findings.filter((finding) => (!test.invocation_id || finding.run_id === test.invocation_id) && (
       !test.workflow || finding.workflow === test.workflow || finding.impacted_workflows?.includes(test.workflow)
     ));
   }
 
   async function sumInfraCost(query) {
     let total = 0;
-    let after;
-    do {
-      const response = await osSearch(RUNS_INDEX, {
-        size: 0,
-        query,
-        aggs: {
-          runs: {
-            composite: {
-              size: 1000,
-              sources: [{ runId: { terms: { field: 'run_id' } } }],
-              ...(after ? { after } : {})
-            },
-            aggs: { infraCost: { max: { field: 'infra_cost_usd' } } }
+    async function sumBy(field, scopedQuery) {
+      let subtotal = 0;
+      let after;
+      do {
+        const response = await osSearch(RUNS_INDEX, {
+          size: 0,
+          query: scopedQuery,
+          aggs: {
+            runs: {
+              composite: {
+                size: 1000,
+                sources: [{ correlationId: { terms: { field } } }],
+                ...(after ? { after } : {})
+              },
+              aggs: { infraCost: { max: { field: 'infra_cost_usd' } } }
+            }
           }
+        });
+        const aggregation = response.aggregations?.runs;
+        for (const bucket of bucketList(aggregation)) {
+          if (bucket.infraCost?.value != null) subtotal += bucket.infraCost.value;
         }
-      });
-      const aggregation = response.aggregations?.runs;
-      for (const bucket of bucketList(aggregation)) {
-        if (bucket.infraCost?.value != null) total += bucket.infraCost.value;
-      }
-      after = aggregation?.after_key;
-    } while (after);
+        after = aggregation?.after_key;
+      } while (after);
+      return subtotal;
+    }
+    total += await sumBy('invocation_id', addFilter(query, { exists: { field: 'invocation_id' } }));
+    // Historical ETL documents used execution.run_id for the value now carried
+    // by invocation_id. It is only a fallback when invocation_id is absent.
+    const legacyQuery = addFilter(addFilter(query, { bool: { must_not: [{ exists: { field: 'invocation_id' } }] } }),
+      { exists: { field: 'run_id' } });
+    total += await sumBy('run_id', legacyQuery);
     const coverage = await osSearch(RUNS_INDEX, {
       size: 0,
       query,
       aggs: {
         values: { value_count: { field: 'infra_cost_usd' } },
-        linkable: { filter: { exists: { field: 'run_id' } }, aggs: {
+        linkable: { filter: { bool: { should: [
+          { exists: { field: 'invocation_id' } },
+          { exists: { field: 'run_id' } }
+        ], minimum_should_match: 1 } }, aggs: {
           values: { value_count: { field: 'infra_cost_usd' } }
         } }
       }
@@ -427,7 +454,7 @@ module.exports = function registerRoutes(router, context) {
               latest: { top_hits: {
                 size: 1,
                 sort: [{ timestamp: 'desc' }, { execution_id: 'asc' }],
-                _source: ['timestamp', 'rhoai_version', 'rhods_operator_digest', 'run_id', 'cluster_name']
+                _source: ['timestamp', 'rhoai_version', 'rhods_operator_digest', 'cluster_name']
               } }
             }
           }
@@ -452,19 +479,20 @@ module.exports = function registerRoutes(router, context) {
         passRate: bucket.pass_rate?.value ?? null,
         rhoaiVersion: latest.rhoai_version || null,
         rhodsOperatorDigest: latest.rhods_operator_digest || null,
-        runId: latest.run_id || null,
         clusterName: latest.cluster_name || null
       };
     }).sort((a, b) => String(b.timestamp || '').localeCompare(String(a.timestamp || '')));
 
     if (req.query.latest === 'true' && req.query.suite) rows = rows.slice(0, 1);
+    // Naming mismatch: RCA run_id joins to the test-run invocation_id.
+    // Execution run_id is obsolete legacy ETL data and is never this join key.
     const findings = await productBugFindings({}, {
-      runIds: [...new Set(rows.map((row) => row.runId).filter(Boolean))]
+      invocationIds: [...new Set(rows.map((row) => row.invocationId).filter(Boolean))]
     });
     res.json({
       rows: rows.map((row) => ({
         ...row,
-        productBugs: row.runId ? findings.filter((finding) => finding.run_id === row.runId) : []
+        productBugs: findings.filter((finding) => finding.run_id === row.invocationId)
       }))
     });
   }));
@@ -473,7 +501,7 @@ module.exports = function registerRoutes(router, context) {
    * @openapi
    * /api/modules/workflow-validation/test-suites/{suite}/{invocationId}:
    *   get:
-   *     summary: One test run with its tests and product bugs
+   *     summary: One test run with its tests and product or UX issues
    *     tags: [Workflow Validation]
    *     parameters:
    *       - { in: path, name: suite, required: true, schema: { type: string } }
@@ -491,15 +519,16 @@ module.exports = function registerRoutes(router, context) {
       ] } },
       sort: [{ timestamp: 'desc' }, { execution_id: 'asc' }],
       _source: [
-        'execution_id', 'run_id', 'workflow', 'workflow_label', 'timestamp', 'verdict',
+        'execution_id', 'invocation_id', 'workflow', 'workflow_label', 'timestamp', 'verdict',
         'passed_int', 'tasks_total', 'tasks_passed', 'tasks_failed', 'rhoai_version',
         'rhods_operator_digest', 'cluster_name', 'duration_s', 'telemetry_origin'
       ]
     });
     if (!hits.length) return res.status(404).json({ error: 'Test run not found' });
     const tests = hits.map((hit) => ({ id: hit._id, ...hit._source }));
-    const runIds = [...new Set(tests.map((test) => test.run_id).filter(Boolean))];
-    const findings = await productBugFindings({}, { runIds });
+    // Naming mismatch: RCA run_id is the execution invocation_id.
+    // Execution run_id is obsolete legacy ETL data and is never this join key.
+    const findings = await productBugFindings({}, { invocationIds: [invocationId] });
     const passed = tests.filter((test) => test.verdict === 'PASS').length;
     const failed = tests.filter((test) => test.verdict === 'FAIL').length;
     const errors = tests.filter((test) => test.verdict === 'ERROR').length;
@@ -578,7 +607,7 @@ module.exports = function registerRoutes(router, context) {
     const bugsBody = {
       size: 0,
       query: addFilter(
-        addFilter(await rootCauseQuery(req.query), { term: { category: 'PRODUCT_BUG' } }),
+        addFilter(await rootCauseQuery(req.query), { terms: { category: STAKEHOLDER_ISSUE_CATEGORIES } }),
         { exists: { field: 'bug_key' } }
       ),
       aggs: {
@@ -692,7 +721,7 @@ module.exports = function registerRoutes(router, context) {
       query: runFilters(req.query),
       sort: [{ timestamp: 'desc' }, { execution_id: 'asc' }],
       _source: [
-        'execution_id', 'run_id', 'workflow', 'workflow_label', 'rhoai_version',
+        'execution_id', 'invocation_id', 'workflow', 'workflow_label', 'rhoai_version',
         'timestamp', 'verdict', 'tasks_passed', 'tasks_failed', 'duration_s', 'cost_usd',
         'telemetry_origin'
       ]
@@ -702,14 +731,16 @@ module.exports = function registerRoutes(router, context) {
       osSearch(BUGS_INDEX, bugsBody),
       searchAll(RUNS_INDEX, dashboardTestsBody)
     ]);
-    const dashboardRunIds = [...new Set(dashboardTestHits.map((hit) => hit._source?.run_id).filter(Boolean))];
+    // Naming mismatch: RCA run_id joins to execution invocation_id.
+    // Execution run_id is obsolete legacy ETL data and is never this join key.
+    const dashboardInvocationIds = [...new Set(dashboardTestHits.map((hit) => hit._source?.invocation_id).filter(Boolean))];
     const dashboardWorkflows = [...new Set(dashboardTestHits.map((hit) => hit._source?.workflow).filter(Boolean))];
     const productBugs = await productBugFindings(req.query, {
-      runIds: dashboardRunIds,
+      invocationIds: dashboardInvocationIds,
       // A workflow name alone spans many test runs and would attach
       // historical bugs to the selected run. Only use it to narrow an exact
-      // run_id correlation; without a run_id there is no safe RCA linkage.
-      workflows: dashboardRunIds.length ? dashboardWorkflows : []
+      // invocation correlation; without invocation_id there is no safe link.
+      workflows: dashboardInvocationIds.length ? dashboardWorkflows : []
     });
     const a = runsR.aggregations || {};
     const b = bugsR.aggregations || {};
@@ -787,7 +818,7 @@ module.exports = function registerRoutes(router, context) {
       sort: [{ [sortBy]: { order: sortDir, missing: '_last' } }, { execution_id: 'asc' }],
       ...(searchAfter ? { search_after: searchAfter } : {}),
       _source: [
-        'schema_version', 'identity_version', 'execution_id', 'invocation_id', 'run_id',
+        'schema_version', 'identity_version', 'execution_id', 'invocation_id',
         'workflow', 'workflow_label', 'rhoai_version',
         'verdict', 'tasks_total', 'tasks_passed', 'tasks_failed',
         'cost_usd', 'infra_cost_usd', 'duration_s', 'num_turns', 'model',
@@ -798,8 +829,10 @@ module.exports = function registerRoutes(router, context) {
     const hits = r.hits?.hits || [];
     const pageHits = hits.slice(0, size);
     const runs = pageHits.map((h) => ({ id: h._id, ...h._source }));
+    // Naming mismatch: RCA run_id stores execution invocation_id.
+    // Execution run_id is obsolete legacy ETL data and is never this join key.
     const productBugs = await productBugFindings(req.query, {
-      runIds: [...new Set(runs.map((run) => run.run_id).filter(Boolean))],
+      invocationIds: [...new Set(runs.map((run) => run.invocation_id).filter(Boolean))],
       workflows: [...new Set(runs.map((run) => run.workflow).filter(Boolean))]
     });
     res.json({
@@ -839,10 +872,12 @@ module.exports = function registerRoutes(router, context) {
     const tasks = taskHits.map((taskHit) => ({ id: taskHit._id, ...taskHit._source }));
 
     let bugs = [];
-    if (run.run_id) {
+    if (run.invocation_id) {
       const bugHits = await searchAll(BUGS_INDEX, {
         query: { bool: { filter: [
-          { term: { run_id: run.run_id } },
+          // Naming mismatch: RCA run_id matches execution invocation_id.
+          // Execution run_id is obsolete legacy ETL data and is never this join key.
+          { term: { run_id: run.invocation_id } },
           ...(run.workflow ? [{ bool: { should: [
             { term: { workflow: run.workflow } },
             { term: { impacted_workflows: run.workflow } }
@@ -899,15 +934,17 @@ module.exports = function registerRoutes(router, context) {
     const hits = r.hits?.hits || [];
     const pageHits = hits.slice(0, size);
     const occurrenceRunIds = [...new Set(pageHits.map((hit) => hit._source?.run_id).filter(Boolean))];
+    // Naming mismatch: RCA run_id is looked up as execution invocation_id.
+    // Execution run_id is obsolete legacy ETL data and is never this join key.
     const linkedExecutions = occurrenceRunIds.length ? await searchAll(RUNS_INDEX, {
-      query: { terms: { run_id: occurrenceRunIds } },
+      query: { terms: { invocation_id: occurrenceRunIds } },
       sort: [{ timestamp: 'desc' }, { execution_id: 'asc' }],
-      _source: ['execution_id', 'run_id', 'workflow']
+      _source: ['execution_id', 'invocation_id', 'workflow']
     }) : [];
     const executionByOccurrence = new Map();
     for (const execution of linkedExecutions) {
       const source = execution._source || {};
-      const key = `${source.run_id || ''}\u0000${source.workflow || ''}`;
+      const key = `${source.invocation_id || ''}\u0000${source.workflow || ''}`;
       if (!executionByOccurrence.has(key)) executionByOccurrence.set(key, source.execution_id || execution._id);
     }
     res.json({
@@ -1042,7 +1079,7 @@ module.exports = function registerRoutes(router, context) {
       query: runFilters({ ...req.query, workflow, q: '', verdict: '' }),
       sort: [{ timestamp: 'asc' }, { execution_id: 'asc' }],
       _source: [
-        'execution_id', 'run_id', 'rhoai_version', 'verdict', 'timestamp',
+        'execution_id', 'invocation_id', 'rhoai_version', 'verdict', 'timestamp',
         'duration_s', 'tasks_total', 'tasks_passed', 'tasks_failed',
         'cost_usd', 'model', 'cluster_name', 'classification', 'confidence', 'workflow', 'workflow_label',
         'telemetry_origin'
@@ -1051,12 +1088,14 @@ module.exports = function registerRoutes(router, context) {
     const runs = runHits.map((h) => ({ id: h._id, ...h._source }));
 
     let bugs = [];
-    const runIds = [...new Set(runs.map((r) => r.run_id).filter(Boolean))];
-    if (runIds.length) {
+    // Naming mismatch: RCA run_id joins to execution invocation_id.
+    // Execution run_id is obsolete legacy ETL data and is never this join key.
+    const invocationIds = [...new Set(runs.map((r) => r.invocation_id).filter(Boolean))];
+    if (invocationIds.length) {
       const bugHits = await searchAll(BUGS_INDEX, {
         query: {
           bool: {
-            filter: [{ terms: { run_id: runIds } }],
+            filter: [{ terms: { run_id: invocationIds } }],
             should: [
               { term: { workflow } },
               { term: { impacted_workflows: workflow } }
@@ -1168,13 +1207,12 @@ module.exports = function registerRoutes(router, context) {
                 passed: { filter: { term: { passed: true } } },
                 failed: { filter: { term: { verdict: 'FAIL' } } },
                 errors: { filter: { term: { verdict: 'ERROR' } } },
-                run_ids: { terms: { field: 'run_id', size: 1000 } },
                 latest: {
                   top_hits: {
                     size: 1,
                     sort: [{ timestamp: 'desc' }, { execution_id: 'asc' }],
                     _source: [
-                      'execution_id', 'run_id', 'workflow', 'workflow_label', 'rhoai_version',
+                      'execution_id', 'invocation_id', 'workflow', 'workflow_label', 'rhoai_version',
                       'verdict', 'timestamp', 'tasks_passed', 'tasks_failed', 'telemetry_origin'
                     ]
                   }
@@ -1200,7 +1238,6 @@ module.exports = function registerRoutes(router, context) {
             errors,
             unknown: bucket.doc_count - knownOutcomes,
             passRate: knownOutcomes ? passed / knownOutcomes : null,
-            runIds: bucketList(bucket.run_ids).map((run) => run.key),
             latest: { id: hit._id, ...hit._source }
             });
           }
@@ -1216,15 +1253,15 @@ module.exports = function registerRoutes(router, context) {
     const workflows = [...new Set([...mapA.keys(), ...mapB.keys()])].sort();
     const [baselineProductBugs, targetProductBugs] = await Promise.all([
       productBugFindings({}, {
-        // RCA documents use the invocation ID as run_id even when the
-        // execution documents omit run_id. Always include the exact selected
-        // invocation so a comparison cannot fall back to historical matches
-        // based only on a shared workflow name.
-        runIds: [...new Set([baselineInvocation, ...baselineRows.flatMap((row) => row.runIds)])],
+        // Naming mismatch: RCA run_id is the selected execution invocation_id.
+        // Execution run_id is obsolete legacy ETL data and is never this join key.
+        invocationIds: [baselineInvocation],
         workflows: [...mapA.keys()]
       }),
       productBugFindings({}, {
-        runIds: [...new Set([targetInvocation, ...targetRows.flatMap((row) => row.runIds)])],
+        // Naming mismatch: RCA run_id is the selected execution invocation_id.
+        // Execution run_id is obsolete legacy ETL data and is never this join key.
+        invocationIds: [targetInvocation],
         workflows: [...mapB.keys()]
       })
     ]);

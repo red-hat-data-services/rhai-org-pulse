@@ -12,6 +12,12 @@ describe('product bug visibility', () => {
     expect(isVisibleFinding(unlinked)).toBe(false)
   })
 
+  it('treats linked UX defects as stakeholder-visible issues', () => {
+    expect(isVisibleProductBug({ category: 'UX_DEFECT', bug_key: 'RHOAIENG-99762' })).toBe(true)
+    expect(isVisibleProductBug({ category: 'UX_DEFECT' })).toBe(false)
+    expect(isVisibleFinding({ category: 'UX_DEFECT' })).toBe(false)
+  })
+
   it('does not hide non-product findings', () => {
     expect(isVisibleFinding({ category: 'ENVIRONMENT' })).toBe(true)
   })
