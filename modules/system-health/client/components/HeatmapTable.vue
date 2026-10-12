@@ -341,11 +341,6 @@ table.heatmap th {
 .dd-run-label {
   font-size: 11px;
   color: #5ea7ff;
-  text-decoration: none;
-}
-
-.dd-run-label:hover {
-  text-decoration: underline;
 }
 
 .dd-run-counts {
