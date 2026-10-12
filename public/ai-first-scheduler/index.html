@@ -515,16 +515,13 @@ tr:hover td{background:#f8fafc}
         <th><span class="tip">RISK ⓘ<span class="tip-box">🔴 HIGH: any Critical field missing (Components, Target Version, Fix Version, PM, Delivery Owner) or 2+ High fields missing.<br>🟡 MEDIUM: exactly 1 High field missing, or Feature Sign-Off absent.<br>🟢 LOW: all Critical/High/Medium items pass.</span></span></th>
         <th><span class="tip">CONFIDENCE ⓘ<span class="tip-box">How likely this feature ships as planned. High = 8–9 of 10 similar features shipped on time. Medium = 5–7 of 10. Low = 3–5 of 10.<br><br>Based on: shipping history, FPDoR completeness, component velocity, RICE. Hover the confidence bar for feature-specific detail.</span></span></th>
         <th onclick="sort('Priority')">PRIORITY ↕</th>
+        <th onclick="sort('OutcomeNumber')"># ↕</th>
         <th>KEY</th>
         <th>TITLE</th>
         <th>OUTCOME</th>
         <th title="Target Version — the planned release milestone for this feature">TARGET VERSION</th>
         <th>COMPONENTS</th>
         <th><span class="tip">SIZE ⓘ<span class="tip-box">Feature size from Arjay's capacity model:<br>S=3pts (1 comp) · M=5pts (1 comp) · L=8pts (2 comps) · XL=13pts (3+ comps)<br>Ceiling: 140pts / release (90% CI, 41 releases)</span></span></th>
-        <th><span class="tip">PM Rec ⓘ<span class="tip-box">Product Manager recommendation. Both PM Rec and DO Rec must be checked before the feature can be added to the Plan.</span></span></th>
-        <th><span class="tip">DO Rec ⓘ<span class="tip-box">Delivery Owner recommendation. Both PM Rec and DO Rec must be checked before the feature can be added to the Plan.</span></span></th>
-        <th><span class="tip">Risk Owner ⓘ<span class="tip-box">If this feature is below-the-line (not recommended), a Director+ must claim accountability for the risk. Enter their name and they'll be notified.</span></span></th>
-        <th><span class="tip">X-Team ⓘ<span class="tip-box">Cross-team coordination. Mark "✓ No" if single team owns all components. Mark "✓ Yes" if coordination required.</span></span></th>
         <th></th>
         <th>TEAM</th>
       </tr></thead>
@@ -3436,7 +3433,7 @@ function renderPmBanner(rows){
 // codeql[js/unsafe-html] Data sanitization: all user data from SAMPLE CSV or postMessage validation; innerHTML used only after origin/source validation
 function renderTbl(rows){
   const tb=document.getElementById('tbody');
-  if(!rows.length){tb.innerHTML='<tr><td colspan="16" class="empty-row">No features match the current filters</td></tr>';return;}
+  if(!rows.length){tb.innerHTML='<tr><td colspan="11" class="empty-row">No features match the current filters</td></tr>';return;}
   let _prevPlace=null, _prevNoTier=null;
   let gaLineShown=false, noLine1=false, noLine2=false, noLine3=false;
   const _allApv=_loadApprovals();
@@ -3497,18 +3494,18 @@ function renderTbl(rows){
     let cutLine='';
     if(_prevPlace!==null){
       if(r._place==='GA'&&!gaLineShown&&_prevPlace!=='GA'){
-        cutLine=`<tr><td colspan="16" style="padding:5px 12px;background:#e8f5e9;border-top:2px solid #81c784;border-bottom:1px solid #c8e6c9;font-size:10px;font-weight:700;color:#1a6b3c;text-align:center;letter-spacing:.04em">▼ Committed for 3.6 GA · Nov 19 — Planning Freeze Sept 23</td></tr>`;
+        cutLine=`<tr><td colspan="11" style="padding:5px 12px;background:#e8f5e9;border-top:2px solid #81c784;border-bottom:1px solid #c8e6c9;font-size:10px;font-weight:700;color:#1a6b3c;text-align:center;letter-spacing:.04em">▼ Committed for 3.6 GA · Nov 19 — Planning Freeze Sept 23</td></tr>`;
         gaLineShown=true;
       } else if(r._place==='No'){
         const t=r._noTier||1;
         if(t===1&&!noLine1){
-          cutLine=`<tr><td colspan="16" style="padding:6px 12px;background:#fffde7;border-top:2px solid #fbbf24;border-bottom:1px solid #fde68a;font-size:10px;font-weight:700;color:#92400e;text-align:center;letter-spacing:.04em">▼ Items below this line may be good release candidates but are missing information for a full analysis</td></tr>`;
+          cutLine=`<tr><td colspan="11" style="padding:6px 12px;background:#fffde7;border-top:2px solid #fbbf24;border-bottom:1px solid #fde68a;font-size:10px;font-weight:700;color:#92400e;text-align:center;letter-spacing:.04em">▼ Items below this line may be good release candidates but are missing information for a full analysis</td></tr>`;
           noLine1=true;
         } else if(t===2&&!noLine2){
-          cutLine=`<tr><td colspan="16" style="padding:6px 12px;background:#ffebee;border-top:2px solid #f87171;border-bottom:1px solid #fecaca;font-size:10px;font-weight:700;color:#c62828;text-align:center;letter-spacing:.04em">▼ Items below this line pose significant capacity, dependency, or historical release risks</td></tr>`;
+          cutLine=`<tr><td colspan="11" style="padding:6px 12px;background:#ffebee;border-top:2px solid #f87171;border-bottom:1px solid #fecaca;font-size:10px;font-weight:700;color:#c62828;text-align:center;letter-spacing:.04em">▼ Items below this line pose significant capacity, dependency, or historical release risks</td></tr>`;
           noLine2=true;
         } else if(t===3&&!noLine3){
-          cutLine=`<tr><td colspan="16" style="padding:6px 12px;background:#f1f5f9;border-top:2px solid #94a3b8;border-bottom:1px solid #e2e8f0;font-size:10px;font-weight:700;color:#475569;text-align:center;letter-spacing:.04em">▼ Items below this line lack sufficient information to be analyzed and cannot be considered for a release</td></tr>`;
+          cutLine=`<tr><td colspan="11" style="padding:6px 12px;background:#f1f5f9;border-top:2px solid #94a3b8;border-bottom:1px solid #e2e8f0;font-size:10px;font-weight:700;color:#475569;text-align:center;letter-spacing:.04em">▼ Items below this line lack sufficient information to be analyzed and cannot be considered for a release</td></tr>`;
           noLine3=true;
         }
       }
@@ -3547,12 +3544,11 @@ function renderTbl(rows){
       <td style="white-space:nowrap;text-align:center">${(()=>{const p=(esc(r['Priority'])||'').trim();if(!p)return '<span style="color:#bbb">—</span>';const pc={'Blocker':'#c62828','Critical':'#c62828','Major':'#e65100','Normal':'#1565c0','Minor':'#4caf50','Undefined':'#9e9e9e'};const color=pc[p]||'#555';return '<span style="font-size:10px;font-weight:700;color:'+color+'">'+p+'</span>';})()}</td>
       <td><a class="klink" href="https://redhat.atlassian.net/browse/${esc(r['Key'])}" target="_blank">${esc(r['Key'])}</a></td>
       <td style="max-width:220px;overflow:hidden;text-overflow:ellipsis" title="${esc(r['Title'])}">${hasCrossTeamDep?'<span style="font-size:9px;font-weight:700;color:#7c3aed;background:#f3e8ff;border:1px solid #c4b5fd;border-radius:3px;padding:1px 4px;margin-right:3px;white-space:nowrap" title="Cross-team dependency flagged — external teams involved; slippage risk outside RHOAI control">⚑ deps</span>':''}${esc(r['Title'])}<div class="compact-key-link"><a href="https://redhat.atlassian.net/browse/${esc(r['Key'])}" target="_blank" style="color:#94a3b8;text-decoration:none">${esc(r['Key'])}</a></div></td>
-      <td style="max-width:140px;white-space:normal;line-height:1.4">${r._isBigRock?'<span class="br-badge">🪨 BR</span>':''}${brGapHtml}<span style="color:#555" title="${esc(r['Outcome'])||''}">${esc(r['Outcome'])||'—'}</span></td>
+      <td style="text-align:center;font-weight:600;color:#1565c0">${r['OutcomeNumber']||'—'}</td>
+      <td style="max-width:140px;white-space:normal;line-height:1.4">${r._isBigRock?'<span class="br-badge">🪨 BR</span>':''}${brGapHtml}${esc(r['Outcome'])?`<a href="https://redhat.atlassian.net/browse/${esc(r['Outcome'])}" target="_blank" style="color:#1565c0;text-decoration:none;font-weight:600" onmouseover="this.style.textDecoration='underline'" onmouseout="this.style.textDecoration='none'">${esc(r['Outcome'])}</a>`:'<span style="color:#bbb">—</span>'}</td>
       <td style="white-space:nowrap;font-size:11px;color:#555">${(esc(r['Target Versions'])||'').trim()||'—'}</td>
       <td title="${esc(r['Components'])}" style="max-width:160px;color:#444">${compsStr||'—'}${r._complexityWarn?`<div style="font-size:9px;color:#e65100;font-weight:700;margin-top:1px" title="${esc(String(r._comps.length))} components — cross-team delivery risk (spec: 6+ = complexity flag)">⚠ ${esc(String(r._comps.length))} comps</div>`:''}</td>
       <td style="white-space:nowrap;text-align:center"><span style="font-size:11px;font-weight:700;padding:2px 6px;border-radius:4px;background:${r._featureSize==='XL'?'#4a1a4a':r._featureSize==='L'?'#1a3a4a':r._featureSize==='M'?'#1a3a1a':'#2a2a1a'};color:${r._featureSize==='XL'?'#e040fb':r._featureSize==='L'?'#40c4ff':r._featureSize==='M'?'#69f0ae':'#ffee58'}">${r._featureSize}</span><span style="font-size:9px;color:#888;margin-left:3px">${r._featurePts}pt</span></td>
-      ${(()=>{const apv=rowApv;const isBelowCut=r._place==='No';const showRisk=apv.pm&&apv.do&&(r._riskLevel==='HIGH'||isBelowCut)&&!apv.pendingRisk;const riskPending=apv.pendingRisk&&!apv.riskAccepted;const riskAccepted=apv.riskAccepted;return `<td style="text-align:center"><input id="apv-pm-${esc(r['Key'])}" type="checkbox" ${apv.pm?'checked':''} onchange="toggleApproval('${esc(r['Key'])}','pm')" title="PM Recommendation — check when you recommend this feature for the plan"></td><td style="text-align:center"><input id="apv-do-${esc(r['Key'])}" type="checkbox" ${apv.do?'checked':''} onchange="toggleApproval('${esc(r['Key'])}','do')" title="Delivery Owner Recommendation — both PM and DO must recommend before the feature can be added to the plan"></td><td id="apv-risk-cell-${esc(r['Key'])}" style="text-align:center">${showRisk?`<button onclick="markPendingRisk('${esc(r['Key'])}')" style="font-size:10px;padding:2px 6px;background:#fff3e0;border:1px solid #ef6c00;color:#e65100;border-radius:3px;cursor:pointer;white-space:nowrap">⚠ Risk Review</button>`:riskPending?`<span style="font-size:10px;color:#e65100;font-weight:600">⚠ Pending</span><br><button onclick="acceptRiskAndAdd('${esc(r['Key'])}')" style="font-size:10px;padding:2px 5px;background:#f0fdf4;border:1px solid #86efac;color:#15803d;border-radius:3px;cursor:pointer;margin-top:2px;white-space:nowrap">✓ Accept → Add to Plan</button>`:riskAccepted?'<span style="font-size:10px;color:#15803d;font-weight:600">✓ Risk accepted</span>':''}</td><td style="padding:4px 6px">${isBelowCut?`<input id="risk-owner-${esc(r['Key'])}" type="text" placeholder="@Director" style="font-size:10px;width:100%;padding:3px 4px;border:1px solid #fbbf24;border-radius:3px;background:#fffbeb" title="Director+ accountability for risk. Type @Name to mention.">`:''}</td>`;})()}
-      <td style="text-align:center;padding:4px 6px"><select id="xteam-${esc(r['Key'])}" style="font-size:10px;padding:3px 4px;border:1px solid #c5b5fd;border-radius:3px;cursor:pointer"><option value="">—</option><option value="no">✓ No</option><option value="yes">✓ Yes</option></select></td>
       <td style="font-size:11px;color:#555;white-space:nowrap">${esc(r['Team'])||'—'}</td>
     </tr>`;
   }).join('');
@@ -3916,14 +3912,25 @@ async function fetchOutcomes() {
 }
 
 function mapFeaturesToOutcomes() {
-  if (!outcomeData || !outcomeData.featureOutcomeMap || typeof outcomeData.featureOutcomeMap !== 'object') return;
+  if (!outcomeData || !outcomeData.outcomes || !Array.isArray(outcomeData.outcomes)) return;
+
+  // Create outcome key → number mapping (1-22)
+  const outcomeKeyToNumber = {};
+  outcomeData.outcomes.forEach((outcome, index) => {
+    outcomeKeyToNumber[outcome.key] = index + 1; // 1-based numbering
+  });
 
   // Apply outcome mapping to all features
   try {
     allData.forEach(feature => {
       const key = feature['Key'];
-      if (key && outcomeData.featureOutcomeMap[key]) {
-        feature['Outcome'] = outcomeData.featureOutcomeMap[key];
+      if (key && outcomeData.featureOutcomeMap && outcomeData.featureOutcomeMap[key]) {
+        const outcomeFullName = outcomeData.featureOutcomeMap[key]; // "RHAISTRAT-2046 Title"
+        const outcomeKey = outcomeFullName.split(' ')[0]; // Extract just the key
+        feature['Outcome'] = outcomeKey; // Store just the key
+        feature['OutcomeNumber'] = outcomeKeyToNumber[outcomeKey] || '—';
+      } else {
+        feature['OutcomeNumber'] = '—';
       }
     });
   } catch (err) {
