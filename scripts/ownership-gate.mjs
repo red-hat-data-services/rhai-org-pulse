@@ -186,6 +186,27 @@ export function pullRequestNumbersFromMergeGroupRef(headRef) {
   return [...numbers];
 }
 
+/** Return other PR numbers, regardless of state, that use the same head SHA. */
+export function sharedHeadPullRequestNumbers(pullRequests, currentPrNumber, headSha) {
+  const currentNumber = Number(currentPrNumber);
+  return [...new Set(pullRequests
+    .filter(pullRequest =>
+      pullRequest.head?.sha === headSha &&
+      Number(pullRequest.number) !== currentNumber
+    )
+    .map(pullRequest => Number(pullRequest.number)))]
+    .sort((first, second) => first - second);
+}
+
+/** Commit statuses are shared by SHA, so duplicate PR heads must fail closed. */
+export function failForSharedHead(result, otherPrNumbers) {
+  return {
+    ...result,
+    passed: false,
+    sharedHeadPullRequestNumbers: otherPrNumbers
+  };
+}
+
 function teamHasMember(teamMembers, owner, login) {
   const members = teamMembers instanceof Map ? teamMembers.get(owner) : teamMembers?.[owner];
   return Boolean(members && new Set(members).has(normalizeLogin(login)));
@@ -367,6 +388,15 @@ export function renderComment(result, authorLogin, headSha) {
     }
   }
 
+  if (result.sharedHeadPullRequestNumbers?.length) {
+    const numbers = result.sharedHeadPullRequestNumbers
+      .map(number => `#${number}`)
+      .join(', ');
+    lines.push(
+      `- ❌ This head commit is also used by ${numbers}. Push a new commit so this pull request has a unique head.`
+    );
+  }
+
   lines.push(
     '',
     '> An eligible owner with repository write access can leave a standalone `/lgtm` or `/approve` PR comment, or submit an approving review. The PR author cannot self-approve.',
@@ -418,6 +448,10 @@ class GitHubApi {
 
   async getPullRequest(number) {
     return this.request(`/repos/${this.repository}/pulls/${number}`);
+  }
+
+  async getPullRequestsForCommit(sha) {
+    return this.paginated(`/repos/${this.repository}/commits/${sha}/pulls`);
   }
 
   async getCodeowners(ref) {
@@ -499,6 +533,15 @@ class GitHubApi {
 }
 
 function statusDetails(result) {
+  if (result.sharedHeadPullRequestNumbers?.length) {
+    const numbers = result.sharedHeadPullRequestNumbers
+      .map(number => `#${number}`)
+      .join(', ');
+    return {
+      state: 'failure',
+      description: `Head commit shared with ${numbers}`
+    };
+  }
   if (result.passed) {
     return { state: 'success', description: 'Ownership policy satisfied' };
   }
@@ -546,6 +589,11 @@ async function evaluatePullRequest(api, prNumber, { codeownersRef } = {}) {
   const pullRequest = await api.getPullRequest(prNumber);
   const headSha = pullRequest.head.sha;
   const authorLogin = normalizeLogin(pullRequest.user.login);
+  const sharedHeadNumbers = sharedHeadPullRequestNumbers(
+    await api.getPullRequestsForCommit(headSha),
+    prNumber,
+    headSha
+  );
 
   const entries = parseCodeowners(
     await api.getCodeowners(codeownersRef || pullRequest.base.sha)
@@ -574,17 +622,21 @@ async function evaluatePullRequest(api, prNumber, { codeownersRef } = {}) {
     }
   }
 
+  const result = evaluateOwnership({
+    entries,
+    changedFiles,
+    authorLogin,
+    approvedReviewers,
+    teamMembers
+  });
+
   return {
     pullRequest,
     headSha,
     authorLogin,
-    result: evaluateOwnership({
-      entries,
-      changedFiles,
-      authorLogin,
-      approvedReviewers,
-      teamMembers
-    })
+    result: sharedHeadNumbers.length
+      ? failForSharedHead(result, sharedHeadNumbers)
+      : result
   };
 }
 

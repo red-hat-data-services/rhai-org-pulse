@@ -6,10 +6,12 @@ import {
   currentApprovers,
   currentHeadApprovalComments,
   evaluateOwnership,
+  failForSharedHead,
   ownersForPath,
   parseCodeowners,
   pullRequestNumbersFromMergeGroupRef,
-  renderComment
+  renderComment,
+  sharedHeadPullRequestNumbers
 } from './ownership-gate.mjs';
 
 const CODEOWNERS = `
@@ -56,6 +58,33 @@ test('merge-queue refs identify every queued pull request without synthetic-SHA 
     [1710, 1711]
   );
   assert.deepEqual(pullRequestNumbersFromMergeGroupRef('gh-readonly-queue/main/no-pr'), []);
+});
+
+test('a head commit shared with another pull request fails closed', () => {
+  const associatedPullRequests = [
+    { number: 1756, head: { sha: 'shared-sha' } },
+    { number: 1755, state: 'closed', merged_at: '2026-10-13T12:47:57Z', head: { sha: 'shared-sha' } },
+    { number: 1758, state: 'open', head: { sha: 'shared-sha' } },
+    { number: 1759, state: 'open', head: { sha: 'other-sha' } }
+  ];
+
+  assert.deepEqual(
+    sharedHeadPullRequestNumbers(associatedPullRequests, 1756, 'shared-sha'),
+    [1755, 1758]
+  );
+
+  const result = failForSharedHead(
+    evaluate({
+      authorLogin: 'saprabhu05',
+      changedFiles: ['modules/okr-hub/client/Dashboard.vue']
+    }),
+    [1755]
+  );
+  const comment = renderComment(result, 'saprabhu05', 'shared-sha');
+
+  assert.equal(result.passed, false);
+  assert.match(comment, /head commit is also used by #1755/);
+  assert.match(comment, /Push a new commit so this pull request has a unique head/);
 });
 
 test('an individual code owner can merge their own module change', () => {
