@@ -40,9 +40,12 @@ You have full Edit and Write access to all files in the repo.
    enforces a minimum operation count; adding a route without its annotation
    will cause the build to fail.
 
-## Integration Test Coverage Validation
+## Test Coverage Validation
 
-As part of the pull request review, you must actively assess whether the developer has introduced module changes that mandate integration test verification.
+As part of the pull request review, you must actively assess whether the
+developer has introduced module changes that mandate integration test
+verification. A test file merely existing is not sufficient: the test must
+exercise the behavior changed by the pull request at the appropriate boundary.
 
 ### 1. Integration Testing Triggers
 
@@ -54,22 +57,57 @@ Evaluate the file diff paths. A pull request **requires an integration test** if
 
 - **Module Server Logic:** Changes to module-specific server files that fetch/transform data from external services (Jira Cloud API, GitHub GraphQL, GitLab GraphQL), implement domain calculations, or orchestrate multi-step operations.
 
-### 2. Validation & Enforcement Workflow
+### 2. Required review procedure
 
-1. **Locate matching tests:** Verify if the PR diff updates or supplements appropriate test modules under `tests/integration/<module>.spec.js` that cover integrated workflow journeys for the modified module.
+For every affected module, build a short coverage map before setting the
+verdict:
 
-2. **Flag Non-Compliance:** If any files within `modules/` were changed but **no matching integration test** is detected in the diff:
-   - Generate a critical alert banner in the review output: **`⚠️ Missing Integration Test Warning`**.
-   - Explicitly highlight which module files were modified without verification (e.g., *"You modified data fetching logic inside `modules/releases/server/planning/routes.js` without corresponding integration assertions"* or *"You added a new view in `modules/ai-impact/views/` without integration test coverage"*).
-   - Instruct the developer to add integration test in `tests/integration/<module>.spec.js` that verifies:
-     - Module is visible and clickable in sidebar
-     - Module views load correctly without errors
-     - Module content renders (buttons, inputs, tables, cards)
-     - API endpoints return expected data structure
-     - Interactive workflows complete successfully
-   - Provide a minimal Playwright test snippet when possible (e.g., basic navigation test, API response validation).
+1. Identify each changed functional path (view, route, server logic, external
+   client, configuration, or runtime dependency).
+2. Locate the exact test and assertion that covers each path. A test file name
+   alone is not evidence.
+3. Classify the coverage correctly:
+   - **UI/fixture coverage** may mock module API responses and is sufficient for
+     UI-only behavior.
+   - **Backend coverage** must load the module server entry and exercise the
+     changed module API route or server behavior without intercepting that
+     route in the browser/client test.
+4. Report missing or insufficient coverage with the affected path and the
+   missing test boundary, not a generic request to “add tests”.
 
-3. **Exceptions:** Do not require integration tests for module changes that are:
+### 3. Backend and external-service changes
+
+For a new module, or a change to `modules/<slug>/server/**`, a module's
+runtime configuration, or an external-service client:
+
+- Require at least one test that covers the module's server registration or an
+  actual module API route. A fully mocked frontend test does not satisfy this
+  requirement.
+- Treat a blanket interception such as
+  `page.route('**/api/modules/<slug>/**', ...)` as **UI/fixture coverage only**.
+  It does not verify server registration, route behavior, runtime imports,
+  configuration wiring, or external-client behavior.
+- When an external dependency is introduced or changed, verify that its error
+  handling and configuration path have a test at the server/client boundary.
+  Also verify that a newly introduced runtime `require()` or `import` package
+  is declared as a direct production dependency rather than relying on a
+  transitive dependency.
+
+### 4. Enforcement
+
+If a changed path that requires coverage has no appropriate test, or only has
+UI/fixture coverage where backend coverage is required, add an unfixed blocking
+issue with category `test-adequacy`. This applies even when a file under
+`tests/integration/` changed and its assertions pass.
+
+Explain the exact missing boundary, for example: *"The new
+`workflow-validation` server route is covered only by a Playwright test that
+intercepts every module API request; no test loads the server route or verifies
+its OpenSearch client/configuration behavior."*
+
+### 5. Exceptions
+
+Do not require new integration tests for module changes that are:
    - Pure UI/styling changes (CSS, Tailwind classes) with no logic modifications
    - Documentation-only updates (comments, JSDoc, README)
    - Simple configuration changes (module.json metadata updates with no behavioral impact)
@@ -88,6 +126,8 @@ PR state:
 - Bugs that will cause runtime errors
 - Breaking changes
 - Violations of any hard constraint defined in `AGENTS.md`
+- Insufficient test coverage for a changed path that requires coverage under
+  **Test Coverage Validation** (`test-adequacy`)
 
 List every unfixed blocking issue in `unfixed_blocking_issues` with a `category`
 (e.g. `"hard-constraint-7"`, `"security"`, `"bug"`, `"breaking-change"`) and a
