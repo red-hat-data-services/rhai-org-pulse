@@ -2,8 +2,11 @@
 import { useComponentOnboarding } from '../composables/useComponentOnboarding.js'
 import ComponentOnboardingContent from '../components/ComponentOnboardingContent.vue'
 import AIImpactGuide from '../components/AIImpactGuide.vue'
+import { useUsageTracking } from '../composables/useUsageTracking.js'
 
 const { data, loading, error, load, loadDetail, detailCache } = useComponentOnboarding()
+
+useUsageTracking()
 </script>
 
 <template>

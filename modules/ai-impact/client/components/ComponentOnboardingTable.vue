@@ -3,6 +3,7 @@ import { ref, computed, inject } from 'vue'
 import { useModuleLink } from '@shared/client/composables/useModuleLink'
 import MultiSelectDropdown from './MultiSelectDropdown.vue'
 import { extractVersionGroup, collectVersionGroups, matchesVersionGroups, formatVersionGroupLabel } from '../utils/version-group.js'
+import { trackRefs } from '../composables/useUsageTracking.js'
 import {
   filterChipsRowClass,
   filterChipNeutralClass,
@@ -114,6 +115,12 @@ function displayVersion(raw) {
 
 // ── Derived list ──────────────────────────────────────────────────────────────
 const selectedKey = ref(null)
+
+trackRefs({
+  filter: { sort: sortKey, completion: completionFilter, product: productFilter, targetVersion: targetVersionFilter },
+  search,
+  open: { component: selectedKey },
+})
 
 function daysBetween(start, end) {
   if (!start || !end) return null
