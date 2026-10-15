@@ -2651,11 +2651,28 @@ The dataset is four separate JSON files under `data/system-health/test-execution
 
 ---
 
+## AI Catalyst Feed Configuration
+
+`data/ai-catalyst/board-config.json` and
+`data/ai-catalyst/showcase/config.json` each store:
+
+```json
+{ "feedUrl": "" }
+```
+
+`feedUrl` is a trimmed string. An empty value uses the corresponding
+`POC_EXPLORER_FEED_URL` or `POC_EXPLORER_SHOWCASE_FEED_URL` environment value,
+then the documented default host. A stored URL takes precedence but its origin
+must still be operator-approved. Tokens are never stored in either file.
+Legacy `sheetId` values are ignored; saving configuration replaces them with
+the `feedUrl` format. Matching default examples live under
+`fixtures/ai-catalyst/`.
+
 ## AI Catalyst Monthly Board — `data/ai-catalyst/boards/{YYYY-MM}.json`
 
 The monthly board is a JSON array written by the AI Catalyst board sync. Each
-element is one candidate parsed from a `board-YYYY-MM` Google Sheet tab. The
-`category` value is a stable strategy-pillar key, not a display label; clients
+element is one candidate parsed from the POC Explorer feed's `board-YYYY-MM`
+board. The `category` value is a stable strategy-pillar key, not a display label; clients
 resolve its title, short title, and color from the shared Showcase pillar
 registry below.
 
@@ -2684,13 +2701,13 @@ registry below.
 | Field | Type | Description |
 |-------|------|-------------|
 | `title` | string | Candidate display title |
-| `uniqueId` | string | Stable candidate identifier used by detail routes |
+| `uniqueId` | string | Stable candidate identifier; legacy rows with a blank ID use their source `link` for detail navigation without changing stored identity |
 | `link` | string | Source repository or project URL |
 | `itemType` | string | `repo` or another discovery item type |
 | `source` | string | Primary discovery source (`github`, `hn`, or `reddit`) |
 | `sources` | string[] | All discovery sources for the candidate |
 | `category` | string | Stable strategy-pillar key; must match a pillar key when metadata is available |
-| `capabilityLabels` | string[] | Capability labels parsed from the source sheet |
+| `capabilityLabels` | string[] | Capability labels parsed from the board feed row |
 | `impactScore` | number/null | Impact score from the board evaluation |
 | `feasibilityScore` | number/null | Original feasibility score |
 | `boardFeasibilityScore` | number/null | Board score used for sorting and display |
@@ -2700,18 +2717,18 @@ registry below.
 `data/ai-catalyst/index.json` contains the available month list and candidate
 counts. Adding a new month adds one board file and one index entry. A board
 sync refreshes discovered months in place, so the board file and its
-`lastSynced` value represent the latest source-sheet snapshot rather than an
+`lastSynced` value represent the latest feed snapshot rather than an
 immutable historical record.
 
 Repository files under `fixtures/ai-catalyst/` are deterministic mock data for
 demo mode and tests; production deployments read the corresponding board rows
-from Google Sheets during sync.
+from the POC Explorer feed during sync.
 
 ---
 
 ## AI Catalyst Showcase Data — `data/ai-catalyst/showcase/showcase-data.json`
 
-Synced from a Google Sheet via the ai-catalyst module (showcase feature). Contains all showcase entries and strategy pillar definitions.
+Synced from the POC Explorer feed via the ai-catalyst module (showcase feature). Contains all showcase entries and strategy pillar definitions.
 
 ```json
 {
@@ -2774,21 +2791,25 @@ Synced from a Google Sheet via the ai-catalyst module (showcase feature). Contai
 | `entries[].sortOrder` | number | Display order |
 | `entries[].strategyPillarKey` | string | References `pillars[].pillarKey` |
 | `entries[].lineage` | string | `pure-open-source`, `openshift-oriented`, or `both` |
-| `entries[].capabilityTags` | string[] | Technical capability tags (pipe-delimited in sheet) |
-| `entries[].customerNeedTags` | string[] | Customer need tags (pipe-delimited in sheet) |
-| `entries[].searchKeywords` | string[] | Additional search terms (pipe-delimited in sheet) |
-| `entries[].knownGoodWith` | string[] | Compatible products (pipe-delimited in sheet) |
+| `entries[].capabilityTags` | string[] | Technical capability tags |
+| `entries[].customerNeedTags` | string[] | Customer need tags |
+| `entries[].searchKeywords` | string[] | Additional search terms |
+| `entries[].knownGoodWith` | string[] | Compatible products |
 | `entries[].githubUrl` | string | Pipe-separated GitHub repo URLs |
 | `entries[].quayUrl` | string | Pipe-separated Quay repo URLs |
 | `entries[].otherResourceUrls` | string | Pipe-separated misc resource URLs |
 | `entries[].mermaidSource` | string | Mermaid diagram source (rendered on detail page) |
 
 Pillar keys are stable identifiers used by both board candidates (`category`)
-and showcase entries (`strategyPillarKey`). New pillars are added by appending
-a row to the `strategy_pillars` source tab and syncing the fixture or stored
-copy; display titles, short titles, summaries, and colors may change without
+and showcase entries (`strategyPillarKey`). New pillars are added to the
+producer's `strategy_pillars` feed rows and synced into the stored copy;
+display titles, short titles, summaries, and colors may change without
 renaming the key. If a board references a key that is not yet in the registry,
 the UI keeps the candidate visible with a generated label and fallback color.
+
+Showcase list fields accept native arrays of strings. Comma-space-separated
+strings and legacy pipe-separated strings are also supported. Invalid known
+cell shapes fail the refresh before replacing stored or cached data.
 
 Board and showcase responses intentionally use different pillar scopes:
 
