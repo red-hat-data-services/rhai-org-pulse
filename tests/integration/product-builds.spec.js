@@ -254,6 +254,40 @@ test.describe('Product Builds Module @product-builds', () => {
     expect(appErrors).toHaveLength(0)
   })
 
+  test('should offer and submit the template-derived version for a timestamp-only branch', async ({ page }) => {
+    const submissions = []
+    await page.route('**/api/modules/product-builds/release-status', route => route.fulfill({ json: { total: 0, groups: [] } }))
+    await page.route('**/api/modules/product-builds/release-epic/options**', route => route.fulfill({ json: {
+      sha: 'e'.repeat(40),
+      products: [{ key: 'rhaiis', branches: [{ branch: '3.2.2', tags: ['3.2.2-{{ timestamp }}'], configured_versions: ['3.2.2'] }] }],
+    } }))
+    await page.route('**/api/modules/product-builds/release-epic', async route => {
+      submissions.push(route.request().postDataJSON())
+      await route.fulfill({ status: 201, json: {
+        epic: { key: 'RHAI-4057', summary: 'Release rhaiis 3.2.2 GA' },
+        cards: [{ key: 'RHAI-4058', summary: 'Release rhaiis 3.2.2 (prod): cuda' }],
+        not_created: [], failures: [], warnings: [], created_keys: ['RHAI-4057', 'RHAI-4058'],
+      } })
+    })
+
+    await page.goto('/#/product-builds/release-status')
+    await page.getByRole('button', { name: 'Create release epic', exact: true }).click()
+    const form = page.locator('[data-release-form="create-epic"]')
+    await form.locator('select[name="product"]').selectOption('rhaiis')
+    await form.locator('select[name="branch"]').selectOption('3.2.2')
+    await expect(form.locator('select[name="version"] option[value="3.2.2"]')).toHaveCount(1)
+    await form.locator('select[name="version"]').selectOption('3.2.2')
+    await form.locator('select[name="feature-mode"]').selectOption('none')
+    await form.getByRole('button', { name: 'Create release epic', exact: true }).click()
+
+    expect(submissions).toHaveLength(1)
+    expect(submissions[0].version).toBe('3.2.2')
+    expect(submissions[0].branch).toBe('3.2.2')
+    await expect(form.getByRole('link', { name: 'RHAI-4057' })).toBeVisible()
+    const appErrors = page.errors.filter(e => !/status of (429|404|503)/.test(e.message))
+    expect(appErrors).toHaveLength(0)
+  })
+
   test('should show CHI column header in artifacts tab', async ({ page }) => {
     await page.goto('/#/product-builds/rhaiis');
     await page.waitForLoadState('networkidle');

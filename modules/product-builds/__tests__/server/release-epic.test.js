@@ -86,6 +86,30 @@ describe('release epic workflow', () => {
     })).toThrow(/Advisory type is required/)
   })
 
+  it('derives the release version from a timestamp template tag', () => {
+    const files = {
+      'owners-groups.yaml': 'groups:\n  productization:\n    - alice',
+      'rhaiis/owners.yaml': 'owners:\n  groups:\n    - productization',
+      'rhaiis/3.2.2/config.yaml': baseConfig('rhaiis', '3.2.2', ['3.2.2-{{ timestamp }}']),
+      'rhaiis/preview/config.yaml': baseConfig('rhaiis', 'preview', ['nemotronh-super-{{ timestamp }}']),
+    }
+    const products = workflow.parsePmcSnapshot(files)
+    const branch = products.find(item => item.key === 'rhaiis').branches.find(item => item.branch === '3.2.2')
+    expect(branch.configured_versions).toEqual(['3.2.2'])
+    expect(branch.tags).toEqual(['3.2.2-{{ timestamp }}'])
+    expect(products.find(item => item.key === 'rhaiis').branches.find(item => item.branch === 'preview').configured_versions).toEqual([])
+
+    const input = workflow.validateReleaseInput(products, {
+      product: 'rhaiis', version: '3.2.2', branch: '3.2.2', advisory_type: 'RHSA', release_type: '',
+    })
+    expect(input.version).toBe('3.2.2')
+    expect(input.release_type).toBe('GA')
+
+    const plan = workflow.checklistPlan({ ...input, metadata: branch }, [{ name: 'cuda', variant: 'cuda' }])
+    expect(plan.cards.some(card => card.summary.startsWith('Bump rhaiis 3.2.2'))).toBe(false)
+    expect(plan.notCreated.some(item => item.summary.startsWith('Bump rhaiis 3.2.2'))).toBe(true)
+  })
+
   it('infers EA from a configured main-branch tag and rejects an explicit mismatch', () => {
     const files = filesForBase()
     files['base-images/main/config.yaml'] = baseConfig('base-images', 'main', ['3.6.0-ea.1'])
