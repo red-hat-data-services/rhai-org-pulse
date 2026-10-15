@@ -117,6 +117,9 @@
             "suite": "model-serving",
             "name": "deploys a model",
             "status": "FAILED",
+            "filePath": "packages/cypress/cypress/tests/e2e/maas/testApiKeys.cy.ts",
+            "area": "maas",
+            "tags": ["@Smoke", "@SmokeSet5", "@Dashboard", "@MaaS", "@MaaSCI"],
             "component": "Model Serving",
             "ownership": null
           }

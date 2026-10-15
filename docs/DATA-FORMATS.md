@@ -18,6 +18,8 @@ RHOAI runs need a canonical `release.version`; ODH nightly can have no release
 version. `release.installedVersion` and `release.imageDigest` preserve the
 observed product version and catalog identity without changing the version
 used for filtering. Missing test counts remain `null`, not zero.
+Stored failed cases can include optional, nullable `filePath`, `area`, and
+`tags` source metadata for area-based triage.
 
 The later analysis POST updates only `agentAnalysis` and preserves the base
 run. Its `findings` can suggest a category, team, Jira issue, and related

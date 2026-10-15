@@ -36,7 +36,20 @@ test('accepts scoped E2E publishing and later unverified agent analysis', async 
   const run = { schemaVersion: 1, jenkins, reporting: { stream: 'release' },
     run: { result: 'FAILURE', startedAt: '2026-10-05T10:00:00.000Z', completedAt: '2026-10-05T10:20:00.000Z', durationMs: 1200000 },
     release: { version: '3.6', installedVersion: '3.6.0' }, environment: { name: 'GCP' },
-    trigger: { causes: [{ kind: 'user' }] } };
+    trigger: { causes: [{ kind: 'user' }] },
+    tests: {
+      collectionState: 'complete',
+      suiteCount: 1,
+      counts: { passed: 51, failed: 1, skipped: 0 },
+      failedCases: [{
+        suite: 'A user can view subscriptions and manage API keys on the Keys and Subscriptions page',
+        name: 'Verify subscriptions tab, API keys, filtering, and revoke all keys for a user',
+        status: 'FAILED',
+        filePath: 'packages/cypress/cypress/tests/e2e/maas/testApiKeys.cy.ts',
+        area: 'maas',
+        tags: [' @MaaS ', '@Dashboard', '@MaaS']
+      }]
+    } };
   const analysis = { schemaVersion: 1, jenkins: { instance: jenkins.instance, job: jenkins.job, buildNumber: jenkins.buildNumber },
     analysis: { producedAt: '2026-10-05T10:30:00.000Z', summary: 'Model serving failed.', reviewStatus: 'verified',
       findings: [{ id: 'serving', category: 'product-defect', suggestedTeam: 'Model Serving',
@@ -47,11 +60,29 @@ test('accepts scoped E2E publishing and later unverified agent analysis', async 
     expect((await post('/runs', { ...run, reporting: { stream: 'unknown' } })).status).toBe(400);
     expect((await post('/runs', { ...run, release: { version: 'rhoai-nightly' } })).status).toBe(400);
     expect((await post('/runs/analysis', analysis)).status).toBe(404);
+    const invalid = await post('/runs', {
+      ...run,
+      tests: {
+        ...run.tests,
+        failedCases: [{ ...run.tests.failedCases[0], filePath: 123, area: 456, tags: [''] }]
+      }
+    });
+    expect(invalid.status).toBe(400);
+    expect((await invalid.json()).details).toEqual([
+      'tests.failedCases[0].filePath must be a string or null (up to 512 characters)',
+      'tests.failedCases[0].area must be a string or null (up to 80 characters)',
+      'tests.failedCases[0].tags[0] must be a non-empty string of at most 80 characters'
+    ]);
     const created = await post('/runs', run);
     expect(created.status).toBe(200);
     expect((await created.json()).status).toBe('created');
     expect(stored.runs[0].reporting.stream).toBe('release');
     expect(stored.runs[0].release.installedVersion).toBe('3.6.0');
+    expect(stored.runs[0].tests.failedCases[0]).toMatchObject({
+      filePath: 'packages/cypress/cypress/tests/e2e/maas/testApiKeys.cy.ts',
+      area: 'maas',
+      tags: ['@MaaS', '@Dashboard']
+    });
 
     const updated = await post('/runs/analysis', analysis);
     expect(updated.status).toBe(200);

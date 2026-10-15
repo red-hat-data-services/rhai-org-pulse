@@ -7,6 +7,10 @@ const jsonBody = express.json({ limit: '2mb' })
 const VALID_RESULTS = new Set(['SUCCESS', 'UNSTABLE', 'FAILURE', 'ABORTED'])
 const VALID_CAUSES = new Set(['timer', 'upstream', 'user', 'rebuild', 'pull_request', 'scm', 'unknown'])
 const VALID_STREAMS = new Set(['odh-nightly', 'rhoai-nightly', 'release'])
+const FAILED_CASE_FILE_PATH_MAX_LENGTH = 512
+const FAILED_CASE_AREA_MAX_LENGTH = 80
+const FAILED_CASE_TAGS_MAX_ITEMS = 20
+const FAILED_CASE_TAG_MAX_LENGTH = 80
 
 function isIsoDate(value) {
   return typeof value === 'string' && Number.isFinite(Date.parse(value))
@@ -70,7 +74,16 @@ function validatePayload(body) {
   if (body.tests != null && (typeof body.tests !== 'object' || Array.isArray(body.tests))) errors.push('tests must be an object')
   if (body.tests?.failedCases !== undefined && !Array.isArray(body.tests.failedCases)) errors.push('tests.failedCases must be an array')
   if (Array.isArray(body.tests?.failedCases)) body.tests.failedCases.forEach((test, index) => {
-    if (!test || typeof test !== 'object' || Array.isArray(test)) errors.push(`tests.failedCases[${index}] must be an object`)
+    if (!test || typeof test !== 'object' || Array.isArray(test)) {
+      errors.push(`tests.failedCases[${index}] must be an object`)
+      return
+    }
+    if (test.filePath != null && (typeof test.filePath !== 'string' || test.filePath.length > FAILED_CASE_FILE_PATH_MAX_LENGTH)) errors.push(`tests.failedCases[${index}].filePath must be a string or null (up to ${FAILED_CASE_FILE_PATH_MAX_LENGTH} characters)`)
+    if (test.area != null && (typeof test.area !== 'string' || test.area.length > FAILED_CASE_AREA_MAX_LENGTH)) errors.push(`tests.failedCases[${index}].area must be a string or null (up to ${FAILED_CASE_AREA_MAX_LENGTH} characters)`)
+    if (test.tags != null && (!Array.isArray(test.tags) || test.tags.length > FAILED_CASE_TAGS_MAX_ITEMS)) errors.push(`tests.failedCases[${index}].tags must be an array or null with at most ${FAILED_CASE_TAGS_MAX_ITEMS} tags`)
+    else if (Array.isArray(test.tags)) test.tags.forEach((tag, tagIndex) => {
+      if (typeof tag !== 'string' || !tag.trim() || tag.length > FAILED_CASE_TAG_MAX_LENGTH) errors.push(`tests.failedCases[${index}].tags[${tagIndex}] must be a non-empty string of at most ${FAILED_CASE_TAG_MAX_LENGTH} characters`)
+    })
   })
   if (body.tests && body.tests.counts) {
     for (const key of ['passed', 'failed', 'skipped']) {
@@ -176,6 +189,13 @@ function normalizedRun(body) {
           suite: String(test.suite || ''),
           name: String(test.name || ''),
           status: String(test.status || 'FAILED'),
+          filePath: typeof test.filePath === 'string' && test.filePath.trim()
+            ? test.filePath.trim().slice(0, FAILED_CASE_FILE_PATH_MAX_LENGTH)
+            : null,
+          area: typeof test.area === 'string' && test.area.trim()
+            ? test.area.trim().slice(0, FAILED_CASE_AREA_MAX_LENGTH)
+            : null,
+          tags: normalizeFailedCaseTags(test.tags),
           component: typeof test.component === 'string' ? test.component.slice(0, 160) : null,
           ownership: ownership ? {
             teamId: typeof ownership.teamId === 'string' ? ownership.teamId.slice(0, 120) : null,
@@ -190,6 +210,11 @@ function normalizedRun(body) {
     agentAnalysis: null,
     receivedAt: new Date().toISOString()
   }
+}
+
+function normalizeFailedCaseTags(tags) {
+  if (!Array.isArray(tags)) return null
+  return [...new Set(tags.map(tag => tag.trim()).filter(Boolean))].slice(0, FAILED_CASE_TAGS_MAX_ITEMS)
 }
 
 module.exports = function registerBuildHealthRoutes(router, context) {
@@ -351,6 +376,9 @@ module.exports = function registerBuildHealthRoutes(router, context) {
    *                         suite: { type: string }
    *                         name: { type: string }
    *                         status: { type: string }
+   *                         filePath: { type: string, nullable: true, maxLength: 512 }
+   *                         area: { type: string, nullable: true, maxLength: 80 }
+   *                         tags: { type: array, maxItems: 20, items: { type: string, maxLength: 80 } }
    *                         component: { type: string, nullable: true }
    *     responses:
    *       200:
