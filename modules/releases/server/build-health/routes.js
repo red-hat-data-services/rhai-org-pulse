@@ -378,7 +378,7 @@ module.exports = function registerBuildHealthRoutes(router, context) {
    *                         status: { type: string }
    *                         filePath: { type: string, nullable: true, maxLength: 512 }
    *                         area: { type: string, nullable: true, maxLength: 80 }
-   *                         tags: { type: array, maxItems: 20, items: { type: string, maxLength: 80 } }
+   *                         tags: { type: array, nullable: true, maxItems: 20, items: { type: string, maxLength: 80 } }
    *                         component: { type: string, nullable: true }
    *     responses:
    *       200:
