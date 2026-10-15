@@ -34,7 +34,7 @@ const PRIORITY_OUTCOMES = [
   { key: 'RHAISTRAT-898', title: 'Deliver Role Based Access Control for RHOAI components' },
   { key: 'RHAISTRAT-1471', title: 'Multi-Tenancy in RHOAI' },
   { key: 'RHAISTRAT-188', title: '[Outcome] Enable AutoRAG for Automated RAG Pattern Discovery and Optimization' },
-  { key: 'RHAISTRAT-1066', title: '[Outcome] Enable AutoML ' }
+  { key: 'RHAISTRAT-1066', title: '[Outcome] Enable AutoML' }
 ];
 
 /**
