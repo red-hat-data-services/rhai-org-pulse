@@ -354,14 +354,26 @@
 
                       <!-- Hover dropdown: per-run Jenkins test-result links for this gate/day -->
                       <span v-if="activeGateCell === `${row.gate}-${d}` && (row.days[d].executions || []).length" class="gc-dd">
-                        <span class="gc-dd-title">{{ row.gate }} · {{ friendlyDate(d) }} · {{ row.days[d].executions.length }} run(s)</span>
-                        <span v-for="(ex, i) in row.days[d].executions" :key="i" class="gc-dd-run">
-                          <a v-if="ex.jenkins_url" :href="testReportUrl(ex.jenkins_url)" target="_blank" class="gc-dd-link">{{ jenkinsLabel(ex.jenkins_url) }} · test report ↗</a>
-                          <span v-else class="gc-dd-link">Run {{ i + 1 }}</span>
+                        <span class="gc-dd-title">{{ row.gate }} · {{ friendlyDate(d) }} · {{ groupedRuns(row.days[d].executions).length }} run(s)</span>
+                        <span v-for="(run, i) in groupedRuns(row.days[d].executions)" :key="i" class="gc-dd-run">
+                          <!-- One line per Jenkins build. When the data came
+                               from the testReport API we deep-link each
+                               component suite to .../testReport/<suite>/;
+                               otherwise we fall back to the whole-run report. -->
+                          <span class="gc-dd-runhead">
+                            <template v-if="run.suiteLinks.length">
+                              <span class="gc-dd-label">{{ run.label }} ·</span>
+                              <a v-for="(sl, j) in run.suiteLinks" :key="j"
+                                 :href="sl.url" target="_blank" class="gc-dd-suite">{{ sl.suite }} ↗</a>
+                            </template>
+                            <a v-else-if="run.jenkins_url" :href="testReportUrl(run.jenkins_url)"
+                               target="_blank" class="gc-dd-link">{{ run.label }} · test report ↗</a>
+                            <span v-else class="gc-dd-link">Run {{ i + 1 }}</span>
+                          </span>
                           <span class="gc-dd-nums">
-                            <span class="cp">{{ ex.passed || 0 }}P</span>
-                            <span class="cf">{{ ex.failed || 0 }}F</span>
-                            <span class="cs">{{ ex.skipped || 0 }}S</span>
+                            <span class="cp">{{ run.passed || 0 }}P</span>
+                            <span class="cf">{{ run.failed || 0 }}F</span>
+                            <span class="cs">{{ run.skipped || 0 }}S</span>
                           </span>
                         </span>
                       </span>
@@ -588,14 +600,59 @@ function jenkinsLabel(url) {
     .replace(/\/job\//g, '/')
 }
 
-// Deep-link a Jenkins build URL to its test-results page (…/testReport/) rather
-// than the build root, so the link lands on the run's test report. Note: a
-// single Jenkins run covers multiple components, so this is the whole run's
-// report — component-specific evidence is the Jira "Open Failed Jiras" link.
-function testReportUrl(url) {
+// Deep-link a Jenkins build URL to its test-results page. With no suite it
+// lands on the whole run's report (…/testReport/). With a suite it lands on
+// that suite's node (…/testReport/<Suite>/) — Jenkins keys the testReport tree
+// by the raw suite name with spaces encoded as %20 (verified against the live
+// server: the %20 form returns 200, an underscore form 404).
+function testReportUrl(url, suite) {
   if (!url) return url
   const base = url.endsWith('/') ? url : url + '/'
-  return `${base}testReport/`
+  if (!suite) return `${base}testReport/`
+  // Encode the suite as a single path segment; encodeURIComponent turns spaces
+  // into %20 and escapes other unsafe characters, matching Jenkins' tree URLs.
+  return `${base}testReport/${encodeURIComponent(suite)}/`
+}
+
+// Group per-run execution rows by Jenkins build URL so one build renders as a
+// single line, then union the component suites seen in that build. This avoids
+// emitting several near-identical links for the same build when a dashboard
+// component maps to multiple Jenkins suites. Component-specific suite links are
+// only produced for data sourced from the testReport API (xml_source), where
+// the suite name maps exactly to the Jenkins testReport URL; otherwise the
+// caller falls back to the whole-run report link.
+function groupedRuns(executions) {
+  const byUrl = new Map()
+  ;(executions || []).forEach((ex) => {
+    const key = ex.jenkins_url || `__norun_${byUrl.size}`
+    let g = byUrl.get(key)
+    if (!g) {
+      g = {
+        jenkins_url: ex.jenkins_url || null,
+        label: ex.jenkins_url ? jenkinsLabel(ex.jenkins_url) : 'Run',
+        passed: 0, failed: 0, skipped: 0,
+        suites: new Set(),
+        apiSourced: false
+      }
+      byUrl.set(key, g)
+    }
+    g.passed += ex.passed || 0
+    g.failed += ex.failed || 0
+    g.skipped += ex.skipped || 0
+    if (ex.xml_source === 'testReport/api/xml') g.apiSourced = true
+    ;(ex.jenkins_suites || []).forEach((s) => { if (s) g.suites.add(s) })
+  })
+  return Array.from(byUrl.values()).map((g) => ({
+    jenkins_url: g.jenkins_url,
+    label: g.label,
+    passed: g.passed,
+    failed: g.failed,
+    skipped: g.skipped,
+    // Only build suite deep-links for testReport-API data with known suites.
+    suiteLinks: (g.apiSourced && g.jenkins_url)
+      ? Array.from(g.suites).sort().map((s) => ({ suite: s, url: testReportUrl(g.jenkins_url, s) }))
+      : []
+  }))
 }
 
 const gateDates = computed(() => {
@@ -1043,6 +1100,10 @@ table.gate-hm th:first-child, table.gate-hm td:first-child { text-align: left; m
 .gc-dd-run { display: flex; justify-content: space-between; align-items: center; gap: 8px; padding: 3px 0; }
 .gc-dd-link { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 10px; color: #5ea7ff; text-decoration: none; }
 .gc-dd-link:hover { text-decoration: underline; }
+.gc-dd-runhead { flex: 1; min-width: 0; display: flex; flex-wrap: wrap; align-items: center; gap: 4px 6px; }
+.gc-dd-label { font-size: 10px; color: #8899aa; white-space: nowrap; }
+.gc-dd-suite { font-size: 10px; color: #5ea7ff; text-decoration: none; background: rgba(94,167,255,.12); border: 1px solid rgba(94,167,255,.3); border-radius: 4px; padding: 1px 6px; white-space: nowrap; }
+.gc-dd-suite:hover { text-decoration: underline; background: rgba(94,167,255,.2); }
 .gc-dd-nums { white-space: nowrap; font-size: 10px; }
 .gc-dd-nums .cp { color: #2ed573; margin-left: 4px; }
 .gc-dd-nums .cf { color: #ff4757; margin-left: 4px; }
