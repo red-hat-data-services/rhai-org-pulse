@@ -490,16 +490,16 @@
             >
               <div class="flex items-center gap-3">
                 <span :class="expandedPhases[phase.epic_key] ? 'rotate-90' : ''" class="transition-transform text-gray-400 text-xs">&#9654;</span>
-                <span :class="phaseIconClass(phase.rag)" class="text-sm">{{ phaseIcon(phase.rag) }}</span>
+                <span :class="phaseIconClass(phaseDisplayRag(phase))" class="text-sm">{{ phaseIcon(phaseDisplayRag(phase)) }}</span>
                 <span class="text-sm font-medium text-gray-700 dark:text-gray-300">{{ phase.name }}</span>
               </div>
               <div class="flex items-center gap-3">
                 <div class="w-24 h-1.5 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
-                  <div :class="phaseBarColor(phase.rag)" class="h-full transition-all duration-500" :style="{ width: phasePct(phase) + '%' }"></div>
+                  <div :class="phaseBarColor(phaseDisplayRag(phase))" class="h-full transition-all duration-500" :style="{ width: phasePct(phase) + '%' }"></div>
                 </div>
                 <span class="text-xs font-medium text-gray-600 dark:text-gray-400 w-12 text-right">{{ phase.done }}/{{ phase.total }}</span>
-                <span :class="ragBadgeClass(phase.rag)" class="text-xs px-1.5 py-0.5 rounded font-medium text-white w-16 text-center">
-                  {{ phase.rag === 'GREEN' ? 'Done' : phase.rag === 'AMBER' ? 'Active' : 'Pending' }}
+                <span :class="ragBadgeClass(phaseDisplayRag(phase))" class="text-xs px-1.5 py-0.5 rounded font-medium text-white w-16 text-center">
+                  {{ phaseStatusLabel(phase) }}
                 </span>
               </div>
             </button>
@@ -1032,6 +1032,24 @@ const phaseTasksMap = computed(() => {
   }
   return map
 })
+
+const SKIPPED_PHASE_RESOLUTIONS = ["Won't Do", 'Obsolete']
+
+function isSkippedPhase(phase) {
+  const tasks = phaseTasksMap.value[phase.epic_key] || []
+  return tasks.length > 0 && tasks.every(task =>
+    task.status_category === 'Done' && SKIPPED_PHASE_RESOLUTIONS.includes(task.resolution)
+  )
+}
+
+function phaseDisplayRag(phase) {
+  return isSkippedPhase(phase) ? 'GRAY' : phase.rag
+}
+
+function phaseStatusLabel(phase) {
+  if (isSkippedPhase(phase)) return 'Not Done'
+  return phase.rag === 'GREEN' ? 'Done' : phase.rag === 'AMBER' ? 'Active' : 'Pending'
+}
 
 const testExecDone = computed(() => {
   if (!director.value || !director.value.test_timeline) return 0

@@ -1390,6 +1390,27 @@ test.describe('Releases Release Readiness @releases', () => {
     expect(page.errors).toHaveLength(0);
   });
 
+  test('marks a phase Not Done when all children were skipped', async ({ page }) => {
+    await page.addInitScript(() => {
+      localStorage.setItem('tt_cache:readiness-selection', JSON.stringify({
+        version: '3.5',
+        families: ['rhoai'],
+        phases: ['EA2']
+      }));
+    });
+
+    await page.goto('/#/releases/reports?report=release-readiness');
+
+    const rc2Row = page.getByRole('button', { name: /RC2/ });
+    await expect(rc2Row).toContainText('Not Done');
+    await expect(rc2Row.getByText('Not Done', { exact: true })).toHaveClass(/bg-gray-400/);
+
+    // RC1 has a mix of open and skipped children, so it keeps its RAG status.
+    const rc1Row = page.getByRole('button', { name: /RC1/ });
+    await expect(rc1Row).toContainText('Active');
+    await expect(rc1Row.getByText('Active', { exact: true })).toHaveClass(/bg-amber-500/);
+  });
+
   test('release readiness versions API returns available versions', async ({ request }) => {
     const res = await request.get('/api/modules/releases/release-readiness/versions');
     expect(res.ok()).toBe(true);
