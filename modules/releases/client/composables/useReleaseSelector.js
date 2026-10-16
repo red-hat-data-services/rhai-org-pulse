@@ -7,12 +7,9 @@ const PHASE_ORDER = ['EA1', 'EA2', 'GA']
 // separate registry entries with distinct schedules and should not appear in the
 // family/version/phase selector alongside standard milestones.
 export function parseReleaseId(id) {
-  // Match patterns: rhoai-3.6 (GA), rhoai-3.6.EA1, rhoai-3.6.EA2, rhoai-3.6.GA
   const match = id.match(/^([a-z]+)-(\d+\.\d+)(?:\.(ea\d?|ga))?$/i)
   if (!match) return null
-  const phaseSuffix = match[3] ? match[3].toUpperCase() : 'GA'
-  // Normalize: both no-suffix and explicit .GA → 'GA'
-  const phase = phaseSuffix === 'GA' ? 'GA' : phaseSuffix
+  const phase = match[3] ? match[3].toUpperCase() : 'GA'
   return { family: match[1].toLowerCase(), version: match[2], phase }
 }
 
