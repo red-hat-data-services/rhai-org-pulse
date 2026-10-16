@@ -18,14 +18,15 @@ RHOAI runs need a canonical `release.version`; ODH nightly can have no release
 version. `release.installedVersion` and `release.imageDigest` preserve the
 observed product version and catalog identity without changing the version
 used for filtering. Missing test counts remain `null`, not zero.
-Stored failed cases can include optional, nullable `filePath`, `area`, and
-`tags` source metadata for area-based triage.
+Stored failed and passed cases can include optional, nullable `filePath`,
+`area`, and `tags` source metadata for area-based triage.
 
 The later analysis POST updates only `agentAnalysis` and preserves the base
 run. Its `findings` can suggest a category, team, Jira issue, and related
 failed test cases. The server marks it `reviewStatus: "unverified"`; machine
 suggestions are not human-confirmed ownership. Retrying the base run keeps
-the latest analysis. At most 2,000 runs and 50 failed cases per run are kept.
+the latest analysis. At most 2,000 runs, 50 failed cases, and 500 passed cases
+per run are kept.
 
 ## Jira Autofix — `data/ai-impact/autofix-data.json`
 
