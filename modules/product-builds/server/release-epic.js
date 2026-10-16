@@ -848,7 +848,10 @@ const RELEASE_LIFECYCLE_LABELS = new Set(['planned', 'ready', 'triggered', 'rele
 const RELEASE_STATE_PRECEDENCE = ['planned', 'triggered', 'ready', 'failed', 'released', 'skip'];
 const RELEASE_INPUT_TYPES = new Set(['image-list', 'git-tag', 'commit-sha']);
 const CVE_RE = /^CVE-\d{4}-\d{4,}$/i;
-const STAGE_TAG_RE = /-\d+$/;
+// A stage tag is <version>-<timestamp>, so the entire remainder after the
+// version prefix must be digits — a tail like -rc-1 ends in digits but is
+// not a timestamp, and the readiness detector cannot verify it.
+const STAGE_TAG_RE = /^\d+$/;
 
 function releaseState(labels = []) {
   const present = new Set(labels);
@@ -1141,7 +1144,7 @@ function validateStagePullspec(component, pullspec, version) {
     }
     return;
   }
-  if (!parsed.reference || parsed.reference === version || !parsed.reference.startsWith(`${version}-`) || !STAGE_TAG_RE.test(parsed.reference)) {
+  if (!parsed.reference || parsed.reference === version || !parsed.reference.startsWith(`${version}-`) || !STAGE_TAG_RE.test(parsed.reference.slice(version.length + 1))) {
     throw new Error(`${component.name} pullspec must use ${expected}:${version}-<timestamp> or ${expected}@sha256:<64 hex digest>`);
   }
   if (parsed.repository === 'quay.io/redhat-user-workloads' || parsed.repository.startsWith('quay.io/redhat-user-workloads/')) {
