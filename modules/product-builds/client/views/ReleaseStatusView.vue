@@ -1,10 +1,35 @@
 <script setup>
-import { onMounted, ref, watch } from 'vue'
+import { computed, onMounted, ref, watch } from 'vue'
 import { apiRequest } from '@shared/client/services/api'
 import { useReleaseStatus } from '../composables/useReleaseStatus'
 
-const { data, loading, error, load } = useReleaseStatus()
+const { data, loading, linksLoading, error, load } = useReleaseStatus()
 const collapsedEpics = ref(new Set())
+const selectedProducts = ref(new Set())
+const selectedStatuses = ref(new Set())
+const STATUS_FILTER_OPTIONS = [
+  { value: 'planned', label: 'Planned' },
+  { value: 'ready', label: 'Ready' },
+  { value: 'triggered', label: 'Triggered / in progress' },
+  { value: 'released', label: 'Released / completed' },
+  { value: 'failed', label: 'Failed' },
+  { value: 'skipped', label: 'Skipped' },
+]
+
+function toggleInSet(setRef, value) {
+  const next = new Set(setRef.value)
+  if (next.has(value)) next.delete(value)
+  else next.add(value)
+  setRef.value = next
+}
+
+function toggleProduct(key) {
+  toggleInSet(selectedProducts, key)
+}
+
+function toggleStatus(state) {
+  toggleInSet(selectedStatuses, state)
+}
 
 function isEpicExpanded(key) {
   return !collapsedEpics.value.has(key)
@@ -388,9 +413,45 @@ function visibleLabels(labels = []) {
   return labels.filter(label => normalize(label) !== 'release automation')
 }
 
+function isReleaseCard(child) {
+  return lifecycleState(child?.labels) !== null || /^release\s/i.test(child.summary || '')
+}
+
+function isVersionBumpCard(child) {
+  return !isReleaseCard(child) && /bump/i.test(child.summary || '')
+}
+
+function releaseCards(epic) {
+  return (epic.children || []).filter(isReleaseCard)
+}
+
+function versionBumpCards(epic) {
+  return (epic.children || []).filter(isVersionBumpCard)
+}
+
+function checklistCards(epic) {
+  return (epic.children || []).filter(child => !isReleaseCard(child) && !isVersionBumpCard(child))
+}
+
 function jiraUrl(key) {
   return `https://redhat.atlassian.net/browse/${key}`
 }
+
+const filteredGroups = computed(() => {
+  const groups = data.value?.groups || []
+  const products = selectedProducts.value
+  const statuses = selectedStatuses.value
+  if (!products.size && !statuses.size) return groups
+  return groups
+    .filter(group => !products.size || products.has(group.key))
+    .map(group => ({
+      ...group,
+      epics: statuses.size
+        ? group.epics.filter(epic => statuses.has(statusState(epic)))
+        : group.epics,
+    }))
+    .filter(group => group.epics.length > 0 || (products.has(group.key) && !statuses.size))
+})
 
 function formatDate(value) {
   if (!value) return '—'
@@ -720,6 +781,43 @@ bootc-gaudi:containers=&lt;pullspec&gt;</code></pre>
       </Transition>
     </section>
 
+    <div data-release-filters class="mt-6 rounded-lg border border-gray-200 bg-gray-50/60 px-4 py-3 dark:border-gray-700 dark:bg-gray-800/60">
+      <div class="flex items-center justify-between">
+        <span class="text-[10px] font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">Filters</span>
+        <span v-if="linksLoading" class="text-xs text-gray-400 dark:text-gray-500" data-links-loading>Loading MR, PipelineRun, and log links…</span>
+      </div>
+      <div class="mt-2 flex flex-wrap items-center gap-1.5" role="group" aria-label="Filter by product">
+        <span class="mr-1 text-xs font-medium text-gray-500 dark:text-gray-400">Product</span>
+        <button
+          v-for="group in (data?.groups || [])"
+          :key="group.key"
+          type="button"
+          :data-filter-product="group.key"
+          :aria-pressed="selectedProducts.has(group.key)"
+          class="rounded-full border px-3 py-1 text-xs font-medium transition focus:outline-none focus:ring-2 focus:ring-primary-500"
+          :class="selectedProducts.has(group.key)
+            ? 'border-primary-600 bg-primary-600 text-white dark:border-primary-500 dark:bg-primary-500'
+            : 'border-gray-200 bg-white text-gray-600 hover:bg-gray-50 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700'"
+          @click="toggleProduct(group.key)"
+        >{{ group.label }}</button>
+      </div>
+      <div class="mt-2 flex flex-wrap items-center gap-1.5" role="group" aria-label="Filter by status">
+        <span class="mr-1 text-xs font-medium text-gray-500 dark:text-gray-400">Status</span>
+        <button
+          v-for="state in STATUS_FILTER_OPTIONS"
+          :key="state.value"
+          type="button"
+          :data-filter-status="state.value"
+          :aria-pressed="selectedStatuses.has(state.value)"
+          class="inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-medium transition focus:outline-none focus:ring-2 focus:ring-primary-500"
+          :class="selectedStatuses.has(state.value)
+            ? 'border-primary-600 bg-primary-600 text-white dark:border-primary-500 dark:bg-primary-500'
+            : 'border-gray-200 bg-white text-gray-600 hover:bg-gray-50 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700'"
+          @click="toggleStatus(state.value)"
+        ><span class="h-2 w-2 rounded-full" :class="STATUS_DOT_CLASSES[state.value]"></span>{{ state.label }}</button>
+      </div>
+    </div>
+
     <div v-if="loading" class="space-y-4">
       <div v-for="i in 3" :key="i" class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-5 animate-pulse">
         <div class="h-5 bg-gray-200 dark:bg-gray-700 rounded w-32 mb-4"></div>
@@ -735,9 +833,13 @@ bootc-gaudi:containers=&lt;pullspec&gt;</code></pre>
       No ongoing release epics found.
     </div>
 
+    <div v-else-if="filteredGroups.length === 0" class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6 text-sm text-gray-500 dark:text-gray-400">
+      No releases match the current filters.
+    </div>
+
     <div v-else class="space-y-6">
       <section
-        v-for="group in data.groups"
+        v-for="group in filteredGroups"
         :key="group.key"
         class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden"
       >
@@ -796,32 +898,121 @@ bootc-gaudi:containers=&lt;pullspec&gt;</code></pre>
           <div v-if="isEpicExpanded(epic.key) && epic.children.length === 0" class="ml-3 mt-4 text-sm text-gray-500 dark:text-gray-400">
             No child cards found.
           </div>
-          <div v-show="isEpicExpanded(epic.key) && epic.children.length > 0" :id="`release-cards-${epic.key}`" class="relative ml-3 mt-4 space-y-3 border-l-2 border-gray-200 pl-5 dark:border-gray-700 sm:ml-5 sm:pl-7" data-tree-branch>
-            <div
-              v-for="child in epic.children"
-              :key="child.key"
-              :data-tree-child="child.key"
-              :data-status-state="statusState(child)"
-              :data-completed="isCompleted(child)"
-              :class="isCompleted(child) ? 'opacity-70' : ''"
-              class="relative rounded-xl border border-gray-200 bg-gray-50/70 p-3 shadow-sm before:absolute before:-left-5 before:top-5 before:w-5 before:border-t-2 before:border-gray-200 dark:border-gray-700 dark:bg-gray-900/30 dark:before:border-gray-700 sm:p-4"
-            >
-              <span :class="statusDotClass(child)" class="absolute -left-[1.8125rem] top-3.5 h-3 w-3 rounded-full border-2 border-white dark:border-gray-800"></span>
-              <div class="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between sm:gap-3">
-                <div class="min-w-0 text-sm">
-                  <a :href="jiraUrl(child.key)" target="_blank" rel="noopener" class="font-medium text-primary-600 dark:text-blue-400 hover:underline">{{ child.key }}</a>
-                   <span class="ml-2 break-words text-gray-700 dark:text-gray-300" :class="isCompleted(child) ? 'line-through' : ''">{{ child.summary }}</span>
+          <div v-show="isEpicExpanded(epic.key) && epic.children.length > 0" :id="`release-cards-${epic.key}`" class="relative ml-3 mt-4 border-l-2 border-gray-200 pl-5 dark:border-gray-700 sm:ml-5 sm:pl-7" data-tree-branch>
+            <div class="space-y-3">
+              <div
+                v-for="child in releaseCards(epic)"
+                :key="child.key"
+                :data-tree-child="child.key"
+                data-release-card="true"
+                :data-status-state="statusState(child)"
+                :data-completed="isCompleted(child)"
+                :class="isCompleted(child) ? 'opacity-70' : ''"
+                class="relative rounded-xl border border-gray-200 bg-gray-50/70 p-3 shadow-sm before:absolute before:-left-5 before:top-5 before:w-5 before:border-t-2 before:border-gray-200 dark:border-gray-700 dark:bg-gray-900/30 dark:before:border-gray-700 sm:p-4"
+              >
+                <span :class="statusDotClass(child)" class="absolute -left-[1.8125rem] top-3.5 h-3 w-3 rounded-full border-2 border-white dark:border-gray-800"></span>
+                <div class="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between sm:gap-3">
+                  <div class="min-w-0 text-sm">
+                    <a :href="jiraUrl(child.key)" target="_blank" rel="noopener" class="font-medium text-primary-600 dark:text-blue-400 hover:underline">{{ child.key }}</a>
+                     <span class="ml-2 break-words text-gray-700 dark:text-gray-300" :class="isCompleted(child) ? 'line-through' : ''">{{ child.summary }}</span>
+                  </div>
+                  <span :data-status-badge="child.key" class="inline-flex shrink-0 items-center self-start rounded-full border px-2 py-0.5 text-xs font-medium whitespace-nowrap" :class="statusClass(child)" :data-status-category="child.status.category">
+                    {{ statusLabel(child) }}
+                  </span>
                 </div>
-                <span :data-status-badge="child.key" class="inline-flex shrink-0 items-center self-start rounded-full border px-2 py-0.5 text-xs font-medium whitespace-nowrap" :class="statusClass(child)" :data-status-category="child.status.category">
-                  {{ statusLabel(child) }}
-                </span>
+                <div class="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-gray-500 dark:text-gray-400">
+                  <div class="flex flex-wrap gap-x-2 gap-y-1">
+                    <span v-for="label in visibleLabels(child.labels)" :key="label" class="text-gray-600 dark:text-gray-300">{{ label }}</span>
+                    <span v-if="visibleLabels(child.labels).length === 0" class="text-gray-400 dark:text-gray-500">—</span>
+                  </div>
+                  <span class="whitespace-nowrap">Updated {{ formatDate(child.updated) }}</span>
+                </div>
+                <div v-if="child.merge_requests?.length || child.pipeline_run" class="mt-1.5 flex flex-wrap items-center gap-1.5 text-xs">
+                  <a
+                    v-for="mr in child.merge_requests"
+                    :key="`${child.key}-mr-${mr.iid}`"
+                    :href="mr.web_url"
+                    target="_blank"
+                    rel="noopener"
+                    :data-mr-link="mr.iid"
+                    class="inline-flex items-center gap-1 rounded-full border border-gray-200 px-2 py-0.5 font-medium text-primary-600 hover:bg-gray-50 dark:border-gray-600 dark:text-blue-400 dark:hover:bg-gray-700/40"
+                  >MR !{{ mr.iid }} <span class="font-normal text-gray-400 dark:text-gray-500">{{ mr.state }}</span></a>
+                  <a
+                    v-if="child.pipeline_run"
+                    :href="child.pipeline_run.url"
+                    target="_blank"
+                    rel="noopener"
+                    :data-pipelinerun-link="child.pipeline_run.name"
+                    :title="`${child.pipeline_run.namespace}/${child.pipeline_run.name}`"
+                    class="inline-flex items-center gap-1 rounded-full border border-gray-200 px-2 py-0.5 font-medium text-primary-600 hover:bg-gray-50 dark:border-gray-600 dark:text-blue-400 dark:hover:bg-gray-700/40"
+                  >{{ child.pipeline_run.name }}</a>
+                  <a
+                    v-if="child.pipeline_run?.logs_url"
+                    :href="child.pipeline_run.logs_url"
+                    target="_blank"
+                    rel="noopener"
+                    :data-logs-link="child.pipeline_run.name"
+                    class="inline-flex items-center gap-1 rounded-full border border-amber-200 bg-amber-50 px-2 py-0.5 font-medium text-amber-700 hover:bg-amber-100 dark:border-amber-700/60 dark:bg-amber-900/30 dark:text-amber-300 dark:hover:bg-amber-900/50"
+                  >Logs</a>
+                </div>
               </div>
-              <div class="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-gray-500 dark:text-gray-400">
-                <div class="flex flex-wrap gap-x-2 gap-y-1">
-                  <span v-for="label in visibleLabels(child.labels)" :key="label" class="text-gray-600 dark:text-gray-300">{{ label }}</span>
-                  <span v-if="visibleLabels(child.labels).length === 0" class="text-gray-400 dark:text-gray-500">—</span>
+            </div>
+            <div v-if="versionBumpCards(epic).length" class="mt-3 space-y-2">
+              <div
+                v-for="child in versionBumpCards(epic)"
+                :key="child.key"
+                :data-tree-child="child.key"
+                data-release-card="false"
+                data-version-bump="true"
+                :data-status-state="statusState(child)"
+                :data-completed="isCompleted(child)"
+                :class="isCompleted(child) ? 'opacity-70' : ''"
+                class="relative rounded-lg border border-gray-200 bg-white p-2.5 shadow-sm before:absolute before:-left-5 before:top-4 before:w-5 before:border-t before:border-gray-200 dark:border-gray-700 dark:bg-gray-800 dark:before:border-gray-700"
+              >
+                <span :class="statusDotClass(child)" class="absolute -left-[1.9rem] top-3 h-2.5 w-2.5 rounded-full border-2 border-white dark:border-gray-800"></span>
+                <div class="flex flex-wrap items-center justify-between gap-x-3 gap-y-1">
+                  <div class="min-w-0 text-sm">
+                    <a :href="jiraUrl(child.key)" target="_blank" rel="noopener" class="font-medium text-primary-600 dark:text-blue-400 hover:underline">{{ child.key }}</a>
+                    <span class="ml-2 break-words text-gray-700 dark:text-gray-300" :class="isCompleted(child) ? 'line-through' : ''">{{ child.summary }}</span>
+                  </div>
+                  <span :data-status-badge="child.key" class="inline-flex shrink-0 items-center rounded-full border px-2 py-0.5 text-xs font-medium whitespace-nowrap" :class="statusClass(child)" :data-status-category="child.status.category">
+                    {{ statusLabel(child) }}
+                  </span>
                 </div>
-                <span class="whitespace-nowrap">Updated {{ formatDate(child.updated) }}</span>
+                <div v-if="child.merge_requests?.length" class="mt-1.5 flex flex-wrap items-center gap-1.5 text-xs">
+                  <a
+                    v-for="mr in child.merge_requests"
+                    :key="`${child.key}-mr-${mr.iid}`"
+                    :href="mr.web_url"
+                    target="_blank"
+                    rel="noopener"
+                    :data-mr-link="mr.iid"
+                    class="inline-flex items-center gap-1 rounded-full border border-gray-200 px-2 py-0.5 font-medium text-primary-600 hover:bg-gray-50 dark:border-gray-600 dark:text-blue-400 dark:hover:bg-gray-700/40"
+                  >MR !{{ mr.iid }} <span class="font-normal text-gray-400 dark:text-gray-500">{{ mr.state }}</span></a>
+                </div>
+              </div>
+            </div>
+            <div v-if="checklistCards(epic).length" class="mt-1.5 space-y-0.5">
+              <div
+                v-for="child in checklistCards(epic)"
+                :key="child.key"
+                :data-tree-child="child.key"
+                data-release-card="false"
+                :data-status-state="statusState(child)"
+                :data-completed="isCompleted(child)"
+                :class="isCompleted(child) ? 'opacity-70' : ''"
+                class="relative py-0.5 before:absolute before:-left-5 before:top-2.5 before:w-5 before:border-t before:border-gray-200 dark:before:border-gray-700"
+              >
+                <span :class="statusDotClass(child)" class="absolute -left-[1.8125rem] top-1.5 h-2.5 w-2.5 rounded-full border-2 border-white dark:border-gray-800"></span>
+                <div class="flex min-w-0 items-center justify-between gap-x-3">
+                  <div class="flex min-w-0 items-baseline gap-2">
+                    <a :href="jiraUrl(child.key)" target="_blank" rel="noopener" class="shrink-0 text-xs font-medium text-primary-600 dark:text-blue-400 hover:underline">{{ child.key }}</a>
+                    <span class="truncate text-xs text-gray-600 dark:text-gray-400" :class="isCompleted(child) ? 'line-through' : ''">{{ child.summary }}</span>
+                  </div>
+                  <span :data-status-badge="child.key" class="inline-flex shrink-0 items-center rounded-full border px-1.5 py-0 text-[10px] font-medium whitespace-nowrap" :class="statusClass(child)" :data-status-category="child.status.category">
+                    {{ statusLabel(child) }}
+                  </span>
+                </div>
               </div>
             </div>
           </div>
