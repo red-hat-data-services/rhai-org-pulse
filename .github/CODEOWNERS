@@ -28,3 +28,7 @@
 
 # Workflow validation integration test.
 /tests/integration/workflow-validation.spec.js @red-hat-data-services/org-pulse-maintainers @adamrdrew
+
+# Build Health report code and integration test.
+/modules/releases/server/build-health/ @saprabhu05 @accorvin
+/tests/integration/releases-e2e-results.spec.js @red-hat-data-services/org-pulse-maintainers @accorvin
