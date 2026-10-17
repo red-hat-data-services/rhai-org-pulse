@@ -13,6 +13,7 @@ const FEATURE_PROJECT = 'RHAISTRAT';
 const JIRA_HOST_DEFAULT = 'https://redhat.atlassian.net';
 const GITLAB_HOST_DEFAULT = 'https://gitlab.com';
 const pmcSnapshotCache = new Map();
+const pmcMergeRequestCache = new Map();
 const triggerOptionsCache = new Map();
 const TRIGGER_OPTIONS_CACHE_TTL = 30_000;
 const VERSION_TAG_PATTERN = /^(?:\d+\.\d+\.\d+)(?:-(?:ea|fast)\.\d+)?$/;
@@ -656,7 +657,42 @@ function createGitlabClient({ baseUrl = GITLAB_HOST_DEFAULT, project, token, fet
     const files = await selective(ref, [...paths], false);
     return { sha: catalog.sha, files: files.files };
   }
-  return { snapshot, selective, repositoryCatalog, resolveRef };
+  async function listMergeRequests() {
+    const cacheKey = `${host}|${projectId}|merge-requests`;
+    const cached = pmcMergeRequestCache.get(cacheKey);
+    if (cached?.value && cached.expiresAt > Date.now()) return cached.value;
+    if (cached?.promise) return cached.promise;
+    const pending = (async () => {
+      const mergeRequests = [];
+      for (let page = 1; page <= 10; page++) {
+        const params = new URLSearchParams({
+          state: 'all', order_by: 'updated_at', sort: 'desc', per_page: '100', page: String(page),
+        });
+        const pageItems = await request(`/projects/${projectId}/merge_requests?${params}`);
+        mergeRequests.push(...(Array.isArray(pageItems) ? pageItems : []));
+        if (!Array.isArray(pageItems) || pageItems.length < 100) break;
+      }
+      return mergeRequests.map(mr => ({
+        iid: mr.iid,
+        title: mr.title || '',
+        state: mr.state || '',
+        web_url: mr.web_url || '',
+        source_branch: mr.source_branch || '',
+        created_at: mr.created_at || null,
+        updated_at: mr.updated_at || null,
+      }));
+    })();
+    pmcMergeRequestCache.set(cacheKey, { promise: pending, expiresAt: Date.now() + cacheTtl });
+    try {
+      const value = await pending;
+      pmcMergeRequestCache.set(cacheKey, { value, expiresAt: Date.now() + cacheTtl });
+      return value;
+    } catch (error) {
+      pmcMergeRequestCache.delete(cacheKey);
+      throw error;
+    }
+  }
+  return { snapshot, selective, repositoryCatalog, resolveRef, listMergeRequests };
 }
 
 function gitlabFor(context, deps = {}) {
@@ -2108,6 +2144,8 @@ function registerReleaseEpicRoutes(router, context, deps = {}) {
       }
        const result = await mutateTriggerRelease(getJira(), pmc, issue, req.body || {});
       invalidateTriggerOptionsCache();
+      pmcMergeRequestCache.clear();
+      require('./release-status').invalidateReleaseStatusCaches();
       res.json(result);
     } catch (err) {
        const status = err.code === 'invalid-epic' || err.code === 'invalid-card'
@@ -2234,6 +2272,7 @@ function registerReleaseEpicRoutes(router, context, deps = {}) {
 }
 
 module.exports = registerReleaseEpicRoutes;
+module.exports.gitlabFor = gitlabFor;
 module.exports._testExports = {
   PRODUCTS, RHELAI_CONFIGS, branchApplication, inferReleaseType, inferReleaseTypeForProduct,
   parseBranch, parsePmcSnapshot, validateReleaseInput, filterComponents, buildEpicAdf,

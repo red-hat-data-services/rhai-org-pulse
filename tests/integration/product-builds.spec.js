@@ -160,6 +160,80 @@ test.describe('Product Builds Module @product-builds', () => {
     expect(appErrors).toHaveLength(0);
   });
 
+  test('should filter the release list and show MR and PipelineRun links', async ({ page }) => {
+    const run = {
+      namespace: 'rhel-ai-cicd--claudio',
+      name: 'create-release-mr-run-abc',
+      url: 'https://console-openshift-console.apps.mpp-e1-preprod.syvu.p1.openshiftapps.com/k8s/ns/rhel-ai-cicd--claudio/tekton.dev~v1~PipelineRun/create-release-mr-run-abc',
+      triggered_at: '2026-10-12T10:00:00Z',
+    };
+    const mr = {
+      iid: 796, state: 'merged',
+      web_url: 'https://gitlab.com/redhat/rhel-ai/ci-cd/aipcc-product-management-configs/-/merge_requests/796',
+    };
+    const epic = (key, summary, labels, children = []) => ({
+      key, summary,
+      status: { name: 'In Progress', category: 'indeterminate' },
+      labels, updated: '2026-10-15T10:00:00Z',
+      details: { version: '3.6.0-ea.2', target: 'prod' },
+      children,
+    });
+    await page.route('**/api/modules/product-builds/release-status', route => route.fulfill({ json: {
+      total: 2,
+      groups: [
+        { key: 'rhaiis', label: 'RHAII', epics: [epic('RHAI-2450', 'Release rhaiis 3.6.0-ea.2 (prod)', ['release-automation'], [
+          {
+            key: 'RHAI-2452', summary: 'Send a release announcement email',
+            status: { name: 'To Do', category: 'new' },
+            labels: [], updated: '2026-10-15T10:00:00Z',
+          },
+          {
+            key: 'RHAI-2453', summary: 'Release rhaiis 3.6.0-ea.2 (prod)',
+            status: { name: 'Triggered', category: 'indeterminate' },
+            labels: ['triggered'], updated: '2026-10-15T10:00:00Z',
+          },
+        ])] },
+        { key: 'rhel-ai', label: 'RHEL AI', epics: [epic('RHAI-2460', 'Release rhelai 3.5.2 GA', ['release-automation'])] },
+      ],
+    } }))
+    await page.route('**/api/modules/product-builds/release-status/links', route => route.fulfill({ json: { links: {
+      'RHAI-2450': { merge_requests: [mr], pipeline_runs: [run] },
+      'RHAI-2452': { merge_requests: [], pipeline_run: null },
+      'RHAI-2453': { merge_requests: [mr], pipeline_run: run },
+    } } }))
+
+    await page.goto('/#/product-builds/release-status');
+    await page.waitForLoadState('networkidle');
+    await page.waitForTimeout(DEFAULT_PAGE_WAIT_TIME);
+
+    await expect(page.locator('[data-tree-root="RHAI-2450"]')).toBeVisible();
+    await expect(page.locator('[data-tree-root="RHAI-2460"]')).toBeVisible();
+    await expect(page.locator('[data-tree-child="RHAI-2453"] [data-mr-link="796"]')).toHaveAttribute(
+      'href', 'https://gitlab.com/redhat/rhel-ai/ci-cd/aipcc-product-management-configs/-/merge_requests/796');
+    await expect(page.locator('[data-tree-child="RHAI-2453"] [data-pipelinerun-link="create-release-mr-run-abc"]')).toHaveAttribute('href', run.url);
+
+    const renderedCards = page.locator('[data-tree-branch] [data-tree-child]');
+    await expect(await renderedCards.evaluateAll(nodes => nodes.map(node => node.getAttribute('data-tree-child'))))
+      .toEqual(['RHAI-2453', 'RHAI-2452']);
+    await expect(page.locator('[data-tree-child="RHAI-2453"]')).toHaveAttribute('data-release-card', 'true');
+    await expect(page.locator('[data-tree-child="RHAI-2452"]')).toHaveAttribute('data-release-card', 'false');
+
+    await page.locator('[data-filter-product="rhel-ai"]').click();
+    await expect(page.locator('[data-tree-root="RHAI-2450"]')).toBeHidden();
+    await expect(page.locator('[data-tree-root="RHAI-2460"]')).toBeVisible();
+
+    await page.locator('[data-filter-product="rhaiis"]').click();
+    await expect(page.locator('[data-tree-root="RHAI-2450"]')).toBeVisible();
+    await expect(page.locator('[data-tree-root="RHAI-2460"]')).toBeVisible();
+
+    await page.locator('[data-filter-product="rhaiis"]').click();
+    await page.locator('[data-filter-status="released"]').click();
+    await expect(page.getByText('No releases match the current filters.')).toBeVisible();
+
+    const appErrors = page.errors.filter(e => !/status of (429|404|503)/.test(e.message));
+    expect(appErrors).toHaveLength(0);
+  });
+
   test('should submit config-family-qualified release readiness components', async ({ page }) => {
     const submissions = []
     await page.route('**/api/modules/product-builds/release-status', route => route.fulfill({ json: { total: 0, groups: [] } }))
