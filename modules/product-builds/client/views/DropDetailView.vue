@@ -54,7 +54,7 @@ const acceleratorWarning = computed(() => {
   return [...accels].join(', ')
 })
 
-const NO_WHEELS_PRODUCTS = new Set(['rhel-ai', 'builder-images'])
+const NO_WHEELS_PRODUCTS = new Set(['rhel-ai', 'builder-images', 'openshell'])
 
 async function fetchWheelsForArtifacts() {
   if (NO_WHEELS_PRODUCTS.has(productKey.value)) return
