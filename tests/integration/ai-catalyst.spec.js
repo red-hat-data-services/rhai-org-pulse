@@ -11,6 +11,9 @@ const { setupErrorTracking, logCapturedErrors, pageHasContent, pageLoadComplete,
  * - Detail view navigates and renders entry content
  * - API endpoints return expected data
  *
+ * The feed-sync suite owns its disposable backend and local feed stub in
+ * ai-catalyst-feed-sync.spec.js.
+ *
  * Tag: @ai-catalyst
  * Usage: npx playwright test --grep @ai-catalyst
  */

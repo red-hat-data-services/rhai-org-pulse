@@ -23,20 +23,35 @@
     "entry": "./server/index.js"
   },
   "secrets": {
-    "platform": ["google"],
+    "platform": [],
     "module": [
       {
-        "key": "POC_EXPLORER_SHEET_ID",
-        "description": "Google Sheets spreadsheet ID for POC Explorer board data",
+        "key": "POC_EXPLORER_FEED_URL",
+        "description": "POC Explorer board/run feed base URL (defaults to https://pocexplorer.redhataicatalyst.com)",
+        "required": false
+      },
+      {
+        "key": "POC_EXPLORER_SHOWCASE_FEED_URL",
+        "description": "Base URL for the POC Explorer showcase feed (defaults to https://showcase.redhataicatalyst.com)",
+        "required": false
+      },
+      {
+        "key": "POC_EXPLORER_ALLOW_LOOPBACK",
+        "description": "Non-secret flag: set to 1 to allow loopback feed URLs for local development and integration stubs; fail-closed by default",
+        "required": false
+      },
+      {
+        "key": "POC_EXPLORER_FEED_TOKEN",
+        "description": "Bearer token for the POC Explorer feed endpoints, minted on the POC Explorer VM (FEED_TOKEN in .env) by the platform operators",
         "required": true
       }
     ]
   },
   "export": {
     "files": [
-      { "path": "ai-catalyst/boards/*.json", "notes": "Parsed monthly board data from Google Sheets" },
+      { "path": "ai-catalyst/boards/*.json", "notes": "Parsed monthly board data from the POC Explorer feed" },
       { "path": "ai-catalyst/index.json", "notes": "Board index with available months" },
-      { "path": "ai-catalyst/showcase/showcase-data.json", "notes": "Cached showcase entries and pillars from Google Sheet sync" }
+      { "path": "ai-catalyst/showcase/showcase-data.json", "notes": "Cached showcase entries and pillars from the POC Explorer feed" }
     ]
   }
 }

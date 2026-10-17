@@ -7,6 +7,12 @@ const jsonBody = express.json({ limit: '2mb' })
 const VALID_RESULTS = new Set(['SUCCESS', 'UNSTABLE', 'FAILURE', 'ABORTED'])
 const VALID_CAUSES = new Set(['timer', 'upstream', 'user', 'rebuild', 'pull_request', 'scm', 'unknown'])
 const VALID_STREAMS = new Set(['odh-nightly', 'rhoai-nightly', 'release'])
+const TEST_CASE_FILE_PATH_MAX_LENGTH = 512
+const TEST_CASE_AREA_MAX_LENGTH = 80
+const TEST_CASE_TAGS_MAX_ITEMS = 20
+const TEST_CASE_TAG_MAX_LENGTH = 80
+const FAILED_CASES_MAX_ITEMS = 50
+const PASSED_CASES_MAX_ITEMS = 500
 
 function isIsoDate(value) {
   return typeof value === 'string' && Number.isFinite(Date.parse(value))
@@ -68,10 +74,8 @@ function validatePayload(body) {
   })
   if (body.stages !== undefined && !Array.isArray(body.stages)) errors.push('stages must be an array')
   if (body.tests != null && (typeof body.tests !== 'object' || Array.isArray(body.tests))) errors.push('tests must be an object')
-  if (body.tests?.failedCases !== undefined && !Array.isArray(body.tests.failedCases)) errors.push('tests.failedCases must be an array')
-  if (Array.isArray(body.tests?.failedCases)) body.tests.failedCases.forEach((test, index) => {
-    if (!test || typeof test !== 'object' || Array.isArray(test)) errors.push(`tests.failedCases[${index}] must be an object`)
-  })
+  validateTestCaseList(body.tests, 'failedCases', errors)
+  validateTestCaseList(body.tests, 'passedCases', errors)
   if (body.tests && body.tests.counts) {
     for (const key of ['passed', 'failed', 'skipped']) {
       const value = body.tests.counts[key]
@@ -170,26 +174,72 @@ function normalizedRun(body) {
         failed: body.tests.counts.failed ?? null,
         skipped: body.tests.counts.skipped ?? null
       } : null,
-      failedCases: Array.isArray(body.tests.failedCases) ? body.tests.failedCases.slice(0, 50).map(test => {
-        const ownership = test.ownership && typeof test.ownership === 'object' ? test.ownership : null
-        return {
-          suite: String(test.suite || ''),
-          name: String(test.name || ''),
-          status: String(test.status || 'FAILED'),
-          component: typeof test.component === 'string' ? test.component.slice(0, 160) : null,
-          ownership: ownership ? {
-            teamId: typeof ownership.teamId === 'string' ? ownership.teamId.slice(0, 120) : null,
-            teamName: typeof ownership.teamName === 'string' ? ownership.teamName.slice(0, 160) : null,
-            source: typeof ownership.source === 'string' ? ownership.source.slice(0, 120) : null,
-            confidence: typeof ownership.confidence === 'string' ? ownership.confidence.slice(0, 40) : null
-          } : null
-        }
-      }) : [],
-      failedCasesTruncated: Array.isArray(body.tests.failedCases) && body.tests.failedCases.length > 50
-    } : { collectionState: 'unavailable', suiteCount: null, counts: null, failedCases: [] },
+      failedCases: normalizeTestCaseList(body.tests.failedCases, FAILED_CASES_MAX_ITEMS, 'FAILED'),
+      failedCasesTruncated: Array.isArray(body.tests.failedCases) && body.tests.failedCases.length > FAILED_CASES_MAX_ITEMS,
+      passedCases: normalizeTestCaseList(body.tests.passedCases, PASSED_CASES_MAX_ITEMS, 'PASSED'),
+      passedCasesTruncated: Array.isArray(body.tests.passedCases) && body.tests.passedCases.length > PASSED_CASES_MAX_ITEMS
+    } : {
+      collectionState: 'unavailable',
+      suiteCount: null,
+      counts: null,
+      failedCases: [],
+      failedCasesTruncated: false,
+      passedCases: [],
+      passedCasesTruncated: false
+    },
     agentAnalysis: null,
     receivedAt: new Date().toISOString()
   }
+}
+
+function validateTestCaseList(tests, field, errors) {
+  if (tests?.[field] !== undefined && !Array.isArray(tests[field])) errors.push(`tests.${field} must be an array`)
+  if (!Array.isArray(tests?.[field])) return
+  tests[field].forEach((test, index) => {
+    if (!test || typeof test !== 'object' || Array.isArray(test)) {
+      errors.push(`tests.${field}[${index}] must be an object`)
+      return
+    }
+    if (test.filePath != null && (typeof test.filePath !== 'string' || test.filePath.length > TEST_CASE_FILE_PATH_MAX_LENGTH)) errors.push(`tests.${field}[${index}].filePath must be a string or null (up to ${TEST_CASE_FILE_PATH_MAX_LENGTH} characters)`)
+    if (test.area != null && (typeof test.area !== 'string' || test.area.length > TEST_CASE_AREA_MAX_LENGTH)) errors.push(`tests.${field}[${index}].area must be a string or null (up to ${TEST_CASE_AREA_MAX_LENGTH} characters)`)
+    if (test.tags != null && (!Array.isArray(test.tags) || test.tags.length > TEST_CASE_TAGS_MAX_ITEMS)) errors.push(`tests.${field}[${index}].tags must be an array or null with at most ${TEST_CASE_TAGS_MAX_ITEMS} tags`)
+    else if (Array.isArray(test.tags)) test.tags.forEach((tag, tagIndex) => {
+      if (typeof tag !== 'string' || !tag.trim() || tag.length > TEST_CASE_TAG_MAX_LENGTH) errors.push(`tests.${field}[${index}].tags[${tagIndex}] must be a non-empty string of at most ${TEST_CASE_TAG_MAX_LENGTH} characters`)
+    })
+  })
+}
+
+function normalizeTestCaseList(testCases, maxItems, defaultStatus) {
+  if (!Array.isArray(testCases)) return []
+  return testCases.slice(0, maxItems).map(test => normalizeTestCase(test, defaultStatus))
+}
+
+function normalizeTestCase(test, defaultStatus) {
+  const ownership = test.ownership && typeof test.ownership === 'object' ? test.ownership : null
+  return {
+    suite: String(test.suite || ''),
+    name: String(test.name || ''),
+    status: String(test.status || defaultStatus),
+    filePath: typeof test.filePath === 'string' && test.filePath.trim()
+      ? test.filePath.trim().slice(0, TEST_CASE_FILE_PATH_MAX_LENGTH)
+      : null,
+    area: typeof test.area === 'string' && test.area.trim()
+      ? test.area.trim().slice(0, TEST_CASE_AREA_MAX_LENGTH)
+      : null,
+    tags: normalizeTestCaseTags(test.tags),
+    component: typeof test.component === 'string' ? test.component.slice(0, 160) : null,
+    ownership: ownership ? {
+      teamId: typeof ownership.teamId === 'string' ? ownership.teamId.slice(0, 120) : null,
+      teamName: typeof ownership.teamName === 'string' ? ownership.teamName.slice(0, 160) : null,
+      source: typeof ownership.source === 'string' ? ownership.source.slice(0, 120) : null,
+      confidence: typeof ownership.confidence === 'string' ? ownership.confidence.slice(0, 40) : null
+    } : null
+  }
+}
+
+function normalizeTestCaseTags(tags) {
+  if (!Array.isArray(tags)) return null
+  return [...new Set(tags.map(tag => tag.trim()).filter(Boolean))].slice(0, TEST_CASE_TAGS_MAX_ITEMS)
 }
 
 module.exports = function registerBuildHealthRoutes(router, context) {
@@ -351,6 +401,21 @@ module.exports = function registerBuildHealthRoutes(router, context) {
    *                         suite: { type: string }
    *                         name: { type: string }
    *                         status: { type: string }
+   *                         filePath: { type: string, nullable: true, maxLength: 512 }
+   *                         area: { type: string, nullable: true, maxLength: 80 }
+   *                         tags: { type: array, nullable: true, maxItems: 20, items: { type: string, maxLength: 80 } }
+   *                         component: { type: string, nullable: true }
+   *                   passedCases:
+   *                     type: array
+   *                     items:
+   *                       type: object
+   *                       properties:
+   *                         suite: { type: string }
+   *                         name: { type: string }
+   *                         status: { type: string }
+   *                         filePath: { type: string, nullable: true, maxLength: 512 }
+   *                         area: { type: string, nullable: true, maxLength: 80 }
+   *                         tags: { type: array, nullable: true, maxItems: 20, items: { type: string, maxLength: 80 } }
    *                         component: { type: string, nullable: true }
    *     responses:
    *       200:

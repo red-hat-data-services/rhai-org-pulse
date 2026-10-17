@@ -196,6 +196,52 @@ test.describe('Workflow Validation module @workflow-validation', () => {
     await expect(page.getByLabel('OpenSearch URL')).toHaveCount(0)
   })
 
+  test('shows compact no-bug indicators with accessible explanations and preserves Jira links', async ({ page }) => {
+    const bugs = [
+      ['PRODUCT_BUG', 'FILED'], ['PRODUCT_BUG', 'EXISTING'],
+      ['UX_DEFECT', 'FILED'], ['UX_DEFECT', 'EXISTING'],
+    ].map(([category, action], index) => ({
+      id: `bug-${index}`, category, action,
+      bug_key: `RHOAIENG-${123 + index}`,
+      jira_url: `https://redhat.atlassian.net/browse/RHOAIENG-${123 + index}`,
+    }))
+    await page.route('**/api/modules/workflow-validation/charts?**', (route) => route.fulfill({
+      json: {
+        overTime: [], byVersion: [], byWorkflow: [], bugsByCategory: [], bugsByAction: [],
+        newProductBugs: [], knownProductBugs: [],
+        tests: [
+          { id: 'pass', workflow_label: 'Passing test without a bug', verdict: 'PASS', productBugs: [] },
+          { id: 'environment', workflow_label: 'Environmental failure', verdict: 'ERROR', productBugs: [] },
+          { id: 'new-bug', workflow_label: 'Test with a new bug', verdict: 'FAIL', productBugs: [bugs[0]] },
+          { id: 'known-bug', workflow_label: 'Test with a known bug', verdict: 'FAIL', productBugs: [bugs[1]] },
+          { id: 'new-ux', workflow_label: 'Test with a new UX defect', verdict: 'FAIL', productBugs: [bugs[2]] },
+          { id: 'known-ux', workflow_label: 'Test with a known UX defect', verdict: 'FAIL', productBugs: [bugs[3]] },
+        ],
+      },
+    }))
+    await page.goto('/#/workflow-validation/overview')
+
+    const passed = page.getByRole('row').filter({ hasText: 'Passing test without a bug' })
+    const environment = page.getByRole('row').filter({ hasText: 'Environmental failure' })
+    const passedIndicator = passed.getByRole('img', { name: 'No product or UX issue recorded.' })
+    const environmentIndicator = environment.getByRole('img', { name: 'No product or UX issue recorded.' })
+    await expect(passedIndicator).toHaveText('—')
+    await expect(passedIndicator).toHaveAttribute('title', 'No product or UX issue recorded.')
+    await expect(environmentIndicator).toHaveText('—')
+    await expect(environmentIndicator).toHaveAccessibleDescription('The test failed or was terminated due to a problem in the test execution environment. No product bug or UX defect was observed.')
+    await passedIndicator.focus()
+    await page.keyboard.press('Tab')
+    await expect(environmentIndicator).toBeFocused()
+    await expect(page.getByRole('main')).not.toContainText('No product or UX issues observed in the filtered executions.')
+    await expect(page.getByRole('main')).not.toContainText('Environmental failure detected. No product or UX issue detected.')
+    await expect(page.getByText('New UX defect opened.', { exact: false })).toBeVisible()
+    await expect(page.getByText('Pre-existing UX defect detected.', { exact: false })).toBeVisible()
+
+    for (const bug of bugs) {
+      await expect(page.getByRole('link', { name: bug.bug_key, exact: true })).toHaveAttribute('href', bug.jira_url)
+    }
+  })
+
   test('toggles hidden costs with iddqd across views', async ({ page }) => {
     await page.goto('/#/workflow-validation/overview')
     await expect(page.getByRole('main').getByRole('heading', { name: 'Workflow Validation' })).toBeVisible()

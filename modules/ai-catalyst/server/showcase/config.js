@@ -1,7 +1,7 @@
 const CONFIG_KEY = 'ai-catalyst/showcase/config.json';
 
 const DEFAULT_CONFIG = {
-  sheetId: ''
+  feedUrl: ''
 };
 
 async function getConfig(readFromStorage) {
@@ -12,11 +12,11 @@ async function getConfig(readFromStorage) {
 async function saveConfig(writeToStorage, config) {
   const merged = { ...DEFAULT_CONFIG };
 
-  if (config.sheetId !== undefined) {
-    if (typeof config.sheetId !== 'string') {
-      throw new Error('sheetId must be a string');
+  if (config.feedUrl !== undefined) {
+    if (typeof config.feedUrl !== 'string') {
+      throw new Error('feedUrl must be a string');
     }
-    merged.sheetId = config.sheetId.trim();
+    merged.feedUrl = config.feedUrl.trim();
   }
 
   await writeToStorage(CONFIG_KEY, merged);

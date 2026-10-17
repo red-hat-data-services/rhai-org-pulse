@@ -15,6 +15,8 @@ const GITLAB_HOST_DEFAULT = 'https://gitlab.com';
 const pmcSnapshotCache = new Map();
 const triggerOptionsCache = new Map();
 const TRIGGER_OPTIONS_CACHE_TTL = 30_000;
+const VERSION_TAG_PATTERN = /^(?:\d+\.\d+\.\d+)(?:-(?:ea|fast)\.\d+)?$/;
+const TEMPLATE_TAG_SUFFIX_PATTERN = /-\{\{[^}]*\}\}$/;
 const INSTRUCTIONS = 'Component readiness is tracked through child Tasks linked to this epic. Use the component readiness skill to create a Task for a batch of components that are ready to release. Each Task carries image pullspecs and is linked to this epic via Epic Link.';
 
 function configPaths(product, branch) {
@@ -78,6 +80,13 @@ function extractDefinition(definition, configFamily, branch) {
   };
 }
 
+function configuredVersionFromTag(tag) {
+  const literal = String(tag);
+  if (VERSION_TAG_PATTERN.test(literal)) return literal;
+  const stripped = literal.replace(TEMPLATE_TAG_SUFFIX_PATTERN, '');
+  return VERSION_TAG_PATTERN.test(stripped) ? stripped : null;
+}
+
 function parseBranch(files, product, branch) {
   const paths = configPaths(product, branch);
   const availablePaths = product === 'rhelai'
@@ -126,7 +135,7 @@ function parseBranch(files, product, branch) {
     release_plans: [...new Set(extracted.flatMap(item => item.releasePlans))],
     tags: [...new Set(extracted.flatMap(item => item.tags))],
     configured_tags: [...new Set(extracted.flatMap(item => item.tags))],
-    configured_versions: [...new Set(extracted.flatMap(item => item.tags).filter(tag => /^(?:\d+\.\d+\.\d+)(?:-(?:ea|fast)\.\d+)?$/.test(String(tag))))],
+    configured_versions: [...new Set(extracted.flatMap(item => item.tags).map(configuredVersionFromTag).filter(Boolean))],
     inferred_release_type: inferReleaseTypeForProduct(product, branch),
   };
 }

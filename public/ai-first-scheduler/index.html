@@ -2837,7 +2837,7 @@ document.addEventListener('click',function(e){
 
 // Receive logged-in user from Org Pulse parent iframe via postMessage.
 // Org Pulse sends { type: 'pm-user', actor: 'wcaban' } or { type: 'eng-user', actor: 'dipika' } after the iframe loads.
-window.addEventListener('message', function(e){
+window.addEventListener('message', async function(e){
   if(!e.data) return;
   if(e.origin!==window.location.origin) return;
   const actor=(e.data.actor||'').split('@')[0].toLowerCase();

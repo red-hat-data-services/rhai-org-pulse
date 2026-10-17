@@ -79,6 +79,30 @@ Dynamic secrets: `GITLAB_*_TOKEN` — per-instance GitLab tokens configured via 
 | `FEATURE_TRAFFIC_GITLAB_TOKEN` | No | | GitLab PAT for CI artifact fetching |
 | `SMARTSHEET_API_TOKEN` | No | | SmartSheet API token for release discovery |
 
+### ai-catalyst
+
+| Env Var | Required | Description |
+|---------|----------|-------------|
+| `POC_EXPLORER_FEED_URL` | No | Base URL for the POC Explorer board/run feeds (defaults to `https://pocexplorer.redhataicatalyst.com`) |
+| `POC_EXPLORER_FEED_TOKEN` | Yes | Bearer token for all POC Explorer feed endpoints (minted by the POC Explorer operators) |
+| `POC_EXPLORER_SHOWCASE_FEED_URL` | No | Base URL for the POC Explorer showcase feed (defaults to `https://showcase.redhataicatalyst.com`) |
+
+Non-secret flag: `POC_EXPLORER_ALLOW_LOOPBACK=1` (plain environment variable for
+local development and integration stubs) permits loopback feed URLs; fail-closed
+by default.
+
+Feed-URL overrides saved in the module settings UI only sync when their origin
+is operator-approved (`POC_EXPLORER_FEED_URL` / `POC_EXPLORER_SHOWCASE_FEED_URL`
+or the documented defaults); any other origin fails closed.
+
+`POC_EXPLORER_FEED_TOKEN` must be provisioned into the cluster Secret and
+injected into the backend container by the environment's GitOps
+administrator (e.g. a `secretKeyRef`/`envFrom` entry alongside the existing
+`team-tracker-secrets` injections) — this PR deliberately adds no deployment
+overlay wiring for it, and creating the Secret key alone does not expose it
+to the backend. The two URL secrets keep their documented defaults and need
+no injection.
+
 ### ai-impact
 
 | Env Var | Required | Description |

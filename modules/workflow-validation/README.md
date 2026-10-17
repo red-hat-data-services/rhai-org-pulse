@@ -110,6 +110,8 @@ Important rules:
   (`FAIL`, when a Jira-linked `PRODUCT_BUG` or `UX_DEFECT` finding is linked) and environmental failures
   (`SKIP`, when an unsuccessful test has no product or UX issue finding). Raw task
   verdicts remain unchanged.
+- No-issue table cells show an em dash. Keyboard focus and hover preserve the
+  explanation, including environmental failures and the absence of product or UX issues.
 - Jira defaults to one exact test-suite run and can switch explicitly to all
   product bugs and UX defects for a RHOAI release, a date range, or all recorded time.
 - Trends defaults to Release Gate when it is available and the URL does not

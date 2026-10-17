@@ -49,7 +49,17 @@ build number. Retrying either call does not create a second run.
     "collectionState": "complete",
     "suiteCount": 1,
     "counts": { "passed": 52, "failed": 0, "skipped": 0 },
-    "failedCases": []
+    "failedCases": [],
+    "passedCases": [
+      {
+        "suite": "A user can view subscriptions and manage API keys on the Keys and Subscriptions page",
+        "name": "Verify subscriptions tab and API keys",
+        "status": "PASSED",
+        "filePath": "packages/cypress/cypress/tests/e2e/maas/testApiKeys.cy.ts",
+        "area": "maas",
+        "tags": ["@Smoke", "@Dashboard", "@MaaS"]
+      }
+    ]
   }
 }
 ```
@@ -62,6 +72,18 @@ health. The publisher can omit `trigger`, `stages`, and `tests` when unavailable
 If a build fails before tests run, send its Jenkins result and omit `tests` or
 send `tests.collectionState: "unavailable"` with null counts. Never replace
 missing counts with zero.
+
+Each entry in `tests.failedCases` and `tests.passedCases` may include source
+metadata: `filePath` is the repository-relative Cypress spec path (at most 512
+characters), `area` is the application area derived from the Cypress directory
+or a stable tag (at most 80 characters), and `tags` preserves the Cypress tags
+(at most 20 tags of 80 characters each). All three fields are optional and may
+be `null`.
+
+Passed-case details are optional. The API stores at most 500 passed cases per
+run and sets `passedCasesTruncated` when the publisher sends more. The
+`counts.passed` value remains authoritative. Reposting a run replaces both the
+failed-case and passed-case lists rather than appending to them.
 
 The response contains `status` (`created` or `updated`), `runKey`, and the
 normalized version. Invalid data returns `400`; missing or invalid API token

@@ -18,10 +18,12 @@
     </template>
     <span
       v-else
+      role="img"
       tabindex="0"
+      :aria-label="neutralTooltip"
       :title="emptyTooltip"
       class="inline-block text-gray-500 dark:text-gray-400 border-b border-dotted border-gray-400 cursor-help"
-    >{{ emptyMessage }}</span>
+    >{{ neutralMessage }}</span>
   </div>
 </template>
 
@@ -33,15 +35,12 @@ import { isVisibleProductBug } from '../utils/product-bugs'
 const props = defineProps({
   findings: { type: Array, default: () => [] },
   verdict: { type: String, default: '' },
-  neutralMessage: { type: String, default: 'No product or UX issues observed in the filtered executions.' },
-  neutralTooltip: { type: String, default: 'No product bug or UX defect was observed for this test in the selected version and date range.' }
+  neutralMessage: { type: String, default: '—' },
+  neutralTooltip: { type: String, default: 'No product or UX issue recorded.' }
 })
 
 const productBugs = computed(() => props.findings.filter(isVisibleProductBug))
 const unsuccessful = computed(() => ['FAIL', 'ERROR'].includes(String(props.verdict).toUpperCase()))
-const emptyMessage = computed(() => unsuccessful.value
-  ? 'Environmental failure detected. No product or UX issue detected.'
-  : props.neutralMessage)
 const emptyTooltip = computed(() => unsuccessful.value
   ? 'The test failed or was terminated due to a problem in the test execution environment. No product bug or UX defect was observed.'
   : props.neutralTooltip)
