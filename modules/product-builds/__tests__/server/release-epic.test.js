@@ -370,6 +370,9 @@ describe('release epic workflow', () => {
     expect(() => workflow.validateStagePullspec(component, 'quay.io/redhat-user-workloads/rhaiis/cuda-ubi9:3.6.0-2026092401', '3.6.0')).toThrow(/stage repository/)
     expect(() => workflow.validateStagePullspec(component, 'quay.io/aipcc/rhaiis/rocm-ubi9:3.6.0-2026092401', '3.6.0')).toThrow(/stage repository/)
     expect(() => workflow.validateStagePullspec(component, 'quay.io/aipcc/rhaiis/cuda-ubi9:3.6.0', '3.6.0')).toThrow(/timestamp/)
+    expect(() => workflow.validateStagePullspec(component, 'quay.io/aipcc/rhaiis/cuda-ubi9:3.6.0-rc1', '3.6.0')).toThrow(/timestamp/)
+    expect(() => workflow.validateStagePullspec(component, 'quay.io/aipcc/rhaiis/cuda-ubi9:3.6.0-rc-1', '3.6.0')).toThrow(/timestamp/)
+    expect(() => workflow.validateStagePullspec(component, 'quay.io/aipcc/rhaiis/cuda-ubi9:3.6.0-1772160593', '3.6.0')).not.toThrow()
   })
 
   it('builds single-value anchors without pullspecs', () => {
