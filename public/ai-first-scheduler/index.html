@@ -3899,6 +3899,27 @@ function clearBRFilter(){
   run();
 }
 
+function viewOutcomeFeatures(outcomeKey){
+  // Set outcome filter to show only features for this outcome
+  const sel = document.getElementById('f-outcome');
+  if (!sel) return;
+
+  // Find the outcome name in the dropdown
+  const outcomeOption = Array.from(sel.options).find(opt => opt.value.startsWith(outcomeKey));
+  if (outcomeOption) {
+    sel.value = outcomeOption.value;
+  }
+
+  // Switch to Feature Scheduling tab
+  switchTab('features');
+
+  // Run filter
+  run();
+
+  // Scroll to table
+  setTimeout(() => document.getElementById('pm-tbl-wrap')?.scrollIntoView({behavior:'smooth'}), 120);
+}
+
 function toggleBRDetail(idx){
   const detail=document.getElementById('br-detail-'+idx);
   const btn=document.getElementById('br-btn-'+idx);
@@ -4072,7 +4093,7 @@ function renderExecView(){
         return `<tr style="border-bottom:1px solid #f0f0f0;cursor:pointer" data-outcome="${outcomeName}" onmouseover="this.style.background='#f8fafc'" onmouseout="this.style.background=''">
           <td style="padding:6px 10px;font-size:13px;font-weight:700;color:${statusColor}">${statusIcon}</td>
           <td style="padding:6px 10px;font-size:10px;font-weight:700;color:#888">—</td>
-          <td style="padding:6px 10px;font-size:11px;font-weight:600">${outcome.key} ${outcome.title}<span style="font-size:9px;color:#1d4ed8;margin-left:6px;cursor:pointer;font-weight:600" onclick="event.stopPropagation()">→ view features</span></td>
+          <td style="padding:6px 10px;font-size:11px;font-weight:600">${outcome.key} ${outcome.title}<span style="font-size:9px;color:#1d4ed8;margin-left:6px;cursor:pointer;font-weight:600" onclick="event.stopPropagation(); viewOutcomeFeatures('${outcome.key}')">→ view features</span></td>
           <td style="padding:6px 10px;font-size:11px;text-align:center">${outcome.inPlan}/${outcome.total}</td>
           <td style="padding:6px 10px;min-width:80px">
             <div style="font-size:11px;font-weight:700;color:${pctColor};text-align:center;margin-bottom:3px">${outcome.percentComplete}%</div>
