@@ -1748,6 +1748,168 @@ test.describe('Releases Blockers @releases', () => {
     expect(page.errors).toHaveLength(0);
   });
 
+  test('Release Blockers table renders the requested Jira columns', async ({ page }) => {
+    await page.route('**/api/modules/releases/delivery/conforma/releases', route => route.fulfill({
+      json: { releases: [], fetchedAt: null, minDate: null, count: 0 }
+    }));
+    await page.route('**/api/modules/releases/delivery/tfa-risk/3.5', route => route.fulfill({
+      json: { overall: { signoffDone: 0, signoffTotal: 0, signoffPct: 0, failedOpen: 0 }, components: [] }
+    }));
+    await page.route('**/api/modules/releases/pm-hub/pillar-config', route => route.fulfill({
+      json: { pillars: [] }
+    }));
+    await page.route('**/api/modules/releases/delivery/blockers/3.5*', route => route.fulfill({
+      json: {
+        releaseNumber: '3.5',
+        fetchedAt: '2026-10-08T00:00:00.000Z',
+        summary: { proposed: 1, approved: 0, rejected: 0, noStatus: 0, total: 1 },
+        timing: { proposedBeforeCodeFreeze: 1, proposedAfterCodeFreeze: 0 },
+        aging: {
+          proposalToDecision: { avg: null, median: null, max: null, count: 0 },
+          approvalToResolution: { avg: null, median: null, max: null, count: 0 },
+          byStatus: {
+            proposed: { avg: 2, median: 2, max: 2, count: 1 },
+            approved: { avg: null, median: null, max: null, count: 0 },
+            rejected: { avg: null, median: null, max: null, count: 0 }
+          }
+        },
+        blockers: [{
+          key: 'RHOAIENG-123',
+          summary: 'Example release blocker',
+          priority: 'Blocker',
+          issueType: 'Bug',
+          status: 'In Progress',
+          releaseBlockerStatus: 'Proposed',
+          assignee: 'Assignee Name',
+          reporter: 'Reporter Name',
+          fixVersions: ['3.5 GA RHOAI RELEASE'],
+          affectedVersions: ['rhoai-3.5'],
+          components: ['AI Pipelines'],
+          team: 'AI Pipelines',
+          daysInCurrentState: 2,
+          proposedBeforeCodeFreeze: true,
+          link: 'https://jira.example.com/browse/RHOAIENG-123'
+        }],
+        criticalMonitoring: [],
+        awarenessTrends: [
+          {
+            key: 'RHOAIENG-APPROVED',
+            summary: 'Approved release blocker',
+            priority: 'Blocker',
+            issueType: 'Bug',
+            status: 'New',
+            releaseBlockerStatus: 'Approved',
+            assignee: 'Approved Owner',
+            reporter: 'Reporter Name',
+            fixVersions: ['3.5 GA RHOAI RELEASE'],
+            affectedVersions: ['rhoai-3.5'],
+            components: ['TrustyAI'],
+            team: 'Security',
+            created: '2026-10-08T00:00:00.000Z',
+            updated: '2026-10-08T00:00:00.000Z',
+            latestProposedDate: '2026-10-02T00:00:00.000Z',
+            link: 'https://jira.example.com/browse/RHOAIENG-APPROVED'
+          },
+          {
+            key: 'RHOAIENG-PROPOSED-OLD',
+            summary: 'Older proposed blocker',
+            priority: 'Blocker',
+            issueType: 'Bug',
+            status: 'In Progress',
+            releaseBlockerStatus: 'Proposed',
+            assignee: 'Platform Owner',
+            reporter: 'Reporter Name',
+            fixVersions: ['3.5 EA2 RHOAI RELEASE'],
+            affectedVersions: ['rhoai-3.5'],
+            components: ['Dashboard'],
+            team: 'Platform',
+            created: '2026-10-01T00:00:00.000Z',
+            updated: '2026-10-03T00:00:00.000Z',
+            latestProposedDate: '2026-10-01T00:00:00.000Z',
+            link: 'https://jira.example.com/browse/RHOAIENG-PROPOSED-OLD'
+          },
+          {
+            key: 'RHOAIENG-PROPOSED-NEW',
+            summary: 'Newest proposed blocker',
+            priority: 'Blocker',
+            issueType: 'Bug',
+            status: 'Review',
+            releaseBlockerStatus: 'Proposed',
+            assignee: 'Gateway Owner',
+            reporter: 'Reporter Name',
+            fixVersions: ['3.5 GA RHOAI RELEASE'],
+            affectedVersions: ['rhoai-3.5'],
+            components: ['Model Serving'],
+            team: 'Gateway',
+            created: '2026-10-06T00:00:00.000Z',
+            updated: '2026-10-07T00:00:00.000Z',
+            latestProposedDate: '2026-10-07T00:00:00.000Z',
+            link: 'https://jira.example.com/browse/RHOAIENG-PROPOSED-NEW'
+          }
+        ]
+      }
+    }));
+
+    await page.goto('/#/releases/deliver?tab=release-blockers&version=3.5');
+    await page.waitForLoadState('networkidle');
+    await page.waitForTimeout(DEFAULT_PAGE_WAIT_TIME);
+
+    const blockersHeading = page.getByRole('heading', { name: 'Release Blockers', exact: true });
+    const blockersTable = blockersHeading.locator('xpath=../../..').locator('table');
+    await expect(blockersTable).toBeVisible();
+
+    const headers = await blockersTable.locator('thead th').evaluateAll(ths =>
+      ths.map(th => th.textContent.replace(/[▲▼⇅]/g, '').trim())
+    );
+    expect(headers).toEqual([
+      'Jira Key', 'Summary', 'Priority', 'Issue type', 'Status',
+      'Release blocker', 'Assignee', 'Reporter', 'Fix version',
+      'Affects version', 'Component', 'Team'
+    ]);
+    const rowText = await blockersTable.locator('tbody tr').textContent();
+    for (const value of [
+      'RHOAIENG-123', 'Example release blocker', 'Blocker', 'Bug',
+      'In Progress', 'Proposed', 'Assignee Name', 'Reporter Name',
+      '3.5 GA RHOAI RELEASE', 'rhoai-3.5', 'AI Pipelines'
+    ]) {
+      expect(rowText).toContain(value);
+    }
+
+    const awarenessSection = page.getByTestId('blockers-awareness-trends');
+    await expect(awarenessSection.getByRole('heading', { name: 'Blockers Awareness and Trends' })).toBeVisible();
+    const awarenessTable = awarenessSection.locator('table');
+    const awarenessHeaders = await awarenessTable.locator('thead th').evaluateAll(ths =>
+      ths.map(th => th.textContent.replace(/[▲▼⇅]/g, '').trim())
+    );
+    expect(awarenessHeaders).toEqual(headers);
+
+    const defaultOrder = await awarenessTable.locator('tbody tr td:first-child').allTextContents();
+    expect(defaultOrder).toEqual([
+      'RHOAIENG-PROPOSED-NEW',
+      'RHOAIENG-PROPOSED-OLD',
+      'RHOAIENG-APPROVED'
+    ]);
+
+    await awarenessSection.getByLabel('Release Blocker').selectOption('Approved');
+    await expect(awarenessTable.locator('tbody tr')).toHaveCount(1);
+    await expect(awarenessTable.locator('tbody tr')).toContainText('RHOAIENG-APPROVED');
+    await awarenessSection.getByRole('button', { name: 'Clear' }).click();
+
+    await awarenessSection.getByLabel('Fix Version').selectOption('3.5 EA2 RHOAI RELEASE');
+    await expect(awarenessTable.locator('tbody tr')).toHaveCount(1);
+    await awarenessSection.getByRole('button', { name: 'Clear' }).click();
+    await awarenessSection.getByLabel('Status').selectOption('Review');
+    await expect(awarenessTable.locator('tbody tr')).toHaveCount(1);
+    await awarenessSection.getByRole('button', { name: 'Clear' }).click();
+    await awarenessSection.getByLabel('Team').selectOption('Gateway');
+    await expect(awarenessTable.locator('tbody tr')).toHaveCount(1);
+    await awarenessSection.getByRole('button', { name: 'Clear' }).click();
+    await awarenessSection.getByLabel('Component').selectOption('TrustyAI');
+    await expect(awarenessTable.locator('tbody tr')).toHaveCount(1);
+
+    expect(page.errors).toHaveLength(0);
+  });
+
   test('blockers API returns expected response shape', async ({ request }) => {
     var res = await request.get('/api/modules/releases/delivery/blockers/3.5');
     expect(res.ok()).toBe(true);
@@ -1777,6 +1939,8 @@ test.describe('Releases Blockers @releases', () => {
     expect(Array.isArray(body.blockers)).toBe(true);
     expect(body).toHaveProperty('criticalMonitoring');
     expect(Array.isArray(body.criticalMonitoring)).toBe(true);
+    expect(body).toHaveProperty('awarenessTrends');
+    expect(Array.isArray(body.awarenessTrends)).toBe(true);
   });
 
   test('blockers API rejects invalid release number', async ({ request }) => {

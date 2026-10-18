@@ -1124,6 +1124,30 @@ Admin-configurable settings for the Releases module delivery domain (formerly Re
 
 ---
 
+## Releases — Release Blockers Response (`fixtures/releases/delivery/blockers-{version}.json`)
+
+The `GET /api/modules/releases/delivery/blockers/{version}` response contains
+summary, timing, and aging statistics plus three issue collections:
+
+- `blockers`: open Blocker-priority issues in the release scope.
+- `criticalMonitoring`: open Critical or Blocker issues that are not approved blockers.
+- `awarenessTrends`: open Blocker-priority issues whose Release Blocker field
+  (`customfield_10847`) is not empty. The release scope matches Fix Version,
+  Affects Version, or Target Version (`customfield_10855`).
+
+Each `awarenessTrends` record includes `key`, `summary`, `link`, `priority`,
+`issueType`, `status`, `releaseBlockerStatus`, `assignee`, `reporter`,
+`fixVersions`, `affectedVersions`, `components`, `team`, `created`, `updated`,
+and `latestProposedDate`. Version and component values remain arrays because a
+Jira issue can contain multiple values. `latestProposedDate` is the most recent
+changelog transition into Proposed and is `null` when no such transition is
+available.
+
+Older fixtures and cached responses may omit `awarenessTrends`; clients treat
+the missing field as an empty collection.
+
+---
+
 ## Releases — Quality Versions (`data/releases/delivery/quality/versions.json`)
 
 All fix versions with release dates from tracked projects (RHOAIENG, AIPCC, RHAIENG, INFERENG).

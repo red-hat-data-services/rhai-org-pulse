@@ -6,11 +6,18 @@ const DEMO_MODE = process.env.DEMO_MODE === 'true'
 
 const BLOCKER_FIELD_ID = 'customfield_10847'
 const TARGET_VERSION_FIELD_ID = 'customfield_10855'
+const TEAM_FIELD_ID = 'customfield_10001'
+const RELEASE_BLOCKER_OPTION_LABELS = {
+  '16772': 'Approved',
+  '16773': 'Proposed',
+  '16774': 'Rejected'
+}
 
 const BLOCKER_FIELDS = [
-  'summary', 'status', 'priority', 'components', 'assignee',
+  'summary', 'status', 'priority', 'issuetype', 'components', 'assignee', 'reporter',
+  'fixVersions', 'versions', TEAM_FIELD_ID,
   'created', 'updated', 'resolutiondate',
-  BLOCKER_FIELD_ID, TARGET_VERSION_FIELD_ID, 'fixVersions', 'labels'
+  BLOCKER_FIELD_ID, TARGET_VERSION_FIELD_ID, 'labels'
 ].join(',')
 
 const CACHE_TTL_MS = 5 * 60 * 1000
@@ -18,6 +25,41 @@ const CACHE_MAX_ENTRIES = 50
 const blockersCache = new Map()
 
 const RELEASE_NUMBER_RE = /^[a-zA-Z0-9._\- ]+$/
+
+function extractJiraNames(field) {
+  if (field === null || field === undefined) return []
+  if (Array.isArray(field)) {
+    return field.map(function (value) {
+      if (value && typeof value === 'object') return value.name || value.value || null
+      return value || null
+    }).filter(Boolean)
+  }
+  if (typeof field === 'object') return field.name || field.value ? [field.name || field.value] : []
+  return field ? [String(field)] : []
+}
+
+function serializeJiraUser(field) {
+  if (field === null || field === undefined) return null
+  if (typeof field === 'string') return field || null
+  if (typeof field !== 'object') return String(field)
+  return field.displayName || field.name || field.emailAddress || null
+}
+
+function serializeJiraField(field) {
+  if (field === null || field === undefined) return null
+  if (typeof field === 'object' && !Array.isArray(field)) {
+    return field.name || field.value || field.displayName || field.label || null
+  }
+  return extractJiraNames(field)[0] || null
+}
+
+function serializeReleaseBlockerStatus(field) {
+  if (field === null || field === undefined) return null
+  if (typeof field === 'object') {
+    return field.value || field.name || RELEASE_BLOCKER_OPTION_LABELS[String(field.id)] || null
+  }
+  return RELEASE_BLOCKER_OPTION_LABELS[String(field)] || String(field)
+}
 
 // Escapes single quotes for safe JQL string interpolation (input already validated by RELEASE_NUMBER_RE)
 function sanitizeForJql(value) {
@@ -49,6 +91,20 @@ function buildCriticalMonitoringJql(version) {
   )
 }
 
+function buildAwarenessTrendsJql(version) {
+  var safe = sanitizeForJql(version)
+  return (
+    'project in (RHAIENG, RHOAIENG) ' +
+    'AND (labels not in (RHOAI-releases, RHOAI-internal, devtestops-service) OR labels is empty) ' +
+    'AND component not in (Documentation, PXE) ' +
+    'AND status not in (Closed, Resolved) ' +
+    "AND (fixVersion IN ('" + safe + "') OR affectedVersion IN ('" + safe + "') OR cf[10855] IN ('" + safe + "')) " +
+    'AND priority in (Blocker) ' +
+    'AND cf[10847] is not EMPTY ' +
+    'ORDER BY updated DESC'
+  )
+}
+
 function parseBlockerHistory(issue) {
   var now = new Date()
   var histories = (issue.changelog && issue.changelog.histories) || []
@@ -62,8 +118,8 @@ function parseBlockerHistory(issue) {
       if (item.fieldId === BLOCKER_FIELD_ID || item.field === 'Release Blocker') {
         transitions.push({
           date: new Date(history.created),
-          from: item.fromString || null,
-          to: item.toString || null
+          from: item.fromString || RELEASE_BLOCKER_OPTION_LABELS[String(item.from)] || null,
+          to: item.toString || RELEASE_BLOCKER_OPTION_LABELS[String(item.to)] || null
         })
       }
     }
@@ -71,7 +127,7 @@ function parseBlockerHistory(issue) {
   transitions.sort(function (a, b) { return a.date - b.date })
 
   var fieldValue = issue.fields && issue.fields[BLOCKER_FIELD_ID]
-  var currentStatus = (fieldValue && fieldValue.value) || null
+  var currentStatus = serializeReleaseBlockerStatus(fieldValue)
 
   var enteredCurrentStateAt = null
   if (transitions.length > 0) {
@@ -90,17 +146,21 @@ function parseBlockerHistory(issue) {
   }
 
   var proposedDate = null
+  var latestProposedDate = null
   var decisionDate = null
   for (var i = 0; i < transitions.length; i++) {
     var t = transitions[i]
-    if (t.to === 'Proposed' && !proposedDate) proposedDate = t.date
-    if (proposedDate && (t.to === 'Approved' || t.to === 'Rejected')) {
+    if (t.to === 'Proposed') {
+      if (!proposedDate) proposedDate = t.date
+      latestProposedDate = t.date
+    }
+    if (proposedDate && !decisionDate && (t.to === 'Approved' || t.to === 'Rejected')) {
       decisionDate = t.date
-      break
     }
   }
   if (!proposedDate && currentStatus === 'Proposed') {
     proposedDate = new Date(issue.fields.created)
+    latestProposedDate = proposedDate
   }
 
   var daysToDecision = null
@@ -112,6 +172,7 @@ function parseBlockerHistory(issue) {
     currentStatus: currentStatus,
     daysInCurrentState: daysInCurrentState,
     proposedDate: proposedDate ? proposedDate.toISOString() : null,
+    latestProposedDate: latestProposedDate ? latestProposedDate.toISOString() : null,
     decisionDate: decisionDate ? decisionDate.toISOString() : null,
     daysToDecision: daysToDecision
   }
@@ -146,7 +207,7 @@ function buildAgingStats(values) {
   }
 }
 
-function buildResponse(releaseNumber, blockerIssues, criticalIssues, codeFreezeDate, jiraHost) {
+function buildResponse(releaseNumber, blockerIssues, criticalIssues, codeFreezeDate, jiraHost, awarenessIssues) {
   var now = new Date()
 
   var proposed = 0
@@ -173,8 +234,11 @@ function buildResponse(releaseNumber, blockerIssues, criticalIssues, codeFreezeD
     var components = ((issue.fields && issue.fields.components) || [])
       .map(function (c) { return (c.name || '').trim() })
       .filter(Boolean)
-    var assigneeObj = issue.fields && issue.fields.assignee
-    var assignee = assigneeObj ? (assigneeObj.displayName || null) : null
+    var assignee = serializeJiraUser(issue.fields && issue.fields.assignee)
+    var reporter = serializeJiraUser(issue.fields && issue.fields.reporter)
+    var fixVersions = extractJiraNames(issue.fields && issue.fields.fixVersions)
+    var affectedVersions = extractJiraNames(issue.fields && issue.fields.versions)
+    var team = serializeJiraField(issue.fields && issue.fields[TEAM_FIELD_ID])
 
     var status = history.currentStatus
     if (status === 'Proposed') {
@@ -213,9 +277,14 @@ function buildResponse(releaseNumber, blockerIssues, criticalIssues, codeFreezeD
       summary: (issue.fields && issue.fields.summary) || '',
       link: jiraHost + '/browse/' + encodeURIComponent(key),
       priority: (issue.fields && issue.fields.priority && issue.fields.priority.name) || 'Unknown',
+      issueType: (issue.fields && issue.fields.issuetype && issue.fields.issuetype.name) || 'Unknown',
       status: (issue.fields && issue.fields.status && issue.fields.status.name) || 'Unknown',
       components: components,
       assignee: assignee,
+      reporter: reporter,
+      fixVersions: fixVersions,
+      affectedVersions: affectedVersions,
+      team: team,
       releaseBlockerStatus: history.currentStatus,
       created: issue.fields && issue.fields.created ? issue.fields.created.slice(0, 10) : null,
       daysInCurrentState: history.daysInCurrentState,
@@ -232,8 +301,8 @@ function buildResponse(releaseNumber, blockerIssues, criticalIssues, codeFreezeD
     var cComponents = ((ci.fields && ci.fields.components) || [])
       .map(function (c) { return (c.name || '').trim() })
       .filter(Boolean)
-    var cAssigneeObj = ci.fields && ci.fields.assignee
-    var cAssignee = cAssigneeObj ? (cAssigneeObj.displayName || null) : null
+    var cAssignee = serializeJiraUser(ci.fields && ci.fields.assignee)
+    var cReporter = serializeJiraUser(ci.fields && ci.fields.reporter)
 
     var cHistory = parseBlockerHistory(ci)
 
@@ -247,13 +316,47 @@ function buildResponse(releaseNumber, blockerIssues, criticalIssues, codeFreezeD
       summary: (ci.fields && ci.fields.summary) || '',
       link: jiraHost + '/browse/' + encodeURIComponent(ci.key),
       priority: (ci.fields && ci.fields.priority && ci.fields.priority.name) || 'Unknown',
+      issueType: (ci.fields && ci.fields.issuetype && ci.fields.issuetype.name) || 'Unknown',
       status: (ci.fields && ci.fields.status && ci.fields.status.name) || 'Unknown',
       components: cComponents,
       assignee: cAssignee,
+      reporter: cReporter,
+      fixVersions: extractJiraNames(ci.fields && ci.fields.fixVersions),
+      affectedVersions: extractJiraNames(ci.fields && ci.fields.versions),
+      team: serializeJiraField(ci.fields && ci.fields[TEAM_FIELD_ID]),
       releaseBlockerStatus: cHistory.currentStatus,
       created: ci.fields && ci.fields.created ? ci.fields.created.slice(0, 10) : null,
       daysOpen: daysOpen,
       daysInCurrentState: cHistory.daysInCurrentState
+    })
+  }
+
+  var awarenessTrends = []
+  var trendIssues = awarenessIssues || []
+  for (var a = 0; a < trendIssues.length; a++) {
+    var trendIssue = trendIssues[a]
+    var trendHistory = parseBlockerHistory(trendIssue)
+    var trendComponents = ((trendIssue.fields && trendIssue.fields.components) || [])
+      .map(function (component) { return (component.name || '').trim() })
+      .filter(Boolean)
+
+    awarenessTrends.push({
+      key: trendIssue.key,
+      summary: (trendIssue.fields && trendIssue.fields.summary) || '',
+      link: jiraHost + '/browse/' + encodeURIComponent(trendIssue.key),
+      priority: (trendIssue.fields && trendIssue.fields.priority && trendIssue.fields.priority.name) || 'Unknown',
+      issueType: (trendIssue.fields && trendIssue.fields.issuetype && trendIssue.fields.issuetype.name) || 'Unknown',
+      status: (trendIssue.fields && trendIssue.fields.status && trendIssue.fields.status.name) || 'Unknown',
+      releaseBlockerStatus: trendHistory.currentStatus,
+      assignee: serializeJiraUser(trendIssue.fields && trendIssue.fields.assignee),
+      reporter: serializeJiraUser(trendIssue.fields && trendIssue.fields.reporter),
+      fixVersions: extractJiraNames(trendIssue.fields && trendIssue.fields.fixVersions),
+      affectedVersions: extractJiraNames(trendIssue.fields && trendIssue.fields.versions),
+      components: trendComponents,
+      team: serializeJiraField(trendIssue.fields && trendIssue.fields[TEAM_FIELD_ID]),
+      created: trendIssue.fields && trendIssue.fields.created ? trendIssue.fields.created : null,
+      updated: trendIssue.fields && trendIssue.fields.updated ? trendIssue.fields.updated : null,
+      latestProposedDate: trendHistory.latestProposedDate
     })
   }
 
@@ -281,11 +384,12 @@ function buildResponse(releaseNumber, blockerIssues, criticalIssues, codeFreezeD
       }
     },
     blockers: blockers,
-    criticalMonitoring: criticalMonitoring
+    criticalMonitoring: criticalMonitoring,
+    awarenessTrends: awarenessTrends
   }
 }
 
-module.exports = async function registerBlockerRoutes(router, context) {
+async function registerBlockerRoutes(router, context) {
   var storage = context.storage
   var requireAuth = context.requireAuth
   var requireScope = context.requireScope
@@ -353,7 +457,8 @@ module.exports = async function registerBlockerRoutes(router, context) {
           byStatus: { proposed: emptyStats, approved: emptyStats, rejected: emptyStats }
         },
         blockers: [],
-        criticalMonitoring: []
+        criticalMonitoring: [],
+        awarenessTrends: []
       })
     }
 
@@ -366,18 +471,23 @@ module.exports = async function registerBlockerRoutes(router, context) {
     try {
       var blockerJql = buildBlockerJql(releaseNumber)
       var criticalJql = buildCriticalMonitoringJql(releaseNumber)
+      var awarenessJql = buildAwarenessTrendsJql(releaseNumber)
 
       // Blockers: fetch with changelog for aging metrics
       // Critical monitoring: fetch without changelog (larger result set, Jira chokes on expand)
+      // Awareness trends: fetch only issues with a Release Blocker value and include changelog
+      // so current proposals can be ordered by their latest transition into Proposed.
       var results = await Promise.all([
         fetchJql(blockerJql, BLOCKER_FIELDS, { expand: 'changelog', maxResults: 100 }),
-        fetchJql(criticalJql, BLOCKER_FIELDS, { maxResults: 100 })
+        fetchJql(criticalJql, BLOCKER_FIELDS, { maxResults: 100 }),
+        fetchJql(awarenessJql, BLOCKER_FIELDS, { expand: 'changelog', maxResults: 100 })
       ])
 
       var blockerIssues = results[0] || []
       var criticalIssues = results[1] || []
+      var awarenessIssues = results[2] || []
 
-      var response = buildResponse(releaseNumber, blockerIssues, criticalIssues, codeFreezeDate, jiraHost)
+      var response = buildResponse(releaseNumber, blockerIssues, criticalIssues, codeFreezeDate, jiraHost, awarenessIssues)
 
       blockersCache.set(cacheKey, { data: response, timestamp: Date.now() })
       if (blockersCache.size > CACHE_MAX_ENTRIES) {
@@ -392,3 +502,8 @@ module.exports = async function registerBlockerRoutes(router, context) {
     }
   })
 }
+
+module.exports = registerBlockerRoutes
+module.exports.BLOCKER_FIELDS = BLOCKER_FIELDS
+module.exports.buildResponse = buildResponse
+module.exports.buildAwarenessTrendsJql = buildAwarenessTrendsJql

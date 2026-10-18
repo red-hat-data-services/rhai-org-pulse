@@ -98,6 +98,99 @@
         </button>
       </div>
 
+      <!-- Blockers Awareness and Trends -->
+      <section data-testid="blockers-awareness-trends" class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden mb-6">
+        <div class="px-4 py-3 border-b border-gray-200 dark:border-gray-700">
+          <div class="flex items-center justify-between gap-3 mb-3">
+            <div>
+              <h3 class="text-sm font-semibold text-gray-700 dark:text-gray-300">Blockers Awareness and Trends</h3>
+              <p class="text-xs text-gray-400 dark:text-gray-500 mt-0.5">Issues with a Proposed, Approved, or Rejected Release blocker value.</p>
+            </div>
+            <span class="text-xs text-gray-400 dark:text-gray-500 whitespace-nowrap">{{ visibleAwarenessTrends.length }} of {{ awarenessTrends.length }} issues</span>
+          </div>
+
+          <div class="flex items-end gap-2 flex-wrap">
+            <label class="block">
+              <span class="block text-[11px] font-medium text-gray-500 dark:text-gray-400 mb-1">Release Blocker</span>
+              <select v-model="awarenessReleaseBlockerFilter" class="text-xs rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 px-2.5 py-1.5 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                <option value="">All values</option>
+                <option v-for="value in awarenessReleaseBlockerOptions" :key="value" :value="value">{{ value }}</option>
+              </select>
+            </label>
+            <label class="block">
+              <span class="block text-[11px] font-medium text-gray-500 dark:text-gray-400 mb-1">Fix Version</span>
+              <select v-model="awarenessFixVersionFilter" class="text-xs rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 px-2.5 py-1.5 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                <option value="">All fix versions</option>
+                <option v-for="value in awarenessFixVersionOptions" :key="value" :value="value">{{ value }}</option>
+              </select>
+            </label>
+            <label class="block">
+              <span class="block text-[11px] font-medium text-gray-500 dark:text-gray-400 mb-1">Status</span>
+              <select v-model="awarenessStatusFilter" class="text-xs rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 px-2.5 py-1.5 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                <option value="">All statuses</option>
+                <option v-for="value in awarenessStatusOptions" :key="value" :value="value">{{ value }}</option>
+              </select>
+            </label>
+            <label class="block">
+              <span class="block text-[11px] font-medium text-gray-500 dark:text-gray-400 mb-1">Team</span>
+              <select v-model="awarenessTeamFilter" class="text-xs rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 px-2.5 py-1.5 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                <option value="">All teams</option>
+                <option v-for="value in awarenessTeamOptions" :key="value" :value="value">{{ value }}</option>
+              </select>
+            </label>
+            <label class="block">
+              <span class="block text-[11px] font-medium text-gray-500 dark:text-gray-400 mb-1">Component</span>
+              <select v-model="awarenessComponentFilter" class="text-xs rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 px-2.5 py-1.5 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                <option value="">All components</option>
+                <option v-for="value in awarenessComponentOptions" :key="value" :value="value">{{ value }}</option>
+              </select>
+            </label>
+            <button v-if="awarenessHasActiveFilters" @click="clearAwarenessFilters" class="text-xs px-2.5 py-1.5 rounded-lg border border-gray-200 dark:border-gray-700 text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">Clear</button>
+          </div>
+        </div>
+
+        <div v-if="visibleAwarenessTrends.length" class="overflow-x-auto scrollable-table">
+          <table class="w-full text-sm">
+            <thead class="sticky top-0 z-10">
+              <tr class="border-b border-gray-100 dark:border-gray-700 bg-gray-50 dark:bg-gray-900">
+                <th v-for="col in blockerColumns" :key="col.key"
+                  class="px-3 py-2 text-left text-xs font-medium uppercase tracking-wide"
+                  :class="col.sortable
+                    ? 'cursor-pointer hover:text-gray-700 dark:hover:text-gray-200 select-none text-gray-500 dark:text-gray-400'
+                    : 'text-gray-500 dark:text-gray-400'"
+                  @click="col.sortable && toggleAwarenessSort(col.key)"
+                >
+                  {{ col.label }}
+                  <span v-if="col.sortable" class="ml-0.5 inline-block w-3 text-center"
+                    :class="awarenessSortKey === col.key ? 'text-blue-600 dark:text-blue-400' : 'text-gray-300 dark:text-gray-600'"
+                  >{{ awarenessSortKey === col.key ? (awarenessSortDir === 'asc' ? '▲' : '▼') : '⇅' }}</span>
+                </th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-gray-100 dark:divide-gray-700">
+              <tr v-for="issue in visibleAwarenessTrends" :key="issue.key" class="hover:bg-gray-50 dark:hover:bg-gray-750">
+                <td class="px-3 py-2"><a :href="issue.link" target="_blank" rel="noopener" class="text-xs text-blue-600 dark:text-blue-400 font-mono hover:underline">{{ issue.key }}</a></td>
+                <td class="px-3 py-2 text-xs text-gray-700 dark:text-gray-300 max-w-xs truncate" :title="issue.summary">{{ issue.summary }}</td>
+                <td class="px-3 py-2 text-xs text-gray-600 dark:text-gray-400">{{ issue.priority || '—' }}</td>
+                <td class="px-3 py-2 text-xs text-gray-600 dark:text-gray-400">{{ issue.issueType || '—' }}</td>
+                <td class="px-3 py-2 text-xs text-gray-600 dark:text-gray-400">{{ issue.status || '—' }}</td>
+                <td class="px-3 py-2"><span :class="blockerStatusClass(issue.releaseBlockerStatus)" class="text-xs px-2 py-0.5 rounded-full font-medium">{{ issue.releaseBlockerStatus }}</span></td>
+                <td class="px-3 py-2 text-xs text-gray-600 dark:text-gray-400">{{ issue.assignee || '—' }}</td>
+                <td class="px-3 py-2 text-xs text-gray-600 dark:text-gray-400">{{ issue.reporter || '—' }}</td>
+                <td class="px-3 py-2 text-xs text-gray-600 dark:text-gray-400">{{ (issue.fixVersions || []).join(', ') || '—' }}</td>
+                <td class="px-3 py-2 text-xs text-gray-600 dark:text-gray-400">{{ (issue.affectedVersions || []).join(', ') || '—' }}</td>
+                <td class="px-3 py-2 text-xs text-gray-600 dark:text-gray-400">{{ (issue.components || []).join(', ') || '—' }}</td>
+                <td class="px-3 py-2 text-xs text-gray-600 dark:text-gray-400">{{ issue.team || '—' }}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <div v-else class="px-4 py-6 text-center">
+          <p v-if="awarenessTrends.length" class="text-xs text-gray-400 dark:text-gray-500">No issues match the selected table filters.</p>
+          <p v-else class="text-xs text-gray-400 dark:text-gray-500">No issues with a Release blocker value were found for this version.</p>
+        </div>
+      </section>
+
       <!-- Test Sign-Off Risk Assessment -->
       <TfaRiskSection v-if="effectiveReleaseNumber" :version="effectiveReleaseNumber" />
 
@@ -291,20 +384,20 @@
                   <a :href="b.link" target="_blank" rel="noopener" class="text-xs text-blue-600 dark:text-blue-400 font-mono hover:underline">{{ b.key }}</a>
                 </td>
                 <td class="px-3 py-2 text-xs text-gray-700 dark:text-gray-300 max-w-xs truncate">{{ b.summary }}</td>
-                <td class="px-3 py-2 text-xs text-gray-600 dark:text-gray-400">{{ b.components.join(', ') || '—' }}</td>
+                <td class="px-3 py-2 text-xs text-gray-600 dark:text-gray-400">{{ b.priority || '—' }}</td>
+                <td class="px-3 py-2 text-xs text-gray-600 dark:text-gray-400">{{ b.issueType || '—' }}</td>
                 <td class="px-3 py-2 text-xs text-gray-600 dark:text-gray-400">{{ b.status }}</td>
                 <td class="px-3 py-2">
                   <span :class="blockerStatusClass(b.releaseBlockerStatus)" class="text-xs px-2 py-0.5 rounded-full font-medium">
                     {{ b.releaseBlockerStatus || 'None' }}
                   </span>
                 </td>
-                <td class="px-3 py-2 text-xs font-medium" :class="agingColor(b.daysInCurrentState)">
-                  {{ b.daysInCurrentState !== null ? b.daysInCurrentState + 'd' : '—' }}
-                </td>
-                <td class="px-3 py-2">
-                  <span v-if="b.proposedBeforeCodeFreeze" class="text-xs px-1.5 py-0.5 rounded bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 font-medium">Pre-CF</span>
-                  <span v-else class="text-xs px-1.5 py-0.5 rounded bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-400 font-medium">Post-CF</span>
-                </td>
+                <td class="px-3 py-2 text-xs text-gray-600 dark:text-gray-400">{{ b.assignee || '—' }}</td>
+                <td class="px-3 py-2 text-xs text-gray-600 dark:text-gray-400">{{ b.reporter || '—' }}</td>
+                <td class="px-3 py-2 text-xs text-gray-600 dark:text-gray-400">{{ (b.fixVersions || []).join(', ') || '—' }}</td>
+                <td class="px-3 py-2 text-xs text-gray-600 dark:text-gray-400">{{ (b.affectedVersions || []).join(', ') || '—' }}</td>
+                <td class="px-3 py-2 text-xs text-gray-600 dark:text-gray-400">{{ b.components.join(', ') || '—' }}</td>
+                <td class="px-3 py-2 text-xs text-gray-600 dark:text-gray-400">{{ b.team || '—' }}</td>
               </tr>
             </tbody>
           </table>
@@ -428,13 +521,18 @@ const sortKey = ref('daysInCurrentState')
 const sortDir = ref('desc')
 
 const blockerColumns = [
-  { key: 'key', label: 'Key', sortable: true },
+  { key: 'key', label: 'Jira Key', sortable: true },
   { key: 'summary', label: 'Summary', sortable: false },
-  { key: 'components', label: 'Component', sortable: true },
+  { key: 'priority', label: 'Priority', sortable: true },
+  { key: 'issueType', label: 'Issue type', sortable: true },
   { key: 'status', label: 'Status', sortable: true },
-  { key: 'releaseBlockerStatus', label: 'Blocker Status', sortable: true },
-  { key: 'daysInCurrentState', label: 'Days in State', sortable: true },
-  { key: 'proposedBeforeCodeFreeze', label: 'Timing', sortable: true }
+  { key: 'releaseBlockerStatus', label: 'Release blocker', sortable: true },
+  { key: 'assignee', label: 'Assignee', sortable: true },
+  { key: 'reporter', label: 'Reporter', sortable: true },
+  { key: 'fixVersions', label: 'Fix version', sortable: true },
+  { key: 'affectedVersions', label: 'Affects version', sortable: true },
+  { key: 'components', label: 'Component', sortable: true },
+  { key: 'team', label: 'Team', sortable: true }
 ]
 
 function toggleSort(key) {
@@ -449,8 +547,8 @@ function toggleSort(key) {
 function sortRows(rows, key, dir) {
   var mult = dir === 'asc' ? 1 : -1
   return rows.sort(function (a, b) {
-    var av = key === 'components' ? (a.components[0] || '') : a[key]
-    var bv = key === 'components' ? (b.components[0] || '') : b[key]
+    var av = Array.isArray(a[key]) ? a[key].join(', ') : a[key]
+    var bv = Array.isArray(b[key]) ? b[key].join(', ') : b[key]
     if (av === null && bv === null) return 0
     if (av === null) return mult
     if (bv === null) return -mult
@@ -459,6 +557,107 @@ function sortRows(rows, key, dir) {
     return String(av).localeCompare(String(bv)) * mult
   })
 }
+
+// Blockers Awareness and Trends filters and sorting
+const awarenessReleaseBlockerFilter = ref('')
+const awarenessFixVersionFilter = ref('')
+const awarenessStatusFilter = ref('')
+const awarenessTeamFilter = ref('')
+const awarenessComponentFilter = ref('')
+const awarenessSortKey = ref(null)
+const awarenessSortDir = ref('desc')
+
+const awarenessTrends = computed(function () {
+  return (data.value && Array.isArray(data.value.awarenessTrends)) ? data.value.awarenessTrends : []
+})
+
+function uniqueSortedValues(rows, key) {
+  var values = new Set()
+  for (var i = 0; i < rows.length; i++) {
+    var value = rows[i][key]
+    var entries = Array.isArray(value) ? value : [value]
+    for (var j = 0; j < entries.length; j++) {
+      if (entries[j]) values.add(entries[j])
+    }
+  }
+  return Array.from(values).sort(function (a, b) { return String(a).localeCompare(String(b)) })
+}
+
+const awarenessReleaseBlockerOptions = computed(function () {
+  var present = new Set(uniqueSortedValues(awarenessTrends.value, 'releaseBlockerStatus'))
+  return ['Proposed', 'Approved', 'Rejected'].filter(function (status) { return present.has(status) })
+})
+const awarenessFixVersionOptions = computed(function () { return uniqueSortedValues(awarenessTrends.value, 'fixVersions') })
+const awarenessStatusOptions = computed(function () { return uniqueSortedValues(awarenessTrends.value, 'status') })
+const awarenessTeamOptions = computed(function () { return uniqueSortedValues(awarenessTrends.value, 'team') })
+const awarenessComponentOptions = computed(function () { return uniqueSortedValues(awarenessTrends.value, 'components') })
+
+const awarenessHasActiveFilters = computed(function () {
+  return Boolean(
+    awarenessReleaseBlockerFilter.value ||
+    awarenessFixVersionFilter.value ||
+    awarenessStatusFilter.value ||
+    awarenessTeamFilter.value ||
+    awarenessComponentFilter.value
+  )
+})
+
+function clearAwarenessFilters() {
+  awarenessReleaseBlockerFilter.value = ''
+  awarenessFixVersionFilter.value = ''
+  awarenessStatusFilter.value = ''
+  awarenessTeamFilter.value = ''
+  awarenessComponentFilter.value = ''
+}
+
+watch(effectiveReleaseNumber, function () {
+  clearAwarenessFilters()
+  awarenessSortKey.value = null
+  awarenessSortDir.value = 'desc'
+})
+
+function toggleAwarenessSort(key) {
+  if (awarenessSortKey.value === key) {
+    awarenessSortDir.value = awarenessSortDir.value === 'asc' ? 'desc' : 'asc'
+  } else {
+    awarenessSortKey.value = key
+    awarenessSortDir.value = 'desc'
+  }
+}
+
+function sortAwarenessByDefault(rows) {
+  return rows.sort(function (a, b) {
+    var aIsProposed = a.releaseBlockerStatus === 'Proposed'
+    var bIsProposed = b.releaseBlockerStatus === 'Proposed'
+    if (aIsProposed !== bIsProposed) return aIsProposed ? -1 : 1
+
+    var aDate = (aIsProposed && a.latestProposedDate) || a.updated || a.created || ''
+    var bDate = (bIsProposed && b.latestProposedDate) || b.updated || b.created || ''
+    var dateOrder = String(bDate).localeCompare(String(aDate))
+    return dateOrder || String(a.key).localeCompare(String(b.key))
+  })
+}
+
+const visibleAwarenessTrends = computed(function () {
+  var rows = awarenessTrends.value.slice()
+  if (awarenessReleaseBlockerFilter.value) {
+    rows = rows.filter(function (issue) { return issue.releaseBlockerStatus === awarenessReleaseBlockerFilter.value })
+  }
+  if (awarenessFixVersionFilter.value) {
+    rows = rows.filter(function (issue) { return (issue.fixVersions || []).includes(awarenessFixVersionFilter.value) })
+  }
+  if (awarenessStatusFilter.value) {
+    rows = rows.filter(function (issue) { return issue.status === awarenessStatusFilter.value })
+  }
+  if (awarenessTeamFilter.value) {
+    rows = rows.filter(function (issue) { return issue.team === awarenessTeamFilter.value })
+  }
+  if (awarenessComponentFilter.value) {
+    rows = rows.filter(function (issue) { return (issue.components || []).includes(awarenessComponentFilter.value) })
+  }
+  if (awarenessSortKey.value) return sortRows(rows, awarenessSortKey.value, awarenessSortDir.value)
+  return sortAwarenessByDefault(rows)
+})
 
 const visibleBlockers = computed(function () {
   var rows = (data.value && data.value.blockers) ? data.value.blockers.slice() : []
