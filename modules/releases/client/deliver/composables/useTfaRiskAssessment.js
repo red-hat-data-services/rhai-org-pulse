@@ -33,6 +33,67 @@ function resolvePillarName(raw) {
   return raw
 }
 
+function aggregateTfaData(responses) {
+  var componentMap = new Map()
+
+  for (var i = 0; i < responses.length; i++) {
+    var components = Array.isArray(responses[i].components) ? responses[i].components : []
+    for (var j = 0; j < components.length; j++) {
+      var component = components[j]
+      var current = componentMap.get(component.name)
+      if (!current) {
+        current = {
+          ...component,
+          signoffs: { done: 0, inProgress: 0, todo: 0, total: 0, pct: 0 },
+          failedOpen: 0,
+          issues: [],
+          failedIssues: []
+        }
+        componentMap.set(component.name, current)
+      }
+
+      var signoffs = component.signoffs || {}
+      current.signoffs.done += signoffs.done || 0
+      current.signoffs.inProgress += signoffs.inProgress || 0
+      current.signoffs.todo += signoffs.todo || 0
+      current.signoffs.total += signoffs.total || 0
+      current.failedOpen += component.failedOpen || 0
+      current.issues = current.issues.concat(component.issues || [])
+      current.failedIssues = current.failedIssues.concat(component.failedIssues || [])
+    }
+  }
+
+  var componentList = Array.from(componentMap.values())
+  var overallDone = 0
+  var overallTotal = 0
+  var overallFailedOpen = 0
+  for (var k = 0; k < componentList.length; k++) {
+    var aggregate = componentList[k]
+    aggregate.signoffs.pct = aggregate.signoffs.total
+      ? Math.round((aggregate.signoffs.done / aggregate.signoffs.total) * 100)
+      : 0
+    overallDone += aggregate.signoffs.done
+    overallTotal += aggregate.signoffs.total
+    overallFailedOpen += aggregate.failedOpen
+  }
+
+  return {
+    releaseNumbers: responses.map(function (response) { return response.releaseNumber }).filter(Boolean),
+    overall: {
+      signoffDone: overallDone,
+      signoffTotal: overallTotal,
+      signoffPct: overallTotal ? Math.round((overallDone / overallTotal) * 100) : 0,
+      failedOpen: overallFailedOpen
+    },
+    components: componentList
+  }
+}
+
+function normalizeVersions(value) {
+  var versions = Array.isArray(value) ? value : (value ? [value] : [])
+  return [...new Set(versions.filter(Boolean))]
+}
+
 export function useTfaRiskAssessment(versionRef, thresholdsRef) {
   var tfaData = ref(null)
   var pillarConfig = ref({ pillars: [] })
@@ -133,8 +194,9 @@ export function useTfaRiskAssessment(versionRef, thresholdsRef) {
     return count
   })
 
-  async function fetchData(version) {
-    if (!version) {
+  async function fetchData(value) {
+    var versions = normalizeVersions(value)
+    if (!versions.length) {
       tfaData.value = null
       return
     }
@@ -143,12 +205,20 @@ export function useTfaRiskAssessment(versionRef, thresholdsRef) {
     expandedPillars.value = {}
     try {
       var results = await Promise.all([
-        apiRequest('/modules/releases/delivery/tfa-risk/' + encodeURIComponent(version)),
+        ...versions.map(async function (version) {
+          try {
+            return await apiRequest('/modules/releases/delivery/tfa-risk/' + encodeURIComponent(version))
+          } catch (err) {
+            if (err && err.status === 404) return null
+            throw err
+          }
+        }),
         apiRequest('/modules/releases/pm-hub/pillar-config')
       ])
-      tfaData.value = results[0]
-      if (results[1] && Array.isArray(results[1].pillars)) {
-        pillarConfig.value = results[1]
+      var config = results.pop()
+      tfaData.value = aggregateTfaData(results.filter(Boolean))
+      if (config && Array.isArray(config.pillars)) {
+        pillarConfig.value = config
       }
     } catch (err) {
       if (err && err.status === 404) {
@@ -163,7 +233,7 @@ export function useTfaRiskAssessment(versionRef, thresholdsRef) {
     }
   }
 
-  watch(versionRef, function (v) { fetchData(v) }, { immediate: true })
+  watch(versionRef, function (versions) { fetchData(versions) }, { immediate: true })
 
   return {
     tfaData: tfaData,
