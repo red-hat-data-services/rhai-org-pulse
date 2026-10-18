@@ -162,6 +162,9 @@
         </div>
       </section>
 
+      <!-- Historical trend charts intentionally use a separate, unfiltered data source. -->
+      <BlockerTrendsSection :data="blockerTrendData" :loading="blockerTrendLoading" :error="blockerTrendError" />
+
       <!-- Test Sign-Off Risk Assessment -->
       <TfaRiskSection v-if="effectiveReleaseNumbers.length" :versions="effectiveReleaseNumbers" />
 
@@ -324,7 +327,9 @@
 <script setup>
 import { ref, computed, inject, watch } from 'vue'
 import { useReleaseBlockers } from '../composables/useReleaseBlockers.js'
+import { useBlockerTrends } from '../composables/useBlockerTrends.js'
 import TfaRiskSection from '../components/TfaRiskSection.vue'
+import BlockerTrendsSection from '../components/BlockerTrendsSection.vue'
 
 const filter = inject('releaseFilter')
 
@@ -351,6 +356,11 @@ const effectiveReleaseNumbers = computed(function () {
 })
 
 const { data, loading, error, refresh } = useReleaseBlockers(releaseRequests)
+const {
+  data: blockerTrendData,
+  loading: blockerTrendLoading,
+  error: blockerTrendError
+} = useBlockerTrends()
 
 // Shared issue columns for the awareness table
 const blockerColumns = [

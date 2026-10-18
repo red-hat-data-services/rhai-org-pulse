@@ -1698,6 +1698,9 @@ test.describe('Program Level Release Report in Deliver @releases', () => {
 test.describe('Releases Blockers @releases', () => {
   test.beforeEach(async ({ page }) => {
     setupErrorTracking(page);
+    await page.route('**/api/modules/releases/delivery/blockers/trends', route => route.fulfill({
+      json: { fetchedAt: '2026-10-08T00:00:00.000Z', releases: [], components: [] }
+    }));
   });
 
   test.afterEach(async ({ page }, testInfo) => {
@@ -1987,6 +1990,13 @@ test.describe('Releases Blockers @releases', () => {
     await page.route('**/api/modules/releases/pm-hub/pillar-config', route => route.fulfill({
       json: { pillars: [] }
     }));
+    await page.route('**/api/modules/releases/delivery/blockers/trends', route => route.fulfill({
+      json: {
+        fetchedAt: '2026-10-08T00:00:00.000Z',
+        releases: [{ label: '3.5 GA RHOAI RELEASE', approved: 3, rejected: 1, total: 4 }],
+        components: [{ label: 'Model Serving', approved: 2, rejected: 1, total: 3 }]
+      }
+    }));
 
     await page.goto('/#/releases/deliver?tab=release-blockers');
     await page.waitForLoadState('networkidle');
@@ -2006,6 +2016,13 @@ test.describe('Releases Blockers @releases', () => {
     await expect(sharedRow).toContainText('3.5 GA RHOAI RELEASE');
     await expect(sharedRow).toContainText('3.6 GA RHOAI RELEASE');
     await expect(page.getByText(/\(1\/2\)/)).toHaveCount(0);
+
+    const trendSection = page.getByTestId('blocker-trends');
+    await expect(trendSection.getByRole('heading', { name: 'Release Blocker Trends' })).toBeVisible();
+    await expect(trendSection).toContainText('3.5 GA RHOAI RELEASE');
+    await trendSection.getByTestId('blocker-trends-toggle').click();
+    await expect(trendSection).toContainText('Model Serving');
+    await expect(trendSection).toContainText('2');
 
     expect(page.errors).toHaveLength(0);
   });

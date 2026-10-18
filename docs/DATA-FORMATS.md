@@ -1146,6 +1146,31 @@ available.
 Older fixtures and cached responses may omit `awarenessTrends`; clients treat
 the missing field as an empty collection.
 
+The `GET /api/modules/releases/delivery/blockers/trends` response contains an
+unfiltered historical aggregate for Blocker-priority issues whose Release
+Blocker field has the Approved (`16772`) or Rejected (`16774`) Jira option.
+It is independent of page-level
+release, team, component, status, and priority filters, and includes resolved
+issues so the trend remains historical:
+
+```json
+{
+  "fetchedAt": "2026-10-18T12:00:00.000Z",
+  "releases": [
+    { "label": "3.5 GA RHOAI RELEASE", "approved": 3, "rejected": 1, "total": 4 }
+  ],
+  "components": [
+    { "label": "Model Serving", "approved": 2, "rejected": 1, "total": 3 }
+  ]
+}
+```
+
+Release groups use the union of Jira Fix Version, Affects Version, and Target
+Version values. Component groups count an issue once per assigned component;
+issues without a component are grouped under `(No component)`. The endpoint
+returns all matching Jira pages rather than only the releases selected in the
+dashboard.
+
 ---
 
 ## Releases — Quality Versions (`data/releases/delivery/quality/versions.json`)

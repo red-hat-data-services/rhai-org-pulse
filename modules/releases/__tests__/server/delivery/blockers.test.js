@@ -3,6 +3,49 @@ import { describe, it, expect } from 'vitest'
 const registerBlockerRoutes = require('../../../server/delivery/blockers')
 
 describe('release blocker Jira field mapping', () => {
+  it('builds an unfiltered historical trends query', () => {
+    const jql = registerBlockerRoutes.buildHistoricalTrendsJql()
+
+    expect(jql).toContain('cf[10847] in (16772, 16774)')
+    expect(jql).not.toContain('fixVersion IN')
+    expect(jql).not.toContain('status not in (Closed, Resolved)')
+  })
+
+  it('aggregates approved and rejected blockers by release and component', () => {
+    const issues = [
+      {
+        key: 'RHOAIENG-901',
+        fields: {
+          fixVersions: [{ name: '3.5 GA RHOAI RELEASE' }],
+          versions: [{ name: 'rhoai-3.5' }],
+          components: [{ name: 'Model Serving' }],
+          customfield_10847: { value: 'Approved' }
+        }
+      },
+      {
+        key: 'RHOAIENG-902',
+        fields: {
+          fixVersions: [{ name: '3.6 GA RHOAI RELEASE' }],
+          versions: [],
+          components: [{ name: 'Model Serving' }, { name: 'KubeRay' }],
+          customfield_10847: { value: 'Rejected' }
+        }
+      }
+    ]
+
+    const trends = registerBlockerRoutes.buildHistoricalTrends(issues)
+
+    expect(trends.releases).toEqual([
+      { label: 'rhoai-3.5', approved: 1, rejected: 0, total: 1 },
+      { label: '3.5 GA RHOAI RELEASE', approved: 1, rejected: 0, total: 1 },
+      { label: '3.6 GA RHOAI RELEASE', approved: 0, rejected: 1, total: 1 }
+    ])
+    expect(trends.components).toEqual([
+      { label: 'KubeRay', approved: 0, rejected: 1, total: 1 },
+      { label: 'Model Serving', approved: 1, rejected: 1, total: 2 }
+    ])
+  })
+
   it('builds the awareness query from the blocker scope and includes fix version matches', () => {
     const jql = registerBlockerRoutes.buildAwarenessTrendsJql('3.5 GA RHOAI RELEASE')
 

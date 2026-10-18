@@ -105,6 +105,91 @@ function buildAwarenessTrendsJql(version) {
   )
 }
 
+function buildHistoricalTrendsJql() {
+  return (
+    'project in (RHAIENG, RHOAIENG) ' +
+    'AND (labels not in (RHOAI-releases, RHOAI-internal, devtestops-service) OR labels is empty) ' +
+    'AND component not in (Documentation, PXE) ' +
+    'AND priority in (Blocker) ' +
+    'AND cf[10847] in (16772, 16774) ' +
+    'ORDER BY updated DESC'
+  )
+}
+
+function compareReleaseNames(left, right) {
+  function releaseKey(value) {
+    var text = String(value || '').toLowerCase()
+    var version = text.match(/(\d+)(?:\.(\d+))?/)
+    var phase = text.match(/\b(?:ea|rc)\s*(\d+)?\b/)
+    var phaseNumber = phase && phase[1] ? Number(phase[1]) : 0
+    var phaseRank = /\bea\s*\d*\b/.test(text)
+      ? 10 + phaseNumber
+      : /\brc\s*\d*\b/.test(text)
+        ? 30 + phaseNumber
+        : /\bga\b/.test(text) ? 50 : 40
+    return [version ? Number(version[1]) : Number.MAX_SAFE_INTEGER, version && version[2] ? Number(version[2]) : 0, phaseRank, text]
+  }
+
+  var a = releaseKey(left)
+  var b = releaseKey(right)
+  for (var i = 0; i < a.length; i++) {
+    if (a[i] < b[i]) return -1
+    if (a[i] > b[i]) return 1
+  }
+  return 0
+}
+
+function buildHistoricalTrends(issues) {
+  var releaseGroups = new Map()
+  var componentGroups = new Map()
+
+  function ensureGroup(groups, label) {
+    if (!groups.has(label)) groups.set(label, { label: label, approved: new Set(), rejected: new Set() })
+    return groups.get(label)
+  }
+
+  for (var i = 0; i < (issues || []).length; i++) {
+    var issue = issues[i]
+    var status = serializeReleaseBlockerStatus(issue.fields && issue.fields[BLOCKER_FIELD_ID])
+    if (status !== 'Approved' && status !== 'Rejected') continue
+
+    var releaseNames = []
+      .concat(extractJiraNames(issue.fields && issue.fields.fixVersions))
+      .concat(extractJiraNames(issue.fields && issue.fields.versions))
+      .concat(extractJiraNames(issue.fields && issue.fields[TARGET_VERSION_FIELD_ID]))
+    releaseNames = [...new Set(releaseNames.filter(Boolean))]
+
+    var componentNames = extractJiraNames(issue.fields && issue.fields.components)
+    if (!componentNames.length) componentNames = ['(No component)']
+    componentNames = [...new Set(componentNames)]
+
+    for (var r = 0; r < releaseNames.length; r++) {
+      var releaseGroup = ensureGroup(releaseGroups, releaseNames[r])
+      releaseGroup[status.toLowerCase()].add(issue.key)
+    }
+    for (var c = 0; c < componentNames.length; c++) {
+      var componentGroup = ensureGroup(componentGroups, componentNames[c])
+      componentGroup[status.toLowerCase()].add(issue.key)
+    }
+  }
+
+  function serializeGroups(groups, sorter) {
+    return Array.from(groups.values()).sort(function (a, b) { return sorter(a.label, b.label) }).map(function (group) {
+      return {
+        label: group.label,
+        approved: group.approved.size,
+        rejected: group.rejected.size,
+        total: group.approved.size + group.rejected.size
+      }
+    })
+  }
+
+  return {
+    releases: serializeGroups(releaseGroups, compareReleaseNames),
+    components: serializeGroups(componentGroups, function (a, b) { return a.localeCompare(b) })
+  }
+}
+
 function parseBlockerHistory(issue) {
   var now = new Date()
   var histories = (issue.changelog && issue.changelog.histories) || []
@@ -410,6 +495,46 @@ async function registerBlockerRoutes(router, context) {
 
   /**
    * @openapi
+   * /api/modules/releases/delivery/blockers/trends:
+   *   get:
+   *     tags: ['Releases: Delivery']
+   *     summary: Get historical release blocker trends
+   *     description: Returns raw Approved and Rejected blocker totals grouped by Jira release version and component, independent of dashboard filters.
+   *     responses:
+   *       200:
+   *         description: Historical blocker trend totals
+   *       500:
+   *         description: Failed to fetch historical blocker trends
+   */
+  router.get('/blockers/trends', requireAuth, requireScope('releases:read'), async function (req, res) {
+    var cacheKey = '__historical-trends__'
+    var cached = blockersCache.get(cacheKey)
+    if (cached && (Date.now() - cached.timestamp) < CACHE_TTL_MS) {
+      return res.json(cached.data)
+    }
+
+    if (DEMO_MODE) {
+      var trendFixture = await readFromStorage('releases/delivery/blockers-trends.json')
+      var demoData = trendFixture || { releases: [], components: [] }
+      var demoResponse = { fetchedAt: new Date().toISOString(), releases: demoData.releases, components: demoData.components }
+      blockersCache.set(cacheKey, { data: demoResponse, timestamp: Date.now() })
+      return res.json(demoResponse)
+    }
+
+    try {
+      var issues = await fetchJql(buildHistoricalTrendsJql(), BLOCKER_FIELDS, { maxResults: 100 })
+      var trends = buildHistoricalTrends(issues || [])
+      var response = { fetchedAt: new Date().toISOString(), releases: trends.releases, components: trends.components }
+      blockersCache.set(cacheKey, { data: response, timestamp: Date.now() })
+      res.json(response)
+    } catch (err) {
+      console.error('[releases/delivery] historical blocker trends fetch error:', err)
+      res.status(500).json({ error: 'Failed to fetch historical blocker trends: ' + err.message })
+    }
+  })
+
+  /**
+   * @openapi
    * /api/modules/releases/delivery/blockers/{releaseNumber}:
    *   get:
    *     tags: ['Releases: Delivery']
@@ -507,3 +632,5 @@ module.exports = registerBlockerRoutes
 module.exports.BLOCKER_FIELDS = BLOCKER_FIELDS
 module.exports.buildResponse = buildResponse
 module.exports.buildAwarenessTrendsJql = buildAwarenessTrendsJql
+module.exports.buildHistoricalTrendsJql = buildHistoricalTrendsJql
+module.exports.buildHistoricalTrends = buildHistoricalTrends

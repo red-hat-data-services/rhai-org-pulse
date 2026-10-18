@@ -1,0 +1,12 @@
+{
+  "releases": [
+    { "label": "3.5 EA2 RHOAI RELEASE", "approved": 1, "rejected": 0, "total": 1 },
+    { "label": "3.5 GA RHOAI RELEASE", "approved": 2, "rejected": 1, "total": 3 },
+    { "label": "3.6 GA RHOAI RELEASE", "approved": 1, "rejected": 0, "total": 1 }
+  ],
+  "components": [
+    { "label": "AI Pipelines", "approved": 1, "rejected": 0, "total": 1 },
+    { "label": "Model Serving", "approved": 2, "rejected": 1, "total": 3 },
+    { "label": "TestOps", "approved": 1, "rejected": 0, "total": 1 }
+  ]
+}
