@@ -2,6 +2,24 @@ import { describe, it, expect } from 'vitest'
 
 const registerBlockerRoutes = require('../../../server/delivery/blockers')
 
+function comment(author, body, accountType) {
+  return {
+    author: { displayName: author, accountType: accountType || 'atlassian' },
+    body: {
+      type: 'doc',
+      content: [{ type: 'paragraph', content: [{ type: 'text', text: body }] }]
+    }
+  }
+}
+
+const COMPLETE_ASSESSMENT = [
+  'Known workarounds? Yes, apply the NetworkPolicy manually.',
+  'Overall impact? Workbench creation fails for all affected clusters.',
+  'Could it have been identified earlier? No, the environment was unavailable.',
+  'Is this a regression? No, it is a pre-existing omission.',
+  'Reviews and tests to prevent collateral damage? QE and component reviews passed.'
+].join(' ')
+
 describe('release blocker Jira field mapping', () => {
   it('builds an unfiltered historical trends query', () => {
     const jql = registerBlockerRoutes.buildHistoricalTrendsJql()
@@ -63,6 +81,106 @@ describe('release blocker Jira field mapping', () => {
     expect(registerBlockerRoutes.BLOCKER_FIELDS).toContain('fixVersions')
     expect(registerBlockerRoutes.BLOCKER_FIELDS).toContain('versions')
     expect(registerBlockerRoutes.BLOCKER_FIELDS).toContain('customfield_10001')
+    expect(registerBlockerRoutes.BLOCKER_FIELDS).toContain('customfield_10000')
+    expect(registerBlockerRoutes.BLOCKER_FIELDS).toContain('customfield_10469')
+    expect(registerBlockerRoutes.BLOCKER_FIELDS).toContain('comment')
+  })
+
+  it('requires substantive human answers for all five assessment questions', () => {
+    const flags = registerBlockerRoutes.assessmentAnswerFlags({
+      comments: [
+        comment('Automation for Jira', [
+          'Known workarounds?', 'Overall impact?', 'Could it have been identified earlier?',
+          'Is this a regression?', 'Reviews and tests to prevent collateral damage?'
+        ].join(' '), 'app'),
+        comment('Engineer Name', COMPLETE_ASSESSMENT)
+      ]
+    })
+
+    expect(flags).toEqual({
+      workaround: true,
+      impact: true,
+      earlyCatch: true,
+      regression: true,
+      reviewsAndTests: true
+    })
+  })
+
+  it('classifies regression status from the latest human comment', () => {
+    expect(registerBlockerRoutes.regressionStatus({
+      comments: [
+        comment('Automation for Jira', 'Is this a regression? Yes.', 'app'),
+        comment('Engineer Name', 'Is this a regression? No, the behavior never worked before.')
+      ]
+    })).toBe('No')
+
+    expect(registerBlockerRoutes.regressionStatus({
+      comments: [comment('Engineer Name', 'This is a regression introduced by the latest upgrade.')]
+    })).toBe('Yes')
+
+    expect(registerBlockerRoutes.regressionStatus({ comments: [] })).toBe('Unknown')
+  })
+
+  it('finds only open pull requests in red-hat-data-services repositories', () => {
+    const pullRequests = registerBlockerRoutes.extractActiveRhdPullRequests({
+      detail: [{
+        pullRequests: [
+          { name: 'Downstream fix', repositoryName: 'red-hat-data-services/kubeflow', status: 'OPEN', url: 'https://github.com/red-hat-data-services/kubeflow/pull/1' },
+          { name: 'Merged downstream fix', repositoryName: 'red-hat-data-services/kubeflow', status: 'MERGED', url: 'https://github.com/red-hat-data-services/kubeflow/pull/2' },
+          { name: 'Upstream fix', repositoryName: 'opendatahub-io/kubeflow', status: 'OPEN', url: 'https://github.com/opendatahub-io/kubeflow/pull/3' }
+        ]
+      }]
+    })
+
+    expect(pullRequests).toEqual([{
+      name: 'Downstream fix',
+      repository: 'red-hat-data-services/kubeflow',
+      status: 'OPEN',
+      url: 'https://github.com/red-hat-data-services/kubeflow/pull/1'
+    }])
+  })
+
+  it('requires PM acknowledgement for z-stream blockers', () => {
+    const issue = {
+      fields: {
+        fixVersions: [{ name: '3.5.1 GA RHOAI' }],
+        customfield_10469: { displayName: 'Product Manager' },
+        comment: {
+          comments: [
+            comment('Engineer Name', COMPLETE_ASSESSMENT),
+            comment('Product Manager', 'ACK — approved for exception triage.')
+          ]
+        }
+      }
+    }
+    const activePullRequests = [{ repository: 'red-hat-data-services/kubeflow', status: 'OPEN' }]
+    const readiness = registerBlockerRoutes.buildTriageReadiness(issue, activePullRequests)
+
+    expect(registerBlockerRoutes.isZStreamVersion(['3.5.1 GA RHOAI'])).toBe(true)
+    expect(readiness.ready).toBe(true)
+    expect(readiness.criteria).toEqual({
+      fixVersion: true,
+      linkedPullRequest: true,
+      assessmentCompleted: true,
+      pmAcknowledgement: true
+    })
+    expect(readiness.pmAcknowledgementRequired).toBe(true)
+  })
+
+  it('reports each missing triage requirement without requiring PM acknowledgement for y-stream', () => {
+    const readiness = registerBlockerRoutes.buildTriageReadiness({
+      fields: {
+        fixVersions: [{ name: '3.6 GA RHOAI RELEASE' }],
+        comment: { comments: [] }
+      }
+    }, [])
+
+    expect(readiness.ready).toBe(false)
+    expect(readiness.criteria.pmAcknowledgement).toBe(true)
+    expect(readiness.missingCriteria).toEqual([
+      'active red-hat-data-services PR',
+      'all five assessment answers'
+    ])
   })
 
   it('maps Jira issue metadata into the blocker row', () => {
@@ -160,6 +278,9 @@ describe('release blocker Jira field mapping', () => {
         components: [{ name: 'Model Serving' }],
         customfield_10001: { name: 'Serving' },
         customfield_10847: { value: 'Proposed' },
+        comment: {
+          comments: [comment('Engineer Name', 'Is this a regression? Yes, the previous release worked.')]
+        },
         created: '2026-09-01T00:00:00.000Z',
         updated: '2026-10-06T00:00:00.000Z'
       },
@@ -198,7 +319,13 @@ describe('release blocker Jira field mapping', () => {
       affectedVersions: ['rhoai-3.5'],
       components: ['Model Serving'],
       team: 'Serving',
+      isRegression: 'Yes',
       latestProposedDate: '2026-10-05T00:00:00.000Z'
+    })
+    expect(response.awarenessTrends[0].triageReadiness).toMatchObject({
+      ready: false,
+      missingCriteria: ['active red-hat-data-services PR', 'all five assessment answers'],
+      pmAcknowledgementRequired: false
     })
   })
 })

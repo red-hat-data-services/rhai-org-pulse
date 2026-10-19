@@ -7,6 +7,9 @@ const DEMO_MODE = process.env.DEMO_MODE === 'true'
 const BLOCKER_FIELD_ID = 'customfield_10847'
 const TARGET_VERSION_FIELD_ID = 'customfield_10855'
 const TEAM_FIELD_ID = 'customfield_10001'
+const DEVELOPMENT_FIELD_ID = 'customfield_10000'
+const PRODUCT_MANAGER_FIELD_ID = 'customfield_10469'
+const GITHUB_APPLICATION_TYPE = 'oAuth-com.github.integration.production'
 const RELEASE_BLOCKER_OPTION_LABELS = {
   '16772': 'Approved',
   '16773': 'Proposed',
@@ -17,7 +20,8 @@ const BLOCKER_FIELDS = [
   'summary', 'status', 'priority', 'issuetype', 'components', 'assignee', 'reporter',
   'fixVersions', 'versions', TEAM_FIELD_ID,
   'created', 'updated', 'resolutiondate',
-  BLOCKER_FIELD_ID, TARGET_VERSION_FIELD_ID, 'labels'
+  BLOCKER_FIELD_ID, TARGET_VERSION_FIELD_ID, DEVELOPMENT_FIELD_ID,
+  PRODUCT_MANAGER_FIELD_ID, 'labels', 'comment'
 ].join(',')
 
 const CACHE_TTL_MS = 5 * 60 * 1000
@@ -25,6 +29,29 @@ const CACHE_MAX_ENTRIES = 50
 const blockersCache = new Map()
 
 const RELEASE_NUMBER_RE = /^[a-zA-Z0-9._\- ]+$/
+const Z_STREAM_VERSION_RE = /(?:^|[^\d])\d+\.\d+\.\d+(?:[^\d]|$)/
+const ASSESSMENT_QUESTIONS = [
+  {
+    key: 'workaround',
+    pattern: /(?:are\s+there\s+any\s+known\s+workarounds?|known\s+workarounds?)(?:[^?]*)\?/i
+  },
+  {
+    key: 'impact',
+    pattern: /(?:what\s+is\s+the\s+)?overall\s+impact(?:\s+of\s+the\s+issue)?(?:[^?]*)\?/i
+  },
+  {
+    key: 'earlyCatch',
+    pattern: /could\s+(?:this\s+issue|it)\s+have\s+been\s+identified\s+earlier(?:[^?]*)\?/i
+  },
+  {
+    key: 'regression',
+    pattern: /is\s+(?:this(?:\s+issue)?|it)\s+a\s+regression(?:[^?]*)\?/i
+  },
+  {
+    key: 'reviewsAndTests',
+    pattern: /(?:what\s+reviews?\s+and\s+tests?\s+have\s+been\s+performed|reviews?\s+and\s+tests?\s+to\s+prevent\s+collateral\s+damage)(?:[^?]*)\?/i
+  }
+]
 
 function extractJiraNames(field) {
   if (field === null || field === undefined) return []
@@ -59,6 +86,198 @@ function serializeReleaseBlockerStatus(field) {
     return field.value || field.name || RELEASE_BLOCKER_OPTION_LABELS[String(field.id)] || null
   }
   return RELEASE_BLOCKER_OPTION_LABELS[String(field)] || String(field)
+}
+
+function extractAdfText(node) {
+  if (!node) return ''
+  if (typeof node === 'string') return node
+  if (Array.isArray(node)) return node.map(extractAdfText).join(' ')
+  if (node.type === 'text') return node.text || ''
+  if (node.type === 'hardBreak') return '\n'
+  if (Array.isArray(node.content)) return node.content.map(extractAdfText).join(' ')
+  return ''
+}
+
+function isAutomationComment(comment) {
+  var author = (comment && comment.author) || {}
+  var name = author.displayName || author.name || ''
+  return author.accountType === 'app' || /automation\s+for\s+jira|jira\s+bot/i.test(name)
+}
+
+function assessmentAnswerFlags(commentField) {
+  var flags = {
+    workaround: false,
+    impact: false,
+    earlyCatch: false,
+    regression: false,
+    reviewsAndTests: false
+  }
+  var comments = commentField && Array.isArray(commentField.comments) ? commentField.comments : []
+
+  for (var i = 0; i < comments.length; i++) {
+    if (isAutomationComment(comments[i])) continue
+    var text = extractAdfText(comments[i].body).replace(/\s+/g, ' ').trim()
+    if (!text) continue
+
+    var matches = ASSESSMENT_QUESTIONS.map(function (question) {
+      return text.match(question.pattern)
+    })
+
+    for (var q = 0; q < ASSESSMENT_QUESTIONS.length; q++) {
+      var match = matches[q]
+      if (!match) continue
+      var answerStart = match.index + match[0].length
+      var answerEnd = text.length
+      for (var next = 0; next < matches.length; next++) {
+        if (matches[next] && matches[next].index > match.index && matches[next].index < answerEnd) {
+          answerEnd = matches[next].index
+        }
+      }
+      var answer = text.slice(answerStart, answerEnd).replace(/^[\s:;\-–—]+/, '').trim()
+      if (/[a-z0-9]{2}/i.test(answer)) flags[ASSESSMENT_QUESTIONS[q].key] = true
+    }
+  }
+
+  return flags
+}
+
+function regressionStatus(commentField) {
+  var comments = commentField && Array.isArray(commentField.comments) ? commentField.comments : []
+
+  // Prefer the most recent human comment so a later correction can supersede
+  // an earlier assessment. Automation comments are not evidence of a defect
+  // being identified as a regression.
+  for (var i = comments.length - 1; i >= 0; i--) {
+    if (isAutomationComment(comments[i])) continue
+    var text = extractAdfText(comments[i].body).replace(/\s+/g, ' ').trim()
+    if (!text) continue
+
+    var question = text.match(/is\s+(?:this(?:\s+issue)?|it)\s+a\s+regression(?:[^?]*)\?/i)
+    if (question) {
+      var answer = text.slice(question.index + question[0].length).match(/^\s*[:;\-–—]?\s*(yes|no)\b/i)
+      if (answer) return answer[1].toLowerCase() === 'yes' ? 'Yes' : 'No'
+    }
+
+    if (/\b(?:not|no)\s+(?:a\s+)?regression\b|\bpre[-\s]?existing\b|\bnever\s+worked\b/i.test(text)) {
+      return 'No'
+    }
+
+    if (/\b(?:this|it)\s+is\s+(?:clearly\s+|definitely\s+)?(?:a\s+)?regression\b|\b(?:confirmed|identified|introduced|caused)\s+(?:as\s+)?(?:a\s+)?regression\b|\bregression\s+(?:bug|issue)\b|\bregressed\s+(?:after|since|in|from)\b/i.test(text)) {
+      return 'Yes'
+    }
+  }
+
+  return 'Unknown'
+}
+
+function isZStreamVersion(fixVersions) {
+  return (fixVersions || []).some(function (version) {
+    return Z_STREAM_VERSION_RE.test(String(version || ''))
+  })
+}
+
+function hasPmAcknowledgement(commentField, productManager) {
+  var comments = commentField && Array.isArray(commentField.comments) ? commentField.comments : []
+  var pmName = String(productManager || '').trim().toLowerCase()
+
+  for (var i = 0; i < comments.length; i++) {
+    var comment = comments[i]
+    if (isAutomationComment(comment)) continue
+    var text = extractAdfText(comment.body).replace(/\s+/g, ' ').trim()
+    var author = (comment.author && (comment.author.displayName || comment.author.name) || '').trim().toLowerCase()
+    if (/\bpm\s*(?:ack(?:nowledged|nowledgement)?|approv(?:e|ed|al))\b/i.test(text)) return true
+    if (pmName && author === pmName && /\b(?:ack(?:nowledged)?|approv(?:e|ed|al))\b/i.test(text)) return true
+  }
+
+  return false
+}
+
+function extractActiveRhdPullRequests(payload) {
+  var active = []
+  var details = payload && Array.isArray(payload.detail) ? payload.detail : []
+  for (var i = 0; i < details.length; i++) {
+    var pullRequests = Array.isArray(details[i].pullRequests) ? details[i].pullRequests : []
+    for (var j = 0; j < pullRequests.length; j++) {
+      var pullRequest = pullRequests[j]
+      var repository = String(pullRequest.repositoryName || '')
+      var url = String(pullRequest.url || '')
+      var isRhdRepository = /^red-hat-data-services\//i.test(repository) || /github\.com\/red-hat-data-services\//i.test(url)
+      if (!isRhdRepository || String(pullRequest.status || '').toUpperCase() !== 'OPEN') continue
+      active.push({
+        name: pullRequest.name || pullRequest.id || url,
+        repository: repository,
+        status: 'OPEN',
+        url: url
+      })
+    }
+  }
+  return active
+}
+
+function buildTriageReadiness(issue, activePullRequests) {
+  var fields = (issue && issue.fields) || {}
+  var fixVersions = extractJiraNames(fields.fixVersions)
+  var zStream = isZStreamVersion(fixVersions)
+  var answers = assessmentAnswerFlags(fields.comment)
+  var assessmentCompleted = Object.keys(answers).every(function (key) { return answers[key] })
+  var productManager = serializeJiraUser(fields[PRODUCT_MANAGER_FIELD_ID])
+  var pmAcknowledged = !zStream || hasPmAcknowledgement(fields.comment, productManager)
+  var criteria = {
+    fixVersion: fixVersions.length > 0,
+    linkedPullRequest: (activePullRequests || []).length > 0,
+    assessmentCompleted: assessmentCompleted,
+    pmAcknowledgement: pmAcknowledged
+  }
+  var missingCriteria = []
+  if (!criteria.fixVersion) missingCriteria.push('Fix Version')
+  if (!criteria.linkedPullRequest) missingCriteria.push('active red-hat-data-services PR')
+  if (!criteria.assessmentCompleted) missingCriteria.push('all five assessment answers')
+  if (!criteria.pmAcknowledgement) missingCriteria.push('PM acknowledgement')
+
+  return {
+    ready: Object.keys(criteria).every(function (key) { return criteria[key] }),
+    criteria: criteria,
+    missingCriteria: missingCriteria,
+    assessmentAnswers: answers,
+    activePullRequests: activePullRequests || [],
+    isZStream: zStream,
+    pmAcknowledgementRequired: zStream,
+    productManager: productManager
+  }
+}
+
+async function fetchActiveRhdPullRequests(issue, jiraRequest) {
+  if (!jiraRequest || !issue || !issue.id) return []
+  try {
+    var path = '/rest/dev-status/1.0/issue/detail?issueId=' + encodeURIComponent(issue.id) +
+      '&applicationType=' + encodeURIComponent(GITHUB_APPLICATION_TYPE) + '&dataType=pullrequest'
+    return extractActiveRhdPullRequests(await jiraRequest(path))
+  } catch (err) {
+    console.warn('[releases/delivery] PR readiness lookup failed for ' + issue.key + ': ' + err.message)
+    return []
+  }
+}
+
+async function buildTriageReadinessMap(issues, jiraRequest) {
+  var proposedIssues = (issues || []).filter(function (issue) {
+    return serializeReleaseBlockerStatus(issue.fields && issue.fields[BLOCKER_FIELD_ID]) === 'Proposed'
+  })
+  var readiness = new Map()
+  var nextIndex = 0
+
+  async function worker() {
+    while (nextIndex < proposedIssues.length) {
+      var issue = proposedIssues[nextIndex++]
+      var activePullRequests = await fetchActiveRhdPullRequests(issue, jiraRequest)
+      readiness.set(issue.key, buildTriageReadiness(issue, activePullRequests))
+    }
+  }
+
+  var workers = []
+  var workerCount = Math.min(5, proposedIssues.length)
+  for (var i = 0; i < workerCount; i++) workers.push(worker())
+  await Promise.all(workers)
+  return readiness
 }
 
 // Escapes single quotes for safe JQL string interpolation (input already validated by RELEASE_NUMBER_RE)
@@ -292,7 +511,7 @@ function buildAgingStats(values) {
   }
 }
 
-function buildResponse(releaseNumber, blockerIssues, criticalIssues, codeFreezeDate, jiraHost, awarenessIssues) {
+function buildResponse(releaseNumber, blockerIssues, criticalIssues, codeFreezeDate, jiraHost, awarenessIssues, triageReadinessByKey) {
   var now = new Date()
 
   var proposed = 0
@@ -439,9 +658,13 @@ function buildResponse(releaseNumber, blockerIssues, criticalIssues, codeFreezeD
       affectedVersions: extractJiraNames(trendIssue.fields && trendIssue.fields.versions),
       components: trendComponents,
       team: serializeJiraField(trendIssue.fields && trendIssue.fields[TEAM_FIELD_ID]),
+      isRegression: regressionStatus(trendIssue.fields && trendIssue.fields.comment),
       created: trendIssue.fields && trendIssue.fields.created ? trendIssue.fields.created : null,
       updated: trendIssue.fields && trendIssue.fields.updated ? trendIssue.fields.updated : null,
-      latestProposedDate: trendHistory.latestProposedDate
+      latestProposedDate: trendHistory.latestProposedDate,
+      triageReadiness: trendHistory.currentStatus === 'Proposed'
+        ? ((triageReadinessByKey && triageReadinessByKey.get(trendIssue.key)) || buildTriageReadiness(trendIssue, []))
+        : null
     })
   }
 
@@ -482,12 +705,15 @@ async function registerBlockerRoutes(router, context) {
 
   var jiraHost = sharedJira.JIRA_HOST
   var fetchJql
+  var jiraRequest
   if (context.jira) {
     jiraHost = context.jira.JIRA_HOST
+    jiraRequest = context.jira.jiraRequest
     fetchJql = function (jql, fields, opts) {
       return context.jira.fetchAllJqlResults(jql, fields, opts)
     }
   } else {
+    jiraRequest = sharedJira.jiraRequest
     fetchJql = function (jql, fields, opts) {
       return sharedJira.fetchAllJqlResults(sharedJira.jiraRequest, jql, fields, opts)
     }
@@ -611,8 +837,17 @@ async function registerBlockerRoutes(router, context) {
       var blockerIssues = results[0] || []
       var criticalIssues = results[1] || []
       var awarenessIssues = results[2] || []
+      var triageReadinessByKey = await buildTriageReadinessMap(awarenessIssues, jiraRequest)
 
-      var response = buildResponse(releaseNumber, blockerIssues, criticalIssues, codeFreezeDate, jiraHost, awarenessIssues)
+      var response = buildResponse(
+        releaseNumber,
+        blockerIssues,
+        criticalIssues,
+        codeFreezeDate,
+        jiraHost,
+        awarenessIssues,
+        triageReadinessByKey
+      )
 
       blockersCache.set(cacheKey, { data: response, timestamp: Date.now() })
       if (blockersCache.size > CACHE_MAX_ENTRIES) {
@@ -634,3 +869,8 @@ module.exports.buildResponse = buildResponse
 module.exports.buildAwarenessTrendsJql = buildAwarenessTrendsJql
 module.exports.buildHistoricalTrendsJql = buildHistoricalTrendsJql
 module.exports.buildHistoricalTrends = buildHistoricalTrends
+module.exports.assessmentAnswerFlags = assessmentAnswerFlags
+module.exports.regressionStatus = regressionStatus
+module.exports.isZStreamVersion = isZStreamVersion
+module.exports.extractActiveRhdPullRequests = extractActiveRhdPullRequests
+module.exports.buildTriageReadiness = buildTriageReadiness

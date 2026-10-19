@@ -1817,6 +1817,7 @@ test.describe('Releases Blockers @releases', () => {
             affectedVersions: ['rhoai-3.5'],
             components: ['TrustyAI'],
             team: 'Security',
+            isRegression: 'Unknown',
             created: '2026-10-08T00:00:00.000Z',
             updated: '2026-10-08T00:00:00.000Z',
             latestProposedDate: '2026-10-02T00:00:00.000Z',
@@ -1835,9 +1836,14 @@ test.describe('Releases Blockers @releases', () => {
             affectedVersions: ['rhoai-3.5'],
             components: ['Dashboard'],
             team: 'Platform',
+            isRegression: 'No',
             created: '2026-10-01T00:00:00.000Z',
             updated: '2026-10-03T00:00:00.000Z',
             latestProposedDate: '2026-10-01T00:00:00.000Z',
+            triageReadiness: {
+              ready: false,
+              missingCriteria: ['active red-hat-data-services PR', 'all five assessment answers']
+            },
             link: 'https://jira.example.com/browse/RHOAIENG-PROPOSED-OLD'
           },
           {
@@ -1853,9 +1859,11 @@ test.describe('Releases Blockers @releases', () => {
             affectedVersions: ['rhoai-3.5'],
             components: ['Model Serving'],
             team: 'Gateway',
+            isRegression: 'Yes',
             created: '2026-10-06T00:00:00.000Z',
             updated: '2026-10-07T00:00:00.000Z',
             latestProposedDate: '2026-10-07T00:00:00.000Z',
+            triageReadiness: { ready: true, missingCriteria: [] },
             link: 'https://jira.example.com/browse/RHOAIENG-PROPOSED-NEW'
           }
         ]
@@ -1870,18 +1878,22 @@ test.describe('Releases Blockers @releases', () => {
 
     const expectedHeaders = [
       'Jira Key', 'Summary', 'Priority', 'Issue type', 'Status',
-      'Release blocker', 'Assignee', 'Reporter', 'Fix version',
+      'Release blocker', 'Is Regression', 'Assignee', 'Reporter', 'Fix version',
       'Affects version', 'Component', 'Team'
     ];
 
     const awarenessSection = page.getByTestId('blockers-awareness-trends');
-    await expect(awarenessSection.getByRole('heading', { name: 'Blockers Awareness and Trends' })).toBeVisible();
+    await expect(awarenessSection.getByRole('heading', { name: 'Release Blockers Awareness' })).toBeVisible();
     const awarenessTable = awarenessSection.locator('table');
 
     await expect(page.getByTestId('blocker-summary-total')).toContainText('3');
     await expect(page.getByTestId('blocker-summary-proposed')).toContainText('2');
     await expect(page.getByTestId('blocker-summary-approved')).toContainText('1');
     await expect(page.getByTestId('blocker-summary-rejected')).toContainText('0');
+    await expect(page.getByTestId('blocker-summary-total')).not.toHaveRole('button');
+    await expect(page.getByTestId('blocker-summary-proposed')).not.toHaveRole('button');
+    await expect(page.getByTestId('blocker-summary-approved')).not.toHaveRole('button');
+    await expect(page.getByTestId('blocker-summary-rejected')).not.toHaveRole('button');
 
     const awarenessHeaders = await awarenessTable.locator('thead th').evaluateAll(ths =>
       ths.map(th => th.textContent.replace(/[▲▼⇅]/g, '').trim())
@@ -1895,15 +1907,10 @@ test.describe('Releases Blockers @releases', () => {
       'RHOAIENG-APPROVED'
     ]);
 
-    await page.getByTestId('blocker-summary-approved').click();
-    await expect(awarenessTable.locator('tbody tr')).toHaveCount(1);
-    await expect(awarenessTable.locator('tbody tr')).toContainText('RHOAIENG-APPROVED');
-    await page.getByTestId('blocker-summary-total').click();
-    await expect(awarenessTable.locator('tbody tr')).toHaveCount(3);
-
     await awarenessSection.getByLabel('Release Blocker').selectOption('Approved');
     await expect(awarenessTable.locator('tbody tr')).toHaveCount(1);
     await expect(awarenessTable.locator('tbody tr')).toContainText('RHOAIENG-APPROVED');
+    await expect(awarenessTable.locator('tbody tr')).toContainText('Unknown');
     await awarenessSection.getByRole('button', { name: 'Clear' }).click();
 
     await awarenessSection.getByLabel('Fix Version').selectOption('3.5 EA2 RHOAI RELEASE');
@@ -1917,6 +1924,29 @@ test.describe('Releases Blockers @releases', () => {
     await awarenessSection.getByRole('button', { name: 'Clear' }).click();
     await awarenessSection.getByLabel('Component').selectOption('TrustyAI');
     await expect(awarenessTable.locator('tbody tr')).toHaveCount(1);
+
+    const triageSection = page.getByTestId('triage-readiness');
+    await expect(triageSection.getByRole('heading', { name: 'Triage Readiness' })).toBeVisible();
+    const triageHeaders = await triageSection.locator('thead th').allTextContents();
+    expect(triageHeaders.map(value => value.trim())).toEqual([
+      'Jira Key', 'Summary', 'Ready for Triage', 'Assignee', 'Status', 'Release Blocker', 'Is Regression', 'Fix Version'
+    ]);
+    await expect(triageSection.locator('tbody tr')).toHaveCount(2);
+    await expect(triageSection).toContainText('RHOAIENG-PROPOSED-NEW');
+    await expect(triageSection).toContainText('RHOAIENG-PROPOSED-OLD');
+    await expect(triageSection).not.toContainText('RHOAIENG-APPROVED');
+    await expect(triageSection.getByText('Ready', { exact: true })).toHaveCount(1);
+    await expect(triageSection.getByText('Not Ready', { exact: true })).toHaveCount(1);
+    await expect(triageSection).toContainText('Fix Version assigned');
+    await expect(triageSection).toContainText('Active red-hat-data-services PR/MR linked');
+    await expect(triageSection).toContainText('All five assessment questions answered');
+    await expect(triageSection).toContainText('PM acknowledgement (z-stream only)');
+    await expect(triageSection).toContainText('Workaround');
+    await expect(triageSection).toContainText('Reviews/tests');
+    await expect(triageSection).toContainText('Yes');
+    await expect(triageSection).toContainText('No');
+    await expect(triageSection).toContainText('✓');
+    await expect(triageSection).toContainText('✕');
 
     expect(page.errors).toHaveLength(0);
   });

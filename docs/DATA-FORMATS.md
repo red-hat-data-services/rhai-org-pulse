@@ -1137,14 +1137,39 @@ summary, timing, and aging statistics plus three issue collections:
 
 Each `awarenessTrends` record includes `key`, `summary`, `link`, `priority`,
 `issueType`, `status`, `releaseBlockerStatus`, `assignee`, `reporter`,
-`fixVersions`, `affectedVersions`, `components`, `team`, `created`, `updated`,
-and `latestProposedDate`. Version and component values remain arrays because a
-Jira issue can contain multiple values. `latestProposedDate` is the most recent
-changelog transition into Proposed and is `null` when no such transition is
-available.
+`isRegression`, `fixVersions`, `affectedVersions`, `components`, `team`,
+`created`, `updated`, `latestProposedDate`, and `triageReadiness`. `isRegression`
+is derived from human Jira comments and is always one of `Yes`, `No`, or
+`Unknown`. Version and component values remain arrays because a Jira issue can
+contain multiple values. `latestProposedDate`
+is the most recent changelog transition into Proposed and is `null` when no
+such transition is available.
+
+`triageReadiness` is populated only for Proposed blockers. It is calculated
+conservatively from Jira evidence and contains:
+
+- `ready`: true only when every applicable criterion passes.
+- `criteria`: booleans for `fixVersion`, `linkedPullRequest`,
+  `assessmentCompleted`, and `pmAcknowledgement`.
+- `missingCriteria`: human-readable unmet requirements.
+- `assessmentAnswers`: answer-detection results for workaround, impact,
+  early-catch, regression, and reviews/tests questions. Jira automation and bot
+  comments are ignored.
+- `activePullRequests`: open PRs linked through Jira development status whose
+  repository belongs to `red-hat-data-services`.
+- `isZStream`, `pmAcknowledgementRequired`, and `productManager`: context for
+  the conditional PM acknowledgement requirement. A Fix Version containing a
+  three-part semantic version, such as `3.5.1`, is treated as z-stream.
+
+For non-z-stream releases, `criteria.pmAcknowledgement` is true because that
+criterion does not apply. For z-stream releases it is true only when a human
+comment contains explicit PM acknowledgement/approval, or when the configured
+Product Manager authors an acknowledgement/approval comment. Missing or
+unavailable Jira evidence always produces a failed criterion.
 
 Older fixtures and cached responses may omit `awarenessTrends`; clients treat
-the missing field as an empty collection.
+the missing field as an empty collection. Older `awarenessTrends` records may
+omit `triageReadiness`; clients display those records as Not Ready.
 
 The `GET /api/modules/releases/delivery/blockers/trends` response contains an
 unfiltered historical aggregate for Blocker-priority issues whose Release

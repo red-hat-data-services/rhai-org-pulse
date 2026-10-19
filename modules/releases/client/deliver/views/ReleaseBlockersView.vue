@@ -21,60 +21,44 @@
 
     <!-- Content -->
     <div v-else-if="data">
-      <!-- Summary Cards (clickable as filters) -->
+      <!-- Summary Cards -->
       <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-6">
-        <button
+        <div
           data-testid="blocker-summary-total"
-          @click="awarenessReleaseBlockerFilter = ''"
-          class="text-left rounded-lg border p-4 transition-all"
-          :class="awarenessReleaseBlockerFilter === ''
-            ? 'bg-blue-50 dark:bg-blue-900/20 border-blue-300 dark:border-blue-700 ring-2 ring-blue-300 dark:ring-blue-700'
-            : 'bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600'"
+          class="rounded-lg border border-blue-200 bg-blue-50/50 p-4 text-left dark:border-blue-800 dark:bg-blue-900/10"
         >
           <p class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-1">Total Blockers</p>
           <p class="text-2xl font-bold text-gray-900 dark:text-gray-100">{{ awarenessSummary.total }}</p>
-        </button>
-        <button
+        </div>
+        <div
           data-testid="blocker-summary-proposed"
-          @click="toggleAwarenessReleaseBlockerFilter('Proposed')"
-          class="text-left rounded-lg border p-4 transition-all"
-          :class="awarenessReleaseBlockerFilter === 'Proposed'
-            ? 'bg-amber-50 dark:bg-amber-900/20 border-amber-400 dark:border-amber-600 ring-2 ring-amber-300 dark:ring-amber-700'
-            : 'bg-white dark:bg-gray-800 border-amber-200 dark:border-amber-800 hover:border-amber-300 dark:hover:border-amber-700'"
+          class="rounded-lg border border-amber-200 bg-white p-4 text-left dark:border-amber-800 dark:bg-gray-800"
         >
           <p class="text-xs font-medium text-amber-600 dark:text-amber-400 uppercase tracking-wide mb-1">Proposed</p>
           <p class="text-2xl font-bold text-amber-700 dark:text-amber-300">{{ awarenessSummary.proposed }}</p>
-        </button>
-        <button
+        </div>
+        <div
           data-testid="blocker-summary-approved"
-          @click="toggleAwarenessReleaseBlockerFilter('Approved')"
-          class="text-left rounded-lg border p-4 transition-all"
-          :class="awarenessReleaseBlockerFilter === 'Approved'
-            ? 'bg-red-50 dark:bg-red-900/20 border-red-400 dark:border-red-600 ring-2 ring-red-300 dark:ring-red-700'
-            : 'bg-white dark:bg-gray-800 border-red-200 dark:border-red-800 hover:border-red-300 dark:hover:border-red-700'"
+          class="rounded-lg border border-red-200 bg-white p-4 text-left dark:border-red-800 dark:bg-gray-800"
         >
           <p class="text-xs font-medium text-red-600 dark:text-red-400 uppercase tracking-wide mb-1">Approved</p>
           <p class="text-2xl font-bold text-red-700 dark:text-red-300">{{ awarenessSummary.approved }}</p>
-        </button>
-        <button
+        </div>
+        <div
           data-testid="blocker-summary-rejected"
-          @click="toggleAwarenessReleaseBlockerFilter('Rejected')"
-          class="text-left rounded-lg border p-4 transition-all"
-          :class="awarenessReleaseBlockerFilter === 'Rejected'
-            ? 'bg-emerald-50 dark:bg-emerald-900/20 border-emerald-400 dark:border-emerald-600 ring-2 ring-emerald-300 dark:ring-emerald-700'
-            : 'bg-white dark:bg-gray-800 border-emerald-200 dark:border-emerald-800 hover:border-emerald-300 dark:hover:border-emerald-700'"
+          class="rounded-lg border border-emerald-200 bg-white p-4 text-left dark:border-emerald-800 dark:bg-gray-800"
         >
           <p class="text-xs font-medium text-emerald-600 dark:text-emerald-400 uppercase tracking-wide mb-1">Rejected</p>
           <p class="text-2xl font-bold text-emerald-700 dark:text-emerald-300">{{ awarenessSummary.rejected }}</p>
-        </button>
+        </div>
       </div>
 
-      <!-- Blockers Awareness and Trends -->
+      <!-- Release Blockers Awareness -->
       <section data-testid="blockers-awareness-trends" class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden mb-6">
         <div class="px-4 py-3 border-b border-gray-200 dark:border-gray-700">
           <div class="flex items-center justify-between gap-3 mb-3">
             <div>
-              <h3 class="text-sm font-semibold text-gray-700 dark:text-gray-300">Blockers Awareness and Trends</h3>
+              <h3 class="text-sm font-semibold text-gray-700 dark:text-gray-300">Release Blockers Awareness</h3>
               <p class="text-xs text-gray-400 dark:text-gray-500 mt-0.5">Issues with a Proposed, Approved, or Rejected Release blocker value.</p>
             </div>
             <span class="text-xs text-gray-400 dark:text-gray-500 whitespace-nowrap">{{ visibleAwarenessTrends.length }} of {{ awarenessTrends.length }} issues</span>
@@ -146,6 +130,7 @@
                 <td class="px-3 py-2 text-xs text-gray-600 dark:text-gray-400">{{ issue.issueType || '—' }}</td>
                 <td class="px-3 py-2 text-xs text-gray-600 dark:text-gray-400">{{ issue.status || '—' }}</td>
                 <td class="px-3 py-2"><span :class="blockerStatusClass(issue.releaseBlockerStatus)" class="text-xs px-2 py-0.5 rounded-full font-medium">{{ issue.releaseBlockerStatus }}</span></td>
+                <td class="px-3 py-2 text-xs text-gray-600 dark:text-gray-400">{{ issue.isRegression || 'Unknown' }}</td>
                 <td class="px-3 py-2 text-xs text-gray-600 dark:text-gray-400">{{ issue.assignee || '—' }}</td>
                 <td class="px-3 py-2 text-xs text-gray-600 dark:text-gray-400">{{ issue.reporter || '—' }}</td>
                 <td class="px-3 py-2 text-xs text-gray-600 dark:text-gray-400">{{ (issue.fixVersions || []).join(', ') || '—' }}</td>
@@ -161,6 +146,8 @@
           <p v-else class="text-xs text-gray-400 dark:text-gray-500">No issues with a Release blocker value were found for this version.</p>
         </div>
       </section>
+
+      <TriageReadinessTable :issues="triageReadinessIssues" />
 
       <!-- Historical trend charts intentionally use a separate, unfiltered data source. -->
       <BlockerTrendsSection :data="blockerTrendData" :loading="blockerTrendLoading" :error="blockerTrendError" />
@@ -330,6 +317,7 @@ import { useReleaseBlockers } from '../composables/useReleaseBlockers.js'
 import { useBlockerTrends } from '../composables/useBlockerTrends.js'
 import TfaRiskSection from '../components/TfaRiskSection.vue'
 import BlockerTrendsSection from '../components/BlockerTrendsSection.vue'
+import TriageReadinessTable from '../components/TriageReadinessTable.vue'
 
 const filter = inject('releaseFilter')
 
@@ -370,6 +358,7 @@ const blockerColumns = [
   { key: 'issueType', label: 'Issue type', sortable: true },
   { key: 'status', label: 'Status', sortable: true },
   { key: 'releaseBlockerStatus', label: 'Release blocker', sortable: true },
+  { key: 'isRegression', label: 'Is Regression', sortable: true },
   { key: 'assignee', label: 'Assignee', sortable: true },
   { key: 'reporter', label: 'Reporter', sortable: true },
   { key: 'fixVersions', label: 'Fix version', sortable: true },
@@ -392,7 +381,7 @@ function sortRows(rows, key, dir) {
   })
 }
 
-// Blockers Awareness and Trends filters and sorting
+// Release Blockers Awareness filters and sorting
 const awarenessReleaseBlockerFilter = ref('')
 const awarenessFixVersionFilter = ref('')
 const awarenessStatusFilter = ref('')
@@ -462,10 +451,6 @@ function clearAwarenessFilters() {
   awarenessComponentFilter.value = ''
 }
 
-function toggleAwarenessReleaseBlockerFilter(status) {
-  awarenessReleaseBlockerFilter.value = awarenessReleaseBlockerFilter.value === status ? '' : status
-}
-
 watch(effectiveReleaseNumbers, function () {
   clearAwarenessFilters()
   awarenessSortKey.value = null
@@ -493,6 +478,12 @@ function sortAwarenessByDefault(rows) {
     return dateOrder || String(a.key).localeCompare(String(b.key))
   })
 }
+
+const triageReadinessIssues = computed(function () {
+  return sortAwarenessByDefault(awarenessTrends.value.filter(function (issue) {
+    return issue.releaseBlockerStatus === 'Proposed'
+  }))
+})
 
 const visibleAwarenessTrends = computed(function () {
   var rows = awarenessTrends.value.slice()
