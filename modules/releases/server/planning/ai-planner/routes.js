@@ -267,7 +267,17 @@ module.exports = function registerAIPlannerRoutes(router, context) {
    */
   router.get('/ai-planner', requireAuth, requireScope('releases:read'), async function(req, res) {
     try {
-      const readiness = await buildFeatureReadiness(readFromStorage, null, listStorageFiles);
+      // Fetch Jira features first to get parentKey links to outcomes (same as /outcomes endpoint)
+      let jiraFeatures = null;
+      if (context.jiraClient) {
+        try {
+          jiraFeatures = await fetchFeaturesWithTimeout(context.jiraClient);
+        } catch (jiraErr) {
+          console.warn('[ai-planner] Jira feature query failed, falling back to cached data:', jiraErr.message);
+        }
+      }
+
+      const readiness = await buildFeatureReadiness(readFromStorage, jiraFeatures, listStorageFiles);
 
       const allFeatures = (readiness.pendingReview || []).concat(readiness.ready || []);
 
