@@ -2,6 +2,7 @@ const express = require('express');
 const { validateSnapshot } = require('./validation');
 const { readAIPlanner, writeAIPlanner, projectSnapshot, emptySnapshot } = require('./storage');
 const { PRIORITY_OUTCOMES, extractOutcomesFromFeatures, calculateOutcomeMetrics } = require('./outcomes-integration');
+const { fetchFeaturesWithTimeout } = require('../feature-query');
 
 const DEMO_MODE = process.env.DEMO_MODE === 'true';
 
@@ -137,8 +138,18 @@ module.exports = function registerAIPlannerRoutes(router, context) {
    */
   router.get('/ai-planner/outcomes', requireAuth, requireScope('releases:read'), async function(req, res) {
     try {
-      // Build outcomes from live feature data (already synced from Jira every 12h)
-      const readiness = await buildFeatureReadiness(readFromStorage, null, listStorageFiles);
+      // Fetch Jira features first to get parentKey links to outcomes
+      var jiraFeatures = null;
+      if (context.jiraClient) {
+        try {
+          jiraFeatures = await fetchFeaturesWithTimeout(context.jiraClient);
+        } catch (jiraErr) {
+          console.warn('[ai-planner/outcomes] Jira feature query failed, falling back to cached data:', jiraErr.message);
+        }
+      }
+
+      // Build outcomes from live feature data with Jira parent links
+      const readiness = await buildFeatureReadiness(readFromStorage, jiraFeatures, listStorageFiles);
       const allFeatures = (readiness.pendingReview || []).concat(readiness.ready || []);
       const inPlanFeatures = allFeatures
         .filter(f => f.status !== 'No' && f.targetVersions && f.targetVersions.some(v => v.includes('3.6')))
