@@ -139,7 +139,7 @@ module.exports = function registerAIPlannerRoutes(router, context) {
   router.get('/ai-planner/outcomes', requireAuth, requireScope('releases:read'), async function(req, res) {
     try {
       // Fetch Jira features first to get parentKey links to outcomes
-      var jiraFeatures = null;
+      let jiraFeatures = null;
       if (context.jiraClient) {
         try {
           jiraFeatures = await fetchFeaturesWithTimeout(context.jiraClient);
