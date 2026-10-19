@@ -152,6 +152,9 @@
       <!-- Historical trend charts intentionally use a separate, unfiltered data source. -->
       <BlockerTrendsSection :data="blockerTrendData" :loading="blockerTrendLoading" :error="blockerTrendError" />
 
+      <!-- Continuous-improvement analysis uses the complete historical trend issue set, independently of page filters. -->
+      <BlockerAnalysisSection :data="blockerAnalysisData" :loading="blockerAnalysisLoading" :error="blockerAnalysisError" />
+
       <!-- Test Sign-Off Risk Assessment -->
       <TfaRiskSection v-if="effectiveReleaseNumbers.length" :versions="effectiveReleaseNumbers" />
 
@@ -315,9 +318,11 @@
 import { ref, computed, inject, watch } from 'vue'
 import { useReleaseBlockers } from '../composables/useReleaseBlockers.js'
 import { useBlockerTrends } from '../composables/useBlockerTrends.js'
+import { useBlockerAnalysis } from '../composables/useBlockerAnalysis.js'
 import TfaRiskSection from '../components/TfaRiskSection.vue'
 import BlockerTrendsSection from '../components/BlockerTrendsSection.vue'
 import TriageReadinessTable from '../components/TriageReadinessTable.vue'
+import BlockerAnalysisSection from '../components/BlockerAnalysisSection.vue'
 
 const filter = inject('releaseFilter')
 
@@ -393,6 +398,12 @@ const awarenessSortDir = ref('desc')
 const awarenessTrends = computed(function () {
   return (data.value && Array.isArray(data.value.awarenessTrends)) ? data.value.awarenessTrends : []
 })
+
+const {
+  data: blockerAnalysisData,
+  loading: blockerAnalysisLoading,
+  error: blockerAnalysisError
+} = useBlockerAnalysis(blockerTrendData)
 
 const awarenessSummary = computed(function () {
   var summary = {

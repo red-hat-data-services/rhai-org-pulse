@@ -1186,6 +1186,25 @@ issues so the trend remains historical:
   ],
   "components": [
     { "label": "Model Serving", "approved": 2, "rejected": 1, "total": 3 }
+  ],
+  "issues": [
+    {
+      "key": "RHOAIENG-93716",
+      "link": "https://redhat.atlassian.net/browse/RHOAIENG-93716",
+      "summary": "NetworkPolicies for Serving Orchestration operands",
+      "releaseBlockerStatus": "Approved",
+      "fixVersions": ["3.5 GA RHOAI RELEASE"],
+      "affectedVersions": [],
+      "trendReleases": ["3.5 GA RHOAI RELEASE"],
+      "components": ["Model Serving"],
+      "labels": [],
+      "isRegression": "Yes",
+      "couldIdentifyEarlier": "Yes",
+      "earlyDetectionResponse": "Yes, an automated upgrade test would have caught the policy mismatch.",
+      "earlyDetectionCategory": "Missing automated tests",
+      "preventionCategory": "Add or expand automated tests",
+      "prevention": "Add an upgrade-path test that validates generated NetworkPolicy resources."
+    }
   ]
 }
 ```
@@ -1194,7 +1213,89 @@ Release groups use the union of Jira Fix Version, Affects Version, and Target
 Version values. Component groups count an issue once per assigned component;
 issues without a component are grouped under `(No component)`. The endpoint
 returns all matching Jira pages rather than only the releases selected in the
-dashboard.
+dashboard. The `issues` records are the deduplicated source rows used by the
+continuous-improvement section. `couldIdentifyEarlier`, `earlyDetectionCategory`,
+`preventionCategory`, and `prevention` are derived locally from the relevant
+human Jira comment response; if no qualifying response is available, they are
+`Unknown` or `null`.
+
+---
+
+## Releases — Release Blocker Continuous-Improvement Analysis (`releases/delivery/blocker-analysis.json`)
+
+The optional `GET /api/modules/releases/delivery/blockers/analysis` endpoint serves the
+precomputed analysis snapshot of issues whose current Release Blocker option is
+Approved (`16772`) or Rejected (`16774`). It is independent of dashboard
+filters. The scheduled collector fetches complete Jira comment and changelog
+pages, sends only relevant human-comment excerpts to the configured
+OpenAI-compatible endpoint, and uploads the validated snapshot through
+`POST /api/modules/releases/delivery/blockers/analysis/bulk`.
+
+The snapshot contains `generatedAt`, `fetchedAt`, `model`, `promptVersion`,
+`partial`, `errors`, `issues`, `aggregates`, and `insights`:
+
+```json
+{
+  "generatedAt": "2026-10-18T06:00:00.000Z",
+  "model": "gpt-5",
+  "promptVersion": "release-blocker-analysis-v1",
+  "partial": false,
+  "issues": [
+    {
+      "key": "RHOAIENG-93716",
+      "link": "https://redhat.atlassian.net/browse/RHOAIENG-93716",
+      "summary": "NetworkPolicies for Serving Orchestration operands",
+      "components": ["Model Serving"],
+      "fixVersions": ["3.5 GA RHOAI RELEASE"],
+      "releaseBlocker": "Approved",
+      "labels": [],
+      "hasPrereleaseCveLabel": false,
+      "proposedDate": "2026-09-18T12:00:00.000Z",
+      "regression": "Yes",
+      "regressionEvidence": "The issue was introduced during the latest upgrade.",
+      "couldIdentifyEarlier": "Yes",
+      "earlyDetectionResponse": "Yes, an automated upgrade test would have caught the policy mismatch.",
+      "earlyDetectionCategory": "Missing automated tests",
+      "preventionCategory": "Add or expand automated tests",
+      "prevention": "Add an upgrade-path test that validates generated NetworkPolicy resources.",
+      "analysisConfidence": "High",
+      "analysisFingerprint": "sha256..."
+    }
+  ],
+  "aggregates": {
+    "overall": {
+      "totalAnalyzed": 1,
+      "regression": { "yes": 1, "no": 0, "unknown": 0 },
+      "earlierIdentification": { "yes": 1, "no": 0, "unknown": 0 },
+      "prereleaseCveRemediation": 0
+    },
+    "byRelease": [],
+    "byComponent": [],
+    "topEarlyDetectionCategories": [],
+    "topPreventionActions": []
+  },
+  "insights": [
+    { "text": "Upgrade-path validation is a prevention opportunity.", "evidenceCount": 1, "issueKeys": ["RHOAIENG-93716"] }
+  ]
+}
+```
+
+`regression` and `couldIdentifyEarlier` are always `Yes`, `No`, or `Unknown`.
+Early-detection categories are normalized to the documented stable taxonomy;
+the singular and plural “Missing automated test(s)” labels are merged into
+`Missing automated tests`. Prevention has a separate stable action taxonomy so
+recommendations can be grouped without losing the issue-specific text.
+
+Overall totals deduplicate by Jira key. A Jira issue with multiple Fix Versions
+or Components is counted once in each applicable group; missing values use
+`No Fix Version` and `(No component)`. `proposedDate` is the most recent
+changelog transition into Proposed and is `null` when unavailable.
+
+The dashboard does not depend on this optional snapshot endpoint or a scheduled
+workflow. It uses the `issues` array from the historical trends response and
+applies deterministic comment classification in the application. This keeps
+the displayed analysis aligned with the chart's existing Jira issue set while
+leaving genuinely unanswered comments as `Unknown`.
 
 ---
 

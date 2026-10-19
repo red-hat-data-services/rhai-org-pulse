@@ -1,6 +1,7 @@
 'use strict'
 
 const sharedJira = require('../../../../shared/server/jira')
+const blockerAnalysis = require('./blocker-analysis')
 
 const DEMO_MODE = process.env.DEMO_MODE === 'true'
 
@@ -26,6 +27,7 @@ const BLOCKER_FIELDS = [
 
 const CACHE_TTL_MS = 5 * 60 * 1000
 const CACHE_MAX_ENTRIES = 50
+const ANALYSIS_STORAGE_KEY = 'releases/delivery/blocker-analysis.json'
 const blockersCache = new Map()
 
 const RELEASE_NUMBER_RE = /^[a-zA-Z0-9._\- ]+$/
@@ -358,9 +360,10 @@ function compareReleaseNames(left, right) {
   return 0
 }
 
-function buildHistoricalTrends(issues) {
+function buildHistoricalTrends(issues, jiraHost) {
   var releaseGroups = new Map()
   var componentGroups = new Map()
+  var historicalIssues = []
 
   function ensureGroup(groups, label) {
     if (!groups.has(label)) groups.set(label, { label: label, approved: new Set(), rejected: new Set() })
@@ -372,10 +375,13 @@ function buildHistoricalTrends(issues) {
     var status = serializeReleaseBlockerStatus(issue.fields && issue.fields[BLOCKER_FIELD_ID])
     if (status !== 'Approved' && status !== 'Rejected') continue
 
+    var fixVersions = extractJiraNames(issue.fields && issue.fields.fixVersions)
+    var affectedVersions = extractJiraNames(issue.fields && issue.fields.versions)
+    var targetVersions = extractJiraNames(issue.fields && issue.fields[TARGET_VERSION_FIELD_ID])
     var releaseNames = []
-      .concat(extractJiraNames(issue.fields && issue.fields.fixVersions))
-      .concat(extractJiraNames(issue.fields && issue.fields.versions))
-      .concat(extractJiraNames(issue.fields && issue.fields[TARGET_VERSION_FIELD_ID]))
+      .concat(fixVersions)
+      .concat(affectedVersions)
+      .concat(targetVersions)
     releaseNames = [...new Set(releaseNames.filter(Boolean))]
 
     var componentNames = extractJiraNames(issue.fields && issue.fields.components)
@@ -390,6 +396,36 @@ function buildHistoricalTrends(issues) {
       var componentGroup = ensureGroup(componentGroups, componentNames[c])
       componentGroup[status.toLowerCase()].add(issue.key)
     }
+
+    var commentAnalysis = blockerAnalysis.classifyCommentAnalysis(issue.fields && issue.fields.comment && issue.fields.comment.comments)
+
+    historicalIssues.push({
+      key: issue.key,
+      summary: (issue.fields && issue.fields.summary) || '',
+      link: jiraHost ? jiraHost + '/browse/' + encodeURIComponent(issue.key) : null,
+      priority: (issue.fields && issue.fields.priority && issue.fields.priority.name) || 'Unknown',
+      issueType: (issue.fields && issue.fields.issuetype && issue.fields.issuetype.name) || 'Unknown',
+      status: (issue.fields && issue.fields.status && issue.fields.status.name) || 'Unknown',
+      releaseBlockerStatus: status,
+      assignee: serializeJiraUser(issue.fields && issue.fields.assignee),
+      reporter: serializeJiraUser(issue.fields && issue.fields.reporter),
+      fixVersions: fixVersions,
+      affectedVersions: affectedVersions,
+      trendReleases: releaseNames,
+      components: componentNames,
+      labels: extractJiraNames(issue.fields && issue.fields.labels),
+      team: serializeJiraField(issue.fields && issue.fields[TEAM_FIELD_ID]),
+      isRegression: regressionStatus(issue.fields && issue.fields.comment),
+      couldIdentifyEarlier: commentAnalysis.couldIdentifyEarlier,
+      earlyDetectionResponse: commentAnalysis.earlyDetectionResponse,
+      earlyDetectionCategory: commentAnalysis.earlyDetectionCategory,
+      preventionCategory: commentAnalysis.preventionCategory,
+      prevention: commentAnalysis.prevention,
+      earlyIdentificationEvidence: commentAnalysis.earlyIdentificationEvidence,
+      created: issue.fields && issue.fields.created ? issue.fields.created : null,
+      updated: issue.fields && issue.fields.updated ? issue.fields.updated : null,
+      latestProposedDate: null
+    })
   }
 
   function serializeGroups(groups, sorter) {
@@ -405,7 +441,8 @@ function buildHistoricalTrends(issues) {
 
   return {
     releases: serializeGroups(releaseGroups, compareReleaseNames),
-    components: serializeGroups(componentGroups, function (a, b) { return a.localeCompare(b) })
+    components: serializeGroups(componentGroups, function (a, b) { return a.localeCompare(b) }),
+    issues: historicalIssues
   }
 }
 
@@ -657,6 +694,7 @@ function buildResponse(releaseNumber, blockerIssues, criticalIssues, codeFreezeD
       fixVersions: extractJiraNames(trendIssue.fields && trendIssue.fields.fixVersions),
       affectedVersions: extractJiraNames(trendIssue.fields && trendIssue.fields.versions),
       components: trendComponents,
+      labels: extractJiraNames(trendIssue.fields && trendIssue.fields.labels),
       team: serializeJiraField(trendIssue.fields && trendIssue.fields[TEAM_FIELD_ID]),
       isRegression: regressionStatus(trendIssue.fields && trendIssue.fields.comment),
       created: trendIssue.fields && trendIssue.fields.created ? trendIssue.fields.created : null,
@@ -725,7 +763,7 @@ async function registerBlockerRoutes(router, context) {
    *   get:
    *     tags: ['Releases: Delivery']
    *     summary: Get historical release blocker trends
-   *     description: Returns raw Approved and Rejected blocker totals grouped by Jira release version and component, independent of dashboard filters.
+   *     description: Returns raw Approved and Rejected blocker totals grouped by Jira release version and component, plus the deduplicated issue records used to build those totals. The data is independent of dashboard filters.
    *     responses:
    *       200:
    *         description: Historical blocker trend totals
@@ -742,20 +780,98 @@ async function registerBlockerRoutes(router, context) {
     if (DEMO_MODE) {
       var trendFixture = await readFromStorage('releases/delivery/blockers-trends.json')
       var demoData = trendFixture || { releases: [], components: [] }
-      var demoResponse = { fetchedAt: new Date().toISOString(), releases: demoData.releases, components: demoData.components }
+      var demoResponse = { fetchedAt: new Date().toISOString(), releases: demoData.releases, components: demoData.components, issues: demoData.issues || [] }
       blockersCache.set(cacheKey, { data: demoResponse, timestamp: Date.now() })
       return res.json(demoResponse)
     }
 
     try {
       var issues = await fetchJql(buildHistoricalTrendsJql(), BLOCKER_FIELDS, { maxResults: 100 })
-      var trends = buildHistoricalTrends(issues || [])
-      var response = { fetchedAt: new Date().toISOString(), releases: trends.releases, components: trends.components }
+      var trends = buildHistoricalTrends(issues || [], jiraHost)
+      var response = { fetchedAt: new Date().toISOString(), releases: trends.releases, components: trends.components, issues: trends.issues }
       blockersCache.set(cacheKey, { data: response, timestamp: Date.now() })
       res.json(response)
     } catch (err) {
       console.error('[releases/delivery] historical blocker trends fetch error:', err)
       res.status(500).json({ error: 'Failed to fetch historical blocker trends: ' + err.message })
+    }
+  })
+
+  /**
+   * @openapi
+   * /api/modules/releases/delivery/blockers/analysis:
+   *   get:
+   *     tags: ['Releases: Delivery']
+   *     summary: Get release blocker continuous-improvement analysis
+   *     description: Returns the precomputed historical analysis snapshot for Approved and Rejected release blockers. The data is independent of dashboard filters.
+   *     responses:
+   *       200:
+   *         description: Release blocker analysis snapshot
+   *       404:
+   *         description: No analysis snapshot is available
+   */
+  router.get('/blockers/analysis', requireAuth, requireScope('releases:read'), async function (req, res) {
+    if (DEMO_MODE) {
+      var demoAnalysis = await readFromStorage(ANALYSIS_STORAGE_KEY)
+      if (!demoAnalysis) return res.status(404).json({ error: 'No release blocker analysis snapshot is available.' })
+      var normalizedDemo = blockerAnalysis.normalizeBlockerAnalysisSnapshot(demoAnalysis)
+      return normalizedDemo.error
+        ? res.status(500).json({ error: 'Invalid release blocker analysis fixture.' })
+        : res.json(normalizedDemo.snapshot)
+    }
+
+    var snapshot = await readFromStorage(ANALYSIS_STORAGE_KEY)
+    if (!snapshot) return res.status(404).json({ error: 'No release blocker analysis snapshot is available.' })
+    var normalized = blockerAnalysis.normalizeBlockerAnalysisSnapshot(snapshot)
+    if (normalized.error) return res.status(500).json({ error: 'Stored release blocker analysis is invalid.' })
+    res.json(normalized.snapshot)
+  })
+
+  /**
+   * @openapi
+   * /api/modules/releases/delivery/blockers/analysis/bulk:
+   *   post:
+   *     tags: ['Releases: Delivery']
+   *     summary: Upload a release blocker analysis snapshot
+   *     description: Stores a validated, precomputed snapshot produced by the continuous-improvement analysis pipeline.
+   *     security:
+   *       - bearerAuth: []
+   *     responses:
+   *       200:
+   *         description: Snapshot stored successfully
+   *       400:
+   *         description: Invalid or oversized snapshot
+   *       413:
+   *         description: Snapshot exceeds the maximum payload size
+   */
+  router.post('/blockers/analysis/bulk', requireAuth, requireScope('releases:write'), async function (req, res) {
+    if (DEMO_MODE) return res.json({ status: 'skipped', message: 'Release blocker analysis ingest disabled in demo mode.' })
+
+    var body = req.body || {}
+    var serializedPayload
+    try {
+      serializedPayload = JSON.stringify(body)
+    } catch {
+      return res.status(400).json({ error: 'payload must be JSON serializable' })
+    }
+    var serializedSize = Buffer.byteLength(serializedPayload, 'utf8')
+    if (serializedSize > 15 * 1024 * 1024) return res.status(413).json({ error: 'payload exceeds maximum size of 15 MB' })
+
+    var normalized = blockerAnalysis.normalizeBlockerAnalysisSnapshot(body)
+    if (normalized.error) return res.status(400).json({ error: normalized.error })
+
+    try {
+      await storage.writeToStorage(ANALYSIS_STORAGE_KEY, normalized.snapshot)
+      blockersCache.delete('__historical-analysis__')
+      res.json({
+        status: 'ok',
+        generatedAt: normalized.snapshot.generatedAt,
+        issueCount: normalized.snapshot.issues.length,
+        partial: normalized.snapshot.partial
+      })
+    } catch (err) {
+      console.error('[releases/delivery] release blocker analysis upload error:', err)
+      res.status(500).json({ error: 'Failed to store release blocker analysis snapshot' })
     }
   })
 
@@ -874,3 +990,6 @@ module.exports.regressionStatus = regressionStatus
 module.exports.isZStreamVersion = isZStreamVersion
 module.exports.extractActiveRhdPullRequests = extractActiveRhdPullRequests
 module.exports.buildTriageReadiness = buildTriageReadiness
+module.exports.ANALYSIS_STORAGE_KEY = ANALYSIS_STORAGE_KEY
+module.exports.buildBlockerAnalysisAggregates = blockerAnalysis.buildBlockerAnalysisAggregates
+module.exports.normalizeBlockerAnalysisSnapshot = blockerAnalysis.normalizeBlockerAnalysisSnapshot

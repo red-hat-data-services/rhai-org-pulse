@@ -62,6 +62,8 @@ describe('release blocker Jira field mapping', () => {
       { label: 'KubeRay', approved: 0, rejected: 1, total: 1 },
       { label: 'Model Serving', approved: 1, rejected: 1, total: 2 }
     ])
+    expect(trends.issues.map(issue => issue.key)).toEqual(['RHOAIENG-901', 'RHOAIENG-902'])
+    expect(trends.issues[0].trendReleases).toEqual(['3.5 GA RHOAI RELEASE', 'rhoai-3.5'])
   })
 
   it('builds the awareness query from the blocker scope and includes fix version matches', () => {

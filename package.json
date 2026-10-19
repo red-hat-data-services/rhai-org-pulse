@@ -11,6 +11,7 @@
     "dev:server": "node -r dotenv/config server/index.js",
     "dev:full": "concurrently \"npm run dev\" \"npm run dev:server\"",
     "build": "vite build",
+    "analyze:release-blockers": "node scripts/generate-release-blocker-analysis.mjs",
     "preview": "vite preview",
     "test": "vitest run",
     "test:coverage": "vitest run --coverage --config vitest.coverage.config.mjs",

@@ -27,6 +27,7 @@ function mergeIssues(responses, field) {
       merged.fixVersions = uniqueValues(existing.fixVersions, issue.fixVersions)
       merged.affectedVersions = uniqueValues(existing.affectedVersions, issue.affectedVersions)
       merged.components = uniqueValues(existing.components, issue.components)
+      merged.labels = uniqueValues(existing.labels, issue.labels)
       merged.releaseNumbers = uniqueValues(existing.releaseNumbers, [response.releaseNumber])
       byKey.set(issue.key, merged)
     }
