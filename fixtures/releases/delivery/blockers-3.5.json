@@ -121,6 +121,114 @@
       "proposedBeforeCodeFreeze": false
     }
   ],
+  "awarenessTrends": [
+    {
+      "key": "RHOAIENG-40005",
+      "summary": "TrustyAI bias metric returns incorrect values for multi-class models",
+      "link": "https://redhat.atlassian.net/browse/RHOAIENG-40005",
+      "priority": "Blocker",
+      "issueType": "Bug",
+      "status": "Open",
+      "releaseBlockerStatus": "Proposed",
+      "assignee": "Eve Johnson",
+      "reporter": "Quality Engineering",
+      "fixVersions": ["3.5 GA RHOAI RELEASE"],
+      "affectedVersions": ["rhoai-3.5"],
+      "components": ["TrustyAI"],
+      "team": "TrustyAI",
+      "isRegression": "Yes",
+      "created": "2026-07-14T09:00:00.000Z",
+      "updated": "2026-07-15T08:00:00.000Z",
+      "latestProposedDate": "2026-07-14T11:00:00.000Z",
+      "triageReadiness": {
+        "ready": true,
+        "criteria": {
+          "fixVersion": true,
+          "linkedPullRequest": true,
+          "assessmentCompleted": true,
+          "pmAcknowledgement": true
+        },
+        "missingCriteria": [],
+        "assessmentAnswers": {
+          "workaround": true,
+          "impact": true,
+          "earlyCatch": true,
+          "regression": true,
+          "reviewsAndTests": true
+        },
+        "activePullRequests": [
+          {
+            "name": "Fix TrustyAI multi-class bias metric",
+            "repository": "red-hat-data-services/trustyai-service",
+            "status": "OPEN",
+            "url": "https://github.com/red-hat-data-services/trustyai-service/pull/101"
+          }
+        ],
+        "isZStream": false,
+        "pmAcknowledgementRequired": false,
+        "productManager": null
+      }
+    },
+    {
+      "key": "RHOAIENG-40002",
+      "summary": "Dashboard login fails intermittently with SSO token refresh",
+      "link": "https://redhat.atlassian.net/browse/RHOAIENG-40002",
+      "priority": "Blocker",
+      "issueType": "Bug",
+      "status": "Open",
+      "releaseBlockerStatus": "Proposed",
+      "assignee": "Bob Kim",
+      "reporter": "Release Engineering",
+      "fixVersions": ["3.5 GA RHOAI RELEASE"],
+      "affectedVersions": ["rhoai-3.5"],
+      "components": ["Dashboard"],
+      "team": "Dashboard",
+      "isRegression": "No",
+      "created": "2026-07-12T09:00:00.000Z",
+      "updated": "2026-07-13T08:00:00.000Z",
+      "latestProposedDate": "2026-07-12T10:00:00.000Z",
+      "triageReadiness": {
+        "ready": false,
+        "criteria": {
+          "fixVersion": true,
+          "linkedPullRequest": false,
+          "assessmentCompleted": false,
+          "pmAcknowledgement": true
+        },
+        "missingCriteria": ["active red-hat-data-services PR", "all five assessment answers"],
+        "assessmentAnswers": {
+          "workaround": true,
+          "impact": true,
+          "earlyCatch": false,
+          "regression": false,
+          "reviewsAndTests": false
+        },
+        "activePullRequests": [],
+        "isZStream": false,
+        "pmAcknowledgementRequired": false,
+        "productManager": null
+      }
+    },
+    {
+      "key": "RHOAIENG-40001",
+      "summary": "Model serving crash on multi-GPU inference with large batch sizes",
+      "link": "https://redhat.atlassian.net/browse/RHOAIENG-40001",
+      "priority": "Blocker",
+      "issueType": "Bug",
+      "status": "In Progress",
+      "releaseBlockerStatus": "Approved",
+      "assignee": "Alice Chen",
+      "reporter": "Release Engineering",
+      "fixVersions": ["3.5 GA RHOAI RELEASE"],
+      "affectedVersions": ["rhoai-3.5"],
+      "components": ["Model Serving"],
+      "team": "Model Serving",
+      "isRegression": "Unknown",
+      "created": "2026-07-10T09:00:00.000Z",
+      "updated": "2026-07-15T07:00:00.000Z",
+      "latestProposedDate": "2026-07-10T10:00:00.000Z"
+    }
+  ],
   "criticalMonitoring": [
     {
       "key": "RHOAIENG-40010",

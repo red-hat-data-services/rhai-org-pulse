@@ -1698,6 +1698,24 @@ test.describe('Program Level Release Report in Deliver @releases', () => {
 test.describe('Releases Blockers @releases', () => {
   test.beforeEach(async ({ page }) => {
     setupErrorTracking(page);
+    await page.route('**/api/modules/releases/delivery/blockers/trends', route => route.fulfill({
+      json: {
+        fetchedAt: '2026-10-08T00:00:00.000Z',
+        releases: [],
+        components: [],
+        issues: [{
+          key: 'RHOAIENG-APPROVED',
+          summary: 'Approved release blocker',
+          releaseBlockerStatus: 'Approved',
+          fixVersions: ['3.5 GA RHOAI RELEASE'],
+          trendReleases: ['3.5 GA RHOAI RELEASE'],
+          components: ['TrustyAI'],
+          labels: [],
+          isRegression: 'Unknown',
+          link: 'https://jira.example.com/browse/RHOAIENG-APPROVED'
+        }]
+      }
+    }));
   });
 
   test.afterEach(async ({ page }, testInfo) => {
@@ -1734,9 +1752,15 @@ test.describe('Releases Blockers @releases', () => {
     expect(page.errors).toHaveLength(0);
   });
 
-  test('Release Blockers view renders summary cards for a version', async ({ page }) => {
-    // Use version param to load data directly via URL
-    await page.goto('/#/releases/deliver?tab=release-blockers&version=3.5');
+  test('Release Blockers view renders summary cards for a selected release', async ({ page }) => {
+    await page.route('**/api/modules/releases/delivery/analysis*', route => route.fulfill({
+      json: { releases: [{ releaseNumber: '3.5' }] }
+    }));
+    await page.route('**/api/modules/releases/delivery/conforma/releases', route => route.fulfill({
+      json: { releases: [], fetchedAt: null, minDate: null, count: 0 }
+    }));
+
+    await page.goto('/#/releases/deliver?tab=release-blockers');
     await page.waitForLoadState('networkidle');
     await page.waitForTimeout(DEFAULT_PAGE_WAIT_TIME);
 
@@ -1744,6 +1768,376 @@ test.describe('Releases Blockers @releases', () => {
     await expect(page.locator('text=PROPOSED').first()).toBeVisible();
     await expect(page.locator('text=APPROVED').first()).toBeVisible();
     await expect(page.locator('text=REJECTED').first()).toBeVisible();
+
+    expect(page.errors).toHaveLength(0);
+  });
+
+  test('Blockers Awareness table renders the requested Jira columns', async ({ page }) => {
+    await page.route('**/api/modules/releases/delivery/analysis*', route => route.fulfill({
+      json: { releases: [{ releaseNumber: '3.5' }] }
+    }));
+    await page.route('**/api/modules/releases/delivery/conforma/releases', route => route.fulfill({
+      json: { releases: [], fetchedAt: null, minDate: null, count: 0 }
+    }));
+    await page.route('**/api/modules/releases/delivery/tfa-risk/3.5', route => route.fulfill({
+      json: { overall: { signoffDone: 0, signoffTotal: 0, signoffPct: 0, failedOpen: 0 }, components: [] }
+    }));
+    await page.route('**/api/modules/releases/pm-hub/pillar-config', route => route.fulfill({
+      json: { pillars: [] }
+    }));
+    await page.route('**/api/modules/releases/delivery/blockers/3.5*', route => route.fulfill({
+      json: {
+        releaseNumber: '3.5',
+        fetchedAt: '2026-10-08T00:00:00.000Z',
+        summary: { proposed: 1, approved: 0, rejected: 0, noStatus: 0, total: 1 },
+        timing: { proposedBeforeCodeFreeze: 1, proposedAfterCodeFreeze: 0 },
+        aging: {
+          proposalToDecision: { avg: null, median: null, max: null, count: 0 },
+          approvalToResolution: { avg: null, median: null, max: null, count: 0 },
+          byStatus: {
+            proposed: { avg: 2, median: 2, max: 2, count: 1 },
+            approved: { avg: null, median: null, max: null, count: 0 },
+            rejected: { avg: null, median: null, max: null, count: 0 }
+          }
+        },
+        blockers: [{
+          key: 'RHOAIENG-123',
+          summary: 'Example release blocker',
+          priority: 'Blocker',
+          issueType: 'Bug',
+          status: 'In Progress',
+          releaseBlockerStatus: 'Proposed',
+          assignee: 'Assignee Name',
+          reporter: 'Reporter Name',
+          fixVersions: ['3.5 GA RHOAI RELEASE'],
+          affectedVersions: ['rhoai-3.5'],
+          components: ['AI Pipelines'],
+          team: 'AI Pipelines',
+          daysInCurrentState: 2,
+          proposedBeforeCodeFreeze: true,
+          link: 'https://jira.example.com/browse/RHOAIENG-123'
+        }],
+        criticalMonitoring: [],
+        awarenessTrends: [
+          {
+            key: 'RHOAIENG-APPROVED',
+            summary: 'Approved release blocker',
+            priority: 'Blocker',
+            issueType: 'Bug',
+            status: 'New',
+            releaseBlockerStatus: 'Approved',
+            assignee: 'Approved Owner',
+            reporter: 'Reporter Name',
+            fixVersions: ['3.5 GA RHOAI RELEASE'],
+            affectedVersions: ['rhoai-3.5'],
+            components: ['TrustyAI'],
+            team: 'Security',
+            labels: ['prerelease-cve-remediation'],
+            isRegression: 'Unknown',
+            created: '2026-10-08T00:00:00.000Z',
+            updated: '2026-10-08T00:00:00.000Z',
+            latestProposedDate: '2026-10-02T00:00:00.000Z',
+            link: 'https://jira.example.com/browse/RHOAIENG-APPROVED'
+          },
+          {
+            key: 'RHOAIENG-PROPOSED-OLD',
+            summary: 'Older proposed blocker',
+            priority: 'Blocker',
+            issueType: 'Bug',
+            status: 'In Progress',
+            releaseBlockerStatus: 'Proposed',
+            assignee: 'Platform Owner',
+            reporter: 'Reporter Name',
+            fixVersions: ['3.5 EA2 RHOAI RELEASE'],
+            affectedVersions: ['rhoai-3.5'],
+            components: ['Dashboard'],
+            team: 'Platform',
+            isRegression: 'No',
+            created: '2026-10-01T00:00:00.000Z',
+            updated: '2026-10-03T00:00:00.000Z',
+            latestProposedDate: '2026-10-01T00:00:00.000Z',
+            triageReadiness: {
+              ready: false,
+              missingCriteria: ['active red-hat-data-services PR', 'all five assessment answers']
+            },
+            link: 'https://jira.example.com/browse/RHOAIENG-PROPOSED-OLD'
+          },
+          {
+            key: 'RHOAIENG-PROPOSED-NEW',
+            summary: 'Newest proposed blocker',
+            priority: 'Blocker',
+            issueType: 'Bug',
+            status: 'Review',
+            releaseBlockerStatus: 'Proposed',
+            assignee: 'Gateway Owner',
+            reporter: 'Reporter Name',
+            fixVersions: ['3.5 GA RHOAI RELEASE'],
+            affectedVersions: ['rhoai-3.5'],
+            components: ['Model Serving'],
+            team: 'Gateway',
+            isRegression: 'Yes',
+            created: '2026-10-06T00:00:00.000Z',
+            updated: '2026-10-07T00:00:00.000Z',
+            latestProposedDate: '2026-10-07T00:00:00.000Z',
+            triageReadiness: { ready: true, missingCriteria: [] },
+            link: 'https://jira.example.com/browse/RHOAIENG-PROPOSED-NEW'
+          }
+        ]
+      }
+    }));
+    await page.route('**/api/modules/releases/delivery/blockers/analysis', route => route.fulfill({
+      json: {
+        generatedAt: '2026-10-08T00:00:00.000Z',
+        model: 'test-model',
+        partial: false,
+        issues: [
+          {
+            key: 'RHOAIENG-APPROVED',
+            link: 'https://jira.example.com/browse/RHOAIENG-APPROVED',
+            summary: 'Approved analysis issue',
+            components: ['TrustyAI'],
+            fixVersions: ['3.5 GA RHOAI RELEASE'],
+            releaseBlocker: 'Approved',
+            proposedDate: '2026-10-02T00:00:00.000Z',
+            regression: 'Yes',
+            couldIdentifyEarlier: 'Yes',
+            earlyDetectionResponse: 'Yes, an automated test would have caught this.',
+            earlyDetectionCategory: 'Missing automated tests',
+            preventionCategory: 'Add or expand automated tests',
+            prevention: 'Add an upgrade-path test.',
+            regressionEvidence: 'The prior release worked.',
+            analysisConfidence: 'High'
+          },
+          {
+            key: 'RHOAIENG-REJECTED',
+            link: 'https://jira.example.com/browse/RHOAIENG-REJECTED',
+            summary: 'Rejected analysis issue',
+            components: ['Dashboard'],
+            fixVersions: ['3.5 GA RHOAI RELEASE'],
+            releaseBlocker: 'Rejected',
+            proposedDate: null,
+            regression: 'Unknown',
+            couldIdentifyEarlier: 'Unknown',
+            earlyDetectionResponse: null,
+            earlyDetectionCategory: 'Unknown',
+            preventionCategory: 'Unknown',
+            prevention: null,
+            regressionEvidence: null,
+            analysisConfidence: 'Unknown'
+          }
+        ],
+        aggregates: {
+          overall: {
+            totalAnalyzed: 2,
+            regression: { yes: 1, no: 0, unknown: 1 },
+            earlierIdentification: { yes: 1, no: 0, unknown: 1 },
+            prereleaseCveRemediation: 0
+          },
+          byRelease: [],
+          byComponent: [],
+          topEarlyDetectionCategories: [],
+          topPreventionActions: []
+        },
+        insights: []
+      }
+    }));
+    await page.goto('/#/releases/deliver?tab=release-blockers');
+    await page.waitForLoadState('networkidle');
+    await page.waitForTimeout(DEFAULT_PAGE_WAIT_TIME);
+
+    await expect(page.getByRole('heading', { name: 'Release Blockers', exact: true })).toHaveCount(0);
+
+    const expectedHeaders = [
+      'Jira Key', 'Summary', 'Priority', 'Issue type', 'Status',
+      'Release blocker', 'Is Regression', 'Assignee', 'Reporter', 'Fix version',
+      'Affects version', 'Component', 'Team'
+    ];
+
+    const awarenessSection = page.getByTestId('blockers-awareness-trends');
+    await expect(awarenessSection.getByRole('heading', { name: 'Release Blockers Awareness' })).toBeVisible();
+    const awarenessTable = awarenessSection.locator('table');
+
+    await expect(page.getByTestId('blocker-summary-total')).toContainText('3');
+    await expect(page.getByTestId('blocker-summary-proposed')).toContainText('2');
+    await expect(page.getByTestId('blocker-summary-approved')).toContainText('1');
+    await expect(page.getByTestId('blocker-summary-rejected')).toContainText('0');
+    await expect(page.getByTestId('blocker-summary-total')).not.toHaveRole('button');
+    await expect(page.getByTestId('blocker-summary-proposed')).not.toHaveRole('button');
+    await expect(page.getByTestId('blocker-summary-approved')).not.toHaveRole('button');
+    await expect(page.getByTestId('blocker-summary-rejected')).not.toHaveRole('button');
+
+    const awarenessHeaders = await awarenessTable.locator('thead th').evaluateAll(ths =>
+      ths.map(th => th.textContent.replace(/[▲▼⇅]/g, '').trim())
+    );
+    expect(awarenessHeaders).toEqual(expectedHeaders);
+
+    const defaultOrder = await awarenessTable.locator('tbody tr td:first-child').allTextContents();
+    expect(defaultOrder).toEqual([
+      'RHOAIENG-PROPOSED-NEW',
+      'RHOAIENG-PROPOSED-OLD',
+      'RHOAIENG-APPROVED'
+    ]);
+
+    await awarenessSection.getByLabel('Release Blocker').selectOption('Approved');
+    await expect(awarenessTable.locator('tbody tr')).toHaveCount(1);
+    await expect(awarenessTable.locator('tbody tr')).toContainText('RHOAIENG-APPROVED');
+    await expect(awarenessTable.locator('tbody tr')).toContainText('Unknown');
+    await awarenessSection.getByRole('button', { name: 'Clear' }).click();
+
+    await awarenessSection.getByLabel('Fix Version').selectOption('3.5 EA2 RHOAI RELEASE');
+    await expect(awarenessTable.locator('tbody tr')).toHaveCount(1);
+    await awarenessSection.getByRole('button', { name: 'Clear' }).click();
+    await awarenessSection.getByLabel('Status').selectOption('Review');
+    await expect(awarenessTable.locator('tbody tr')).toHaveCount(1);
+    await awarenessSection.getByRole('button', { name: 'Clear' }).click();
+    await awarenessSection.getByLabel('Team').selectOption('Gateway');
+    await expect(awarenessTable.locator('tbody tr')).toHaveCount(1);
+    await awarenessSection.getByRole('button', { name: 'Clear' }).click();
+    await awarenessSection.getByLabel('Component').selectOption('TrustyAI');
+    await expect(awarenessTable.locator('tbody tr')).toHaveCount(1);
+
+    const triageSection = page.getByTestId('triage-readiness');
+    await expect(triageSection.getByRole('heading', { name: 'Triage Readiness' })).toBeVisible();
+    const triageHeaders = await triageSection.locator('thead th').allTextContents();
+    expect(triageHeaders.map(value => value.trim())).toEqual([
+      'Jira Key', 'Summary', 'Ready for Triage', 'Assignee', 'Status', 'Release Blocker', 'Is Regression', 'Fix Version'
+    ]);
+    await expect(triageSection.locator('tbody tr')).toHaveCount(2);
+    await expect(triageSection).toContainText('RHOAIENG-PROPOSED-NEW');
+    await expect(triageSection).toContainText('RHOAIENG-PROPOSED-OLD');
+    await expect(triageSection).not.toContainText('RHOAIENG-APPROVED');
+    await expect(triageSection.getByText('Ready', { exact: true })).toHaveCount(1);
+    await expect(triageSection.getByText('Not Ready', { exact: true })).toHaveCount(1);
+    await expect(triageSection).toContainText('Fix Version assigned');
+    await expect(triageSection).toContainText('Active red-hat-data-services PR/MR linked');
+    await expect(triageSection).toContainText('All five assessment questions answered');
+    await expect(triageSection).toContainText('PM acknowledgement (z-stream only)');
+    await expect(triageSection).toContainText('Workaround');
+    await expect(triageSection).toContainText('Reviews/tests');
+    await expect(triageSection).toContainText('Yes');
+    await expect(triageSection).toContainText('No');
+    await expect(triageSection).toContainText('✓');
+    await expect(triageSection).toContainText('✕');
+
+    const analysisSection = page.getByTestId('blocker-analysis');
+    await expect(analysisSection.getByRole('heading', { name: 'Release Blocker Continuous Improvement' })).toBeVisible();
+    await expect(analysisSection).toContainText('Total analyzed');
+    await expect(analysisSection).toContainText('Pre-release CVE');
+    await expect(analysisSection.locator('tbody tr')).toHaveCount(1);
+    await expect(analysisSection).toContainText('Existing Jira issue data');
+    await analysisSection.getByPlaceholder('Key or summary').fill('Approved release blocker');
+    await expect(analysisSection.locator('tbody tr')).toHaveCount(1);
+    await analysisSection.locator('tbody tr').first().click();
+    await expect(analysisSection).toContainText('Unknown — no qualifying comment response was found.');
+    await expect(analysisSection).toContainText('Jira evidence');
+    await analysisSection.getByRole('button', { name: 'By Component', exact: true }).click();
+    await expect(analysisSection).toContainText('TrustyAI');
+
+    expect(page.errors).toHaveLength(0);
+  });
+
+  test('combines multiple selected releases into one table and summary', async ({ page }) => {
+    const emptyStats = { avg: null, median: null, p90: null, max: null, count: 0 };
+    const makeIssue = (key, releaseBlockerStatus, fixVersion) => ({
+      key,
+      summary: `${releaseBlockerStatus} blocker`,
+      priority: 'Blocker',
+      issueType: 'Bug',
+      status: 'In Progress',
+      releaseBlockerStatus,
+      assignee: 'Owner',
+      reporter: 'Reporter',
+      fixVersions: [fixVersion],
+      affectedVersions: [],
+      components: ['Model Serving'],
+      team: 'Serving',
+      created: '2026-10-01T00:00:00.000Z',
+      updated: '2026-10-08T00:00:00.000Z',
+      latestProposedDate: '2026-10-02T00:00:00.000Z',
+      daysInCurrentState: 2,
+      daysToDecision: null,
+      proposedBeforeCodeFreeze: true,
+      link: `https://jira.example.com/browse/${key}`
+    });
+    const makeResponse = (releaseNumber, awarenessTrends) => ({
+      releaseNumber,
+      fetchedAt: '2026-10-08T00:00:00.000Z',
+      summary: { proposed: 0, approved: 0, rejected: 0, noStatus: 0, total: awarenessTrends.length },
+      timing: { proposedBeforeCodeFreeze: awarenessTrends.length, proposedAfterCodeFreeze: 0 },
+      aging: {
+        proposalToDecision: emptyStats,
+        approvalToResolution: emptyStats,
+        byStatus: { proposed: emptyStats, approved: emptyStats, rejected: emptyStats }
+      },
+      blockers: awarenessTrends,
+      criticalMonitoring: [],
+      awarenessTrends
+    });
+
+    const shared35 = makeIssue('RHOAIENG-SHARED', 'Proposed', '3.5 GA RHOAI RELEASE');
+    const shared36 = makeIssue('RHOAIENG-SHARED', 'Proposed', '3.6 GA RHOAI RELEASE');
+    const approved36 = makeIssue('RHOAIENG-APPROVED-36', 'Approved', '3.6 GA RHOAI RELEASE');
+    const requestedReleases = [];
+
+    await page.route('**/api/modules/releases/delivery/analysis*', route => route.fulfill({
+      json: {
+        releases: [
+          { releaseNumber: '3.5 GA RHOAI RELEASE', codeFreezeDate: '2026-09-20' },
+          { releaseNumber: '3.6 GA RHOAI RELEASE', codeFreezeDate: '2026-10-20' }
+        ]
+      }
+    }));
+    await page.route('**/api/modules/releases/delivery/conforma/releases', route => route.fulfill({
+      json: { releases: [], fetchedAt: null, minDate: null, count: 0 }
+    }));
+    await page.route('**/api/modules/releases/delivery/blockers/*', route => {
+      const url = decodeURIComponent(route.request().url());
+      if (url.includes('/blockers/3.5 GA RHOAI RELEASE')) {
+        requestedReleases.push('3.5');
+        return route.fulfill({ json: makeResponse('3.5 GA RHOAI RELEASE', [shared35]) });
+      }
+      requestedReleases.push('3.6');
+      return route.fulfill({ json: makeResponse('3.6 GA RHOAI RELEASE', [shared36, approved36]) });
+    });
+    await page.route('**/api/modules/releases/delivery/tfa-risk/*', route => route.fulfill({
+      json: { overall: { signoffDone: 0, signoffTotal: 0, signoffPct: 0, failedOpen: 0 }, components: [] }
+    }));
+    await page.route('**/api/modules/releases/pm-hub/pillar-config', route => route.fulfill({
+      json: { pillars: [] }
+    }));
+    await page.route('**/api/modules/releases/delivery/blockers/trends', route => route.fulfill({
+      json: {
+        fetchedAt: '2026-10-08T00:00:00.000Z',
+        releases: [{ label: '3.5 GA RHOAI RELEASE', approved: 3, rejected: 1, total: 4 }],
+        components: [{ label: 'Model Serving', approved: 2, rejected: 1, total: 3 }],
+        issues: []
+      }
+    }));
+    await page.goto('/#/releases/deliver?tab=release-blockers');
+    await page.waitForLoadState('networkidle');
+    await page.waitForTimeout(DEFAULT_PAGE_WAIT_TIME);
+
+    await expect(page.getByText('Combining 2 selected releases', { exact: true })).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Load', exact: true })).toHaveCount(0);
+    await expect(page.locator('input[placeholder*="rhoai-"]')).toHaveCount(0);
+    expect(requestedReleases.sort()).toEqual(['3.5', '3.6']);
+    await expect(page.getByTestId('blocker-summary-total')).toContainText('2');
+    await expect(page.getByTestId('blocker-summary-proposed')).toContainText('1');
+    await expect(page.getByTestId('blocker-summary-approved')).toContainText('1');
+
+    const awarenessTable = page.getByTestId('blockers-awareness-trends').locator('table');
+    await expect(awarenessTable.locator('tbody tr')).toHaveCount(2);
+    const sharedRow = awarenessTable.locator('tbody tr').filter({ hasText: 'RHOAIENG-SHARED' });
+    await expect(sharedRow).toContainText('3.5 GA RHOAI RELEASE');
+    await expect(sharedRow).toContainText('3.6 GA RHOAI RELEASE');
+    await expect(page.getByText(/\(1\/2\)/)).toHaveCount(0);
+
+    const trendSection = page.getByTestId('blocker-trends');
+    await expect(trendSection.getByRole('heading', { name: 'Release Blocker Trends' })).toBeVisible();
+    await expect(trendSection).toContainText('3.5 GA RHOAI RELEASE');
+    await trendSection.getByTestId('blocker-trends-toggle').click();
+    await expect(trendSection).toContainText('Model Serving');
+    await expect(trendSection).toContainText('2');
 
     expect(page.errors).toHaveLength(0);
   });
@@ -1777,6 +2171,8 @@ test.describe('Releases Blockers @releases', () => {
     expect(Array.isArray(body.blockers)).toBe(true);
     expect(body).toHaveProperty('criticalMonitoring');
     expect(Array.isArray(body.criticalMonitoring)).toBe(true);
+    expect(body).toHaveProperty('awarenessTrends');
+    expect(Array.isArray(body.awarenessTrends)).toBe(true);
   });
 
   test('blockers API rejects invalid release number', async ({ request }) => {

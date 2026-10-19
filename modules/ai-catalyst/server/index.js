@@ -1,22 +1,24 @@
-const { createGoogleSheetsClient } = require('../../../shared/server/google-sheets');
+const { createFeedClient } = require('./feed-client');
 const {
   getShowcaseData,
   fetchShowcaseData,
-  clearCache: clearShowcaseCache,
   STORAGE_KEY: SHOWCASE_STORAGE_KEY,
   getReferencedPillarKeys,
   mergePillarMetadata,
   normalizeShowcaseData,
-} = require('./showcase/sheets-sync');
+  parseArrayField,
+} = require('./showcase/feed-sync');
 const { getConfig: getShowcaseConfig, saveConfig: saveShowcaseConfig } = require('./showcase/config');
 const { getConfig: getBoardConfig, saveConfig: saveBoardConfig } = require('./board-config');
 
 const DEMO_MODE = process.env.DEMO_MODE === 'true';
-const BOARD_SHEET_RE = /^board-\d{4}-\d{2}$/;
+const BOARD_NAME_RE = /^board-\d{4}-\d{2}$/;
 const STORAGE_PREFIX = 'ai-catalyst';
 const INDEX_PATH = `${STORAGE_PREFIX}/index.json`;
+const DEFAULT_FEED_URL = 'https://pocexplorer.redhataicatalyst.com';
+const DEFAULT_SHOWCASE_FEED_URL = 'https://showcase.redhataicatalyst.com';
 
-const PIPE_DELIMITED_FIELDS = new Set([
+const LIST_FIELDS = new Set([
   'capability_labels', 'red_hat_stack', 'sources'
 ]);
 
@@ -41,24 +43,52 @@ function snakeToCamel(str) {
   return str.replace(/_([a-z])/g, (_, c) => c.toUpperCase());
 }
 
-function parseRow(headers, row) {
+/**
+ * Map one feed row (object keyed by snake_case column) to the camelCase
+ * candidate contract. Board feed rows stringify every value to former-sheet
+ * semantics: "yes"/"no" booleans, decimal-string numbers, ", "-joined lists.
+ */
+function parseFeedRow(row) {
   const obj = {};
-  for (let i = 0; i < headers.length; i++) {
-    const key = headers[i];
+  for (const [key, raw] of Object.entries(row || {})) {
     if (!key) continue;
-    const raw = i < row.length ? row[i] : '';
     const camel = snakeToCamel(key);
-    const val = typeof raw === 'string' ? raw.trim() : String(raw ?? '');
+    const val = typeof raw === 'string' ? raw.trim() : raw;
 
-    if (PIPE_DELIMITED_FIELDS.has(key)) {
-      obj[camel] = val ? val.split('|').map(s => s.trim()).filter(Boolean) : [];
+    if (LIST_FIELDS.has(key)) {
+      obj[camel] = parseArrayField(raw);
     } else if (NUMERIC_FIELDS.has(key)) {
       const n = Number(val);
-      obj[camel] = Number.isFinite(n) ? n : null;
+      obj[camel] = (val === '' || val === null || val === undefined) ? null : (Number.isFinite(n) ? n : null);
     } else if (BOOLEAN_FIELDS.has(key)) {
-      obj[camel] = val.toLowerCase() === 'true' || val === '1';
+      const s = typeof val === 'string' ? val.toLowerCase() : '';
+      obj[camel] = s === 'yes' || s === 'true' || s === '1';
     } else if (JSON_FIELDS.has(key)) {
-      try { obj[camel] = val ? JSON.parse(val) : []; } catch { obj[camel] = []; }
+      // Empty means "no review history yet"; anything else must parse to an
+      // array or the board fails loudly instead of silently erasing history.
+      if (val === '' || val === null || val === undefined) {
+        obj[camel] = [];
+      } else {
+        let parsed;
+        try {
+          parsed = JSON.parse(val);
+        } catch {
+          parsed = undefined;
+        }
+        if (!Array.isArray(parsed)) {
+          throw new Error(`malformed ${key} on feed row "${row.title || row.unique_id || 'unknown'}" — expected a JSON array`);
+        }
+        // Elements reach CandidateDetail.vue, which reads review.timestamp
+        // and lowercases review.decision: a null element or non-string
+        // decision must fail the board here, not crash the client later.
+        const badElement = parsed.find(e =>
+          !(e && typeof e === 'object' && !Array.isArray(e)) ||
+          (e.decision !== undefined && typeof e.decision !== 'string'));
+        if (badElement !== undefined) {
+          throw new Error(`malformed ${key} on feed row "${row.title || row.unique_id || 'unknown'}" — every element must be an object with a string decision`);
+        }
+        obj[camel] = parsed;
+      }
     } else {
       obj[camel] = val;
     }
@@ -66,10 +96,13 @@ function parseRow(headers, row) {
   return obj;
 }
 
-function parseBoardSheet(headers, dataRows) {
-  return dataRows
-    .filter(row => row.some(c => String(c ?? '').trim()))
-    .map(row => parseRow(headers, row));
+function parseBoardRows(rows) {
+  return (Array.isArray(rows) ? rows : [])
+    // Padding rows are empty after trimming — the parser trims every cell,
+    // so an untrimmed emptiness test would keep whitespace-only rows and
+    // store garbage candidates over valid cached data.
+    .filter(row => row && Object.values(row).some(v => v != null && String(v).trim() !== ''))
+    .map(row => parseFeedRow(row));
 }
 
 function extractDecisionStatus(candidate) {
@@ -153,12 +186,50 @@ module.exports = function registerRoutes(router, context) {
   let lastSyncTime = null;
   let syncRunning = false;
 
-  async function getSheetId() {
-    return (await getBoardConfig(readFromStorage)).sheetId || (secrets && secrets.POC_EXPLORER_SHEET_ID) || '';
+  // Loopback feed URLs are opt-in: without this flag the token never goes to
+  // a local listener, so stored settings cannot exfiltrate it on-loopback.
+  // Declared in module.json (non-secret flag); resolveSecret is the
+  // sanctioned env accessor — module server code never reads secrets
+  // from process.env.
+  const allowLoopback = context.resolveSecret('POC_EXPLORER_ALLOW_LOOPBACK') === '1';
+
+  function getFeedToken() {
+    return (secrets && secrets.POC_EXPLORER_FEED_TOKEN) || context.resolveSecret('POC_EXPLORER_FEED_TOKEN') || '';
+  }
+
+  async function getBoardFeedUrl() {
+    const configured = (await getBoardConfig(readFromStorage)).feedUrl;
+    return configured || (secrets && secrets.POC_EXPLORER_FEED_URL) || DEFAULT_FEED_URL;
+  }
+
+  async function getShowcaseFeedUrl() {
+    const configured = (await getShowcaseConfig(readFromStorage)).feedUrl;
+    return configured || (secrets && secrets.POC_EXPLORER_SHOWCASE_FEED_URL) || DEFAULT_SHOWCASE_FEED_URL;
+  }
+
+  // Origins the feed token may be sent to: the two documented defaults plus
+  // env-configured URLs (machine-level operator approval). Loopback is only
+  // reachable at all when POC_EXPLORER_ALLOW_LOOPBACK=1 is set.
+  function getAllowedFeedOrigins() {
+    const origins = new Set();
+    for (const url of [
+      DEFAULT_FEED_URL,
+      DEFAULT_SHOWCASE_FEED_URL,
+      secrets && secrets.POC_EXPLORER_FEED_URL,
+      secrets && secrets.POC_EXPLORER_SHOWCASE_FEED_URL,
+    ]) {
+      if (!url) continue;
+      try {
+        origins.add(new URL(url).origin);
+      } catch {
+        // Malformed env URLs fall through to the feed client's own validation.
+      }
+    }
+    return [...origins];
   }
 
   async function isConfigured() {
-    return !!(await getSheetId());
+    return !!getFeedToken();
   }
 
   async function readIndex() {
@@ -211,7 +282,7 @@ module.exports = function registerRoutes(router, context) {
   /**
    * Resolve the complete showcase pillar catalog, including configured
    * pillars that currently have no entries. Entry references are synthesized
-   * when a sheet refresh has entries ahead of its pillar metadata row.
+   * when a feed refresh has entries ahead of its pillar metadata row.
    */
   function getShowcasePillars(entries, showcaseData) {
     return mergePillarMetadata(
@@ -223,52 +294,81 @@ module.exports = function registerRoutes(router, context) {
   // --- Sync logic ---
 
   async function syncBoards() {
-    if (syncRunning || !(await isConfigured())) return { skipped: true };
+    if (syncRunning) return { status: 'skipped', reason: 'sync already running' };
+    if (!(await isConfigured())) return { status: 'skipped', reason: 'not configured' };
     syncRunning = true;
     try {
-      const keyFile = (secrets && secrets.GOOGLE_SERVICE_ACCOUNT_KEY_FILE) || '/etc/secrets/google-sa-key.json';
-      const sheetsClient = createGoogleSheetsClient({ keyFile });
-      const sheetId = await getSheetId();
+      const client = createFeedClient({
+        baseUrl: await getBoardFeedUrl(),
+        token: getFeedToken(),
+        allowedOrigins: getAllowedFeedOrigins(),
+        allowLoopback,
+      });
 
-      const sheetNames = await sheetsClient.discoverSheetNames(sheetId);
-      const boardSheets = sheetNames.filter(n => BOARD_SHEET_RE.test(n));
+      const listedBoards = await client.listBoards();
 
-      if (boardSheets.length === 0) {
-        return { synced: 0, message: 'No board sheets found' };
+      if (listedBoards.length === 0) {
+        // A shape-valid empty list is a degraded feed, not a successful
+        // sync: the skip shape keeps the refresh handler due for the next
+        // tick instead of stamping success for a full cadence window.
+        return { status: 'skipped', reason: 'feed returned no boards' };
       }
 
+      // A name the board filter drops is failed propagation, not a silent
+      // skip: it rides failed[] so the refresh handler rejects the run.
+      const failed = listedBoards
+        .filter(n => !BOARD_NAME_RE.test(n))
+        .map(n => ({ board: n, error: 'board name does not match board-YYYY-MM' }));
+      const boardNames = listedBoards.filter(n => BOARD_NAME_RE.test(n));
+
       const existingIndex = await readIndex();
-      const existingMonths = new Set((existingIndex.boards || []).map(b => b.month));
+      const previousByMonth = new Map((existingIndex.boards || []).map(b => [b.month, b]));
+      const months = new Set(previousByMonth.keys());
+      const syncedMonths = new Set();
       let syncCount = 0;
 
-      for (const sheetName of boardSheets) {
-        const month = sheetName.replace('board-', '');
-
-        const { headers, rows } = await sheetsClient.fetchRawSheet(sheetId, sheetName);
-        if (!headers.length) continue;
-
-        const candidates = parseBoardSheet(headers, rows);
-        await writeToStorage(`${STORAGE_PREFIX}/boards/${month}.json`, candidates);
-        syncCount++;
-
-        if (!existingMonths.has(month)) {
-          existingMonths.add(month);
+      for (const boardName of boardNames) {
+        const month = boardName.replace('board-', '');
+        try {
+          const payload = await client.getBoard(boardName);
+          const candidates = parseBoardRows(payload.rows);
+          if (candidates.some(candidate => !candidate.uniqueId && !candidate.link)) {
+            throw new Error('invalid candidate identity — expected a unique_id or source link');
+          }
+          if (candidates.length === 0 && payload.count > 0) {
+            throw new Error(`degraded board payload — reported ${payload.count} rows but none parsed into candidates`);
+          }
+          await writeToStorage(`${STORAGE_PREFIX}/boards/${month}.json`, candidates);
+          syncCount++;
+          syncedMonths.add(month);
+          months.add(month);
+        } catch (err) {
+          failed.push({ board: boardName, error: err.message || String(err) });
         }
       }
 
+      const now = new Date().toISOString();
       const boards = [];
-      for (const month of [...existingMonths].sort().reverse()) {
+      for (const month of [...months].sort().reverse()) {
         const data = await readBoard(month);
         boards.push({
           month,
           candidateCount: Array.isArray(data) ? data.length : 0,
-          lastSynced: new Date().toISOString()
+          // Months that did not sync this run keep their previous timestamp,
+          // so a failed refresh cannot masquerade as a fresh sync.
+          lastSynced: syncedMonths.has(month) ? now : (previousByMonth.get(month) || {}).lastSynced || null
         });
       }
 
-      await writeToStorage(INDEX_PATH, { boards, lastSynced: new Date().toISOString() });
-      lastSyncTime = new Date().toISOString();
-      return { synced: syncCount, total: boardSheets.length };
+      const runFailed = failed.length > 0;
+      await writeToStorage(INDEX_PATH, {
+        boards,
+        lastSynced: runFailed ? (existingIndex.lastSynced || null) : now
+      });
+      if (!runFailed) {
+        lastSyncTime = now;
+      }
+      return { synced: syncCount, failed, total: listedBoards.length };
     } finally {
       syncRunning = false;
     }
@@ -424,7 +524,7 @@ module.exports = function registerRoutes(router, context) {
    *         required: true
    *         schema:
    *           type: string
-   *         description: Candidate unique_id
+    *         description: Candidate unique_id, or source link for legacy rows without an ID
    *     responses:
    *       200:
    *         description: Candidate details with the resolved strategy pillar metadata
@@ -439,7 +539,7 @@ module.exports = function registerRoutes(router, context) {
     for (const month of months) {
       const candidates = DEMO_MODE ? getDemoBoard(month) : await readBoard(month);
       if (!Array.isArray(candidates)) continue;
-      const found = candidates.find(c => c.uniqueId === id);
+      const found = candidates.find(c => c.uniqueId === id || (!c.uniqueId && c.link === id));
       if (found) {
         const showcaseData = await loadPillarData();
         const pillar = getBoardPillars([found], showcaseData)
@@ -491,7 +591,7 @@ module.exports = function registerRoutes(router, context) {
    * /api/modules/ai-catalyst/sync:
    *   post:
    *     tags: [AI Catalyst]
-   *     summary: Manually trigger board sync from Google Sheets (admin)
+   *     summary: Manually trigger board sync from the POC Explorer feed (admin)
    *     responses:
    *       200:
    *         description: Sync result
@@ -512,8 +612,6 @@ module.exports = function registerRoutes(router, context) {
 
   // --- Showcase routes ---
 
-  const showcaseKeyFile = context.resolveSecret('GOOGLE_SERVICE_ACCOUNT_KEY_FILE') || '/etc/secrets/google-sa-key.json';
-
   async function loadShowcaseDemoData() {
     return normalizeShowcaseData(
       (await readFromStorage(SHOWCASE_STORAGE_KEY)) || { entries: [], pillars: [], fetchedAt: null },
@@ -521,7 +619,7 @@ module.exports = function registerRoutes(router, context) {
   }
 
   // Board and showcase data are synced independently. Prefer the cached
-  // showcase catalog so board requests remain available when Google Sheets is
+  // showcase catalog so board requests remain available when the feed is
   // temporarily unreachable, and synthesize metadata for any category that
   // has arrived in a board before its pillar row has been refreshed.
   async function loadPillarData() {
@@ -537,13 +635,10 @@ module.exports = function registerRoutes(router, context) {
     }
 
     try {
-      // The board and showcase settings normally point at the same workbook,
-      // but use the board workbook as a compatibility fallback for deployments
-      // that only configured the monthly board.
-      const showcaseSheetId = (await getShowcaseConfig(readFromStorage)).sheetId;
-      const sheetId = showcaseSheetId || await getSheetId();
-      if (sheetId) {
-        return normalizeShowcaseData(await getShowcaseData(sheetId, showcaseKeyFile, storage));
+      if (await isConfigured()) {
+        return normalizeShowcaseData(
+          await getShowcaseData(getShowcaseFeedUrl, getFeedToken(), storage, getAllowedFeedOrigins(), allowLoopback),
+        );
       }
     } catch (err) {
       console.error('[ai-catalyst:showcase] Failed to load pillar metadata:', err.message);
@@ -600,11 +695,10 @@ module.exports = function registerRoutes(router, context) {
   router.get('/showcase/entries', requireAuth, requireScope('ai-catalyst:showcase'), async function(req, res) {
     try {
       let data;
-      const sheetId = (await getShowcaseConfig(readFromStorage)).sheetId;
-      if (DEMO_MODE || !sheetId) {
+      if (DEMO_MODE || !(await isConfigured())) {
         data = await loadShowcaseDemoData();
       } else {
-        data = await getShowcaseData(sheetId, showcaseKeyFile, storage);
+        data = await getShowcaseData(getShowcaseFeedUrl, getFeedToken(), storage, getAllowedFeedOrigins(), allowLoopback);
       }
 
       data = normalizeShowcaseData(data);
@@ -646,11 +740,10 @@ module.exports = function registerRoutes(router, context) {
   router.get('/showcase/entries/:slug', requireAuth, requireScope('ai-catalyst:showcase'), async function(req, res) {
     try {
       let data;
-      const sheetId = (await getShowcaseConfig(readFromStorage)).sheetId;
-      if (DEMO_MODE || !sheetId) {
+      if (DEMO_MODE || !(await isConfigured())) {
         data = await loadShowcaseDemoData();
       } else {
-        data = await getShowcaseData(sheetId, showcaseKeyFile, storage);
+        data = await getShowcaseData(getShowcaseFeedUrl, getFeedToken(), storage, getAllowedFeedOrigins(), allowLoopback);
       }
 
       data = normalizeShowcaseData(data);
@@ -679,20 +772,18 @@ module.exports = function registerRoutes(router, context) {
    * /api/modules/ai-catalyst/showcase/refresh:
    *   post:
    *     tags: [AI Catalyst]
-   *     summary: Force refresh showcase data from Google Sheets (admin)
+   *     summary: Force refresh showcase data from the POC Explorer feed (admin)
    *     responses:
    *       200:
    *         description: Refresh result
    */
   router.post('/showcase/refresh', requireAdmin, async function(req, res) {
-    const sheetId = (await getShowcaseConfig(readFromStorage)).sheetId;
-    if (DEMO_MODE || !sheetId) {
-      return res.json({ status: 'skipped', reason: 'Demo mode or no sheet configured' });
+    if (DEMO_MODE || !(await isConfigured())) {
+      return res.json({ status: 'skipped', reason: 'Demo mode or feed not configured' });
     }
 
     try {
-      clearShowcaseCache();
-      const data = await fetchShowcaseData(sheetId, showcaseKeyFile, storage);
+      const data = await fetchShowcaseData(await getShowcaseFeedUrl(), getFeedToken(), storage, getAllowedFeedOrigins(), allowLoopback);
       res.json({
         status: 'refreshed',
         entries: data.entries.length,
@@ -701,7 +792,7 @@ module.exports = function registerRoutes(router, context) {
       });
     } catch (err) {
       console.error('[ai-catalyst:showcase] POST /refresh error:', err.message);
-      res.status(500).json({ error: 'Failed to refresh from Google Sheets', details: err.message });
+      res.status(500).json({ error: 'Failed to refresh from POC Explorer feed', details: err.message });
     }
   });
 
@@ -711,11 +802,21 @@ module.exports = function registerRoutes(router, context) {
     context.registerRefresh('ai-catalyst:sync-boards', {
       order: 80,
       cadence: '1h',
-      description: 'Sync monthly board data from POC Explorer Google Sheet',
+      description: 'Sync monthly board data from the POC Explorer feed',
       handler: async function() {
         if (DEMO_MODE) return { status: 'skipped', reason: 'demo mode' };
         if (!(await isConfigured())) return { status: 'skipped', reason: 'not configured' };
         const result = await syncBoards();
+        if (result.status === 'skipped') return result;
+        if (result.failed && result.failed.length) {
+          // Throwing is the refresh registry's retry mechanism: a returned
+          // value counts as success and would advance lastSuccessfulRun,
+          // silencing retries for a full cadence window.
+          throw new Error(
+            `Board sync failed for ${result.failed.length}/${result.total} boards — `
+            + result.failed.map(f => `${f.board}: ${f.error}`).join('; '),
+          );
+        }
         return { status: 'success', ...result };
       }
     });
@@ -723,12 +824,13 @@ module.exports = function registerRoutes(router, context) {
     context.registerRefresh('ai-catalyst:showcase-sync', {
       order: 81,
       cadence: '1h',
-      description: 'Sync AI Catalyst Showcase data from Google Sheets',
+      description: 'Sync AI Catalyst Showcase data from the POC Explorer feed',
       handler: async function() {
-        const sheetId = (await getShowcaseConfig(readFromStorage)).sheetId;
-        if (DEMO_MODE || !sheetId) return;
-        clearShowcaseCache();
-        await fetchShowcaseData(sheetId, showcaseKeyFile, storage);
+        // A bare return counts as success and burns the cadence window;
+        // the skip shape keeps the handler due for the next tick.
+        if (DEMO_MODE) return { status: 'skipped', reason: 'demo mode' };
+        if (!(await isConfigured())) return { status: 'skipped', reason: 'not configured' };
+        await fetchShowcaseData(await getShowcaseFeedUrl(), getFeedToken(), storage, getAllowedFeedOrigins(), allowLoopback);
       },
     });
   }
@@ -746,8 +848,12 @@ module.exports = function registerRoutes(router, context) {
         syncRunning,
         boardCount: (index && index.boards) ? index.boards.length : 0,
         boards: (index && index.boards) || [],
+        feed: {
+          url: await getBoardFeedUrl(),
+          tokenConfigured: !!getFeedToken(),
+        },
         showcase: {
-          sheetConfigured: !!(await getShowcaseConfig(readFromStorage)).sheetId,
+          configured: await isConfigured(),
           dataExists: !!showcaseData,
           entryCount: showcaseData?.entries?.length || 0,
           pillarCount: showcaseData?.pillars?.length || 0,

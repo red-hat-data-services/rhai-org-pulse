@@ -485,7 +485,7 @@ describe('ReleaseStatusView', () => {
   it('renders returned Feature choices for explicit selection or skip', async () => {
     apiRequest.mockImplementation((path, options) => {
       if (path === '/modules/product-builds/release-status') return Promise.resolve(response([]))
-       if (path === '/modules/product-builds/release-epic/options') return Promise.resolve({ products: [{ key: 'rhaiis', branches: [{ branch: '3.6-fast1', configured_versions: ['3.6.0'] }] }] })
+        if (path === '/modules/product-builds/release-epic/options') return Promise.resolve({ products: [{ key: 'rhaiis', branches: [{ branch: '3.6-fast1', configured_versions: ['3.6.0'] }] }] })
       if (options?.method !== 'POST') return Promise.resolve(response([]))
       const error = new Error('multiple features')
       error.data = { features: [{ key: 'RHAISTRAT-1', summary: 'RHAII 3.6 fast1 Release' }] }
@@ -504,5 +504,193 @@ describe('ReleaseStatusView', () => {
     await flushPromises()
     expect(wrapper.text()).toContain('RHAISTRAT-1')
     expect(wrapper.text()).toContain('Skip parent Feature')
+  })
+
+  it('filters releases with multi-select product and status buttons', async () => {
+    const release = (key, labels) => ({
+      key,
+      summary: `${key} release`,
+      status: { name: 'In Progress', category: 'indeterminate' },
+      labels,
+      updated: '2026-10-15T10:00:00Z',
+      details: {},
+      children: [],
+    })
+    apiRequest.mockResolvedValue({
+      total: 3,
+      groups: [
+        { key: 'rhaiis', label: 'RHAII', epics: [release('AIPCC-500', ['planned'])] },
+        { key: 'rhel-ai', label: 'RHEL AI', epics: [release('AIPCC-501', ['released'])] },
+        { key: 'torch', label: 'Torch', epics: [release('AIPCC-502', ['released'])] },
+      ],
+    })
+
+    const wrapper = mount(ReleaseStatusView)
+    await flushPromises()
+
+    expect(wrapper.get('[data-tree-root="AIPCC-500"]')).toBeTruthy()
+    expect(wrapper.get('[data-tree-root="AIPCC-501"]')).toBeTruthy()
+    expect(wrapper.get('[data-tree-root="AIPCC-502"]')).toBeTruthy()
+
+    await wrapper.get('[data-filter-product="rhel-ai"]').trigger('click')
+    expect(wrapper.find('[data-tree-root="AIPCC-500"]').exists()).toBe(false)
+    expect(wrapper.get('[data-tree-root="AIPCC-501"]')).toBeTruthy()
+
+    await wrapper.get('[data-filter-product="torch"]').trigger('click')
+    expect(wrapper.get('[data-tree-root="AIPCC-501"]')).toBeTruthy()
+    expect(wrapper.get('[data-tree-root="AIPCC-502"]')).toBeTruthy()
+
+    await wrapper.get('[data-filter-product="rhel-ai"]').trigger('click')
+    expect(wrapper.find('[data-tree-root="AIPCC-501"]').exists()).toBe(false)
+
+    await wrapper.get('[data-filter-status="released"]').trigger('click')
+    expect(wrapper.get('[data-tree-root="AIPCC-502"]')).toBeTruthy()
+
+    await wrapper.get('[data-filter-status="planned"]').trigger('click')
+    expect(wrapper.get('[data-tree-root="AIPCC-502"]')).toBeTruthy()
+
+    await wrapper.get('[data-filter-status="released"]').trigger('click')
+    expect(wrapper.text()).toContain('No releases match the current filters.')
+
+    await wrapper.get('[data-filter-product="torch"]').trigger('click')
+    await wrapper.get('[data-filter-status="planned"]').trigger('click')
+    expect(wrapper.get('[data-tree-root="AIPCC-500"]')).toBeTruthy()
+    expect(wrapper.get('[data-tree-root="AIPCC-501"]')).toBeTruthy()
+    expect(wrapper.get('[data-tree-root="AIPCC-502"]')).toBeTruthy()
+  })
+
+  it('puts release cards first and compacts the other checklist cards', async () => {
+    apiRequest.mockResolvedValue(response([{
+      key: 'AIPCC-700',
+      summary: 'Card order release',
+      status: { name: 'In Progress', category: 'indeterminate' },
+      labels: ['release-automation'],
+      updated: '2026-10-15T10:00:00Z',
+      details: {},
+      children: [
+        { key: 'AIPCC-701', summary: 'Send a release announcement email', status: { name: 'To Do', category: 'new' }, labels: [], updated: '2026-10-15T10:00:00Z' },
+        { key: 'AIPCC-702', summary: 'Release rhaiis 3.6.0 (prod)', status: { name: 'Triggered', category: 'indeterminate' }, labels: ['triggered'], updated: '2026-10-15T10:00:00Z' },
+        { key: 'AIPCC-703', summary: 'Build RC drops', status: { name: 'Done', category: 'done' }, labels: [], updated: '2026-10-15T10:00:00Z' },
+        { key: 'AIPCC-705', summary: 'Release rhaiis 3.4.6 (prod): cpu, cuda', status: { name: 'Done', category: 'done' }, labels: [], updated: '2026-10-15T10:00:00Z' },
+      ],
+    }]))
+
+    const wrapper = mount(ReleaseStatusView)
+    await flushPromises()
+
+    const children = wrapper.findAll('[data-tree-child]')
+    expect(children.map(node => node.attributes('data-tree-child'))).toEqual(['AIPCC-702', 'AIPCC-705', 'AIPCC-701', 'AIPCC-703'])
+    expect(children[0].attributes('data-release-card')).toBe('true')
+    expect(children[1].attributes('data-release-card')).toBe('true')
+    expect(children[2].attributes('data-release-card')).toBe('false')
+    expect(children[3].attributes('data-release-card')).toBe('false')
+    expect(children[0].classes()).toContain('rounded-xl')
+    expect(children[2].classes()).not.toContain('rounded-xl')
+    expect(children[2].text()).toContain('Send a release announcement email')
+    expect(children[2].text()).not.toContain('Updated')
+  })
+
+  it('renders version bump cards below the release cards with their MR links', async () => {
+    const run = {
+      namespace: 'rhel-ai-cicd--claudio',
+      name: 'create-release-mr-run-abc',
+      url: 'https://console-openshift-console.apps.mpp-e1-preprod.syvu.p1.openshiftapps.com/k8s/ns/rhel-ai-cicd--claudio/tekton.dev~v1~PipelineRun/create-release-mr-run-abc',
+      triggered_at: '2026-10-12T10:00:00Z',
+    }
+    const mr = {
+      iid: 769, state: 'merged',
+      web_url: 'https://gitlab.com/redhat/rhel-ai/ci-cd/aipcc-product-management-configs/-/merge_requests/769',
+    }
+    apiRequest.mockImplementation((path) => {
+      if (path === '/modules/product-builds/release-status') {
+        return Promise.resolve(response([{
+          key: 'AIPCC-700',
+          summary: 'Card order release',
+          status: { name: 'In Progress', category: 'indeterminate' },
+          labels: ['release-automation'],
+          updated: '2026-10-15T10:00:00Z',
+          details: {},
+          children: [
+            { key: 'AIPCC-701', summary: 'Send a release announcement email', status: { name: 'To Do', category: 'new' }, labels: [], updated: '2026-10-15T10:00:00Z' },
+            { key: 'AIPCC-702', summary: 'Release rhaiis 3.6.0 (prod)', status: { name: 'Triggered', category: 'indeterminate' }, labels: ['triggered'], updated: '2026-10-15T10:00:00Z' },
+            { key: 'AIPCC-704', summary: 'Bump RHAII version to 3.6.1', status: { name: 'Done', category: 'done' }, labels: [], updated: '2026-10-15T10:00:00Z' },
+          ],
+        }]))
+      }
+      if (path === '/modules/product-builds/release-status/links') {
+        return Promise.resolve({ links: {
+          'AIPCC-702': { merge_requests: [], pipeline_run: run },
+          'AIPCC-704': { merge_requests: [mr], pipeline_run: null },
+        } })
+      }
+      return Promise.resolve(response([]))
+    })
+
+    const wrapper = mount(ReleaseStatusView)
+    await flushPromises()
+
+    const children = wrapper.findAll('[data-tree-child]')
+    expect(children.map(node => node.attributes('data-tree-child'))).toEqual(['AIPCC-702', 'AIPCC-704', 'AIPCC-701'])
+    const bumpCard = children[1]
+    expect(bumpCard.attributes('data-version-bump')).toBe('true')
+    expect(bumpCard.classes()).toContain('rounded-lg')
+    const bumpMr = bumpCard.get('[data-mr-link="769"]')
+    expect(bumpMr.attributes('href')).toBe('https://gitlab.com/redhat/rhel-ai/ci-cd/aipcc-product-management-configs/-/merge_requests/769')
+    expect(children[2].classes()).not.toContain('rounded-lg')
+  })
+
+  it('links PMC merge requests and PipelineRuns on epics and readiness cards', async () => {
+    const run = {
+      namespace: 'rhel-ai-cicd--claudio',
+      name: 'create-release-mr-run-abc',
+      url: 'https://console-openshift-console.apps.mpp-e1-preprod.syvu.p1.openshiftapps.com/k8s/ns/rhel-ai-cicd--claudio/tekton.dev~v1~PipelineRun/create-release-mr-run-abc',
+      logs_url: 'https://rhcorporate.sumologic.com/log-search/create?query=_index%3Drh_paas_preprod',
+      triggered_at: '2026-10-12T10:00:00Z',
+    }
+    const mr = {
+      iid: 796, state: 'merged',
+      web_url: 'https://gitlab.com/redhat/rhel-ai/ci-cd/aipcc-product-management-configs/-/merge_requests/796',
+    }
+    apiRequest.mockImplementation((path) => {
+      if (path === '/modules/product-builds/release-status') {
+        return Promise.resolve(response([{
+          key: 'AIPCC-600',
+          summary: 'Linked release',
+          status: { name: 'In Progress', category: 'indeterminate' },
+          labels: ['release-automation'],
+          updated: '2026-10-15T10:00:00Z',
+          details: {},
+          children: [{
+            key: 'AIPCC-601',
+            summary: 'Production card',
+            status: { name: 'Triggered', category: 'indeterminate' },
+            labels: ['triggered'],
+            updated: '2026-10-15T10:00:00Z',
+          }],
+        }]))
+      }
+      if (path === '/modules/product-builds/release-status/links') {
+        return Promise.resolve({ links: {
+          'AIPCC-600': { merge_requests: [mr], pipeline_runs: [run] },
+          'AIPCC-601': { merge_requests: [mr], pipeline_run: run },
+        } })
+      }
+      return Promise.resolve(response([]))
+    })
+
+    const wrapper = mount(ReleaseStatusView)
+    await flushPromises()
+
+    expect(wrapper.findAll('[data-mr-link]')).toHaveLength(1)
+    expect(wrapper.findAll('[data-pipelinerun-link]')).toHaveLength(1)
+    const childMr = wrapper.get('[data-tree-child="AIPCC-601"] [data-mr-link="796"]')
+    expect(childMr.attributes('href')).toBe('https://gitlab.com/redhat/rhel-ai/ci-cd/aipcc-product-management-configs/-/merge_requests/796')
+    expect(childMr.text()).toContain('merged')
+    const childRun = wrapper.get('[data-tree-child="AIPCC-601"] [data-pipelinerun-link="create-release-mr-run-abc"]')
+    expect(childRun.attributes('href')).toBe(run.url)
+    expect(childRun.attributes('title')).toBe('rhel-ai-cicd--claudio/create-release-mr-run-abc')
+    const childLogs = wrapper.get('[data-tree-child="AIPCC-601"] [data-logs-link="create-release-mr-run-abc"]')
+    expect(childLogs.attributes('href')).toBe(run.logs_url)
+    expect(childLogs.text()).toContain('Logs')
   })
 })

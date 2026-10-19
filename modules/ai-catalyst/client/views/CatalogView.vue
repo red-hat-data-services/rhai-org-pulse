@@ -178,7 +178,7 @@ const filteredEntries = computed(() => {
         || (e.capabilityTags || []).some(t => t.toLowerCase().includes(q))
         || (e.customerNeedTags || []).some(t => t.toLowerCase().includes(q))
     })
-    .sort((a, b) => (a.sortOrder || 999) - (b.sortOrder || 999))
+    .sort((a, b) => (a.sortOrder ?? 999) - (b.sortOrder ?? 999))
 })
 
 function clearFilters() {

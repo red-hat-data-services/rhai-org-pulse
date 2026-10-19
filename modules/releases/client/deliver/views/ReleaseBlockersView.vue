@@ -1,31 +1,8 @@
 <template>
   <div>
-    <!-- Version input + chip bar navigation -->
-    <div class="flex items-center gap-3 mb-4 flex-wrap">
-      <label class="text-sm font-medium text-gray-700 dark:text-gray-300 whitespace-nowrap">Version:</label>
-      <input
-        v-model="manualVersion"
-        type="text"
-        :placeholder="effectiveReleaseNumber || 'e.g. rhoai-3.5.EA1'"
-        class="max-w-xs bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded-md px-3 py-1.5 text-sm text-gray-900 dark:text-gray-100 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
-        @keydown.enter="applyManualVersion"
-      />
-      <button
-        @click="applyManualVersion"
-        :disabled="!manualVersion.trim()"
-        class="px-3 py-1.5 text-sm font-medium rounded-md bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
-      >Load</button>
-      <span v-if="appliedManualVersion" class="text-xs text-gray-400 dark:text-gray-500">
-        Showing: <strong class="text-gray-600 dark:text-gray-300">{{ appliedManualVersion }}</strong>
-        <button @click="clearManualVersion" class="ml-1 text-blue-500 hover:underline">&times; clear</button>
-      </span>
-      <!-- Chip bar navigation (when no manual override) -->
-      <div v-if="!appliedManualVersion && filteredReleases.length > 1" class="flex items-center gap-2 ml-auto">
-        <button :disabled="releaseIndex <= 0" @click="releaseIndex--" class="px-2 py-1 text-xs rounded border border-gray-300 dark:border-gray-600 disabled:opacity-30">&larr;</button>
-        <span class="text-xs text-gray-500 dark:text-gray-400">{{ selectedRelease?.releaseNumber }} ({{ releaseIndex + 1 }}/{{ filteredReleases.length }})</span>
-        <button :disabled="releaseIndex >= filteredReleases.length - 1" @click="releaseIndex++" class="px-2 py-1 text-xs rounded border border-gray-300 dark:border-gray-600 disabled:opacity-30">&rarr;</button>
-      </div>
-    </div>
+    <p v-if="effectiveReleaseNumbers.length" class="mb-4 text-right text-xs text-gray-500 dark:text-gray-400">
+      Combining {{ effectiveReleaseNumbers.length }} selected release{{ effectiveReleaseNumbers.length === 1 ? '' : 's' }}
+    </p>
 
     <!-- Loading -->
     <div v-if="loading" class="flex items-center justify-center py-12">
@@ -38,84 +15,162 @@
     </div>
 
     <!-- Empty / no release selected -->
-    <div v-else-if="!data && !effectiveReleaseNumber" class="text-center py-12">
+    <div v-else-if="!data && !effectiveReleaseNumbers.length" class="text-center py-12">
       <p class="text-gray-500 dark:text-gray-400">Enter a release version above or select one from the filter bar to view blockers.</p>
     </div>
 
     <!-- Content -->
     <div v-else-if="data">
-      <!-- Summary Cards (clickable as filters) -->
-      <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 mb-6">
-        <button
-          @click="toggleStatusFilter(null)"
-          class="text-left rounded-lg border p-4 transition-all"
-          :class="activeStatusFilter === null
-            ? 'bg-blue-50 dark:bg-blue-900/20 border-blue-300 dark:border-blue-700 ring-2 ring-blue-300 dark:ring-blue-700'
-            : 'bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600'"
+      <!-- Summary Cards -->
+      <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-6">
+        <div
+          data-testid="blocker-summary-total"
+          class="rounded-lg border border-blue-200 bg-blue-50/50 p-4 text-left dark:border-blue-800 dark:bg-blue-900/10"
         >
           <p class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-1">Total Blockers</p>
-          <p class="text-2xl font-bold text-gray-900 dark:text-gray-100">{{ data.summary.total }}</p>
-        </button>
-        <button
-          @click="toggleStatusFilter('Proposed')"
-          class="text-left rounded-lg border p-4 transition-all"
-          :class="activeStatusFilter === 'Proposed'
-            ? 'bg-amber-50 dark:bg-amber-900/20 border-amber-400 dark:border-amber-600 ring-2 ring-amber-300 dark:ring-amber-700'
-            : 'bg-white dark:bg-gray-800 border-amber-200 dark:border-amber-800 hover:border-amber-300 dark:hover:border-amber-700'"
+          <p class="text-2xl font-bold text-gray-900 dark:text-gray-100">{{ awarenessSummary.total }}</p>
+        </div>
+        <div
+          data-testid="blocker-summary-proposed"
+          class="rounded-lg border border-amber-200 bg-white p-4 text-left dark:border-amber-800 dark:bg-gray-800"
         >
           <p class="text-xs font-medium text-amber-600 dark:text-amber-400 uppercase tracking-wide mb-1">Proposed</p>
-          <p class="text-2xl font-bold text-amber-700 dark:text-amber-300">{{ data.summary.proposed }}</p>
-        </button>
-        <button
-          @click="toggleStatusFilter('Approved')"
-          class="text-left rounded-lg border p-4 transition-all"
-          :class="activeStatusFilter === 'Approved'
-            ? 'bg-red-50 dark:bg-red-900/20 border-red-400 dark:border-red-600 ring-2 ring-red-300 dark:ring-red-700'
-            : 'bg-white dark:bg-gray-800 border-red-200 dark:border-red-800 hover:border-red-300 dark:hover:border-red-700'"
+          <p class="text-2xl font-bold text-amber-700 dark:text-amber-300">{{ awarenessSummary.proposed }}</p>
+        </div>
+        <div
+          data-testid="blocker-summary-approved"
+          class="rounded-lg border border-red-200 bg-white p-4 text-left dark:border-red-800 dark:bg-gray-800"
         >
           <p class="text-xs font-medium text-red-600 dark:text-red-400 uppercase tracking-wide mb-1">Approved</p>
-          <p class="text-2xl font-bold text-red-700 dark:text-red-300">{{ data.summary.approved }}</p>
-        </button>
-        <button
-          @click="toggleStatusFilter('Rejected')"
-          class="text-left rounded-lg border p-4 transition-all"
-          :class="activeStatusFilter === 'Rejected'
-            ? 'bg-emerald-50 dark:bg-emerald-900/20 border-emerald-400 dark:border-emerald-600 ring-2 ring-emerald-300 dark:ring-emerald-700'
-            : 'bg-white dark:bg-gray-800 border-emerald-200 dark:border-emerald-800 hover:border-emerald-300 dark:hover:border-emerald-700'"
+          <p class="text-2xl font-bold text-red-700 dark:text-red-300">{{ awarenessSummary.approved }}</p>
+        </div>
+        <div
+          data-testid="blocker-summary-rejected"
+          class="rounded-lg border border-emerald-200 bg-white p-4 text-left dark:border-emerald-800 dark:bg-gray-800"
         >
           <p class="text-xs font-medium text-emerald-600 dark:text-emerald-400 uppercase tracking-wide mb-1">Rejected</p>
-          <p class="text-2xl font-bold text-emerald-700 dark:text-emerald-300">{{ data.summary.rejected }}</p>
-        </button>
-        <button
-          @click="toggleStatusFilter('None')"
-          class="text-left rounded-lg border p-4 transition-all"
-          :class="activeStatusFilter === 'None'
-            ? 'bg-gray-100 dark:bg-gray-700 border-gray-400 dark:border-gray-500 ring-2 ring-gray-300 dark:ring-gray-600'
-            : 'bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600'"
-        >
-          <p class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-1">No Status</p>
-          <p class="text-2xl font-bold text-gray-600 dark:text-gray-400">{{ data.summary.noStatus }}</p>
-        </button>
+          <p class="text-2xl font-bold text-emerald-700 dark:text-emerald-300">{{ awarenessSummary.rejected }}</p>
+        </div>
       </div>
 
+      <!-- Release Blockers Awareness -->
+      <section data-testid="blockers-awareness-trends" class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden mb-6">
+        <div class="px-4 py-3 border-b border-gray-200 dark:border-gray-700">
+          <div class="flex items-center justify-between gap-3 mb-3">
+            <div>
+              <h3 class="text-sm font-semibold text-gray-700 dark:text-gray-300">Release Blockers Awareness</h3>
+              <p class="text-xs text-gray-400 dark:text-gray-500 mt-0.5">Issues with a Proposed, Approved, or Rejected Release blocker value.</p>
+            </div>
+            <span class="text-xs text-gray-400 dark:text-gray-500 whitespace-nowrap">{{ visibleAwarenessTrends.length }} of {{ awarenessTrends.length }} issues</span>
+          </div>
+
+          <div class="flex items-end gap-2 flex-wrap">
+            <label class="block">
+              <span class="block text-[11px] font-medium text-gray-500 dark:text-gray-400 mb-1">Release Blocker</span>
+              <select v-model="awarenessReleaseBlockerFilter" class="text-xs rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 px-2.5 py-1.5 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                <option value="">All values</option>
+                <option v-for="value in awarenessReleaseBlockerOptions" :key="value" :value="value">{{ value }}</option>
+              </select>
+            </label>
+            <label class="block">
+              <span class="block text-[11px] font-medium text-gray-500 dark:text-gray-400 mb-1">Fix Version</span>
+              <select v-model="awarenessFixVersionFilter" class="text-xs rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 px-2.5 py-1.5 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                <option value="">All fix versions</option>
+                <option v-for="value in awarenessFixVersionOptions" :key="value" :value="value">{{ value }}</option>
+              </select>
+            </label>
+            <label class="block">
+              <span class="block text-[11px] font-medium text-gray-500 dark:text-gray-400 mb-1">Status</span>
+              <select v-model="awarenessStatusFilter" class="text-xs rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 px-2.5 py-1.5 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                <option value="">All statuses</option>
+                <option v-for="value in awarenessStatusOptions" :key="value" :value="value">{{ value }}</option>
+              </select>
+            </label>
+            <label class="block">
+              <span class="block text-[11px] font-medium text-gray-500 dark:text-gray-400 mb-1">Team</span>
+              <select v-model="awarenessTeamFilter" class="text-xs rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 px-2.5 py-1.5 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                <option value="">All teams</option>
+                <option v-for="value in awarenessTeamOptions" :key="value" :value="value">{{ value }}</option>
+              </select>
+            </label>
+            <label class="block">
+              <span class="block text-[11px] font-medium text-gray-500 dark:text-gray-400 mb-1">Component</span>
+              <select v-model="awarenessComponentFilter" class="text-xs rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 px-2.5 py-1.5 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                <option value="">All components</option>
+                <option v-for="value in awarenessComponentOptions" :key="value" :value="value">{{ value }}</option>
+              </select>
+            </label>
+            <button v-if="awarenessHasActiveFilters" @click="clearAwarenessFilters" class="text-xs px-2.5 py-1.5 rounded-lg border border-gray-200 dark:border-gray-700 text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">Clear</button>
+          </div>
+        </div>
+
+        <div v-if="visibleAwarenessTrends.length" class="overflow-x-auto scrollable-table">
+          <table class="w-full text-sm">
+            <thead class="sticky top-0 z-10">
+              <tr class="border-b border-gray-100 dark:border-gray-700 bg-gray-50 dark:bg-gray-900">
+                <th v-for="col in blockerColumns" :key="col.key"
+                  class="px-3 py-2 text-left text-xs font-medium uppercase tracking-wide"
+                  :class="col.sortable
+                    ? 'cursor-pointer hover:text-gray-700 dark:hover:text-gray-200 select-none text-gray-500 dark:text-gray-400'
+                    : 'text-gray-500 dark:text-gray-400'"
+                  @click="col.sortable && toggleAwarenessSort(col.key)"
+                >
+                  {{ col.label }}
+                  <span v-if="col.sortable" class="ml-0.5 inline-block w-3 text-center"
+                    :class="awarenessSortKey === col.key ? 'text-blue-600 dark:text-blue-400' : 'text-gray-300 dark:text-gray-600'"
+                  >{{ awarenessSortKey === col.key ? (awarenessSortDir === 'asc' ? '▲' : '▼') : '⇅' }}</span>
+                </th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-gray-100 dark:divide-gray-700">
+              <tr v-for="issue in visibleAwarenessTrends" :key="issue.key" class="hover:bg-gray-50 dark:hover:bg-gray-750">
+                <td class="px-3 py-2"><a :href="issue.link" target="_blank" rel="noopener" class="text-xs text-blue-600 dark:text-blue-400 font-mono hover:underline">{{ issue.key }}</a></td>
+                <td class="px-3 py-2 text-xs text-gray-700 dark:text-gray-300 max-w-xs truncate" :title="issue.summary">{{ issue.summary }}</td>
+                <td class="px-3 py-2 text-xs text-gray-600 dark:text-gray-400">{{ issue.priority || '—' }}</td>
+                <td class="px-3 py-2 text-xs text-gray-600 dark:text-gray-400">{{ issue.issueType || '—' }}</td>
+                <td class="px-3 py-2 text-xs text-gray-600 dark:text-gray-400">{{ issue.status || '—' }}</td>
+                <td class="px-3 py-2"><span :class="blockerStatusClass(issue.releaseBlockerStatus)" class="text-xs px-2 py-0.5 rounded-full font-medium">{{ issue.releaseBlockerStatus }}</span></td>
+                <td class="px-3 py-2 text-xs text-gray-600 dark:text-gray-400">{{ issue.isRegression || 'Unknown' }}</td>
+                <td class="px-3 py-2 text-xs text-gray-600 dark:text-gray-400">{{ issue.assignee || '—' }}</td>
+                <td class="px-3 py-2 text-xs text-gray-600 dark:text-gray-400">{{ issue.reporter || '—' }}</td>
+                <td class="px-3 py-2 text-xs text-gray-600 dark:text-gray-400">{{ (issue.fixVersions || []).join(', ') || '—' }}</td>
+                <td class="px-3 py-2 text-xs text-gray-600 dark:text-gray-400">{{ (issue.affectedVersions || []).join(', ') || '—' }}</td>
+                <td class="px-3 py-2 text-xs text-gray-600 dark:text-gray-400">{{ (issue.components || []).join(', ') || '—' }}</td>
+                <td class="px-3 py-2 text-xs text-gray-600 dark:text-gray-400">{{ issue.team || '—' }}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <div v-else class="px-4 py-6 text-center">
+          <p v-if="awarenessTrends.length" class="text-xs text-gray-400 dark:text-gray-500">No issues match the selected table filters.</p>
+          <p v-else class="text-xs text-gray-400 dark:text-gray-500">No issues with a Release blocker value were found for this version.</p>
+        </div>
+      </section>
+
+      <TriageReadinessTable :issues="triageReadinessIssues" />
+
+      <!-- Historical trend charts intentionally use a separate, unfiltered data source. -->
+      <BlockerTrendsSection :data="blockerTrendData" :loading="blockerTrendLoading" :error="blockerTrendError" />
+
+      <!-- Continuous-improvement analysis uses the complete historical trend issue set, independently of page filters. -->
+      <BlockerAnalysisSection :data="blockerAnalysisData" :loading="blockerAnalysisLoading" :error="blockerAnalysisError" />
+
       <!-- Test Sign-Off Risk Assessment -->
-      <TfaRiskSection v-if="effectiveReleaseNumber" :version="effectiveReleaseNumber" />
+      <TfaRiskSection v-if="effectiveReleaseNumbers.length" :versions="effectiveReleaseNumbers" />
 
       <!-- Timing Breakdown + Aging Metrics row -->
       <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-6">
         <div class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4">
           <h3 class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">Code Freeze Timing</h3>
           <div class="space-y-2">
-            <button @click="toggleTimingFilter(true)" class="w-full flex items-center justify-between rounded px-2 py-1 transition-colors"
-              :class="activeTimingFilter === true ? 'bg-blue-50 dark:bg-blue-900/20' : 'hover:bg-gray-50 dark:hover:bg-gray-750'">
-              <span class="text-xs" :class="activeTimingFilter === true ? 'text-blue-700 dark:text-blue-300 font-medium' : 'text-gray-500 dark:text-gray-400'">Before Code Freeze</span>
+            <div class="w-full flex items-center justify-between px-2 py-1">
+              <span class="text-xs text-gray-500 dark:text-gray-400">Before Code Freeze</span>
               <span class="text-sm font-bold text-blue-600 dark:text-blue-400">{{ data.timing.proposedBeforeCodeFreeze }}</span>
-            </button>
-            <button @click="toggleTimingFilter(false)" class="w-full flex items-center justify-between rounded px-2 py-1 transition-colors"
-              :class="activeTimingFilter === false ? 'bg-orange-50 dark:bg-orange-900/20' : 'hover:bg-gray-50 dark:hover:bg-gray-750'">
-              <span class="text-xs" :class="activeTimingFilter === false ? 'text-orange-700 dark:text-orange-300 font-medium' : 'text-gray-500 dark:text-gray-400'">After Code Freeze</span>
+            </div>
+            <div class="w-full flex items-center justify-between px-2 py-1">
+              <span class="text-xs text-gray-500 dark:text-gray-400">After Code Freeze</span>
               <span class="text-sm font-bold text-orange-600 dark:text-orange-400">{{ data.timing.proposedAfterCodeFreeze }}</span>
-            </button>
+            </div>
           </div>
         </div>
         <div class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4">
@@ -245,76 +300,6 @@
         </div>
       </div>
 
-      <!-- Blockers Table -->
-      <div class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden mb-6">
-        <div class="px-4 py-3 border-b border-gray-200 dark:border-gray-700">
-          <div class="flex items-center justify-between mb-2">
-            <h3 class="text-sm font-semibold text-gray-700 dark:text-gray-300">Release Blockers</h3>
-            <span class="text-xs text-gray-400 dark:text-gray-500">{{ visibleBlockers.length }} of {{ data.blockers.length }} issues</span>
-          </div>
-          <div v-if="activeStatusFilter !== null || activeTimingFilter !== null" class="flex items-center gap-2 flex-wrap">
-            <span class="text-xs text-gray-500 dark:text-gray-400">Filters:</span>
-            <button v-if="activeStatusFilter !== null" @click="activeStatusFilter = null"
-              class="inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full font-medium"
-              :class="blockerStatusClass(activeStatusFilter === 'None' ? null : activeStatusFilter)">
-              {{ activeStatusFilter }} &times;
-            </button>
-            <button v-if="activeTimingFilter !== null" @click="activeTimingFilter = null"
-              class="inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full font-medium"
-              :class="activeTimingFilter ? 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400' : 'bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-400'">
-              {{ activeTimingFilter ? 'Pre-CF' : 'Post-CF' }} &times;
-            </button>
-            <button @click="clearFilters" class="text-xs text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 underline">Clear all</button>
-          </div>
-        </div>
-        <div v-if="visibleBlockers.length" class="overflow-x-auto scrollable-table">
-          <table class="w-full text-sm">
-            <thead class="sticky top-0 z-10">
-              <tr class="border-b border-gray-100 dark:border-gray-700 bg-gray-50 dark:bg-gray-900">
-                <th v-for="col in blockerColumns" :key="col.key"
-                  class="px-3 py-2 text-left text-xs font-medium uppercase tracking-wide"
-                  :class="col.sortable
-                    ? 'cursor-pointer hover:text-gray-700 dark:hover:text-gray-200 select-none text-gray-500 dark:text-gray-400'
-                    : 'text-gray-500 dark:text-gray-400'"
-                  @click="col.sortable && toggleSort(col.key)"
-                >
-                  {{ col.label }}
-                  <span v-if="col.sortable" class="ml-0.5 inline-block w-3 text-center"
-                    :class="sortKey === col.key ? 'text-blue-600 dark:text-blue-400' : 'text-gray-300 dark:text-gray-600'"
-                  >{{ sortKey === col.key ? (sortDir === 'asc' ? '▲' : '▼') : '⇅' }}</span>
-                </th>
-              </tr>
-            </thead>
-            <tbody class="divide-y divide-gray-100 dark:divide-gray-700">
-              <tr v-for="b in visibleBlockers" :key="b.key" class="hover:bg-gray-50 dark:hover:bg-gray-750">
-                <td class="px-3 py-2">
-                  <a :href="b.link" target="_blank" rel="noopener" class="text-xs text-blue-600 dark:text-blue-400 font-mono hover:underline">{{ b.key }}</a>
-                </td>
-                <td class="px-3 py-2 text-xs text-gray-700 dark:text-gray-300 max-w-xs truncate">{{ b.summary }}</td>
-                <td class="px-3 py-2 text-xs text-gray-600 dark:text-gray-400">{{ b.components.join(', ') || '—' }}</td>
-                <td class="px-3 py-2 text-xs text-gray-600 dark:text-gray-400">{{ b.status }}</td>
-                <td class="px-3 py-2">
-                  <span :class="blockerStatusClass(b.releaseBlockerStatus)" class="text-xs px-2 py-0.5 rounded-full font-medium">
-                    {{ b.releaseBlockerStatus || 'None' }}
-                  </span>
-                </td>
-                <td class="px-3 py-2 text-xs font-medium" :class="agingColor(b.daysInCurrentState)">
-                  {{ b.daysInCurrentState !== null ? b.daysInCurrentState + 'd' : '—' }}
-                </td>
-                <td class="px-3 py-2">
-                  <span v-if="b.proposedBeforeCodeFreeze" class="text-xs px-1.5 py-0.5 rounded bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 font-medium">Pre-CF</span>
-                  <span v-else class="text-xs px-1.5 py-0.5 rounded bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-400 font-medium">Post-CF</span>
-                </td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-        <div v-else class="px-4 py-6 text-center">
-          <p v-if="data.blockers.length" class="text-xs text-gray-400 dark:text-gray-500">No blockers match the active filters.</p>
-          <p v-else class="text-xs text-gray-400 dark:text-gray-500">No release blockers found for this version.</p>
-        </div>
-      </div>
-
       <!-- Updated timestamp -->
       <div v-if="data.fetchedAt" class="mt-4 flex items-center justify-between">
         <p class="text-xs text-gray-400 dark:text-gray-500">
@@ -332,125 +317,66 @@
 <script setup>
 import { ref, computed, inject, watch } from 'vue'
 import { useReleaseBlockers } from '../composables/useReleaseBlockers.js'
+import { useBlockerTrends } from '../composables/useBlockerTrends.js'
+import { useBlockerAnalysis } from '../composables/useBlockerAnalysis.js'
 import TfaRiskSection from '../components/TfaRiskSection.vue'
+import BlockerTrendsSection from '../components/BlockerTrendsSection.vue'
+import TriageReadinessTable from '../components/TriageReadinessTable.vue'
+import BlockerAnalysisSection from '../components/BlockerAnalysisSection.vue'
 
 const filter = inject('releaseFilter')
-const moduleNav = inject('moduleNav', null)
 
 const filteredReleases = computed(function () {
   return filter.filteredReleases.value || []
 })
 
-const releaseIndex = ref(0)
-
-watch(filteredReleases, function () {
-  releaseIndex.value = 0
+const releaseRequests = computed(function () {
+  var seen = new Set()
+  return filteredReleases.value.filter(function (release) {
+    if (!release.releaseNumber || seen.has(release.releaseNumber)) return false
+    seen.add(release.releaseNumber)
+    return true
+  }).map(function (release) {
+    return {
+      releaseNumber: release.releaseNumber,
+      codeFreezeDate: release.codeFreezeDate || null
+    }
+  })
 })
 
-const selectedRelease = computed(function () {
-  var releases = filteredReleases.value
-  if (!releases.length) return null
-  var idx = Math.min(releaseIndex.value, releases.length - 1)
-  return releases[idx] || null
+const effectiveReleaseNumbers = computed(function () {
+  return releaseRequests.value.map(function (release) { return release.releaseNumber })
 })
 
-// Restore manual version from URL params on mount
-function getParam(key) {
-  var params = moduleNav && moduleNav.params ? moduleNav.params.value : {}
-  return params[key] || null
-}
+const { data, loading, error, refresh } = useReleaseBlockers(releaseRequests)
+const {
+  data: blockerTrendData,
+  loading: blockerTrendLoading,
+  error: blockerTrendError
+} = useBlockerTrends()
 
-function updateParams(updates) {
-  if (moduleNav && moduleNav.updateParams) {
-    moduleNav.updateParams(updates, { push: false })
-  }
-}
-
-const manualVersion = ref(getParam('version') || '')
-const appliedManualVersion = ref(getParam('version') || '')
-
-function applyManualVersion() {
-  var v = manualVersion.value.trim()
-  if (v) {
-    appliedManualVersion.value = v
-    updateParams({ version: v })
-  }
-}
-
-function clearManualVersion() {
-  appliedManualVersion.value = ''
-  manualVersion.value = ''
-  updateParams({ version: '' })
-}
-
-const effectiveReleaseNumber = computed(function () {
-  if (appliedManualVersion.value) return appliedManualVersion.value
-  if (selectedRelease.value) return selectedRelease.value.releaseNumber
-  return null
-})
-
-const codeFreezeDate = computed(function () {
-  return selectedRelease.value ? (selectedRelease.value.codeFreezeDate || null) : null
-})
-
-const { data, loading, error, refresh } = useReleaseBlockers(effectiveReleaseNumber, codeFreezeDate)
-
-// Filters — restore from URL params
-var savedStatus = getParam('blockerStatus')
-var savedTiming = getParam('timing')
-const activeStatusFilter = ref(savedStatus || null)
-const activeTimingFilter = ref(savedTiming === 'pre' ? true : savedTiming === 'post' ? false : null)
-
-watch(data, function () {
-  if (!getParam('blockerStatus')) activeStatusFilter.value = null
-  if (!getParam('timing')) activeTimingFilter.value = null
-})
-
-function toggleStatusFilter(status) {
-  activeStatusFilter.value = activeStatusFilter.value === status ? null : status
-  updateParams({ blockerStatus: activeStatusFilter.value || '' })
-}
-
-function toggleTimingFilter(isBeforeCF) {
-  activeTimingFilter.value = activeTimingFilter.value === isBeforeCF ? null : isBeforeCF
-  var val = activeTimingFilter.value === true ? 'pre' : activeTimingFilter.value === false ? 'post' : ''
-  updateParams({ timing: val })
-}
-
-function clearFilters() {
-  activeStatusFilter.value = null
-  activeTimingFilter.value = null
-  updateParams({ blockerStatus: '', timing: '' })
-}
-
-// Blocker table sorting
-const sortKey = ref('daysInCurrentState')
-const sortDir = ref('desc')
-
+// Shared issue columns for the awareness table
 const blockerColumns = [
-  { key: 'key', label: 'Key', sortable: true },
+  { key: 'key', label: 'Jira Key', sortable: true },
   { key: 'summary', label: 'Summary', sortable: false },
-  { key: 'components', label: 'Component', sortable: true },
+  { key: 'priority', label: 'Priority', sortable: true },
+  { key: 'issueType', label: 'Issue type', sortable: true },
   { key: 'status', label: 'Status', sortable: true },
-  { key: 'releaseBlockerStatus', label: 'Blocker Status', sortable: true },
-  { key: 'daysInCurrentState', label: 'Days in State', sortable: true },
-  { key: 'proposedBeforeCodeFreeze', label: 'Timing', sortable: true }
+  { key: 'releaseBlockerStatus', label: 'Release blocker', sortable: true },
+  { key: 'isRegression', label: 'Is Regression', sortable: true },
+  { key: 'assignee', label: 'Assignee', sortable: true },
+  { key: 'reporter', label: 'Reporter', sortable: true },
+  { key: 'fixVersions', label: 'Fix version', sortable: true },
+  { key: 'affectedVersions', label: 'Affects version', sortable: true },
+  { key: 'components', label: 'Component', sortable: true },
+  { key: 'team', label: 'Team', sortable: true }
 ]
-
-function toggleSort(key) {
-  if (sortKey.value === key) {
-    sortDir.value = sortDir.value === 'asc' ? 'desc' : 'asc'
-  } else {
-    sortKey.value = key
-    sortDir.value = 'desc'
-  }
-}
 
 function sortRows(rows, key, dir) {
   var mult = dir === 'asc' ? 1 : -1
   return rows.sort(function (a, b) {
-    var av = key === 'components' ? (a.components[0] || '') : a[key]
-    var bv = key === 'components' ? (b.components[0] || '') : b[key]
+    var av = Array.isArray(a[key]) ? a[key].join(', ') : a[key]
+    var bv = Array.isArray(b[key]) ? b[key].join(', ') : b[key]
     if (av === null && bv === null) return 0
     if (av === null) return mult
     if (bv === null) return -mult
@@ -460,19 +386,135 @@ function sortRows(rows, key, dir) {
   })
 }
 
-const visibleBlockers = computed(function () {
-  var rows = (data.value && data.value.blockers) ? data.value.blockers.slice() : []
-  if (activeStatusFilter.value !== null) {
-    if (activeStatusFilter.value === 'None') {
-      rows = rows.filter(function (b) { return !b.releaseBlockerStatus })
-    } else {
-      rows = rows.filter(function (b) { return b.releaseBlockerStatus === activeStatusFilter.value })
+// Release Blockers Awareness filters and sorting
+const awarenessReleaseBlockerFilter = ref('')
+const awarenessFixVersionFilter = ref('')
+const awarenessStatusFilter = ref('')
+const awarenessTeamFilter = ref('')
+const awarenessComponentFilter = ref('')
+const awarenessSortKey = ref(null)
+const awarenessSortDir = ref('desc')
+
+const awarenessTrends = computed(function () {
+  return (data.value && Array.isArray(data.value.awarenessTrends)) ? data.value.awarenessTrends : []
+})
+
+const {
+  data: blockerAnalysisData,
+  loading: blockerAnalysisLoading,
+  error: blockerAnalysisError
+} = useBlockerAnalysis(blockerTrendData)
+
+const awarenessSummary = computed(function () {
+  var summary = {
+    proposed: 0,
+    approved: 0,
+    rejected: 0,
+    total: awarenessTrends.value.length
+  }
+
+  for (var i = 0; i < awarenessTrends.value.length; i++) {
+    var status = awarenessTrends.value[i].releaseBlockerStatus
+    if (status === 'Proposed') summary.proposed++
+    else if (status === 'Approved') summary.approved++
+    else if (status === 'Rejected') summary.rejected++
+  }
+
+  return summary
+})
+
+function uniqueSortedValues(rows, key) {
+  var values = new Set()
+  for (var i = 0; i < rows.length; i++) {
+    var value = rows[i][key]
+    var entries = Array.isArray(value) ? value : [value]
+    for (var j = 0; j < entries.length; j++) {
+      if (entries[j]) values.add(entries[j])
     }
   }
-  if (activeTimingFilter.value !== null) {
-    rows = rows.filter(function (b) { return b.proposedBeforeCodeFreeze === activeTimingFilter.value })
+  return Array.from(values).sort(function (a, b) { return String(a).localeCompare(String(b)) })
+}
+
+const awarenessReleaseBlockerOptions = computed(function () {
+  var present = new Set(uniqueSortedValues(awarenessTrends.value, 'releaseBlockerStatus'))
+  return ['Proposed', 'Approved', 'Rejected'].filter(function (status) { return present.has(status) })
+})
+const awarenessFixVersionOptions = computed(function () { return uniqueSortedValues(awarenessTrends.value, 'fixVersions') })
+const awarenessStatusOptions = computed(function () { return uniqueSortedValues(awarenessTrends.value, 'status') })
+const awarenessTeamOptions = computed(function () { return uniqueSortedValues(awarenessTrends.value, 'team') })
+const awarenessComponentOptions = computed(function () { return uniqueSortedValues(awarenessTrends.value, 'components') })
+
+const awarenessHasActiveFilters = computed(function () {
+  return Boolean(
+    awarenessReleaseBlockerFilter.value ||
+    awarenessFixVersionFilter.value ||
+    awarenessStatusFilter.value ||
+    awarenessTeamFilter.value ||
+    awarenessComponentFilter.value
+  )
+})
+
+function clearAwarenessFilters() {
+  awarenessReleaseBlockerFilter.value = ''
+  awarenessFixVersionFilter.value = ''
+  awarenessStatusFilter.value = ''
+  awarenessTeamFilter.value = ''
+  awarenessComponentFilter.value = ''
+}
+
+watch(effectiveReleaseNumbers, function () {
+  clearAwarenessFilters()
+  awarenessSortKey.value = null
+  awarenessSortDir.value = 'desc'
+})
+
+function toggleAwarenessSort(key) {
+  if (awarenessSortKey.value === key) {
+    awarenessSortDir.value = awarenessSortDir.value === 'asc' ? 'desc' : 'asc'
+  } else {
+    awarenessSortKey.value = key
+    awarenessSortDir.value = 'desc'
   }
-  return sortRows(rows, sortKey.value, sortDir.value)
+}
+
+function sortAwarenessByDefault(rows) {
+  return rows.sort(function (a, b) {
+    var aIsProposed = a.releaseBlockerStatus === 'Proposed'
+    var bIsProposed = b.releaseBlockerStatus === 'Proposed'
+    if (aIsProposed !== bIsProposed) return aIsProposed ? -1 : 1
+
+    var aDate = (aIsProposed && a.latestProposedDate) || a.updated || a.created || ''
+    var bDate = (bIsProposed && b.latestProposedDate) || b.updated || b.created || ''
+    var dateOrder = String(bDate).localeCompare(String(aDate))
+    return dateOrder || String(a.key).localeCompare(String(b.key))
+  })
+}
+
+const triageReadinessIssues = computed(function () {
+  return sortAwarenessByDefault(awarenessTrends.value.filter(function (issue) {
+    return issue.releaseBlockerStatus === 'Proposed'
+  }))
+})
+
+const visibleAwarenessTrends = computed(function () {
+  var rows = awarenessTrends.value.slice()
+  if (awarenessReleaseBlockerFilter.value) {
+    rows = rows.filter(function (issue) { return issue.releaseBlockerStatus === awarenessReleaseBlockerFilter.value })
+  }
+  if (awarenessFixVersionFilter.value) {
+    rows = rows.filter(function (issue) { return (issue.fixVersions || []).includes(awarenessFixVersionFilter.value) })
+  }
+  if (awarenessStatusFilter.value) {
+    rows = rows.filter(function (issue) { return issue.status === awarenessStatusFilter.value })
+  }
+  if (awarenessTeamFilter.value) {
+    rows = rows.filter(function (issue) { return issue.team === awarenessTeamFilter.value })
+  }
+  if (awarenessComponentFilter.value) {
+    rows = rows.filter(function (issue) { return (issue.components || []).includes(awarenessComponentFilter.value) })
+  }
+  if (awarenessSortKey.value) return sortRows(rows, awarenessSortKey.value, awarenessSortDir.value)
+  return sortAwarenessByDefault(rows)
 })
 
 // Critical monitoring table sorting

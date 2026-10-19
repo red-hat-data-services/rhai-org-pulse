@@ -210,7 +210,7 @@ import { useTfaRiskAssessment } from '../composables/useTfaRiskAssessment.js'
 import { getPillarColor } from '../composables/pillarColors.js'
 
 var props = defineProps({
-  version: { type: String, required: true }
+  versions: { type: Array, required: true }
 })
 
 var inputBlocker = ref(50)
@@ -252,7 +252,7 @@ var {
   expandedPillars,
   loading,
   error
-} = useTfaRiskAssessment(toRef(props, 'version'), thresholdsRef)
+} = useTfaRiskAssessment(toRef(props, 'versions'), thresholdsRef)
 
 var lastClickedPillar = ref(null)
 

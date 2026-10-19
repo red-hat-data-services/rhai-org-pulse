@@ -55,7 +55,20 @@
           "skipped": 0
         },
         "failedCases": [],
-        "failedCasesTruncated": false
+        "failedCasesTruncated": false,
+        "passedCases": [
+          {
+            "suite": "A user can view subscriptions and manage API keys on the Keys and Subscriptions page",
+            "name": "Verify subscriptions tab and API keys",
+            "status": "PASSED",
+            "filePath": "packages/cypress/cypress/tests/e2e/maas/testApiKeys.cy.ts",
+            "area": "maas",
+            "tags": ["@Smoke", "@Dashboard", "@MaaS"],
+            "component": null,
+            "ownership": null
+          }
+        ],
+        "passedCasesTruncated": false
       },
       "agentAnalysis": null,
       "receivedAt": "2026-10-07T10:35:00.000Z"
@@ -117,11 +130,27 @@
             "suite": "model-serving",
             "name": "deploys a model",
             "status": "FAILED",
+            "filePath": "packages/cypress/cypress/tests/e2e/maas/testApiKeys.cy.ts",
+            "area": "maas",
+            "tags": ["@Smoke", "@SmokeSet5", "@Dashboard", "@MaaS", "@MaaSCI"],
             "component": "Model Serving",
             "ownership": null
           }
         ],
-        "failedCasesTruncated": false
+        "failedCasesTruncated": false,
+        "passedCases": [
+          {
+            "suite": "A user can view subscriptions and manage API keys on the Keys and Subscriptions page",
+            "name": "Verify subscriptions tab and API keys",
+            "status": "PASSED",
+            "filePath": "packages/cypress/cypress/tests/e2e/maas/testApiKeys.cy.ts",
+            "area": "maas",
+            "tags": ["@Smoke", "@Dashboard", "@MaaS"],
+            "component": null,
+            "ownership": null
+          }
+        ],
+        "passedCasesTruncated": false
       },
       "agentAnalysis": {
         "source": "agent",

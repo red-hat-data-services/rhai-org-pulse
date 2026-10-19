@@ -78,8 +78,8 @@ function humanizeKey(key) {
 
 /**
  * Convert the server's strategy_pillars row shape into the metadata consumed
- * by all AI Catalyst client views. The server may expose camelCase fields or
- * the original spreadsheet snake_case fields while a sync is in flight.
+ * by all AI Catalyst client views. Handles both camelCase and legacy
+ * snake_case pillar shapes defensively.
  */
 function normalizePillar(pillar, index = 0) {
   const key = pillar?.pillarKey || pillar?.pillar_key || pillar?.key || pillar?.category || `pillar-${index + 1}`

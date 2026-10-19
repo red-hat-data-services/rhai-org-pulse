@@ -13,8 +13,11 @@ const FEATURE_PROJECT = 'RHAISTRAT';
 const JIRA_HOST_DEFAULT = 'https://redhat.atlassian.net';
 const GITLAB_HOST_DEFAULT = 'https://gitlab.com';
 const pmcSnapshotCache = new Map();
+const pmcMergeRequestCache = new Map();
 const triggerOptionsCache = new Map();
 const TRIGGER_OPTIONS_CACHE_TTL = 30_000;
+const VERSION_TAG_PATTERN = /^(?:\d+\.\d+\.\d+)(?:-(?:ea|fast)\.\d+)?$/;
+const TEMPLATE_TAG_SUFFIX_PATTERN = /-\{\{[^}]*\}\}$/;
 const INSTRUCTIONS = 'Component readiness is tracked through child Tasks linked to this epic. Use the component readiness skill to create a Task for a batch of components that are ready to release. Each Task carries image pullspecs and is linked to this epic via Epic Link.';
 
 function configPaths(product, branch) {
@@ -78,6 +81,13 @@ function extractDefinition(definition, configFamily, branch) {
   };
 }
 
+function configuredVersionFromTag(tag) {
+  const literal = String(tag);
+  if (VERSION_TAG_PATTERN.test(literal)) return literal;
+  const stripped = literal.replace(TEMPLATE_TAG_SUFFIX_PATTERN, '');
+  return VERSION_TAG_PATTERN.test(stripped) ? stripped : null;
+}
+
 function parseBranch(files, product, branch) {
   const paths = configPaths(product, branch);
   const availablePaths = product === 'rhelai'
@@ -126,7 +136,7 @@ function parseBranch(files, product, branch) {
     release_plans: [...new Set(extracted.flatMap(item => item.releasePlans))],
     tags: [...new Set(extracted.flatMap(item => item.tags))],
     configured_tags: [...new Set(extracted.flatMap(item => item.tags))],
-    configured_versions: [...new Set(extracted.flatMap(item => item.tags).filter(tag => /^(?:\d+\.\d+\.\d+)(?:-(?:ea|fast)\.\d+)?$/.test(String(tag))))],
+    configured_versions: [...new Set(extracted.flatMap(item => item.tags).map(configuredVersionFromTag).filter(Boolean))],
     inferred_release_type: inferReleaseTypeForProduct(product, branch),
   };
 }
@@ -647,7 +657,42 @@ function createGitlabClient({ baseUrl = GITLAB_HOST_DEFAULT, project, token, fet
     const files = await selective(ref, [...paths], false);
     return { sha: catalog.sha, files: files.files };
   }
-  return { snapshot, selective, repositoryCatalog, resolveRef };
+  async function listMergeRequests() {
+    const cacheKey = `${host}|${projectId}|merge-requests`;
+    const cached = pmcMergeRequestCache.get(cacheKey);
+    if (cached?.value && cached.expiresAt > Date.now()) return cached.value;
+    if (cached?.promise) return cached.promise;
+    const pending = (async () => {
+      const mergeRequests = [];
+      for (let page = 1; page <= 10; page++) {
+        const params = new URLSearchParams({
+          state: 'all', order_by: 'updated_at', sort: 'desc', per_page: '100', page: String(page),
+        });
+        const pageItems = await request(`/projects/${projectId}/merge_requests?${params}`);
+        mergeRequests.push(...(Array.isArray(pageItems) ? pageItems : []));
+        if (!Array.isArray(pageItems) || pageItems.length < 100) break;
+      }
+      return mergeRequests.map(mr => ({
+        iid: mr.iid,
+        title: mr.title || '',
+        state: mr.state || '',
+        web_url: mr.web_url || '',
+        source_branch: mr.source_branch || '',
+        created_at: mr.created_at || null,
+        updated_at: mr.updated_at || null,
+      }));
+    })();
+    pmcMergeRequestCache.set(cacheKey, { promise: pending, expiresAt: Date.now() + cacheTtl });
+    try {
+      const value = await pending;
+      pmcMergeRequestCache.set(cacheKey, { value, expiresAt: Date.now() + cacheTtl });
+      return value;
+    } catch (error) {
+      pmcMergeRequestCache.delete(cacheKey);
+      throw error;
+    }
+  }
+  return { snapshot, selective, repositoryCatalog, resolveRef, listMergeRequests };
 }
 
 function gitlabFor(context, deps = {}) {
@@ -848,7 +893,10 @@ const RELEASE_LIFECYCLE_LABELS = new Set(['planned', 'ready', 'triggered', 'rele
 const RELEASE_STATE_PRECEDENCE = ['planned', 'triggered', 'ready', 'failed', 'released', 'skip'];
 const RELEASE_INPUT_TYPES = new Set(['image-list', 'git-tag', 'commit-sha']);
 const CVE_RE = /^CVE-\d{4}-\d{4,}$/i;
-const STAGE_TAG_RE = /-\d+$/;
+// A stage tag is <version>-<timestamp>, so the entire remainder after the
+// version prefix must be digits — a tail like -rc-1 ends in digits but is
+// not a timestamp, and the readiness detector cannot verify it.
+const STAGE_TAG_RE = /^\d+$/;
 
 function releaseState(labels = []) {
   const present = new Set(labels);
@@ -1141,7 +1189,7 @@ function validateStagePullspec(component, pullspec, version) {
     }
     return;
   }
-  if (!parsed.reference || parsed.reference === version || !parsed.reference.startsWith(`${version}-`) || !STAGE_TAG_RE.test(parsed.reference)) {
+  if (!parsed.reference || parsed.reference === version || !parsed.reference.startsWith(`${version}-`) || !STAGE_TAG_RE.test(parsed.reference.slice(version.length + 1))) {
     throw new Error(`${component.name} pullspec must use ${expected}:${version}-<timestamp> or ${expected}@sha256:<64 hex digest>`);
   }
   if (parsed.repository === 'quay.io/redhat-user-workloads' || parsed.repository.startsWith('quay.io/redhat-user-workloads/')) {
@@ -2099,6 +2147,8 @@ function registerReleaseEpicRoutes(router, context, deps = {}) {
       }
        const result = await mutateTriggerRelease(getJira(), pmc, issue, req.body || {});
       invalidateTriggerOptionsCache();
+      pmcMergeRequestCache.clear();
+      require('./release-status').invalidateReleaseStatusCaches();
       res.json(result);
     } catch (err) {
        const status = err.code === 'invalid-epic' || err.code === 'invalid-card'
@@ -2225,6 +2275,7 @@ function registerReleaseEpicRoutes(router, context, deps = {}) {
 }
 
 module.exports = registerReleaseEpicRoutes;
+module.exports.gitlabFor = gitlabFor;
 module.exports._testExports = {
   PRODUCTS, RHELAI_CONFIGS, branchApplication, inferReleaseType, inferReleaseTypeForProduct,
   parseBranch, parsePmcSnapshot, validateReleaseInput, filterComponents, buildEpicAdf,

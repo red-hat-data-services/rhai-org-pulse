@@ -1,0 +1,83 @@
+{
+  "generatedAt": "2026-10-18T06:00:00.000Z",
+  "fetchedAt": "2026-10-18T06:00:00.000Z",
+  "model": "demo-fixture",
+  "promptVersion": "release-blocker-analysis-v1",
+  "source": { "jql": "demo", "issueCount": 3 },
+  "partial": false,
+  "errors": [],
+  "issues": [
+    {
+      "key": "RHOAIENG-93716",
+      "link": "https://redhat.atlassian.net/browse/RHOAIENG-93716",
+      "summary": "NetworkPolicies for Serving Orchestration operands",
+      "components": ["Model Serving"],
+      "fixVersions": ["3.5 GA RHOAI RELEASE"],
+      "releaseBlocker": "Approved",
+      "labels": [],
+      "hasPrereleaseCveLabel": false,
+      "proposedDate": "2026-09-18T12:00:00.000Z",
+      "regression": "Yes",
+      "regressionEvidence": "The issue was introduced during the latest upgrade.",
+      "couldIdentifyEarlier": "Yes",
+      "earlyDetectionResponse": "Yes, an automated upgrade test would have caught the policy mismatch.",
+      "earlyDetectionCategory": "Missing automated tests",
+      "preventionCategory": "Add or expand automated tests",
+      "prevention": "Add an upgrade-path test that validates generated NetworkPolicy resources.",
+      "analysisConfidence": "High",
+      "analysisFingerprint": "demo-93716"
+    },
+    {
+      "key": "RHOAIENG-84765",
+      "link": "https://redhat.atlassian.net/browse/RHOAIENG-84765",
+      "summary": "Verify application pods run with anyuid SCC",
+      "components": ["Security"],
+      "fixVersions": ["3.6 GA RHOAI RELEASE"],
+      "releaseBlocker": "Approved",
+      "labels": ["prerelease-cve-remediation"],
+      "hasPrereleaseCveLabel": true,
+      "proposedDate": "2026-10-02T12:00:00.000Z",
+      "regression": "No",
+      "regressionEvidence": "The behavior never worked in the supported configuration.",
+      "couldIdentifyEarlier": "Unknown",
+      "earlyDetectionResponse": null,
+      "earlyDetectionCategory": "Unknown",
+      "preventionCategory": "Unknown",
+      "prevention": null,
+      "analysisConfidence": "Low",
+      "analysisFingerprint": "demo-84765"
+    },
+    {
+      "key": "RHOAIENG-91822",
+      "link": "https://redhat.atlassian.net/browse/RHOAIENG-91822",
+      "summary": "ExternalProvider secretRef.name validation",
+      "components": ["MaaS"],
+      "fixVersions": ["3.6 GA RHOAI RELEASE"],
+      "releaseBlocker": "Rejected",
+      "labels": [],
+      "hasPrereleaseCveLabel": false,
+      "proposedDate": "2026-09-25T12:00:00.000Z",
+      "regression": "Unknown",
+      "regressionEvidence": null,
+      "couldIdentifyEarlier": "No",
+      "earlyDetectionResponse": "No, the issue only occurs with a customer-specific provider configuration.",
+      "earlyDetectionCategory": "Environment/configuration issue",
+      "preventionCategory": "Fix environment/configuration",
+      "prevention": "Add a representative provider configuration to release validation.",
+      "analysisConfidence": "Medium",
+      "analysisFingerprint": "demo-91822"
+    }
+  ],
+  "insights": [
+    {
+      "text": "Upgrade-path validation is the clearest prevention opportunity in the analyzed blockers.",
+      "evidenceCount": 1,
+      "issueKeys": ["RHOAIENG-93716"]
+    },
+    {
+      "text": "One approved blocker is explicitly linked to pre-release CVE remediation.",
+      "evidenceCount": 1,
+      "issueKeys": ["RHOAIENG-84765"]
+    }
+  ]
+}

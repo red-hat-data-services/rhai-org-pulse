@@ -68,7 +68,7 @@ async function loadCandidates() {
 }
 
 function onSelectCandidate(candidate) {
-  nav.navigateTo('candidate-detail', { id: candidate.uniqueId, month: selectedMonth.value })
+  nav.navigateTo('candidate-detail', { id: candidate.uniqueId || candidate.link, month: selectedMonth.value })
 }
 
 watch([selectedMonth, selectedCategory, selectedStatus, selectedSource, selectedSort], (values, previousValues) => {

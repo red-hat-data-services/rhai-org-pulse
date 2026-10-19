@@ -7,9 +7,10 @@ const PHASE_ORDER = ['EA1', 'EA2', 'GA']
 // separate registry entries with distinct schedules and should not appear in the
 // family/version/phase selector alongside standard milestones.
 export function parseReleaseId(id) {
-  const match = id.match(/^([a-z]+)-(\d+\.\d+)(?:\.(ea\d?))?$/i)
+  const match = id.match(/^([a-z]+)-(\d+\.\d+)(?:\.(ea\d?|ga))?$/i)
   if (!match) return null
-  return { family: match[1].toLowerCase(), version: match[2], phase: match[3] ? match[3].toUpperCase() : 'GA' }
+  const phase = match[3] ? match[3].toUpperCase() : 'GA'
+  return { family: match[1].toLowerCase(), version: match[2], phase }
 }
 
 /**

@@ -18,12 +18,15 @@ RHOAI runs need a canonical `release.version`; ODH nightly can have no release
 version. `release.installedVersion` and `release.imageDigest` preserve the
 observed product version and catalog identity without changing the version
 used for filtering. Missing test counts remain `null`, not zero.
+Stored failed and passed cases can include optional, nullable `filePath`,
+`area`, and `tags` source metadata for area-based triage.
 
 The later analysis POST updates only `agentAnalysis` and preserves the base
 run. Its `findings` can suggest a category, team, Jira issue, and related
 failed test cases. The server marks it `reviewStatus: "unverified"`; machine
 suggestions are not human-confirmed ownership. Retrying the base run keeps
-the latest analysis. At most 2,000 runs and 50 failed cases per run are kept.
+the latest analysis. At most 2,000 runs, 50 failed cases, and 500 passed cases
+per run are kept.
 
 ## Jira Autofix — `data/ai-impact/autofix-data.json`
 
@@ -1118,6 +1121,181 @@ Admin-configurable settings for the Releases module delivery domain (formerly Re
 - `productPagesBaseUrl` defaults to `https://productpages.redhat.com`. Override for non-standard instances.
 - `productPagesTokenUrl` defaults to the Red Hat SSO token endpoint. Override for non-standard SSO.
 - Credentials (`PRODUCT_PAGES_CLIENT_ID`, `PRODUCT_PAGES_CLIENT_SECRET`, `PRODUCT_PAGES_TOKEN`) are env-var-only and not stored in config.
+
+---
+
+## Releases — Release Blockers Response (`fixtures/releases/delivery/blockers-{version}.json`)
+
+The `GET /api/modules/releases/delivery/blockers/{version}` response contains
+summary, timing, and aging statistics plus three issue collections:
+
+- `blockers`: open Blocker-priority issues in the release scope.
+- `criticalMonitoring`: open Critical or Blocker issues that are not approved blockers.
+- `awarenessTrends`: open Blocker-priority issues whose Release Blocker field
+  (`customfield_10847`) is not empty. The release scope matches Fix Version,
+  Affects Version, or Target Version (`customfield_10855`).
+
+Each `awarenessTrends` record includes `key`, `summary`, `link`, `priority`,
+`issueType`, `status`, `releaseBlockerStatus`, `assignee`, `reporter`,
+`isRegression`, `fixVersions`, `affectedVersions`, `components`, `team`,
+`created`, `updated`, `latestProposedDate`, and `triageReadiness`. `isRegression`
+is derived from human Jira comments and is always one of `Yes`, `No`, or
+`Unknown`. Version and component values remain arrays because a Jira issue can
+contain multiple values. `latestProposedDate`
+is the most recent changelog transition into Proposed and is `null` when no
+such transition is available.
+
+`triageReadiness` is populated only for Proposed blockers. It is calculated
+conservatively from Jira evidence and contains:
+
+- `ready`: true only when every applicable criterion passes.
+- `criteria`: booleans for `fixVersion`, `linkedPullRequest`,
+  `assessmentCompleted`, and `pmAcknowledgement`.
+- `missingCriteria`: human-readable unmet requirements.
+- `assessmentAnswers`: answer-detection results for workaround, impact,
+  early-catch, regression, and reviews/tests questions. Jira automation and bot
+  comments are ignored.
+- `activePullRequests`: open PRs linked through Jira development status whose
+  repository belongs to `red-hat-data-services`.
+- `isZStream`, `pmAcknowledgementRequired`, and `productManager`: context for
+  the conditional PM acknowledgement requirement. A Fix Version containing a
+  three-part semantic version, such as `3.5.1`, is treated as z-stream.
+
+For non-z-stream releases, `criteria.pmAcknowledgement` is true because that
+criterion does not apply. For z-stream releases it is true only when a human
+comment contains explicit PM acknowledgement/approval, or when the configured
+Product Manager authors an acknowledgement/approval comment. Missing or
+unavailable Jira evidence always produces a failed criterion.
+
+Older fixtures and cached responses may omit `awarenessTrends`; clients treat
+the missing field as an empty collection. Older `awarenessTrends` records may
+omit `triageReadiness`; clients display those records as Not Ready.
+
+The `GET /api/modules/releases/delivery/blockers/trends` response contains an
+unfiltered historical aggregate for Blocker-priority issues whose Release
+Blocker field has the Approved (`16772`) or Rejected (`16774`) Jira option.
+It is independent of page-level
+release, team, component, status, and priority filters, and includes resolved
+issues so the trend remains historical:
+
+```json
+{
+  "fetchedAt": "2026-10-18T12:00:00.000Z",
+  "releases": [
+    { "label": "3.5 GA RHOAI RELEASE", "approved": 3, "rejected": 1, "total": 4 }
+  ],
+  "components": [
+    { "label": "Model Serving", "approved": 2, "rejected": 1, "total": 3 }
+  ],
+  "issues": [
+    {
+      "key": "RHOAIENG-93716",
+      "link": "https://redhat.atlassian.net/browse/RHOAIENG-93716",
+      "summary": "NetworkPolicies for Serving Orchestration operands",
+      "releaseBlockerStatus": "Approved",
+      "fixVersions": ["3.5 GA RHOAI RELEASE"],
+      "affectedVersions": [],
+      "trendReleases": ["3.5 GA RHOAI RELEASE"],
+      "components": ["Model Serving"],
+      "labels": [],
+      "isRegression": "Yes",
+      "couldIdentifyEarlier": "Yes",
+      "earlyDetectionResponse": "Yes, an automated upgrade test would have caught the policy mismatch.",
+      "earlyDetectionCategory": "Missing automated tests",
+      "preventionCategory": "Add or expand automated tests",
+      "prevention": "Add an upgrade-path test that validates generated NetworkPolicy resources."
+    }
+  ]
+}
+```
+
+Release groups use the union of Jira Fix Version, Affects Version, and Target
+Version values. Component groups count an issue once per assigned component;
+issues without a component are grouped under `(No component)`. The endpoint
+returns all matching Jira pages rather than only the releases selected in the
+dashboard. The `issues` records are the deduplicated source rows used by the
+continuous-improvement section. `couldIdentifyEarlier`, `earlyDetectionCategory`,
+`preventionCategory`, and `prevention` are derived locally from the relevant
+human Jira comment response; if no qualifying response is available, they are
+`Unknown` or `null`.
+
+---
+
+## Releases — Release Blocker Continuous-Improvement Analysis (`releases/delivery/blocker-analysis.json`)
+
+The optional `GET /api/modules/releases/delivery/blockers/analysis` endpoint serves the
+precomputed analysis snapshot of issues whose current Release Blocker option is
+Approved (`16772`) or Rejected (`16774`). It is independent of dashboard
+filters. The scheduled collector fetches complete Jira comment and changelog
+pages, sends only relevant human-comment excerpts to the configured
+OpenAI-compatible endpoint, and uploads the validated snapshot through
+`POST /api/modules/releases/delivery/blockers/analysis/bulk`.
+
+The snapshot contains `generatedAt`, `fetchedAt`, `model`, `promptVersion`,
+`partial`, `errors`, `issues`, `aggregates`, and `insights`:
+
+```json
+{
+  "generatedAt": "2026-10-18T06:00:00.000Z",
+  "model": "gpt-5",
+  "promptVersion": "release-blocker-analysis-v1",
+  "partial": false,
+  "issues": [
+    {
+      "key": "RHOAIENG-93716",
+      "link": "https://redhat.atlassian.net/browse/RHOAIENG-93716",
+      "summary": "NetworkPolicies for Serving Orchestration operands",
+      "components": ["Model Serving"],
+      "fixVersions": ["3.5 GA RHOAI RELEASE"],
+      "releaseBlocker": "Approved",
+      "labels": [],
+      "hasPrereleaseCveLabel": false,
+      "proposedDate": "2026-09-18T12:00:00.000Z",
+      "regression": "Yes",
+      "regressionEvidence": "The issue was introduced during the latest upgrade.",
+      "couldIdentifyEarlier": "Yes",
+      "earlyDetectionResponse": "Yes, an automated upgrade test would have caught the policy mismatch.",
+      "earlyDetectionCategory": "Missing automated tests",
+      "preventionCategory": "Add or expand automated tests",
+      "prevention": "Add an upgrade-path test that validates generated NetworkPolicy resources.",
+      "analysisConfidence": "High",
+      "analysisFingerprint": "sha256..."
+    }
+  ],
+  "aggregates": {
+    "overall": {
+      "totalAnalyzed": 1,
+      "regression": { "yes": 1, "no": 0, "unknown": 0 },
+      "earlierIdentification": { "yes": 1, "no": 0, "unknown": 0 },
+      "prereleaseCveRemediation": 0
+    },
+    "byRelease": [],
+    "byComponent": [],
+    "topEarlyDetectionCategories": [],
+    "topPreventionActions": []
+  },
+  "insights": [
+    { "text": "Upgrade-path validation is a prevention opportunity.", "evidenceCount": 1, "issueKeys": ["RHOAIENG-93716"] }
+  ]
+}
+```
+
+`regression` and `couldIdentifyEarlier` are always `Yes`, `No`, or `Unknown`.
+Early-detection categories are normalized to the documented stable taxonomy;
+the singular and plural “Missing automated test(s)” labels are merged into
+`Missing automated tests`. Prevention has a separate stable action taxonomy so
+recommendations can be grouped without losing the issue-specific text.
+
+Overall totals deduplicate by Jira key. A Jira issue with multiple Fix Versions
+or Components is counted once in each applicable group; missing values use
+`No Fix Version` and `(No component)`. `proposedDate` is the most recent
+changelog transition into Proposed and is `null` when unavailable.
+
+The dashboard does not depend on this optional snapshot endpoint or a scheduled
+workflow. It uses the `issues` array from the historical trends response and
+applies deterministic comment classification in the application. This keeps
+the displayed analysis aligned with the chart's existing Jira issue set while
+leaving genuinely unanswered comments as `Unknown`.
 
 ---
 
@@ -2651,11 +2829,28 @@ The dataset is four separate JSON files under `data/system-health/test-execution
 
 ---
 
+## AI Catalyst Feed Configuration
+
+`data/ai-catalyst/board-config.json` and
+`data/ai-catalyst/showcase/config.json` each store:
+
+```json
+{ "feedUrl": "" }
+```
+
+`feedUrl` is a trimmed string. An empty value uses the corresponding
+`POC_EXPLORER_FEED_URL` or `POC_EXPLORER_SHOWCASE_FEED_URL` environment value,
+then the documented default host. A stored URL takes precedence but its origin
+must still be operator-approved. Tokens are never stored in either file.
+Legacy `sheetId` values are ignored; saving configuration replaces them with
+the `feedUrl` format. Matching default examples live under
+`fixtures/ai-catalyst/`.
+
 ## AI Catalyst Monthly Board — `data/ai-catalyst/boards/{YYYY-MM}.json`
 
 The monthly board is a JSON array written by the AI Catalyst board sync. Each
-element is one candidate parsed from a `board-YYYY-MM` Google Sheet tab. The
-`category` value is a stable strategy-pillar key, not a display label; clients
+element is one candidate parsed from the POC Explorer feed's `board-YYYY-MM`
+board. The `category` value is a stable strategy-pillar key, not a display label; clients
 resolve its title, short title, and color from the shared Showcase pillar
 registry below.
 
@@ -2684,13 +2879,13 @@ registry below.
 | Field | Type | Description |
 |-------|------|-------------|
 | `title` | string | Candidate display title |
-| `uniqueId` | string | Stable candidate identifier used by detail routes |
+| `uniqueId` | string | Stable candidate identifier; legacy rows with a blank ID use their source `link` for detail navigation without changing stored identity |
 | `link` | string | Source repository or project URL |
 | `itemType` | string | `repo` or another discovery item type |
 | `source` | string | Primary discovery source (`github`, `hn`, or `reddit`) |
 | `sources` | string[] | All discovery sources for the candidate |
 | `category` | string | Stable strategy-pillar key; must match a pillar key when metadata is available |
-| `capabilityLabels` | string[] | Capability labels parsed from the source sheet |
+| `capabilityLabels` | string[] | Capability labels parsed from the board feed row |
 | `impactScore` | number/null | Impact score from the board evaluation |
 | `feasibilityScore` | number/null | Original feasibility score |
 | `boardFeasibilityScore` | number/null | Board score used for sorting and display |
@@ -2700,18 +2895,18 @@ registry below.
 `data/ai-catalyst/index.json` contains the available month list and candidate
 counts. Adding a new month adds one board file and one index entry. A board
 sync refreshes discovered months in place, so the board file and its
-`lastSynced` value represent the latest source-sheet snapshot rather than an
+`lastSynced` value represent the latest feed snapshot rather than an
 immutable historical record.
 
 Repository files under `fixtures/ai-catalyst/` are deterministic mock data for
 demo mode and tests; production deployments read the corresponding board rows
-from Google Sheets during sync.
+from the POC Explorer feed during sync.
 
 ---
 
 ## AI Catalyst Showcase Data — `data/ai-catalyst/showcase/showcase-data.json`
 
-Synced from a Google Sheet via the ai-catalyst module (showcase feature). Contains all showcase entries and strategy pillar definitions.
+Synced from the POC Explorer feed via the ai-catalyst module (showcase feature). Contains all showcase entries and strategy pillar definitions.
 
 ```json
 {
@@ -2774,21 +2969,25 @@ Synced from a Google Sheet via the ai-catalyst module (showcase feature). Contai
 | `entries[].sortOrder` | number | Display order |
 | `entries[].strategyPillarKey` | string | References `pillars[].pillarKey` |
 | `entries[].lineage` | string | `pure-open-source`, `openshift-oriented`, or `both` |
-| `entries[].capabilityTags` | string[] | Technical capability tags (pipe-delimited in sheet) |
-| `entries[].customerNeedTags` | string[] | Customer need tags (pipe-delimited in sheet) |
-| `entries[].searchKeywords` | string[] | Additional search terms (pipe-delimited in sheet) |
-| `entries[].knownGoodWith` | string[] | Compatible products (pipe-delimited in sheet) |
+| `entries[].capabilityTags` | string[] | Technical capability tags |
+| `entries[].customerNeedTags` | string[] | Customer need tags |
+| `entries[].searchKeywords` | string[] | Additional search terms |
+| `entries[].knownGoodWith` | string[] | Compatible products |
 | `entries[].githubUrl` | string | Pipe-separated GitHub repo URLs |
 | `entries[].quayUrl` | string | Pipe-separated Quay repo URLs |
 | `entries[].otherResourceUrls` | string | Pipe-separated misc resource URLs |
 | `entries[].mermaidSource` | string | Mermaid diagram source (rendered on detail page) |
 
 Pillar keys are stable identifiers used by both board candidates (`category`)
-and showcase entries (`strategyPillarKey`). New pillars are added by appending
-a row to the `strategy_pillars` source tab and syncing the fixture or stored
-copy; display titles, short titles, summaries, and colors may change without
+and showcase entries (`strategyPillarKey`). New pillars are added to the
+producer's `strategy_pillars` feed rows and synced into the stored copy;
+display titles, short titles, summaries, and colors may change without
 renaming the key. If a board references a key that is not yet in the registry,
 the UI keeps the candidate visible with a generated label and fallback color.
+
+Showcase list fields accept native arrays of strings. Comma-space-separated
+strings and legacy pipe-separated strings are also supported. Invalid known
+cell shapes fail the refresh before replacing stored or cached data.
 
 Board and showcase responses intentionally use different pillar scopes:
 

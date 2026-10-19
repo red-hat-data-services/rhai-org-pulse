@@ -1,0 +1,84 @@
+{
+  "releases": [
+    { "label": "3.5 EA2 RHOAI RELEASE", "approved": 1, "rejected": 0, "total": 1 },
+    { "label": "3.5 GA RHOAI RELEASE", "approved": 2, "rejected": 1, "total": 3 },
+    { "label": "3.6 GA RHOAI RELEASE", "approved": 1, "rejected": 0, "total": 1 }
+  ],
+  "components": [
+    { "label": "AI Pipelines", "approved": 1, "rejected": 0, "total": 1 },
+    { "label": "Model Serving", "approved": 2, "rejected": 1, "total": 3 },
+    { "label": "TestOps", "approved": 1, "rejected": 0, "total": 1 }
+  ],
+  "issues": [
+    {
+      "key": "RHOAIENG-DEMO-1",
+      "summary": "Pipeline promotion is blocked in the 3.5 EA2 release",
+      "link": null,
+      "releaseBlockerStatus": "Approved",
+      "fixVersions": ["3.5 EA2 RHOAI RELEASE"],
+      "trendReleases": ["3.5 EA2 RHOAI RELEASE"],
+      "components": ["AI Pipelines"],
+      "labels": [],
+      "isRegression": "Unknown",
+      "couldIdentifyEarlier": "Yes",
+      "earlyDetectionResponse": "Yes, an automated test would have caught the promotion path.",
+      "earlyDetectionCategory": "Missing automated tests",
+      "preventionCategory": "Add or expand automated tests",
+      "prevention": "Add an automated promotion-path test."
+    },
+    {
+      "key": "RHOAIENG-DEMO-2",
+      "summary": "Serving endpoint does not start for the 3.5 GA release",
+      "link": null,
+      "releaseBlockerStatus": "Approved",
+      "fixVersions": ["3.5 GA RHOAI RELEASE"],
+      "trendReleases": ["3.5 GA RHOAI RELEASE"],
+      "components": ["Model Serving"],
+      "labels": [],
+      "isRegression": "Unknown",
+      "couldIdentifyEarlier": "Yes",
+      "earlyDetectionResponse": "Yes, the upgrade scenario was not covered by release validation.",
+      "earlyDetectionCategory": "Release validation gap",
+      "preventionCategory": "Expand release validation",
+      "prevention": "Add the upgrade scenario to release validation."
+    },
+    {
+      "key": "RHOAIENG-DEMO-3",
+      "summary": "Model deployment remains unavailable after upgrade",
+      "link": null,
+      "releaseBlockerStatus": "Approved",
+      "fixVersions": ["3.5 GA RHOAI RELEASE"],
+      "trendReleases": ["3.5 GA RHOAI RELEASE"],
+      "components": ["Model Serving"],
+      "labels": [],
+      "isRegression": "Unknown",
+      "couldIdentifyEarlier": "No",
+      "earlyDetectionResponse": "No, the failure depended on an unavailable cluster configuration.",
+      "earlyDetectionCategory": "Environment/configuration issue",
+      "preventionCategory": "Fix environment/configuration",
+      "prevention": "Add a preflight check for the required cluster configuration."
+    },
+    {
+      "key": "RHOAIENG-DEMO-4",
+      "summary": "Serving validation issue rejected for the 3.5 GA release",
+      "link": null,
+      "releaseBlockerStatus": "Rejected",
+      "fixVersions": ["3.5 GA RHOAI RELEASE"],
+      "trendReleases": ["3.5 GA RHOAI RELEASE"],
+      "components": ["Model Serving"],
+      "labels": [],
+      "isRegression": "Unknown"
+    },
+    {
+      "key": "RHOAIENG-DEMO-5",
+      "summary": "Test workflow blocks the 3.6 GA release",
+      "link": null,
+      "releaseBlockerStatus": "Approved",
+      "fixVersions": ["3.6 GA RHOAI RELEASE"],
+      "trendReleases": ["3.6 GA RHOAI RELEASE"],
+      "components": ["TestOps"],
+      "labels": [],
+      "isRegression": "Unknown"
+    }
+  ]
+}
