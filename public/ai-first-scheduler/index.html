@@ -3325,10 +3325,20 @@ function run(){
     let va=a[sortCol],vb=b[sortCol];
     if(sortCol==='Score'||sortCol==='Rank'){va=+va;vb=+vb;}
     else if(sortCol==='OutcomeNumber'){
-      const numA = parseInt(va) || Infinity;
-      const numB = parseInt(vb) || Infinity;
-      va = numA;
-      vb = numB;
+      // Handle em-dash (—) for features without outcomes
+      const isEmDashA = va === '—' || va === null || va === undefined;
+      const isEmDashB = vb === '—' || vb === null || vb === undefined;
+
+      // If both are em-dash, keep original order
+      if(isEmDashA && isEmDashB) return 0;
+      // If only A is em-dash, send to end
+      if(isEmDashA) return 1;
+      // If only B is em-dash, send to end
+      if(isEmDashB) return -1;
+
+      // Both have outcome numbers - compare numerically
+      va = parseInt(va) || Infinity;
+      vb = parseInt(vb) || Infinity;
     }
     else if(sortCol==='FPDoR'){
       const vaStr = typeof va === 'string' ? va : (va?.passedCount + '/' + va?.totalCount || '0');
