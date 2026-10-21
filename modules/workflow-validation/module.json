@@ -9,14 +9,15 @@
   "client": {
     "entry": "./client/index.js",
     "navItems": [
-      { "id": "overview", "label": "Dashboard", "icon": "LayoutDashboard", "default": true },
+      { "id": "recent-runs", "label": "Dashboard", "icon": "LayoutDashboard", "default": true },
       { "id": "workflows", "label": "Trends", "icon": "Kanban" },
       { "id": "compare", "label": "Compare", "icon": "git-branch" },
       { "id": "activity", "label": "Jira", "icon": "activity" }
     ],
     "hiddenRoutes": {
       "runs": "compare",
-      "run-detail": "overview",
+      "overview": "recent-runs",
+      "run-detail": "recent-runs",
       "workflow-history": "workflows"
     },
     "settingsComponent": "./client/components/WorkflowValidationSettings.vue"

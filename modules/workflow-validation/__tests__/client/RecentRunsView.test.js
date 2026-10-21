@@ -1,0 +1,136 @@
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import { flushPromises, mount } from '@vue/test-utils'
+import RecentRunsView from '../../client/views/RecentRunsView.vue'
+import { filters, resetFilters } from '../../client/composables/useWorkflowValidation'
+import { apiRequest } from '@shared/client/services/api'
+import fixture from '../../../../fixtures/workflow-validation/recent-runs.json'
+
+vi.mock('@shared/client/services/api', () => ({ apiRequest: vi.fn() }))
+
+describe('Recent Runs', () => {
+  let wrapper
+  beforeEach(() => {
+    apiRequest.mockReset().mockResolvedValue(fixture)
+    resetFilters()
+  })
+  afterEach(() => wrapper?.unmount())
+
+  it('uses the existing API across all suites and versions without shared filters', async () => {
+    Object.assign(filters, { version: 'older', testSuite: 'another-suite', invocationId: 'another-run', verdict: 'FAIL', q: 'old search' })
+    wrapper = mount(RecentRunsView)
+    await flushPromises()
+    expect(apiRequest).toHaveBeenCalledExactlyOnceWith('/modules/workflow-validation/test-suites?limit=20&includeBugs=false&orderBy=build')
+    expect(wrapper.findAll('tbody tr')).toHaveLength(3)
+    expect(wrapper.text()).toContain('Release Gate')
+    expect(wrapper.text()).toContain('Exploratory Specs')
+    expect(wrapper.text()).toContain('Version unavailable')
+    expect(wrapper.findAll('tbody tr')[0].text()).toContain('Not available yet')
+    expect(wrapper.text()).not.toContain('2026-10-19')
+    expect(wrapper.text()).not.toContain('Design preview')
+  })
+
+  it('renders the actual CI start in UTC and leaves missing values unavailable', async () => {
+    apiRequest.mockResolvedValue({ buildMetadataEnabled: true, rows: [
+      { ...fixture.rows[0], buildTimestamp: '2026-10-19T10:30:00.000Z' },
+      { ...fixture.rows[1], buildTimestamp: null },
+      { ...fixture.rows[2], buildTimestamp: 'invalid' }
+    ] })
+    wrapper = mount(RecentRunsView)
+    await flushPromises()
+    expect(wrapper.get('time').attributes('datetime')).toBe('2026-10-19T10:30:00.000Z')
+    expect(wrapper.get('time').text()).toContain('10:30 AM')
+    expect(wrapper.text()).toContain('UTC')
+    expect(wrapper.findAll('tbody tr')[1].text()).toContain('Unavailable')
+    expect(wrapper.findAll('time')).toHaveLength(1)
+  })
+
+  it('links to the exact dashboard run and explicitly clears an unavailable version', async () => {
+    wrapper = mount(RecentRunsView)
+    await flushPromises()
+    const link = new URL(wrapper.findAll('a')[2].attributes('href').replace('#', ''), 'http://localhost')
+    expect(link.pathname).toBe('/workflow-validation/overview')
+    expect(Object.fromEntries(link.searchParams)).toEqual({
+      exactRun: '1', version: '', testSuite: 'ad-hoc', invocationId: 'sample / opaque?&id',
+      datePreset: 'all', dateFrom: '', dateTo: ''
+    })
+  })
+
+  it('shows original Jenkins and GitLab job identities with separate CI links', async () => {
+    apiRequest.mockResolvedValue({ rows: [
+      { ...fixture.rows[0], ciBuild: { platform: 'jenkins', jobId: '42', buildNumber: '42', jobName: 'folder/release-gate',
+        jobUrl: 'https://jenkins.example/job/folder/job/release-gate/42', pipelineId: null } },
+      { ...fixture.rows[1], ciBuild: { platform: 'gitlab', jobId: '123', buildNumber: null, jobName: 'exploratory-specs',
+        jobUrl: 'https://gitlab.example/team/project/-/jobs/123', pipelineId: '789' } },
+      { ...fixture.rows[2], ciBuild: null }
+    ] })
+    wrapper = mount(RecentRunsView)
+    await flushPromises()
+    const links = wrapper.findAll('a[target="_blank"]')
+    expect(links.map(link => link.text())).toEqual(['Build #42 ↗', 'Job #123 ↗'])
+    expect(links[0].attributes('href')).toBe('https://jenkins.example/job/folder/job/release-gate/42')
+    expect(links[0].attributes('rel')).toBe('noopener noreferrer')
+    expect(links[0].attributes('aria-label')).toContain('folder/release-gate (opens in a new tab)')
+    expect(wrapper.text()).toContain('Pipeline #789')
+    expect(wrapper.findAll('tbody tr')[2].text()).toContain('Unavailable')
+    expect(wrapper.findAll('a').filter(link => link.text() === 'View run')).toHaveLength(3)
+  })
+
+  it('does not create external links from malformed or credential-bearing API values', async () => {
+    for (const jobUrl of ['javascript:alert(1)', 'https://user:secret@jenkins.example/job/test/42',
+      'https://jenkins.example/job/test/43', 'https://jenkins.example/job/test/42?token=secret']) {
+      apiRequest.mockResolvedValue({ rows: [{ ...fixture.rows[0], ciBuild: {
+        platform: 'jenkins', jobId: '42', buildNumber: '42', jobName: 'test', jobUrl
+      } }] })
+      wrapper = mount(RecentRunsView)
+      await flushPromises()
+      expect(wrapper.find('a[target="_blank"]').exists()).toBe(false)
+      wrapper.unmount()
+    }
+  })
+
+  it('caps older backend responses at 20 rows', async () => {
+    apiRequest.mockResolvedValue({ rows: Array.from({ length: 25 }, (_, i) => ({ ...fixture.rows[0], invocationId: `run-${i}` })) })
+    wrapper = mount(RecentRunsView)
+    await flushPromises()
+    expect(wrapper.findAll('tbody tr')).toHaveLength(20)
+  })
+
+  it('shows an empty state only after a successful request', async () => {
+    let resolve
+    apiRequest.mockReturnValue(new Promise(done => { resolve = done }))
+    wrapper = mount(RecentRunsView)
+    await wrapper.vm.$nextTick()
+    expect(wrapper.get('[role="status"]').text()).toContain('Loading')
+    expect(wrapper.text()).not.toContain('No runs are available')
+    resolve({ rows: [] })
+    await flushPromises()
+    expect(wrapper.text()).toContain('No runs are available')
+  })
+
+  it('retries failures without presenting them as empty results', async () => {
+    apiRequest.mockRejectedValueOnce(new Error('Service unavailable'))
+    wrapper = mount(RecentRunsView)
+    await flushPromises()
+    expect(wrapper.get('[role="alert"]').text()).toContain('Service unavailable')
+    expect(wrapper.text()).not.toContain('No runs are available')
+    await wrapper.get('[role="alert"] button').trigger('click')
+    await flushPromises()
+    expect(wrapper.findAll('tbody tr')).toHaveLength(3)
+    expect(wrapper.find('[role="alert"]').exists()).toBe(false)
+  })
+
+  it('retains rows while refreshing and after a refresh failure', async () => {
+    wrapper = mount(RecentRunsView)
+    await flushPromises()
+    let reject
+    apiRequest.mockReturnValueOnce(new Promise((_, fail) => { reject = fail }))
+    await wrapper.get('button').trigger('click')
+    expect(wrapper.findAll('tbody tr')).toHaveLength(3)
+    expect(wrapper.get('button').element.disabled).toBe(true)
+    expect(wrapper.get('[role="status"]').text()).toContain('Updating')
+    reject(new Error('Refresh failed'))
+    await flushPromises()
+    expect(wrapper.findAll('tbody tr')).toHaveLength(3)
+    expect(wrapper.get('[role="alert"]').text()).toContain('Refresh failed')
+  })
+})

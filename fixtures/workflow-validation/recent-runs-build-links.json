@@ -1,0 +1,19 @@
+{
+  "buildMetadataEnabled": true,
+  "rows": [
+    {
+      "suite": "release-gate", "invocationId": "sample-jenkins-run", "rhoaiVersion": "3.6",
+      "timestamp": "2026-10-19T10:45:00.000Z", "buildTimestamp": "2026-10-19T10:30:00.000Z",
+      "ciBuild": { "platform": "jenkins", "jobId": "42", "jobName": "folder/release-gate", "jobUrl": "https://jenkins.example/job/folder/job/release-gate/42", "buildNumber": "42", "pipelineId": null }
+    },
+    {
+      "suite": "exploratory-specs", "invocationId": "sample-gitlab-run", "rhoaiVersion": "3.6",
+      "timestamp": "2026-10-18T10:45:00.000Z", "buildTimestamp": "2026-10-18T10:30:00.000Z",
+      "ciBuild": { "platform": "gitlab", "jobId": "123", "jobName": "exploratory-specs", "jobUrl": "https://gitlab.example/team/project/-/jobs/123", "buildNumber": null, "pipelineId": "789" }
+    },
+    {
+      "suite": "ad-hoc", "invocationId": "sample-unresolved-run", "rhoaiVersion": null,
+      "timestamp": null, "buildTimestamp": null, "ciBuild": null
+    }
+  ]
+}

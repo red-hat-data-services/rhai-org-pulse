@@ -47,6 +47,7 @@ function register(secrets = {}) {
 
 afterEach(() => {
   vi.unstubAllGlobals()
+  vi.unstubAllEnvs()
   delete process.env.WORKFLOW_VALIDATION_OPENSEARCH_URL
 })
 
@@ -378,6 +379,98 @@ describe('workflow-validation live schema routes', () => {
       suite: 'productization', invocationId: 'invocation-1', tests: 3,
       passed: 2, failed: 1, passRate: 2 / 3, duration: 180, rhodsOperatorDigest: 'abcdef0123456789'
     })])
+    expect(response.body.rows[0]).not.toHaveProperty('firstTestTimestamp')
+  })
+
+  it('selects the newest 20 run groups across all composite pages without loading bugs', async () => {
+    const buckets = Array.from({ length: 25 }, (_, i) => ({
+      key: { suite: i % 2 ? 'release_gate' : 'exploratory_specs', invocation: `run-${i}` },
+      doc_count: 1,
+      latest: { hits: { hits: [{ _source: { timestamp: new Date(Date.UTC(2026, 0, i + 1)).toISOString(), rhoai_version: '3.6' } }] } }
+    }))
+    const request = vi.fn((url, options) => {
+      expect(url).toContain(`/${RUNS_INDEX}/`)
+      const body = JSON.parse(options.body)
+      expect(body.query.bool.filter).toEqual([
+        { exists: { field: 'telemetry_suite' } }, { exists: { field: 'invocation_id' } }
+      ])
+      const after = body.aggs.suite_runs.composite.after
+      return Promise.resolve(jsonResponse({ aggregations: { suite_runs: after
+        ? { buckets: buckets.slice(15) }
+        : { buckets: buckets.slice(0, 15), after_key: { suite: 'release_gate', invocation: 'run-14' } }
+      } }))
+    })
+    vi.stubGlobal('fetch', request)
+    const response = makeResponse()
+    await register()['/test-suites'].at(-1)({ query: { limit: '20', includeBugs: 'false' } }, response)
+    expect(request).toHaveBeenCalledTimes(2)
+    expect(response.body.rows.map(row => row.invocationId)).toEqual(Array.from({ length: 20 }, (_, i) => `run-${24 - i}`))
+    expect(response.body.rows.every(row => row.buildTimestamp === null)).toBe(true)
+  })
+
+  it('keeps missing metadata and orders tied or missing timestamps consistently', async () => {
+    const sources = [
+      ['z', '2026-01-01T12:00:00Z'], ['a', '2026-01-01T10:00:00-02:00'], ['missing', null], ['invalid', 'not-a-date']
+    ]
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue(jsonResponse({ aggregations: { suite_runs: {
+      buckets: sources.map(([invocation, timestamp]) => ({
+        key: { suite: 'suite', invocation }, doc_count: 1,
+        latest: { hits: { hits: [{ _source: { timestamp } }] } }
+      }))
+    } } })))
+    const response = makeResponse()
+    await register()['/test-suites'].at(-1)({ query: { limit: '20', includeBugs: 'false' } }, response)
+    expect(response.body.rows.map(row => row.invocationId)).toEqual(['a', 'z', 'invalid', 'missing'])
+    expect(response.body.rows.every(row => row.rhoaiVersion === null && row.buildTimestamp === null)).toBe(true)
+  })
+
+  it('joins CI identity across aggregation pages before selecting the latest 20 builds', async () => {
+    const { suiteBuildId } = require('../../server/suite-builds')
+    vi.stubEnv('WORKFLOW_VALIDATION_BUILD_TIME_ENABLED', 'true')
+    const buckets = Array.from({ length: 25 }, (_, i) => ({
+      key: { suite: 'release-gate', invocation: `run-${i}` }, doc_count: 1,
+      first_test: { value_as_string: '2026-10-20T12:00:00.000Z' },
+      latest: { hits: { hits: [{ _source: { timestamp: new Date(Date.UTC(2026, 9, 20, 12, i)).toISOString() } }] } }
+    }))
+    const documents = new Map(buckets.map((bucket, i) => {
+      const id = suiteBuildId(bucket.key.suite, bucket.key.invocation)
+      return [id, { schema_version: '1.0', suite_build_id: id, telemetry_suite: bucket.key.suite,
+        invocation_id: bucket.key.invocation, ci_platform: 'jenkins', ci_job_id: `${i + 1}`, ci_build_number: `${i + 1}`,
+        ci_job_name: 'folder/release-gate', ci_job_url: `https://jenkins.example/job/folder/job/release-gate/${i + 1}`,
+        ci_job_started_at: i === 0 ? '2026-10-19T10:30:00.000Z' : '2026-10-18T10:30:00.000Z', metadata_source: 'runtime' }]
+    }))
+    const request = vi.fn((url, options) => {
+      const body = JSON.parse(options.body)
+      if (url.endsWith('/workflow-suite-builds/_mget')) {
+        expect(body.ids).toHaveLength(25)
+        return Promise.resolve(jsonResponse({ docs: body.ids.map(id => ({ _id: id, found: true, _source: documents.get(id) })) }))
+      }
+      expect(url).toContain(`/${RUNS_INDEX}/`)
+      return Promise.resolve(jsonResponse({ aggregations: { suite_runs: body.aggs.suite_runs.composite.after
+        ? { buckets: buckets.slice(15) }
+        : { buckets: buckets.slice(0, 15), after_key: { suite: 'release-gate', invocation: 'run-14' } }
+      } }))
+    })
+    vi.stubGlobal('fetch', request)
+    const response = makeResponse()
+    await register()['/test-suites'].at(-1)({ query: { limit: '20', includeBugs: 'false', orderBy: 'build' } }, response)
+    expect(response.statusCode).toBe(200)
+    expect(response.body.buildMetadataEnabled).toBe(true)
+    expect(response.body.rows).toHaveLength(20)
+    expect(response.body.rows[0]).toMatchObject({ invocationId: 'run-0', ciBuild: {
+      platform: 'jenkins', jobId: '1', buildNumber: '1', jobName: 'folder/release-gate',
+      jobUrl: 'https://jenkins.example/job/folder/job/release-gate/1', pipelineId: null
+    } })
+    expect(request).toHaveBeenCalledTimes(3)
+  })
+
+  it.each(['0', '-1', '201', '1.5', '20junk', ''])('rejects invalid run limit %j before querying OpenSearch', async (limit) => {
+    const request = vi.fn()
+    vi.stubGlobal('fetch', request)
+    const response = makeResponse()
+    await register()['/test-suites'].at(-1)({ query: { limit } }, response)
+    expect(response.statusCode).toBe(400)
+    expect(request).not.toHaveBeenCalled()
   })
 
   it('returns exact tests for one test run', async () => {
