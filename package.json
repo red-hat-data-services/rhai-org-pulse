@@ -38,7 +38,7 @@
     "adm-zip": "^0.6.1",
     "dompurify": "^3.4.16",
     "express": "^5.2.1",
-    "express-rate-limit": "^8.7.0",
+    "express-rate-limit": "^8.7.1",
     "js-yaml": "^5.4.3",
     "marked": "^18.1.1",
     "mermaid": "^12.1.0",
