@@ -54,7 +54,8 @@ const ALLOWED = new Set([
   'GOOGLE_OAUTH_CALLBACK_URL',
   'VITE_API_BASE_URL',
   // AI Eng: workflow-validation module (OpenSearch endpoint — no auth, non-secret)
-  'WORKFLOW_VALIDATION_OPENSEARCH_URL'
+  'WORKFLOW_VALIDATION_OPENSEARCH_URL',
+  'WORKFLOW_VALIDATION_BUILD_TIME_ENABLED'
 ])
 
 module.exports = {

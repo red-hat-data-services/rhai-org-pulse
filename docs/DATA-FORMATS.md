@@ -2,6 +2,27 @@
 
 This document describes the JSON structure of all files stored in the `data/` directory (production) and `fixtures/` directory (demo mode). **Demo fixtures must always match production format** — see [Fixture Rules](#fixture-rules) below.
 
+## Workflow Validation recent runs — API example fixture
+
+[`fixtures/workflow-validation/recent-runs.json`](../fixtures/workflow-validation/recent-runs.json)
+is synthetic test data for `GET /api/modules/workflow-validation/test-suites?limit=20&includeBugs=false`.
+It is not a stored production snapshot. This response contains `rows` with
+`suite`, `invocationId`, `rhoaiVersion`, `timestamp`, and `buildTimestamp`.
+The suite and invocation identify one run. Version and timestamp can be null.
+
+`timestamp` is the latest recorded test start in the run. The API sorts by this
+value, puts missing or invalid timestamps last, and breaks ties by suite and
+invocation. It applies `limit` after reading all composite aggregation pages.
+`limit` accepts integers from 1 to 200. The default response remains unlimited
+and includes the existing counts and product bugs. `includeBugs=false` returns
+only the metadata fields above and skips product-bug retrieval.
+
+This example omits `orderBy`, so it uses test-time ordering and `buildTimestamp`
+is null. Enabled `orderBy=build` requests can return verified CI build dates,
+as described below. Without enabled build metadata, Recent Runs shows
+“Not available yet” in that column. The existing test timestamp must not be
+presented as a verified build timestamp.
+
 ## Releases E2E Results — `data/releases/build-health/runs.json`
 
 The E2E publisher stores completed Jenkins runs in a bounded `runs` array,
@@ -3200,3 +3221,24 @@ The `fixtures/` directory provides read-only demo data used when `DEMO_MODE=true
 1. **Fixtures must match production JSON structure.** When the backend changes how it writes a data file, update the corresponding fixture to use the same shape.
 2. **Test mocks should match production format.** Unit test mock data (e.g., in `__tests__/`) should use the production JSON structure as the primary format. Add separate backward-compatibility tests if old formats need to be supported.
 3. **Verify against real data.** If you're unsure of a data file's format, check the actual files in `data/` (symlinked from the main worktree) rather than trusting fixtures alone.
+
+
+### Workflow Validation CI build dates (RHAI-10898)
+
+`GET /api/modules/workflow-validation/test-suites?orderBy=build&includeBugs=false`
+returns `buildMetadataEnabled` and nullable `rows[].buildTimestamp`. Dates are the
+original CI job execution start, normalized to UTC. `timestamp` remains the test
+timestamp. The backend reads `workflow-suite-builds` by SHA-256 of the UTF-8 JSON
+array `[telemetry_suite, invocation_id]`. It joins every qualifying run group
+before sorting and applying `limit`. Known dates sort newest first. Missing or
+invalid dates sort last. Ties use the suite and invocation ID. A build start more
+than five minutes after the first recorded test is invalid. No test-time fallback
+is used for a build date.
+
+The nonsecret `WORKFLOW_VALIDATION_BUILD_TIME_ENABLED=true` flag enables this join.
+The default keeps the existing placeholder and test-time ordering. Requests that
+omit `orderBy=build` retain test-time ordering for other consumers. An enabled
+metadata backend failure is an API error, not a set of unavailable dates.
+The new index contains only original CI identity, start time, schema version, and
+provenance. Historical execution labels remain raw observations. Build numbers
+and job links in the UI are tracked separately in RHAI-10570.

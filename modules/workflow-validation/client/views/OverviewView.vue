@@ -8,7 +8,12 @@
       </p>
     </div>
 
+    <div v-if="exactRun" class="mb-4 text-sm text-gray-600 dark:text-gray-300">
+      <a href="#/workflow-validation/recent-runs" class="font-medium text-primary-700 underline dark:text-primary-300">Recent Runs</a>
+      <p class="mt-2 break-all">{{ formatSuiteName(nav.params.value.testSuite) }} · {{ nav.params.value.invocationId }}</p>
+    </div>
     <FilterBar
+      v-else
       :show-verdict="false"
       :show-search="false"
       show-test-suite
@@ -18,15 +23,16 @@
       @suite-execution="selectedSuiteExecution = $event"
     />
 
-    <!-- OpenSearch unreachable -->
-    <div v-if="unreachable" class="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-xl p-10 text-center">
+    <p v-if="exactRun && loading" role="status" class="mb-4 text-sm text-gray-500 dark:text-gray-400">Loading selected run…</p>
+    <div v-if="unreachable" role="alert" class="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-xl p-10 text-center">
       <ServerCrashIcon :size="28" class="mx-auto mb-3 text-amber-500" />
-      <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-2">OpenSearch is unreachable</h3>
+      <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-2">{{ exactRun ? 'Unable to load the selected run' : 'OpenSearch is unreachable' }}</h3>
       <p class="text-sm text-gray-600 dark:text-gray-400 max-w-md mx-auto">{{ unreachable }}</p>
-      <p class="text-xs text-gray-500 dark:text-gray-500 mt-3">Check the backend OpenSearch endpoint and read-only credentials.</p>
+      <button v-if="exactRun" type="button" class="mt-3 font-medium text-primary-700 underline dark:text-primary-300" @click="loadAll">Retry</button>
+      <p v-else class="text-xs text-gray-500 dark:text-gray-500 mt-3">Check the backend OpenSearch endpoint and read-only credentials.</p>
     </div>
 
-    <template v-else>
+    <template v-else-if="!exactRun || hasLoaded">
       <!-- KPI tiles -->
       <div class="flex flex-wrap justify-center gap-4 mb-6 [&>*]:w-[calc(50%-0.5rem)] md:[&>*]:w-[calc(33.333%-0.75rem)] lg:[&>*]:w-[calc(25%-0.75rem)] xl:[&>*]:w-[calc(20%-0.8rem)]">
         <MetricCard :value="charts.tests.length" label="Tests" />
@@ -35,7 +41,7 @@
         <MetricCard :value="outcomeCounts.skip" label="Skipped" tone="amber" />
         <MetricCard :value="formatPercent(dashboardPassRate)" label="Pass Rate"
           :tone="passTone(dashboardPassRate)" />
-        <MetricCard :value="selectedSuiteExecution?.rhoaiVersion || overview.runs.version || filters.version || 'Unknown'" label="Version" />
+        <MetricCard :value="selectedSuiteExecution?.rhoaiVersion || overview.runs.version || (exactRun ? nav.params.value.version : filters.version) || 'Unknown'" label="Version" />
         <MetricCard
           v-if="buildDigest"
           :value="formatBuildId(buildDigest)"
@@ -92,7 +98,7 @@
 </template>
 
 <script setup>
-import { computed, inject, reactive, ref } from 'vue'
+import { computed, inject, onBeforeUnmount, reactive, ref, watch } from 'vue'
 import { ServerCrash as ServerCrashIcon } from 'lucide-vue-next'
 import FilterBar from '../components/FilterBar.vue'
 import MetricCard from '../components/MetricCard.vue'
@@ -102,16 +108,19 @@ import { isVisibleProductBug } from '../utils/product-bugs'
 import { useCostVisibility } from '../composables/useCostVisibility'
 import {
   displayedOutcomeCounts, filterQueryValues, filters, hydrateFilters, syncQueryParams, useWorkflowValidation,
-  formatBuildId, formatUsd, formatPercent
+  formatBuildId, formatSuiteName, formatUsd, formatPercent
 } from '../composables/useWorkflowValidation'
 
 const nav = inject('moduleNav')
 const FILTER_KEYS = ['version', 'testSuite', 'invocationId', 'datePreset', 'dateFrom', 'dateTo']
-hydrateFilters(nav?.params?.value, FILTER_KEYS)
-const { getOverview, getCharts } = useWorkflowValidation()
+if (nav?.params?.value?.exactRun !== '1') hydrateFilters(nav?.params?.value, FILTER_KEYS)
+const { getOverview, getCharts, getTestSuite } = useWorkflowValidation()
+const exactRun = computed(() => nav?.params?.value?.exactRun === '1')
 const costsVisible = useCostVisibility()
 
 const loading = ref(false)
+const hasLoaded = ref(false)
+let requestId = 0
 const unreachable = ref('')
 const selectedSuiteExecution = ref(null)
 const overview = reactive({
@@ -132,27 +141,50 @@ function passTone(rate) { if (rate == null) return 'neutral'; return rate >= 0.9
 function openTest(test) { nav.navigateTo('run-detail', { runKey: test.execution_id || test.id }) }
 
 async function loadAll() {
+  const id = ++requestId
   loading.value = true
+  hasLoaded.value = false
   unreachable.value = ''
   try {
     const suiteScoped = Boolean(filters.testSuite)
     const dashboardScope = {
       verdict: '', q: '',
-      ...(suiteScoped ? { dateFrom: '', dateTo: '' } : {})
+      ...(suiteScoped ? { dateFrom: '', dateTo: '' } : {}),
+      ...(exactRun.value ? {
+        version: nav.params.value.version || '',
+        testSuite: nav.params.value.testSuite || '',
+        invocationId: nav.params.value.invocationId || '',
+        dateFrom: '', dateTo: ''
+      } : {})
+    }
+    if (exactRun.value) {
+      if (!dashboardScope.testSuite || !dashboardScope.invocationId) throw new Error('The run link is incomplete.')
+      const execution = await getTestSuite(dashboardScope.testSuite, dashboardScope.invocationId)
+      if (id !== requestId) return
+      selectedSuiteExecution.value = execution
     }
     const [ov, ch] = await Promise.all([getOverview(dashboardScope), getCharts(dashboardScope)])
+    if (id !== requestId) return
     Object.assign(overview, ov)
     Object.assign(charts, ch)
-    syncQueryParams(nav, filterQueryValues(FILTER_KEYS))
+    hasLoaded.value = true
+    if (!exactRun.value) syncQueryParams(nav, filterQueryValues(FILTER_KEYS))
   } catch (err) {
-    if (err.status === 503 || err.data?.code === 'OS_UNREACHABLE') {
+    if (id !== requestId) return
+    if (exactRun.value && err.status === 404) {
+      unreachable.value = 'This run is no longer available. Select another run from Recent Runs.'
+    } else if (err.status === 503 || err.data?.code === 'OS_UNREACHABLE') {
       unreachable.value = err.data?.error || err.message
     } else {
       unreachable.value = err.message || 'Failed to load data'
     }
   } finally {
-    loading.value = false
+    if (id === requestId) loading.value = false
   }
 }
 
+watch(() => [nav?.params?.value?.exactRun, nav?.params?.value?.testSuite, nav?.params?.value?.invocationId, nav?.params?.value?.version], () => {
+  if (exactRun.value) loadAll()
+}, { immediate: true })
+onBeforeUnmount(() => { requestId += 1 })
 </script>

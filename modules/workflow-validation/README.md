@@ -138,3 +138,11 @@ contract, representative tests, and affected Vue transformations together.
   `search_after`; callers must not inspect or construct cursor contents.
 - Searches are read-only and use bounded cursor pages, `search_after`, or
   composite aggregation pagination as appropriate.
+
+
+Build dates use the separate strict `workflow-suite-builds` index. Enable the
+read-only join with `WORKFLOW_VALIDATION_BUILD_TIME_ENABLED=true` after that
+index is provisioned. The landing page requests global build-time order and
+displays UTC. Disable the flag to restore the previous placeholder behavior.
+Original execution documents and test-time ordering for other API clients stay
+unchanged. See `docs/DATA-FORMATS.md` for the join and missing-data rules.

@@ -1,0 +1,7 @@
+{
+  "rows": [
+    { "suite": "release_gate", "invocationId": "sample-release-001", "rhoaiVersion": "3.6.0-ea.2", "timestamp": "2026-10-19T10:30:00Z", "buildTimestamp": null },
+    { "suite": "exploratory_specs", "invocationId": "sample-exploratory-001", "rhoaiVersion": "3.5.0", "timestamp": "2026-10-18T08:15:00Z", "buildTimestamp": null },
+    { "suite": "ad-hoc", "invocationId": "sample / opaque?&id", "rhoaiVersion": null, "timestamp": null, "buildTimestamp": null }
+  ]
+}

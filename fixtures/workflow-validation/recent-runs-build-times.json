@@ -1,0 +1,7 @@
+{
+  "buildMetadataEnabled": true,
+  "rows": [
+    {"suite":"release-gate","invocationId":"example-original-run","rhoaiVersion":"3.6","timestamp":"2026-10-19T10:45:00.000Z","buildTimestamp":"2026-10-19T10:30:00.000Z"},
+    {"suite":"ad-hoc","invocationId":"example-unresolved-run","rhoaiVersion":null,"timestamp":"2026-10-19T10:50:00.000Z","buildTimestamp":null}
+  ]
+}
