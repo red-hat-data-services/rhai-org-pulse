@@ -23,9 +23,9 @@
               role="tooltip"
             >
               <p class="font-semibold mb-1.5">How grades are calculated</p>
-              <template v-if="selectedEnv === 'latest'">
+              <template v-if="selectedEnv === 'latest' || selectedEnv === 'nightly'">
                 <p class="mb-1.5">
-                  Konflux builds uses official
+                  {{ envLabel(selectedEnv) }} uses official
                   <span class="underline">Container Health Index</span>
                   (Red Hat article 2803031) from the newest green Konflux clair-scan, not catalog HealthIndex and not a
                   <code class="text-[0.7rem]">latest</code> image tag. Grades will not match Prod for the same image.
@@ -297,13 +297,13 @@ const selectedVersionId = ref('')
 const expanded = ref({})
 
 const GRADE_SORT = ['A', 'B', 'C', 'D', 'E', 'F', 'Unknown']
-const envKeys = ['prod', 'stage', 'latest']
+const envKeys = ['prod', 'stage', 'latest', 'nightly']
 
 function chiGradeChipLabel(grade) {
   if (!grade) return '—'
   return grade === 'Unknown' ? '?' : grade
 }
-const ENV_LABELS = { prod: 'Prod', stage: 'Stage', latest: 'Konflux builds' }
+const ENV_LABELS = { prod: 'Prod', stage: 'Stage', latest: 'Konflux builds', nightly: 'Nightly builds' }
 
 function envLabel(key) {
   return ENV_LABELS[key] || key

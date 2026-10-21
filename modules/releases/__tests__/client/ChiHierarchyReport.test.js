@@ -131,6 +131,39 @@ const fixture = {
           ]
         }
       ]
+    },
+    nightly: {
+      fetchedAt: '2026-10-13T11:53:15.000Z',
+      source: 'ec-cve-run-tool (RHEL errata filtered, Konflux Clair scan)',
+      versions: [
+        {
+          id: 'rhoai-3.6',
+          tag: 'v3.6',
+          summary: {
+            imageCount: 2,
+            gradeDistribution: { A: 1, D: 1 },
+            critical: 0,
+            important: 4,
+            staleImageCount: 1
+          },
+          components: [
+            {
+              name: 'AI Core Dashboard',
+              summary: { imageCount: 1, worstGrade: 'A', oldestImageAgeDays: 0 },
+              images: [
+                {
+                  name: 'odh-dashboard-nightly-rhel9',
+                  grade: 'A',
+                  gradeDate: '2026-10-13',
+                  vulnerabilityCount: 0,
+                  lastUpdated: '2026-10-13',
+                  ageDays: 0
+                }
+              ]
+            }
+          ]
+        }
+      ]
     }
   }
 }
@@ -211,6 +244,20 @@ describe('ChiHierarchyReport', () => {
     expect(wrapper.text()).toContain('odh-example-stale-rhel9')
     expect(wrapper.text()).toContain('stale')
     expect(wrapper.text()).toContain('40d')
+  })
+
+  it('toggles Nightly builds and shows nightly source plus rhel-vex grading copy', async () => {
+    const wrapper = mountReport()
+    await flushPromises()
+
+    const nightlyBtn = wrapper.findAll('button').find(b => b.text() === 'Nightly builds')
+    expect(nightlyBtn).toBeTruthy()
+    await nightlyBtn.trigger('click')
+    await flushPromises()
+
+    expect(wrapper.text()).toContain('ec-cve-run-tool')
+    expect(wrapper.text()).toContain('rhel-vex')
+    expect(wrapper.text()).toContain('Nightly builds uses official')
   })
 
   it('toggles Konflux builds and shows Konflux source plus rhel-vex grading copy', async () => {
