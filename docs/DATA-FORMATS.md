@@ -2,6 +2,27 @@
 
 This document describes the JSON structure of all files stored in the `data/` directory (production) and `fixtures/` directory (demo mode). **Demo fixtures must always match production format** — see [Fixture Rules](#fixture-rules) below.
 
+## Workflow Validation recent runs — API example fixture
+
+[`fixtures/workflow-validation/recent-runs.json`](../fixtures/workflow-validation/recent-runs.json)
+is synthetic test data for `GET /api/modules/workflow-validation/test-suites?limit=20&includeBugs=false`.
+It is not a stored production snapshot. This response contains `rows` with
+`suite`, `invocationId`, `rhoaiVersion`, `timestamp`, and `buildTimestamp`.
+The suite and invocation identify one run. Version and timestamp can be null.
+
+`timestamp` is the latest recorded test start in the run. The API sorts by this
+value, puts missing or invalid timestamps last, and breaks ties by suite and
+invocation. It applies `limit` after reading all composite aggregation pages.
+`limit` accepts integers from 1 to 200. The default response remains unlimited
+and includes the existing counts and product bugs. `includeBugs=false` returns
+only the metadata fields above and skips product-bug retrieval.
+
+Build-time integration is deferred. `buildTimestamp` is always null in this
+response. Recent Runs shows “Not available yet” in that column. The existing
+test timestamp must not be presented as a verified build timestamp.
+Actual build dates and selecting/ordering the latest 20 runs by build time
+are tracked together in [RHAI-10898](https://redhat.atlassian.net/browse/RHAI-10898).
+
 ## Releases E2E Results — `data/releases/build-health/runs.json`
 
 The E2E publisher stores completed Jenkins runs in a bounded `runs` array,

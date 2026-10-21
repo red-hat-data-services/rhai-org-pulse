@@ -110,6 +110,102 @@ test.describe('Workflow Validation module @workflow-validation', () => {
     })
   })
 
+  test('opens a recent run through the existing dashboard and its individual test', async ({ page }) => {
+    const requests = []
+    page.on('request', request => {
+      if (request.url().includes('/api/modules/workflow-validation/')) requests.push(new URL(request.url()))
+    })
+    await page.goto('/#/workflow-validation/recent-runs?version=old&testSuite=old&invocationId=old')
+    await expect(page.getByRole('heading', { name: 'Recent Runs', exact: true })).toBeVisible()
+    await expect(page.getByRole('columnheader', { name: 'Build date and time' })).toBeVisible()
+    await expect(page.getByRole('table').locator('tbody tr')).toHaveCount(1)
+    await expect(page.getByRole('table')).toContainText('Not available yet')
+    await expect(page.getByText('Design preview', { exact: false })).toHaveCount(0)
+    const recentRequest = requests.find(url => url.pathname.endsWith('/test-suites'))
+    expect(Object.fromEntries(recentRequest.searchParams)).toEqual({ limit: '20', includeBugs: 'false' })
+
+    await page.getByRole('link', { name: 'View run invocation-1' }).click()
+    await expect(page).toHaveURL(/overview\?exactRun=1/)
+    await expect(page.getByRole('heading', { name: 'Test Results', exact: true })).toBeVisible()
+    await expect(page.locator('aside nav').getByRole('button', { name: 'Dashboard', exact: true })).toHaveAttribute('aria-current', 'page')
+    await expect(page.locator('aside nav').getByRole('button', { name: 'Recent Runs', exact: true })).toHaveCount(0)
+    for (const url of requests.filter(url => /\/(overview|charts)$/.test(url.pathname))) {
+      expect(url.searchParams.get('testSuite')).toBe('productization')
+      expect(url.searchParams.get('invocationId')).toBe('invocation-1')
+      expect(url.searchParams.get('version')).toBe('3.6')
+      expect(url.searchParams.has('dateFrom')).toBe(false)
+    }
+    await page.getByRole('row').filter({ hasText: 'Live workflow' }).click()
+    await expect(page).toHaveURL(/runKey=opaque-id/)
+    await expect(page.getByRole('heading', { name: 'Live workflow' })).toBeVisible()
+    await expect(page.locator('aside nav').getByRole('button', { name: 'Dashboard', exact: true })).toHaveAttribute('aria-current', 'page')
+    await page.locator('aside nav').getByRole('button', { name: 'Dashboard', exact: true }).click()
+    await expect(page.getByRole('heading', { name: 'Recent Runs', exact: true })).toBeVisible()
+  })
+
+  test('keeps the recent-runs table inside narrow screens with the sidebar collapsed', async ({ page }) => {
+    await page.goto('/#/workflow-validation/recent-runs')
+    await expect(page.getByRole('link', { name: 'View run invocation-1' })).toBeVisible()
+    await page.getByRole('button', { name: 'Collapse sidebar', exact: true }).click()
+    for (const width of [375, 320]) {
+      await page.setViewportSize({ width, height: 900 })
+      await expect.poll(() => page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(width)
+      await page.getByRole('link', { name: 'View run invocation-1' }).focus()
+      await expect(page.getByRole('link', { name: 'View run invocation-1' })).toBeFocused()
+    }
+  })
+
+  test('preserves ordinary test filters after visiting an exact run', async ({ page }) => {
+    let ordinaryScope
+    let testsScope
+    let returningToTests = false
+    page.on('request', request => {
+      const url = new URL(request.url())
+      if (url.pathname.endsWith('/runs')) {
+        if (returningToTests) testsScope = url.searchParams
+        else ordinaryScope = url.searchParams
+      }
+    })
+    await page.goto('/#/workflow-validation/runs?version=3.6&datePreset=custom&dateFrom=2026-09-01&dateTo=2026-09-30')
+    await expect(page.getByRole('heading', { name: 'Test Results', exact: true })).toBeVisible()
+    await expect.poll(() => Boolean(ordinaryScope)).toBe(true)
+    await page.evaluate(() => { window.location.hash = '/workflow-validation/recent-runs' })
+    await page.getByRole('link', { name: 'View run invocation-1', exact: true }).click()
+    await expect(page.getByRole('heading', { name: 'Test Results', exact: true })).toBeVisible()
+    returningToTests = true
+    await page.evaluate(() => { window.location.hash = '/workflow-validation/runs' })
+    await expect.poll(() => Boolean(testsScope)).toBe(true)
+    for (const key of ['version', 'testSuite', 'invocationId', 'dateFrom', 'dateTo']) {
+      expect(testsScope.get(key)).toBe(ordinaryScope.get(key))
+    }
+  })
+
+  test('reports a missing selected run without opening the latest run', async ({ page }) => {
+    await page.route('**/api/modules/workflow-validation/test-suites/productization/removed-run', route => route.fulfill({
+      status: 404, json: { error: 'Test run not found' }
+    }))
+    await page.goto('/#/workflow-validation/overview?exactRun=1&version=&testSuite=productization&invocationId=removed-run')
+    await expect(page.getByRole('alert')).toContainText('This run is no longer available')
+    await expect(page.getByRole('heading', { name: 'Test Results', exact: true })).toHaveCount(0)
+    await page.getByRole('link', { name: 'Recent Runs', exact: true }).click()
+    await expect(page.getByRole('heading', { name: 'Recent Runs', exact: true })).toBeVisible()
+  })
+
+  test('retries a landing-page error and shows an empty state after success', async ({ page }) => {
+    let failed = true
+    await page.route('**/api/modules/workflow-validation/test-suites?**', route => route.fulfill({
+      status: failed ? 503 : 200,
+      json: failed ? { error: 'Recent runs unavailable' } : { rows: [] }
+    }))
+    await page.goto('/#/workflow-validation/recent-runs')
+    await expect(page.getByRole('alert')).toContainText('Recent runs unavailable')
+    await expect(page.getByText('No runs are available.')).toHaveCount(0)
+    failed = false
+    await page.getByRole('button', { name: 'Retry' }).click()
+    await expect(page.getByText('No runs are available.')).toBeVisible()
+    await expect(page.getByRole('alert')).toHaveCount(0)
+  })
+
   test('defaults Trends to Release Gate despite a newer Ad Hoc run and allows changing suites', async ({ page }) => {
     await mockTrendSuites(page)
     await page.goto('/#/workflow-validation/workflows?datePreset=all')
@@ -344,11 +440,17 @@ test.describe('Workflow Validation module @workflow-validation', () => {
     const moduleButton = page.locator('aside nav button').filter({ hasText: 'Workflow Validation' }).first()
     await expect(moduleButton).toBeVisible()
     await moduleButton.click()
-    await expect(page.locator('aside nav').getByText('Dashboard', { exact: true })).toBeVisible()
+    await expect(page.locator('aside nav').getByRole('button', { name: 'Dashboard', exact: true })).toHaveCount(1)
+    await expect(page.locator('aside nav').getByRole('button', { name: 'Recent Runs', exact: true })).toHaveCount(0)
+    await page.locator('aside nav').getByRole('button', { name: 'Dashboard', exact: true }).click()
+    await expect(page.getByRole('heading', { name: 'Recent Runs', exact: true })).toBeVisible()
+    await page.goto('/#/workflow-validation')
+    await expect(page.getByRole('heading', { name: 'Recent Runs', exact: true })).toBeVisible()
     await expect(page.locator('aside nav').getByText('Test Runs', { exact: true })).toHaveCount(0)
     await expect(page.locator('aside nav').getByText('Test Results', { exact: true })).toHaveCount(0)
 
     for (const [view, heading] of [
+      ['recent-runs', 'Recent Runs'],
       ['overview', 'Workflow Validation'],
       ['workflows', 'Trends'],
       ['compare', 'Compare Test Runs'],

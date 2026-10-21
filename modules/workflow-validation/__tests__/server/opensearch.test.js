@@ -380,6 +380,57 @@ describe('workflow-validation live schema routes', () => {
     })])
   })
 
+  it('selects the newest 20 run groups across all composite pages without loading bugs', async () => {
+    const buckets = Array.from({ length: 25 }, (_, i) => ({
+      key: { suite: i % 2 ? 'release_gate' : 'exploratory_specs', invocation: `run-${i}` },
+      doc_count: 1,
+      latest: { hits: { hits: [{ _source: { timestamp: new Date(Date.UTC(2026, 0, i + 1)).toISOString(), rhoai_version: '3.6' } }] } }
+    }))
+    const request = vi.fn((url, options) => {
+      expect(url).toContain(`/${RUNS_INDEX}/`)
+      const body = JSON.parse(options.body)
+      expect(body.query.bool.filter).toEqual([
+        { exists: { field: 'telemetry_suite' } }, { exists: { field: 'invocation_id' } }
+      ])
+      const after = body.aggs.suite_runs.composite.after
+      return Promise.resolve(jsonResponse({ aggregations: { suite_runs: after
+        ? { buckets: buckets.slice(15) }
+        : { buckets: buckets.slice(0, 15), after_key: { suite: 'release_gate', invocation: 'run-14' } }
+      } }))
+    })
+    vi.stubGlobal('fetch', request)
+    const response = makeResponse()
+    await register()['/test-suites'].at(-1)({ query: { limit: '20', includeBugs: 'false' } }, response)
+    expect(request).toHaveBeenCalledTimes(2)
+    expect(response.body.rows.map(row => row.invocationId)).toEqual(Array.from({ length: 20 }, (_, i) => `run-${24 - i}`))
+    expect(response.body.rows.every(row => row.buildTimestamp === null)).toBe(true)
+  })
+
+  it('keeps missing metadata and orders tied or missing timestamps consistently', async () => {
+    const sources = [
+      ['z', '2026-01-01T12:00:00Z'], ['a', '2026-01-01T10:00:00-02:00'], ['missing', null], ['invalid', 'not-a-date']
+    ]
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue(jsonResponse({ aggregations: { suite_runs: {
+      buckets: sources.map(([invocation, timestamp]) => ({
+        key: { suite: 'suite', invocation }, doc_count: 1,
+        latest: { hits: { hits: [{ _source: { timestamp } }] } }
+      }))
+    } } })))
+    const response = makeResponse()
+    await register()['/test-suites'].at(-1)({ query: { limit: '20', includeBugs: 'false' } }, response)
+    expect(response.body.rows.map(row => row.invocationId)).toEqual(['a', 'z', 'invalid', 'missing'])
+    expect(response.body.rows.every(row => row.rhoaiVersion === null && row.buildTimestamp === null)).toBe(true)
+  })
+
+  it.each(['0', '-1', '201', '1.5', '20junk', ''])('rejects invalid run limit %j before querying OpenSearch', async (limit) => {
+    const request = vi.fn()
+    vi.stubGlobal('fetch', request)
+    const response = makeResponse()
+    await register()['/test-suites'].at(-1)({ query: { limit } }, response)
+    expect(response.statusCode).toBe(400)
+    expect(request).not.toHaveBeenCalled()
+  })
+
   it('returns exact tests for one test run', async () => {
     vi.stubGlobal('fetch', vi.fn((url, options) => {
       const body = JSON.parse(options.body)
