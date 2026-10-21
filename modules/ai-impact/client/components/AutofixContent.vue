@@ -14,6 +14,7 @@ import {
   Legend
 } from 'chart.js'
 import LoadingOverlay from '@shared/client/components/LoadingOverlay.vue'
+import { trackRefs } from '../composables/useUsageTracking.js'
 
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, BarElement, BarController, Filler, Tooltip, Legend)
 
@@ -54,6 +55,11 @@ const statusDropdownRef = ref(null)
 const selectedProject = ref('all')
 const selectedIssueType = ref('all')
 const selectedComponent = ref('all')
+
+trackRefs({
+  filter: { state: stateFilter, status: statusFilter, project: selectedProject, issueType: selectedIssueType, component: selectedComponent },
+  search: searchQuery,
+})
 
 const TERMINAL_STATES = new Set([
   'autofix-merged', 'autofix-rejected', 'autofix-max-retries'
