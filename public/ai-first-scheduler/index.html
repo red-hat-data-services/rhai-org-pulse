@@ -437,16 +437,19 @@ tr:hover td{background:#f8fafc}
 
     <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:14px">
       <!-- Priority Outcomes (Locked) -->
-      <div style="background:#fff;border:1px solid #86efac;border-radius:8px;padding:12px">
-        <div style="font-size:10px;color:#666;font-weight:600;margin-bottom:6px;text-transform:uppercase">🎯 Priority Outcomes (20%)</div>
+      <div id="capacity-locked-card" style="background:#fff;border:1px solid #86efac;border-radius:8px;padding:12px">
+        <div style="font-size:10px;color:#666;font-weight:600;margin-bottom:6px;text-transform:uppercase;display:flex;align-items:center;justify-content:space-between">
+          <span>🎯 Priority Outcomes</span>
+          <span id="capacity-locked-badge" style="font-size:9px;background:#dcfce7;color:#166534;padding:2px 6px;border-radius:3px;font-weight:700">Target 20%</span>
+        </div>
         <div style="display:flex;align-items:baseline;gap:4px">
           <span id="capacity-locked" style="font-size:24px;font-weight:800;color:#166534">0</span>
-          <span style="font-size:11px;color:#999">/ 250 target</span>
+          <span style="font-size:11px;color:#999">/ 250</span>
         </div>
         <div id="capacity-locked-bar" style="height:4px;background:#dcfce7;border-radius:2px;margin-top:8px;overflow:hidden">
           <div style="height:100%;background:#22c55e;width:0%;transition:width .3s"></div>
         </div>
-        <div id="capacity-locked-status" style="font-size:10px;color:#166534;margin-top:4px;font-weight:600">0%</div>
+        <div id="capacity-locked-status" style="font-size:10px;color:#166534;margin-top:4px;font-weight:600">0% allocated</div>
       </div>
 
       <!-- Flexible Features -->
@@ -2994,6 +2997,7 @@ window.addEventListener('message', async function(e){
     const {features=[], bugQueue=[], capacity={}, cveReserve=null, lastSyncedAt} = e.data;
     cveReserveData = cveReserve;
     const mapped = features.map(f => ({
+      'Rank': f.Rank || '',
       'Key': f.Key || '',
       'Title': f.Summary || f.Title || '',
       'Components': (f.Components || []).join('; '),
@@ -3422,6 +3426,7 @@ function updateLandingCapacity(filteredRows){
   // 20% target = ~250 for full 41-release ceiling
   const targetLocked = 250;
   const lockedPct = Math.min(Math.round(locked.length / targetLocked * 100), 100);
+  const isOverTarget = locked.length > targetLocked;
 
   // Calculate filter label
   const rel = v('f-rel');
@@ -3441,8 +3446,31 @@ function updateLandingCapacity(filteredRows){
   document.getElementById('capacity-flexible').textContent = flexible.length;
 
   const lockedBar = panel.querySelector('#capacity-locked-bar div');
-  if(lockedBar) lockedBar.style.width = lockedPct + '%';
-  document.getElementById('capacity-locked-status').textContent = lockedPct + '%';
+  if(lockedBar) {
+    lockedBar.style.width = lockedPct + '%';
+    lockedBar.style.background = isOverTarget ? '#ef4444' : '#22c55e';
+  }
+
+  // Update card styling to show alert when over target
+  const lockedCard = document.getElementById('capacity-locked-card');
+  const lockedBadge = document.getElementById('capacity-locked-badge');
+  if(lockedCard && lockedBadge) {
+    if(isOverTarget) {
+      lockedCard.style.border = '1px solid #fecaca';
+      lockedCard.style.background = '#fef2f2';
+      lockedBadge.style.background = '#fee2e2';
+      lockedBadge.style.color = '#991b1b';
+      lockedBadge.textContent = '⚠️ OVER 20%';
+    } else {
+      lockedCard.style.border = '1px solid #86efac';
+      lockedCard.style.background = '#fff';
+      lockedBadge.style.background = '#dcfce7';
+      lockedBadge.style.color = '#166534';
+      lockedBadge.textContent = 'Target 20%';
+    }
+  }
+
+  document.getElementById('capacity-locked-status').textContent = lockedPct + '% allocated';
 
   // Overall capacity: sum locked + flexible, target 500 for 40%+20%=60%
   const totalCapacityTarget = 500;
@@ -3745,7 +3773,7 @@ function renderTbl(rows){
       ?'opacity:0.55;background:#f9fafb;'
       :(_needsAction?'border-left:3px solid #f59e0b;':'')+(isSwing?'background:#fff8e1;':_bandBg?'background:'+_bandBg+';':'');
     return cutLine+`<tr id="apv-row-${esc(r['Key'])}" style="${trStyle}" title="${isSwing?'Swing feature — confidence borderline (50–69%), worth discussing at freeze':''}">
-      <td style="color:#bbb">${r['Rank']||'—'}</td>
+      <td style="color:#666;font-weight:600;font-size:13px">${r['Rank']||'—'}</td>
       <td class="score-col" style="display:none"><span class="score">${esc(r['Score'])}</span></td>
       <td><div class="fpdor-cell"><span class="rp ${rCls}" title="${fpdorTooltip}">${esc(r['FPDoR'])||'—'}</span><span class="fpdor-w">w:${esc(r._wFPDoR)}</span>${breakdownHtml}</div></td>
       <td>${(()=>{
@@ -4566,12 +4594,54 @@ function toggleSummary(){
   }
 }
 
+// ── FETCH TIMELINE MILESTONES FROM RELEASES REGISTRY ─────────────────────────────────
+async function fetchTimelineMilestones(){
+  try {
+    const [res36, res37] = await Promise.all([
+      fetch('/api/modules/releases/registry/rhoai-3.6',{signal:AbortSignal.timeout(5000)}),
+      fetch('/api/modules/releases/registry/rhoai-3.7',{signal:AbortSignal.timeout(5000)})
+    ]);
+
+    if(!res36.ok || !res37.ok) throw new Error('Registry fetch failed');
+
+    const rel36=await res36.json();
+    const rel37=await res37.json();
+
+    const milestones=[];
+
+    // Extract milestones from registry for 3.6
+    // Registry milestone keys: ga, codeFreeze, featureFreeze, planningFreeze (plain date strings)
+    if(rel36.milestones && typeof rel36.milestones==='object'){
+      const m36=rel36.milestones;
+      if(m36.ga) milestones.push({lbl:'3.6 GA Release',date:m36.ga,badge:'Informational launch',badgeColor:'#2e7d32'});
+      if(m36.codeFreeze) milestones.push({lbl:'RHOAI 3.6 GA Code Freeze',date:m36.codeFreeze});
+    }
+
+    // Extract milestones from registry for 3.7
+    if(rel37.milestones && typeof rel37.milestones==='object'){
+      const m37=rel37.milestones;
+      if(m37.planningFreeze) milestones.push({lbl:'RHAI Planning Freeze',date:m37.planningFreeze,badge:'Mandatory from here',badgeColor:'#c62828'});
+      if(m37.ga) milestones.push({lbl:'3.7 GA Release',date:m37.ga});
+    }
+
+    return milestones.length>0?milestones:null;
+  } catch(err) {
+    console.warn('Failed to fetch timeline from releases registry, using fallback dates:', err.message);
+    return null;
+  }
+}
+
 // ── SCHEDULE TIMELINE STRIP ───────────────────────────────────────────────────────
-function renderScheduleStrip(){
+async function renderScheduleStrip(){
   const strip=document.getElementById('sched-strip');
   if(!strip) return;
   const today=new Date();
-  const milestones=[
+
+  // Try to fetch from Product Pages; fall back to hardcoded dates
+  let timelineMilestones=await fetchTimelineMilestones();
+
+  let milestones=timelineMilestones || [
+    // Fallback: hardcoded dates (used if Product Pages API is unavailable)
     // 3.6 — upcoming only (past milestones removed per Sarah Finn Sep 16)
     {lbl:'RHOAI EA2 Code Freeze',date:'2026-09-18'},
     {lbl:'3.6 GA Planning Freeze',date:'2026-09-23',urgent:true},
@@ -4584,12 +4654,14 @@ function renderScheduleStrip(){
     {lbl:'3.6 GA Release',date:'2026-11-19',badge:'Informational launch',badgeColor:'#2e7d32'},
     // 3.7 (EA1 skipped)
     {lbl:'RHAI Planning Freeze',date:'2026-11-11',badge:'Mandatory from here',badgeColor:'#c62828'},
-    {lbl:'3.7 EA2 Release Prep',date:'2026-12-15'},
-    {lbl:'3.7 EA2 Release',date:'2027-01-20'},
+    {lbl:'3.7 EA Release Prep',date:'2026-12-15'},
+    {lbl:'3.7 EA Release',date:'2027-01-20'},
     {lbl:'3.7 GA Release',date:'2027-02-17'},
     // 3.8
     {lbl:'3.8 GA Summit',date:'2027-05-27',sep38:true},
   ];
+  // Sort chronologically by date (critical for both API and fallback data)
+  milestones.sort((a, b) => new Date(a.date) - new Date(b.date));
   const fmt=d=>{const mo=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];return mo[d.getMonth()]+' '+d.getDate();};
   strip.innerHTML=milestones.map((m,i)=>{
     const dt=new Date(m.date);
@@ -4614,7 +4686,7 @@ function renderScheduleStrip(){
     return todayPfx+`<div class="sm ${cls}"><div class="sm-lbl">${m.lbl}</div><div class="sm-date">${fmt(dt)}</div><div class="sm-badge">${badge}</div>${rolloutBadge}</div>`;
   }).join('');
 }
-renderScheduleStrip();
+(async () => { await renderScheduleStrip(); })();
 
 // ── EMBEDDED DATA (feature-readiness-2026-08-12.csv, 1148 features) ─────────────
 const SAMPLE=`Rank,Key,Title,Score,FPDoR,Failed FPDoR Items,Outcome,Target Versions,Fix Version,Components,Team,Status,Priority,Confidence,Labels
