@@ -46,6 +46,7 @@ export const viewOwners = {
   'product-builds/artifact-detail':                'Pavol Pitonak',
   'product-builds/base-images':                    'Pavol Pitonak',
   'product-builds/builder-images':                 'Pavol Pitonak',
+  'product-builds/channels':                       'Einat Pacifici',
   'product-builds/drop-detail':                    'Pavol Pitonak',
   'product-builds/overview':                       'Giulia Naponiello',
   'product-builds/package-analysis':               'Einat Pacifici',
