@@ -8,8 +8,19 @@ const ALL_CHILD_TASKS_JQL = epicKey => (
   `project in (AIPCC, RHAI) AND issuetype = Task AND (parent = ${epicKey} OR "Epic Link" = ${epicKey})`
 );
 const MARKER_TRIGGERED = 'PipelineRun triggered:';
-const CONSOLE_BASE_URL = process.env.CLAUDIO_CONSOLE_BASE_URL
+const MPP_NAMESPACE = 'rhel-ai-cicd--claudio';
+const ITUP_NAMESPACE = 'aipcc-claudio--runtime-int';
+const MPP_CONSOLE_BASE_URL = process.env.CLAUDIO_CONSOLE_BASE_URL
   || 'https://console-openshift-console.apps.mpp-e1-preprod.syvu.p1.openshiftapps.com';
+const ITUP_CONSOLE_BASE_URL = 'https://console-openshift-console.apps.prod-stable-spoke1-dc-iad2.itup.redhat.com';
+const CONSOLE_BASE_URL_BY_NAMESPACE = new Map([
+  [MPP_NAMESPACE, MPP_CONSOLE_BASE_URL],
+  [ITUP_NAMESPACE, ITUP_CONSOLE_BASE_URL],
+]);
+const SUMO_INDEX_BY_NAMESPACE = new Map([
+  [MPP_NAMESPACE, 'rh_paas_preprod'],
+  [ITUP_NAMESPACE, 'rh_paas'],
+]);
 const SUMO_UI_BASE_URL = process.env.SUMOLOGIC_UI_BASE_URL || 'https://rhcorporate.sumologic.com';
 const DNS_LABEL = /^[a-z0-9](?:[-a-z0-9]*[a-z0-9])?$/;
 const JIRA_KEY_PATTERN = /\b(?:AIPCC|RHAI)-\d+\b/g;
@@ -198,13 +209,12 @@ function transformChild(issue) {
   };
 }
 
-// Verified against live Sumo on 2026-10-16: the MP+ pod logs land in
-// _index=rh_paas_preprod _sourceCategory=openshift as JSON that is not
-// auto-parsed, so the kubernetes.* fields need an explicit json operator.
-// (The %"-field" form from the aipcc-claudio user guide no longer works.)
+// Sumo stores the kubernetes.* fields as JSON, so extract them before filtering.
 function sumoLogsUrl({ namespace, name, triggered_at }) {
+  const index = SUMO_INDEX_BY_NAMESPACE.get(namespace);
+  if (!index) return null;
   const query = [
-    '_index=rh_paas_preprod _sourceCategory=openshift',
+    `_index=${index} _sourceCategory=openshift`,
     '| json "kubernetes.namespace_name" as ns',
     '| json "kubernetes.pod_name" as pod',
     '| json "message" as log_message nodrop',
@@ -242,10 +252,12 @@ function parsePipelineRunRef(comments) {
     if (!DNS_LABEL.test(namespace) || !DNS_LABEL.test(name)) continue;
     const at = body.match(/at (\d{4}-\d{2}-\d{2}T[\d:.]+Z?)/);
     const triggered_at = at ? at[1] : null;
+    const consoleBaseUrl = CONSOLE_BASE_URL_BY_NAMESPACE.get(namespace);
+    if (!consoleBaseUrl) return null;
     return {
       namespace,
       name,
-      url: `${CONSOLE_BASE_URL}/k8s/ns/${namespace}/tekton.dev~v1~PipelineRun/${name}`,
+      url: `${consoleBaseUrl}/k8s/ns/${namespace}/tekton.dev~v1~PipelineRun/${name}`,
       logs_url: sumoLogsUrl({ namespace, name, triggered_at }),
       triggered_at,
     };
@@ -512,7 +524,7 @@ module.exports = function registerReleaseStatusRoutes(router, context) {
    *   get:
    *     tags: [Product Builds]
    *     summary: Get PipelineRun and merge request links for the ongoing release epics
-   *     description: Returns a map keyed by Jira issue key. Each readiness card carries the PipelineRun that triggered it (from the readiness-detector comment, with OpenShift console and Sumo Logic log links) and the matching PMC merge requests; each epic carries the aggregated links. Served from a stale-while-revalidate cache.
+   *     description: Returns a map keyed by Jira issue key. Each readiness card carries the PipelineRun that triggered it (from the readiness-detector comment, with an OpenShift console link and a Sumo Logic log link when its index is known) and the matching PMC merge requests; each epic carries the aggregated links. Served from a stale-while-revalidate cache.
    *     responses:
    *       200:
    *         description: Map of issue key to PipelineRun and merge request links
@@ -543,7 +555,8 @@ module.exports._testExports = {
   SCAN_JQL,
   ALL_CHILD_TASKS_JQL,
   MARKER_TRIGGERED,
-  CONSOLE_BASE_URL,
+  MPP_CONSOLE_BASE_URL,
+  ITUP_CONSOLE_BASE_URL,
   SUMO_UI_BASE_URL,
   parseMetadata,
   productGroup,

@@ -163,9 +163,10 @@ test.describe('Product Builds Module @product-builds', () => {
 
   test('should filter the release list and show MR and PipelineRun links', async ({ page }) => {
     const run = {
-      namespace: 'rhel-ai-cicd--claudio',
+      namespace: 'aipcc-claudio--runtime-int',
       name: 'create-release-mr-run-abc',
-      url: 'https://console-openshift-console.apps.mpp-e1-preprod.syvu.p1.openshiftapps.com/k8s/ns/rhel-ai-cicd--claudio/tekton.dev~v1~PipelineRun/create-release-mr-run-abc',
+      url: 'https://console-openshift-console.apps.prod-stable-spoke1-dc-iad2.itup.redhat.com/k8s/ns/aipcc-claudio--runtime-int/tekton.dev~v1~PipelineRun/create-release-mr-run-abc',
+      logs_url: 'https://rhcorporate.sumologic.com/log-search/create?query=itup',
       triggered_at: '2026-10-12T10:00:00Z',
     };
     const mr = {
@@ -212,6 +213,7 @@ test.describe('Product Builds Module @product-builds', () => {
     await expect(page.locator('[data-tree-child="RHAI-2453"] [data-mr-link="796"]')).toHaveAttribute(
       'href', 'https://gitlab.com/redhat/rhel-ai/ci-cd/aipcc-product-management-configs/-/merge_requests/796');
     await expect(page.locator('[data-tree-child="RHAI-2453"] [data-pipelinerun-link="create-release-mr-run-abc"]')).toHaveAttribute('href', run.url);
+    await expect(page.locator('[data-tree-child="RHAI-2453"] [data-logs-link="create-release-mr-run-abc"]')).toHaveAttribute('href', run.logs_url);
 
     const renderedCards = page.locator('[data-tree-branch] [data-tree-child]');
     await expect(await renderedCards.evaluateAll(nodes => nodes.map(node => node.getAttribute('data-tree-child'))))

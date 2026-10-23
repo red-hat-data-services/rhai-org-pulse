@@ -17,7 +17,8 @@ const {
   buildReleaseLinks,
   createPayloadCache,
   clearPipelineRunCommentCache,
-  CONSOLE_BASE_URL,
+  MPP_CONSOLE_BASE_URL,
+  ITUP_CONSOLE_BASE_URL,
   SUMO_UI_BASE_URL,
 } = require('../../server/release-status')._testExports
 
@@ -146,18 +147,37 @@ describe('release status', () => {
     expect(ref).toEqual({
       namespace: 'rhel-ai-cicd--claudio',
       name: 'create-release-mr-run-new',
-      url: `${CONSOLE_BASE_URL}/k8s/ns/rhel-ai-cicd--claudio/tekton.dev~v1~PipelineRun/create-release-mr-run-new`,
+      url: `${MPP_CONSOLE_BASE_URL}/k8s/ns/rhel-ai-cicd--claudio/tekton.dev~v1~PipelineRun/create-release-mr-run-new`,
       logs_url: expect.any(String),
       triggered_at: '2026-10-12T10:00:00Z',
     })
 
     const params = new URL(ref.logs_url).searchParams
     expect(ref.logs_url).toContain(`${SUMO_UI_BASE_URL}/log-search/create?`)
+    expect(params.get('query')).toContain('_index=rh_paas_preprod _sourceCategory=openshift')
     expect(params.get('query')).toContain('json "kubernetes.namespace_name" as ns')
     expect(params.get('query')).toContain('ns="rhel-ai-cicd--claudio" and pod matches "create-release-mr-run-new*"')
     expect(params.get('query')).toContain('json "message" as log_message nodrop')
     expect(params.get('startTime')).toMatch(/^-\d+[hd]$/)
     expect(params.get('endTime')).toBe(null)
+  })
+
+  it('links ITUP runs to the ITUP console and Sumo logs', () => {
+    const ref = parsePipelineRunRef([
+      comment('2026-10-22T10:00:00.000Z', 'readiness-detector: PipelineRun triggered: aipcc-claudio--runtime-int/create-release-mr-run-itup at 2026-10-22T10:00:00Z'),
+    ])
+
+    expect(ref.url).toBe(`${ITUP_CONSOLE_BASE_URL}/k8s/ns/aipcc-claudio--runtime-int/tekton.dev~v1~PipelineRun/create-release-mr-run-itup`)
+    const query = new URL(ref.logs_url).searchParams.get('query')
+    expect(query).toContain('_index=rh_paas _sourceCategory=openshift')
+    expect(query).toContain('ns="aipcc-claudio--runtime-int" and pod matches "create-release-mr-run-itup*"')
+  })
+
+  it('does not fall back to an older run when the newest run uses an unsupported namespace', () => {
+    expect(parsePipelineRunRef([
+      comment('2026-10-10T10:00:00.000Z', 'readiness-detector: PipelineRun triggered: rhel-ai-cicd--claudio/create-release-mr-run-old at 2026-10-10T10:00:00Z'),
+      comment('2026-10-12T10:00:00.000Z', 'readiness-detector: PipelineRun triggered: unknown-namespace/create-release-mr-run-new at 2026-10-12T10:00:00Z'),
+    ])).toBe(null)
   })
 
   it('opens a tight window for a run that just triggered', () => {
@@ -187,6 +207,9 @@ describe('release status', () => {
     ])).toBe(null)
     expect(parsePipelineRunRef([
       comment('2026-10-10T10:00:00.000Z', 'readiness-detector: Pipeline triggered: legacy marker without ref'),
+    ])).toBe(null)
+    expect(parsePipelineRunRef([
+      comment('2026-10-10T10:00:00.000Z', 'readiness-detector: PipelineRun triggered: unknown-namespace/create-release-mr-run-abc'),
     ])).toBe(null)
     expect(parsePipelineRunRef([])).toBe(null)
     expect(parsePipelineRunRef(null)).toBe(null)
