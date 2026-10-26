@@ -16,6 +16,7 @@ const registerHygieneRoutes = require('./hygiene/routes');
 const registerTvFvDeltaRoutes = require('./tv-fv-delta/routes');
 const registerFeaturePressureRoutes = require('./feature-pressure/routes');
 const registerPmHubRoutes = require('./pm-hub/routes');
+const registerTechDebtRoutes = require('./tech-debt/routes');
 const registerDraftPlanRoutes = require('./draft-plans/routes');
 const registerReleaseReadinessRoutes = require('./release-readiness/routes');
 const { registerCveSustainingRoutes, registerFixAvailabilityRoutes } = require('./cve-sustaining/routes');
@@ -295,6 +296,15 @@ module.exports = async function registerRoutes(router, context) {
     storage
   });
   router.use('/pm-hub', pmHubRouter);
+
+  // Tech Debt Prioritization read-only Jira routes
+  var techDebtRouter = express.Router();
+  registerTechDebtRoutes(techDebtRouter, {
+    requireAuth,
+    requireScope,
+    jira
+  });
+  router.use('/tech-debt', techDebtRouter);
 
   // Draft Plans sub-router (mounted at /api/modules/releases/draft-plans/)
   var draftPlansRouter = express.Router();

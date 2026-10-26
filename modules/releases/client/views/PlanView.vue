@@ -18,6 +18,7 @@
     <div class="p-6">
       <DashboardView v-if="activeTab === 'outcomes'" />
       <FeatureReadinessView v-else-if="activeTab === 'feature-readiness'" />
+      <TechDebtPrioritizationView v-else-if="activeTab === 'tech-debt-prioritization'" />
       <DraftPlansView v-else-if="activeTab === 'draft-plans' && canViewDraftPlans" />
       <BuFeedbackView v-else-if="activeTab === 'bu-feedback'" />
       <PmHubView v-else-if="activeTab === 'pm-hub'" />
@@ -33,6 +34,7 @@ import { ref, computed, inject, watch, onMounted } from 'vue'
 import { apiRequest } from '@shared/client/services/api'
 import DashboardView from '../plan/views/DashboardView.vue'
 import FeatureReadinessView from '../plan/views/FeatureReadinessView.vue'
+import TechDebtPrioritizationView from '../plan/views/TechDebtPrioritizationView.vue'
 import DraftPlansView from '../plan/views/DraftPlansView.vue'
 import BuFeedbackView from '../plan/views/BuFeedbackView.vue'
 import PmHubView from '../plan/views/PmHubView.vue'
@@ -42,6 +44,7 @@ var ALL_TABS = [
   { id: 'outcomes', label: 'Big Rocks' },
   { id: 'pm-hub', label: 'PM Hub' },
   { id: 'feature-readiness', label: 'Features List (1-n)' },
+  { id: 'tech-debt-prioritization', label: 'Tech Debt Prioritization' },
   { id: 'draft-plans', label: 'Plan Approval' },
   { id: 'bu-feedback', label: 'Field and BU Feedback' },
   { id: 'ai-planner', label: 'AI Planner' },

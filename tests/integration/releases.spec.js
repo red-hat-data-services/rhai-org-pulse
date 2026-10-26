@@ -1103,6 +1103,312 @@ test.describe('Releases FPDoR Readiness @releases', () => {
     expect(page.errors).toHaveLength(0);
   });
 
+  test('Tech Debt Prioritization tab appears after Features List and supports deep links', async ({ page }) => {
+    await page.route('**/api/modules/releases/tech-debt/components', async route => {
+      await route.fulfill({ json: { project: 'RHAI', components: [] } });
+    });
+    await page.goto('/#/releases/plan');
+    await page.waitForLoadState('networkidle');
+    await page.waitForTimeout(DEFAULT_PAGE_WAIT_TIME);
+
+    const featureTab = page.locator('button', { hasText: 'Features List (1-n)' });
+    const techDebtTab = page.locator('button', { hasText: 'Tech Debt Prioritization' });
+    await expect(featureTab).toBeVisible();
+    await expect(techDebtTab).toBeVisible();
+
+    const featureTabIndex = await featureTab.evaluate(el => Array.from(el.parentElement.children).indexOf(el));
+    const techDebtTabIndex = await techDebtTab.evaluate(el => Array.from(el.parentElement.children).indexOf(el));
+    expect(techDebtTabIndex).toBe(featureTabIndex + 1);
+
+    await techDebtTab.click();
+    await expect(page.getByTestId('tech-debt-prioritization')).toBeVisible();
+
+    await page.goto('/#/releases/plan?tab=tech-debt-prioritization');
+    await page.waitForLoadState('networkidle');
+    await page.waitForTimeout(DEFAULT_PAGE_WAIT_TIME);
+    await expect(page.getByTestId('tech-debt-prioritization')).toBeVisible();
+
+    expect(page.errors).toHaveLength(0);
+  });
+
+  test('Tech Debt Cockpit filters, classifies, and ranks deterministic Jira issues', async ({ page }) => {
+    const issueRequests = [];
+    await page.route('**/api/modules/releases/tech-debt/components', async route => {
+      await route.fulfill({
+        json: {
+          project: 'RHAI',
+          components: [
+            { id: '1', name: 'AI Gateway' },
+            { id: '2', name: 'Model Serving' }
+          ]
+        }
+      });
+    });
+    await page.route('**/api/modules/releases/tech-debt/issues?*', async route => {
+      issueRequests.push(route.request().url());
+      await route.fulfill({
+        json: {
+          projects: ['RHAI', 'RHAIENG', 'RHOAIENG', 'INFERENG', 'AIPCC'],
+          selectedComponents: ['AI Gateway'],
+          fetchedAt: '2026-10-26T14:30:00.000Z',
+          cacheStatus: 'refreshed',
+          warning: null,
+          counts: { total: 3, inFlight: 2, backlog: 1, bugs: 2, vulnerabilities: 1 },
+          inFlight: [
+            {
+              key: 'RHAI-101',
+              link: 'https://redhat.atlassian.net/browse/RHAI-101',
+              summary: 'Active model serving bug',
+              issueType: 'Bug',
+              jiraPriority: 'High',
+              rawScore: 60,
+              priorityScore: 70,
+              scoreStatus: 'preview',
+              scoreModel: 'bug-v1',
+              priorityBand: { level: 'P1', label: 'Urgent', expectedAction: 'Begin within 2–4 business days' },
+              primaryBugType: { code: 'approved-release-blocker', label: 'Approved Release Blocker' },
+              classificationSignals: [
+                { code: 'approved-release-blocker', label: 'Approved Release Blocker', evidence: 'Release Blocker is Approved' },
+                { code: 'ci-detected', label: 'CI/nightly detected', evidence: 'CI, Cypress, or nightly label' }
+              ],
+              scoreBreakdown: {
+                customerImpact: { points: 0, state: 'No customer or field signal' },
+                deliverySecurity: { points: 22, state: 'Approved Release Blocker' },
+                detectionSource: { points: 2, state: 'CI, nightly, gate, or human test' },
+                jiraSeverity: { points: 16, state: 'High' },
+                dueDate: { points: 15, state: 'Past due' },
+                age: { points: 5, state: '13+ weeks' }
+              },
+              guardrail: { applied: true, minimumScore: 70, reasons: ['Approved Release Blocker guarantees at least P1'] },
+              status: 'In Progress',
+              components: ['AI Gateway'],
+              assignee: { name: 'Pat Engineer' },
+              dueDate: '2026-11-01',
+              updatedAt: '2026-10-20T12:00:00.000Z',
+              fixVersions: ['3.0 GA']
+            },
+            {
+              key: 'RHAI-102',
+              link: 'https://redhat.atlassian.net/browse/RHAI-102',
+              summary: 'Reviewing a gateway fix',
+              issueType: 'Bug',
+              jiraPriority: 'Medium',
+              rawScore: 11,
+              priorityScore: 11,
+              scoreStatus: 'preview',
+              scoreModel: 'bug-v1',
+              priorityBand: { level: 'P4', label: 'Backlog', expectedAction: 'Review monthly' },
+              primaryBugType: { code: 'workflow-validation', label: 'Workflow-validation bug' },
+              classificationSignals: [
+                { code: 'workflow-validation', label: 'Workflow-validation bug', evidence: 'Workflow Validation reporter' }
+              ],
+              scoreBreakdown: {
+                customerImpact: { points: 0, state: 'No customer or field signal' },
+                deliverySecurity: { points: 0, state: 'No delivery or security signal' },
+                detectionSource: { points: 3, state: 'Workflow validation' },
+                jiraSeverity: { points: 8, state: 'Medium' },
+                dueDate: { points: 0, state: 'Missing or invalid' },
+                age: { points: 0, state: '0–1 week' }
+              },
+              guardrail: { applied: false, minimumScore: null, reasons: [] },
+              status: 'Review',
+              components: ['AI Gateway'],
+              assignee: null,
+              dueDate: null,
+              updatedAt: '2026-10-21T12:00:00.000Z',
+              fixVersions: []
+            }
+          ],
+          backlog: [
+            {
+              key: 'RHAI-201',
+              link: 'https://redhat.atlassian.net/browse/RHAI-201',
+              summary: 'Critical dependency vulnerability',
+              issueType: 'Vulnerability',
+              jiraPriority: 'Critical',
+              rawScore: 95,
+              priorityScore: 95,
+              scoreStatus: 'scored',
+              priorityBand: { level: 'P0', label: 'Immediate', expectedAction: 'Begin within 1–2 business days' },
+              scoreBreakdown: {
+                sla: { points: 35, state: 'Breached' },
+                cvss: { points: 30, state: 'Critical (9.0–10.0)' },
+                dueDate: { points: 15, state: 'Past due' },
+                reviewOutcome: { points: 10, state: 'Needs action' },
+                age: { points: 5, state: '13+ weeks' },
+                uncertainty: { points: 0, state: 'Complete tracking data', reasons: [] }
+              },
+              guardrail: { applied: false, minimumScore: null, reasons: [] },
+              triageFlags: [{ code: 'sla-breached', label: 'SLA breached' }],
+              status: 'Open',
+              components: ['AI Gateway'],
+              assignee: { name: 'Sam Security' },
+              dueDate: '2026-10-30',
+              updatedAt: '2026-10-15T12:00:00.000Z',
+              fixVersions: ['3.0 GA'],
+              rank: 1,
+              rankGroup: 'vulnerability'
+            }
+          ]
+        }
+      });
+    });
+
+    await page.goto('/#/releases/plan?tab=tech-debt-prioritization');
+    await page.waitForLoadState('networkidle');
+
+    await expect(page.getByTestId('tech-debt-importance')).toContainText('Why this report matters');
+    await expect(page.getByTestId('tech-debt-importance')).toContainText('CVE remediation as part of every feature');
+    await page.getByTestId('vulnerability-rubric-open').click();
+    await expect(page.getByTestId('vulnerability-scoring-rubric')).toContainText('Priority score = SLA + CVSS + due date + review outcome + age + uncertainty');
+    await page.getByTestId('bug-rubric-tab').click();
+    await expect(page.getByTestId('bug-rubric-content')).toContainText('Preview score = customer + delivery/security + detection + Jira severity + due date + age');
+    await expect(page.getByTestId('bug-rubric-content')).toContainText('Shadow rollout');
+    await page.getByTestId('vulnerability-rubric-close').click();
+    await expect(page.getByTestId('vulnerability-scoring-rubric')).toBeHidden();
+    await expect(page.getByTestId('tech-debt-component-filter')).toBeVisible();
+    await expect(page.getByTestId('tech-debt-triage-filter')).toBeVisible();
+    await expect(page.getByTestId('tech-debt-release-filter')).toBeVisible();
+    await expect(page.getByTestId('tech-debt-clear-filters')).toBeVisible();
+    await expect(page.getByTestId('tech-debt-component-required')).toBeVisible();
+    expect(issueRequests).toHaveLength(0);
+
+    await page.getByTestId('tech-debt-component-filter').click();
+    await page.getByRole('checkbox', { name: 'AI Gateway' }).check();
+
+    await expect(page.getByTestId('tech-debt-cockpit')).toBeVisible();
+    await expect(page.getByTestId('tech-debt-summary')).toContainText(/Total\s*3/);
+    await expect(page.getByTestId('tech-debt-in-flight-pane')).toContainText('RHAI-101');
+    await expect(page.getByTestId('tech-debt-in-flight-pane')).toContainText('RHAI-102');
+    await expect(page.getByTestId('tech-debt-in-flight-pane')).toContainText('Preview P1 · 70');
+    await expect(page.getByTestId('tech-debt-in-flight-pane')).toContainText('Approved Release Blocker');
+    await expect(page.getByTestId('tech-debt-backlog-pane')).toContainText('RHAI-201');
+    await expect(page.getByTestId('tech-debt-backlog-pane')).toContainText('Critical dependency vulnerability');
+    await expect(page.getByTestId('tech-debt-backlog-pane')).toContainText('Vulnerabilities');
+    await expect(page.getByTestId('tech-debt-backlog-pane').getByTestId('tech-debt-score')).toHaveText('P0 · 95');
+    await expect(page.getByTestId('tech-debt-triage-flags')).toContainText('SLA breached');
+    const vulnerabilityBreakdown = page.getByTestId('tech-debt-backlog-pane').getByTestId('tech-debt-score-breakdown');
+    await vulnerabilityBreakdown.locator('summary').click();
+    await expect(vulnerabilityBreakdown).toContainText('35 SLA + 30 CVSS + 15 Due + 10 Review + 5 Age + 0 Uncertainty = 95');
+    await expect(page.getByTestId('tech-debt-backlog-pane').getByText('Critical', { exact: true })).toHaveClass(/bg-red-100/);
+    await expect(page.getByTestId('tech-debt-in-flight-pane').getByText('In Progress', { exact: true })).toHaveClass(/bg-blue-100/);
+    await expect(page.getByTestId('tech-debt-in-flight-pane').getByText('Review', { exact: true })).toHaveClass(/bg-amber-100/);
+    await expect(page.getByRole('link', { name: /RHAI-201/ })).toHaveAttribute('href', 'https://redhat.atlassian.net/browse/RHAI-201');
+    expect(issueRequests[0]).toContain('component=AI+Gateway');
+
+    await page.getByTestId('tech-debt-refresh').click();
+    await expect.poll(() => issueRequests.length).toBe(2);
+    expect(issueRequests[1]).toContain('refresh=true');
+
+    await page.getByTestId('tech-debt-triage-filter').selectOption('exceptions');
+    await expect.poll(() => issueRequests.length).toBe(3);
+    expect(issueRequests[2]).toContain('triage=exceptions');
+    await expect(page.getByTestId('tech-debt-selected-filters')).toContainText('Needs Triage / Exceptions');
+
+    await page.getByTestId('tech-debt-clear-filters').click();
+    await expect(page.getByTestId('tech-debt-selected-filters')).toHaveCount(0);
+    await expect(page.getByTestId('tech-debt-cockpit')).toHaveCount(0);
+    await expect(page.getByTestId('tech-debt-component-required')).toBeVisible();
+
+    expect(page.errors).toHaveLength(0);
+  });
+
+  test('Tech Debt Cockpit displays every Bug source classification in score-preview mode', async ({ page }) => {
+    function previewBug(key, rank, priority, score, primary, signals) {
+      return {
+        key,
+        link: 'https://redhat.atlassian.net/browse/' + key,
+        summary: 'Preview scoring example for ' + primary.label,
+        issueType: 'Bug',
+        jiraPriority: priority,
+        rawScore: score,
+        priorityScore: score,
+        scoreStatus: 'preview',
+        scoreModel: 'bug-v1',
+        priorityBand: { level: score >= 85 ? 'P0' : score >= 70 ? 'P1' : score >= 50 ? 'P2' : score >= 30 ? 'P3' : 'P4', label: 'Preview', expectedAction: 'Preview only' },
+        primaryBugType: primary,
+        classificationSignals: signals,
+        scoreBreakdown: {
+          customerImpact: { points: 0, state: 'Example' },
+          deliverySecurity: { points: 0, state: 'Example' },
+          detectionSource: { points: 0, state: 'Example' },
+          jiraSeverity: { points: 0, state: priority },
+          dueDate: { points: 0, state: 'Missing or invalid' },
+          age: { points: 0, state: '0–1 week' }
+        },
+        guardrail: { applied: false, minimumScore: null, reasons: [] },
+        status: 'Open',
+        components: ['AI Gateway'],
+        assignee: null,
+        dueDate: null,
+        updatedAt: '2026-10-20T12:00:00.000Z',
+        fixVersions: [],
+        rank,
+        rankGroup: 'bug'
+      };
+    }
+
+    const examples = [
+      previewBug('RHAI-301', 1, 'High', 35,
+        { code: 'customer-linked', label: 'Customer-linked defect' },
+        [
+          { code: 'customer-linked', label: 'Customer-linked defect', evidence: 'SFDC Cases Counter is populated' },
+          { code: 'field-feedback', label: 'BU/SSA/field feedback', evidence: 'Feedback label is present' },
+          { code: 'approved-release-blocker', label: 'Approved Release Blocker', evidence: 'Release Blocker is Approved' }
+        ]),
+      previewBug('RHAI-302', 2, 'Medium', 33, { code: 'prerelease-cve', label: 'Pre-release CVE' }, [{ code: 'prerelease-cve', label: 'Pre-release CVE', evidence: 'Pre-release CVE rule matched' }]),
+      previewBug('RHAI-303', 3, 'Medium', 30, { code: 'approved-release-blocker', label: 'Approved Release Blocker' }, [{ code: 'approved-release-blocker', label: 'Approved Release Blocker', evidence: 'Release Blocker is Approved' }]),
+      previewBug('RHAI-304', 4, 'Medium', 25, { code: 'field-feedback', label: 'BU/SSA/field feedback' }, [{ code: 'field-feedback', label: 'BU/SSA/field feedback', evidence: 'Feedback label is present' }]),
+      previewBug('RHAI-305', 5, 'Medium', 20, { code: 'devtestops-e2e', label: 'DevTestOps/E2E bug' }, [{ code: 'devtestops-test-failure', label: 'DevTestOps automated test failure', evidence: 'test-failed label and DevTestOps reporter' }]),
+      previewBug('RHAI-306', 6, 'Medium', 15, { code: 'workflow-validation', label: 'Workflow-validation bug' }, [{ code: 'workflow-validation', label: 'Workflow-validation bug', evidence: 'Workflow Validation reporter' }]),
+      previewBug('RHAI-307', 7, 'Low', 90, { code: 'component-team', label: 'Component-team/unclassified Bug' }, [{ code: 'component-team', label: 'Component-team/unclassified Bug', evidence: 'No higher-precedence source classification matched' }])
+    ];
+
+    await page.route('**/api/modules/releases/tech-debt/components', async route => {
+      await route.fulfill({ json: { project: 'RHAI', components: [{ id: '1', name: 'AI Gateway' }] } });
+    });
+    await page.route('**/api/modules/releases/tech-debt/issues?*', async route => {
+      await route.fulfill({
+        json: {
+          projects: ['RHAI'],
+          selectedComponents: ['AI Gateway'],
+          bugScoring: { modelVersion: 'bug-v1', mode: 'shadow', rankingApplied: false },
+          fetchedAt: '2026-10-26T14:30:00.000Z',
+          cacheStatus: 'refreshed',
+          warning: null,
+          counts: { total: 7, inFlight: 0, backlog: 7, bugs: 7, vulnerabilities: 0 },
+          inFlight: [],
+          backlog: examples
+        }
+      });
+    });
+
+    await page.goto('/#/releases/plan?tab=tech-debt-prioritization');
+    await page.getByTestId('tech-debt-component-filter').click();
+    await page.getByRole('checkbox', { name: 'AI Gateway' }).check();
+
+    const pane = page.getByTestId('tech-debt-backlog-pane');
+    for (const label of [
+      'Customer-linked defect',
+      'Pre-release CVE',
+      'Approved Release Blocker',
+      'BU/SSA/field feedback',
+      'DevTestOps/E2E bug',
+      'Workflow-validation bug',
+      'Component-team/unclassified Bug'
+    ]) {
+      await expect(pane).toContainText(label);
+    }
+    await expect(pane).toContainText('Preview P0 · 90');
+    await expect(pane).toContainText('Jira priority order · bug-v1 score preview');
+    await expect(pane.getByTestId('tech-debt-backlog-card').first()).toContainText('RHAI-301');
+    await expect(pane.getByTestId('tech-debt-backlog-card').last()).toContainText('RHAI-307');
+    await expect(pane.getByTestId('tech-debt-backlog-card').first()).toContainText('BU/SSA/field feedback');
+    await expect(pane.getByTestId('tech-debt-backlog-card').first()).toContainText('Approved Release Blocker');
+
+    expect(page.errors).toHaveLength(0);
+  });
+
   test('Feature List shows FPDoR readiness badges', async ({ page }) => {
     await page.goto('/#/releases/plan?tab=feature-readiness');
     await page.waitForLoadState('networkidle');

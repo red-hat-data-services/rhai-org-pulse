@@ -15,6 +15,9 @@ vi.mock('../../../client/plan/views/DashboardView.vue', function() {
 vi.mock('../../../client/plan/views/FeatureReadinessView.vue', function() {
   return { default: { name: 'FeatureReadinessView', template: '<div>Features</div>' } }
 })
+vi.mock('../../../client/plan/views/TechDebtPrioritizationView.vue', function() {
+  return { default: { name: 'TechDebtPrioritizationView', template: '<div data-testid="tech-debt-prioritization">Tech Debt Prioritization</div>' } }
+})
 vi.mock('../../../client/plan/views/DraftPlansView.vue', function() {
   return { default: { name: 'DraftPlansView', template: '<div>Draft Plans Body</div>' } }
 })
@@ -124,5 +127,31 @@ describe('PlanView AI Planner tab', function() {
     await nextTick()
 
     expect(wrapper.find('[data-testid="ai-planner"]').exists()).toBe(true)
+  })
+})
+
+describe('PlanView Tech Debt Prioritization tab', function() {
+  beforeEach(function() {
+    vi.clearAllMocks()
+  })
+
+  it('shows the Tech Debt Prioritization tab after Features List', async function() {
+    apiRequest.mockResolvedValue({ canViewDraftPlans: false })
+    var wrapper = mountPlanView()
+    await flushPromises()
+    await nextTick()
+
+    var buttons = wrapper.findAll('button')
+    var labels = buttons.map(function(button) { return button.text() })
+    expect(labels.indexOf('Tech Debt Prioritization')).toBe(labels.indexOf('Features List (1-n)') + 1)
+  })
+
+  it('renders on a tech-debt-prioritization deep link', async function() {
+    apiRequest.mockResolvedValue({ canViewDraftPlans: false })
+    var wrapper = mountPlanView({ tab: 'tech-debt-prioritization' })
+    await flushPromises()
+    await nextTick()
+
+    expect(wrapper.find('[data-testid="tech-debt-prioritization"]').exists()).toBe(true)
   })
 })
