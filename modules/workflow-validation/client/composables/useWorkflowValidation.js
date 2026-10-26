@@ -21,6 +21,7 @@ export const filters = reactive({
   action: '',
   q: '',
   jiraScope: '',
+  jiraSuiteMode: 'run',
   testSuite: '',
   invocationId: '',
   datePreset: '90',
@@ -39,6 +40,7 @@ export function resetFilters() {
   filters.action = ''
   filters.q = ''
   filters.jiraScope = ''
+  filters.jiraSuiteMode = 'run'
   filters.testSuite = ''
   filters.invocationId = ''
   filters.datePreset = '90'
@@ -226,6 +228,7 @@ export function runOutcomeCounts(run = {}) {
 
 export function useWorkflowValidation() {
   const getFilters = () => initializeVersionFilter()
+  const getScopedFilters = (params = {}) => apiRequest(`${BASE}/filters${buildQuery(params, {})}`)
   const getOverview = (extra = {}) => filteredRequest('overview', ['version', 'dateFrom', 'dateTo', 'testSuite', 'invocationId'], extra)
   const getCharts = (extra = {}) => filteredRequest('charts', ['version', 'dateFrom', 'dateTo', 'testSuite', 'invocationId'], extra)
   const getRuns = (cursor = '', size = 25, sorting = {}) => filteredRequest('runs', ['version', 'verdict', 'workflow', 'q', 'testSuite', 'invocationId', 'dateFrom', 'dateTo'], { cursor, size, ...sorting })
@@ -239,7 +242,7 @@ export function useWorkflowValidation() {
   const getTestSuite = (suite, invocationId) => apiRequest(`${BASE}/test-suites/${encodeURIComponent(suite)}/${encodeURIComponent(invocationId)}`)
 
   return {
-    getFilters, getOverview, getCharts, getRuns, getRun, getBugs,
+    getFilters, getScopedFilters, getOverview, getCharts, getRuns, getRun, getBugs,
     getWorkflows, getWorkflowHistory,
     getCompareRuns, getRunCompare, getTestSuites, getTestSuite
   }
