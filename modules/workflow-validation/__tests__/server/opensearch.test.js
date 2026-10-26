@@ -158,17 +158,11 @@ describe('workflow-validation live schema routes', () => {
       const body = JSON.parse(options.body)
       expect(url).toContain(`/${RUNS_INDEX}/`)
       expect(body.aggs.test_suites.terms.field).toBe('telemetry_suite')
-      expect(body.query.bool.filter).toEqual(expect.arrayContaining([
-        { term: { telemetry_suite: 'release-gate' } },
-        { range: { timestamp: { gte: '2026-10-01', lte: '2026-10-07T23:59:59.999Z' } } }
-      ]))
       expect(JSON.stringify(body)).not.toContain('telemetry_origin')
       return Promise.resolve(jsonResponse({ aggregations: {} }))
     }))
     const routes = register()
-    await routes['/filters'].at(-1)({
-      query: { testSuite: 'release-gate', dateFrom: '2026-10-01', dateTo: '2026-10-07' }
-    }, makeResponse())
+    await routes['/filters'].at(-1)({ query: {} }, makeResponse())
   })
 
   it('searches text that is visible in each list', () => {

@@ -313,8 +313,10 @@ test.describe('Workflow Validation module @workflow-validation', () => {
 
   test('switches Jira between suite, release, date, and all-bug scopes', async ({ page }) => {
     const bugRequests = []
+    const workflowRequests = []
     page.on('request', (request) => {
       if (request.url().includes('/api/modules/workflow-validation/bugs')) bugRequests.push(request.url())
+      if (request.url().includes('/api/modules/workflow-validation/workflows')) workflowRequests.push(request.url())
     })
 
     await page.goto('/#/workflow-validation/activity')
@@ -332,6 +334,12 @@ test.describe('Workflow Validation module @workflow-validation', () => {
       const url = new URL(bugRequests.at(-1))
       return url.searchParams.get('testSuite') === 'productization' &&
         !url.searchParams.has('invocationId') &&
+        Boolean(url.searchParams.get('dateFrom')) &&
+        Boolean(url.searchParams.get('dateTo'))
+    }).toBe(true)
+    await expect.poll(() => {
+      const url = new URL(workflowRequests.at(-1))
+      return url.searchParams.get('testSuite') === 'productization' &&
         Boolean(url.searchParams.get('dateFrom')) &&
         Boolean(url.searchParams.get('dateTo'))
     }).toBe(true)

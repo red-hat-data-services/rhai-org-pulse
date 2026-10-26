@@ -371,23 +371,12 @@ module.exports = function registerRoutes(router, context) {
    *   get:
    *     summary: Distinct values for the filter bar (versions, providers, workflows)
    *     tags: [Workflow Validation]
-   *     parameters:
-   *       - { in: query, name: version, schema: { type: string } }
-   *       - { in: query, name: testSuite, schema: { type: string } }
-   *       - { in: query, name: dateFrom, schema: { type: string, format: date } }
-   *       - { in: query, name: dateTo, schema: { type: string, format: date } }
    *     responses:
    *       200: { description: Filter option lists }
    */
   router.get('/filters', requireAuth, safe(async function (req, res) {
     const body = {
       size: 0,
-      query: runFilters({
-        version: req.query.version,
-        testSuite: req.query.testSuite,
-        dateFrom: req.query.dateFrom,
-        dateTo: req.query.dateTo
-      }),
       aggs: {
         versions: { terms: { field: 'rhoai_version', size: 100 } },
         providers: { terms: { field: 'inference_provider', size: 20 } },
@@ -988,6 +977,7 @@ module.exports = function registerRoutes(router, context) {
    *     tags: [Workflow Validation]
    *     parameters:
    *       - { in: query, name: version, schema: { type: string } }
+   *       - { in: query, name: testSuite, schema: { type: string } }
    *       - { in: query, name: verdict, schema: { type: string } }
    *       - { in: query, name: q, schema: { type: string }, description: Partial workflow name }
    *       - { in: query, name: dateFrom, schema: { type: string, format: date } }

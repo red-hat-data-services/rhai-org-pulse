@@ -228,13 +228,12 @@ export function runOutcomeCounts(run = {}) {
 
 export function useWorkflowValidation() {
   const getFilters = () => initializeVersionFilter()
-  const getScopedFilters = (params = {}) => apiRequest(`${BASE}/filters${buildQuery(params, {})}`)
   const getOverview = (extra = {}) => filteredRequest('overview', ['version', 'dateFrom', 'dateTo', 'testSuite', 'invocationId'], extra)
   const getCharts = (extra = {}) => filteredRequest('charts', ['version', 'dateFrom', 'dateTo', 'testSuite', 'invocationId'], extra)
   const getRuns = (cursor = '', size = 25, sorting = {}) => filteredRequest('runs', ['version', 'verdict', 'workflow', 'q', 'testSuite', 'invocationId', 'dateFrom', 'dateTo'], { cursor, size, ...sorting })
   const getRun = (executionId) => apiRequest(`${BASE}/runs/${encodeURIComponent(executionId)}`)
   const getBugs = (cursor = '', size = 50) => filteredRequest('bugs', ['version', 'testSuite', 'invocationId', 'workflow', 'category', 'action', 'q', 'dateFrom', 'dateTo'], { cursor, size })
-  const getWorkflows = (extra = {}) => filteredRequest('workflows', ['version', 'q', 'dateFrom', 'dateTo'], extra)
+  const getWorkflows = (extra = {}) => filteredRequest('workflows', ['version', 'q', 'testSuite', 'dateFrom', 'dateTo'], extra)
   const getWorkflowHistory = (workflow) => filteredRequest('workflow-history', ['version', 'dateFrom', 'dateTo'], { workflow })
   const getCompareRuns = (testSuite = '') => apiRequest(`${BASE}/compare-runs${buildQuery({ testSuite }, {})}`)
   const getRunCompare = (baselineInvocation, targetInvocation, testSuite) => apiRequest(`${BASE}/run-compare${buildQuery({ baselineInvocation, targetInvocation, testSuite }, {})}`)
@@ -242,7 +241,7 @@ export function useWorkflowValidation() {
   const getTestSuite = (suite, invocationId) => apiRequest(`${BASE}/test-suites/${encodeURIComponent(suite)}/${encodeURIComponent(invocationId)}`)
 
   return {
-    getFilters, getScopedFilters, getOverview, getCharts, getRuns, getRun, getBugs,
+    getFilters, getOverview, getCharts, getRuns, getRun, getBugs,
     getWorkflows, getWorkflowHistory,
     getCompareRuns, getRunCompare, getTestSuites, getTestSuite
   }

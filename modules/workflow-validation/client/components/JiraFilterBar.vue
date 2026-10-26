@@ -75,7 +75,7 @@ import { Search as SearchIcon } from 'lucide-vue-next'
 import { defaultDateRange, filters, formatDate, formatSuiteName, highestNumberedVersion, useWorkflowValidation } from '../composables/useWorkflowValidation'
 
 const emit = defineEmits(['change', 'ready'])
-const { getFilters, getScopedFilters, getTestSuite, getTestSuites } = useWorkflowValidation()
+const { getFilters, getTestSuite, getTestSuites, getWorkflows } = useWorkflowValidation()
 const options = ref({ versions: [], workflows: [], testSuites: [] })
 const workflows = ref([])
 const suiteRuns = ref([])
@@ -108,7 +108,7 @@ async function loadRunTests() {
 function setWorkflows(rows) {
   workflows.value = (rows || []).map((test) => ({
     value: test.value || test.workflow,
-    label: test.label || test.workflow_label || test.workflow
+    label: test.label || test.workflowLabel || test.workflow_label || test.workflow
   })).filter((test, index, items) => test.value && items.findIndex((item) => item.value === test.value) === index)
     .sort((a, b) => a.label.localeCompare(b.label))
   if (filters.workflow && !workflows.value.some((workflow) => workflow.value === filters.workflow)) filters.workflow = ''
@@ -116,7 +116,9 @@ function setWorkflows(rows) {
 
 async function loadSuiteDateTests() {
   if (!filters.testSuite) return
-  const response = await getScopedFilters({
+  const response = await getWorkflows({
+    version: '',
+    q: '',
     testSuite: filters.testSuite,
     dateFrom: filters.dateFrom,
     dateTo: filters.dateTo
