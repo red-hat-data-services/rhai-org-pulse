@@ -10,6 +10,20 @@
     </div>
 
     <aside
+      class="flex items-start gap-3 rounded-xl border border-red-300 bg-red-50 px-4 py-3 text-red-900 dark:border-red-800 dark:bg-red-950/35 dark:text-red-100"
+      role="alert"
+      data-testid="tech-debt-user-testing-warning"
+    >
+      <span class="mt-0.5 text-lg leading-none text-red-600 dark:text-red-300" aria-hidden="true">⚠</span>
+      <div>
+        <h3 class="text-sm font-bold">User testing notice</h3>
+        <p class="mt-0.5 text-sm leading-5 text-red-800 dark:text-red-200">
+          This report is currently under user testing. Results and prioritization may change; validate the underlying Jira data before making delivery decisions and proceed with caution.
+        </p>
+      </div>
+    </aside>
+
+    <aside
       class="flex items-start gap-3 rounded-xl border border-primary-200 bg-primary-50/70 px-4 py-3 dark:border-primary-800 dark:bg-primary-950/30"
       aria-labelledby="tech-debt-importance-heading"
       data-testid="tech-debt-importance"
@@ -200,6 +214,10 @@
         {{ cockpitData.warning }}
       </div>
 
+      <div v-if="cockpitLoading && cockpitData" class="rounded-xl border border-blue-200 bg-blue-50 px-4 py-3 text-sm text-blue-800 dark:border-blue-800 dark:bg-blue-950/30 dark:text-blue-200" role="status" data-testid="tech-debt-background-refresh">
+        Updating Jira data in the background. Previously loaded results remain available while the refresh completes.
+      </div>
+
       <div v-if="cockpitError" class="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800 dark:border-red-800 dark:bg-red-900/20 dark:text-red-200" role="alert" data-testid="tech-debt-error">
         <span>{{ cockpitError }}</span>
         <button type="button" class="rounded-lg border border-red-300 px-3 py-1.5 font-semibold hover:bg-red-100 dark:border-red-700 dark:hover:bg-red-900/40" @click="loadIssues(false)">
@@ -213,7 +231,7 @@
             <p class="text-xs font-bold uppercase tracking-[0.16em] text-primary-600 dark:text-primary-300">Tech Debt Cockpit</p>
             <h3 class="mt-1 text-lg font-bold text-gray-900 dark:text-gray-100">Open engineering debt at a glance</h3>
           <p v-if="cockpitData?.fetchedAt" class="mt-1 text-xs text-gray-500 dark:text-gray-400" data-testid="tech-debt-fetched-at">
-              Refreshed {{ formatTimestamp(cockpitData.fetchedAt) }} · {{ cockpitData.cacheStatus === 'hit' ? 'cached Jira data' : cockpitData.cacheStatus === 'stale' ? 'stale Jira data' : 'live Jira data' }}
+              Refreshed {{ formatTimestamp(cockpitData.fetchedAt) }} · {{ cockpitData.clientCacheStatus === 'hit' ? 'saved session data' : cockpitData.cacheStatus === 'hit' ? 'cached Jira data' : cockpitData.cacheStatus === 'stale' ? 'stale Jira data' : 'live Jira data' }}
           </p>
           <p class="mt-2 max-w-2xl text-xs text-gray-500 dark:text-gray-400">
             Bug and vulnerability scores guide queue ordering and never override mandatory organizational security policy.
@@ -297,6 +315,11 @@ import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { apiRequest } from '@shared/client/services/api'
 import TechDebtIssueCard from '../components/TechDebtIssueCard.vue'
 import TechDebtScoringRubricModal from '../components/TechDebtScoringRubricModal.vue'
+import {
+  readTechDebtIssueCache,
+  techDebtIssueCacheKey,
+  writeTechDebtIssueCache
+} from '../services/techDebtIssueCache'
 
 const PAGE_SIZE = 25
 const componentOptions = ref([])
@@ -407,6 +430,16 @@ function issuePath(refresh) {
   return '/modules/releases/tech-debt/issues?' + params.toString()
 }
 
+function normalizeCockpitResponse(response, clientCacheStatus) {
+  return {
+    ...response,
+    clientCacheStatus,
+    counts: response?.counts || {},
+    inFlight: Array.isArray(response?.inFlight) ? response.inFlight : [],
+    backlog: Array.isArray(response?.backlog) ? response.backlog : []
+  }
+}
+
 async function loadIssues(refresh) {
   const requestId = ++issueRequestId
   if (!selectedComponents.value.length) {
@@ -416,25 +449,40 @@ async function loadIssues(refresh) {
     return
   }
 
+  const cacheKey = techDebtIssueCacheKey(
+    selectedComponents.value,
+    selectedIssueType.value,
+    selectedTriage.value
+  )
+  const cached = refresh ? null : readTechDebtIssueCache(cacheKey)
+
+  if (cached) {
+    cockpitData.value = normalizeCockpitResponse(cached.data, 'hit')
+    if (cached.fresh) {
+      cockpitError.value = ''
+      cockpitLoading.value = false
+      visibleInFlight.value = PAGE_SIZE
+      visibleBacklog.value = PAGE_SIZE
+      return
+    }
+  }
+
   cockpitLoading.value = true
   cockpitError.value = ''
   visibleInFlight.value = PAGE_SIZE
   visibleBacklog.value = PAGE_SIZE
-  if (!refresh) cockpitData.value = null
+  if (!refresh && !cached) cockpitData.value = null
 
   try {
     const response = await apiRequest(issuePath(refresh))
+    const normalizedResponse = normalizeCockpitResponse(response, 'network')
+    writeTechDebtIssueCache(cacheKey, normalizedResponse)
     if (requestId !== issueRequestId) return
-    cockpitData.value = {
-      ...response,
-      counts: response?.counts || {},
-      inFlight: Array.isArray(response?.inFlight) ? response.inFlight : [],
-      backlog: Array.isArray(response?.backlog) ? response.backlog : []
-    }
+    cockpitData.value = normalizedResponse
   } catch (err) {
     if (requestId !== issueRequestId) return
     cockpitError.value = err && err.message ? err.message : 'Unable to load tech debt issues.'
-    if (!refresh) cockpitData.value = null
+    if (!refresh && !cached) cockpitData.value = null
   } finally {
     if (requestId === issueRequestId) cockpitLoading.value = false
   }

@@ -1173,8 +1173,9 @@ preserves the arithmetic before these guardrails.
 `conflicting-review-outcome`, and `missing-cvss`. The optional
 `triage=exceptions` query returns only Vulnerabilities with at least one flag.
 All date comparisons use UTC calendar dates. The response is calculated from
-the live, five-minute-cached Jira cohort and is independent of the CVE
-Sustaining report's 90-day timeline and exclusions.
+a live Jira query scoped to the selected components. Up to six recent component
+selections are cached for five minutes and the response remains independent of
+the CVE Sustaining report's 90-day timeline and exclusions.
 
 ### Bug score
 

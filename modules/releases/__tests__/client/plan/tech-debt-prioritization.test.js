@@ -7,6 +7,12 @@ vi.mock('@shared/client/services/api', function () {
 
 import { apiRequest } from '@shared/client/services/api'
 import TechDebtPrioritizationView from '../../../client/plan/views/TechDebtPrioritizationView.vue'
+import {
+  clearTechDebtIssueCache,
+  TECH_DEBT_CACHE_TTL_MS,
+  techDebtIssueCacheKey,
+  writeTechDebtIssueCache
+} from '../../../client/plan/services/techDebtIssueCache'
 
 const componentsResponse = {
   project: 'RHAI',
@@ -127,6 +133,7 @@ async function selectComponent(wrapper, name = 'AI Gateway') {
 describe('TechDebtPrioritizationView', function () {
   beforeEach(function () {
     vi.clearAllMocks()
+    clearTechDebtIssueCache()
   })
 
   it('requires a component before requesting issues', async function () {
@@ -136,6 +143,8 @@ describe('TechDebtPrioritizationView', function () {
 
     expect(apiRequest).toHaveBeenCalledTimes(1)
     expect(apiRequest).toHaveBeenCalledWith('/modules/releases/tech-debt/components')
+    expect(wrapper.get('[data-testid="tech-debt-user-testing-warning"]').text()).toContain('This report is currently under user testing')
+    expect(wrapper.get('[data-testid="tech-debt-user-testing-warning"]').text()).toContain('proceed with caution')
     expect(wrapper.get('[data-testid="tech-debt-importance"]').text()).toContain('Why this report matters')
     expect(wrapper.get('[data-testid="tech-debt-importance"]').text()).toContain('CVE remediation as part of every feature')
     expect(wrapper.find('[data-testid="tech-debt-component-required"]').exists()).toBe(true)
@@ -201,6 +210,70 @@ describe('TechDebtPrioritizationView', function () {
     expect(wrapper.findAll('[data-testid="tech-debt-issue-type"]').map(node => node.text())).toEqual(['Bug', 'Vulnerability'])
     expect(wrapper.findAll('[data-testid="tech-debt-status"]').map(node => node.text())).toEqual(['In Progress', 'Open'])
     expect(wrapper.get('a[href="https://jira.example.test/browse/RHAI-20"]').attributes('target')).toBe('_blank')
+  })
+
+  it('instantly restores a previously loaded component selection from the session cache', async function () {
+    apiRequest.mockImplementation(function (path) {
+      if (path === '/modules/releases/tech-debt/components') return Promise.resolve(componentsResponse)
+      const modelServing = path.includes('component=Model+Serving')
+      const component = modelServing ? 'Model Serving' : 'AI Gateway'
+      const key = modelServing ? 'RHAI-MODEL-1' : 'RHAI-GATEWAY-1'
+      return Promise.resolve(cockpitResponse({
+        selectedComponents: [component],
+        counts: { total: 1, inFlight: 0, backlog: 1, bugs: 1, vulnerabilities: 0 },
+        inFlight: [],
+        backlog: [scoredBug(key, { rank: 1, components: [component] })]
+      }))
+    })
+    const wrapper = mount(TechDebtPrioritizationView)
+    await flushPromises()
+
+    await selectComponent(wrapper, 'AI Gateway')
+    expect(wrapper.get('[data-testid="tech-debt-backlog-pane"]').text()).toContain('RHAI-GATEWAY-1')
+
+    await wrapper.get('input[aria-label="AI Gateway"]').setValue(false)
+    await flushPromises()
+    await wrapper.get('input[aria-label="Model Serving"]').setValue(true)
+    await flushPromises()
+    expect(wrapper.get('[data-testid="tech-debt-backlog-pane"]').text()).toContain('RHAI-MODEL-1')
+
+    await wrapper.get('input[aria-label="Model Serving"]').setValue(false)
+    await flushPromises()
+    await wrapper.get('input[aria-label="AI Gateway"]').setValue(true)
+    await flushPromises()
+
+    const issueRequests = apiRequest.mock.calls.map(function (call) { return call[0] }).filter(function (path) {
+      return path.startsWith('/modules/releases/tech-debt/issues?')
+    })
+    expect(issueRequests).toHaveLength(2)
+    expect(wrapper.get('[data-testid="tech-debt-backlog-pane"]').text()).toContain('RHAI-GATEWAY-1')
+    expect(wrapper.get('[data-testid="tech-debt-fetched-at"]').text()).toContain('saved session data')
+  })
+
+  it('keeps stale cached stats visible while refreshing them in the background', async function () {
+    let resolveIssues
+    apiRequest.mockImplementation(function (path) {
+      if (path === '/modules/releases/tech-debt/components') return Promise.resolve(componentsResponse)
+      return new Promise(function (resolve) { resolveIssues = resolve })
+    })
+    writeTechDebtIssueCache(
+      techDebtIssueCacheKey(['AI Gateway'], '', ''),
+      cockpitResponse({ counts: { total: 7, inFlight: 1, backlog: 6, bugs: 6, vulnerabilities: 1 } }),
+      Date.now() - TECH_DEBT_CACHE_TTL_MS
+    )
+    const wrapper = mount(TechDebtPrioritizationView)
+    await flushPromises()
+
+    await selectComponent(wrapper, 'AI Gateway')
+
+    expect(wrapper.get('[data-testid="tech-debt-summary"]').text()).toContain('7')
+    expect(wrapper.get('[data-testid="tech-debt-background-refresh"]').text()).toContain('Previously loaded results remain available')
+
+    resolveIssues(cockpitResponse({ counts: { total: 3, inFlight: 1, backlog: 2, bugs: 2, vulnerabilities: 1 } }))
+    await flushPromises()
+
+    expect(wrapper.get('[data-testid="tech-debt-summary"]').text()).toContain('3')
+    expect(wrapper.find('[data-testid="tech-debt-background-refresh"]').exists()).toBe(false)
   })
 
   it('sends the selected Bug or CVE issue type filter with the component request', async function () {

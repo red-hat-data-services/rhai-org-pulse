@@ -111,7 +111,7 @@ describe('Tech Debt Prioritization routes', function () {
     expect(jira.jiraRequest).not.toHaveBeenCalled()
   })
 
-  it('queries the complete five-project open Bug and Vulnerability cohort', async function () {
+  it('queries a component-scoped five-project open Bug and Vulnerability cohort', async function () {
     const jira = jiraWithIssues([])
     const res = makeResponse()
 
@@ -121,7 +121,8 @@ describe('Tech Debt Prioritization routes', function () {
       return new URLSearchParams(value.split('?')[1]).get('fields') !== 'key'
     })
     const params = new URLSearchParams(path.split('?')[1])
-    expect(params.get('jql')).toBe('project in (RHAI, RHAIENG, RHOAIENG, INFERENG, AIPCC) AND issuetype in (Bug, Vulnerability) AND statusCategory != Done')
+    expect(params.get('jql')).toBe(registerTechDebtRoutes._test.scopedIssueJql(['Model Serving']))
+    expect(params.get('jql')).toContain('component in ("Model Serving")')
     expect(params.get('fields')).toContain('customfield_10859')
     expect(params.get('fields')).toContain('customfield_10847')
     expect(params.get('fields')).toContain('reporter')
@@ -130,7 +131,7 @@ describe('Tech Debt Prioritization routes', function () {
     const sfdcPath = jira.jiraRequest.mock.calls.map(call => call[0]).find(function (value) {
       return (new URLSearchParams(value.split('?')[1]).get('jql') || '').includes('SFDC_Cases_Counter')
     })
-    expect(new URLSearchParams(sfdcPath.split('?')[1]).get('jql')).toBe(registerTechDebtRoutes._test.SFDC_BUG_JQL)
+    expect(new URLSearchParams(sfdcPath.split('?')[1]).get('jql')).toBe(registerTechDebtRoutes._test.scopedSfdcJql(['Model Serving']))
     expect(res.body.projects).toEqual(['RHAI', 'RHAIENG', 'RHOAIENG', 'INFERENG', 'AIPCC'])
     expect(res.body.bugScoring).toEqual({ modelVersion: 'bug-v1', mode: 'active', rankingApplied: true })
     expect(res.body.queueScoring).toEqual({ mode: 'combined', rankingField: 'priorityScore' })
@@ -150,6 +151,12 @@ describe('Tech Debt Prioritization routes', function () {
     const secondParams = new URLSearchParams(jira.jiraRequest.mock.calls[1][0].split('?')[1])
     expect(secondParams.get('nextPageToken')).toBe('page-2')
     expect(secondParams.get('properties')).toBe('rh-sla-dt')
+  })
+
+  it('quotes selected component names safely in Jira JQL', function () {
+    expect(registerTechDebtRoutes._test.componentJqlClause(['Model "Serving"', 'Pipelines\\Core'])).toBe(
+      'component in ("Model \\"Serving\\"", "Pipelines\\\\Core")'
+    )
   })
 
   it('paginates the SFDC key lookup used for customer-linked Bugs', async function () {
@@ -407,6 +414,23 @@ describe('Tech Debt Prioritization routes', function () {
     expect(first.body.cacheStatus).toBe('refreshed')
     expect(cached.body.cacheStatus).toBe('hit')
     expect(refreshed.body.cacheStatus).toBe('refreshed')
+  })
+
+  it('keeps separate reusable caches for recently selected component sets', async function () {
+    const jira = jiraWithIssues([rawIssue('RHAI-1')])
+    const handler = register(jira).issues
+
+    const modelServing = makeResponse()
+    await handler({ query: { component: 'Model Serving' } }, modelServing)
+    const workbench = makeResponse()
+    await handler({ query: { component: 'Workbench' } }, workbench)
+    const modelServingAgain = makeResponse()
+    await handler({ query: { component: 'Model Serving' } }, modelServingAgain)
+
+    expect(jira.jiraRequest).toHaveBeenCalledTimes(4)
+    expect(modelServing.body.cacheStatus).toBe('refreshed')
+    expect(workbench.body.cacheStatus).toBe('refreshed')
+    expect(modelServingAgain.body.cacheStatus).toBe('hit')
   })
 
   it('serves stale cached data with a warning when Jira refresh fails', async function () {

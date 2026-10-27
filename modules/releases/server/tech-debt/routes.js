@@ -14,6 +14,7 @@ const { scoreBug } = require('./bug-score')
 const RHAI_PROJECT = 'RHAI'
 const PROJECTS = ['RHAI', 'RHAIENG', 'RHOAIENG', 'INFERENG', 'AIPCC']
 const CACHE_TTL_MS = 5 * 60 * 1000
+const MAX_CACHE_ENTRIES = 6
 const RELEASE_BLOCKER_FIELD_ID = 'customfield_10847'
 const RELEASE_BLOCKER_OPTION_LABELS = {
   '16772': 'Approved',
@@ -43,8 +44,8 @@ const ISSUE_JQL = [
 ].join(' AND ')
 const SFDC_BUG_JQL = ISSUE_JQL + ' AND issuetype = Bug AND SFDC_Cases_Counter > 0'
 
-let issueCache = null
-let issueFetchPromise = null
+const issueCaches = new Map()
+const issueFetchPromises = new Map()
 
 function normalizeText(value) {
   return String(value || '').trim()
@@ -149,12 +150,34 @@ function isRefreshRequested(query) {
   return normalizeText(query && query.refresh).toLowerCase() === 'true'
 }
 
-async function fetchIssuePages(jira) {
+function escapeJqlString(value) {
+  return normalizeText(value).replace(/\\/g, '\\\\').replace(/"/g, '\\"')
+}
+
+function componentJqlClause(components) {
+  return 'component in (' + components.map(function (component) {
+    return '"' + escapeJqlString(component) + '"'
+  }).join(', ') + ')'
+}
+
+function scopedIssueJql(components) {
+  return ISSUE_JQL + ' AND ' + componentJqlClause(components)
+}
+
+function scopedSfdcJql(components) {
+  return SFDC_BUG_JQL + ' AND ' + componentJqlClause(components)
+}
+
+function cohortCacheKey(components) {
+  return components.slice().sort(function (a, b) { return a.localeCompare(b) }).join('\u0000')
+}
+
+async function fetchIssuePages(jira, jql = ISSUE_JQL) {
   const rows = []
   let nextPageToken = null
   while (true) {
     const params = new URLSearchParams({
-      jql: ISSUE_JQL,
+      jql,
       fields: ISSUE_FIELDS,
       properties: SLA_DATE_PROPERTY,
       maxResults: '100'
@@ -187,10 +210,10 @@ async function fetchIssueKeySet(jira, jql) {
   return keys
 }
 
-async function fetchIssueCohort(jira) {
+async function fetchIssueCohort(jira, selectedComponents) {
   const [rows, sfdcBugKeys] = await Promise.all([
-    fetchIssuePages(jira),
-    fetchIssueKeySet(jira, SFDC_BUG_JQL)
+    fetchIssuePages(jira, scopedIssueJql(selectedComponents)),
+    fetchIssueKeySet(jira, scopedSfdcJql(selectedComponents))
   ])
   const deduplicated = new Map()
   for (const row of Array.isArray(rows) ? rows : []) {
@@ -201,32 +224,44 @@ async function fetchIssueCohort(jira) {
   return Array.from(deduplicated.values())
 }
 
-function freshCache() {
-  return issueCache && Date.now() - issueCache.cachedAt < CACHE_TTL_MS
+function freshCache(entry) {
+  return entry && Date.now() - entry.cachedAt < CACHE_TTL_MS
 }
 
-async function loadIssueCohort(jira, refresh) {
-  if (!refresh && freshCache()) {
-    return { issues: issueCache.issues, fetchedAt: issueCache.fetchedAt, cacheStatus: 'hit', warning: null }
+function writeIssueCache(key, entry) {
+  issueCaches.delete(key)
+  issueCaches.set(key, entry)
+  while (issueCaches.size > MAX_CACHE_ENTRIES) {
+    issueCaches.delete(issueCaches.keys().next().value)
+  }
+}
+
+async function loadIssueCohort(jira, selectedComponents, refresh) {
+  const key = cohortCacheKey(selectedComponents)
+  const cached = issueCaches.get(key)
+  if (!refresh && freshCache(cached)) {
+    writeIssueCache(key, cached)
+    return { issues: cached.issues, fetchedAt: cached.fetchedAt, cacheStatus: 'hit', warning: null }
   }
 
-  if (!issueFetchPromise) {
-    issueFetchPromise = fetchIssueCohort(jira).then(function (issues) {
+  if (!issueFetchPromises.has(key)) {
+    const fetchPromise = fetchIssueCohort(jira, selectedComponents).then(function (issues) {
       const fetchedAt = new Date().toISOString()
-      issueCache = { issues, fetchedAt, cachedAt: Date.now() }
+      writeIssueCache(key, { issues, fetchedAt, cachedAt: Date.now() })
       return { issues, fetchedAt, cacheStatus: 'refreshed', warning: null }
     }).finally(function () {
-      issueFetchPromise = null
+      issueFetchPromises.delete(key)
     })
+    issueFetchPromises.set(key, fetchPromise)
   }
 
   try {
-    return await issueFetchPromise
+    return await issueFetchPromises.get(key)
   } catch (err) {
-    if (issueCache) {
+    if (cached) {
       return {
-        issues: issueCache.issues,
-        fetchedAt: issueCache.fetchedAt,
+        issues: cached.issues,
+        fetchedAt: cached.fetchedAt,
         cacheStatus: 'stale',
         warning: 'Jira is temporarily unavailable. Showing the most recently cached tech debt data.'
       }
@@ -370,7 +405,7 @@ function registerTechDebtRoutes(router, { requireAuth, requireScope, jira }) {
    *   get:
    *     tags: [Releases]
    *     summary: Get open tech debt issues for selected components
-   *     description: Returns unresolved Bugs and Vulnerabilities split into in-flight and backlog panes, with both issue types combined and ordered by effective priority score.
+   *     description: Returns unresolved Bugs and Vulnerabilities split into in-flight and backlog panes, with both issue types combined and ordered by effective priority score. Jira queries are scoped to the selected components and recent selections are cached for five minutes.
    *     parameters:
    *       - in: query
    *         name: component
@@ -425,7 +460,7 @@ function registerTechDebtRoutes(router, { requireAuth, requireScope, jira }) {
     }
 
     try {
-      const cohort = await loadIssueCohort(jira, isRefreshRequested(req.query))
+      const cohort = await loadIssueCohort(jira, selectedComponents, isRefreshRequested(req.query))
       res.json(buildCockpitResponse(cohort, selectedComponents, issueTypeFilter.value, triageFilter.value))
     } catch (err) {
       console.error('[releases/tech-debt] Issue fetch failed:', err.message)
@@ -437,17 +472,22 @@ function registerTechDebtRoutes(router, { requireAuth, requireScope, jira }) {
 registerTechDebtRoutes._test = {
   ISSUE_FIELDS,
   ISSUE_JQL,
+  MAX_CACHE_ENTRIES,
   SFDC_BUG_JQL,
   buildCockpitResponse,
+  cohortCacheKey,
+  componentJqlClause,
   comparePriorityScores,
   fetchIssueKeySet,
   fetchIssuePages,
   normalizeIssue,
   normalizeReleaseBlockerStatus,
   orderPaneIssues,
+  scopedIssueJql,
+  scopedSfdcJql,
   resetCache: function () {
-    issueCache = null
-    issueFetchPromise = null
+    issueCaches.clear()
+    issueFetchPromises.clear()
   }
 }
 

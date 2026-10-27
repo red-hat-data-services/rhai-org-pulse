@@ -1257,6 +1257,8 @@ test.describe('Releases FPDoR Readiness @releases', () => {
     await page.goto('/#/releases/plan?tab=tech-debt-prioritization');
     await page.waitForLoadState('networkidle');
 
+    await expect(page.getByTestId('tech-debt-user-testing-warning')).toContainText('This report is currently under user testing');
+    await expect(page.getByTestId('tech-debt-user-testing-warning')).toContainText('proceed with caution');
     await expect(page.getByTestId('tech-debt-importance')).toContainText('Why this report matters');
     await expect(page.getByTestId('tech-debt-importance')).toContainText('CVE remediation as part of every feature');
     await page.getByTestId('vulnerability-rubric-open').click();
@@ -1296,13 +1298,22 @@ test.describe('Releases FPDoR Readiness @releases', () => {
     await expect(page.getByRole('link', { name: /RHAI-201/ })).toHaveAttribute('href', 'https://redhat.atlassian.net/browse/RHAI-201');
     expect(issueRequests[0]).toContain('component=AI+Gateway');
 
-    await page.getByTestId('tech-debt-refresh').click();
+    await page.getByTestId('tech-debt-component-filter').click();
+    await page.getByRole('checkbox', { name: 'AI Gateway' }).uncheck();
+    await page.getByRole('checkbox', { name: 'Model Serving' }).check();
     await expect.poll(() => issueRequests.length).toBe(2);
-    expect(issueRequests[1]).toContain('refresh=true');
+    await page.getByRole('checkbox', { name: 'Model Serving' }).uncheck();
+    await page.getByRole('checkbox', { name: 'AI Gateway' }).check();
+    await expect(page.getByTestId('tech-debt-fetched-at')).toContainText('saved session data');
+    expect(issueRequests).toHaveLength(2);
+
+    await page.getByTestId('tech-debt-refresh').click();
+    await expect.poll(() => issueRequests.length).toBe(3);
+    expect(issueRequests[2]).toContain('refresh=true');
 
     await page.getByTestId('tech-debt-triage-filter').selectOption('exceptions');
-    await expect.poll(() => issueRequests.length).toBe(3);
-    expect(issueRequests[2]).toContain('triage=exceptions');
+    await expect.poll(() => issueRequests.length).toBe(4);
+    expect(issueRequests[3]).toContain('triage=exceptions');
     await expect(page.getByTestId('tech-debt-selected-filters')).toContainText('Needs Triage / Exceptions');
 
     await page.getByTestId('tech-debt-clear-filters').click();
