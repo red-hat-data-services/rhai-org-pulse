@@ -4597,15 +4597,18 @@ function toggleSummary(){
 // ── FETCH TIMELINE MILESTONES FROM RELEASES REGISTRY ─────────────────────────────────
 async function fetchTimelineMilestones(){
   try {
-    const [res36, res37] = await Promise.all([
-      fetch('/api/modules/releases/registry/rhoai-3.6',{signal:AbortSignal.timeout(5000)}),
-      fetch('/api/modules/releases/registry/rhoai-3.7',{signal:AbortSignal.timeout(5000)})
-    ]);
+    // Fetch the collection once instead of requesting optional release IDs directly.
+    // A missing release is an expected fallback condition, while a direct lookup emits
+    // a browser-level 404 even though this function catches the response and recovers.
+    const response=await fetch('/api/modules/releases/registry',{signal:AbortSignal.timeout(5000)});
+    if(!response.ok) throw new Error('Registry fetch failed');
 
-    if(!res36.ok || !res37.ok) throw new Error('Registry fetch failed');
+    const registry=await response.json();
+    const releases=Array.isArray(registry.releases)?registry.releases:[];
+    const rel36=releases.find(release=>release.id==='rhoai-3.6');
+    const rel37=releases.find(release=>release.id==='rhoai-3.7');
 
-    const rel36=await res36.json();
-    const rel37=await res37.json();
+    if(!rel36 || !rel37) throw new Error('Required releases are not in the registry');
 
     const milestones=[];
 
