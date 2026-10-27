@@ -82,7 +82,7 @@ describe('PlanView Draft Plans gate', function() {
     await nextTick()
 
     expect(wrapper.text()).not.toContain('Draft Plans Body')
-    expect(wrapper.text()).toContain('Big Rocks')
+    expect(wrapper.findComponent({ name: 'PmHubView' }).exists()).toBe(true)
   })
 })
 
@@ -148,5 +148,17 @@ describe('PlanView AI Planner tab', function() {
     await nextTick()
 
     expect(wrapper.find('[data-testid="ai-planner"]').exists()).toBe(true)
+  })
+})
+
+describe('PlanView without Big Rocks', function() {
+  it.each([{}, { tab: 'outcomes' }, { tab: 'unknown' }])('opens PM Hub for %j', async function(params) {
+    apiRequest.mockResolvedValue({ canViewDraftPlans: false })
+    var wrapper = mountPlanView(params)
+    await flushPromises()
+
+    expect(wrapper.findComponent({ name: 'PmHubView' }).exists()).toBe(true)
+    expect(wrapper.findComponent({ name: 'DashboardView' }).exists()).toBe(false)
+    expect(wrapper.findAll('button').map(function(button) { return button.text() })).not.toContain('Big Rocks')
   })
 })
