@@ -955,15 +955,14 @@ test.describe('Releases Planning Health @releases', () => {
     logCapturedErrors(page, testInfo);
   });
 
-  test('Big Rocks tab shows planning readiness banner when in planning mode', async ({ page }) => {
+  test('Plan opens PM Hub by default', async ({ page }) => {
     await page.goto('/#/releases/plan');
     await page.waitForLoadState('networkidle');
     await page.waitForTimeout(DEFAULT_PAGE_WAIT_TIME);
 
-    // In demo mode with planning fixture, the planning readiness banner should appear
-    // if the health data has releasePhaseMode === 'planning'
-    // Banner may or may not be visible depending on demo fixture config
-    // Just verify page loads without errors
+    const tabs = page.getByRole('navigation', { name: 'Plan sub-tabs' });
+    await expect(tabs.getByRole('button', { name: 'PM Hub', exact: true })).toHaveClass(/border-primary-500/);
+    await expect(tabs.getByRole('button', { name: 'Big Rocks', exact: true })).toHaveCount(0);
     expect(page.errors).toHaveLength(0);
   });
 
@@ -2229,21 +2228,12 @@ test.describe('Releases Big Rocks hybrid candidates @releases', () => {
     }
   });
 
-  test('Big Rocks plan view loads rock table from candidates', async ({ page }) => {
-    await page.goto('/#/releases/plan');
-    await page.waitForLoadState('networkidle');
-    await page.waitForTimeout(DEFAULT_PAGE_WAIT_TIME);
-
-    const bigRocksTab = page.getByRole('button', { name: /Big Rocks/i }).or(
-      page.locator('button, a, [role="tab"]', { hasText: /Big Rocks/i })
-    );
-    if (await bigRocksTab.first().isVisible().catch(function () { return false; })) {
-      await bigRocksTab.first().click();
-      await page.waitForTimeout(500);
-    }
-
-    // Rock names from demo candidates fixture should render
-    await expect(page.getByText('MaaS', { exact: false }).first()).toBeVisible({ timeout: 10000 });
+  test('legacy Big Rocks link opens PM Hub', async ({ page }) => {
+    await page.goto('/#/releases/plan?tab=outcomes');
+    const tabs = page.getByRole('navigation', { name: 'Plan sub-tabs' });
+    await expect(tabs.getByRole('button', { name: 'PM Hub', exact: true })).toHaveClass(/border-primary-500/);
+    await expect(tabs.getByRole('button', { name: 'Big Rocks', exact: true })).toHaveCount(0);
+    await expect(page.getByRole('heading', { name: 'Big Rocks Dashboard', exact: true })).toHaveCount(0);
     expect(page.errors).toHaveLength(0);
   });
 });
@@ -3329,7 +3319,7 @@ test.describe('Releases AI Planner tab @releases', () => {
     await planner.locator('#f-place').selectOption('EA1');
     await expect(planner.locator('#f-place')).toHaveValue('EA1');
 
-    await page.locator('button', { hasText: 'Big Rocks' }).first().click();
+    await page.getByRole('navigation', { name: 'Plan sub-tabs' }).getByRole('button', { name: 'PM Hub', exact: true }).click();
     await page.waitForTimeout(DEFAULT_PAGE_WAIT_TIME);
     await page.locator('button', { hasText: 'AI Planner' }).first().click();
     await page.waitForTimeout(DEFAULT_PAGE_WAIT_TIME);
