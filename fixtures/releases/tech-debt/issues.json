@@ -1,0 +1,83 @@
+{
+  "projects": ["RHAI", "RHAIENG", "RHOAIENG", "INFERENG", "AIPCC"],
+  "selectedComponents": ["AI Core Platform"],
+  "selectedIssueType": "Bug",
+  "selectedTriage": "all",
+  "bugScoring": {
+    "modelVersion": "bug-v1",
+    "mode": "active",
+    "rankingApplied": true
+  },
+  "queueScoring": {
+    "mode": "combined",
+    "rankingField": "priorityScore"
+  },
+  "asOfDate": "2026-10-26",
+  "fetchedAt": "2026-10-26T12:00:00.000Z",
+  "cacheStatus": "refreshed",
+  "warning": null,
+  "counts": {
+    "total": 1,
+    "inFlight": 0,
+    "backlog": 1,
+    "bugs": 1,
+    "vulnerabilities": 0
+  },
+  "inFlight": [],
+  "backlog": [
+    {
+      "key": "RHAIENG-456",
+      "link": "https://redhat.atlassian.net/browse/RHAIENG-456",
+      "summary": "Customer-reported upgrade regression",
+      "issueType": "Bug",
+      "jiraPriority": "High",
+      "status": "Backlog",
+      "statusCategory": "To Do",
+      "components": ["AI Core Platform"],
+      "assignee": { "id": "engineer-account", "name": "Example Engineer" },
+      "reporter": { "id": "devtestops-account", "name": "DevTestOps Jira Bot" },
+      "createdAt": "2026-07-01T12:00:00.000Z",
+      "updatedAt": "2026-10-20T12:00:00.000Z",
+      "dueDate": "2026-10-25",
+      "fixVersions": ["3.6 GA RHOAI RELEASE"],
+      "labels": ["prerelease-cve-remediation", "test-failed"],
+      "releaseBlockerStatus": "Approved",
+      "hasSfdcCases": true,
+      "cvss": null,
+      "slaDate": null,
+      "rawScore": 95,
+      "priorityScore": 95,
+      "scoreStatus": "scored",
+      "scoreModel": "bug-v1",
+      "primaryBugType": { "code": "customer-linked", "label": "Affecting customer" },
+      "classificationSignals": [
+        { "code": "customer-linked", "label": "Affecting customer", "evidence": "SFDC Cases Counter is populated" },
+        {
+          "code": "prerelease-cve",
+          "label": "Pre-release CVE",
+          "evidence": "prerelease-cve-remediation label and DevTestOps reporter",
+          "evidenceData": { "reporter": { "id": "devtestops-account", "name": "DevTestOps Jira Bot" } }
+        },
+        { "code": "approved-release-blocker", "label": "Approved Release Blocker", "evidence": "Release Blocker is Approved" },
+        {
+          "code": "devtestops-test-failure",
+          "label": "DevTestOps automated test failure",
+          "evidence": "test-failed label and DevTestOps reporter",
+          "evidenceData": { "reporter": { "id": "devtestops-account", "name": "DevTestOps Jira Bot" } }
+        }
+      ],
+      "priorityBand": { "level": "P0", "label": "Immediate", "expectedAction": "Begin within 1–2 business days" },
+      "scoreBreakdown": {
+        "customerImpact": { "points": 30, "state": "Affecting customer", "code": "customer-linked", "evidence": "SFDC Cases Counter is populated" },
+        "deliverySecurity": { "points": 25, "state": "Pre-release CVE", "code": "prerelease-cve", "evidence": "Pre-release CVE rule matched" },
+        "detectionSource": { "points": 4, "state": "DevTestOps automated test failure", "code": "devtestops-test-failure", "evidence": "DevTestOps test-failed rule matched" },
+        "jiraSeverity": { "points": 16, "state": "High", "value": "high" },
+        "dueDate": { "points": 15, "state": "Past due", "date": "2026-10-25", "daysUntil": -1 },
+        "age": { "points": 5, "state": "13+ weeks", "weeks": 16 }
+      },
+      "guardrail": { "applied": false, "minimumScore": null, "reasons": ["Approved Release Blocker guarantees at least P1", "Affecting-customer Blocker/Critical/High priority Bug guarantees at least P1"] },
+      "rank": 1,
+      "rankGroup": "combined"
+    }
+  ]
+}
