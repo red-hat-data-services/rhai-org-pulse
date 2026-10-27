@@ -17,7 +17,7 @@
             The score combines delivery urgency, technical severity, action required, issue age, and tracking uncertainty. The raw maximum is 95 points.
           </p>
           <p v-else class="mt-1 max-w-3xl text-sm text-gray-600 dark:text-gray-300">
-            The preview score balances customer impact, delivery and security risk, detection source, Jira severity, due date, and age. Bugs remain ordered by Jira priority during shadow rollout.
+            The score balances customer impact, delivery and security risk, detection source, Jira severity, due date, and age. Bugs and vulnerabilities are ranked together by effective priority score.
           </p>
         </div>
         <button
@@ -123,7 +123,7 @@
         <section class="mt-5 rounded-xl border border-gray-200 p-4 dark:border-gray-700">
           <h3 class="text-sm font-bold text-gray-900 dark:text-gray-100">Queue ordering</h3>
           <p class="mt-1 text-sm leading-5 text-gray-600 dark:text-gray-300">
-            Vulnerabilities are sorted by effective score (highest first), SLA date (earliest), Jira due date (earliest), CVSS (highest), then creation date (oldest). Bugs use their separate preview rubric and remain ordered by Jira priority during shadow rollout.
+            Bugs and vulnerabilities share one queue sorted by effective score (highest first), SLA date (earliest), Jira due date (earliest), CVSS (highest), then creation date (oldest).
           </p>
           <p class="mt-2 text-xs text-gray-500 dark:text-gray-400">
             Date boundaries use UTC calendar days. “Within seven days” includes today; age uses completed seven-day periods.
@@ -133,9 +133,9 @@
 
         <div v-else data-testid="bug-rubric-content">
           <div class="rounded-xl border border-indigo-200 bg-indigo-50 px-4 py-3 text-sm text-indigo-900 dark:border-indigo-800 dark:bg-indigo-950/40 dark:text-indigo-100">
-            <p class="font-semibold">Preview score = customer + delivery/security + detection + Jira severity + due date + age</p>
+            <p class="font-semibold">Bug score = customer + delivery/security + detection + Jira severity + due date + age</p>
             <p class="mt-1 text-xs leading-5 text-indigo-800 dark:text-indigo-200">
-              Only the highest matching rule in each dimension contributes points. Missing values receive zero points, and the preview score does not yet control Bug ordering.
+              Only the highest matching rule in each dimension contributes points. Missing values receive zero points. The effective score controls position in the combined queue.
             </p>
           </div>
 
@@ -167,7 +167,7 @@
               <h3 class="text-sm font-bold text-gray-900 dark:text-gray-100">Bug guardrails</h3>
               <ul class="mt-3 space-y-2 text-sm leading-5 text-gray-700 dark:text-gray-200">
                 <li><strong>Approved Release Blocker:</strong> effective score is at least 70 (P1 — Urgent).</li>
-                <li><strong>Customer-linked high-severity Bug:</strong> effective score is at least 70 when Jira priority is Blocker, Highest, Critical, or High.</li>
+                <li><strong>Affecting-customer high-severity Bug:</strong> effective score is at least 70 when Jira priority is Blocker, Highest, Critical, or High.</li>
               </ul>
             </section>
           </div>
@@ -206,9 +206,9 @@
           </section>
 
           <section class="mt-5 rounded-xl border border-amber-200 bg-amber-50/60 p-4 dark:border-amber-800 dark:bg-amber-950/20">
-            <h3 class="text-sm font-bold text-gray-900 dark:text-gray-100">Shadow rollout</h3>
+            <h3 class="text-sm font-bold text-gray-900 dark:text-gray-100">Active prioritization</h3>
             <p class="mt-1 text-sm leading-5 text-gray-700 dark:text-gray-200">
-              Bug cards show their preview score and exact evidence, but the queue remains sorted by Jira priority, due date, oldest update, then Jira key. Score-based ordering requires a later explicit decision.
+              Bug-v1 and vulnerability scores are active in one shared queue. Backlog ranks are global across both issue types, with each card exposing the score equation and supporting evidence.
             </p>
           </section>
         </div>
@@ -298,7 +298,7 @@ const bugScoreCategories = [
     name: 'Customer impact',
     max: 30,
     rows: [
-      { label: 'Customer-linked (SFDC)', points: 30 },
+      { label: 'Affecting customer (SFDC)', points: 30 },
       { label: 'BU/SSA/field feedback', points: 15 },
       { label: 'No matching signal', points: 0 }
     ]
@@ -366,7 +366,7 @@ const bugScoreCategories = [
 ]
 
 const bugTypePrecedence = [
-  'Customer-linked defect',
+  'Affecting customer',
   'Pre-release CVE',
   'Approved Release Blocker',
   'BU/SSA/field feedback',
@@ -376,7 +376,7 @@ const bugTypePrecedence = [
 ]
 
 const bugSourceRules = [
-  { label: 'Customer-linked', evidence: 'SFDC Cases Counter > 0 from the parallel cohort-scoped Jira lookup.' },
+  { label: 'Affecting customer', evidence: 'SFDC Cases Counter > 0 from the parallel cohort-scoped Jira lookup.' },
   { label: 'Field feedback', evidence: 'AIBU_Feedback, AISSA_Feedback, or BU_EarlyAccess_Feedback label without SFDC.' },
   { label: 'Pre-release CVE', evidence: 'prerelease-cve-remediation label plus DevTestOps Jira Bot reporter.' },
   { label: 'Release blocker', evidence: 'Release Blocker custom field is Approved (option 16772).' },

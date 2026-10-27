@@ -5,8 +5,12 @@
   "selectedTriage": "all",
   "bugScoring": {
     "modelVersion": "bug-v1",
-    "mode": "shadow",
-    "rankingApplied": false
+    "mode": "active",
+    "rankingApplied": true
+  },
+  "queueScoring": {
+    "mode": "combined",
+    "rankingField": "priorityScore"
   },
   "asOfDate": "2026-10-26",
   "fetchedAt": "2026-10-26T12:00:00.000Z",
@@ -43,11 +47,11 @@
       "slaDate": null,
       "rawScore": 95,
       "priorityScore": 95,
-      "scoreStatus": "preview",
+      "scoreStatus": "scored",
       "scoreModel": "bug-v1",
-      "primaryBugType": { "code": "customer-linked", "label": "Customer-linked defect" },
+      "primaryBugType": { "code": "customer-linked", "label": "Affecting customer" },
       "classificationSignals": [
-        { "code": "customer-linked", "label": "Customer-linked defect", "evidence": "SFDC Cases Counter is populated" },
+        { "code": "customer-linked", "label": "Affecting customer", "evidence": "SFDC Cases Counter is populated" },
         {
           "code": "prerelease-cve",
           "label": "Pre-release CVE",
@@ -64,16 +68,16 @@
       ],
       "priorityBand": { "level": "P0", "label": "Immediate", "expectedAction": "Begin within 1–2 business days" },
       "scoreBreakdown": {
-        "customerImpact": { "points": 30, "state": "Customer-linked defect", "code": "customer-linked", "evidence": "SFDC Cases Counter is populated" },
+        "customerImpact": { "points": 30, "state": "Affecting customer", "code": "customer-linked", "evidence": "SFDC Cases Counter is populated" },
         "deliverySecurity": { "points": 25, "state": "Pre-release CVE", "code": "prerelease-cve", "evidence": "Pre-release CVE rule matched" },
         "detectionSource": { "points": 4, "state": "DevTestOps automated test failure", "code": "devtestops-test-failure", "evidence": "DevTestOps test-failed rule matched" },
         "jiraSeverity": { "points": 16, "state": "High", "value": "high" },
         "dueDate": { "points": 15, "state": "Past due", "date": "2026-10-25", "daysUntil": -1 },
         "age": { "points": 5, "state": "13+ weeks", "weeks": 16 }
       },
-      "guardrail": { "applied": false, "minimumScore": null, "reasons": ["Approved Release Blocker guarantees at least P1", "Customer-linked Blocker/Critical/High priority Bug guarantees at least P1"] },
+      "guardrail": { "applied": false, "minimumScore": null, "reasons": ["Approved Release Blocker guarantees at least P1", "Affecting-customer Blocker/Critical/High priority Bug guarantees at least P1"] },
       "rank": 1,
-      "rankGroup": "bug"
+      "rankGroup": "combined"
     }
   ]
 }

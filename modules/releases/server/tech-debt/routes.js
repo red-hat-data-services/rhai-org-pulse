@@ -43,19 +43,6 @@ const ISSUE_JQL = [
 ].join(' AND ')
 const SFDC_BUG_JQL = ISSUE_JQL + ' AND issuetype = Bug AND SFDC_Cases_Counter > 0'
 
-const PRIORITY_ORDER = new Map([
-  ['blocker', 0],
-  ['highest', 0],
-  ['critical', 1],
-  ['high', 1],
-  ['major', 2],
-  ['medium', 2],
-  ['normal', 3],
-  ['low', 3],
-  ['minor', 4],
-  ['lowest', 4]
-])
-
 let issueCache = null
 let issueFetchPromise = null
 
@@ -121,28 +108,10 @@ function normalizeIssue(issue, jiraHost) {
   }
 }
 
-function priorityRank(priority) {
-  const rank = PRIORITY_ORDER.get(normalizeText(priority).toLowerCase())
-  return rank === undefined ? 99 : rank
-}
-
 function dateValue(value, fallback) {
   if (!value) return fallback
   const parsed = Date.parse(value)
   return Number.isNaN(parsed) ? fallback : parsed
-}
-
-function compareIssues(a, b) {
-  const priorityDifference = priorityRank(a.jiraPriority) - priorityRank(b.jiraPriority)
-  if (priorityDifference !== 0) return priorityDifference
-
-  const dueDifference = dateValue(a.dueDate, Number.MAX_SAFE_INTEGER) - dateValue(b.dueDate, Number.MAX_SAFE_INTEGER)
-  if (dueDifference !== 0) return dueDifference
-
-  const updatedDifference = dateValue(a.updatedAt, Number.MAX_SAFE_INTEGER) - dateValue(b.updatedAt, Number.MAX_SAFE_INTEGER)
-  if (updatedDifference !== 0) return updatedDifference
-
-  return a.key.localeCompare(b.key)
 }
 
 function selectedComponentsFromQuery(query) {
@@ -276,7 +245,7 @@ function enrichIssue(issue, now) {
     : { ...issue, ...scoreBug(issue, now) }
 }
 
-function compareVulnerabilities(a, b) {
+function comparePriorityScores(a, b) {
   const scoreDifference = (b.priorityScore || 0) - (a.priorityScore || 0)
   if (scoreDifference !== 0) return scoreDifference
 
@@ -286,9 +255,11 @@ function compareVulnerabilities(a, b) {
   const dueDifference = dateValue(a.dueDate, Number.MAX_SAFE_INTEGER) - dateValue(b.dueDate, Number.MAX_SAFE_INTEGER)
   if (dueDifference !== 0) return dueDifference
 
-  const aCvss = a.scoreBreakdown && a.scoreBreakdown.cvss && a.scoreBreakdown.cvss.value
-  const bCvss = b.scoreBreakdown && b.scoreBreakdown.cvss && b.scoreBreakdown.cvss.value
-  const cvssDifference = (bCvss === null ? -1 : bCvss) - (aCvss === null ? -1 : aCvss)
+  const aCvssValue = a.scoreBreakdown && a.scoreBreakdown.cvss && a.scoreBreakdown.cvss.value
+  const bCvssValue = b.scoreBreakdown && b.scoreBreakdown.cvss && b.scoreBreakdown.cvss.value
+  const aCvss = Number.isFinite(aCvssValue) ? aCvssValue : -1
+  const bCvss = Number.isFinite(bCvssValue) ? bCvssValue : -1
+  const cvssDifference = bCvss - aCvss
   if (cvssDifference !== 0) return cvssDifference
 
   const createdDifference = dateValue(a.createdAt, Number.MAX_SAFE_INTEGER) - dateValue(b.createdAt, Number.MAX_SAFE_INTEGER)
@@ -297,17 +268,13 @@ function compareVulnerabilities(a, b) {
 }
 
 function orderPaneIssues(issues, ranked) {
-  const vulnerabilities = issues.filter(isVulnerability).sort(compareVulnerabilities)
-  const bugs = issues.filter(function (issue) { return !isVulnerability(issue) }).sort(compareIssues)
+  const ordered = issues.slice().sort(comparePriorityScores)
   if (!ranked) {
-    return vulnerabilities.map(function (issue) { return { ...issue, rankGroup: 'vulnerability' } })
-      .concat(bugs.map(function (issue) { return { ...issue, rankGroup: 'bug' } }))
+    return ordered.map(function (issue) { return { ...issue, rankGroup: 'combined' } })
   }
-  return vulnerabilities.map(function (issue, index) {
-    return { ...issue, rank: index + 1, rankGroup: 'vulnerability' }
-  }).concat(bugs.map(function (issue, index) {
-    return { ...issue, rank: index + 1, rankGroup: 'bug' }
-  }))
+  return ordered.map(function (issue, index) {
+    return { ...issue, rank: index + 1, rankGroup: 'combined' }
+  })
 }
 
 function buildCockpitResponse(cohort, selectedComponents, selectedIssueType, selectedTriage = 'all', now = new Date()) {
@@ -337,7 +304,8 @@ function buildCockpitResponse(cohort, selectedComponents, selectedIssueType, sel
     selectedComponents,
     selectedIssueType: selectedIssueType || null,
     selectedTriage,
-    bugScoring: { modelVersion: 'bug-v1', mode: 'shadow', rankingApplied: false },
+    bugScoring: { modelVersion: 'bug-v1', mode: 'active', rankingApplied: true },
+    queueScoring: { mode: 'combined', rankingField: 'priorityScore' },
     asOfDate: utcDateOnly(now),
     fetchedAt: cohort.fetchedAt,
     cacheStatus: cohort.cacheStatus,
@@ -402,7 +370,7 @@ function registerTechDebtRoutes(router, { requireAuth, requireScope, jira }) {
    *   get:
    *     tags: [Releases]
    *     summary: Get open tech debt issues for selected components
-   *     description: Returns unresolved Bugs with preview scores and scored Vulnerabilities split into in-flight and prioritized backlog panes. Bug ordering remains based on Jira priority while the bug-v1 model runs in shadow mode.
+   *     description: Returns unresolved Bugs and Vulnerabilities split into in-flight and backlog panes, with both issue types combined and ordered by effective priority score.
    *     parameters:
    *       - in: query
    *         name: component
@@ -471,8 +439,7 @@ registerTechDebtRoutes._test = {
   ISSUE_JQL,
   SFDC_BUG_JQL,
   buildCockpitResponse,
-  compareIssues,
-  compareVulnerabilities,
+  comparePriorityScores,
   fetchIssueKeySet,
   fetchIssuePages,
   normalizeIssue,

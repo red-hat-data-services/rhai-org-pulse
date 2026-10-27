@@ -1163,7 +1163,7 @@ test.describe('Releases FPDoR Readiness @releases', () => {
               jiraPriority: 'High',
               rawScore: 60,
               priorityScore: 70,
-              scoreStatus: 'preview',
+              scoreStatus: 'scored',
               scoreModel: 'bug-v1',
               priorityBand: { level: 'P1', label: 'Urgent', expectedAction: 'Begin within 2–4 business days' },
               primaryBugType: { code: 'approved-release-blocker', label: 'Approved Release Blocker' },
@@ -1195,7 +1195,7 @@ test.describe('Releases FPDoR Readiness @releases', () => {
               jiraPriority: 'Medium',
               rawScore: 11,
               priorityScore: 11,
-              scoreStatus: 'preview',
+              scoreStatus: 'scored',
               scoreModel: 'bug-v1',
               priorityBand: { level: 'P4', label: 'Backlog', expectedAction: 'Review monthly' },
               primaryBugType: { code: 'workflow-validation', label: 'Workflow-validation bug' },
@@ -1247,7 +1247,7 @@ test.describe('Releases FPDoR Readiness @releases', () => {
               updatedAt: '2026-10-15T12:00:00.000Z',
               fixVersions: ['3.0 GA'],
               rank: 1,
-              rankGroup: 'vulnerability'
+              rankGroup: 'combined'
             }
           ]
         }
@@ -1262,8 +1262,8 @@ test.describe('Releases FPDoR Readiness @releases', () => {
     await page.getByTestId('vulnerability-rubric-open').click();
     await expect(page.getByTestId('vulnerability-scoring-rubric')).toContainText('Priority score = SLA + CVSS + due date + review outcome + age + uncertainty');
     await page.getByTestId('bug-rubric-tab').click();
-    await expect(page.getByTestId('bug-rubric-content')).toContainText('Preview score = customer + delivery/security + detection + Jira severity + due date + age');
-    await expect(page.getByTestId('bug-rubric-content')).toContainText('Shadow rollout');
+    await expect(page.getByTestId('bug-rubric-content')).toContainText('Bug score = customer + delivery/security + detection + Jira severity + due date + age');
+    await expect(page.getByTestId('bug-rubric-content')).toContainText('Active prioritization');
     await page.getByTestId('vulnerability-rubric-close').click();
     await expect(page.getByTestId('vulnerability-scoring-rubric')).toBeHidden();
     await expect(page.getByTestId('tech-debt-component-filter')).toBeVisible();
@@ -1280,11 +1280,11 @@ test.describe('Releases FPDoR Readiness @releases', () => {
     await expect(page.getByTestId('tech-debt-summary')).toContainText(/Total\s*3/);
     await expect(page.getByTestId('tech-debt-in-flight-pane')).toContainText('RHAI-101');
     await expect(page.getByTestId('tech-debt-in-flight-pane')).toContainText('RHAI-102');
-    await expect(page.getByTestId('tech-debt-in-flight-pane')).toContainText('Preview P1 · 70');
+    await expect(page.getByTestId('tech-debt-in-flight-pane')).toContainText('P1 · 70');
     await expect(page.getByTestId('tech-debt-in-flight-pane')).toContainText('Approved Release Blocker');
     await expect(page.getByTestId('tech-debt-backlog-pane')).toContainText('RHAI-201');
     await expect(page.getByTestId('tech-debt-backlog-pane')).toContainText('Critical dependency vulnerability');
-    await expect(page.getByTestId('tech-debt-backlog-pane')).toContainText('Vulnerabilities');
+    await expect(page.getByText('Bugs and CVEs ranked together by effective priority score')).toBeVisible();
     await expect(page.getByTestId('tech-debt-backlog-pane').getByTestId('tech-debt-score')).toHaveText('P0 · 95');
     await expect(page.getByTestId('tech-debt-triage-flags')).toContainText('SLA breached');
     const vulnerabilityBreakdown = page.getByTestId('tech-debt-backlog-pane').getByTestId('tech-debt-score-breakdown');
@@ -1313,19 +1313,19 @@ test.describe('Releases FPDoR Readiness @releases', () => {
     expect(page.errors).toHaveLength(0);
   });
 
-  test('Tech Debt Cockpit displays every Bug source classification in score-preview mode', async ({ page }) => {
-    function previewBug(key, rank, priority, score, primary, signals) {
+  test('Tech Debt Cockpit displays every Bug classification in one active Bug and CVE score queue', async ({ page }) => {
+    function scoredBug(key, rank, priority, score, primary, signals) {
       return {
         key,
         link: 'https://redhat.atlassian.net/browse/' + key,
-        summary: 'Preview scoring example for ' + primary.label,
+        summary: 'Scoring example for ' + primary.label,
         issueType: 'Bug',
         jiraPriority: priority,
         rawScore: score,
         priorityScore: score,
-        scoreStatus: 'preview',
+        scoreStatus: 'scored',
         scoreModel: 'bug-v1',
-        priorityBand: { level: score >= 85 ? 'P0' : score >= 70 ? 'P1' : score >= 50 ? 'P2' : score >= 30 ? 'P3' : 'P4', label: 'Preview', expectedAction: 'Preview only' },
+        priorityBand: { level: score >= 85 ? 'P0' : score >= 70 ? 'P1' : score >= 50 ? 'P2' : score >= 30 ? 'P3' : 'P4', label: 'Scored', expectedAction: 'Follow the priority band guidance' },
         primaryBugType: primary,
         classificationSignals: signals,
         scoreBreakdown: {
@@ -1344,24 +1344,53 @@ test.describe('Releases FPDoR Readiness @releases', () => {
         updatedAt: '2026-10-20T12:00:00.000Z',
         fixVersions: [],
         rank,
-        rankGroup: 'bug'
+        rankGroup: 'combined'
       };
     }
 
     const examples = [
-      previewBug('RHAI-301', 1, 'High', 35,
-        { code: 'customer-linked', label: 'Customer-linked defect' },
+      scoredBug('RHAI-307', 1, 'Low', 90, { code: 'component-team', label: 'Component-team/unclassified Bug' }, [{ code: 'component-team', label: 'Component-team/unclassified Bug', evidence: 'No higher-precedence source classification matched' }]),
+      {
+        key: 'RHAI-CVE-308',
+        link: 'https://redhat.atlassian.net/browse/RHAI-CVE-308',
+        summary: 'Mixed queue vulnerability',
+        issueType: 'Vulnerability',
+        jiraPriority: 'Critical',
+        rawScore: 80,
+        priorityScore: 80,
+        scoreStatus: 'scored',
+        priorityBand: { level: 'P1', label: 'Urgent', expectedAction: 'Begin within 2–4 business days' },
+        scoreBreakdown: {
+          sla: { points: 30, state: 'Due within 7 days' },
+          cvss: { points: 30, state: 'Critical (9.0–10.0)' },
+          dueDate: { points: 13, state: 'Due within 7 days' },
+          reviewOutcome: { points: 7, state: 'Needs review' },
+          age: { points: 0, state: '0–1 week' },
+          uncertainty: { points: 0, state: 'Complete tracking data' }
+        },
+        guardrail: { applied: false, minimumScore: null, reasons: [] },
+        triageFlags: [],
+        status: 'Open',
+        components: ['AI Gateway'],
+        assignee: null,
+        dueDate: '2026-11-01',
+        updatedAt: '2026-10-20T12:00:00.000Z',
+        fixVersions: [],
+        rank: 2,
+        rankGroup: 'combined'
+      },
+      scoredBug('RHAI-301', 3, 'High', 35,
+        { code: 'customer-linked', label: 'Affecting customer' },
         [
-          { code: 'customer-linked', label: 'Customer-linked defect', evidence: 'SFDC Cases Counter is populated' },
+          { code: 'customer-linked', label: 'Affecting customer', evidence: 'SFDC Cases Counter is populated' },
           { code: 'field-feedback', label: 'BU/SSA/field feedback', evidence: 'Feedback label is present' },
           { code: 'approved-release-blocker', label: 'Approved Release Blocker', evidence: 'Release Blocker is Approved' }
         ]),
-      previewBug('RHAI-302', 2, 'Medium', 33, { code: 'prerelease-cve', label: 'Pre-release CVE' }, [{ code: 'prerelease-cve', label: 'Pre-release CVE', evidence: 'Pre-release CVE rule matched' }]),
-      previewBug('RHAI-303', 3, 'Medium', 30, { code: 'approved-release-blocker', label: 'Approved Release Blocker' }, [{ code: 'approved-release-blocker', label: 'Approved Release Blocker', evidence: 'Release Blocker is Approved' }]),
-      previewBug('RHAI-304', 4, 'Medium', 25, { code: 'field-feedback', label: 'BU/SSA/field feedback' }, [{ code: 'field-feedback', label: 'BU/SSA/field feedback', evidence: 'Feedback label is present' }]),
-      previewBug('RHAI-305', 5, 'Medium', 20, { code: 'devtestops-e2e', label: 'DevTestOps/E2E bug' }, [{ code: 'devtestops-test-failure', label: 'DevTestOps automated test failure', evidence: 'test-failed label and DevTestOps reporter' }]),
-      previewBug('RHAI-306', 6, 'Medium', 15, { code: 'workflow-validation', label: 'Workflow-validation bug' }, [{ code: 'workflow-validation', label: 'Workflow-validation bug', evidence: 'Workflow Validation reporter' }]),
-      previewBug('RHAI-307', 7, 'Low', 90, { code: 'component-team', label: 'Component-team/unclassified Bug' }, [{ code: 'component-team', label: 'Component-team/unclassified Bug', evidence: 'No higher-precedence source classification matched' }])
+      scoredBug('RHAI-302', 4, 'Medium', 33, { code: 'prerelease-cve', label: 'Pre-release CVE' }, [{ code: 'prerelease-cve', label: 'Pre-release CVE', evidence: 'Pre-release CVE rule matched' }]),
+      scoredBug('RHAI-303', 5, 'Medium', 30, { code: 'approved-release-blocker', label: 'Approved Release Blocker' }, [{ code: 'approved-release-blocker', label: 'Approved Release Blocker', evidence: 'Release Blocker is Approved' }]),
+      scoredBug('RHAI-304', 6, 'Medium', 25, { code: 'field-feedback', label: 'BU/SSA/field feedback' }, [{ code: 'field-feedback', label: 'BU/SSA/field feedback', evidence: 'Feedback label is present' }]),
+      scoredBug('RHAI-305', 7, 'Medium', 20, { code: 'devtestops-e2e', label: 'DevTestOps/E2E bug' }, [{ code: 'devtestops-test-failure', label: 'DevTestOps automated test failure', evidence: 'test-failed label and DevTestOps reporter' }]),
+      scoredBug('RHAI-306', 8, 'Medium', 15, { code: 'workflow-validation', label: 'Workflow-validation bug' }, [{ code: 'workflow-validation', label: 'Workflow-validation bug', evidence: 'Workflow Validation reporter' }])
     ];
 
     await page.route('**/api/modules/releases/tech-debt/components', async route => {
@@ -1372,11 +1401,12 @@ test.describe('Releases FPDoR Readiness @releases', () => {
         json: {
           projects: ['RHAI'],
           selectedComponents: ['AI Gateway'],
-          bugScoring: { modelVersion: 'bug-v1', mode: 'shadow', rankingApplied: false },
+          bugScoring: { modelVersion: 'bug-v1', mode: 'active', rankingApplied: true },
+          queueScoring: { mode: 'combined', rankingField: 'priorityScore' },
           fetchedAt: '2026-10-26T14:30:00.000Z',
           cacheStatus: 'refreshed',
           warning: null,
-          counts: { total: 7, inFlight: 0, backlog: 7, bugs: 7, vulnerabilities: 0 },
+          counts: { total: 8, inFlight: 0, backlog: 8, bugs: 7, vulnerabilities: 1 },
           inFlight: [],
           backlog: examples
         }
@@ -1389,7 +1419,7 @@ test.describe('Releases FPDoR Readiness @releases', () => {
 
     const pane = page.getByTestId('tech-debt-backlog-pane');
     for (const label of [
-      'Customer-linked defect',
+      'Affecting customer',
       'Pre-release CVE',
       'Approved Release Blocker',
       'BU/SSA/field feedback',
@@ -1399,12 +1429,14 @@ test.describe('Releases FPDoR Readiness @releases', () => {
     ]) {
       await expect(pane).toContainText(label);
     }
-    await expect(pane).toContainText('Preview P0 · 90');
-    await expect(pane).toContainText('Jira priority order · bug-v1 score preview');
-    await expect(pane.getByTestId('tech-debt-backlog-card').first()).toContainText('RHAI-301');
-    await expect(pane.getByTestId('tech-debt-backlog-card').last()).toContainText('RHAI-307');
-    await expect(pane.getByTestId('tech-debt-backlog-card').first()).toContainText('BU/SSA/field feedback');
-    await expect(pane.getByTestId('tech-debt-backlog-card').first()).toContainText('Approved Release Blocker');
+    await expect(pane).toContainText('P0 · 90');
+    await expect(page.getByText('Bugs and CVEs ranked together by effective priority score')).toBeVisible();
+    await expect(pane.getByTestId('tech-debt-backlog-card').first()).toContainText('RHAI-307');
+    await expect(pane.getByTestId('tech-debt-backlog-card').nth(1)).toContainText('RHAI-CVE-308');
+    await expect(pane.getByTestId('tech-debt-backlog-card').last()).toContainText('RHAI-306');
+    const customerCard = pane.getByTestId('tech-debt-backlog-card').filter({ hasText: 'RHAI-301' });
+    await expect(customerCard).toContainText('BU/SSA/field feedback');
+    await expect(customerCard).toContainText('Approved Release Blocker');
 
     expect(page.errors).toHaveLength(0);
   });

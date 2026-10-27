@@ -86,7 +86,7 @@ function classifyBug(issue) {
     reporter: { id: issue.reporter.id || null, name: issue.reporter.name || null }
   } : null
 
-  if (issue.hasSfdcCases) addSignal(signals, 'customer-linked', 'Customer-linked defect', 'SFDC Cases Counter is populated')
+  if (issue.hasSfdcCases) addSignal(signals, 'customer-linked', 'Affecting customer', 'SFDC Cases Counter is populated')
   if (feedback) addSignal(signals, 'field-feedback', 'BU/SSA/field feedback', 'Feedback label is present')
   if (prereleaseCve) addSignal(signals, 'prerelease-cve', 'Pre-release CVE', 'prerelease-cve-remediation label and DevTestOps reporter', reporterEvidence)
   if (approvedBlocker) addSignal(signals, 'approved-release-blocker', 'Approved Release Blocker', 'Release Blocker is Approved')
@@ -103,7 +103,7 @@ function classifyBug(issue) {
   if (humanGate) addSignal(signals, 'human-gate', 'Human-filed gate bug', 'gate:* label from a non-automation reporter', reporterEvidence)
 
   let primaryBugType
-  if (issue.hasSfdcCases) primaryBugType = { code: 'customer-linked', label: 'Customer-linked defect' }
+  if (issue.hasSfdcCases) primaryBugType = { code: 'customer-linked', label: 'Affecting customer' }
   else if (prereleaseCve) primaryBugType = { code: 'prerelease-cve', label: 'Pre-release CVE' }
   else if (approvedBlocker) primaryBugType = { code: 'approved-release-blocker', label: 'Approved Release Blocker' }
   else if (feedback) primaryBugType = { code: 'field-feedback', label: 'BU/SSA/field feedback' }
@@ -145,7 +145,7 @@ function scoreBug(issue, now = new Date()) {
   const matches = classification.matches
 
   const customerCandidates = []
-  if (issue.hasSfdcCases) customerCandidates.push({ points: 30, state: 'Customer-linked defect', code: 'customer-linked', evidence: 'SFDC Cases Counter is populated' })
+  if (issue.hasSfdcCases) customerCandidates.push({ points: 30, state: 'Affecting customer', code: 'customer-linked', evidence: 'SFDC Cases Counter is populated' })
   else if (matches.feedback) customerCandidates.push({ points: 15, state: 'BU/SSA/field feedback', code: 'field-feedback', evidence: 'Feedback label without an SFDC case' })
   const customerImpact = chooseHighest(customerCandidates, 'No customer or field signal')
 
@@ -180,7 +180,7 @@ function scoreBug(issue, now = new Date()) {
   }
   if (issue.hasSfdcCases && ['blocker', 'highest', 'critical', 'high'].includes(severity.value)) {
     priorityScore = Math.max(priorityScore, 70)
-    guardrailReasons.push('Customer-linked Blocker/Critical/High priority Bug guarantees at least P1')
+    guardrailReasons.push('Affecting-customer Blocker/Critical/High priority Bug guarantees at least P1')
   }
 
   const band = priorityBand(priorityScore)
@@ -193,7 +193,7 @@ function scoreBug(issue, now = new Date()) {
       label: band.label,
       expectedAction: band.expectedAction
     },
-    scoreStatus: 'preview',
+    scoreStatus: 'scored',
     scoreModel: 'bug-v1',
     primaryBugType: classification.primaryBugType,
     classificationSignals: classification.signals,

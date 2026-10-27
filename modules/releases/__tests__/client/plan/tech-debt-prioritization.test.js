@@ -59,7 +59,7 @@ function scoredVulnerability(key, overrides = {}) {
     },
     guardrail: { applied: false, minimumScore: null, reasons: [] },
     triageFlags: [{ code: 'sla-breached', label: 'SLA breached' }],
-    rankGroup: 'vulnerability',
+    rankGroup: 'combined',
     ...overrides
   })
 }
@@ -69,7 +69,7 @@ function scoredBug(key, overrides = {}) {
     jiraPriority: 'High',
     rawScore: 60,
     priorityScore: 70,
-    scoreStatus: 'preview',
+    scoreStatus: 'scored',
     scoreModel: 'bug-v1',
     priorityBand: {
       level: 'P1',
@@ -163,10 +163,10 @@ describe('TechDebtPrioritizationView', function () {
     expect(rubric.text()).toContain('Missing or invalid values receive zero category points')
     expect(rubric.text()).toContain('P0 — Immediate')
     await wrapper.get('[data-testid="bug-rubric-tab"]').trigger('click')
-    expect(wrapper.get('[data-testid="bug-rubric-content"]').text()).toContain('Preview score = customer + delivery/security + detection + Jira severity + due date + age')
-    expect(wrapper.get('[data-testid="bug-rubric-content"]').text()).toContain('Customer-linked (SFDC)')
+    expect(wrapper.get('[data-testid="bug-rubric-content"]').text()).toContain('Bug score = customer + delivery/security + detection + Jira severity + due date + age')
+    expect(wrapper.get('[data-testid="bug-rubric-content"]').text()).toContain('Affecting customer (SFDC)')
     expect(wrapper.get('[data-testid="bug-source-rules"]').text()).toContain('prerelease-cve-remediation label plus DevTestOps Jira Bot reporter')
-    expect(wrapper.get('[data-testid="bug-rubric-content"]').text()).toContain('Shadow rollout')
+    expect(wrapper.get('[data-testid="bug-rubric-content"]').text()).toContain('Active prioritization')
 
     await wrapper.get('[data-testid="vulnerability-rubric-close"]').trigger('click')
     expect(wrapper.find('[data-testid="vulnerability-scoring-rubric"]').exists()).toBe(false)
@@ -235,13 +235,13 @@ describe('TechDebtPrioritizationView', function () {
     expect(apiRequest).toHaveBeenLastCalledWith('/modules/releases/tech-debt/issues?component=AI+Gateway&issueType=Bug')
   })
 
-  it('shows separate ranking groups and an auditable CVE score breakdown', async function () {
+  it('shows one mixed, globally ranked queue with an auditable CVE score breakdown', async function () {
     mockSuccessfulApi(cockpitResponse({
       counts: { total: 2, inFlight: 0, backlog: 2, bugs: 1, vulnerabilities: 1 },
       inFlight: [],
       backlog: [
         scoredVulnerability('RHAI-CVE-1', { rank: 1 }),
-        issue('RHAI-BUG-1', { rank: 1, rankGroup: 'bug' })
+        scoredBug('RHAI-BUG-1', { rank: 2, rankGroup: 'combined' })
       ]
     }))
     const wrapper = mount(TechDebtPrioritizationView)
@@ -249,32 +249,35 @@ describe('TechDebtPrioritizationView', function () {
     await selectComponent(wrapper)
 
     const pane = wrapper.get('[data-testid="tech-debt-backlog-pane"]')
-    expect(pane.text()).toContain('Vulnerabilities')
-    expect(pane.text()).toContain('Bugs')
-    expect(wrapper.get('[data-testid="tech-debt-score"]').text()).toBe('P0 · 95')
-    expect(wrapper.get('[data-testid="tech-debt-score-breakdown"]').text()).toContain('35 SLA + 30 CVSS + 15 Due + 10 Review + 5 Age + 0 Uncertainty = 95')
-    expect(wrapper.get('[data-testid="tech-debt-triage-flags"]').text()).toContain('SLA breached')
+    const cards = pane.findAll('[data-testid="tech-debt-backlog-card"]')
+    expect(cards.map(card => card.get('a').text())).toEqual(expect.arrayContaining(['RHAI-CVE-1 (opens in a new tab)', 'RHAI-BUG-1 (opens in a new tab)']))
+    expect(cards[0].get('[aria-label="Tech debt backlog rank 1"]').text()).toBe('1')
+    expect(cards[1].get('[aria-label="Tech debt backlog rank 2"]').text()).toBe('2')
+    expect(cards[0].get('[data-testid="tech-debt-score"]').text()).toBe('P0 · 95')
+    expect(cards[0].get('[data-testid="tech-debt-score-breakdown"]').text()).toContain('35 SLA + 30 CVSS + 15 Due + 10 Review + 5 Age + 0 Uncertainty = 95')
+    expect(cards[0].get('[data-testid="tech-debt-triage-flags"]').text()).toContain('SLA breached')
+    expect(wrapper.text()).toContain('Bugs and CVEs ranked together by effective priority score')
   })
 
-  it('shows Bug preview scores, classification evidence, and guardrails without changing Jira ordering', async function () {
+  it('uses active Bug scores for ordering while preserving classification evidence and guardrails', async function () {
     mockSuccessfulApi(cockpitResponse({
       counts: { total: 2, inFlight: 0, backlog: 2, bugs: 2, vulnerabilities: 0 },
       inFlight: [],
       backlog: [
-        scoredBug('RHAI-BUG-HIGH', {
-          rank: 1,
-          jiraPriority: 'High',
-          priorityScore: 60,
-          rawScore: 60,
-          priorityBand: { level: 'P2', label: 'Planned', expectedAction: 'Commit to the current or next sprint' },
-          guardrail: { applied: false, reasons: [] }
-        }),
         scoredBug('RHAI-BUG-LOW', {
-          rank: 2,
+          rank: 1,
           jiraPriority: 'Low',
           priorityScore: 90,
           rawScore: 90,
           priorityBand: { level: 'P0', label: 'Immediate', expectedAction: 'Begin within 1–2 business days' },
+          guardrail: { applied: false, reasons: [] }
+        }),
+        scoredBug('RHAI-BUG-HIGH', {
+          rank: 2,
+          jiraPriority: 'High',
+          priorityScore: 60,
+          rawScore: 60,
+          priorityBand: { level: 'P2', label: 'Planned', expectedAction: 'Commit to the current or next sprint' },
           guardrail: { applied: false, reasons: [] }
         })
       ]
@@ -284,13 +287,13 @@ describe('TechDebtPrioritizationView', function () {
     await selectComponent(wrapper)
 
     const cards = wrapper.findAll('[data-testid="tech-debt-backlog-card"]')
-    expect(cards[0].text()).toContain('RHAI-BUG-HIGH')
-    expect(cards[1].text()).toContain('RHAI-BUG-LOW')
-    expect(cards[0].get('[data-testid="tech-debt-score"]').text()).toBe('Preview P2 · 60')
+    expect(cards[0].text()).toContain('RHAI-BUG-LOW')
+    expect(cards[1].text()).toContain('RHAI-BUG-HIGH')
+    expect(cards[0].get('[data-testid="tech-debt-score"]').text()).toBe('P0 · 90')
     expect(cards[0].get('[data-testid="tech-debt-bug-classification"]').text()).toContain('Approved Release Blocker')
-    expect(cards[0].get('[data-testid="tech-debt-score-breakdown"]').text()).toContain('0 Customer + 22 Delivery/security + 2 Detection + 16 Jira severity + 15 Due + 5 Age = 60')
+    expect(cards[1].get('[data-testid="tech-debt-score-breakdown"]').text()).toContain('0 Customer + 22 Delivery/security + 2 Detection + 16 Jira severity + 15 Due + 5 Age = 60')
     expect(cards[0].get('[data-testid="tech-debt-score-breakdown"]').text()).toContain('Release Blocker is Approved')
-    expect(wrapper.get('[data-testid="tech-debt-backlog-pane"]').text()).toContain('Jira priority order · bug-v1 score preview')
+    expect(wrapper.text()).toContain('Bugs and CVEs ranked together by effective priority score')
   })
 
   it('shows summary counts and stale-data warnings', async function () {

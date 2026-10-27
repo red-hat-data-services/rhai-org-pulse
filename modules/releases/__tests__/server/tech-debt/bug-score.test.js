@@ -112,7 +112,7 @@ describe('Bug priority scoring', function () {
       reporter: { id: 'account-123', name: 'DEVTESTOPS JIRA BOT' }
     }))
 
-    expect(classification.primaryBugType).toEqual({ code: 'customer-linked', label: 'Customer-linked defect' })
+    expect(classification.primaryBugType).toEqual({ code: 'customer-linked', label: 'Affecting customer' })
     expect(classification.signals.map(signal => signal.code)).toEqual(expect.arrayContaining([
       'customer-linked',
       'field-feedback',
@@ -149,7 +149,7 @@ describe('Bug priority scoring', function () {
 
     expect(result.rawScore).toBe(95)
     expect(result.priorityBand.level).toBe('P0')
-    expect(result.scoreStatus).toBe('preview')
+    expect(result.scoreStatus).toBe('scored')
     expect(result.scoreModel).toBe('bug-v1')
   })
 
@@ -176,7 +176,7 @@ describe('Bug priority scoring', function () {
 
     expect(result.rawScore).toBe(46)
     expect(result.priorityScore).toBe(70)
-    expect(result.guardrail.reasons[0]).toContain('Customer-linked')
+    expect(result.guardrail.reasons[0]).toContain('Affecting-customer')
   })
 
   it('uses UTC calendar dates and completed seven-day periods', function () {

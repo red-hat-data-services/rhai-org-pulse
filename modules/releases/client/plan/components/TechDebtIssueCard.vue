@@ -7,7 +7,7 @@
       <div
         v-if="rank"
         class="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-gray-900 text-sm font-bold text-white dark:bg-gray-100 dark:text-gray-900"
-        :aria-label="`${rankGroupLabel} backlog rank ${rank}`"
+        :aria-label="`Tech debt backlog rank ${rank}`"
       >
         {{ rank }}
       </div>
@@ -51,7 +51,7 @@
       </span>
     </div>
 
-    <div v-if="isPreviewBug" class="mt-3 flex flex-wrap gap-1.5" data-testid="tech-debt-bug-classification">
+    <div v-if="isScoredBug" class="mt-3 flex flex-wrap gap-1.5" data-testid="tech-debt-bug-classification">
       <span class="rounded-full bg-indigo-100 px-2 py-1 text-[11px] font-bold text-indigo-800 dark:bg-indigo-900/40 dark:text-indigo-200">
         {{ issue.primaryBugType?.label || 'Unclassified Bug' }}
       </span>
@@ -77,7 +77,7 @@
 
     <details v-if="hasPriorityScore" :class="scoreBreakdownClass" data-testid="tech-debt-score-breakdown">
       <summary :class="scoreSummaryClass">
-        {{ isPreviewBug ? 'Preview score breakdown' : 'Score breakdown' }} · {{ issue.priorityBand.label }}
+        Score breakdown · {{ issue.priorityBand.label }}
       </summary>
       <p class="mt-2 font-medium text-gray-700 dark:text-gray-200">{{ scoreEquation }}</p>
       <dl class="mt-2 grid gap-1 text-gray-600 dark:text-gray-300">
@@ -86,7 +86,7 @@
           <dd class="shrink-0 font-semibold">+{{ row.points }}</dd>
         </div>
       </dl>
-      <div v-if="isPreviewBug && issue.classificationSignals?.length" class="mt-2 border-t border-current/10 pt-2 text-gray-600 dark:text-gray-300">
+      <div v-if="isScoredBug && issue.classificationSignals?.length" class="mt-2 border-t border-current/10 pt-2 text-gray-600 dark:text-gray-300">
         <p class="font-semibold text-gray-700 dark:text-gray-200">Classification evidence</p>
         <p v-for="signal in issue.classificationSignals" :key="signal.code" class="mt-1">
           <strong>{{ signal.label }}:</strong> {{ signal.evidence }}
@@ -143,12 +143,12 @@ const isScoredVulnerability = computed(function () {
   return props.issue.issueType?.toLowerCase() === 'vulnerability' && props.issue.scoreStatus === 'scored'
 })
 
-const isPreviewBug = computed(function () {
-  return props.issue.issueType?.toLowerCase() === 'bug' && props.issue.scoreStatus === 'preview'
+const isScoredBug = computed(function () {
+  return props.issue.issueType?.toLowerCase() === 'bug' && ['scored', 'preview'].includes(props.issue.scoreStatus)
 })
 
 const hasPriorityScore = computed(function () {
-  return isScoredVulnerability.value || isPreviewBug.value
+  return isScoredVulnerability.value || isScoredBug.value
 })
 
 const secondaryClassificationSignals = computed(function () {
@@ -158,13 +158,9 @@ const secondaryClassificationSignals = computed(function () {
   })
 })
 
-const rankGroupLabel = computed(function () {
-  return props.issue.rankGroup === 'vulnerability' ? 'Vulnerability' : 'Bug'
-})
-
 const breakdownRows = computed(function () {
   const breakdown = props.issue.scoreBreakdown || {}
-  if (isPreviewBug.value) {
+  if (isScoredBug.value) {
     return [
       { label: 'Customer', ...breakdown.customerImpact },
       { label: 'Delivery/security', ...breakdown.deliverySecurity },
@@ -185,7 +181,7 @@ const breakdownRows = computed(function () {
 })
 
 const scoreEquation = computed(function () {
-  const labels = isPreviewBug.value ? [
+  const labels = isScoredBug.value ? [
     ['Customer', props.issue.scoreBreakdown?.customerImpact?.points || 0],
     ['Delivery/security', props.issue.scoreBreakdown?.deliverySecurity?.points || 0],
     ['Detection', props.issue.scoreBreakdown?.detectionSource?.points || 0],
@@ -204,20 +200,19 @@ const scoreEquation = computed(function () {
 })
 
 const scoreBadgeText = computed(function () {
-  const prefix = isPreviewBug.value ? 'Preview ' : ''
-  return `${prefix}${props.issue.priorityBand?.level || '—'} · ${props.issue.priorityScore}`
+  return `${props.issue.priorityBand?.level || '—'} · ${props.issue.priorityScore}`
 })
 
 const scoreBreakdownClass = computed(function () {
   const base = 'mt-3 rounded-lg border px-3 py-2 text-xs '
-  return isPreviewBug.value
+  return isScoredBug.value
     ? base + 'border-indigo-100 bg-indigo-50/60 dark:border-indigo-900/50 dark:bg-indigo-950/20'
     : base + 'border-fuchsia-100 bg-fuchsia-50/60 dark:border-fuchsia-900/50 dark:bg-fuchsia-950/20'
 })
 
 const scoreSummaryClass = computed(function () {
   const base = 'cursor-pointer font-semibold '
-  return isPreviewBug.value
+  return isScoredBug.value
     ? base + 'text-indigo-800 dark:text-indigo-200'
     : base + 'text-fuchsia-800 dark:text-fuchsia-200'
 })

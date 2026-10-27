@@ -216,7 +216,7 @@
               Refreshed {{ formatTimestamp(cockpitData.fetchedAt) }} · {{ cockpitData.cacheStatus === 'hit' ? 'cached Jira data' : cockpitData.cacheStatus === 'stale' ? 'stale Jira data' : 'live Jira data' }}
           </p>
           <p class="mt-2 max-w-2xl text-xs text-gray-500 dark:text-gray-400">
-            Vulnerability scores guide queue ordering and never override mandatory organizational security policy.
+            Bug and vulnerability scores guide queue ordering and never override mandatory organizational security policy.
           </p>
           </div>
           <button
@@ -254,18 +254,12 @@
           <header class="flex items-center justify-between gap-3 border-b border-blue-200 px-5 py-4 dark:border-blue-900">
             <div>
               <h3 id="in-flight-heading" class="font-bold text-gray-900 dark:text-gray-100">In-Flight Work</h3>
-              <p class="mt-0.5 text-xs text-gray-500 dark:text-gray-400">Exact Jira status: In Progress or Review</p>
+              <p class="mt-0.5 text-xs text-gray-500 dark:text-gray-400">Active Bugs and CVEs ordered by effective priority score</p>
             </div>
             <span class="rounded-full bg-blue-100 px-3 py-1 text-sm font-bold text-blue-800 dark:bg-blue-900/50 dark:text-blue-200">{{ cockpitData.counts?.inFlight || 0 }}</span>
           </header>
           <div class="grid grid-cols-1 gap-3 p-4 sm:grid-cols-2" data-testid="tech-debt-in-flight-pane">
-            <template v-for="group in visibleInFlightGroups" :key="group.key">
-              <div class="flex items-center justify-between gap-3 border-b border-blue-100 pb-2 sm:col-span-2 dark:border-blue-900/60">
-                <p class="text-xs font-bold uppercase tracking-wider text-gray-600 dark:text-gray-300">{{ group.label }}</p>
-                <span class="text-xs font-semibold text-gray-500 dark:text-gray-400">{{ group.items.length }} shown</span>
-              </div>
-              <TechDebtIssueCard v-for="issue in group.items" :key="issue.key" :issue="issue" pane="in-flight" />
-            </template>
+            <TechDebtIssueCard v-for="issue in visibleInFlightIssues" :key="issue.key" :issue="issue" pane="in-flight" />
             <div v-if="!cockpitData.inFlight?.length" class="rounded-xl border border-dashed border-blue-200 bg-white px-5 py-10 text-center text-sm text-gray-500 sm:col-span-2 dark:border-blue-900 dark:bg-gray-800 dark:text-gray-400">
               No In Progress or Review issues match these components.
             </div>
@@ -279,21 +273,12 @@
           <header class="flex items-center justify-between gap-3 border-b border-gray-200 px-5 py-4 dark:border-gray-700">
             <div>
               <h3 id="backlog-heading" class="font-bold text-gray-900 dark:text-gray-100">Prioritized Backlog</h3>
-              <p class="mt-0.5 text-xs text-gray-500 dark:text-gray-400">CVE scores drive ranking; Bug scores are visible in shadow mode while Jira priority controls order</p>
+              <p class="mt-0.5 text-xs text-gray-500 dark:text-gray-400">Bugs and CVEs ranked together by effective priority score</p>
             </div>
             <span class="rounded-full bg-gray-200 px-3 py-1 text-sm font-bold text-gray-800 dark:bg-gray-700 dark:text-gray-200">{{ cockpitData.counts?.backlog || 0 }}</span>
           </header>
           <div class="grid grid-cols-1 gap-3 p-4 sm:grid-cols-2" data-testid="tech-debt-backlog-pane">
-            <template v-for="group in visibleBacklogGroups" :key="group.key">
-              <div class="flex items-center justify-between gap-3 border-b border-gray-200 pb-2 sm:col-span-2 dark:border-gray-700">
-                <div>
-                  <p class="text-xs font-bold uppercase tracking-wider text-gray-600 dark:text-gray-300">{{ group.label }}</p>
-                  <p class="mt-0.5 text-[11px] text-gray-500 dark:text-gray-400">{{ group.description }}</p>
-                </div>
-                <span class="text-xs font-semibold text-gray-500 dark:text-gray-400">{{ group.items.length }} shown</span>
-              </div>
-              <TechDebtIssueCard v-for="issue in group.items" :key="issue.key" :issue="issue" :rank="issue.rank" pane="backlog" />
-            </template>
+            <TechDebtIssueCard v-for="issue in visibleBacklogIssues" :key="issue.key" :issue="issue" :rank="issue.rank" pane="backlog" />
             <div v-if="!cockpitData.backlog?.length" class="rounded-xl border border-dashed border-gray-300 bg-white px-5 py-10 text-center text-sm text-gray-500 sm:col-span-2 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400">
               No unresolved backlog issues match these components.
             </div>
@@ -372,8 +357,6 @@ const summaryStats = computed(function () {
 })
 const visibleInFlightIssues = computed(() => (cockpitData.value?.inFlight || []).slice(0, visibleInFlight.value))
 const visibleBacklogIssues = computed(() => (cockpitData.value?.backlog || []).slice(0, visibleBacklog.value))
-const visibleInFlightGroups = computed(() => groupIssues(visibleInFlightIssues.value, false))
-const visibleBacklogGroups = computed(() => groupIssues(visibleBacklogIssues.value, true))
 const hasMoreInFlight = computed(() => (cockpitData.value?.inFlight || []).length > visibleInFlight.value)
 const hasMoreBacklog = computed(() => (cockpitData.value?.backlog || []).length > visibleBacklog.value)
 
@@ -383,25 +366,6 @@ function toggleComponent(name) {
   } else {
     selectedComponents.value = selectedComponents.value.concat(name)
   }
-}
-
-function groupIssues(issues, ranked) {
-  const vulnerabilities = issues.filter(function (issue) { return issue.issueType?.toLowerCase() === 'vulnerability' })
-  const bugs = issues.filter(function (issue) { return issue.issueType?.toLowerCase() !== 'vulnerability' })
-  return [
-    {
-      key: 'vulnerability',
-      label: 'Vulnerabilities',
-      description: ranked ? 'Priority score, SLA, due date, CVSS, then age' : 'Ordered by vulnerability priority score',
-      items: vulnerabilities
-    },
-    {
-      key: 'bug',
-      label: 'Bugs',
-      description: 'Jira priority order · bug-v1 score preview',
-      items: bugs
-    }
-  ].filter(function (group) { return group.items.length > 0 })
 }
 
 function removeFilter(filter) {

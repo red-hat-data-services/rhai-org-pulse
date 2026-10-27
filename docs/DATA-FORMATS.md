@@ -1097,8 +1097,8 @@ component's report.
 
 `GET /api/modules/releases/tech-debt/issues` returns the complete open Bug and
 Vulnerability cohort for the selected Jira components. Vulnerabilities include
-a deterministic priority assessment. Bugs include a deterministic `bug-v1`
-preview score while retaining Jira-priority ordering during shadow rollout.
+a deterministic priority assessment. Bugs use the deterministic `bug-v1`
+assessment. Both issue types share one backlog ordered by effective score.
 The representative contract fixture is
 `fixtures/releases/tech-debt/issues.json`.
 Response metadata identifies that behavior with:
@@ -1107,8 +1107,12 @@ Response metadata identifies that behavior with:
 {
   "bugScoring": {
     "modelVersion": "bug-v1",
-    "mode": "shadow",
-    "rankingApplied": false
+    "mode": "active",
+    "rankingApplied": true
+  },
+  "queueScoring": {
+    "mode": "combined",
+    "rankingField": "priorityScore"
   }
 }
 ```
@@ -1172,11 +1176,11 @@ All date comparisons use UTC calendar dates. The response is calculated from
 the live, five-minute-cached Jira cohort and is independent of the CVE
 Sustaining report's 90-day timeline and exclusions.
 
-### Bug preview score
+### Bug score
 
-Bug records use `scoreStatus: "preview"`. The score is visible and auditable,
-but backlog rank continues to use Jira priority, earliest Due Date, oldest
-update, and Jira key. There is no automatic cutover to score ordering.
+Bug records use `scoreStatus: "scored"`. Their effective score participates in
+the same backlog ranking as Vulnerabilities. Ranks are global across both issue
+types rather than restarting for each type.
 
 ```json
 {
@@ -1184,7 +1188,7 @@ update, and Jira key. There is no automatic cutover to score ordering.
   "issueType": "Bug",
   "rawScore": 62,
   "priorityScore": 70,
-  "scoreStatus": "preview",
+  "scoreStatus": "scored",
   "scoreModel": "bug-v1",
   "primaryBugType": {
     "code": "approved-release-blocker",
@@ -1229,7 +1233,7 @@ Only the highest matching rule in each dimension contributes points:
 | Jira Due Date | 15 past due; 13 within 7 days; 9 within 30; 5 within 90; 2 later; missing 0 |
 | Issue age | 5 for 13+ weeks; 4 for 8–12; 3 for 4–7; 2 for 2–3; otherwise 0 |
 
-The primary Bug type is selected in this order: Customer-linked defect,
+The primary Bug type is selected in this order: Affecting customer,
 Pre-release CVE, Approved Release Blocker, BU/SSA/field feedback,
 DevTestOps/E2E, Workflow validation, then Component-team/unclassified. All
 matching evidence remains in `classificationSignals`. SFDC membership is
@@ -1239,7 +1243,7 @@ fallback instead of treating every issue as non-customer-facing.
 
 Classification evidence is normalized case-insensitively. The source rules are:
 
-- Customer-linked: `SFDC_Cases_Counter > 0`.
+- Affecting customer: `SFDC_Cases_Counter > 0`.
 - Field feedback: `AIBU_Feedback`, `AISSA_Feedback`, or
   `BU_EarlyAccess_Feedback` without SFDC.
 - Pre-release CVE: `prerelease-cve-remediation` plus the DevTestOps Jira Bot
@@ -1255,9 +1259,11 @@ Classification evidence is normalized case-insensitively. The source rules are:
   human-filed `gate:*` labels.
 
 An Approved Release Blocker has an effective score floor of 70/P1. An
-SFDC-linked Bug with Jira priority Blocker, Highest, Critical, or High also has
+affecting-customer Bug with Jira priority Blocker, Highest, Critical, or High also has
 a 70/P1 floor. Missing Bug fields receive zero points and no uncertainty bonus.
-The score reuses the Vulnerability P0–P4 bands and UTC date boundaries.
+The score reuses the Vulnerability P0–P4 bands and UTC date boundaries. The
+combined queue sorts by effective score descending, then earliest SLA date,
+earliest Jira Due Date, highest CVSS, oldest creation date, and Jira key.
 
 ---
 
