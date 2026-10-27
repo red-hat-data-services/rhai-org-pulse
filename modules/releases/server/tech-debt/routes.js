@@ -15,6 +15,7 @@ const RHAI_PROJECT = 'RHAI'
 const PROJECTS = ['RHAI', 'RHAIENG', 'RHOAIENG', 'INFERENG', 'AIPCC']
 const CACHE_TTL_MS = 5 * 60 * 1000
 const MAX_CACHE_ENTRIES = 6
+const MAX_SELECTED_COMPONENTS = 20
 const RELEASE_BLOCKER_FIELD_ID = 'customfield_10847'
 const RELEASE_BLOCKER_OPTION_LABELS = {
   '16772': 'Approved',
@@ -447,6 +448,9 @@ function registerTechDebtRoutes(router, { requireAuth, requireScope, jira }) {
     if (!selectedComponents.length) {
       return res.status(400).json({ error: 'At least one component is required' })
     }
+    if (selectedComponents.length > MAX_SELECTED_COMPONENTS) {
+      return res.status(400).json({ error: 'At most ' + MAX_SELECTED_COMPONENTS + ' components may be selected' })
+    }
     if (!jira || typeof jira.jiraRequest !== 'function') {
       return res.status(503).json({ error: 'Jira client not configured' })
     }
@@ -473,6 +477,7 @@ registerTechDebtRoutes._test = {
   ISSUE_FIELDS,
   ISSUE_JQL,
   MAX_CACHE_ENTRIES,
+  MAX_SELECTED_COMPONENTS,
   SFDC_BUG_JQL,
   buildCockpitResponse,
   cohortCacheKey,
