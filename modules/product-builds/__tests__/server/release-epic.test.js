@@ -2,7 +2,7 @@ import { describe, it, expect, vi } from 'vitest'
 
 const workflow = require('../../server/release-epic')._testExports
 
-const baseConfig = (application = 'rhaiis', _branch = '3.6-fast1', tags = ['3.6.0-fast.1']) => `
+const baseConfig = (application = 'rhaiis', _branch = '3.6-fast1', tags = ['3.6.0-fast.1'], commonExtra = '') => `
 definitions:
   - application: ${application}
     tenant: ai-tenant
@@ -21,8 +21,9 @@ definitions:
       - name: ${application}-prod
     release_plan_admission:
       common:
-        tags:
+${tags.length ? `        tags:
 ${tags.map(tag => `          - "${tag}"`).join('\n')}
+` : ''}${commonExtra}
 `
 
 function filesForBase() {
@@ -108,6 +109,46 @@ describe('release epic workflow', () => {
     const plan = workflow.checklistPlan({ ...input, metadata: branch }, [{ name: 'cuda', variant: 'cuda' }])
     expect(plan.cards.some(card => card.summary.startsWith('Bump rhaiis 3.2.2'))).toBe(false)
     expect(plan.notCreated.some(item => item.summary.startsWith('Bump rhaiis 3.2.2'))).toBe(true)
+  })
+
+  it('falls back to product_version for branches that configure no release tags', () => {
+    const files = {
+      'owners-groups.yaml': 'groups: {}',
+      'base-images/owners.yaml': 'owners: {}',
+      'base-images/release-trailing/config.yaml': baseConfig('base-images', 'release-trailing', [], '        product_version: "3.6"'),
+      'rhaiis/owners.yaml': 'owners: {}',
+      'rhaiis/3.6/config.yaml': baseConfig('rhaiis', '3.6', ['3.6.0'], '        product_version: "3.6"'),
+      'torch/owners.yaml': 'owners: {}',
+      'torch/main/config.yaml': baseConfig('torch', 'main', ['2.14'], '        product_version: "3.5"'),
+    }
+    const products = workflow.parsePmcSnapshot(files)
+
+    const trailing = products.find(item => item.key === 'base-images').branches.find(item => item.branch === 'release-trailing')
+    expect(trailing.tags).toEqual([])
+    expect(trailing.configured_versions).toEqual(['3.6'])
+
+    const input = workflow.validateReleaseInput(products, {
+      product: 'base-images', version: '3.6', branch: 'release-trailing', advisory_type: 'RHEA', release_type: '',
+    })
+    expect(input.version).toBe('3.6')
+    expect(input.release_type).toBe('GA')
+
+    const plan = workflow.checklistPlan(input, [{ name: 'cuda', variant: 'cuda' }])
+    expect(plan.cards.map(card => card.summary)).toEqual([
+      'Release base-images 3.6 (stage-rc): cuda',
+      'Release base-images 3.6 (prod): cuda',
+      'Send a base-images 3.6 release announcement email',
+    ])
+    expect(plan.notCreated.some(item => item.summary.startsWith('Bump base-images 3.6'))).toBe(true)
+
+    expect(() => workflow.validateReleaseInput(products, {
+      product: 'base-images', version: '9.9', branch: 'release-trailing', advisory_type: 'RHEA', release_type: '',
+    })).toThrow(/not configured for base-images\/release-trailing\. Configured versions: 3\.6/)
+
+    const rhaiis = products.find(item => item.key === 'rhaiis').branches.find(item => item.branch === '3.6')
+    expect(rhaiis.configured_versions).toEqual(['3.6.0'])
+    const torch = products.find(item => item.key === 'torch').branches.find(item => item.branch === 'main')
+    expect(torch.configured_versions).toEqual([])
   })
 
   it('infers EA from a configured main-branch tag and rejects an explicit mismatch', () => {
