@@ -156,12 +156,12 @@ test.describe('Workflow Validation module @workflow-validation', () => {
     await page.goto('/#/workflow-validation/overview')
     await expect(page.getByRole('main').getByRole('heading', { name: 'Workflow Validation' })).toBeVisible()
     await expect(page.getByText('Live workflow')).toBeVisible()
-    await expect(page.getByRole('heading', { name: 'New Product and UX Issues Opened' })).toBeVisible()
-    await expect(page.getByRole('heading', { name: 'Known Product and UX Issues Encountered' })).toBeVisible()
+    await expect(page.getByRole('heading', { name: 'New Jira Issues Opened' })).toBeVisible()
+    await expect(page.getByRole('heading', { name: 'Existing Jira Issues Encountered' })).toBeVisible()
     await expect(page.getByRole('heading', { name: 'Test Results', exact: true })).toBeVisible()
     const resultsTable = page.getByRole('table')
     await expect(resultsTable.getByRole('columnheader', { name: /Task results/i })).toHaveCount(0)
-    await expect(resultsTable.getByRole('columnheader', { name: 'Product or UX issue', exact: true })).toBeVisible()
+    await expect(resultsTable.getByRole('columnheader', { name: 'Jira issue', exact: true })).toBeVisible()
     await expect(resultsTable.getByRole('columnheader')).toHaveCount(5)
     await expect(resultsTable.locator('tbody tr').first().getByRole('cell')).toHaveCount(5)
     expect(requests.some((url) => url.includes('/overview'))).toBe(true)
@@ -223,12 +223,12 @@ test.describe('Workflow Validation module @workflow-validation', () => {
 
     const passed = page.getByRole('row').filter({ hasText: 'Passing test without a bug' })
     const environment = page.getByRole('row').filter({ hasText: 'Environmental failure' })
-    const passedIndicator = passed.getByRole('img', { name: 'No product or UX issue recorded.' })
-    const environmentIndicator = environment.getByRole('img', { name: 'No product or UX issue recorded.' })
+    const passedIndicator = passed.getByRole('img', { name: 'No Jira-linked issue recorded.' })
+    const environmentIndicator = environment.getByRole('img', { name: 'No Jira-linked issue recorded.' })
     await expect(passedIndicator).toHaveText('—')
-    await expect(passedIndicator).toHaveAttribute('title', 'No product or UX issue recorded.')
+    await expect(passedIndicator).toHaveAttribute('title', 'No Jira-linked issue recorded.')
     await expect(environmentIndicator).toHaveText('—')
-    await expect(environmentIndicator).toHaveAccessibleDescription('The test failed or was terminated due to a problem in the test execution environment. No product bug or UX defect was observed.')
+    await expect(environmentIndicator).toHaveAccessibleDescription('The test failed or was terminated without a Jira-linked issue recorded.')
     await passedIndicator.focus()
     await page.keyboard.press('Tab')
     await expect(environmentIndicator).toBeFocused()
@@ -357,8 +357,29 @@ test.describe('Workflow Validation module @workflow-validation', () => {
     await expect(page.getByLabel('Test Suite')).toHaveCount(0)
     await expect.poll(() => {
       const url = new URL(bugRequests.at(-1))
-      return ['version', 'testSuite', 'invocationId', 'dateFrom', 'dateTo'].every((key) => !url.searchParams.has(key))
+      return ['version', 'testSuite', 'invocationId', 'dateFrom', 'dateTo', 'category'].every((key) => !url.searchParams.has(key))
     }).toBe(true)
+  })
+
+  test('shows Jira-linked RFEs and future issue categories', async ({ page }) => {
+    await page.route('**/api/modules/workflow-validation/bugs?**', (route) => route.fulfill({ json: {
+      total: 2, size: 50, nextCursor: null,
+      kpis: { total: 2, opened: 1, distinctJira: 2 },
+      byCategory: [{ category: 'RFE', count: 1 }, { category: 'FUTURE_CATEGORY', count: 1 }],
+      byAction: [{ action: 'FILED', count: 1 }, { action: 'EXISTING', count: 1 }],
+      bugs: [
+        { id: 'rfe', category: 'RFE', action: 'FILED', opened: true, bug_key: 'RHAIRFE-123', error_summary: 'Requested workflow enhancement' },
+        { id: 'future', category: 'FUTURE_CATEGORY', action: 'EXISTING', opened: false, bug_key: 'RHOAIENG-234', error_summary: 'Future issue category' }
+      ]
+    } }))
+    await page.goto('/#/workflow-validation/activity')
+
+    await expect(page.getByText('RHAIRFE-123')).toBeVisible()
+    await expect(page.getByText('RHOAIENG-234')).toBeVisible()
+    await expect(page.getByText('Category: RFE')).toBeVisible()
+    await expect(page.getByText('Category: FUTURE CATEGORY')).toBeVisible()
+    await expect(page.getByText('New Jira issue opened')).toBeVisible()
+    await expect(page.getByText('Existing Jira issue encountered')).toBeVisible()
   })
 
   test('is visible in navigation and all primary views render', async ({ page }) => {
@@ -382,11 +403,11 @@ test.describe('Workflow Validation module @workflow-validation', () => {
 
     await page.goto('/#/workflow-validation/workflows')
     await expect(page.getByRole('heading', { name: 'Pass Rate and Test Volume' })).toBeVisible()
-    await expect(page.getByRole('heading', { name: 'Bug Occurrences Over Time' })).toBeVisible()
-    await expect(page.getByRole('heading', { name: 'Bug Frequency by RHOAI Version' })).toBeVisible()
+    await expect(page.getByRole('heading', { name: 'Jira Issue Occurrences Over Time' })).toBeVisible()
+    await expect(page.getByRole('heading', { name: 'Jira Issue Frequency by RHOAI Version' })).toBeVisible()
     await expect(page.getByRole('heading', { name: 'Run History' })).toBeVisible()
-    await expect(page.getByRole('columnheader', { name: 'Bugs opened' })).toBeVisible()
-    await expect(page.getByRole('columnheader', { name: 'Known bugs' })).toBeVisible()
+    await expect(page.getByRole('columnheader', { name: 'Issues opened' })).toBeVisible()
+    await expect(page.getByRole('columnheader', { name: 'Existing issues' })).toBeVisible()
 
     await page.goto('/#/workflow-validation/runs')
     await expect(page.getByRole('option', { name: 'Error', exact: true })).toHaveCount(1)

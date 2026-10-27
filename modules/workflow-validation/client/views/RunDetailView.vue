@@ -61,7 +61,7 @@
           </div>
           <div v-else class="px-6 py-10 text-center">
             <p class="text-sm text-gray-500 dark:text-gray-400">
-              {{ run.verdict === 'PASS' ? 'Clean test — no root-cause findings recorded.' : 'No root-cause findings recorded for this test.' }}
+              No visible root-cause findings for this test.
             </p>
             <div v-if="run.classification" class="mt-3 inline-flex items-center gap-2">
               <span class="text-xs text-gray-500 dark:text-gray-400">Test classification:</span>

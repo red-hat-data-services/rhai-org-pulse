@@ -90,9 +90,11 @@ Important rules:
   `invocation_id` before summing. Historical ETL documents fall back to
   `run_id` only when `invocation_id` is absent.
 - Root causes may not have a Jira key.
-- Product-bug and UX-defect findings without a Jira ID are not surfaced in
-  stakeholder-facing issue lists, charts, counts, or outcome classification.
-  Other root-cause categories remain visible.
+- Stakeholder-facing issue lists, charts, counts, and outcome classification
+  include Jira-linked root causes of any category except `ENVIRONMENT` and
+  `CREDENTIAL_EXPOSURE`. New categories are included automatically when they
+  have a Jira key. Run detail and workflow history retain non-Jira root-cause
+  findings except those two hidden categories.
 - Missing fields mean unknown unless their documented business meaning says
   otherwise.
 - The dashboard always presents one bounded test run. It defaults to
@@ -101,26 +103,26 @@ Important rules:
   can select another cohort; the dashboard never defaults to an aggregation
   of historical executions.
 - Dashboard metrics and the complete test-results table are scoped to that one
-  `rhoai_version`, `telemetry_suite`, and `invocation_id`. Product bugs and UX
-  defects from the same execution are separated into newly opened Jira issues
-  and known issues encountered without opening another issue.
+  `rhoai_version`, `telemetry_suite`, and `invocation_id`. Jira-linked issues
+  from the same execution are separated into newly opened issues and existing
+  issues encountered without opening another issue.
 - The dashboard table omits task counts; task outcomes remain available in the
   execution detail and workflow history views.
-- Stakeholder-facing test outcomes distinguish `PASS` from product or UX failures
-  (`FAIL`, when a Jira-linked `PRODUCT_BUG` or `UX_DEFECT` finding is linked) and environmental failures
-  (`SKIP`, when an unsuccessful test has no product or UX issue finding). Raw task
-  verdicts remain unchanged.
-- No-issue table cells show an em dash. Keyboard focus and hover preserve the
-  explanation, including environmental failures and the absence of product or UX issues.
+- Stakeholder-facing test outcomes distinguish `PASS` from Jira-linked issue
+  failures (`FAIL`, when a visible Jira-linked finding is attached) and other
+  unsuccessful tests (`SKIP`, when no visible Jira-linked issue is attached).
+  Raw task verdicts remain unchanged.
+- No-issue table cells show an em dash. Keyboard focus and hover explain that
+  no Jira-linked issue was recorded.
 - Jira defaults to one exact test-suite run and can switch explicitly to all
-  product bugs and UX defects for a RHOAI release, a date range, or all recorded time.
+  visible Jira-linked issues for a RHOAI release, a date range, or all recorded time.
 - Trends defaults to Release Gate when it is available and the URL does not
   specify a suite. Otherwise it uses the most recently active test suite across
-  all RHOAI versions. It charts pass rate, test volume, newly opened product or UX issues,
-  and known issues per invocation, with version rollups and exact-run links
+  all RHOAI versions. It charts pass rate, test volume, newly opened Jira issues,
+  and existing issues per invocation, with version rollups and exact-run links
   back to the dashboard. Date and release filters remain shareable in the URL.
 - Compare requires a test-run group and two dated invocations. Each side is one
-  exact test run, and product/UX issue linkage remains constrained to its run IDs.
+  exact test run, and Jira issue linkage remains constrained to its run IDs.
 
 The source mappings maintained by the workflow-validation Director are the
 authoritative schema. When mappings change, update backend queries, this

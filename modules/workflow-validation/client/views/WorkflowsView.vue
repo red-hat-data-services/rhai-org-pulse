@@ -2,7 +2,7 @@
   <div>
     <div class="mb-4">
       <h2 class="text-2xl font-bold text-gray-900 dark:text-gray-100">Trends</h2>
-      <p class="mt-0.5 text-sm text-gray-500 dark:text-gray-400">Track a test run's health, product and UX issues, and release-to-release progress.</p>
+      <p class="mt-0.5 text-sm text-gray-500 dark:text-gray-400">Track a test run's health, Jira issues, and release-to-release progress.</p>
     </div>
     <div class="mb-6 rounded-xl border border-gray-100 bg-white p-3 shadow-sm dark:border-gray-700/60 dark:bg-gray-800">
       <div class="flex flex-wrap items-center gap-3">
@@ -57,8 +57,8 @@
                 <th class="px-4 py-3 text-right font-semibold">Runs</th>
                 <th class="px-4 py-3 text-right font-semibold">Tests</th>
                 <th class="px-4 py-3 font-semibold">Pass rate</th>
-                <th class="px-4 py-3 text-right font-semibold">Bugs opened</th>
-                <th class="px-4 py-3 text-right font-semibold">Known bugs</th>
+                <th class="px-4 py-3 text-right font-semibold">Issues opened</th>
+                <th class="px-4 py-3 text-right font-semibold">Existing issues</th>
               </tr>
             </thead>
             <tbody>
@@ -83,7 +83,7 @@
       <div class="overflow-hidden rounded-xl border border-gray-100 bg-white shadow-sm dark:border-gray-700/60 dark:bg-gray-800">
         <div class="border-b border-gray-100 px-6 py-4 dark:border-gray-700/60">
           <h3 class="font-semibold text-gray-900 dark:text-gray-100">Run History</h3>
-          <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">Select a row to inspect every test and product or UX issue from that exact run.</p>
+          <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">Select a row to inspect every test and Jira issue from that exact run.</p>
         </div>
         <div class="overflow-x-auto">
           <table class="w-full text-sm">
@@ -102,8 +102,8 @@
                 <th class="px-4 py-3 font-semibold">
                   <button @click="setSort('passRate')">Pass rate {{ sortMark('passRate') }}</button>
                 </th>
-                <th class="px-4 py-3 text-right font-semibold">Bugs opened</th>
-                <th class="px-4 py-3 text-right font-semibold">Known bugs</th>
+                <th class="px-4 py-3 text-right font-semibold">Issues opened</th>
+                <th class="px-4 py-3 text-right font-semibold">Existing issues</th>
                 <th class="px-4 py-3 text-right font-semibold">
                   <button @click="setSort('duration')">Total test time {{ sortMark('duration') }}</button>
                 </th>
@@ -159,7 +159,7 @@ import { computed, inject, onMounted, ref } from 'vue'
 import TestRunBugChart from '../components/TestRunBugChart.vue'
 import TestRunBugVersionChart from '../components/TestRunBugVersionChart.vue'
 import TestRunOutcomeChart from '../components/TestRunOutcomeChart.vue'
-import { isVisibleProductBug } from '../utils/product-bugs'
+import { isVisibleJiraIssue } from '../utils/product-bugs'
 import { compareTableValues, defaultDateRange, formatBuildId, formatDate, formatDuration, formatPercent, formatSuiteName, runOutcomeCounts, syncQueryParams, useWorkflowValidation } from '../composables/useWorkflowValidation'
 const nav = inject('moduleNav')
 const urlParams = new URLSearchParams(window.location.hash.split('?')[1] || '')
@@ -178,7 +178,7 @@ const error = ref('')
 const sortBy = ref('timestamp')
 const sortDir = ref('desc')
 function bugCounts(run) {
-  const bugs = (run.productBugs || []).filter(isVisibleProductBug)
+  const bugs = (run.productBugs || []).filter(isVisibleJiraIssue)
   return {
     new: bugs.filter((bug) => bug.opened === true).length,
     known: bugs.filter((bug) => bug.opened !== true).length,

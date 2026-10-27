@@ -159,7 +159,7 @@ describe('Workflow Validation OverviewView', () => {
     expect(text).not.toContain('distinct linked issues')
   })
 
-  it('renders every test result with product-bug context and hides task outcomes', () => {
+  it('renders every test result with Jira issue context and hides task outcomes', () => {
     expect(wrapper.text()).toContain('Test Results')
     expect(wrapper.text()).toContain('Fraud Detection Test')
     expect(wrapper.text()).toContain('Origin: gitlab-mr')
@@ -169,27 +169,27 @@ describe('Workflow Validation OverviewView', () => {
     expect(wrapper.text()).toContain('RHOAIENG-456 — New product bug opened.')
     expect(wrapper.get('a[href="https://issues.example/RHOAIENG-456"]').text()).toBe('RHOAIENG-456')
     expect(wrapper.text()).toContain('RHOAIENG-789 — Pre-existing product bug detected.')
-    expect(wrapper.findAll('[role="img"][aria-label="No product or UX issue recorded."]')).toHaveLength(2)
+    expect(wrapper.findAll('[role="img"][aria-label="No Jira-linked issue recorded."]')).toHaveLength(2)
     expect(wrapper.text()).not.toContain('Environmental failure detected. No product or UX issue detected.')
     expect(wrapper.text()).not.toContain('AIPCC-123')
     expect(wrapper.text()).not.toContain('Existing product bug detected. Jira ID missing.')
     expect(wrapper.text()).not.toContain('Most Frequently Failing Tasks')
   })
 
-  it('explains each product bug state with a tooltip', () => {
+  it('explains each Jira issue state with a tooltip', () => {
     const tooltips = wrapper.findAll('[title]').map((node) => node.attributes('title'))
     expect(tooltips).toContain('A new product bug was detected. RHOAIENG-456 has been opened.')
-    expect(tooltips).toContain('The test failed after encountering an already reported bug. No new issue was opened, but a new occurrence was logged and the issue was updated.')
+    expect(tooltips).toContain('The test encountered an already reported product bug. No new issue was opened.')
     expect(tooltips).not.toContain('A Jira issue exists for this product bug, but its ID is missing from Org Pulse. This may indicate a data import problem or a problem publishing the telemetry.')
-    expect(tooltips).toContain('The test failed or was terminated due to a problem in the test execution environment. No product bug or UX defect was observed.')
+    expect(tooltips).toContain('The test failed or was terminated without a Jira-linked issue recorded.')
   })
 
-  it('separates newly opened and known product bugs with clear explanations', () => {
-    expect(wrapper.text()).toContain('New Product and UX Issues Opened')
-    expect(wrapper.text()).toContain('Product bugs and UX defects first reported and filed as new Jira issues during this test run.')
+  it('separates newly opened and existing Jira issues with clear explanations', () => {
+    expect(wrapper.text()).toContain('New Jira Issues Opened')
+    expect(wrapper.text()).toContain('Jira issues first opened during this test run.')
     expect(wrapper.text()).toContain('RHOAIENG-123')
-    expect(wrapper.text()).toContain('Known Product and UX Issues Encountered')
-    expect(wrapper.text()).toContain('Previously reported product bugs and UX defects encountered again during this test run; no new Jira issue was opened.')
+    expect(wrapper.text()).toContain('Existing Jira Issues Encountered')
+    expect(wrapper.text()).toContain('Previously reported Jira issues encountered again during this test run; no new issue was opened.')
     expect(wrapper.text()).toContain('RHOAIENG-789')
     expect(wrapper.text()).not.toContain('Root Causes by Category')
   })

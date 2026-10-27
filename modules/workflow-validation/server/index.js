@@ -39,7 +39,7 @@ function safe(handler) {
 
 const bucketList = (agg) => (agg && agg.buckets ? agg.buckets : []);
 const valueOrNull = (agg) => agg?.value ?? null;
-const STAKEHOLDER_ISSUE_CATEGORIES = ['PRODUCT_BUG', 'UX_DEFECT'];
+const HIDDEN_ISSUE_CATEGORIES = ['ENVIRONMENT', 'CREDENTIAL_EXPOSURE'];
 
 function decodeCursor(value) {
   if (!value) return null;
@@ -63,10 +63,21 @@ const encodeCursor = (sort) => sort ? Buffer.from(JSON.stringify(sort)).toString
 
 function addFilter(query, clause) {
   if (!clause) return query;
+  if (query.match_none) return query;
   if (query.match_all) return { bool: { filter: [clause] } };
   const bool = { ...(query.bool || {}) };
   bool.filter = [...(bool.filter || []), clause];
   return { bool };
+}
+
+function withoutHiddenIssues(query) {
+  return addFilter(query, {
+    bool: { must_not: [{ terms: { category: HIDDEN_ISSUE_CATEGORIES } }] }
+  });
+}
+
+function visibleJiraIssues(query) {
+  return addFilter(withoutHiddenIssues(query), { exists: { field: 'bug_key' } });
 }
 
 module.exports = function registerRoutes(router, context) {
@@ -263,10 +274,8 @@ module.exports = function registerRoutes(router, context) {
     // Test suite is execution metadata; the invocationIds argument carries
     // that scope across the execution invocation_id -> RCA run_id join.
     const bugParams = { ...q, q: '', category: '', action: '', opened: '', testSuite: '' };
-    let query = addFilter(bugFilters(bugParams), { terms: { category: STAKEHOLDER_ISSUE_CATEGORIES } });
-    // Stakeholder issue surfaces intentionally hide telemetry findings that
-    // cannot link to Jira; those findings must not influence visible outcomes.
-    query = addFilter(query, { exists: { field: 'bug_key' } });
+    // Keep every Jira-linked issue category except known non-issue findings.
+    let query = visibleJiraIssues(bugFilters(bugParams));
     // Naming mismatch: RCA run_id stores the Director invocation_id.
     // Execution run_id is obsolete legacy ETL data and is never this join key.
     if (invocationIds.length) query = addFilter(query, { terms: { run_id: invocationIds } });
@@ -606,10 +615,7 @@ module.exports = function registerRoutes(router, context) {
     };
     const bugsBody = {
       size: 0,
-      query: addFilter(
-        addFilter(await rootCauseQuery(req.query), { terms: { category: STAKEHOLDER_ISSUE_CATEGORIES } }),
-        { exists: { field: 'bug_key' } }
-      ),
+      query: visibleJiraIssues(await rootCauseQuery(req.query)),
       aggs: {
         total: { value_count: { field: 'root_cause_id' } },
         opened: { filter: { term: { opened: true } } },
@@ -710,7 +716,7 @@ module.exports = function registerRoutes(router, context) {
     };
     const bugsBody = {
       size: 0,
-      query: rootCauseFilter,
+      query: visibleJiraIssues(rootCauseFilter),
       aggs: {
         by_category: { terms: { field: 'category', size: 20 } },
         by_action: { terms: { field: 'action', size: 20 } },
@@ -874,7 +880,7 @@ module.exports = function registerRoutes(router, context) {
     let bugs = [];
     if (run.invocation_id) {
       const bugHits = await searchAll(BUGS_INDEX, {
-        query: { bool: { filter: [
+        query: withoutHiddenIssues({ bool: { filter: [
           // Naming mismatch: RCA run_id matches execution invocation_id.
           // Execution run_id is obsolete legacy ETL data and is never this join key.
           { term: { run_id: run.invocation_id } },
@@ -882,7 +888,7 @@ module.exports = function registerRoutes(router, context) {
             { term: { workflow: run.workflow } },
             { term: { impacted_workflows: run.workflow } }
           ], minimum_should_match: 1 } }] : [])
-        ] } },
+        ] } }),
         sort: [{ timestamp: 'desc' }, { root_cause_id: 'asc' }]
       });
       bugs = bugHits.map((h) => ({ id: h._id, ...h._source }));
@@ -894,7 +900,7 @@ module.exports = function registerRoutes(router, context) {
    * @openapi
    * /api/modules/workflow-validation/bugs:
    *   get:
-   *     summary: Paginated bug list with KPIs and breakdowns (respects filters)
+   *     summary: Paginated Jira-linked issue list, excluding environment and credential findings
    *     tags: [Workflow Validation]
    *     parameters:
    *       - { in: query, name: version, schema: { type: string } }
@@ -914,7 +920,7 @@ module.exports = function registerRoutes(router, context) {
   router.get('/bugs', requireAuth, safe(async function (req, res) {
     const size = paginationSize(req.query.size, 50);
     const searchAfter = decodeCursor(req.query.cursor);
-    const query = await rootCauseQuery(req.query);
+    const query = visibleJiraIssues(await rootCauseQuery(req.query));
     const body = {
       size: size + 1,
       track_total_hits: true,
@@ -1094,7 +1100,7 @@ module.exports = function registerRoutes(router, context) {
     const invocationIds = [...new Set(runs.map((r) => r.invocation_id).filter(Boolean))];
     if (invocationIds.length) {
       const bugHits = await searchAll(BUGS_INDEX, {
-        query: {
+        query: withoutHiddenIssues({
           bool: {
             filter: [{ terms: { run_id: invocationIds } }],
             should: [
@@ -1103,7 +1109,7 @@ module.exports = function registerRoutes(router, context) {
             ],
             minimum_should_match: 1
           }
-        },
+        }),
         sort: [{ timestamp: 'desc' }, { root_cause_id: 'asc' }]
       });
       bugs = bugHits.map((h) => ({ id: h._id, ...h._source }));

@@ -136,9 +136,6 @@ function bugFilters(q = {}) {
   const categories = String(q.category || '').split(',').map((value) => value.trim()).filter(Boolean);
   if (categories.length === 1) filter.push({ term: { category: categories[0] } });
   if (categories.length > 1) filter.push({ terms: { category: categories } });
-  if (categories.length && categories.every((category) => ['PRODUCT_BUG', 'UX_DEFECT'].includes(category))) {
-    filter.push({ exists: { field: 'bug_key' } });
-  }
   if (q.action) filter.push({ term: { action: q.action } });
   if (q.opened === 'true' || q.opened === 'false') filter.push({ term: { opened: q.opened === 'true' } });
   if (q.workflow) {

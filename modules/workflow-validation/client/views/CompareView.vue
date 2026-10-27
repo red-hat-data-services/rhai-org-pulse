@@ -64,7 +64,7 @@
                   <th class="px-4 py-3 font-semibold"><button @click="setSort('baselineVerdict')">{{ shortRunLabel(baseline) }} {{ sortMark('baselineVerdict') }}</button></th>
                   <th class="px-4 py-3 font-semibold"><button @click="setSort('targetVerdict')">{{ shortRunLabel(target) }} {{ sortMark('targetVerdict') }}</button></th>
                   <th class="px-4 py-3 font-semibold"><button @click="setSort('targetTimestamp')">Last observed {{ sortMark('targetTimestamp') }}</button></th>
-                  <th class="px-4 py-3 font-semibold min-w-72">Target product or UX issue</th>
+                  <th class="px-4 py-3 font-semibold min-w-72">Target Jira issue</th>
                 </tr>
               </thead>
               <tbody>
