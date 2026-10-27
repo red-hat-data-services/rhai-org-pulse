@@ -914,33 +914,58 @@ module.exports = function registerRoutes(router, context) {
    *       - { in: query, name: q, schema: { type: string }, description: Failure summary text }
    *       - { in: query, name: dateFrom, schema: { type: string, format: date } }
    *       - { in: query, name: dateTo, schema: { type: string, format: date } }
-   *       - { in: query, name: cursor, schema: { type: string }, description: Opaque search-after cursor }
+   *       - { in: query, name: distinct, schema: { type: boolean, default: false }, description: Group by Jira key and return the latest matching occurrence per issue }
+   *       - { in: query, name: cursor, schema: { type: string }, description: Opaque pagination cursor for the selected mode }
    *       - { in: query, name: size, schema: { type: integer, default: 50 } }
    *     responses:
-   *       200: { description: Jira issue occurrences with KPIs }
+   *       200: { description: Jira issues or occurrences with KPIs }
    */
   router.get('/bugs', requireAuth, safe(async function (req, res) {
     const size = paginationSize(req.query.size, 50);
-    const searchAfter = decodeCursor(req.query.cursor);
+    const distinct = req.query.distinct === 'true';
+    const cursor = decodeCursor(req.query.cursor);
+    if (distinct && cursor && (cursor.length !== 1 || typeof cursor[0] !== 'string')) {
+      const err = new Error('Invalid pagination cursor');
+      err.code = 'BAD_REQUEST';
+      throw err;
+    }
     const query = visibleJiraIssues(await rootCauseQuery(req.query));
     const body = {
-      size: size + 1,
+      size: distinct ? 0 : size + 1,
       track_total_hits: true,
       query,
-      sort: [{ timestamp: 'desc' }, { root_cause_id: 'asc' }],
-      ...(searchAfter ? { search_after: searchAfter } : {}),
+      ...(!distinct ? {
+        sort: [{ timestamp: 'desc' }, { root_cause_id: 'asc' }],
+        ...(cursor ? { search_after: cursor } : {})
+      } : {}),
       aggs: {
         total: { value_count: { field: 'root_cause_id' } },
         opened: { filter: { term: { opened: true } } },
-        distinct_jira: { cardinality: { field: 'bug_key' } },
+        distinct_jira: { cardinality: { field: 'bug_key', precision_threshold: 40000 } },
         by_category: { terms: { field: 'category', size: 20 } },
-        by_action: { terms: { field: 'action', size: 20 } }
+        by_action: { terms: { field: 'action', size: 20 } },
+        ...(distinct ? { issues: {
+          composite: {
+            size,
+            sources: [{ jiraKey: { terms: { field: 'bug_key' } } }],
+            ...(cursor ? { after: { jiraKey: cursor[0] } } : {})
+          },
+          aggs: { latest: { top_hits: {
+            size: 1,
+            sort: [{ timestamp: 'desc' }, { root_cause_id: 'asc' }]
+          } } }
+        } } : {})
       }
     };
     const r = await osSearch(BUGS_INDEX, body);
     const a = r.aggregations || {};
-    const hits = r.hits?.hits || [];
-    const pageHits = hits.slice(0, size);
+    const hits = distinct
+      ? bucketList(a.issues).map((bucket) => ({
+        ...bucket.latest?.hits?.hits?.[0],
+        occurrenceCount: bucket.doc_count
+      })).filter((hit) => hit._id)
+      : (r.hits?.hits || []);
+    const pageHits = distinct ? hits : hits.slice(0, size);
     const occurrenceRunIds = [...new Set(pageHits.map((hit) => hit._source?.run_id).filter(Boolean))];
     // Naming mismatch: RCA run_id is looked up as execution invocation_id.
     // Execution run_id is obsolete legacy ETL data and is never this join key.
@@ -956,9 +981,11 @@ module.exports = function registerRoutes(router, context) {
       if (!executionByOccurrence.has(key)) executionByOccurrence.set(key, source.execution_id || execution._id);
     }
     res.json({
-      total: r.hits?.total?.value || 0,
+      total: distinct ? (a.distinct_jira?.value || 0) : (r.hits?.total?.value || 0),
       size,
-      nextCursor: hits.length > size ? encodeCursor(pageHits.at(-1)?.sort) : null,
+      nextCursor: distinct
+        ? encodeCursor(a.issues?.after_key ? [a.issues.after_key.jiraKey] : null)
+        : (hits.length > size ? encodeCursor(pageHits.at(-1)?.sort) : null),
       kpis: {
         total: a.total?.value || 0,
         opened: a.opened?.doc_count || 0,
@@ -972,7 +999,8 @@ module.exports = function registerRoutes(router, context) {
         const executionId = candidateWorkflows
           .map((workflow) => executionByOccurrence.get(`${bug.run_id || ''}\u0000${workflow}`))
           .find(Boolean);
-        return { id: h._id, ...bug, ...(executionId ? { execution_id: executionId } : {}) };
+        return { id: h._id, ...bug, ...(distinct ? { occurrenceCount: h.occurrenceCount } : {}),
+          ...(executionId ? { execution_id: executionId } : {}) };
       })
     });
   }));

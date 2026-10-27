@@ -9,6 +9,7 @@
         class="font-mono font-semibold text-sm text-blue-600 dark:text-blue-400 hover:underline shrink-0"
       >{{ bug.bug_key }}</a>
       <span v-else-if="bug.bug_key" class="shrink-0 font-mono text-sm font-semibold text-gray-700 dark:text-gray-200">{{ bug.bug_key }}</span>
+      <span v-if="bug.occurrenceCount > 1" class="text-xs text-gray-500 dark:text-gray-400">{{ bug.occurrenceCount }} occurrences</span>
       <span
         class="inline-block px-2.5 py-0.5 rounded-full text-[0.68rem] font-semibold"
         :class="issueOutcome.tone"

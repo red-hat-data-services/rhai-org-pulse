@@ -117,6 +117,11 @@ Important rules:
   no Jira-linked issue was recorded.
 - Jira defaults to one exact test-suite run and can switch explicitly to all
   visible Jira-linked issues for a RHOAI release, a date range, or all recorded time.
+- The Jira issue list shows one row per Jira key by default, using the latest
+  matching occurrence as its representative and showing the number of matching
+  occurrences. The checkbox switches to every occurrence; its state is shareable
+  in the URL. Distinct pages are ordered by Jira key and use OpenSearch composite
+  aggregation cursors. KPI cards continue to summarize all matching occurrences.
 - Trends defaults to Release Gate when it is available and the URL does not
   specify a suite. Otherwise it uses the most recently active test suite across
   all RHOAI versions. It charts pass rate, test volume, newly opened Jira issues,

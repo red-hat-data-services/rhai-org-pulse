@@ -389,6 +389,40 @@ test.describe('Workflow Validation module @workflow-validation', () => {
     await expect(page.getByText('Existing Jira issue encountered')).toBeVisible()
   })
 
+  test('shows distinct Jira issues by default and switches to all occurrences', async ({ page }) => {
+    const requests = []
+    await page.route('**/api/modules/workflow-validation/bugs?**', (route) => {
+      const distinct = new URL(route.request().url()).searchParams.get('distinct') === 'true'
+      requests.push(distinct)
+      const issue = (id, key) => ({ id, bug_key: key, category: 'PRODUCT_BUG',
+        action: 'EXISTING', error_summary: `Occurrence ${id}` })
+      return route.fulfill({ json: {
+        total: distinct ? 2 : 3, size: 50, nextCursor: null,
+        kpis: { total: 3, opened: 0, distinctJira: 2 }, byCategory: [], byAction: [],
+        bugs: distinct
+          ? [{ ...issue('latest', 'RHOAIENG-1'), occurrenceCount: 2 }, issue('other', 'RHOAIENG-2')]
+          : [issue('latest', 'RHOAIENG-1'), issue('older', 'RHOAIENG-1'), issue('other', 'RHOAIENG-2')]
+      } })
+    })
+    await page.goto('/#/workflow-validation/activity')
+    const toggle = page.getByRole('checkbox', { name: 'Show distinct issues only' })
+    await expect(toggle).toBeChecked()
+    await expect(page.getByRole('heading', { name: 'Jira Issues', exact: true })).toBeVisible()
+    await expect(page.getByText('2 occurrences')).toBeVisible()
+    await expect(page.getByText('Occurrence older')).toHaveCount(0)
+    expect(requests.at(-1)).toBe(true)
+
+    await toggle.uncheck()
+    await expect(page).toHaveURL(/distinct=false/)
+    await expect(page.getByRole('heading', { name: 'Jira Issue Occurrences' })).toBeVisible()
+    await expect(page.getByText('Occurrence older')).toBeVisible()
+    expect(requests.at(-1)).toBe(false)
+
+    await page.reload()
+    await expect(toggle).not.toBeChecked()
+    await expect(page.getByText('Occurrence older')).toBeVisible()
+  })
+
   test('is visible in navigation and all primary views render', async ({ page }) => {
     await page.goto('/')
     const moduleButton = page.locator('aside nav button').filter({ hasText: 'Workflow Validation' }).first()

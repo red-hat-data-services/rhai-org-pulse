@@ -206,6 +206,48 @@ describe('workflow-validation live schema routes', () => {
     expect(JSON.stringify(query)).not.toContain('UX_DEFECT')
   })
 
+  it('pages distinct Jira keys and returns the latest occurrence for each key', async () => {
+    const requests = []
+    vi.stubGlobal('fetch', vi.fn((_url, options) => {
+      const body = JSON.parse(options.body)
+      requests.push(body)
+      const nextPage = Boolean(body.aggs.issues.composite.after)
+      const key = nextPage ? 'RHOAIENG-2' : 'RHOAIENG-1'
+      return Promise.resolve(jsonResponse({
+        hits: { total: { value: 4 }, hits: [] },
+        aggregations: {
+          total: { value: 4 }, opened: { doc_count: 1 }, distinct_jira: { value: 2 },
+          issues: {
+            buckets: [{ key: { jiraKey: key }, doc_count: nextPage ? 1 : 3,
+              latest: { hits: { hits: [{ _id: nextPage ? 'second' : 'latest', _source: {
+                bug_key: key, category: nextPage ? 'FEATURE_REQUEST' : 'PRODUCT_BUG',
+                error_summary: nextPage ? 'Feature request' : 'Latest occurrence'
+              } }] } } }],
+            ...(nextPage ? {} : { after_key: { jiraKey: key } })
+          }
+        }
+      }))
+    }))
+    const routes = register()
+    const first = makeResponse()
+    await routes['/bugs'].at(-1)({ query: { distinct: 'true', size: '1' } }, first)
+    expect(first.body).toMatchObject({ total: 2, kpis: { total: 4, distinctJira: 2 },
+      bugs: [{ id: 'latest', bug_key: 'RHOAIENG-1', occurrenceCount: 3 }] })
+    expect(first.body.nextCursor).toBeTruthy()
+    expect(requests[0]).toMatchObject({ size: 0, aggs: { issues: { composite: { size: 1 } } } })
+    expect(requests[0].aggs.issues.aggs.latest.top_hits.sort).toEqual([
+      { timestamp: 'desc' }, { root_cause_id: 'asc' }
+    ])
+    expect(requests[0].query.bool.filter).toContainEqual({ exists: { field: 'bug_key' } })
+
+    const second = makeResponse()
+    await routes['/bugs'].at(-1)({ query: { distinct: 'true', size: '1', cursor: first.body.nextCursor } }, second)
+    expect(requests[1].aggs.issues.composite.after).toEqual({ jiraKey: 'RHOAIENG-1' })
+    expect(second.body).toMatchObject({ total: 2,
+      bugs: [{ id: 'second', bug_key: 'RHOAIENG-2', occurrenceCount: 1 }] })
+    expect(second.body.nextCursor).toBeNull()
+  })
+
   it('keeps an unmatched test suite empty after applying issue visibility', async () => {
     let rootCauseQuery
     vi.stubGlobal('fetch', vi.fn((url, options) => {

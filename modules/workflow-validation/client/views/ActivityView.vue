@@ -26,9 +26,15 @@
 
       <!-- Activity feed -->
       <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700/60 overflow-hidden">
-        <div class="px-6 py-4 border-b border-gray-100 dark:border-gray-700/60 flex items-center justify-between">
-          <h3 class="text-base font-semibold text-gray-900 dark:text-gray-100">Jira Issue Occurrences</h3>
-          <span class="text-xs text-gray-500 dark:text-gray-400">{{ total }} records</span>
+        <div class="px-6 py-4 border-b border-gray-100 dark:border-gray-700/60 flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <h3 class="text-base font-semibold text-gray-900 dark:text-gray-100">{{ distinct ? 'Jira Issues' : 'Jira Issue Occurrences' }}</h3>
+            <span class="text-xs text-gray-500 dark:text-gray-400">{{ total }} {{ distinct ? 'issues' : 'occurrences' }}</span>
+          </div>
+          <label class="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300 cursor-pointer">
+            <input v-model="distinct" type="checkbox" class="accent-blue-600" @change="reload">
+            Show distinct issues only
+          </label>
         </div>
         <div v-if="loading" class="px-6 py-10 text-center text-gray-400 dark:text-gray-500">Loading Jira issues…</div>
         <div v-else-if="bugs.length" class="divide-y divide-gray-50 dark:divide-gray-700/40">
@@ -73,6 +79,7 @@ if (!initialParams.jiraSuiteMode && filters.jiraScope === 'suite') {
 }
 
 const bugs = ref([])
+const distinct = ref(initialParams.distinct !== 'false')
 const total = ref(0)
 const size = ref(50)
 const cursor = ref('')
@@ -94,13 +101,13 @@ async function load() {
   loading.value = true
   unreachable.value = ''
   try {
-    const data = await getBugs(cursor.value, size.value)
+    const data = await getBugs(cursor.value, size.value, distinct.value)
     bugs.value = data.bugs
     total.value = data.total
     nextCursor.value = data.nextCursor
     Object.assign(kpis, data.kpis)
     byAction.value = data.byAction
-    syncQueryParams(nav, filterQueryValues(FILTER_KEYS))
+    syncQueryParams(nav, { ...filterQueryValues(FILTER_KEYS), distinct: distinct.value ? '' : 'false' })
   } catch (err) {
     if (err.status === 503 || err.data?.code === 'OS_UNREACHABLE') {
       unreachable.value = err.data?.error || err.message
