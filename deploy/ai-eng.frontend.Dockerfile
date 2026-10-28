@@ -20,6 +20,9 @@ COPY modules/ ./modules/
 # Add public assets (includes AI-First scheduler demo)
 COPY public/ ./public/
 
+# Setup workspace (creates /src symlink for @org-pulse/core integration)
+RUN npm run setup
+
 RUN npm run build
 
 # Stage 2: Serve with hardened nginx
