@@ -142,32 +142,42 @@ module.exports = function registerAIPlannerRoutes(router, context) {
       // Fetch priority outcomes (live from cache synced from Jira every 12h)
       const jiraRequest = context.jiraClient && context.jiraClient.jiraRequest;
       let priorityOutcomes = [];
+      let outcomesFromJira = false;
       try {
         priorityOutcomes = await fetchPriorityOutcomes(jiraRequest, readFromStorage, writeToStorage);
+        if (priorityOutcomes && priorityOutcomes.length > 0) {
+          outcomesFromJira = true;
+        }
       } catch (outcomeErr) {
-        console.warn('[ai-planner/outcomes] getPriorityOutcomes failed, using empty list:', outcomeErr.message);
-        priorityOutcomes = [];
+        console.warn('[ai-planner/outcomes] getPriorityOutcomes failed, falling back to defaults:', outcomeErr.message);
       }
 
-      // Fetch Jira features to get parentKey links to outcomes
+      // Use fallback outcomes if Jira fetch failed or returned empty
+      if (!outcomesFromJira || !priorityOutcomes || priorityOutcomes.length === 0) {
+        priorityOutcomes = FALLBACK_OUTCOMES;
+      }
+
+      // Fetch Jira features to get parentKey links to outcomes (optional)
       let jiraFeatures = null;
       if (context.jiraClient) {
         try {
           jiraFeatures = await fetchFeaturesWithTimeout(context.jiraClient);
         } catch (jiraErr) {
-          console.warn('[ai-planner/outcomes] Jira feature query failed, falling back to cached data:', jiraErr.message);
+          console.warn('[ai-planner/outcomes] Jira feature query failed, using empty features:', jiraErr.message);
         }
       }
 
-      // Build outcomes from live feature data with Jira parent links
-      let readiness = null;
-      try {
-        readiness = await buildFeatureReadiness(readFromStorage, jiraFeatures, listStorageFiles);
-      } catch (readinessErr) {
-        console.warn('[ai-planner/outcomes] buildFeatureReadiness failed, returning empty outcomes:', readinessErr.message);
-        readiness = { pendingReview: [], ready: [] };
+      // Build outcomes from live feature data with priority ordering
+      let allFeatures = [];
+      if (jiraFeatures) {
+        try {
+          const readiness = await buildFeatureReadiness(readFromStorage, jiraFeatures, listStorageFiles);
+          allFeatures = (readiness.pendingReview || []).concat(readiness.ready || []);
+        } catch (readinessErr) {
+          console.warn('[ai-planner/outcomes] buildFeatureReadiness failed, using empty features:', readinessErr.message);
+        }
       }
-      const allFeatures = (readiness.pendingReview || []).concat(readiness.ready || []);
+
       const inPlanFeatures = allFeatures
         .filter(f => f.status !== 'No' && f.targetVersions && f.targetVersions.some(v => v.includes('3.6')))
         .map(f => f.key);
@@ -175,8 +185,7 @@ module.exports = function registerAIPlannerRoutes(router, context) {
       // Extract outcomes from live feature parent links, using priorityOutcomes for ordering
       const outcomeMap = extractOutcomesFromFeatures(allFeatures, priorityOutcomes);
 
-      // Sort outcomes by priority order (from Jira cache)
-      // Take only first 12 for executive view
+      // Get first 12 outcomes for executive view
       const allOutcomes = Object.values(outcomeMap)
         .sort((a, b) => (a.outcomeNumber || 999) - (b.outcomeNumber || 999));
       const executiveOutcomes = allOutcomes.slice(0, 12);
@@ -200,16 +209,31 @@ module.exports = function registerAIPlannerRoutes(router, context) {
         featureOutcomeMap: featureOutcomeMap,
         generatedAt: new Date().toISOString(),
         version: '3.6',
-        lastSyncedAt: readiness.meta?.lastSyncedAt || new Date().toISOString(),
         featureCount: allFeatures.length,
         inPlanCount: inPlanFeatures.length,
-        source: 'live-jira-plan-view-7384',
+        source: outcomesFromJira ? 'live-jira-plan-view-7384' : 'fallback-outcomes',
         totalOutcomesInJira: allOutcomes.length,
         executiveOutcomesReturned: executiveOutcomes.length
       });
     } catch (err) {
       console.error('Outcomes fetch error:', err);
-      res.status(500).json({ error: err.message });
+      // Return fallback outcomes even on error (graceful degradation)
+      res.json({
+        outcomes: FALLBACK_OUTCOMES.slice(0, 12).map((outcome) => ({
+          ...outcome,
+          inPlan: 0,
+          total: 0,
+          percentComplete: 0,
+          confidence: 0,
+          status: 'Unknown',
+          children: [],
+          linkedVersions: []
+        })),
+        featureOutcomeMap: {},
+        generatedAt: new Date().toISOString(),
+        source: 'fallback-error',
+        error: 'Could not fetch live outcomes, using fallback'
+      });
     }
   });
 
