@@ -66,12 +66,12 @@ describe('outcome-fetch', () => {
   })
 
   describe('getPriorityOutcomes', () => {
-    it('returns cached outcomes when available', async () => {
+    it('returns cached outcomes when available and fresh', async () => {
       const cachedOutcomes = [
         { orderNumber: 1, key: 'RHAISTRAT-3004', title: 'Deliver a Production-Ready, Praxis-Native AI Gateway' }
       ]
 
-      const mockReadFromStorage = vi.fn().mockResolvedValue(cachedOutcomes)
+      const mockReadFromStorage = vi.fn().mockResolvedValue({ data: cachedOutcomes, timestamp: Date.now() })
       const mockWriteToStorage = vi.fn()
       const mockJiraRequest = vi.fn()
 
@@ -79,6 +79,27 @@ describe('outcome-fetch', () => {
 
       expect(result).toEqual(cachedOutcomes)
       expect(mockJiraRequest).not.toHaveBeenCalled()
+    })
+
+    it('refreshes when cache is expired', async () => {
+      const staleOutcomes = [
+        { orderNumber: 1, key: 'RHAISTRAT-3004', title: 'Old title' }
+      ]
+      const thirteenHoursAgo = Date.now() - 13 * 60 * 60 * 1000
+
+      const mockReadFromStorage = vi.fn().mockResolvedValue({ data: staleOutcomes, timestamp: thirteenHoursAgo })
+      const mockWriteToStorage = vi.fn().mockResolvedValue(undefined)
+      const mockJiraRequest = vi.fn().mockResolvedValue({
+        issues: [
+          { key: 'RHAISTRAT-3004', fields: { summary: 'Fresh title' } }
+        ]
+      })
+
+      const result = await getPriorityOutcomes(mockJiraRequest, mockReadFromStorage, mockWriteToStorage)
+
+      expect(result).toHaveLength(1)
+      expect(result[0].title).toBe('Fresh title')
+      expect(mockJiraRequest).toHaveBeenCalled()
     })
 
     it('fetches from Jira when cache is empty', async () => {
@@ -99,7 +120,7 @@ describe('outcome-fetch', () => {
       expect(result[0].key).toBe('RHAISTRAT-3004')
       expect(mockWriteToStorage).toHaveBeenCalledWith(
         'releases/planning/priority-outcomes.json',
-        expect.any(Array)
+        expect.objectContaining({ data: expect.any(Array), timestamp: expect.any(Number) })
       )
     })
 

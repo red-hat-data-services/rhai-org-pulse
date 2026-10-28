@@ -148,13 +148,18 @@ async function fetchOutcomesInPriorityOrder(jiraRequest) {
  */
 async function getPriorityOutcomes(jiraRequest, readFromStorage, writeToStorage) {
   var cachePath = DATA_PREFIX + '/priority-outcomes.json'
+  var TWELVE_HOURS = 12 * 60 * 60 * 1000
 
   // Try cached first
   try {
     var cached = await readFromStorage(cachePath)
-    if (cached && Array.isArray(cached) && cached.length > 0) {
-      console.log('[release-planning] Using cached priority outcomes (' + cached.length + ')')
-      return cached
+    if (cached && cached.timestamp && Array.isArray(cached.data) && cached.data.length > 0) {
+      var age = Date.now() - cached.timestamp
+      if (age < TWELVE_HOURS) {
+        console.log('[release-planning] Using cached priority outcomes (' + cached.data.length + ', age: ' + Math.round(age / 3600000) + 'h)')
+        return cached.data
+      }
+      console.log('[release-planning] Priority outcomes cache expired (' + Math.round(age / 3600000) + 'h old), refreshing')
     }
   } catch {
     // Cache miss or error; fetch fresh
@@ -165,7 +170,7 @@ async function getPriorityOutcomes(jiraRequest, readFromStorage, writeToStorage)
 
   if (outcomes.length > 0) {
     try {
-      await writeToStorage(cachePath, outcomes)
+      await writeToStorage(cachePath, { data: outcomes, timestamp: Date.now() })
       console.log('[release-planning] Saved ' + outcomes.length + ' priority outcomes to cache')
     } catch (err) {
       console.error('[release-planning] Failed to cache outcomes:', err.message)

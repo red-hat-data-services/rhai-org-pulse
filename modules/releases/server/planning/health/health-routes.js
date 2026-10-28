@@ -19,8 +19,8 @@ var blockDuringImpersonation
 try {
   blockDuringImpersonation = require('../../../../../shared/server/auth').blockDuringImpersonation
 } catch (err) {
-  console.warn('[health-routes] auth module not found, using no-op:', err.message)
-  blockDuringImpersonation = function(req, res, next) { next() }
+  console.warn('[health-routes] auth module not found, write endpoints disabled:', err.message)
+  blockDuringImpersonation = function(req, res) { res.status(403).json({ error: 'Auth module unavailable' }) }
 }
 
 var sharedJira

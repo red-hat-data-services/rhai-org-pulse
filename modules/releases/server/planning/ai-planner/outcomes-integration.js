@@ -33,16 +33,15 @@ const FALLBACK_OUTCOMES = [
   { orderNumber: 10, key: 'RHAISTRAT-2446', title: 'Platform Multimodal Experience' },
   { orderNumber: 11, key: 'RHAISTRAT-2016', title: 'AI-Native Observability Operations for RHOAI' },
   { orderNumber: 12, key: 'RHAISTRAT-1446', title: 'Delivering GPUaaS and Kueue Experience in OpenShift AI' },
-  { orderNumber: 13, key: 'RHAISTRAT-2921', title: '[🟢^^^RANKED OUTCOMES ABOVE THIS LINE^^🟢 ]' },
-  { orderNumber: 14, key: 'RHAISTRAT-2046', title: 'AIPCC Security Policy Compliance Directive' },
-  { orderNumber: 15, key: 'RHAISTRAT-2129', title: 'Outcome: RHAIE Platform Stabilization, Quality, and Cohesion' },
-  { orderNumber: 16, key: 'RHAISTRAT-1513', title: 'MaaS — 3.5 Deliverables' },
-  { orderNumber: 17, key: 'RHAISTRAT-2125', title: 'OCP 5 release and impact on RH AI' },
-  { orderNumber: 18, key: 'RHAISTRAT-1979', title: 'Outcome: Production Resilience' },
-  { orderNumber: 19, key: 'RHAISTRAT-1680', title: 'Parent Outcome: Unified Red Hat AI Inference (RHAII) on Any Linux and Any Kubernetes' },
-  { orderNumber: 20, key: 'RHAISTRAT-1357', title: 'Make Red Hat Inference Server the Best for Agents' },
-  { orderNumber: 21, key: 'RHAISTRAT-1855', title: 'End-to-End Observability for RH AI — All Components Emitting Metrics, Traces, and Logs' },
-  { orderNumber: 22, key: 'RHAISTRAT-1517', title: 'Observability for OpenShift AI — 3.5 Deliverables' }
+  { orderNumber: 13, key: 'RHAISTRAT-2046', title: 'AIPCC Security Policy Compliance Directive' },
+  { orderNumber: 14, key: 'RHAISTRAT-2129', title: 'Outcome: RHAIE Platform Stabilization, Quality, and Cohesion' },
+  { orderNumber: 15, key: 'RHAISTRAT-1513', title: 'MaaS — 3.5 Deliverables' },
+  { orderNumber: 16, key: 'RHAISTRAT-2125', title: 'OCP 5 release and impact on RH AI' },
+  { orderNumber: 17, key: 'RHAISTRAT-1979', title: 'Outcome: Production Resilience' },
+  { orderNumber: 18, key: 'RHAISTRAT-1680', title: 'Parent Outcome: Unified Red Hat AI Inference (RHAII) on Any Linux and Any Kubernetes' },
+  { orderNumber: 19, key: 'RHAISTRAT-1357', title: 'Make Red Hat Inference Server the Best for Agents' },
+  { orderNumber: 20, key: 'RHAISTRAT-1855', title: 'End-to-End Observability for RH AI — All Components Emitting Metrics, Traces, and Logs' },
+  { orderNumber: 21, key: 'RHAISTRAT-1517', title: 'Observability for OpenShift AI — 3.5 Deliverables' }
 ];
 
 /**
@@ -53,9 +52,14 @@ const FALLBACK_OUTCOMES = [
  * @param {Array} priorityOutcomes - Outcomes in priority order (from cache or fallback)
  * @returns {Object} Map of outcomeKey -> { key, title, children: [...feature keys...], outcomeNumber: 1-22 }
  */
+function isJiraMarker(outcome) {
+  return outcome.title && outcome.title.includes('^^^');
+}
+
 function extractOutcomesFromFeatures(allFeatures, priorityOutcomes) {
   const outcomes = {};
-  const outcomesToUse = priorityOutcomes && priorityOutcomes.length > 0 ? priorityOutcomes : FALLBACK_OUTCOMES;
+  const source = priorityOutcomes && priorityOutcomes.length > 0 ? priorityOutcomes : FALLBACK_OUTCOMES;
+  const outcomesToUse = source.filter(o => !isJiraMarker(o));
   const titleMap = {};
 
   // Build title→key map from priorityOutcomes
