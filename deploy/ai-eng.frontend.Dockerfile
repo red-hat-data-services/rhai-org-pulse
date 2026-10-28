@@ -20,11 +20,8 @@ COPY modules/ ./modules/
 # Add public assets (includes AI-First scheduler demo)
 COPY public/ ./public/
 
-# Create /src symlink for @org-pulse/core integration
-# Use relative path (works regardless of WORKDIR) instead of absolute /app path
-RUN ln -sf ./node_modules/@org-pulse/core/src ./src && \
-    ls -la ./src && \
-    test -f ./src/main.js && echo "✓ /src/main.js exists" || echo "✗ /src/main.js NOT FOUND"
+# Copy /src directory from @org-pulse/core (more reliable than symlinking in Docker)
+RUN cp -r ./node_modules/@org-pulse/core/src ./src
 
 RUN npm run build
 
