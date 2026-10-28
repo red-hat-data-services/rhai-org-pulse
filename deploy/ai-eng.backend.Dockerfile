@@ -21,7 +21,8 @@ COPY fixtures/ ./fixtures/
 # Add platform customizations
 COPY platform/ ./platform/
 
-# Create /src symlink for @org-pulse/core integration (setup already ran on host)
-RUN ln -sf /app/node_modules/@org-pulse/core/src /app/src
+# Create /src symlink for @org-pulse/core integration
+# Use relative path (works regardless of WORKDIR)
+RUN ln -sf ./node_modules/@org-pulse/core/src ./src
 
 USER 65532

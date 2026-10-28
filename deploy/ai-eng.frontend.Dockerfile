@@ -21,8 +21,8 @@ COPY modules/ ./modules/
 COPY public/ ./public/
 
 # Create /src symlink for @org-pulse/core integration
-# (setup.js does this on host; we replicate it here for Docker builds)
-RUN ln -sf /app/node_modules/@org-pulse/core/src /app/src
+# Use relative path (works regardless of WORKDIR) instead of absolute /app path
+RUN ln -sf ./node_modules/@org-pulse/core/src ./src
 
 RUN npm run build
 
