@@ -1,18 +1,17 @@
 import { describe, it, expect } from 'vitest'
 
-// NOTE: This test file references google-docs module which doesn't exist.
-// Wrapping in try-catch so the test file can be loaded without crashing other tests.
+// google-docs is a core module from @org-pulse/core, available after `npm run setup`.
+// In local dev without core symlinks, gracefully skip these tests.
 let googleDocsModule
 try {
   googleDocsModule = require('../../../../../shared/server/google-docs')
 } catch {
-  // Module doesn't exist - all tests will be skipped
   googleDocsModule = null
 }
 
 const skipAll = !googleDocsModule
 
-describe.skipIf(skipAll)('google-docs (skipped - module not found)', () => {
+describe.skipIf(skipAll)('google-docs', () => {
   if (!googleDocsModule) {
     it('placeholder', () => {
       expect(true).toBe(true)
@@ -134,10 +133,84 @@ describe.skipIf(skipAll)('google-docs (skipped - module not found)', () => {
   })
 
   describe('extractBigRocksFromDoc', () => {
-    it('parses fixture', () => {
+    it('parses all 14 Big Rocks from the fixture', () => {
       const result = extractBigRocksFromDoc(fixture)
       expect(result.bigRocks).toHaveLength(14)
+    })
+
+    it('extracts the document title', () => {
+      const result = extractBigRocksFromDoc(fixture)
       expect(result.title).toBe('RH AI Big Rocks for 3.5')
+    })
+
+    it('extracts names correctly', () => {
+      const result = extractBigRocksFromDoc(fixture)
+      const names = result.bigRocks.map(function(r) { return r.name })
+      expect(names[0]).toBe('MaaS')
+      expect(names[1]).toBe('Gen AI Studio / Prompt Lab')
+      expect(names[2]).toBe('Bring Your Own Agent')
+      expect(names[3]).toBe('Enable tool calling for open source models')
+      expect(names[4]).toBe('Llm-d / llm-d on xKS')
+      expect(names[5]).toBe('2.25 to 3.5 upgrade support')
+      expect(names[6]).toBe('Eval Hub')
+      expect(names[10]).toBe('AutoRAG')
+      expect(names[13]).toBe('AutoML')
+    })
+
+    it('extracts state from parenthesized text', () => {
+      const result = extractBigRocksFromDoc(fixture)
+      expect(result.bigRocks[0].state).toBe('continue from 3.4')
+      expect(result.bigRocks[3].state).toBe('new for 3.5')
+      expect(result.bigRocks[5].state).toBe('')
+    })
+
+    it('extracts single outcome key from top-level item', () => {
+      const result = extractBigRocksFromDoc(fixture)
+      expect(result.bigRocks[0].outcomeKeys).toEqual(['RHAISTRAT-1513'])
+      expect(result.bigRocks[1].outcomeKeys).toEqual(['RHAISTRAT-1312'])
+    })
+
+    it('extracts multiple outcome keys from sub-items (Big Rock #5)', () => {
+      const result = extractBigRocksFromDoc(fixture)
+      expect(result.bigRocks[4].outcomeKeys).toContain('RHAISTRAT-1515')
+      expect(result.bigRocks[4].outcomeKeys).toContain('RHAISTRAT-1403')
+      expect(result.bigRocks[4].outcomeKeys).toHaveLength(2)
+    })
+
+    it('handles missing outcome key with warning (Big Rock #3)', () => {
+      const result = extractBigRocksFromDoc(fixture)
+      expect(result.bigRocks[2].outcomeKeys).toEqual([])
+      expect(result.warnings).toContain("Big Rock #3 'Bring Your Own Agent' has no outcome key")
+    })
+
+    it('assigns sequential priorities', () => {
+      const result = extractBigRocksFromDoc(fixture)
+      for (let i = 0; i < result.bigRocks.length; i++) {
+        expect(result.bigRocks[i].priority).toBe(i + 1)
+      }
+    })
+
+    it('handles an empty document', () => {
+      const result = extractBigRocksFromDoc({ title: 'Empty', body: { content: [] } })
+      expect(result.bigRocks).toHaveLength(0)
+      expect(result.warnings).toHaveLength(0)
+    })
+
+    it('handles a document with no body', () => {
+      const result = extractBigRocksFromDoc({ title: 'No body' })
+      expect(result.bigRocks).toHaveLength(0)
+    })
+
+    it('generates warnings for all rocks without outcome keys', () => {
+      const result = extractBigRocksFromDoc(fixture)
+      const noKeyRocks = result.bigRocks.filter(function(r) { return r.outcomeKeys.length === 0 })
+      expect(noKeyRocks.length).toBe(result.warnings.length)
+    })
+
+    it('extracts outcome keys from sub-items for Observability', () => {
+      const result = extractBigRocksFromDoc(fixture)
+      expect(result.bigRocks[8].outcomeKeys).toContain('RHAISTRAT-1517')
+      expect(result.bigRocks[8].outcomeKeys).toContain('RHAISTRAT-1446')
     })
   })
 })

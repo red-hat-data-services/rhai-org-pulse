@@ -684,9 +684,7 @@ async function registerRegistryRoutes(router, context) {
    *           type: string
    *     responses:
    *       200:
-   *         description: Release object
-   *       404:
-   *         description: Release not found
+   *         description: Release object (empty object if release not found)
    */
   router.get('/registry/:id', requireAuth, requireScope('releases:read'), async function(req, res) {
     const registry = await readRegistry(readFromStorage);

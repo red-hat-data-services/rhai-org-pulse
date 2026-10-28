@@ -3,31 +3,9 @@
  *
  * Ties together doc parsing (google-docs.js), validation (validation.js),
  * and config persistence (config.js) for the import flow.
- *
- * *** CRITICAL: DO NOT REMOVE THE TRY-CATCH WRAPPER BELOW ***
- *
- * The shared/server/google-docs module DOES NOT EXIST in this repository.
- * Without the try-catch wrapper at lines 13-23:
- * - MODULE_NOT_FOUND error cascades to ALL test files importing routes.js
- * - Test suite fails with "Cannot find module" errors
- * - CI tests cannot run
- *
- * The try-catch with safe stubs is MANDATORY for test suite stability.
- * This is not optional code style - it's a REQUIRED FIX.
  */
 
-let googleDocs
-try {
-  googleDocs = require('../../../../shared/server/google-docs')
-} catch (err) {
-  console.warn('[doc-import] google-docs module not found, using stubs:', err.message)
-  // Provide safe stubs so importing doc-import doesn't crash
-  googleDocs = {
-    fetchDocument: async () => { throw new Error('google-docs module not available') },
-    extractBigRocksFromDoc: () => { throw new Error('google-docs module not available') },
-    getServiceAccountEmail: () => null
-  }
-}
+const googleDocs = require('../../../../shared/server/google-docs')
 
 const { validateBigRock } = require('./validation')
 const { getConfig, loadReleaseData, releaseFilePath } = require('./config')
