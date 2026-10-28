@@ -4616,17 +4616,17 @@ async function fetchTimelineMilestones(){
     // Extract milestones from registry for 3.6
     if(rel36.milestones && typeof rel36.milestones==='object'){
       const m36=rel36.milestones;
-      if(m36.gaRelease) milestones.push({lbl:'3.6 GA Release',date:m36.gaRelease.date||m36.gaRelease,badge:'Informational launch',badgeColor:'#2e7d32'});
-      if(m36.codeFreeze) milestones.push({lbl:'RHOAI 3.6 GA Code Freeze',date:m36.codeFreeze.date||m36.codeFreeze});
+      if(m36.ga||m36.gaRelease) milestones.push({lbl:'3.6 GA Release',date:(m36.ga&&(typeof m36.ga==='string'?m36.ga:m36.ga.date))||(m36.gaRelease&&(typeof m36.gaRelease==='string'?m36.gaRelease:m36.gaRelease.date)),badge:'Informational launch',badgeColor:'#2e7d32'});
+      if(m36.codeFreeze) milestones.push({lbl:'RHOAI 3.6 GA Code Freeze',date:typeof m36.codeFreeze==='string'?m36.codeFreeze:m36.codeFreeze.date});
     }
 
     // Extract milestones from registry for 3.7
     if(rel37.milestones && typeof rel37.milestones==='object'){
       const m37=rel37.milestones;
-      if(m37.planning) milestones.push({lbl:'3.7 Planning',date:m37.planning.date||m37.planning,sep:true});
-      if(m37.planningFreeze) milestones.push({lbl:'RHAI Planning Freeze',date:m37.planningFreeze.date||m37.planningFreeze,badge:'Mandatory from here',badgeColor:'#c62828'});
-      if(m37.eaRelease) milestones.push({lbl:'3.7 EA Release',date:m37.eaRelease.date||m37.eaRelease});
-      if(m37.gaRelease) milestones.push({lbl:'3.7 GA Release',date:m37.gaRelease.date||m37.gaRelease});
+      if(m37.planning) milestones.push({lbl:'3.7 Planning',date:typeof m37.planning==='string'?m37.planning:m37.planning.date,sep:true});
+      if(m37.planningFreeze) milestones.push({lbl:'RHAI Planning Freeze',date:typeof m37.planningFreeze==='string'?m37.planningFreeze:m37.planningFreeze.date,badge:'Mandatory from here',badgeColor:'#c62828'});
+      if(m37.eaRelease) milestones.push({lbl:'3.7 EA Release',date:typeof m37.eaRelease==='string'?m37.eaRelease:m37.eaRelease.date});
+      if(m37.ga||m37.gaRelease) milestones.push({lbl:'3.7 GA Release',date:(m37.ga&&(typeof m37.ga==='string'?m37.ga:m37.ga.date))||(m37.gaRelease&&(typeof m37.gaRelease==='string'?m37.gaRelease:m37.gaRelease.date))});
     }
 
     return milestones.length>0?milestones:null;

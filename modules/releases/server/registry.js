@@ -691,13 +691,15 @@ async function registerRegistryRoutes(router, context) {
    *           type: string
    *     responses:
    *       200:
-   *         description: Release object (empty object if not found)
+   *         description: Release object
+   *       404:
+   *         description: Release not found
    */
   router.get('/registry/:id', requireAuth, requireScope('releases:read'), async function(req, res) {
     const registry = await readRegistry(readFromStorage);
     const release = registry.releases.find(r => r.id === req.params.id);
     if (!release) {
-      return res.json({});
+      return res.status(404).json({ error: 'Release not found' });
     }
     res.json(release);
   });
