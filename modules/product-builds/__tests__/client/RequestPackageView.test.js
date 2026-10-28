@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { mount, flushPromises } from '@vue/test-utils'
 import RequestPackageView from '../../client/views/RequestPackageView.vue'
 
@@ -71,6 +71,42 @@ describe('RequestPackageView', () => {
     expect(wrapper.find('#req-package-name').exists()).toBe(true)
     expect(wrapper.find('#req-jira-id').exists()).toBe(true)
     expect(wrapper.find('button[type="submit"]').text()).toContain('Submit request')
+  })
+
+  describe('delivery SLA', () => {
+    beforeEach(() => {
+      vi.useFakeTimers({ toFake: ['Date'] })
+      vi.setSystemTime(new Date('2026-10-28T12:00:00Z'))
+    })
+    afterEach(() => {
+      vi.useRealTimers()
+    })
+
+    it('states the 10 business day SLA and blocks earlier dates in the picker', async () => {
+      const wrapper = mount(RequestPackageView)
+      await flushPromises()
+      const notice = wrapper.find('#req-sla-notice')
+      expect(notice.text()).toContain('Delivery SLA: 10 business days')
+      expect(notice.text()).toContain('Wed, Nov 11, 2026')
+      expect(wrapper.find('#req-delivery-timeline').attributes('min')).toBe('2026-11-11')
+      expect(wrapper.find('#req-delivery-timeline-hint').text()).toContain('Wed, Nov 11, 2026')
+    })
+
+    it('rejects a delivery date inside the SLA and accepts the first date after it', async () => {
+      const wrapper = mount(RequestPackageView)
+      await fillValidForm(wrapper)
+      await wrapper.find('#req-delivery-timeline').setValue('2026-11-10')
+      await wrapper.find('form').trigger('submit')
+      await flushPromises()
+      expect(submitRequest).not.toHaveBeenCalled()
+      expect(wrapper.find('#req-delivery-timeline-error').text()).toBe(
+        'Delivery date must be at least 10 business days from today (Wed, Nov 11, 2026 or later)'
+      )
+      await wrapper.find('#req-delivery-timeline').setValue('2026-11-11')
+      await wrapper.find('form').trigger('submit')
+      await flushPromises()
+      expect(JSON.parse(submitRequest.mock.calls[0][1].body).delivery_timeline).toBe('2026-11-11')
+    })
   })
 
   it('loads team choices and submits only a selected option', async () => {

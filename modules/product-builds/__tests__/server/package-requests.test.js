@@ -4,7 +4,9 @@ import { readFileSync } from 'node:fs'
 const registerPackageRequestRoutes = require('../../server/package-requests')
 const {
   validateRequest,
-  isAtLeastDaysFromToday,
+  earliestSlaDate,
+  meetsSla,
+  SLA_BUSINESS_DAYS,
   buildEpicSummary,
   buildEpicName,
   sanitizeTeamLabel,
@@ -432,16 +434,25 @@ describe('package-requests', () => {
       await expect422(validBody({ justification: '   ' }), 'justification')
     })
 
-    it('requires the delivery timeline to be at least 8 calendar days out', async () => {
-      await expect422(validBody({ delivery_timeline: isoDaysFromNow(7) }), 'delivery_timeline')
+    it('requires the delivery timeline to meet the 10 business day SLA', async () => {
+      const earliest = earliestSlaDate(SLA_BUSINESS_DAYS)
+      const dayBefore = new Date(earliest + 'T00:00:00Z')
+      dayBefore.setUTCDate(dayBefore.getUTCDate() - 1)
+      await expect422(validBody({ delivery_timeline: dayBefore.toISOString().slice(0, 10) }), 'delivery_timeline')
+      await expect422(validBody({ delivery_timeline: isoDaysFromNow(8) }), 'delivery_timeline')
       await expect422(validBody({ delivery_timeline: 'not-a-date' }), 'delivery_timeline')
+      const { router } = register()
+      const res = await callHandler(router, { userEmail: 'jane@redhat.com', body: validBody({ delivery_timeline: isoDaysFromNow(8) }) })
+      expect(res._json.fields.delivery_timeline).toBe(
+        `Delivery timeline must be at least 10 business days from today (earliest ${earliest})`
+      )
     })
 
-    it('accepts a delivery timeline exactly 8 days out', async () => {
+    it('accepts a delivery timeline exactly on the SLA date', async () => {
       const { router } = register({ isDemoMode: true })
       const res = await callHandler(router, {
         userEmail: 'jane@redhat.com',
-        body: validBody({ delivery_timeline: isoDaysFromNow(8) })
+        body: validBody({ delivery_timeline: earliestSlaDate(SLA_BUSINESS_DAYS) })
       })
       expect(res._status).toBe(200)
       expect(res._json.demo).toBe(true)
@@ -1212,11 +1223,25 @@ describe('package-requests', () => {
       expect(valid).toBe(true)
     })
 
-    it('isAtLeastDaysFromToday uses calendar days', () => {
-      const now = new Date('2026-01-10T12:00:00Z')
-      expect(isAtLeastDaysFromToday('2026-01-18', 8, now)).toBe(true)
-      expect(isAtLeastDaysFromToday('2026-01-17', 8, now)).toBe(false)
-      expect(isAtLeastDaysFromToday('2026-01-10', 8, now)).toBe(false)
+    it('earliestSlaDate counts business days and skips weekends', () => {
+      expect(SLA_BUSINESS_DAYS).toBe(10)
+      // Wednesday: two full weeks of weekdays lands on the Wednesday after next.
+      expect(earliestSlaDate(10, new Date('2026-10-28T12:00:00Z'))).toBe('2026-11-11')
+      // Friday: the weekend is skipped before counting starts.
+      expect(earliestSlaDate(10, new Date('2026-10-30T23:59:00Z'))).toBe('2026-11-13')
+      // Saturday and Sunday start counting from the next Monday.
+      expect(earliestSlaDate(10, new Date('2026-01-10T12:00:00Z'))).toBe('2026-01-23')
+      expect(earliestSlaDate(10, new Date('2026-01-11T12:00:00Z'))).toBe('2026-01-23')
+      expect(earliestSlaDate(1, new Date('2026-10-30T12:00:00Z'))).toBe('2026-11-02')
+    })
+
+    it('meetsSla accepts the SLA date or later, including weekends after it', () => {
+      const now = new Date('2026-10-28T12:00:00Z')
+      expect(meetsSla('2026-11-11', 10, now)).toBe(true)
+      expect(meetsSla('2026-11-14', 10, now)).toBe(true)
+      expect(meetsSla('2026-11-10', 10, now)).toBe(false)
+      expect(meetsSla('2026-11-05', 10, now)).toBe(false)
+      expect(meetsSla('not-a-date', 10, now)).toBe(false)
     })
 
     it('buildEpicSummary formats the summary', () => {

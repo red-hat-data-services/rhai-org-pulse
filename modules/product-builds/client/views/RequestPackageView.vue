@@ -11,29 +11,30 @@ const SAFE_IDENTIFIER_RE = /^[a-zA-Z0-9][a-zA-Z0-9._-]*$/
 const JIRA_KEY_RE = /^[A-Z][A-Z0-9]+-\d+$/
 const VERSION_RE = /^[a-zA-Z0-9._-]+$/
 const DATE_RE = /^\d{4}-\d{2}-\d{2}$/
-const MIN_LEAD_TIME_DAYS = 8
+// Delivery SLA in business days (Mon-Fri, UTC). Mirrors the server check.
+const SLA_BUSINESS_DAYS = 10
 const SOURCES = [
   { id: 'pypi', label: 'PyPI', hint: 'Published on pypi.org' },
   { id: 'git', label: 'Git repository', hint: 'HTTP(S) URL of the git repository' },
   { id: 'other', label: 'Other', hint: 'Manual source (internal index, archive, ...)' }
 ]
 
-function isoDaysFromNow(days) {
+function isoBusinessDaysFromNow(days) {
   const d = new Date()
   d.setUTCHours(0, 0, 0, 0)
-  d.setUTCDate(d.getUTCDate() + days)
+  let added = 0
+  while (added < days) {
+    d.setUTCDate(d.getUTCDate() + 1)
+    const day = d.getUTCDay()
+    if (day !== 0 && day !== 6) added++
+  }
   return d.toISOString().slice(0, 10)
 }
 
-const minDeliveryDate = computed(() => isoDaysFromNow(MIN_LEAD_TIME_DAYS))
-
-function daysUntil(dateStr) {
-  const today = new Date()
-  today.setUTCHours(0, 0, 0, 0)
-  const target = new Date(dateStr + 'T00:00:00Z')
-  if (isNaN(target.getTime())) return NaN
-  return Math.round((target - today) / 86400000)
-}
+const minDeliveryDate = computed(() => isoBusinessDaysFromNow(SLA_BUSINESS_DAYS))
+const minDeliveryDateLabel = computed(() => new Date(minDeliveryDate.value + 'T00:00:00Z').toLocaleDateString('en-US', {
+  weekday: 'short', month: 'short', day: 'numeric', year: 'numeric', timeZone: 'UTC'
+}))
 
 function defaults() {
   return {
@@ -150,8 +151,8 @@ function validate() {
   const date = form.delivery_timeline.trim()
   if (!DATE_RE.test(date)) {
     errors.delivery_timeline = 'Delivery date is required (YYYY-MM-DD)'
-  } else if (daysUntil(date) < MIN_LEAD_TIME_DAYS) {
-    errors.delivery_timeline = `Delivery date must be at least ${MIN_LEAD_TIME_DAYS} calendar days from today`
+  } else if (date < minDeliveryDate.value) {
+    errors.delivery_timeline = `Delivery date must be at least ${SLA_BUSINESS_DAYS} business days from today (${minDeliveryDateLabel.value} or later)`
   }
 
   if (!form.testing_requirements.trim() && !form.testing_ack) {
@@ -420,6 +421,18 @@ function jiraHref(ticket) {
         </div>
       </div>
 
+      <div
+        id="req-sla-notice"
+        role="note"
+        class="mb-4 p-4 rounded-lg border border-blue-200 dark:border-blue-800 bg-blue-50 dark:bg-blue-900/20 text-sm text-blue-800 dark:text-blue-300"
+      >
+        <p class="font-semibold">Delivery SLA: {{ SLA_BUSINESS_DAYS }} business days</p>
+        <p class="mt-1">
+          Package requests are delivered within {{ SLA_BUSINESS_DAYS }} business days (Monday to Friday).
+          The delivery date must fall on or after <strong>{{ minDeliveryDateLabel }}</strong>; earlier dates cannot be selected.
+        </p>
+      </div>
+
       <div class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-6 space-y-6">
         <!-- Requester -->
         <p class="text-xs text-gray-500 dark:text-gray-400 -mt-2">
@@ -661,7 +674,7 @@ function jiraHref(ticket) {
               :class="fieldErrors.delivery_timeline ? 'border-red-400 dark:border-red-600' : 'border-gray-300 dark:border-gray-600'"
             />
             <p id="req-delivery-timeline-hint" class="mt-1 text-xs text-gray-400 dark:text-gray-500">
-              At least {{ MIN_LEAD_TIME_DAYS }} calendar days from today.
+              Earliest date within our SLA: {{ minDeliveryDateLabel }}.
             </p>
             <p v-if="fieldErrors.delivery_timeline" id="req-delivery-timeline-error" class="mt-1 text-xs text-red-600 dark:text-red-400">{{ fieldErrors.delivery_timeline }}</p>
           </div>
