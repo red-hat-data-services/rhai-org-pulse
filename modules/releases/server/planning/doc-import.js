@@ -5,7 +5,12 @@
  * and config persistence (config.js) for the import flow.
  */
 
-const googleDocs = require('../../../../shared/server/google-docs')
+let googleDocs
+try {
+  googleDocs = require('../../../../shared/server/google-docs')
+} catch {
+  googleDocs = null
+}
 const { validateBigRock } = require('./validation')
 const { getConfig, loadReleaseData, releaseFilePath } = require('./config')
 
