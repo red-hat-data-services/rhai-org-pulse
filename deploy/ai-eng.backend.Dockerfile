@@ -22,6 +22,6 @@ COPY fixtures/ ./fixtures/
 COPY platform/ ./platform/
 
 # Create /src symlink for @org-pulse/core integration (setup already ran on host)
-RUN mkdir -p /app/src && ln -sf ../node_modules/@org-pulse/core/src/main.js /app/src/main.js
+RUN mkdir -p /app/src && ln -sf /app/node_modules/@org-pulse/core/src/main.js /app/src/main.js
 
 USER 65532
