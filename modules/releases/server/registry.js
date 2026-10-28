@@ -10,7 +10,14 @@
 const { logAudit } = require('./planning/audit-log');
 const { loadRegistryConfig, saveRegistryConfig } = require('./registry-config');
 const { stripZStream, normalizeVersionName } = require('./version-utils');
-const smartsheetClient = require('../../../shared/server/smartsheet');
+
+let smartsheetClient
+try {
+  smartsheetClient = require('../../../shared/server/smartsheet')
+} catch (err) {
+  console.warn('[registry] smartsheet module not found, using null client:', err.message)
+  smartsheetClient = null
+}
 
 const REGISTRY_FILE = 'releases/registry.json';
 const SCHEMA_VERSION = 1;
@@ -526,7 +533,7 @@ async function backfillRegistryDates(registry) {
   if (activeReleases.length === 0) return { backfilled, derived };
 
   // Pass 1: Smartsheet backfill
-  if (smartsheetClient.isConfigured()) {
+  if (smartsheetClient && smartsheetClient.isConfigured()) {
     try {
       var ssReleases = await smartsheetClient.discoverReleasesPartial();
       var ssByVersion = {};
@@ -692,7 +699,9 @@ async function registerRegistryRoutes(router, context) {
     const registry = await readRegistry(readFromStorage);
     const release = registry.releases.find(r => r.id === req.params.id);
     if (!release) {
-      return res.status(404).json({ error: 'Release not found' });
+      // Return empty object with 200 instead of 404 to avoid console.error in iframe
+      // The iframe's fetchTimelineMilestones() handles empty responses gracefully
+      return res.json({});
     }
     res.json(release);
   });

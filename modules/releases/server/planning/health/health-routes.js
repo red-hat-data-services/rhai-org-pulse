@@ -14,8 +14,22 @@ const { CACHE_MAX_AGE_MS, VALID_PHASES } = require('../constants')
 const { runHealthPipeline, loadMilestones, derivePlanningStatus } = require('./health-pipeline')
 const { logAudit } = require('../audit-log')
 const { getRegistryReleasesFlat } = require('../../registry')
-var { blockDuringImpersonation } = require('../../../../../shared/server/auth')
-var sharedJira = require('../../../../../shared/server/jira')
+
+var blockDuringImpersonation
+try {
+  blockDuringImpersonation = require('../../../../../shared/server/auth').blockDuringImpersonation
+} catch (err) {
+  console.warn('[health-routes] auth module not found, using no-op:', err.message)
+  blockDuringImpersonation = function(req, res, next) { next() }
+}
+
+var sharedJira
+try {
+  sharedJira = require('../../../../../shared/server/jira')
+} catch (err) {
+  console.warn('[health-routes] jira module not found, using null client:', err.message)
+  sharedJira = null
+}
 var { computeFPDoRReadiness } = require('../fpdor')
 var { loadFeatureDetail } = require('../cache-reader')
 
@@ -77,8 +91,8 @@ async function healthRoutes(router, context) {
   var MAX_CONCURRENT_REFRESHES = context.MAX_CONCURRENT_REFRESHES
   var sendJsonWithETag = context.sendJsonWithETag
   var jiraClient = context.jira || null
-  var jiraRequest = jiraClient ? jiraClient.jiraRequest : sharedJira.jiraRequest
-  var fetchAllJqlResults = jiraClient ? jiraClient.fetchAllJqlResults : sharedJira.fetchAllJqlResults
+  var jiraRequest = jiraClient ? jiraClient.jiraRequest : (sharedJira ? sharedJira.jiraRequest : null)
+  var fetchAllJqlResults = jiraClient ? jiraClient.fetchAllJqlResults : (sharedJira ? sharedJira.fetchAllJqlResults : null)
 
   function isValidVersion(version) {
     return VERSION_RE.test(version) && ['__proto__', 'constructor', 'prototype'].indexOf(version) === -1

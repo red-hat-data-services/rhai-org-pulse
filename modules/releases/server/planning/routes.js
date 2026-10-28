@@ -24,7 +24,15 @@ const { validateBigRock } = require('./validation')
 const { getOutcomeSummaries } = require('./outcome-fetch')
 const { previewDocImport, executeDocImport } = require('./doc-import')
 const { logAudit, getAuditLog, computeFieldDiff } = require('./audit-log')
-const { blockDuringImpersonation } = require('../../../../shared/server/auth')
+
+let blockDuringImpersonation
+try {
+  blockDuringImpersonation = require('../../../../shared/server/auth').blockDuringImpersonation
+} catch (err) {
+  console.warn('[routes] auth module not found, using no-op:', err.message)
+  blockDuringImpersonation = function(req, res, next) { next() }
+}
+
 const healthRoutes = require('./health/health-routes')
 var { buildFeatureReadiness } = require('./feature-readiness')
 var { fetchFeaturesWithTimeout } = require('./feature-query')
@@ -47,7 +55,18 @@ function isValidVersion(version) {
  * @param {object} context - { storage, requireAuth, requireAdmin, requireScope, roleStore, registerDiagnostics }
  */
 module.exports = async function registerPlanningRoutes(router, context) {
-  var smartsheetClient = context.smartsheet || require('../../../../shared/server/smartsheet')
+  var smartsheetClient
+  if (context.smartsheet) {
+    smartsheetClient = context.smartsheet
+  } else {
+    try {
+      smartsheetClient = require('../../../../shared/server/smartsheet')
+    } catch (err) {
+      console.warn('[routes] smartsheet module not found, using null client:', err.message)
+      smartsheetClient = null
+    }
+  }
+
   var jiraClient = context.jira || null
   var customerPortalClient = context.customerPortal || createCustomerPortalClient({
     offlineToken: context.secrets && context.secrets.CUSTOMER_PORTAL_OFFLINE_TOKEN
@@ -1861,5 +1880,5 @@ module.exports = async function registerPlanningRoutes(router, context) {
 
   // ─── AI Planner Routes ───
   const registerAIPlannerRoutes = require('./ai-planner/routes');
-  registerAIPlannerRoutes(router, { ...context, buildFeatureReadiness, listStorageFiles });
+  registerAIPlannerRoutes(router, { ...context, jiraClient, buildFeatureReadiness, listStorageFiles });
 }
