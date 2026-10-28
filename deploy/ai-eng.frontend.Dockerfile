@@ -22,7 +22,9 @@ COPY public/ ./public/
 
 # Create /src symlink for @org-pulse/core integration
 # Use relative path (works regardless of WORKDIR) instead of absolute /app path
-RUN ln -sf ./node_modules/@org-pulse/core/src ./src
+RUN ln -sf ./node_modules/@org-pulse/core/src ./src && \
+    ls -la ./src && \
+    test -f ./src/main.js && echo "✓ /src/main.js exists" || echo "✗ /src/main.js NOT FOUND"
 
 RUN npm run build
 
