@@ -691,16 +691,12 @@ async function registerRegistryRoutes(router, context) {
    *           type: string
    *     responses:
    *       200:
-   *         description: Release object
-   *       404:
-   *         description: Release not found
+   *         description: Release object (empty object if not found)
    */
   router.get('/registry/:id', requireAuth, requireScope('releases:read'), async function(req, res) {
     const registry = await readRegistry(readFromStorage);
     const release = registry.releases.find(r => r.id === req.params.id);
     if (!release) {
-      // Return empty object with 200 instead of 404 to avoid console.error in iframe
-      // The iframe's fetchTimelineMilestones() handles empty responses gracefully
       return res.json({});
     }
     res.json(release);
