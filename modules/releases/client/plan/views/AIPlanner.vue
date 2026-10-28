@@ -234,7 +234,7 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <div ref="containerRef" class="w-full flex flex-col bg-gray-50 dark:bg-gray-900 gap-3" :style="{ height: 'auto' }">
+  <div ref="containerRef" class="w-full flex flex-col bg-gray-50 dark:bg-gray-900 gap-3" :style="{ height: containerHeight }">
     <div class="rounded-lg border border-red-300 bg-red-50 dark:bg-red-500/10 px-4 py-3">
       <div class="flex items-start gap-3">
         <div class="text-red-600 dark:text-red-400 mt-0.5">
@@ -248,7 +248,7 @@ onUnmounted(() => {
         </div>
       </div>
     </div>
-    <div class="flex-1 overflow-hidden" :style="{ height: containerHeight }">
+    <div class="flex-1 min-h-0 overflow-hidden">
       <iframe
         v-if="plannerUrl"
         ref="iframeRef"
