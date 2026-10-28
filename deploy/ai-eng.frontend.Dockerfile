@@ -20,8 +20,9 @@ COPY modules/ ./modules/
 # Add public assets (includes AI-First scheduler demo)
 COPY public/ ./public/
 
-# Setup workspace (creates /src symlink and syncs core modules)
-RUN npm run setup
+# Create /src symlink for @org-pulse/core integration
+# (setup.js does this on host; we replicate it here for Docker builds)
+RUN ln -sf /app/node_modules/@org-pulse/core/src /app/src
 
 RUN npm run build
 
