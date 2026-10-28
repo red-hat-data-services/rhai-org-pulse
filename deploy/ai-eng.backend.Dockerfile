@@ -21,4 +21,7 @@ COPY fixtures/ ./fixtures/
 # Add platform customizations
 COPY platform/ ./platform/
 
+# Setup workspace (creates /src symlink for @org-pulse/core integration)
+RUN npm run setup
+
 USER 65532
