@@ -109,7 +109,7 @@ import {
 } from 'chart.js'
 import MetricCard from '../components/MetricCard.vue'
 import StatusBadge from '../components/StatusBadge.vue'
-import { isProductIssueCategory, isVisibleFinding } from '../utils/product-bugs'
+import { isVisibleJiraIssue, isVisibleFinding } from '../utils/product-bugs'
 import { compareTableValues, displayedOutcomeCounts, displayedTestOutcome, filterQueryValues, hydrateFilters, syncQueryParams, useWorkflowValidation, formatDuration, formatPercent, formatDate, formatRatio } from '../composables/useWorkflowValidation'
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, PointElement, LineElement, Tooltip, Legend, Filler)
@@ -133,7 +133,7 @@ const runsWithBugs = computed(() => runs.value.map((run) => ({
   ...run,
   // RCA run_id stores execution invocation_id; execution.run_id is obsolete
   // legacy ETL data and is never the RCA join key.
-  productBugs: bugs.value.filter((bug) => bug.run_id === run.invocation_id && isProductIssueCategory(bug.category))
+  productBugs: bugs.value.filter((bug) => bug.run_id === run.invocation_id && isVisibleJiraIssue(bug))
 })))
 const sortedRuns = computed(() => [...runsWithBugs.value].sort((a, b) =>
   compareTableValues(a[sortBy.value], b[sortBy.value], sortDir.value)))

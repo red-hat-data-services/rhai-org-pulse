@@ -4,10 +4,12 @@ Org Pulse report under **Releases → Reports → Container Health Index**
 ([RHOAIENG-97404](https://redhat.atlassian.net/browse/RHOAIENG-97404)).
 
 The app is a **display layer**: an external CHI collector builds a snapshot
-(Prod + Stage + Konflux builds) and POSTs it to
+(Prod + Stage + Konflux builds + Nightly builds) and POSTs it to
 `/api/modules/releases/chi-hierarchy/bulk`. Org Pulse does not call Pyxis,
 Konflux, or ProdSec at runtime. The UI tab **Konflux builds** is stored under
-the JSON key `environments.latest` (not a `latest` image tag).
+the JSON key `environments.latest` (not a `latest` image tag). The UI tab
+**Nightly builds** is stored under `environments.nightly` and is produced by
+the `ec-cve-run-tool` pipeline with RHEL errata filtering.
 
 | Piece | Location |
 |---|---|
@@ -58,6 +60,7 @@ Images under `rhoai/` must carry the matching tag (`v3.6`) in:
 | Prod | `prod` | `catalog.redhat.com` (public Pyxis) |
 | Stage | `stage` | `pyxis.stage.engineering.redhat.com` (Kerberos) |
 | Konflux builds | `latest` | Konflux clair-scan via KubeArchive (`OC_TOKEN`) |
+| Nightly builds | `nightly` | `ec-cve-run-tool` pipeline, RHEL errata-filtered Clair scan |
 
 Do **not** use `catalog.stage.redhat.com` (403).
 
@@ -74,7 +77,7 @@ In the [CHI repository](https://gitlab.cee.redhat.com/sustaining-engineering/rho
 - **Local:** follow `PIPELINE.md` — collect Prod (+ Stage if Kerberos works),
   run `build_chi_hierarchy.py`, POST to Org Pulse bulk.
 
-After upload, open **Container Health Index**, pick Prod/Stage/Konflux builds, and confirm the
+After upload, open **Container Health Index**, pick Prod/Stage/Konflux builds/Nightly builds, and confirm the
 new version appears in the dropdown with component → image rows.
 
 ### 4. Org Pulse changes (usually none)
@@ -103,6 +106,7 @@ Hover the help icon next to **Container Health Index**.
 
 - **Prod / Stage:** catalog HealthIndex ([article 2803031](https://access.redhat.com/articles/2803031)).
 - **Konflux builds** (`environments.latest`): same article, computed from the newest green Konflux clair-scan. Letter is the age of the oldest **rhel-vex** patched Critical/Important (High → Important). Unpatched Clair findings and `osv/go` / `osv/pypi` do not change the letter. Zero such findings → A. Unknown means missing pipeline or scan. These grades will not match Prod for the same image name.
+- **Nightly builds** (`environments.nightly`): computed by the `ec-cve-run-tool` pipeline using Konflux Clair scan data with **RHEL errata filtering** — only findings covered by a RHEL advisory count toward the grade. Non-RHEL findings (`osv/go`, `osv/pypi`) are excluded and reported in the per-image `scanNote` field. Grades differ from both Prod (catalog HealthIndex) and Konflux builds (on-push clair-scan without errata filtering). Active streams are read from `src/config/releases.yaml` in `rhods-devops-infra`.
 
 ---
 

@@ -1,24 +1,30 @@
 import { describe, expect, it } from 'vitest'
-import { hasJiraId, isVisibleFinding, isVisibleProductBug } from '../../client/utils/product-bugs'
+import { hasJiraId, isHiddenIssueCategory, isVisibleFinding, isVisibleJiraIssue } from '../../client/utils/product-bugs'
 
-describe('product bug visibility', () => {
-  it('shows product bugs only when a Jira ID is present', () => {
+describe('issue visibility', () => {
+  it('shows Jira-linked issues of current and future categories', () => {
     const linked = { category: 'PRODUCT_BUG', bug_key: 'RHOAIENG-123' }
     const unlinked = { category: 'PRODUCT_BUG' }
 
     expect(hasJiraId(linked)).toBe(true)
-    expect(isVisibleProductBug(linked)).toBe(true)
-    expect(isVisibleProductBug(unlinked)).toBe(false)
-    expect(isVisibleFinding(unlinked)).toBe(false)
+    expect(isVisibleJiraIssue(linked)).toBe(true)
+    expect(isVisibleJiraIssue(unlinked)).toBe(false)
+    expect(isVisibleJiraIssue({ category: 'FEATURE_REQUEST', bug_key: 'RHAIRFE-123' })).toBe(true)
+    expect(isVisibleJiraIssue({ category: 'FUTURE_CATEGORY', bug_key: 'RHOAIENG-234' })).toBe(true)
+    expect(isVisibleFinding(unlinked)).toBe(true)
   })
 
-  it('treats linked UX defects as stakeholder-visible issues', () => {
-    expect(isVisibleProductBug({ category: 'UX_DEFECT', bug_key: 'RHOAIENG-99762' })).toBe(true)
-    expect(isVisibleProductBug({ category: 'UX_DEFECT' })).toBe(false)
-    expect(isVisibleFinding({ category: 'UX_DEFECT' })).toBe(false)
+  it('hides known non-issue findings', () => {
+    for (const category of ['ENVIRONMENT', 'CREDENTIAL_EXPOSURE', 'MISSING_PRECONDITION', 'AUTOMATION_BUG']) {
+      const finding = { category, bug_key: 'RHOAIENG-456' }
+      expect(isHiddenIssueCategory(category)).toBe(true)
+      expect(isVisibleJiraIssue(finding)).toBe(false)
+      expect(isVisibleFinding(finding)).toBe(false)
+    }
   })
 
-  it('does not hide non-product findings', () => {
-    expect(isVisibleFinding({ category: 'ENVIRONMENT' })).toBe(true)
+  it('retains non-Jira diagnostic findings in other categories', () => {
+    expect(isVisibleFinding({ category: 'SPEC_DEFECT' })).toBe(true)
+    expect(isVisibleJiraIssue({ category: 'SPEC_DEFECT' })).toBe(false)
   })
 })

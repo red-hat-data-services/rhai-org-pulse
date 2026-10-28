@@ -8,7 +8,8 @@
         rel="noopener"
         class="font-mono font-semibold text-sm text-blue-600 dark:text-blue-400 hover:underline shrink-0"
       >{{ bug.bug_key }}</a>
-      <span v-else class="shrink-0 font-mono text-sm font-semibold text-gray-700 dark:text-gray-200">{{ bug.bug_key }}</span>
+      <span v-else-if="bug.bug_key" class="shrink-0 font-mono text-sm font-semibold text-gray-700 dark:text-gray-200">{{ bug.bug_key }}</span>
+      <span v-if="bug.occurrenceCount > 1" class="text-xs text-gray-500 dark:text-gray-400">{{ bug.occurrenceCount }} occurrences</span>
       <span
         class="inline-block px-2.5 py-0.5 rounded-full text-[0.68rem] font-semibold"
         :class="issueOutcome.tone"
@@ -18,6 +19,7 @@
       <p class="flex-1 min-w-[200px] text-sm text-gray-700 dark:text-gray-300">{{ bug.error_summary || '—' }}</p>
     </div>
     <div class="flex flex-wrap gap-x-4 gap-y-1 mt-2 text-xs text-gray-500 dark:text-gray-400">
+      <span v-if="bug.category">Category: {{ String(bug.category).replaceAll('_', ' ') }}</span>
       <span v-if="bug.rhoaieng_component || bug.component">{{ bug.rhoaieng_component || bug.component }}</span>
       <span v-if="bug.rhoai_version">Version {{ bug.rhoai_version }}</span>
       <span v-if="bug.workflow">Test: {{ bug.workflow }}</span>
@@ -63,31 +65,28 @@
 <script setup>
 import { computed } from 'vue'
 import { safeExternalUrl } from '../utils/external-url'
-import { isProductIssueCategory, isVisibleFinding } from '../utils/product-bugs'
+import { hasJiraId, isVisibleFinding } from '../utils/product-bugs'
 const props = defineProps({
   bug: { type: Object, required: true }
 })
 defineEmits(['open-test'])
 
 const issueOutcome = computed(() => {
-  if (props.bug.category && !isProductIssueCategory(props.bug.category)) return {
+  if (!hasJiraId(props.bug)) return {
     label: {
-      ENVIRONMENT: 'Environment failure',
-      SPEC_DEFECT: 'Test specification defect',
-      AUTOMATION_BUG: 'Test automation defect',
-      CREDENTIAL_EXPOSURE: 'Credential exposure'
-    }[props.bug.category] || 'Non-product failure',
-    detail: `The RCA classified this finding as ${String(props.bug.category).toLowerCase().replaceAll('_', ' ')} rather than a product bug.`,
+      SPEC_DEFECT: 'Test specification defect'
+    }[props.bug.category] || 'Root-cause finding',
+    detail: 'This finding has no linked Jira issue.',
     tone: 'bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-200'
   }
   if (props.bug.action === 'FILED' || props.bug.opened) return {
     label: 'New Jira issue opened',
-    detail: `${props.bug.bug_key} was opened for this newly detected ${props.bug.category === 'UX_DEFECT' ? 'UX defect' : 'product bug'}.`,
+    detail: `${props.bug.bug_key} was opened for this finding.`,
     tone: 'bg-blue-100 text-blue-800 dark:bg-blue-900/40 dark:text-blue-300'
   }
   if (props.bug.action === 'EXISTING' || props.bug.action === 'MATCH') return {
     label: 'Existing Jira issue encountered',
-    detail: `This occurrence matched the previously reported ${props.bug.category === 'UX_DEFECT' ? 'UX defect' : 'product bug'} ${props.bug.bug_key}; no new issue was opened.`,
+    detail: `This occurrence matched the previously reported issue ${props.bug.bug_key}; no new issue was opened.`,
     tone: 'bg-teal-100 text-teal-800 dark:bg-teal-900/40 dark:text-teal-300'
   }
   return {
@@ -112,10 +111,8 @@ const hasDetails = computed(() => detailFacts.value.length > 0 || Boolean(
 // Left accent echoes the report's priority stripe, keyed off category.
 const accent = computed(() => {
   const c = String(props.bug.category || '').toUpperCase()
-  if (c === 'PRODUCT_BUG' || c === 'UX_DEFECT' || c === 'CREDENTIAL_EXPOSURE') return 'border-red-500'
-  if (c === 'ENVIRONMENT') return 'border-amber-500'
+  if (c === 'PRODUCT_BUG' || c === 'UX_DEFECT') return 'border-red-500'
   if (c === 'SPEC_DEFECT') return 'border-yellow-500'
-  if (c === 'AUTOMATION_BUG') return 'border-purple-500'
   return 'border-gray-300 dark:border-gray-600'
 })
 </script>

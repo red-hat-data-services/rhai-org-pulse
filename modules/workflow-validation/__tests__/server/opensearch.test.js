@@ -178,19 +178,88 @@ describe('workflow-validation live schema routes', () => {
     expect(activity).not.toContain('workaround')
   })
 
-  it('requires a Jira ID when listing product bugs', () => {
-    expect(bugFilters({ category: 'PRODUCT_BUG' }).bool.filter).toContainEqual({
-      exists: { field: 'bug_key' }
-    })
-    expect(bugFilters({ category: 'ENVIRONMENT' }).bool.filter)
-      .not.toContainEqual({ exists: { field: 'bug_key' } })
+  it('only filters RCA categories when explicitly requested', () => {
+    expect(bugFilters()).toEqual({ match_all: {} })
+    expect(bugFilters({ category: 'FEATURE_REQUEST' }).bool.filter).toEqual([{ term: { category: 'FEATURE_REQUEST' } }])
+    expect(bugFilters({ category: 'PRODUCT_BUG,UX_DEFECT' }).bool.filter).toEqual([
+      { terms: { category: ['PRODUCT_BUG', 'UX_DEFECT'] } }
+    ])
   })
 
-  it('filters product and UX issues together while requiring a Jira ID', () => {
-    expect(bugFilters({ category: 'PRODUCT_BUG,UX_DEFECT' }).bool.filter).toEqual(expect.arrayContaining([
-      { terms: { category: ['PRODUCT_BUG', 'UX_DEFECT'] } },
-      { exists: { field: 'bug_key' } }
-    ]))
+  it('queries every Jira-linked category except hidden findings on the bugs route', async () => {
+    let query
+    vi.stubGlobal('fetch', vi.fn((_url, options) => {
+      query = JSON.parse(options.body).query
+      return Promise.resolve(jsonResponse({ hits: { hits: [], total: { value: 0 } }, aggregations: {} }))
+    }))
+    const response = makeResponse()
+    await register()['/bugs'].at(-1)({ query: {} }, response)
+
+    expect(response.statusCode).toBe(200)
+    expect(query.bool.filter).toContainEqual({ exists: { field: 'bug_key' } })
+    expect(query.bool.filter).toContainEqual({
+      bool: { must_not: [{ terms: { category: [
+        'ENVIRONMENT', 'CREDENTIAL_EXPOSURE', 'MISSING_PRECONDITION', 'AUTOMATION_BUG'
+      ] } }] }
+    })
+    expect(JSON.stringify(query)).not.toContain('PRODUCT_BUG')
+    expect(JSON.stringify(query)).not.toContain('UX_DEFECT')
+  })
+
+  it('pages distinct Jira keys and returns the latest occurrence for each key', async () => {
+    const requests = []
+    vi.stubGlobal('fetch', vi.fn((_url, options) => {
+      const body = JSON.parse(options.body)
+      requests.push(body)
+      const nextPage = Boolean(body.aggs.issues.composite.after)
+      const key = nextPage ? 'RHOAIENG-2' : 'RHOAIENG-1'
+      return Promise.resolve(jsonResponse({
+        hits: { total: { value: 4 }, hits: [] },
+        aggregations: {
+          total: { value: 4 }, opened: { doc_count: 1 }, distinct_jira: { value: 2 },
+          issues: {
+            buckets: [{ key: { jiraKey: key }, doc_count: nextPage ? 1 : 3,
+              latest: { hits: { hits: [{ _id: nextPage ? 'second' : 'latest', _source: {
+                bug_key: key, category: nextPage ? 'FEATURE_REQUEST' : 'PRODUCT_BUG',
+                error_summary: nextPage ? 'Feature request' : 'Latest occurrence'
+              } }] } } }],
+            ...(nextPage ? {} : { after_key: { jiraKey: key } })
+          }
+        }
+      }))
+    }))
+    const routes = register()
+    const first = makeResponse()
+    await routes['/bugs'].at(-1)({ query: { distinct: 'true', size: '1' } }, first)
+    expect(first.body).toMatchObject({ total: 2, kpis: { total: 4, distinctJira: 2 },
+      bugs: [{ id: 'latest', bug_key: 'RHOAIENG-1', occurrenceCount: 3 }] })
+    expect(first.body.nextCursor).toBeTruthy()
+    expect(requests[0]).toMatchObject({ size: 0, aggs: { issues: { composite: { size: 1 } } } })
+    expect(requests[0].aggs.issues.aggs.latest.top_hits.sort).toEqual([
+      { timestamp: 'desc' }, { root_cause_id: 'asc' }
+    ])
+    expect(requests[0].query.bool.filter).toContainEqual({ exists: { field: 'bug_key' } })
+
+    const second = makeResponse()
+    await routes['/bugs'].at(-1)({ query: { distinct: 'true', size: '1', cursor: first.body.nextCursor } }, second)
+    expect(requests[1].aggs.issues.composite.after).toEqual({ jiraKey: 'RHOAIENG-1' })
+    expect(second.body).toMatchObject({ total: 2,
+      bugs: [{ id: 'second', bug_key: 'RHOAIENG-2', occurrenceCount: 1 }] })
+    expect(second.body.nextCursor).toBeNull()
+  })
+
+  it('keeps an unmatched test suite empty after applying issue visibility', async () => {
+    let rootCauseQuery
+    vi.stubGlobal('fetch', vi.fn((url, options) => {
+      const body = JSON.parse(options.body)
+      if (url.includes(`/${BUGS_INDEX}/`)) rootCauseQuery = body.query
+      return Promise.resolve(jsonResponse({ hits: { hits: [], total: { value: 0 } }, aggregations: {} }))
+    }))
+    const response = makeResponse()
+    await register()['/bugs'].at(-1)({ query: { testSuite: 'not-a-suite' } }, response)
+
+    expect(rootCauseQuery).toEqual({ match_none: {} })
+    expect(response.body.total).toBe(0)
   })
 
   it('applies the same inclusive date range to execution, task, and RCA queries', () => {
@@ -225,6 +294,9 @@ describe('workflow-validation live schema routes', () => {
       }
       expect(url).toContain(`/${BUGS_INDEX}/`)
       expect(body.query.bool.filter).toContainEqual({ term: { run_id: 'invocation-1' } })
+      expect(JSON.stringify(body.query)).toContain('CREDENTIAL_EXPOSURE')
+      expect(JSON.stringify(body.query)).toContain('MISSING_PRECONDITION')
+      expect(JSON.stringify(body.query)).toContain('AUTOMATION_BUG')
       expect(JSON.stringify(body.query)).toContain('workflow-a')
       expect(JSON.stringify(body.query)).toContain('impacted_workflows')
       return Promise.resolve(jsonResponse({ hits: { hits: [{
@@ -258,6 +330,7 @@ describe('workflow-validation live schema routes', () => {
       }
       expect(url).toContain(`/${BUGS_INDEX}/`)
       expect(body.query.bool.filter).toContainEqual({ terms: { run_id: ['invocation-1'] } })
+      expect(JSON.stringify(body.query)).toContain('ENVIRONMENT')
       expect(body.query.bool.should).toEqual([
         { term: { workflow: 'workflow-a' } },
         { term: { impacted_workflows: 'workflow-a' } }
@@ -426,6 +499,8 @@ describe('workflow-validation live schema routes', () => {
         _id: 'known-bug', _source: { root_cause_id: 'known-bug', run_id: 'invocation-1', workflow: 'test-b', category: 'PRODUCT_BUG', opened: false, action: 'EXISTING', bug_key: 'RHOAIENG-2' }, sort: ['2026-09-16', 'known-bug']
       }, {
         _id: 'ux-defect', _source: { root_cause_id: 'ux-defect', run_id: 'invocation-1', workflow: 'test-a', category: 'UX_DEFECT', opened: true, action: 'FILED', bug_key: 'RHOAIENG-3' }, sort: ['2026-09-16', 'ux-defect']
+      }, {
+        _id: 'rfe', _source: { root_cause_id: 'rfe', run_id: 'invocation-1', workflow: 'test-a', category: 'FEATURE_REQUEST', opened: true, action: 'FILED', bug_key: 'RHAIRFE-123' }, sort: ['2026-09-16', 'rfe']
       }] } }))
     }))
     const routes = register()
@@ -437,11 +512,13 @@ describe('workflow-validation live schema routes', () => {
     expect(response.body.tests).toHaveLength(2)
     expect(response.body.tests[0].productBugs).toEqual(expect.arrayContaining([
       expect.objectContaining({ bug_key: 'RHOAIENG-1', category: 'PRODUCT_BUG' }),
-      expect.objectContaining({ bug_key: 'RHOAIENG-3', category: 'UX_DEFECT' })
+      expect.objectContaining({ bug_key: 'RHOAIENG-3', category: 'UX_DEFECT' }),
+      expect.objectContaining({ bug_key: 'RHAIRFE-123', category: 'FEATURE_REQUEST' })
     ]))
     expect(response.body.newProductBugs).toEqual(expect.arrayContaining([
       expect.objectContaining({ bug_key: 'RHOAIENG-1', category: 'PRODUCT_BUG' }),
-      expect.objectContaining({ bug_key: 'RHOAIENG-3', category: 'UX_DEFECT' })
+      expect.objectContaining({ bug_key: 'RHOAIENG-3', category: 'UX_DEFECT' }),
+      expect.objectContaining({ bug_key: 'RHAIRFE-123', category: 'FEATURE_REQUEST' })
     ]))
     expect(response.body.knownProductBugs).toEqual([expect.objectContaining({ bug_key: 'RHOAIENG-2' })])
     expect(response.body).not.toHaveProperty('failedTests')
@@ -449,8 +526,13 @@ describe('workflow-validation live schema routes', () => {
     expect(rootCauseQueries.length).toBeGreaterThan(0)
     expect(rootCauseQueries.every((query) => !JSON.stringify(query).includes('telemetry_suite'))).toBe(true)
     expect(rootCauseQueries.some((query) => JSON.stringify(query).includes('invocation-1'))).toBe(true)
-    expect(rootCauseQueries.some((query) => JSON.stringify(query).includes('UX_DEFECT'))).toBe(true)
-    expect(rootCauseQueries.some((query) => JSON.stringify(query).includes('bug_key'))).toBe(true)
+    expect(rootCauseQueries.some((query) => JSON.stringify(query).includes('ENVIRONMENT'))).toBe(true)
+    expect(rootCauseQueries.some((query) => JSON.stringify(query).includes('CREDENTIAL_EXPOSURE'))).toBe(true)
+    expect(rootCauseQueries.some((query) => JSON.stringify(query).includes('MISSING_PRECONDITION'))).toBe(true)
+    expect(rootCauseQueries.some((query) => JSON.stringify(query).includes('AUTOMATION_BUG'))).toBe(true)
+    expect(rootCauseQueries.every((query) => !JSON.stringify(query).includes('PRODUCT_BUG'))).toBe(true)
+    expect(rootCauseQueries.every((query) => !JSON.stringify(query).includes('UX_DEFECT'))).toBe(true)
+    expect(rootCauseQueries.every((query) => JSON.stringify(query).includes('bug_key'))).toBe(true)
   })
 
   it('requires charts to be scoped to one concrete test run', async () => {

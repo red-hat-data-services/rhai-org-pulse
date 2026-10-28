@@ -8,7 +8,7 @@ const DEFAULT_CONFIG = {
   excludedStatuses: ['Closed'],
   lookbackMonths: 0,
   trendThresholdPp: 2,
-  autofixProjects: ['AIPCC', 'RHOAIENG', 'RHAIENG', 'RHAIFIRST', 'INFERENG', 'JN'],
+  autofixProjects: ['AIPCC', 'RHOAIENG', 'RHAI', 'RHAIENG', 'RHAIFIRST', 'INFERENG', 'JN'],
   // Null means project-wide policy cohort. Set to component names to scope it.
   autofixComponents: null,
   autofixCreatedAfter: null,

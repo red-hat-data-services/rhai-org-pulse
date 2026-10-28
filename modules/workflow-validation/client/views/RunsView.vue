@@ -36,7 +36,7 @@
                 <th class="px-4 py-3 font-semibold text-right"><button @click="setSort('tasks')">Tasks {{ sortMark('tasks') }}</button></th>
                 <th v-if="costsVisible" class="px-4 py-3 font-semibold text-right">AI Cost</th>
                 <th class="px-4 py-3 font-semibold text-right"><button @click="setSort('duration')">Duration {{ sortMark('duration') }}</button></th>
-                <th class="px-4 py-3 font-semibold min-w-72">Product bug</th>
+                <th class="px-4 py-3 font-semibold min-w-72">Jira issue</th>
                 <th class="px-4 py-3 font-semibold"><button @click="setSort('timestamp')">When {{ sortMark('timestamp') }}</button></th>
               </tr>
             </thead>

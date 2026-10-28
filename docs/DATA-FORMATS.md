@@ -1093,6 +1093,181 @@ component's report.
 
 ---
 
+## Releases — Tech Debt Priority Scoring (API Response)
+
+`GET /api/modules/releases/tech-debt/issues` returns the complete open Bug and
+Vulnerability cohort for the selected Jira components. Vulnerabilities include
+a deterministic priority assessment. Bugs use the deterministic `bug-v1`
+assessment. Both issue types share one backlog ordered by effective score.
+The representative contract fixture is
+`fixtures/releases/tech-debt/issues.json`.
+Response metadata identifies that behavior with:
+
+```json
+{
+  "bugScoring": {
+    "modelVersion": "bug-v1",
+    "mode": "active",
+    "rankingApplied": true
+  },
+  "queueScoring": {
+    "mode": "combined",
+    "rankingField": "priorityScore"
+  }
+}
+```
+
+### Vulnerability score
+
+```json
+{
+  "key": "RHAIENG-123",
+  "issueType": "Vulnerability",
+  "rawScore": 69,
+  "priorityScore": 70,
+  "scoreStatus": "scored",
+  "priorityBand": {
+    "level": "P1",
+    "label": "Urgent",
+    "expectedAction": "Begin within 2–4 business days"
+  },
+  "scoreBreakdown": {
+    "sla": { "points": 35, "state": "Breached", "date": "2026-10-20", "daysUntil": -6 },
+    "cvss": { "points": 14, "state": "Medium (4.0–6.9)", "value": 6.5 },
+    "dueDate": { "points": 9, "state": "Due in 8–30 days", "date": "2026-11-10", "daysUntil": 15 },
+    "reviewOutcome": { "points": 7, "state": "Needs review", "value": "needs-review", "conflict": false },
+    "age": { "points": 4, "state": "8–12 weeks", "weeks": 9 },
+    "uncertainty": { "points": 0, "state": "Complete tracking data", "reasons": [] }
+  },
+  "guardrail": {
+    "applied": true,
+    "minimumScore": 70,
+    "reasons": ["SLA breach guarantees at least P1"]
+  },
+  "triageFlags": [
+    { "code": "sla-breached", "label": "SLA breached" }
+  ]
+}
+```
+
+The raw score is the sum of six independently visible categories:
+
+| Category | Valid-value points | Missing/invalid behavior |
+| --- | --- | --- |
+| SLA urgency | 35 breached; 30 within 7 days; 22 within 30; 12 within 90; 4 later | 0 plus 2 uncertainty |
+| CVSS | 30 for 9.0+; 23 for 7.0+; 14 for 4.0+; 5 below 4.0 | 0 plus 1 uncertainty |
+| Jira Due Date | 15 past due; 13 within 7 days; 9 within 30; 5 within 90; 2 later | 0 plus 1 uncertainty |
+| Review outcome | 10 needs action; 8 not found; 7 needs review; 2 possibly resolved | 0 plus 1 uncertainty |
+| Issue age | 5 for 13+ weeks; 4 for 8–12; 3 for 4–7; 2 for 2–3; 0 for 0–1 | 0 |
+| Uncertainty | Up to 5 from the missing fields above | — |
+
+Missing values never receive fallback urgency points. Scores are not
+normalized: the practical raw maximum is 95. Effective priority bands are P0
+at 85+, P1 at 70+, P2 at 50+, P3 at 30+, and P4 below 30. A breached SLA
+raises the effective score to at least 70; CVSS 9+ combined with an SLA or Due
+Date within seven days or overdue raises it to at least 85. `rawScore` always
+preserves the arithmetic before these guardrails.
+
+`triageFlags` can include `sla-breached`, `missing-sla`,
+`due-after-90-days`, `missing-due-date`, `missing-review-outcome`,
+`conflicting-review-outcome`, and `missing-cvss`. The optional
+`triage=exceptions` query returns only Vulnerabilities with at least one flag.
+All date comparisons use UTC calendar dates. The response is calculated from
+a live Jira query scoped to the selected components. Up to six recent component
+selections are cached for five minutes and the response remains independent of
+the CVE Sustaining report's 90-day timeline and exclusions.
+
+### Bug score
+
+Bug records use `scoreStatus: "scored"`. Their effective score participates in
+the same backlog ranking as Vulnerabilities. Ranks are global across both issue
+types rather than restarting for each type.
+
+```json
+{
+  "key": "RHAIENG-456",
+  "issueType": "Bug",
+  "rawScore": 62,
+  "priorityScore": 70,
+  "scoreStatus": "scored",
+  "scoreModel": "bug-v1",
+  "primaryBugType": {
+    "code": "approved-release-blocker",
+    "label": "Approved Release Blocker"
+  },
+  "classificationSignals": [
+    {
+      "code": "approved-release-blocker",
+      "label": "Approved Release Blocker",
+      "evidence": "Release Blocker is Approved"
+    }
+  ],
+  "priorityBand": {
+    "level": "P1",
+    "label": "Urgent",
+    "expectedAction": "Begin within 2–4 business days"
+  },
+  "scoreBreakdown": {
+    "customerImpact": { "points": 0, "state": "No customer or field signal" },
+    "deliverySecurity": { "points": 22, "state": "Approved Release Blocker" },
+    "detectionSource": { "points": 4, "state": "DevTestOps automated test failure" },
+    "jiraSeverity": { "points": 16, "state": "High" },
+    "dueDate": { "points": 15, "state": "Past due" },
+    "age": { "points": 5, "state": "13+ weeks" }
+  },
+  "guardrail": {
+    "applied": true,
+    "minimumScore": 70,
+    "reasons": ["Approved Release Blocker guarantees at least P1"]
+  }
+}
+```
+
+Only the highest matching rule in each dimension contributes points:
+
+| Dimension | Points |
+| --- | --- |
+| Customer impact | 30 SFDC-linked; 15 BU/SSA/Early Access feedback without SFDC; otherwise 0 |
+| Delivery/security | 25 pre-release CVE; 22 Approved blocker; 20 Snyk SCA; 16 Snyk SAST; 14 generic Snyk; 12 Security/Conforma/TLS; otherwise 0 |
+| Detection source | 5 operator auto E2E; 4 DevTestOps test failure; 3 workflow validation; 2 CI/nightly/gate/human test; otherwise 0 |
+| Jira severity | 20 Blocker/Highest; 16 Critical/High; 12 Major; 8 Medium/Normal; 4 Low/Minor; 2 Lowest; otherwise 0 |
+| Jira Due Date | 15 past due; 13 within 7 days; 9 within 30; 5 within 90; 2 later; missing 0 |
+| Issue age | 5 for 13+ weeks; 4 for 8–12; 3 for 4–7; 2 for 2–3; otherwise 0 |
+
+The primary Bug type is selected in this order: Affecting customer,
+Pre-release CVE, Approved Release Blocker, BU/SSA/field feedback,
+DevTestOps/E2E, Workflow validation, then Component-team/unclassified. All
+matching evidence remains in `classificationSignals`. SFDC membership is
+derived by a parallel Jira key query because the field is not read directly
+from issue results. If that lookup fails, the API uses its existing stale-cache
+fallback instead of treating every issue as non-customer-facing.
+
+Classification evidence is normalized case-insensitively. The source rules are:
+
+- Affecting customer: `SFDC_Cases_Counter > 0`.
+- Field feedback: `AIBU_Feedback`, `AISSA_Feedback`, or
+  `BU_EarlyAccess_Feedback` without SFDC.
+- Pre-release CVE: `prerelease-cve-remediation` plus the DevTestOps Jira Bot
+  reporter.
+- Approved blocker: Release Blocker option `16772` / Approved.
+- Snyk: `snyk` plus the RHOAIENG AutomationBot reporter. `dependency` or
+  `vuln` identifies SCA; `code-analysis` or a `cwe` label identifies SAST. SCA
+  wins when both subtypes match.
+- DevTestOps/E2E: `test-failed` plus DevTestOps Jira Bot, or
+  `odh-operator-auto-e2e-blocker` plus RHOAIENG AutomationBot.
+- Workflow validation: Workflow Validation reporter.
+- Other detection: CI/nightly, release tooling, human `test-failed`, or
+  human-filed `gate:*` labels.
+
+An Approved Release Blocker has an effective score floor of 70/P1. An
+affecting-customer Bug with Jira priority Blocker, Highest, Critical, or High also has
+a 70/P1 floor. Missing Bug fields receive zero points and no uncertainty bonus.
+The score reuses the Vulnerability P0–P4 bands and UTC date boundaries. The
+combined queue sorts by effective score descending, then earliest SLA date,
+earliest Jira Due Date, highest CVSS, oldest creation date, and Jira key.
+
+---
+
 ## Releases — Delivery Config (`data/releases/delivery/config.json`)
 
 Admin-configurable settings for the Releases module delivery domain (formerly Release Analysis).
@@ -2060,7 +2235,7 @@ JSON Lines format (one JSON object per line). Partitioned by month for efficient
 
 ## Releases — CHI Hierarchy (`data/releases/chi-hierarchy/latest.json`)
 
-Pre-computed Container Health Index hierarchy for Org Pulse (RHOAIENG-97404). Environments: **Prod** (`catalog.redhat.com`), **Stage** (Stage Pyxis), **Latest** (Konflux clair-scan via KubeArchive). Hierarchy: Product version → Components → Images.
+Pre-computed Container Health Index hierarchy for Org Pulse (RHOAIENG-97404). Environments: **Prod** (`catalog.redhat.com`), **Stage** (Stage Pyxis), **Latest** (Konflux clair-scan via KubeArchive), **Nightly** (`ec-cve-run-tool`, RHEL errata-filtered). Hierarchy: Product version → Components → Images.
 
 Fixture: `fixtures/releases/chi-hierarchy/latest.json`.
 
@@ -2131,6 +2306,29 @@ Fixture: `fixtures/releases/chi-hierarchy/latest.json`.
           }]
         }]
       }]
+    },
+    "nightly": {
+      "fetchedAt": "2026-10-13T11:53:15.000Z",
+      "source": "ec-cve-run-tool (RHEL errata filtered, Konflux Clair scan)",
+      "versions": [{
+        "id": "rhoai-3.6",
+        "tag": "v3.6",
+        "summary": { "imageCount": 2, "gradeDistribution": { "A": 1, "D": 1 }, "critical": 0, "important": 4, "staleImageCount": 1 },
+        "components": [{
+          "name": "AI Core Dashboard",
+          "summary": { "imageCount": 1, "worstGrade": "A", "critical": 0, "important": 0, "oldestImageAgeDays": 0 },
+          "images": [{
+            "name": "odh-dashboard-nightly-rhel9",
+            "grade": "A",
+            "gradeDate": "2026-10-13",
+            "vulnerabilityCount": 0,
+            "advisories": { "Critical": 0, "Important": 0 },
+            "scanNote": "3 CVE(s) excluded (no RHEL errata or non-RHEL fix)",
+            "lastUpdated": "2026-10-13",
+            "ageDays": 0
+          }]
+        }]
+      }]
     }
   }
 }
@@ -2142,7 +2340,7 @@ Fixture: `fixtures/releases/chi-hierarchy/latest.json`.
 | GET | `/api/modules/releases/chi-hierarchy/status` | `releases:read` | Upload / env summary |
 | POST | `/api/modules/releases/chi-hierarchy/bulk` | `releases:write` | Pipeline ingest (skipped in `DEMO_MODE`) |
 
-Image staleness: `ageDays > 14` is treated as stale in the UI. Prod/Stage `grade` / `gradeDate` / `vulnerabilityCount` align with catalog HealthIndex. Latest grades are official CHI from rhel-vex patched Critical/Important (see the in-page grading tip). Latest images use `konfluxUrl` instead of `catalogUrl`.
+Image staleness: `ageDays > 14` is treated as stale in the UI. Prod/Stage `grade` / `gradeDate` / `vulnerabilityCount` align with catalog HealthIndex. Latest (Konflux builds) grades are official CHI from rhel-vex patched Critical/Important (see the in-page grading tip). Latest images use `konfluxUrl` instead of `catalogUrl`. Nightly images carry an optional `scanNote` string explaining excluded CVEs (RHEL errata filtering); it is shown in the image table when the Nightly tab is active.
 
 `catalogUrl` must include the Pyxis repository `_id` final path segment (e.g. `…/odh-dashboard-rhel9/680cdd696ed1cf1f6cf2a587`); without it catalog.redhat.com returns 404.
 

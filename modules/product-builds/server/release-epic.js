@@ -18,6 +18,7 @@ const triggerOptionsCache = new Map();
 const TRIGGER_OPTIONS_CACHE_TTL = 30_000;
 const VERSION_TAG_PATTERN = /^(?:\d+\.\d+\.\d+)(?:-(?:ea|fast)\.\d+)?$/;
 const TEMPLATE_TAG_SUFFIX_PATTERN = /-\{\{[^}]*\}\}$/;
+const PRODUCT_VERSION_PATTERN = /^\d+\.\d+(?:\.\d+)?(?:-(?:ea|fast)\.\d+)?$/;
 const INSTRUCTIONS = 'Component readiness is tracked through child Tasks linked to this epic. Use the component readiness skill to create a Task for a batch of components that are ready to release. Each Task carries image pullspecs and is linked to this epic via Epic Link.';
 
 function configPaths(product, branch) {
@@ -78,6 +79,9 @@ function extractDefinition(definition, configFamily, branch) {
     tags: Array.isArray(definition.release_plan_admission?.common?.tags)
       ? definition.release_plan_admission.common.tags.map(String)
       : [],
+    product_version: definition.release_plan_admission?.common?.product_version == null
+      ? ''
+      : String(definition.release_plan_admission.common.product_version),
   };
 }
 
@@ -123,6 +127,15 @@ function parseBranch(files, product, branch) {
     components.push(item);
   }
 
+  // Branches that configure no release tags at all (for example
+  // base-images/release-trailing) publish a single rolling version through
+  // release_plan_admission.common.product_version instead.
+  const tags = [...new Set(extracted.flatMap(item => item.tags))];
+  const tagVersions = [...new Set(tags.map(configuredVersionFromTag).filter(Boolean))];
+  const productVersions = [...new Set(extracted.map(item => item.product_version)
+    .filter(value => PRODUCT_VERSION_PATTERN.test(value)))];
+  const configuredVersions = tagVersions.length ? tagVersions : (tags.length ? [] : productVersions);
+
   return {
     product,
     branch,
@@ -134,9 +147,9 @@ function parseBranch(files, product, branch) {
       : ['—'],
     components,
     release_plans: [...new Set(extracted.flatMap(item => item.releasePlans))],
-    tags: [...new Set(extracted.flatMap(item => item.tags))],
-    configured_tags: [...new Set(extracted.flatMap(item => item.tags))],
-    configured_versions: [...new Set(extracted.flatMap(item => item.tags).map(configuredVersionFromTag).filter(Boolean))],
+    tags,
+    configured_tags: tags,
+    configured_versions: configuredVersions,
     inferred_release_type: inferReleaseTypeForProduct(product, branch),
   };
 }
@@ -224,7 +237,10 @@ function validateReleaseInput(products, body) {
   const branch = metadata.branch;
   const version = resolveVersion(metadata, requestedVersion);
   if (!version) {
-    throw new Error(`Version ${requestedVersion} is not configured for ${product}/${branch}. Exact configured tags: ${metadata.tags.join(', ')}`);
+    const detail = metadata.tags.length
+      ? `Exact configured tags: ${metadata.tags.join(', ')}`
+      : `Configured versions: ${metadata.configured_versions.join(', ')}`;
+    throw new Error(`Version ${requestedVersion} is not configured for ${product}/${branch}. ${detail}`);
   }
   const inferredReleaseType = inferReleaseTypeForProduct(product, branch, version);
   if (releaseTypeInput && releaseTypeInput !== inferredReleaseType) {

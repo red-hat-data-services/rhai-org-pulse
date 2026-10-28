@@ -57,13 +57,18 @@ describe('workflow-validation default version filter', () => {
     expect(formatBuildId(null)).toBe('Unknown')
   })
 
-  it('distinguishes product failures from environment-skipped tests', () => {
+  it('distinguishes Jira-linked issue failures from other unsuccessful tests', () => {
     expect(displayedTestOutcome({ verdict: 'PASS' })).toBe('PASS')
     expect(displayedTestOutcome({ verdict: 'FAIL', productBugs: [{ category: 'PRODUCT_BUG', bug_key: 'RHOAIENG-1' }] })).toBe('FAIL')
     expect(displayedTestOutcome({ verdict: 'FAIL', productBugs: [{ category: 'UX_DEFECT', bug_key: 'RHOAIENG-99762' }] })).toBe('FAIL')
+    expect(displayedTestOutcome({ verdict: 'FAIL', productBugs: [{ category: 'FEATURE_REQUEST', bug_key: 'RHAIRFE-123' }] })).toBe('FAIL')
+    expect(displayedTestOutcome({ verdict: 'FAIL', productBugs: [{ category: 'FUTURE_CATEGORY', bug_key: 'RHOAIENG-234' }] })).toBe('FAIL')
     expect(displayedTestOutcome({ verdict: 'FAIL', productBugs: [{ category: 'UX_DEFECT' }] })).toBe('SKIP')
     expect(displayedTestOutcome({ verdict: 'FAIL', productBugs: [{ category: 'PRODUCT_BUG' }] })).toBe('SKIP')
     expect(displayedTestOutcome({ verdict: 'ERROR', productBugs: [{ category: 'ENVIRONMENT' }] })).toBe('SKIP')
+    expect(displayedTestOutcome({ verdict: 'FAIL', productBugs: [{ category: 'CREDENTIAL_EXPOSURE', bug_key: 'RHOAIENG-5' }] })).toBe('SKIP')
+    expect(displayedTestOutcome({ verdict: 'FAIL', productBugs: [{ category: 'MISSING_PRECONDITION', bug_key: 'RHOAIENG-6' }] })).toBe('SKIP')
+    expect(displayedTestOutcome({ verdict: 'FAIL', productBugs: [{ category: 'AUTOMATION_BUG', bug_key: 'RHOAIENG-7' }] })).toBe('SKIP')
     expect(displayedOutcomeCounts([
       { verdict: 'PASS' },
       { verdict: 'FAIL', productBugs: [{ category: 'PRODUCT_BUG', bug_key: 'RHOAIENG-1' }] },

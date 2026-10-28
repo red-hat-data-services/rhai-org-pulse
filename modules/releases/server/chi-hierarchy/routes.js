@@ -12,7 +12,7 @@ function validatePayload(body) {
   }
   var envs = body.environments
   var hasEnv = false
-  for (var key of ['prod', 'stage', 'latest']) {
+  for (var key of ['prod', 'stage', 'latest', 'nightly']) {
     if (envs[key] == null) continue
     hasEnv = true
     var env = envs[key]
@@ -23,7 +23,7 @@ function validatePayload(body) {
       return 'environments.' + key + '.versions must be an array'
     }
   }
-  if (!hasEnv) return 'environments must include prod, stage, and/or latest'
+  if (!hasEnv) return 'environments must include prod, stage, latest, and/or nightly'
   return null
 }
 
@@ -81,6 +81,13 @@ function registerChiHierarchyRoutes(router, context) {
               source: envs.latest.source || null,
               versionCount: Array.isArray(envs.latest.versions) ? envs.latest.versions.length : 0
             }
+          : null,
+        nightly: envs.nightly
+          ? {
+              fetchedAt: envs.nightly.fetchedAt || null,
+              source: envs.nightly.source || null,
+              versionCount: Array.isArray(envs.nightly.versions) ? envs.nightly.versions.length : 0
+            }
           : null
       },
       lastUpload: lastUpload || null
@@ -115,7 +122,7 @@ function registerChiHierarchyRoutes(router, context) {
    *   post:
    *     summary: Bulk ingest CHI hierarchy snapshot
    *     description: |
-   *       Pipeline ingest for pre-computed Prod/Stage/Latest CHI hierarchy JSON.
+   *       Pipeline ingest for pre-computed Prod/Stage/Latest/Nightly CHI hierarchy JSON.
    *       Requires `releases:write`. Skipped in DEMO_MODE.
    *     tags: [Releases - CHI Hierarchy]
    *     security:

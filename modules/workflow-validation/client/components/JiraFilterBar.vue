@@ -6,7 +6,7 @@
           <option value="suite">Test Suite</option>
           <option value="release">RHOAI Release</option>
           <option value="date">Date Range</option>
-          <option value="all">All Bugs</option>
+          <option value="all">All Issues</option>
         </select>
       </label>
 
@@ -62,7 +62,7 @@
       <label class="flex min-w-[240px] flex-1 flex-col gap-1 text-xs font-semibold text-gray-500 dark:text-gray-400">Search
         <span class="relative">
           <SearchIcon :size="15" class="absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-400" />
-          <input v-model="filters.q" type="text" aria-label="Search Jira keys, tests, components, or bug details…" placeholder="Search Jira keys, tests, components, or bug details…" :class="[inputClass, 'w-full pl-8']" @keyup.enter="emitChange" />
+          <input v-model="filters.q" type="text" aria-label="Search Jira keys, tests, components, or issue details…" placeholder="Search Jira keys, tests, components, or issue details…" :class="[inputClass, 'w-full pl-8']" @keyup.enter="emitChange" />
         </span>
       </label>
     </div>

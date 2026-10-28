@@ -6,7 +6,7 @@
           <th class="px-5 py-3 font-semibold"><button @click="setSort('verdict')">Verdict {{ sortMark('verdict') }}</button></th>
           <th class="px-4 py-3 font-semibold"><button @click="setSort('workflow')">Test {{ sortMark('workflow') }}</button></th>
           <th class="px-4 py-3 font-semibold"><button @click="setSort('rhoai_version')">Version {{ sortMark('rhoai_version') }}</button></th>
-          <th class="px-4 py-3 font-semibold min-w-72">Product or UX issue</th>
+          <th class="px-4 py-3 font-semibold min-w-72">Jira issue</th>
           <th v-if="costsVisible" class="px-4 py-3 font-semibold text-right">AI Cost</th>
           <th class="px-4 py-3 font-semibold"><button @click="setSort('timestamp')">When {{ sortMark('timestamp') }}</button></th>
         </tr>

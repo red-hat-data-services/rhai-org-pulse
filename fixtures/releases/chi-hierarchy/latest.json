@@ -225,6 +225,1124 @@
           ]
         }
       ]
+    },
+    "nightly": {
+      "fetchedAt": "2026-10-13T11:53:15Z",
+      "source": "rhods-devops-infra ec-cve-run-tool (RHEL errata filtered, Konflux Clair scan)",
+      "versions": [
+        {
+          "id": "rhoai-3.6",
+          "tag": "v3.6",
+          "summary": {
+            "imageCount": 53,
+            "gradeDistribution": {
+              "A": 2,
+              "B": 9,
+              "C": 8,
+              "D": 28,
+              "F": 6
+            },
+            "critical": 0,
+            "important": 605,
+            "staleImageCount": 51
+          },
+          "components": [
+            {
+              "name": "AI Core Dashboard",
+              "summary": {
+                "imageCount": 1,
+                "worstGrade": "D",
+                "critical": 0,
+                "important": 27,
+                "oldestImageAgeDays": 265
+              },
+              "images": [
+                {
+                  "name": "odh-mod-arch-gen-ai-rhel9",
+                  "grade": "D",
+                  "gradeDate": "2026-01-21",
+                  "vulnerabilityCount": 27,
+                  "advisories": {
+                    "Critical": 0,
+                    "Important": 27,
+                    "Moderate": 0,
+                    "Low": 0
+                  },
+                  "catalogUrl": null,
+                  "konfluxUrl": null,
+                  "scanNote": "58 CVE(s) excluded (no RHEL errata or non-RHEL fix)",
+                  "lastUpdated": "2026-01-21",
+                  "ageDays": 265
+                }
+              ]
+            },
+            {
+              "name": "AI Core Platform",
+              "summary": {
+                "imageCount": 2,
+                "worstGrade": "D",
+                "critical": 0,
+                "important": 8,
+                "oldestImageAgeDays": 172
+              },
+              "images": [
+                {
+                  "name": "odh-must-gather-rhel9",
+                  "grade": "C",
+                  "gradeDate": "2026-08-12",
+                  "vulnerabilityCount": 7,
+                  "advisories": {
+                    "Critical": 0,
+                    "Important": 7,
+                    "Moderate": 0,
+                    "Low": 0
+                  },
+                  "catalogUrl": null,
+                  "konfluxUrl": null,
+                  "scanNote": "15 CVE(s) excluded (no RHEL errata or non-RHEL fix)",
+                  "lastUpdated": "2026-08-12",
+                  "ageDays": 62
+                },
+                {
+                  "name": "odh-cli-rhel9",
+                  "grade": "D",
+                  "gradeDate": "2026-04-24",
+                  "vulnerabilityCount": 1,
+                  "advisories": {
+                    "Critical": 0,
+                    "Important": 1,
+                    "Moderate": 0,
+                    "Low": 0
+                  },
+                  "catalogUrl": null,
+                  "konfluxUrl": null,
+                  "scanNote": "15 CVE(s) excluded (no RHEL errata or non-RHEL fix)",
+                  "lastUpdated": "2026-04-24",
+                  "ageDays": 172
+                }
+              ]
+            },
+            {
+              "name": "AI Evaluations",
+              "summary": {
+                "imageCount": 3,
+                "worstGrade": "D",
+                "critical": 0,
+                "important": 30,
+                "oldestImageAgeDays": 260
+              },
+              "images": [
+                {
+                  "name": "odh-ta-lmes-driver-rhel9",
+                  "grade": "D",
+                  "gradeDate": "2026-01-26",
+                  "vulnerabilityCount": 14,
+                  "advisories": {
+                    "Critical": 0,
+                    "Important": 14,
+                    "Moderate": 0,
+                    "Low": 0
+                  },
+                  "catalogUrl": null,
+                  "konfluxUrl": null,
+                  "scanNote": "1 CVE(s) excluded (no RHEL errata or non-RHEL fix)",
+                  "lastUpdated": "2026-01-26",
+                  "ageDays": 260
+                },
+                {
+                  "name": "odh-ta-lmes-job-rhel9",
+                  "grade": "D",
+                  "gradeDate": "2026-01-26",
+                  "vulnerabilityCount": 4,
+                  "advisories": {
+                    "Critical": 0,
+                    "Important": 4,
+                    "Moderate": 0,
+                    "Low": 0
+                  },
+                  "catalogUrl": null,
+                  "konfluxUrl": null,
+                  "scanNote": "53 CVE(s) excluded (no RHEL errata or non-RHEL fix)",
+                  "lastUpdated": "2026-01-26",
+                  "ageDays": 260
+                },
+                {
+                  "name": "odh-trustyai-garak-lls-provider-dsp-rhel9",
+                  "grade": "D",
+                  "gradeDate": "2026-06-16",
+                  "vulnerabilityCount": 12,
+                  "advisories": {
+                    "Critical": 0,
+                    "Important": 12,
+                    "Moderate": 0,
+                    "Low": 0
+                  },
+                  "catalogUrl": null,
+                  "konfluxUrl": null,
+                  "scanNote": "24 CVE(s) excluded (no RHEL errata or non-RHEL fix)",
+                  "lastUpdated": "2026-06-16",
+                  "ageDays": 119
+                }
+              ]
+            },
+            {
+              "name": "AI Guardrails",
+              "summary": {
+                "imageCount": 1,
+                "worstGrade": "D",
+                "critical": 0,
+                "important": 7,
+                "oldestImageAgeDays": 260
+              },
+              "images": [
+                {
+                  "name": "odh-trustyai-nemo-guardrails-server-rhel9",
+                  "grade": "D",
+                  "gradeDate": "2026-01-26",
+                  "vulnerabilityCount": 7,
+                  "advisories": {
+                    "Critical": 0,
+                    "Important": 7,
+                    "Moderate": 0,
+                    "Low": 0
+                  },
+                  "catalogUrl": null,
+                  "konfluxUrl": null,
+                  "scanNote": "30 CVE(s) excluded (no RHEL errata or non-RHEL fix)",
+                  "lastUpdated": "2026-01-26",
+                  "ageDays": 260
+                }
+              ]
+            },
+            {
+              "name": "AI Hub",
+              "summary": {
+                "imageCount": 2,
+                "worstGrade": "D",
+                "critical": 0,
+                "important": 9,
+                "oldestImageAgeDays": 260
+              },
+              "images": [
+                {
+                  "name": "odh-model-metadata-collection-rhel9",
+                  "grade": "D",
+                  "gradeDate": "2026-02-16",
+                  "vulnerabilityCount": 6,
+                  "advisories": {
+                    "Critical": 0,
+                    "Important": 6,
+                    "Moderate": 0,
+                    "Low": 0
+                  },
+                  "catalogUrl": null,
+                  "konfluxUrl": null,
+                  "scanNote": "1 CVE(s) excluded (no RHEL errata or non-RHEL fix)",
+                  "lastUpdated": "2026-02-16",
+                  "ageDays": 239
+                },
+                {
+                  "name": "odh-model-registry-job-async-upload-rhel9",
+                  "grade": "D",
+                  "gradeDate": "2026-01-26",
+                  "vulnerabilityCount": 3,
+                  "advisories": {
+                    "Critical": 0,
+                    "Important": 3,
+                    "Moderate": 0,
+                    "Low": 0
+                  },
+                  "catalogUrl": null,
+                  "konfluxUrl": null,
+                  "scanNote": "7 CVE(s) excluded (no RHEL errata or non-RHEL fix)",
+                  "lastUpdated": "2026-01-26",
+                  "ageDays": 260
+                }
+              ]
+            },
+            {
+              "name": "AI Pipelines",
+              "summary": {
+                "imageCount": 8,
+                "worstGrade": "D",
+                "critical": 0,
+                "important": 181,
+                "oldestImageAgeDays": 173
+              },
+              "images": [
+                {
+                  "name": "odh-data-science-pipelines-argo-argoexec-rhel9",
+                  "grade": "D",
+                  "gradeDate": "2026-04-23",
+                  "vulnerabilityCount": 31,
+                  "advisories": {
+                    "Critical": 0,
+                    "Important": 31,
+                    "Moderate": 0,
+                    "Low": 0
+                  },
+                  "catalogUrl": null,
+                  "konfluxUrl": null,
+                  "scanNote": "27 CVE(s) excluded (no RHEL errata or non-RHEL fix)",
+                  "lastUpdated": "2026-04-23",
+                  "ageDays": 173
+                },
+                {
+                  "name": "odh-data-science-pipelines-argo-workflowcontroller-rhel9",
+                  "grade": "D",
+                  "gradeDate": "2026-04-23",
+                  "vulnerabilityCount": 31,
+                  "advisories": {
+                    "Critical": 0,
+                    "Important": 31,
+                    "Moderate": 0,
+                    "Low": 0
+                  },
+                  "catalogUrl": null,
+                  "konfluxUrl": null,
+                  "scanNote": "25 CVE(s) excluded (no RHEL errata or non-RHEL fix)",
+                  "lastUpdated": "2026-04-23",
+                  "ageDays": 173
+                },
+                {
+                  "name": "odh-data-science-pipelines-operator-controller-rhel9",
+                  "grade": "D",
+                  "gradeDate": "2026-04-24",
+                  "vulnerabilityCount": 14,
+                  "advisories": {
+                    "Critical": 0,
+                    "Important": 14,
+                    "Moderate": 0,
+                    "Low": 0
+                  },
+                  "catalogUrl": null,
+                  "konfluxUrl": null,
+                  "scanNote": "3 CVE(s) excluded (no RHEL errata or non-RHEL fix)",
+                  "lastUpdated": "2026-04-24",
+                  "ageDays": 172
+                },
+                {
+                  "name": "odh-ml-pipelines-api-server-v2-rhel9",
+                  "grade": "D",
+                  "gradeDate": "2026-04-23",
+                  "vulnerabilityCount": 21,
+                  "advisories": {
+                    "Critical": 0,
+                    "Important": 21,
+                    "Moderate": 0,
+                    "Low": 0
+                  },
+                  "catalogUrl": null,
+                  "konfluxUrl": null,
+                  "scanNote": "6 CVE(s) excluded (no RHEL errata or non-RHEL fix)",
+                  "lastUpdated": "2026-04-23",
+                  "ageDays": 173
+                },
+                {
+                  "name": "odh-ml-pipelines-driver-rhel9",
+                  "grade": "D",
+                  "gradeDate": "2026-04-23",
+                  "vulnerabilityCount": 21,
+                  "advisories": {
+                    "Critical": 0,
+                    "Important": 21,
+                    "Moderate": 0,
+                    "Low": 0
+                  },
+                  "catalogUrl": null,
+                  "konfluxUrl": null,
+                  "scanNote": "7 CVE(s) excluded (no RHEL errata or non-RHEL fix)",
+                  "lastUpdated": "2026-04-23",
+                  "ageDays": 173
+                },
+                {
+                  "name": "odh-ml-pipelines-launcher-rhel9",
+                  "grade": "D",
+                  "gradeDate": "2026-04-23",
+                  "vulnerabilityCount": 21,
+                  "advisories": {
+                    "Critical": 0,
+                    "Important": 21,
+                    "Moderate": 0,
+                    "Low": 0
+                  },
+                  "catalogUrl": null,
+                  "konfluxUrl": null,
+                  "scanNote": "7 CVE(s) excluded (no RHEL errata or non-RHEL fix)",
+                  "lastUpdated": "2026-04-23",
+                  "ageDays": 173
+                },
+                {
+                  "name": "odh-ml-pipelines-persistenceagent-v2-rhel9",
+                  "grade": "D",
+                  "gradeDate": "2026-04-23",
+                  "vulnerabilityCount": 21,
+                  "advisories": {
+                    "Critical": 0,
+                    "Important": 21,
+                    "Moderate": 0,
+                    "Low": 0
+                  },
+                  "catalogUrl": null,
+                  "konfluxUrl": null,
+                  "scanNote": "7 CVE(s) excluded (no RHEL errata or non-RHEL fix)",
+                  "lastUpdated": "2026-04-23",
+                  "ageDays": 173
+                },
+                {
+                  "name": "odh-ml-pipelines-scheduledworkflow-v2-rhel9",
+                  "grade": "D",
+                  "gradeDate": "2026-04-23",
+                  "vulnerabilityCount": 21,
+                  "advisories": {
+                    "Critical": 0,
+                    "Important": 21,
+                    "Moderate": 0,
+                    "Low": 0
+                  },
+                  "catalogUrl": null,
+                  "konfluxUrl": null,
+                  "scanNote": "7 CVE(s) excluded (no RHEL errata or non-RHEL fix)",
+                  "lastUpdated": "2026-04-23",
+                  "ageDays": 173
+                }
+              ]
+            },
+            {
+              "name": "AI Safety Orchestration",
+              "summary": {
+                "imageCount": 1,
+                "worstGrade": "D",
+                "critical": 0,
+                "important": 18,
+                "oldestImageAgeDays": 260
+              },
+              "images": [
+                {
+                  "name": "odh-trustyai-service-operator-rhel9",
+                  "grade": "D",
+                  "gradeDate": "2026-01-26",
+                  "vulnerabilityCount": 18,
+                  "advisories": {
+                    "Critical": 0,
+                    "Important": 18,
+                    "Moderate": 0,
+                    "Low": 0
+                  },
+                  "catalogUrl": null,
+                  "konfluxUrl": null,
+                  "scanNote": "1 CVE(s) excluded (no RHEL errata or non-RHEL fix)",
+                  "lastUpdated": "2026-01-26",
+                  "ageDays": 260
+                }
+              ]
+            },
+            {
+              "name": "AutoRAG",
+              "summary": {
+                "imageCount": 1,
+                "worstGrade": "D",
+                "critical": 0,
+                "important": 8,
+                "oldestImageAgeDays": 98
+              },
+              "images": [
+                {
+                  "name": "odh-autorag-rhel9",
+                  "grade": "D",
+                  "gradeDate": "2026-07-07",
+                  "vulnerabilityCount": 8,
+                  "advisories": {
+                    "Critical": 0,
+                    "Important": 8,
+                    "Moderate": 0,
+                    "Low": 0
+                  },
+                  "catalogUrl": null,
+                  "konfluxUrl": null,
+                  "scanNote": "15 CVE(s) excluded (no RHEL errata or non-RHEL fix)",
+                  "lastUpdated": "2026-07-07",
+                  "ageDays": 98
+                }
+              ]
+            },
+            {
+              "name": "Feature Store",
+              "summary": {
+                "imageCount": 2,
+                "worstGrade": "D",
+                "critical": 0,
+                "important": 27,
+                "oldestImageAgeDays": 239
+              },
+              "images": [
+                {
+                  "name": "odh-feast-operator-rhel9",
+                  "grade": "D",
+                  "gradeDate": "2026-02-16",
+                  "vulnerabilityCount": 19,
+                  "advisories": {
+                    "Critical": 0,
+                    "Important": 19,
+                    "Moderate": 0,
+                    "Low": 0
+                  },
+                  "catalogUrl": null,
+                  "konfluxUrl": null,
+                  "scanNote": "2 CVE(s) excluded (no RHEL errata or non-RHEL fix)",
+                  "lastUpdated": "2026-02-16",
+                  "ageDays": 239
+                },
+                {
+                  "name": "odh-feature-server-rhel9",
+                  "grade": "D",
+                  "gradeDate": "2026-04-30",
+                  "vulnerabilityCount": 8,
+                  "advisories": {
+                    "Critical": 0,
+                    "Important": 8,
+                    "Moderate": 0,
+                    "Low": 0
+                  },
+                  "catalogUrl": null,
+                  "konfluxUrl": null,
+                  "scanNote": "30 CVE(s) excluded (no RHEL errata or non-RHEL fix)",
+                  "lastUpdated": "2026-04-30",
+                  "ageDays": 166
+                }
+              ]
+            },
+            {
+              "name": "Kubeflow Spark Operator",
+              "summary": {
+                "imageCount": 1,
+                "worstGrade": "D",
+                "critical": 0,
+                "important": 9,
+                "oldestImageAgeDays": 134
+              },
+              "images": [
+                {
+                  "name": "odh-spark-operator-rhel9",
+                  "grade": "D",
+                  "gradeDate": "2026-06-01",
+                  "vulnerabilityCount": 9,
+                  "advisories": {
+                    "Critical": 0,
+                    "Important": 9,
+                    "Moderate": 0,
+                    "Low": 0
+                  },
+                  "catalogUrl": null,
+                  "konfluxUrl": null,
+                  "scanNote": "45 CVE(s) excluded (no RHEL errata or non-RHEL fix)",
+                  "lastUpdated": "2026-06-01",
+                  "ageDays": 134
+                }
+              ]
+            },
+            {
+              "name": "MLflow",
+              "summary": {
+                "imageCount": 1,
+                "worstGrade": "D",
+                "critical": 0,
+                "important": 12,
+                "oldestImageAgeDays": 166
+              },
+              "images": [
+                {
+                  "name": "odh-mlflow-rhel9",
+                  "grade": "D",
+                  "gradeDate": "2026-04-30",
+                  "vulnerabilityCount": 12,
+                  "advisories": {
+                    "Critical": 0,
+                    "Important": 12,
+                    "Moderate": 0,
+                    "Low": 0
+                  },
+                  "catalogUrl": null,
+                  "konfluxUrl": null,
+                  "scanNote": "30 CVE(s) excluded (no RHEL errata or non-RHEL fix)",
+                  "lastUpdated": "2026-04-30",
+                  "ageDays": 166
+                }
+              ]
+            },
+            {
+              "name": "Model Runtimes",
+              "summary": {
+                "imageCount": 1,
+                "worstGrade": "D",
+                "critical": 0,
+                "important": 14,
+                "oldestImageAgeDays": 251
+              },
+              "images": [
+                {
+                  "name": "odh-vllm-cpu-rhel9",
+                  "grade": "D",
+                  "gradeDate": "2026-02-04",
+                  "vulnerabilityCount": 14,
+                  "advisories": {
+                    "Critical": 0,
+                    "Important": 14,
+                    "Moderate": 0,
+                    "Low": 0
+                  },
+                  "catalogUrl": null,
+                  "konfluxUrl": null,
+                  "scanNote": "20 CVE(s) excluded (no RHEL errata or non-RHEL fix)",
+                  "lastUpdated": "2026-02-04",
+                  "ageDays": 251
+                }
+              ]
+            },
+            {
+              "name": "Notebooks Images",
+              "summary": {
+                "imageCount": 2,
+                "worstGrade": "F",
+                "critical": 0,
+                "important": 55,
+                "oldestImageAgeDays": 984
+              },
+              "images": [
+                {
+                  "name": "odh-pipeline-runtime-pytorch-llmcompressor-cuda-py312-rhel9",
+                  "grade": "F",
+                  "gradeDate": "2024-02-02",
+                  "vulnerabilityCount": 28,
+                  "advisories": {
+                    "Critical": 0,
+                    "Important": 28,
+                    "Moderate": 0,
+                    "Low": 0
+                  },
+                  "catalogUrl": null,
+                  "konfluxUrl": null,
+                  "scanNote": "44 CVE(s) excluded (no RHEL errata or non-RHEL fix)",
+                  "lastUpdated": "2024-02-02",
+                  "ageDays": 984
+                },
+                {
+                  "name": "odh-workbench-jupyter-trustyai-cpu-py312-rhel9",
+                  "grade": "F",
+                  "gradeDate": "2024-02-02",
+                  "vulnerabilityCount": 27,
+                  "advisories": {
+                    "Critical": 0,
+                    "Important": 27,
+                    "Moderate": 0,
+                    "Low": 0
+                  },
+                  "catalogUrl": null,
+                  "konfluxUrl": null,
+                  "scanNote": "54 CVE(s) excluded (no RHEL errata or non-RHEL fix)",
+                  "lastUpdated": "2024-02-02",
+                  "ageDays": 984
+                }
+              ]
+            },
+            {
+              "name": "Serving Orchestration",
+              "summary": {
+                "imageCount": 4,
+                "worstGrade": "D",
+                "critical": 0,
+                "important": 41,
+                "oldestImageAgeDays": 172
+              },
+              "images": [
+                {
+                  "name": "odh-kserve-storage-initializer-rhel9",
+                  "grade": "C",
+                  "gradeDate": "2026-08-12",
+                  "vulnerabilityCount": 5,
+                  "advisories": {
+                    "Critical": 0,
+                    "Important": 5,
+                    "Moderate": 0,
+                    "Low": 0
+                  },
+                  "catalogUrl": null,
+                  "konfluxUrl": null,
+                  "scanNote": "18 CVE(s) excluded (no RHEL errata or non-RHEL fix)",
+                  "lastUpdated": "2026-08-12",
+                  "ageDays": 62
+                },
+                {
+                  "name": "odh-kserve-agent-rhel9",
+                  "grade": "D",
+                  "gradeDate": "2026-04-24",
+                  "vulnerabilityCount": 12,
+                  "advisories": {
+                    "Critical": 0,
+                    "Important": 12,
+                    "Moderate": 0,
+                    "Low": 0
+                  },
+                  "catalogUrl": null,
+                  "konfluxUrl": null,
+                  "scanNote": "9 CVE(s) excluded (no RHEL errata or non-RHEL fix)",
+                  "lastUpdated": "2026-04-24",
+                  "ageDays": 172
+                },
+                {
+                  "name": "odh-kserve-controller-rhel9",
+                  "grade": "D",
+                  "gradeDate": "2026-04-24",
+                  "vulnerabilityCount": 12,
+                  "advisories": {
+                    "Critical": 0,
+                    "Important": 12,
+                    "Moderate": 0,
+                    "Low": 0
+                  },
+                  "catalogUrl": null,
+                  "konfluxUrl": null,
+                  "scanNote": "7 CVE(s) excluded (no RHEL errata or non-RHEL fix)",
+                  "lastUpdated": "2026-04-24",
+                  "ageDays": 172
+                },
+                {
+                  "name": "odh-kserve-router-rhel9",
+                  "grade": "D",
+                  "gradeDate": "2026-04-24",
+                  "vulnerabilityCount": 12,
+                  "advisories": {
+                    "Critical": 0,
+                    "Important": 12,
+                    "Moderate": 0,
+                    "Low": 0
+                  },
+                  "catalogUrl": null,
+                  "konfluxUrl": null,
+                  "scanNote": "7 CVE(s) excluded (no RHEL errata or non-RHEL fix)",
+                  "lastUpdated": "2026-04-24",
+                  "ageDays": 172
+                }
+              ]
+            },
+            {
+              "name": "Training Kubeflow",
+              "summary": {
+                "imageCount": 1,
+                "worstGrade": "B",
+                "critical": 0,
+                "important": 3,
+                "oldestImageAgeDays": 29
+              },
+              "images": [
+                {
+                  "name": "odh-trainer-operator-rhel9",
+                  "grade": "B",
+                  "gradeDate": "2026-09-14",
+                  "vulnerabilityCount": 3,
+                  "advisories": {
+                    "Critical": 0,
+                    "Important": 3,
+                    "Moderate": 0,
+                    "Low": 0
+                  },
+                  "catalogUrl": null,
+                  "konfluxUrl": null,
+                  "scanNote": "7 CVE(s) excluded (no RHEL errata or non-RHEL fix)",
+                  "lastUpdated": "2026-09-14",
+                  "ageDays": 29
+                }
+              ]
+            },
+            {
+              "name": "Unmapped",
+              "summary": {
+                "imageCount": 22,
+                "worstGrade": "F",
+                "critical": 0,
+                "important": 156,
+                "oldestImageAgeDays": 984
+              },
+              "images": [
+                {
+                  "name": "odh-autorag-inference-rhel9",
+                  "grade": "A",
+                  "gradeDate": "2026-10-13",
+                  "vulnerabilityCount": 0,
+                  "advisories": {
+                    "Critical": 0,
+                    "Important": 0,
+                    "Moderate": 0,
+                    "Low": 0
+                  },
+                  "catalogUrl": null,
+                  "konfluxUrl": null,
+                  "scanNote": "1 CVE(s) excluded (no RHEL errata or non-RHEL fix)",
+                  "lastUpdated": "2026-10-13",
+                  "ageDays": 0
+                },
+                {
+                  "name": "odh-trustyai-service-py-rhel9",
+                  "grade": "A",
+                  "gradeDate": "2026-10-13",
+                  "vulnerabilityCount": 0,
+                  "advisories": {
+                    "Critical": 0,
+                    "Important": 0,
+                    "Moderate": 0,
+                    "Low": 0
+                  },
+                  "catalogUrl": null,
+                  "konfluxUrl": null,
+                  "scanNote": "1 CVE(s) excluded (no RHEL errata or non-RHEL fix)",
+                  "lastUpdated": "2026-10-13",
+                  "ageDays": 0
+                },
+                {
+                  "name": "odh-ai-gateway-operator-rhel9",
+                  "grade": "B",
+                  "gradeDate": "2026-09-14",
+                  "vulnerabilityCount": 3,
+                  "advisories": {
+                    "Critical": 0,
+                    "Important": 3,
+                    "Moderate": 0,
+                    "Low": 0
+                  },
+                  "catalogUrl": null,
+                  "konfluxUrl": null,
+                  "scanNote": "3 CVE(s) excluded (no RHEL errata or non-RHEL fix)",
+                  "lastUpdated": "2026-09-14",
+                  "ageDays": 29
+                },
+                {
+                  "name": "odh-feast-module-operator-rhel9",
+                  "grade": "B",
+                  "gradeDate": "2026-09-14",
+                  "vulnerabilityCount": 3,
+                  "advisories": {
+                    "Critical": 0,
+                    "Important": 3,
+                    "Moderate": 0,
+                    "Low": 0
+                  },
+                  "catalogUrl": null,
+                  "konfluxUrl": null,
+                  "scanNote": "5 CVE(s) excluded (no RHEL errata or non-RHEL fix)",
+                  "lastUpdated": "2026-09-14",
+                  "ageDays": 29
+                },
+                {
+                  "name": "odh-kserve-module-operator-rhel9",
+                  "grade": "B",
+                  "gradeDate": "2026-09-14",
+                  "vulnerabilityCount": 3,
+                  "advisories": {
+                    "Critical": 0,
+                    "Important": 3,
+                    "Moderate": 0,
+                    "Low": 0
+                  },
+                  "catalogUrl": null,
+                  "konfluxUrl": null,
+                  "scanNote": "14 CVE(s) excluded (no RHEL errata or non-RHEL fix)",
+                  "lastUpdated": "2026-09-14",
+                  "ageDays": 29
+                },
+                {
+                  "name": "odh-mod-arch-notebooks-rhel9",
+                  "grade": "B",
+                  "gradeDate": "2026-09-14",
+                  "vulnerabilityCount": 3,
+                  "advisories": {
+                    "Critical": 0,
+                    "Important": 3,
+                    "Moderate": 0,
+                    "Low": 0
+                  },
+                  "catalogUrl": null,
+                  "konfluxUrl": null,
+                  "scanNote": "6 CVE(s) excluded (no RHEL errata or non-RHEL fix)",
+                  "lastUpdated": "2026-09-14",
+                  "ageDays": 29
+                },
+                {
+                  "name": "odh-observability-rhel9",
+                  "grade": "B",
+                  "gradeDate": "2026-09-14",
+                  "vulnerabilityCount": 3,
+                  "advisories": {
+                    "Critical": 0,
+                    "Important": 3,
+                    "Moderate": 0,
+                    "Low": 0
+                  },
+                  "catalogUrl": null,
+                  "konfluxUrl": null,
+                  "scanNote": "5 CVE(s) excluded (no RHEL errata or non-RHEL fix)",
+                  "lastUpdated": "2026-09-14",
+                  "ageDays": 29
+                },
+                {
+                  "name": "odh-ogx-module-operator-rhel9",
+                  "grade": "B",
+                  "gradeDate": "2026-09-14",
+                  "vulnerabilityCount": 3,
+                  "advisories": {
+                    "Critical": 0,
+                    "Important": 3,
+                    "Moderate": 0,
+                    "Low": 0
+                  },
+                  "catalogUrl": null,
+                  "konfluxUrl": null,
+                  "scanNote": "5 CVE(s) excluded (no RHEL errata or non-RHEL fix)",
+                  "lastUpdated": "2026-09-14",
+                  "ageDays": 29
+                },
+                {
+                  "name": "odh-ray-module-operator-rhel9",
+                  "grade": "B",
+                  "gradeDate": "2026-09-14",
+                  "vulnerabilityCount": 3,
+                  "advisories": {
+                    "Critical": 0,
+                    "Important": 3,
+                    "Moderate": 0,
+                    "Low": 0
+                  },
+                  "catalogUrl": null,
+                  "konfluxUrl": null,
+                  "scanNote": "5 CVE(s) excluded (no RHEL errata or non-RHEL fix)",
+                  "lastUpdated": "2026-09-14",
+                  "ageDays": 29
+                },
+                {
+                  "name": "odh-spark-operator-module-rhel9",
+                  "grade": "B",
+                  "gradeDate": "2026-09-14",
+                  "vulnerabilityCount": 3,
+                  "advisories": {
+                    "Critical": 0,
+                    "Important": 3,
+                    "Moderate": 0,
+                    "Low": 0
+                  },
+                  "catalogUrl": null,
+                  "konfluxUrl": null,
+                  "scanNote": "12 CVE(s) excluded (no RHEL errata or non-RHEL fix)",
+                  "lastUpdated": "2026-09-14",
+                  "ageDays": 29
+                },
+                {
+                  "name": "odh-data-connect-hub-flight-rhel9",
+                  "grade": "C",
+                  "gradeDate": "2026-08-12",
+                  "vulnerabilityCount": 5,
+                  "advisories": {
+                    "Critical": 0,
+                    "Important": 5,
+                    "Moderate": 0,
+                    "Low": 0
+                  },
+                  "catalogUrl": null,
+                  "konfluxUrl": null,
+                  "scanNote": "1 CVE(s) excluded (no RHEL errata or non-RHEL fix)",
+                  "lastUpdated": "2026-08-12",
+                  "ageDays": 62
+                },
+                {
+                  "name": "odh-data-connect-hub-rest-rhel9",
+                  "grade": "C",
+                  "gradeDate": "2026-08-12",
+                  "vulnerabilityCount": 5,
+                  "advisories": {
+                    "Critical": 0,
+                    "Important": 5,
+                    "Moderate": 0,
+                    "Low": 0
+                  },
+                  "catalogUrl": null,
+                  "konfluxUrl": null,
+                  "scanNote": "1 CVE(s) excluded (no RHEL errata or non-RHEL fix)",
+                  "lastUpdated": "2026-08-12",
+                  "ageDays": 62
+                },
+                {
+                  "name": "odh-kserve-localmodel-controller-rhel9",
+                  "grade": "C",
+                  "gradeDate": "2026-08-12",
+                  "vulnerabilityCount": 5,
+                  "advisories": {
+                    "Critical": 0,
+                    "Important": 5,
+                    "Moderate": 0,
+                    "Low": 0
+                  },
+                  "catalogUrl": null,
+                  "konfluxUrl": null,
+                  "scanNote": "3 CVE(s) excluded (no RHEL errata or non-RHEL fix)",
+                  "lastUpdated": "2026-08-12",
+                  "ageDays": 62
+                },
+                {
+                  "name": "odh-kserve-localmodelnode-agent-rhel9",
+                  "grade": "C",
+                  "gradeDate": "2026-08-12",
+                  "vulnerabilityCount": 5,
+                  "advisories": {
+                    "Critical": 0,
+                    "Important": 5,
+                    "Moderate": 0,
+                    "Low": 0
+                  },
+                  "catalogUrl": null,
+                  "konfluxUrl": null,
+                  "scanNote": "2 CVE(s) excluded (no RHEL errata or non-RHEL fix)",
+                  "lastUpdated": "2026-08-12",
+                  "ageDays": 62
+                },
+                {
+                  "name": "odh-trustyai-module-operator-rhel9",
+                  "grade": "C",
+                  "gradeDate": "2026-08-12",
+                  "vulnerabilityCount": 5,
+                  "advisories": {
+                    "Critical": 0,
+                    "Important": 5,
+                    "Moderate": 0,
+                    "Low": 0
+                  },
+                  "catalogUrl": null,
+                  "konfluxUrl": null,
+                  "scanNote": "1 CVE(s) excluded (no RHEL errata or non-RHEL fix)",
+                  "lastUpdated": "2026-08-12",
+                  "ageDays": 62
+                },
+                {
+                  "name": "odh-workbenches-controller-rhel9",
+                  "grade": "C",
+                  "gradeDate": "2026-08-12",
+                  "vulnerabilityCount": 5,
+                  "advisories": {
+                    "Critical": 0,
+                    "Important": 5,
+                    "Moderate": 0,
+                    "Low": 0
+                  },
+                  "catalogUrl": null,
+                  "konfluxUrl": null,
+                  "scanNote": "1 CVE(s) excluded (no RHEL errata or non-RHEL fix)",
+                  "lastUpdated": "2026-08-12",
+                  "ageDays": 62
+                },
+                {
+                  "name": "odh-kserve-llmisvc-controller-rhel9",
+                  "grade": "D",
+                  "gradeDate": "2026-06-01",
+                  "vulnerabilityCount": 18,
+                  "advisories": {
+                    "Critical": 0,
+                    "Important": 18,
+                    "Moderate": 0,
+                    "Low": 0
+                  },
+                  "catalogUrl": null,
+                  "konfluxUrl": null,
+                  "scanNote": "3 CVE(s) excluded (no RHEL errata or non-RHEL fix)",
+                  "lastUpdated": "2026-06-01",
+                  "ageDays": 134
+                },
+                {
+                  "name": "odh-model-serving-api-rhel9",
+                  "grade": "D",
+                  "gradeDate": "2026-04-24",
+                  "vulnerabilityCount": 17,
+                  "advisories": {
+                    "Critical": 0,
+                    "Important": 17,
+                    "Moderate": 0,
+                    "Low": 0
+                  },
+                  "catalogUrl": null,
+                  "konfluxUrl": null,
+                  "scanNote": "1 CVE(s) excluded (no RHEL errata or non-RHEL fix)",
+                  "lastUpdated": "2026-04-24",
+                  "ageDays": 172
+                },
+                {
+                  "name": "odh-th-torch-cpu-py312-rhel9",
+                  "grade": "F",
+                  "gradeDate": "2024-02-02",
+                  "vulnerabilityCount": 13,
+                  "advisories": {
+                    "Critical": 0,
+                    "Important": 13,
+                    "Moderate": 0,
+                    "Low": 0
+                  },
+                  "catalogUrl": null,
+                  "konfluxUrl": null,
+                  "scanNote": "24 CVE(s) excluded (no RHEL errata or non-RHEL fix)",
+                  "lastUpdated": "2024-02-02",
+                  "ageDays": 984
+                },
+                {
+                  "name": "odh-th-torch-cuda-py312-rhel9",
+                  "grade": "F",
+                  "gradeDate": "2024-02-02",
+                  "vulnerabilityCount": 13,
+                  "advisories": {
+                    "Critical": 0,
+                    "Important": 13,
+                    "Moderate": 0,
+                    "Low": 0
+                  },
+                  "catalogUrl": null,
+                  "konfluxUrl": null,
+                  "scanNote": "42 CVE(s) excluded (no RHEL errata or non-RHEL fix)",
+                  "lastUpdated": "2024-02-02",
+                  "ageDays": 984
+                },
+                {
+                  "name": "odh-th-torch-rocm-py312-rhel9",
+                  "grade": "F",
+                  "gradeDate": "2024-02-02",
+                  "vulnerabilityCount": 13,
+                  "advisories": {
+                    "Critical": 0,
+                    "Important": 13,
+                    "Moderate": 0,
+                    "Low": 0
+                  },
+                  "catalogUrl": null,
+                  "konfluxUrl": null,
+                  "scanNote": "6 CVE(s) excluded (no RHEL errata or non-RHEL fix)",
+                  "lastUpdated": "2024-02-02",
+                  "ageDays": 984
+                },
+                {
+                  "name": "odh-wb-jupyter-pytorch-llmcompressor-cuda-py312-rhel9",
+                  "grade": "F",
+                  "gradeDate": "2024-02-02",
+                  "vulnerabilityCount": 28,
+                  "advisories": {
+                    "Critical": 0,
+                    "Important": 28,
+                    "Moderate": 0,
+                    "Low": 0
+                  },
+                  "catalogUrl": null,
+                  "konfluxUrl": null,
+                  "scanNote": "55 CVE(s) excluded (no RHEL errata or non-RHEL fix)",
+                  "lastUpdated": "2024-02-02",
+                  "ageDays": 984
+                }
+              ]
+            }
+          ]
+        }
+      ]
     }
   }
 }
