@@ -169,13 +169,11 @@ module.exports = function registerAIPlannerRoutes(router, context) {
 
       // Build outcomes from live feature data with priority ordering
       let allFeatures = [];
-      if (jiraFeatures) {
-        try {
-          const readiness = await buildFeatureReadiness(readFromStorage, jiraFeatures, listStorageFiles);
-          allFeatures = (readiness.pendingReview || []).concat(readiness.ready || []);
-        } catch (readinessErr) {
-          console.warn('[ai-planner/outcomes] buildFeatureReadiness failed, using empty features:', readinessErr.message);
-        }
+      try {
+        const readiness = await buildFeatureReadiness(readFromStorage, jiraFeatures, listStorageFiles);
+        allFeatures = (readiness.pendingReview || []).concat(readiness.ready || []);
+      } catch (readinessErr) {
+        console.warn('[ai-planner/outcomes] buildFeatureReadiness failed, using empty features:', readinessErr.message);
       }
 
       const inPlanFeatures = allFeatures
