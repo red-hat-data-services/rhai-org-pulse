@@ -81,7 +81,7 @@ function cellClass(channel) {
                   {{ channel.maturity === 'stable' ? 'Stable' : 'Rolling' }}
                   <span v-if="multiOs" class="ml-auto font-normal text-gray-500 dark:text-gray-400">{{ osLabel(channel.rhel_version) }}</span>
                 </span>
-                <span class="block mt-0.5 text-[11px] leading-tight text-gray-600 dark:text-gray-400 whitespace-nowrap">
+                <span v-if="channel.compatible_releases?.length" class="block mt-0.5 text-[11px] leading-tight text-gray-600 dark:text-gray-400 whitespace-nowrap">
                   {{ releaseSummary(channel.compatible_releases) }}
                 </span>
               </button>

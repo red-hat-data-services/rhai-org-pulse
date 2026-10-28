@@ -82,16 +82,16 @@ describe('labels', () => {
     expect(releaseSummary(['rhel-ai-1.5'])).toBe('RHEL-AI 1.5')
     expect(releaseSummary(['RHOAI 3.5', 'RHOAI 3.6-EA2', 'RHAIIS 3.6'])).toBe('RHOAI 3.5, 3.6-EA2 / RHAIIS 3.6')
     expect(releaseSummary(['nightly'])).toBe('NIGHTLY')
-    expect(releaseSummary([])).toBe('Not adopted yet')
-    expect(releaseSummary(undefined)).toBe('Not adopted yet')
+    expect(releaseSummary([])).toBe('')
+    expect(releaseSummary(undefined)).toBe('')
   })
 })
 
 describe('buildChannelMatrix', () => {
   const { columns, rows } = buildChannelMatrix(CHANNELS)
 
-  it('orders torch columns newest first with no torch last', () => {
-    expect(columns.map(c => c.id)).toEqual(['2.13', '2.12', '2.11', '2.9', 'notorch'])
+  it('orders torch columns oldest first with no torch last', () => {
+    expect(columns.map(c => c.id)).toEqual(['2.9', '2.11', '2.12', '2.13', 'notorch'])
   })
 
   it('orders rows by accelerator family then newest SDK first', () => {
@@ -118,6 +118,44 @@ describe('sortChannels', () => {
       'rocm7.14-torch2.12-ubi9',
     ])
   })
+
+  it('sorts numeric torch versions in either direction and keeps missing versions last', () => {
+    const channels = [
+      ch({ torch_version: '2.15' }),
+      ch({ torch_version: null }),
+      ch({ torch_version: '2.9' }),
+      ch({ torch_version: '2.10' }),
+    ]
+    expect(sortChannels(channels, { field: 'torch_version' }).map(c => c.torch_version))
+      .toEqual(['2.9', '2.10', '2.15', null])
+    expect(sortChannels(channels, { field: 'torch_version', direction: 'desc' }).map(c => c.torch_version))
+      .toEqual(['2.15', '2.10', '2.9', null])
+    expect(channels.map(c => c.torch_version)).toEqual(['2.15', null, '2.9', '2.10'])
+  })
+
+  it('sorts drops by timestamp even when their names and time zones differ', () => {
+    const channels = [
+      ch({ name: 'newer', latest_drop: { name: 'alpha', created_at: '2026-10-25T10:00:00Z' } }),
+      ch({ name: 'missing', latest_drop: null }),
+      ch({ name: 'older', latest_drop: { name: 'zulu', created_at: '2026-10-25T11:00:00+03:00' } }),
+      ch({ name: 'invalid', latest_drop: { name: 'invalid', created_at: 'unknown' } }),
+    ]
+    expect(sortChannels(channels, { field: 'latest_drop' }).map(c => c.name))
+      .toEqual(['older', 'newer', 'invalid', 'missing'])
+    expect(sortChannels(channels, { field: 'latest_drop', direction: 'desc' }).map(c => c.name))
+      .toEqual(['newer', 'older', 'invalid', 'missing'])
+  })
+
+  it('orders compatible releases consistently without changing their published order', () => {
+    const channels = [
+      ch({ name: 'later', compatible_releases: ['RHOAI 3.10'] }),
+      ch({ name: 'earlier', compatible_releases: ['RHOAI 3.9', 'RHOAI 3.6'] }),
+      ch({ name: 'missing', compatible_releases: [] }),
+    ]
+    expect(sortChannels(channels, { field: 'compatible_releases' }).map(c => c.name))
+      .toEqual(['earlier', 'later', 'missing'])
+    expect(channels[1].compatible_releases).toEqual(['RHOAI 3.9', 'RHOAI 3.6'])
+  })
 })
 
 describe('filterChannels', () => {
@@ -137,13 +175,44 @@ describe('filterChannels', () => {
     expect(filterChannels(CHANNELS, { query: 'no torch' })).toHaveLength(1)
     expect(filterChannels(CHANNELS, { query: '  rhoai-3.7 ' })).toHaveLength(2)
   })
+
+  it('matches any selected value per dimension and combines dimensions', () => {
+    expect(filterChannels(CHANNELS, {
+      accelerators: ['cuda|13.0', 'rocm|7.14'],
+      torchVersions: ['2.11', '2.12'],
+      osVersions: ['ubi9'],
+    }).map(c => c.name)).toEqual(['rocm7.14-torch2.12-ubi9', 'cuda13.0-torch2.11-ubi9'])
+    expect(filterChannels(CHANNELS, {
+      torchVersions: ['notorch'],
+    }).map(c => c.name)).toEqual(['cpu-notorch-ubi9'])
+    expect(filterChannels(CHANNELS, {
+      accelerators: [], torchVersions: [], osVersions: [],
+      maturities: [],
+    })).toHaveLength(CHANNELS.length)
+    expect(filterChannels(CHANNELS, {
+      maturities: ['stable', 'rolling'],
+    })).toHaveLength(CHANNELS.length)
+    expect(filterChannels(CHANNELS, {
+      accelerators: ['cuda|13.0'], torchVersions: ['2.11'], maturities: ['rolling'],
+    }).map(c => c.name)).toEqual(['cuda13.0-torch2.11-ubi10'])
+    expect(filterChannels(CHANNELS, {
+      accelerators: ['cpu|'], torchVersions: ['2.11'],
+    })).toEqual([])
+  })
 })
 
 describe('collectFilterOptions', () => {
-  it('collects sorted unique releases and OS versions', () => {
+  it('collects sorted unique filter values including no torch', () => {
     expect(collectFilterOptions(CHANNELS)).toEqual({
       releases: ['rhoai-3.6', 'rhoai-3.7'],
-      osVersions: ['ubi10', 'ubi9'],
+      osVersions: ['ubi9', 'ubi10'],
+      accelerators: [
+        { value: 'cpu|', label: 'CPU' },
+        { value: 'cuda|12.9', label: 'CUDA 12.9' },
+        { value: 'cuda|13.0', label: 'CUDA 13.0' },
+        { value: 'rocm|7.14', label: 'ROCm 7.14' },
+      ],
+      torchVersions: ['2.9', '2.11', '2.12', '2.13', 'notorch'],
     })
   })
 })

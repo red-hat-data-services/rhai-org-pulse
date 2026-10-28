@@ -62,11 +62,14 @@ import { filterQueryValues, filters, hydrateFilters, syncQueryParams, useWorkflo
 
 const { getBugs } = useWorkflowValidation()
 const nav = inject('moduleNav')
-const FILTER_KEYS = ['jiraScope', 'version', 'testSuite', 'invocationId', 'workflow', 'q', 'datePreset', 'dateFrom', 'dateTo']
+const FILTER_KEYS = ['jiraScope', 'jiraSuiteMode', 'version', 'testSuite', 'invocationId', 'workflow', 'q', 'datePreset', 'dateFrom', 'dateTo']
 const initialParams = nav?.params?.value || {}
 hydrateFilters(initialParams, FILTER_KEYS)
 if (!initialParams.jiraScope) {
   filters.jiraScope = initialParams.testSuite ? 'suite' : initialParams.version ? 'release' : initialParams.dateFrom || initialParams.dateTo ? 'date' : 'suite'
+}
+if (!initialParams.jiraSuiteMode && filters.jiraScope === 'suite') {
+  filters.jiraSuiteMode = initialParams.invocationId ? 'run' : initialParams.dateFrom || initialParams.dateTo ? 'date' : 'run'
 }
 
 const bugs = ref([])

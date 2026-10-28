@@ -313,14 +313,36 @@ test.describe('Workflow Validation module @workflow-validation', () => {
 
   test('switches Jira between suite, release, date, and all-bug scopes', async ({ page }) => {
     const bugRequests = []
+    const workflowRequests = []
     page.on('request', (request) => {
       if (request.url().includes('/api/modules/workflow-validation/bugs')) bugRequests.push(request.url())
+      if (request.url().includes('/api/modules/workflow-validation/workflows')) workflowRequests.push(request.url())
     })
 
     await page.goto('/#/workflow-validation/activity')
     await expect(page.getByLabel('View By')).toHaveValue('suite')
     await expect(page.getByLabel('Test Suite')).toBeVisible()
+    await expect(page.getByLabel('Show Issues From')).toHaveValue('run')
     await expect(page.getByLabel('Test Run')).toBeVisible()
+
+    await page.getByLabel('Show Issues From').selectOption('date')
+    await expect(page.getByLabel('Test Run')).toHaveCount(0)
+    await expect(page.getByLabel('Date Range')).toHaveValue('90')
+    await expect(page.getByLabel('Start Date')).toBeVisible()
+    await expect(page.getByLabel('End Date')).toBeVisible()
+    await expect.poll(() => {
+      const url = new URL(bugRequests.at(-1))
+      return url.searchParams.get('testSuite') === 'productization' &&
+        !url.searchParams.has('invocationId') &&
+        Boolean(url.searchParams.get('dateFrom')) &&
+        Boolean(url.searchParams.get('dateTo'))
+    }).toBe(true)
+    await expect.poll(() => {
+      const url = new URL(workflowRequests.at(-1))
+      return url.searchParams.get('testSuite') === 'productization' &&
+        Boolean(url.searchParams.get('dateFrom')) &&
+        Boolean(url.searchParams.get('dateTo'))
+    }).toBe(true)
 
     await page.getByLabel('View By').selectOption('release')
     await expect(page.getByLabel('RHOAI Version')).toHaveValue('3.6')

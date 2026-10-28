@@ -692,7 +692,9 @@ async function registerRegistryRoutes(router, context) {
     const registry = await readRegistry(readFromStorage);
     const release = registry.releases.find(r => r.id === req.params.id);
     if (!release) {
-      return res.status(404).json({ error: 'Release not found' });
+      // Return empty object with 200 instead of 404 to avoid console.error in iframe
+      // The iframe's fetchTimelineMilestones() handles empty responses gracefully
+      return res.json({});
     }
     res.json(release);
   });

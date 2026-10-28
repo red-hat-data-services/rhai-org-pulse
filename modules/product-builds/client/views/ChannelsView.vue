@@ -1,6 +1,6 @@
 <script setup>
 import { ref, computed, onMounted, inject, watch } from 'vue'
-import { Search } from 'lucide-vue-next'
+import { Search, ArrowUp, ArrowDown, ArrowUpDown } from 'lucide-vue-next'
 import { useChannels } from '../composables/useChannels'
 import {
   sortChannels,
@@ -9,6 +9,7 @@ import {
   stackLabel,
   osLabel,
   acceleratorMeta,
+  NO_TORCH,
 } from '../utils/channels'
 import { formatShortDate } from '../utils/formatting'
 import PersistentSearchBar from '../components/PersistentSearchBar.vue'
@@ -16,6 +17,7 @@ import ChannelMatrix from '../components/channels/ChannelMatrix.vue'
 import ChannelDrawer from '../components/channels/ChannelDrawer.vue'
 import ChannelName from '../components/channels/ChannelName.vue'
 import MaturityBadge from '../components/channels/MaturityBadge.vue'
+import ChannelFilterPill from '../components/channels/ChannelFilterPill.vue'
 
 const nav = inject('moduleNav')
 const { channels, source, asOf, loading, error, load } = useChannels()
@@ -24,16 +26,37 @@ const query = ref('')
 const maturity = ref('')
 const release = ref('')
 const os = ref('')
+const selectedAccelerators = ref([])
+const selectedTorchVersions = ref([])
+const selectedOsVersions = ref([])
+const selectedMaturities = ref([])
+const sortField = ref('')
+const sortDirection = ref('asc')
+
+const TABLE_COLUMNS = [
+  { field: 'name', label: 'Channel' },
+  { field: 'maturity', label: 'Maturity' },
+  { field: 'accelerator', label: 'Accelerator' },
+  { field: 'torch_version', label: 'Torch' },
+  { field: 'rhel_version', label: 'OS' },
+  { field: 'compatible_releases', label: 'Compatible releases' },
+  { field: 'latest_drop', label: 'Latest RHAIBI drop' },
+  { field: 'wheel_count', label: 'Wheels' },
+]
 
 const MATURITY_OPTIONS = [
   { value: '', label: 'All' },
   { value: 'stable', label: 'Stable' },
   { value: 'rolling', label: 'Rolling' },
 ]
+const TABLE_MATURITY_OPTIONS = MATURITY_OPTIONS.filter(option => option.value)
 
 const selectedName = computed(() => nav.params.value?.channel || null)
 
-const sortedChannels = computed(() => sortChannels(channels.value))
+const sortedChannels = computed(() => sortChannels(channels.value, {
+  field: sortField.value,
+  direction: sortDirection.value,
+}))
 const filterOptions = computed(() => collectFilterOptions(channels.value))
 const visibleChannels = computed(() => filterChannels(sortedChannels.value, {
   query: query.value,
@@ -43,6 +66,20 @@ const visibleChannels = computed(() => filterChannels(sortedChannels.value, {
 }))
 const visibleNames = computed(() => new Set(visibleChannels.value.map(c => c.name)))
 const hasFilters = computed(() => !!(query.value || maturity.value || release.value || os.value))
+const tableChannels = computed(() => filterChannels(visibleChannels.value, {
+  accelerators: selectedAccelerators.value,
+  torchVersions: selectedTorchVersions.value,
+  osVersions: selectedOsVersions.value,
+  maturities: selectedMaturities.value,
+}))
+const hasTableFilters = computed(() => !!(
+  selectedAccelerators.value.length || selectedTorchVersions.value.length || selectedOsVersions.value.length || selectedMaturities.value.length
+))
+const torchOptions = computed(() => filterOptions.value.torchVersions.map(version => ({
+  value: version,
+  label: version === NO_TORCH ? 'No torch' : version,
+})))
+const osOptions = computed(() => filterOptions.value.osVersions.map(version => ({ value: version, label: osLabel(version) })))
 
 const counts = computed(() => {
   const stable = channels.value.filter(c => c.maturity === 'stable').length
@@ -53,6 +90,9 @@ const counts = computed(() => {
 watch(filterOptions, (opts) => {
   if (release.value && !opts.releases.includes(release.value)) release.value = ''
   if (os.value && !opts.osVersions.includes(os.value)) os.value = ''
+  selectedAccelerators.value = selectedAccelerators.value.filter(value => opts.accelerators.some(option => option.value === value))
+  selectedTorchVersions.value = selectedTorchVersions.value.filter(value => opts.torchVersions.includes(value))
+  selectedOsVersions.value = selectedOsVersions.value.filter(value => opts.osVersions.includes(value))
 })
 
 onMounted(() => load())
@@ -70,6 +110,23 @@ function clearFilters() {
   maturity.value = ''
   release.value = ''
   os.value = ''
+  clearTableFilters()
+}
+
+function clearTableFilters() {
+  selectedAccelerators.value = []
+  selectedTorchVersions.value = []
+  selectedOsVersions.value = []
+  selectedMaturities.value = []
+}
+
+function toggleSort(field) {
+  if (sortField.value === field) {
+    sortDirection.value = sortDirection.value === 'asc' ? 'desc' : 'asc'
+  } else {
+    sortField.value = field
+    sortDirection.value = 'asc'
+  }
 }
 
 function viewBaseImages() {
@@ -204,27 +261,82 @@ function viewBaseImages() {
       </section>
 
       <!-- Channel list -->
-      <section class="rounded-xl border border-gray-100 bg-white shadow-sm dark:border-gray-700/60 dark:bg-gray-800">
+      <section class="rounded-xl border border-gray-100 bg-white shadow-sm dark:border-gray-700/60 dark:bg-gray-800" data-testid="all-channels">
         <div class="px-5 pt-5 pb-3">
           <h2 class="text-base font-semibold text-gray-900 dark:text-gray-100">All channels</h2>
+          <div class="relative mt-3 flex flex-wrap items-center gap-2">
+            <ChannelFilterPill
+              id="channel-accelerator-filter"
+              v-model="selectedAccelerators"
+              label="Accelerator"
+              :options="filterOptions.accelerators"
+            />
+            <ChannelFilterPill
+              id="channel-torch-filter"
+              v-model="selectedTorchVersions"
+              label="Torch"
+              :options="torchOptions"
+            />
+            <ChannelFilterPill
+              id="channel-os-filter"
+              v-model="selectedOsVersions"
+              label="OS"
+              :options="osOptions"
+            />
+            <ChannelFilterPill
+              id="channel-maturity-filter"
+              v-model="selectedMaturities"
+              label="Maturity"
+              :options="TABLE_MATURITY_OPTIONS"
+            />
+            <span class="text-xs text-gray-500 dark:text-gray-400" role="status">
+              {{ tableChannels.length }} of {{ visibleChannels.length }} channels
+            </span>
+            <button
+              v-if="hasTableFilters"
+              type="button"
+              class="rounded text-xs font-medium text-primary-700 hover:underline focus-visible:ring-2 focus-visible:ring-primary-500 dark:text-blue-400"
+              aria-label="Clear table filters"
+              @click="clearTableFilters"
+            >Clear filters</button>
+          </div>
         </div>
-        <div v-if="visibleChannels.length" class="overflow-x-auto">
+        <div v-if="tableChannels.length" class="overflow-x-auto">
           <table class="w-full text-sm" data-testid="channels-table">
             <thead>
               <tr class="border-y border-gray-100 bg-gray-50 text-left text-xs text-gray-500 dark:border-gray-700 dark:bg-gray-900/40 dark:text-gray-400">
-                <th scope="col" class="px-5 py-2 font-medium">Channel</th>
-                <th scope="col" class="px-3 py-2 font-medium">Maturity</th>
-                <th scope="col" class="px-3 py-2 font-medium">Accelerator</th>
-                <th scope="col" class="px-3 py-2 font-medium">Torch</th>
-                <th scope="col" class="px-3 py-2 font-medium">OS</th>
-                <th scope="col" class="px-3 py-2 font-medium">Compatible releases</th>
-                <th scope="col" class="px-3 py-2 font-medium">Latest RHAIBI drop</th>
-                <th scope="col" class="px-5 py-2 font-medium text-right">Wheels</th>
+                <th
+                  v-for="col in TABLE_COLUMNS"
+                  :key="col.field"
+                  scope="col"
+                  class="py-2 font-medium"
+                  :class="col.field === 'name' || col.field === 'wheel_count' ? 'px-5' : 'px-3'"
+                  :aria-sort="sortField === col.field ? (sortDirection === 'asc' ? 'ascending' : 'descending') : undefined"
+                >
+                  <button
+                    type="button"
+                    class="flex w-full items-center gap-1 rounded text-left hover:text-gray-900 dark:hover:text-gray-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500"
+                    :class="[
+                      col.field === 'wheel_count' ? 'justify-end' : '',
+                      sortField === col.field ? 'text-primary-700 dark:text-blue-400' : '',
+                    ]"
+                    :aria-label="`Sort by ${col.label}`"
+                    @click="toggleSort(col.field)"
+                  >
+                    {{ col.label }}
+                    <component
+                      :is="sortField === col.field ? (sortDirection === 'asc' ? ArrowUp : ArrowDown) : ArrowUpDown"
+                      :size="12"
+                      class="shrink-0"
+                      aria-hidden="true"
+                    />
+                  </button>
+                </th>
               </tr>
             </thead>
             <tbody class="divide-y divide-gray-100 dark:divide-gray-700/60">
               <tr
-                v-for="channel in visibleChannels"
+                v-for="channel in tableChannels"
                 :key="channel.name"
                 class="cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700/40"
                 :class="channel.name === selectedName ? 'bg-primary-50/60 dark:bg-blue-900/20' : ''"

@@ -49,7 +49,7 @@ export function channelNameSegments(name) {
 
 // "rhoai-3.5, rhoai-3.6, rhaiis-3.6" -> "RHOAI 3.5, 3.6 / RHAIIS 3.6"
 export function releaseSummary(releases) {
-  if (!releases?.length) return 'Not adopted yet'
+  if (!releases?.length) return ''
   const byProduct = new Map()
   for (const release of releases) {
     const match = /^(.+?)[ -](\d.*)$/.exec(release)
@@ -81,7 +81,39 @@ export function torchColumnId(channel) {
   return channel.torch_version || NO_TORCH
 }
 
-export function sortChannels(channels) {
+const channelCollator = new Intl.Collator(undefined, { numeric: true, sensitivity: 'base' })
+const CHANNEL_SORT_VALUES = {
+  name: channel => channel.name,
+  maturity: channel => channel.maturity,
+  accelerator: channel => stackLabel(channel),
+  torch_version: channel => channel.torch_version,
+  rhel_version: channel => osLabel(channel.rhel_version),
+  compatible_releases: channel => [...(channel.compatible_releases || [])]
+    .sort(channelCollator.compare).join(', '),
+  latest_drop: channel => {
+    const date = Date.parse(channel.latest_drop?.created_at)
+    return Number.isFinite(date) ? date : null
+  },
+  wheel_count: channel => channel.wheel_count,
+}
+
+export function sortChannels(channels, { field, direction = 'asc' } = {}) {
+  const getValue = CHANNEL_SORT_VALUES[field]
+  if (getValue) {
+    const multiplier = direction === 'desc' ? -1 : 1
+    return [...channels].sort((a, b) => {
+      const av = getValue(a)
+      const bv = getValue(b)
+      const aMissing = av == null || av === ''
+      const bMissing = bv == null || bv === ''
+      // Keep missing values last in either direction, including channels without torch.
+      if (aMissing !== bMissing) return aMissing ? 1 : -1
+      const diff = aMissing ? 0 : typeof av === 'number' && typeof bv === 'number'
+        ? av - bv
+        : channelCollator.compare(av, bv)
+      return diff * multiplier || channelCollator.compare(a.name, b.name)
+    })
+  }
   return [...channels].sort((a, b) => {
     if (a.maturity !== b.maturity) return a.maturity === 'stable' ? -1 : 1
     const order = acceleratorMeta(a.accelerator).order - acceleratorMeta(b.accelerator).order
@@ -95,7 +127,7 @@ export function sortChannels(channels) {
 
 /**
  * Lay channels out as accelerator stacks (rows) by torch version (columns).
- * Columns run newest torch first with "no torch" last. A cell can hold
+ * Columns run oldest torch first with "no torch" last. A cell can hold
  * several channels when the same stack ships for more than one OS.
  */
 export function buildChannelMatrix(channels) {
@@ -123,7 +155,7 @@ export function buildChannelMatrix(channels) {
   }
 
   const columns = [...torchVersions]
-    .sort((a, b) => compareVersions(b, a))
+    .sort(compareVersions)
     .map(v => ({ id: v, label: v }))
   if (hasNoTorch) columns.push({ id: NO_TORCH, label: 'No torch' })
 
@@ -139,27 +171,41 @@ export function buildChannelMatrix(channels) {
 export function collectFilterOptions(channels) {
   const releases = new Set()
   const osVersions = new Set()
+  const accelerators = new Map()
+  const torchVersions = new Set()
   for (const channel of channels) {
     for (const release of channel.compatible_releases || []) releases.add(release)
     if (channel.rhel_version) osVersions.add(channel.rhel_version)
+    accelerators.set(stackId(channel), { value: stackId(channel), label: stackLabel(channel) })
+    torchVersions.add(torchColumnId(channel))
   }
   return {
     releases: [...releases].sort(),
-    osVersions: [...osVersions].sort(),
+    osVersions: [...osVersions].sort(channelCollator.compare),
+    accelerators: [...accelerators.values()].sort((a, b) => channelCollator.compare(a.label, b.label)),
+    torchVersions: [...torchVersions].sort((a, b) => {
+      if (a === NO_TORCH || b === NO_TORCH) return a === b ? 0 : a === NO_TORCH ? 1 : -1
+      return compareVersions(a, b)
+    }),
   }
 }
 
 /**
  * Filter channels by free text (matched against name, description and
- * compatible releases), maturity, compatible release and OS.
- * Empty filter values match everything.
+ * compatible releases), maturity, compatible release and OS. Multiselect
+ * dimensions match any selected value within each dimension and all dimensions
+ * together. Empty filter values match everything.
  */
 export function filterChannels(channels, filters = {}) {
   const query = (filters.query || '').trim().toLowerCase()
   return channels.filter(channel => {
     if (filters.maturity && channel.maturity !== filters.maturity) return false
+    if (filters.maturities?.length && !filters.maturities.includes(channel.maturity)) return false
     if (filters.release && !(channel.compatible_releases || []).includes(filters.release)) return false
     if (filters.os && channel.rhel_version !== filters.os) return false
+    if (filters.accelerators?.length && !filters.accelerators.includes(stackId(channel))) return false
+    if (filters.torchVersions?.length && !filters.torchVersions.includes(torchColumnId(channel))) return false
+    if (filters.osVersions?.length && !filters.osVersions.includes(channel.rhel_version)) return false
     if (!query) return true
     const haystack = [
       channel.name,

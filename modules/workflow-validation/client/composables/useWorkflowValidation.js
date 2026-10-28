@@ -21,6 +21,7 @@ export const filters = reactive({
   action: '',
   q: '',
   jiraScope: '',
+  jiraSuiteMode: 'run',
   testSuite: '',
   invocationId: '',
   datePreset: '90',
@@ -39,6 +40,7 @@ export function resetFilters() {
   filters.action = ''
   filters.q = ''
   filters.jiraScope = ''
+  filters.jiraSuiteMode = 'run'
   filters.testSuite = ''
   filters.invocationId = ''
   filters.datePreset = '90'
@@ -231,7 +233,7 @@ export function useWorkflowValidation() {
   const getRuns = (cursor = '', size = 25, sorting = {}) => filteredRequest('runs', ['version', 'verdict', 'workflow', 'q', 'testSuite', 'invocationId', 'dateFrom', 'dateTo'], { cursor, size, ...sorting })
   const getRun = (executionId) => apiRequest(`${BASE}/runs/${encodeURIComponent(executionId)}`)
   const getBugs = (cursor = '', size = 50) => filteredRequest('bugs', ['version', 'testSuite', 'invocationId', 'workflow', 'category', 'action', 'q', 'dateFrom', 'dateTo'], { cursor, size })
-  const getWorkflows = (extra = {}) => filteredRequest('workflows', ['version', 'q', 'dateFrom', 'dateTo'], extra)
+  const getWorkflows = (extra = {}) => filteredRequest('workflows', ['version', 'q', 'testSuite', 'dateFrom', 'dateTo'], extra)
   const getWorkflowHistory = (workflow) => filteredRequest('workflow-history', ['version', 'dateFrom', 'dateTo'], { workflow })
   const getCompareRuns = (testSuite = '') => apiRequest(`${BASE}/compare-runs${buildQuery({ testSuite }, {})}`)
   const getRunCompare = (baselineInvocation, targetInvocation, testSuite) => apiRequest(`${BASE}/run-compare${buildQuery({ baselineInvocation, targetInvocation, testSuite }, {})}`)

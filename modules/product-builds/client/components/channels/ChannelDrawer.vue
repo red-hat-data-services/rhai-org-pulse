@@ -232,7 +232,7 @@ function onKeydown(event) {
             </dl>
 
             <div class="mt-5">
-              <h3 class="text-xs text-gray-500 dark:text-gray-400">Compatible releases</h3>
+              <h3 v-if="releases.length" class="text-xs text-gray-500 dark:text-gray-400">Compatible releases</h3>
               <div v-if="releases.length" class="mt-1 flex flex-wrap gap-1.5">
                 <span
                   v-for="release in releases"
@@ -240,7 +240,6 @@ function onKeydown(event) {
                   class="rounded-md bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-700 dark:bg-gray-800 dark:text-gray-300"
                 >{{ release }}</span>
               </div>
-              <p v-else class="mt-1 text-sm text-gray-500 dark:text-gray-400">No product release has adopted this channel yet.</p>
               <p class="mt-2 text-sm text-gray-600 dark:text-gray-400 max-w-prose">{{ maturityNote }}</p>
             </div>
 

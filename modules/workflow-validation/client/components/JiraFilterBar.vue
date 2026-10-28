@@ -16,7 +16,13 @@
             <option v-for="suite in options.testSuites" :key="suite.value" :value="suite.value">{{ formatSuiteName(suite.value) }}</option>
           </select>
         </label>
-        <label :class="labelClass">Test Run
+        <label :class="labelClass">Show Issues From
+          <select v-model="filters.jiraSuiteMode" aria-label="Show Issues From" :class="inputClass" @change="changeSuiteMode">
+            <option value="run">Single test run</option>
+            <option value="date">Date range</option>
+          </select>
+        </label>
+        <label v-if="filters.jiraSuiteMode === 'run'" :class="labelClass">Test Run
           <select v-model="filters.invocationId" aria-label="Test Run" :class="inputClass" @change="changeRun">
             <option v-for="run in suiteRuns" :key="run.invocationId" :value="run.invocationId">{{ formatDate(run.timestamp) }}</option>
           </select>
@@ -29,7 +35,7 @@
         </select>
       </label>
 
-      <template v-if="filters.jiraScope === 'date'">
+      <template v-if="filters.jiraScope === 'date' || (filters.jiraScope === 'suite' && filters.jiraSuiteMode === 'date')">
         <label :class="labelClass">Date Range
           <select v-model="filters.datePreset" aria-label="Date Range" :class="inputClass" @change="applyDatePreset">
             <option value="7">Last 7 days</option>
@@ -69,7 +75,7 @@ import { Search as SearchIcon } from 'lucide-vue-next'
 import { defaultDateRange, filters, formatDate, formatSuiteName, highestNumberedVersion, useWorkflowValidation } from '../composables/useWorkflowValidation'
 
 const emit = defineEmits(['change', 'ready'])
-const { getFilters, getTestSuite, getTestSuites } = useWorkflowValidation()
+const { getFilters, getTestSuite, getTestSuites, getWorkflows } = useWorkflowValidation()
 const options = ref({ versions: [], workflows: [], testSuites: [] })
 const workflows = ref([])
 const suiteRuns = ref([])
@@ -99,9 +105,47 @@ async function loadRunTests() {
   if (filters.workflow && !workflows.value.some((workflow) => workflow.value === filters.workflow)) filters.workflow = ''
 }
 
+function setWorkflows(rows) {
+  workflows.value = (rows || []).map((test) => ({
+    value: test.value || test.workflow,
+    label: test.label || test.workflowLabel || test.workflow_label || test.workflow
+  })).filter((test, index, items) => test.value && items.findIndex((item) => item.value === test.value) === index)
+    .sort((a, b) => a.label.localeCompare(b.label))
+  if (filters.workflow && !workflows.value.some((workflow) => workflow.value === filters.workflow)) filters.workflow = ''
+}
+
+async function loadSuiteDateTests() {
+  if (!filters.testSuite) return
+  const response = await getWorkflows({
+    version: '',
+    q: '',
+    testSuite: filters.testSuite,
+    dateFrom: filters.dateFrom,
+    dateTo: filters.dateTo
+  })
+  setWorkflows(response.workflows)
+}
+
 async function changeSuite() {
   filters.invocationId = ''
-  await loadSuiteRuns()
+  filters.workflow = ''
+  if (filters.jiraSuiteMode === 'date') await loadSuiteDateTests()
+  else await loadSuiteRuns()
+  emitChange()
+}
+
+async function changeSuiteMode() {
+  filters.invocationId = ''
+  filters.workflow = ''
+  if (filters.jiraSuiteMode === 'date') {
+    filters.datePreset = '90'
+    Object.assign(filters, defaultDateRange(90))
+    await loadSuiteDateTests()
+  } else {
+    filters.dateFrom = ''
+    filters.dateTo = ''
+    await loadSuiteRuns()
+  }
   emitChange()
 }
 
@@ -113,6 +157,7 @@ async function changeRun() {
 async function changeScope() {
   filters.version = ''
   filters.testSuite = ''
+  filters.jiraSuiteMode = 'run'
   filters.invocationId = ''
   filters.workflow = ''
   filters.dateFrom = ''
@@ -131,13 +176,15 @@ async function changeScope() {
   emitChange()
 }
 
-function applyDatePreset() {
+async function applyDatePreset() {
   if (filters.datePreset !== 'custom') Object.assign(filters, defaultDateRange(Number(filters.datePreset)))
+  if (filters.jiraScope === 'suite') await loadSuiteDateTests()
   emitChange()
 }
 
-function useCustomDates() {
+async function useCustomDates() {
   filters.datePreset = 'custom'
+  if (filters.jiraScope === 'suite') await loadSuiteDateTests()
   emitChange()
 }
 
@@ -148,10 +195,16 @@ onMounted(async () => {
   filters.jiraScope = initialScope
   if (filters.jiraScope === 'suite') {
     filters.version = ''
-    filters.dateFrom = ''
-    filters.dateTo = ''
     if (!filters.testSuite) filters.testSuite = options.value.testSuites[0]?.value || ''
-    await loadSuiteRuns()
+    if (filters.jiraSuiteMode === 'date') {
+      filters.invocationId = ''
+      if (!filters.dateFrom && !filters.dateTo) Object.assign(filters, defaultDateRange(90))
+      await loadSuiteDateTests()
+    } else {
+      filters.dateFrom = ''
+      filters.dateTo = ''
+      await loadSuiteRuns()
+    }
   } else if (filters.jiraScope === 'release') {
     filters.testSuite = ''
     filters.invocationId = ''

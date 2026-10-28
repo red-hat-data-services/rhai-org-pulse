@@ -977,6 +977,7 @@ module.exports = function registerRoutes(router, context) {
    *     tags: [Workflow Validation]
    *     parameters:
    *       - { in: query, name: version, schema: { type: string } }
+   *       - { in: query, name: testSuite, schema: { type: string } }
    *       - { in: query, name: verdict, schema: { type: string } }
    *       - { in: query, name: q, schema: { type: string }, description: Partial workflow name }
    *       - { in: query, name: dateFrom, schema: { type: string, format: date } }
