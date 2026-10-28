@@ -1,19 +1,15 @@
 import { describe, it, expect } from 'vitest'
-let extractBigRocksFromDoc, extractText, extractOutcomeKeys, parseTopLevelItem, getNestingLevel
-try {
-  const googleDocs = require('../../../../../shared/server/google-docs')
-  extractBigRocksFromDoc = googleDocs.extractBigRocksFromDoc
-  extractText = googleDocs.extractText
-  extractOutcomeKeys = googleDocs.extractOutcomeKeys
-  parseTopLevelItem = googleDocs.parseTopLevelItem
-  getNestingLevel = googleDocs.getNestingLevel
-} catch {
-  // Module not available in test environment
-}
+const {
+  extractBigRocksFromDoc,
+  extractText,
+  extractOutcomeKeys,
+  parseTopLevelItem,
+  getNestingLevel
+} = require('../../../../../shared/server/google-docs')
 
 const fixture = require('../../../../../fixtures/releases/planning/google-doc-response.json')
 
-describe.skip('getNestingLevel', () => {
+describe('getNestingLevel', () => {
   it('returns 0 when nestingLevel is omitted (Google Docs API behavior)', () => {
     expect(getNestingLevel({ listId: 'kix.list1' })).toBe(0)
   })
@@ -28,7 +24,7 @@ describe.skip('getNestingLevel', () => {
   })
 })
 
-describe.skip('extractText', () => {
+describe('extractText', () => {
   it('extracts text from paragraph elements', () => {
     const para = {
       elements: [
@@ -55,7 +51,7 @@ describe.skip('extractText', () => {
   })
 })
 
-describe.skip('extractOutcomeKeys', () => {
+describe('extractOutcomeKeys', () => {
   it('extracts single RHAISTRAT key', () => {
     expect(extractOutcomeKeys('Outcome: RHAISTRAT-1513')).toEqual(['RHAISTRAT-1513'])
   })
@@ -76,7 +72,7 @@ describe.skip('extractOutcomeKeys', () => {
   })
 })
 
-describe.skip('parseTopLevelItem', () => {
+describe('parseTopLevelItem', () => {
   it('extracts name, state, and outcome key', () => {
     const result = parseTopLevelItem('MaaS (continue from 3.4) Outcome: RHAISTRAT-1513', 1)
     expect(result.name).toBe('MaaS')
@@ -116,7 +112,7 @@ describe.skip('parseTopLevelItem', () => {
   })
 })
 
-describe.skip('extractBigRocksFromDoc', () => {
+describe('extractBigRocksFromDoc', () => {
   it('parses all 14 Big Rocks from the fixture', () => {
     const result = extractBigRocksFromDoc(fixture)
     expect(result.bigRocks).toHaveLength(14)

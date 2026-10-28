@@ -5,12 +5,7 @@
  * and config persistence (config.js) for the import flow.
  */
 
-let googleDocs
-try {
-  googleDocs = require('../../../../shared/server/google-docs')
-} catch {
-  googleDocs = null
-}
+const googleDocs = require('../../../../shared/server/google-docs')
 const { validateBigRock } = require('./validation')
 const { getConfig, loadReleaseData, releaseFilePath } = require('./config')
 
@@ -35,10 +30,6 @@ function parseDocId(input) {
  * Fetch and parse a Google Doc, returning Big Rocks for preview.
  */
 async function previewDocImport(docIdOrUrl) {
-  if (!googleDocs) {
-    throw Object.assign(new Error('Google Docs integration is not available'), { statusCode: 501 })
-  }
-
   const docId = parseDocId(docIdOrUrl)
   if (!docId) {
     throw Object.assign(new Error('Invalid Google Doc URL or ID'), { statusCode: 400 })
