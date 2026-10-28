@@ -1,10 +1,11 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
-import { mount } from '@vue/test-utils'
+import { flushPromises, mount } from '@vue/test-utils'
+import { ref } from 'vue'
 import OverviewView from '../../client/views/OverviewView.vue'
 import FilterBar from '../../client/components/FilterBar.vue'
 import RunsView from '../../client/views/RunsView.vue'
 import { resetCostVisibility } from '../../client/composables/useCostVisibility'
-import { filters } from '../../client/composables/useWorkflowValidation'
+import { filters, resetFilters } from '../../client/composables/useWorkflowValidation'
 import { apiRequest } from '@shared/client/services/api'
 
 const mockOverview = {
@@ -89,6 +90,7 @@ vi.mock('@shared/client/services/api', () => ({
     if (path.includes('/overview')) return Promise.resolve(mockOverview)
     if (path.includes('/charts')) return Promise.resolve(mockCharts)
     if (path.includes('/runs')) return Promise.resolve({ total: 0, runs: [], nextCursor: null })
+    if (path.includes('/test-suites/')) return Promise.resolve({ suite: 'productization', invocationId: path.split('/').at(-1), rhoaiVersion: null })
     if (path.includes('/test-suites') && path.includes('version=3.5.0')) return Promise.resolve({ rows: [{
       suite: 'legacy-validation', invocationId: 'legacy-invocation', timestamp: '2026-08-15T12:00:00Z',
       rhoaiVersion: '3.5.0'
@@ -320,5 +322,71 @@ describe('Workflow Validation OverviewView', () => {
     expect(wrapper.text()).not.toContain('AI Cost')
     expect(wrapper.text()).not.toContain('Infra Cost')
     expect(wrapper.text()).not.toContain('$1.94')
+  })
+})
+
+describe('Dashboard navigation from Recent Runs', () => {
+  let wrapper
+  let nav
+  beforeEach(() => {
+    vi.clearAllMocks()
+    resetFilters()
+    nav = { navigateTo: vi.fn(), updateParams: vi.fn(), params: ref({
+      exactRun: '1', testSuite: 'productization', invocationId: 'selected-run', version: '',
+      datePreset: 'all', dateFrom: '', dateTo: ''
+    }) }
+  })
+  afterEach(() => wrapper?.unmount())
+
+  it('honors an explicit run with no version instead of selecting the highest version', async () => {
+    filters.version = 'stale-version'
+    wrapper = mount(OverviewView, { global: { provide: { moduleNav: nav } } })
+    await flushPromises()
+    const requests = apiRequest.mock.calls.map(([path]) => path).filter(path => /\/(overview|charts)/.test(path))
+    expect(requests).toHaveLength(2)
+    for (const path of requests) {
+      const params = new URL(path, 'http://localhost').searchParams
+      expect(params.get('testSuite')).toBe('productization')
+      expect(params.get('invocationId')).toBe('selected-run')
+      for (const key of ['version', 'dateFrom', 'dateTo', 'verdict', 'q']) expect(params.has(key)).toBe(false)
+    }
+    expect(wrapper.findComponent(FilterBar).exists()).toBe(false)
+    expect(nav.updateParams).not.toHaveBeenCalled()
+    expect(wrapper.get('a[href="#/workflow-validation/recent-runs"]').text()).toBe('Recent Runs')
+  })
+
+  it('keeps shared filters unchanged while an exact run is open', async () => {
+    Object.assign(filters, { version: '3.5', testSuite: 'exploratory-specs', invocationId: 'previous-run',
+      datePreset: 'custom', dateFrom: '2026-09-01', dateTo: '2026-09-30' })
+    const previous = { ...filters }
+    wrapper = mount(OverviewView, { global: { provide: { moduleNav: nav } } })
+    await flushPromises()
+    expect({ ...filters }).toEqual(previous)
+    const requests = apiRequest.mock.calls.map(([path]) => path).filter(path => /\/(overview|charts)/.test(path))
+    expect(requests.every(path => new URL(path, 'http://localhost').searchParams.get('invocationId') === 'selected-run')).toBe(true)
+  })
+
+  it('reports a removed run without falling back to another invocation', async () => {
+    apiRequest.mockRejectedValueOnce(Object.assign(new Error('Not found'), { status: 404 }))
+    wrapper = mount(OverviewView, { global: { provide: { moduleNav: nav } } })
+    await flushPromises()
+    expect(wrapper.get('[role="alert"]').text()).toContain('This run is no longer available')
+    expect(apiRequest).toHaveBeenCalledExactlyOnceWith('/modules/workflow-validation/test-suites/productization/selected-run')
+    expect(wrapper.text()).not.toContain('Fraud Detection Test')
+  })
+
+  it('reloads a new selected run and ignores the previous run response', async () => {
+    let resolveFirst
+    apiRequest.mockReturnValueOnce(new Promise(resolve => { resolveFirst = resolve }))
+    wrapper = mount(OverviewView, { global: { provide: { moduleNav: nav } } })
+    nav.params.value = { ...nav.params.value, invocationId: 'new-selected-run' }
+    await flushPromises()
+    expect(apiRequest).toHaveBeenCalledWith('/modules/workflow-validation/test-suites/productization/new-selected-run')
+    const count = apiRequest.mock.calls.length
+    resolveFirst({ rhoaiVersion: 'outdated-version' })
+    await flushPromises()
+    expect(apiRequest.mock.calls).toHaveLength(count)
+    expect(wrapper.text()).not.toContain('outdated-version')
+    expect(wrapper.text()).toContain('new-selected-run')
   })
 })

@@ -9,8 +9,11 @@ FROM quay.io/org-pulse/org-pulse-core-backend:${CORE_TAG}
 
 USER 0
 
+# Save the core parser patch before adding unsaved AI Eng packages.
+RUN npm install --save body-parser@^2.4.0
+
 # Install AI Eng-specific runtime dependencies not in core
-RUN npm install --no-save @octokit/rest js-yaml express-rate-limit adm-zip xml2js undici@7.29.1
+RUN npm install --no-save @octokit/rest js-yaml express-rate-limit adm-zip xml2js undici@7.30.1
 
 # Add all non-core modules (core image already has team-tracker)
 COPY modules/ ./modules/

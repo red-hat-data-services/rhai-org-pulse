@@ -102,6 +102,7 @@ export const viewOwners = {
   'workflow-validation/activity':                  'Adam Drew',
   'workflow-validation/compare':                   'Adam Drew',
   'workflow-validation/overview':                  'Adam Drew',
+  'workflow-validation/recent-runs':               'ggedalia',
   'workflow-validation/run-detail':                'Adam Drew',
   'workflow-validation/runs':                      'Adam Drew',
   'workflow-validation/workflow-history':          'Adam Drew',

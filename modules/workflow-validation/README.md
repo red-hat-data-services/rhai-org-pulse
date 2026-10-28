@@ -146,3 +146,13 @@ contract, representative tests, and affected Vue transformations together.
   `search_after`; callers must not inspect or construct cursor contents.
 - Searches are read-only and use bounded cursor pages, `search_after`, or
   composite aggregation pagination as appropriate.
+
+## Recent Runs landing page
+
+Dashboard opens Recent Runs. It lists up to 20 suite/invocation groups across
+all recorded versions, ordered by latest execution time. Each row shows the
+suite, recorded version, and View run. The page uses the existing
+`/test-suites?limit=20&includeBugs=false` API and ignores shared detail filters.
+View run opens the existing Overview view for that exact suite and invocation.
+Loading, empty, retry, and refresh states are covered by client and integration
+tests. Build metadata is outside this landing-page change.
