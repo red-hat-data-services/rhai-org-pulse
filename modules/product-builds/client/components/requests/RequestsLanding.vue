@@ -37,7 +37,7 @@ defineEmits(['select'])
     >
       <p class="font-semibold">Not sure what to request?</p>
       <p class="mt-1">
-        Ask in <strong>#forum-aipcc</strong> and tag <strong>@aipcc-productization</strong>. We will point you to the right request.
+        Ask in <strong>#forum-aipcc</strong> and tag <strong>@aipcc-support</strong>. We will point you to the right request.
       </p>
     </div>
   </div>

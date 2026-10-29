@@ -138,6 +138,12 @@ test.describe('Product Builds Module @product-builds', () => {
   }
 
   test('should file an RPM request for existing channels', async ({ page }) => {
+    // Only the submission response is simulated, so reruns do not hit the per-user cooldown.
+    const submissions = []
+    await page.route('**/api/modules/product-builds/rpm-requests', async route => {
+      submissions.push(route.request().postDataJSON())
+      await route.fulfill({ status: 201, json: { status: 'created', jira: { key: 'RHAI-901', url: 'https://redhat.atlassian.net/browse/RHAI-901' }, assignee: { assigned: true, email: 'epacific@redhat.com' } } })
+    })
     await page.goto('/#/product-builds/package-request?tab=rpm')
     await page.waitForLoadState('networkidle')
     await expect(page.getByRole('heading', { name: 'RPM Requests', level: 2 })).toBeVisible()
@@ -165,16 +171,27 @@ test.describe('Product Builds Module @product-builds', () => {
     await page.locator('#rpm-jira-id').fill('RHAISTRAT-42')
     await page.locator('#rpm-delivery-timeline').fill(triageDeliveryDate())
     await page.locator('#rpm-justification').fill('Needed by the new base image')
-    const responsePromise = page.waitForResponse(response => response.url().endsWith('/api/modules/product-builds/rpm-requests'))
     await page.getByRole('button', { name: 'Submit RPM request' }).click()
-    expect((await responsePromise).ok()).toBe(true)
     await expect(page.getByText('RPM request submitted')).toBeVisible()
+    await expect(page.getByRole('link', { name: /RHAI-901/ })).toBeVisible()
+    expect(submissions).toHaveLength(1)
+    expect(submissions[0]).toMatchObject({
+      rpm_name: 'gcc-toolset-14',
+      source_url: 'https://src.fedoraproject.org/rpms/gcc-toolset-14',
+      channels: [channelName],
+      jira_id: 'RHAISTRAT-42'
+    })
 
     const appErrors = page.errors.filter(e => !/status of (429|404|503)/.test(e.message))
     expect(appErrors).toHaveLength(0)
   })
 
   test('should show the channel disclaimer and file a channel request', async ({ page }) => {
+    const submissions = []
+    await page.route('**/api/modules/product-builds/channel-requests', async route => {
+      submissions.push(route.request().postDataJSON())
+      await route.fulfill({ status: 201, json: { status: 'created', jira: { key: 'RHAI-902', url: 'https://redhat.atlassian.net/browse/RHAI-902' }, assignee: { assigned: true, email: 'epacific@redhat.com' } } })
+    })
     await page.goto('/#/product-builds/package-request')
     await page.waitForLoadState('networkidle')
     await page.getByTestId('request-tab-channel').click()
@@ -195,10 +212,11 @@ test.describe('Product Builds Module @product-builds', () => {
     await page.locator('#chan-jira-id').fill('RHAISTRAT-42')
     await page.locator('#chan-delivery-timeline').fill(triageDeliveryDate())
     await page.locator('#chan-justification').fill('New accelerator card for a customer')
-    const responsePromise = page.waitForResponse(response => response.url().endsWith('/api/modules/product-builds/channel-requests'))
     await page.getByRole('button', { name: 'Submit channel request' }).click()
-    expect((await responsePromise).ok()).toBe(true)
     await expect(page.getByText('Channel request submitted')).toBeVisible()
+    await expect(page.getByRole('link', { name: /RHAI-902/ })).toBeVisible()
+    expect(submissions).toHaveLength(1)
+    expect(submissions[0]).toMatchObject({ torch_version: '2.12', accelerator: 'ROCm 10.4', os: 'RHEL 10', jira_id: 'RHAISTRAT-42' })
 
     const appErrors = page.errors.filter(e => !/status of (429|404|503)/.test(e.message))
     expect(appErrors).toHaveLength(0)

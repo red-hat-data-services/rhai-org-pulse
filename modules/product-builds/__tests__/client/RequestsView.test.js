@@ -59,6 +59,7 @@ describe('RequestsView', () => {
       'Channel Requests'
     ])
     expect(wrapper.find('#requests-help').text()).toContain('#forum-aipcc')
+    expect(wrapper.find('#requests-help').text()).toContain('@aipcc-support')
     expect(wrapper.find('#req-package-name').exists()).toBe(false)
   })
 
@@ -84,6 +85,17 @@ describe('RequestsView', () => {
     const { wrapper } = await mountView({ tab })
     expect(wrapper.find(selector).exists()).toBe(true)
     expect(wrapper.find(`[data-testid="request-tab-${tab}"]`).attributes('aria-selected')).toBe('true')
+  })
+
+  it('keeps a half-filled form when visiting Overview and coming back', async () => {
+    const { wrapper } = await mountView({ tab: 'rpm' })
+    await wrapper.find('#rpm-name').setValue('gcc-toolset-14')
+    await wrapper.findAll('[role="tab"]')[0].trigger('click')
+    await flushPromises()
+    expect(wrapper.find('#rpm-name').exists()).toBe(false)
+    await wrapper.find('[data-testid="request-tab-rpm"]').trigger('click')
+    await flushPromises()
+    expect(wrapper.find('#rpm-name').element.value).toBe('gcc-toolset-14')
   })
 
   it.each(['constructor', 'toString'])('ignores the inherited %s key as a tab', async (tab) => {

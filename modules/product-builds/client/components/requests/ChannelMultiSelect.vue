@@ -144,7 +144,6 @@ function focusInput() {
           aria-hidden="true"
         ><span v-if="isSelected(option.name)">&check;</span></span>
         <span class="font-mono">{{ option.name }}</span>
-        <span v-if="option.maturity" class="text-xs text-gray-400 dark:text-gray-500">({{ option.maturity }})</span>
       </li>
       <li v-if="!filtered.length" class="px-3 py-2 text-sm text-gray-500 dark:text-gray-400">
         No channels match "{{ query.trim() }}"

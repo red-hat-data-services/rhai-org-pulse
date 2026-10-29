@@ -75,6 +75,7 @@ describe('AIPCC-E triage request forms', () => {
       expect(apiRequest).toHaveBeenCalledWith('/modules/product-builds/channels?limit=1000&offset=0')
       const names = wrapper.findAll('[role="option"]').map(option => option.attributes('data-value'))
       expect(names).toEqual(['cuda13.0-torch2.11-ubi9', 'rocm6.4-torch2.11-ubi9'])
+      expect(wrapper.find('#rpm-channels-listbox').text()).not.toContain('stable')
     })
 
     it('filters channels as you type and picks them with the keyboard', async () => {
@@ -185,6 +186,7 @@ describe('AIPCC-E triage request forms', () => {
       expect(wrapper.element.firstElementChild).toBe(disclaimer.element)
       expect(disclaimer.text()).toContain('New channels require an approved STRAT and prior discussion with AIPCC')
       expect(disclaimer.text()).toContain('#forum-aipcc')
+      expect(disclaimer.text()).toContain('@aipcc-support')
       expect(wrapper.text()).not.toMatch(/SLA/)
     })
 

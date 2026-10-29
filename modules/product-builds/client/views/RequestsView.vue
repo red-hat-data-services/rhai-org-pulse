@@ -113,8 +113,9 @@ function selectTab(tab) {
     </div>
 
     <RequestsLanding v-if="!activeTab" :options="REQUEST_TYPES" @select="selectTab" />
-    <KeepAlive v-else>
-      <component :is="FORMS[activeTab]" :key="activeTab" />
+    <!-- KeepAlive stays mounted on Overview so half-filled forms survive a trip to the landing page. -->
+    <KeepAlive>
+      <component :is="FORMS[activeTab]" v-if="activeTab" :key="activeTab" />
     </KeepAlive>
   </div>
 </template>

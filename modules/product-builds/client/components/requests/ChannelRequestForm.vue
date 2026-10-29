@@ -121,7 +121,7 @@ function resetForm() {
         Requests without both will not be considered.
       </p>
       <p class="mt-1">
-        Questions? Ask in <strong>#forum-aipcc</strong> and tag <strong>@aipcc-productization</strong>.
+        Questions? Ask in <strong>#forum-aipcc</strong> and tag <strong>@aipcc-support</strong>.
       </p>
     </div>
 
