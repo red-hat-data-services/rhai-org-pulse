@@ -987,13 +987,15 @@ Admin-configurable settings for the AI Impact module.
 
 ## Releases — CVE Sustaining Snapshot (`data/releases/cve-sustaining/latest.json`)
 
-The CVE sustaining snapshot may include `slaCompliance` for quarterly SLA
-metrics and `actionReportRecords` for the component-scoped CVE Action Report.
-The existing sustaining metrics and `openIssueRecords` fields remain unchanged.
+The CVE sustaining snapshot may include `slaCompliance` for quarterly SLA and
+possibly-closable counts, and `actionReportRecords` for the component-scoped CVE
+Action Report. Each open issue projection includes a `possiblyClosable` flag
+used to highlight matching tickets in drill-down lists.
 
 ```json
 {
   "slaCompliance": {
+    "possiblyClosableCount": 5,
     "quarters": [
       {
         "label": "Q3 2026",
@@ -1001,6 +1003,7 @@ The existing sustaining metrics and `openIssueRecords` fields remain unchanged.
         "quarterEnd": "2026-09-30",
         "resolvedCount": 4,
         "newOpenCount": 3,
+        "possiblyClosableCount": 2,
         "noSlaDate": 1,
         "total": 3,
         "metSla": 2,
@@ -1015,7 +1018,8 @@ The existing sustaining metrics and `openIssueRecords` fields remain unchanged.
             "status": "Resolved",
             "assignee": "Alice Example",
             "slaDate": "2026-09-20",
-            "resolved": "2026-09-21T12:00:00.000Z"
+            "resolved": "2026-09-21T12:00:00.000Z",
+            "possiblyClosable": true
           }
         ]
       }
@@ -1042,7 +1046,20 @@ The existing sustaining metrics and `openIssueRecords` fields remain unchanged.
         "resolved": "2026-09-10T11:20:00.000Z"
       }
     ]
-  }
+  },
+  "openIssueRecords": [
+    {
+      "key": "RHAIENG-123",
+      "summary": "CVE-2026-0123 in example package",
+      "component": "Model Serving",
+      "components": ["Model Serving"],
+      "versions": ["rhoai-2.17"],
+      "status": "In Progress",
+      "assignee": "Alice Example",
+      "duedate": null,
+      "possiblyClosable": true
+    }
+  ]
 }
 ```
 
@@ -1056,9 +1073,16 @@ is `metSla / total`, rounded to an integer, or zero when no tickets have an SLA
 Date. `newOpenCount` counts issues open in the current snapshot whose Jira
 created date falls between `quarterStart` and `quarterEnd`, inclusive. An open
 ticket created in an earlier quarter is not included in this count.
+`possiblyClosableCount` counts issues across all statuses that have exactly one
+recognized CVE review label and that label is
+`rhai-cve-review-possibly-closable`; unrelated labels do not affect the match.
+The top-level `slaCompliance.possiblyClosableCount` includes all matching
+issues, while each quarter's count groups them by creation date and only covers
+the four displayed quarters. `possiblyClosable` on `openIssueRecords` and
+`breachedIssues` is the same classification as a boolean used for the UI badge.
 `breachedIssues` contains the ticket-level report for the quarter. Each record
 includes the Jira key, summary, component, target versions, status, assignee,
-SLA Date, and resolution timestamp. The quarter's Breached count opens this
+SLA Date, resolution timestamp, and possibly-closable flag. The quarter's Breached count opens this
 report inline in the dashboard; ticket keys link to their Jira issues.
 
 Older cached snapshots may contain SLA metrics calculated from Jira Due Date

@@ -36,9 +36,10 @@
     <template v-else>
       <p class="text-xs text-gray-500 dark:text-gray-400">As of {{ data.asOfDate }} · Window ends {{ data.windowEndDate }} · Last refreshed {{ formatDate(data.lastRefreshed) }}</p>
 
-      <section class="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+      <section class="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
         <SummaryCard label="All open vulnerabilities" :item="data.summary?.openVulnerabilities" />
         <SummaryCard label="SLA breached" :item="data.summary?.slaBreached" :emphasis="true" />
+        <SummaryCard label="Obsolete issues" :item="data.summary?.obsoleteIssues" />
         <SummaryCard label="No SLA date" :item="data.summary?.noSlaDate" />
       </section>
 
@@ -78,7 +79,8 @@ const { data, availableComponents, selectedComponent, loading, error, refreshErr
 const selected = ref('')
 const outcomes = [
   { key: 'needs-action', label: 'Needs action' }, { key: 'not-found', label: 'Not found' },
-  { key: 'needs-review', label: 'Needs review' }, { key: 'possibly-resolved', label: 'Possibly resolved' }
+  { key: 'needs-review', label: 'Needs review' }, { key: 'possibly-resolved', label: 'Possibly resolved' },
+  { key: 'possibly-closable', label: 'Possibly closable' }
 ]
 const chartOptions = { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, ticks: { precision: 0 } } } }
 const weeklyChartOptions = { ...chartOptions, plugins: { legend: { display: true, position: 'top' } } }
@@ -86,7 +88,8 @@ const ageOutcomes = [
   { key: 'needs-action', label: 'Needs action', color: '#2563eb' },
   { key: 'not-found', label: 'Not found', color: '#ef4444' },
   { key: 'needs-review', label: 'Needs review', color: '#f59e0b' },
-  { key: 'possibly-resolved', label: 'Possibly resolved', color: '#10b981' }
+  { key: 'possibly-resolved', label: 'Possibly resolved', color: '#10b981' },
+  { key: 'possibly-closable', label: 'Possibly closable', color: '#8b5cf6' }
 ]
 const ageChartOptions = {
   ...chartOptions,

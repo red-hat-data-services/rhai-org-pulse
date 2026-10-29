@@ -2786,6 +2786,54 @@ test.describe('Releases CVE Sustaining Report @releases', () => {
     expect(page.errors).toHaveLength(0);
   });
 
+  test('counts and labels out-of-support tickets across statuses', async ({ page }) => {
+    const body = JSON.parse(JSON.stringify(cveSustainingFixture));
+    const issue = { ...body.openIssueRecords.find(record => record.key === 'RHAIENG-1005'), possiblyClosable: true };
+    body.openIssueRecords = [issue];
+    body.slaCompliance.possiblyClosableCount = 2;
+    body.slaCompliance.quarters = body.slaCompliance.quarters.map(quarter => ({
+      ...quarter,
+      possiblyClosableCount: quarter.label === 'Q3 2026' ? 2 : 0,
+      missedSla: quarter.label === 'Q3 2026' ? 1 : quarter.missedSla,
+      breachedIssues: quarter.label === 'Q3 2026'
+        ? [{
+            key: 'RHAIENG-CLOSED-OUT-OF-SUPPORT',
+            summary: 'CVE on an out-of-support image',
+            component: 'Model Serving',
+            versions: ['rhoai-2.17'],
+            status: 'Resolved',
+            assignee: 'Alice',
+            slaDate: '2026-09-01',
+            resolved: '2026-09-05T12:00:00.000Z',
+            possiblyClosable: true
+          }]
+        : quarter.breachedIssues
+    }));
+
+    await page.route('**/api/modules/releases/cve-sustaining', async route => {
+      await route.fulfill({ json: body });
+    });
+    await page.route('**/api/modules/team-tracker/field-options/component', async route => {
+      await route.fulfill({ json: { values: ['Dashboard', 'Model Serving'] } });
+    });
+    await page.goto('/#/releases/reports?report=cve-sustaining');
+    await page.waitForLoadState('networkidle');
+    await page.waitForTimeout(DEFAULT_PAGE_WAIT_TIME);
+
+    await expect(page.getByTestId('possibly-closable-overall-count')).toHaveText('2');
+    const quarter = page.locator('[data-testid="sla-quarter-card"]').filter({ hasText: 'Q3 2026' });
+    await expect(quarter.getByTestId('sla-quarter-possibly-closable-count')).toHaveText('2');
+
+    const matrix = page.locator('section').filter({ hasText: 'CVEs across all versions' });
+    await matrix.locator('tbody button').first().click();
+    await expect(page.getByTestId('cve-possibly-closable-RHAIENG-1005')).toBeVisible();
+    await page.keyboard.press('Escape');
+
+    await page.locator('[title="Show the Q3 2026 breached ticket report"]').click();
+    await expect(page.getByTestId('sla-possibly-closable-RHAIENG-CLOSED-OUT-OF-SUPPORT')).toBeVisible();
+    expect(page.errors).toHaveLength(0);
+  });
+
   test('SLA quarter opens an inline report containing breached vulnerabilities only', async ({ page }) => {
     const body = JSON.parse(JSON.stringify(cveSustainingFixture));
     body.slaCompliance = {
@@ -2796,6 +2844,7 @@ test.describe('Releases CVE Sustaining Report @releases', () => {
         total: 3,
         resolvedCount: 4,
         newOpenCount: 3,
+        possiblyClosableCount: 0,
         noSlaDate: 1,
         metSla: 2,
         missedSla: 1,
@@ -2825,8 +2874,9 @@ test.describe('Releases CVE Sustaining Report @releases', () => {
     const slaSection = page.locator('section').filter({ hasText: 'CVE SLA Compliance' });
     const firstQuarterMetrics = slaSection.getByTestId('sla-quarter-metrics').first();
     await expect(firstQuarterMetrics.getByTestId('sla-quarter-metric-label')).toHaveText([
-      'Breached:', 'Met:', 'Resolved overall:', 'New this quarter and still open:', 'No SLA Date:'
+      'Breached:', 'Met:', 'Resolved overall:', 'New this quarter and still open:', 'Out of support:', 'No SLA Date:'
     ]);
+    await expect(firstQuarterMetrics.getByTestId('sla-quarter-possibly-closable-count')).toHaveText('0');
     await expect(slaSection.locator('a')).toHaveCount(0);
 
     const summaryValues = firstQuarterMetrics.getByTestId('sla-quarter-metric-value');
@@ -3031,7 +3081,8 @@ test.describe('Releases CVE Sustaining Report @releases', () => {
       'needs-action',
       'not-found',
       'needs-review',
-      'possibly-resolved'
+      'possibly-resolved',
+      'possibly-closable'
     ].includes(outcome)))).toBe(true);
     expect(report.summary.slaBreached.count).toBeGreaterThan(0);
     expect(report.summary.noSlaDate.count).toBeGreaterThan(0);
