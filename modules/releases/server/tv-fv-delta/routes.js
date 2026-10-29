@@ -1,4 +1,16 @@
-const { jiraRequest, JIRA_HOST, fetchAllJqlResults, fetchProjectVersions } = require('../../../../shared/server/jira')
+let jiraModule
+try {
+  jiraModule = require('../../../../shared/server/jira')
+} catch (err) {
+  console.warn('[tv-fv-delta/routes] jira module not found, using stub:', err.message)
+  jiraModule = {
+    jiraRequest: null,
+    JIRA_HOST: 'https://redhat.atlassian.net',
+    fetchAllJqlResults: null,
+    fetchProjectVersions: null
+  }
+}
+const { jiraRequest, JIRA_HOST, fetchAllJqlResults, fetchProjectVersions } = jiraModule
 const { normalizeVersionName: sharedNormalize } = require('../version-utils')
 
 const JIRA_BROWSE = JIRA_HOST + '/browse'
@@ -1129,7 +1141,11 @@ async function registerRoutes(router, context) {
       })
     }
 
-    // No cache — trigger first fetch using planning config if available
+    // No cache — check Jira availability before starting background refresh
+    if (!fetchAllJqlResults) {
+      return res.status(503).json({ error: 'Jira integration is unavailable' })
+    }
+
     triggerBackgroundRefresh((await fetchReleasesFromPlanning(storage)).releases)
     res.status(202).json({
       _refreshing: true,

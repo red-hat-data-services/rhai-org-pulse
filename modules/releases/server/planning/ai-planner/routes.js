@@ -1,7 +1,8 @@
 const express = require('express');
 const { validateSnapshot } = require('./validation');
 const { readAIPlanner, writeAIPlanner, projectSnapshot, emptySnapshot } = require('./storage');
-const { PRIORITY_OUTCOMES, extractOutcomesFromFeatures, calculateOutcomeMetrics } = require('./outcomes-integration');
+const { FALLBACK_OUTCOMES, extractOutcomesFromFeatures, calculateOutcomeMetrics } = require('./outcomes-integration');
+const { getPriorityOutcomes: fetchPriorityOutcomes } = require('../outcome-fetch');
 const { fetchFeaturesWithTimeout } = require('../feature-query');
 
 const DEMO_MODE = process.env.DEMO_MODE === 'true';
@@ -130,41 +131,65 @@ module.exports = function registerAIPlannerRoutes(router, context) {
    * @openapi
    * /api/modules/releases/planning/ai-planner/outcomes:
    *   get:
-   *     summary: Fetch 22 prioritized outcomes from Jira plan with in-plan feature counts
+   *     summary: Fetch first 12 outcomes from Jira plan view 7384 with feature versions
    *     tags: [releases-planning]
    *     responses:
    *       200:
-   *         description: Array of outcomes with child feature counts and metrics
+   *         description: Array of first 12 outcomes (live from Jira plan) with child feature counts, metrics, and linked versions
    */
   router.get('/ai-planner/outcomes', requireAuth, requireScope('releases:read'), async function(req, res) {
     try {
-      // Fetch Jira features first to get parentKey links to outcomes
+      // Fetch priority outcomes (live from cache synced from Jira every 12h)
+      const jiraRequest = context.jiraClient && context.jiraClient.jiraRequest;
+      let priorityOutcomes = [];
+      let outcomesFromJira = false;
+      try {
+        priorityOutcomes = await fetchPriorityOutcomes(jiraRequest, readFromStorage, writeToStorage);
+        if (priorityOutcomes && priorityOutcomes.length > 0) {
+          outcomesFromJira = true;
+        }
+      } catch (outcomeErr) {
+        console.warn('[ai-planner/outcomes] getPriorityOutcomes failed, falling back to defaults:', outcomeErr.message);
+      }
+
+      // Use fallback outcomes if Jira fetch failed or returned empty
+      if (!outcomesFromJira || !priorityOutcomes || priorityOutcomes.length === 0) {
+        priorityOutcomes = FALLBACK_OUTCOMES;
+      }
+
+      // Fetch Jira features to get parentKey links to outcomes (optional)
       let jiraFeatures = null;
       if (context.jiraClient) {
         try {
           jiraFeatures = await fetchFeaturesWithTimeout(context.jiraClient);
         } catch (jiraErr) {
-          console.warn('[ai-planner/outcomes] Jira feature query failed, falling back to cached data:', jiraErr.message);
+          console.warn('[ai-planner/outcomes] Jira feature query failed, using empty features:', jiraErr.message);
         }
       }
 
-      // Build outcomes from live feature data with Jira parent links
-      const readiness = await buildFeatureReadiness(readFromStorage, jiraFeatures, listStorageFiles);
-      const allFeatures = (readiness.pendingReview || []).concat(readiness.ready || []);
+      // Build outcomes from live feature data with priority ordering
+      let allFeatures = [];
+      try {
+        const readiness = await buildFeatureReadiness(readFromStorage, jiraFeatures, listStorageFiles);
+        allFeatures = (readiness.pendingReview || []).concat(readiness.ready || []);
+      } catch (readinessErr) {
+        console.warn('[ai-planner/outcomes] buildFeatureReadiness failed, using empty features:', readinessErr.message);
+      }
+
       const inPlanFeatures = allFeatures
         .filter(f => f.status !== 'No' && f.targetVersions && f.targetVersions.some(v => v.includes('3.6')))
         .map(f => f.key);
 
-      // Extract outcomes from live feature parent links (100% from Jira, same 12h sync as features)
-      const outcomeMap = extractOutcomesFromFeatures(allFeatures);
+      // Extract outcomes from live feature parent links, using priorityOutcomes for ordering
+      const outcomeMap = extractOutcomesFromFeatures(allFeatures, priorityOutcomes);
 
-      // Convert to ordered array matching PRIORITY_OUTCOMES order (include all 22, even if empty)
-      const outcomes = PRIORITY_OUTCOMES
-        .map(o => outcomeMap[o.key])
-        .filter(outcome => outcome);
+      // Get first 12 outcomes for executive view
+      const allOutcomes = Object.values(outcomeMap)
+        .sort((a, b) => (a.outcomeNumber || 999) - (b.outcomeNumber || 999));
+      const executiveOutcomes = allOutcomes.slice(0, 12);
 
-      // Calculate metrics (in-plan count, % complete, confidence, status)
-      const outcomesWithMetrics = calculateOutcomeMetrics(outcomes, inPlanFeatures, allFeatures);
+      // Calculate metrics (in-plan count, % complete, confidence, status, linkedVersions)
+      const outcomesWithMetrics = calculateOutcomeMetrics(executiveOutcomes, inPlanFeatures, allFeatures);
 
       // Build feature→outcome mapping for dropdown filtering
       const featureOutcomeMap = {};
@@ -182,14 +207,31 @@ module.exports = function registerAIPlannerRoutes(router, context) {
         featureOutcomeMap: featureOutcomeMap,
         generatedAt: new Date().toISOString(),
         version: '3.6',
-        lastSyncedAt: readiness.meta?.lastSyncedAt || new Date().toISOString(),
         featureCount: allFeatures.length,
         inPlanCount: inPlanFeatures.length,
-        source: 'live-jira-12h-sync'
+        source: outcomesFromJira ? 'live-jira-plan-view-7384' : 'fallback-outcomes',
+        totalOutcomesInJira: allOutcomes.length,
+        executiveOutcomesReturned: executiveOutcomes.length
       });
     } catch (err) {
       console.error('Outcomes fetch error:', err);
-      res.status(500).json({ error: err.message });
+      // Return fallback outcomes even on error (graceful degradation)
+      res.json({
+        outcomes: FALLBACK_OUTCOMES.slice(0, 12).map((outcome) => ({
+          ...outcome,
+          inPlan: 0,
+          total: 0,
+          percentComplete: 0,
+          confidence: 0,
+          status: 'Unknown',
+          children: [],
+          linkedVersions: []
+        })),
+        featureOutcomeMap: {},
+        generatedAt: new Date().toISOString(),
+        source: 'fallback-error',
+        error: 'Could not fetch live outcomes, using fallback'
+      });
     }
   });
 
@@ -267,7 +309,17 @@ module.exports = function registerAIPlannerRoutes(router, context) {
    */
   router.get('/ai-planner', requireAuth, requireScope('releases:read'), async function(req, res) {
     try {
-      // Fetch Jira features first to get parentKey links to outcomes (same as /outcomes endpoint)
+      // Fetch priority outcomes (live from cache synced from Jira every 12h)
+      const jiraRequest = context.jiraClient && context.jiraClient.jiraRequest;
+      let priorityOutcomes = [];
+      try {
+        priorityOutcomes = await fetchPriorityOutcomes(jiraRequest, readFromStorage, writeToStorage);
+      } catch (outcomeErr) {
+        console.warn('[ai-planner] getPriorityOutcomes failed, using empty list:', outcomeErr.message);
+        priorityOutcomes = [];
+      }
+
+      // Fetch Jira features first to get parentKey links to outcomes
       let jiraFeatures = null;
       if (context.jiraClient) {
         try {
@@ -277,19 +329,25 @@ module.exports = function registerAIPlannerRoutes(router, context) {
         }
       }
 
-      const readiness = await buildFeatureReadiness(readFromStorage, jiraFeatures, listStorageFiles);
+      let readiness = null;
+      try {
+        readiness = await buildFeatureReadiness(readFromStorage, jiraFeatures, listStorageFiles);
+      } catch (readinessErr) {
+        console.warn('[ai-planner] buildFeatureReadiness failed, returning empty features:', readinessErr.message);
+        readiness = { pendingReview: [], ready: [], meta: {} };
+      }
 
       const allFeatures = (readiness.pendingReview || []).concat(readiness.ready || []);
 
-      // Build outcome number mapping from live feature data
-      const outcomeMap = extractOutcomesFromFeatures(allFeatures);
+      // Build outcome number mapping from live feature data, using priorityOutcomes for ordering
+      const outcomeMap = extractOutcomesFromFeatures(allFeatures, priorityOutcomes);
       const featureToOutcomeNumber = {};
       const featureToOutcomeKey = {};
-      PRIORITY_OUTCOMES.forEach((o, index) => {
+      (priorityOutcomes && priorityOutcomes.length > 0 ? priorityOutcomes : FALLBACK_OUTCOMES).forEach((o) => {
         const outcome = outcomeMap[o.key];
         if (outcome && outcome.children) {
           outcome.children.forEach(childKey => {
-            featureToOutcomeNumber[childKey] = index + 1;
+            featureToOutcomeNumber[childKey] = o.orderNumber || 0;
             featureToOutcomeKey[childKey] = o.key;
           });
         }

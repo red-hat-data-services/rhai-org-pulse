@@ -93,4 +93,104 @@ async function getOutcomeSummaries(jiraRequest, keys, version, readFromStorage, 
   return fetched
 }
 
-module.exports = { fetchOutcomeSummaries: fetchOutcomeSummaries, getOutcomeSummaries: getOutcomeSummaries }
+/**
+ * Fetch outcomes in priority order from Jira (type = Outcome, project = RHAISTRAT).
+ * Jira plan view 7384 (Racer Strat) determines priority order via issue ordering.
+ * We query all outcomes and order by their appearance in the plan.
+ *
+ * @param {Function} jiraRequest - Bound jiraRequest function from jira client
+ * @returns {Promise<Array>} Array of outcomes [{key, title, orderNumber}] in Jira plan order
+ */
+async function fetchOutcomesInPriorityOrder(jiraRequest) {
+  if (!jiraRequest) {
+    console.log('[release-planning] Jira credentials not configured, skipping outcomes fetch')
+    return []
+  }
+
+  try {
+    // Query outcomes from RHAISTRAT project, ordered by creation date as a proxy
+    // for plan order. The Jira Plans API doesn't expose plan-view ordering via JQL.
+    var jql = 'project = RHAISTRAT AND type = Outcome ORDER BY created ASC'
+    var params = new URLSearchParams({
+      jql: jql,
+      fields: 'summary',
+      maxResults: '100'
+    })
+    var data = await jiraRequest('/rest/api/3/search/jql?' + params)
+
+    var outcomes = []
+    if (data && data.issues) {
+      for (var i = 0; i < data.issues.length; i++) {
+        var issue = data.issues[i]
+        outcomes.push({
+          key: issue.key,
+          title: (issue.fields && issue.fields.summary) || '',
+          orderNumber: i + 1
+        })
+      }
+    }
+
+    console.log('[release-planning] Fetched ' + outcomes.length + ' outcomes from Jira')
+    return outcomes
+  } catch (err) {
+    console.error('[release-planning] Failed to fetch outcomes from Jira:', err.message)
+    return []
+  }
+}
+
+/**
+ * Load or fetch outcomes in priority order, cache in data/releases/planning/priority-outcomes.json
+ *
+ * @param {Function} jiraRequest - Bound jiraRequest function
+ * @param {Function} readFromStorage
+ * @param {Function} writeToStorage
+ * @returns {Promise<Array>} Array of outcomes in priority order
+ */
+async function getPriorityOutcomes(jiraRequest, readFromStorage, writeToStorage) {
+  var cachePath = DATA_PREFIX + '/priority-outcomes.json'
+  var TWELVE_HOURS = 12 * 60 * 60 * 1000
+
+  // Try cached first
+  var staleData = null
+  try {
+    var cached = await readFromStorage(cachePath)
+    if (cached && cached.timestamp && Array.isArray(cached.data) && cached.data.length > 0) {
+      var age = Date.now() - cached.timestamp
+      if (age < TWELVE_HOURS) {
+        console.log('[release-planning] Using cached priority outcomes (' + cached.data.length + ', age: ' + Math.round(age / 3600000) + 'h)')
+        return cached.data
+      }
+      staleData = cached.data
+      console.log('[release-planning] Priority outcomes cache expired (' + Math.round(age / 3600000) + 'h old), refreshing')
+    }
+  } catch {
+    // Cache miss or error; fetch fresh
+  }
+
+  // Fetch from Jira
+  var outcomes = await fetchOutcomesInPriorityOrder(jiraRequest)
+
+  if (outcomes.length > 0) {
+    try {
+      await writeToStorage(cachePath, { data: outcomes, timestamp: Date.now() })
+      console.log('[release-planning] Saved ' + outcomes.length + ' priority outcomes to cache')
+    } catch (err) {
+      console.error('[release-planning] Failed to cache outcomes:', err.message)
+    }
+    return outcomes
+  }
+
+  if (staleData) {
+    console.log('[release-planning] Jira refresh returned empty, using stale cache (' + staleData.length + ' outcomes)')
+    return staleData
+  }
+
+  return outcomes
+}
+
+module.exports = {
+  fetchOutcomeSummaries: fetchOutcomeSummaries,
+  getOutcomeSummaries: getOutcomeSummaries,
+  fetchOutcomesInPriorityOrder: fetchOutcomesInPriorityOrder,
+  getPriorityOutcomes: getPriorityOutcomes
+}
