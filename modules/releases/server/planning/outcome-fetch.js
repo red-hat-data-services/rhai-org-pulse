@@ -118,8 +118,11 @@ async function fetchOutcomesInPriorityOrder(jiraRequest, fallbackOutcomes) {
   }
 
   try {
-    // Extract outcome keys from FALLBACK_OUTCOMES
-    var outcomeKeys = fallbackOutcomes.map(function(o) { return o.key })
+    // Extract and validate outcome keys from FALLBACK_OUTCOMES
+    var outcomeKeys = fallbackOutcomes
+      .map(function(o) { return o.key })
+      .filter(function(k) { return typeof k === 'string' && ISSUE_KEY_PATTERN.test(k) })
+    if (outcomeKeys.length === 0) return []
 
     // Fetch fresh summaries from Jira
     var jql = 'key in (' + outcomeKeys.join(',') + ') ORDER BY Rank ASC'
