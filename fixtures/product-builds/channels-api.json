@@ -6,6 +6,7 @@
       {
         "name": "cuda13.0-torch2.11-el9.8",
         "description": "CUDA 13.0 with Torch 2.11 on RHEL 9.8",
+        "maturity": "stable",
         "accelerator": "cuda",
         "accelerator_version": "13.0",
         "torch_version": "2.11",
@@ -24,6 +25,7 @@
       {
         "name": "cpu-torch2.15-el9.8",
         "description": "CPU with Torch 2.15 on RHEL 9.8",
+        "maturity": "rolling",
         "accelerator": "cpu",
         "accelerator_version": "",
         "torch_version": "2.15",
@@ -47,6 +49,7 @@
     "channel": {
       "name": "cuda13.0-torch2.11-el9.8",
       "description": "CUDA 13.0 with Torch 2.11 on RHEL 9.8",
+      "maturity": "stable",
       "accelerator": "cuda",
       "accelerator_version": "13.0",
       "torch_version": "2.11",
