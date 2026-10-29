@@ -8,6 +8,9 @@ ARG CORE_TAG=latest
 # Stage 1: Build with all AI Eng modules
 FROM quay.io/org-pulse/org-pulse-core-frontend-builder:${CORE_TAG} AS build
 
+# Copy scripts early since postinstall hook needs it
+COPY scripts/ ./scripts/
+
 # Install all dependencies (including @org-pulse/core) from package-lock.json
 COPY package.json package-lock.json ./
 RUN npm ci

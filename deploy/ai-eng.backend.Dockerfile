@@ -9,6 +9,9 @@ FROM quay.io/org-pulse/org-pulse-core-backend:${CORE_TAG}
 
 USER 0
 
+# Copy scripts early since postinstall hook needs it
+COPY scripts/ ./scripts/
+
 # Install all dependencies (including @org-pulse/core) from package-lock.json
 COPY package.json package-lock.json ./
 RUN npm ci
