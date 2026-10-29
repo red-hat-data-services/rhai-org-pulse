@@ -981,17 +981,16 @@ test.describe('Releases Outcomes Coverage @releases', () => {
     }
   });
 
-  test('Outcomes data preserves all 22 priority outcomes @releases', async ({ page }) => {
+  test('Outcomes data preserves all 12 ranked priority outcomes @releases', async ({ page }) => {
     const response = await page.request.get('/api/modules/releases/planning/ai-planner/outcomes');
     const data = await response.json();
 
-    // All 22 outcomes should be present (even if some have 0 features)
-    expect(data.outcomes.length).toBeGreaterThanOrEqual(1);
+    // All 12 ranked outcomes should be present (above the "ranked outcomes" line in Jira)
+    expect(data.outcomes.length).toBe(12);
 
-    // Verify outcomeNumber sequence (1-22) is maintained
+    // Verify outcomeNumber sequence (1-12) is maintained
     const outcomeNumbers = data.outcomes.map(o => o.outcomeNumber);
-    const maxNumber = Math.max(...outcomeNumbers);
-    expect(maxNumber).toBeGreaterThanOrEqual(1);
+    expect(Math.max(...outcomeNumbers)).toBe(12);
   });
 
   test('Outcomes feature-to-outcome mapping enables filtering @releases', async ({ page }) => {
