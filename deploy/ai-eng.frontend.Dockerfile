@@ -8,15 +8,9 @@ ARG CORE_TAG=latest
 # Stage 1: Build with all AI Eng modules
 FROM quay.io/org-pulse/org-pulse-core-frontend-builder:${CORE_TAG} AS build
 
-# Copy scripts early since postinstall hook needs it
-COPY scripts/ ./scripts/
-
-# Install all dependencies (including @org-pulse/core) from package-lock.json
+# Install all dependencies (including @org-pulse/core and AI Eng deps) from lockfile
 COPY package.json package-lock.json ./
 RUN npm ci
-
-# Install AI Eng-specific frontend dependencies (core deps already present)
-RUN npm install --no-save mermaid @dagrejs/dagre @vue-flow/core @vue-flow/background @vue-flow/controls @vue-flow/minimap
 
 # Add platform customizations
 COPY platform/ ./platform/
