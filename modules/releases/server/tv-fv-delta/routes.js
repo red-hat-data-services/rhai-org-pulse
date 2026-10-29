@@ -1141,7 +1141,11 @@ async function registerRoutes(router, context) {
       })
     }
 
-    // No cache — trigger first fetch using planning config if available
+    // No cache — check Jira availability before starting background refresh
+    if (!fetchAllJqlResults) {
+      return res.status(503).json({ error: 'Jira integration is unavailable' })
+    }
+
     triggerBackgroundRefresh((await fetchReleasesFromPlanning(storage)).releases)
     res.status(202).json({
       _refreshing: true,

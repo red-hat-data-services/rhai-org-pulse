@@ -9,13 +9,9 @@ let googleDocs
 try {
   googleDocs = require('../../../../shared/server/google-docs')
 } catch (err) {
-  console.warn('[doc-import] google-docs module not found, using stubs:', err.message)
-  // Provide safe stubs so importing doc-import doesn't crash
-  googleDocs = {
-    fetchDocument: async () => { throw new Error('google-docs module not available') },
-    extractBigRocksFromDoc: () => { throw new Error('google-docs module not available') },
-    getServiceAccountEmail: () => null
-  }
+  // Module not available in this environment (OK for testing/CI)
+  console.debug('[doc-import] google-docs module not available:', err.message)
+  googleDocs = null
 }
 
 const { validateBigRock } = require('./validation')
@@ -42,6 +38,13 @@ function parseDocId(input) {
  * Fetch and parse a Google Doc, returning Big Rocks for preview.
  */
 async function previewDocImport(docIdOrUrl) {
+  if (!googleDocs) {
+    throw Object.assign(
+      new Error('Google Docs integration is not available in this environment'),
+      { statusCode: 503 }
+    )
+  }
+
   const docId = parseDocId(docIdOrUrl)
   if (!docId) {
     throw Object.assign(new Error('Invalid Google Doc URL or ID'), { statusCode: 400 })
