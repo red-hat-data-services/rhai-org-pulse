@@ -118,12 +118,13 @@ onMounted(() => {
       <table class="w-full text-xs">
         <thead class="sticky top-0 z-10 bg-gray-50 dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
           <tr>
+            <th class="px-3 py-2 text-center font-semibold text-gray-700 dark:text-gray-300 whitespace-nowrap uppercase tracking-wide">OC#</th>
             <th class="px-3 py-2 text-left font-semibold text-gray-700 dark:text-gray-300 whitespace-nowrap uppercase tracking-wide">Outcome</th>
             <th class="px-3 py-2 text-center font-semibold text-gray-700 dark:text-gray-300 whitespace-nowrap uppercase tracking-wide">In Plan</th>
             <th class="px-3 py-2 text-center font-semibold text-gray-700 dark:text-gray-300 whitespace-nowrap uppercase tracking-wide">% Complete</th>
             <th class="px-3 py-2 text-center font-semibold text-gray-700 dark:text-gray-300 whitespace-nowrap uppercase tracking-wide">Confidence</th>
             <th class="px-3 py-2 text-center font-semibold text-gray-700 dark:text-gray-300 whitespace-nowrap uppercase tracking-wide">Status</th>
-            <th class="px-3 py-2 text-left font-semibold text-gray-700 dark:text-gray-300 whitespace-nowrap uppercase tracking-wide">Linked Versions</th>
+            <th class="px-3 py-2 text-left font-semibold text-gray-700 dark:text-gray-300 whitespace-nowrap uppercase tracking-wide">Versions</th>
           </tr>
         </thead>
         <tbody class="divide-y divide-gray-100 dark:divide-gray-700">
@@ -132,6 +133,9 @@ onMounted(() => {
             :key="outcome.key"
             class="hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors"
           >
+            <td class="px-3 py-2 text-center text-gray-900 dark:text-gray-100 font-bold">
+              {{ outcome.outcomeNumber }}
+            </td>
             <td class="px-3 py-2 text-gray-900 dark:text-gray-100">
               <a
                 :href="`https://issues.redhat.com/browse/${outcome.key}`"
