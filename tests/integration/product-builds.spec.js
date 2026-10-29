@@ -72,6 +72,13 @@ test.describe('Product Builds Module @product-builds', () => {
     await expect(page.locator('#req-package-name')).toBeVisible()
     await expect(page.getByRole('button', { name: 'Submit request' })).toBeVisible()
 
+    await expect(page.locator('#req-sla-notice')).toContainText('Delivery SLA: 10 business days')
+    const minDate = await page.locator('#req-delivery-timeline').getAttribute('min')
+    const twoWeeksOut = new Date()
+    twoWeeksOut.setUTCDate(twoWeeksOut.getUTCDate() + 14)
+    expect(minDate > new Date().toISOString().slice(0, 10)).toBe(true)
+    expect(minDate <= twoWeeksOut.toISOString().slice(0, 10)).toBe(true)
+
     const appErrors = page.errors.filter(e => !/status of (429|404|503)/.test(e.message))
     expect(appErrors).toHaveLength(0)
   })

@@ -46,7 +46,9 @@ const JIRA_EMAIL_DOMAIN = 'redhat.com';
 const SAFE_IDENTIFIER_RE = /^[a-zA-Z0-9][a-zA-Z0-9._-]*$/;
 const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
 const PACKAGE_SOURCES = ['pypi', 'git', 'other'];
-const MIN_LEAD_TIME_DAYS = 8;
+// Delivery SLA: the earliest due date is this many business days (Mon-Fri,
+// UTC) after today. Public holidays are not excluded.
+const SLA_BUSINESS_DAYS = 10;
 const DUPLICATE_LOOKBACK_DAYS = 30;
 const RATE_LIMIT_WINDOW_MS = 60_000;
 const TEAM_OPTIONS_CACHE_TTL_MS = 5 * 60_000;
@@ -70,12 +72,26 @@ const DEMO_TEAM_OPTIONS = {
 
 // --- Validation ---
 
-function isAtLeastDaysFromToday(dateStr, minDays, now = new Date()) {
-  const today = new Date(now);
-  today.setUTCHours(0, 0, 0, 0);
+/**
+ * Earliest delivery date (YYYY-MM-DD) that meets the SLA: `businessDays`
+ * weekdays after today, counted in UTC.
+ */
+function earliestSlaDate(businessDays, now = new Date()) {
+  const date = new Date(now);
+  date.setUTCHours(0, 0, 0, 0);
+  let added = 0;
+  while (added < businessDays) {
+    date.setUTCDate(date.getUTCDate() + 1);
+    const day = date.getUTCDay();
+    if (day !== 0 && day !== 6) added++;
+  }
+  return date.toISOString().slice(0, 10);
+}
+
+function meetsSla(dateStr, businessDays, now = new Date()) {
   const target = new Date(dateStr + 'T00:00:00Z');
   if (isNaN(target.getTime())) return false;
-  return Math.round((target - today) / 86_400_000) >= minDays;
+  return target.toISOString().slice(0, 10) >= earliestSlaDate(businessDays, now);
 }
 
 /**
@@ -175,8 +191,9 @@ function validateRequest(body, opts = {}) {
   const deliveryTimeline = typeof body.delivery_timeline === 'string' ? body.delivery_timeline.trim() : '';
   if (!DATE_RE.test(deliveryTimeline)) {
     errors.delivery_timeline = 'Delivery timeline must be a date in YYYY-MM-DD format';
-  } else if (!isAtLeastDaysFromToday(deliveryTimeline, MIN_LEAD_TIME_DAYS, now)) {
-    errors.delivery_timeline = `Delivery timeline must be at least ${MIN_LEAD_TIME_DAYS} calendar days from today`;
+  } else if (!meetsSla(deliveryTimeline, SLA_BUSINESS_DAYS, now)) {
+    errors.delivery_timeline = `Delivery timeline must be at least ${SLA_BUSINESS_DAYS} business days from today ` +
+      `(earliest ${earliestSlaDate(SLA_BUSINESS_DAYS, now)})`;
   }
 
   let releaseTarget = null;
@@ -902,7 +919,10 @@ module.exports = function registerPackageRequestRoutes(router, context, deps = {
    *               delivery_timeline:
    *                 type: string
    *                 format: date
-   *                 description: Desired delivery date (YYYY-MM-DD), at least 8 calendar days out
+   *                 description: >-
+   *                   Desired delivery date (YYYY-MM-DD). Must be at least 10
+   *                   business days (Monday to Friday, UTC) from today to meet
+   *                   the delivery SLA.
    *               release_target:
    *                 type: array
    *                 items:
@@ -1183,7 +1203,9 @@ module.exports = function registerPackageRequestRoutes(router, context, deps = {
 
 module.exports._testExports = {
   validateRequest,
-  isAtLeastDaysFromToday,
+  earliestSlaDate,
+  meetsSla,
+  SLA_BUSINESS_DAYS,
   buildEpicSummary,
   buildEpicName,
   sanitizeTeamLabel,

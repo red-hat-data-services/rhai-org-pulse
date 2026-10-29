@@ -234,16 +234,31 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <div ref="containerRef" class="w-full flex flex-col bg-gray-50 dark:bg-gray-900" :style="{ height: containerHeight }">
-    <iframe
-      v-if="plannerUrl"
-      ref="iframeRef"
-      :src="plannerUrl"
-      class="flex-1 w-full border-none"
-      title="AI-First Release Planner"
-      sandbox="allow-same-origin allow-scripts allow-popups allow-forms"
-      @load="sendDataToIframe"
-    />
+  <div ref="containerRef" class="w-full flex flex-col bg-gray-50 dark:bg-gray-900 gap-3" :style="{ height: containerHeight }">
+    <div class="rounded-lg border border-red-300 bg-red-50 dark:bg-red-500/10 px-4 py-3">
+      <div class="flex items-start gap-3">
+        <div class="text-red-600 dark:text-red-400 mt-0.5">
+          <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd" /></svg>
+        </div>
+        <div>
+          <h3 class="font-semibold text-red-700 dark:text-red-300">Under Construction</h3>
+          <p class="text-sm text-red-600 dark:text-red-400 mt-1">
+            This feature is currently under construction. Results and data may change; validate outcomes and feature details before making delivery decisions.
+          </p>
+        </div>
+      </div>
+    </div>
+    <div class="flex-1 min-h-0 overflow-hidden">
+      <iframe
+        v-if="plannerUrl"
+        ref="iframeRef"
+        :src="plannerUrl"
+        class="w-full h-full border-none"
+        title="AI-First Release Planner"
+        sandbox="allow-same-origin allow-scripts allow-popups allow-forms"
+        @load="sendDataToIframe"
+      />
+    </div>
     <Toast
       v-if="showToast"
       :message="toastMessage"
