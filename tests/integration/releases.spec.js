@@ -2964,7 +2964,8 @@ test.describe('Releases CVE Sustaining Report @releases', () => {
       'needs-action',
       'not-found',
       'needs-review',
-      'possibly-resolved'
+      'possibly-resolved',
+      'possibly-closable'
     ].includes(outcome)))).toBe(true);
     expect(report.summary.slaBreached.count).toBeGreaterThan(0);
     expect(report.summary.noSlaDate.count).toBeGreaterThan(0);

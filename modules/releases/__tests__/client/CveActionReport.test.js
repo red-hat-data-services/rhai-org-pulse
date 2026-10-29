@@ -70,9 +70,9 @@ describe('CveActionReport', () => {
     expect(charts[1].props('options').scales.x.stacked).toBe(true)
     expect(charts[1].props('options').scales.y.stacked).toBe(true)
     expect(charts[1].props('data').datasets.map(dataset => dataset.label)).toEqual([
-      'Needs action', 'Not found', 'Needs review', 'Possibly resolved'
+      'Needs action', 'Not found', 'Needs review', 'Possibly resolved', 'Possibly closable'
     ])
-    expect(charts[1].props('data').datasets.map(dataset => dataset.data[0])).toEqual([2, 0, 1, 0])
+    expect(charts[1].props('data').datasets.map(dataset => dataset.data[0])).toEqual([2, 0, 1, 0, 0])
     expect(wrapper.text()).toContain('All open vulnerabilities')
     expect(wrapper.text()).toContain('SLA breached')
     expect(wrapper.text()).toContain('No SLA date')
