@@ -83,15 +83,22 @@ export async function collectSnapshot(config, now = new Date(), fetchImpl = fetc
 }
 
 export async function uploadSnapshot(config, snapshot, fetchImpl = fetch) {
+  const headers = {
+    'Content-Type': 'application/json',
+    Accept: 'application/json'
+  }
+  if (config.orgPulseToken) {
+    headers.Authorization = `Bearer ${config.orgPulseToken}`
+  } else {
+    headers['X-Forwarded-Email'] = requireValue('ORG_PULSE_EMAIL', config.orgPulseEmail)
+    headers['X-Proxy-Secret'] = requireValue('ORG_PULSE_PROXY_SECRET', config.orgPulseProxySecret)
+  }
+
   return requestJson(
     `${config.orgPulseUrl}/api/modules/releases/tech-debt/trends/bulk`,
     {
       method: 'POST',
-      headers: {
-        Authorization: `Bearer ${config.orgPulseToken}`,
-        'Content-Type': 'application/json',
-        Accept: 'application/json'
-      },
+      headers,
       body: JSON.stringify(snapshot)
     },
     fetchImpl
@@ -104,7 +111,12 @@ export async function main(env = process.env, fetchImpl = fetch) {
     jiraEmail: requireValue('JIRA_EMAIL', env.JIRA_EMAIL),
     jiraToken: requireValue('JIRA_TOKEN', env.JIRA_TOKEN),
     orgPulseUrl: requireValue('ORG_PULSE_URL', env.ORG_PULSE_URL).replace(/\/$/, ''),
-    orgPulseToken: requireValue('ORG_PULSE_TOKEN', env.ORG_PULSE_TOKEN)
+    orgPulseToken: env.ORG_PULSE_TOKEN,
+    orgPulseEmail: env.ORG_PULSE_EMAIL || env.CRON_ADMIN_EMAIL,
+    orgPulseProxySecret: env.ORG_PULSE_PROXY_SECRET
+  }
+  if (!config.orgPulseToken && !(config.orgPulseEmail && config.orgPulseProxySecret)) {
+    throw new Error('Set ORG_PULSE_TOKEN or both ORG_PULSE_EMAIL and ORG_PULSE_PROXY_SECRET')
   }
   const snapshot = await collectSnapshot(config, new Date(), fetchImpl)
   const result = await uploadSnapshot(config, snapshot, fetchImpl)

@@ -2,7 +2,8 @@ import { describe, expect, it, vi } from 'vitest'
 import {
   collectSnapshot,
   fetchJiraPages,
-  historicalJql
+  historicalJql,
+  uploadSnapshot
 } from '../../../../../scripts/generate-tech-debt-trends.mjs'
 
 function response(body) {
@@ -64,5 +65,30 @@ describe('Tech Debt trend collector', function () {
     const snapshot = await collectSnapshot(config, new Date('2026-10-29T06:00:00.000Z'), fetchImpl)
     expect(snapshot.events[0].category).toBe('customer-linked')
     expect(fetchImpl).toHaveBeenCalledTimes(2)
+  })
+
+  it('uploads with a scoped API token when configured', async function () {
+    const fetchImpl = vi.fn().mockResolvedValue(response({ stored: true }))
+    await uploadSnapshot({
+      orgPulseUrl: 'https://pulse.example.test',
+      orgPulseToken: 'scoped-token'
+    }, { schemaVersion: 1 }, fetchImpl)
+
+    expect(fetchImpl.mock.calls[0][1].headers.Authorization).toBe('Bearer scoped-token')
+    expect(fetchImpl.mock.calls[0][1].headers['X-Proxy-Secret']).toBeUndefined()
+  })
+
+  it('uploads through the internal proxy-authenticated service path', async function () {
+    const fetchImpl = vi.fn().mockResolvedValue(response({ stored: true }))
+    await uploadSnapshot({
+      orgPulseUrl: 'http://backend:3001',
+      orgPulseEmail: 'collector@example.test',
+      orgPulseProxySecret: 'proxy-secret'
+    }, { schemaVersion: 1 }, fetchImpl)
+
+    const headers = fetchImpl.mock.calls[0][1].headers
+    expect(headers.Authorization).toBeUndefined()
+    expect(headers['X-Forwarded-Email']).toBe('collector@example.test')
+    expect(headers['X-Proxy-Secret']).toBe('proxy-secret')
   })
 })

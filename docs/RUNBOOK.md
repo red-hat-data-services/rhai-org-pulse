@@ -233,6 +233,20 @@ Each refresh handler declares its own cadence. Handlers that ran within their wi
 
 Most CronJob ticks complete in seconds (only handlers past their cadence run).
 
+### Tech Debt Trends Collector
+
+| | |
+|---|---|
+| **Name** | `team-tracker-tech-debt-trends` |
+| **Schedule** | `0 6 * * *` (daily at 06:00 UTC) |
+| **Concurrency** | `Forbid` (no overlapping runs) |
+| **Deadline** | 30 minutes (`activeDeadlineSeconds: 1800`) |
+| **Action** | Builds and uploads the six-month Received/Closed snapshot |
+| **Credentials** | `team-tracker-secrets`, `proxy-auth-secret`, and `CRON_ADMIN_EMAIL` |
+
+To populate a missing snapshot without waiting for the next scheduled run, see
+the manual Job command in `docs/TECH-DEBT-TRENDS.md`.
+
 ---
 
 ## Secrets
