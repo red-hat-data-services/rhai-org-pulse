@@ -92,6 +92,7 @@ function parseDescriptionFields(rawDesc) {
 // --- Merge request links ---
 
 const MR_URL_RE = /\/-\/merge_requests\/(\d+)/;
+const HTTP_URL_RE = /^https?:\/\//i;
 
 function extractMergeRequests(remoteLinks) {
   if (!Array.isArray(remoteLinks)) return [];
@@ -100,6 +101,9 @@ function extractMergeRequests(remoteLinks) {
   for (const link of remoteLinks) {
     const url = link && link.object && link.object.url;
     if (typeof url !== 'string') continue;
+    // The URL is rendered as a link, so reject non-http(s) schemes outright
+    // rather than letting a crafted javascript: link reach the template.
+    if (!HTTP_URL_RE.test(url)) continue;
     const match = url.match(MR_URL_RE);
     if (!match) continue;
 

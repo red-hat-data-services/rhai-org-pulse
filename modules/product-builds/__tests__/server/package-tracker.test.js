@@ -232,6 +232,19 @@ describe('package-tracker', () => {
       }])
     })
 
+    it('rejects non-http(s) schemes that would be unsafe as links', () => {
+      const links = [
+        { object: { url: 'javascript:void(0)//-/merge_requests/7' } },
+        { object: { url: 'data:text/html,<script>alert(1)</script>/-/merge_requests/8' } },
+        { object: { url: 'https://gitlab.com/g/p/-/merge_requests/9' } },
+      ]
+      expect(extractMergeRequests(links)).toEqual([{
+        iid: 9,
+        url: 'https://gitlab.com/g/p/-/merge_requests/9',
+        title: '',
+      }])
+    })
+
     it('deduplicates repeated links', () => {
       const url = 'https://gitlab.com/g/p/-/merge_requests/7'
       expect(extractMergeRequests([{ object: { url } }, { object: { url } }])).toHaveLength(1)
