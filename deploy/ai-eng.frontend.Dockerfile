@@ -27,8 +27,8 @@ COPY modules/ ./modules/
 # Add public assets (includes AI-First scheduler demo)
 COPY public/ ./public/
 
-# Copy /src directory from @org-pulse/core (more reliable than symlinking in Docker)
-RUN cp -r ./node_modules/@org-pulse/core/src ./src
+# Replace /src directory with @org-pulse/core/src for Vite resolution
+RUN rm -rf ./src && cp -r ./node_modules/@org-pulse/core/src ./src
 
 RUN npm run build
 
