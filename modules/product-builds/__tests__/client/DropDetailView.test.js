@@ -10,6 +10,7 @@ vi.mock('@shared/client/services/api', () => ({
 const { apiRequest } = await import('@shared/client/services/api')
 
 const DROP_KEY = 'base-images-base-v2026102901'
+const LINKED_DROP_KEY = 'base-images-base-v2026102601'
 const CHANNEL = 'cuda13.0-torch2.11-el9.8'
 
 const DROP = {
@@ -20,6 +21,8 @@ const DROP = {
   git_branch: 'release/trailing',
   environments: [],
 }
+
+const LINKED_DROP = { ...DROP, key: LINKED_DROP_KEY, name: 'base-v2026102601' }
 
 function artifact(key, overrides = {}) {
   return {
@@ -41,13 +44,24 @@ const ARTIFACTS = [
   artifact('quay.io/aipcc/base-images/rocm7.14-torch2.11-el9.8:rocm7.14-torch2.11-1793241618'),
 ]
 
-function mockApi(artifacts = ARTIFACTS) {
+function mockApi(options = {}) {
+  // Accepts either a plain artifact list (the common case) or
+  // { artifacts, artifactsByDrop } where a drop's page can be deferred.
+  const list = Array.isArray(options) ? options : options.artifacts || ARTIFACTS
+  const byDrop = (!Array.isArray(options) && options.artifactsByDrop) || {}
+  const drops = { [DROP_KEY]: DROP, [LINKED_DROP_KEY]: LINKED_DROP }
+
   apiRequest.mockImplementation((path) => {
     if (path.endsWith('/changelog')) return Promise.resolve(null)
     if (path.endsWith('/metrics')) return Promise.resolve(null)
-    if (path.startsWith('/modules/product-builds/artifacts?')) return Promise.resolve(artifacts)
+    if (path.startsWith('/modules/product-builds/artifacts?')) {
+      const dropKey = new URLSearchParams(path.split('?')[1]).get('drop_key')
+      return byDrop[dropKey] ? byDrop[dropKey]() : Promise.resolve(list)
+    }
     if (path.startsWith('/modules/product-builds/artifacts/')) return Promise.resolve([])
-    if (path.startsWith('/modules/product-builds/drops/')) return Promise.resolve(DROP)
+    if (path.startsWith('/modules/product-builds/drops/')) {
+      return Promise.resolve(drops[decodeURIComponent(path.split('/').pop())] || DROP)
+    }
     return Promise.reject(new Error(`unexpected ${path}`))
   })
 }
@@ -107,6 +121,7 @@ describe('DropDetailView', () => {
     const note = wrapper.find('[data-testid="drop-channel-note"]')
     expect(note.text()).toContain(CHANNEL)
     expect(note.text()).toContain('2 images are included in this drop')
+    expect(note.find('button').text()).toBe('Jump to first')
 
     const matches = wrapper.findAll('[data-channel-match="true"]')
     expect(matches).toHaveLength(2)
@@ -114,6 +129,55 @@ describe('DropDetailView', () => {
 
     expect(document.getElementById('channel-artifact-anchor')).toBe(matches[0].element)
     expect(Element.prototype.scrollIntoView).toHaveBeenCalledWith({ behavior: 'smooth', block: 'center' })
+    wrapper.unmount()
+  })
+
+  it('scrolls to the new drop once its own artifacts land', async () => {
+    let resolveLinked
+    mockApi({
+      artifactsByDrop: {
+        [LINKED_DROP_KEY]: () => new Promise((resolve) => { resolveLinked = resolve }),
+      },
+    })
+    const { wrapper, nav } = mountView({ channel: CHANNEL })
+    await flushPromises()
+    await nextTick()
+    expect(Element.prototype.scrollIntoView).toHaveBeenCalledTimes(1)
+
+    Element.prototype.scrollIntoView.mockClear()
+    nav.updateParams({ key: LINKED_DROP_KEY })
+    await flushPromises()
+
+    // The previous drop's matches are no longer shown, and nothing is scrolled yet.
+    const note = wrapper.find('[data-testid="drop-channel-note"]')
+    expect(wrapper.findAll('[data-channel-match="true"]')).toHaveLength(0)
+    expect(note.text()).toContain('looking for its images')
+    expect(Element.prototype.scrollIntoView).not.toHaveBeenCalled()
+
+    resolveLinked([artifact(`quay.io/aipcc/base-images/${CHANNEL}:1793241603`)])
+    await flushPromises()
+    await nextTick()
+
+    // The new drop's own match is found and scrolled to exactly once.
+    expect(Element.prototype.scrollIntoView).toHaveBeenCalledTimes(1)
+    const match = wrapper.find('[data-channel-match="true"]')
+    expect(document.getElementById('channel-artifact-anchor')).toBe(match.element)
+    expect(note.text()).toContain('1 image is included in this drop')
+    wrapper.unmount()
+  })
+
+  it('labels a match count as partial while more artifacts remain', async () => {
+    const page = Array.from({ length: 50 }, (_, i) => artifact(`quay.io/aipcc/base-images/other-${i}:1793241603`))
+    page[3] = artifact(`quay.io/aipcc/base-images/${CHANNEL}:1793241603`)
+    mockApi(page)
+
+    const { wrapper } = mountView({ channel: CHANNEL })
+    await flushPromises()
+    await nextTick()
+
+    const note = wrapper.find('[data-testid="drop-channel-note"]')
+    expect(note.text()).toContain('1 image is included in this drop so far')
+    expect(note.find('button').text()).toBe('Jump to it')
     wrapper.unmount()
   })
 

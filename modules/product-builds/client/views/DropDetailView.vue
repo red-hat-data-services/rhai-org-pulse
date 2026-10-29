@@ -33,7 +33,16 @@ function isChannelArtifact(art) {
   return !!channelName.value && artifactRepo(art.key) === channelName.value
 }
 
-const channelArtifacts = computed(() => artifacts.value.filter(isChannelArtifact))
+// Which drop the loaded artifact list belongs to. The previous drop's artifacts
+// stay loaded until the next page resolves, so the banner and the scroll watcher
+// have to know they are not this drop's images.
+const artifactsDropKey = ref(null)
+
+const channelArtifacts = computed(() =>
+  artifactsDropKey.value === currentDropKey.value
+    ? artifacts.value.filter(isChannelArtifact)
+    : []
+)
 const firstChannelArtifactKey = computed(() => channelArtifacts.value[0]?.key || null)
 
 function scrollToChannelArtifact() {
@@ -46,10 +55,11 @@ function clearChannel() {
   nav.updateParams({ channel: undefined }, { push: false })
 }
 
-// Scroll to the channel's first image once per drop, after the artifacts land.
+// Scroll to the channel's first image once per drop, after that drop's own
+// artifacts land — not while the previous drop's artifacts are still loaded.
 let scrolledTo = null
-watch([currentDropKey, channelName, artifacts], ([key, channel, list]) => {
-  if (!key || !channel || !list.some(isChannelArtifact)) return
+watch([currentDropKey, channelName, channelArtifacts], ([key, channel, list]) => {
+  if (!key || !channel || !list.length) return
   const token = `${key}::${channel}`
   if (scrolledTo === token) return
   scrolledTo = token
@@ -128,10 +138,15 @@ watch(artifacts, (val) => {
 const MAX_CHANNEL_PAGES = 5
 
 async function loadDropArtifacts(key, channel) {
+  artifactsDropKey.value = null
   await loadArtifacts({ drop_key: key })
+  // A newer drop took over while this page was in flight; drop it.
+  if (currentDropKey.value !== key) return
+  artifactsDropKey.value = key
   let pages = 0
-  while (channel && hasMore.value && pages < MAX_CHANNEL_PAGES && !artifacts.value.some(isChannelArtifact)) {
+  while (channel && currentDropKey.value === key && hasMore.value && pages < MAX_CHANNEL_PAGES && !artifacts.value.some(isChannelArtifact)) {
     await loadArtifacts({ drop_key: key, offset: artifacts.value.length }, { append: true })
+    if (currentDropKey.value !== key) return
     pages += 1
   }
 }
@@ -327,7 +342,7 @@ const totalColumns = 7
           <span>
             Channel <span class="font-semibold">{{ channelName }}</span>:
             <template v-if="channelArtifacts.length">
-              {{ channelArtifacts.length }} {{ channelArtifacts.length === 1 ? 'image is' : 'images are' }} included in this drop.
+              {{ channelArtifacts.length }} {{ channelArtifacts.length === 1 ? 'image is' : 'images are' }} included in this drop<template v-if="hasMore"> so far</template>.
             </template>
             <template v-else-if="artifactsLoading">looking for its images…</template>
             <template v-else-if="hasMore">no image for this channel in the loaded artifacts.</template>
@@ -338,7 +353,7 @@ const totalColumns = 7
             type="button"
             class="font-medium underline hover:no-underline focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500"
             @click="scrollToChannelArtifact"
-          >Jump to it</button>
+          >{{ channelArtifacts.length === 1 ? 'Jump to it' : 'Jump to first' }}</button>
           <button
             type="button"
             class="ml-auto rounded text-xs font-medium text-primary-700 hover:underline focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 dark:text-blue-300"
