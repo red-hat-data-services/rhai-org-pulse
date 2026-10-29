@@ -1,7 +1,6 @@
 <script setup>
 import { computed } from 'vue'
-import { ShieldCheck, RefreshCw } from 'lucide-vue-next'
-import { buildChannelMatrix, acceleratorMeta, osLabel, releaseSummary } from '../../utils/channels'
+import { buildChannelMatrix, acceleratorMeta, isReleaseAdopted, osLabel, releaseSummary } from '../../utils/channels'
 
 const props = defineProps({
   channels: { type: Array, required: true },
@@ -12,12 +11,14 @@ const props = defineProps({
 const emit = defineEmits(['select'])
 
 const matrix = computed(() => buildChannelMatrix(props.channels))
-const multiOs = computed(() => new Set(props.channels.map(c => c.rhel_version)).size > 1)
+
+// Channels adopted by a release keep the solid green card; the ones that are
+// still moving with the base images get the dashed amber card.
+const ADOPTED_CELL = 'bg-emerald-50 border-emerald-300 hover:bg-emerald-100 dark:bg-emerald-900/20 dark:border-emerald-700 dark:hover:bg-emerald-900/40'
+const UNADOPTED_CELL = 'bg-white border-dashed border-amber-400 hover:bg-amber-50 dark:bg-gray-800 dark:border-amber-600 dark:hover:bg-amber-900/20'
 
 function cellClass(channel) {
-  const base = channel.maturity === 'stable'
-    ? 'bg-emerald-50 border-emerald-300 hover:bg-emerald-100 dark:bg-emerald-900/20 dark:border-emerald-700 dark:hover:bg-emerald-900/40'
-    : 'bg-white border-dashed border-amber-400 hover:bg-amber-50 dark:bg-gray-800 dark:border-amber-600 dark:hover:bg-amber-900/20'
+  const base = isReleaseAdopted(channel) ? ADOPTED_CELL : UNADOPTED_CELL
   const selected = channel.name === props.selectedName
     ? ' ring-2 ring-primary-500 dark:ring-blue-400 ring-offset-1 ring-offset-white dark:ring-offset-gray-800'
     : ''
@@ -74,12 +75,9 @@ function cellClass(channel) {
               >
                 <span
                   class="flex items-center gap-1 text-xs font-medium"
-                  :class="channel.maturity === 'stable' ? 'text-emerald-700 dark:text-emerald-300' : 'text-amber-700 dark:text-amber-300'"
+                  :class="isReleaseAdopted(channel) ? 'text-emerald-700 dark:text-emerald-300' : 'text-amber-700 dark:text-amber-300'"
                 >
-                  <ShieldCheck v-if="channel.maturity === 'stable'" :size="12" aria-hidden="true" />
-                  <RefreshCw v-else :size="12" aria-hidden="true" />
-                  {{ channel.maturity === 'stable' ? 'Stable' : 'Rolling' }}
-                  <span v-if="multiOs" class="ml-auto font-normal text-gray-500 dark:text-gray-400">{{ osLabel(channel.rhel_version) }}</span>
+                  {{ osLabel(channel.rhel_version) }}
                 </span>
                 <span v-if="channel.compatible_releases?.length" class="block mt-0.5 text-[11px] leading-tight text-gray-600 dark:text-gray-400 whitespace-nowrap">
                   {{ releaseSummary(channel.compatible_releases) }}

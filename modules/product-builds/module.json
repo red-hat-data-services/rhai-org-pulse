@@ -22,6 +22,7 @@
     ],
     "hiddenRoutes": {
       "series-detail": "$product",
+      "channel-detail": "$product",
       "drop-detail": "$product",
       "artifact-detail": "$product",
       "search": null

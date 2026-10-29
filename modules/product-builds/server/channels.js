@@ -34,7 +34,7 @@ module.exports = function registerChannelRoutes(router, { getBaseUrl, demoMode =
    *         description: >-
    *           Object with source ("dashboard", or "sample" for demo data), as_of and channels array.
    *           name, description, accelerator, accelerator_version, torch_version, rhel_version
-   *           and compatible_releases mirror Pulp distribution labels; maturity, visibility,
+   *           and compatible_releases mirror Pulp distribution labels; visibility,
    *           os_release, wheel_count, wheel_kinds, drop_count and latest_drop are derived
    *           and optional.
    *       503:
