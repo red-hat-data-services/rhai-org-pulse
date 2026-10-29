@@ -34,7 +34,6 @@ const SORTABLE_COLUMNS = [
   { field: 'package',        label: 'Package',        width: 'min-w-[140px]' },
   { field: 'status',         label: 'Status',         width: 'w-[100px]' },
   { field: 'assignee',       label: 'Assignee',       width: 'w-[120px]' },
-  { field: 'related_ticket', label: 'Related Ticket', width: 'w-[120px]' },
   { field: 'target_date',    label: 'Due Date',       width: 'w-[95px]' },
   { field: 'release',        label: 'Release',        width: 'w-[100px]' },
   { field: 'fix_version',    label: 'Fix Version',    width: 'w-[100px]' },
@@ -105,10 +104,6 @@ function toggleRow(key) {
   if (next.has(key)) next.delete(key)
   else next.add(key)
   expandedRows.value = next
-}
-
-function isJiraKey(str) {
-  return str && /^[A-Z]+-\d+$/.test(str)
 }
 
 function setRiskFilterFromCard(card) {
@@ -244,6 +239,7 @@ onMounted(load)
                 {{ col.label }}
                 <span v-if="sortField === col.field" class="ml-0.5 text-blue-500">{{ sortDir === 'asc' ? '▲' : '▼' }}</span>
               </th>
+              <th class="w-[80px] text-left py-2.5 px-2 font-medium text-gray-600 dark:text-gray-400 whitespace-nowrap">Link to MR</th>
               <th class="w-[75px] text-left py-2.5 px-2 font-medium text-gray-600 dark:text-gray-400">Risk</th>
             </tr>
           </thead>
@@ -271,11 +267,6 @@ onMounted(load)
                 </td>
                 <!-- Assignee -->
                 <td class="py-2 px-2 text-gray-700 dark:text-gray-300 truncate max-w-[120px]" :title="pkg.assignee">{{ pkg.assignee }}</td>
-                <!-- Related Ticket -->
-                <td class="py-2 px-2">
-                  <a v-if="isJiraKey(pkg.related_ticket)" :href="`${JIRA_BASE}/${pkg.related_ticket}`" target="_blank" rel="noopener noreferrer" class="text-blue-600 hover:underline" @click.stop>{{ pkg.related_ticket }}</a>
-                  <span v-else class="text-gray-400">{{ pkg.related_ticket || '—' }}</span>
-                </td>
                 <!-- Due Date -->
                 <td class="py-2 px-2 text-gray-700 dark:text-gray-300 tabular-nums">{{ pkg.target_date || '—' }}</td>
                 <!-- Release -->
@@ -308,6 +299,19 @@ onMounted(load)
                   </template>
                   <span v-else class="text-gray-400">&mdash;</span>
                 </td>
+                <!-- Link to MR -->
+                <td class="py-2 px-2">
+                  <a
+                    v-if="pkg.mr_url"
+                    :href="pkg.mr_url"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    class="text-blue-600 dark:text-blue-400 hover:underline"
+                    :title="`MR !${pkg.mr_iid}` + (pkg.mr_count > 1 ? ` (+${pkg.mr_count - 1} more)` : '')"
+                    @click.stop
+                  >MR</a>
+                  <span v-else class="text-gray-400">&mdash;</span>
+                </td>
                 <!-- Risk -->
                 <td class="py-2 px-2">
                   <span
@@ -328,10 +332,11 @@ onMounted(load)
                   <td class="py-1.5 px-2 pl-6">
                     <a :href="`${JIRA_BASE}/${child.key}`" target="_blank" rel="noopener noreferrer" class="text-blue-500 hover:underline text-xs">{{ child.key }}</a>
                   </td>
-                  <td class="py-1.5 px-2 text-gray-600 dark:text-gray-400 text-xs" colspan="8">{{ child.summary }}</td>
+                  <td class="py-1.5 px-2 text-gray-600 dark:text-gray-400 text-xs" colspan="7">{{ child.summary }}</td>
                   <td class="py-1.5 px-2" colspan="2">
                     <span class="inline-flex items-center px-1.5 py-0.5 rounded text-[11px] font-medium text-white" :class="STATUS_CATEGORY_COLORS[child.status_category] || 'bg-gray-500'">{{ child.status }}</span>
                   </td>
+                  <td></td>
                   <td></td>
                 </tr>
               </template>

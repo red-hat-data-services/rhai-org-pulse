@@ -89,6 +89,37 @@ function parseDescriptionFields(rawDesc) {
   return result;
 }
 
+// --- Merge request links ---
+
+const MR_URL_RE = /\/-\/merge_requests\/(\d+)/;
+
+function extractMergeRequests(remoteLinks) {
+  if (!Array.isArray(remoteLinks)) return [];
+
+  const mergeRequests = [];
+  for (const link of remoteLinks) {
+    const url = link && link.object && link.object.url;
+    if (typeof url !== 'string') continue;
+    const match = url.match(MR_URL_RE);
+    if (!match) continue;
+
+    const iid = Number(match[1]);
+    if (mergeRequests.some(mr => mr.url === url)) continue;
+    mergeRequests.push({
+      iid,
+      url,
+      title: link.object.title || '',
+    });
+  }
+  return mergeRequests;
+}
+
+async function fetchEpicMergeRequests(jira, key) {
+  if (typeof jira.jiraRequest !== 'function') return [];
+  const remoteLinks = await jira.jiraRequest(`/rest/api/3/issue/${key}/remotelink`);
+  return extractMergeRequests(remoteLinks);
+}
+
 // --- Risk and lead time ---
 
 function computeRisk(targetDateStr) {
@@ -144,20 +175,24 @@ async function buildReleaseTracker(jira) {
   const childrenJql = key => `"Epic Link" = ${key}`;
   const childFields = 'key,summary,status';
 
-  // Fetch children in batches to avoid overwhelming JIRA
+  // Fetch children and MR links in batches to avoid overwhelming JIRA
   const packages = [];
   for (let i = 0; i < epics.length; i += CHILDREN_CONCURRENCY) {
     const batch = epics.slice(i, i + CHILDREN_CONCURRENCY);
-    const childResults = await Promise.all(
-      batch.map(epic =>
-        JIRA_KEY_RE.test(epic.key)
-          ? jira.fetchAllJqlResults(childrenJql(epic.key), childFields, { maxResults: 100 }).catch(() => [])
-          : Promise.resolve([])
-      )
+    const batchData = await Promise.all(
+      batch.map(epic => {
+        if (!JIRA_KEY_RE.test(epic.key)) {
+          return Promise.resolve({ children: [], mergeRequests: [] });
+        }
+        return Promise.all([
+          jira.fetchAllJqlResults(childrenJql(epic.key), childFields, { maxResults: 100 }).catch(() => []),
+          fetchEpicMergeRequests(jira, epic.key).catch(() => []),
+        ]).then(([children, mergeRequests]) => ({ children, mergeRequests }));
+      })
     );
     for (let j = 0; j < batch.length; j++) {
       const epic = batch[j];
-      const children = childResults[j];
+      const { children, mergeRequests } = batchData[j];
       const f = epic.fields || {};
       const descFields = parseDescriptionFields(f.description);
       const targetDate = f.duedate || descFields.targetDate;
@@ -179,6 +214,9 @@ async function buildReleaseTracker(jira) {
         release: targetVersions[0] || null,
         fix_version: (fixVersions[0] && fixVersions[0].name) || null,
         related_ticket: descFields.relatedTicket || null,
+        mr_url: (mergeRequests[0] && mergeRequests[0].url) || null,
+        mr_iid: (mergeRequests[0] && mergeRequests[0].iid) || null,
+        mr_count: mergeRequests.length,
         team: descFields.team || null,
         size: (sizeRaw && typeof sizeRaw === 'object') ? sizeRaw.value : (sizeRaw || null),
         days_overdue,
@@ -246,7 +284,7 @@ module.exports = function registerPackageTrackerRoutes(router, context) {
    *   get:
    *     tags: [Package Tracker]
    *     summary: Get package release tracker data
-   *     description: Returns matching AIPCC and RHAI package epics with risk assessment, due dates, release versions, and child issues. Cached for 1 hour.
+   *     description: Returns matching AIPCC and RHAI package epics with risk assessment, due dates, release versions, child issues, and linked merge requests. Cached for 1 hour.
    *     parameters:
    *       - name: refresh
    *         in: query
@@ -308,4 +346,5 @@ module.exports = function registerPackageTrackerRoutes(router, context) {
 module.exports._testExports = {
   extractAdfText, extractJiraLinks, parseDescriptionFields,
   computeRisk, computeLeadTime, extractTargetVersions, buildReleaseTracker,
+  extractMergeRequests,
 };
