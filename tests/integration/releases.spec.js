@@ -1132,6 +1132,7 @@ test.describe('Releases FPDoR Readiness @releases', () => {
 
   test('Tech Debt Cockpit filters, classifies, and ranks deterministic Jira issues', async ({ page }) => {
     const issueRequests = [];
+    const trendRequests = [];
     await page.route('**/api/modules/releases/tech-debt/components', async route => {
       await route.fulfill({
         json: {
@@ -1252,6 +1253,44 @@ test.describe('Releases FPDoR Readiness @releases', () => {
         }
       });
     });
+    await page.route('**/api/modules/releases/tech-debt/trends?*', async route => {
+      trendRequests.push(route.request().url());
+      const url = new URL(route.request().url());
+      const components = url.searchParams.getAll('component');
+      await route.fulfill({
+        json: {
+          generatedAt: '2026-10-29T06:00:00.000Z',
+          window: {
+            months: ['2026-05', '2026-06', '2026-07', '2026-08', '2026-09', '2026-10'],
+            startDate: '2026-05-01',
+            endExclusive: '2026-11-01',
+            timezone: 'UTC'
+          },
+          selectedComponents: components,
+          selectedIssueType: null,
+          categories: [
+            { code: 'vulnerability', label: 'CVE / Vulnerability', issueType: 'Vulnerability', color: '#a21caf' },
+            { code: 'component-team', label: 'Component-team/unclassified', issueType: 'Bug', color: '#64748b' }
+          ],
+          totals: { received: 4, resolved: 2 },
+          components: components.map(component => ({
+            component,
+            totals: { received: 4, resolved: 2 },
+            months: [
+              { month: '2026-05', received: { total: 0, categories: { vulnerability: 0, 'component-team': 0 } }, resolved: { total: 0, categories: { vulnerability: 0, 'component-team': 0 } } },
+              { month: '2026-06', received: { total: 0, categories: { vulnerability: 0, 'component-team': 0 } }, resolved: { total: 0, categories: { vulnerability: 0, 'component-team': 0 } } },
+              { month: '2026-07', received: { total: 0, categories: { vulnerability: 0, 'component-team': 0 } }, resolved: { total: 0, categories: { vulnerability: 0, 'component-team': 0 } } },
+              { month: '2026-08', received: { total: 1, categories: { vulnerability: 0, 'component-team': 1 } }, resolved: { total: 0, categories: { vulnerability: 0, 'component-team': 0 } } },
+              { month: '2026-09', received: { total: 1, categories: { vulnerability: 1, 'component-team': 0 } }, resolved: { total: 1, categories: { vulnerability: 0, 'component-team': 1 } } },
+              { month: '2026-10', received: { total: 2, categories: { vulnerability: 1, 'component-team': 1 } }, resolved: { total: 1, categories: { vulnerability: 1, 'component-team': 0 } } }
+            ]
+          })),
+          issueCount: 4,
+          stale: false,
+          warning: null
+        }
+      });
+    });
 
     await page.goto('/#/releases/plan?tab=tech-debt-prioritization');
     await page.waitForLoadState('networkidle');
@@ -1279,6 +1318,15 @@ test.describe('Releases FPDoR Readiness @releases', () => {
 
     await expect(page.getByTestId('tech-debt-cockpit')).toBeVisible();
     await expect(page.getByTestId('tech-debt-summary')).toContainText(/Total\s*3/);
+    await expect(page.getByTestId('tech-debt-summary')).toContainText(/Received · 6 months\s*4/);
+    await expect(page.getByTestId('tech-debt-summary')).toContainText(/Resolved · 6 months\s*2/);
+    await expect(page.getByTestId('tech-debt-trends')).toContainText('Received vs. closed tech debt');
+    await expect(page.getByTestId('tech-debt-trends')).toContainText('AI Gateway');
+    await expect(page.getByTestId('tech-debt-trend-volume-view')).toHaveAttribute('aria-pressed', 'true');
+    await expect(page.getByTestId('tech-debt-trends')).not.toContainText('CVE / Vulnerability');
+    await page.getByTestId('tech-debt-trend-issue-types-view').click();
+    await expect(page.getByTestId('tech-debt-trend-issue-types-view')).toHaveAttribute('aria-pressed', 'true');
+    await expect(page.getByTestId('tech-debt-trends')).toContainText('CVE / Vulnerability');
     await expect(page.getByTestId('tech-debt-in-flight-pane')).toContainText('RHAI-101');
     await expect(page.getByTestId('tech-debt-in-flight-pane')).toContainText('RHAI-102');
     await expect(page.getByTestId('tech-debt-in-flight-pane')).toContainText('P1 · 70');
@@ -1296,6 +1344,7 @@ test.describe('Releases FPDoR Readiness @releases', () => {
     await expect(page.getByTestId('tech-debt-in-flight-pane').getByText('Review', { exact: true })).toHaveClass(/bg-amber-100/);
     await expect(page.getByRole('link', { name: /RHAI-201/ })).toHaveAttribute('href', 'https://redhat.atlassian.net/browse/RHAI-201');
     expect(issueRequests[0]).toContain('component=AI+Gateway');
+    expect(trendRequests[0]).toContain('component=AI+Gateway');
 
     await page.getByTestId('tech-debt-component-filter').click();
     await page.getByRole('checkbox', { name: 'AI Gateway' }).uncheck();
@@ -1308,11 +1357,13 @@ test.describe('Releases FPDoR Readiness @releases', () => {
 
     await page.getByTestId('tech-debt-refresh').click();
     await expect.poll(() => issueRequests.length).toBe(3);
+    await expect.poll(() => trendRequests.length).toBe(3);
     expect(issueRequests[2]).toContain('refresh=true');
 
     await page.getByTestId('tech-debt-triage-filter').selectOption('exceptions');
     await expect.poll(() => issueRequests.length).toBe(4);
     expect(issueRequests[3]).toContain('triage=exceptions');
+    expect(trendRequests).toHaveLength(3);
     await expect(page.getByTestId('tech-debt-selected-filters')).toContainText('Needs Triage / Exceptions');
 
     await page.getByTestId('tech-debt-clear-filters').click();
@@ -1419,6 +1470,22 @@ test.describe('Releases FPDoR Readiness @releases', () => {
           counts: { total: 8, inFlight: 0, backlog: 8, bugs: 7, vulnerabilities: 1 },
           inFlight: [],
           backlog: examples
+        }
+      });
+    });
+    await page.route('**/api/modules/releases/tech-debt/trends?*', async route => {
+      await route.fulfill({
+        json: {
+          generatedAt: '2026-10-29T06:00:00.000Z',
+          window: { months: ['2026-05', '2026-06', '2026-07', '2026-08', '2026-09', '2026-10'], startDate: '2026-05-01', endExclusive: '2026-11-01', timezone: 'UTC' },
+          selectedComponents: ['AI Gateway'],
+          selectedIssueType: null,
+          categories: [],
+          totals: { received: 0, resolved: 0 },
+          components: [{ component: 'AI Gateway', totals: { received: 0, resolved: 0 }, months: [] }],
+          issueCount: 0,
+          stale: false,
+          warning: null
         }
       });
     });

@@ -1,0 +1,31 @@
+name: Tech Debt Trends Snapshot
+
+on:
+  schedule:
+    - cron: '0 6 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  collect:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '22'
+          cache: npm
+
+      - run: npm ci
+
+      - name: Generate and upload Tech Debt trends
+        run: npm run collect:tech-debt-trends
+        env:
+          JIRA_HOST: ${{ vars.JIRA_HOST }}
+          JIRA_EMAIL: ${{ secrets.JIRA_EMAIL }}
+          JIRA_TOKEN: ${{ secrets.JIRA_TOKEN }}
+          ORG_PULSE_URL: ${{ secrets.ORG_PULSE_URL }}
+          ORG_PULSE_TOKEN: ${{ secrets.ORG_PULSE_TOKEN }}

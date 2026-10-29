@@ -3,9 +3,12 @@ import { beforeEach, describe, expect, it } from 'vitest'
 import {
   clearTechDebtIssueCache,
   readTechDebtIssueCache,
+  readTechDebtTrendCache,
   TECH_DEBT_CACHE_MAX_ENTRIES,
   TECH_DEBT_CACHE_TTL_MS,
   techDebtIssueCacheKey,
+  techDebtTrendCacheKey,
+  writeTechDebtTrendCache,
   writeTechDebtIssueCache
 } from '../../../client/plan/services/techDebtIssueCache'
 
@@ -44,5 +47,17 @@ describe('Tech Debt issue response cache', function () {
 
     expect(readTechDebtIssueCache(firstKey, 102)).not.toBeNull()
     expect(readTechDebtIssueCache(techDebtIssueCacheKey(['Component 1']), 102)).toBeNull()
+  })
+
+  it('caches trend responses independently by component and issue type', function () {
+    const key = techDebtTrendCacheKey(['Model Serving', 'AI Gateway'], 'Vulnerability')
+    writeTechDebtTrendCache(key, { totals: { received: 4, resolved: 2 } }, 1000)
+
+    expect(key).toBe(techDebtTrendCacheKey(['AI Gateway', 'Model Serving'], 'Vulnerability'))
+    expect(readTechDebtTrendCache(key, 1001)).toMatchObject({
+      fresh: true,
+      data: { totals: { received: 4, resolved: 2 } }
+    })
+    expect(readTechDebtIssueCache(key, 1001)).toBeNull()
   })
 })

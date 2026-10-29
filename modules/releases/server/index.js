@@ -302,7 +302,8 @@ module.exports = async function registerRoutes(router, context) {
   registerTechDebtRoutes(techDebtRouter, {
     requireAuth,
     requireScope,
-    jira
+    jira,
+    storage
   });
   router.use('/tech-debt', techDebtRouter);
 

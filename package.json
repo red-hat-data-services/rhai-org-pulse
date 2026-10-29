@@ -12,6 +12,7 @@
     "dev:full": "concurrently \"npm run dev\" \"npm run dev:server\"",
     "build": "vite build",
     "analyze:release-blockers": "node scripts/generate-release-blocker-analysis.mjs",
+    "collect:tech-debt-trends": "node scripts/generate-tech-debt-trends.mjs",
     "preview": "vite preview",
     "test": "vitest run",
     "test:coverage": "vitest run --coverage --config vitest.coverage.config.mjs",

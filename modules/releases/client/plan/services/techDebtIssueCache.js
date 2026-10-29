@@ -1,6 +1,7 @@
 const CACHE_TTL_MS = 5 * 60 * 1000
 const MAX_CACHE_ENTRIES = 6
 const responseCache = new Map()
+const trendResponseCache = new Map()
 
 export function techDebtIssueCacheKey(components, issueType, triage) {
   const normalizedComponents = (Array.isArray(components) ? components : [])
@@ -41,6 +42,31 @@ export function writeTechDebtIssueCache(key, data, now = Date.now()) {
 
 export function clearTechDebtIssueCache() {
   responseCache.clear()
+  trendResponseCache.clear()
+}
+
+export function techDebtTrendCacheKey(components, issueType) {
+  return techDebtIssueCacheKey(components, issueType, '')
+}
+
+export function readTechDebtTrendCache(key, now = Date.now()) {
+  const entry = trendResponseCache.get(key)
+  if (!entry) return null
+  trendResponseCache.delete(key)
+  trendResponseCache.set(key, entry)
+  return {
+    data: entry.data,
+    cachedAt: entry.cachedAt,
+    fresh: now - entry.cachedAt < CACHE_TTL_MS
+  }
+}
+
+export function writeTechDebtTrendCache(key, data, now = Date.now()) {
+  trendResponseCache.delete(key)
+  trendResponseCache.set(key, { data, cachedAt: now })
+  while (trendResponseCache.size > MAX_CACHE_ENTRIES) {
+    trendResponseCache.delete(trendResponseCache.keys().next().value)
+  }
 }
 
 export const TECH_DEBT_CACHE_TTL_MS = CACHE_TTL_MS
