@@ -39,20 +39,27 @@ test.describe('Product Builds Module @product-builds', () => {
     expect(appErrors).toHaveLength(0);
   });
 
-  test('should expose the Request Package navigation item and form', async ({ page }) => {
+  test('should expose the AIPCC-E Requests navigation item, landing page and Python form', async ({ page }) => {
     await page.goto('/')
     await page.waitForLoadState('networkidle')
     await page.waitForTimeout(DEFAULT_PAGE_WAIT_TIME)
 
     await page.locator('aside').getByRole('button', { name: 'Product Builds', exact: true }).click()
-    const requestLink = page.locator('aside').getByText('Request Package', { exact: true })
+    const requestLink = page.locator('aside').getByText('AIPCC-E Requests', { exact: true })
     await expect(requestLink).toBeVisible()
     await requestLink.click()
     await page.waitForLoadState('networkidle')
     await page.waitForTimeout(DEFAULT_PAGE_WAIT_TIME)
 
     expect(page.url()).toMatch(/product-builds\/package-request/)
-    await expect(page.getByRole('heading', { name: 'Request Package' })).toBeVisible()
+    await expect(page.getByRole('heading', { name: 'AIPCC-E Requests', level: 1 })).toBeVisible()
+    for (const card of ['Python Package Requests', 'RPM Requests', 'Channel Requests']) {
+      await expect(page.getByRole('heading', { name: card, level: 2 })).toBeVisible()
+    }
+    await expect(page.locator('#requests-help')).toContainText('#forum-aipcc')
+    await page.getByTestId('request-card-python').click()
+    expect(page.url()).toMatch(/package-request\?tab=python/)
+    await expect(page.getByRole('heading', { name: 'Python Package Requests', level: 2 })).toBeVisible()
     const team = page.getByRole('combobox', { name: 'Team', exact: true })
     await expect(team).toBeVisible()
     await expect(team).toBeEnabled()
@@ -97,7 +104,7 @@ test.describe('Product Builds Module @product-builds', () => {
         } })
       }
     })
-    await page.goto('/#/product-builds/package-request')
+    await page.goto('/#/product-builds/package-request?tab=python')
     await page.locator('#req-team-project').selectOption('RHAI')
     const team = page.locator('#req-team')
     await expect(team).toBeEnabled()
@@ -121,6 +128,80 @@ test.describe('Product Builds Module @product-builds', () => {
     expect(submissions[0].team).toBe(option)
     expect(submissions[0].project).toBe('RHAI')
     expect(submissions[1]).toEqual(submissions[0])
+  })
+
+  function triageDeliveryDate() {
+    // 35 calendar days is always at least 20 business days out.
+    const date = new Date()
+    date.setUTCDate(date.getUTCDate() + 35)
+    return date.toISOString().slice(0, 10)
+  }
+
+  test('should file an RPM request for existing channels', async ({ page }) => {
+    await page.goto('/#/product-builds/package-request?tab=rpm')
+    await page.waitForLoadState('networkidle')
+    await expect(page.getByRole('heading', { name: 'RPM Requests', level: 2 })).toBeVisible()
+    await expect(page.getByTestId('request-tab-rpm')).toHaveAttribute('aria-selected', 'true')
+
+    const channelInput = page.locator('#rpm-channels')
+    await channelInput.click()
+    const channelOptions = page.getByRole('option')
+    await expect(channelOptions.first()).toBeVisible()
+    expect(await channelOptions.count()).toBeGreaterThan(0)
+    const channelName = await channelOptions.first().getAttribute('data-value')
+    const minDate = await page.locator('#rpm-delivery-timeline').getAttribute('min')
+    expect(minDate > new Date().toISOString().slice(0, 10)).toBe(true)
+    await expect(page.locator('#rpm-delivery-timeline-hint')).toContainText('Earliest available date')
+    await expect(page.locator('main')).not.toContainText('SLA')
+
+    const team = page.locator('#rpm-team')
+    await expect(team).toBeEnabled()
+    await team.selectOption(await team.locator('option:not([disabled])').first().getAttribute('value'))
+    await page.locator('#rpm-name').fill('gcc-toolset-14')
+    await page.locator('#rpm-source-url').fill('https://src.fedoraproject.org/rpms/gcc-toolset-14')
+    await channelInput.fill(channelName)
+    await page.locator(`[role="option"][data-value="${channelName}"]`).click()
+    await expect(page.getByTestId('channel-chip')).toContainText(channelName)
+    await page.locator('#rpm-jira-id').fill('RHAISTRAT-42')
+    await page.locator('#rpm-delivery-timeline').fill(triageDeliveryDate())
+    await page.locator('#rpm-justification').fill('Needed by the new base image')
+    const responsePromise = page.waitForResponse(response => response.url().endsWith('/api/modules/product-builds/rpm-requests'))
+    await page.getByRole('button', { name: 'Submit RPM request' }).click()
+    expect((await responsePromise).ok()).toBe(true)
+    await expect(page.getByText('RPM request submitted')).toBeVisible()
+
+    const appErrors = page.errors.filter(e => !/status of (429|404|503)/.test(e.message))
+    expect(appErrors).toHaveLength(0)
+  })
+
+  test('should show the channel disclaimer and file a channel request', async ({ page }) => {
+    await page.goto('/#/product-builds/package-request')
+    await page.waitForLoadState('networkidle')
+    await page.getByTestId('request-tab-channel').click()
+    expect(page.url()).toMatch(/package-request\?tab=channel/)
+
+    const disclaimer = page.locator('#chan-disclaimer')
+    await expect(disclaimer).toBeVisible()
+    await expect(disclaimer).toContainText('New channels require an approved STRAT and prior discussion with AIPCC')
+    await expect(disclaimer).toContainText('#forum-aipcc')
+    await expect(page.locator('main')).not.toContainText('SLA')
+
+    const team = page.locator('#chan-team')
+    await expect(team).toBeEnabled()
+    await team.selectOption(await team.locator('option:not([disabled])').first().getAttribute('value'))
+    await page.locator('#chan-torch-version').fill('2.12')
+    await page.locator('#chan-accelerator').fill('ROCm 10.4')
+    await page.locator('#chan-os').fill('RHEL 10')
+    await page.locator('#chan-jira-id').fill('RHAISTRAT-42')
+    await page.locator('#chan-delivery-timeline').fill(triageDeliveryDate())
+    await page.locator('#chan-justification').fill('New accelerator card for a customer')
+    const responsePromise = page.waitForResponse(response => response.url().endsWith('/api/modules/product-builds/channel-requests'))
+    await page.getByRole('button', { name: 'Submit channel request' }).click()
+    expect((await responsePromise).ok()).toBe(true)
+    await expect(page.getByText('Channel request submitted')).toBeVisible()
+
+    const appErrors = page.errors.filter(e => !/status of (429|404|503)/.test(e.message))
+    expect(appErrors).toHaveLength(0)
   })
 
   test('should navigate to RHAIIS view', async ({ page }) => {

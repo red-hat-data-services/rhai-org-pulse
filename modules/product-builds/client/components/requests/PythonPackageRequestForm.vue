@@ -1,9 +1,7 @@
 <script setup>
 import { ref, reactive, computed, watch } from 'vue'
 import { apiRequest } from '@shared/client/services/api'
-import { useAuth } from '@shared/client/composables/useAuth'
-
-const { user } = useAuth()
+import { isoBusinessDaysFromNow, formatDateLabel } from '../../utils/request-dates'
 
 const JIRA_BASE = 'https://redhat.atlassian.net/browse'
 const PACKAGE_NAME_RE = /^[a-zA-Z][a-zA-Z0-9._-]*$/
@@ -19,22 +17,8 @@ const SOURCES = [
   { id: 'other', label: 'Other', hint: 'Manual source (internal index, archive, ...)' }
 ]
 
-function isoBusinessDaysFromNow(days) {
-  const d = new Date()
-  d.setUTCHours(0, 0, 0, 0)
-  let added = 0
-  while (added < days) {
-    d.setUTCDate(d.getUTCDate() + 1)
-    const day = d.getUTCDay()
-    if (day !== 0 && day !== 6) added++
-  }
-  return d.toISOString().slice(0, 10)
-}
-
 const minDeliveryDate = computed(() => isoBusinessDaysFromNow(SLA_BUSINESS_DAYS))
-const minDeliveryDateLabel = computed(() => new Date(minDeliveryDate.value + 'T00:00:00Z').toLocaleDateString('en-US', {
-  weekday: 'short', month: 'short', day: 'numeric', year: 'numeric', timeZone: 'UTC'
-}))
+const minDeliveryDateLabel = computed(() => formatDateLabel(minDeliveryDate.value))
 
 function defaults() {
   return {
@@ -91,7 +75,6 @@ const duplicates = ref(null) // 409 existing_tickets array
 const success = ref(null) // 201 (or demo 200) payload
 
 const needsSourceUrl = computed(() => form.package_source === 'git' || form.package_source === 'other')
-const identityLabel = computed(() => (user.value ? (user.value.displayName || user.value.email) : null))
 
 function parseList(raw) {
   return String(raw || '').split(',').map(s => s.trim()).filter(Boolean)
@@ -263,24 +246,13 @@ function jiraHref(ticket) {
 </script>
 
 <template>
-  <div class="max-w-[900px]">
-    <!-- Header -->
-    <div class="mb-6 flex items-start justify-between gap-4 flex-wrap">
-      <div>
-        <h1 class="text-2xl font-bold text-gray-900 dark:text-white">Request Package</h1>
-        <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">
-          Submit a package update request. A Jira Epic is filed and the onboarding pipeline is triggered on success.
-        </p>
-      </div>
-      <div
-        v-if="identityLabel"
-        class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-gray-100 dark:bg-gray-800 text-sm text-gray-700 dark:text-gray-300"
-      >
-        <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-        </svg>
-        <span>Submitting as <strong class="font-semibold">{{ identityLabel }}</strong></span>
-      </div>
+  <div>
+    <div class="mb-4">
+      <h2 class="text-lg font-bold text-gray-900 dark:text-white">Python Package Requests</h2>
+      <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">
+        For Python packages (wheels) only. A Jira Epic is filed and the onboarding pipeline is triggered on success.
+        For RPMs or new channels, use the other tabs.
+      </p>
     </div>
 
     <!-- Success panel -->
@@ -292,7 +264,7 @@ function jiraHref(ticket) {
           </svg>
         </div>
         <div>
-          <h2 class="text-lg font-bold text-green-800 dark:text-green-300">Package request submitted</h2>
+          <h3 class="text-lg font-bold text-green-800 dark:text-green-300">Package request submitted</h3>
           <p class="text-sm text-green-600 dark:text-green-400/80">
             {{ success.summary || 'Request accepted' }}
             <span v-if="success.demo"> (demo mode)</span>

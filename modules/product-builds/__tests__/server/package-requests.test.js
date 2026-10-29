@@ -441,6 +441,7 @@ describe('package-requests', () => {
       await expect422(validBody({ delivery_timeline: dayBefore.toISOString().slice(0, 10) }), 'delivery_timeline')
       await expect422(validBody({ delivery_timeline: isoDaysFromNow(8) }), 'delivery_timeline')
       await expect422(validBody({ delivery_timeline: 'not-a-date' }), 'delivery_timeline')
+      await expect422(validBody({ delivery_timeline: '2099-02-31' }), 'delivery_timeline')
       const { router } = register()
       const res = await callHandler(router, { userEmail: 'jane@redhat.com', body: validBody({ delivery_timeline: isoDaysFromNow(8) }) })
       expect(res._json.fields.delivery_timeline).toBe(

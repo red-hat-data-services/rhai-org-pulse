@@ -16,5 +16,5 @@ export const routes = {
   'drop-detail': defineAsyncComponent(() => import('./views/DropDetailView.vue')),
   'artifact-detail': defineAsyncComponent(() => import('./views/ArtifactDetailView.vue')),
   'package-analysis': defineAsyncComponent(() => import('./views/PackageAnalysisView.vue')),
-  'package-request': defineAsyncComponent(() => import('./views/RequestPackageView.vue')),
+  'package-request': defineAsyncComponent(() => import('./views/RequestsView.vue')),
 }
