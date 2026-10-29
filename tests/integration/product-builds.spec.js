@@ -747,6 +747,65 @@ test.describe('Product Builds Module @product-builds', () => {
     expect(appErrors).toHaveLength(0);
   });
 
+  test('should open a RHAIBI drop detail from the channel drawer', async ({ page }) => {
+    const channel = dashboardChannels.detail.channel;
+    const drop = {
+      key: 'base-images-base-v2026102901',
+      name: 'base-v2026102901',
+      product_key: 'base-images',
+      product_version: '3.6',
+      git_branch: 'main',
+      created_at: '2026-10-28T10:00:00Z',
+      pullspec: `${channel.base_image}:base-v2026102901`,
+      changes: [],
+    };
+    await page.route('**/api/modules/product-builds/channels?*', route => route.fulfill({ json: dashboardChannels.list }));
+    await page.route(`**/api/modules/product-builds/channels/${channel.name}`, route => route.fulfill({
+      json: { source: 'dashboard', channel: { ...channel, drops: [drop], wheels: [] } },
+    }));
+    await page.route('**/api/modules/product-builds/drops/**', route => {
+      const path = new URL(route.request().url()).pathname;
+      const isDetail = /\/drops\/[^/]+$/.test(path);
+      return route.fulfill({ json: isDetail ? drop : {} });
+    });
+    const channelArtifact = {
+      key: `${channel.base_image}:${channel.name}-1793241603`,
+      type: 'containers',
+      variant: 'cuda13.0-el9.8',
+      archs: ['x86_64'],
+      environments: ['stage'],
+      alternative_names: [],
+      created_at: '2026-10-28T22:55:00Z',
+    };
+    await page.route('**/api/modules/product-builds/artifacts?*', route => route.fulfill({ json: [channelArtifact] }));
+    await page.route('**/api/modules/product-builds/artifacts/*/wheels', route => route.fulfill({ json: [] }));
+
+    await page.goto(`/#/product-builds/channels?channel=${encodeURIComponent(channel.name)}`);
+
+    const drawer = page.getByTestId('channel-drawer');
+    const dropLink = drawer.getByRole('button', { name: `View drop ${drop.name}`, exact: true });
+    await expect(dropLink).toBeVisible();
+    await dropLink.click();
+
+    await expect(page).toHaveURL(url => url.hash.includes('product-builds/drop-detail')
+      && url.hash.includes(`key=${drop.key}`)
+      && url.hash.includes('product=base-images')
+      && url.hash.includes(`channel=${channel.name}`));
+    await expect(page.getByRole('heading', { name: `Drop: ${drop.name}`, exact: true })).toBeVisible();
+    await expect(page.getByTestId('channel-drawer')).toHaveCount(0);
+
+    // The channel travels to the drop page and its image is picked out of the drop.
+    const channelNote = page.getByTestId('drop-channel-note');
+    await expect(channelNote).toContainText(channel.name);
+    await expect(channelNote).toContainText('1 image is included in this drop');
+    const match = page.locator('[data-channel-match="true"]');
+    await expect(match).toHaveCount(1);
+    await expect(match).toContainText(channelArtifact.key);
+
+    const appErrors = page.errors.filter(e => !/status of (429|404|503)/.test(e.message));
+    expect(appErrors).toHaveLength(0);
+  });
+
   test('should deep link to a channel', async ({ page, request }) => {
     const { channels } = await (await request.get('/api/modules/product-builds/channels')).json();
     const channelName = channels[0].name;

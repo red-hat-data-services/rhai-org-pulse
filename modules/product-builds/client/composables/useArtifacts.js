@@ -8,8 +8,12 @@ export function useArtifacts() {
   const loading = ref(false)
   const error = ref(null)
   const hasMore = ref(false)
+  // Filters change as the user navigates, so responses can arrive out of order.
+  // Only the newest request may write state; earlier ones are dropped on arrival.
+  let latestRequest = 0
 
   async function loadArtifacts(filters = {}, { append = false } = {}) {
+    const request = ++latestRequest
     loading.value = true
     error.value = null
 
@@ -24,6 +28,7 @@ export function useArtifacts() {
 
     try {
       const data = await apiRequest(`${BASE}/artifacts?${params}`)
+      if (request !== latestRequest) return
       const items = Array.isArray(data) ? data : []
       if (append) {
         artifacts.value = [...artifacts.value, ...items]
@@ -32,9 +37,10 @@ export function useArtifacts() {
       }
       hasMore.value = items.length >= limit
     } catch (err) {
+      if (request !== latestRequest) return
       error.value = err.message
     } finally {
-      loading.value = false
+      if (request === latestRequest) loading.value = false
     }
   }
 

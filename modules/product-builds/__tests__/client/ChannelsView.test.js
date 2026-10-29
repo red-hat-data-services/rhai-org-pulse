@@ -186,6 +186,25 @@ describe('ChannelsView', () => {
     wrapper.unmount()
   })
 
+  it('opens a drop detail when a RHAIBI drop is clicked', async () => {
+    const { wrapper, nav } = mountView({ channel: 'cuda13.0-torch2.11-ubi9' })
+    await flushPromises()
+
+    const dropButton = drawer().querySelector('button[aria-label="View drop base-v2026091101"]')
+    expect(dropButton).not.toBeNull()
+    expect(dropButton.textContent.trim()).toBe('base-v2026091101')
+
+    dropButton.click()
+    await flushPromises()
+
+    expect(nav.navigateTo).toHaveBeenCalledWith('drop-detail', {
+      key: 'base-images-base-v2026091101',
+      product: 'base-images',
+      channel: 'cuda13.0-torch2.11-ubi9',
+    })
+    wrapper.unmount()
+  })
+
   it('shows copy actions and hides the sample chip for live data', async () => {
     apiRequest.mockImplementation((path) => path.startsWith('/modules/product-builds/channels?')
       ? Promise.resolve({ source: 'live', channels: CHANNELS })

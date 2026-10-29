@@ -66,6 +66,40 @@ describe('useArtifacts', () => {
     expect(artifacts.value[0].key).toBe('b')
   })
 
+  it('ignores a superseded response that arrives last', async () => {
+    let resolveFirst
+    apiRequest.mockImplementationOnce(() => new Promise(resolve => { resolveFirst = resolve }))
+
+    const { artifacts, loading, loadArtifacts } = useArtifacts()
+    const first = loadArtifacts({ drop_key: 'drop-a' })
+
+    apiRequest.mockResolvedValueOnce([{ key: 'b-1' }])
+    await loadArtifacts({ drop_key: 'drop-b' })
+    expect(artifacts.value.map(a => a.key)).toEqual(['b-1'])
+
+    resolveFirst([{ key: 'a-1' }])
+    await first
+
+    expect(artifacts.value.map(a => a.key)).toEqual(['b-1'])
+    expect(loading.value).toBe(false)
+  })
+
+  it('ignores a superseded error', async () => {
+    let rejectFirst
+    apiRequest.mockImplementationOnce(() => new Promise((_, reject) => { rejectFirst = reject }))
+
+    const { error, loadArtifacts } = useArtifacts()
+    const first = loadArtifacts({ drop_key: 'drop-a' })
+
+    apiRequest.mockResolvedValueOnce([{ key: 'b-1' }])
+    await loadArtifacts({ drop_key: 'drop-b' })
+
+    rejectFirst(new Error('late failure'))
+    await first
+
+    expect(error.value).toBeNull()
+  })
+
   it('sets error on rejected request', async () => {
     apiRequest.mockRejectedValue(new Error('not found'))
 

@@ -132,6 +132,18 @@ function toggleSort(field) {
 function viewBaseImages() {
   nav.navigateTo('base-images')
 }
+
+// Channel drops are RHAIBI base image drops, so they open in the product-builds
+// drop detail view for the base-images product. The channel travels along so the
+// drop page can point out the images built for it.
+function viewDrop(drop) {
+  if (!drop?.key) return
+  nav.navigateTo('drop-detail', {
+    key: drop.key,
+    product: drop.product_key || 'base-images',
+    channel: selectedName.value || undefined,
+  })
+}
 </script>
 
 <template>
@@ -386,6 +398,12 @@ function viewBaseImages() {
       </section>
     </template>
 
-    <ChannelDrawer :name="selectedName" :sample="source === 'sample'" @close="closeChannel" @view-base-images="viewBaseImages" />
+    <ChannelDrawer
+      :name="selectedName"
+      :sample="source === 'sample'"
+      @close="closeChannel"
+      @view-base-images="viewBaseImages"
+      @view-drop="viewDrop"
+    />
   </div>
 </template>
