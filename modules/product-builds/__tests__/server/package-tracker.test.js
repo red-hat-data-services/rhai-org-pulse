@@ -4,6 +4,7 @@ const registerRoutes = require('../../server/package-tracker')
 const {
   extractAdfText, extractJiraLinks, parseDescriptionFields,
   computeRisk, computeLeadTime, extractTargetVersions, buildReleaseTracker,
+  extractMergeRequests,
 } = registerRoutes._testExports
 
 describe('package-tracker', () => {
@@ -190,6 +191,66 @@ describe('package-tracker', () => {
     })
   })
 
+  describe('extractMergeRequests', () => {
+    it('returns empty for non-array input', () => {
+      expect(extractMergeRequests(null)).toEqual([])
+      expect(extractMergeRequests(undefined)).toEqual([])
+    })
+
+    it('extracts GitLab merge request links and ignores other web links', () => {
+      const links = [
+        {
+          object: {
+            url: 'https://gitlab.com/redhat/rhel-ai/wheels/fondue/-/merge_requests/1479',
+            title: 'Merge request - RHAI-8268, RHAI-8280',
+          },
+        },
+        {
+          object: {
+            url: 'https://gitlab.com/redhat/rhel-ai/wheels/fondue/-/commit/502f52b9e74b923a92632c6cf8a5738e6e3edd4b',
+            title: 'Solved by commit',
+          },
+        },
+        { object: { url: null } },
+        {},
+      ]
+      expect(extractMergeRequests(links)).toEqual([{
+        iid: 1479,
+        url: 'https://gitlab.com/redhat/rhel-ai/wheels/fondue/-/merge_requests/1479',
+        title: 'Merge request - RHAI-8268, RHAI-8280',
+      }])
+    })
+
+    it('supports self-hosted instances and query strings', () => {
+      const links = [
+        { object: { url: 'https://gitlab.example.com/group/project/-/merge_requests/12?view=parallel' } },
+      ]
+      expect(extractMergeRequests(links)).toEqual([{
+        iid: 12,
+        url: 'https://gitlab.example.com/group/project/-/merge_requests/12?view=parallel',
+        title: '',
+      }])
+    })
+
+    it('rejects non-http(s) schemes that would be unsafe as links', () => {
+      const links = [
+        { object: { url: 'javascript:void(0)//-/merge_requests/7' } },
+        { object: { url: 'data:text/html,<script>alert(1)</script>/-/merge_requests/8' } },
+        { object: { url: 'https://gitlab.com/g/p/-/merge_requests/9' } },
+      ]
+      expect(extractMergeRequests(links)).toEqual([{
+        iid: 9,
+        url: 'https://gitlab.com/g/p/-/merge_requests/9',
+        title: '',
+      }])
+    })
+
+    it('deduplicates repeated links', () => {
+      const url = 'https://gitlab.com/g/p/-/merge_requests/7'
+      expect(extractMergeRequests([{ object: { url } }, { object: { url } }])).toHaveLength(1)
+    })
+  })
+
   describe('buildReleaseTracker', () => {
     it('queries package epics in AIPCC and RHAI with the tracker exclusions', async () => {
       const jira = {
@@ -210,6 +271,54 @@ describe('package-tracker', () => {
       )
       expect(result.total).toBe(2)
       expect(result.packages.map(pkg => pkg.key)).toEqual(['AIPCC-123', 'RHAI-456'])
+    })
+
+    it('attaches the first merge request from Jira web links', async () => {
+      const mrUrl = 'https://gitlab.com/redhat/rhel-ai/wheels/fondue/-/merge_requests/1479'
+      const jira = {
+        fetchAllJqlResults: vi.fn()
+          .mockResolvedValueOnce([{ key: 'RHAI-8280', fields: { summary: 'wandb package' } }])
+          .mockResolvedValue([]),
+        jiraRequest: vi.fn().mockResolvedValue([
+          { object: { url: mrUrl, title: 'Merge request - RHAI-8280' } },
+          { object: { url: 'https://gitlab.com/redhat/rhel-ai/wheels/fondue/-/merge_requests/1480' } },
+          { object: { url: 'https://gitlab.com/redhat/rhel-ai/wheels/fondue/-/commit/deadbeef' } },
+        ]),
+      }
+
+      const result = await buildReleaseTracker(jira)
+
+      expect(jira.jiraRequest).toHaveBeenCalledWith('/rest/api/3/issue/RHAI-8280/remotelink')
+      expect(result.packages[0]).toMatchObject({ mr_url: mrUrl, mr_iid: 1479, mr_count: 2 })
+    })
+
+    it('sets MR fields to empty when the epic has no merge request web links', async () => {
+      const jira = {
+        fetchAllJqlResults: vi.fn()
+          .mockResolvedValueOnce([{ key: 'RHAI-15895', fields: { summary: 'ppi-python package' } }])
+          .mockResolvedValue([]),
+        jiraRequest: vi.fn().mockResolvedValue([
+          { object: { url: 'https://gitlab.com/redhat/rhel-ai/wheels/fondue/-/commit/deadbeef' } },
+        ]),
+      }
+
+      const result = await buildReleaseTracker(jira)
+
+      expect(result.packages[0]).toMatchObject({ mr_url: null, mr_iid: null, mr_count: 0 })
+    })
+
+    it('still builds the tracker when remote link lookup fails', async () => {
+      const jira = {
+        fetchAllJqlResults: vi.fn()
+          .mockResolvedValueOnce([{ key: 'RHAI-9999', fields: { summary: 'pkg' } }])
+          .mockResolvedValue([]),
+        jiraRequest: vi.fn().mockRejectedValue(new Error('403')),
+      }
+
+      const result = await buildReleaseTracker(jira)
+
+      expect(result.total).toBe(1)
+      expect(result.packages[0].mr_count).toBe(0)
     })
   })
 
