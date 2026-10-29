@@ -240,25 +240,99 @@
           <button
             type="button"
             class="inline-flex items-center gap-2 rounded-lg border border-gray-300 px-4 py-2 text-sm font-semibold text-gray-700 transition hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-primary-500 disabled:cursor-wait disabled:opacity-60 dark:border-gray-600 dark:text-gray-200 dark:hover:bg-gray-700"
-            :disabled="cockpitLoading"
+            :disabled="cockpitLoading || trendLoading"
             data-testid="tech-debt-refresh"
-            @click="loadIssues(true)"
+            @click="refreshCockpit"
           >
             <span aria-hidden="true">↻</span>
-            {{ cockpitLoading ? 'Refreshing…' : 'Refresh' }}
+            {{ cockpitLoading || trendLoading ? 'Refreshing…' : 'Refresh' }}
           </button>
         </div>
 
-        <div v-if="cockpitLoading && !cockpitData" class="grid gap-3 p-5 sm:grid-cols-2 lg:grid-cols-5" aria-label="Loading cockpit summary">
-          <div v-for="index in 5" :key="index" class="h-20 animate-pulse rounded-xl bg-gray-100 dark:bg-gray-700" />
+        <div v-if="cockpitLoading && !cockpitData" class="grid gap-3 p-5 sm:grid-cols-2 lg:grid-cols-4" aria-label="Loading cockpit summary">
+          <div v-for="index in 7" :key="index" class="h-20 animate-pulse rounded-xl bg-gray-100 dark:bg-gray-700" />
         </div>
-        <div v-else class="grid gap-px bg-gray-200 sm:grid-cols-2 lg:grid-cols-5 dark:bg-gray-700" data-testid="tech-debt-summary">
+        <div v-else class="grid gap-px bg-gray-200 sm:grid-cols-2 lg:grid-cols-4 dark:bg-gray-700" data-testid="tech-debt-summary">
           <div v-for="stat in summaryStats" :key="stat.label" class="bg-white px-5 py-4 dark:bg-gray-800">
             <p class="text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">{{ stat.label }}</p>
             <p class="mt-1 text-2xl font-bold" :class="stat.color">{{ stat.value }}</p>
           </div>
         </div>
       </div>
+
+      <section class="overflow-hidden rounded-2xl border border-gray-200 bg-gray-50/70 shadow-sm dark:border-gray-700 dark:bg-gray-900/30" aria-labelledby="tech-debt-flow-heading" data-testid="tech-debt-trends">
+        <header class="border-b border-gray-200 bg-white px-5 py-4 dark:border-gray-700 dark:bg-gray-800">
+          <div class="flex flex-wrap items-start justify-between gap-3">
+            <div>
+              <h3 id="tech-debt-flow-heading" class="text-base font-bold text-gray-900 dark:text-gray-100">Received vs. closed tech debt</h3>
+              <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                Current UTC month plus the previous five calendar months, grouped by component.
+              </p>
+              <p v-if="trendData?.generatedAt" class="mt-1 text-xs text-gray-400 dark:text-gray-500" data-testid="tech-debt-trend-generated-at">
+                Snapshot generated {{ formatTimestamp(trendData.generatedAt) }}
+              </p>
+            </div>
+            <div class="inline-flex rounded-lg bg-gray-100 p-1 dark:bg-gray-700" aria-label="Trend chart view" data-testid="tech-debt-trend-view-toggle">
+              <button
+                type="button"
+                class="rounded-md px-3 py-1.5 text-xs font-semibold transition focus:outline-none focus:ring-2 focus:ring-primary-500"
+                :class="trendViewMode === 'volume' ? 'bg-white text-primary-700 shadow-sm dark:bg-gray-800 dark:text-primary-300' : 'text-gray-600 hover:text-gray-900 dark:text-gray-300 dark:hover:text-white'"
+                :aria-pressed="trendViewMode === 'volume'"
+                data-testid="tech-debt-trend-volume-view"
+                @click="trendViewMode = 'volume'"
+              >
+                Received vs. Closed
+              </button>
+              <button
+                type="button"
+                class="rounded-md px-3 py-1.5 text-xs font-semibold transition focus:outline-none focus:ring-2 focus:ring-primary-500"
+                :class="trendViewMode === 'issue-types' ? 'bg-white text-primary-700 shadow-sm dark:bg-gray-800 dark:text-primary-300' : 'text-gray-600 hover:text-gray-900 dark:text-gray-300 dark:hover:text-white'"
+                :aria-pressed="trendViewMode === 'issue-types'"
+                data-testid="tech-debt-trend-issue-types-view"
+                @click="trendViewMode = 'issue-types'"
+              >
+                Issue types
+              </button>
+            </div>
+          </div>
+          <div class="mt-3 flex items-center gap-4 text-xs font-semibold text-gray-600 dark:text-gray-300" aria-label="Issue state legend">
+            <template v-if="trendViewMode === 'volume'">
+              <span class="inline-flex items-center gap-1.5"><span class="w-5 border-t-[3px] border-primary-600" />Received</span>
+              <span class="inline-flex items-center gap-1.5"><span class="w-5 border-t-[3px] border-dashed border-emerald-600" />Closed</span>
+            </template>
+            <template v-else>
+              <span class="inline-flex items-center gap-1.5"><span class="h-3 w-3 rounded-sm bg-primary-600" />Received</span>
+              <span class="inline-flex items-center gap-1.5"><span class="h-3 w-3 rounded-sm border border-primary-600 bg-primary-200" />Closed</span>
+            </template>
+          </div>
+          <div v-if="trendViewMode === 'issue-types' && trendData?.categories?.length" class="mt-3 flex flex-wrap gap-x-4 gap-y-2" aria-label="Issue category legend">
+            <span v-for="category in trendData.categories" :key="category.code" class="inline-flex items-center gap-1.5 text-xs text-gray-600 dark:text-gray-300">
+              <span class="h-2.5 w-2.5 rounded-full" :style="{ backgroundColor: category.color }" />
+              {{ category.label }}
+            </span>
+          </div>
+        </header>
+
+        <div v-if="trendData?.warning" class="border-b border-amber-200 bg-amber-50 px-5 py-3 text-sm text-amber-800 dark:border-amber-800 dark:bg-amber-950/30 dark:text-amber-200" role="status" data-testid="tech-debt-trend-stale-warning">
+          {{ trendData.warning }}
+        </div>
+        <div v-if="trendError" class="flex flex-wrap items-center justify-between gap-3 border-b border-amber-200 bg-amber-50 px-5 py-3 text-sm text-amber-800 dark:border-amber-800 dark:bg-amber-950/30 dark:text-amber-200" role="status" data-testid="tech-debt-trend-error">
+          <span>Historical flow data is not available yet. The live priority queue remains available.</span>
+          <button type="button" class="rounded-lg border border-amber-300 px-3 py-1.5 font-semibold hover:bg-amber-100 dark:border-amber-700 dark:hover:bg-amber-900/40" @click="loadTrends(false)">Retry</button>
+        </div>
+        <div v-if="trendLoading && !trendData" class="grid gap-4 p-5 lg:grid-cols-2" aria-label="Loading historical tech debt trends">
+          <div v-for="index in selectedComponents.length" :key="index" class="h-72 animate-pulse rounded-xl bg-gray-200 dark:bg-gray-700" />
+        </div>
+        <div v-else-if="trendData" class="grid gap-4 p-5 lg:grid-cols-2">
+          <TechDebtFlowChart
+            v-for="panel in trendData.components"
+            :key="panel.component"
+            :panel="panel"
+            :categories="trendData.categories"
+            :show-issue-types="trendViewMode === 'issue-types'"
+          />
+        </div>
+      </section>
 
       <div v-if="cockpitLoading && !cockpitData" class="grid gap-6 xl:grid-cols-2" data-testid="tech-debt-loading">
         <div v-for="pane in 2" :key="pane" class="space-y-3 rounded-2xl border border-gray-200 bg-gray-50 p-4 dark:border-gray-700 dark:bg-gray-900/40">
@@ -313,12 +387,16 @@
 <script setup>
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { apiRequest } from '@shared/client/services/api'
+import TechDebtFlowChart from '../components/TechDebtFlowChart.vue'
 import TechDebtIssueCard from '../components/TechDebtIssueCard.vue'
 import TechDebtScoringRubricModal from '../components/TechDebtScoringRubricModal.vue'
 import {
   readTechDebtIssueCache,
+  readTechDebtTrendCache,
   techDebtIssueCacheKey,
-  writeTechDebtIssueCache
+  techDebtTrendCacheKey,
+  writeTechDebtIssueCache,
+  writeTechDebtTrendCache
 } from '../services/techDebtIssueCache'
 
 const PAGE_SIZE = 25
@@ -335,9 +413,14 @@ const componentsError = ref('')
 const cockpitData = ref(null)
 const cockpitLoading = ref(false)
 const cockpitError = ref('')
+const trendData = ref(null)
+const trendLoading = ref(false)
+const trendError = ref('')
+const trendViewMode = ref('volume')
 const visibleInFlight = ref(PAGE_SIZE)
 const visibleBacklog = ref(PAGE_SIZE)
 let issueRequestId = 0
+let trendRequestId = 0
 
 const componentFilterLabel = computed(() => {
   if (componentsLoading.value) return 'Loading components…'
@@ -375,7 +458,9 @@ const summaryStats = computed(function () {
     { label: 'In flight', value: counts.inFlight || 0, color: 'text-blue-700 dark:text-blue-300' },
     { label: 'Backlog', value: counts.backlog || 0, color: 'text-gray-700 dark:text-gray-200' },
     { label: 'Bugs', value: counts.bugs || 0, color: 'text-red-700 dark:text-red-300' },
-    { label: 'Vulnerabilities', value: counts.vulnerabilities || 0, color: 'text-fuchsia-700 dark:text-fuchsia-300' }
+    { label: 'Vulnerabilities', value: counts.vulnerabilities || 0, color: 'text-fuchsia-700 dark:text-fuchsia-300' },
+    { label: 'Received · 6 months', value: trendData.value ? trendData.value.totals?.received || 0 : '—', color: 'text-primary-700 dark:text-primary-300' },
+    { label: 'Resolved · 6 months', value: trendData.value ? trendData.value.totals?.resolved || 0 : '—', color: 'text-emerald-700 dark:text-emerald-300' }
   ]
 })
 const visibleInFlightIssues = computed(() => (cockpitData.value?.inFlight || []).slice(0, visibleInFlight.value))
@@ -428,6 +513,13 @@ function issuePath(refresh) {
   if (selectedTriage.value) params.set('triage', selectedTriage.value)
   if (refresh) params.set('refresh', 'true')
   return '/modules/releases/tech-debt/issues?' + params.toString()
+}
+
+function trendPath() {
+  const params = new URLSearchParams()
+  for (const component of selectedComponents.value) params.append('component', component)
+  if (selectedIssueType.value) params.set('issueType', selectedIssueType.value)
+  return '/modules/releases/tech-debt/trends?' + params.toString()
 }
 
 function normalizeCockpitResponse(response, clientCacheStatus) {
@@ -488,6 +580,48 @@ async function loadIssues(refresh) {
   }
 }
 
+async function loadTrends(refresh) {
+  const requestId = ++trendRequestId
+  if (!selectedComponents.value.length) {
+    trendData.value = null
+    trendError.value = ''
+    trendLoading.value = false
+    return
+  }
+
+  const cacheKey = techDebtTrendCacheKey(selectedComponents.value, selectedIssueType.value)
+  const cached = refresh ? null : readTechDebtTrendCache(cacheKey)
+  if (cached) {
+    trendData.value = cached.data
+    if (cached.fresh) {
+      trendError.value = ''
+      trendLoading.value = false
+      return
+    }
+  }
+
+  trendLoading.value = true
+  trendError.value = ''
+  if (!cached && !refresh) trendData.value = null
+  try {
+    const response = await apiRequest(trendPath())
+    writeTechDebtTrendCache(cacheKey, response)
+    if (requestId !== trendRequestId) return
+    trendData.value = response
+  } catch (err) {
+    if (requestId !== trendRequestId) return
+    trendError.value = err && err.message ? err.message : 'Historical tech debt flow is unavailable.'
+    if (!cached) trendData.value = null
+  } finally {
+    if (requestId === trendRequestId) trendLoading.value = false
+  }
+}
+
+function refreshCockpit() {
+  loadIssues(true)
+  loadTrends(true)
+}
+
 async function loadComponents() {
   componentsLoading.value = true
   componentsError.value = ''
@@ -517,6 +651,10 @@ watch([selectedComponents, selectedIssueType, selectedTriage], function () {
     return
   }
   loadIssues(false)
+})
+
+watch([selectedComponents, selectedIssueType], function () {
+  loadTrends(false)
 })
 
 onMounted(function () {

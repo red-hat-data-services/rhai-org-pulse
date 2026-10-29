@@ -6,6 +6,7 @@ function makeRouter() {
   const routes = {}
   return {
     get: vi.fn((path, ...handlers) => { routes[path] = handlers }),
+    post: vi.fn((path, ...handlers) => { routes[path] = handlers }),
     _routes: routes
   }
 }
@@ -19,16 +20,19 @@ function makeResponse() {
   }
 }
 
-function register(jira) {
+function register(jira, storage = {}) {
   const router = makeRouter()
   registerTechDebtRoutes(router, {
     jira,
+    storage,
     requireAuth: function (req, res, next) { next() },
     requireScope: function () { return function (req, res, next) { next() } }
   })
   return {
     components: router._routes['/components'].at(-1),
-    issues: router._routes['/issues'].at(-1)
+    issues: router._routes['/issues'].at(-1),
+    trends: router._routes['/trends'].at(-1),
+    uploadTrends: router._routes['/trends/bulk'].at(-1)
   }
 }
 
@@ -109,6 +113,74 @@ describe('Tech Debt Prioritization routes', function () {
     expect(res.statusCode).toBe(400)
     expect(res.body.error).toContain('component')
     expect(jira.jiraRequest).not.toHaveBeenCalled()
+  })
+
+  it('serves filtered six-month trend data from storage', async function () {
+    const snapshot = require('../../../server/tech-debt/trends').buildTrendSnapshot([
+      rawIssue('RHAI-1', {
+        fields: {
+          components: [{ name: 'Model Serving' }, { name: 'Pipelines' }],
+          created: '2026-09-01T00:00:00.000Z',
+          resolutiondate: '2026-10-01T00:00:00.000Z'
+        }
+      }),
+      rawIssue('RHAI-2', {
+        fields: {
+          issuetype: { name: 'Vulnerability' },
+          components: [{ name: 'Model Serving' }],
+          created: '2026-10-01T00:00:00.000Z'
+        }
+      })
+    ], new Set(), new Date('2026-10-29T06:00:00.000Z'))
+    const storage = { readFromStorage: vi.fn(async function () { return snapshot }) }
+    const res = makeResponse()
+
+    await register(null, storage).trends({ query: { component: 'Model Serving', issueType: 'Bug' } }, res)
+
+    expect(res.statusCode).toBe(200)
+    expect(res.body.totals).toEqual({ received: 1, resolved: 1 })
+    expect(res.body.categories.every(function (category) { return category.issueType === 'Bug' })).toBe(true)
+  })
+
+  it('returns 404 when no historical trend snapshot exists', async function () {
+    const storage = { readFromStorage: vi.fn(async function () { return null }) }
+    const res = makeResponse()
+
+    await register(null, storage).trends({ query: { component: 'Model Serving' } }, res)
+
+    expect(res.statusCode).toBe(404)
+    expect(res.body.error).toContain('No tech debt trend snapshot')
+  })
+
+  it('validates a trend snapshot before replacing stored data', async function () {
+    const writeToStorage = vi.fn()
+    const storage = { writeToStorage }
+    const invalidResponse = makeResponse()
+    await register(null, storage).uploadTrends({ body: { schemaVersion: 1 } }, invalidResponse)
+    expect(invalidResponse.statusCode).toBe(400)
+    expect(writeToStorage).not.toHaveBeenCalled()
+
+    const snapshot = require('../../../server/tech-debt/trends').buildTrendSnapshot(
+      [rawIssue('RHAI-1', { fields: { created: '2026-10-01T00:00:00.000Z' } })],
+      new Set(),
+      new Date('2026-10-29T06:00:00.000Z')
+    )
+    const validResponse = makeResponse()
+    await register(null, storage).uploadTrends({ body: snapshot }, validResponse)
+    expect(validResponse.statusCode).toBe(200)
+    expect(writeToStorage).toHaveBeenCalledWith('releases/tech-debt/trends.json', expect.objectContaining({ issueCount: 1 }))
+  })
+
+  it('rejects oversized trend uploads before writing storage', async function () {
+    const writeToStorage = vi.fn()
+    const res = makeResponse()
+
+    await register(null, { writeToStorage }).uploadTrends({
+      body: { padding: 'x'.repeat(15 * 1024 * 1024) }
+    }, res)
+
+    expect(res.statusCode).toBe(413)
+    expect(writeToStorage).not.toHaveBeenCalled()
   })
 
   it('queries a component-scoped five-project open Bug and Vulnerability cohort', async function () {

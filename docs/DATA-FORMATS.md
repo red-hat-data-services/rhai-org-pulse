@@ -1268,6 +1268,49 @@ earliest Jira Due Date, highest CVSS, oldest creation date, and Jira key.
 
 ---
 
+## Releases — Tech Debt Six-Month Trends (`releases/tech-debt/trends.json`)
+
+The scheduled Tech Debt collector uploads this compact Jira event snapshot to
+`POST /api/modules/releases/tech-debt/trends/bulk`. The dashboard reads filtered
+aggregates from `GET /api/modules/releases/tech-debt/trends` using repeated
+`component` parameters and an optional `issueType=Bug|Vulnerability` parameter.
+The representative fixture is `fixtures/releases/tech-debt/trends.json`.
+
+```json
+{
+  "schemaVersion": 1,
+  "generatedAt": "2026-10-29T06:00:00.000Z",
+  "window": {
+    "months": ["2026-05", "2026-06", "2026-07", "2026-08", "2026-09", "2026-10"],
+    "startDate": "2026-05-01",
+    "endExclusive": "2026-11-01",
+    "timezone": "UTC"
+  },
+  "projects": ["RHAI", "RHAIENG", "RHOAIENG", "INFERENG", "AIPCC"],
+  "issueCount": 1,
+  "events": [
+    {
+      "key": "RHAIENG-100",
+      "issueType": "Bug",
+      "category": "customer-linked",
+      "components": ["AI Core Platform", "Model Serving"],
+      "createdMonth": "2026-08",
+      "resolvedMonth": "2026-10"
+    }
+  ]
+}
+```
+
+`createdMonth` is derived from Jira `created`; `resolvedMonth` is derived from
+`resolutiondate`. Either may be null, but at least one must fall within the six
+calendar-month window. Bug categories use the existing primary Bug classifier;
+Vulnerability issues use `vulnerability`. The API counts a multi-component
+issue in every matching component panel while deduplicating the overall
+Received and Resolved totals by Jira key. Snapshots older than 48 hours are
+served with a warning.
+
+---
+
 ## Releases — Delivery Config (`data/releases/delivery/config.json`)
 
 Admin-configurable settings for the Releases module delivery domain (formerly Release Analysis).

@@ -5,6 +5,15 @@ vi.mock('@shared/client/services/api', function () {
   return { apiRequest: vi.fn() }
 })
 
+vi.mock('../../../client/plan/components/TechDebtFlowChart.vue', function () {
+  return {
+    default: {
+      props: ['panel', 'categories', 'showIssueTypes'],
+      template: '<div data-testid="tech-debt-trend-chart-stub">{{ panel.component }} · {{ panel.totals.received }} received · {{ panel.totals.resolved }} closed · {{ showIssueTypes ? "issue types" : "totals" }}</div>'
+    }
+  }
+})
+
 import { apiRequest } from '@shared/client/services/api'
 import TechDebtPrioritizationView from '../../../client/plan/views/TechDebtPrioritizationView.vue'
 import {
@@ -117,9 +126,37 @@ function cockpitResponse(overrides = {}) {
   }
 }
 
+function trendResponse(overrides = {}) {
+  return {
+    generatedAt: '2026-10-29T06:00:00.000Z',
+    window: {
+      months: ['2026-05', '2026-06', '2026-07', '2026-08', '2026-09', '2026-10'],
+      startDate: '2026-05-01',
+      endExclusive: '2026-11-01',
+      timezone: 'UTC'
+    },
+    selectedComponents: ['AI Gateway'],
+    selectedIssueType: null,
+    categories: [
+      { code: 'vulnerability', label: 'CVE / Vulnerability', issueType: 'Vulnerability', color: '#a21caf' },
+      { code: 'component-team', label: 'Component-team/unclassified', issueType: 'Bug', color: '#64748b' }
+    ],
+    totals: { received: 8, resolved: 5 },
+    components: [{
+      component: 'AI Gateway',
+      totals: { received: 8, resolved: 5 },
+      months: []
+    }],
+    stale: false,
+    warning: null,
+    ...overrides
+  }
+}
+
 function mockSuccessfulApi(response = cockpitResponse()) {
   apiRequest.mockImplementation(function (path) {
     if (path === '/modules/releases/tech-debt/components') return Promise.resolve(componentsResponse)
+    if (path.startsWith('/modules/releases/tech-debt/trends?')) return Promise.resolve(trendResponse())
     return Promise.resolve(response)
   })
 }
@@ -203,7 +240,8 @@ describe('TechDebtPrioritizationView', function () {
     await wrapper.get('input[aria-label="Model Serving"]').setValue(true)
     await flushPromises()
 
-    expect(apiRequest).toHaveBeenLastCalledWith('/modules/releases/tech-debt/issues?component=AI+Gateway&component=Model+Serving')
+    expect(apiRequest).toHaveBeenCalledWith('/modules/releases/tech-debt/issues?component=AI+Gateway&component=Model+Serving')
+    expect(apiRequest).toHaveBeenCalledWith('/modules/releases/tech-debt/trends?component=AI+Gateway&component=Model+Serving')
     expect(wrapper.get('[data-testid="tech-debt-in-flight-pane"]').text()).toContain('RHAI-10')
     expect(wrapper.get('[data-testid="tech-debt-backlog-pane"]').text()).toContain('RHAI-20')
     expect(wrapper.get('[data-testid="tech-debt-backlog-pane"]').text()).toContain('1')
@@ -215,6 +253,7 @@ describe('TechDebtPrioritizationView', function () {
   it('instantly restores a previously loaded component selection from the session cache', async function () {
     apiRequest.mockImplementation(function (path) {
       if (path === '/modules/releases/tech-debt/components') return Promise.resolve(componentsResponse)
+      if (path.startsWith('/modules/releases/tech-debt/trends?')) return Promise.resolve(trendResponse())
       const modelServing = path.includes('component=Model+Serving')
       const component = modelServing ? 'Model Serving' : 'AI Gateway'
       const key = modelServing ? 'RHAI-MODEL-1' : 'RHAI-GATEWAY-1'
@@ -254,6 +293,7 @@ describe('TechDebtPrioritizationView', function () {
     let resolveIssues
     apiRequest.mockImplementation(function (path) {
       if (path === '/modules/releases/tech-debt/components') return Promise.resolve(componentsResponse)
+      if (path.startsWith('/modules/releases/tech-debt/trends?')) return Promise.resolve(trendResponse())
       return new Promise(function (resolve) { resolveIssues = resolve })
     })
     writeTechDebtIssueCache(
@@ -285,7 +325,8 @@ describe('TechDebtPrioritizationView', function () {
     await wrapper.get('[data-testid="tech-debt-issue-type-filter"]').setValue('Vulnerability')
     await flushPromises()
 
-    expect(apiRequest).toHaveBeenLastCalledWith('/modules/releases/tech-debt/issues?component=AI+Gateway&issueType=Vulnerability')
+    expect(apiRequest).toHaveBeenCalledWith('/modules/releases/tech-debt/issues?component=AI+Gateway&issueType=Vulnerability')
+    expect(apiRequest).toHaveBeenCalledWith('/modules/releases/tech-debt/trends?component=AI+Gateway&issueType=Vulnerability')
     expect(wrapper.get('[data-testid="tech-debt-selected-filters"]').text()).toContain('Issue type: CVE (Vulnerability)')
   })
 
@@ -298,14 +339,14 @@ describe('TechDebtPrioritizationView', function () {
     await wrapper.get('[data-testid="tech-debt-triage-filter"]').setValue('exceptions')
     await flushPromises()
 
-    expect(apiRequest).toHaveBeenLastCalledWith('/modules/releases/tech-debt/issues?component=AI+Gateway&triage=exceptions')
+    expect(apiRequest).toHaveBeenCalledWith('/modules/releases/tech-debt/issues?component=AI+Gateway&triage=exceptions')
     expect(wrapper.get('[data-testid="tech-debt-selected-filters"]').text()).toContain('Triage: Needs Triage / Exceptions')
 
     await wrapper.get('[data-testid="tech-debt-issue-type-filter"]').setValue('Bug')
     await flushPromises()
 
     expect(wrapper.get('[data-testid="tech-debt-triage-filter"]').attributes('disabled')).toBeDefined()
-    expect(apiRequest).toHaveBeenLastCalledWith('/modules/releases/tech-debt/issues?component=AI+Gateway&issueType=Bug')
+    expect(apiRequest).toHaveBeenCalledWith('/modules/releases/tech-debt/issues?component=AI+Gateway&issueType=Bug')
   })
 
   it('shows one mixed, globally ranked queue with an auditable CVE score breakdown', async function () {
@@ -383,6 +424,60 @@ describe('TechDebtPrioritizationView', function () {
     expect(wrapper.get('[data-testid="tech-debt-fetched-at"]').text()).toContain('stale Jira data')
   })
 
+  it('shows six-month Received and Resolved totals with component trend panels', async function () {
+    mockSuccessfulApi()
+    const wrapper = mount(TechDebtPrioritizationView)
+    await flushPromises()
+    await selectComponent(wrapper)
+
+    const summary = wrapper.get('[data-testid="tech-debt-summary"]').text()
+    expect(summary).toContain('Received · 6 months')
+    expect(summary).toContain('8')
+    expect(summary).toContain('Resolved · 6 months')
+    expect(summary).toContain('5')
+    expect(wrapper.get('[data-testid="tech-debt-trends"]').text()).toContain('Received vs. closed tech debt')
+    expect(wrapper.get('[data-testid="tech-debt-trend-chart-stub"]').text()).toContain('AI Gateway · 8 received · 5 closed · totals')
+    expect(wrapper.find('[aria-label="Issue category legend"]').exists()).toBe(false)
+
+    await wrapper.get('[data-testid="tech-debt-trend-issue-types-view"]').trigger('click')
+
+    expect(wrapper.get('[data-testid="tech-debt-trend-chart-stub"]').text()).toContain('issue types')
+    expect(wrapper.get('[aria-label="Issue category legend"]').text()).toContain('CVE / Vulnerability')
+  })
+
+  it('keeps historical trends independent of the triage filter', async function () {
+    mockSuccessfulApi()
+    const wrapper = mount(TechDebtPrioritizationView)
+    await flushPromises()
+    await selectComponent(wrapper)
+    const trendCallsBefore = apiRequest.mock.calls.filter(function (call) {
+      return call[0].startsWith('/modules/releases/tech-debt/trends?')
+    }).length
+
+    await wrapper.get('[data-testid="tech-debt-triage-filter"]').setValue('exceptions')
+    await flushPromises()
+
+    const trendCallsAfter = apiRequest.mock.calls.filter(function (call) {
+      return call[0].startsWith('/modules/releases/tech-debt/trends?')
+    }).length
+    expect(trendCallsAfter).toBe(trendCallsBefore)
+  })
+
+  it('keeps the live cockpit available when the trend snapshot is unavailable', async function () {
+    apiRequest.mockImplementation(function (path) {
+      if (path === '/modules/releases/tech-debt/components') return Promise.resolve(componentsResponse)
+      if (path.startsWith('/modules/releases/tech-debt/trends?')) return Promise.reject(new Error('HTTP 404'))
+      return Promise.resolve(cockpitResponse())
+    })
+    const wrapper = mount(TechDebtPrioritizationView)
+    await flushPromises()
+    await selectComponent(wrapper)
+
+    expect(wrapper.get('[data-testid="tech-debt-trend-error"]').text()).toContain('live priority queue remains available')
+    expect(wrapper.get('[data-testid="tech-debt-backlog-pane"]').text()).toContain('RHAI-20')
+    expect(wrapper.get('[data-testid="tech-debt-summary"]').text()).toContain('—')
+  })
+
   it('shows 25 cards initially and makes every issue accessible with Show more', async function () {
     const backlog = Array.from({ length: 26 }, function (_, index) {
       return issue('RHAI-' + (index + 1), { rank: index + 1 })
@@ -410,13 +505,15 @@ describe('TechDebtPrioritizationView', function () {
     await wrapper.get('[data-testid="tech-debt-refresh"]').trigger('click')
     await flushPromises()
 
-    expect(apiRequest).toHaveBeenLastCalledWith('/modules/releases/tech-debt/issues?component=AI+Gateway&refresh=true')
+    expect(apiRequest).toHaveBeenCalledWith('/modules/releases/tech-debt/issues?component=AI+Gateway&refresh=true')
+    expect(apiRequest).toHaveBeenCalledWith('/modules/releases/tech-debt/trends?component=AI+Gateway')
   })
 
   it('shows loading, retryable error, and empty-pane states', async function () {
     let rejectIssues
     apiRequest.mockImplementation(function (path) {
       if (path === '/modules/releases/tech-debt/components') return Promise.resolve(componentsResponse)
+      if (path.startsWith('/modules/releases/tech-debt/trends?')) return Promise.resolve(trendResponse())
       return new Promise(function (resolve, reject) { rejectIssues = reject })
     })
     const wrapper = mount(TechDebtPrioritizationView)
@@ -432,6 +529,7 @@ describe('TechDebtPrioritizationView', function () {
 
     apiRequest.mockImplementation(function (path) {
       if (path === '/modules/releases/tech-debt/components') return Promise.resolve(componentsResponse)
+      if (path.startsWith('/modules/releases/tech-debt/trends?')) return Promise.resolve(trendResponse())
       return Promise.resolve(cockpitResponse({
         counts: { total: 0, inFlight: 0, backlog: 0, bugs: 0, vulnerabilities: 0 },
         inFlight: [],
