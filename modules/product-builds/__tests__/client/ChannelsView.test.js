@@ -31,10 +31,10 @@ function summary(overrides) {
 }
 
 const CHANNELS = [
-  summary({ name: 'cuda13.0-torch2.11-ubi9', accelerator: 'cuda', accelerator_version: '13.0', torch_version: '2.11', maturity: 'stable', compatible_releases: ['rhoai-3.5', 'rhoai-3.6'] }),
-  summary({ name: 'cuda13.0-torch2.13-ubi9', accelerator: 'cuda', accelerator_version: '13.0', torch_version: '2.13', maturity: 'rolling', compatible_releases: ['rhoai-3.7'] }),
-  summary({ name: 'rocm7.14-torch2.12-ubi9', accelerator: 'rocm', accelerator_version: '7.14', torch_version: '2.12', maturity: 'rolling' }),
-  summary({ name: 'cpu-notorch-ubi9', accelerator: 'cpu', accelerator_version: '', torch_version: null, maturity: 'stable', compatible_releases: ['rhoai-3.6'], wheel_kinds: undefined }),
+  summary({ name: 'cuda13.0-torch2.11-ubi9', accelerator: 'cuda', accelerator_version: '13.0', torch_version: '2.11', compatible_releases: ['rhoai-3.5', 'rhoai-3.6'] }),
+  summary({ name: 'cuda13.0-torch2.13-ubi9', accelerator: 'cuda', accelerator_version: '13.0', torch_version: '2.13', compatible_releases: ['rhoai-3.7'] }),
+  summary({ name: 'rocm7.14-torch2.12-ubi9', accelerator: 'rocm', accelerator_version: '7.14', torch_version: '2.12' }),
+  summary({ name: 'cpu-notorch-ubi9', accelerator: 'cpu', accelerator_version: '', torch_version: null, compatible_releases: ['rhoai-3.6'], wheel_kinds: undefined }),
 ]
 
 function detail(name) {
@@ -131,12 +131,31 @@ describe('ChannelsView', () => {
     wrapper.unmount()
   })
 
-  it('shows stable channels first in the table', async () => {
+  it('orders the table by accelerator and newest torch', async () => {
     const { wrapper } = mountView()
     await flushPromises()
 
-    const maturities = wrapper.findAll('[data-testid="channel-row"]').map(r => r.text().includes('Stable') ? 'stable' : 'rolling')
-    expect(maturities).toEqual(['stable', 'stable', 'rolling', 'rolling'])
+    const names = wrapper.findAll('[data-testid="channel-row"] td:first-child button').map(b => b.text())
+    expect(names).toEqual([
+      'cuda13.0-torch2.13-ubi9',
+      'cuda13.0-torch2.11-ubi9',
+      'rocm7.14-torch2.12-ubi9',
+      'cpu-notorch-ubi9',
+    ])
+    wrapper.unmount()
+  })
+
+  it('tones matrix cards by whether a release adopted the channel', async () => {
+    const { wrapper } = mountView()
+    await flushPromises()
+
+    const adopted = wrapper.find('[data-channel="cuda13.0-torch2.11-ubi9"]').classes()
+    expect(adopted).toContain('bg-emerald-50')
+    expect(adopted).not.toContain('border-dashed')
+
+    const moving = wrapper.find('[data-channel="rocm7.14-torch2.12-ubi9"]').classes()
+    expect(moving).toContain('border-dashed')
+    expect(moving).toContain('border-amber-400')
     wrapper.unmount()
   })
 
@@ -144,11 +163,11 @@ describe('ChannelsView', () => {
     const { wrapper } = mountView()
     await flushPromises()
 
-    await wrapper.findAll('button').find(b => b.text() === 'Rolling').trigger('click')
+    await wrapper.find('input[aria-label="Search channels"]').setValue('rocm')
 
-    expect(wrapper.findAll('[data-testid="channel-row"]')).toHaveLength(2)
+    expect(wrapper.findAll('[data-testid="channel-row"]')).toHaveLength(1)
     expect(wrapper.find('[data-channel="cuda13.0-torch2.11-ubi9"]').classes()).toContain('opacity-30')
-    expect(wrapper.find('[data-channel="cuda13.0-torch2.13-ubi9"]').classes()).not.toContain('opacity-30')
+    expect(wrapper.find('[data-channel="rocm7.14-torch2.12-ubi9"]').classes()).not.toContain('opacity-30')
 
     await wrapper.find('input[aria-label="Search channels"]').setValue('no-such-channel')
     expect(wrapper.text()).toContain('No channels match these filters.')

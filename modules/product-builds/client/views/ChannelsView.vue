@@ -16,26 +16,22 @@ import PersistentSearchBar from '../components/PersistentSearchBar.vue'
 import ChannelMatrix from '../components/channels/ChannelMatrix.vue'
 import ChannelDrawer from '../components/channels/ChannelDrawer.vue'
 import ChannelName from '../components/channels/ChannelName.vue'
-import MaturityBadge from '../components/channels/MaturityBadge.vue'
 import ChannelFilterPill from '../components/channels/ChannelFilterPill.vue'
 
 const nav = inject('moduleNav')
 const { channels, source, asOf, loading, error, load } = useChannels()
 
 const query = ref('')
-const maturity = ref('')
 const release = ref('')
 const os = ref('')
 const selectedAccelerators = ref([])
 const selectedTorchVersions = ref([])
 const selectedOsVersions = ref([])
-const selectedMaturities = ref([])
 const sortField = ref('')
 const sortDirection = ref('asc')
 
 const TABLE_COLUMNS = [
   { field: 'name', label: 'Channel' },
-  { field: 'maturity', label: 'Maturity' },
   { field: 'accelerator', label: 'Accelerator' },
   { field: 'torch_version', label: 'Torch' },
   { field: 'rhel_version', label: 'OS' },
@@ -43,13 +39,6 @@ const TABLE_COLUMNS = [
   { field: 'latest_drop', label: 'Latest RHAIBI drop' },
   { field: 'wheel_count', label: 'Wheels' },
 ]
-
-const MATURITY_OPTIONS = [
-  { value: '', label: 'All' },
-  { value: 'stable', label: 'Stable' },
-  { value: 'rolling', label: 'Rolling' },
-]
-const TABLE_MATURITY_OPTIONS = MATURITY_OPTIONS.filter(option => option.value)
 
 const selectedName = computed(() => nav.params.value?.channel || null)
 
@@ -60,31 +49,24 @@ const sortedChannels = computed(() => sortChannels(channels.value, {
 const filterOptions = computed(() => collectFilterOptions(channels.value))
 const visibleChannels = computed(() => filterChannels(sortedChannels.value, {
   query: query.value,
-  maturity: maturity.value,
   release: release.value,
   os: os.value,
 }))
 const visibleNames = computed(() => new Set(visibleChannels.value.map(c => c.name)))
-const hasFilters = computed(() => !!(query.value || maturity.value || release.value || os.value))
+const hasFilters = computed(() => !!(query.value || release.value || os.value))
 const tableChannels = computed(() => filterChannels(visibleChannels.value, {
   accelerators: selectedAccelerators.value,
   torchVersions: selectedTorchVersions.value,
   osVersions: selectedOsVersions.value,
-  maturities: selectedMaturities.value,
 }))
 const hasTableFilters = computed(() => !!(
-  selectedAccelerators.value.length || selectedTorchVersions.value.length || selectedOsVersions.value.length || selectedMaturities.value.length
+  selectedAccelerators.value.length || selectedTorchVersions.value.length || selectedOsVersions.value.length
 ))
 const torchOptions = computed(() => filterOptions.value.torchVersions.map(version => ({
   value: version,
   label: version === NO_TORCH ? 'No torch' : version,
 })))
 const osOptions = computed(() => filterOptions.value.osVersions.map(version => ({ value: version, label: osLabel(version) })))
-
-const counts = computed(() => {
-  const stable = channels.value.filter(c => c.maturity === 'stable').length
-  return { stable, rolling: channels.value.length - stable }
-})
 
 // Drop filter values that no longer exist after a reload.
 watch(filterOptions, (opts) => {
@@ -107,7 +89,6 @@ function closeChannel() {
 
 function clearFilters() {
   query.value = ''
-  maturity.value = ''
   release.value = ''
   os.value = ''
   clearTableFilters()
@@ -117,7 +98,6 @@ function clearTableFilters() {
   selectedAccelerators.value = []
   selectedTorchVersions.value = []
   selectedOsVersions.value = []
-  selectedMaturities.value = []
 }
 
 function toggleSort(field) {
@@ -154,7 +134,6 @@ function viewDrop(drop) {
         <h1 class="text-xl font-bold text-gray-900 dark:text-gray-100">Channels</h1>
         <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
           Find the package channel that matches your accelerator, torch and OS.
-          Stable channels keep stack versions fixed; rolling channels pick up new content continuously.
         </p>
       </div>
       <PersistentSearchBar />
@@ -196,23 +175,11 @@ function viewDrop(drop) {
     <template v-else>
       <!-- Matrix -->
       <section class="rounded-xl border border-gray-100 bg-white p-5 shadow-sm dark:border-gray-700/60 dark:bg-gray-800">
-        <div class="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
-          <div>
-            <h2 class="text-base font-semibold text-gray-900 dark:text-gray-100">Accelerator and torch coverage</h2>
-            <p class="mt-0.5 text-xs text-gray-500 dark:text-gray-400">
-              Rows are accelerator stacks, columns are torch versions. Pick a channel to see its RHAIBI drops and wheels.
-            </p>
-          </div>
-          <div class="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-gray-600 dark:text-gray-400" aria-label="Legend">
-            <span class="inline-flex items-center gap-1.5">
-              <span class="h-3.5 w-5 rounded border border-emerald-300 bg-emerald-50 dark:border-emerald-700 dark:bg-emerald-900/30" aria-hidden="true"></span>
-              Stable <span class="font-semibold tabular-nums text-gray-900 dark:text-gray-100">{{ counts.stable }}</span>
-            </span>
-            <span class="inline-flex items-center gap-1.5">
-              <span class="h-3.5 w-5 rounded border border-dashed border-amber-400 dark:border-amber-600" aria-hidden="true"></span>
-              Rolling <span class="font-semibold tabular-nums text-gray-900 dark:text-gray-100">{{ counts.rolling }}</span>
-            </span>
-          </div>
+        <div>
+          <h2 class="text-base font-semibold text-gray-900 dark:text-gray-100">Accelerator and torch coverage</h2>
+          <p class="mt-0.5 text-xs text-gray-500 dark:text-gray-400">
+            Rows are accelerator stacks, columns are torch versions. Pick a channel to see its RHAIBI drops and wheels.
+          </p>
         </div>
 
         <!-- Filters -->
@@ -226,19 +193,6 @@ function viewDrop(drop) {
               aria-label="Search channels"
               class="w-full rounded-lg border border-gray-300 bg-white py-1.5 pl-8 pr-3 text-sm text-gray-900 placeholder-gray-400 focus:border-primary-500 focus:ring-2 focus:ring-primary-500 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100 dark:placeholder-gray-500"
             />
-          </div>
-          <div class="inline-flex rounded-lg border border-gray-300 p-0.5 dark:border-gray-600" role="group" aria-label="Maturity">
-            <button
-              v-for="opt in MATURITY_OPTIONS"
-              :key="opt.value"
-              type="button"
-              class="rounded-md px-2.5 py-1 text-sm focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500"
-              :class="maturity === opt.value
-                ? 'bg-gray-900 text-white dark:bg-gray-100 dark:text-gray-900'
-                : 'text-gray-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700'"
-              :aria-pressed="maturity === opt.value"
-              @click="maturity = opt.value"
-            >{{ opt.label }}</button>
           </div>
           <select
             v-model="release"
@@ -294,12 +248,6 @@ function viewDrop(drop) {
               v-model="selectedOsVersions"
               label="OS"
               :options="osOptions"
-            />
-            <ChannelFilterPill
-              id="channel-maturity-filter"
-              v-model="selectedMaturities"
-              label="Maturity"
-              :options="TABLE_MATURITY_OPTIONS"
             />
             <span class="text-xs text-gray-500 dark:text-gray-400" role="status">
               {{ tableChannels.length }} of {{ visibleChannels.length }} channels
@@ -364,7 +312,6 @@ function viewDrop(drop) {
                     <ChannelName :channel="channel" />
                   </button>
                 </td>
-                <td class="px-3 py-2.5"><MaturityBadge :maturity="channel.maturity" /></td>
                 <td class="px-3 py-2.5 whitespace-nowrap">
                   <span class="inline-flex items-center gap-1.5">
                     <span class="h-2.5 w-1 rounded-full" :class="acceleratorMeta(channel.accelerator).rule" aria-hidden="true"></span>

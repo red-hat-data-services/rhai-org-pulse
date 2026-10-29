@@ -137,6 +137,75 @@ test.describe('Product Builds Module @product-builds', () => {
     expect(appErrors).toHaveLength(0);
   });
 
+  test('should open Base Images on the Channels tab and list channels', async ({ page }) => {
+    await page.route('**/api/modules/product-builds/products/base-images', route => route.fulfill({ json: {
+      key: 'base-images', product_name: 'Base Images', short_name: 'Base Images',
+    } }));
+    await page.route('**/api/modules/product-builds/drops?*', route => route.fulfill({ json: [] }));
+    await page.route('**/api/modules/product-builds/series?*', route => route.fulfill({ json: [] }));
+
+    await page.goto('/#/product-builds/base-images');
+    await page.waitForLoadState('networkidle');
+    await page.waitForTimeout(DEFAULT_PAGE_WAIT_TIME);
+
+    await expect(page.getByRole('button', { name: 'Channels', exact: true })).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Legacy', exact: true })).toBeVisible();
+    await expect(page.getByTestId('base-images-channels')).toBeVisible();
+
+    const rows = page.getByTestId('base-images-channel-row');
+    await expect(rows.first()).toBeVisible();
+    expect(await rows.count()).toBeGreaterThan(1);
+
+    await page.getByLabel('Search channels').fill('cuda13.0');
+    await expect(rows.first()).toContainText('cuda13.0');
+
+    // Opening a channel navigates to its own detail page rather than a drawer.
+    await rows.first().click();
+    await expect(page).toHaveURL(url => url.hash.includes('product-builds/channel-detail')
+      && url.hash.includes('channel='));
+    await expect(page.getByRole('button', { name: 'Back to Base Images', exact: true })).toBeVisible();
+    await expect(page.getByText('Package index', { exact: false })).toBeVisible();
+    await expect(page.getByTestId('channel-drawer')).toHaveCount(0);
+
+    // The back button returns to the Base Images view.
+    await page.getByRole('button', { name: 'Back to Base Images', exact: true }).click();
+    await expect(page).toHaveURL(url => url.hash.includes('product-builds/base-images'));
+    await expect(page.getByTestId('base-images-channels')).toBeVisible();
+
+    const appErrors = page.errors.filter(e => !/status of (429|404|503)/.test(e.message));
+    expect(appErrors).toHaveLength(0);
+  });
+
+  test('should keep Base Images series and artifacts under the Legacy tab', async ({ page }) => {
+    await page.route('**/api/modules/product-builds/products/base-images', route => route.fulfill({ json: {
+      key: 'base-images', product_name: 'Base Images', short_name: 'Base Images',
+    } }));
+    await page.route('**/api/modules/product-builds/drops?*', route => route.fulfill({ json: [{
+      key: 'base-images-base-v2026102901', name: 'base-v2026102901', product_key: 'base-images',
+      product_version: '3.6', git_branch: 'main', created_at: '2026-10-28T10:00:00Z', environments: ['stage'],
+    }] }));
+    await page.route('**/api/modules/product-builds/series?*', route => route.fulfill({ json: ['3.6'] }));
+    await page.route('**/api/modules/product-builds/artifacts?*', route => route.fulfill({ json: [{
+      key: 'quay.io/aipcc/base-images/cuda13.0-torch2.11-ubi9:base-v2026102901',
+      variant: 'cuda', archs: ['x86_64'], environments: ['stage'],
+      health_index: { grade: 'A', vulnerability_count: 0 }, konflux_data: { tests: [] },
+    }] }));
+
+    await page.goto('/#/product-builds/base-images');
+    await page.waitForLoadState('networkidle');
+    await page.waitForTimeout(DEFAULT_PAGE_WAIT_TIME);
+
+    await page.getByRole('button', { name: 'Legacy', exact: true }).click();
+    await expect(page.getByRole('button', { name: 'Series', exact: true })).toBeVisible();
+    await expect(page.getByText('base-v2026102901').first()).toBeVisible();
+
+    await page.getByRole('button', { name: 'Artifacts', exact: true }).click();
+    await expect(page.getByRole('columnheader', { name: 'CHI', exact: true })).toBeVisible();
+
+    const appErrors = page.errors.filter(e => !/status of (429|404|503)/.test(e.message));
+    expect(appErrors).toHaveLength(0);
+  });
+
   test('should show Package Analysis tracking AIPCC and RHAI Epics', async ({ page }) => {
     await page.goto('/#/product-builds/package-analysis');
     await page.waitForLoadState('networkidle');
@@ -458,8 +527,7 @@ test.describe('Product Builds Module @product-builds', () => {
     expect(list.ok()).toBe(true);
     const { channels } = await list.json();
     expect(channels.length).toBeGreaterThan(0);
-    expect(channels.some(c => c.maturity === 'stable')).toBe(true);
-    expect(channels.some(c => c.maturity === 'rolling')).toBe(true);
+    expect(channels.every(c => !('maturity' in c))).toBe(true);
 
     const detail = await request.get(`/api/modules/product-builds/channels/${encodeURIComponent(channels[0].name)}`);
     expect(detail.ok()).toBe(true);
@@ -483,14 +551,6 @@ test.describe('Product Builds Module @product-builds', () => {
     await expect(page.locator('h1').filter({ hasText: 'Channels' })).toBeVisible();
     await expect(page.locator('[data-testid="channel-matrix"]')).toBeVisible();
     await expect(page.locator('[data-testid="channel-row"]').first()).toBeVisible();
-
-    await page.getByRole('button', { name: 'Rolling', exact: true }).click();
-    const rows = page.locator('[data-testid="channel-row"]');
-    const rowCount = await rows.count();
-    expect(rowCount).toBeGreaterThan(0);
-    for (let i = 0; i < rowCount; i++) {
-      await expect(rows.nth(i)).toContainText('Rolling');
-    }
 
     const appErrors = page.errors.filter(e => !/status of (429|404|503)/.test(e.message));
     expect(appErrors).toHaveLength(0);
@@ -525,7 +585,7 @@ test.describe('Product Builds Module @product-builds', () => {
     const channels = [
       { ...base, name: 'cuda13.0-torch2.9-el9.8', torch_version: '2.9', compatible_releases: ['RHOAI 3.9'],
         latest_drop: { name: 'z-drop', created_at: '2026-10-15T10:00:00Z' }, wheel_count: 2 },
-      { ...base, name: 'cuda12.9-torch2.10-el10.0', maturity: 'rolling', accelerator_version: '12.9', torch_version: '2.10',
+      { ...base, name: 'cuda12.9-torch2.10-el10.0', accelerator_version: '12.9', torch_version: '2.10',
         rhel_version: '10.0', compatible_releases: ['RHOAI 3.10'], latest_drop: { name: 'a-drop', created_at: '2026-10-16T10:00:00Z' }, wheel_count: 10 },
       { ...base, name: 'rocm7.2-torch2.15-el9.10', accelerator: 'rocm', accelerator_version: '7.2', torch_version: '2.15',
         rhel_version: '9.10', compatible_releases: ['RHOAI 3.6'], latest_drop: { name: 'm-drop', created_at: '2026-10-14T10:00:00Z' }, wheel_count: 0 },
@@ -542,7 +602,6 @@ test.describe('Product Builds Module @product-builds', () => {
     const expectOrder = indices => expect(rowNames).toHaveText(indices.map(index => channels[index].name));
     const cases = [
       { label: 'Channel', asc: [3, 1, 0, 2], desc: [2, 0, 1, 3] },
-      { label: 'Maturity', asc: [1, 3, 0, 2], desc: [3, 0, 2, 1] },
       { label: 'Accelerator', asc: [3, 1, 0, 2], desc: [2, 0, 1, 3] },
       { label: 'Torch', asc: [0, 1, 2, 3], desc: [2, 1, 0, 3] },
       { label: 'OS', asc: [0, 2, 1, 3], desc: [3, 1, 2, 0] },
@@ -550,7 +609,7 @@ test.describe('Product Builds Module @product-builds', () => {
       { label: 'Latest RHAIBI drop', asc: [2, 0, 1, 3], desc: [1, 0, 2, 3] },
       { label: 'Wheels', asc: [2, 0, 1, 3], desc: [1, 0, 2, 3] },
     ];
-    await expect(table.getByRole('button', { name: /^Sort by / })).toHaveCount(8);
+    await expect(table.getByRole('button', { name: /^Sort by / })).toHaveCount(7);
     for (const { label, asc, desc } of cases) {
       const button = table.getByRole('button', { name: `Sort by ${label}`, exact: true });
       const header = table.getByRole('columnheader').filter({
@@ -571,10 +630,6 @@ test.describe('Product Builds Module @product-builds', () => {
     await expectOrder([0, 1, 2, 3]);
     await torchSort.press('Space');
     await expectOrder([2, 1, 0, 3]);
-    await page.getByRole('button', { name: 'Stable', exact: true }).click();
-    await expectOrder([2, 0, 3]);
-    await page.getByRole('button', { name: 'All', exact: true }).click();
-    await expectOrder([2, 1, 0, 3]);
     await expect(page.getByTestId('channel-matrix').locator('thead th')).toHaveText([
       'Accelerator', /^Torch\s*2\.9$/, '2.10', '2.15', 'No torch',
     ]);
@@ -586,7 +641,7 @@ test.describe('Product Builds Module @product-builds', () => {
     const base = dashboardChannels.list.channels[0];
     const channels = [
       { ...base, name: 'cuda13.0-torch2.9-ubi9', torch_version: '2.9', rhel_version: 'ubi9' },
-      { ...base, name: 'cuda13.0-torch2.10-ubi10', torch_version: '2.10', rhel_version: 'ubi10', maturity: 'rolling' },
+      { ...base, name: 'cuda13.0-torch2.10-ubi10', torch_version: '2.10', rhel_version: 'ubi10' },
       { ...base, name: 'rocm7.14-torch2.10-ubi9', accelerator: 'rocm', accelerator_version: '7.14', torch_version: '2.10', rhel_version: 'ubi9' },
       { ...base, name: 'cpu-notorch-ubi9', accelerator: 'cpu', accelerator_version: '', torch_version: null, rhel_version: 'ubi9' },
       { ...base, name: 'cuda12.9-torch2.9-ubi9', accelerator_version: '12.9', torch_version: '2.9', rhel_version: 'ubi9' },
@@ -603,7 +658,6 @@ test.describe('Product Builds Module @product-builds', () => {
     const accelerator = section.getByRole('button', { name: /^Accelerator filter/ });
     const torch = section.getByRole('button', { name: /^Torch filter/ });
     const os = section.getByRole('button', { name: /^OS filter/ });
-    const maturityPill = section.getByRole('button', { name: /^Maturity filter/ });
 
     await section.getByRole('button', { name: 'Sort by Torch', exact: true }).click();
     await expectOrder([4, 0, 1, 2, 5, 3]);
@@ -630,18 +684,6 @@ test.describe('Product Builds Module @product-builds', () => {
     await expect(torch).toHaveAttribute('aria-expanded', 'false');
     await expect(torch).toBeFocused();
 
-    await maturityPill.click();
-    const maturityOptions = section.getByRole('group', { name: 'Maturity options', exact: true });
-    await maturityOptions.getByRole('checkbox', { name: 'Stable', exact: true }).check();
-    await expectOrder([0, 2]);
-    await maturityOptions.getByRole('checkbox', { name: 'Rolling', exact: true }).check();
-    await expectOrder([0, 1, 2]);
-    await maturityOptions.getByRole('checkbox', { name: 'Stable', exact: true }).uncheck();
-    await expectOrder([1]);
-    await expect(maturityPill).toHaveAccessibleName('Maturity filter, 1 selected');
-    await maturityOptions.getByRole('button', { name: 'Clear Maturity filter', exact: true }).click();
-    await expectOrder([0, 1, 2]);
-
     await os.click();
     const osOptions = section.getByRole('group', { name: 'OS options', exact: true });
     await osOptions.getByRole('checkbox', { name: 'UBI 9', exact: true }).check();
@@ -651,26 +693,23 @@ test.describe('Product Builds Module @product-builds', () => {
     await osOptions.getByRole('checkbox', { name: 'UBI 9', exact: true }).uncheck();
     await expectOrder([1]);
     await osOptions.getByRole('checkbox', { name: 'UBI 10', exact: true }).press('Escape');
-    await maturityPill.click();
-    await maturityOptions.getByRole('checkbox', { name: 'Stable', exact: true }).check();
+    const search = page.getByRole('searchbox', { name: 'Search channels' });
+    await search.fill('no-such-channel');
     await expect(section).toContainText('No channels match these filters.');
-    await maturityOptions.getByRole('checkbox', { name: 'Stable', exact: true }).press('Escape');
-    await page.getByRole('button', { name: 'Stable', exact: true }).click();
-    await expect(section).toContainText('No channels match these filters.');
-    await expect(section.getByRole('status')).toHaveText('0 of 5 channels');
+    await expect(section.getByRole('status')).toHaveText('0 of 0 channels');
+    await search.fill('');
+    await expectOrder([1]);
     await section.getByRole('button', { name: 'Clear table filters', exact: true }).click();
-    await expectOrder([4, 0, 2, 5, 3]);
+    await expectOrder([4, 0, 1, 2, 5, 3]);
     await expect(accelerator).toHaveAccessibleName('Accelerator filter');
-    await expect(maturityPill).toHaveAccessibleName('Maturity filter');
 
     await torch.click();
     await torchOptions.getByRole('checkbox', { name: 'No torch', exact: true }).check();
     await expectOrder([3]);
     await torchOptions.getByRole('button', { name: 'Clear Torch filter', exact: true }).click();
-    await expectOrder([4, 0, 2, 5, 3]);
+    await expectOrder([4, 0, 1, 2, 5, 3]);
     await section.getByRole('heading', { name: 'All channels', exact: true }).click();
     await expect(torchOptions).toHaveCount(0);
-    await page.getByRole('button', { name: 'All', exact: true }).click();
     await section.getByRole('button', { name: 'Sort by Torch', exact: true }).click();
     await expectOrder([5, 1, 2, 4, 0, 3]);
 
@@ -694,7 +733,7 @@ test.describe('Product Builds Module @product-builds', () => {
     const matrix = page.getByTestId('channel-matrix');
     await expect(matrix).toContainText('RHOAI 3.6-EA2');
     const cell = matrix.getByRole('button', { name: `Open channel ${unadopted.name}`, exact: true });
-    await expect(cell).toHaveText('Rolling');
+    await expect(cell).toHaveText('RHEL 9.8');
     await cell.click();
     const drawer = page.getByTestId('channel-drawer');
     await expect(drawer).toContainText(unadopted.description);

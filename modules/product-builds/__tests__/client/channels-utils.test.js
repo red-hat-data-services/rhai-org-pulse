@@ -7,6 +7,7 @@ import {
   compareVersions,
   filterChannels,
   filterWheels,
+  isReleaseAdopted,
   osLabel,
   releaseSummary,
   sortChannels,
@@ -20,7 +21,6 @@ function ch(overrides) {
     accelerator_version: '13.0',
     torch_version: '2.11',
     rhel_version: 'ubi9',
-    maturity: 'stable',
     compatible_releases: ['rhoai-3.6'],
     description: '',
     ...overrides,
@@ -32,12 +32,12 @@ function ch(overrides) {
 
 const CHANNELS = [
   ch({ accelerator: 'cpu', accelerator_version: '', torch_version: null }),
-  ch({ torch_version: '2.9', maturity: 'rolling', compatible_releases: [] }),
-  ch({ torch_version: '2.13', maturity: 'rolling', compatible_releases: ['rhoai-3.7'] }),
+  ch({ torch_version: '2.9', compatible_releases: [] }),
+  ch({ torch_version: '2.13', compatible_releases: ['rhoai-3.7'] }),
   ch({ accelerator_version: '12.9' }),
-  ch({ accelerator: 'rocm', accelerator_version: '7.14', torch_version: '2.12', maturity: 'rolling', compatible_releases: ['rhoai-3.7'] }),
+  ch({ accelerator: 'rocm', accelerator_version: '7.14', torch_version: '2.12', compatible_releases: ['rhoai-3.7'] }),
   ch({}),
-  ch({ rhel_version: 'ubi10', maturity: 'rolling', compatible_releases: [] }),
+  ch({ rhel_version: 'ubi10', compatible_releases: [] }),
 ]
 
 describe('compareVersions', () => {
@@ -87,6 +87,15 @@ describe('labels', () => {
   })
 })
 
+describe('isReleaseAdopted', () => {
+  it('treats a channel listed by a product release as adopted', () => {
+    expect(isReleaseAdopted(ch({ compatible_releases: ['rhoai-3.6'] }))).toBe(true)
+    expect(isReleaseAdopted(ch({ compatible_releases: [] }))).toBe(false)
+    expect(isReleaseAdopted({})).toBe(false)
+    expect(isReleaseAdopted(undefined)).toBe(false)
+  })
+})
+
 describe('buildChannelMatrix', () => {
   const { columns, rows } = buildChannelMatrix(CHANNELS)
 
@@ -106,16 +115,16 @@ describe('buildChannelMatrix', () => {
 })
 
 describe('sortChannels', () => {
-  it('puts stable first, then accelerator order, newest SDK and torch first', () => {
+  it('orders by accelerator, then newest SDK and torch first', () => {
     const names = sortChannels(CHANNELS).map(c => c.name)
     expect(names).toEqual([
-      'cuda13.0-torch2.11-ubi9',
-      'cuda12.9-torch2.11-ubi9',
-      'cpu-notorch-ubi9',
       'cuda13.0-torch2.13-ubi9',
+      'cuda13.0-torch2.11-ubi9',
       'cuda13.0-torch2.11-ubi10',
       'cuda13.0-torch2.9-ubi9',
+      'cuda12.9-torch2.11-ubi9',
       'rocm7.14-torch2.12-ubi9',
+      'cpu-notorch-ubi9',
     ])
   })
 
@@ -163,8 +172,8 @@ describe('filterChannels', () => {
     expect(filterChannels(CHANNELS)).toHaveLength(CHANNELS.length)
   })
 
-  it('filters by maturity, release and OS together', () => {
-    const result = filterChannels(CHANNELS, { maturity: 'rolling', release: 'rhoai-3.7' })
+  it('filters by release and OS together', () => {
+    const result = filterChannels(CHANNELS, { release: 'rhoai-3.7' })
     expect(result.map(c => c.name)).toEqual(['cuda13.0-torch2.13-ubi9', 'rocm7.14-torch2.12-ubi9'])
     expect(filterChannels(CHANNELS, { os: 'ubi10' }).map(c => c.name)).toEqual(['cuda13.0-torch2.11-ubi10'])
   })
@@ -187,14 +196,10 @@ describe('filterChannels', () => {
     }).map(c => c.name)).toEqual(['cpu-notorch-ubi9'])
     expect(filterChannels(CHANNELS, {
       accelerators: [], torchVersions: [], osVersions: [],
-      maturities: [],
     })).toHaveLength(CHANNELS.length)
     expect(filterChannels(CHANNELS, {
-      maturities: ['stable', 'rolling'],
-    })).toHaveLength(CHANNELS.length)
-    expect(filterChannels(CHANNELS, {
-      accelerators: ['cuda|13.0'], torchVersions: ['2.11'], maturities: ['rolling'],
-    }).map(c => c.name)).toEqual(['cuda13.0-torch2.11-ubi10'])
+      accelerators: ['cuda|13.0'], torchVersions: ['2.11'],
+    }).map(c => c.name)).toEqual(['cuda13.0-torch2.11-ubi9', 'cuda13.0-torch2.11-ubi10'])
     expect(filterChannels(CHANNELS, {
       accelerators: ['cpu|'], torchVersions: ['2.11'],
     })).toEqual([])
