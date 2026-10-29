@@ -1,5 +1,5 @@
 <script setup>
-import { onMounted, inject, ref, computed, reactive, watch } from 'vue'
+import { onMounted, inject, ref, computed, reactive, watch, nextTick } from 'vue'
 import { useDropDetail } from '../composables/useDrops'
 import { useArtifacts } from '../composables/useArtifacts'
 import { apiRequest } from '@shared/client/services/api'
@@ -11,7 +11,7 @@ import PersistentSearchBar from '../components/PersistentSearchBar.vue'
 const BASE = '/modules/product-builds'
 const nav = inject('moduleNav')
 const { drop, changelog, metrics, loading, error, loadDrop, loadChangelog, loadMetrics } = useDropDetail()
-const { artifacts, loading: artifactsLoading, error: artifactsError, loadArtifacts } = useArtifacts()
+const { artifacts, hasMore, loading: artifactsLoading, error: artifactsError, loadArtifacts } = useArtifacts()
 
 const currentDropKey = computed(() => nav.params.value.key)
 const wheelsData = reactive(new Map())
@@ -20,6 +20,41 @@ const packagesPopup = ref(null)
 const packagesShowAll = reactive(new Set())
 
 const productKey = computed(() => nav.params.value.product || '')
+
+// Set when the drop is opened from a channel, so its images can be picked out
+// of the drop's artifact list.
+const channelName = computed(() => nav.params.value.channel || '')
+
+function artifactRepo(key) {
+  return String(key || '').split('/').pop().split(':')[0]
+}
+
+function isChannelArtifact(art) {
+  return !!channelName.value && artifactRepo(art.key) === channelName.value
+}
+
+const channelArtifacts = computed(() => artifacts.value.filter(isChannelArtifact))
+const firstChannelArtifactKey = computed(() => channelArtifacts.value[0]?.key || null)
+
+function scrollToChannelArtifact() {
+  nextTick(() => {
+    document.getElementById('channel-artifact-anchor')?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+  })
+}
+
+function clearChannel() {
+  nav.updateParams({ channel: undefined }, { push: false })
+}
+
+// Scroll to the channel's first image once per drop, after the artifacts land.
+let scrolledTo = null
+watch([currentDropKey, channelName, artifacts], ([key, channel, list]) => {
+  if (!key || !channel || !list.some(isChannelArtifact)) return
+  const token = `${key}::${channel}`
+  if (scrolledTo === token) return
+  scrolledTo = token
+  scrollToChannelArtifact()
+})
 
 function extractAccelerator(variant) {
   if (!variant) return null
@@ -56,12 +91,15 @@ const acceleratorWarning = computed(() => {
 
 const NO_WHEELS_PRODUCTS = new Set(['rhel-ai', 'builder-images'])
 
+const wheelsFetched = new Set()
+
 async function fetchWheelsForArtifacts() {
   if (NO_WHEELS_PRODUCTS.has(productKey.value)) return
   await Promise.all(
     artifacts.value
-      .filter(a => a.type === 'containers')
+      .filter(a => a.type === 'containers' && !wheelsFetched.has(a.key))
       .map(async (a) => {
+        wheelsFetched.add(a.key)
         try {
           const data = await apiRequest(`${BASE}/artifacts/${encodeURIComponent(a.key)}/wheels`)
           const wheels = Array.isArray(data) ? data : []
@@ -85,13 +123,27 @@ watch(artifacts, (val) => {
   if (val.length > 0) fetchWheelsForArtifacts()
 })
 
+// The artifacts endpoint has no text search, so when a channel is in play keep
+// paging through the drop until its images are loaded (or there is nothing left).
+const MAX_CHANNEL_PAGES = 5
+
+async function loadDropArtifacts(key, channel) {
+  await loadArtifacts({ drop_key: key })
+  let pages = 0
+  while (channel && hasMore.value && pages < MAX_CHANNEL_PAGES && !artifacts.value.some(isChannelArtifact)) {
+    await loadArtifacts({ drop_key: key, offset: artifacts.value.length }, { append: true })
+    pages += 1
+  }
+}
+
 async function loadAll(key) {
   if (!key) return
   wheelsData.clear()
   wheelsRaw.clear()
+  wheelsFetched.clear()
   expandedRows.clear()
   await loadDrop(key)
-  loadArtifacts({ drop_key: key })
+  loadDropArtifacts(key, channelName.value)
   loadChangelog(key)
   loadMetrics(key)
 }
@@ -104,7 +156,7 @@ function navigateToArtifact(artifactKey) {
 }
 
 function navigateToDrop(key) {
-  nav.navigateTo('drop-detail', { key, product: productKey.value })
+  nav.navigateTo('drop-detail', { key, product: productKey.value, channel: channelName.value || undefined })
 }
 
 function formatRelativeDate(dateString) {
@@ -267,6 +319,33 @@ const totalColumns = 7
 
       <!-- Artifacts -->
       <div>
+        <div
+          v-if="channelName"
+          data-testid="drop-channel-note"
+          class="mb-3 flex flex-wrap items-center gap-x-2 gap-y-1 rounded-lg border border-primary-200 bg-primary-50 px-4 py-2.5 text-sm text-primary-800 dark:border-blue-800 dark:bg-blue-900/20 dark:text-blue-200"
+        >
+          <span>
+            Channel <span class="font-semibold">{{ channelName }}</span>:
+            <template v-if="channelArtifacts.length">
+              {{ channelArtifacts.length }} {{ channelArtifacts.length === 1 ? 'image is' : 'images are' }} included in this drop.
+            </template>
+            <template v-else-if="artifactsLoading">looking for its images…</template>
+            <template v-else-if="hasMore">no image for this channel in the loaded artifacts.</template>
+            <template v-else>no image for this channel in this drop.</template>
+          </span>
+          <button
+            v-if="channelArtifacts.length"
+            type="button"
+            class="font-medium underline hover:no-underline focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500"
+            @click="scrollToChannelArtifact"
+          >Jump to it</button>
+          <button
+            type="button"
+            class="ml-auto rounded text-xs font-medium text-primary-700 hover:underline focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 dark:text-blue-300"
+            aria-label="Clear channel highlight"
+            @click="clearChannel"
+          >Clear</button>
+        </div>
         <div v-if="artifactsLoading" class="text-sm text-gray-500 dark:text-gray-400">Loading artifacts…</div>
         <div v-else-if="artifactsError" class="text-sm text-red-600 dark:text-red-400">{{ artifactsError }}</div>
         <div v-else-if="artifacts.length === 0" class="text-sm text-gray-500 dark:text-gray-400">No artifacts for this drop.</div>
@@ -287,7 +366,12 @@ const totalColumns = 7
               <template v-for="art in artifacts" :key="art.key">
                 <tr
                   @click="toggleRow(art.key, $event)"
-                  class="hover:bg-gray-50 dark:hover:bg-gray-700/50 cursor-pointer transition-colors"
+                  class="cursor-pointer transition-colors"
+                  :class="isChannelArtifact(art)
+                    ? 'bg-primary-50/70 hover:bg-primary-100/70 dark:bg-blue-900/20 dark:hover:bg-blue-900/30'
+                    : 'hover:bg-gray-50 dark:hover:bg-gray-700/50'"
+                  :id="art.key === firstChannelArtifactKey ? 'channel-artifact-anchor' : undefined"
+                  :data-channel-match="isChannelArtifact(art) ? 'true' : undefined"
                 >
                   <td class="px-4 py-3">
                     <div class="flex items-center gap-1.5">
@@ -295,6 +379,10 @@ const totalColumns = 7
                         class="text-sm font-medium text-primary-600 dark:text-blue-400 truncate hover:underline"
                         @click.stop="navigateToArtifact(art.key)"
                       >{{ getProdKey(art) || art.key }}</span>
+                      <span
+                        v-if="isChannelArtifact(art)"
+                        class="shrink-0 rounded bg-primary-100 px-1.5 py-0.5 text-[10px] font-medium text-primary-700 dark:bg-blue-900/40 dark:text-blue-300"
+                      >Channel</span>
                       <button
                         @click="copyKey(getProdKey(art) || art.key, $event)"
                         class="shrink-0 p-0.5 rounded hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"

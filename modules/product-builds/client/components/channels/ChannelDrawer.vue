@@ -13,7 +13,7 @@ const props = defineProps({
   sample: { type: Boolean, default: false },
 })
 
-const emit = defineEmits(['close', 'view-base-images'])
+const emit = defineEmits(['close', 'view-base-images', 'view-drop'])
 
 const { channel, loading, error, load, reset } = useChannelDetail()
 
@@ -325,7 +325,12 @@ function onKeydown(event) {
                     aria-hidden="true"
                   ></span>
                   <div class="flex flex-wrap items-baseline gap-x-2 gap-y-1">
-                    <span class="text-sm font-medium text-gray-900 dark:text-gray-100">{{ drop.name }}</span>
+                    <button
+                      type="button"
+                      class="rounded text-left text-sm font-medium text-primary-700 hover:underline focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 dark:text-blue-400"
+                      :aria-label="`View drop ${drop.name}`"
+                      @click="emit('view-drop', drop)"
+                    >{{ drop.name }}</button>
                     <span v-if="i === 0" class="rounded bg-primary-50 px-1.5 text-xs font-medium text-primary-700 dark:bg-blue-900/30 dark:text-blue-300">Latest</span>
                     <span
                       class="rounded px-1.5 text-xs"
