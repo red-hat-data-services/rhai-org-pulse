@@ -32,3 +32,7 @@
 # Build Health report code and integration test.
 /modules/releases/server/build-health/ @saprabhu05 @accorvin
 /tests/integration/releases-e2e-results.spec.js @red-hat-data-services/org-pulse-maintainers @accorvin
+
+# Product Builds integration tests.
+/tests/integration/package-analysis.spec.js @red-hat-data-services/org-pulse-maintainers @epacific1
+/tests/integration/product-builds.spec.js @red-hat-data-services/org-pulse-maintainers @epacific1
