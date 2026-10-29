@@ -94,59 +94,85 @@ async function getOutcomeSummaries(jiraRequest, keys, version, readFromStorage, 
 }
 
 /**
- * Fetch outcomes in priority order from Jira (type = Outcome, project = RHAISTRAT).
- * Jira plan view 7384 (Racer Strat) determines priority order via issue ordering.
- * We query all outcomes and order by their appearance in the plan.
+ * Fetch outcome summaries from Jira and merge with FALLBACK_OUTCOMES for ordering.
+ *
+ * Strategy:
+ * 1. Use FALLBACK_OUTCOMES for correct View 7384 ordering (manually maintained)
+ * 2. Fetch fresh summaries from Jira (query by keys in Rank order)
+ * 3. Merge fresh Jira titles into FALLBACK_OUTCOMES structure
+ * 4. Fall back to FALLBACK_OUTCOMES titles if Jira fetch fails
+ *
+ * This ensures:
+ * - Ordering is always correct (View 7384 order from FALLBACK_OUTCOMES)
+ * - Titles are fresh from Jira (if Jira is available)
+ * - Graceful degradation (uses cached FALLBACK_OUTCOMES if Jira unavailable)
  *
  * @param {Function} jiraRequest - Bound jiraRequest function from jira client
- * @returns {Promise<Array>} Array of outcomes [{key, title, orderNumber}] in Jira plan order
+ * @param {Array} fallbackOutcomes - FALLBACK_OUTCOMES array (for ordering and keys)
+ * @returns {Promise<Array>} Outcomes with fresh Jira titles, in View 7384 order
  */
-async function fetchOutcomesInPriorityOrder(jiraRequest) {
-  if (!jiraRequest) {
-    console.log('[release-planning] Jira credentials not configured, skipping outcomes fetch')
+async function fetchOutcomesInPriorityOrder(jiraRequest, fallbackOutcomes) {
+  if (!jiraRequest || !fallbackOutcomes || fallbackOutcomes.length === 0) {
+    console.log('[release-planning] Jira credentials not available or no fallback outcomes, skipping fetch')
     return []
   }
 
   try {
-    // Query outcomes from RHAISTRAT project, ordered by creation date as a proxy
-    // for plan order. The Jira Plans API doesn't expose plan-view ordering via JQL.
-    var jql = 'project = RHAISTRAT AND type = Outcome ORDER BY created ASC'
-    var params = new URLSearchParams({
-      jql: jql,
-      fields: 'summary',
-      maxResults: '100'
-    })
+    // Extract and validate outcome keys from FALLBACK_OUTCOMES
+    var outcomeKeys = fallbackOutcomes
+      .map(function(o) { return o.key })
+      .filter(function(k) { return typeof k === 'string' && ISSUE_KEY_PATTERN.test(k) })
+    if (outcomeKeys.length === 0) return []
+
+    // Fetch fresh summaries from Jira
+    var jql = 'key in (' + outcomeKeys.join(',') + ') ORDER BY Rank ASC'
+    var params = new URLSearchParams({ jql: jql, fields: 'summary', maxResults: String(outcomeKeys.length) })
     var data = await jiraRequest('/rest/api/3/search/jql?' + params)
 
-    var outcomes = []
+    // Build map of fresh Jira titles
+    var jiraTitles = {}
     if (data && data.issues) {
       for (var i = 0; i < data.issues.length; i++) {
         var issue = data.issues[i]
-        outcomes.push({
-          key: issue.key,
-          title: (issue.fields && issue.fields.summary) || '',
-          orderNumber: i + 1
-        })
+        jiraTitles[issue.key] = (issue.fields && issue.fields.summary) || ''
       }
     }
 
-    console.log('[release-planning] Fetched ' + outcomes.length + ' outcomes from Jira')
+    // Merge fresh titles with FALLBACK_OUTCOMES, preserving View 7384 order
+    var outcomes = fallbackOutcomes.map(function(outcome) {
+      return {
+        key: outcome.key,
+        title: jiraTitles[outcome.key] || outcome.title, // Use fresh Jira title if available
+        orderNumber: outcome.orderNumber
+      }
+    })
+
+    console.log('[release-planning] Fetched ' + Object.keys(jiraTitles).length + ' outcome titles from Jira, preserving View 7384 order')
     return outcomes
   } catch (err) {
-    console.error('[release-planning] Failed to fetch outcomes from Jira:', err.message)
+    console.warn('[release-planning] Failed to fetch outcome titles from Jira:', err.message, '(will use FALLBACK_OUTCOMES)')
     return []
   }
 }
 
 /**
- * Load or fetch outcomes in priority order, cache in data/releases/planning/priority-outcomes.json
+ * Load priority outcomes with fresh Jira titles while preserving View 7384 order.
  *
- * @param {Function} jiraRequest - Bound jiraRequest function
- * @param {Function} readFromStorage
- * @param {Function} writeToStorage
- * @returns {Promise<Array>} Array of outcomes in priority order
+ * Implementation:
+ * 1. Import FALLBACK_OUTCOMES for ordering reference
+ * 2. Try to fetch fresh outcome titles from Jira (key-in query)
+ * 3. If successful, merge fresh titles with FALLBACK_OUTCOMES structure
+ * 4. If Jira fails, fall back to FALLBACK_OUTCOMES entirely
+ *
+ * The outcome of this function determines what goes into the 12h cache.
+ *
+ * @param {Function} jiraRequest - Bound jiraRequest function from jira client
+ * @param {Function} readFromStorage - Storage read function
+ * @param {Function} writeToStorage - Storage write function
+ * @param {Array} fallbackOutcomes - FALLBACK_OUTCOMES array (for ordering and keys)
+ * @returns {Promise<Array>} Outcomes in View 7384 order (fresh titles if available)
  */
-async function getPriorityOutcomes(jiraRequest, readFromStorage, writeToStorage) {
+async function getPriorityOutcomes(jiraRequest, readFromStorage, writeToStorage, fallbackOutcomes) {
   var cachePath = DATA_PREFIX + '/priority-outcomes.json'
   var TWELVE_HOURS = 12 * 60 * 60 * 1000
 
@@ -167,8 +193,8 @@ async function getPriorityOutcomes(jiraRequest, readFromStorage, writeToStorage)
     // Cache miss or error; fetch fresh
   }
 
-  // Fetch from Jira
-  var outcomes = await fetchOutcomesInPriorityOrder(jiraRequest)
+  // Fetch fresh outcomes from Jira (with FALLBACK_OUTCOMES for ordering)
+  var outcomes = await fetchOutcomesInPriorityOrder(jiraRequest, fallbackOutcomes)
 
   if (outcomes.length > 0) {
     try {
@@ -185,7 +211,9 @@ async function getPriorityOutcomes(jiraRequest, readFromStorage, writeToStorage)
     return staleData
   }
 
-  return outcomes
+  // Final fallback: return empty array (routes.js will use FALLBACK_OUTCOMES)
+  console.log('[release-planning] Could not fetch outcomes from Jira or cache, will use FALLBACK_OUTCOMES')
+  return []
 }
 
 module.exports = {

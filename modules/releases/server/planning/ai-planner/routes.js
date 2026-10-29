@@ -139,12 +139,12 @@ module.exports = function registerAIPlannerRoutes(router, context) {
    */
   router.get('/ai-planner/outcomes', requireAuth, requireScope('releases:read'), async function(req, res) {
     try {
-      // Fetch priority outcomes (live from cache synced from Jira every 12h)
+      // Fetch priority outcomes (fresh Jira titles with View 7384 ordering)
       const jiraRequest = context.jiraClient && context.jiraClient.jiraRequest;
       let priorityOutcomes = [];
       let outcomesFromJira = false;
       try {
-        priorityOutcomes = await fetchPriorityOutcomes(jiraRequest, readFromStorage, writeToStorage);
+        priorityOutcomes = await fetchPriorityOutcomes(jiraRequest, readFromStorage, writeToStorage, FALLBACK_OUTCOMES);
         if (priorityOutcomes && priorityOutcomes.length > 0) {
           outcomesFromJira = true;
         }

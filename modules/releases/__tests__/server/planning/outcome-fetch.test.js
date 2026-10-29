@@ -6,60 +6,71 @@ describe('outcome-fetch', () => {
     vi.clearAllMocks()
   })
 
+  const SAMPLE_FALLBACKS = [
+    { key: 'RHAISTRAT-3004', title: 'Deliver a Production-Ready, Praxis-Native AI Gateway', orderNumber: 1 },
+    { key: 'RHAISTRAT-1981', title: 'Outcome: Platform User Experience for Model Serving', orderNumber: 2 }
+  ]
+
   describe('fetchOutcomesInPriorityOrder', () => {
     it('returns empty array when jiraRequest is not available', async () => {
-      const result = await fetchOutcomesInPriorityOrder(null)
+      const result = await fetchOutcomesInPriorityOrder(null, SAMPLE_FALLBACKS)
       expect(result).toEqual([])
     })
 
-    it('fetches outcomes from Jira and returns in priority order', async () => {
+    it('returns empty array when fallbackOutcomes is missing', async () => {
+      const mockJiraRequest = vi.fn()
+      const result = await fetchOutcomesInPriorityOrder(mockJiraRequest, null)
+      expect(result).toEqual([])
+    })
+
+    it('fetches fresh titles from Jira and merges with fallback ordering', async () => {
       const mockJiraRequest = vi.fn().mockResolvedValue({
         issues: [
           {
             key: 'RHAISTRAT-3004',
-            fields: { summary: 'Deliver a Production-Ready, Praxis-Native AI Gateway' }
+            fields: { summary: 'Fresh Gateway Title' }
           },
           {
             key: 'RHAISTRAT-1981',
-            fields: { summary: 'Outcome: Platform User Experience for Model Serving' }
+            fields: { summary: 'Fresh Model Serving Title' }
           }
         ]
       })
 
-      const result = await fetchOutcomesInPriorityOrder(mockJiraRequest)
+      const result = await fetchOutcomesInPriorityOrder(mockJiraRequest, SAMPLE_FALLBACKS)
 
       expect(result).toHaveLength(2)
       expect(result[0]).toEqual({
         key: 'RHAISTRAT-3004',
-        title: 'Deliver a Production-Ready, Praxis-Native AI Gateway',
+        title: 'Fresh Gateway Title',
         orderNumber: 1
       })
       expect(result[1]).toEqual({
         key: 'RHAISTRAT-1981',
-        title: 'Outcome: Platform User Experience for Model Serving',
+        title: 'Fresh Model Serving Title',
         orderNumber: 2
       })
     })
 
-    it('handles missing summaries gracefully', async () => {
+    it('uses fallback titles when Jira returns missing summaries', async () => {
       const mockJiraRequest = vi.fn().mockResolvedValue({
         issues: [
           { key: 'RHAISTRAT-3004', fields: {} },
-          { key: 'RHAISTRAT-1981', fields: { summary: 'Outcome: Platform User Experience for Model Serving' } }
+          { key: 'RHAISTRAT-1981', fields: { summary: 'Fresh Model Serving Title' } }
         ]
       })
 
-      const result = await fetchOutcomesInPriorityOrder(mockJiraRequest)
+      const result = await fetchOutcomesInPriorityOrder(mockJiraRequest, SAMPLE_FALLBACKS)
 
       expect(result).toHaveLength(2)
-      expect(result[0].title).toBe('')
-      expect(result[1].title).toBe('Outcome: Platform User Experience for Model Serving')
+      expect(result[0].title).toBe('Deliver a Production-Ready, Praxis-Native AI Gateway')
+      expect(result[1].title).toBe('Fresh Model Serving Title')
     })
 
     it('returns empty array on Jira error', async () => {
       const mockJiraRequest = vi.fn().mockRejectedValue(new Error('Jira API error'))
 
-      const result = await fetchOutcomesInPriorityOrder(mockJiraRequest)
+      const result = await fetchOutcomesInPriorityOrder(mockJiraRequest, SAMPLE_FALLBACKS)
 
       expect(result).toEqual([])
     })
@@ -75,7 +86,7 @@ describe('outcome-fetch', () => {
       const mockWriteToStorage = vi.fn()
       const mockJiraRequest = vi.fn()
 
-      const result = await getPriorityOutcomes(mockJiraRequest, mockReadFromStorage, mockWriteToStorage)
+      const result = await getPriorityOutcomes(mockJiraRequest, mockReadFromStorage, mockWriteToStorage, SAMPLE_FALLBACKS)
 
       expect(result).toEqual(cachedOutcomes)
       expect(mockJiraRequest).not.toHaveBeenCalled()
@@ -91,13 +102,14 @@ describe('outcome-fetch', () => {
       const mockWriteToStorage = vi.fn().mockResolvedValue(undefined)
       const mockJiraRequest = vi.fn().mockResolvedValue({
         issues: [
-          { key: 'RHAISTRAT-3004', fields: { summary: 'Fresh title' } }
+          { key: 'RHAISTRAT-3004', fields: { summary: 'Fresh title' } },
+          { key: 'RHAISTRAT-1981', fields: { summary: 'Fresh Model Serving' } }
         ]
       })
 
-      const result = await getPriorityOutcomes(mockJiraRequest, mockReadFromStorage, mockWriteToStorage)
+      const result = await getPriorityOutcomes(mockJiraRequest, mockReadFromStorage, mockWriteToStorage, SAMPLE_FALLBACKS)
 
-      expect(result).toHaveLength(1)
+      expect(result).toHaveLength(2)
       expect(result[0].title).toBe('Fresh title')
       expect(mockJiraRequest).toHaveBeenCalled()
     })
@@ -110,13 +122,17 @@ describe('outcome-fetch', () => {
           {
             key: 'RHAISTRAT-3004',
             fields: { summary: 'Deliver a Production-Ready, Praxis-Native AI Gateway' }
+          },
+          {
+            key: 'RHAISTRAT-1981',
+            fields: { summary: 'Fresh Model Serving' }
           }
         ]
       })
 
-      const result = await getPriorityOutcomes(mockJiraRequest, mockReadFromStorage, mockWriteToStorage)
+      const result = await getPriorityOutcomes(mockJiraRequest, mockReadFromStorage, mockWriteToStorage, SAMPLE_FALLBACKS)
 
-      expect(result).toHaveLength(1)
+      expect(result).toHaveLength(2)
       expect(result[0].key).toBe('RHAISTRAT-3004')
       expect(mockWriteToStorage).toHaveBeenCalledWith(
         'releases/planning/priority-outcomes.json',
@@ -132,14 +148,17 @@ describe('outcome-fetch', () => {
           {
             key: 'RHAISTRAT-3004',
             fields: { summary: 'Deliver a Production-Ready, Praxis-Native AI Gateway' }
+          },
+          {
+            key: 'RHAISTRAT-1981',
+            fields: { summary: 'Fresh Model Serving' }
           }
         ]
       })
 
-      const result = await getPriorityOutcomes(mockJiraRequest, mockReadFromStorage, mockWriteToStorage)
+      const result = await getPriorityOutcomes(mockJiraRequest, mockReadFromStorage, mockWriteToStorage, SAMPLE_FALLBACKS)
 
-      // Should still return fetched outcomes even if write fails
-      expect(result).toHaveLength(1)
+      expect(result).toHaveLength(2)
       expect(result[0].key).toBe('RHAISTRAT-3004')
     })
   })
