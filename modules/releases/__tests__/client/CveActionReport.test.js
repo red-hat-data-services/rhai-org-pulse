@@ -29,8 +29,8 @@ const report = {
   createdWeekly: [{ label: 'Sep 21', count: 2, closed: 1 }],
   openAgeBuckets: [{
     label: '0–1 weeks',
-    count: 3,
-    outcomes: { 'needs-action': 2, 'needs-review': 1 }
+    count: 4,
+    outcomes: { 'needs-action': 2, 'needs-review': 1, 'possibly-closable': 1 }
   }]
 }
 
@@ -72,7 +72,7 @@ describe('CveActionReport', () => {
     expect(charts[1].props('data').datasets.map(dataset => dataset.label)).toEqual([
       'Needs action', 'Not found', 'Needs review', 'Possibly resolved', 'Possibly closable'
     ])
-    expect(charts[1].props('data').datasets.map(dataset => dataset.data[0])).toEqual([2, 0, 1, 0, 0])
+    expect(charts[1].props('data').datasets.map(dataset => dataset.data[0])).toEqual([2, 0, 1, 0, 1])
     expect(wrapper.text()).toContain('All open vulnerabilities')
     expect(wrapper.text()).toContain('SLA breached')
     expect(wrapper.text()).toContain('No SLA date')

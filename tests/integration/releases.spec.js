@@ -2777,6 +2777,7 @@ test.describe('Releases CVE Sustaining Report @releases', () => {
         total: 3,
         resolvedCount: 4,
         newOpenCount: 3,
+        possiblyClosableCount: 0,
         noSlaDate: 1,
         metSla: 2,
         missedSla: 1,
@@ -2806,8 +2807,9 @@ test.describe('Releases CVE Sustaining Report @releases', () => {
     const slaSection = page.locator('section').filter({ hasText: 'CVE SLA Compliance' });
     const firstQuarterMetrics = slaSection.getByTestId('sla-quarter-metrics').first();
     await expect(firstQuarterMetrics.getByTestId('sla-quarter-metric-label')).toHaveText([
-      'Breached:', 'Met:', 'Resolved overall:', 'New this quarter and still open:', 'No SLA Date:'
+      'Breached:', 'Met:', 'Resolved overall:', 'New this quarter and still open:', 'Out of support:', 'No SLA Date:'
     ]);
+    await expect(firstQuarterMetrics.getByTestId('sla-quarter-possibly-closable-count')).toHaveText('0');
     await expect(slaSection.locator('a')).toHaveCount(0);
 
     const summaryValues = firstQuarterMetrics.getByTestId('sla-quarter-metric-value');
