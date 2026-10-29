@@ -9,6 +9,10 @@ FROM quay.io/org-pulse/org-pulse-core-backend:${CORE_TAG}
 
 USER 0
 
+# Install all dependencies (including @org-pulse/core) from package-lock.json
+COPY package.json package-lock.json ./
+RUN npm ci
+
 # Install AI Eng-specific runtime dependencies not in core
 RUN npm install --no-save @octokit/rest js-yaml express-rate-limit adm-zip xml2js undici@7.29.1
 
