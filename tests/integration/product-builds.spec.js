@@ -145,7 +145,7 @@ test.describe('Product Builds Module @product-builds', () => {
 
     const channelInput = page.locator('#rpm-channels')
     await channelInput.click()
-    const channelOptions = page.getByRole('option')
+    const channelOptions = page.locator('#rpm-channels-listbox').getByRole('option')
     await expect(channelOptions.first()).toBeVisible()
     expect(await channelOptions.count()).toBeGreaterThan(0)
     const channelName = await channelOptions.first().getAttribute('data-value')
@@ -160,7 +160,7 @@ test.describe('Product Builds Module @product-builds', () => {
     await page.locator('#rpm-name').fill('gcc-toolset-14')
     await page.locator('#rpm-source-url').fill('https://src.fedoraproject.org/rpms/gcc-toolset-14')
     await channelInput.fill(channelName)
-    await page.locator(`[role="option"][data-value="${channelName}"]`).click()
+    await channelOptions.and(page.locator(`[data-value="${channelName}"]`)).click()
     await expect(page.getByTestId('channel-chip')).toContainText(channelName)
     await page.locator('#rpm-jira-id').fill('RHAISTRAT-42')
     await page.locator('#rpm-delivery-timeline').fill(triageDeliveryDate())
