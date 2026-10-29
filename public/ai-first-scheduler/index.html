@@ -4132,7 +4132,20 @@ function renderBigRocks(data){
     }).join('');
 
     panel.style.display = '';
-    panel.innerHTML = `<div class="br-title">🎯 Outcomes — 3.6 <span style="font-size:11px;color:#94a3b8;font-weight:400;margin-left:6px">22 prioritized from Jira plan view 7384</span></div><div class="br-grid">${items}</div>`;
+    // Render outcomes as table instead of cards
+    const tableRows = data.outcomes.map((o, idx) => `
+      <tr style="border-bottom:1px solid #e5e7eb;hover:background-color:#f9fafb">
+        <td style="padding:8px 12px;text-align:center;font-weight:bold;color:#1f2937">${o.outcomeNumber}</td>
+        <td style="padding:8px 12px"><a href="https://issues.redhat.com/browse/${o.key}" target="_blank" style="color:#2563eb;font-weight:600;text-decoration:none">${o.key}</a><div style="font-size:11px;color:#6b7280;margin-top:2px">${o.title}</div></td>
+        <td style="padding:8px 12px;text-align:center">${o.inPlan}/${o.total}</td>
+        <td style="padding:8px 12px;text-align:center"><div style="display:flex;align-items:center;justify-content:center;gap:4px"><div style="width:40px;height:4px;background:#e5e7eb;border-radius:2px"><div style="width:${o.percentComplete}%;height:100%;background:#10b981;border-radius:2px"></div></div><span style="font-weight:600;color:#1f2937;width:28px;text-align:right">${o.percentComplete}%</span></div></td>
+        <td style="padding:8px 12px;text-align:center;font-weight:600;color:${o.confidence>=80?'#059669':o.confidence>=60?'#ca8a04':'#dc2626'}">${o.confidence}%</td>
+        <td style="padding:8px 12px;text-align:center;font-size:12px;font-weight:500;color:${o.status==='Confident'?'#059669':o.status==='Lagging'?'#ea580c':'#6b7280'}">${o.status}</td>
+        <td style="padding:8px 12px;color:#374151;font-weight:500">${o.linkedVersions && o.linkedVersions.length ? o.linkedVersions.join(', ') : '—'}</td>
+      </tr>
+    `).join('');
+
+    panel.innerHTML = `<div class="br-title">🎯 Outcomes — 3.6 <span style="font-size:11px;color:#94a3b8;font-weight:400;margin-left:6px">12 ranked from Jira plan view 7384</span></div><div style="overflow-x:auto;border:1px solid #e5e7eb;border-radius:6px;background:#fff"><table style="width:100%;border-collapse:collapse;font-size:12px"><thead style="background:#f9fafb;border-bottom:1px solid #e5e7eb"><tr><th style="padding:8px 12px;text-align:center;font-weight:600;color:#374151;text-transform:uppercase">OC#</th><th style="padding:8px 12px;text-align:left;font-weight:600;color:#374151;text-transform:uppercase">Outcome</th><th style="padding:8px 12px;text-align:center;font-weight:600;color:#374151;text-transform:uppercase">In Plan</th><th style="padding:8px 12px;text-align:center;font-weight:600;color:#374151;text-transform:uppercase">% Complete</th><th style="padding:8px 12px;text-align:center;font-weight:600;color:#374151;text-transform:uppercase">Confidence</th><th style="padding:8px 12px;text-align:center;font-weight:600;color:#374151;text-transform:uppercase">Status</th><th style="padding:8px 12px;text-align:left;font-weight:600;color:#374151;text-transform:uppercase">Versions</th></tr></thead><tbody>${tableRows}</tbody></table></div>`;
     return;
   }
 
