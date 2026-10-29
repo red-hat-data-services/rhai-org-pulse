@@ -24,8 +24,7 @@
     "validate:openapi": "cp scripts/openapi-route-count.json node_modules/@org-pulse/core/scripts/ && node node_modules/@org-pulse/core/scripts/validate-openapi.js",
     "validate:dockerfile-deps": "node scripts/validate-dockerfile-deps.js",
     "update:view-owners": "node scripts/update-view-owners.js",
-    "prepare": "husky || true",
-    "postinstall": "node -e \"const fs=require('fs'),path=require('path'),src='./node_modules/@org-pulse/core/src',dst='./src';if(!fs.existsSync(dst)){if(fs.existsSync(src))fs.symlinkSync(path.resolve(src),path.resolve(dst),'dir').catch(()=>{})}\""
+    "prepare": "husky || true"
   },
   "dependencies": {
     "@dagrejs/dagre": "^3.1.1",
