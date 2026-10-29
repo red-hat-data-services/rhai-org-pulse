@@ -1,0 +1,62 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: team-tracker-tech-debt-trends
+  labels:
+    app: team-tracker
+    component: tech-debt-trends
+spec:
+  schedule: "0 6 * * *"
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 3
+  jobTemplate:
+    spec:
+      activeDeadlineSeconds: 1800
+      backoffLimit: 0
+      template:
+        metadata:
+          labels:
+            app: team-tracker
+            component: tech-debt-trends
+        spec:
+          restartPolicy: Never
+          containers:
+            - name: tech-debt-trends
+              image: quay.io/org-pulse/team-tracker-backend:latest
+              command:
+                - node
+                - scripts/generate-tech-debt-trends.mjs
+              envFrom:
+                - configMapRef:
+                    name: team-tracker-config
+              env:
+                - name: JIRA_EMAIL
+                  valueFrom:
+                    secretKeyRef:
+                      name: team-tracker-secrets
+                      key: JIRA_EMAIL
+                - name: JIRA_TOKEN
+                  valueFrom:
+                    secretKeyRef:
+                      name: team-tracker-secrets
+                      key: JIRA_TOKEN
+                - name: ORG_PULSE_URL
+                  value: http://backend:3001
+                - name: ORG_PULSE_EMAIL
+                  valueFrom:
+                    configMapKeyRef:
+                      name: team-tracker-config
+                      key: CRON_ADMIN_EMAIL
+                - name: ORG_PULSE_PROXY_SECRET
+                  valueFrom:
+                    secretKeyRef:
+                      name: proxy-auth-secret
+                      key: secret
+              resources:
+                requests:
+                  memory: "256Mi"
+                  cpu: "100m"
+                limits:
+                  memory: "1Gi"
+                  cpu: "1"

@@ -288,6 +288,12 @@ oc rollout restart deployment/backend -n team-tracker
 
 The `team-tracker-sync-refresh` CronJob fires every 15 minutes (`*/15 * * * *`) and triggers a cadence-aware refresh via `POST /api/admin/refresh-all`. Each handler has a declared cadence (e.g., `24h` for roster sync, `12h` for execution pipeline). Handlers that have run within their cadence window are skipped — most ticks complete in seconds.
 
+The AI Engineering overlay adds `team-tracker-tech-debt-trends`, scheduled daily
+at 06:00 UTC. This separate Job pod builds and uploads the six-month Tech Debt
+flow snapshot using the existing `team-tracker-secrets`, `proxy-auth-secret`,
+and `CRON_ADMIN_EMAIL` configuration. See `docs/TECH-DEBT-TRENDS.md` for the
+manual-run command.
+
 - `concurrencyPolicy: Forbid` prevents overlapping runs
 - `activeDeadlineSeconds: 1800` (30 min) accommodates the heaviest handler (`team-tracker:metrics`)
 - Poll timeout exits 0 (the backend completes independently)

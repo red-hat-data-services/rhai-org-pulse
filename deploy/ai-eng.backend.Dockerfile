@@ -21,4 +21,7 @@ COPY fixtures/ ./fixtures/
 # Add platform customizations
 COPY platform/ ./platform/
 
+# External collectors executed by OpenShift CronJobs
+COPY scripts/generate-tech-debt-trends.mjs ./scripts/generate-tech-debt-trends.mjs
+
 USER 65532
