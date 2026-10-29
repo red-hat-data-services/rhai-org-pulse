@@ -134,7 +134,7 @@
             class="text-sm border border-gray-300 dark:border-gray-600 rounded px-3 py-1.5 bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 focus:outline-none focus:ring-1 focus:ring-primary-500"
           >
             <option v-for="v in versionOptions" :key="v.id" :value="v.id">
-              {{ v.id }} ({{ v.tag }})
+              {{ v.id }}{{ v.tag ? ` (${v.tag})` : '' }}
             </option>
           </select>
         </div>
