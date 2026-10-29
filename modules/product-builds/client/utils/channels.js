@@ -35,7 +35,7 @@ export function torchLabel(channel) {
 
 // A channel adopted by a product release keeps its stack fixed for that
 // release; the rest follow whatever the base images publish. The matrix tones
-// each channel by this, which is why it does not need a separate maturity field.
+// each channel by this.
 export function isReleaseAdopted(channel) {
   return (channel?.compatible_releases || []).length > 0
 }

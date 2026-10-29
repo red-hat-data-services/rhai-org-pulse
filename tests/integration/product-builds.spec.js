@@ -148,8 +148,11 @@ test.describe('Product Builds Module @product-builds', () => {
     await page.waitForLoadState('networkidle');
     await page.waitForTimeout(DEFAULT_PAGE_WAIT_TIME);
 
-    await expect(page.getByRole('button', { name: 'Channels', exact: true })).toBeVisible();
-    await expect(page.getByRole('button', { name: 'Legacy', exact: true })).toBeVisible();
+    // The sidebar also has a "Channels" nav item, so scope the tab assertions to
+    // the page content.
+    const content = page.getByRole('main');
+    await expect(content.getByRole('button', { name: 'Channels', exact: true })).toBeVisible();
+    await expect(content.getByRole('button', { name: 'Legacy', exact: true })).toBeVisible();
     await expect(page.getByTestId('base-images-channels')).toBeVisible();
 
     const rows = page.getByTestId('base-images-channel-row');
