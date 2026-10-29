@@ -1,4 +1,16 @@
-const { jiraRequest, JIRA_HOST, fetchAllJqlResults, fetchProjectVersions } = require('../../../../shared/server/jira')
+let jiraModule
+try {
+  jiraModule = require('../../../../shared/server/jira')
+} catch (err) {
+  console.warn('[tv-fv-delta/routes] jira module not found, using stub:', err.message)
+  jiraModule = {
+    jiraRequest: null,
+    JIRA_HOST: 'https://redhat.atlassian.net',
+    fetchAllJqlResults: null,
+    fetchProjectVersions: null
+  }
+}
+const { jiraRequest, JIRA_HOST, fetchAllJqlResults, fetchProjectVersions } = jiraModule
 const { normalizeVersionName: sharedNormalize } = require('../version-utils')
 
 const JIRA_BROWSE = JIRA_HOST + '/browse'

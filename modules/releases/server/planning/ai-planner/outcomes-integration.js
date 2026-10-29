@@ -3,68 +3,76 @@
  * Features contain parent links; we extract and organize them by outcome.
  *
  * Outcomes are parent work items (RHAISTRAT-* issues) with child features.
- * The 22 priority order matches Jira plan view 7384 (Racer Strat).
+ * Outcomes are fetched live from Jira via:
+ * 1. Feature parent links (feature→outcome mapping for feature aggregation)
+ * 2. Direct Jira query for priority order (outcome-fetch.js)
+ *
+ * Priority order is cached in data/releases/planning/priority-outcomes.json
+ * and synced via cadence refresh (12h like features).
  */
 
 const OUTCOME_KEY_PATTERN = /^RHAISTRAT-\d+$/;
 
 /**
- * The 22 prioritized outcomes from Jira plan view 7384 (Racer Strat).
- * Order matches Jira plan priority. Features' parent fields reference these.
+ * Fallback outcomes (used when Jira fetch fails or cache is empty).
+ * These are loaded from data/releases/planning/priority-outcomes.json at runtime,
+ * which is synced from Jira every 12h via cadence refresh handler.
+ *
+ * Format: {orderNumber, key, title}
  */
-const PRIORITY_OUTCOMES = [
-  { key: 'RHAISTRAT-2046', title: 'AIPCC Security Policy Compliance Directive' },
-  { key: 'RHAISTRAT-2129', title: 'Outcome: RHAIE Platform Stabilization, Quality, and Cohesion' },
-  { key: 'RHAISTRAT-1513', title: 'MaaS — 3.5 Deliverables' },
-  { key: 'RHAISTRAT-2125', title: 'OCP 5 release and impact on RH AI' },
-  { key: 'RHAISTRAT-1979', title: 'Outcome: Production Resilience' },
-  { key: 'RHAISTRAT-1981', title: 'Outcome: Platform Experience for llm-d' },
-  { key: 'RHAISTRAT-1680', title: 'Parent Outcome: Unified Red Hat AI Inference (RHAII) on Any Linux and Any Kubernetes' },
-  { key: 'RHAISTRAT-2875', title: 'AI Grid MVP' },
-  { key: 'RHAISTRAT-155', title: 'Agents run governed in OpenShell on Red Hat AI in production' },
-  { key: 'RHAISTRAT-1357', title: 'Make Red Hat Inference Server the Best for Agents' },
-  { key: 'RHAISTRAT-1855', title: 'End-to-End Observability for RH AI — All Components Emitting Metrics, Traces, and Logs' },
-  { key: 'RHAISTRAT-2016', title: '[TP] AI-Native Observability Operations for RHOAI' },
-  { key: 'RHAISTRAT-1517', title: 'Observability for OpenShift AI — 3.5 Deliverables' },
-  { key: 'RHAISTRAT-1669', title: 'Red Hat AI Factory with NVIDIA: Vera Rubin Day 0 Support' },
-  { key: 'RHAISTRAT-1446', title: 'Delivering GPUaaS and Kueue Experience in OpenShift AI' },
-  { key: 'RHAISTRAT-1312', title: 'Gen AI Studio — Playground, Observability, AI Assets, and Model Specialization' },
-  { key: 'RHAISTRAT-1339', title: 'AI Hub AI Asset Delivery for Agentic Solutions' },
-  { key: 'RHAISTRAT-1498', title: '[Outcome] EvalHub Dashboard UI Experience for 3.5 & 3.6 (EA1, EA2, GA)' },
-  { key: 'RHAISTRAT-898', title: 'Deliver Role Based Access Control for RHOAI components' },
-  { key: 'RHAISTRAT-1471', title: 'Multi-Tenancy in RHOAI' },
-  { key: 'RHAISTRAT-188', title: '[Outcome] Enable AutoRAG for Automated RAG Pattern Discovery and Optimization' },
-  { key: 'RHAISTRAT-1066', title: '[Outcome] Enable AutoML' }
+const FALLBACK_OUTCOMES = [
+  { orderNumber: 1, key: 'RHAISTRAT-3004', title: 'Deliver a Production-Ready, Praxis-Native AI Gateway' },
+  { orderNumber: 2, key: 'RHAISTRAT-1981', title: 'Outcome: Platform User Experience for Model Serving' },
+  { orderNumber: 3, key: 'RHAISTRAT-2997', title: 'MaaS Governance and Platform Maturity' },
+  { orderNumber: 4, key: 'RHAISTRAT-2875', title: 'AI Grid TP - Multicluster inference use case' },
+  { orderNumber: 5, key: 'RHAISTRAT-155', title: 'Agents run governed in OpenShell on Red Hat AI in production' },
+  { orderNumber: 6, key: 'RHAISTRAT-2955', title: 'OpenClaw Enterprise runs on Red Hat AI as a Tech Preview with OpenShell governance and Red Hat AI models' },
+  { orderNumber: 7, key: 'RHAISTRAT-2686', title: '[Big Rock] SOTA Model Deployment Recipe Catalog' },
+  { orderNumber: 8, key: 'RHAISTRAT-1339', title: 'AI Hub AI Asset Delivery for Agentic Solutions' },
+  { orderNumber: 9, key: 'RHAISTRAT-2996', title: '[Outcome] AI Safety Studio: A Security-Team-Owned Workspace for Guardrail Visibility and Control' },
+  { orderNumber: 10, key: 'RHAISTRAT-2446', title: 'Platform Multimodal Experience' },
+  { orderNumber: 11, key: 'RHAISTRAT-2016', title: 'AI-Native Observability Operations for RHOAI' },
+  { orderNumber: 12, key: 'RHAISTRAT-1446', title: 'Delivering GPUaaS and Kueue Experience in OpenShift AI' },
+  { orderNumber: 13, key: 'RHAISTRAT-2046', title: 'AIPCC Security Policy Compliance Directive' },
+  { orderNumber: 14, key: 'RHAISTRAT-2129', title: 'Outcome: RHAIE Platform Stabilization, Quality, and Cohesion' },
+  { orderNumber: 15, key: 'RHAISTRAT-1513', title: 'MaaS — 3.5 Deliverables' },
+  { orderNumber: 16, key: 'RHAISTRAT-2125', title: 'OCP 5 release and impact on RH AI' },
+  { orderNumber: 17, key: 'RHAISTRAT-1979', title: 'Outcome: Production Resilience' },
+  { orderNumber: 18, key: 'RHAISTRAT-1680', title: 'Parent Outcome: Unified Red Hat AI Inference (RHAII) on Any Linux and Any Kubernetes' },
+  { orderNumber: 19, key: 'RHAISTRAT-1357', title: 'Make Red Hat Inference Server the Best for Agents' },
+  { orderNumber: 20, key: 'RHAISTRAT-1855', title: 'End-to-End Observability for RH AI — All Components Emitting Metrics, Traces, and Logs' },
+  { orderNumber: 21, key: 'RHAISTRAT-1517', title: 'Observability for OpenShift AI — 3.5 Deliverables' }
 ];
-
-/**
- * Build title → key mapping for quick outcome lookup
- */
-function buildOutcomeTitleMap() {
-  const titleMap = {};
-  PRIORITY_OUTCOMES.forEach(outcome => {
-    titleMap[outcome.title] = outcome.key;
-  });
-  return titleMap;
-}
 
 /**
  * Extract outcomes from live feature data (already from Jira 12h sync).
  * Build map of outcome key → { key, title, children }.
  *
  * @param {Array} allFeatures - Features from buildFeatureReadiness (includes parent links from Jira)
+ * @param {Array} priorityOutcomes - Outcomes in priority order (from cache or fallback)
  * @returns {Object} Map of outcomeKey -> { key, title, children: [...feature keys...], outcomeNumber: 1-22 }
  */
-function extractOutcomesFromFeatures(allFeatures) {
-  const outcomes = {};
-  const titleMap = buildOutcomeTitleMap();
+function isJiraMarker(outcome) {
+  return outcome.title && outcome.title.includes('^^^');
+}
 
-  // Initialize all outcomes (1-22)
-  PRIORITY_OUTCOMES.forEach((outcome, index) => {
+function extractOutcomesFromFeatures(allFeatures, priorityOutcomes) {
+  const outcomes = {};
+  const source = priorityOutcomes && priorityOutcomes.length > 0 ? priorityOutcomes : FALLBACK_OUTCOMES;
+  const outcomesToUse = source.filter(o => !isJiraMarker(o));
+  const titleMap = {};
+
+  // Build title→key map from priorityOutcomes
+  outcomesToUse.forEach(outcome => {
+    titleMap[outcome.title] = outcome.key;
+  });
+
+  // Initialize all outcomes
+  outcomesToUse.forEach((outcome, index) => {
     outcomes[outcome.key] = {
       key: outcome.key,
       title: outcome.title,
-      outcomeNumber: index + 1,
+      outcomeNumber: outcome.orderNumber || (index + 1),
       children: []
     };
   });
@@ -99,14 +107,20 @@ function extractOutcomesFromFeatures(allFeatures) {
  *
  * @param {Array} outcomes - Array of outcome objects from extractOutcomesFromFeatures
  * @param {Array} inPlanFeatures - Array of feature keys currently in draft-plan
- * @param {Array} allFeatures - All features (for confidence aggregation)
- * @returns {Array} Array of outcome objects with metrics
+ * @param {Array} allFeatures - All features (for confidence aggregation and version extraction)
+ * @returns {Array} Array of outcome objects with metrics and version info
  */
 function calculateOutcomeMetrics(outcomes, inPlanFeatures, allFeatures) {
   const inPlanSet = new Set(inPlanFeatures.map(f => typeof f === 'string' ? f : f.key));
   const confidenceMap = new Map();
+  const versionMap = new Map();
   allFeatures.forEach(f => {
-    confidenceMap.set(typeof f === 'string' ? f : f.key, f.confidence || f._conf || 0);
+    const key = typeof f === 'string' ? f : f.key;
+    confidenceMap.set(key, f.confidence || f._conf || 0);
+    const versions = f.targetVersions || [];
+    if (versions.length > 0) {
+      versionMap.set(key, versions);
+    }
   });
 
   return Object.values(outcomes).map(outcome => {
@@ -122,6 +136,16 @@ function calculateOutcomeMetrics(outcomes, inPlanFeatures, allFeatures) {
     const avgConfidence = inPlanConfidences.length > 0
       ? Math.round(inPlanConfidences.reduce((a, b) => a + b, 0) / inPlanConfidences.length)
       : 0;
+
+    // Collect unique versions from child features
+    const versionSet = new Set();
+    outcome.children.forEach(child => {
+      const versions = versionMap.get(child);
+      if (versions && Array.isArray(versions)) {
+        versions.forEach(v => versionSet.add(v));
+      }
+    });
+    const linkedVersions = Array.from(versionSet).sort();
 
     // Status logic: confident if all children ready, otherwise pending
     let status = 'Confident';
@@ -140,13 +164,14 @@ function calculateOutcomeMetrics(outcomes, inPlanFeatures, allFeatures) {
       percentComplete,
       confidence: avgConfidence,
       status,
-      children: outcome.children
+      children: outcome.children,
+      linkedVersions: linkedVersions
     };
   });
 }
 
 module.exports = {
-  PRIORITY_OUTCOMES,
+  FALLBACK_OUTCOMES,
   extractOutcomesFromFeatures,
   calculateOutcomeMetrics
 };

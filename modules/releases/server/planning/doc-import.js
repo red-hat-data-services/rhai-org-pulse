@@ -5,7 +5,19 @@
  * and config persistence (config.js) for the import flow.
  */
 
-const googleDocs = require('../../../../shared/server/google-docs')
+let googleDocs
+try {
+  googleDocs = require('../../../../shared/server/google-docs')
+} catch (err) {
+  console.warn('[doc-import] google-docs module not found, using stubs:', err.message)
+  // Provide safe stubs so importing doc-import doesn't crash
+  googleDocs = {
+    fetchDocument: async () => { throw new Error('google-docs module not available') },
+    extractBigRocksFromDoc: () => { throw new Error('google-docs module not available') },
+    getServiceAccountEmail: () => null
+  }
+}
+
 const { validateBigRock } = require('./validation')
 const { getConfig, loadReleaseData, releaseFilePath } = require('./config')
 
