@@ -151,6 +151,7 @@ async function getPriorityOutcomes(jiraRequest, readFromStorage, writeToStorage)
   var TWELVE_HOURS = 12 * 60 * 60 * 1000
 
   // Try cached first
+  var staleData = null
   try {
     var cached = await readFromStorage(cachePath)
     if (cached && cached.timestamp && Array.isArray(cached.data) && cached.data.length > 0) {
@@ -159,6 +160,7 @@ async function getPriorityOutcomes(jiraRequest, readFromStorage, writeToStorage)
         console.log('[release-planning] Using cached priority outcomes (' + cached.data.length + ', age: ' + Math.round(age / 3600000) + 'h)')
         return cached.data
       }
+      staleData = cached.data
       console.log('[release-planning] Priority outcomes cache expired (' + Math.round(age / 3600000) + 'h old), refreshing')
     }
   } catch {
@@ -175,6 +177,12 @@ async function getPriorityOutcomes(jiraRequest, readFromStorage, writeToStorage)
     } catch (err) {
       console.error('[release-planning] Failed to cache outcomes:', err.message)
     }
+    return outcomes
+  }
+
+  if (staleData) {
+    console.log('[release-planning] Jira refresh returned empty, using stale cache (' + staleData.length + ' outcomes)')
+    return staleData
   }
 
   return outcomes

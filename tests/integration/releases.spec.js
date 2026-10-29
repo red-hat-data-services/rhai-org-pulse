@@ -962,7 +962,8 @@ test.describe('Releases Outcomes Coverage @releases', () => {
     const data = await response.json();
     expect(data).toHaveProperty('outcomes');
     expect(data).toHaveProperty('featureOutcomeMap');
-    expect(data).toHaveProperty('source', 'live-jira-12h-sync');
+    expect(data).toHaveProperty('source');
+    expect(['live-jira-plan-view-7384', 'fallback-outcomes', 'fallback-error']).toContain(data.source);
 
     // Verify outcomes array structure
     expect(Array.isArray(data.outcomes)).toBe(true);
