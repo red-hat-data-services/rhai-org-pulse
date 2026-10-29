@@ -1,5 +1,5 @@
 <script setup>
-import { ref, onMounted, onUnmounted, inject, computed, watch } from 'vue'
+import { ref, onMounted, onUnmounted, inject, computed, watch, defineAsyncComponent } from 'vue'
 import { useScroll } from '@vueuse/core'
 import { useProduct, useDrops, useSeries } from '../composables/useDrops'
 import { useArtifacts } from '../composables/useArtifacts'
@@ -7,6 +7,8 @@ import { formatDate, envBadgeClass } from '../utils/formatting'
 import ChiBadge from '../components/ChiBadge.vue'
 import TestsSummary from '../components/TestsSummary.vue'
 import PersistentSearchBar from '../components/PersistentSearchBar.vue'
+
+const BaseImagesChannelList = defineAsyncComponent(() => import('../components/channels/BaseImagesChannelList.vue'))
 
 const PRODUCT_CONFIGS = {
   'rhaiis':            { key: 'rhaiis',        artifactType: 'containers' },
@@ -30,13 +32,27 @@ const ARTIFACT_PAGE_SIZE = 50
 const artifactOffset = ref(0)
 
 const activeTab = ref('series')
+const legacyTab = ref('series')
 const selectedSeries = ref('')
 const productConfig = ref(getConfigFromHash())
 const productKey = computed(() => productConfig.value.key)
 const artifactTypeFilter = computed(() => productConfig.value.artifactType)
 
+// Base Images now leads with the content channels that back each image. The
+// former series/artifacts views stay available under a Legacy tab.
+const isBaseImages = computed(() => productKey.value === 'base-images')
+const topTabs = computed(() => isBaseImages.value ? ['channels', 'legacy'] : ['series', 'artifacts'])
+const TAB_LABELS = { channels: 'Channels', legacy: 'Legacy', series: 'Series', artifacts: 'Artifacts' }
+const showingSeries = computed(() => isBaseImages.value
+  ? activeTab.value === 'legacy' && legacyTab.value === 'series'
+  : activeTab.value === 'series')
+const showingArtifacts = computed(() => isBaseImages.value
+  ? activeTab.value === 'legacy' && legacyTab.value === 'artifacts'
+  : activeTab.value === 'artifacts')
+
 async function load() {
-  activeTab.value = 'series'
+  activeTab.value = isBaseImages.value ? 'channels' : 'series'
+  legacyTab.value = 'series'
   selectedSeries.value = ''
   resetArtifacts()
   artifactOffset.value = 0
@@ -86,11 +102,11 @@ async function loadMoreArtifacts() {
 const { arrivedState } = useScroll(window, { offset: { bottom: 200 } })
 
 watch(() => arrivedState.bottom, (arrived) => {
-  if (arrived && activeTab.value === 'artifacts') loadMoreArtifacts()
+  if (arrived && showingArtifacts.value) loadMoreArtifacts()
 })
 
-watch(activeTab, (tab) => {
-  if (tab === 'artifacts' && artifacts.value.length === 0) {
+watch([activeTab, legacyTab], () => {
+  if (showingArtifacts.value && artifacts.value.length === 0) {
     loadArtifactsPage()
   }
 })
@@ -140,7 +156,8 @@ const groupedDrops = computed(() => {
           {{ productConfig.label || product?.product_name || product?.short_name || productKey }}
         </h1>
         <p v-if="product" class="text-sm text-gray-500 dark:text-gray-400 mt-1">
-          Overview of {{ product.short_name || productKey }} product series and their available drops
+          <template v-if="isBaseImages">Content channels and the base image drops behind them</template>
+          <template v-else>Overview of {{ product.short_name || productKey }} product series and their available drops</template>
         </p>
       </div>
       <PersistentSearchBar />
@@ -155,19 +172,39 @@ const groupedDrops = computed(() => {
       <div class="border-b border-gray-200 dark:border-gray-700">
         <nav class="flex gap-4">
           <button
-            v-for="tab in ['series', 'artifacts']"
+            v-for="tab in topTabs"
             :key="tab"
             @click="activeTab = tab"
             class="py-2 text-sm font-medium border-b-2 transition-colors"
             :class="activeTab === tab
               ? 'border-gray-900 dark:border-gray-100 text-gray-900 dark:text-gray-100'
               : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'"
-          >{{ tab.charAt(0).toUpperCase() + tab.slice(1) }}</button>
+          >{{ TAB_LABELS[tab] }}</button>
+        </nav>
+      </div>
+
+      <!-- Channels tab (Base Images) -->
+      <div v-if="isBaseImages && activeTab === 'channels'">
+        <BaseImagesChannelList />
+      </div>
+
+      <!-- Legacy sub-tabs (Base Images) -->
+      <div v-if="isBaseImages && activeTab === 'legacy'" class="border-b border-gray-200 dark:border-gray-700">
+        <nav class="flex gap-4">
+          <button
+            v-for="tab in ['series', 'artifacts']"
+            :key="tab"
+            @click="legacyTab = tab"
+            class="py-2 text-xs font-medium border-b-2 transition-colors"
+            :class="legacyTab === tab
+              ? 'border-gray-900 dark:border-gray-100 text-gray-900 dark:text-gray-100'
+              : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'"
+          >{{ TAB_LABELS[tab] }}</button>
         </nav>
       </div>
 
       <!-- Series tab -->
-      <div v-if="activeTab === 'series'" class="space-y-4">
+      <div v-if="showingSeries" class="space-y-4">
         <!-- Series filter -->
         <div class="flex items-center justify-end">
           <select
@@ -282,7 +319,7 @@ const groupedDrops = computed(() => {
       </div>
 
       <!-- Artifacts tab -->
-      <div v-if="activeTab === 'artifacts'">
+      <div v-if="showingArtifacts">
         <div v-if="artifactsLoading && artifacts.length === 0" class="text-sm text-gray-500 dark:text-gray-400">Loading artifacts…</div>
         <div v-else-if="artifactsError && artifacts.length === 0" class="text-sm text-red-600 dark:text-red-400">{{ artifactsError }}</div>
         <div v-else-if="!artifactsLoading && artifacts.length === 0" class="text-sm text-gray-500 dark:text-gray-400">No artifacts found.</div>

@@ -12,6 +12,7 @@ export const routes = {
   'base-images': ProductView,
   'builder-images': ProductView,
   'series-detail': defineAsyncComponent(() => import('./views/SeriesDetailView.vue')),
+  'channel-detail': defineAsyncComponent(() => import('./views/ChannelDetailView.vue')),
   'wheel-collections': defineAsyncComponent(() => import('./views/WheelCollectionsView.vue')),
   'drop-detail': defineAsyncComponent(() => import('./views/DropDetailView.vue')),
   'artifact-detail': defineAsyncComponent(() => import('./views/ArtifactDetailView.vue')),
