@@ -49,6 +49,7 @@ export const viewOwners = {
   'product-builds/channel-detail':                 'Einat Pacifici',
   'product-builds/channels':                       'Einat Pacifici',
   'product-builds/drop-detail':                    'Pavol Pitonak',
+  'product-builds/openshell':                      'Pavol Pitonak',
   'product-builds/overview':                       'Giulia Naponiello',
   'product-builds/package-analysis':               'Einat Pacifici',
   'product-builds/package-request':                'André Lustosa',

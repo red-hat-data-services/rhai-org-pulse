@@ -99,7 +99,7 @@ const acceleratorWarning = computed(() => {
   return [...accels].join(', ')
 })
 
-const NO_WHEELS_PRODUCTS = new Set(['rhel-ai', 'builder-images'])
+const NO_WHEELS_PRODUCTS = new Set(['rhel-ai', 'builder-images', 'openshell'])
 
 const wheelsFetched = new Set()
 
