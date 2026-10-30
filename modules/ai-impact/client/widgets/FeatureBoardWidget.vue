@@ -9,6 +9,8 @@ import ForYouSettings from '../components/ForYouSettings.vue'
 import ForYouBoardTab from '../components/ForYouBoardTab.vue'
 import { useModuleLink } from '@shared/client/composables/useModuleLink.js'
 import { useFieldDefinitions } from '@shared/client/composables/useFieldDefinitions.js'
+import { useUsageTracking } from '../composables/useUsageTracking.js'
+import { trackUsage } from '@shared/client/services/usageTracking.js'
 
 defineProps({
   size: { type: String, default: 'full' }
@@ -40,6 +42,9 @@ const loading = computed(() => rfeLoading.value || featureLoading.value || asses
 
 const showSettings = ref(false)
 
+const USAGE_PAGE = 'ai-impact::sotu/feature-board'
+useUsageTracking({ page: USAGE_PAGE, open: { settings: showSettings } })
+
 const stageOptions = [
   { value: 'not-assessed', label: 'Not Yet Assessed' },
   { value: 'needs-revision', label: 'Needs Revision' },
@@ -69,6 +74,7 @@ const availableComponents = computed(() => {
 })
 
 function handleNavigate(item) {
+  trackUsage('open', item.type === 'rfe' ? 'rfe' : 'feature', USAGE_PAGE)
   if (item.type === 'rfe') {
     crossNavigate('ai-impact', 'rfe-review', { select: item.key, from: 'sotu' })
   } else {
@@ -77,6 +83,7 @@ function handleNavigate(item) {
 }
 
 function handleSettingsUpdate(newMode, components) {
+  trackUsage('settings', 'for-you', USAGE_PAGE)
   const prefs = useForYouPreferences()
   prefs.setMode(newMode)
   prefs.setManualComponents(components)
