@@ -1,15 +1,9 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { mount, flushPromises } from '@vue/test-utils'
-import RequestPackageView from '../../client/views/RequestPackageView.vue'
+import PythonPackageRequestForm from '../../client/components/requests/PythonPackageRequestForm.vue'
 
 vi.mock('@shared/client/services/api', () => ({
   apiRequest: vi.fn()
-}))
-
-vi.mock('@shared/client/composables/useAuth', () => ({
-  useAuth: () => ({
-    user: { value: { email: 'jane@redhat.com', displayName: 'Jane Doe' } }
-  })
 }))
 
 const { apiRequest } = await import('@shared/client/services/api')
@@ -52,7 +46,7 @@ function successResponse() {
   }
 }
 
-describe('RequestPackageView', () => {
+describe('PythonPackageRequestForm', () => {
   beforeEach(() => {
     vi.clearAllMocks()
     submitRequest.mockReset()
@@ -63,10 +57,10 @@ describe('RequestPackageView', () => {
       : fetchTeams(url))
   })
 
-  it('renders the form and authenticated identity', () => {
-    const wrapper = mount(RequestPackageView)
-    expect(wrapper.text()).toContain('Request Package')
-    expect(wrapper.text()).toContain('Jane Doe')
+  it('renders the Python package form', () => {
+    const wrapper = mount(PythonPackageRequestForm)
+    expect(wrapper.find('h2').text()).toBe('Python Package Requests')
+    expect(wrapper.text()).toContain('For Python packages (wheels) only')
     expect(wrapper.find('#req-team').exists()).toBe(true)
     expect(wrapper.find('#req-package-name').exists()).toBe(true)
     expect(wrapper.find('#req-jira-id').exists()).toBe(true)
@@ -83,7 +77,7 @@ describe('RequestPackageView', () => {
     })
 
     it('states the 10 business day SLA and blocks earlier dates in the picker', async () => {
-      const wrapper = mount(RequestPackageView)
+      const wrapper = mount(PythonPackageRequestForm)
       await flushPromises()
       const notice = wrapper.find('#req-sla-notice')
       expect(notice.text()).toContain('Delivery SLA: 10 business days')
@@ -93,7 +87,7 @@ describe('RequestPackageView', () => {
     })
 
     it('rejects a delivery date inside the SLA and accepts the first date after it', async () => {
-      const wrapper = mount(RequestPackageView)
+      const wrapper = mount(PythonPackageRequestForm)
       await fillValidForm(wrapper)
       await wrapper.find('#req-delivery-timeline').setValue('2026-11-10')
       await wrapper.find('form').trigger('submit')
@@ -110,7 +104,7 @@ describe('RequestPackageView', () => {
   })
 
   it('loads team choices and submits only a selected option', async () => {
-    const wrapper = mount(RequestPackageView)
+    const wrapper = mount(PythonPackageRequestForm)
     expect(wrapper.find('#req-team').element.tagName).toBe('SELECT')
     expect(wrapper.find('#req-team').element.disabled).toBe(true)
     await flushPromises()
@@ -123,7 +117,7 @@ describe('RequestPackageView', () => {
   })
 
   it('clears the selection and ignores stale team loads when the project changes', async () => {
-    const wrapper = mount(RequestPackageView)
+    const wrapper = mount(PythonPackageRequestForm)
     await flushPromises()
     await wrapper.find('#req-team').setValue('Platform')
     let finishOldLoad
@@ -141,13 +135,13 @@ describe('RequestPackageView', () => {
   })
 
   it('offers only RHAISTRAT and RHAI now that AIPCC is deprecated', async () => {
-    const wrapper = mount(RequestPackageView)
+    const wrapper = mount(PythonPackageRequestForm)
     await flushPromises()
     expect(wrapper.findAll('#req-team-project option').map(option => option.element.value)).toEqual(['RHAISTRAT', 'RHAI'])
   })
 
   it('sends the selected project and explains where the request is filed', async () => {
-    const wrapper = mount(RequestPackageView)
+    const wrapper = mount(PythonPackageRequestForm)
     await flushPromises()
     expect(wrapper.find('#req-team-project-hint').text()).toContain('RHAISTRAT has no Epic type, so the request is filed in RHAI')
     await wrapper.find('#req-team-project').setValue('RHAI')
@@ -160,7 +154,7 @@ describe('RequestPackageView', () => {
   })
 
   it('resets the team project and selection to the original defaults', async () => {
-    const wrapper = mount(RequestPackageView)
+    const wrapper = mount(PythonPackageRequestForm)
     await flushPromises()
     await wrapper.find('#req-team-project').setValue('RHAI')
     await flushPromises()
@@ -174,7 +168,7 @@ describe('RequestPackageView', () => {
 
   it('keeps submission disabled on team load failure and supports retry', async () => {
     fetchTeams.mockRejectedValueOnce(new Error('Unavailable'))
-    const wrapper = mount(RequestPackageView)
+    const wrapper = mount(PythonPackageRequestForm)
     await flushPromises()
     expect(wrapper.text()).toContain('Could not load teams')
     expect(wrapper.find('button[type="submit"]').element.disabled).toBe(true)
@@ -186,7 +180,7 @@ describe('RequestPackageView', () => {
 
   it('explains an empty team list without allowing free text', async () => {
     fetchTeams.mockResolvedValueOnce([])
-    const wrapper = mount(RequestPackageView)
+    const wrapper = mount(PythonPackageRequestForm)
     await flushPromises()
     expect(wrapper.text()).toContain('No teams are available for this project')
     expect(wrapper.find('#req-team').element.disabled).toBe(true)
@@ -194,7 +188,7 @@ describe('RequestPackageView', () => {
   })
 
   it('shows required validation without submitting', async () => {
-    const wrapper = mount(RequestPackageView)
+    const wrapper = mount(PythonPackageRequestForm)
     await wrapper.find('form').trigger('submit')
 
     expect(submitRequest).not.toHaveBeenCalled()
@@ -206,7 +200,7 @@ describe('RequestPackageView', () => {
   })
 
   it('requires a URL only for git and other sources', async () => {
-    const wrapper = mount(RequestPackageView)
+    const wrapper = mount(PythonPackageRequestForm)
     expect(wrapper.find('#req-source-url').exists()).toBe(false)
 
     await wrapper.find('input[value="git"]').setChecked()
@@ -221,7 +215,7 @@ describe('RequestPackageView', () => {
   })
 
   it('accepts hardware and testing acknowledgements', async () => {
-    const wrapper = mount(RequestPackageView)
+    const wrapper = mount(PythonPackageRequestForm)
     await flushPromises()
     await wrapper.find('#req-team').setValue('Platform')
     await wrapper.find('#req-package-name').setValue('vllm')
@@ -239,7 +233,7 @@ describe('RequestPackageView', () => {
   })
 
   it('submits the backend payload without a requester field', async () => {
-    const wrapper = mount(RequestPackageView)
+    const wrapper = mount(PythonPackageRequestForm)
     await fillValidForm(wrapper)
     await wrapper.find('#req-version').setValue('2.5.1')
     await wrapper.find('#req-release-target').setValue('3.4, 3.5')
@@ -280,7 +274,7 @@ describe('RequestPackageView', () => {
       })
       .mockResolvedValueOnce(successResponse())
 
-    const wrapper = mount(RequestPackageView)
+    const wrapper = mount(PythonPackageRequestForm)
     await fillValidForm(wrapper)
     await wrapper.find('form').trigger('submit')
     await flushPromises()
@@ -304,7 +298,7 @@ describe('RequestPackageView', () => {
     })
     submitRequest.mockRejectedValueOnce(duplicate)
 
-    const wrapper = mount(RequestPackageView)
+    const wrapper = mount(PythonPackageRequestForm)
     await fillValidForm(wrapper)
     await wrapper.find('form').trigger('submit')
     await flushPromises()
@@ -328,7 +322,7 @@ describe('RequestPackageView', () => {
     })
     submitRequest.mockRejectedValueOnce(rateLimit)
 
-    const wrapper = mount(RequestPackageView)
+    const wrapper = mount(PythonPackageRequestForm)
     await fillValidForm(wrapper)
     await wrapper.find('form').trigger('submit')
     await flushPromises()
