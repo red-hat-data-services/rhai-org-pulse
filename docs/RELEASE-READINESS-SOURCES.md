@@ -1,15 +1,22 @@
 # Release Readiness Dashboard: Sources and UI Coverage
 
-## Dashboard snapshot
+## RC build-date source order
 
-![Release Readiness dashboard snapshot](assets/release-readiness-ea2-overview.png)
+The diagram shows how `phases[].build_ready_date` is selected for each RC
+number found by the extractor when its Jira test Epic is present.
+
+The selection logic applies to every release version processed by the
+extractor, independently for each RC phase it finds. The `rhoai-3.5.EA2`
+references below are examples only.
+
+![Build Received source order for every release and RC found: manual override, Stage Promoter, Product Pages with YAML filling missing fields, then Jira. Jira searches Epics by release Fix Version and build-helper summary, without restricting the project or initiative. For phase RC number n, use the matching Push to Stage resolutiondate, then try the matching Prepare resolutiondate if the first is missing or before Code Freeze. Test Started comes separately from the RCn Builds Testing Epic's first In Progress transition.](assets/rc-build-date-source.svg)
 
 ## Source conventions
 
 - `RELEASE_VERSION` is the canonical release name, for example `rhoai-3.5.EA2`.
 - `JIRA_VERSIONS` may provide exact Jira version names. Otherwise the extractor
   derives candidates and validates them against the `RHOAIENG` project.
-- For EA2, the version clause is:
+- Example: the EA2 version clause for `rhoai-3.5.EA2` is:
 
   ```jql
   (fixVersion IN ('rhoai-3.5.EA2', '3.5 EA2 RHOAI RELEASE')
@@ -23,6 +30,10 @@
   values belong in this document.
 
 ## Product Pages REST queries
+
+The examples use `rhoai-3.5.EA2`. For other releases, the extractor derives
+the Product Pages label and, when the corresponding file exists, the checked-in
+YAML fallback path from `RELEASE_VERSION`.
 
 The Product Pages client performs these calls:
 
@@ -53,21 +64,23 @@ The Product Pages client performs these calls:
   Authorization: Bearer <access token>
   ```
 
-  The extractor derives the label `3.5 EA2` from `rhoai-3.5.EA2`, then scans
+  For this example, the extractor derives the label `3.5 EA2` from
+  `rhoai-3.5.EA2`, then scans
   task `name`, `flags`, `date_start`, and `date_finish`:
 
-  - GA: task name contains `3.5 EA2`, flag `ga`, and `RHOAI`; fallback name
-    contains `3.5 EA2` and `RHOAI RELEASE`.
-  - Code freeze: name contains `3.5 EA2 RHOAI Code Freeze`; fallbacks are
-    `RHOAI Feature Freeze`, then `AIPCC Code Freeze`.
-  - RC1 build: name contains `3.5 EA2` and `RC1`.
-  - RC2 build: name contains `3.5 EA2` and `RC2`.
+  - GA: task name contains the derived release label, flag `ga`, and `RHOAI`;
+    fallback name contains the label and `RHOAI RELEASE`.
+  - Code freeze: name contains the derived release label and `RHOAI Code Freeze`;
+    fallbacks are `RHOAI Feature Freeze`, then `AIPCC Code Freeze`.
+  - RC build: the release-cycle matcher uses the RC number from each Jira phase
+    to find the matching Product Pages build task for that release.
 
   The selected date is the later of `date_start` and `date_finish`; if only one
   exists, that one is used.
 
 - If Product Pages is unavailable or has no code-freeze date, code freeze falls
-  back to `jira/jira-release-variables-3.5.0-ea2.yaml`, reading
+  back to the YAML file derived from the release version. For this example it
+  is `jira/jira-release-variables-3.5.0-ea2.yaml`, which provides
   `code_freeze_date`.
 
 ## Executed Jira JQL
@@ -218,7 +231,25 @@ The Product Pages client performs these calls:
 - Requests `status` and returns the count plus a Jira filter URL.
 - Feeds the Open Issues to Validate banner.
 
-### 9. Test-phase Epics for Nightly/RC dates
+### Release Cycle Metrics source table
+
+| Displayed value | Source and fallback |
+| --- | --- |
+| Code Freeze | Product Pages schedule; the checked-in release-variable YAML fills the field when Product Pages has no value. |
+| Build Received for each RC found (`phases[].build_ready_date`) | Manual override → Stage Promoter → Product Pages/YAML → separate Jira build-helper query by release Fix Version: match the RC number in the phase to the Epic summary; use the `Push to Stage` Epic `resolutiondate`, then the matching `Prepare` Epic `resolutiondate` → `null`. |
+| Test Started | First Jira changelog transition to `In Progress` on the test-phase Epic. |
+| Test Finished | Jira test-phase Epic `resolutiondate`; `updated` only if the Epic is Done and has no resolution date. |
+| TFAs Passed | Latest TFA task `updated` date once every task is In Progress or Done. |
+| TFAs Triaged | Latest TFA task `updated` date once every task is Done. |
+| Blockers Resolved | `null` while any blocker is open; otherwise latest resolved blocker `resolutiondate`, falling back to `updated`. |
+| Working-day counts | Calculated locally from the dates; Monday–Friday only, with no public holidays excluded. |
+
+### 9. Jira test-phase Epics and Build Received helper query
+
+Test-phase dates and Build Received use separate Jira queries. The first is
+initiative-scoped; the build-helper lookup uses the release Fix Version.
+
+#### Initiative query for test-phase Epics
 
 - Function: `fetch_test_phase_epic_dates()`
 - JQL:
@@ -229,13 +260,55 @@ The Product Pages client performs these calls:
   AND issuetype = Epic
   ```
 
-- Requests `summary`, `status`, `updated`, `resolutiondate`, and `issuetype`.
-- Python classifies summaries into Nightly, RC1, RC2, or RC3 and identifies build
-  Epics versus test Epics.
-- `updated` is used as a test-start proxy; `resolutiondate` (or Done `updated`)
-  is used as a completion proxy.
-- Feeds the Test Execution Phases accordion and the Jira fallback for cycle
-  build dates.
+- Requests `summary`, `status`, `updated`, `resolutiondate`, and `issuetype`,
+  and expands each Epic's status-transition history.
+- The query returns Epics under the release initiative. The extractor uses the
+  matching `Builds Testing` Epic's first transition to `In Progress` for Test
+  Started and its `resolutiondate` for Test Finished, falling back to `updated`
+  only when that Epic is Done and has no resolution date. It does not source
+  Build Received from this query.
+
+#### Separate Fix Version query for Jira build-helper Epics
+
+- Function: `fetch_build_helper_epic_dates()`
+- JQL example for `rhoai-3.6.EA2`:
+
+  ```jql
+  fixVersion IN ('rhoai-3.6.EA2', '3.6 EA2 RHOAI RELEASE')
+  AND issuetype = Epic
+  AND (summary ~ "Prepare" OR summary ~ "Push to Stage")
+  ```
+
+- The version values are configured by `JIRA_VERSIONS` or derived from the
+  release version and validated against Jira.
+- This query has no project or initiative-parent restriction. It finds Epics
+  with the matching Fix Version and build-helper summary, including helpers
+  outside the release testing initiative.
+- For a dashboard phase with RC number `n`, the extractor matches helper
+  summaries containing `RCn`. It reads `resolutiondate`, tries `Push to Stage`
+  before `Prepare`, and never uses a build Epic's `updated` date. A missing date
+  or a date before Code Freeze causes it to try the next candidate. Test Started
+  is not an upper bound, so a helper Epic's later `resolutiondate` can still be
+  reported as Build Received.
+
+#### Other Build Received sources
+
+- Stage Promoter data comes from successful matching runs of
+  `red-hat-data-services/rhods-devops-infra`'s `stage-promoter.yaml` GitHub
+  Actions workflow. The extractor matches release/build type from the successful
+  `show-info` job log and uses the run completion date. For each RC with a
+  known Test Started date, it selects the latest matching date strictly after
+  the known lower bound—Code Freeze for RC1, or the latest earlier RC's Test
+  Started date for later RCs—and on or before that RC's Test Started date. If
+  no lower bound is known, only the Test Started upper bound applies. It skips
+  this source when `GITHUB_TOKEN`/`GH_TOKEN` is unset or the API lookup fails.
+- The release-variable YAML is checked in under the extractor repository's
+  `jira/` directory (for example, `jira/jira-release-variables-3.6.0-ea2.yaml`).
+  The extractor merges those RC milestone values into the schedule only when
+  Product Pages has no value for the corresponding fields; CI reads this
+  version-controlled file.
+- These sources feed Build Received in Release Cycle Metrics. Test Started and
+  Test Finished remain sourced from the test-phase Epic query above.
 
 ### 10. TFA milestone dates
 
@@ -253,7 +326,7 @@ The Product Pages client performs these calls:
 - If every task is In Progress or Done, the latest `updated` becomes
   `tfas_passed_date`. If every task is Done, the latest `updated` becomes
   `tfas_triaged_date`.
-- Feeds both RC1 and RC2 cycle timelines with release-scoped dates.
+- Feeds the returned RC cycle timelines with release-scoped dates.
 
 ### 11. Resolved blockers
 
@@ -273,7 +346,7 @@ The Product Pages client performs these calls:
 
 - Requests `status`, `resolutiondate`, and `updated`; selects the latest
   resolution date, falling back to updated.
-- Feeds both RC1 and RC2 cycle timelines.
+- Feeds blocker resolution dates into every returned RC cycle timeline.
 
 ### 12. TFA totals
 
@@ -406,16 +479,23 @@ executed during extraction.
   - Displays phase name, done/total, percentage, RAG, and expandable tasks.
   - Source: initiative child JQL and task data returned through child queries.
 - Release Cycle Metrics:
-  - Displays code freeze, RC1/RC2 build-received dates, working-day counts,
+  - Displays code freeze and Build Received dates for every returned RC phase,
+    working-day counts,
     test start/finish, TFA milestones, and blocker resolution.
-  - Sources: Product Pages plus Jira test-phase/TFA/blocker queries; working-day
-    counts are calculated locally.
+  - Build-date source order: optional `ACTUAL_BUILD_DATES` override, Stage
+    Promoter, Product Pages/YAML, then Jira as a last fallback. Jira searches
+    by release Fix Version and build-helper summary without a project or
+    initiative restriction, matches the RC number in the phase to the Epic
+    summary, then tries `push to stage` before `prepare`. It reads the selected
+    Epic's `resolutiondate`; only dates before Code Freeze are skipped. Test
+    Started does not cap Build Received.
+    Other dates come from the Product Pages code-freeze schedule or checked-in
+    YAML fallback and Jira test-phase/TFA/blocker queries; working-day counts
+    are calculated locally.
 
 ## Known data caveat
 
-Jira test-phase `updated` timestamps are proxies, not dedicated test-start
-timestamps. A later edit can make `test_started_date` later than
-`test_finished_date`; the UI currently displays the supplied values rather than
-reordering or suppressing them.
-
-Assisted-by: Codex
+Jira test-start dates use the first changelog transition to `In Progress`.
+Jira completion dates use `resolutiondate`, with `updated` only as a fallback
+for Done Epics. These dates reflect Jira records and may not be the exact time
+the build was physically received or testing began.
