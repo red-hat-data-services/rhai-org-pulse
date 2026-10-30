@@ -32,7 +32,32 @@ const FALLBACK_OUTCOMES = [
   { orderNumber: 9, key: 'RHAISTRAT-2996', title: '[Outcome] AI Safety Studio: A Security-Team-Owned Workspace for Guardrail Visibility and Control' },
   { orderNumber: 10, key: 'RHAISTRAT-2446', title: 'Platform Multimodal Experience' },
   { orderNumber: 11, key: 'RHAISTRAT-2016', title: 'AI-Native Observability Operations for RHOAI' },
-  { orderNumber: 12, key: 'RHAISTRAT-1446', title: 'Delivering GPUaaS and Kueue Experience in OpenShift AI' }
+  { orderNumber: 12, key: 'RHAISTRAT-1446', title: 'Delivering GPUaaS and Kueue Experience in OpenShift AI' },
+  { orderNumber: 13, key: 'RHAISTRAT-2921', title: '[🎯^^^RANKED OUTCOMES ABOVE THIS LINE^^^...]' },
+  { orderNumber: 14, key: 'RHAISTRAT-2046', title: 'AIPCC Security Policy Compliance Directive' },
+  { orderNumber: 15, key: 'RHAISTRAT-2129', title: 'Outcome: RHAIE Platform Stabilization, Quality, and Cohesion' },
+  { orderNumber: 16, key: 'RHAISTRAT-1513', title: 'MaaS — 3.5 Deliverables' },
+  { orderNumber: 17, key: 'RHAISTRAT-2125', title: 'OCP 5 release and impact on RH AI' },
+  { orderNumber: 18, key: 'RHAISTRAT-1979', title: 'Outcome: Production Resilience' },
+  { orderNumber: 19, key: 'RHAISTRAT-1680', title: 'Parent Outcome: Unified Red Hat AI Inference (RHAII) on Any Linux and Any Kubernetes' },
+  { orderNumber: 20, key: 'RHAISTRAT-1357', title: 'Make Red Hat Inference Server the Best for Agents' },
+  { orderNumber: 21, key: 'RHAISTRAT-1855', title: 'End-to-End Observability for RH AI — All Components Emitting Metrics, Traces, and Logs' },
+  { orderNumber: 22, key: 'RHAISTRAT-1517', title: 'Observability for OpenShift AI — 3.5 Deliverables' },
+  { orderNumber: 23, key: 'RHAISTRAT-1669', title: 'Red Hat AI Factory with NVIDIA: Vera Rubin Dashboard' },
+  { orderNumber: 24, key: 'RHAISTRAT-2995', title: '[Outcome] Graph AutoRAG - Relationship-Aware Agentic RAG' },
+  { orderNumber: 25, key: 'RHAISTRAT-1312', title: 'Gen AI Studio — Playground, Observability, AI Experimentation' },
+  { orderNumber: 26, key: 'RHAISTRAT-1498', title: '[Outcome] EvalHub Dashboard UI Experience' },
+  { orderNumber: 27, key: 'RHAISTRAT-898', title: 'Deliver Role Based Access Control for RHOAI' },
+  { orderNumber: 28, key: 'RHAISTRAT-1471', title: 'Multi-Tenancy in RHOAI' },
+  { orderNumber: 29, key: 'RHAISTRAT-188', title: '[Outcome] Enable AutoRAG for Automated RAG' },
+  { orderNumber: 30, key: 'RHAISTRAT-1066', title: '[Outcome] Enable AutoML' },
+  { orderNumber: 31, key: 'RHAISTRAT-1480', title: 'Automated Migration: RHOAI 2.25 to 3.5 (EUS)' },
+  { orderNumber: 32, key: 'RHAISTRAT-1210', title: '[Outcome] Integration Safety/Guardrails for MC Conversations' },
+  { orderNumber: 33, key: 'RHAISTRAT-1261', title: '[Outcome] Agent Red Teaming Platform' },
+  { orderNumber: 34, key: 'RHAISTRAT-1264', title: '[Outcome] Build a TrustyAI Agent Safety Solution' },
+  { orderNumber: 35, key: 'RHAISTRAT-1269', title: '[Outcome] Platform-Level Safety Enforcement' },
+  { orderNumber: 36, key: 'RHAISTRAT-1303', title: 'Summit \'26 Model Validation Delivery' },
+  { orderNumber: 37, key: 'RHAISTRAT-1317', title: '[Outcome] Physics-Based Observability for LLMs' }
 ];
 
 /**
