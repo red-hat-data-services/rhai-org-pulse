@@ -2592,7 +2592,7 @@ are not selected on open. If no release qualifies, no version is selected.
 ```
 
 **Notes:**
-- `test_timeline` entries are the Epics shown as accordion rows in the "Test Execution Phases" section; `breakdowns.*.test_execution.phases[*].tasks` are the child tasks shown when a row is expanded. `test_timeline` rows only render a generic `Done`/`Active`/`Pending` badge derived from `rag` — Resolution is only surfaced for the child tasks, not the Epic itself.
+- `test_timeline` entries are the Epics shown as accordion rows in the "Test Execution Phases" section; `breakdowns.*.test_execution.phases[*].tasks` are the child tasks shown when a row is expanded. The row's icon, progress bar, and status badge are derived from `rag`, except that the UI shows a grey `Not Done` badge when every child task has status category `Done` and resolution `"Won't Do"` or `"Obsolete"`. Resolution is only surfaced for the child tasks, not the Epic itself.
 - Task objects carry the Jira `status`/`status_category` and `resolution` (same semantics as `resolution` in [Person Metrics](#person-metrics--datapeoplenamejson): the raw Jira resolution name, or `null`/absent while unresolved).
 - The UI renders a task's label as `<Status> - <Resolution>` (e.g. `"Done - Won't Do"`) whenever `resolution` is set, falling back to just `<Status>` otherwise; `resolution` is optional — older payloads without it still render using `status` alone.
 - No-work resolutions (`"Won't Do"`, `"Can't Do"`, `"Obsolete"`, `"Duplicate"`, `"Cannot Reproduce"`) are rendered in a muted/gray style instead of green, even when `status_category` is `"Done"`, since the work itself wasn't completed.
