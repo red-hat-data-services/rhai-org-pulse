@@ -59,13 +59,18 @@ Browser integration tests cover Dashboard to selected run to individual test,
 return navigation, missing runs, retry, narrow screens, and ignored legacy
 build fields. The fixture is synthetic; the product reads the existing API.
 
-## GPUaaS dev verification — 2026-10-28
+## GPUaaS dev verification — 2026-11-01
 
-The dev preview runs application code from commit
-`489642ac9c368a744c086ecd188d5aab28b8636d`. The deployed landing page shows
-20 real runs through the existing OpenSearch connection. View run opened the
-selected 17-test run, and its return link opened Recent Runs. Both deployments
-are ready. Runtime settings and OAuth configuration are unchanged. No OpenSearch
-data was updated.
+The frontend and backend images were built from the PR Dockerfiles at commit
+`cb4fa024d2dc51410e8061fbf392caf4178214b2`, using core tag `v2.0.91`.
+This revision removes the shared dependency and security changes from the PR.
+Both image builds completed, and both deployments are ready. The deployed
+backend source matches the PR. Runtime settings and OAuth configuration are
+unchanged. The previous image references are saved locally for rollback.
+
+The landing page shows 20 real runs through the existing OpenSearch connection.
+View run opened Ad Hoc invocation `1791447487869` with 17 tests: 11 passed and
+6 skipped. Its return link opened Recent Runs. No OpenSearch data was updated.
 
 [GPUaaS landing-page screenshot](images/rhai-10567-recent-runs-gpuaas.jpg).
+[GPUaaS selected-run screenshot](images/rhai-10567-selected-run-gpuaas.jpg).
