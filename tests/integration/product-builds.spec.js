@@ -149,10 +149,12 @@ test.describe('Product Builds Module @product-builds', () => {
     await page.waitForTimeout(DEFAULT_PAGE_WAIT_TIME);
 
     // The sidebar also has a "Channels" nav item, so scope the tab assertions to
-    // the page content.
+    // the page content. Base Images opens on Legacy, with Channels second.
     const content = page.getByRole('main');
-    await expect(content.getByRole('button', { name: 'Channels', exact: true })).toBeVisible();
-    await expect(content.getByRole('button', { name: 'Legacy', exact: true })).toBeVisible();
+    await expect(content.getByRole('button', { name: /^(Legacy|Channels)$/ })).toHaveText(['Legacy', 'Channels']);
+    await expect(content.getByRole('button', { name: 'Series', exact: true })).toBeVisible();
+
+    await content.getByRole('button', { name: 'Channels', exact: true }).click();
     await expect(page.getByTestId('base-images-channels')).toBeVisible();
 
     const rows = page.getByTestId('base-images-channel-row');
@@ -173,6 +175,7 @@ test.describe('Product Builds Module @product-builds', () => {
     // The back button returns to the Base Images view.
     await page.getByRole('button', { name: 'Back to Base Images', exact: true }).click();
     await expect(page).toHaveURL(url => url.hash.includes('product-builds/base-images'));
+    await content.getByRole('button', { name: 'Channels', exact: true }).click();
     await expect(page.getByTestId('base-images-channels')).toBeVisible();
 
     const appErrors = page.errors.filter(e => !/status of (429|404|503)/.test(e.message));
