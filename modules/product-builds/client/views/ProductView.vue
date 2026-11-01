@@ -38,10 +38,10 @@ const productConfig = ref(getConfigFromHash())
 const productKey = computed(() => productConfig.value.key)
 const artifactTypeFilter = computed(() => productConfig.value.artifactType)
 
-// Base Images now leads with the content channels that back each image. The
-// former series/artifacts views stay available under a Legacy tab.
+// Base Images leads with the series/artifacts views; the content channels that
+// back each image live under a Channels tab.
 const isBaseImages = computed(() => productKey.value === 'base-images')
-const topTabs = computed(() => isBaseImages.value ? ['channels', 'legacy'] : ['series', 'artifacts'])
+const topTabs = computed(() => isBaseImages.value ? ['legacy', 'channels'] : ['series', 'artifacts'])
 const TAB_LABELS = { channels: 'Channels', legacy: 'Legacy', series: 'Series', artifacts: 'Artifacts' }
 const showingSeries = computed(() => isBaseImages.value
   ? activeTab.value === 'legacy' && legacyTab.value === 'series'
@@ -51,7 +51,7 @@ const showingArtifacts = computed(() => isBaseImages.value
   : activeTab.value === 'artifacts')
 
 async function load() {
-  activeTab.value = isBaseImages.value ? 'channels' : 'series'
+  activeTab.value = isBaseImages.value ? 'legacy' : 'series'
   legacyTab.value = 'series'
   selectedSeries.value = ''
   resetArtifacts()
