@@ -113,16 +113,16 @@ function viewBaseImages() {
   nav.navigateTo('base-images')
 }
 
-// Channel drops are RHAIBI base image drops, so they open in the product-builds
-// drop detail view for the base-images product. The channel travels along so the
-// drop page can point out the images built for it.
+// Channel drops are RHAIBI base image drops, and a drop's pull spec is the
+// artifact key the image is published under, so open that image directly.
 function viewDrop(drop) {
   if (!drop?.key) return
-  nav.navigateTo('drop-detail', {
-    key: drop.key,
-    product: drop.product_key || 'base-images',
-    channel: selectedName.value || undefined,
-  })
+  const product = drop.product_key || 'base-images'
+  if (drop.pullspec) {
+    nav.navigateTo('artifact-detail', { key: drop.pullspec, product })
+    return
+  }
+  nav.navigateTo('drop-detail', { key: drop.key, product })
 }
 </script>
 
