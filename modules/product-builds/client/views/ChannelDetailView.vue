@@ -26,13 +26,15 @@ function goBack() {
   nav.navigateTo('base-images')
 }
 
+// A drop's pull spec is the artifact key its image is published under, so open
+// that image directly. Fall back to the drop when no pull spec is published.
 function viewDrop(drop) {
   if (!drop?.key) return
-  nav.navigateTo('drop-detail', {
-    key: drop.key,
-    product: 'base-images',
-    channel: channelName.value || undefined,
-  })
+  if (drop.pullspec) {
+    nav.navigateTo('artifact-detail', { key: drop.pullspec, product: drop.product_key || 'base-images' })
+    return
+  }
+  nav.navigateTo('drop-detail', { key: drop.key, product: drop.product_key || 'base-images' })
 }
 </script>
 

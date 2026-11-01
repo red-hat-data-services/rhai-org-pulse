@@ -205,7 +205,7 @@ describe('ChannelsView', () => {
     wrapper.unmount()
   })
 
-  it('opens a drop detail when a RHAIBI drop is clicked', async () => {
+  it('opens the image artifact detail when a RHAIBI drop is clicked', async () => {
     const { wrapper, nav } = mountView({ channel: 'cuda13.0-torch2.11-ubi9' })
     await flushPromises()
 
@@ -216,10 +216,28 @@ describe('ChannelsView', () => {
     dropButton.click()
     await flushPromises()
 
+    expect(nav.navigateTo).toHaveBeenCalledWith('artifact-detail', {
+      key: 'quay.io/aipcc/base-images/cuda13.0-torch2.11-ubi9:base-v2026091101',
+      product: 'base-images',
+    })
+    wrapper.unmount()
+  })
+
+  it('falls back to the drop detail when a drop has no pull spec', async () => {
+    const channel = detail('cuda13.0-torch2.11-ubi9')
+    channel.drops[0] = { ...channel.drops[0], pullspec: undefined }
+    apiRequest.mockImplementation((path) => path.startsWith('/modules/product-builds/channels?')
+      ? Promise.resolve({ source: 'sample', channels: CHANNELS })
+      : Promise.resolve({ source: 'sample', channel }))
+    const { wrapper, nav } = mountView({ channel: 'cuda13.0-torch2.11-ubi9' })
+    await flushPromises()
+
+    drawer().querySelector('button[aria-label="View drop base-v2026091101"]').click()
+    await flushPromises()
+
     expect(nav.navigateTo).toHaveBeenCalledWith('drop-detail', {
       key: 'base-images-base-v2026091101',
       product: 'base-images',
-      channel: 'cuda13.0-torch2.11-ubi9',
     })
     wrapper.unmount()
   })
