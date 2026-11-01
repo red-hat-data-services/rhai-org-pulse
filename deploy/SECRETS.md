@@ -1,6 +1,9 @@
 # Secrets Reference
 
-All secrets used by Org Pulse, organized by platform group and module. No structural deployment changes are needed — existing OpenShift Secret objects and `.env` files continue to work.
+All secrets used by Org Pulse, organized by platform group and module. Existing
+OpenShift Secret objects and `.env` files continue to work, but a Secret key only
+reaches a container when the deployment wiring injects it — see the ai-catalyst
+section for a key this repo wires through the environment overlay.
 
 ## Platform Secret Groups
 
