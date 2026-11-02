@@ -313,7 +313,7 @@ module.exports = function registerAIPlannerRoutes(router, context) {
       const jiraRequest = context.jiraClient && context.jiraClient.jiraRequest;
       let priorityOutcomes = [];
       try {
-        priorityOutcomes = await fetchPriorityOutcomes(jiraRequest, readFromStorage, writeToStorage);
+        priorityOutcomes = await fetchPriorityOutcomes(jiraRequest, readFromStorage, writeToStorage, FALLBACK_OUTCOMES);
       } catch (outcomeErr) {
         console.warn('[ai-planner] getPriorityOutcomes failed, using empty list:', outcomeErr.message);
         priorityOutcomes = [];
