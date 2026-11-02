@@ -424,12 +424,22 @@ module.exports = function registerRoutes(router, context) {
    *       - { in: query, name: suite, schema: { type: string } }
    *       - { in: query, name: version, schema: { type: string } }
    *       - { in: query, name: latest, schema: { type: boolean } }
+   *       - { in: query, name: limit, schema: { type: integer, minimum: 1, maximum: 200 }, description: Limit run groups after ordering newest first }
+   *       - { in: query, name: includeBugs, schema: { type: boolean, default: true }, description: Set false for lightweight run metadata without RCA retrieval }
    *       - { in: query, name: dateFrom, schema: { type: string, format: date } }
    *       - { in: query, name: dateTo, schema: { type: string, format: date } }
    *     responses:
-   *       200: { description: Test run rows }
+   *       200: { description: "Test run rows ordered by latest recorded execution time. Lightweight responses contain suite, invocation, version and execution timestamp." }
+   *       400: { description: Invalid limit }
    */
   router.get('/test-suites', requireAuth, safe(async function (req, res) {
+    let limit = null;
+    if (req.query.limit !== undefined) {
+      if (!/^[1-9]\d*$/.test(String(req.query.limit)) || Number(req.query.limit) > 200) {
+        return res.status(400).json({ error: 'limit must be an integer between 1 and 200' });
+      }
+      limit = Number(req.query.limit);
+    }
     let query = runFilters({
       version: req.query.version,
       dateFrom: req.query.dateFrom,
@@ -492,9 +502,23 @@ module.exports = function registerRoutes(router, context) {
         rhodsOperatorDigest: latest.rhods_operator_digest || null,
         clusterName: latest.cluster_name || null
       };
-    }).sort((a, b) => String(b.timestamp || '').localeCompare(String(a.timestamp || '')));
+    });
+    rows.sort((a, b) => {
+      const time = row => Number.isFinite(Date.parse(row.timestamp)) ? Date.parse(row.timestamp) : -Infinity;
+      const left = time(a), right = time(b);
+      if (left !== right) return right > left ? 1 : -1;
+      const key = row => JSON.stringify([row.suite, row.invocationId]);
+      return key(a) < key(b) ? -1 : key(a) > key(b) ? 1 : 0;
+    });
 
     if (req.query.latest === 'true' && req.query.suite) rows = rows.slice(0, 1);
+    if (limit !== null) rows = rows.slice(0, limit);
+    if (req.query.includeBugs === 'false') {
+      return res.json({
+        rows: rows.map(({ suite, invocationId, timestamp, rhoaiVersion }) => ({
+          suite, invocationId, timestamp, rhoaiVersion
+        })) });
+    }
     // Naming mismatch: RCA run_id joins to the test-run invocation_id.
     // Execution run_id is obsolete legacy ETL data and is never this join key.
     const findings = await productBugFindings({}, {
