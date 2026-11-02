@@ -4133,7 +4133,7 @@ function renderBigRocks(data){
     `).join('');
 
     const relSel = document.getElementById('f-rel');
-    const activeRelease = relSel && relSel.value ? relSel.value : 'All Releases';
+    const activeRelease = esc(relSel && relSel.value ? relSel.value : 'All Releases');
     panel.innerHTML = `<div class="br-title">🎯 Outcomes — ${activeRelease} <span style="font-size:11px;color:#94a3b8;font-weight:400;margin-left:6px">${outcomes.length} ranked from Jira plan view 7384</span></div><div style="overflow-x:auto;border:1px solid #e5e7eb;border-radius:6px;background:#fff"><table style="width:100%;border-collapse:collapse;font-size:12px"><thead style="background:#f9fafb;border-bottom:1px solid #e5e7eb"><tr><th style="padding:8px 12px;text-align:center;font-weight:600;color:#374151;text-transform:uppercase">OC#</th><th style="padding:8px 12px;text-align:left;font-weight:600;color:#374151;text-transform:uppercase">Outcome</th><th style="padding:8px 12px;text-align:center;font-weight:600;color:#374151;text-transform:uppercase">In Plan</th><th style="padding:8px 12px;text-align:center;font-weight:600;color:#374151;text-transform:uppercase">% Complete</th><th style="padding:8px 12px;text-align:center;font-weight:600;color:#374151;text-transform:uppercase">Confidence</th><th style="padding:8px 12px;text-align:center;font-weight:600;color:#374151;text-transform:uppercase">Status</th><th style="padding:8px 12px;text-align:left;font-weight:600;color:#374151;text-transform:uppercase">Versions</th></tr></thead><tbody>${tableRows}</tbody></table></div>`;
     return;
   }
