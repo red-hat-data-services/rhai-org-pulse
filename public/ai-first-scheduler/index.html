@@ -2938,7 +2938,7 @@ function detectEvt(s){
 }
 
 // ── STATE ─────────────────────────────────────────────────────────────────────
-let allData=[], sortCol='Rank', sortAsc=true;
+let allData=[], sortCol='OutcomeNumber', sortAsc=true;
 // 'demo' until a live payload schedules successfully. Surfaced next to the feature
 // count, because a stale embedded dataset is indistinguishable from real data.
 let dataSource='demo';
@@ -4118,22 +4118,9 @@ function renderBigRocks(data){
     : null;
 
   if (outcomes) {
-    // Render outcomes from API
-    const items = outcomes.map((outcome, idx) => {
-      let cls = 'br-ok', icon = '✓';
-      if (outcome.total === 0) { cls = ''; icon = '—'; }
-      else if (outcome.inPlan === 0) { cls = 'br-miss'; icon = '✗'; }
-      else if (outcome.inPlan < outcome.total) { cls = 'br-warn'; icon = '⚠'; }
-
-      // Use percentComplete (inPlan/total) for the main display, not confidence
-      const pctColor = outcome.percentComplete >= 80 ? '#2e7d32' : outcome.percentComplete >= 40 ? '#f57f17' : '#c62828';
-
-      return `<div class="br-item br-clickable ${cls}" title="Click to filter table to ${outcome.title}"><div class="br-name">${icon} ${outcome.key} ${outcome.title}</div><div style="font-size:13px;font-weight:700;color:${pctColor};margin:4px 0 2px">${outcome.percentComplete}%</div><div style="font-size:10px;color:#777">${outcome.inPlan}/${outcome.total} in-plan</div></div>`;
-    }).join('');
-
     panel.style.display = '';
-    // Render outcomes as table instead of cards
-    const tableRows = data.outcomes.map((o, idx) => `
+    // Render outcomes as a table instead of cards
+    const tableRows = outcomes.map((o, idx) => `
       <tr style="border-bottom:1px solid #e5e7eb;hover:background-color:#f9fafb">
         <td style="padding:8px 12px;text-align:center;font-weight:bold;color:#1f2937">${o.outcomeNumber}</td>
         <td style="padding:8px 12px"><a href="https://issues.redhat.com/browse/${o.key}" target="_blank" style="color:#2563eb;font-weight:600;text-decoration:none">${o.key}</a><div style="font-size:11px;color:#6b7280;margin-top:2px">${o.title}</div></td>
@@ -4145,7 +4132,9 @@ function renderBigRocks(data){
       </tr>
     `).join('');
 
-    panel.innerHTML = `<div class="br-title">🎯 Outcomes — 3.6 <span style="font-size:11px;color:#94a3b8;font-weight:400;margin-left:6px">12 ranked from Jira plan view 7384</span></div><div style="overflow-x:auto;border:1px solid #e5e7eb;border-radius:6px;background:#fff"><table style="width:100%;border-collapse:collapse;font-size:12px"><thead style="background:#f9fafb;border-bottom:1px solid #e5e7eb"><tr><th style="padding:8px 12px;text-align:center;font-weight:600;color:#374151;text-transform:uppercase">OC#</th><th style="padding:8px 12px;text-align:left;font-weight:600;color:#374151;text-transform:uppercase">Outcome</th><th style="padding:8px 12px;text-align:center;font-weight:600;color:#374151;text-transform:uppercase">In Plan</th><th style="padding:8px 12px;text-align:center;font-weight:600;color:#374151;text-transform:uppercase">% Complete</th><th style="padding:8px 12px;text-align:center;font-weight:600;color:#374151;text-transform:uppercase">Confidence</th><th style="padding:8px 12px;text-align:center;font-weight:600;color:#374151;text-transform:uppercase">Status</th><th style="padding:8px 12px;text-align:left;font-weight:600;color:#374151;text-transform:uppercase">Versions</th></tr></thead><tbody>${tableRows}</tbody></table></div>`;
+    const relSel = document.getElementById('f-rel');
+    const activeRelease = relSel && relSel.value ? relSel.value : 'All Releases';
+    panel.innerHTML = `<div class="br-title">🎯 Outcomes — ${activeRelease} <span style="font-size:11px;color:#94a3b8;font-weight:400;margin-left:6px">${outcomes.length} ranked from Jira plan view 7384</span></div><div style="overflow-x:auto;border:1px solid #e5e7eb;border-radius:6px;background:#fff"><table style="width:100%;border-collapse:collapse;font-size:12px"><thead style="background:#f9fafb;border-bottom:1px solid #e5e7eb"><tr><th style="padding:8px 12px;text-align:center;font-weight:600;color:#374151;text-transform:uppercase">OC#</th><th style="padding:8px 12px;text-align:left;font-weight:600;color:#374151;text-transform:uppercase">Outcome</th><th style="padding:8px 12px;text-align:center;font-weight:600;color:#374151;text-transform:uppercase">In Plan</th><th style="padding:8px 12px;text-align:center;font-weight:600;color:#374151;text-transform:uppercase">% Complete</th><th style="padding:8px 12px;text-align:center;font-weight:600;color:#374151;text-transform:uppercase">Confidence</th><th style="padding:8px 12px;text-align:center;font-weight:600;color:#374151;text-transform:uppercase">Status</th><th style="padding:8px 12px;text-align:left;font-weight:600;color:#374151;text-transform:uppercase">Versions</th></tr></thead><tbody>${tableRows}</tbody></table></div>`;
     return;
   }
 

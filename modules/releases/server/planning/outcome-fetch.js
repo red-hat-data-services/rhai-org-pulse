@@ -174,7 +174,10 @@ async function fetchOutcomesInPriorityOrder(jiraRequest, fallbackOutcomes) {
  */
 async function getPriorityOutcomes(jiraRequest, readFromStorage, writeToStorage, fallbackOutcomes) {
   var cachePath = DATA_PREFIX + '/priority-outcomes.json'
-  var TWELVE_HOURS = 12 * 60 * 60 * 1000
+  // Short TTL so Jira edits (title/summary changes) land in the planner within
+  // one PM working cycle instead of half a day — same jiraRequest()/token the
+  // feature path already uses, just a single small key-in query re-run more often.
+  var CACHE_TTL_MS = 40 * 60 * 1000
 
   // Try cached first
   var staleData = null
@@ -182,12 +185,12 @@ async function getPriorityOutcomes(jiraRequest, readFromStorage, writeToStorage,
     var cached = await readFromStorage(cachePath)
     if (cached && cached.timestamp && Array.isArray(cached.data) && cached.data.length > 0) {
       var age = Date.now() - cached.timestamp
-      if (age < TWELVE_HOURS) {
-        console.log('[release-planning] Using cached priority outcomes (' + cached.data.length + ', age: ' + Math.round(age / 3600000) + 'h)')
+      if (age < CACHE_TTL_MS) {
+        console.log('[release-planning] Using cached priority outcomes (' + cached.data.length + ', age: ' + Math.round(age / 60000) + 'm)')
         return cached.data
       }
       staleData = cached.data
-      console.log('[release-planning] Priority outcomes cache expired (' + Math.round(age / 3600000) + 'h old), refreshing')
+      console.log('[release-planning] Priority outcomes cache expired (' + Math.round(age / 60000) + 'm old), refreshing')
     }
   } catch {
     // Cache miss or error; fetch fresh
