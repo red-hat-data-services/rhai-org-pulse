@@ -150,6 +150,7 @@ export const viewOwners = {
   'releases/reports/container-health-index':       'Sanket Jagtap',
   'releases/reports/cve-action-report':            'Doug Hellmann',
   'releases/reports/cve-sustaining':               'Saiesh Prabhu',
+  'releases/reports/cve-upstream-components':      'Doug Hellmann',
   'releases/reports/pre-release-cve':              'Moulali Shikalwadi',
   'releases/reports/release-readiness':            'Arthy Loganathan',
   'releases/reports/rhoai-component-architectures': 'Waldemar Znoinski',

@@ -36,6 +36,14 @@ export const reports = [
     component: defineAsyncComponent(() => import('./CveSustainingReport.vue'))
   },
   {
+    id: 'cve-upstream-components',
+    label: 'CVE Upstream Components',
+    description: 'Open CVE tickets grouped by upstream package and ecosystem, with live Jira searches.',
+    icon: 'ShieldAlert',
+    tags: ['Security', 'CVE', 'Upstream'],
+    component: defineAsyncComponent(() => import('./CveUpstreamComponentsReport.vue'))
+  },
+  {
     id: 'cve-action-report',
     label: 'CVE Action Report',
     description: 'Component-owned CVE work queue with due dates, review outcomes, intake, and age.',

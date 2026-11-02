@@ -4214,3 +4214,189 @@ test.describe('Releases Execute deep-link @releases', () => {
     expect(unexpectedDemoResourceErrors(page)).toHaveLength(0);
   });
 });
+
+/**
+ * CVE Upstream Components Report
+ *
+ * Verify the report is reachable through Releases navigation, renders the
+ * snapshot projection, keeps the donut denominator stable while filtering, and
+ * handles legacy and synthetic data-quality cases.
+ */
+test.describe('Releases CVE Upstream Components @releases', () => {
+  test.beforeEach(async ({ page }) => {
+    setupErrorTracking(page);
+  });
+
+  test.afterEach(async ({ page }, testInfo) => {
+    logCapturedErrors(page, testInfo);
+  });
+
+  test('navigates from Releases sidebar to the report and filters its fixture-backed table', async ({ page, request }) => {
+    const response = await request.get('/api/modules/releases/cve-sustaining');
+    expect(response.ok()).toBe(true);
+    const snapshot = await response.json();
+    expect(snapshot.upstreamComponentDataVersion).toBe(1);
+    expect(snapshot.openIssueRecords).toHaveLength(8);
+    expect(snapshot.openIssueRecords.every(record => Array.isArray(record.labels))).toBe(true);
+    expect(snapshot.openIssueRecords.some(record => typeof record.upstreamComponent === 'string')).toBe(true);
+
+    await page.goto('/#/releases/plan');
+    await page.waitForLoadState('networkidle');
+    await page.getByRole('button', { name: 'Reports', exact: true }).click();
+    await expect(page).toHaveURL(/#\/releases\/reports$/);
+
+    await page.getByRole('button', { name: 'CVE Upstream Components', exact: true }).click();
+    await expect(page.getByRole('heading', { name: 'CVE Upstream Components', exact: true })).toBeVisible();
+    await expect(page.getByText('The chart includes all 4 open tickets with an upstream component')).toBeVisible();
+    await expect(page.getByText(/open tickets have no upstream component/)).toHaveCount(0);
+
+    const legend = page.getByRole('list', { name: 'Ecosystem distribution legend' });
+    const allLegendText = await legend.innerText();
+    await expect(legend).not.toContainText('Unknown');
+    await expect(legend).toContainText('Multiple ecosystems');
+    await expect(legend).toContainText('3 tickets (75%)');
+    await expect(legend).toContainText('1 ticket (25%)');
+    await expect(legend).toContainText('npm');
+
+    const table = page.getByRole('table');
+    const allRows = table.locator('tbody tr');
+    await expect(allRows).toHaveCount(2);
+    await expect(allRows.nth(0)).toContainText('fickling');
+    await expect(allRows.nth(0)).toContainText('npm, pypi');
+    await expect(allRows.nth(0).locator('td').nth(2)).toHaveText('3');
+    await expect(allRows.nth(1)).toContainText('react-dom');
+
+    const componentLink = allRows.nth(0).getByRole('link', { name: 'fickling' });
+    await expect(componentLink).toHaveAttribute('target', '_blank');
+    await expect(componentLink.locator('svg.lucide-external-link')).toBeVisible();
+    await expect(componentLink).toHaveAccessibleName('fickling (opens in a new tab)');
+    await expect(componentLink).toHaveAttribute('rel', /noopener/);
+    await expect(componentLink).toHaveAttribute('rel', /noreferrer/);
+    const jql = new URL(await componentLink.getAttribute('href')).searchParams.get('jql');
+    expect(jql).toContain('cf[10632] ~');
+    expect(jql).toContain('fickling');
+    expect(jql).not.toContain('labels = "ecosystem:');
+    expect(jql).toContain('status not in (Closed, Resolved)');
+    expect(jql).not.toMatch(/\bkey\s+in\b/i);
+    expect(jql).not.toMatch(/fixVersion|Target Version/i);
+
+    await page.getByRole('combobox', { name: 'Filter component rows by ecosystem' }).selectOption('npm');
+    await expect(allRows).toHaveCount(2);
+    await expect(allRows.nth(0)).toContainText('fickling');
+    await expect(allRows.nth(1)).toContainText('react-dom');
+    expect(await legend.innerText()).toBe(allLegendText);
+
+    await page.getByRole('combobox', { name: 'Filter component rows by ecosystem' }).selectOption('pypi');
+    await expect(allRows).toHaveCount(1);
+    await expect(allRows.first().locator('td').nth(2)).toHaveText('3');
+    await page.getByRole('combobox', { name: 'Filter component rows by ecosystem' }).selectOption('');
+    await expect(allRows).toHaveCount(2);
+    expect(page.errors).toHaveLength(0);
+  });
+
+  test('does not add horizontal document overflow beyond the Reports shell on mobile', async ({ page }) => {
+    await page.setViewportSize({ width: 390, height: 844 });
+    await page.goto('/#/releases/reports');
+    await page.getByRole('button', { name: 'CVE Upstream Components', exact: true }).waitFor();
+    const shellBaselineWidth = await page.evaluate(() => document.documentElement.scrollWidth);
+
+    await page.goto('/#/releases/reports?report=cve-upstream-components');
+    await expect(page.getByRole('heading', { name: 'CVE Upstream Components', exact: true })).toBeAttached();
+    await expect(page.getByText(/The chart includes all \d+ open tickets/)).toBeAttached();
+    await expect(page.getByRole('list', { name: 'Ecosystem distribution legend' })).toBeAttached();
+    const reportWidth = await page.evaluate(() => document.documentElement.scrollWidth);
+
+    expect(reportWidth).toBeLessThanOrEqual(shellBaselineWidth);
+    await page.getByRole('button', { name: 'Collapse sidebar' }).click();
+    await expect(page.getByRole('heading', { name: 'CVE Upstream Components', exact: true })).toBeVisible();
+    await expect(page.getByRole('list', { name: 'Ecosystem distribution legend' })).toBeVisible();
+    await expect.poll(() => page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(390);
+  });
+
+  test('shows legacy snapshot refresh guidance and keeps the cache after refresh failure', async ({ page }) => {
+    const legacySnapshot = {
+      lastRefreshed: '2026-10-30T12:00:00.000Z',
+      openIssueRecords: [{ key: 'RHAI-LEGACY-1', status: 'New', upstreamComponent: 'not-available' }]
+    };
+    await page.route('**/api/modules/releases/cve-sustaining', async route => {
+      await route.fulfill({ json: legacySnapshot });
+    });
+    await page.route('**/api/modules/releases/cve-sustaining/refresh', async route => {
+      await route.fulfill({
+        status: 500,
+        contentType: 'application/json',
+        body: JSON.stringify({ error: 'Refresh failed: Jira is unavailable' })
+      });
+    });
+
+    await page.goto('/#/releases/reports?report=cve-upstream-components');
+    await expect(page.getByText('Refresh from Jira to load upstream component details', { exact: true })).toBeVisible();
+    await page.getByRole('button', { name: 'Refresh from Jira to load upstream component details' }).click();
+    await expect(page.getByRole('alert')).toContainText('Refresh failed: Jira is unavailable');
+    await expect(page.getByText('Refresh from Jira to load upstream component details', { exact: true })).toBeVisible();
+    expect(page.errors.filter(error => !error.message.includes('status of 500'))).toHaveLength(0);
+  });
+
+  test('merges normalized component names, infers ecosystems and keeps donut colors unique', async ({ page }) => {
+    const syntheticSnapshot = {
+      upstreamComponentDataVersion: 1,
+      lastRefreshed: '2026-11-02T12:30:00.000Z',
+      jiraSearchBase: 'https://jira.example/issues/?jql=',
+      openIssueRecords: [
+        { key: 'RHAI-PILLOW-1', status: 'New', labels: ['ecosystem:pypi'], upstreamComponent: 'pillow' },
+        { key: 'RHAI-PILLOW-2', status: 'New', labels: [], upstreamComponent: 'PILLOW' },
+        { key: 'RHAI-PILLOW-3', status: 'New', labels: ['ecosystem:Unknown'], upstreamComponent: 'Pillow' },
+        { key: 'RHAI-MULTI-1', status: 'New', labels: ['ecosystem:pypi'], upstreamComponent: 'multi-package' },
+        { key: 'RHAI-MULTI-2', status: 'New', labels: ['ecosystem:rpm'], upstreamComponent: 'MULTI-PACKAGE' },
+        { key: 'RHAI-MULTI-3', status: 'New', labels: [], upstreamComponent: 'multi-package' },
+        { key: 'RHAI-GO-1', status: 'New', labels: ['ecosystem:golang'], upstreamComponent: 'golang; example.org/lib' },
+        { key: 'RHAI-GO-2', status: 'New', labels: [], upstreamComponent: 'EXAMPLE.ORG/LIB' },
+        { key: 'RHAI-UNKNOWN', status: 'New', labels: [], upstreamComponent: 'unknown-package' },
+        { key: 'RHAI-MISSING', status: 'New', labels: ['ecosystem:ruby'], upstreamComponent: null }
+      ]
+    };
+    await page.route('**/api/modules/releases/cve-sustaining', async route => {
+      await route.fulfill({ json: syntheticSnapshot });
+    });
+
+    await page.goto('/#/releases/reports?report=cve-upstream-components');
+    await expect(page.getByText('The chart includes all 9 open tickets with an upstream component')).toBeVisible();
+    await expect(page.getByText(/3 open tickets belong to components associated with multiple ecosystems/)).toBeVisible();
+    await expect(page.getByText(/table row totals may overlap/)).toHaveCount(0);
+    await expect(page.getByText(/ecosystem membership is not constrained/)).toHaveCount(0);
+
+    const legend = page.getByRole('list', { name: 'Ecosystem distribution legend' });
+    await expect(legend).toContainText('Multiple ecosystems');
+    await expect(legend).toContainText('3 tickets (33.33%)');
+    await expect(legend).toContainText('2 tickets (22.22%)');
+    const swatches = await legend.locator('li [aria-hidden="true"]').evaluateAll(elements =>
+      elements.map(element => element.style.backgroundColor)
+    );
+    expect(swatches).toHaveLength(4);
+    expect(new Set(swatches).size).toBe(4);
+
+    const selector = page.getByRole('combobox', { name: 'Filter component rows by ecosystem' });
+    await expect(selector.locator('option').filter({ hasText: 'ruby' })).toHaveCount(0);
+    const tableRows = page.getByRole('table').locator('tbody tr');
+    await expect(tableRows).toHaveCount(4);
+    const pillow = tableRows.filter({ hasText: 'pillow' });
+    await expect(pillow).toHaveCount(1);
+    await expect(pillow.locator('td').nth(1)).toHaveText('pypi');
+    await expect(pillow.locator('td').nth(2)).toHaveText('3');
+    const go = tableRows.filter({ hasText: 'example.org/lib' });
+    await expect(go).toHaveCount(1);
+    await expect(go.locator('td').nth(2)).toHaveText('2');
+    await expect(go).not.toContainText('golang; ');
+
+    await selector.selectOption('rpm');
+    await expect(tableRows).toHaveCount(1);
+    await expect(tableRows.first().locator('td').nth(1)).toHaveText('pypi, rpm');
+    await expect(tableRows.first().locator('td').nth(2)).toHaveText('3');
+    const jql = new URL(await tableRows.first().getByRole('link').getAttribute('href')).searchParams.get('jql');
+    expect(jql).not.toContain('labels = "ecosystem:');
+    await selector.selectOption('Unknown');
+    await expect(tableRows).toHaveCount(1);
+    await expect(tableRows.first().locator('td').nth(0)).toHaveText('unknown-package');
+    expect(page.errors).toHaveLength(0);
+  });
+});

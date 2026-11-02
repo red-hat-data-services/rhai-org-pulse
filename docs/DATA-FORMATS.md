@@ -990,10 +990,18 @@ Admin-configurable settings for the AI Impact module.
 The CVE sustaining snapshot may include `slaCompliance` for quarterly SLA and
 possibly-closable counts, and `actionReportRecords` for the component-scoped CVE
 Action Report. Each open issue projection includes a `possiblyClosable` flag
-used to highlight matching tickets in drill-down lists.
+used to highlight matching tickets in drill-down lists. Newly aggregated snapshots
+set top-level `upstreamComponentDataVersion` to `1`; each `openIssueRecords` item
+includes Jira `labels` as a string array and `upstreamComponent` as a trimmed
+string or `null`. The component comes from Jira `customfield_10632`; absent, blank,
+or non-string values project as `null`, and non-array labels project as `[]`. The
+fixture shows synthetic matching component names across release versions and
+ecosystems. Older cached snapshots without the version marker remain legacy data:
+the API does not invent these fields, and a refresh is required to load them.
 
 ```json
 {
+  "upstreamComponentDataVersion": 1,
   "slaCompliance": {
     "possiblyClosableCount": 5,
     "quarters": [
@@ -1049,15 +1057,43 @@ used to highlight matching tickets in drill-down lists.
   },
   "openIssueRecords": [
     {
-      "key": "RHAIENG-123",
-      "summary": "CVE-2026-0123 in example package",
+      "key": "RHAIENG-1001",
+      "summary": "CVE-2026-0001 in golang stdlib",
+      "component": "Model Serving",
+      "components": ["Model Serving"],
+      "versions": ["rhoai-2.17"],
+      "status": "New",
+      "assignee": "Alice",
+      "duedate": "2026-06-01",
+      "possiblyClosable": false,
+      "labels": ["ecosystem:pypi"],
+      "upstreamComponent": "fickling"
+    },
+    {
+      "key": "RHAIENG-1002",
+      "summary": "CVE-2026-0002 in openssl",
+      "component": "Model Serving",
+      "components": ["Model Serving"],
+      "versions": ["rhoai-2.16", "rhoai-2.17"],
+      "status": "In Progress",
+      "assignee": "Alice",
+      "duedate": "2026-09-15",
+      "possiblyClosable": false,
+      "labels": ["ecosystem:pypi"],
+      "upstreamComponent": "fickling"
+    },
+    {
+      "key": "RHAIENG-1003",
+      "summary": "CVE-2026-0003 in python requests library",
       "component": "Model Serving",
       "components": ["Model Serving"],
       "versions": ["rhoai-2.17"],
       "status": "In Progress",
-      "assignee": "Alice Example",
-      "duedate": null,
-      "possiblyClosable": true
+      "assignee": "Alice",
+      "duedate": "2026-09-29",
+      "possiblyClosable": false,
+      "labels": ["ecosystem:npm"],
+      "upstreamComponent": "fickling"
     }
   ]
 }
@@ -1110,10 +1146,34 @@ display as **Unspecified** in score breakdowns.
 
 Older snapshots may omit `actionReportRecords`; the API treats that as an
 empty projection and the report remains unavailable until the next sustaining
-refresh. Extra record fields are ignored, and missing optional values are
-treated as empty/null for backward-compatible reads. Component membership is
+refresh. Snapshots without `upstreamComponentDataVersion` predate the upstream
+component projection and remain readable without fabricated `labels` or
+`upstreamComponent` values; refresh from Jira to obtain the new fields. Extra
+record fields are ignored, and missing optional values are treated as empty/null
+for backward-compatible reads. Component membership is
 preserved as an array because an issue is counted once in each assigned
 component's report.
+
+The CVE Upstream Components report ignores tickets without an upstream component
+in both the table and donut. It trims names, removes a leading `golang; `
+(case-insensitively), and groups by the remaining component name ignoring case
+across all release versions. Displayed component names are lowercase. Each
+component appears once with its total unique open-ticket count and the sorted
+union of its known ecosystems. Unlabeled/Unknown occurrences inherit known
+ecosystems from other occurrences of the same component; **Unknown** is used only
+when the entire component group has no known ecosystem. A component can list
+multiple ecosystems, such as `pypi, rpm`.
+
+The donut counts each included ticket once using its component group's inferred
+ecosystems: its sole known ecosystem, **Unknown**, or **Multiple ecosystems**
+when the group has more than one known ecosystem. Each slice has a unique color,
+shared by its legend swatch. Ecosystem selection filters component rows by
+membership without reducing their ticket counts or changing the donut.
+Named-component Jira links use `cf[10632] ~` phrase text search, not exact field
+equality, so similarly named components may match. Links intentionally do not
+restrict ecosystem labels: they include the group's unlabeled and multi-ecosystem
+occurrences regardless of the selected table filter. No per-row Unknown warning
+is shown.
 
 ---
 
