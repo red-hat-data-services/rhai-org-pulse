@@ -64,6 +64,11 @@ describe('feature-query', function() {
       expect(QUERY_FIELDS).toContain('project')
     })
 
+    it('includes parent and Epic Link so outcome linkage does not depend on the candidates cache', function() {
+      expect(QUERY_FIELDS).toContain('parent')
+      expect(QUERY_FIELDS).toContain('customfield_10014')
+    })
+
     it('omits description to keep the Features List request path light', function() {
       expect(QUERY_FIELDS).not.toContain('description')
     })
@@ -101,6 +106,27 @@ describe('feature-query', function() {
     it('handles null assignee', function() {
       var result = normalizeIssue({ key: 'RHAISTRAT-4', fields: { assignee: null } })
       expect(result.assignee).toBeNull()
+    })
+
+    it('extracts parentKey from the standard parent field', function() {
+      var result = normalizeIssue({
+        key: 'RHAISTRAT-2117',
+        fields: { parent: { key: 'RHAISTRAT-1339' } }
+      })
+      expect(result.parentKey).toBe('RHAISTRAT-1339')
+    })
+
+    it('falls back to Epic Link when parent field is absent', function() {
+      var result = normalizeIssue({
+        key: 'RHAISTRAT-2118',
+        fields: { customfield_10014: 'RHAISTRAT-1339' }
+      })
+      expect(result.parentKey).toBe('RHAISTRAT-1339')
+    })
+
+    it('sets parentKey to null when neither parent nor Epic Link is present', function() {
+      var result = normalizeIssue({ key: 'RHAISTRAT-2119', fields: {} })
+      expect(result.parentKey).toBeNull()
     })
 
     it('extracts component names from objects', function() {

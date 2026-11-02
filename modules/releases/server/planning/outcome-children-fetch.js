@@ -164,5 +164,7 @@ async function fetchOutcomeChildren(jiraClient, outcomeKeys) {
 module.exports = {
   fetchOutcomeChildren: fetchOutcomeChildren,
   normalizeChild: normalizeChild,
-  versionNames: versionNames
+  versionNames: versionNames,
+  resolveParentKey: resolveParentKey,
+  EPIC_LINK_FIELD: EPIC_LINK_FIELD
 }
