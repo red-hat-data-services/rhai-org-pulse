@@ -217,8 +217,9 @@ module.exports = function registerAIPlannerRoutes(router, context) {
       console.error('Outcomes fetch error:', err);
       // Return fallback outcomes even on error (graceful degradation)
       res.json({
-        outcomes: FALLBACK_OUTCOMES.slice(0, 12).map((outcome) => ({
+        outcomes: FALLBACK_OUTCOMES.slice(0, 12).map((outcome, index) => ({
           ...outcome,
+          outcomeNumber: outcome.orderNumber || (index + 1),
           inPlan: 0,
           total: 0,
           percentComplete: 0,
@@ -309,7 +310,7 @@ module.exports = function registerAIPlannerRoutes(router, context) {
    */
   router.get('/ai-planner', requireAuth, requireScope('releases:read'), async function(req, res) {
     try {
-      // Fetch priority outcomes (live from cache synced from Jira every 12h)
+      // Fetch priority outcomes (live from cache synced from Jira every 40min)
       const jiraRequest = context.jiraClient && context.jiraClient.jiraRequest;
       let priorityOutcomes = [];
       try {
