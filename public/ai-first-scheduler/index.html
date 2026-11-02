@@ -4119,8 +4119,16 @@ function renderBigRocks(data){
 
   if (outcomes) {
     panel.style.display = '';
+    const relSel = document.getElementById('f-rel');
+    const rawRelease = relSel && relSel.value ? relSel.value : '';
+    // Linked versions read like "3.7 EA RHOAI RELEASE" — match by substring so
+    // picking "3.7" keeps any outcome with at least one 3.7 version in plan.
+    const visibleOutcomes = rawRelease
+      ? outcomes.filter(o => o.linkedVersions && o.linkedVersions.some(v => v.toLowerCase().includes(rawRelease.toLowerCase())))
+      : outcomes;
+    const activeRelease = esc(rawRelease || 'All Releases');
     // Render outcomes as a table instead of cards
-    const tableRows = outcomes.map(o => `
+    const tableRows = visibleOutcomes.map(o => `
       <tr style="border-bottom:1px solid #e5e7eb">
         <td style="padding:8px 12px;text-align:center;font-weight:bold;color:#1f2937">${o.outcomeNumber}</td>
         <td style="padding:8px 12px"><a href="https://issues.redhat.com/browse/${esc(o.key)}" target="_blank" style="color:#2563eb;font-weight:600;text-decoration:none">${esc(o.key)}</a><span style="font-size:9px;color:#1d4ed8;margin-left:6px;cursor:pointer;font-weight:600" onclick="event.stopPropagation(); viewOutcomeFeatures('${esc(o.key)}')">→ view features</span><div style="font-size:11px;color:#6b7280;margin-top:2px">${esc(o.title)}</div></td>
@@ -4132,9 +4140,7 @@ function renderBigRocks(data){
       </tr>
     `).join('');
 
-    const relSel = document.getElementById('f-rel');
-    const activeRelease = esc(relSel && relSel.value ? relSel.value : 'All Releases');
-    panel.innerHTML = `<div class="br-title">🎯 Outcomes — ${activeRelease} <span style="font-size:11px;color:#94a3b8;font-weight:400;margin-left:6px">${outcomes.length} ranked from Jira plan view 7384</span></div><div style="overflow-x:auto;border:1px solid #e5e7eb;border-radius:6px;background:#fff"><table style="width:100%;border-collapse:collapse;font-size:12px"><thead style="background:#f9fafb;border-bottom:1px solid #e5e7eb"><tr><th style="padding:8px 12px;text-align:center;font-weight:600;color:#374151;text-transform:uppercase">OC#</th><th style="padding:8px 12px;text-align:left;font-weight:600;color:#374151;text-transform:uppercase">Outcome</th><th style="padding:8px 12px;text-align:center;font-weight:600;color:#374151;text-transform:uppercase">In Plan</th><th style="padding:8px 12px;text-align:center;font-weight:600;color:#374151;text-transform:uppercase">% Complete</th><th style="padding:8px 12px;text-align:center;font-weight:600;color:#374151;text-transform:uppercase">Confidence</th><th style="padding:8px 12px;text-align:center;font-weight:600;color:#374151;text-transform:uppercase">Status</th><th style="padding:8px 12px;text-align:left;font-weight:600;color:#374151;text-transform:uppercase">Versions</th></tr></thead><tbody>${tableRows}</tbody></table></div>`;
+    panel.innerHTML = `<div class="br-title">🎯 Outcomes — ${activeRelease} <span style="font-size:11px;color:#94a3b8;font-weight:400;margin-left:6px">${visibleOutcomes.length} of ${outcomes.length} ranked, from Jira plan view 7384</span></div><div style="overflow-x:auto;border:1px solid #e5e7eb;border-radius:6px;background:#fff"><table style="width:100%;border-collapse:collapse;font-size:12px"><thead style="background:#f9fafb;border-bottom:1px solid #e5e7eb"><tr><th style="padding:8px 12px;text-align:center;font-weight:600;color:#374151;text-transform:uppercase">OC#</th><th style="padding:8px 12px;text-align:left;font-weight:600;color:#374151;text-transform:uppercase">Outcome</th><th style="padding:8px 12px;text-align:center;font-weight:600;color:#374151;text-transform:uppercase">In Plan</th><th style="padding:8px 12px;text-align:center;font-weight:600;color:#374151;text-transform:uppercase">% Complete</th><th style="padding:8px 12px;text-align:center;font-weight:600;color:#374151;text-transform:uppercase">Confidence</th><th style="padding:8px 12px;text-align:center;font-weight:600;color:#374151;text-transform:uppercase">Status</th><th style="padding:8px 12px;text-align:left;font-weight:600;color:#374151;text-transform:uppercase">Versions</th></tr></thead><tbody>${tableRows}</tbody></table></div>`;
     return;
   }
 
