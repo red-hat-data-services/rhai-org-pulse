@@ -4120,15 +4120,15 @@ function renderBigRocks(data){
   if (outcomes) {
     panel.style.display = '';
     // Render outcomes as a table instead of cards
-    const tableRows = outcomes.map((o, idx) => `
-      <tr style="border-bottom:1px solid #e5e7eb;hover:background-color:#f9fafb">
+    const tableRows = outcomes.map(o => `
+      <tr style="border-bottom:1px solid #e5e7eb">
         <td style="padding:8px 12px;text-align:center;font-weight:bold;color:#1f2937">${o.outcomeNumber}</td>
-        <td style="padding:8px 12px"><a href="https://issues.redhat.com/browse/${o.key}" target="_blank" style="color:#2563eb;font-weight:600;text-decoration:none">${o.key}</a><div style="font-size:11px;color:#6b7280;margin-top:2px">${o.title}</div></td>
+        <td style="padding:8px 12px"><a href="https://issues.redhat.com/browse/${esc(o.key)}" target="_blank" style="color:#2563eb;font-weight:600;text-decoration:none">${esc(o.key)}</a><div style="font-size:11px;color:#6b7280;margin-top:2px">${esc(o.title)}</div></td>
         <td style="padding:8px 12px;text-align:center">${o.inPlan}/${o.total}</td>
         <td style="padding:8px 12px;text-align:center"><div style="display:flex;align-items:center;justify-content:center;gap:4px"><div style="width:40px;height:4px;background:#e5e7eb;border-radius:2px"><div style="width:${o.percentComplete}%;height:100%;background:#10b981;border-radius:2px"></div></div><span style="font-weight:600;color:#1f2937;width:28px;text-align:right">${o.percentComplete}%</span></div></td>
         <td style="padding:8px 12px;text-align:center;font-weight:600;color:${o.confidence>=80?'#059669':o.confidence>=60?'#ca8a04':'#dc2626'}">${o.confidence}%</td>
-        <td style="padding:8px 12px;text-align:center;font-size:12px;font-weight:500;color:${o.status==='Confident'?'#059669':o.status==='Lagging'?'#ea580c':'#6b7280'}">${o.status}</td>
-        <td style="padding:8px 12px;color:#374151;font-weight:500">${o.linkedVersions && o.linkedVersions.length ? o.linkedVersions.join(', ') : '—'}</td>
+        <td style="padding:8px 12px;text-align:center;font-size:12px;font-weight:500;color:${o.status==='Confident'?'#059669':o.status==='Lagging'?'#ea580c':'#6b7280'}">${esc(o.status)}</td>
+        <td style="padding:8px 12px;color:#374151;font-weight:500">${o.linkedVersions && o.linkedVersions.length ? o.linkedVersions.map(esc).join(', ') : '—'}</td>
       </tr>
     `).join('');
 

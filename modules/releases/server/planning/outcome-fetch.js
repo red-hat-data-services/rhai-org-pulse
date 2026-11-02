@@ -164,7 +164,7 @@ async function fetchOutcomesInPriorityOrder(jiraRequest, fallbackOutcomes) {
  * 3. If successful, merge fresh titles with FALLBACK_OUTCOMES structure
  * 4. If Jira fails, fall back to FALLBACK_OUTCOMES entirely
  *
- * The outcome of this function determines what goes into the 12h cache.
+ * The outcome of this function determines what goes into the 40-min cache.
  *
  * @param {Function} jiraRequest - Bound jiraRequest function from jira client
  * @param {Function} readFromStorage - Storage read function
