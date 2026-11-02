@@ -156,3 +156,8 @@ suite, recorded version, and View run. The page uses the existing
 View run opens the existing Overview view for that exact suite and invocation.
 Loading, empty, retry, and refresh states are covered by client and integration
 tests. Build metadata is outside this landing-page change.
+
+See the [Recent Runs contract](docs/rhai-10567-recent-runs-contract.md) for
+navigation, page states, and deployment evidence. The
+[API response format](docs/DATA-FORMATS.md) documents the synthetic
+[unit-test fixture](__tests__/fixtures/recent-runs.json).

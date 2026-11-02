@@ -3,7 +3,7 @@ import { flushPromises, mount } from '@vue/test-utils'
 import RecentRunsView from '../../client/views/RecentRunsView.vue'
 import { filters, resetFilters } from '../../client/composables/useWorkflowValidation'
 import { apiRequest } from '@shared/client/services/api'
-import fixture from '../../../../fixtures/workflow-validation/recent-runs.json'
+import fixture from '../fixtures/recent-runs.json'
 
 vi.mock('@shared/client/services/api', () => ({ apiRequest: vi.fn() }))
 
