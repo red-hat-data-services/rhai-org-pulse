@@ -1,5 +1,5 @@
 <template>
-  <div>
+  <div class="min-w-0 w-full overflow-x-clip">
     <div class="flex flex-col items-stretch gap-3 mb-4 sm:flex-row sm:items-center">
       <div class="flex min-w-0 w-full items-start gap-2 sm:w-auto sm:flex-1 sm:items-center sm:gap-3">
         <button
