@@ -12,7 +12,7 @@
       { "id": "quality-analysis", "label": "Quality analysis", "icon": "clipboard-list", "default": true },
       { "id": "component-maturity", "label": "Component maturity", "icon": "layers" },
       { "id": "odh-e2e-health", "label": "opendatahub-operator E2E health", "icon": "activity" },
-      { "id": "test-execution", "label": "Test Execution Dashboard (Beta)", "icon": "bar-chart-2" }
+      { "id": "test-execution", "label": "Test Execution", "icon": "bar-chart-2" }
     ],
     "hiddenRoutes": {
       "disconnected-repo-detail": "component-maturity",
@@ -33,7 +33,8 @@
       { "path": "system-health/test-execution/heatmap.json", "notes": "Test execution heatmap: per-component daily pass/fail/skip totals with version|release breakdown, pushed by the external test-reports pipeline" },
       { "path": "system-health/test-execution/components.json", "notes": "Per-component daily series and quality-gate execution detail for the test execution dashboard" },
       { "path": "system-health/test-execution/jira_config.json", "notes": "Release/team JQL configuration used to build Jira links from the test execution dashboard" },
-      { "path": "system-health/test-execution/meta.json", "notes": "Test execution dashboard generation metadata (date window, component list, data mode)" }
+      { "path": "system-health/test-execution/meta.json", "notes": "Test execution dashboard generation metadata (date window, component list, data mode)" },
+      { "path": "system-health/test-execution/nightly_health.json", "notes": "Nightly promotion-gate readiness snapshot (per-day runs, component states, selection policy)" }
     ]
   }
 }

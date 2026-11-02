@@ -36,7 +36,7 @@ export async function fetchComponentDetail(componentName) {
  *
  * The data is pushed into org-pulse storage by the external test-reports
  * pipeline (see docs/DATA-FORMATS.md) and served as a combined object:
- *   { heatmap, components, jira_config, meta, lastUpload }
+ *   { heatmap, components, jira_config, meta, nightly_health, lastUpload }
  *
  * `heatmap` is the primary payload consumed by the dashboard and is either an
  * array of components or an object `{ components: [...] }`. This composable
@@ -47,6 +47,7 @@ export function useTestDashboard() {
   const error = ref(null)
 
   const heatmap = ref([]) // normalized array of { component, overall, days }
+  const nightlyHealth = ref(null)
   const jiraConfig = ref(null)
   const meta = ref(null)
   const lastUpload = ref(null)
@@ -57,30 +58,51 @@ export function useTestDashboard() {
     return []
   }
 
+  function normalizeNightlyHealth(raw) {
+    if (!raw || typeof raw !== 'object') return null
+    if (
+      typeof raw.schema_version !== 'number' ||
+      !Number.isInteger(raw.schema_version) ||
+      raw.schema_version !== 1 ||
+      !Array.isArray(raw.days)
+    ) {
+      return null
+    }
+    return raw
+  }
+
   async function loadData() {
     loading.value = true
     error.value = null
     try {
       const res = await apiRequest(DATA_ENDPOINT)
       heatmap.value = normalizeHeatmap(res.heatmap)
+      nightlyHealth.value = normalizeNightlyHealth(res.nightly_health)
       jiraConfig.value = res.jira_config || null
       meta.value = res.meta || null
       lastUpload.value = res.lastUpload || null
     } catch (err) {
       error.value = err.message || 'Failed to load test execution data'
       heatmap.value = []
+      nightlyHealth.value = null
     } finally {
       loading.value = false
     }
   }
 
-  const hasData = computed(() => heatmap.value.length > 0)
+  const hasHeatmapData = computed(() => heatmap.value.length > 0)
+  const hasNightlyData = computed(() => {
+    const nh = nightlyHealth.value
+    return !!(nh && Array.isArray(nh.days) && nh.days.length > 0)
+  })
 
   return {
     loading,
     error,
-    hasData,
+    hasHeatmapData,
+    hasNightlyData,
     heatmap,
+    nightlyHealth,
     jiraConfig,
     meta,
     lastUpload,

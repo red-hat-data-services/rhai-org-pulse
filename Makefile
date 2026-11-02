@@ -146,6 +146,7 @@ test-module: ## Run integration tests for a module (MODULE=<name>)
 	# Run integration tests filtered by module tag
 	@echo "Running Playwright tests tagged with @$(MODULE)..."
 	$(CONTAINER_RUNTIME) run $(CONTAINER_FLAGS) $(COMMON_ENV) \
+		-e CI=true \
 		$(PLAYWRIGHT_IMAGE) \
 		bash -c "$(SETUP_CMD) && npx playwright test --grep @$(MODULE)" || \
 		(EXIT_CODE=$$?; $(MAKE) clean-integration-test; exit $$EXIT_CODE)

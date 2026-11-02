@@ -1,3 +1,5 @@
+const { expect } = require('@playwright/test');
+
 /**
  * Sets up error tracking for a Playwright page
  *
@@ -134,11 +136,22 @@ async function countDisabledNavItems(page, sectionName) {
   return disabledCount;
 }
 
+function filterBenignConsoleErrors(errors) {
+  if (!errors?.length) return [];
+  return errors.filter((e) => !/status of (429|404)/.test(e.message || ''));
+}
+
+function expectNoBenignConsoleErrors(page) {
+  expect(filterBenignConsoleErrors(page.errors)).toHaveLength(0);
+}
+
 module.exports = {
   setupErrorTracking,
   logCapturedErrors,
   pageHasContent,
   pageLoadComplete,
   mainContentIsVisible,
-  countDisabledNavItems
+  countDisabledNavItems,
+  filterBenignConsoleErrors,
+  expectNoBenignConsoleErrors
 };
