@@ -2,11 +2,13 @@ var { CUSTOM_FIELDS, serializeField, numericField } = require('../hygiene/jira-f
 var { parseDescriptionSignals } = require('./health/description-scanner')
 var { fetchEpicsForFeatures } = require('../execution/jira-enrich')
 var { FEATURES_LIST_PROJECTS, CLOSED_STATUSES } = require('./constants')
+var { resolveParentKey, EPIC_LINK_FIELD } = require('./outcome-children-fetch')
 
 var QUERY_FIELDS = [
   'summary', 'status', 'issuetype', 'assignee', 'fixVersions',
   'components', 'labels', 'priority', 'created', 'updated', 'project',
-  'issuelinks',
+  'issuelinks', 'parent',
+  EPIC_LINK_FIELD,
   CUSTOM_FIELDS.team,
   CUSTOM_FIELDS.targetVersion,
   CUSTOM_FIELDS.riceScore,
@@ -122,6 +124,7 @@ function normalizeIssue(issue) {
     : null
 
   var blockedBy = extractBlockedBy(fields.issuelinks)
+  var parentKey = resolveParentKey(fields) || null
 
   return {
     key: issue.key,
@@ -131,6 +134,7 @@ function normalizeIssue(issue) {
     statusCategory: statusCategory,
     issueType: issueType,
     assignee: assignee,
+    parentKey: parentKey,
     team: serializeField(fields[CUSTOM_FIELDS.team]),
     components: components,
     labels: labels,
