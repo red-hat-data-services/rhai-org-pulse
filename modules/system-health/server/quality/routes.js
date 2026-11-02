@@ -1,5 +1,5 @@
 const express = require('express');
-const { validateQualityReport } = require('./validation');
+const { validateQualityReport, validateNightlyHealthPayload } = require('./validation');
 const {
   readReports,
   writeReportsAtomic,
@@ -587,7 +587,7 @@ module.exports = function registerQualityRoutes(router, context) {
   // The app just stores and serves it. See docs/DATA-FORMATS.md.
 
   const TEST_EXEC_BASE = 'system-health/test-execution';
-  const TEST_EXEC_FILES = ['heatmap', 'components', 'jira_config', 'meta'];
+  const TEST_EXEC_FILES = ['heatmap', 'components', 'jira_config', 'meta', 'nightly_health'];
 
   /**
    * @openapi
@@ -598,7 +598,8 @@ module.exports = function registerQualityRoutes(router, context) {
    *       Ingest endpoint for the external test-reports pipeline to push
    *       pre-computed dashboard JSON. Requires the `system-health:write` scope
    *       (a scoped pipeline token, not an interactive admin). Accepts any
-   *       subset of `heatmap`, `components`, `jira_config`, and `meta`; each
+   *       subset of `heatmap`, `components`, `jira_config`, `meta`, and
+   *       `nightly_health`; each
    *       provided key is written to storage atomically and an upload receipt
    *       is recorded.
    *     tags: [System Health - Test Execution]
@@ -615,6 +616,7 @@ module.exports = function registerQualityRoutes(router, context) {
    *               components: { type: object, description: "Per-component daily + quality-gate detail" }
    *               jira_config: { type: object, description: "Release/team JQL configuration" }
    *               meta: { type: object, description: "Generation metadata (dates, component list)" }
+   *               nightly_health: { type: object, description: "Nightly build readiness snapshot (schema_version, days, runs)" }
    *     responses:
    *       200:
    *         description: Upload result with the list of stored files
@@ -645,6 +647,13 @@ module.exports = function registerQualityRoutes(router, context) {
       }
     }
 
+    if (body.nightly_health !== undefined) {
+      const nightlyError = validateNightlyHealthPayload(body.nightly_health);
+      if (nightlyError) {
+        return res.status(400).json({ error: nightlyError });
+      }
+    }
+
     try {
       const stored = [];
       for (const key of provided) {
@@ -672,14 +681,14 @@ module.exports = function registerQualityRoutes(router, context) {
    *     summary: Get test execution dashboard data
    *     description: |
    *       Returns the stored dashboard payloads. With no query params, returns a
-   *       combined object `{ heatmap, components, jira_config, meta, lastUpload }`.
+   *       combined object `{ heatmap, components, jira_config, meta, nightly_health, lastUpload }`.
    *       Pass `?file=<name>` to fetch a single payload.
    *     tags: [System Health - Test Execution]
    *     parameters:
    *       - name: file
    *         in: query
    *         required: false
-   *         schema: { type: string, enum: [heatmap, components, jira_config, meta] }
+   *         schema: { type: string, enum: [heatmap, components, jira_config, meta, nightly_health] }
    *     responses:
    *       200:
    *         description: Dashboard data
@@ -698,11 +707,12 @@ module.exports = function registerQualityRoutes(router, context) {
         return res.json(data || {});
       }
 
-      const [heatmap, components, jira_config, meta, lastUpload] = await Promise.all([
+      const [heatmap, components, jira_config, meta, nightly_health, lastUpload] = await Promise.all([
         readFromStorage(`${TEST_EXEC_BASE}/heatmap.json`),
         readFromStorage(`${TEST_EXEC_BASE}/components.json`),
         readFromStorage(`${TEST_EXEC_BASE}/jira_config.json`),
         readFromStorage(`${TEST_EXEC_BASE}/meta.json`),
+        readFromStorage(`${TEST_EXEC_BASE}/nightly_health.json`),
         readFromStorage(`${TEST_EXEC_BASE}/last-upload.json`)
       ]);
 
@@ -711,6 +721,7 @@ module.exports = function registerQualityRoutes(router, context) {
         components: components || null,
         jira_config: jira_config || null,
         meta: meta || null,
+        nightly_health: nightly_health || null,
         lastUpload: lastUpload || null
       });
     } catch (error) {

@@ -28,8 +28,9 @@ coverage/
 .DS_Store
 Thumbs.db
 
-# Local dev data
-data/
+# Local dev data (keep view-owner overrides in git)
+data/*
+!data/view-owner-overrides.json
 data-backup.tar.gz
 
 # Google Sheets service account key
@@ -42,7 +43,6 @@ output.txt
 .claude/*
 !.claude/CLAUDE.md
 !.claude/commands/
-data
 
 # Local PP files
 rhelai.json

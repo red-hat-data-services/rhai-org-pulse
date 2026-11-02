@@ -34,8 +34,11 @@ import {
   Legend,
   Filler
 } from 'chart.js'
+import { useChartTheme } from '../composables/useChartTheme.js'
 
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend, Filler)
+
+const { textColor, gridColor, isDark } = useChartTheme()
 
 const props = defineProps({
   // Normalized heatmap: array of { component, days: { date: { by_vr } } }
@@ -45,10 +48,17 @@ const props = defineProps({
   }
 })
 
-const LINE_COLORS = [
+const LINE_COLORS_DARK = [
   '#2ed573', '#3498db', '#e17055', '#a29bfe', '#fdcb6e',
   '#6c5ce7', '#00cec9', '#fab1a0', '#ff6b81', '#70a1ff'
 ]
+
+const LINE_COLORS_LIGHT = [
+  '#059669', '#2563eb', '#c2410c', '#7c3aed', '#b45309',
+  '#5b21b6', '#0f766e', '#be123c', '#dc2626', '#1d4ed8'
+]
+
+const lineColors = computed(() => (isDark.value ? LINE_COLORS_DARK : LINE_COLORS_LIGHT))
 
 function normalizeVersion(v) {
   const base = String(v).split('-')[0]
@@ -112,7 +122,7 @@ const chartData = computed(() => {
   let ci = 0
   allVersions.value.forEach((v) => {
     if (!selectedVersions.value.includes(v)) return
-    const color = LINE_COLORS[ci % LINE_COLORS.length]
+    const color = lineColors.value[ci % lineColors.value.length]
     ci++
     const dayMap = versionDayPassed.value[v]
     datasets.push({
@@ -129,26 +139,39 @@ const chartData = computed(() => {
   return { labels: dates.map(friendlyDate), datasets }
 })
 
-const chartOptions = {
+const chartOptions = computed(() => ({
   responsive: true,
   maintainAspectRatio: false,
   plugins: {
     legend: {
       position: 'bottom',
-      labels: { color: '#8899aa', usePointStyle: true, pointStyle: 'rect', padding: 14, font: { size: 11 } }
+      labels: {
+        color: textColor.value,
+        usePointStyle: true,
+        pointStyle: 'rect',
+        padding: 14,
+        font: { size: 11 }
+      }
     }
   },
   scales: {
-    x: { ticks: { color: '#6b8299', font: { size: 10 }, maxRotation: 45 }, grid: { color: 'rgba(30,73,118,.2)' } },
-    y: { ticks: { color: '#6b8299', font: { size: 10 } }, grid: { color: 'rgba(30,73,118,.3)' }, beginAtZero: true }
+    x: {
+      ticks: { color: textColor.value, font: { size: 10 }, maxRotation: 45 },
+      grid: { color: gridColor.value }
+    },
+    y: {
+      ticks: { color: textColor.value, font: { size: 10 } },
+      grid: { color: gridColor.value },
+      beginAtZero: true
+    }
   }
-}
+}))
 </script>
 
 <style scoped>
 .bottom-panel {
-  background: #0d2137;
-  border: 1px solid #1e4976;
+  background: var(--te-surface);
+  border: 1px solid var(--te-border);
   border-radius: 8px;
   padding: 20px;
   margin-top: 28px;
@@ -157,13 +180,13 @@ const chartOptions = {
 .bottom-panel h3 {
   font-size: 16px;
   font-weight: 600;
-  color: #fff;
+  color: var(--te-heading);
   margin-bottom: 4px;
 }
 
 .panel-sub {
   font-size: 12px;
-  color: #8899aa;
+  color: var(--te-text-muted);
   margin-bottom: 14px;
 }
 
@@ -180,19 +203,19 @@ const chartOptions = {
   gap: 5px;
   cursor: pointer;
   font-size: 12px;
-  color: #ccc;
-  background: #132f4c;
-  border: 1px solid #1e4976;
+  color: var(--te-toggle-text);
+  background: var(--te-surface-raised);
+  border: 1px solid var(--te-border);
   border-radius: 4px;
   padding: 4px 10px;
 }
 
 .version-toggles label:hover {
-  border-color: #3a6ea5;
+  border-color: var(--te-accent);
 }
 
 .version-toggles input[type="checkbox"] {
-  accent-color: #5ea7ff;
+  accent-color: var(--te-accent);
 }
 
 .chart-container {
@@ -206,7 +229,7 @@ const chartOptions = {
   align-items: center;
   justify-content: center;
   height: 100%;
-  color: #6b8299;
+  color: var(--te-sc-label);
   font-size: 13px;
 }
 </style>

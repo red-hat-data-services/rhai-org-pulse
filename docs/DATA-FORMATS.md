@@ -3030,7 +3030,7 @@ Each entry has: `dimension` (name), `score` (0-10), `status` (human-readable sum
 
 Aggregated RHOAI test execution statistics shown on the "Test Execution Dashboard (Beta)" view. This is a **display-layer** feature (HC3): an external pipeline (`test-reports-opensearch`) queries Jenkins/OpenSearch, pre-computes the dashboard payloads, and pushes them via the bulk API. The app only stores and serves the JSON — it performs no aggregation.
 
-The dataset is four separate JSON files under `data/system-health/test-execution/`:
+The dataset is five separate JSON files under `data/system-health/test-execution/`:
 
 | File | Purpose |
 |------|---------|
@@ -3038,6 +3038,7 @@ The dataset is four separate JSON files under `data/system-health/test-execution
 | `components.json` | Per-component daily series plus quality-gate execution detail (used by component drill-downs). |
 | `jira_config.json` | Release → team/JQL configuration used to build Jira links. |
 | `meta.json` | Generation metadata (date window, component list, data mode). |
+| `nightly_health.json` | Nightly promotion-gate readiness: per-day selected runs, component states, deployment evidence, optional artifact links. Renders in a separate table even when the heatmap is empty. |
 
 ### `heatmap.json`
 
@@ -3089,13 +3090,65 @@ The dataset is four separate JSON files under `data/system-health/test-execution
 
 `components.json` is a map keyed by component name with `overall`, a `daily[]` array, and a `quality_gates` object (per-gate, per-date execution lists). `jira_config.json` is a map with a `releases` object keyed by `"<version>|<release>"`, each carrying `fix_version`, `rhoai_jira_version`, `project`, and a `teams` map. These are stored verbatim and passed through to the client; they are consumed opportunistically for drill-downs and Jira links.
 
+### `nightly_health.json`
+
+Producer-computed nightly readiness (not derived from the heatmap). Stored as the inner object (same shape as the bulk `nightly_health` key).
+
+```json
+{
+  "schema_version": 1,
+  "generated_at": "2026-11-01T10:00:00Z",
+  "timezone": "UTC",
+  "selection_policy": "latest_completed_by_started_at",
+  "days": [
+    {
+      "date": "2026-11-01",
+      "stream_key": "example-stream",
+      "latest_run_id": "example-job:102",
+      "runs": [
+        {
+          "run_id": "example-job:102",
+          "build_number": 102,
+          "source_result": "FAILURE",
+          "deployment": { "state": "failed", "evidence_ref": "…" },
+          "components": [
+            {
+              "id": "platform",
+              "name": "Platform",
+              "state": "blocked",
+              "reason_code": "deployment_failed",
+              "tests": null
+            }
+          ],
+          "artifacts": { "pod_logs": null, "bvt_results": null },
+          "collection": { "state": "complete", "xml_available": false, "warnings": [] }
+        }
+      ]
+    }
+  ]
+}
+```
+
+**Fields:**
+
+- `schema_version` — required; must be exactly `1` (reject other values on upload).
+- `days[]` — calendar rows (each `date` unique); `latest_run_id` selects the run shown in each matrix column; other same-day entries remain in `runs[]` for the day detail panel.
+- `runs[].promotion_gate` — optional metadata from `promotion_gate_test_summary.yaml` (`status`, `rhoai_version`, `update_channel`, `cluster_name`, `openshift_version`, …).
+- `runs[].gates` — optional **array** of BVT gate rows (`cluster-health`, `operator-health`) with `source_status` and `tests` counts matching the YAML; each entry must be an object with non-empty `id` (reject `{}` or non-array `gates` on bulk upload). Optional `state` uses the same enum as `components[].state`.
+- `runs[].components[]` — `state` is one of `ready`, `failed`, `blocked`, `unknown`, `not_run`, `not_applicable`; `source_status` mirrors YAML `components.<id>.status` for display. When `state` is `blocked`, the UI shows **Blocked** as the readiness label and `source_status` separately (BVT/YAML).
+- **Heatmap join:** match heatmap row `component` names to `components[].id` by normalizing display names (lowercase, strip non-alphanumeric). The synthetic heatmap row **RHOAI Deployment** maps to gate `operator-health`. Overlay uses each day's `latest_run_id` only (same as the nightly matrix).
+- `tests: null` — no observed test results (not zero failures).
+- `artifacts` — durable refs plus optional browser URLs when verified; null when unavailable.
+
+**UI:** Test Execution Dashboard renders a **date-column matrix** (five-day paging) above the component heatmap; clicking a date lists all `runs[]` for that day.
+
 **API:**
 
 | Method | Path | Auth | Purpose |
 |--------|------|------|---------|
-| `GET` | `/api/modules/system-health/quality/test-execution/data` | `system-health:read` | Combined `{ heatmap, components, jira_config, meta, lastUpload }`; `?file=<name>` for a single payload |
+| `GET` | `/api/modules/system-health/quality/test-execution/data` | `system-health:read` | Combined `{ heatmap, components, jira_config, meta, nightly_health, lastUpload }`; `?file=<name>` for a single payload |
 | `GET` | `/api/modules/system-health/quality/test-execution/status` | `system-health:read` | Last upload receipt |
-| `POST` | `/api/modules/system-health/quality/test-execution/bulk` | `system-health:write` | Push any subset of `heatmap`/`components`/`jira_config`/`meta` from the pipeline |
+| `POST` | `/api/modules/system-health/quality/test-execution/bulk` | `system-health:write` | Push any subset of `heatmap`/`components`/`jira_config`/`meta`/`nightly_health` from the pipeline |
 
 **Upload receipt:** `data/system-health/test-execution/last-upload.json` records `{ uploadedAt, uploadedBy, files }` after each bulk write.
 

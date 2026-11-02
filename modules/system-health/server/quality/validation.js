@@ -126,4 +126,137 @@ function validateQualityReport(body) {
   return { valid: true, data };
 }
 
-module.exports = { validateQualityReport, SCORECARD_DIMENSIONS, VALID_TIERS };
+/** @type {readonly string[]} */
+const NIGHTLY_COMPONENT_STATES = Object.freeze([
+  'ready',
+  'failed',
+  'blocked',
+  'unknown',
+  'not_run',
+  'not_applicable'
+]);
+
+/**
+ * @param {unknown} gates
+ * @param {string} runLabel
+ * @returns {string|null}
+ */
+function validateNightlyRunGates(gates, runLabel) {
+  if (gates === undefined) {
+    return null;
+  }
+  if (!Array.isArray(gates)) {
+    return `${runLabel}.gates must be an array when present`;
+  }
+  for (let gateIndex = 0; gateIndex < gates.length; gateIndex += 1) {
+    const gate = gates[gateIndex];
+    const gateLabel = `${runLabel}.gates[${gateIndex}]`;
+    if (!gate || typeof gate !== 'object' || Array.isArray(gate)) {
+      return `${gateLabel} must be an object`;
+    }
+    if (typeof gate.id !== 'string' || gate.id.length === 0) {
+      return `${gateLabel} must have a non-empty id string`;
+    }
+    if (gate.state !== undefined) {
+      if (typeof gate.state !== 'string' || !NIGHTLY_COMPONENT_STATES.includes(gate.state)) {
+        return `${gateLabel}.state must be one of: ${NIGHTLY_COMPONENT_STATES.join(', ')}`;
+      }
+    }
+  }
+  return null;
+}
+
+/**
+ * @param {unknown} payload
+ * @returns {string|null} error message or null when valid
+ */
+function validateNightlyHealthPayload(payload) {
+  if (!payload || typeof payload !== 'object' || Array.isArray(payload)) {
+    return 'nightly_health must be an object';
+  }
+  if (
+    typeof payload.schema_version !== 'number' ||
+    !Number.isInteger(payload.schema_version) ||
+    payload.schema_version !== 1
+  ) {
+    return 'nightly_health.schema_version must be 1';
+  }
+  if (!Array.isArray(payload.days)) {
+    return 'nightly_health.days must be an array';
+  }
+  const seenDates = new Set();
+  for (let dayIndex = 0; dayIndex < payload.days.length; dayIndex += 1) {
+    const day = payload.days[dayIndex];
+    const dayLabel = `nightly_health.days[${dayIndex}]`;
+    if (!day || typeof day !== 'object' || Array.isArray(day)) {
+      return `${dayLabel} must be an object`;
+    }
+    if (typeof day.date !== 'string' || day.date.length === 0) {
+      return `${dayLabel} must have a non-empty date string`;
+    }
+    if (seenDates.has(day.date)) {
+      return `${dayLabel} has duplicate date ${day.date}`;
+    }
+    seenDates.add(day.date);
+    if (!Array.isArray(day.runs)) {
+      return `${dayLabel} must have a runs array`;
+    }
+
+    const runIds = new Set();
+    for (let runIndex = 0; runIndex < day.runs.length; runIndex += 1) {
+      const run = day.runs[runIndex];
+      const runLabel = `${dayLabel}.runs[${runIndex}]`;
+      if (!run || typeof run !== 'object' || Array.isArray(run)) {
+        return `${runLabel} must be an object`;
+      }
+      if (typeof run.run_id !== 'string' || run.run_id.length === 0) {
+        return `${runLabel} must have a non-empty run_id string`;
+      }
+      if (runIds.has(run.run_id)) {
+        return `${dayLabel} has duplicate run_id ${run.run_id}`;
+      }
+      runIds.add(run.run_id);
+
+      const gatesError = validateNightlyRunGates(run.gates, runLabel);
+      if (gatesError) {
+        return gatesError;
+      }
+
+      if (!Array.isArray(run.components)) {
+        return `${runLabel}.components must be an array`;
+      }
+      for (let compIndex = 0; compIndex < run.components.length; compIndex += 1) {
+        const component = run.components[compIndex];
+        const compLabel = `${runLabel}.components[${compIndex}]`;
+        if (!component || typeof component !== 'object' || Array.isArray(component)) {
+          return `${compLabel} must be an object`;
+        }
+        const componentId = component.id;
+        if (typeof componentId !== 'string' || componentId.length === 0) {
+          return `${compLabel} must have a non-empty id string`;
+        }
+        if (typeof component.state !== 'string' || !NIGHTLY_COMPONENT_STATES.includes(component.state)) {
+          return `${compLabel}.state must be one of: ${NIGHTLY_COMPONENT_STATES.join(', ')}`;
+        }
+      }
+    }
+
+    if (day.runs.length > 0) {
+      if (typeof day.latest_run_id !== 'string' || day.latest_run_id.length === 0) {
+        return `${dayLabel} must include latest_run_id when runs is non-empty`;
+      }
+      if (!runIds.has(day.latest_run_id)) {
+        return `${dayLabel}.latest_run_id must reference a run in runs`;
+      }
+    }
+  }
+  return null;
+}
+
+module.exports = {
+  validateQualityReport,
+  validateNightlyHealthPayload,
+  NIGHTLY_COMPONENT_STATES,
+  SCORECARD_DIMENSIONS,
+  VALID_TIERS
+};

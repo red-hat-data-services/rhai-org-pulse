@@ -18,17 +18,20 @@
               {{ comp.component }}
             </a>
             <div class="comp-stats" v-if="comp.overall">
-              {{ passPct(comp.overall.passed, comp.overall.total) }}% · 
+              {{ passPct(comp.overall.passed, comp.overall.total) }}% ·
               {{ (comp.overall.total || 0).toLocaleString() }} tests
             </div>
           </td>
           <td v-for="date in dates" :key="`${comp.component}-${date}`" class="data-cell">
             <template v-if="comp.days && comp.days[date]">
-              <div 
+              <div
                 class="cell"
                 :class="`cell-${pctColor(passPct(comp.days[date].passed, comp.days[date].total))}`"
               >
-                <div class="cell-pct" :class="`cell-pct-${pctColor(passPct(comp.days[date].passed, comp.days[date].total))}`">
+                <div
+                  class="cell-pct"
+                  :class="`cell-pct-${pctColor(passPct(comp.days[date].passed, comp.days[date].total))}`"
+                >
                   {{ passPct(comp.days[date].passed, comp.days[date].total) }}%
                 </div>
                 <div class="cell-counts">
@@ -62,9 +65,9 @@ defineEmits(['component-click'])
 
 const dates = computed(() => {
   const dateSet = new Set()
-  props.components.forEach(comp => {
+  props.components.forEach((comp) => {
     if (comp.days) {
-      Object.keys(comp.days).forEach(d => dateSet.add(d))
+      Object.keys(comp.days).forEach((d) => dateSet.add(d))
     }
   })
   return Array.from(dateSet).sort((a, b) => b.localeCompare(a))
@@ -106,17 +109,17 @@ table.heatmap th,
 table.heatmap td {
   padding: 8px 6px;
   text-align: center;
-  border-bottom: 1px solid #1e4976;
+  border-bottom: 1px solid var(--te-border, #1e4976);
   white-space: nowrap;
 }
 
 table.heatmap th {
   font-size: 11px;
-  color: #8899aa;
+  color: var(--te-text-muted, #8899aa);
   font-weight: 600;
   position: sticky;
   top: 0;
-  background: #0a1929;
+  background: var(--te-sticky-bg, #0a1929);
   z-index: 10;
 }
 
@@ -132,19 +135,19 @@ table.heatmap th {
 }
 
 .comp-name a {
-  color: #5ea7ff;
+  color: var(--te-link, #5ea7ff);
   font-size: 13px;
   text-decoration: none;
 }
 
 .comp-name a:hover {
-  color: #8ec5ff;
+  color: var(--te-link-hover, #8ec5ff);
   text-decoration: underline;
 }
 
 .comp-stats {
   font-size: 10px;
-  color: #6b8299;
+  color: var(--te-comp-stats, #6b8299);
   margin-top: 2px;
 }
 
@@ -155,10 +158,15 @@ table.heatmap th {
 
 .cell {
   border-radius: 6px;
-  padding: 6px 4px;
-  min-width: 60px;
-  display: inline-block;
+  padding: 8px 6px;
+  min-width: 72px;
+  min-height: 52px;
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
   text-align: center;
+  box-sizing: border-box;
 }
 
 .cell-green {
@@ -182,14 +190,14 @@ table.heatmap th {
 }
 
 .cell-na {
-  color: #4a5568;
+  color: var(--te-cell-na, #4a5568);
   font-size: 13px;
 }
 
 .cell-pct {
   font-size: 16px;
   font-weight: 700;
-  line-height: 1;
+  line-height: 1.1;
 }
 
 .cell-pct-green {

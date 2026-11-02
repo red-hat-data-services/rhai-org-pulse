@@ -1,0 +1,242 @@
+{
+  "schema_version": 1,
+  "generated_at": "2026-11-02T10:00:00Z",
+  "timezone": "UTC",
+  "selection_policy": "latest_completed_by_started_at",
+  "days": [
+    {
+      "date": "2026-11-02",
+      "stream_key": "example-stream",
+      "latest_run_id": "example-job:105",
+      "runs": [
+        {
+          "run_id": "example-job:105",
+          "build_number": 105,
+          "jenkins_url": "https://example.invalid/job/promotion-gate/105/",
+          "started_at": "2026-11-02T08:00:00Z",
+          "completed_at": "2026-11-02T08:45:00Z",
+          "source_result": "SUCCESS",
+          "promotion_gate": {
+            "status": "passed",
+            "rhoai_version": "3.6.0",
+            "update_channel": "beta",
+            "cluster_name": "fixture-cluster",
+            "openshift_version": "4.20"
+          },
+          "gates": [
+            {
+              "id": "cluster-health",
+              "name": "Cluster health",
+              "source_status": "passed",
+              "tests": { "passed": 1, "failed": 0, "skipped": 0 }
+            },
+            {
+              "id": "operator-health",
+              "name": "RHOAI deployment",
+              "source_status": "passed",
+              "tests": { "passed": 4, "failed": 0, "skipped": 0 }
+            }
+          ],
+          "components": [
+            {
+              "id": "dashboard",
+              "name": "Dashboard",
+              "state": "ready",
+              "source_status": "passed",
+              "reason_code": "ok",
+              "tests": { "passed": 2, "failed": 0, "skipped": 0 }
+            },
+            {
+              "id": "aigateway",
+              "name": "AI Gateway",
+              "state": "ready",
+              "source_status": "passed",
+              "reason_code": "ok",
+              "tests": { "passed": 5, "failed": 0, "skipped": 0 }
+            }
+          ],
+          "artifacts": { "pod_logs": null, "bvt_results": null },
+          "collection": { "state": "complete", "xml_available": true, "warnings": [] }
+        }
+      ]
+    },
+    {
+      "date": "2026-11-01",
+      "stream_key": "example-stream",
+      "latest_run_id": "example-job:102",
+      "runs": [
+        {
+          "run_id": "example-job:101",
+          "build_number": 101,
+          "jenkins_url": "https://example.invalid/job/promotion-gate/101/",
+          "started_at": "2026-11-01T06:00:00Z",
+          "completed_at": "2026-11-01T06:15:00Z",
+          "source_result": "FAILURE",
+          "promotion_gate": { "status": "failed", "rhoai_version": "3.6.0", "update_channel": "beta" },
+          "gates": [
+            {
+              "id": "cluster-health",
+              "name": "Cluster health",
+              "source_status": "passed",
+              "tests": { "passed": 1, "failed": 0, "skipped": 0 }
+            },
+            {
+              "id": "operator-health",
+              "name": "RHOAI deployment",
+              "source_status": "failed",
+              "tests": { "passed": 2, "failed": 1, "skipped": 0 }
+            }
+          ],
+          "components": [
+            {
+              "id": "dashboard",
+              "name": "Dashboard",
+              "state": "failed",
+              "source_status": "failed",
+              "reason_code": "bvt_failed",
+              "tests": { "passed": 1, "failed": 2, "skipped": 0 }
+            }
+          ],
+          "artifacts": { "pod_logs": null, "bvt_results": null },
+          "collection": { "state": "complete", "xml_available": true, "warnings": [] }
+        },
+        {
+          "run_id": "example-job:102",
+          "build_number": 102,
+          "jenkins_url": "https://example.invalid/job/promotion-gate/102/",
+          "started_at": "2026-11-01T08:00:00Z",
+          "completed_at": "2026-11-01T08:20:00Z",
+          "source_result": "FAILURE",
+          "promotion_gate": { "status": "failed", "rhoai_version": "3.6.0", "update_channel": "beta" },
+          "gates": [
+            {
+              "id": "cluster-health",
+              "name": "Cluster health",
+              "source_status": "passed",
+              "tests": { "passed": 1, "failed": 0, "skipped": 0 }
+            },
+            {
+              "id": "operator-health",
+              "name": "RHOAI deployment",
+              "source_status": "passed",
+              "tests": { "passed": 4, "failed": 0, "skipped": 0 }
+            }
+          ],
+          "components": [
+            {
+              "id": "dashboard",
+              "name": "Dashboard",
+              "state": "blocked",
+              "source_status": "failed",
+              "reason_code": "deployment_failed",
+              "tests": null
+            },
+            {
+              "id": "aigateway",
+              "name": "AI Gateway",
+              "state": "blocked",
+              "source_status": "failed",
+              "reason_code": "deployment_failed",
+              "tests": null
+            }
+          ],
+          "artifacts": { "pod_logs": null, "bvt_results": null },
+          "collection": { "state": "complete", "xml_available": false, "warnings": [] }
+        }
+      ]
+    },
+    {
+      "date": "2026-10-31",
+      "latest_run_id": "example-job:100",
+      "runs": [
+        {
+          "run_id": "example-job:100",
+          "build_number": 100,
+          "started_at": "2026-10-31T07:00:00Z",
+          "completed_at": "2026-10-31T07:50:00Z",
+          "source_result": "SUCCESS",
+          "promotion_gate": { "status": "passed", "rhoai_version": "3.6.0" },
+          "gates": [
+            { "id": "cluster-health", "name": "Cluster health", "source_status": "passed", "tests": { "passed": 1, "failed": 0, "skipped": 0 } },
+            { "id": "operator-health", "name": "RHOAI deployment", "source_status": "passed", "tests": { "passed": 4, "failed": 0, "skipped": 0 } }
+          ],
+          "components": [
+            { "id": "dashboard", "name": "Dashboard", "state": "ready", "source_status": "passed", "reason_code": "ok", "tests": { "passed": 0, "failed": 0, "skipped": 0 } }
+          ],
+          "artifacts": { "pod_logs": null, "bvt_results": null },
+          "collection": { "state": "complete", "xml_available": true, "warnings": [] }
+        }
+      ]
+    },
+    {
+      "date": "2026-10-30",
+      "latest_run_id": "example-job:99",
+      "runs": [
+        {
+          "run_id": "example-job:99",
+          "build_number": 99,
+          "started_at": "2026-10-30T07:00:00Z",
+          "completed_at": "2026-10-30T07:40:00Z",
+          "source_result": "SUCCESS",
+          "promotion_gate": { "status": "passed", "rhoai_version": "3.6.0" },
+          "gates": [
+            { "id": "cluster-health", "name": "Cluster health", "source_status": "passed", "tests": { "passed": 1, "failed": 0, "skipped": 0 } },
+            { "id": "operator-health", "name": "RHOAI deployment", "source_status": "passed", "tests": { "passed": 3, "failed": 0, "skipped": 1 } }
+          ],
+          "components": [
+            { "id": "dashboard", "name": "Dashboard", "state": "ready", "source_status": "passed", "reason_code": "ok", "tests": { "passed": 1, "failed": 0, "skipped": 0 } },
+            { "id": "workbenches", "name": "Workbenches", "state": "not_applicable", "source_status": "NotInstalled", "reason_code": "not_installed", "tests": { "passed": 0, "failed": 0, "skipped": 0 } }
+          ],
+          "artifacts": { "pod_logs": null, "bvt_results": null },
+          "collection": { "state": "complete", "xml_available": true, "warnings": [] }
+        }
+      ]
+    },
+    {
+      "date": "2026-10-29",
+      "latest_run_id": "example-job:98",
+      "runs": [
+        {
+          "run_id": "example-job:98",
+          "build_number": 98,
+          "started_at": "2026-10-29T07:00:00Z",
+          "completed_at": "2026-10-29T07:35:00Z",
+          "source_result": "UNSTABLE",
+          "promotion_gate": { "status": "failed", "rhoai_version": "3.6.0" },
+          "gates": [
+            { "id": "cluster-health", "name": "Cluster health", "source_status": "passed", "tests": { "passed": 1, "failed": 0, "skipped": 0 } },
+            { "id": "operator-health", "name": "RHOAI deployment", "source_status": "failed", "tests": { "passed": 2, "failed": 2, "skipped": 0 } }
+          ],
+          "components": [
+            { "id": "dashboard", "name": "Dashboard", "state": "failed", "source_status": "failed", "reason_code": "bvt_failed", "tests": { "passed": 3, "failed": 2, "skipped": 0 } }
+          ],
+          "artifacts": { "pod_logs": null, "bvt_results": null },
+          "collection": { "state": "complete", "xml_available": true, "warnings": [] }
+        }
+      ]
+    },
+    {
+      "date": "2026-10-28",
+      "latest_run_id": "example-job:97",
+      "runs": [
+        {
+          "run_id": "example-job:97",
+          "build_number": 97,
+          "started_at": "2026-10-28T07:00:00Z",
+          "completed_at": "2026-10-28T07:30:00Z",
+          "source_result": "SUCCESS",
+          "promotion_gate": { "status": "passed", "rhoai_version": "3.5.0" },
+          "gates": [
+            { "id": "cluster-health", "name": "Cluster health", "source_status": "passed", "tests": { "passed": 1, "failed": 0, "skipped": 0 } },
+            { "id": "operator-health", "name": "RHOAI deployment", "source_status": "passed", "tests": { "passed": 4, "failed": 0, "skipped": 0 } }
+          ],
+          "components": [
+            { "id": "dashboard", "name": "Dashboard", "state": "ready", "source_status": "passed", "reason_code": "ok", "tests": { "passed": 2, "failed": 0, "skipped": 0 } }
+          ],
+          "artifacts": { "pod_logs": null, "bvt_results": null },
+          "collection": { "state": "complete", "xml_available": true, "warnings": [] }
+        }
+      ]
+    }
+  ]
+}
