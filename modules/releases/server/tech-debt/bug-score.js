@@ -3,7 +3,7 @@ const {
   scoreAge,
   scoreDeadline,
   utcDateOnly
-} = require('./vulnerability-score')
+} = require('./scoring-utils')
 
 const FEEDBACK_LABELS = new Set(['aibu_feedback', 'aissa_feedback', 'bu_earlyaccess_feedback'])
 const SECURITY_LABELS = new Set(['security', 'conforma', 'conforma-violation', 'tls-profile-compliance'])
@@ -168,7 +168,7 @@ function scoreBug(issue, now = new Date()) {
   const detectionSource = chooseHighest(detectionCandidates, 'No detection-source signal')
 
   const severity = jiraSeverity(issue.jiraPriority)
-  const dueDate = scoreDeadline(issue.dueDate, asOfDate, 'due')
+  const dueDate = scoreDeadline(issue.dueDate, asOfDate)
   const age = scoreAge(issue.createdAt, asOfDate)
   const rawScore = customerImpact.points + deliverySecurity.points + detectionSource.points + severity.points + dueDate.points + age.points
   let priorityScore = rawScore

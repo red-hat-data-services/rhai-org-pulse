@@ -43,7 +43,7 @@
           data-testid="vulnerability-rubric-open"
           @click="scoringRubricOpen = true"
         >
-          View comprehensive scoring rubrics
+          View prioritization guidelines and scoring rubric
           <span aria-hidden="true">↗</span>
         </button>
       </div>
@@ -234,7 +234,7 @@
               Refreshed {{ formatTimestamp(cockpitData.fetchedAt) }} · {{ cockpitData.clientCacheStatus === 'hit' ? 'saved session data' : cockpitData.cacheStatus === 'hit' ? 'cached Jira data' : cockpitData.cacheStatus === 'stale' ? 'stale Jira data' : 'live Jira data' }}
           </p>
           <p class="mt-2 max-w-2xl text-xs text-gray-500 dark:text-gray-400">
-            Bug and vulnerability scores guide queue ordering and never override mandatory organizational security policy.
+            Bug priority scores and company CVE remediation SLAs guide queue order; neither overrides mandatory organizational security policy.
           </p>
           </div>
           <button
@@ -334,49 +334,63 @@
         </div>
       </section>
 
-      <div v-if="cockpitLoading && !cockpitData" class="grid gap-6 xl:grid-cols-2" data-testid="tech-debt-loading">
-        <div v-for="pane in 2" :key="pane" class="space-y-3 rounded-2xl border border-gray-200 bg-gray-50 p-4 dark:border-gray-700 dark:bg-gray-900/40">
+      <div v-if="cockpitLoading && !cockpitData" class="grid gap-6 xl:grid-cols-3" data-testid="tech-debt-loading">
+        <div v-for="pane in 3" :key="pane" class="space-y-3 rounded-2xl border border-gray-200 bg-gray-50 p-4 dark:border-gray-700 dark:bg-gray-900/40">
           <div class="h-7 w-48 animate-pulse rounded bg-gray-200 dark:bg-gray-700" />
           <div v-for="card in 3" :key="card" class="h-52 animate-pulse rounded-xl bg-white dark:bg-gray-800" />
         </div>
       </div>
 
-      <div v-else-if="cockpitData" class="grid items-start gap-6 xl:grid-cols-2">
+      <div v-else-if="cockpitData" class="grid items-start gap-6 xl:grid-cols-3" data-testid="tech-debt-cockpit-panes">
         <section class="overflow-hidden rounded-2xl border border-blue-200 bg-blue-50/50 dark:border-blue-900 dark:bg-blue-950/20" aria-labelledby="in-flight-heading">
           <header class="flex items-center justify-between gap-3 border-b border-blue-200 px-5 py-4 dark:border-blue-900">
             <div>
               <h3 id="in-flight-heading" class="font-bold text-gray-900 dark:text-gray-100">In-Flight Work</h3>
-              <p class="mt-0.5 text-xs text-gray-500 dark:text-gray-400">Active Bugs and CVEs ordered by effective priority score</p>
+              <p class="mt-0.5 text-xs text-gray-500 dark:text-gray-400">Bugs ordered by score; CVEs surfaced by company SLA urgency</p>
             </div>
             <span class="rounded-full bg-blue-100 px-3 py-1 text-sm font-bold text-blue-800 dark:bg-blue-900/50 dark:text-blue-200">{{ cockpitData.counts?.inFlight || 0 }}</span>
           </header>
-          <div class="grid grid-cols-1 gap-3 p-4 sm:grid-cols-2" data-testid="tech-debt-in-flight-pane">
+          <div class="grid grid-cols-1 gap-3 p-4" data-testid="tech-debt-in-flight-pane">
             <TechDebtIssueCard v-for="issue in visibleInFlightIssues" :key="issue.key" :issue="issue" pane="in-flight" />
-            <div v-if="!cockpitData.inFlight?.length" class="rounded-xl border border-dashed border-blue-200 bg-white px-5 py-10 text-center text-sm text-gray-500 sm:col-span-2 dark:border-blue-900 dark:bg-gray-800 dark:text-gray-400">
+            <div v-if="!cockpitData.inFlight?.length" class="rounded-xl border border-dashed border-blue-200 bg-white px-5 py-10 text-center text-sm text-gray-500 dark:border-blue-900 dark:bg-gray-800 dark:text-gray-400">
               No In Progress or Review issues match these components.
             </div>
-            <button v-if="hasMoreInFlight" type="button" class="w-full rounded-lg border border-blue-200 bg-white px-4 py-2 text-sm font-semibold text-blue-700 hover:bg-blue-50 sm:col-span-2 dark:border-blue-800 dark:bg-gray-800 dark:text-blue-300 dark:hover:bg-gray-700" data-testid="tech-debt-in-flight-more" @click="visibleInFlight += PAGE_SIZE">
+            <button v-if="hasMoreInFlight" type="button" class="w-full rounded-lg border border-blue-200 bg-white px-4 py-2 text-sm font-semibold text-blue-700 hover:bg-blue-50 dark:border-blue-800 dark:bg-gray-800 dark:text-blue-300 dark:hover:bg-gray-700" data-testid="tech-debt-in-flight-more" @click="visibleInFlight += PAGE_SIZE">
               Show more in-flight work
             </button>
           </div>
         </section>
 
-        <section class="overflow-hidden rounded-2xl border border-gray-200 bg-gray-50 dark:border-gray-700 dark:bg-gray-900/40" aria-labelledby="backlog-heading">
+        <section class="min-w-0 overflow-hidden rounded-2xl border border-gray-200 bg-gray-50 dark:border-gray-700 dark:bg-gray-900/40 xl:col-span-2" aria-labelledby="backlog-heading">
           <header class="flex items-center justify-between gap-3 border-b border-gray-200 px-5 py-4 dark:border-gray-700">
             <div>
               <h3 id="backlog-heading" class="font-bold text-gray-900 dark:text-gray-100">Prioritized Backlog</h3>
-              <p class="mt-0.5 text-xs text-gray-500 dark:text-gray-400">Bugs and CVEs ranked together by effective priority score</p>
+              <p class="mt-0.5 text-xs text-gray-500 dark:text-gray-400">Separate ranked groups: company SLA for CVEs and priority score for Bugs</p>
             </div>
             <span class="rounded-full bg-gray-200 px-3 py-1 text-sm font-bold text-gray-800 dark:bg-gray-700 dark:text-gray-200">{{ cockpitData.counts?.backlog || 0 }}</span>
           </header>
-          <div class="grid grid-cols-1 gap-3 p-4 sm:grid-cols-2" data-testid="tech-debt-backlog-pane">
-            <TechDebtIssueCard v-for="issue in visibleBacklogIssues" :key="issue.key" :issue="issue" :rank="issue.rank" pane="backlog" />
-            <div v-if="!cockpitData.backlog?.length" class="rounded-xl border border-dashed border-gray-300 bg-white px-5 py-10 text-center text-sm text-gray-500 sm:col-span-2 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400">
+          <div class="grid grid-cols-1 items-start gap-5 p-4" :class="{ 'xl:grid-cols-2': vulnerabilityBacklog.length && bugBacklog.length }" data-testid="tech-debt-backlog-pane">
+            <div v-if="!cockpitData.backlog?.length" class="rounded-xl border border-dashed border-gray-300 bg-white px-5 py-10 text-center text-sm text-gray-500 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400">
               No unresolved backlog issues match these components.
             </div>
-            <button v-if="hasMoreBacklog" type="button" class="w-full rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-50 sm:col-span-2 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-200 dark:hover:bg-gray-700" data-testid="tech-debt-backlog-more" @click="visibleBacklog += PAGE_SIZE">
-              Show more backlog
-            </button>
+            <section v-if="vulnerabilityBacklog.length" class="min-w-0" aria-labelledby="vulnerability-backlog-heading" data-testid="tech-debt-vulnerability-backlog">
+              <h4 id="vulnerability-backlog-heading" class="mb-3 text-sm font-bold text-fuchsia-800 dark:text-fuchsia-200">CVE / Vulnerability — Company SLA priority</h4>
+              <div class="grid grid-cols-1 gap-3" data-testid="tech-debt-vulnerability-backlog-list">
+                <TechDebtIssueCard v-for="issue in visibleVulnerabilityBacklogIssues" :key="issue.key" :issue="issue" :rank="issue.rank" pane="backlog" />
+                <button v-if="hasMoreVulnerabilityBacklog" type="button" class="w-full rounded-lg border border-fuchsia-200 bg-white px-4 py-2 text-sm font-semibold text-fuchsia-800 hover:bg-fuchsia-50 dark:border-fuchsia-800 dark:bg-gray-800 dark:text-fuchsia-200 dark:hover:bg-gray-700" data-testid="tech-debt-vulnerability-backlog-more" @click="visibleVulnerabilityBacklogCount += PAGE_SIZE">
+                  Show more CVEs
+                </button>
+              </div>
+            </section>
+            <section v-if="bugBacklog.length" class="min-w-0" aria-labelledby="bug-backlog-heading" data-testid="tech-debt-bug-backlog">
+              <h4 id="bug-backlog-heading" class="mb-3 text-sm font-bold text-indigo-800 dark:text-indigo-200">Bugs — Priority score</h4>
+              <div class="grid grid-cols-1 gap-3" data-testid="tech-debt-bug-backlog-list">
+                <TechDebtIssueCard v-for="issue in visibleBugBacklogIssues" :key="issue.key" :issue="issue" :rank="issue.rank" pane="backlog" />
+                <button v-if="hasMoreBugBacklog" type="button" class="w-full rounded-lg border border-indigo-200 bg-white px-4 py-2 text-sm font-semibold text-indigo-800 hover:bg-indigo-50 dark:border-indigo-800 dark:bg-gray-800 dark:text-indigo-200 dark:hover:bg-gray-700" data-testid="tech-debt-bug-backlog-more" @click="visibleBugBacklogCount += PAGE_SIZE">
+                  Show more Bugs
+                </button>
+              </div>
+            </section>
           </div>
         </section>
       </div>
@@ -418,7 +432,8 @@ const trendLoading = ref(false)
 const trendError = ref('')
 const trendViewMode = ref('volume')
 const visibleInFlight = ref(PAGE_SIZE)
-const visibleBacklog = ref(PAGE_SIZE)
+const visibleVulnerabilityBacklogCount = ref(PAGE_SIZE)
+const visibleBugBacklogCount = ref(PAGE_SIZE)
 let issueRequestId = 0
 let trendRequestId = 0
 
@@ -464,9 +479,13 @@ const summaryStats = computed(function () {
   ]
 })
 const visibleInFlightIssues = computed(() => (cockpitData.value?.inFlight || []).slice(0, visibleInFlight.value))
-const visibleBacklogIssues = computed(() => (cockpitData.value?.backlog || []).slice(0, visibleBacklog.value))
+const vulnerabilityBacklog = computed(() => (cockpitData.value?.backlog || []).filter(issue => issue.issueType?.toLowerCase() === 'vulnerability'))
+const bugBacklog = computed(() => (cockpitData.value?.backlog || []).filter(issue => issue.issueType?.toLowerCase() !== 'vulnerability'))
+const visibleVulnerabilityBacklogIssues = computed(() => vulnerabilityBacklog.value.slice(0, visibleVulnerabilityBacklogCount.value))
+const visibleBugBacklogIssues = computed(() => bugBacklog.value.slice(0, visibleBugBacklogCount.value))
 const hasMoreInFlight = computed(() => (cockpitData.value?.inFlight || []).length > visibleInFlight.value)
-const hasMoreBacklog = computed(() => (cockpitData.value?.backlog || []).length > visibleBacklog.value)
+const hasMoreVulnerabilityBacklog = computed(() => vulnerabilityBacklog.value.length > visibleVulnerabilityBacklogCount.value)
+const hasMoreBugBacklog = computed(() => bugBacklog.value.length > visibleBugBacklogCount.value)
 
 function toggleComponent(name) {
   if (selectedComponents.value.includes(name)) {
@@ -554,7 +573,8 @@ async function loadIssues(refresh) {
       cockpitError.value = ''
       cockpitLoading.value = false
       visibleInFlight.value = PAGE_SIZE
-      visibleBacklog.value = PAGE_SIZE
+      visibleVulnerabilityBacklogCount.value = PAGE_SIZE
+      visibleBugBacklogCount.value = PAGE_SIZE
       return
     }
   }
@@ -562,7 +582,8 @@ async function loadIssues(refresh) {
   cockpitLoading.value = true
   cockpitError.value = ''
   visibleInFlight.value = PAGE_SIZE
-  visibleBacklog.value = PAGE_SIZE
+  visibleVulnerabilityBacklogCount.value = PAGE_SIZE
+  visibleBugBacklogCount.value = PAGE_SIZE
   if (!refresh && !cached) cockpitData.value = null
 
   try {

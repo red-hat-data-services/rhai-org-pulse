@@ -11,13 +11,13 @@
       <header class="flex items-start justify-between gap-4 border-b border-gray-200 px-5 py-4 dark:border-gray-700">
         <div>
           <p class="text-xs font-bold uppercase tracking-[0.14em] text-fuchsia-700 dark:text-fuchsia-300">Transparent prioritization</p>
-          <h2 v-if="activeRubric === 'vulnerability'" id="vulnerability-rubric-title" class="mt-1 text-xl font-bold text-gray-900 dark:text-gray-100">Vulnerability priority scoring rubric</h2>
+          <h2 v-if="activeRubric === 'vulnerability'" id="vulnerability-rubric-title" class="mt-1 text-xl font-bold text-gray-900 dark:text-gray-100">Company CVE remediation SLA guidelines</h2>
           <h2 v-else id="bug-rubric-title" class="mt-1 text-xl font-bold text-gray-900 dark:text-gray-100">Bug priority scoring rubric</h2>
           <p v-if="activeRubric === 'vulnerability'" class="mt-1 max-w-3xl text-sm text-gray-600 dark:text-gray-300">
-            The score combines delivery urgency, technical severity, action required, issue age, and tracking uncertainty. The raw maximum is 95 points.
+            Jira’s company SLA date is the source of truth for CVE backlog order. The policy tables explain expected remediation timelines; they do not recalculate or override the Jira deadline.
           </p>
           <p v-else class="mt-1 max-w-3xl text-sm text-gray-600 dark:text-gray-300">
-            The score balances customer impact, delivery and security risk, detection source, Jira severity, due date, and age. Bugs and vulnerabilities are ranked together by effective priority score.
+            Bug scores rank Bugs within their own group. CVEs are ordered separately by company SLA deadline.
           </p>
         </div>
         <button
@@ -42,7 +42,7 @@
             data-testid="vulnerability-rubric-tab"
             @click="activeRubric = 'vulnerability'"
           >
-            Vulnerabilities
+            CVE guidelines
           </button>
           <button
             type="button"
@@ -58,84 +58,55 @@
         </div>
 
         <div v-if="activeRubric === 'vulnerability'" data-testid="vulnerability-rubric-content">
-        <div class="rounded-xl border border-primary-200 bg-primary-50 px-4 py-3 text-sm text-primary-900 dark:border-primary-800 dark:bg-primary-950/40 dark:text-primary-100">
-          <p class="font-semibold">Priority score = SLA + CVSS + due date + review outcome + age + uncertainty</p>
-          <p class="mt-1 text-xs leading-5 text-primary-800 dark:text-primary-200">
-            Missing or invalid values receive zero category points and only the uncertainty points listed below. Scores guide queue ordering and do not override mandatory security policy.
-          </p>
-        </div>
-
-        <div class="mt-5 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-          <section v-for="category in scoreCategories" :key="category.name" class="overflow-hidden rounded-xl border border-gray-200 dark:border-gray-700">
-            <header class="flex items-center justify-between gap-3 bg-gray-50 px-4 py-3 dark:bg-gray-800">
-              <h3 class="text-sm font-bold text-gray-900 dark:text-gray-100">{{ category.name }}</h3>
-              <span class="rounded-full bg-white px-2 py-0.5 text-xs font-semibold text-gray-600 shadow-sm dark:bg-gray-700 dark:text-gray-300">Max {{ category.max }}</span>
-            </header>
-            <div class="divide-y divide-gray-100 text-sm dark:divide-gray-800">
-              <div v-for="row in category.rows" :key="row.label" class="flex items-center justify-between gap-3 px-4 py-2">
-                <span class="text-gray-600 dark:text-gray-300">{{ row.label }}</span>
-                <strong class="shrink-0 text-gray-900 dark:text-gray-100">{{ row.points }}</strong>
-              </div>
-            </div>
-          </section>
-        </div>
-
-        <div class="mt-5 grid gap-4 lg:grid-cols-2">
-          <section class="rounded-xl border border-amber-200 bg-amber-50/60 p-4 dark:border-amber-800 dark:bg-amber-950/20">
-            <h3 class="text-sm font-bold text-gray-900 dark:text-gray-100">Data uncertainty</h3>
-            <p class="mt-1 text-xs text-gray-600 dark:text-gray-300">Added to keep records with incomplete tracking data visible for triage.</p>
-            <ul class="mt-3 grid gap-2 text-sm text-gray-700 dark:text-gray-200 sm:grid-cols-2">
-              <li v-for="item in uncertaintyPoints" :key="item.label" class="flex justify-between gap-3 rounded-lg bg-white/80 px-3 py-2 dark:bg-gray-900/50">
-                <span>{{ item.label }}</span><strong>+{{ item.points }}</strong>
-              </li>
-            </ul>
-          </section>
-
-          <section class="rounded-xl border border-red-200 bg-red-50/60 p-4 dark:border-red-900 dark:bg-red-950/20">
-            <h3 class="text-sm font-bold text-gray-900 dark:text-gray-100">Guardrails</h3>
-            <ul class="mt-3 space-y-2 text-sm leading-5 text-gray-700 dark:text-gray-200">
-              <li><strong>SLA breached:</strong> effective score is at least 70 (P1 — Urgent).</li>
-              <li><strong>CVSS 9+ and urgent deadline:</strong> effective score is at least 85 (P0 — Immediate) when the SLA or Jira due date is overdue or within seven days.</li>
-            </ul>
-          </section>
-        </div>
-
-        <section class="mt-5 overflow-hidden rounded-xl border border-gray-200 dark:border-gray-700">
-          <header class="bg-gray-50 px-4 py-3 dark:bg-gray-800">
-            <h3 class="text-sm font-bold text-gray-900 dark:text-gray-100">Priority bands and expected action</h3>
-          </header>
-          <div class="overflow-x-auto">
-            <table class="min-w-full divide-y divide-gray-200 text-left text-sm dark:divide-gray-700">
-              <thead class="bg-white text-xs uppercase tracking-wider text-gray-500 dark:bg-gray-900 dark:text-gray-400">
-                <tr><th class="px-4 py-2">Score</th><th class="px-4 py-2">Priority</th><th class="px-4 py-2">Expected action</th></tr>
-              </thead>
-              <tbody class="divide-y divide-gray-100 dark:divide-gray-800">
-                <tr v-for="band in priorityBands" :key="band.score">
-                  <td class="px-4 py-2 font-semibold text-gray-900 dark:text-gray-100">{{ band.score }}</td>
-                  <td class="px-4 py-2 text-gray-700 dark:text-gray-200">{{ band.priority }}</td>
-                  <td class="px-4 py-2 text-gray-600 dark:text-gray-300">{{ band.action }}</td>
-                </tr>
-              </tbody>
-            </table>
+          <div class="rounded-xl border border-fuchsia-200 bg-fuchsia-50 px-4 py-3 text-sm text-fuchsia-950 dark:border-fuchsia-800 dark:bg-fuchsia-950/30 dark:text-fuchsia-100">
+            <p class="font-semibold">CVE order follows Jira’s `rh-sla-dt` deadline—not a weighted score.</p>
+            <p class="mt-1 text-xs leading-5 text-fuchsia-900 dark:text-fuchsia-200">Breached SLAs come first, sorted by the oldest deadline; upcoming deadlines follow from earliest to latest. Missing SLA dates appear last and are flagged for triage.</p>
           </div>
-        </section>
 
-        <section class="mt-5 rounded-xl border border-gray-200 p-4 dark:border-gray-700">
-          <h3 class="text-sm font-bold text-gray-900 dark:text-gray-100">Queue ordering</h3>
-          <p class="mt-1 text-sm leading-5 text-gray-600 dark:text-gray-300">
-            Bugs and vulnerabilities share one queue sorted by effective score (highest first), SLA date (earliest), Jira due date (earliest), CVSS (highest), then creation date (oldest).
-          </p>
-          <p class="mt-2 text-xs text-gray-500 dark:text-gray-400">
-            Date boundaries use UTC calendar days. “Within seven days” includes today; age uses completed seven-day periods.
-          </p>
-        </section>
+          <div class="mt-5 grid gap-4 lg:grid-cols-2">
+            <section v-for="policy in vulnerabilityPolicies" :key="policy.version" class="overflow-hidden rounded-xl border border-gray-200 dark:border-gray-700">
+              <header class="bg-gray-50 px-4 py-3 dark:bg-gray-800">
+                <h3 class="text-sm font-bold text-gray-900 dark:text-gray-100">{{ policy.title }}</h3>
+                <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">{{ policy.appliesTo }}</p>
+              </header>
+              <div class="overflow-x-auto">
+                <table class="min-w-full divide-y divide-gray-200 text-left text-sm dark:divide-gray-700">
+                  <thead class="bg-white text-xs uppercase tracking-wider text-gray-500 dark:bg-gray-900 dark:text-gray-400">
+                    <tr><th class="px-4 py-2">Severity / type</th><th class="px-4 py-2">Target SLA</th></tr>
+                  </thead>
+                  <tbody class="divide-y divide-gray-100 dark:divide-gray-800">
+                    <tr v-for="deadline in policy.deadlines" :key="deadline.severity">
+                      <td class="px-4 py-2 text-gray-700 dark:text-gray-200">{{ deadline.severity }}</td>
+                      <td class="px-4 py-2 font-semibold text-gray-900 dark:text-gray-100">{{ deadline.days }} days<span v-if="deadline.note" class="font-normal text-gray-500"> ({{ deadline.note }})</span></td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </section>
+          </div>
+
+          <div class="mt-5 rounded-xl border border-amber-200 bg-amber-50/70 p-4 text-sm text-amber-950 dark:border-amber-800 dark:bg-amber-950/20 dark:text-amber-100">
+            <h3 class="font-bold">How policy selection works</h3>
+            <p class="mt-1 leading-5">The applicable policy is selected using the Jira issue creation timestamp in UTC. The updated policy applies inclusively to issues created on or after <strong>Dec 1, 2026 at 00:00 UTC</strong>. Issues without a valid creation timestamp have an unknown policy version.</p>
+            <p class="mt-2 leading-5">Severity/KEV classification is not inferred from CVSS. The policy timelines are explanatory only; Jira’s SLA date remains authoritative and is not recalculated here. CVSS, due date, review labels, age, and triage flags do not affect CVE order.</p>
+          </div>
+
+          <section class="mt-5 rounded-xl border border-gray-200 p-4 dark:border-gray-700">
+            <h3 class="text-sm font-bold text-gray-900 dark:text-gray-100">Backlog order</h3>
+            <ol class="mt-2 list-decimal space-y-1 pl-5 text-sm text-gray-600 dark:text-gray-300">
+              <li>Valid Jira SLA dates, ascending (oldest breached date first).</li>
+              <li>Oldest Jira creation timestamp when SLA dates match.</li>
+              <li>Jira key for stable ordering; missing or invalid SLA dates last.</li>
+            </ol>
+            <p class="mt-2 text-xs text-gray-500 dark:text-gray-400">Bugs remain in a separate group ranked by their Bug-v1 priority score. These guidelines do not override mandatory organizational security policy.</p>
+          </section>
         </div>
 
         <div v-else data-testid="bug-rubric-content">
           <div class="rounded-xl border border-indigo-200 bg-indigo-50 px-4 py-3 text-sm text-indigo-900 dark:border-indigo-800 dark:bg-indigo-950/40 dark:text-indigo-100">
             <p class="font-semibold">Bug score = customer + delivery/security + detection + Jira severity + due date + age</p>
             <p class="mt-1 text-xs leading-5 text-indigo-800 dark:text-indigo-200">
-              Only the highest matching rule in each dimension contributes points. Missing values receive zero points. The effective score controls position in the combined queue.
+              Only the highest matching rule in each dimension contributes points. Missing values receive zero points. The effective score controls position within the Bugs group.
             </p>
           </div>
 
@@ -208,7 +179,7 @@
           <section class="mt-5 rounded-xl border border-amber-200 bg-amber-50/60 p-4 dark:border-amber-800 dark:bg-amber-950/20">
             <h3 class="text-sm font-bold text-gray-900 dark:text-gray-100">Active prioritization</h3>
             <p class="mt-1 text-sm leading-5 text-gray-700 dark:text-gray-200">
-              Bug-v1 and vulnerability scores are active in one shared queue. Backlog ranks are global across both issue types, with each card exposing the score equation and supporting evidence.
+              Bug-v1 scores rank Bugs within their own group. CVEs are ranked separately by Jira company SLA date; each group starts its rank sequence at 1.
             </p>
           </section>
         </div>
@@ -226,71 +197,31 @@ const props = defineProps({
 })
 const activeRubric = ref(props.initialTab === 'bug' ? 'bug' : 'vulnerability')
 
-const scoreCategories = [
+const vulnerabilityPolicies = [
   {
-    name: 'SLA urgency',
-    max: 35,
-    rows: [
-      { label: 'Breached', points: 35 },
-      { label: 'Due within 7 days', points: 30 },
-      { label: 'Due in 8–30 days', points: 22 },
-      { label: 'Due in 31–90 days', points: 12 },
-      { label: 'Due after 90 days', points: 4 },
-      { label: 'Missing or invalid', points: 0 }
+    version: 'current',
+    title: 'Current company policy',
+    appliesTo: 'Issues created before Dec 1, 2026 (UTC)',
+    deadlines: [
+      { severity: 'KEV (Known Exploited Vulnerability)', days: 5 },
+      { severity: 'Critical', days: 30 },
+      { severity: 'Important', days: 60 },
+      { severity: 'Moderate', days: 90 },
+      { severity: 'Low', days: 180 }
     ]
   },
   {
-    name: 'CVSS base score',
-    max: 30,
-    rows: [
-      { label: '9.0–10.0', points: 30 },
-      { label: '7.0–8.9', points: 23 },
-      { label: '4.0–6.9', points: 14 },
-      { label: '0–3.9', points: 5 },
-      { label: 'Missing or invalid', points: 0 }
-    ]
-  },
-  {
-    name: 'Jira due date',
-    max: 15,
-    rows: [
-      { label: 'Past due', points: 15 },
-      { label: 'Due within 7 days', points: 13 },
-      { label: 'Due in 8–30 days', points: 9 },
-      { label: 'Due in 31–90 days', points: 5 },
-      { label: 'Due after 90 days', points: 2 },
-      { label: 'Missing', points: 0 }
-    ]
-  },
-  {
-    name: 'Review outcome',
-    max: 10,
-    rows: [
-      { label: 'Needs action', points: 10 },
-      { label: 'Not found', points: 8 },
-      { label: 'Needs review', points: 7 },
-      { label: 'Possibly resolved', points: 2 },
-      { label: 'Missing or conflicting', points: 0 }
-    ]
-  },
-  {
-    name: 'Issue age',
-    max: 5,
-    rows: [
-      { label: '13+ weeks', points: 5 },
-      { label: '8–12 weeks', points: 4 },
-      { label: '4–7 weeks', points: 3 },
-      { label: '2–3 weeks', points: 2 },
-      { label: '0–1 week', points: 0 }
+    version: 'dec-2026',
+    title: 'Updated policy · effective Dec 1, 2026',
+    appliesTo: 'Issues created on or after Dec 1, 2026 (UTC)',
+    deadlines: [
+      { severity: 'KEV (Known Exploited Vulnerability)', days: 3 },
+      { severity: 'Critical', days: 7 },
+      { severity: 'Important', days: 21 },
+      { severity: 'Moderate', days: 60, note: 'where applicable' },
+      { severity: 'Low', days: 90, note: 'where applicable' }
     ]
   }
-]
-
-const uncertaintyPoints = [
-  { label: 'Missing SLA', points: 2 },
-  { label: 'Missing CVSS', points: 1 },
-  { label: 'Missing due date', points: 1 },
-  { label: 'Missing/conflicting outcome', points: 1 }
 ]
 
 const bugScoreCategories = [

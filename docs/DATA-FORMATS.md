@@ -1120,9 +1120,10 @@ component's report.
 ## Releases — Tech Debt Priority Scoring (API Response)
 
 `GET /api/modules/releases/tech-debt/issues` returns the complete open Bug and
-Vulnerability cohort for the selected Jira components. Vulnerabilities include
-a deterministic priority assessment. Bugs use the deterministic `bug-v1`
-assessment. Both issue types share one backlog ordered by effective score.
+Vulnerability cohort for the selected Jira components. Vulnerabilities use
+`company-sla-v1` prioritization. Bugs use the deterministic `bug-v1`
+assessment. Backlog issues are returned in separate groups with independent
+rank sequences.
 The representative contract fixture is
 `fixtures/releases/tech-debt/issues.json`.
 Response metadata identifies that behavior with:
@@ -1134,63 +1135,102 @@ Response metadata identifies that behavior with:
     "mode": "active",
     "rankingApplied": true
   },
+  "vulnerabilityPrioritization": {
+    "modelVersion": "company-sla-v1",
+    "method": "company-sla",
+    "slaSource": "rh-sla-dt",
+    "policyCutover": "2026-12-01T00:00:00.000Z",
+    "policies": [
+      {
+        "version": "current",
+        "label": "Current company policy",
+        "effectiveFrom": null,
+        "appliesTo": "Issues created before Dec 1, 2026 (UTC)",
+        "deadlines": [
+          { "severity": "KEV (Known Exploited Vulnerability)", "days": 5 },
+          { "severity": "Critical", "days": 30 },
+          { "severity": "Important", "days": 60 },
+          { "severity": "Moderate", "days": 90 },
+          { "severity": "Low", "days": 180 }
+        ]
+      },
+      {
+        "version": "dec-2026",
+        "label": "Updated company policy",
+        "effectiveFrom": "2026-12-01T00:00:00.000Z",
+        "appliesTo": "Issues created on or after Dec 1, 2026 (UTC)",
+        "deadlines": [
+          { "severity": "KEV (Known Exploited Vulnerability)", "days": 3 },
+          { "severity": "Critical", "days": 7 },
+          { "severity": "Important", "days": 21 },
+          { "severity": "Moderate", "days": 60, "note": "Where applicable" },
+          { "severity": "Low", "days": 90, "note": "Where applicable" }
+        ]
+      }
+    ]
+  },
   "queueScoring": {
-    "mode": "combined",
-    "rankingField": "priorityScore"
+    "mode": "grouped",
+    "rankingGroups": [
+      { "rankGroup": "vulnerability-sla", "issueType": "Vulnerability", "rankingField": "slaDate" },
+      { "rankGroup": "bug-score", "issueType": "Bug", "rankingField": "priorityScore" }
+    ]
   }
 }
 ```
 
-### Vulnerability score
+### Vulnerability company SLA assessment
 
 ```json
 {
   "key": "RHAIENG-123",
   "issueType": "Vulnerability",
-  "rawScore": 69,
-  "priorityScore": 70,
-  "scoreStatus": "scored",
-  "priorityBand": {
-    "level": "P1",
-    "label": "Urgent",
-    "expectedAction": "Begin within 2–4 business days"
-  },
-  "scoreBreakdown": {
-    "sla": { "points": 35, "state": "Breached", "date": "2026-10-20", "daysUntil": -6 },
-    "cvss": { "points": 14, "state": "Medium (4.0–6.9)", "value": 6.5 },
-    "dueDate": { "points": 9, "state": "Due in 8–30 days", "date": "2026-11-10", "daysUntil": 15 },
-    "reviewOutcome": { "points": 7, "state": "Needs review", "value": "needs-review", "conflict": false },
-    "age": { "points": 4, "state": "8–12 weeks", "weeks": 9 },
-    "uncertainty": { "points": 0, "state": "Complete tracking data", "reasons": [] }
-  },
-  "guardrail": {
-    "applied": true,
-    "minimumScore": 70,
-    "reasons": ["SLA breach guarantees at least P1"]
-  },
+  "createdAt": "2026-08-01T12:00:00.000Z",
+  "slaDate": "2026-10-20",
+  "rawScore": null,
+  "priorityScore": null,
+  "priorityBand": null,
+  "scoreStatus": "not-applicable",
+  "priorityMethod": "company-sla",
+  "slaState": "breached",
+  "slaDaysUntil": -6,
+  "policyVersion": "current",
+  "policyLabel": "Current company policy",
+  "rank": 1,
+  "rankGroup": "vulnerability-sla",
   "triageFlags": [
     { "code": "sla-breached", "label": "SLA breached" }
   ]
 }
 ```
 
-The raw score is the sum of six independently visible categories:
+Vulnerability records retain compatibility score fields, but
+`rawScore`, `priorityScore`, and `priorityBand` are `null`, and `scoreStatus`
+is `not-applicable`. No weighted score or CVE guardrail is calculated.
+`priorityMethod: "company-sla"` identifies the active method. `slaState` is
+`breached`, `due-today`, `upcoming`, or `missing`; `slaDaysUntil` is the UTC
+calendar-day difference (negative when overdue, `null` when missing/invalid).
 
-| Category | Valid-value points | Missing/invalid behavior |
-| --- | --- | --- |
-| SLA urgency | 35 breached; 30 within 7 days; 22 within 30; 12 within 90; 4 later | 0 plus 2 uncertainty |
-| CVSS | 30 for 9.0+; 23 for 7.0+; 14 for 4.0+; 5 below 4.0 | 0 plus 1 uncertainty |
-| Jira Due Date | 15 past due; 13 within 7 days; 9 within 30; 5 within 90; 2 later | 0 plus 1 uncertainty |
-| Review outcome | 10 needs action; 8 not found; 7 needs review; 2 possibly resolved | 0 plus 1 uncertainty |
-| Issue age | 5 for 13+ weeks; 4 for 8–12; 3 for 4–7; 2 for 2–3; 0 for 0–1 | 0 |
-| Uncertainty | Up to 5 from the missing fields above | — |
+The policy is selected from the Jira `createdAt` timestamp, normalized to UTC.
+Its day counts are explanatory and do not calculate or override Jira's actual
+SLA deadline:
 
-Missing values never receive fallback urgency points. Scores are not
-normalized: the practical raw maximum is 95. Effective priority bands are P0
-at 85+, P1 at 70+, P2 at 50+, P3 at 30+, and P4 below 30. A breached SLA
-raises the effective score to at least 70; CVSS 9+ combined with an SLA or Due
-Date within seven days or overdue raises it to at least 85. `rawScore` always
-preserves the arithmetic before these guardrails.
+| Policy | Jira issue creation time (UTC) | KEV | Critical | Important | Moderate | Low |
+| --- | --- | ---: | ---: | ---: | ---: | ---: |
+| Current | Before 2026-12-01 00:00 UTC | 5 days | 30 days | 60 days | 90 days | 180 days |
+| Updated (`dec-2026`) | On/after 2026-12-01 00:00 UTC | 3 days | 7 days | 21 days | 60 days* | 90 days* |
+
+*Updated Moderate and Low timelines apply where applicable. The inclusive
+cutover is `2026-12-01T00:00:00.000Z`. Missing or invalid creation timestamps
+produce a null policy version and label. Do not infer Red Hat severity or KEV
+status from CVSS. Jira's `rh-sla-dt` date is authoritative.
+
+Backlog Vulnerabilities sort by valid Jira SLA date ascending (oldest breached
+deadline first), oldest `createdAt` if SLA dates tie, then Jira key. Missing or
+invalid SLA dates sort last. CVSS, Jira due date, review outcome, age, previous
+score fields, and triage flags do not affect the order. Vulnerabilities use
+`rankGroup: "vulnerability-sla"` and ranks restart at 1 independently of Bug
+ranks.
 
 `triageFlags` can include `sla-breached`, `missing-sla`,
 `due-after-90-days`, `missing-due-date`, `missing-review-outcome`,
@@ -1203,9 +1243,9 @@ the CVE Sustaining report's 90-day timeline and exclusions.
 
 ### Bug score
 
-Bug records use `scoreStatus: "scored"`. Their effective score participates in
-the same backlog ranking as Vulnerabilities. Ranks are global across both issue
-types rather than restarting for each type.
+Bug records use `scoreStatus: "scored"`. Their effective score determines
+ordering within the Bug backlog group. Bugs use `rankGroup: "bug-score"` and
+their ranks restart at 1 independently of Vulnerability ranks.
 
 ```json
 {
@@ -1286,9 +1326,10 @@ Classification evidence is normalized case-insensitively. The source rules are:
 An Approved Release Blocker has an effective score floor of 70/P1. An
 affecting-customer Bug with Jira priority Blocker, Highest, Critical, or High also has
 a 70/P1 floor. Missing Bug fields receive zero points and no uncertainty bonus.
-The score reuses the Vulnerability P0–P4 bands and UTC date boundaries. The
-combined queue sorts by effective score descending, then earliest SLA date,
-earliest Jira Due Date, highest CVSS, oldest creation date, and Jira key.
+The score reuses the shared P0–P4 bands and UTC date boundaries. Bugs sort by
+effective score descending, then earliest Jira Due Date, oldest creation date,
+and Jira key. In a mixed result, the Vulnerability SLA group is displayed first,
+followed by the Bug score group; each group's backlog ranks start at 1.
 
 ---
 

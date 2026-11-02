@@ -1,30 +1,76 @@
 {
   "projects": ["RHAI", "RHAIENG", "RHOAIENG", "INFERENG", "AIPCC"],
   "selectedComponents": ["AI Core Platform"],
-  "selectedIssueType": "Bug",
+  "selectedIssueType": null,
   "selectedTriage": "all",
   "bugScoring": {
     "modelVersion": "bug-v1",
     "mode": "active",
     "rankingApplied": true
   },
+  "vulnerabilityPrioritization": {
+    "modelVersion": "company-sla-v1",
+    "method": "company-sla",
+    "slaSource": "rh-sla-dt",
+    "policyCutover": "2026-12-01T00:00:00.000Z",
+    "policies": [
+      { "version": "current", "label": "Current company policy", "deadlines": [{ "severity": "KEV (Known Exploited Vulnerability)", "days": 5 }, { "severity": "Critical", "days": 30 }, { "severity": "Important", "days": 60 }, { "severity": "Moderate", "days": 90 }, { "severity": "Low", "days": 180 }] },
+      { "version": "dec-2026", "label": "Updated company policy", "effectiveFrom": "2026-12-01T00:00:00.000Z", "deadlines": [{ "severity": "KEV (Known Exploited Vulnerability)", "days": 3 }, { "severity": "Critical", "days": 7 }, { "severity": "Important", "days": 21 }, { "severity": "Moderate", "days": 60, "note": "Where applicable" }, { "severity": "Low", "days": 90, "note": "Where applicable" }] }
+    ]
+  },
   "queueScoring": {
-    "mode": "combined",
-    "rankingField": "priorityScore"
+    "mode": "grouped",
+    "rankingGroups": [
+      { "rankGroup": "vulnerability-sla", "issueType": "Vulnerability", "rankingField": "slaDate" },
+      { "rankGroup": "bug-score", "issueType": "Bug", "rankingField": "priorityScore" }
+    ]
   },
   "asOfDate": "2026-10-26",
   "fetchedAt": "2026-10-26T12:00:00.000Z",
   "cacheStatus": "refreshed",
   "warning": null,
   "counts": {
-    "total": 1,
+    "total": 2,
     "inFlight": 0,
-    "backlog": 1,
+    "backlog": 2,
     "bugs": 1,
-    "vulnerabilities": 0
+    "vulnerabilities": 1
   },
   "inFlight": [],
   "backlog": [
+    {
+      "key": "RHAIENG-123",
+      "link": "https://redhat.atlassian.net/browse/RHAIENG-123",
+      "summary": "Remediate vulnerability before company SLA deadline",
+      "issueType": "Vulnerability",
+      "jiraPriority": "Critical",
+      "status": "Open",
+      "statusCategory": "To Do",
+      "components": ["AI Core Platform"],
+      "assignee": { "id": "security-engineer", "name": "Security Engineer" },
+      "reporter": { "id": "devtestops-account", "name": "DevTestOps Jira Bot" },
+      "createdAt": "2026-08-01T12:00:00.000Z",
+      "updatedAt": "2026-10-20T12:00:00.000Z",
+      "dueDate": "2026-11-15",
+      "fixVersions": ["3.6 GA RHOAI RELEASE"],
+      "labels": [],
+      "releaseBlockerStatus": null,
+      "hasSfdcCases": false,
+      "cvss": "9.8",
+      "slaDate": "2026-10-20",
+      "rawScore": null,
+      "priorityScore": null,
+      "priorityBand": null,
+      "scoreStatus": "not-applicable",
+      "priorityMethod": "company-sla",
+      "slaState": "breached",
+      "slaDaysUntil": -6,
+      "policyVersion": "current",
+      "policyLabel": "Current company policy",
+      "triageFlags": [{ "code": "sla-breached", "label": "SLA breached" }],
+      "rank": 1,
+      "rankGroup": "vulnerability-sla"
+    },
     {
       "key": "RHAIENG-456",
       "link": "https://redhat.atlassian.net/browse/RHAIENG-456",
@@ -77,7 +123,7 @@
       },
       "guardrail": { "applied": false, "minimumScore": null, "reasons": ["Approved Release Blocker guarantees at least P1", "Affecting-customer Blocker/Critical/High priority Bug guarantees at least P1"] },
       "rank": 1,
-      "rankGroup": "combined"
+      "rankGroup": "bug-score"
     }
   ]
 }

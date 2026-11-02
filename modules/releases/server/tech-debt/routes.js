@@ -8,7 +8,13 @@ const {
   normalizeCvss,
   normalizeSlaDate
 } = require('../cve-sustaining/issue-fields')
-const { scoreVulnerability, utcDateOnly } = require('./vulnerability-score')
+const {
+  POLICY_CUTOVER,
+  VULNERABILITY_SLA_POLICIES,
+  assessVulnerabilityPolicy,
+  policyForCreatedAt,
+  utcDateOnly
+} = require('./vulnerability-policy')
 const { scoreBug } = require('./bug-score')
 const {
   STORAGE_KEY: TRENDS_STORAGE_KEY,
@@ -282,7 +288,7 @@ function isVulnerability(issue) {
 
 function enrichIssue(issue, now) {
   return isVulnerability(issue)
-    ? { ...issue, ...scoreVulnerability(issue, now) }
+    ? { ...issue, ...assessVulnerabilityPolicy(issue, now) }
     : { ...issue, ...scoreBug(issue, now) }
 }
 
@@ -308,14 +314,28 @@ function comparePriorityScores(a, b) {
   return a.key.localeCompare(b.key)
 }
 
+function compareVulnerabilitySla(a, b) {
+  const slaDifference = dateValue(a.slaDate, Number.MAX_SAFE_INTEGER) - dateValue(b.slaDate, Number.MAX_SAFE_INTEGER)
+  if (slaDifference !== 0) return slaDifference
+
+  const createdDifference = dateValue(a.createdAt, Number.MAX_SAFE_INTEGER) - dateValue(b.createdAt, Number.MAX_SAFE_INTEGER)
+  if (createdDifference !== 0) return createdDifference
+  return a.key.localeCompare(b.key)
+}
+
 function orderPaneIssues(issues, ranked) {
-  const ordered = issues.slice().sort(comparePriorityScores)
-  if (!ranked) {
-    return ordered.map(function (issue) { return { ...issue, rankGroup: 'combined' } })
+  const vulnerabilities = issues.filter(isVulnerability).slice().sort(compareVulnerabilitySla)
+  const bugs = issues.filter(function (issue) { return !isVulnerability(issue) }).slice().sort(comparePriorityScores)
+  const assignGroup = function (group, rankGroup) {
+    return group.map(function (issue, index) {
+      return {
+        ...issue,
+        ...(ranked ? { rank: index + 1 } : {}),
+        rankGroup
+      }
+    })
   }
-  return ordered.map(function (issue, index) {
-    return { ...issue, rank: index + 1, rankGroup: 'combined' }
-  })
+  return assignGroup(vulnerabilities, 'vulnerability-sla').concat(assignGroup(bugs, 'bug-score'))
 }
 
 function buildCockpitResponse(cohort, selectedComponents, selectedIssueType, selectedTriage = 'all', now = new Date()) {
@@ -346,7 +366,20 @@ function buildCockpitResponse(cohort, selectedComponents, selectedIssueType, sel
     selectedIssueType: selectedIssueType || null,
     selectedTriage,
     bugScoring: { modelVersion: 'bug-v1', mode: 'active', rankingApplied: true },
-    queueScoring: { mode: 'combined', rankingField: 'priorityScore' },
+    vulnerabilityPrioritization: {
+      modelVersion: 'company-sla-v1',
+      method: 'company-sla',
+      slaSource: SLA_DATE_PROPERTY,
+      policyCutover: POLICY_CUTOVER,
+      policies: VULNERABILITY_SLA_POLICIES
+    },
+    queueScoring: {
+      mode: 'grouped',
+      rankingGroups: [
+        { rankGroup: 'vulnerability-sla', issueType: 'Vulnerability', rankingField: 'slaDate' },
+        { rankGroup: 'bug-score', issueType: 'Bug', rankingField: 'priorityScore' }
+      ]
+    },
     asOfDate: utcDateOnly(now),
     fetchedAt: cohort.fetchedAt,
     cacheStatus: cohort.cacheStatus,
@@ -411,7 +444,7 @@ function registerTechDebtRoutes(router, { requireAuth, requireScope, jira, stora
    *   get:
    *     tags: [Releases]
    *     summary: Get open tech debt issues for selected components
-   *     description: Returns unresolved Bugs and Vulnerabilities split into in-flight and backlog panes, with both issue types combined and ordered by effective priority score. Jira queries are scoped to the selected components and recent selections are cached for five minutes.
+   *     description: Returns unresolved Bugs and Vulnerabilities split into in-flight and backlog panes. Vulnerabilities are grouped and ordered by Jira company SLA date; Bugs are grouped and ordered by their effective priority score. Each backlog group has its own rank sequence.
    *     parameters:
    *       - in: query
    *         name: component
@@ -443,6 +476,50 @@ function registerTechDebtRoutes(router, { requireAuth, requireScope, jira, stora
    *     responses:
    *       200:
    *         description: Tech debt cockpit issue data
+   *         content:
+   *           application/json:
+   *             schema:
+   *               type: object
+   *               properties:
+   *                 vulnerabilityPrioritization:
+   *                   type: object
+   *                   description: Company SLA model metadata and effective-dated policy configuration.
+   *                   properties:
+   *                     modelVersion: { type: string, example: company-sla-v1 }
+   *                     method: { type: string, example: company-sla }
+   *                     slaSource: { type: string, example: rh-sla-dt }
+   *                     policyCutover: { type: string, format: date-time, example: '2026-12-01T00:00:00.000Z' }
+   *                 queueScoring:
+   *                   type: object
+   *                   description: Grouped queue order; each backlog rank starts at one per rank group.
+   *                   properties:
+   *                     mode: { type: string, example: grouped }
+   *                     rankingGroups:
+   *                       type: array
+   *                       items:
+   *                         type: object
+   *                         properties:
+   *                           rankGroup: { type: string, enum: [vulnerability-sla, bug-score] }
+   *                           issueType: { type: string, enum: [Vulnerability, Bug] }
+   *                           rankingField: { type: string, enum: [slaDate, priorityScore] }
+   *                 backlog:
+   *                   type: array
+   *                   items:
+   *                     type: object
+   *                     properties:
+   *                       key: { type: string, example: RHAIENG-123 }
+   *                       rank: { type: integer, minimum: 1 }
+   *                       rankGroup: { type: string, enum: [vulnerability-sla, bug-score] }
+   *                       priorityMethod: { type: string, nullable: true, enum: [company-sla] }
+   *                       slaDate: { type: string, format: date, nullable: true }
+   *                       slaState: { type: string, enum: [breached, due-today, upcoming, missing] }
+   *                       slaDaysUntil: { type: integer, nullable: true }
+   *                       policyVersion: { type: string, nullable: true, enum: [current, dec-2026] }
+   *                       policyLabel: { type: string, nullable: true }
+   *                       rawScore: { type: number, nullable: true }
+   *                       priorityScore: { type: number, nullable: true }
+   *                       priorityBand: { type: object, nullable: true }
+   *                       scoreStatus: { type: string, enum: [not-applicable, scored] }
    *       400:
    *         description: No component was supplied
    *       503:
@@ -594,15 +671,20 @@ registerTechDebtRoutes._test = {
   MAX_CACHE_ENTRIES,
   MAX_SELECTED_COMPONENTS,
   SFDC_BUG_JQL,
+  POLICY_CUTOVER,
+  VULNERABILITY_SLA_POLICIES,
+  assessVulnerabilityPolicy,
   buildCockpitResponse,
   cohortCacheKey,
   componentJqlClause,
   comparePriorityScores,
+  compareVulnerabilitySla,
   fetchIssueKeySet,
   fetchIssuePages,
   normalizeIssue,
   normalizeReleaseBlockerStatus,
   orderPaneIssues,
+  policyForCreatedAt,
   scopedIssueJql,
   scopedSfdcJql,
   buildTrendResponse,

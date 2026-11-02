@@ -1,6 +1,6 @@
 <template>
   <article
-    class="group relative rounded-xl border border-gray-200 bg-white p-4 shadow-sm transition hover:-translate-y-0.5 hover:border-gray-300 hover:shadow-md dark:border-gray-700 dark:bg-gray-800 dark:hover:border-gray-600"
+    class="group relative rounded-xl border border-gray-200 bg-white p-4 shadow-sm transition hover:-translate-y-0.5 hover:border-gray-300 hover:shadow-md xl:min-h-[23rem] dark:border-gray-700 dark:bg-gray-800 dark:hover:border-gray-600"
     :data-testid="`tech-debt-${pane}-card`"
   >
     <div class="flex items-start gap-3">
@@ -46,6 +46,13 @@
       >
         {{ scoreBadgeText }}
       </span>
+      <span
+        v-else-if="isCompanySlaVulnerability"
+        :class="slaBadgeClass"
+        data-testid="tech-debt-sla-badge"
+      >
+        {{ slaBadgeText }}
+      </span>
       <span v-else class="rounded-full bg-gray-100 px-2.5 py-1 text-xs font-semibold text-gray-600 dark:bg-gray-700 dark:text-gray-300">
         Score pending
       </span>
@@ -74,6 +81,27 @@
         {{ flag.label }}
       </span>
     </div>
+
+    <details v-if="isCompanySlaVulnerability" class="mt-3 rounded-lg border border-fuchsia-100 bg-fuchsia-50/60 px-3 py-2 text-xs dark:border-fuchsia-900/50 dark:bg-fuchsia-950/20" data-testid="tech-debt-sla-details">
+      <summary class="cursor-pointer font-semibold text-fuchsia-800 dark:text-fuchsia-200">Company SLA details</summary>
+      <dl class="mt-2 grid gap-1 text-gray-600 dark:text-gray-300">
+        <div class="flex justify-between gap-3">
+          <dt>Jira creation date</dt><dd class="text-right font-semibold">{{ formatDate(issue.createdAt) }}</dd>
+        </div>
+        <div class="flex justify-between gap-3">
+          <dt>Jira SLA deadline</dt><dd class="text-right font-semibold">{{ formatSlaDate(issue.slaDate) }}</dd>
+        </div>
+        <div class="flex justify-between gap-3">
+          <dt>Applicable policy</dt><dd class="text-right font-semibold">{{ issue.policyLabel ? `${issue.policyLabel} (${issue.policyVersion || 'version unknown'})` : 'Unknown policy' }}</dd>
+        </div>
+        <div class="flex justify-between gap-3">
+          <dt>Deadline status</dt><dd class="text-right font-semibold">{{ slaStateDescription }}</dd>
+        </div>
+      </dl>
+      <p class="mt-2 border-t border-fuchsia-200 pt-2 text-gray-600 dark:border-fuchsia-900/50 dark:text-gray-300">
+        Jira SLA Date controls this CVE’s backlog position. CVSS, Jira due date, review outcome, age, and triage flags do not change its order.
+      </p>
+    </details>
 
     <details v-if="hasPriorityScore" :class="scoreBreakdownClass" data-testid="tech-debt-score-breakdown">
       <summary :class="scoreSummaryClass">
@@ -106,7 +134,7 @@
       </div>
       <div>
         <dt class="font-semibold uppercase tracking-wide text-gray-400">Due</dt>
-        <dd class="mt-0.5">{{ formatDate(issue.dueDate) }}</dd>
+        <dd class="mt-0.5">{{ formatDueDate(issue.dueDate) }}</dd>
       </div>
       <div>
         <dt class="font-semibold uppercase tracking-wide text-gray-400">Updated</dt>
@@ -139,8 +167,8 @@ const props = defineProps({
   rank: { type: Number, default: null }
 })
 
-const isScoredVulnerability = computed(function () {
-  return props.issue.issueType?.toLowerCase() === 'vulnerability' && props.issue.scoreStatus === 'scored'
+const isCompanySlaVulnerability = computed(function () {
+  return props.issue.issueType?.toLowerCase() === 'vulnerability' && props.issue.priorityMethod === 'company-sla'
 })
 
 const isScoredBug = computed(function () {
@@ -148,7 +176,35 @@ const isScoredBug = computed(function () {
 })
 
 const hasPriorityScore = computed(function () {
-  return isScoredVulnerability.value || isScoredBug.value
+  return isScoredBug.value
+})
+
+const slaBadgeText = computed(function () {
+  if (props.issue.slaState === 'breached') {
+    const days = Math.abs(Number(props.issue.slaDaysUntil) || 0)
+    return `SLA breached · ${days} ${days === 1 ? 'day' : 'days'}`
+  }
+  if (props.issue.slaState === 'due-today') return 'SLA due today'
+  if (props.issue.slaState === 'upcoming') {
+    const days = Number(props.issue.slaDaysUntil)
+    return `SLA due in ${days} ${days === 1 ? 'day' : 'days'}`
+  }
+  return 'Missing SLA · Needs triage'
+})
+
+const slaStateDescription = computed(function () {
+  if (props.issue.slaState === 'breached') return `${Math.abs(Number(props.issue.slaDaysUntil) || 0)} days overdue`
+  if (props.issue.slaState === 'due-today') return 'Due today'
+  if (props.issue.slaState === 'upcoming') return `Due in ${props.issue.slaDaysUntil} days`
+  return 'SLA date missing or invalid'
+})
+
+const slaBadgeClass = computed(function () {
+  const base = 'rounded-full px-2.5 py-1 text-xs font-bold '
+  if (props.issue.slaState === 'breached') return base + 'bg-red-100 text-red-800 dark:bg-red-900/40 dark:text-red-200'
+  if (props.issue.slaState === 'due-today') return base + 'bg-orange-100 text-orange-800 dark:bg-orange-900/40 dark:text-orange-200'
+  if (props.issue.slaState === 'upcoming') return base + 'bg-blue-100 text-blue-800 dark:bg-blue-900/40 dark:text-blue-200'
+  return base + 'bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-200'
 })
 
 const secondaryClassificationSignals = computed(function () {
@@ -252,10 +308,24 @@ const statusClass = computed(function () {
 })
 
 function formatDate(value) {
+  if (!value) return 'Unknown'
+  const date = new Date(value)
+  if (Number.isNaN(date.getTime())) return 'Unknown'
+  return date.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })
+}
+
+function formatDueDate(value) {
   if (!value) return 'No due date'
   const date = new Date(value)
   if (Number.isNaN(date.getTime())) return 'No due date'
   return date.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })
+}
+
+function formatSlaDate(value) {
+  if (!value) return 'Missing SLA'
+  const date = new Date(value + (String(value).length === 10 ? 'T00:00:00Z' : ''))
+  if (Number.isNaN(date.getTime())) return 'Invalid SLA date'
+  return date.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric', timeZone: 'UTC' })
 }
 
 function formatAge(value) {
