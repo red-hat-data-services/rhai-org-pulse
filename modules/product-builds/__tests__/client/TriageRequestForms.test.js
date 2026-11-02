@@ -199,6 +199,17 @@ describe('AIPCC-E triage request forms', () => {
       expect(wrapper.find('#chan-torch-version-error').text()).toBe('Torch version is required')
       expect(wrapper.find('#chan-accelerator-error').text()).toBe('Accelerator is required')
       expect(wrapper.find('#chan-os-error').text()).toBe('Operating system is required')
+      expect(wrapper.find('#chan-discussion-link-error').text()).toBe('Link to your discussion with AIPCC (for example a Slack thread)')
+    })
+
+    it('rejects a discussion reference that is not a link', async () => {
+      const wrapper = mount(ChannelRequestForm)
+      await fillCommon(wrapper, 'chan')
+      await wrapper.find('#chan-discussion-link').setValue('talked to Einat')
+      await wrapper.find('form').trigger('submit')
+      await flushPromises()
+      expect(submitRequest).not.toHaveBeenCalled()
+      expect(wrapper.find('#chan-discussion-link-error').text()).toBe('Discussion link must be an HTTP or HTTPS URL')
     })
 
     it('submits free text stack details', async () => {
@@ -211,6 +222,7 @@ describe('AIPCC-E triage request forms', () => {
       await wrapper.find('#chan-torch-version').setValue(' 2.12 ')
       await wrapper.find('#chan-accelerator').setValue('ROCm 10.4')
       await wrapper.find('#chan-os').setValue('RHEL 10')
+      await wrapper.find('#chan-discussion-link').setValue('https://redhat.enterprise.slack.com/archives/C01/p123')
       await wrapper.find('form').trigger('submit')
       await flushPromises()
 
@@ -221,6 +233,7 @@ describe('AIPCC-E triage request forms', () => {
         torch_version: '2.12',
         accelerator: 'ROCm 10.4',
         os: 'RHEL 10',
+        discussion_link: 'https://redhat.enterprise.slack.com/archives/C01/p123',
         jira_id: 'RHAISTRAT-42',
         delivery_timeline: EARLIEST,
         justification: 'Needed for the new card'

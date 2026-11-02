@@ -10,6 +10,7 @@ defineEmits(['select'])
   <div class="space-y-6">
     <p class="text-sm text-gray-600 dark:text-gray-300">
       Pick the request that matches what you need. Each request files a Jira Epic that AIPCC tracks to delivery.
+      Every request needs a related Jira issue, a delivery date and a business justification.
     </p>
 
     <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -18,15 +19,24 @@ defineEmits(['select'])
         :key="option.id"
         type="button"
         :data-testid="`request-card-${option.id}`"
-        class="text-left bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-5 hover:border-gray-400 dark:hover:border-gray-500 hover:shadow-sm transition flex flex-col"
+        class="group text-left cursor-pointer bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-5 flex flex-col transition hover:border-primary-400 dark:hover:border-primary-500 hover:shadow-md hover:-translate-y-0.5 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 dark:focus-visible:ring-offset-gray-900"
         @click="$emit('select', option.id)"
       >
-        <h2 class="text-base font-semibold text-gray-900 dark:text-white">{{ option.label }}</h2>
-        <p class="mt-2 text-sm text-gray-600 dark:text-gray-300">{{ option.summary }}</p>
-        <ul class="mt-3 space-y-1 text-xs text-gray-500 dark:text-gray-400 list-disc pl-4">
-          <li v-for="point in option.points" :key="point">{{ point }}</li>
+        <h2 class="text-base font-semibold text-gray-900 dark:text-white group-hover:text-primary-700 dark:group-hover:text-primary-300">{{ option.label }}</h2>
+        <p class="mt-2 text-sm text-gray-600 dark:text-gray-300" data-testid="card-description">{{ option.description }}</p>
+
+        <h3 class="mt-4 text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">Prerequisites</h3>
+        <ul class="mt-1 space-y-1 text-xs text-gray-600 dark:text-gray-300 list-disc pl-4" data-testid="card-prerequisites">
+          <li v-for="item in option.prerequisites" :key="item">{{ item }}</li>
         </ul>
-        <span class="mt-auto pt-4 text-sm font-medium text-primary-600 dark:text-primary-400">{{ option.cta }} &rarr;</span>
+
+        <h3 class="mt-4 text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">Turnaround</h3>
+        <p class="mt-1 text-xs text-gray-600 dark:text-gray-300" data-testid="card-turnaround">{{ option.turnaround }}</p>
+
+        <span class="mt-auto pt-4 text-sm font-medium text-primary-600 dark:text-primary-400">
+          {{ option.cta }}
+          <span class="inline-block transition-transform group-hover:translate-x-1" aria-hidden="true">&rarr;</span>
+        </span>
       </button>
     </div>
 

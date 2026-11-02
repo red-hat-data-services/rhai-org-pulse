@@ -63,6 +63,21 @@ describe('RequestsView', () => {
     expect(wrapper.find('#req-package-name').exists()).toBe(false)
   })
 
+  it('gives every card a description, prerequisites and turnaround', async () => {
+    const { wrapper } = await mountView()
+    const turnaround = id => wrapper.find(`[data-testid="request-card-${id}"] [data-testid="card-turnaround"]`).text()
+    for (const id of ['python', 'rpm', 'channel']) {
+      const card = wrapper.find(`[data-testid="request-card-${id}"]`)
+      expect(card.find('[data-testid="card-description"]').text()).not.toBe('')
+      expect(card.findAll('[data-testid="card-prerequisites"] li').length).toBeGreaterThan(0)
+    }
+    expect(turnaround('python')).toBe('10 business day SLA')
+    expect(turnaround('rpm')).toBe('Triaged by AIPCC')
+    expect(turnaround('channel')).toBe('Triaged by AIPCC')
+    expect(wrapper.find('[data-testid="request-card-python"]').text()).toContain('For system packages, use an RPM request.')
+    expect(wrapper.find('[data-testid="request-card-channel"]').text()).toContain('A link to your prior discussion with AIPCC')
+  })
+
   it('never describes RPM or channel delivery as an SLA', async () => {
     const { wrapper } = await mountView()
     expect(wrapper.find('[data-testid="request-card-rpm"]').text()).not.toMatch(/SLA|business days/i)

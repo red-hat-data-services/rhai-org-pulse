@@ -11,6 +11,8 @@ import TriageRequestSuccess from './TriageRequestSuccess.vue'
 // Mirror server/triage-requests.js.
 const LEAD_BUSINESS_DAYS = 20
 const FREE_TEXT_MAX_LENGTH = 200
+const DISCUSSION_LINK_MAX_LENGTH = 2000
+const HTTP_URL_RE = /^https?:\/\//i
 const JIRA_KEY_RE = /^[A-Z][A-Z0-9]+-\d+$/
 const DATE_RE = /^\d{4}-\d{2}-\d{2}$/
 const STACK_FIELDS = [
@@ -25,6 +27,7 @@ function defaults() {
     torch_version: '',
     accelerator: '',
     os: '',
+    discussion_link: '',
     jira_id: '',
     delivery_timeline: '',
     justification: ''
@@ -52,6 +55,11 @@ function validate() {
     if (!value) errors[field.key] = `${field.label} is required`
     else if (value.length > FREE_TEXT_MAX_LENGTH) errors[field.key] = `${field.label} must be at most ${FREE_TEXT_MAX_LENGTH} characters`
   }
+
+  const discussionLink = form.discussion_link.trim()
+  if (!discussionLink) errors.discussion_link = 'Link to your discussion with AIPCC (for example a Slack thread)'
+  else if (!HTTP_URL_RE.test(discussionLink)) errors.discussion_link = 'Discussion link must be an HTTP or HTTPS URL'
+  else if (discussionLink.length > DISCUSSION_LINK_MAX_LENGTH) errors.discussion_link = `Discussion link must be at most ${DISCUSSION_LINK_MAX_LENGTH} characters`
 
   if (!JIRA_KEY_RE.test(form.jira_id.trim())) {
     errors.jira_id = 'Jira key must match the PROJECT-123 format (e.g. RHAISTRAT-1234)'
@@ -85,6 +93,7 @@ async function submit() {
         torch_version: form.torch_version.trim(),
         accelerator: form.accelerator.trim(),
         os: form.os.trim(),
+        discussion_link: form.discussion_link.trim(),
         jira_id: form.jira_id.trim(),
         delivery_timeline: form.delivery_timeline.trim(),
         justification: form.justification.trim()
@@ -186,6 +195,30 @@ function resetForm() {
             </div>
           </div>
         </fieldset>
+
+        <div>
+          <label for="chan-discussion-link" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+            AIPCC discussion link <span class="text-red-500" aria-hidden="true">*</span>
+          </label>
+          <input
+            id="chan-discussion-link"
+            v-model="form.discussion_link"
+            type="url"
+            required
+            autocomplete="off"
+            :maxlength="DISCUSSION_LINK_MAX_LENGTH"
+            placeholder="https://redhat.enterprise.slack.com/archives/..."
+            aria-required="true"
+            :aria-invalid="!!fieldErrors.discussion_link"
+            :aria-describedby="fieldErrors.discussion_link ? 'chan-discussion-link-error' : 'chan-discussion-link-hint'"
+            class="w-full px-3 py-2 border rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 text-sm focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+            :class="fieldErrors.discussion_link ? 'border-red-400 dark:border-red-600' : 'border-gray-300 dark:border-gray-600'"
+          />
+          <p v-if="fieldErrors.discussion_link" id="chan-discussion-link-error" class="mt-1 text-xs text-red-600 dark:text-red-400">{{ fieldErrors.discussion_link }}</p>
+          <p v-else id="chan-discussion-link-hint" class="mt-1 text-xs text-gray-500 dark:text-gray-400">
+            The Slack thread or other place where you discussed this channel with AIPCC. It is added to the Jira Epic.
+          </p>
+        </div>
 
         <RequestCommonFields
           id-prefix="chan"

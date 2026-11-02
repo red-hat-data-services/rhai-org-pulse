@@ -53,6 +53,7 @@ const RPM_NAME_RE = /^[a-zA-Z0-9][a-zA-Z0-9._+-]*$/;
 const RPM_VERSION_RE = /^[a-zA-Z0-9._+~^-]+$/;
 const CHANNEL_NAME_RE = /^[a-zA-Z0-9][a-zA-Z0-9._+-]*$/;
 const HTTP_URL_RE = /^https?:\/\//i;
+const DISCUSSION_LINK_MAX_LENGTH = 2000;
 
 function dateMessage(earliest) {
   return `Delivery date must be on or after ${earliest}`;
@@ -203,6 +204,17 @@ function validateChannelRequest(body, opts = {}) {
     values[key] = value;
   }
 
+  // Proof of the prior AIPCC discussion the disclaimer asks for, so triage can check it.
+  const discussionLink = trimmed(body.discussion_link);
+  if (!discussionLink) {
+    errors.discussion_link = 'Link to your discussion with AIPCC (for example a Slack thread)';
+  } else if (!HTTP_URL_RE.test(discussionLink)) {
+    errors.discussion_link = 'Discussion link must be an HTTP or HTTPS URL';
+  } else if (discussionLink.length > DISCUSSION_LINK_MAX_LENGTH) {
+    errors.discussion_link = `Discussion link must be at most ${DISCUSSION_LINK_MAX_LENGTH} characters`;
+  }
+  values.discussionLink = discussionLink;
+
   return {
     valid: Object.keys(errors).length === 0,
     errors,
@@ -221,6 +233,7 @@ function buildChannelDescription(request, requesterEmailAddress, jiraHost) {
     [adfLabel('Torch version: '), adfText(request.torchVersion + ' ')],
     [adfLabel('Accelerator: '), adfText(request.accelerator + ' ')],
     [adfLabel('Operating system: '), adfText(request.os + ' ')],
+    [adfLabel('AIPCC discussion: '), adfLink(request.discussionLink, request.discussionLink), adfText(' ')],
     [adfLabel('Justification: '), adfText(request.justification + ' ')],
     [adfLabel('Target Date: '), adfText(request.deliveryTimeline + ' ')],
     relatedLine(request, jiraHost)
@@ -568,7 +581,7 @@ module.exports = function registerTriageRequestRoutes(router, context, deps = {}
    *         application/json:
    *           schema:
    *             type: object
-   *             required: [team, torch_version, accelerator, os, jira_id, justification, delivery_timeline]
+   *             required: [team, torch_version, accelerator, os, discussion_link, jira_id, justification, delivery_timeline]
    *             properties:
    *               team:
    *                 type: string
@@ -585,6 +598,9 @@ module.exports = function registerTriageRequestRoutes(router, context, deps = {}
    *               os:
    *                 type: string
    *                 description: Operating system, free text, at most 200 characters
+   *               discussion_link:
+   *                 type: string
+   *                 description: HTTP or HTTPS link to the prior discussion with AIPCC (for example a Slack thread), at most 2000 characters
    *               jira_id:
    *                 type: string
    *                 description: Related Jira issue key (must exist), typically the approved STRAT

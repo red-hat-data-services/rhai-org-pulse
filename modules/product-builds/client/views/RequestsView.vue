@@ -9,42 +9,43 @@ import ChannelRequestForm from '../components/requests/ChannelRequestForm.vue'
 const nav = inject('moduleNav', null)
 const { user } = useAuth()
 
+// Every card follows the same template: description, prerequisites, turnaround.
 const REQUEST_TYPES = [
   {
     id: 'python',
     tab: 'Python Packages',
     label: 'Python Package Requests',
     cta: 'Request a Python package',
-    summary: 'A Python package (wheel) your team needs in the AIPCC indexes.',
-    points: [
-      'Python packages only, not RPMs',
-      'Starts the onboarding pipeline automatically',
-      'Delivered within 10 business days'
-    ]
+    description: 'A Python package (wheel) your team needs in the AIPCC indexes. For system packages, use an RPM request.',
+    prerequisites: [
+      'Package name and where it comes from (PyPI, Git or another URL)',
+      'Hardware and testing needs, or accept the defaults'
+    ],
+    turnaround: '10 business day SLA'
   },
   {
     id: 'rpm',
     tab: 'RPMs',
     label: 'RPM Requests',
     cta: 'Request an RPM',
-    summary: 'A system package (RPM) that existing channels need.',
-    points: [
-      'Pick the channels that need the RPM',
-      'Give a source URL or describe where it comes from',
-      'Triaged by AIPCC'
-    ]
+    description: 'A system package (RPM) that existing channels need.',
+    prerequisites: [
+      'RPM name and a source URL or description of where it comes from',
+      'The existing channels that need it'
+    ],
+    turnaround: 'Triaged by AIPCC'
   },
   {
     id: 'channel',
     tab: 'Channels',
     label: 'Channel Requests',
     cta: 'Request a channel',
-    summary: 'A torch, accelerator and operating system combination AIPCC does not build yet.',
-    points: [
-      'Requires an approved STRAT',
-      'Discuss with AIPCC before submitting',
-      'Triaged by AIPCC'
-    ]
+    description: 'A torch, accelerator and operating system combination AIPCC does not build yet.',
+    prerequisites: [
+      'An approved STRAT',
+      'A link to your prior discussion with AIPCC'
+    ],
+    turnaround: 'Triaged by AIPCC'
   }
 ]
 const FORMS = {

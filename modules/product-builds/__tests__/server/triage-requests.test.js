@@ -70,6 +70,7 @@ function channelBody(overrides = {}) {
     torch_version: '2.12',
     accelerator: 'ROCm 10.4',
     os: 'RHEL 10',
+    discussion_link: 'https://redhat.enterprise.slack.com/archives/C01/p123',
     ...overrides
   })
 }
@@ -197,6 +198,17 @@ describe('triage-requests', () => {
       expect(validateChannelRequest(channelBody({ accelerator: 'x'.repeat(201) }), { now: NOW }).errors.accelerator)
         .toBe('Accelerator must be at most 200 characters')
     })
+
+    it('requires an http(s) link to the prior AIPCC discussion', () => {
+      expect(validateChannelRequest(channelBody({ discussion_link: ' ' }), { now: NOW }).errors.discussion_link)
+        .toBe('Link to your discussion with AIPCC (for example a Slack thread)')
+      expect(validateChannelRequest(channelBody({ discussion_link: 'slack thread with Einat' }), { now: NOW }).errors.discussion_link)
+        .toBe('Discussion link must be an HTTP or HTTPS URL')
+      expect(validateChannelRequest(channelBody({ discussion_link: 'https://x.io/' + 'a'.repeat(2000) }), { now: NOW }).errors.discussion_link)
+        .toBe('Discussion link must be at most 2000 characters')
+      expect(validateChannelRequest(channelBody(), { now: NOW }).request.discussionLink)
+        .toBe('https://redhat.enterprise.slack.com/archives/C01/p123')
+    })
   })
 
   describe('Epic fields', () => {
@@ -220,6 +232,16 @@ describe('triage-requests', () => {
       expect(fields.labels).not.toContain('package')
       expect(fields.labels).not.toContain('dashboard-filed')
       expect(JSON.stringify(fields.description)).toContain('cuda13.0-torch2.11-ubi9, rocm6.4-torch2.11-ubi9')
+    })
+
+    it('links the AIPCC discussion in the channel Epic description', () => {
+      const { request } = validateChannelRequest(channelBody(), { now: NOW })
+      const fields = buildTriageEpicFields('channel', request, 'jane@redhat.com', {
+        jiraHost: 'https://redhat.atlassian.net', reporterAccountId: 'acc-1', jiraProject: 'RHAI'
+      })
+      const text = JSON.stringify(fields.description)
+      expect(text).toContain('AIPCC discussion: ')
+      expect(text).toContain('"href":"https://redhat.enterprise.slack.com/archives/C01/p123"')
     })
 
     it('summarises channel requests and caps the summary length', () => {

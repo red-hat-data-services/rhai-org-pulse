@@ -56,6 +56,8 @@ test.describe('Product Builds Module @product-builds', () => {
     for (const card of ['Python Package Requests', 'RPM Requests', 'Channel Requests']) {
       await expect(page.getByRole('heading', { name: card, level: 2 })).toBeVisible()
     }
+    await expect(page.getByTestId('request-card-rpm').getByTestId('card-turnaround')).toHaveText('Triaged by AIPCC')
+    await expect(page.getByTestId('request-card-channel').getByTestId('card-turnaround')).toHaveText('Triaged by AIPCC')
     await expect(page.locator('#requests-help')).toContainText('#forum-aipcc')
     await page.getByTestId('request-card-python').click()
     expect(page.url()).toMatch(/package-request\?tab=python/)
@@ -209,6 +211,7 @@ test.describe('Product Builds Module @product-builds', () => {
     await page.locator('#chan-torch-version').fill('2.12')
     await page.locator('#chan-accelerator').fill('ROCm 10.4')
     await page.locator('#chan-os').fill('RHEL 10')
+    await page.locator('#chan-discussion-link').fill('https://redhat.enterprise.slack.com/archives/C01/p123')
     await page.locator('#chan-jira-id').fill('RHAISTRAT-42')
     await page.locator('#chan-delivery-timeline').fill(triageDeliveryDate())
     await page.locator('#chan-justification').fill('New accelerator card for a customer')
@@ -216,7 +219,13 @@ test.describe('Product Builds Module @product-builds', () => {
     await expect(page.getByText('Channel request submitted')).toBeVisible()
     await expect(page.getByRole('link', { name: /RHAI-902/ })).toBeVisible()
     expect(submissions).toHaveLength(1)
-    expect(submissions[0]).toMatchObject({ torch_version: '2.12', accelerator: 'ROCm 10.4', os: 'RHEL 10', jira_id: 'RHAISTRAT-42' })
+    expect(submissions[0]).toMatchObject({
+      torch_version: '2.12',
+      accelerator: 'ROCm 10.4',
+      os: 'RHEL 10',
+      discussion_link: 'https://redhat.enterprise.slack.com/archives/C01/p123',
+      jira_id: 'RHAISTRAT-42'
+    })
 
     const appErrors = page.errors.filter(e => !/status of (429|404|503)/.test(e.message))
     expect(appErrors).toHaveLength(0)
