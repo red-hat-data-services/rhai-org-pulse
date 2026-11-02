@@ -2938,7 +2938,7 @@ function detectEvt(s){
 }
 
 // ── STATE ─────────────────────────────────────────────────────────────────────
-let allData=[], sortCol='Rank', sortAsc=true;
+let allData=[], sortCol='OutcomeNumber', sortAsc=true;
 // 'demo' until a live payload schedules successfully. Surfaced next to the feature
 // count, because a stale embedded dataset is indistinguishable from real data.
 let dataSource='demo';
@@ -4118,21 +4118,23 @@ function renderBigRocks(data){
     : null;
 
   if (outcomes) {
-    // Render outcomes from API
-    const items = outcomes.map((outcome, idx) => {
-      let cls = 'br-ok', icon = '✓';
-      if (outcome.total === 0) { cls = ''; icon = '—'; }
-      else if (outcome.inPlan === 0) { cls = 'br-miss'; icon = '✗'; }
-      else if (outcome.inPlan < outcome.total) { cls = 'br-warn'; icon = '⚠'; }
-
-      // Use percentComplete (inPlan/total) for the main display, not confidence
-      const pctColor = outcome.percentComplete >= 80 ? '#2e7d32' : outcome.percentComplete >= 40 ? '#f57f17' : '#c62828';
-
-      return `<div class="br-item br-clickable ${cls}" title="Click to filter table to ${outcome.title}"><div class="br-name">${icon} ${outcome.key} ${outcome.title}</div><div style="font-size:13px;font-weight:700;color:${pctColor};margin:4px 0 2px">${outcome.percentComplete}%</div><div style="font-size:10px;color:#777">${outcome.inPlan}/${outcome.total} in-plan</div></div>`;
-    }).join('');
-
     panel.style.display = '';
-    panel.innerHTML = `<div class="br-title">🎯 Outcomes — 3.6 <span style="font-size:11px;color:#94a3b8;font-weight:400;margin-left:6px">22 prioritized from Jira plan view 7384</span></div><div class="br-grid">${items}</div>`;
+    // Render outcomes as a table instead of cards
+    const tableRows = outcomes.map(o => `
+      <tr style="border-bottom:1px solid #e5e7eb">
+        <td style="padding:8px 12px;text-align:center;font-weight:bold;color:#1f2937">${o.outcomeNumber}</td>
+        <td style="padding:8px 12px"><a href="https://issues.redhat.com/browse/${esc(o.key)}" target="_blank" style="color:#2563eb;font-weight:600;text-decoration:none">${esc(o.key)}</a><div style="font-size:11px;color:#6b7280;margin-top:2px">${esc(o.title)}</div></td>
+        <td style="padding:8px 12px;text-align:center">${o.inPlan}/${o.total}</td>
+        <td style="padding:8px 12px;text-align:center"><div style="display:flex;align-items:center;justify-content:center;gap:4px"><div style="width:40px;height:4px;background:#e5e7eb;border-radius:2px"><div style="width:${o.percentComplete}%;height:100%;background:#10b981;border-radius:2px"></div></div><span style="font-weight:600;color:#1f2937;width:28px;text-align:right">${o.percentComplete}%</span></div></td>
+        <td style="padding:8px 12px;text-align:center;font-weight:600;color:${o.confidence>=80?'#059669':o.confidence>=60?'#ca8a04':'#dc2626'}">${o.confidence}%</td>
+        <td style="padding:8px 12px;text-align:center;font-size:12px;font-weight:500;color:${o.status==='Confident'?'#059669':o.status==='Lagging'?'#ea580c':'#6b7280'}">${esc(o.status)}</td>
+        <td style="padding:8px 12px;color:#374151;font-weight:500">${o.linkedVersions && o.linkedVersions.length ? o.linkedVersions.map(esc).join(', ') : '—'}</td>
+      </tr>
+    `).join('');
+
+    const relSel = document.getElementById('f-rel');
+    const activeRelease = esc(relSel && relSel.value ? relSel.value : 'All Releases');
+    panel.innerHTML = `<div class="br-title">🎯 Outcomes — ${activeRelease} <span style="font-size:11px;color:#94a3b8;font-weight:400;margin-left:6px">${outcomes.length} ranked from Jira plan view 7384</span></div><div style="overflow-x:auto;border:1px solid #e5e7eb;border-radius:6px;background:#fff"><table style="width:100%;border-collapse:collapse;font-size:12px"><thead style="background:#f9fafb;border-bottom:1px solid #e5e7eb"><tr><th style="padding:8px 12px;text-align:center;font-weight:600;color:#374151;text-transform:uppercase">OC#</th><th style="padding:8px 12px;text-align:left;font-weight:600;color:#374151;text-transform:uppercase">Outcome</th><th style="padding:8px 12px;text-align:center;font-weight:600;color:#374151;text-transform:uppercase">In Plan</th><th style="padding:8px 12px;text-align:center;font-weight:600;color:#374151;text-transform:uppercase">% Complete</th><th style="padding:8px 12px;text-align:center;font-weight:600;color:#374151;text-transform:uppercase">Confidence</th><th style="padding:8px 12px;text-align:center;font-weight:600;color:#374151;text-transform:uppercase">Status</th><th style="padding:8px 12px;text-align:left;font-weight:600;color:#374151;text-transform:uppercase">Versions</th></tr></thead><tbody>${tableRows}</tbody></table></div>`;
     return;
   }
 
