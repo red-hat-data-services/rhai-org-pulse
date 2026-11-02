@@ -1108,6 +1108,14 @@ included through the 90-day window. CVSS is sourced from Jira
 example, `"7.5 CVSS:3.1/..."`). Missing or malformed values are `null` and
 display as **Unspecified** in score breakdowns.
 
+The applicable company SLA policy is selected from the Jira `created` instant
+in UTC: issues created before `2026-12-01T00:00:00Z` use the current policy;
+issues created at or after that inclusive cutoff use the policy effective Dec.
+1, 2026. This policy selection does not calculate or change an issue's SLA
+deadline. Jira's Red Hat Forge `rh-sla-dt` value remains authoritative for
+breach and compliance classification. If `created` is missing or invalid, the
+policy version is unknown, but a valid Jira SLA date is still used.
+
 Older snapshots may omit `actionReportRecords`; the API treats that as an
 empty projection and the report remains unavailable until the next sustaining
 refresh. Extra record fields are ignored, and missing optional values are
