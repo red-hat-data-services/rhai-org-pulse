@@ -4119,11 +4119,19 @@ function renderBigRocks(data){
 
   if (outcomes) {
     panel.style.display = '';
+    const relSel = document.getElementById('f-rel');
+    const rawRelease = relSel && relSel.value ? relSel.value : '';
+    // Linked versions read like "3.7 EA RHOAI RELEASE" — match by substring so
+    // picking "3.7" keeps any outcome with at least one 3.7 version in plan.
+    const visibleOutcomes = rawRelease
+      ? outcomes.filter(o => o.linkedVersions && o.linkedVersions.some(v => v.toLowerCase().includes(rawRelease.toLowerCase())))
+      : outcomes;
+    const activeRelease = esc(rawRelease || 'All Releases');
     // Render outcomes as a table instead of cards
-    const tableRows = outcomes.map(o => `
+    const tableRows = visibleOutcomes.map(o => `
       <tr style="border-bottom:1px solid #e5e7eb">
         <td style="padding:8px 12px;text-align:center;font-weight:bold;color:#1f2937">${o.outcomeNumber}</td>
-        <td style="padding:8px 12px"><a href="https://issues.redhat.com/browse/${esc(o.key)}" target="_blank" style="color:#2563eb;font-weight:600;text-decoration:none">${esc(o.key)}</a><div style="font-size:11px;color:#6b7280;margin-top:2px">${esc(o.title)}</div></td>
+        <td style="padding:8px 12px"><a href="https://issues.redhat.com/browse/${esc(o.key)}" target="_blank" style="color:#2563eb;font-weight:600;text-decoration:none">${esc(o.key)}</a><button type="button" style="font-size:9px;color:#1d4ed8;margin-left:6px;cursor:pointer;font-weight:600;border:none;background:none;padding:0;font-family:inherit" onclick="event.stopPropagation(); viewOutcomeFeatures('${esc(o.key)}')">→ view features</button><div style="font-size:11px;color:#6b7280;margin-top:2px">${esc(o.title)}</div></td>
         <td style="padding:8px 12px;text-align:center">${o.inPlan}/${o.total}</td>
         <td style="padding:8px 12px;text-align:center"><div style="display:flex;align-items:center;justify-content:center;gap:4px"><div style="width:40px;height:4px;background:#e5e7eb;border-radius:2px"><div style="width:${o.percentComplete}%;height:100%;background:#10b981;border-radius:2px"></div></div><span style="font-weight:600;color:#1f2937;width:28px;text-align:right">${o.percentComplete}%</span></div></td>
         <td style="padding:8px 12px;text-align:center;font-weight:600;color:${o.confidence>=80?'#059669':o.confidence>=60?'#ca8a04':'#dc2626'}">${o.confidence}%</td>
@@ -4132,9 +4140,7 @@ function renderBigRocks(data){
       </tr>
     `).join('');
 
-    const relSel = document.getElementById('f-rel');
-    const activeRelease = esc(relSel && relSel.value ? relSel.value : 'All Releases');
-    panel.innerHTML = `<div class="br-title">🎯 Outcomes — ${activeRelease} <span style="font-size:11px;color:#94a3b8;font-weight:400;margin-left:6px">${outcomes.length} ranked from Jira plan view 7384</span></div><div style="overflow-x:auto;border:1px solid #e5e7eb;border-radius:6px;background:#fff"><table style="width:100%;border-collapse:collapse;font-size:12px"><thead style="background:#f9fafb;border-bottom:1px solid #e5e7eb"><tr><th style="padding:8px 12px;text-align:center;font-weight:600;color:#374151;text-transform:uppercase">OC#</th><th style="padding:8px 12px;text-align:left;font-weight:600;color:#374151;text-transform:uppercase">Outcome</th><th style="padding:8px 12px;text-align:center;font-weight:600;color:#374151;text-transform:uppercase">In Plan</th><th style="padding:8px 12px;text-align:center;font-weight:600;color:#374151;text-transform:uppercase">% Complete</th><th style="padding:8px 12px;text-align:center;font-weight:600;color:#374151;text-transform:uppercase">Confidence</th><th style="padding:8px 12px;text-align:center;font-weight:600;color:#374151;text-transform:uppercase">Status</th><th style="padding:8px 12px;text-align:left;font-weight:600;color:#374151;text-transform:uppercase">Versions</th></tr></thead><tbody>${tableRows}</tbody></table></div>`;
+    panel.innerHTML = `<div class="br-title">🎯 Outcomes — ${activeRelease} <span style="font-size:11px;color:#94a3b8;font-weight:400;margin-left:6px">${visibleOutcomes.length} of ${outcomes.length} ranked, from Jira plan view 7384</span></div><div style="overflow-x:auto;border:1px solid #e5e7eb;border-radius:6px;background:#fff"><table style="width:100%;border-collapse:collapse;font-size:12px"><thead style="background:#f9fafb;border-bottom:1px solid #e5e7eb"><tr><th style="padding:8px 12px;text-align:center;font-weight:600;color:#374151;text-transform:uppercase">OC#</th><th style="padding:8px 12px;text-align:left;font-weight:600;color:#374151;text-transform:uppercase">Outcome</th><th style="padding:8px 12px;text-align:center;font-weight:600;color:#374151;text-transform:uppercase">In Plan</th><th style="padding:8px 12px;text-align:center;font-weight:600;color:#374151;text-transform:uppercase">% Complete</th><th style="padding:8px 12px;text-align:center;font-weight:600;color:#374151;text-transform:uppercase">Confidence</th><th style="padding:8px 12px;text-align:center;font-weight:600;color:#374151;text-transform:uppercase">Status</th><th style="padding:8px 12px;text-align:left;font-weight:600;color:#374151;text-transform:uppercase">Versions</th></tr></thead><tbody>${tableRows}</tbody></table></div>`;
     return;
   }
 
@@ -4398,60 +4404,8 @@ function renderExecView(){
   const coveredOutcomes=BIG_ROCKS.filter(br=>s[br.name].inPlan>0).length;
   const gappedOutcomes=BIG_ROCKS.filter(br=>s[br.name].total>0&&s[br.name].inPlan===0).length;
 
-  const topRisks=inPlan
-    .filter(r=>r._riskLevel==='CRITICAL'||r._riskLevel==='HIGH')
-    .sort((a,b)=>(a._riskLevel==='CRITICAL'?0:1)-(b._riskLevel==='CRITICAL'?0:1))
-    .slice(0,8);
-
   const counts={features:0,bugs:0,research:0};
   inPlan.forEach(r=>counts[classifyFeature(r)]++);
-
-  // Use outcomes from API if available (22 outcomes), otherwise fall back to BIG_ROCKS (18)
-  const outcomeRows = (outcomeData && outcomeData.outcomes && outcomeData.outcomes.length > 0)
-    ? outcomeData.outcomes.map(outcome => {
-        if (outcome.total === 0) return '';
-        const pctColor = outcome.percentComplete >= 80 ? '#2e7d32' : outcome.percentComplete >= 50 ? '#f57f17' : '#c62828';
-        const outcomeName = `${outcome.key} ${outcome.title}`;
-        return `<tr style="border-bottom:1px solid #f0f0f0;cursor:pointer" data-outcome="${outcomeName}" onmouseover="this.style.background='#f8fafc'" onmouseout="this.style.background=''">
-          <td style="padding:6px 10px;font-size:11px;font-weight:600">${outcome.key} ${outcome.title}<span style="font-size:9px;color:#1d4ed8;margin-left:6px;cursor:pointer;font-weight:600" onclick="event.stopPropagation(); viewOutcomeFeatures('${outcome.key}')">→ view features</span></td>
-          <td style="padding:6px 10px;font-size:11px;text-align:center">${outcome.inPlan}/${outcome.total}</td>
-          <td style="padding:6px 10px;min-width:80px">
-            <div style="font-size:11px;font-weight:700;color:${pctColor};text-align:center;margin-bottom:3px">${outcome.percentComplete}%</div>
-            <div style="height:5px;background:#f0f0f0;border-radius:3px;overflow:hidden"><div style="width:${outcome.percentComplete}%;height:100%;background:${pctColor};border-radius:3px"></div></div>
-          </td>
-          <td style="padding:6px 10px;font-size:12px;text-align:center;color:${outcome.inPlan===0?'#bbb':outcome.confidence>=70?'#2e7d32':outcome.confidence>=50?'#f57f17':'#c62828'};font-weight:700">${outcome.inPlan>0?outcome.confidence+'%':'—'}</td>
-          <td style="padding:6px 10px;font-size:10px;color:#888">${outcome.inPlan===0&&outcome.total>0?'<span style="color:#c62828;font-weight:600">No features in plan</span>':outcome.confidence>=70?'Confident':outcome.confidence>=40?'Lagging':'At Risk'}</td>
-        </tr>`;
-      }).join('')
-    : BIG_ROCKS.map(br => {
-        const d = s[br.name];
-        if (d.total === 0) return '';
-        const pctDone = d.total > 0 ? Math.round(d.inPlan / d.total * 100) : 0;
-        const pctColor = pctDone >= 80 ? '#2e7d32' : pctDone >= 50 ? '#f57f17' : '#c62828';
-        return `<tr style="border-bottom:1px solid #f0f0f0" data-outcome="${br.name}" onmouseover="this.style.background='#f8fafc'" onmouseout="this.style.background=''">
-          <td style="padding:6px 10px;font-size:11px;font-weight:600">P${br.priority} ${br.name}</td>
-          <td style="padding:6px 10px;font-size:11px;text-align:center">${d.inPlan}/${d.total}</td>
-          <td style="padding:6px 10px;min-width:80px">
-            <div style="font-size:11px;font-weight:700;color:${pctColor};text-align:center;margin-bottom:3px">${pctDone}%</div>
-            <div style="height:5px;background:#f0f0f0;border-radius:3px;overflow:hidden"><div style="width:${pctDone}%;height:100%;background:${pctColor};border-radius:3px"></div></div>
-          </td>
-          <td style="padding:6px 10px;font-size:12px;text-align:center;color:${d.inPlan===0?'#bbb':d.avgConf>=70?'#2e7d32':d.avgConf>=50?'#f57f17':'#c62828'};font-weight:700">${d.inPlan>0?d.avgConf+'%':'—'}</td>
-          <td style="padding:6px 10px;font-size:10px;color:#888">${d.inPlan===0&&d.total>0?'<span style="color:#c62828;font-weight:600">No features in plan</span>':d.avgConf>=70?'Confident':d.avgConf>=40?'Lagging':'At Risk'}</td>
-        </tr>`;
-      }).join('');
-
-  const riskRows=topRisks.map(r=>{
-    const rl=r._riskLevel||'HIGH';
-    const rColor=rl==='CRITICAL'?'#c62828':'#e65100';
-    return `<tr style="border-bottom:1px solid #f5f5f5">
-      <td style="padding:5px 10px"><span style="background:${rColor};color:#fff;font-size:9px;font-weight:700;padding:1px 6px;border-radius:3px">${rl}</span></td>
-      <td style="padding:5px 10px;font-size:11px;font-weight:600"><a href="https://redhat.atlassian.net/browse/${esc(r['Key'])||''}" target="_blank" style="color:#1d4ed8;text-decoration:none" onmouseover="this.style.textDecoration='underline'" onmouseout="this.style.textDecoration='none'">${esc(r['Key'])||''}</a></td>
-      <td style="padding:5px 10px;font-size:11px"><a href="https://redhat.atlassian.net/browse/${esc(r['Key'])||''}" target="_blank" style="color:#0f172a;text-decoration:none" onmouseover="this.style.textDecoration='underline'" onmouseout="this.style.textDecoration='none'">${(esc(r['Title'])||'').slice(0,60)}${(esc(r['Title'])||'').length>60?'…':''}</a></td>
-      <td style="padding:5px 10px;font-size:10px;color:#6a1b9a">${(esc(r['Components'])||'').split(';')[0].trim()||'—'}</td>
-      <td style="padding:5px 10px;font-size:10px;color:#888">${r._place||''}</td>
-      <td style="padding:5px 10px;font-size:10px;color:#888">${r['Assignee']||'Unassigned'}</td>
-    </tr>`;
-  }).join('');
 
   const workMixHtml=['features','bugs','research'].map(k=>{
     const pct=totalInPlan?Math.round(counts[k]/totalInPlan*100):0;
@@ -4498,54 +4452,24 @@ function renderExecView(){
     </div>
   </div>
 
-  <div style="display:grid;grid-template-columns:3fr 2fr;gap:16px;margin-bottom:18px">
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:18px">
     <div style="background:#fff;border:1px solid #e0e0e0;border-radius:8px;padding:16px">
-      <div style="font-size:12px;font-weight:700;color:#333;margin-bottom:10px;text-transform:uppercase;letter-spacing:.05em">🎯 Outcomes Coverage</div>
-      <table style="width:100%;border-collapse:collapse">
-        <thead><tr style="border-bottom:2px solid #f0f0f0">
-          <th style="text-align:left;padding:4px 10px;font-size:10px;color:#888;font-weight:600">OUTCOME</th>
-          <th style="text-align:center;padding:4px 10px;font-size:10px;color:#888;font-weight:600">IN PLAN</th>
-          <th style="text-align:center;padding:4px 10px;font-size:10px;color:#888;font-weight:600">% COMPLETE</th>
-          <th style="text-align:center;padding:4px 10px;font-size:10px;color:#888;font-weight:600">CONFIDENCE</th>
-          <th style="text-align:left;padding:4px 10px;font-size:10px;color:#888;font-weight:600">STATUS</th>
-        </tr></thead>
-        <tbody>${outcomeRows}</tbody>
-      </table>
+      <div style="font-size:12px;font-weight:700;color:#333;margin-bottom:10px;text-transform:uppercase;letter-spacing:.05em">🛡 Quality Capacity Model</div>
+      <div style="font-size:11px;color:#555;line-height:1.7">
+        <div style="display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid #f5f5f5"><span>CVE reserve (daily scans → blocker Jira)</span><span style="font-weight:700;color:#c62828">−20%</span></div>
+        <div style="display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid #f5f5f5"><span>Embargoed security issues (invisible until lifted)</span><span style="font-weight:700;color:#e65100">−5%</span></div>
+        <div style="display:flex;justify-content:space-between;padding:6px 0;border-top:2px solid #e0e0e0;margin-top:2px"><span style="font-weight:700">Net available capacity</span><span style="font-weight:800;color:#2e7d32;font-size:15px">75%</span></div>
+      </div>
+      <div style="font-size:10px;color:#888;margin-top:8px;border-top:1px solid #f0f0f0;padding-top:6px">
+        Source: Dana Gutride (QE) + John Graham sync · Sep 3–4, 2026<br>
+        CVE spike: Notebook images 2,730 CVEs · AI Core Dashboard 912 CVEs
+      </div>
     </div>
-    <div>
-      <div style="background:#fff;border:1px solid #e0e0e0;border-radius:8px;padding:16px;margin-bottom:12px">
-        <div style="font-size:12px;font-weight:700;color:#333;margin-bottom:10px;text-transform:uppercase;letter-spacing:.05em">🛡 Quality Capacity Model</div>
-        <div style="font-size:11px;color:#555;line-height:1.7">
-          <div style="display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid #f5f5f5"><span>CVE reserve (daily scans → blocker Jira)</span><span style="font-weight:700;color:#c62828">−20%</span></div>
-          <div style="display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid #f5f5f5"><span>Embargoed security issues (invisible until lifted)</span><span style="font-weight:700;color:#e65100">−5%</span></div>
-          <div style="display:flex;justify-content:space-between;padding:6px 0;border-top:2px solid #e0e0e0;margin-top:2px"><span style="font-weight:700">Net available capacity</span><span style="font-weight:800;color:#2e7d32;font-size:15px">75%</span></div>
-        </div>
-        <div style="font-size:10px;color:#888;margin-top:8px;border-top:1px solid #f0f0f0;padding-top:6px">
-          Source: Dana Gutride (QE) + John Graham sync · Sep 3–4, 2026<br>
-          CVE spike: Notebook images 2,730 CVEs · AI Core Dashboard 912 CVEs
-        </div>
-      </div>
-      <div style="background:#fff;border:1px solid #e0e0e0;border-radius:8px;padding:16px">
-        <div style="font-size:12px;font-weight:700;color:#333;margin-bottom:10px;text-transform:uppercase;letter-spacing:.05em">📊 Work Mix (In-Plan)</div>
-        ${workMixHtml}
-      </div>
+    <div style="background:#fff;border:1px solid #e0e0e0;border-radius:8px;padding:16px">
+      <div style="font-size:12px;font-weight:700;color:#333;margin-bottom:10px;text-transform:uppercase;letter-spacing:.05em">📊 Work Mix (In-Plan)</div>
+      ${workMixHtml}
     </div>
   </div>
-
-  ${topRisks.length?`<div style="background:#fff;border:1px solid #ffcdd2;border-radius:8px;padding:16px;margin-bottom:18px">
-    <div style="font-size:12px;font-weight:700;color:#c62828;margin-bottom:10px;text-transform:uppercase;letter-spacing:.05em">⚠ Top Risks — Features Needing Attention (${topRisks.length})</div>
-    <table style="width:100%;border-collapse:collapse">
-      <thead><tr style="border-bottom:2px solid #f5f5f5">
-        <th style="text-align:left;padding:4px 10px;font-size:10px;color:#888;font-weight:600">RISK</th>
-        <th style="text-align:left;padding:4px 10px;font-size:10px;color:#888;font-weight:600">FEATURE KEY</th>
-        <th style="text-align:left;padding:4px 10px;font-size:10px;color:#888;font-weight:600">FEATURE</th>
-        <th style="text-align:left;padding:4px 10px;font-size:10px;color:#888;font-weight:600">COMPONENT</th>
-        <th style="text-align:left;padding:4px 10px;font-size:10px;color:#888;font-weight:600">PHASE</th>
-        <th style="text-align:left;padding:4px 10px;font-size:10px;color:#888;font-weight:600">OWNER</th>
-      </tr></thead>
-      <tbody>${riskRows}</tbody>
-    </table>
-  </div>`:''}
 
   <div style="font-size:10px;color:#aaa;text-align:center;padding:8px 0 4px">
     AI-First Release Planner · RHOAI 3.6 · Model v10 (AUC 85.7%) · Data from Org Pulse CSV export
