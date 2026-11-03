@@ -34,5 +34,5 @@
 /tests/integration/releases-e2e-results.spec.js @red-hat-data-services/org-pulse-maintainers @accorvin
 
 # Product Builds integration tests.
-/tests/integration/package-analysis.spec.js @red-hat-data-services/org-pulse-maintainers @epacific1
-/tests/integration/product-builds.spec.js @red-hat-data-services/org-pulse-maintainers @epacific1
+/tests/integration/package-analysis.spec.js @red-hat-data-services/org-pulse-maintainers @epacific1 @andre-motta
+/tests/integration/product-builds.spec.js @red-hat-data-services/org-pulse-maintainers @epacific1 @andre-motta
