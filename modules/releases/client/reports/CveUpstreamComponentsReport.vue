@@ -73,28 +73,45 @@
     </div>
 
     <div v-else-if="!metadataReady" class="rounded-lg border border-amber-200 bg-amber-50 p-5 dark:border-amber-800 dark:bg-amber-900/20">
-      <h3 class="text-sm font-semibold text-amber-900 dark:text-amber-200">Upstream component details are not in this cache</h3>
+      <h3 class="text-sm font-semibold text-amber-900 dark:text-amber-200">Upstream component and CVSS details are not in this cache</h3>
       <p class="mt-1 text-sm text-amber-800 dark:text-amber-300">
-        Refresh from Jira to load upstream component details. Older snapshots do not include upstream component or ecosystem metadata.
+        Refresh from Jira to load upstream component and CVSS details. Older snapshots do not include the fields required for this report.
       </p>
       <button type="button" class="mt-3 text-sm font-medium underline hover:no-underline text-amber-900 dark:text-amber-200" @click="handleRefresh">
-        Refresh from Jira to load upstream component details
+        Refresh from Jira to load upstream component and CVSS details
       </button>
     </div>
 
     <div v-else class="space-y-6">
       <section class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-5" aria-labelledby="ecosystem-overview-title">
-        <div class="mb-4">
+        <div class="mb-4 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
           <h3 id="ecosystem-overview-title" class="text-sm font-semibold text-gray-900 dark:text-gray-100">Open tickets by ecosystem</h3>
-          <p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
-            The chart includes all {{ totalOpen.toLocaleString() }} open tickets with an upstream component; ecosystem selection filters only the table.
-          </p>
+          <label class="flex shrink-0 items-center gap-2 text-sm text-gray-700 dark:text-gray-300">
+            <span>Minimum CVSS severity</span>
+            <select
+              v-model="selectedSeverity"
+              aria-label="Filter by minimum CVSS severity"
+              :disabled="!cvssReady"
+              class="rounded-md border border-gray-300 bg-white px-2.5 py-1.5 text-sm text-gray-900 disabled:cursor-not-allowed disabled:opacity-60 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100"
+            >
+              <option value="">All severities</option>
+              <option v-for="severity in severityOptions" :key="severity.value" :value="severity.value">
+                {{ severity.label }}
+              </option>
+            </select>
+          </label>
         </div>
+        <p v-if="!cvssReady" class="mb-4 rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-900 dark:border-amber-800 dark:bg-amber-900/20 dark:text-amber-200" role="status">
+          CVSS severity filtering is unavailable for this cached snapshot. Refresh from Jira to enable CVSS severity filtering; all existing rows remain visible.
+        </p>
+        <p class="mb-4 text-xs text-gray-500 dark:text-gray-400">
+          The chart includes {{ totalOpen.toLocaleString() }} open tickets with an upstream component{{ selectedSeverity ? ` and CVSS score of ${selectedSeverity} or higher` : '' }}. Selecting an ecosystem filters only the table. All severities includes tickets with missing CVSS scores.
+        </p>
         <div class="grid grid-cols-1 md:grid-cols-[minmax(180px,260px)_1fr] gap-6 items-center">
           <div v-if="totalOpen > 0" class="mx-auto w-full max-w-[260px]">
             <Doughnut :data="chartData" :options="chartOptions" />
           </div>
-          <p v-else class="text-sm text-gray-500 dark:text-gray-400">No open tickets</p>
+          <p v-else class="text-sm text-gray-500 dark:text-gray-400">No open tickets match this CVSS threshold</p>
           <ul aria-label="Ecosystem distribution legend" class="grid grid-cols-1 sm:grid-cols-2 gap-x-5 gap-y-2 text-sm">
             <li v-for="(item, index) in ecosystemBreakdown" :key="item.ecosystem" class="flex items-center justify-between gap-3 text-gray-700 dark:text-gray-300">
               <span class="flex min-w-0 items-center gap-2">
@@ -139,7 +156,7 @@
           No named upstream components match this ecosystem.
         </div>
         <div v-else-if="totalOpen === 0" class="px-5 py-8 text-center text-sm text-gray-500 dark:text-gray-400">
-          No open CVE upstream components.
+          {{ selectedSeverity ? `No open CVE upstream components have a CVSS score of ${selectedSeverity} or higher.` : 'No open CVE upstream components.' }}
         </div>
         <div v-else class="overflow-x-auto">
           <table class="min-w-full text-sm">
@@ -181,15 +198,23 @@ ChartJS.register(ArcElement, Tooltip, Legend)
 
 const nav = inject('moduleNav')
 const { data, loading, error, refreshError, refreshing, loadData, refresh, cleanup } = useCveSustaining()
+const selectedSeverity = ref('')
 const selectedEcosystem = ref('')
+const severityOptions = [
+  { label: 'Critical (9.0+)', value: '9.0' },
+  { label: 'High (7.0+)', value: '7.0' },
+  { label: 'Medium (4.0+)', value: '4.0' },
+  { label: 'Low (0.1+)', value: '0.1' }
+]
 const {
   metadataReady,
+  cvssReady,
   totalOpen,
   ecosystems,
   ecosystemBreakdown,
   filteredRows,
   multipleEcosystemCount
-} = useCveUpstreamComponents(data, selectedEcosystem)
+} = useCveUpstreamComponents(data, selectedSeverity, selectedEcosystem)
 
 // Space hues across the entire distribution instead of cycling a fixed palette.
 // The legend reads these same values, including Unknown and multi-ecosystem slices.

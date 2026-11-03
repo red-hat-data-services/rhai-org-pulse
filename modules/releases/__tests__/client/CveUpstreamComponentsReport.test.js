@@ -16,7 +16,7 @@ vi.mock('../../client/reports/composables/useCveSustaining.js', () => ({
   useCveSustaining: vi.fn()
 }))
 
-function issue(key, labels, upstreamComponent, versions = ['rhoai-2.17']) {
+function issue(key, labels, upstreamComponent, versions = ['rhoai-2.17'], cvss = null) {
   return {
     key,
     summary: `CVE issue ${key}`,
@@ -28,22 +28,23 @@ function issue(key, labels, upstreamComponent, versions = ['rhoai-2.17']) {
     duedate: null,
     possiblyClosable: false,
     labels,
-    upstreamComponent
+    upstreamComponent,
+    cvss
   }
 }
 
 function payload(records = [
-  issue('RHAI-1', ['ecosystem:pypi'], 'fickling', ['rhoai-2.16']),
-  issue('RHAI-2', ['ecosystem:pypi'], 'fickling', ['rhoai-2.17']),
-  issue('RHAI-3', ['ecosystem:pypi'], 'other-package'),
-  issue('RHAI-4', ['ecosystem:golang'], 'example.org/lib/v2'),
-  issue('RHAI-5', ['ecosystem:golang'], 'example.org/lib/v2', ['rhoai-2.16', 'rhoai-2.17']),
-  issue('RHAI-6', ['ecosystem:pypi', 'ecosystem:golang'], 'shared-package'),
+  issue('RHAI-1', ['ecosystem:pypi'], 'fickling', ['rhoai-2.16'], '9.8'),
+  issue('RHAI-2', ['ecosystem:pypi'], 'fickling', ['rhoai-2.17'], '7.5'),
+  issue('RHAI-3', ['ecosystem:pypi'], 'other-package', ['rhoai-2.17'], '5.0'),
+  issue('RHAI-4', ['ecosystem:golang'], 'example.org/lib/v2', ['rhoai-2.17'], '3.2'),
+  issue('RHAI-5', ['ecosystem:golang'], 'example.org/lib/v2', ['rhoai-2.16', 'rhoai-2.17'], '2.5'),
+  issue('RHAI-6', ['ecosystem:pypi', 'ecosystem:golang'], 'shared-package', ['rhoai-2.17'], '9.0'),
   issue('RHAI-7', [], null),
   issue('RHAI-8', [], 'unlabeled-package')
 ]) {
   return {
-    upstreamComponentDataVersion: 1,
+    upstreamComponentDataVersion: 2,
     jiraSearchBase: 'https://jira.example/issues/?jql=',
     lastRefreshed: '2026-11-02T12:30:00.000Z',
     openIssueRecords: records
@@ -104,7 +105,7 @@ describe('CveUpstreamComponentsReport', () => {
     expect(wrapper.get('[aria-label="Ecosystem distribution legend"]').text()).toContain('pypi')
     expect(wrapper.get('[aria-label="Ecosystem distribution legend"]').text()).toContain('3 tickets (42.86%)')
     expect(wrapper.get('[aria-label="Ecosystem distribution legend"]').text()).toContain('Multiple ecosystems')
-    expect(wrapper.text()).toContain('The chart includes all 7 open tickets with an upstream component')
+    expect(wrapper.text()).toContain('The chart includes 7 open tickets with an upstream component')
   })
 
   it('keeps each visible legend swatch aligned with its donut slice color', () => {
@@ -165,6 +166,30 @@ describe('CveUpstreamComponentsReport', () => {
     expect(wrapper.findAll('tbody tr')).toHaveLength(5)
   })
 
+  it('defaults to all scores and applies the minimum CVSS threshold to both chart and table', async () => {
+    const { wrapper } = mountReport()
+    const selector = wrapper.get('select[aria-label="Filter by minimum CVSS severity"]')
+    const chart = wrapper.findComponent({ name: 'MockDoughnut' })
+
+    expect(selector.element.value).toBe('')
+    expect(wrapper.findAll('tbody tr')).toHaveLength(5)
+    expect(chart.props('data').datasets[0].data).toEqual([3, 2, 1, 1])
+
+    await selector.setValue('7.0')
+
+    expect(wrapper.text()).toContain('3 open tickets with an upstream component and CVSS score of 7.0 or higher')
+    expect(chart.props('data').labels).toEqual(['pypi', 'Multiple ecosystems'])
+    expect(chart.props('data').datasets[0].data).toEqual([2, 1])
+    expect(wrapper.findAll('tbody tr').map(row => row.find('td a').text())).toEqual([
+      'fickling', 'shared-package'
+    ])
+    expect(wrapper.findAll('tbody tr').map(row => row.findAll('td')[2].text())).toEqual(['2', '1'])
+
+    await selector.setValue('')
+    expect(wrapper.findAll('tbody tr')).toHaveLength(5)
+    expect(chart.props('data').datasets[0].data).toEqual([3, 2, 1, 1])
+  })
+
   it('keeps the global phrase-search caveat without redundant table warnings', () => {
     const { wrapper } = mountReport()
     const unknownRow = wrapper.findAll('tbody tr').find(row => row.text().includes('Unknown'))
@@ -216,7 +241,7 @@ describe('CveUpstreamComponentsReport', () => {
       ['pillow', 'pypi, rpm', '4'],
       ['example.org/lib', 'golang', '2']
     ])
-    const selector = wrapper.get('select')
+    const selector = wrapper.get('select[aria-label="Filter component rows by ecosystem"]')
     expect(selector.text()).not.toContain('Unknown')
     expect(selector.text()).not.toContain('ruby')
     const originalChart = wrapper.findComponent({ name: 'MockDoughnut' }).props('data')
@@ -260,9 +285,20 @@ describe('CveUpstreamComponentsReport', () => {
     }
     const { wrapper } = mountReport(createService({ data: ref(oldCache) }))
 
-    expect(wrapper.text()).toContain('Refresh from Jira to load upstream component details')
+    expect(wrapper.text()).toContain('Refresh from Jira to load upstream component and CVSS details')
     expect(wrapper.text()).not.toContain('No upstream component is available')
     expect(wrapper.find('tbody').exists()).toBe(false)
+  })
+
+  it('keeps version-1 rows visible in All mode and disables severity filtering until refresh', () => {
+    const oldUpstreamCache = payload()
+    oldUpstreamCache.upstreamComponentDataVersion = 1
+    oldUpstreamCache.openIssueRecords.forEach(record => { delete record.cvss })
+    const { wrapper } = mountReport(createService({ data: ref(oldUpstreamCache) }))
+
+    expect(wrapper.findAll('tbody tr')).toHaveLength(5)
+    expect(wrapper.get('select[aria-label="Filter by minimum CVSS severity"]').attributes('disabled')).toBeDefined()
+    expect(wrapper.text()).toContain('Refresh from Jira to enable CVSS severity filtering')
   })
 
   it('shows a genuine zero state for a refreshed snapshot with no open tickets', () => {
@@ -271,7 +307,7 @@ describe('CveUpstreamComponentsReport', () => {
     expect(wrapper.text()).toContain('No open CVE upstream components')
     expect(wrapper.get('[aria-label="Ecosystem distribution legend"]').text()).toContain('No open tickets')
     expect(wrapper.findAll('tbody tr')).toHaveLength(0)
-    expect(wrapper.text()).not.toContain('Refresh from Jira to load upstream component details')
+    expect(wrapper.text()).not.toContain('Refresh from Jira to load upstream component and CVSS details')
   })
 
   it('shows a load error and a refresh action when the snapshot request fails', () => {
@@ -287,12 +323,12 @@ describe('CveUpstreamComponentsReport', () => {
       service.refreshError.value = 'Refresh failed: Jira is unavailable'
     })
     const { wrapper } = mountReport(service)
-    await wrapper.get('select').setValue('pypi')
+    await wrapper.get('select[aria-label="Filter component rows by ecosystem"]').setValue('pypi')
     await wrapper.get('button[aria-label="Refresh from Jira"]').trigger('click')
     await flushPromises()
 
     expect(wrapper.get('[role="alert"]').text()).toBe('Refresh failed: Jira is unavailable')
-    expect(wrapper.get('select').element.value).toBe('pypi')
+    expect(wrapper.get('select[aria-label="Filter component rows by ecosystem"]').element.value).toBe('pypi')
     expect(wrapper.findAll('tbody tr').map(row => row.text())).toEqual([
       expect.stringContaining('fickling'),
       expect.stringContaining('other-package'),
@@ -303,13 +339,13 @@ describe('CveUpstreamComponentsReport', () => {
   it('resets a removed ecosystem selection to All after refreshed metadata changes', async () => {
     const service = createService()
     const { wrapper } = mountReport(service)
-    await wrapper.get('select').setValue('pypi')
+    await wrapper.get('select[aria-label="Filter component rows by ecosystem"]').setValue('pypi')
     service.data.value = payload([
       issue('RHAI-9', ['ecosystem:golang'], 'new-package')
     ])
     await flushPromises()
 
-    expect(wrapper.get('select').element.value).toBe('')
+    expect(wrapper.get('select[aria-label="Filter component rows by ecosystem"]').element.value).toBe('')
     expect(wrapper.findAll('tbody tr')).toHaveLength(1)
     expect(wrapper.get('tbody').text()).toContain('new-package')
   })

@@ -4259,10 +4259,11 @@ test.describe('Releases CVE Upstream Components @releases', () => {
     const response = await request.get('/api/modules/releases/cve-sustaining');
     expect(response.ok()).toBe(true);
     const snapshot = await response.json();
-    expect(snapshot.upstreamComponentDataVersion).toBe(1);
+    expect(snapshot.upstreamComponentDataVersion).toBe(2);
     expect(snapshot.openIssueRecords).toHaveLength(8);
     expect(snapshot.openIssueRecords.every(record => Array.isArray(record.labels))).toBe(true);
     expect(snapshot.openIssueRecords.some(record => typeof record.upstreamComponent === 'string')).toBe(true);
+    expect(snapshot.openIssueRecords.every(record => record.cvss === null || typeof record.cvss === 'string')).toBe(true);
 
     await page.goto('/#/releases/plan');
     await page.waitForLoadState('networkidle');
@@ -4271,7 +4272,7 @@ test.describe('Releases CVE Upstream Components @releases', () => {
 
     await page.getByRole('button', { name: 'CVE Upstream Components', exact: true }).click();
     await expect(page.getByRole('heading', { name: 'CVE Upstream Components', exact: true })).toBeVisible();
-    await expect(page.getByText('The chart includes all 4 open tickets with an upstream component')).toBeVisible();
+    await expect(page.getByText('The chart includes 4 open tickets with an upstream component')).toBeVisible();
     await expect(page.getByText(/open tickets have no upstream component/)).toHaveCount(0);
 
     const legend = page.getByRole('list', { name: 'Ecosystem distribution legend' });
@@ -4289,6 +4290,19 @@ test.describe('Releases CVE Upstream Components @releases', () => {
     await expect(allRows.nth(0)).toContainText('npm, pypi');
     await expect(allRows.nth(0).locator('td').nth(2)).toHaveText('3');
     await expect(allRows.nth(1)).toContainText('react-dom');
+
+    const severity = page.getByRole('combobox', { name: 'Filter by minimum CVSS severity' });
+    await expect(severity).toHaveValue('');
+    await severity.selectOption('7.0');
+    await expect(page.getByText(/2 open tickets with an upstream component and CVSS score of 7\.0 or higher/)).toBeVisible();
+    await expect(allRows).toHaveCount(1);
+    await expect(allRows.first()).toContainText('fickling');
+    await expect(allRows.first().locator('td').nth(2)).toHaveText('2');
+    await expect(legend).toContainText('2 tickets (100%)');
+    await expect(legend).not.toContainText('Multiple ecosystems');
+    await severity.selectOption('');
+    await expect(allRows).toHaveCount(2);
+    expect(await legend.innerText()).toBe(allLegendText);
 
     const componentLink = allRows.nth(0).getByRole('link', { name: 'fickling' });
     await expect(componentLink).toHaveAttribute('target', '_blank');
@@ -4326,7 +4340,7 @@ test.describe('Releases CVE Upstream Components @releases', () => {
 
     await page.goto('/#/releases/reports?report=cve-upstream-components');
     await expect(page.getByRole('heading', { name: 'CVE Upstream Components', exact: true })).toBeAttached();
-    await expect(page.getByText(/The chart includes all \d+ open tickets/)).toBeAttached();
+    await expect(page.getByText(/The chart includes \d+ open tickets/)).toBeAttached();
     await expect(page.getByRole('list', { name: 'Ecosystem distribution legend' })).toBeAttached();
     const reportWidth = await page.evaluate(() => document.documentElement.scrollWidth);
 
@@ -4335,6 +4349,36 @@ test.describe('Releases CVE Upstream Components @releases', () => {
     await expect(page.getByRole('heading', { name: 'CVE Upstream Components', exact: true })).toBeVisible();
     await expect(page.getByRole('list', { name: 'Ecosystem distribution legend' })).toBeVisible();
     await expect.poll(() => page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(390);
+  });
+
+  test('keeps version-1 upstream rows visible and disables CVSS filtering until refresh', async ({ page }) => {
+    await page.route('**/api/modules/releases/cve-sustaining', async route => {
+      await route.fulfill({
+        json: {
+          upstreamComponentDataVersion: 1,
+          lastRefreshed: '2026-10-30T12:00:00.000Z',
+          jiraSearchBase: 'https://jira.example/issues/?jql=',
+          openIssueRecords: [{
+            key: 'RHAI-V1',
+            status: 'New',
+            labels: ['ecosystem:pypi'],
+            upstreamComponent: 'legacy-package'
+          }]
+        }
+      });
+    });
+
+    await page.goto('/#/releases/reports?report=cve-upstream-components');
+    const severity = page.getByRole('combobox', { name: 'Filter by minimum CVSS severity' });
+    const rows = page.getByRole('table').locator('tbody tr');
+
+    await expect(page.getByRole('heading', { name: 'CVE Upstream Components', exact: true })).toBeVisible();
+    await expect(rows).toHaveCount(1);
+    await expect(rows.first()).toContainText('legacy-package');
+    await expect(severity).toHaveValue('');
+    await expect(severity).toBeDisabled();
+    await expect(page.getByRole('status')).toContainText('Refresh from Jira to enable CVSS severity filtering');
+    expect(page.errors).toHaveLength(0);
   });
 
   test('shows legacy snapshot refresh guidance and keeps the cache after refresh failure', async ({ page }) => {
@@ -4354,29 +4398,29 @@ test.describe('Releases CVE Upstream Components @releases', () => {
     });
 
     await page.goto('/#/releases/reports?report=cve-upstream-components');
-    await expect(page.getByText('Refresh from Jira to load upstream component details', { exact: true })).toBeVisible();
-    await page.getByRole('button', { name: 'Refresh from Jira to load upstream component details' }).click();
+    await expect(page.getByText('Refresh from Jira to load upstream component and CVSS details', { exact: true })).toBeVisible();
+    await page.getByRole('button', { name: 'Refresh from Jira to load upstream component and CVSS details' }).click();
     await expect(page.getByRole('alert')).toContainText('Refresh failed: Jira is unavailable');
-    await expect(page.getByText('Refresh from Jira to load upstream component details', { exact: true })).toBeVisible();
+    await expect(page.getByText('Refresh from Jira to load upstream component and CVSS details', { exact: true })).toBeVisible();
     expect(page.errors.filter(error => !error.message.includes('status of 500'))).toHaveLength(0);
   });
 
   test('merges normalized component names, infers ecosystems and keeps donut colors unique', async ({ page }) => {
     const syntheticSnapshot = {
-      upstreamComponentDataVersion: 1,
+      upstreamComponentDataVersion: 2,
       lastRefreshed: '2026-11-02T12:30:00.000Z',
       jiraSearchBase: 'https://jira.example/issues/?jql=',
       openIssueRecords: [
-        { key: 'RHAI-PILLOW-1', status: 'New', labels: ['ecosystem:pypi'], upstreamComponent: 'pillow' },
-        { key: 'RHAI-PILLOW-2', status: 'New', labels: [], upstreamComponent: 'PILLOW' },
-        { key: 'RHAI-PILLOW-3', status: 'New', labels: ['ecosystem:Unknown'], upstreamComponent: 'Pillow' },
-        { key: 'RHAI-MULTI-1', status: 'New', labels: ['ecosystem:pypi'], upstreamComponent: 'multi-package' },
-        { key: 'RHAI-MULTI-2', status: 'New', labels: ['ecosystem:rpm'], upstreamComponent: 'MULTI-PACKAGE' },
-        { key: 'RHAI-MULTI-3', status: 'New', labels: [], upstreamComponent: 'multi-package' },
-        { key: 'RHAI-GO-1', status: 'New', labels: ['ecosystem:golang'], upstreamComponent: 'golang; example.org/lib' },
-        { key: 'RHAI-GO-2', status: 'New', labels: [], upstreamComponent: 'EXAMPLE.ORG/LIB' },
-        { key: 'RHAI-UNKNOWN', status: 'New', labels: [], upstreamComponent: 'unknown-package' },
-        { key: 'RHAI-MISSING', status: 'New', labels: ['ecosystem:ruby'], upstreamComponent: null }
+        { key: 'RHAI-PILLOW-1', status: 'New', labels: ['ecosystem:pypi'], upstreamComponent: 'pillow', cvss: '9.8' },
+        { key: 'RHAI-PILLOW-2', status: 'New', labels: [], upstreamComponent: 'PILLOW', cvss: '7.5' },
+        { key: 'RHAI-PILLOW-3', status: 'New', labels: ['ecosystem:Unknown'], upstreamComponent: 'Pillow', cvss: '5.0' },
+        { key: 'RHAI-MULTI-1', status: 'New', labels: ['ecosystem:pypi'], upstreamComponent: 'multi-package', cvss: '9.0' },
+        { key: 'RHAI-MULTI-2', status: 'New', labels: ['ecosystem:rpm'], upstreamComponent: 'MULTI-PACKAGE', cvss: '8.0' },
+        { key: 'RHAI-MULTI-3', status: 'New', labels: [], upstreamComponent: 'multi-package', cvss: '4.0' },
+        { key: 'RHAI-GO-1', status: 'New', labels: ['ecosystem:golang'], upstreamComponent: 'golang; example.org/lib', cvss: '7.0' },
+        { key: 'RHAI-GO-2', status: 'New', labels: [], upstreamComponent: 'EXAMPLE.ORG/LIB', cvss: '6.0' },
+        { key: 'RHAI-UNKNOWN', status: 'New', labels: [], upstreamComponent: 'unknown-package', cvss: null },
+        { key: 'RHAI-MISSING', status: 'New', labels: ['ecosystem:ruby'], upstreamComponent: null, cvss: '9.8' }
       ]
     };
     await page.route('**/api/modules/releases/cve-sustaining', async route => {
@@ -4384,7 +4428,7 @@ test.describe('Releases CVE Upstream Components @releases', () => {
     });
 
     await page.goto('/#/releases/reports?report=cve-upstream-components');
-    await expect(page.getByText('The chart includes all 9 open tickets with an upstream component')).toBeVisible();
+    await expect(page.getByText('The chart includes 9 open tickets with an upstream component')).toBeVisible();
     await expect(page.getByText(/3 open tickets belong to components associated with multiple ecosystems/)).toBeVisible();
     await expect(page.getByText(/table row totals may overlap/)).toHaveCount(0);
     await expect(page.getByText(/ecosystem membership is not constrained/)).toHaveCount(0);

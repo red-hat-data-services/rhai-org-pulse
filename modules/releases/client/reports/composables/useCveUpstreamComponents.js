@@ -57,10 +57,21 @@ function jiraUrl(searchBase, component) {
   return searchBase + encodeURIComponent(clauses.join(' AND '))
 }
 
-function buildAggregation(payload) {
-  if (payload?.upstreamComponentDataVersion !== 1) {
+function hasMinimumCvssScore(value, minimumScore) {
+  if (minimumScore === '' || minimumScore === null || minimumScore === undefined) return true
+  if (value === null || value === undefined || value === '') return false
+
+  const score = Number(value)
+  const minimum = Number(minimumScore)
+  return Number.isFinite(score) && score >= 0 && score <= 10 && Number.isFinite(minimum) && score >= minimum
+}
+
+function buildAggregation(payload, minimumCvssScore) {
+  const dataVersion = payload?.upstreamComponentDataVersion
+  if (dataVersion !== 1 && dataVersion !== 2) {
     return {
       metadataReady: false,
+      cvssReady: false,
       totalOpen: 0,
       ecosystems: [],
       ecosystemBreakdown: [],
@@ -69,6 +80,7 @@ function buildAggregation(payload) {
     }
   }
 
+  const cvssReady = dataVersion === 2
   const searchBase = typeof payload.jiraSearchBase === 'string' && payload.jiraSearchBase
     ? payload.jiraSearchBase
     : DEFAULT_JIRA_SEARCH_BASE
@@ -81,6 +93,7 @@ function buildAggregation(payload) {
 
   for (const issue of Array.isArray(payload.openIssueRecords) ? payload.openIssueRecords : []) {
     if (!issue || typeof issue !== 'object') continue
+    if (minimumCvssScore && (!cvssReady || !hasMinimumCvssScore(issue.cvss, minimumCvssScore))) continue
     const status = typeof issue.status === 'string' ? issue.status.trim().toLowerCase() : ''
     if (status === 'closed' || status === 'resolved') continue
 
@@ -138,6 +151,7 @@ function buildAggregation(payload) {
 
   return {
     metadataReady: true,
+    cvssReady,
     totalOpen,
     ecosystems: [...ecosystemOptions].sort(compareStrings),
     ecosystemBreakdown,
@@ -150,11 +164,13 @@ function buildAggregation(payload) {
  * Lightweight ecosystem/component grouping over the cached sustaining snapshot.
  *
  * @param {import('vue').Ref<Object|null>} data - Sustaining payload
+ * @param {import('vue').Ref<string>} selectedSeverity - Minimum CVSS score; empty means all scores
  * @param {import('vue').Ref<string>} selectedEcosystem - Table-only ecosystem selection; empty means all
  */
-export function useCveUpstreamComponents(data, selectedEcosystem) {
-  const aggregation = computed(() => buildAggregation(data.value))
+export function useCveUpstreamComponents(data, selectedSeverity, selectedEcosystem) {
+  const aggregation = computed(() => buildAggregation(data.value, selectedSeverity.value))
   const metadataReady = computed(() => aggregation.value.metadataReady)
+  const cvssReady = computed(() => aggregation.value.cvssReady)
   const totalOpen = computed(() => aggregation.value.totalOpen)
   const ecosystems = computed(() => aggregation.value.ecosystems)
   const ecosystemBreakdown = computed(() => aggregation.value.ecosystemBreakdown)
@@ -169,6 +185,7 @@ export function useCveUpstreamComponents(data, selectedEcosystem) {
 
   return {
     metadataReady,
+    cvssReady,
     totalOpen,
     ecosystems,
     ecosystemBreakdown,
