@@ -3254,7 +3254,8 @@ Producer-computed nightly readiness (not derived from the heatmap). Stored as th
 **Fields:**
 
 - `schema_version` — required; must be exactly `1` (reject other values on upload).
-- `days[]` — calendar rows (each `date` unique); `latest_run_id` selects the run shown in each matrix column; other same-day entries remain in `runs[]` for the day detail panel.
+- `days[]` — calendar rows; each `(stream_key, date)` pair must be unique when multiple Jenkins jobs are published in one snapshot. Omit `stream_key` for single-job snapshots (legacy). `latest_run_id` selects the run shown in each matrix column; other same-day entries remain in `runs[]` for the day detail panel.
+- `jenkins_jobs[]` — optional catalog for the UI job switcher: `{ "stream_key", "label", "jenkins_job" }` (folder/job path). When more than one `stream_key` appears in `days[]`, the Test Execution matrix shows a **Test results source** filter beside the date pager. Deep link: `#/system-health/test-execution?source=<label-or-stream_key>` (for example `source=devops/promotion-gate-tests`).
 - `runs[].promotion_gate` — optional metadata from `promotion_gate_test_summary.yaml` (`status`, `rhoai_version`, `update_channel`, `cluster_name`, `openshift_version`, …).
 - `runs[].gates` — optional **array** of BVT gate rows (`cluster-health`, `operator-health`) with `source_status` and `tests` counts matching the YAML; each entry must be an object with non-empty `id` (reject `{}` or non-array `gates` on bulk upload). Optional `state` uses the same enum as `components[].state`.
 - `runs[].components[]` — `state` is one of `ready`, `failed`, `blocked`, `unknown`, `not_run`, `not_applicable`; `source_status` mirrors YAML `components.<id>.status` for display. When `state` is `blocked`, the UI shows **Blocked** as the readiness label and `source_status` separately (BVT/YAML).

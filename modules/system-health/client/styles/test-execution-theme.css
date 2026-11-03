@@ -24,7 +24,7 @@
   --te-cell-btn-bg: #f3f4f6;
   --te-cell-btn-border: #e5e7eb;
   --te-panel-bg: #f9fafb;
-  --te-panel-bg-strong: rgba(243, 244, 246, 0.95);
+  --te-panel-bg-strong: #f3f4f6;
   --te-panel-border: rgba(37, 99, 235, 0.2);
   --te-divider: rgba(0, 0, 0, 0.08);
   --te-divider-soft: rgba(0, 0, 0, 0.06);
@@ -69,8 +69,8 @@ html.dark .test-execution-theme {
   --te-section-title-bg: linear-gradient(90deg, #132f4c 0%, transparent 100%);
   --te-cell-btn-bg: rgba(10, 25, 41, 0.5);
   --te-cell-btn-border: rgba(255, 255, 255, 0.06);
-  --te-panel-bg: rgba(19, 47, 76, 0.35);
-  --te-panel-bg-strong: rgba(19, 47, 76, 0.35);
+  --te-panel-bg: #132f4c;
+  --te-panel-bg-strong: #0f2744;
   --te-panel-border: rgba(94, 167, 255, 0.2);
   --te-divider: rgba(255, 255, 255, 0.08);
   --te-divider-soft: rgba(255, 255, 255, 0.06);

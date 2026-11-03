@@ -1,23 +1,16 @@
 import { computed, unref } from 'vue'
-import { resolveSelectedRun, findMatrixCell } from './useNightlyHealthMatrix'
+import {
+  resolveSelectedRun,
+  findMatrixCell,
+  resolveHeatmapComponentToRowId
+} from './useNightlyHealthMatrix'
 
-/** Synthetic heatmap row label for BVT / operator-health gate (RHAI-16425). */
-export const RHOAI_DEPLOYMENT_ROW_LABEL = 'RHOAI Deployment'
-
-/**
- * Match heatmap row names to nightly_health components[].id (producer contract).
- * Display names are normalized; explicit label maps to operator-health gate.
- *
- * @param {string} componentName
- * @returns {string|null}
- */
-export function normalizeHeatmapComponentToNightlyId(componentName) {
-  if (!componentName || typeof componentName !== 'string') return null
-  const trimmed = componentName.trim()
-  if (trimmed === RHOAI_DEPLOYMENT_ROW_LABEL) return 'operator-health'
-  const normalized = trimmed.toLowerCase().replace(/[^a-z0-9]+/g, '')
-  return normalized.length > 0 ? normalized : null
-}
+export {
+  normalizeHeatmapComponentToNightlyId,
+  resolveHeatmapComponentToRowId,
+  buildComponentIdentityIndex,
+  RHOAI_DEPLOYMENT_ROW_LABEL
+} from './useNightlyHealthMatrix'
 
 /**
  * @param {object|null} nightlyHealth
@@ -39,12 +32,13 @@ export function buildNightlyDayMap(nightlyHealth) {
  */
 export function lookupNightlyCell(nightlyHealth, date, componentName) {
   if (!date || !componentName) return null
-  const nightlyId = normalizeHeatmapComponentToNightlyId(componentName)
-  if (!nightlyId) return null
+  const days = Array.isArray(nightlyHealth?.days) ? nightlyHealth.days : []
   const day = buildNightlyDayMap(nightlyHealth).get(date)
   if (!day) return null
   const { run } = resolveSelectedRun(day)
   if (!run) return null
+  const nightlyId = resolveHeatmapComponentToRowId(componentName, days, { run })
+  if (!nightlyId) return null
   const cell = findMatrixCell(run, nightlyId)
   if (!cell) return null
   return { day, run, cell }
@@ -67,12 +61,13 @@ export function useHeatmapNightlyOverlay(payloadRef) {
 
   function overlayFor(componentName, date) {
     if (!date || !componentName) return null
-    const nightlyId = normalizeHeatmapComponentToNightlyId(componentName)
-    if (!nightlyId) return null
+    const days = Array.from(dayMap.value.values())
     const day = dayMap.value.get(date)
     if (!day) return null
     const { run } = resolveSelectedRun(day)
     if (!run) return null
+    const nightlyId = resolveHeatmapComponentToRowId(componentName, days, { run })
+    if (!nightlyId) return null
     const cell = findMatrixCell(run, nightlyId)
     if (!cell) return null
     return { day, run, cell }

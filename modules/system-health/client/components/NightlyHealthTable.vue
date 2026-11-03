@@ -1,16 +1,52 @@
 <template>
   <div class="nightly-health">
-    <div v-if="totalDays > NIGHTLY_PAGE_SIZE" class="pager">
-      <button type="button" class="pager-btn" :disabled="!canPageNewer" @click="pageNewer">
-        ← Newer {{ NIGHTLY_PAGE_SIZE }} days
-      </button>
-      <span class="pager-label">
-        {{ visibleDayRangeLabel }}
-      </span>
-      <button type="button" class="pager-btn" :disabled="!canPageOlder" @click="pageOlder">
-        Older {{ NIGHTLY_PAGE_SIZE }} days →
+    <div
+      v-if="totalDays > 0 && (maxPageOffset > 0 || jenkinsJobOptions.length > 1)"
+      class="pager-toolbar"
+    >
+      <div v-if="maxPageOffset > 0" class="pager">
+        <button type="button" class="pager-btn" :disabled="!canPageNewer" @click="pageNewer">
+          ← Newer {{ columnsPerPage }} days
+        </button>
+        <span class="pager-label">
+          {{ visibleDayRangeLabel }}
+          <span class="pager-count">({{ visibleDays.length }} of {{ totalDays }} days)</span>
+        </span>
+        <button type="button" class="pager-btn" :disabled="!canPageOlder" @click="pageOlder">
+          Older {{ columnsPerPage }} days →
+        </button>
+      </div>
+      <div v-if="jenkinsJobOptions.length > 1" class="pager-job-filter">
+        <label class="pager-job-label">
+          <span class="pager-job-label-text">Test Results Source</span>
+          <select
+            v-model="selectedStreamKey"
+            class="pager-job-select"
+            aria-label="Test Results Source"
+          >
+            <option v-for="job in jenkinsJobOptions" :key="job.stream_key" :value="job.stream_key">
+              {{ job.label }}
+            </option>
+          </select>
+        </label>
+      </div>
+    </div>
+    <div v-if="viewingOlderDays" class="pager-notice" role="status">
+      You are viewing older UTC days. Latest data is
+      <strong>{{ friendlyDate(newestDayDate) }}</strong>
+      (build #{{ newestBuildLabel }}).
+      <button type="button" class="pager-link-btn" @click="jumpToNewestDays">
+        Jump to newest days
       </button>
     </div>
+    <p
+      v-else-if="totalDays > 0 && visibleDays.length === totalDays"
+      class="day-snapshot-hint"
+    >
+      Showing all {{ totalDays }} UTC days in this snapshot
+      (one column per calendar day, newest → oldest left to right; same-day Jenkins retries are in the day panel).
+      Paging appears when more than {{ NIGHTLY_PAGE_SIZE }} UTC days are published.
+    </p>
 
     <div class="matrix-wrapper">
       <table class="nightly-matrix">
@@ -27,7 +63,7 @@
                 type="button"
                 class="date-header-btn"
                 :title="`Show all builds on ${day.date}`"
-                @click="selectDay(day.date)"
+                @click="onMatrixDayClick(day.date, $event)"
               >
                 <div class="date-cell">
                   <span class="date-label">{{ friendlyDate(day.date) }}</span>
@@ -40,7 +76,16 @@
         <tbody>
           <tr v-for="rowId in rowIds" :key="rowId">
             <td class="comp-name">
-              <span class="comp-label">{{ rowName(rowId) }}</span>
+              <a
+                v-if="rowLinkTarget(rowId)"
+                href="#"
+                class="comp-link"
+                :title="rowNameTooltip(rowId)"
+                @click.prevent="onComponentLinkClick(rowId)"
+              >
+                {{ rowName(rowId) }}
+              </a>
+              <span v-else class="comp-label" :title="rowNameTooltip(rowId)">{{ rowName(rowId) }}</span>
             </td>
             <td
               v-for="day in visibleDays"
@@ -51,7 +96,7 @@
               <button
                 type="button"
                 class="cell-btn"
-                @click="selectDay(day.date)"
+                @click="onMatrixDayClick(day.date, $event)"
               >
                 <template v-if="cellFor(day, rowId)">
                   <div
@@ -67,8 +112,9 @@
                     <div
                       v-if="cellSourceStatusSubtitle(cellFor(day, rowId))"
                       class="cell-substatus"
+                      :class="dscSourceStatusClass(cellSourceStatusSubtitle(cellFor(day, rowId)))"
                     >
-                      BVT: {{ cellSourceStatusSubtitle(cellFor(day, rowId)) }}
+                      {{ cellSourceStatusSubtitlePrefix(rowId) }}: {{ cellSourceStatusSubtitle(cellFor(day, rowId)) }}
                     </div>
                     <div v-if="cellTestCounts(cellFor(day, rowId))" class="cell-counts">
                       <span class="cp">{{ cellTestCounts(cellFor(day, rowId)).passed }}</span>
@@ -86,73 +132,101 @@
       </table>
     </div>
 
-    <div v-if="selectedDayEntry" class="day-panel">
-      <div class="day-panel-header">
-        <h3>Runs on {{ selectedDayEntry.date }}</h3>
-        <button type="button" class="day-panel-close" @click="selectDay(selectedDayEntry.date)">
-          Close
-        </button>
-      </div>
-      <p v-if="selectionError(selectedDayEntry)" class="selection-error" role="status">
-        {{ selectionError(selectedDayEntry) }}
-      </p>
-      <div v-if="selectedDayRuns.length === 0" class="day-panel-empty">No runs recorded for this day.</div>
-      <ul v-else class="run-list">
-        <li
-          v-for="run in selectedDayRuns"
-          :key="run.run_id"
-          class="run-list-item"
-          :class="{ 'run-list-item--selected': run.run_id === selectedDayEntry.latest_run_id }"
-        >
-          <div class="run-list-main">
-            <span v-if="run.run_id === selectedDayEntry.latest_run_id" class="selected-badge">Selected for column</span>
-            <span class="run-build">Build #{{ run.build_number ?? '—' }}</span>
-            <span v-if="runPromotionStatus(run)" class="run-status">{{ runPromotionStatus(run) }}</span>
-          </div>
-          <div class="run-list-meta">
-            <span>{{ formatTimestamp(run.started_at) }}</span>
-            <span v-if="run.completed_at"> → {{ formatTimestamp(run.completed_at) }}</span>
-          </div>
-          <div v-if="runMetaLine(run)" class="run-list-detail">{{ runMetaLine(run) }}</div>
-          <a
-            v-if="safeHttpUrl(run.jenkins_url)"
-            class="run-link"
-            :href="safeHttpUrl(run.jenkins_url)"
-            target="_blank"
-            rel="noopener noreferrer"
+    <Teleport to="body">
+      <div
+        v-if="selectedDayEntry"
+        ref="dayPopupRef"
+        class="test-execution-theme nightly-day-popup day-panel day-panel--popup"
+        :style="dayPopupStyle"
+        tabindex="-1"
+        role="dialog"
+        aria-modal="false"
+        :aria-labelledby="dayPanelTitleId"
+      >
+        <div class="day-panel-header">
+          <h3 :id="dayPanelTitleId">Runs on {{ selectedDayEntry.date }}</h3>
+          <button type="button" class="day-panel-close" @click="dismissDayPanel">
+            Close
+          </button>
+        </div>
+        <p v-if="selectionError(selectedDayEntry)" class="selection-error" role="status">
+          {{ selectionError(selectedDayEntry) }}
+        </p>
+        <div v-if="selectedDayRuns.length === 0" class="day-panel-empty">No runs recorded for this day.</div>
+        <ul v-else class="run-list">
+          <li
+            v-for="run in selectedDayRuns"
+            :key="run.run_id"
+            class="run-list-item"
+            :class="{ 'run-list-item--selected': run.run_id === selectedDayEntry.latest_run_id }"
           >
-            Jenkins run
-          </a>
-        </li>
-      </ul>
-    </div>
+            <div class="run-list-main">
+              <span v-if="run.run_id === selectedDayEntry.latest_run_id" class="selected-badge">Selected for column</span>
+              <span class="run-build">Build #{{ run.build_number ?? '—' }}</span>
+              <span v-if="runPromotionStatus(run)" class="run-status">{{ runPromotionStatus(run) }}</span>
+            </div>
+            <div class="run-list-meta">
+              <span>{{ formatTimestamp(run.started_at) }}</span>
+              <span v-if="run.completed_at"> → {{ formatTimestamp(run.completed_at) }}</span>
+            </div>
+            <div v-if="runMetaLine(run)" class="run-list-detail">{{ runMetaLine(run) }}</div>
+            <a
+              v-if="safeHttpUrl(run.jenkins_url)"
+              class="run-link"
+              :href="safeHttpUrl(run.jenkins_url)"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              Jenkins run
+            </a>
+          </li>
+        </ul>
+      </div>
+    </Teleport>
   </div>
 </template>
 
 <script setup>
-import { computed, toRef } from 'vue'
+import { computed, nextTick, ref, toRef, useId } from 'vue'
+import { onClickOutside, onKeyStroke, useEventListener } from '@vueuse/core'
 import {
   NIGHTLY_PAGE_SIZE,
   useNightlyHealthMatrix,
   resolveSelectedRun,
   findMatrixCell,
+  resolveDisplayMatrixCell,
   cellDisplayStatus,
   nightlyCellTone,
   cellSourceStatusSubtitle,
+  cellSourceStatusSubtitlePrefix,
+  dscSourceStatusClass,
   rowLabel,
+  rowLabelTooltip,
+  nightlyRowHeatmapLinkTarget,
   friendlyDate,
   formatTimestamp,
   safeHttpUrl
 } from '../composables/useNightlyHealthMatrix'
+import '../styles/test-execution-theme.css'
 
 const props = defineProps({
   payload: {
     type: Object,
     required: true
+  },
+  /** Full heatmap inventory so nightly rows match Component Heatmap (cells may still be –). */
+  heatmapComponents: {
+    type: Array,
+    default: () => []
   }
 })
 
+const selectedStreamKey = defineModel('selectedStreamKey', { type: String, default: null })
+
+const emit = defineEmits(['component-click'])
+
 const payloadRef = toRef(props, 'payload')
+const heatmapComponentsRef = toRef(props, 'heatmapComponents')
 
 const {
   visibleDays,
@@ -161,29 +235,131 @@ const {
   canPageOlder,
   pageNewer,
   pageOlder,
-  selectDay,
+  openDay,
+  closeDay,
   selectedDate,
   selectedDayEntry,
   selectedDayRuns,
-  totalDays
-} = useNightlyHealthMatrix(payloadRef)
+  totalDays,
+  maxPageOffset,
+  columnsPerPage,
+  jumpToNewestDays,
+  viewingOlderDays,
+  newestDayDate,
+  sortedDays,
+  jenkinsJobOptions
+} = useNightlyHealthMatrix(payloadRef, heatmapComponentsRef, selectedStreamKey)
+
+const dayPopupRef = ref(null)
+const dayPanelTitleId = useId()
+const popupPos = ref({ top: 0, left: 0 })
+const lastMatrixClickTarget = ref(null)
+const lastPopupClickEvent = ref(null)
+
+const POPUP_WIDTH = 380
+const POPUP_VIEWPORT_GUTTER = 24
+
+const dayPopupStyle = computed(() => ({
+  top: `${popupPos.value.top}px`,
+  left: `${popupPos.value.left}px`
+}))
+
+function positionDayPopup(event) {
+  if (!event || typeof event.clientX !== 'number' || typeof event.clientY !== 'number') {
+    return
+  }
+  const margin = 8
+  const gap = 6
+  const clickX = event.clientX
+  const clickY = event.clientY
+  const popupEl = dayPopupRef.value
+  const height = popupEl?.offsetHeight || 240
+  const width = Math.min(POPUP_WIDTH, Math.max(0, window.innerWidth - POPUP_VIEWPORT_GUTTER))
+
+  // Below the pointer; popup centered horizontally so the click sits above its middle.
+  let left = clickX - width / 2
+  let top = clickY + gap
+
+  left = Math.min(Math.max(margin, left), window.innerWidth - width - margin)
+
+  if (top + height > window.innerHeight - margin) {
+    top = clickY - height - gap
+  }
+  if (top < margin) {
+    top = margin
+  }
+
+  popupPos.value = { top, left }
+}
+
+function focusDayPopup() {
+  dayPopupRef.value?.focus?.()
+}
+
+function dismissDayPanel() {
+  const restore = lastMatrixClickTarget.value
+  closeDay()
+  nextTick(() => {
+    if (restore && typeof restore.focus === 'function') {
+      restore.focus()
+    }
+  })
+}
+
+function onMatrixDayClick(date, event) {
+  lastMatrixClickTarget.value = event?.currentTarget ?? null
+  lastPopupClickEvent.value = event ?? null
+  openDay(date)
+  positionDayPopup(event)
+  nextTick(() => {
+    positionDayPopup(event)
+    focusDayPopup()
+    requestAnimationFrame(() => {
+      positionDayPopup(event)
+      focusDayPopup()
+    })
+  })
+}
+
+onKeyStroke('Escape', () => {
+  if (selectedDayEntry.value) dismissDayPanel()
+})
+
+onClickOutside(dayPopupRef, (ev) => {
+  if (ev.target.closest?.('.cell-btn, .date-header-btn')) {
+    return
+  }
+  if (selectedDayEntry.value) closeDay()
+})
+
+useEventListener(window, 'resize', () => {
+  if (!selectedDayEntry.value || !lastPopupClickEvent.value) return
+  positionDayPopup(lastPopupClickEvent.value)
+})
 
 const visibleDayRangeLabel = computed(() => {
   if (visibleDays.value.length === 0) return 'No nightly days'
   const newest = visibleDays.value[0]?.date
   const oldest = visibleDays.value[visibleDays.value.length - 1]?.date
-  return `${friendlyDate(oldest)} – ${friendlyDate(newest)}`
+  return `${friendlyDate(newest)} – ${friendlyDate(oldest)}`
+})
+
+const newestBuildLabel = computed(() => {
+  const day = sortedDays.value[sortedDays.value.length - 1]
+  if (!day) return '—'
+  const { run } = resolveSelectedRun(day)
+  return run?.build_number ?? '—'
 })
 
 const rowNameCache = computed(() => {
   const map = new Map()
-  for (const day of props.payload?.days || []) {
+  for (const day of sortedDays.value) {
     for (const run of day.runs || []) {
       if (!run) continue
       for (const rowId of rowIds.value) {
         if (map.has(rowId)) continue
         const cell = findMatrixCell(run, rowId)
-        if (cell) map.set(rowId, rowLabel(rowId, cell))
+        if (cell) map.set(rowId, rowLabel(rowId, cell, props.heatmapComponents))
       }
     }
   }
@@ -191,7 +367,35 @@ const rowNameCache = computed(() => {
 })
 
 function rowName(rowId) {
-  return rowNameCache.value.get(rowId) || rowLabel(rowId, null)
+  return rowNameCache.value.get(rowId) || rowLabel(rowId, null, props.heatmapComponents)
+}
+
+function rowNameTooltip(rowId) {
+  for (const day of sortedDays.value) {
+    for (const run of day.runs || []) {
+      const cell = findMatrixCell(run, rowId)
+      if (cell) return rowLabelTooltip(rowId, cell)
+    }
+  }
+  return rowLabelTooltip(rowId, null)
+}
+
+const rowLinkTargetCache = computed(() => {
+  const map = new Map()
+  for (const rowId of rowIds.value) {
+    const target = nightlyRowHeatmapLinkTarget(rowId, props.heatmapComponents, sortedDays.value)
+    if (target) map.set(rowId, target)
+  }
+  return map
+})
+
+function rowLinkTarget(rowId) {
+  return rowLinkTargetCache.value.get(rowId) || null
+}
+
+function onComponentLinkClick(rowId) {
+  const name = rowLinkTarget(rowId)
+  if (name) emit('component-click', name)
 }
 
 function selectionError(day) {
@@ -203,7 +407,7 @@ function selectedRun(day) {
 }
 
 function cellFor(day, rowId) {
-  return findMatrixCell(selectedRun(day), rowId)
+  return resolveDisplayMatrixCell(selectedRun(day), rowId)
 }
 
 function columnBuildLabel(day) {
@@ -221,7 +425,9 @@ function cellTestCounts(cell) {
   const passed = t.passed ?? 0
   const failed = t.failed ?? 0
   const skipped = t.skipped ?? 0
-  if (passed === 0 && failed === 0 && skipped === 0) return null
+  if (passed === 0 && failed === 0 && skipped === 0) {
+    return null
+  }
   return { passed, failed, skipped }
 }
 
@@ -248,21 +454,56 @@ function runMetaLine(run) {
   margin-top: 0;
 }
 
+.pager-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
 .pager {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
   gap: 12px;
-  margin-bottom: 12px;
+}
+
+.pager-job-filter {
+  margin-left: auto;
+}
+
+.pager-job-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+}
+
+.pager-job-label-text {
+  font-weight: 600;
+  color: var(--te-pager-label, #374151);
+}
+
+.pager-job-select {
+  font-size: 12px;
+  padding: 6px 10px;
+  border-radius: 6px;
+  border: 1px solid var(--te-border, #e5e7eb);
+  background: var(--te-surface, #fff);
+  color: var(--te-text, #111827);
+  max-width: min(420px, 55vw);
 }
 
 .pager-btn {
-  background: var(--te-accent-soft);
-  border: 1px solid var(--te-accent-border);
-  color: var(--te-accent);
+  background: var(--te-accent-soft, rgba(37, 99, 235, 0.08));
+  border: 1px solid var(--te-accent-border, rgba(37, 99, 235, 0.25));
+  color: var(--te-accent, #2563eb);
   padding: 6px 12px;
-  border-radius: 4px;
+  border-radius: 6px;
   font-size: 12px;
+  font-weight: 600;
   cursor: pointer;
 }
 
@@ -273,7 +514,43 @@ function runMetaLine(run) {
 
 .pager-label {
   font-size: 12px;
-  color: var(--te-pager-label);
+  font-weight: 600;
+  color: var(--te-pager-label, #374151);
+}
+
+.pager-count {
+  font-weight: 500;
+  color: var(--te-text-muted, #6b7280);
+}
+
+.day-snapshot-hint {
+  font-size: 12px;
+  color: var(--te-text-muted, #6b7280);
+  margin: 0 0 10px;
+  line-height: 1.4;
+}
+
+.pager-notice {
+  font-size: 12px;
+  color: var(--te-text-muted, #6b7280);
+  background: var(--te-help-bg, #f3f4f6);
+  border: 1px solid var(--te-border, #e5e7eb);
+  border-radius: 6px;
+  padding: 8px 12px;
+  margin: 0 0 10px;
+  line-height: 1.45;
+}
+
+.pager-link-btn {
+  margin-left: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--te-accent, #2563eb);
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  text-decoration: underline;
 }
 
 .matrix-wrapper {
@@ -314,8 +591,20 @@ table.nightly-matrix th {
 
 .comp-name {
   text-align: left;
-  font-weight: 600;
+  font-weight: 500;
   padding: 8px 12px;
+}
+
+.comp-link {
+  color: var(--te-link, #5ea7ff);
+  font-size: 13px;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.comp-link:hover {
+  color: var(--te-link-hover, #8ec5ff);
+  text-decoration: underline;
 }
 
 .comp-label {
@@ -457,6 +746,22 @@ table.nightly-matrix th {
   line-height: 1.2;
 }
 
+.cell-substatus.dsc-status-ready {
+  color: #15803d;
+}
+
+.cell-substatus.dsc-status-not-ready {
+  color: #b91c1c;
+}
+
+html.dark .cell-substatus.dsc-status-ready {
+  color: #2ed573;
+}
+
+html.dark .cell-substatus.dsc-status-not-ready {
+  color: #ff4757;
+}
+
 .cell-counts {
   display: flex;
   gap: 3px;
@@ -484,11 +789,21 @@ table.nightly-matrix th {
 }
 
 .day-panel {
-  margin-top: 20px;
   padding: 16px 18px;
-  border: 1px solid var(--te-panel-border);
+  border: 1px solid var(--te-panel-border, #d1d5db);
   border-radius: 8px;
-  background: var(--te-panel-bg-strong);
+  background: var(--te-panel-bg-strong, #ffffff);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.35);
+}
+
+.day-panel--popup {
+  position: fixed;
+  z-index: 2000;
+  width: min(380px, calc(100vw - 24px));
+  max-height: min(70vh, 420px);
+  overflow-y: auto;
+  margin: 0;
+  box-sizing: border-box;
 }
 
 .day-panel-header {
@@ -578,5 +893,62 @@ table.nightly-matrix th {
 .day-panel-empty {
   font-size: 13px;
   color: var(--te-text-muted);
+}
+</style>
+
+<!-- Teleport renders on body: opaque panel + theme tokens (not scoped) -->
+<style>
+.test-execution-theme.nightly-day-popup {
+  background: #ffffff;
+  color: #111827;
+  border: 1px solid #d1d5db;
+  box-shadow: 0 16px 48px rgba(15, 23, 42, 0.28);
+}
+
+.test-execution-theme.nightly-day-popup .day-panel-header h3,
+.test-execution-theme.nightly-day-popup .run-build {
+  color: #111827;
+}
+
+.test-execution-theme.nightly-day-popup .run-list-meta,
+.test-execution-theme.nightly-day-popup .run-list-detail,
+.test-execution-theme.nightly-day-popup .run-status,
+.test-execution-theme.nightly-day-popup .day-panel-empty,
+.test-execution-theme.nightly-day-popup .day-panel-close {
+  color: #4b5563;
+}
+
+html.dark .test-execution-theme.nightly-day-popup {
+  background: #0a1929;
+  color: #e8eef4;
+  border-color: #1e4976;
+  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.65);
+}
+
+html.dark .test-execution-theme.nightly-day-popup .day-panel-header h3,
+html.dark .test-execution-theme.nightly-day-popup .run-build {
+  color: #ffffff;
+}
+
+html.dark .test-execution-theme.nightly-day-popup .run-list-meta,
+html.dark .test-execution-theme.nightly-day-popup .run-list-detail,
+html.dark .test-execution-theme.nightly-day-popup .run-status,
+html.dark .test-execution-theme.nightly-day-popup .day-panel-empty,
+html.dark .test-execution-theme.nightly-day-popup .day-panel-close {
+  color: #8899aa;
+}
+
+html.dark .test-execution-theme.nightly-day-popup .run-list-item {
+  border-bottom-color: rgba(255, 255, 255, 0.08);
+}
+
+html.dark .test-execution-theme .pager-btn {
+  background: rgba(94, 167, 255, 0.12);
+  border: 1px solid rgba(94, 167, 255, 0.35);
+  color: #5ea7ff;
+}
+
+html.dark .test-execution-theme .pager-label {
+  color: #c8d4de;
 }
 </style>
