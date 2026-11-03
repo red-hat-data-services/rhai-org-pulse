@@ -13,7 +13,7 @@ defineEmits(['select'])
       Every request needs a related Jira issue, a delivery date and a business justification.
     </p>
 
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+    <div class="grid grid-cols-1 gap-4" :class="options.length === 2 ? 'md:grid-cols-2' : 'md:grid-cols-3'">
       <button
         v-for="option in options"
         :key="option.id"

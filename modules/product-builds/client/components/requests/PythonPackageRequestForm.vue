@@ -1,5 +1,5 @@
 <script setup>
-import { ref, reactive, computed, watch } from 'vue'
+import { ref, reactive, computed } from 'vue'
 import { apiRequest } from '@shared/client/services/api'
 import { isoBusinessDaysFromNow, formatDateLabel } from '../../utils/request-dates'
 
@@ -30,19 +30,20 @@ function defaults() {
     version: '',
     backport_versions: '',
     other_hardware: '',
-    hardware_ack: false,
+    hardware_choice: '', // 'default' (all supported accelerators) or 'custom'
     jira_id: '',
     justification: '',
     delivery_timeline: '',
     release_target: '',
     release_commitment: '',
     testing_requirements: '',
-    testing_ack: false
+    testing_choice: '' // 'default' (probe/import tests) or 'custom'
   }
 }
 
 const form = reactive(defaults())
-const teamProject = ref('RHAISTRAT')
+// Python package Epics are always filed in RHAI, so the team list comes from RHAI too.
+const TEAM_PROJECT = 'RHAI'
 const teams = ref([])
 const loadingTeams = ref(false)
 const teamLoadError = ref('')
@@ -55,7 +56,7 @@ async function loadTeams() {
   teamLoadError.value = ''
   loadingTeams.value = true
   try {
-    const data = await apiRequest(`/modules/product-builds/package-requests/teams?project=${teamProject.value}`)
+    const data = await apiRequest(`/modules/product-builds/package-requests/teams?project=${TEAM_PROJECT}`)
     if (loadId !== teamLoadId) return
     teams.value = data
   } catch {
@@ -66,7 +67,7 @@ async function loadTeams() {
   }
 }
 
-watch(teamProject, loadTeams, { immediate: true })
+loadTeams()
 const fieldErrors = ref({})
 const submitting = ref(false)
 const banner = ref(null) // { type, text } form-level message
@@ -121,8 +122,10 @@ function validate() {
     errors.version = 'Version must contain only letters, digits, dots, underscores or dashes'
   }
 
-  if (!form.other_hardware.trim() && !form.hardware_ack) {
-    errors.other_hardware = 'Provide hardware details or acknowledge the all-supported-accelerators default'
+  if (!form.hardware_choice) {
+    errors.other_hardware = 'Choose all supported accelerators or describe the hardware you need'
+  } else if (form.hardware_choice === 'custom' && !form.other_hardware.trim()) {
+    errors.other_hardware = 'Describe the hardware you need'
   }
 
   if (!JIRA_KEY_RE.test(form.jira_id.trim())) {
@@ -138,8 +141,10 @@ function validate() {
     errors.delivery_timeline = `Delivery date must be at least ${SLA_BUSINESS_DAYS} business days from today (${minDeliveryDateLabel.value} or later)`
   }
 
-  if (!form.testing_requirements.trim() && !form.testing_ack) {
-    errors.testing_requirements = 'Provide testing requirements or acknowledge the default probe/import tests'
+  if (!form.testing_choice) {
+    errors.testing_requirements = 'Choose the default tests or describe the testing you need'
+  } else if (form.testing_choice === 'custom' && !form.testing_requirements.trim()) {
+    errors.testing_requirements = 'Describe the testing you need'
   }
 
   return errors
@@ -148,21 +153,21 @@ function validate() {
 function buildPayload(skipProductionCheck) {
   const payload = {
     team: form.team.trim(),
-    project: teamProject.value,
+    project: TEAM_PROJECT,
     package_name: form.package_name.trim(),
     extras: parseList(form.extras),
     package_source: form.package_source,
     source_url: needsSourceUrl.value ? form.source_url.trim() : null,
     version: form.version.trim() || null,
-    other_hardware: form.other_hardware.trim(),
-    hardware_defaults_acknowledged: form.hardware_ack,
+    other_hardware: form.hardware_choice === 'custom' ? form.other_hardware.trim() : '',
+    hardware_defaults_acknowledged: form.hardware_choice === 'default',
     jira_id: form.jira_id.trim(),
     justification: form.justification.trim(),
     delivery_timeline: form.delivery_timeline.trim(),
     release_target: parseList(form.release_target),
     release_commitment: form.release_commitment.trim(),
-    testing_requirements: form.testing_requirements.trim(),
-    testing_defaults_acknowledged: form.testing_ack,
+    testing_requirements: form.testing_choice === 'custom' ? form.testing_requirements.trim() : '',
+    testing_defaults_acknowledged: form.testing_choice === 'default',
     backport_versions: parseList(form.backport_versions)
   }
   if (skipProductionCheck) payload.skip_production_check = true
@@ -231,7 +236,6 @@ function cancelWarning() {
 }
 
 function resetForm() {
-  teamProject.value = 'RHAISTRAT'
   Object.assign(form, defaults())
   fieldErrors.value = {}
   banner.value = null
@@ -251,7 +255,7 @@ function jiraHref(ticket) {
       <h2 class="text-lg font-bold text-gray-900 dark:text-white">Python Package Requests</h2>
       <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">
         For Python packages (wheels) only. A Jira Epic is filed and the onboarding pipeline is triggered on success.
-        For RPMs or new channels, use the other tabs.
+        For new channels, use the Channels tab.
       </p>
     </div>
 
@@ -411,25 +415,6 @@ function jiraHref(ticket) {
           The request is filed under your signed-in identity. The server treats the authenticated identity as authoritative.
         </p>
 
-        <div>
-          <label for="req-team-project" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Team's Jira project</label>
-          <select
-            id="req-team-project"
-            v-model="teamProject"
-            :disabled="submitting"
-            aria-describedby="req-team-project-hint"
-            class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 text-sm focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
-          >
-            <option value="RHAISTRAT">RHAISTRAT</option>
-            <option value="RHAI">RHAI</option>
-          </select>
-          <p id="req-team-project-hint" class="mt-1 text-xs text-gray-500 dark:text-gray-400">
-            Choose the project your team belongs to.
-            <template v-if="teamProject === 'RHAISTRAT'">RHAISTRAT has no Epic type, so the request is filed in RHAI.</template>
-            <template v-else>The request is filed in {{ teamProject }}.</template>
-          </p>
-        </div>
-
         <!-- Team + package -->
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
@@ -579,32 +564,54 @@ function jiraHref(ticket) {
         </div>
 
         <!-- Hardware -->
-        <fieldset class="border border-gray-200 dark:border-gray-700 rounded-lg p-4">
-          <legend class="px-2 text-sm font-medium text-gray-700 dark:text-gray-300">Hardware support <span class="text-red-500" aria-hidden="true">*</span> <span class="text-xs font-normal text-gray-400">(details or acknowledgement)</span></legend>
-          <label for="req-other-hardware" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-            Other hardware details (optional)
-          </label>
-          <textarea
-            id="req-other-hardware"
-            v-model="form.other_hardware"
-            rows="2"
-            placeholder="e.g. 2x H100 nodes, AMD MI300X"
-            :disabled="form.hardware_ack"
-            :aria-invalid="!!fieldErrors.other_hardware && !form.hardware_ack"
-            :aria-describedby="fieldErrors.other_hardware ? 'req-other-hardware-error' : null"
-            class="w-full px-3 py-2 border rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 text-sm focus:ring-2 focus:ring-primary-500 focus:border-primary-500 disabled:opacity-50 disabled:cursor-not-allowed"
-            :class="fieldErrors.other_hardware ? 'border-red-400 dark:border-red-600' : 'border-gray-300 dark:border-gray-600'"
-          ></textarea>
-          <label class="mt-2 inline-flex items-start gap-2 text-sm text-gray-700 dark:text-gray-300 cursor-pointer">
-            <input
-              id="req-hardware-ack"
-              v-model="form.hardware_ack"
-              type="checkbox"
-              class="mt-0.5 text-primary-600 border-gray-300 dark:border-gray-600 rounded"
-            />
-            <span>I confirm the package must support all supported accelerators (default)</span>
-          </label>
-          <p v-if="fieldErrors.other_hardware" id="req-other-hardware-error" class="mt-1 text-xs text-red-600 dark:text-red-400">{{ fieldErrors.other_hardware }}</p>
+        <fieldset
+          class="border border-gray-200 dark:border-gray-700 rounded-lg p-4"
+          :aria-describedby="fieldErrors.other_hardware ? 'req-other-hardware-error' : null"
+        >
+          <legend class="px-2 text-sm font-medium text-gray-700 dark:text-gray-300">Hardware support <span class="text-red-500" aria-hidden="true">*</span> <span class="text-xs font-normal text-gray-400">(choose one)</span></legend>
+          <div class="space-y-2">
+            <label class="flex items-start gap-2 text-sm text-gray-700 dark:text-gray-300 cursor-pointer">
+              <input
+                id="req-hardware-default"
+                v-model="form.hardware_choice"
+                type="radio"
+                name="req-hardware"
+                value="default"
+                :disabled="submitting"
+                class="mt-0.5 text-primary-600 border-gray-300 dark:border-gray-600"
+              />
+              <span>All supported accelerators (default)</span>
+            </label>
+            <label class="flex items-start gap-2 text-sm text-gray-700 dark:text-gray-300 cursor-pointer">
+              <input
+                id="req-hardware-custom"
+                v-model="form.hardware_choice"
+                type="radio"
+                name="req-hardware"
+                value="custom"
+                :disabled="submitting"
+                class="mt-0.5 text-primary-600 border-gray-300 dark:border-gray-600"
+              />
+              <span>Specific hardware</span>
+            </label>
+          </div>
+          <div v-if="form.hardware_choice === 'custom'" class="mt-3 pl-6">
+            <label for="req-other-hardware" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+              Hardware details <span class="text-red-500" aria-hidden="true">*</span>
+            </label>
+            <textarea
+              id="req-other-hardware"
+              v-model="form.other_hardware"
+              rows="2"
+              placeholder="e.g. 2x H100 nodes, AMD MI300X"
+              aria-required="true"
+              :aria-invalid="!!fieldErrors.other_hardware"
+              :aria-describedby="fieldErrors.other_hardware ? 'req-other-hardware-error' : null"
+              class="w-full px-3 py-2 border rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 text-sm focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+              :class="fieldErrors.other_hardware ? 'border-red-400 dark:border-red-600' : 'border-gray-300 dark:border-gray-600'"
+            ></textarea>
+          </div>
+          <p v-if="fieldErrors.other_hardware" id="req-other-hardware-error" class="mt-2 text-xs text-red-600 dark:text-red-400">{{ fieldErrors.other_hardware }}</p>
         </fieldset>
 
         <!-- Jira + justification -->
@@ -696,32 +703,54 @@ function jiraHref(ticket) {
         </div>
 
         <!-- Testing -->
-        <fieldset class="border border-gray-200 dark:border-gray-700 rounded-lg p-4">
-          <legend class="px-2 text-sm font-medium text-gray-700 dark:text-gray-300">Testing requirements <span class="text-red-500" aria-hidden="true">*</span> <span class="text-xs font-normal text-gray-400">(details or acknowledgement)</span></legend>
-          <label for="req-testing-requirements" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-            Testing beyond the defaults (optional)
-          </label>
-          <textarea
-            id="req-testing-requirements"
-            v-model="form.testing_requirements"
-            rows="2"
-            placeholder="e.g. Run the full wheel test suite on GPU CI"
-            :disabled="form.testing_ack"
-            :aria-invalid="!!fieldErrors.testing_requirements"
-            :aria-describedby="fieldErrors.testing_requirements ? 'req-testing-requirements-error' : null"
-            class="w-full px-3 py-2 border rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 text-sm focus:ring-2 focus:ring-primary-500 focus:border-primary-500 disabled:opacity-50 disabled:cursor-not-allowed"
-            :class="fieldErrors.testing_requirements ? 'border-red-400 dark:border-red-600' : 'border-gray-300 dark:border-gray-600'"
-          ></textarea>
-          <label class="mt-2 inline-flex items-start gap-2 text-sm text-gray-700 dark:text-gray-300 cursor-pointer">
-            <input
-              id="req-testing-ack"
-              v-model="form.testing_ack"
-              type="checkbox"
-              class="mt-0.5 text-primary-600 border-gray-300 dark:border-gray-600 rounded"
-            />
-            <span>I accept the default probe/import tests (no additional testing requirements)</span>
-          </label>
-          <p v-if="fieldErrors.testing_requirements" id="req-testing-requirements-error" class="mt-1 text-xs text-red-600 dark:text-red-400">{{ fieldErrors.testing_requirements }}</p>
+        <fieldset
+          class="border border-gray-200 dark:border-gray-700 rounded-lg p-4"
+          :aria-describedby="fieldErrors.testing_requirements ? 'req-testing-requirements-error' : null"
+        >
+          <legend class="px-2 text-sm font-medium text-gray-700 dark:text-gray-300">Testing requirements <span class="text-red-500" aria-hidden="true">*</span> <span class="text-xs font-normal text-gray-400">(choose one)</span></legend>
+          <div class="space-y-2">
+            <label class="flex items-start gap-2 text-sm text-gray-700 dark:text-gray-300 cursor-pointer">
+              <input
+                id="req-testing-default"
+                v-model="form.testing_choice"
+                type="radio"
+                name="req-testing"
+                value="default"
+                :disabled="submitting"
+                class="mt-0.5 text-primary-600 border-gray-300 dark:border-gray-600"
+              />
+              <span>Default probe and import tests</span>
+            </label>
+            <label class="flex items-start gap-2 text-sm text-gray-700 dark:text-gray-300 cursor-pointer">
+              <input
+                id="req-testing-custom"
+                v-model="form.testing_choice"
+                type="radio"
+                name="req-testing"
+                value="custom"
+                :disabled="submitting"
+                class="mt-0.5 text-primary-600 border-gray-300 dark:border-gray-600"
+              />
+              <span>Additional testing</span>
+            </label>
+          </div>
+          <div v-if="form.testing_choice === 'custom'" class="mt-3 pl-6">
+            <label for="req-testing-requirements" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+              Testing details <span class="text-red-500" aria-hidden="true">*</span>
+            </label>
+            <textarea
+              id="req-testing-requirements"
+              v-model="form.testing_requirements"
+              rows="2"
+              placeholder="e.g. Run the full wheel test suite on GPU CI"
+              aria-required="true"
+              :aria-invalid="!!fieldErrors.testing_requirements"
+              :aria-describedby="fieldErrors.testing_requirements ? 'req-testing-requirements-error' : null"
+              class="w-full px-3 py-2 border rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 text-sm focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+              :class="fieldErrors.testing_requirements ? 'border-red-400 dark:border-red-600' : 'border-gray-300 dark:border-gray-600'"
+            ></textarea>
+          </div>
+          <p v-if="fieldErrors.testing_requirements" id="req-testing-requirements-error" class="mt-2 text-xs text-red-600 dark:text-red-400">{{ fieldErrors.testing_requirements }}</p>
         </fieldset>
 
         <!-- Actions -->

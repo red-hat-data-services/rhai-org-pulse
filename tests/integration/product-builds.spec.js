@@ -53,31 +53,30 @@ test.describe('Product Builds Module @product-builds', () => {
 
     expect(page.url()).toMatch(/product-builds\/package-request/)
     await expect(page.getByRole('heading', { name: 'AIPCC-E Requests', level: 1 })).toBeVisible()
-    for (const card of ['Python Package Requests', 'RPM Requests', 'Channel Requests']) {
+    for (const card of ['Python Package Requests', 'Channel Requests']) {
       await expect(page.getByRole('heading', { name: card, level: 2 })).toBeVisible()
     }
-    await expect(page.getByTestId('request-card-rpm').getByTestId('card-turnaround')).toHaveText('Triaged by AIPCC')
+    await expect(page.getByRole('heading', { name: 'RPM Requests', level: 2 })).toHaveCount(0)
     await expect(page.getByTestId('request-card-channel').getByTestId('card-turnaround')).toHaveText('Triaged by AIPCC')
     await expect(page.locator('#requests-help')).toContainText('#forum-aipcc')
+    const teamsResponse = page.waitForResponse(response => response.url().includes('/package-requests/teams?project=RHAI'))
     await page.getByTestId('request-card-python').click()
     expect(page.url()).toMatch(/package-request\?tab=python/)
     await expect(page.getByRole('heading', { name: 'Python Package Requests', level: 2 })).toBeVisible()
     const team = page.getByRole('combobox', { name: 'Team', exact: true })
     await expect(team).toBeVisible()
     await expect(team).toBeEnabled()
-    for (const project of ['RHAI', 'RHAISTRAT']) {
-      const responsePromise = page.waitForResponse(response => response.url().includes(`/package-requests/teams?project=${project}`))
-      await page.locator('#req-team-project').selectOption(project)
-      const response = await responsePromise
-      expect(response.ok()).toBe(true)
-      const options = await response.json()
-      expect(options.length).toBeGreaterThan(0)
-      for (const option of options) {
-        expect(option).toEqual({ value: expect.any(String), label: expect.any(String) })
-      }
-      await team.selectOption(options[0].value)
-      await expect(team).toHaveValue(options[0].value)
+    // Python package requests are always filed in RHAI, so there is no project picker.
+    await expect(page.locator('#req-team-project')).toHaveCount(0)
+    const response = await teamsResponse
+    expect(response.ok()).toBe(true)
+    const options = await response.json()
+    expect(options.length).toBeGreaterThan(0)
+    for (const option of options) {
+      expect(option).toEqual({ value: expect.any(String), label: expect.any(String) })
     }
+    await team.selectOption(options[0].value)
+    await expect(team).toHaveValue(options[0].value)
     await expect(page.locator('#req-package-name')).toBeVisible()
     await expect(page.getByRole('button', { name: 'Submit request' })).toBeVisible()
 
@@ -107,7 +106,6 @@ test.describe('Product Builds Module @product-builds', () => {
       }
     })
     await page.goto('/#/product-builds/package-request?tab=python')
-    await page.locator('#req-team-project').selectOption('RHAI')
     const team = page.locator('#req-team')
     await expect(team).toBeEnabled()
     const option = await team.locator('option:not([disabled])').first().getAttribute('value')
@@ -118,8 +116,8 @@ test.describe('Product Builds Module @product-builds', () => {
     const date = new Date()
     date.setUTCDate(date.getUTCDate() + 30)
     await page.locator('#req-delivery-timeline').fill(date.toISOString().slice(0, 10))
-    await page.locator('#req-hardware-ack').check()
-    await page.locator('#req-testing-ack').check()
+    await page.locator('#req-hardware-default').check()
+    await page.locator('#req-testing-default').check()
     await page.getByRole('button', { name: 'Submit request', exact: true }).click()
     await expect(page.getByText(/Failed to create Jira Epic/)).toBeVisible()
     await expect(team).toHaveValue(option)
@@ -139,53 +137,17 @@ test.describe('Product Builds Module @product-builds', () => {
     return date.toISOString().slice(0, 10)
   }
 
-  test('should file an RPM request for existing channels', async ({ page }) => {
-    // Only the submission response is simulated, so reruns do not hit the per-user cooldown.
-    const submissions = []
-    await page.route('**/api/modules/product-builds/rpm-requests', async route => {
-      submissions.push(route.request().postDataJSON())
-      await route.fulfill({ status: 201, json: { status: 'created', jira: { key: 'RHAI-901', url: 'https://redhat.atlassian.net/browse/RHAI-901' }, assignee: { assigned: true, email: 'epacific@redhat.com' } } })
-    })
+  test('should hide paused RPM requests and reject RPM submissions', async ({ page, request }) => {
     await page.goto('/#/product-builds/package-request?tab=rpm')
     await page.waitForLoadState('networkidle')
-    await expect(page.getByRole('heading', { name: 'RPM Requests', level: 2 })).toBeVisible()
-    await expect(page.getByTestId('request-tab-rpm')).toHaveAttribute('aria-selected', 'true')
+    await expect(page.getByTestId('request-card-python')).toBeVisible()
+    await expect(page.getByTestId('request-card-rpm')).toHaveCount(0)
+    await expect(page.getByTestId('request-tab-rpm')).toHaveCount(0)
+    await expect(page.locator('#rpm-name')).toHaveCount(0)
 
-    const channelInput = page.locator('#rpm-channels')
-    await channelInput.click()
-    const channelOptions = page.locator('#rpm-channels-listbox').getByRole('option')
-    await expect(channelOptions.first()).toBeVisible()
-    expect(await channelOptions.count()).toBeGreaterThan(0)
-    const channelName = await channelOptions.first().getAttribute('data-value')
-    const minDate = await page.locator('#rpm-delivery-timeline').getAttribute('min')
-    expect(minDate > new Date().toISOString().slice(0, 10)).toBe(true)
-    await expect(page.locator('#rpm-delivery-timeline-hint')).toContainText('Earliest available date')
-    await expect(page.locator('main')).not.toContainText('SLA')
-
-    const team = page.locator('#rpm-team')
-    await expect(team).toBeEnabled()
-    await team.selectOption(await team.locator('option:not([disabled])').first().getAttribute('value'))
-    await page.locator('#rpm-name').fill('gcc-toolset-14')
-    await page.locator('#rpm-source-url').fill('https://src.fedoraproject.org/rpms/gcc-toolset-14')
-    await channelInput.fill(channelName)
-    await channelOptions.and(page.locator(`[data-value="${channelName}"]`)).click()
-    await expect(page.getByTestId('channel-chip')).toContainText(channelName)
-    await page.locator('#rpm-jira-id').fill('RHAISTRAT-42')
-    await page.locator('#rpm-delivery-timeline').fill(triageDeliveryDate())
-    await page.locator('#rpm-justification').fill('Needed by the new base image')
-    await page.getByRole('button', { name: 'Submit RPM request' }).click()
-    await expect(page.getByText('RPM request submitted')).toBeVisible()
-    await expect(page.getByRole('link', { name: /RHAI-901/ })).toBeVisible()
-    expect(submissions).toHaveLength(1)
-    expect(submissions[0]).toMatchObject({
-      rpm_name: 'gcc-toolset-14',
-      source_url: 'https://src.fedoraproject.org/rpms/gcc-toolset-14',
-      channels: [channelName],
-      jira_id: 'RHAISTRAT-42'
-    })
-
-    const appErrors = page.errors.filter(e => !/status of (429|404|503)/.test(e.message))
-    expect(appErrors).toHaveLength(0)
+    const res = await request.post('/api/modules/product-builds/rpm-requests', { data: {} })
+    expect(res.status()).toBe(503)
+    expect((await res.json()).error).toContain('RPM requests are paused')
   })
 
   test('should show the channel disclaimer and file a channel request', async ({ page }) => {

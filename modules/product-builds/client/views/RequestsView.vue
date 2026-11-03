@@ -10,13 +10,14 @@ const nav = inject('moduleNav', null)
 const { user } = useAuth()
 
 // Every card follows the same template: description, prerequisites, turnaround.
-const REQUEST_TYPES = [
+// A type with `enabled: false` gets no card, tab or route.
+const ALL_REQUEST_TYPES = [
   {
     id: 'python',
     tab: 'Python Packages',
     label: 'Python Package Requests',
     cta: 'Request a Python package',
-    description: 'A Python package (wheel) your team needs in the AIPCC indexes. For system packages, use an RPM request.',
+    description: 'A Python package (wheel) your team needs in the AIPCC indexes.',
     prerequisites: [
       'Package name and where it comes from (PyPI, Git or another URL)',
       'Hardware and testing needs, or accept the defaults'
@@ -25,6 +26,9 @@ const REQUEST_TYPES = [
   },
   {
     id: 'rpm',
+    // Paused while AIPCC works through RPM blockers. Flip back to true together with
+    // RPM_REQUESTS_ENABLED in server/triage-requests.js to restore the form.
+    enabled: false,
     tab: 'RPMs',
     label: 'RPM Requests',
     cta: 'Request an RPM',
@@ -48,11 +52,13 @@ const REQUEST_TYPES = [
     turnaround: 'Triaged by AIPCC'
   }
 ]
-const FORMS = {
+const FORM_COMPONENTS = {
   python: PythonPackageRequestForm,
   rpm: RpmRequestForm,
   channel: ChannelRequestForm
 }
+const REQUEST_TYPES = ALL_REQUEST_TYPES.filter(type => type.enabled !== false)
+const FORMS = Object.fromEntries(REQUEST_TYPES.map(type => [type.id, FORM_COMPONENTS[type.id]]))
 
 const activeTab = computed(() => {
   const tab = nav && nav.params && nav.params.value ? nav.params.value.tab : null
@@ -71,7 +77,7 @@ function selectTab(tab) {
       <div>
         <h1 class="text-2xl font-bold text-gray-900 dark:text-white">AIPCC-E Requests</h1>
         <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">
-          Request Python packages, RPMs and new channels from AIPCC.
+          Request Python packages and new channels from AIPCC.
         </p>
       </div>
       <div

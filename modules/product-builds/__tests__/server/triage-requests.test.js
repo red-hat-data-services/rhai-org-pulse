@@ -4,6 +4,8 @@ import { readFileSync } from 'node:fs'
 const registerTriageRequestRoutes = require('../../server/triage-requests')
 const {
   TRIAGE_LEAD_BUSINESS_DAYS,
+  RPM_REQUESTS_ENABLED,
+  RPM_REQUESTS_PAUSED_MESSAGE,
   COMPONENT_NAME,
   DEFAULT_TRIAGE_ASSIGNEE_EMAIL,
   validateRpmRequest,
@@ -102,7 +104,8 @@ function register(deps = {}, secrets = {}) {
     resolveSecret: vi.fn(() => null),
     requireAuth: vi.fn(function (_req, _res, next) { next() })
   }
-  registerTriageRequestRoutes(router, context, { now: () => NOW, ...deps })
+  // RPM handlers stay covered while the form is paused; the paused route has its own test.
+  registerTriageRequestRoutes(router, context, { now: () => NOW, rpmRequestsEnabled: true, ...deps })
   return { router, context }
 }
 
@@ -123,6 +126,19 @@ describe('triage-requests', () => {
     _lastSubmission.clear()
     _pendingSubmissions.clear()
     delete process.env.DEMO_MODE
+  })
+
+  describe('paused RPM requests', () => {
+    it('are paused by default and answer 503 without touching Jira', async () => {
+      expect(RPM_REQUESTS_ENABLED).toBe(false)
+      const jira = makeJira()
+      const { router } = register({ jiraClient: jira, rpmRequestsEnabled: undefined })
+      const res = await call(router, '/rpm-requests', { body: rpmBody() })
+      expect(res._status).toBe(503)
+      expect(res._json).toEqual({ error: RPM_REQUESTS_PAUSED_MESSAGE })
+      expect(jira.jiraRequest).not.toHaveBeenCalled()
+      expect((await call(router, '/channel-requests', { body: channelBody() }))._status).toBe(201)
+    })
   })
 
   describe('route registration and OpenAPI', () => {
