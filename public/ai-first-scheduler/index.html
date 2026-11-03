@@ -272,18 +272,6 @@ tr:hover td{background:#f8fafc}
 </div>
 
 <div id="sched-strip" class="sched-strip"></div>
-<div style="background:#fffbeb;border-bottom:1px solid #fde68a;padding:5px 24px;display:flex;align-items:center;gap:16px;font-size:11px;flex-wrap:wrap">
-  <span style="color:#92400e;font-weight:700;letter-spacing:.03em;white-space:nowrap">📰 Planning News</span>
-  <span id="planning-banner-text" contenteditable="true" spellcheck="false"
-    title="Click to edit — changes save to your browser."
-    style="color:#78350f;outline:none;border-bottom:1px dashed transparent;cursor:text"
-    onmouseenter="this.style.borderBottomColor='#d97706'"
-    onmouseleave="this.style.borderBottomColor='transparent'"
-    oninput="saveBannerText()"
-    onkeydown="if(event.key==='Enter'){event.preventDefault();this.blur()}"
-  >3.7 Planning — We will have one EA release. <strong style="color:#b45309">RHAI Planning Freeze Nov 11th</strong>. Automated planning will be fully embedded in the planning process, including a soft planning freeze milestone.</span>
-  <span style="margin-left:auto;color:#92400e;font-style:italic;white-space:nowrap">3.7 EA2: Jan 20 · GA: Feb 17</span>
-</div>
 
 <div class="tabs" style="display:none">
   <div class="tab" onclick="showTab('arch')">Architecture</div>
@@ -408,8 +396,7 @@ tr:hover td{background:#f8fafc}
       <span style="color:#ccc">·</span>
       <span id="st-in" style="color:#1a7f37;font-weight:600;font-size:11px">— in-plan</span>
       <span id="st-no" style="display:none"></span>
-      <button class="btn btn-red" onclick="fetchOutcomes(); run()" style="font-size:11px;padding:3px 10px" title="Refresh — re-scores features and outcomes with current data">↻ Refresh</button>
-      <button class="btn" onclick="doExport()" style="font-size:11px;padding:3px 10px">Export</button>
+      <button class="btn btn-red" onclick="doLiveRefresh()" style="font-size:11px;padding:3px 10px" title="Refresh — pulls live Jira features/outcomes and the latest Product Pages release dates">↻ Refresh</button>
       <div style="position:relative;display:inline-block">
         <button id="hamburger-btn" onclick="toggleHamburger(event)" title="Architecture & Data Appendix" style="font-size:16px;padding:4px 11px;background:#f8fafc;border:1px solid #cbd5e1;border-radius:6px;cursor:pointer;color:#475569;line-height:1;font-weight:700;letter-spacing:1px">☰</button>
         <div id="hamburger-menu" style="display:none;position:absolute;right:0;top:calc(100% + 4px);background:#fff;border:1px solid #e2e8f0;border-radius:8px;box-shadow:0 4px 16px rgba(0,0,0,.1);min-width:170px;z-index:300;padding:4px 0">
@@ -2946,16 +2933,6 @@ let dataSource='demo';
 // been refreshed, which is a normal state and must not blank the Executive tab.
 let cveReserveData=null;
 
-function saveBannerText(){
-  const el = document.getElementById('planning-banner-text');
-  if(el) localStorage.setItem('planningBannerText', el.innerHTML);
-}
-function restoreBannerText(){
-  const saved = localStorage.getItem('planningBannerText');
-  const el = document.getElementById('planning-banner-text');
-  if(saved && el) el.innerHTML = saved;
-}
-
 document.addEventListener('click',function(e){
   const m=document.getElementById('hamburger-menu');
   const btn=document.getElementById('hamburger-btn');
@@ -3046,7 +3023,6 @@ window.addEventListener('message', async function(e){
 });
 
 window.onload=()=>{
-  restoreBannerText();
   // Load SAMPLE data for testing/standalone mode
   // When Org Pulse sends postMessage with 'ai-planner-data', it will override this
   allData = parseCSV(SAMPLE).map(r => ({...r}));
@@ -4289,6 +4265,23 @@ async function fetchOutcomes() {
   }
 }
 
+// Live refresh: forces a Product Pages → registry sync (same discovery the
+// Manage > Releases "Discover" button runs) so the milestone bar picks up
+// the latest dates immediately, then re-pulls live Jira features/outcomes.
+// Discover is admin-scoped (requirePlanningManager) — non-admin users just
+// skip that step and fall back to whatever registry data is already cached.
+async function doLiveRefresh(){
+  try {
+    await fetch('/api/modules/releases/registry/discover', { method: 'POST' });
+  } catch (err) {
+    console.warn('Registry discover skipped (non-blocking):', err);
+  }
+  await renderScheduleStrip();
+  await fetchOutcomes();
+  run();
+  updateRefreshTimestamp();
+}
+
 function mapFeaturesToOutcomes() {
   if (!outcomeData || !outcomeData.outcomes || !Array.isArray(outcomeData.outcomes)) return;
 
@@ -4476,17 +4469,6 @@ function renderExecView(){
   </div>`;
 }
 
-function doExport(){
-  const hdr=['Rank','Key','Title','Score','FPDoR','Target Versions','Fix Version','Components','Team','Priority','Confidence','Placement','Confidence%','Reason'];
-  const lines=[hdr.join(','),...allData.map(r=>[
-    r['Rank'],esc(r['Key']),`"${(esc(r['Title'])||'').replace(/"/g,'""')}"`,r['Score'],r['FPDoR'],
-    `"${esc(r['Target Versions'])||''}"`,`"${esc(r['Fix Version'])||''}"`,`"${esc(r['Components'])||''}"`,
-    `"${esc(r['Team'])||''}"`,esc(r['Priority']),r['Confidence'],r._place,r._conf+'%',`"${r._reason}"`
-  ].join(','))];
-  const a=Object.assign(document.createElement('a'),{href:URL.createObjectURL(new Blob([lines.join('\n')],{type:'text/csv'})),download:'release-plan-output.csv'});
-  a.click();
-}
-
 function toggleHamburger(e){
   if(e) e.stopPropagation();
   const m=document.getElementById('hamburger-menu');
@@ -4521,45 +4503,54 @@ function toggleSummary(){
 }
 
 // ── FETCH TIMELINE MILESTONES FROM RELEASES REGISTRY ─────────────────────────────────
-async function fetchTimelineMilestones(){
+// Product Pages publishes one registry row per phase (rhoai-3.7, rhoai-3.7.ea2, ...).
+// Each row's own due date lands in that row's `milestones.ga` field — there is no
+// shared "eaRelease" field on the GA row. Fetching only "rhoai-3.7" can never surface
+// the EA date; the EA-phase row has to be fetched separately. Each fetch is also
+// independent (not Promise.all-or-nothing) so one not-yet-discovered row doesn't
+// blank out dates that *are* available from the others.
+async function fetchRegistryRelease(id){
   try {
-    const [res36, res37] = await Promise.all([
-      fetch('/api/modules/releases/registry/rhoai-3.6',{signal:AbortSignal.timeout(5000)}),
-      fetch('/api/modules/releases/registry/rhoai-3.7',{signal:AbortSignal.timeout(5000)})
-    ]);
-
-    // Handle 404 gracefully — in demo mode or when registry not yet synced, use fallback
-    if(!res36.ok || !res37.ok) {
-      console.log('[Timeline] Registry endpoints not available, using fallback dates');
-      return null;
-    }
-
-    const rel36=await res36.json();
-    const rel37=await res37.json();
-
-    const milestones=[];
-
-    // Extract milestones from registry for 3.6
-    if(rel36.milestones && typeof rel36.milestones==='object'){
-      const m36=rel36.milestones;
-      if(m36.ga||m36.gaRelease) milestones.push({lbl:'3.6 GA Release',date:(m36.ga&&(typeof m36.ga==='string'?m36.ga:m36.ga.date))||(m36.gaRelease&&(typeof m36.gaRelease==='string'?m36.gaRelease:m36.gaRelease.date)),badge:'Informational launch',badgeColor:'#2e7d32'});
-      if(m36.codeFreeze) milestones.push({lbl:'RHOAI 3.6 GA Code Freeze',date:typeof m36.codeFreeze==='string'?m36.codeFreeze:m36.codeFreeze.date});
-    }
-
-    // Extract milestones from registry for 3.7
-    if(rel37.milestones && typeof rel37.milestones==='object'){
-      const m37=rel37.milestones;
-      if(m37.planning) milestones.push({lbl:'3.7 Planning',date:typeof m37.planning==='string'?m37.planning:m37.planning.date,sep:true});
-      if(m37.planningFreeze) milestones.push({lbl:'RHAI Planning Freeze',date:typeof m37.planningFreeze==='string'?m37.planningFreeze:m37.planningFreeze.date,badge:'Mandatory from here',badgeColor:'#c62828'});
-      if(m37.eaRelease) milestones.push({lbl:'3.7 EA Release',date:typeof m37.eaRelease==='string'?m37.eaRelease:m37.eaRelease.date});
-      if(m37.ga||m37.gaRelease) milestones.push({lbl:'3.7 GA Release',date:(m37.ga&&(typeof m37.ga==='string'?m37.ga:m37.ga.date))||(m37.gaRelease&&(typeof m37.gaRelease==='string'?m37.gaRelease:m37.gaRelease.date))});
-    }
-
-    return milestones.length>0?milestones:null;
+    const res = await fetch('/api/modules/releases/registry/' + id, {signal:AbortSignal.timeout(5000)});
+    if(!res.ok) return null;
+    return await res.json();
   } catch(err) {
-    console.warn('Failed to fetch timeline from releases registry, using fallback dates:', err.message);
+    console.warn('[Timeline] Registry fetch failed for ' + id + ':', err.message);
     return null;
   }
+}
+async function fetchTimelineMilestones(){
+  const [rel36, rel37, rel37ea2] = await Promise.all([
+    fetchRegistryRelease('rhoai-3.6'),
+    fetchRegistryRelease('rhoai-3.7'),
+    fetchRegistryRelease('rhoai-3.7.ea2')
+  ]);
+
+  const milestones=[];
+
+  // Extract milestones from registry for 3.6
+  if(rel36 && rel36.milestones && typeof rel36.milestones==='object'){
+    const m36=rel36.milestones;
+    if(m36.ga||m36.gaRelease) milestones.push({lbl:'3.6 GA Release',date:(m36.ga&&(typeof m36.ga==='string'?m36.ga:m36.ga.date))||(m36.gaRelease&&(typeof m36.gaRelease==='string'?m36.gaRelease:m36.gaRelease.date)),badge:'Informational launch',badgeColor:'#2e7d32'});
+    if(m36.codeFreeze) milestones.push({lbl:'RHOAI 3.6 GA Code Freeze',date:typeof m36.codeFreeze==='string'?m36.codeFreeze:m36.codeFreeze.date});
+  }
+
+  // Extract milestones from registry for 3.7 GA row
+  if(rel37 && rel37.milestones && typeof rel37.milestones==='object'){
+    const m37=rel37.milestones;
+    if(m37.planningFreeze) milestones.push({lbl:'RHAI Planning Freeze',date:typeof m37.planningFreeze==='string'?m37.planningFreeze:m37.planningFreeze.date,badge:'Mandatory from here',badgeColor:'#c62828'});
+    if(m37.ga||m37.gaRelease) milestones.push({lbl:'3.7 GA Release',date:(m37.ga&&(typeof m37.ga==='string'?m37.ga:m37.ga.date))||(m37.gaRelease&&(typeof m37.gaRelease==='string'?m37.gaRelease:m37.gaRelease.date))});
+  }
+
+  // Extract EA2 milestones from its own Product Pages row (rhoai-3.7.ea2) —
+  // this row's codeFreeze/ga are the real "EA Release Prep" / "EA Release" dates.
+  if(rel37ea2 && rel37ea2.milestones && typeof rel37ea2.milestones==='object'){
+    const mea2=rel37ea2.milestones;
+    if(mea2.codeFreeze) milestones.push({lbl:'3.7 EA Release Prep',date:typeof mea2.codeFreeze==='string'?mea2.codeFreeze:mea2.codeFreeze.date});
+    if(mea2.ga) milestones.push({lbl:'3.7 EA Release',date:typeof mea2.ga==='string'?mea2.ga:mea2.ga.date});
+  }
+
+  return milestones.length>0?milestones:null;
 }
 
 // ── SCHEDULE TIMELINE STRIP ───────────────────────────────────────────────────────
