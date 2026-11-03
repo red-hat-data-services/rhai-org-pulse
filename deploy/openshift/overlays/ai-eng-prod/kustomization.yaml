@@ -23,6 +23,6 @@ patches:
 
 images:
 - name: quay.io/org-pulse/team-tracker-backend
-  newTag: 4e8874d2395989dfa68ba33364a4ef93705365ab
+  newTag: d2fb50e877a59e01db4ed333887962dd0e8e047e
 - name: quay.io/org-pulse/team-tracker-frontend
-  newTag: 4e8874d2395989dfa68ba33364a4ef93705365ab
+  newTag: d2fb50e877a59e01db4ed333887962dd0e8e047e
