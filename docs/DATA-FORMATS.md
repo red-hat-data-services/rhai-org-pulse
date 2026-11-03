@@ -991,17 +991,21 @@ The CVE sustaining snapshot may include `slaCompliance` for quarterly SLA and
 possibly-closable counts, and `actionReportRecords` for the component-scoped CVE
 Action Report. Each open issue projection includes a `possiblyClosable` flag
 used to highlight matching tickets in drill-down lists. Newly aggregated snapshots
-set top-level `upstreamComponentDataVersion` to `1`; each `openIssueRecords` item
-includes Jira `labels` as a string array and `upstreamComponent` as a trimmed
-string or `null`. The component comes from Jira `customfield_10632`; absent, blank,
-or non-string values project as `null`, and non-array labels project as `[]`. The
-fixture shows synthetic matching component names across release versions and
-ecosystems. Older cached snapshots without the version marker remain legacy data:
-the API does not invent these fields, and a refresh is required to load them.
+set top-level `upstreamComponentDataVersion` to `2`; each `openIssueRecords` item
+includes Jira `labels` as a string array, `upstreamComponent` as a trimmed string
+or `null`, and `cvss` as a normalized one-decimal score string or `null`. The
+component comes from Jira `customfield_10632`; absent, blank, or non-string values
+project as `null`, and non-array labels project as `[]`. CVSS comes from Jira
+`customfield_10859`; missing or malformed scores project as `null`. The fixture
+shows synthetic matching component names across release versions and ecosystems.
+Older cached snapshots with version `1` include the upstream component projection
+but not CVSS: the report continues to show all rows by default and disables its
+severity filter until refresh. Snapshots without the version marker still lack
+upstream component metadata and require refresh before the report can display them.
 
 ```json
 {
-  "upstreamComponentDataVersion": 1,
+  "upstreamComponentDataVersion": 2,
   "slaCompliance": {
     "possiblyClosableCount": 5,
     "quarters": [
@@ -1067,7 +1071,8 @@ the API does not invent these fields, and a refresh is required to load them.
       "duedate": "2026-06-01",
       "possiblyClosable": false,
       "labels": ["ecosystem:pypi"],
-      "upstreamComponent": "fickling"
+      "upstreamComponent": "fickling",
+      "cvss": "9.8"
     },
     {
       "key": "RHAIENG-1002",
@@ -1080,7 +1085,8 @@ the API does not invent these fields, and a refresh is required to load them.
       "duedate": "2026-09-15",
       "possiblyClosable": false,
       "labels": ["ecosystem:pypi"],
-      "upstreamComponent": "fickling"
+      "upstreamComponent": "fickling",
+      "cvss": "7.5"
     },
     {
       "key": "RHAIENG-1003",
@@ -1093,7 +1099,8 @@ the API does not invent these fields, and a refresh is required to load them.
       "duedate": "2026-09-29",
       "possiblyClosable": false,
       "labels": ["ecosystem:npm"],
-      "upstreamComponent": "fickling"
+      "upstreamComponent": "fickling",
+      "cvss": "5.0"
     }
   ]
 }
@@ -1155,7 +1162,12 @@ preserved as an array because an issue is counted once in each assigned
 component's report.
 
 The CVE Upstream Components report ignores tickets without an upstream component
-in both the table and donut. It trims names, removes a leading `golang; `
+in both the table and donut. Its CVSS severity selector is a minimum threshold:
+Critical includes scores 9.0+, High 7.0+, Medium 4.0+, and Low 0.1+; higher
+severities remain included when a lower threshold is selected. All severities is
+the default and includes records with missing CVSS. Selecting a threshold excludes
+missing/malformed scores and filters both the donut and component counts. It trims
+names, removes a leading `golang; `
 (case-insensitively), and groups by the remaining component name ignoring case
 across all release versions. Displayed component names are lowercase. Each
 component appears once with its total unique open-ticket count and the sorted
@@ -1168,7 +1180,8 @@ The donut counts each included ticket once using its component group's inferred
 ecosystems: its sole known ecosystem, **Unknown**, or **Multiple ecosystems**
 when the group has more than one known ecosystem. Each slice has a unique color,
 shared by its legend swatch. Ecosystem selection filters component rows by
-membership without reducing their ticket counts or changing the donut.
+membership without reducing their severity-filtered ticket counts or changing the
+donut.
 Named-component Jira links use `cf[10632] ~` phrase text search, not exact field
 equality, so similarly named components may match. Links intentionally do not
 restrict ecosystem labels: they include the group's unlabeled and multi-ecosystem

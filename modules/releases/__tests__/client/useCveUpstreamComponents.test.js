@@ -11,19 +11,21 @@ function issue(key, labels, upstreamComponent, overrides = {}) {
     status: 'New',
     labels,
     upstreamComponent,
+    cvss: null,
     versions: ['rhoai-2.17'],
     ...overrides
   }
 }
 
-function report(records, selectedEcosystem = '') {
+function report(records, selectedSeverity = '', selectedEcosystem = '') {
   const data = ref({
-    upstreamComponentDataVersion: 1,
+    upstreamComponentDataVersion: 2,
     jiraSearchBase: JIRA_SEARCH_BASE,
     openIssueRecords: records
   })
+  const severity = ref(selectedSeverity)
   const selected = ref(selectedEcosystem)
-  return { model: useCveUpstreamComponents(data, selected), selected, data }
+  return { model: useCveUpstreamComponents(data, severity, selected), severity, selected, data }
 }
 
 describe('useCveUpstreamComponents', () => {
@@ -64,26 +66,26 @@ describe('useCveUpstreamComponents', () => {
     const legacyPayload = {
       openIssueRecords: [issue('RHAI-OLD', [], 'old-package')]
     }
-    const legacy = useCveUpstreamComponents(ref(legacyPayload), ref(''))
+    const legacy = useCveUpstreamComponents(ref(legacyPayload), ref(''), ref(''))
 
     expect(legacy.metadataReady.value).toBe(false)
     expect(legacy.totalOpen.value).toBe(0)
     expect(legacy.ecosystemBreakdown.value).toEqual([])
     expect(legacy.componentRows.value).toEqual([])
-    for (const version of [0, 2]) {
+    for (const version of [0, 3]) {
       const unsupported = useCveUpstreamComponents(ref({
         ...legacyPayload,
         upstreamComponentDataVersion: version
-      }), ref(''))
+      }), ref(''), ref(''))
       expect(unsupported.metadataReady.value).toBe(false)
       expect(unsupported.componentRows.value).toEqual([])
     }
 
     const empty = useCveUpstreamComponents(ref({
-      upstreamComponentDataVersion: 1,
+      upstreamComponentDataVersion: 2,
       jiraSearchBase: JIRA_SEARCH_BASE,
       openIssueRecords: []
-    }), ref(''))
+    }), ref(''), ref(''))
 
     expect(empty.metadataReady.value).toBe(true)
     expect(empty.totalOpen.value).toBe(0)
@@ -93,15 +95,64 @@ describe('useCveUpstreamComponents', () => {
     expect(empty.multipleEcosystemCount.value).toBe(0)
   })
 
-  it('uses the current Jira host when a schema-v1 payload omits its search base', () => {
+  it('keeps version-1 upstream data visible while marking CVSS filtering unavailable', () => {
+    const model = useCveUpstreamComponents(ref({
+      upstreamComponentDataVersion: 1,
+      jiraSearchBase: JIRA_SEARCH_BASE,
+      openIssueRecords: [issue('RHAI-V1', ['ecosystem:pypi'], 'legacy-package')]
+    }), ref(''), ref(''))
+
+    expect(model.metadataReady.value).toBe(true)
+    expect(model.cvssReady.value).toBe(false)
+    expect(model.totalOpen.value).toBe(1)
+    expect(model.componentRows.value.map(row => row.component)).toEqual(['legacy-package'])
+  })
+
+  it('uses the current Jira host when a version-1 payload omits its search base', () => {
     const model = useCveUpstreamComponents(ref({
       upstreamComponentDataVersion: 1,
       openIssueRecords: [issue('RHAI-FALLBACK', ['ecosystem:pypi'], 'fickling')]
-    }), ref(''))
+    }), ref(''), ref(''))
 
     expect(model.componentRows.value[0].jiraUrl).toMatch(
       /^https:\/\/redhat\.atlassian\.net\/issues\/\?jql=/
     )
+  })
+
+  it('uses the selected CVSS severity as a minimum threshold for the chart and component rows', () => {
+    const { model, severity } = report([
+      issue('RHAI-CRITICAL', ['ecosystem:pypi'], 'critical-package', { cvss: '9.8' }),
+      issue('RHAI-HIGH', ['ecosystem:npm'], 'high-package', { cvss: '7.0' }),
+      issue('RHAI-MEDIUM', ['ecosystem:golang'], 'medium-package', { cvss: '4.0' }),
+      issue('RHAI-LOW', ['ecosystem:rpm'], 'low-package', { cvss: '0.1' }),
+      issue('RHAI-NONE', ['ecosystem:pypi'], 'none-package', { cvss: '0.0' }),
+      issue('RHAI-MISSING', ['ecosystem:pypi'], 'missing-package'),
+      issue('RHAI-INVALID', ['ecosystem:pypi'], 'invalid-package', { cvss: 'not-a-score' })
+    ])
+
+    expect(severity.value).toBe('')
+    expect(model.totalOpen.value).toBe(7)
+    expect(model.componentRows.value.map(row => row.component)).toHaveLength(7)
+
+    severity.value = '7.0'
+    expect(model.totalOpen.value).toBe(2)
+    expect(model.ecosystemBreakdown.value).toEqual([
+      { ecosystem: 'npm', count: 1, pct: 50 },
+      { ecosystem: 'pypi', count: 1, pct: 50 }
+    ])
+    expect(model.componentRows.value.map(row => row.component)).toEqual(['critical-package', 'high-package'])
+
+    severity.value = '4.0'
+    expect(model.totalOpen.value).toBe(3)
+    expect(model.componentRows.value.map(row => row.component)).toEqual([
+      'critical-package', 'high-package', 'medium-package'
+    ])
+
+    severity.value = '0.1'
+    expect(model.totalOpen.value).toBe(4)
+    expect(model.componentRows.value.map(row => row.component)).toEqual([
+      'critical-package', 'high-package', 'low-package', 'medium-package'
+    ])
   })
 
   it('counts unique tickets once per normalized component and derives multi-ecosystem slices by group', () => {
