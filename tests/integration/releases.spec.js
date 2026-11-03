@@ -3905,8 +3905,7 @@ test.describe('Releases AI Planner tab @releases', () => {
 
     const aiPlannerTab = page.locator('button', { hasText: 'AI Planner' });
     await expect(aiPlannerTab).toHaveClass(/border-primary-500/);
-    await expect(page.getByRole('heading', { name: 'Under Construction' })).toBeVisible();
-    await expect(page.getByText('validate outcomes and feature details before making delivery decisions.')).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Under Construction' })).toHaveCount(0);
     const plannerFrame = page.frameLocator('iframe[title="AI-First Release Planner"]');
     await expect(plannerFrame.locator('.hdr-title')).toContainText('AI-First Release Planner');
 
