@@ -206,7 +206,13 @@ describe('Tech Debt Prioritization routes', function () {
     expect(new URLSearchParams(sfdcPath.split('?')[1]).get('jql')).toBe(registerTechDebtRoutes._test.scopedSfdcJql(['Model Serving']))
     expect(res.body.projects).toEqual(['RHAI', 'RHAIENG', 'RHOAIENG', 'INFERENG', 'AIPCC'])
     expect(res.body.bugScoring).toEqual({ modelVersion: 'bug-v1', mode: 'active', rankingApplied: true })
-    expect(res.body.queueScoring).toEqual({ mode: 'combined', rankingField: 'priorityScore' })
+    expect(res.body.queueScoring.mode).toBe('grouped')
+    expect(res.body.vulnerabilityPrioritization).toMatchObject({
+      modelVersion: 'company-sla-v1',
+      method: 'company-sla',
+      slaSource: 'rh-sla-dt',
+      policyCutover: '2026-12-01T00:00:00.000Z'
+    })
   })
 
   it('paginates Jira search results with SLA properties', async function () {
@@ -358,7 +364,7 @@ describe('Tech Debt Prioritization routes', function () {
     expect(res.body.counts).toMatchObject({ total: 4, inFlight: 2, backlog: 2 })
   })
 
-  it('orders Bugs and Vulnerabilities together by effective score with global ranks', function () {
+  it('orders Vulnerabilities by SLA before score-ranked Bugs and restarts ranks per group', function () {
     const ordered = registerTechDebtRoutes._test.orderPaneIssues([
       {
         key: 'RHAI-BUG-LOW',
@@ -370,13 +376,38 @@ describe('Tech Debt Prioritization routes', function () {
         scoreBreakdown: {}
       },
       {
-        key: 'RHAI-CVE-TOP',
+        key: 'RHAI-CVE-LATE',
         issueType: 'Vulnerability',
         priorityScore: 95,
-        slaDate: '2026-10-01',
+        slaDate: '2026-11-01',
         dueDate: '2026-10-05',
         createdAt: '2026-02-01',
         scoreBreakdown: { cvss: { value: 9.8 } }
+      },
+      {
+        key: 'RHAI-CVE-EARLY',
+        issueType: 'Vulnerability',
+        priorityScore: 1,
+        slaDate: '2026-10-01',
+        dueDate: '2026-12-01',
+        createdAt: '2026-03-01',
+        scoreBreakdown: { cvss: { value: 1 } }
+      },
+      {
+        key: 'RHAI-CVE-INVALID',
+        issueType: 'Vulnerability',
+        priorityScore: 100,
+        slaDate: 'not-a-date',
+        createdAt: '2026-01-01',
+        scoreBreakdown: { cvss: { value: 10 } }
+      },
+      {
+        key: 'RHAI-CVE-MISSING',
+        issueType: 'Vulnerability',
+        priorityScore: 100,
+        slaDate: null,
+        createdAt: '2026-02-01',
+        scoreBreakdown: { cvss: { value: 10 } }
       },
       {
         key: 'RHAI-BUG-HIGH',
@@ -389,9 +420,25 @@ describe('Tech Debt Prioritization routes', function () {
       }
     ], true)
 
-    expect(ordered.map(issue => issue.key)).toEqual(['RHAI-CVE-TOP', 'RHAI-BUG-HIGH', 'RHAI-BUG-LOW'])
-    expect(ordered.map(issue => issue.rank)).toEqual([1, 2, 3])
-    expect(ordered.every(issue => issue.rankGroup === 'combined')).toBe(true)
+    expect(ordered.map(issue => issue.key)).toEqual([
+      'RHAI-CVE-EARLY', 'RHAI-CVE-LATE', 'RHAI-CVE-INVALID', 'RHAI-CVE-MISSING', 'RHAI-BUG-HIGH', 'RHAI-BUG-LOW'
+    ])
+    expect(ordered.map(issue => issue.rank)).toEqual([1, 2, 3, 4, 1, 2])
+    expect(ordered.map(issue => issue.rankGroup)).toEqual([
+      'vulnerability-sla', 'vulnerability-sla', 'vulnerability-sla', 'vulnerability-sla', 'bug-score', 'bug-score'
+    ])
+  })
+
+  it('uses creation time and Jira key to break equal SLA dates, ignoring scores and due dates', function () {
+    const ordered = registerTechDebtRoutes._test.orderPaneIssues([
+      { key: 'RHAI-Z', issueType: 'Vulnerability', slaDate: '2026-11-30', createdAt: '2026-01-02', priorityScore: 999, dueDate: '2020-01-01' },
+      { key: 'RHAI-C', issueType: 'Vulnerability', slaDate: '2026-11-30', createdAt: '2026-01-01', priorityScore: 0, dueDate: '2030-01-01' },
+      { key: 'RHAI-B', issueType: 'Vulnerability', slaDate: '2026-11-30', createdAt: '2026-01-02', priorityScore: 0, dueDate: null },
+      { key: 'RHAI-A', issueType: 'Vulnerability', slaDate: '2026-11-30', createdAt: '2026-01-02', priorityScore: 0, dueDate: '2029-01-01' }
+    ], true)
+
+    expect(ordered.map(issue => issue.key)).toEqual(['RHAI-C', 'RHAI-A', 'RHAI-B', 'RHAI-Z'])
+    expect(ordered.map(issue => issue.rank)).toEqual([1, 2, 3, 4])
   })
 
   it('reports pane and issue-type counts', async function () {
@@ -406,7 +453,7 @@ describe('Tech Debt Prioritization routes', function () {
     expect(res.body.counts).toEqual({ total: 2, inFlight: 1, backlog: 1, bugs: 1, vulnerabilities: 1 })
   })
 
-  it('scores and ranks Bugs and Vulnerabilities together while keeping exceptions vulnerability-only', function () {
+  it('ranks CVEs by SLA in a separate group while keeping exceptions vulnerability-only', function () {
     const normalizeIssue = registerTechDebtRoutes._test.normalizeIssue
     const cohort = {
       fetchedAt: '2026-10-26T12:00:00.000Z',
@@ -448,16 +495,26 @@ describe('Tech Debt Prioritization routes', function () {
 
     expect(all.backlog.map(issue => issue.key)).toEqual([
       'RHAI-CVE-HIGH',
-      'RHAI-BUG-HIGH',
       'RHAI-CVE-LOW',
+      'RHAI-BUG-HIGH',
       'RHAI-BUG-LOW'
     ])
-    expect(all.backlog.map(issue => issue.rank)).toEqual([1, 2, 3, 4])
-    expect(all.backlog.every(issue => issue.rankGroup === 'combined')).toBe(true)
-    expect(all.backlog[0]).toMatchObject({ scoreStatus: 'scored', rawScore: 95, priorityScore: 95 })
-    expect(all.backlog[1]).toMatchObject({ scoreStatus: 'scored', priorityScore: 25, scoreModel: 'bug-v1' })
+    expect(all.backlog.map(issue => issue.rank)).toEqual([1, 2, 1, 2])
+    expect(all.backlog.map(issue => issue.rankGroup)).toEqual([
+      'vulnerability-sla', 'vulnerability-sla', 'bug-score', 'bug-score'
+    ])
+    expect(all.backlog[0]).toMatchObject({ scoreStatus: 'not-applicable', rawScore: null, priorityScore: null, priorityMethod: 'company-sla', slaState: 'breached' })
+    expect(all.backlog[1]).toMatchObject({ scoreStatus: 'not-applicable', priorityScore: null, slaState: 'upcoming' })
+    expect(all.backlog[2]).toMatchObject({ scoreStatus: 'scored', priorityScore: 25, scoreModel: 'bug-v1' })
     expect(all.bugScoring).toEqual({ modelVersion: 'bug-v1', mode: 'active', rankingApplied: true })
-    expect(all.queueScoring).toEqual({ mode: 'combined', rankingField: 'priorityScore' })
+    expect(all.vulnerabilityPrioritization).toMatchObject({ modelVersion: 'company-sla-v1', method: 'company-sla', slaSource: 'rh-sla-dt' })
+    expect(all.queueScoring).toEqual({
+      mode: 'grouped',
+      rankingGroups: [
+        { rankGroup: 'vulnerability-sla', issueType: 'Vulnerability', rankingField: 'slaDate' },
+        { rankGroup: 'bug-score', issueType: 'Bug', rankingField: 'priorityScore' }
+      ]
+    })
 
     const exceptions = registerTechDebtRoutes._test.buildCockpitResponse(
       cohort,

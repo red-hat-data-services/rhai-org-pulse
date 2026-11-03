@@ -52,29 +52,23 @@ function issue(key, overrides = {}) {
   }
 }
 
-function scoredVulnerability(key, overrides = {}) {
+function companySlaVulnerability(key, overrides = {}) {
   return issue(key, {
     issueType: 'Vulnerability',
     jiraPriority: 'Critical',
-    rawScore: 95,
-    priorityScore: 95,
-    scoreStatus: 'scored',
-    priorityBand: {
-      level: 'P0',
-      label: 'Immediate',
-      expectedAction: 'Begin within 1–2 business days'
-    },
-    scoreBreakdown: {
-      sla: { points: 35, state: 'Breached' },
-      cvss: { points: 30, state: 'Critical (9.0–10.0)' },
-      dueDate: { points: 15, state: 'Past due' },
-      reviewOutcome: { points: 10, state: 'Needs action' },
-      age: { points: 5, state: '13+ weeks' },
-      uncertainty: { points: 0, state: 'Complete tracking data', reasons: [] }
-    },
-    guardrail: { applied: false, minimumScore: null, reasons: [] },
+    createdAt: '2026-08-01T12:00:00.000Z',
+    slaDate: '2026-10-20',
+    rawScore: null,
+    priorityScore: null,
+    priorityBand: null,
+    scoreStatus: 'not-applicable',
+    priorityMethod: 'company-sla',
+    slaState: 'breached',
+    slaDaysUntil: -6,
+    policyVersion: 'current',
+    policyLabel: 'Current company policy',
     triageFlags: [{ code: 'sla-breached', label: 'SLA breached' }],
-    rankGroup: 'combined',
+    rankGroup: 'vulnerability-sla',
     ...overrides
   })
 }
@@ -121,7 +115,7 @@ function cockpitResponse(overrides = {}) {
     warning: null,
     counts: { total: 2, inFlight: 1, backlog: 1, bugs: 1, vulnerabilities: 1 },
     inFlight: [scoredBug('RHAI-10', { status: 'In Progress', jiraPriority: 'High' })],
-    backlog: [scoredVulnerability('RHAI-20', { rank: 1 })],
+    backlog: [companySlaVulnerability('RHAI-20', { rank: 1 })],
     ...overrides
   }
 }
@@ -198,16 +192,19 @@ describe('TechDebtPrioritizationView', function () {
     expect(wrapper.text()).toContain('Model Serving')
   })
 
-  it('opens the vulnerability scoring rubric and explains the complete score', async function () {
+  it('opens company CVE SLA guidelines and retains the Bug scoring rubric', async function () {
     mockSuccessfulApi()
     const wrapper = mount(TechDebtPrioritizationView, { attachTo: document.body })
     await flushPromises()
 
     await wrapper.get('[data-testid="vulnerability-rubric-open"]').trigger('click')
     const rubric = wrapper.get('[data-testid="vulnerability-scoring-rubric"]')
-    expect(rubric.text()).toContain('Priority score = SLA + CVSS + due date + review outcome + age + uncertainty')
-    expect(rubric.text()).toContain('Missing or invalid values receive zero category points')
-    expect(rubric.text()).toContain('P0 — Immediate')
+    expect(rubric.text()).toContain('CVE order follows Jira’s `rh-sla-dt` deadline—not a weighted score.')
+    expect(rubric.text()).toContain('KEV (Known Exploited Vulnerability)')
+    expect(rubric.text()).toContain('30 days')
+    expect(rubric.text()).toContain('7 days')
+    expect(rubric.text()).toContain('Dec 1, 2026 at 00:00 UTC')
+    expect(rubric.text()).toContain('Jira’s SLA date remains authoritative')
     await wrapper.get('[data-testid="bug-rubric-tab"]').trigger('click')
     expect(wrapper.get('[data-testid="bug-rubric-content"]').text()).toContain('Bug score = customer + delivery/security + detection + Jira severity + due date + age')
     expect(wrapper.get('[data-testid="bug-rubric-content"]').text()).toContain('Affecting customer (SFDC)')
@@ -349,13 +346,13 @@ describe('TechDebtPrioritizationView', function () {
     expect(apiRequest).toHaveBeenCalledWith('/modules/releases/tech-debt/issues?component=AI+Gateway&issueType=Bug')
   })
 
-  it('shows one mixed, globally ranked queue with an auditable CVE score breakdown', async function () {
+  it('shows distinct company-SLA CVE and score-ranked Bug groups with independent ranks', async function () {
     mockSuccessfulApi(cockpitResponse({
       counts: { total: 2, inFlight: 0, backlog: 2, bugs: 1, vulnerabilities: 1 },
       inFlight: [],
       backlog: [
-        scoredVulnerability('RHAI-CVE-1', { rank: 1 }),
-        scoredBug('RHAI-BUG-1', { rank: 2, rankGroup: 'combined' })
+        companySlaVulnerability('RHAI-CVE-1', { rank: 1 }),
+        scoredBug('RHAI-BUG-1', { rank: 1, rankGroup: 'bug-score' })
       ]
     }))
     const wrapper = mount(TechDebtPrioritizationView)
@@ -363,14 +360,45 @@ describe('TechDebtPrioritizationView', function () {
     await selectComponent(wrapper)
 
     const pane = wrapper.get('[data-testid="tech-debt-backlog-pane"]')
-    const cards = pane.findAll('[data-testid="tech-debt-backlog-card"]')
-    expect(cards.map(card => card.get('a').text())).toEqual(expect.arrayContaining(['RHAI-CVE-1 (opens in a new tab)', 'RHAI-BUG-1 (opens in a new tab)']))
-    expect(cards[0].get('[aria-label="Tech debt backlog rank 1"]').text()).toBe('1')
-    expect(cards[1].get('[aria-label="Tech debt backlog rank 2"]').text()).toBe('2')
-    expect(cards[0].get('[data-testid="tech-debt-score"]').text()).toBe('P0 · 95')
-    expect(cards[0].get('[data-testid="tech-debt-score-breakdown"]').text()).toContain('35 SLA + 30 CVSS + 15 Due + 10 Review + 5 Age + 0 Uncertainty = 95')
-    expect(cards[0].get('[data-testid="tech-debt-triage-flags"]').text()).toContain('SLA breached')
-    expect(wrapper.text()).toContain('Bugs and CVEs ranked together by effective priority score')
+    const cveCards = pane.get('[data-testid="tech-debt-vulnerability-backlog"]').findAll('[data-testid="tech-debt-backlog-card"]')
+    const bugCards = pane.get('[data-testid="tech-debt-bug-backlog"]').findAll('[data-testid="tech-debt-backlog-card"]')
+    const cockpitPanes = wrapper.get('[data-testid="tech-debt-cockpit-panes"]')
+    expect(cockpitPanes.classes()).toContain('xl:grid-cols-3')
+    expect(cockpitPanes.get('[aria-labelledby="backlog-heading"]').classes()).toContain('xl:col-span-2')
+    expect(wrapper.get('[data-testid="tech-debt-in-flight-pane"]').classes()).toContain('grid-cols-1')
+    expect(wrapper.get('[data-testid="tech-debt-in-flight-pane"]').classes()).not.toContain('sm:grid-cols-2')
+    expect(pane.classes()).toContain('xl:grid-cols-2')
+    expect(pane.get('[data-testid="tech-debt-vulnerability-backlog-list"]').classes()).toContain('grid-cols-1')
+    expect(pane.get('[data-testid="tech-debt-vulnerability-backlog-list"]').classes()).not.toContain('xl:grid-cols-2')
+    expect(pane.get('[data-testid="tech-debt-bug-backlog-list"]').classes()).toContain('grid-cols-1')
+    expect(pane.get('[data-testid="tech-debt-bug-backlog-list"]').classes()).not.toContain('xl:grid-cols-2')
+    expect(cveCards[0].get('a').text()).toContain('RHAI-CVE-1')
+    expect(bugCards[0].get('a').text()).toContain('RHAI-BUG-1')
+    expect(cveCards[0].get('[aria-label="Tech debt backlog rank 1"]').text()).toBe('1')
+    expect(bugCards[0].get('[aria-label="Tech debt backlog rank 1"]').text()).toBe('1')
+    expect(cveCards[0].classes()).toContain('xl:min-h-[23rem]')
+    expect(bugCards[0].classes()).toContain('xl:min-h-[23rem]')
+    expect(cveCards[0].get('[data-testid="tech-debt-sla-badge"]').text()).toContain('SLA breached · 6 days')
+    expect(cveCards[0].find('[data-testid="tech-debt-score"]').exists()).toBe(false)
+    expect(cveCards[0].get('[data-testid="tech-debt-sla-details"]').text()).toContain('Jira SLA Date controls this CVE’s backlog position')
+    expect(bugCards[0].get('[data-testid="tech-debt-score"]').text()).toBe('P1 · 70')
+    expect(wrapper.text()).toContain('Separate ranked groups: company SLA for CVEs and priority score for Bugs')
+  })
+
+  it('uses the full backlog width when only one issue-type queue is populated', async function () {
+    mockSuccessfulApi(cockpitResponse({
+      counts: { total: 1, inFlight: 0, backlog: 1, bugs: 0, vulnerabilities: 1 },
+      inFlight: [],
+      backlog: [companySlaVulnerability('RHAI-CVE-ONLY', { rank: 1 })]
+    }))
+    const wrapper = mount(TechDebtPrioritizationView)
+    await flushPromises()
+    await selectComponent(wrapper)
+
+    const pane = wrapper.get('[data-testid="tech-debt-backlog-pane"]')
+    expect(pane.classes()).not.toContain('xl:grid-cols-2')
+    expect(pane.get('[data-testid="tech-debt-vulnerability-backlog"]').exists()).toBe(true)
+    expect(pane.find('[data-testid="tech-debt-bug-backlog"]').exists()).toBe(false)
   })
 
   it('uses active Bug scores for ordering while preserving classification evidence and guardrails', async function () {
@@ -407,7 +435,7 @@ describe('TechDebtPrioritizationView', function () {
     expect(cards[0].get('[data-testid="tech-debt-bug-classification"]').text()).toContain('Approved Release Blocker')
     expect(cards[1].get('[data-testid="tech-debt-score-breakdown"]').text()).toContain('0 Customer + 22 Delivery/security + 2 Detection + 16 Jira severity + 15 Due + 5 Age = 60')
     expect(cards[0].get('[data-testid="tech-debt-score-breakdown"]').text()).toContain('Release Blocker is Approved')
-    expect(wrapper.text()).toContain('Bugs and CVEs ranked together by effective priority score')
+    expect(wrapper.text()).toContain('Separate ranked groups: company SLA for CVEs and priority score for Bugs')
   })
 
   it('shows summary counts and stale-data warnings', async function () {
@@ -478,12 +506,14 @@ describe('TechDebtPrioritizationView', function () {
     expect(wrapper.get('[data-testid="tech-debt-summary"]').text()).toContain('—')
   })
 
-  it('shows 25 cards initially and makes every issue accessible with Show more', async function () {
+  it('paginates CVE and Bug groups independently', async function () {
     const backlog = Array.from({ length: 26 }, function (_, index) {
-      return issue('RHAI-' + (index + 1), { rank: index + 1 })
-    })
+      return companySlaVulnerability('RHAI-CVE-' + (index + 1), { rank: index + 1 })
+    }).concat(Array.from({ length: 26 }, function (_, index) {
+      return scoredBug('RHAI-BUG-' + (index + 1), { rank: index + 1 })
+    }))
     mockSuccessfulApi(cockpitResponse({
-      counts: { total: 26, inFlight: 0, backlog: 26, bugs: 26, vulnerabilities: 0 },
+      counts: { total: 52, inFlight: 0, backlog: 52, bugs: 26, vulnerabilities: 26 },
       inFlight: [],
       backlog
     }))
@@ -491,9 +521,12 @@ describe('TechDebtPrioritizationView', function () {
     await flushPromises()
     await selectComponent(wrapper)
 
-    expect(wrapper.findAll('[data-testid="tech-debt-backlog-card"]')).toHaveLength(25)
-    await wrapper.get('[data-testid="tech-debt-backlog-more"]').trigger('click')
-    expect(wrapper.findAll('[data-testid="tech-debt-backlog-card"]')).toHaveLength(26)
+    expect(wrapper.findAll('[data-testid="tech-debt-backlog-card"]')).toHaveLength(50)
+    await wrapper.get('[data-testid="tech-debt-vulnerability-backlog-more"]').trigger('click')
+    expect(wrapper.get('[data-testid="tech-debt-vulnerability-backlog"]').findAll('[data-testid="tech-debt-backlog-card"]')).toHaveLength(26)
+    expect(wrapper.get('[data-testid="tech-debt-bug-backlog"]').findAll('[data-testid="tech-debt-backlog-card"]')).toHaveLength(25)
+    await wrapper.get('[data-testid="tech-debt-bug-backlog-more"]').trigger('click')
+    expect(wrapper.findAll('[data-testid="tech-debt-backlog-card"]')).toHaveLength(52)
   })
 
   it('forces a refresh from the manual Refresh action', async function () {
