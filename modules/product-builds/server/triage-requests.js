@@ -42,6 +42,10 @@ const {
 } = require('./request-common');
 
 const TRIAGE_LEAD_BUSINESS_DAYS = 20;
+// RPM requests are paused while AIPCC works through blockers on its side.
+// Flip this back to true (and `enabled` in client/views/RequestsView.vue) to restore them.
+const RPM_REQUESTS_ENABLED = false;
+const RPM_REQUESTS_PAUSED_MESSAGE = 'RPM requests are paused for now. Ask in #forum-aipcc if you need an RPM.';
 const COMPONENT_NAME = 'AIPCC Ecosystems';
 const DEFAULT_TRIAGE_ASSIGNEE_EMAIL = 'epacific@redhat.com';
 const DEFAULT_TARGET_VERSION_FIELD = 'customfield_10855';
@@ -324,6 +328,7 @@ module.exports = function registerTriageRequestRoutes(router, context, deps = {}
   const assigneeEmail = resolveTriageAssigneeEmail(secrets);
   const noopAuth = function (_req, _res, next) { next(); };
   const requireAuth = (context && context.requireAuth) || noopAuth;
+  const rpmRequestsEnabled = deps.rpmRequestsEnabled ?? RPM_REQUESTS_ENABLED;
 
   let _jira;
   function getJira() {
@@ -555,9 +560,11 @@ module.exports = function registerTriageRequestRoutes(router, context, deps = {}
    *       502:
    *         description: Jira Epic creation failed
    *       503:
-   *         description: Jira is not configured
+   *         description: Jira is not configured, or RPM requests are paused
    */
-  router.post('/rpm-requests', requireAuth, handler('rpm'));
+  router.post('/rpm-requests', requireAuth, rpmRequestsEnabled ? handler('rpm') : function rpmRequestsPaused(_req, res) {
+    res.status(503).json({ error: RPM_REQUESTS_PAUSED_MESSAGE });
+  });
 
   /**
    * @openapi
@@ -632,6 +639,8 @@ module.exports = function registerTriageRequestRoutes(router, context, deps = {}
 };
 
 module.exports._testExports = {
+  RPM_REQUESTS_ENABLED,
+  RPM_REQUESTS_PAUSED_MESSAGE,
   TRIAGE_LEAD_BUSINESS_DAYS,
   COMPONENT_NAME,
   DEFAULT_TRIAGE_ASSIGNEE_EMAIL,

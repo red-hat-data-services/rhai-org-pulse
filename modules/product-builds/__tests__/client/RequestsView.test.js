@@ -48,14 +48,13 @@ describe('RequestsView', () => {
     })
   })
 
-  it('shows the AIPCC-E Requests landing page with all three request types', async () => {
+  it('shows the AIPCC-E Requests landing page with the Python package and channel request types', async () => {
     const { wrapper } = await mountView()
     expect(wrapper.find('h1').text()).toBe('AIPCC-E Requests')
     expect(wrapper.text()).toContain('Jane Doe')
     const cards = wrapper.findAll('[data-testid^="request-card-"]')
     expect(cards.map(card => card.find('h2').text())).toEqual([
       'Python Package Requests',
-      'RPM Requests',
       'Channel Requests'
     ])
     expect(wrapper.find('#requests-help').text()).toContain('#forum-aipcc')
@@ -66,35 +65,32 @@ describe('RequestsView', () => {
   it('gives every card a description, prerequisites and turnaround', async () => {
     const { wrapper } = await mountView()
     const turnaround = id => wrapper.find(`[data-testid="request-card-${id}"] [data-testid="card-turnaround"]`).text()
-    for (const id of ['python', 'rpm', 'channel']) {
+    for (const id of ['python', 'channel']) {
       const card = wrapper.find(`[data-testid="request-card-${id}"]`)
       expect(card.find('[data-testid="card-description"]').text()).not.toBe('')
       expect(card.findAll('[data-testid="card-prerequisites"] li').length).toBeGreaterThan(0)
     }
     expect(turnaround('python')).toBe('10 business day SLA')
-    expect(turnaround('rpm')).toBe('Triaged by AIPCC')
     expect(turnaround('channel')).toBe('Triaged by AIPCC')
-    expect(wrapper.find('[data-testid="request-card-python"]').text()).toContain('For system packages, use an RPM request.')
+    expect(wrapper.find('[data-testid="request-card-python"]').text()).not.toMatch(/RPM/)
     expect(wrapper.find('[data-testid="request-card-channel"]').text()).toContain('A link to your prior discussion with AIPCC')
   })
 
-  it('never describes RPM or channel delivery as an SLA', async () => {
+  it('never describes channel delivery as an SLA', async () => {
     const { wrapper } = await mountView()
-    expect(wrapper.find('[data-testid="request-card-rpm"]').text()).not.toMatch(/SLA|business days/i)
     expect(wrapper.find('[data-testid="request-card-channel"]').text()).not.toMatch(/SLA|business days/i)
   })
 
   it('opens a form from a landing card and records the tab in the URL', async () => {
     const { wrapper, nav } = await mountView()
-    await wrapper.find('[data-testid="request-card-rpm"]').trigger('click')
+    await wrapper.find('[data-testid="request-card-channel"]').trigger('click')
     await flushPromises()
-    expect(nav.updateParams).toHaveBeenCalledWith({ tab: 'rpm' })
-    expect(wrapper.find('#rpm-name').exists()).toBe(true)
+    expect(nav.updateParams).toHaveBeenCalledWith({ tab: 'channel' })
+    expect(wrapper.find('#chan-torch-version').exists()).toBe(true)
   })
 
   it.each([
     ['python', '#req-package-name'],
-    ['rpm', '#rpm-name'],
     ['channel', '#chan-torch-version']
   ])('renders the %s form from the tab parameter', async (tab, selector) => {
     const { wrapper } = await mountView({ tab })
@@ -103,14 +99,23 @@ describe('RequestsView', () => {
   })
 
   it('keeps a half-filled form when visiting Overview and coming back', async () => {
-    const { wrapper } = await mountView({ tab: 'rpm' })
-    await wrapper.find('#rpm-name').setValue('gcc-toolset-14')
+    const { wrapper } = await mountView({ tab: 'channel' })
+    await wrapper.find('#chan-torch-version').setValue('2.12')
     await wrapper.findAll('[role="tab"]')[0].trigger('click')
     await flushPromises()
-    expect(wrapper.find('#rpm-name').exists()).toBe(false)
-    await wrapper.find('[data-testid="request-tab-rpm"]').trigger('click')
+    expect(wrapper.find('#chan-torch-version').exists()).toBe(false)
+    await wrapper.find('[data-testid="request-tab-channel"]').trigger('click')
     await flushPromises()
-    expect(wrapper.find('#rpm-name').element.value).toBe('gcc-toolset-14')
+    expect(wrapper.find('#chan-torch-version').element.value).toBe('2.12')
+  })
+
+  it('hides paused RPM requests from the cards, tabs and tab parameter', async () => {
+    const { wrapper } = await mountView({ tab: 'rpm' })
+    expect(wrapper.find('#rpm-name').exists()).toBe(false)
+    expect(wrapper.find('[data-testid="request-card-rpm"]').exists()).toBe(false)
+    expect(wrapper.find('[data-testid="request-tab-rpm"]').exists()).toBe(false)
+    expect(wrapper.find('[data-testid="request-card-python"]').exists()).toBe(true)
+    expect(wrapper.text()).not.toMatch(/RPM/)
   })
 
   it.each(['constructor', 'toString'])('ignores the inherited %s key as a tab', async (tab) => {

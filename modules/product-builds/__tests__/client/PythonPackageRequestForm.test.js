@@ -19,6 +19,12 @@ function futureDate(days = 30) {
 }
 
 async function fillValidForm(wrapper) {
+  await fillBasics(wrapper)
+  await wrapper.find('#req-hardware-default').setValue(true)
+  await wrapper.find('#req-testing-default').setValue(true)
+}
+
+async function fillBasics(wrapper) {
   await flushPromises()
   await wrapper.find('#req-team').setValue('Platform')
   await wrapper.find('#req-package-name').setValue('vllm')
@@ -26,8 +32,6 @@ async function fillValidForm(wrapper) {
   await wrapper.find('#req-jira-id').setValue('AIPCC-42')
   await wrapper.find('#req-justification').setValue('Needed for CUDA wheel builds')
   await wrapper.find('#req-delivery-timeline').setValue(futureDate())
-  await wrapper.find('#req-hardware-ack').setValue(true)
-  await wrapper.find('#req-testing-ack').setValue(true)
 }
 
 function successResponse() {
@@ -108,7 +112,7 @@ describe('PythonPackageRequestForm', () => {
     expect(wrapper.find('#req-team').element.tagName).toBe('SELECT')
     expect(wrapper.find('#req-team').element.disabled).toBe(true)
     await flushPromises()
-    expect(fetchTeams).toHaveBeenCalledWith('/modules/product-builds/package-requests/teams?project=RHAISTRAT')
+    expect(fetchTeams).toHaveBeenCalledWith('/modules/product-builds/package-requests/teams?project=RHAI')
     expect(wrapper.findAll('#req-team option').map(option => option.text())).toEqual(['Select a team', 'Platform', 'Agentic'])
     await fillValidForm(wrapper)
     await wrapper.find('#req-team').setValue('Free text')
@@ -116,54 +120,26 @@ describe('PythonPackageRequestForm', () => {
     expect(submitRequest).not.toHaveBeenCalled()
   })
 
-  it('clears the selection and ignores stale team loads when the project changes', async () => {
+  it('always files under RHAI without a project picker', async () => {
     const wrapper = mount(PythonPackageRequestForm)
     await flushPromises()
-    await wrapper.find('#req-team').setValue('Platform')
-    let finishOldLoad
-    fetchTeams.mockImplementationOnce(() => new Promise(resolve => { finishOldLoad = resolve }))
-    await wrapper.find('#req-team-project').setValue('RHAI')
-    expect(wrapper.find('#req-team').element.value).toBe('')
-    expect(wrapper.find('#req-team').element.disabled).toBe(true)
-    fetchTeams.mockResolvedValueOnce([{ value: 'Agentic', label: 'Agentic' }])
-    await wrapper.find('#req-team-project').setValue('RHAISTRAT')
-    await flushPromises()
-    finishOldLoad([{ value: 'Accelerator Enablement', label: 'Accelerator Enablement' }])
-    await flushPromises()
-    expect(wrapper.findAll('#req-team option').map(option => option.text())).toEqual(['Select a team', 'Agentic'])
+    expect(wrapper.find('#req-team-project').exists()).toBe(false)
+    expect(fetchTeams).toHaveBeenCalledTimes(1)
     expect(fetchTeams).toHaveBeenCalledWith('/modules/product-builds/package-requests/teams?project=RHAI')
-  })
-
-  it('offers only RHAISTRAT and RHAI now that AIPCC is deprecated', async () => {
-    const wrapper = mount(PythonPackageRequestForm)
-    await flushPromises()
-    expect(wrapper.findAll('#req-team-project option').map(option => option.element.value)).toEqual(['RHAISTRAT', 'RHAI'])
-  })
-
-  it('sends the selected project and explains where the request is filed', async () => {
-    const wrapper = mount(PythonPackageRequestForm)
-    await flushPromises()
-    expect(wrapper.find('#req-team-project-hint').text()).toContain('RHAISTRAT has no Epic type, so the request is filed in RHAI')
-    await wrapper.find('#req-team-project').setValue('RHAI')
-    await flushPromises()
-    expect(wrapper.find('#req-team-project-hint').text()).toContain('The request is filed in RHAI')
     await fillValidForm(wrapper)
     await wrapper.find('form').trigger('submit')
     await flushPromises()
     expect(JSON.parse(submitRequest.mock.calls[0][1].body).project).toBe('RHAI')
   })
 
-  it('resets the team project and selection to the original defaults', async () => {
+  it('resets the team selection', async () => {
     const wrapper = mount(PythonPackageRequestForm)
-    await flushPromises()
-    await wrapper.find('#req-team-project').setValue('RHAI')
     await flushPromises()
     await wrapper.find('#req-team').setValue('Platform')
     await wrapper.findAll('button').find(button => button.text() === 'Reset').trigger('click')
     await flushPromises()
-    expect(wrapper.find('#req-team-project').element.value).toBe('RHAISTRAT')
     expect(wrapper.find('#req-team').element.value).toBe('')
-    expect(fetchTeams).toHaveBeenLastCalledWith('/modules/product-builds/package-requests/teams?project=RHAISTRAT')
+    expect(wrapper.findAll('#req-team option').map(option => option.text())).toEqual(['Select a team', 'Platform', 'Agentic'])
   })
 
   it('keeps submission disabled on team load failure and supports retry', async () => {
@@ -195,8 +171,8 @@ describe('PythonPackageRequestForm', () => {
     expect(wrapper.text()).toContain('Team is required')
     expect(wrapper.text()).toContain('Package name must start with a letter')
     expect(wrapper.text()).toContain('Business justification is required')
-    expect(wrapper.text()).toContain('Provide hardware details')
-    expect(wrapper.text()).toContain('Provide testing requirements')
+    expect(wrapper.text()).toContain('Choose all supported accelerators or describe the hardware you need')
+    expect(wrapper.text()).toContain('Choose the default tests or describe the testing you need')
   })
 
   it('requires a URL only for git and other sources', async () => {
@@ -214,22 +190,54 @@ describe('PythonPackageRequestForm', () => {
     expect(wrapper.text()).toContain('Source URL must be an HTTP or HTTPS URL')
   })
 
-  it('accepts hardware and testing acknowledgements', async () => {
+  it('requires an explicit hardware and testing choice', async () => {
     const wrapper = mount(PythonPackageRequestForm)
-    await flushPromises()
-    await wrapper.find('#req-team').setValue('Platform')
-    await wrapper.find('#req-package-name').setValue('vllm')
-    await wrapper.find('#req-jira-id').setValue('AIPCC-42')
-    await wrapper.find('#req-justification').setValue('Needed')
-    await wrapper.find('#req-delivery-timeline').setValue(futureDate())
-
-    await wrapper.find('#req-hardware-ack').setValue(true)
-    await wrapper.find('#req-testing-ack').setValue(true)
+    await fillBasics(wrapper)
+    expect(wrapper.find('#req-hardware-default').element.checked).toBe(false)
+    expect(wrapper.find('#req-other-hardware').exists()).toBe(false)
+    expect(wrapper.find('#req-testing-requirements').exists()).toBe(false)
     await wrapper.find('form').trigger('submit')
+    expect(submitRequest).not.toHaveBeenCalled()
+    expect(wrapper.find('#req-other-hardware-error').text()).toBe('Choose all supported accelerators or describe the hardware you need')
+    expect(wrapper.find('#req-testing-requirements-error').text()).toBe('Choose the default tests or describe the testing you need')
+  })
 
-    expect(wrapper.text()).not.toContain('Provide hardware details or acknowledge')
-    expect(wrapper.text()).not.toContain('Provide testing requirements or acknowledge')
-    expect(submitRequest).toHaveBeenCalled()
+  it('asks for details only when specific hardware or extra testing is chosen', async () => {
+    const wrapper = mount(PythonPackageRequestForm)
+    await fillValidForm(wrapper)
+    await wrapper.find('#req-hardware-custom').setValue(true)
+    await wrapper.find('#req-testing-custom').setValue(true)
+    await wrapper.find('form').trigger('submit')
+    expect(submitRequest).not.toHaveBeenCalled()
+    expect(wrapper.find('#req-other-hardware-error').text()).toBe('Describe the hardware you need')
+    expect(wrapper.find('#req-testing-requirements-error').text()).toBe('Describe the testing you need')
+
+    await wrapper.find('#req-other-hardware').setValue('2x H100 nodes')
+    await wrapper.find('#req-testing-requirements').setValue('Full GPU test suite')
+    await wrapper.find('form').trigger('submit')
+    await flushPromises()
+    expect(JSON.parse(submitRequest.mock.calls[0][1].body)).toMatchObject({
+      other_hardware: '2x H100 nodes',
+      hardware_defaults_acknowledged: false,
+      testing_requirements: 'Full GPU test suite',
+      testing_defaults_acknowledged: false
+    })
+  })
+
+  it('sends the defaults as acknowledgements and drops hidden details', async () => {
+    const wrapper = mount(PythonPackageRequestForm)
+    await fillValidForm(wrapper)
+    await wrapper.find('#req-hardware-custom').setValue(true)
+    await wrapper.find('#req-other-hardware').setValue('changed my mind')
+    await wrapper.find('#req-hardware-default').setValue(true)
+    await wrapper.find('form').trigger('submit')
+    await flushPromises()
+    expect(JSON.parse(submitRequest.mock.calls[0][1].body)).toMatchObject({
+      other_hardware: '',
+      hardware_defaults_acknowledged: true,
+      testing_requirements: '',
+      testing_defaults_acknowledged: true
+    })
   })
 
   it('submits the backend payload without a requester field', async () => {
@@ -247,7 +255,7 @@ describe('PythonPackageRequestForm', () => {
     expect(submitRequest.mock.calls[0][0]).toBe('/modules/product-builds/package-requests')
     expect(payload).toMatchObject({
       team: 'Platform',
-      project: 'RHAISTRAT',
+      project: 'RHAI',
       package_name: 'vllm',
       extras: ['cu12', 'dev'],
       package_source: 'pypi',
