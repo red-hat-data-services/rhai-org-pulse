@@ -176,5 +176,5 @@ npx playwright test --config modules/workflow-validation/playwright.config.cjs
 
 The configuration starts the frontend locally. Start `npm run dev:server`
 separately for the backend route check. CI uses its existing app containers.
-The shared CI entrypoint loads this module-owned suite through a one-line
-`require`. The test implementation stays in this module.
+The feature PR leaves shared files unchanged. The current shared CI runner
+needs a separate maintainer-approved update to discover this module-owned suite.

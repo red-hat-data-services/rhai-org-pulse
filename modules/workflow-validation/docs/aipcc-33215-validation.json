@@ -99,7 +99,7 @@
     "browserTestsPassed": 27,
     "fullUnitSuitePassed": 6737,
     "unitTestsSkipped": 11,
-    "ciRouting": "Shared one-line entrypoint requires the module-owned suite",
+    "ciRouting": "Blocked: shared runner update belongs in a separate maintainer-approved change",
     "temporarySharedLoaderProof": {
       "passed": 27,
       "repositorySharedFilesChanged": false
@@ -110,7 +110,7 @@
       "reason": "Legacy mocks and expectations target the previous Recent Runs page"
     },
     "sharedEntryPoint": "tests/integration/workflow-validation.spec.js",
-    "sharedEntryPointLines": 1,
-    "sharedCiSuitePassed": 27
+    "prScope": "modules/workflow-validation/** only",
+    "outsideModuleChanges": false
   }
 }

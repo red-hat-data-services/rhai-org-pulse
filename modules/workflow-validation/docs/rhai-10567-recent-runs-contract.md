@@ -182,11 +182,12 @@ screens. No browser errors occurred. The JSON evidence reflects this revision.
 
 ### Module-owned browser tests
 
-The replacement PR keeps the browser implementation and Playwright config
-inside Workflow Validation. The shared test file contains only one `require`
-that loads the module-owned suite. Its previous test implementation moves into
-the module. Both paths list Adam as an eligible owner.
+The feature PR keeps every change inside Workflow Validation, including the
+browser suite and its standalone Playwright config. Shared test files and the
+shared CI configuration remain identical to the base branch.
 
-All 27 module-owned browser tests pass. The fresh main-branch baseline also
-passes 6,737 unit tests (11 skipped), lint, and the production build. CI uses
-the same shared entrypoint and module tag to execute the moved tests.
+All 27 module-owned browser tests pass. The branch also passes 6,737 unit tests
+(11 skipped), lint, and the production build. The unchanged shared runner still
+loads the legacy suite; five old checks fail against the updated page. A
+separate maintainer-approved runner update must discover the module-owned suite
+before this feature PR can merge. The PR remains draft for that dependency.
