@@ -18,7 +18,7 @@ describe('jira-plan', function() {
     it('queries open RHAISTRAT Outcomes in Jira Rank order', function() {
       expect(OUTCOME_JQL).toContain('project = RHAISTRAT')
       expect(OUTCOME_JQL).toContain('issuetype = Outcome')
-      expect(OUTCOME_JQL).toContain('status != Closed')
+      expect(OUTCOME_JQL).toContain('status not in (Closed, Done, Resolved, Cancelled)')
       expect(OUTCOME_JQL).toContain('ORDER BY Rank ASC')
     })
   })
@@ -115,7 +115,7 @@ describe('jira-plan', function() {
       var jql = client.fetchAllJqlResults.mock.calls[0][0]
       expect(jql).toContain('parent = "RHAISTRAT-3004"')
       expect(jql).toContain('"Epic Link" = "RHAISTRAT-3004"')
-      expect(jql).toContain('status != Closed')
+      expect(jql).toContain('status not in (Closed, Done, Resolved, Cancelled)')
       expect(result.children).toHaveLength(1)
       expect(result.children[0].key).toBe('RHAISTRAT-1935')
       expect(result.children[0].issueType).toBe('Feature')

@@ -22,7 +22,7 @@ var PLAN = {
   sentinelKey: 'RHAISTRAT-2921'
 }
 
-var OUTCOME_JQL = 'project = RHAISTRAT AND issuetype = Outcome AND status != Closed ORDER BY Rank ASC'
+var OUTCOME_JQL = 'project = RHAISTRAT AND issuetype = Outcome AND status not in (Closed, Done, Resolved, Cancelled) ORDER BY Rank ASC'
 var ISSUE_FIELDS = [
   'summary',
   'status',
@@ -171,7 +171,7 @@ async function fetchOutcomeChildren(jiraClient, outcomeKey) {
   // One key is used here, but keeping the existing Plan hierarchy query shape
   // (parent + Epic Link fallback) matches how the Plan assembles child rows.
   var quoted = '"' + outcomeKey + '"'
-  var jql = '(parent = ' + quoted + ' OR "Epic Link" = ' + quoted + ') AND status != Closed ORDER BY Rank ASC'
+  var jql = '(parent = ' + quoted + ' OR "Epic Link" = ' + quoted + ') AND status not in (Closed, Done, Resolved, Cancelled) ORDER BY Rank ASC'
   var issues = await jiraClient.fetchAllJqlResults(jql, ISSUE_FIELDS, { maxResults: 100 })
   var children = []
   var seen = {}

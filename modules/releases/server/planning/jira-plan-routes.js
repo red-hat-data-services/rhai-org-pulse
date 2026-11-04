@@ -6,8 +6,11 @@ var path = require('path')
 var fs = require('fs')
 var { fetchRankedOutcomes, fetchOutcomeChildren } = require('./jira-plan')
 
+var { OUTCOME_KEY_PATTERN } = require('./validation')
+
 var DEMO_MODE = process.env.DEMO_MODE === 'true'
 var CACHE_TTL_MS = 5 * 60 * 1000
+var MAX_CHILDREN_CACHE_SIZE = 200
 
 function loadFixture() {
   var fixturePath = path.join(__dirname, '..', '..', '..', '..', 'fixtures', 'releases', 'planning', 'jira-plan.json')
@@ -66,6 +69,7 @@ module.exports = function registerJiraPlanRoutes(router, context) {
     try {
       var data = await fetchRankedOutcomes(jira)
       baseCache = { cachedAt: Date.now(), data: data }
+      childrenCache.clear()
       res.json(data)
     } catch (err) {
       console.error('[releases/planning] Jira Plan fetch failed:', err.message)
@@ -97,6 +101,10 @@ module.exports = function registerJiraPlanRoutes(router, context) {
   router.get('/jira-plan/outcomes/:key/children', requireAuth, requireScope('releases:read'), async function(req, res) {
     var key = req.params.key
 
+    if (typeof key !== 'string' || !OUTCOME_KEY_PATTERN.test(key)) {
+      return res.status(400).json({ error: 'Invalid Outcome key' })
+    }
+
     if (DEMO_MODE) {
       var fixture = loadFixture()
       if (!fixture) return res.status(404).json({ error: 'Demo Jira Plan data not available' })
@@ -115,6 +123,9 @@ module.exports = function registerJiraPlanRoutes(router, context) {
 
     try {
       var data = await fetchOutcomeChildren(jira, key)
+      if (childrenCache.size >= MAX_CHILDREN_CACHE_SIZE) {
+        childrenCache.delete(childrenCache.keys().next().value)
+      }
       childrenCache.set(key, { cachedAt: Date.now(), data: data })
       res.json(data)
     } catch (err) {

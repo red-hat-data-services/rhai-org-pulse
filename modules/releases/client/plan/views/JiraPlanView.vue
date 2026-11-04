@@ -255,7 +255,7 @@ const expandedKeys = ref(new Set())
 const childrenByKey = ref({})
 const loadingChildren = ref({})
 const childErrors = ref({})
-
+var planGeneration = 0
 
 function isExpanded(key) {
   return expandedKeys.value.has(key)
@@ -300,7 +300,9 @@ async function loadPlan(forceRefresh) {
     outcomes.value = Array.isArray(data && data.outcomes) ? data.outcomes : []
     generatedAt.value = data && data.generatedAt || ''
     expandedKeys.value = new Set()
+    planGeneration += 1
     childrenByKey.value = {}
+    loadingChildren.value = {}
     childErrors.value = {}
   } catch (err) {
     loadError.value = err && err.message ? err.message : 'Unknown error'
@@ -325,20 +327,23 @@ async function toggleOutcome(key) {
   if (childrenByKey.value[key] || loadingChildren.value[key]) return
   loadingChildren.value = { ...loadingChildren.value, [key]: true }
   childErrors.value = { ...childErrors.value, [key]: '' }
+  var generation = planGeneration
 
   try {
     var data = await apiRequest('/modules/releases/planning/jira-plan/outcomes/' + encodeURIComponent(key) + '/children')
+    if (generation !== planGeneration) return
     childrenByKey.value = {
       ...childrenByKey.value,
       [key]: Array.isArray(data && data.children) ? data.children : []
     }
   } catch (err) {
+    if (generation !== planGeneration) return
     childErrors.value = {
       ...childErrors.value,
       [key]: err && err.message ? err.message : 'Could not load child work items'
     }
   } finally {
-    loadingChildren.value = { ...loadingChildren.value, [key]: false }
+    if (generation === planGeneration) loadingChildren.value = { ...loadingChildren.value, [key]: false }
   }
 }
 
