@@ -217,6 +217,7 @@ test.describe('Workflow Validation module @workflow-validation', () => {
     const recentRequest = requests.find(url => url.pathname.endsWith('/test-suites'))
     expect(Object.fromEntries(recentRequest.searchParams)).toEqual({ pageSize: '20', includeBugs: 'false', sortDir: 'desc' })
 
+    await expect(page.getByRole('link', { name: 'View run invocation-1' })).toHaveAttribute('href', /[?&]version=&/)
     await page.getByRole('link', { name: 'View run invocation-1' }).click()
     await expect(page).toHaveURL(/overview\?exactRun=1/)
     await expect(page.getByRole('heading', { name: 'Test Results', exact: true })).toBeVisible()

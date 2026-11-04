@@ -36,12 +36,16 @@ describe('Recent Runs', () => {
     expect(wrapper.text()).not.toMatch(/Build date|Jenkins|Image release/)
   })
 
-  it('keeps exact-run navigation and clears an unavailable version', async () => {
+  it('opens exact runs by suite and invocation without a version filter', async () => {
     wrapper = mount(RecentRunsView)
     await flushPromises()
-    const link = new URL(wrapper.findAll('a')[2].attributes('href').replace('#', ''), 'http://localhost')
-    expect(link.pathname).toBe('/workflow-validation/overview')
-    expect(Object.fromEntries(link.searchParams)).toEqual({ exactRun: '1', version: '', testSuite: 'ad-hoc', invocationId: 'sample / opaque?&id', datePreset: 'all', dateFrom: '', dateTo: '' })
+    for (const [index, anchor] of wrapper.findAll('a').entries()) {
+      const run = fixture.rows[index]
+      const link = new URL(anchor.attributes('href').replace('#', ''), 'http://localhost')
+      expect(link.pathname).toBe('/workflow-validation/overview')
+      expect(Object.fromEntries(link.searchParams)).toEqual({ exactRun: '1', version: '', testSuite: run.suite,
+        invocationId: run.invocationId, datePreset: 'all', dateFrom: '', dateTo: '' })
+    }
   })
 
   it('visits subsequent and previous pages without applying shared filters', async () => {

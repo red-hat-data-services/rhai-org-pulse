@@ -25,8 +25,7 @@ or version defaults do not restrict this page. URL parameters use the `recent`
 prefix so reloads retain the current filters, sort, and page.
 
 View run opens the existing Overview view as a hidden details route. Pass
-`exactRun=1`, recorded version, suite, and invocation, and clear date bounds.
-The recorded version is display metadata. Scope Overview and Charts queries by
+`exactRun=1`, suite, and invocation, and clear the version and date bounds. Scope Overview and Charts queries by
 suite and invocation across every version in that run.
 Verify the selected run before fetching its Overview and Charts data. Show an
 error and a link to Recent Runs if that run is missing. Never fall back to a
@@ -168,3 +167,9 @@ Rapid typing sent only the final search. No browser errors occurred. Document
 counts and runtime settings stayed unchanged. Screenshots and JSON above now
 reflect this revision. Synthetic regression tests cover 9,000-character IDs,
 deleted cursor anchors, and mixed-version data without changing stored records.
+
+### Minor review cleanup
+
+Exact-run links now clear the version parameter, matching the exact-run data
+queries. One `RECENT_RUNS_PAGE_SIZE` constant controls the requested page size,
+response row limit, and page-size label. The page still shows 20 runs at a time.

@@ -3,7 +3,7 @@
     <div class="mb-5 flex flex-wrap items-start justify-between gap-4">
       <div class="min-w-0">
         <h2 class="text-2xl font-bold text-gray-900 dark:text-gray-100">Recent Runs</h2>
-        <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">20 runs per page, ordered by recorded test time. All dates are UTC.</p>
+        <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">{{ RECENT_RUNS_PAGE_SIZE }} runs per page, ordered by recorded test time. All dates are UTC.</p>
       </div>
       <button type="button" :disabled="loading || searchPending" :class="buttonClass" @click="requestRuns(applied, true)">Refresh</button>
     </div>
@@ -100,7 +100,7 @@
 
 <script setup>
 import { computed, inject, onBeforeUnmount, onMounted, reactive, ref, watch } from 'vue'
-import { formatSuiteName, syncQueryParams, useWorkflowValidation } from '../composables/useWorkflowValidation'
+import { RECENT_RUNS_PAGE_SIZE, formatSuiteName, syncQueryParams, useWorkflowValidation } from '../composables/useWorkflowValidation'
 
 const nav = inject('moduleNav', null)
 const { getRecentRuns } = useWorkflowValidation()
@@ -147,7 +147,7 @@ let searchTimer
 function cancelSearch() { clearTimeout(searchTimer); searchPending.value = false }
 
 function runLink(run) {
-  const params = new URLSearchParams({ exactRun: '1', version: run.rhoaiVersion || '', testSuite: run.suite, invocationId: run.invocationId, datePreset: 'all', dateFrom: '', dateTo: '' })
+  const params = new URLSearchParams({ exactRun: '1', version: '', testSuite: run.suite, invocationId: run.invocationId, datePreset: 'all', dateFrom: '', dateTo: '' })
   return `#/workflow-validation/overview?${params}`
 }
 
@@ -164,7 +164,7 @@ async function requestRuns(query, refresh = false) {
   try {
     const data = await getRecentRuns({ ...requested, ...(refresh ? { refresh: true } : {}) }, { signal: controller.signal })
     if (!active || current !== sequence) return
-    if (!Array.isArray(data.rows) || data.rows.length > 20 || !Number.isInteger(data.total)
+    if (!Array.isArray(data.rows) || data.rows.length > RECENT_RUNS_PAGE_SIZE || !Number.isInteger(data.total)
       || !Number.isInteger(data.start) || !Number.isInteger(data.end)
       || !Array.isArray(data.options?.versions) || !Array.isArray(data.options?.suites)
       || !(data.nextCursor === null || typeof data.nextCursor === 'string')
