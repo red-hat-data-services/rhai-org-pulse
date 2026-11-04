@@ -149,15 +149,32 @@ contract, representative tests, and affected Vue transformations together.
 
 ## Recent Runs landing page
 
-Dashboard opens Recent Runs. It lists up to 20 suite/invocation groups across
-all recorded versions, ordered by latest execution time. Each row shows the
-suite, recorded version, and View run. The page uses the existing
-`/test-suites?limit=20&includeBugs=false` API and ignores shared detail filters.
-View run opens the existing Overview view for that exact suite and invocation.
-Loading, empty, retry, and refresh states are covered by client and integration
-tests. Build metadata is outside this landing-page change.
+Dashboard opens Recent Runs with the latest 20 suite/invocation groups and
+pagination across all available runs. Each row shows the suite, recorded
+version, recorded test time in UTC, and View run. Optional filters select
+version, suite, run ID, and recorded dates. Choices update results immediately;
+Run ID search waits for a 300 ms typing pause. Sorting uses the existing execution
+`timestamp`; RHOAI build time is not available yet. Clear restores the initial
+unfiltered page. The page uses `/test-suites?pageSize=20&includeBugs=false`
+and ignores shared detail filters. Metadata is cached for up to 10 seconds;
+Refresh bypasses the cache. View run opens all tests in the exact suite and invocation, across versions.
 
 See the [Recent Runs contract](docs/rhai-10567-recent-runs-contract.md) for
 navigation, page states, and deployment evidence. The
 [API response format](docs/DATA-FORMATS.md) documents the synthetic
 [unit-test fixture](__tests__/fixtures/recent-runs.json).
+
+## Browser integration tests
+
+The Workflow Validation browser suite lives in
+[`tests/integration/workflow-validation.spec.js`](tests/integration/workflow-validation.spec.js).
+Run it from the repository root:
+
+```bash
+npx playwright test --config modules/workflow-validation/playwright.config.cjs
+```
+
+The configuration starts the frontend locally. Start `npm run dev:server`
+separately for the backend route check. CI uses its existing app containers.
+The current shared CI entrypoint must load this module-owned suite before the
+replacement PR can pass its integration job.

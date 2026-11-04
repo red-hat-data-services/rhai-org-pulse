@@ -1,0 +1,113 @@
+{
+  "ticket": "AIPCC-33215",
+  "sourceCommit": "cf7df25c30c456c272e93b040951f6eef5829f28",
+  "environment": "GPUaaS preview only",
+  "api": {
+    "groups": 146,
+    "pages": 8,
+    "initialRows": 20,
+    "fullTraversal": true,
+    "previousPage": true,
+    "globalTimestampOrder": true,
+    "oldestFirst": true,
+    "filterBeyondFirstPage": true,
+    "utcDateFilter": true,
+    "cursorMismatchRejected": true,
+    "boundedCursors": true,
+    "legacyBookmark": true,
+    "refreshKeepsPage": true,
+    "checkedAt": "2026-11-04T10:06:27.645794+00:00",
+    "storedDataUnchanged": true,
+    "deployedSourceMatches": true,
+    "runtimeConfigurationPreserved": true
+  },
+  "browser": {
+    "checkedAt": "2026-11-04T10:07:00.501Z",
+    "actualDeployedFrontend": true,
+    "actualDeployedBackend": true,
+    "exactLinkClearsVersion": true,
+    "initialRows": 20,
+    "groups": 146,
+    "pagesVisited": 8,
+    "pageReload": true,
+    "filtersBeyondFirstPage": true,
+    "filterReload": true,
+    "legacyPageBookmark": true,
+    "refreshRetainsPage": true,
+    "refreshErrorRetainsRows": true,
+    "retryRecovers": true,
+    "exactScopeAcrossVersions": true,
+    "typingDebounced": true,
+    "automaticFilters": true,
+    "runIdDelayMs": 300,
+    "clear": true,
+    "oldestFirst": true,
+    "utcDateFilter": true,
+    "narrowWidths": [
+      375,
+      320
+    ],
+    "exactRunLink": "#/workflow-validation/overview?exactRun=1&version=&testSuite=dashboard-dev-tests&invocationId=dashboard-dev-tests-20261102-132252-verified&datePreset=all&dateFrom=&dateTo=",
+    "pageErrors": []
+  },
+  "checks": {
+    "fullUnitSuite": {
+      "passed": 6700,
+      "skipped": 11,
+      "command": "NODE_OPTIONS=--no-experimental-webstorage npm test"
+    },
+    "browserIntegration": {
+      "passed": 27,
+      "command": "npx playwright test tests/integration/workflow-validation.spec.js --project=chromium --workers=2"
+    },
+    "lint": "passed",
+    "productionBuild": "passed",
+    "moduleValidation": "passed",
+    "openapiValidation": "passed",
+    "platformValidation": "skipped by validator: no platform directory found",
+    "workflowModuleTests": {
+      "passed": 135,
+      "command": "NODE_OPTIONS=--no-experimental-webstorage npx vitest run modules/workflow-validation"
+    }
+  },
+  "previewFrontendShell": "Existing compatible core 2.0.83; production build checked with dependency core 2.0.94",
+  "images": {
+    "backend": "image-registry.openshift-image-registry.svc:5000/workflow-validation-org-pulse/org-pulse-backend@sha256:78c458c8ad3d2e2234c021c152841da489e5fca4c07101ed01fec4435d8d32bd",
+    "frontend": "image-registry.openshift-image-registry.svc:5000/workflow-validation-org-pulse/org-pulse-frontend@sha256:68283c99b401eaedfd98d8267d0f90ec2ac174998084e68289077c2d40fd18a0"
+  },
+  "backendSourceCommit": "786e1a68af136bab241acded2be8711537c8e40f",
+  "reviewFixes": {
+    "disconnectedScans": "stop between OpenSearch requests; partial or failed scans are not cached",
+    "metadataCacheSeconds": 10,
+    "refreshAndRetryBypassCache": true,
+    "longIds": "bounded v2 hash cursors; returned IDs intact; legacy cursors supported",
+    "mixedVersionRuns": "exact-run data queries use suite and invocation across all versions",
+    "typingDelay": "older requests invalidated immediately; responses cannot update rows or URL while typing"
+  },
+  "minorCleanup": {
+    "exactRunLinksClearVersion": true,
+    "sharedClientPageSize": 20,
+    "pageSizeUsedBy": [
+      "request",
+      "response validation",
+      "page label"
+    ]
+  },
+  "testMigration": {
+    "moduleOwnedSuite": "modules/workflow-validation/tests/integration/workflow-validation.spec.js",
+    "config": "modules/workflow-validation/playwright.config.cjs",
+    "browserTestsPassed": 27,
+    "fullUnitSuitePassed": 6737,
+    "unitTestsSkipped": 11,
+    "unchangedSharedSuite": {
+      "passed": 17,
+      "failed": 5,
+      "reason": "Legacy mocks and expectations target the previous Recent Runs page"
+    },
+    "ciRouting": "Needs an approved shared loader or prerequisite migration before merge",
+    "temporarySharedLoaderProof": {
+      "passed": 27,
+      "repositorySharedFilesChanged": false
+    }
+  }
+}

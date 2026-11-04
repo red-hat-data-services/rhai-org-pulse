@@ -18,5 +18,24 @@
       "rhoaiVersion": null,
       "timestamp": null
     }
-  ]
+  ],
+  "total": 3,
+  "pageSize": 20,
+  "start": 1,
+  "end": 3,
+  "nextCursor": null,
+  "previousCursor": null,
+  "options": {
+    "versions": [
+      "3.6.0-ea.2",
+      "3.5.0"
+    ],
+    "suites": [
+      "ad-hoc",
+      "exploratory_specs",
+      "release_gate"
+    ]
+  },
+  "sortField": "timestamp",
+  "sortDir": "desc"
 }

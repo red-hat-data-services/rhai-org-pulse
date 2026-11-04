@@ -16,6 +16,7 @@ const {
   bugFilters
 } = require('./opensearch');
 const { getEffectiveSettings, getSavedSettings, saveSettings } = require('./config');
+const { parseRecentRuns, pageRecentRuns } = require('./recent-runs');
 
 /** Wrap an async handler so OpenSearch connectivity errors become clean HTTP responses. */
 function safe(handler) {
@@ -82,11 +83,81 @@ function visibleJiraIssues(query) {
   return addFilter(withoutHiddenIssues(query), { exists: { field: 'bug_key' } });
 }
 
+/** Read complete run groups; stop between searches when the response closes.
+ * Paged callers request metadata only. Legacy callers retain all aggregates.
+ */
+async function readSuiteRunGroups(query, search, { isClosed = () => false, metadataOnly = false } = {}) {
+  const buckets = [];
+  let after;
+  do {
+    if (isClosed()) return null;
+    const response = await search(RUNS_INDEX, {
+      size: 0,
+      query,
+      aggs: {
+        suite_runs: {
+          composite: {
+            size: 500,
+            sources: [
+              { suite: { terms: { field: 'telemetry_suite' } } },
+              { invocation: { terms: { field: 'invocation_id' } } }
+            ],
+            ...(after ? { after } : {})
+          },
+          aggs: {
+            ...(!metadataOnly ? {
+              pass_rate: { avg: { field: 'passed_int' } },
+              passed: { filter: { term: { verdict: 'PASS' } } },
+              failed: { filter: { term: { verdict: 'FAIL' } } },
+              errors: { filter: { term: { verdict: 'ERROR' } } },
+              duration: { sum: { field: 'duration_s' } },
+              duration_count: { value_count: { field: 'duration_s' } },
+            } : {}),
+            latest: { top_hits: {
+              size: 1,
+              sort: [{ timestamp: 'desc' }, { execution_id: 'asc' }],
+              _source: metadataOnly ? ['timestamp', 'rhoai_version'] : ['timestamp', 'rhoai_version', 'rhods_operator_digest', 'cluster_name']
+            } }
+          }
+        }
+      }
+    });
+    if (isClosed()) return null;
+    const aggregation = response.aggregations?.suite_runs;
+    buckets.push(...bucketList(aggregation));
+    after = aggregation?.after_key;
+  } while (after);
+
+  return buckets.map((bucket) => {
+    const latest = bucket.latest?.hits?.hits?.[0]?._source || {};
+    return {
+      suite: bucket.key.suite,
+      invocationId: bucket.key.invocation,
+      timestamp: latest.timestamp || null,
+      ...(!metadataOnly ? {
+        tests: bucket.doc_count,
+        passed: bucket.passed?.doc_count || 0,
+        failed: bucket.failed?.doc_count || 0,
+        errors: bucket.errors?.doc_count || 0,
+        duration: bucket.duration_count?.value === bucket.doc_count ? valueOrNull(bucket.duration) : null,
+        passRate: bucket.pass_rate?.value ?? null,
+      } : {}),
+      rhoaiVersion: latest.rhoai_version || null,
+      ...(!metadataOnly ? {
+        rhodsOperatorDigest: latest.rhods_operator_digest || null,
+        clusterName: latest.cluster_name || null
+      } : {})
+    };
+  });
+}
+
+/** Mount read-only routes and a short-lived metadata cache for this connection. */
 module.exports = function registerRoutes(router, context) {
   const { requireAuth, requireAdmin } = context;
   const { readFromStorage, writeToStorage } = context.storage || {};
   let cachedClient;
   let cachedSignature;
+  let recentGroupsCache;
 
   async function getRuntimeClient() {
     const settings = await getEffectiveSettings(readFromStorage);
@@ -215,6 +286,7 @@ module.exports = function registerRoutes(router, context) {
       const overrides = await saveSettings(writeToStorage, req.body);
       cachedClient = null;
       cachedSignature = null;
+      recentGroupsCache = null;
       const effective = await getEffectiveSettings(readFromStorage);
       res.json({ status: 'saved', overrides, ...effective });
     } catch (err) {
@@ -428,11 +500,17 @@ module.exports = function registerRoutes(router, context) {
    *       - { in: query, name: includeBugs, schema: { type: boolean, default: true }, description: Set false for lightweight run metadata without RCA retrieval }
    *       - { in: query, name: dateFrom, schema: { type: string, format: date } }
    *       - { in: query, name: dateTo, schema: { type: string, format: date } }
+   *       - { in: query, name: pageSize, schema: { type: integer, minimum: 1, maximum: 200 }, description: Opt into lightweight pagination across all run groups }
+   *       - { in: query, name: cursor, schema: { type: string }, description: Recent-run cursor bound to filters and sort order }
+   *       - { in: query, name: sortDir, schema: { type: string, enum: [asc, desc], default: desc }, description: Latest recorded test timestamp order; requires pageSize }
+   *       - { in: query, name: runQuery, schema: { type: string, maxLength: 256 }, description: Run ID substring; requires pageSize }
+   *       - { in: query, name: refresh, schema: { type: boolean, default: false }, description: Bypass the 10-second metadata cache; requires pageSize }
    *     responses:
-   *       200: { description: "Test run rows ordered by latest recorded execution time. Lightweight responses contain suite, invocation, version and execution timestamp." }
-   *       400: { description: Invalid limit }
+   *       200: { description: "Run groups ordered by recorded execution timestamp. Paged mode returns rows, total, start, end, pageSize, nextCursor, previousCursor, options (versions and suites), sortField and sortDir." }
+   *       400: { description: "Invalid limit, page parameters, or cursor" }
    */
   router.get('/test-suites', requireAuth, safe(async function (req, res) {
+    const recent = parseRecentRuns(req.query);
     let limit = null;
     if (req.query.limit !== undefined) {
       if (!/^[1-9]\d*$/.test(String(req.query.limit)) || Number(req.query.limit) > 200) {
@@ -440,69 +518,40 @@ module.exports = function registerRoutes(router, context) {
       }
       limit = Number(req.query.limit);
     }
-    let query = runFilters({
+    let query = runFilters(recent ? {} : {
       version: req.query.version,
       dateFrom: req.query.dateFrom,
       dateTo: req.query.dateTo
     });
     query = addFilter(query, { exists: { field: 'telemetry_suite' } });
     query = addFilter(query, { exists: { field: 'invocation_id' } });
-    if (req.query.suite) query = addFilter(query, { term: { telemetry_suite: req.query.suite } });
+    if (!recent && req.query.suite) query = addFilter(query, { term: { telemetry_suite: req.query.suite } });
 
-    const buckets = [];
-    let after;
-    do {
-      const response = await osSearch(RUNS_INDEX, {
-        size: 0,
-        query,
-        aggs: {
-          suite_runs: {
-            composite: {
-              size: 500,
-              sources: [
-                { suite: { terms: { field: 'telemetry_suite' } } },
-                { invocation: { terms: { field: 'invocation_id' } } }
-              ],
-              ...(after ? { after } : {})
-            },
-            aggs: {
-              pass_rate: { avg: { field: 'passed_int' } },
-              passed: { filter: { term: { verdict: 'PASS' } } },
-              failed: { filter: { term: { verdict: 'FAIL' } } },
-              errors: { filter: { term: { verdict: 'ERROR' } } },
-              duration: { sum: { field: 'duration_s' } },
-              duration_count: { value_count: { field: 'duration_s' } },
-              latest: { top_hits: {
-                size: 1,
-                sort: [{ timestamp: 'desc' }, { execution_id: 'asc' }],
-                _source: ['timestamp', 'rhoai_version', 'rhods_operator_digest', 'cluster_name']
-              } }
-            }
-          }
+    if (recent) {
+      let closed = res.destroyed;
+      const onClose = () => { closed = true; };
+      res.once('close', onClose);
+      try {
+        const client = (await getRuntimeClient()).client;
+        if (closed) return;
+        let rows = !recent.refresh && recentGroupsCache?.client === client
+          && Date.now() < recentGroupsCache.expiresAt ? recentGroupsCache.rows : null;
+        if (!rows) {
+          rows = await readSuiteRunGroups(query, (index, body) => client.search(index, body), {
+            metadataOnly: true, isClosed: () => closed
+          });
+          if (rows === null || closed) return;
+          if (cachedClient === client) recentGroupsCache = { client, rows, expiresAt: Date.now() + 10_000 };
         }
-      });
-      const aggregation = response.aggregations?.suite_runs;
-      buckets.push(...bucketList(aggregation));
-      after = aggregation?.after_key;
-    } while (after);
-
-    let rows = buckets.map((bucket) => {
-      const latest = bucket.latest?.hits?.hits?.[0]?._source || {};
-      return {
-        suite: bucket.key.suite,
-        invocationId: bucket.key.invocation,
-        timestamp: latest.timestamp || null,
-        tests: bucket.doc_count,
-        passed: bucket.passed?.doc_count || 0,
-        failed: bucket.failed?.doc_count || 0,
-        errors: bucket.errors?.doc_count || 0,
-        duration: bucket.duration_count?.value === bucket.doc_count ? valueOrNull(bucket.duration) : null,
-        passRate: bucket.pass_rate?.value ?? null,
-        rhoaiVersion: latest.rhoai_version || null,
-        rhodsOperatorDigest: latest.rhods_operator_digest || null,
-        clusterName: latest.cluster_name || null
-      };
-    });
+        return res.json(pageRecentRuns(rows, recent));
+      } catch (err) {
+        if (!closed) throw err;
+      } finally {
+        res.removeListener('close', onClose);
+      }
+      return;
+    }
+    let rows = await readSuiteRunGroups(query, osSearch);
     rows.sort((a, b) => {
       const time = row => Number.isFinite(Date.parse(row.timestamp)) ? Date.parse(row.timestamp) : -Infinity;
       const left = time(a), right = time(b);
