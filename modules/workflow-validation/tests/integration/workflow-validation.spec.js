@@ -6,7 +6,7 @@ function recentPage(rows, values = {}) {
     options: { versions: [...new Set(rows.map(row => row.rhoaiVersion).filter(Boolean))], suites: [...new Set(rows.map(row => row.suite))] }, ...values }
 }
 
-async function mockRecentPages(page) {
+async function mockRecentPages(page, { refreshRunPrefix = '' } = {}) {
   const all = Array.from({ length: 47 }, (_, index) => ({ suite: index % 2 ? 'release-gate' : 'ad-hoc',
     invocationId: `run-${String(index).padStart(2, '0')}`, rhoaiVersion: index === 0 ? '3.0' : '3.6',
     timestamp: new Date(Date.UTC(2026, 0, index + 1)).toISOString() }))
@@ -19,7 +19,8 @@ async function mockRecentPages(page) {
       && (!query.get('dateTo') || row.timestamp.slice(0, 10) <= query.get('dateTo')))
     matching = matching.sort((a, b) => (Date.parse(a.timestamp) - Date.parse(b.timestamp)) * (query.get('sortDir') === 'asc' ? 1 : -1))
     const offset = Number(query.get('cursor') || 0)
-    const rows = matching.slice(offset, offset + 20)
+    const rows = matching.slice(offset, offset + 20).map(row => query.get('refresh') === 'true'
+      ? { ...row, invocationId: refreshRunPrefix + row.invocationId } : row)
     return route.fulfill({ json: recentPage(rows, { total: matching.length, start: rows.length ? offset + 1 : 0,
       end: offset + rows.length, nextCursor: offset + 20 < matching.length ? String(offset + 20) : null,
       previousCursor: offset > 0 ? String(Math.max(0, offset - 20)) : null,
@@ -255,7 +256,7 @@ test.describe('Workflow Validation module @workflow-validation', () => {
   })
 
   test('Refresh bypasses the metadata cache and retains the current page', async ({ page }) => {
-    await mockRecentPages(page)
+    await mockRecentPages(page, { refreshRunPrefix: 'refreshed-' })
     await page.goto('/#/workflow-validation/recent-runs')
     const pages = page.getByRole('navigation', { name: 'Recent run pages' })
     await expect(pages).toContainText('Showing 1–20 of 47 runs')
@@ -266,6 +267,7 @@ test.describe('Workflow Validation module @workflow-validation', () => {
     expect(new URL((await refreshed).url()).searchParams.has('cursor')).toBe(true)
     await expect(page.getByRole('button', { name: 'Refresh', exact: true })).toBeEnabled()
     await expect(pages).toContainText('Showing 21–40')
+    await expect(page.getByRole('table')).toContainText('refreshed-run-26')
   })
 
   test('keeps the landing page free of build data from an older backend', async ({ page }) => {

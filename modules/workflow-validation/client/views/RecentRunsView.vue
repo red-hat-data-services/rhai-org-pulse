@@ -156,6 +156,11 @@ async function requestRuns(query, refresh = false) {
   cancelSearch()
   const current = ++sequence
   controller?.abort()
+  if (query.dateFrom && query.dateTo && query.dateFrom > query.dateTo) {
+    loading.value = false
+    error.value = ''
+    return
+  }
   controller = new AbortController()
   const requested = { ...query }
   lastAttempt.value = requested

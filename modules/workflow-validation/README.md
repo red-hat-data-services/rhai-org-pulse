@@ -104,7 +104,9 @@ Important rules:
   can select another cohort; the dashboard never defaults to an aggregation
   of historical executions.
 - Dashboard metrics and the complete test-results table are scoped to that one
-  `rhoai_version`, `telemetry_suite`, and `invocation_id`. Jira-linked issues
+  `rhoai_version`, `telemetry_suite`, and `invocation_id`, except exact-run links
+  from Recent Runs. Those links select `telemetry_suite` and `invocation_id`
+  across versions. Jira-linked issues
   from the same execution are separated into newly opened issues and existing
   issues encountered without opening another issue.
 - The dashboard table omits task counts; task outcomes remain available in the

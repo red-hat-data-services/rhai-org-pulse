@@ -508,6 +508,30 @@ describe('workflow-validation live schema routes', () => {
     expect(fetch).toHaveBeenCalledTimes(6) // Legacy callers remain uncached.
   })
 
+  it('keeps newer refresh results cached when an older scan finishes later', async () => {
+    const pending = []
+    const fetch = vi.fn(() => new Promise(resolve => pending.push(resolve)))
+    vi.stubGlobal('fetch', fetch)
+    const route = register()['/test-suites'].at(-1)
+    const older = route({ query: { pageSize: '20' } }, makeResponse())
+    await vi.waitFor(() => expect(pending).toHaveLength(1))
+    const refreshed = makeResponse()
+    const newer = route({ query: { pageSize: '20', refresh: 'true' } }, refreshed)
+    await vi.waitFor(() => expect(pending).toHaveLength(2))
+    pending[1](jsonResponse({ aggregations: { suite_runs: { buckets: [{
+      key: { suite: 'release_gate', invocation: 'new-run' },
+      latest: { hits: { hits: [{ _source: { timestamp: '2026-01-01T00:00:00Z' } }] } }
+    }] } } }))
+    await newer
+    expect(refreshed.body.rows[0].invocationId).toBe('new-run')
+    pending[0](jsonResponse({ aggregations: { suite_runs: { buckets: [] } } }))
+    await older
+    const cached = makeResponse()
+    await route({ query: { pageSize: '20' } }, cached)
+    expect(cached.body.rows[0].invocationId).toBe('new-run')
+    expect(fetch).toHaveBeenCalledTimes(2)
+  })
+
   it('stops a disconnected composite scan and never caches its partial rows', async () => {
     const response = makeResponse()
     const fetch = vi.fn().mockImplementationOnce(async () => {

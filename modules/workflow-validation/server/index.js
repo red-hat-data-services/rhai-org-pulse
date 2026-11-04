@@ -158,6 +158,7 @@ module.exports = function registerRoutes(router, context) {
   let cachedClient;
   let cachedSignature;
   let recentGroupsCache;
+  let recentScanSequence = 0;
 
   async function getRuntimeClient() {
     const settings = await getEffectiveSettings(readFromStorage);
@@ -537,11 +538,14 @@ module.exports = function registerRoutes(router, context) {
         let rows = !recent.refresh && recentGroupsCache?.client === client
           && Date.now() < recentGroupsCache.expiresAt ? recentGroupsCache.rows : null;
         if (!rows) {
+          const scanSequence = ++recentScanSequence;
           rows = await readSuiteRunGroups(query, (index, body) => client.search(index, body), {
             metadataOnly: true, isClosed: () => closed
           });
           if (rows === null || closed) return;
-          if (cachedClient === client) recentGroupsCache = { client, rows, expiresAt: Date.now() + 10_000 };
+          if (cachedClient === client && scanSequence > (recentGroupsCache?.sequence || 0)) {
+            recentGroupsCache = { client, rows, sequence: scanSequence, expiresAt: Date.now() + 10_000 };
+          }
         }
         return res.json(pageRecentRuns(rows, recent));
       } catch (err) {

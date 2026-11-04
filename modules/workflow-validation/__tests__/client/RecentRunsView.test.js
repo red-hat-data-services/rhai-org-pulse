@@ -134,6 +134,23 @@ describe('Recent Runs', () => {
     expect(wrapper.find('[role="alert"]').exists()).toBe(false)
   })
 
+  it('waits for a valid restored URL range before fetching, including navigation and refresh', async () => {
+    const params = ref({ recentFrom: '2026-02-01', recentTo: '2026-01-01' })
+    wrapper = mount(RecentRunsView, { global: { provide: { moduleNav: { params } } } })
+    await flushPromises()
+    expect(apiRequest).not.toHaveBeenCalled()
+    expect(wrapper.get('[role="alert"]').text()).toContain('Recorded from must be on or before Recorded to')
+    await button('Refresh').trigger('click')
+    expect(apiRequest).not.toHaveBeenCalled()
+    params.value = { recentFrom: '2026-01-01', recentTo: '2026-02-01' }
+    await flushPromises()
+    expect(apiRequest).toHaveBeenCalledTimes(1)
+    params.value = { recentFrom: '2026-03-01', recentTo: '2026-02-01' }
+    await flushPromises()
+    expect(apiRequest).toHaveBeenCalledTimes(1)
+    expect(wrapper.get('[role="alert"]').text()).toContain('Recorded from must be on or before Recorded to')
+  })
+
   it('hydrates its own URL state and synchronizes successful selections without duplicate loads', async () => {
     const params = ref({ recentVersion: '3.5.0', recentSort: 'asc', recentCursor: 'saved-page', version: 'unrelated' })
     const nav = { params, updateParams: vi.fn(values => { params.value = { ...params.value, ...values } }) }
