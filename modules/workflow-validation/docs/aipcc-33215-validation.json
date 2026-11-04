@@ -97,7 +97,7 @@
     "browserTestsPassed": 27,
     "fullUnitSuitePassed": 6739,
     "unitTestsSkipped": 11,
-    "ciRouting": "Blocked: shared runner update belongs in a separate maintainer-approved change",
+    "ciRouting": "Existing shared entrypoint loads the module-owned 27-test suite with one require; CI configuration is unchanged",
     "temporarySharedLoaderProof": {
       "passed": 27,
       "repositorySharedFilesChanged": false
@@ -108,9 +108,27 @@
       "reason": "Legacy mocks and expectations target the previous Recent Runs page"
     },
     "sharedEntryPoint": "tests/integration/workflow-validation.spec.js",
-    "prScope": "modules/workflow-validation/** only",
-    "outsideModuleChanges": false,
-    "prStatus": "Ready for review; shared CI integration and ownership approval still block merging"
+    "prScope": "Module implementation, tests, and evidence; one shared test entrypoint outside the module",
+    "outsideModuleChanges": true,
+    "prStatus": "Ready for review; ownership approval and required checks are required before merging",
+    "sharedEntryPointLines": 1,
+    "sharedEntryPointOwners": [
+      "red-hat-data-services/org-pulse-maintainers",
+      "adamrdrew"
+    ],
+    "sharedCiCommandProof": {
+      "command": "npx playwright test --grep @workflow-validation --workers=2",
+      "passed": 27,
+      "sameTestsAsModuleCommand": true,
+      "previousTestsRetained": 22,
+      "newTests": 5,
+      "skipped": 0
+    },
+    "ownershipEligibility": {
+      "reviewer": "adamrdrew",
+      "verifiedWithRepositoryOwnershipEvaluator": true,
+      "actualApprovalStillRequired": true
+    }
   },
   "builds": {
     "backend": "org-pulse-backend-aipcc33215-ready-20261104-4866ecfb-1",
@@ -133,9 +151,10 @@
       "limit=20 instead of pageSize=20",
       "version filter retained in exact-run links"
     ],
-    "discovery": "The shared Makefile runs the root Playwright config, whose testDir is ./tests. It does not discover the module-owned suite.",
+    "discovery": "The root runner discovers the existing shared entrypoint, which now loads the module-owned suite.",
     "reproduction": "One unchanged failing shared test reproduced the visible error: The run service returned an invalid page. Please retry.",
-    "ownershipGate": "Module approval is still required; this is separate from the browser test failure.",
-    "requiredResolution": "A separate maintainer-approved CI update must discover the module-owned suite while preserving the existing suites for other modules."
+    "ownershipGate": "Approval is required; CODEOWNERS explicitly lists adamrdrew for the module and the shared Workflow Validation test entrypoint.",
+    "requiredResolution": "Fixed in this PR through the one-line shared entrypoint; no separate CI PR or configuration change is required.",
+    "historicalFailure": true
   }
 }

@@ -182,15 +182,19 @@ screens. No browser errors occurred. The JSON evidence reflects this revision.
 
 ### Module-owned browser tests
 
-The feature PR keeps every change inside Workflow Validation, including the
-browser suite and its standalone Playwright config. Shared test files and the
-shared CI configuration remain identical to the base branch.
+The browser suite and its standalone Playwright config live inside Workflow
+Validation. The existing shared entrypoint,
+`tests/integration/workflow-validation.spec.js`, contains one `require` that
+loads the module-owned suite. This is the only changed file outside the module.
+CODEOWNERS explicitly lists `@adamrdrew` for this entrypoint, as in PR #1792.
+CI workflows, Makefile, and the root Playwright config are unchanged.
 
-All 27 module-owned browser tests pass. The branch also passes 6,739 unit tests
-(11 skipped), lint, and the production build. The unchanged shared runner still
-loads the legacy suite; five old checks fail against the updated page. A
-separate maintainer-approved runner update must discover the module-owned suite
-before this feature PR can merge. The PR is ready for review. This dependency still blocks merging.
+The suite retains all 22 previous browser tests with updated API expectations
+and adds five tests for pagination, automatic filtering, refresh, and runs
+spanning versions. No test is skipped or disabled by the loader. Both the
+standalone module command and the existing shared CI command discover the same
+27 tests. The branch also passes 6,739 unit tests (11 skipped), lint, and the
+production build.
 
 
 ## Fresh GPUaaS images and CI diagnosis — 2026-11-04
@@ -214,7 +218,8 @@ counts, and runtime configuration match the baseline.
 [Fresh filtered page](images/aipcc-33215-gpuaas-filtered.png).
 
 The [required integration run](https://github.com/red-hat-data-services/rhai-org-pulse/actions/runs/41901136010)
-has 17 passing and five failing shared tests. The shared suite supplies only
+recorded 17 passing and five failing shared tests before the entrypoint fix.
+The old shared suite supplied only
 `{ rows }`. The page requires pagination metadata and rejects that incomplete
 response, so the table, run links, and empty state never appear. One unchanged
 shared test reproduced the visible error: “The run service returned an invalid
@@ -223,9 +228,9 @@ version filter on exact-run links. Those expectations describe the previous
 page behavior.
 
 The shared Makefile runs `npx playwright test --grep @workflow-validation` with
-the root configuration, whose `testDir` is `./tests`. It does not discover the
-27 updated tests inside this module. A separate maintainer-approved CI update
-must select the module-owned suite and preserve existing coverage for other
-modules. The Ownership Gate separately requires module approval. No tests have
-been deleted or disabled. The PR is ready for review; these checks still block
-merging. Application code has not changed during this failure investigation.
+the root configuration, whose `testDir` is `./tests`. The shared entrypoint now
+loads the updated 27-test module suite through one `require`. This fixes discovery
+without changing CI configuration or another module's tests. The previous tests
+are retained in that suite. The Ownership Gate still requires approval. The PR
+is ready for review. This fix changes test discovery and documentation only;
+the deployed application code and GPUaaS evidence remain applicable.
