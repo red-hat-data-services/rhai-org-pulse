@@ -227,7 +227,7 @@ export function runOutcomeCounts(run = {}) {
 // ─── API ───
 
 export function useWorkflowValidation() {
-  const getRecentRuns = () => apiRequest(`${BASE}/test-suites?limit=20&includeBugs=false`)
+  const getRecentRuns = (params = {}, options = {}) => apiRequest(`${BASE}/test-suites${buildQuery({ pageSize: 20, includeBugs: false, ...params }, {})}`, options)
   const getFilters = () => initializeVersionFilter()
   const getOverview = (extra = {}) => filteredRequest('overview', ['version', 'dateFrom', 'dateTo', 'testSuite', 'invocationId'], extra)
   const getCharts = (extra = {}) => filteredRequest('charts', ['version', 'dateFrom', 'dateTo', 'testSuite', 'invocationId'], extra)

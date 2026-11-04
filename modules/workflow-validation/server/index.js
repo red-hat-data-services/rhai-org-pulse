@@ -16,6 +16,7 @@ const {
   bugFilters
 } = require('./opensearch');
 const { getEffectiveSettings, getSavedSettings, saveSettings } = require('./config');
+const { parseRecentRuns, pageRecentRuns } = require('./recent-runs');
 
 /** Wrap an async handler so OpenSearch connectivity errors become clean HTTP responses. */
 function safe(handler) {
@@ -428,11 +429,16 @@ module.exports = function registerRoutes(router, context) {
    *       - { in: query, name: includeBugs, schema: { type: boolean, default: true }, description: Set false for lightweight run metadata without RCA retrieval }
    *       - { in: query, name: dateFrom, schema: { type: string, format: date } }
    *       - { in: query, name: dateTo, schema: { type: string, format: date } }
+   *       - { in: query, name: pageSize, schema: { type: integer, minimum: 1, maximum: 200 }, description: Opt into lightweight pagination across all run groups }
+   *       - { in: query, name: cursor, schema: { type: string }, description: Recent-run cursor bound to filters and sort order }
+   *       - { in: query, name: sortDir, schema: { type: string, enum: [asc, desc], default: desc }, description: Latest recorded test timestamp order; requires pageSize }
+   *       - { in: query, name: runQuery, schema: { type: string, maxLength: 256 }, description: Run ID substring; requires pageSize }
    *     responses:
-   *       200: { description: "Test run rows ordered by latest recorded execution time. Lightweight responses contain suite, invocation, version and execution timestamp." }
-   *       400: { description: Invalid limit }
+   *       200: { description: "Run groups ordered by recorded execution timestamp. Paged mode returns rows, total, start, end, pageSize, nextCursor, previousCursor, options (versions and suites), sortField and sortDir." }
+   *       400: { description: "Invalid limit, page parameters, or cursor" }
    */
   router.get('/test-suites', requireAuth, safe(async function (req, res) {
+    const recent = parseRecentRuns(req.query);
     let limit = null;
     if (req.query.limit !== undefined) {
       if (!/^[1-9]\d*$/.test(String(req.query.limit)) || Number(req.query.limit) > 200) {
@@ -440,14 +446,14 @@ module.exports = function registerRoutes(router, context) {
       }
       limit = Number(req.query.limit);
     }
-    let query = runFilters({
+    let query = runFilters(recent ? {} : {
       version: req.query.version,
       dateFrom: req.query.dateFrom,
       dateTo: req.query.dateTo
     });
     query = addFilter(query, { exists: { field: 'telemetry_suite' } });
     query = addFilter(query, { exists: { field: 'invocation_id' } });
-    if (req.query.suite) query = addFilter(query, { term: { telemetry_suite: req.query.suite } });
+    if (!recent && req.query.suite) query = addFilter(query, { term: { telemetry_suite: req.query.suite } });
 
     const buckets = [];
     let after;
@@ -503,6 +509,7 @@ module.exports = function registerRoutes(router, context) {
         clusterName: latest.cluster_name || null
       };
     });
+    if (recent) return res.json(pageRecentRuns(rows, recent));
     rows.sort((a, b) => {
       const time = row => Number.isFinite(Date.parse(row.timestamp)) ? Date.parse(row.timestamp) : -Infinity;
       const left = time(a), right = time(b);

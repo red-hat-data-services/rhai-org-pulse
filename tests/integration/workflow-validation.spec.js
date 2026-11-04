@@ -1,5 +1,30 @@
 const { test, expect } = require('@playwright/test')
 
+function recentPage(rows, values = {}) {
+  return { rows, total: rows.length, start: rows.length ? 1 : 0, end: rows.length,
+    nextCursor: null, previousCursor: null,
+    options: { versions: [...new Set(rows.map(row => row.rhoaiVersion).filter(Boolean))], suites: [...new Set(rows.map(row => row.suite))] }, ...values }
+}
+
+async function mockRecentPages(page) {
+  const all = Array.from({ length: 47 }, (_, index) => ({ suite: index % 2 ? 'release-gate' : 'ad-hoc',
+    invocationId: `run-${String(index).padStart(2, '0')}`, rhoaiVersion: index === 0 ? '3.0' : '3.6',
+    timestamp: new Date(Date.UTC(2026, 0, index + 1)).toISOString() }))
+  await page.route('**/api/modules/workflow-validation/test-suites?**', route => {
+    const query = new URL(route.request().url()).searchParams
+    let matching = all.filter(row => (!query.get('version') || row.rhoaiVersion === query.get('version'))
+      && (!query.get('suite') || row.suite === query.get('suite'))
+      && (!query.get('runQuery') || row.invocationId.includes(query.get('runQuery'))))
+    matching = matching.sort((a, b) => (Date.parse(a.timestamp) - Date.parse(b.timestamp)) * (query.get('sortDir') === 'asc' ? 1 : -1))
+    const offset = Number(query.get('cursor') || 0)
+    const rows = matching.slice(offset, offset + 20)
+    return route.fulfill({ json: recentPage(rows, { total: matching.length, start: rows.length ? offset + 1 : 0,
+      end: offset + rows.length, nextCursor: offset + 20 < matching.length ? String(offset + 20) : null,
+      previousCursor: offset > 0 ? String(Math.max(0, offset - 20)) : null,
+      options: { versions: ['3.6', '3.0'], suites: ['release-gate', 'ad-hoc'] } }) })
+  })
+}
+
 async function mockTrendSuites(page) {
   const rows = [
     { suite: 'ad-hoc', invocationId: 'ad-hoc-latest', timestamp: '2026-10-02T10:00:00Z', tests: 2, passed: 2, failed: 0, errors: 0, passRate: 1, rhoaiVersion: '3.6', productBugs: [] },
@@ -14,7 +39,8 @@ async function mockTrendSuites(page) {
   }))
   await page.route('**/api/modules/workflow-validation/test-suites?**', (route) => {
     const suite = new URL(route.request().url()).searchParams.get('suite')
-    return route.fulfill({ json: { rows: suite ? rows.filter((row) => row.suite === suite) : rows } })
+    const selected = suite ? rows.filter((row) => row.suite === suite) : rows
+    return route.fulfill({ json: new URL(route.request().url()).searchParams.has('pageSize') ? recentPage(selected) : { rows: selected } })
   })
 }
 
@@ -112,8 +138,49 @@ test.describe('Workflow Validation module @workflow-validation', () => {
       if (path.endsWith('/workflow-history')) {
         body = { workflow: 'live-workflow', workflowLabel: 'Live workflow', summary: { runs: 1, passed: 1, failed: 0, passRate: 1, latestVerdict: 'PASS' }, runs: [{ id: 'different-opensearch-id', execution_id: 'opaque-id', run_id: 'run-1', workflow: 'live-workflow', workflow_label: 'Live workflow', rhoai_version: '3.6', verdict: 'PASS', timestamp: '2026-09-15T10:00:00Z', tasks_passed: 1, tasks_total: 1 }], bugs: [] }
       }
+      if (path.endsWith('/test-suites') && new URL(route.request().url()).searchParams.has('pageSize')) body = recentPage(body.rows)
       await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(body) })
     })
+  })
+
+  test('shows pagination on the initial list and reaches all 47 runs', async ({ page }) => {
+    await mockRecentPages(page)
+    await page.goto('/#/workflow-validation/recent-runs')
+    const pages = page.getByRole('navigation', { name: 'Recent run pages' })
+    await expect(pages).toBeVisible()
+    await expect(pages).toContainText('Showing 1–20 of 47 runs')
+    await expect(page.getByRole('table').locator('tbody tr')).toHaveCount(20)
+    await expect(pages.getByRole('button', { name: 'Previous page' })).toBeDisabled()
+    await expect(page.getByRole('table').locator('tbody tr').first()).toContainText('run-46')
+    await pages.getByRole('button', { name: 'Next page' }).click()
+    await expect(pages).toContainText('Showing 21–40 of 47 runs')
+    await pages.getByRole('button', { name: 'Next page' }).click()
+    await expect(pages).toContainText('Showing 41–47 of 47 runs')
+    await expect(page.getByRole('table').locator('tbody tr')).toHaveCount(7)
+    await expect(pages.getByRole('button', { name: 'Next page' })).toBeDisabled()
+    await pages.getByRole('button', { name: 'Previous page' }).click()
+    await expect(pages).toContainText('Showing 21–40 of 47 runs')
+    await page.getByRole('combobox', { name: 'Sort runs' }).selectOption('asc')
+    await page.getByRole('button', { name: 'Apply filters' }).click()
+    await expect(pages).toContainText('Showing 1–20 of 47 runs')
+    await expect(page.getByRole('table').locator('tbody tr').first()).toContainText('run-00')
+  })
+
+  test('filters outside the initial 20, restores selections on reload, and clears back to page one', async ({ page }) => {
+    await mockRecentPages(page)
+    await page.goto('/#/workflow-validation/recent-runs')
+    await expect(page.getByRole('table').locator('tbody tr')).toHaveCount(20)
+    await page.getByRole('combobox', { name: 'RHOAI version', exact: true }).selectOption('3.0')
+    await page.getByRole('button', { name: 'Apply filters' }).click()
+    await expect(page.getByRole('table').locator('tbody tr')).toHaveCount(1)
+    await expect(page.getByRole('table')).toContainText('run-00')
+    await expect(page).toHaveURL(/recentVersion=3.0/)
+    await page.reload()
+    await expect(page.getByRole('combobox', { name: 'RHOAI version', exact: true })).toHaveValue('3.0')
+    await expect(page.getByRole('table')).toContainText('run-00')
+    await page.getByRole('button', { name: 'Clear filters' }).click()
+    await expect(page.getByRole('navigation', { name: 'Recent run pages' })).toContainText('Showing 1–20 of 47 runs')
+    await expect(page.getByRole('table').locator('tbody tr')).toHaveCount(20)
   })
 
   test('opens a recent run through the existing dashboard and its individual test', async ({ page }) => {
@@ -123,12 +190,12 @@ test.describe('Workflow Validation module @workflow-validation', () => {
     })
     await page.goto('/#/workflow-validation/recent-runs?version=old&testSuite=old&invocationId=old')
     await expect(page.getByRole('heading', { name: 'Recent Runs', exact: true })).toBeVisible()
-    await expect(page.getByRole('columnheader')).toHaveCount(3)
+    await expect(page.getByRole('columnheader')).toHaveCount(4)
     await expect(page.getByRole('columnheader', { name: /build|image/i })).toHaveCount(0)
     await expect(page.getByRole('table').locator('tbody tr')).toHaveCount(1)
     await expect(page.getByText('Design preview', { exact: false })).toHaveCount(0)
     const recentRequest = requests.find(url => url.pathname.endsWith('/test-suites'))
-    expect(Object.fromEntries(recentRequest.searchParams)).toEqual({ limit: '20', includeBugs: 'false' })
+    expect(Object.fromEntries(recentRequest.searchParams)).toEqual({ pageSize: '20', includeBugs: 'false', sortDir: 'desc' })
 
     await page.getByRole('link', { name: 'View run invocation-1' }).click()
     await expect(page).toHaveURL(/overview\?exactRun=1/)
@@ -151,14 +218,14 @@ test.describe('Workflow Validation module @workflow-validation', () => {
 
   test('keeps the landing page free of build data from an older backend', async ({ page }) => {
     await page.route('**/api/modules/workflow-validation/test-suites?**', route => route.fulfill({
-      json: { buildMetadataEnabled: true, rows: [
+      json: { buildMetadataEnabled: true, ...recentPage([
         { suite: 'release-gate', invocationId: 'original-run', rhoaiVersion: '3.6', buildTimestamp: '2026-10-19T10:30:00.000Z', operatorImage: { release: '123', buildDate: '2026-07-03T09:28:12Z' } },
         { suite: 'ad-hoc', invocationId: 'another-run' }
-      ] }
+      ]) }
     }))
     await page.goto('/#/workflow-validation/recent-runs')
     await expect(page.getByRole('table').locator('tbody tr')).toHaveCount(2)
-    await expect(page.getByRole('columnheader')).toHaveCount(3)
+    await expect(page.getByRole('columnheader')).toHaveCount(4)
     await expect(page.getByRole('columnheader', { name: /build|image/i })).toHaveCount(0)
     await expect(page.locator('table time')).toHaveCount(0)
     await expect(page.getByRole('table')).not.toContainText('10:30')
@@ -217,7 +284,7 @@ test.describe('Workflow Validation module @workflow-validation', () => {
     let failed = true
     await page.route('**/api/modules/workflow-validation/test-suites?**', route => route.fulfill({
       status: failed ? 503 : 200,
-      json: failed ? { error: 'Recent runs unavailable' } : { rows: [] }
+      json: failed ? { error: 'Recent runs unavailable' } : recentPage([])
     }))
     await page.goto('/#/workflow-validation/recent-runs')
     await expect(page.getByRole('alert')).toContainText('Recent runs unavailable')

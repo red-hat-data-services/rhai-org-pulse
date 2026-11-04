@@ -149,13 +149,13 @@ contract, representative tests, and affected Vue transformations together.
 
 ## Recent Runs landing page
 
-Dashboard opens Recent Runs. It lists up to 20 suite/invocation groups across
-all recorded versions, ordered by latest execution time. Each row shows the
-suite, recorded version, and View run. The page uses the existing
-`/test-suites?limit=20&includeBugs=false` API and ignores shared detail filters.
-View run opens the existing Overview view for that exact suite and invocation.
-Loading, empty, retry, and refresh states are covered by client and integration
-tests. Build metadata is outside this landing-page change.
+Dashboard opens Recent Runs with the latest 20 suite/invocation groups and
+pagination across all available runs. Each row shows the suite, recorded
+version, recorded test time in UTC, and View run. Optional filters select
+version, suite, run ID, and recorded dates. Sorting uses the existing execution
+`timestamp`; RHOAI build time is not available yet. Clear restores the initial
+unfiltered page. The page uses `/test-suites?pageSize=20&includeBugs=false`
+and ignores shared detail filters. View run opens the exact suite and invocation.
 
 See the [Recent Runs contract](docs/rhai-10567-recent-runs-contract.md) for
 navigation, page states, and deployment evidence. The

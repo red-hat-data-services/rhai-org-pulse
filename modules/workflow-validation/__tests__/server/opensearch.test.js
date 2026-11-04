@@ -453,6 +453,43 @@ describe('workflow-validation live schema routes', () => {
     })])
   })
 
+  it('paginates and filters complete run groups across composite pages without loading bugs', async () => {
+    const all = Array.from({ length: 45 }, (_, index) => ({
+      key: { suite: 'release_gate', invocation: `run-${index}` }, doc_count: 2,
+      latest: { hits: { hits: [{ _source: { timestamp: new Date(Date.UTC(2026, 0, index + 1)).toISOString(), rhoai_version: index === 0 ? '3.0' : '3.6' } }] } }
+    }))
+    const requests = []
+    vi.stubGlobal('fetch', vi.fn(async (_url, options) => {
+      const body = JSON.parse(options.body)
+      requests.push(body)
+      return jsonResponse({ aggregations: { suite_runs: body.aggs.suite_runs.composite.after
+        ? { buckets: all.slice(25) }
+        : { buckets: all.slice(0, 25), after_key: { suite: 'release_gate', invocation: 'run-24' } } } })
+    }))
+    const route = register()['/test-suites'].at(-1)
+    const first = makeResponse()
+    await route({ query: { pageSize: '20', includeBugs: 'false' } }, first)
+    expect(first.body).toMatchObject({ total: 45, start: 1, end: 20, previousCursor: null })
+    expect(first.body.rows[0].invocationId).toBe('run-44')
+    const next = makeResponse()
+    await route({ query: { pageSize: '20', includeBugs: 'false', cursor: first.body.nextCursor } }, next)
+    expect(next.body).toMatchObject({ start: 21, end: 40 })
+    const old = makeResponse()
+    await route({ query: { pageSize: '20', version: '3.0', includeBugs: 'false' } }, old)
+    expect(old.body.rows.map(row => row.invocationId)).toEqual(['run-0'])
+    expect(requests.every(body => body.aggs?.suite_runs)).toBe(true)
+    expect(requests.at(-1).query.bool.filter).not.toContainEqual({ term: { rhoai_version: '3.0' } })
+  })
+
+  it('rejects invalid recent-run pagination before querying OpenSearch', async () => {
+    const fetch = vi.fn()
+    vi.stubGlobal('fetch', fetch)
+    const response = makeResponse()
+    await register()['/test-suites'].at(-1)({ query: { pageSize: '20', sortDir: 'wrong' } }, response)
+    expect(response.statusCode).toBe(400)
+    expect(fetch).not.toHaveBeenCalled()
+  })
+
   it('selects the newest 20 run groups across all composite pages without loading bugs', async () => {
     const buckets = Array.from({ length: 25 }, (_, i) => ({
       key: { suite: i % 2 ? 'release_gate' : 'exploratory_specs', invocation: `run-${i}` },

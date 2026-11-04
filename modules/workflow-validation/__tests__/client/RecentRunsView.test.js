@@ -1,77 +1,133 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { flushPromises, mount } from '@vue/test-utils'
+import { ref } from 'vue'
 import RecentRunsView from '../../client/views/RecentRunsView.vue'
 import { filters, resetFilters } from '../../client/composables/useWorkflowValidation'
 import { apiRequest } from '@shared/client/services/api'
 import fixture from '../fixtures/recent-runs.json'
 
 vi.mock('@shared/client/services/api', () => ({ apiRequest: vi.fn() }))
+const options = { versions: ['3.6.0-ea.2', '3.5.0', 'older'], suites: ['release_gate', 'exploratory_specs', 'ad-hoc'] }
+function page(rows = fixture.rows, values = {}) {
+  return { rows, total: rows.length, start: rows.length ? 1 : 0, end: rows.length,
+    nextCursor: null, previousCursor: null, options, ...values }
+}
+const request = call => new URL(apiRequest.mock.calls[call][0], 'http://localhost').searchParams
 
 describe('Recent Runs', () => {
   let wrapper
-  beforeEach(() => {
-    apiRequest.mockReset().mockResolvedValue(fixture)
-    resetFilters()
-  })
+  const button = name => wrapper.findAll('button').find(item => item.text() === name)
+  beforeEach(() => { apiRequest.mockReset().mockResolvedValue(page()); resetFilters() })
   afterEach(() => wrapper?.unmount())
 
-  it('uses the existing API across all suites and versions without shared filters', async () => {
-    Object.assign(filters, { version: 'older', testSuite: 'another-suite', invocationId: 'another-run', verdict: 'FAIL', q: 'old search' })
+  it('starts unfiltered with pagination and the existing recorded timestamp', async () => {
+    Object.assign(filters, { version: 'older', testSuite: 'another-suite', invocationId: 'another-run', dateFrom: '2000-01-01' })
     wrapper = mount(RecentRunsView)
     await flushPromises()
-    expect(apiRequest).toHaveBeenCalledExactlyOnceWith('/modules/workflow-validation/test-suites?limit=20&includeBugs=false')
+    expect(Object.fromEntries(request(0))).toEqual({ pageSize: '20', includeBugs: 'false', sortDir: 'desc' })
     expect(wrapper.findAll('tbody tr')).toHaveLength(3)
-    expect(wrapper.text()).toContain('Release Gate')
-    expect(wrapper.text()).toContain('Exploratory Specs')
+    expect(wrapper.findAll('thead th').map(cell => cell.text())).toEqual(['Test suite', 'Version', 'Recorded test time (UTC)', 'Run details'])
+    expect(wrapper.get('nav[aria-label="Recent run pages"]').text()).toContain('Showing 1–3 of 3 runs')
+    expect(button('Previous').element.disabled).toBe(true)
+    expect(button('Next').element.disabled).toBe(true)
+    expect(wrapper.text()).toContain('All versions · All suites · All run IDs · All dates')
     expect(wrapper.text()).toContain('Version unavailable')
-    expect(wrapper.findAll('thead th').map(cell => cell.text())).toEqual(['Test suite', 'Version', 'Run details'])
-    expect(wrapper.text()).not.toContain('2026-10-19')
-    expect(wrapper.text()).not.toContain('Design preview')
+    expect(wrapper.findAll('time')).toHaveLength(2)
+    expect(wrapper.text()).not.toMatch(/Build date|Jenkins|Image release/)
   })
 
-  it('shows only landing-page columns when a backend includes extra build metadata', async () => {
-    apiRequest.mockResolvedValue({ buildMetadataEnabled: true, rows: [
-      { ...fixture.rows[0], buildTimestamp: '2026-10-19T10:30:00.000Z', operatorImage: { release: '123', buildDate: '2026-07-03T09:28:12Z' } },
-      fixture.rows[1]
-    ] })
-    wrapper = mount(RecentRunsView)
-    await flushPromises()
-    expect(wrapper.findAll('thead th')).toHaveLength(3)
-    expect(wrapper.findAll('time')).toHaveLength(0)
-    expect(wrapper.text()).not.toMatch(/Build|Jenkins|Image release|2026-07-03|10:30/)
-  })
-
-  it('links to the exact dashboard run and explicitly clears an unavailable version', async () => {
+  it('keeps exact-run navigation and clears an unavailable version', async () => {
     wrapper = mount(RecentRunsView)
     await flushPromises()
     const link = new URL(wrapper.findAll('a')[2].attributes('href').replace('#', ''), 'http://localhost')
     expect(link.pathname).toBe('/workflow-validation/overview')
-    expect(Object.fromEntries(link.searchParams)).toEqual({
-      exactRun: '1', version: '', testSuite: 'ad-hoc', invocationId: 'sample / opaque?&id',
-      datePreset: 'all', dateFrom: '', dateTo: ''
-    })
+    expect(Object.fromEntries(link.searchParams)).toEqual({ exactRun: '1', version: '', testSuite: 'ad-hoc', invocationId: 'sample / opaque?&id', datePreset: 'all', dateFrom: '', dateTo: '' })
   })
 
-  it('caps older backend responses at 20 rows', async () => {
-    apiRequest.mockResolvedValue({ rows: Array.from({ length: 25 }, (_, i) => ({ ...fixture.rows[0], invocationId: `run-${i}` })) })
+  it('visits subsequent and previous pages without applying shared filters', async () => {
+    apiRequest.mockResolvedValueOnce(page(fixture.rows, { total: 45, nextCursor: 'page-two' }))
     wrapper = mount(RecentRunsView)
     await flushPromises()
-    expect(wrapper.findAll('tbody tr')).toHaveLength(20)
+    apiRequest.mockResolvedValueOnce(page([fixture.rows[1]], { total: 45, start: 21, end: 21, previousCursor: 'page-one' }))
+    await button('Next').trigger('click')
+    await flushPromises()
+    expect(request(1).get('cursor')).toBe('page-two')
+    expect(wrapper.text()).toContain('Showing 21–21 of 45 runs')
+    apiRequest.mockResolvedValueOnce(page())
+    await button('Previous').trigger('click')
+    await flushPromises()
+    expect(request(2).get('cursor')).toBe('page-one')
   })
 
-  it('shows an empty state only after a successful request', async () => {
+  it('submits optional filters and resets pagination, then clears everything', async () => {
+    apiRequest.mockResolvedValueOnce(page(fixture.rows, { nextCursor: 'next-page', total: 40 }))
+    wrapper = mount(RecentRunsView)
+    await flushPromises()
+    await wrapper.get('select[aria-label="RHOAI version"]').setValue('older')
+    await wrapper.get('select[aria-label="Test suite"]').setValue('release_gate')
+    await wrapper.get('input[aria-label="Run ID"]').setValue('original-run')
+    await wrapper.get('input[aria-label="Recorded from (UTC)"]').setValue('2026-01-01')
+    await wrapper.get('input[aria-label="Recorded to (UTC)"]').setValue('2026-02-01')
+    await wrapper.get('select[aria-label="Sort runs"]').setValue('asc')
+    apiRequest.mockResolvedValueOnce(page([fixture.rows[0]]))
+    await wrapper.get('form').trigger('submit')
+    await flushPromises()
+    expect(Object.fromEntries(request(1))).toEqual({ pageSize: '20', includeBugs: 'false', version: 'older', suite: 'release_gate', runQuery: 'original-run', dateFrom: '2026-01-01', dateTo: '2026-02-01', sortDir: 'asc' })
+    await button('Clear filters').trigger('click')
+    await flushPromises()
+    expect(Object.fromEntries(request(2))).toEqual({ pageSize: '20', includeBugs: 'false', sortDir: 'desc' })
+    expect(wrapper.get('input[aria-label="Run ID"]').element.value).toBe('')
+    expect(filters.version).toBe('')
+  })
+
+  it('hydrates its own URL state and synchronizes successful selections without duplicate loads', async () => {
+    const params = ref({ recentVersion: '3.5.0', recentSort: 'asc', recentCursor: 'saved-page', version: 'unrelated' })
+    const nav = { params, updateParams: vi.fn(values => { params.value = { ...params.value, ...values } }) }
+    wrapper = mount(RecentRunsView, { global: { provide: { moduleNav: nav } } })
+    await flushPromises()
+    expect(Object.fromEntries(request(0))).toMatchObject({ version: '3.5.0', sortDir: 'asc', cursor: 'saved-page' })
+    expect(apiRequest).toHaveBeenCalledTimes(1)
+    await button('Clear filters').trigger('click')
+    await flushPromises()
+    expect(nav.updateParams).toHaveBeenLastCalledWith(expect.objectContaining({ recentVersion: '', recentSort: 'desc', recentCursor: '' }), { push: false })
+    expect(apiRequest).toHaveBeenCalledTimes(2)
+    params.value = { recentRun: 'restored-search' }
+    await flushPromises()
+    expect(request(2).get('runQuery')).toBe('restored-search')
+  })
+
+  it('ignores a late response after a newer filter request and aborts the old fetch', async () => {
+    wrapper = mount(RecentRunsView)
+    await flushPromises()
+    let resolve
+    apiRequest.mockReturnValueOnce(new Promise(done => { resolve = done }))
+    await button('Refresh').trigger('click')
+    await wrapper.get('input[aria-label="Run ID"]').setValue('newer')
+    apiRequest.mockResolvedValueOnce(page([{ ...fixture.rows[0], invocationId: 'newer' }]))
+    await wrapper.get('form').trigger('submit')
+    await flushPromises()
+    expect(apiRequest.mock.calls[1][1].signal.aborted).toBe(true)
+    resolve(page([{ ...fixture.rows[0], invocationId: 'old-response' }]))
+    await flushPromises()
+    expect(wrapper.text()).toContain('newer')
+    expect(wrapper.text()).not.toContain('old-response')
+    expect(wrapper.find('[role="status"]').exists()).toBe(false)
+  })
+
+  it('shows empty results only after success and always keeps pagination visible', async () => {
     let resolve
     apiRequest.mockReturnValue(new Promise(done => { resolve = done }))
     wrapper = mount(RecentRunsView)
-    await wrapper.vm.$nextTick()
+    await flushPromises()
     expect(wrapper.get('[role="status"]').text()).toContain('Loading')
     expect(wrapper.text()).not.toContain('No runs are available')
-    resolve({ rows: [] })
+    resolve(page([]))
     await flushPromises()
-    expect(wrapper.text()).toContain('No runs are available')
+    expect(wrapper.text()).toContain('No runs are available.')
+    expect(wrapper.get('nav').text()).toContain('Showing 0–0 of 0 runs')
   })
 
-  it('retries failures without presenting them as empty results', async () => {
+  it('retries initial failures and retains a previous page after refresh failure', async () => {
     apiRequest.mockRejectedValueOnce(new Error('Service unavailable'))
     wrapper = mount(RecentRunsView)
     await flushPromises()
@@ -80,21 +136,18 @@ describe('Recent Runs', () => {
     await wrapper.get('[role="alert"] button').trigger('click')
     await flushPromises()
     expect(wrapper.findAll('tbody tr')).toHaveLength(3)
-    expect(wrapper.find('[role="alert"]').exists()).toBe(false)
+    apiRequest.mockRejectedValueOnce(new Error('Refresh failed'))
+    await button('Refresh').trigger('click')
+    await flushPromises()
+    expect(wrapper.findAll('tbody tr')).toHaveLength(3)
+    expect(wrapper.get('[role="alert"]').text()).toContain('The previous results are still shown')
   })
 
-  it('retains rows while refreshing and after a refresh failure', async () => {
+  it('rejects an old backend response without pagination instead of presenting a false total', async () => {
+    apiRequest.mockResolvedValueOnce({ rows: fixture.rows })
     wrapper = mount(RecentRunsView)
     await flushPromises()
-    let reject
-    apiRequest.mockReturnValueOnce(new Promise((_, fail) => { reject = fail }))
-    await wrapper.get('button').trigger('click')
-    expect(wrapper.findAll('tbody tr')).toHaveLength(3)
-    expect(wrapper.get('button').element.disabled).toBe(true)
-    expect(wrapper.get('[role="status"]').text()).toContain('Updating')
-    reject(new Error('Refresh failed'))
-    await flushPromises()
-    expect(wrapper.findAll('tbody tr')).toHaveLength(3)
-    expect(wrapper.get('[role="alert"]').text()).toContain('Refresh failed')
+    expect(wrapper.get('[role="alert"]').text()).toContain('invalid page')
+    expect(wrapper.find('nav').exists()).toBe(false)
   })
 })

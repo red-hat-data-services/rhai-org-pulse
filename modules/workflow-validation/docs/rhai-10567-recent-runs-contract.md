@@ -1,18 +1,27 @@
 # Recent Runs: landing page and data contract
 
-Story: [RHAI-10567](https://redhat.atlassian.net/browse/RHAI-10567).
-Scope updated on 2026-10-28: the landing page only. Build metadata is separate.
+Stories: [RHAI-10567](https://redhat.atlassian.net/browse/RHAI-10567) and
+[AIPCC-33215](https://redhat.atlassian.net/browse/AIPCC-33215).
 
 ## Page and navigation
 
-Dashboard opens Recent Runs inside the existing Workflow Validation module.
-Show up to 20 runs across all suites and recorded versions. A run is one
+Dashboard opens Recent Runs inside Workflow Validation. The initial view shows
+20 runs, newest first, with Previous and Next controls. A run is one
 `telemetry_suite` and `invocation_id` pair. Keep different invocations separate.
 
-Show three columns: Test suite, Version, and View run. Keep the invocation ID
-as secondary text. Format suite labels without changing stored identifiers.
-Missing version shows “Version unavailable.” Build columns, build placeholders,
-CI links, image metadata lookups, and database changes are outside this PR.
+Show Test suite, Version, Recorded test time (UTC), and View run. Missing version
+or time shows an unavailable label. The time is the latest existing execution
+`timestamp` in the group. It is not a RHOAI build date. Build metadata and
+OpenSearch schema changes are outside this change.
+
+Version, suite, run ID, and recorded-date filters are optional. Run ID matches
+a case-insensitive substring. Date bounds are inclusive UTC calendar days.
+Sort newest or oldest recorded test first. Apply searches all available run
+groups, including those outside the first page. Clear restores the unfiltered,
+newest-first first page. Show the applied criteria and matching range/count.
+Filter options come from all groups. Shared detail filters and automatic date
+or version defaults do not restrict this page. URL parameters use the `recent`
+prefix so reloads retain the current filters, sort, and page.
 
 View run opens the existing Overview view as a hidden details route. Pass
 `exactRun=1`, explicit version, suite, and invocation, and clear date bounds.
@@ -27,37 +36,56 @@ The existing Overview route remains available for bookmarked links.
 ## API
 
 Reuse authenticated `GET /api/modules/workflow-validation/test-suites` with
-`limit=20&includeBugs=false`. Do not inherit shared version, suite, invocation,
-verdict, search, or date filters. Do not add another recent-runs endpoint.
+`pageSize=20&includeBugs=false&sortDir=desc`. Do not add another endpoint.
 
-The backend queries only existing workflow execution records. It reads every
-composite aggregation page, groups by suite and invocation, and selects each
-group's latest metadata. Sort by recorded execution timestamp descending before
-applying the limit. Missing or invalid timestamps sort last; ties use suite and
-invocation. The timestamp orders the list and is not shown as a build date.
+The backend reads every composite aggregation page, groups existing execution
+records by suite and invocation, and selects each group's latest metadata.
+It applies filters to complete groups, sorts all matching groups, and then
+selects a page. It never filters individual executions first in paged mode.
+Missing or invalid timestamps sort last in either direction. Timestamp ties
+use suite and invocation for a stable order.
 
-The lightweight response contains only `suite`, `invocationId`, `rhoaiVersion`,
-and `timestamp`. `limit` accepts integers from 1 to 200; invalid values return
-HTTP 400 before querying OpenSearch. Omitting `includeBugs=false` keeps the
-existing full response for other callers. No additional index is required.
-The browser also caps rows at 20 for older backends that ignore the limit.
+Paged parameters:
+
+- `pageSize`: integer from 1 to 200. The landing page requests 20.
+- `version`, `suite`: exact group metadata matches.
+- `runQuery`: case-insensitive invocation ID substring.
+- `dateFrom`, `dateTo`: optional `YYYY-MM-DD` bounds on the group timestamp.
+- `sortDir`: `desc` (default) or `asc`, using `timestamp`.
+- `cursor`: opaque next/previous anchor, bound to filters, sort, and page size.
+
+Return lightweight `rows` with `suite`, `invocationId`, `rhoaiVersion`, and
+`timestamp`, plus `total`, `start`, `end`, `pageSize`, `nextCursor`,
+`previousCursor`, `options`, `sortField`, and `sortDir`. Options contain all
+available `versions` and `suites`. Null cursors disable the corresponding
+button. Each request reads current data; this is not a frozen snapshot. Newer
+insertions do not shift a next-page anchor. A deleted or changed run can alter
+page counts. If the anchor has no remaining rows, Previous can reset to page one.
+
+Invalid paged parameters return HTTP 400 before querying OpenSearch. Do not
+combine paged mode with legacy `limit`, `latest`, or bug enrichment. Calls
+without `pageSize` keep the existing unlimited/full response and optional
+`limit=1..200&includeBugs=false` behavior for other consumers. No new index,
+stored field, or data migration is required.
 
 ## Page states
 
-Show Loading during the first request. Show “No runs are available” only after
-a successful empty response. Show an error and Retry on failure. Keep existing
-rows during refresh and after a refresh failure. Disable Refresh while its
-request is pending. Ignore responses after the page unmounts.
+Show Loading during the first request. Show an empty message only after a
+successful empty response. Show an error and Retry on failure. Keep existing
+rows during refresh and after a refresh failure. Pagination uses the applied
+filters, even when the user has unsubmitted edits. Disable pagination and
+Refresh while loading. Cancel earlier requests and ignore stale responses.
 
 ## Verification
 
-Client tests cover request isolation, three-column rendering, metadata gaps,
-exact navigation, loading, empty/error/retry states, and refresh retention.
-Server tests cover grouping, pagination before limiting, execution-time ordering,
-timestamp ties, metadata gaps, invalid limits, and existing full responses.
-Browser integration tests cover Dashboard to selected run to individual test,
-return navigation, missing runs, retry, narrow screens, and ignored legacy
-build fields. The fixture is synthetic; the product reads the existing API.
+Server tests cover traversal beyond 20 groups and across composite pages,
+full-list filters/options, UTC bounds, both sort directions, timestamp ties,
+missing metadata, invalid parameters, cursor isolation, and legacy responses.
+Client tests cover initial pagination, recorded-time labels, filter isolation,
+URL restoration, exact navigation, loading, retry, and stale responses.
+Browser tests cover all 47 synthetic runs, filters outside the first page,
+reload and clear, exact navigation, missing runs, and narrow screens.
+The fixture is synthetic; the product reads the existing API.
 
 ## GPUaaS dev verification — 2026-11-01
 
