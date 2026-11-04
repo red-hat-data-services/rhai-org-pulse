@@ -25,7 +25,7 @@ describe('Tech Debt trend collector', function () {
   it('builds a bounded six-month Jira query', function () {
     const jql = historicalJql(new Date('2026-10-29T06:00:00.000Z'))
     expect(jql).toContain('project in (RHAI, RHAIENG, RHOAIENG, INFERENG, AIPCC)')
-    expect(jql).toContain('(labels not in ("ux-debt") OR labels is EMPTY)')
+    expect(jql).toContain('(issuetype = Vulnerability OR labels not in ("ux-debt") OR labels is EMPTY)')
     expect(jql).toContain('created >= "2026-05-01"')
     expect(jql).toContain('resolutiondate < "2026-11-01"')
   })

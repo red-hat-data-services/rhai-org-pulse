@@ -399,7 +399,7 @@
 </template>
 
 <script setup>
-import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
+import { computed, onActivated, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { apiRequest } from '@shared/client/services/api'
 import TechDebtFlowChart from '../components/TechDebtFlowChart.vue'
 import TechDebtIssueCard from '../components/TechDebtIssueCard.vue'
@@ -675,6 +675,11 @@ watch([selectedComponents, selectedIssueType, selectedTriage], function () {
 })
 
 watch([selectedComponents, selectedIssueType], function () {
+  loadTrends(false)
+})
+
+onActivated(function () {
+  loadIssues(false)
   loadTrends(false)
 })
 

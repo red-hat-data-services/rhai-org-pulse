@@ -53,7 +53,7 @@ const ISSUE_JQL = [
   'project in (' + PROJECTS.join(', ') + ')',
   'issuetype in (Bug, Vulnerability)',
   'statusCategory != Done',
-  '(labels not in ("ux-debt") OR labels is EMPTY)'
+  '(issuetype = Vulnerability OR labels not in ("ux-debt") OR labels is EMPTY)'
 ].join(' AND ')
 const SFDC_BUG_JQL = ISSUE_JQL + ' AND issuetype = Bug AND SFDC_Cases_Counter > 0'
 

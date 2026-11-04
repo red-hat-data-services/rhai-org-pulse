@@ -113,7 +113,7 @@ if (nav && nav.params) {
 
     updatingFromUrl = true
     activeTab.value = nextTab
-    viewMode.value = nextView
+    if (nextTab === 'feature-execution') viewMode.value = nextView
 
     nextTick(function() {
       if (legacyTab && nav.updateParams) {
