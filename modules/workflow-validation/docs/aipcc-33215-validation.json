@@ -1,6 +1,6 @@
 {
   "ticket": "AIPCC-33215",
-  "sourceCommit": "9cc551f9984f517859fb9cc3287fd98fe8b91045",
+  "sourceCommit": "adb3472385bfcedbac9aee586656e3868b551a50",
   "environment": "GPUaaS preview only",
   "api": {
     "groups": 146,
@@ -13,13 +13,13 @@
     "filterBeyondFirstPage": true,
     "utcDateFilter": true,
     "cursorMismatchRejected": true,
-    "checkedAt": "2026-11-04T09:06:30.865388+00:00",
+    "checkedAt": "2026-11-04T09:15:48.945512+00:00",
     "storedDataUnchanged": true,
     "deployedSourceMatches": true,
     "runtimeConfigurationPreserved": true
   },
   "browser": {
-    "checkedAt": "2026-11-04T09:06:13.751Z",
+    "checkedAt": "2026-11-04T09:16:11.728Z",
     "actualDeployedFrontend": true,
     "actualDeployedBackend": true,
     "initialRows": 20,
@@ -28,6 +28,8 @@
     "pageReload": true,
     "filtersBeyondFirstPage": true,
     "filterReload": true,
+    "automaticFilters": true,
+    "runIdDelayMs": 300,
     "clear": true,
     "oldestFirst": true,
     "utcDateFilter": true,
@@ -40,24 +42,28 @@
   },
   "checks": {
     "fullUnitSuite": {
-      "passed": 6688,
+      "passed": 6692,
       "skipped": 11,
       "command": "NODE_OPTIONS=--no-experimental-webstorage npm test"
     },
-    "additionalCursorInsertionCase": "passed with focused client/server tests (25 passed)",
     "browserIntegration": {
-      "passed": 24,
+      "passed": 25,
       "command": "npx playwright test tests/integration/workflow-validation.spec.js --project=chromium --workers=2"
     },
     "lint": "passed",
     "productionBuild": "passed",
     "moduleValidation": "passed",
     "openapiValidation": "passed",
-    "platformValidation": "skipped by validator: no platform directory found"
+    "platformValidation": "skipped by validator: no platform directory found",
+    "workflowModuleTests": {
+      "passed": 127,
+      "command": "NODE_OPTIONS=--no-experimental-webstorage npx vitest run modules/workflow-validation"
+    }
   },
   "previewFrontendShell": "Existing compatible core 2.0.83; production build checked with dependency core 2.0.94",
   "images": {
     "backend": "image-registry.openshift-image-registry.svc:5000/workflow-validation-org-pulse/org-pulse-backend@sha256:8d67783fdf63ebde2ec2d00b69b8c2c4fe5e46954356b64ea65a6dd91baf8dff",
-    "frontend": "image-registry.openshift-image-registry.svc:5000/workflow-validation-org-pulse/org-pulse-frontend@sha256:a9170a3b1cdab7fc256f0b90a23cce1bb6989909ed63fd3176ac5fc041e8b4ed"
-  }
+    "frontend": "image-registry.openshift-image-registry.svc:5000/workflow-validation-org-pulse/org-pulse-frontend@sha256:a51d6d619eb0e80bc190cc38ac98431caeb1da07c71ffa4384751d06c70cf6bd"
+  },
+  "backendSourceCommit": "9cc551f9984f517859fb9cc3287fd98fe8b91045"
 }

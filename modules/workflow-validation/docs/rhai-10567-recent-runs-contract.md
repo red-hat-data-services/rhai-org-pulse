@@ -128,3 +128,14 @@ passed. Node 26 tests used `--no-experimental-webstorage` and local server acces
 [Machine-readable evidence](aipcc-33215-validation.json).
 [Initial unfiltered page](images/aipcc-33215-gpuaas-recent-runs.png).
 [Filtered page](images/aipcc-33215-gpuaas-filtered.png).
+
+### Automatic-filter follow-up
+
+Frontend source `adb34723` removes Apply filters. Version, suite, date, and sort
+choices update immediately. Run ID search waits for a 300 ms typing pause.
+Clear filters remains and restores the newest-first, unfiltered first page.
+The full unit suite passed 6,692 tests, with 11 skipped. All 127 module
+unit tests and 25 browser integration tests passed. The updated
+GPUaaS frontend passed the same live checks, including automatic filters,
+Clear filters, reload, all eight pages, and narrow screens. Screenshots and the
+machine-readable evidence above reflect this frontend revision.
