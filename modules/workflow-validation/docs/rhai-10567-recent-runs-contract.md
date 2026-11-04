@@ -186,8 +186,46 @@ The feature PR keeps every change inside Workflow Validation, including the
 browser suite and its standalone Playwright config. Shared test files and the
 shared CI configuration remain identical to the base branch.
 
-All 27 module-owned browser tests pass. The branch also passes 6,737 unit tests
+All 27 module-owned browser tests pass. The branch also passes 6,739 unit tests
 (11 skipped), lint, and the production build. The unchanged shared runner still
 loads the legacy suite; five old checks fail against the updated page. A
 separate maintainer-approved runner update must discover the module-owned suite
-before this feature PR can merge. The PR remains draft for that dependency.
+before this feature PR can merge. The PR is ready for review. This dependency still blocks merging.
+
+
+## Fresh GPUaaS images and CI diagnosis — 2026-11-04
+
+Backend and frontend images were built from runtime code at `4866ecfb` and
+rolled out to the GPUaaS preview. Both deployments are ready. The images extend
+the existing GPUaaS images and keep its compatible core 2.0.83 frontend shell.
+The production frontend build also passes with the declared core dependency.
+Image digests, build names, checks, and asset hashes are recorded in
+[aipcc-33215-validation.json](aipcc-33215-validation.json).
+
+Live API and browser checks passed against the deployed images. They cover all
+146 run groups across eight pages, initial 20 rows, previous/next and reload,
+automatic filters, UTC dates, both sort orders, Clear, Refresh, Retry, exact-run
+navigation across versions, and 375/320 px screens. Invalid restored date ranges
+show validation before a paged request. No browser page errors occurred. Backend
+source hashes and frontend asset hashes match the build. Run metadata, document
+counts, and runtime configuration match the baseline.
+
+[Fresh initial page](images/aipcc-33215-gpuaas-recent-runs.png).
+[Fresh filtered page](images/aipcc-33215-gpuaas-filtered.png).
+
+The [required integration run](https://github.com/red-hat-data-services/rhai-org-pulse/actions/runs/41901136010)
+has 17 passing and five failing shared tests. The shared suite supplies only
+`{ rows }`. The page requires pagination metadata and rejects that incomplete
+response, so the table, run links, and empty state never appear. One unchanged
+shared test reproduced the visible error: “The run service returned an invalid
+page. Please retry.” The old suite also expects three headers, `limit=20`, and a
+version filter on exact-run links. Those expectations describe the previous
+page behavior.
+
+The shared Makefile runs `npx playwright test --grep @workflow-validation` with
+the root configuration, whose `testDir` is `./tests`. It does not discover the
+27 updated tests inside this module. A separate maintainer-approved CI update
+must select the module-owned suite and preserve existing coverage for other
+modules. The Ownership Gate separately requires module approval. No tests have
+been deleted or disabled. The PR is ready for review; these checks still block
+merging. Application code has not changed during this failure investigation.

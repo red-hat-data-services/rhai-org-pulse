@@ -1,6 +1,6 @@
 {
   "ticket": "AIPCC-33215",
-  "sourceCommit": "cf7df25c30c456c272e93b040951f6eef5829f28",
+  "sourceCommit": "4866ecfbe16dbc7356093a7dae66c7a25b77b1ec",
   "environment": "GPUaaS preview only",
   "api": {
     "groups": 146,
@@ -16,15 +16,16 @@
     "boundedCursors": true,
     "legacyBookmark": true,
     "refreshKeepsPage": true,
-    "checkedAt": "2026-11-04T10:06:27.645794+00:00",
+    "checkedAt": "2026-11-04T19:54:13.121826+00:00",
     "storedDataUnchanged": true,
     "deployedSourceMatches": true,
     "runtimeConfigurationPreserved": true
   },
   "browser": {
-    "checkedAt": "2026-11-04T10:07:00.501Z",
+    "checkedAt": "2026-11-04T19:57:44.596Z",
     "actualDeployedFrontend": true,
     "actualDeployedBackend": true,
+    "invalidRestoredDateRangeBlocked": true,
     "exactLinkClearsVersion": true,
     "initialRows": 20,
     "groups": 146,
@@ -52,30 +53,27 @@
   },
   "checks": {
     "fullUnitSuite": {
-      "passed": 6700,
+      "passed": 6739,
       "skipped": 11,
       "command": "NODE_OPTIONS=--no-experimental-webstorage npm test"
     },
     "browserIntegration": {
       "passed": 27,
-      "command": "npx playwright test tests/integration/workflow-validation.spec.js --project=chromium --workers=2"
+      "command": "npx playwright test --config modules/workflow-validation/playwright.config.cjs --workers=2",
+      "environment": "Isolated local backend with Workflow Validation enabled"
     },
     "lint": "passed",
     "productionBuild": "passed",
     "moduleValidation": "passed",
     "openapiValidation": "passed",
-    "platformValidation": "skipped by validator: no platform directory found",
-    "workflowModuleTests": {
-      "passed": 135,
-      "command": "NODE_OPTIONS=--no-experimental-webstorage npx vitest run modules/workflow-validation"
-    }
+    "platformValidation": "skipped by validator: no platform directory found"
   },
   "previewFrontendShell": "Existing compatible core 2.0.83; production build checked with dependency core 2.0.94",
   "images": {
-    "backend": "image-registry.openshift-image-registry.svc:5000/workflow-validation-org-pulse/org-pulse-backend@sha256:78c458c8ad3d2e2234c021c152841da489e5fca4c07101ed01fec4435d8d32bd",
-    "frontend": "image-registry.openshift-image-registry.svc:5000/workflow-validation-org-pulse/org-pulse-frontend@sha256:68283c99b401eaedfd98d8267d0f90ec2ac174998084e68289077c2d40fd18a0"
+    "backend": "image-registry.openshift-image-registry.svc:5000/workflow-validation-org-pulse/org-pulse-backend@sha256:97486b288fde04e4f3be7fbc4cbb13c6a6a8d1a5b6fcfe6917fce1da5b01e5d7",
+    "frontend": "image-registry.openshift-image-registry.svc:5000/workflow-validation-org-pulse/org-pulse-frontend@sha256:6ba829ef185b7a6bffef96360976fd093707b4a42e6d16a43d25fe6b49cd779b"
   },
-  "backendSourceCommit": "786e1a68af136bab241acded2be8711537c8e40f",
+  "backendSourceCommit": "4866ecfbe16dbc7356093a7dae66c7a25b77b1ec",
   "reviewFixes": {
     "disconnectedScans": "stop between OpenSearch requests; partial or failed scans are not cached",
     "metadataCacheSeconds": 10,
@@ -97,7 +95,7 @@
     "moduleOwnedSuite": "modules/workflow-validation/tests/integration/workflow-validation.spec.js",
     "config": "modules/workflow-validation/playwright.config.cjs",
     "browserTestsPassed": 27,
-    "fullUnitSuitePassed": 6737,
+    "fullUnitSuitePassed": 6739,
     "unitTestsSkipped": 11,
     "ciRouting": "Blocked: shared runner update belongs in a separate maintainer-approved change",
     "temporarySharedLoaderProof": {
@@ -111,6 +109,33 @@
     },
     "sharedEntryPoint": "tests/integration/workflow-validation.spec.js",
     "prScope": "modules/workflow-validation/** only",
-    "outsideModuleChanges": false
+    "outsideModuleChanges": false,
+    "prStatus": "Ready for review; shared CI integration and ownership approval still block merging"
+  },
+  "builds": {
+    "backend": "org-pulse-backend-aipcc33215-ready-20261104-4866ecfb-1",
+    "frontend": "org-pulse-frontend-aipcc33215-ready-20261104-4866ecfb-1"
+  },
+  "frontendAssetsVerified": {
+    "index.html": "884ba6af18055542eee4f17dfabda7cf73a5f1fc69bf152d924e580c02fb4f3a",
+    "assets/RecentRunsView-CiD_qYJ7.js": "407b80fd251c38971c2a2eab6a7ecc62077c5ad9ebf22b524928995bfb8336ae",
+    "assets/useWorkflowValidation-BudwR_ee.js": "f094e4642c19a70fefadce71ad793137e1864f050ead8d556d127cee641405bd"
+  },
+  "ciDiagnosis": {
+    "run": "https://github.com/red-hat-data-services/rhai-org-pulse/actions/runs/41901136010",
+    "sharedBrowserSuite": {
+      "passed": 17,
+      "failed": 5
+    },
+    "primaryCause": "Legacy mocks return only rows; the paginated page rejects responses without totals, cursors, and options.",
+    "otherOutdatedExpectations": [
+      "three column headers instead of four",
+      "limit=20 instead of pageSize=20",
+      "version filter retained in exact-run links"
+    ],
+    "discovery": "The shared Makefile runs the root Playwright config, whose testDir is ./tests. It does not discover the module-owned suite.",
+    "reproduction": "One unchanged failing shared test reproduced the visible error: The run service returned an invalid page. Please retry.",
+    "ownershipGate": "Module approval is still required; this is separate from the browser test failure.",
+    "requiredResolution": "A separate maintainer-approved CI update must discover the module-owned suite while preserving the existing suites for other modules."
   }
 }
