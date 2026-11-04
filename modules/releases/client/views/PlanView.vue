@@ -43,7 +43,7 @@ import AIPlanner from '../plan/views/AIPlanner.vue'
 var ALL_TABS = [
   { id: 'outcomes', label: 'Big Rocks' },
   { id: 'pm-hub', label: 'PM Hub' },
-  { id: 'jira-plan', label: 'Jira Plan' },
+  { id: 'jira-plan', label: 'Prioritized Outcomes' },
   { id: 'feature-readiness', label: 'Features List (1-n)' },
   { id: 'draft-plans', label: 'Plan Approval' },
   { id: 'bu-feedback', label: 'Field and BU Feedback' },

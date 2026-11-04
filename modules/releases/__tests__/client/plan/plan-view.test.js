@@ -101,7 +101,7 @@ describe('PlanView Jira Plan tab', function() {
     await flushPromises()
     await nextTick()
 
-    expect(wrapper.findAll('button').map(function(button) { return button.text() })).toContain('Jira Plan')
+    expect(wrapper.findAll('button').map(function(button) { return button.text() })).toContain('Prioritized Outcomes')
     expect(wrapper.find('[data-testid="jira-plan-view"]').exists()).toBe(true)
     expect(wrapper.text()).toContain('Jira Plan Body')
   })
