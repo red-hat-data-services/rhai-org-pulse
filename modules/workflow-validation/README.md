@@ -152,7 +152,8 @@ contract, representative tests, and affected Vue transformations together.
 Dashboard opens Recent Runs with the latest 20 suite/invocation groups and
 pagination across all available runs. Each row shows the suite, recorded
 version, recorded test time in UTC, and View run. Optional filters select
-version, suite, run ID, and recorded dates. Sorting uses the existing execution
+version, suite, run ID, and recorded dates. Choices update results immediately;
+Run ID search waits for a 300 ms typing pause. Sorting uses the existing execution
 `timestamp`; RHOAI build time is not available yet. Clear restores the initial
 unfiltered page. The page uses `/test-suites?pageSize=20&includeBugs=false`
 and ignores shared detail filters. View run opens the exact suite and invocation.

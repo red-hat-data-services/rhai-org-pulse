@@ -16,8 +16,9 @@ OpenSearch schema changes are outside this change.
 
 Version, suite, run ID, and recorded-date filters are optional. Run ID matches
 a case-insensitive substring. Date bounds are inclusive UTC calendar days.
-Sort newest or oldest recorded test first. Apply searches all available run
-groups, including those outside the first page. Clear restores the unfiltered,
+Sort newest or oldest recorded test first. Choices update results immediately.
+Run ID search updates after a 300 ms typing pause. Every change resets to page
+one and searches all available run groups, including those outside the first page. Clear restores the unfiltered,
 newest-first first page. Show the applied criteria and matching range/count.
 Filter options come from all groups. Shared detail filters and automatic date
 or version defaults do not restrict this page. URL parameters use the `recent`
@@ -72,9 +73,9 @@ stored field, or data migration is required.
 
 Show Loading during the first request. Show an empty message only after a
 successful empty response. Show an error and Retry on failure. Keep existing
-rows during refresh and after a refresh failure. Pagination uses the applied
-filters, even when the user has unsubmitted edits. Disable pagination and
-Refresh while loading. Cancel earlier requests and ignore stale responses.
+rows during refresh and after a refresh failure. Pagination uses the filters for the displayed results. Disable pagination and
+Refresh while loading or waiting for the search delay. Cancel queued searches
+on clear, navigation, or unmount. Wait for a valid date range before fetching. Cancel earlier requests and ignore stale responses.
 
 ## Verification
 

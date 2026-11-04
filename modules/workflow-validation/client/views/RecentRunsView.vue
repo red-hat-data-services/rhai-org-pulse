@@ -5,49 +5,50 @@
         <h2 class="text-2xl font-bold text-gray-900 dark:text-gray-100">Recent Runs</h2>
         <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">20 runs per page, ordered by recorded test time. All dates are UTC.</p>
       </div>
-      <button type="button" :disabled="loading" :class="buttonClass" @click="requestRuns(applied)">Refresh</button>
+      <button type="button" :disabled="loading || searchPending" :class="buttonClass" @click="requestRuns(applied)">Refresh</button>
     </div>
 
-    <form class="mb-5 rounded-xl border border-gray-200 bg-white p-4 dark:border-gray-700 dark:bg-gray-800" @submit.prevent="applyFilters">
+    <form aria-label="Run filters" class="mb-5 rounded-xl border border-gray-200 bg-white p-4 dark:border-gray-700 dark:bg-gray-800" @submit.prevent="applyFilters">
       <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         <label class="text-sm text-gray-700 dark:text-gray-200">RHOAI version
-          <select v-model="draft.version" aria-label="RHOAI version" :class="inputClass">
+          <select v-model="draft.version" aria-label="RHOAI version" :class="inputClass" @change="applyFilters">
             <option value="">All versions</option>
             <option v-for="version in options.versions" :key="version" :value="version">{{ version }}</option>
           </select>
         </label>
         <label class="text-sm text-gray-700 dark:text-gray-200">Test suite
-          <select v-model="draft.suite" aria-label="Test suite" :class="inputClass">
+          <select v-model="draft.suite" aria-label="Test suite" :class="inputClass" @change="applyFilters">
             <option value="">All suites</option>
             <option v-for="suite in options.suites" :key="suite" :value="suite">{{ formatSuiteName(suite) }}</option>
           </select>
         </label>
         <label class="text-sm text-gray-700 dark:text-gray-200">Run ID
-          <input v-model="draft.runQuery" aria-label="Run ID" type="search" maxlength="256" placeholder="Search any run ID" :class="inputClass">
+          <input v-model="draft.runQuery" aria-label="Run ID" type="search" maxlength="256" placeholder="Search any run ID" :class="inputClass" @input="scheduleSearch">
         </label>
         <label class="text-sm text-gray-700 dark:text-gray-200">Recorded from (UTC)
-          <input v-model="draft.dateFrom" aria-label="Recorded from (UTC)" type="date" :max="draft.dateTo || undefined" :class="inputClass">
+          <input v-model="draft.dateFrom" aria-label="Recorded from (UTC)" type="date" :max="draft.dateTo || undefined" :class="inputClass" @change="applyFilters">
         </label>
         <label class="text-sm text-gray-700 dark:text-gray-200">Recorded to (UTC)
-          <input v-model="draft.dateTo" aria-label="Recorded to (UTC)" type="date" :min="draft.dateFrom || undefined" :class="inputClass">
+          <input v-model="draft.dateTo" aria-label="Recorded to (UTC)" type="date" :min="draft.dateFrom || undefined" :class="inputClass" @change="applyFilters">
         </label>
         <label class="text-sm text-gray-700 dark:text-gray-200">Sort runs
-          <select v-model="draft.sortDir" aria-label="Sort runs" :class="inputClass">
+          <select v-model="draft.sortDir" aria-label="Sort runs" :class="inputClass" @change="applyFilters">
             <option value="desc">Newest recorded test first</option>
             <option value="asc">Oldest recorded test first</option>
           </select>
         </label>
       </div>
       <div class="mt-4 flex flex-wrap gap-3">
-        <button type="submit" class="rounded-lg bg-primary-700 px-4 py-2 text-sm font-medium text-white hover:bg-primary-800">Apply filters</button>
+        <p class="self-center text-sm text-gray-500 dark:text-gray-400">Filters update automatically.</p>
         <button type="button" :class="buttonClass" @click="clearFilters">Clear filters</button>
       </div>
+      <p v-if="invalidDateRange" role="alert" class="mt-3 text-sm text-amber-700 dark:text-amber-300">Recorded from must be on or before Recorded to.</p>
     </form>
 
     <div v-if="error" role="alert" class="mb-4 rounded-xl border border-amber-200 bg-amber-50 p-5 dark:border-amber-800 dark:bg-amber-900/20">
       <p class="text-sm text-gray-800 dark:text-gray-200">{{ error }}</p>
       <p v-if="hasLoaded" class="mt-1 text-sm text-gray-600 dark:text-gray-300">The previous results are still shown.</p>
-      <button type="button" :disabled="loading" class="mt-2 text-sm font-semibold text-primary-700 dark:text-primary-300" @click="requestRuns(lastAttempt)">Retry</button>
+      <button type="button" :disabled="loading || searchPending" class="mt-2 text-sm font-semibold text-primary-700 dark:text-primary-300" @click="requestRuns(lastAttempt)">Retry</button>
     </div>
     <p v-if="loading" role="status" class="mb-4 text-sm text-gray-500 dark:text-gray-400">{{ hasLoaded ? 'Updating recent runs…' : 'Loading recent runs…' }}</p>
 
@@ -89,8 +90,8 @@
       <nav aria-label="Recent run pages" class="flex flex-wrap items-center justify-between gap-3 px-5 py-4">
         <p aria-live="polite" class="text-sm text-gray-600 dark:text-gray-300">Showing {{ page.start }}–{{ page.end }} of {{ page.total }} runs</p>
         <div class="flex gap-3">
-          <button type="button" aria-label="Previous page" :disabled="loading || page.previousCursor === null" :class="buttonClass" @click="loadPage(page.previousCursor)">Previous</button>
-          <button type="button" aria-label="Next page" :disabled="loading || page.nextCursor === null" :class="buttonClass" @click="loadPage(page.nextCursor)">Next</button>
+          <button type="button" aria-label="Previous page" :disabled="loading || searchPending || page.previousCursor === null" :class="buttonClass" @click="loadPage(page.previousCursor)">Previous</button>
+          <button type="button" aria-label="Next page" :disabled="loading || searchPending || page.nextCursor === null" :class="buttonClass" @click="loadPage(page.nextCursor)">Next</button>
         </div>
       </nav>
     </div>
@@ -116,6 +117,8 @@ function fromUrl() {
 }
 const applied = ref(fromUrl())
 const draft = reactive({ ...applied.value })
+const invalidDateRange = computed(() => draft.dateFrom && draft.dateTo && draft.dateFrom > draft.dateTo)
+const searchPending = ref(false)
 const runs = ref([])
 const page = ref({ total: 0, start: 0, end: 0, nextCursor: null, previousCursor: null })
 const options = ref({ versions: [], suites: [] })
@@ -138,6 +141,9 @@ const recordedTime = value => formatter.format(new Date(value))
 let active = true
 let sequence = 0
 let controller
+let searchTimer
+
+function cancelSearch() { clearTimeout(searchTimer); searchPending.value = false }
 
 function runLink(run) {
   const params = new URLSearchParams({ exactRun: '1', version: run.rhoaiVersion || '', testSuite: run.suite, invocationId: run.invocationId, datePreset: 'all', dateFrom: '', dateTo: '' })
@@ -145,6 +151,7 @@ function runLink(run) {
 }
 
 async function requestRuns(query) {
+  cancelSearch()
   const current = ++sequence
   controller?.abort()
   controller = new AbortController()
@@ -173,8 +180,16 @@ async function requestRuns(query) {
     if (active && current === sequence) loading.value = false
   }
 }
-function applyFilters() { requestRuns({ ...draft, cursor: '' }) }
-function clearFilters() { Object.assign(draft, defaults()); requestRuns(defaults()) }
+function applyFilters() {
+  cancelSearch()
+  if (!invalidDateRange.value) requestRuns({ ...draft, cursor: '' })
+}
+function scheduleSearch() {
+  cancelSearch()
+  searchPending.value = true
+  searchTimer = setTimeout(applyFilters, 300)
+}
+function clearFilters() { Object.assign(draft, defaults()); applyFilters() }
 function loadPage(cursor) { requestRuns({ ...applied.value, cursor: cursor || '' }) }
 watch(() => nav?.params?.value, () => {
   const query = fromUrl()
@@ -183,5 +198,5 @@ watch(() => nav?.params?.value, () => {
   requestRuns(query)
 }, { deep: true })
 onMounted(() => requestRuns(applied.value))
-onBeforeUnmount(() => { active = false; sequence += 1; controller?.abort() })
+onBeforeUnmount(() => { active = false; sequence += 1; cancelSearch(); controller?.abort() })
 </script>

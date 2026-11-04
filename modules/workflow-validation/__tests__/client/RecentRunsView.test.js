@@ -12,13 +12,13 @@ function page(rows = fixture.rows, values = {}) {
   return { rows, total: rows.length, start: rows.length ? 1 : 0, end: rows.length,
     nextCursor: null, previousCursor: null, options, ...values }
 }
-const request = call => new URL(apiRequest.mock.calls[call][0], 'http://localhost').searchParams
+const request = call => new URL(apiRequest.mock.calls.at(call)[0], 'http://localhost').searchParams
 
 describe('Recent Runs', () => {
   let wrapper
   const button = name => wrapper.findAll('button').find(item => item.text() === name)
-  beforeEach(() => { apiRequest.mockReset().mockResolvedValue(page()); resetFilters() })
-  afterEach(() => wrapper?.unmount())
+  beforeEach(() => { vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout'] }); apiRequest.mockReset().mockResolvedValue(page()); resetFilters() })
+  afterEach(() => { wrapper?.unmount(); vi.useRealTimers() })
 
   it('starts unfiltered with pagination and the existing recorded timestamp', async () => {
     Object.assign(filters, { version: 'older', testSuite: 'another-suite', invocationId: 'another-run', dateFrom: '2000-01-01' })
@@ -59,7 +59,7 @@ describe('Recent Runs', () => {
     expect(request(2).get('cursor')).toBe('page-one')
   })
 
-  it('submits optional filters and resets pagination, then clears everything', async () => {
+  it('automatically applies choices and resets pagination, then clears everything', async () => {
     apiRequest.mockResolvedValueOnce(page(fixture.rows, { nextCursor: 'next-page', total: 40 }))
     wrapper = mount(RecentRunsView)
     await flushPromises()
@@ -69,15 +69,65 @@ describe('Recent Runs', () => {
     await wrapper.get('input[aria-label="Recorded from (UTC)"]').setValue('2026-01-01')
     await wrapper.get('input[aria-label="Recorded to (UTC)"]').setValue('2026-02-01')
     await wrapper.get('select[aria-label="Sort runs"]').setValue('asc')
-    apiRequest.mockResolvedValueOnce(page([fixture.rows[0]]))
-    await wrapper.get('form').trigger('submit')
     await flushPromises()
-    expect(Object.fromEntries(request(1))).toEqual({ pageSize: '20', includeBugs: 'false', version: 'older', suite: 'release_gate', runQuery: 'original-run', dateFrom: '2026-01-01', dateTo: '2026-02-01', sortDir: 'asc' })
+    expect(wrapper.find('button[type="submit"]').exists()).toBe(false)
+    expect(Object.fromEntries(request(-1))).toEqual({ pageSize: '20', includeBugs: 'false', version: 'older', suite: 'release_gate', runQuery: 'original-run', dateFrom: '2026-01-01', dateTo: '2026-02-01', sortDir: 'asc' })
     await button('Clear filters').trigger('click')
     await flushPromises()
-    expect(Object.fromEntries(request(2))).toEqual({ pageSize: '20', includeBugs: 'false', sortDir: 'desc' })
+    expect(Object.fromEntries(request(-1))).toEqual({ pageSize: '20', includeBugs: 'false', sortDir: 'desc' })
     expect(wrapper.get('input[aria-label="Run ID"]').element.value).toBe('')
     expect(filters.version).toBe('')
+  })
+
+  it('waits for a pause in Run ID typing and returns to the first page', async () => {
+    apiRequest.mockResolvedValueOnce(page(fixture.rows, { total: 45, nextCursor: 'page-two' }))
+    wrapper = mount(RecentRunsView)
+    await flushPromises()
+    await button('Next').trigger('click')
+    await flushPromises()
+    await wrapper.get('input[aria-label="Run ID"]').setValue('or')
+    expect(button('Refresh').element.disabled).toBe(true)
+    await vi.advanceTimersByTimeAsync(299)
+    expect(apiRequest).toHaveBeenCalledTimes(2)
+    await wrapper.get('input[aria-label="Run ID"]').setValue('original')
+    await vi.advanceTimersByTimeAsync(299)
+    expect(apiRequest).toHaveBeenCalledTimes(2)
+    await vi.advanceTimersByTimeAsync(1)
+    await flushPromises()
+    expect(apiRequest).toHaveBeenCalledTimes(3)
+    expect(request(-1).get('runQuery')).toBe('original')
+    expect(request(-1).has('cursor')).toBe(false)
+  })
+
+  it('cancels queued search when clearing or leaving the page', async () => {
+    wrapper = mount(RecentRunsView)
+    await flushPromises()
+    await wrapper.get('input[aria-label="Run ID"]').setValue('queued')
+    await button('Clear filters').trigger('click')
+    await vi.advanceTimersByTimeAsync(300)
+    await flushPromises()
+    expect(apiRequest).toHaveBeenCalledTimes(2)
+    expect(request(-1).has('runQuery')).toBe(false)
+    await wrapper.get('input[aria-label="Run ID"]').setValue('leaving')
+    wrapper.unmount()
+    await vi.advanceTimersByTimeAsync(300)
+    expect(apiRequest).toHaveBeenCalledTimes(2)
+  })
+
+  it('waits for a valid date range before fetching', async () => {
+    wrapper = mount(RecentRunsView)
+    await flushPromises()
+    await wrapper.get('input[aria-label="Recorded from (UTC)"]').setValue('2026-02-01')
+    await flushPromises()
+    await wrapper.get('input[aria-label="Recorded to (UTC)"]').setValue('2026-01-01')
+    await flushPromises()
+    expect(apiRequest).toHaveBeenCalledTimes(2)
+    expect(wrapper.get('[role="alert"]').text()).toContain('Recorded from must be on or before Recorded to')
+    await wrapper.get('input[aria-label="Recorded to (UTC)"]').setValue('2026-03-01')
+    await flushPromises()
+    expect(apiRequest).toHaveBeenCalledTimes(3)
+    expect(request(-1).get('dateTo')).toBe('2026-03-01')
+    expect(wrapper.find('[role="alert"]').exists()).toBe(false)
   })
 
   it('hydrates its own URL state and synchronizes successful selections without duplicate loads', async () => {
@@ -104,7 +154,7 @@ describe('Recent Runs', () => {
     await button('Refresh').trigger('click')
     await wrapper.get('input[aria-label="Run ID"]').setValue('newer')
     apiRequest.mockResolvedValueOnce(page([{ ...fixture.rows[0], invocationId: 'newer' }]))
-    await wrapper.get('form').trigger('submit')
+    await vi.advanceTimersByTimeAsync(300)
     await flushPromises()
     expect(apiRequest.mock.calls[1][1].signal.aborted).toBe(true)
     resolve(page([{ ...fixture.rows[0], invocationId: 'old-response' }]))
