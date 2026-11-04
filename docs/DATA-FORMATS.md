@@ -987,13 +987,27 @@ Admin-configurable settings for the AI Impact module.
 
 ## Releases — CVE Sustaining Snapshot (`data/releases/cve-sustaining/latest.json`)
 
-The CVE sustaining snapshot may include `slaCompliance` for quarterly SLA
-metrics and `actionReportRecords` for the component-scoped CVE Action Report.
-The existing sustaining metrics and `openIssueRecords` fields remain unchanged.
+The CVE sustaining snapshot may include `slaCompliance` for quarterly SLA and
+possibly-closable counts, and `actionReportRecords` for the component-scoped CVE
+Action Report. Each open issue projection includes a `possiblyClosable` flag
+used to highlight matching tickets in drill-down lists. Newly aggregated snapshots
+set top-level `upstreamComponentDataVersion` to `2`; each `openIssueRecords` item
+includes Jira `labels` as a string array, `upstreamComponent` as a trimmed string
+or `null`, and `cvss` as a normalized one-decimal score string or `null`. The
+component comes from Jira `customfield_10632`; absent, blank, or non-string values
+project as `null`, and non-array labels project as `[]`. CVSS comes from Jira
+`customfield_10859`; missing or malformed scores project as `null`. The fixture
+shows synthetic matching component names across release versions and ecosystems.
+Older cached snapshots with version `1` include the upstream component projection
+but not CVSS: the report continues to show all rows by default and disables its
+severity filter until refresh. Snapshots without the version marker still lack
+upstream component metadata and require refresh before the report can display them.
 
 ```json
 {
+  "upstreamComponentDataVersion": 2,
   "slaCompliance": {
+    "possiblyClosableCount": 5,
     "quarters": [
       {
         "label": "Q3 2026",
@@ -1001,6 +1015,7 @@ The existing sustaining metrics and `openIssueRecords` fields remain unchanged.
         "quarterEnd": "2026-09-30",
         "resolvedCount": 4,
         "newOpenCount": 3,
+        "possiblyClosableCount": 2,
         "noSlaDate": 1,
         "total": 3,
         "metSla": 2,
@@ -1015,7 +1030,8 @@ The existing sustaining metrics and `openIssueRecords` fields remain unchanged.
             "status": "Resolved",
             "assignee": "Alice Example",
             "slaDate": "2026-09-20",
-            "resolved": "2026-09-21T12:00:00.000Z"
+            "resolved": "2026-09-21T12:00:00.000Z",
+            "possiblyClosable": true
           }
         ]
       }
@@ -1042,7 +1058,51 @@ The existing sustaining metrics and `openIssueRecords` fields remain unchanged.
         "resolved": "2026-09-10T11:20:00.000Z"
       }
     ]
-  }
+  },
+  "openIssueRecords": [
+    {
+      "key": "RHAIENG-1001",
+      "summary": "CVE-2026-0001 in golang stdlib",
+      "component": "Model Serving",
+      "components": ["Model Serving"],
+      "versions": ["rhoai-2.17"],
+      "status": "New",
+      "assignee": "Alice",
+      "duedate": "2026-06-01",
+      "possiblyClosable": false,
+      "labels": ["ecosystem:pypi"],
+      "upstreamComponent": "fickling",
+      "cvss": "9.8"
+    },
+    {
+      "key": "RHAIENG-1002",
+      "summary": "CVE-2026-0002 in openssl",
+      "component": "Model Serving",
+      "components": ["Model Serving"],
+      "versions": ["rhoai-2.16", "rhoai-2.17"],
+      "status": "In Progress",
+      "assignee": "Alice",
+      "duedate": "2026-09-15",
+      "possiblyClosable": false,
+      "labels": ["ecosystem:pypi"],
+      "upstreamComponent": "fickling",
+      "cvss": "7.5"
+    },
+    {
+      "key": "RHAIENG-1003",
+      "summary": "CVE-2026-0003 in python requests library",
+      "component": "Model Serving",
+      "components": ["Model Serving"],
+      "versions": ["rhoai-2.17"],
+      "status": "In Progress",
+      "assignee": "Alice",
+      "duedate": "2026-09-29",
+      "possiblyClosable": false,
+      "labels": ["ecosystem:npm"],
+      "upstreamComponent": "fickling",
+      "cvss": "5.0"
+    }
+  ]
 }
 ```
 
@@ -1056,9 +1116,16 @@ is `metSla / total`, rounded to an integer, or zero when no tickets have an SLA
 Date. `newOpenCount` counts issues open in the current snapshot whose Jira
 created date falls between `quarterStart` and `quarterEnd`, inclusive. An open
 ticket created in an earlier quarter is not included in this count.
+`possiblyClosableCount` counts issues across all statuses that have exactly one
+recognized CVE review label and that label is
+`rhai-cve-review-possibly-closable`; unrelated labels do not affect the match.
+The top-level `slaCompliance.possiblyClosableCount` includes all matching
+issues, while each quarter's count groups them by creation date and only covers
+the four displayed quarters. `possiblyClosable` on `openIssueRecords` and
+`breachedIssues` is the same classification as a boolean used for the UI badge.
 `breachedIssues` contains the ticket-level report for the quarter. Each record
 includes the Jira key, summary, component, target versions, status, assignee,
-SLA Date, and resolution timestamp. The quarter's Breached count opens this
+SLA Date, resolution timestamp, and possibly-closable flag. The quarter's Breached count opens this
 report inline in the dashboard; ticket keys link to their Jira issues.
 
 Older cached snapshots may contain SLA metrics calculated from Jira Due Date
@@ -1084,12 +1151,309 @@ included through the 90-day window. CVSS is sourced from Jira
 example, `"7.5 CVSS:3.1/..."`). Missing or malformed values are `null` and
 display as **Unspecified** in score breakdowns.
 
+The applicable company SLA policy is selected from the Jira `created` instant
+in UTC: issues created before `2026-12-01T00:00:00Z` use the current policy;
+issues created at or after that inclusive cutoff use the policy effective Dec.
+1, 2026. This policy selection does not calculate or change an issue's SLA
+deadline. Jira's Red Hat Forge `rh-sla-dt` value remains authoritative for
+breach and compliance classification. If `created` is missing or invalid, the
+policy version is unknown, but a valid Jira SLA date is still used.
+
 Older snapshots may omit `actionReportRecords`; the API treats that as an
 empty projection and the report remains unavailable until the next sustaining
-refresh. Extra record fields are ignored, and missing optional values are
-treated as empty/null for backward-compatible reads. Component membership is
+refresh. Snapshots without `upstreamComponentDataVersion` predate the upstream
+component projection and remain readable without fabricated `labels` or
+`upstreamComponent` values; refresh from Jira to obtain the new fields. Extra
+record fields are ignored, and missing optional values are treated as empty/null
+for backward-compatible reads. Component membership is
 preserved as an array because an issue is counted once in each assigned
 component's report.
+
+The CVE Upstream Components report ignores tickets without an upstream component
+in both the table and donut. Its CVSS severity selector is a minimum threshold:
+Critical includes scores 9.0+, High 7.0+, Medium 4.0+, and Low 0.1+; higher
+severities remain included when a lower threshold is selected. All severities is
+the default and includes records with missing CVSS. Selecting a threshold excludes
+missing/malformed scores and filters both the donut and component counts. It trims
+names, removes a leading `golang; `
+(case-insensitively), and groups by the remaining component name ignoring case
+across all release versions. Displayed component names are lowercase. Each
+component appears once with its total unique open-ticket count and the sorted
+union of its known ecosystems. Unlabeled/Unknown occurrences inherit known
+ecosystems from other occurrences of the same component; **Unknown** is used only
+when the entire component group has no known ecosystem. A component can list
+multiple ecosystems, such as `pypi, rpm`.
+
+The donut counts each included ticket once using its component group's inferred
+ecosystems: its sole known ecosystem, **Unknown**, or **Multiple ecosystems**
+when the group has more than one known ecosystem. Each slice has a unique color,
+shared by its legend swatch. Ecosystem selection filters component rows by
+membership without reducing their severity-filtered ticket counts or changing the
+donut.
+Named-component Jira links use `cf[10632] ~` phrase text search, not exact field
+equality, so similarly named components may match. Links intentionally do not
+restrict ecosystem labels: they include the group's unlabeled and multi-ecosystem
+occurrences regardless of the selected table filter. No per-row Unknown warning
+is shown.
+
+---
+
+## Releases — Tech Debt Priority Scoring (API Response)
+
+`GET /api/modules/releases/tech-debt/issues` returns the complete open Bug and
+Vulnerability cohort for the selected Jira components. Vulnerabilities use
+`company-sla-v1` prioritization. Bugs use the deterministic `bug-v1`
+assessment. Backlog issues are returned in separate groups with independent
+rank sequences.
+The representative contract fixture is
+`fixtures/releases/tech-debt/issues.json`.
+Response metadata identifies that behavior with:
+
+```json
+{
+  "bugScoring": {
+    "modelVersion": "bug-v1",
+    "mode": "active",
+    "rankingApplied": true
+  },
+  "vulnerabilityPrioritization": {
+    "modelVersion": "company-sla-v1",
+    "method": "company-sla",
+    "slaSource": "rh-sla-dt",
+    "policyCutover": "2026-12-01T00:00:00.000Z",
+    "policies": [
+      {
+        "version": "current",
+        "label": "Current company policy",
+        "effectiveFrom": null,
+        "appliesTo": "Issues created before Dec 1, 2026 (UTC)",
+        "deadlines": [
+          { "severity": "KEV (Known Exploited Vulnerability)", "days": 5 },
+          { "severity": "Critical", "days": 30 },
+          { "severity": "Important", "days": 60 },
+          { "severity": "Moderate", "days": 90 },
+          { "severity": "Low", "days": 180 }
+        ]
+      },
+      {
+        "version": "dec-2026",
+        "label": "Updated company policy",
+        "effectiveFrom": "2026-12-01T00:00:00.000Z",
+        "appliesTo": "Issues created on or after Dec 1, 2026 (UTC)",
+        "deadlines": [
+          { "severity": "KEV (Known Exploited Vulnerability)", "days": 3 },
+          { "severity": "Critical", "days": 7 },
+          { "severity": "Important", "days": 21 },
+          { "severity": "Moderate", "days": 60, "note": "Where applicable" },
+          { "severity": "Low", "days": 90, "note": "Where applicable" }
+        ]
+      }
+    ]
+  },
+  "queueScoring": {
+    "mode": "grouped",
+    "rankingGroups": [
+      { "rankGroup": "vulnerability-sla", "issueType": "Vulnerability", "rankingField": "slaDate" },
+      { "rankGroup": "bug-score", "issueType": "Bug", "rankingField": "priorityScore" }
+    ]
+  }
+}
+```
+
+### Vulnerability company SLA assessment
+
+```json
+{
+  "key": "RHAIENG-123",
+  "issueType": "Vulnerability",
+  "createdAt": "2026-08-01T12:00:00.000Z",
+  "slaDate": "2026-10-20",
+  "rawScore": null,
+  "priorityScore": null,
+  "priorityBand": null,
+  "scoreStatus": "not-applicable",
+  "priorityMethod": "company-sla",
+  "slaState": "breached",
+  "slaDaysUntil": -6,
+  "policyVersion": "current",
+  "policyLabel": "Current company policy",
+  "rank": 1,
+  "rankGroup": "vulnerability-sla",
+  "triageFlags": [
+    { "code": "sla-breached", "label": "SLA breached" }
+  ]
+}
+```
+
+Vulnerability records retain compatibility score fields, but
+`rawScore`, `priorityScore`, and `priorityBand` are `null`, and `scoreStatus`
+is `not-applicable`. No weighted score or CVE guardrail is calculated.
+`priorityMethod: "company-sla"` identifies the active method. `slaState` is
+`breached`, `due-today`, `upcoming`, or `missing`; `slaDaysUntil` is the UTC
+calendar-day difference (negative when overdue, `null` when missing/invalid).
+
+The policy is selected from the Jira `createdAt` timestamp, normalized to UTC.
+Its day counts are explanatory and do not calculate or override Jira's actual
+SLA deadline:
+
+| Policy | Jira issue creation time (UTC) | KEV | Critical | Important | Moderate | Low |
+| --- | --- | ---: | ---: | ---: | ---: | ---: |
+| Current | Before 2026-12-01 00:00 UTC | 5 days | 30 days | 60 days | 90 days | 180 days |
+| Updated (`dec-2026`) | On/after 2026-12-01 00:00 UTC | 3 days | 7 days | 21 days | 60 days* | 90 days* |
+
+*Updated Moderate and Low timelines apply where applicable. The inclusive
+cutover is `2026-12-01T00:00:00.000Z`. Missing or invalid creation timestamps
+produce a null policy version and label. Do not infer Red Hat severity or KEV
+status from CVSS. Jira's `rh-sla-dt` date is authoritative.
+
+Backlog Vulnerabilities sort by valid Jira SLA date ascending (oldest breached
+deadline first), oldest `createdAt` if SLA dates tie, then Jira key. Missing or
+invalid SLA dates sort last. CVSS, Jira due date, review outcome, age, previous
+score fields, and triage flags do not affect the order. Vulnerabilities use
+`rankGroup: "vulnerability-sla"` and ranks restart at 1 independently of Bug
+ranks.
+
+`triageFlags` can include `sla-breached`, `missing-sla`,
+`due-after-90-days`, `missing-due-date`, `missing-review-outcome`,
+`conflicting-review-outcome`, and `missing-cvss`. The optional
+`triage=exceptions` query returns only Vulnerabilities with at least one flag.
+All date comparisons use UTC calendar dates. The response is calculated from
+a live Jira query scoped to the selected components. Up to six recent component
+selections are cached for five minutes and the response remains independent of
+the CVE Sustaining report's 90-day timeline and exclusions.
+
+### Bug score
+
+Bug records use `scoreStatus: "scored"`. Their effective score determines
+ordering within the Bug backlog group. Bugs use `rankGroup: "bug-score"` and
+their ranks restart at 1 independently of Vulnerability ranks.
+
+```json
+{
+  "key": "RHAIENG-456",
+  "issueType": "Bug",
+  "rawScore": 62,
+  "priorityScore": 70,
+  "scoreStatus": "scored",
+  "scoreModel": "bug-v1",
+  "primaryBugType": {
+    "code": "approved-release-blocker",
+    "label": "Approved Release Blocker"
+  },
+  "classificationSignals": [
+    {
+      "code": "approved-release-blocker",
+      "label": "Approved Release Blocker",
+      "evidence": "Release Blocker is Approved"
+    }
+  ],
+  "priorityBand": {
+    "level": "P1",
+    "label": "Urgent",
+    "expectedAction": "Begin within 2–4 business days"
+  },
+  "scoreBreakdown": {
+    "customerImpact": { "points": 0, "state": "No customer or field signal" },
+    "deliverySecurity": { "points": 22, "state": "Approved Release Blocker" },
+    "detectionSource": { "points": 4, "state": "DevTestOps automated test failure" },
+    "jiraSeverity": { "points": 16, "state": "High" },
+    "dueDate": { "points": 15, "state": "Past due" },
+    "age": { "points": 5, "state": "13+ weeks" }
+  },
+  "guardrail": {
+    "applied": true,
+    "minimumScore": 70,
+    "reasons": ["Approved Release Blocker guarantees at least P1"]
+  }
+}
+```
+
+Only the highest matching rule in each dimension contributes points:
+
+| Dimension | Points |
+| --- | --- |
+| Customer impact | 30 SFDC-linked; 15 BU/SSA/Early Access feedback without SFDC; otherwise 0 |
+| Delivery/security | 25 pre-release CVE; 22 Approved blocker; 20 Snyk SCA; 16 Snyk SAST; 14 generic Snyk; 12 Security/Conforma/TLS; otherwise 0 |
+| Detection source | 5 operator auto E2E; 4 DevTestOps test failure; 3 workflow validation; 2 CI/nightly/gate/human test; otherwise 0 |
+| Jira severity | 20 Blocker/Highest; 16 Critical/High; 12 Major; 8 Medium/Normal; 4 Low/Minor; 2 Lowest; otherwise 0 |
+| Jira Due Date | 15 past due; 13 within 7 days; 9 within 30; 5 within 90; 2 later; missing 0 |
+| Issue age | 5 for 13+ weeks; 4 for 8–12; 3 for 4–7; 2 for 2–3; otherwise 0 |
+
+The primary Bug type is selected in this order: Affecting customer,
+Pre-release CVE, Approved Release Blocker, BU/SSA/field feedback,
+DevTestOps/E2E, Workflow validation, then Component-team/unclassified. All
+matching evidence remains in `classificationSignals`. SFDC membership is
+derived by a parallel Jira key query because the field is not read directly
+from issue results. If that lookup fails, the API uses its existing stale-cache
+fallback instead of treating every issue as non-customer-facing.
+
+Classification evidence is normalized case-insensitively. The source rules are:
+
+- Affecting customer: `SFDC_Cases_Counter > 0`.
+- Field feedback: `AIBU_Feedback`, `AISSA_Feedback`, or
+  `BU_EarlyAccess_Feedback` without SFDC.
+- Pre-release CVE: `prerelease-cve-remediation` plus the DevTestOps Jira Bot
+  reporter.
+- Approved blocker: Release Blocker option `16772` / Approved.
+- Snyk: `snyk` plus the RHOAIENG AutomationBot reporter. `dependency` or
+  `vuln` identifies SCA; `code-analysis` or a `cwe` label identifies SAST. SCA
+  wins when both subtypes match.
+- DevTestOps/E2E: `test-failed` plus DevTestOps Jira Bot, or
+  `odh-operator-auto-e2e-blocker` plus RHOAIENG AutomationBot.
+- Workflow validation: Workflow Validation reporter.
+- Other detection: CI/nightly, release tooling, human `test-failed`, or
+  human-filed `gate:*` labels.
+
+An Approved Release Blocker has an effective score floor of 70/P1. An
+affecting-customer Bug with Jira priority Blocker, Highest, Critical, or High also has
+a 70/P1 floor. Missing Bug fields receive zero points and no uncertainty bonus.
+The score reuses the shared P0–P4 bands and UTC date boundaries. Bugs sort by
+effective score descending, then earliest Jira Due Date, oldest creation date,
+and Jira key. In a mixed result, the Vulnerability SLA group is displayed first,
+followed by the Bug score group; each group's backlog ranks start at 1.
+
+---
+
+## Releases — Tech Debt Six-Month Trends (`releases/tech-debt/trends.json`)
+
+The scheduled Tech Debt collector uploads this compact Jira event snapshot to
+`POST /api/modules/releases/tech-debt/trends/bulk`. The dashboard reads filtered
+aggregates from `GET /api/modules/releases/tech-debt/trends` using repeated
+`component` parameters and an optional `issueType=Bug|Vulnerability` parameter.
+The representative fixture is `fixtures/releases/tech-debt/trends.json`.
+
+```json
+{
+  "schemaVersion": 1,
+  "generatedAt": "2026-10-29T06:00:00.000Z",
+  "window": {
+    "months": ["2026-05", "2026-06", "2026-07", "2026-08", "2026-09", "2026-10"],
+    "startDate": "2026-05-01",
+    "endExclusive": "2026-11-01",
+    "timezone": "UTC"
+  },
+  "projects": ["RHAI", "RHAIENG", "RHOAIENG", "INFERENG", "AIPCC"],
+  "issueCount": 1,
+  "events": [
+    {
+      "key": "RHAIENG-100",
+      "issueType": "Bug",
+      "category": "customer-linked",
+      "components": ["AI Core Platform", "Model Serving"],
+      "createdMonth": "2026-08",
+      "resolvedMonth": "2026-10"
+    }
+  ]
+}
+```
+
+`createdMonth` is derived from Jira `created`; `resolvedMonth` is derived from
+`resolutiondate`. Either may be null, but at least one must fall within the six
+calendar-month window. Bug categories use the existing primary Bug classifier;
+Vulnerability issues use `vulnerability`. The API counts a multi-component
+issue in every matching component panel while deduplicating the overall
+Received and Resolved totals by Jira key. Snapshots older than 48 hours are
+served with a warning.
 
 ---
 
@@ -2060,7 +2424,7 @@ JSON Lines format (one JSON object per line). Partitioned by month for efficient
 
 ## Releases — CHI Hierarchy (`data/releases/chi-hierarchy/latest.json`)
 
-Pre-computed Container Health Index hierarchy for Org Pulse (RHOAIENG-97404). Environments: **Prod** (`catalog.redhat.com`), **Stage** (Stage Pyxis), **Latest** (Konflux clair-scan via KubeArchive). Hierarchy: Product version → Components → Images.
+Pre-computed Container Health Index hierarchy for Org Pulse (RHOAIENG-97404). Environments: **Prod** (`catalog.redhat.com`), **Stage** (Stage Pyxis), **Latest** (Konflux clair-scan via KubeArchive), **Nightly** (`ec-cve-run-tool`, RHEL errata-filtered). Hierarchy: Product version → Components → Images.
 
 Fixture: `fixtures/releases/chi-hierarchy/latest.json`.
 
@@ -2131,6 +2495,29 @@ Fixture: `fixtures/releases/chi-hierarchy/latest.json`.
           }]
         }]
       }]
+    },
+    "nightly": {
+      "fetchedAt": "2026-10-13T11:53:15.000Z",
+      "source": "ec-cve-run-tool (RHEL errata filtered, Konflux Clair scan)",
+      "versions": [{
+        "id": "rhoai-3.6",
+        "tag": "v3.6",
+        "summary": { "imageCount": 2, "gradeDistribution": { "A": 1, "D": 1 }, "critical": 0, "important": 4, "staleImageCount": 1 },
+        "components": [{
+          "name": "AI Core Dashboard",
+          "summary": { "imageCount": 1, "worstGrade": "A", "critical": 0, "important": 0, "oldestImageAgeDays": 0 },
+          "images": [{
+            "name": "odh-dashboard-nightly-rhel9",
+            "grade": "A",
+            "gradeDate": "2026-10-13",
+            "vulnerabilityCount": 0,
+            "advisories": { "Critical": 0, "Important": 0 },
+            "scanNote": "3 CVE(s) excluded (no RHEL errata or non-RHEL fix)",
+            "lastUpdated": "2026-10-13",
+            "ageDays": 0
+          }]
+        }]
+      }]
     }
   }
 }
@@ -2142,7 +2529,7 @@ Fixture: `fixtures/releases/chi-hierarchy/latest.json`.
 | GET | `/api/modules/releases/chi-hierarchy/status` | `releases:read` | Upload / env summary |
 | POST | `/api/modules/releases/chi-hierarchy/bulk` | `releases:write` | Pipeline ingest (skipped in `DEMO_MODE`) |
 
-Image staleness: `ageDays > 14` is treated as stale in the UI. Prod/Stage `grade` / `gradeDate` / `vulnerabilityCount` align with catalog HealthIndex. Latest grades are official CHI from rhel-vex patched Critical/Important (see the in-page grading tip). Latest images use `konfluxUrl` instead of `catalogUrl`.
+Image staleness: `ageDays > 14` is treated as stale in the UI. Prod/Stage `grade` / `gradeDate` / `vulnerabilityCount` align with catalog HealthIndex. Latest (Konflux builds) grades are official CHI from rhel-vex patched Critical/Important (see the in-page grading tip). Latest images use `konfluxUrl` instead of `catalogUrl`. Nightly images carry an optional `scanNote` string explaining excluded CVEs (RHEL errata filtering); it is shown in the image table when the Nightly tab is active.
 
 `catalogUrl` must include the Pyxis repository `_id` final path segment (e.g. `…/odh-dashboard-rhel9/680cdd696ed1cf1f6cf2a587`); without it catalog.redhat.com returns 404.
 
@@ -2327,7 +2714,7 @@ are not selected on open. If no release qualifies, no version is selected.
 ```
 
 **Notes:**
-- `test_timeline` entries are the Epics shown as accordion rows in the "Test Execution Phases" section; `breakdowns.*.test_execution.phases[*].tasks` are the child tasks shown when a row is expanded. `test_timeline` rows only render a generic `Done`/`Active`/`Pending` badge derived from `rag` — Resolution is only surfaced for the child tasks, not the Epic itself.
+- `test_timeline` entries are the Epics shown as accordion rows in the "Test Execution Phases" section; `breakdowns.*.test_execution.phases[*].tasks` are the child tasks shown when a row is expanded. The row's icon, progress bar, and status badge are derived from `rag`, except that the UI shows a grey `Not Done` badge when every child task has status category `Done` and resolution `"Won't Do"` or `"Obsolete"`. Resolution is only surfaced for the child tasks, not the Epic itself.
 - Task objects carry the Jira `status`/`status_category` and `resolution` (same semantics as `resolution` in [Person Metrics](#person-metrics--datapeoplenamejson): the raw Jira resolution name, or `null`/absent while unresolved).
 - The UI renders a task's label as `<Status> - <Resolution>` (e.g. `"Done - Won't Do"`) whenever `resolution` is set, falling back to just `<Status>` otherwise; `resolution` is optional — older payloads without it still render using `status` alone.
 - No-work resolutions (`"Won't Do"`, `"Can't Do"`, `"Obsolete"`, `"Duplicate"`, `"Cannot Reproduce"`) are rendered in a muted/gray style instead of green, even when `status_category` is `"Done"`, since the work itself wasn't completed.
@@ -2765,7 +3152,7 @@ Each entry has: `dimension` (name), `score` (0-10), `status` (human-readable sum
 
 Aggregated RHOAI test execution statistics shown on the "Test Execution Dashboard (Beta)" view. This is a **display-layer** feature (HC3): an external pipeline (`test-reports-opensearch`) queries Jenkins/OpenSearch, pre-computes the dashboard payloads, and pushes them via the bulk API. The app only stores and serves the JSON — it performs no aggregation.
 
-The dataset is four separate JSON files under `data/system-health/test-execution/`:
+The dataset is five separate JSON files under `data/system-health/test-execution/`:
 
 | File | Purpose |
 |------|---------|
@@ -2773,6 +3160,7 @@ The dataset is four separate JSON files under `data/system-health/test-execution
 | `components.json` | Per-component daily series plus quality-gate execution detail (used by component drill-downs). |
 | `jira_config.json` | Release → team/JQL configuration used to build Jira links. |
 | `meta.json` | Generation metadata (date window, component list, data mode). |
+| `nightly_health.json` | Nightly promotion-gate readiness: per-day selected runs, component states, deployment evidence, optional artifact links. Renders in a separate table even when the heatmap is empty. |
 
 ### `heatmap.json`
 
@@ -2824,13 +3212,66 @@ The dataset is four separate JSON files under `data/system-health/test-execution
 
 `components.json` is a map keyed by component name with `overall`, a `daily[]` array, and a `quality_gates` object (per-gate, per-date execution lists). `jira_config.json` is a map with a `releases` object keyed by `"<version>|<release>"`, each carrying `fix_version`, `rhoai_jira_version`, `project`, and a `teams` map. These are stored verbatim and passed through to the client; they are consumed opportunistically for drill-downs and Jira links.
 
+### `nightly_health.json`
+
+Producer-computed nightly readiness (not derived from the heatmap). Stored as the inner object (same shape as the bulk `nightly_health` key).
+
+```json
+{
+  "schema_version": 1,
+  "generated_at": "2026-11-01T10:00:00Z",
+  "timezone": "UTC",
+  "selection_policy": "latest_completed_by_started_at",
+  "days": [
+    {
+      "date": "2026-11-01",
+      "stream_key": "example-stream",
+      "latest_run_id": "example-job:102",
+      "runs": [
+        {
+          "run_id": "example-job:102",
+          "build_number": 102,
+          "source_result": "FAILURE",
+          "deployment": { "state": "failed", "evidence_ref": "…" },
+          "components": [
+            {
+              "id": "platform",
+              "name": "Platform",
+              "state": "blocked",
+              "reason_code": "deployment_failed",
+              "tests": null
+            }
+          ],
+          "artifacts": { "pod_logs": null, "bvt_results": null },
+          "collection": { "state": "complete", "xml_available": false, "warnings": [] }
+        }
+      ]
+    }
+  ]
+}
+```
+
+**Fields:**
+
+- `schema_version` — required; must be exactly `1` (reject other values on upload).
+- `days[]` — calendar rows; each `(stream_key, date)` pair must be unique when multiple Jenkins jobs are published in one snapshot. Omit `stream_key` for single-job snapshots (legacy). `latest_run_id` selects the run shown in each matrix column; other same-day entries remain in `runs[]` for the day detail panel.
+- `jenkins_jobs[]` — optional catalog for the UI job switcher: `{ "stream_key", "label", "jenkins_job" }` (folder/job path). When more than one `stream_key` appears in `days[]`, the Test Execution matrix shows a **Test results source** filter beside the date pager. Deep link: `#/system-health/test-execution?source=<label-or-stream_key>` (for example `source=devops/promotion-gate-tests`).
+- `runs[].promotion_gate` — optional metadata from `promotion_gate_test_summary.yaml` (`status`, `rhoai_version`, `update_channel`, `cluster_name`, `openshift_version`, …).
+- `runs[].gates` — optional **array** of BVT gate rows (`cluster-health`, `operator-health`) with `source_status` and `tests` counts matching the YAML; each entry must be an object with non-empty `id` (reject `{}` or non-array `gates` on bulk upload). Optional `state` uses the same enum as `components[].state`.
+- `runs[].components[]` — `state` is one of `ready`, `failed`, `blocked`, `unknown`, `not_run`, `not_applicable`; `source_status` mirrors YAML `components.<id>.status` for display. When `state` is `blocked`, the UI shows **Blocked** as the readiness label and `source_status` separately (BVT/YAML).
+- **Heatmap join:** match heatmap row `component` names to `components[].id` by normalizing display names (lowercase, strip non-alphanumeric). The synthetic heatmap row **RHOAI Deployment** maps to gate `operator-health`. Overlay uses each day's `latest_run_id` only (same as the nightly matrix).
+- `tests: null` — no observed test results (not zero failures).
+- `artifacts` — durable refs plus optional browser URLs when verified; null when unavailable.
+
+**UI:** Test Execution Dashboard renders a **date-column matrix** (five-day paging) above the component heatmap; clicking a date lists all `runs[]` for that day.
+
 **API:**
 
 | Method | Path | Auth | Purpose |
 |--------|------|------|---------|
-| `GET` | `/api/modules/system-health/quality/test-execution/data` | `system-health:read` | Combined `{ heatmap, components, jira_config, meta, lastUpload }`; `?file=<name>` for a single payload |
+| `GET` | `/api/modules/system-health/quality/test-execution/data` | `system-health:read` | Combined `{ heatmap, components, jira_config, meta, nightly_health, lastUpload }`; `?file=<name>` for a single payload |
 | `GET` | `/api/modules/system-health/quality/test-execution/status` | `system-health:read` | Last upload receipt |
-| `POST` | `/api/modules/system-health/quality/test-execution/bulk` | `system-health:write` | Push any subset of `heatmap`/`components`/`jira_config`/`meta` from the pipeline |
+| `POST` | `/api/modules/system-health/quality/test-execution/bulk` | `system-health:write` | Push any subset of `heatmap`/`components`/`jira_config`/`meta`/`nightly_health` from the pipeline |
 
 **Upload receipt:** `data/system-health/test-execution/last-upload.json` records `{ uploadedAt, uploadedBy, files }` after each bulk write.
 

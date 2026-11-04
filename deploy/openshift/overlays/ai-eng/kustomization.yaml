@@ -6,7 +6,8 @@ kind: Kustomization
 # (ai-eng-dev, ai-eng-preprod, ai-eng-prod) extend this.
 
 resources:
-  - https://github.com/red-hat-data-services/org-pulse-core//deploy/openshift/base?ref=v2.0.91
+  - https://github.com/red-hat-data-services/org-pulse-core//deploy/openshift/base?ref=v2.0.94
+  - cronjob-tech-debt-trends.yaml
 
 patches:
   - path: backend-secrets-patch.yaml

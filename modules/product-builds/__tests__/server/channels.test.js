@@ -55,7 +55,6 @@ describe('channel routes', () => {
     expect(first).not.toHaveProperty('drops')
     expect(first).toMatchObject({
       name: expect.any(String),
-      maturity: expect.stringMatching(/^(stable|rolling)$/),
       accelerator: expect.any(String),
       rhel_version: expect.any(String),
       wheel_count: expect.any(Number),
@@ -159,11 +158,9 @@ describe('sample channel catalog', () => {
     }
   })
 
-  it('covers both maturities, and every stable channel is adopted by a release', () => {
-    expect(channels.some(c => c.maturity === 'rolling')).toBe(true)
-    const stable = channels.filter(c => c.maturity === 'stable')
-    expect(stable.length).toBeGreaterThan(0)
-    for (const c of stable) expect(c.compatible_releases.length).toBeGreaterThan(0)
+  it('includes channels adopted by a release and channels not adopted yet', () => {
+    expect(channels.some(c => c.compatible_releases.length > 0)).toBe(true)
+    expect(channels.some(c => c.compatible_releases.length === 0)).toBe(true)
   })
 
   it('keeps summaries consistent with details', () => {
@@ -190,10 +187,10 @@ describe('sample channel catalog', () => {
     }
   })
 
-  it('only gives release branch drops to stable channels adopted by that release', () => {
+  it('only gives release branch drops to channels adopted by that release', () => {
     for (const c of channels) {
       const branchDrops = getChannel(c.name).drops.filter(d => d.git_branch !== 'main')
-      if (c.maturity === 'rolling' || !c.compatible_releases.includes('rhoai-3.6')) {
+      if (!c.compatible_releases.includes('rhoai-3.6')) {
         expect(branchDrops).toEqual([])
       } else {
         expect(branchDrops.length).toBeGreaterThan(0)

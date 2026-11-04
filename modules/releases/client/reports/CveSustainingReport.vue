@@ -81,7 +81,7 @@
 
       <!-- Total count banner -->
       <div class="bg-gradient-to-r from-red-600 to-orange-600 dark:from-red-700 dark:to-orange-700 rounded-lg px-6 py-4 text-white shadow">
-        <div class="flex items-center justify-between">
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 items-center">
           <div>
             <p class="text-xs font-semibold uppercase tracking-widest text-red-200">Open CVEs{{ filters.hasActiveFilters.value ? ' (filtered)' : '' }}</p>
             <a :href="agg.totalOpen_jql.value" target="_blank" rel="noopener noreferrer"
@@ -90,6 +90,12 @@
               {{ agg.totalOpen.value.toLocaleString() }}
               <svg class="w-4 h-4 opacity-60" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" /></svg>
             </a>
+          </div>
+          <div class="text-center">
+            <p class="text-xs font-semibold uppercase tracking-widest text-red-200">Out of support</p>
+            <p class="text-3xl font-extrabold" data-testid="possibly-closable-overall-count">
+              {{ Number.isInteger(data.slaCompliance?.possiblyClosableCount) ? data.slaCompliance.possiblyClosableCount.toLocaleString() : '—' }}
+            </p>
           </div>
           <div class="text-right">
             <p class="text-xs font-semibold uppercase tracking-widest text-red-200">Total (all statuses)</p>
@@ -107,7 +113,7 @@
       <section v-if="slaQuarters.length" class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-5">
         <div class="mb-4">
           <h3 class="text-sm font-semibold text-gray-900 dark:text-gray-100">CVE SLA Compliance</h3>
-          <p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">Resolved on or before SLA Date. Tickets without an SLA Date are listed separately and excluded from compliance. New this quarter and still open counts current open tickets created during each quarter.</p>
+          <p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">Resolved on or before SLA Date. Tickets without an SLA Date are listed separately and excluded from compliance. New this quarter and still open counts current open tickets created during each quarter. Out of support counts include all statuses and are grouped by creation quarter.</p>
         </div>
         <p v-if="!slaDataReady" class="text-sm text-amber-700 dark:text-amber-300">
           This cached snapshot does not include quarterly SLA details. Refresh from Jira to load ticket-level breach reports and current open counts.
@@ -152,6 +158,11 @@
                   title="Currently open tickets created during this quarter">
                   <span data-testid="sla-quarter-metric-label">New this quarter and still open:</span>
                   <span data-testid="sla-quarter-metric-value">{{ q.newOpenCount }}</span>
+                </div>
+                <div class="flex items-center justify-between gap-3 font-semibold"
+                  title="All tickets flagged out of support, grouped by creation quarter">
+                  <span data-testid="sla-quarter-metric-label">Out of support:</span>
+                  <span data-testid="sla-quarter-possibly-closable-count">{{ Number.isInteger(q.possiblyClosableCount) ? q.possiblyClosableCount : '—' }}</span>
                 </div>
                 <div class="flex items-center justify-between gap-3 font-semibold text-gray-600 dark:text-gray-300">
                   <span data-testid="sla-quarter-metric-label">No SLA Date:</span>
@@ -204,7 +215,12 @@
                   <td class="py-2 px-4 whitespace-nowrap">
                     <a :href="jiraIssueUrl(issue.key)" target="_blank" rel="noopener noreferrer" class="text-primary-600 dark:text-primary-400 hover:underline font-medium">{{ issue.key }}</a>
                   </td>
-                  <td class="py-2 px-4 text-gray-900 dark:text-gray-100">{{ issue.summary || '—' }}</td>
+                  <td class="py-2 px-4 text-gray-900 dark:text-gray-100">
+                    <span>{{ issue.summary || '—' }}</span>
+                    <span v-if="issue.possiblyClosable" :data-testid="'sla-possibly-closable-' + issue.key"
+                      title="Tagged as belonging to an out-of-support image"
+                      class="ml-2 inline-flex items-center rounded-full bg-gray-100 px-2 py-0.5 text-[10px] font-semibold text-gray-700 dark:bg-gray-700 dark:text-gray-300">Out of support</span>
+                  </td>
                   <td class="py-2 px-4 text-gray-600 dark:text-gray-400 whitespace-nowrap">{{ issue.component || '—' }}</td>
                   <td class="py-2 px-4 text-gray-600 dark:text-gray-400 whitespace-nowrap">{{ (issue.versions || []).join(', ') || '—' }}</td>
                   <td class="py-2 px-4 text-gray-600 dark:text-gray-400 whitespace-nowrap">{{ issue.status || '—' }}</td>

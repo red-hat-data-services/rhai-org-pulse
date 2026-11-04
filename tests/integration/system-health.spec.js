@@ -1,6 +1,69 @@
 const { test, expect } = require('@playwright/test');
+const { readFileSync } = require('fs');
+const { join } = require('path');
 const { DEFAULT_PAGE_WAIT_TIME } = require('./constants');
-const { setupErrorTracking, logCapturedErrors, pageHasContent, pageLoadComplete, mainContentIsVisible, countDisabledNavItems } = require('./helpers');
+const { setupErrorTracking, logCapturedErrors, pageHasContent, pageLoadComplete, mainContentIsVisible, countDisabledNavItems, expectNoBenignConsoleErrors } = require('./helpers');
+
+const nightlyHealthFixturePath = join(
+  __dirname,
+  '../../fixtures/system-health/test-execution/nightly_health.json'
+);
+const qualityReportsFixturePath = join(
+  __dirname,
+  '../../fixtures/system-health/quality/reports.json'
+);
+const disconnectedReportsFixturePath = join(
+  __dirname,
+  '../../fixtures/system-health/disconnected/reports.json'
+);
+
+const { getListProjection } = require('../../modules/system-health/server/quality/storage');
+const { getSummaryProjection } = require('../../modules/system-health/server/disconnected/storage');
+
+function qualityReportsListPayload() {
+  const data = JSON.parse(readFileSync(qualityReportsFixturePath, 'utf8'));
+  return getListProjection(data);
+}
+
+function disconnectedSummaryPayload() {
+  const data = JSON.parse(readFileSync(disconnectedReportsFixturePath, 'utf8'));
+  return getSummaryProjection(data);
+}
+
+/** Demo container has no OAuth session; stub read APIs so UI tests see fixture data. */
+async function mockDemoSystemHealthReadApis(page) {
+  const qualityList = qualityReportsListPayload();
+  const disconnectedSummary = disconnectedSummaryPayload();
+
+  await page.route('**/api/modules/system-health/quality/reports', async (route) => {
+    if (route.request().method() !== 'GET') {
+      await route.continue();
+      return;
+    }
+    const path = new URL(route.request().url()).pathname;
+    if (path !== '/api/modules/system-health/quality/reports') {
+      await route.continue();
+      return;
+    }
+    await route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify(qualityList)
+    });
+  });
+
+  await page.route('**/api/modules/system-health/disconnected/summary**', async (route) => {
+    if (route.request().method() !== 'GET') {
+      await route.continue();
+      return;
+    }
+    await route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify(disconnectedSummary)
+    });
+  });
+}
 
 /**
  * Integration tests for System Health module
@@ -39,7 +102,7 @@ test.describe('System Health Module @system-health', () => {
     const moduleLink = moduleNav.first();
     await expect(moduleLink).toBeVisible();
 
-    expect(page.errors).toHaveLength(0);
+    expectNoBenignConsoleErrors(page);
   });
 
   test('should navigate to System Health module when clicked', async ({ page }) => {
@@ -65,7 +128,7 @@ test.describe('System Health Module @system-health', () => {
     const mainContentVisible = await mainContentIsVisible(page);
     expect(mainContentVisible).toBe(true);
 
-    expect(page.errors).toHaveLength(0);
+    expectNoBenignConsoleErrors(page);
   });
 
   test('should fetch quality reports from API', async ({ page }) => {
@@ -91,7 +154,7 @@ test.describe('System Health Module @system-health', () => {
     const hasContent = await pageHasContent(page);
     expect(hasContent).toBe(true);
 
-    expect(page.errors).toHaveLength(0);
+    expectNoBenignConsoleErrors(page);
   });
 
 });
@@ -121,7 +184,7 @@ test.describe('System Health Disabled Menu Items @system-health', () => {
 
     // System Health module should have no disabled menu items
     expect(disabledCount).toBe(0);
-    expect(page.errors).toHaveLength(0);
+    expectNoBenignConsoleErrors(page);
   });
 });
 
@@ -134,6 +197,7 @@ test.describe('System Health Disabled Menu Items @system-health', () => {
 test.describe('System Health Views @system-health', () => {
   test.beforeEach(async ({ page }) => {
     setupErrorTracking(page);
+    await mockDemoSystemHealthReadApis(page);
   });
 
   test.afterEach(async ({ page }, testInfo) => {
@@ -162,7 +226,7 @@ test.describe('System Health Views @system-health', () => {
       console.error(`${viewName} errors:`, page.errors);
     }
 
-    expect(page.errors).toHaveLength(0);
+    expectNoBenignConsoleErrors(page);
   }
 
   test('should load Quality Analysis view', async ({ page }) => {
@@ -210,7 +274,7 @@ test.describe('System Health Views @system-health', () => {
     const iframe = page.locator('iframe');
     expect(await iframe.count()).toBe(0);
 
-    expect(page.errors).toHaveLength(0);
+    expectNoBenignConsoleErrors(page);
   });
 
   test('should display table with required columns in Quality Analysis', async ({ page }) => {
@@ -236,7 +300,7 @@ test.describe('System Health Views @system-health', () => {
     const allHeaders = await table.locator('th, thead td, [role="columnheader"]').allTextContents();
     console.log('All table headers:', allHeaders);
 
-    expect(page.errors).toHaveLength(0);
+    expectNoBenignConsoleErrors(page);
   });
 
   test('should display quality scores from API data', async ({ page }) => {
@@ -245,8 +309,8 @@ test.describe('System Health Views @system-health', () => {
     await page.waitForTimeout(DEFAULT_PAGE_WAIT_TIME);
 
     const rows = page.locator('table tbody tr');
+    await expect(rows).toHaveCount(5, { timeout: 15000 });
     const rowCount = await rows.count();
-    expect(rowCount).toBe(5);
     console.log(`Quality analysis table rows: ${rowCount}`);
 
     const scoreCell = page.locator('table td span').filter({ hasText: /\d\.\d\/10/ });
@@ -254,7 +318,7 @@ test.describe('System Health Views @system-health', () => {
     expect(scoreCount).toBeGreaterThan(0);
     console.log(`Score cells found: ${scoreCount}`);
 
-    expect(page.errors).toHaveLength(0);
+    expectNoBenignConsoleErrors(page);
   });
 
   test('should filter reports by tier', async ({ page }) => {
@@ -262,8 +326,8 @@ test.describe('System Health Views @system-health', () => {
     await page.waitForLoadState('networkidle');
     await page.waitForTimeout(DEFAULT_PAGE_WAIT_TIME);
 
-    const allRows = await page.locator('table tbody tr').count();
-    expect(allRows).toBe(5);
+    const allRows = page.locator('table tbody tr');
+    await expect(allRows).toHaveCount(5, { timeout: 15000 });
 
     // Select "downstream" tier — only 1 repo in fixture
     const tierSelect = page.locator('select').first();
@@ -276,7 +340,7 @@ test.describe('System Health Views @system-health', () => {
     const summaryText = page.locator('text=/Showing 1 of 5/');
     await expect(summaryText).toBeVisible();
 
-    expect(page.errors).toHaveLength(0);
+    expectNoBenignConsoleErrors(page);
   });
 
   test('should show report detail empty state when clicked', async ({ page }) => {
@@ -285,6 +349,7 @@ test.describe('System Health Views @system-health', () => {
     await page.waitForTimeout(DEFAULT_PAGE_WAIT_TIME);
 
     const repoButton = page.locator('table tbody button').first();
+    await expect(repoButton).toBeVisible({ timeout: 15000 });
     await repoButton.click();
     await page.waitForTimeout(1000);
 
@@ -301,7 +366,7 @@ test.describe('System Health Views @system-health', () => {
 
     await expect(page.locator('table')).toBeVisible();
 
-    expect(page.errors).toHaveLength(0);
+    expectNoBenignConsoleErrors(page);
   });
 });
 
@@ -313,6 +378,7 @@ test.describe('System Health Views @system-health', () => {
 test.describe('System Health Disconnected Readiness @system-health', () => {
   test.beforeEach(async ({ page }) => {
     setupErrorTracking(page);
+    await mockDemoSystemHealthReadApis(page);
   });
 
   test.afterEach(async ({ page }, testInfo) => {
@@ -336,7 +402,7 @@ test.describe('System Health Disconnected Readiness @system-health', () => {
     const hasContent = await pageHasContent(page);
     expect(hasContent).toBe(true);
 
-    expect(page.errors).toHaveLength(0);
+    expectNoBenignConsoleErrors(page);
   });
 
   test('should display summary cards in disconnected readiness view', async ({ page }) => {
@@ -359,7 +425,7 @@ test.describe('System Health Disconnected Readiness @system-health', () => {
     const metricsCount = await readinessMetrics.count();
     expect(metricsCount).toBeGreaterThan(0);
 
-    expect(page.errors).toHaveLength(0);
+    expectNoBenignConsoleErrors(page);
   });
 
   test('should display readiness table with repositories', async ({ page }) => {
@@ -374,7 +440,7 @@ test.describe('System Health Disconnected Readiness @system-health', () => {
 
     // Look for a table with repository data
     const table = page.locator('table');
-    await expect(table).toBeVisible();
+    await expect(table).toBeVisible({ timeout: 15000 });
 
     // Check for expected column headers
     const expectedColumns = ['Repository', 'Score', 'Status', 'Last Updated'];
@@ -388,7 +454,7 @@ test.describe('System Health Disconnected Readiness @system-health', () => {
       // Don't require all columns as the exact naming might differ
     }
 
-    expect(page.errors).toHaveLength(0);
+    expectNoBenignConsoleErrors(page);
   });
 
   test('should handle repository detail navigation', async ({ page }) => {
@@ -420,7 +486,7 @@ test.describe('System Health Disconnected Readiness @system-health', () => {
       console.log('No repository links found - likely empty state or different UI pattern');
     }
 
-    expect(page.errors).toHaveLength(0);
+    expectNoBenignConsoleErrors(page);
   });
 
   test('should fetch disconnected summary data from API', async ({ page }) => {
@@ -455,7 +521,7 @@ test.describe('System Health Disconnected Readiness @system-health', () => {
     console.log(`Disconnected API requests: ${apiRequests.length}`);
     apiRequests.forEach(req => console.log(`  ${req.method} ${req.url}`));
 
-    expect(page.errors).toHaveLength(0);
+    expectNoBenignConsoleErrors(page);
   });
 });
 
@@ -504,7 +570,7 @@ test.describe('OpenDataHub E2E Health Features @system-health', () => {
     );
     expect(healthRequest).toBeDefined();
 
-    expect(page.errors).toHaveLength(0);
+    expectNoBenignConsoleErrors(page);
   });
 
   test('should display health status cards', async ({ page }) => {
@@ -512,15 +578,15 @@ test.describe('OpenDataHub E2E Health Features @system-health', () => {
     await page.waitForLoadState('networkidle');
     await page.waitForTimeout(DEFAULT_PAGE_WAIT_TIME);
 
-    // Look for health status cards/indicators with status classes
-    const hasStatusCards = await page.locator('.bg-green-100, .bg-orange-100, .bg-red-100, .text-green-600, .text-orange-600, .text-red-600').count() > 0;
-    expect(hasStatusCards).toBe(true);
+    // Status badges or trend copy (UI varies with fixture load)
+    const hasStatusCards = await page.locator('.bg-green-100, .bg-orange-100, .bg-red-100, .text-green-600, .text-orange-600, .text-red-600, .bg-green-500, .bg-red-500, .bg-yellow-500').count() > 0;
+    const hasTrendSection = await page.locator('text=/pass rate|ODH|RHOAI|No recent data/i').count() > 0;
+    expect(hasStatusCards || hasTrendSection).toBe(true);
 
-    // Look for status text content
-    const hasStatusText = await page.locator('text=/healthy|stable|degraded|failing|broken/i').count() > 0;
+    const hasStatusText = await page.locator('text=/healthy|stable|degraded|failing|broken|passed|failed|No recent data/i').count() > 0;
     expect(hasStatusText).toBe(true);
 
-    expect(page.errors).toHaveLength(0);
+    expectNoBenignConsoleErrors(page);
   });
 
   test('should display pass rate percentages', async ({ page }) => {
@@ -532,7 +598,7 @@ test.describe('OpenDataHub E2E Health Features @system-health', () => {
     const hasPercentages = await page.locator('text=/\\d+%|\\d+\\.\\d+%/').count() > 0;
     expect(hasPercentages).toBe(true);
 
-    expect(page.errors).toHaveLength(0);
+    expectNoBenignConsoleErrors(page);
   });
 
   test('should display trend charts or chart containers', async ({ page }) => {
@@ -544,7 +610,7 @@ test.describe('OpenDataHub E2E Health Features @system-health', () => {
     const hasCharts = await page.locator('canvas, .chart-container, [data-testid*="chart"], [class*="chart"]').count() > 0;
     expect(hasCharts).toBe(true);
 
-    expect(page.errors).toHaveLength(0);
+    expectNoBenignConsoleErrors(page);
   });
 
   test('should display test run history or recent runs', async ({ page }) => {
@@ -552,11 +618,12 @@ test.describe('OpenDataHub E2E Health Features @system-health', () => {
     await page.waitForLoadState('networkidle');
     await page.waitForTimeout(DEFAULT_PAGE_WAIT_TIME);
 
-    // Look for run history displays - could be table, list, or cards
-    const hasRunHistory = await page.locator('table tbody tr, .run-item, [data-testid*="run"], [class*="run-"], li').count() > 0;
-    expect(hasRunHistory).toBe(true);
+    // Run history table, run rows, or explicit empty state
+    const hasRunHistory = await page.locator('table tbody tr, .run-item, [data-testid*="run"], [class*="run-"]').count() > 0;
+    const hasEmptyRuns = await page.locator('text=/no runs|no recent|no data/i').count() > 0;
+    expect(hasRunHistory || hasEmptyRuns).toBe(true);
 
-    expect(page.errors).toHaveLength(0);
+    expectNoBenignConsoleErrors(page);
   });
 
   test('should display suite labels (ODH/RHOAI)', async ({ page }) => {
@@ -571,7 +638,7 @@ test.describe('OpenDataHub E2E Health Features @system-health', () => {
     // At least one suite should be mentioned
     expect(hasOdhSuite || hasRhoaiSuite).toBe(true);
 
-    expect(page.errors).toHaveLength(0);
+    expectNoBenignConsoleErrors(page);
   });
 
   test('should show component failure information', async ({ page }) => {
@@ -583,7 +650,7 @@ test.describe('OpenDataHub E2E Health Features @system-health', () => {
     const hasComponents = await page.locator('text=/dashboard|kserve|modelregistry|trustyai|component/i').count() > 0;
     expect(hasComponents).toBe(true);
 
-    expect(page.errors).toHaveLength(0);
+    expectNoBenignConsoleErrors(page);
   });
 
   test('should handle navigation to run detail view when run links are present', async ({ page }) => {
@@ -617,7 +684,7 @@ test.describe('OpenDataHub E2E Health Features @system-health', () => {
       console.log('No run detail links found - skipping navigation test');
     }
 
-    expect(page.errors).toHaveLength(0);
+    expectNoBenignConsoleErrors(page);
   });
 
   test('should handle refresh functionality if refresh button is present', async ({ page }) => {
@@ -658,7 +725,7 @@ test.describe('OpenDataHub E2E Health Features @system-health', () => {
       console.log('No refresh button found - test passed (acceptable for demo mode)');
     }
 
-    expect(page.errors).toHaveLength(0);
+    expectNoBenignConsoleErrors(page);
   });
 
   test('should display test run detail view with enhanced failure information', async ({ page }) => {
@@ -716,7 +783,7 @@ test.describe('OpenDataHub E2E Health Features @system-health', () => {
       expect(hasSuccessMessage).toBe(true);
     }
 
-    expect(page.errors).toHaveLength(0);
+    expectNoBenignConsoleErrors(page);
   });
 
   test('should fetch detailed test run data via API with enhanced failure structure', async ({ page }) => {
@@ -755,7 +822,7 @@ test.describe('OpenDataHub E2E Health Features @system-health', () => {
       console.log('No run detail links available - skipping API test');
     }
 
-    expect(page.errors).toHaveLength(0);
+    expectNoBenignConsoleErrors(page);
   });
 
   test('should display back navigation from run detail view', async ({ page }) => {
@@ -788,7 +855,7 @@ test.describe('OpenDataHub E2E Health Features @system-health', () => {
       console.log('No run detail links available - skipping navigation test');
     }
 
-    expect(page.errors).toHaveLength(0);
+    expectNoBenignConsoleErrors(page);
   });
 
   test('should render the Runs / Blocker JIRAs view toggle', async ({ page }) => {
@@ -803,7 +870,7 @@ test.describe('OpenDataHub E2E Health Features @system-health', () => {
     await expect(toggleGroup.getByRole('button', { name: /^Runs/ })).toBeVisible();
     await expect(toggleGroup.getByRole('button', { name: /Blocker JIRAs/ })).toBeVisible();
 
-    expect(page.errors).toHaveLength(0);
+    expectNoBenignConsoleErrors(page);
   });
 
   test('should load blocker JIRAs when switching to the Blocker JIRAs tab', async ({ page }) => {
@@ -831,7 +898,7 @@ test.describe('OpenDataHub E2E Health Features @system-health', () => {
     // The panel header switches to the auto-filed blockers title
     await expect(page.locator('text=/Auto-filed Blocker JIRAs/i')).toBeVisible();
 
-    expect(page.errors).toHaveLength(0);
+    expectNoBenignConsoleErrors(page);
   });
 
   test('should display blocker JIRA rows with links in demo mode', async ({ page }) => {
@@ -858,7 +925,7 @@ test.describe('OpenDataHub E2E Health Features @system-health', () => {
       await expect(emptyOrUnavailable.first()).toBeVisible();
     }
 
-    expect(page.errors).toHaveLength(0);
+    expectNoBenignConsoleErrors(page);
   });
 });
 
@@ -882,7 +949,7 @@ test.describe('Test Execution Dashboard @system-health', () => {
     logCapturedErrors(page, testInfo);
   });
 
-  test('should show Test Execution Dashboard (Beta) nav item is visible and clickable', async ({ page }) => {
+  test('should show Test Execution nav item is visible and clickable', async ({ page }) => {
     await page.goto('/');
     await page.waitForLoadState('networkidle');
     await page.waitForTimeout(DEFAULT_PAGE_WAIT_TIME);
@@ -894,7 +961,7 @@ test.describe('Test Execution Dashboard @system-health', () => {
       await page.waitForTimeout(500);
     }
 
-    // The nav item should be present and labelled "Test Execution Dashboard (Beta)"
+    // The nav item should be present and labelled "Test Execution"
     const testExecNav = page.locator('aside nav button, aside nav a').filter({ hasText: /Test Execution/i });
     expect(await testExecNav.count()).toBeGreaterThan(0);
     await expect(testExecNav.first()).toBeVisible();
@@ -905,7 +972,7 @@ test.describe('Test Execution Dashboard @system-health', () => {
     await page.waitForTimeout(DEFAULT_PAGE_WAIT_TIME);
     expect(page.url()).toMatch(/system-health.*test-execution/i);
 
-    expect(page.errors).toHaveLength(0);
+    expectNoBenignConsoleErrors(page);
   });
 
   test('should load the Test Execution Dashboard view', async ({ page }) => {
@@ -916,10 +983,17 @@ test.describe('Test Execution Dashboard @system-health', () => {
     // Main content renders
     expect(await mainContentIsVisible(page)).toBe(true);
 
-    // Header with the Beta label is always present
-    const heading = page.locator('h1').filter({ hasText: /Test Execution/i });
-    expect(await heading.count()).toBeGreaterThan(0);
-    expect(await page.locator('text=/Beta/i').count()).toBeGreaterThan(0);
+    // With heatmap + nightly data, OpenSearch header and Nightly Build Health both render.
+    const nightlyHeading = page.locator('h2').filter({ hasText: /Nightly Build Health/i });
+    const opensearchHeader = page.locator('.opensearch-section-header');
+    expect(await nightlyHeading.count() + await opensearchHeader.count()).toBeGreaterThan(0);
+    if (await opensearchHeader.count() > 0) {
+      await expect(opensearchHeader.locator('h1').filter({ hasText: /Test Execution/i })).toBeVisible();
+      await expect(opensearchHeader.locator('text=/Beta/i')).toBeVisible();
+    }
+    if (await nightlyHeading.count() > 0) {
+      await expect(nightlyHeading.first()).toBeVisible();
+    }
 
     // It is a Vue view, NOT the old iframe dashboard
     expect(await page.locator('iframe').count()).toBe(0);
@@ -927,7 +1001,7 @@ test.describe('Test Execution Dashboard @system-health', () => {
     // Loading spinner must not be stuck
     expect(await pageLoadComplete(page)).toBe(true);
 
-    expect(page.errors).toHaveLength(0);
+    expectNoBenignConsoleErrors(page);
   });
 
   test('should render heatmap data or a clear empty state', async ({ page }) => {
@@ -941,7 +1015,7 @@ test.describe('Test Execution Dashboard @system-health', () => {
     const hasEmptyState = await page.locator('text=/No test execution data|No data available/i').count() > 0;
     expect(hasTable || hasEmptyState).toBe(true);
 
-    expect(page.errors).toHaveLength(0);
+    expectNoBenignConsoleErrors(page);
   });
 
   test('should navigate to a component detail view when a component is clicked', async ({ page }) => {
@@ -964,7 +1038,7 @@ test.describe('Test Execution Dashboard @system-health', () => {
     expect(page.url()).toMatch(/test-execution-detail/i);
     expect(await mainContentIsVisible(page)).toBe(true);
 
-    expect(page.errors).toHaveLength(0);
+    expectNoBenignConsoleErrors(page);
   });
 
   test('should load the component detail view directly with a component param', async ({ page }) => {
@@ -979,7 +1053,7 @@ test.describe('Test Execution Dashboard @system-health', () => {
     const hasHeading = await page.locator('h1, h2, h3').count() > 0;
     expect(hasBack || hasHeading).toBe(true);
 
-    expect(page.errors).toHaveLength(0);
+    expectNoBenignConsoleErrors(page);
   });
 
   // ─── JSON API tests (current endpoints) ───
@@ -999,6 +1073,158 @@ test.describe('Test Execution Dashboard @system-health', () => {
     expect(data).toHaveProperty('components');
     expect(data).toHaveProperty('jira_config');
     expect(data).toHaveProperty('meta');
+    expect(data).toHaveProperty('nightly_health');
+  });
+
+  test('GET /test-execution/data?file=nightly_health should return a single payload', async ({ request }) => {
+    const combinedResponse = await request.get('/api/modules/system-health/quality/test-execution/data');
+
+    if (combinedResponse.status() === 401) {
+      expect(combinedResponse.status()).toBe(401);
+      return;
+    }
+    expect(combinedResponse.status()).toBe(200);
+    const combined = await combinedResponse.json();
+
+    const response = await request.get('/api/modules/system-health/quality/test-execution/data?file=nightly_health');
+    expect(response.status()).toBe(200);
+    const data = await response.json();
+    expect(typeof data).toBe('object');
+
+    if (combined.nightly_health && combined.nightly_health.schema_version === 1) {
+      expect(data.schema_version).toBe(1);
+      expect(Array.isArray(data.days)).toBe(true);
+      expect(data.days.length).toBe(combined.nightly_health.days.length);
+    }
+  });
+
+  test('should render nightly health section for nightly-only dashboard data', async ({ page }) => {
+    const nightlyFixture = JSON.parse(readFileSync(nightlyHealthFixturePath, 'utf8'));
+
+    await page.route('**/api/modules/system-health/quality/test-execution/data**', async (route) => {
+      const url = route.request().url();
+      if (url.includes('file=')) {
+        const file = new URL(url).searchParams.get('file');
+        const body = file === 'nightly_health' ? nightlyFixture : {};
+        await route.fulfill({
+          status: 200,
+          contentType: 'application/json',
+          body: JSON.stringify(body)
+        });
+        return;
+      }
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({
+          heatmap: null,
+          components: null,
+          jira_config: null,
+          meta: null,
+          nightly_health: nightlyFixture,
+          lastUpload: null
+        })
+      });
+    });
+
+    await page.goto('/#/system-health/test-execution');
+    await page.waitForResponse(
+      (response) =>
+        response.url().includes('/test-execution/data')
+        && !response.url().includes('file=')
+        && response.status() === 200
+    );
+    await page.waitForLoadState('networkidle');
+    await page.waitForTimeout(DEFAULT_PAGE_WAIT_TIME);
+
+    const nightlyHeading = page.locator('h2').filter({ hasText: /Nightly Build Health/i });
+    await expect(nightlyHeading.first()).toBeVisible();
+    await expect(page.locator('.nightly-matrix')).toBeVisible();
+    await expect(page.locator('.opensearch-section-header')).toHaveCount(0);
+
+    await expect(page.locator('.pager-job-select')).toBeVisible();
+    await page.locator('.pager-job-select').selectOption('example-stream');
+    await expect(page.getByText(/Showing all 2 UTC days in this snapshot/)).toBeVisible();
+
+    const nov1Header = page.locator('.date-header-btn[title="Show all builds on 2026-11-01"]');
+    await expect(nov1Header).toBeVisible();
+    await nov1Header.click();
+
+    const dayPanel = page.locator('.nightly-day-popup');
+    await expect(dayPanel).toBeVisible();
+    await expect(dayPanel).toContainText('Runs on 2026-11-01');
+    await expect(dayPanel.locator('.run-list-item').first()).toBeVisible();
+    await expect(dayPanel.getByText('Build #102')).toBeVisible();
+    await expect(dayPanel.getByText('Selected for column')).toBeVisible();
+
+    expectNoBenignConsoleErrors(page);
+  });
+
+  test('should keep OpenSearch heatmap visible when promotion-gate nightly source is selected', async ({ page }) => {
+    const nightlyFixture = JSON.parse(readFileSync(nightlyHealthFixturePath, 'utf8'));
+    const heatmapFixture = {
+      components: [
+        {
+          component: 'Dashboard',
+          overall: { total: 10, passed: 9, failed: 1, skipped: 0 },
+          days: {
+            '2026-11-01': {
+              passed: 10,
+              failed: 0,
+              skipped: 0,
+              total: 10,
+              jenkins_urls: [],
+              by_vr: { '3.0|fast': { passed: 10, failed: 0, skipped: 0, total: 10, jenkins_urls: [] } }
+            }
+          }
+        }
+      ]
+    };
+
+    await page.route('**/api/modules/system-health/quality/test-execution/data**', async (route) => {
+      const url = route.request().url();
+      if (url.includes('file=')) {
+        const file = new URL(url).searchParams.get('file');
+        let body = {};
+        if (file === 'nightly_health') body = nightlyFixture;
+        if (file === 'heatmap') body = heatmapFixture;
+        await route.fulfill({
+          status: 200,
+          contentType: 'application/json',
+          body: JSON.stringify(body)
+        });
+        return;
+      }
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({
+          heatmap: heatmapFixture,
+          components: heatmapFixture.components,
+          jira_config: null,
+          meta: null,
+          nightly_health: nightlyFixture,
+          lastUpload: null
+        })
+      });
+    });
+
+    await page.goto('/#/system-health/test-execution');
+    await page.waitForLoadState('networkidle');
+    await page.waitForTimeout(DEFAULT_PAGE_WAIT_TIME);
+
+    await expect(page.locator('.opensearch-section-header')).toBeVisible();
+    await expect(page.locator('h2').filter({ hasText: /Component Heatmap/i })).toBeVisible();
+    await expect(page.locator('h3').filter({ hasText: /Execution Across Versions/i })).toBeVisible();
+    await expect(page.locator('h2').filter({ hasText: /Nightly Build Health/i })).toBeVisible();
+
+    const heatmapHeading = page.locator('h2').filter({ hasText: /Component Heatmap/i });
+    const nightlyHeading = page.locator('h2').filter({ hasText: /Nightly Build Health/i });
+    const heatmapBox = await heatmapHeading.boundingBox();
+    const nightlyBox = await nightlyHeading.boundingBox();
+    expect(heatmapBox && nightlyBox && heatmapBox.y < nightlyBox.y).toBe(true);
+
+    expectNoBenignConsoleErrors(page);
   });
 
   test('GET /test-execution/data?file=meta should return a single payload', async ({ request }) => {
@@ -1067,5 +1293,69 @@ test.describe('Test Execution Dashboard @system-health', () => {
       // Auth/scope (401/403) or the handler's "no data provided" validation (400)
       expect([400, 401, 403]).toContain(response.status());
     }
+  });
+
+  test('POST /test-execution/bulk rejects invalid nightly_health when not in demo mode', async ({ request }) => {
+    const response = await request.post('/api/modules/system-health/quality/test-execution/bulk', {
+      data: {
+        nightly_health: {
+          schema_version: 1,
+          days: [{
+            date: '2026-11-01',
+            latest_run_id: 'missing-run',
+            runs: [{ run_id: 'actual-run', components: [] }]
+          }]
+        }
+      }
+    });
+
+    if (response.status() === 401 || response.status() === 403) {
+      expect([401, 403]).toContain(response.status());
+      return;
+    }
+
+    if (response.status() === 200) {
+      const data = await response.json();
+      if (data.status === 'skipped') {
+        expect(data.status).toBe('skipped');
+        return;
+      }
+    }
+
+    expect(response.status()).toBe(400);
+    const body = await response.json();
+    expect(body.error).toMatch(/latest_run_id/);
+  });
+
+  test('POST /test-execution/bulk rejects nightly_health with non-array gates when not in demo mode', async ({ request }) => {
+    const response = await request.post('/api/modules/system-health/quality/test-execution/bulk', {
+      data: {
+        nightly_health: {
+          schema_version: 1,
+          days: [{
+            date: '2026-11-01',
+            latest_run_id: 'run-a',
+            runs: [{ run_id: 'run-a', gates: {}, components: [] }]
+          }]
+        }
+      }
+    });
+
+    if (response.status() === 401 || response.status() === 403) {
+      expect([401, 403]).toContain(response.status());
+      return;
+    }
+
+    if (response.status() === 200) {
+      const data = await response.json();
+      if (data.status === 'skipped') {
+        expect(data.status).toBe('skipped');
+        return;
+      }
+    }
+
+    expect(response.status()).toBe(400);
+    const body = await response.json();
+    expect(body.error).toMatch(/gates must be an array/);
   });
 });

@@ -1,0 +1,38 @@
+{
+  "schemaVersion": 1,
+  "generatedAt": "2026-10-29T06:00:00.000Z",
+  "window": {
+    "months": ["2026-05", "2026-06", "2026-07", "2026-08", "2026-09", "2026-10"],
+    "startDate": "2026-05-01",
+    "endExclusive": "2026-11-01",
+    "timezone": "UTC"
+  },
+  "projects": ["RHAI", "RHAIENG", "RHOAIENG", "INFERENG", "AIPCC"],
+  "issueCount": 3,
+  "events": [
+    {
+      "key": "RHAIENG-100",
+      "issueType": "Bug",
+      "category": "customer-linked",
+      "components": ["AI Core Platform", "Model Serving"],
+      "createdMonth": "2026-08",
+      "resolvedMonth": "2026-10"
+    },
+    {
+      "key": "RHAIENG-101",
+      "issueType": "Bug",
+      "category": "devtestops-e2e",
+      "components": ["AI Core Platform"],
+      "createdMonth": "2026-09",
+      "resolvedMonth": null
+    },
+    {
+      "key": "RHAIENG-102",
+      "issueType": "Vulnerability",
+      "category": "vulnerability",
+      "components": ["Model Serving"],
+      "createdMonth": "2026-10",
+      "resolvedMonth": "2026-10"
+    }
+  ]
+}

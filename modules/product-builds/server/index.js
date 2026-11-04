@@ -1037,6 +1037,9 @@ module.exports = function registerRoutes(router, context) {
   // --- Package Requests ---
   require('./package-requests')(router, context);
 
+  // --- RPM and Channel Requests ---
+  require('./triage-requests')(router, context);
+
   // --- Channels ---
   require('./channels')(router, {
     getBaseUrl: async () => (await getConfig(readFromStorage)).baseUrl,

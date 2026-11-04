@@ -74,4 +74,12 @@ describe('CveIssueListModal', function() {
     expect(owner.text()).not.toContain('Coming from Security Component')
     expect(component.text()).toBe('Model Serving')
   })
+
+  it('labels issues whose image is out of support', function() {
+    const wrapper = mountModal([makeIssue({ possiblyClosable: true })])
+    const badge = wrapper.get('[data-testid="cve-possibly-closable-RHAIENG-1001"]')
+
+    expect(badge.text()).toBe('Out of support')
+    expect(badge.attributes('title')).toContain('out-of-support image')
+  })
 })

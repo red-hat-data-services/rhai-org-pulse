@@ -19,23 +19,25 @@ const ARCH_GPU = ['x86_64', 'aarch64'];
 const ARCH_ALL = ['x86_64', 'aarch64', 'ppc64le', 's390x'];
 
 const CHANNEL_DEFINITIONS = [
-  // Stable: adopted by a product release, torch and accelerator anchor locked.
-  { accelerator: 'cuda', accelerator_version: '13.0', torch: '2.11', maturity: 'stable', compatible_releases: ['rhoai-3.5', 'rhoai-3.6'], architectures: ARCH_GPU, since: '2026-06-01' },
-  { accelerator: 'cuda', accelerator_version: '12.9', torch: '2.11', maturity: 'stable', compatible_releases: ['rhoai-3.6'], architectures: ARCH_GPU, since: '2026-06-01' },
-  { accelerator: 'rocm', accelerator_version: '7.14', torch: '2.11', maturity: 'stable', compatible_releases: ['rhoai-3.6'], architectures: ['x86_64'], since: '2026-06-01' },
-  { accelerator: 'gaudi', accelerator_version: '1.24.1', torch: '2.11', maturity: 'stable', compatible_releases: ['rhaiis-3.6'], architectures: ['x86_64'], since: '2026-06-01', private: true },
-  { accelerator: 'spyre', accelerator_version: '', torch: '2.11', maturity: 'stable', compatible_releases: ['rhoai-3.6'], architectures: ['x86_64', 's390x'], since: '2026-06-01' },
-  { accelerator: 'neuron', accelerator_version: '', torch: '2.9', maturity: 'stable', compatible_releases: ['rhaiis-3.5', 'rhaiis-3.6'], architectures: ['x86_64'], since: '2026-06-01', private: true },
-  { accelerator: 'cpu', accelerator_version: '', torch: '2.11', maturity: 'stable', compatible_releases: ['rhoai-3.5', 'rhoai-3.6'], architectures: ARCH_ALL, since: '2026-06-01' },
-  { accelerator: 'cpu', accelerator_version: '', torch: null, maturity: 'stable', compatible_releases: ['rhoai-3.6'], architectures: ARCH_ALL, since: '2026-06-01' },
-  // Rolling: content flows continuously, any team can adopt after testing.
-  { accelerator: 'cuda', accelerator_version: '13.2', torch: '2.11', maturity: 'rolling', compatible_releases: [], architectures: ARCH_GPU, since: '2026-08-07' },
-  { accelerator: 'cuda', accelerator_version: '13.0', torch: '2.13', maturity: 'rolling', compatible_releases: ['rhoai-3.7'], architectures: ARCH_GPU, since: '2026-08-17' },
-  { accelerator: 'cuda', accelerator_version: '12.9', torch: '2.13', maturity: 'rolling', compatible_releases: ['rhoai-3.7'], architectures: ARCH_GPU, since: '2026-08-17' },
-  { accelerator: 'cuda', accelerator_version: '13.0', torch: '2.14', maturity: 'rolling', compatible_releases: [], architectures: ARCH_GPU, since: '2026-08-24' },
-  { accelerator: 'rocm', accelerator_version: '7.14', torch: '2.12', maturity: 'rolling', compatible_releases: ['rhoai-3.7'], architectures: ['x86_64'], since: '2026-08-14' },
-  { accelerator: 'tpu', accelerator_version: '', torch: '2.10', maturity: 'rolling', compatible_releases: ['rhaiis-3.6'], architectures: ['x86_64'], since: '2026-08-04', private: true },
-  { accelerator: 'cpu', accelerator_version: '', torch: '2.14', maturity: 'rolling', compatible_releases: [], architectures: ARCH_GPU, since: '2026-08-24' },
+  // Adopted by a product release: released channels, with the branch drops of
+  // the releases that list them.
+  { accelerator: 'cuda', accelerator_version: '13.0', torch: '2.11', compatible_releases: ['rhoai-3.5', 'rhoai-3.6'], architectures: ARCH_GPU, since: '2026-06-01' },
+  { accelerator: 'cuda', accelerator_version: '12.9', torch: '2.11', compatible_releases: ['rhoai-3.6'], architectures: ARCH_GPU, since: '2026-06-01' },
+  { accelerator: 'rocm', accelerator_version: '7.14', torch: '2.11', compatible_releases: ['rhoai-3.6'], architectures: ['x86_64'], since: '2026-06-01' },
+  { accelerator: 'gaudi', accelerator_version: '1.24.1', torch: '2.11', compatible_releases: ['rhaiis-3.6'], architectures: ['x86_64'], since: '2026-06-01', private: true },
+  { accelerator: 'spyre', accelerator_version: '', torch: '2.11', compatible_releases: ['rhoai-3.6'], architectures: ['x86_64', 's390x'], since: '2026-06-01' },
+  { accelerator: 'neuron', accelerator_version: '', torch: '2.9', compatible_releases: ['rhaiis-3.5', 'rhaiis-3.6'], architectures: ['x86_64'], since: '2026-06-01', private: true },
+  { accelerator: 'cpu', accelerator_version: '', torch: '2.11', compatible_releases: ['rhoai-3.5', 'rhoai-3.6'], architectures: ARCH_ALL, since: '2026-06-01' },
+  { accelerator: 'cpu', accelerator_version: '', torch: null, compatible_releases: ['rhoai-3.6'], architectures: ARCH_ALL, since: '2026-06-01' },
+  // Not adopted by a release yet: content flows continuously and any team can
+  // start using it after its own testing.
+  { accelerator: 'cuda', accelerator_version: '13.2', torch: '2.11', compatible_releases: [], architectures: ARCH_GPU, since: '2026-08-07' },
+  { accelerator: 'cuda', accelerator_version: '13.0', torch: '2.13', compatible_releases: ['rhoai-3.7'], architectures: ARCH_GPU, since: '2026-08-17' },
+  { accelerator: 'cuda', accelerator_version: '12.9', torch: '2.13', compatible_releases: ['rhoai-3.7'], architectures: ARCH_GPU, since: '2026-08-17' },
+  { accelerator: 'cuda', accelerator_version: '13.0', torch: '2.14', compatible_releases: [], architectures: ARCH_GPU, since: '2026-08-24' },
+  { accelerator: 'rocm', accelerator_version: '7.14', torch: '2.12', compatible_releases: ['rhoai-3.7'], architectures: ['x86_64'], since: '2026-08-14' },
+  { accelerator: 'tpu', accelerator_version: '', torch: '2.10', compatible_releases: ['rhaiis-3.6'], architectures: ['x86_64'], since: '2026-08-04', private: true },
+  { accelerator: 'cpu', accelerator_version: '', torch: '2.14', compatible_releases: [], architectures: ARCH_GPU, since: '2026-08-24' },
 ];
 
 const ACCELERATOR_LABELS = {
@@ -179,7 +181,7 @@ function buildDrops(def, name) {
   const since = new Date(`${def.since}T00:00:00Z`).getTime();
   const torchVersion = def.torch ? TORCH_STACKS[def.torch][0][1] : null;
   const branchDrops = RELEASE_BRANCH_DROPS.filter(d =>
-    def.maturity === 'stable' && def.compatible_releases.includes(d.release)
+    def.compatible_releases.includes(d.release)
   );
   return [...MAIN_DROPS.map(d => ({ ...d, branch: 'main' })), ...branchDrops]
     .filter(d => new Date(d.created_at).getTime() >= since)
@@ -211,7 +213,6 @@ function buildChannel(def) {
     summary: {
       name,
       description: describeChannel(def),
-      maturity: def.maturity,
       accelerator: def.accelerator,
       accelerator_version: def.accelerator_version,
       torch_version: def.torch,

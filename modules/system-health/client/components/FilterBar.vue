@@ -19,14 +19,14 @@
           <option v-for="r in releases" :key="r" :value="r">{{ r }}</option>
         </select>
       </div>
-      <div class="filter-group" style="border-left: 1px solid #1e4976; padding-left: 12px; margin-left: 4px">
+      <div class="filter-group filter-group--divider">
         <span class="filter-label">Date Range</span>
-        <label style="display: flex; align-items: center; gap: 6px; cursor: pointer; font-size: 11px; color: #ccc">
+        <label class="date-toggle-label">
           <input 
             v-model="localFilters.useDateRange" 
             type="checkbox" 
+            class="date-toggle-input"
             @change="emitFilters"
-            style="accent-color: #5ea7ff; width: 14px; height: 14px"
           >
           <span>Enable</span>
         </label>
@@ -130,22 +130,43 @@ function formatDate(d) {
 .filter-label {
   font-size: 10px;
   text-transform: uppercase;
-  color: #6b8299;
+  color: var(--te-sc-label);
   letter-spacing: 0.5px;
   font-weight: 600;
 }
 
 .filter-value {
   font-size: 13px;
-  color: #fff;
+  color: var(--te-heading);
   font-weight: 500;
+}
+
+.filter-group--divider {
+  border-left: 1px solid var(--te-border);
+  padding-left: 12px;
+  margin-left: 4px;
+}
+
+.date-toggle-label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  font-size: 11px;
+  color: var(--te-toggle-text);
+}
+
+.date-toggle-input {
+  accent-color: var(--te-accent);
+  width: 14px;
+  height: 14px;
 }
 
 select,
 input[type="date"] {
-  background: #132f4c;
-  color: #fff;
-  border: 1px solid #1e4976;
+  background: var(--te-surface-input);
+  color: var(--te-heading);
+  border: 1px solid var(--te-border);
   border-radius: 4px;
   padding: 6px 10px;
   font-size: 13px;
@@ -158,31 +179,26 @@ input[type="date"] {
 
 select:hover,
 input[type="date"]:hover {
-  border-color: #3a6ea5;
-}
-
-input[type="date"]::-webkit-calendar-picker-indicator {
-  filter: invert(1);
-  cursor: pointer;
+  border-color: var(--te-accent);
 }
 
 .help-box {
-  background: rgba(94, 167, 255, 0.06);
-  border: 1px solid rgba(94, 167, 255, 0.15);
+  background: var(--te-help-bg);
+  border: 1px solid var(--te-help-border);
   border-radius: 8px;
   padding: 14px 18px;
 }
 
 .help-box h4 {
   font-size: 13px;
-  color: #5ea7ff;
+  color: var(--te-accent);
   margin-bottom: 6px;
 }
 
 .help-box p,
 .help-box li {
   font-size: 12px;
-  color: #8899aa;
+  color: var(--te-text-muted);
   line-height: 1.6;
 }
 

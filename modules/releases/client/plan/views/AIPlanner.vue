@@ -234,16 +234,18 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <div ref="containerRef" class="w-full flex flex-col bg-gray-50 dark:bg-gray-900" :style="{ height: containerHeight }">
-    <iframe
-      v-if="plannerUrl"
-      ref="iframeRef"
-      :src="plannerUrl"
-      class="flex-1 w-full border-none"
-      title="AI-First Release Planner"
-      sandbox="allow-same-origin allow-scripts allow-popups allow-forms"
-      @load="sendDataToIframe"
-    />
+  <div ref="containerRef" class="w-full flex flex-col bg-gray-50 dark:bg-gray-900 gap-3" :style="{ height: containerHeight }">
+    <div class="flex-1 min-h-0 overflow-hidden">
+      <iframe
+        v-if="plannerUrl"
+        ref="iframeRef"
+        :src="plannerUrl"
+        class="w-full h-full border-none"
+        title="AI-First Release Planner"
+        sandbox="allow-same-origin allow-scripts allow-popups allow-forms"
+        @load="sendDataToIframe"
+      />
+    </div>
     <Toast
       v-if="showToast"
       :message="toastMessage"

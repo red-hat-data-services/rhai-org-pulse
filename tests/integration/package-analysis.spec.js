@@ -101,7 +101,7 @@ test.describe('Package Analysis @package-analysis', () => {
     expect(appErrors).toHaveLength(0);
   });
 
-  test('should load RHAI package epics in the Tracker tab', async ({ page }) => {
+  test('should load package epics and aligned child rows without a Related Ticket column', async ({ page }) => {
     await page.route('**/api/modules/product-builds/package-tracker', route => route.fulfill({
       status: 200,
       json: {
@@ -116,8 +116,18 @@ test.describe('Package Analysis @package-analysis', () => {
           status: 'In Progress',
           status_category: 'indeterminate',
           assignee: 'Package Owner',
+          related_ticket: 'RHAI-123',
+          mr_url: 'https://gitlab.com/redhat/rhel-ai/wheels/fondue/-/merge_requests/1479',
+          mr_iid: 1479,
+          mr_count: 1,
+          target_date: '2026-11-01',
           risk: 'no_date',
-          children: [],
+          children: [{
+            key: 'RHAI-457',
+            summary: 'Build the example package',
+            status: 'To Do',
+            status_category: 'new',
+          }],
         }],
       },
     }));
@@ -127,6 +137,25 @@ test.describe('Package Analysis @package-analysis', () => {
     await expect(page.getByRole('button', { name: 'Tracker' })).toBeVisible();
     await expect(page.getByRole('link', { name: 'RHAI-456' })).toBeVisible();
     await expect(page.getByText('example package update request')).toBeVisible();
+
+    const table = page.getByRole('table');
+    await expect(table.getByRole('columnheader', { name: 'Related Ticket' })).toHaveCount(0);
+    await expect(table.getByRole('link', { name: 'RHAI-123' })).toHaveCount(0);
+    await expect(table.getByRole('columnheader', { name: 'Due Date' })).toBeVisible();
+    await expect(table.getByRole('columnheader', { name: 'Link to MR' })).toBeVisible();
+    const mrLink = table.getByRole('link', { name: 'MR', exact: true });
+    await expect(mrLink).toHaveAttribute('href', 'https://gitlab.com/redhat/rhel-ai/wheels/fondue/-/merge_requests/1479');
+    await expect(mrLink).toHaveAttribute('title', 'MR !1479');
+    const packageRow = table.getByRole('row').filter({ hasText: 'RHAI-456' });
+    await expect(packageRow.getByRole('cell').nth(5)).toHaveText('2026-11-01');
+
+    await packageRow.click();
+    const childRow = table.getByRole('row').filter({ hasText: 'RHAI-457' });
+    await expect(childRow.getByText('Build the example package')).toBeVisible();
+    await expect(childRow.getByText('To Do', { exact: true })).toBeVisible();
+    const childColumnCount = await childRow.getByRole('cell').evaluateAll(cells =>
+      cells.reduce((total, cell) => total + cell.colSpan, 0));
+    expect(childColumnCount).toBe(await table.getByRole('columnheader').count());
   });
 
   test('should switch to Package Search tab and show form', async ({ page }) => {

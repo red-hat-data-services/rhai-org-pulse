@@ -170,6 +170,12 @@ Your modules declare secrets in `module.json` under `secrets`. See [docs/MODULES
 
 The base includes a CronJob (`team-tracker-sync-refresh`) that fires every 15 minutes (`*/15 * * * *`) and triggers a cadence-aware refresh via `POST /api/admin/refresh-all`. Each handler declares its own cadence (e.g., `24h` for roster sync, `12h` for execution pipeline). Handlers that have run within their cadence window are skipped — most ticks complete in seconds.
 
+The AI Engineering overlay also includes `team-tracker-tech-debt-trends`, which
+runs at 06:00 UTC daily. It computes the six-month Tech Debt Received/Closed
+snapshot in an isolated Job pod using the existing Jira and proxy-auth secrets,
+then uploads the validated snapshot to the Releases module. See
+`docs/TECH-DEBT-TRENDS.md` for manual execution and troubleshooting.
+
 - `concurrencyPolicy: Forbid` prevents overlapping runs
 - `activeDeadlineSeconds: 1800` (30 min) accommodates the heaviest handler (`team-tracker:metrics`)
 - Backup runs as a refresh handler (`platform:backup`, cadence `24h`), not as a separate script step

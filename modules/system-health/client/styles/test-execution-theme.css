@@ -1,0 +1,104 @@
+/**
+ * Theme tokens for Test Execution dashboard components.
+ * Applied via `.test-execution-theme` on the view root; inherits to child components.
+ */
+.test-execution-theme {
+  --te-text: #111827;
+  --te-text-muted: #6b7280;
+  --te-text-subtle: #9ca3af;
+  --te-heading: #111827;
+  --te-surface: #ffffff;
+  --te-surface-raised: #f9fafb;
+  --te-surface-input: #ffffff;
+  --te-border: #e5e7eb;
+  --te-border-strong: #d1d5db;
+  --te-sticky-bg: #ffffff;
+  --te-link: #2563eb;
+  --te-link-hover: #1d4ed8;
+  --te-accent: #2563eb;
+  --te-accent-soft: rgba(37, 99, 235, 0.08);
+  --te-accent-border: rgba(37, 99, 235, 0.25);
+  --te-help-bg: rgba(37, 99, 235, 0.06);
+  --te-help-border: rgba(37, 99, 235, 0.15);
+  --te-section-title-bg: linear-gradient(90deg, #f3f4f6 0%, transparent 100%);
+  --te-cell-btn-bg: #f3f4f6;
+  --te-cell-btn-border: #e5e7eb;
+  --te-panel-bg: #f9fafb;
+  --te-panel-bg-strong: #f3f4f6;
+  --te-panel-border: rgba(37, 99, 235, 0.2);
+  --te-divider: rgba(0, 0, 0, 0.08);
+  --te-divider-soft: rgba(0, 0, 0, 0.06);
+  --te-pager-label: #374151;
+  --te-row-name: #111827;
+  --te-date-label: #111827;
+  --te-toggle-text: #374151;
+  --te-sc-value: #111827;
+  --te-sc-label: #6b7280;
+  --te-deployment-label: #374151;
+  --te-comp-stats: #6b7280;
+  --te-cell-na: #9ca3af;
+  --te-beta: #d97706;
+  --te-loading: #6b7280;
+  --te-chart-grid: rgba(229, 231, 235, 1);
+  --te-chart-tick: rgba(107, 114, 128, 1);
+  --te-metric-total: #2563eb;
+  --te-metric-passed: #059669;
+  --te-metric-failed: #dc2626;
+  --te-metric-skipped: #b45309;
+  --te-metric-pct: #6d28d9;
+}
+
+html.dark .test-execution-theme {
+  --te-text: #e0e0e0;
+  --te-text-muted: #8899aa;
+  --te-text-subtle: #6b7280;
+  --te-heading: #ffffff;
+  --te-surface: #0d2137;
+  --te-surface-raised: #132f4c;
+  --te-surface-input: #132f4c;
+  --te-border: #1e4976;
+  --te-border-strong: #1e4976;
+  --te-sticky-bg: #0a1929;
+  --te-link: #5ea7ff;
+  --te-link-hover: #8ec5ff;
+  --te-accent: #5ea7ff;
+  --te-accent-soft: rgba(94, 167, 255, 0.08);
+  --te-accent-border: rgba(94, 167, 255, 0.35);
+  --te-help-bg: rgba(94, 167, 255, 0.06);
+  --te-help-border: rgba(94, 167, 255, 0.15);
+  --te-section-title-bg: linear-gradient(90deg, #132f4c 0%, transparent 100%);
+  --te-cell-btn-bg: rgba(10, 25, 41, 0.5);
+  --te-cell-btn-border: rgba(255, 255, 255, 0.06);
+  --te-panel-bg: #132f4c;
+  --te-panel-bg-strong: #0f2744;
+  --te-panel-border: rgba(94, 167, 255, 0.2);
+  --te-divider: rgba(255, 255, 255, 0.08);
+  --te-divider-soft: rgba(255, 255, 255, 0.06);
+  --te-pager-label: #c8d4de;
+  --te-row-name: #e0e0e0;
+  --te-date-label: #ffffff;
+  --te-toggle-text: #cccccc;
+  --te-sc-value: #ffffff;
+  --te-sc-label: #6b8299;
+  --te-deployment-label: #c5d4e8;
+  --te-comp-stats: #6b8299;
+  --te-cell-na: #4a5568;
+  --te-beta: #ffa502;
+  --te-loading: #6b8299;
+  --te-chart-grid: rgba(30, 73, 118, 0.25);
+  --te-chart-tick: #6b8299;
+  --te-metric-total: #3498db;
+  --te-metric-passed: #2ed573;
+  --te-metric-failed: #ff4757;
+  --te-metric-skipped: #ffa502;
+  --te-metric-pct: #a29bfe;
+}
+
+.test-execution-theme input[type="date"]::-webkit-calendar-picker-indicator {
+  filter: none;
+  cursor: pointer;
+}
+
+html.dark .test-execution-theme input[type="date"]::-webkit-calendar-picker-indicator {
+  filter: invert(1);
+}

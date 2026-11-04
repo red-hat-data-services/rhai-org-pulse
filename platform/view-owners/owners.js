@@ -46,6 +46,7 @@ export const viewOwners = {
   'product-builds/artifact-detail':                'Pavol Pitonak',
   'product-builds/base-images':                    'Pavol Pitonak',
   'product-builds/builder-images':                 'Pavol Pitonak',
+  'product-builds/channel-detail':                 'Einat Pacifici',
   'product-builds/channels':                       'Einat Pacifici',
   'product-builds/drop-detail':                    'Pavol Pitonak',
   'product-builds/overview':                       'Giulia Naponiello',
@@ -102,6 +103,7 @@ export const viewOwners = {
   'workflow-validation/activity':                  'Adam Drew',
   'workflow-validation/compare':                   'Adam Drew',
   'workflow-validation/overview':                  'Adam Drew',
+  'workflow-validation/recent-runs':               'ggedalia',
   'workflow-validation/run-detail':                'Adam Drew',
   'workflow-validation/runs':                      'Adam Drew',
   'workflow-validation/workflow-history':          'Adam Drew',
@@ -125,8 +127,8 @@ export const viewOwners = {
   'releases/plan/ai-planner':                      'yuvalluria',
   'releases/plan/bu-feedback':                     'Saiesh Prabhu',
   'releases/plan/feature-readiness':               'Erle Marion',
-  'releases/plan/outcomes':                        'Jen Albertson',
   'releases/plan/pm-hub':                          'Saiesh Prabhu',
+  'releases/plan/tech-debt-prioritization':        'Saiesh Prabhu',
 
   // releases > registry
   'releases/registry/hygiene':                     'Alex Corvin',
@@ -149,6 +151,7 @@ export const viewOwners = {
   'releases/reports/container-health-index':       'Sanket Jagtap',
   'releases/reports/cve-action-report':            'Doug Hellmann',
   'releases/reports/cve-sustaining':               'Saiesh Prabhu',
+  'releases/reports/cve-upstream-components':      'Doug Hellmann',
   'releases/reports/pre-release-cve':              'Moulali Shikalwadi',
   'releases/reports/release-readiness':            'Arthy Loganathan',
   'releases/reports/rhoai-component-architectures': 'Waldemar Znoinski',

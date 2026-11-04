@@ -76,7 +76,12 @@
                     </a>
                   </span>
                 </td>
-                <td class="py-2 px-4 text-gray-900 dark:text-gray-100">{{ issue.summary || '—' }}</td>
+                <td class="py-2 px-4 text-gray-900 dark:text-gray-100">
+                  <span>{{ issue.summary || '—' }}</span>
+                  <span v-if="issue.possiblyClosable" :data-testid="'cve-possibly-closable-' + issue.key"
+                    title="Tagged as belonging to an out-of-support image"
+                    class="ml-2 inline-flex items-center rounded-full bg-gray-100 px-2 py-0.5 text-[10px] font-semibold text-gray-700 dark:bg-gray-700 dark:text-gray-300">Out of support</span>
+                </td>
                 <td
                   class="py-2 px-4 text-gray-600 dark:text-gray-400 whitespace-nowrap"
                   :data-testid="'cve-component-' + issue.key"

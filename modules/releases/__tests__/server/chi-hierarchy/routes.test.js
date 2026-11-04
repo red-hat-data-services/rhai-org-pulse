@@ -80,7 +80,7 @@ describe('chi-hierarchy routes', () => {
   it('validatePayload rejects missing environments', async () => {
     const { validatePayload } = await import('../../../server/chi-hierarchy/routes.js')
     expect(validatePayload({})).toMatch(/environments/)
-    expect(validatePayload({ environments: {} })).toMatch(/prod, stage, and\/or latest/)
+    expect(validatePayload({ environments: {} })).toMatch(/prod, stage, latest, and\/or nightly/)
     expect(validatePayload(SAMPLE)).toBeNull()
   })
 
@@ -117,6 +117,13 @@ describe('chi-hierarchy routes', () => {
     const { validatePayload } = await import('../../../server/chi-hierarchy/routes.js')
     expect(validatePayload({
       environments: { latest: { versions: [] } }
+    })).toBeNull()
+  })
+
+  it('validatePayload accepts nightly-only', async () => {
+    const { validatePayload } = await import('../../../server/chi-hierarchy/routes.js')
+    expect(validatePayload({
+      environments: { nightly: { versions: [] } }
     })).toBeNull()
   })
 

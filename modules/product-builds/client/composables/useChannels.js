@@ -43,6 +43,7 @@ export function useChannels() {
 
 export function useChannelDetail() {
   const channel = ref(null)
+  const source = ref(null)
   const loading = ref(false)
   const error = ref(null)
   let requestId = 0
@@ -50,6 +51,7 @@ export function useChannelDetail() {
   async function load(name) {
     const id = ++requestId
     channel.value = null
+    source.value = null
     loading.value = false
     error.value = null
     // "." and ".." survive encodeURIComponent and would be resolved as path
@@ -64,6 +66,7 @@ export function useChannelDetail() {
       if (id !== requestId) return
       if (!data?.channel) throw new Error('Channel not found')
       channel.value = data.channel
+      source.value = data.source || null
     } catch (err) {
       if (id !== requestId) return
       error.value = err.message
@@ -75,9 +78,10 @@ export function useChannelDetail() {
   function reset() {
     requestId++
     channel.value = null
+    source.value = null
     loading.value = false
     error.value = null
   }
 
-  return { channel, loading, error, load, reset }
+  return { channel, source, loading, error, load, reset }
 }

@@ -39,38 +39,53 @@ test.describe('Product Builds Module @product-builds', () => {
     expect(appErrors).toHaveLength(0);
   });
 
-  test('should expose the Request Package navigation item and form', async ({ page }) => {
+  test('should expose the AIPCC-E Requests navigation item, landing page and Python form', async ({ page }) => {
     await page.goto('/')
     await page.waitForLoadState('networkidle')
     await page.waitForTimeout(DEFAULT_PAGE_WAIT_TIME)
 
     await page.locator('aside').getByRole('button', { name: 'Product Builds', exact: true }).click()
-    const requestLink = page.locator('aside').getByText('Request Package', { exact: true })
+    const requestLink = page.locator('aside').getByText('AIPCC-E Requests', { exact: true })
     await expect(requestLink).toBeVisible()
     await requestLink.click()
     await page.waitForLoadState('networkidle')
     await page.waitForTimeout(DEFAULT_PAGE_WAIT_TIME)
 
     expect(page.url()).toMatch(/product-builds\/package-request/)
-    await expect(page.getByRole('heading', { name: 'Request Package' })).toBeVisible()
+    await expect(page.getByRole('heading', { name: 'AIPCC-E Requests', level: 1 })).toBeVisible()
+    for (const card of ['Python Package Requests', 'Channel Requests']) {
+      await expect(page.getByRole('heading', { name: card, level: 2 })).toBeVisible()
+    }
+    await expect(page.getByRole('heading', { name: 'RPM Requests', level: 2 })).toHaveCount(0)
+    await expect(page.getByTestId('request-card-channel').getByTestId('card-turnaround')).toHaveText('Triaged by AIPCC')
+    await expect(page.locator('#requests-help')).toContainText('#forum-aipcc')
+    const teamsResponse = page.waitForResponse(response => response.url().includes('/package-requests/teams?project=RHAI'))
+    await page.getByTestId('request-card-python').click()
+    expect(page.url()).toMatch(/package-request\?tab=python/)
+    await expect(page.getByRole('heading', { name: 'Python Package Requests', level: 2 })).toBeVisible()
     const team = page.getByRole('combobox', { name: 'Team', exact: true })
     await expect(team).toBeVisible()
     await expect(team).toBeEnabled()
-    for (const project of ['RHAI', 'RHAISTRAT']) {
-      const responsePromise = page.waitForResponse(response => response.url().includes(`/package-requests/teams?project=${project}`))
-      await page.locator('#req-team-project').selectOption(project)
-      const response = await responsePromise
-      expect(response.ok()).toBe(true)
-      const options = await response.json()
-      expect(options.length).toBeGreaterThan(0)
-      for (const option of options) {
-        expect(option).toEqual({ value: expect.any(String), label: expect.any(String) })
-      }
-      await team.selectOption(options[0].value)
-      await expect(team).toHaveValue(options[0].value)
+    // Python package requests are always filed in RHAI, so there is no project picker.
+    await expect(page.locator('#req-team-project')).toHaveCount(0)
+    const response = await teamsResponse
+    expect(response.ok()).toBe(true)
+    const options = await response.json()
+    expect(options.length).toBeGreaterThan(0)
+    for (const option of options) {
+      expect(option).toEqual({ value: expect.any(String), label: expect.any(String) })
     }
+    await team.selectOption(options[0].value)
+    await expect(team).toHaveValue(options[0].value)
     await expect(page.locator('#req-package-name')).toBeVisible()
     await expect(page.getByRole('button', { name: 'Submit request' })).toBeVisible()
+
+    await expect(page.locator('#req-sla-notice')).toContainText('Delivery SLA: 10 business days')
+    const minDate = await page.locator('#req-delivery-timeline').getAttribute('min')
+    const twoWeeksOut = new Date()
+    twoWeeksOut.setUTCDate(twoWeeksOut.getUTCDate() + 14)
+    expect(minDate > new Date().toISOString().slice(0, 10)).toBe(true)
+    expect(minDate <= twoWeeksOut.toISOString().slice(0, 10)).toBe(true)
 
     const appErrors = page.errors.filter(e => !/status of (429|404|503)/.test(e.message))
     expect(appErrors).toHaveLength(0)
@@ -90,8 +105,7 @@ test.describe('Product Builds Module @product-builds', () => {
         } })
       }
     })
-    await page.goto('/#/product-builds/package-request')
-    await page.locator('#req-team-project').selectOption('RHAI')
+    await page.goto('/#/product-builds/package-request?tab=python')
     const team = page.locator('#req-team')
     await expect(team).toBeEnabled()
     const option = await team.locator('option:not([disabled])').first().getAttribute('value')
@@ -102,8 +116,8 @@ test.describe('Product Builds Module @product-builds', () => {
     const date = new Date()
     date.setUTCDate(date.getUTCDate() + 30)
     await page.locator('#req-delivery-timeline').fill(date.toISOString().slice(0, 10))
-    await page.locator('#req-hardware-ack').check()
-    await page.locator('#req-testing-ack').check()
+    await page.locator('#req-hardware-default').check()
+    await page.locator('#req-testing-default').check()
     await page.getByRole('button', { name: 'Submit request', exact: true }).click()
     await expect(page.getByText(/Failed to create Jira Epic/)).toBeVisible()
     await expect(team).toHaveValue(option)
@@ -116,6 +130,69 @@ test.describe('Product Builds Module @product-builds', () => {
     expect(submissions[1]).toEqual(submissions[0])
   })
 
+  function triageDeliveryDate() {
+    // 35 calendar days is always at least 20 business days out.
+    const date = new Date()
+    date.setUTCDate(date.getUTCDate() + 35)
+    return date.toISOString().slice(0, 10)
+  }
+
+  test('should hide paused RPM requests and reject RPM submissions', async ({ page, request }) => {
+    await page.goto('/#/product-builds/package-request?tab=rpm')
+    await page.waitForLoadState('networkidle')
+    await expect(page.getByTestId('request-card-python')).toBeVisible()
+    await expect(page.getByTestId('request-card-rpm')).toHaveCount(0)
+    await expect(page.getByTestId('request-tab-rpm')).toHaveCount(0)
+    await expect(page.locator('#rpm-name')).toHaveCount(0)
+
+    const res = await request.post('/api/modules/product-builds/rpm-requests', { data: {} })
+    expect(res.status()).toBe(503)
+    expect((await res.json()).error).toContain('RPM requests are paused')
+  })
+
+  test('should show the channel disclaimer and file a channel request', async ({ page }) => {
+    const submissions = []
+    await page.route('**/api/modules/product-builds/channel-requests', async route => {
+      submissions.push(route.request().postDataJSON())
+      await route.fulfill({ status: 201, json: { status: 'created', jira: { key: 'RHAI-902', url: 'https://redhat.atlassian.net/browse/RHAI-902' }, assignee: { assigned: true, email: 'epacific@redhat.com' } } })
+    })
+    await page.goto('/#/product-builds/package-request')
+    await page.waitForLoadState('networkidle')
+    await page.getByTestId('request-tab-channel').click()
+    expect(page.url()).toMatch(/package-request\?tab=channel/)
+
+    const disclaimer = page.locator('#chan-disclaimer')
+    await expect(disclaimer).toBeVisible()
+    await expect(disclaimer).toContainText('New channels require an approved STRAT and prior discussion with AIPCC')
+    await expect(disclaimer).toContainText('#forum-aipcc')
+    await expect(page.locator('main')).not.toContainText('SLA')
+
+    const team = page.locator('#chan-team')
+    await expect(team).toBeEnabled()
+    await team.selectOption(await team.locator('option:not([disabled])').first().getAttribute('value'))
+    await page.locator('#chan-torch-version').fill('2.12')
+    await page.locator('#chan-accelerator').fill('ROCm 10.4')
+    await page.locator('#chan-os').fill('RHEL 10')
+    await page.locator('#chan-discussion-link').fill('https://redhat.enterprise.slack.com/archives/C01/p123')
+    await page.locator('#chan-jira-id').fill('RHAISTRAT-42')
+    await page.locator('#chan-delivery-timeline').fill(triageDeliveryDate())
+    await page.locator('#chan-justification').fill('New accelerator card for a customer')
+    await page.getByRole('button', { name: 'Submit channel request' }).click()
+    await expect(page.getByText('Channel request submitted')).toBeVisible()
+    await expect(page.getByRole('link', { name: /RHAI-902/ })).toBeVisible()
+    expect(submissions).toHaveLength(1)
+    expect(submissions[0]).toMatchObject({
+      torch_version: '2.12',
+      accelerator: 'ROCm 10.4',
+      os: 'RHEL 10',
+      discussion_link: 'https://redhat.enterprise.slack.com/archives/C01/p123',
+      jira_id: 'RHAISTRAT-42'
+    })
+
+    const appErrors = page.errors.filter(e => !/status of (429|404|503)/.test(e.message))
+    expect(appErrors).toHaveLength(0)
+  })
+
   test('should navigate to RHAIIS view', async ({ page }) => {
     await page.goto('/#/product-builds/rhaiis');
     await page.waitForLoadState('networkidle');
@@ -125,6 +202,81 @@ test.describe('Product Builds Module @product-builds', () => {
 
     const mainContentVisible = await mainContentIsVisible(page);
     expect(mainContentVisible).toBe(true);
+
+    const appErrors = page.errors.filter(e => !/status of (429|404|503)/.test(e.message));
+    expect(appErrors).toHaveLength(0);
+  });
+
+  test('should open Base Images on the Channels tab and list channels', async ({ page }) => {
+    await page.route('**/api/modules/product-builds/products/base-images', route => route.fulfill({ json: {
+      key: 'base-images', product_name: 'Base Images', short_name: 'Base Images',
+    } }));
+    await page.route('**/api/modules/product-builds/drops?*', route => route.fulfill({ json: [] }));
+    await page.route('**/api/modules/product-builds/series?*', route => route.fulfill({ json: [] }));
+
+    await page.goto('/#/product-builds/base-images');
+    await page.waitForLoadState('networkidle');
+    await page.waitForTimeout(DEFAULT_PAGE_WAIT_TIME);
+
+    // The sidebar also has a "Channels" nav item, so scope the tab assertions to
+    // the page content. Base Images opens on Legacy, with Channels second.
+    const content = page.getByRole('main');
+    await expect(content.getByRole('button', { name: /^(Legacy|Channels)$/ })).toHaveText(['Legacy', 'Channels']);
+    await expect(content.getByRole('button', { name: 'Series', exact: true })).toBeVisible();
+
+    await content.getByRole('button', { name: 'Channels', exact: true }).click();
+    await expect(page.getByTestId('base-images-channels')).toBeVisible();
+
+    const rows = page.getByTestId('base-images-channel-row');
+    await expect(rows.first()).toBeVisible();
+    expect(await rows.count()).toBeGreaterThan(1);
+
+    await page.getByLabel('Search channels').fill('cuda13.0');
+    await expect(rows.first()).toContainText('cuda13.0');
+
+    // Opening a channel navigates to its own detail page rather than a drawer.
+    await rows.first().click();
+    await expect(page).toHaveURL(url => url.hash.includes('product-builds/channel-detail')
+      && url.hash.includes('channel='));
+    await expect(page.getByRole('button', { name: 'Back to Base Images', exact: true })).toBeVisible();
+    await expect(page.getByText('Package index', { exact: false })).toBeVisible();
+    await expect(page.getByTestId('channel-drawer')).toHaveCount(0);
+
+    // The back button returns to the Base Images view.
+    await page.getByRole('button', { name: 'Back to Base Images', exact: true }).click();
+    await expect(page).toHaveURL(url => url.hash.includes('product-builds/base-images'));
+    await content.getByRole('button', { name: 'Channels', exact: true }).click();
+    await expect(page.getByTestId('base-images-channels')).toBeVisible();
+
+    const appErrors = page.errors.filter(e => !/status of (429|404|503)/.test(e.message));
+    expect(appErrors).toHaveLength(0);
+  });
+
+  test('should keep Base Images series and artifacts under the Legacy tab', async ({ page }) => {
+    await page.route('**/api/modules/product-builds/products/base-images', route => route.fulfill({ json: {
+      key: 'base-images', product_name: 'Base Images', short_name: 'Base Images',
+    } }));
+    await page.route('**/api/modules/product-builds/drops?*', route => route.fulfill({ json: [{
+      key: 'base-images-base-v2026102901', name: 'base-v2026102901', product_key: 'base-images',
+      product_version: '3.6', git_branch: 'main', created_at: '2026-10-28T10:00:00Z', environments: ['stage'],
+    }] }));
+    await page.route('**/api/modules/product-builds/series?*', route => route.fulfill({ json: ['3.6'] }));
+    await page.route('**/api/modules/product-builds/artifacts?*', route => route.fulfill({ json: [{
+      key: 'quay.io/aipcc/base-images/cuda13.0-torch2.11-ubi9:base-v2026102901',
+      variant: 'cuda', archs: ['x86_64'], environments: ['stage'],
+      health_index: { grade: 'A', vulnerability_count: 0 }, konflux_data: { tests: [] },
+    }] }));
+
+    await page.goto('/#/product-builds/base-images');
+    await page.waitForLoadState('networkidle');
+    await page.waitForTimeout(DEFAULT_PAGE_WAIT_TIME);
+
+    await page.getByRole('button', { name: 'Legacy', exact: true }).click();
+    await expect(page.getByRole('button', { name: 'Series', exact: true })).toBeVisible();
+    await expect(page.getByText('base-v2026102901').first()).toBeVisible();
+
+    await page.getByRole('button', { name: 'Artifacts', exact: true }).click();
+    await expect(page.getByRole('columnheader', { name: 'CHI', exact: true })).toBeVisible();
 
     const appErrors = page.errors.filter(e => !/status of (429|404|503)/.test(e.message));
     expect(appErrors).toHaveLength(0);
@@ -451,8 +603,7 @@ test.describe('Product Builds Module @product-builds', () => {
     expect(list.ok()).toBe(true);
     const { channels } = await list.json();
     expect(channels.length).toBeGreaterThan(0);
-    expect(channels.some(c => c.maturity === 'stable')).toBe(true);
-    expect(channels.some(c => c.maturity === 'rolling')).toBe(true);
+    expect(channels.every(c => !('maturity' in c))).toBe(true);
 
     const detail = await request.get(`/api/modules/product-builds/channels/${encodeURIComponent(channels[0].name)}`);
     expect(detail.ok()).toBe(true);
@@ -476,14 +627,6 @@ test.describe('Product Builds Module @product-builds', () => {
     await expect(page.locator('h1').filter({ hasText: 'Channels' })).toBeVisible();
     await expect(page.locator('[data-testid="channel-matrix"]')).toBeVisible();
     await expect(page.locator('[data-testid="channel-row"]').first()).toBeVisible();
-
-    await page.getByRole('button', { name: 'Rolling', exact: true }).click();
-    const rows = page.locator('[data-testid="channel-row"]');
-    const rowCount = await rows.count();
-    expect(rowCount).toBeGreaterThan(0);
-    for (let i = 0; i < rowCount; i++) {
-      await expect(rows.nth(i)).toContainText('Rolling');
-    }
 
     const appErrors = page.errors.filter(e => !/status of (429|404|503)/.test(e.message));
     expect(appErrors).toHaveLength(0);
@@ -518,7 +661,7 @@ test.describe('Product Builds Module @product-builds', () => {
     const channels = [
       { ...base, name: 'cuda13.0-torch2.9-el9.8', torch_version: '2.9', compatible_releases: ['RHOAI 3.9'],
         latest_drop: { name: 'z-drop', created_at: '2026-10-15T10:00:00Z' }, wheel_count: 2 },
-      { ...base, name: 'cuda12.9-torch2.10-el10.0', maturity: 'rolling', accelerator_version: '12.9', torch_version: '2.10',
+      { ...base, name: 'cuda12.9-torch2.10-el10.0', accelerator_version: '12.9', torch_version: '2.10',
         rhel_version: '10.0', compatible_releases: ['RHOAI 3.10'], latest_drop: { name: 'a-drop', created_at: '2026-10-16T10:00:00Z' }, wheel_count: 10 },
       { ...base, name: 'rocm7.2-torch2.15-el9.10', accelerator: 'rocm', accelerator_version: '7.2', torch_version: '2.15',
         rhel_version: '9.10', compatible_releases: ['RHOAI 3.6'], latest_drop: { name: 'm-drop', created_at: '2026-10-14T10:00:00Z' }, wheel_count: 0 },
@@ -535,7 +678,6 @@ test.describe('Product Builds Module @product-builds', () => {
     const expectOrder = indices => expect(rowNames).toHaveText(indices.map(index => channels[index].name));
     const cases = [
       { label: 'Channel', asc: [3, 1, 0, 2], desc: [2, 0, 1, 3] },
-      { label: 'Maturity', asc: [1, 3, 0, 2], desc: [3, 0, 2, 1] },
       { label: 'Accelerator', asc: [3, 1, 0, 2], desc: [2, 0, 1, 3] },
       { label: 'Torch', asc: [0, 1, 2, 3], desc: [2, 1, 0, 3] },
       { label: 'OS', asc: [0, 2, 1, 3], desc: [3, 1, 2, 0] },
@@ -543,7 +685,7 @@ test.describe('Product Builds Module @product-builds', () => {
       { label: 'Latest RHAIBI drop', asc: [2, 0, 1, 3], desc: [1, 0, 2, 3] },
       { label: 'Wheels', asc: [2, 0, 1, 3], desc: [1, 0, 2, 3] },
     ];
-    await expect(table.getByRole('button', { name: /^Sort by / })).toHaveCount(8);
+    await expect(table.getByRole('button', { name: /^Sort by / })).toHaveCount(7);
     for (const { label, asc, desc } of cases) {
       const button = table.getByRole('button', { name: `Sort by ${label}`, exact: true });
       const header = table.getByRole('columnheader').filter({
@@ -564,10 +706,6 @@ test.describe('Product Builds Module @product-builds', () => {
     await expectOrder([0, 1, 2, 3]);
     await torchSort.press('Space');
     await expectOrder([2, 1, 0, 3]);
-    await page.getByRole('button', { name: 'Stable', exact: true }).click();
-    await expectOrder([2, 0, 3]);
-    await page.getByRole('button', { name: 'All', exact: true }).click();
-    await expectOrder([2, 1, 0, 3]);
     await expect(page.getByTestId('channel-matrix').locator('thead th')).toHaveText([
       'Accelerator', /^Torch\s*2\.9$/, '2.10', '2.15', 'No torch',
     ]);
@@ -579,7 +717,7 @@ test.describe('Product Builds Module @product-builds', () => {
     const base = dashboardChannels.list.channels[0];
     const channels = [
       { ...base, name: 'cuda13.0-torch2.9-ubi9', torch_version: '2.9', rhel_version: 'ubi9' },
-      { ...base, name: 'cuda13.0-torch2.10-ubi10', torch_version: '2.10', rhel_version: 'ubi10', maturity: 'rolling' },
+      { ...base, name: 'cuda13.0-torch2.10-ubi10', torch_version: '2.10', rhel_version: 'ubi10' },
       { ...base, name: 'rocm7.14-torch2.10-ubi9', accelerator: 'rocm', accelerator_version: '7.14', torch_version: '2.10', rhel_version: 'ubi9' },
       { ...base, name: 'cpu-notorch-ubi9', accelerator: 'cpu', accelerator_version: '', torch_version: null, rhel_version: 'ubi9' },
       { ...base, name: 'cuda12.9-torch2.9-ubi9', accelerator_version: '12.9', torch_version: '2.9', rhel_version: 'ubi9' },
@@ -596,7 +734,6 @@ test.describe('Product Builds Module @product-builds', () => {
     const accelerator = section.getByRole('button', { name: /^Accelerator filter/ });
     const torch = section.getByRole('button', { name: /^Torch filter/ });
     const os = section.getByRole('button', { name: /^OS filter/ });
-    const maturityPill = section.getByRole('button', { name: /^Maturity filter/ });
 
     await section.getByRole('button', { name: 'Sort by Torch', exact: true }).click();
     await expectOrder([4, 0, 1, 2, 5, 3]);
@@ -623,18 +760,6 @@ test.describe('Product Builds Module @product-builds', () => {
     await expect(torch).toHaveAttribute('aria-expanded', 'false');
     await expect(torch).toBeFocused();
 
-    await maturityPill.click();
-    const maturityOptions = section.getByRole('group', { name: 'Maturity options', exact: true });
-    await maturityOptions.getByRole('checkbox', { name: 'Stable', exact: true }).check();
-    await expectOrder([0, 2]);
-    await maturityOptions.getByRole('checkbox', { name: 'Rolling', exact: true }).check();
-    await expectOrder([0, 1, 2]);
-    await maturityOptions.getByRole('checkbox', { name: 'Stable', exact: true }).uncheck();
-    await expectOrder([1]);
-    await expect(maturityPill).toHaveAccessibleName('Maturity filter, 1 selected');
-    await maturityOptions.getByRole('button', { name: 'Clear Maturity filter', exact: true }).click();
-    await expectOrder([0, 1, 2]);
-
     await os.click();
     const osOptions = section.getByRole('group', { name: 'OS options', exact: true });
     await osOptions.getByRole('checkbox', { name: 'UBI 9', exact: true }).check();
@@ -644,26 +769,23 @@ test.describe('Product Builds Module @product-builds', () => {
     await osOptions.getByRole('checkbox', { name: 'UBI 9', exact: true }).uncheck();
     await expectOrder([1]);
     await osOptions.getByRole('checkbox', { name: 'UBI 10', exact: true }).press('Escape');
-    await maturityPill.click();
-    await maturityOptions.getByRole('checkbox', { name: 'Stable', exact: true }).check();
+    const search = page.getByRole('searchbox', { name: 'Search channels' });
+    await search.fill('no-such-channel');
     await expect(section).toContainText('No channels match these filters.');
-    await maturityOptions.getByRole('checkbox', { name: 'Stable', exact: true }).press('Escape');
-    await page.getByRole('button', { name: 'Stable', exact: true }).click();
-    await expect(section).toContainText('No channels match these filters.');
-    await expect(section.getByRole('status')).toHaveText('0 of 5 channels');
+    await expect(section.getByRole('status')).toHaveText('0 of 0 channels');
+    await search.fill('');
+    await expectOrder([1]);
     await section.getByRole('button', { name: 'Clear table filters', exact: true }).click();
-    await expectOrder([4, 0, 2, 5, 3]);
+    await expectOrder([4, 0, 1, 2, 5, 3]);
     await expect(accelerator).toHaveAccessibleName('Accelerator filter');
-    await expect(maturityPill).toHaveAccessibleName('Maturity filter');
 
     await torch.click();
     await torchOptions.getByRole('checkbox', { name: 'No torch', exact: true }).check();
     await expectOrder([3]);
     await torchOptions.getByRole('button', { name: 'Clear Torch filter', exact: true }).click();
-    await expectOrder([4, 0, 2, 5, 3]);
+    await expectOrder([4, 0, 1, 2, 5, 3]);
     await section.getByRole('heading', { name: 'All channels', exact: true }).click();
     await expect(torchOptions).toHaveCount(0);
-    await page.getByRole('button', { name: 'All', exact: true }).click();
     await section.getByRole('button', { name: 'Sort by Torch', exact: true }).click();
     await expectOrder([5, 1, 2, 4, 0, 3]);
 
@@ -687,7 +809,7 @@ test.describe('Product Builds Module @product-builds', () => {
     const matrix = page.getByTestId('channel-matrix');
     await expect(matrix).toContainText('RHOAI 3.6-EA2');
     const cell = matrix.getByRole('button', { name: `Open channel ${unadopted.name}`, exact: true });
-    await expect(cell).toHaveText('Rolling');
+    await expect(cell).toHaveText('RHEL 9.8');
     await cell.click();
     const drawer = page.getByTestId('channel-drawer');
     await expect(drawer).toContainText(unadopted.description);
@@ -735,6 +857,54 @@ test.describe('Product Builds Module @product-builds', () => {
     await page.keyboard.press('Escape');
     await expect(drawer).toBeHidden();
     expect(page.url()).not.toContain('channel=');
+
+    const appErrors = page.errors.filter(e => !/status of (429|404|503)/.test(e.message));
+    expect(appErrors).toHaveLength(0);
+  });
+
+  test('should open the image artifact detail from a RHAIBI drop in the channel drawer', async ({ page }) => {
+    const channel = dashboardChannels.detail.channel;
+    const drop = {
+      key: 'base-images-base-v2026102901',
+      name: 'base-v2026102901',
+      product_key: 'base-images',
+      product_version: '3.6',
+      git_branch: 'main',
+      created_at: '2026-10-28T10:00:00Z',
+      pullspec: `${channel.base_image}:base-v2026102901`,
+      changes: [],
+    };
+    await page.route('**/api/modules/product-builds/channels?*', route => route.fulfill({ json: dashboardChannels.list }));
+    await page.route(`**/api/modules/product-builds/channels/${channel.name}`, route => route.fulfill({
+      json: { source: 'dashboard', channel: { ...channel, drops: [drop], wheels: [] } },
+    }));
+    const imageArtifact = {
+      key: drop.pullspec,
+      type: 'containers',
+      variant: 'cuda13.0-el9.8',
+      archs: ['x86_64'],
+      environments: ['stage'],
+      alternative_names: [],
+      created_at: '2026-10-28T22:55:00Z',
+    };
+    await page.route('**/api/modules/product-builds/artifacts?*', route => route.fulfill({ json: [imageArtifact] }));
+    await page.route('**/api/modules/product-builds/artifacts/*/wheels', route => route.fulfill({ json: [] }));
+    await page.route('**/api/modules/product-builds/artifacts/*/containers', route => route.fulfill({ json: [] }));
+    await page.route('**/api/modules/product-builds/artifacts/*', route => route.fulfill({ json: imageArtifact }));
+
+    await page.goto(`/#/product-builds/channels?channel=${encodeURIComponent(channel.name)}`);
+
+    const drawer = page.getByTestId('channel-drawer');
+    const dropLink = drawer.getByRole('button', { name: `View drop ${drop.name}`, exact: true });
+    await expect(dropLink).toBeVisible();
+    await dropLink.click();
+
+    // The drop's pull spec is the artifact key the image is published under.
+    await expect(page).toHaveURL(url => url.hash.includes('product-builds/artifact-detail')
+      && url.hash.includes(`key=${encodeURIComponent(drop.pullspec)}`)
+      && url.hash.includes('product=base-images'));
+    await expect(page.getByRole('heading', { name: drop.pullspec, exact: true })).toBeVisible();
+    await expect(page.getByTestId('channel-drawer')).toHaveCount(0);
 
     const appErrors = page.errors.filter(e => !/status of (429|404|503)/.test(e.message));
     expect(appErrors).toHaveLength(0);

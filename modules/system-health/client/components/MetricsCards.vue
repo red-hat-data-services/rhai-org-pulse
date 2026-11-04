@@ -107,7 +107,7 @@ function friendlyDate(iso) {
   display: none;
   margin-bottom: 6px;
   font-size: 12px;
-  color: #6b8299;
+  color: var(--te-sc-label);
   padding: 0 2px;
 }
 
@@ -123,8 +123,8 @@ function friendlyDate(iso) {
 }
 
 .sc {
-  background: #0d2137;
-  border: 1px solid #1e4976;
+  background: var(--te-surface);
+  border: 1px solid var(--te-border);
   border-radius: 8px;
   padding: 14px 18px;
   border-left: 4px solid;
@@ -134,7 +134,7 @@ function friendlyDate(iso) {
   font-size: 10px;
   text-transform: uppercase;
   letter-spacing: 1px;
-  color: #6b8299;
+  color: var(--te-sc-label);
   margin-bottom: 6px;
   font-weight: 600;
 }
@@ -142,53 +142,53 @@ function friendlyDate(iso) {
 .sc-value {
   font-size: 28px;
   font-weight: 700;
-  color: #fff;
+  color: var(--te-sc-value);
 }
 
 .sc-sub {
   font-size: 11px;
-  color: #6b8299;
+  color: var(--te-sc-label);
   margin-top: 2px;
 }
 
 .sc-total {
-  border-left-color: #3498db;
+  border-left-color: var(--te-metric-total);
 }
 
 .sc-total .sc-value {
-  color: #3498db;
+  color: var(--te-metric-total);
 }
 
 .sc-passed {
-  border-left-color: #2ed573;
+  border-left-color: var(--te-metric-passed);
 }
 
 .sc-passed .sc-value {
-  color: #2ed573;
+  color: var(--te-metric-passed);
 }
 
 .sc-failed {
-  border-left-color: #ff4757;
+  border-left-color: var(--te-metric-failed);
 }
 
 .sc-failed .sc-value {
-  color: #ff4757;
+  color: var(--te-metric-failed);
 }
 
 .sc-skipped {
-  border-left-color: #ffa502;
+  border-left-color: var(--te-metric-skipped);
 }
 
 .sc-skipped .sc-value {
-  color: #ffa502;
+  color: var(--te-metric-skipped);
 }
 
 .sc-pct {
-  border-left-color: #a29bfe;
+  border-left-color: var(--te-metric-pct);
 }
 
 .sc-pct .sc-value {
-  color: #a29bfe;
+  color: var(--te-metric-pct);
 }
 
 @media (max-width: 1200px) {

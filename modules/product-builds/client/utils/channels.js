@@ -33,6 +33,13 @@ export function torchLabel(channel) {
   return channel.torch_version ? `Torch ${channel.torch_version}` : 'No torch'
 }
 
+// A channel adopted by a product release keeps its stack fixed for that
+// release; the rest follow whatever the base images publish. The matrix tones
+// each channel by this.
+export function isReleaseAdopted(channel) {
+  return (channel?.compatible_releases || []).length > 0
+}
+
 export function osLabel(rhelVersion) {
   const match = /^ubi(\d+)$/i.exec(rhelVersion || '')
   if (match) return `UBI ${match[1]}`
@@ -84,7 +91,6 @@ export function torchColumnId(channel) {
 const channelCollator = new Intl.Collator(undefined, { numeric: true, sensitivity: 'base' })
 const CHANNEL_SORT_VALUES = {
   name: channel => channel.name,
-  maturity: channel => channel.maturity,
   accelerator: channel => stackLabel(channel),
   torch_version: channel => channel.torch_version,
   rhel_version: channel => osLabel(channel.rhel_version),
@@ -115,7 +121,6 @@ export function sortChannels(channels, { field, direction = 'asc' } = {}) {
     })
   }
   return [...channels].sort((a, b) => {
-    if (a.maturity !== b.maturity) return a.maturity === 'stable' ? -1 : 1
     const order = acceleratorMeta(a.accelerator).order - acceleratorMeta(b.accelerator).order
     if (order !== 0) return order
     const accel = compareVersions(b.accelerator_version || 0, a.accelerator_version || 0)
@@ -192,15 +197,13 @@ export function collectFilterOptions(channels) {
 
 /**
  * Filter channels by free text (matched against name, description and
- * compatible releases), maturity, compatible release and OS. Multiselect
+ * compatible releases), compatible release and OS. Multiselect
  * dimensions match any selected value within each dimension and all dimensions
  * together. Empty filter values match everything.
  */
 export function filterChannels(channels, filters = {}) {
   const query = (filters.query || '').trim().toLowerCase()
   return channels.filter(channel => {
-    if (filters.maturity && channel.maturity !== filters.maturity) return false
-    if (filters.maturities?.length && !filters.maturities.includes(channel.maturity)) return false
     if (filters.release && !(channel.compatible_releases || []).includes(filters.release)) return false
     if (filters.os && channel.rhel_version !== filters.os) return false
     if (filters.accelerators?.length && !filters.accelerators.includes(stackId(channel))) return false
