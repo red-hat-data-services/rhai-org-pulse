@@ -195,6 +195,7 @@ describe('Tech Debt Prioritization routes', function () {
     const params = new URLSearchParams(path.split('?')[1])
     expect(params.get('jql')).toBe(registerTechDebtRoutes._test.scopedIssueJql(['Model Serving']))
     expect(params.get('jql')).toContain('component in ("Model Serving")')
+    expect(params.get('jql')).toContain('(labels not in ("ux-debt") OR labels is EMPTY)')
     expect(params.get('fields')).toContain('customfield_10859')
     expect(params.get('fields')).toContain('customfield_10847')
     expect(params.get('fields')).toContain('reporter')

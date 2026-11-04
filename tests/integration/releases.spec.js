@@ -1175,29 +1175,34 @@ test.describe('Releases FPDoR Readiness @releases', () => {
     expect(page.errors).toHaveLength(0);
   });
 
-  test('Tech Debt Prioritization tab appears after Features List and supports deep links', async ({ page }) => {
+  test('Tech Debt Prioritization is the second Execute tab and redirects legacy Plan links', async ({ page }) => {
     await page.route('**/api/modules/releases/tech-debt/components', async route => {
       await route.fulfill({ json: { project: 'RHAI', components: [] } });
     });
     await page.goto('/#/releases/plan');
     await page.waitForLoadState('networkidle');
     await page.waitForTimeout(DEFAULT_PAGE_WAIT_TIME);
+    await expect(page.getByTestId('execute-tab-tech-debt-prioritization')).toHaveCount(0);
+    await expect(page.getByRole('button', { name: 'Tech Debt Prioritization', exact: true })).toHaveCount(0);
 
-    const featureTab = page.locator('button', { hasText: 'Features List (1-n)' });
-    const techDebtTab = page.locator('button', { hasText: 'Tech Debt Prioritization' });
+    await page.goto('/#/releases/execute?tab=tech-debt-prioritization');
+    await page.waitForLoadState('networkidle');
+    await page.waitForTimeout(DEFAULT_PAGE_WAIT_TIME);
+
+    const featureTab = page.getByTestId('execute-tab-feature-execution');
+    const techDebtTab = page.getByTestId('execute-tab-tech-debt-prioritization');
     await expect(featureTab).toBeVisible();
     await expect(techDebtTab).toBeVisible();
 
     const featureTabIndex = await featureTab.evaluate(el => Array.from(el.parentElement.children).indexOf(el));
     const techDebtTabIndex = await techDebtTab.evaluate(el => Array.from(el.parentElement.children).indexOf(el));
     expect(techDebtTabIndex).toBe(featureTabIndex + 1);
-
-    await techDebtTab.click();
     await expect(page.getByTestId('tech-debt-prioritization')).toBeVisible();
 
     await page.goto('/#/releases/plan?tab=tech-debt-prioritization');
     await page.waitForLoadState('networkidle');
     await page.waitForTimeout(DEFAULT_PAGE_WAIT_TIME);
+    await expect(page).toHaveURL(/#\/releases\/execute\?tab=tech-debt-prioritization/);
     await expect(page.getByTestId('tech-debt-prioritization')).toBeVisible();
 
     expect(page.errors).toHaveLength(0);
@@ -1377,7 +1382,7 @@ test.describe('Releases FPDoR Readiness @releases', () => {
       });
     });
 
-    await page.goto('/#/releases/plan?tab=tech-debt-prioritization');
+    await page.goto('/#/releases/execute?tab=tech-debt-prioritization');
     await page.waitForLoadState('networkidle');
 
     await expect(page.getByTestId('tech-debt-user-testing-warning')).toContainText('This report is currently under user testing');
@@ -1389,6 +1394,10 @@ test.describe('Releases FPDoR Readiness @releases', () => {
     await expect(page.getByTestId('vulnerability-scoring-rubric')).toContainText('Dec 1, 2026 at 00:00 UTC');
     await page.getByTestId('bug-rubric-tab').click();
     await expect(page.getByTestId('bug-rubric-content')).toContainText('Bug score = customer + delivery/security + detection + Jira severity + due date + age');
+    await expect(page.getByTestId('bug-rubric-content')).toContainText('Dashboard Integration E2E');
+    await expect(page.getByTestId('bug-rubric-content')).toContainText('Build Cannot Run');
+    await expect(page.getByTestId('bug-source-rules')).toContainText('cypress_found_bug');
+    await expect(page.getByTestId('bug-source-rules')).toContainText('dsc-not-ready');
     await expect(page.getByTestId('bug-rubric-content')).toContainText('Active prioritization');
     await page.getByTestId('vulnerability-rubric-close').click();
     await expect(page.getByTestId('vulnerability-scoring-rubric')).toBeHidden();
@@ -1525,18 +1534,29 @@ test.describe('Releases FPDoR Readiness @releases', () => {
         rank: 1,
         rankGroup: 'vulnerability-sla'
       },
-      scoredBug('RHAI-301', 2, 'High', 35,
+      scoredBug('RHAI-301', 2, 'Medium', 70,
+        { code: 'dashboard-integration-e2e', label: 'Dashboard Integration E2E' },
+        [
+          { code: 'dashboard-integration-e2e', label: 'Dashboard Integration E2E', evidence: 'cypress_found_bug label is present' },
+          { code: 'customer-linked', label: 'Affecting customer', evidence: 'SFDC Cases Counter is populated' }
+        ]),
+      scoredBug('RHAI-302', 3, 'Medium', 70,
+        { code: 'build-cannot-run', label: 'Build Cannot Run' },
+        [{ code: 'build-cannot-run', label: 'Build Cannot Run', evidence: 'dsc-not-ready label is present' }]),
+      scoredBug('RHAI-303', 4, 'High', 60,
         { code: 'customer-linked', label: 'Affecting customer' },
         [
           { code: 'customer-linked', label: 'Affecting customer', evidence: 'SFDC Cases Counter is populated' },
-          { code: 'field-feedback', label: 'BU/SSA/field feedback', evidence: 'Feedback label is present' },
           { code: 'approved-release-blocker', label: 'Approved Release Blocker', evidence: 'Release Blocker is Approved' }
         ]),
-      scoredBug('RHAI-302', 3, 'Medium', 33, { code: 'prerelease-cve', label: 'Pre-release CVE' }, [{ code: 'prerelease-cve', label: 'Pre-release CVE', evidence: 'Pre-release CVE rule matched' }]),
-      scoredBug('RHAI-303', 4, 'Medium', 30, { code: 'approved-release-blocker', label: 'Approved Release Blocker' }, [{ code: 'approved-release-blocker', label: 'Approved Release Blocker', evidence: 'Release Blocker is Approved' }]),
-      scoredBug('RHAI-304', 5, 'Medium', 25, { code: 'field-feedback', label: 'BU/SSA/field feedback' }, [{ code: 'field-feedback', label: 'BU/SSA/field feedback', evidence: 'Feedback label is present' }]),
-      scoredBug('RHAI-305', 6, 'Medium', 20, { code: 'devtestops-e2e', label: 'DevTestOps/E2E bug' }, [{ code: 'devtestops-test-failure', label: 'DevTestOps automated test failure', evidence: 'test-failed label and DevTestOps reporter' }]),
-      scoredBug('RHAI-306', 7, 'Medium', 15, { code: 'workflow-validation', label: 'Workflow-validation bug' }, [{ code: 'workflow-validation', label: 'Workflow-validation bug', evidence: 'Workflow Validation reporter' }])
+      scoredBug('RHAI-304', 5, 'Medium', 55, { code: 'prerelease-cve', label: 'Pre-release CVE' }, [{ code: 'prerelease-cve', label: 'Pre-release CVE', evidence: 'Pre-release CVE rule matched' }]),
+      scoredBug('RHAI-305', 6, 'Medium', 50, { code: 'approved-release-blocker', label: 'Approved Release Blocker' }, [{ code: 'approved-release-blocker', label: 'Approved Release Blocker', evidence: 'Release Blocker is Approved' }]),
+      scoredBug('RHAI-306', 7, 'Medium', 45, { code: 'snyk', label: 'Snyk' }, [{ code: 'snyk-sca', label: 'Snyk SCA', evidence: 'Snyk automation with dependency/vulnerability label' }]),
+      scoredBug('RHAI-308', 8, 'Medium', 40, { code: 'field-feedback', label: 'BU/SSA/field feedback' }, [{ code: 'field-feedback', label: 'BU/SSA/field feedback', evidence: 'Feedback label is present' }]),
+      scoredBug('RHAI-309', 9, 'Medium', 35, { code: 'operator-e2e', label: 'Operator auto E2E blocker' }, [{ code: 'operator-e2e', label: 'Operator auto E2E blocker', evidence: 'Operator E2E blocker label and automation reporter' }]),
+      scoredBug('RHAI-310', 10, 'Medium', 30, { code: 'devtestops-e2e', label: 'DevTestOps automated test failure' }, [{ code: 'devtestops-test-failure', label: 'DevTestOps automated test failure', evidence: 'test-failed label and DevTestOps reporter' }]),
+      scoredBug('RHAI-311', 11, 'Medium', 25, { code: 'workflow-validation', label: 'Workflow-validation bug' }, [{ code: 'workflow-validation', label: 'Workflow-validation bug', evidence: 'Workflow Validation reporter' }]),
+      scoredBug('RHAI-312', 12, 'Medium', 20, { code: 'unclassified-automation', label: 'Unclassified automation Bug' }, [{ code: 'unclassified-automation', label: 'Unclassified automation Bug', evidence: 'Automation reporter did not match a recognized source rule' }])
     ];
 
     await page.route('**/api/modules/releases/tech-debt/components', async route => {
@@ -1564,7 +1584,7 @@ test.describe('Releases FPDoR Readiness @releases', () => {
           fetchedAt: '2026-10-26T14:30:00.000Z',
           cacheStatus: 'refreshed',
           warning: null,
-          counts: { total: 8, inFlight: 0, backlog: 8, bugs: 7, vulnerabilities: 1 },
+          counts: { total: 13, inFlight: 0, backlog: 13, bugs: 12, vulnerabilities: 1 },
           inFlight: [],
           backlog: examples
         }
@@ -1587,18 +1607,23 @@ test.describe('Releases FPDoR Readiness @releases', () => {
       });
     });
 
-    await page.goto('/#/releases/plan?tab=tech-debt-prioritization');
+    await page.goto('/#/releases/execute?tab=tech-debt-prioritization');
     await page.getByTestId('tech-debt-component-filter').click();
     await page.getByRole('checkbox', { name: 'AI Gateway' }).check();
 
     const pane = page.getByTestId('tech-debt-backlog-pane');
     for (const label of [
+      'Dashboard Integration E2E',
+      'Build Cannot Run',
       'Affecting customer',
       'Pre-release CVE',
       'Approved Release Blocker',
+      'Snyk',
       'BU/SSA/field feedback',
-      'DevTestOps/E2E bug',
+      'Operator auto E2E blocker',
+      'DevTestOps automated test failure',
       'Workflow-validation bug',
+      'Unclassified automation Bug',
       'Component-team/unclassified Bug'
     ]) {
       await expect(pane).toContainText(label);
@@ -1608,9 +1633,12 @@ test.describe('Releases FPDoR Readiness @releases', () => {
     await expect(pane.getByTestId('tech-debt-vulnerability-backlog').getByTestId('tech-debt-backlog-card').first()).toContainText('RHAI-CVE-308');
     await expect(pane.getByTestId('tech-debt-vulnerability-backlog').getByTestId('tech-debt-sla-badge')).toHaveText('SLA due in 9 days');
     await expect(pane.getByTestId('tech-debt-bug-backlog').getByTestId('tech-debt-backlog-card').first()).toContainText('RHAI-307');
-    await expect(pane.getByTestId('tech-debt-bug-backlog').getByTestId('tech-debt-backlog-card').last()).toContainText('RHAI-306');
-    const customerCard = pane.getByTestId('tech-debt-backlog-card').filter({ hasText: 'RHAI-301' });
-    await expect(customerCard).toContainText('BU/SSA/field feedback');
+    await expect(pane.getByTestId('tech-debt-bug-backlog').getByTestId('tech-debt-backlog-card').last()).toContainText('RHAI-312');
+    const dashboardCard = pane.getByTestId('tech-debt-backlog-card').filter({ hasText: 'RHAI-301' });
+    await expect(dashboardCard).toContainText('P1 · 70');
+    await expect(dashboardCard).toContainText('Affecting customer');
+    const customerCard = pane.getByTestId('tech-debt-backlog-card').filter({ hasText: 'RHAI-303' });
+    await expect(customerCard).not.toContainText('BU/SSA/field feedback');
     await expect(customerCard).toContainText('Approved Release Blocker');
 
     expect(page.errors).toHaveLength(0);

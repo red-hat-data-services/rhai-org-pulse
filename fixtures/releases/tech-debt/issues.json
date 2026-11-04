@@ -74,7 +74,7 @@
     {
       "key": "RHAIENG-456",
       "link": "https://redhat.atlassian.net/browse/RHAIENG-456",
-      "summary": "Customer-reported upgrade regression",
+      "summary": "Dashboard integration E2E customer regression",
       "issueType": "Bug",
       "jiraPriority": "High",
       "status": "Backlog",
@@ -86,7 +86,7 @@
       "updatedAt": "2026-10-20T12:00:00.000Z",
       "dueDate": "2026-10-25",
       "fixVersions": ["3.6 GA RHOAI RELEASE"],
-      "labels": ["prerelease-cve-remediation", "test-failed"],
+      "labels": ["cypress_found_bug", "prerelease-cve-remediation", "test-failed"],
       "releaseBlockerStatus": "Approved",
       "hasSfdcCases": true,
       "cvss": null,
@@ -95,8 +95,9 @@
       "priorityScore": 95,
       "scoreStatus": "scored",
       "scoreModel": "bug-v1",
-      "primaryBugType": { "code": "customer-linked", "label": "Affecting customer" },
+      "primaryBugType": { "code": "dashboard-integration-e2e", "label": "Dashboard Integration E2E" },
       "classificationSignals": [
+        { "code": "dashboard-integration-e2e", "label": "Dashboard Integration E2E", "evidence": "cypress_found_bug label is present" },
         { "code": "customer-linked", "label": "Affecting customer", "evidence": "SFDC Cases Counter is populated" },
         {
           "code": "prerelease-cve",
@@ -121,7 +122,7 @@
         "dueDate": { "points": 15, "state": "Past due", "date": "2026-10-25", "daysUntil": -1 },
         "age": { "points": 5, "state": "13+ weeks", "weeks": 16 }
       },
-      "guardrail": { "applied": false, "minimumScore": null, "reasons": ["Approved Release Blocker guarantees at least P1", "Affecting-customer Blocker/Critical/High priority Bug guarantees at least P1"] },
+      "guardrail": { "applied": false, "minimumScore": null, "reasons": ["Approved Release Blocker guarantees at least P1", "Dashboard Integration E2E guarantees at least P1", "Affecting-customer Blocker/Critical/High priority Bug guarantees at least P1"] },
       "rank": 1,
       "rankGroup": "bug-score"
     }

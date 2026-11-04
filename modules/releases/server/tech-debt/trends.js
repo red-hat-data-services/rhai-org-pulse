@@ -7,13 +7,18 @@ const STORAGE_KEY = 'releases/tech-debt/trends.json'
 
 const CATEGORY_DEFINITIONS = [
   { code: 'vulnerability', label: 'CVE / Vulnerability', issueType: 'Vulnerability', color: '#a21caf' },
+  { code: 'dashboard-integration-e2e', label: 'Dashboard Integration E2E', issueType: 'Bug', color: '#be123c' },
+  { code: 'build-cannot-run', label: 'Build Cannot Run', issueType: 'Bug', color: '#b45309' },
   { code: 'customer-linked', label: 'Affecting customer', issueType: 'Bug', color: '#dc2626' },
   { code: 'prerelease-cve', label: 'Pre-release CVE', issueType: 'Bug', color: '#db2777' },
   { code: 'approved-release-blocker', label: 'Approved Release Blocker', issueType: 'Bug', color: '#ea580c' },
+  { code: 'snyk', label: 'Snyk', issueType: 'Bug', color: '#7c3aed' },
   { code: 'field-feedback', label: 'BU/SSA/field feedback', issueType: 'Bug', color: '#2563eb' },
-  { code: 'devtestops-e2e', label: 'DevTestOps/E2E', issueType: 'Bug', color: '#0d9488' },
+  { code: 'operator-e2e', label: 'Operator auto E2E blocker', issueType: 'Bug', color: '#047857' },
+  { code: 'devtestops-e2e', label: 'DevTestOps automated test failure', issueType: 'Bug', color: '#0d9488' },
   { code: 'workflow-validation', label: 'Workflow validation', issueType: 'Bug', color: '#0891b2' },
-  { code: 'component-team', label: 'Component-team/unclassified', issueType: 'Bug', color: '#64748b' }
+  { code: 'component-team', label: 'Component-team/unclassified', issueType: 'Bug', color: '#64748b' },
+  { code: 'unclassified-automation', label: 'Unclassified automation', issueType: 'Bug', color: '#78716c' }
 ]
 
 const CATEGORY_BY_CODE = new Map(CATEGORY_DEFINITIONS.map(function (category) {

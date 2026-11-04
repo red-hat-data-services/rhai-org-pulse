@@ -52,7 +52,8 @@ const ISSUE_FIELDS = [
 const ISSUE_JQL = [
   'project in (' + PROJECTS.join(', ') + ')',
   'issuetype in (Bug, Vulnerability)',
-  'statusCategory != Done'
+  'statusCategory != Done',
+  '(labels not in ("ux-debt") OR labels is EMPTY)'
 ].join(' AND ')
 const SFDC_BUG_JQL = ISSUE_JQL + ' AND issuetype = Bug AND SFDC_Cases_Counter > 0'
 
@@ -520,6 +521,24 @@ function registerTechDebtRoutes(router, { requireAuth, requireScope, jira, stora
    *                       priorityScore: { type: number, nullable: true }
    *                       priorityBand: { type: object, nullable: true }
    *                       scoreStatus: { type: string, enum: [not-applicable, scored] }
+   *                       scoreModel: { type: string, nullable: true, example: bug-v1 }
+   *                       primaryBugType:
+   *                         type: object
+   *                         nullable: true
+   *                         description: Highest-precedence Jira source classification for a Bug.
+   *                         properties:
+   *                           code:
+   *                             type: string
+   *                             enum: [dashboard-integration-e2e, build-cannot-run, customer-linked, prerelease-cve, approved-release-blocker, snyk, field-feedback, operator-e2e, devtestops-e2e, workflow-validation, unclassified-automation, component-team]
+   *                           label: { type: string }
+   *                       classificationSignals:
+   *                         type: array
+   *                         items:
+   *                           type: object
+   *                           properties:
+   *                             code: { type: string }
+   *                             label: { type: string }
+   *                             evidence: { type: string }
    *       400:
    *         description: No component was supplied
    *       503:

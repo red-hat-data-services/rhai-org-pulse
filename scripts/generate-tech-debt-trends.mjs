@@ -24,6 +24,7 @@ export function historicalJql(now = new Date()) {
   return [
     `project in (${PROJECTS.join(', ')})`,
     'issuetype in (Bug, Vulnerability)',
+    '(labels not in ("ux-debt") OR labels is EMPTY)',
     `((created >= "${window.startDate}" AND created < "${window.endExclusive}") OR ` +
       `(resolutiondate >= "${window.startDate}" AND resolutiondate < "${window.endExclusive}"))`
   ].join(' AND ')
