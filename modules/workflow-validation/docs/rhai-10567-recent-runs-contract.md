@@ -182,9 +182,11 @@ screens. No browser errors occurred. The JSON evidence reflects this revision.
 
 ### Module-owned browser tests
 
-The replacement branch keeps the browser implementation and Playwright config
-inside Workflow Validation. The suite contains 27 passing tests. The fresh
-main-branch baseline also passes 6,737 unit tests (11 skipped), lint, and the
-production build. The existing shared suite still expects the previous page
-and has five failing checks against this implementation. CI must route its
-existing entrypoint to the module-owned suite before this replacement can merge.
+The replacement PR keeps the browser implementation and Playwright config
+inside Workflow Validation. The shared test file contains only one `require`
+that loads the module-owned suite. Its previous test implementation moves into
+the module. Both paths list Adam as an eligible owner.
+
+All 27 module-owned browser tests pass. The fresh main-branch baseline also
+passes 6,737 unit tests (11 skipped), lint, and the production build. CI uses
+the same shared entrypoint and module tag to execute the moved tests.

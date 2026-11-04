@@ -99,15 +99,18 @@
     "browserTestsPassed": 27,
     "fullUnitSuitePassed": 6737,
     "unitTestsSkipped": 11,
-    "unchangedSharedSuite": {
+    "ciRouting": "Shared one-line entrypoint requires the module-owned suite",
+    "temporarySharedLoaderProof": {
+      "passed": 27,
+      "repositorySharedFilesChanged": false
+    },
+    "preMigrationSharedSuite": {
       "passed": 17,
       "failed": 5,
       "reason": "Legacy mocks and expectations target the previous Recent Runs page"
     },
-    "ciRouting": "Needs an approved shared loader or prerequisite migration before merge",
-    "temporarySharedLoaderProof": {
-      "passed": 27,
-      "repositorySharedFilesChanged": false
-    }
+    "sharedEntryPoint": "tests/integration/workflow-validation.spec.js",
+    "sharedEntryPointLines": 1,
+    "sharedCiSuitePassed": 27
   }
 }
