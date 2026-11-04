@@ -102,3 +102,28 @@ View run opened Ad Hoc invocation `1791447487869` with 17 tests: 11 passed and
 
 [GPUaaS landing-page screenshot](images/rhai-10567-recent-runs-gpuaas.jpg).
 [GPUaaS selected-run screenshot](images/rhai-10567-selected-run-gpuaas.jpg).
+
+## GPUaaS pagination verification — 2026-11-04
+
+Feature source: `9cc551f9`, on `feat/AIPCC-33215-recent-runs-controls`.
+Both preview image builds completed and both deployments are ready. The preview
+keeps its existing compatible app shell. The standard production build also
+passes with the declared core dependency. This deployment targets GPUaaS only.
+
+Live API and browser checks visited all 146 groups across eight pages. The
+initial view shows 20 rows and pagination. Checks passed for Previous/Next,
+page reload, a run outside the initial 20, filter reload, clear, UTC dates,
+oldest-first sorting, and exact-run navigation. The settled page fits 375px and
+320px screens; the table scrolls horizontally. No browser errors occurred.
+The inventory and document counts stayed unchanged: 712 executions, 4,157 tasks,
+and 184 root causes. Runtime settings, storage, and OAuth configuration stayed
+unchanged. Previous image references are saved locally for rollback.
+
+The full unit suite passed 6,688 tests, with 11 skipped. The added insertion
+case and focused client/server tests passed afterward (25 tests). All 24 browser
+integration tests passed. Lint, OpenAPI/module checks, and the production build
+passed. Node 26 tests used `--no-experimental-webstorage` and local server access.
+
+[Machine-readable evidence](aipcc-33215-validation.json).
+[Initial unfiltered page](images/aipcc-33215-gpuaas-recent-runs.png).
+[Filtered page](images/aipcc-33215-gpuaas-filtered.png).
