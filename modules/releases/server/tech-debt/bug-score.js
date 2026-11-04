@@ -7,7 +7,7 @@ const {
 
 const FEEDBACK_LABELS = new Set(['aibu_feedback', 'aissa_feedback', 'bu_earlyaccess_feedback'])
 const SECURITY_LABELS = new Set(['security', 'conforma', 'conforma-violation', 'tls-profile-compliance'])
-const CI_LABELS = new Set(['ci-detected', 'cypress_found_bug', 'found_in_nightly'])
+const CI_LABELS = new Set(['ci-detected', 'found_in_nightly'])
 const RELEASE_TOOLING_LABELS = new Set(['rhoai-sustaining', 'rhoai-jenkins-agent', 'fbc', 'build-failure'])
 const DEVTESTOPS_REPORTER = 'devtestops jira bot'
 const AUTOMATION_REPORTER = 'rhoaieng automationbot'
@@ -65,15 +65,17 @@ function classifyBug(issue) {
   const labels = normalizedLabels(issue.labels)
   const reporter = normalize(issue.reporter && issue.reporter.name)
   const signals = []
-  const feedback = hasAny(labels, FEEDBACK_LABELS)
+  const dashboardIntegrationE2e = labels.has('cypress_found_bug')
+  const buildCannotRun = labels.has('dsc-not-ready')
+  const feedback = hasAny(labels, FEEDBACK_LABELS) && !issue.hasSfdcCases
   const approvedBlocker = normalize(issue.releaseBlockerStatus) === 'approved'
   const prereleaseCve = labels.has('prerelease-cve-remediation') && reporter === DEVTESTOPS_REPORTER
   const operatorE2e = labels.has('odh-operator-auto-e2e-blocker') && reporter === AUTOMATION_REPORTER
   const devtestopsFailure = labels.has('test-failed') && reporter === DEVTESTOPS_REPORTER
   const workflowValidation = reporter === WORKFLOW_REPORTER
-  const automationReporter = reporter === DEVTESTOPS_REPORTER || reporter === AUTOMATION_REPORTER
-  const humanTestFailure = labels.has('test-failed') && !automationReporter
-  const humanGate = Array.from(labels).some(function (label) { return label.startsWith('gate:') }) && !automationReporter
+  const sourceReporter = reporter === DEVTESTOPS_REPORTER || reporter === AUTOMATION_REPORTER || reporter === WORKFLOW_REPORTER
+  const humanTestFailure = labels.has('test-failed') && !sourceReporter
+  const humanGate = Array.from(labels).some(function (label) { return label.startsWith('gate:') }) && !sourceReporter
   const ciDetected = hasAny(labels, CI_LABELS)
   const releaseTooling = hasAny(labels, RELEASE_TOOLING_LABELS)
   const securityRelated = hasAny(labels, SECURITY_LABELS)
@@ -86,6 +88,8 @@ function classifyBug(issue) {
     reporter: { id: issue.reporter.id || null, name: issue.reporter.name || null }
   } : null
 
+  if (dashboardIntegrationE2e) addSignal(signals, 'dashboard-integration-e2e', 'Dashboard Integration E2E', 'cypress_found_bug label is present')
+  if (buildCannotRun) addSignal(signals, 'build-cannot-run', 'Build Cannot Run', 'dsc-not-ready label is present')
   if (issue.hasSfdcCases) addSignal(signals, 'customer-linked', 'Affecting customer', 'SFDC Cases Counter is populated')
   if (feedback) addSignal(signals, 'field-feedback', 'BU/SSA/field feedback', 'Feedback label is present')
   if (prereleaseCve) addSignal(signals, 'prerelease-cve', 'Pre-release CVE', 'prerelease-cve-remediation label and DevTestOps reporter', reporterEvidence)
@@ -97,22 +101,29 @@ function classifyBug(issue) {
   if (operatorE2e) addSignal(signals, 'operator-e2e', 'Operator auto E2E blocker', 'Operator E2E blocker label and automation reporter', reporterEvidence)
   if (devtestopsFailure) addSignal(signals, 'devtestops-test-failure', 'DevTestOps automated test failure', 'test-failed label and DevTestOps reporter', reporterEvidence)
   if (workflowValidation) addSignal(signals, 'workflow-validation', 'Workflow-validation bug', 'Workflow Validation reporter', reporterEvidence)
-  if (ciDetected) addSignal(signals, 'ci-detected', 'CI/nightly detected', 'CI, Cypress, or nightly label')
+  if (ciDetected) addSignal(signals, 'ci-detected', 'CI/nightly detected', 'CI or nightly label')
   if (releaseTooling) addSignal(signals, 'release-tooling', 'Release/CI tooling', 'Release or build tooling label')
   if (humanTestFailure) addSignal(signals, 'human-test-failure', 'Human-filed test bug', 'test-failed label from a non-automation reporter', reporterEvidence)
   if (humanGate) addSignal(signals, 'human-gate', 'Human-filed gate bug', 'gate:* label from a non-automation reporter', reporterEvidence)
 
   let primaryBugType
-  if (issue.hasSfdcCases) primaryBugType = { code: 'customer-linked', label: 'Affecting customer' }
+  if (dashboardIntegrationE2e) primaryBugType = { code: 'dashboard-integration-e2e', label: 'Dashboard Integration E2E' }
+  else if (buildCannotRun) primaryBugType = { code: 'build-cannot-run', label: 'Build Cannot Run' }
+  else if (issue.hasSfdcCases) primaryBugType = { code: 'customer-linked', label: 'Affecting customer' }
   else if (prereleaseCve) primaryBugType = { code: 'prerelease-cve', label: 'Pre-release CVE' }
   else if (approvedBlocker) primaryBugType = { code: 'approved-release-blocker', label: 'Approved Release Blocker' }
+  else if (snyk) primaryBugType = { code: 'snyk', label: 'Snyk' }
   else if (feedback) primaryBugType = { code: 'field-feedback', label: 'BU/SSA/field feedback' }
-  else if (operatorE2e || devtestopsFailure) primaryBugType = { code: 'devtestops-e2e', label: 'DevTestOps/E2E bug' }
+  else if (operatorE2e) primaryBugType = { code: 'operator-e2e', label: 'Operator auto E2E blocker' }
+  else if (devtestopsFailure) primaryBugType = { code: 'devtestops-e2e', label: 'DevTestOps automated test failure' }
   else if (workflowValidation) primaryBugType = { code: 'workflow-validation', label: 'Workflow-validation bug' }
+  else if (sourceReporter) primaryBugType = { code: 'unclassified-automation', label: 'Unclassified automation Bug' }
   else primaryBugType = { code: 'component-team', label: 'Component-team/unclassified Bug' }
 
   if (primaryBugType.code === 'component-team') {
     addSignal(signals, 'component-team', primaryBugType.label, 'No higher-precedence source classification matched')
+  } else if (primaryBugType.code === 'unclassified-automation') {
+    addSignal(signals, 'unclassified-automation', primaryBugType.label, 'Automation or workflow reporter did not match a recognized source rule', reporterEvidence)
   }
 
   return {
@@ -122,7 +133,9 @@ function classifyBug(issue) {
     primaryBugType,
     matches: {
       approvedBlocker,
+      buildCannotRun,
       ciDetected,
+      dashboardIntegrationE2e,
       devtestopsFailure,
       feedback,
       humanGate,
@@ -162,7 +175,7 @@ function scoreBug(issue, now = new Date()) {
   if (matches.operatorE2e) detectionCandidates.push({ points: 5, state: 'Operator auto E2E blocker', code: 'operator-e2e', evidence: 'Operator E2E blocker automation rule matched' })
   if (matches.devtestopsFailure) detectionCandidates.push({ points: 4, state: 'DevTestOps automated test failure', code: 'devtestops-test-failure', evidence: 'DevTestOps test-failed rule matched' })
   if (matches.workflowValidation) detectionCandidates.push({ points: 3, state: 'Workflow validation', code: 'workflow-validation', evidence: 'Workflow Validation reporter' })
-  if (matches.ciDetected || matches.releaseTooling || matches.humanTestFailure || matches.humanGate) {
+  if (matches.dashboardIntegrationE2e || matches.ciDetected || matches.releaseTooling || matches.humanTestFailure || matches.humanGate) {
     detectionCandidates.push({ points: 2, state: 'CI, nightly, gate, or human test', code: 'other-detection', evidence: 'A secondary detection-source rule matched' })
   }
   const detectionSource = chooseHighest(detectionCandidates, 'No detection-source signal')
@@ -177,6 +190,14 @@ function scoreBug(issue, now = new Date()) {
   if (matches.approvedBlocker) {
     priorityScore = Math.max(priorityScore, 70)
     guardrailReasons.push('Approved Release Blocker guarantees at least P1')
+  }
+  if (matches.dashboardIntegrationE2e) {
+    priorityScore = Math.max(priorityScore, 70)
+    guardrailReasons.push('Dashboard Integration E2E guarantees at least P1')
+  }
+  if (matches.buildCannotRun) {
+    priorityScore = Math.max(priorityScore, 70)
+    guardrailReasons.push('Build Cannot Run guarantees at least P1')
   }
   if (issue.hasSfdcCases && ['blocker', 'highest', 'critical', 'high'].includes(severity.value)) {
     priorityScore = Math.max(priorityScore, 70)

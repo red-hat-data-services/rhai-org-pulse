@@ -17,7 +17,6 @@
     </div>
     <div class="p-6">
       <FeatureReadinessView v-if="activeTab === 'feature-readiness'" />
-      <TechDebtPrioritizationView v-else-if="activeTab === 'tech-debt-prioritization'" />
       <DraftPlansView v-else-if="activeTab === 'draft-plans' && canViewDraftPlans" />
       <BuFeedbackView v-else-if="activeTab === 'bu-feedback'" />
       <PmHubView v-else-if="activeTab === 'pm-hub'" />
@@ -32,7 +31,6 @@
 import { ref, computed, inject, watch, onMounted } from 'vue'
 import { apiRequest } from '@shared/client/services/api'
 import FeatureReadinessView from '../plan/views/FeatureReadinessView.vue'
-import TechDebtPrioritizationView from '../plan/views/TechDebtPrioritizationView.vue'
 import DraftPlansView from '../plan/views/DraftPlansView.vue'
 import BuFeedbackView from '../plan/views/BuFeedbackView.vue'
 import PmHubView from '../plan/views/PmHubView.vue'
@@ -41,7 +39,6 @@ import AIPlanner from '../plan/views/AIPlanner.vue'
 var ALL_TABS = [
   { id: 'pm-hub', label: 'PM Hub' },
   { id: 'feature-readiness', label: 'Features List (1-n)' },
-  { id: 'tech-debt-prioritization', label: 'Tech Debt Prioritization' },
   { id: 'draft-plans', label: 'Plan Approval' },
   { id: 'bu-feedback', label: 'Field and BU Feedback' },
   { id: 'ai-planner', label: 'AI Planner' },
@@ -57,13 +54,27 @@ var tabs = computed(function() {
 })
 
 var moduleNav = inject('moduleNav', null)
+var legacyTechDebtRedirectStarted = false
 
 function validTabIds() {
   return tabs.value.map(function(t) { return t.id })
 }
 
+function currentParams() {
+  return moduleNav && moduleNav.params ? moduleNav.params.value || {} : {}
+}
+
+function redirectLegacyTechDebt(params) {
+  if (!params || params.tab !== 'tech-debt-prioritization') return false
+  if (legacyTechDebtRedirectStarted) return true
+  if (!moduleNav || !moduleNav.navigateTo) return false
+  legacyTechDebtRedirectStarted = true
+  moduleNav.navigateTo('execute', Object.assign({}, params, { tab: 'tech-debt-prioritization' }))
+  return true
+}
+
 function getTabFromParams() {
-  var params = moduleNav && moduleNav.params ? moduleNav.params.value : {}
+  var params = currentParams()
   var tab = params.tab
   var ids = validTabIds()
   if (tab && ids.indexOf(tab) !== -1) return tab
@@ -79,6 +90,7 @@ watch(activeTab, function(tab) {
 }, { immediate: true })
 
 function syncActiveTab() {
+  if (redirectLegacyTechDebt(currentParams())) return
   var tab = getTabFromParams()
   // Deep-link to draft-plans while gated → fall back until access resolves or deny.
   if (tab === 'draft-plans' && !canViewDraftPlans.value) {
@@ -96,6 +108,7 @@ watch(activeTab, function(tab) {
 
 if (moduleNav && moduleNav.params) {
   watch(moduleNav.params, function() {
+    if (redirectLegacyTechDebt(currentParams())) return
     var tab = getTabFromParams()
     if (tab === 'draft-plans' && !canViewDraftPlans.value) {
       if (activeTab.value !== 'pm-hub') activeTab.value = 'pm-hub'
@@ -110,6 +123,7 @@ watch(canViewDraftPlans, function() {
 })
 
 onMounted(async function() {
+  if (redirectLegacyTechDebt(currentParams())) return
   try {
     var res = await apiRequest('/modules/releases/draft-plans/access')
     canViewDraftPlans.value = !!(res && res.canViewDraftPlans)

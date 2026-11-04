@@ -8,7 +8,7 @@
     "timezone": "UTC"
   },
   "projects": ["RHAI", "RHAIENG", "RHOAIENG", "INFERENG", "AIPCC"],
-  "issueCount": 3,
+  "issueCount": 5,
   "events": [
     {
       "key": "RHAIENG-100",
@@ -33,6 +33,22 @@
       "components": ["Model Serving"],
       "createdMonth": "2026-10",
       "resolvedMonth": "2026-10"
+    },
+    {
+      "key": "RHAIENG-103",
+      "issueType": "Bug",
+      "category": "dashboard-integration-e2e",
+      "components": ["AI Core Platform"],
+      "createdMonth": "2026-10",
+      "resolvedMonth": null
+    },
+    {
+      "key": "RHAIENG-104",
+      "issueType": "Bug",
+      "category": "build-cannot-run",
+      "components": ["Model Serving"],
+      "createdMonth": "2026-10",
+      "resolvedMonth": null
     }
   ]
 }

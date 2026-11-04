@@ -5,7 +5,7 @@ vi.mock('@shared/client/services/api', function () {
   return { apiRequest: vi.fn() }
 })
 
-vi.mock('../../../client/plan/components/TechDebtFlowChart.vue', function () {
+vi.mock('../../../client/execute/components/TechDebtFlowChart.vue', function () {
   return {
     default: {
       props: ['panel', 'categories', 'showIssueTypes'],
@@ -15,13 +15,13 @@ vi.mock('../../../client/plan/components/TechDebtFlowChart.vue', function () {
 })
 
 import { apiRequest } from '@shared/client/services/api'
-import TechDebtPrioritizationView from '../../../client/plan/views/TechDebtPrioritizationView.vue'
+import TechDebtPrioritizationView from '../../../client/execute/views/TechDebtPrioritizationView.vue'
 import {
   clearTechDebtIssueCache,
   TECH_DEBT_CACHE_TTL_MS,
   techDebtIssueCacheKey,
   writeTechDebtIssueCache
-} from '../../../client/plan/services/techDebtIssueCache'
+} from '../../../client/execute/services/techDebtIssueCache'
 
 const componentsResponse = {
   project: 'RHAI',
@@ -207,8 +207,13 @@ describe('TechDebtPrioritizationView', function () {
     expect(rubric.text()).toContain('Jira’s SLA date remains authoritative')
     await wrapper.get('[data-testid="bug-rubric-tab"]').trigger('click')
     expect(wrapper.get('[data-testid="bug-rubric-content"]').text()).toContain('Bug score = customer + delivery/security + detection + Jira severity + due date + age')
+    expect(wrapper.get('[data-testid="bug-rubric-content"]').text()).toContain('Dashboard Integration E2E')
+    expect(wrapper.get('[data-testid="bug-rubric-content"]').text()).toContain('Build Cannot Run')
     expect(wrapper.get('[data-testid="bug-rubric-content"]').text()).toContain('Affecting customer (SFDC)')
     expect(wrapper.get('[data-testid="bug-source-rules"]').text()).toContain('prerelease-cve-remediation label plus DevTestOps Jira Bot reporter')
+    expect(wrapper.get('[data-testid="bug-source-rules"]').text()).toContain('cypress_found_bug label')
+    expect(wrapper.get('[data-testid="bug-source-rules"]').text()).toContain('dsc-not-ready label')
+    expect(wrapper.get('[data-testid="bug-source-rules"]').text()).toContain('ux-debt are excluded')
     expect(wrapper.get('[data-testid="bug-rubric-content"]').text()).toContain('Active prioritization')
 
     await wrapper.get('[data-testid="vulnerability-rubric-close"]').trigger('click')

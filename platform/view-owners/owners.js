@@ -119,16 +119,14 @@ export const viewOwners = {
   'releases/deliver/risk-dashboard':               'Saiesh Prabhu',
 
   // releases > execute
-  'releases/execute/board':                        'Saiesh Prabhu',
-  'releases/execute/signals':                      'Alex Corvin',
-  'releases/execute/table':                        'Alex Corvin',
+  'releases/execute/feature-execution':            'Saiesh Prabhu',
+  'releases/execute/tech-debt-prioritization':     'Saiesh Prabhu',
 
   // releases > plan
   'releases/plan/ai-planner':                      'yuvalluria',
   'releases/plan/bu-feedback':                     'Saiesh Prabhu',
   'releases/plan/feature-readiness':               'Erle Marion',
   'releases/plan/pm-hub':                          'Saiesh Prabhu',
-  'releases/plan/tech-debt-prioritization':        'Saiesh Prabhu',
 
   // releases > registry
   'releases/registry/hygiene':                     'Alex Corvin',

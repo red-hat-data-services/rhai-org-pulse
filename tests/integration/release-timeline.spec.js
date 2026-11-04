@@ -445,7 +445,7 @@ test.describe('Release Timeline @release-timeline @releases', () => {
     expect(url).toContain('version=' + encodeURIComponent(card.version));
     // Cards deep-link straight to the Kanban board.
     expect(url).toContain('view=board');
-    expect(url).toContain('tab=board');
+    expect(url).toContain('tab=feature-execution');
     // The card's product is carried through: the Execute page lands on the
     // single clicked-card product rather than defaulting to ALL products of the
     // version (which would be a comma-joined list). We assert on the URL rather

@@ -1320,7 +1320,8 @@ ranks.
 All date comparisons use UTC calendar dates. The response is calculated from
 a live Jira query scoped to the selected components. Up to six recent component
 selections are cached for five minutes and the response remains independent of
-the CVE Sustaining report's 90-day timeline and exclusions.
+the CVE Sustaining report's 90-day timeline and exclusions. Bugs labeled
+`ux-debt` are excluded from the live cohort and the historical trend collector.
 
 ### Bug score
 
@@ -1379,16 +1380,25 @@ Only the highest matching rule in each dimension contributes points:
 | Jira Due Date | 15 past due; 13 within 7 days; 9 within 30; 5 within 90; 2 later; missing 0 |
 | Issue age | 5 for 13+ weeks; 4 for 8–12; 3 for 4–7; 2 for 2–3; otherwise 0 |
 
-The primary Bug type is selected in this order: Affecting customer,
-Pre-release CVE, Approved Release Blocker, BU/SSA/field feedback,
-DevTestOps/E2E, Workflow validation, then Component-team/unclassified. All
-matching evidence remains in `classificationSignals`. SFDC membership is
+The primary Bug type is selected in this order: Dashboard Integration E2E,
+Build Cannot Run, Affecting customer, Pre-release CVE, Approved Release
+Blocker, Snyk, BU/SSA/field feedback, Operator auto E2E blocker, DevTestOps
+automated test failure, Workflow validation, Unclassified automation, then
+Component-team/unclassified.
+An unmatched DevTestOps, RHOAIENG AutomationBot, or Workflow Validation
+reporter is classified as Unclassified automation immediately before the
+Component-team fallback. Component-team/unclassified is reserved for
+non-source reporters when no higher-precedence source rule matches.
+All matching evidence remains in `classificationSignals`. SFDC membership is
 derived by a parallel Jira key query because the field is not read directly
 from issue results. If that lookup fails, the API uses its existing stale-cache
 fallback instead of treating every issue as non-customer-facing.
 
 Classification evidence is normalized case-insensitively. The source rules are:
 
+- Dashboard Integration E2E: `cypress_found_bug`. It retains the existing
+  two-point secondary detection contribution.
+- Build Cannot Run: `dsc-not-ready`. It adds no raw-score category points.
 - Affecting customer: `SFDC_Cases_Counter > 0`.
 - Field feedback: `AIBU_Feedback`, `AISSA_Feedback`, or
   `BU_EarlyAccess_Feedback` without SFDC.
@@ -1398,15 +1408,18 @@ Classification evidence is normalized case-insensitively. The source rules are:
 - Snyk: `snyk` plus the RHOAIENG AutomationBot reporter. `dependency` or
   `vuln` identifies SCA; `code-analysis` or a `cwe` label identifies SAST. SCA
   wins when both subtypes match.
-- DevTestOps/E2E: `test-failed` plus DevTestOps Jira Bot, or
-  `odh-operator-auto-e2e-blocker` plus RHOAIENG AutomationBot.
+- Operator auto E2E: `odh-operator-auto-e2e-blocker` plus RHOAIENG
+  AutomationBot.
+- DevTestOps automated test: `test-failed` plus DevTestOps Jira Bot.
 - Workflow validation: Workflow Validation reporter.
 - Other detection: CI/nightly, release tooling, human `test-failed`, or
   human-filed `gate:*` labels.
 
-An Approved Release Blocker has an effective score floor of 70/P1. An
-affecting-customer Bug with Jira priority Blocker, Highest, Critical, or High also has
-a 70/P1 floor. Missing Bug fields receive zero points and no uncertainty bonus.
+Dashboard Integration E2E, Build Cannot Run, and Approved Release Blocker each
+have an effective score floor of 70/P1. An affecting-customer Bug with Jira
+priority Blocker, Highest, Critical, or High also has a 70/P1 floor. The two
+new build-blocking guardrails do not add raw-score points. Missing Bug fields
+receive zero points and no uncertainty bonus.
 The score reuses the shared P0–P4 bands and UTC date boundaries. Bugs sort by
 effective score descending, then earliest Jira Due Date, oldest creation date,
 and Jira key. In a mixed result, the Vulnerability SLA group is displayed first,
@@ -1453,7 +1466,8 @@ calendar-month window. Bug categories use the existing primary Bug classifier;
 Vulnerability issues use `vulnerability`. The API counts a multi-component
 issue in every matching component panel while deduplicating the overall
 Received and Resolved totals by Jira key. Snapshots older than 48 hours are
-served with a warning.
+served with a warning. A refreshed snapshot is required after classifier
+changes to recategorize historical Bug events.
 
 ---
 

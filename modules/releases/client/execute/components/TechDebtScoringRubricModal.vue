@@ -137,6 +137,8 @@
             <section class="rounded-xl border border-red-200 bg-red-50/60 p-4 dark:border-red-900 dark:bg-red-950/20">
               <h3 class="text-sm font-bold text-gray-900 dark:text-gray-100">Bug guardrails</h3>
               <ul class="mt-3 space-y-2 text-sm leading-5 text-gray-700 dark:text-gray-200">
+                <li><strong>Dashboard Integration E2E:</strong> effective score is at least 70 (P1 — Urgent).</li>
+                <li><strong>Build Cannot Run:</strong> effective score is at least 70 (P1 — Urgent).</li>
                 <li><strong>Approved Release Blocker:</strong> effective score is at least 70 (P1 — Urgent).</li>
                 <li><strong>Affecting-customer high-severity Bug:</strong> effective score is at least 70 when Jira priority is Blocker, Highest, Critical, or High.</li>
               </ul>
@@ -297,24 +299,35 @@ const bugScoreCategories = [
 ]
 
 const bugTypePrecedence = [
+  'Dashboard Integration E2E',
+  'Build Cannot Run',
   'Affecting customer',
   'Pre-release CVE',
   'Approved Release Blocker',
+  'Snyk',
   'BU/SSA/field feedback',
-  'DevTestOps/E2E bug',
+  'Operator auto E2E blocker',
+  'DevTestOps automated test failure',
   'Workflow-validation bug',
+  'Unclassified automation Bug',
   'Component-team/unclassified Bug'
 ]
 
 const bugSourceRules = [
+  { label: 'Dashboard Integration E2E', evidence: 'cypress_found_bug label. This source receives the existing 2 detection points and a 70/P1 score floor.' },
+  { label: 'Build Cannot Run', evidence: 'dsc-not-ready label. This source adds no raw-score points and receives a 70/P1 score floor.' },
   { label: 'Affecting customer', evidence: 'SFDC Cases Counter > 0 from the parallel cohort-scoped Jira lookup.' },
-  { label: 'Field feedback', evidence: 'AIBU_Feedback, AISSA_Feedback, or BU_EarlyAccess_Feedback label without SFDC.' },
   { label: 'Pre-release CVE', evidence: 'prerelease-cve-remediation label plus DevTestOps Jira Bot reporter.' },
   { label: 'Release blocker', evidence: 'Release Blocker custom field is Approved (option 16772).' },
   { label: 'Snyk', evidence: 'snyk label plus RHOAIENG AutomationBot reporter; dependency/vuln means SCA, code-analysis/CWE means SAST.' },
-  { label: 'DevTestOps/E2E', evidence: 'test-failed plus DevTestOps Jira Bot, or odh-operator-auto-e2e-blocker plus RHOAIENG AutomationBot.' },
+  { label: 'Field feedback', evidence: 'AIBU_Feedback, AISSA_Feedback, or BU_EarlyAccess_Feedback label without SFDC.' },
+  { label: 'Operator auto E2E', evidence: 'odh-operator-auto-e2e-blocker plus RHOAIENG AutomationBot.' },
+  { label: 'DevTestOps automated test', evidence: 'test-failed plus DevTestOps Jira Bot.' },
   { label: 'Workflow validation', evidence: 'Workflow Validation reporter.' },
-  { label: 'Other detection', evidence: 'CI/nightly, release tooling, human test-failed, or human-filed gate:* labels.' }
+  { label: 'Unclassified automation', evidence: 'DevTestOps Jira Bot, RHOAIENG AutomationBot, or Workflow Validation reporter without another matching source rule.' },
+  { label: 'Component-team/unclassified', evidence: 'A non-source reporter with no higher-precedence source classification.' },
+  { label: 'Other detection', evidence: 'CI/nightly, release tooling, human test-failed, or human-filed gate:* labels.' },
+  { label: 'Excluded', evidence: 'Bugs labeled ux-debt are excluded from the Tech Debt report and historical trends.' }
 ]
 
 const priorityBands = [
