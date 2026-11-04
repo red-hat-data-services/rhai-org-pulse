@@ -109,7 +109,34 @@ describe('validateNightlyHealthPayload', () => {
         validDay({ date: '2026-11-01' }),
         validDay({ date: '2026-11-01', latest_run_id: 'run-b', runs: [{ run_id: 'run-b', components: [] }] })
       ]
-    })).toMatch(/duplicate date/)
+    })).toMatch(/duplicate stream_key default and date/)
+  })
+
+  it('allows duplicate calendar dates when stream_key differs', () => {
+    expect(validateNightlyHealthPayload({
+      schema_version: 1,
+      jenkins_jobs: [
+        { stream_key: 'job-a', label: 'a', jenkins_job: 'folder/a' },
+        { stream_key: 'job-b', label: 'b', jenkins_job: 'folder/b' }
+      ],
+      days: [
+        validDay({ date: '2026-11-01', stream_key: 'job-a' }),
+        validDay({
+          date: '2026-11-01',
+          stream_key: 'job-b',
+          latest_run_id: 'run-b',
+          runs: [{ run_id: 'run-b', components: [{ id: 'x', name: 'X', state: 'ready', reason_code: 'ok' }] }]
+        })
+      ]
+    })).toBeNull()
+  })
+
+  it('rejects malformed jenkins_jobs entries', () => {
+    expect(validateNightlyHealthPayload({
+      schema_version: 1,
+      jenkins_jobs: [{}],
+      days: []
+    })).toMatch(/stream_key/)
   })
 
   it('rejects malformed days', () => {
@@ -119,6 +146,16 @@ describe('validateNightlyHealthPayload', () => {
       schema_version: 1,
       days: [{ date: '2026-11-01' }]
     })).toMatch(/runs array/)
+  })
+
+  it('rejects duplicate day when stream_key omitted on one row and default on another', () => {
+    expect(validateNightlyHealthPayload({
+      schema_version: 1,
+      days: [
+        { date: '2026-11-01', latest_run_id: 'a', runs: [{ run_id: 'a', components: [] }] },
+        { date: '2026-11-01', stream_key: 'default', latest_run_id: 'b', runs: [{ run_id: 'b', components: [] }] }
+      ]
+    })).toMatch(/duplicate stream_key default/)
   })
 
   it('rejects malformed optional gates on runs', () => {

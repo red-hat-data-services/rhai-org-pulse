@@ -184,7 +184,28 @@ function validateNightlyHealthPayload(payload) {
   if (!Array.isArray(payload.days)) {
     return 'nightly_health.days must be an array';
   }
-  const seenDates = new Set();
+  if (payload.jenkins_jobs !== undefined) {
+    if (!Array.isArray(payload.jenkins_jobs)) {
+      return 'nightly_health.jenkins_jobs must be an array when present';
+    }
+    for (let jobIndex = 0; jobIndex < payload.jenkins_jobs.length; jobIndex += 1) {
+      const job = payload.jenkins_jobs[jobIndex];
+      const jobLabel = `nightly_health.jenkins_jobs[${jobIndex}]`;
+      if (!job || typeof job !== 'object' || Array.isArray(job)) {
+        return `${jobLabel} must be an object`;
+      }
+      if (typeof job.stream_key !== 'string' || job.stream_key.length === 0) {
+        return `${jobLabel} must have a non-empty stream_key string`;
+      }
+      if (job.label !== undefined && typeof job.label !== 'string') {
+        return `${jobLabel}.label must be a string when present`;
+      }
+      if (job.jenkins_job !== undefined && typeof job.jenkins_job !== 'string') {
+        return `${jobLabel}.jenkins_job must be a string when present`;
+      }
+    }
+  }
+  const seenDayKeys = new Set();
   for (let dayIndex = 0; dayIndex < payload.days.length; dayIndex += 1) {
     const day = payload.days[dayIndex];
     const dayLabel = `nightly_health.days[${dayIndex}]`;
@@ -194,10 +215,13 @@ function validateNightlyHealthPayload(payload) {
     if (typeof day.date !== 'string' || day.date.length === 0) {
       return `${dayLabel} must have a non-empty date string`;
     }
-    if (seenDates.has(day.date)) {
-      return `${dayLabel} has duplicate date ${day.date}`;
+    const streamKey =
+      typeof day.stream_key === 'string' && day.stream_key.length > 0 ? day.stream_key : 'default';
+    const dayKey = `${streamKey}\0${day.date}`;
+    if (seenDayKeys.has(dayKey)) {
+      return `${dayLabel} has duplicate stream_key ${streamKey} and date ${day.date}`;
     }
-    seenDates.add(day.date);
+    seenDayKeys.add(dayKey);
     if (!Array.isArray(day.runs)) {
       return `${dayLabel} must have a runs array`;
     }

@@ -1,5 +1,6 @@
-import { describe, it, expect } from 'vitest'
+import { describe, it, expect, afterEach } from 'vitest'
 import { mount } from '@vue/test-utils'
+import { nextTick } from 'vue'
 import { readFileSync } from 'fs'
 import { fileURLToPath } from 'url'
 import { dirname, join } from 'path'
@@ -11,14 +12,25 @@ const fixturePath = join(
 )
 
 describe('NightlyHealthTable', () => {
+  const mountOptions = { attachTo: document.body }
+  /** @type {import('@vue/test-utils').VueWrapper|null} */
+  let wrapper = null
+
+  afterEach(() => {
+    wrapper?.unmount()
+    wrapper = null
+  })
+
   it('renders date-column matrix from fixture', () => {
     const payload = JSON.parse(readFileSync(fixturePath, 'utf8'))
-    const wrapper = mount(NightlyHealthTable, { props: { payload } })
+    wrapper = mount(NightlyHealthTable, { props: { payload }, ...mountOptions })
 
     expect(wrapper.find('.nightly-matrix').exists()).toBe(true)
-    expect(wrapper.text()).toContain('Cluster health')
-    expect(wrapper.text()).toContain('RHOAI deployment')
-    expect(wrapper.find('.pager-btn').exists()).toBe(true)
+    expect(wrapper.text()).toContain('Cluster Health')
+    expect(wrapper.text()).toContain('RHOAI Deployment')
+    // Fixture mixes default-stream days (Oct 28–31) and example-stream (Nov 1–2).
+    expect(wrapper.find('.pager-job-select').exists()).toBe(true)
+    expect(wrapper.text()).toContain('Showing all 4 UTC days in this snapshot')
   })
 
   it('shows RHOAI deployment label when gate still has legacy Operator health name', () => {
@@ -39,26 +51,131 @@ describe('NightlyHealthTable', () => {
         }]
       }]
     }
-    const wrapper = mount(NightlyHealthTable, { props: { payload } })
-    expect(wrapper.text()).toContain('RHOAI deployment')
+    wrapper = mount(NightlyHealthTable, { props: { payload }, ...mountOptions })
+    expect(wrapper.text()).toContain('RHOAI Deployment')
     expect(wrapper.text()).not.toContain('Operator health')
   })
 
   it('shows day detail panel with all builds when a date column is clicked', async () => {
     const payload = JSON.parse(readFileSync(fixturePath, 'utf8'))
-    const wrapper = mount(NightlyHealthTable, { props: { payload } })
+    wrapper = mount(NightlyHealthTable, { props: { payload }, ...mountOptions })
+
+    await wrapper.find('.pager-job-select').setValue('example-stream')
+    await nextTick()
 
     const headerBtn = wrapper.findAll('.date-header-btn').find((b) => b.text().includes('Nov 1'))
     expect(headerBtn).toBeTruthy()
     await headerBtn.trigger('click')
+    await nextTick()
 
-    expect(wrapper.find('.day-panel').exists()).toBe(true)
-    expect(wrapper.text()).toContain('Runs on 2026-11-01')
+    expect(document.body.querySelector('.day-panel')).toBeTruthy()
+    expect(document.body.textContent).toContain('Runs on 2026-11-01')
+    expect(document.body.textContent).toContain('Blocked')
+    expect(document.body.textContent).toContain('DSC: failed')
+    expect(document.body.textContent).toContain('Build #101')
+    expect(document.body.textContent).toContain('Build #102')
+    expect(document.body.textContent).toContain('Selected for column')
+
+    const items = document.body.querySelectorAll('.run-list-item')
+    expect(items[0].textContent).toContain('Build #102')
+    expect(items[0].textContent).toContain('Selected for column')
+  })
+
+  it('shows Jenkins job filter when multiple stream_key values are present', async () => {
+    const payload = {
+      schema_version: 1,
+      jenkins_jobs: [
+        { stream_key: 'job-a', label: 'folder/job-a', jenkins_job: 'folder/job-a' },
+        { stream_key: 'job-b', label: 'folder/job-b', jenkins_job: 'folder/job-b' }
+      ],
+      days: [
+        {
+          date: '2026-11-02',
+          stream_key: 'job-a',
+          latest_run_id: 'job-a:1',
+          runs: [{
+            run_id: 'job-a:1',
+            build_number: 1,
+            gates: [{ id: 'cluster-health', name: 'Cluster health', source_status: 'passed' }],
+            components: [{ id: 'dashboard', name: 'Dashboard', state: 'ready', reason_code: 'ok' }]
+          }]
+        },
+        {
+          date: '2026-11-02',
+          stream_key: 'job-b',
+          latest_run_id: 'job-b:9',
+          runs: [{
+            run_id: 'job-b:9',
+            build_number: 9,
+            gates: [{ id: 'cluster-health', name: 'Cluster health', source_status: 'failed' }],
+            components: [{ id: 'dashboard', name: 'Dashboard', state: 'blocked', reason_code: 'deployment_failed' }]
+          }]
+        }
+      ]
+    }
+    wrapper = mount(NightlyHealthTable, { props: { payload }, ...mountOptions })
+
+    expect(wrapper.find('.pager-job-select').exists()).toBe(true)
+    expect(wrapper.find('.pager-job-select').element.value).toBe('job-a')
+    expect(wrapper.text()).toContain('Passed')
+
+    await wrapper.find('.pager-job-select').setValue('job-b')
     expect(wrapper.text()).toContain('Blocked')
-    expect(wrapper.text()).toContain('BVT: failed')
-    expect(wrapper.text()).toContain('Build #101')
-    expect(wrapper.text()).toContain('Build #102')
-    expect(wrapper.text()).toContain('Selected for column')
+  })
+
+  it('hides Jenkins job filter when only one stream is present', () => {
+    const payload = {
+      schema_version: 1,
+      days: [{
+        date: '2026-11-01',
+        stream_key: 'only-stream',
+        latest_run_id: 'run-a',
+        runs: [{
+          run_id: 'run-a',
+          gates: [{ id: 'cluster-health', name: 'Cluster health', source_status: 'passed' }],
+          components: [{ id: 'dashboard', name: 'Dashboard', state: 'ready', reason_code: 'ok' }]
+        }]
+      }]
+    }
+    wrapper = mount(NightlyHealthTable, { props: { payload }, ...mountOptions })
+    expect(wrapper.find('.pager-job-select').exists()).toBe(false)
+  })
+
+  it('uses selected stream row names when streams disagree on component display names', async () => {
+    const payload = {
+      schema_version: 1,
+      jenkins_jobs: [
+        { stream_key: 'job-a', label: 'folder/job-a', jenkins_job: 'folder/job-a' },
+        { stream_key: 'job-b', label: 'folder/job-b', jenkins_job: 'folder/job-b' }
+      ],
+      days: [
+        {
+          date: '2026-11-02',
+          stream_key: 'job-a',
+          latest_run_id: 'job-a:1',
+          runs: [{
+            run_id: 'job-a:1',
+            gates: [{ id: 'cluster-health', name: 'Cluster health', source_status: 'passed' }],
+            components: [{ id: 'dashboard', name: 'Dashboard Alpha', state: 'ready', reason_code: 'ok' }]
+          }]
+        },
+        {
+          date: '2026-11-02',
+          stream_key: 'job-b',
+          latest_run_id: 'job-b:1',
+          runs: [{
+            run_id: 'job-b:1',
+            gates: [{ id: 'cluster-health', name: 'Cluster health', source_status: 'passed' }],
+            components: [{ id: 'dashboard', name: 'Dashboard Beta', state: 'ready', reason_code: 'ok' }]
+          }]
+        }
+      ]
+    }
+    wrapper = mount(NightlyHealthTable, { props: { payload }, ...mountOptions })
+    expect(wrapper.text()).toContain('Dashboard Alpha')
+    await wrapper.find('.pager-job-select').setValue('job-b')
+    expect(wrapper.text()).toContain('Dashboard Beta')
+    expect(wrapper.text()).not.toContain('Dashboard Alpha')
   })
 
   it('shows unavailable message when latest_run_id is invalid', async () => {
@@ -76,10 +193,32 @@ describe('NightlyHealthTable', () => {
         ]
       }]
     }
-    const wrapper = mount(NightlyHealthTable, { props: { payload } })
+    wrapper = mount(NightlyHealthTable, { props: { payload }, ...mountOptions })
 
     await wrapper.find('.date-header-btn').trigger('click')
-    expect(wrapper.find('.selection-error').exists()).toBe(true)
-    expect(wrapper.text()).toContain('not-in-list')
+    await nextTick()
+    expect(document.body.querySelector('.selection-error')).toBeTruthy()
+    expect(document.body.textContent).toContain('not-in-list')
+  })
+
+  it('links component rows to heatmap detail and leaves gate rows plain text', async () => {
+    const payload = JSON.parse(readFileSync(fixturePath, 'utf8'))
+    const heatmapComponents = [
+      { component: 'Dashboard' },
+      { component: 'AI Gateway' }
+    ]
+    wrapper = mount(NightlyHealthTable, {
+      props: { payload, heatmapComponents },
+      ...mountOptions
+    })
+
+    const links = wrapper.findAll('.comp-name a.comp-link')
+    expect(links.length).toBeGreaterThanOrEqual(2)
+    const linkLabels = links.map((a) => a.text())
+    expect(linkLabels).not.toContain('Cluster Health')
+    expect(linkLabels).not.toContain('RHOAI Deployment')
+
+    await links[0].trigger('click')
+    expect(wrapper.emitted('component-click')?.[0]?.[0]).toBeTruthy()
   })
 })

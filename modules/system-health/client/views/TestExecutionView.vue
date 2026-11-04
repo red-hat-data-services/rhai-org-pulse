@@ -1,79 +1,94 @@
 <template>
   <div class="dashboard test-execution-theme">
     <div class="container">
-      <!-- Header -->
-      <div class="header">
-        <h1>Test Execution <span class="beta-tag">(Beta)</span></h1>
-        <p>Aggregated view of RHOAI test execution across all components, quality gates, and releases. Data is ingested from Jenkins CI builds and indexed in OpenSearch.</p>
-      </div>
-
-      <!-- Filter Bar -->
-      <FilterBar 
-        :filters="filters"
-        :versions="availableVersions"
-        :releases="availableReleases"
-        @filters-change="updateFilters"
-      />
-
-      <!-- Metrics Cards -->
-      <MetricsCards 
-        v-if="filteredComponents.length > 0"
-        :components="filteredComponents"
-        :filters="filters"
-      />
-
       <!-- Loading / Error -->
       <div v-if="loading" class="loading">Loading…</div>
       <div v-else-if="error" class="error">{{ error }}</div>
 
       <template v-else>
-        <!-- Nightly build health (independent of heatmap) -->
-        <div v-if="hasNightlyData" class="section nightly-section">
-          <div class="section-title nightly-section-header">
-            <h2>Nightly build health</h2>
-            <p class="section-sub">
-              <template v-if="nightlyHealth?.generated_at">
-                Generated {{ formatTimestamp(nightlyHealth.generated_at) }}.
-              </template>
-              Matrix shows the RHOAI status per day (same fields as
-              <code>promotion_gate_test_summary.yaml</code>). Click a date column to list all builds that day.
-            </p>
-          </div>
-          <NightlyHealthTable :payload="nightlyHealth" />
-        </div>
-
-        <!-- Heatmap empty when no aggregate data -->
         <div v-if="!hasHeatmapData && !hasNightlyData" class="no-data">
           No test execution data has been uploaded yet. The external test-reports
           pipeline pushes data to this dashboard via the bulk API.
         </div>
-        <div v-else-if="hasHeatmapData && filteredComponents.length === 0" class="no-data heatmap-filter-empty">
-          <p>{{ heatmapFilterEmptyMessage }}</p>
-        </div>
-        <template v-else-if="hasHeatmapData && filteredComponents.length > 0">
-          <!-- Heatmap section -->
-          <div class="section">
-            <div class="section-title">
-              <h2>Component Heatmap</h2>
-            </div>
-            <div class="help-box">
-              <h4>How to read the heatmap</h4>
-              <ul>
-                <li><strong>Each row</strong> is a test component (e.g., Platform, Workbenches, Model Server).</li>
-                <li><strong>Each column</strong> is a calendar date. Dates with no executions show "–".</li>
-                <li><strong>Cell color</strong> indicates pass rate: <span class="color-green">🟢 ≥95%</span> · <span class="color-amber">🟡 80–94%</span> · <span class="color-orange">🟠 60–79%</span> · <span class="color-red">🔴 &lt;60%</span>.</li>
-                <li><strong>Cell content</strong> shows the pass percentage, plus pass/fail/skip counts below it.</li>
-              </ul>
+
+        <template v-else>
+          <template v-if="hasHeatmapData">
+            <div class="header opensearch-section-header">
+              <h1>Test Execution <span class="beta-tag">(Beta)</span></h1>
+              <p>Aggregated view of RHOAI test execution across all components, quality gates, and releases. Data is ingested from Jenkins CI builds and indexed in OpenSearch.</p>
             </div>
 
-            <HeatmapTable
+            <FilterBar
+              :filters="filters"
+              :versions="availableVersions"
+              :releases="availableReleases"
+              @filters-change="updateFilters"
+            />
+
+            <MetricsCards
+              v-if="filteredComponents.length > 0"
               :components="filteredComponents"
+              :filters="filters"
+            />
+
+            <div
+              v-if="filteredComponents.length === 0"
+              class="no-data heatmap-filter-empty"
+            >
+              <p>{{ heatmapFilterEmptyMessage }}</p>
+            </div>
+            <template v-else>
+              <div class="section">
+                <div class="section-title">
+                  <h2>Component Heatmap</h2>
+                </div>
+                <div class="help-box">
+                  <h4>How to read the heatmap</h4>
+                  <ul>
+                    <li><strong>Each row</strong> is a test component (e.g., Platform, Workbenches, Model Server).</li>
+                    <li><strong>Each column</strong> is a calendar date. Dates with no executions show "–".</li>
+                    <li><strong>Cell color</strong> indicates pass rate: <span class="color-green">🟢 ≥95%</span> · <span class="color-amber">🟡 80–94%</span> · <span class="color-orange">🟠 60–79%</span> · <span class="color-red">🔴 &lt;60%</span>.</li>
+                    <li><strong>Cell content</strong> shows the pass percentage, plus pass/fail/skip counts below it.</li>
+                  </ul>
+                </div>
+
+                <HeatmapTable
+                  :components="filteredComponents"
+                  @component-click="onComponentClick"
+                />
+              </div>
+
+              <TrendChart :components="filteredComponents" />
+            </template>
+          </template>
+
+          <div v-if="hasNightlyData" class="section nightly-section">
+            <div class="section-title nightly-section-header">
+              <h2>Nightly Build Health</h2>
+              <p class="section-sub">
+                <template v-if="nightlyHealth?.generated_at">
+                  Generated {{ formatTimestamp(nightlyHealth.generated_at) }}.
+                </template>
+                Matrix shows promotion-gate status per day (same fields as
+                <code>promotion_gate_test_summary.yaml</code>). Click a date column to list all builds that day.
+                <strong>Test Results Source</strong> below filters this matrix only.
+              </p>
+              <div class="help-box nightly-help">
+                <h4>How to read Nightly Build Health</h4>
+                <ul>
+                  <li><strong>Each column</strong> is a UTC day; the cell uses that day&apos;s selected promotion-gate run (<code>latest_run_id</code>).</li>
+                  <li><strong>–</strong> means that component is missing from that run&apos;s YAML. <strong>Not Installed</strong> means the summary explicitly reports the component is not on the cluster.</li>
+                  <li><strong>Blocked</strong> means deployment or gate prerequisites failed. A Blocked cell can still show recorded test counts. A <strong>DSC:</strong> subtitle is operator/DataScienceCluster readiness from YAML, not a passed test result.</li>
+                </ul>
+              </div>
+            </div>
+            <NightlyHealthTable
+              v-model:selected-stream-key="selectedNightlyStreamKey"
+              :payload="nightlyHealth"
+              :heatmap-components="heatmap"
               @component-click="onComponentClick"
             />
           </div>
-
-          <!-- Version trend chart -->
-          <TrendChart :components="filteredComponents" />
         </template>
       </template>
     </div>
@@ -81,19 +96,87 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, inject, watch } from 'vue'
+import { ref, computed, onMounted, inject, watch, nextTick } from 'vue'
 import { useTestDashboard } from '../composables/useTestDashboard'
 import FilterBar from '../components/FilterBar.vue'
 import MetricsCards from '../components/MetricsCards.vue'
 import HeatmapTable from '../components/HeatmapTable.vue'
 import TrendChart from '../components/TrendChart.vue'
 import NightlyHealthTable from '../components/NightlyHealthTable.vue'
-import { formatTimestamp } from '../composables/useNightlyHealthMatrix'
+import {
+  formatTimestamp,
+  TEST_RESULTS_SOURCE_QUERY_PARAM,
+  streamKeyFromTestResultsSourceQuery,
+  testResultsSourceQueryValue
+} from '../composables/useNightlyHealthMatrix'
 import '../styles/test-execution-theme.css'
 
 const { loadData, heatmap, nightlyHealth, loading, error, hasHeatmapData, hasNightlyData } = useTestDashboard()
 
 const nav = inject('moduleNav', null)
+
+const selectedNightlyStreamKey = ref(null)
+
+let applyingSourceFromUrl = false
+/** Blocks hash sync until URL `source` is applied (avoids default stream clobbering deep links). */
+const initialSourceResolved = ref(false)
+
+function applyTestResultsSourceFromNavParams() {
+  if (!hasNightlyData.value) {
+    initialSourceResolved.value = true
+    return
+  }
+  const raw = nav?.params?.value?.[TEST_RESULTS_SOURCE_QUERY_PARAM]
+  if (raw == null || raw === '') {
+    initialSourceResolved.value = true
+    return
+  }
+  const key = streamKeyFromTestResultsSourceQuery(nightlyHealth.value, String(raw))
+  if (!key) {
+    initialSourceResolved.value = true
+    return
+  }
+  if (key === selectedNightlyStreamKey.value) {
+    initialSourceResolved.value = true
+    syncTestResultsSourceToNavParams(key)
+    return
+  }
+  applyingSourceFromUrl = true
+  selectedNightlyStreamKey.value = key
+  nextTick(() => {
+    applyingSourceFromUrl = false
+    initialSourceResolved.value = true
+  })
+}
+
+function syncTestResultsSourceToNavParams(streamKey) {
+  if (!initialSourceResolved.value || !nav?.updateParams || applyingSourceFromUrl) return
+  const nextValue = streamKey
+    ? testResultsSourceQueryValue(nightlyHealth.value, streamKey)
+    : undefined
+  const current = nav.params.value?.[TEST_RESULTS_SOURCE_QUERY_PARAM]
+  if (nextValue === current || (!nextValue && (current == null || current === ''))) return
+  nav.updateParams(
+    { [TEST_RESULTS_SOURCE_QUERY_PARAM]: nextValue || undefined },
+    { push: false }
+  )
+}
+
+watch(nightlyHealth, () => {
+  initialSourceResolved.value = false
+  applyTestResultsSourceFromNavParams()
+})
+
+if (nav) {
+  watch(
+    () => nav.params.value?.[TEST_RESULTS_SOURCE_QUERY_PARAM],
+    () => applyTestResultsSourceFromNavParams()
+  )
+}
+
+watch(selectedNightlyStreamKey, (key) => {
+  syncTestResultsSourceToNavParams(key)
+})
 
 const filters = ref({
   version: 'All',
@@ -280,7 +363,7 @@ const heatmapFilterEmptyMessage = computed(() => {
     msg += ' Widen the date range or disable Date Range to include older heatmap days.'
   }
   if (hasNightlyData.value) {
-    msg += ' Promotion-gate status is in Nightly build health above.'
+    msg += ' Promotion-gate status is in Nightly Build Health below.'
   }
   return msg
 })
@@ -334,6 +417,10 @@ function onComponentClick(componentName) {
 
 .header {
   margin-bottom: 8px;
+}
+
+.opensearch-section-header {
+  margin-top: 0;
 }
 
 .header h1 {

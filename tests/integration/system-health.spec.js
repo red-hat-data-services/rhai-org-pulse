@@ -983,10 +983,17 @@ test.describe('Test Execution Dashboard @system-health', () => {
     // Main content renders
     expect(await mainContentIsVisible(page)).toBe(true);
 
-    // Header with the Beta label is always present
-    const heading = page.locator('h1').filter({ hasText: /Test Execution/i });
-    expect(await heading.count()).toBeGreaterThan(0);
-    expect(await page.locator('text=/Beta/i').count()).toBeGreaterThan(0);
+    // With heatmap + nightly data, OpenSearch header and Nightly Build Health both render.
+    const nightlyHeading = page.locator('h2').filter({ hasText: /Nightly Build Health/i });
+    const opensearchHeader = page.locator('.opensearch-section-header');
+    expect(await nightlyHeading.count() + await opensearchHeader.count()).toBeGreaterThan(0);
+    if (await opensearchHeader.count() > 0) {
+      await expect(opensearchHeader.locator('h1').filter({ hasText: /Test Execution/i })).toBeVisible();
+      await expect(opensearchHeader.locator('text=/Beta/i')).toBeVisible();
+    }
+    if (await nightlyHeading.count() > 0) {
+      await expect(nightlyHeading.first()).toBeVisible();
+    }
 
     // It is a Vue view, NOT the old iframe dashboard
     expect(await page.locator('iframe').count()).toBe(0);
@@ -1121,18 +1128,101 @@ test.describe('Test Execution Dashboard @system-health', () => {
     });
 
     await page.goto('/#/system-health/test-execution');
+    await page.waitForResponse(
+      (response) =>
+        response.url().includes('/test-execution/data')
+        && !response.url().includes('file=')
+        && response.status() === 200
+    );
     await page.waitForLoadState('networkidle');
     await page.waitForTimeout(DEFAULT_PAGE_WAIT_TIME);
 
-    const nightlyHeading = page.locator('h2').filter({ hasText: /Nightly build health/i });
+    const nightlyHeading = page.locator('h2').filter({ hasText: /Nightly Build Health/i });
     await expect(nightlyHeading.first()).toBeVisible();
     await expect(page.locator('.nightly-matrix')).toBeVisible();
+    await expect(page.locator('.opensearch-section-header')).toHaveCount(0);
 
-    await page.locator('.date-header-btn').filter({ hasText: 'Nov 1' }).first().click();
-    await page.waitForTimeout(300);
-    await expect(page.locator('.day-panel')).toBeVisible();
-    await expect(page.getByText('Build #101')).toBeVisible();
-    await expect(page.getByText('Selected for column')).toBeVisible();
+    await expect(page.locator('.pager-job-select')).toBeVisible();
+    await page.locator('.pager-job-select').selectOption('example-stream');
+    await expect(page.getByText(/Showing all 2 UTC days in this snapshot/)).toBeVisible();
+
+    const nov1Header = page.locator('.date-header-btn[title="Show all builds on 2026-11-01"]');
+    await expect(nov1Header).toBeVisible();
+    await nov1Header.click();
+
+    const dayPanel = page.locator('.nightly-day-popup');
+    await expect(dayPanel).toBeVisible();
+    await expect(dayPanel).toContainText('Runs on 2026-11-01');
+    await expect(dayPanel.locator('.run-list-item').first()).toBeVisible();
+    await expect(dayPanel.getByText('Build #102')).toBeVisible();
+    await expect(dayPanel.getByText('Selected for column')).toBeVisible();
+
+    expectNoBenignConsoleErrors(page);
+  });
+
+  test('should keep OpenSearch heatmap visible when promotion-gate nightly source is selected', async ({ page }) => {
+    const nightlyFixture = JSON.parse(readFileSync(nightlyHealthFixturePath, 'utf8'));
+    const heatmapFixture = {
+      components: [
+        {
+          component: 'Dashboard',
+          overall: { total: 10, passed: 9, failed: 1, skipped: 0 },
+          days: {
+            '2026-11-01': {
+              passed: 10,
+              failed: 0,
+              skipped: 0,
+              total: 10,
+              jenkins_urls: [],
+              by_vr: { '3.0|fast': { passed: 10, failed: 0, skipped: 0, total: 10, jenkins_urls: [] } }
+            }
+          }
+        }
+      ]
+    };
+
+    await page.route('**/api/modules/system-health/quality/test-execution/data**', async (route) => {
+      const url = route.request().url();
+      if (url.includes('file=')) {
+        const file = new URL(url).searchParams.get('file');
+        let body = {};
+        if (file === 'nightly_health') body = nightlyFixture;
+        if (file === 'heatmap') body = heatmapFixture;
+        await route.fulfill({
+          status: 200,
+          contentType: 'application/json',
+          body: JSON.stringify(body)
+        });
+        return;
+      }
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({
+          heatmap: heatmapFixture,
+          components: heatmapFixture.components,
+          jira_config: null,
+          meta: null,
+          nightly_health: nightlyFixture,
+          lastUpload: null
+        })
+      });
+    });
+
+    await page.goto('/#/system-health/test-execution');
+    await page.waitForLoadState('networkidle');
+    await page.waitForTimeout(DEFAULT_PAGE_WAIT_TIME);
+
+    await expect(page.locator('.opensearch-section-header')).toBeVisible();
+    await expect(page.locator('h2').filter({ hasText: /Component Heatmap/i })).toBeVisible();
+    await expect(page.locator('h3').filter({ hasText: /Execution Across Versions/i })).toBeVisible();
+    await expect(page.locator('h2').filter({ hasText: /Nightly Build Health/i })).toBeVisible();
+
+    const heatmapHeading = page.locator('h2').filter({ hasText: /Component Heatmap/i });
+    const nightlyHeading = page.locator('h2').filter({ hasText: /Nightly Build Health/i });
+    const heatmapBox = await heatmapHeading.boundingBox();
+    const nightlyBox = await nightlyHeading.boundingBox();
+    expect(heatmapBox && nightlyBox && heatmapBox.y < nightlyBox.y).toBe(true);
 
     expectNoBenignConsoleErrors(page);
   });
