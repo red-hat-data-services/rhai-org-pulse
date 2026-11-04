@@ -29,7 +29,8 @@
     ],
     "settingsComponent": "./client/components/ReleasesSettings.vue",
     "hiddenRoutes": {
-      "feature-detail": "execute"
+      "feature-detail": "execute",
+      "feature-scheduling-preview": "plan"
     }
   },
   "server": {

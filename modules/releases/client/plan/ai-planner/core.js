@@ -552,3 +552,120 @@ export function classifyFeature(r){
   if(/\bspike\b|\bpoc\b|proof.of.concept/.test(title)) return 'research';
   return 'features';
 }
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Stage 1b additions (Feature Scheduling UI conversion). Same extraction rules
+// as stage 1a: byte-faithful to index.html where noted, DOM/window reads
+// replaced by explicit parameters where the original read them from the page.
+// ─────────────────────────────────────────────────────────────────────────────
+
+/**
+ * Source: index.html lines 2961-2986 -- the `ai-planner-data` postMessage handler's
+ * per-feature mapping, run just before schedule(). AIPlanner.vue already fetches
+ * GET /modules/releases/planning/ai-planner and posts exactly this `features` array
+ * shape to the iframe; this native composable fetches the same endpoint and applies
+ * the same mapping instead of relying on postMessage.
+ *
+ * KNOWN QUIRKS, preserved as-is (not fixed, matching current production behavior):
+ *  - `_conf: parseInt(f.Confidence)||0` -- f.Confidence is a word like "committed"
+ *    or "not-ready", so parseInt always yields NaN -> 0. schedule() overwrites
+ *    `_conf` anyway, so this placeholder value is never actually used downstream.
+ *  - There is no `Score` key in the mapped object (only `RICE`), but schedule()'s
+ *    pre-filter step reads `r['Score']` for `_score` (the RICE-boost signal) --
+ *    so `_score` is always 0 for API-sourced rows and the RICE boost is inert.
+ *    This matches index.html's live-data path exactly; it is a pre-existing gap,
+ *    not introduced by this extraction.
+ *  - The real API response (modules/releases/server/planning/ai-planner/storage.js
+ *    `projectSnapshot`) does not include Team, Outcome, Labels,
+ *    "Failed FPDoR Items", "Fix Version", or "Release Type" -- those fields come
+ *    through as '' for every API-sourced row, in both index.html and here.
+ */
+export function mapApiFeatureToRow(f) {
+  return {
+    'Rank': f.Rank || '',
+    'Key': f.Key || '',
+    'Title': f.Summary || f.Title || '',
+    'Components': (f.Components || []).join('; '),
+    'Team': f.Team || '',
+    'Priority': f.Priority || '',
+    'Outcome': f.Outcome || '',
+    'OutcomeNumber': f.OutcomeNumber || '—',
+    'Target Versions': f.PlannedFor || '',
+    'RICE': f.Score || 0,
+    'FPDoR': f.FPDoR || '0/17',
+    'Failed FPDoR Items': f['Failed FPDoR Items'] || '',
+    'Confidence': f.Confidence || 'not-ready',
+    'Labels': f.Labels || '',
+    'Fix Version': f['Fix Version'] || '',
+    'Release Type': f['Release Type'] || '',
+    'PM': f.PM || '',
+    'Assignee': f.DeliveryOwner || '',
+    'PlannedFor': f.PlannedFor || '3.6 GA',
+    '_conf': parseInt(f.Confidence) || 0,
+    '_place': f.PlannedFor || 'Unknown',
+    '_riskLevel': f.riskLevel || 'Medium'
+  }
+}
+
+// Source: index.html lines 3492-3517 (run()'s per-column sort comparator).
+// `sortCol`/`sortAsc` were outer closures in index.html; here they're explicit
+// parameters. Returns a new array (same as the original's `rows=rows.slice().sort(...)`).
+export function sortFeatures(rows, sortCol, sortAsc) {
+  return rows.slice().sort((a, b) => {
+    let va=a[sortCol],vb=b[sortCol];
+    if(sortCol==='Score'||sortCol==='Rank'){va=+va;vb=+vb;}
+    else if(sortCol==='OutcomeNumber'){
+      // Handle em-dash (—) for features without outcomes
+      const isEmDashA = va === '—' || va === null || va === undefined;
+      const isEmDashB = vb === '—' || vb === null || vb === undefined;
+
+      // If both are em-dash, keep original order
+      if(isEmDashA && isEmDashB) return 0;
+      // If only A is em-dash, send to end
+      if(isEmDashA) return 1;
+      // If only B is em-dash, send to end
+      if(isEmDashB) return -1;
+
+      // Both have outcome numbers - compare numerically
+      va = parseInt(va) || Infinity;
+      vb = parseInt(vb) || Infinity;
+    }
+    else if(sortCol==='FPDoR'){
+      const vaStr = typeof va === 'string' ? va : (va?.passedCount + '/' + va?.totalCount || '0');
+      const vbStr = typeof vb === 'string' ? vb : (vb?.passedCount + '/' + vb?.totalCount || '0');
+      va=parseInt((vaStr||'0').split('/')[0]);vb=parseInt((vbStr||'0').split('/')[0]);
+    }
+    return sortAsc?(va>vb?1:-1):(va<vb?1:-1);
+  });
+}
+
+// Source: index.html lines 3520-3527 (run()'s "No" row sub-tiering for the 3-tier
+// below-the-line display). Mutates `_noTier` on each "No" row, same as the
+// original; rows not placed "No" are left untouched. Returns `rows` for convenience.
+export function assignNoTier(rows) {
+  rows.filter(r=>r._place==='No').forEach(r=>{
+    const hasTv=!!(r._tv);
+    const hasComps=!!(esc(r['Components'])||'').trim();
+    const wFP=r._wFPDoR||0;
+    if(!hasTv||!hasComps||wFP<20){r._noTier=3;return;}  // insufficient info — can't analyze
+    if(wFP>=55){r._noTier=2;return;}                      // has data but capacity/risk keeps below cut
+    r._noTier=1;                                           // missing some analysis fields, PM can fix
+  });
+  return rows;
+}
+
+// Source: index.html lines 3531-3542 (run()'s placement-based grouping, skipped
+// when sorting by OutcomeNumber so that sort order is preserved instead).
+export function applyPlacementGrouping(rows, sortCol) {
+  if (sortCol === 'OutcomeNumber') return rows;
+  const PLACE_ORDER={'EA1':0,'EA2':1,'GA':2,'No':3};
+  return rows.slice().sort((a,b)=>{
+    const pg=(PLACE_ORDER[a._place]??3)-(PLACE_ORDER[b._place]??3);
+    if(pg!==0) return pg;
+    if(a._place==='No'&&b._place==='No'){
+      const tg=(a._noTier||1)-(b._noTier||1);
+      if(tg!==0) return tg;
+    }
+    return (b._conf||0)-(a._conf||0);
+  });
+}

@@ -6,7 +6,11 @@ import {
   computeWeightedFPDoR,
   classifyFeature,
   filterFeatures,
-  aggregateBigRockStats
+  aggregateBigRockStats,
+  mapApiFeatureToRow,
+  sortFeatures,
+  assignNoTier,
+  applyPlacementGrouping
 } from '../../../../client/plan/ai-planner/core.js'
 
 function baseRow(overrides) {
@@ -166,5 +170,109 @@ describe('aggregateBigRockStats', () => {
     const rows = [{ _bigRocks: ['GPUaaS'], _place: 'No', _conf: 0 }]
     const { stats } = aggregateBigRockStats(rows)
     expect(stats['GPUaaS']).toEqual({ inPlan: 0, total: 1, confSum: 0, avgConf: 0 })
+  })
+})
+
+describe('mapApiFeatureToRow', () => {
+  it('maps the GET /planning/ai-planner feature shape to schedule()-ready row fields', () => {
+    const apiFeature = {
+      Key: 'RHAISTRAT-500',
+      Summary: 'Example feature',
+      Components: ['AI Hub', 'AI Core Platform'],
+      Team: 'RHOAI AI Hub',
+      Priority: 'Major',
+      Outcome: 'RHAISTRAT-1339',
+      PlannedFor: '3.6 EA1 RHOAI RELEASE',
+      Score: 42,
+      FPDoR: '17/17',
+      'Failed FPDoR Items': '',
+      Confidence: 'committed',
+      Labels: 'rp-qg1-pass',
+      'Fix Version': '',
+      'Release Type': 'GA',
+      PM: 'Jane PM',
+      DeliveryOwner: 'Someone',
+      OutcomeNumber: 3
+    }
+    const row = mapApiFeatureToRow(apiFeature)
+    expect(row['Key']).toBe('RHAISTRAT-500')
+    expect(row['Title']).toBe('Example feature')
+    expect(row['Components']).toBe('AI Hub; AI Core Platform')
+    expect(row['Target Versions']).toBe('3.6 EA1 RHOAI RELEASE')
+    expect(row['RICE']).toBe(42)
+    expect(row['PM']).toBe('Jane PM')
+    expect(row['Assignee']).toBe('Someone')
+    expect(row['OutcomeNumber']).toBe(3)
+  })
+
+  it('defaults OutcomeNumber to an em-dash and schedules cleanly when fields are missing', () => {
+    const row = mapApiFeatureToRow({ Key: 'RHAISTRAT-501' })
+    expect(row['OutcomeNumber']).toBe('—')
+    expect(row['Components']).toBe('')
+    const [scheduled] = schedule([row])
+    expect(scheduled._place).toBe('No')
+  })
+})
+
+describe('sortFeatures', () => {
+  it('sorts numerically by FPDoR passed count', () => {
+    const rows = [{ Key: 'A', FPDoR: '5/17' }, { Key: 'B', FPDoR: '12/17' }, { Key: 'C', FPDoR: '0/17' }]
+    expect(sortFeatures(rows, 'FPDoR', true).map(r => r.Key)).toEqual(['C', 'A', 'B'])
+    expect(sortFeatures(rows, 'FPDoR', false).map(r => r.Key)).toEqual(['B', 'A', 'C'])
+  })
+
+  it('sends em-dash OutcomeNumber rows to the end regardless of direction', () => {
+    const rows = [{ Key: 'A', OutcomeNumber: '—' }, { Key: 'B', OutcomeNumber: 2 }, { Key: 'C', OutcomeNumber: 1 }]
+    expect(sortFeatures(rows, 'OutcomeNumber', true).map(r => r.Key)).toEqual(['C', 'B', 'A'])
+  })
+
+  it('does not mutate the input array', () => {
+    const rows = [{ Key: 'B' }, { Key: 'A' }]
+    sortFeatures(rows, 'Key', true)
+    expect(rows.map(r => r.Key)).toEqual(['B', 'A'])
+  })
+})
+
+describe('assignNoTier', () => {
+  it('tiers "No" rows by how much analysis is possible, and skips placed rows', () => {
+    const rows = [
+      { _place: 'No', _tv: '', _wFPDoR: 0, Components: '' },
+      { _place: 'No', _tv: '3.6', _wFPDoR: 60, Components: 'AI Hub' },
+      { _place: 'No', _tv: '3.6', _wFPDoR: 30, Components: 'AI Hub' },
+      { _place: 'EA1', _wFPDoR: 90 }
+    ]
+    assignNoTier(rows)
+    expect(rows[0]._noTier).toBe(3)
+    expect(rows[1]._noTier).toBe(2)
+    expect(rows[2]._noTier).toBe(1)
+    expect(rows[3]._noTier).toBeUndefined()
+  })
+})
+
+describe('applyPlacementGrouping', () => {
+  it('groups EA1 before EA2 before GA before No, then by confidence descending', () => {
+    const rows = [
+      { Key: 'ga-low', _place: 'GA', _conf: 40 },
+      { Key: 'ea1', _place: 'EA1', _conf: 50 },
+      { Key: 'no', _place: 'No', _conf: 0, _noTier: 1 },
+      { Key: 'ga-high', _place: 'GA', _conf: 90 },
+      { Key: 'ea2', _place: 'EA2', _conf: 60 }
+    ]
+    const grouped = applyPlacementGrouping(rows, 'Score')
+    expect(grouped.map(r => r.Key)).toEqual(['ea1', 'ea2', 'ga-high', 'ga-low', 'no'])
+  })
+
+  it('is a no-op when sorting by OutcomeNumber, to preserve that order', () => {
+    const rows = [{ Key: 'A', _place: 'No' }, { Key: 'B', _place: 'EA1' }]
+    expect(applyPlacementGrouping(rows, 'OutcomeNumber')).toBe(rows)
+  })
+
+  it('breaks ties among "No" rows by _noTier', () => {
+    const rows = [
+      { Key: 'tier3', _place: 'No', _conf: 0, _noTier: 3 },
+      { Key: 'tier1', _place: 'No', _conf: 0, _noTier: 1 },
+      { Key: 'tier2', _place: 'No', _conf: 0, _noTier: 2 }
+    ]
+    expect(applyPlacementGrouping(rows, 'Score').map(r => r.Key)).toEqual(['tier1', 'tier2', 'tier3'])
   })
 })
