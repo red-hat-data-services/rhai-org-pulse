@@ -71,25 +71,37 @@ export function listNightlyJenkinsJobOptions(payload) {
   }
   return orderedKeys.map((stream_key) => {
     const meta = metaByKey.get(stream_key)
-    let label = meta?.label || meta?.jenkins_job || null
-    if (!label) {
-      for (const day of days) {
-        const dayKey = dayStreamKey(day)
-        if (dayKey !== stream_key) continue
-        for (const run of day.runs || []) {
-          const fromUrl = jenkinsJobPathFromUrl(run?.jenkins_url)
-          if (fromUrl) {
-            label = fromUrl
-            break
-          }
+    let inferredFromRuns = null
+    for (const day of days) {
+      const dayKey = dayStreamKey(day)
+      if (dayKey !== stream_key) continue
+      for (const run of day.runs || []) {
+        const fromUrl = jenkinsJobPathFromUrl(run?.jenkins_url)
+        if (fromUrl) {
+          inferredFromRuns = fromUrl
+          break
         }
-        if (label) break
       }
+      if (inferredFromRuns) break
+    }
+    const metaJenkinsJob = typeof meta?.jenkins_job === 'string' ? meta.jenkins_job : null
+    const metaLabel = typeof meta?.label === 'string' ? meta.label : null
+    let label
+    if (metaJenkinsJob) {
+      label = metaJenkinsJob
+    } else if (inferredFromRuns) {
+      label = inferredFromRuns
+    } else if (metaLabel && metaLabel !== stream_key && metaLabel.includes('/')) {
+      label = metaLabel
+    } else if (metaLabel) {
+      label = metaLabel
+    } else {
+      label = stream_key
     }
     return {
       stream_key,
-      label: label || stream_key,
-      jenkins_job: typeof meta?.jenkins_job === 'string' ? meta.jenkins_job : null
+      label,
+      jenkins_job: metaJenkinsJob || inferredFromRuns
     }
   })
 }
@@ -109,27 +121,193 @@ export function resolveNightlyJenkinsJobOption(payload, streamKey) {
 /** Hash query key for nightly test-results source deep links (`#/system-health/test-execution?source=…`). */
 export const TEST_RESULTS_SOURCE_QUERY_PARAM = 'source'
 
+/** E2E reporting stream ids reused as nightly `stream_key` — never prefer these in `?source=`. */
+export const REPORTING_STREAM_KEYS = new Set(['rhoai-nightly', 'odh-nightly', 'release'])
+
+/**
+ * @param {{ stream_key?: string, label?: string, jenkins_job?: string|null }} option
+ * @returns {string|null}
+ */
+function jenkinsJobPathForSource(option) {
+  if (!option || typeof option !== 'object') return null
+  if (typeof option.jenkins_job === 'string' && option.jenkins_job.trim()) {
+    return option.jenkins_job.trim()
+  }
+  if (typeof option.label === 'string' && option.label.trim()) {
+    return option.label.trim()
+  }
+  return null
+}
+
+/**
+ * @param {{ stream_key?: string, label?: string, jenkins_job?: string|null }} option
+ * @param {{ stream_key?: string, label?: string, jenkins_job?: string|null }[]} allOptions
+ * @returns {string|null}
+ */
+function uniqueJenkinsSlugForSource(option, allOptions) {
+  const jobPath = jenkinsJobPathForSource(option)
+  if (!jobPath) return null
+  const slug = jenkinsJobBasename(jobPath)
+  if (!slug) return null
+  const lower = slug.toLowerCase()
+  const sameSlug = allOptions.filter((o) => {
+    const path = jenkinsJobPathForSource(o)
+    return path && jenkinsJobBasename(path).toLowerCase() === lower
+  })
+  if (sameSlug.length === 1) return slug
+  return null
+}
+
+/**
+ * Last path segment of a Jenkins job path (drops folder prefix).
+ *
+ * @param {string|null|undefined} jobPath
+ * @returns {string}
+ */
+export function jenkinsJobBasename(jobPath) {
+  if (!jobPath || typeof jobPath !== 'string') return ''
+  const trimmed = jobPath.trim()
+  const slash = trimmed.lastIndexOf('/')
+  return slash >= 0 ? trimmed.slice(slash + 1) : trimmed
+}
+
+/**
+ * @param {{ stream_key?: string, label?: string, jenkins_job?: string|null }} option
+ * @returns {string}
+ */
+export function testResultsSourceBasename(option) {
+  if (!option || typeof option !== 'object') return ''
+  const path = option.jenkins_job || option.label || option.stream_key || ''
+  return jenkinsJobBasename(path)
+}
+
+/**
+ * @param {string|null|undefined} basename
+ * @returns {string}
+ */
+export function humanizeJenkinsJobBasename(basename) {
+  if (!basename || typeof basename !== 'string') return ''
+  return basename
+    .split(/[-_]+/)
+    .filter(Boolean)
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+    .join(' ')
+}
+
+/**
+ * Short name shown in the Test Results Source filter and in `?source=` (job basename, not stream_key).
+ *
+ * @param {{ stream_key?: string, label?: string, jenkins_job?: string|null }} option
+ * @returns {string}
+ */
+export function testResultsSourceOptionLabel(option) {
+  if (!option || typeof option !== 'object') return ''
+  const jobPath = jenkinsJobPathForSource(option)
+  if (jobPath && jobPath.includes('/')) {
+    return jenkinsJobBasename(jobPath)
+  }
+  if (jobPath && jobPath !== option.stream_key) {
+    return jenkinsJobBasename(jobPath)
+  }
+  const base = testResultsSourceBasename(option)
+  return base || option.stream_key || ''
+}
+
+/**
+ * Full Jenkins job path for UI when short basenames are not unique.
+ *
+ * @param {{ stream_key?: string, label?: string, jenkins_job?: string|null }} option
+ * @returns {string}
+ */
+export function testResultsSourceFullPath(option) {
+  if (!option || typeof option !== 'object') return ''
+  const path = option.jenkins_job || option.label || ''
+  if (typeof path === 'string' && path.trim()) return path.trim()
+  return testResultsSourceOptionLabel(option)
+}
+
+/**
+ * Label for the Test Results Source dropdown; uses full job path when basenames collide.
+ *
+ * @param {{ stream_key?: string, label?: string, jenkins_job?: string|null }} option
+ * @param {{ stream_key?: string, label?: string, jenkins_job?: string|null }[]} allOptions
+ * @returns {string}
+ */
+export function testResultsSourceDropdownLabel(option, allOptions) {
+  const shortLabel = testResultsSourceOptionLabel(option)
+  const list = Array.isArray(allOptions) ? allOptions : []
+  if (list.length <= 1) return shortLabel
+  const lower = shortLabel.toLowerCase()
+  const sameBasename = list.filter(
+    (o) => testResultsSourceOptionLabel(o).toLowerCase() === lower
+  )
+  if (sameBasename.length <= 1) return shortLabel
+  const fullPath = testResultsSourceFullPath(option) || shortLabel
+  const fullPathCollides = list.some(
+    (o) => o !== option && testResultsSourceFullPath(o) === fullPath
+  )
+  if (!fullPathCollides) return fullPath
+  const suffix = streamKeyDisambiguationLabel(option.stream_key)
+  return suffix ? `${fullPath} (${suffix})` : fullPath
+}
+
+/**
+ * Parenthetical disambiguator in the Test Results Source dropdown (never E2E reporting ids).
+ *
+ * @param {string|null|undefined} streamKey
+ * @returns {string|null}
+ */
+export function streamKeyDisambiguationLabel(streamKey) {
+  if (streamKey == null || typeof streamKey !== 'string') return null
+  const trimmed = streamKey.trim()
+  if (!trimmed || REPORTING_STREAM_KEYS.has(trimmed)) return null
+  return trimmed
+}
+
 /**
  * @param {object|null|undefined} payload
  * @param {string|null|undefined} streamKey
  * @returns {string|null}
  */
-function nightlyOptionFieldMatchesLower(option, valueLower) {
-  return [option.stream_key, option.label, option.jenkins_job].some(
-    (value) => (value || '').toLowerCase() === valueLower
-  )
-}
-
 export function testResultsSourceQueryValue(payload, streamKey) {
   const option = resolveNightlyJenkinsJobOption(payload, streamKey)
   if (!option) return null
   const options = listNightlyJenkinsJobOptions(payload)
-  const labelKey = (option.label || '').toLowerCase()
-  const labelIsUnique =
-    labelKey.length > 0
-    && options.filter((o) => nightlyOptionFieldMatchesLower(o, labelKey)).length === 1
-  if (labelIsUnique && option.label) return option.label
+  const fromJob = uniqueJenkinsSlugForSource(option, options)
+  if (fromJob) return fromJob
+  const candidate = testResultsSourceOptionLabel(option)
+  if (!candidate) return option.stream_key
+  const lower = candidate.toLowerCase()
+  const sameLabel = options.filter(
+    (o) => testResultsSourceOptionLabel(o).toLowerCase() === lower
+  )
+  if (sameLabel.length === 1) return candidate
+  if (REPORTING_STREAM_KEYS.has(option.stream_key) && candidate && candidate !== option.stream_key) {
+    return candidate
+  }
   return option.stream_key
+}
+
+/**
+ * Value for `?source=` — never an E2E reporting stream id when a Jenkins job label exists.
+ *
+ * @param {object|null|undefined} payload
+ * @param {string|null|undefined} streamKey
+ * @returns {string|null}
+ */
+export function testResultsSourceQueryValueForUrl(payload, streamKey) {
+  const raw = testResultsSourceQueryValue(payload, streamKey)
+  if (raw == null) return null
+  if (!REPORTING_STREAM_KEYS.has(raw)) return raw
+  const option = resolveNightlyJenkinsJobOption(payload, streamKey)
+  if (!option) return raw
+  const fromJob = testResultsSourceOptionLabel(option)
+  if (fromJob && !REPORTING_STREAM_KEYS.has(fromJob)) return fromJob
+  const full = testResultsSourceFullPath(option)
+  if (full && full.includes('/') && !REPORTING_STREAM_KEYS.has(full)) {
+    return jenkinsJobBasename(full) || full
+  }
+  return raw
 }
 
 /**
@@ -146,16 +324,45 @@ export function streamKeyFromTestResultsSourceQuery(payload, queryValue) {
   const options = listNightlyJenkinsJobOptions(payload)
   if (options.length === 0) return null
   const lower = needle.toLowerCase()
-  const match =
-    options.find((o) => o.stream_key === needle)
-    || options.find((o) => o.label === needle || o.jenkins_job === needle)
-    || options.find(
-      (o) =>
-        o.stream_key.toLowerCase() === lower
-        || o.label.toLowerCase() === lower
-        || (o.jenkins_job && o.jenkins_job.toLowerCase() === lower)
-    )
-  return match?.stream_key ?? null
+
+  const byStreamKey = options.find((o) => o.stream_key === needle)
+  if (byStreamKey) return byStreamKey.stream_key
+
+  const byStreamKeyLower = options.find((o) => o.stream_key.toLowerCase() === lower)
+  if (byStreamKeyLower) return byStreamKeyLower.stream_key
+
+  const byFilterLabel = options.filter(
+    (o) => testResultsSourceOptionLabel(o).toLowerCase() === lower
+  )
+  if (byFilterLabel.length === 1) return byFilterLabel[0].stream_key
+  if (byFilterLabel.length > 1) return byFilterLabel[0].stream_key
+
+  const byFullPath = options.find((o) => o.label === needle || o.jenkins_job === needle)
+  if (byFullPath) return byFullPath.stream_key
+
+  const byFullPathLower = options.find(
+    (o) =>
+      o.label.toLowerCase() === lower
+      || (o.jenkins_job && o.jenkins_job.toLowerCase() === lower)
+  )
+  if (byFullPathLower) return byFullPathLower.stream_key
+
+  return null
+}
+
+/**
+ * Gates tab heading aligned with Test Results Source (basename + " Results").
+ *
+ * @param {object|null|undefined} payload
+ * @param {string|null|undefined} streamKey
+ * @returns {string}
+ */
+export function nightlyTestResultsPanelTitle(payload, streamKey) {
+  const option = resolveNightlyJenkinsJobOption(payload, streamKey)
+  if (!option) return 'Promotional Gate Test Status'
+  const words = humanizeJenkinsJobBasename(testResultsSourceOptionLabel(option))
+  if (!words) return 'Promotional Gate Test Status'
+  return `${words} Results`
 }
 
 const GATE_ROW_ORDER = ['cluster-health', 'operator-health']
@@ -297,6 +504,125 @@ export function normalizeHeatmapComponentToNightlyId(componentName, daysOrIndex 
 }
 
 /**
+ * Merge producer component fields across runs (later rows fill gaps in earlier metadata).
+ *
+ * @param {{ name?: string, jira_component?: string }} existing
+ * @param {{ name?: string, jira_component?: string }} incoming
+ * @returns {{ name?: string, jira_component?: string }}
+ */
+function mergeComponentMetaEntry(existing, incoming) {
+  const next = {
+    name: existing.name,
+    jira_component: existing.jira_component
+  }
+  if (!next.jira_component && incoming.jira_component) {
+    next.jira_component = incoming.jira_component
+  }
+  if (!next.name && incoming.name) {
+    next.name = incoming.name
+  }
+  return next
+}
+
+/**
+ * Merged metadata per producer component id across all runs in `days`.
+ *
+ * @param {object[]} days
+ * @returns {Map<string, { name?: string, jira_component?: string }>}
+ */
+function collectComponentMetaById(days) {
+  const meta = new Map()
+  for (const day of days || []) {
+    for (const run of day.runs || []) {
+      for (const comp of run.components || []) {
+        if (!comp?.id) continue
+        const prev = meta.get(comp.id)
+        if (!prev) {
+          meta.set(comp.id, { name: comp.name, jira_component: comp.jira_component })
+        } else {
+          meta.set(comp.id, mergeComponentMetaEntry(prev, comp))
+        }
+      }
+    }
+  }
+  return meta
+}
+
+/**
+ * Stable identity for deduping matrix rows (prefer Jira filing name, then dashboard name).
+ *
+ * @param {string} rowId
+ * @param {object[]} days
+ * @param {Map<string, { name?: string, jira_component?: string }>|null} [metaById]
+ * @returns {string}
+ */
+export function canonicalKeyForRowId(rowId, days, metaById = null) {
+  if (!rowId) return ''
+  const meta = metaById || collectComponentMetaById(days)
+  const entry = meta.get(rowId)
+  if (entry) {
+    const key = normalizeComponentIdentityKey(entry.jira_component || entry.name)
+    if (key) return key
+  }
+  return normalizeComponentIdentityKey(rowId)
+}
+
+/**
+ * Dedupe key for matrix row ids: published name/jira only; raw ids stay distinct (no slug collapse).
+ *
+ * @param {string} rowId
+ * @param {Map<string, { name?: string, jira_component?: string }>} metaById
+ * @returns {string}
+ */
+function matrixRowDedupeKey(rowId, metaById) {
+  if (!rowId) return ''
+  if (rowId === 'cluster-health' || rowId === 'operator-health') return rowId
+  const entry = metaById.get(rowId)
+  if (entry) {
+    const published = (entry.jira_component || entry.name || '').trim()
+    if (published) return `pub:${published.toLowerCase()}`
+  }
+  return `id:${rowId}`
+}
+
+/**
+ * One producer row id per heatmap inventory label (avoids duplicate matrix rows for alias ids).
+ *
+ * @param {string} componentName
+ * @param {object[]} days
+ * @returns {string|null}
+ */
+export function pickHeatmapInventoryRowId(componentName, days) {
+  if (!componentName || typeof componentName !== 'string') return null
+  const matched = producerRowIdsMatchingHeatmapLabel(componentName, days)
+  if (matched.length === 1) return matched[0]
+  if (matched.length > 1) {
+    const labelKey = normalizeComponentIdentityKey(componentName.trim())
+    const meta = collectComponentMetaById(days)
+    const byJira = matched.filter(
+      (id) => normalizeComponentIdentityKey(meta.get(id)?.jira_component) === labelKey
+    )
+    if (byJira.length === 1) return byJira[0]
+    const byName = matched.filter(
+      (id) => normalizeComponentIdentityKey(meta.get(id)?.name) === labelKey
+    )
+    if (byName.length === 1) return byName[0]
+
+    const sortedDays = [...(days || [])].sort((a, b) => (a.date || '').localeCompare(b.date || ''))
+    for (let i = 0; i < sortedDays.length; i += 1) {
+      const { run } = resolveSelectedRun(sortedDays[i])
+      if (!run) continue
+      const idsInRun = new Set((run.components || []).map((c) => c?.id).filter(Boolean))
+      const active = matched.filter((id) => idsInRun.has(id))
+      if (active.length === 1) return active[0]
+      if (active.length > 1) return active.sort()[0]
+    }
+    return matched.sort()[0]
+  }
+  return resolveHeatmapComponentToRowId(componentName, days)
+}
+
+/**
  * @param {object|null} day
  * @returns {{ run: object|null, error: string|null }}
  */
@@ -324,15 +650,28 @@ export function resolveSelectedRun(day) {
 /**
  * @param {object} run
  * @param {string} rowId
+ * @param {object[]|null} [days] when set, resolve alias producer ids with the same canonical identity
+ * @param {Map<string, { name?: string, jira_component?: string }>|null} [metaById]
  * @returns {object|null}
  */
-export function findMatrixCell(run, rowId) {
+export function findMatrixCell(run, rowId, days = null, metaById = null) {
   if (!run) return null
   const gates = Array.isArray(run.gates) ? run.gates : []
   const gate = gates.find((g) => g && g.id === rowId)
   if (gate) return gate
   const components = Array.isArray(run.components) ? run.components : []
-  return components.find((c) => c && c.id === rowId) || null
+  const direct = components.find((c) => c && c.id === rowId)
+  if (direct) return direct
+  if (!Array.isArray(days) || days.length === 0) return null
+
+  const meta = metaById || collectComponentMetaById(days)
+  const targetKey = canonicalKeyForRowId(rowId, days, meta)
+  if (!targetKey) return null
+  const matches = components.filter((c) => {
+    if (!c?.id) return false
+    return canonicalKeyForRowId(c.id, days, meta) === targetKey
+  })
+  return matches.length === 1 ? matches[0] : null
 }
 
 /** Match test-reports-dashboard nightly_health._gate_indicates_failure */
@@ -377,8 +716,8 @@ export function applyPrerequisiteBlockingForDisplay(cell, run) {
  * @param {string} rowId
  * @returns {object|null}
  */
-export function resolveDisplayMatrixCell(run, rowId) {
-  const cell = findMatrixCell(run, rowId)
+export function resolveDisplayMatrixCell(run, rowId, days = null) {
+  const cell = findMatrixCell(run, rowId, days)
   if (!cell || !run) return cell
   if (rowId === 'cluster-health' || rowId === 'operator-health') return cell
   return applyPrerequisiteBlockingForDisplay(cell, run)
@@ -555,6 +894,204 @@ export function orderDayRunsForPanel(day) {
 }
 
 /**
+ * Human-readable product line (RHOAI version, channel, optional product_label).
+ *
+ * @param {object|null|undefined} run
+ * @returns {string}
+ */
+export function runProductUnderTestLabel(run) {
+  const pg = run?.promotion_gate
+  if (!pg || typeof pg !== 'object') return ''
+  const parts = []
+  if (pg.rhoai_version) parts.push(`RHOAI ${pg.rhoai_version}`)
+  if (pg.update_channel) parts.push(String(pg.update_channel))
+  if (pg.product_label) parts.push(String(pg.product_label))
+  return parts.join(' · ')
+}
+
+/**
+ * Cluster / OCP context from promotion_gate (excludes product version line).
+ *
+ * @param {object|null|undefined} run
+ * @returns {string}
+ */
+export function runEnvironmentLine(run) {
+  const pg = run?.promotion_gate
+  if (!pg || typeof pg !== 'object') return ''
+  const parts = []
+  if (pg.cluster_name) parts.push(String(pg.cluster_name))
+  if (pg.openshift_version) parts.push(`OCP ${pg.openshift_version}`)
+  return parts.join(' · ')
+}
+
+/**
+ * @param {object|null|undefined} run
+ * @returns {string|null}
+ */
+export function runJenkinsBuildNumberDisplay(run) {
+  if (run?.build_number == null) return null
+  return `#${run.build_number}`
+}
+
+/**
+ * @param {object|null|undefined} run
+ * @returns {number|null}
+ */
+export function runDurationMs(run) {
+  if (run?.duration_seconds != null && Number.isFinite(Number(run.duration_seconds))) {
+    return Number(run.duration_seconds) * 1000
+  }
+  if (run?.duration_ms != null && Number.isFinite(Number(run.duration_ms))) {
+    return Number(run.duration_ms)
+  }
+  const start = run?.started_at
+  const end = run?.completed_at
+  if (start && end) {
+    const ms = Date.parse(end) - Date.parse(start)
+    if (Number.isFinite(ms) && ms >= 0) return ms
+  }
+  return null
+}
+
+/**
+ * @param {object|null|undefined} run
+ * @returns {string|null}
+ */
+export function formatRunDuration(run) {
+  const ms = runDurationMs(run)
+  if (ms == null) return null
+  const totalMin = Math.max(1, Math.round(ms / 60_000))
+  if (totalMin < 60) return `${totalMin} min`
+  const hours = Math.floor(totalMin / 60)
+  const mins = totalMin % 60
+  if (mins === 0) return `${hours}h`
+  return `${hours}h ${mins}m`
+}
+
+/**
+ * Subline under a matrix date header: selected Jenkins run + product under test.
+ *
+ * @param {object|null|undefined} run
+ * @returns {string}
+ */
+export function nightlyColumnHeaderSubline(run) {
+  if (!run) return ''
+  const num =
+    run.build_number != null ? `Run #${run.build_number}` : ''
+  const product = runProductUnderTestLabel(run)
+  return [num, product].filter(Boolean).join(' · ')
+}
+
+/**
+ * Test Execution matrix source line for the day panel (promotion-gate job path).
+ *
+ * @param {{ stream_key?: string, label?: string, jenkins_job?: string|null }|null|undefined} option
+ * @param {{ stream_key?: string, label?: string, jenkins_job?: string|null }[]} [allOptions]
+ * @returns {string}
+ */
+export function nightlyTestSourceDescription(option, allOptions = []) {
+  void allOptions
+  if (!option) return 'Promotion gate'
+  const path = testResultsSourceFullPath(option) || testResultsSourceBasename(option)
+  return path ? `Promotion gate · ${path}` : 'Promotion gate'
+}
+
+/**
+ * @param {unknown} ref
+ * @returns {string|null}
+ */
+export function artifactRefHref(ref) {
+  if (!ref) return null
+  if (typeof ref === 'string') return safeHttpUrl(ref)
+  if (typeof ref === 'object' && ref !== null) {
+    const obj = /** @type {Record<string, unknown>} */ (ref)
+    const url = obj.url || obj.href || obj.browser_url
+    if (typeof url === 'string') return safeHttpUrl(url)
+  }
+  return null
+}
+
+/**
+ * @param {object|null|undefined} run
+ * @returns {{ id: string, label: string, href: string|null, unavailable: boolean }[]}
+ */
+export function runArtifactPanelEntries(run) {
+  const artifacts = run?.artifacts
+  const specs = [
+    { id: 'pod_logs', label: 'Pod logs' },
+    { id: 'bvt_results', label: 'BVT results' }
+  ]
+  return specs.map(({ id, label }) => {
+    const href = artifacts && typeof artifacts === 'object' ? artifactRefHref(artifacts[id]) : null
+    return { id, label, href, unavailable: !href }
+  })
+}
+
+/**
+ * @param {object|null|undefined} run
+ * @returns {string|null}
+ */
+export function runOdsBuildUrl(run) {
+  const pg = run?.promotion_gate
+  if (!pg || typeof pg !== 'object') return null
+  const raw = pg.ods_build_url || pg.odsBuildUrl
+  if (typeof raw !== 'string' || !raw.trim()) return null
+  return safeHttpUrl(raw.trim())
+}
+
+const ODS_LINK_HASH_DISPLAY_LEN = 12
+
+/**
+ * @param {string} raw
+ * @returns {string}
+ */
+export function shortenDigestForDisplay(raw) {
+  const s = String(raw || '').trim()
+  if (!s) return ''
+  const sha = s.match(/sha256:([a-f0-9]+)/i)
+  if (sha) return sha[1].slice(0, ODS_LINK_HASH_DISPLAY_LEN)
+  if (/^[a-f0-9]{7,64}$/i.test(s)) return s.slice(0, ODS_LINK_HASH_DISPLAY_LEN)
+  if (s.length > ODS_LINK_HASH_DISPLAY_LEN) return s.slice(0, ODS_LINK_HASH_DISPLAY_LEN)
+  return s
+}
+
+/**
+ * Hyperlink text for promotion_gate ODS / quay payload URL (short digest or hash).
+ *
+ * @param {object|null|undefined} run
+ * @returns {string}
+ */
+export function runOdsBuildLinkLabel(run) {
+  const href = runOdsBuildUrl(run)
+  if (!href) return ''
+  try {
+    const u = new URL(href)
+    const fragment = u.hash.replace(/^#/, '')
+    if (fragment) {
+      const short = shortenDigestForDisplay(fragment)
+      if (short) return short
+    }
+    for (const key of ['hash', 'digest', 'sha256', 'manifest']) {
+      const value = u.searchParams.get(key)
+      if (value) {
+        const short = shortenDigestForDisplay(value)
+        if (short) return short
+      }
+    }
+    const segments = u.pathname.split('/').filter(Boolean)
+    for (let i = segments.length - 1; i >= 0; i -= 1) {
+      const seg = segments[i]
+      if (/sha256:[a-f0-9]+/i.test(seg) || /^[a-f0-9]{7,64}$/i.test(seg)) {
+        return shortenDigestForDisplay(seg)
+      }
+    }
+  } catch {
+    // not a parseable URL — fall through
+  }
+  return shortenDigestForDisplay(href) || 'build'
+}
+
+/**
  * @param {string} status
  * @returns {'green'|'red'|'amber'|'muted'|'neutral'}
  */
@@ -588,6 +1125,7 @@ export function nightlyCellTone(cell) {
  */
 export function collectMatrixRowIds(days, heatmapComponents = null) {
   const ids = new Set()
+  const metaById = collectComponentMetaById(days)
 
   for (const day of days) {
     for (const run of day.runs || []) {
@@ -603,18 +1141,17 @@ export function collectMatrixRowIds(days, heatmapComponents = null) {
   }
 
   const heatmapOrder = []
+  const canonicalKeysInOrder = new Set()
   if (Array.isArray(heatmapComponents)) {
     for (const entry of heatmapComponents) {
-      const matched = producerRowIdsMatchingHeatmapLabel(entry?.component, days)
-      const rowIdsForEntry =
-        matched.length > 0
-          ? matched
-          : [resolveHeatmapComponentToRowId(entry?.component, days)].filter(Boolean)
-      for (const rowId of rowIdsForEntry) {
-        ids.add(rowId)
-        if (rowId === 'cluster-health' || rowId === 'operator-health') continue
-        if (!heatmapOrder.includes(rowId)) heatmapOrder.push(rowId)
-      }
+      const rowId = pickHeatmapInventoryRowId(entry?.component, days)
+      if (!rowId) continue
+      ids.add(rowId)
+      if (rowId === 'cluster-health' || rowId === 'operator-health') continue
+      const canon = matrixRowDedupeKey(rowId, metaById)
+      if (canonicalKeysInOrder.has(canon)) continue
+      canonicalKeysInOrder.add(canon)
+      if (!heatmapOrder.includes(rowId)) heatmapOrder.push(rowId)
     }
   }
 
@@ -634,6 +1171,13 @@ export function collectMatrixRowIds(days, heatmapComponents = null) {
   const heatmapSet = new Set(heatmapOrder)
   const nightlyOnly = Array.from(ids)
     .filter((id) => !heatmapSet.has(id))
+    .filter((id) => {
+      if (id === 'cluster-health' || id === 'operator-health') return true
+      const canon = matrixRowDedupeKey(id, metaById)
+      if (canonicalKeysInOrder.has(canon)) return false
+      canonicalKeysInOrder.add(canon)
+      return true
+    })
     .sort((a, b) => a.localeCompare(b))
 
   return ordered.concat(heatmapOrder, nightlyOnly)

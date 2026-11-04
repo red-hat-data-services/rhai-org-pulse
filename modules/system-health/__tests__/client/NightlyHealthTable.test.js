@@ -21,14 +21,18 @@ describe('NightlyHealthTable', () => {
     wrapper = null
   })
 
-  it('renders date-column matrix from fixture', () => {
+  it('renders date-column matrix from fixture', async () => {
     const payload = JSON.parse(readFileSync(fixturePath, 'utf8'))
-    wrapper = mount(NightlyHealthTable, { props: { payload }, ...mountOptions })
+    // Oct 28–31 omit stream_key (→ default); Nov 1–2 use example-stream.
+    wrapper = mount(NightlyHealthTable, {
+      props: { payload, selectedStreamKey: 'default' },
+      ...mountOptions
+    })
+    await nextTick()
 
     expect(wrapper.find('.nightly-matrix').exists()).toBe(true)
     expect(wrapper.text()).toContain('Cluster Health')
     expect(wrapper.text()).toContain('RHOAI Deployment')
-    // Fixture mixes default-stream days (Oct 28–31) and example-stream (Nov 1–2).
     expect(wrapper.find('.pager-job-select').exists()).toBe(true)
     expect(wrapper.text()).toContain('Showing all 4 UTC days in this snapshot')
   })
@@ -72,13 +76,19 @@ describe('NightlyHealthTable', () => {
     expect(document.body.textContent).toContain('Runs on 2026-11-01')
     expect(document.body.textContent).toContain('Blocked')
     expect(document.body.textContent).toContain('DSC: failed')
-    expect(document.body.textContent).toContain('Build #101')
-    expect(document.body.textContent).toContain('Build #102')
-    expect(document.body.textContent).toContain('Selected for column')
+    expect(document.body.textContent).toContain('Jenkins run')
+    expect(document.body.textContent).toContain('#101')
+    expect(document.body.textContent).toContain('#102')
+    expect(document.body.textContent).toContain('RHOAI 3.6.0')
+    expect(document.body.textContent).not.toContain('Product under test:')
+    expect(document.body.textContent).not.toContain('Selected for column')
+    expect(document.body.textContent).not.toContain('Product payload (ODS build)')
+    expect(document.body.textContent).not.toContain('Test source:')
+    expect(document.body.textContent).not.toContain('Unavailable')
 
     const items = document.body.querySelectorAll('.run-list-item')
-    expect(items[0].textContent).toContain('Build #102')
-    expect(items[0].textContent).toContain('Selected for column')
+    expect(items[0].textContent).toContain('#102')
+    expect(items[0].classList.contains('run-list-item--selected')).toBe(true)
   })
 
   it('shows Jenkins job filter when multiple stream_key values are present', async () => {
