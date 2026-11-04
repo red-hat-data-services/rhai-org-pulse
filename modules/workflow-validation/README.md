@@ -156,7 +156,8 @@ version, suite, run ID, and recorded dates. Choices update results immediately;
 Run ID search waits for a 300 ms typing pause. Sorting uses the existing execution
 `timestamp`; RHOAI build time is not available yet. Clear restores the initial
 unfiltered page. The page uses `/test-suites?pageSize=20&includeBugs=false`
-and ignores shared detail filters. View run opens the exact suite and invocation.
+and ignores shared detail filters. Metadata is cached for up to 10 seconds;
+Refresh bypasses the cache. View run opens all tests in the exact suite and invocation, across versions.
 
 See the [Recent Runs contract](docs/rhai-10567-recent-runs-contract.md) for
 navigation, page states, and deployment evidence. The

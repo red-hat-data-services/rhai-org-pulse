@@ -151,7 +151,7 @@ async function loadAll() {
       verdict: '', q: '',
       ...(suiteScoped ? { dateFrom: '', dateTo: '' } : {}),
       ...(exactRun.value ? {
-        version: nav.params.value.version || '',
+        version: '', // Suite and invocation identify the whole run, including mixed versions.
         testSuite: nav.params.value.testSuite || '',
         invocationId: nav.params.value.invocationId || '',
         dateFrom: '', dateTo: ''

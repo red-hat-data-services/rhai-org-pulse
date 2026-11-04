@@ -12,6 +12,7 @@ const {
   timestampRange
 } = require('../../server/opensearch')
 const registerRoutes = require('../../server/index')
+const { EventEmitter } = require('node:events')
 
 function jsonResponse(body, status = 200) {
   return new Response(JSON.stringify(body), {
@@ -30,12 +31,12 @@ function makeRouter() {
 }
 
 function makeResponse() {
-  const response = {
+  const response = Object.assign(new EventEmitter(), {
     statusCode: 200,
     body: null,
     status(code) { response.statusCode = code; return response },
     json(body) { response.body = body; return response }
-  }
+  })
   return response
 }
 
@@ -47,6 +48,7 @@ function register(secrets = {}) {
 
 afterEach(() => {
   vi.unstubAllGlobals()
+  vi.restoreAllMocks()
   delete process.env.WORKFLOW_VALIDATION_OPENSEARCH_URL
 })
 
@@ -477,8 +479,70 @@ describe('workflow-validation live schema routes', () => {
     const old = makeResponse()
     await route({ query: { pageSize: '20', version: '3.0', includeBugs: 'false' } }, old)
     expect(old.body.rows.map(row => row.invocationId)).toEqual(['run-0'])
-    expect(requests.every(body => body.aggs?.suite_runs)).toBe(true)
+    expect(requests).toHaveLength(2) // Page and filter changes reuse the complete metadata snapshot.
+    expect(requests.every(body => Object.keys(body.aggs.suite_runs.aggs).join() === 'latest')).toBe(true)
     expect(requests.at(-1).query.bool.filter).not.toContainEqual({ term: { rhoai_version: '3.0' } })
+  })
+
+  it('expires metadata after 10 seconds, bypasses it on refresh, and isolates connections', async () => {
+    let now = 1000
+    vi.spyOn(Date, 'now').mockImplementation(() => now)
+    const fetch = vi.fn().mockImplementation(async () => jsonResponse({ aggregations: { suite_runs: { buckets: [] } } }))
+    vi.stubGlobal('fetch', fetch)
+    const route = register()['/test-suites'].at(-1)
+    const read = query => route({ query: { pageSize: '20', ...query } }, makeResponse())
+    await read({})
+    await read({ version: '3.6' })
+    expect(fetch).toHaveBeenCalledTimes(1)
+    await read({ refresh: 'true' })
+    expect(fetch).toHaveBeenCalledTimes(2)
+    now += 10_001
+    await read({})
+    expect(fetch).toHaveBeenCalledTimes(3)
+    process.env.WORKFLOW_VALIDATION_OPENSEARCH_URL = 'https://changed.example'
+    await read({})
+    expect(fetch).toHaveBeenCalledTimes(4)
+    expect(fetch.mock.lastCall[0]).toMatch(/^https:\/\/changed.example\//)
+    await route({ query: { includeBugs: 'false' } }, makeResponse())
+    await route({ query: { includeBugs: 'false' } }, makeResponse())
+    expect(fetch).toHaveBeenCalledTimes(6) // Legacy callers remain uncached.
+  })
+
+  it('stops a disconnected composite scan and never caches its partial rows', async () => {
+    const response = makeResponse()
+    const fetch = vi.fn().mockImplementationOnce(async () => {
+      response.emit('close')
+      return jsonResponse({ aggregations: { suite_runs: { buckets: [], after_key: { suite: 's', invocation: 'i' } } } })
+    }).mockImplementation(async () => jsonResponse({ aggregations: { suite_runs: { buckets: [] } } }))
+    vi.stubGlobal('fetch', fetch)
+    const route = register()['/test-suites'].at(-1)
+    await route({ query: { pageSize: '20' } }, response)
+    expect(fetch).toHaveBeenCalledTimes(1)
+    expect(response.body).toBeNull()
+    expect(response.listenerCount('close')).toBe(0)
+    const connected = makeResponse()
+    await route({ query: { pageSize: '20' } }, connected)
+    expect(fetch).toHaveBeenCalledTimes(2)
+    expect(connected.body.total).toBe(0)
+  })
+
+  it('does not start a search after an early disconnect or cache a failed search', async () => {
+    const fetch = vi.fn().mockRejectedValueOnce(new Error('network failed'))
+      .mockImplementation(async () => jsonResponse({ aggregations: { suite_runs: { buckets: [] } } }))
+    vi.stubGlobal('fetch', fetch)
+    const route = register()['/test-suites'].at(-1)
+    const closed = makeResponse()
+    const pending = route({ query: { pageSize: '20' } }, closed)
+    closed.emit('close')
+    await pending
+    expect(fetch).not.toHaveBeenCalled()
+    const failed = makeResponse()
+    await route({ query: { pageSize: '20' } }, failed)
+    expect(failed.statusCode).toBe(503)
+    const retry = makeResponse()
+    await route({ query: { pageSize: '20' } }, retry)
+    expect(fetch).toHaveBeenCalledTimes(2)
+    expect(retry.body.total).toBe(0)
   })
 
   it('rejects invalid recent-run pagination before querying OpenSearch', async () => {

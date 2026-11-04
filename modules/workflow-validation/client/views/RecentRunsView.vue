@@ -5,7 +5,7 @@
         <h2 class="text-2xl font-bold text-gray-900 dark:text-gray-100">Recent Runs</h2>
         <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">20 runs per page, ordered by recorded test time. All dates are UTC.</p>
       </div>
-      <button type="button" :disabled="loading || searchPending" :class="buttonClass" @click="requestRuns(applied)">Refresh</button>
+      <button type="button" :disabled="loading || searchPending" :class="buttonClass" @click="requestRuns(applied, true)">Refresh</button>
     </div>
 
     <form aria-label="Run filters" class="mb-5 rounded-xl border border-gray-200 bg-white p-4 dark:border-gray-700 dark:bg-gray-800" @submit.prevent="applyFilters">
@@ -48,9 +48,9 @@
     <div v-if="error" role="alert" class="mb-4 rounded-xl border border-amber-200 bg-amber-50 p-5 dark:border-amber-800 dark:bg-amber-900/20">
       <p class="text-sm text-gray-800 dark:text-gray-200">{{ error }}</p>
       <p v-if="hasLoaded" class="mt-1 text-sm text-gray-600 dark:text-gray-300">The previous results are still shown.</p>
-      <button type="button" :disabled="loading || searchPending" class="mt-2 text-sm font-semibold text-primary-700 dark:text-primary-300" @click="requestRuns(lastAttempt)">Retry</button>
+      <button type="button" :disabled="loading || searchPending" class="mt-2 text-sm font-semibold text-primary-700 dark:text-primary-300" @click="requestRuns(lastAttempt, true)">Retry</button>
     </div>
-    <p v-if="loading" role="status" class="mb-4 text-sm text-gray-500 dark:text-gray-400">{{ hasLoaded ? 'Updating recent runs…' : 'Loading recent runs…' }}</p>
+    <p v-if="loading || searchPending" role="status" class="mb-4 text-sm text-gray-500 dark:text-gray-400">{{ hasLoaded ? 'Updating recent runs…' : 'Loading recent runs…' }}</p>
 
     <div v-if="hasLoaded" :aria-busy="loading" class="overflow-hidden rounded-xl border border-gray-100 bg-white dark:border-gray-700 dark:bg-gray-800">
       <p class="border-b border-gray-100 px-5 py-3 text-sm text-gray-600 dark:border-gray-700 dark:text-gray-300">{{ criteria }}</p>
@@ -106,6 +106,7 @@ const nav = inject('moduleNav', null)
 const { getRecentRuns } = useWorkflowValidation()
 const fields = { version: 'recentVersion', suite: 'recentSuite', runQuery: 'recentRun', dateFrom: 'recentFrom', dateTo: 'recentTo', sortDir: 'recentSort', cursor: 'recentCursor' }
 const defaults = () => ({ version: '', suite: '', runQuery: '', dateFrom: '', dateTo: '', sortDir: 'desc', cursor: '' })
+/** Restore page-local filters without inheriting detail-view defaults. */
 function fromUrl() {
   const query = defaults()
   for (const [key, name] of Object.entries(fields)) {
@@ -150,7 +151,8 @@ function runLink(run) {
   return `#/workflow-validation/overview?${params}`
 }
 
-async function requestRuns(query) {
+/** Fetch one page; Refresh and Retry bypass the metadata cache. */
+async function requestRuns(query, refresh = false) {
   cancelSearch()
   const current = ++sequence
   controller?.abort()
@@ -160,7 +162,7 @@ async function requestRuns(query) {
   loading.value = true
   error.value = ''
   try {
-    const data = await getRecentRuns(requested, { signal: controller.signal })
+    const data = await getRecentRuns({ ...requested, ...(refresh ? { refresh: true } : {}) }, { signal: controller.signal })
     if (!active || current !== sequence) return
     if (!Array.isArray(data.rows) || data.rows.length > 20 || !Number.isInteger(data.total)
       || !Number.isInteger(data.start) || !Number.isInteger(data.end)
@@ -180,12 +182,18 @@ async function requestRuns(query) {
     if (active && current === sequence) loading.value = false
   }
 }
+/** Apply a valid selection from page one and cancel queued typing. */
 function applyFilters() {
   cancelSearch()
   if (!invalidDateRange.value) requestRuns({ ...draft, cursor: '' })
 }
+/** Invalidate an older response immediately, then wait for a pause in typing. */
 function scheduleSearch() {
   cancelSearch()
+  sequence += 1
+  controller?.abort()
+  loading.value = false
+  error.value = ''
   searchPending.value = true
   searchTimer = setTimeout(applyFilters, 300)
 }

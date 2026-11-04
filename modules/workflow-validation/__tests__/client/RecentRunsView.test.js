@@ -164,6 +164,30 @@ describe('Recent Runs', () => {
     expect(wrapper.find('[role="status"]').exists()).toBe(false)
   })
 
+  it('does not commit a response or URL update during the typing delay', async () => {
+    const params = ref({})
+    const nav = { params, updateParams: vi.fn(values => { params.value = { ...params.value, ...values } }) }
+    wrapper = mount(RecentRunsView, { global: { provide: { moduleNav: nav } } })
+    await flushPromises()
+    let resolve
+    apiRequest.mockReturnValueOnce(new Promise(done => { resolve = done }))
+    await button('Refresh').trigger('click')
+    expect(request(-1).get('refresh')).toBe('true')
+    await wrapper.get('input[aria-label="Run ID"]').setValue('new-search')
+    expect(apiRequest.mock.calls[1][1].signal.aborted).toBe(true)
+    resolve(page([{ ...fixture.rows[0], invocationId: 'obsolete' }]))
+    await vi.advanceTimersByTimeAsync(100)
+    await flushPromises()
+    expect(wrapper.text()).not.toContain('obsolete')
+    expect(nav.updateParams).toHaveBeenCalledTimes(1)
+    expect(params.value.recentRun).toBe('')
+    apiRequest.mockResolvedValueOnce(page([{ ...fixture.rows[0], invocationId: 'new-search' }]))
+    await vi.advanceTimersByTimeAsync(200)
+    await flushPromises()
+    expect(wrapper.text()).toContain('new-search')
+    expect(params.value.recentRun).toBe('new-search')
+  })
+
   it('shows empty results only after success and always keeps pagination visible', async () => {
     let resolve
     apiRequest.mockReturnValue(new Promise(done => { resolve = done }))

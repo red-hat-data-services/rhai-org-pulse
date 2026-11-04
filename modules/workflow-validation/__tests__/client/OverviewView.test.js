@@ -338,7 +338,8 @@ describe('Dashboard navigation from Recent Runs', () => {
   })
   afterEach(() => wrapper?.unmount())
 
-  it('honors an explicit run with no version instead of selecting the highest version', async () => {
+  it.each(['', '3.6'])('loads all versions in an exact run when the link version is %j', async (version) => {
+    nav.params.value.version = version
     filters.version = 'stale-version'
     wrapper = mount(OverviewView, { global: { provide: { moduleNav: nav } } })
     await flushPromises()

@@ -1,18 +1,21 @@
 /** Lightweight filtering and pagination of complete suite/invocation run groups. */
 const { createHash } = require('node:crypto');
 
+/** Reject invalid query values before querying OpenSearch. */
 function invalid(message) {
   const error = new Error(message);
   error.code = 'BAD_REQUEST';
   throw error;
 }
 
+/** Normalize a bounded optional filter string. */
 function text(value, name) {
   if (value === undefined) return '';
   if (typeof value !== 'string' || value.length > 256) invalid(`Invalid ${name}`);
   return value.trim();
 }
 
+/** Accept only real UTC calendar dates in YYYY-MM-DD format. */
 function date(value, name) {
   const input = text(value, name);
   if (!input) return '';
@@ -22,9 +25,10 @@ function date(value, name) {
   return input;
 }
 
+/** Validate paged queries and query-bound cursors; return null for legacy callers. */
 function parseRecentRuns(query) {
   if (query.pageSize === undefined) {
-    if (query.cursor !== undefined || query.sortDir !== undefined || query.runQuery !== undefined) {
+    if (query.cursor !== undefined || query.sortDir !== undefined || query.runQuery !== undefined || query.refresh !== undefined) {
       invalid('pageSize is required for recent-run pagination');
     }
     return null;
@@ -43,29 +47,37 @@ function parseRecentRuns(query) {
   if (filters.dateFrom && filters.dateTo && filters.dateFrom > filters.dateTo) invalid('dateFrom must not be after dateTo');
   const direction = query.sortDir === undefined ? 'desc' : text(query.sortDir, 'sortDir');
   if (!['asc', 'desc'].includes(direction)) invalid('sortDir must be asc or desc');
+  if (query.refresh !== undefined && !['true', 'false'].includes(query.refresh)) invalid('refresh must be true or false');
   const pageSize = Number(query.pageSize);
   const scope = createHash('sha256').update(JSON.stringify([filters, direction, pageSize])).digest('hex');
   let cursor = null;
   if (query.cursor) {
     if (typeof query.cursor !== 'string' || query.cursor.length > 8192 || !/^[\w-]+$/.test(query.cursor)) invalid('Invalid recent-run cursor');
     try { cursor = JSON.parse(Buffer.from(query.cursor, 'base64url').toString()); } catch { invalid('Invalid recent-run cursor'); }
-    if (cursor?.v !== 1 || cursor.scope !== scope || !['after', 'before'].includes(cursor.direction)
+    if (![1, 2].includes(cursor?.v) || cursor.scope !== scope || !['after', 'before'].includes(cursor.direction)
       || !Array.isArray(cursor.anchor) || cursor.anchor.length !== 3
       || !(cursor.anchor[0] === null || Number.isSafeInteger(cursor.anchor[0]))
-      || !cursor.anchor.slice(1).every(value => typeof value === 'string' && value.length > 0 && value.length <= 2048)) {
+      || !cursor.anchor.slice(1).every(value => typeof value === 'string' && value.length > 0
+        && (cursor.v === 1 || /^[a-f0-9]{64}$/.test(value)))) {
       invalid('Cursor does not match the current filters and sorting');
     }
   } else if (query.cursor !== undefined && typeof query.cursor !== 'string') invalid('Invalid recent-run cursor');
-  return { filters, direction, pageSize, scope, cursor };
+  return { filters, direction, pageSize, scope, cursor, refresh: query.refresh === 'true' };
 }
 
+/** Parse recorded execution time; missing or invalid dates sort last. */
 function time(value) {
   const parsed = typeof value === 'string' && value ? Date.parse(value) : NaN;
   return Number.isFinite(parsed) ? parsed : null;
 }
 
+/** Bound cursor length without truncating suite or invocation IDs. */
+function identityHash(value) { return createHash('sha256').update(value).digest('hex'); }
+
+/** Keep full identities for stable ordering without changing stored IDs. */
 function anchor(row) { return [time(row.timestamp), row.suite, row.invocationId]; }
 
+/** Order recorded times first, with exact suite/invocation ties and missing times last. */
 function compare(left, right, direction) {
   if (left[0] !== right[0]) {
     if (left[0] === null) return 1;
@@ -76,6 +88,7 @@ function compare(left, right, direction) {
   return a < b ? -1 : a > b ? 1 : 0;
 }
 
+/** Filter a complete metadata snapshot and return one page around an opaque anchor. */
 function pageRecentRuns(allRows, request) {
   const { filters, direction, pageSize, scope, cursor } = request;
   const available = allRows.filter(row => typeof row.suite === 'string' && row.suite
@@ -94,14 +107,21 @@ function pageRecentRuns(allRows, request) {
       && (from === null || (recorded !== null && recorded >= from))
       && (until === null || (recorded !== null && recorded < until));
   }).sort((a, b) => compare(anchor(a), anchor(b), direction));
+  let cursorAnchor = cursor?.anchor;
+  if (cursor?.v === 2) {
+    const origin = available.find(row => identityHash(row.suite) === cursor.anchor[1]
+      && identityHash(row.invocationId) === cursor.anchor[2]);
+    cursorAnchor = origin ? [cursor.anchor[0], origin.suite, origin.invocationId] : null;
+  }
   let candidates = rows;
-  if (cursor) candidates = rows.filter(row => cursor.direction === 'after'
-    ? compare(anchor(row), cursor.anchor, direction) > 0
-    : compare(anchor(row), cursor.anchor, direction) < 0);
+  if (cursor) candidates = cursorAnchor ? rows.filter(row => cursor.direction === 'after'
+    ? compare(anchor(row), cursorAnchor, direction) > 0
+    : compare(anchor(row), cursorAnchor, direction) < 0) : [];
   const page = cursor?.direction === 'before' ? candidates.slice(-pageSize) : candidates.slice(0, pageSize);
   const start = page.length ? rows.indexOf(page[0]) : -1;
   const end = start + page.length;
-  const encode = (row, way) => Buffer.from(JSON.stringify({ v: 1, scope, direction: way, anchor: anchor(row) })).toString('base64url');
+  const encode = (row, way) => Buffer.from(JSON.stringify({ v: 2, scope, direction: way,
+    anchor: [time(row.timestamp), identityHash(row.suite), identityHash(row.invocationId)] })).toString('base64url');
   return {
     rows: page.map(({ suite, invocationId, timestamp, rhoaiVersion }) => ({ suite, invocationId, timestamp, rhoaiVersion })),
     total: rows.length, pageSize, start: start < 0 ? 0 : start + 1, end: start < 0 ? 0 : end,

@@ -67,6 +67,35 @@ describe('Recent run pagination', () => {
     expect(pageRecentRuns(input, request({ dateFrom: '2026-01-01' })).total).toBe(2)
   })
 
+  it('round-trips long IDs using bounded cursors without truncating returned identities', () => {
+    const suite = 's'.repeat(9000)
+    const input = ['a', 'b', 'c'].map(id => ({ suite, invocationId: 'i'.repeat(9000) + id, timestamp: rows[0].timestamp }))
+    const query = { pageSize: '1' }
+    const first = pageRecentRuns(input, parseRecentRuns(query))
+    expect(first.rows[0].suite).toBe(suite)
+    expect(first.nextCursor.length).toBeLessThan(512)
+    const second = pageRecentRuns(input, parseRecentRuns({ ...query, cursor: first.nextCursor }))
+    expect(second.rows[0].invocationId).toBe(input[1].invocationId)
+    const previous = pageRecentRuns(input, parseRecentRuns({ ...query, cursor: second.previousCursor }))
+    expect(previous.rows).toEqual(first.rows)
+    const last = pageRecentRuns(input, parseRecentRuns({ ...query, cursor: second.nextCursor, refresh: 'true' }))
+    expect(last.rows).toEqual([input[2]])
+    expect(last.nextCursor).toBeNull()
+  })
+
+  it('accepts earlier raw-ID cursors and resets safely when a hashed anchor was deleted', () => {
+    const first = pageRecentRuns(rows, request())
+    const decoded = JSON.parse(Buffer.from(first.nextCursor, 'base64url').toString())
+    const origin = first.rows.at(-1)
+    const old = Buffer.from(JSON.stringify({ ...decoded, v: 1,
+      anchor: [Date.parse(origin.timestamp), origin.suite, origin.invocationId] })).toString('base64url')
+    expect(pageRecentRuns(rows, request({ cursor: old })).rows).toEqual(pageRecentRuns(rows, request({ cursor: first.nextCursor })).rows)
+    expect(pageRecentRuns(rows.filter(row => row.invocationId !== origin.invocationId), request({ cursor: first.nextCursor })))
+      .toMatchObject({ rows: [], total: 46, previousCursor: '' })
+    const malformed = Buffer.from(JSON.stringify({ ...decoded, anchor: [null, 'short-hash', {}] })).toString('base64url')
+    expect(() => request({ cursor: malformed })).toThrow(/Cursor/)
+  })
+
   it('rejects cursors reused with different filters, sorting, or page size', () => {
     const cursor = pageRecentRuns(rows, request()).nextCursor
     for (const changed of [{ version: '3.0' }, { sortDir: 'asc' }, { pageSize: '10' }]) {
@@ -77,7 +106,7 @@ describe('Recent run pagination', () => {
   it.each([
     { pageSize: '0' }, { pageSize: '201' }, { pageSize: '20x' }, { sortDir: 'sideways' },
     { dateFrom: '2026-02-31' }, { dateFrom: '2026-02-01', dateTo: '2026-01-01' },
-    { version: ['3.5', '3.6'] }, { cursor: 'not-json' }, { limit: '20' }
+    { version: ['3.5', '3.6'] }, { cursor: 'not-json' }, { limit: '20' }, { refresh: 'maybe' }
   ])('rejects invalid page parameters: %j', values => {
     expect(() => request(values)).toThrow()
   })

@@ -225,7 +225,7 @@ test.describe('Workflow Validation module @workflow-validation', () => {
     for (const url of requests.filter(url => /\/(overview|charts)$/.test(url.pathname))) {
       expect(url.searchParams.get('testSuite')).toBe('productization')
       expect(url.searchParams.get('invocationId')).toBe('invocation-1')
-      expect(url.searchParams.get('version')).toBe('3.6')
+      expect(url.searchParams.has('version')).toBe(false)
       expect(url.searchParams.has('dateFrom')).toBe(false)
     }
     await page.getByRole('row').filter({ hasText: 'Live workflow' }).click()
@@ -234,6 +234,37 @@ test.describe('Workflow Validation module @workflow-validation', () => {
     await expect(page.locator('aside nav').getByRole('button', { name: 'Dashboard', exact: true })).toHaveAttribute('aria-current', 'page')
     await page.locator('aside nav').getByRole('button', { name: 'Dashboard', exact: true }).click()
     await expect(page.getByRole('heading', { name: 'Recent Runs', exact: true })).toBeVisible()
+  })
+
+  test('shows tests from every version in the selected suite and invocation', async ({ page }) => {
+    await page.route('**/api/modules/workflow-validation/charts?**', route => {
+      const version = new URL(route.request().url()).searchParams.get('version')
+      const tests = [
+        { execution_id: 'v35', workflow_label: 'Version 3.5 test', rhoai_version: '3.5', verdict: 'PASS', productBugs: [] },
+        { execution_id: 'v36', workflow_label: 'Version 3.6 test', rhoai_version: '3.6', verdict: 'FAIL', productBugs: [] }
+      ].filter(row => !version || row.rhoai_version === version)
+      return route.fulfill({ json: { tests, newProductBugs: [], knownProductBugs: [] } })
+    })
+    await page.goto('/#/workflow-validation/recent-runs')
+    await page.getByRole('link', { name: 'View run invocation-1' }).click()
+    await expect(page.getByRole('heading', { name: 'Test Results', exact: true })).toBeVisible()
+    await expect(page.getByRole('table').locator('tbody tr')).toHaveCount(2)
+    await expect(page.getByRole('table')).toContainText('Version 3.5 test')
+    await expect(page.getByRole('table')).toContainText('Version 3.6 test')
+  })
+
+  test('Refresh bypasses the metadata cache and retains the current page', async ({ page }) => {
+    await mockRecentPages(page)
+    await page.goto('/#/workflow-validation/recent-runs')
+    const pages = page.getByRole('navigation', { name: 'Recent run pages' })
+    await expect(pages).toContainText('Showing 1–20 of 47 runs')
+    await pages.getByRole('button', { name: 'Next page' }).click()
+    await expect(pages).toContainText('Showing 21–40')
+    const refreshed = page.waitForRequest(request => request.url().includes('/test-suites?') && new URL(request.url()).searchParams.get('refresh') === 'true')
+    await page.getByRole('button', { name: 'Refresh', exact: true }).click()
+    expect(new URL((await refreshed).url()).searchParams.has('cursor')).toBe(true)
+    await expect(page.getByRole('button', { name: 'Refresh', exact: true })).toBeEnabled()
+    await expect(pages).toContainText('Showing 21–40')
   })
 
   test('keeps the landing page free of build data from an older backend', async ({ page }) => {

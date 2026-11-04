@@ -25,7 +25,9 @@ or version defaults do not restrict this page. URL parameters use the `recent`
 prefix so reloads retain the current filters, sort, and page.
 
 View run opens the existing Overview view as a hidden details route. Pass
-`exactRun=1`, explicit version, suite, and invocation, and clear date bounds.
+`exactRun=1`, recorded version, suite, and invocation, and clear date bounds.
+The recorded version is display metadata. Scope Overview and Charts queries by
+suite and invocation across every version in that run.
 Verify the selected run before fetching its Overview and Charts data. Show an
 error and a link to Recent Runs if that run is missing. Never fall back to a
 different run. Ignore responses for earlier route selections.
@@ -54,20 +56,28 @@ Paged parameters:
 - `dateFrom`, `dateTo`: optional `YYYY-MM-DD` bounds on the group timestamp.
 - `sortDir`: `desc` (default) or `asc`, using `timestamp`.
 - `cursor`: opaque next/previous anchor, bound to filters, sort, and page size.
+- `refresh=true`: bypass the metadata cache (used by Refresh and Retry).
 
 Return lightweight `rows` with `suite`, `invocationId`, `rhoaiVersion`, and
 `timestamp`, plus `total`, `start`, `end`, `pageSize`, `nextCursor`,
 `previousCursor`, `options`, `sortField`, and `sortDir`. Options contain all
 available `versions` and `suites`. Null cursors disable the corresponding
-button. Each request reads current data; this is not a frozen snapshot. Newer
+button. Complete grouped metadata is cached for up to 10 seconds per runtime
+connection. Page, filter, and sort requests reuse that metadata; Refresh and
+Retry bypass the cache. Connection changes invalidate reuse. Failed or
+disconnected scans are never cached. Legacy calls remain uncached. Newer
 insertions do not shift a next-page anchor. A deleted or changed run can alter
-page counts. If the anchor has no remaining rows, Previous can reset to page one.
+page counts. Cursors contain fixed-size hashes of suite and invocation IDs, so long IDs
+do not produce oversized URLs. Returned IDs are never truncated. Earlier raw-ID
+cursors remain supported. If a hashed anchor was deleted, or the anchor has no
+remaining rows, the page is empty and Previous resets to page one.
 
 Invalid paged parameters return HTTP 400 before querying OpenSearch. Do not
 combine paged mode with legacy `limit`, `latest`, or bug enrichment. Calls
 without `pageSize` keep the existing unlimited/full response and optional
-`limit=1..200&includeBugs=false` behavior for other consumers. No new index,
-stored field, or data migration is required.
+`limit=1..200&includeBugs=false` behavior for other consumers. Paged scans fetch metadata only and stop before the next OpenSearch request
+when the response closes. An in-flight OpenSearch request keeps its existing
+timeout. No new index, stored field, or data migration is required.
 
 ## Page states
 
@@ -75,7 +85,8 @@ Show Loading during the first request. Show an empty message only after a
 successful empty response. Show an error and Retry on failure. Keep existing
 rows during refresh and after a refresh failure. Pagination uses the filters for the displayed results. Disable pagination and
 Refresh while loading or waiting for the search delay. Cancel queued searches
-on clear, navigation, or unmount. Wait for a valid date range before fetching. Cancel earlier requests and ignore stale responses.
+on clear, navigation, or unmount. New typing immediately cancels and invalidates
+an older request, including responses arriving during the typing delay. Wait for a valid date range before fetching. Cancel earlier requests and ignore stale responses.
 
 ## Verification
 
