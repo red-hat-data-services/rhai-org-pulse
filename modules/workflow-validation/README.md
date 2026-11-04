@@ -104,7 +104,9 @@ Important rules:
   can select another cohort; the dashboard never defaults to an aggregation
   of historical executions.
 - Dashboard metrics and the complete test-results table are scoped to that one
-  `rhoai_version`, `telemetry_suite`, and `invocation_id`. Jira-linked issues
+  `rhoai_version`, `telemetry_suite`, and `invocation_id`, except exact-run links
+  from Recent Runs. Those links select `telemetry_suite` and `invocation_id`
+  across versions. Jira-linked issues
   from the same execution are separated into newly opened issues and existing
   issues encountered without opening another issue.
 - The dashboard table omits task counts; task outcomes remain available in the
@@ -149,15 +151,35 @@ contract, representative tests, and affected Vue transformations together.
 
 ## Recent Runs landing page
 
-Dashboard opens Recent Runs. It lists up to 20 suite/invocation groups across
-all recorded versions, ordered by latest execution time. Each row shows the
-suite, recorded version, and View run. The page uses the existing
-`/test-suites?limit=20&includeBugs=false` API and ignores shared detail filters.
-View run opens the existing Overview view for that exact suite and invocation.
-Loading, empty, retry, and refresh states are covered by client and integration
-tests. Build metadata is outside this landing-page change.
+Dashboard opens Recent Runs with the latest 20 suite/invocation groups and
+pagination across all available runs. Each row shows the suite, recorded
+version, recorded test time in UTC, and View run. Optional filters select
+version, suite, run ID, and recorded dates. Choices update results immediately;
+Run ID search waits for a 300 ms typing pause. Sorting uses the existing execution
+`timestamp`; RHOAI build time is not available yet. Clear restores the initial
+unfiltered page. The page uses `/test-suites?pageSize=20&includeBugs=false`
+and ignores shared detail filters. Metadata is cached for up to 10 seconds;
+Refresh bypasses the cache. View run opens all tests in the exact suite and invocation, across versions.
 
 See the [Recent Runs contract](docs/rhai-10567-recent-runs-contract.md) for
 navigation, page states, and deployment evidence. The
 [API response format](docs/DATA-FORMATS.md) documents the synthetic
 [unit-test fixture](__tests__/fixtures/recent-runs.json).
+
+## Browser integration tests
+
+The Workflow Validation browser suite lives in
+[`tests/integration/workflow-validation.spec.js`](tests/integration/workflow-validation.spec.js).
+Run it from the repository root:
+
+```bash
+npx playwright test --config modules/workflow-validation/playwright.config.cjs
+```
+
+The configuration starts the frontend locally. Start `npm run dev:server`
+separately for the backend route check. CI uses its existing app containers.
+The existing shared entrypoint, `tests/integration/workflow-validation.spec.js`
+at the repository root, loads this suite with one `require`. The existing CI
+command therefore runs the same 27 tests. Test implementations stay inside the
+module. This shared entrypoint is the only changed file outside the module;
+CODEOWNERS explicitly lists `@adamrdrew` for it, as in PR #1792.

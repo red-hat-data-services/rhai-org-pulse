@@ -12,6 +12,7 @@ const {
   timestampRange
 } = require('../../server/opensearch')
 const registerRoutes = require('../../server/index')
+const { EventEmitter } = require('node:events')
 
 function jsonResponse(body, status = 200) {
   return new Response(JSON.stringify(body), {
@@ -30,12 +31,12 @@ function makeRouter() {
 }
 
 function makeResponse() {
-  const response = {
+  const response = Object.assign(new EventEmitter(), {
     statusCode: 200,
     body: null,
     status(code) { response.statusCode = code; return response },
     json(body) { response.body = body; return response }
-  }
+  })
   return response
 }
 
@@ -47,6 +48,7 @@ function register(secrets = {}) {
 
 afterEach(() => {
   vi.unstubAllGlobals()
+  vi.restoreAllMocks()
   delete process.env.WORKFLOW_VALIDATION_OPENSEARCH_URL
 })
 
@@ -451,6 +453,129 @@ describe('workflow-validation live schema routes', () => {
       suite: 'productization', invocationId: 'invocation-1', tests: 3,
       passed: 2, failed: 1, passRate: 2 / 3, duration: 180, rhodsOperatorDigest: 'abcdef0123456789'
     })])
+  })
+
+  it('paginates and filters complete run groups across composite pages without loading bugs', async () => {
+    const all = Array.from({ length: 45 }, (_, index) => ({
+      key: { suite: 'release_gate', invocation: `run-${index}` }, doc_count: 2,
+      latest: { hits: { hits: [{ _source: { timestamp: new Date(Date.UTC(2026, 0, index + 1)).toISOString(), rhoai_version: index === 0 ? '3.0' : '3.6' } }] } }
+    }))
+    const requests = []
+    vi.stubGlobal('fetch', vi.fn(async (_url, options) => {
+      const body = JSON.parse(options.body)
+      requests.push(body)
+      return jsonResponse({ aggregations: { suite_runs: body.aggs.suite_runs.composite.after
+        ? { buckets: all.slice(25) }
+        : { buckets: all.slice(0, 25), after_key: { suite: 'release_gate', invocation: 'run-24' } } } })
+    }))
+    const route = register()['/test-suites'].at(-1)
+    const first = makeResponse()
+    await route({ query: { pageSize: '20', includeBugs: 'false' } }, first)
+    expect(first.body).toMatchObject({ total: 45, start: 1, end: 20, previousCursor: null })
+    expect(first.body.rows[0].invocationId).toBe('run-44')
+    const next = makeResponse()
+    await route({ query: { pageSize: '20', includeBugs: 'false', cursor: first.body.nextCursor } }, next)
+    expect(next.body).toMatchObject({ start: 21, end: 40 })
+    const old = makeResponse()
+    await route({ query: { pageSize: '20', version: '3.0', includeBugs: 'false' } }, old)
+    expect(old.body.rows.map(row => row.invocationId)).toEqual(['run-0'])
+    expect(requests).toHaveLength(2) // Page and filter changes reuse the complete metadata snapshot.
+    expect(requests.every(body => Object.keys(body.aggs.suite_runs.aggs).join() === 'latest')).toBe(true)
+    expect(requests.at(-1).query.bool.filter).not.toContainEqual({ term: { rhoai_version: '3.0' } })
+  })
+
+  it('expires metadata after 10 seconds, bypasses it on refresh, and isolates connections', async () => {
+    let now = 1000
+    vi.spyOn(Date, 'now').mockImplementation(() => now)
+    const fetch = vi.fn().mockImplementation(async () => jsonResponse({ aggregations: { suite_runs: { buckets: [] } } }))
+    vi.stubGlobal('fetch', fetch)
+    const route = register()['/test-suites'].at(-1)
+    const read = query => route({ query: { pageSize: '20', ...query } }, makeResponse())
+    await read({})
+    await read({ version: '3.6' })
+    expect(fetch).toHaveBeenCalledTimes(1)
+    await read({ refresh: 'true' })
+    expect(fetch).toHaveBeenCalledTimes(2)
+    now += 10_001
+    await read({})
+    expect(fetch).toHaveBeenCalledTimes(3)
+    process.env.WORKFLOW_VALIDATION_OPENSEARCH_URL = 'https://changed.example'
+    await read({})
+    expect(fetch).toHaveBeenCalledTimes(4)
+    expect(fetch.mock.lastCall[0]).toMatch(/^https:\/\/changed.example\//)
+    await route({ query: { includeBugs: 'false' } }, makeResponse())
+    await route({ query: { includeBugs: 'false' } }, makeResponse())
+    expect(fetch).toHaveBeenCalledTimes(6) // Legacy callers remain uncached.
+  })
+
+  it('keeps newer refresh results cached when an older scan finishes later', async () => {
+    const pending = []
+    const fetch = vi.fn(() => new Promise(resolve => pending.push(resolve)))
+    vi.stubGlobal('fetch', fetch)
+    const route = register()['/test-suites'].at(-1)
+    const older = route({ query: { pageSize: '20' } }, makeResponse())
+    await vi.waitFor(() => expect(pending).toHaveLength(1))
+    const refreshed = makeResponse()
+    const newer = route({ query: { pageSize: '20', refresh: 'true' } }, refreshed)
+    await vi.waitFor(() => expect(pending).toHaveLength(2))
+    pending[1](jsonResponse({ aggregations: { suite_runs: { buckets: [{
+      key: { suite: 'release_gate', invocation: 'new-run' },
+      latest: { hits: { hits: [{ _source: { timestamp: '2026-01-01T00:00:00Z' } }] } }
+    }] } } }))
+    await newer
+    expect(refreshed.body.rows[0].invocationId).toBe('new-run')
+    pending[0](jsonResponse({ aggregations: { suite_runs: { buckets: [] } } }))
+    await older
+    const cached = makeResponse()
+    await route({ query: { pageSize: '20' } }, cached)
+    expect(cached.body.rows[0].invocationId).toBe('new-run')
+    expect(fetch).toHaveBeenCalledTimes(2)
+  })
+
+  it('stops a disconnected composite scan and never caches its partial rows', async () => {
+    const response = makeResponse()
+    const fetch = vi.fn().mockImplementationOnce(async () => {
+      response.emit('close')
+      return jsonResponse({ aggregations: { suite_runs: { buckets: [], after_key: { suite: 's', invocation: 'i' } } } })
+    }).mockImplementation(async () => jsonResponse({ aggregations: { suite_runs: { buckets: [] } } }))
+    vi.stubGlobal('fetch', fetch)
+    const route = register()['/test-suites'].at(-1)
+    await route({ query: { pageSize: '20' } }, response)
+    expect(fetch).toHaveBeenCalledTimes(1)
+    expect(response.body).toBeNull()
+    expect(response.listenerCount('close')).toBe(0)
+    const connected = makeResponse()
+    await route({ query: { pageSize: '20' } }, connected)
+    expect(fetch).toHaveBeenCalledTimes(2)
+    expect(connected.body.total).toBe(0)
+  })
+
+  it('does not start a search after an early disconnect or cache a failed search', async () => {
+    const fetch = vi.fn().mockRejectedValueOnce(new Error('network failed'))
+      .mockImplementation(async () => jsonResponse({ aggregations: { suite_runs: { buckets: [] } } }))
+    vi.stubGlobal('fetch', fetch)
+    const route = register()['/test-suites'].at(-1)
+    const closed = makeResponse()
+    const pending = route({ query: { pageSize: '20' } }, closed)
+    closed.emit('close')
+    await pending
+    expect(fetch).not.toHaveBeenCalled()
+    const failed = makeResponse()
+    await route({ query: { pageSize: '20' } }, failed)
+    expect(failed.statusCode).toBe(503)
+    const retry = makeResponse()
+    await route({ query: { pageSize: '20' } }, retry)
+    expect(fetch).toHaveBeenCalledTimes(2)
+    expect(retry.body.total).toBe(0)
+  })
+
+  it('rejects invalid recent-run pagination before querying OpenSearch', async () => {
+    const fetch = vi.fn()
+    vi.stubGlobal('fetch', fetch)
+    const response = makeResponse()
+    await register()['/test-suites'].at(-1)({ query: { pageSize: '20', sortDir: 'wrong' } }, response)
+    expect(response.statusCode).toBe(400)
+    expect(fetch).not.toHaveBeenCalled()
   })
 
   it('selects the newest 20 run groups across all composite pages without loading bugs', async () => {

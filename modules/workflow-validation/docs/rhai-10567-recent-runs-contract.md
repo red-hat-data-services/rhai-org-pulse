@@ -1,21 +1,32 @@
 # Recent Runs: landing page and data contract
 
-Story: [RHAI-10567](https://redhat.atlassian.net/browse/RHAI-10567).
-Scope updated on 2026-10-28: the landing page only. Build metadata is separate.
+Stories: [RHAI-10567](https://redhat.atlassian.net/browse/RHAI-10567) and
+[AIPCC-33215](https://redhat.atlassian.net/browse/AIPCC-33215).
 
 ## Page and navigation
 
-Dashboard opens Recent Runs inside the existing Workflow Validation module.
-Show up to 20 runs across all suites and recorded versions. A run is one
+Dashboard opens Recent Runs inside Workflow Validation. The initial view shows
+20 runs, newest first, with Previous and Next controls. A run is one
 `telemetry_suite` and `invocation_id` pair. Keep different invocations separate.
 
-Show three columns: Test suite, Version, and View run. Keep the invocation ID
-as secondary text. Format suite labels without changing stored identifiers.
-Missing version shows “Version unavailable.” Build columns, build placeholders,
-CI links, image metadata lookups, and database changes are outside this PR.
+Show Test suite, Version, Recorded test time (UTC), and View run. Missing version
+or time shows an unavailable label. The time is the latest existing execution
+`timestamp` in the group. It is not a RHOAI build date. Build metadata and
+OpenSearch schema changes are outside this change.
+
+Version, suite, run ID, and recorded-date filters are optional. Run ID matches
+a case-insensitive substring. Date bounds are inclusive UTC calendar days.
+Sort newest or oldest recorded test first. Choices update results immediately.
+Run ID search updates after a 300 ms typing pause. Every change resets to page
+one and searches all available run groups, including those outside the first page. Clear restores the unfiltered,
+newest-first first page. Show the applied criteria and matching range/count.
+Filter options come from all groups. Shared detail filters and automatic date
+or version defaults do not restrict this page. URL parameters use the `recent`
+prefix so reloads retain the current filters, sort, and page.
 
 View run opens the existing Overview view as a hidden details route. Pass
-`exactRun=1`, explicit version, suite, and invocation, and clear date bounds.
+`exactRun=1`, suite, and invocation, and clear the version and date bounds. Scope Overview and Charts queries by
+suite and invocation across every version in that run.
 Verify the selected run before fetching its Overview and Charts data. Show an
 error and a link to Recent Runs if that run is missing. Never fall back to a
 different run. Ignore responses for earlier route selections.
@@ -27,37 +38,65 @@ The existing Overview route remains available for bookmarked links.
 ## API
 
 Reuse authenticated `GET /api/modules/workflow-validation/test-suites` with
-`limit=20&includeBugs=false`. Do not inherit shared version, suite, invocation,
-verdict, search, or date filters. Do not add another recent-runs endpoint.
+`pageSize=20&includeBugs=false&sortDir=desc`. Do not add another endpoint.
 
-The backend queries only existing workflow execution records. It reads every
-composite aggregation page, groups by suite and invocation, and selects each
-group's latest metadata. Sort by recorded execution timestamp descending before
-applying the limit. Missing or invalid timestamps sort last; ties use suite and
-invocation. The timestamp orders the list and is not shown as a build date.
+The backend reads every composite aggregation page, groups existing execution
+records by suite and invocation, and selects each group's latest metadata.
+It applies filters to complete groups, sorts all matching groups, and then
+selects a page. It never filters individual executions first in paged mode.
+Missing or invalid timestamps sort last in either direction. Timestamp ties
+use suite and invocation for a stable order.
 
-The lightweight response contains only `suite`, `invocationId`, `rhoaiVersion`,
-and `timestamp`. `limit` accepts integers from 1 to 200; invalid values return
-HTTP 400 before querying OpenSearch. Omitting `includeBugs=false` keeps the
-existing full response for other callers. No additional index is required.
-The browser also caps rows at 20 for older backends that ignore the limit.
+Paged parameters:
+
+- `pageSize`: integer from 1 to 200. The landing page requests 20.
+- `version`, `suite`: exact group metadata matches.
+- `runQuery`: case-insensitive invocation ID substring.
+- `dateFrom`, `dateTo`: optional `YYYY-MM-DD` bounds on the group timestamp.
+- `sortDir`: `desc` (default) or `asc`, using `timestamp`.
+- `cursor`: opaque next/previous anchor, bound to filters, sort, and page size.
+- `refresh=true`: bypass the metadata cache (used by Refresh and Retry).
+
+Return lightweight `rows` with `suite`, `invocationId`, `rhoaiVersion`, and
+`timestamp`, plus `total`, `start`, `end`, `pageSize`, `nextCursor`,
+`previousCursor`, `options`, `sortField`, and `sortDir`. Options contain all
+available `versions` and `suites`. Null cursors disable the corresponding
+button. Complete grouped metadata is cached for up to 10 seconds per runtime
+connection. Page, filter, and sort requests reuse that metadata; Refresh and
+Retry bypass the cache. Connection changes invalidate reuse. Failed or
+disconnected scans are never cached. Legacy calls remain uncached. Newer
+insertions do not shift a next-page anchor. A deleted or changed run can alter
+page counts. Cursors contain fixed-size hashes of suite and invocation IDs, so long IDs
+do not produce oversized URLs. Returned IDs are never truncated. Earlier raw-ID
+cursors remain supported. If a hashed anchor was deleted, or the anchor has no
+remaining rows, the page is empty and Previous resets to page one.
+
+Invalid paged parameters return HTTP 400 before querying OpenSearch. Do not
+combine paged mode with legacy `limit`, `latest`, or bug enrichment. Calls
+without `pageSize` keep the existing unlimited/full response and optional
+`limit=1..200&includeBugs=false` behavior for other consumers. Paged scans fetch metadata only and stop before the next OpenSearch request
+when the response closes. An in-flight OpenSearch request keeps its existing
+timeout. No new index, stored field, or data migration is required.
 
 ## Page states
 
-Show Loading during the first request. Show “No runs are available” only after
-a successful empty response. Show an error and Retry on failure. Keep existing
-rows during refresh and after a refresh failure. Disable Refresh while its
-request is pending. Ignore responses after the page unmounts.
+Show Loading during the first request. Show an empty message only after a
+successful empty response. Show an error and Retry on failure. Keep existing
+rows during refresh and after a refresh failure. Pagination uses the filters for the displayed results. Disable pagination and
+Refresh while loading or waiting for the search delay. Cancel queued searches
+on clear, navigation, or unmount. New typing immediately cancels and invalidates
+an older request, including responses arriving during the typing delay. Wait for a valid date range before fetching. Cancel earlier requests and ignore stale responses.
 
 ## Verification
 
-Client tests cover request isolation, three-column rendering, metadata gaps,
-exact navigation, loading, empty/error/retry states, and refresh retention.
-Server tests cover grouping, pagination before limiting, execution-time ordering,
-timestamp ties, metadata gaps, invalid limits, and existing full responses.
-Browser integration tests cover Dashboard to selected run to individual test,
-return navigation, missing runs, retry, narrow screens, and ignored legacy
-build fields. The fixture is synthetic; the product reads the existing API.
+Server tests cover traversal beyond 20 groups and across composite pages,
+full-list filters/options, UTC bounds, both sort directions, timestamp ties,
+missing metadata, invalid parameters, cursor isolation, and legacy responses.
+Client tests cover initial pagination, recorded-time labels, filter isolation,
+URL restoration, exact navigation, loading, retry, and stale responses.
+Browser tests cover all 47 synthetic runs, filters outside the first page,
+reload and clear, exact navigation, missing runs, and narrow screens.
+The fixture is synthetic; the product reads the existing API.
 
 ## GPUaaS dev verification — 2026-11-01
 
@@ -74,3 +113,124 @@ View run opened Ad Hoc invocation `1791447487869` with 17 tests: 11 passed and
 
 [GPUaaS landing-page screenshot](images/rhai-10567-recent-runs-gpuaas.jpg).
 [GPUaaS selected-run screenshot](images/rhai-10567-selected-run-gpuaas.jpg).
+
+## GPUaaS pagination verification — 2026-11-04
+
+Feature source: `9cc551f9`, on `feat/AIPCC-33215-recent-runs-controls`.
+Both preview image builds completed and both deployments are ready. The preview
+keeps its existing compatible app shell. The standard production build also
+passes with the declared core dependency. This deployment targets GPUaaS only.
+
+Live API and browser checks visited all 146 groups across eight pages. The
+initial view shows 20 rows and pagination. Checks passed for Previous/Next,
+page reload, a run outside the initial 20, filter reload, clear, UTC dates,
+oldest-first sorting, and exact-run navigation. The settled page fits 375px and
+320px screens; the table scrolls horizontally. No browser errors occurred.
+The inventory and document counts stayed unchanged: 712 executions, 4,157 tasks,
+and 184 root causes. Runtime settings, storage, and OAuth configuration stayed
+unchanged. Previous image references are saved locally for rollback.
+
+The full unit suite passed 6,688 tests, with 11 skipped. The added insertion
+case and focused client/server tests passed afterward (25 tests). All 24 browser
+integration tests passed. Lint, OpenAPI/module checks, and the production build
+passed. Node 26 tests used `--no-experimental-webstorage` and local server access.
+
+[Machine-readable evidence](aipcc-33215-validation.json).
+[Initial unfiltered page](images/aipcc-33215-gpuaas-recent-runs.png).
+[Filtered page](images/aipcc-33215-gpuaas-filtered.png).
+
+### Automatic-filter follow-up
+
+Frontend source `adb34723` removes Apply filters. Version, suite, date, and sort
+choices update immediately. Run ID search waits for a 300 ms typing pause.
+Clear filters remains and restores the newest-first, unfiltered first page.
+The full unit suite passed 6,692 tests, with 11 skipped. All 127 module
+unit tests and 25 browser integration tests passed. The updated
+GPUaaS frontend passed the same live checks, including automatic filters,
+Clear filters, reload, all eight pages, and narrow screens. Screenshots and the
+machine-readable evidence above reflect this frontend revision.
+
+### Review fixes and UI checks — 2026-11-04
+
+Source `786e1a68` addresses disconnected scans, long-ID cursors, repeated metadata
+scans, mixed-version exact runs, and stale responses during the typing delay.
+Helper functions now document their behavior. The full unit suite passed 6,700
+tests (11 skipped), including 135 module tests. All 27 browser integration tests
+passed, including mixed-version results and Refresh on a later page.
+
+Both updated images are deployed to GPUaaS. Live browser checks passed for all
+146 groups across eight pages, automatic filters, Clear filters, date/sort
+controls, old raw-ID page bookmarks, reload, Refresh retaining the current page,
+retaining rows after an injected refresh error, Retry recovery, and 320/375px
+layouts. Exact-run queries use suite and invocation without a version filter.
+Rapid typing sent only the final search. No browser errors occurred. Document
+counts and runtime settings stayed unchanged. Screenshots and JSON above now
+reflect this revision. Synthetic regression tests cover 9,000-character IDs,
+deleted cursor anchors, and mixed-version data without changing stored records.
+
+### Minor review cleanup
+
+Exact-run links now clear the version parameter, matching the exact-run data
+queries. One `RECENT_RUNS_PAGE_SIZE` constant controls the requested page size,
+response row limit, and page-size label. The page still shows 20 runs at a time.
+
+Source `cf7df25c` passes all 6,700 unit tests (11 skipped) and all 27 browser
+integration tests. The updated GPUaaS frontend also passes the live UI checks,
+including an empty version in exact-run links, 20 rows per page, automatic
+filters, Clear filters, pagination, old page links, Refresh/Retry, and narrow
+screens. No browser errors occurred. The JSON evidence reflects this revision.
+
+### Module-owned browser tests
+
+The browser suite and its standalone Playwright config live inside Workflow
+Validation. The existing shared entrypoint,
+`tests/integration/workflow-validation.spec.js`, contains one `require` that
+loads the module-owned suite. This is the only changed file outside the module.
+CODEOWNERS explicitly lists `@adamrdrew` for this entrypoint, as in PR #1792.
+CI workflows, Makefile, and the root Playwright config are unchanged.
+
+The suite retains all 22 previous browser tests with updated API expectations
+and adds five tests for pagination, automatic filtering, refresh, and runs
+spanning versions. No test is skipped or disabled by the loader. Both the
+standalone module command and the existing shared CI command discover the same
+27 tests. The branch also passes 6,739 unit tests (11 skipped), lint, and the
+production build.
+
+
+## Fresh GPUaaS images and CI diagnosis — 2026-11-04
+
+Backend and frontend images were built from runtime code at `4866ecfb` and
+rolled out to the GPUaaS preview. Both deployments are ready. The images extend
+the existing GPUaaS images and keep its compatible core 2.0.83 frontend shell.
+The production frontend build also passes with the declared core dependency.
+Image digests, build names, checks, and asset hashes are recorded in
+[aipcc-33215-validation.json](aipcc-33215-validation.json).
+
+Live API and browser checks passed against the deployed images. They cover all
+146 run groups across eight pages, initial 20 rows, previous/next and reload,
+automatic filters, UTC dates, both sort orders, Clear, Refresh, Retry, exact-run
+navigation across versions, and 375/320 px screens. Invalid restored date ranges
+show validation before a paged request. No browser page errors occurred. Backend
+source hashes and frontend asset hashes match the build. Run metadata, document
+counts, and runtime configuration match the baseline.
+
+[Fresh initial page](images/aipcc-33215-gpuaas-recent-runs.png).
+[Fresh filtered page](images/aipcc-33215-gpuaas-filtered.png).
+
+The [required integration run](https://github.com/red-hat-data-services/rhai-org-pulse/actions/runs/41901136010)
+recorded 17 passing and five failing shared tests before the entrypoint fix.
+The old shared suite supplied only
+`{ rows }`. The page requires pagination metadata and rejects that incomplete
+response, so the table, run links, and empty state never appear. One unchanged
+shared test reproduced the visible error: “The run service returned an invalid
+page. Please retry.” The old suite also expects three headers, `limit=20`, and a
+version filter on exact-run links. Those expectations describe the previous
+page behavior.
+
+The shared Makefile runs `npx playwright test --grep @workflow-validation` with
+the root configuration, whose `testDir` is `./tests`. The shared entrypoint now
+loads the updated 27-test module suite through one `require`. This fixes discovery
+without changing CI configuration or another module's tests. The previous tests
+are retained in that suite. The Ownership Gate still requires approval. The PR
+is ready for review. This fix changes test discovery and documentation only;
+the deployed application code and GPUaaS evidence remain applicable.

@@ -1,0 +1,160 @@
+{
+  "ticket": "AIPCC-33215",
+  "sourceCommit": "4866ecfbe16dbc7356093a7dae66c7a25b77b1ec",
+  "environment": "GPUaaS preview only",
+  "api": {
+    "groups": 146,
+    "pages": 8,
+    "initialRows": 20,
+    "fullTraversal": true,
+    "previousPage": true,
+    "globalTimestampOrder": true,
+    "oldestFirst": true,
+    "filterBeyondFirstPage": true,
+    "utcDateFilter": true,
+    "cursorMismatchRejected": true,
+    "boundedCursors": true,
+    "legacyBookmark": true,
+    "refreshKeepsPage": true,
+    "checkedAt": "2026-11-04T19:54:13.121826+00:00",
+    "storedDataUnchanged": true,
+    "deployedSourceMatches": true,
+    "runtimeConfigurationPreserved": true
+  },
+  "browser": {
+    "checkedAt": "2026-11-04T19:57:44.596Z",
+    "actualDeployedFrontend": true,
+    "actualDeployedBackend": true,
+    "invalidRestoredDateRangeBlocked": true,
+    "exactLinkClearsVersion": true,
+    "initialRows": 20,
+    "groups": 146,
+    "pagesVisited": 8,
+    "pageReload": true,
+    "filtersBeyondFirstPage": true,
+    "filterReload": true,
+    "legacyPageBookmark": true,
+    "refreshRetainsPage": true,
+    "refreshErrorRetainsRows": true,
+    "retryRecovers": true,
+    "exactScopeAcrossVersions": true,
+    "typingDebounced": true,
+    "automaticFilters": true,
+    "runIdDelayMs": 300,
+    "clear": true,
+    "oldestFirst": true,
+    "utcDateFilter": true,
+    "narrowWidths": [
+      375,
+      320
+    ],
+    "exactRunLink": "#/workflow-validation/overview?exactRun=1&version=&testSuite=dashboard-dev-tests&invocationId=dashboard-dev-tests-20261102-132252-verified&datePreset=all&dateFrom=&dateTo=",
+    "pageErrors": []
+  },
+  "checks": {
+    "fullUnitSuite": {
+      "passed": 6739,
+      "skipped": 11,
+      "command": "NODE_OPTIONS=--no-experimental-webstorage npm test"
+    },
+    "browserIntegration": {
+      "passed": 27,
+      "command": "npx playwright test --config modules/workflow-validation/playwright.config.cjs --workers=2",
+      "environment": "Isolated local backend with Workflow Validation enabled"
+    },
+    "lint": "passed",
+    "productionBuild": "passed",
+    "moduleValidation": "passed",
+    "openapiValidation": "passed",
+    "platformValidation": "skipped by validator: no platform directory found"
+  },
+  "previewFrontendShell": "Existing compatible core 2.0.83; production build checked with dependency core 2.0.94",
+  "images": {
+    "backend": "image-registry.openshift-image-registry.svc:5000/workflow-validation-org-pulse/org-pulse-backend@sha256:97486b288fde04e4f3be7fbc4cbb13c6a6a8d1a5b6fcfe6917fce1da5b01e5d7",
+    "frontend": "image-registry.openshift-image-registry.svc:5000/workflow-validation-org-pulse/org-pulse-frontend@sha256:6ba829ef185b7a6bffef96360976fd093707b4a42e6d16a43d25fe6b49cd779b"
+  },
+  "backendSourceCommit": "4866ecfbe16dbc7356093a7dae66c7a25b77b1ec",
+  "reviewFixes": {
+    "disconnectedScans": "stop between OpenSearch requests; partial or failed scans are not cached",
+    "metadataCacheSeconds": 10,
+    "refreshAndRetryBypassCache": true,
+    "longIds": "bounded v2 hash cursors; returned IDs intact; legacy cursors supported",
+    "mixedVersionRuns": "exact-run data queries use suite and invocation across all versions",
+    "typingDelay": "older requests invalidated immediately; responses cannot update rows or URL while typing"
+  },
+  "minorCleanup": {
+    "exactRunLinksClearVersion": true,
+    "sharedClientPageSize": 20,
+    "pageSizeUsedBy": [
+      "request",
+      "response validation",
+      "page label"
+    ]
+  },
+  "testMigration": {
+    "moduleOwnedSuite": "modules/workflow-validation/tests/integration/workflow-validation.spec.js",
+    "config": "modules/workflow-validation/playwright.config.cjs",
+    "browserTestsPassed": 27,
+    "fullUnitSuitePassed": 6739,
+    "unitTestsSkipped": 11,
+    "ciRouting": "Existing shared entrypoint loads the module-owned 27-test suite with one require; CI configuration is unchanged",
+    "temporarySharedLoaderProof": {
+      "passed": 27,
+      "repositorySharedFilesChanged": false
+    },
+    "preMigrationSharedSuite": {
+      "passed": 17,
+      "failed": 5,
+      "reason": "Legacy mocks and expectations target the previous Recent Runs page"
+    },
+    "sharedEntryPoint": "tests/integration/workflow-validation.spec.js",
+    "prScope": "Module implementation, tests, and evidence; one shared test entrypoint outside the module",
+    "outsideModuleChanges": true,
+    "prStatus": "Ready for review; ownership approval and required checks are required before merging",
+    "sharedEntryPointLines": 1,
+    "sharedEntryPointOwners": [
+      "red-hat-data-services/org-pulse-maintainers",
+      "adamrdrew"
+    ],
+    "sharedCiCommandProof": {
+      "command": "npx playwright test --grep @workflow-validation --workers=2",
+      "passed": 27,
+      "sameTestsAsModuleCommand": true,
+      "previousTestsRetained": 22,
+      "newTests": 5,
+      "skipped": 0
+    },
+    "ownershipEligibility": {
+      "reviewer": "adamrdrew",
+      "verifiedWithRepositoryOwnershipEvaluator": true,
+      "actualApprovalStillRequired": true
+    }
+  },
+  "builds": {
+    "backend": "org-pulse-backend-aipcc33215-ready-20261104-4866ecfb-1",
+    "frontend": "org-pulse-frontend-aipcc33215-ready-20261104-4866ecfb-1"
+  },
+  "frontendAssetsVerified": {
+    "index.html": "884ba6af18055542eee4f17dfabda7cf73a5f1fc69bf152d924e580c02fb4f3a",
+    "assets/RecentRunsView-CiD_qYJ7.js": "407b80fd251c38971c2a2eab6a7ecc62077c5ad9ebf22b524928995bfb8336ae",
+    "assets/useWorkflowValidation-BudwR_ee.js": "f094e4642c19a70fefadce71ad793137e1864f050ead8d556d127cee641405bd"
+  },
+  "ciDiagnosis": {
+    "run": "https://github.com/red-hat-data-services/rhai-org-pulse/actions/runs/41901136010",
+    "sharedBrowserSuite": {
+      "passed": 17,
+      "failed": 5
+    },
+    "primaryCause": "Legacy mocks return only rows; the paginated page rejects responses without totals, cursors, and options.",
+    "otherOutdatedExpectations": [
+      "three column headers instead of four",
+      "limit=20 instead of pageSize=20",
+      "version filter retained in exact-run links"
+    ],
+    "discovery": "The root runner discovers the existing shared entrypoint, which now loads the module-owned suite.",
+    "reproduction": "One unchanged failing shared test reproduced the visible error: The run service returned an invalid page. Please retry.",
+    "ownershipGate": "Approval is required; CODEOWNERS explicitly lists adamrdrew for the module and the shared Workflow Validation test entrypoint.",
+    "requiredResolution": "Fixed in this PR through the one-line shared entrypoint; no separate CI PR or configuration change is required.",
+    "historicalFailure": true
+  }
+}
