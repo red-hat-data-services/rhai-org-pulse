@@ -150,3 +150,21 @@ unit tests and 25 browser integration tests passed. The updated
 GPUaaS frontend passed the same live checks, including automatic filters,
 Clear filters, reload, all eight pages, and narrow screens. Screenshots and the
 machine-readable evidence above reflect this frontend revision.
+
+### Review fixes and UI checks — 2026-11-04
+
+Source `786e1a68` addresses disconnected scans, long-ID cursors, repeated metadata
+scans, mixed-version exact runs, and stale responses during the typing delay.
+Helper functions now document their behavior. The full unit suite passed 6,700
+tests (11 skipped), including 135 module tests. All 27 browser integration tests
+passed, including mixed-version results and Refresh on a later page.
+
+Both updated images are deployed to GPUaaS. Live browser checks passed for all
+146 groups across eight pages, automatic filters, Clear filters, date/sort
+controls, old raw-ID page bookmarks, reload, Refresh retaining the current page,
+retaining rows after an injected refresh error, Retry recovery, and 320/375px
+layouts. Exact-run queries use suite and invocation without a version filter.
+Rapid typing sent only the final search. No browser errors occurred. Document
+counts and runtime settings stayed unchanged. Screenshots and JSON above now
+reflect this revision. Synthetic regression tests cover 9,000-character IDs,
+deleted cursor anchors, and mixed-version data without changing stored records.

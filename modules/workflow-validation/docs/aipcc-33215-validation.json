@@ -1,6 +1,6 @@
 {
   "ticket": "AIPCC-33215",
-  "sourceCommit": "adb3472385bfcedbac9aee586656e3868b551a50",
+  "sourceCommit": "786e1a68af136bab241acded2be8711537c8e40f",
   "environment": "GPUaaS preview only",
   "api": {
     "groups": 146,
@@ -13,13 +13,16 @@
     "filterBeyondFirstPage": true,
     "utcDateFilter": true,
     "cursorMismatchRejected": true,
-    "checkedAt": "2026-11-04T09:15:48.945512+00:00",
+    "boundedCursors": true,
+    "legacyBookmark": true,
+    "refreshKeepsPage": true,
+    "checkedAt": "2026-11-04T09:45:32.873095+00:00",
     "storedDataUnchanged": true,
     "deployedSourceMatches": true,
     "runtimeConfigurationPreserved": true
   },
   "browser": {
-    "checkedAt": "2026-11-04T09:16:11.728Z",
+    "checkedAt": "2026-11-04T09:46:46.508Z",
     "actualDeployedFrontend": true,
     "actualDeployedBackend": true,
     "initialRows": 20,
@@ -28,6 +31,12 @@
     "pageReload": true,
     "filtersBeyondFirstPage": true,
     "filterReload": true,
+    "legacyPageBookmark": true,
+    "refreshRetainsPage": true,
+    "refreshErrorRetainsRows": true,
+    "retryRecovers": true,
+    "exactScopeAcrossVersions": true,
+    "typingDebounced": true,
     "automaticFilters": true,
     "runIdDelayMs": 300,
     "clear": true,
@@ -42,12 +51,12 @@
   },
   "checks": {
     "fullUnitSuite": {
-      "passed": 6692,
+      "passed": 6700,
       "skipped": 11,
       "command": "NODE_OPTIONS=--no-experimental-webstorage npm test"
     },
     "browserIntegration": {
-      "passed": 25,
+      "passed": 27,
       "command": "npx playwright test tests/integration/workflow-validation.spec.js --project=chromium --workers=2"
     },
     "lint": "passed",
@@ -56,14 +65,22 @@
     "openapiValidation": "passed",
     "platformValidation": "skipped by validator: no platform directory found",
     "workflowModuleTests": {
-      "passed": 127,
+      "passed": 135,
       "command": "NODE_OPTIONS=--no-experimental-webstorage npx vitest run modules/workflow-validation"
     }
   },
   "previewFrontendShell": "Existing compatible core 2.0.83; production build checked with dependency core 2.0.94",
   "images": {
-    "backend": "image-registry.openshift-image-registry.svc:5000/workflow-validation-org-pulse/org-pulse-backend@sha256:8d67783fdf63ebde2ec2d00b69b8c2c4fe5e46954356b64ea65a6dd91baf8dff",
-    "frontend": "image-registry.openshift-image-registry.svc:5000/workflow-validation-org-pulse/org-pulse-frontend@sha256:a51d6d619eb0e80bc190cc38ac98431caeb1da07c71ffa4384751d06c70cf6bd"
+    "backend": "image-registry.openshift-image-registry.svc:5000/workflow-validation-org-pulse/org-pulse-backend@sha256:78c458c8ad3d2e2234c021c152841da489e5fca4c07101ed01fec4435d8d32bd",
+    "frontend": "image-registry.openshift-image-registry.svc:5000/workflow-validation-org-pulse/org-pulse-frontend@sha256:02804f4e5b45a6c9ee7612f20bde19eb66ed404d7d45ee95c62d0ef9ed6f7d4c"
   },
-  "backendSourceCommit": "9cc551f9984f517859fb9cc3287fd98fe8b91045"
+  "backendSourceCommit": "786e1a68af136bab241acded2be8711537c8e40f",
+  "reviewFixes": {
+    "disconnectedScans": "stop between OpenSearch requests; partial or failed scans are not cached",
+    "metadataCacheSeconds": 10,
+    "refreshAndRetryBypassCache": true,
+    "longIds": "bounded v2 hash cursors; returned IDs intact; legacy cursors supported",
+    "mixedVersionRuns": "exact-run data queries use suite and invocation across all versions",
+    "typingDelay": "older requests invalidated immediately; responses cannot update rows or URL while typing"
+  }
 }
