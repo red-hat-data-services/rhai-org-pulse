@@ -1369,28 +1369,13 @@ const BIG_ROCKS = [
     links:null, newChildren:0, externalDeps:[], projected:'~20–50' },
 ];
 
-const PM_COMPONENTS = {
-  'Adam Bellusci':    ['Model Serving Runtimes','Serving Orchestration','AI Hub'],
-  'William Caban':    ['AI Safety','EvalHub / Model Eval'],
-  'Jenny Yi':         ['AI Core Dashboard'],
-  'Peter Double':     ['GenAI Studio','Model Context Protocol'],
-  'Naina Singh':      ['llm-d'],
-  'Yuchen Fama':      ['vllm','PSAP','vLLM Runtime'],
-  'Rob Greenberg':    ['LLM Compressor','Optimized Models','Model Validation'],
-  'Erwan Gallen':     ['INFERENG Midstream'],
-  'Jonathan Zarecki': ['MaaS','AI Gateway','Feature Store'],
-  'Kezia Cook':       ['Notebooks Server','Notebook images and extensions'],
-  'Suhas Kashyap':    ['AutoRAG','Model and Agent Observability','AI Navigator'],
-  'Aditi Saluja':     ['AutoML','SDG','Training Hub','Fine Tuning / Kubeflow-Dev'],
-  'Jehlum Pandit':    ['Development platform','Data Processing','Agentic and AI Tooling Experience'],
-  'Adel Zaalouk':     ['AgentOps','AgentDev','OGX Core'],
-  'Myriam Fentanes Gutierrez': ['AI Pipelines','AI Core Platform','MLflow'],
-  'Christoph Görn':   ['KubeRay','Ray Training','Training Kubeflow'],
-  'Luke Inglis':      ['Inference-Time Techniques'],
-  'Christoph Goern':  ['GPUaaS'],
-};
-
-// Maps Org Pulse Kerberos actor → PM name in PM_COMPONENTS.
+// Maps Org Pulse Kerberos actor → PM display name, as it appears in the live
+// Jira "PM" field on each feature (window._pmFilter matches against that field
+// directly — see applyPmFilter/run). There is no component-ownership proxy here
+// anymore: the old PM_COMPONENTS map filtered by a hand-maintained component list
+// instead of the feature's actual Jira PM, so a PM's own features silently
+// disappeared whenever that list was stale or incomplete (e.g. RHAISTRAT-1446,
+// RHAISTRAT-1339 — reported Nov 3).
 // When a PM first loads the planner via Org Pulse, their actor is passed as ?user=actor.
 // Update entries below when a PM confirms their username (check their Org Pulse profile).
 const PM_ACTORS = {
@@ -2952,7 +2937,7 @@ window.addEventListener('message', async function(e){
     if(!pm) return;
     localStorage.setItem('selectedPm',pm);
     localStorage.setItem('userRole','pm');
-    window._pmFilter=PM_COMPONENTS[pm]||[];
+    window._pmFilter=pm;
     populatePmSelect();
     const sel=document.getElementById('f-pm-select');
     if(sel) sel.value=pm;
@@ -3097,14 +3082,17 @@ function populatePmSelect(){
   const sel=document.getElementById('f-pm-select');
   if(!sel) return;
   const saved=localStorage.getItem('selectedPm')||'';
-  const opts=Object.keys(PM_COMPONENTS).sort().map(pm=>`<option value="${pm}"${pm===saved?' selected':''}>${pm}</option>`).join('');
+  // Options come from the live Jira "PM" field on each feature, not a hand-maintained
+  // list — so the dropdown always matches who Jira actually says owns a feature.
+  const pms=[...new Set(allData.map(r=>(r['PM']||'').trim()).filter(Boolean))].sort();
+  const opts=pms.map(pm=>`<option value="${esc(pm)}"${pm===saved?' selected':''}>${esc(pm)}</option>`).join('');
   sel.innerHTML='<option value="">All PMs</option>'+opts;
 }
 function applyPmFilter(){
   const sel=document.getElementById('f-pm-select');
   const pm=sel?sel.value:'';
   if(pm) localStorage.setItem('selectedPm',pm); else localStorage.removeItem('selectedPm');
-  window._pmFilter=PM_COMPONENTS[pm]||[];
+  window._pmFilter=pm;
   run();
 }
 function applyUrlUserParam(){
@@ -3115,7 +3103,7 @@ function applyUrlUserParam(){
   const pm=PM_ACTORS[actor];
   if(!pm) return false;
   localStorage.setItem('selectedPm',pm);
-  window._pmFilter=PM_COMPONENTS[pm]||[];
+  window._pmFilter=pm;
   const sel=document.getElementById('f-pm-select');
   if(sel) sel.value=pm;
   return true;
@@ -3125,7 +3113,7 @@ function restoreMyComp(){
   if(!saved) return;
   const sel=document.getElementById('f-pm-select');
   if(sel) sel.value=saved;
-  window._pmFilter=PM_COMPONENTS[saved]||[];
+  window._pmFilter=saved;
 }
 function setOpts(id,vals,ph){
   const s=document.getElementById(id);
@@ -3291,7 +3279,10 @@ function switchTab(name){
   document.querySelectorAll('.main-tab').forEach(b=>b.classList.toggle('active',b.dataset.tab===name));
   document.querySelectorAll('.tab-pane').forEach(p=>p.classList.toggle('active',p.id==='tab-'+name));
   if(name==='roadmap'){window._roadmapVisible=true;if(typeof renderRoadmapTimeline==='function')renderRoadmapTimeline(allData);}
-  if(name==='executive'){renderExecView();}
+  // Re-run the shared filter pipeline so the Executive summary reflects whatever
+  // Version/Team/PM/etc. filters are already selected, instead of always summarizing
+  // all of allData regardless of the filter bar (reported by John Graham, Nov 3).
+  if(name==='executive'){run();}
 }
 function renderRoadmapTimeline(data){
   const phases = ['EA1','EA2','GA'];
@@ -3469,7 +3460,7 @@ function run(){
   const pri  = v('f-pri'), fail  = v('f-fail');
   const assign = v('f-assign');
   const bigRockOnly = document.getElementById('f-bigrock').checked;
-  const pmComps = window._pmFilter||[];
+  const pmSel = window._pmFilter||'';
 
   let rows=allData.filter(r=>{
     if(rel&&!((esc(r['Target Versions'])||'').includes(rel)||(esc(r['Fix Version'])||'').includes(rel))) return false;
@@ -3484,7 +3475,7 @@ function run(){
     if(out&&esc(r['Outcome'])!==out) return false;
     if(tv.length&&!tv.some(v=>(esc(r['Target Versions'])||'').includes(v)||(esc(r['Fix Version'])||'').includes(v))) return false;
     if(comp.length&&!comp.some(c=>(esc(r['Components'])||'').includes(c))) return false;
-    if(pmComps.length&&!pmComps.some(c=>(esc(r['Components'])||'').includes(c))) return false;
+    if(pmSel&&(r['PM']||'').trim()!==pmSel) return false;
     if(team.length&&!team.some(t=>(esc(r['Team'])||'').includes(t))) return false;
     if(assign&&(r['Assignee']||'').trim()!==assign) return false;
     if(pri&&esc(r['Priority'])!==pri) return false;
@@ -3558,7 +3549,7 @@ function run(){
   });
   renderTbl(rows); renderPmBanner(rows); renderCards(allData); updateLandingCapacity(rows); renderCapacityMix(allData); renderBigRocks(allData); renderAppendix(allData);
   if(document.getElementById('tab-roadmap')?.classList.contains('active')) renderRoadmapTimeline(allData);
-  if(document.getElementById('tab-executive')?.classList.contains('active')) renderExecView();
+  if(document.getElementById('tab-executive')?.classList.contains('active')) renderExecView(rows);
 }
 function v(id){return document.getElementById(id).value;}
 function sort(col){
@@ -3630,7 +3621,8 @@ function renderPmBanner(rows){
   if(!pmVal){banner.style.display='none';return;}
   const pmName=PM_ACTORS[pmVal]||pmVal;
   const allApv=_loadApprovals();
-  const allInPlan=allData.filter(r=>r._place!=='No'&&(window._pmFilter||[]).length?window._pmFilter.some(c=>(esc(r['Components'])||'').includes(c)):true);
+  const pmSel=window._pmFilter||'';
+  const allInPlan=allData.filter(r=>r._place!=='No'&&(pmSel?(r['PM']||'').trim()===pmSel:true));
   const inPlan=rows.filter(r=>r._place!=='No');
   if(!allInPlan.length){banner.style.display='none';return;}
   const needReview=allInPlan.filter(r=>!(allApv[esc(r['Key'])]||{}).pm);
@@ -4368,12 +4360,16 @@ function renderCveReserve(){
   </div>`;
 }
 
-function renderExecView(){
+function renderExecView(rows){
+  // Honor the shared filter bar (Version/Team/PM/etc.) so the outcomes summary
+  // only reflects what's actually selected — previously this always summarized
+  // every feature regardless of filters (reported by John Graham, Nov 3).
+  const data=rows||allData;
   const el=document.getElementById('exec-view');
-  if(!el||!allData.length) return;
+  if(!el||!data.length) return;
 
-  const inPlan=allData.filter(r=>r._place!=='No');
-  const total=allData.length;
+  const inPlan=data.filter(r=>r._place!=='No');
+  const total=data.length;
   const totalInPlan=inPlan.length;
 
   const avgConf=totalInPlan>0?Math.round(inPlan.reduce((s,r)=>s+(r._conf||0),0)/totalInPlan):0;
@@ -4382,7 +4378,7 @@ function renderExecView(){
 
   const s={};
   BIG_ROCKS.forEach(br=>{s[br.name]={inPlan:0,total:0,confSum:0};});
-  allData.forEach(r=>{
+  data.forEach(r=>{
     if(!r._bigRocks) return;
     r._bigRocks.forEach(name=>{
       if(!s[name]) return;
