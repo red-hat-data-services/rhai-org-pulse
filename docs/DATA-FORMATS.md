@@ -3200,6 +3200,63 @@ The Releases module reads the sheet through Org Pulse's shared Google Sheets cli
 
 ---
 
+### `releases/planning/jira-plan.json`
+
+Demo fixture for the read-only **Releases > Plan > Jira Plan** tab. Production
+does not persist this payload; the API composes it live from Jira and the
+fixture mirrors that response for demo mode.
+
+```json
+{
+  "plan": {
+    "id": "5187",
+    "scenarioId": "5190",
+    "viewId": "7542",
+    "name": "RHAI Outcome to Feature Prioritization",
+    "url": "https://redhat.atlassian.net/jira/plans/5187/scenarios/5190/timeline?vid=7542",
+    "project": "RHAISTRAT",
+    "sentinelKey": "RHAISTRAT-2921"
+  },
+  "sentinelKey": "RHAISTRAT-2921",
+  "generatedAt": "2026-11-04T15:00:00.000Z",
+  "outcomes": [
+    {
+      "key": "RHAISTRAT-3004",
+      "rank": 1,
+      "summary": "Deliver a Production-Ready, Praxis-Native AI Gateway",
+      "issueType": "Outcome",
+      "status": "New",
+      "statusCategory": "To Do",
+      "priority": "Blocker",
+      "assignee": "Christopher Ferreira",
+      "reporter": "Christopher Ferreira",
+      "productManager": "Christopher Ferreira",
+      "components": [],
+      "targetVersions": ["3.7 GA RHOAI RELEASE"],
+      "fixVersions": [],
+      "releaseType": null,
+      "team": null,
+      "labels": ["Priority-Outcome-3.7"],
+      "project": "RHAISTRAT",
+      "created": null,
+      "updated": null,
+      "url": "https://redhat.atlassian.net/browse/RHAISTRAT-3004"
+    }
+  ],
+  "childrenByOutcome": {
+    "RHAISTRAT-3004": []
+  }
+}
+```
+
+`outcomes` is ordered by Jira Rank and stops before `sentinelKey`; the marker
+itself and Outcomes below it are omitted. `childrenByOutcome` is demo-only and
+backs the expand action by returning direct open child work items. The live
+endpoints are `GET /api/modules/releases/planning/jira-plan` and
+`GET /api/modules/releases/planning/jira-plan/outcomes/{key}/children`.
+
+---
+
 ## Fixture Rules
 
 The `fixtures/` directory provides read-only demo data used when `DEMO_MODE=true`. These rules prevent data format drift:

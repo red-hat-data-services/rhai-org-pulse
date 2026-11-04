@@ -189,6 +189,24 @@ test.describe('Releases Views @releases', () => {
     await testView(page, 'plan', 'Plan');
   });
 
+  test('should show the read-only Jira Plan and expand an Outcome', async ({ page }) => {
+    await page.goto('/#/releases/plan?tab=jira-plan');
+    await page.waitForLoadState('networkidle');
+    await page.waitForTimeout(DEFAULT_PAGE_WAIT_TIME);
+
+    const jiraPlan = page.getByTestId('jira-plan-view');
+    await expect(jiraPlan).toBeVisible();
+    await expect(jiraPlan).toContainText('Read-only');
+    await expect(jiraPlan).toContainText('RHAISTRAT-2921');
+    await expect(page.getByTestId('jira-plan-outcome-row')).toHaveCount(12);
+    await expect(page.getByTestId('jira-plan-outcome-row').first()).toContainText('RHAISTRAT-3004');
+
+    await page.getByTestId('jira-plan-toggle-RHAISTRAT-3004').click();
+    await expect(page.getByTestId('jira-plan-child-row')).toHaveCount(2);
+    await expect(page.getByTestId('jira-plan-child-row').first()).toContainText('RHAISTRAT-1935');
+    expect(page.errors).toHaveLength(0);
+  });
+
   test('should load Execute view', async ({ page }) => {
     await testView(page, 'execute', 'Execute');
   });

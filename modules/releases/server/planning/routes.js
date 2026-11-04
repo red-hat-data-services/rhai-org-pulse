@@ -30,6 +30,7 @@ var { buildFeatureReadiness } = require('./feature-readiness')
 var { fetchFeaturesWithTimeout } = require('./feature-query')
 var { extractFirstInProgressAt, extractCustomersFromComments } = require('./bu-feedback-issue')
 var { createCustomerPortalClient, extractLinkedCaseNumbers, extractCustomerName } = require('./customer-portal')
+var registerJiraPlanRoutes = require('./jira-plan-routes')
 
 const { isValidVersionParam } = require('../version-utils')
 
@@ -237,6 +238,13 @@ module.exports = async function registerPlanningRoutes(router, context) {
 
     doRefresh(1)
   }
+
+  // Read-only Jira Plan projection (Releases > Plan > Jira Plan).
+  registerJiraPlanRoutes(router, {
+    requireAuth: requireAuth,
+    requireScope: requireScope,
+    jira: jiraClient
+  })
 
   // Mount health routes -- pass requireAuth as requirePM (open to all authenticated users)
   healthRoutes(router, {

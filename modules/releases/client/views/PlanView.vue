@@ -21,6 +21,7 @@
       <DraftPlansView v-else-if="activeTab === 'draft-plans' && canViewDraftPlans" />
       <BuFeedbackView v-else-if="activeTab === 'bu-feedback'" />
       <PmHubView v-else-if="activeTab === 'pm-hub'" />
+      <JiraPlanView v-else-if="activeTab === 'jira-plan'" />
       <!-- Kept mounted once opened. Unmounting destroys the planner's iframe, which
            resets its filters and selection every time the user visits another tab. -->
       <AIPlanner v-if="plannerOpened" v-show="activeTab === 'ai-planner'" />
@@ -36,11 +37,13 @@ import FeatureReadinessView from '../plan/views/FeatureReadinessView.vue'
 import DraftPlansView from '../plan/views/DraftPlansView.vue'
 import BuFeedbackView from '../plan/views/BuFeedbackView.vue'
 import PmHubView from '../plan/views/PmHubView.vue'
+import JiraPlanView from '../plan/views/JiraPlanView.vue'
 import AIPlanner from '../plan/views/AIPlanner.vue'
 
 var ALL_TABS = [
   { id: 'outcomes', label: 'Big Rocks' },
   { id: 'pm-hub', label: 'PM Hub' },
+  { id: 'jira-plan', label: 'Jira Plan' },
   { id: 'feature-readiness', label: 'Features List (1-n)' },
   { id: 'draft-plans', label: 'Plan Approval' },
   { id: 'bu-feedback', label: 'Field and BU Feedback' },
