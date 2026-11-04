@@ -173,3 +173,9 @@ deleted cursor anchors, and mixed-version data without changing stored records.
 Exact-run links now clear the version parameter, matching the exact-run data
 queries. One `RECENT_RUNS_PAGE_SIZE` constant controls the requested page size,
 response row limit, and page-size label. The page still shows 20 runs at a time.
+
+Source `cf7df25c` passes all 6,700 unit tests (11 skipped) and all 27 browser
+integration tests. The updated GPUaaS frontend also passes the live UI checks,
+including an empty version in exact-run links, 20 rows per page, automatic
+filters, Clear filters, pagination, old page links, Refresh/Retry, and narrow
+screens. No browser errors occurred. The JSON evidence reflects this revision.

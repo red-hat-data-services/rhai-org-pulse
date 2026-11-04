@@ -1,6 +1,6 @@
 {
   "ticket": "AIPCC-33215",
-  "sourceCommit": "786e1a68af136bab241acded2be8711537c8e40f",
+  "sourceCommit": "cf7df25c30c456c272e93b040951f6eef5829f28",
   "environment": "GPUaaS preview only",
   "api": {
     "groups": 146,
@@ -16,15 +16,16 @@
     "boundedCursors": true,
     "legacyBookmark": true,
     "refreshKeepsPage": true,
-    "checkedAt": "2026-11-04T09:45:32.873095+00:00",
+    "checkedAt": "2026-11-04T10:06:27.645794+00:00",
     "storedDataUnchanged": true,
     "deployedSourceMatches": true,
     "runtimeConfigurationPreserved": true
   },
   "browser": {
-    "checkedAt": "2026-11-04T09:46:46.508Z",
+    "checkedAt": "2026-11-04T10:07:00.501Z",
     "actualDeployedFrontend": true,
     "actualDeployedBackend": true,
+    "exactLinkClearsVersion": true,
     "initialRows": 20,
     "groups": 146,
     "pagesVisited": 8,
@@ -46,7 +47,7 @@
       375,
       320
     ],
-    "exactRunLink": "#/workflow-validation/overview?exactRun=1&version=3.5.0-ea.2&testSuite=dashboard-dev-tests&invocationId=dashboard-dev-tests-20261102-132252-verified&datePreset=all&dateFrom=&dateTo=",
+    "exactRunLink": "#/workflow-validation/overview?exactRun=1&version=&testSuite=dashboard-dev-tests&invocationId=dashboard-dev-tests-20261102-132252-verified&datePreset=all&dateFrom=&dateTo=",
     "pageErrors": []
   },
   "checks": {
@@ -72,7 +73,7 @@
   "previewFrontendShell": "Existing compatible core 2.0.83; production build checked with dependency core 2.0.94",
   "images": {
     "backend": "image-registry.openshift-image-registry.svc:5000/workflow-validation-org-pulse/org-pulse-backend@sha256:78c458c8ad3d2e2234c021c152841da489e5fca4c07101ed01fec4435d8d32bd",
-    "frontend": "image-registry.openshift-image-registry.svc:5000/workflow-validation-org-pulse/org-pulse-frontend@sha256:02804f4e5b45a6c9ee7612f20bde19eb66ed404d7d45ee95c62d0ef9ed6f7d4c"
+    "frontend": "image-registry.openshift-image-registry.svc:5000/workflow-validation-org-pulse/org-pulse-frontend@sha256:68283c99b401eaedfd98d8267d0f90ec2ac174998084e68289077c2d40fd18a0"
   },
   "backendSourceCommit": "786e1a68af136bab241acded2be8711537c8e40f",
   "reviewFixes": {
@@ -82,5 +83,14 @@
     "longIds": "bounded v2 hash cursors; returned IDs intact; legacy cursors supported",
     "mixedVersionRuns": "exact-run data queries use suite and invocation across all versions",
     "typingDelay": "older requests invalidated immediately; responses cannot update rows or URL while typing"
+  },
+  "minorCleanup": {
+    "exactRunLinksClearVersion": true,
+    "sharedClientPageSize": 20,
+    "pageSizeUsedBy": [
+      "request",
+      "response validation",
+      "page label"
+    ]
   }
 }
