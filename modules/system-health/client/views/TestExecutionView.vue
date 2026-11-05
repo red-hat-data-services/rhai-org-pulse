@@ -74,12 +74,6 @@
                 @filters-change="updateFilters"
               />
 
-              <MetricsCards
-                v-if="filteredComponents.length > 0"
-                :components="filteredComponents"
-                :filters="filters"
-              />
-
               <div
                 v-if="filteredComponents.length === 0"
                 class="no-data heatmap-filter-empty"
