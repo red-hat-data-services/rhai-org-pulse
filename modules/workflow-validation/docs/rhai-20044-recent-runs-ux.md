@@ -45,4 +45,19 @@ on the original duplicate-version request.
 
 ## Verification
 
-Validation results and GPUaaS screenshots are added after the preview rollout.
+Source `0092440c` passes 6,781 unit tests (11 skipped), including 160 module
+tests. All 31 browser integration tests pass through the existing shared CI
+entrypoint. Lint, module/OpenAPI validation, the standard production build, and
+the compatible GPUaaS frontend build pass.
+
+Both preview images are deployed and ready. The backend source and served
+frontend assets match the build. Read-only API checks traverse all 146 groups
+across eight pages in each of the six sort orders. Checks also cover multiple
+versions, release-aware version choices, earlier page bookmarks, Refresh,
+UTC dates, filters beyond page one, and cursor scope validation. The baseline
+counts remain 712 executions, 4,157 tasks, and 184 root causes. Run metadata and
+runtime settings are unchanged. Previous image references are saved for rollback.
+
+[Machine-readable evidence](rhai-20044-validation.json) records image digests,
+source/asset hashes, and validation results. Live browser screenshots are pending
+test authentication approval.

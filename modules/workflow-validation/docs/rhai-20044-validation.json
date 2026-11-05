@@ -1,0 +1,118 @@
+{
+  "ticket": "RHAI-20044",
+  "sourceCommit": "0092440c",
+  "environment": "GPUaaS preview only",
+  "api": {
+    "checkedAt": "2026-11-05T09:17:10.378Z",
+    "groups": 146,
+    "pages": 8,
+    "initialRows": 20,
+    "sortTraversals": [
+      {
+        "field": "timestamp",
+        "direction": "asc",
+        "pages": 8,
+        "groups": 146
+      },
+      {
+        "field": "timestamp",
+        "direction": "desc",
+        "pages": 8,
+        "groups": 146
+      },
+      {
+        "field": "version",
+        "direction": "asc",
+        "pages": 8,
+        "groups": 146
+      },
+      {
+        "field": "version",
+        "direction": "desc",
+        "pages": 8,
+        "groups": 146
+      },
+      {
+        "field": "suite",
+        "direction": "asc",
+        "pages": 8,
+        "groups": 146
+      },
+      {
+        "field": "suite",
+        "direction": "desc",
+        "pages": 8,
+        "groups": 146
+      }
+    ],
+    "multiVersion": true,
+    "sortedVersionChoices": true,
+    "legacyBookmark": true,
+    "boundedV3Cursor": true,
+    "refreshKeepsPage": true,
+    "cursorMismatchRejected": true,
+    "filterBeyondFirstPage": true,
+    "utcDate": true,
+    "storedDataUnchanged": true,
+    "deployedSourceMatches": true,
+    "runtimeConfigurationPreserved": true
+  },
+  "checks": {
+    "fullUnitSuite": {
+      "passed": 6781,
+      "skipped": 11,
+      "command": "NODE_OPTIONS=--no-experimental-webstorage npm test"
+    },
+    "moduleUnitSuite": {
+      "passed": 160
+    },
+    "browserIntegration": {
+      "passed": 31,
+      "command": "npx playwright test --grep @workflow-validation --workers=2"
+    },
+    "lint": "passed",
+    "productionBuild": "passed",
+    "compatiblePreviewBuild": "passed",
+    "moduleValidation": "passed",
+    "openapiValidation": "passed"
+  },
+  "counts": {
+    "ok": true,
+    "executions": 712,
+    "tasks": 4157,
+    "rootCauses": 184
+  },
+  "images": {
+    "backend": {
+      "build": "org-pulse-backend-rhai20044-20261105-1",
+      "image": "image-registry.openshift-image-registry.svc:5000/workflow-validation-org-pulse/org-pulse-backend@sha256:190fa04011126d0fcf27c2c0a2d72ed0460c5f19370af13e5f51cef280e18c09"
+    },
+    "frontend": {
+      "build": "org-pulse-frontend-rhai20044-20261105-1",
+      "image": "image-registry.openshift-image-registry.svc:5000/workflow-validation-org-pulse/org-pulse-frontend@sha256:0a0afea8fdfa48d8427e04c0073546b06ea8f59d18f5dcc88bc0eb83fee8035c"
+    }
+  },
+  "backendSourceHashes": {
+    "modules/workflow-validation/server/index.js": "57d7bc81954e62cdbc1dd513babfd0a5fd3567a8e5fd588c3fff03deeaa07320",
+    "modules/workflow-validation/server/opensearch.js": "0518aad36b68647c9e6a7769051443cce03cb6f975cc776d81e38b5ec0c84b01",
+    "modules/workflow-validation/server/config.js": "fa83e397f4a130b3958972eabac9ca926c7f4a12b3c57ef0d73185ab84318ca0",
+    "modules/workflow-validation/server/recent-runs.js": "3ad41981cc17a9ea69654e8f2fe9291cb4b1f376ffab059012af982a7508b051",
+    "modules/workflow-validation/lib/versions.js": "cfca844860f56b35c9a7145e08ae7cca26f9e7d347d46b62931248344fe294b6",
+    "modules/workflow-validation/lib/package.json": "609158e6c5fbc237939fa3ddf7faab80ab690bdc0c8d584414a885130103c4e8"
+  },
+  "frontendAssetHashes": {
+    "index.html": "3a0b8de6514a4d0043e6b23803f22dee93b096010b7e5107b2cc32bb55efb4ab",
+    "assets/RecentRunsView-BSdwfmY8.js": "c2b5928503d4ffd673141f63bab132e1cf80913ef942bfe2dfd308a46ccbcca0"
+  },
+  "rollbackImages": {
+    "backend": "image-registry.openshift-image-registry.svc:5000/workflow-validation-org-pulse/org-pulse-backend@sha256:97486b288fde04e4f3be7fbc4cbb13c6a6a8d1a5b6fcfe6917fce1da5b01e5d7",
+    "frontend": "image-registry.openshift-image-registry.svc:5000/workflow-validation-org-pulse/org-pulse-frontend@sha256:6ba829ef185b7a6bffef96360976fd093707b4a42e6d16a43d25fe6b49cd779b"
+  },
+  "partialVersionFinding": {
+    "label": "3.6",
+    "classification": "release unspecified",
+    "reason": "Collector can truncate patch and prerelease labels; historical digest has no confirmed full-version match.",
+    "productionMetadata": "HTTP 403; approved browser navigation failed."
+  },
+  "liveBrowserVerification": "pending permission for in-memory preview proxy authentication"
+}
