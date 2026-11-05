@@ -24,6 +24,9 @@ vi.mock('../../../client/plan/views/BuFeedbackView.vue', function() {
 vi.mock('../../../client/plan/views/PmHubView.vue', function() {
   return { default: { name: 'PmHubView', template: '<div>PM Hub</div>' } }
 })
+vi.mock('../../../client/plan/views/JiraPlanView.vue', function() {
+  return { default: { name: 'JiraPlanView', template: '<div data-testid="jira-plan-view">Jira Plan Body</div>' } }
+})
 vi.mock('../../../client/plan/views/AIPlanner.vue', function() {
   return { default: { name: 'AIPlanner', template: '<div data-testid="ai-planner">AI-First Release Planner</div>' } }
 })
@@ -81,6 +84,27 @@ describe('PlanView Draft Plans gate', function() {
 
     expect(wrapper.text()).not.toContain('Draft Plans Body')
     expect(wrapper.findComponent({ name: 'PmHubView' }).exists()).toBe(true)
+  })
+})
+
+describe('PlanView Jira Plan tab', function() {
+  beforeEach(function() {
+    vi.clearAllMocks()
+  })
+
+  afterEach(function() {
+    vi.clearAllMocks()
+  })
+
+  it('shows the Prioritized Outcomes tab and opens it from a deep link', async function() {
+    apiRequest.mockResolvedValue({ canViewDraftPlans: false })
+    var wrapper = mountPlanView({ tab: 'jira-plan' })
+    await flushPromises()
+    await nextTick()
+
+    expect(wrapper.findAll('button').map(function(button) { return button.text() })).toContain('Prioritized Outcomes')
+    expect(wrapper.find('[data-testid="jira-plan-view"]').exists()).toBe(true)
+    expect(wrapper.text()).toContain('Jira Plan Body')
   })
 })
 
