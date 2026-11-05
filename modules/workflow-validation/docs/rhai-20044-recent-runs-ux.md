@@ -35,7 +35,7 @@ is removed. This rule applies to Recent Runs; it does not rewrite OpenSearch doc
 
 ## Verification
 
-Source `925498ac` passes 6,781 unit tests (11 skipped), including 160 module
+Source `c97ef75c` passes 6,781 unit tests (11 skipped), including 160 module
 tests. All 32 browser integration tests pass through the existing shared CI
 entrypoint. Lint, module/OpenAPI validation, the standard production build, and
 the compatible GPUaaS frontend build pass.
@@ -58,7 +58,8 @@ filter summary, version choice order, multiple versions and
 selection reload, date presets and Custom dates, filtering beyond page one,
 Clear, Refresh/Retry, older bookmarks, and exact-run navigation by mouse and
 keyboard. The page fits 375px and 320px screens with horizontal table scrolling.
-No browser page errors occurred. Test credentials stayed in memory.
+The three columns use equal widths on desktop and mobile. The time heading is
+Executed at (UTC). No browser page errors occurred. Test credentials stayed in memory.
 
 - [Initial page](images/rhai-20044-gpuaas-recent-runs.png)
 - [Multiple versions](images/rhai-20044-gpuaas-multiple-versions.png)

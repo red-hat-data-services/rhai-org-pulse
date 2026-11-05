@@ -1,9 +1,9 @@
 {
   "ticket": "RHAI-20044",
-  "sourceCommit": "925498acca019e1efba2f8f60b681e2efc509fd0",
+  "sourceCommit": "c97ef75c4c679e5f2384b89576d4c6715e5251b6",
   "environment": "GPUaaS preview only",
   "api": {
-    "checkedAt": "2026-11-05T10:05:37.543Z",
+    "checkedAt": "2026-11-05T10:23:43.771Z",
     "groups": 146,
     "pages": 8,
     "initialRows": 20,
@@ -89,8 +89,8 @@
       "image": "image-registry.openshift-image-registry.svc:5000/workflow-validation-org-pulse/org-pulse-backend@sha256:08347098607257e441ac2d4f11a4c4fe269288a5b386f2a9c9512833c4499e1d"
     },
     "frontend": {
-      "build": "org-pulse-frontend-rhai20044-compact-20261105-1",
-      "image": "image-registry.openshift-image-registry.svc:5000/workflow-validation-org-pulse/org-pulse-frontend@sha256:b5950d481add3c872e1bdd080a50c6c8d0f22e9633b9d4457cb8d9315c199212"
+      "build": "org-pulse-frontend-rhai20044-executed-20261105-1",
+      "image": "image-registry.openshift-image-registry.svc:5000/workflow-validation-org-pulse/org-pulse-frontend@sha256:9d62e2ed4608289b09633a167b7cf231a8cbf28cd12a20f5a52329df2fe35d2c"
     }
   },
   "backendSourceHashes": {
@@ -102,15 +102,15 @@
     "modules/workflow-validation/lib/package.json": "609158e6c5fbc237939fa3ddf7faab80ab690bdc0c8d584414a885130103c4e8"
   },
   "frontendAssetHashes": {
-    "index.html": "fb19a1796c6d7e3566f620dd2147306dd201d06844eca80d1831a55655b34493",
-    "assets/RecentRunsView-DKQq9tSJ.js": "90b7bc8c133cda34b98d19cecfeae489d7aa2b0fbd443624e80c441a7aef74b2"
+    "index.html": "e31f67bc4515e6b0186dd680f1a0d75bc18acec438263a402f0947d56a13abd6",
+    "assets/RecentRunsView-BgDe-Oy9.js": "22b881811543cd81f12f6177197113600006e05f34a7ed7d7e5ceece4196ef51"
   },
   "rollbackImages": {
     "backend": "image-registry.openshift-image-registry.svc:5000/workflow-validation-org-pulse/org-pulse-backend@sha256:08347098607257e441ac2d4f11a4c4fe269288a5b386f2a9c9512833c4499e1d",
-    "frontend": "image-registry.openshift-image-registry.svc:5000/workflow-validation-org-pulse/org-pulse-frontend@sha256:be7d1b004647b9ae0b227b249f562f1bf6b20594db92367d181cefa0faacffb3"
+    "frontend": "image-registry.openshift-image-registry.svc:5000/workflow-validation-org-pulse/org-pulse-frontend@sha256:860dd233bae60568b238d19c9e763a8521be0b77a95714264cb105fd9cad0c68"
   },
   "browser": {
-    "checkedAt": "2026-11-05T10:06:15.920Z",
+    "checkedAt": "2026-11-05T10:24:17.231Z",
     "actualDeployedFrontend": true,
     "actualDeployedBackend": true,
     "initialRows": 20,
@@ -130,6 +130,24 @@
     "columnSortDropdowns": true,
     "headingOpensDropdown": true,
     "compactSortHeaders": true,
+    "executedAtLabel": true,
+    "equalColumnWidths": [
+      371.328125,
+      371.328125,
+      371.34375
+    ],
+    "responsiveColumnWidths": {
+      "320": [
+        256,
+        256,
+        256
+      ],
+      "375": [
+        256,
+        256,
+        256
+      ]
+    },
     "filterSummaryRemoved": true,
     "sortedVersionChoices": true,
     "selectionReload": true,
@@ -168,7 +186,9 @@
     "plainVersionLabels": true,
     "filterSummaryRemoved": true,
     "columnSortDropdowns": true,
-    "compactSortHeaders": true
+    "compactSortHeaders": true,
+    "equalWidthColumns": true,
+    "timeColumnLabel": "Executed at (UTC)"
   },
   "deploymentScope": "Frontend update; backend image unchanged"
 }
