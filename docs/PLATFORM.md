@@ -173,6 +173,63 @@ allocation tab, the report card, and the settings tab.
 2. Edit `platform/allocation/classify.js` classification logic.
 3. Run `npm run validate:platform` to verify the manifest.
 
+## Server Routes (`platform/*/`)
+
+Server-route platform extensions register Express routes on a dedicated mount
+path without contributing any UI. Core discovers manifests with
+`"type": "server-routes"` and mounts the exported router at the path
+specified by `mountPath` (e.g., `/api/usage`).
+
+Requires `@org-pulse/core` ≥ 2.0.95, which adds the `server-routes`
+extension type and the `appendToStorage`, `readRawFromStorage`,
+`writeRawToStorage`, and `listAllStorageFiles` storage methods used by
+server-route extensions.
+
+### Manifest format
+
+```json
+{
+  "type": "server-routes",
+  "mountPath": "/api/usage",
+  "server": {
+    "entry": "./server/index.js"
+  },
+  "secrets": {
+    "module": [
+      {
+        "key": "USAGE_TRACKING_HMAC_KEY",
+        "description": "HMAC key for pseudonymizing user IDs",
+        "required": false
+      }
+    ]
+  }
+}
+```
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `type` | string | yes | Must be `server-routes` |
+| `mountPath` | string | yes | Absolute mount path for the router (e.g., `/api/usage`) |
+| `server.entry` | string | yes | Path to the server entry point relative to the extension dir |
+| `secrets` | object | no | Secret declarations — use `secrets.module` array with `key`, `description`, and `required` per secret |
+
+### Server entry contract
+
+The entry module must export a single function:
+
+```js
+module.exports = function register(router, context) {
+  // router — Express Router, already scoped to mountPath
+  // context — { storage, requireAuth, requireAdmin, resolveSecret, registerRefresh }
+}
+```
+
+### Adding a new server-routes extension
+
+1. Create `platform/<name>/manifest.json` with `"type": "server-routes"`
+2. Create `platform/<name>/server/index.js` exporting the register function
+3. Run `npm run validate:platform` to verify the manifest
+
 ## Dockerfile layering
 
 The core frontend builder does NOT include `platform/`. Deployment-specific

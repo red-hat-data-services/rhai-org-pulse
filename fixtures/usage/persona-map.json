@@ -1,0 +1,10 @@
+{
+  "Software Engineer": "developer",
+  "Senior Software Engineer": "developer",
+  "Principal Software Engineer": "developer",
+  "Engineering Manager": "engineering-manager",
+  "Senior Engineering Manager": "engineering-manager",
+  "Director of Product Management": "product-management",
+  "Senior Product Manager": "product-management",
+  "Senior UX Designer": "ux-designer"
+}
