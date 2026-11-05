@@ -1,7 +1,8 @@
 # Recent Runs: landing page and data contract
 
 Stories: [RHAI-10567](https://redhat.atlassian.net/browse/RHAI-10567) and
-[AIPCC-33215](https://redhat.atlassian.net/browse/AIPCC-33215).
+[AIPCC-33215](https://redhat.atlassian.net/browse/AIPCC-33215), with the
+[RHAI-20044 refinement](rhai-20044-recent-runs-ux.md).
 
 ## Page and navigation
 
@@ -9,14 +10,19 @@ Dashboard opens Recent Runs inside Workflow Validation. The initial view shows
 20 runs, newest first, with Previous and Next controls. A run is one
 `telemetry_suite` and `invocation_id` pair. Keep different invocations separate.
 
-Show Test suite, Version, Recorded test time (UTC), and View run. Missing version
+Show Test suite, Version, and Recorded test time (UTC). Each heading sorts its
+column in either direction. Make each run row clickable and keyboard accessible. Missing version
 or time shows an unavailable label. The time is the latest existing execution
 `timestamp` in the group. It is not a RHOAI build date. Build metadata and
 OpenSearch schema changes are outside this change.
 
-Version, suite, run ID, and recorded-date filters are optional. Run ID matches
+Multiple versions, suite, run ID, and Date Range filters are optional.
+Date Range provides All time, Last 7/30/90 days, and Custom dates. Show date
+inputs only for Custom dates. Select versions with OR semantics. Run ID matches
 a case-insensitive substring. Date bounds are inclusive UTC calendar days.
-Sort newest or oldest recorded test first. Choices update results immediately.
+Default to newest recorded test first. Sort versions numerically, with GA
+above EA for the same release, and suites by displayed name. Sort the full
+matching list before pagination. Choices update results immediately.
 Run ID search updates after a 300 ms typing pause. Every change resets to page
 one and searches all available run groups, including those outside the first page. Clear restores the unfiltered,
 newest-first first page. Show the applied criteria and matching range/count.
@@ -24,7 +30,7 @@ Filter options come from all groups. Shared detail filters and automatic date
 or version defaults do not restrict this page. URL parameters use the `recent`
 prefix so reloads retain the current filters, sort, and page.
 
-View run opens the existing Overview view as a hidden details route. Pass
+Clicking a row or pressing Enter opens the existing Overview view as a hidden details route. Pass
 `exactRun=1`, suite, and invocation, and clear the version and date bounds. Scope Overview and Charts queries by
 suite and invocation across every version in that run.
 Verify the selected run before fetching its Overview and Charts data. Show an
@@ -44,16 +50,19 @@ The backend reads every composite aggregation page, groups existing execution
 records by suite and invocation, and selects each group's latest metadata.
 It applies filters to complete groups, sorts all matching groups, and then
 selects a page. It never filters individual executions first in paged mode.
-Missing or invalid timestamps sort last in either direction. Timestamp ties
+Missing or invalid sort values sort last in either direction. Ties
 use suite and invocation for a stable order.
 
 Paged parameters:
 
 - `pageSize`: integer from 1 to 200. The landing page requests 20.
-- `version`, `suite`: exact group metadata matches.
+- `versions`: repeat for up to 50 selected versions; match any selected version.
+- `version`: older single-version parameter; do not combine with `versions`.
+- `suite`: exact group metadata match.
 - `runQuery`: case-insensitive invocation ID substring.
 - `dateFrom`, `dateTo`: optional `YYYY-MM-DD` bounds on the group timestamp.
-- `sortDir`: `desc` (default) or `asc`, using `timestamp`.
+- `sortField`: `timestamp` (default), `version`, or `suite`.
+- `sortDir`: `desc` (default) or `asc`.
 - `cursor`: opaque next/previous anchor, bound to filters, sort, and page size.
 - `refresh=true`: bypass the metadata cache (used by Refresh and Retry).
 
@@ -67,7 +76,7 @@ Retry bypass the cache. Connection changes invalidate reuse. Failed or
 disconnected scans are never cached. Legacy calls remain uncached. Newer
 insertions do not shift a next-page anchor. A deleted or changed run can alter
 page counts. Cursors contain fixed-size hashes of suite and invocation IDs, so long IDs
-do not produce oversized URLs. Returned IDs are never truncated. Earlier raw-ID
+do not produce oversized URLs. Returned IDs are never truncated. New cursors use v3. Earlier v1/v2 timestamp-sort
 cursors remain supported. If a hashed anchor was deleted, or the anchor has no
 remaining rows, the page is empty and Previous resets to page one.
 

@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
-const { parseRecentRuns, pageRecentRuns } = require('../../server/recent-runs')
+import * as versionRules from '../../lib/versions.js'
+const { parseRecentRuns, pageRecentRuns } = require('../../server/recent-runs')(versionRules)
 
 const rows = Array.from({ length: 47 }, (_, index) => ({
   suite: index % 2 ? 'release_gate' : 'ad-hoc', invocationId: `run-${String(index).padStart(2, '0')}`,
@@ -120,5 +121,86 @@ describe('Recent run pagination', () => {
     expect(missing.options.versions).toContain('3.0')
     const changed = pageRecentRuns(first.rows, request({ cursor: first.nextCursor }))
     expect(changed).toMatchObject({ rows: [], total: 20, previousCursor: '' })
+  })
+})
+
+
+describe('Recent Runs multi-version and column sorting', () => {
+  const releases = ['3.6.0', '3.6.0-ea.2', '3.6.0-ea.1', '3.6', '3.5.2', '3.10.0', null]
+  const input = Array.from({ length: 83 }, (_, index) => ({ suite: ['z-suite', 'ad_hoc', 'Release-Gate'][index % 3], invocationId: `item-${index}`,
+    timestamp: index % 11 ? new Date(Date.UTC(2026, 0, index % 23 + 1)).toISOString() : null, rhoaiVersion: releases[index % releases.length] }))
+
+  it('matches any selected version, combines confirmed spelling aliases, and keeps unspecified releases separate', () => {
+    const sample = [{ ...rows[0], rhoaiVersion: '3.6.0 EA1' }, { ...rows[1], rhoaiVersion: '3.6.0-ea.1' }, { ...rows[2], rhoaiVersion: '3.6.0' }, { ...rows[3], rhoaiVersion: '3.6' }]
+    const result = pageRecentRuns(sample, request({ versions: ['3.6.0-ea.1', '3.6.0'] }))
+    expect(result.total).toBe(3)
+    expect(result.options.versions).toEqual(['3.6.0', '3.6.0-ea.1', '3.6'])
+    expect(pageRecentRuns(sample, request({ versions: '3.6.0' })).total).toBe(1)
+    expect(pageRecentRuns(sample, request({ version: '3.6' })).total).toBe(1)
+  })
+
+  it.each(['timestamp', 'version', 'suite'])('traverses the whole dataset in both directions sorted by %s', sortField => {
+    for (const sortDir of ['asc', 'desc']) {
+      const query = { pageSize: '7', sortField, sortDir }
+      let page = pageRecentRuns(input, parseRecentRuns(query))
+      const pages = [page], all = [...page.rows]
+      while (page.nextCursor) {
+        page = pageRecentRuns(input, parseRecentRuns({ ...query, cursor: page.nextCursor }))
+        pages.push(page); all.push(...page.rows)
+        expect(pages.length).toBeLessThan(20)
+      }
+      expect(all).toHaveLength(input.length)
+      expect(new Set(all.map(row => JSON.stringify([row.suite, row.invocationId]))).size).toBe(input.length)
+      const expected = pageRecentRuns(input, parseRecentRuns({ pageSize: '200', sortField, sortDir })).rows
+      expect(all).toEqual(expected)
+      for (let index = pages.length - 1; index > 0; index--) {
+        const previous = pageRecentRuns(input, parseRecentRuns({ ...query, cursor: pages[index].previousCursor }))
+        expect(previous.rows).toEqual(pages[index - 1].rows)
+      }
+    }
+  })
+
+  it('uses release order for versions and visible suite names for alphabetic sorting', () => {
+    const version = pageRecentRuns(input, request({ sortField: 'version' }))
+    expect(version.rows[0].rhoaiVersion).toBe('3.10.0')
+    const suite = pageRecentRuns(input, request({ sortField: 'suite', sortDir: 'asc' }))
+    expect(suite.rows[0].suite).toBe('ad_hoc')
+    const reversed = pageRecentRuns(input, request({ sortField: 'suite', sortDir: 'desc' }))
+    expect(reversed.rows[0].suite).toBe('z-suite')
+  })
+
+  it('binds cursors to the selected set and column while allowing equivalent selection order', () => {
+    const query = { versions: ['3.6.0', '3.5.2'], sortField: 'version' }
+    const first = pageRecentRuns(input, request({ ...query, pageSize: '3' }))
+    const normal = pageRecentRuns(input, request({ ...query, pageSize: '3', cursor: first.nextCursor }))
+    const reordered = pageRecentRuns(input, request({ versions: ['3.5.2', '03.06.00'], sortField: 'version', pageSize: '3', cursor: first.nextCursor }))
+    expect(reordered.rows).toEqual(normal.rows)
+    expect(() => request({ ...query, pageSize: '3', cursor: first.nextCursor, sortField: 'suite' })).toThrow(/Cursor/)
+    expect(() => request({ ...query, pageSize: '3', cursor: first.nextCursor, versions: ['3.6.0'] })).toThrow(/Cursor/)
+  })
+
+  it('continues real v1/v2 bookmarks using their original scope', () => {
+    const { createHash } = require('node:crypto')
+    const first = pageRecentRuns(rows, request())
+    const origin = first.rows.at(-1)
+    const scope = createHash('sha256').update(JSON.stringify([{ version: '', suite: '', runQuery: '', dateFrom: '', dateTo: '' }, 'desc', 20])).digest('hex')
+    for (const v of [1, 2]) {
+      const identity = value => v === 1 ? value : createHash('sha256').update(value).digest('hex')
+      const cursor = Buffer.from(JSON.stringify({ v, scope, direction: 'after', anchor: [Date.parse(origin.timestamp), identity(origin.suite), identity(origin.invocationId)] })).toString('base64url')
+      expect(pageRecentRuns(rows, request({ cursor })).rows).toEqual(pageRecentRuns(rows, request({ cursor: first.nextCursor })).rows)
+    }
+  })
+
+  it.each(['timestamp', 'version'])('never repeats the anchor when its %s changes', sortField => {
+    const query = { pageSize: '3', sortField }
+    const first = pageRecentRuns(input, request(query))
+    const origin = first.rows.at(-1)
+    const updated = input.map(row => row.invocationId === origin.invocationId ? { ...row, timestamp: '1990-01-01T00:00:00Z', rhoaiVersion: '1.0.0' } : row)
+    const next = pageRecentRuns(updated, request({ ...query, cursor: first.nextCursor }))
+    expect(next.rows.some(row => row.invocationId === origin.invocationId)).toBe(false)
+  })
+
+  it.each([{ versions: [''] }, { versions: [{}] }, { versions: Array(51).fill('3.6.0') }, { versions: '3.6.0', version: '3.5.0' }, { sortField: 'execution_id' }])('rejects malformed multi-version/sort parameters %j', query => {
+    expect(() => request(query)).toThrow()
   })
 })

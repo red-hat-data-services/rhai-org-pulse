@@ -16,7 +16,7 @@ const {
   bugFilters
 } = require('./opensearch');
 const { getEffectiveSettings, getSavedSettings, saveSettings } = require('./config');
-const { parseRecentRuns, pageRecentRuns } = require('./recent-runs');
+const recentRunTools = import('../lib/versions.js').then(rules => require('./recent-runs')(rules));
 
 /** Wrap an async handler so OpenSearch connectivity errors become clean HTTP responses. */
 function safe(handler) {
@@ -496,6 +496,8 @@ module.exports = function registerRoutes(router, context) {
    *     parameters:
    *       - { in: query, name: suite, schema: { type: string } }
    *       - { in: query, name: version, schema: { type: string } }
+   *       - { in: query, name: versions, schema: { type: array, maxItems: 50, items: { type: string } }, style: form, explode: true, description: Match any selected version; paged mode only; cannot combine with version }
+   *       - { in: query, name: sortField, schema: { type: string, enum: [timestamp, version, suite], default: timestamp }, description: Global sort column in paged mode }
    *       - { in: query, name: latest, schema: { type: boolean } }
    *       - { in: query, name: limit, schema: { type: integer, minimum: 1, maximum: 200 }, description: Limit run groups after ordering newest first }
    *       - { in: query, name: includeBugs, schema: { type: boolean, default: true }, description: Set false for lightweight run metadata without RCA retrieval }
@@ -503,7 +505,7 @@ module.exports = function registerRoutes(router, context) {
    *       - { in: query, name: dateTo, schema: { type: string, format: date } }
    *       - { in: query, name: pageSize, schema: { type: integer, minimum: 1, maximum: 200 }, description: Opt into lightweight pagination across all run groups }
    *       - { in: query, name: cursor, schema: { type: string }, description: Recent-run cursor bound to filters and sort order }
-   *       - { in: query, name: sortDir, schema: { type: string, enum: [asc, desc], default: desc }, description: Latest recorded test timestamp order; requires pageSize }
+   *       - { in: query, name: sortDir, schema: { type: string, enum: [asc, desc], default: desc }, description: Selected column sort direction; requires pageSize }
    *       - { in: query, name: runQuery, schema: { type: string, maxLength: 256 }, description: Run ID substring; requires pageSize }
    *       - { in: query, name: refresh, schema: { type: boolean, default: false }, description: Bypass the 10-second metadata cache; requires pageSize }
    *     responses:
@@ -511,6 +513,13 @@ module.exports = function registerRoutes(router, context) {
    *       400: { description: "Invalid limit, page parameters, or cursor" }
    */
   router.get('/test-suites', requireAuth, safe(async function (req, res) {
+    let disconnected = Boolean(res.destroyed);
+    const onEarlyClose = () => { disconnected = true; };
+    res.once('close', onEarlyClose);
+    let tools;
+    try { tools = await recentRunTools; } finally { res.removeListener('close', onEarlyClose); }
+    if (disconnected) return;
+    const { parseRecentRuns, pageRecentRuns } = tools;
     const recent = parseRecentRuns(req.query);
     let limit = null;
     if (req.query.limit !== undefined) {

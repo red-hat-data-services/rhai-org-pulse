@@ -152,19 +152,26 @@ contract, representative tests, and affected Vue transformations together.
 ## Recent Runs landing page
 
 Dashboard opens Recent Runs with the latest 20 suite/invocation groups and
-pagination across all available runs. Each row shows the suite, recorded
-version, recorded test time in UTC, and View run. Optional filters select
-version, suite, run ID, and recorded dates. Choices update results immediately;
-Run ID search waits for a 300 ms typing pause. Sorting uses the existing execution
-`timestamp`; RHOAI build time is not available yet. Clear restores the initial
-unfiltered page. The page uses `/test-suites?pageSize=20&includeBugs=false`
-and ignores shared detail filters. Metadata is cached for up to 10 seconds;
-Refresh bypasses the cache. View run opens all tests in the exact suite and invocation, across versions.
+pagination across all available runs. Each row shows the suite, version, and
+recorded test time in UTC. Select a row or press Enter to open its exact run.
 
-See the [Recent Runs contract](docs/rhai-10567-recent-runs-contract.md) for
-navigation, page states, and deployment evidence. The
-[API response format](docs/DATA-FORMATS.md) documents the synthetic
-[unit-test fixture](__tests__/fixtures/recent-runs.json).
+Select one or more versions, a suite, a Run ID, or a Date Range. Date Range
+supports All time, Last 7/30/90 days, and Custom dates. Choices update results
+immediately. Run ID search waits for a 300 ms typing pause. Select a column
+heading to sort all matching runs by suite, version, or recorded test time.
+Versions use numeric release order, with GA above EA for the same release.
+Partial labels such as `3.6` remain separate and show “release unspecified”.
+
+Clear filters restores the unfiltered, newest-first first page. Shareable URLs
+retain the filters, sort, and page. Sorting and dates use existing execution
+metadata; RHOAI build time is not available yet. The page uses
+`/test-suites?pageSize=20&includeBugs=false` and ignores shared detail filters.
+Metadata is cached for up to 10 seconds. Refresh bypasses the cache.
+
+See the [Recent Runs contract](docs/rhai-10567-recent-runs-contract.md),
+[RHAI-20044 details](docs/rhai-20044-recent-runs-ux.md), and
+[API response format](docs/DATA-FORMATS.md). The
+[unit-test fixture](__tests__/fixtures/recent-runs.json) is synthetic.
 
 ## Browser integration tests
 
