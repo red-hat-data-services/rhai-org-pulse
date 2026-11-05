@@ -51,11 +51,12 @@
           <caption class="sr-only">Recent Workflow Validation runs. Select a run to open its details.</caption>
           <thead class="border-b border-gray-100 text-xs uppercase tracking-wide text-gray-500 dark:border-gray-700 dark:text-gray-400">
             <tr>
-              <th v-for="column in columns" :key="column.field" scope="col" :aria-label="column.label" :aria-sort="applied.sortField === column.field ? (applied.sortDir === 'asc' ? 'ascending' : 'descending') : 'none'" class="px-5 py-3">
-                <label class="block">
+              <th v-for="column in columns" :key="column.field" scope="col" :aria-label="column.label" :aria-sort="applied.sortField === column.field ? (applied.sortDir === 'asc' ? 'ascending' : 'descending') : 'none'" class="p-0">
+                <label class="relative flex min-h-12 w-full cursor-pointer items-center justify-between gap-3 px-5 py-3 hover:bg-gray-50 focus-within:outline focus-within:outline-2 focus-within:-outline-offset-2 focus-within:outline-primary-500 dark:hover:bg-gray-700/30">
                   <span>{{ column.label }}</span>
+                  <svg aria-hidden="true" class="pointer-events-none h-3 w-3 shrink-0" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="m4 6 4 4 4-4" /></svg>
                   <select :aria-label="column.sortLabel" :value="draft.sortField === column.field ? draft.sortDir : ''"
-                    class="mt-2 block w-full min-w-[8rem] rounded-lg border border-gray-300 bg-white px-2 py-2 text-xs font-normal normal-case dark:border-gray-600 dark:bg-gray-900"
+                    class="absolute inset-0 h-full w-full cursor-pointer bg-white text-gray-700 opacity-0 dark:bg-gray-900 dark:text-gray-200"
                     @change="setSort(column.field, $event.target.value)">
                     <option value="" disabled>Sort…</option>
                     <option v-for="order in column.orders" :key="order.value" :value="order.value">{{ order.label }}</option>
