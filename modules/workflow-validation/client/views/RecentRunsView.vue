@@ -3,7 +3,7 @@
     <div class="mb-5 flex flex-wrap items-start justify-between gap-4">
       <div class="min-w-0">
         <h2 class="text-2xl font-bold text-gray-900 dark:text-gray-100">Recent Runs</h2>
-        <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">{{ RECENT_RUNS_PAGE_SIZE }} runs per page. Select a column heading to sort. All dates are UTC.</p>
+        <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">{{ RECENT_RUNS_PAGE_SIZE }} runs per page. Use the column dropdowns to sort. All dates are UTC.</p>
       </div>
       <button type="button" :disabled="loading || searchPending" :class="buttonClass" @click="requestRuns(applied, true)">Refresh</button>
     </div>
@@ -46,14 +46,21 @@
     </div>
     <p v-if="loading || searchPending" role="status" class="mb-4 text-sm text-gray-500 dark:text-gray-400">{{ hasLoaded ? 'Updating recent runs…' : 'Loading recent runs…' }}</p>
     <div v-if="hasLoaded" :aria-busy="loading" class="overflow-hidden rounded-xl border border-gray-100 bg-white dark:border-gray-700 dark:bg-gray-800">
-      <p class="border-b border-gray-100 px-5 py-3 text-sm text-gray-600 dark:text-gray-300">{{ criteria }}</p>
       <div class="relative overflow-x-auto">
         <table class="w-full text-left text-sm">
           <caption class="sr-only">Recent Workflow Validation runs. Select a run to open its details.</caption>
           <thead class="border-b border-gray-100 text-xs uppercase tracking-wide text-gray-500 dark:border-gray-700 dark:text-gray-400">
             <tr>
-              <th v-for="column in columns" :key="column.field" scope="col" :aria-sort="applied.sortField === column.field ? (applied.sortDir === 'asc' ? 'ascending' : 'descending') : 'none'" class="px-5 py-3">
-                <button type="button" class="flex items-center gap-2 text-left focus-visible:rounded focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary-500" @click="setSort(column.field)">{{ column.label }}<span v-if="applied.sortField === column.field" aria-hidden="true">{{ applied.sortDir === 'asc' ? '↑' : '↓' }}</span></button>
+              <th v-for="column in columns" :key="column.field" scope="col" :aria-label="column.label" :aria-sort="applied.sortField === column.field ? (applied.sortDir === 'asc' ? 'ascending' : 'descending') : 'none'" class="px-5 py-3">
+                <label class="block">
+                  <span>{{ column.label }}</span>
+                  <select :aria-label="column.sortLabel" :value="draft.sortField === column.field ? draft.sortDir : ''"
+                    class="mt-2 block w-full min-w-[8rem] rounded-lg border border-gray-300 bg-white px-2 py-2 text-xs font-normal normal-case dark:border-gray-600 dark:bg-gray-900"
+                    @change="setSort(column.field, $event.target.value)">
+                    <option value="" disabled>Sort…</option>
+                    <option v-for="order in column.orders" :key="order.value" :value="order.value">{{ order.label }}</option>
+                  </select>
+                </label>
               </th>
             </tr>
           </thead>
@@ -87,7 +94,11 @@ import * as versionRules from '../../lib/versions.js'
 const { normalizeVersions, versionLabel } = versionRules
 const nav = inject('moduleNav', null)
 const { getRecentRuns } = useWorkflowValidation()
-const columns = [{ field: 'suite', label: 'Test suite' }, { field: 'version', label: 'Version' }, { field: 'timestamp', label: 'Recorded test time (UTC)' }]
+const columns = [
+  { field: 'suite', label: 'Test suite', sortLabel: 'Sort test suite', orders: [{ value: 'asc', label: 'A–Z' }, { value: 'desc', label: 'Z–A' }] },
+  { field: 'version', label: 'Version', sortLabel: 'Sort version', orders: [{ value: 'desc', label: 'Highest first' }, { value: 'asc', label: 'Lowest first' }] },
+  { field: 'timestamp', label: 'Recorded test time (UTC)', sortLabel: 'Sort recorded test time', orders: [{ value: 'desc', label: 'Newest first' }, { value: 'asc', label: 'Oldest first' }] }
+]
 const fields = { suite: 'recentSuite', runQuery: 'recentRun', datePreset: 'recentDatePreset', dateFrom: 'recentFrom', dateTo: 'recentTo', sortField: 'recentSortField', sortDir: 'recentSort', cursor: 'recentCursor' }
 const defaults = () => ({ versions: [], suite: '', runQuery: '', datePreset: 'all', dateFrom: '', dateTo: '', sortField: 'timestamp', sortDir: 'desc', cursor: '' })
 const restoreError = ref('')
@@ -118,9 +129,6 @@ const invalidDateRange = computed(() => draft.dateFrom && draft.dateTo && draft.
 const runs = ref([]), options = ref({ versions: [], suites: [] }), page = ref({ total: 0, start: 0, end: 0, nextCursor: null, previousCursor: null })
 const loading = ref(false), searchPending = ref(false), hasLoaded = ref(false), error = ref(''), lastAttempt = ref({ ...applied.value })
 const hasFilters = computed(() => applied.value.versions.length || ['suite', 'runQuery', 'dateFrom', 'dateTo'].some(key => applied.value[key]))
-const criteria = computed(() => [applied.value.versions.length ? normalizeVersions(applied.value.versions).map(versionLabel).join(', ') : 'All versions', applied.value.suite ? formatSuiteName(applied.value.suite) : 'All suites',
-  applied.value.runQuery ? `Run ID contains “${applied.value.runQuery}”` : 'All run IDs', applied.value.dateFrom || applied.value.dateTo ? `${applied.value.dateFrom || 'Any start'} to ${applied.value.dateTo || 'Any end'} (UTC)` : 'All time',
-  applied.value.sortField === 'timestamp' ? (applied.value.sortDir === 'asc' ? 'Oldest recorded test first' : 'Newest recorded test first') : applied.value.sortField === 'version' ? (applied.value.sortDir === 'asc' ? 'Lowest version first' : 'Highest version first') : (applied.value.sortDir === 'asc' ? 'Test suite A–Z' : 'Test suite Z–A')].join(' · '))
 const inputClass = 'mt-1 block w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm dark:border-gray-600 dark:bg-gray-900'
 const buttonClass = 'rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 disabled:opacity-50 dark:border-gray-600 dark:text-gray-200 dark:hover:bg-gray-700'
 const formatter = new Intl.DateTimeFormat('en-GB', { dateStyle: 'medium', timeStyle: 'medium', timeZone: 'UTC' })
@@ -166,7 +174,7 @@ function applyDatePreset() {
   Object.assign(draft, draft.datePreset === 'all' ? { dateFrom: '', dateTo: '' } : draft.datePreset === 'custom' ? {} : utcRange(Number(draft.datePreset)))
   applyFilters()
 }
-function setSort(field) { draft.sortDir = draft.sortField === field ? (draft.sortDir === 'asc' ? 'desc' : 'asc') : field === 'suite' ? 'asc' : 'desc'; draft.sortField = field; applyFilters() }
+function setSort(field, direction) { draft.sortField = field; draft.sortDir = direction; applyFilters() }
 function scheduleSearch() { cancelSearch(); sequence += 1; controller?.abort(); loading.value = false; error.value = ''; searchPending.value = true; searchTimer = setTimeout(applyFilters, 300) }
 function clearFilters() { Object.assign(draft, defaults()); applyFilters() }
 function loadPage(cursor) { requestRuns({ ...applied.value, cursor: cursor || '' }) }

@@ -8,8 +8,8 @@
 - Select several versions. A run matches any selected version.
 - Use one Date Range selector. Presets cover All time and Last 7/30/90 days.
   Custom dates reveals inclusive UTC start and end dates.
-- Select each table heading to sort suite, version, or recorded time in either
-  direction. Ordering applies across every page. Newest time remains the default.
+- Use each column heading’s dropdown to sort suite, version, or recorded time
+  in either direction. Ordering applies across every page. Newest time remains the default.
 - Versions sort numerically. GA sorts above EA for the same release; EA2 sorts
   above EA1. Confirmed spelling aliases such as `3.6.0 EA1` and `3.6.0-ea.1`
   share one choice. Patch versions remain distinct.
@@ -29,7 +29,8 @@ Recent Runs displays the legacy `3.6` label as `3.6.0`, as requested. The dropdo
 has one `3.6.0` choice. Selecting it matches runs stored under either value, and
 both values use the same sort position above `3.6.0-ea.*`. Earlier `3.6` filter
 URLs still work. Explicit EA releases and patch releases remain separate.
-This rule applies to Recent Runs; it does not rewrite OpenSearch documents.
+Version labels show only the version string. The filter summary above the table
+is removed. This rule applies to Recent Runs; it does not rewrite OpenSearch documents.
 
 ## Verification
 

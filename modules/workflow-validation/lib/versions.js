@@ -17,9 +17,7 @@ function normalizeVersion(value) {
   return normalized === '3.6' ? '3.6.0' : normalized;
 }
 function versionLabel(value) {
-  const normalized = normalizeVersion(value);
-  const parsed = parseVersion(normalized);
-  return parsed?.patch === null && !parsed.stage ? `${normalized} (release unspecified)` : normalized;
+  return normalizeVersion(value);
 }
 function compareVersions(left, right) {
   const a = parseVersion(normalizeVersion(left)), b = parseVersion(normalizeVersion(right));

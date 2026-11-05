@@ -10,8 +10,9 @@ Dashboard opens Recent Runs inside Workflow Validation. The initial view shows
 20 runs, newest first, with Previous and Next controls. A run is one
 `telemetry_suite` and `invocation_id` pair. Keep different invocations separate.
 
-Show Test suite, Version, and Recorded test time (UTC). Each heading sorts its
-column in either direction. Make each run row clickable and keyboard accessible. Missing version
+Show Test suite, Version, and Recorded test time (UTC). Each column heading
+has a dropdown to sort its column in either direction. Make each run row clickable
+and keyboard accessible. Missing version
 or time shows an unavailable label. The time is the latest existing execution
 `timestamp` in the group. It is not a RHOAI build date. Build metadata and
 OpenSearch schema changes are outside this change.
@@ -25,7 +26,7 @@ above EA for the same release, and suites by displayed name. Sort the full
 matching list before pagination. Choices update results immediately.
 Run ID search updates after a 300 ms typing pause. Every change resets to page
 one and searches all available run groups, including those outside the first page. Clear restores the unfiltered,
-newest-first first page. Show the applied criteria and matching range/count.
+newest-first first page. Show the matching range/count.
 Filter options come from all groups. Shared detail filters and automatic date
 or version defaults do not restrict this page. URL parameters use the `recent`
 prefix so reloads retain the current filters, sort, and page.

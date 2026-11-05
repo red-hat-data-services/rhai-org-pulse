@@ -13,7 +13,7 @@ describe('Recent Runs version rules', () => {
     expect(versionLabel('3.6')).toBe('3.6.0')
     expect(compareVersions('3.6', '3.6.0')).toBe(0)
     expect(compareVersions('3.6', '3.6.0-ea.2')).toBeGreaterThan(0)
-    expect(versionLabel('3.4')).toBe('3.4 (release unspecified)')
+    expect(versionLabel('3.4')).toBe('3.4')
     expect(versionLabel('3.6.0')).toBe('3.6.0')
     expect(normalizeVersion('custom build')).toBe('custom build')
   })

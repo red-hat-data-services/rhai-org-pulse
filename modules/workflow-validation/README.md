@@ -157,11 +157,11 @@ recorded test time in UTC. Select a row or press Enter to open its exact run.
 
 Select one or more versions, a suite, a Run ID, or a Date Range. Date Range
 supports All time, Last 7/30/90 days, and Custom dates. Choices update results
-immediately. Run ID search waits for a 300 ms typing pause. Select a column
-heading to sort all matching runs by suite, version, or recorded test time.
+immediately. Run ID search waits for a 300 ms typing pause. Use the dropdown in
+each column heading to sort all matching runs by suite, version, or recorded time.
 Versions use numeric release order, with GA above EA for the same release.
 The legacy `3.6` label shares the `3.6.0` choice and display. EA releases remain
-separate. Other partial labels show “release unspecified”.
+separate. Other partial versions keep their recorded label.
 
 Clear filters restores the unfiltered, newest-first first page. Shareable URLs
 retain the filters, sort, and page. Sorting and dates use existing execution

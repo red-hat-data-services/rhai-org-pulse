@@ -26,11 +26,13 @@ describe('Recent Runs', () => {
     await flushPromises()
     expect(Object.fromEntries(request(0))).toEqual({ pageSize: '20', includeBugs: 'false', sortField: 'timestamp', sortDir: 'desc' })
     expect(wrapper.findAll('tbody tr')).toHaveLength(3)
-    expect(wrapper.findAll('thead th').map(cell => cell.text())).toEqual(['Test suite', 'Version', 'Recorded test time (UTC)↓'])
+    expect(wrapper.findAll('thead th').map(cell => cell.attributes('aria-label'))).toEqual(['Test suite', 'Version', 'Recorded test time (UTC)'])
+    expect(wrapper.findAll('th button')).toHaveLength(0)
+    expect(wrapper.findAll('th select').map(select => select.element.value)).toEqual(['', '', 'desc'])
     expect(wrapper.get('nav[aria-label="Recent run pages"]').text()).toContain('Showing 1–3 of 3 runs')
     expect(button('Previous').element.disabled).toBe(true)
     expect(button('Next').element.disabled).toBe(true)
-    expect(wrapper.text()).toContain('All versions · All suites · All run IDs · All time')
+    expect(wrapper.text()).not.toContain('All versions · All suites · All run IDs · All time')
     expect(wrapper.text()).toContain('Version unavailable')
     expect(wrapper.findAll('time')).toHaveLength(2)
     expect(wrapper.text()).not.toMatch(/Build date|Jenkins|Image release/)
@@ -78,7 +80,7 @@ describe('Recent Runs', () => {
     await wrapper.get('select[aria-label="Date Range"]').setValue('custom')
     await wrapper.get('input[aria-label="Start Date (UTC)"]').setValue('2026-01-01')
     await wrapper.get('input[aria-label="End Date (UTC)"]').setValue('2026-02-01')
-    await wrapper.get('th button').trigger('click')
+    await wrapper.get('select[aria-label="Sort test suite"]').setValue('asc')
     await flushPromises()
     expect(request(-1).getAll('versions')).toEqual(['3.5.0', 'older'])
     expect(Object.fromEntries(request(-1))).toMatchObject({ suite: 'release_gate', runQuery: 'original-run', dateFrom: '2026-01-01', dateTo: '2026-02-01', sortField: 'suite', sortDir: 'asc' })
@@ -279,18 +281,18 @@ describe('Recent Runs', () => {
     expect(request(-1).has('dateFrom')).toBe(false)
   })
 
-  it('toggles each sort header and stores selected versions and sorting in the URL', async () => {
+  it('selects each column sort direction and stores versions and sorting in the URL', async () => {
     const params = ref({ recentVersions: JSON.stringify(['3.5.0', '3.6.0-ea.2']) })
     const nav = { params, updateParams: vi.fn(values => { params.value = { ...params.value, ...values } }) }
     wrapper = mount(RecentRunsView, { global: { provide: { moduleNav: nav } } })
     await flushPromises()
     for (const [index, field, first] of [[0, 'suite', 'asc'], [1, 'version', 'desc'], [2, 'timestamp', 'desc']]) {
-      await wrapper.findAll('th button')[index].trigger('click')
+      await wrapper.findAll('th select')[index].setValue(first)
       await flushPromises()
       expect(request(-1).get('sortField')).toBe(field)
       expect(request(-1).get('sortDir')).toBe(first)
       expect(wrapper.findAll('th')[index].attributes('aria-sort')).toBe(first === 'asc' ? 'ascending' : 'descending')
-      await wrapper.findAll('th button')[index].trigger('click')
+      await wrapper.findAll('th select')[index].setValue(first === 'asc' ? 'desc' : 'asc')
       await flushPromises()
       expect(request(-1).get('sortDir')).not.toBe(first)
     }
