@@ -114,5 +114,45 @@
     "reason": "Collector can truncate patch and prerelease labels; historical digest has no confirmed full-version match.",
     "productionMetadata": "HTTP 403; approved browser navigation failed."
   },
-  "liveBrowserVerification": "pending permission for in-memory preview proxy authentication"
+  "browser": {
+    "checkedAt": "2026-11-05T09:19:40.953Z",
+    "actualDeployedFrontend": true,
+    "actualDeployedBackend": true,
+    "initialRows": 20,
+    "groups": 146,
+    "pagesVisited": 8,
+    "pageReload": true,
+    "legacyPageBookmark": true,
+    "refreshRetainsPage": true,
+    "refreshErrorRetainsRows": true,
+    "retryRecovers": true,
+    "multipleVersions": [
+      "3.6.0-ea.2",
+      "3.6.0-ea.1"
+    ],
+    "sortedVersionChoices": true,
+    "selectionReload": true,
+    "allColumnDirections": true,
+    "datePresets": true,
+    "customUtcDates": true,
+    "filterBeyondFirstPage": true,
+    "typingDebounced": true,
+    "clear": true,
+    "exactMouseNavigation": true,
+    "exactKeyboardNavigation": true,
+    "exactScopeAcrossVersions": true,
+    "narrowWidths": [
+      375,
+      320
+    ],
+    "pageErrors": []
+  },
+  "screenshots": [
+    "images/rhai-20044-gpuaas-custom-dates.png",
+    "images/rhai-20044-gpuaas-filtered.png",
+    "images/rhai-20044-gpuaas-mobile.png",
+    "images/rhai-20044-gpuaas-multiple-versions.png",
+    "images/rhai-20044-gpuaas-recent-runs.png",
+    "images/rhai-20044-gpuaas-selected-run.png"
+  ]
 }

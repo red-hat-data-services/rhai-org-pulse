@@ -59,5 +59,18 @@ counts remain 712 executions, 4,157 tasks, and 184 root causes. Run metadata and
 runtime settings are unchanged. Previous image references are saved for rollback.
 
 [Machine-readable evidence](rhai-20044-validation.json) records image digests,
-source/asset hashes, and validation results. Live browser screenshots are pending
-test authentication approval.
+source/asset hashes, and validation results.
+
+Live browser checks passed against both deployed images. They cover all eight
+pages, all column directions, version choice order, multiple versions and
+selection reload, date presets and Custom dates, filtering beyond page one,
+Clear, Refresh/Retry, older bookmarks, and exact-run navigation by mouse and
+keyboard. The page fits 375px and 320px screens with horizontal table scrolling.
+No browser page errors occurred. Test credentials stayed in memory.
+
+- [Initial page](images/rhai-20044-gpuaas-recent-runs.png)
+- [Multiple versions](images/rhai-20044-gpuaas-multiple-versions.png)
+- [Custom UTC dates](images/rhai-20044-gpuaas-custom-dates.png)
+- [Run ID and suite filters](images/rhai-20044-gpuaas-filtered.png)
+- [Selected run](images/rhai-20044-gpuaas-selected-run.png)
+- [320px layout](images/rhai-20044-gpuaas-mobile.png)
