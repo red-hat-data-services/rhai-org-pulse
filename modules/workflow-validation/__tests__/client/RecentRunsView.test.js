@@ -26,7 +26,7 @@ describe('Recent Runs', () => {
     await flushPromises()
     expect(Object.fromEntries(request(0))).toEqual({ pageSize: '20', includeBugs: 'false', sortField: 'timestamp', sortDir: 'desc' })
     expect(wrapper.findAll('tbody tr')).toHaveLength(3)
-    expect(wrapper.findAll('thead th').map(cell => cell.attributes('aria-label'))).toEqual(['Test suite', 'Version', 'Recorded test time (UTC)'])
+    expect(wrapper.findAll('thead th').map(cell => cell.attributes('aria-label'))).toEqual(['Test suite', 'Version', 'Executed at (UTC)'])
     expect(wrapper.findAll('th button')).toHaveLength(0)
     expect(wrapper.findAll('th select').map(select => select.element.value)).toEqual(['', '', 'desc'])
     expect(wrapper.get('nav[aria-label="Recent run pages"]').text()).toContain('Showing 1–3 of 3 runs')

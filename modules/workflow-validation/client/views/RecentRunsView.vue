@@ -98,7 +98,7 @@ const { getRecentRuns } = useWorkflowValidation()
 const columns = [
   { field: 'suite', label: 'Test suite', sortLabel: 'Sort test suite', orders: [{ value: 'asc', label: 'A–Z' }, { value: 'desc', label: 'Z–A' }] },
   { field: 'version', label: 'Version', sortLabel: 'Sort version', orders: [{ value: 'desc', label: 'Highest first' }, { value: 'asc', label: 'Lowest first' }] },
-  { field: 'timestamp', label: 'Recorded test time (UTC)', sortLabel: 'Sort recorded test time', orders: [{ value: 'desc', label: 'Newest first' }, { value: 'asc', label: 'Oldest first' }] }
+  { field: 'timestamp', label: 'Executed at (UTC)', sortLabel: 'Sort execution time', orders: [{ value: 'desc', label: 'Newest first' }, { value: 'asc', label: 'Oldest first' }] }
 ]
 const fields = { suite: 'recentSuite', runQuery: 'recentRun', datePreset: 'recentDatePreset', dateFrom: 'recentFrom', dateTo: 'recentTo', sortField: 'recentSortField', sortDir: 'recentSort', cursor: 'recentCursor' }
 const defaults = () => ({ versions: [], suite: '', runQuery: '', datePreset: 'all', dateFrom: '', dateTo: '', sortField: 'timestamp', sortDir: 'desc', cursor: '' })

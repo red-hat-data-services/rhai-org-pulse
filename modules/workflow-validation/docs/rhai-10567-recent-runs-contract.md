@@ -10,7 +10,7 @@ Dashboard opens Recent Runs inside Workflow Validation. The initial view shows
 20 runs, newest first, with Previous and Next controls. A run is one
 `telemetry_suite` and `invocation_id` pair. Keep different invocations separate.
 
-Show Test suite, Version, and Recorded test time (UTC). Each column heading
+Show Test suite, Version, and Executed at (UTC). Each column heading
 has a dropdown to sort its column in either direction. Make each run row clickable
 and keyboard accessible. Missing version
 or time shows an unavailable label. The time is the latest existing execution
