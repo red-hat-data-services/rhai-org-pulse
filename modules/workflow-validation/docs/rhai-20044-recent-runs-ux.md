@@ -35,7 +35,7 @@ is removed. This rule applies to Recent Runs; it does not rewrite OpenSearch doc
 
 ## Verification
 
-Source `18b76271` passes 6,781 unit tests (11 skipped), including 160 module
+Source `925498ac` passes 6,781 unit tests (11 skipped), including 160 module
 tests. All 32 browser integration tests pass through the existing shared CI
 entrypoint. Lint, module/OpenAPI validation, the standard production build, and
 the compatible GPUaaS frontend build pass.
@@ -52,7 +52,8 @@ runtime settings are unchanged. Previous image references are saved for rollback
 source/asset hashes, and validation results.
 
 Live browser checks passed against both deployed images. They cover all eight
-pages, column sort dropdowns in both directions, plain version labels, the removed
+pages, opening sort menus from the compact headings, both sort directions, plain
+version labels, the removed
 filter summary, version choice order, multiple versions and
 selection reload, date presets and Custom dates, filtering beyond page one,
 Clear, Refresh/Retry, older bookmarks, and exact-run navigation by mouse and

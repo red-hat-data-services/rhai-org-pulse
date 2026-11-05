@@ -1,9 +1,9 @@
 {
   "ticket": "RHAI-20044",
-  "sourceCommit": "18b76271b3bd12ac27ff7102ae0518a3ceaef724",
+  "sourceCommit": "925498acca019e1efba2f8f60b681e2efc509fd0",
   "environment": "GPUaaS preview only",
   "api": {
-    "checkedAt": "2026-11-05T09:50:42.381Z",
+    "checkedAt": "2026-11-05T10:05:37.543Z",
     "groups": 146,
     "pages": 8,
     "initialRows": 20,
@@ -89,8 +89,8 @@
       "image": "image-registry.openshift-image-registry.svc:5000/workflow-validation-org-pulse/org-pulse-backend@sha256:08347098607257e441ac2d4f11a4c4fe269288a5b386f2a9c9512833c4499e1d"
     },
     "frontend": {
-      "build": "org-pulse-frontend-rhai20044-labels-20261105-1",
-      "image": "image-registry.openshift-image-registry.svc:5000/workflow-validation-org-pulse/org-pulse-frontend@sha256:be7d1b004647b9ae0b227b249f562f1bf6b20594db92367d181cefa0faacffb3"
+      "build": "org-pulse-frontend-rhai20044-compact-20261105-1",
+      "image": "image-registry.openshift-image-registry.svc:5000/workflow-validation-org-pulse/org-pulse-frontend@sha256:b5950d481add3c872e1bdd080a50c6c8d0f22e9633b9d4457cb8d9315c199212"
     }
   },
   "backendSourceHashes": {
@@ -102,16 +102,15 @@
     "modules/workflow-validation/lib/package.json": "609158e6c5fbc237939fa3ddf7faab80ab690bdc0c8d584414a885130103c4e8"
   },
   "frontendAssetHashes": {
-    "index.html": "33b725aea06ffb61ea6943f8cb73538d9151f5328fbd7a6e585648c7f7f4cafd",
-    "assets/RecentRunsView-BRTmJZYi.js": "029a49ef37c770a76308c3518bca1ecc2d5925eaa8492c8d109f5e82f2d511f3",
-    "assets/RecentRunsView-DSOQP82I.js": "617161b9fcf8ff013f6484e8bfc3913474d80a31f55f8d2fe3c22239be0aa71c"
+    "index.html": "fb19a1796c6d7e3566f620dd2147306dd201d06844eca80d1831a55655b34493",
+    "assets/RecentRunsView-DKQq9tSJ.js": "90b7bc8c133cda34b98d19cecfeae489d7aa2b0fbd443624e80c441a7aef74b2"
   },
   "rollbackImages": {
-    "backend": "image-registry.openshift-image-registry.svc:5000/workflow-validation-org-pulse/org-pulse-backend@sha256:51913222a4746953e95ad594dd67c9360e6e8846f1ba9da2f528551b08dde30b",
-    "frontend": "image-registry.openshift-image-registry.svc:5000/workflow-validation-org-pulse/org-pulse-frontend@sha256:3e3d6f2274b7d20653a74fd53cea1a7f05596b5af3ed2c7c21838a6ce7b9fb2f"
+    "backend": "image-registry.openshift-image-registry.svc:5000/workflow-validation-org-pulse/org-pulse-backend@sha256:08347098607257e441ac2d4f11a4c4fe269288a5b386f2a9c9512833c4499e1d",
+    "frontend": "image-registry.openshift-image-registry.svc:5000/workflow-validation-org-pulse/org-pulse-frontend@sha256:be7d1b004647b9ae0b227b249f562f1bf6b20594db92367d181cefa0faacffb3"
   },
   "browser": {
-    "checkedAt": "2026-11-05T09:51:14.672Z",
+    "checkedAt": "2026-11-05T10:06:15.920Z",
     "actualDeployedFrontend": true,
     "actualDeployedBackend": true,
     "initialRows": 20,
@@ -129,6 +128,8 @@
     "legacy36Alias": true,
     "plainVersionLabels": true,
     "columnSortDropdowns": true,
+    "headingOpensDropdown": true,
+    "compactSortHeaders": true,
     "filterSummaryRemoved": true,
     "sortedVersionChoices": true,
     "selectionReload": true,
@@ -166,6 +167,8 @@
   "presentation": {
     "plainVersionLabels": true,
     "filterSummaryRemoved": true,
-    "columnSortDropdowns": true
-  }
+    "columnSortDropdowns": true,
+    "compactSortHeaders": true
+  },
+  "deploymentScope": "Frontend update; backend image unchanged"
 }
