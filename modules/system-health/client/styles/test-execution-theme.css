@@ -32,7 +32,6 @@
   --te-row-name: #111827;
   --te-date-label: #111827;
   --te-toggle-text: #374151;
-  --te-sc-value: #111827;
   --te-sc-label: #6b7280;
   --te-deployment-label: #374151;
   --te-comp-stats: #6b7280;
@@ -41,11 +40,6 @@
   --te-loading: #6b7280;
   --te-chart-grid: rgba(229, 231, 235, 1);
   --te-chart-tick: rgba(107, 114, 128, 1);
-  --te-metric-total: #2563eb;
-  --te-metric-passed: #059669;
-  --te-metric-failed: #dc2626;
-  --te-metric-skipped: #b45309;
-  --te-metric-pct: #6d28d9;
 }
 
 html.dark .test-execution-theme {
@@ -78,7 +72,6 @@ html.dark .test-execution-theme {
   --te-row-name: #e0e0e0;
   --te-date-label: #ffffff;
   --te-toggle-text: #cccccc;
-  --te-sc-value: #ffffff;
   --te-sc-label: #6b8299;
   --te-deployment-label: #c5d4e8;
   --te-comp-stats: #6b8299;
@@ -87,11 +80,6 @@ html.dark .test-execution-theme {
   --te-loading: #6b8299;
   --te-chart-grid: rgba(30, 73, 118, 0.25);
   --te-chart-tick: #6b8299;
-  --te-metric-total: #3498db;
-  --te-metric-passed: #2ed573;
-  --te-metric-failed: #ff4757;
-  --te-metric-skipped: #ffa502;
-  --te-metric-pct: #a29bfe;
 }
 
 .test-execution-theme input[type="date"]::-webkit-calendar-picker-indicator {
