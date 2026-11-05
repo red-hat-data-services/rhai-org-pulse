@@ -5,11 +5,11 @@ describe('Recent Runs version selector', () => {
   it('shows sorted unique choices, selects several, and clears to All versions', async () => {
     const wrapper = mount(RecentVersionSelect, { props: { options: ['3.6.0-ea.1', '3.5.2', '3.6.0', '3.6.0 EA1', '3.6'], modelValue: [] } })
     await wrapper.get('button').trigger('click')
-    expect(wrapper.findAll('label').slice(1).map(label => label.text())).toEqual(['All versions', '3.6.0', '3.6.0-ea.1', '3.6 (release unspecified)', '3.5.2'])
+    expect(wrapper.findAll('label').slice(1).map(label => label.text())).toEqual(['All versions', '3.6.0', '3.6.0-ea.1', '3.5.2'])
     const inputs = wrapper.findAll('input')
     await inputs[1].setValue(true)
     await wrapper.setProps({ modelValue: wrapper.emitted('update:modelValue').at(-1)[0] })
-    await inputs[4].setValue(true)
+    await inputs[3].setValue(true)
     expect(wrapper.emitted('update:modelValue').at(-1)[0]).toEqual(['3.6.0', '3.5.2'])
     await wrapper.setProps({ modelValue: ['3.6.0', '3.5.2'] })
     await inputs[0].setValue(true)

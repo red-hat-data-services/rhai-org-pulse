@@ -160,7 +160,8 @@ supports All time, Last 7/30/90 days, and Custom dates. Choices update results
 immediately. Run ID search waits for a 300 ms typing pause. Select a column
 heading to sort all matching runs by suite, version, or recorded test time.
 Versions use numeric release order, with GA above EA for the same release.
-Partial labels such as `3.6` remain separate and show “release unspecified”.
+The legacy `3.6` label shares the `3.6.0` choice and display. EA releases remain
+separate. Other partial labels show “release unspecified”.
 
 Clear filters restores the unfiltered, newest-first first page. Shareable URLs
 retain the filters, sort, and page. Sorting and dates use existing execution

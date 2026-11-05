@@ -19,7 +19,9 @@ remain intact in rows, and legacy raw-ID cursors remain supported. If an anchor
 was deleted, Previous resets to page one. An empty previous cursor resets to page one.
 `options` lists versions and suites from all available groups. Versions use
 descending numeric release order, with GA above EA for the same release.
-Confirmed spelling aliases are normalized. Partial versions remain separate.
+Confirmed spelling aliases are normalized. Recent Runs also groups `3.6` with
+`3.6.0` for display, filtering, and sorting. EA versions and other partial
+versions remain separate. Stored version strings are preserved.
 Repeated `versions` parameters select multiple versions with OR semantics.
 The older single `version` parameter remains supported; do not combine them.
 New v3 cursors bind the version set, sort column, direction, and page size.

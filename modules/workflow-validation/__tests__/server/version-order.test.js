@@ -7,10 +7,13 @@ describe('Recent Runs version rules', () => {
     expect(compareVersions('3.6.0', '3.6.0-rc.2')).toBeGreaterThan(0)
     expect(compareVersions('3.6.0-ea.10', '3.6.0-ea.2')).toBeGreaterThan(0)
   })
-  it('combines equivalent full-version spellings without inventing a patch or release stage', () => {
+  it('combines legacy 3.6 with 3.6.0 while keeping EA and other partial labels distinct', () => {
     expect(normalizeVersions(['3.6', '3.6.0', '03.06.00', '3.6.0 EA1', '3.6.0-ea.1']))
-      .toEqual(['3.6.0', '3.6.0-ea.1', '3.6'])
-    expect(versionLabel('3.6')).toBe('3.6 (release unspecified)')
+      .toEqual(['3.6.0', '3.6.0-ea.1'])
+    expect(versionLabel('3.6')).toBe('3.6.0')
+    expect(compareVersions('3.6', '3.6.0')).toBe(0)
+    expect(compareVersions('3.6', '3.6.0-ea.2')).toBeGreaterThan(0)
+    expect(versionLabel('3.4')).toBe('3.4 (release unspecified)')
     expect(versionLabel('3.6.0')).toBe('3.6.0')
     expect(normalizeVersion('custom build')).toBe('custom build')
   })

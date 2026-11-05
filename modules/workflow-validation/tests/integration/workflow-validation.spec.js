@@ -8,17 +8,18 @@ function recentPage(rows, values = {}) {
 
 async function mockRecentPages(page, { refreshRunPrefix = '' } = {}) {
   const all = Array.from({ length: 47 }, (_, index) => ({ suite: index % 2 ? 'release-gate' : 'ad-hoc',
-    invocationId: `run-${String(index).padStart(2, '0')}`, rhoaiVersion: index === 0 ? '3.0' : ['3.6.0', '3.6.0-ea.2', '3.6.0-ea.1', '3.5.2'][index % 4],
+    invocationId: `run-${String(index).padStart(2, '0')}`, rhoaiVersion: index === 0 ? '3.0' : index === 4 ? '3.6' : ['3.6.0', '3.6.0-ea.2', '3.6.0-ea.1', '3.5.2'][index % 4],
     timestamp: new Date(Date.UTC(2026, 0, index + 1)).toISOString() }))
   await page.route('**/api/modules/workflow-validation/test-suites?**', route => {
     const query = new URL(route.request().url()).searchParams
     const versions = query.getAll('versions').length ? query.getAll('versions') : query.get('version') ? [query.get('version')] : []
-    let matching = all.filter(row => (!versions.length || versions.includes(row.rhoaiVersion))
+    const canonical = version => version === '3.6' ? '3.6.0' : version
+    let matching = all.filter(row => (!versions.length || versions.map(canonical).includes(canonical(row.rhoaiVersion)))
       && (!query.get('suite') || row.suite === query.get('suite'))
       && (!query.get('runQuery') || row.invocationId.includes(query.get('runQuery')))
       && (!query.get('dateFrom') || row.timestamp.slice(0, 10) >= query.get('dateFrom'))
       && (!query.get('dateTo') || row.timestamp.slice(0, 10) <= query.get('dateTo')))
-    const rank = { '3.6.0': 5, '3.6.0-ea.2': 4, '3.6.0-ea.1': 3, '3.5.2': 2, '3.0': 1 }
+    const rank = { '3.6.0': 5, '3.6': 5, '3.6.0-ea.2': 4, '3.6.0-ea.1': 3, '3.5.2': 2, '3.0': 1 }
     const compare = (a, b) => query.get('sortField') === 'version' ? rank[a.rhoaiVersion] - rank[b.rhoaiVersion] : query.get('sortField') === 'suite' ? a.suite.localeCompare(b.suite) : Date.parse(a.timestamp) - Date.parse(b.timestamp)
     matching = matching.sort((a, b) => compare(a, b) * (query.get('sortDir') === 'asc' ? 1 : -1) || a.invocationId.localeCompare(b.invocationId))
     const offset = Number(query.get('cursor') || 0)
@@ -27,7 +28,7 @@ async function mockRecentPages(page, { refreshRunPrefix = '' } = {}) {
     return route.fulfill({ json: recentPage(rows, { total: matching.length, start: rows.length ? offset + 1 : 0,
       end: offset + rows.length, nextCursor: offset + 20 < matching.length ? String(offset + 20) : null,
       previousCursor: offset > 0 ? String(Math.max(0, offset - 20)) : null,
-      options: { versions: ['3.6.0-ea.1', '3.0', '3.6.0', '3.5.2', '3.6.0-ea.2'], suites: ['release-gate', 'ad-hoc'] } }) })
+      options: { versions: ['3.6.0-ea.1', '3.0', '3.6', '3.6.0', '3.5.2', '3.6.0-ea.2'], suites: ['release-gate', 'ad-hoc'] } }) })
   })
 }
 
@@ -236,6 +237,24 @@ test.describe('Workflow Validation module @workflow-validation', () => {
     await expect(pages).toContainText('Showing 21–22 of 22 runs')
     await expect(trigger).toContainText('3.6.0, 3.5.2')
     await expect(page.getByRole('table')).not.toContainText('3.6.0-ea.')
+  })
+
+  test('groups 3.6 and 3.6.0 under one choice and restores a legacy 3.6 filter', async ({ page }) => {
+    await mockRecentPages(page)
+    await page.goto('/#/workflow-validation/recent-runs?recentVersion=3.6')
+    const trigger = page.getByRole('button', { name: 'RHOAI versions', exact: true })
+    await expect(page.getByRole('navigation', { name: 'Recent run pages' })).toContainText('Showing 1–11 of 11 runs')
+    await expect(trigger).toContainText('3.6.0')
+    const table = page.getByRole('table')
+    await expect(table).toContainText('run-04')
+    await expect(table).toContainText('run-08')
+    await expect(table.locator('tbody tr td:nth-child(2)')).toHaveText(Array(11).fill('3.6.0'))
+    await trigger.click()
+    await expect(page.getByRole('checkbox', { name: '3.6.0', exact: true })).toHaveCount(1)
+    await expect(page.getByRole('checkbox', { name: '3.6', exact: true })).toHaveCount(0)
+    await page.keyboard.press('Escape')
+    await page.reload()
+    await expect(page.getByRole('navigation', { name: 'Recent run pages' })).toContainText('Showing 1–11 of 11 runs')
   })
 
   test('sorts each data column in both directions and resets pagination', async ({ page }) => {

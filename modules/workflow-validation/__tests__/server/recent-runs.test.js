@@ -130,13 +130,13 @@ describe('Recent Runs multi-version and column sorting', () => {
   const input = Array.from({ length: 83 }, (_, index) => ({ suite: ['z-suite', 'ad_hoc', 'Release-Gate'][index % 3], invocationId: `item-${index}`,
     timestamp: index % 11 ? new Date(Date.UTC(2026, 0, index % 23 + 1)).toISOString() : null, rhoaiVersion: releases[index % releases.length] }))
 
-  it('matches any selected version, combines confirmed spelling aliases, and keeps unspecified releases separate', () => {
+  it('matches both legacy 3.6 and 3.6.0 while keeping EA releases separate', () => {
     const sample = [{ ...rows[0], rhoaiVersion: '3.6.0 EA1' }, { ...rows[1], rhoaiVersion: '3.6.0-ea.1' }, { ...rows[2], rhoaiVersion: '3.6.0' }, { ...rows[3], rhoaiVersion: '3.6' }]
     const result = pageRecentRuns(sample, request({ versions: ['3.6.0-ea.1', '3.6.0'] }))
-    expect(result.total).toBe(3)
-    expect(result.options.versions).toEqual(['3.6.0', '3.6.0-ea.1', '3.6'])
-    expect(pageRecentRuns(sample, request({ versions: '3.6.0' })).total).toBe(1)
-    expect(pageRecentRuns(sample, request({ version: '3.6' })).total).toBe(1)
+    expect(result.total).toBe(4)
+    expect(result.options.versions).toEqual(['3.6.0', '3.6.0-ea.1'])
+    expect(pageRecentRuns(sample, request({ versions: '3.6.0' })).total).toBe(2)
+    expect(pageRecentRuns(sample, request({ version: '3.6' })).total).toBe(2)
   })
 
   it.each(['timestamp', 'version', 'suite'])('traverses the whole dataset in both directions sorted by %s', sortField => {

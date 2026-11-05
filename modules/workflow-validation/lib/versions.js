@@ -12,7 +12,9 @@ function normalizeVersion(value) {
   const parsed = parseVersion(input);
   if (!parsed) return input;
   const base = `${parsed.major}.${parsed.minor}${parsed.patch === null ? '' : `.${parsed.patch}`}`;
-  return base + (parsed.stage ? `-${parsed.stage}.${parsed.stageNumber}` : '');
+  const normalized = base + (parsed.stage ? `-${parsed.stage}.${parsed.stageNumber}` : '');
+  // Recent Runs groups the legacy 3.6 label with 3.6.0.
+  return normalized === '3.6' ? '3.6.0' : normalized;
 }
 function versionLabel(value) {
   const normalized = normalizeVersion(value);
@@ -20,7 +22,7 @@ function versionLabel(value) {
   return parsed?.patch === null && !parsed.stage ? `${normalized} (release unspecified)` : normalized;
 }
 function compareVersions(left, right) {
-  const a = parseVersion(left), b = parseVersion(right);
+  const a = parseVersion(normalizeVersion(left)), b = parseVersion(normalizeVersion(right));
   if (a && b) {
     for (const key of ['major', 'minor']) if (a[key] !== b[key]) return a[key] > b[key] ? 1 : -1;
     // An unspecified release is separate from any confirmed patch/stage.

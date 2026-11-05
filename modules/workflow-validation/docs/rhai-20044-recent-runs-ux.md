@@ -23,25 +23,13 @@ Repeated `versions` query parameters and v3 cursors support the new selection
 and sort columns. The API validates selection limits and cursor scope before
 reading OpenSearch. No schema or stored data changes are required.
 
-## Partial-version investigation
+## Version normalization
 
-A label such as `3.6` does not establish GA `3.6.0`. The Director collector's
-automatic version detection extracts only major.minor from the operator CSV.
-It can therefore lose patch and prerelease information. Explicit configured
-versions are preserved.
-
-Read-only GPUaaS metadata contained one `3.6` execution. Its operator digest
-had no matching full-version record in the accessible dataset. The current
-cluster runs a different operator digest. The image registry requires an
-authenticated lookup; the public catalog did not identify this historical digest.
-The approved production metadata request returned HTTP 403, and the browser
-could not navigate because of a browser-tool error. Production metadata could
-not establish whether the historical runs were EA or GA.
-
-Keep these labels separate and display `3.6 (release unspecified)`. Do not
-relabel historical data or merge it into GA without authoritative metadata.
-The same rule applies to other major.minor labels. This is the remaining limit
-on the original duplicate-version request.
+Recent Runs displays the legacy `3.6` label as `3.6.0`, as requested. The dropdown
+has one `3.6.0` choice. Selecting it matches runs stored under either value, and
+both values use the same sort position above `3.6.0-ea.*`. Earlier `3.6` filter
+URLs still work. Explicit EA releases and patch releases remain separate.
+This rule applies to Recent Runs; it does not rewrite OpenSearch documents.
 
 ## Verification
 
