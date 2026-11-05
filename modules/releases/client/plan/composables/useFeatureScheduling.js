@@ -6,7 +6,8 @@ import {
   filterFeatures,
   sortFeatures,
   assignNoTier,
-  applyPlacementGrouping
+  applyPlacementGrouping,
+  aggregateRoadmapGrid
 } from '../ai-planner/core.js'
 
 const API_PATH = '/modules/releases/planning/ai-planner'
@@ -57,6 +58,9 @@ const filters = ref(defaultFilters())
 const sortCol = ref('OutcomeNumber')
 const sortAsc = ref(true)
 const urgentFilterKeys = ref(null)
+// { name, phase, feats } | null -- replaces window._drilldownMap + the floating
+// popover from showRoadmapDrilldown() (index.html lines 3355-3383) with reactive state.
+const roadmapDrilldown = ref(null)
 const approvals = ref(loadApprovalsFromStorage())
 
 function saveApprovals() {
@@ -189,6 +193,29 @@ export function useFeatureScheduling() {
     }
   })
 
+  // Roadmap tab (Outcome x EA1/EA2/GA/No grid) -- see aggregateRoadmapGrid() for the
+  // "no live outcomes API" caveat; this always uses its BIG_ROCKS fallback shape.
+  const roadmapRows = computed(() => aggregateRoadmapGrid(scheduledRows.value))
+
+  function showRoadmapDrilldown(name, phase) {
+    const row = roadmapRows.value.find(r => r.name === name)
+    const feats = row ? row.phases[phase].feats : []
+    if (!feats.length) {
+      roadmapDrilldown.value = null
+      return
+    }
+    // Clicking the same cell again closes it, same as index.html's toggle behavior.
+    if (roadmapDrilldown.value && roadmapDrilldown.value.name === name && roadmapDrilldown.value.phase === phase) {
+      roadmapDrilldown.value = null
+      return
+    }
+    roadmapDrilldown.value = { name, phase, feats }
+  }
+
+  function clearRoadmapDrilldown() {
+    roadmapDrilldown.value = null
+  }
+
   return {
     scheduledRows,
     displayRows,
@@ -211,6 +238,10 @@ export function useFeatureScheduling() {
     urgentFilterKeys,
     applyUrgentFilter,
     clearUrgentFilter,
+    roadmapRows,
+    roadmapDrilldown,
+    showRoadmapDrilldown,
+    clearRoadmapDrilldown,
     loadFeatures
   }
 }
@@ -226,6 +257,7 @@ export function _resetFeatureSchedulingForTests() {
   sortCol.value = 'OutcomeNumber'
   sortAsc.value = true
   urgentFilterKeys.value = null
+  roadmapDrilldown.value = null
   approvals.value = {}
   localStorage.removeItem(APPROVALS_STORAGE_KEY)
 }

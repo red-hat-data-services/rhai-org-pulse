@@ -10,7 +10,9 @@ import {
   mapApiFeatureToRow,
   sortFeatures,
   assignNoTier,
-  applyPlacementGrouping
+  applyPlacementGrouping,
+  aggregateRoadmapGrid,
+  roadmapCellColor
 } from '../../../../client/plan/ai-planner/core.js'
 
 function baseRow(overrides) {
@@ -274,5 +276,52 @@ describe('applyPlacementGrouping', () => {
       { Key: 'tier2', _place: 'No', _conf: 0, _noTier: 2 }
     ]
     expect(applyPlacementGrouping(rows, 'Score').map(r => r.Key)).toEqual(['tier1', 'tier2', 'tier3'])
+  })
+})
+
+describe('aggregateRoadmapGrid', () => {
+  const outcomes = [{ key: 'Upgrade Support', title: 'Upgrade Support' }, { key: 'MaaS', title: 'MaaS' }]
+
+  it('buckets features by outcome and placement, carrying feature detail for drilldown', () => {
+    const rows = [
+      { Key: 'A', Title: 'Feature A', Outcome: 'Upgrade Support', _place: 'EA1', _conf: 80 },
+      { Key: 'B', Title: 'Feature B', Outcome: 'Upgrade Support', _place: 'EA1', _conf: 60 },
+      { Key: 'C', Title: 'Feature C', Outcome: 'Upgrade Support', _place: 'No', _conf: 0 }
+    ]
+    const grid = aggregateRoadmapGrid(rows, outcomes)
+    expect(grid).toHaveLength(1)
+    expect(grid[0].name).toBe('Upgrade Support')
+    expect(grid[0].phases.EA1.c).toBe(2)
+    expect(grid[0].phases.EA1.s).toBe(140)
+    expect(grid[0].phases.EA1.feats.map(f => f.key)).toEqual(['A', 'B'])
+    expect(grid[0].phases.No.c).toBe(1)
+    expect(grid[0].total).toBe(3)
+  })
+
+  it('falls back to _bigRocks[0] when Outcome is empty, and omits outcomes with zero features', () => {
+    const rows = [{ Key: 'D', Title: 'Feature D', Outcome: '', _bigRocks: ['MaaS'], _place: 'GA', _conf: 90 }]
+    const grid = aggregateRoadmapGrid(rows, outcomes)
+    expect(grid.map(g => g.name)).toEqual(['MaaS'])
+    expect(grid[0].phases.GA.c).toBe(1)
+  })
+
+  it('defaults to a BIG_ROCKS-derived outcome list when none is passed', () => {
+    const rows = [{ Key: 'E', Title: 'Feature E', Outcome: 'Upgrade Support', _place: 'EA1', _conf: 50 }]
+    const grid = aggregateRoadmapGrid(rows)
+    expect(grid.find(g => g.name === 'Upgrade Support')).toBeTruthy()
+  })
+
+  it('ignores features with no resolvable outcome', () => {
+    const rows = [{ Key: 'F', Title: 'Feature F', Outcome: '', _place: 'EA1', _conf: 50 }]
+    expect(aggregateRoadmapGrid(rows, outcomes)).toEqual([])
+  })
+})
+
+describe('roadmapCellColor', () => {
+  it('bands by average confidence, and greys out empty cells', () => {
+    expect(roadmapCellColor(0, 0)).toBe('#fafafa')
+    expect(roadmapCellColor(3, 70)).toBe('#e8f5e9')
+    expect(roadmapCellColor(3, 55)).toBe('#fff8e1')
+    expect(roadmapCellColor(3, 20)).toBe('#ffebee')
   })
 })

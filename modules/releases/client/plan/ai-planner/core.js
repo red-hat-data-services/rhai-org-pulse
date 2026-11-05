@@ -669,3 +669,67 @@ export function applyPlacementGrouping(rows, sortCol) {
     return (b._conf||0)-(a._conf||0);
   });
 }
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Stage 1c additions (Roadmap tab). Same extraction rules as before.
+// ─────────────────────────────────────────────────────────────────────────────
+
+/**
+ * Source: index.html lines 3287-3313 (renderRoadmapTimeline()'s outcome × release-phase
+ * aggregation). HTML table building and the click-to-drilldown popover (the rest of
+ * renderRoadmapTimeline, plus showRoadmapDrilldown) are view-layer and stay in Vue.
+ *
+ * NOT ported: index.html prefers a live ~22-outcome list fetched separately
+ * (window.outcomeData from GET /ai-planner/outcomes) over BIG_ROCKS when available.
+ * That fetch-and-prefer branch isn't reproduced here; `outcomes` always falls back to
+ * the BIG_ROCKS-derived shape ({key, title, outcomeNumber: 0}) index.html itself uses
+ * before that fetch resolves (or when it fails). Pass a real outcomes list in to get
+ * the live-equivalent behavior once that API is wired up.
+ *
+ * KNOWN GAP, preserved as-is: `r['Status']` is never populated on API-sourced rows --
+ * mapApiFeatureToRow() (this file) doesn't map it, matching index.html's own
+ * `ai-planner-data` postMessage mapping, which also omits it. So `done`/`wip` are
+ * always false for live data and every in-grid feature counts as "not started".
+ */
+export function aggregateRoadmapGrid(rows, outcomes) {
+  const phases = ['EA1','EA2','GA'];
+  const list = outcomes || BIG_ROCKS.map(br => ({ key: br.name, title: br.name, outcomeNumber: 0 }));
+  const grid = {};
+  list.forEach(o=>{
+    const name = o.key || o.name;
+    grid[name]={EA1:{c:0,s:0,done:0,wip:0,feats:[]},EA2:{c:0,s:0,done:0,wip:0,feats:[]},GA:{c:0,s:0,done:0,wip:0,feats:[]},No:{c:0,s:0,done:0,wip:0,feats:[]}};
+  });
+  rows.forEach(r=>{
+    const outcomeKey = r['Outcome'] || (r._bigRocks && r._bigRocks[0]);
+    if(!outcomeKey) return;
+    const ph = phases.includes(r._place) ? r._place : 'No';
+    const st = (r._status||esc(r['Status'])||'').toLowerCase();
+    const done = /done|closed|released|release pending/.test(st);
+    const wip  = /in progress|review|testing/.test(st);
+    if(grid[outcomeKey]){
+      grid[outcomeKey][ph].c++;
+      grid[outcomeKey][ph].s += (r._conf||0);
+      if(done) grid[outcomeKey][ph].done++;
+      else if(wip) grid[outcomeKey][ph].wip++;
+      grid[outcomeKey][ph].feats.push({key:esc(r['Key'])||'',title:(esc(r['Title'])||esc(r['Summary'])||''),conf:Math.round(r._conf||0)});
+    }
+  });
+  const rowsOut=[];
+  list.forEach(o=>{
+    const name = o.key || o.name;
+    const g=grid[name];
+    if(!g) return;
+    const total=phases.reduce((s,p)=>s+g[p].c,0)+g.No.c;
+    if(!total) return;
+    rowsOut.push({ name, displayName: o.title || o.key || name, phases: g, total });
+  });
+  return rowsOut;
+}
+
+// Source: index.html line 3314 (renderRoadmapTimeline()'s cell background banding).
+export function roadmapCellColor(count, avgConf) {
+  if(!count) return '#fafafa';
+  if(avgConf>=70) return '#e8f5e9';
+  if(avgConf>=50) return '#fff8e1';
+  return '#ffebee';
+}

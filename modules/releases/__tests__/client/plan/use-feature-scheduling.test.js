@@ -138,4 +138,28 @@ describe('useFeatureScheduling', function() {
     // Now reviewed, so it should no longer be urgent even if risk/confidence would qualify.
     expect(api.pmReviewStatus.value.urgentKeys).not.toContain('RHAISTRAT-1')
   })
+
+  it('aggregates roadmapRows from the BIG_ROCKS fallback and toggles drilldown on repeat clicks', async function() {
+    mockApiRequest.mockResolvedValueOnce({
+      features: [
+        apiFeature({ Key: 'RHAISTRAT-1', Outcome: 'Upgrade Support', PlannedFor: '3.6 EA1 RHOAI RELEASE' }),
+        apiFeature({ Key: 'RHAISTRAT-2', Outcome: 'Upgrade Support', PlannedFor: '3.6 EA1 RHOAI RELEASE' })
+      ],
+      metadata: { source: 'live' },
+      lastSyncedAt: null
+    })
+    var api = mountComposable()
+    await api.loadFeatures()
+    await flushPromises()
+
+    var row = api.roadmapRows.value.find(function(r) { return r.name === 'Upgrade Support' })
+    expect(row).toBeTruthy()
+    expect(row.phases.EA1.c).toBe(2)
+
+    expect(api.roadmapDrilldown.value).toBeNull()
+    api.showRoadmapDrilldown('Upgrade Support', 'EA1')
+    expect(api.roadmapDrilldown.value.feats).toHaveLength(2)
+    api.showRoadmapDrilldown('Upgrade Support', 'EA1')
+    expect(api.roadmapDrilldown.value).toBeNull()
+  })
 })
