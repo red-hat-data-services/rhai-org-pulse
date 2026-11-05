@@ -1,9 +1,9 @@
 {
   "ticket": "RHAI-20044",
-  "sourceCommit": "3b8bf8b9dcb7d2ceeb5ae11630b34328fba2d847",
+  "sourceCommit": "18b76271b3bd12ac27ff7102ae0518a3ceaef724",
   "environment": "GPUaaS preview only",
   "api": {
-    "checkedAt": "2026-11-05T09:33:43.761Z",
+    "checkedAt": "2026-11-05T09:50:42.381Z",
     "groups": 146,
     "pages": 8,
     "initialRows": 20,
@@ -85,12 +85,12 @@
   },
   "images": {
     "backend": {
-      "build": "org-pulse-backend-rhai20044-alias-20261105-1",
-      "image": "image-registry.openshift-image-registry.svc:5000/workflow-validation-org-pulse/org-pulse-backend@sha256:51913222a4746953e95ad594dd67c9360e6e8846f1ba9da2f528551b08dde30b"
+      "build": "org-pulse-backend-rhai20044-labels-20261105-1",
+      "image": "image-registry.openshift-image-registry.svc:5000/workflow-validation-org-pulse/org-pulse-backend@sha256:08347098607257e441ac2d4f11a4c4fe269288a5b386f2a9c9512833c4499e1d"
     },
     "frontend": {
-      "build": "org-pulse-frontend-rhai20044-alias-20261105-1",
-      "image": "image-registry.openshift-image-registry.svc:5000/workflow-validation-org-pulse/org-pulse-frontend@sha256:3e3d6f2274b7d20653a74fd53cea1a7f05596b5af3ed2c7c21838a6ce7b9fb2f"
+      "build": "org-pulse-frontend-rhai20044-labels-20261105-1",
+      "image": "image-registry.openshift-image-registry.svc:5000/workflow-validation-org-pulse/org-pulse-frontend@sha256:be7d1b004647b9ae0b227b249f562f1bf6b20594db92367d181cefa0faacffb3"
     }
   },
   "backendSourceHashes": {
@@ -98,19 +98,20 @@
     "modules/workflow-validation/server/opensearch.js": "0518aad36b68647c9e6a7769051443cce03cb6f975cc776d81e38b5ec0c84b01",
     "modules/workflow-validation/server/config.js": "fa83e397f4a130b3958972eabac9ca926c7f4a12b3c57ef0d73185ab84318ca0",
     "modules/workflow-validation/server/recent-runs.js": "3ad41981cc17a9ea69654e8f2fe9291cb4b1f376ffab059012af982a7508b051",
-    "modules/workflow-validation/lib/versions.js": "57bbbdac8d520ccfacfe017a612a031325f3e6cc42e0f4f6b298028d9bf91689",
+    "modules/workflow-validation/lib/versions.js": "294df1244181f7184105508a15badf5f7c539498cfc790e5160796209329cd3f",
     "modules/workflow-validation/lib/package.json": "609158e6c5fbc237939fa3ddf7faab80ab690bdc0c8d584414a885130103c4e8"
   },
   "frontendAssetHashes": {
-    "index.html": "adb4c8e4c3f5c4da96a13e324d73802a8cd4d176803c409dead4c2302d4b6a54",
-    "assets/RecentRunsView-uKU7pjY6.js": "25a2c82d973fab08eec43072c98cc08529140f0df1342678d4c6e64938f54f9e"
+    "index.html": "33b725aea06ffb61ea6943f8cb73538d9151f5328fbd7a6e585648c7f7f4cafd",
+    "assets/RecentRunsView-BRTmJZYi.js": "029a49ef37c770a76308c3518bca1ecc2d5925eaa8492c8d109f5e82f2d511f3",
+    "assets/RecentRunsView-DSOQP82I.js": "617161b9fcf8ff013f6484e8bfc3913474d80a31f55f8d2fe3c22239be0aa71c"
   },
   "rollbackImages": {
-    "backend": "image-registry.openshift-image-registry.svc:5000/workflow-validation-org-pulse/org-pulse-backend@sha256:190fa04011126d0fcf27c2c0a2d72ed0460c5f19370af13e5f51cef280e18c09",
-    "frontend": "image-registry.openshift-image-registry.svc:5000/workflow-validation-org-pulse/org-pulse-frontend@sha256:0a0afea8fdfa48d8427e04c0073546b06ea8f59d18f5dcc88bc0eb83fee8035c"
+    "backend": "image-registry.openshift-image-registry.svc:5000/workflow-validation-org-pulse/org-pulse-backend@sha256:51913222a4746953e95ad594dd67c9360e6e8846f1ba9da2f528551b08dde30b",
+    "frontend": "image-registry.openshift-image-registry.svc:5000/workflow-validation-org-pulse/org-pulse-frontend@sha256:3e3d6f2274b7d20653a74fd53cea1a7f05596b5af3ed2c7c21838a6ce7b9fb2f"
   },
   "browser": {
-    "checkedAt": "2026-11-05T09:34:20.139Z",
+    "checkedAt": "2026-11-05T09:51:14.672Z",
     "actualDeployedFrontend": true,
     "actualDeployedBackend": true,
     "initialRows": 20,
@@ -126,6 +127,9 @@
       "3.6.0-ea.2"
     ],
     "legacy36Alias": true,
+    "plainVersionLabels": true,
+    "columnSortDropdowns": true,
+    "filterSummaryRemoved": true,
     "sortedVersionChoices": true,
     "selectionReload": true,
     "allColumnDirections": true,
@@ -158,5 +162,10 @@
     "filterMatchesBothStoredValues": true,
     "eaReleasesSeparate": true,
     "storedDocumentsChanged": false
+  },
+  "presentation": {
+    "plainVersionLabels": true,
+    "filterSummaryRemoved": true,
+    "columnSortDropdowns": true
   }
 }
