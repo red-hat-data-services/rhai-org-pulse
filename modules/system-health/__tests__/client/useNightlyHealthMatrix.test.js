@@ -5,9 +5,19 @@ import { fileURLToPath } from 'url'
 import { dirname, join } from 'path'
 import {
   resolveSelectedRun,
+  canonicalKeyForRowId,
   collectMatrixRowIds,
   dscSourceStatusClass,
   orderDayRunsForPanel,
+  formatRunDuration,
+  nightlyColumnHeaderSubline,
+  nightlyTestSourceDescription,
+  runArtifactPanelEntries,
+  runProductUnderTestLabel,
+  runOdsBuildUrl,
+  runOdsBuildLinkLabel,
+  shortenDigestForDisplay,
+  artifactRefHref,
   cellDisplayStatus,
   statusColorClass,
   cellSourceStatusSubtitle,
@@ -15,9 +25,16 @@ import {
   resolveDisplayMatrixCell,
   listNightlyJenkinsJobOptions,
   jenkinsJobPathFromUrl,
+  jenkinsJobBasename,
+  humanizeJenkinsJobBasename,
+  nightlyTestResultsPanelTitle,
   TEST_RESULTS_SOURCE_QUERY_PARAM,
+  testResultsSourceOptionLabel,
+  testResultsSourceDropdownLabel,
+  streamKeyDisambiguationLabel,
   streamKeyFromTestResultsSourceQuery,
   testResultsSourceQueryValue,
+  testResultsSourceQueryValueForUrl,
   cellSourceStatusSubtitlePrefix,
   normalizeHeatmapComponentToNightlyId,
   findMatrixCell,
@@ -181,7 +198,7 @@ describe('useNightlyHealthMatrix helpers', () => {
     expect(resolveHeatmapComponentToRowId('AI-Gateway', days)).toBe('aigateway')
   })
 
-  it('collects both producer ids when heatmap label shares canonical name across id change', () => {
+  it('uses one matrix row per heatmap label when producer ids change (trainer → trainingoperator)', () => {
     const days = [
       {
         date: '2026-11-01',
@@ -224,14 +241,94 @@ describe('useNightlyHealthMatrix helpers', () => {
     ]
     const heatmap = [{ component: 'Training Kubeflow' }]
     const ids = collectMatrixRowIds(days, heatmap)
-    expect(ids).toContain('trainer')
-    expect(ids).toContain('trainingoperator')
+    expect(ids.filter((id) => id === 'trainer' || id === 'trainingoperator')).toEqual(['trainer'])
+    expect(findMatrixCell(days[1].runs[0], 'trainer', days)?.id).toBe('trainingoperator')
     expect(resolveHeatmapComponentToRowId('Training Kubeflow', days, { run: days[0].runs[0] })).toBe(
       'trainer'
     )
     expect(resolveHeatmapComponentToRowId('Training', days, { run: days[1].runs[0] })).toBe(
       'trainingoperator'
     )
+  })
+
+  it('dedupes nightly-only rows that share canonical identity with heatmap inventory', () => {
+    const days = [{
+      date: '2026-11-01',
+      latest_run_id: 'r1',
+      runs: [{
+        run_id: 'r1',
+        components: [
+          { id: 'trainer', name: 'Training', jira_component: 'Training Kubeflow' },
+          { id: 'trainingoperator', name: 'Training', jira_component: 'Training Kubeflow' }
+        ]
+      }]
+    }]
+    const heatmap = [{ component: 'Training Kubeflow' }]
+    const ids = collectMatrixRowIds(days, heatmap)
+    expect(ids).toEqual(['cluster-health', 'operator-health', 'trainer'])
+  })
+
+  it('merges component metadata across runs so rows dedupe when jira arrives later', () => {
+    const days = [
+      {
+        date: '2026-11-01',
+        runs: [{
+          run_id: 'a:1',
+          components: [{ id: 'trainer', name: 'Training' }]
+        }]
+      },
+      {
+        date: '2026-11-02',
+        runs: [{
+          run_id: 'b:1',
+          components: [
+            { id: 'trainer', name: 'Training', jira_component: 'Training Kubeflow' },
+            { id: 'trainingoperator', name: 'Training', jira_component: 'Training Kubeflow' }
+          ]
+        }]
+      }
+    ]
+    expect(canonicalKeyForRowId('trainer', days)).toBe('trainingkubeflow')
+    const heatmap = [{ component: 'Training Kubeflow' }]
+    const ids = collectMatrixRowIds(days, heatmap)
+    expect(ids.filter((id) => id === 'trainer' || id === 'trainingoperator')).toEqual(['trainer'])
+  })
+
+  it('keeps nightly-only rows when ids differ only by normalized slug without published names', () => {
+    const days = [{
+      date: '2026-11-01',
+      latest_run_id: 'r1',
+      runs: [{
+        run_id: 'r1',
+        components: [{ id: 'foo-bar' }, { id: 'foobar' }]
+      }]
+    }]
+    expect(collectMatrixRowIds(days)).toEqual([
+      'cluster-health',
+      'operator-health',
+      'foo-bar',
+      'foobar'
+    ])
+  })
+
+  it('returns null from findMatrixCell when alias match is ambiguous in one run', () => {
+    const run = {
+      components: [
+        { id: 'a', jira_component: 'Same Component' },
+        { id: 'b', jira_component: 'Same Component' }
+      ]
+    }
+    const days = [{
+      date: '2026-11-01',
+      runs: [{
+        run_id: 'r1',
+        components: [
+          ...run.components,
+          { id: 'matrix-row', jira_component: 'Same Component' }
+        ]
+      }]
+    }]
+    expect(findMatrixCell(run, 'matrix-row', days)).toBeNull()
   })
 
   it('nightlyRowHeatmapLinkTarget skips gate rows and resolves heatmap component names', () => {
@@ -372,6 +469,88 @@ describe('useNightlyHealthMatrix helpers', () => {
     expect(ordered.map((r) => r.run_id)).toEqual(['run-b', 'run-a', 'run-c'])
   })
 
+  it('formats run duration from started_at and completed_at', () => {
+    const run = {
+      started_at: '2026-11-02T08:00:00Z',
+      completed_at: '2026-11-02T08:45:00Z'
+    }
+    expect(formatRunDuration(run)).toBe('45 min')
+  })
+
+  it('builds column subline with Run # and product label', () => {
+    const run = {
+      build_number: 29,
+      promotion_gate: { rhoai_version: '3.6.0', update_channel: 'stable-3.x' }
+    }
+    expect(nightlyColumnHeaderSubline(run)).toBe('Run #29 · RHOAI 3.6.0 · stable-3.x')
+    expect(runProductUnderTestLabel(run)).toBe('RHOAI 3.6.0 · stable-3.x')
+  })
+
+  it('describes promotion-gate test source from jenkins_jobs catalog', () => {
+    const option = {
+      stream_key: 'example-stream',
+      jenkins_job: 'devops/promotion-gate-tests'
+    }
+    expect(nightlyTestSourceDescription(option)).toBe(
+      'Promotion gate · devops/promotion-gate-tests'
+    )
+  })
+
+  it('lists artifact panel entries with Unavailable when refs are null', () => {
+    const entries = runArtifactPanelEntries({ artifacts: { pod_logs: null, bvt_results: null } })
+    expect(entries).toHaveLength(2)
+    expect(entries.every((e) => e.unavailable && !e.href)).toBe(true)
+  })
+
+  it('resolves artifact URL strings and objects', () => {
+    expect(artifactRefHref('https://example.invalid/logs.tgz')).toBe(
+      'https://example.invalid/logs.tgz'
+    )
+    expect(artifactRefHref({ url: 'https://example.invalid/bvt.zip' })).toBe(
+      'https://example.invalid/bvt.zip'
+    )
+  })
+
+  it('exposes ods_build_url from promotion_gate for payload link', () => {
+    const run = {
+      promotion_gate: { ods_build_url: 'https://example.invalid/quay/fixture' }
+    }
+    expect(runOdsBuildUrl(run)).toBe('https://example.invalid/quay/fixture')
+  })
+
+  it('returns null for non-http ods_build_url values', () => {
+    const run = {
+      promotion_gate: { ods_build_url: 'javascript:alert(1)' }
+    }
+    expect(runOdsBuildUrl(run)).toBeNull()
+  })
+
+  it('uses short hash from query or fragment as ODS link label', () => {
+    expect(
+      runOdsBuildLinkLabel({
+        promotion_gate: {
+          ods_build_url: 'https://quay.example/v2/tag/manifests/sha256:abcdef0123456789deadbeef'
+        }
+      })
+    ).toBe('abcdef012345')
+    expect(
+      runOdsBuildLinkLabel({
+        promotion_gate: {
+          ods_build_url: 'https://quay.example/build?digest=sha256:feedfacefeedfacefeedfacefeedfacefeedfacefeedfacefeedface'
+        }
+      })
+    ).toBe('feedfacefeed')
+    expect(
+      runOdsBuildLinkLabel({
+        promotion_gate: { ods_build_url: 'https://quay.example/payload#cafebabecafe' }
+      })
+    ).toBe('cafebabecafe')
+  })
+
+  it('shortens raw digest tokens for display', () => {
+    expect(shortenDigestForDisplay('sha256:abcdef0123456789')).toBe('abcdef012345')
+  })
+
   it('pageOlder shows the oldest day window in visibleDays', () => {
     const dates = [
       '2026-10-26',
@@ -477,12 +656,102 @@ describe('useNightlyHealthMatrix helpers', () => {
       ]
     }
     expect(streamKeyFromTestResultsSourceQuery(payload, 'devops/promotion-gate-tests')).toBe('pg')
+    expect(streamKeyFromTestResultsSourceQuery(payload, 'promotion-gate-tests')).toBe('pg')
     expect(streamKeyFromTestResultsSourceQuery(payload, 'pg')).toBe('pg')
-    expect(testResultsSourceQueryValue(payload, 'bvt')).toBe('devops/nightly-bvt')
+    expect(testResultsSourceQueryValue(payload, 'bvt')).toBe('nightly-bvt')
+    expect(testResultsSourceQueryValue(payload, 'pg')).toBe('promotion-gate-tests')
     expect(streamKeyFromTestResultsSourceQuery(payload, 'unknown')).toBeNull()
   })
 
-  it('uses stream_key in source query when jenkins_jobs labels collide', () => {
+  it('uses filter label in URL not internal stream_key (e.g. rhoai-nightly)', () => {
+    const payload = {
+      schema_version: 1,
+      jenkins_jobs: [
+        {
+          stream_key: 'rhoai-nightly',
+          label: 'rhoai-nightly'
+        }
+      ],
+      days: [
+        {
+          date: '2026-11-01',
+          stream_key: 'rhoai-nightly',
+          runs: [
+            {
+              run_id: 'x:1',
+              jenkins_url: 'https://jenkins.example/job/devops/job/promotion-gate-tests/1/'
+            }
+          ]
+        }
+      ]
+    }
+    const options = listNightlyJenkinsJobOptions(payload)
+    expect(options[0].label).toBe('devops/promotion-gate-tests')
+    expect(testResultsSourceOptionLabel(options[0])).toBe('promotion-gate-tests')
+    expect(testResultsSourceQueryValue(payload, 'rhoai-nightly')).toBe('promotion-gate-tests')
+    expect(streamKeyFromTestResultsSourceQuery(payload, 'promotion-gate-tests')).toBe('rhoai-nightly')
+    expect(streamKeyFromTestResultsSourceQuery(payload, 'rhoai-nightly')).toBe('rhoai-nightly')
+  })
+
+  it('testResultsSourceQueryValueForUrl never returns reporting stream ids when job label exists', () => {
+    const payload = {
+      schema_version: 1,
+      jenkins_jobs: [{ stream_key: 'rhoai-nightly', label: 'rhoai-nightly' }],
+      days: [
+        {
+          date: '2026-11-01',
+          stream_key: 'rhoai-nightly',
+          runs: [
+            {
+              jenkins_url: 'https://jenkins.example/job/devops/job/promotion-gate-tests/1/'
+            }
+          ]
+        }
+      ]
+    }
+    expect(testResultsSourceQueryValueForUrl(payload, 'rhoai-nightly')).toBe('promotion-gate-tests')
+  })
+
+  it('uses stream_key in source query when reporting stream job basename collides', () => {
+    const payload = {
+      schema_version: 1,
+      jenkins_jobs: [
+        {
+          stream_key: 'rhoai-nightly',
+          label: 'devops/promotion-gate-tests',
+          jenkins_job: 'devops/promotion-gate-tests'
+        },
+        {
+          stream_key: 'pg',
+          label: 'devops/promotion-gate-tests',
+          jenkins_job: 'devops/promotion-gate-tests'
+        }
+      ],
+      days: [
+        { date: '2026-11-01', stream_key: 'rhoai-nightly', runs: [] },
+        { date: '2026-11-01', stream_key: 'pg', runs: [] }
+      ]
+    }
+    expect(testResultsSourceQueryValue(payload, 'rhoai-nightly')).toBe('promotion-gate-tests')
+    expect(testResultsSourceQueryValue(payload, 'pg')).toBe('pg')
+    expect(testResultsSourceQueryValueForUrl(payload, 'rhoai-nightly')).toBe('promotion-gate-tests')
+    expect(testResultsSourceQueryValueForUrl(payload, 'pg')).toBe('pg')
+    expect(streamKeyFromTestResultsSourceQuery(payload, 'rhoai-nightly')).toBe('rhoai-nightly')
+    expect(streamKeyFromTestResultsSourceQuery(payload, 'pg')).toBe('pg')
+  })
+
+  it('builds gates panel title from Jenkins job basename', () => {
+    const payload = {
+      days: [{ date: '2026-11-01', stream_key: 'pg', runs: [] }],
+      jenkins_jobs: [
+        { stream_key: 'pg', label: 'devops/promotion-gate-tests', jenkins_job: 'devops/promotion-gate-tests' }
+      ]
+    }
+    expect(nightlyTestResultsPanelTitle(payload, 'pg')).toBe('Promotion Gate Tests Results')
+    expect(humanizeJenkinsJobBasename(jenkinsJobBasename('devops/bvt-nightly'))).toBe('Bvt Nightly')
+  })
+
+  it('uses job basename in source query when jenkins_jobs labels collide', () => {
     const payload = {
       schema_version: 1,
       jenkins_jobs: [
@@ -494,8 +763,119 @@ describe('useNightlyHealthMatrix helpers', () => {
         { date: '2026-11-01', stream_key: 'b', runs: [] }
       ]
     }
+    expect(testResultsSourceQueryValue(payload, 'a')).toBe('job-a')
+    expect(testResultsSourceQueryValue(payload, 'b')).toBe('job-b')
+  })
+
+  it('uses stream_key in source query when job basenames collide', () => {
+    const payload = {
+      schema_version: 1,
+      jenkins_jobs: [
+        { stream_key: 'a', label: 'devops/folder-a', jenkins_job: 'devops/same-job' },
+        { stream_key: 'b', label: 'devops/folder-b', jenkins_job: 'other/same-job' }
+      ],
+      days: [
+        { date: '2026-11-01', stream_key: 'a', runs: [] },
+        { date: '2026-11-01', stream_key: 'b', runs: [] }
+      ]
+    }
+    const options = listNightlyJenkinsJobOptions(payload)
+    expect(testResultsSourceOptionLabel(options[0])).toBe('same-job')
+    expect(testResultsSourceOptionLabel(options[1])).toBe('same-job')
+    expect(testResultsSourceDropdownLabel(options[0], options)).toBe('devops/same-job')
+    expect(testResultsSourceDropdownLabel(options[1], options)).toBe('other/same-job')
     expect(testResultsSourceQueryValue(payload, 'a')).toBe('a')
     expect(testResultsSourceQueryValue(payload, 'b')).toBe('b')
+  })
+
+  it('appends stream_key to dropdown label when jenkins_job paths are identical', () => {
+    const payload = {
+      schema_version: 1,
+      jenkins_jobs: [
+        { stream_key: 'a', label: 'devops/shared', jenkins_job: 'devops/shared' },
+        { stream_key: 'b', label: 'devops/shared', jenkins_job: 'devops/shared' }
+      ],
+      days: [
+        { date: '2026-11-01', stream_key: 'a', runs: [] },
+        { date: '2026-11-01', stream_key: 'b', runs: [] }
+      ]
+    }
+    const options = listNightlyJenkinsJobOptions(payload)
+    expect(testResultsSourceDropdownLabel(options[0], options)).toBe('devops/shared (a)')
+    expect(testResultsSourceDropdownLabel(options[1], options)).toBe('devops/shared (b)')
+  })
+
+  it('does not show reporting stream_key in dropdown disambiguation suffix', () => {
+    const payload = {
+      schema_version: 1,
+      jenkins_jobs: [
+        {
+          stream_key: 'rhoai-nightly',
+          label: 'devops/promotion-gate-tests',
+          jenkins_job: 'devops/promotion-gate-tests'
+        },
+        {
+          stream_key: 'pg',
+          label: 'devops/promotion-gate-tests',
+          jenkins_job: 'devops/promotion-gate-tests'
+        }
+      ],
+      days: [
+        { date: '2026-11-01', stream_key: 'rhoai-nightly', runs: [] },
+        { date: '2026-11-01', stream_key: 'pg', runs: [] }
+      ]
+    }
+    const options = listNightlyJenkinsJobOptions(payload)
+    expect(streamKeyDisambiguationLabel('rhoai-nightly')).toBeNull()
+    expect(testResultsSourceDropdownLabel(options[0], options)).toBe('devops/promotion-gate-tests')
+    expect(testResultsSourceDropdownLabel(options[1], options)).toBe('devops/promotion-gate-tests (pg)')
+  })
+
+  it('resolves findMatrixCell alias using merged metadata from other runs', () => {
+    const run = {
+      components: [{ id: 'trainingoperator', name: 'Training' }]
+    }
+    const days = [
+      {
+        date: '2026-11-01',
+        runs: [{
+          run_id: 'r1',
+          components: [
+            { id: 'trainer', name: 'Training', jira_component: 'Training Kubeflow' },
+            {
+              id: 'trainingoperator',
+              name: 'Training',
+              jira_component: 'Training Kubeflow'
+            }
+          ]
+        }]
+      },
+      {
+        date: '2026-11-02',
+        runs: [{ run_id: 'r2', components: run.components }]
+      }
+    ]
+    expect(findMatrixCell(run, 'trainer', days)?.id).toBe('trainingoperator')
+  })
+
+  it('keeps C and C++ as separate matrix rows when names differ only by punctuation', () => {
+    const days = [{
+      date: '2026-11-01',
+      latest_run_id: 'r1',
+      runs: [{
+        run_id: 'r1',
+        components: [
+          { id: 'c-lang', name: 'C' },
+          { id: 'cpp-lang', name: 'C++' }
+        ]
+      }]
+    }]
+    expect(collectMatrixRowIds(days)).toEqual([
+      'cluster-health',
+      'operator-health',
+      'c-lang',
+      'cpp-lang'
+    ])
   })
 
   it('round-trips stream_key when label matches another option field', () => {
@@ -511,7 +891,9 @@ describe('useNightlyHealthMatrix helpers', () => {
       ]
     }
     expect(testResultsSourceQueryValue(payload, 'bvt')).toBe('bvt')
+    expect(testResultsSourceQueryValue(payload, 'pg')).toBe('promotion-gate')
     expect(streamKeyFromTestResultsSourceQuery(payload, 'bvt')).toBe('bvt')
+    expect(streamKeyFromTestResultsSourceQuery(payload, 'promotion-gate')).toBe('pg')
     expect(streamKeyFromTestResultsSourceQuery(payload, 'pg')).toBe('pg')
   })
 

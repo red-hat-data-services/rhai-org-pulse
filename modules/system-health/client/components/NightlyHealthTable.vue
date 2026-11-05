@@ -25,7 +25,7 @@
             aria-label="Test Results Source"
           >
             <option v-for="job in jenkinsJobOptions" :key="job.stream_key" :value="job.stream_key">
-              {{ job.label }}
+              {{ testResultsSourceDropdownLabel(job, jenkinsJobOptions) }}
             </option>
           </select>
         </label>
@@ -159,26 +159,41 @@
             :key="run.run_id"
             class="run-list-item"
             :class="{ 'run-list-item--selected': run.run_id === selectedDayEntry.latest_run_id }"
+            :aria-current="run.run_id === selectedDayEntry.latest_run_id ? 'true' : undefined"
           >
-            <div class="run-list-main">
-              <span v-if="run.run_id === selectedDayEntry.latest_run_id" class="selected-badge">Selected for column</span>
-              <span class="run-build">Build #{{ run.build_number ?? '—' }}</span>
-              <span v-if="runPromotionStatus(run)" class="run-status">{{ runPromotionStatus(run) }}</span>
+            <div class="run-lines">
+              <div v-if="runShowJenkinsLine(run)" class="run-line">
+                <a
+                  v-if="safeHttpUrl(run.jenkins_url)"
+                  class="run-inline-link"
+                  :href="safeHttpUrl(run.jenkins_url)"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >{{ runJenkinsLinkText(run) }}</a>
+                <span v-else>{{ runJenkinsLinkText(run) }}</span><template v-if="runPromotionStatus(run)"> · {{ runPromotionStatus(run) }}</template>
+              </div>
+              <div v-if="runProductUnderTestLabel(run)" class="run-line">
+                {{ runProductUnderTestLabel(run) }}<template v-if="runOdsBuildUrl(run)"> · <a
+                  class="run-inline-link"
+                  :href="runOdsBuildUrl(run)"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >{{ runOdsBuildLinkLabel(run) }}</a></template>
+              </div>
+              <div v-if="runEnvironmentLine(run)" class="run-line">{{ runEnvironmentLine(run) }}</div>
+              <div v-if="runFooterLinks(run).length" class="run-line">
+                <template v-for="(link, idx) in runFooterLinks(run)" :key="link.key">
+                  <span v-if="idx > 0"> · </span>
+                  <template v-if="link.prefix">{{ link.prefix }}</template><a
+                    class="run-inline-link"
+                    :href="link.href"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >{{ link.label }}</a>
+                </template>
+              </div>
+              <div v-if="runTimestampLine(run)" class="run-line">{{ runTimestampLine(run) }}</div>
             </div>
-            <div class="run-list-meta">
-              <span>{{ formatTimestamp(run.started_at) }}</span>
-              <span v-if="run.completed_at"> → {{ formatTimestamp(run.completed_at) }}</span>
-            </div>
-            <div v-if="runMetaLine(run)" class="run-list-detail">{{ runMetaLine(run) }}</div>
-            <a
-              v-if="safeHttpUrl(run.jenkins_url)"
-              class="run-link"
-              :href="safeHttpUrl(run.jenkins_url)"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              Jenkins run
-            </a>
           </li>
         </ul>
       </div>
@@ -187,7 +202,7 @@
 </template>
 
 <script setup>
-import { computed, nextTick, ref, toRef, useId } from 'vue'
+import { computed, nextTick, ref, toRef, useId, watch } from 'vue'
 import { onClickOutside, onKeyStroke, useEventListener } from '@vueuse/core'
 import {
   NIGHTLY_PAGE_SIZE,
@@ -205,7 +220,16 @@ import {
   nightlyRowHeatmapLinkTarget,
   friendlyDate,
   formatTimestamp,
-  safeHttpUrl
+  formatRunDuration,
+  nightlyColumnHeaderSubline,
+  runArtifactPanelEntries,
+  runEnvironmentLine,
+  runJenkinsBuildNumberDisplay,
+  runOdsBuildUrl,
+  runOdsBuildLinkLabel,
+  runProductUnderTestLabel,
+  safeHttpUrl,
+  testResultsSourceDropdownLabel
 } from '../composables/useNightlyHealthMatrix'
 import '../styles/test-execution-theme.css'
 
@@ -218,6 +242,11 @@ const props = defineProps({
   heatmapComponents: {
     type: Array,
     default: () => []
+  },
+  /** When false (e.g. parent tab hidden), close any teleported day popup. */
+  tabPanelActive: {
+    type: Boolean,
+    default: true
   }
 })
 
@@ -249,6 +278,13 @@ const {
   sortedDays,
   jenkinsJobOptions
 } = useNightlyHealthMatrix(payloadRef, heatmapComponentsRef, selectedStreamKey)
+
+watch(
+  () => props.tabPanelActive,
+  (active) => {
+    if (!active) closeDay()
+  }
+)
 
 const dayPopupRef = ref(null)
 const dayPanelTitleId = useId()
@@ -358,7 +394,7 @@ const rowNameCache = computed(() => {
       if (!run) continue
       for (const rowId of rowIds.value) {
         if (map.has(rowId)) continue
-        const cell = findMatrixCell(run, rowId)
+        const cell = findMatrixCell(run, rowId, sortedDays.value)
         if (cell) map.set(rowId, rowLabel(rowId, cell, props.heatmapComponents))
       }
     }
@@ -373,7 +409,7 @@ function rowName(rowId) {
 function rowNameTooltip(rowId) {
   for (const day of sortedDays.value) {
     for (const run of day.runs || []) {
-      const cell = findMatrixCell(run, rowId)
+      const cell = findMatrixCell(run, rowId, sortedDays.value)
       if (cell) return rowLabelTooltip(rowId, cell)
     }
   }
@@ -407,16 +443,47 @@ function selectedRun(day) {
 }
 
 function cellFor(day, rowId) {
-  return resolveDisplayMatrixCell(selectedRun(day), rowId)
+  return resolveDisplayMatrixCell(selectedRun(day), rowId, sortedDays.value)
 }
 
 function columnBuildLabel(day) {
-  const run = selectedRun(day)
-  if (!run) return ''
-  const pg = run.promotion_gate
-  const num = run.build_number != null ? `#${run.build_number}` : ''
-  const ver = pg?.rhoai_version ? `RHOAI ${pg.rhoai_version}` : ''
-  return [num, ver].filter(Boolean).join(' · ')
+  return nightlyColumnHeaderSubline(selectedRun(day))
+}
+
+function runJenkinsLinkText(run) {
+  const num = runJenkinsBuildNumberDisplay(run)
+  if (num) return `Jenkins run ${num}`
+  return 'Jenkins run'
+}
+
+function runShowJenkinsLine(run) {
+  return Boolean(safeHttpUrl(run?.jenkins_url) || runJenkinsBuildNumberDisplay(run) || runPromotionStatus(run))
+}
+
+function runTimestampLine(run) {
+  const started = run?.started_at
+  const duration = formatRunDuration(run)
+  if (!started && !duration) return ''
+  const parts = []
+  if (started) parts.push(formatTimestamp(started))
+  if (duration) parts.push(`Duration ${duration}`)
+  return parts.join(' · ')
+}
+
+/** @returns {{ key: string, prefix: string, href: string, label: string }[]} */
+function runFooterLinks(run) {
+  /** @type {{ key: string, prefix: string, href: string, label: string }[]} */
+  const links = []
+  for (const entry of runArtifactPanelEntries(run)) {
+    if (!entry.href) continue
+    links.push({
+      key: entry.id,
+      prefix: `${entry.label}: `,
+      href: entry.href,
+      label: 'Open'
+    })
+  }
+  return links
 }
 
 function cellTestCounts(cell) {
@@ -438,15 +505,6 @@ function runPromotionStatus(run) {
   return ''
 }
 
-function runMetaLine(run) {
-  const pg = run.promotion_gate || {}
-  const parts = []
-  if (pg.rhoai_version) parts.push(`RHOAI ${pg.rhoai_version}`)
-  if (pg.update_channel) parts.push(pg.update_channel)
-  if (pg.cluster_name) parts.push(pg.cluster_name)
-  if (pg.openshift_version) parts.push(`OCP ${pg.openshift_version}`)
-  return parts.join(' · ')
-}
 </script>
 
 <style scoped>
@@ -841,8 +899,11 @@ html.dark .cell-substatus.dsc-status-not-ready {
 }
 
 .run-list-item {
-  padding: 12px 0;
+  padding: 10px 0;
   border-bottom: 1px solid var(--te-divider-soft);
+  font-size: 12px;
+  line-height: 1.45;
+  color: var(--te-text-muted);
 }
 
 .run-list-item--selected {
@@ -850,44 +911,28 @@ html.dark .cell-substatus.dsc-status-not-ready {
   padding-left: 10px;
 }
 
-.run-list-main {
+.run-lines {
   display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-  align-items: center;
+  flex-direction: column;
+  gap: 2px;
 }
 
-.selected-badge {
-  font-size: 11px;
-  font-weight: 600;
-  color: var(--te-accent);
-  background: var(--te-accent-soft);
-  padding: 2px 8px;
-  border-radius: 4px;
-}
-
-.run-build {
-  font-weight: 600;
-  color: var(--te-heading);
-}
-
-.run-status {
-  text-transform: capitalize;
-  color: var(--te-pager-label);
-}
-
-.run-list-meta,
-.run-list-detail {
+.run-line {
   font-size: 12px;
+  font-weight: 400;
   color: var(--te-text-muted);
-  margin-top: 4px;
 }
 
-.run-link {
-  display: inline-block;
-  margin-top: 6px;
-  font-size: 12px;
+.run-inline-link {
   color: var(--te-link);
+  font-size: inherit;
+  font-weight: inherit;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.run-inline-link:hover {
+  color: var(--te-link-hover, var(--te-link));
 }
 
 .day-panel-empty {

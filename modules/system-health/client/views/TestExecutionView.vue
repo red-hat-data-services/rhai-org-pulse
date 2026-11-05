@@ -12,82 +12,144 @@
         </div>
 
         <template v-else>
-          <template v-if="hasHeatmapData">
-            <div class="header opensearch-section-header">
-              <h1>Test Execution <span class="beta-tag">(Beta)</span></h1>
-              <p>Aggregated view of RHOAI test execution across all components, quality gates, and releases. Data is ingested from Jenkins CI builds and indexed in OpenSearch.</p>
-            </div>
-
-            <FilterBar
-              :filters="filters"
-              :versions="availableVersions"
-              :releases="availableReleases"
-              @filters-change="updateFilters"
-            />
-
-            <MetricsCards
-              v-if="filteredComponents.length > 0"
-              :components="filteredComponents"
-              :filters="filters"
-            />
-
-            <div
-              v-if="filteredComponents.length === 0"
-              class="no-data heatmap-filter-empty"
+          <nav
+            class="dashboard-tabs"
+            role="tablist"
+            aria-label="Test execution views"
+            @keydown="onExecutionTabKeydown"
+          >
+            <button
+              id="test-exec-tab-releases"
+              type="button"
+              role="tab"
+              class="dashboard-tab"
+              :class="{ 'dashboard-tab--active': activeTab === 'releases' }"
+              :aria-selected="activeTab === 'releases'"
+              aria-controls="test-exec-panel-releases"
+              :tabindex="activeTab === 'releases' ? 0 : -1"
+              :disabled="!hasHeatmapData"
+              @click="setActiveTab('releases')"
             >
-              <p>{{ heatmapFilterEmptyMessage }}</p>
+              RHOAI Releases
+            </button>
+            <button
+              id="test-exec-tab-gates"
+              type="button"
+              role="tab"
+              class="dashboard-tab"
+              :class="{ 'dashboard-tab--active': activeTab === 'gates' }"
+              :aria-selected="activeTab === 'gates'"
+              aria-controls="test-exec-panel-gates"
+              :tabindex="activeTab === 'gates' ? 0 : -1"
+              :disabled="!hasNightlyData"
+              @click="setActiveTab('gates')"
+            >
+              Promotion Gate
+            </button>
+          </nav>
+
+          <div
+            id="test-exec-panel-releases"
+            v-show="activeTab === 'releases'"
+            role="tabpanel"
+            class="tab-panel"
+            aria-labelledby="test-exec-tab-releases"
+          >
+            <div v-if="!hasHeatmapData" class="no-data tab-empty">
+              No OpenSearch release test data has been uploaded yet.
             </div>
             <template v-else>
-              <div class="section">
-                <div class="section-title">
-                  <h2>Component Heatmap</h2>
-                </div>
-                <div class="help-box">
-                  <h4>How to read the heatmap</h4>
-                  <ul>
-                    <li><strong>Each row</strong> is a test component (e.g., Platform, Workbenches, Model Server).</li>
-                    <li><strong>Each column</strong> is a calendar date. Dates with no executions show "–".</li>
-                    <li><strong>Cell color</strong> indicates pass rate: <span class="color-green">🟢 ≥95%</span> · <span class="color-amber">🟡 80–94%</span> · <span class="color-orange">🟠 60–79%</span> · <span class="color-red">🔴 &lt;60%</span>.</li>
-                    <li><strong>Cell content</strong> shows the pass percentage, plus pass/fail/skip counts below it.</li>
-                  </ul>
-                </div>
-
-                <HeatmapTable
-                  :components="filteredComponents"
-                  @component-click="onComponentClick"
-                />
+              <div class="tab-panel-heading">
+                <h2 class="tab-panel-title">RHOAI Releases Test Results</h2>
+                <p class="tab-panel-intro">
+                  Aggregated view of RHOAI test execution across all components, quality gates, and releases.
+                  Data is ingested from Jenkins CI builds and indexed in OpenSearch.
+                </p>
               </div>
 
-              <TrendChart :components="filteredComponents" />
-            </template>
-          </template>
+              <FilterBar
+                :filters="filters"
+                :versions="availableVersions"
+                :releases="availableReleases"
+                @filters-change="updateFilters"
+              />
 
-          <div v-if="hasNightlyData" class="section nightly-section">
-            <div class="section-title nightly-section-header">
-              <h2>Nightly Build Health</h2>
-              <p class="section-sub">
-                <template v-if="nightlyHealth?.generated_at">
-                  Generated {{ formatTimestamp(nightlyHealth.generated_at) }}.
-                </template>
-                Matrix shows promotion-gate status per day (same fields as
-                <code>promotion_gate_test_summary.yaml</code>). Click a date column to list all builds that day.
-                <strong>Test Results Source</strong> below filters this matrix only.
-              </p>
-              <div class="help-box nightly-help">
-                <h4>How to read Nightly Build Health</h4>
+              <MetricsCards
+                v-if="filteredComponents.length > 0"
+                :components="filteredComponents"
+                :filters="filters"
+              />
+
+              <div
+                v-if="filteredComponents.length === 0"
+                class="no-data heatmap-filter-empty"
+              >
+                <p>{{ heatmapFilterEmptyMessage }}</p>
+              </div>
+              <template v-else>
+                <div class="section">
+                  <div class="section-title">
+                    <h3 class="tab-section-subtitle">Component Heatmap</h3>
+                  </div>
+                  <div class="help-box tab-help-box">
+                    <h4>ℹ️ How to read the heatmap</h4>
+                    <ul>
+                      <li><strong>Each row</strong> — A test component (e.g., Platform, Workbenches, Model Server).</li>
+                      <li><strong>Each column</strong> — A calendar date; dates with no executions show "–".</li>
+                      <li><strong>Cell color</strong> — Pass rate: <span class="color-green">🟢 ≥95%</span> · <span class="color-amber">🟡 80–94%</span> · <span class="color-orange">🟠 60–79%</span> · <span class="color-red">🔴 &lt;60%</span>.</li>
+                      <li><strong>Cell content</strong> — Pass percentage plus pass/fail/skip counts below it.</li>
+                    </ul>
+                  </div>
+
+                  <HeatmapTable
+                    :components="filteredComponents"
+                    @component-click="onComponentClick"
+                  />
+                </div>
+
+                <TrendChart :components="filteredComponents" />
+              </template>
+            </template>
+          </div>
+
+          <div
+            id="test-exec-panel-gates"
+            v-show="activeTab === 'gates'"
+            role="tabpanel"
+            class="tab-panel"
+            aria-labelledby="test-exec-tab-gates"
+          >
+            <div v-if="!hasNightlyData" class="no-data tab-empty">
+              No promotion-gate nightly data has been uploaded yet.
+            </div>
+            <div v-else class="nightly-section--tab">
+              <div class="tab-panel-heading">
+                <h2 class="tab-panel-title">{{ gatesPanelTitle }}</h2>
+                <p class="tab-panel-intro">
+                  <template v-if="nightlyHealth?.generated_at">
+                    Generated {{ formatTimestamp(nightlyHealth.generated_at) }}.
+                  </template>
+                  Matrix shows promotion-gate status per day (same fields as
+                  <code>promotion_gate_test_summary.yaml</code>). Click a date column to list all builds that day.
+                  <strong>Test Results Source</strong> below filters this matrix only.
+                </p>
+              </div>
+              <div class="help-box tab-help-box">
+                <h4>ℹ️ How to read {{ gatesPanelTitle }}</h4>
                 <ul>
-                  <li><strong>Each column</strong> is a UTC day; the cell uses that day&apos;s selected promotion-gate run (<code>latest_run_id</code>).</li>
-                  <li><strong>–</strong> means that component is missing from that run&apos;s YAML. <strong>Not Installed</strong> means the summary explicitly reports the component is not on the cluster.</li>
-                  <li><strong>Blocked</strong> means deployment or gate prerequisites failed. A Blocked cell can still show recorded test counts. A <strong>DSC:</strong> subtitle is operator/DataScienceCluster readiness from YAML, not a passed test result.</li>
+                  <li><strong>Each column</strong> — A UTC day; the cell uses that day&apos;s selected promotion-gate run (<code>latest_run_id</code>).</li>
+                  <li><strong>– (empty cell)</strong> — That component is missing from that run&apos;s YAML; <strong>Not Installed</strong> means the summary explicitly reports the component is not on the cluster.</li>
+                  <li><strong>Blocked</strong> — Deployment or gate prerequisites failed before component tests could run; a <strong>DSC:</strong> subtitle is operator/DataScienceCluster readiness from YAML, not a passed test result.</li>
                 </ul>
               </div>
+              <NightlyHealthTable
+                v-model:selected-stream-key="selectedNightlyStreamKey"
+                :payload="nightlyHealth"
+                :heatmap-components="heatmap"
+                :tab-panel-active="activeTab === 'gates'"
+                @component-click="onComponentClick"
+              />
             </div>
-            <NightlyHealthTable
-              v-model:selected-stream-key="selectedNightlyStreamKey"
-              :payload="nightlyHealth"
-              :heatmap-components="heatmap"
-              @component-click="onComponentClick"
-            />
           </div>
         </template>
       </template>
@@ -105,9 +167,11 @@ import TrendChart from '../components/TrendChart.vue'
 import NightlyHealthTable from '../components/NightlyHealthTable.vue'
 import {
   formatTimestamp,
+  REPORTING_STREAM_KEYS,
   TEST_RESULTS_SOURCE_QUERY_PARAM,
+  nightlyTestResultsPanelTitle,
   streamKeyFromTestResultsSourceQuery,
-  testResultsSourceQueryValue
+  testResultsSourceQueryValueForUrl
 } from '../composables/useNightlyHealthMatrix'
 import '../styles/test-execution-theme.css'
 
@@ -115,13 +179,36 @@ const { loadData, heatmap, nightlyHealth, loading, error, hasHeatmapData, hasNig
 
 const nav = inject('moduleNav', null)
 
+/** Hash query: `tab=releases` | `tab=gates` (distinct from nightly `source=` stream filter). */
+const TEST_EXECUTION_TAB_PARAM = 'tab'
+
+const EXECUTION_TAB_ORDER = ['releases', 'gates']
+const EXECUTION_TAB_DOM_IDS = {
+  releases: 'test-exec-tab-releases',
+  gates: 'test-exec-tab-gates'
+}
+
 const selectedNightlyStreamKey = ref(null)
+const activeTab = ref('releases')
+
+const gatesPanelTitle = computed(() =>
+  nightlyTestResultsPanelTitle(nightlyHealth.value, selectedNightlyStreamKey.value)
+)
 
 let applyingSourceFromUrl = false
+let applyingTabFromUrl = false
 /** Blocks hash sync until URL `source` is applied (avoids default stream clobbering deep links). */
 const initialSourceResolved = ref(false)
 
+function canonicalizeGatesSourceInUrl() {
+  initialSourceResolved.value = true
+  rewriteGatesSourceParamToMatchFilter()
+}
+
 function applyTestResultsSourceFromNavParams() {
+  if (activeTab.value !== 'gates') {
+    return
+  }
   if (!hasNightlyData.value) {
     initialSourceResolved.value = true
     return
@@ -129,16 +216,19 @@ function applyTestResultsSourceFromNavParams() {
   const raw = nav?.params?.value?.[TEST_RESULTS_SOURCE_QUERY_PARAM]
   if (raw == null || raw === '') {
     initialSourceResolved.value = true
+    nextTick(() => rewriteGatesSourceParamToMatchFilter())
     return
   }
   const key = streamKeyFromTestResultsSourceQuery(nightlyHealth.value, String(raw))
   if (!key) {
     initialSourceResolved.value = true
+    nextTick(() => canonicalizeGatesSourceInUrl())
     return
   }
   if (key === selectedNightlyStreamKey.value) {
     initialSourceResolved.value = true
     syncTestResultsSourceToNavParams(key)
+    nextTick(() => rewriteGatesSourceParamToMatchFilter())
     return
   }
   applyingSourceFromUrl = true
@@ -146,23 +236,50 @@ function applyTestResultsSourceFromNavParams() {
   nextTick(() => {
     applyingSourceFromUrl = false
     initialSourceResolved.value = true
+    syncTestResultsSourceToNavParams(key)
+    rewriteGatesSourceParamToMatchFilter()
   })
 }
 
 function syncTestResultsSourceToNavParams(streamKey) {
-  if (!initialSourceResolved.value || !nav?.updateParams || applyingSourceFromUrl) return
-  const nextValue = streamKey
-    ? testResultsSourceQueryValue(nightlyHealth.value, streamKey)
-    : undefined
+  if (activeTab.value !== 'gates') return
+  if (!nav?.updateParams || applyingSourceFromUrl) return
+  if (!streamKey || !hasNightlyData.value) return
+  const canonical = testResultsSourceQueryValueForUrl(nightlyHealth.value, streamKey)
+  if (!canonical) return
   const current = nav.params.value?.[TEST_RESULTS_SOURCE_QUERY_PARAM]
-  if (nextValue === current || (!nextValue && (current == null || current === ''))) return
+  if (canonical === current) return
+  if (!initialSourceResolved.value) return
   nav.updateParams(
-    { [TEST_RESULTS_SOURCE_QUERY_PARAM]: nextValue || undefined },
+    { [TEST_RESULTS_SOURCE_QUERY_PARAM]: canonical },
     { push: false }
   )
 }
 
+function rewriteGatesSourceParamToMatchFilter() {
+  if (activeTab.value !== 'gates' || !hasNightlyData.value || !nav?.updateParams) return
+  if (applyingSourceFromUrl) return
+  const key = selectedNightlyStreamKey.value
+  if (!key) return
+  const canonical = testResultsSourceQueryValueForUrl(nightlyHealth.value, key)
+  if (!canonical) return
+  const current = nav.params.value?.[TEST_RESULTS_SOURCE_QUERY_PARAM]
+  const needsRewrite =
+    canonical !== current
+    || REPORTING_STREAM_KEYS.has(String(current || ''))
+  if (!needsRewrite) return
+  applyingSourceFromUrl = true
+  nav.updateParams({ [TEST_RESULTS_SOURCE_QUERY_PARAM]: canonical }, { push: false })
+  nextTick(() => {
+    applyingSourceFromUrl = false
+  })
+}
+
 watch(nightlyHealth, () => {
+  if (activeTab.value !== 'gates') {
+    initialSourceResolved.value = true
+    return
+  }
   initialSourceResolved.value = false
   applyTestResultsSourceFromNavParams()
 })
@@ -175,8 +292,181 @@ if (nav) {
 }
 
 watch(selectedNightlyStreamKey, (key) => {
-  syncTestResultsSourceToNavParams(key)
+  if (activeTab.value === 'gates') {
+    syncTestResultsSourceToNavParams(key)
+    nextTick(() => rewriteGatesSourceParamToMatchFilter())
+  }
 })
+
+watch(
+  [selectedNightlyStreamKey, nightlyHealth, activeTab, loading],
+  () => {
+    if (loading.value || activeTab.value !== 'gates' || !nightlyHealth.value) return
+    nextTick(() => {
+      initialSourceResolved.value = true
+      rewriteGatesSourceParamToMatchFilter()
+    })
+  },
+  { flush: 'post' }
+)
+
+function parseTabQueryValue(raw) {
+  const tab = String(raw ?? '').trim().toLowerCase()
+  if (tab === 'releases' || tab === 'nightly') return 'releases'
+  if (tab === 'gates') return 'gates'
+  return null
+}
+
+function resolveTabFromParam(raw) {
+  const tab = parseTabQueryValue(raw)
+  if (tab === 'releases' && hasHeatmapData.value) return 'releases'
+  if (tab === 'gates' && hasNightlyData.value) return 'gates'
+  return null
+}
+
+function defaultTabForData() {
+  if (hasHeatmapData.value) return 'releases'
+  if (hasNightlyData.value) return 'gates'
+  return 'releases'
+}
+
+function applyActiveTabFromNavParams() {
+  const wanted = parseTabQueryValue(nav?.params?.value?.[TEST_EXECUTION_TAB_PARAM])
+  if (wanted === 'gates') {
+    if (hasNightlyData.value) {
+      activeTab.value = 'gates'
+      return
+    }
+    if (loading.value) {
+      activeTab.value = 'gates'
+      return
+    }
+  }
+  if (wanted === 'releases') {
+    if (hasHeatmapData.value) {
+      activeTab.value = 'releases'
+      return
+    }
+    if (loading.value) {
+      activeTab.value = 'releases'
+      return
+    }
+  }
+  const resolved = wanted ? resolveTabFromParam(wanted) : null
+  activeTab.value = resolved || defaultTabForData()
+}
+
+function clearSourceFromNavParams() {
+  if (!nav?.updateParams || applyingSourceFromUrl) return
+  const current = nav.params.value?.[TEST_RESULTS_SOURCE_QUERY_PARAM]
+  if (current == null || current === '') return
+  applyingSourceFromUrl = true
+  nav.updateParams({ [TEST_RESULTS_SOURCE_QUERY_PARAM]: undefined }, { push: false })
+  nextTick(() => {
+    applyingSourceFromUrl = false
+  })
+}
+
+function syncActiveTabToNavParams(tab) {
+  if (!nav?.updateParams || applyingTabFromUrl) return
+  const next = tab === 'gates' ? 'gates' : tab === 'releases' ? 'releases' : undefined
+  const current = nav.params.value?.[TEST_EXECUTION_TAB_PARAM]
+  const patch = { [TEST_EXECUTION_TAB_PARAM]: next || undefined }
+  if (tab === 'releases') {
+    patch[TEST_RESULTS_SOURCE_QUERY_PARAM] = undefined
+  } else if (tab === 'gates' && hasNightlyData.value && selectedNightlyStreamKey.value) {
+    const canonical = testResultsSourceQueryValueForUrl(
+      nightlyHealth.value,
+      selectedNightlyStreamKey.value
+    )
+    if (canonical) {
+      patch[TEST_RESULTS_SOURCE_QUERY_PARAM] = canonical
+    }
+  }
+  const sourceCurrent = nav.params.value?.[TEST_RESULTS_SOURCE_QUERY_PARAM]
+  const sourceClears = tab === 'releases' && sourceCurrent != null && sourceCurrent !== ''
+  const tabMissing = Boolean(next) && (current == null || current === '')
+  const sourcePatch = patch[TEST_RESULTS_SOURCE_QUERY_PARAM]
+  const sourceChanges =
+    sourcePatch !== undefined
+    && sourcePatch !== sourceCurrent
+    && !(sourcePatch == null && (sourceCurrent == null || sourceCurrent === ''))
+  if (next === current && !sourceClears && !tabMissing && !sourceChanges) return
+  nav.updateParams(patch, { push: false })
+}
+
+function isExecutionTabEnabled(tab) {
+  if (tab === 'releases') return hasHeatmapData.value
+  if (tab === 'gates') return hasNightlyData.value
+  return false
+}
+
+function onExecutionTabKeydown(event) {
+  const navigationKeys = ['ArrowLeft', 'ArrowRight', 'Home', 'End']
+  if (!navigationKeys.includes(event.key)) return
+  const enabledTabs = EXECUTION_TAB_ORDER.filter(isExecutionTabEnabled)
+  if (enabledTabs.length === 0) return
+  event.preventDefault()
+  let idx = enabledTabs.indexOf(activeTab.value)
+  if (idx < 0) idx = 0
+  if (event.key === 'Home') idx = 0
+  else if (event.key === 'End') idx = enabledTabs.length - 1
+  else if (event.key === 'ArrowRight') idx = (idx + 1) % enabledTabs.length
+  else if (event.key === 'ArrowLeft') idx = (idx - 1 + enabledTabs.length) % enabledTabs.length
+  const nextTab = enabledTabs[idx]
+  setActiveTab(nextTab)
+  nextTick(() => {
+    document.getElementById(EXECUTION_TAB_DOM_IDS[nextTab])?.focus()
+  })
+}
+
+function setActiveTab(tab) {
+  if (tab === 'releases' && !hasHeatmapData.value) return
+  if (tab === 'gates' && !hasNightlyData.value) return
+  activeTab.value = tab
+  nextTick(() => {
+    syncActiveTabToNavParams(tab)
+  })
+}
+
+watch(activeTab, (tab) => {
+  syncActiveTabToNavParams(tab)
+  if (tab === 'releases') {
+    clearSourceFromNavParams()
+  } else if (tab === 'gates') {
+    initialSourceResolved.value = false
+    applyTestResultsSourceFromNavParams()
+  }
+})
+
+watch([hasNightlyData, hasHeatmapData], () => {
+  const fromUrl = resolveTabFromParam(nav?.params?.value?.[TEST_EXECUTION_TAB_PARAM])
+  if (fromUrl) {
+    activeTab.value = fromUrl
+    if (fromUrl === 'gates') {
+      applyTestResultsSourceFromNavParams()
+    }
+    return
+  }
+  if (activeTab.value === 'releases' && !hasHeatmapData.value && hasNightlyData.value) {
+    activeTab.value = 'gates'
+  } else if (activeTab.value === 'gates' && !hasNightlyData.value && hasHeatmapData.value) {
+    activeTab.value = 'releases'
+  }
+})
+
+if (nav) {
+  watch(
+    () => nav.params.value?.[TEST_EXECUTION_TAB_PARAM],
+    () => {
+      applyingTabFromUrl = true
+      applyActiveTabFromNavParams()
+      nextTick(() => {
+        applyingTabFromUrl = false
+      })
+    }
+  )
+}
 
 const filters = ref({
   version: 'All',
@@ -195,7 +485,19 @@ onMounted(() => {
   filters.value.fromDate = formatDate(from)
   filters.value.toDate = formatDate(today)
 
+  applyActiveTabFromNavParams()
   loadData()
+})
+
+watch(loading, (isLoading, wasLoading) => {
+  if (wasLoading && !isLoading) {
+    applyActiveTabFromNavParams()
+    if (activeTab.value === 'gates') {
+      applyTestResultsSourceFromNavParams()
+    }
+    syncActiveTabToNavParams(activeTab.value)
+    canonicalizeGatesSourceInUrl()
+  }
 })
 
 const components = computed(() => heatmap.value || [])
@@ -363,7 +665,7 @@ const heatmapFilterEmptyMessage = computed(() => {
     msg += ' Widen the date range or disable Date Range to include older heatmap days.'
   }
   if (hasNightlyData.value) {
-    msg += ' Promotion-gate status is in Nightly Build Health below.'
+    msg += ' Promotion-gate status is on the Promotion Gate tab.'
   }
   return msg
 })
@@ -371,10 +673,10 @@ const heatmapFilterEmptyMessage = computed(() => {
 function vrKeyMatches(vrKey, version, release) {
   const [v, r] = vrKey.split('|')
   const normV = normalizeVersion(v)
-  
+
   if (version && version !== 'All' && normalizeVersion(version) !== normV) return false
   if (release && release !== 'All' && r !== release) return false
-  
+
   return true
 }
 
@@ -417,6 +719,53 @@ function onComponentClick(componentName) {
 
 .header {
   margin-bottom: 8px;
+}
+
+.tab-panel-heading {
+  margin-bottom: 16px;
+}
+
+.tab-panel-title {
+  font-size: 26px;
+  font-weight: 700;
+  color: var(--te-heading);
+  margin: 0 0 8px;
+  line-height: 1.2;
+  font-family: inherit;
+  letter-spacing: normal;
+  text-transform: none;
+  background: none;
+  padding: 0;
+  border-radius: 0;
+}
+
+.tab-panel-intro {
+  font-size: 13px;
+  font-weight: 400;
+  color: var(--te-text-muted);
+  line-height: 1.5;
+  max-width: 900px;
+  margin: 0 0 12px;
+  padding: 0;
+}
+
+.tab-panel-intro code {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--te-heading);
+  background: var(--te-surface-raised);
+  padding: 0 4px;
+  border-radius: 3px;
+}
+
+.tab-section-subtitle {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--te-heading);
+  margin: 0;
+  background: var(--te-section-title-bg);
+  padding: 8px 16px;
+  border-radius: 6px;
 }
 
 .opensearch-section-header {
@@ -473,23 +822,6 @@ function onComponentClick(componentName) {
   border-radius: 3px;
 }
 
-.nightly-section-header .section-sub {
-  font-size: 12px;
-  color: var(--te-text-muted);
-  padding-left: 16px;
-  margin: 0 0 10px;
-  line-height: 1.4;
-}
-
-.nightly-section-header .section-sub code {
-  font-size: 11px;
-  font-weight: 600;
-  color: var(--te-heading);
-  background: var(--te-surface-raised);
-  padding: 0 4px;
-  border-radius: 3px;
-}
-
 .help-box {
   background: var(--te-help-bg);
   border: 1px solid var(--te-help-border);
@@ -498,11 +830,17 @@ function onComponentClick(componentName) {
   margin-bottom: 6px;
 }
 
+.tab-help-box {
+  margin-top: 0;
+  margin-bottom: 16px;
+  max-width: none;
+}
+
 .help-box h4 {
   font-size: 13px;
   color: var(--te-accent);
   margin-bottom: 6px;
-  font-weight: 600;
+  font-weight: normal;
 }
 
 .help-box p,
@@ -510,6 +848,7 @@ function onComponentClick(componentName) {
   font-size: 12px;
   color: var(--te-text-muted);
   line-height: 1.6;
+  max-width: none;
 }
 
 .help-box ul {
@@ -555,5 +894,51 @@ function onComponentClick(componentName) {
 
 .section {
   margin-top: 28px;
+}
+
+.nightly-section--tab {
+  margin-top: 16px;
+}
+
+.dashboard-tabs {
+  display: flex;
+  gap: 4px;
+  border-bottom: 1px solid var(--te-border, #1e4976);
+  margin-bottom: 20px;
+}
+
+.dashboard-tab {
+  appearance: none;
+  background: transparent;
+  border: none;
+  border-bottom: 2px solid transparent;
+  color: var(--te-text-muted);
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 600;
+  margin-bottom: -1px;
+  padding: 10px 18px;
+}
+
+.dashboard-tab:hover:not(:disabled) {
+  color: var(--te-heading);
+}
+
+.dashboard-tab--active {
+  border-bottom-color: var(--te-accent, #5ea7ff);
+  color: var(--te-heading);
+}
+
+.dashboard-tab:disabled {
+  cursor: not-allowed;
+  opacity: 0.45;
+}
+
+.tab-panel {
+  min-height: 120px;
+}
+
+.tab-empty {
+  padding: 48px 24px;
 }
 </style>
