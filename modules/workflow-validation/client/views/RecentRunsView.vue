@@ -47,7 +47,7 @@
     <p v-if="loading || searchPending" role="status" class="mb-4 text-sm text-gray-500 dark:text-gray-400">{{ hasLoaded ? 'Updating recent runs…' : 'Loading recent runs…' }}</p>
     <div v-if="hasLoaded" :aria-busy="loading" class="overflow-hidden rounded-xl border border-gray-100 bg-white dark:border-gray-700 dark:bg-gray-800">
       <div class="relative overflow-x-auto">
-        <table class="w-full text-left text-sm">
+        <table class="w-full min-w-[48rem] table-fixed text-left text-sm">
           <caption class="sr-only">Recent Workflow Validation runs. Select a run to open its details.</caption>
           <thead class="border-b border-gray-100 text-xs uppercase tracking-wide text-gray-500 dark:border-gray-700 dark:text-gray-400">
             <tr>
@@ -73,7 +73,7 @@
                 <div class="font-medium text-gray-900 dark:text-gray-100">{{ run.suite ? formatSuiteName(run.suite) : 'Test suite unavailable' }}</div>
                 <div class="mt-1 break-all font-mono text-xs text-gray-500 dark:text-gray-400">{{ run.invocationId }}</div>
               </td>
-              <td class="px-5 py-4 font-mono text-xs text-gray-600 dark:text-gray-300">{{ run.rhoaiVersion ? versionLabel(run.rhoaiVersion) : 'Version unavailable' }}</td>
+              <td class="break-words px-5 py-4 font-mono text-xs text-gray-600 dark:text-gray-300">{{ run.rhoaiVersion ? versionLabel(run.rhoaiVersion) : 'Version unavailable' }}</td>
               <td class="whitespace-nowrap px-5 py-4 text-gray-600 dark:text-gray-300"><time v-if="validTime(run.timestamp)" :datetime="run.timestamp">{{ recordedTime(run.timestamp) }}</time><span v-else>Unavailable</span></td>
             </tr>
             <tr v-if="!runs.length"><td colspan="3" class="px-5 py-12 text-center text-gray-500 dark:text-gray-400">{{ page.total ? 'This page has changed. Use Previous to return to the first page.' : hasFilters ? 'No runs match these filters.' : 'No runs are available.' }}</td></tr>
