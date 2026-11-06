@@ -1708,7 +1708,7 @@ test.describe('Promotion Gates @system-health', () => {
       await expect(page.locator('text=' + stage).first()).toBeVisible();
     }
     await expect(page.locator('text=Not run')).toBeVisible();
-    await expect(page.locator('text=eg-80-abc')).toBeVisible();
+    await expect(page.locator('text=eg-80-test')).toBeVisible();
 
     expectNoBenignConsoleErrors(page);
   });
