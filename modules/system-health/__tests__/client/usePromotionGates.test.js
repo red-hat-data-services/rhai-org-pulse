@@ -9,6 +9,7 @@ import {
   usePromotionGates,
   isPrProblem,
   prProblemReason,
+  promotionVerdict,
   summarizePullRequests,
   buildDiffUrl,
   joinReleaseBranches
@@ -191,5 +192,29 @@ describe('buildDiffUrl', () => {
   it('uses the provided branches', () => {
     expect(buildDiffUrl('odh-dashboard', 'stable-3.6', 'main-3.6'))
       .toBe('https://github.com/red-hat-data-services/odh-dashboard/compare/stable-3.6...main-3.6')
+  })
+})
+
+describe('promotionVerdict', () => {
+  const job = (state, statuses) => ({
+    state,
+    state_json: { 'pull-requests': statuses.map((prStatus, i) => ({ repo: `r${i}`, 'pr-status': prStatus })) },
+    early_gate: { build: { status: 'succeeded' } }
+  })
+
+  it('is complete only when every component is promoted and the leader PR merged', () => {
+    expect(promotionVerdict(job('MERGED', ['success', 'success']))).toBe('complete')
+  })
+
+  it('does not call a closed, unmerged leader PR complete', () => {
+    expect(promotionVerdict(job('CLOSED', ['success', 'success']))).toBe('progress')
+  })
+
+  it('is blocked on a failing build', () => {
+    expect(promotionVerdict(job('OPEN', ['success', 'build-failure']))).toBe('blocked')
+  })
+
+  it('is empty without components', () => {
+    expect(promotionVerdict(job('OPEN', []))).toBe('empty')
   })
 })

@@ -1688,7 +1688,7 @@ test.describe('Promotion Gates @system-health', () => {
     logCapturedErrors(page, testInfo);
   });
 
-  test('should load Promotion Gates view with leader PR header and gates', async ({ page }) => {
+  test('should load Promotion Gates view with verdict, stages and early gate', async ({ page }) => {
     await page.goto('/#/system-health/promotion-gates');
     await page.waitForLoadState('networkidle');
     await page.waitForTimeout(DEFAULT_PAGE_WAIT_TIME);
@@ -1696,56 +1696,53 @@ test.describe('Promotion Gates @system-health', () => {
     const mainContentVisible = await mainContentIsVisible(page);
     expect(mainContentVisible).toBe(true);
 
-    // Leader PR header card with link, state badge and label chip
     await expect(page.locator('h1', { hasText: 'Promotion gates' })).toBeVisible();
     await expect(page.getByRole('link', { name: /Leader PR #80/ })).toBeVisible();
-    await expect(page.locator('span', { hasText: 'OPEN' }).first()).toBeVisible();
 
-    // Gate status cards
-    await expect(page.locator('text=Component builds')).toBeVisible();
-    await expect(page.locator('text=Early gate build')).toBeVisible();
-    await expect(page.locator('text=Early gate test')).toBeVisible();
+    // Hero verdict with the promoted count
+    await expect(page.locator('text=Promotion blocked')).toBeVisible();
+    await expect(page.locator('text=1 of 2 components promoted')).toBeVisible();
 
-    expectNoBenignConsoleErrors(page);
-  });
-
-  test('should render components table with statuses, reasons and summary', async ({ page }) => {
-    await page.goto('/#/system-health/promotion-gates');
-    await page.waitForLoadState('networkidle');
-    await page.waitForTimeout(DEFAULT_PAGE_WAIT_TIME);
-
-    // Summary counts: 1 ok, 1 failing
-    await expect(page.locator('p', { hasText: '1 ok · 1 failing · 0 pending' })).toBeVisible();
-
-    // Both repos listed, with the blocking reason for the failing one
-    await expect(page.locator('td', { hasText: 'odh-dashboard' })).toBeVisible();
-    await expect(page.locator('td', { hasText: 'odh-model-controller' })).toBeVisible();
-    await expect(page.locator('td', { hasText: 'Required build failed' })).toBeVisible();
-
-    // Issue from creator-outcomes surfaces in the issues section
-    await expect(page.locator('h3', { hasText: 'PR creation and auto-merge issues' })).toBeVisible();
-    await expect(page.locator('td', { hasText: 'Auto-merge failed' })).toBeVisible();
+    // Stage strip covering the whole flow
+    for (const stage of ['Child PRs', 'Builds', 'Early gate build', 'Early gate test', 'Merge']) {
+      await expect(page.locator('text=' + stage).first()).toBeVisible();
+    }
+    await expect(page.locator('text=Not run')).toBeVisible();
+    await expect(page.locator('text=eg-80-abc')).toBeVisible();
 
     expectNoBenignConsoleErrors(page);
   });
 
-  test('should filter components by repo and problems only', async ({ page }) => {
+  test('should split components into blocking and passing tables', async ({ page }) => {
     await page.goto('/#/system-health/promotion-gates');
     await page.waitForLoadState('networkidle');
     await page.waitForTimeout(DEFAULT_PAGE_WAIT_TIME);
 
-    // Problems only hides the successful repo
-    await page.selectOption('select', 'problems');
-    await page.waitForTimeout(500);
-    await expect(page.locator('td', { hasText: 'odh-dashboard' })).toHaveCount(0);
-    await expect(page.locator('td', { hasText: 'odh-model-controller' })).toBeVisible();
+    await expect(page.locator('h2', { hasText: 'Blocking components' })).toBeVisible();
+    await expect(page.locator('h2', { hasText: 'Passing components' })).toBeVisible();
 
-    // Repo filter narrows to the matching row
-    await page.selectOption('select', 'all');
-    await page.fill('div[aria-label="Latest job"] input[type="search"]', 'odh-dashboard');
-    await page.waitForTimeout(500);
-    await expect(page.locator('td', { hasText: 'odh-dashboard' })).toBeVisible();
-    await expect(page.locator('td', { hasText: 'odh-model-controller' })).toHaveCount(0);
+    // Both tables render at once, no toggle; the failing repo carries its reason
+    const blocking = page.locator('section', { has: page.locator('h2', { hasText: 'Blocking components' }) });
+    const passing = page.locator('section', { has: page.locator('h2', { hasText: 'Passing components' }) });
+    await expect(blocking.locator('text=odh-model-controller')).toBeVisible();
+    await expect(blocking.locator('text=Required build failed')).toBeVisible();
+    await expect(passing.locator('text=odh-dashboard')).toBeVisible();
+
+    // Auto-merge issue from creator-outcomes surfaces in its own section
+    await expect(page.locator('h2', { hasText: 'PR creation and auto-merge issues' })).toBeVisible();
+    await expect(page.locator('text=Auto-merge failed')).toBeVisible();
+
+    expectNoBenignConsoleErrors(page);
+  });
+
+  test('should link each repo to its GitHub page', async ({ page }) => {
+    await page.goto('/#/system-health/promotion-gates');
+    await page.waitForLoadState('networkidle');
+    await page.waitForTimeout(DEFAULT_PAGE_WAIT_TIME);
+
+    const repoLink = page.getByRole('link', { name: 'odh-model-controller', exact: true }).first();
+    await expect(repoLink).toBeVisible();
+    await expect(repoLink).toHaveAttribute('href', 'https://github.com/red-hat-data-services/odh-model-controller');
 
     expectNoBenignConsoleErrors(page);
   });
@@ -1767,9 +1764,8 @@ test.describe('Promotion Gates @system-health', () => {
     await page.waitForTimeout(DEFAULT_PAGE_WAIT_TIME);
 
     await expect(page.getByRole('tab', { name: 'Release branches' })).toBeVisible();
-    await expect(page.locator('td', { hasText: 'odh-dashboard' })).toBeVisible();
 
-    const diffLink = page.getByRole('link', { name: 'stable…main' }).first();
+    const diffLink = page.getByRole('link', { name: 'main → stable' }).first();
     await expect(diffLink).toBeVisible();
     await expect(diffLink).toHaveAttribute('href', 'https://github.com/red-hat-data-services/odh-dashboard/compare/stable...main');
 

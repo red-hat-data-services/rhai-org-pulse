@@ -96,7 +96,7 @@ describe('PromotionGatesView', () => {
     vi.mocked(apiRequest).mockReset()
   })
 
-  it('renders the leader PR header, gates and early gate blocks', async () => {
+  it('renders the hero verdict, stage strip and early gate details', async () => {
     vi.mocked(apiRequest).mockResolvedValue(makeJob())
     const wrapper = await mountView()
 
@@ -107,37 +107,63 @@ describe('PromotionGatesView', () => {
     // Label chips
     expect(wrapper.text()).toContain('gated-artifacts-promoter')
 
-    // Gate cards with required/optional markers
-    expect(wrapper.text()).toContain('Component builds')
-    expect(wrapper.text()).toContain('Early gate build')
-    expect(wrapper.text()).toContain('Optional')
+    // Hero verdict and progress counts
+    expect(wrapper.text()).toContain('Promotion blocked')
+    expect(wrapper.text()).toContain('1 of 2 components promoted')
+    expect(wrapper.text()).toContain('1 ok')
+    expect(wrapper.text()).toContain('1 blocked')
+    expect(wrapper.text()).toContain('0 pending')
 
-    // Early gate build block shows its links; test block shows not run yet
+    // Stage strip covers the whole flow, with the early gate details inline
+    for (const stage of ['Child PRs', 'Builds', 'Early gate build', 'Early gate test', 'Merge']) {
+      expect(wrapper.text()).toContain(stage)
+    }
+    expect(wrapper.text()).toContain('Not run')
     expect(wrapper.text()).toContain('eg-80-abc')
-    expect(wrapper.text()).toContain('Not run yet')
   })
 
-  it('renders the components table with statuses, blocking reasons and build links', async () => {
+  it('splits components into blocking and passing tables', async () => {
     vi.mocked(apiRequest).mockResolvedValue(makeJob())
     const wrapper = await mountView()
 
-    expect(wrapper.text()).toContain('1 ok · 1 failing · 0 pending')
-    expect(wrapper.text()).toContain('odh-dashboard')
-    expect(wrapper.text()).toContain('odh-model-controller')
-    expect(wrapper.text()).toContain('Required build failed')
+    const text = wrapper.text()
+    expect(text).toContain('Blocking components')
+    expect(text).toContain('Passing components')
+    // Blocking comes first, passing underneath, both visible without a toggle
+    expect(text.indexOf('Blocking components')).toBeLessThan(text.indexOf('Passing components'))
+    expect(text).toContain('Required build failed')
 
-    const buildLink = wrapper.findAll('a').find((a) => a.text() === 'odh-dashboard-run')
-    expect(buildLink).toBeDefined()
-    expect(buildLink.attributes('href')).toBe('https://konflux.example.com/runs/1')
+    const blocking = wrapper.find('h2.text-sm.font-semibold')
+    expect(blocking.exists()).toBe(true)
+
+    // Both repos rendered, one per table
+    const latestPanel = wrapper.find('div[aria-label="Latest job"]')
+    expect(latestPanel.text()).toContain('odh-dashboard')
+    expect(latestPanel.text()).toContain('odh-model-controller')
   })
 
-  it('renders the issues section and the positive line when all outcomes succeed', async () => {
+  it('renders build links for blocking components', async () => {
+    const job = makeJob()
+    job.state_json['pull-requests'][1]['build-observations'].runs = [
+      { name: 'odh-model-controller-build', status: 'failure', url: 'https://konflux.example.com/runs/2' },
+      { name: 'odh-model-serving-api-build', status: 'failure', url: 'https://konflux.example.com/runs/3' }
+    ]
+    vi.mocked(apiRequest).mockResolvedValue(job)
+    const wrapper = await mountView()
+
+    const buildLink = wrapper.findAll('a').find((a) => a.text() === 'Failing builds' || a.text() === 'odh-model-controller-build')
+    expect(buildLink).toBeDefined()
+    const runLink = wrapper.findAll('a').find((a) => a.attributes('href') === 'https://konflux.example.com/runs/2')
+    expect(runLink).toBeDefined()
+  })
+
+  it('hides the issues section when all creator outcomes succeed', async () => {
     const job = makeJob()
     job.state_json['creator-outcomes'] = [job.state_json['creator-outcomes'][0]]
     vi.mocked(apiRequest).mockResolvedValue(job)
     const wrapper = await mountView()
 
-    expect(wrapper.text()).toContain('No PR creation or auto-merge issues')
+    expect(wrapper.text()).not.toContain('PR creation and auto-merge issues')
   })
 
   it('renders the issues table rows for failing outcomes', async () => {
@@ -155,7 +181,17 @@ describe('PromotionGatesView', () => {
     const wrapper = await mountView()
 
     expect(wrapper.text()).toContain('No promotion gates data yet')
-    expect(wrapper.text()).toContain('dashboard collector configured')
+    expect(wrapper.text()).toContain('collector may not have run yet')
+  })
+
+  it('points at the settings when the dashboard API is not configured', async () => {
+    const err = new Error('HTTP 503')
+    err.status = 503
+    vi.mocked(apiRequest).mockRejectedValue(err)
+    const wrapper = await mountView()
+
+    expect(wrapper.text()).toContain('Dashboard API not configured')
+    expect(wrapper.text()).toContain('settings')
   })
 
   it('renders the release branches tab with diff links', async () => {
@@ -164,18 +200,8 @@ describe('PromotionGatesView', () => {
 
     await wrapper.findAll('button').find((b) => b.text() === 'Release branches').trigger('click')
 
-    const diffLink = wrapper.findAll('a').find((a) => a.text() === 'stable…main')
+    const diffLink = wrapper.findAll('a').find((a) => a.text() === 'main → stable')
     expect(diffLink).toBeDefined()
     expect(diffLink.attributes('href')).toBe('https://github.com/red-hat-data-services/odh-dashboard/compare/stable...main')
-  })
-
-  it('filters the components table by problems only', async () => {
-    vi.mocked(apiRequest).mockResolvedValue(makeJob())
-    const wrapper = await mountView()
-
-    await wrapper.find('select').setValue('problems')
-    const latestPanel = wrapper.find('div[aria-label="Latest job"]')
-    expect(latestPanel.text()).not.toContain('odh-dashboard')
-    expect(latestPanel.text()).toContain('odh-model-controller')
   })
 })

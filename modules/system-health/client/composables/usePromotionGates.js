@@ -29,6 +29,39 @@ export function prProblemReason(pr) {
   return pr['pr-status'] || 'unknown'
 }
 
+/** Statuses that are a hard failure, as opposed to still running or unknown. */
+export const BLOCKING_STATUSES = ['build-failure', 'merge-failure']
+
+export function isBlockingPr(pr) {
+  return BLOCKING_STATUSES.includes(prStatus(pr))
+}
+
+/**
+ * Overall verdict for the latest job, in display priority order:
+ * `blocked` (a hard failure or a failed gate), `complete` (everything promoted
+ * and the leader PR merged), `progress` (anything still running or unknown)
+ * and `empty` (no components collected yet).
+ */
+export function promotionVerdict(job) {
+  const state = (job && job.state_json) || {}
+  const pullRequests = state['pull-requests'] || []
+  if (pullRequests.length === 0) return 'empty'
+
+  const gates = state['promotion-gates'] || []
+  if (gates.some((gate) => String(gate.status || '').toLowerCase() === 'failed')) return 'blocked'
+
+  const build = job && job.early_gate && job.early_gate.build
+  if (String((build && build.status) || '').toLowerCase() === 'failed') return 'blocked'
+
+  if (pullRequests.some(isBlockingPr)) return 'blocked'
+
+  const allPromoted = pullRequests.every((pr) => prStatus(pr) === 'success')
+  // Only a merged leader PR means the promotion landed; a closed one was abandoned.
+  if (allPromoted && String(job.state || '').toUpperCase() === 'MERGED') return 'complete'
+
+  return 'progress'
+}
+
 /** Summary counts over `state_json["pull-requests"]`: ok / failing / pending. */
 export function summarizePullRequests(pullRequests) {
   const summary = { ok: 0, failing: 0, pending: 0, total: 0 }

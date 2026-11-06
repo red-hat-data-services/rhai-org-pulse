@@ -74,6 +74,7 @@ export const viewOwners = {
   'system-health/disconnected-repo-detail':        'Ajay Jaganathan',
   'system-health/e2e-run-detail':                  'Ajay Jaganathan',
   'system-health/odh-e2e-health':                  'Ajay Jaganathan',
+  'system-health/promotion-gates':                 'Giulia Naponiello',
   'system-health/quality-analysis':                'Dana Gutride',
   'system-health/test-execution':                  'Arthy Loganathan',
   'system-health/test-execution-detail':           'Arthy Loganathan',
