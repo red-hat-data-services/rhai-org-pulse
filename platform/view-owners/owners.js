@@ -126,6 +126,7 @@ export const viewOwners = {
   'releases/plan/ai-planner':                      'yuvalluria',
   'releases/plan/bu-feedback':                     'Saiesh Prabhu',
   'releases/plan/feature-readiness':               'Erle Marion',
+  'releases/plan/jira-plan':                       'Arjay Hinek',
   'releases/plan/pm-hub':                          'Saiesh Prabhu',
 
   // releases > registry
