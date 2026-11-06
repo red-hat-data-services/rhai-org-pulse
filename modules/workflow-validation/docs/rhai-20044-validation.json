@@ -1,0 +1,194 @@
+{
+  "ticket": "RHAI-20044",
+  "sourceCommit": "c97ef75c4c679e5f2384b89576d4c6715e5251b6",
+  "environment": "GPUaaS preview only",
+  "api": {
+    "checkedAt": "2026-11-05T10:23:43.771Z",
+    "groups": 146,
+    "pages": 8,
+    "initialRows": 20,
+    "sortTraversals": [
+      {
+        "field": "timestamp",
+        "direction": "asc",
+        "pages": 8,
+        "groups": 146
+      },
+      {
+        "field": "timestamp",
+        "direction": "desc",
+        "pages": 8,
+        "groups": 146
+      },
+      {
+        "field": "version",
+        "direction": "asc",
+        "pages": 8,
+        "groups": 146
+      },
+      {
+        "field": "version",
+        "direction": "desc",
+        "pages": 8,
+        "groups": 146
+      },
+      {
+        "field": "suite",
+        "direction": "asc",
+        "pages": 8,
+        "groups": 146
+      },
+      {
+        "field": "suite",
+        "direction": "desc",
+        "pages": 8,
+        "groups": 146
+      }
+    ],
+    "legacy36Alias": true,
+    "multiVersion": true,
+    "sortedVersionChoices": true,
+    "legacyBookmark": true,
+    "boundedV3Cursor": true,
+    "refreshKeepsPage": true,
+    "cursorMismatchRejected": true,
+    "filterBeyondFirstPage": true,
+    "utcDate": true,
+    "storedDataUnchanged": true,
+    "deployedSourceMatches": true,
+    "runtimeConfigurationPreserved": true
+  },
+  "checks": {
+    "fullUnitSuite": {
+      "passed": 6781,
+      "skipped": 11,
+      "command": "NODE_OPTIONS=--no-experimental-webstorage npm test"
+    },
+    "moduleUnitSuite": {
+      "passed": 160
+    },
+    "browserIntegration": {
+      "passed": 32,
+      "command": "npx playwright test --grep @workflow-validation --workers=2"
+    },
+    "lint": "passed",
+    "productionBuild": "passed",
+    "compatiblePreviewBuild": "passed",
+    "moduleValidation": "passed",
+    "openapiValidation": "passed"
+  },
+  "counts": {
+    "ok": true,
+    "executions": 712,
+    "tasks": 4157,
+    "rootCauses": 184
+  },
+  "images": {
+    "backend": {
+      "build": "org-pulse-backend-rhai20044-labels-20261105-1",
+      "image": "image-registry.openshift-image-registry.svc:5000/workflow-validation-org-pulse/org-pulse-backend@sha256:08347098607257e441ac2d4f11a4c4fe269288a5b386f2a9c9512833c4499e1d"
+    },
+    "frontend": {
+      "build": "org-pulse-frontend-rhai20044-executed-20261105-1",
+      "image": "image-registry.openshift-image-registry.svc:5000/workflow-validation-org-pulse/org-pulse-frontend@sha256:9d62e2ed4608289b09633a167b7cf231a8cbf28cd12a20f5a52329df2fe35d2c"
+    }
+  },
+  "backendSourceHashes": {
+    "modules/workflow-validation/server/index.js": "57d7bc81954e62cdbc1dd513babfd0a5fd3567a8e5fd588c3fff03deeaa07320",
+    "modules/workflow-validation/server/opensearch.js": "0518aad36b68647c9e6a7769051443cce03cb6f975cc776d81e38b5ec0c84b01",
+    "modules/workflow-validation/server/config.js": "fa83e397f4a130b3958972eabac9ca926c7f4a12b3c57ef0d73185ab84318ca0",
+    "modules/workflow-validation/server/recent-runs.js": "3ad41981cc17a9ea69654e8f2fe9291cb4b1f376ffab059012af982a7508b051",
+    "modules/workflow-validation/lib/versions.js": "294df1244181f7184105508a15badf5f7c539498cfc790e5160796209329cd3f",
+    "modules/workflow-validation/lib/package.json": "609158e6c5fbc237939fa3ddf7faab80ab690bdc0c8d584414a885130103c4e8"
+  },
+  "frontendAssetHashes": {
+    "index.html": "e31f67bc4515e6b0186dd680f1a0d75bc18acec438263a402f0947d56a13abd6",
+    "assets/RecentRunsView-BgDe-Oy9.js": "22b881811543cd81f12f6177197113600006e05f34a7ed7d7e5ceece4196ef51"
+  },
+  "rollbackImages": {
+    "backend": "image-registry.openshift-image-registry.svc:5000/workflow-validation-org-pulse/org-pulse-backend@sha256:08347098607257e441ac2d4f11a4c4fe269288a5b386f2a9c9512833c4499e1d",
+    "frontend": "image-registry.openshift-image-registry.svc:5000/workflow-validation-org-pulse/org-pulse-frontend@sha256:860dd233bae60568b238d19c9e763a8521be0b77a95714264cb105fd9cad0c68"
+  },
+  "browser": {
+    "checkedAt": "2026-11-05T10:24:17.231Z",
+    "actualDeployedFrontend": true,
+    "actualDeployedBackend": true,
+    "initialRows": 20,
+    "groups": 146,
+    "pagesVisited": 8,
+    "pageReload": true,
+    "legacyPageBookmark": true,
+    "refreshRetainsPage": true,
+    "refreshErrorRetainsRows": true,
+    "retryRecovers": true,
+    "multipleVersions": [
+      "3.6.0",
+      "3.6.0-ea.2"
+    ],
+    "legacy36Alias": true,
+    "plainVersionLabels": true,
+    "columnSortDropdowns": true,
+    "headingOpensDropdown": true,
+    "compactSortHeaders": true,
+    "executedAtLabel": true,
+    "equalColumnWidths": [
+      371.328125,
+      371.328125,
+      371.34375
+    ],
+    "responsiveColumnWidths": {
+      "320": [
+        256,
+        256,
+        256
+      ],
+      "375": [
+        256,
+        256,
+        256
+      ]
+    },
+    "filterSummaryRemoved": true,
+    "sortedVersionChoices": true,
+    "selectionReload": true,
+    "allColumnDirections": true,
+    "datePresets": true,
+    "customUtcDates": true,
+    "filterBeyondFirstPage": true,
+    "typingDebounced": true,
+    "clear": true,
+    "exactMouseNavigation": true,
+    "exactKeyboardNavigation": true,
+    "exactScopeAcrossVersions": true,
+    "narrowWidths": [
+      375,
+      320
+    ],
+    "pageErrors": []
+  },
+  "screenshots": [
+    "images/rhai-20044-gpuaas-custom-dates.png",
+    "images/rhai-20044-gpuaas-filtered.png",
+    "images/rhai-20044-gpuaas-mobile.png",
+    "images/rhai-20044-gpuaas-multiple-versions.png",
+    "images/rhai-20044-gpuaas-recent-runs.png",
+    "images/rhai-20044-gpuaas-selected-run.png"
+  ],
+  "versionNormalization": {
+    "legacyLabel": "3.6",
+    "displayLabel": "3.6.0",
+    "sameDropdownChoice": true,
+    "filterMatchesBothStoredValues": true,
+    "eaReleasesSeparate": true,
+    "storedDocumentsChanged": false
+  },
+  "presentation": {
+    "plainVersionLabels": true,
+    "filterSummaryRemoved": true,
+    "columnSortDropdowns": true,
+    "compactSortHeaders": true,
+    "equalWidthColumns": true,
+    "timeColumnLabel": "Executed at (UTC)"
+  },
+  "deploymentScope": "Frontend update; backend image unchanged"
+}

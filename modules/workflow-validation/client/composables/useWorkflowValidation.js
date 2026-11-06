@@ -70,7 +70,8 @@ export function filterQueryValues(keys = []) {
 export function buildQuery(extra = {}, base = filters) {
   const params = new URLSearchParams()
   for (const [k, v] of Object.entries({ ...base, ...extra })) {
-    if (v !== '' && v !== null && v !== undefined) params.set(k, v)
+    if (Array.isArray(v)) v.forEach(value => params.append(k, value))
+    else if (v !== '' && v !== null && v !== undefined) params.set(k, v)
   }
   const s = params.toString()
   return s ? `?${s}` : ''

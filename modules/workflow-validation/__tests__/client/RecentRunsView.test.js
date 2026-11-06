@@ -24,27 +24,31 @@ describe('Recent Runs', () => {
     Object.assign(filters, { version: 'older', testSuite: 'another-suite', invocationId: 'another-run', dateFrom: '2000-01-01' })
     wrapper = mount(RecentRunsView)
     await flushPromises()
-    expect(Object.fromEntries(request(0))).toEqual({ pageSize: '20', includeBugs: 'false', sortDir: 'desc' })
+    expect(Object.fromEntries(request(0))).toEqual({ pageSize: '20', includeBugs: 'false', sortField: 'timestamp', sortDir: 'desc' })
     expect(wrapper.findAll('tbody tr')).toHaveLength(3)
-    expect(wrapper.findAll('thead th').map(cell => cell.text())).toEqual(['Test suite', 'Version', 'Recorded test time (UTC)', 'Run details'])
+    expect(wrapper.findAll('thead th').map(cell => cell.attributes('aria-label'))).toEqual(['Test suite', 'Version', 'Executed at (UTC)'])
+    expect(wrapper.findAll('th button')).toHaveLength(0)
+    expect(wrapper.findAll('th select').map(select => select.element.value)).toEqual(['', '', 'desc'])
     expect(wrapper.get('nav[aria-label="Recent run pages"]').text()).toContain('Showing 1–3 of 3 runs')
     expect(button('Previous').element.disabled).toBe(true)
     expect(button('Next').element.disabled).toBe(true)
-    expect(wrapper.text()).toContain('All versions · All suites · All run IDs · All dates')
+    expect(wrapper.text()).not.toContain('All versions · All suites · All run IDs · All time')
     expect(wrapper.text()).toContain('Version unavailable')
     expect(wrapper.findAll('time')).toHaveLength(2)
     expect(wrapper.text()).not.toMatch(/Build date|Jenkins|Image release/)
   })
 
-  it('opens exact runs by suite and invocation without a version filter', async () => {
-    wrapper = mount(RecentRunsView)
+  it('opens exact runs from the whole row by click and Enter without a version filter', async () => {
+    const nav = { navigateTo: vi.fn() }
+    wrapper = mount(RecentRunsView, { global: { provide: { moduleNav: nav } } })
     await flushPromises()
-    for (const [index, anchor] of wrapper.findAll('a').entries()) {
+    expect(wrapper.findAll('a')).toHaveLength(0)
+    for (const [index, row] of wrapper.findAll('tbody tr').entries()) {
       const run = fixture.rows[index]
-      const link = new URL(anchor.attributes('href').replace('#', ''), 'http://localhost')
-      expect(link.pathname).toBe('/workflow-validation/overview')
-      expect(Object.fromEntries(link.searchParams)).toEqual({ exactRun: '1', version: '', testSuite: run.suite,
+      await row.trigger(index % 2 ? 'keydown.enter' : 'click')
+      expect(nav.navigateTo).toHaveBeenLastCalledWith('overview', { exactRun: '1', version: '', testSuite: run.suite,
         invocationId: run.invocationId, datePreset: 'all', dateFrom: '', dateTo: '' })
+      expect(row.attributes('tabindex')).toBe('0')
     }
   })
 
@@ -63,23 +67,30 @@ describe('Recent Runs', () => {
     expect(request(2).get('cursor')).toBe('page-one')
   })
 
-  it('automatically applies choices and resets pagination, then clears everything', async () => {
+  it('automatically applies multiple versions and custom dates, then clears everything', async () => {
     apiRequest.mockResolvedValueOnce(page(fixture.rows, { nextCursor: 'next-page', total: 40 }))
     wrapper = mount(RecentRunsView)
     await flushPromises()
-    await wrapper.get('select[aria-label="RHOAI version"]').setValue('older')
+    await wrapper.get('button[aria-controls="recent-version-options"]').trigger('click')
+    const checkbox = value => wrapper.findAll('#recent-version-options label').find(label => label.text() === value).get('input')
+    await checkbox('older').setValue(true)
+    await checkbox('3.5.0').setValue(true)
     await wrapper.get('select[aria-label="Test suite"]').setValue('release_gate')
     await wrapper.get('input[aria-label="Run ID"]').setValue('original-run')
-    await wrapper.get('input[aria-label="Recorded from (UTC)"]').setValue('2026-01-01')
-    await wrapper.get('input[aria-label="Recorded to (UTC)"]').setValue('2026-02-01')
-    await wrapper.get('select[aria-label="Sort runs"]').setValue('asc')
+    await wrapper.get('select[aria-label="Date Range"]').setValue('custom')
+    await wrapper.get('input[aria-label="Start Date (UTC)"]').setValue('2026-01-01')
+    await wrapper.get('input[aria-label="End Date (UTC)"]').setValue('2026-02-01')
+    await wrapper.get('select[aria-label="Sort test suite"]').setValue('asc')
     await flushPromises()
+    expect(request(-1).getAll('versions')).toEqual(['3.5.0', 'older'])
+    expect(Object.fromEntries(request(-1))).toMatchObject({ suite: 'release_gate', runQuery: 'original-run', dateFrom: '2026-01-01', dateTo: '2026-02-01', sortField: 'suite', sortDir: 'asc' })
+    expect(request(-1).has('cursor')).toBe(false)
     expect(wrapper.find('button[type="submit"]').exists()).toBe(false)
-    expect(Object.fromEntries(request(-1))).toEqual({ pageSize: '20', includeBugs: 'false', version: 'older', suite: 'release_gate', runQuery: 'original-run', dateFrom: '2026-01-01', dateTo: '2026-02-01', sortDir: 'asc' })
     await button('Clear filters').trigger('click')
     await flushPromises()
-    expect(Object.fromEntries(request(-1))).toEqual({ pageSize: '20', includeBugs: 'false', sortDir: 'desc' })
-    expect(wrapper.get('input[aria-label="Run ID"]').element.value).toBe('')
+    expect(Object.fromEntries(request(-1))).toEqual({ pageSize: '20', includeBugs: 'false', sortField: 'timestamp', sortDir: 'desc' })
+    expect(wrapper.get('select[aria-label="Date Range"]').element.value).toBe('all')
+    expect(wrapper.find('input[type="date"]').exists()).toBe(false)
     expect(filters.version).toBe('')
   })
 
@@ -118,18 +129,24 @@ describe('Recent Runs', () => {
     expect(apiRequest).toHaveBeenCalledTimes(2)
   })
 
-  it('waits for a valid date range before fetching', async () => {
+  it('waits for valid custom dates and cancels an older request when the range becomes invalid', async () => {
     wrapper = mount(RecentRunsView)
     await flushPromises()
-    await wrapper.get('input[aria-label="Recorded from (UTC)"]').setValue('2026-02-01')
+    await wrapper.get('select[aria-label="Date Range"]').setValue('custom')
+    let resolve
+    apiRequest.mockReturnValueOnce(new Promise(done => { resolve = done }))
+    await wrapper.get('input[aria-label="Start Date (UTC)"]').setValue('2026-02-01')
+    const calls = apiRequest.mock.calls.length
+    await wrapper.get('input[aria-label="End Date (UTC)"]').setValue('2026-01-01')
+    expect(apiRequest.mock.calls.at(-1)[1].signal.aborted).toBe(true)
+    resolve(page([{ ...fixture.rows[0], invocationId: 'obsolete-date-response' }]))
     await flushPromises()
-    await wrapper.get('input[aria-label="Recorded to (UTC)"]').setValue('2026-01-01')
+    expect(apiRequest).toHaveBeenCalledTimes(calls)
+    expect(wrapper.text()).not.toContain('obsolete-date-response')
+    expect(wrapper.get('[role="alert"]').text()).toContain('Start Date must be on or before End Date')
+    await wrapper.get('input[aria-label="End Date (UTC)"]').setValue('2026-03-01')
     await flushPromises()
-    expect(apiRequest).toHaveBeenCalledTimes(2)
-    expect(wrapper.get('[role="alert"]').text()).toContain('Recorded from must be on or before Recorded to')
-    await wrapper.get('input[aria-label="Recorded to (UTC)"]').setValue('2026-03-01')
-    await flushPromises()
-    expect(apiRequest).toHaveBeenCalledTimes(3)
+    expect(apiRequest).toHaveBeenCalledTimes(calls + 1)
     expect(request(-1).get('dateTo')).toBe('2026-03-01')
     expect(wrapper.find('[role="alert"]').exists()).toBe(false)
   })
@@ -139,7 +156,7 @@ describe('Recent Runs', () => {
     wrapper = mount(RecentRunsView, { global: { provide: { moduleNav: { params } } } })
     await flushPromises()
     expect(apiRequest).not.toHaveBeenCalled()
-    expect(wrapper.get('[role="alert"]').text()).toContain('Recorded from must be on or before Recorded to')
+    expect(wrapper.get('[role="alert"]').text()).toContain('Start Date must be on or before End Date')
     await button('Refresh').trigger('click')
     expect(apiRequest).not.toHaveBeenCalled()
     params.value = { recentFrom: '2026-01-01', recentTo: '2026-02-01' }
@@ -148,7 +165,7 @@ describe('Recent Runs', () => {
     params.value = { recentFrom: '2026-03-01', recentTo: '2026-02-01' }
     await flushPromises()
     expect(apiRequest).toHaveBeenCalledTimes(1)
-    expect(wrapper.get('[role="alert"]').text()).toContain('Recorded from must be on or before Recorded to')
+    expect(wrapper.get('[role="alert"]').text()).toContain('Start Date must be on or before End Date')
   })
 
   it('hydrates its own URL state and synchronizes successful selections without duplicate loads', async () => {
@@ -156,7 +173,7 @@ describe('Recent Runs', () => {
     const nav = { params, updateParams: vi.fn(values => { params.value = { ...params.value, ...values } }) }
     wrapper = mount(RecentRunsView, { global: { provide: { moduleNav: nav } } })
     await flushPromises()
-    expect(Object.fromEntries(request(0))).toMatchObject({ version: '3.5.0', sortDir: 'asc', cursor: 'saved-page' })
+    expect(Object.fromEntries(request(0))).toMatchObject({ versions: '3.5.0', sortDir: 'asc', cursor: 'saved-page' })
     expect(apiRequest).toHaveBeenCalledTimes(1)
     await button('Clear filters').trigger('click')
     await flushPromises()
@@ -245,4 +262,62 @@ describe('Recent Runs', () => {
     expect(wrapper.get('[role="alert"]').text()).toContain('invalid page')
     expect(wrapper.find('nav').exists()).toBe(false)
   })
+  it('uses inclusive UTC dates for presets and shows date inputs only for Custom', async () => {
+    vi.useFakeTimers({ toFake: ['Date', 'setTimeout', 'clearTimeout'] })
+    vi.setSystemTime(new Date('2026-11-05T00:15:00Z'))
+    wrapper = mount(RecentRunsView)
+    await flushPromises()
+    expect(wrapper.find('input[type="date"]').exists()).toBe(false)
+    for (const [preset, from] of [['7', '2026-10-30'], ['30', '2026-10-07'], ['90', '2026-08-08']]) {
+      await wrapper.get('select[aria-label="Date Range"]').setValue(preset)
+      await flushPromises()
+      expect(request(-1).get('dateFrom')).toBe(from)
+      expect(request(-1).get('dateTo')).toBe('2026-11-05')
+    }
+    await wrapper.get('select[aria-label="Date Range"]').setValue('custom')
+    expect(wrapper.findAll('input[type="date"]')).toHaveLength(2)
+    await wrapper.get('select[aria-label="Date Range"]').setValue('all')
+    await flushPromises()
+    expect(request(-1).has('dateFrom')).toBe(false)
+  })
+
+  it('selects each column sort direction and stores versions and sorting in the URL', async () => {
+    const params = ref({ recentVersions: JSON.stringify(['3.5.0', '3.6.0-ea.2']) })
+    const nav = { params, updateParams: vi.fn(values => { params.value = { ...params.value, ...values } }) }
+    wrapper = mount(RecentRunsView, { global: { provide: { moduleNav: nav } } })
+    await flushPromises()
+    for (const [index, field, first] of [[0, 'suite', 'asc'], [1, 'version', 'desc'], [2, 'timestamp', 'desc']]) {
+      await wrapper.findAll('th select')[index].setValue(first)
+      await flushPromises()
+      expect(request(-1).get('sortField')).toBe(field)
+      expect(request(-1).get('sortDir')).toBe(first)
+      expect(wrapper.findAll('th')[index].attributes('aria-sort')).toBe(first === 'asc' ? 'ascending' : 'descending')
+      await wrapper.findAll('th select')[index].setValue(first === 'asc' ? 'desc' : 'asc')
+      await flushPromises()
+      expect(request(-1).get('sortDir')).not.toBe(first)
+    }
+    expect(JSON.parse(params.value.recentVersions)).toEqual(['3.6.0-ea.2', '3.5.0'])
+    expect(params.value.recentSortField).toBe('timestamp')
+  })
+
+  it('does not fetch malformed saved versions and recovers through Clear', async () => {
+    wrapper = mount(RecentRunsView, { global: { provide: { moduleNav: { params: ref({ recentVersions: '[bad' }) } } } })
+    await flushPromises()
+    expect(apiRequest).not.toHaveBeenCalled()
+    expect(wrapper.get('[role="alert"]').text()).toContain('saved version selection is invalid')
+    await button('Clear filters').trigger('click')
+    await flushPromises()
+    expect(apiRequest).toHaveBeenCalledTimes(1)
+  })
+
+  it('does not navigate while a user is selecting run text', async () => {
+    const nav = { navigateTo: vi.fn() }
+    wrapper = mount(RecentRunsView, { global: { provide: { moduleNav: nav } } })
+    await flushPromises()
+    const selection = vi.spyOn(window, 'getSelection').mockReturnValue({ toString: () => 'copied run ID' })
+    await wrapper.get('tbody tr').trigger('click')
+    expect(nav.navigateTo).not.toHaveBeenCalled()
+    selection.mockRestore()
+  })
+
 })
