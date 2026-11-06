@@ -611,7 +611,7 @@ onMounted(loadLatest)
                   :href="repoUrl(pr.repo)"
                   target="_blank"
                   rel="noopener noreferrer"
-                  class="w-56 shrink-0 truncate text-sm font-medium text-gray-900 dark:text-gray-100 hover:text-primary-600 dark:hover:text-primary-400 hover:underline"
+                  class="w-56 shrink-0 truncate text-sm font-medium text-primary-600 dark:text-primary-400 hover:underline"
                   :title="pr.repo"
                 >{{ pr.repo }}</a>
                 <span
@@ -686,7 +686,7 @@ onMounted(loadLatest)
                   :href="repoUrl(pr.repo)"
                   target="_blank"
                   rel="noopener noreferrer"
-                  class="w-56 shrink-0 truncate text-sm font-medium text-gray-900 dark:text-gray-100 hover:text-primary-600 dark:hover:text-primary-400 hover:underline"
+                  class="w-56 shrink-0 truncate text-sm font-medium text-primary-600 dark:text-primary-400 hover:underline"
                   :title="pr.repo"
                 >{{ pr.repo }}</a>
                 <span
@@ -727,7 +727,7 @@ onMounted(loadLatest)
                 :href="repoUrl(issue.repo)"
                 target="_blank"
                 rel="noopener noreferrer"
-                class="truncate text-sm font-medium text-gray-900 dark:text-gray-100 hover:text-primary-600 dark:hover:text-primary-400 hover:underline"
+                class="truncate text-sm font-medium text-primary-600 dark:text-primary-400 hover:underline"
               >{{ issue.repo }}</a>
               <span class="min-w-0 flex-1 truncate text-xs text-gray-600 dark:text-gray-300" :title="issue.reason">{{ issue.reason }}</span>
               <span class="flex shrink-0 items-center gap-x-3 whitespace-nowrap text-xs">
@@ -798,7 +798,7 @@ onMounted(loadLatest)
                       :href="repoUrl(row.repo)"
                       target="_blank"
                       rel="noopener noreferrer"
-                      class="text-gray-900 dark:text-gray-100 hover:text-primary-600 dark:hover:text-primary-400 hover:underline"
+                      class="text-primary-600 dark:text-primary-400 hover:underline"
                     >{{ row.repo }}</a>
                   </td>
                   <td class="px-4 py-2 text-sm">
