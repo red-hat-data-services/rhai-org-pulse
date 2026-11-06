@@ -74,6 +74,7 @@ export const viewOwners = {
   'system-health/disconnected-repo-detail':        'Ajay Jaganathan',
   'system-health/e2e-run-detail':                  'Ajay Jaganathan',
   'system-health/odh-e2e-health':                  'Ajay Jaganathan',
+  'system-health/promotion-gates':                 'Giulia Naponiello',
   'system-health/quality-analysis':                'Dana Gutride',
   'system-health/test-execution':                  'Arthy Loganathan',
   'system-health/test-execution-detail':           'Arthy Loganathan',
@@ -126,6 +127,7 @@ export const viewOwners = {
   'releases/plan/ai-planner':                      'yuvalluria',
   'releases/plan/bu-feedback':                     'Saiesh Prabhu',
   'releases/plan/feature-readiness':               'Erle Marion',
+  'releases/plan/jira-plan':                       'Arjay Hinek',
   'releases/plan/pm-hub':                          'Saiesh Prabhu',
 
   // releases > registry
