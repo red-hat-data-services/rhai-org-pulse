@@ -6,6 +6,7 @@ import { PHASES } from '../constants.js'
 import TestPlanReviewContent from '../components/TestPlanReviewContent.vue'
 import TestPlanDetailPanel from '../components/TestPlanDetailPanel.vue'
 import AIImpactGuide from '../components/AIImpactGuide.vue'
+import { useUsageTracking } from '../composables/useUsageTracking.js'
 
 const moduleNav = inject('moduleNav')
 
@@ -20,6 +21,13 @@ const {
   testPlanLoading, testPlanError, loadTestPlans, loadTestPlanDetail,
   timeWindow
 } = useTestPlans()
+
+useUsageTracking({
+  filter: { timeWindow, sortBy, verdict: verdictFilter },
+  search: searchQuery,
+  open: { testPlan: selectedPlan },
+  toggle: { charts: chartExpanded },
+})
 
 // Load RFE data only for jiraHost (used by detail panel links)
 const rfeTimeWindow = ref('month')

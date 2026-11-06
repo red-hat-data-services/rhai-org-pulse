@@ -7,6 +7,7 @@ import { PHASES } from '../constants.js'
 import FeatureReviewContent from '../components/FeatureReviewContent.vue'
 import FeatureDetailPanel from '../components/FeatureDetailPanel.vue'
 import AIImpactGuide from '../components/AIImpactGuide.vue'
+import { useUsageTracking } from '../composables/useUsageTracking.js'
 
 const moduleNav = inject('moduleNav')
 const { navigateTo: crossNavigate } = useModuleLink()
@@ -24,6 +25,13 @@ const {
   featureLoading, featureError, loadFeatures, loadFeatureDetail,
   timeWindow
 } = useFeatures()
+
+useUsageTracking({
+  filter: { timeWindow, sortBy, recommendation: recommendationFilter, priority: priorityFilter, humanReview: humanReviewFilter },
+  search: searchQuery,
+  open: { feature: selectedFeature },
+  toggle: { charts: chartExpanded },
+})
 
 // Load RFE data only for jiraHost (used by detail panel links)
 const rfeTimeWindow = ref('month')
