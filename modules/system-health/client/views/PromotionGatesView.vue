@@ -104,6 +104,15 @@ function prNumberFromUrl(url) {
   return match ? `#${match[1]}` : 'PR'
 }
 
+const REPO_ORG = 'red-hat-data-services'
+
+/** GitHub URL for a repo name, which may be a bare name or an owner/name pair. */
+function repoUrl(repo) {
+  if (!repo) return null
+  const full = String(repo).includes('/') ? String(repo) : `${REPO_ORG}/${repo}`
+  return `https://github.com/${full}`
+}
+
 // --- Hero ---
 
 const VERDICTS = {
@@ -598,9 +607,13 @@ onMounted(loadLatest)
                   class="h-1.5 w-1.5 shrink-0 rounded-full"
                   :class="isBlockingPr(pr) ? 'bg-red-500' : isPrProblem(pr) ? 'bg-amber-500' : 'bg-green-500'"
                 />
-                <span class="w-56 shrink-0 truncate text-sm font-medium text-gray-900 dark:text-gray-100" :title="pr.repo">
-                  {{ pr.repo }}
-                </span>
+                <a
+                  :href="repoUrl(pr.repo)"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  class="w-56 shrink-0 truncate text-sm font-medium text-gray-900 dark:text-gray-100 hover:text-primary-600 dark:hover:text-primary-400 hover:underline"
+                  :title="pr.repo"
+                >{{ pr.repo }}</a>
                 <span
                   class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium"
                   :class="statusBadgeClass(pr['pr-status'])"
@@ -669,9 +682,13 @@ onMounted(loadLatest)
             >
               <div class="flex flex-wrap items-center gap-x-3 gap-y-1">
                 <span class="h-1.5 w-1.5 shrink-0 rounded-full bg-green-500" />
-                <span class="w-56 shrink-0 truncate text-sm font-medium text-gray-900 dark:text-gray-100" :title="pr.repo">
-                  {{ pr.repo }}
-                </span>
+                <a
+                  :href="repoUrl(pr.repo)"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  class="w-56 shrink-0 truncate text-sm font-medium text-gray-900 dark:text-gray-100 hover:text-primary-600 dark:hover:text-primary-400 hover:underline"
+                  :title="pr.repo"
+                >{{ pr.repo }}</a>
                 <span
                   class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium"
                   :class="statusBadgeClass(pr['pr-status'])"
@@ -706,7 +723,12 @@ onMounted(loadLatest)
               :key="issue.repo"
               class="flex flex-wrap items-center gap-x-3 gap-y-1 px-4 py-2.5"
             >
-              <span class="truncate text-sm font-medium text-gray-900 dark:text-gray-100">{{ issue.repo }}</span>
+              <a
+                :href="repoUrl(issue.repo)"
+                target="_blank"
+                rel="noopener noreferrer"
+                class="truncate text-sm font-medium text-gray-900 dark:text-gray-100 hover:text-primary-600 dark:hover:text-primary-400 hover:underline"
+              >{{ issue.repo }}</a>
               <span class="min-w-0 flex-1 truncate text-xs text-gray-600 dark:text-gray-300" :title="issue.reason">{{ issue.reason }}</span>
               <span class="flex shrink-0 items-center gap-x-3 whitespace-nowrap text-xs">
                 <a
@@ -771,7 +793,14 @@ onMounted(loadLatest)
                   :key="row.repo"
                   class="hover:bg-gray-50 dark:hover:bg-gray-700/40"
                 >
-                  <td class="px-4 py-2 text-sm font-medium text-gray-900 dark:text-gray-100">{{ row.repo }}</td>
+                  <td class="px-4 py-2 text-sm font-medium">
+                    <a
+                      :href="repoUrl(row.repo)"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      class="text-gray-900 dark:text-gray-100 hover:text-primary-600 dark:hover:text-primary-400 hover:underline"
+                    >{{ row.repo }}</a>
+                  </td>
                   <td class="px-4 py-2 text-sm">
                     <a
                       v-if="row.prUrl"
