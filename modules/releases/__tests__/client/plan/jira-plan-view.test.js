@@ -25,6 +25,7 @@ var planPayload = {
       productManager: 'Christopher Ferreira',
       components: ['AI Gateway'],
       targetVersions: ['3.7 GA RHOAI RELEASE'],
+      fixVersions: ['3.6 GA RHOAI RELEASE'],
       url: 'https://redhat.atlassian.net/browse/RHAISTRAT-3004'
     },
     {
@@ -39,6 +40,7 @@ var planPayload = {
       productManager: 'Naina Singh',
       components: [],
       targetVersions: [],
+      fixVersions: [],
       url: 'https://redhat.atlassian.net/browse/RHAISTRAT-1981'
     }
   ]
@@ -59,6 +61,8 @@ describe('JiraPlanView', function() {
     expect(wrapper.findAll('[data-testid="jira-plan-outcome-row"]')).toHaveLength(2)
     expect(wrapper.text()).toContain('First ranked outcome')
     expect(wrapper.text()).toContain('Second ranked outcome')
+    expect(wrapper.text()).toContain('Releases')
+    expect(wrapper.text()).toContain('3.6 GA RHOAI RELEASE')
     expect(apiRequest).toHaveBeenCalledWith('/modules/releases/planning/jira-plan')
   })
 
@@ -76,6 +80,7 @@ describe('JiraPlanView', function() {
           priority: 'Major',
           assignee: 'Nick Gagan',
           targetVersions: ['3.7 GA RHOAI RELEASE'],
+          fixVersions: ['3.7 GA RHOAI RELEASE'],
           url: 'https://redhat.atlassian.net/browse/RHAISTRAT-1935'
         }]
       })
@@ -89,6 +94,8 @@ describe('JiraPlanView', function() {
     expect(apiRequest).toHaveBeenCalledWith('/modules/releases/planning/jira-plan/outcomes/RHAISTRAT-3004/children')
     expect(wrapper.findAll('[data-testid="jira-plan-child-row"]')).toHaveLength(1)
     expect(wrapper.text()).toContain('Child feature')
+    expect(wrapper.text()).toContain('Releases')
+    expect(wrapper.text()).toContain('3.7 GA RHOAI RELEASE')
   })
 
   it('shows a clear error when the Plan cannot be loaded', async function() {
