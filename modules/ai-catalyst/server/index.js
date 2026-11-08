@@ -2,6 +2,7 @@ const { createFeedClient, validateFeedDestination, redactUrl } = require('./feed
 const {
   getShowcaseData,
   fetchShowcaseData,
+  getCachedShowcaseData,
   STORAGE_KEY: SHOWCASE_STORAGE_KEY,
   getReferencedPillarKeys,
   mergePillarMetadata,
@@ -127,7 +128,9 @@ function filterCandidates(candidates, query) {
   }
   if (query.source) {
     // The feed uses "hackernews"; the filter option keeps the legacy "hn".
-    const sources = query.source === 'hn' ? ['hn', 'hackernews'] : [query.source];
+    const sources = query.source === 'hn' || query.source === 'hackernews'
+      ? ['hn', 'hackernews']
+      : [query.source];
     filtered = filtered.filter(c => sources.includes(c.source));
   }
   if (query.status) {
@@ -304,16 +307,26 @@ module.exports = function registerRoutes(router, context) {
 
   // --- Sync logic ---
 
+  async function persistSyncAttempt(error) {
+    try {
+      const existingIndex = await readIndex();
+      await writeToStorage(INDEX_PATH, {
+        ...(existingIndex || {}),
+        boards: (existingIndex && existingIndex.boards) || [],
+        lastSynced: (existingIndex && existingIndex.lastSynced) || null,
+        lastAttemptedAt: lastSyncAttemptTime,
+        lastError: error
+      });
+    } catch (persistErr) {
+      console.error('[ai-catalyst] Failed to persist sync status:', persistErr.message);
+    }
+  }
+
   async function syncBoards() {
+    if (syncRunning) return { status: 'skipped', reason: 'sync already running' };
+    if (!(await isConfigured())) return { status: 'skipped', reason: 'not configured' };
+    // Only real runs count as an attempt; a skip is not a failure.
     lastSyncAttemptTime = new Date().toISOString();
-    if (syncRunning) {
-      lastSyncError = 'sync already running';
-      return { status: 'skipped', reason: 'sync already running' };
-    }
-    if (!(await isConfigured())) {
-      lastSyncError = 'not configured';
-      return { status: 'skipped', reason: 'not configured' };
-    }
     syncRunning = true;
     try {
       const client = createFeedClient({
@@ -329,6 +342,8 @@ module.exports = function registerRoutes(router, context) {
         // A shape-valid empty list is a degraded feed, not a successful
         // sync: the skip shape keeps the refresh handler due for the next
         // tick instead of stamping success for a full cadence window.
+        lastSyncError = 'feed returned no boards';
+        await persistSyncAttempt(lastSyncError);
         return { status: 'skipped', reason: 'feed returned no boards' };
       }
 
@@ -401,18 +416,7 @@ module.exports = function registerRoutes(router, context) {
       // A failure before the per-board loop (unreachable proxy, 401, bad
       // shape) must also survive a restart, not just live in memory.
       lastSyncError = redactUrl(err.message || String(err));
-      try {
-        const existingIndex = await readIndex();
-        await writeToStorage(INDEX_PATH, {
-          ...(existingIndex || {}),
-          boards: (existingIndex && existingIndex.boards) || [],
-          lastSynced: (existingIndex && existingIndex.lastSynced) || null,
-          lastAttemptedAt: lastSyncAttemptTime,
-          lastError: lastSyncError
-        });
-      } catch (persistErr) {
-        console.error('[ai-catalyst] Failed to persist sync failure:', persistErr.message);
-      }
+      await persistSyncAttempt(lastSyncError);
       throw err;
     } finally {
       syncRunning = false;
@@ -700,6 +704,11 @@ module.exports = function registerRoutes(router, context) {
   // temporarily unreachable, and synthesize metadata for any category that
   // has arrived in a board before its pillar row has been refreshed.
   async function loadPillarData() {
+    // Prefer the shared in-memory catalog: it is fresh even when the last
+    // storage write failed. Read storage only when no cache exists.
+    const cached = getCachedShowcaseData();
+    if (cached) return normalizeShowcaseData(cached);
+
     try {
       const stored = await readFromStorage(SHOWCASE_STORAGE_KEY);
       if (stored) return normalizeShowcaseData(stored);
@@ -931,17 +940,24 @@ module.exports = function registerRoutes(router, context) {
     context.registerDiagnostics(async function() {
       const index = await readIndex();
       const showcaseData = await readFromStorage(SHOWCASE_STORAGE_KEY);
+      const syncError = lastSyncError || (index && index.lastError) || null;
+      let feedUrl;
+      try {
+        feedUrl = redactUrl(await getBoardFeedUrl());
+      } catch {
+        feedUrl = null;
+      }
       return {
         configured: await isConfigured(),
         demoMode: DEMO_MODE,
         lastSyncTime,
-        lastSyncAttemptTime,
-        lastSyncError,
+        lastSyncAttemptTime: lastSyncAttemptTime || (index && index.lastAttemptedAt) || null,
+        lastSyncError: syncError ? redactUrl(syncError) : null,
         syncRunning,
         boardCount: (index && index.boards) ? index.boards.length : 0,
         boards: (index && index.boards) || [],
         feed: {
-          url: await getBoardFeedUrl(),
+          url: feedUrl,
           tokenConfigured: !!getFeedToken(),
         },
         showcase: {

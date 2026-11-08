@@ -54,7 +54,8 @@ const isRepoProject = computed(() => {
 })
 
 function hasValue(val) {
-  return Boolean(val) && !['None', 'none', 'N/A'].includes(String(val).trim())
+  const text = String(val ?? '').trim()
+  return text !== '' && !/^(none|n\/a)$/i.test(text)
 }
 
 function isHttpUrl(val) {

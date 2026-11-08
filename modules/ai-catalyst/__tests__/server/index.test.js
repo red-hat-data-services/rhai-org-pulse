@@ -1099,7 +1099,10 @@ describe('ai-catalyst board sync via POC Explorer feed', () => {
     await handlers['/sync']({}, res)
 
     expect(res.json).toHaveBeenCalledWith({ status: 'skipped', reason: 'feed returned no boards' })
-    expect(storage.writeToStorage).not.toHaveBeenCalled()
+    // The degraded feed is recorded so /config is not silently green.
+    const index = storage.map.get('ai-catalyst/index.json')
+    expect(index).toMatchObject({ boards: [], lastError: 'feed returned no boards' })
+    expect(index.lastAttemptedAt).toEqual(expect.any(String))
   })
 
   it('passes the empty-board-list skip through the boards refresh handler', async () => {
@@ -1250,6 +1253,26 @@ describe('ai-catalyst board sync via POC Explorer feed', () => {
     }))
   })
 
+  it('reports the persisted sync error through diagnostics after a restart', async () => {
+    const { context } = makeContext({
+      storage: makeStorage({
+        'ai-catalyst/index.json': {
+          boards: [], lastSynced: null,
+          lastAttemptedAt: '2026-11-01T00:00:00Z', lastError: 'connect ECONNREFUSED 127.0.0.1:3128',
+        },
+      }),
+    })
+
+    const diagnostics = context.registerDiagnostics.mock.calls[0][0]
+    const result = await diagnostics()
+
+    expect(result).toMatchObject({
+      lastSyncError: 'connect ECONNREFUSED 127.0.0.1:3128',
+      lastSyncAttemptTime: '2026-11-01T00:00:00Z',
+      feed: { url: 'https://pocexplorer.redhataicatalyst.com' },
+    })
+  })
+
   it('strips credentials from the effective URL and from sync errors', async () => {
     const { handlers } = makeContext({
       storage: makeStorage({
@@ -1303,23 +1326,28 @@ describe('ai-catalyst board sync via POC Explorer feed', () => {
     expect(res.json).toHaveBeenCalledWith({ error: expect.stringContaining('not an approved origin') })
   })
 
-  it('filters the legacy "hn" option against the feed\'s "hackernews" source', async () => {
+  it('matches both "hn" and "hackernews" spellings in the source filter', async () => {
     const { handlers } = makeContext({
       storage: makeStorage({
         'ai-catalyst/index.json': { boards: [{ month: '2026-09' }] },
         'ai-catalyst/boards/2026-09.json': [
           { uniqueId: 'org/hn', source: 'hackernews', title: 'HN item' },
+          { uniqueId: 'org/legacy', source: 'hn', title: 'Legacy HN item' },
           { uniqueId: 'org/gh', source: 'github', title: 'GH item' },
         ],
       }),
     })
-    const res = { json: vi.fn(), status: vi.fn() }
 
-    await handlers['/boards/:month']({ params: { month: '2026-09' }, query: { source: 'hn' } }, res)
-
-    expect(res.json).toHaveBeenCalledWith(expect.objectContaining({
-      candidates: [expect.objectContaining({ uniqueId: 'org/hn' })],
-    }))
+    for (const source of ['hn', 'hackernews']) {
+      const res = { json: vi.fn(), status: vi.fn() }
+      await handlers['/boards/:month']({ params: { month: '2026-09' }, query: { source } }, res)
+      expect(res.json).toHaveBeenCalledWith(expect.objectContaining({
+        candidates: [
+          expect.objectContaining({ uniqueId: 'org/hn' }),
+          expect.objectContaining({ uniqueId: 'org/legacy' }),
+        ],
+      }))
+    }
   })
 
   it('sends a trimmed token even when the secret carries a newline', async () => {

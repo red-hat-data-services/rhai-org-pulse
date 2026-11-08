@@ -56,6 +56,7 @@ async function saveBoardConfig() {
     boardSaveSuccess.value = true
     setTimeout(() => { boardSaveSuccess.value = false }, 3000)
     loadConfig()
+    loadBoardConfig()
   } catch (e) {
     boardSaveError.value = e.message
   } finally {
@@ -86,6 +87,7 @@ async function saveShowcaseConfig() {
     })
     showcaseSaveSuccess.value = true
     setTimeout(() => { showcaseSaveSuccess.value = false }, 3000)
+    loadShowcaseConfig()
   } catch (e) {
     showcaseSaveError.value = e.message
   } finally {
@@ -111,9 +113,9 @@ onMounted(() => {
       <template v-else>
         <div v-if="config" class="space-y-3">
           <div class="flex items-center gap-2">
-            <span :class="['w-2 h-2 rounded-full', config.configured ? (config.lastSyncError ? 'bg-amber-500' : 'bg-green-500') : 'bg-red-500']"></span>
+            <span :class="['w-2 h-2 rounded-full', config.configured ? (config.configError || config.lastSyncError ? 'bg-amber-500' : 'bg-green-500') : 'bg-red-500']"></span>
             <span class="text-sm text-gray-700 dark:text-gray-300">
-              {{ config.configured ? (config.lastSyncError ? 'Configured, last sync failed' : 'Connected to POC Explorer feed') : 'Not configured' }}
+              {{ !config.configured ? 'Not configured' : (config.configError ? 'Configured, config unreadable' : (config.lastSyncError ? 'Configured, last sync failed' : 'Connected to POC Explorer feed')) }}
             </span>
           </div>
 
@@ -182,6 +184,9 @@ onMounted(() => {
           <p class="text-xs text-gray-400 dark:text-gray-500 mt-1">
             Optional override of the showcase feed base URL (separate from the board feed URL).
             The override must match an operator-approved origin (see POC_EXPLORER_SHOWCASE_FEED_URL), otherwise sync fails closed.
+          </p>
+          <p v-if="showcaseConfig.configReadError" class="text-xs text-red-600 dark:text-red-400 mt-1">
+            Stored config unreadable: {{ showcaseConfig.configReadError }}
           </p>
         </div>
 

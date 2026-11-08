@@ -284,10 +284,15 @@ function clearCache() {
   _cache = null;
 }
 
+function getCachedShowcaseData() {
+  return _cache ? _cache.data : null;
+}
+
 module.exports = {
   fetchShowcaseData,
   getShowcaseData,
   clearCache,
+  getCachedShowcaseData,
   parseArrayField,
   mapRow,
   humanizePillarKey,
