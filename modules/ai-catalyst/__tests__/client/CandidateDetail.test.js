@@ -51,6 +51,7 @@ describe('CandidateDetail feed-field rendering', () => {
       link: 'https://github.com/org/project',
       pocRepo: 'FAILED: Requires PostgreSQL',
       pocImage: 'quay.io/aicatalyst/deepcloak:latest',
+      pocReport: 'n/a',
       pocBlog: 'https://example.com/post',
     })
     await flushPromises()
@@ -63,6 +64,7 @@ describe('CandidateDetail feed-field rendering', () => {
 
     expect(wrapper.text()).toContain('POC Repo: FAILED: Requires PostgreSQL')
     expect(wrapper.text()).toContain('POC Image: quay.io/aicatalyst/deepcloak:latest')
+    expect(wrapper.text()).not.toContain('POC Report')
   })
 
   it('styles review history decisions that arrive as verbs', async () => {
