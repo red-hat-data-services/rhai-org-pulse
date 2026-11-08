@@ -8,9 +8,10 @@
 - Select several versions. A run matches any selected version.
 - Use one Date Range selector. Presets cover All time and Last 7/30/90 days.
   Custom dates reveals inclusive UTC start and end dates.
-- Use each column heading’s dropdown to sort suite, version, or recorded time
-  in either direction. The whole heading opens the menu, marked by a small down
-  arrow. Ordering applies across every page. Newest time remains the default.
+- Click a column heading to sort immediately. Clicking the active column reverses
+  the order. Switching columns starts with A–Z for suites, highest first for
+  versions, or newest first for execution time. An arrow shows the active
+  direction. Ordering applies across every page. Newest time remains the default.
 - Versions sort numerically. GA sorts above EA for the same release; EA2 sorts
   above EA1. Confirmed spelling aliases such as `3.6.0 EA1` and `3.6.0-ea.1`
   share one choice. Patch versions remain distinct.

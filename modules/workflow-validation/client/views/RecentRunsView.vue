@@ -3,7 +3,7 @@
     <div class="mb-5 flex flex-wrap items-start justify-between gap-4">
       <div class="min-w-0">
         <h2 class="text-2xl font-bold text-gray-900 dark:text-gray-100">Recent Runs</h2>
-        <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">{{ RECENT_RUNS_PAGE_SIZE }} runs per page. Use the column dropdowns to sort. All dates are UTC.</p>
+        <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">{{ RECENT_RUNS_PAGE_SIZE }} runs per page. Click a column heading to sort. All dates are UTC.</p>
       </div>
       <button type="button" :disabled="loading || searchPending" :class="buttonClass" @click="requestRuns(applied, true)">Refresh</button>
     </div>
@@ -52,16 +52,12 @@
           <thead class="border-b border-gray-100 text-xs uppercase tracking-wide text-gray-500 dark:border-gray-700 dark:text-gray-400">
             <tr>
               <th v-for="column in columns" :key="column.field" scope="col" :aria-label="column.label" :aria-sort="applied.sortField === column.field ? (applied.sortDir === 'asc' ? 'ascending' : 'descending') : 'none'" class="p-0">
-                <label class="relative flex min-h-12 w-full cursor-pointer items-center justify-between gap-3 px-5 py-3 hover:bg-gray-50 focus-within:outline focus-within:outline-2 focus-within:-outline-offset-2 focus-within:outline-primary-500 dark:hover:bg-gray-700/30">
+                <button type="button" :aria-label="column.sortLabel"
+                  class="flex min-h-12 w-full cursor-pointer items-center justify-between gap-3 px-5 py-3 text-left hover:bg-gray-50 focus-visible:outline focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-primary-500 dark:hover:bg-gray-700/30"
+                  @click="setSort(column)">
                   <span>{{ column.label }}</span>
-                  <svg aria-hidden="true" class="pointer-events-none h-3 w-3 shrink-0" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="m4 6 4 4 4-4" /></svg>
-                  <select :aria-label="column.sortLabel" :value="draft.sortField === column.field ? draft.sortDir : ''"
-                    class="absolute inset-0 h-full w-full cursor-pointer bg-white text-gray-700 opacity-0 dark:bg-gray-900 dark:text-gray-200"
-                    @change="setSort(column.field, $event.target.value)">
-                    <option value="" disabled>Sort…</option>
-                    <option v-for="order in column.orders" :key="order.value" :value="order.value">{{ order.label }}</option>
-                  </select>
-                </label>
+                  <span aria-hidden="true" class="shrink-0 text-sm">{{ applied.sortField === column.field ? (applied.sortDir === 'asc' ? '↑' : '↓') : '↕' }}</span>
+                </button>
               </th>
             </tr>
           </thead>
@@ -96,9 +92,9 @@ const { normalizeVersions, versionLabel } = versionRules
 const nav = inject('moduleNav', null)
 const { getRecentRuns } = useWorkflowValidation()
 const columns = [
-  { field: 'suite', label: 'Test suite', sortLabel: 'Sort test suite', orders: [{ value: 'asc', label: 'A–Z' }, { value: 'desc', label: 'Z–A' }] },
-  { field: 'version', label: 'Version', sortLabel: 'Sort version', orders: [{ value: 'desc', label: 'Highest first' }, { value: 'asc', label: 'Lowest first' }] },
-  { field: 'timestamp', label: 'Executed at (UTC)', sortLabel: 'Sort execution time', orders: [{ value: 'desc', label: 'Newest first' }, { value: 'asc', label: 'Oldest first' }] }
+  { field: 'suite', label: 'Test suite', sortLabel: 'Sort test suite', firstDirection: 'asc' },
+  { field: 'version', label: 'Version', sortLabel: 'Sort version', firstDirection: 'desc' },
+  { field: 'timestamp', label: 'Executed at (UTC)', sortLabel: 'Sort execution time', firstDirection: 'desc' }
 ]
 const fields = { suite: 'recentSuite', runQuery: 'recentRun', datePreset: 'recentDatePreset', dateFrom: 'recentFrom', dateTo: 'recentTo', sortField: 'recentSortField', sortDir: 'recentSort', cursor: 'recentCursor' }
 const defaults = () => ({ versions: [], suite: '', runQuery: '', datePreset: 'all', dateFrom: '', dateTo: '', sortField: 'timestamp', sortDir: 'desc', cursor: '' })
@@ -175,7 +171,13 @@ function applyDatePreset() {
   Object.assign(draft, draft.datePreset === 'all' ? { dateFrom: '', dateTo: '' } : draft.datePreset === 'custom' ? {} : utcRange(Number(draft.datePreset)))
   applyFilters()
 }
-function setSort(field, direction) { draft.sortField = field; draft.sortDir = direction; applyFilters() }
+function setSort(column) {
+  // During a request, reverse the latest intent; otherwise follow the displayed rows.
+  const current = loading.value ? lastAttempt.value : applied.value
+  draft.sortDir = current.sortField === column.field ? (current.sortDir === 'asc' ? 'desc' : 'asc') : column.firstDirection
+  draft.sortField = column.field
+  applyFilters()
+}
 function scheduleSearch() { cancelSearch(); sequence += 1; controller?.abort(); loading.value = false; error.value = ''; searchPending.value = true; searchTimer = setTimeout(applyFilters, 300) }
 function clearFilters() { Object.assign(draft, defaults()); applyFilters() }
 function loadPage(cursor) { requestRuns({ ...applied.value, cursor: cursor || '' }) }

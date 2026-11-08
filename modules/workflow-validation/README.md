@@ -157,8 +157,9 @@ execution time (`Executed at (UTC)`). Select a row or press Enter to open its ex
 
 Select one or more versions, a suite, a Run ID, or a Date Range. Date Range
 supports All time, Last 7/30/90 days, and Custom dates. Choices update results
-immediately. Run ID search waits for a 300 ms typing pause. Use the dropdown in
-each column heading to sort all matching runs by suite, version, or recorded time.
+immediately. Run ID search waits for a 300 ms typing pause. Click a column heading to sort all matching runs immediately. Click the active
+heading again to reverse its order. Switching columns starts with A–Z for suites,
+highest first for versions, and newest first for execution time.
 Versions use numeric release order, with GA above EA for the same release.
 The legacy `3.6` label shares the `3.6.0` choice and display. EA releases remain
 separate. Other partial versions keep their recorded label.

@@ -27,8 +27,9 @@ describe('Recent Runs', () => {
     expect(Object.fromEntries(request(0))).toEqual({ pageSize: '20', includeBugs: 'false', sortField: 'timestamp', sortDir: 'desc' })
     expect(wrapper.findAll('tbody tr')).toHaveLength(3)
     expect(wrapper.findAll('thead th').map(cell => cell.attributes('aria-label'))).toEqual(['Test suite', 'Version', 'Executed at (UTC)'])
-    expect(wrapper.findAll('th button')).toHaveLength(0)
-    expect(wrapper.findAll('th select').map(select => select.element.value)).toEqual(['', '', 'desc'])
+    expect(wrapper.findAll('th button')).toHaveLength(3)
+    expect(wrapper.findAll('th select')).toHaveLength(0)
+    expect(wrapper.get('button[aria-label="Sort execution time"]').text()).toContain('↓')
     expect(wrapper.get('nav[aria-label="Recent run pages"]').text()).toContain('Showing 1–3 of 3 runs')
     expect(button('Previous').element.disabled).toBe(true)
     expect(button('Next').element.disabled).toBe(true)
@@ -80,7 +81,7 @@ describe('Recent Runs', () => {
     await wrapper.get('select[aria-label="Date Range"]').setValue('custom')
     await wrapper.get('input[aria-label="Start Date (UTC)"]').setValue('2026-01-01')
     await wrapper.get('input[aria-label="End Date (UTC)"]').setValue('2026-02-01')
-    await wrapper.get('select[aria-label="Sort test suite"]').setValue('asc')
+    await wrapper.get('button[aria-label="Sort test suite"]').trigger('click')
     await flushPromises()
     expect(request(-1).getAll('versions')).toEqual(['3.5.0', 'older'])
     expect(Object.fromEntries(request(-1))).toMatchObject({ suite: 'release_gate', runQuery: 'original-run', dateFrom: '2026-01-01', dateTo: '2026-02-01', sortField: 'suite', sortDir: 'asc' })
@@ -281,23 +282,63 @@ describe('Recent Runs', () => {
     expect(request(-1).has('dateFrom')).toBe(false)
   })
 
-  it('selects each column sort direction and stores versions and sorting in the URL', async () => {
+  it('toggles each heading and resets to its first direction when switching columns', async () => {
     const params = ref({ recentVersions: JSON.stringify(['3.5.0', '3.6.0-ea.2']) })
     const nav = { params, updateParams: vi.fn(values => { params.value = { ...params.value, ...values } }) }
     wrapper = mount(RecentRunsView, { global: { provide: { moduleNav: nav } } })
     await flushPromises()
     for (const [index, field, first] of [[0, 'suite', 'asc'], [1, 'version', 'desc'], [2, 'timestamp', 'desc']]) {
-      await wrapper.findAll('th select')[index].setValue(first)
+      await wrapper.findAll('th button')[index].trigger('click')
       await flushPromises()
       expect(request(-1).get('sortField')).toBe(field)
       expect(request(-1).get('sortDir')).toBe(first)
       expect(wrapper.findAll('th')[index].attributes('aria-sort')).toBe(first === 'asc' ? 'ascending' : 'descending')
-      await wrapper.findAll('th select')[index].setValue(first === 'asc' ? 'desc' : 'asc')
+      await wrapper.findAll('th button')[index].trigger('click')
       await flushPromises()
       expect(request(-1).get('sortDir')).not.toBe(first)
     }
+    for (const [index, first] of [[0, 'asc'], [1, 'desc'], [2, 'desc']]) {
+      await wrapper.findAll('th button')[index].trigger('click')
+      await flushPromises()
+      expect(request(-1).get('sortDir')).toBe(first)
+      expect(wrapper.findAll('th button')[index].text()).toContain(first === 'asc' ? '↑' : '↓')
+      expect(request(-1).has('cursor')).toBe(false)
+    }
     expect(JSON.parse(params.value.recentVersions)).toEqual(['3.6.0-ea.2', '3.5.0'])
     expect(params.value.recentSortField).toBe('timestamp')
+  })
+
+  it('reverses a pending sort on a second click and ignores the earlier response', async () => {
+    wrapper = mount(RecentRunsView)
+    await flushPromises()
+    let resolveEarlier
+    apiRequest.mockReturnValueOnce(new Promise(resolve => { resolveEarlier = resolve }))
+    const suiteHeading = wrapper.get('button[aria-label="Sort test suite"]')
+    await suiteHeading.trigger('click')
+    expect(request(-1).get('sortDir')).toBe('asc')
+    apiRequest.mockResolvedValueOnce(page([{ ...fixture.rows[0], invocationId: 'latest-sort' }]))
+    await suiteHeading.trigger('click')
+    await flushPromises()
+    expect(request(-1).get('sortDir')).toBe('desc')
+    expect(apiRequest.mock.calls[1][1].signal.aborted).toBe(true)
+    resolveEarlier(page([{ ...fixture.rows[0], invocationId: 'earlier-sort' }]))
+    await flushPromises()
+    expect(wrapper.text()).toContain('latest-sort')
+    expect(wrapper.text()).not.toContain('earlier-sort')
+    expect(wrapper.findAll('th')[0].attributes('aria-sort')).toBe('descending')
+  })
+
+  it('reverses the displayed sort after a different column request fails', async () => {
+    wrapper = mount(RecentRunsView)
+    await flushPromises()
+    apiRequest.mockRejectedValueOnce(new Error('Temporary failure'))
+    await wrapper.get('button[aria-label="Sort test suite"]').trigger('click')
+    await flushPromises()
+    expect(wrapper.findAll('th')[2].attributes('aria-sort')).toBe('descending')
+    await wrapper.get('button[aria-label="Sort execution time"]').trigger('click')
+    await flushPromises()
+    expect(request(-1).get('sortField')).toBe('timestamp')
+    expect(request(-1).get('sortDir')).toBe('asc')
   })
 
   it('does not fetch malformed saved versions and recovers through Clear', async () => {
