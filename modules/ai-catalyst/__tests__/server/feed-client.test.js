@@ -1,7 +1,7 @@
 import { describe, it, expect, vi } from 'vitest';
 import http from 'node:http';
 
-import { createFeedClient, FeedError, proxyDispatcherFromEnv } from '../../server/feed-client.js';
+import { createFeedClient, FeedError, proxyDispatcherFromEnv, redactUrl } from '../../server/feed-client.js';
 
 function jsonResponse(status, body) {
   return {
@@ -470,5 +470,18 @@ describe('proxyDispatcherFromEnv', () => {
   it('honours HTTPS_PROXY and HTTP_PROXY', () => {
     expect(proxyDispatcherFromEnv({ HTTPS_PROXY: 'http://proxy.example:3128' })).toHaveProperty('dispatch');
     expect(proxyDispatcherFromEnv({ HTTP_PROXY: 'http://proxy.example:3128' })).toHaveProperty('dispatch');
+  });
+});
+
+describe('redactUrl', () => {
+  it('drops userinfo, including a password that contains "@"', () => {
+    expect(redactUrl('https://user:pa@ss@feed.example.test')).toBe('https://feed.example.test');
+    expect(redactUrl('https://user:secret@feed.example.test/path?x=1')).toBe('https://feed.example.test/path?x=1');
+  });
+
+  it('drops userinfo from error text that is not a bare URL', () => {
+    const message = 'Failed to reach https://user:pass@feed.example.test: boom';
+    expect(redactUrl(message)).not.toContain('user:pass');
+    expect(redactUrl(message)).toContain('feed.example.test');
   });
 });

@@ -1222,6 +1222,58 @@ describe('ai-catalyst board sync via POC Explorer feed', () => {
     }))
   })
 
+  it('persists a failure that happens before the per-board loop', async () => {
+    stubFeedFeed({}) // boards.json -> 404
+    const previous = {
+      boards: [{ month: '2026-09', candidateCount: 2, lastSynced: 'old' }],
+      lastSynced: 'old',
+    }
+    const { handlers, storage } = makeContext({
+      storage: makeStorage({ 'ai-catalyst/index.json': previous }),
+    })
+
+    const syncRes = { json: vi.fn(), status: vi.fn().mockReturnThis() }
+    await handlers['/sync']({}, syncRes)
+    expect(syncRes.status).toHaveBeenCalledWith(500)
+
+    const index = storage.map.get('ai-catalyst/index.json')
+    expect(index).toMatchObject({ boards: previous.boards, lastSynced: 'old' })
+    expect(index.lastError).toContain('unknown board')
+    expect(index.lastAttemptedAt).toEqual(expect.any(String))
+
+    const { handlers: reloaded } = makeContext({ storage })
+    const configRes = { json: vi.fn() }
+    await reloaded['/config']({}, configRes)
+    expect(configRes.json).toHaveBeenCalledWith(expect.objectContaining({
+      lastSyncError: expect.stringContaining('unknown board'),
+      lastSyncAttemptTime: expect.any(String),
+    }))
+  })
+
+  it('strips credentials from the effective URL and from sync errors', async () => {
+    const { handlers } = makeContext({
+      storage: makeStorage({
+        'ai-catalyst/board-config.json': { feedUrl: 'https://user:pa@ss@feed.example.test' },
+      }),
+    })
+
+    const configRes = { json: vi.fn() }
+    await handlers['/config']({}, configRes)
+    const config = configRes.json.mock.calls[0][0]
+    expect(config.feedUrl).toBe('https://feed.example.test')
+    expect(config.feedUrl).not.toContain('pa@ss')
+
+    // A sync now fails; its error message must not carry the password either.
+    const syncRes = { json: vi.fn(), status: vi.fn().mockReturnThis() }
+    await handlers['/sync']({}, syncRes)
+    const afterRes = { json: vi.fn() }
+    await handlers['/config']({}, afterRes)
+    const after = afterRes.json.mock.calls[0][0]
+    expect(after.lastSyncError).toContain('feed URL')
+    expect(after.lastSyncError).not.toContain('pa@ss')
+    expect(after.lastSyncError).not.toContain('user:')
+  })
+
   it('clears the persisted sync error after a successful run', async () => {
     stubFeedFeed({
       '/feed/boards.json': { boards: ['board-2026-09'] },

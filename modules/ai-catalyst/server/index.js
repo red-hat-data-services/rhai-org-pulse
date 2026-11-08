@@ -1,4 +1,4 @@
-const { createFeedClient, validateFeedDestination } = require('./feed-client');
+const { createFeedClient, validateFeedDestination, redactUrl } = require('./feed-client');
 const {
   getShowcaseData,
   fetchShowcaseData,
@@ -38,11 +38,6 @@ const BOOLEAN_FIELDS = new Set([
 ]);
 
 const JSON_FIELDS = new Set(['pm_review_history']);
-
-function redactFeedUrl(url) {
-  // Never echo credentials embedded in a stored URL.
-  return String(url || '').replace(/\/\/[^/@]*@/, '//');
-}
 
 function snakeToCamel(str) {
   return str.replace(/_([a-z])/g, (_, c) => c.toUpperCase());
@@ -388,7 +383,7 @@ module.exports = function registerRoutes(router, context) {
       // did not sync keep their previous stamp.
       const advanced = syncCount > 0;
       const lastError = failed.length
-        ? `Board sync failed for ${failed.length}/${listedBoards.length} boards — ${failed.map(f => `${f.board}: ${f.error}`).join('; ')}`
+        ? redactUrl(`Board sync failed for ${failed.length}/${listedBoards.length} boards — ${failed.map(f => `${f.board}: ${f.error}`).join('; ')}`)
         : null;
       await writeToStorage(INDEX_PATH, {
         boards,
@@ -403,7 +398,21 @@ module.exports = function registerRoutes(router, context) {
       lastSyncError = lastError;
       return { synced: syncCount, failed, total: listedBoards.length };
     } catch (err) {
-      lastSyncError = err.message || String(err);
+      // A failure before the per-board loop (unreachable proxy, 401, bad
+      // shape) must also survive a restart, not just live in memory.
+      lastSyncError = redactUrl(err.message || String(err));
+      try {
+        const existingIndex = await readIndex();
+        await writeToStorage(INDEX_PATH, {
+          ...(existingIndex || {}),
+          boards: (existingIndex && existingIndex.boards) || [],
+          lastSynced: (existingIndex && existingIndex.lastSynced) || null,
+          lastAttemptedAt: lastSyncAttemptTime,
+          lastError: lastSyncError
+        });
+      } catch (persistErr) {
+        console.error('[ai-catalyst] Failed to persist sync failure:', persistErr.message);
+      }
       throw err;
     } finally {
       syncRunning = false;
@@ -478,6 +487,7 @@ module.exports = function registerRoutes(router, context) {
     } catch (err) {
       configError = err.message || String(err);
     }
+    const syncError = lastSyncError || (index && index.lastError) || null;
     res.json({
       configured: await isConfigured(),
       demoMode: DEMO_MODE,
@@ -485,11 +495,11 @@ module.exports = function registerRoutes(router, context) {
       // The persisted attempt/error survive a restart; the module state is
       // fresher when a run happened in this process.
       lastSyncAttemptTime: lastSyncAttemptTime || (index && index.lastAttemptedAt) || null,
-      lastSyncError: lastSyncError || (index && index.lastError) || null,
+      lastSyncError: syncError ? redactUrl(syncError) : null,
       // The effective URL, not the stored override: a save that later fails
       // closed is visible without reading the pod logs.
-      feedUrl: feedUrl ? redactFeedUrl(feedUrl) : null,
-      configError,
+      feedUrl: feedUrl ? redactUrl(feedUrl) : null,
+      configError: configError ? redactUrl(configError) : null,
       boardCount: (index && index.boards) ? index.boards.length : 0
     });
   });
@@ -892,10 +902,10 @@ module.exports = function registerRoutes(router, context) {
           // Throwing is the refresh registry's retry mechanism: a returned
           // value counts as success and would advance lastSuccessfulRun,
           // silencing retries for a full cadence window.
-          throw new Error(
+          throw new Error(redactUrl(
             `Board sync failed for ${result.failed.length}/${result.total} boards — `
             + result.failed.map(f => `${f.board}: ${f.error}`).join('; '),
-          );
+          ));
         }
         return { status: 'success', ...result };
       }
