@@ -449,11 +449,9 @@ describe('default proxy dispatcher', () => {
     await new Promise(resolve => proxy.listen(0, '127.0.0.1', resolve));
     const previous = process.env.HTTPS_PROXY;
     process.env.HTTPS_PROXY = `http://127.0.0.1:${proxy.address().port}`;
-    vi.resetModules();
 
     try {
-      const { createFeedClient: createUnproxied } = await import('../../server/feed-client.js');
-      const client = createUnproxied({ baseUrl: 'https://feed.example.test', token: 't' });
+      const client = createFeedClient({ baseUrl: 'https://feed.example.test', token: 't' });
       await expect(client.listBoards()).rejects.toThrow();
       expect(seen).toEqual(['feed.example.test:443']);
     } finally {

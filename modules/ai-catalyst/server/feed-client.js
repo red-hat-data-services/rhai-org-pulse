@@ -1,4 +1,4 @@
-const { EnvHttpProxyAgent } = require('undici');
+const { EnvHttpProxyAgent, fetch: undiciFetch } = require('undici');
 
 const DEFAULT_TIMEOUT_MS = 30000;
 
@@ -25,8 +25,20 @@ function proxyDispatcherFromEnv(env = process.env) {
 }
 
 let _defaultDispatcher;
-function defaultDispatcher() {
-  if (_defaultDispatcher === undefined) _defaultDispatcher = proxyDispatcherFromEnv();
+let _proxyKey;
+
+function proxyEnvKey(env) {
+  return [env.HTTPS_PROXY, env.https_proxy, env.HTTP_PROXY, env.http_proxy, env.NO_PROXY, env.no_proxy].join('\u0000');
+}
+
+function defaultDispatcher(env = process.env) {
+  // Reuse one agent per proxy configuration. Keying on the env (instead of
+  // caching a single value) keeps tests and any runtime env change honest.
+  const key = proxyEnvKey(env);
+  if (_defaultDispatcher === undefined || _proxyKey !== key) {
+    _proxyKey = key;
+    _defaultDispatcher = proxyDispatcherFromEnv(env);
+  }
   return _defaultDispatcher;
 }
 
@@ -122,7 +134,11 @@ function createFeedClient({ baseUrl, token, timeoutMs = DEFAULT_TIMEOUT_MS, fetc
         const agent = dispatcher === undefined ? defaultDispatcher() : dispatcher;
         if (agent) options.dispatcher = agent;
       }
-      const response = await fetchFn(url, options);
+      // A dispatcher and the fetch that uses it must come from the same
+      // undici copy: Node's global fetch rejects a dispatcher from another
+      // version (CI runs Node 22 with undici 8, prod runs Node 26 with 7).
+      const doFetch = options.dispatcher && fetchFn === globalThis.fetch ? undiciFetch : fetchFn;
+      const response = await doFetch(url, options);
       const text = await response.text();
       const body = parseJsonBody(text);
 
