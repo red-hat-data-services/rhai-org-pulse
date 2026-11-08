@@ -99,10 +99,12 @@ const columns = [
 const fields = { suite: 'recentSuite', runQuery: 'recentRun', datePreset: 'recentDatePreset', dateFrom: 'recentFrom', dateTo: 'recentTo', sortField: 'recentSortField', sortDir: 'recentSort', cursor: 'recentCursor' }
 const defaults = () => ({ versions: [], suite: '', runQuery: '', datePreset: 'all', dateFrom: '', dateTo: '', sortField: 'timestamp', sortDir: 'desc', cursor: '' })
 const restoreError = ref('')
+/** Return inclusive UTC calendar bounds for a date preset. */
 function utcRange(days, now = new Date()) {
   const end = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()))
   return { dateFrom: new Date(end.getTime() - (days - 1) * 86400000).toISOString().slice(0, 10), dateTo: end.toISOString().slice(0, 10) }
 }
+/** Restore page-owned filters while keeping legacy cursor spellings intact. */
 function fromUrl() {
   const query = defaults(), params = nav?.params?.value || {}
   restoreError.value = ''
@@ -133,13 +135,16 @@ const validTime = value => typeof value === 'string' && Number.isFinite(Date.par
 const recordedTime = value => formatter.format(new Date(value))
 const canOpen = run => Boolean(run.suite && run.invocationId)
 let active = true, sequence = 0, controller, searchTimer
+/** Cancel a queued Run ID filter before another action takes over. */
 function cancelSearch() { clearTimeout(searchTimer); searchPending.value = false }
+/** Open the exact suite and invocation while allowing users to select row text. */
 function openRun(run, event) {
   if (!canOpen(run) || (event?.type === 'click' && window.getSelection()?.toString())) return
   const params = { exactRun: '1', version: '', testSuite: run.suite, invocationId: run.invocationId, datePreset: 'all', dateFrom: '', dateTo: '' }
   if (nav?.navigateTo) nav.navigateTo('overview', params)
   else window.location.hash = `/workflow-validation/overview?${new URLSearchParams(params)}`
 }
+/** Load a validated page, ignore stale responses, and commit matching URL and cursor state. */
 async function requestRuns(query, refresh = false) {
   cancelSearch()
   const current = ++sequence
@@ -156,30 +161,37 @@ async function requestRuns(query, refresh = false) {
     if (!Array.isArray(data.rows) || data.rows.length > RECENT_RUNS_PAGE_SIZE || !Number.isInteger(data.total) || !Number.isInteger(data.start) || !Number.isInteger(data.end)
       || !Array.isArray(data.options?.versions) || !Array.isArray(data.options?.suites) || !(data.nextCursor === null || typeof data.nextCursor === 'string') || !(data.previousCursor === null || typeof data.previousCursor === 'string')) throw new Error('The run service returned an invalid page. Please retry.')
     runs.value = data.rows; page.value = { total: data.total, start: data.start, end: data.end, nextCursor: data.nextCursor, previousCursor: data.previousCursor }; options.value = data.options
-    // Keep raw legacy spellings through the first request so earlier cursor scopes remain valid.
-    requested.versions = normalizeVersions(requested.versions)
+    // Keep the original spelling while a restored cursor still depends on its scope.
+    if (!requested.cursor) requested.versions = normalizeVersions(requested.versions)
     applied.value = requested; hasLoaded.value = true
     syncQueryParams(nav, { ...Object.fromEntries(Object.entries(fields).map(([key, name]) => [name, requested[key]])), recentVersions: requested.versions.length ? JSON.stringify(requested.versions) : '', recentVersion: '' })
   } catch (err) { if (active && current === sequence) error.value = err.message || 'Failed to load recent runs.' }
   finally { if (active && current === sequence) loading.value = false }
 }
+/** Apply canonical filters from page one after a user changes the selection. */
 function applyFilters() {
   cancelSearch(); restoreError.value = ''
   requestRuns({ ...draft, versions: normalizeVersions(draft.versions), cursor: '' })
 }
+/** Set the date bounds for the selected preset before applying filters. */
 function applyDatePreset() {
   Object.assign(draft, draft.datePreset === 'all' ? { dateFrom: '', dateTo: '' } : draft.datePreset === 'custom' ? {} : utcRange(Number(draft.datePreset)))
   applyFilters()
 }
+/** Reverse the active sort or use the new column’s first direction, only for valid dates. */
 function setSort(column) {
+  if (invalidDateRange.value) return
   // During a request, reverse the latest intent; otherwise follow the displayed rows.
   const current = loading.value ? lastAttempt.value : applied.value
   draft.sortDir = current.sortField === column.field ? (current.sortDir === 'asc' ? 'desc' : 'asc') : column.firstDirection
   draft.sortField = column.field
   applyFilters()
 }
+/** Cancel outdated work and debounce the next Run ID request. */
 function scheduleSearch() { cancelSearch(); sequence += 1; controller?.abort(); loading.value = false; error.value = ''; searchPending.value = true; searchTimer = setTimeout(applyFilters, 300) }
+/** Restore the unfiltered newest-first first page. */
 function clearFilters() { Object.assign(draft, defaults()); applyFilters() }
+/** Load a neighboring page with the exact filter scope that produced its cursor. */
 function loadPage(cursor) { requestRuns({ ...applied.value, cursor: cursor || '' }) }
 watch(() => nav?.params?.value, () => { const query = fromUrl(); if (JSON.stringify(query) === JSON.stringify(applied.value)) return; Object.assign(draft, query); requestRuns(query) }, { deep: true })
 onMounted(() => requestRuns(applied.value))

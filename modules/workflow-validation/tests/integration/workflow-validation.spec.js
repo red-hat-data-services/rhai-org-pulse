@@ -1,11 +1,13 @@
 const { test, expect } = require('@playwright/test')
 
+/** Build a complete paged response for browser fixtures. */
 function recentPage(rows, values = {}) {
   return { rows, total: rows.length, start: rows.length ? 1 : 0, end: rows.length,
     nextCursor: null, previousCursor: null,
     options: { versions: [...new Set(rows.map(row => row.rhoaiVersion).filter(Boolean))], suites: [...new Set(rows.map(row => row.suite))] }, ...values }
 }
 
+/** Serve deterministic multi-page fixture data for filtering and sorting journeys. */
 async function mockRecentPages(page, { refreshRunPrefix = '' } = {}) {
   const all = Array.from({ length: 47 }, (_, index) => ({ suite: index % 2 ? 'release-gate' : 'ad-hoc',
     invocationId: `run-${String(index).padStart(2, '0')}`, rhoaiVersion: index === 0 ? '3.0' : index === 4 ? '3.6' : ['3.6.0', '3.6.0-ea.2', '3.6.0-ea.1', '3.5.2'][index % 4],
@@ -32,6 +34,20 @@ async function mockRecentPages(page, { refreshRunPrefix = '' } = {}) {
   })
 }
 
+/** Serve the real paged metadata contract with synthetic rows and no database writes. */
+async function mockRecentData(page, rows) {
+  const tools = require('../../server/recent-runs')(await import('../../lib/versions.js'))
+  await page.route('**/api/modules/workflow-validation/test-suites?**', async route => {
+    const params = new URL(route.request().url()).searchParams
+    const query = Object.fromEntries(params)
+    if (params.has('versions')) query.versions = params.getAll('versions')
+    try { await route.fulfill({ json: tools.pageRecentRuns(rows, tools.parseRecentRuns(query)) }) }
+    catch (error) { await route.fulfill({ status: 400, json: { error: error.message } }) }
+  })
+  return tools
+}
+
+/** Select version checkboxes through the same popup used in the deployed page. */
 async function selectRecentVersions(page, values) {
   const trigger = page.getByRole('button', { name: 'RHOAI versions', exact: true })
   if (await trigger.getAttribute('aria-expanded') !== 'true') await trigger.click()
@@ -224,7 +240,7 @@ test.describe('Workflow Validation module @workflow-validation', () => {
     await page.goto('/#/workflow-validation/recent-runs')
     const trigger = page.getByRole('button', { name: 'RHOAI versions', exact: true })
     await trigger.click()
-    await expect(page.locator('#recent-version-options label')).toHaveText(['All versions', '3.6.0', '3.6.0-ea.2', '3.6.0-ea.1', '3.5.2', '3.0'])
+    await expect(page.getByRole('group', { name: 'RHOAI versions' }).locator('label')).toHaveText(['All versions', '3.6.0', '3.6.0-ea.2', '3.6.0-ea.1', '3.5.2', '3.0'])
     await page.keyboard.press('Escape')
     await expect(trigger).toBeFocused()
     await selectRecentVersions(page, ['3.5.2', '3.6.0'])
@@ -319,6 +335,96 @@ test.describe('Workflow Validation module @workflow-validation', () => {
     await expect(pages).toContainText('of 47 runs')
     await expect(page.getByRole('combobox', { name: 'Date Range', exact: true })).toHaveValue('all')
     await expect(page.getByLabel('Start Date (UTC)', { exact: true })).toHaveCount(0)
+  })
+
+  test('keeps the visible sort when headings are clicked during an invalid date range', async ({ page }) => {
+    await mockRecentPages(page)
+    const requests = []
+    page.on('request', request => { const url = new URL(request.url()); if (url.pathname.endsWith('/test-suites') && url.searchParams.has('pageSize')) requests.push(url) })
+    await page.goto('/#/workflow-validation/recent-runs')
+    const heading = page.getByRole('columnheader', { name: 'Executed at (UTC)', exact: true })
+    await expect(heading).toHaveAttribute('aria-sort', 'descending')
+    await page.getByRole('combobox', { name: 'Date Range', exact: true }).selectOption('custom')
+    await page.getByLabel('Start Date (UTC)', { exact: true }).fill('2026-01-03')
+    await expect(page.getByRole('button', { name: 'Refresh', exact: true })).toBeEnabled()
+    await page.getByLabel('End Date (UTC)', { exact: true }).fill('2026-01-01')
+    await expect(page.getByRole('alert')).toContainText('Start Date must be on or before End Date')
+    const count = requests.length
+    for (const label of ['Sort test suite', 'Sort version', 'Sort execution time']) await page.getByRole('button', { name: label, exact: true }).click()
+    expect(requests).toHaveLength(count)
+    await expect(heading).toHaveAttribute('aria-sort', 'descending')
+    await page.getByLabel('End Date (UTC)', { exact: true }).fill('2026-01-05')
+    await expect(page.getByRole('navigation', { name: 'Recent run pages' })).toContainText('Showing 1–3 of 3 runs')
+    expect(requests.at(-1).searchParams.get('sortField')).toBe('timestamp')
+    expect(requests.at(-1).searchParams.get('sortDir')).toBe('desc')
+    await expect(page.getByRole('table').locator('tbody tr').first()).toContainText('run-04')
+  })
+
+  for (const v of [1, 2]) test(`refreshes and reloads a legacy v${v} version bookmark without losing its page`, async ({ page }) => {
+    const { createHash } = require('node:crypto')
+    const rows = Array.from({ length: 47 }, (_, index) => ({ suite: 'suite', invocationId: `legacy-${index}`,
+      rhoaiVersion: '3.6', timestamp: new Date(Date.UTC(2026, 0, index + 1)).toISOString() }))
+    await mockRecentData(page, rows)
+    const hash = value => createHash('sha256').update(value).digest('hex'), identity = value => v === 1 ? value : hash(value)
+    const scope = hash(JSON.stringify([{ version: '3.6', suite: '', runQuery: '', dateFrom: '', dateTo: '' }, 'desc', 20]))
+    const origin = rows[27]
+    const cursor = Buffer.from(JSON.stringify({ v, scope, direction: 'after',
+      anchor: [Date.parse(origin.timestamp), identity(origin.suite), identity(origin.invocationId)] })).toString('base64url')
+    await page.goto('/#/workflow-validation/recent-runs?' + new URLSearchParams({ recentVersion: '3.6', recentCursor: cursor }))
+    const pages = page.getByRole('navigation', { name: 'Recent run pages' })
+    const refresh = page.getByRole('button', { name: 'Refresh', exact: true })
+    await expect(pages).toContainText('Showing 21–40 of 47 runs')
+    await expect(page.getByRole('button', { name: 'RHOAI versions', exact: true })).toContainText('3.6.0')
+    await refresh.click()
+    await expect(refresh).toBeEnabled()
+    await expect(page.getByRole('alert')).toHaveCount(0)
+    await expect(pages).toContainText('Showing 21–40 of 47 runs')
+    await page.reload()
+    await expect(pages).toContainText('Showing 21–40 of 47 runs')
+    await refresh.click()
+    await expect(refresh).toBeEnabled()
+    await expect(page.getByRole('alert')).toHaveCount(0)
+    await pages.getByRole('button', { name: 'Next page' }).click()
+    await expect(pages).toContainText('Showing 41–47 of 47 runs')
+    await refresh.click()
+    await expect(refresh).toBeEnabled()
+    await expect(page.getByRole('alert')).toHaveCount(0)
+    await pages.getByRole('button', { name: 'Previous page' }).click()
+    await expect(pages).toContainText('Showing 21–40 of 47 runs')
+  })
+
+  test('keeps unparseable versions after valid releases in either direction', async ({ page }) => {
+    const rows = ['3.6.0', 'broken', null, '3.5.0'].map((rhoaiVersion, index) =>
+      ({ suite: 'suite', invocationId: `id-${index}`, rhoaiVersion, timestamp: '2026-01-01T00:00:00Z' }))
+    await mockRecentData(page, rows)
+    await page.goto('/#/workflow-validation/recent-runs')
+    const versions = page.getByRole('table').locator('tbody tr td:nth-child(2)')
+    await page.getByRole('button', { name: 'Sort version', exact: true }).click()
+    await expect(versions).toHaveText(['3.6.0', '3.5.0', 'broken', 'Version unavailable'])
+    await page.getByRole('button', { name: 'Sort version', exact: true }).click()
+    await expect(versions).toHaveText(['3.5.0', '3.6.0', 'broken', 'Version unavailable'])
+  })
+
+  test('prevents a 51st version selection and permits replacing a selected version', async ({ page }) => {
+    const rows = Array.from({ length: 51 }, (_, index) => ({ suite: 'suite', invocationId: `id-${index}`,
+      rhoaiVersion: `3.6.${index}`, timestamp: '2026-01-01T00:00:00Z' }))
+    await mockRecentData(page, rows)
+    await page.goto('/#/workflow-validation/recent-runs?' + new URLSearchParams({ recentVersions: JSON.stringify(rows.slice(0, 50).map(row => row.rhoaiVersion)) }))
+    await expect(page.getByRole('navigation', { name: 'Recent run pages' })).toContainText('of 50 runs')
+    await page.getByRole('button', { name: 'RHOAI versions', exact: true }).click()
+    const remaining = page.getByRole('checkbox', { name: '3.6.50', exact: true })
+    await expect(remaining).toBeDisabled()
+    await page.getByRole('checkbox', { name: '3.6.49', exact: true }).uncheck()
+    await expect(remaining).toBeEnabled()
+    await remaining.check()
+    await page.keyboard.press('Escape')
+    await expect(page.getByRole('navigation', { name: 'Recent run pages' })).toContainText('of 50 runs')
+    await expect(page.getByRole('alert')).toHaveCount(0)
+    await page.reload()
+    await expect(page.getByRole('navigation', { name: 'Recent run pages' })).toContainText('of 50 runs')
+    await page.getByRole('button', { name: 'RHOAI versions', exact: true }).click()
+    await expect(remaining).toBeChecked()
+    await expect(page.getByRole('checkbox', { name: '3.6.49', exact: true })).toBeDisabled()
   })
 
   test('opens a run through keyboard Enter with the exact-run scope', async ({ page }) => {

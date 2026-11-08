@@ -5,9 +5,13 @@ import RecentRunsView from '../../client/views/RecentRunsView.vue'
 import { filters, resetFilters } from '../../client/composables/useWorkflowValidation'
 import { apiRequest } from '@shared/client/services/api'
 import fixture from '../fixtures/recent-runs.json'
+import { createHash } from 'node:crypto'
+import * as versionRules from '../../lib/versions.js'
+const { parseRecentRuns, pageRecentRuns } = require('../../server/recent-runs')(versionRules)
 
 vi.mock('@shared/client/services/api', () => ({ apiRequest: vi.fn() }))
 const options = { versions: ['3.6.0-ea.2', '3.5.0', 'older'], suites: ['release_gate', 'exploratory_specs', 'ad-hoc'] }
+/** Build a complete page fixture and allow explicit pagination overrides. */
 function page(rows = fixture.rows, values = {}) {
   return { rows, total: rows.length, start: rows.length ? 1 : 0, end: rows.length,
     nextCursor: null, previousCursor: null, options, ...values }
@@ -72,8 +76,8 @@ describe('Recent Runs', () => {
     apiRequest.mockResolvedValueOnce(page(fixture.rows, { nextCursor: 'next-page', total: 40 }))
     wrapper = mount(RecentRunsView)
     await flushPromises()
-    await wrapper.get('button[aria-controls="recent-version-options"]').trigger('click')
-    const checkbox = value => wrapper.findAll('#recent-version-options label').find(label => label.text() === value).get('input')
+    await wrapper.get('button[aria-controls]').trigger('click')
+    const checkbox = value => wrapper.findAll('[role="group"] label').find(label => label.text() === value).get('input')
     await checkbox('older').setValue(true)
     await checkbox('3.5.0').setValue(true)
     await wrapper.get('select[aria-label="Test suite"]').setValue('release_gate')
@@ -145,10 +149,14 @@ describe('Recent Runs', () => {
     expect(apiRequest).toHaveBeenCalledTimes(calls)
     expect(wrapper.text()).not.toContain('obsolete-date-response')
     expect(wrapper.get('[role="alert"]').text()).toContain('Start Date must be on or before End Date')
+    for (const heading of wrapper.findAll('th button')) await heading.trigger('click')
+    expect(apiRequest).toHaveBeenCalledTimes(calls)
     await wrapper.get('input[aria-label="End Date (UTC)"]').setValue('2026-03-01')
     await flushPromises()
     expect(apiRequest).toHaveBeenCalledTimes(calls + 1)
     expect(request(-1).get('dateTo')).toBe('2026-03-01')
+    expect(request(-1).get('sortField')).toBe('timestamp')
+    expect(request(-1).get('sortDir')).toBe('desc')
     expect(wrapper.find('[role="alert"]').exists()).toBe(false)
   })
 
@@ -183,6 +191,49 @@ describe('Recent Runs', () => {
     params.value = { recentRun: 'restored-search' }
     await flushPromises()
     expect(request(2).get('runQuery')).toBe('restored-search')
+  })
+
+  it.each([1, 2])('preserves a v%s bookmark scope through Refresh, reload, and page navigation', async v => {
+    const rows = Array.from({ length: 47 }, (_, index) => ({ suite: 'suite', invocationId: `legacy-${index}`,
+      rhoaiVersion: '3.6', timestamp: new Date(Date.UTC(2026, 0, index + 1)).toISOString() }))
+    const hash = value => createHash('sha256').update(value).digest('hex')
+    const scope = hash(JSON.stringify([{ version: '3.6', suite: '', runQuery: '', dateFrom: '', dateTo: '' }, 'desc', 20]))
+    const origin = rows[27], identity = value => v === 1 ? value : hash(value)
+    const cursor = Buffer.from(JSON.stringify({ v, scope, direction: 'after',
+      anchor: [Date.parse(origin.timestamp), identity(origin.suite), identity(origin.invocationId)] })).toString('base64url')
+    apiRequest.mockImplementation(async url => {
+      const query = new URL(url, 'http://localhost').searchParams
+      return pageRecentRuns(rows, parseRecentRuns({ ...Object.fromEntries(query), versions: query.getAll('versions') }))
+    })
+    const params = ref({ recentVersion: '3.6', recentCursor: cursor })
+    const nav = { params, updateParams: vi.fn(values => { params.value = { ...params.value, ...values } }) }
+    const mountView = () => mount(RecentRunsView, { global: { provide: { moduleNav: nav } } })
+    wrapper = mountView()
+    await flushPromises()
+    expect(wrapper.text()).toContain('Showing 21–40 of 47 runs')
+    expect(wrapper.get('button[aria-controls]').text()).toContain('3.6.0')
+    for (let reload = 0; reload < 2; reload++) {
+      await button('Refresh').trigger('click')
+      await flushPromises()
+      expect(wrapper.find('[role="alert"]').exists()).toBe(false)
+      expect(wrapper.text()).toContain('Showing 21–40 of 47 runs')
+      expect(request(-1).getAll('versions')).toEqual(['3.6'])
+      expect(request(-1).get('cursor')).toBe(cursor)
+      if (!reload) { wrapper.unmount(); wrapper = mountView(); await flushPromises() }
+    }
+    await button('Next').trigger('click')
+    await flushPromises()
+    expect(wrapper.text()).toContain('Showing 41–47 of 47 runs')
+    await button('Refresh').trigger('click')
+    await flushPromises()
+    expect(wrapper.find('[role="alert"]').exists()).toBe(false)
+    await button('Previous').trigger('click')
+    await flushPromises()
+    expect(wrapper.text()).toContain('Showing 21–40 of 47 runs')
+    await wrapper.get('button[aria-label="Sort version"]').trigger('click')
+    await flushPromises()
+    expect(request(-1).getAll('versions')).toEqual(['3.6.0'])
+    expect(request(-1).has('cursor')).toBe(false)
   })
 
   it('ignores a late response after a newer filter request and aborts the old fetch', async () => {

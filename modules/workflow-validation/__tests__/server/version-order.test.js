@@ -17,6 +17,12 @@ describe('Recent Runs version rules', () => {
     expect(versionLabel('3.6.0')).toBe('3.6.0')
     expect(normalizeVersion('custom build')).toBe('custom build')
   })
+  it('orders unknown labels deterministically even when locale comparison treats them as equal', () => {
+    for (const labels of [['Custom', 'custom'], ['build2', 'build02']]) {
+      expect(compareVersions(...labels)).not.toBe(0)
+      expect(normalizeVersions(labels)).toEqual(normalizeVersions([...labels].reverse()))
+    }
+  })
   it('is antisymmetric and deterministic for full, partial, missing, and unknown labels', () => {
     const values = ['3.6.0', '3.6.0 EA1', '3.6.0-ea.1', '3.6', '3.5.9', '', 'older']
     for (const a of values) for (const b of values) expect(Math.sign(compareVersions(a, b)) + Math.sign(compareVersions(b, a))).toBe(0)

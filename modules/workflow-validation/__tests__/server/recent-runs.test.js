@@ -160,6 +160,31 @@ describe('Recent Runs multi-version and column sorting', () => {
     }
   })
 
+  it.each(['asc', 'desc'])('keeps invalid versions last through forward and backward %s pagination', sortDir => {
+    const sample = ['3.6.0', 'broken', null, '3.5.0', '', 'custom'].map((rhoaiVersion, index) =>
+      ({ suite: 'suite', invocationId: `id-${index}`, rhoaiVersion, timestamp: rows[0].timestamp }))
+    const query = { pageSize: '1', sortField: 'version', sortDir }
+    let page = pageRecentRuns(sample, request(query))
+    const pages = [page]
+    while (page.nextCursor) {
+      page = pageRecentRuns(sample, request({ ...query, cursor: page.nextCursor }))
+      pages.push(page)
+      expect(pages.length).toBeLessThanOrEqual(sample.length)
+    }
+    expect(pages.flatMap(page => page.rows.map(row => row.invocationId)))
+      .toEqual([...(sortDir === 'asc' ? ['id-3', 'id-0'] : ['id-0', 'id-3']), 'id-1', 'id-2', 'id-4', 'id-5'])
+    for (let index = pages.length - 1; index > 0; index--)
+      expect(pageRecentRuns(sample, request({ ...query, cursor: pages[index].previousCursor })).rows).toEqual(pages[index - 1].rows)
+  })
+
+  it('keeps cursor scope stable when unknown labels differ only in case or numeric spelling', () => {
+    const sample = ['Custom', 'custom', 'build2', 'build02'].map((rhoaiVersion, index) => ({ ...rows[index], rhoaiVersion }))
+    const versions = sample.map(row => row.rhoaiVersion)
+    const query = { pageSize: '1', versions }
+    const first = pageRecentRuns(sample, request(query))
+    expect(pageRecentRuns(sample, request({ ...query, versions: [...versions].reverse(), cursor: first.nextCursor })).start).toBe(2)
+  })
+
   it('uses release order for versions and visible suite names for alphabetic sorting', () => {
     const version = pageRecentRuns(input, request({ sortField: 'version' }))
     expect(version.rows[0].rhoaiVersion).toBe('3.10.0')

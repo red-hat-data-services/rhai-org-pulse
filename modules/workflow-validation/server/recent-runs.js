@@ -1,13 +1,17 @@
 /** Lightweight filtering and pagination of complete suite/invocation run groups. */
 const { createHash } = require('node:crypto');
-module.exports = function createRecentRuns({ normalizeVersion, normalizeVersions, compareVersions, suiteLabel }) {
+/** Create paging helpers with the same release rules used by the client. */
+module.exports = function createRecentRuns({ parseVersion, normalizeVersion, normalizeVersions, compareVersions, suiteLabel }) {
   const SORT_FIELDS = ['timestamp', 'version', 'suite'];
+  /** Reject an invalid paged request with a client-facing BAD_REQUEST error. */
   function invalid(message) { const error = new Error(message); error.code = 'BAD_REQUEST'; throw error; }
+  /** Read a bounded optional query string and reject non-string values. */
   function text(value, name) {
     if (value === undefined) return '';
     if (typeof value !== 'string' || value.length > 256) invalid(`Invalid ${name}`);
     return value.trim();
   }
+  /** Validate an inclusive UTC calendar date without accepting calendar overflow. */
   function date(value, name) {
     const input = text(value, name);
     if (!input) return '';
@@ -60,21 +64,27 @@ module.exports = function createRecentRuns({ normalizeVersion, normalizeVersions
     } else if (query.cursor !== undefined && typeof query.cursor !== 'string') invalid('Invalid recent-run cursor');
     return { filters, direction, sortField, pageSize, scope, cursor, refresh: query.refresh === 'true' };
   }
+  /** Convert a recorded timestamp to milliseconds; invalid or missing timestamps sort last. */
   function time(value) { const parsed = typeof value === 'string' && value ? Date.parse(value) : NaN; return Number.isFinite(parsed) ? parsed : null; }
-  function versionValue(row) { const value = normalizeVersion(row.rhoaiVersion); return value && value.length <= 256 ? value : null; }
+  /** Return a comparable release label; missing and unparseable versions sort last. */
+  function versionValue(row) { const value = normalizeVersion(row.rhoaiVersion); return parseVersion(value) ? value : null; }
+  /** Select the normalized value used to order the requested column. */
   function sortValue(row, field) { return field === 'timestamp' ? time(row.timestamp) : field === 'version' ? versionValue(row) : suiteLabel(row.suite); }
+  /** Compare valid values in the selected direction while keeping null values last. */
   function compareValues(a, b, field, direction) {
     if (a === null || b === null) return a === b ? 0 : a === null ? 1 : -1;
     const value = field === 'timestamp' ? a - b : field === 'version' ? compareVersions(a, b)
       : a.localeCompare(b, 'en', { numeric: true, sensitivity: 'base' });
     return value * (direction === 'asc' ? 1 : -1);
   }
+  /** Order rows globally, then break ties by their exact suite and invocation identity. */
   function compareRows(a, b, field, direction) {
     const order = compareValues(sortValue(a, field), sortValue(b, field), field, direction);
     if (order) return order;
     const left = JSON.stringify([a.suite, a.invocationId]), right = JSON.stringify([b.suite, b.invocationId]);
     return left < right ? -1 : left > right ? 1 : 0;
   }
+  /** Check the complete run identity independently of mutable sort metadata. */
   function sameRun(a, b) { return a.suite === b.suite && a.invocationId === b.invocationId; }
   /** Filter complete groups, sort globally, and return a stable anchored page. */
   function pageRecentRuns(allRows, request) {

@@ -5,13 +5,16 @@
 
 ## Behavior
 
-- Select several versions. A run matches any selected version.
+- Select up to 50 versions. A run matches any selected version. At the limit,
+  clear one selected version before adding another.
 - Use one Date Range selector. Presets cover All time and Last 7/30/90 days.
   Custom dates reveals inclusive UTC start and end dates.
 - Click a column heading to sort immediately. Clicking the active column reverses
   the order. Switching columns starts with A–Z for suites, highest first for
   versions, or newest first for execution time. An arrow shows the active
   direction. Ordering applies across every page. Newest time remains the default.
+  Invalid date ranges leave the current sort unchanged. Missing and unparseable
+  versions sort last in both directions.
 - Versions sort numerically. GA sorts above EA for the same release; EA2 sorts
   above EA1. Confirmed spelling aliases such as `3.6.0 EA1` and `3.6.0-ea.1`
   share one choice. Patch versions remain distinct.
@@ -21,6 +24,8 @@
 The page retains 20 rows, automatic filters, 300 ms Run ID debounce, Clear
 filters, Refresh/Retry, stale-response protection, and shareable URLs. Earlier
 single-version URLs, custom date URLs, and v1/v2 timestamp page bookmarks work.
+Refresh and reload retain a restored bookmark’s original version scope until
+a filter or sort change starts a new first page.
 Repeated `versions` query parameters and v3 cursors support the new selection
 and sort columns. The API validates selection limits and cursor scope before
 reading OpenSearch. No schema or stored data changes are required.

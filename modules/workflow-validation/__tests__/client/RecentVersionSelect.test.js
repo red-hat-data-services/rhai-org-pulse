@@ -16,6 +16,32 @@ describe('Recent Runs version selector', () => {
     expect(wrapper.emitted('update:modelValue').at(-1)[0]).toEqual([])
     wrapper.unmount()
   })
+  it('limits the selection to 50 and lets users clear one before selecting another', async () => {
+    const versions = Array.from({ length: 51 }, (_, index) => `3.6.${index}`)
+    const wrapper = mount(RecentVersionSelect, { props: { options: versions, modelValue: versions.slice(0, 50) } })
+    await wrapper.get('button').trigger('click')
+    const checkbox = version => wrapper.findAll('label').find(label => label.text() === version).get('input')
+    expect(checkbox('3.6.50').element.disabled).toBe(true)
+    expect(checkbox('3.6.49').element.disabled).toBe(false)
+    await checkbox('3.6.49').setValue(false)
+    await wrapper.setProps({ modelValue: wrapper.emitted('update:modelValue').at(-1)[0] })
+    expect(checkbox('3.6.50').element.disabled).toBe(false)
+    await checkbox('3.6.50').setValue(true)
+    expect(wrapper.emitted('update:modelValue').at(-1)[0]).toHaveLength(50)
+    wrapper.unmount()
+  })
+  it('gives each instance distinct label and popup associations', async () => {
+    const wrapper = mount({ components: { RecentVersionSelect }, template: '<div><RecentVersionSelect /><RecentVersionSelect /></div>' })
+    const triggers = wrapper.findAll('button')
+    expect(new Set(triggers.map(trigger => trigger.attributes('aria-labelledby'))).size).toBe(2)
+    expect(new Set(triggers.map(trigger => trigger.attributes('aria-controls'))).size).toBe(2)
+    for (const trigger of triggers) {
+      await trigger.trigger('click')
+      const popup = wrapper.findAll('[role="group"]').find(group => group.attributes('id') === trigger.attributes('aria-controls'))
+      expect(popup.attributes('aria-labelledby')).toBe(trigger.attributes('aria-labelledby'))
+    }
+    wrapper.unmount()
+  })
   it('opens with ArrowDown and closes with Escape or outside focus', async () => {
     const wrapper = mount(RecentVersionSelect, { attachTo: document.body, props: { options: ['3.6.0'] } })
     await wrapper.get('button').trigger('keydown.down')

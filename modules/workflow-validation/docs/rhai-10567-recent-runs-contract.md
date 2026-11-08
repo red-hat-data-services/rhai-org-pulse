@@ -52,7 +52,8 @@ The backend reads every composite aggregation page, groups existing execution
 records by suite and invocation, and selects each group's latest metadata.
 It applies filters to complete groups, sorts all matching groups, and then
 selects a page. It never filters individual executions first in paged mode.
-Missing or invalid sort values sort last in either direction. Ties
+Missing or invalid sort values, including unparseable version labels, sort
+last in either direction. Ties
 use suite and invocation for a stable order.
 
 Paged parameters:
