@@ -1,9 +1,9 @@
 {
   "ticket": "RHAI-20044",
-  "sourceCommit": "c97ef75c4c679e5f2384b89576d4c6715e5251b6",
+  "sourceCommit": "1d72206376b451e1337fe403f2160db676ca1f99",
   "environment": "GPUaaS preview only",
   "api": {
-    "checkedAt": "2026-11-05T10:23:43.771Z",
+    "checkedAt": "2026-11-08T08:48:04.667Z",
     "groups": 146,
     "pages": 8,
     "initialRows": 20,
@@ -60,12 +60,12 @@
   },
   "checks": {
     "fullUnitSuite": {
-      "passed": 6781,
+      "passed": 6783,
       "skipped": 11,
       "command": "NODE_OPTIONS=--no-experimental-webstorage npm test"
     },
     "moduleUnitSuite": {
-      "passed": 160
+      "passed": 162
     },
     "browserIntegration": {
       "passed": 32,
@@ -89,8 +89,8 @@
       "image": "image-registry.openshift-image-registry.svc:5000/workflow-validation-org-pulse/org-pulse-backend@sha256:08347098607257e441ac2d4f11a4c4fe269288a5b386f2a9c9512833c4499e1d"
     },
     "frontend": {
-      "build": "org-pulse-frontend-rhai20044-executed-20261105-1",
-      "image": "image-registry.openshift-image-registry.svc:5000/workflow-validation-org-pulse/org-pulse-frontend@sha256:9d62e2ed4608289b09633a167b7cf231a8cbf28cd12a20f5a52329df2fe35d2c"
+      "build": "org-pulse-frontend-rhai20044-clicksort-20261108-1",
+      "image": "image-registry.openshift-image-registry.svc:5000/workflow-validation-org-pulse/org-pulse-frontend@sha256:b176664759643feb6000c7b8386ead05b42a209f8438961e8bcbc6b0dd57ccb6"
     }
   },
   "backendSourceHashes": {
@@ -102,15 +102,15 @@
     "modules/workflow-validation/lib/package.json": "609158e6c5fbc237939fa3ddf7faab80ab690bdc0c8d584414a885130103c4e8"
   },
   "frontendAssetHashes": {
-    "index.html": "e31f67bc4515e6b0186dd680f1a0d75bc18acec438263a402f0947d56a13abd6",
-    "assets/RecentRunsView-BgDe-Oy9.js": "22b881811543cd81f12f6177197113600006e05f34a7ed7d7e5ceece4196ef51"
+    "index.html": "e7c030a11963c456b692a2da60fc6e9d344ab2d2989b238163ac525c53036d3b",
+    "assets/RecentRunsView-CTD7t3fl.js": "441dee7a67e866dc28d76f2d56165c51026bd83aee1f60124e1186c19cf47769"
   },
   "rollbackImages": {
     "backend": "image-registry.openshift-image-registry.svc:5000/workflow-validation-org-pulse/org-pulse-backend@sha256:08347098607257e441ac2d4f11a4c4fe269288a5b386f2a9c9512833c4499e1d",
-    "frontend": "image-registry.openshift-image-registry.svc:5000/workflow-validation-org-pulse/org-pulse-frontend@sha256:860dd233bae60568b238d19c9e763a8521be0b77a95714264cb105fd9cad0c68"
+    "frontend": "image-registry.openshift-image-registry.svc:5000/workflow-validation-org-pulse/org-pulse-frontend@sha256:9d62e2ed4608289b09633a167b7cf231a8cbf28cd12a20f5a52329df2fe35d2c"
   },
   "browser": {
-    "checkedAt": "2026-11-05T10:24:17.231Z",
+    "checkedAt": "2026-11-08T08:50:44.485Z",
     "actualDeployedFrontend": true,
     "actualDeployedBackend": true,
     "initialRows": 20,
@@ -127,8 +127,11 @@
     ],
     "legacy36Alias": true,
     "plainVersionLabels": true,
-    "columnSortDropdowns": true,
-    "headingOpensDropdown": true,
+    "oneClickSorting": true,
+    "toggleCurrentColumn": true,
+    "switchColumnFirstDirection": true,
+    "oneRequestPerClick": true,
+    "keyboardHeaderSorting": true,
     "compactSortHeaders": true,
     "executedAtLabel": true,
     "equalColumnWidths": [
@@ -185,10 +188,16 @@
   "presentation": {
     "plainVersionLabels": true,
     "filterSummaryRemoved": true,
-    "columnSortDropdowns": true,
     "compactSortHeaders": true,
     "equalWidthColumns": true,
-    "timeColumnLabel": "Executed at (UTC)"
+    "timeColumnLabel": "Executed at (UTC)",
+    "oneClickSorting": true,
+    "activeHeadingReversesDirection": true,
+    "newColumnFirstDirections": {
+      "suite": "asc",
+      "version": "desc",
+      "timestamp": "desc"
+    }
   },
   "deploymentScope": "Frontend update; backend image unchanged"
 }

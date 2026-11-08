@@ -36,12 +36,13 @@ is removed. This rule applies to Recent Runs; it does not rewrite OpenSearch doc
 
 ## Verification
 
-Source `c97ef75c` passes 6,781 unit tests (11 skipped), including 160 module
+Source `1d722063` passes 6,783 unit tests (11 skipped), including 162 module
 tests. All 32 browser integration tests pass through the existing shared CI
 entrypoint. Lint, module/OpenAPI validation, the standard production build, and
 the compatible GPUaaS frontend build pass.
 
-Both preview images are deployed and ready. The backend source and served
+The updated frontend is deployed and ready. The backend image is unchanged.
+The backend source and served
 frontend assets match the build. Read-only API checks traverse all 146 groups
 across eight pages in each of the six sort orders. Checks also cover multiple
 versions, the `3.6`/`3.6.0` alias, release-aware version choices, earlier page bookmarks, Refresh,
@@ -53,9 +54,10 @@ runtime settings are unchanged. Previous image references are saved for rollback
 source/asset hashes, and validation results.
 
 Live browser checks passed against both deployed images. They cover all eight
-pages, opening sort menus from the compact headings, both sort directions, plain
-version labels, the removed
-filter summary, version choice order, multiple versions and
+pages, immediate heading clicks, both sort directions, one request per click,
+keyboard sorting, and each column’s first direction when switching columns.
+They also cover plain version labels, the removed filter summary, version
+choice order, multiple versions and
 selection reload, date presets and Custom dates, filtering beyond page one,
 Clear, Refresh/Retry, older bookmarks, and exact-run navigation by mouse and
 keyboard. The page fits 375px and 320px screens with horizontal table scrolling.
