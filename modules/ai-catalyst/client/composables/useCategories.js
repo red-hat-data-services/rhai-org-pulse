@@ -148,7 +148,9 @@ export function useCategories() {
   }
 
   function getSourceLabel(source) {
-    return SOURCE_LABELS[source] || source
+    // The feed emits "hackernews"; the legacy key stays "hn" for cached data
+    // and for the single filter option.
+    return SOURCE_LABELS[source === 'hackernews' ? 'hn' : source] || source
   }
 
   function getScoreColor(score) {

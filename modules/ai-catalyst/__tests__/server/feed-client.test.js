@@ -1,6 +1,7 @@
 import { describe, it, expect, vi } from 'vitest';
+import http from 'node:http';
 
-import { createFeedClient, FeedError } from '../../server/feed-client.js';
+import { createFeedClient, FeedError, proxyDispatcherFromEnv } from '../../server/feed-client.js';
 
 function jsonResponse(status, body) {
   return {
@@ -393,5 +394,83 @@ describe('createFeedClient destination validation', () => {
     expect(err).toBeInstanceOf(FeedError);
     expect(err.message).toContain('not a valid URL');
     expect(fetchFn).not.toHaveBeenCalled();
+  });
+
+  it('rejects a base URL with a query or fragment instead of sending a broken path', async () => {
+    const fetchFn = vi.fn();
+    for (const baseUrl of ['https://feed.example.test?x=1', 'https://feed.example.test#frag']) {
+      const client = createFeedClient({ baseUrl, token: 't', fetchFn });
+      const err = await client.listBoards().catch(e => e);
+      expect(err).toBeInstanceOf(FeedError);
+      expect(err.message).toContain('query or fragment');
+    }
+    expect(fetchFn).not.toHaveBeenCalled();
+  });
+
+  it('rejects credentialed feed URLs before the token is sent', async () => {
+    const fetchFn = vi.fn();
+    const client = createFeedClient({ baseUrl: 'https://user:pass@feed.example.test', token: 't', fetchFn });
+
+    const err = await client.listBoards().catch(e => e);
+    expect(err).toBeInstanceOf(FeedError);
+    expect(err.message).toContain('must not contain credentials');
+    expect(err.message).not.toContain('pass');
+    expect(fetchFn).not.toHaveBeenCalled();
+  });
+
+  it('sends external requests through the proxy dispatcher and keeps loopback direct', async () => {
+    const dispatcher = { dispatch: vi.fn() };
+    const fetchFn = vi.fn(async () => jsonResponse(200, { boards: [] }));
+
+    const external = createFeedClient({ baseUrl: 'https://feed.example.test', token: 't', fetchFn, dispatcher });
+    await external.listBoards();
+    expect(fetchFn.mock.calls[0][1].dispatcher).toBe(dispatcher);
+
+    const loopback = createFeedClient({
+      baseUrl: 'http://127.0.0.1:45678',
+      token: 't',
+      fetchFn,
+      allowLoopback: true,
+      dispatcher,
+    });
+    await loopback.listBoards();
+    expect(fetchFn.mock.calls[1][1].dispatcher).toBeUndefined();
+  });
+});
+
+describe('default proxy dispatcher', () => {
+  it('routes the client through HTTPS_PROXY when no dispatcher is injected', async () => {
+    const seen = [];
+    const proxy = http.createServer();
+    proxy.on('connect', (req, socket) => {
+      seen.push(req.url);
+      socket.destroy();
+    });
+    await new Promise(resolve => proxy.listen(0, '127.0.0.1', resolve));
+    const previous = process.env.HTTPS_PROXY;
+    process.env.HTTPS_PROXY = `http://127.0.0.1:${proxy.address().port}`;
+    vi.resetModules();
+
+    try {
+      const { createFeedClient: createUnproxied } = await import('../../server/feed-client.js');
+      const client = createUnproxied({ baseUrl: 'https://feed.example.test', token: 't' });
+      await expect(client.listBoards()).rejects.toThrow();
+      expect(seen).toEqual(['feed.example.test:443']);
+    } finally {
+      if (previous === undefined) delete process.env.HTTPS_PROXY;
+      else process.env.HTTPS_PROXY = previous;
+      await new Promise(resolve => proxy.close(resolve));
+    }
+  });
+});
+
+describe('proxyDispatcherFromEnv', () => {
+  it('is absent when no proxy is configured', () => {
+    expect(proxyDispatcherFromEnv({})).toBeNull();
+  });
+
+  it('honours HTTPS_PROXY and HTTP_PROXY', () => {
+    expect(proxyDispatcherFromEnv({ HTTPS_PROXY: 'http://proxy.example:3128' })).toHaveProperty('dispatch');
+    expect(proxyDispatcherFromEnv({ HTTP_PROXY: 'http://proxy.example:3128' })).toHaveProperty('dispatch');
   });
 });

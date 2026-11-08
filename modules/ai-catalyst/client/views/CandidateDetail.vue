@@ -44,7 +44,7 @@ const starsDisplay = computed(() => {
 const sourceLinkLabel = computed(() => {
   const src = candidate.value?.source
   if (src === 'reddit') return 'Reddit Post'
-  if (src === 'hn') return 'Hacker News Post'
+  if (src === 'hn' || src === 'hackernews') return 'Hacker News Post'
   return 'Repository'
 })
 
@@ -53,24 +53,33 @@ const isRepoProject = computed(() => {
   return src === 'github'
 })
 
-function hasUrl(val) {
-  return val && val !== 'None' && val !== 'none' && val !== 'N/A'
+function hasValue(val) {
+  return Boolean(val) && !['None', 'none', 'N/A'].includes(String(val).trim())
 }
 
-function normalizeUrl(val) {
-  if (!val) return val
-  if (val.startsWith('http://') || val.startsWith('https://')) return val
-  return 'https://' + val
+function isHttpUrl(val) {
+  return /^https?:\/\//i.test(String(val || '').trim())
+}
+
+function reviewMeta(decision) {
+  return getDecisionMeta(getDecisionStatus({ pmDecision: decision }))
 }
 
 const resourceLinks = computed(() => {
   if (!candidate.value) return []
   const links = []
-  if (hasUrl(candidate.value.link)) links.push({ label: sourceLinkLabel.value, url: normalizeUrl(candidate.value.link) })
-  if (hasUrl(candidate.value.pocRepo)) links.push({ label: 'POC Repo', url: normalizeUrl(candidate.value.pocRepo) })
-  if (hasUrl(candidate.value.pocImage)) links.push({ label: 'POC Image', url: normalizeUrl(candidate.value.pocImage) })
-  if (hasUrl(candidate.value.pocReport)) links.push({ label: 'POC Report', url: normalizeUrl(candidate.value.pocReport) })
-  if (hasUrl(candidate.value.pocBlog)) links.push({ label: 'Blog Post', url: normalizeUrl(candidate.value.pocBlog) })
+  // The feed puts run outcomes and local paths in these columns; only real
+  // http(s) URLs become anchors, the rest render as text.
+  const add = (label, val) => {
+    if (!hasValue(val)) return
+    const text = String(val).trim()
+    links.push({ label, value: text, url: isHttpUrl(text) ? text : null })
+  }
+  add(sourceLinkLabel.value, candidate.value.link)
+  add('POC Repo', candidate.value.pocRepo)
+  add('POC Image', candidate.value.pocImage)
+  add('POC Report', candidate.value.pocReport)
+  add('Blog Post', candidate.value.pocBlog)
   return links
 })
 
@@ -117,8 +126,8 @@ function goBack() {
             </div>
           </div>
           <a
-            v-if="hasUrl(candidate.link)"
-            :href="normalizeUrl(candidate.link)"
+            v-if="isHttpUrl(candidate.link)"
+            :href="candidate.link"
             target="_blank"
             rel="noopener"
             class="text-sm text-primary-600 dark:text-primary-400 hover:underline whitespace-nowrap"
@@ -194,21 +203,21 @@ function goBack() {
           </div>
           <div>
             <span class="text-gray-500 dark:text-gray-400 text-xs">GPU Required</span>
-            <p class="text-gray-900 dark:text-gray-100">{{ candidate.gpuRequired ? 'Yes' : 'No' }}<span v-if="candidate.vramGb"> ({{ candidate.vramGb }} GB)</span></p>
+            <p class="text-gray-900 dark:text-gray-100">{{ candidate.gpuRequired == null ? '—' : (candidate.gpuRequired ? 'Yes' : 'No') }}<span v-if="candidate.vramGb"> ({{ candidate.vramGb }} GB)</span></p>
           </div>
           <div>
             <span class="text-gray-500 dark:text-gray-400 text-xs">Dockerfile</span>
-            <p class="text-gray-900 dark:text-gray-100">{{ candidate.hasDockerfile ? 'Yes' : 'No' }}</p>
+            <p class="text-gray-900 dark:text-gray-100">{{ candidate.hasDockerfile == null ? '—' : (candidate.hasDockerfile ? 'Yes' : 'No') }}</p>
           </div>
-          <div v-if="candidate.contributors">
+          <div v-if="candidate.contributors != null">
             <span class="text-gray-500 dark:text-gray-400 text-xs">Contributors</span>
             <p class="text-gray-900 dark:text-gray-100">{{ candidate.contributors }}</p>
           </div>
-          <div v-if="candidate.openIssues">
+          <div v-if="candidate.openIssues != null">
             <span class="text-gray-500 dark:text-gray-400 text-xs">Open Issues</span>
             <p class="text-gray-900 dark:text-gray-100">{{ candidate.openIssues }}</p>
           </div>
-          <div v-if="candidate.starsVelocity">
+          <div v-if="candidate.starsVelocity != null">
             <span class="text-gray-500 dark:text-gray-400 text-xs">Stars Velocity</span>
             <p class="text-gray-900 dark:text-gray-100">{{ candidate.starsVelocity }}/day</p>
           </div>
@@ -263,7 +272,7 @@ function goBack() {
           <div v-for="(review, idx) in candidate.pmReviewHistory" :key="idx" class="flex items-start gap-2 text-sm">
             <span class="text-xs text-gray-400 dark:text-gray-500 w-32 shrink-0">{{ review.timestamp ? new Date(review.timestamp).toLocaleDateString() : '' }}</span>
             <span class="font-medium text-gray-700 dark:text-gray-300">{{ review.reviewer }}</span>
-            <span :class="['text-xs px-1.5 py-0.5 rounded', getDecisionMeta(review.decision?.toLowerCase() || 'pending').bgClass, getDecisionMeta(review.decision?.toLowerCase() || 'pending').textClass]">{{ review.decision }}</span>
+            <span :class="['text-xs px-1.5 py-0.5 rounded', reviewMeta(review.decision).bgClass, reviewMeta(review.decision).textClass]">{{ review.decision }}</span>
             <span v-if="review.comments" class="text-gray-500 dark:text-gray-400">{{ review.comments }}</span>
           </div>
         </div>
@@ -274,16 +283,20 @@ function goBack() {
       <div v-if="resourceLinks.length" class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-4">
         <h3 class="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-3">Resources</h3>
         <div class="flex flex-wrap gap-2">
-          <a
-            v-for="link in resourceLinks"
-            :key="link.url"
-            :href="link.url"
-            target="_blank"
-            rel="noopener"
-            class="text-sm text-primary-600 dark:text-primary-400 hover:underline"
-          >
-            {{ link.label }} &rarr;
-          </a>
+          <template v-for="link in resourceLinks" :key="link.label + link.value">
+            <a
+              v-if="link.url"
+              :href="link.url"
+              target="_blank"
+              rel="noopener"
+              class="text-sm text-primary-600 dark:text-primary-400 hover:underline"
+            >
+              {{ link.label }} &rarr;
+            </a>
+            <span v-else class="text-sm text-gray-600 dark:text-gray-400">
+              {{ link.label }}: {{ link.value }}
+            </span>
+          </template>
         </div>
       </div>
     </template>

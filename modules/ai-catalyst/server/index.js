@@ -1,4 +1,4 @@
-const { createFeedClient } = require('./feed-client');
+const { createFeedClient, validateFeedDestination } = require('./feed-client');
 const {
   getShowcaseData,
   fetchShowcaseData,
@@ -39,6 +39,11 @@ const BOOLEAN_FIELDS = new Set([
 
 const JSON_FIELDS = new Set(['pm_review_history']);
 
+function redactFeedUrl(url) {
+  // Never echo credentials embedded in a stored URL.
+  return String(url || '').replace(/\/\/[^/@]*@/, '//');
+}
+
 function snakeToCamel(str) {
   return str.replace(/_([a-z])/g, (_, c) => c.toUpperCase());
 }
@@ -61,8 +66,13 @@ function parseFeedRow(row) {
       const n = Number(val);
       obj[camel] = (val === '' || val === null || val === undefined) ? null : (Number.isFinite(n) ? n : null);
     } else if (BOOLEAN_FIELDS.has(key)) {
+      // Tri-state: the feed says "unknown" or leaves the cell blank for
+      // trend rows. Collapsing that to "No" asserts something the feed never
+      // said (GPU Required: No on 443 of 678 real rows).
       const s = typeof val === 'string' ? val.toLowerCase() : '';
-      obj[camel] = s === 'yes' || s === 'true' || s === '1';
+      if (s === 'yes' || s === 'true' || s === '1') obj[camel] = true;
+      else if (s === 'no' || s === 'false' || s === '0') obj[camel] = false;
+      else obj[camel] = null;
     } else if (JSON_FIELDS.has(key)) {
       // Empty means "no review history yet"; anything else must parse to an
       // array or the board fails loudly instead of silently erasing history.
@@ -121,7 +131,9 @@ function filterCandidates(candidates, query) {
     filtered = filtered.filter(c => c.category === query.category);
   }
   if (query.source) {
-    filtered = filtered.filter(c => c.source === query.source);
+    // The feed uses "hackernews"; the filter option keeps the legacy "hn".
+    const sources = query.source === 'hn' ? ['hn', 'hackernews'] : [query.source];
+    filtered = filtered.filter(c => sources.includes(c.source));
   }
   if (query.status) {
     filtered = filtered.filter(c => extractDecisionStatus(c) === query.status);
@@ -184,6 +196,8 @@ module.exports = function registerRoutes(router, context) {
   ]);
 
   let lastSyncTime = null;
+  let lastSyncAttemptTime = null;
+  let lastSyncError = null;
   let syncRunning = false;
 
   // Loopback feed URLs are opt-in: without this flag the token never goes to
@@ -194,7 +208,9 @@ module.exports = function registerRoutes(router, context) {
   const allowLoopback = context.resolveSecret('POC_EXPLORER_ALLOW_LOOPBACK') === '1';
 
   function getFeedToken() {
-    return (secrets && secrets.POC_EXPLORER_FEED_TOKEN) || context.resolveSecret('POC_EXPLORER_FEED_TOKEN') || '';
+    // Secrets created from files often carry a trailing newline; a bare
+    // whitespace value must not count as configured and send a broken header.
+    return String((secrets && secrets.POC_EXPLORER_FEED_TOKEN) || context.resolveSecret('POC_EXPLORER_FEED_TOKEN') || '').trim();
   }
 
   async function getBoardFeedUrl() {
@@ -294,8 +310,15 @@ module.exports = function registerRoutes(router, context) {
   // --- Sync logic ---
 
   async function syncBoards() {
-    if (syncRunning) return { status: 'skipped', reason: 'sync already running' };
-    if (!(await isConfigured())) return { status: 'skipped', reason: 'not configured' };
+    lastSyncAttemptTime = new Date().toISOString();
+    if (syncRunning) {
+      lastSyncError = 'sync already running';
+      return { status: 'skipped', reason: 'sync already running' };
+    }
+    if (!(await isConfigured())) {
+      lastSyncError = 'not configured';
+      return { status: 'skipped', reason: 'not configured' };
+    }
     syncRunning = true;
     try {
       const client = createFeedClient({
@@ -360,15 +383,28 @@ module.exports = function registerRoutes(router, context) {
         });
       }
 
-      const runFailed = failed.length > 0;
+      // Advance the run stamp when at least one month was written: a single
+      // broken board must not pin /config.lastSyncTime forever. Months that
+      // did not sync keep their previous stamp.
+      const advanced = syncCount > 0;
+      const lastError = failed.length
+        ? `Board sync failed for ${failed.length}/${listedBoards.length} boards — ${failed.map(f => `${f.board}: ${f.error}`).join('; ')}`
+        : null;
       await writeToStorage(INDEX_PATH, {
         boards,
-        lastSynced: runFailed ? (existingIndex.lastSynced || null) : now
+        lastSynced: advanced ? now : (existingIndex.lastSynced || null),
+        // Persist the attempt and error so a restart cannot erase the signal.
+        lastAttemptedAt: now,
+        lastError
       });
-      if (!runFailed) {
+      if (advanced) {
         lastSyncTime = now;
       }
+      lastSyncError = lastError;
       return { synced: syncCount, failed, total: listedBoards.length };
+    } catch (err) {
+      lastSyncError = err.message || String(err);
+      throw err;
     } finally {
       syncRunning = false;
     }
@@ -387,7 +423,13 @@ module.exports = function registerRoutes(router, context) {
    *         description: Current board configuration
    */
   router.get('/board-config', requireAdmin, async function(req, res) {
-    res.json(await getBoardConfig(readFromStorage));
+    try {
+      res.json(await getBoardConfig(readFromStorage));
+    } catch (err) {
+      // Let the admin see and replace an unreadable stored value instead of
+      // the panel hiding the field.
+      res.json({ feedUrl: '', configReadError: err.message });
+    }
   });
 
   /**
@@ -404,7 +446,13 @@ module.exports = function registerRoutes(router, context) {
    */
   router.post('/board-config', requireAdmin, async function(req, res) {
     try {
-      await saveBoardConfig(writeToStorage, req.body);
+      const feedUrl = req.body && req.body.feedUrl;
+      // Fail at save time, not silently on every sync: the client refuses an
+      // unapproved or HTTPS-less URL before any request is made.
+      if (typeof feedUrl === 'string' && feedUrl.trim()) {
+        validateFeedDestination(feedUrl.trim(), getAllowedFeedOrigins(), allowLoopback);
+      }
+      await saveBoardConfig(writeToStorage, req.body || {});
       res.json({ status: 'saved' });
     } catch (err) {
       res.status(400).json({ error: err.message });
@@ -423,10 +471,25 @@ module.exports = function registerRoutes(router, context) {
    */
   router.get('/config', requireAuth, requireScope('ai-catalyst:read'), async function(req, res) {
     const index = DEMO_MODE ? getDemoIndex() : await readIndex();
+    let feedUrl = null;
+    let configError = null;
+    try {
+      feedUrl = await getBoardFeedUrl();
+    } catch (err) {
+      configError = err.message || String(err);
+    }
     res.json({
       configured: await isConfigured(),
       demoMode: DEMO_MODE,
       lastSyncTime: lastSyncTime || (index && index.lastSynced) || null,
+      // The persisted attempt/error survive a restart; the module state is
+      // fresher when a run happened in this process.
+      lastSyncAttemptTime: lastSyncAttemptTime || (index && index.lastAttemptedAt) || null,
+      lastSyncError: lastSyncError || (index && index.lastError) || null,
+      // The effective URL, not the stored override: a save that later fails
+      // closed is visible without reading the pod logs.
+      feedUrl: feedUrl ? redactFeedUrl(feedUrl) : null,
+      configError,
       boardCount: (index && index.boards) ? index.boards.length : 0
     });
   });
@@ -474,7 +537,7 @@ module.exports = function registerRoutes(router, context) {
    *         in: query
    *         schema:
    *           type: string
-   *           enum: [github, hn, reddit]
+   *           enum: [github, hn, hackernews, reddit]
    *         description: Filter by discovery source
    *       - name: sort
    *         in: query
@@ -604,7 +667,11 @@ module.exports = function registerRoutes(router, context) {
     }
     try {
       const result = await syncBoards();
-      res.json({ status: 'ok', ...result });
+      // A run where every board failed is not success, even over HTTP.
+      const status = result.status === 'skipped'
+        ? 'skipped'
+        : (result.synced === 0 && result.failed && result.failed.length ? 'failed' : 'ok');
+      res.json({ ...result, status });
     } catch (err) {
       res.status(500).json({ error: 'Sync failed: ' + (err.message || String(err)) });
     }
@@ -658,7 +725,11 @@ module.exports = function registerRoutes(router, context) {
    *         description: Current showcase configuration
    */
   router.get('/showcase/config', requireAdmin, async function(req, res) {
-    res.json(await getShowcaseConfig(readFromStorage));
+    try {
+      res.json(await getShowcaseConfig(readFromStorage));
+    } catch (err) {
+      res.json({ feedUrl: '', configReadError: err.message });
+    }
   });
 
   /**
@@ -675,7 +746,11 @@ module.exports = function registerRoutes(router, context) {
    */
   router.post('/showcase/config', requireAdmin, async function(req, res) {
     try {
-      await saveShowcaseConfig(writeToStorage, req.body);
+      const feedUrl = req.body && req.body.feedUrl;
+      if (typeof feedUrl === 'string' && feedUrl.trim()) {
+        validateFeedDestination(feedUrl.trim(), getAllowedFeedOrigins(), allowLoopback);
+      }
+      await saveShowcaseConfig(writeToStorage, req.body || {});
       res.json({ status: 'saved' });
     } catch (err) {
       res.status(400).json({ error: err.message });
@@ -799,13 +874,18 @@ module.exports = function registerRoutes(router, context) {
   // --- Refresh handler ---
 
   if (context.registerRefresh) {
-    context.registerRefresh('ai-catalyst:sync-boards', {
+    // Core prefixes the module slug, so this registers as
+    // "ai-catalyst:sync-boards".
+    context.registerRefresh('sync-boards', {
       order: 80,
       cadence: '1h',
+      // The sync fetches the board list plus one board per month, each with
+      // its own 30s abort; the registry default of 5 minutes is too tight
+      // once the feed carries nine or more months.
+      timeout: 600000,
       description: 'Sync monthly board data from the POC Explorer feed',
       handler: async function() {
         if (DEMO_MODE) return { status: 'skipped', reason: 'demo mode' };
-        if (!(await isConfigured())) return { status: 'skipped', reason: 'not configured' };
         const result = await syncBoards();
         if (result.status === 'skipped') return result;
         if (result.failed && result.failed.length) {
@@ -821,7 +901,7 @@ module.exports = function registerRoutes(router, context) {
       }
     });
 
-    context.registerRefresh('ai-catalyst:showcase-sync', {
+    context.registerRefresh('showcase-sync', {
       order: 81,
       cadence: '1h',
       description: 'Sync AI Catalyst Showcase data from the POC Explorer feed',
@@ -845,6 +925,8 @@ module.exports = function registerRoutes(router, context) {
         configured: await isConfigured(),
         demoMode: DEMO_MODE,
         lastSyncTime,
+        lastSyncAttemptTime,
+        lastSyncError,
         syncRunning,
         boardCount: (index && index.boards) ? index.boards.length : 0,
         boards: (index && index.boards) || [],

@@ -24,4 +24,11 @@ describe('useCategories', () => {
         expect.objectContaining({ pillarKey: 'data-science-engineering', color: '#06b6d4' })
       ]))
   })
+
+  it('labels the feed source "hackernews" as well as the legacy "hn"', () => {
+    const { getSourceLabel } = useCategories()
+
+    expect(getSourceLabel('hackernews')).toBe('Hacker News')
+    expect(getSourceLabel('hn')).toBe('Hacker News')
+  })
 })

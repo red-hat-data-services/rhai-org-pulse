@@ -3366,14 +3366,17 @@ registry below.
 | `uniqueId` | string | Stable candidate identifier; legacy rows with a blank ID use their source `link` for detail navigation without changing stored identity |
 | `link` | string | Source repository or project URL |
 | `itemType` | string | `repo` or another discovery item type |
-| `source` | string | Primary discovery source (`github`, `hn`, or `reddit`) |
+| `source` | string | Primary discovery source (`github`, `hn`, `hackernews`, or `reddit`) |
 | `sources` | string[] | All discovery sources for the candidate |
 | `category` | string | Stable strategy-pillar key; must match a pillar key when metadata is available |
 | `capabilityLabels` | string[] | Capability labels parsed from the board feed row |
 | `impactScore` | number/null | Impact score from the board evaluation |
 | `feasibilityScore` | number/null | Original feasibility score |
 | `boardFeasibilityScore` | number/null | Board score used for sorting and display |
-| `boardPassesGate` | boolean | Whether the candidate passes the board gate |
+| `boardFeasibilityEstimated` | boolean/null | Whether the board score is estimated; `null` when the feed says unknown or leaves the cell blank |
+| `boardPassesGate` | boolean/null | Whether the candidate passes the board gate; `null` when the feed says unknown or leaves the cell blank |
+| `gpuRequired` | boolean/null | Whether the candidate needs a GPU; `null` for `unknown` or trend rows |
+| `hasDockerfile` | boolean/null | Whether the project ships a Dockerfile; `null` for trend rows |
 | `pmDecision` | string | PM decision text; status is derived from `Approve`, `Decline`, `Revisit`, or empty |
 
 `data/ai-catalyst/index.json` contains the available month list and candidate

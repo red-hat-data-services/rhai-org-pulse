@@ -1,9 +1,34 @@
+const { EnvHttpProxyAgent } = require('undici');
+
 const DEFAULT_TIMEOUT_MS = 30000;
 
 // Loopback is the dev/test carve-out: a token sent to loopback stays on the
 // machine. It is strictly opt-in via POC_EXPLORER_ALLOW_LOOPBACK=1 so a
 // stored settings URL can never aim the production token at a local listener.
 const LOOPBACK_HOSTNAMES = new Set(['localhost', '127.0.0.1', '[::1]']);
+
+/**
+ * Node's global fetch ignores HTTP_PROXY/HTTPS_PROXY. Production pods reach
+ * external hosts only through the corporate proxy, so without a dispatcher
+ * the request never leaves the cluster. This mirrors the workflow-validation
+ * client: a per-client agent, never a global dispatcher.
+ */
+function proxyDispatcherFromEnv(env = process.env) {
+  const httpProxy = env.HTTP_PROXY || env.http_proxy;
+  const httpsProxy = env.HTTPS_PROXY || env.https_proxy;
+  if (!httpsProxy && !httpProxy) return null;
+  return new EnvHttpProxyAgent({
+    httpProxy: httpProxy || undefined,
+    httpsProxy: httpsProxy || undefined,
+    noProxy: env.NO_PROXY || env.no_proxy || undefined,
+  });
+}
+
+let _defaultDispatcher;
+function defaultDispatcher() {
+  if (_defaultDispatcher === undefined) _defaultDispatcher = proxyDispatcherFromEnv();
+  return _defaultDispatcher;
+}
 
 class FeedError extends Error {
   constructor(message, { status, body, cause } = {}) {
@@ -45,6 +70,18 @@ function validateFeedDestination(root, allowedOrigins, allowLoopback) {
     throw new FeedError(`POC Explorer feed URL must use HTTPS (plain HTTP is only allowed on loopback): ${root}`);
   }
 
+  // Credentials in the URL would be sent to the feed and echoed by /config;
+  // they are never a valid base URL.
+  if (parsed.username || parsed.password) {
+    throw new FeedError('POC Explorer feed URL must not contain credentials');
+  }
+
+  // The client appends the feed path itself; a query or fragment can only
+  // produce a broken URL.
+  if (parsed.search || parsed.hash) {
+    throw new FeedError(`POC Explorer feed URL must not contain a query or fragment: ${root}`);
+  }
+
   if (Array.isArray(allowedOrigins) && !isLoopback && !allowedOrigins.includes(parsed.origin)) {
     throw new FeedError(
       `POC Explorer feed URL is not an approved origin: ${parsed.origin} (approved: ${allowedOrigins.join(', ')})`,
@@ -56,7 +93,7 @@ function validateFeedDestination(root, allowedOrigins, allowLoopback) {
  * HTTP client for the POC Explorer machine feeds (ADR-077 producer side).
  * All endpoints require `Authorization: Bearer <token>` and return JSON.
  */
-function createFeedClient({ baseUrl, token, timeoutMs = DEFAULT_TIMEOUT_MS, fetchFn = globalThis.fetch, allowedOrigins, allowLoopback = false }) {
+function createFeedClient({ baseUrl, token, timeoutMs = DEFAULT_TIMEOUT_MS, fetchFn = globalThis.fetch, allowedOrigins, allowLoopback = false, dispatcher }) {
   const root = String(baseUrl || '').replace(/\/+$/, '');
 
   async function request(path) {
@@ -74,10 +111,18 @@ function createFeedClient({ baseUrl, token, timeoutMs = DEFAULT_TIMEOUT_MS, fetc
     // clearing it after headers arrive would let a stalled body hang forever.
     const timer = setTimeout(() => controller.abort(), timeoutMs);
     try {
-      const response = await fetchFn(url, {
+      const options = {
         headers: { Authorization: `Bearer ${token}` },
         signal: controller.signal,
-      });
+      };
+      // Resolve the proxy lazily: a malformed proxy URL must not break
+      // loopback stubs, and it should surface as a feed error, not a crash.
+      // Loopback stays direct even when a proxy is configured.
+      if (!LOOPBACK_HOSTNAMES.has(new URL(root).hostname)) {
+        const agent = dispatcher === undefined ? defaultDispatcher() : dispatcher;
+        if (agent) options.dispatcher = agent;
+      }
+      const response = await fetchFn(url, options);
       const text = await response.text();
       const body = parseJsonBody(text);
 
@@ -106,8 +151,13 @@ function createFeedClient({ baseUrl, token, timeoutMs = DEFAULT_TIMEOUT_MS, fetc
       if (err && err.name === 'AbortError') {
         throw new FeedError(`POC Explorer feed request timed out after ${Math.round(timeoutMs / 1000)}s: ${url}`, { cause: err });
       }
+      // undici hides the real cause two levels deep (e.g. a 407 from the
+      // proxy), so report it instead of the generic "fetch failed".
+      const detail = (err && err.cause && err.cause.cause && err.cause.cause.message)
+        || (err && err.cause && err.cause.message)
+        || err.message;
       throw new FeedError(
-        `Failed to reach POC Explorer feed at ${root}: ${err.message}. Check POC_EXPLORER_FEED_URL and network connectivity.`,
+        `Failed to reach POC Explorer feed at ${root}: ${detail}. Check POC_EXPLORER_FEED_URL and network connectivity.`,
         { cause: err },
       );
     } finally {
@@ -168,4 +218,4 @@ function createFeedClient({ baseUrl, token, timeoutMs = DEFAULT_TIMEOUT_MS, fetc
   };
 }
 
-module.exports = { createFeedClient, FeedError };
+module.exports = { createFeedClient, FeedError, proxyDispatcherFromEnv, validateFeedDestination };

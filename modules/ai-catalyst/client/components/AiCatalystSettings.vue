@@ -111,9 +111,9 @@ onMounted(() => {
       <template v-else>
         <div v-if="config" class="space-y-3">
           <div class="flex items-center gap-2">
-            <span :class="['w-2 h-2 rounded-full', config.configured ? 'bg-green-500' : 'bg-red-500']"></span>
+            <span :class="['w-2 h-2 rounded-full', config.configured ? (config.lastSyncError ? 'bg-amber-500' : 'bg-green-500') : 'bg-red-500']"></span>
             <span class="text-sm text-gray-700 dark:text-gray-300">
-              {{ config.configured ? 'Connected to POC Explorer feed' : 'Not configured' }}
+              {{ config.configured ? (config.lastSyncError ? 'Configured, last sync failed' : 'Connected to POC Explorer feed') : 'Not configured' }}
             </span>
           </div>
 
@@ -122,7 +122,10 @@ onMounted(() => {
           </div>
 
           <div class="text-xs text-gray-500 dark:text-gray-400 space-y-1">
+            <div v-if="config.configError" class="text-red-600 dark:text-red-400">Stored config unreadable: {{ config.configError }}</div>
             <div v-if="config.lastSyncTime">Last sync: {{ new Date(config.lastSyncTime).toLocaleString() }}</div>
+            <div v-if="config.lastSyncAttemptTime">Last attempt: {{ new Date(config.lastSyncAttemptTime).toLocaleString() }}</div>
+            <div v-if="config.lastSyncError" class="text-red-600 dark:text-red-400">Sync error: {{ config.lastSyncError }}</div>
             <div>Available boards: {{ config.boardCount }}</div>
           </div>
         </div>
