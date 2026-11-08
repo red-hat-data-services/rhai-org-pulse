@@ -155,7 +155,7 @@ Dashboard opens Recent Runs with the latest 20 suite/invocation groups and
 pagination across all available runs. Each row shows the suite, version, and
 execution time (`Executed at (UTC)`). Select a row or press Enter to open its exact run.
 
-Select one or more versions, a suite, a Run ID, or a Date Range. Date Range
+Select up to 50 versions, a suite, a Run ID, or a Date Range. Date Range
 supports All time, Last 7/30/90 days, and Custom dates. Choices update results
 immediately. Run ID search waits for a 300 ms typing pause. Click a column heading to sort all matching runs immediately. Click the active
 heading again to reverse its order. Switching columns starts with A–Z for suites,

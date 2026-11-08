@@ -41,13 +41,12 @@ is removed. This rule applies to Recent Runs; it does not rewrite OpenSearch doc
 
 ## Verification
 
-Source `1d722063` passes 6,783 unit tests (11 skipped), including 162 module
-tests. All 32 browser integration tests pass through the existing shared CI
+Source `17364679` passes 6,791 unit tests (11 skipped), including 170 module
+tests. All 37 browser integration tests pass through the existing shared CI
 entrypoint. Lint, module/OpenAPI validation, the standard production build, and
 the compatible GPUaaS frontend build pass.
 
-The updated frontend is deployed and ready. The backend image is unchanged.
-The backend source and served
+Both updated images are deployed and ready. The backend source and served
 frontend assets match the build. Read-only API checks traverse all 146 groups
 across eight pages in each of the six sort orders. Checks also cover multiple
 versions, the `3.6`/`3.6.0` alias, release-aware version choices, earlier page bookmarks, Refresh,
@@ -69,9 +68,17 @@ keyboard. The page fits 375px and 320px screens with horizontal table scrolling.
 The three columns use equal widths on desktop and mobile. The time heading is
 Executed at (UTC). No browser page errors occurred. Test credentials stayed in memory.
 
+Review regressions cover legacy v1/v2 alias bookmarks through Refresh, reload,
+and page navigation; invalid dates leave the sort unchanged. Unit and browser
+tests cover the 50-version limit, and unit tests verify distinct selector IDs.
+The deployed backend helpers also passed synthetic invalid-version ordering and
+unknown-label scope checks entirely in memory. They did not write to OpenSearch.
+Function documentation covers the release and pagination helpers.
+
 - [Initial page](images/rhai-20044-gpuaas-recent-runs.png)
 - [Multiple versions](images/rhai-20044-gpuaas-multiple-versions.png)
 - [Custom UTC dates](images/rhai-20044-gpuaas-custom-dates.png)
+- [Invalid date recovery](images/rhai-20044-gpuaas-invalid-dates.png)
 - [Run ID and suite filters](images/rhai-20044-gpuaas-filtered.png)
 - [Selected run](images/rhai-20044-gpuaas-selected-run.png)
 - [320px layout](images/rhai-20044-gpuaas-mobile.png)

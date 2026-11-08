@@ -1,9 +1,9 @@
 {
   "ticket": "RHAI-20044",
-  "sourceCommit": "1d72206376b451e1337fe403f2160db676ca1f99",
+  "sourceCommit": "17364679f20e2f65ef4684cb71a31efce2f31183",
   "environment": "GPUaaS preview only",
   "api": {
-    "checkedAt": "2026-11-08T08:48:04.667Z",
+    "checkedAt": "2026-11-08T09:23:33.002Z",
     "groups": 146,
     "pages": 8,
     "initialRows": 20,
@@ -46,6 +46,8 @@
       }
     ],
     "legacy36Alias": true,
+    "deployedHelperInvalidVersionsLast": true,
+    "deployedHelperUnknownLabelsDeterministic": true,
     "multiVersion": true,
     "sortedVersionChoices": true,
     "legacyBookmark": true,
@@ -60,15 +62,15 @@
   },
   "checks": {
     "fullUnitSuite": {
-      "passed": 6783,
+      "passed": 6791,
       "skipped": 11,
       "command": "NODE_OPTIONS=--no-experimental-webstorage npm test"
     },
     "moduleUnitSuite": {
-      "passed": 162
+      "passed": 170
     },
     "browserIntegration": {
-      "passed": 32,
+      "passed": 37,
       "command": "npx playwright test --grep @workflow-validation --workers=2"
     },
     "lint": "passed",
@@ -85,32 +87,32 @@
   },
   "images": {
     "backend": {
-      "build": "org-pulse-backend-rhai20044-labels-20261105-1",
-      "image": "image-registry.openshift-image-registry.svc:5000/workflow-validation-org-pulse/org-pulse-backend@sha256:08347098607257e441ac2d4f11a4c4fe269288a5b386f2a9c9512833c4499e1d"
+      "build": "org-pulse-backend-rhai20044-reviewfix-20261108-1",
+      "image": "image-registry.openshift-image-registry.svc:5000/workflow-validation-org-pulse/org-pulse-backend@sha256:d541daf89469df621a8be524593a19bf14873aa27d403cac7f2e01a43cab9dbb"
     },
     "frontend": {
-      "build": "org-pulse-frontend-rhai20044-clicksort-20261108-1",
-      "image": "image-registry.openshift-image-registry.svc:5000/workflow-validation-org-pulse/org-pulse-frontend@sha256:b176664759643feb6000c7b8386ead05b42a209f8438961e8bcbc6b0dd57ccb6"
+      "build": "org-pulse-frontend-rhai20044-reviewfix-20261108-1",
+      "image": "image-registry.openshift-image-registry.svc:5000/workflow-validation-org-pulse/org-pulse-frontend@sha256:93fcd91a812c59c1f1b618349369f79bf0d726fb7334e46b42d451c5bfad4475"
     }
   },
   "backendSourceHashes": {
     "modules/workflow-validation/server/index.js": "57d7bc81954e62cdbc1dd513babfd0a5fd3567a8e5fd588c3fff03deeaa07320",
     "modules/workflow-validation/server/opensearch.js": "0518aad36b68647c9e6a7769051443cce03cb6f975cc776d81e38b5ec0c84b01",
     "modules/workflow-validation/server/config.js": "fa83e397f4a130b3958972eabac9ca926c7f4a12b3c57ef0d73185ab84318ca0",
-    "modules/workflow-validation/server/recent-runs.js": "3ad41981cc17a9ea69654e8f2fe9291cb4b1f376ffab059012af982a7508b051",
-    "modules/workflow-validation/lib/versions.js": "294df1244181f7184105508a15badf5f7c539498cfc790e5160796209329cd3f",
+    "modules/workflow-validation/server/recent-runs.js": "9a161148bc7b151f8ae8c80a1464cb99be65d5609192fb3be0087d99ce1b4bfc",
+    "modules/workflow-validation/lib/versions.js": "d5c9fb59e39ca5552ee4cfd36aeecda162f3f49a46d6adbbc89a278e5b372a0b",
     "modules/workflow-validation/lib/package.json": "609158e6c5fbc237939fa3ddf7faab80ab690bdc0c8d584414a885130103c4e8"
   },
   "frontendAssetHashes": {
-    "index.html": "e7c030a11963c456b692a2da60fc6e9d344ab2d2989b238163ac525c53036d3b",
-    "assets/RecentRunsView-CTD7t3fl.js": "441dee7a67e866dc28d76f2d56165c51026bd83aee1f60124e1186c19cf47769"
+    "index.html": "518bea8020b5a433467085f7c3cfd65e1b52097b92350f3620571efb5ad402ec",
+    "assets/RecentRunsView-DCB5RJVg.js": "c19c0e5646b0c4a22ec603348c7916f706dc5d2fb2f3b89e41db6f158b4c077a"
   },
   "rollbackImages": {
     "backend": "image-registry.openshift-image-registry.svc:5000/workflow-validation-org-pulse/org-pulse-backend@sha256:08347098607257e441ac2d4f11a4c4fe269288a5b386f2a9c9512833c4499e1d",
-    "frontend": "image-registry.openshift-image-registry.svc:5000/workflow-validation-org-pulse/org-pulse-frontend@sha256:9d62e2ed4608289b09633a167b7cf231a8cbf28cd12a20f5a52329df2fe35d2c"
+    "frontend": "image-registry.openshift-image-registry.svc:5000/workflow-validation-org-pulse/org-pulse-frontend@sha256:b176664759643feb6000c7b8386ead05b42a209f8438961e8bcbc6b0dd57ccb6"
   },
   "browser": {
-    "checkedAt": "2026-11-08T08:50:44.485Z",
+    "checkedAt": "2026-11-08T09:24:27.901Z",
     "actualDeployedFrontend": true,
     "actualDeployedBackend": true,
     "initialRows": 20,
@@ -157,6 +159,11 @@
     "allColumnDirections": true,
     "datePresets": true,
     "customUtcDates": true,
+    "invalidDatesKeepSort": true,
+    "legacyAliasBookmarkRefresh": [
+      1,
+      2
+    ],
     "filterBeyondFirstPage": true,
     "typingDebounced": true,
     "clear": true,
@@ -172,6 +179,7 @@
   "screenshots": [
     "images/rhai-20044-gpuaas-custom-dates.png",
     "images/rhai-20044-gpuaas-filtered.png",
+    "images/rhai-20044-gpuaas-invalid-dates.png",
     "images/rhai-20044-gpuaas-mobile.png",
     "images/rhai-20044-gpuaas-multiple-versions.png",
     "images/rhai-20044-gpuaas-recent-runs.png",
@@ -199,5 +207,26 @@
       "timestamp": "desc"
     }
   },
-  "deploymentScope": "Frontend update; backend image unchanged"
+  "deploymentScope": "Frontend and backend update; preview only",
+  "reviewFixes": {
+    "legacyCursorScopePreserved": true,
+    "invalidDatesKeepSort": true,
+    "invalidVersionsLastBothDirections": true,
+    "unknownVersionLabelsDeterministic": true,
+    "selectorLimit": 50,
+    "uniqueSelectorInstanceIds": true,
+    "outsideInteractionHandlerCombined": true,
+    "functionDocumentationAdded": true,
+    "focusedRegressions": {
+      "before": {
+        "passed": 57,
+        "failed": 9
+      },
+      "after": {
+        "passed": 66,
+        "failed": 0
+      }
+    },
+    "syntheticCasesDoNotWriteOpenSearch": true
+  }
 }
