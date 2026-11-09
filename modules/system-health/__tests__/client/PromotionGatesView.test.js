@@ -109,7 +109,7 @@ describe('PromotionGatesView', () => {
 
     // Hero verdict and progress counts
     expect(wrapper.text()).toContain('Promotion blocked')
-    expect(wrapper.text()).toContain('1 of 2 components promoted')
+    expect(wrapper.text()).toContain('1 of 2 components passed')
     expect(wrapper.text()).toContain('1 ok')
     expect(wrapper.text()).toContain('1 blocked')
     expect(wrapper.text()).toContain('0 pending')
@@ -128,9 +128,9 @@ describe('PromotionGatesView', () => {
 
     const text = wrapper.text()
     expect(text).toContain('Blocking components')
-    expect(text).toContain('Passing components')
+    expect(text).toContain('Succeeded components')
     // Blocking comes first, passing underneath, both visible without a toggle
-    expect(text.indexOf('Blocking components')).toBeLessThan(text.indexOf('Passing components'))
+    expect(text.indexOf('Blocking components')).toBeLessThan(text.indexOf('Succeeded components'))
     expect(text).toContain('Required build failed')
 
     const blocking = wrapper.find('h2.text-sm.font-semibold')

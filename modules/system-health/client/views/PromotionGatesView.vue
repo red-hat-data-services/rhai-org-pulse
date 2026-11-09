@@ -499,7 +499,7 @@ onMounted(loadLatest)
           <div class="mt-5">
             <div class="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-2">
               <p class="text-sm font-medium text-gray-900 dark:text-gray-100">
-                {{ summary.ok }} of {{ summary.total }} components promoted
+                {{ summary.ok }} of {{ summary.total }} components passed
               </p>
               <div class="flex items-center gap-1.5">
                 <span
@@ -522,6 +522,10 @@ onMounted(loadLatest)
                 :style="{ width: `${segment.width}%` }"
               />
             </div>
+            <p class="mt-2 text-xs text-gray-500 dark:text-gray-400">
+              Every component is promoted together, only once all builds and gates pass — a
+              single failing build blocks the whole batch.
+            </p>
           </div>
         </section>
 
@@ -623,7 +627,7 @@ onMounted(loadLatest)
                   :title="isPrProblem(pr) ? prProblemReason(pr) : ''"
                 >
                   <template v-if="isPrProblem(pr)">{{ displayReason(pr) }}</template>
-                  <template v-else>Promoted</template>
+                  <template v-else>Ready to merge</template>
                 </span>
                 <a
                   v-if="pr['pr-url']"
@@ -660,16 +664,16 @@ onMounted(loadLatest)
           class="flex items-center gap-2 rounded-lg border border-green-200 bg-green-50/60 px-4 py-3 text-sm text-green-800 dark:border-green-900/70 dark:bg-green-950/20 dark:text-green-300"
         >
           <span class="h-1.5 w-1.5 rounded-full bg-green-500" />
-          All {{ summary.total }} components promoted.
+          All {{ summary.total }} components passed — nothing is blocking the promotion.
         </p>
 
-        <!-- Passing components -->
+        <!-- Succeeded components -->
         <section
           v-if="passingPullRequests.length > 0"
           class="rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800"
         >
           <div class="flex items-center gap-2 border-b border-gray-100 dark:border-gray-700 px-4 py-3">
-            <h2 class="text-sm font-semibold text-gray-900 dark:text-gray-100">Passing components</h2>
+            <h2 class="text-sm font-semibold text-gray-900 dark:text-gray-100">Succeeded components</h2>
             <span class="inline-flex items-center rounded-full bg-green-100 px-2 py-0.5 text-xs font-medium text-green-800 dark:bg-green-900/40 dark:text-green-300">
               {{ passingPullRequests.length }}
             </span>
@@ -693,7 +697,7 @@ onMounted(loadLatest)
                   class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium"
                   :class="statusBadgeClass(pr['pr-status'])"
                 >{{ statusLabel(pr['pr-status']) }}</span>
-                <span class="min-w-0 flex-1 truncate text-xs text-gray-500 dark:text-gray-400">Promoted</span>
+                <span class="min-w-0 flex-1 truncate text-xs text-gray-500 dark:text-gray-400">Ready to merge</span>
                 <a
                   v-if="pr['pr-url']"
                   :href="pr['pr-url']"

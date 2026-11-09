@@ -1701,7 +1701,7 @@ test.describe('Promotion Gates @system-health', () => {
 
     // Hero verdict with the promoted count
     await expect(page.locator('text=Promotion blocked')).toBeVisible();
-    await expect(page.locator('text=1 of 2 components promoted')).toBeVisible();
+    await expect(page.locator('text=1 of 2 components passed')).toBeVisible();
 
     // Stage strip covering the whole flow
     for (const stage of ['Child PRs', 'Builds', 'Early gate build', 'Early gate test', 'Merge']) {
@@ -1719,11 +1719,11 @@ test.describe('Promotion Gates @system-health', () => {
     await page.waitForTimeout(DEFAULT_PAGE_WAIT_TIME);
 
     await expect(page.locator('h2', { hasText: 'Blocking components' })).toBeVisible();
-    await expect(page.locator('h2', { hasText: 'Passing components' })).toBeVisible();
+    await expect(page.locator('h2', { hasText: 'Succeeded components' })).toBeVisible();
 
     // Both tables render at once, no toggle; the failing repo carries its reason
     const blocking = page.locator('section', { has: page.locator('h2', { hasText: 'Blocking components' }) });
-    const passing = page.locator('section', { has: page.locator('h2', { hasText: 'Passing components' }) });
+    const passing = page.locator('section', { has: page.locator('h2', { hasText: 'Succeeded components' }) });
     await expect(blocking.locator('text=odh-model-controller')).toBeVisible();
     await expect(blocking.locator('text=Required build failed')).toBeVisible();
     await expect(passing.locator('text=odh-dashboard')).toBeVisible();
