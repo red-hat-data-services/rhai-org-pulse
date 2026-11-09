@@ -76,6 +76,40 @@ async function mockTrendSuites(page) {
 }
 
 test.describe('Workflow Validation module @workflow-validation', () => {
+  test('opens a run-scoped Jira search separately and shows verified empty and unavailable states', async ({ page, context }) => {
+    const jql = 'key IN (RHOAIENG-1, RHOAIENG-2) AND (labels IS EMPTY OR labels NOT IN ("rca-scope-internal"))'
+    const jiraUrl = 'https://redhat.atlassian.net/issues/?jql=' + encodeURIComponent(jql)
+    await context.route('https://redhat.atlassian.net/**', route => route.fulfill({ contentType: 'text/html', body: '<p>Jira search fixture</p>' }))
+    await page.route('**/api/modules/workflow-validation/test-suites?**', route => route.fulfill({ json: recentPage([
+      { suite: 'release_gate', invocationId: 'with-tickets', rhoaiVersion: '3.6', timestamp: '2026-11-01T00:00:00Z', bugTickets: { status: 'ready', url: jiraUrl } },
+      { suite: 'release_gate', invocationId: 'only-internal', rhoaiVersion: '3.6', timestamp: '2026-11-01T00:00:00Z', bugTickets: { status: 'empty' } },
+      { suite: 'release_gate', invocationId: 'unknown-labels', rhoaiVersion: '3.6', timestamp: '2026-11-01T00:00:00Z', bugTickets: { status: 'unavailable' } },
+    ]) }))
+    await page.goto('/#/workflow-validation/recent-runs')
+    const link = page.getByRole('link', { name: 'Open bug tickets for run with-tickets in Jira (opens in a new tab)', exact: true })
+    await expect(link).toBeVisible()
+    await expect(link).toHaveAttribute('rel', 'noopener noreferrer')
+    const row = page.getByRole('row', { name: 'Open run only-internal', exact: true })
+    await expect(row).toContainText('No ticket recorded')
+    await expect(row.getByRole('link')).toHaveCount(0)
+    await expect(page.getByRole('row', { name: 'Open run unknown-labels', exact: true })).toContainText('Bug tickets unavailable')
+    const popupPromise = page.waitForEvent('popup')
+    await link.click()
+    const popup = await popupPromise
+    await expect(popup).toHaveURL(jiraUrl)
+    await expect(page).toHaveURL(/workflow-validation\/recent-runs/)
+    await popup.close()
+    const keyboardPopup = page.waitForEvent('popup')
+    await link.focus()
+    await page.keyboard.press('Enter')
+    const keyboardPage = await keyboardPopup
+    await expect(keyboardPage).toHaveURL(jiraUrl)
+    await expect(page).toHaveURL(/workflow-validation\/recent-runs/)
+    await keyboardPage.close()
+    await page.getByRole('row', { name: 'Open run with-tickets', exact: true }).getByRole('cell').first().click()
+    await expect(page).toHaveURL(/workflow-validation\/overview.*invocationId=with-tickets/)
+  })
+
   test.beforeEach(async ({ page }) => {
     await page.route('**/api/modules/workflow-validation/**', async (route) => {
       const path = new URL(route.request().url()).pathname
@@ -346,7 +380,7 @@ test.describe('Workflow Validation module @workflow-validation', () => {
     await expect(heading).toHaveAttribute('aria-sort', 'descending')
     await page.getByRole('combobox', { name: 'Date Range', exact: true }).selectOption('custom')
     await page.getByLabel('Start Date (UTC)', { exact: true }).fill('2026-01-03')
-    await expect(page.getByRole('button', { name: 'Refresh', exact: true })).toBeEnabled()
+    await expect(page.getByRole('main').getByRole('button', { name: 'Refresh', exact: true })).toBeEnabled()
     await page.getByLabel('End Date (UTC)', { exact: true }).fill('2026-01-01')
     await expect(page.getByRole('alert')).toContainText('Start Date must be on or before End Date')
     const count = requests.length
@@ -372,7 +406,7 @@ test.describe('Workflow Validation module @workflow-validation', () => {
       anchor: [Date.parse(origin.timestamp), identity(origin.suite), identity(origin.invocationId)] })).toString('base64url')
     await page.goto('/#/workflow-validation/recent-runs?' + new URLSearchParams({ recentVersion: '3.6', recentCursor: cursor }))
     const pages = page.getByRole('navigation', { name: 'Recent run pages' })
-    const refresh = page.getByRole('button', { name: 'Refresh', exact: true })
+    const refresh = page.getByRole('main').getByRole('button', { name: 'Refresh', exact: true })
     await expect(pages).toContainText('Showing 21–40 of 47 runs')
     await expect(page.getByRole('button', { name: 'RHOAI versions', exact: true })).toContainText('3.6.0')
     await refresh.click()
@@ -447,12 +481,12 @@ test.describe('Workflow Validation module @workflow-validation', () => {
     })
     await page.goto('/#/workflow-validation/recent-runs?version=old&testSuite=old&invocationId=old')
     await expect(page.getByRole('heading', { name: 'Recent Runs', exact: true })).toBeVisible()
-    await expect(page.getByRole('columnheader')).toHaveCount(3)
+    await expect(page.getByRole('columnheader')).toHaveCount(4)
     await expect(page.getByRole('columnheader', { name: /build|image/i })).toHaveCount(0)
     await expect(page.getByRole('table').locator('tbody tr')).toHaveCount(1)
     await expect(page.getByText('Design preview', { exact: false })).toHaveCount(0)
     const recentRequest = requests.find(url => url.pathname.endsWith('/test-suites'))
-    expect(Object.fromEntries(recentRequest.searchParams)).toEqual({ pageSize: '20', includeBugs: 'false', sortField: 'timestamp', sortDir: 'desc' })
+    expect(Object.fromEntries(recentRequest.searchParams)).toEqual({ pageSize: '20', includeBugs: 'false', includeBugTickets: 'true', sortField: 'timestamp', sortDir: 'desc' })
 
     await expect(page.getByRole('link', { name: /View run/ })).toHaveCount(0)
     await page.getByRole('row', { name: 'Open run invocation-1' }).click()
@@ -515,7 +549,7 @@ test.describe('Workflow Validation module @workflow-validation', () => {
     }))
     await page.goto('/#/workflow-validation/recent-runs')
     await expect(page.getByRole('table').locator('tbody tr')).toHaveCount(2)
-    await expect(page.getByRole('columnheader')).toHaveCount(3)
+    await expect(page.getByRole('columnheader')).toHaveCount(4)
     await expect(page.getByRole('columnheader', { name: /build|image/i })).toHaveCount(0)
     await expect(page.locator('table time')).toHaveCount(0)
     await expect(page.getByRole('table')).not.toContainText('10:30')

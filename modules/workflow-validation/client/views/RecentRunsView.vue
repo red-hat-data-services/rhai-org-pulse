@@ -47,7 +47,7 @@
     <p v-if="loading || searchPending" role="status" class="mb-4 text-sm text-gray-500 dark:text-gray-400">{{ hasLoaded ? 'Updating recent runs…' : 'Loading recent runs…' }}</p>
     <div v-if="hasLoaded" :aria-busy="loading" class="overflow-hidden rounded-xl border border-gray-100 bg-white dark:border-gray-700 dark:bg-gray-800">
       <div class="relative overflow-x-auto">
-        <table class="w-full min-w-[48rem] table-fixed text-left text-sm">
+        <table class="w-full min-w-[56rem] table-fixed text-left text-sm">
           <caption class="sr-only">Recent Workflow Validation runs. Select a run to open its details.</caption>
           <thead class="border-b border-gray-100 text-xs uppercase tracking-wide text-gray-500 dark:border-gray-700 dark:text-gray-400">
             <tr>
@@ -59,6 +59,7 @@
                   <span aria-hidden="true" class="shrink-0 text-sm">{{ applied.sortField === column.field ? (applied.sortDir === 'asc' ? '↑' : '↓') : '↕' }}</span>
                 </button>
               </th>
+              <th scope="col" class="px-5 py-3">Bug tickets</th>
             </tr>
           </thead>
           <tbody>
@@ -71,8 +72,17 @@
               </td>
               <td class="break-words px-5 py-4 font-mono text-xs text-gray-600 dark:text-gray-300">{{ run.rhoaiVersion ? versionLabel(run.rhoaiVersion) : 'Version unavailable' }}</td>
               <td class="whitespace-nowrap px-5 py-4 text-gray-600 dark:text-gray-300"><time v-if="validTime(run.timestamp)" :datetime="run.timestamp">{{ recordedTime(run.timestamp) }}</time><span v-else>Unavailable</span></td>
+              <td class="px-5 py-4">
+                <a v-if="run.bugTickets?.status === 'ready' && safeExternalUrl(run.bugTickets.url)"
+                  :href="safeExternalUrl(run.bugTickets.url)" target="_blank" rel="noopener noreferrer"
+                  :aria-label="`Open bug tickets for run ${run.invocationId} in Jira (opens in a new tab)`"
+                  class="whitespace-nowrap font-medium text-primary-700 underline hover:text-primary-900 focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary-500 dark:text-primary-300"
+                  @click.stop @keydown.enter.stop>Bug tickets <span aria-hidden="true">↗</span></a>
+                <span v-else-if="run.bugTickets?.status === 'empty'" class="text-xs text-gray-500 dark:text-gray-400" title="No eligible Jira tickets are recorded for this run.">No ticket recorded</span>
+                <span v-else class="text-xs text-gray-500 dark:text-gray-400" title="Ticket associations or Jira labels could not be verified. Use Refresh to retry.">Bug tickets unavailable</span>
+              </td>
             </tr>
-            <tr v-if="!runs.length"><td colspan="3" class="px-5 py-12 text-center text-gray-500 dark:text-gray-400">{{ page.total ? 'This page has changed. Use Previous to return to the first page.' : hasFilters ? 'No runs match these filters.' : 'No runs are available.' }}</td></tr>
+            <tr v-if="!runs.length"><td colspan="4" class="px-5 py-12 text-center text-gray-500 dark:text-gray-400">{{ page.total ? 'This page has changed. Use Previous to return to the first page.' : hasFilters ? 'No runs match these filters.' : 'No runs are available.' }}</td></tr>
           </tbody>
         </table>
       </div>
@@ -88,6 +98,7 @@ import { computed, inject, onBeforeUnmount, onMounted, reactive, ref, watch } fr
 import { RECENT_RUNS_PAGE_SIZE, formatSuiteName, syncQueryParams, useWorkflowValidation } from '../composables/useWorkflowValidation'
 import RecentVersionSelect from '../components/RecentVersionSelect.vue'
 import * as versionRules from '../../lib/versions.js'
+import { safeExternalUrl } from '../utils/external-url'
 const { normalizeVersions, versionLabel } = versionRules
 const nav = inject('moduleNav', null)
 const { getRecentRuns } = useWorkflowValidation()

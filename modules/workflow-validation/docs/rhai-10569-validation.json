@@ -1,0 +1,39 @@
+{
+  "checkedAt": "2026-11-09T10:31:49.400529+00:00",
+  "coreTag": "v2.0.94",
+  "previewUrl": "https://team-tracker-workflow-validation-org-pulse.apps.workval.aipcc-gpuaas.com/#/workflow-validation/recent-runs?recentRun=1785871397611&recentSuite=release_gate",
+  "tests": {
+    "unit_passed": 6813,
+    "unit_skipped": 11,
+    "browser_passed": 38,
+    "lint": "passed",
+    "module_validation": "passed",
+    "openapi_validation": "passed",
+    "standard_frontend_build": "passed",
+    "standard_backend_build": "passed"
+  },
+  "liveBackend": {
+    "jiraReachable": true,
+    "sourceMatches": true,
+    "telemetryUnchangedAtVerification": true,
+    "internalOnlyControl": "synthetic in-memory association; real Jira label; empty state verified"
+  },
+  "deployments": {
+    "backend": {
+      "ready": true,
+      "image": "image-registry.openshift-image-registry.svc:5000/workflow-validation-org-pulse/org-pulse-backend@sha256:b94cb7e2cb94548d13cc4bd6df2c81fd7b124739fd55416d6431a0a21680e155",
+      "runtime_configuration_preserved": true
+    },
+    "frontend": {
+      "ready": true,
+      "image": "image-registry.openshift-image-registry.svc:5000/workflow-validation-org-pulse/org-pulse-frontend@sha256:7742ddb0ffed3c32140c0598a02cb109e588b76bf0229b3d22a0d7383104cb2c",
+      "runtime_configuration_preserved": true
+    }
+  },
+  "knownDataIssue": {
+    "ticket": "RHAI-9991",
+    "missing_jira_key": "RHOAIENG-100723",
+    "recorded_root_causes": 0
+  },
+  "pullRequestCreated": false
+}

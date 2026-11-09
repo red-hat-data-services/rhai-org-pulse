@@ -132,6 +132,40 @@ describe('OpenSearch runtime client', () => {
 })
 
 describe('workflow-validation live schema routes', () => {
+  it('adds verified-empty ticket states only for the selected page when requested', async () => {
+    const searches = []
+    vi.stubGlobal('fetch', vi.fn((url, options) => {
+      const body = JSON.parse(options.body)
+      searches.push({ url, body })
+      if (body.aggs?.suite_runs) return Promise.resolve(jsonResponse({ aggregations: { suite_runs: { buckets: [{
+        key: { suite: 'release_gate', invocation: 'run-1' }, latest: { hits: { hits: [{ _source: { timestamp: '2026-11-01T00:00:00Z' } }] } }
+      }] } } }))
+      if (url.includes(`/${RUNS_INDEX}/`)) return Promise.resolve(jsonResponse({ hits: { hits: [{ _source: {
+        telemetry_suite: 'release_gate', invocation_id: 'run-1', workflow: 'workflow-a'
+      } }] } }))
+      return Promise.resolve(jsonResponse({ hits: { hits: [] } }))
+    }))
+    const response = makeResponse()
+    await register()['/test-suites'].at(-1)({ query: { pageSize: '20', includeBugs: 'false', includeBugTickets: 'true' } }, response)
+    expect(response.statusCode).toBe(200)
+    expect(response.body.rows[0]).toMatchObject({ suite: 'release_gate', invocationId: 'run-1', bugTickets: { status: 'empty' } })
+    expect(searches).toHaveLength(3)
+    expect(searches[2].body.query.bool.filter).toContainEqual({ terms: { run_id: ['run-1'] } })
+    expect(JSON.stringify(searches[2])).not.toContain('category')
+  })
+
+  it.each([
+    { includeBugTickets: 'true' },
+    { pageSize: '20', includeBugTickets: 'invalid' },
+  ])('rejects invalid bug ticket enrichment parameters before searches: %j', async query => {
+    const fetch = vi.fn()
+    vi.stubGlobal('fetch', fetch)
+    const response = makeResponse()
+    await register()['/test-suites'].at(-1)({ query }, response)
+    expect(response.statusCode).toBe(400)
+    expect(fetch).not.toHaveBeenCalled()
+  })
+
   it('uses canonical workflow identity and never maps run verdict to task status', () => {
     expect(JSON.stringify(runFilters({ workflow: 'wf-a', verdict: 'PASS' })))
       .toContain('"workflow":"wf-a"')

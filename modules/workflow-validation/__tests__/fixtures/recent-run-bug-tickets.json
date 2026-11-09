@@ -1,0 +1,37 @@
+{
+  "rows": [
+    {
+      "suite": "release_gate",
+      "invocationId": "sample-with-tickets",
+      "rhoaiVersion": "3.6.0",
+      "timestamp": "2026-11-01T00:00:00Z",
+      "bugTickets": {
+        "status": "ready",
+        "url": "https://redhat.atlassian.net/issues/?jql=key+IN+%28RHOAIENG-1%2C+RHOAIENG-2%29+AND+%28labels+IS+EMPTY+OR+labels+NOT+IN+%28%22rca-scope-internal%22%29%29"
+      }
+    },
+    {
+      "suite": "release_gate",
+      "invocationId": "sample-only-internal",
+      "rhoaiVersion": "3.6.0",
+      "timestamp": "2026-11-01T00:00:00Z",
+      "bugTickets": { "status": "empty" }
+    },
+    {
+      "suite": "release_gate",
+      "invocationId": "sample-unavailable",
+      "rhoaiVersion": "3.6.0",
+      "timestamp": "2026-11-01T00:00:00Z",
+      "bugTickets": { "status": "unavailable" }
+    }
+  ],
+  "total": 3,
+  "pageSize": 20,
+  "start": 1,
+  "end": 3,
+  "nextCursor": null,
+  "previousCursor": null,
+  "options": { "versions": ["3.6.0"], "suites": ["release_gate"] },
+  "sortField": "timestamp",
+  "sortDir": "desc"
+}

@@ -16,6 +16,8 @@ const {
   bugFilters
 } = require('./opensearch');
 const { getEffectiveSettings, getSavedSettings, saveSettings } = require('./config');
+const { createJiraClient } = require('../../../shared/server/jira');
+const { createBugTickets } = require('./bug-tickets');
 const recentRunTools = import('../lib/versions.js').then(rules => require('./recent-runs')(rules));
 
 /** Wrap an async handler so OpenSearch connectivity errors become clean HTTP responses. */
@@ -159,6 +161,20 @@ module.exports = function registerRoutes(router, context) {
   let cachedSignature;
   let recentGroupsCache;
   let recentScanSequence = 0;
+  let jiraClient;
+  let jiraSignature;
+  const enrichBugTickets = createBugTickets({ getJiraClient() {
+    const email = context.secrets?.JIRA_EMAIL;
+    const token = context.secrets?.JIRA_TOKEN;
+    if (!email || !token) throw new Error('Jira credentials are unavailable');
+    const host = process.env.JIRA_HOST || 'https://redhat.atlassian.net';
+    const signature = JSON.stringify([email, token, host]);
+    if (!jiraClient || jiraSignature !== signature) {
+      jiraClient = createJiraClient({ email, token, host });
+      jiraSignature = signature;
+    }
+    return jiraClient;
+  } });
 
   async function getRuntimeClient() {
     const settings = await getEffectiveSettings(readFromStorage);
@@ -501,6 +517,7 @@ module.exports = function registerRoutes(router, context) {
    *       - { in: query, name: latest, schema: { type: boolean } }
    *       - { in: query, name: limit, schema: { type: integer, minimum: 1, maximum: 200 }, description: Limit run groups after ordering newest first }
    *       - { in: query, name: includeBugs, schema: { type: boolean, default: true }, description: Set false for lightweight run metadata without RCA retrieval }
+   *       - { in: query, name: includeBugTickets, schema: { type: boolean, default: false }, description: Add per-row Jira search links in paged mode; exclude rca-scope-internal using verified Jira labels }
    *       - { in: query, name: dateFrom, schema: { type: string, format: date } }
    *       - { in: query, name: dateTo, schema: { type: string, format: date } }
    *       - { in: query, name: pageSize, schema: { type: integer, minimum: 1, maximum: 200 }, description: Opt into lightweight pagination across all run groups }
@@ -509,7 +526,7 @@ module.exports = function registerRoutes(router, context) {
    *       - { in: query, name: runQuery, schema: { type: string, maxLength: 256 }, description: Run ID substring; requires pageSize }
    *       - { in: query, name: refresh, schema: { type: boolean, default: false }, description: Bypass the 10-second metadata cache; requires pageSize }
    *     responses:
-   *       200: { description: "Run groups ordered by recorded execution timestamp. Paged mode returns rows, total, start, end, pageSize, nextCursor, previousCursor, options (versions and suites), sortField and sortDir." }
+   *       200: { description: "Run groups ordered by recorded execution timestamp. Paged mode returns rows, total, start, end, pageSize, nextCursor, previousCursor, options (versions and suites), sortField and sortDir. includeBugTickets adds bugTickets with ready, empty or unavailable status; ready includes a Jira search URL." }
    *       400: { description: "Invalid limit, page parameters, or cursor" }
    */
   router.get('/test-suites', requireAuth, safe(async function (req, res) {
@@ -556,7 +573,13 @@ module.exports = function registerRoutes(router, context) {
             recentGroupsCache = { client, rows, sequence: scanSequence, expiresAt: Date.now() + 10_000 };
           }
         }
-        return res.json(pageRecentRuns(rows, recent));
+        const page = pageRecentRuns(rows, recent);
+        if (req.query.includeBugTickets === 'true') {
+          page.rows = await enrichBugTickets(page.rows, {
+            search: (index, body) => client.search(index, body), refresh: recent.refresh, isClosed: () => closed
+          });
+        }
+        if (!closed) return res.json(page);
       } catch (err) {
         if (!closed) throw err;
       } finally {

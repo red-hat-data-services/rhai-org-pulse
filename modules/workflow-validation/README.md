@@ -167,8 +167,21 @@ separate. Other partial versions keep their recorded label.
 Clear filters restores the unfiltered, newest-first first page. Shareable URLs
 retain the filters, sort, and page. Sorting and dates use existing execution
 metadata; RHOAI build time is not available yet. The page uses
-`/test-suites?pageSize=20&includeBugs=false` and ignores shared detail filters.
+`/test-suites?pageSize=20&includeBugs=false&includeBugTickets=true` and ignores shared detail filters.
 Metadata is cached for up to 10 seconds. Refresh bypasses the cache.
+
+Each row also shows **Bug tickets**, **No ticket recorded**, or **Bug tickets
+unavailable**. The link opens a Jira search in a new tab without opening the
+run details. Recorded associations supply the keys. Jira labels determine
+eligibility: exclude `rca-scope-internal`, regardless of RCA category. The
+backend requests labels only and caches verified decisions for up to one minute.
+Refresh bypasses that cache. Runs with only Internal-labelled tickets show
+**No ticket recorded**. Missing credentials, inaccessible tickets, incomplete
+associations, and service failures show **Bug tickets unavailable**.
+
+The module consumes the platform `jira` secret group (`JIRA_EMAIL` and
+`JIRA_TOKEN`) through `context.secrets`. Credentials stay on the backend.
+See [RHAI-10569 details](docs/rhai-10569-bug-ticket-links.md).
 
 See the [Recent Runs contract](docs/rhai-10567-recent-runs-contract.md),
 [RHAI-20044 details](docs/rhai-20044-recent-runs-ux.md), and
