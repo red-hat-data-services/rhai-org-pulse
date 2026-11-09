@@ -85,6 +85,29 @@ describe('validateComponentOnboarding targetVersion', () => {
   });
 });
 
+describe('validateComponentOnboarding Jira projects', () => {
+  const base = {
+    summary: 'Test onboarding',
+    status: 'In Progress',
+    completionStatus: 'in-progress',
+    productContext: 'RHOAI',
+    syncedAt: '2026-01-01T00:00:00.000Z'
+  };
+
+  it.each(['RHOAIENG-1', 'RHAI-1', 'RHAIENG-1'])(
+    'accepts component onboarding issue key %s from the ingestion project list',
+    key => {
+      expect(validateComponentOnboarding({ ...base, key }).valid).toBe(true);
+    }
+  );
+
+  it('rejects an issue key from a project outside the ingestion project list', () => {
+    const result = validateComponentOnboarding({ ...base, key: 'RHAISTRAT-1' });
+    expect(result.valid).toBe(false);
+    expect(result.errors).toContain('key must start with one of: RHOAIENG-, RHAI-, RHAIENG-');
+  });
+});
+
 describe('extractVersionNameFromJiraField', () => {
   it('extracts version name from Jira field shapes', () => {
     expect(extractVersionNameFromJiraField({ name: '3.6 GA RHOAI RELEASE' }))
