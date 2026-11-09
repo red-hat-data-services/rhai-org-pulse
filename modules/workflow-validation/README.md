@@ -170,7 +170,7 @@ metadata; RHOAI build time is not available yet. The page uses
 `/test-suites?pageSize=20&includeBugs=false&includeBugTickets=true` and ignores shared detail filters.
 Metadata is cached for up to 10 seconds. Refresh bypasses the cache.
 
-Each row also shows **Issues found**, **No issues recorded**, or **Issues
+Each row also shows **Jira issues**, **No issues recorded**, or **Issues
 unavailable**. The link opens a Jira search in a new tab without opening the
 run details. Recorded associations supply the keys. Jira labels determine
 eligibility: exclude `rca-scope-internal`, regardless of RCA category. The

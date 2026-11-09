@@ -3,7 +3,8 @@
 Story: [RHAI-10569](https://redhat.atlassian.net/browse/RHAI-10569).
 Parent branch: [RHAI-20044 / PR #1866](https://github.com/red-hat-data-services/rhai-org-pulse/pull/1866).
 
-The Recent Runs table adds one Issues found column. It covers bugs and RFAs. A link opens the recorded
+The Recent Runs table adds one Issues found column. It covers bugs and RFAs.
+The Jira issues link opens the recorded
 run's eligible Jira tickets in a new tab. It does not trigger run navigation.
 The existing sorting, filters, pagination, exact-run navigation, and test counts
 keep their existing behavior. This change adds no ticket previews or ranking.
@@ -33,7 +34,7 @@ AND (labels IS EMPTY OR labels NOT IN ("rca-scope-internal"))
 
 ## Row states
 
-- **Issues found**: at least one eligible ticket has been verified.
+- **Jira issues**: at least one eligible ticket has been verified.
 - **No issues recorded**: no recorded keys, or every recorded ticket has the
   Internal label. This wording follows the requested landing-page behavior.
 - **Issues unavailable**: a credential, service, association, or Jira

@@ -75,9 +75,9 @@
               <td class="px-5 py-4">
                 <a v-if="run.bugTickets?.status === 'ready' && safeExternalUrl(run.bugTickets.url)"
                   :href="safeExternalUrl(run.bugTickets.url)" target="_blank" rel="noopener noreferrer"
-                  :aria-label="`Open issues for run ${run.invocationId} in Jira (opens in a new tab)`"
+                  :aria-label="`Open Jira issues for run ${run.invocationId} (opens in a new tab)`"
                   class="whitespace-nowrap font-medium text-primary-700 underline hover:text-primary-900 focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary-500 dark:text-primary-300"
-                  @click.stop @keydown.enter.stop>Issues found <span aria-hidden="true">↗</span></a>
+                  @click.stop @keydown.enter.stop>Jira issues <span aria-hidden="true">↗</span></a>
                 <span v-else-if="run.bugTickets?.status === 'empty'" class="text-xs text-gray-500 dark:text-gray-400" title="No eligible Jira issues are recorded for this run.">No issues recorded</span>
                 <span v-else class="text-xs text-gray-500 dark:text-gray-400" title="Issue associations or Jira labels could not be verified. Use Refresh to retry.">Issues unavailable</span>
               </td>

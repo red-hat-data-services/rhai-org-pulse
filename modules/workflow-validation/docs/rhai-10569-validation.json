@@ -26,7 +26,7 @@
     },
     "frontend": {
       "ready": true,
-      "image": "image-registry.openshift-image-registry.svc:5000/workflow-validation-org-pulse/org-pulse-frontend@sha256:d84250a5fa2d1dee0dc04480e5029e9f39a3f273b469852e9a52945630a25183",
+      "image": "image-registry.openshift-image-registry.svc:5000/workflow-validation-org-pulse/org-pulse-frontend@sha256:182f2ec82d8356c8b31b9c8e3f446feb715b65258094e1f45d4e4e3c73c9affa",
       "runtime_configuration_preserved": true
     }
   },
@@ -50,6 +50,20 @@
     "browser_label_check_passed": true,
     "unit_passed": 6813,
     "unit_skipped": 11,
+    "lint": "passed"
+  },
+  "jiraLinkLabelUpdate": {
+    "checked_at": "2026-11-09T13:15:42.210412+00:00",
+    "build": "org-pulse-frontend-rhai10569-standard-20261109-3",
+    "image": "image-registry.openshift-image-registry.svc:5000/workflow-validation-org-pulse/org-pulse-frontend@sha256:182f2ec82d8356c8b31b9c8e3f446feb715b65258094e1f45d4e4e3c73c9affa",
+    "served_asset": "assets/RecentRunsView-DiG60lV0.js",
+    "asset_sha256": "ffe43ce29a5c5e131c3483f4dd2659421a6b4bb9d6b8a0a146a56aebe76932cc",
+    "row_link": "Jira issues",
+    "column": "Issues found",
+    "empty": "No issues recorded",
+    "unit_passed": 6813,
+    "unit_skipped": 11,
+    "browser_link_check_passed": true,
     "lint": "passed"
   }
 }
