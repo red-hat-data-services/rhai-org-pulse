@@ -137,9 +137,10 @@ export function useCategories() {
   function getDecisionStatus(candidate) {
     const dec = (candidate.pmDecision || '').toLowerCase()
     if (!dec) return 'pending'
-    if (dec.includes('approve')) return 'approved'
-    if (dec.includes('decline')) return 'declined'
+    // Negatives first: "Disapprove" and "Not approved" contain "approve".
+    if (/disapprov|declin|reject|\bnot\s+approv/.test(dec)) return 'declined'
     if (dec.includes('revisit')) return 'revisit'
+    if (/\bapprov/.test(dec)) return 'approved'
     return 'pending'
   }
 

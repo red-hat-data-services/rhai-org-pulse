@@ -285,16 +285,10 @@ function clearCache() {
   _cache = null;
 }
 
-/** Return the in-memory catalog, or null when no fetch has succeeded yet. */
-function getCachedShowcaseData() {
-  return _cache ? _cache.data : null;
-}
-
 module.exports = {
   fetchShowcaseData,
   getShowcaseData,
   clearCache,
-  getCachedShowcaseData,
   parseArrayField,
   mapRow,
   humanizePillarKey,

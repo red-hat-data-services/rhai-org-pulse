@@ -1,7 +1,7 @@
 import { describe, it, expect, vi } from 'vitest';
 import http from 'node:http';
 
-import { createFeedClient, FeedError, proxyDispatcherFromEnv, redactUrl } from '../../server/feed-client.js';
+import { createFeedClient, FeedError, proxyDispatcherFromEnv, redactUrl, redactText } from '../../server/feed-client.js';
 
 function jsonResponse(status, body) {
   return {
@@ -479,9 +479,15 @@ describe('redactUrl', () => {
     expect(redactUrl('https://user:secret@feed.example.test/path?x=1')).toBe('https://feed.example.test/path?x=1');
   });
 
-  it('drops userinfo from error text that is not a bare URL', () => {
+  it('replaces a malformed value instead of echoing it', () => {
+    expect(redactUrl('user:secret@feed.example.test')).toBe('(invalid URL)');
+    expect(redactUrl('not a url')).toBe('(invalid URL)');
+  });
+
+  it('drops scheme userinfo from error text without losing the message', () => {
     const message = 'Failed to reach https://user:pass@feed.example.test: boom';
-    expect(redactUrl(message)).not.toContain('user:pass');
-    expect(redactUrl(message)).toContain('feed.example.test');
+    expect(redactText(message)).not.toContain('user:pass');
+    expect(redactText(message)).toContain('feed.example.test');
+    expect(redactText(message)).toContain('boom');
   });
 });

@@ -4,7 +4,6 @@ import {
   fetchShowcaseData,
   getShowcaseData,
   clearCache,
-  getCachedShowcaseData,
   parseArrayField,
   mapRow,
   ENTRY_COLUMN_MAP,
@@ -363,16 +362,6 @@ describe('fetchShowcaseData', () => {
     const data = await getShowcaseData('https://feed.example.test', 'token-123', storage);
     expect(data.entries.map(e => e.slug)).toContain('vllm-serving');
     expect(storage.readFromStorage).not.toHaveBeenCalled();
-  });
-
-  it('exposes the in-memory catalog so board responses match showcase responses', async () => {
-    expect(getCachedShowcaseData()).toBeNull()
-    stubFeed({ '/feed/showcase.json': FEED_PAYLOAD })
-    const storage = { writeToStorage: vi.fn(async () => {}) };
-
-    await fetchShowcaseData('https://feed.example.test', 'token-123', storage);
-
-    expect(getCachedShowcaseData().entries.map(e => e.slug)).toContain('vllm-serving')
   });
 
   it('surfaces an actionable error on 401', async () => {

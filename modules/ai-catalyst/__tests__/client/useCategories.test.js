@@ -25,6 +25,16 @@ describe('useCategories', () => {
       ]))
   })
 
+  it('does not read "Disapprove" or "Not approved" as approved', () => {
+    const { getDecisionStatus } = useCategories()
+
+    expect(getDecisionStatus({ pmDecision: 'Approve' })).toBe('approved')
+    expect(getDecisionStatus({ pmDecision: 'Approved' })).toBe('approved')
+    expect(getDecisionStatus({ pmDecision: 'Disapprove' })).toBe('declined')
+    expect(getDecisionStatus({ pmDecision: 'Not approved' })).toBe('declined')
+    expect(getDecisionStatus({ pmDecision: 'Decline' })).toBe('declined')
+  })
+
   it('labels the feed source "hackernews" as well as the legacy "hn"', () => {
     const { getSourceLabel } = useCategories()
 

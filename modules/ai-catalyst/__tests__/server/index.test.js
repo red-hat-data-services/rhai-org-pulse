@@ -1253,6 +1253,57 @@ describe('ai-catalyst board sync via POC Explorer feed', () => {
     }))
   })
 
+  it('does not treat "Disapprove" as approved in the status filter', async () => {
+    const { handlers } = makeContext({
+      storage: makeStorage({
+        'ai-catalyst/index.json': { boards: [{ month: '2026-09' }] },
+        'ai-catalyst/boards/2026-09.json': [
+          { uniqueId: 'org/no', pmDecision: 'Disapprove', title: 'No' },
+          { uniqueId: 'org/yes', pmDecision: 'Approve', title: 'Yes' },
+        ],
+      }),
+    })
+    const res = { json: vi.fn(), status: vi.fn() }
+
+    await handlers['/boards/:month']({ params: { month: '2026-09' }, query: { status: 'approved' } }, res)
+
+    expect(res.json).toHaveBeenCalledWith(expect.objectContaining({
+      candidates: [expect.objectContaining({ uniqueId: 'org/yes' })],
+    }))
+  })
+
+  it('does not echo a malformed stored feed URL with credentials', async () => {
+    const { handlers } = makeContext({
+      storage: makeStorage({
+        'ai-catalyst/board-config.json': { feedUrl: 'user:secret@feed.example.test' },
+      }),
+    })
+    const res = { json: vi.fn() }
+
+    await handlers['/config']({}, res)
+
+    expect(res.json).toHaveBeenCalledWith(expect.objectContaining({ feedUrl: '(invalid URL)' }))
+    expect(JSON.stringify(res.json.mock.calls[0][0])).not.toContain('secret')
+  })
+
+  it('reports an unreadable board config in diagnostics', async () => {
+    const { context } = makeContext({
+      storage: {
+        readFromStorage: vi.fn(async key => {
+          if (key === 'ai-catalyst/board-config.json') throw new Error('bad config')
+          return null
+        }),
+        writeToStorage: vi.fn(async () => {}),
+      },
+    })
+
+    const diagnostics = context.registerDiagnostics.mock.calls[0][0]
+    const result = await diagnostics()
+
+    expect(result.feed.url).toBeNull()
+    expect(result.configError).toContain('bad config')
+  })
+
   it('reports the persisted sync error through diagnostics after a restart', async () => {
     const { context } = makeContext({
       storage: makeStorage({

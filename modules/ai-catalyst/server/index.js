@@ -1,8 +1,7 @@
-const { createFeedClient, validateFeedDestination, redactUrl } = require('./feed-client');
+const { createFeedClient, validateFeedDestination, redactUrl, redactText } = require('./feed-client');
 const {
   getShowcaseData,
   fetchShowcaseData,
-  getCachedShowcaseData,
   STORAGE_KEY: SHOWCASE_STORAGE_KEY,
   getReferencedPillarKeys,
   mergePillarMetadata,
@@ -114,9 +113,10 @@ function parseBoardRows(rows) {
 function extractDecisionStatus(candidate) {
   const dec = (candidate.pmDecision || '').toLowerCase();
   if (!dec) return 'pending';
-  if (dec.includes('approve')) return 'approved';
-  if (dec.includes('decline')) return 'declined';
+  // Negatives first: "Disapprove" and "Not approved" contain "approve".
+  if (/disapprov|declin|reject|\bnot\s+approv/.test(dec)) return 'declined';
   if (dec.includes('revisit')) return 'revisit';
+  if (/\bapprov/.test(dec)) return 'approved';
   return 'pending';
 }
 
@@ -402,7 +402,7 @@ module.exports = function registerRoutes(router, context) {
       // did not sync keep their previous stamp.
       const advanced = syncCount > 0;
       const lastError = failed.length
-        ? redactUrl(`Board sync failed for ${failed.length}/${listedBoards.length} boards — ${failed.map(f => `${f.board}: ${f.error}`).join('; ')}`)
+        ? redactText(`Board sync failed for ${failed.length}/${listedBoards.length} boards — ${failed.map(f => `${f.board}: ${f.error}`).join('; ')}`)
         : null;
       await writeToStorage(INDEX_PATH, {
         boards,
@@ -419,7 +419,7 @@ module.exports = function registerRoutes(router, context) {
     } catch (err) {
       // A failure before the per-board loop (unreachable proxy, 401, bad
       // shape) must also survive a restart, not just live in memory.
-      lastSyncError = redactUrl(err.message || String(err));
+      lastSyncError = redactText(err.message || String(err));
       await persistSyncAttempt(lastSyncError);
       throw err;
     } finally {
@@ -503,11 +503,11 @@ module.exports = function registerRoutes(router, context) {
       // The persisted attempt/error survive a restart; the module state is
       // fresher when a run happened in this process.
       lastSyncAttemptTime: lastSyncAttemptTime || (index && index.lastAttemptedAt) || null,
-      lastSyncError: syncError ? redactUrl(syncError) : null,
+      lastSyncError: syncError ? redactText(syncError) : null,
       // The effective URL, not the stored override: a save that later fails
       // closed is visible without reading the pod logs.
       feedUrl: feedUrl ? redactUrl(feedUrl) : null,
-      configError: configError ? redactUrl(configError) : null,
+      configError: configError ? redactText(configError) : null,
       boardCount: (index && index.boards) ? index.boards.length : 0
     });
   });
@@ -707,32 +707,27 @@ module.exports = function registerRoutes(router, context) {
   // showcase catalog so board requests remain available when the feed is
   // temporarily unreachable, and synthesize metadata for any category that
   // has arrived in a board before its pillar row has been refreshed.
-  /** Prefer the shared catalog, then storage; fetch only as a last resort. */
+  /** Prefer the shared catalog; refresh it once the read-path TTL expires. */
   async function loadPillarData() {
-    // Prefer the shared in-memory catalog: it is fresh even when the last
-    // storage write failed. Read storage only when no cache exists.
-    const cached = getCachedShowcaseData();
-    if (cached) return normalizeShowcaseData(cached);
-
-    try {
-      const stored = await readFromStorage(SHOWCASE_STORAGE_KEY);
-      if (stored) return normalizeShowcaseData(stored);
-    } catch (err) {
-      console.error('[ai-catalyst:showcase] Failed to read pillar cache:', err.message);
-    }
-
-    if (DEMO_MODE) {
-      return loadShowcaseDemoData();
-    }
+    if (DEMO_MODE) return loadShowcaseDemoData();
 
     try {
       if (await isConfigured()) {
+        // getShowcaseData serves the fresh cache and refreshes it once the TTL
+        // expires, falling back to cache/storage when the feed fails.
         return normalizeShowcaseData(
           await getShowcaseData(getShowcaseFeedUrl, getFeedToken(), storage, getAllowedFeedOrigins(), allowLoopback),
         );
       }
     } catch (err) {
       console.error('[ai-catalyst:showcase] Failed to load pillar metadata:', err.message);
+    }
+
+    try {
+      const stored = await readFromStorage(SHOWCASE_STORAGE_KEY);
+      if (stored) return normalizeShowcaseData(stored);
+    } catch (err) {
+      console.error('[ai-catalyst:showcase] Failed to read pillar cache:', err.message);
     }
 
     return normalizeShowcaseData({ entries: [], pillars: [], fetchedAt: null });
@@ -916,7 +911,7 @@ module.exports = function registerRoutes(router, context) {
           // Throwing is the refresh registry's retry mechanism: a returned
           // value counts as success and would advance lastSuccessfulRun,
           // silencing retries for a full cadence window.
-          throw new Error(redactUrl(
+          throw new Error(redactText(
             `Board sync failed for ${result.failed.length}/${result.total} boards — `
             + result.failed.map(f => `${f.board}: ${f.error}`).join('; '),
           ));
@@ -946,19 +941,21 @@ module.exports = function registerRoutes(router, context) {
       const index = await readIndex();
       const showcaseData = await readFromStorage(SHOWCASE_STORAGE_KEY);
       const syncError = lastSyncError || (index && index.lastError) || null;
-      let feedUrl;
+      let feedUrl = null;
+      let configError = null;
       try {
         feedUrl = redactUrl(await getBoardFeedUrl());
-      } catch {
-        feedUrl = null;
+      } catch (err) {
+        configError = redactText(err.message || String(err));
       }
       return {
         configured: await isConfigured(),
         demoMode: DEMO_MODE,
         lastSyncTime,
         lastSyncAttemptTime: lastSyncAttemptTime || (index && index.lastAttemptedAt) || null,
-        lastSyncError: syncError ? redactUrl(syncError) : null,
+        lastSyncError: syncError ? redactText(syncError) : null,
         syncRunning,
+        configError,
         boardCount: (index && index.boards) ? index.boards.length : 0,
         boards: (index && index.boards) || [],
         feed: {

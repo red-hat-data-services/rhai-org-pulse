@@ -44,19 +44,27 @@ function defaultDispatcher(env = process.env) {
 }
 
 /**
- * Strip userinfo from a URL, or from any text that contains one. Used before
- * echoing a configured or observed URL into an API response or an error.
+ * Render a URL without userinfo. Anything that is not a single valid URL
+ * (including a malformed stored value) becomes an opaque placeholder, so the
+ * value can never be echoed with credentials.
  */
 function redactUrl(value) {
-  const text = String(value || '');
   try {
-    const parsed = new URL(text);
+    const parsed = new URL(String(value || ''));
+    // Only hierarchical http(s) URLs are safe to render; an opaque or
+    // scheme-only value could hide credentials in its path.
+    if (parsed.protocol !== 'https:' && parsed.protocol !== 'http:') return '(invalid URL)';
+    if (!parsed.host) return '(invalid URL)';
     const pathname = parsed.pathname === '/' ? '' : parsed.pathname;
     return `${parsed.protocol}//${parsed.host}${pathname}${parsed.search}${parsed.hash}`;
   } catch {
-    // Not a bare URL (an error message): drop any userinfo it embeds.
-    return text.replace(/\/\/[^/]*@/g, '//');
+    return '(invalid URL)';
   }
+}
+
+/** Strip scheme-based userinfo from free text such as an error message. */
+function redactText(value) {
+  return String(value || '').replace(/([a-z][a-z0-9+.-]*:\/\/)[^/\s]*@/gi, '$1');
 }
 
 class FeedError extends Error {
@@ -88,15 +96,15 @@ function validateFeedDestination(root, allowedOrigins, allowLoopback) {
   try {
     parsed = new URL(root);
   } catch {
-    throw new FeedError(`POC Explorer feed URL is not a valid URL: ${redactUrl(root)}`);
+    throw new FeedError(`POC Explorer feed URL is not a valid URL`);
   }
 
   const isLoopback = LOOPBACK_HOSTNAMES.has(parsed.hostname);
   if (isLoopback && !allowLoopback) {
-    throw new FeedError(`POC Explorer feed URL points at loopback, which is only allowed when POC_EXPLORER_ALLOW_LOOPBACK=1: ${redactUrl(root)}`);
+    throw new FeedError(`POC Explorer feed URL points at loopback, which is only allowed when POC_EXPLORER_ALLOW_LOOPBACK=1`);
   }
   if (parsed.protocol !== 'https:' && !(parsed.protocol === 'http:' && isLoopback)) {
-    throw new FeedError(`POC Explorer feed URL must use HTTPS (plain HTTP is only allowed on loopback): ${redactUrl(root)}`);
+    throw new FeedError(`POC Explorer feed URL must use HTTPS (plain HTTP is only allowed on loopback)`);
   }
 
   // Credentials in the URL would be sent to the feed and echoed by /config;
@@ -108,7 +116,7 @@ function validateFeedDestination(root, allowedOrigins, allowLoopback) {
   // The client appends the feed path itself; a query or fragment can only
   // produce a broken URL.
   if (parsed.search || parsed.hash) {
-    throw new FeedError(`POC Explorer feed URL must not contain a query or fragment: ${redactUrl(root)}`);
+    throw new FeedError(`POC Explorer feed URL must not contain a query or fragment`);
   }
 
   if (Array.isArray(allowedOrigins) && !isLoopback && !allowedOrigins.includes(parsed.origin)) {
@@ -187,7 +195,7 @@ function createFeedClient({ baseUrl, token, timeoutMs = DEFAULT_TIMEOUT_MS, fetc
       }
       // undici hides the real cause two levels deep (e.g. a 407 from the
       // proxy), so report it instead of the generic "fetch failed".
-      const detail = redactUrl(
+      const detail = redactText(
         (err && err.cause && err.cause.cause && err.cause.cause.message)
         || (err && err.cause && err.cause.message)
         || err.message,
@@ -254,4 +262,4 @@ function createFeedClient({ baseUrl, token, timeoutMs = DEFAULT_TIMEOUT_MS, fetc
   };
 }
 
-module.exports = { createFeedClient, FeedError, proxyDispatcherFromEnv, validateFeedDestination, redactUrl };
+module.exports = { createFeedClient, FeedError, proxyDispatcherFromEnv, validateFeedDestination, redactUrl, redactText };
