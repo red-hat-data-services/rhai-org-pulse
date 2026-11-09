@@ -1,7 +1,19 @@
 {
-  "checkedAt": "2026-11-09T10:31:49.400529+00:00",
+  "checkedAt": "2026-11-09T14:22:00.855698+00:00",
   "coreTag": "v2.0.94",
+  "sourceBranch": "feat/RHAI-10569-run-bug-links",
+  "parentPullRequest": "https://github.com/red-hat-data-services/rhai-org-pulse/pull/1866",
   "previewUrl": "https://team-tracker-workflow-validation-org-pulse.apps.workval.aipcc-gpuaas.com/#/workflow-validation/recent-runs?recentRun=1785871397611&recentSuite=release_gate",
+  "labels": {
+    "column": "Issues found",
+    "link": "Jira issues",
+    "empty": "No issues recorded",
+    "unavailable": "Issues unavailable"
+  },
+  "tableExplanation": {
+    "text": "Each row shows one test suite run, its RHOAI version, and execution time. Select a row to view its results. Select Jira issues to open the bugs and RFEs associated with that run.",
+    "position": "below Recent Runs and above filters"
+  },
   "tests": {
     "unit_passed": 6813,
     "unit_skipped": 11,
@@ -26,57 +38,19 @@
     },
     "frontend": {
       "ready": true,
-      "image": "image-registry.openshift-image-registry.svc:5000/workflow-validation-org-pulse/org-pulse-frontend@sha256:16abfa07f4672b42fb06f7492123eb848cf67ec7a8365a837a64037368196049",
+      "image": "image-registry.openshift-image-registry.svc:5000/workflow-validation-org-pulse/org-pulse-frontend@sha256:0fd3c62443410041f9736a098f58304edd402ee4af45e84bb368aaadf6c1559c",
       "runtime_configuration_preserved": true
     }
+  },
+  "frontendVerification": {
+    "build": "org-pulse-frontend-rhai10569-standard-20261109-5",
+    "servedAsset": "assets/RecentRunsView-CYjamwdS.js",
+    "assetSha256": "a5591c32e4277e443304a368cc211b285dac3da6d783dc04dd29f6bbedc46faa",
+    "rfeWordingVerified": true
   },
   "knownDataIssue": {
     "ticket": "RHAI-9991",
     "missing_jira_key": "RHOAIENG-100723",
     "recorded_root_causes": 0
-  },
-  "pullRequestCreated": false,
-  "issueLabelUpdate": {
-    "checked_at": "2026-11-09T13:10:16.745935+00:00",
-    "image": "image-registry.openshift-image-registry.svc:5000/workflow-validation-org-pulse/org-pulse-frontend@sha256:d84250a5fa2d1dee0dc04480e5029e9f39a3f273b469852e9a52945630a25183",
-    "build": "org-pulse-frontend-rhai10569-standard-20261109-2",
-    "served_asset": "assets/RecentRunsView-CbO30n3G.js",
-    "asset_sha256": "05d750614ddc3a28095d4155cbf2f74aac29195e7a03b68d8d73e533392ecb37",
-    "labels": [
-      "Issues found",
-      "No issues recorded",
-      "Issues unavailable"
-    ],
-    "browser_label_check_passed": true,
-    "unit_passed": 6813,
-    "unit_skipped": 11,
-    "lint": "passed"
-  },
-  "jiraLinkLabelUpdate": {
-    "checked_at": "2026-11-09T13:15:42.210412+00:00",
-    "build": "org-pulse-frontend-rhai10569-standard-20261109-3",
-    "image": "image-registry.openshift-image-registry.svc:5000/workflow-validation-org-pulse/org-pulse-frontend@sha256:182f2ec82d8356c8b31b9c8e3f446feb715b65258094e1f45d4e4e3c73c9affa",
-    "served_asset": "assets/RecentRunsView-DiG60lV0.js",
-    "asset_sha256": "ffe43ce29a5c5e131c3483f4dd2659421a6b4bb9d6b8a0a146a56aebe76932cc",
-    "row_link": "Jira issues",
-    "column": "Issues found",
-    "empty": "No issues recorded",
-    "unit_passed": 6813,
-    "unit_skipped": 11,
-    "browser_link_check_passed": true,
-    "lint": "passed"
-  },
-  "tableExplanationUpdate": {
-    "checked_at": "2026-11-09T13:21:59.998361+00:00",
-    "build": "org-pulse-frontend-rhai10569-standard-20261109-4",
-    "image": "image-registry.openshift-image-registry.svc:5000/workflow-validation-org-pulse/org-pulse-frontend@sha256:16abfa07f4672b42fb06f7492123eb848cf67ec7a8365a837a64037368196049",
-    "served_asset": "assets/RecentRunsView-C1QMm6Ag.js",
-    "asset_sha256": "5b48455b739778db1d1bf0dc58cb064047ae49ddff3661258014101de1f4006f",
-    "paragraph": "Each row shows one test suite run, its RHOAI version, and execution time. Select a row to view its results. Select Jira issues to open the bugs and RFAs associated with that run.",
-    "position": "below Recent Runs and above filters",
-    "unit_passed": 6813,
-    "unit_skipped": 11,
-    "browser_checks_passed": 2,
-    "lint": "passed"
   }
 }

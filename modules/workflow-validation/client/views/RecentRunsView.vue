@@ -6,7 +6,7 @@
         <p class="mt-2 max-w-3xl text-sm leading-6 text-gray-600 dark:text-gray-300">
           Each row shows one test suite run, its RHOAI version, and execution time.
           Select a row to view its results.
-          Select <strong class="font-medium">Jira issues</strong> to open the bugs and RFAs associated with that run.
+          Select <strong class="font-medium">Jira issues</strong> to open the bugs and RFEs associated with that run.
         </p>
         <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">{{ RECENT_RUNS_PAGE_SIZE }} runs per page. Click a column heading to sort. All dates are UTC.</p>
       </div>

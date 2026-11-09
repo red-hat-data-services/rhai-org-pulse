@@ -3,7 +3,7 @@
 Story: [RHAI-10569](https://redhat.atlassian.net/browse/RHAI-10569).
 Parent branch: [RHAI-20044 / PR #1866](https://github.com/red-hat-data-services/rhai-org-pulse/pull/1866).
 
-The Recent Runs table adds one Issues found column. It covers bugs and RFAs.
+The Recent Runs table adds one Issues found column. It covers bugs and RFEs.
 The Jira issues link opens the recorded
 run's eligible Jira tickets in a new tab. It does not trigger run navigation.
 An explanation below the Recent Runs heading and above the filters describes
@@ -63,7 +63,8 @@ All 6,813 unit tests passed (11 skipped), and all 38 browser tests passed.
 Lint, module/OpenAPI validation, and the production build passed.
 
 [Deployment and test evidence](rhai-10569-validation.json).
-No PR has been created; the GPUaaS preview is for user approval first.
+The GPUaaS preview was reviewed before preparing the pull request. The source
+branch builds on PR #1866 and must follow its merge order.
 
 ## Missing-bug dependency assessment
 
@@ -74,5 +75,5 @@ ticket named by [RHAI-9991](https://redhat.atlassian.net/browse/RHAI-9991), for
 affects this link retrieval path: a correct join cannot recover a ticket that
 has no recorded root-cause document. The upstream investigation remains
 necessary for that run. This change reads recorded associations and does not
-repair or fabricate ingestion data. The empty label says **No ticket
-recorded**, rather than claiming that no bug exists.
+repair or fabricate ingestion data. The empty label says **No issues
+recorded** because it describes the recorded associations.
