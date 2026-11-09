@@ -170,14 +170,14 @@ metadata; RHOAI build time is not available yet. The page uses
 `/test-suites?pageSize=20&includeBugs=false&includeBugTickets=true` and ignores shared detail filters.
 Metadata is cached for up to 10 seconds. Refresh bypasses the cache.
 
-Each row also shows **Bug tickets**, **No ticket recorded**, or **Bug tickets
+Each row also shows **Issues found**, **No issues recorded**, or **Issues
 unavailable**. The link opens a Jira search in a new tab without opening the
 run details. Recorded associations supply the keys. Jira labels determine
 eligibility: exclude `rca-scope-internal`, regardless of RCA category. The
 backend requests labels only and caches verified decisions for up to one minute.
 Refresh bypasses that cache. Runs with only Internal-labelled tickets show
-**No ticket recorded**. Missing credentials, inaccessible tickets, incomplete
-associations, and service failures show **Bug tickets unavailable**.
+**No issues recorded**. Missing credentials, inaccessible tickets, incomplete
+associations, and service failures show **Issues unavailable**.
 
 The module consumes the platform `jira` secret group (`JIRA_EMAIL` and
 `JIRA_TOKEN`) through `context.secrets`. Credentials stay on the backend.

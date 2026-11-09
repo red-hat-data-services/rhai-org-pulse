@@ -59,7 +59,7 @@
                   <span aria-hidden="true" class="shrink-0 text-sm">{{ applied.sortField === column.field ? (applied.sortDir === 'asc' ? '↑' : '↓') : '↕' }}</span>
                 </button>
               </th>
-              <th scope="col" class="px-5 py-3">Bug tickets</th>
+              <th scope="col" aria-label="Issues found" class="px-5 py-3">Issues found</th>
             </tr>
           </thead>
           <tbody>
@@ -75,11 +75,11 @@
               <td class="px-5 py-4">
                 <a v-if="run.bugTickets?.status === 'ready' && safeExternalUrl(run.bugTickets.url)"
                   :href="safeExternalUrl(run.bugTickets.url)" target="_blank" rel="noopener noreferrer"
-                  :aria-label="`Open bug tickets for run ${run.invocationId} in Jira (opens in a new tab)`"
+                  :aria-label="`Open issues for run ${run.invocationId} in Jira (opens in a new tab)`"
                   class="whitespace-nowrap font-medium text-primary-700 underline hover:text-primary-900 focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary-500 dark:text-primary-300"
-                  @click.stop @keydown.enter.stop>Bug tickets <span aria-hidden="true">↗</span></a>
-                <span v-else-if="run.bugTickets?.status === 'empty'" class="text-xs text-gray-500 dark:text-gray-400" title="No eligible Jira tickets are recorded for this run.">No ticket recorded</span>
-                <span v-else class="text-xs text-gray-500 dark:text-gray-400" title="Ticket associations or Jira labels could not be verified. Use Refresh to retry.">Bug tickets unavailable</span>
+                  @click.stop @keydown.enter.stop>Issues found <span aria-hidden="true">↗</span></a>
+                <span v-else-if="run.bugTickets?.status === 'empty'" class="text-xs text-gray-500 dark:text-gray-400" title="No eligible Jira issues are recorded for this run.">No issues recorded</span>
+                <span v-else class="text-xs text-gray-500 dark:text-gray-400" title="Issue associations or Jira labels could not be verified. Use Refresh to retry.">Issues unavailable</span>
               </td>
             </tr>
             <tr v-if="!runs.length"><td colspan="4" class="px-5 py-12 text-center text-gray-500 dark:text-gray-400">{{ page.total ? 'This page has changed. Use Previous to return to the first page.' : hasFilters ? 'No runs match these filters.' : 'No runs are available.' }}</td></tr>

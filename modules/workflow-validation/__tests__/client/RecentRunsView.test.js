@@ -30,7 +30,7 @@ describe('Recent Runs', () => {
     await flushPromises()
     expect(Object.fromEntries(request(0))).toEqual({ pageSize: '20', includeBugs: 'false', includeBugTickets: 'true', sortField: 'timestamp', sortDir: 'desc' })
     expect(wrapper.findAll('tbody tr')).toHaveLength(3)
-    expect(wrapper.findAll('thead th').map(cell => cell.attributes('aria-label'))).toEqual(['Test suite', 'Version', 'Executed at (UTC)', undefined])
+    expect(wrapper.findAll('thead th').map(cell => cell.attributes('aria-label'))).toEqual(['Test suite', 'Version', 'Executed at (UTC)', 'Issues found'])
     expect(wrapper.findAll('th button')).toHaveLength(3)
     expect(wrapper.findAll('th select')).toHaveLength(0)
     expect(wrapper.get('button[aria-label="Sort execution time"]').text()).toContain('↓')
@@ -70,8 +70,8 @@ describe('Recent Runs', () => {
     await link.trigger('click')
     await link.trigger('keydown.enter')
     expect(nav.navigateTo).not.toHaveBeenCalled()
-    expect(wrapper.text()).toContain('No ticket recorded')
-    expect(wrapper.text()).toContain('Bug tickets unavailable')
+    expect(wrapper.text()).toContain('No issues recorded')
+    expect(wrapper.text()).toContain('Issues unavailable')
     await wrapper.get('tbody tr td').trigger('click')
     expect(nav.navigateTo).toHaveBeenCalledTimes(1)
   })
@@ -81,7 +81,7 @@ describe('Recent Runs', () => {
     wrapper = mount(RecentRunsView)
     await flushPromises()
     expect(wrapper.find('a').exists()).toBe(false)
-    expect(wrapper.text()).toContain('Bug tickets unavailable')
+    expect(wrapper.text()).toContain('Issues unavailable')
   })
 
   it('visits subsequent and previous pages without applying shared filters', async () => {

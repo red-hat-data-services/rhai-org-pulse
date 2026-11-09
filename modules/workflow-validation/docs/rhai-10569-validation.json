@@ -26,7 +26,7 @@
     },
     "frontend": {
       "ready": true,
-      "image": "image-registry.openshift-image-registry.svc:5000/workflow-validation-org-pulse/org-pulse-frontend@sha256:7742ddb0ffed3c32140c0598a02cb109e588b76bf0229b3d22a0d7383104cb2c",
+      "image": "image-registry.openshift-image-registry.svc:5000/workflow-validation-org-pulse/org-pulse-frontend@sha256:d84250a5fa2d1dee0dc04480e5029e9f39a3f273b469852e9a52945630a25183",
       "runtime_configuration_preserved": true
     }
   },
@@ -35,5 +35,21 @@
     "missing_jira_key": "RHOAIENG-100723",
     "recorded_root_causes": 0
   },
-  "pullRequestCreated": false
+  "pullRequestCreated": false,
+  "issueLabelUpdate": {
+    "checked_at": "2026-11-09T13:10:16.745935+00:00",
+    "image": "image-registry.openshift-image-registry.svc:5000/workflow-validation-org-pulse/org-pulse-frontend@sha256:d84250a5fa2d1dee0dc04480e5029e9f39a3f273b469852e9a52945630a25183",
+    "build": "org-pulse-frontend-rhai10569-standard-20261109-2",
+    "served_asset": "assets/RecentRunsView-CbO30n3G.js",
+    "asset_sha256": "05d750614ddc3a28095d4155cbf2f74aac29195e7a03b68d8d73e533392ecb37",
+    "labels": [
+      "Issues found",
+      "No issues recorded",
+      "Issues unavailable"
+    ],
+    "browser_label_check_passed": true,
+    "unit_passed": 6813,
+    "unit_skipped": 11,
+    "lint": "passed"
+  }
 }

@@ -86,13 +86,13 @@ test.describe('Workflow Validation module @workflow-validation', () => {
       { suite: 'release_gate', invocationId: 'unknown-labels', rhoaiVersion: '3.6', timestamp: '2026-11-01T00:00:00Z', bugTickets: { status: 'unavailable' } },
     ]) }))
     await page.goto('/#/workflow-validation/recent-runs')
-    const link = page.getByRole('link', { name: 'Open bug tickets for run with-tickets in Jira (opens in a new tab)', exact: true })
+    const link = page.getByRole('link', { name: 'Open issues for run with-tickets in Jira (opens in a new tab)', exact: true })
     await expect(link).toBeVisible()
     await expect(link).toHaveAttribute('rel', 'noopener noreferrer')
     const row = page.getByRole('row', { name: 'Open run only-internal', exact: true })
-    await expect(row).toContainText('No ticket recorded')
+    await expect(row).toContainText('No issues recorded')
     await expect(row.getByRole('link')).toHaveCount(0)
-    await expect(page.getByRole('row', { name: 'Open run unknown-labels', exact: true })).toContainText('Bug tickets unavailable')
+    await expect(page.getByRole('row', { name: 'Open run unknown-labels', exact: true })).toContainText('Issues unavailable')
     const popupPromise = page.waitForEvent('popup')
     await link.click()
     const popup = await popupPromise
