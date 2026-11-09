@@ -120,6 +120,7 @@ function extractDecisionStatus(candidate) {
   return 'pending';
 }
 
+/** Apply the board's category/source/status filters and its sort order. */
 function filterCandidates(candidates, query) {
   let filtered = candidates;
 
@@ -205,6 +206,7 @@ module.exports = function registerRoutes(router, context) {
   // from process.env.
   const allowLoopback = context.resolveSecret('POC_EXPLORER_ALLOW_LOOPBACK') === '1';
 
+  /** Resolve the feed token, trimming whitespace from file-mounted secrets. */
   function getFeedToken() {
     // Secrets created from files often carry a trailing newline; a bare
     // whitespace value must not count as configured and send a broken header.
@@ -307,6 +309,7 @@ module.exports = function registerRoutes(router, context) {
 
   // --- Sync logic ---
 
+  /** Persist the attempt time and error without touching cached boards. */
   async function persistSyncAttempt(error) {
     try {
       const existingIndex = await readIndex();
@@ -322,6 +325,7 @@ module.exports = function registerRoutes(router, context) {
     }
   }
 
+  /** Fetch every listed board, persist it, and report per-board failures. */
   async function syncBoards() {
     if (syncRunning) return { status: 'skipped', reason: 'sync already running' };
     if (!(await isConfigured())) return { status: 'skipped', reason: 'not configured' };
@@ -703,6 +707,7 @@ module.exports = function registerRoutes(router, context) {
   // showcase catalog so board requests remain available when the feed is
   // temporarily unreachable, and synthesize metadata for any category that
   // has arrived in a board before its pillar row has been refreshed.
+  /** Prefer the shared catalog, then storage; fetch only as a last resort. */
   async function loadPillarData() {
     // Prefer the shared in-memory catalog: it is fresh even when the last
     // storage write failed. Read storage only when no cache exists.

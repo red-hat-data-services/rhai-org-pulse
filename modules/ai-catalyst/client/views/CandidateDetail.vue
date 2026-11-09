@@ -41,6 +41,7 @@ const starsDisplay = computed(() => {
   return s >= 1000 ? (s / 1000).toFixed(1) + 'K' : String(s)
 })
 
+/** Label for the candidate's primary source link. */
 const sourceLinkLabel = computed(() => {
   const src = candidate.value?.source
   if (src === 'reddit') return 'Reddit Post'
@@ -53,19 +54,23 @@ const isRepoProject = computed(() => {
   return src === 'github'
 })
 
+/** Treat blank and placeholder cells (none, n/a, null, -) as absent. */
 function hasValue(val) {
   const text = String(val ?? '').trim()
   return text !== '' && !/^(none|n\/a|null|-)$/i.test(text)
 }
 
+/** True only for http(s) URLs; prose and registry paths stay text. */
 function isHttpUrl(val) {
   return /^https?:\/\//i.test(String(val || '').trim())
 }
 
+/** Decision badge metadata for a review-history row (verb or status form). */
 function reviewMeta(decision) {
   return getDecisionMeta(getDecisionStatus({ pmDecision: decision }))
 }
 
+/** Resource rows: real URLs become links, other values render as text. */
 const resourceLinks = computed(() => {
   if (!candidate.value) return []
   const links = []

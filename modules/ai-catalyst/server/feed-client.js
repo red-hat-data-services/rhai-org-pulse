@@ -31,6 +31,7 @@ function proxyEnvKey(env) {
   return [env.HTTPS_PROXY, env.https_proxy, env.HTTP_PROXY, env.http_proxy, env.NO_PROXY, env.no_proxy].join('\u0000');
 }
 
+/** Memoize the proxy dispatcher for the current proxy environment. */
 function defaultDispatcher(env = process.env) {
   // Reuse one agent per proxy configuration. Keying on the env (instead of
   // caching a single value) keeps tests and any runtime env change honest.
@@ -124,6 +125,7 @@ function validateFeedDestination(root, allowedOrigins, allowLoopback) {
 function createFeedClient({ baseUrl, token, timeoutMs = DEFAULT_TIMEOUT_MS, fetchFn = globalThis.fetch, allowedOrigins, allowLoopback = false, dispatcher }) {
   const root = String(baseUrl || '').replace(/\/+$/, '');
 
+  /** Fetch one feed path with bearer auth, timeout and destination validation. */
   async function request(path) {
     if (!token) {
       throw new FeedError('POC Explorer feed token is not configured — set POC_EXPLORER_FEED_TOKEN');

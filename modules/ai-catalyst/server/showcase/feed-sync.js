@@ -217,6 +217,7 @@ function normalizeShowcaseData(data) {
   };
 }
 
+/** Fetch and map the showcase feed, then publish it to the cache and storage. */
 async function fetchShowcaseData(baseUrl, token, storage, allowedOrigins, allowLoopback, timeoutMs) {
   const client = createFeedClient({ baseUrl, token, allowedOrigins, allowLoopback, timeoutMs });
   const payload = await client.getShowcase();
@@ -284,6 +285,7 @@ function clearCache() {
   _cache = null;
 }
 
+/** Return the in-memory catalog, or null when no fetch has succeeded yet. */
 function getCachedShowcaseData() {
   return _cache ? _cache.data : null;
 }

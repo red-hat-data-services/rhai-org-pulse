@@ -147,6 +147,7 @@ export function useCategories() {
     return DECISION_STATUSES[status] || DECISION_STATUSES.pending
   }
 
+  /** Map a feed source value to its display label, normalising "hackernews". */
   function getSourceLabel(source) {
     // The feed emits "hackernews"; the legacy key stays "hn" for cached data
     // and for the single filter option.
