@@ -6,6 +6,8 @@ Parent branch: [RHAI-20044 / PR #1866](https://github.com/red-hat-data-services/
 The Recent Runs table adds one Issues found column. It covers bugs and RFAs.
 The Jira issues link opens the recorded
 run's eligible Jira tickets in a new tab. It does not trigger run navigation.
+An explanation below the Recent Runs heading and above the filters describes
+the row contents, run navigation, and Jira issues link.
 The existing sorting, filters, pagination, exact-run navigation, and test counts
 keep their existing behavior. This change adds no ticket previews or ranking.
 

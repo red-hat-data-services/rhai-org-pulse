@@ -26,7 +26,7 @@
     },
     "frontend": {
       "ready": true,
-      "image": "image-registry.openshift-image-registry.svc:5000/workflow-validation-org-pulse/org-pulse-frontend@sha256:182f2ec82d8356c8b31b9c8e3f446feb715b65258094e1f45d4e4e3c73c9affa",
+      "image": "image-registry.openshift-image-registry.svc:5000/workflow-validation-org-pulse/org-pulse-frontend@sha256:16abfa07f4672b42fb06f7492123eb848cf67ec7a8365a837a64037368196049",
       "runtime_configuration_preserved": true
     }
   },
@@ -64,6 +64,19 @@
     "unit_passed": 6813,
     "unit_skipped": 11,
     "browser_link_check_passed": true,
+    "lint": "passed"
+  },
+  "tableExplanationUpdate": {
+    "checked_at": "2026-11-09T13:21:59.998361+00:00",
+    "build": "org-pulse-frontend-rhai10569-standard-20261109-4",
+    "image": "image-registry.openshift-image-registry.svc:5000/workflow-validation-org-pulse/org-pulse-frontend@sha256:16abfa07f4672b42fb06f7492123eb848cf67ec7a8365a837a64037368196049",
+    "served_asset": "assets/RecentRunsView-C1QMm6Ag.js",
+    "asset_sha256": "5b48455b739778db1d1bf0dc58cb064047ae49ddff3661258014101de1f4006f",
+    "paragraph": "Each row shows one test suite run, its RHOAI version, and execution time. Select a row to view its results. Select Jira issues to open the bugs and RFAs associated with that run.",
+    "position": "below Recent Runs and above filters",
+    "unit_passed": 6813,
+    "unit_skipped": 11,
+    "browser_checks_passed": 2,
     "lint": "passed"
   }
 }

@@ -154,6 +154,8 @@ contract, representative tests, and affected Vue transformations together.
 Dashboard opens Recent Runs with the latest 20 suite/invocation groups and
 pagination across all available runs. Each row shows the suite, version, and
 execution time (`Executed at (UTC)`). Select a row or press Enter to open its exact run.
+An explanation below the Recent Runs heading and above the filters describes
+each row and the separate Jira issues link for associated bugs and RFAs.
 
 Select up to 50 versions, a suite, a Run ID, or a Date Range. Date Range
 supports All time, Last 7/30/90 days, and Custom dates. Choices update results
