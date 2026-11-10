@@ -1573,3 +1573,202 @@ test.describe('Test Execution Dashboard @system-health', () => {
     expect(body.error).toMatch(/gates must be an array/);
   });
 });
+
+/**
+ * Promotion Gates
+ *
+ * The view proxies the AIPCC Dashboard API through the module server; the
+ * browser only calls /api/modules/system-health/promotion-gates/*. Mock those
+ * endpoints with a trimmed job so the UI tests do not need a live dashboard.
+ */
+function buildPromotionGatesJob() {
+  return {
+    pr_number: 80,
+    trigger_id: 'gap-d7deac-test',
+    title: 'GAP leader: gap-test',
+    state: 'OPEN',
+    created_at: '2026-11-05T08:06:17Z',
+    closed_at: null,
+    merged_at: null,
+    labels: ['gated-artifacts-promoter'],
+    is_test: false,
+    source_url: 'https://github.com/red-hat-data-services/gated-artifacts-promoter/pull/80',
+    state_json: {
+      'pull-requests': [
+        {
+          repo: 'odh-dashboard',
+          'pr-url': 'https://github.com/red-hat-data-services/odh-dashboard/pull/2696',
+          'pr-status': 'success',
+          builds: [],
+          'build-observations': {
+            runs: [{ name: 'odh-dashboard-run', status: 'success', reason: 'Completed', url: 'https://konflux.example.com/runs/1' }]
+          }
+        },
+        {
+          repo: 'odh-model-controller',
+          'pr-url': 'https://github.com/red-hat-data-services/odh-model-controller/pull/1784',
+          'pr-status': 'build-failure',
+          builds: [],
+          'build-observations': {
+            'gate-reason': 'Required build failed',
+            runs: [{ name: 'odh-model-controller-run', status: 'failure', reason: 'Step failed', url: 'https://konflux.example.com/runs/2' }]
+          }
+        }
+      ],
+      'creator-outcomes': [
+        {
+          repo: 'red-hat-data-services/odh-dashboard',
+          'source-branch': 'main',
+          'target-branch': 'stable',
+          outcome: 'success',
+          reason: 'Updated pull request #2696',
+          'pr-url': 'https://github.com/red-hat-data-services/odh-dashboard/pull/2696',
+          'workflow-url': 'https://github.com/red-hat-data-services/rhods-devops-infra/actions/runs/1',
+          'observed-at': '2026-11-05T07:56:48+00:00'
+        },
+        {
+          repo: 'red-hat-data-services/odh-model-controller',
+          'source-branch': 'main',
+          'target-branch': 'stable',
+          outcome: 'merge-failure',
+          reason: 'Auto-merge failed',
+          'pr-url': 'https://github.com/red-hat-data-services/odh-model-controller/pull/1784',
+          'workflow-url': 'https://github.com/red-hat-data-services/rhods-devops-infra/actions/runs/2',
+          'observed-at': '2026-11-05T07:56:48+00:00'
+        }
+      ],
+      'promotion-gates': [
+        { id: 'component-builds', required: true, status: 'pending' },
+        { id: 'early-gate-build', required: false, status: 'failed' },
+        { id: 'early-gate-test', required: false, status: 'pending' }
+      ]
+    },
+    early_gate: {
+      build: {
+        status: 'failed',
+        pipeline_url: 'https://konflux.example.com/pipelineruns/early-gate-build',
+        ephemeral_branch: 'eg-80-test',
+        comment_url: 'https://github.com/red-hat-data-services/gated-artifacts-promoter/issues/80#issuecomment-1',
+        raw: '',
+        updated_at: '2026-11-05T09:25:43Z'
+      },
+      test: { status: 'unknown', pipeline_url: null, ephemeral_branch: null, comment_url: null, raw: null, updated_at: null }
+    },
+    synced_at: '2026-11-06T08:30:00Z'
+  };
+}
+
+async function mockPromotionGatesApi(page, job) {
+  await page.route('**/api/modules/system-health/promotion-gates/**', async (route) => {
+    if (route.request().method() !== 'GET') {
+      await route.continue();
+      return;
+    }
+    const path = new URL(route.request().url()).pathname;
+    if (path !== '/api/modules/system-health/promotion-gates/latest') {
+      await route.continue();
+      return;
+    }
+    if (job === null) {
+      await route.fulfill({ status: 404, contentType: 'application/json', body: JSON.stringify({ message: 'No promotion gates data yet' }) });
+      return;
+    }
+    await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(job) });
+  });
+}
+
+test.describe('Promotion Gates @system-health', () => {
+  test.beforeEach(async ({ page }) => {
+    setupErrorTracking(page);
+    await mockDemoSystemHealthReadApis(page);
+    await mockPromotionGatesApi(page, buildPromotionGatesJob());
+  });
+
+  test.afterEach(async ({ page }, testInfo) => {
+    logCapturedErrors(page, testInfo);
+  });
+
+  test('should load Promotion Gates view with verdict, stages and early gate', async ({ page }) => {
+    await page.goto('/#/system-health/promotion-gates');
+    await page.waitForLoadState('networkidle');
+    await page.waitForTimeout(DEFAULT_PAGE_WAIT_TIME);
+
+    const mainContentVisible = await mainContentIsVisible(page);
+    expect(mainContentVisible).toBe(true);
+
+    await expect(page.locator('h1', { hasText: 'Promotion gates' })).toBeVisible();
+    await expect(page.getByRole('link', { name: /Leader PR #80/ })).toBeVisible();
+
+    // Hero verdict with the promoted count
+    await expect(page.locator('text=Promotion blocked')).toBeVisible();
+    await expect(page.locator('text=1 of 2 components passed')).toBeVisible();
+
+    // Stage strip covering the whole flow
+    for (const stage of ['Child PRs', 'Builds', 'Early gate build', 'Early gate test', 'Merge']) {
+      await expect(page.locator('text=' + stage).first()).toBeVisible();
+    }
+    await expect(page.locator('text=Not run')).toBeVisible();
+    await expect(page.locator('text=eg-80-test')).toBeVisible();
+
+    expectNoBenignConsoleErrors(page);
+  });
+
+  test('should split components into blocking and passing tables', async ({ page }) => {
+    await page.goto('/#/system-health/promotion-gates');
+    await page.waitForLoadState('networkidle');
+    await page.waitForTimeout(DEFAULT_PAGE_WAIT_TIME);
+
+    await expect(page.locator('h2', { hasText: 'Blocking components' })).toBeVisible();
+    await expect(page.locator('h2', { hasText: 'Succeeded components' })).toBeVisible();
+
+    // Both tables render at once, no toggle; the failing repo carries its reason
+    const blocking = page.locator('section', { has: page.locator('h2', { hasText: 'Blocking components' }) });
+    const passing = page.locator('section', { has: page.locator('h2', { hasText: 'Succeeded components' }) });
+    await expect(blocking.locator('text=odh-model-controller')).toBeVisible();
+    await expect(blocking.locator('text=Required build failed')).toBeVisible();
+    await expect(passing.locator('text=odh-dashboard')).toBeVisible();
+
+    // Auto-merge issue from creator-outcomes surfaces in its own section
+    await expect(page.locator('h2', { hasText: 'PR creation and auto-merge issues' })).toBeVisible();
+    await expect(page.locator('text=Auto-merge failed')).toBeVisible();
+
+    expectNoBenignConsoleErrors(page);
+  });
+
+  test('should link each repo to its GitHub page', async ({ page }) => {
+    await page.goto('/#/system-health/promotion-gates');
+    await page.waitForLoadState('networkidle');
+    await page.waitForTimeout(DEFAULT_PAGE_WAIT_TIME);
+
+    const repoLink = page.getByRole('link', { name: 'odh-model-controller', exact: true }).first();
+    await expect(repoLink).toBeVisible();
+    await expect(repoLink).toHaveAttribute('href', 'https://github.com/red-hat-data-services/odh-model-controller');
+
+    expectNoBenignConsoleErrors(page);
+  });
+
+  test('should show friendly empty state when no data is collected yet', async ({ page }) => {
+    await mockPromotionGatesApi(page, null);
+    await page.goto('/#/system-health/promotion-gates');
+    await page.waitForLoadState('networkidle');
+    await page.waitForTimeout(DEFAULT_PAGE_WAIT_TIME);
+
+    await expect(page.locator('text=No promotion gates data yet')).toBeVisible();
+
+    expectNoBenignConsoleErrors(page);
+  });
+
+  test('should render Release branches tab with diff links', async ({ page }) => {
+    await page.goto('/#/system-health/promotion-gates?tab=branches');
+    await page.waitForLoadState('networkidle');
+    await page.waitForTimeout(DEFAULT_PAGE_WAIT_TIME);
+
+    await expect(page.getByRole('tab', { name: 'Release branches' })).toBeVisible();
+
+    const diffLink = page.getByRole('link', { name: 'main → stable' }).first();
+    await expect(diffLink).toBeVisible();
+    await expect(diffLink).toHaveAttribute('href', 'https://github.com/red-hat-data-services/odh-dashboard/compare/stable...main');
+
+    expectNoBenignConsoleErrors(page);
+  });
+});
