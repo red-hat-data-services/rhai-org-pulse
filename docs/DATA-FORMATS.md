@@ -3717,6 +3717,57 @@ endpoints are `GET /api/modules/releases/planning/jira-plan` and
 
 ---
 
+---
+
+## Usage Tracking (`data/usage/`)
+
+The usage-tracking platform extension stores pseudonymized usage analytics data. User IDs are HMAC-SHA256 hashes of the user email and are stable for a given key.
+
+**Ingestion limits:** Each request accepts at most 100 events. Each user is capped at 2,000 events per day; requests beyond the quota are rejected (429) or partially accepted.
+
+**Retention:** Event files and dated reports older than 30 days are automatically deleted during the daily report generation cycle.
+
+### Event Files: `usage/events-{YYYY-MM-DD}.jsonl`
+
+Daily append-only JSONL files. Each line is a JSON object:
+
+```json
+{"ts":"2026-10-12T10:00:00.000Z","module":"ai-impact","view":"autofix","action":"view","target":null,"userId":"hmac:a1b2c3...","persona":"developer","org":"rhai"}
+```
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `ts` | string | ISO 8601 timestamp (server time) |
+| `module` | string | Module slug (e.g., `ai-impact`, `releases`) |
+| `view` | string | View identifier within the module |
+| `action` | string | One of: `view`, `tab-switch`, `filter`, `search`, `drill-down`, `button-click`, `external-link`, `navigate` |
+| `target` | string\|null | Action target, truncated to 100 chars |
+| `userId` | string | HMAC-SHA256 pseudonymized user ID (`hmac:` prefix) or `anonymous` |
+| `persona` | string\|null | Resolved persona (e.g., `developer`, `engineering-manager`, `other`) |
+| `org` | string\|null | Organization context |
+
+### Reports: `usage/report-latest.txt` and `usage/report-{YYYY-MM-DD}.txt`
+
+Plain text usage reports generated daily (24h refresh cadence). Contains summary stats, per-module breakdown, AI Impact breakdown, per-persona breakdown, navigation flows, and measurement gaps.
+
+### Persona Map: `usage/persona-map.json`
+
+Title-to-persona mapping configuration:
+
+```json
+{
+  "Software Engineer": "developer",
+  "Senior Software Engineer": "developer",
+  "Engineering Manager": "engineering-manager"
+}
+```
+
+Keys are job titles (matched from the team registry). Values are persona slugs. Unmapped titles resolve to `other`.
+
+### HMAC Key: `usage/hmac-key.txt`
+
+Auto-generated HMAC key fallback (plain hex string). Created on first use when `USAGE_TRACKING_HMAC_KEY` env var is not set. Persisted across restarts for stable user correlation. Operators should set the env var in production rather than relying on this file.
+
 ## Fixture Rules
 
 The `fixtures/` directory provides read-only demo data used when `DEMO_MODE=true`. These rules prevent data format drift:
