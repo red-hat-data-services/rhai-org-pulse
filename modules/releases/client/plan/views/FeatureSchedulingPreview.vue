@@ -3,6 +3,7 @@ import { onMounted } from 'vue'
 import { useFeatureScheduling } from '../composables/useFeatureScheduling'
 import FeatureSchedulingFilterBar from '../components/FeatureSchedulingFilterBar.vue'
 import FeatureSchedulingRow from '../components/FeatureSchedulingRow.vue'
+import PlacementSummaryCards from '../components/PlacementSummaryCards.vue'
 
 // Stage 1b preview -- native Vue rebuild of the AI Planner iframe's Feature
 // Scheduling tab (public/ai-first-scheduler/index.html). Not wired into any nav
@@ -90,28 +91,7 @@ const headers = [
     </div>
 
     <!-- Placement summary cards -- always over the full dataset, not the filtered view -->
-    <div class="grid grid-cols-5 gap-3 px-4 py-3 bg-gray-50 dark:bg-gray-800/40 border-b border-gray-200 dark:border-gray-700">
-      <div class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-md px-3 py-2 text-center">
-        <div class="text-lg font-bold text-blue-700 dark:text-blue-300">{{ placementCounts.EA1 }}</div>
-        <div class="text-[10px] uppercase tracking-wide text-gray-500 dark:text-gray-400">EA1</div>
-      </div>
-      <div class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-md px-3 py-2 text-center">
-        <div class="text-lg font-bold text-indigo-700 dark:text-indigo-300">{{ placementCounts.EA2 }}</div>
-        <div class="text-[10px] uppercase tracking-wide text-gray-500 dark:text-gray-400">EA2</div>
-      </div>
-      <div class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-md px-3 py-2 text-center">
-        <div class="text-lg font-bold text-green-700 dark:text-green-300">{{ placementCounts.GA }}</div>
-        <div class="text-[10px] uppercase tracking-wide text-gray-500 dark:text-gray-400">GA</div>
-      </div>
-      <div class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-md px-3 py-2 text-center">
-        <div class="text-lg font-bold text-gray-600 dark:text-gray-300">{{ placementCounts.No }}</div>
-        <div class="text-[10px] uppercase tracking-wide text-gray-500 dark:text-gray-400">No</div>
-      </div>
-      <div class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-md px-3 py-2 text-center">
-        <div class="text-lg font-bold text-primary-700 dark:text-primary-300">{{ recommendedCount }}</div>
-        <div class="text-[10px] uppercase tracking-wide text-gray-500 dark:text-gray-400">PM+DO Recommended</div>
-      </div>
-    </div>
+    <PlacementSummaryCards :counts="placementCounts" :recommendedCount="recommendedCount" />
 
     <!-- PM banner: needs-review + urgent filter + scroll-to-next-unchecked -->
     <div v-if="filters.pm" class="flex items-center justify-between gap-3 px-4 py-2 bg-amber-50 dark:bg-amber-900/10 border-b border-amber-200 dark:border-amber-800 text-xs">

@@ -162,4 +162,27 @@ describe('useFeatureScheduling', function() {
     api.showRoadmapDrilldown('Upgrade Support', 'EA1')
     expect(api.roadmapDrilldown.value).toBeNull()
   })
+
+  it('Executive aggregates (filteredPlacementCounts/deliveryConfidenceSummary/workMix/outcomesStats) honor the active filters', async function() {
+    var api = mountComposable()
+    await api.loadFeatures()
+    await flushPromises()
+
+    // Unfiltered: 3 features -- RHAISTRAT-1 EA1, RHAISTRAT-2 GA, RHAISTRAT-3 No (no components)
+    expect(api.filteredPlacementCounts.value).toEqual({ EA1: 1, EA2: 0, GA: 1, No: 1 })
+    expect(api.deliveryConfidenceSummary.value.total).toBe(3)
+    expect(api.deliveryConfidenceSummary.value.totalInPlan).toBe(2)
+
+    api.filters.value = Object.assign({}, api.filters.value, { pm: 'Jane PM' })
+    // Only RHAISTRAT-1 has PM 'Jane PM'
+    expect(api.filteredPlacementCounts.value).toEqual({ EA1: 1, EA2: 0, GA: 0, No: 0 })
+    expect(api.deliveryConfidenceSummary.value.total).toBe(1)
+
+    var mix = api.workMix.value
+    expect(mix.map(function(m) { return m.key })).toEqual(['features', 'bugs', 'research'])
+
+    expect(api.outcomesStats.value.stats).toBeTruthy()
+    // placementCounts (Feature Scheduling's own cards) stays global regardless of filters
+    expect(api.placementCounts.value).toEqual({ EA1: 1, EA2: 0, GA: 1, No: 1 })
+  })
 })

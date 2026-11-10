@@ -10,6 +10,7 @@ export const routes = {
   // #/releases/<id> for local QA. See AI-PLANNER-HANDOFF.md.
   'feature-scheduling-preview': defineAsyncComponent(() => import('./plan/views/FeatureSchedulingPreview.vue')),
   'roadmap-preview': defineAsyncComponent(() => import('./plan/views/RoadmapPreview.vue')),
+  'executive-preview': defineAsyncComponent(() => import('./plan/views/ExecutivePreview.vue')),
   'deliver': defineAsyncComponent(() => import('./views/DeliverView.vue')),
   'reports': defineAsyncComponent(() => import('./views/ReportsView.vue')),
   'audit': defineAsyncComponent(() => import('./views/AuditView.vue')),

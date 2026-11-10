@@ -68,6 +68,7 @@ export const viewOwners = {
   'releases/plan':                                 'Alex Corvin',
   'releases/registry':                             'Alex Corvin',
   'releases/reports':                              'Alex Corvin',
+  'releases/roadmap-preview':                      'Yuval Luria',
   'releases/schedule':                             'Einat Pacifici',
 
   // system-health

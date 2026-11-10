@@ -7,7 +7,10 @@ import {
   sortFeatures,
   assignNoTier,
   applyPlacementGrouping,
-  aggregateRoadmapGrid
+  aggregateRoadmapGrid,
+  aggregateBigRockStats,
+  computeDeliveryConfidenceSummary,
+  computeWorkMix
 } from '../ai-planner/core.js'
 
 const API_PATH = '/modules/releases/planning/ai-planner'
@@ -173,6 +176,19 @@ export function useFeatureScheduling() {
     }
   })
 
+  // Executive tab summary -- unlike placementCounts above, this honors the shared
+  // filter bar (index.html lines 4364-4366, Nov 3 fix: "previously this always
+  // summarized every feature regardless of filters"), so it's built off
+  // displayRows rather than scheduledRows.
+  const filteredPlacementCounts = computed(() => {
+    const c = { EA1: 0, EA2: 0, GA: 0, No: 0 }
+    displayRows.value.forEach(r => { c[r._place] = (c[r._place] || 0) + 1 })
+    return c
+  })
+  const deliveryConfidenceSummary = computed(() => computeDeliveryConfidenceSummary(displayRows.value))
+  const workMix = computed(() => computeWorkMix(displayRows.value))
+  const outcomesStats = computed(() => aggregateBigRockStats(displayRows.value))
+
   const recommendedCount = computed(() => Object.values(approvals.value).filter(v => v.pm && v.do).length)
   const pendingRiskCount = computed(() => Object.values(approvals.value).filter(v => v.pendingRisk).length)
 
@@ -232,6 +248,10 @@ export function useFeatureScheduling() {
     approvals,
     toggleApproval,
     placementCounts,
+    filteredPlacementCounts,
+    deliveryConfidenceSummary,
+    workMix,
+    outcomesStats,
     recommendedCount,
     pendingRiskCount,
     pmReviewStatus,

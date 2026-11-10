@@ -12,7 +12,10 @@ import {
   assignNoTier,
   applyPlacementGrouping,
   aggregateRoadmapGrid,
-  roadmapCellColor
+  roadmapCellColor,
+  computeDeliveryConfidenceSummary,
+  computeWorkMix,
+  bigRockStatusLabel
 } from '../../../../client/plan/ai-planner/core.js'
 
 function baseRow(overrides) {
@@ -323,5 +326,52 @@ describe('roadmapCellColor', () => {
     expect(roadmapCellColor(3, 70)).toBe('#e8f5e9')
     expect(roadmapCellColor(3, 55)).toBe('#fff8e1')
     expect(roadmapCellColor(3, 20)).toBe('#ffebee')
+  })
+})
+
+describe('computeDeliveryConfidenceSummary', () => {
+  it('averages confidence across in-plan rows only, and bands the label', () => {
+    const rows = [
+      { _place: 'EA1', _conf: 90 },
+      { _place: 'GA', _conf: 50 },
+      { _place: 'No', _conf: 0 }
+    ]
+    const summary = computeDeliveryConfidenceSummary(rows)
+    expect(summary).toEqual({ total: 3, totalInPlan: 2, avgConf: 70, confLabel: 'On Track' })
+  })
+
+  it('reports 0% / Critical when nothing is in plan', () => {
+    expect(computeDeliveryConfidenceSummary([{ _place: 'No', _conf: 0 }])).toEqual({
+      total: 1, totalInPlan: 0, avgConf: 0, confLabel: 'Critical'
+    })
+  })
+})
+
+describe('computeWorkMix', () => {
+  it('classifies in-plan rows and measures each bucket against its target share', () => {
+    const rows = [
+      { _place: 'EA1', Title: 'Feature', Labels: '' },
+      { _place: 'EA1', Title: 'Fix a bug', Labels: 'bug' },
+      { _place: 'No', Title: 'Spike', Labels: 'spike' } // excluded -- not in plan
+    ]
+    const mix = computeWorkMix(rows)
+    const features = mix.find(m => m.key === 'features')
+    const bugs = mix.find(m => m.key === 'bugs')
+    const research = mix.find(m => m.key === 'research')
+    expect(features.count).toBe(1)
+    expect(bugs.count).toBe(1)
+    expect(research.count).toBe(0)
+    expect(features.pct).toBe(50)
+    expect(bugs.target).toBe(40)
+    expect(research.onTarget).toBe(false)
+  })
+})
+
+describe('bigRockStatusLabel', () => {
+  it('labels by the Aha! OKR confidence thresholds, with a distinct label for empty outcomes', () => {
+    expect(bigRockStatusLabel(0, 0)).toBe('No features in plan')
+    expect(bigRockStatusLabel(3, 70)).toBe('Confident')
+    expect(bigRockStatusLabel(3, 50)).toBe('Lagging')
+    expect(bigRockStatusLabel(3, 10)).toBe('At Risk')
   })
 })

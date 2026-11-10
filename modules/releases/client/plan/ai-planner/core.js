@@ -733,3 +733,54 @@ export function roadmapCellColor(count, avgConf) {
   if(avgConf>=50) return '#fff8e1';
   return '#ffebee';
 }
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Stage 1c additions (Executive tab). Same extraction rules as before. As of this
+// extraction, production (PR #1877, not yet merged) is relocating the Roadmap
+// tab's EA1/EA2/GA/No summary cards + release selector into Executive and
+// dropping Roadmap entirely (it duplicated Executive's outcomes table) -- those
+// cards are already covered by the `placementCounts`-style aggregation from
+// stage 1b, not re-extracted here.
+// ─────────────────────────────────────────────────────────────────────────────
+
+/**
+ * Source: index.html lines 4371-4377 (renderExecView()'s delivery-confidence
+ * tile). `confColor` is a 3-way color ramp -- left to the Vue layer, same as
+ * the placement/risk color maps in FeatureSchedulingRow.vue, since it's pure
+ * presentation with no independent business meaning beyond confLabel's bands.
+ */
+export function computeDeliveryConfidenceSummary(rows) {
+  const inPlan = rows.filter(r=>r._place!=='No');
+  const total = rows.length;
+  const totalInPlan = inPlan.length;
+  const avgConf = totalInPlan>0 ? Math.round(inPlan.reduce((s,r)=>s+(r._conf||0),0)/totalInPlan) : 0;
+  const confLabel = avgConf>=70?'On Track':avgConf>=50?'At Risk':'Critical';
+  return { total, totalInPlan, avgConf, confLabel };
+}
+
+// Source: index.html lines 4396-4408 (renderExecView()'s "Work Mix (In-Plan)"
+// panel) -- in-plan feature counts by classifyFeature() bucket, each measured
+// against its target share. HTML/color/label strings stay in the Vue layer.
+const WORK_MIX_TARGETS = { features: 40, bugs: 40, research: 20 };
+export function computeWorkMix(rows) {
+  const inPlan = rows.filter(r=>r._place!=='No');
+  const counts = { features:0, bugs:0, research:0 };
+  inPlan.forEach(r=>counts[classifyFeature(r)]++);
+  const totalInPlan = inPlan.length;
+  return ['features','bugs','research'].map(key=>{
+    const pct = totalInPlan ? Math.round(counts[key]/totalInPlan*100) : 0;
+    const target = WORK_MIX_TARGETS[key];
+    return { key, count: counts[key], pct, target, onTarget: Math.abs(pct-target)<=5 };
+  });
+}
+
+// Source: index.html lines 4160-4162 (renderBigRocks()'s "Aha! OKR thresholds"
+// status label for the outcomes table/tiles) -- ≥70% avg confidence = Confident,
+// 40-69% = Lagging, else At Risk; an outcome with nothing in-plan yet is its own
+// label rather than a 0%-confidence "At Risk".
+export function bigRockStatusLabel(inPlanCount, avgConf) {
+  if(!inPlanCount) return 'No features in plan';
+  if(avgConf>=70) return 'Confident';
+  if(avgConf>=40) return 'Lagging';
+  return 'At Risk';
+}
