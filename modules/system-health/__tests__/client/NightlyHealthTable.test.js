@@ -306,7 +306,7 @@ describe('NightlyHealthTable', () => {
     expect(document.body.textContent).toContain('RHOAI-999')
   })
 
-  it('links component rows to heatmap detail and leaves gate rows plain text', async () => {
+  it('renders component rows as plain text without heatmap drill-down links', async () => {
     const payload = JSON.parse(readFileSync(fixturePath, 'utf8'))
     const heatmapComponents = [
       { component: 'Dashboard' },
@@ -317,13 +317,8 @@ describe('NightlyHealthTable', () => {
       ...mountOptions
     })
 
-    const links = wrapper.findAll('.comp-name a.comp-link')
-    expect(links.length).toBeGreaterThanOrEqual(2)
-    const linkLabels = links.map((a) => a.text())
-    expect(linkLabels).not.toContain('Cluster Health')
-    expect(linkLabels).not.toContain('RHOAI Deployment')
-
-    await links[0].trigger('click')
-    expect(wrapper.emitted('component-click')?.[0]?.[0]).toBeTruthy()
+    expect(wrapper.findAll('.comp-name a.comp-link')).toHaveLength(0)
+    expect(wrapper.findAll('.comp-name span.comp-label').length).toBeGreaterThanOrEqual(2)
+    expect(wrapper.emitted('component-click')).toBeFalsy()
   })
 })

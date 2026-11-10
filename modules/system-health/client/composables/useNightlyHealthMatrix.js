@@ -1033,6 +1033,39 @@ export function normalizeHttpUrlForCompare(href) {
 }
 
 /**
+ * @param {string} raw href or quay pullspec
+ * @returns {string} normalized `sha256:<hex>` or empty
+ */
+export function quaySha256DigestKey(raw) {
+  if (typeof raw !== 'string' || !raw.trim()) return ''
+  const match = raw.trim().match(/sha256:([a-f0-9]{64})/i)
+  return match ? `sha256:${match[1].toLowerCase()}` : ''
+}
+
+/**
+ * @param {object|null|undefined} run
+ * @returns {Set<string>}
+ */
+export function runPromotionGateQuayDigestKeys(run) {
+  /** @type {Set<string>} */
+  const keys = new Set()
+  const pg = run?.promotion_gate
+  if (!pg || typeof pg !== 'object') return keys
+  for (const field of ['ods_build_url', 'odsBuildUrl', 'operator_image_ref']) {
+    const raw = pg[field]
+    if (typeof raw !== 'string' || !raw.trim()) continue
+    const key = quaySha256DigestKey(raw)
+    if (key) keys.add(key)
+    const browser = quayBrowserUrlFromImageRef(raw.trim())
+    if (browser) {
+      const fromBrowser = quaySha256DigestKey(browser)
+      if (fromBrowser) keys.add(fromBrowser)
+    }
+  }
+  return keys
+}
+
+/**
  * @param {string} segment
  * @returns {string}
  */
@@ -1173,6 +1206,10 @@ export function runOrgPulsePanelLinks(run) {
       .filter((href) => typeof href === 'string' && href)
       .map((href) => normalizeHttpUrlForCompare(href))
   )
+  const odsHref = runOdsBuildUrl(run)
+  const odsKey = odsHref ? normalizeHttpUrlForCompare(odsHref) : ''
+  const digestKeys = runPromotionGateQuayDigestKeys(run)
+  const showQuayOnProductLine = Boolean(odsHref) || digestKeys.size > 0
   const raw = run?.org_pulse_links
   if (!Array.isArray(raw)) return []
   /** @type {{ id: string, label: string, href: string }[]} */
@@ -1182,9 +1219,13 @@ export function runOrgPulsePanelLinks(run) {
     const rawHref = item?.href
     const href = safeHttpUrl(rawHref) || quayBrowserUrlFromImageRef(rawHref)
     const dedupeKey = href ? normalizeHttpUrlForCompare(href) : ''
-    if (!href || artifactHrefs.has(dedupeKey) || seen.has(dedupeKey)) return
-    seen.add(dedupeKey)
     const label = typeof item?.label === 'string' && item.label.trim() ? item.label.trim() : 'Link'
+    const linkDigest = quaySha256DigestKey(String(rawHref || '')) || quaySha256DigestKey(href || '')
+    if (!href || artifactHrefs.has(dedupeKey) || seen.has(dedupeKey)) return
+    if (odsKey && dedupeKey === odsKey) return
+    if (showQuayOnProductLine && /^image$/i.test(label)) return
+    if (digestKeys.size && linkDigest && digestKeys.has(linkDigest)) return
+    seen.add(dedupeKey)
     links.push({ id: `org-pulse-link-${idx}`, label, href })
   })
   return links
@@ -1198,8 +1239,12 @@ export function runOdsBuildUrl(run) {
   const pg = run?.promotion_gate
   if (!pg || typeof pg !== 'object') return null
   const raw = pg.ods_build_url || pg.odsBuildUrl
-  if (typeof raw !== 'string' || !raw.trim()) return null
-  const trimmed = raw.trim()
+  let trimmed = typeof raw === 'string' ? raw.trim() : ''
+  if (!trimmed) {
+    const imageRef = pg.operator_image_ref
+    trimmed = typeof imageRef === 'string' ? imageRef.trim() : ''
+  }
+  if (!trimmed) return null
   return safeHttpUrl(trimmed) || quayBrowserUrlFromImageRef(trimmed)
 }
 
@@ -1402,9 +1447,10 @@ export function rowLabelFromHeatmap(rowId, heatmapComponents, days = null) {
  * @param {object[]|null} [days]
  * @returns {string|null}
  */
-export function nightlyRowHeatmapLinkTarget(rowId, heatmapComponents, days = null) {
-  if (NIGHTLY_GATE_ROW_IDS.has(rowId)) return null
-  return rowLabelFromHeatmap(rowId, heatmapComponents, days)
+export function nightlyRowHeatmapLinkTarget(_rowId, _heatmapComponents, _days = null) {
+  // Promotion-gate nightly matrix: component names are plain text (RHAI-18946 §5).
+  // Heatmap drill-down stays on the heatmap view, not matrix row links.
+  return null
 }
 
 /**

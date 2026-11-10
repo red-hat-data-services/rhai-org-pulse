@@ -18,6 +18,8 @@ import {
   runS3ArtifactsInlineLink,
   runProductUnderTestLabel,
   runOdsBuildUrl,
+  quaySha256DigestKey,
+  runPromotionGateQuayDigestKeys,
   runOdsBuildLinkLabel,
   shortenDigestForDisplay,
   artifactRefHref,
@@ -334,7 +336,7 @@ describe('useNightlyHealthMatrix helpers', () => {
     expect(findMatrixCell(run, 'matrix-row', days)).toBeNull()
   })
 
-  it('nightlyRowHeatmapLinkTarget skips gate rows and resolves heatmap component names', () => {
+  it('nightlyRowHeatmapLinkTarget never links matrix rows to heatmap drill-down', () => {
     const days = [{
       date: '2026-11-01',
       runs: [{
@@ -348,8 +350,8 @@ describe('useNightlyHealthMatrix helpers', () => {
     const heatmap = [{ component: 'AI Gateway' }, { component: 'Dashboard' }]
     expect(nightlyRowHeatmapLinkTarget('cluster-health', heatmap, days)).toBeNull()
     expect(nightlyRowHeatmapLinkTarget('operator-health', heatmap, days)).toBeNull()
-    expect(nightlyRowHeatmapLinkTarget('aigateway', heatmap, days)).toBe('AI Gateway')
-    expect(nightlyRowHeatmapLinkTarget('dashboard', heatmap, days)).toBe('Dashboard')
+    expect(nightlyRowHeatmapLinkTarget('aigateway', heatmap, days)).toBeNull()
+    expect(nightlyRowHeatmapLinkTarget('dashboard', heatmap, days)).toBeNull()
     expect(nightlyRowHeatmapLinkTarget('unknown-row', heatmap, days)).toBeNull()
   })
 
@@ -574,6 +576,51 @@ describe('useNightlyHealthMatrix helpers', () => {
         href: 'https://example.invalid/folder/'
       })
     ).toBe('https://example.invalid/folder/')
+  })
+
+  it('drops org_pulse_links Image label when promotion_gate ods_build_url is shown', () => {
+    const digest =
+      'sha256:abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789ab'
+    const ods = `https://quay.io/repository/rhoai/bundle/manifest/${digest}`
+    const links = runOrgPulsePanelLinks({
+      promotion_gate: { ods_build_url: ods },
+      org_pulse_links: [
+        { label: 'Image', href: `quay.io/rhoai/bundle@${digest}` },
+        { label: 'S3', href: 'https://example.invalid/s3/' }
+      ]
+    })
+    expect(links).toHaveLength(1)
+    expect(links[0].label).toBe('S3')
+  })
+
+  it('drops Image org_pulse_link by digest when only operator_image_ref is set', () => {
+    const digest =
+      'sha256:8665a96e7b6aba002a922cec435995ffe15355996a255b8b1d3be2e16b1edaf8'
+    const links = runOrgPulsePanelLinks({
+      promotion_gate: { operator_image_ref: `quay.io/rhoai/rhoai-fbc-fragment@${digest}` },
+      org_pulse_links: [
+        {
+          label: 'Image',
+          href: `https://quay.io/repository/rhoai/rhoai-fbc-fragment/manifest/${digest}`
+        }
+      ]
+    })
+    expect(links).toHaveLength(0)
+    expect(quaySha256DigestKey(digest)).toBe(digest.toLowerCase())
+    expect(runPromotionGateQuayDigestKeys({
+      promotion_gate: { operator_image_ref: `quay.io/x@${digest}` }
+    }).has(digest.toLowerCase())).toBe(true)
+  })
+
+  it('resolves ods URL from operator_image_ref when ods_build_url is absent', () => {
+    const digest =
+      'sha256:8665a96e7b6aba002a922cec435995ffe15355996a255b8b1d3be2e16b1edaf8'
+    const run = {
+      promotion_gate: { operator_image_ref: `quay.io/rhoai/rhoai-fbc-fragment@${digest}` }
+    }
+    expect(runOdsBuildUrl(run)).toBe(
+      `https://quay.io/repository/rhoai/rhoai-fbc-fragment/manifest/${digest}`
+    )
   })
 
   it('drops org_pulse_links when artifact href matches with different hostname case', () => {
