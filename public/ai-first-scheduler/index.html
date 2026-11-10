@@ -4412,16 +4412,17 @@ function renderExecView(rows){
 // the table — Nov 10 request) so it's still available for offline review/sharing.
 function doExport(){
   const rows=window._lastFilteredRows||allData;
+  function csvQ(v){const s=v==null?'':String(v);return '"'+s.replace(/"/g,'""')+'"';}
   const hdr=['Rank','Key','Title','FPDoR','Weighted FPDoR','Readiness Issues','Risk','Target Versions','Fix Version','Components','Team','Priority','Confidence','Placement','Confidence%','PM','Outcome'];
   const lines=[hdr.join(','),...rows.map(r=>{
     const failedSet=new Set(r._failedItems);
     const issues=FPDOR_TIERS_DISPLAY.flatMap(t=>t.items.filter(i=>failedSet.has(i)).map(i=>t.label+': '+i)).join('; ');
     return [
-      r['Rank'],esc(r['Key']),`"${(esc(r['Title'])||'').replace(/"/g,'""')}"`,r['FPDoR'],r._wFPDoR,
-      `"${issues.replace(/"/g,'""')}"`,r._riskLevel||'',
-      `"${esc(r['Target Versions'])||''}"`,`"${esc(r['Fix Version'])||''}"`,`"${esc(r['Components'])||''}"`,
-      `"${esc(r['Team'])||''}"`,esc(r['Priority']),r['Confidence'],r._place,(r._conf||0)+'%',
-      `"${esc(r['PM'])||''}"`,`"${esc(r['Outcome'])||''}"`
+      r['Rank'],r['Key']||'',csvQ(r['Title']),r['FPDoR'],r._wFPDoR,
+      csvQ(issues),r._riskLevel||'',
+      csvQ(r['Target Versions']),csvQ(r['Fix Version']),csvQ(r['Components']),
+      csvQ(r['Team']),r['Priority']||'',r['Confidence'],r._place,(r._conf||0)+'%',
+      csvQ(r['PM']),csvQ(r['Outcome'])
     ].join(',');
   })];
   const a=Object.assign(document.createElement('a'),{href:URL.createObjectURL(new Blob([lines.join('\n')],{type:'text/csv'})),download:'feature-scheduling-export.csv'});
