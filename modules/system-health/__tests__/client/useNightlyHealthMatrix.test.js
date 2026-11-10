@@ -12,7 +12,10 @@ import {
   formatRunDuration,
   nightlyColumnHeaderSubline,
   nightlyTestSourceDescription,
+  quayBrowserUrlFromImageRef,
   runArtifactPanelEntries,
+  runOrgPulsePanelLinks,
+  runS3ArtifactsInlineLink,
   runProductUnderTestLabel,
   runOdsBuildUrl,
   runOdsBuildLinkLabel,
@@ -496,10 +499,66 @@ describe('useNightlyHealthMatrix helpers', () => {
     )
   })
 
-  it('lists artifact panel entries with Unavailable when refs are null', () => {
+  it('omits artifact panel entries when refs are null', () => {
     const entries = runArtifactPanelEntries({ artifacts: { pod_logs: null, bvt_results: null } })
-    expect(entries).toHaveLength(2)
-    expect(entries.every((e) => e.unavailable && !e.href)).toBe(true)
+    expect(entries).toHaveLength(0)
+  })
+
+  it('falls back to pod logs when s3_artifacts is not a browser URL', () => {
+    const pod = 'https://example.invalid/pod.tgz'
+    const entries = runArtifactPanelEntries({
+      artifacts: { s3_artifacts: 's3://bucket/prefix/', pod_logs: pod }
+    })
+    expect(entries).toHaveLength(1)
+    expect(entries[0].id).toBe('pod_logs')
+    expect(entries[0].href).toBe(pod)
+  })
+
+  it('prefers single s3_artifacts folder link when present', () => {
+    const href =
+      'https://us-east-1.console.aws.amazon.com/s3/buckets/b?region=us-east-1&prefix=ci/4/'
+    const entries = runArtifactPanelEntries({ artifacts: { s3_artifacts: href } })
+    expect(entries).toHaveLength(1)
+    expect(entries[0].label).toBe('S3 Artifacts')
+    expect(entries[0].href).toBe(href)
+  })
+
+  it('exposes s3_artifacts for inline Jenkins line link', () => {
+    const href =
+      'https://us-east-1.console.aws.amazon.com/s3/buckets/b?region=us-east-1&prefix=ci/4/'
+    const link = runS3ArtifactsInlineLink({ artifacts: { s3_artifacts: href } })
+    expect(link).toEqual({ plainPrefix: 'S3', linkText: 'Artifacts', href })
+    expect(runS3ArtifactsInlineLink({ artifacts: { pod_logs: href } })).toBeNull()
+  })
+
+  it('deduplicates identical org_pulse_links by href', () => {
+    const href = 'https://example.invalid/jira/RHOAI-1'
+    const links = runOrgPulsePanelLinks({
+      org_pulse_links: [
+        { label: 'A', href },
+        { label: 'B', href },
+        { label: 'C', href: 'https://example.invalid/other' }
+      ]
+    })
+    expect(links).toHaveLength(2)
+    expect(links[0].href).toBe(href)
+    expect(links[1].href).toBe('https://example.invalid/other')
+  })
+
+  it('omits org_pulse_links whose href matches an artifact link', () => {
+    const href =
+      'https://us-east-1.console.aws.amazon.com/s3/buckets/b?region=us-east-1&prefix=ci/4/'
+    const other = 'https://example.com/jira/RHOAI-1'
+    const links = runOrgPulsePanelLinks({
+      artifacts: { s3_artifacts: href },
+      org_pulse_links: [
+        { label: 'S3', href },
+        { label: 'Jira', href: other }
+      ]
+    })
+    expect(links).toHaveLength(1)
+    expect(links[0].label).toBe('Jira')
+    expect(links[0].href).toBe(other)
   })
 
   it('resolves artifact URL strings and objects', () => {
@@ -509,6 +568,29 @@ describe('useNightlyHealthMatrix helpers', () => {
     expect(artifactRefHref({ url: 'https://example.invalid/bvt.zip' })).toBe(
       'https://example.invalid/bvt.zip'
     )
+    expect(
+      artifactRefHref({
+        url: 'not-a-browser-url',
+        href: 'https://example.invalid/folder/'
+      })
+    ).toBe('https://example.invalid/folder/')
+  })
+
+  it('drops org_pulse_links when artifact href matches with different hostname case', () => {
+    const href =
+      'https://us-east-1.console.aws.amazon.com/s3/buckets/b?region=us-east-1&prefix=ci/4/'
+    const otherCasing =
+      'https://US-EAST-1.console.aws.amazon.com/s3/buckets/b?region=us-east-1&prefix=ci/4/'
+    const jira = 'https://example.invalid/jira/RHOAI-1'
+    const links = runOrgPulsePanelLinks({
+      artifacts: { s3_artifacts: href },
+      org_pulse_links: [
+        { label: 'S3 dup', href: otherCasing },
+        { label: 'Ticket', href: jira }
+      ]
+    })
+    expect(links).toHaveLength(1)
+    expect(links[0].href).toBe(jira)
   })
 
   it('exposes ods_build_url from promotion_gate for payload link', () => {
@@ -523,6 +605,24 @@ describe('useNightlyHealthMatrix helpers', () => {
       promotion_gate: { ods_build_url: 'javascript:alert(1)' }
     }
     expect(runOdsBuildUrl(run)).toBeNull()
+  })
+
+  it('maps raw quay pullspec on promotion_gate to browser URL', () => {
+    expect(quayBrowserUrlFromImageRef('quay.io/org/repo@sha256:abc')).toBe(
+      'https://quay.io/repository/org/repo/manifest/sha256:abc'
+    )
+    expect(
+      quayBrowserUrlFromImageRef(
+        'quay.io/rhoai/bundle:v1@sha256:abcdef0123456789deadbeef'
+      )
+    ).toBe('https://quay.io/repository/rhoai/bundle/manifest/sha256:abcdef0123456789deadbeef')
+    const run = {
+      promotion_gate: { ods_build_url: 'quay.io/rhoai/bundle:v1' }
+    }
+    expect(runOdsBuildUrl(run)).toBe('https://quay.io/repository/rhoai/bundle/tag/v1')
+    expect(
+      quayBrowserUrlFromImageRef('quay.io/org/repo:sha256:abcdef0123456789deadbeef')
+    ).toBe('https://quay.io/repository/org/repo/manifest/sha256:abcdef0123456789deadbeef')
   })
 
   it('uses short hash from query or fragment as ODS link label', () => {
@@ -545,6 +645,29 @@ describe('useNightlyHealthMatrix helpers', () => {
         promotion_gate: { ods_build_url: 'https://quay.example/payload#cafebabecafe' }
       })
     ).toBe('cafebabecafe')
+    expect(
+      runOdsBuildLinkLabel({
+        promotion_gate: {
+          ods_build_url:
+            'https://quay.io/repository/rhoai/rhoai-fbc-fragment/tag/sha256%3Aabcdef0123456789deadbeef'
+        }
+      })
+    ).toBe('abcdef012345')
+    expect(
+      runOdsBuildLinkLabel({
+        promotion_gate: {
+          ods_build_url: 'https://quay.io/repository/rhoai/bundle/tag/v2.32.0-2026110901'
+        }
+      })
+    ).toBe('v2.32.0-2026110901')
+    expect(
+      runOdsBuildLinkLabel({
+        promotion_gate: {
+          ods_build_url:
+            'https://quay.io/repository/rhoai/bundle/tag/bad%ZZ/sha256%3Aabcdef0123456789deadbeef'
+        }
+      })
+    ).toBe('abcdef012345')
   })
 
   it('shortens raw digest tokens for display', () => {
