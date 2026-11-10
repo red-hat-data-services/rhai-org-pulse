@@ -2,11 +2,12 @@
 import { onMounted } from 'vue'
 import { useFeatureScheduling } from '../composables/useFeatureScheduling'
 
-// Stage 1c preview -- native Vue port of the AI Planner iframe's Data Appendix
-// tab (renderAppendix(), public/ai-first-scheduler/index.html lines 3873-3989,
-// plus the tab's own markup at lines 718-1124). Not wired into any nav item;
-// reachable only via #/releases/data-appendix-preview for local QA. See
-// AI-PLANNER-HANDOFF.md and the Nov 3 2026 migration plan.
+// Native Vue port of the AI Planner iframe's Data Appendix tab (renderAppendix(),
+// public/ai-first-scheduler/index.html lines 3873-3989, plus the tab's own
+// markup at lines 718-1124). As of the Nov 11 2026 cutover, reachable from
+// AIPlanner.vue's hamburger menu (☰ → Data Appendix), same affordance
+// index.html itself exposes. See AI-PLANNER-HANDOFF.md and the Nov 3 2026
+// migration plan.
 //
 // Most of this tab is static historical/reference documentation (ML model
 // training notes, A/B calibration snapshots, bug-debt stats, a decision-tree
@@ -29,7 +30,6 @@ const {
   teamCapacityUsage,
   exclusionBreakdown,
   fpdorFieldBreakdown,
-  loading,
   error,
   loadFeatures
 } = useFeatureScheduling()
@@ -45,7 +45,7 @@ function statusClass(over) {
 <div class="appendix-preview space-y-0">
   <div class="flex items-center justify-between px-4 py-2 bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700">
     <div class="text-sm font-semibold text-gray-700 dark:text-gray-200">
-      Data Appendix (preview)
+      Data Appendix
       <span class="ml-2 text-xs font-normal text-gray-400 dark:text-gray-500">{{ scheduledRows.length }} features loaded</span>
     </div>
   </div>
@@ -54,7 +54,10 @@ function statusClass(over) {
     {{ error }}
   </div>
 
-  <div class="p-4" v-if="scheduledRows.length">
+  <!-- index.html's tab-ap markup has no data-dependent guard -- the static
+       reference content below is always present; only the four dynamic
+       tables' own rows (and their individual empty-states) depend on data. -->
+  <div class="p-4">
   <div style="background:#e3f2fd;border:1px solid #90caf9;border-radius:6px;padding:14px;margin-bottom:16px">
     <div style="font-size:12px;font-weight:700;color:#0d47a1;margin-bottom:8px">📋 EA/GA Strategy — Phase Distinctions</div>
     <div style="font-size:11px;color:#1565c0;line-height:1.6">
@@ -522,7 +525,6 @@ function statusClass(over) {
   </table></div>
 
   </div>
-  <div v-else-if="!loading" class="px-4 py-10 text-center text-sm text-gray-400 dark:text-gray-500">No features loaded</div>
 </div>
 </template>
 

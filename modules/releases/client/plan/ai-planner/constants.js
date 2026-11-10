@@ -1094,3 +1094,30 @@ export const FPDOR_TIERS_DISPLAY = [
   { label:'Medium',   cls:'fd-med',  items:['Cross-team deps','Feature human sign-off','Requirements clarity','Acceptance criteria','Risks & assumptions','Architectural alignment'] },
   { label:'Soft',     cls:'fd-soft', items:['UXD','Source RFE / AI SDLC'] },
 ];
+
+// Source: index.html lines 1381-1400 (maps Org Pulse Kerberos actor -> PM
+// display name, as it appears in the live Jira "PM" field). Used to preselect
+// a signed-in PM's own features -- previously via the ?user=actor query param
+// on the iframe src (a workaround for the iframe's separate browsing context);
+// now read directly from the signed-in session, no URL param needed. See
+// AIPlanner.vue.
+export const PM_ACTORS = {
+  'abellusc':  'Adam Bellusci',
+  'wcaban':    'William Caban',
+  'jenyi':     'Jenny Yi',
+  'jyi':       'Jenny Yi',
+  'pdouble':   'Peter Double',
+  'nsingh':    'Naina Singh',
+  'yfama':     'Yuchen Fama',
+  'rgreenberg':'Rob Greenberg',
+  'egallen':   'Erwan Gallen',
+  'jzarecki':  'Jonathan Zarecki',
+  'kcook':     'Kezia Cook',
+  'skashyap':  'Suhas Kashyap',
+  'asaluja':   'Aditi Saluja',
+  'jpandit':   'Jehlum Pandit',
+  'azaalouk':  'Adel Zaalouk',
+  'mfentane':  'Myriam Fentanes Gutierrez',
+  'cgoern':    'Christoph Görn',
+  'linglis':   'Luke Inglis',
+};

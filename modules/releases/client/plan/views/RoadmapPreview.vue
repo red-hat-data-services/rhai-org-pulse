@@ -3,10 +3,13 @@ import { onMounted } from 'vue'
 import { useFeatureScheduling } from '../composables/useFeatureScheduling'
 import { roadmapCellColor } from '../ai-planner/core.js'
 
-// Stage 1c preview -- native Vue rebuild of the AI Planner iframe's Roadmap tab
-// (renderRoadmapTimeline(), public/ai-first-scheduler/index.html lines 3287-3353).
-// Not wired into any nav item; reachable only via #/releases/roadmap-preview for
-// local QA. See AI-PLANNER-HANDOFF.md and the Nov 3 2026 migration plan.
+// Native Vue rebuild of the AI Planner iframe's Roadmap tab (renderRoadmapTimeline(),
+// public/ai-first-scheduler/index.html lines 3287-3353). SUPERSEDED (Nov 10 2026):
+// production (PR #1877) dropped the Roadmap tab entirely -- its Outcome x Phase
+// info duplicated Executive's outcomes table -- and moved Roadmap's summary
+// cards + release selector into Executive (see ExecutivePreview.vue). This file
+// and its hidden route are intentionally left unwired rather than deleted
+// (explicit call from the Nov 10 sync); it is not reachable from any UI.
 //
 // Known gap (inherited from aggregateRoadmapGrid(), not introduced here): the live
 // ~22-outcome list (GET /ai-planner/outcomes) isn't wired up, so this always groups

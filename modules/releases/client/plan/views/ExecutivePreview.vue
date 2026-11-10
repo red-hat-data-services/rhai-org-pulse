@@ -5,10 +5,11 @@ import PlacementSummaryCards from '../components/PlacementSummaryCards.vue'
 import { bigRockStatusLabel } from '../ai-planner/core.js'
 import { BIG_ROCKS } from '../ai-planner/constants.js'
 
-// Stage 1c preview -- native Vue rebuild of the AI Planner iframe's Executive tab
-// (renderExecView(), public/ai-first-scheduler/index.html lines 4363-4466).
-// Not wired into any nav item; reachable only via #/releases/executive-preview
-// for local QA. See AI-PLANNER-HANDOFF.md and the Nov 3 2026 migration plan.
+// Native Vue rebuild of the AI Planner iframe's Executive tab (renderExecView(),
+// public/ai-first-scheduler/index.html lines 4363-4466). As of the Nov 11 2026
+// cutover, this is the real Executive sub-tab rendered by AIPlanner.vue -- the
+// iframe is no longer used for this tab. See AI-PLANNER-HANDOFF.md and the
+// Nov 3 2026 migration plan.
 //
 // Per Nov 10 guidance: production (PR #1877, not yet merged) is dropping the
 // Roadmap tab -- it duplicated this tab's outcomes table -- and relocating
@@ -102,7 +103,7 @@ function statusClass(status) {
   <div class="space-y-0 overflow-hidden">
     <div class="flex items-center justify-between px-4 py-2 bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700">
       <div class="text-sm font-semibold text-gray-700 dark:text-gray-200">
-        Executive (preview)
+        Executive
         <span class="ml-2 text-xs font-normal text-gray-400 dark:text-gray-500">{{ scheduledRows.length }} features loaded</span>
       </div>
       <div class="flex items-center gap-2">

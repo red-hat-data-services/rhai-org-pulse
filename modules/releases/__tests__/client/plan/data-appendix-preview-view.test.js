@@ -68,4 +68,13 @@ describe('DataAppendixPreview', () => {
     expect(wrapper.text()).toContain('RHAISTRAT-2')
     expect(wrapper.text()).toContain('Assign a Target Version')
   })
+
+  it('renders the static reference sections even with zero features (index.html has no data-dependent guard here)', async () => {
+    mockApiRequest.mockResolvedValue({ features: [], metadata: { source: 'live' }, lastSyncedAt: null })
+    const wrapper = mount(DataAppendixPreview)
+    await flushPromises()
+    expect(wrapper.text()).toContain('EA/GA Strategy')
+    expect(wrapper.text()).toContain('ML Model')
+    expect(wrapper.text()).toContain('No team data')
+  })
 })

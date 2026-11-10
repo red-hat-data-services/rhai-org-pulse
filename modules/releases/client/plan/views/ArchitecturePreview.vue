@@ -10,8 +10,9 @@
   <style> block below, rather than rewritten in Tailwind, to keep this a faithful
   capture rather than a redesign.
 
-  Not wired into any nav item; reachable only via #/releases/architecture-preview
-  for local QA. See AI-PLANNER-HANDOFF.md and the Nov 3 2026 migration plan.
+  As of the Nov 11 2026 cutover, reachable from AIPlanner.vue's hamburger menu
+  (☰ → Architecture), same affordance index.html itself exposes. See
+  AI-PLANNER-HANDOFF.md and the Nov 3 2026 migration plan.
 -->
 <template>
 <div class="arch-preview">

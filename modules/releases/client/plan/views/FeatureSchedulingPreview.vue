@@ -6,11 +6,10 @@ import FeatureSchedulingRow from '../components/FeatureSchedulingRow.vue'
 import PlacementSummaryCards from '../components/PlacementSummaryCards.vue'
 import { buildFeatureSchedulingCsv } from '../ai-planner/core.js'
 
-// Stage 1b preview -- native Vue rebuild of the AI Planner iframe's Feature
-// Scheduling tab (public/ai-first-scheduler/index.html). Not wired into any nav
-// item or the production AIPlanner.vue iframe; reachable only via direct hash
-// navigation (#/releases/feature-scheduling-preview) for local QA while the
-// iframe stays the production surface. See AI-PLANNER-HANDOFF.md and the
+// Native Vue rebuild of the AI Planner iframe's Feature Scheduling tab
+// (public/ai-first-scheduler/index.html). As of the Nov 11 2026 cutover, this
+// is the real Feature Scheduling sub-tab rendered by AIPlanner.vue -- the
+// iframe is no longer used for this tab. See AI-PLANNER-HANDOFF.md and the
 // Nov 3 2026 migration plan.
 
 const {
@@ -92,7 +91,7 @@ const headers = [
 
     <div class="flex items-center justify-between px-4 py-2 bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700">
       <div class="text-sm font-semibold text-gray-700 dark:text-gray-200">
-        Feature Scheduling (preview)
+        Feature Scheduling
         <span class="ml-2 text-xs font-normal text-gray-400 dark:text-gray-500">
           {{ displayRows.length }} shown{{ dataSource !== 'live' ? ' (' + dataSource + ' data)' : '' }}
         </span>

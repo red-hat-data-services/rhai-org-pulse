@@ -60,18 +60,13 @@ export const viewOwners = {
   'product-builds/wheel-collections':              'Pavol Pitonak',
 
   // releases
-  'releases/architecture-preview':                 'Yuval Luria',
   'releases/audit':                                'Alex Corvin',
-  'releases/data-appendix-preview':                'Yuval Luria',
   'releases/deliver':                              'Alex Corvin',
   'releases/execute':                              'Alex Corvin',
-  'releases/executive-preview':                    'Yuval Luria',
   'releases/feature-detail':                       'shuels2',
-  'releases/feature-scheduling-preview':           'Yuval Luria',
   'releases/plan':                                 'Alex Corvin',
   'releases/registry':                             'Alex Corvin',
   'releases/reports':                              'Alex Corvin',
-  'releases/roadmap-preview':                      'Yuval Luria',
   'releases/schedule':                             'Einat Pacifici',
 
   // system-health
