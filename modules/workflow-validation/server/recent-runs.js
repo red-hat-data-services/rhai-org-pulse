@@ -24,7 +24,7 @@ module.exports = function createRecentRuns({ parseVersion, normalizeVersion, nor
   /** Validate paged filters and bind a cursor to the selected criteria. */
   function parseRecentRuns(query) {
     if (query.pageSize === undefined) {
-      if (['cursor', 'sortDir', 'sortField', 'versions', 'runQuery', 'refresh'].some(key => query[key] !== undefined)) invalid('pageSize is required for recent-run pagination');
+      if (['cursor', 'sortDir', 'sortField', 'versions', 'runQuery', 'refresh', 'includeBugTickets'].some(key => query[key] !== undefined)) invalid('pageSize is required for recent-run pagination');
       return null;
     }
     if (typeof query.pageSize !== 'string' || !/^[1-9]\d*$/.test(query.pageSize) || Number(query.pageSize) > 200) invalid('pageSize must be an integer between 1 and 200');
@@ -43,6 +43,7 @@ module.exports = function createRecentRuns({ parseVersion, normalizeVersion, nor
     if (!['asc', 'desc'].includes(direction)) invalid('sortDir must be asc or desc');
     if (!SORT_FIELDS.includes(sortField)) invalid('Invalid sortField');
     if (query.refresh !== undefined && !['true', 'false'].includes(query.refresh)) invalid('refresh must be true or false');
+    if (query.includeBugTickets !== undefined && !['true', 'false'].includes(query.includeBugTickets)) invalid('includeBugTickets must be true or false');
     const pageSize = Number(query.pageSize);
     const scope = hash(JSON.stringify([filters, sortField, direction, pageSize]));
     // Earlier date-sorted bookmarks used a single exact version and v1/v2 cursors.

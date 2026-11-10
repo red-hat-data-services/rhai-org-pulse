@@ -28,9 +28,9 @@ describe('Recent Runs', () => {
     Object.assign(filters, { version: 'older', testSuite: 'another-suite', invocationId: 'another-run', dateFrom: '2000-01-01' })
     wrapper = mount(RecentRunsView)
     await flushPromises()
-    expect(Object.fromEntries(request(0))).toEqual({ pageSize: '20', includeBugs: 'false', sortField: 'timestamp', sortDir: 'desc' })
+    expect(Object.fromEntries(request(0))).toEqual({ pageSize: '20', includeBugs: 'false', includeBugTickets: 'true', sortField: 'timestamp', sortDir: 'desc' })
     expect(wrapper.findAll('tbody tr')).toHaveLength(3)
-    expect(wrapper.findAll('thead th').map(cell => cell.attributes('aria-label'))).toEqual(['Test suite', 'Version', 'Executed at (UTC)'])
+    expect(wrapper.findAll('thead th').map(cell => cell.attributes('aria-label'))).toEqual(['Test suite', 'Version', 'Executed at (UTC)', 'Issues found'])
     expect(wrapper.findAll('th button')).toHaveLength(3)
     expect(wrapper.findAll('th select')).toHaveLength(0)
     expect(wrapper.get('button[aria-label="Sort execution time"]').text()).toContain('↓')
@@ -55,6 +55,33 @@ describe('Recent Runs', () => {
         invocationId: run.invocationId, datePreset: 'all', dateFrom: '', dateTo: '' })
       expect(row.attributes('tabindex')).toBe('0')
     }
+  })
+
+  it('opens Jira separately from row navigation and distinguishes empty from unavailable tickets', async () => {
+    const url = 'https://redhat.atlassian.net/issues/?jql=' + encodeURIComponent('key IN (RHOAIENG-1) AND (labels IS EMPTY OR labels NOT IN ("rca-scope-internal"))')
+    apiRequest.mockResolvedValueOnce(page(fixture.rows.map((row, index) => ({ ...row,
+      bugTickets: index === 0 ? { status: 'ready', url } : { status: index === 1 ? 'empty' : 'unavailable' }
+    }))))
+    const nav = { navigateTo: vi.fn() }
+    wrapper = mount(RecentRunsView, { global: { provide: { moduleNav: nav } } })
+    await flushPromises()
+    const link = wrapper.get('a')
+    expect(link.attributes()).toMatchObject({ href: url, target: '_blank', rel: 'noopener noreferrer' })
+    await link.trigger('click')
+    await link.trigger('keydown.enter')
+    expect(nav.navigateTo).not.toHaveBeenCalled()
+    expect(wrapper.text()).toContain('No issues recorded')
+    expect(wrapper.text()).toContain('Issues unavailable')
+    await wrapper.get('tbody tr td').trigger('click')
+    expect(nav.navigateTo).toHaveBeenCalledTimes(1)
+  })
+
+  it('does not render an unsafe ticket URL', async () => {
+    apiRequest.mockResolvedValueOnce(page([{ ...fixture.rows[0], bugTickets: { status: 'ready', url: 'javascript:alert(1)' } }]))
+    wrapper = mount(RecentRunsView)
+    await flushPromises()
+    expect(wrapper.find('a').exists()).toBe(false)
+    expect(wrapper.text()).toContain('Issues unavailable')
   })
 
   it('visits subsequent and previous pages without applying shared filters', async () => {
@@ -93,7 +120,7 @@ describe('Recent Runs', () => {
     expect(wrapper.find('button[type="submit"]').exists()).toBe(false)
     await button('Clear filters').trigger('click')
     await flushPromises()
-    expect(Object.fromEntries(request(-1))).toEqual({ pageSize: '20', includeBugs: 'false', sortField: 'timestamp', sortDir: 'desc' })
+    expect(Object.fromEntries(request(-1))).toEqual({ pageSize: '20', includeBugs: 'false', includeBugTickets: 'true', sortField: 'timestamp', sortDir: 'desc' })
     expect(wrapper.get('select[aria-label="Date Range"]').element.value).toBe('all')
     expect(wrapper.find('input[type="date"]').exists()).toBe(false)
     expect(filters.version).toBe('')

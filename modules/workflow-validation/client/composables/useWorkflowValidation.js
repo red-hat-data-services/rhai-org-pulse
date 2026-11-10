@@ -230,7 +230,7 @@ export function runOutcomeCounts(run = {}) {
 export const RECENT_RUNS_PAGE_SIZE = 20
 
 export function useWorkflowValidation() {
-  const getRecentRuns = (params = {}, options = {}) => apiRequest(`${BASE}/test-suites${buildQuery({ pageSize: RECENT_RUNS_PAGE_SIZE, includeBugs: false, ...params }, {})}`, options)
+  const getRecentRuns = (params = {}, options = {}) => apiRequest(`${BASE}/test-suites${buildQuery({ pageSize: RECENT_RUNS_PAGE_SIZE, includeBugs: false, includeBugTickets: true, ...params }, {})}`, options)
   const getFilters = () => initializeVersionFilter()
   const getOverview = (extra = {}) => filteredRequest('overview', ['version', 'dateFrom', 'dateTo', 'testSuite', 'invocationId'], extra)
   const getCharts = (extra = {}) => filteredRequest('charts', ['version', 'dateFrom', 'dateTo', 'testSuite', 'invocationId'], extra)

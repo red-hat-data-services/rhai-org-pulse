@@ -154,6 +154,8 @@ contract, representative tests, and affected Vue transformations together.
 Dashboard opens Recent Runs with the latest 20 suite/invocation groups and
 pagination across all available runs. Each row shows the suite, version, and
 execution time (`Executed at (UTC)`). Select a row or press Enter to open its exact run.
+An explanation below the Recent Runs heading and above the filters describes
+each row and the separate Jira issues link for associated bugs and RFEs.
 
 Select up to 50 versions, a suite, a Run ID, or a Date Range. Date Range
 supports All time, Last 7/30/90 days, and Custom dates. Choices update results
@@ -167,8 +169,21 @@ separate. Other partial versions keep their recorded label.
 Clear filters restores the unfiltered, newest-first first page. Shareable URLs
 retain the filters, sort, and page. Sorting and dates use existing execution
 metadata; RHOAI build time is not available yet. The page uses
-`/test-suites?pageSize=20&includeBugs=false` and ignores shared detail filters.
+`/test-suites?pageSize=20&includeBugs=false&includeBugTickets=true` and ignores shared detail filters.
 Metadata is cached for up to 10 seconds. Refresh bypasses the cache.
+
+Each row also shows **Jira issues**, **No issues recorded**, or **Issues
+unavailable**. The link opens a Jira search in a new tab without opening the
+run details. Recorded associations supply the keys. Jira labels determine
+eligibility: exclude `rca-scope-internal`, regardless of RCA category. The
+backend requests labels only and caches verified decisions for up to one minute.
+Refresh bypasses that cache. Runs with only Internal-labelled tickets show
+**No issues recorded**. Missing credentials, inaccessible tickets, incomplete
+associations, and service failures show **Issues unavailable**.
+
+The module consumes the platform `jira` secret group (`JIRA_EMAIL` and
+`JIRA_TOKEN`) through `context.secrets`. Credentials stay on the backend.
+See [RHAI-10569 details](docs/rhai-10569-bug-ticket-links.md).
 
 See the [Recent Runs contract](docs/rhai-10567-recent-runs-contract.md),
 [RHAI-20044 details](docs/rhai-20044-recent-runs-ux.md), and
