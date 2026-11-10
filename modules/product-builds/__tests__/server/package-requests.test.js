@@ -770,6 +770,7 @@ describe('package-requests', () => {
       expect(fields.labels).toContain('team-platform')
       expect(fields.duedate).toBe(isoDaysFromNow(30))
       expect(fields.security).toEqual({ name: SECURITY_NAME })
+      expect(COMPONENT_NAME).toBe('AIPCC Ecosystems')
       expect(fields.components).toEqual([{ name: COMPONENT_NAME }])
       expect(fields[EPIC_NAME_FIELD]).toBe('vllm package update request')
       expect(fields[EPIC_NAME_FIELD]).not.toBe('Platform')
