@@ -460,6 +460,23 @@ describe('default proxy dispatcher', () => {
       await new Promise(resolve => proxy.close(resolve));
     }
   });
+
+  it('uses a stubbed global fetch instead of undici fetch when a proxy is set', async () => {
+    const fetchMock = vi.fn(async () => jsonResponse(200, { boards: ['board-2026-09'] }));
+    const previous = process.env.HTTPS_PROXY;
+    process.env.HTTPS_PROXY = 'http://proxy.invalid:1';
+    vi.stubGlobal('fetch', fetchMock);
+
+    try {
+      const client = createFeedClient({ baseUrl: 'https://feed.example.test', token: 't' });
+      await expect(client.listBoards()).resolves.toEqual(['board-2026-09']);
+      expect(fetchMock).toHaveBeenCalledTimes(1);
+    } finally {
+      vi.unstubAllGlobals();
+      if (previous === undefined) delete process.env.HTTPS_PROXY;
+      else process.env.HTTPS_PROXY = previous;
+    }
+  });
 });
 
 describe('proxyDispatcherFromEnv', () => {

@@ -3380,10 +3380,12 @@ registry below.
 | `pmDecision` | string | PM decision text; status is derived from `Approve`, `Decline`, `Revisit`, or empty |
 
 `data/ai-catalyst/index.json` contains the available month list and candidate
-counts. Adding a new month adds one board file and one index entry. A board
-sync refreshes discovered months in place, so the board file and its
-`lastSynced` value represent the latest feed snapshot rather than an
-immutable historical record.
+counts, plus the last attempt: `lastSynced` advances when at least one month
+was written, `lastAttemptedAt` records when a run last started, and `lastError`
+holds the failure summary (or `null`). Adding a new month adds one board file
+and one index entry. A board sync refreshes discovered months in place, so the
+board file and its `lastSynced` value represent the latest feed snapshot rather
+than an immutable historical record.
 
 Repository files under `fixtures/ai-catalyst/` are deterministic mock data for
 demo mode and tests; production deployments read the corresponding board rows

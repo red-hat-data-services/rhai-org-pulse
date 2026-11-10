@@ -1,5 +1,9 @@
 const { EnvHttpProxyAgent, fetch: undiciFetch } = require('undici');
 
+// Captured before any test can stub globalThis.fetch: only the real global
+// fetch may be swapped for undici's, so stubs and injected functions win.
+const nativeFetch = globalThis.fetch;
+
 const DEFAULT_TIMEOUT_MS = 30000;
 
 // Loopback is the dev/test carve-out: a token sent to loopback stays on the
@@ -163,7 +167,7 @@ function createFeedClient({ baseUrl, token, timeoutMs = DEFAULT_TIMEOUT_MS, fetc
       // A dispatcher and the fetch that uses it must come from the same
       // undici copy: Node's global fetch rejects a dispatcher from another
       // version (CI runs Node 22 with undici 8, prod runs Node 26 with 7).
-      const doFetch = options.dispatcher && fetchFn === globalThis.fetch ? undiciFetch : fetchFn;
+      const doFetch = options.dispatcher && fetchFn === nativeFetch ? undiciFetch : fetchFn;
       const response = await doFetch(url, options);
       const text = await response.text();
       const body = parseJsonBody(text);

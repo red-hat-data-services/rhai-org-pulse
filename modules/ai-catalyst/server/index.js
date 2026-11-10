@@ -2,6 +2,7 @@ const { createFeedClient, validateFeedDestination, redactUrl, redactText } = req
 const {
   getShowcaseData,
   fetchShowcaseData,
+  getCachedShowcaseData,
   STORAGE_KEY: SHOWCASE_STORAGE_KEY,
   getReferencedPillarKeys,
   mergePillarMetadata,
@@ -707,27 +708,32 @@ module.exports = function registerRoutes(router, context) {
   // showcase catalog so board requests remain available when the feed is
   // temporarily unreachable, and synthesize metadata for any category that
   // has arrived in a board before its pillar row has been refreshed.
-  /** Prefer the shared catalog; refresh it once the read-path TTL expires. */
+  /**
+   * Resolve pillar metadata without fetching on the read path: a stalled feed
+   * would add its timeout to every board request. The hourly showcase sync
+   * keeps the cache and storage fresh.
+   */
   async function loadPillarData() {
     if (DEMO_MODE) return loadShowcaseDemoData();
 
-    try {
-      if (await isConfigured()) {
-        // getShowcaseData serves the fresh cache and refreshes it once the TTL
-        // expires, falling back to cache/storage when the feed fails.
-        return normalizeShowcaseData(
-          await getShowcaseData(getShowcaseFeedUrl, getFeedToken(), storage, getAllowedFeedOrigins(), allowLoopback),
-        );
-      }
-    } catch (err) {
-      console.error('[ai-catalyst:showcase] Failed to load pillar metadata:', err.message);
-    }
+    const cached = getCachedShowcaseData();
+    if (cached) return normalizeShowcaseData(cached);
 
     try {
       const stored = await readFromStorage(SHOWCASE_STORAGE_KEY);
       if (stored) return normalizeShowcaseData(stored);
     } catch (err) {
       console.error('[ai-catalyst:showcase] Failed to read pillar cache:', err.message);
+    }
+
+    try {
+      if (await isConfigured()) {
+        return normalizeShowcaseData(
+          await getShowcaseData(getShowcaseFeedUrl, getFeedToken(), storage, getAllowedFeedOrigins(), allowLoopback),
+        );
+      }
+    } catch (err) {
+      console.error('[ai-catalyst:showcase] Failed to load pillar metadata:', err.message);
     }
 
     return normalizeShowcaseData({ entries: [], pillars: [], fetchedAt: null });
