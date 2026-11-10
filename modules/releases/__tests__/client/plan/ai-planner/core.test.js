@@ -15,7 +15,11 @@ import {
   roadmapCellColor,
   computeDeliveryConfidenceSummary,
   computeWorkMix,
-  bigRockStatusLabel
+  bigRockStatusLabel,
+  computeComponentCapacityUsage,
+  computeTeamCapacityUsage,
+  computeExclusionBreakdown,
+  computeFpdorFieldBreakdown
 } from '../../../../client/plan/ai-planner/core.js'
 
 function baseRow(overrides) {
@@ -373,5 +377,79 @@ describe('bigRockStatusLabel', () => {
     expect(bigRockStatusLabel(3, 70)).toBe('Confident')
     expect(bigRockStatusLabel(3, 50)).toBe('Lagging')
     expect(bigRockStatusLabel(3, 10)).toBe('At Risk')
+  })
+})
+
+describe('computeComponentCapacityUsage', () => {
+  it('counts in-plan usage per component and flags rows over their CAP ceiling', () => {
+    // CAP['AI Hub'] = { EA1: 1, EA2: 2, GA: 1 }
+    const rows = [
+      { _place: 'EA1', Components: 'AI Hub' },
+      { _place: 'EA1', Components: 'AI Hub' },
+      { _place: 'No', Components: 'AI Hub' } // excluded -- not in plan
+    ]
+    const usage = computeComponentCapacityUsage(rows).find(u => u.component === 'AI Hub')
+    expect(usage.used).toEqual({ EA1: 2, EA2: 0, GA: 0 })
+    expect(usage.cap).toEqual({ EA1: 1, EA2: 2, GA: 1 })
+    expect(usage.over).toBe(true)
+  })
+
+  it('defaults unlisted components to a cap of 1/1/1', () => {
+    const usage = computeComponentCapacityUsage([{ _place: 'GA', Components: 'Totally Unknown Thing' }])
+      .find(u => u.component === 'Totally Unknown Thing')
+    expect(usage.cap).toEqual({ EA1: 1, EA2: 1, GA: 1 })
+    expect(usage.over).toBe(false)
+  })
+})
+
+describe('computeTeamCapacityUsage', () => {
+  it('sorts bottleneck teams (Dashboard/Docs) first, then alphabetically', () => {
+    const rows = [
+      { _place: 'GA', Team: 'Zebra Team' },
+      { _place: 'GA', Team: 'Documentation' },
+      { _place: 'GA', Team: 'Alpha Team' }
+    ]
+    const usage = computeTeamCapacityUsage(rows)
+    expect(usage.map(u => u.team)).toEqual(['Documentation', 'Alpha Team', 'Zebra Team'])
+    expect(usage[0].isBottleneck).toBe(true)
+    expect(usage[0].isDoc).toBe(true)
+  })
+
+  it('excludes "No"-placed rows and rows with no team', () => {
+    const rows = [{ _place: 'No', Team: 'Alpha Team' }, { _place: 'GA', Team: '' }]
+    expect(computeTeamCapacityUsage(rows)).toEqual([])
+  })
+})
+
+describe('computeExclusionBreakdown', () => {
+  it('groups "No" rows by reason, first-match-wins, sorted by group size descending', () => {
+    const rows = [
+      { _place: 'No', _reason: 'No Target Version set' },
+      { _place: 'No', _reason: 'No components assigned' },
+      { _place: 'No', _reason: 'Mandatory FPDoR field missing: PM' },
+      { _place: 'No', _reason: 'Something else entirely' },
+      { _place: 'EA1', _reason: '' } // excluded -- not "No"
+    ]
+    const groups = computeExclusionBreakdown(rows)
+    expect(groups[0].key).toBe('No Target Version')
+    expect(groups[0].rows).toHaveLength(2)
+    expect(groups.find(g => g.key === 'other').rows).toHaveLength(1)
+  })
+})
+
+describe('computeFpdorFieldBreakdown', () => {
+  it('extracts the missing field name and ranks by frequency', () => {
+    const rows = [
+      { _place: 'No', _reason: 'Mandatory FPDoR field missing: PM · extra' },
+      { _place: 'No', _reason: 'Mandatory FPDoR field missing: PM' },
+      { _place: 'No', _reason: 'Mandatory FPDoR field missing: Release Type' }
+    ]
+    const breakdown = computeFpdorFieldBreakdown(rows)
+    expect(breakdown[0]).toEqual({ field: 'PM', count: 2, pct: 100 })
+    expect(breakdown[1]).toEqual({ field: 'Release Type', count: 1, pct: 50 })
+  })
+
+  it('returns an empty list when nothing is blocked by a mandatory field', () => {
+    expect(computeFpdorFieldBreakdown([{ _place: 'No', _reason: 'Readiness too low' }])).toEqual([])
   })
 })

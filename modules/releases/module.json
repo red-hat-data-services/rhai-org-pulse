@@ -33,7 +33,8 @@
       "feature-scheduling-preview": "plan",
       "roadmap-preview": "plan",
       "executive-preview": "plan",
-      "architecture-preview": "plan"
+      "architecture-preview": "plan",
+      "data-appendix-preview": "plan"
     }
   },
   "server": {

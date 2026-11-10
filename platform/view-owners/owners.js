@@ -60,6 +60,7 @@ export const viewOwners = {
   'product-builds/wheel-collections':              'Pavol Pitonak',
 
   // releases
+  'releases/architecture-preview':                 'Yuval Luria',
   'releases/audit':                                'Alex Corvin',
   'releases/deliver':                              'Alex Corvin',
   'releases/execute':                              'Alex Corvin',

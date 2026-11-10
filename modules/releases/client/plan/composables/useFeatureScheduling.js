@@ -10,7 +10,11 @@ import {
   aggregateRoadmapGrid,
   aggregateBigRockStats,
   computeDeliveryConfidenceSummary,
-  computeWorkMix
+  computeWorkMix,
+  computeComponentCapacityUsage,
+  computeTeamCapacityUsage,
+  computeExclusionBreakdown,
+  computeFpdorFieldBreakdown
 } from '../ai-planner/core.js'
 
 const API_PATH = '/modules/releases/planning/ai-planner'
@@ -189,6 +193,14 @@ export function useFeatureScheduling() {
   const workMix = computed(() => computeWorkMix(displayRows.value))
   const outcomesStats = computed(() => aggregateBigRockStats(displayRows.value))
 
+  // Data Appendix tab -- like placementCounts, index.html calls
+  // renderAppendix(allData) with the full unfiltered dataset (line 3550), not
+  // the active filter set, so these are built off scheduledRows.
+  const componentCapacityUsage = computed(() => computeComponentCapacityUsage(scheduledRows.value))
+  const teamCapacityUsage = computed(() => computeTeamCapacityUsage(scheduledRows.value))
+  const exclusionBreakdown = computed(() => computeExclusionBreakdown(scheduledRows.value))
+  const fpdorFieldBreakdown = computed(() => computeFpdorFieldBreakdown(scheduledRows.value))
+
   const recommendedCount = computed(() => Object.values(approvals.value).filter(v => v.pm && v.do).length)
   const pendingRiskCount = computed(() => Object.values(approvals.value).filter(v => v.pendingRisk).length)
 
@@ -252,6 +264,10 @@ export function useFeatureScheduling() {
     deliveryConfidenceSummary,
     workMix,
     outcomesStats,
+    componentCapacityUsage,
+    teamCapacityUsage,
+    exclusionBreakdown,
+    fpdorFieldBreakdown,
     recommendedCount,
     pendingRiskCount,
     pmReviewStatus,

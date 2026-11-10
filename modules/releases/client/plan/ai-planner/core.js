@@ -784,3 +784,96 @@ export function bigRockStatusLabel(inPlanCount, avgConf) {
   if(avgConf>=40) return 'Lagging';
   return 'At Risk';
 }
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Stage 1c additions (Data Appendix tab). Same extraction rules as before.
+// renderAppendix() (index.html lines 3873-3989) is mostly HTML-string building
+// around four small aggregations; each is pulled out below as structured data,
+// HTML/color/label strings left to the Vue layer.
+// ─────────────────────────────────────────────────────────────────────────────
+
+// Source: index.html lines 3874-3899 (Component Capacity table).
+export function computeComponentCapacityUsage(rows) {
+  const usedC = {};
+  rows.forEach(r=>{
+    if(r._place==='No') return;
+    (esc(r['Components'])||'').split(';').forEach(c=>{
+      c=c.trim(); if(!c) return;
+      if(!usedC[c]) usedC[c]={EA1:0,EA2:0,GA:0};
+      if(usedC[c][r._place]!==undefined) usedC[c][r._place]++;
+    });
+  });
+  const allC=[...new Set([...Object.keys(CAP),...Object.keys(usedC)])].sort();
+  return allC.map(c=>{
+    const cap=CAP[c]||{EA1:1,EA2:1,GA:1};
+    const used=usedC[c]||{EA1:0,EA2:0,GA:0};
+    const over=used.EA1>cap.EA1||used.EA2>cap.EA2||used.GA>cap.GA;
+    return { component:c, cap, used, over };
+  });
+}
+
+// Source: index.html lines 3901-3926 (Team — Features In-Plan vs p75 Capacity
+// table). BOTTLENECK_TEAMS keeps Dashboard/Docs teams pinned to the top of the
+// list (John Graham, Aug 24: they set the EA2 system ceiling).
+const BOTTLENECK_TEAMS = ['documentation','doc ','docs ','dashboard'];
+function isBottleneckTeam(t) { return BOTTLENECK_TEAMS.some(b=>t.toLowerCase().includes(b)); }
+export function computeTeamCapacityUsage(rows) {
+  const usedT = {};
+  rows.forEach(r=>{
+    if(r._place==='No') return;
+    const t=(esc(r['Team'])||'').trim();
+    if(t){
+      if(!usedT[t]) usedT[t]={EA1:0,EA2:0,GA:0};
+      if(usedT[t][r._place]!==undefined) usedT[t][r._place]++;
+    }
+  });
+  const allT=[...new Set(Object.keys(usedT))].sort((a,b)=>{
+    if(isBottleneckTeam(a)&&!isBottleneckTeam(b)) return -1;
+    if(!isBottleneckTeam(a)&&isBottleneckTeam(b)) return 1;
+    return a.localeCompare(b);
+  });
+  return allT.map(t=>{
+    const used=usedT[t]||{EA1:0,EA2:0,GA:0};
+    return { team:t, used, total: used.EA1+used.EA2+used.GA, isBottleneck: isBottleneckTeam(t), isDoc: /doc/i.test(t) };
+  });
+}
+
+// Source: index.html lines 3928-3957 (Exclusion Breakdown (No) table). Group
+// order mirrors the original if/else-if chain -- a row matches the first
+// applicable reason, falling through to "other" only if none match.
+const EXCLUSION_GROUPS = [
+  { key:'No Target Version',     label:'Assign a Target Version',     match: rs=>rs.includes('No Target Version')||rs.includes('No components') },
+  { key:'Mandatory FPDoR field', label:'Fill mandatory FPDoR fields',  match: rs=>rs.includes('Mandatory FPDoR') },
+  { key:'Non-standard',          label:'Fix Target Version format',   match: rs=>rs.includes('Non-standard')||rs.includes('does not map') },
+  { key:'Readiness too low',     label:'Complete FPDoR checklist',    match: rs=>rs.includes('Readiness too low')||rs.includes('Moderate readiness')||rs.includes('w:') },
+];
+export function computeExclusionBreakdown(rows) {
+  const noRows = rows.filter(r=>r._place==='No');
+  const groups = {};
+  EXCLUSION_GROUPS.forEach(g=>{ groups[g.key] = { key:g.key, label:g.label, rows:[] }; });
+  groups.other = { key:'other', label:'Other / review reason', rows:[] };
+  noRows.forEach(r=>{
+    const rs = r._reason||'';
+    const matched = EXCLUSION_GROUPS.find(g=>g.match(rs));
+    (matched ? groups[matched.key] : groups.other).rows.push(r);
+  });
+  return Object.values(groups)
+    .filter(g=>g.rows.length>0)
+    .sort((a,b)=>b.rows.length-a.rows.length);
+}
+
+// Source: index.html lines 3959-3988 (FPDoR Field Failure Breakdown table) --
+// which specific mandatory fields are blocking the most "No"-placed features.
+export function computeFpdorFieldBreakdown(rows) {
+  const noRows = rows.filter(r=>r._place==='No');
+  const fpdorRows = noRows.filter(r=>(r._reason||'').includes('Mandatory FPDoR'));
+  const fieldCounts = {};
+  fpdorRows.forEach(r=>{
+    const m=(r._reason||'').match(/missing:\s*(.+?)(\s*·|$)/i);
+    const field=m?m[1].trim():'Unknown field';
+    fieldCounts[field]=(fieldCounts[field]||0)+1;
+  });
+  const sorted=Object.entries(fieldCounts).sort((a,b)=>b[1]-a[1]);
+  const maxCount=sorted[0]?sorted[0][1]:1;
+  return sorted.map(([field,count])=>({ field, count, pct: Math.round(count/maxCount*100) }));
+}

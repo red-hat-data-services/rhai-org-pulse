@@ -12,6 +12,7 @@ export const routes = {
   'roadmap-preview': defineAsyncComponent(() => import('./plan/views/RoadmapPreview.vue')),
   'executive-preview': defineAsyncComponent(() => import('./plan/views/ExecutivePreview.vue')),
   'architecture-preview': defineAsyncComponent(() => import('./plan/views/ArchitecturePreview.vue')),
+  'data-appendix-preview': defineAsyncComponent(() => import('./plan/views/DataAppendixPreview.vue')),
   'deliver': defineAsyncComponent(() => import('./views/DeliverView.vue')),
   'reports': defineAsyncComponent(() => import('./views/ReportsView.vue')),
   'audit': defineAsyncComponent(() => import('./views/AuditView.vue')),
