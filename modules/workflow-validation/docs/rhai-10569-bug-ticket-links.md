@@ -1,7 +1,7 @@
 # Per-run Jira issue links
 
 Story: [RHAI-10569](https://redhat.atlassian.net/browse/RHAI-10569).
-Parent branch: [RHAI-20044 / PR #1866](https://github.com/red-hat-data-services/rhai-org-pulse/pull/1866).
+Prerequisite: [RHAI-20044 / PR #1866](https://github.com/red-hat-data-services/rhai-org-pulse/pull/1866), merged on 2026-11-10.
 
 The Recent Runs table adds one Issues found column. It covers bugs and RFEs.
 The Jira issues link opens the recorded
@@ -63,8 +63,10 @@ All 6,813 unit tests passed (11 skipped), and all 38 browser tests passed.
 Lint, module/OpenAPI validation, and the production build passed.
 
 [Deployment and test evidence](rhai-10569-validation.json).
-The GPUaaS preview was reviewed before preparing the pull request. The source
-branch builds on PR #1866 and must follow its merge order.
+The GPUaaS preview was reviewed before preparing the pull request. After
+PR #1866 merged, this feature was rebased onto `main` at `040ffab1506f`.
+All five feature commits applied without code changes. The rebase was checked
+locally with core v2.0.95; the GPUaaS evidence above remains from core v2.0.94.
 
 ## Missing-bug dependency assessment
 

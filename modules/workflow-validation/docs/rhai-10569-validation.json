@@ -52,5 +52,22 @@
     "ticket": "RHAI-9991",
     "missing_jira_key": "RHOAIENG-100723",
     "recorded_root_causes": 0
+  },
+  "rebaseVerification": {
+    "checkedAt": "2026-11-10T15:40:44.312313+00:00",
+    "parentMergedAt": "2026-11-10T15:17:56Z",
+    "baseCommit": "040ffab1506f32fae7b6a63bbf32707f53aa2fae",
+    "coreVersion": "2.0.95",
+    "featureCommitsAppliedWithoutCodeChanges": true,
+    "unitPassed": 6980,
+    "unitSkipped": 11,
+    "browserPassed": 38,
+    "lint": "passed",
+    "moduleValidation": "passed",
+    "openapiValidation": "passed",
+    "productionFrontendBuild": "passed",
+    "gpuPreview": "original core v2.0.94 preview retained; rebased branch verified locally",
+    "unitCommand": "NODE_OPTIONS=--no-experimental-webstorage npm test -- --maxWorkers=2",
+    "unitExitCode": 0
   }
 }
