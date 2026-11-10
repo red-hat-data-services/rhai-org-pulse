@@ -23,10 +23,40 @@ export function prStatus(pr) {
  */
 export function prProblemReason(pr) {
   const obs = (pr && pr['build-observations']) || {}
-  if (obs['gate-reason']) return obs['gate-reason']
+  const reason = obs['gate-reason']
+  if (reason) return compactReason(reason, obs.runs || [])
   const run = (obs.runs || []).find((r) => String(r.status || '').toLowerCase() !== 'success')
   if (run && run.reason) return run.reason
   return pr['pr-status'] || 'unknown'
+}
+
+/**
+ * The failure mode, without the parts the row already shows.
+ *
+ * The bot's gate reason opens with the failing component name and ends with
+ * "(+N more)", both of which the row already renders as build links. Strip
+ * them, and reduce "Konflux failure: Failed" to "Failed".
+ */
+export function compactReason(reason, runs = []) {
+  let text = String(reason || '').trim()
+  const names = runs
+    .map((run) => run.component || run.name)
+    .filter(Boolean)
+    .sort((a, b) => b.length - a.length)
+  for (const name of names) {
+    if (text.startsWith(`${name} `)) {
+      text = text.slice(name.length + 1)
+      break
+    }
+  }
+  // The bot prefixes the reason with the failing component even when that
+  // run is not in the current observations, so drop a leading token when a
+  // "Konflux ..." clause follows it.
+  text = text.replace(/^\S+\s+(?=Konflux\b)/, '')
+  text = text.replace(/\s*\(\+\d+ more\)\s*$/, '')
+  const mode = /^Konflux\b[^:]*:\s*(.+)$/.exec(text)
+  if (mode) text = mode[1]
+  return text.trim() || String(reason || '').trim()
 }
 
 /** Statuses that are a hard failure, as opposed to still running or unknown. */
@@ -60,6 +90,31 @@ export function promotionVerdict(job) {
   if (allPromoted && String(job.state || '').toUpperCase() === 'MERGED') return 'complete'
 
   return 'progress'
+}
+
+/**
+ * Jira and Slack links per repo, from the job's `failure_links` (parsed by the
+ * collector from the GAP bot's failure-summary comment). Jira keys are the
+ * last path segment, so the staging and production Jira hosts both work.
+ */
+export function failureLinksByRepo(job) {
+  const links = (job && job.failure_links) || []
+  const byRepo = {}
+  for (const link of links) {
+    if (!link || !link.repo) continue
+    const entry = byRepo[link.repo] || (byRepo[link.repo] = { jira: [], slack: [] })
+    if (link.jira_url) {
+      entry.jira.push({
+        key: String(link.jira_url).split('/').filter(Boolean).pop() || 'Jira',
+        url: link.jira_url,
+        label: link.label || null
+      })
+    }
+    if (link.slack_url && !entry.slack.includes(link.slack_url)) {
+      entry.slack.push(link.slack_url)
+    }
+  }
+  return byRepo
 }
 
 /** Summary counts over `state_json["pull-requests"]`: ok / failing / pending. */
@@ -171,6 +226,7 @@ export function usePromotionGates() {
   const pullRequests = computed(() => (stateJson.value && stateJson.value['pull-requests']) || [])
   const creatorOutcomes = computed(() => (stateJson.value && stateJson.value['creator-outcomes']) || [])
   const gates = computed(() => (stateJson.value && stateJson.value['promotion-gates']) || [])
+  const repoLinks = computed(() => failureLinksByRepo(job.value))
   const issues = computed(() => creatorOutcomes.value.filter((o) => String(o.outcome || '').toLowerCase() !== 'success'))
   const releaseBranches = computed(() => joinReleaseBranches(stateJson.value))
 
@@ -184,6 +240,7 @@ export function usePromotionGates() {
     pullRequests,
     creatorOutcomes,
     gates,
+    repoLinks,
     issues,
     releaseBranches,
     loadLatest,

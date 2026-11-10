@@ -9,6 +9,8 @@ import {
   usePromotionGates,
   isPrProblem,
   prProblemReason,
+  compactReason,
+  failureLinksByRepo,
   promotionVerdict,
   summarizePullRequests,
   buildDiffUrl,
@@ -216,5 +218,51 @@ describe('promotionVerdict', () => {
 
   it('is empty without components', () => {
     expect(promotionVerdict(job('OPEN', []))).toBe('empty')
+  })
+})
+
+
+describe('failureLinksByRepo', () => {
+  it('groups Jira keys and Slack threads per repo', () => {
+    const job = {
+      failure_links: [
+        { repo: 'kserve', label: 'a', jira_url: 'https://stage-redhat.atlassian.net/browse/RHAI-240', slack_url: 'https://redhat-internal.slack.com/x' },
+        { repo: 'kserve', label: 'b', jira_url: 'https://redhat.atlassian.net/browse/RHAI-241', slack_url: 'https://redhat-internal.slack.com/x' }
+      ]
+    }
+    const byRepo = failureLinksByRepo(job)
+    expect(byRepo.kserve.jira.map((j) => j.key)).toEqual(['RHAI-240', 'RHAI-241'])
+    // the same Slack thread is listed once
+    expect(byRepo.kserve.slack).toHaveLength(1)
+  })
+
+  it('tolerates a job without links', () => {
+    expect(failureLinksByRepo({})).toEqual({})
+    expect(failureLinksByRepo(null)).toEqual({})
+  })
+})
+
+
+describe('compactReason', () => {
+  const runs = [{ component: 'odh-data-connect-hub-flight-v3-7-ea-1' }]
+
+  it('drops the component name and the (+N more) suffix', () => {
+    expect(
+      compactReason('odh-data-connect-hub-flight-v3-7-ea-1 Konflux failure: Failed (+1 more)', runs)
+    ).toBe('Failed')
+  })
+
+  it('keeps a meaningful failure mode', () => {
+    expect(compactReason('odh-kserve-agent-v3-7-ea-1 Konflux failure: CouldntGetTask', runs)).toBe(
+      'CouldntGetTask'
+    )
+    expect(
+      compactReason('Konflux lookup unavailable: PR-associated PipelineRun has an unknown trigger event', [])
+    ).toBe('PR-associated PipelineRun has an unknown trigger event')
+  })
+
+  it('leaves a reason without a component prefix alone', () => {
+    const merge = 'main-release-feasibility (rhoai-3.7-ea.1) concluded failure'
+    expect(compactReason(merge, [])).toBe(merge)
   })
 })
