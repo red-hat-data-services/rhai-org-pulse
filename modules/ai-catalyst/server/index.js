@@ -1,7 +1,8 @@
-const { createFeedClient } = require('./feed-client');
+const { createFeedClient, validateFeedDestination, redactUrl, redactText } = require('./feed-client');
 const {
   getShowcaseData,
   fetchShowcaseData,
+  getCachedShowcaseData,
   STORAGE_KEY: SHOWCASE_STORAGE_KEY,
   getReferencedPillarKeys,
   mergePillarMetadata,
@@ -61,8 +62,13 @@ function parseFeedRow(row) {
       const n = Number(val);
       obj[camel] = (val === '' || val === null || val === undefined) ? null : (Number.isFinite(n) ? n : null);
     } else if (BOOLEAN_FIELDS.has(key)) {
+      // Tri-state: the feed says "unknown" or leaves the cell blank for
+      // trend rows. Collapsing that to "No" asserts something the feed never
+      // said (GPU Required: No on 443 of 678 real rows).
       const s = typeof val === 'string' ? val.toLowerCase() : '';
-      obj[camel] = s === 'yes' || s === 'true' || s === '1';
+      if (s === 'yes' || s === 'true' || s === '1') obj[camel] = true;
+      else if (s === 'no' || s === 'false' || s === '0') obj[camel] = false;
+      else obj[camel] = null;
     } else if (JSON_FIELDS.has(key)) {
       // Empty means "no review history yet"; anything else must parse to an
       // array or the board fails loudly instead of silently erasing history.
@@ -108,12 +114,14 @@ function parseBoardRows(rows) {
 function extractDecisionStatus(candidate) {
   const dec = (candidate.pmDecision || '').toLowerCase();
   if (!dec) return 'pending';
-  if (dec.includes('approve')) return 'approved';
-  if (dec.includes('decline')) return 'declined';
+  // Negatives first: "Disapprove" and "Not approved" contain "approve".
+  if (/disapprov|declin|reject|\bnot\s+approv/.test(dec)) return 'declined';
   if (dec.includes('revisit')) return 'revisit';
+  if (/\bapprov/.test(dec)) return 'approved';
   return 'pending';
 }
 
+/** Apply the board's category/source/status filters and its sort order. */
 function filterCandidates(candidates, query) {
   let filtered = candidates;
 
@@ -121,7 +129,11 @@ function filterCandidates(candidates, query) {
     filtered = filtered.filter(c => c.category === query.category);
   }
   if (query.source) {
-    filtered = filtered.filter(c => c.source === query.source);
+    // The feed uses "hackernews"; the filter option keeps the legacy "hn".
+    const sources = query.source === 'hn' || query.source === 'hackernews'
+      ? ['hn', 'hackernews']
+      : [query.source];
+    filtered = filtered.filter(c => sources.includes(c.source));
   }
   if (query.status) {
     filtered = filtered.filter(c => extractDecisionStatus(c) === query.status);
@@ -184,6 +196,8 @@ module.exports = function registerRoutes(router, context) {
   ]);
 
   let lastSyncTime = null;
+  let lastSyncAttemptTime = null;
+  let lastSyncError = null;
   let syncRunning = false;
 
   // Loopback feed URLs are opt-in: without this flag the token never goes to
@@ -193,8 +207,11 @@ module.exports = function registerRoutes(router, context) {
   // from process.env.
   const allowLoopback = context.resolveSecret('POC_EXPLORER_ALLOW_LOOPBACK') === '1';
 
+  /** Resolve the feed token, trimming whitespace from file-mounted secrets. */
   function getFeedToken() {
-    return (secrets && secrets.POC_EXPLORER_FEED_TOKEN) || context.resolveSecret('POC_EXPLORER_FEED_TOKEN') || '';
+    // Secrets created from files often carry a trailing newline; a bare
+    // whitespace value must not count as configured and send a broken header.
+    return String((secrets && secrets.POC_EXPLORER_FEED_TOKEN) || context.resolveSecret('POC_EXPLORER_FEED_TOKEN') || '').trim();
   }
 
   async function getBoardFeedUrl() {
@@ -293,9 +310,28 @@ module.exports = function registerRoutes(router, context) {
 
   // --- Sync logic ---
 
+  /** Persist the attempt time and error without touching cached boards. */
+  async function persistSyncAttempt(error) {
+    try {
+      const existingIndex = await readIndex();
+      await writeToStorage(INDEX_PATH, {
+        ...(existingIndex || {}),
+        boards: (existingIndex && existingIndex.boards) || [],
+        lastSynced: (existingIndex && existingIndex.lastSynced) || null,
+        lastAttemptedAt: lastSyncAttemptTime,
+        lastError: error
+      });
+    } catch (persistErr) {
+      console.error('[ai-catalyst] Failed to persist sync status:', persistErr.message);
+    }
+  }
+
+  /** Fetch every listed board, persist it, and report per-board failures. */
   async function syncBoards() {
     if (syncRunning) return { status: 'skipped', reason: 'sync already running' };
     if (!(await isConfigured())) return { status: 'skipped', reason: 'not configured' };
+    // Only real runs count as an attempt; a skip is not a failure.
+    lastSyncAttemptTime = new Date().toISOString();
     syncRunning = true;
     try {
       const client = createFeedClient({
@@ -311,6 +347,8 @@ module.exports = function registerRoutes(router, context) {
         // A shape-valid empty list is a degraded feed, not a successful
         // sync: the skip shape keeps the refresh handler due for the next
         // tick instead of stamping success for a full cadence window.
+        lastSyncError = 'feed returned no boards';
+        await persistSyncAttempt(lastSyncError);
         return { status: 'skipped', reason: 'feed returned no boards' };
       }
 
@@ -360,15 +398,31 @@ module.exports = function registerRoutes(router, context) {
         });
       }
 
-      const runFailed = failed.length > 0;
+      // Advance the run stamp when at least one month was written: a single
+      // broken board must not pin /config.lastSyncTime forever. Months that
+      // did not sync keep their previous stamp.
+      const advanced = syncCount > 0;
+      const lastError = failed.length
+        ? redactText(`Board sync failed for ${failed.length}/${listedBoards.length} boards — ${failed.map(f => `${f.board}: ${f.error}`).join('; ')}`)
+        : null;
       await writeToStorage(INDEX_PATH, {
         boards,
-        lastSynced: runFailed ? (existingIndex.lastSynced || null) : now
+        lastSynced: advanced ? now : (existingIndex.lastSynced || null),
+        // Persist the attempt and error so a restart cannot erase the signal.
+        lastAttemptedAt: now,
+        lastError
       });
-      if (!runFailed) {
+      if (advanced) {
         lastSyncTime = now;
       }
+      lastSyncError = lastError;
       return { synced: syncCount, failed, total: listedBoards.length };
+    } catch (err) {
+      // A failure before the per-board loop (unreachable proxy, 401, bad
+      // shape) must also survive a restart, not just live in memory.
+      lastSyncError = redactText(err.message || String(err));
+      await persistSyncAttempt(lastSyncError);
+      throw err;
     } finally {
       syncRunning = false;
     }
@@ -387,7 +441,13 @@ module.exports = function registerRoutes(router, context) {
    *         description: Current board configuration
    */
   router.get('/board-config', requireAdmin, async function(req, res) {
-    res.json(await getBoardConfig(readFromStorage));
+    try {
+      res.json(await getBoardConfig(readFromStorage));
+    } catch (err) {
+      // Let the admin see and replace an unreadable stored value instead of
+      // the panel hiding the field.
+      res.json({ feedUrl: '', configReadError: err.message });
+    }
   });
 
   /**
@@ -404,7 +464,13 @@ module.exports = function registerRoutes(router, context) {
    */
   router.post('/board-config', requireAdmin, async function(req, res) {
     try {
-      await saveBoardConfig(writeToStorage, req.body);
+      const feedUrl = req.body && req.body.feedUrl;
+      // Fail at save time, not silently on every sync: the client refuses an
+      // unapproved or HTTPS-less URL before any request is made.
+      if (typeof feedUrl === 'string' && feedUrl.trim()) {
+        validateFeedDestination(feedUrl.trim(), getAllowedFeedOrigins(), allowLoopback);
+      }
+      await saveBoardConfig(writeToStorage, req.body || {});
       res.json({ status: 'saved' });
     } catch (err) {
       res.status(400).json({ error: err.message });
@@ -423,10 +489,26 @@ module.exports = function registerRoutes(router, context) {
    */
   router.get('/config', requireAuth, requireScope('ai-catalyst:read'), async function(req, res) {
     const index = DEMO_MODE ? getDemoIndex() : await readIndex();
+    let feedUrl = null;
+    let configError = null;
+    try {
+      feedUrl = await getBoardFeedUrl();
+    } catch (err) {
+      configError = err.message || String(err);
+    }
+    const syncError = lastSyncError || (index && index.lastError) || null;
     res.json({
       configured: await isConfigured(),
       demoMode: DEMO_MODE,
       lastSyncTime: lastSyncTime || (index && index.lastSynced) || null,
+      // The persisted attempt/error survive a restart; the module state is
+      // fresher when a run happened in this process.
+      lastSyncAttemptTime: lastSyncAttemptTime || (index && index.lastAttemptedAt) || null,
+      lastSyncError: syncError ? redactText(syncError) : null,
+      // The effective URL, not the stored override: a save that later fails
+      // closed is visible without reading the pod logs.
+      feedUrl: feedUrl ? redactUrl(feedUrl) : null,
+      configError: configError ? redactText(configError) : null,
       boardCount: (index && index.boards) ? index.boards.length : 0
     });
   });
@@ -474,7 +556,7 @@ module.exports = function registerRoutes(router, context) {
    *         in: query
    *         schema:
    *           type: string
-   *           enum: [github, hn, reddit]
+   *           enum: [github, hn, hackernews, reddit]
    *         description: Filter by discovery source
    *       - name: sort
    *         in: query
@@ -604,7 +686,11 @@ module.exports = function registerRoutes(router, context) {
     }
     try {
       const result = await syncBoards();
-      res.json({ status: 'ok', ...result });
+      // A run where every board failed is not success, even over HTTP.
+      const status = result.status === 'skipped'
+        ? 'skipped'
+        : (result.synced === 0 && result.failed && result.failed.length ? 'failed' : 'ok');
+      res.json({ ...result, status });
     } catch (err) {
       res.status(500).json({ error: 'Sync failed: ' + (err.message || String(err)) });
     }
@@ -622,16 +708,22 @@ module.exports = function registerRoutes(router, context) {
   // showcase catalog so board requests remain available when the feed is
   // temporarily unreachable, and synthesize metadata for any category that
   // has arrived in a board before its pillar row has been refreshed.
+  /**
+   * Resolve pillar metadata without fetching on the read path: a stalled feed
+   * would add its timeout to every board request. The hourly showcase sync
+   * keeps the cache and storage fresh.
+   */
   async function loadPillarData() {
+    if (DEMO_MODE) return loadShowcaseDemoData();
+
+    const cached = getCachedShowcaseData();
+    if (cached) return normalizeShowcaseData(cached);
+
     try {
       const stored = await readFromStorage(SHOWCASE_STORAGE_KEY);
       if (stored) return normalizeShowcaseData(stored);
     } catch (err) {
       console.error('[ai-catalyst:showcase] Failed to read pillar cache:', err.message);
-    }
-
-    if (DEMO_MODE) {
-      return loadShowcaseDemoData();
     }
 
     try {
@@ -658,7 +750,11 @@ module.exports = function registerRoutes(router, context) {
    *         description: Current showcase configuration
    */
   router.get('/showcase/config', requireAdmin, async function(req, res) {
-    res.json(await getShowcaseConfig(readFromStorage));
+    try {
+      res.json(await getShowcaseConfig(readFromStorage));
+    } catch (err) {
+      res.json({ feedUrl: '', configReadError: err.message });
+    }
   });
 
   /**
@@ -675,7 +771,11 @@ module.exports = function registerRoutes(router, context) {
    */
   router.post('/showcase/config', requireAdmin, async function(req, res) {
     try {
-      await saveShowcaseConfig(writeToStorage, req.body);
+      const feedUrl = req.body && req.body.feedUrl;
+      if (typeof feedUrl === 'string' && feedUrl.trim()) {
+        validateFeedDestination(feedUrl.trim(), getAllowedFeedOrigins(), allowLoopback);
+      }
+      await saveShowcaseConfig(writeToStorage, req.body || {});
       res.json({ status: 'saved' });
     } catch (err) {
       res.status(400).json({ error: err.message });
@@ -799,29 +899,34 @@ module.exports = function registerRoutes(router, context) {
   // --- Refresh handler ---
 
   if (context.registerRefresh) {
-    context.registerRefresh('ai-catalyst:sync-boards', {
+    // Core prefixes the module slug, so this registers as
+    // "ai-catalyst:sync-boards".
+    context.registerRefresh('sync-boards', {
       order: 80,
       cadence: '1h',
+      // The sync fetches the board list plus one board per month, each with
+      // its own 30s abort; the registry default of 5 minutes is too tight
+      // once the feed carries nine or more months.
+      timeout: 600000,
       description: 'Sync monthly board data from the POC Explorer feed',
       handler: async function() {
         if (DEMO_MODE) return { status: 'skipped', reason: 'demo mode' };
-        if (!(await isConfigured())) return { status: 'skipped', reason: 'not configured' };
         const result = await syncBoards();
         if (result.status === 'skipped') return result;
         if (result.failed && result.failed.length) {
           // Throwing is the refresh registry's retry mechanism: a returned
           // value counts as success and would advance lastSuccessfulRun,
           // silencing retries for a full cadence window.
-          throw new Error(
+          throw new Error(redactText(
             `Board sync failed for ${result.failed.length}/${result.total} boards — `
             + result.failed.map(f => `${f.board}: ${f.error}`).join('; '),
-          );
+          ));
         }
         return { status: 'success', ...result };
       }
     });
 
-    context.registerRefresh('ai-catalyst:showcase-sync', {
+    context.registerRefresh('showcase-sync', {
       order: 81,
       cadence: '1h',
       description: 'Sync AI Catalyst Showcase data from the POC Explorer feed',
@@ -841,15 +946,26 @@ module.exports = function registerRoutes(router, context) {
     context.registerDiagnostics(async function() {
       const index = await readIndex();
       const showcaseData = await readFromStorage(SHOWCASE_STORAGE_KEY);
+      const syncError = lastSyncError || (index && index.lastError) || null;
+      let feedUrl = null;
+      let configError = null;
+      try {
+        feedUrl = redactUrl(await getBoardFeedUrl());
+      } catch (err) {
+        configError = redactText(err.message || String(err));
+      }
       return {
         configured: await isConfigured(),
         demoMode: DEMO_MODE,
         lastSyncTime,
+        lastSyncAttemptTime: lastSyncAttemptTime || (index && index.lastAttemptedAt) || null,
+        lastSyncError: syncError ? redactText(syncError) : null,
         syncRunning,
+        configError,
         boardCount: (index && index.boards) ? index.boards.length : 0,
         boards: (index && index.boards) || [],
         feed: {
-          url: await getBoardFeedUrl(),
+          url: feedUrl,
           tokenConfigured: !!getFeedToken(),
         },
         showcase: {

@@ -96,7 +96,12 @@ by default.
 
 Feed-URL overrides saved in the module settings UI only sync when their origin
 is operator-approved (`POC_EXPLORER_FEED_URL` / `POC_EXPLORER_SHOWCASE_FEED_URL`
-or the documented defaults); any other origin fails closed.
+or the documented defaults); any other origin fails closed at save time. A base
+URL must not embed credentials or a query/fragment.
+
+Feed requests use the deployment's `HTTP_PROXY` / `HTTPS_PROXY` / `NO_PROXY`
+(the production backend's ArgoCD-injected corporate proxy), like the
+workflow-validation OpenSearch client. Loopback stubs stay direct.
 
 `POC_EXPLORER_FEED_TOKEN` is provisioned into the `team-tracker-secrets` Secret
 by the environment's GitOps/Vault administrator and is injected into the backend
