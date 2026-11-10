@@ -11,6 +11,7 @@ export const routes = {
   'feature-scheduling-preview': defineAsyncComponent(() => import('./plan/views/FeatureSchedulingPreview.vue')),
   'roadmap-preview': defineAsyncComponent(() => import('./plan/views/RoadmapPreview.vue')),
   'executive-preview': defineAsyncComponent(() => import('./plan/views/ExecutivePreview.vue')),
+  'architecture-preview': defineAsyncComponent(() => import('./plan/views/ArchitecturePreview.vue')),
   'deliver': defineAsyncComponent(() => import('./views/DeliverView.vue')),
   'reports': defineAsyncComponent(() => import('./views/ReportsView.vue')),
   'audit': defineAsyncComponent(() => import('./views/AuditView.vue')),

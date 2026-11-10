@@ -63,6 +63,7 @@ export const viewOwners = {
   'releases/audit':                                'Alex Corvin',
   'releases/deliver':                              'Alex Corvin',
   'releases/execute':                              'Alex Corvin',
+  'releases/executive-preview':                    'Yuval Luria',
   'releases/feature-detail':                       'shuels2',
   'releases/feature-scheduling-preview':           'Yuval Luria',
   'releases/plan':                                 'Alex Corvin',
