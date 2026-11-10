@@ -1,5 +1,6 @@
 <script setup>
 import { computed } from 'vue'
+import { buildFpdorTooltip } from '../ai-planner/core.js'
 
 const props = defineProps({
   feature: { type: Object, required: true },
@@ -29,6 +30,11 @@ const riskClass = computed(() => {
 })
 
 const components = computed(() => (props.feature['Components'] || '').split(';').map(s => s.trim()).filter(Boolean))
+
+// index.html used to show the FPDoR tier breakdown as permanent inline pills
+// under the w-score; PR #1877 (Nov 10) made it hover-only to declutter the
+// table, reusing the same tooltip text already shown on the badge.
+const fpdorTooltip = computed(() => buildFpdorTooltip(props.feature))
 </script>
 
 <template>
@@ -85,7 +91,8 @@ const components = computed(() => (props.feature['Components'] || '').split(';')
     </td>
 
     <td class="px-3 py-2.5 whitespace-nowrap text-center">
-      <span class="text-xs font-mono text-gray-700 dark:text-gray-300" :title="'Weighted FPDoR: ' + feature._wFPDoR + '/100'">{{ feature['FPDoR'] || '—' }} <span class="text-gray-400">(w:{{ feature._wFPDoR }})</span></span>
+      <span class="text-xs font-mono text-gray-700 dark:text-gray-300" :title="fpdorTooltip">{{ feature['FPDoR'] || '—' }}</span>
+      <span class="text-xs text-gray-400" :title="fpdorTooltip">(w:{{ feature._wFPDoR }})</span>
     </td>
 
     <td class="px-3 py-2.5 whitespace-nowrap text-center">

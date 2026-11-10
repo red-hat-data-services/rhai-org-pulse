@@ -1085,3 +1085,12 @@ export const ROADMAP_OUTCOMES={
   "RHAISTRAT-949":{br:"Multitenancy",rc:"not-ready"},
   "RHAISTRAT-978":{br:"GPUaaS",rc:"committed"}
 }; // 259 features with explicit Big Rock labels from RHAI-Roadmap.html
+
+// Source: index.html lines 1552-1557 (tier groupings for the FPDoR hover tooltip
+// and the "Readiness Issues" CSV export column, PR #1877).
+export const FPDOR_TIERS_DISPLAY = [
+  { label:'Critical', cls:'fd-crit', items:['Components','Child epics','Target Version','Delivery Owner','PM'] },
+  { label:'High',     cls:'fd-high', items:['Release Type','Priority','RICE','Docs impact'] },
+  { label:'Medium',   cls:'fd-med',  items:['Cross-team deps','Feature human sign-off','Requirements clarity','Acceptance criteria','Risks & assumptions','Architectural alignment'] },
+  { label:'Soft',     cls:'fd-soft', items:['UXD','Source RFE / AI SDLC'] },
+];

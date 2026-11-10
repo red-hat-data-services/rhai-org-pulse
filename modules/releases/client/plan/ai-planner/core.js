@@ -21,7 +21,8 @@ import {
   FPDOR_MANDATORY_HARD,
   ML_SCORES,
   ML_REAL_KEYS,
-  ROADMAP_OUTCOMES
+  ROADMAP_OUTCOMES,
+  FPDOR_TIERS_DISPLAY
 } from './constants.js'
 
 /**
@@ -876,4 +877,61 @@ export function computeFpdorFieldBreakdown(rows) {
   const sorted=Object.entries(fieldCounts).sort((a,b)=>b[1]-a[1]);
   const maxCount=sorted[0]?sorted[0][1]:1;
   return sorted.map(([field,count])=>({ field, count, pct: Math.round(count/maxCount*100) }));
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Stage 1c corrections (Nov 10/11): PR #1877 (fix/ai-planner-csv-export-roadmap-
+// removal, not yet merged to main) re-adds an Export CSV button to Feature
+// Scheduling and makes the FPDoR breakdown hover-only instead of permanent
+// inline pills. Extracted read-only from that branch (commits a43241d9,
+// 2f97e1d6) without merging/rebasing onto it, per instructions.
+// ─────────────────────────────────────────────────────────────────────────────
+
+/**
+ * Source: index.html lines 3661-3678 (renderTbl()'s FPDoR hover tooltip, as of
+ * PR #1877 -- the breakdown is hover-only now; the inline <span class="fd-item">
+ * pills that used to sit under the w-score were removed).
+ */
+export function buildFpdorTooltip(r) {
+  const failedSet = new Set(r._failedItems);
+  const hasFpdorData = r['FPDoR'] && r['FPDoR'] !== '—';
+  const tooltipLines = ['Weighted FPDoR: '+r._wFPDoR+'/100 (Erle\'s tier weights)', ''];
+  // Only the failures are listed. Printing a tier's passes as well split each tier
+  // across two lines, and "passed" there also swept up N/A items, so the lines never
+  // added up to the N/17 badge — that badge counts outright passes only.
+  FPDOR_TIERS_DISPLAY.forEach(t=>{
+    const fails = t.items.filter(i=>failedSet.has(i));
+    if(fails.length) tooltipLines.push('✗ '+t.label+': '+fails.join(', '));
+  });
+  if(hasFpdorData){
+    tooltipLines.push('', failedSet.size
+      ? esc(r['FPDoR'])+' passed · '+failedSet.size+' failing · remainder not applicable'
+      : esc(r['FPDoR'])+' passed · nothing failing');
+  }
+  return tooltipLines.join('\n');
+}
+
+/**
+ * Source: index.html's doExport() as of PR #1877 commit 2f97e1d6 (final form --
+ * an earlier revision in the same PR used esc() for CSV cells, which produced
+ * HTML entities like &amp; instead of & in exported text; that was corrected
+ * to a CSV-only quote escaper before doExport() shipped). Returns the CSV text;
+ * triggering the browser download is left to the Vue layer (DOM side effect),
+ * same split as index.html.doExport() being Blob/anchor glue around this logic.
+ */
+export function buildFeatureSchedulingCsv(rows) {
+  function csvQ(v){ const s=v==null?'':String(v); return '"'+s.replace(/"/g,'""')+'"'; }
+  const hdr=['Rank','Key','Title','FPDoR','Weighted FPDoR','Readiness Issues','Risk','Target Versions','Fix Version','Components','Team','Priority','Confidence','Placement','Confidence%','PM','Outcome'];
+  const lines=[hdr.join(','),...rows.map(r=>{
+    const failedSet=new Set(r._failedItems);
+    const issues=FPDOR_TIERS_DISPLAY.flatMap(t=>t.items.filter(i=>failedSet.has(i)).map(i=>t.label+': '+i)).join('; ');
+    return [
+      r['Rank'],r['Key']||'',csvQ(r['Title']),r['FPDoR'],r._wFPDoR,
+      csvQ(issues),r._riskLevel||'',
+      csvQ(r['Target Versions']),csvQ(r['Fix Version']),csvQ(r['Components']),
+      csvQ(r['Team']),r['Priority']||'',r['Confidence'],r._place,(r._conf||0)+'%',
+      csvQ(r['PM']),csvQ(r['Outcome'])
+    ].join(',');
+  })];
+  return lines.join('\n');
 }

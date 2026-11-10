@@ -4,6 +4,7 @@ import { useFeatureScheduling } from '../composables/useFeatureScheduling'
 import FeatureSchedulingFilterBar from '../components/FeatureSchedulingFilterBar.vue'
 import FeatureSchedulingRow from '../components/FeatureSchedulingRow.vue'
 import PlacementSummaryCards from '../components/PlacementSummaryCards.vue'
+import { buildFeatureSchedulingCsv } from '../ai-planner/core.js'
 
 // Stage 1b preview -- native Vue rebuild of the AI Planner iframe's Feature
 // Scheduling tab (public/ai-first-scheduler/index.html). Not wired into any nav
@@ -46,6 +47,17 @@ function approvalFor(key) {
   return approvals.value[key] || { pm: false, do: false }
 }
 
+// index.html's doExport() (PR #1877) -- exports the currently filtered/sorted
+// rows (window._lastFilteredRows there, displayRows here), not the full dataset.
+function exportCsv() {
+  const csv = buildFeatureSchedulingCsv(displayRows.value)
+  const a = Object.assign(document.createElement('a'), {
+    href: URL.createObjectURL(new Blob([csv], { type: 'text/csv' })),
+    download: 'feature-scheduling-export.csv'
+  })
+  a.click()
+}
+
 // index.html's scrollToFirstUnchecked() (line 3604-3609), ported 1:1 as a DOM
 // method since this is view-layer behavior, not pure calculation logic.
 function scrollToFirstUnchecked() {
@@ -85,8 +97,16 @@ const headers = [
           {{ displayRows.length }} shown{{ dataSource !== 'live' ? ' (' + dataSource + ' data)' : '' }}
         </span>
       </div>
-      <div v-if="lastSyncedAt" class="text-xs text-gray-400 dark:text-gray-500">
-        Last synced: {{ new Date(lastSyncedAt).toLocaleString() }}
+      <div class="flex items-center gap-3">
+        <span v-if="lastSyncedAt" class="text-xs text-gray-400 dark:text-gray-500">
+          Last synced: {{ new Date(lastSyncedAt).toLocaleString() }}
+        </span>
+        <button
+          type="button"
+          @click="exportCsv"
+          title="Export the currently filtered/sorted features to CSV, including FPDoR readiness details"
+          class="px-2 py-1 text-xs font-medium rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700"
+        >⬇ Export CSV</button>
       </div>
     </div>
 

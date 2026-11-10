@@ -185,4 +185,62 @@ describe('useFeatureScheduling', function() {
     // placementCounts (Feature Scheduling's own cards) stays global regardless of filters
     expect(api.placementCounts.value).toEqual({ EA1: 1, EA2: 0, GA: 1, No: 1 })
   })
+
+  it('loadOutcomes populates liveOutcomes only when the API returns a non-empty list', async function() {
+    var api = mountComposable()
+    expect(api.liveOutcomes.value).toBeNull()
+
+    mockApiRequest.mockImplementation(function(path) {
+      if (String(path).indexOf('/outcomes') !== -1) {
+        return Promise.resolve({ outcomes: [] })
+      }
+      return Promise.resolve(JSON.parse(JSON.stringify(SNAPSHOT)))
+    })
+    await api.loadOutcomes()
+    expect(api.liveOutcomes.value).toBeNull() // empty list -- stay on the BIG_ROCKS fallback
+
+    mockApiRequest.mockImplementation(function(path) {
+      if (String(path).indexOf('/outcomes') !== -1) {
+        return Promise.resolve({
+          outcomes: [
+            { key: 'RHAISTRAT-1', title: 'Outcome One', outcomeNumber: 1, inPlan: 2, total: 3, percentComplete: 66, confidence: 80, status: 'Confident', linkedVersions: ['3.6 EA1 RHOAI RELEASE'] },
+            { key: 'RHAISTRAT-2', title: 'Outcome Two', outcomeNumber: 2, inPlan: 0, total: 1, percentComplete: 0, confidence: 0, status: 'No features in plan', linkedVersions: ['3.6 GA RHOAI RELEASE'] }
+          ]
+        })
+      }
+      return Promise.resolve(JSON.parse(JSON.stringify(SNAPSHOT)))
+    })
+    await api.loadOutcomes()
+    expect(api.liveOutcomes.value).toHaveLength(2)
+    expect(api.visibleLiveOutcomes.value).toHaveLength(2)
+  })
+
+  it('visibleLiveOutcomes filters by the selected release via a linkedVersions substring match', async function() {
+    var api = mountComposable()
+    mockApiRequest.mockImplementation(function(path) {
+      if (String(path).indexOf('/outcomes') !== -1) {
+        return Promise.resolve({
+          outcomes: [
+            { key: 'RHAISTRAT-1', title: 'Outcome One', outcomeNumber: 1, linkedVersions: ['3.6 EA1 RHOAI RELEASE'] },
+            { key: 'RHAISTRAT-2', title: 'Outcome Two', outcomeNumber: 2, linkedVersions: ['3.7 GA RHOAI RELEASE'] }
+          ]
+        })
+      }
+      return Promise.resolve(JSON.parse(JSON.stringify(SNAPSHOT)))
+    })
+    await api.loadOutcomes()
+
+    api.filters.value = Object.assign({}, api.filters.value, { rel: '3.6' })
+    expect(api.visibleLiveOutcomes.value.map(function(o) { return o.key })).toEqual(['RHAISTRAT-1'])
+  })
+
+  it('does not blank liveOutcomes when the outcomes fetch fails (non-blocking)', async function() {
+    var api = mountComposable()
+    mockApiRequest.mockImplementation(function(path) {
+      if (String(path).indexOf('/outcomes') !== -1) return Promise.reject(new Error('boom'))
+      return Promise.resolve(JSON.parse(JSON.stringify(SNAPSHOT)))
+    })
+    await api.loadOutcomes()
+    expect(api.liveOutcomes.value).toBeNull()
+  })
 })

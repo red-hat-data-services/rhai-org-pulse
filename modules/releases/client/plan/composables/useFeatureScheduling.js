@@ -18,6 +18,7 @@ import {
 } from '../ai-planner/core.js'
 
 const API_PATH = '/modules/releases/planning/ai-planner'
+const OUTCOMES_API_PATH = '/modules/releases/planning/ai-planner/outcomes'
 
 // Same localStorage key index.html's iframe already uses (toggleApproval/_loadApprovals/
 // _saveApprovals, index.html lines 3183-3223) -- kept for continuity so approvals made in
@@ -61,6 +62,12 @@ const lastSyncedAt = ref(null)
 // mistaken for a live one.
 const dataSource = ref('none')
 
+// Live ~22-outcome list (index.html's `outcomeData`, fetched via fetchOutcomes()
+// from the same endpoint). null until a successful fetch; the Executive
+// outcomes table falls back to BIG_ROCKS only while this is null/empty, same
+// as renderBigRocks()'s own fallback condition.
+const outcomeData = ref(null)
+
 const filters = ref(defaultFilters())
 const sortCol = ref('OutcomeNumber')
 const sortAsc = ref(true)
@@ -91,6 +98,20 @@ export function useFeatureScheduling() {
       error.value = err.message || 'Failed to load AI Planner data'
     } finally {
       loading.value = false
+    }
+  }
+
+  // Source: index.html's fetchOutcomes() (lines 4236-4258). Independent, non-
+  // blocking fetch -- a failure here must not blank the Executive tab, same as
+  // the original's try/catch-and-warn.
+  async function loadOutcomes() {
+    try {
+      const data = await apiRequest(OUTCOMES_API_PATH)
+      if (data && Array.isArray(data.outcomes)) {
+        outcomeData.value = data
+      }
+    } catch {
+      // non-blocking -- Executive falls back to the BIG_ROCKS-derived table
     }
   }
 
@@ -193,6 +214,23 @@ export function useFeatureScheduling() {
   const workMix = computed(() => computeWorkMix(displayRows.value))
   const outcomesStats = computed(() => aggregateBigRockStats(displayRows.value))
 
+  // Source: renderBigRocks()'s live path (index.html lines 4083-4096) -- when
+  // the live outcomes API returned a non-empty list, that's the real source of
+  // truth, filtered by the selected release via substring match on
+  // linkedVersions. null when the live list is unavailable/empty, signaling
+  // callers (ExecutivePreview.vue) to fall back to outcomesStats/BIG_ROCKS,
+  // same fallback condition index.html itself uses.
+  const liveOutcomes = computed(() => {
+    const outcomes = outcomeData.value && Array.isArray(outcomeData.value.outcomes) ? outcomeData.value.outcomes : []
+    return outcomes.length ? outcomes : null
+  })
+  const visibleLiveOutcomes = computed(() => {
+    if (!liveOutcomes.value) return null
+    const rawRelease = filters.value.rel || ''
+    if (!rawRelease) return liveOutcomes.value
+    return liveOutcomes.value.filter(o => o.linkedVersions && o.linkedVersions.some(v => v.toLowerCase().includes(rawRelease.toLowerCase())))
+  })
+
   // Data Appendix tab -- like placementCounts, index.html calls
   // renderAppendix(allData) with the full unfiltered dataset (line 3550), not
   // the active filter set, so these are built off scheduledRows.
@@ -264,6 +302,9 @@ export function useFeatureScheduling() {
     deliveryConfidenceSummary,
     workMix,
     outcomesStats,
+    outcomeData,
+    liveOutcomes,
+    visibleLiveOutcomes,
     componentCapacityUsage,
     teamCapacityUsage,
     exclusionBreakdown,
@@ -278,7 +319,8 @@ export function useFeatureScheduling() {
     roadmapDrilldown,
     showRoadmapDrilldown,
     clearRoadmapDrilldown,
-    loadFeatures
+    loadFeatures,
+    loadOutcomes
   }
 }
 
@@ -289,6 +331,7 @@ export function _resetFeatureSchedulingForTests() {
   error.value = null
   lastSyncedAt.value = null
   dataSource.value = 'none'
+  outcomeData.value = null
   filters.value = defaultFilters()
   sortCol.value = 'OutcomeNumber'
   sortAsc.value = true

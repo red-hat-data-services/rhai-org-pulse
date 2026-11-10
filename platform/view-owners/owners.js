@@ -62,6 +62,7 @@ export const viewOwners = {
   // releases
   'releases/architecture-preview':                 'Yuval Luria',
   'releases/audit':                                'Alex Corvin',
+  'releases/data-appendix-preview':                'Yuval Luria',
   'releases/deliver':                              'Alex Corvin',
   'releases/execute':                              'Alex Corvin',
   'releases/executive-preview':                    'Yuval Luria',

@@ -29,6 +29,17 @@ import { BIG_ROCKS } from '../ai-planner/constants.js'
 // lines 4327-4361) -- it needs `cveReserve` plumbed through from the API
 // response, which this composable doesn't fetch yet. The static "Quality
 // Capacity Model" box (hardcoded 20%/5%/75%) is kept since it's plain text.
+//
+// Nov 11 correction: the Outcomes TABLE below is sourced from the live ~22-
+// outcome API (visibleLiveOutcomes, GET .../ai-planner/outcomes) when that
+// fetch succeeds with a non-empty list, matching renderBigRocks()'s live path
+// (index.html lines 4083-4113) exactly -- same columns, same release-filter-by-
+// linkedVersions-substring behavior. BIG_ROCKS (outcomeRows below) is only the
+// fallback for when that API genuinely returns nothing, same as production.
+// Note this is independent of the "Outcomes X/19" tile in the dark summary
+// banner above the table -- that tile is always BIG_ROCKS-based in index.html
+// too (renderExecView(), lines 4379-4394), regardless of what the outcomes
+// table itself is showing; not something this fix changes.
 
 const {
   scheduledRows,
@@ -39,12 +50,18 @@ const {
   deliveryConfidenceSummary,
   workMix,
   outcomesStats,
+  visibleLiveOutcomes,
+  liveOutcomes,
   loading,
   error,
-  loadFeatures
+  loadFeatures,
+  loadOutcomes
 } = useFeatureScheduling()
 
-onMounted(loadFeatures)
+onMounted(() => {
+  loadFeatures()
+  loadOutcomes()
+})
 
 function updateRelease(event) {
   filters.value = { ...filters.value, rel: event.target.value }
@@ -161,10 +178,45 @@ function statusClass(status) {
       </div>
 
       <!-- Outcomes table -- read-only summary (ranking/editing now lives in the
-           separate "Prioritized Outcomes" view at #/releases/plan?tab=jira-plan) -->
+           separate "Prioritized Outcomes" view at #/releases/plan?tab=jira-plan).
+           Live data (visibleLiveOutcomes) when available; BIG_ROCKS fallback
+           (outcomeRows) only when that API returns nothing, matching
+           renderBigRocks()'s own fallback condition. -->
       <div class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden">
-        <div class="text-xs font-bold uppercase tracking-wide text-gray-700 dark:text-gray-200 px-4 py-2 border-b border-gray-200 dark:border-gray-700">Outcomes</div>
-        <table class="w-full text-xs">
+        <div class="text-xs font-bold uppercase tracking-wide text-gray-700 dark:text-gray-200 px-4 py-2 border-b border-gray-200 dark:border-gray-700">
+          Outcomes
+          <span v-if="liveOutcomes" class="font-normal normal-case text-gray-400">
+            — {{ filters.rel || 'All Releases' }} · {{ visibleLiveOutcomes.length }} of {{ liveOutcomes.length }} ranked, from Jira plan view 7384
+          </span>
+        </div>
+        <table v-if="liveOutcomes" class="w-full text-xs">
+          <thead class="bg-gray-50 dark:bg-gray-800/60">
+            <tr>
+              <th class="text-center px-3 py-2 font-semibold text-gray-500 dark:text-gray-400 uppercase">OC#</th>
+              <th class="text-left px-3 py-2 font-semibold text-gray-500 dark:text-gray-400 uppercase">Outcome</th>
+              <th class="text-center px-3 py-2 font-semibold text-gray-500 dark:text-gray-400 uppercase">In Plan</th>
+              <th class="text-center px-3 py-2 font-semibold text-gray-500 dark:text-gray-400 uppercase">% Complete</th>
+              <th class="text-center px-3 py-2 font-semibold text-gray-500 dark:text-gray-400 uppercase">Confidence</th>
+              <th class="text-center px-3 py-2 font-semibold text-gray-500 dark:text-gray-400 uppercase">Status</th>
+              <th class="text-left px-3 py-2 font-semibold text-gray-500 dark:text-gray-400 uppercase">Versions</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr v-for="o in visibleLiveOutcomes" :key="o.key" class="border-b border-gray-50 dark:border-gray-800">
+              <td class="px-3 py-2 text-center font-bold text-gray-800 dark:text-gray-100">{{ o.outcomeNumber }}</td>
+              <td class="px-3 py-2">
+                <a :href="'https://issues.redhat.com/browse/' + o.key" target="_blank" rel="noopener noreferrer" class="text-primary-600 dark:text-blue-400 font-semibold">{{ o.key }}</a>
+                <div class="text-gray-500 dark:text-gray-400">{{ o.title }}</div>
+              </td>
+              <td class="px-3 py-2 text-center">{{ o.inPlan }}/{{ o.total }}</td>
+              <td class="px-3 py-2 text-center">{{ o.percentComplete }}%</td>
+              <td class="px-3 py-2 text-center font-semibold" :class="o.confidence >= 80 ? 'text-green-700 dark:text-green-400' : o.confidence >= 60 ? 'text-amber-600 dark:text-amber-400' : 'text-red-600 dark:text-red-400'">{{ o.confidence }}%</td>
+              <td class="px-3 py-2 text-center font-medium" :class="o.status === 'Confident' ? 'text-green-700 dark:text-green-400' : o.status === 'Lagging' ? 'text-orange-600 dark:text-orange-400' : 'text-gray-500 dark:text-gray-400'">{{ o.status }}</td>
+              <td class="px-3 py-2 text-gray-600 dark:text-gray-300">{{ o.linkedVersions && o.linkedVersions.length ? o.linkedVersions.join(', ') : '—' }}</td>
+            </tr>
+          </tbody>
+        </table>
+        <table v-else class="w-full text-xs">
           <thead class="bg-gray-50 dark:bg-gray-800/60">
             <tr>
               <th class="text-left px-3 py-2 font-semibold text-gray-500 dark:text-gray-400 uppercase">Outcome</th>

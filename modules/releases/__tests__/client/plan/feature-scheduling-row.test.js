@@ -58,4 +58,13 @@ describe('FeatureSchedulingRow', () => {
     })
     expect(wrapper.classes().join(' ')).toContain('bg-green-50')
   })
+
+  it('shows the FPDoR tier breakdown as a hover tooltip, not permanent inline pills (PR #1877)', () => {
+    const wrapper = mount(FeatureSchedulingRow, {
+      props: { feature: feature({ FPDoR: '15/17', _wFPDoR: 85, _failedItems: ['Priority'] }) }
+    })
+    expect(wrapper.find('.fd-item').exists()).toBe(false)
+    const titledEls = wrapper.findAll('[title]').filter(el => el.attributes('title').includes('✗ High: Priority'))
+    expect(titledEls.length).toBeGreaterThan(0)
+  })
 })

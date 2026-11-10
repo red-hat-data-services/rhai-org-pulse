@@ -66,10 +66,30 @@ describe('FeatureSchedulingPreview', () => {
     expect(cardNumbers).toEqual(['1', '0', '1', '1', '0'])
   })
 
-  it('does not render an Export button (removed per PR #1856 / Nov 3 decision)', async () => {
+  it('exports the currently filtered/sorted rows to CSV on Export click (PR #1877)', async () => {
+    var capturedBlob = null
+    var clickSpy = vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(() => {})
+    var createObjectURLSpy = vi.spyOn(URL, 'createObjectURL').mockImplementation(function(blob) {
+      capturedBlob = blob
+      return 'blob:mock-url'
+    })
+
     const wrapper = mount(FeatureSchedulingPreview)
     await flushPromises()
-    expect(wrapper.text()).not.toContain('Export')
+    const exportBtn = wrapper.findAll('button').find(b => b.text().includes('Export CSV'))
+    expect(exportBtn).toBeTruthy()
+    await exportBtn.trigger('click')
+
+    expect(clickSpy).toHaveBeenCalled()
+    expect(createObjectURLSpy).toHaveBeenCalled()
+    const csv = await capturedBlob.text()
+    expect(csv.split('\n')[0]).toBe(
+      'Rank,Key,Title,FPDoR,Weighted FPDoR,Readiness Issues,Risk,Target Versions,Fix Version,Components,Team,Priority,Confidence,Placement,Confidence%,PM,Outcome'
+    )
+    expect(csv).toContain('RHAISTRAT-1')
+
+    clickSpy.mockRestore()
+    createObjectURLSpy.mockRestore()
   })
 
   it('toggles sort direction when a sortable header is clicked twice', async () => {
