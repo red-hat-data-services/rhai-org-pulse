@@ -72,6 +72,14 @@ function makeJob() {
       },
       test: { status: 'unknown', pipeline_url: null, ephemeral_branch: null, comment_url: null, updated_at: null }
     },
+    failure_links: [
+      {
+        repo: 'odh-model-controller',
+        label: 'odh-model-serving-api',
+        jira_url: 'https://stage-redhat.atlassian.net/browse/RHAI-219',
+        slack_url: 'https://redhat-internal.slack.com/archives/C1/p2'
+      }
+    ],
     synced_at: '2026-11-06T08:30:00Z'
   }
 }
@@ -104,8 +112,11 @@ describe('PromotionGatesView', () => {
     expect(leaderLink).toBeDefined()
     expect(leaderLink.attributes('href')).toBe('https://github.com/red-hat-data-services/gated-artifacts-promoter/pull/80')
 
-    // Label chips
+    // Label chips and the deployment-health link
     expect(wrapper.text()).toContain('gated-artifacts-promoter')
+    const health = wrapper.findAll('a').find((a) => a.text().startsWith('RHOAI Deployment Health'))
+    expect(health).toBeDefined()
+    expect(health.attributes('href')).toContain('/system-health/test-execution?tab=gates')
 
     // Hero verdict and progress counts
     expect(wrapper.text()).toContain('Promotion blocked')
@@ -166,6 +177,20 @@ describe('PromotionGatesView', () => {
     expect(wrapper.text()).not.toContain('PR creation and auto-merge issues')
   })
 
+  it('links each blocking repo to its Jira issue and Slack thread', async () => {
+    vi.mocked(apiRequest).mockResolvedValue(makeJob())
+    const wrapper = await mountView()
+
+    // the chip shows the key and, when known, the failing scope
+    // the Jira is paired with the build it belongs to (bare scope -> versioned name)
+    const jira = wrapper.findAll('a').find((a) => a.text().startsWith('RHAI-219'))
+    expect(jira).toBeDefined()
+    expect(jira.attributes('href')).toBe('https://stage-redhat.atlassian.net/browse/RHAI-219')
+
+    // Slack links are not rendered: the bot posts them to private channels
+    expect(wrapper.findAll('a').some((a) => a.text().startsWith('Slack'))).toBe(false)
+  })
+
   it('renders the issues table rows for failing outcomes', async () => {
     vi.mocked(apiRequest).mockResolvedValue(makeJob())
     const wrapper = await mountView()
@@ -203,5 +228,64 @@ describe('PromotionGatesView', () => {
     const diffLink = wrapper.findAll('a').find((a) => a.text() === 'main → stable')
     expect(diffLink).toBeDefined()
     expect(diffLink.attributes('href')).toBe('https://github.com/red-hat-data-services/odh-dashboard/compare/stable...main')
+  })
+})
+
+
+describe('PromotionGatesView failing components', () => {
+  const baseJob = () => makeJob()
+
+  it('still lists a blocked component whose run has no PipelineRun url', async () => {
+    const job = baseJob()
+    job.state_json['pull-requests'][1]['build-observations'].runs = [
+      { component: 'odh-model-serving-api-v3-6', status: 'missing', reason: 'No PipelineRun found' }
+    ]
+    vi.mocked(apiRequest).mockResolvedValue(job)
+    const wrapper = await mountView()
+
+    expect(wrapper.text()).toContain('odh-model-serving-api-v3-6')
+    expect(wrapper.text()).toContain('No PipelineRun found')
+  })
+
+  it('pairs a bare Jira scope with the versioned component name', async () => {
+    const job = baseJob()
+    job.failure_links = [
+      {
+        repo: 'odh-model-controller',
+        label: 'odh-model-serving-api',
+        jira_url: 'https://stage-redhat.atlassian.net/browse/RHAI-219',
+        slack_url: null
+      }
+    ]
+    job.state_json['pull-requests'][1]['build-observations'].runs = [
+      { component: 'odh-model-serving-api-v3-6', status: 'failure', reason: 'Failed', url: 'https://konflux/runs/1' }
+    ]
+    vi.mocked(apiRequest).mockResolvedValue(job)
+    const wrapper = await mountView()
+
+    const lines = wrapper.findAll('div').filter((d) => d.text().includes('RHAI-219'))
+    const line = lines[lines.length - 1]
+    expect(line.text()).toContain('odh-model-serving-api-v3-6')
+    expect(line.text()).toContain('Failed')
+    expect(line.text()).not.toContain('no build in this run')
+  })
+
+  it('marks a Jira whose build now passes', async () => {
+    const job = baseJob()
+    job.failure_links = [
+      {
+        repo: 'odh-model-controller',
+        label: 'odh-model-serving-api',
+        jira_url: 'https://stage-redhat.atlassian.net/browse/RHAI-219',
+        slack_url: null
+      }
+    ]
+    job.state_json['pull-requests'][1]['build-observations'].runs = [
+      { component: 'odh-model-serving-api-v3-6', status: 'success', reason: 'Completed', url: 'https://konflux/runs/1' }
+    ]
+    vi.mocked(apiRequest).mockResolvedValue(job)
+    const wrapper = await mountView()
+
+    expect(wrapper.text()).toContain('build succeeded')
   })
 })

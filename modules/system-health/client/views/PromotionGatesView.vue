@@ -12,6 +12,11 @@ import {
 
 const nav = inject('moduleNav', null)
 
+// Early-gate test results and deployment health live in the separate
+// deployment-health Org Pulse instance; keep the address here for one edit.
+const DEPLOYMENT_HEALTH_URL =
+  'https://team-tracker.apps.int.spoke.prod.us-west-2.aws.paas.redhat.com/#/system-health/test-execution?tab=gates&source=promotion-gate-tests'
+
 const {
   loading,
   error,
@@ -20,6 +25,7 @@ const {
   job,
   pullRequests,
   gates,
+  repoLinks,
   issues,
   releaseBranches,
   loadLatest
@@ -326,27 +332,77 @@ const passingPullRequests = computed(() =>
     .sort((a, b) => String(a.repo).localeCompare(String(b.repo)))
 )
 
-const MAX_RUN_LINKS = 3
-
 /**
  * Failing PipelineRuns for a component row, capped so the row stays compact.
  * A single failure is labelled generically because the reason already names
  * the component; several failures keep their names so they can be told apart.
  */
-function failures(pr) {
+// Lines shown per blocking repo before the rest collapse into a count.
+const MAX_COMPONENT_LINES = 4
+
+function failingBuilds(pr) {
   const runs = (pr['build-observations'] && pr['build-observations'].runs) || []
-  const failing = runs.filter((run) => run.url && !['success', 'succeeded'].includes(lower(run.status)))
-  const single = failing.length === 1
-  return {
-    label: single ? 'Failing build' : 'Failing builds',
-    hidden: Math.max(0, failing.length - MAX_RUN_LINKS),
-    links: failing.slice(0, MAX_RUN_LINKS).map((run) => ({
-      url: run.url,
-      label: single ? 'PipelineRun' : run.component || run.name || 'Build',
-      title: run.component || run.name || 'Build'
+  return runs
+    // any non-success run blocks the batch, including "missing" ones that
+    // carry no PipelineRun URL yet
+    .filter((run) => !['success', 'succeeded'].includes(lower(run.status)))
+    .map((run) => ({
+      url: run.url || '',
+      component: run.component || run.name || 'Build',
+      reason: run.reason || run.status || 'failed'
     }))
-  }
 }
+
+/**
+ * Gate reason for rows with no build list (merge feasibility, lookup
+ * problems); when builds failed, the per-component lines carry the detail.
+ */
+function problemSummary(pr) {
+  return failingBuilds(pr).length ? '' : displayReason(pr)
+}
+
+/** The bot sometimes writes a bare scope ("feasibility", "odh-kserve") where
+ * a run carries the versioned component name ("odh-kserve-agent-v3-7-ea-1"). */
+function labelMatches(label, component) {
+  if (!label || !component) return false
+  return label === component || component.startsWith(`${label}-`)
+}
+
+/**
+ * One line per component that matters, pairing its Jira with its build state:
+ * failed builds first, then builds flagged by a Jira that now pass, then
+ * Jiras whose component has no build in this run.
+ */
+function failureEntries(pr) {
+  const builds = failingBuilds(pr)
+  const links = (repoLinks.value[pr.repo] && repoLinks.value[pr.repo].jira) || []
+  const runs = (pr['build-observations'] && pr['build-observations'].runs) || []
+  const runFor = (label) =>
+    runs.find((run) => labelMatches(label, run.component || run.name)) || null
+
+  const entries = []
+  const used = new Set()
+  for (const build of builds) {
+    const jira = links.find((link) => labelMatches(link.label, build.component)) || null
+    if (jira) used.add(jira)
+    entries.push({ key: `build:${entries.length}:${build.component}`, component: build.component, url: build.url, reason: build.reason, jira, state: 'failed' })
+  }
+  for (const jira of links) {
+    if (used.has(jira)) continue
+    const component = jira.label || ''
+    const status = component ? lower((runFor(component) || {}).status) || null : null
+    entries.push({
+      key: `jira:${jira.key}:${component}`,
+      component: component || 'no component in the Jira link',
+      url: null,
+      reason: status === 'success' ? 'build succeeded' : status || 'no build in this run',
+      jira,
+      state: status === 'success' ? 'recovered' : 'unlinked'
+    })
+  }
+  return entries
+}
+
 
 /** Gate reasons sometimes carry an unrendered `${{ matrix.x }}`; hide it in the row. */
 function displayReason(pr) {
@@ -376,12 +432,20 @@ onMounted(loadLatest)
           Daily promotion from main to stable, one child PR per component repo.
         </p>
       </div>
-      <a
-        href="https://github.com/red-hat-data-services/gated-artifacts-promoter"
-        target="_blank"
-        rel="noopener noreferrer"
-        class="text-xs font-medium text-primary-600 dark:text-primary-400 hover:underline"
-      >gated-artifacts-promoter ↗</a>
+      <div class="flex flex-wrap items-center gap-x-4 gap-y-1">
+        <a
+          :href="DEPLOYMENT_HEALTH_URL"
+          target="_blank"
+          rel="noopener noreferrer"
+          class="text-xs font-medium text-primary-600 dark:text-primary-400 hover:underline"
+        >RHOAI Deployment Health ↗</a>
+        <a
+          href="https://github.com/red-hat-data-services/gated-artifacts-promoter"
+          target="_blank"
+          rel="noopener noreferrer"
+          class="text-xs font-medium text-primary-600 dark:text-primary-400 hover:underline"
+        >gated-artifacts-promoter ↗</a>
+      </div>
     </div>
 
     <!-- Loading -->
@@ -626,7 +690,7 @@ onMounted(loadLatest)
                   class="min-w-0 flex-1 truncate text-xs text-gray-500 dark:text-gray-400"
                   :title="isPrProblem(pr) ? prProblemReason(pr) : ''"
                 >
-                  <template v-if="isPrProblem(pr)">{{ displayReason(pr) }}</template>
+                  <template v-if="isPrProblem(pr)">{{ problemSummary(pr) }}</template>
                   <template v-else>Ready to merge</template>
                 </span>
                 <a
@@ -638,21 +702,48 @@ onMounted(loadLatest)
                 >{{ prNumberFromUrl(pr['pr-url']) }}</a>
               </div>
               <div
-                v-if="failures(pr).links.length"
-                class="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 pl-[1.15rem] text-xs text-gray-500 dark:text-gray-400"
+                v-if="failureEntries(pr).length"
+                class="mt-1 space-y-0.5 pl-[1.15rem] text-xs text-gray-500 dark:text-gray-400"
               >
-                <span>{{ failures(pr).label }}</span>
-                <template v-for="run in failures(pr).links" :key="run.url">
-                  <span class="text-gray-300 dark:text-gray-600">·</span>
+                <div
+                  v-for="entry in failureEntries(pr).slice(0, MAX_COMPONENT_LINES)"
+                  :key="entry.key"
+                  class="flex flex-wrap items-baseline gap-x-2"
+                >
                   <a
-                    :href="run.url"
+                    v-if="entry.jira"
+                    :href="entry.jira.url"
                     target="_blank"
                     rel="noopener noreferrer"
-                    class="max-w-[16rem] truncate text-primary-600 dark:text-primary-400 hover:underline"
-                    :title="run.title"
-                  >{{ run.label }}</a>
-                </template>
-                <span v-if="failures(pr).hidden" class="text-gray-400 dark:text-gray-500">+{{ failures(pr).hidden }} more</span>
+                    class="group relative inline-flex items-center rounded-md bg-blue-50 px-1.5 py-0.5 font-medium text-blue-700 ring-1 ring-inset ring-blue-200 hover:bg-blue-100 dark:bg-blue-900/30 dark:text-blue-300 dark:ring-blue-800 dark:hover:bg-blue-900/50"
+                  >
+                    {{ entry.jira.key }}
+                    <span
+                      v-if="entry.jira.label"
+                      role="tooltip"
+                      class="pointer-events-none absolute bottom-full left-0 z-20 mb-1 hidden max-w-[22rem] truncate rounded bg-gray-900 px-2 py-1 text-[11px] font-normal text-white shadow-lg group-hover:block dark:bg-gray-700"
+                    >{{ entry.jira.label }}</span>
+                  </a>
+                  <a
+                    v-if="entry.url"
+                    :href="entry.url"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    class="max-w-[22rem] truncate text-primary-600 dark:text-primary-400 hover:underline"
+                    :title="entry.component"
+                  >{{ entry.component }}</a>
+                  <span v-else class="max-w-[22rem] truncate text-gray-600 dark:text-gray-300" :title="entry.component">{{ entry.component }}</span>
+                  <span class="text-gray-300 dark:text-gray-600">·</span>
+                  <span
+                    class="truncate"
+                    :class="entry.state === 'recovered' ? 'text-green-700 dark:text-green-400' : 'text-gray-600 dark:text-gray-300'"
+                  >{{ entry.reason }}</span>
+                </div>
+                <div
+                  v-if="failureEntries(pr).length > MAX_COMPONENT_LINES"
+                  class="text-gray-400 dark:text-gray-500"
+                  :title="failureEntries(pr).slice(MAX_COMPONENT_LINES).map((entry) => entry.component).join(', ')"
+                >+{{ failureEntries(pr).length - MAX_COMPONENT_LINES }} more blocked components</div>
               </div>
             </li>
           </ul>

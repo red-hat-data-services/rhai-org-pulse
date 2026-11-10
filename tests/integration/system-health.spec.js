@@ -1643,6 +1643,14 @@ function buildPromotionGatesJob() {
         { id: 'early-gate-test', required: false, status: 'pending' }
       ]
     },
+    failure_links: [
+      {
+        repo: 'odh-model-controller',
+        label: 'odh-model-serving-api',
+        jira_url: 'https://stage-redhat.atlassian.net/browse/RHAI-219',
+        slack_url: 'https://redhat-internal.slack.com/archives/C1/p2'
+      }
+    ],
     early_gate: {
       build: {
         status: 'failed',
@@ -1724,9 +1732,16 @@ test.describe('Promotion Gates @system-health', () => {
     // Both tables render at once, no toggle; the failing repo carries its reason
     const blocking = page.locator('section', { has: page.locator('h2', { hasText: 'Blocking components' }) });
     const passing = page.locator('section', { has: page.locator('h2', { hasText: 'Succeeded components' }) });
-    await expect(blocking.locator('text=odh-model-controller')).toBeVisible();
-    await expect(blocking.locator('text=Required build failed')).toBeVisible();
-    await expect(passing.locator('text=odh-dashboard')).toBeVisible();
+    // the repo name now also appears in the per-component lines
+    await expect(blocking.locator('text=odh-model-controller').first()).toBeVisible();
+    // each failing build now carries its own reason on its own line
+    await expect(blocking.locator('text=odh-model-controller-run').first()).toBeVisible();
+    await expect(blocking.locator('text=Step failed').first()).toBeVisible();
+    // the bot's Jira link is shown against the failing component
+    await expect(blocking.getByRole('link', { name: 'RHAI-219' })).toBeVisible();
+    // Slack links are not rendered (they point at private channels)
+    await expect(blocking.locator('text=Slack')).toHaveCount(0);
+    await expect(passing.locator('text=odh-dashboard').first()).toBeVisible();
 
     // Auto-merge issue from creator-outcomes surfaces in its own section
     await expect(page.locator('h2', { hasText: 'PR creation and auto-merge issues' })).toBeVisible();
