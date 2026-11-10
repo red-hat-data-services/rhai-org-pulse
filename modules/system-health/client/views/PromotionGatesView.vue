@@ -20,6 +20,7 @@ const {
   job,
   pullRequests,
   gates,
+  repoLinks,
   issues,
   releaseBranches,
   loadLatest
@@ -638,21 +639,43 @@ onMounted(loadLatest)
                 >{{ prNumberFromUrl(pr['pr-url']) }}</a>
               </div>
               <div
-                v-if="failures(pr).links.length"
+                v-if="failures(pr).links.length || (repoLinks[pr.repo] && repoLinks[pr.repo].jira.length)"
                 class="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 pl-[1.15rem] text-xs text-gray-500 dark:text-gray-400"
               >
-                <span>{{ failures(pr).label }}</span>
-                <template v-for="run in failures(pr).links" :key="run.url">
+                <template v-if="failures(pr).links.length">
+                  <span>{{ failures(pr).label }}</span>
+                  <template v-for="run in failures(pr).links" :key="run.url">
+                    <span class="text-gray-300 dark:text-gray-600">·</span>
+                    <a
+                      :href="run.url"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      class="max-w-[16rem] truncate text-primary-600 dark:text-primary-400 hover:underline"
+                      :title="run.title"
+                    >{{ run.label }}</a>
+                  </template>
+                  <span v-if="failures(pr).hidden" class="text-gray-400 dark:text-gray-500">+{{ failures(pr).hidden }} more</span>
+                </template>
+                <template v-if="repoLinks[pr.repo] && repoLinks[pr.repo].jira.length">
                   <span class="text-gray-300 dark:text-gray-600">·</span>
+                  <span>Jira</span>
                   <a
-                    :href="run.url"
+                    v-for="jira in repoLinks[pr.repo].jira"
+                    :key="jira.url"
+                    :href="jira.url"
                     target="_blank"
                     rel="noopener noreferrer"
-                    class="max-w-[16rem] truncate text-primary-600 dark:text-primary-400 hover:underline"
-                    :title="run.title"
-                  >{{ run.label }}</a>
+                    class="whitespace-nowrap text-primary-600 dark:text-primary-400 hover:underline"
+                    :title="jira.label || jira.key"
+                  >{{ jira.key }}</a>
+                  <a
+                    v-if="repoLinks[pr.repo].slack.length"
+                    :href="repoLinks[pr.repo].slack[0]"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    class="whitespace-nowrap text-primary-600 dark:text-primary-400 hover:underline"
+                  >Slack</a>
                 </template>
-                <span v-if="failures(pr).hidden" class="text-gray-400 dark:text-gray-500">+{{ failures(pr).hidden }} more</span>
               </div>
             </li>
           </ul>

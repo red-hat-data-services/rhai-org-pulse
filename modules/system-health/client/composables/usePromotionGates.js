@@ -62,6 +62,31 @@ export function promotionVerdict(job) {
   return 'progress'
 }
 
+/**
+ * Jira and Slack links per repo, from the job's `failure_links` (parsed by the
+ * collector from the GAP bot's failure-summary comment). Jira keys are the
+ * last path segment, so the staging and production Jira hosts both work.
+ */
+export function failureLinksByRepo(job) {
+  const links = (job && job.failure_links) || []
+  const byRepo = {}
+  for (const link of links) {
+    if (!link || !link.repo) continue
+    const entry = byRepo[link.repo] || (byRepo[link.repo] = { jira: [], slack: [] })
+    if (link.jira_url) {
+      entry.jira.push({
+        key: String(link.jira_url).split('/').filter(Boolean).pop() || 'Jira',
+        url: link.jira_url,
+        label: link.label || null
+      })
+    }
+    if (link.slack_url && !entry.slack.includes(link.slack_url)) {
+      entry.slack.push(link.slack_url)
+    }
+  }
+  return byRepo
+}
+
 /** Summary counts over `state_json["pull-requests"]`: ok / failing / pending. */
 export function summarizePullRequests(pullRequests) {
   const summary = { ok: 0, failing: 0, pending: 0, total: 0 }
@@ -171,6 +196,7 @@ export function usePromotionGates() {
   const pullRequests = computed(() => (stateJson.value && stateJson.value['pull-requests']) || [])
   const creatorOutcomes = computed(() => (stateJson.value && stateJson.value['creator-outcomes']) || [])
   const gates = computed(() => (stateJson.value && stateJson.value['promotion-gates']) || [])
+  const repoLinks = computed(() => failureLinksByRepo(job.value))
   const issues = computed(() => creatorOutcomes.value.filter((o) => String(o.outcome || '').toLowerCase() !== 'success'))
   const releaseBranches = computed(() => joinReleaseBranches(stateJson.value))
 
@@ -184,6 +210,7 @@ export function usePromotionGates() {
     pullRequests,
     creatorOutcomes,
     gates,
+    repoLinks,
     issues,
     releaseBranches,
     loadLatest,

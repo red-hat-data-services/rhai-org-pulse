@@ -72,6 +72,14 @@ function makeJob() {
       },
       test: { status: 'unknown', pipeline_url: null, ephemeral_branch: null, comment_url: null, updated_at: null }
     },
+    failure_links: [
+      {
+        repo: 'odh-model-controller',
+        label: 'odh-model-serving-api',
+        jira_url: 'https://stage-redhat.atlassian.net/browse/RHAI-219',
+        slack_url: 'https://redhat-internal.slack.com/archives/C1/p2'
+      }
+    ],
     synced_at: '2026-11-06T08:30:00Z'
   }
 }
@@ -164,6 +172,19 @@ describe('PromotionGatesView', () => {
     const wrapper = await mountView()
 
     expect(wrapper.text()).not.toContain('PR creation and auto-merge issues')
+  })
+
+  it('links each blocking repo to its Jira issue and Slack thread', async () => {
+    vi.mocked(apiRequest).mockResolvedValue(makeJob())
+    const wrapper = await mountView()
+
+    const jira = wrapper.findAll('a').find((a) => a.text() === 'RHAI-219')
+    expect(jira).toBeDefined()
+    expect(jira.attributes('href')).toBe('https://stage-redhat.atlassian.net/browse/RHAI-219')
+
+    const slack = wrapper.findAll('a').find((a) => a.text() === 'Slack')
+    expect(slack).toBeDefined()
+    expect(slack.attributes('href')).toContain('slack.com')
   })
 
   it('renders the issues table rows for failing outcomes', async () => {

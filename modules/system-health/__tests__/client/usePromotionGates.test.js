@@ -9,6 +9,7 @@ import {
   usePromotionGates,
   isPrProblem,
   prProblemReason,
+  failureLinksByRepo,
   promotionVerdict,
   summarizePullRequests,
   buildDiffUrl,
@@ -216,5 +217,26 @@ describe('promotionVerdict', () => {
 
   it('is empty without components', () => {
     expect(promotionVerdict(job('OPEN', []))).toBe('empty')
+  })
+})
+
+
+describe('failureLinksByRepo', () => {
+  it('groups Jira keys and Slack threads per repo', () => {
+    const job = {
+      failure_links: [
+        { repo: 'kserve', label: 'a', jira_url: 'https://stage-redhat.atlassian.net/browse/RHAI-240', slack_url: 'https://redhat-internal.slack.com/x' },
+        { repo: 'kserve', label: 'b', jira_url: 'https://redhat.atlassian.net/browse/RHAI-241', slack_url: 'https://redhat-internal.slack.com/x' }
+      ]
+    }
+    const byRepo = failureLinksByRepo(job)
+    expect(byRepo.kserve.jira.map((j) => j.key)).toEqual(['RHAI-240', 'RHAI-241'])
+    // the same Slack thread is listed once
+    expect(byRepo.kserve.slack).toHaveLength(1)
+  })
+
+  it('tolerates a job without links', () => {
+    expect(failureLinksByRepo({})).toEqual({})
+    expect(failureLinksByRepo(null)).toEqual({})
   })
 })
