@@ -211,6 +211,101 @@ describe('NightlyHealthTable', () => {
     expect(document.body.textContent).toContain('not-in-list')
   })
 
+  it('puts S3 Artifacts link on the Jenkins line in the day panel', async () => {
+    const s3Href =
+      'https://us-east-1.console.aws.amazon.com/s3/buckets/b?region=us-east-1&prefix=ci/7/'
+    const payload = {
+      schema_version: 1,
+      days: [{
+        date: '2026-11-08',
+        latest_run_id: 'job:7',
+        runs: [{
+          run_id: 'job:7',
+          build_number: 7,
+          jenkins_url: 'https://jenkins.example/job/1/7/',
+          promotion_gate: { status: 'passed' },
+          artifacts: { s3_artifacts: s3Href },
+          gates: [],
+          components: []
+        }]
+      }]
+    }
+    wrapper = mount(NightlyHealthTable, { props: { payload }, ...mountOptions })
+    await wrapper.find('.date-header-btn').trigger('click')
+    await nextTick()
+
+    const item = document.body.querySelector('.run-list-item')
+    expect(item).toBeTruthy()
+    const line = item.querySelector('.run-line')
+    expect(line.textContent).toContain('Jenkins run')
+    expect(line.textContent).toContain('#7')
+    expect(line.textContent).toContain('S3 Artifacts')
+    expect(line.textContent).not.toContain('passed')
+    expect(line.textContent).not.toContain('Open')
+    const s3Anchor = Array.from(line.querySelectorAll('a')).find((a) => a.textContent === 'Artifacts')
+    expect(s3Anchor?.getAttribute('href')).toBe(s3Href)
+    const jenkinsAnchor = line.querySelector('a.run-inline-link')
+    expect(jenkinsAnchor?.textContent).toContain('Jenkins run')
+    expect(jenkinsAnchor?.textContent).not.toBe('Artifacts')
+  })
+
+  it('shows S3 Artifacts without Jenkins label when Jenkins metadata is absent', async () => {
+    const s3Href =
+      'https://us-east-1.console.aws.amazon.com/s3/buckets/b?region=us-east-1&prefix=ci/9/'
+    const payload = {
+      schema_version: 1,
+      days: [{
+        date: '2026-11-09',
+        latest_run_id: 'job:9',
+        runs: [{
+          run_id: 'job:9',
+          artifacts: { s3_artifacts: s3Href },
+          gates: [],
+          components: []
+        }]
+      }]
+    }
+    wrapper = mount(NightlyHealthTable, { props: { payload }, ...mountOptions })
+    await wrapper.find('.date-header-btn').trigger('click')
+    await nextTick()
+
+    const item = document.body.querySelector('.run-list-item')
+    const line = item.querySelector('.run-line')
+    expect(line.textContent).not.toContain('Jenkins')
+    expect(line.textContent).toContain('S3 Artifacts')
+    const s3Anchor = line.querySelector('a.run-inline-link')
+    expect(s3Anchor?.getAttribute('href')).toBe(s3Href)
+    expect(s3Anchor?.textContent).toBe('Artifacts')
+  })
+
+  it('renders org_pulse_links in the day panel', async () => {
+    const ticketHref = 'https://example.invalid/browse/RHOAI-999'
+    const payload = {
+      schema_version: 1,
+      days: [{
+        date: '2026-11-09',
+        latest_run_id: 'job:1',
+        runs: [{
+          run_id: 'job:1',
+          build_number: 1,
+          jenkins_url: 'https://jenkins.example/job/1/1/',
+          org_pulse_links: [{ label: 'RHOAI-999', href: ticketHref }],
+          gates: [],
+          components: []
+        }]
+      }]
+    }
+    wrapper = mount(NightlyHealthTable, { props: { payload }, ...mountOptions })
+    await wrapper.find('.date-header-btn').trigger('click')
+    await nextTick()
+
+    const anchors = Array.from(document.body.querySelectorAll('.run-list-item a.run-inline-link'))
+    const ticketAnchor = anchors.find((a) => a.getAttribute('href') === ticketHref)
+    expect(ticketAnchor).toBeTruthy()
+    expect(ticketAnchor?.textContent).toBe('Open')
+    expect(document.body.textContent).toContain('RHOAI-999')
+  })
+
   it('links component rows to heatmap detail and leaves gate rows plain text', async () => {
     const payload = JSON.parse(readFileSync(fixturePath, 'utf8'))
     const heatmapComponents = [

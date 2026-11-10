@@ -162,16 +162,31 @@
             :aria-current="run.run_id === selectedDayEntry.latest_run_id ? 'true' : undefined"
           >
             <div class="run-lines">
-              <div v-if="runShowJenkinsLine(run)" class="run-line">
-                <a
-                  v-if="safeHttpUrl(run.jenkins_url)"
-                  class="run-inline-link"
-                  :href="safeHttpUrl(run.jenkins_url)"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >{{ runJenkinsLinkText(run) }}</a>
-                <span v-else>{{ runJenkinsLinkText(run) }}</span><template v-if="runPromotionStatus(run)"> · {{ runPromotionStatus(run) }}</template>
-              </div>
+              <template v-for="jenkinsRow in [runJenkinsRow(run)]" :key="`${jenkinsRow.showJenkins ? 'j' : 's3'}-${jenkinsRow.s3?.href || ''}`">
+                <div v-if="jenkinsRow.showJenkins" class="run-line">
+                  <a
+                    v-if="safeHttpUrl(run.jenkins_url)"
+                    class="run-inline-link"
+                    :href="safeHttpUrl(run.jenkins_url)"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >{{ runJenkinsLinkText(run) }}</a>
+                  <span v-else>{{ runJenkinsLinkText(run) }}</span><template v-if="jenkinsRow.s3"> · <template v-if="jenkinsRow.s3.plainPrefix"><span class="run-s3-prefix">{{ jenkinsRow.s3.plainPrefix }}</span><span v-text="' '" class="run-s3-gap" /></template><a
+                    class="run-inline-link"
+                    :href="jenkinsRow.s3.href"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >{{ jenkinsRow.s3.linkText }}</a></template>
+                </div>
+                <div v-else-if="jenkinsRow.s3" class="run-line">
+                  <template v-if="jenkinsRow.s3.plainPrefix"><span class="run-s3-prefix">{{ jenkinsRow.s3.plainPrefix }}</span><span v-text="' '" class="run-s3-gap" /></template><a
+                    class="run-inline-link"
+                    :href="jenkinsRow.s3.href"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >{{ jenkinsRow.s3.linkText }}</a>
+                </div>
+              </template>
               <div v-if="runProductUnderTestLabel(run)" class="run-line">
                 {{ runProductUnderTestLabel(run) }}<template v-if="runOdsBuildUrl(run)"> · <a
                   class="run-inline-link"
@@ -180,9 +195,28 @@
                   rel="noopener noreferrer"
                 >{{ runOdsBuildLinkLabel(run) }}</a></template>
               </div>
+              <div v-else-if="runOdsBuildUrl(run)" class="run-line">
+                <a
+                  class="run-inline-link"
+                  :href="runOdsBuildUrl(run)"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >{{ runOdsBuildLinkLabel(run) }}</a>
+              </div>
               <div v-if="runEnvironmentLine(run)" class="run-line">{{ runEnvironmentLine(run) }}</div>
               <div v-if="runFooterLinks(run).length" class="run-line">
                 <template v-for="(link, idx) in runFooterLinks(run)" :key="link.key">
+                  <span v-if="idx > 0"> · </span>
+                  <template v-if="link.prefix">{{ link.prefix }}</template><a
+                    class="run-inline-link"
+                    :href="link.href"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >{{ link.label }}</a>
+                </template>
+              </div>
+              <div v-if="runOrgPulseLinks(run).length" class="run-line">
+                <template v-for="(link, idx) in runOrgPulseLinks(run)" :key="link.key">
                   <span v-if="idx > 0"> · </span>
                   <template v-if="link.prefix">{{ link.prefix }}</template><a
                     class="run-inline-link"
@@ -223,6 +257,8 @@ import {
   formatRunDuration,
   nightlyColumnHeaderSubline,
   runArtifactPanelEntries,
+  runOrgPulsePanelLinks,
+  runS3ArtifactsInlineLink,
   runEnvironmentLine,
   runJenkinsBuildNumberDisplay,
   runOdsBuildUrl,
@@ -456,8 +492,11 @@ function runJenkinsLinkText(run) {
   return 'Jenkins run'
 }
 
-function runShowJenkinsLine(run) {
-  return Boolean(safeHttpUrl(run?.jenkins_url) || runJenkinsBuildNumberDisplay(run) || runPromotionStatus(run))
+/** @returns {{ showJenkins: boolean, s3: ReturnType<typeof runS3ArtifactsInlineLink> }} */
+function runJenkinsRow(run) {
+  const s3 = runS3ArtifactsInlineLink(run)
+  const showJenkins = Boolean(safeHttpUrl(run?.jenkins_url) || runJenkinsBuildNumberDisplay(run))
+  return { showJenkins, s3 }
 }
 
 function runTimestampLine(run) {
@@ -475,7 +514,7 @@ function runFooterLinks(run) {
   /** @type {{ key: string, prefix: string, href: string, label: string }[]} */
   const links = []
   for (const entry of runArtifactPanelEntries(run)) {
-    if (!entry.href) continue
+    if (!entry.href || entry.id === 's3_artifacts') continue
     links.push({
       key: entry.id,
       prefix: `${entry.label}: `,
@@ -484,6 +523,16 @@ function runFooterLinks(run) {
     })
   }
   return links
+}
+
+/** @returns {{ key: string, prefix: string, href: string, label: string }[]} */
+function runOrgPulseLinks(run) {
+  return runOrgPulsePanelLinks(run).map((entry) => ({
+    key: entry.id,
+    prefix: `${entry.label}: `,
+    href: entry.href,
+    label: 'Open'
+  }))
 }
 
 function cellTestCounts(cell) {
@@ -496,13 +545,6 @@ function cellTestCounts(cell) {
     return null
   }
   return { passed, failed, skipped }
-}
-
-function runPromotionStatus(run) {
-  const pg = run.promotion_gate
-  if (pg?.status) return pg.status
-  if (run.source_result) return run.source_result
-  return ''
 }
 
 </script>

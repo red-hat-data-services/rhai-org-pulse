@@ -1005,10 +1005,111 @@ export function artifactRefHref(ref) {
   if (typeof ref === 'string') return safeHttpUrl(ref)
   if (typeof ref === 'object' && ref !== null) {
     const obj = /** @type {Record<string, unknown>} */ (ref)
-    const url = obj.url || obj.href || obj.browser_url
-    if (typeof url === 'string') return safeHttpUrl(url)
+    for (const key of ['url', 'href', 'browser_url']) {
+      const candidate = obj[key]
+      if (typeof candidate === 'string') {
+        const href = safeHttpUrl(candidate)
+        if (href) return href
+      }
+    }
   }
   return null
+}
+
+/**
+ * Stable key for deduping http(s) links (hostname lowercased).
+ *
+ * @param {string} href
+ * @returns {string}
+ */
+export function normalizeHttpUrlForCompare(href) {
+  try {
+    const parsed = new URL(href)
+    parsed.hostname = parsed.hostname.toLowerCase()
+    return parsed.href
+  } catch {
+    return href
+  }
+}
+
+/**
+ * @param {string} segment
+ * @returns {string}
+ */
+function safeDecodeUriSegment(segment) {
+  try {
+    return decodeURIComponent(segment)
+  } catch {
+    return segment
+  }
+}
+
+/**
+ * @param {string} path quay path after `quay.io/` (no registry prefix)
+ * @returns {{ repo: string, tagPart: string|null }}
+ */
+function splitQuayRepoAndTag(path) {
+  const slash = path.lastIndexOf('/')
+  const colonSearchFrom = slash >= 0 ? slash + 1 : 0
+  const colon = path.indexOf(':', colonSearchFrom)
+  if (colon >= 0) {
+    return { repo: path.slice(0, colon), tagPart: path.slice(colon + 1) }
+  }
+  return { repo: path, tagPart: null }
+}
+
+/**
+ * @param {string} raw
+ * @returns {boolean}
+ */
+function looksLikeDigestToken(raw) {
+  const s = String(raw || '').trim()
+  return /^sha256:[a-f0-9]+$/i.test(s) || /^[a-f0-9]{7,64}$/i.test(s)
+}
+
+/**
+ * @param {unknown} raw
+ * @returns {string|null}
+ */
+export function quayBrowserUrlFromImageRef(raw) {
+  const s = String(raw || '').trim()
+  if (!s) return null
+  const direct = safeHttpUrl(s)
+  if (direct) return direct
+  let ref = s
+  if (ref.toLowerCase().startsWith('docker://')) {
+    ref = ref.slice('docker://'.length)
+  }
+  if (!ref.toLowerCase().startsWith('quay.io/')) return null
+  const path = ref.slice('quay.io/'.length)
+  let repo
+  let tagPart
+  if (path.includes('@')) {
+    const at = path.indexOf('@')
+    repo = path.slice(0, at)
+    tagPart = path.slice(at + 1)
+  } else if (path.includes(':')) {
+    const split = splitQuayRepoAndTag(path)
+    repo = split.repo
+    tagPart = split.tagPart
+  } else {
+    return `https://quay.io/repository/${path}`
+  }
+  repo = repo.trim()
+  tagPart = tagPart.trim()
+  if (!repo || !tagPart) return null
+  const digestLike = /^sha256:[a-f0-9]+$/i.test(tagPart)
+  if (digestLike) {
+    let repoPath = repo
+    if (repo.includes(':')) {
+      repoPath = repo.slice(0, repo.lastIndexOf(':'))
+    }
+    repoPath = repoPath.trim()
+    if (!repoPath) return null
+    return `https://quay.io/repository/${repoPath}/manifest/${tagPart}`
+  }
+  const enc = encodeURIComponent(tagPart)
+  return `https://quay.io/repository/${repo}/tag/${enc}`
 }
 
 /**
@@ -1017,14 +1118,76 @@ export function artifactRefHref(ref) {
  */
 export function runArtifactPanelEntries(run) {
   const artifacts = run?.artifacts
+  if (artifacts && typeof artifacts === 'object' && artifacts.s3_artifacts) {
+    const href = artifactRefHref(artifacts.s3_artifacts)
+    if (href) {
+      return [{
+        id: 's3_artifacts',
+        label: 'S3 Artifacts',
+        href,
+        unavailable: false
+      }]
+    }
+  }
   const specs = [
+    { id: 's3_artifacts', label: 'S3 Artifacts' },
     { id: 'pod_logs', label: 'Pod logs' },
     { id: 'bvt_results', label: 'BVT results' }
   ]
-  return specs.map(({ id, label }) => {
-    const href = artifacts && typeof artifacts === 'object' ? artifactRefHref(artifacts[id]) : null
-    return { id, label, href, unavailable: !href }
+  return specs
+    .map(({ id, label }) => {
+      const href = artifacts && typeof artifacts === 'object' ? artifactRefHref(artifacts[id]) : null
+      return { id, label, href, unavailable: !href }
+    })
+    .filter((entry) => !entry.unavailable)
+}
+
+/**
+ * Jenkins-line S3 folder link: plain storage prefix, linked artifact type word(s).
+ *
+ * @param {object|null|undefined} run
+ * @returns {{ plainPrefix: string, linkText: string, href: string }|null}
+ */
+export function runS3ArtifactsInlineLink(run) {
+  for (const entry of runArtifactPanelEntries(run)) {
+    if (entry.id === 's3_artifacts' && entry.href) {
+      const words = String(entry.label || '').trim().split(/\s+/).filter(Boolean)
+      const plainPrefix = words.length > 1 ? words[0] : ''
+      const linkText = words.length > 1 ? words.slice(1).join(' ') : String(entry.label || 'Artifacts')
+      return { plainPrefix, linkText, href: entry.href }
+    }
+  }
+  return null
+}
+
+/**
+ * Producer `org_pulse_links` minus any href already shown from `artifacts`.
+ *
+ * @param {object|null|undefined} run
+ * @returns {{ id: string, label: string, href: string }[]}
+ */
+export function runOrgPulsePanelLinks(run) {
+  const artifactHrefs = new Set(
+    runArtifactPanelEntries(run)
+      .map((entry) => entry.href)
+      .filter((href) => typeof href === 'string' && href)
+      .map((href) => normalizeHttpUrlForCompare(href))
+  )
+  const raw = run?.org_pulse_links
+  if (!Array.isArray(raw)) return []
+  /** @type {{ id: string, label: string, href: string }[]} */
+  const links = []
+  const seen = new Set()
+  raw.forEach((item, idx) => {
+    const rawHref = item?.href
+    const href = safeHttpUrl(rawHref) || quayBrowserUrlFromImageRef(rawHref)
+    const dedupeKey = href ? normalizeHttpUrlForCompare(href) : ''
+    if (!href || artifactHrefs.has(dedupeKey) || seen.has(dedupeKey)) return
+    seen.add(dedupeKey)
+    const label = typeof item?.label === 'string' && item.label.trim() ? item.label.trim() : 'Link'
+    links.push({ id: `org-pulse-link-${idx}`, label, href })
   })
+  return links
 }
 
 /**
@@ -1036,7 +1199,8 @@ export function runOdsBuildUrl(run) {
   if (!pg || typeof pg !== 'object') return null
   const raw = pg.ods_build_url || pg.odsBuildUrl
   if (typeof raw !== 'string' || !raw.trim()) return null
-  return safeHttpUrl(raw.trim())
+  const trimmed = raw.trim()
+  return safeHttpUrl(trimmed) || quayBrowserUrlFromImageRef(trimmed)
 }
 
 const ODS_LINK_HASH_DISPLAY_LEN = 12
@@ -1079,16 +1243,42 @@ export function runOdsBuildLinkLabel(run) {
       }
     }
     const segments = u.pathname.split('/').filter(Boolean)
+    const tagIdx = segments.lastIndexOf('tag')
+    if (tagIdx >= 0 && tagIdx < segments.length - 1) {
+      const afterTag = segments.slice(tagIdx + 1).map((s) => safeDecodeUriSegment(s))
+      for (let j = afterTag.length - 1; j >= 0; j -= 1) {
+        const part = afterTag[j]
+        if (looksLikeDigestToken(part)) {
+          return shortenDigestForDisplay(part)
+        }
+      }
+      if (segments.includes('repository') && afterTag.length === 1) {
+        const part = afterTag[0]
+        if (looksLikeDigestToken(part)) {
+          return shortenDigestForDisplay(part)
+        }
+        return part || 'build'
+      }
+    }
     for (let i = segments.length - 1; i >= 0; i -= 1) {
-      const seg = segments[i]
-      if (/sha256:[a-f0-9]+/i.test(seg) || /^[a-f0-9]{7,64}$/i.test(seg)) {
+      const seg = safeDecodeUriSegment(segments[i])
+      if (looksLikeDigestToken(seg)) {
         return shortenDigestForDisplay(seg)
       }
     }
   } catch {
     // not a parseable URL — fall through
   }
-  return shortenDigestForDisplay(href) || 'build'
+  const pg = run?.promotion_gate
+  const imageRef = pg && typeof pg === 'object' ? pg.operator_image_ref : null
+  if (typeof imageRef === 'string' && imageRef.includes('@')) {
+    const suffix = imageRef.split('@').pop()
+    if (looksLikeDigestToken(suffix)) {
+      const short = shortenDigestForDisplay(suffix)
+      if (short) return short
+    }
+  }
+  return 'build'
 }
 
 /**
