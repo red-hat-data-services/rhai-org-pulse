@@ -129,16 +129,16 @@
                   <template v-if="nightlyHealth?.generated_at">
                     Generated {{ formatTimestamp(nightlyHealth.generated_at) }}.
                   </template>
-                  Each column is the latest promotion-gate status per component for that day.
+                  Each column shows promotion-gate results from the selected run for that day.
                   Click a date column to open every build recorded that day.
                 </p>
               </div>
               <div class="help-box tab-help-box">
                 <h4>ℹ️ How to read {{ gatesPanelTitle }}</h4>
                 <ul>
-                  <li><strong>Each column</strong> — Latest result per component for that day; the day popup dialog lists all builds.</li>
-                  <li><strong>Passed</strong> — Gate tests for that component completed successfully.</li>
-                  <li><strong>Failed</strong> — At least one gate test did not pass.</li>
+                  <li><strong>Each column</strong> — Results from the selected run for that day; the day popup dialog lists all builds.</li>
+                  <li><strong>Passed</strong> — The source reports a pass, or readiness is ready when no source status is available.</li>
+                  <li><strong>Failed</strong> — The source reports a failure, or readiness is failed when no source status is available.</li>
                   <li><strong>Blocked</strong> — Health checks failed before tests ran, or <strong>DSC</strong> status for components is not ready.</li>
                   <li><strong>Blank</strong> — No result for that component; <strong>Not Installed</strong> — component set to 'removed' in DSC.</li>
                 </ul>
