@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { getRegistryUrl, getQuayDirectTagUrl, getQuayAllTagsUrl, getDigestUrl, formatShortDate } from '../../client/utils/formatting.js'
+import { getRegistryUrl, getQuayDirectTagUrl, getQuayAllTagsUrl, getDigestUrl, formatShortDate, getCommitUrlForRepo, getCommitUrl } from '../../client/utils/formatting.js'
 
 describe('getRegistryUrl', () => {
   it('returns quay tags URL for quay.io keys', () => {
@@ -94,5 +94,59 @@ describe('formatShortDate', () => {
     expect(formatShortDate('2026-01-01')).toBe('Jan 1, 2026')
     expect(formatShortDate('2026-09-11T14:12:00Z')).toMatch(/Sep 1[01], 2026/)
     expect(formatShortDate('')).toBe('')
+  })
+})
+
+describe('getCommitUrlForRepo', () => {
+  it('uses GitHub-style commit URLs for github.com repositories', () => {
+    expect(getCommitUrlForRepo('https://github.com/red-hat-data-services/rhelai', 'cbc6ca5380e1ee3f0e38e65900f4a6af752da391')).toBe(
+      'https://github.com/red-hat-data-services/rhelai/commit/cbc6ca5380e1ee3f0e38e65900f4a6af752da391'
+    )
+  })
+
+  it('strips .git suffix and trailing slashes before building the URL', () => {
+    expect(getCommitUrlForRepo('https://github.com/red-hat-data-services/rhelai.git/', 'abc123')).toBe(
+      'https://github.com/red-hat-data-services/rhelai/commit/abc123'
+    )
+  })
+
+  it('keeps GitLab-style commit URLs for gitlab.com repositories', () => {
+    expect(getCommitUrlForRepo('https://gitlab.com/redhat/rhel-ai/rhaiis/containers', 'abc123')).toBe(
+      'https://gitlab.com/redhat/rhel-ai/rhaiis/containers/-/commit/abc123'
+    )
+  })
+
+  it('returns null for missing repo URL or commit', () => {
+    expect(getCommitUrlForRepo(null, 'abc123')).toBeNull()
+    expect(getCommitUrlForRepo('https://github.com/o/r', null)).toBeNull()
+  })
+})
+
+describe('getCommitUrl', () => {
+  it('links GitHub-hosted artifacts with GitHub-style commit URLs', () => {
+    expect(getCommitUrl({
+      commit: 'cbc6ca5380e1ee3f0e38e65900f4a6af752da391',
+      git_repository: { url: 'https://github.com/red-hat-data-services/rhelai' }
+    })).toBe(
+      'https://github.com/red-hat-data-services/rhelai/commit/cbc6ca5380e1ee3f0e38e65900f4a6af752da391'
+    )
+  })
+
+  it('links GitLab-hosted artifacts with GitLab-style commit URLs', () => {
+    expect(getCommitUrl({
+      commit: 'abc123',
+      git_repository: { url: 'https://gitlab.com/redhat/rhel-ai/rhaiis/containers' }
+    })).toBe(
+      'https://gitlab.com/redhat/rhel-ai/rhaiis/containers/-/commit/abc123'
+    )
+  })
+
+  it('falls back to the source label for the repository URL', () => {
+    expect(getCommitUrl({
+      commit: 'abc123',
+      labels: { 'org.opencontainers.image.source': 'https://github.com/red-hat-data-services/rhelai' }
+    })).toBe(
+      'https://github.com/red-hat-data-services/rhelai/commit/abc123'
+    )
   })
 })
