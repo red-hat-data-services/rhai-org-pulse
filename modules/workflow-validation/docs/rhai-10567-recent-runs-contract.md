@@ -272,7 +272,7 @@ All 11 verified dates match the 18 image documents. Missing builds sort last.
 Next, Previous, reload, and Clear filters pass in the dashboard.
 
 [Validation evidence](rhai-10567-build-validation.json).
-[Deployment record](../../../docs/plans/rhai-10567-dev-deployment.md).
+[Deployment record](rhai-10567-dev-deployment.md).
 [Default order](images/rhai-10567-build-default-gpuaas.jpg).
 [Build descending](images/rhai-10567-build-descending-gpuaas.jpg).
 [Build ascending](images/rhai-10567-build-ascending-gpuaas.jpg).

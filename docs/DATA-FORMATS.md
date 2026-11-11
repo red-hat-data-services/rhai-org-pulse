@@ -2,14 +2,6 @@
 
 This document describes the JSON structure of all files stored in the `data/` directory (production) and `fixtures/` directory (demo mode). **Demo fixtures must always match production format** — see [Fixture Rules](#fixture-rules) below.
 
-## Workflow Validation recent runs API
-
-Paged recent-run rows also return nullable `buildDate` and `buildDateStatus`.
-The build date is a verified operator image timestamp normalized to UTC.
-The server joins existing image records by `invocation_id`; stored records do
-not change. See the [module contract](../modules/workflow-validation/docs/DATA-FORMATS.md)
-and its [synthetic fixture](../modules/workflow-validation/__tests__/fixtures/recent-runs.json).
-
 ## Releases E2E Results — `data/releases/build-health/runs.json`
 
 The E2E publisher stores completed Jenkins runs in a bounded `runs` array,

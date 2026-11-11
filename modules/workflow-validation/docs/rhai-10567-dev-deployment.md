@@ -135,13 +135,13 @@ The previous join returned only eight verified rows; grouping restores three dat
   the sorted page, and Clear filters restoring the default order.
 - Document counts stay unchanged: 726 executions, 4,171 tasks, and 184 root causes.
 
-[Machine-readable evidence](../../modules/workflow-validation/docs/rhai-10567-build-validation.json).
+[Machine-readable evidence](rhai-10567-build-validation.json).
 Screenshots show the actual fixed GPUaaS dashboard. They omit browser chrome and
 the account sidebar. Browser zoom was restored after capture.
 
-- [Default execution order](../../modules/workflow-validation/docs/images/rhai-10567-build-default-gpuaas.jpg).
-- [Build descending](../../modules/workflow-validation/docs/images/rhai-10567-build-descending-gpuaas.jpg).
-- [Build ascending](../../modules/workflow-validation/docs/images/rhai-10567-build-ascending-gpuaas.jpg).
+- [Default execution order](images/rhai-10567-build-default-gpuaas.jpg).
+- [Build descending](images/rhai-10567-build-descending-gpuaas.jpg).
+- [Build ascending](images/rhai-10567-build-ascending-gpuaas.jpg).
 
 ## 7. Problems Found and Fixed
 
