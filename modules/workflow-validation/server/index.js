@@ -10,6 +10,7 @@ const {
   RUNS_INDEX,
   TASKS_INDEX,
   BUGS_INDEX,
+  IMAGES_INDEX,
   getOpenSearchConfig,
   createOpenSearchClient,
   runFilters,
@@ -150,6 +151,29 @@ async function readSuiteRunGroups(query, search, { isClosed = () => false, metad
         clusterName: latest.cluster_name || null
       } : {})
     };
+  });
+}
+
+/** Add verified RHOAI operator build metadata to paged run rows. */
+async function addBuildDates(rows, search, isClosed) {
+  const ids = [...new Set(rows.map(row => row.invocationId).filter(Boolean))];
+  if (!ids.length) return rows;
+  const response = await search(IMAGES_INDEX, {
+    query: { terms: { invocation_id: ids } },
+    size: ids.length,
+    _source: ['invocation_id', 'operator_image.build_date', 'operator_image.build_date_status']
+  });
+  if (isClosed()) return null;
+  const byId = new Map();
+  for (const doc of response?.hits?.hits || []) {
+    const id = doc?._source?.invocation_id;
+    if (id) byId.set(id, doc._source.operator_image || {});
+  }
+  return rows.map(row => {
+    const image = byId.get(row.invocationId) || {};
+    const recorded = image.build_date_status === 'verified' && typeof image.build_date === 'string'
+      && Number.isFinite(Date.parse(image.build_date)) ? new Date(image.build_date).toISOString() : null;
+    return { ...row, buildDate: recorded, buildDateStatus: image.build_date_status || null };
   });
 }
 
@@ -513,7 +537,7 @@ module.exports = function registerRoutes(router, context) {
    *       - { in: query, name: suite, schema: { type: string } }
    *       - { in: query, name: version, schema: { type: string } }
    *       - { in: query, name: versions, schema: { type: array, maxItems: 50, items: { type: string } }, style: form, explode: true, description: Match any selected version; paged mode only; cannot combine with version }
-   *       - { in: query, name: sortField, schema: { type: string, enum: [timestamp, version, suite], default: timestamp }, description: Global sort column in paged mode }
+   *       - { in: query, name: sortField, schema: { type: string, enum: [timestamp, version, suite, buildDate], default: timestamp }, description: Global sort column in paged mode }
    *       - { in: query, name: latest, schema: { type: boolean } }
    *       - { in: query, name: limit, schema: { type: integer, minimum: 1, maximum: 200 }, description: Limit run groups after ordering newest first }
    *       - { in: query, name: includeBugs, schema: { type: boolean, default: true }, description: Set false for lightweight run metadata without RCA retrieval }
@@ -526,7 +550,7 @@ module.exports = function registerRoutes(router, context) {
    *       - { in: query, name: runQuery, schema: { type: string, maxLength: 256 }, description: Run ID substring; requires pageSize }
    *       - { in: query, name: refresh, schema: { type: boolean, default: false }, description: Bypass the 10-second metadata cache; requires pageSize }
    *     responses:
-   *       200: { description: "Run groups ordered by recorded execution timestamp. Paged mode returns rows, total, start, end, pageSize, nextCursor, previousCursor, options (versions and suites), sortField and sortDir. includeBugTickets adds bugTickets with ready, empty or unavailable status; ready includes a Jira search URL." }
+   *       200: { description: "Run groups ordered by recorded execution timestamp. Paged mode returns rows, total, start, end, pageSize, nextCursor, previousCursor, options (versions and suites), sortField and sortDir. includeBugTickets adds bugTickets with ready, empty or unavailable status; ready includes a Jira search URL. buildDate is the verified RHOAI operator image build time from workflow-execution-images, or null. sortField buildDate sorts by build date, then time." }
    *       400: { description: "Invalid limit, page parameters, or cursor" }
    */
   router.get('/test-suites', requireAuth, safe(async function (req, res) {
@@ -573,6 +597,8 @@ module.exports = function registerRoutes(router, context) {
             recentGroupsCache = { client, rows, sequence: scanSequence, expiresAt: Date.now() + 10_000 };
           }
         }
+        rows = await addBuildDates(rows, (index, body) => client.search(index, body), () => closed);
+        if (!rows || closed) return;
         const page = pageRecentRuns(rows, recent);
         if (req.query.includeBugTickets === 'true') {
           page.rows = await enrichBugTickets(page.rows, {

@@ -80,7 +80,7 @@ describe('Recent run pagination', () => {
     const previous = pageRecentRuns(input, parseRecentRuns({ ...query, cursor: second.previousCursor }))
     expect(previous.rows).toEqual(first.rows)
     const last = pageRecentRuns(input, parseRecentRuns({ ...query, cursor: second.nextCursor, refresh: 'true' }))
-    expect(last.rows).toEqual([input[2]])
+    expect(last.rows).toMatchObject([input[2]])
     expect(last.nextCursor).toBeNull()
   })
 
@@ -128,7 +128,8 @@ describe('Recent run pagination', () => {
 describe('Recent Runs multi-version and column sorting', () => {
   const releases = ['3.6.0', '3.6.0-ea.2', '3.6.0-ea.1', '3.6', '3.5.2', '3.10.0', null]
   const input = Array.from({ length: 83 }, (_, index) => ({ suite: ['z-suite', 'ad_hoc', 'Release-Gate'][index % 3], invocationId: `item-${index}`,
-    timestamp: index % 11 ? new Date(Date.UTC(2026, 0, index % 23 + 1)).toISOString() : null, rhoaiVersion: releases[index % releases.length] }))
+    timestamp: index % 11 ? new Date(Date.UTC(2026, 0, index % 23 + 1)).toISOString() : null, rhoaiVersion: releases[index % releases.length],
+    buildDate: index % 7 ? new Date(Date.UTC(2025, 11, 1 + index % 19, index % 24, (index * 7) % 60, index % 60)).toISOString() : null }))
 
   it('matches both legacy 3.6 and 3.6.0 while keeping EA releases separate', () => {
     const sample = [{ ...rows[0], rhoaiVersion: '3.6.0 EA1' }, { ...rows[1], rhoaiVersion: '3.6.0-ea.1' }, { ...rows[2], rhoaiVersion: '3.6.0' }, { ...rows[3], rhoaiVersion: '3.6' }]
@@ -139,7 +140,7 @@ describe('Recent Runs multi-version and column sorting', () => {
     expect(pageRecentRuns(sample, request({ version: '3.6' })).total).toBe(2)
   })
 
-  it.each(['timestamp', 'version', 'suite'])('traverses the whole dataset in both directions sorted by %s', sortField => {
+  it.each(['timestamp', 'version', 'suite', 'buildDate'])('traverses the whole dataset in both directions sorted by %s', sortField => {
     for (const sortDir of ['asc', 'desc']) {
       const query = { pageSize: '7', sortField, sortDir }
       let page = pageRecentRuns(input, parseRecentRuns(query))
@@ -192,6 +193,29 @@ describe('Recent Runs multi-version and column sorting', () => {
     expect(suite.rows[0].suite).toBe('ad_hoc')
     const reversed = pageRecentRuns(input, request({ sortField: 'suite', sortDir: 'desc' }))
     expect(reversed.rows[0].suite).toBe('z-suite')
+  })
+
+  it('sorts build dates newest first with time as tie breaker and keeps missing dates last', () => {
+    const sample = [
+      { suite: 's', invocationId: 'same-day-early', timestamp: rows[0].timestamp, buildDate: '2026-11-05T09:00:00Z' },
+      { suite: 's', invocationId: 'newer', timestamp: rows[0].timestamp, buildDate: '2026-11-10T08:00:00Z' },
+      { suite: 's', invocationId: 'missing', timestamp: rows[0].timestamp, buildDate: null },
+      { suite: 's', invocationId: 'same-day-late', timestamp: rows[0].timestamp, buildDate: '2026-11-05T18:39:57Z' },
+      { suite: 's', invocationId: 'no-field', timestamp: rows[0].timestamp }
+    ]
+    const desc = pageRecentRuns(sample, request({ sortField: 'buildDate' }))
+    expect(desc.rows.map(row => row.invocationId)).toEqual(['newer', 'same-day-late', 'same-day-early', 'missing', 'no-field'])
+    const asc = pageRecentRuns(sample, request({ sortField: 'buildDate', sortDir: 'asc' }))
+    expect(asc.rows.map(row => row.invocationId)).toEqual(['same-day-early', 'same-day-late', 'newer', 'missing', 'no-field'])
+    expect(asc.rows[0]).toMatchObject({ buildDate: '2026-11-05T09:00:00Z', buildDateStatus: null })
+  })
+
+  it('keeps the default execution-time order when no sort is requested', () => {
+    const result = pageRecentRuns(input, request({ sortDir: 'desc' }))
+    expect(result.sortField).toBe('timestamp')
+    const times = result.rows.map(row => row.timestamp).filter(Boolean).sort().reverse()
+    expect(times.length).toBeGreaterThan(0)
+    expect(result.rows.filter(row => row.timestamp)[0].timestamp).toBe(times[0])
   })
 
   it('binds cursors to the selected set and column while allowing equivalent selection order', () => {

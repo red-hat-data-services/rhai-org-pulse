@@ -152,8 +152,8 @@ contract, representative tests, and affected Vue transformations together.
 ## Recent Runs landing page
 
 Dashboard opens Recent Runs with the latest 20 suite/invocation groups and
-pagination across all available runs. Each row shows the suite, version, and
-execution time (`Executed at (UTC)`). Select a row or press Enter to open its exact run.
+pagination across all available runs. Each row shows the suite, version, RHOAI
+build date and time (`RHOAI build (UTC)`), and execution time (`Executed at (UTC)`). Select a row or press Enter to open its exact run.
 An explanation below the Recent Runs heading and above the filters describes
 each row and the separate Jira issues link for associated bugs and RFEs.
 
@@ -161,14 +161,15 @@ Select up to 50 versions, a suite, a Run ID, or a Date Range. Date Range
 supports All time, Last 7/30/90 days, and Custom dates. Choices update results
 immediately. Run ID search waits for a 300 ms typing pause. Click a column heading to sort all matching runs immediately. Click the active
 heading again to reverse its order. Switching columns starts with A–Z for suites,
-highest first for versions, and newest first for execution time.
+highest first for versions, and newest first for RHOAI build and execution time.
+Rows show `unavailable` when the verified build date is missing.
 Versions use numeric release order, with GA above EA for the same release.
 The legacy `3.6` label shares the `3.6.0` choice and display. EA releases remain
 separate. Other partial versions keep their recorded label.
 
 Clear filters restores the unfiltered, newest-first first page. Shareable URLs
 retain the filters, sort, and page. Sorting and dates use existing execution
-metadata; RHOAI build time is not available yet. The page uses
+metadata. Build values come from the existing `workflow-execution-images` index. The page uses
 `/test-suites?pageSize=20&includeBugs=false&includeBugTickets=true` and ignores shared detail filters.
 Metadata is cached for up to 10 seconds. Refresh bypasses the cache.
 

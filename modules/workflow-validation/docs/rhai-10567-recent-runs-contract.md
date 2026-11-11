@@ -10,13 +10,20 @@ Dashboard opens Recent Runs inside Workflow Validation. The initial view shows
 20 runs, newest first, with Previous and Next controls. A run is one
 `telemetry_suite` and `invocation_id` pair. Keep different invocations separate.
 
-Show Test suite, Version, and Executed at (UTC). Each column heading
-sorts immediately on click. A second click reverses its order. Switching columns
-starts with suite A–Z, highest version first, or newest execution first. Make each run row clickable
-and keyboard accessible. Missing version
-or time shows an unavailable label. The time is the latest existing execution
-`timestamp` in the group. It is not a RHOAI build date. Build metadata and
-OpenSearch schema changes are outside this change.
+Show Test suite, Version, RHOAI build (UTC), and Executed at (UTC). Each column
+heading sorts immediately on click. A second click reverses its order. Switching
+columns starts with suite A–Z, highest version first, newest build first, or
+newest execution first. The initial order is still newest execution first.
+Make each run row clickable and keyboard accessible. Missing version, time, or
+build date shows an unavailable label. The time is the latest existing execution
+`timestamp` in the group. It is not a RHOAI build date.
+
+RHOAI build (UTC) is the verified operator image build time from the
+`workflow-execution-images` index. The row shows the build date on the first line
+and the time plus `UTC` on the second line. It joins on `execution_id` equal to
+the run `invocationId`. Show `unavailable` when no document exists, the status is
+not `verified`, or the date is invalid. Missing build values sort last in both
+directions. Build date sorting uses the time as a tie breaker.
 
 Multiple versions, suite, run ID, and Date Range filters are optional.
 Date Range provides All time, Last 7/30/90 days, and Custom dates. Show date
@@ -64,13 +71,13 @@ Paged parameters:
 - `suite`: exact group metadata match.
 - `runQuery`: case-insensitive invocation ID substring.
 - `dateFrom`, `dateTo`: optional `YYYY-MM-DD` bounds on the group timestamp.
-- `sortField`: `timestamp` (default), `version`, or `suite`.
+- `sortField`: `timestamp` (default), `version`, `suite`, or `buildDate`.
 - `sortDir`: `desc` (default) or `asc`.
 - `cursor`: opaque next/previous anchor, bound to filters, sort, and page size.
 - `refresh=true`: bypass the metadata cache (used by Refresh and Retry).
 
-Return lightweight `rows` with `suite`, `invocationId`, `rhoaiVersion`, and
-`timestamp`, plus `total`, `start`, `end`, `pageSize`, `nextCursor`,
+Return lightweight `rows` with `suite`, `invocationId`, `rhoaiVersion`,
+`timestamp`, `buildDate`, and `buildDateStatus`, plus `total`, `start`, `end`, `pageSize`, `nextCursor`,
 `previousCursor`, `options`, `sortField`, and `sortDir`. Options contain all
 available `versions` and `suites`. Null cursors disable the corresponding
 button. Complete grouped metadata is cached for up to 10 seconds per runtime
@@ -83,6 +90,8 @@ do not produce oversized URLs. Returned IDs are never truncated. New cursors use
 cursors remain supported. If a hashed anchor was deleted, or the anchor has no
 remaining rows, the page is empty and Previous resets to page one.
 
+Paged responses fetch build metadata with one `_mget` request per page, after
+the page is selected. Other consumers keep their existing response shape.
 Invalid paged parameters return HTTP 400 before querying OpenSearch. Do not
 combine paged mode with legacy `limit`, `latest`, or bug enrichment. Calls
 without `pageSize` keep the existing unlimited/full response and optional
