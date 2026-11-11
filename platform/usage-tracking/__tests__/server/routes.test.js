@@ -40,6 +40,7 @@ function createTestContext() {
     requireAdmin: function (_req, _res, next) { next() },
     resolveSecret: vi.fn(function () { return undefined }),
     registerRefresh: vi.fn(),
+    registerDiagnostics: vi.fn(),
     _written: written
   }
 }
@@ -76,9 +77,24 @@ describe('usage-tracking routes', () => {
   })
 
   it('registers a refresh handler', () => {
-    expect(ctx.registerRefresh).toHaveBeenCalledWith('report', expect.objectContaining({
-      cadence: '24h'
+    expect(ctx.registerRefresh).toHaveBeenCalledWith('generate-report', expect.objectContaining({
+      cadence: '24h',
+      order: 200
     }))
+  })
+
+  it('registers diagnostics', () => {
+    expect(ctx.registerDiagnostics).toHaveBeenCalledWith(expect.any(Function))
+  })
+
+  it('diagnostics returns expected shape', async () => {
+    const diagFn = ctx.registerDiagnostics.mock.calls[0][0]
+    const result = await diagFn()
+    expect(result).toHaveProperty('eventFileCount')
+    expect(result).toHaveProperty('oldestDay')
+    expect(result).toHaveProperty('newestDay')
+    expect(result).toHaveProperty('todayEventCount')
+    expect(result).toHaveProperty('lastReportGenerated')
   })
 
   describe('POST /events', () => {
