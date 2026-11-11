@@ -199,6 +199,43 @@ module.exports = function registerPromotionGatesRoutes(router, context) {
     }
     await upstream(`/promotion-gates/jobs/${number}`, req, res);
   });
+
+  /**
+   * @openapi
+   * /api/modules/system-health/promotion-gates/summary:
+   *   get:
+   *     tags: [System Health - Promotion Gates]
+   *     summary: Aggregated promotion gates history
+   *     description: |
+   *       Aggregates the stored promotion-gates runs for the manager-facing
+   *       trends tab: per-run rollups, per-component blocking frequency,
+   *       failure classes and release counts. Computed in the AIPCC
+   *       Dashboard API from stored documents, never from live GitHub calls.
+   *     parameters:
+   *       - name: days
+   *         in: query
+   *         schema:
+   *           type: integer
+   *           minimum: 1
+   *           maximum: 365
+   *           default: 30
+   *         description: How many days back from today to aggregate
+   *       - name: format
+   *         in: query
+   *         schema:
+   *           type: string
+   *           enum: [json, csv]
+   *           default: json
+   *         description: csv returns the per-run table for pasting into a report
+   *     responses:
+   *       200:
+   *         description: Aggregated summary, or CSV when format=csv
+   *       503:
+   *         description: AIPCC Dashboard API not configured
+   */
+  router.get('/summary', async function(req, res) {
+    await upstream('/promotion-gates/summary', req, res);
+  });
 };
 
 module.exports.getConfig = getConfig;
