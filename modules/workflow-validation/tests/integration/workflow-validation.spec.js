@@ -335,7 +335,7 @@ test.describe('Workflow Validation module @workflow-validation', () => {
     await table.getByRole('button', { name: 'Sort execution time', exact: true }).click()
     await expect(table.locator('tbody tr').first()).toContainText('run-00')
     await expect(page.getByRole('combobox', { name: 'Sort runs' })).toHaveCount(0)
-    await expect(table.locator('thead button')).toHaveCount(3)
+    await expect(table.locator('thead button')).toHaveCount(4)
     await expect(table.locator('thead select')).toHaveCount(0)
     await expect(page.getByText('All versions · All suites · All run IDs · All time', { exact: false })).toHaveCount(0)
     await page.reload()
@@ -481,8 +481,8 @@ test.describe('Workflow Validation module @workflow-validation', () => {
     })
     await page.goto('/#/workflow-validation/recent-runs?version=old&testSuite=old&invocationId=old')
     await expect(page.getByRole('heading', { name: 'Recent Runs', exact: true })).toBeVisible()
-    await expect(page.getByRole('columnheader')).toHaveCount(4)
-    await expect(page.getByRole('columnheader', { name: /build|image/i })).toHaveCount(0)
+    await expect(page.getByRole('columnheader')).toHaveCount(5)
+    await expect(page.getByRole('columnheader', { name: 'RHOAI build (UTC)', exact: true })).toBeVisible()
     await expect(page.getByRole('table').locator('tbody tr')).toHaveCount(1)
     await expect(page.getByText('Design preview', { exact: false })).toHaveCount(0)
     const recentRequest = requests.find(url => url.pathname.endsWith('/test-suites'))
@@ -540,7 +540,7 @@ test.describe('Workflow Validation module @workflow-validation', () => {
     await expect(page.getByRole('table')).toContainText('refreshed-run-26')
   })
 
-  test('keeps the landing page free of build data from an older backend', async ({ page }) => {
+  test('shows unavailable build values for an older backend response', async ({ page }) => {
     await page.route('**/api/modules/workflow-validation/test-suites?**', route => route.fulfill({
       json: { buildMetadataEnabled: true, ...recentPage([
         { suite: 'release-gate', invocationId: 'original-run', rhoaiVersion: '3.6', buildTimestamp: '2026-10-19T10:30:00.000Z', operatorImage: { release: '123', buildDate: '2026-07-03T09:28:12Z' } },
@@ -549,11 +549,45 @@ test.describe('Workflow Validation module @workflow-validation', () => {
     }))
     await page.goto('/#/workflow-validation/recent-runs')
     await expect(page.getByRole('table').locator('tbody tr')).toHaveCount(2)
-    await expect(page.getByRole('columnheader')).toHaveCount(4)
-    await expect(page.getByRole('columnheader', { name: /build|image/i })).toHaveCount(0)
+    await expect(page.getByRole('columnheader')).toHaveCount(5)
+    await expect(page.getByRole('columnheader', { name: 'RHOAI build (UTC)', exact: true })).toBeVisible()
+    await expect(page.getByRole('table').locator('tbody tr').first().locator('td').nth(2)).toHaveText('unavailable')
     await expect(page.locator('table time')).toHaveCount(0)
     await expect(page.getByRole('table')).not.toContainText('10:30')
     await expect(page.getByRole('row', { name: 'Open run original-run' })).toHaveAttribute('tabindex', '0')
+  })
+
+  test('renders UTC builds and sorts every page with unavailable builds last', async ({ page }) => {
+    const rows = Array.from({ length: 47 }, (_, index) => ({ suite: 'release_gate', invocationId: `build-${index}`,
+      rhoaiVersion: '3.6.0', timestamp: new Date(Date.UTC(2026, 10, index + 1)).toISOString(),
+      buildDate: index % 7 ? new Date(Date.UTC(2026, 10, 1 + index % 3, index % 24)).toISOString() : null,
+      buildDateStatus: index % 7 ? 'verified' : 'unavailable' }))
+    rows[46].buildDate = '2026-11-03T00:00:00+02:00'
+    const tools = await mockRecentData(page, rows)
+    await page.goto('/#/workflow-validation/recent-runs')
+    const table = page.getByRole('table'), pages = page.getByRole('navigation', { name: 'Recent run pages' })
+    await expect(table.getByRole('columnheader')).toHaveText(['Test suite↕', 'Version↕', 'RHOAI build (UTC)↕', 'Executed at (UTC)↓', 'Issues found'])
+    const cell = table.locator('tbody tr').first().locator('td').nth(2)
+    await expect(cell.locator('time')).toHaveText('02 Nov 2026')
+    await expect(cell.locator('br')).toHaveCount(1)
+    await expect(cell.locator('span')).toHaveText('22:00:00 UTC')
+    for (const sortDir of ['desc', 'asc']) {
+      await table.getByRole('button', { name: 'Sort RHOAI build time', exact: true }).click()
+      await expect(table.getByRole('columnheader', { name: 'RHOAI build (UTC)', exact: true }))
+        .toHaveAttribute('aria-sort', sortDir === 'desc' ? 'descending' : 'ascending')
+      const visited = []
+      do {
+        await expect(pages).toContainText(`Showing ${visited.length + 1}–`)
+        visited.push(...await table.locator('tbody tr').evaluateAll(elements => elements.map(row => row.getAttribute('aria-label').replace('Open run ', ''))))
+        if (await pages.getByRole('button', { name: 'Next page' }).isDisabled()) break
+        await pages.getByRole('button', { name: 'Next page' }).click()
+      } while (visited.length < rows.length)
+      const expected = tools.pageRecentRuns(rows, tools.parseRecentRuns({ pageSize: '200', sortField: 'buildDate', sortDir }))
+      expect(visited).toEqual(expected.rows.map(row => row.invocationId))
+      await expect(table.locator('tbody tr').last().locator('td').nth(2)).toHaveText('unavailable')
+      await page.reload()
+      await expect(pages).toContainText('Showing 41–47 of 47 runs')
+    }
   })
 
   test('keeps the recent-runs table inside narrow screens with the sidebar collapsed', async ({ page }) => {

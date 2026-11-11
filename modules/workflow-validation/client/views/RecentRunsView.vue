@@ -77,7 +77,7 @@
               </td>
               <td class="break-words px-5 py-4 font-mono text-xs text-gray-600 dark:text-gray-300">{{ run.rhoaiVersion ? versionLabel(run.rhoaiVersion) : 'Version unavailable' }}</td>
               <td class="whitespace-nowrap px-5 py-4 text-gray-600 dark:text-gray-300">
-                <template v-if="validTime(run.buildDate)"><time :datetime="run.buildDate">{{ buildDate(run.buildDate) }}</time><br><span>{{ buildTime(run.buildDate) }}</span></template>
+                <template v-if="run.buildDateStatus === 'verified' && validTime(run.buildDate)"><time :datetime="run.buildDate">{{ buildDate(run.buildDate) }}</time><br><span>{{ buildTime(run.buildDate) }}</span></template>
                 <span v-else title="No verified RHOAI operator image build time is recorded for this run.">unavailable</span>
               </td>
               <td class="whitespace-nowrap px-5 py-4 text-gray-600 dark:text-gray-300"><time v-if="validTime(run.timestamp)" :datetime="run.timestamp">{{ recordedTime(run.timestamp) }}</time><span v-else>Unavailable</span></td>

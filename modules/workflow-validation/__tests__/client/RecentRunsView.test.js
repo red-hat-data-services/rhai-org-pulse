@@ -39,9 +39,34 @@ describe('Recent Runs', () => {
     expect(button('Next').element.disabled).toBe(true)
     expect(wrapper.text()).not.toContain('All versions · All suites · All run IDs · All time')
     expect(wrapper.text()).toContain('Version unavailable')
-    expect(wrapper.findAll('time')).toHaveLength(2)
+    expect(wrapper.findAll('time')).toHaveLength(3)
     expect(wrapper.text()).toContain('unavailable')
     expect(wrapper.text()).not.toMatch(/Build date|Jenkins|Image release/)
+  })
+
+  it('renders the verified build date and time on separate lines in UTC', async () => {
+    apiRequest.mockResolvedValueOnce(page([{ ...fixture.rows[0], buildDate: '2026-11-06T01:14:40+02:00' }]))
+    wrapper = mount(RecentRunsView)
+    await flushPromises()
+    const cell = wrapper.get('tbody tr').findAll('td')[2]
+    expect(cell.get('time').text()).toBe('05 Nov 2026')
+    expect(cell.find('br').exists()).toBe(true)
+    expect(cell.get('span').text()).toBe('23:14:40 UTC')
+    expect(cell.get('time').attributes('datetime')).toBe('2026-11-06T01:14:40+02:00')
+  })
+
+  it.each([
+    { buildDate: null, buildDateStatus: 'unavailable' },
+    { buildDate: 'not-a-date', buildDateStatus: 'verified' },
+    { buildDate: '2026-11-05T05:14:40Z', buildDateStatus: 'unavailable' },
+    { buildDate: undefined, buildDateStatus: undefined }
+  ])('shows lowercase unavailable for missing, invalid, or unverified build metadata: %j', async build => {
+    apiRequest.mockResolvedValueOnce(page([{ ...fixture.rows[0], ...build }]))
+    wrapper = mount(RecentRunsView)
+    await flushPromises()
+    const cell = wrapper.get('tbody tr').findAll('td')[2]
+    expect(cell.text()).toBe('unavailable')
+    expect(cell.find('time').exists()).toBe(false)
   })
 
   it('opens exact runs from the whole row by click and Enter without a version filter', async () => {

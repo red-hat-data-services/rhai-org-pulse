@@ -168,10 +168,13 @@ The legacy `3.6` label shares the `3.6.0` choice and display. EA releases remain
 separate. Other partial versions keep their recorded label.
 
 Clear filters restores the unfiltered, newest-first first page. Shareable URLs
-retain the filters, sort, and page. Sorting and dates use existing execution
-metadata. Build values come from the existing `workflow-execution-images` index. The page uses
+retain the filters, sort, and page. Execution dates use existing execution
+metadata. Build values join the existing `workflow-execution-images` index by
+`invocation_id`. Duplicate image documents use the newest verified build date.
+Build dates must include a timezone and are normalized to UTC. The page uses
 `/test-suites?pageSize=20&includeBugs=false&includeBugTickets=true` and ignores shared detail filters.
-Metadata is cached for up to 10 seconds. Refresh bypasses the cache.
+Run and build metadata share one cache for up to 10 seconds. Image queries use
+batches of at most 500 invocation IDs. Refresh bypasses the cache.
 
 Each row also shows **Jira issues**, **No issues recorded**, or **Issues
 unavailable**. The link opens a Jira search in a new tab without opening the

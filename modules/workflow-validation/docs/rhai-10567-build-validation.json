@@ -1,0 +1,116 @@
+{
+  "environment": "GPUaaS development",
+  "namespace": "workflow-validation-org-pulse",
+  "dashboard": "https://team-tracker-workflow-validation-org-pulse.apps.workval.aipcc-gpuaas.com",
+  "ticket": "RHAI-10567",
+  "backend": {
+    "build": "org-pulse-backend-builddate-20261111-10",
+    "image": "org-pulse-backend@sha256:69d80b77be90a400a1794cb326c7048450be41b69eac2628a9177bd252259c44",
+    "rollback": "org-pulse-backend@sha256:73fcebe70903d6a987a7bb0e53337cc40815e8ddd5e7f520d7038ac7c337f9fd",
+    "rollout": "complete",
+    "deployedIndexSourceSha256": "7a2973a86d2958eebab5d8350ed1e8124ba7cd6a17fcc35908933e7ec0c0ffe0"
+  },
+  "frontend": {
+    "build": "org-pulse-frontend-builddate-20261111-4",
+    "image": "org-pulse-frontend@sha256:0d691019128e1321efd3af42b7e396909ed6389f51cd2dc4027d59ffb32150eb",
+    "rollback": "org-pulse-frontend@sha256:9d240fdb6113f7a237c30d07409131e2d55bdc8717344c6f16d6ee2f5ecb2665",
+    "rollout": "complete",
+    "buildViewSourceSha256": "50ec8a72a2e6a00ff85b45f744ec27633b5715105d4c77523367c4e098934ac4"
+  },
+  "localChecks": {
+    "focusedUnitTests": {
+      "passed": 130
+    },
+    "moduleBrowserTests": {
+      "passed": 39
+    },
+    "lint": "passed",
+    "openapi": "passed with four pre-existing undocumented-route warnings",
+    "productionBuild": "passed",
+    "diffCheck": "passed",
+    "fullSuite": "Not run: user reports 71 pre-existing localStorage failures in five unrelated client files."
+  },
+  "liveApi": {
+    "checkedAt": "2026-11-11T19:41:58.656Z",
+    "status": "passed",
+    "countsBefore": {
+      "executions": 726,
+      "tasks": 4171,
+      "rootCauses": 184
+    },
+    "countsAfter": {
+      "executions": 726,
+      "tasks": 4171,
+      "rootCauses": 184
+    },
+    "imageDocuments": 18,
+    "runGroups": 157,
+    "verifiedBuildRows": 11,
+    "unavailableBuildRows": 146,
+    "pages": {
+      "default": 8,
+      "buildDescending": 8,
+      "buildAscending": 8
+    },
+    "buildRange": {
+      "earliest": "2026-07-03T09:28:12.000Z",
+      "latest": "2026-11-05T05:14:40.000Z"
+    },
+    "bugTicketStatuses": [
+      "empty",
+      "ready"
+    ],
+    "bugTicketCounts": {
+      "ready": 15,
+      "empty": 142,
+      "unavailable": 0
+    },
+    "checks": [
+      "independent image-document comparison",
+      "invocation join",
+      "default execution descending",
+      "global build ascending and descending",
+      "unavailable last in both directions",
+      "all pages without duplicates",
+      "previous cursors",
+      "suite and run ID filters",
+      "date filter",
+      "version filter",
+      "bug ticket enrichment",
+      "concurrent refresh requests",
+      "cached response stability",
+      "unchanged document counts"
+    ]
+  },
+  "liveBrowser": {
+    "status": "passed",
+    "checks": [
+      "two-line UTC date/time",
+      "lowercase unavailable",
+      "column immediately after Version",
+      "build descending",
+      "build ascending",
+      "Next and Previous",
+      "reload retains sorted page",
+      "Clear filters restores execution descending"
+    ],
+    "zoomRestored": true
+  },
+  "screenshots": [
+    {
+      "mode": "default",
+      "path": "images/rhai-10567-build-default-gpuaas.jpg",
+      "sha256": "c9a07c2d98ed4372da8ae556186a5f7839380441aa83f47f1a498d912d2dde90"
+    },
+    {
+      "mode": "descending",
+      "path": "images/rhai-10567-build-descending-gpuaas.jpg",
+      "sha256": "321c02018f934220a9f77234d0d2c1bf389f11a459d27f762d67833ee6d03e60"
+    },
+    {
+      "mode": "ascending",
+      "path": "images/rhai-10567-build-ascending-gpuaas.jpg",
+      "sha256": "0c0bad789d961a0f0ef246731d2bbd07960f8c9c3d86decdefee61da2d75f6ba"
+    }
+  ]
+}

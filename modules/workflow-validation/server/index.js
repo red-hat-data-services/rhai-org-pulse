@@ -154,26 +154,44 @@ async function readSuiteRunGroups(query, search, { isClosed = () => false, metad
   });
 }
 
-/** Add verified RHOAI operator build metadata to paged run rows. */
-async function addBuildDates(rows, search, isClosed) {
+/** Accept explicit-zone ISO timestamps without normalizing invalid calendar days. */
+function verifiedBuildDate(value) {
+  if (typeof value !== 'string' || !/^\d{4}-\d{2}-\d{2}T(?:[01]\d|2[0-3]):[0-5]\d:[0-5]\d(?:\.\d{1,9})?(?:Z|[+-](?:[01]\d|2[0-3]):[0-5]\d)$/.test(value)) return null;
+  const day = value.slice(0, 10), midnight = Date.parse(`${day}T00:00:00Z`), timestamp = Date.parse(value);
+  if (!Number.isFinite(midnight) || new Date(midnight).toISOString().slice(0, 10) !== day || !Number.isFinite(timestamp)) return null;
+  return new Date(timestamp).toISOString();
+}
+
+/** Join bounded image groups; duplicates use their newest verified build timestamp. */
+async function addBuildDates(rows, search, isClosed = () => false) {
   const ids = [...new Set(rows.map(row => row.invocationId).filter(Boolean))];
-  if (!ids.length) return rows;
-  const response = await search(IMAGES_INDEX, {
-    query: { terms: { invocation_id: ids } },
-    size: ids.length,
-    _source: ['invocation_id', 'operator_image.build_date', 'operator_image.build_date_status']
-  });
-  if (isClosed()) return null;
   const byId = new Map();
-  for (const doc of response?.hits?.hits || []) {
-    const id = doc?._source?.invocation_id;
-    if (id) byId.set(id, doc._source.operator_image || {});
+  for (let offset = 0; offset < ids.length; offset += 500) {
+    if (isClosed()) return null;
+    const response = await search(IMAGES_INDEX, {
+      size: 0,
+      query: { terms: { invocation_id: ids.slice(offset, offset + 500) } },
+      aggs: { builds: {
+        terms: { field: 'invocation_id', size: 500 },
+        aggs: { verified: {
+          filter: { term: { 'operator_image.build_date_status': 'verified' } },
+          aggs: { latest: { top_hits: {
+            size: 1,
+            sort: [{ 'operator_image.build_date': { order: 'desc', missing: '_last' } }],
+            _source: ['operator_image.build_date']
+          } } }
+        } }
+      } }
+    });
+    if (isClosed()) return null;
+    for (const bucket of bucketList(response.aggregations?.builds)) {
+      const date = bucket.verified?.latest?.hits?.hits?.[0]?._source?.operator_image?.build_date;
+      byId.set(bucket.key, verifiedBuildDate(date));
+    }
   }
   return rows.map(row => {
-    const image = byId.get(row.invocationId) || {};
-    const recorded = image.build_date_status === 'verified' && typeof image.build_date === 'string'
-      && Number.isFinite(Date.parse(image.build_date)) ? new Date(image.build_date).toISOString() : null;
-    return { ...row, buildDate: recorded, buildDateStatus: image.build_date_status || null };
+    const buildDate = byId.get(row.invocationId) || null;
+    return { ...row, buildDate, buildDateStatus: buildDate ? 'verified' : byId.has(row.invocationId) ? 'unavailable' : null };
   });
 }
 
@@ -550,7 +568,7 @@ module.exports = function registerRoutes(router, context) {
    *       - { in: query, name: runQuery, schema: { type: string, maxLength: 256 }, description: Run ID substring; requires pageSize }
    *       - { in: query, name: refresh, schema: { type: boolean, default: false }, description: Bypass the 10-second metadata cache; requires pageSize }
    *     responses:
-   *       200: { description: "Run groups ordered by recorded execution timestamp. Paged mode returns rows, total, start, end, pageSize, nextCursor, previousCursor, options (versions and suites), sortField and sortDir. includeBugTickets adds bugTickets with ready, empty or unavailable status; ready includes a Jira search URL. buildDate is the verified RHOAI operator image build time from workflow-execution-images, or null. sortField buildDate sorts by build date, then time." }
+   *       200: { description: "Run groups default to recorded execution timestamp descending. Paged mode returns rows, total, start, end, pageSize, nextCursor, previousCursor, options (versions and suites), sortField and sortDir. includeBugTickets adds bugTickets with ready, empty or unavailable status; ready includes a Jira search URL. buildDate is the newest verified RHOAI operator image build time for the invocation, normalized from a valid explicit-zone ISO timestamp, or null. buildDateStatus is verified, unavailable, or null when no image group exists. sortField buildDate sorts by build date, then time, with missing values last. Run and build metadata share a 10-second cache; refresh bypasses both." }
    *       400: { description: "Invalid limit, page parameters, or cursor" }
    */
   router.get('/test-suites', requireAuth, safe(async function (req, res) {
@@ -593,12 +611,12 @@ module.exports = function registerRoutes(router, context) {
             metadataOnly: true, isClosed: () => closed
           });
           if (rows === null || closed) return;
+          rows = await addBuildDates(rows, (index, body) => client.search(index, body), () => closed);
+          if (rows === null || closed) return;
           if (cachedClient === client && scanSequence > (recentGroupsCache?.sequence || 0)) {
             recentGroupsCache = { client, rows, sequence: scanSequence, expiresAt: Date.now() + 10_000 };
           }
         }
-        rows = await addBuildDates(rows, (index, body) => client.search(index, body), () => closed);
-        if (!rows || closed) return;
         const page = pageRecentRuns(rows, recent);
         if (req.query.includeBugTickets === 'true') {
           page.rows = await enrichBugTickets(page.rows, {

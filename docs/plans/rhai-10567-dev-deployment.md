@@ -1,6 +1,6 @@
 # RHAI Build Column: Development Deployment
 
-**Status:** Deployed (development)
+**Status:** Deployed and verified (development)
 **Author:** Codex
 **Date:** 2026-11-11
 **Module:** workflow-validation
@@ -49,10 +49,12 @@ Use the existing fields.
 
 - `server/opensearch.js`: export `IMAGES_INDEX`.
 - `server/index.js`: add `addBuildDates(rows, search, isClosed)`.
-  It runs one `terms` query on `invocation_id`.
-  It accepts only rows with `build_date_status === 'verified'`.
-  It parses `build_date`.
+  It queries at most 500 `invocation_id` values per request.
+  Each invocation group selects its newest verified image build timestamp.
+  It validates explicit-zone ISO dates and normalizes them to UTC.
   It runs on the full result set before paging.
+  Run groups and build metadata share the existing 10-second cache.
+  Failed or disconnected enrichment is not cached.
 - `server/recent-runs.js`: add `buildDate` to `SORT_FIELDS`.
   Add `buildDate` to the version 3 cursor.
   Sort missing values last.
@@ -76,9 +78,12 @@ Use the existing fields.
 
 ## 4. Test Results
 
-- Focused server and client tests: 110 passed.
+- Focused server and client tests: 130 passed.
+- Module browser tests: 39 passed.
 - `npm run lint`: passed.
 - `npm run validate:openapi`: passed with pre-existing warnings.
+- `npm run build`: passed.
+- `git diff --check`: passed.
 - Full `npm test` was not used.
   It has 71 pre-existing localStorage failures in 5 unrelated client files.
 
@@ -93,14 +98,16 @@ Use the existing fields.
 ### Backend
 
 - BuildConfig: `org-pulse-backend-builddate-20261111`
-- Image digest: `org-pulse-backend@sha256:73fcebe70903d6a987a7bb0e53337cc40815e8ddd5e7f520d7038ac7c337f9fd`
-- Rollback digest: `org-pulse-backend@sha256:c8b53da3261346538f4c5ca495f2c57421fdebe83a23547cae3aa88d0f955879`
+- Build: `org-pulse-backend-builddate-20261111-10`
+- Image digest: `org-pulse-backend@sha256:69d80b77be90a400a1794cb326c7048450be41b69eac2628a9177bd252259c44`
+- Rollback digest: `org-pulse-backend@sha256:73fcebe70903d6a987a7bb0e53337cc40815e8ddd5e7f520d7038ac7c337f9fd`
 
 ### Frontend
 
 - BuildConfig: `org-pulse-frontend-builddate-20261111`
-- Image digest: `org-pulse-frontend@sha256:9d240fdb6113f7a237c30d07409131e2d55bdc8717344c6f16d6ee2f5ecb2665`
-- Rollback digest: `org-pulse-frontend@sha256:6b958af847ddd8d725d23a7e5843cd5002b55d3c84fe6d94021c71e44b832432`
+- Build: `org-pulse-frontend-builddate-20261111-4`
+- Image digest: `org-pulse-frontend@sha256:0d691019128e1321efd3af42b7e396909ed6389f51cd2dc4027d59ffb32150eb`
+- Rollback digest: `org-pulse-frontend@sha256:9d240fdb6113f7a237c30d07409131e2d55bdc8717344c6f16d6ee2f5ecb2665`
 
 ### Routes
 
@@ -109,13 +116,32 @@ Use the existing fields.
 
 ## 6. Live Verification
 
-All checks passed.
+The fixed images completed both rollouts. The deployed backend source hash matches
+the tested source. Live API checks compared all 157 run groups with all 18 image
+documents. All 11 verified dates match. The other 146 rows have no verified build.
+The previous join returned only eight verified rows; grouping restores three dates.
 
 - `buildDate` descending: verified dates first, then `unavailable` rows.
 - `buildDate` ascending: dates reversed, `unavailable` rows still last.
 - Default order: `sortField=timestamp`, `sortDir=desc`.
   Newest runs first.
   Build values are correct.
+- All eight pages pass in each order, with no duplicate or missing run groups.
+- Previous cursors, suite/run ID/date/version filters, concurrent Refresh requests,
+  and cached responses pass.
+- Bug ticket enrichment retains all run/build values: 15 rows have Jira links,
+  and 142 rows have no eligible tickets.
+- Browser checks pass for both build directions, Next, Previous, reload retaining
+  the sorted page, and Clear filters restoring the default order.
+- Document counts stay unchanged: 726 executions, 4,171 tasks, and 184 root causes.
+
+[Machine-readable evidence](../../modules/workflow-validation/docs/rhai-10567-build-validation.json).
+Screenshots show the actual fixed GPUaaS dashboard. They omit browser chrome and
+the account sidebar. Browser zoom was restored after capture.
+
+- [Default execution order](../../modules/workflow-validation/docs/images/rhai-10567-build-default-gpuaas.jpg).
+- [Build descending](../../modules/workflow-validation/docs/images/rhai-10567-build-descending-gpuaas.jpg).
+- [Build ascending](../../modules/workflow-validation/docs/images/rhai-10567-build-ascending-gpuaas.jpg).
 
 ## 7. Problems Found and Fixed
 
@@ -135,3 +161,21 @@ All checks passed.
 - `grep --include=*.env` and `oc -o custom-columns` failed on zsh globbing. This was harmless.
 - The `-l app=backend` selector returns no pods. Use `app=team-tracker,component=backend` instead.
 - The full test suite has pre-existing failures. See section 4.
+
+## 9. Review Fixes — 2026-11-11
+
+Image lookups now use bounded invocation groups. This avoids OpenSearch result
+and terms limits. Duplicate image documents cannot hide another invocation.
+The client displays a date only when its status is `verified`.
+Calendar overflow and timestamps without a timezone show `unavailable`.
+Build metadata stays in the same cache snapshot as run metadata.
+Concurrent requests retain the existing scan-order and connection guards.
+
+Regression tests cover 10,001 and 65,537 invocations, duplicate image groups,
+document ID collisions, invalid dates, timezone offsets, cache expiry and Refresh,
+failed image lookups, disconnected clients, and competing image responses.
+Browser tests verify UTC rendering and both build sort directions across all
+47 synthetic rows, including unavailable values and reload.
+
+The user approved both development deployments. Section 5 records the deployed
+images and their immediate rollback targets. Section 6 records the live checks.
