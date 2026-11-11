@@ -129,17 +129,18 @@
                   <template v-if="nightlyHealth?.generated_at">
                     Generated {{ formatTimestamp(nightlyHealth.generated_at) }}.
                   </template>
-                  Matrix shows promotion-gate status per day (same fields as
-                  <code>promotion_gate_test_summary.yaml</code>). Click a date column to list all builds that day.
-                  <strong>Test Results Source</strong> below filters this matrix only.
+                  Each column is the latest promotion-gate status per component for that day.
+                  Click a date column to open every build recorded that day.
                 </p>
               </div>
               <div class="help-box tab-help-box">
                 <h4>ℹ️ How to read {{ gatesPanelTitle }}</h4>
                 <ul>
-                  <li><strong>Each column</strong> — A UTC day; the cell uses that day&apos;s selected promotion-gate run (<code>latest_run_id</code>).</li>
-                  <li><strong>– (empty cell)</strong> — That component is missing from that run&apos;s YAML; <strong>Not Installed</strong> means the summary explicitly reports the component is not on the cluster.</li>
-                  <li><strong>Blocked</strong> — Deployment or gate prerequisites failed before component tests could run; a <strong>DSC:</strong> subtitle is operator/DataScienceCluster readiness from YAML, not a passed test result.</li>
+                  <li><strong>Each column</strong> — Latest result per component for that day; the day popup dialog lists all builds.</li>
+                  <li><strong>Passed</strong> — Gate tests for that component completed successfully.</li>
+                  <li><strong>Failed</strong> — At least one gate test did not pass.</li>
+                  <li><strong>Blocked</strong> — Health checks failed before tests ran, or <strong>DSC</strong> status for components is not ready.</li>
+                  <li><strong>Blank</strong> — No result for that component; <strong>Not Installed</strong> — component set to 'removed' in DSC.</li>
                 </ul>
               </div>
               <NightlyHealthTable
