@@ -4,6 +4,7 @@ import { PHASES } from '../constants.js'
 import { ArrowLeft, ChevronRight, Sparkles, User, Pencil, Eye, RefreshCw, AlertTriangle, Play, FileText, StickyNote, Code, MessageSquare, HelpCircle, BookOpen, ChevronDown, Search, Zap, ChevronsRight, Archive, Globe, Lightbulb, GitPullRequest, Timer, Terminal, Package } from 'lucide-vue-next'
 
 const moduleNav = inject('moduleNav')
+const tracker = inject('usageTracker', null)
 
 const selectedPhase = ref(null)
 const labelsExpanded = ref(false)
@@ -87,6 +88,7 @@ function selectPhase(phase) {
   if (!updatingFromUrl) {
     moduleNav.updateParams({ section: phase?.id })
   }
+  if (phase && tracker) tracker.trackInteraction('ai-impact', 'ai-factory-guide', 'select', phase.id)
 }
 
 function closeDetail() {
@@ -98,6 +100,7 @@ function closeDetail() {
 
 function goToPage(phaseId) {
   moduleNav.navigateTo(phaseId)
+  if (tracker) tracker.trackInteraction('ai-impact', 'ai-factory-guide', 'navigate', phaseId)
 }
 
 const fromForYou = computed(() => moduleNav.params.value?.from === 'sotu' || moduleNav.params.value?.from === 'state-of-the-union')

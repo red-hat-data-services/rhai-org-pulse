@@ -8,6 +8,7 @@ import TestPlanDetailPanel from '../components/TestPlanDetailPanel.vue'
 import AIImpactGuide from '../components/AIImpactGuide.vue'
 
 const moduleNav = inject('moduleNav')
+const tracker = inject('usageTracker', null)
 
 const selectedPlan = ref(null)
 const searchQuery = ref('')
@@ -33,6 +34,7 @@ function handleSelectPlan(plan) {
   selectedPlan.value = plan
   if (plan) {
     moduleNav.navigateTo('test-plan-review', { select: plan.key })
+    if (tracker) tracker.trackInteraction('ai-impact', 'test-plan-review', 'select', plan.key)
   }
 }
 
@@ -103,11 +105,11 @@ watch(() => Object.keys(testPlans.value).length, () => {
       :verdictFilter="verdictFilter"
       :sortBy="sortBy"
       :selectedPlan="selectedPlan"
-      @update:timeWindow="timeWindow = $event"
+      @update:timeWindow="timeWindow = $event; tracker?.trackInteraction('ai-impact', 'test-plan-review', 'filter', `timeWindow:${$event}`)"
       @update:chartExpanded="chartExpanded = $event"
       @update:searchQuery="searchQuery = $event"
-      @update:verdictFilter="verdictFilter = $event"
-      @update:sortBy="sortBy = $event"
+      @update:verdictFilter="verdictFilter = $event; tracker?.trackInteraction('ai-impact', 'test-plan-review', 'filter', `verdict:${$event}`)"
+      @update:sortBy="sortBy = $event; tracker?.trackInteraction('ai-impact', 'test-plan-review', 'sort', $event)"
       @selectPlan="handleSelectPlan"
       @retry="handleRetry"
     />
