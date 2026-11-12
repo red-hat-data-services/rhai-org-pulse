@@ -210,11 +210,11 @@ function compareCycleKeys(a, b) {
 }
 
 function compareMilestoneKeys(a, b) {
-  // "3.6-GA" / "3.6-EA2" — EA1 first, then EA2, then GA
-  var ma = /-(EA(\d+)|GA)$/.exec(a)
-  var mb = /-(EA(\d+)|GA)$/.exec(b)
-  var oa = ma && ma[1] === 'GA' ? 99 : (ma ? parseInt(ma[2], 10) : 0)
-  var ob = mb && mb[1] === 'GA' ? 99 : (mb ? parseInt(mb[2], 10) : 0)
+  // "3.6-GA" / "3.6-EA2" / "3.7-EA" — unnumbered EA first, then EA1, EA2, then GA
+  var ma = /-(EA(\d*)|GA)$/.exec(a)
+  var mb = /-(EA(\d*)|GA)$/.exec(b)
+  var oa = ma && ma[1] === 'GA' ? 99 : (ma ? parseInt(ma[2] || '0', 10) : 0)
+  var ob = mb && mb[1] === 'GA' ? 99 : (mb ? parseInt(mb[2] || '0', 10) : 0)
   return oa - ob
 }
 
