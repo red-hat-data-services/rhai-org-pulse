@@ -67,6 +67,7 @@ function createOpenSearchClient(config = {}, fetchImpl = fetch) {
   const search = (index, body) => request(`/${index}/_search`, {
     method: 'POST', body: JSON.stringify(body)
   });
+  const fieldCaps = (index, fields) => request(`/${index}/_field_caps?fields=${fields.map(encodeURIComponent).join(',')}`);
 
   async function status() {
     const count = async (index) => (await request(`/${index}/_count`)).count;
@@ -76,7 +77,7 @@ function createOpenSearchClient(config = {}, fetchImpl = fetch) {
     return { executions, tasks, rootCauses };
   }
 
-  return { search, status };
+  return { search, fieldCaps, status };
 }
 
 function boolQuery(filter, must) {

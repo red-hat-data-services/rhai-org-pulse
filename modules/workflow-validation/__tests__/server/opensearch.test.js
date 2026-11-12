@@ -26,7 +26,7 @@ function jsonResponse(body, status = 200) {
 
 /** True for a build-metadata search by run invocation IDs. */
 function isImagesQuery(url, body) {
-  return url.endsWith(`/${IMAGES_INDEX}/_search`) && Boolean(body?.query?.terms?.invocation_id)
+  return url.endsWith(`/${IMAGES_INDEX}/_search`) && Boolean(body?.query?.terms?.['invocation_id.keyword'] || body?.query?.terms?.invocation_id)
 }
 
 /** Image aggregation fixtures contain the newest verified hit for each invocation. */
@@ -55,7 +55,14 @@ function makeResponse() {
   return response
 }
 
-function register(secrets = {}) {
+function register(secrets = {}, imageMapping = 'text') {
+  const fetch = globalThis.fetch
+  vi.stubGlobal('fetch', vi.fn((url, options) => url.includes(`/${IMAGES_INDEX}/_field_caps?`)
+    ? Promise.resolve(jsonResponse({ fields: imageMapping === 'text'
+      ? { invocation_id: { text: { searchable: true, aggregatable: false } },
+        'invocation_id.keyword': { keyword: { searchable: true, aggregatable: true } } }
+      : { invocation_id: { [imageMapping]: { searchable: true, aggregatable: true } } } }))
+    : fetch(url, options)))
   const router = makeRouter()
   registerRoutes(router, { requireAuth: vi.fn(), secrets })
   return router.routes
@@ -97,6 +104,14 @@ describe('OpenSearch runtime client', () => {
     expect(url).toBe(`https://search.example/${RUNS_INDEX}/_search`)
     expect(options.headers.Authorization).toBe(`Basic ${Buffer.from('reader:secret').toString('base64')}`)
     expect(JSON.stringify(options)).not.toContain('WORKFLOW_VALIDATION_OPENSEARCH_PASSWORD')
+  })
+
+  it('reads field capabilities with the same authenticated client', async () => {
+    const request = vi.fn().mockResolvedValue(jsonResponse({ fields: {} }))
+    const client = createOpenSearchClient({ url: 'https://search.example', username: 'reader', password: 'secret' }, request)
+    await client.fieldCaps(IMAGES_INDEX, ['invocation_id', 'invocation_id.keyword'])
+    expect(request.mock.calls[0][0]).toBe(`https://search.example/${IMAGES_INDEX}/_field_caps?fields=invocation_id,invocation_id.keyword`)
+    expect(request.mock.calls[0][1].headers.Authorization).toBe(`Basic ${Buffer.from('reader:secret').toString('base64')}`)
   })
 
   it('supports an unauthenticated local POC and rejects partial credentials', async () => {
@@ -532,10 +547,10 @@ describe('workflow-validation live schema routes', () => {
       ])
     expect(requests).toHaveLength(1)
     expect(requests[0].url).toMatch(new RegExp(`/${IMAGES_INDEX}/_search$`))
-    expect(requests[0].body.query).toEqual({ terms: { invocation_id: ['run-verified', 'run-unavailable', 'run-no-doc'] } })
+    expect(requests[0].body.query).toEqual({ terms: { 'invocation_id.keyword': ['run-verified', 'run-unavailable', 'run-no-doc'] } })
     expect(requests[0].body.size).toBe(0)
     expect(requests[0].body.aggs.builds).toEqual({
-      terms: { field: 'invocation_id', size: 500 },
+      terms: { field: 'invocation_id.keyword', size: 500 },
       aggs: { verified: {
         filter: { term: { 'operator_image.build_date_status': 'verified' } },
         aggs: { latest: { top_hits: { size: 1,
@@ -543,6 +558,26 @@ describe('workflow-validation live schema routes', () => {
           _source: ['operator_image.build_date'] } } }
       } }
     })
+  })
+
+  it('uses the root invocation field when the image index maps it as keyword', async () => {
+    const queries = []
+    vi.stubGlobal('fetch', vi.fn(async (url, options) => {
+      const body = JSON.parse(options.body)
+      if (isImagesQuery(url, body)) {
+        queries.push(body)
+        return imageResponse([['run-1', '2026-11-05T05:14:40Z']])
+      }
+      return jsonResponse({ aggregations: { suite_runs: { buckets: [
+        { key: { suite: 'release_gate', invocation: 'run-1' }, latest: { hits: { hits: [] } } }
+      ] } } })
+    }))
+    const response = makeResponse()
+    await register({}, 'keyword')['/test-suites'].at(-1)({ query: { pageSize: '20' } }, response)
+    expect(response.statusCode).toBe(200)
+    expect(response.body.rows[0].buildDate).toBe('2026-11-05T05:14:40.000Z')
+    expect(queries[0].query).toEqual({ terms: { invocation_id: ['run-1'] } })
+    expect(queries[0].aggs.builds.terms.field).toBe('invocation_id')
   })
 
   it('sorts the complete row set by RHOAI build date and keeps missing values last', async () => {
@@ -573,10 +608,10 @@ describe('workflow-validation live schema routes', () => {
       const body = JSON.parse(options.body)
       if (isImagesQuery(url, body)) {
         imageQueries++
-        expect(body.query.terms.invocation_id.length).toBeLessThanOrEqual(500)
+        expect(body.query.terms['invocation_id.keyword'].length).toBeLessThanOrEqual(500)
         expect(body.size).toBe(0)
         expect(body.aggs.builds.terms.size).toBe(500)
-        return imageResponse(body.query.terms.invocation_id.includes(last) ? [[last, '2026-11-05T05:14:40Z']] : [])
+        return imageResponse(body.query.terms['invocation_id.keyword'].includes(last) ? [[last, '2026-11-05T05:14:40Z']] : [])
       }
       const offset = Number(body.aggs.suite_runs.composite.after?.invocation || 0)
       const end = Math.min(offset + 500, count)
@@ -598,7 +633,7 @@ describe('workflow-validation live schema routes', () => {
     vi.stubGlobal('fetch', vi.fn(async (url, options) => {
       const body = JSON.parse(options.body)
       if (isImagesQuery(url, body)) {
-        expect(body.aggs.builds.terms).toEqual({ field: 'invocation_id', size: 500 })
+        expect(body.aggs.builds.terms).toEqual({ field: 'invocation_id.keyword', size: 500 })
         expect(body.aggs.builds.aggs.verified.filter).toEqual({ term: { 'operator_image.build_date_status': 'verified' } })
         expect(body.aggs.builds.aggs.verified.aggs.latest.top_hits.sort)
           .toEqual([{ 'operator_image.build_date': { order: 'desc', missing: '_last' } }])
@@ -736,7 +771,7 @@ describe('workflow-validation live schema routes', () => {
     vi.stubGlobal('fetch', vi.fn(async (url, options) => {
       const body = JSON.parse(options.body)
       if (isImagesQuery(url, body)) {
-        return imageResponse(body.query.terms.invocation_id.map(id => [id, '2026-11-05T05:14:40Z']))
+        return imageResponse(body.query.terms['invocation_id.keyword'].map(id => [id, '2026-11-05T05:14:40Z']))
       }
       requests.push(body)
       return jsonResponse({ aggregations: { suite_runs: body.aggs.suite_runs.composite.after

@@ -173,6 +173,9 @@ Clear filters restores the unfiltered, newest-first first page. Shareable URLs
 retain the filters, sort, and page. Execution dates use existing execution
 metadata. Build values join the existing `workflow-execution-images` index by
 `invocation_id`. Duplicate image documents use the newest verified build date.
+The image lookup uses `invocation_id.keyword` when the image index maps
+`invocation_id` as text with a keyword subfield, or `invocation_id` when it is
+already a keyword field.
 Build dates must include a timezone and are normalized to UTC. The page uses
 `/test-suites?pageSize=20&includeBugs=false&includeBugTickets=true` and ignores shared detail filters.
 Run and build metadata share one cache for up to 10 seconds. Image queries use
