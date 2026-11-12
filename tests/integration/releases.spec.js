@@ -198,6 +198,7 @@ test.describe('Releases Views @releases', () => {
     await expect(jiraPlan).toBeVisible();
     await expect(jiraPlan).toContainText('Read-only');
     await expect(jiraPlan).toContainText('RHAISTRAT-2921');
+    await expect(jiraPlan).toContainText('Releases');
     await expect(page.getByTestId('jira-plan-outcome-row')).toHaveCount(12);
     await expect(page.getByTestId('jira-plan-outcome-row').first()).toContainText('RHAISTRAT-3004');
 

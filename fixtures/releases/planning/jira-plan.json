@@ -244,7 +244,7 @@
       "productManager": "Suhas Kashyap",
       "components": ["AI Core Platform", "AI Navigator", "Model and Agent Observability"],
       "targetVersions": ["3.6 GA RHOAI RELEASE"],
-      "fixVersions": [],
+      "fixVersions": ["3.6 GA RHOAI RELEASE"],
       "releaseType": null,
       "team": null,
       "labels": [],
