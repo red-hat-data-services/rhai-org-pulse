@@ -163,16 +163,16 @@ function verifiedBuildDate(value) {
 }
 
 /** Join bounded image groups; duplicates use their newest verified build timestamp. */
-async function addBuildDates(rows, search, isClosed = () => false) {
+async function addBuildDates(rows, search, invocationField, isClosed = () => false) {
   const ids = [...new Set(rows.map(row => row.invocationId).filter(Boolean))];
   const byId = new Map();
   for (let offset = 0; offset < ids.length; offset += 500) {
     if (isClosed()) return null;
     const response = await search(IMAGES_INDEX, {
       size: 0,
-      query: { terms: { invocation_id: ids.slice(offset, offset + 500) } },
+      query: { terms: { [invocationField]: ids.slice(offset, offset + 500) } },
       aggs: { builds: {
-        terms: { field: 'invocation_id', size: 500 },
+        terms: { field: invocationField, size: 500 },
         aggs: { verified: {
           filter: { term: { 'operator_image.build_date_status': 'verified' } },
           aggs: { latest: { top_hits: {
@@ -203,6 +203,7 @@ module.exports = function registerRoutes(router, context) {
   let cachedSignature;
   let recentGroupsCache;
   let recentScanSequence = 0;
+  const imageInvocationFields = new WeakMap();
   let jiraClient;
   let jiraSignature;
   const enrichBugTickets = createBugTickets({ getJiraClient() {
@@ -240,6 +241,25 @@ module.exports = function registerRoutes(router, context) {
   const osSearch = async function(...args) {
     return (await getRuntimeClient()).client.search(...args);
   };
+
+  /** Resolve the image index's exact-value field without assuming its mapping matches executions. */
+  function imageInvocationField(client) {
+    let pending = imageInvocationFields.get(client);
+    if (!pending) {
+      pending = client.fieldCaps(IMAGES_INDEX, ['invocation_id', 'invocation_id.keyword']).then(({ fields }) => {
+        const subfield = fields?.['invocation_id.keyword']?.keyword;
+        const direct = fields?.invocation_id?.keyword;
+        if (subfield?.aggregatable && subfield.searchable) return 'invocation_id.keyword';
+        if (direct?.aggregatable && direct.searchable) return 'invocation_id';
+        throw new Error('Image index invocation_id must be a keyword field or have a keyword subfield');
+      }).catch((error) => {
+        imageInvocationFields.delete(client);
+        throw error;
+      });
+      imageInvocationFields.set(client, pending);
+    }
+    return pending;
+  }
 
   if (context.registerSecretValidator) {
     context.registerSecretValidator('WORKFLOW_VALIDATION_OPENSEARCH_PASSWORD', async function() {
@@ -611,8 +631,12 @@ module.exports = function registerRoutes(router, context) {
             metadataOnly: true, isClosed: () => closed
           });
           if (rows === null || closed) return;
-          rows = await addBuildDates(rows, (index, body) => client.search(index, body), () => closed);
-          if (rows === null || closed) return;
+          if (rows.length) {
+            const invocationField = await imageInvocationField(client);
+            if (closed) return;
+            rows = await addBuildDates(rows, (index, body) => client.search(index, body), invocationField, () => closed);
+            if (rows === null || closed) return;
+          }
           if (cachedClient === client && scanSequence > (recentGroupsCache?.sequence || 0)) {
             recentGroupsCache = { client, rows, sequence: scanSequence, expiresAt: Date.now() + 10_000 };
           }

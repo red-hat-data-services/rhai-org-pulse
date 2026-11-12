@@ -590,6 +590,17 @@ test.describe('Workflow Validation module @workflow-validation', () => {
     }
   })
 
+  test('shows a verified build for an exact invocation ID containing punctuation', async ({ page }) => {
+    const invocationId = 'release_gate/2026-11-05:run-1'
+    await mockRecentData(page, [{ suite: 'release_gate', invocationId, rhoaiVersion: '3.6.0',
+      timestamp: '2026-11-06T10:00:00Z', buildDate: '2026-11-05T05:14:40Z', buildDateStatus: 'verified' }])
+    await page.goto('/#/workflow-validation/recent-runs')
+    const row = page.getByRole('row', { name: `Open run ${invocationId}` })
+    await expect(row.locator('td').nth(2)).toHaveText('5 Nov 2026, 05:14:40')
+    await row.click()
+    await expect.poll(() => new URL(page.url().split('#')[1], 'http://localhost').searchParams.get('invocationId')).toBe(invocationId)
+  })
+
   test('keeps the recent-runs table inside narrow screens with the sidebar collapsed', async ({ page }) => {
     await page.goto('/#/workflow-validation/recent-runs')
     await expect(page.getByRole('row', { name: 'Open run invocation-1' })).toBeVisible()
