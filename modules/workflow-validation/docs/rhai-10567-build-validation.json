@@ -1,0 +1,148 @@
+{
+  "environment": "GPUaaS development",
+  "namespace": "workflow-validation-org-pulse",
+  "dashboard": "https://team-tracker-workflow-validation-org-pulse.apps.workval.aipcc-gpuaas.com",
+  "ticket": "RHAI-10567",
+  "backend": {
+    "build": "org-pulse-backend-builddate-20261111-11",
+    "image": "org-pulse-backend@sha256:ab7d371d08bf6f6a6fd222fb8f6d73ad09f155750d09aca7fa15afd8be06f2d9",
+    "rollback": "org-pulse-backend@sha256:69d80b77be90a400a1794cb326c7048450be41b69eac2628a9177bd252259c44",
+    "rollout": "complete",
+    "deployedIndexSourceSha256": "7a2973a86d2958eebab5d8350ed1e8124ba7cd6a17fcc35908933e7ec0c0ffe0",
+    "runtimeVersion": "2.0.99",
+    "deployedSourceSha256": {
+      "modules/workflow-validation/server/index.js": "7a2973a86d2958eebab5d8350ed1e8124ba7cd6a17fcc35908933e7ec0c0ffe0",
+      "modules/workflow-validation/server/recent-runs.js": "85a2889347d952d4ffc696338d099e3c39106b05999931b5aa742f37d3676096",
+      "modules/workflow-validation/server/opensearch.js": "8aa5bbf5cfae5491466d85af8a2298a5deafb4e0f347fe4c9de6d4216ca298ac"
+    }
+  },
+  "frontend": {
+    "build": "org-pulse-frontend-builddate-20261111-6",
+    "image": "org-pulse-frontend@sha256:736ef1d41872206e3e05bf4adec69e7e1f71fd3fb7422250513ea10336930803",
+    "rollback": "org-pulse-frontend@sha256:38b8ee4901e88ed46278431b19e270b2add7c3ec496dbcd4c988512d447d4501",
+    "rollout": "complete",
+    "buildViewSourceSha256": "e48ee7bf4aea39748e95494c112076c414792c9c1d019437efd669fba0889241"
+  },
+  "localChecks": {
+    "focusedUnitTests": {
+      "passed": 130
+    },
+    "moduleBrowserTests": {
+      "passed": 39
+    },
+    "lint": "passed",
+    "openapi": "passed with four pre-existing undocumented-route warnings",
+    "productionBuild": "passed",
+    "diffCheck": "passed",
+    "fullSuite": "Not run: user reports 71 pre-existing localStorage failures in five unrelated client files."
+  },
+  "liveApi": {
+    "checkedAt": "2026-11-12T07:31:40.786Z",
+    "status": "passed",
+    "countsBefore": {
+      "executions": 726,
+      "tasks": 4171,
+      "rootCauses": 184
+    },
+    "countsAfter": {
+      "executions": 726,
+      "tasks": 4171,
+      "rootCauses": 184
+    },
+    "imageDocuments": 18,
+    "runGroups": 157,
+    "verifiedBuildRows": 11,
+    "unavailableBuildRows": 146,
+    "pages": {
+      "default": 8,
+      "buildDescending": 8,
+      "buildAscending": 8
+    },
+    "buildRange": {
+      "earliest": "2026-07-03T09:28:12.000Z",
+      "latest": "2026-11-05T05:14:40.000Z"
+    },
+    "bugTicketStatuses": [
+      "empty",
+      "ready"
+    ],
+    "bugTicketCounts": {
+      "ready": 15,
+      "empty": 142,
+      "unavailable": 0
+    },
+    "checks": [
+      "independent image-document comparison",
+      "invocation join",
+      "default execution descending",
+      "global build ascending and descending",
+      "unavailable last in both directions",
+      "all pages without duplicates",
+      "previous cursors",
+      "suite and run ID filters",
+      "date filter",
+      "version filter",
+      "bug ticket enrichment",
+      "concurrent refresh requests",
+      "cached response stability",
+      "unchanged document counts"
+    ]
+  },
+  "liveBrowser": {
+    "checkedAt": "2026-11-12T07:37:49.608Z",
+    "status": "passed",
+    "visibleRowsChecked": 20,
+    "verifiedBuildRowsChecked": 11,
+    "examples": [
+      "5 Nov 2026, 05:14:40",
+      "3 Jul 2026, 09:28:12"
+    ],
+    "checks": [
+      "single-line UTC date/time matches Executed at",
+      "UTC appears in column headings without repeating in build cells",
+      "lowercase unavailable",
+      "column immediately after Version",
+      "build descending",
+      "build ascending",
+      "unavailable starts at row 12 in both build orders",
+      "Next and Previous",
+      "reload retains sorted page",
+      "Clear filters restores execution descending"
+    ],
+    "zoomRestored": true
+  },
+  "screenshots": [
+    {
+      "mode": "default",
+      "path": "images/rhai-10567-build-default-gpuaas.jpg",
+      "sha256": "0edc6ac8c1c4f3d06f378f33fabf25bf56c19bbbbf68730f4b9b37755ce94973",
+      "frontendBuild": "org-pulse-frontend-builddate-20261111-6"
+    },
+    {
+      "mode": "descending",
+      "path": "images/rhai-10567-build-descending-gpuaas.jpg",
+      "sha256": "b6222468205aaecac47f0836ff0c8b0f7b6132817ced0aff33818ed689ab0164",
+      "frontendBuild": "org-pulse-frontend-builddate-20261111-6"
+    },
+    {
+      "mode": "ascending",
+      "path": "images/rhai-10567-build-ascending-gpuaas.jpg",
+      "sha256": "9b44a2f6e7b8b7d93e9babfa636f475e66ce87a43c39dae4f7832afe14549028",
+      "frontendBuild": "org-pulse-frontend-builddate-20261111-6"
+    }
+  ],
+  "sourceCommit": "21865eac27112877cc5a9316b94d56af0eeffbeb",
+  "sourceArchiveSha256": "35a32038c8bfd47da097550df174df5c67c4292854b9349f007642294426c915",
+  "coreTag": "v2.0.99",
+  "ciChecks": {
+    "sourceCommit": "21865eac27112877cc5a9316b94d56af0eeffbeb",
+    "unitTests": {
+      "passed": 7024,
+      "skipped": 11
+    },
+    "testAndBuild": "https://github.com/red-hat-data-services/rhai-org-pulse/actions/runs/43174410891/job/131035129958",
+    "moduleIntegration": "https://github.com/red-hat-data-services/rhai-org-pulse/actions/runs/43174411007/job/131035128589",
+    "smokeStatus": "https://github.com/red-hat-data-services/rhai-org-pulse/actions/runs/43174410891/job/131036459930",
+    "status": "passed"
+  }
+}

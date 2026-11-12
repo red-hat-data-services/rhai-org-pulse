@@ -4,7 +4,7 @@
       <div class="min-w-0">
         <h2 class="text-2xl font-bold text-gray-900 dark:text-gray-100">Recent Runs</h2>
         <p class="mt-2 max-w-3xl text-sm leading-6 text-gray-600 dark:text-gray-300">
-          Each row shows one test suite run, its RHOAI version, and execution time.
+          Each row shows one test suite run, its RHOAI version, RHOAI operator image build time, and execution time.
           Select a row to view its results.
           Select <strong class="font-medium">Jira issues</strong> to open the bugs and RFEs associated with that run.
         </p>
@@ -52,7 +52,7 @@
     <p v-if="loading || searchPending" role="status" class="mb-4 text-sm text-gray-500 dark:text-gray-400">{{ hasLoaded ? 'Updating recent runs…' : 'Loading recent runs…' }}</p>
     <div v-if="hasLoaded" :aria-busy="loading" class="overflow-hidden rounded-xl border border-gray-100 bg-white dark:border-gray-700 dark:bg-gray-800">
       <div class="relative overflow-x-auto">
-        <table class="w-full min-w-[56rem] table-fixed text-left text-sm">
+        <table class="w-full min-w-[64rem] table-fixed text-left text-sm">
           <caption class="sr-only">Recent Workflow Validation runs. Select a run to open its details.</caption>
           <thead class="border-b border-gray-100 text-xs uppercase tracking-wide text-gray-500 dark:border-gray-700 dark:text-gray-400">
             <tr>
@@ -76,6 +76,10 @@
                 <div class="mt-1 break-all font-mono text-xs text-gray-500 dark:text-gray-400">{{ run.invocationId }}</div>
               </td>
               <td class="break-words px-5 py-4 font-mono text-xs text-gray-600 dark:text-gray-300">{{ run.rhoaiVersion ? versionLabel(run.rhoaiVersion) : 'Version unavailable' }}</td>
+              <td class="whitespace-nowrap px-5 py-4 text-gray-600 dark:text-gray-300">
+                <time v-if="run.buildDateStatus === 'verified' && validTime(run.buildDate)" :datetime="run.buildDate">{{ recordedTime(run.buildDate) }}</time>
+                <span v-else title="No verified RHOAI operator image build time is recorded for this run.">unavailable</span>
+              </td>
               <td class="whitespace-nowrap px-5 py-4 text-gray-600 dark:text-gray-300"><time v-if="validTime(run.timestamp)" :datetime="run.timestamp">{{ recordedTime(run.timestamp) }}</time><span v-else>Unavailable</span></td>
               <td class="px-5 py-4">
                 <a v-if="run.bugTickets?.status === 'ready' && safeExternalUrl(run.bugTickets.url)"
@@ -87,7 +91,7 @@
                 <span v-else class="text-xs text-gray-500 dark:text-gray-400" title="Issue associations or Jira labels could not be verified. Use Refresh to retry.">Issues unavailable</span>
               </td>
             </tr>
-            <tr v-if="!runs.length"><td colspan="4" class="px-5 py-12 text-center text-gray-500 dark:text-gray-400">{{ page.total ? 'This page has changed. Use Previous to return to the first page.' : hasFilters ? 'No runs match these filters.' : 'No runs are available.' }}</td></tr>
+            <tr v-if="!runs.length"><td colspan="5" class="px-5 py-12 text-center text-gray-500 dark:text-gray-400">{{ page.total ? 'This page has changed. Use Previous to return to the first page.' : hasFilters ? 'No runs match these filters.' : 'No runs are available.' }}</td></tr>
           </tbody>
         </table>
       </div>
@@ -110,6 +114,7 @@ const { getRecentRuns } = useWorkflowValidation()
 const columns = [
   { field: 'suite', label: 'Test suite', sortLabel: 'Sort test suite', firstDirection: 'asc' },
   { field: 'version', label: 'Version', sortLabel: 'Sort version', firstDirection: 'desc' },
+  { field: 'buildDate', label: 'RHOAI build (UTC)', sortLabel: 'Sort RHOAI build time', firstDirection: 'desc' },
   { field: 'timestamp', label: 'Executed at (UTC)', sortLabel: 'Sort execution time', firstDirection: 'desc' }
 ]
 const fields = { suite: 'recentSuite', runQuery: 'recentRun', datePreset: 'recentDatePreset', dateFrom: 'recentFrom', dateTo: 'recentTo', sortField: 'recentSortField', sortDir: 'recentSort', cursor: 'recentCursor' }

@@ -10,6 +10,7 @@ const {
   RUNS_INDEX,
   TASKS_INDEX,
   BUGS_INDEX,
+  IMAGES_INDEX,
   getOpenSearchConfig,
   createOpenSearchClient,
   runFilters,
@@ -150,6 +151,47 @@ async function readSuiteRunGroups(query, search, { isClosed = () => false, metad
         clusterName: latest.cluster_name || null
       } : {})
     };
+  });
+}
+
+/** Accept explicit-zone ISO timestamps without normalizing invalid calendar days. */
+function verifiedBuildDate(value) {
+  if (typeof value !== 'string' || !/^\d{4}-\d{2}-\d{2}T(?:[01]\d|2[0-3]):[0-5]\d:[0-5]\d(?:\.\d{1,9})?(?:Z|[+-](?:[01]\d|2[0-3]):[0-5]\d)$/.test(value)) return null;
+  const day = value.slice(0, 10), midnight = Date.parse(`${day}T00:00:00Z`), timestamp = Date.parse(value);
+  if (!Number.isFinite(midnight) || new Date(midnight).toISOString().slice(0, 10) !== day || !Number.isFinite(timestamp)) return null;
+  return new Date(timestamp).toISOString();
+}
+
+/** Join bounded image groups; duplicates use their newest verified build timestamp. */
+async function addBuildDates(rows, search, isClosed = () => false) {
+  const ids = [...new Set(rows.map(row => row.invocationId).filter(Boolean))];
+  const byId = new Map();
+  for (let offset = 0; offset < ids.length; offset += 500) {
+    if (isClosed()) return null;
+    const response = await search(IMAGES_INDEX, {
+      size: 0,
+      query: { terms: { invocation_id: ids.slice(offset, offset + 500) } },
+      aggs: { builds: {
+        terms: { field: 'invocation_id', size: 500 },
+        aggs: { verified: {
+          filter: { term: { 'operator_image.build_date_status': 'verified' } },
+          aggs: { latest: { top_hits: {
+            size: 1,
+            sort: [{ 'operator_image.build_date': { order: 'desc', missing: '_last' } }],
+            _source: ['operator_image.build_date']
+          } } }
+        } }
+      } }
+    });
+    if (isClosed()) return null;
+    for (const bucket of bucketList(response.aggregations?.builds)) {
+      const date = bucket.verified?.latest?.hits?.hits?.[0]?._source?.operator_image?.build_date;
+      byId.set(bucket.key, verifiedBuildDate(date));
+    }
+  }
+  return rows.map(row => {
+    const buildDate = byId.get(row.invocationId) || null;
+    return { ...row, buildDate, buildDateStatus: buildDate ? 'verified' : byId.has(row.invocationId) ? 'unavailable' : null };
   });
 }
 
@@ -513,7 +555,7 @@ module.exports = function registerRoutes(router, context) {
    *       - { in: query, name: suite, schema: { type: string } }
    *       - { in: query, name: version, schema: { type: string } }
    *       - { in: query, name: versions, schema: { type: array, maxItems: 50, items: { type: string } }, style: form, explode: true, description: Match any selected version; paged mode only; cannot combine with version }
-   *       - { in: query, name: sortField, schema: { type: string, enum: [timestamp, version, suite], default: timestamp }, description: Global sort column in paged mode }
+   *       - { in: query, name: sortField, schema: { type: string, enum: [timestamp, version, suite, buildDate], default: timestamp }, description: Global sort column in paged mode }
    *       - { in: query, name: latest, schema: { type: boolean } }
    *       - { in: query, name: limit, schema: { type: integer, minimum: 1, maximum: 200 }, description: Limit run groups after ordering newest first }
    *       - { in: query, name: includeBugs, schema: { type: boolean, default: true }, description: Set false for lightweight run metadata without RCA retrieval }
@@ -526,7 +568,7 @@ module.exports = function registerRoutes(router, context) {
    *       - { in: query, name: runQuery, schema: { type: string, maxLength: 256 }, description: Run ID substring; requires pageSize }
    *       - { in: query, name: refresh, schema: { type: boolean, default: false }, description: Bypass the 10-second metadata cache; requires pageSize }
    *     responses:
-   *       200: { description: "Run groups ordered by recorded execution timestamp. Paged mode returns rows, total, start, end, pageSize, nextCursor, previousCursor, options (versions and suites), sortField and sortDir. includeBugTickets adds bugTickets with ready, empty or unavailable status; ready includes a Jira search URL." }
+   *       200: { description: "Run groups default to recorded execution timestamp descending. Paged mode returns rows, total, start, end, pageSize, nextCursor, previousCursor, options (versions and suites), sortField and sortDir. includeBugTickets adds bugTickets with ready, empty or unavailable status; ready includes a Jira search URL. buildDate is the newest verified RHOAI operator image build time for the invocation, normalized from a valid explicit-zone ISO timestamp, or null. buildDateStatus is verified, unavailable, or null when no image group exists. sortField buildDate sorts by build date, then time, with missing values last. Run and build metadata share a 10-second cache; refresh bypasses both." }
    *       400: { description: "Invalid limit, page parameters, or cursor" }
    */
   router.get('/test-suites', requireAuth, safe(async function (req, res) {
@@ -568,6 +610,8 @@ module.exports = function registerRoutes(router, context) {
           rows = await readSuiteRunGroups(query, (index, body) => client.search(index, body), {
             metadataOnly: true, isClosed: () => closed
           });
+          if (rows === null || closed) return;
+          rows = await addBuildDates(rows, (index, body) => client.search(index, body), () => closed);
           if (rows === null || closed) return;
           if (cachedClient === client && scanSequence > (recentGroupsCache?.sequence || 0)) {
             recentGroupsCache = { client, rows, sequence: scanSequence, expiresAt: Date.now() + 10_000 };
