@@ -1229,29 +1229,25 @@ test.describe('Test Execution Dashboard @system-health', () => {
     expectNoBenignConsoleErrors(page);
   });
 
-  test('should show the nightly BVT stream as RHOAI Deployment on the RHOAI Releases tab only', async ({ page }) => {
-    const nightlyFixture = JSON.parse(readFileSync(nightlyHealthFixturePath, 'utf8'));
-    const heatmapFixture = JSON.parse(readFileSync(heatmapFixturePath, 'utf8'));
-    const bvtStreamKey = 'rhoai-nightly-bvt';
-    // Same run shape as the promotion-gate fixture, published under the nightly BVT stream
-    const bvtDay = {
+  const bvtStreamKey = 'rhoai-nightly-bvt';
+
+  /** Fixture day re-published under the nightly BVT stream (same run shape as the promotion-gate fixture). */
+  function nightlyBvtDay(nightlyFixture) {
+    return {
       ...JSON.parse(JSON.stringify(nightlyFixture.days.find((d) => d.stream_key === 'example-stream'))),
       stream_key: bvtStreamKey
     };
-    const payload = {
-      ...nightlyFixture,
-      jenkins_jobs: [
-        ...nightlyFixture.jenkins_jobs,
-        { stream_key: bvtStreamKey, label: 'devops/rhoai-nightly-bvt', jenkins_job: 'devops/rhoai-nightly-bvt' }
-      ],
-      days: [...nightlyFixture.days, bvtDay]
-    };
+  }
 
+  const nightlyBvtJob = { stream_key: bvtStreamKey, label: 'devops/rhoai-nightly-bvt', jenkins_job: 'devops/rhoai-nightly-bvt' };
+
+  /** Serves the given heatmap / nightly_health payloads and opens the RHOAI Releases tab. */
+  async function openTestExecutionWithData(page, { heatmap, nightlyHealth }) {
     await page.route('**/api/modules/system-health/quality/test-execution/data**', async (route) => {
       const url = route.request().url();
       if (url.includes('file=')) {
         const file = new URL(url).searchParams.get('file');
-        const body = file === 'nightly_health' ? payload : file === 'heatmap' ? heatmapFixture : {};
+        const body = file === 'nightly_health' ? nightlyHealth : file === 'heatmap' ? (heatmap || {}) : {};
         await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(body) });
         return;
       }
@@ -1259,11 +1255,11 @@ test.describe('Test Execution Dashboard @system-health', () => {
         status: 200,
         contentType: 'application/json',
         body: JSON.stringify({
-          heatmap: heatmapFixture,
+          heatmap,
           components: null,
           jira_config: null,
           meta: null,
-          nightly_health: payload,
+          nightly_health: nightlyHealth,
           lastUpload: null
         })
       });
@@ -1279,11 +1275,24 @@ test.describe('Test Execution Dashboard @system-health', () => {
     await dataReady;
     await page.waitForLoadState('networkidle');
     await page.waitForTimeout(DEFAULT_PAGE_WAIT_TIME);
+  }
+
+  test('should show the nightly BVT stream as RHOAI Deployment on the RHOAI Releases tab only', async ({ page }) => {
+    const nightlyFixture = JSON.parse(readFileSync(nightlyHealthFixturePath, 'utf8'));
+    const heatmapFixture = JSON.parse(readFileSync(heatmapFixturePath, 'utf8'));
+    const bvtDay = nightlyBvtDay(nightlyFixture);
+    await openTestExecutionWithData(page, {
+      heatmap: heatmapFixture,
+      nightlyHealth: {
+        ...nightlyFixture,
+        jenkins_jobs: [...nightlyFixture.jenkins_jobs, nightlyBvtJob],
+        days: [...nightlyFixture.days, bvtDay]
+      }
+    });
 
     // RHOAI Releases: RHOAI Deployment matrix with only the nightly BVT day, above Component Heatmap
-    const releases = releasesTabPanel(page);
-    const deployment = releases.locator('.rhoai-deployment-section');
-    await expect(deployment.getByRole('heading', { name: 'RHOAI Deployment' })).toBeVisible();
+    const deployment = releasesTabPanel(page).locator('.rhoai-deployment-section');
+    await expect(deployment.getByRole('heading', { name: 'RHOAI Deployment', exact: true })).toBeVisible();
     await expect(deployment.locator('.nightly-matrix')).toBeVisible();
     await expect(deployment.locator('.date-header-btn')).toHaveCount(1);
     await expect(deployment.locator(`.date-header-btn[title="Show all builds on ${bvtDay.date}"]`)).toBeVisible();
@@ -1295,6 +1304,22 @@ test.describe('Test Execution Dashboard @system-health', () => {
     const sourceOptions = gatesTabPanel(page).locator('.pager-job-select option');
     await expect(sourceOptions).not.toHaveCount(0);
     await expect(gatesTabPanel(page).locator(`.pager-job-select option[value="${bvtStreamKey}"]`)).toHaveCount(0);
+
+    expectNoBenignConsoleErrors(page);
+  });
+
+  test('should show RHOAI Deployment when only nightly BVT data is uploaded', async ({ page }) => {
+    const nightlyFixture = JSON.parse(readFileSync(nightlyHealthFixturePath, 'utf8'));
+    await openTestExecutionWithData(page, {
+      heatmap: null,
+      nightlyHealth: { ...nightlyFixture, jenkins_jobs: [nightlyBvtJob], days: [nightlyBvtDay(nightlyFixture)] }
+    });
+
+    await expect(page.getByRole('tab', { name: 'RHOAI Releases' })).toBeEnabled();
+    await expect(page.getByRole('tab', { name: 'Promotion Gate' })).toBeDisabled();
+    const releases = releasesTabPanel(page);
+    await expect(releases.locator('.rhoai-deployment-section .nightly-matrix')).toBeVisible();
+    await expect(releases.getByText('No OpenSearch release test data has been uploaded yet.')).toBeVisible();
 
     expectNoBenignConsoleErrors(page);
   });

@@ -27,7 +27,7 @@
               :aria-selected="activeTab === 'releases'"
               aria-controls="test-exec-panel-releases"
               :tabindex="activeTab === 'releases' ? 0 : -1"
-              :disabled="!hasHeatmapData"
+              :disabled="!hasReleasesTabData"
               @click="setActiveTab('releases')"
             >
               RHOAI Releases
@@ -55,10 +55,7 @@
             class="tab-panel"
             aria-labelledby="test-exec-tab-releases"
           >
-            <div v-if="!hasHeatmapData" class="no-data tab-empty">
-              No OpenSearch release test data has been uploaded yet.
-            </div>
-            <template v-else>
+            <template v-if="hasHeatmapData">
               <div class="tab-panel-heading">
                 <h2 class="tab-panel-title">RHOAI Releases Test Results</h2>
                 <p class="tab-panel-intro">
@@ -79,27 +76,33 @@
                 :components="filteredComponents"
                 :filters="filters"
               />
+            </template>
 
-              <div v-if="rhoaiDeploymentHealth" class="section rhoai-deployment-section">
-                <div class="section-title">
-                  <h3 class="tab-section-subtitle">RHOAI Deployment</h3>
-                </div>
-                <div class="help-box tab-help-box">
-                  <h4>ℹ️ How to read RHOAI Deployment</h4>
-                  <ul>
-                    <li><strong>Each column</strong> — A UTC day; the nightly BVT run that installed that day&apos;s RHOAI nightly build on a fresh cluster. Click a date for the day&apos;s runs, logs and artifacts.</li>
-                    <li><strong>Each row</strong> — Cluster health, RHOAI deployment (operator health) and each component&apos;s DataScienceCluster readiness.</li>
-                    <li><strong>Blocked</strong> — The deployment failed, so the nightly tests for that build did not run.</li>
-                  </ul>
-                </div>
-                <NightlyHealthTable
-                  :payload="rhoaiDeploymentHealth"
-                  :heatmap-components="heatmap"
-                  :tab-panel-active="activeTab === 'releases'"
-                  @component-click="onComponentClick"
-                />
+            <!-- Nightly BVT: shown whether or not heatmap data was uploaded -->
+            <div v-if="rhoaiDeploymentHealth" class="section rhoai-deployment-section">
+              <div class="section-title">
+                <h3 class="tab-section-subtitle">RHOAI Deployment</h3>
               </div>
+              <div class="help-box tab-help-box">
+                <h4>ℹ️ How to read RHOAI Deployment</h4>
+                <ul>
+                  <li><strong>Each column</strong> — A UTC day; the nightly BVT run that installed that day&apos;s RHOAI nightly build on a fresh cluster. Click a date for the day&apos;s runs, logs and artifacts.</li>
+                  <li><strong>Each row</strong> — Cluster health, RHOAI deployment (operator health) and each component&apos;s DataScienceCluster readiness.</li>
+                  <li><strong>Blocked</strong> — The deployment failed, so the nightly tests for that build did not run.</li>
+                </ul>
+              </div>
+              <NightlyHealthTable
+                :payload="rhoaiDeploymentHealth"
+                :heatmap-components="heatmap"
+                :tab-panel-active="activeTab === 'releases'"
+                @component-click="onComponentClick"
+              />
+            </div>
 
+            <div v-if="!hasHeatmapData" class="no-data tab-empty">
+              No OpenSearch release test data has been uploaded yet.
+            </div>
+            <template v-else>
               <div
                 v-if="filteredComponents.length === 0"
                 class="no-data heatmap-filter-empty"
@@ -217,6 +220,9 @@ const nightlyHealth = computed(() =>
   filterNightlyHealthByStream(allNightlyHealth.value, { exclude: [RHOAI_NIGHTLY_BVT_STREAM_KEY] })
 )
 const hasNightlyData = computed(() => Boolean(nightlyHealth.value))
+
+/** RHOAI Releases tab: heatmap (OpenSearch) and/or the nightly BVT RHOAI Deployment matrix. */
+const hasReleasesTabData = computed(() => hasHeatmapData.value || Boolean(rhoaiDeploymentHealth.value))
 
 const nav = inject('moduleNav', null)
 
@@ -360,13 +366,13 @@ function parseTabQueryValue(raw) {
 
 function resolveTabFromParam(raw) {
   const tab = parseTabQueryValue(raw)
-  if (tab === 'releases' && hasHeatmapData.value) return 'releases'
+  if (tab === 'releases' && hasReleasesTabData.value) return 'releases'
   if (tab === 'gates' && hasNightlyData.value) return 'gates'
   return null
 }
 
 function defaultTabForData() {
-  if (hasHeatmapData.value) return 'releases'
+  if (hasReleasesTabData.value) return 'releases'
   if (hasNightlyData.value) return 'gates'
   return 'releases'
 }
@@ -384,7 +390,7 @@ function applyActiveTabFromNavParams() {
     }
   }
   if (wanted === 'releases') {
-    if (hasHeatmapData.value) {
+    if (hasReleasesTabData.value) {
       activeTab.value = 'releases'
       return
     }
@@ -437,7 +443,7 @@ function syncActiveTabToNavParams(tab) {
 }
 
 function isExecutionTabEnabled(tab) {
-  if (tab === 'releases') return hasHeatmapData.value
+  if (tab === 'releases') return hasReleasesTabData.value
   if (tab === 'gates') return hasNightlyData.value
   return false
 }
@@ -462,7 +468,7 @@ function onExecutionTabKeydown(event) {
 }
 
 function setActiveTab(tab) {
-  if (tab === 'releases' && !hasHeatmapData.value) return
+  if (tab === 'releases' && !hasReleasesTabData.value) return
   if (tab === 'gates' && !hasNightlyData.value) return
   activeTab.value = tab
   nextTick(() => {
@@ -480,7 +486,7 @@ watch(activeTab, (tab) => {
   }
 })
 
-watch([hasNightlyData, hasHeatmapData], () => {
+watch([hasNightlyData, hasReleasesTabData], () => {
   const fromUrl = resolveTabFromParam(nav?.params?.value?.[TEST_EXECUTION_TAB_PARAM])
   if (fromUrl) {
     activeTab.value = fromUrl
@@ -489,9 +495,9 @@ watch([hasNightlyData, hasHeatmapData], () => {
     }
     return
   }
-  if (activeTab.value === 'releases' && !hasHeatmapData.value && hasNightlyData.value) {
+  if (activeTab.value === 'releases' && !hasReleasesTabData.value && hasNightlyData.value) {
     activeTab.value = 'gates'
-  } else if (activeTab.value === 'gates' && !hasNightlyData.value && hasHeatmapData.value) {
+  } else if (activeTab.value === 'gates' && !hasNightlyData.value && hasReleasesTabData.value) {
     activeTab.value = 'releases'
   }
 })
