@@ -85,13 +85,17 @@ Use the existing fields.
 - `npm run validate:openapi`: passed with pre-existing warnings.
 - `npm run build`: passed.
 - `git diff --check`: passed.
-- Full `npm test` was not used.
+- The full local `npm test` was not used.
   It has 71 pre-existing localStorage failures in 5 unrelated client files.
+- CI passed 7,024 unit tests with 11 skipped. Test & Build, module integration,
+  smoke tests, and Smoke Test Status all passed for source `21865eac`.
 
 ## 5. Deployment
 
 ### Cluster
 
+- Source commit: `21865eac27112877cc5a9316b94d56af0eeffbeb`
+- Core tag: `v2.0.99`
 - Context: `default/api-workval-aipcc-gpuaas-com:6443/ldap-admin1`
 - Namespace: `workflow-validation-org-pulse`
 - Pod labels: `app=team-tracker,component=backend`
@@ -99,16 +103,16 @@ Use the existing fields.
 ### Backend
 
 - BuildConfig: `org-pulse-backend-builddate-20261111`
-- Build: `org-pulse-backend-builddate-20261111-10`
-- Image digest: `org-pulse-backend@sha256:69d80b77be90a400a1794cb326c7048450be41b69eac2628a9177bd252259c44`
-- Rollback digest: `org-pulse-backend@sha256:73fcebe70903d6a987a7bb0e53337cc40815e8ddd5e7f520d7038ac7c337f9fd`
+- Build: `org-pulse-backend-builddate-20261111-11`
+- Image digest: `org-pulse-backend@sha256:ab7d371d08bf6f6a6fd222fb8f6d73ad09f155750d09aca7fa15afd8be06f2d9`
+- Rollback digest: `org-pulse-backend@sha256:69d80b77be90a400a1794cb326c7048450be41b69eac2628a9177bd252259c44`
 
 ### Frontend
 
 - BuildConfig: `org-pulse-frontend-builddate-20261111`
-- Build: `org-pulse-frontend-builddate-20261111-5`
-- Image digest: `org-pulse-frontend@sha256:38b8ee4901e88ed46278431b19e270b2add7c3ec496dbcd4c988512d447d4501`
-- Rollback digest: `org-pulse-frontend@sha256:0d691019128e1321efd3af42b7e396909ed6389f51cd2dc4027d59ffb32150eb`
+- Build: `org-pulse-frontend-builddate-20261111-6`
+- Image digest: `org-pulse-frontend@sha256:736ef1d41872206e3e05bf4adec69e7e1f71fd3fb7422250513ea10336930803`
+- Rollback digest: `org-pulse-frontend@sha256:38b8ee4901e88ed46278431b19e270b2add7c3ec496dbcd4c988512d447d4501`
 
 ### Routes
 
@@ -159,7 +163,7 @@ the account sidebar. Browser zoom was restored after capture.
 
 ## 8. Deviations
 
-- There is no local container runtime. Builds use BuildConfigs with `CORE_TAG=v2.0.96`.
+- There is no local container runtime. Builds use BuildConfigs with `CORE_TAG=v2.0.99`.
 - The unused environment variable `WORKFLOW_VALIDATION_BUILD_TIME_ENABLED=false` is unchanged.
 - `grep --include=*.env` and `oc -o custom-columns` failed on zsh globbing. This was harmless.
 - The `-l app=backend` selector returns no pods. Use `app=team-tracker,component=backend` instead.
@@ -194,3 +198,19 @@ Lint and the production build passed. Fresh GPUaaS API checks passed for all
 157 run groups across eight pages in all three sort orders. Live browser checks
 confirmed the format, both build sort directions, Next, Previous, reload, and
 Clear filters. The three screenshots and validation JSON now show this revision.
+
+## 11. Current PR Deployment — 2026-11-12
+
+Backend build 11 and frontend build 6 deploy source `21865eac` with core
+`v2.0.99`. Both rollouts completed. The deployed image digests match the builds,
+and the backend source hashes match the PR. Section 5 records rollback targets.
+
+Fresh API checks passed for all 157 run groups across eight pages in each
+sort order. All 11 verified builds match OpenSearch image documents. All 146
+unavailable builds remain last in both build orders. Filters, previous cursors,
+concurrent Refresh requests, cache consistency, and bug ticket enrichment pass.
+Document counts remain unchanged.
+
+Fresh browser checks pass for the single-line format, both build sort directions,
+Next, Previous, reload retaining page two, and Clear filters restoring the default.
+All three screenshots now show frontend build 6. Browser zoom is restored to 100%.

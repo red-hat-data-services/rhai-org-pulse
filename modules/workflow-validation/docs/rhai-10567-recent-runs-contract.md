@@ -267,8 +267,8 @@ the deployed application code and GPUaaS evidence remain applicable.
 
 ## RHOAI build column verification — 2026-11-12
 
-Backend build 10 and frontend build 5 are deployed to GPUaaS. All 157 run groups
-pass live API checks in the default execution order and both build orders.
+Backend build 11 and frontend build 6 are deployed to GPUaaS with core `v2.0.99`.
+All 157 run groups pass live API checks in the default execution order and both build orders.
 All 11 verified dates match the 18 image documents. Missing builds sort last.
 Next, Previous, reload, and Clear filters pass in the dashboard.
 Verified builds match the single-line execution format, for example
