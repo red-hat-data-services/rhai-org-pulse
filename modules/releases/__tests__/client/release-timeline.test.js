@@ -2433,6 +2433,27 @@ describe('ReleaseTimeline → Execute deep-link', () => {
     expect(wrapper.vm.versionForNode(eaNode)).toBe('3.5.EA1')
   })
 
+  it('versionForNode keeps an unnumbered EA milestone distinct from GA', () => {
+    var releases = [
+      {
+        id: '3.7_ea_rhai', displayName: '3.7 EA', productPagesShortname: null,
+        milestones: { codeFreeze: '2026-12-09' }
+      },
+      makeRelease('rhoai-3.7', { displayName: 'rhoai-3.7', shortname: 'rhoai',
+        codeFreeze: '2026-12-10' })
+    ]
+    var wrapper = mount(ReleaseTimeline, { props: { releases } })
+    var eaNode = nodeWithLabel(wrapper, /^3\.7 EA$/)
+    var gaNode = nodeWithLabel(wrapper, /^3\.7 GA$/)
+    expect(eaNode).toBeTruthy()
+    expect(gaNode).toBeTruthy()
+    expect(wrapper.vm.versionForNode(eaNode)).toBe('3.7.EA')
+    expect(wrapper.vm.versionForNode(gaNode)).toBe('3.7')
+    expect(wrapper.vm.versionForNode({
+      groupLabel: '3.7 EA', releases: [{ id: 'rhoai-3.7', displayName: '3.7 EA' }]
+    })).toBe('3.7.EA')
+  })
+
   it('versionForNode maps a GA node to "<major>.<minor>" (GA stripped)', () => {
     var releases = [
       makeRelease('rhoai-3.6', { displayName: 'rhoai-3.6', shortname: 'rhoai', ga: '2026-11-19' })

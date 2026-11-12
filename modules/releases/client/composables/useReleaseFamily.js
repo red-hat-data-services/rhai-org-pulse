@@ -3,44 +3,45 @@ import { countUniqueCategoryTotals } from './mergeReleaseDetails'
 
 // ═══ RELEASE NAME PARSING ═══
 
-/** Legacy: rhoai-3.6.EA1, RHELAI-3.2 */
-var LEGACY_PATTERN = /^(rhoai|rhelai|rhaii|rhai)[- _](\d+)\.(\d+)(?:\.z)?(?:\.EA(\d+))?$/i
+/** Legacy: rhoai-3.6.EA1, rhoai-3.7.EA, RHELAI-3.2 */
+var LEGACY_PATTERN = /^(rhoai|rhelai|rhaii|rhai)[- _](\d+)\.(\d+)(?:\.z)?(?:\.(EA\d*))?$/i
 
-/** Product-family Jira names: "3.6 EA1 RHOAI RELEASE", "3.5 GA RHELAI RELEASE" */
-var PRODUCT_FAMILY_PATTERN = /^(\d+)\.(\d+)\s+(EA(\d+)|GA)\s+(RHOAI|RHAII|RHELAI|RHAI)\s+RELEASE$/i
+/** Product-family Jira names: "3.6 EA1 RHOAI RELEASE", "3.7 EA RHOAI RELEASE", "3.5 GA RHELAI RELEASE" */
+var PRODUCT_FAMILY_PATTERN = /^(\d+)\.(\d+)\s+(EA(\d*)|GA)\s+(RHOAI|RHAII|RHELAI|RHAI)\s+RELEASE$/i
 
 var PRODUCT_ORDER = { rhoai: 0, rhaii: 1, rhelai: 2, rhai: 3 }
 var PRODUCT_LABELS = { rhoai: 'RHOAI', rhelai: 'RHELAI', rhaii: 'RHAII', rhai: 'RHAI' }
 
 /**
  * Parse a release name into structured parts.
- * Supports legacy (rhoai-3.6.EA1) and product-family (3.6 EA1 RHOAI RELEASE) names.
+ * Supports legacy (rhoai-3.6.EA1) and product-family (3.6 EA1 RHOAI RELEASE) names,
+ * including unnumbered EA milestones.
  */
 function parseReleaseName(name) {
   if (!name) return null
 
   var pf = PRODUCT_FAMILY_PATTERN.exec(name)
   if (pf) {
-    var pfEa = pf[3] && String(pf[3]).toUpperCase() !== 'GA' ? parseInt(pf[4], 10) : 0
+    var pfMilestone = pf[3].toUpperCase()
     return {
       product: pf[5].toLowerCase(),
       major: parseInt(pf[1], 10),
       minor: parseInt(pf[2], 10),
-      milestone: pfEa ? 'EA' + pfEa : 'GA',
-      milestoneOrder: pfEa || 99,
+      milestone: pfMilestone,
+      milestoneOrder: pfMilestone === 'GA' ? 99 : parseInt(pf[4] || '0', 10),
       raw: name,
     }
   }
 
   var m = LEGACY_PATTERN.exec(name)
   if (!m) return null
-  var eaNum = m[4] ? parseInt(m[4], 10) : 0
+  var eaTag = m[4] ? m[4].toUpperCase() : null
   return {
     product: m[1].toLowerCase(),
     major: parseInt(m[2], 10),
     minor: parseInt(m[3], 10),
-    milestone: eaNum ? 'EA' + eaNum : 'GA',
-    milestoneOrder: eaNum || 99,
+    milestone: eaTag || 'GA',
+    milestoneOrder: eaTag ? parseInt(eaTag.slice(2) || '0', 10) : 99,
     raw: name,
   }
 }
@@ -58,7 +59,7 @@ function compareReleases(a, b) {
 
   if (pa.major !== pb.major) return pb.major - pa.major
   if (pa.minor !== pb.minor) return pb.minor - pa.minor
-  // EA1 before EA2 before GA
+  // Unnumbered EA before EA1, EA2, then GA.
   if (pa.milestoneOrder !== pb.milestoneOrder) return pa.milestoneOrder - pb.milestoneOrder
   var oa = PRODUCT_ORDER[pa.product] != null ? PRODUCT_ORDER[pa.product] : 99
   var ob = PRODUCT_ORDER[pb.product] != null ? PRODUCT_ORDER[pb.product] : 99
@@ -117,7 +118,7 @@ function cycleLabel(cycleKey) {
 }
 
 function milestoneGroupLabel(groupKey) {
-  var m = /^(\d+\.\d+)-(EA\d+|GA)$/.exec(groupKey)
+  var m = /^(\d+\.\d+)-(EA\d*|GA)$/.exec(groupKey)
   if (m) return m[1] + ' ' + m[2] + ' Release'
   return groupKey
 }

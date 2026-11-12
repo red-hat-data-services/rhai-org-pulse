@@ -228,6 +228,36 @@ test.describe('Releases Views @releases', () => {
     await testView(page, 'schedule', 'Schedule');
   });
 
+  test('keeps an unnumbered EA release distinct from GA in the Schedule', async ({ page }) => {
+    await page.route('**/api/modules/releases/registry', route => route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({ releases: [
+        {
+          id: '3.7_ea_rhai', displayName: '3.7 EA', state: 'active',
+          productPagesShortname: null,
+          fixVersions: ['3.7 EA RHOAI RELEASE', '3.7 EA RHAII RELEASE', '3.7 EA RHELAI RELEASE'],
+          milestones: { codeFreeze: '2090-12-09', ga: '2091-01-09' }
+        },
+        {
+          id: 'rhoai-3.7', displayName: 'rhoai-3.7', state: 'active',
+          productPagesShortname: 'rhoai',
+          milestones: { codeFreeze: '2090-12-10', ga: '2091-02-09' }
+        }
+      ] })
+    }));
+
+    await page.goto('/#/releases/schedule');
+    const ea = page.getByRole('button', { name: '3.7 EA', exact: true });
+    await expect(ea).toBeVisible();
+    await expect(page.getByRole('button', { name: '3.7 GA', exact: true })).toBeVisible();
+
+    await ea.click();
+    await expect(page.getByRole('cell', { name: '3.7 EA', exact: true })).toBeVisible();
+    await expect(page.getByRole('cell', { name: 'rhoai-3.7', exact: true })).toHaveCount(0);
+    await expect(page.getByTestId('milestone-countdown-card').first()).toContainText('3.7 EA');
+  });
+
   test('should open AIPCC Milestones from the Schedule pill', async ({ page }) => {
     await page.goto('/#/releases/schedule');
     await page.waitForLoadState('networkidle');

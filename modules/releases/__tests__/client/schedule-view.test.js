@@ -394,6 +394,34 @@ describe('ScheduleView', () => {
     expect(hideReleased.element.checked).toBe(true)
   })
 
+  it('shows and filters an unnumbered EA independently from GA', async () => {
+    apiRequest.mockResolvedValue({
+      releases: [
+        {
+          id: '3.7_ea_rhai', displayName: '3.7 EA', state: 'active',
+          productPagesShortname: null,
+          milestones: { codeFreeze: '2026-12-09', ga: '2027-02-17' }
+        },
+        makeRelease('rhoai-3.7', {
+          displayName: 'rhoai-3.7', codeFreeze: '2027-01-29', ga: '2027-02-17'
+        })
+      ]
+    })
+    const wrapper = mount(ScheduleView, { global: { stubs: { ReleaseTimeline: ReleaseTimelineStub } } })
+    await flushPromises()
+
+    const ea = wrapper.findAll('button').find(b => b.text().trim() === '3.7 EA')
+    const ga = wrapper.findAll('button').find(b => b.text().trim() === '3.7 GA')
+    expect(ea).toBeTruthy()
+    expect(ga).toBeTruthy()
+
+    await ea.trigger('click')
+    await flushPromises()
+    expect(getReleaseRows(wrapper)).toHaveLength(1)
+    expect(getReleaseRows(wrapper)[0].text()).toContain('3.7 EA')
+    expect(wrapper.findComponent(ReleaseTimelineStub).props('releases')).toHaveLength(1)
+  })
+
   it('shows an N/A tile when a release has no dated milestones', async () => {
     apiRequest.mockResolvedValue({
       releases: [

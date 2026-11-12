@@ -67,7 +67,7 @@ function normalizeVersionName(name) {
 
   // {ver} {phase} {product}  — e.g. "3 5 ea1 rhoai"
   var m = new RegExp(
-    '^(\\d+(?:\\s+\\d+)*)\\s+(ga|ea\\d+)\\s+(' + PRODUCTS_RE + ')$'
+    '^(\\d+(?:\\s+\\d+)*)\\s+(ga|ea\\d*)\\s+(' + PRODUCTS_RE + ')$'
   ).exec(s);
   if (m) {
     return m[2] === 'ga'
@@ -117,7 +117,7 @@ function parseVersionComponents(name) {
   if (!s) return null;
 
   var m = new RegExp(
-    '^(' + PRODUCTS_RE + ')\\s+(\\d+(?:\\s+\\d+)*)(?:\\s+(ea\\d+))?$'
+    '^(' + PRODUCTS_RE + ')\\s+(\\d+(?:\\s+\\d+)*)(?:\\s+(ea\\d*))?$'
   ).exec(s);
   if (m) {
     return {

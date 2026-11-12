@@ -515,6 +515,10 @@ function onCardHover(e) {
 // Server pill format = version + (phase ? '.' + phase : ''); GA is stripped.
 function versionForNode(nd) {
   if (!nd) return null
+  var explicitLabel = /^(\d+\.\d+)\s+(EA\d*|GA)$/i.exec(nd.groupLabel || '')
+  if (explicitLabel) {
+    return explicitLabel[1] + (explicitLabel[2].toUpperCase() === 'GA' ? '' : '.' + explicitLabel[2].toUpperCase())
+  }
   var releases = nd.releases || []
   for (var i = 0; i < releases.length; i++) {
     var parsed = parseReleaseName(releases[i].displayName) || parseReleaseName(releases[i].id)
@@ -526,7 +530,7 @@ function versionForNode(nd) {
   // Some registry entries use product-family names that do not match the
   // source release parser. The timeline has already normalized those entries
   // into a stable cycle/milestone label, which is sufficient for Execute.
-  var labelMatch = /(\d+\.\d+)(?:[.\s-]+(EA\d+|GA))?/i.exec(nd.groupLabel || '')
+  var labelMatch = /(\d+\.\d+)(?:[.\s-]+(EA\d*|GA))?/i.exec(nd.groupLabel || '')
   if (labelMatch) {
     return labelMatch[1] + (labelMatch[2] && labelMatch[2] !== 'GA' ? '.' + labelMatch[2] : '')
   }

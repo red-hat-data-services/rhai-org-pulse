@@ -9,16 +9,26 @@ var MILESTONE_KEYS = [
 ]
 
 export function groupKey(release) {
-  var names = [release.displayName, release.id]
-  for (var i = 0; i < names.length; i++) {
-    if (!names[i]) continue
-    var parsed = parseReleaseName(names[i])
-    if (parsed) return parsed.product + '-' + parsed.major + '.' + parsed.minor + '-' + parsed.milestone
+  var parsedName = parseReleaseName(release.displayName)
+  if (parsedName) return parsedName.product + '-' + parsedName.major + '.' + parsedName.minor + '-' + parsedName.milestone
+
+  // Some registry display names omit the product and EA number ("3.7 EA").
+  // Honor that explicit EA label before a generic GA-looking registry id.
+  var displayEa = /(\d+\.\d+)[.\s-]+(EA\d*)\b/i.exec(release.displayName || '')
+  if (displayEa) {
+    var displayProduct = getProduct(release)
+    return (displayProduct ? displayProduct + '-' : '') + displayEa[1] + '-' + displayEa[2].toUpperCase()
   }
+
+  var parsedId = parseReleaseName(release.id)
+  if (parsedId) return parsedId.product + '-' + parsedId.major + '.' + parsedId.minor + '-' + parsedId.milestone
+
   var cycle = extractCycle(release.id) || extractCycle(release.displayName)
   if (cycle) {
-    var eaMatch = (release.id || '').match(/ea(\d+)/i)
-    var milestone = eaMatch ? 'EA' + eaMatch[1] : 'GA'
+    var eaMatch = [release.displayName, release.id]
+      .map(function (name) { return /\d+\.\d+[.\s-]+(EA\d*)\b/i.exec(name || '') })
+      .find(Boolean)
+    var milestone = eaMatch ? eaMatch[1].toUpperCase() : 'GA'
     var product = getProduct(release)
     return (product ? product + '-' : '') + cycle + '-' + milestone
   }
@@ -31,7 +41,7 @@ export function cycleFromGroupLabel(label) {
 }
 
 function groupLabelFromKey(key) {
-  var m = /^(?:[a-z]+-)?(\d+\.\d+)-(EA\d+|GA)$/i.exec(key)
+  var m = /^(?:[a-z]+-)?(\d+\.\d+)-(EA\d*|GA)$/i.exec(key)
   if (m) return m[1] + ' ' + m[2]
   return key
 }
