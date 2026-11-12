@@ -19,8 +19,9 @@ build date shows an unavailable label. The time is the latest existing execution
 `timestamp` in the group. It is not a RHOAI build date.
 
 RHOAI build (UTC) is the verified operator image build time from the
-`workflow-execution-images` index. The row shows the build date on the first line
-and the time plus `UTC` on the second line. It joins on `invocation_id` equal to
+`workflow-execution-images` index. Build and execution timestamps use the same
+single-line UTC format, for example `5 Nov 2026, 05:14:40`. Keep `(UTC)` in the
+column heading without repeating it in each row. It joins on `invocation_id` equal to
 the run `invocationId`. Show `unavailable` when no document exists, the status is
 not `verified`, or the date is invalid. Missing build values sort last in both
 directions. Build date sorting uses the time as a tie breaker. Dates must be
@@ -264,12 +265,14 @@ are retained in that suite. The Ownership Gate still requires approval. The PR
 is ready for review. This fix changes test discovery and documentation only;
 the deployed application code and GPUaaS evidence remain applicable.
 
-## RHOAI build column verification — 2026-11-11
+## RHOAI build column verification — 2026-11-12
 
-Backend build 10 and frontend build 4 are deployed to GPUaaS. All 157 run groups
+Backend build 10 and frontend build 5 are deployed to GPUaaS. All 157 run groups
 pass live API checks in the default execution order and both build orders.
 All 11 verified dates match the 18 image documents. Missing builds sort last.
 Next, Previous, reload, and Clear filters pass in the dashboard.
+Verified builds match the single-line execution format, for example
+`5 Nov 2026, 05:14:40`. UTC appears in the column headings only.
 
 [Validation evidence](rhai-10567-build-validation.json).
 [Deployment record](rhai-10567-dev-deployment.md).

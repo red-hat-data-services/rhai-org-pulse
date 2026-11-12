@@ -2,7 +2,7 @@
 
 **Status:** Deployed and verified (development)
 **Author:** Codex
-**Date:** 2026-11-11
+**Date:** 2026-11-12
 **Module:** workflow-validation
 **Ticket:** RHAI-10567
 **Branch:** `feat/rhai-10898-rhoai-build-column`
@@ -13,7 +13,8 @@
 
 Add one sortable column, `RHOAI build (UTC)`, to the Recent Runs table.
 Place it directly after the `Version` column.
-Show the build date on line 1 and the build time plus `UTC` on line 2.
+Show the build date and time on one line, matching `Executed at (UTC)`.
+Keep `(UTC)` in the column heading without repeating it in each row.
 Show `unavailable` when the build data is missing or not verified.
 Sort by build date, then by time. Put missing values last.
 Do not change the default order: `Executed at (UTC)` descending.
@@ -64,7 +65,7 @@ Use the existing fields.
 ### Client
 
 - `client/views/RecentRunsView.vue`: add the new column after `Version`.
-  Use two lines: en-GB date, then time and `UTC`.
+  Use the same single-line UTC formatter as `Executed at (UTC)`.
   Show lowercase `unavailable` when data is missing.
   Add a sort button after `version`. First direction is `desc`.
   Change the empty-row colspan from 4 to 5.
@@ -105,9 +106,9 @@ Use the existing fields.
 ### Frontend
 
 - BuildConfig: `org-pulse-frontend-builddate-20261111`
-- Build: `org-pulse-frontend-builddate-20261111-4`
-- Image digest: `org-pulse-frontend@sha256:0d691019128e1321efd3af42b7e396909ed6389f51cd2dc4027d59ffb32150eb`
-- Rollback digest: `org-pulse-frontend@sha256:9d240fdb6113f7a237c30d07409131e2d55bdc8717344c6f16d6ee2f5ecb2665`
+- Build: `org-pulse-frontend-builddate-20261111-5`
+- Image digest: `org-pulse-frontend@sha256:38b8ee4901e88ed46278431b19e270b2add7c3ec496dbcd4c988512d447d4501`
+- Rollback digest: `org-pulse-frontend@sha256:0d691019128e1321efd3af42b7e396909ed6389f51cd2dc4027d59ffb32150eb`
 
 ### Routes
 
@@ -133,6 +134,8 @@ The previous join returned only eight verified rows; grouping restores three dat
   and 142 rows have no eligible tickets.
 - Browser checks pass for both build directions, Next, Previous, reload retaining
   the sorted page, and Clear filters restoring the default order.
+- Verified builds use the same single-line UTC format as execution times,
+  for example `5 Nov 2026, 05:14:40`. UTC appears in the column headings only.
 - Document counts stay unchanged: 726 executions, 4,171 tasks, and 184 root causes.
 
 [Machine-readable evidence](rhai-10567-build-validation.json).
@@ -174,8 +177,20 @@ Concurrent requests retain the existing scan-order and connection guards.
 Regression tests cover 10,001 and 65,537 invocations, duplicate image groups,
 document ID collisions, invalid dates, timezone offsets, cache expiry and Refresh,
 failed image lookups, disconnected clients, and competing image responses.
-Browser tests verify UTC rendering and both build sort directions across all
+Browser tests verify single-line UTC rendering and both build sort directions across all
 47 synthetic rows, including unavailable values and reload.
 
 The user approved both development deployments. Section 5 records the deployed
 images and their immediate rollback targets. Section 6 records the live checks.
+
+## 10. Build Display Update — 2026-11-12
+
+Frontend build 5 uses the execution-time formatter for verified build values.
+It removes the line break and repeated UTC label. The heading keeps `(UTC)`.
+Missing builds still show lowercase `unavailable`.
+
+All 130 focused unit tests and 39 module browser tests passed again.
+Lint and the production build passed. Fresh GPUaaS API checks passed for all
+157 run groups across eight pages in all three sort orders. Live browser checks
+confirmed the format, both build sort directions, Next, Previous, reload, and
+Clear filters. The three screenshots and validation JSON now show this revision.

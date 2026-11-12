@@ -11,11 +11,11 @@
     "deployedIndexSourceSha256": "7a2973a86d2958eebab5d8350ed1e8124ba7cd6a17fcc35908933e7ec0c0ffe0"
   },
   "frontend": {
-    "build": "org-pulse-frontend-builddate-20261111-4",
-    "image": "org-pulse-frontend@sha256:0d691019128e1321efd3af42b7e396909ed6389f51cd2dc4027d59ffb32150eb",
-    "rollback": "org-pulse-frontend@sha256:9d240fdb6113f7a237c30d07409131e2d55bdc8717344c6f16d6ee2f5ecb2665",
+    "build": "org-pulse-frontend-builddate-20261111-5",
+    "image": "org-pulse-frontend@sha256:38b8ee4901e88ed46278431b19e270b2add7c3ec496dbcd4c988512d447d4501",
+    "rollback": "org-pulse-frontend@sha256:0d691019128e1321efd3af42b7e396909ed6389f51cd2dc4027d59ffb32150eb",
     "rollout": "complete",
-    "buildViewSourceSha256": "50ec8a72a2e6a00ff85b45f744ec27633b5715105d4c77523367c4e098934ac4"
+    "buildViewSourceSha256": "e48ee7bf4aea39748e95494c112076c414792c9c1d019437efd669fba0889241"
   },
   "localChecks": {
     "focusedUnitTests": {
@@ -31,7 +31,7 @@
     "fullSuite": "Not run: user reports 71 pre-existing localStorage failures in five unrelated client files."
   },
   "liveApi": {
-    "checkedAt": "2026-11-11T19:41:58.656Z",
+    "checkedAt": "2026-11-12T07:02:37.258Z",
     "status": "passed",
     "countsBefore": {
       "executions": 726,
@@ -83,9 +83,17 @@
     ]
   },
   "liveBrowser": {
+    "checkedAt": "2026-11-12T07:06:47.376Z",
     "status": "passed",
+    "visibleRowsChecked": 20,
+    "verifiedBuildRowsChecked": 11,
+    "examples": [
+      "5 Nov 2026, 05:14:40",
+      "3 Jul 2026, 09:28:12"
+    ],
     "checks": [
-      "two-line UTC date/time",
+      "single-line UTC date/time matches Executed at",
+      "UTC appears in column headings without repeating in build cells",
       "lowercase unavailable",
       "column immediately after Version",
       "build descending",
@@ -100,17 +108,17 @@
     {
       "mode": "default",
       "path": "images/rhai-10567-build-default-gpuaas.jpg",
-      "sha256": "c9a07c2d98ed4372da8ae556186a5f7839380441aa83f47f1a498d912d2dde90"
+      "sha256": "38b88021f50c99d8a3733d8c001bfbd536981d700d11e95a913b11aec06970dc"
     },
     {
       "mode": "descending",
       "path": "images/rhai-10567-build-descending-gpuaas.jpg",
-      "sha256": "321c02018f934220a9f77234d0d2c1bf389f11a459d27f762d67833ee6d03e60"
+      "sha256": "90c4c7099ce714f2427beec4c3e87f0905b4a70621e65c81e1caac9326ac32e3"
     },
     {
       "mode": "ascending",
       "path": "images/rhai-10567-build-ascending-gpuaas.jpg",
-      "sha256": "0c0bad789d961a0f0ef246731d2bbd07960f8c9c3d86decdefee61da2d75f6ba"
+      "sha256": "dbd87124317e72eda760e764ee8e075dcf450e5dbba27a67f6c425936d3458e4"
     }
   ]
 }

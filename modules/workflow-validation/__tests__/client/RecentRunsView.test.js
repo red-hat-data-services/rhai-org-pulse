@@ -44,14 +44,15 @@ describe('Recent Runs', () => {
     expect(wrapper.text()).not.toMatch(/Build date|Jenkins|Image release/)
   })
 
-  it('renders the verified build date and time on separate lines in UTC', async () => {
-    apiRequest.mockResolvedValueOnce(page([{ ...fixture.rows[0], buildDate: '2026-11-06T01:14:40+02:00' }]))
+  it('matches execution date formatting on one line without repeating UTC in build cells', async () => {
+    apiRequest.mockResolvedValueOnce(page([{ ...fixture.rows[0], buildDate: '2026-11-06T01:14:40+02:00', timestamp: '2026-11-05T23:14:40Z' }]))
     wrapper = mount(RecentRunsView)
     await flushPromises()
     const cell = wrapper.get('tbody tr').findAll('td')[2]
-    expect(cell.get('time').text()).toBe('05 Nov 2026')
-    expect(cell.find('br').exists()).toBe(true)
-    expect(cell.get('span').text()).toBe('23:14:40 UTC')
+    expect(cell.get('time').text()).toBe('5 Nov 2026, 23:14:40')
+    expect(cell.text()).toBe(wrapper.get('tbody tr').findAll('td')[3].text())
+    expect(cell.find('br').exists()).toBe(false)
+    expect(cell.text()).not.toContain('UTC')
     expect(cell.get('time').attributes('datetime')).toBe('2026-11-06T01:14:40+02:00')
   })
 

@@ -568,9 +568,9 @@ test.describe('Workflow Validation module @workflow-validation', () => {
     const table = page.getByRole('table'), pages = page.getByRole('navigation', { name: 'Recent run pages' })
     await expect(table.getByRole('columnheader')).toHaveText(['Test suite↕', 'Version↕', 'RHOAI build (UTC)↕', 'Executed at (UTC)↓', 'Issues found'])
     const cell = table.locator('tbody tr').first().locator('td').nth(2)
-    await expect(cell.locator('time')).toHaveText('02 Nov 2026')
-    await expect(cell.locator('br')).toHaveCount(1)
-    await expect(cell.locator('span')).toHaveText('22:00:00 UTC')
+    await expect(cell.locator('time')).toHaveText('2 Nov 2026, 22:00:00')
+    await expect(cell.locator('br')).toHaveCount(0)
+    await expect(cell).not.toContainText('UTC')
     for (const sortDir of ['desc', 'asc']) {
       await table.getByRole('button', { name: 'Sort RHOAI build time', exact: true }).click()
       await expect(table.getByRole('columnheader', { name: 'RHOAI build (UTC)', exact: true }))

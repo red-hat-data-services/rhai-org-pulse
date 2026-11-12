@@ -154,6 +154,8 @@ contract, representative tests, and affected Vue transformations together.
 Dashboard opens Recent Runs with the latest 20 suite/invocation groups and
 pagination across all available runs. Each row shows the suite, version, RHOAI
 build date and time (`RHOAI build (UTC)`), and execution time (`Executed at (UTC)`). Select a row or press Enter to open its exact run.
+Build and execution timestamps use the same single-line date/time format.
+The column headings identify UTC; individual cells do not repeat the label.
 An explanation below the Recent Runs heading and above the filters describes
 each row and the separate Jira issues link for associated bugs and RFEs.
 

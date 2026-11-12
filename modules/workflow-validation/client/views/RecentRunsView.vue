@@ -77,7 +77,7 @@
               </td>
               <td class="break-words px-5 py-4 font-mono text-xs text-gray-600 dark:text-gray-300">{{ run.rhoaiVersion ? versionLabel(run.rhoaiVersion) : 'Version unavailable' }}</td>
               <td class="whitespace-nowrap px-5 py-4 text-gray-600 dark:text-gray-300">
-                <template v-if="run.buildDateStatus === 'verified' && validTime(run.buildDate)"><time :datetime="run.buildDate">{{ buildDate(run.buildDate) }}</time><br><span>{{ buildTime(run.buildDate) }}</span></template>
+                <time v-if="run.buildDateStatus === 'verified' && validTime(run.buildDate)" :datetime="run.buildDate">{{ recordedTime(run.buildDate) }}</time>
                 <span v-else title="No verified RHOAI operator image build time is recorded for this run.">unavailable</span>
               </td>
               <td class="whitespace-nowrap px-5 py-4 text-gray-600 dark:text-gray-300"><time v-if="validTime(run.timestamp)" :datetime="run.timestamp">{{ recordedTime(run.timestamp) }}</time><span v-else>Unavailable</span></td>
@@ -152,11 +152,7 @@ const hasFilters = computed(() => applied.value.versions.length || ['suite', 'ru
 const inputClass = 'mt-1 block w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm dark:border-gray-600 dark:bg-gray-900'
 const buttonClass = 'rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 disabled:opacity-50 dark:border-gray-600 dark:text-gray-200 dark:hover:bg-gray-700'
 const formatter = new Intl.DateTimeFormat('en-GB', { dateStyle: 'medium', timeStyle: 'medium', timeZone: 'UTC' })
-const dateFormatter = new Intl.DateTimeFormat('en-GB', { day: '2-digit', month: 'short', year: 'numeric', timeZone: 'UTC' })
-const timeFormatter = new Intl.DateTimeFormat('en-GB', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false, timeZone: 'UTC' })
 const validTime = value => typeof value === 'string' && Number.isFinite(Date.parse(value))
-const buildDate = value => dateFormatter.format(new Date(value))
-const buildTime = value => `${timeFormatter.format(new Date(value))} UTC`
 const recordedTime = value => formatter.format(new Date(value))
 const canOpen = run => Boolean(run.suite && run.invocationId)
 let active = true, sequence = 0, controller, searchTimer
