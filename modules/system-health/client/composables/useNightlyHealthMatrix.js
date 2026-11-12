@@ -42,6 +42,16 @@ export function jenkinsJobPathFromUrl(url) {
 }
 
 /**
+ * Stream of a nightly day; days without `stream_key` (legacy single-job snapshots) are `default`.
+ *
+ * @param {object} day
+ * @returns {string}
+ */
+function nightlyDayStreamKey(day) {
+  return typeof day?.stream_key === 'string' && day.stream_key.length > 0 ? day.stream_key : 'default'
+}
+
+/**
  * @param {object|null|undefined} payload
  * @returns {{ stream_key: string, label: string, jenkins_job: string|null }[]}
  */
@@ -56,9 +66,7 @@ export function listNightlyJenkinsJobOptions(payload) {
       metaByKey.set(job.stream_key, job)
     }
   }
-  const dayStreamKey = (day) =>
-    (typeof day.stream_key === 'string' && day.stream_key.length > 0 ? day.stream_key : 'default')
-  const keys = new Set(days.map((day) => dayStreamKey(day)))
+  const keys = new Set(days.map((day) => nightlyDayStreamKey(day)))
   const orderedKeys = []
   for (const job of metaJobs) {
     const sk = job?.stream_key
@@ -73,7 +81,7 @@ export function listNightlyJenkinsJobOptions(payload) {
     const meta = metaByKey.get(stream_key)
     let inferredFromRuns = null
     for (const day of days) {
-      const dayKey = dayStreamKey(day)
+      const dayKey = nightlyDayStreamKey(day)
       if (dayKey !== stream_key) continue
       for (const run of day.runs || []) {
         const fromUrl = jenkinsJobPathFromUrl(run?.jenkins_url)
@@ -116,6 +124,34 @@ export function resolveNightlyJenkinsJobOption(payload, streamKey) {
   if (options.length === 0) return null
   const key = streamKey ?? options[0]?.stream_key
   return options.find((o) => o.stream_key === key) || options[0]
+}
+
+/**
+ * `stream_key` of the RHOAI nightly BVT (`devops/rhoai-nightly-bvt`), shown as "RHOAI Deployment" on the
+ * RHOAI Releases tab instead of the Promotion Gate tab (RHAI-16425).
+ */
+export const RHOAI_NIGHTLY_BVT_STREAM_KEY = 'rhoai-nightly-bvt'
+
+/**
+ * Copy of a nightly_health payload restricted to some `stream_key`s (days and `jenkins_jobs[]`).
+ *
+ * @param {object|null|undefined} payload
+ * @param {{ include?: string[], exclude?: string[] }} filter `include` keeps only these keys; `exclude` drops them
+ * @returns {object|null} `null` when no day is left
+ */
+export function filterNightlyHealthByStream(payload, { include = null, exclude = null } = {}) {
+  if (!payload || typeof payload !== 'object' || !Array.isArray(payload.days)) return null
+  const keep = (key) => {
+    if (Array.isArray(include) && !include.includes(key)) return false
+    if (Array.isArray(exclude) && exclude.includes(key)) return false
+    return true
+  }
+  const days = payload.days.filter((day) => keep(nightlyDayStreamKey(day)))
+  if (days.length === 0) return null
+  const jobs = Array.isArray(payload.jenkins_jobs)
+    ? payload.jenkins_jobs.filter((job) => job && keep(job.stream_key))
+    : payload.jenkins_jobs
+  return { ...payload, days, ...(jobs !== undefined ? { jenkins_jobs: jobs } : {}) }
 }
 
 /** Hash query key for nightly test-results source deep links (`#/system-health/test-execution?source=…`). */
@@ -1524,13 +1560,7 @@ export function useNightlyHealthMatrix(payloadRef, heatmapComponentsRef = null, 
     if (options.length <= 1) return days
     const key = selectedStreamKey.value
     if (!key) return days
-    return days.filter((day) => {
-      const dayKey =
-        typeof day.stream_key === 'string' && day.stream_key.length > 0
-          ? day.stream_key
-          : 'default'
-      return dayKey === key
-    })
+    return days.filter((day) => nightlyDayStreamKey(day) === key)
   })
 
   const totalDays = computed(() => sortedDays.value.length)
