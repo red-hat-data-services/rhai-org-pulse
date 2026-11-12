@@ -4412,7 +4412,7 @@ function renderExecView(rows){
 // the table — Nov 10 request) so it's still available for offline review/sharing.
 function doExport(){
   const rows=window._lastFilteredRows||allData;
-  function csvQ(v){const s=v==null?'':String(v);return '"'+s.replace(/"/g,'""')+'"';}
+  function csvQ(v){let s=v==null?'':String(v);if(/^[=+\-@\t\r]/.test(s))s="'"+s;return '"'+s.replace(/"/g,'""')+'"';}
   const hdr=['Rank','Key','Title','FPDoR','Weighted FPDoR','Readiness Issues','Risk','Target Versions','Fix Version','Components','Team','Priority','Confidence','Placement','Confidence%','PM','Outcome'];
   const lines=[hdr.join(','),...rows.map(r=>{
     const failedSet=new Set(r._failedItems);
@@ -4425,8 +4425,10 @@ function doExport(){
       csvQ(r['PM']),csvQ(r['Outcome'])
     ].join(',');
   })];
-  const a=Object.assign(document.createElement('a'),{href:URL.createObjectURL(new Blob([lines.join('\n')],{type:'text/csv'})),download:'feature-scheduling-export.csv'});
+  const url=URL.createObjectURL(new Blob([lines.join('\n')],{type:'text/csv;charset=utf-8'}));
+  const a=Object.assign(document.createElement('a'),{href:url,download:'feature-scheduling-export.csv'});
   a.click();
+  setTimeout(()=>URL.revokeObjectURL(url),0);
 }
 
 function toggleHamburger(e){
