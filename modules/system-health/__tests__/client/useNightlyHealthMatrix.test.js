@@ -593,7 +593,7 @@ describe('useNightlyHealthMatrix helpers', () => {
     expect(links[0].label).toBe('S3')
   })
 
-  it('drops Image org_pulse_link by digest when only operator_image_ref is set', () => {
+  it('drops Image org_pulse_link by digest when operator_image_ref resolves to ODS URL', () => {
     const digest =
       'sha256:8665a96e7b6aba002a922cec435995ffe15355996a255b8b1d3be2e16b1edaf8'
     const links = runOrgPulsePanelLinks({
@@ -610,6 +610,19 @@ describe('useNightlyHealthMatrix helpers', () => {
     expect(runPromotionGateQuayDigestKeys({
       promotion_gate: { operator_image_ref: `quay.io/x@${digest}` }
     }).has(digest.toLowerCase())).toBe(true)
+  })
+
+  it('keeps Image org_pulse_link when operator_image_ref digest is not shown as ODS URL', () => {
+    const digest =
+      'sha256:8665a96e7b6aba002a922cec435995ffe15355996a255b8b1d3be2e16b1edaf8'
+    const imageHref = `https://registry.example.invalid/rhoai/bundle@${digest}`
+    const links = runOrgPulsePanelLinks({
+      promotion_gate: { operator_image_ref: `registry.example.invalid/rhoai/bundle@${digest}` },
+      org_pulse_links: [{ label: 'Image', href: imageHref }]
+    })
+    expect(runOdsBuildUrl({ promotion_gate: { operator_image_ref: `registry.example.invalid/rhoai/bundle@${digest}` } })).toBeNull()
+    expect(links).toHaveLength(1)
+    expect(links[0].href).toBe(imageHref)
   })
 
   it('resolves ods URL from operator_image_ref when ods_build_url is absent', () => {
@@ -769,6 +782,23 @@ describe('useNightlyHealthMatrix helpers', () => {
     expect(formatNightlyStatusLabel('passed')).toBe('Passed')
     expect(formatNightlyStatusLabel('not ready')).toBe('Not Ready')
     expect(titleCaseLabel('cluster health')).toBe('Cluster Health')
+    expect(titleCaseLabel('ai gateway')).toBe('AI Gateway')
+    expect(titleCaseLabel('ai-evaluations')).toBe('AI-Evaluations')
+  })
+
+  it('preserves producer canonical name casing when jira_component is absent', () => {
+    expect(
+      rowLabel('ai-evaluations', {
+        id: 'ai-evaluations',
+        name: 'AI Evaluations'
+      })
+    ).toBe('AI Evaluations')
+    expect(
+      rowLabel('aigateway', {
+        id: 'aigateway',
+        name: 'AI Gateway'
+      })
+    ).toBe('AI Gateway')
   })
 
   it('prefers jira_component for matrix row label and tooltip keeps id and canonical name', () => {

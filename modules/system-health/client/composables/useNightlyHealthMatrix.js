@@ -867,7 +867,12 @@ export function readinessCellTone(cell) {
 /** Title-case row labels (Cluster Health, AI Gateway, …). */
 export function titleCaseLabel(text) {
   if (!text || typeof text !== 'string') return text || ''
-  return text.replace(/\b\w+/g, (word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+  return text.replace(/\b\w+/g, (word) => {
+    const lower = word.toLowerCase()
+    if (lower === 'ai') return 'AI'
+    if (lower === 'rhoai') return 'RHOAI'
+    return word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()
+  })
 }
 
 /**
@@ -1209,7 +1214,7 @@ export function runOrgPulsePanelLinks(run) {
   const odsHref = runOdsBuildUrl(run)
   const odsKey = odsHref ? normalizeHttpUrlForCompare(odsHref) : ''
   const digestKeys = runPromotionGateQuayDigestKeys(run)
-  const showQuayOnProductLine = Boolean(odsHref) || digestKeys.size > 0
+  const showQuayOnProductLine = Boolean(odsHref)
   const raw = run?.org_pulse_links
   if (!Array.isArray(raw)) return []
   /** @type {{ id: string, label: string, href: string }[]} */
@@ -1224,7 +1229,7 @@ export function runOrgPulsePanelLinks(run) {
     if (!href || artifactHrefs.has(dedupeKey) || seen.has(dedupeKey)) return
     if (odsKey && dedupeKey === odsKey) return
     if (showQuayOnProductLine && /^image$/i.test(label)) return
-    if (digestKeys.size && linkDigest && digestKeys.has(linkDigest)) return
+    if (showQuayOnProductLine && digestKeys.size && linkDigest && digestKeys.has(linkDigest)) return
     seen.add(dedupeKey)
     links.push({ id: `org-pulse-link-${idx}`, label, href })
   })
@@ -1461,7 +1466,7 @@ export function rowLabel(rowId, rowCell, heatmapComponents = null) {
   if (rowId === 'operator-health') return 'RHOAI Deployment'
   if (rowId === 'cluster-health') return 'Cluster Health'
   if (rowCell?.jira_component) return rowCell.jira_component
-  if (rowCell?.name) return titleCaseLabel(rowCell.name)
+  if (rowCell?.name) return String(rowCell.name).trim()
   const fromHeatmap = rowLabelFromHeatmap(rowId, heatmapComponents)
   if (fromHeatmap) return titleCaseLabel(fromHeatmap)
   return titleCaseLabel(rowId)
