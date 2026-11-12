@@ -6,7 +6,7 @@
       <div v-else-if="error" class="error">{{ error }}</div>
 
       <template v-else>
-        <div v-if="!hasHeatmapData && !hasNightlyData" class="no-data">
+        <div v-if="!hasHeatmapData && !hasAnyNightlyData" class="no-data">
           No test execution data has been uploaded yet. The external test-reports
           pipeline pushes data to this dashboard via the bulk API.
         </div>
@@ -79,6 +79,26 @@
                 :components="filteredComponents"
                 :filters="filters"
               />
+
+              <div v-if="rhoaiDeploymentHealth" class="section rhoai-deployment-section">
+                <div class="section-title">
+                  <h3 class="tab-section-subtitle">RHOAI Deployment</h3>
+                </div>
+                <div class="help-box tab-help-box">
+                  <h4>ℹ️ How to read RHOAI Deployment</h4>
+                  <ul>
+                    <li><strong>Each column</strong> — A UTC day; the nightly BVT run that installed that day&apos;s RHOAI nightly build on a fresh cluster. Click a date for the day&apos;s runs, logs and artifacts.</li>
+                    <li><strong>Each row</strong> — Cluster health, RHOAI deployment (operator health) and each component&apos;s DataScienceCluster readiness.</li>
+                    <li><strong>Blocked</strong> — The deployment failed, so the nightly tests for that build did not run.</li>
+                  </ul>
+                </div>
+                <NightlyHealthTable
+                  :payload="rhoaiDeploymentHealth"
+                  :heatmap-components="heatmap"
+                  :tab-panel-active="activeTab === 'releases'"
+                  @component-click="onComponentClick"
+                />
+              </div>
 
               <div
                 v-if="filteredComponents.length === 0"
@@ -166,8 +186,10 @@ import HeatmapTable from '../components/HeatmapTable.vue'
 import TrendChart from '../components/TrendChart.vue'
 import NightlyHealthTable from '../components/NightlyHealthTable.vue'
 import {
+  filterNightlyHealthByStream,
   formatTimestamp,
   REPORTING_STREAM_KEYS,
+  RHOAI_NIGHTLY_BVT_STREAM_KEY,
   TEST_RESULTS_SOURCE_QUERY_PARAM,
   nightlyTestResultsPanelTitle,
   streamKeyFromTestResultsSourceQuery,
@@ -175,7 +197,26 @@ import {
 } from '../composables/useNightlyHealthMatrix'
 import '../styles/test-execution-theme.css'
 
-const { loadData, heatmap, nightlyHealth, loading, error, hasHeatmapData, hasNightlyData } = useTestDashboard()
+const {
+  loadData,
+  heatmap,
+  nightlyHealth: allNightlyHealth,
+  loading,
+  error,
+  hasHeatmapData,
+  hasNightlyData: hasAnyNightlyData
+} = useTestDashboard()
+
+/** Nightly BVT stream: "RHOAI Deployment" matrix on the RHOAI Releases tab. */
+const rhoaiDeploymentHealth = computed(() =>
+  filterNightlyHealthByStream(allNightlyHealth.value, { include: [RHOAI_NIGHTLY_BVT_STREAM_KEY] })
+)
+
+/** Promotion Gate tab: every other stream (the nightly BVT is not a Test Results Source there). */
+const nightlyHealth = computed(() =>
+  filterNightlyHealthByStream(allNightlyHealth.value, { exclude: [RHOAI_NIGHTLY_BVT_STREAM_KEY] })
+)
+const hasNightlyData = computed(() => Boolean(nightlyHealth.value))
 
 const nav = inject('moduleNav', null)
 
