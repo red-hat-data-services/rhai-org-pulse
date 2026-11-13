@@ -74,12 +74,6 @@
                 @filters-change="updateFilters"
               />
 
-              <MetricsCards
-                v-if="filteredComponents.length > 0"
-                :components="filteredComponents"
-                :filters="filters"
-              />
-
               <div
                 v-if="filteredComponents.length === 0"
                 class="no-data heatmap-filter-empty"
@@ -162,7 +156,6 @@
 import { ref, computed, onMounted, inject, watch, nextTick } from 'vue'
 import { useTestDashboard } from '../composables/useTestDashboard'
 import FilterBar from '../components/FilterBar.vue'
-import MetricsCards from '../components/MetricsCards.vue'
 import HeatmapTable from '../components/HeatmapTable.vue'
 import TrendChart from '../components/TrendChart.vue'
 import NightlyHealthTable from '../components/NightlyHealthTable.vue'
@@ -588,13 +581,9 @@ function filterHeatmapComponents(filterOverrides = {}) {
       })
 
       let overallP = 0
-      let overallF = 0
-      let overallS = 0
       let overallT = 0
       Object.values(filteredDays).forEach((day) => {
         overallP += day.passed || 0
-        overallF += day.failed || 0
-        overallS += day.skipped || 0
         overallT += day.total || 0
       })
 
@@ -602,9 +591,7 @@ function filterHeatmapComponents(filterOverrides = {}) {
         component: comp.component,
         overall: {
           total: overallT,
-          passed: overallP,
-          failed: overallF,
-          skipped: overallS
+          passed: overallP
         },
         days: filteredDays
       }
