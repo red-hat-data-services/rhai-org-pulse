@@ -3,8 +3,11 @@ import { ref } from 'vue'
 import { useAutofix } from '../composables/useAutofix.js'
 import AutofixContent from '../components/AutofixContent.vue'
 import AIImpactGuide from '../components/AIImpactGuide.vue'
+import { useUsageTracking } from '../composables/useUsageTracking.js'
 
 const timeWindow = ref('month')
+
+useUsageTracking({ filter: { timeWindow } })
 const { autofixData, loading, error, load } = useAutofix(timeWindow)
 </script>
 
