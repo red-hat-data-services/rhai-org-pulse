@@ -1,5 +1,20 @@
 <script setup>
-import { ref, computed, onMounted, inject } from 'vue'
+import { ref, computed, onMounted, inject, watch } from 'vue'
+import { Line } from 'vue-chartjs'
+import {
+  Chart as ChartJS,
+  CategoryScale,
+  LinearScale,
+  PointElement,
+  LineElement,
+  Title,
+  Tooltip,
+  Legend,
+  Filler
+} from 'chart.js'
+import { useChartTheme } from '../composables/useChartTheme.js'
+
+ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend, Filler)
 import {
   usePromotionGates,
   isPrProblem,
@@ -27,6 +42,10 @@ const {
   gates,
   repoLinks,
   issues,
+  summary: trendSummary,
+  summaryLoading,
+  summaryError,
+  loadSummary,
   releaseBranches,
   loadLatest
 } = usePromotionGates()
@@ -35,7 +54,8 @@ const {
 
 const TABS = [
   { id: 'latest', label: 'Latest job' },
-  { id: 'branches', label: 'Release branches' }
+  { id: 'branches', label: 'Release branches' },
+  { id: 'trends', label: 'Trends' }
 ]
 
 const localTab = ref('latest')
@@ -43,6 +63,7 @@ const localTab = ref('latest')
 const activeTab = computed(() => {
   const fromNav = nav && nav.params && nav.params.value ? nav.params.value.tab : null
   if (fromNav === 'branches') return 'branches'
+  if (fromNav === 'trends') return 'trends'
   if (fromNav === 'latest') return 'latest'
   return localTab.value
 })
@@ -307,6 +328,345 @@ const earlyGateDetail = computed(() => {
     ].filter((link) => link.url)
   }
 })
+
+
+// --- Trends ---
+
+const TREND_PERIODS = [
+  { days: 7, label: '7 days' },
+  { days: 30, label: '30 days' },
+  { days: 90, label: '90 days' }
+]
+
+const trendDays = ref(30)
+
+const trendRuns = computed(() => (trendSummary.value && trendSummary.value.runs) || [])
+const trendComponents = computed(() => (trendSummary.value && trendSummary.value.components) || [])
+const trendTotals = computed(
+  () => (trendSummary.value && trendSummary.value.totals) || { runs: 0, runs_all_passed: 0, components: 0, passed: 0, failed: 0, blocked: 0, creator_issues: 0 }
+)
+
+const CLASS_BAR = {
+  build_failure: 'bg-red-500',
+  build_pending: 'bg-amber-400',
+  merge_failure: 'bg-orange-400',
+  creator_issue: 'bg-sky-400'
+}
+
+const CLASS_TINT = {
+  build_failure: 'bg-red-50 text-red-800 dark:bg-red-900/30 dark:text-red-300',
+  build_pending: 'bg-amber-50 text-amber-800 dark:bg-amber-900/30 dark:text-amber-300',
+  merge_failure: 'bg-orange-50 text-orange-800 dark:bg-orange-900/30 dark:text-orange-300',
+  creator_issue: 'bg-sky-50 text-sky-800 dark:bg-sky-900/30 dark:text-sky-300'
+}
+
+const CLASS_LABEL = {
+  build_failure: 'Build failure',
+  build_pending: 'Build pending',
+  merge_failure: 'Merge conflict',
+  creator_issue: 'PR creation'
+}
+
+/** Plain-language reason behind the Promoted check mark. */
+function promotedReason(run) {
+  if (run.all_passed) {
+    return 'Every component passed, no PR-creation failures, and all required gates succeeded'
+  }
+  const reasons = []
+  if (run.state && run.state !== 'MERGED') reasons.push(`state is ${run.state}`)
+  if (run.failed) reasons.push(`${run.failed} component${run.failed === 1 ? '' : 's'} blocked`)
+  if (run.pending) reasons.push(`${run.pending} still building`)
+  if (run.creator_issues) {
+    reasons.push(`${run.creator_issues} PR-creation failure${run.creator_issues === 1 ? '' : 's'}`)
+  }
+  if (run.gates_passed === false) reasons.push('a required promotion gate did not succeed')
+  return reasons.length ? `Not promoted: ${reasons.join(', ')}` : 'Not promoted'
+}
+
+function pct(part, whole) {
+  if (!whole) return 0
+  return Math.round((part / whole) * 1000) / 10
+}
+
+const averageBlocksPerRun = computed(() => {
+  const runs = trendTotals.value.runs
+  if (!runs) return 0
+  return Math.round((trendTotals.value.failed / runs) * 10) / 10
+})
+
+function selectPeriod(days) {
+  trendDays.value = days
+  loadSummary(days)
+}
+
+const summaryQuery = computed(() => `days=${trendDays.value}`)
+
+function loadTrends() {
+  if (!trendSummary.value) loadSummary(trendDays.value)
+}
+
+// Load the aggregate the first time the tab is opened.
+watch(
+  activeTab,
+  (tab) => {
+    if (tab === 'trends') loadTrends()
+  },
+  { immediate: true }
+)
+
+
+const { textColor: chartTextColor, gridColor: chartGridColor } = useChartTheme()
+
+/** Owner filter for the failure-rate chart: '' plots all components. */
+const chartRepoFilter = ref('')
+
+const chartRepoOptions = computed(() =>
+  trendComponents.value.map((row) => row.repo).sort((a, b) => a.localeCompare(b))
+)
+
+// A period switch can shrink the component list; drop a selection that no
+// longer exists so the chart never plots a repo with no data.
+watch(chartRepoOptions, (repos) => {
+  if (chartRepoFilter.value && !repos.includes(chartRepoFilter.value)) {
+    chartRepoFilter.value = ''
+  }
+})
+
+/** One run, one repo: 100 when it blocked the batch, 0 when it passed,
+ * null when it was absent or still building (no point plotted). */
+function repoBlockedValue(run, repo) {
+  const entry = (run.repos || []).find((item) => item.repo === repo)
+  if (!entry || entry.class === 'build_pending') return null
+  return entry.class ? 100 : 0
+}
+
+/** Share of blocked components per run — the "how often does it fail" chart. */
+const failureRateChart = computed(() => {
+  const labels = trendRuns.value.map((run) => shortDate(run.date))
+  const repo = chartRepoFilter.value
+  if (repo) {
+    return {
+      labels,
+      datasets: [
+        {
+          label: `Blocked — ${repo}`,
+          data: trendRuns.value.map((run) => repoBlockedValue(run, repo)),
+          borderColor: 'rgb(239, 68, 68)',
+          backgroundColor: 'rgba(239, 68, 68, 0.15)',
+          pointBackgroundColor: 'rgb(239, 68, 68)',
+          borderWidth: 2,
+          pointRadius: 3,
+          fill: true,
+          stepped: true,
+          spanGaps: false
+        }
+      ]
+    }
+  }
+  return {
+    labels,
+    datasets: [
+      {
+        label: 'Blocked components',
+        data: trendRuns.value.map((run) => (run.components ? pct(run.failed, run.components) : null)),
+        borderColor: 'rgb(239, 68, 68)',
+        backgroundColor: 'rgba(239, 68, 68, 0.15)',
+        pointBackgroundColor: 'rgb(239, 68, 68)',
+        borderWidth: 2,
+        pointRadius: 3,
+        fill: true,
+        tension: 0.3,
+        spanGaps: true
+      },
+      {
+        label: 'Fully promoted',
+        data: trendRuns.value.map((run) => (run.all_passed ? 100 : 0)),
+        borderColor: 'rgb(16, 185, 129)',
+        backgroundColor: 'rgba(16, 185, 129, 0.15)',
+        pointBackgroundColor: 'rgb(16, 185, 129)',
+        borderWidth: 1,
+        pointRadius: 2,
+        stepped: true,
+        fill: false,
+        spanGaps: true
+      }
+    ]
+  }
+})
+
+const failureRateOptions = computed(() => ({
+  responsive: true,
+  maintainAspectRatio: false,
+  plugins: {
+    legend: {
+      display: true,
+      position: 'bottom',
+      labels: { color: chartTextColor.value, boxWidth: 10, boxHeight: 10, font: { size: 10 } }
+    },
+    tooltip: {
+      callbacks: {
+        label: (item) => {
+          const run = trendRuns.value[item.dataIndex]
+          if (chartRepoFilter.value) {
+            return item.raw === 100
+              ? `Blocked (${shortDate(run && run.date)})`
+              : `Passed (${shortDate(run && run.date)})`
+          }
+          if (item.dataset.label === 'Fully promoted') {
+            return run && run.all_passed
+              ? `Fully promoted (${shortDate(run.date)})`
+              : `Not fully promoted (${shortDate(run && run.date)})`
+          }
+          if (!run) return `${item.formattedValue}% blocked`
+          const attempts = run.attempts > 1 ? ` · ${run.attempts} attempts` : ''
+          const pending = run.pending ? `, ${run.pending} still building` : ''
+          return `${item.formattedValue}% failed — ${run.failed} of ${run.components} (PR #${run.pr_number}${attempts}${pending})`
+        }
+      }
+    }
+  },
+  scales: {
+    x: {
+      ticks: { color: chartTextColor.value, font: { size: 9 }, maxRotation: 0, maxTicksLimit: 12 },
+      grid: { display: false }
+    },
+    y: {
+      beginAtZero: true,
+      max: 100,
+      ticks: { color: chartTextColor.value, font: { size: 10 }, callback: (value) => `${value}%` },
+      grid: { color: chartGridColor.value },
+      title: chartRepoFilter.value
+        ? { display: true, text: `Blocked vs passed — ${chartRepoFilter.value}`, color: chartTextColor.value, font: { size: 10 } }
+        : { display: false }
+    }
+  }
+}))
+
+function shortDate(iso) {
+  if (!iso) return '—'
+  const [, month, day] = iso.split('-')
+  return `${month}/${day}`
+}
+
+/** Abbreviated weekday from an ISO date, computed in UTC so it never drifts. */
+function weekday(iso) {
+  if (!iso) return ''
+  const [year, month, day] = iso.split('-').map(Number)
+  if (!year || !month || !day) return ''
+  return ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][new Date(Date.UTC(year, month - 1, day)).getUTCDay()]
+}
+
+/**
+ * Longer windows shrink each day to a single dot, so 30 or 90 days stay one
+ * readable grid instead of a wall of labels.
+ */
+const compactHeatmap = computed(() => trendDays.value > 7)
+
+/** Month spans for the compact header, one per consecutive month of runs. */
+const heatmapMonths = computed(() => {
+  const groups = []
+  for (const run of trendRuns.value) {
+    const [year, month] = (run.date || '').split('-')
+    if (!year || !month) continue
+    const key = `${year}-${month}`
+    const last = groups[groups.length - 1]
+    if (last && last.key === key) last.count += 1
+    else groups.push({ key, label: monthName(month), count: 1 })
+  }
+  return groups
+})
+
+function monthName(month) {
+  return [
+    'January', 'February', 'March', 'April', 'May', 'June',
+    'July', 'August', 'September', 'October', 'November', 'December'
+  ][Number(month) - 1] || ''
+}
+
+function dayOfMonth(iso) {
+  if (!iso) return ''
+  return String(Number(iso.split('-')[2]))
+}
+
+const CLASS_SOFT = {
+  build_failure: 'bg-red-300/80 dark:bg-red-800/90',
+  build_pending: 'bg-amber-300/80 dark:bg-amber-800/90',
+  merge_failure: 'bg-orange-300/80 dark:bg-orange-800/90',
+  creator_issue: 'bg-sky-300/80 dark:bg-sky-800/90'
+}
+
+/** Soft fill for the compact grid: class, passed, or not in the run. */
+function fillClass(cell) {
+  if (!cell.seen) return 'bg-gray-300/80 dark:bg-gray-700/90'
+  return cell.class ? CLASS_SOFT[cell.class] || 'bg-gray-200' : 'bg-emerald-300/80 dark:bg-emerald-800/90'
+}
+
+/**
+ * Repos blocking most often, one cell per run: the class that blocked it, a
+ * green cell when it took part and passed, blank when it was not in that run.
+ * Cells for a failed repo link to the Jira the GAP bot filed for it.
+ */
+const heatmapRows = computed(() => {
+  const runs = trendRuns.value
+  const rows = trendComponents.value.slice(0, 12).map((row) => {
+    const cells = runs.map((run) => {
+      const entry = (run.repos || []).find((repo) => repo.repo === row.repo)
+      if (!entry) {
+        return {
+          pr: run.pr_number,
+          class: null,
+          seen: false,
+          label: '—',
+          tint: 'bg-gray-50 text-gray-400 dark:bg-gray-700/40 dark:text-gray-500',
+          title: `not in PR #${run.pr_number}`,
+          link: null,
+          key: ''
+        }
+      }
+      if (!entry.class) {
+        return {
+          pr: run.pr_number,
+          class: null,
+          seen: true,
+          label: 'Passed',
+          tint: 'bg-emerald-50 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-300',
+          title: `passed in PR #${run.pr_number}`,
+          link: null,
+          key: ''
+        }
+      }
+      // Jira links exist only for repos that actually failed, not pending ones.
+      // A repo can carry several tickets (one per scope); the first opens the
+      // cell, the tooltip lists them all.
+      const urls = entry.class !== 'build_pending' ? (run.links || {})[row.repo] || [] : []
+      const link = urls[0] || null
+      const keys = urls.map(jiraKeyFromUrl).filter(Boolean)
+      let title = `${CLASS_LABEL[entry.class] || entry.class} in PR #${run.pr_number}`
+      if (keys.length) title += ` · ${keys.join(', ')}`
+      return {
+        pr: run.pr_number,
+        class: entry.class,
+        seen: true,
+        label: CLASS_LABEL[entry.class] || entry.class,
+        tint: CLASS_TINT[entry.class] || 'bg-gray-50 text-gray-700 dark:bg-gray-700/40 dark:text-gray-300',
+        title,
+        link,
+        key: keys[0] || ''
+      }
+    })
+    const seen = cells.filter((cell) => cell.seen).length
+    return { repo: row.repo, blocks: row.blocks, seen, cells }
+  })
+  // The rows are chosen by block count, but shown alphabetically so an owner
+  // can find their component by name instead of scanning a ranking.
+  return rows.sort((a, b) => a.repo.localeCompare(b.repo))
+})
+
+/** Jira issue key from a browse URL, e.g. RHAI-123 from .../browse/RHAI-123. */
+function jiraKeyFromUrl(url) {
+  const key = String(url).split('?')[0].split('/').pop() || ''
+  return /^[A-Z][A-Z0-9]*-\d+$/.test(key) ? key : ''
+}
 
 // --- Components ---
 
@@ -935,6 +1295,297 @@ onMounted(loadLatest)
             Compare shows what is in main and not yet in stable.
           </p>
         </div>
+      </div>
+
+      <!-- Trends -->
+      <div
+        v-show="activeTab === 'trends'"
+        role="tabpanel"
+        aria-label="Trends"
+        class="space-y-4"
+      >
+        <div class="flex flex-wrap items-center justify-between gap-3">
+          <div class="flex items-center gap-1.5">
+            <button
+              v-for="period in TREND_PERIODS"
+              :key="period.days"
+              type="button"
+              class="rounded-md px-2 py-1 text-xs font-medium ring-1 ring-inset transition-colors"
+              :class="trendDays === period.days
+                ? 'bg-primary-600 text-white ring-primary-600'
+                : 'bg-white text-gray-600 ring-gray-200 hover:bg-gray-50 dark:bg-gray-800 dark:text-gray-300 dark:ring-gray-700'"
+              @click="selectPeriod(period.days)"
+            >{{ period.label }}</button>
+          </div>
+          <div class="flex items-center gap-3 text-xs">
+            <a
+              :href="`/api/modules/system-health/promotion-gates/summary?${summaryQuery}&format=csv`"
+              class="font-medium text-primary-600 dark:text-primary-400 hover:underline"
+            >Export CSV ↓</a>
+            <a
+              :href="`/api/modules/system-health/promotion-gates/summary?${summaryQuery}`"
+              target="_blank"
+              rel="noopener noreferrer"
+              class="font-medium text-primary-600 dark:text-primary-400 hover:underline"
+            >JSON ↗</a>
+          </div>
+        </div>
+
+        <p v-if="summaryLoading" class="py-8 text-center text-sm text-gray-500 dark:text-gray-400">Loading history…</p>
+        <p v-else-if="summaryError" class="py-8 text-center text-sm text-red-600 dark:text-red-400">{{ summaryError }}</p>
+        <p v-else-if="!trendRuns.length" class="py-8 text-center text-sm text-gray-500 dark:text-gray-400">
+          No runs recorded in this period yet.
+        </p>
+
+        <template v-else>
+          <div class="grid grid-cols-2 gap-3 lg:grid-cols-3">
+            <div class="rounded-lg border border-gray-200 bg-white px-4 py-3 dark:border-gray-700 dark:bg-gray-800">
+              <p class="text-xs text-gray-500 dark:text-gray-400">Promotion days</p>
+              <p class="mt-1 text-2xl font-semibold text-gray-900 dark:text-gray-100">{{ trendTotals.runs }}</p>
+              <p class="text-[11px] text-gray-500 dark:text-gray-400">{{ trendDays }} day window</p>
+            </div>
+            <div class="rounded-lg border border-gray-200 bg-white px-4 py-3 dark:border-gray-700 dark:bg-gray-800">
+              <p class="text-xs text-gray-500 dark:text-gray-400">Failures per day</p>
+              <p class="mt-1 text-2xl font-semibold text-gray-900 dark:text-gray-100">
+                {{ averageBlocksPerRun }}
+                <span class="text-sm font-normal text-gray-500 dark:text-gray-400">components</span>
+              </p>
+              <p class="text-[11px] text-gray-500 dark:text-gray-400">across {{ trendRuns.length }} days</p>
+              <p v-if="trendTotals.creator_issues" class="text-[11px] text-orange-700 dark:text-orange-300">
+                plus {{ trendTotals.creator_issues }} PR creation failure{{ trendTotals.creator_issues === 1 ? '' : 's' }}
+              </p>
+            </div>
+            <div class="rounded-lg border border-gray-200 bg-white px-4 py-3 dark:border-gray-700 dark:bg-gray-800">
+              <p class="text-xs text-gray-500 dark:text-gray-400">Fully promoted</p>
+              <p class="mt-1 text-2xl font-semibold text-gray-900 dark:text-gray-100">
+                {{ trendTotals.runs_all_passed }} of {{ trendTotals.runs }}
+                <span class="text-sm font-normal text-gray-500 dark:text-gray-400">runs · {{ pct(trendTotals.runs_all_passed, trendTotals.runs) }}%</span>
+              </p>
+              <p v-if="!trendTotals.runs_all_passed" class="text-[11px] text-gray-500 dark:text-gray-400">no successful run yet</p>
+            </div>
+          </div>
+
+          <section class="rounded-lg border border-gray-200 bg-white dark:border-gray-700 dark:bg-gray-800">
+            <div class="flex flex-wrap items-center justify-between gap-2 border-b border-gray-100 px-4 py-3 dark:border-gray-700">
+              <div>
+                <h2 class="text-sm font-semibold text-gray-900 dark:text-gray-100">How often does promotion fail?</h2>
+                <p class="text-xs text-gray-500 dark:text-gray-400">
+                  Share of each day's components whose build or merge failed, from the attempt that carried the batch.
+                  Components still building are not counted as failures. 100% means nothing was promoted.
+                </p>
+              </div>
+              <label class="flex items-center gap-1.5 text-xs text-gray-500 dark:text-gray-400">
+                Component
+                <select
+                  v-model="chartRepoFilter"
+                  class="rounded-md border border-gray-200 bg-white px-2 py-1 text-xs text-gray-700 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300"
+                  aria-label="Filter the chart by component"
+                >
+                  <option value="">All components</option>
+                  <option v-for="repo in chartRepoOptions" :key="repo" :value="repo">{{ repo }}</option>
+                </select>
+              </label>
+            </div>
+            <div class="h-56 px-2 py-3">
+              <Line :data="failureRateChart" :options="failureRateOptions" />
+            </div>
+          </section>
+
+          <section class="rounded-lg border border-gray-200 bg-white dark:border-gray-700 dark:bg-gray-800">
+            <div class="flex flex-wrap items-baseline justify-between gap-2 border-b border-gray-100 px-4 py-3 dark:border-gray-700">
+              <div>
+                <h2 class="text-sm font-semibold text-gray-900 dark:text-gray-100">Promotion history - frequent blockers</h2>
+              </div>
+              <div class="flex flex-wrap items-center gap-3 text-[11px] text-gray-500 dark:text-gray-400">
+                <span class="inline-flex items-center gap-1"><span class="h-2 w-2 rounded-sm bg-red-500" />Build failure</span>
+                <span class="inline-flex items-center gap-1"><span class="h-2 w-2 rounded-sm bg-amber-400" />Build pending</span>
+                <span class="inline-flex items-center gap-1"><span class="h-2 w-2 rounded-sm bg-orange-400" />Merge conflict</span>
+                <span class="inline-flex items-center gap-1"><span class="h-2 w-2 rounded-sm bg-emerald-400" />Passed</span>
+                <span class="inline-flex items-center gap-1"><span class="h-2 w-2 rounded-sm bg-gray-200 dark:bg-gray-600" />Not in run</span>
+              </div>
+            </div>
+            <div class="overflow-x-auto px-4 py-3">
+              <table class="min-w-full border-separate border-spacing-0.5 text-xs">
+                <thead>
+                  <template v-if="compactHeatmap">
+                    <tr>
+                      <th rowspan="2" class="sticky left-0 bg-white px-2 py-1 text-left font-medium text-gray-500 dark:bg-gray-800 dark:text-gray-400">Repository</th>
+                      <th
+                        v-for="group in heatmapMonths"
+                        :key="group.key"
+                        :colspan="group.count"
+                        class="border-b border-gray-100 px-1 py-1 text-center text-[11px] font-medium text-gray-500 dark:border-gray-700 dark:text-gray-400"
+                      >{{ group.label }}</th>
+                      <th rowspan="2" class="px-2 py-1 text-right font-medium text-gray-500 dark:text-gray-400">Failed</th>
+                    </tr>
+                    <tr>
+                      <th
+                        v-for="run in trendRuns"
+                        :key="run.pr_number"
+                        class="min-w-[1.1rem] px-0.5 py-1 text-center text-[10px] font-normal text-gray-400 dark:text-gray-500"
+                        :title="`Leader PR #${run.pr_number}`"
+                      >{{ dayOfMonth(run.date) }}</th>
+                    </tr>
+                  </template>
+                  <tr v-else>
+                    <th class="sticky left-0 bg-white px-2 py-1 text-left font-medium text-gray-500 dark:bg-gray-800 dark:text-gray-400">Repository</th>
+                    <th
+                      v-for="run in trendRuns"
+                      :key="run.pr_number"
+                      class="px-1 py-1 text-center font-medium text-gray-400 dark:text-gray-500"
+                      :title="`Leader PR #${run.pr_number}`"
+                    >{{ weekday(run.date) }} {{ shortDate(run.date) }}</th>
+                    <th class="px-2 py-1 text-right font-medium text-gray-500 dark:text-gray-400">Failed</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr v-for="row in heatmapRows" :key="row.repo">
+                    <td class="sticky left-0 max-w-[14rem] truncate bg-white px-2 py-1 dark:bg-gray-800">
+                      <a
+                        :href="repoUrl(row.repo)"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        class="text-primary-600 dark:text-primary-400 hover:underline"
+                        :title="row.repo"
+                      >{{ row.repo }}</a>
+                    </td>
+                    <td v-for="cell in row.cells" :key="`${row.repo}-${cell.pr}`" class="px-0.5 py-0.5">
+                      <template v-if="compactHeatmap">
+                        <a
+                          v-if="cell.link"
+                          :href="cell.link"
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          class="flex h-5 min-w-[1.1rem] items-center justify-center rounded hover:ring-1 hover:ring-gray-300 dark:hover:ring-gray-500"
+                          :title="cell.title"
+                          :aria-label="cell.title"
+                        >
+                          <span class="h-4 w-5 rounded" :class="fillClass(cell)" />
+                        </a>
+                        <div
+                          v-else
+                          role="img"
+                          class="flex h-5 min-w-[1.1rem] items-center justify-center"
+                          :title="cell.title"
+                          :aria-label="cell.title"
+                        >
+                          <span class="h-4 w-5 rounded" :class="fillClass(cell)" />
+                        </div>
+                      </template>
+                      <div
+                        v-else
+                        class="flex h-7 w-40 items-center justify-center gap-0.5 rounded px-0.5 text-[11px] font-medium"
+                        :class="cell.tint"
+                        :title="cell.title"
+                        :aria-label="cell.title"
+                      >
+                        <span
+                          v-if="cell.class"
+                          class="h-1.5 w-1.5 shrink-0 rounded-full"
+                          :class="CLASS_BAR[cell.class]"
+                        />
+                        <span class="min-w-0 truncate">{{ cell.label }}</span>
+                        <span v-if="cell.key" class="shrink-0 text-gray-400 dark:text-gray-500">-</span>
+                        <a
+                          v-if="cell.key"
+                          :href="cell.link"
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          class="shrink-0 text-[10px] leading-none underline decoration-dotted underline-offset-2 hover:text-gray-900 dark:hover:text-gray-100"
+                          :title="`Open ${cell.key} in Jira`"
+                        >{{ cell.key }}</a>
+                        <a
+                          v-else-if="cell.link"
+                          :href="cell.link"
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          class="shrink-0 opacity-70 hover:opacity-100"
+                          title="Open the Jira ticket"
+                        >
+                          <svg class="h-2.5 w-2.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true">
+                            <path d="M7 17 17 7M9 7h8v8" stroke-linecap="round" stroke-linejoin="round" />
+                          </svg>
+                        </a>
+                      </div>
+                    </td>
+                    <td class="px-2 py-1 text-right text-gray-600 dark:text-gray-300">{{ row.blocks }}/{{ row.seen }}</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </section>
+
+          <section class="rounded-lg border border-gray-200 bg-white dark:border-gray-700 dark:bg-gray-800">
+            <div class="border-b border-gray-100 px-4 py-3 dark:border-gray-700">
+              <h2 class="text-sm font-semibold text-gray-900 dark:text-gray-100">How the gate works</h2>
+              <p class="text-xs text-gray-500 dark:text-gray-400">Live numbers from the latest run, one batch for every component.</p>
+            </div>
+            <div class="flex flex-wrap items-stretch gap-1.5 px-4 py-3">
+              <template v-for="(stage, index) in stages" :key="stage.key">
+                <div class="min-w-[8.5rem] flex-1 rounded-md bg-gray-50 px-3 py-2 dark:bg-gray-700/40">
+                  <p class="text-xs font-medium text-gray-500 dark:text-gray-400">{{ stage.label }}</p>
+                  <p class="mt-0.5 text-sm font-semibold text-gray-900 dark:text-gray-100">{{ stage.value }}</p>
+                </div>
+                <span v-if="index < stages.length - 1" class="self-center text-xs text-gray-300 dark:text-gray-600" aria-hidden="true">→</span>
+              </template>
+            </div>
+          </section>
+
+          <section class="rounded-lg border border-gray-200 bg-white dark:border-gray-700 dark:bg-gray-800">
+            <div class="border-b border-gray-100 px-4 py-3 dark:border-gray-700">
+              <h2 class="text-sm font-semibold text-gray-900 dark:text-gray-100">Run rollup</h2>
+            </div>
+            <div class="overflow-x-auto">
+              <table class="min-w-full text-sm">
+                <thead class="border-b border-gray-100 text-left text-xs uppercase tracking-wide text-gray-500 dark:border-gray-700 dark:text-gray-400">
+                  <tr>
+                    <th class="px-4 py-2">Date</th>
+                    <th class="px-4 py-2">Leader PR</th>
+                    <th class="px-4 py-2">State</th>
+                    <th class="px-4 py-2">Promoted</th>
+                    <th class="px-4 py-2">Release</th>
+                    <th class="px-4 py-2">Components</th>
+                    <th class="px-4 py-2">Passed</th>
+                    <th class="px-4 py-2">Failed</th>
+                    <th class="px-4 py-2">Pending</th>
+                  </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-100 dark:divide-gray-700">
+                  <tr v-for="run in trendRuns" :key="run.pr_number">
+                    <td class="px-4 py-2 text-gray-500 dark:text-gray-400">{{ run.date }}</td>
+                    <td class="px-4 py-2">
+                      <a
+                        :href="`https://github.com/red-hat-data-services/gated-artifacts-promoter/pull/${run.pr_number}`"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        class="text-primary-600 dark:text-primary-400 hover:underline"
+                      >#{{ run.pr_number }}</a>
+                      <span v-if="run.attempts > 1" class="text-[11px] text-gray-400 dark:text-gray-500">· {{ run.attempts }} attempts</span>
+                    </td>
+                    <td class="px-4 py-2 text-gray-600 dark:text-gray-300">{{ run.state }}</td>
+                    <td class="px-4 py-2">
+                      <span v-if="run.all_passed" class="text-emerald-600 dark:text-emerald-400" :title="promotedReason(run)">✓</span>
+                      <span v-else class="text-gray-400 dark:text-gray-500" :title="promotedReason(run)">—</span>
+                    </td>
+                    <td class="px-4 py-2 text-gray-600 dark:text-gray-300">{{ run.release || '—' }}</td>
+                    <td class="px-4 py-2 text-gray-600 dark:text-gray-300">
+                      <span v-if="run.components">{{ run.components }}</span>
+                      <span
+                        v-else-if="run.creator_issues"
+                        class="text-orange-700 dark:text-orange-300"
+                        title="The batch never produced child PRs"
+                      >creation failed</span>
+                      <span v-else>—</span>
+                    </td>
+                    <td class="px-4 py-2 text-gray-600 dark:text-gray-300">{{ run.components ? run.passed : '—' }}</td>
+                    <td class="px-4 py-2 text-gray-600 dark:text-gray-300">{{ run.components ? run.failed : '—' }}</td>
+                    <td class="px-4 py-2 text-gray-600 dark:text-gray-300">{{ run.components ? run.pending : '—' }}</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </section>
+        </template>
       </div>
     </template>
   </div>
