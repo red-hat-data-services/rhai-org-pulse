@@ -279,7 +279,7 @@ describe('NightlyHealthTable', () => {
   })
 
   it('renders org_pulse_links in the day panel', async () => {
-    const ticketHref = 'https://example.invalid/browse/RHOAI-999'
+    const ticketHref = 'https://example.invalid/notes/999'
     const payload = {
       schema_version: 1,
       days: [{
@@ -289,7 +289,7 @@ describe('NightlyHealthTable', () => {
           run_id: 'job:1',
           build_number: 1,
           jenkins_url: 'https://jenkins.example/job/1/1/',
-          org_pulse_links: [{ label: 'RHOAI-999', href: ticketHref }],
+          org_pulse_links: [{ label: 'Release notes', href: ticketHref }],
           gates: [],
           components: []
         }]
@@ -303,7 +303,72 @@ describe('NightlyHealthTable', () => {
     const ticketAnchor = anchors.find((a) => a.getAttribute('href') === ticketHref)
     expect(ticketAnchor).toBeTruthy()
     expect(ticketAnchor?.textContent).toBe('Open')
-    expect(document.body.textContent).toContain('RHOAI-999')
+    expect(document.body.textContent).toContain('Release notes')
+  })
+
+  function mountSingleRun(run) {
+    const payload = {
+      schema_version: 1,
+      days: [{
+        date: '2026-11-09',
+        latest_run_id: 'job:1',
+        runs: [{
+          run_id: 'job:1',
+          build_number: 1,
+          jenkins_url: 'https://jenkins.example/job/1/1/',
+          gates: [],
+          components: [],
+          ...run
+        }]
+      }]
+    }
+    wrapper = mount(NightlyHealthTable, { props: { payload }, ...mountOptions })
+    return wrapper.find('.date-header-btn').trigger('click').then(() => nextTick())
+  }
+
+  it('renders Jira keys as hyperlinks with created/reused action', async () => {
+    const href1 = 'https://redhat.atlassian.net/browse/RHOAIENG-1'
+    const href2 = 'https://redhat.atlassian.net/browse/RHOAIENG-2'
+    await mountSingleRun({
+      jira: {
+        status: 'live',
+        issues: [
+          { key: 'RHOAIENG-1', href: href1, action: 'created' },
+          { key: 'RHOAIENG-2', href: href2, action: 'reused' }
+        ]
+      }
+    })
+    const line = document.body.querySelector('[data-testid="run-jira-line"]')
+    expect(line.textContent.replace(/\s+/g, ' ')).toContain('Jira: RHOAIENG-1 (created) · RHOAIENG-2 (reused)')
+    const anchors = Array.from(line.querySelectorAll('a'))
+    expect(anchors.map((a) => a.getAttribute('href'))).toEqual([href1, href2])
+    expect(anchors.map((a) => a.textContent)).toEqual(['RHOAIENG-1', 'RHOAIENG-2'])
+    expect(anchors[0].getAttribute('target')).toBe('_blank')
+    expect(anchors[0].getAttribute('rel')).toContain('noopener')
+  })
+
+  it('shows "No Jira tied in this run" when there are no tickets', async () => {
+    await mountSingleRun({ jira: { status: 'live', issues: [] } })
+    const line = document.body.querySelector('[data-testid="run-jira-line"]')
+    expect(line.textContent.trim()).toBe('No Jira tied in this run')
+    expect(line.querySelector('a')).toBeNull()
+  })
+
+  it('notes dry-run mode when no Jira tickets were created', async () => {
+    await mountSingleRun({ jira: { status: 'dry_run', issues: [] } })
+    const line = document.body.querySelector('[data-testid="run-jira-line"]')
+    expect(line.textContent).toContain('No Jira tied in this run')
+    expect(line.textContent).toContain('dry-run')
+  })
+
+  it('falls back to legacy Jira links in org_pulse_links', async () => {
+    const href = 'https://redhat.atlassian.net/browse/RHOAIENG-77'
+    await mountSingleRun({ org_pulse_links: [{ label: 'RHOAIENG-77', href }] })
+    const line = document.body.querySelector('[data-testid="run-jira-line"]')
+    expect(line.querySelector('a')?.getAttribute('href')).toBe(href)
+    const openAnchors = Array.from(document.body.querySelectorAll('.run-list-item a.run-inline-link'))
+      .filter((a) => a.textContent === 'Open')
+    expect(openAnchors).toHaveLength(0)
   })
 
   it('renders component rows as plain text without heatmap drill-down links', async () => {
