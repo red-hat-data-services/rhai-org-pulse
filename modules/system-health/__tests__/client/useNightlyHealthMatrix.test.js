@@ -165,6 +165,32 @@ describe('useNightlyHealthMatrix helpers', () => {
     })
   })
 
+  it('joins heatmap labels of folded producer rows (merged_from) instead of adding an empty row', () => {
+    const days = [{
+      date: '2026-11-13',
+      latest_run_id: 'pg:56',
+      runs: [{
+        run_id: 'pg:56',
+        gates: [],
+        components: [{
+          id: 'ogx',
+          name: 'OGX',
+          jira_component: 'OGX Core',
+          source_status: 'Ready',
+          state: 'blocked',
+          merged_from: [{ id: 'llamastackoperator', name: 'Llama Stack', source_status: 'NotInstalled' }]
+        }]
+      }]
+    }]
+    const heatmap = [{ component: 'Llama Stack' }, { component: 'OGX' }, { component: 'Model Runtimes' }]
+    const ids = collectMatrixRowIds(days, heatmap)
+    expect(ids).toContain('ogx')
+    expect(ids).not.toContain('llamastack')
+    expect(ids).not.toContain('llamastackoperator')
+    // Heatmap components with no producer data still get their placeholder row.
+    expect(ids).toContain('modelruntimes')
+  })
+
   describe('cellDscCaption', () => {
     it('names the DSC component with its status on blocked cells', () => {
       const cell = { state: 'blocked', source_status: 'Ready', dsc_component: 'trustyai' }

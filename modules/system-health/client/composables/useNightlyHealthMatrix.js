@@ -393,6 +393,22 @@ function addComponentIdentityKey(index, key, rowId) {
 }
 
 /**
+ * Identity strings a producer component answers to: its id, name, jira_component, plus the ids
+ * and names of producer rows folded into it (`merged_from`, e.g. llamastackoperator / "Llama Stack"
+ * folded into the OGX Core row), so heatmap labels of folded rows join the surviving row.
+ *
+ * @param {object} comp
+ * @returns {string[]}
+ */
+function componentIdentityFields(comp) {
+  const fields = [comp.id, comp.name, comp.jira_component]
+  for (const folded of Array.isArray(comp.merged_from) ? comp.merged_from : []) {
+    if (folded && typeof folded === 'object') fields.push(folded.id, folded.name)
+  }
+  return fields.filter((f) => typeof f === 'string' && f.length > 0)
+}
+
+/**
  * Map canonical identity strings (id, name, jira_component) → producer row id, or `null` when ambiguous.
  *
  * @param {object[]} days
@@ -404,9 +420,9 @@ export function buildComponentIdentityIndex(days) {
     for (const run of day.runs || []) {
       for (const comp of run.components || []) {
         if (!comp?.id) continue
-        addComponentIdentityKey(index, comp.id, comp.id)
-        if (comp.name) addComponentIdentityKey(index, comp.name, comp.id)
-        if (comp.jira_component) addComponentIdentityKey(index, comp.jira_component, comp.id)
+        for (const field of componentIdentityFields(comp)) {
+          addComponentIdentityKey(index, field, comp.id)
+        }
       }
     }
   }
@@ -433,7 +449,7 @@ export function producerRowIdsMatchingHeatmapLabel(componentName, days, scope = 
     if (!run || typeof run !== 'object') continue
     for (const comp of run.components || []) {
       if (!comp?.id) continue
-      const fields = [comp.id, comp.name, comp.jira_component]
+      const fields = componentIdentityFields(comp)
       if (fields.some((field) => normalizeComponentIdentityKey(field) === key)) {
         ids.add(comp.id)
       }
