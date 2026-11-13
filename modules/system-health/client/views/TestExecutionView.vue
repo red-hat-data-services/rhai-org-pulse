@@ -136,12 +136,21 @@
               <div class="help-box tab-help-box">
                 <h4>ℹ️ How to read {{ gatesPanelTitle }}</h4>
                 <ul>
-                  <li><strong>Each column</strong> — Results from the selected run for that day; the day popup dialog lists all builds.</li>
-                  <li><strong>Passed</strong> — The source reports a pass, or readiness is ready when no source status is available.</li>
-                  <li><strong>Failed</strong> — The source reports a failure, or readiness is failed when no source status is available.</li>
-                  <li><strong>Blocked</strong> — Health checks failed before tests ran, or <strong>DSC</strong> status for components is not ready.</li>
-                  <li><strong>Blank</strong> — No result for that component; <strong>Not Installed</strong> — component set to 'removed' in DSC.</li>
-                  <li><strong>DSC &lt;name&gt;</strong> — The DataScienceCluster component the status was read from (e.g. <code>trustyai</code>, <code>aigateway.batchGateway</code>).</li>
+                  <li><strong>Each column</strong> — One day. Cells show the latest run for that day; click the date to see every run, newest first.</li>
+                  <li><strong>Passed</strong> — Tests passed, the component was Ready in the DSC.</li>
+                  <li><strong>Failed</strong> — Tests failed, the component was not Ready in the DSC.</li>
+                  <li><strong>Blocked</strong> — Tests did not run: health checks failed first, or the component was not Ready in the DSC.</li>
+                  <li><strong>Blank</strong> — No result was reported for the component in that run.</li>
+                  <li><strong>Not Installed</strong> — The component is set to <code>Removed</code> in the DSC.</li>
+                  <li><strong>DSC &lt;name&gt;</strong> — The DataScienceCluster component the status came from (for example <code>trustyai</code> or <code>aigateway.batchGateway</code>).</li>
+                  <li>
+                    <strong>S3 artifacts</strong> — Log in via
+                    <a :href="S3_ACCESS_HELP.loginUrl" target="_blank" rel="noopener noreferrer">Red Hat IT AWS</a>,
+                    choose the account <code>{{ S3_ACCESS_HELP.account }}</code> and the role
+                    <template v-for="(role, idx) in S3_ACCESS_HELP.roles" :key="role"><template v-if="idx > 0"> or </template><code>{{ role }}</code></template>.
+                    No role yet? Request access in <code>{{ S3_ACCESS_HELP.requestChannel }}</code>.
+                    <strong>S3 access help</strong> next to "Runs on &lt;date&gt;" shows these steps too.
+                  </li>
                 </ul>
               </div>
               <NightlyHealthTable
@@ -163,6 +172,7 @@
 import { ref, computed, onMounted, inject, watch, nextTick } from 'vue'
 import { useTestDashboard } from '../composables/useTestDashboard'
 import FilterBar from '../components/FilterBar.vue'
+import { S3_ACCESS_HELP } from '../composables/useNightlyHealthMatrix'
 import MetricsCards from '../components/MetricsCards.vue'
 import HeatmapTable from '../components/HeatmapTable.vue'
 import TrendChart from '../components/TrendChart.vue'
