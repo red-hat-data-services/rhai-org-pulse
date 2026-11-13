@@ -1257,6 +1257,79 @@ test.describe('Releases FPDoR Readiness @releases', () => {
     expect(page.errors).toHaveLength(0);
   });
 
+  test('Tech Debt Cockpit includes componentless issues alone or with named components', async ({ page }) => {
+    const issueRequests = [];
+    const trendRequests = [];
+    await page.route('**/api/modules/releases/tech-debt/components', async route => {
+      await route.fulfill({
+        json: { project: 'RHAI', components: [{ id: '1', name: 'AI Gateway' }] }
+      });
+    });
+    await page.route('**/api/modules/releases/tech-debt/issues?*', async route => {
+      issueRequests.push(route.request().url());
+      await route.fulfill({
+        json: {
+          projects: ['RHAI', 'RHAIENG', 'RHOAIENG', 'INFERENG', 'AIPCC'],
+          selectedComponents: new URL(route.request().url()).searchParams.getAll('component'),
+          includeNoComponent: new URL(route.request().url()).searchParams.get('includeNoComponent') === 'true',
+          fetchedAt: '2026-10-26T14:30:00.000Z',
+          counts: { total: 0, inFlight: 0, backlog: 0, bugs: 0, vulnerabilities: 0 },
+          inFlight: [],
+          backlog: []
+        }
+      });
+    });
+    await page.route('**/api/modules/releases/tech-debt/trends?*', async route => {
+      trendRequests.push(route.request().url());
+      const url = new URL(route.request().url());
+      const components = url.searchParams.getAll('component').map(component => ({
+        component,
+        noComponent: false,
+        totals: { received: 0, resolved: 0 },
+        months: []
+      }));
+      if (url.searchParams.get('includeNoComponent') === 'true') {
+        components.push({
+          component: 'No component',
+          noComponent: true,
+          totals: { received: 0, resolved: 0 },
+          months: []
+        });
+      }
+      await route.fulfill({
+        json: {
+          generatedAt: '2026-10-29T06:00:00.000Z',
+          window: { months: [], timezone: 'UTC' },
+          categories: [],
+          totals: { received: 0, resolved: 0 },
+          components,
+          stale: false,
+          warning: null
+        }
+      });
+    });
+
+    await page.goto('/#/releases/execute?tab=tech-debt-prioritization');
+    await page.getByTestId('tech-debt-component-filter').click();
+    await expect(page.locator('[role="listbox"] label').first()).toContainText('No component');
+    await page.getByRole('checkbox', { name: 'No component' }).check();
+
+    await expect(page.getByTestId('tech-debt-cockpit')).toBeVisible();
+    await expect(page.getByTestId('tech-debt-selected-filters')).toContainText('Component: No component');
+    await expect(page.getByTestId('tech-debt-trends')).toContainText('No component');
+    expect(issueRequests.at(-1)).toContain('includeNoComponent=true');
+    expect(trendRequests.at(-1)).toContain('includeNoComponent=true');
+
+    await page.getByRole('checkbox', { name: 'AI Gateway' }).check();
+    await expect.poll(() => issueRequests.length).toBe(2);
+    await expect.poll(() => trendRequests.length).toBe(2);
+    expect(issueRequests.at(-1)).toContain('component=AI+Gateway');
+    expect(issueRequests.at(-1)).toContain('includeNoComponent=true');
+    expect(trendRequests.at(-1)).toContain('component=AI+Gateway');
+    expect(trendRequests.at(-1)).toContain('includeNoComponent=true');
+    expect(page.errors).toHaveLength(0);
+  });
+
   test('Tech Debt Cockpit filters, classifies, and ranks deterministic Jira issues', async ({ page }) => {
     const issueRequests = [];
     const trendRequests = [];
