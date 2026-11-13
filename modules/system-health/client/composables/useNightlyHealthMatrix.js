@@ -1321,6 +1321,48 @@ export function runS3ArtifactsInlineLink(run) {
   return null
 }
 
+const JIRA_KEY_LABEL_RE = /^[A-Z][A-Z0-9]+-\d+$/
+
+function isJiraKeyLabel(label) {
+  return typeof label === 'string' && JIRA_KEY_LABEL_RE.test(label.trim())
+}
+
+/**
+ * Jira tickets the promotion gate created or reused in this run.
+ * Reads `run.jira.issues`; falls back to legacy Jira-key entries in `org_pulse_links`.
+ * When there are none, `emptyText` explains why (e.g. dry-run) next to "No Jira tied in this run".
+ *
+ * @param {object|null|undefined} run
+ * @returns {{ issues: { key: string, href: string, action: string }[], emptyText: string }}
+ */
+export function runJiraSummary(run) {
+  /** @type {{ key: string, href: string, action: string }[]} */
+  const issues = []
+  const seen = new Set()
+  const add = (key, rawHref, action) => {
+    const k = typeof key === 'string' ? key.trim().toUpperCase() : ''
+    const href = safeHttpUrl(rawHref)
+    if (!k || !href || seen.has(k)) return
+    seen.add(k)
+    issues.push({ key: k, href, action: action === 'created' || action === 'reused' ? action : '' })
+  }
+  const jira = run?.jira
+  if (Array.isArray(jira?.issues)) {
+    jira.issues.forEach((item) => add(item?.key, item?.href, item?.action))
+  }
+  if (!issues.length && Array.isArray(run?.org_pulse_links)) {
+    run.org_pulse_links.forEach((item) => {
+      if (isJiraKeyLabel(item?.label)) add(item.label, item.href, '')
+    })
+  }
+  let emptyText = 'No Jira tied in this run'
+  const status = typeof jira?.status === 'string' ? jira.status : ''
+  if (status === 'dry_run') emptyText += ' (Jira reporting ran in dry-run mode)'
+  else if (status === 'disabled') emptyText += ' (Jira reporting disabled)'
+  else if (status === 'failed') emptyText += ' (Jira reporter failed)'
+  return { issues, emptyText }
+}
+
 /**
  * Producer `org_pulse_links` minus any href already shown from `artifacts`.
  *
@@ -1344,6 +1386,8 @@ export function runOrgPulsePanelLinks(run) {
   const links = []
   const seen = new Set()
   raw.forEach((item, idx) => {
+    // Legacy producers put Jira tickets here; they are shown on the Jira line instead.
+    if (isJiraKeyLabel(item?.label)) return
     const rawHref = item?.href
     const href = safeHttpUrl(rawHref) || quayBrowserUrlFromImageRef(rawHref)
     const dedupeKey = href ? normalizeHttpUrlForCompare(href) : ''

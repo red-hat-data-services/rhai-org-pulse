@@ -206,6 +206,21 @@
                 >{{ runOdsBuildLinkLabel(run) }}</a>
               </div>
               <div v-if="runEnvironmentLine(run)" class="run-line">{{ runEnvironmentLine(run) }}</div>
+              <div class="run-line" data-testid="run-jira-line">
+                <template v-if="runJiraSummary(run).issues.length">
+                  Jira:
+                  <template v-for="(issue, idx) in runJiraSummary(run).issues" :key="issue.key">
+                    <span v-if="idx > 0"> · </span>
+                    <a
+                      class="run-inline-link"
+                      :href="issue.href"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >{{ issue.key }}</a><template v-if="issue.action"> ({{ issue.action }})</template>
+                  </template>
+                </template>
+                <template v-else>{{ runJiraSummary(run).emptyText }}</template>
+              </div>
               <div v-if="runFooterLinks(run).length" class="run-line">
                 <template v-for="(link, idx) in runFooterLinks(run)" :key="link.key">
                   <span v-if="idx > 0"> · </span>
@@ -257,6 +272,7 @@ import {
   formatRunDuration,
   nightlyColumnHeaderSubline,
   runArtifactPanelEntries,
+  runJiraSummary,
   runOrgPulsePanelLinks,
   runS3ArtifactsInlineLink,
   runEnvironmentLine,
