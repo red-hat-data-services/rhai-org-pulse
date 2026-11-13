@@ -240,6 +240,14 @@ async function pushRosterToUpstream(storage, deps) {
 function startPeriodicRosterPush(storage) {
   if (process.env.DEMO_MODE === 'true') return;
 
+  // The built-in default is a fixed namespace. When the canonical instance
+  // moved, every push kept going to the old one and nothing said so. Make the
+  // fallback loud instead of relying on empty dashboards to reveal it.
+  if (!process.env.UPSTREAM_PULSE_API_URL) {
+    console.warn('[upstream-pulse] UPSTREAM_PULSE_API_URL is not set; roster pushes will use the built-in default: '
+      + DEFAULT_BASE_URL);
+  }
+
   async function checkAndPush() {
     let registry;
     try {
