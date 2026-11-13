@@ -150,6 +150,37 @@ describe('useNightlyHealthMatrix helpers', () => {
       expect(labels.mcplifecycleoperator).toBe('AI Core Platform')
     })
 
+    it('folds the retired "Platform" heatmap label into AI Core Platform (no empty Platform row)', () => {
+      expect(ids).not.toContain('platform')
+      expect(Object.values(labels)).not.toContain('Platform')
+      expect(ids.filter((id) => labels[id] === 'AI Core Platform')).toEqual(['mcplifecycleoperator'])
+    })
+
+    it('folds "Platform" when the stale heatmap has no "AI Core Platform" entry', () => {
+      const staleHeatmap = [{ component: 'Platform' }, { component: 'KubeRay' }]
+      const staleIds = collectMatrixRowIds(days, staleHeatmap)
+      expect(staleIds).not.toContain('platform')
+      expect(staleIds.filter((id) => id === 'mcplifecycleoperator')).toHaveLength(1)
+      expect(matrixRowLabel('mcplifecycleoperator', days, staleHeatmap)).toBe('AI Core Platform')
+    })
+
+    it('folds an older run row published as "Platform" into AI Core Platform', () => {
+      const withLegacyRow = [{
+        date: '2026-11-11',
+        latest_run_id: 'pg:50',
+        runs: [{
+          run_id: 'pg:50',
+          build_number: 50,
+          completed_at: '2026-11-11T09:00:00Z',
+          gates: [],
+          components: [comp('platform', 'Platform', 'Platform', 'Ready')]
+        }]
+      }, ...days]
+      const legacyIds = collectMatrixRowIds(withLegacyRow, [{ component: 'AI Core Platform' }])
+      expect(legacyIds).not.toContain('platform')
+      expect(legacyIds.filter((id) => id === 'mcplifecycleoperator')).toHaveLength(1)
+    })
+
     it('binds OGX Core to ogx (Ready), not llamastackoperator (Not Installed), on every day', () => {
       expect(ids).toContain('ogx')
       expect(ids).not.toContain('llamastackoperator')
@@ -250,14 +281,16 @@ describe('useNightlyHealthMatrix helpers', () => {
 
   it('adds heatmap inventory rows missing from nightly JSON', () => {
     const fixture = JSON.parse(readFileSync(fixturePath, 'utf8'))
-    const heatmap = [{ component: 'Batch Gateway' }, { component: 'Kserve' }]
+    const heatmap = [{ component: 'Model Runtimes' }, { component: 'Kserve' }, { component: 'Batch Gateway' }]
     const ids = collectMatrixRowIds(fixture.days, heatmap)
-    expect(ids).toContain('batchgateway')
+    expect(ids).toContain('modelruntimes')
     expect(ids).toContain('kserve')
+    // Retired label (renamed to llm-d) with no producer row: dropped, not an empty placeholder.
+    expect(ids).not.toContain('batchgateway')
     const dashIdx = ids.indexOf('dashboard')
-    const batchIdx = ids.indexOf('batchgateway')
-    expect(batchIdx).toBeGreaterThan(-1)
-    expect(dashIdx).toBeGreaterThan(batchIdx)
+    const runtimesIdx = ids.indexOf('modelruntimes')
+    expect(runtimesIdx).toBeGreaterThan(-1)
+    expect(dashIdx).toBeGreaterThan(runtimesIdx)
   })
 
   it('joins heatmap labels to producer YAML ids via canonical name and jira_component (MR !5 + PR #1855)', () => {
