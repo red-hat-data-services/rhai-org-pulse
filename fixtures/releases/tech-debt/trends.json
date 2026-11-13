@@ -8,7 +8,7 @@
     "timezone": "UTC"
   },
   "projects": ["RHAI", "RHAIENG", "RHOAIENG", "INFERENG", "AIPCC"],
-  "issueCount": 5,
+  "issueCount": 6,
   "events": [
     {
       "key": "RHAIENG-100",
@@ -47,6 +47,14 @@
       "issueType": "Bug",
       "category": "build-cannot-run",
       "components": ["Model Serving"],
+      "createdMonth": "2026-10",
+      "resolvedMonth": null
+    },
+    {
+      "key": "RHAIENG-105",
+      "issueType": "Vulnerability",
+      "category": "vulnerability",
+      "components": [],
       "createdMonth": "2026-10",
       "resolvedMonth": null
     }

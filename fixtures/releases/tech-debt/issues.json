@@ -1,6 +1,7 @@
 {
   "projects": ["RHAI", "RHAIENG", "RHOAIENG", "INFERENG", "AIPCC"],
   "selectedComponents": ["AI Core Platform"],
+  "includeNoComponent": false,
   "selectedIssueType": null,
   "selectedTriage": "all",
   "bugScoring": {

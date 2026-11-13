@@ -1201,7 +1201,9 @@ is shown.
 ## Releases — Tech Debt Priority Scoring (API Response)
 
 `GET /api/modules/releases/tech-debt/issues` returns the complete open Bug and
-Vulnerability cohort for the selected Jira components. Vulnerabilities use
+Vulnerability cohort for the selected Jira components. Pass repeated
+`component` parameters for named components and/or `includeNoComponent=true`
+for issues whose Jira component field is empty. Vulnerabilities use
 `company-sla-v1` prioritization. Bugs use the deterministic `bug-v1`
 assessment. Backlog issues are returned in separate groups with independent
 rank sequences.
@@ -1211,6 +1213,8 @@ Response metadata identifies that behavior with:
 
 ```json
 {
+  "selectedComponents": ["AI Core Platform"],
+  "includeNoComponent": false,
   "bugScoring": {
     "modelVersion": "bug-v1",
     "mode": "active",
@@ -1432,7 +1436,9 @@ followed by the Bug score group; each group's backlog ranks start at 1.
 The scheduled Tech Debt collector uploads this compact Jira event snapshot to
 `POST /api/modules/releases/tech-debt/trends/bulk`. The dashboard reads filtered
 aggregates from `GET /api/modules/releases/tech-debt/trends` using repeated
-`component` parameters and an optional `issueType=Bug|Vulnerability` parameter.
+`component` parameters, optional `includeNoComponent=true`, and an optional
+`issueType=Bug|Vulnerability` parameter. `includeNoComponent` selects Jira
+issues whose component field is empty and may be combined with named components.
 The representative fixture is `fixtures/releases/tech-debt/trends.json`.
 
 ```json
@@ -1446,7 +1452,7 @@ The representative fixture is `fixtures/releases/tech-debt/trends.json`.
     "timezone": "UTC"
   },
   "projects": ["RHAI", "RHAIENG", "RHOAIENG", "INFERENG", "AIPCC"],
-  "issueCount": 1,
+  "issueCount": 2,
   "events": [
     {
       "key": "RHAIENG-100",
@@ -1455,6 +1461,14 @@ The representative fixture is `fixtures/releases/tech-debt/trends.json`.
       "components": ["AI Core Platform", "Model Serving"],
       "createdMonth": "2026-08",
       "resolvedMonth": "2026-10"
+    },
+    {
+      "key": "RHAIENG-101",
+      "issueType": "Vulnerability",
+      "category": "vulnerability",
+      "components": [],
+      "createdMonth": "2026-10",
+      "resolvedMonth": null
     }
   ]
 }
@@ -1465,9 +1479,10 @@ The representative fixture is `fixtures/releases/tech-debt/trends.json`.
 calendar-month window. Bug categories use the existing primary Bug classifier;
 Vulnerability issues use `vulnerability`. The API counts a multi-component
 issue in every matching component panel while deduplicating the overall
-Received and Resolved totals by Jira key. Snapshots older than 48 hours are
-served with a warning. A refreshed snapshot is required after classifier
-changes to recategorize historical Bug events.
+Received and Resolved totals by Jira key. An empty `components` array represents
+the **No component** panel. Snapshots older than 48 hours are served with a
+warning. A refreshed snapshot is required after classifier or component-scope
+changes to populate updated historical events.
 
 ---
 
