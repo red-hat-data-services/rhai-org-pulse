@@ -137,8 +137,8 @@
                 <h4>ℹ️ How to read {{ gatesPanelTitle }}</h4>
                 <ul>
                   <li><strong>Each column</strong> — One day. Cells show the latest run for that day; click the date to see every run, newest first.</li>
-                  <li><strong>Passed</strong> — Tests passed. If no test result was reported, the component was Ready in the DSC.</li>
-                  <li><strong>Failed</strong> — Tests failed. If no test result was reported, the component was not Ready in the DSC.</li>
+                  <li><strong>Passed</strong> — Tests passed, or the component was Ready in the DSC.</li>
+                  <li><strong>Failed</strong> — Tests failed, or the component was not Ready in the DSC.</li>
                   <li><strong>Blocked</strong> — Tests did not run: health checks failed first, or the component was not Ready in the DSC.</li>
                   <li><strong>Blank</strong> — No result was reported for the component in that run.</li>
                   <li><strong>Not Installed</strong> — The component is set to <code>Removed</code> in the DSC.</li>
