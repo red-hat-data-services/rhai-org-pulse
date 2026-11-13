@@ -241,7 +241,7 @@ function startPeriodicRosterPush(storage) {
   if (process.env.DEMO_MODE === 'true') return;
 
   async function checkAndPush() {
-    var registry;
+    let registry;
     try {
       registry = await storage.readFromStorage('team-data/registry.json');
     } catch (err) {
@@ -250,7 +250,7 @@ function startPeriodicRosterPush(storage) {
     }
     if (!registry || !registry.meta || !registry.meta.generatedAt) return;
 
-    var generatedAt = registry.meta.generatedAt;
+    const generatedAt = registry.meta.generatedAt;
 
     // Push on every tick, not only when generatedAt changes. The payload is a
     // few hundred rows and the upstream endpoint is idempotent, so an
@@ -258,7 +258,7 @@ function startPeriodicRosterPush(storage) {
     // tick repairs. Change detection here used an in-memory marker, which
     // silently closed the window whenever a push failed.
     try {
-      var result = await pushRosterToUpstream(storage);
+      const result = await pushRosterToUpstream(storage);
       _lastPushGeneratedAt = generatedAt;
       _lastPushResult = {
         at: new Date().toISOString(),
