@@ -73,6 +73,32 @@ describe('useNightlyHealthMatrix helpers', () => {
     expect(run.run_id).toBe('example-job:102')
   })
 
+  it('hides Workload Orchestration, Demos and Other rows from history and heatmap inventory', () => {
+    const days = [{
+      date: '2026-11-11',
+      stream_key: 'promotion-gate',
+      latest_run_id: 'r1',
+      runs: [{
+        run_id: 'r1',
+        gates: [],
+        components: [
+          { id: 'kueue', name: 'Distributed Workloads', jira_component: 'Workload Orchestration', state: 'blocked' },
+          { id: 'dashboard', name: 'Dashboard', jira_component: 'AI Core Dashboard', state: 'ready' }
+        ]
+      }]
+    }]
+    const heatmap = [
+      { component: 'Dashboard' },
+      { component: 'Demos' },
+      { component: 'Other' },
+      { component: 'Workload Orchestration' }
+    ]
+    const ids = collectMatrixRowIds(days, heatmap)
+    expect(ids).toContain('dashboard')
+    expect(ids).not.toContain('kueue')
+    expect(ids.some((id) => ['demos', 'other', 'workloadorchestration'].includes(id))).toBe(false)
+  })
+
   it('collects gate rows before component ids', () => {
     const fixture = JSON.parse(readFileSync(fixturePath, 'utf8'))
     const ids = collectMatrixRowIds(fixture.days)

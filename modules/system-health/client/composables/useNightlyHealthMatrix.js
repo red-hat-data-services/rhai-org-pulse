@@ -1359,6 +1359,35 @@ export function nightlyCellTone(cell) {
 }
 
 /**
+ * Components that must not appear as rows in the promotion-gate matrix.
+ * Keys are normalizeComponentIdentityKey() of the producer id, published name, Jira component or
+ * heatmap label. They are hidden here (not only at the producer) because rows also come from
+ * historic nightly runs already stored in Org Pulse and from the full heatmap inventory, neither of
+ * which is rewritten when the producer stops emitting a component.
+ */
+export const HIDDEN_MATRIX_COMPONENT_KEYS = new Set([
+  'workloadorchestration',
+  'distributedworkloads',
+  'kueue',
+  'demos',
+  'other',
+  'others',
+  'aitestingworkflowvalidation',
+  'testops'
+])
+
+/**
+ * @param {...(string|null|undefined)} candidates id / name / jira_component / heatmap label
+ * @returns {boolean}
+ */
+export function isHiddenMatrixComponent(...candidates) {
+  return candidates.some((c) => {
+    const key = normalizeComponentIdentityKey(typeof c === 'string' ? c : '')
+    return key !== '' && HIDDEN_MATRIX_COMPONENT_KEYS.has(key)
+  })
+}
+
+/**
  * @param {object[]} days
  * @param {{ component?: string }[]|null} [heatmapComponents] full heatmap inventory (not date-filtered)
  * @returns {string[]}
@@ -1366,6 +1395,10 @@ export function nightlyCellTone(cell) {
 export function collectMatrixRowIds(days, heatmapComponents = null) {
   const ids = new Set()
   const metaById = collectComponentMetaById(days)
+  const isHiddenRowId = (id) => {
+    const entry = metaById.get(id)
+    return isHiddenMatrixComponent(id, entry?.name, entry?.jira_component)
+  }
 
   for (const day of days) {
     for (const run of day.runs || []) {
@@ -1384,8 +1417,10 @@ export function collectMatrixRowIds(days, heatmapComponents = null) {
   const canonicalKeysInOrder = new Set()
   if (Array.isArray(heatmapComponents)) {
     for (const entry of heatmapComponents) {
+      if (isHiddenMatrixComponent(entry?.component)) continue
       const rowId = pickHeatmapInventoryRowId(entry?.component, days)
       if (!rowId) continue
+      if (isHiddenRowId(rowId)) continue
       ids.add(rowId)
       if (rowId === 'cluster-health' || rowId === 'operator-health') continue
       const canon = matrixRowDedupeKey(rowId, metaById)
@@ -1411,6 +1446,7 @@ export function collectMatrixRowIds(days, heatmapComponents = null) {
   const heatmapSet = new Set(heatmapOrder)
   const nightlyOnly = Array.from(ids)
     .filter((id) => !heatmapSet.has(id))
+    .filter((id) => !isHiddenRowId(id))
     .filter((id) => {
       if (id === 'cluster-health' || id === 'operator-health') return true
       const canon = matrixRowDedupeKey(id, metaById)
