@@ -330,6 +330,7 @@ describe('NightlyHealthTable', () => {
     await mountSingleRun({})
     const btn = document.body.querySelector('.s3-help-btn')
     expect(btn).toBeTruthy()
+    expect(btn.textContent).toContain('S3 access help')
     expect(btn.getAttribute('aria-expanded')).toBe('false')
     expect(document.body.querySelector('.s3-help-popover')).toBeNull()
 

@@ -137,8 +137,8 @@
                 <h4>ℹ️ How to read {{ gatesPanelTitle }}</h4>
                 <ul>
                   <li><strong>Each column</strong> — One day. Cells show the latest run for that day; click the date to see every run, newest first.</li>
-                  <li><strong>Passed</strong> — Tests passed, or the component was Ready in the DSC.</li>
-                  <li><strong>Failed</strong> — Tests failed, or the component was not Ready in the DSC.</li>
+                  <li><strong>Passed</strong> — Tests passed, the component was Ready in the DSC.</li>
+                  <li><strong>Failed</strong> — Tests failed, the component was not Ready in the DSC.</li>
                   <li><strong>Blocked</strong> — Tests did not run: health checks failed first, or the component was not Ready in the DSC.</li>
                   <li><strong>Blank</strong> — No result was reported for the component in that run.</li>
                   <li><strong>Not Installed</strong> — The component is set to <code>Removed</code> in the DSC.</li>
@@ -149,7 +149,7 @@
                     choose the account <code>{{ S3_ACCESS_HELP.account }}</code> and the role
                     <template v-for="(role, idx) in S3_ACCESS_HELP.roles" :key="role"><template v-if="idx > 0"> or </template><code>{{ role }}</code></template>.
                     No role yet? Request access in <code>{{ S3_ACCESS_HELP.requestChannel }}</code>.
-                    The <strong>?</strong> next to "Runs on &lt;date&gt;" shows these steps too.
+                    <strong>S3 access help</strong> next to "Runs on &lt;date&gt;" shows these steps too.
                   </li>
                 </ul>
               </div>

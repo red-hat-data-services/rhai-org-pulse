@@ -153,10 +153,9 @@
               class="s3-help-btn"
               :aria-expanded="s3HelpOpen ? 'true' : 'false'"
               :aria-controls="s3HelpId"
-              aria-label="How to access S3 artifacts"
               title="How to access S3 artifacts"
               @click="s3HelpOpen = !s3HelpOpen"
-            >?</button>
+            ><span class="s3-help-icon" aria-hidden="true">?</span>S3 access help</button>
           </div>
           <button type="button" class="day-panel-close" @click="dismissDayPanel">
             Close
@@ -981,17 +980,32 @@ html.dark .cell-substatus.dsc-status-not-ready {
 }
 
 .s3-help-btn {
-  width: 20px;
-  height: 20px;
-  border-radius: 50%;
-  border: 1px solid var(--te-border);
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  border: none;
   background: transparent;
   color: var(--te-link);
   font-size: 12px;
-  font-weight: 600;
   line-height: 1;
   cursor: pointer;
-  padding: 0;
+  padding: 2px 0;
+}
+
+.s3-help-btn:hover {
+  text-decoration: underline;
+}
+
+.s3-help-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  border: 1px solid currentColor;
+  font-size: 11px;
+  font-weight: 600;
 }
 
 .s3-help-btn:focus-visible,
