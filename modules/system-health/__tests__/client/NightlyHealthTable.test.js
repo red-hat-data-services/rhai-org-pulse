@@ -326,6 +326,31 @@ describe('NightlyHealthTable', () => {
     return wrapper.find('.date-header-btn').trigger('click').then(() => nextTick())
   }
 
+  it('opens and closes the S3 access help popover from the Runs on header', async () => {
+    await mountSingleRun({})
+    const btn = document.body.querySelector('.s3-help-btn')
+    expect(btn).toBeTruthy()
+    expect(btn.getAttribute('aria-expanded')).toBe('false')
+    expect(document.body.querySelector('.s3-help-popover')).toBeNull()
+
+    btn.click()
+    await nextTick()
+    const pop = document.body.querySelector('.s3-help-popover')
+    expect(pop).toBeTruthy()
+    expect(btn.getAttribute('aria-expanded')).toBe('true')
+    expect(pop.getAttribute('id')).toBe(btn.getAttribute('aria-controls'))
+    expect(pop.textContent).toContain('qe-rhods-general')
+    expect(pop.textContent).toContain('rhoai-testops')
+    expect(pop.textContent).toContain('#rhoai-devtestops-requests')
+    const login = pop.querySelector('a')
+    expect(login.getAttribute('href')).toBe('https://auth.redhat.com/auth/realms/EmployeeIDP/protocol/saml/clients/itaws')
+    expect(login.getAttribute('target')).toBe('_blank')
+
+    pop.querySelector('.s3-help-close').click()
+    await nextTick()
+    expect(document.body.querySelector('.s3-help-popover')).toBeNull()
+  })
+
   it('renders Jira keys as hyperlinks with created/reused action', async () => {
     const href1 = 'https://redhat.atlassian.net/browse/RHOAIENG-1'
     const href2 = 'https://redhat.atlassian.net/browse/RHOAIENG-2'

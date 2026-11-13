@@ -630,7 +630,7 @@ describe('useNightlyHealthMatrix helpers', () => {
     expect(ordered.map((r) => r.run_id)).toEqual(['run-b', 'run-a'])
   })
 
-  it('orders an older latest_run_id run first with remaining runs ascending', () => {
+  it('orders an older latest_run_id run first with remaining runs newest first', () => {
     const day = {
       latest_run_id: 'run-b',
       runs: [
@@ -640,7 +640,23 @@ describe('useNightlyHealthMatrix helpers', () => {
       ]
     }
     const ordered = orderDayRunsForPanel(day)
-    expect(ordered.map((r) => r.run_id)).toEqual(['run-b', 'run-a', 'run-c'])
+    expect(ordered.map((r) => r.run_id)).toEqual(['run-b', 'run-c', 'run-a'])
+  })
+
+  it('orders remaining runs newest first across mixed timestamp formats', () => {
+    const day = {
+      latest_run_id: 'job:67',
+      runs: [
+        { run_id: 'job:53', started_at: '2026-11-13T04:59:00.000+00:00', build_number: 53 },
+        { run_id: 'job:67', started_at: '2026-11-13T16:10:46Z', build_number: 67 },
+        { run_id: 'job:54', started_at: '2026-11-13T06:12:00Z', build_number: 54 },
+        { run_id: 'job:60', started_at: '2026-11-13T11:30:00.123Z', build_number: 60 },
+        { run_id: 'job:61', build_number: 61 },
+        { run_id: 'job:62', started_at: '2026-11-13T11:30:00.123Z', build_number: 62 }
+      ]
+    }
+    const ordered = orderDayRunsForPanel(day)
+    expect(ordered.map((r) => r.run_id)).toEqual(['job:67', 'job:62', 'job:60', 'job:54', 'job:53', 'job:61'])
   })
 
   it('formats run duration from started_at and completed_at', () => {

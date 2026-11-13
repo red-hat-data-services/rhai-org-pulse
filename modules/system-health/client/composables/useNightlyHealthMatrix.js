@@ -998,28 +998,56 @@ export function titleCaseLabel(text) {
   })
 }
 
+function runStartedAtMs(run) {
+  const ms = Date.parse(String(run?.started_at || ''))
+  return Number.isFinite(ms) ? ms : Number.NEGATIVE_INFINITY
+}
+
+function runBuildNumber(run) {
+  const n = Number(run?.build_number)
+  return Number.isFinite(n) ? n : Number.NEGATIVE_INFINITY
+}
+
 /**
- * Same-day runs for the day panel: selected column run first, then chronological.
+ * Same-day runs for the day panel: selected column run first, then newest first.
+ * Sorts on parsed `started_at` (Jenkins and OpenSearch runs may format it differently),
+ * then `build_number`; runs without a timestamp go last.
  *
  * @param {{ latest_run_id?: string, runs?: object[] }|null} day
  * @returns {object[]}
  */
 export function orderDayRunsForPanel(day) {
   if (!day || !Array.isArray(day.runs)) return []
-  const sorted = [...day.runs].sort((a, b) =>
-    String(a.started_at || '').localeCompare(String(b.started_at || ''))
-  )
+  const sorted = day.runs
+    .filter((r) => r && typeof r === 'object')
+    .sort((a, b) => {
+      const ta = runStartedAtMs(a)
+      const tb = runStartedAtMs(b)
+      if (ta !== tb) return tb > ta ? 1 : -1
+      const na = runBuildNumber(a)
+      const nb = runBuildNumber(b)
+      if (na !== nb) return nb > na ? 1 : -1
+      return 0
+    })
   const latestId = day.latest_run_id
   if (typeof latestId !== 'string' || latestId.length === 0) {
     return sorted
   }
-  const idx = sorted.findIndex((r) => r && r.run_id === latestId)
+  const idx = sorted.findIndex((r) => r.run_id === latestId)
   if (idx <= 0) {
     return sorted
   }
   const selected = sorted[idx]
   return [selected, ...sorted.slice(0, idx), ...sorted.slice(idx + 1)]
 }
+
+/** How to reach the S3 artifacts linked from promotion-gate runs. */
+export const S3_ACCESS_HELP = Object.freeze({
+  loginUrl: 'https://auth.redhat.com/auth/realms/EmployeeIDP/protocol/saml/clients/itaws',
+  account: 'qe-rhods-general',
+  roles: Object.freeze(['rhoai-testops', 'rhoai-dev']),
+  requestChannel: '#rhoai-devtestops-requests'
+})
 
 /**
  * Human-readable product line (RHOAI version, channel, optional product_label).

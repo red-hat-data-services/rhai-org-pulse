@@ -146,10 +146,45 @@
         :aria-labelledby="dayPanelTitleId"
       >
         <div class="day-panel-header">
-          <h3 :id="dayPanelTitleId">Runs on {{ selectedDayEntry.date }}</h3>
+          <div class="day-panel-title">
+            <h3 :id="dayPanelTitleId">Runs on {{ selectedDayEntry.date }}</h3>
+            <button
+              type="button"
+              class="s3-help-btn"
+              :aria-expanded="s3HelpOpen ? 'true' : 'false'"
+              :aria-controls="s3HelpId"
+              aria-label="How to access S3 artifacts"
+              title="How to access S3 artifacts"
+              @click="s3HelpOpen = !s3HelpOpen"
+            >?</button>
+          </div>
           <button type="button" class="day-panel-close" @click="dismissDayPanel">
             Close
           </button>
+        </div>
+        <div
+          v-if="s3HelpOpen"
+          :id="s3HelpId"
+          class="s3-help-popover"
+          role="region"
+          aria-label="S3 artifacts access"
+        >
+          <div class="s3-help-header">
+            <strong>S3 artifacts access</strong>
+            <button type="button" class="s3-help-close" aria-label="Close S3 access help" @click="s3HelpOpen = false">×</button>
+          </div>
+          <ol>
+            <li>
+              Log in via
+              <a class="run-inline-link" :href="S3_ACCESS_HELP.loginUrl" target="_blank" rel="noopener noreferrer">Red Hat IT AWS</a>.
+            </li>
+            <li>Choose the account <code>{{ S3_ACCESS_HELP.account }}</code>.</li>
+            <li>
+              Choose your role:
+              <template v-for="(role, idx) in S3_ACCESS_HELP.roles" :key="role"><template v-if="idx > 0"> or </template><code>{{ role }}</code></template>.
+            </li>
+            <li>No role yet? Request access in <code>{{ S3_ACCESS_HELP.requestChannel }}</code> on Slack.</li>
+          </ol>
         </div>
         <p v-if="selectionError(selectedDayEntry)" class="selection-error" role="status">
           {{ selectionError(selectedDayEntry) }}
@@ -273,6 +308,7 @@ import {
   nightlyColumnHeaderSubline,
   runArtifactPanelEntries,
   runJiraSummary,
+  S3_ACCESS_HELP,
   runOrgPulsePanelLinks,
   runS3ArtifactsInlineLink,
   runEnvironmentLine,
@@ -340,6 +376,8 @@ watch(
 
 const dayPopupRef = ref(null)
 const dayPanelTitleId = useId()
+const s3HelpId = useId()
+const s3HelpOpen = ref(false)
 const popupPos = ref({ top: 0, left: 0 })
 const lastMatrixClickTarget = ref(null)
 const lastPopupClickEvent = ref(null)
@@ -410,7 +448,15 @@ function onMatrixDayClick(date, event) {
 }
 
 onKeyStroke('Escape', () => {
+  if (s3HelpOpen.value) {
+    s3HelpOpen.value = false
+    return
+  }
   if (selectedDayEntry.value) dismissDayPanel()
+})
+
+watch(selectedDayEntry, () => {
+  s3HelpOpen.value = false
 })
 
 onClickOutside(dayPopupRef, (ev) => {
@@ -928,6 +974,63 @@ html.dark .cell-substatus.dsc-status-not-ready {
   color: var(--te-heading);
 }
 
+.day-panel-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.s3-help-btn {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  border: 1px solid var(--te-border);
+  background: transparent;
+  color: var(--te-link);
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1;
+  cursor: pointer;
+  padding: 0;
+}
+
+.s3-help-btn:focus-visible,
+.s3-help-close:focus-visible {
+  outline: 2px solid var(--te-accent);
+  outline-offset: 2px;
+}
+
+.s3-help-popover {
+  margin: 0 0 12px;
+  padding: 10px 12px;
+  border: 1px solid var(--te-border);
+  border-radius: 6px;
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--te-text-muted);
+}
+
+.s3-help-popover ol {
+  margin: 6px 0 0;
+  padding-left: 18px;
+}
+
+.s3-help-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.s3-help-close {
+  background: transparent;
+  border: none;
+  color: var(--te-text-muted);
+  font-size: 16px;
+  line-height: 1;
+  cursor: pointer;
+  padding: 0 2px;
+}
+
 .day-panel-close {
   background: transparent;
   border: 1px solid var(--te-border);
@@ -1032,6 +1135,18 @@ html.dark .test-execution-theme.nightly-day-popup .run-status,
 html.dark .test-execution-theme.nightly-day-popup .day-panel-empty,
 html.dark .test-execution-theme.nightly-day-popup .day-panel-close {
   color: #8899aa;
+}
+
+.test-execution-theme.nightly-day-popup .s3-help-popover {
+  background: #f9fafb;
+  border-color: #d1d5db;
+  color: #374151;
+}
+
+html.dark .test-execution-theme.nightly-day-popup .s3-help-popover {
+  background: #0f2236;
+  border-color: #1e4976;
+  color: #c8d4de;
 }
 
 html.dark .test-execution-theme.nightly-day-popup .run-list-item {
