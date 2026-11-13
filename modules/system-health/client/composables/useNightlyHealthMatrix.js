@@ -1330,7 +1330,7 @@ function isJiraKeyLabel(label) {
 /**
  * Jira tickets the promotion gate created or reused in this run.
  * Reads `run.jira.issues`; falls back to legacy Jira-key entries in `org_pulse_links`.
- * When there are none, `note` explains why (e.g. dry-run) next to "No Jira tied in this run".
+ * When there are none, `emptyText` explains why (e.g. dry-run) next to "No Jira tied in this run".
  *
  * @param {object|null|undefined} run
  * @returns {{ issues: { key: string, href: string, action: string }[], emptyText: string }}
