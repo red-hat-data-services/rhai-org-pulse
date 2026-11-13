@@ -110,11 +110,13 @@
                       {{ cellDisplayStatus(cellFor(day, rowId)) }}
                     </div>
                     <div
-                      v-if="cellSourceStatusSubtitle(cellFor(day, rowId))"
+                      v-for="caption in [cellDscCaption(rowId, cellFor(day, rowId))].filter(Boolean)"
+                      :key="caption.text"
                       class="cell-substatus"
-                      :class="dscSourceStatusClass(cellSourceStatusSubtitle(cellFor(day, rowId)))"
+                      :class="dscSourceStatusClass(caption.status)"
+                      :title="caption.title"
                     >
-                      {{ cellSourceStatusSubtitlePrefix(rowId) }}: {{ cellSourceStatusSubtitle(cellFor(day, rowId)) }}
+                      {{ caption.text }}
                     </div>
                     <div v-if="cellTestCounts(cellFor(day, rowId))" class="cell-counts">
                       <span class="cp">{{ cellTestCounts(cellFor(day, rowId)).passed }}</span>
@@ -242,15 +244,13 @@ import {
   NIGHTLY_PAGE_SIZE,
   useNightlyHealthMatrix,
   resolveSelectedRun,
-  findMatrixCell,
   resolveDisplayMatrixCell,
   cellDisplayStatus,
   nightlyCellTone,
-  cellSourceStatusSubtitle,
-  cellSourceStatusSubtitlePrefix,
+  cellDscCaption,
   dscSourceStatusClass,
-  rowLabel,
-  rowLabelTooltip,
+  matrixRowLabel,
+  matrixRowLabelTooltip,
   nightlyRowHeatmapLinkTarget,
   friendlyDate,
   formatTimestamp,
@@ -423,33 +423,22 @@ const newestBuildLabel = computed(() => {
   return run?.build_number ?? '—'
 })
 
+// Labels follow the newest run that has the row, so producer renames (e.g. AI Gateway →
+// Inference Gateway) show immediately instead of the oldest published name.
 const rowNameCache = computed(() => {
   const map = new Map()
-  for (const day of sortedDays.value) {
-    for (const run of day.runs || []) {
-      if (!run) continue
-      for (const rowId of rowIds.value) {
-        if (map.has(rowId)) continue
-        const cell = findMatrixCell(run, rowId, sortedDays.value)
-        if (cell) map.set(rowId, rowLabel(rowId, cell, props.heatmapComponents))
-      }
-    }
+  for (const rowId of rowIds.value) {
+    map.set(rowId, matrixRowLabel(rowId, sortedDays.value, props.heatmapComponents))
   }
   return map
 })
 
 function rowName(rowId) {
-  return rowNameCache.value.get(rowId) || rowLabel(rowId, null, props.heatmapComponents)
+  return rowNameCache.value.get(rowId) || matrixRowLabel(rowId, [], props.heatmapComponents)
 }
 
 function rowNameTooltip(rowId) {
-  for (const day of sortedDays.value) {
-    for (const run of day.runs || []) {
-      const cell = findMatrixCell(run, rowId, sortedDays.value)
-      if (cell) return rowLabelTooltip(rowId, cell)
-    }
-  }
-  return rowLabelTooltip(rowId, null)
+  return matrixRowLabelTooltip(rowId, sortedDays.value)
 }
 
 const rowLinkTargetCache = computed(() => {
@@ -844,6 +833,10 @@ table.nightly-matrix th {
   color: var(--te-text-muted);
   margin-top: 3px;
   line-height: 1.2;
+  /* DSC paths such as "aigateway.modelsAsAService" wrap inside the cell instead of widening the column. */
+  max-width: 110px;
+  white-space: normal;
+  overflow-wrap: anywhere;
 }
 
 .cell-substatus.dsc-status-ready {
