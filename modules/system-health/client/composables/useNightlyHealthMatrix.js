@@ -377,6 +377,29 @@ export function normalizeComponentIdentityKey(value) {
 }
 
 /**
+ * Retired component names (normalizeComponentIdentityKey) → the name the producer publishes today.
+ * Heatmap snapshots and historic nightly runs keep the old label after a rename; without this the
+ * old label matches no producer row and the matrix renders an empty placeholder row for it
+ * (e.g. "Platform" next to "AI Core Platform").
+ */
+export const RENAMED_MATRIX_COMPONENT_LABELS = Object.freeze({
+  platform: 'AI Core Platform',
+  aigateway: 'Inference Gateway',
+  batchgateway: 'llm-d'
+})
+
+/**
+ * Current component name for a possibly retired label; other labels are returned unchanged.
+ *
+ * @param {string|null|undefined} label
+ * @returns {string}
+ */
+export function currentComponentLabel(label) {
+  if (typeof label !== 'string') return ''
+  return RENAMED_MATRIX_COMPONENT_LABELS[normalizeComponentIdentityKey(label)] || label
+}
+
+/**
  * @param {object} index
  * @param {string} key
  * @param {string} rowId
@@ -609,7 +632,8 @@ function matrixRowDedupeKey(rowId, metaById) {
   if (rowId === 'cluster-health' || rowId === 'operator-health') return rowId
   const entry = metaById.get(rowId)
   if (entry) {
-    const published = (entry.jira_component || entry.name || '').trim()
+    // A row published under a retired name dedupes into its renamed row.
+    const published = currentComponentLabel((entry.jira_component || entry.name || '').trim()).trim()
     if (published) return `pub:${published.toLowerCase()}`
   }
   return `id:${rowId}`
@@ -1583,6 +1607,26 @@ export function isHiddenMatrixComponent(...candidates) {
 }
 
 /**
+ * Heatmap label to match against producer rows. Stale heatmap snapshots can still carry a retired
+ * name ({@link RENAMED_MATRIX_COMPONENT_LABELS}):
+ * - a label a producer still publishes is used as-is;
+ * - a retired label is matched as its renamed component;
+ * - a retired label that matches nothing is dropped (`null`) instead of becoming an empty row.
+ *
+ * @param {string|null|undefined} label
+ * @param {object[]} days
+ * @returns {string|null}
+ */
+export function heatmapLabelForMatrix(label, days) {
+  if (typeof label !== 'string' || !label.trim()) return null
+  const renamed = currentComponentLabel(label)
+  if (renamed === label) return label
+  if (producerRowIdsMatchingHeatmapLabel(label, days).length > 0) return label
+  if (producerRowIdsMatchingHeatmapLabel(renamed, days).length > 0) return renamed
+  return null
+}
+
+/**
  * @param {object[]} days
  * @param {{ component?: string }[]|null} [heatmapComponents] full heatmap inventory (not date-filtered)
  * @returns {string[]}
@@ -1618,8 +1662,9 @@ export function collectMatrixRowIds(days, heatmapComponents = null) {
   const canonicalKeysInOrder = new Set()
   if (Array.isArray(heatmapComponents)) {
     for (const entry of heatmapComponents) {
-      if (isHiddenMatrixComponent(entry?.component)) continue
-      const pickedId = pickHeatmapInventoryRowId(entry?.component, days)
+      const label = heatmapLabelForMatrix(entry?.component, days)
+      if (!label || isHiddenMatrixComponent(label)) continue
+      const pickedId = pickHeatmapInventoryRowId(label, days)
       if (!pickedId) continue
       const rowId = preferRowId(pickedId)
       if (isHiddenRowId(rowId)) continue
