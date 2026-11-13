@@ -141,6 +141,7 @@
                   <li><strong>Failed</strong> — The source reports a failure, or readiness is failed when no source status is available.</li>
                   <li><strong>Blocked</strong> — Health checks failed before tests ran, or <strong>DSC</strong> status for components is not ready.</li>
                   <li><strong>Blank</strong> — No result for that component; <strong>Not Installed</strong> — component set to 'removed' in DSC.</li>
+                  <li><strong>DSC &lt;name&gt;</strong> — The DataScienceCluster component the status was read from (e.g. <code>trustyai</code>, <code>aigateway.batchGateway</code>).</li>
                 </ul>
               </div>
               <NightlyHealthTable

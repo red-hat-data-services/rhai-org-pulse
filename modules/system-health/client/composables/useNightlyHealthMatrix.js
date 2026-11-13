@@ -393,6 +393,22 @@ function addComponentIdentityKey(index, key, rowId) {
 }
 
 /**
+ * Identity strings a producer component answers to: its id, name, jira_component, plus the ids
+ * and names of producer rows folded into it (`merged_from`, e.g. llamastackoperator / "Llama Stack"
+ * folded into the OGX Core row), so heatmap labels of folded rows join the surviving row.
+ *
+ * @param {object} comp
+ * @returns {string[]}
+ */
+function componentIdentityFields(comp) {
+  const fields = [comp.id, comp.name, comp.jira_component]
+  for (const folded of Array.isArray(comp.merged_from) ? comp.merged_from : []) {
+    if (folded && typeof folded === 'object') fields.push(folded.id, folded.name)
+  }
+  return fields.filter((f) => typeof f === 'string' && f.length > 0)
+}
+
+/**
  * Map canonical identity strings (id, name, jira_component) → producer row id, or `null` when ambiguous.
  *
  * @param {object[]} days
@@ -404,9 +420,9 @@ export function buildComponentIdentityIndex(days) {
     for (const run of day.runs || []) {
       for (const comp of run.components || []) {
         if (!comp?.id) continue
-        addComponentIdentityKey(index, comp.id, comp.id)
-        if (comp.name) addComponentIdentityKey(index, comp.name, comp.id)
-        if (comp.jira_component) addComponentIdentityKey(index, comp.jira_component, comp.id)
+        for (const field of componentIdentityFields(comp)) {
+          addComponentIdentityKey(index, field, comp.id)
+        }
       }
     }
   }
@@ -433,7 +449,7 @@ export function producerRowIdsMatchingHeatmapLabel(componentName, days, scope = 
     if (!run || typeof run !== 'object') continue
     for (const comp of run.components || []) {
       if (!comp?.id) continue
-      const fields = [comp.id, comp.name, comp.jira_component]
+      const fields = componentIdentityFields(comp)
       if (fields.some((field) => normalizeComponentIdentityKey(field) === key)) {
         ids.add(comp.id)
       }
@@ -504,24 +520,37 @@ export function normalizeHeatmapComponentToNightlyId(componentName, daysOrIndex 
 }
 
 /**
- * Merge producer component fields across runs (later rows fill gaps in earlier metadata).
+ * Merge producer component fields across runs. Callers walk `days` oldest → newest, so `incoming`
+ * is the newer run: its published name / Jira component win, older values only fill gaps.
+ * Newest-wins keeps row identity in step with producer renames and remaps (e.g. sparkoperator
+ * KubeRay → Kubeflow Spark Operator); oldest-wins froze rows on the first published mapping.
  *
  * @param {{ name?: string, jira_component?: string }} existing
  * @param {{ name?: string, jira_component?: string }} incoming
  * @returns {{ name?: string, jira_component?: string }}
  */
 function mergeComponentMetaEntry(existing, incoming) {
-  const next = {
-    name: existing.name,
-    jira_component: existing.jira_component
+  return {
+    name: incoming.name || existing.name,
+    jira_component: incoming.jira_component || existing.jira_component
   }
-  if (!next.jira_component && incoming.jira_component) {
-    next.jira_component = incoming.jira_component
-  }
-  if (!next.name && incoming.name) {
-    next.name = incoming.name
-  }
-  return next
+}
+
+/**
+ * A day's runs ordered oldest → newest by completion (then start) time, then build number.
+ * Payload order is not guaranteed (producers store same-day retries newest-first).
+ *
+ * @param {object|null|undefined} day
+ * @returns {object[]}
+ */
+function dayRunsOldestFirst(day) {
+  const runs = Array.isArray(day?.runs) ? day.runs.filter((r) => r && typeof r === 'object') : []
+  const ts = (r) => String(r.completed_at || r.started_at || '')
+  const num = (r) => (Number.isFinite(Number(r.build_number)) ? Number(r.build_number) : -1)
+  return runs
+    .map((run, index) => ({ run, index }))
+    .sort((a, b) => ts(a.run).localeCompare(ts(b.run)) || num(a.run) - num(b.run) || a.index - b.index)
+    .map(({ run }) => run)
 }
 
 /**
@@ -533,7 +562,8 @@ function mergeComponentMetaEntry(existing, incoming) {
 function collectComponentMetaById(days) {
   const meta = new Map()
   for (const day of days || []) {
-    for (const run of day.runs || []) {
+    // Same-day retries are stored newest-first; walk them oldest → newest so the newest wins.
+    for (const run of dayRunsOldestFirst(day)) {
       for (const comp of run.components || []) {
         if (!comp?.id) continue
         const prev = meta.get(comp.id)
@@ -583,6 +613,70 @@ function matrixRowDedupeKey(rowId, metaById) {
     if (published) return `pub:${published.toLowerCase()}`
   }
   return `id:${rowId}`
+}
+
+/**
+ * Producer id to use for each published component (dedupe key), taken from the newest selected
+ * run that emits one. When ids sharing a component change over time (llamastackoperator → ogx
+ * under "OGX Core"), the row follows the id the producer emits today rather than whichever id an
+ * older run or the heatmap label order happened to match first.
+ *
+ * @param {object[]} days sorted oldest → newest
+ * @param {Map<string, { name?: string, jira_component?: string }>} metaById
+ * @returns {Map<string, string>}
+ */
+function preferredRowIdByDedupeKey(days, metaById) {
+  const preferred = new Map()
+  for (let i = (days || []).length - 1; i >= 0; i -= 1) {
+    const { run } = resolveSelectedRun(days[i])
+    if (!run) continue
+    for (const comp of run.components || []) {
+      if (!comp?.id) continue
+      const key = matrixRowDedupeKey(comp.id, metaById)
+      if (!preferred.has(key)) preferred.set(key, comp.id)
+    }
+  }
+  return preferred
+}
+
+/**
+ * Newest producer cell for a row (labels and tooltips follow the latest published names).
+ *
+ * @param {string} rowId
+ * @param {object[]} days sorted oldest → newest
+ * @returns {object|null}
+ */
+function newestMatrixCellForRow(rowId, days) {
+  const list = days || []
+  for (let i = list.length - 1; i >= 0; i -= 1) {
+    for (const run of dayRunsOldestFirst(list[i]).reverse()) {
+      const cell = findMatrixCell(run, rowId, list)
+      if (cell) return cell
+    }
+  }
+  return null
+}
+
+/**
+ * Row label from the newest run that has the row (e.g. "Inference Gateway" after a rename,
+ * while older runs still say "AI Gateway").
+ *
+ * @param {string} rowId
+ * @param {object[]} days sorted oldest → newest
+ * @param {{ component?: string }[]|null} [heatmapComponents]
+ * @returns {string}
+ */
+export function matrixRowLabel(rowId, days, heatmapComponents = null) {
+  return rowLabel(rowId, newestMatrixCellForRow(rowId, days), heatmapComponents)
+}
+
+/**
+ * @param {string} rowId
+ * @param {object[]} days sorted oldest → newest
+ * @returns {string}
+ */
+export function matrixRowLabelTooltip(rowId, days) {
+  return rowLabelTooltip(rowId, newestMatrixCellForRow(rowId, days))
 }
 
 /**
@@ -772,6 +866,35 @@ export function dscSourceStatusClass(sourceStatus) {
 }
 
 const NIGHTLY_GATE_ROW_IDS = new Set(['cluster-health', 'operator-health'])
+
+/**
+ * Caption under the cell status. Component cells name the DataScienceCluster component the
+ * status was read from (producer `dsc_component`, e.g. "trustyai", "aigateway.batchGateway"),
+ * so a user can map the row to the DSC. Older payloads without `dsc_component` keep "DSC: <status>".
+ *
+ * @param {string} rowId
+ * @param {object|null} cell
+ * @returns {{ text: string, status: string|null, title: string }|null}
+ */
+export function cellDscCaption(rowId, cell) {
+  if (!cell) return null
+  const status = cellSourceStatusSubtitle(cell)
+  if (NIGHTLY_GATE_ROW_IDS.has(rowId)) {
+    return status ? { text: `Gate: ${status}`, status, title: `Gate status: ${status}` } : null
+  }
+  const name = typeof cell.dsc_component === 'string' ? cell.dsc_component.trim() : ''
+  if (status) {
+    return {
+      text: name ? `DSC ${name}: ${status}` : `DSC: ${status}`,
+      status,
+      title: name ? `DataScienceCluster component "${name}" is ${status}` : `DSC status: ${status}`
+    }
+  }
+  if (name) {
+    return { text: `DSC ${name}`, status: null, title: `DataScienceCluster component "${name}"` }
+  }
+  return null
+}
 
 /**
  * Prefix for blocked-cell source_status subtitle (gate rows vs component DSC readiness).
@@ -1399,6 +1522,12 @@ export function collectMatrixRowIds(days, heatmapComponents = null) {
     const entry = metaById.get(id)
     return isHiddenMatrixComponent(id, entry?.name, entry?.jira_component)
   }
+  const preferredIdByCanon = preferredRowIdByDedupeKey(days, metaById)
+  /** Several producer ids can share one published component (OGX Core: ogx + llamastackoperator). */
+  const preferRowId = (id) => {
+    if (id === 'cluster-health' || id === 'operator-health') return id
+    return preferredIdByCanon.get(matrixRowDedupeKey(id, metaById)) || id
+  }
 
   for (const day of days) {
     for (const run of day.runs || []) {
@@ -1418,8 +1547,9 @@ export function collectMatrixRowIds(days, heatmapComponents = null) {
   if (Array.isArray(heatmapComponents)) {
     for (const entry of heatmapComponents) {
       if (isHiddenMatrixComponent(entry?.component)) continue
-      const rowId = pickHeatmapInventoryRowId(entry?.component, days)
-      if (!rowId) continue
+      const pickedId = pickHeatmapInventoryRowId(entry?.component, days)
+      if (!pickedId) continue
+      const rowId = preferRowId(pickedId)
       if (isHiddenRowId(rowId)) continue
       ids.add(rowId)
       if (rowId === 'cluster-health' || rowId === 'operator-health') continue
@@ -1444,7 +1574,7 @@ export function collectMatrixRowIds(days, heatmapComponents = null) {
   }
 
   const heatmapSet = new Set(heatmapOrder)
-  const nightlyOnly = Array.from(ids)
+  const nightlyOnly = [...new Set(Array.from(ids).map(preferRowId))]
     .filter((id) => !heatmapSet.has(id))
     .filter((id) => !isHiddenRowId(id))
     .filter((id) => {
