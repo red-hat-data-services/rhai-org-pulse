@@ -58,7 +58,9 @@ import {
   visibleDayWindow,
   buildComponentIdentityIndex,
   resolveHeatmapComponentToRowId,
-  producerRowIdsMatchingHeatmapLabel
+  producerRowIdsMatchingHeatmapLabel,
+  filterNightlyHealthByStream,
+  RHOAI_NIGHTLY_BVT_STREAM_KEY
 } from '../../client/composables/useNightlyHealthMatrix'
 
 const fixturePath = join(
@@ -1336,6 +1338,46 @@ describe('useNightlyHealthMatrix helpers', () => {
   it('decodes percent-encoded Jenkins job path segments', () => {
     const url = 'https://jenkins.example/job/devops/job/promotion%20gate/42/'
     expect(jenkinsJobPathFromUrl(url)).toBe('devops/promotion gate')
+  })
+
+  it('splits the nightly BVT stream from the promotion-gate streams', () => {
+    const payload = {
+      schema_version: 1,
+      jenkins_jobs: [
+        { stream_key: 'promotion-gate', label: 'devops/promotion-gate-tests', jenkins_job: 'devops/promotion-gate-tests' },
+        { stream_key: RHOAI_NIGHTLY_BVT_STREAM_KEY, label: 'devops/rhoai-nightly-bvt', jenkins_job: 'devops/rhoai-nightly-bvt' }
+      ],
+      days: [
+        { date: '2026-11-10', stream_key: 'promotion-gate', latest_run_id: 'pg:1', runs: [] },
+        { date: '2026-11-10', stream_key: RHOAI_NIGHTLY_BVT_STREAM_KEY, latest_run_id: 'bvt:1', runs: [] },
+        { date: '2026-11-09', latest_run_id: 'legacy:1', runs: [] }
+      ]
+    }
+
+    const bvt = filterNightlyHealthByStream(payload, { include: [RHOAI_NIGHTLY_BVT_STREAM_KEY] })
+    expect(bvt.days.map((d) => d.latest_run_id)).toEqual(['bvt:1'])
+    expect(bvt.jenkins_jobs.map((j) => j.stream_key)).toEqual([RHOAI_NIGHTLY_BVT_STREAM_KEY])
+    expect(bvt.schema_version).toBe(1)
+
+    const gates = filterNightlyHealthByStream(payload, { exclude: [RHOAI_NIGHTLY_BVT_STREAM_KEY] })
+    expect(gates.days.map((d) => d.latest_run_id)).toEqual(['pg:1', 'legacy:1'])
+    expect(gates.jenkins_jobs.map((j) => j.stream_key)).toEqual(['promotion-gate'])
+    expect(listNightlyJenkinsJobOptions(gates).map((o) => o.stream_key)).toEqual(['promotion-gate', 'default'])
+
+    // Input is not mutated
+    expect(payload.days).toHaveLength(3)
+    expect(payload.jenkins_jobs).toHaveLength(2)
+  })
+
+  it('returns null when no nightly day matches the stream filter', () => {
+    const payload = {
+      schema_version: 1,
+      days: [{ date: '2026-11-10', stream_key: 'promotion-gate', latest_run_id: 'pg:1', runs: [] }]
+    }
+    expect(filterNightlyHealthByStream(payload, { include: [RHOAI_NIGHTLY_BVT_STREAM_KEY] })).toBeNull()
+    expect(filterNightlyHealthByStream(null, { include: [RHOAI_NIGHTLY_BVT_STREAM_KEY] })).toBeNull()
+    expect(filterNightlyHealthByStream({ schema_version: 1 }, {})).toBeNull()
+    expect(filterNightlyHealthByStream(payload, { exclude: [RHOAI_NIGHTLY_BVT_STREAM_KEY] }).jenkins_jobs).toBeUndefined()
   })
 
   it('filters omitted stream_key days under the default option when multiple streams exist', async () => {
