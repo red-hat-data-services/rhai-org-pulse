@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed, onMounted, watch } from 'vue'
+import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
 import { useDraftPlans } from '../composables/useDraftPlans'
 import DraftPlanRow from '../components/DraftPlanRow.vue'
 import DraftPlanDrawer from '../components/DraftPlanDrawer.vue'
@@ -67,6 +67,7 @@ var {
 
 var selectedFeatureKey = ref(null)
 var filterPlacements = PLACEMENTS.concat(['Descope'])
+var iframeMessageHandler = null
 
 var selectedFeature = computed(function() {
   if (!selectedFeatureKey.value) return null
@@ -193,6 +194,26 @@ onMounted(async function() {
   // among approvals already saved on the cycle.
   filterEvent.value = sessionAdded.value.length ? '__session__' : '__approved__'
   filterDecision.value = ''
+
+  iframeMessageHandler = async function(event) {
+    if (event.origin !== window.location.origin) return
+    if (!event.data || event.data.type !== 'add-to-draft-plan') return
+    var targetVersion = event.data.version || (event.data.features && event.data.features[0] && event.data.features[0].version)
+    if (targetVersion && targetVersion !== selectedVersion.value) {
+      try {
+        await loadEditor(targetVersion)
+      } catch (e) {
+        console.warn('Could not load version ' + targetVersion + ':', e)
+      }
+    }
+  }
+  window.addEventListener('message', iframeMessageHandler)
+})
+
+onUnmounted(function() {
+  if (iframeMessageHandler) {
+    window.removeEventListener('message', iframeMessageHandler)
+  }
 })
 </script>
 
