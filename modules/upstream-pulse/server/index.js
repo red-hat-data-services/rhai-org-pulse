@@ -172,6 +172,7 @@ const ROSTER_PUSH_STARTUP_DELAY = 2 * 60 * 1000; // 2 minutes
 const ROSTER_PUSH_TIMEOUT = 5 * 60 * 1000; // 5 minutes (bulk sync processes hundreds of members)
 
 let _lastPushGeneratedAt = null;
+let _lastPushResult = null;
 
 function getServiceIdentityHeaders() {
   const serviceUser = process.env.UPSTREAM_SYNC_SERVICE_USER || 'roster-sync-service';
@@ -183,8 +184,15 @@ function getServiceIdentityHeaders() {
   };
 }
 
-async function pushRosterToUpstream(storage) {
-  const allPeople = getAllPeople(storage);
+async function pushRosterToUpstream(storage, deps) {
+  // getAllPeople is async in @org-pulse/core (it awaits readFromStorage and
+  // loadConfig). Awaiting is also safe for the older synchronous implementation,
+  // so this works across core versions.
+  //
+  // `deps` lets tests inject the roster reader without mocking the shared
+  // module across the node_modules symlink.
+  const loadPeople = (deps && deps.getAllPeople) || getAllPeople;
+  const allPeople = await loadPeople(storage);
 
   const people = [];
   for (const p of allPeople) {
@@ -232,23 +240,58 @@ async function pushRosterToUpstream(storage) {
 function startPeriodicRosterPush(storage) {
   if (process.env.DEMO_MODE === 'true') return;
 
+  // The built-in default is a fixed namespace. When the canonical instance
+  // moved, every push kept going to the old one and nothing said so. Make the
+  // fallback loud instead of relying on empty dashboards to reveal it.
+  if (!process.env.UPSTREAM_PULSE_API_URL) {
+    console.warn('[upstream-pulse] UPSTREAM_PULSE_API_URL is not set; roster pushes will use the built-in default: '
+      + DEFAULT_BASE_URL);
+  }
+
   async function checkAndPush() {
+    let registry;
     try {
-      const registry = await storage.readFromStorage('team-data/registry.json');
-      if (!registry || !registry.meta || !registry.meta.generatedAt) return;
-
-      const generatedAt = registry.meta.generatedAt;
-      if (_lastPushGeneratedAt === generatedAt) return;
-
-      pushRosterToUpstream(storage).then(function(result) {
-        if (!result.skipped) {
-          _lastPushGeneratedAt = generatedAt;
-        }
-      }).catch(function(err) {
-        console.warn('[upstream-pulse] Periodic roster push failed:', err.message);
-      });
+      registry = await storage.readFromStorage('team-data/registry.json');
     } catch (err) {
       console.warn('[upstream-pulse] Periodic roster push check failed:', err.message);
+      return;
+    }
+    if (!registry || !registry.meta || !registry.meta.generatedAt) return;
+
+    const generatedAt = registry.meta.generatedAt;
+
+    // Push on every tick, not only when generatedAt changes. The payload is a
+    // few hundred rows and the upstream endpoint is idempotent, so an
+    // unconditional push turns any transient failure into something the next
+    // tick repairs. Change detection here used an in-memory marker, which
+    // silently closed the window whenever a push failed.
+    try {
+      const result = await pushRosterToUpstream(storage);
+      _lastPushGeneratedAt = generatedAt;
+      _lastPushResult = {
+        at: new Date().toISOString(),
+        generatedAt: generatedAt,
+        ok: true,
+        skipped: !!(result && result.skipped),
+        reason: (result && result.reason) || null,
+        inserted: result && result.inserted,
+        upserted: result && result.upserted,
+        deactivated: result && result.deactivated,
+        relinked: result && result.relinked,
+        wouldDeactivate: (result && result.wouldDeactivate) || []
+      };
+      if (result && result.relinked === 0 && result.inserted > 0) {
+        console.warn('[upstream-pulse] Roster push inserted members but relinked 0 contributions',
+          JSON.stringify(_lastPushResult));
+      }
+    } catch (err) {
+      _lastPushResult = {
+        at: new Date().toISOString(),
+        generatedAt: generatedAt,
+        ok: false,
+        error: err.message
+      };
+      console.warn('[upstream-pulse] Periodic roster push failed:', err.message);
     }
   }
 
@@ -762,9 +805,15 @@ module.exports = function registerRoutes(router, context) {
         connection,
         rosterPush: {
           lastPushGeneratedAt: _lastPushGeneratedAt,
+          lastPushResult: _lastPushResult,
           serviceUser: process.env.UPSTREAM_SYNC_SERVICE_USER || 'roster-sync-service'
         }
       };
     });
   }
 };
+
+// Exported for unit tests. Keeps the production module shape (a single
+// registerRoutes export) while allowing the roster push to be exercised
+// directly.
+module.exports.pushRosterToUpstream = pushRosterToUpstream;
