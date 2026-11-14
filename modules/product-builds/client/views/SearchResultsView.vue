@@ -191,6 +191,7 @@ onMounted(() => {
             <option value="rhel-ai">RHEL AI</option>
             <option value="base-images">Base Images</option>
             <option value="builder-images">Builder Images</option>
+            <option value="openshell">OpenShell</option>
           </select>
         </div>
 
