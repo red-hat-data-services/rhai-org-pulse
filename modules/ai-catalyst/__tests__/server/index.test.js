@@ -1261,6 +1261,7 @@ describe('ai-catalyst board sync via POC Explorer feed', () => {
           { uniqueId: 'org/no', pmDecision: 'Disapprove', title: 'No' },
           { uniqueId: 'org/yes', pmDecision: 'Approve', title: 'Yes' },
         ],
+        'ai-catalyst/showcase/showcase-data.json': { entries: [], pillars: [] },
       }),
     })
     const res = { json: vi.fn(), status: vi.fn() }
@@ -1386,6 +1387,7 @@ describe('ai-catalyst board sync via POC Explorer feed', () => {
           { uniqueId: 'org/legacy', source: 'hn', title: 'Legacy HN item' },
           { uniqueId: 'org/gh', source: 'github', title: 'GH item' },
         ],
+        'ai-catalyst/showcase/showcase-data.json': { entries: [], pillars: [] },
       }),
     })
 
