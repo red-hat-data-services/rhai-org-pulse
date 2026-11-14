@@ -9,6 +9,7 @@ import FeatureDetailPanel from '../components/FeatureDetailPanel.vue'
 import AIImpactGuide from '../components/AIImpactGuide.vue'
 
 const moduleNav = inject('moduleNav')
+const tracker = inject('usageTracker', null)
 const { navigateTo: crossNavigate } = useModuleLink()
 
 const selectedFeature = ref(null)
@@ -37,6 +38,7 @@ function handleSelectFeature(feature) {
   if (feature) {
     selectedFeature.value = feature
     moduleNav.navigateTo('feature-review', { select: feature.key })
+    if (tracker) tracker.trackInteraction('ai-impact', 'feature-review', 'select', feature.key)
   }
 }
 
@@ -70,6 +72,7 @@ function handleViewInReleases(featureKey) {
     key: featureKey,
     fromFeatureReview: '1'
   })
+  if (tracker) tracker.trackInteraction('ai-impact', 'feature-review', 'navigate', 'releases:feature-detail')
 }
 
 // Handle incoming select param (cross-link from RFE Review)
@@ -118,13 +121,13 @@ watch(() => Object.keys(features.value).length, () => {
       :humanReviewFilter="humanReviewFilter"
       :sortBy="sortBy"
       :selectedFeature="selectedFeature"
-      @update:timeWindow="timeWindow = $event"
+      @update:timeWindow="timeWindow = $event; tracker?.trackInteraction('ai-impact', 'feature-review', 'filter', `timeWindow:${$event}`)"
       @update:chartExpanded="chartExpanded = $event"
       @update:searchQuery="searchQuery = $event"
-      @update:recommendationFilter="recommendationFilter = $event"
-      @update:priorityFilter="priorityFilter = $event"
-      @update:humanReviewFilter="humanReviewFilter = $event"
-      @update:sortBy="sortBy = $event"
+      @update:recommendationFilter="recommendationFilter = $event; tracker?.trackInteraction('ai-impact', 'feature-review', 'filter', `recommendation:${$event}`)"
+      @update:priorityFilter="priorityFilter = $event; tracker?.trackInteraction('ai-impact', 'feature-review', 'filter', `priority:${$event}`)"
+      @update:humanReviewFilter="humanReviewFilter = $event; tracker?.trackInteraction('ai-impact', 'feature-review', 'filter', `humanReview:${$event}`)"
+      @update:sortBy="sortBy = $event; tracker?.trackInteraction('ai-impact', 'feature-review', 'sort', $event)"
       @selectFeature="handleSelectFeature"
       @retry="handleRetry"
     />
