@@ -61,7 +61,7 @@ module.exports = function registerUsageTracking(router, context) {
     return hmacKeyPromise
   }
 
-  context.registerRefresh('report', {
+  context.registerRefresh('generate-report', {
     handler: async function () {
       const result = await runReportGeneration(context)
       console.log(`[usage-tracking] Report generated: ${result.eventCount} events, ${result.periodStart} to ${result.periodEnd}`)
@@ -69,7 +69,25 @@ module.exports = function registerUsageTracking(router, context) {
     },
     cadence: '24h',
     timeout: 60_000,
-    order: 500
+    order: 200
+  })
+
+  context.registerDiagnostics(async function () {
+    const files = await storage.listAllStorageFiles('usage')
+    const eventFiles = files.filter(function (f) { return f.startsWith('events-') && f.endsWith('.jsonl') })
+    const today = new Date().toISOString().slice(0, 10)
+    const todayRaw = await storage.readRawFromStorage(`usage/events-${today}.jsonl`)
+    const todayCount = todayRaw ? todayRaw.split('\n').filter(Boolean).length : 0
+    const sortedDays = eventFiles
+      .map(function (f) { return f.replace('events-', '').replace('.jsonl', '') })
+      .sort()
+    return {
+      eventFileCount: eventFiles.length,
+      oldestDay: sortedDays[0] || null,
+      newestDay: sortedDays[sortedDays.length - 1] || null,
+      todayEventCount: todayCount,
+      lastReportGenerated: await storage.getFileMtime('usage/report-latest.txt') || null
+    }
   })
 
   /**

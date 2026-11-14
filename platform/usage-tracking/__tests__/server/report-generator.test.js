@@ -114,6 +114,36 @@ describe('generateReport', () => {
     expect(report).toContain('custom-module')
     expect(report).not.toContain('system-health')
   })
+
+  it('includes AI IMPACT x PERSONA cross-tab section', () => {
+    const report = generateReport(sampleEvents, '2026-10-06', '2026-10-12')
+    expect(report).toContain('AI IMPACT x PERSONA')
+    expect(report).toContain('developer')
+    expect(report).toContain('engineering-manager')
+    expect(report).toContain('autofix')
+    expect(report).toContain('rfe-review')
+  })
+
+  it('counts per-persona per-view visits in cross-tab', () => {
+    const report = generateReport(sampleEvents, '2026-10-06', '2026-10-12')
+    const lines = report.split('\n')
+    const crossTabStart = lines.findIndex(function (l) { return l.includes('AI IMPACT x PERSONA') })
+    const crossTabLines = lines.slice(crossTabStart + 1)
+    const devLine = crossTabLines.find(function (l) { return l.trim().startsWith('developer') })
+    expect(devLine).toBeDefined()
+    expect(devLine).toMatch(/2/)
+    const mgrLine = crossTabLines.find(function (l) { return l.trim().startsWith('engineering-manager') })
+    expect(mgrLine).toBeDefined()
+    expect(mgrLine).toMatch(/1/)
+  })
+
+  it('omits AI IMPACT x PERSONA when no ai-impact events', () => {
+    const nonAiEvents = [
+      { ts: '2026-10-12T10:00:00Z', module: 'releases', view: 'pipeline', action: 'view', userId: 'u1', persona: 'dev' }
+    ]
+    const report = generateReport(nonAiEvents, '2026-10-06', '2026-10-12')
+    expect(report).not.toContain('AI IMPACT x PERSONA')
+  })
 })
 
 describe('runReportGeneration retention', () => {
