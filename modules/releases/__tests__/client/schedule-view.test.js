@@ -75,6 +75,7 @@ describe('ScheduleView', () => {
     expect(wrapper.text()).toContain('Sep 15, 2026')
     expect(wrapper.text()).toContain('Aug 20, 2026')
     expect(wrapper.text()).toContain('Jul 10, 2026')
+    expect(wrapper.find('input[type="checkbox"]').element.checked).toBe(false)
   })
 
   it('shows em-dash for missing milestone dates', async () => {
@@ -234,6 +235,7 @@ describe('ScheduleView', () => {
     const wrapper = mount(ScheduleView, { global: { stubs: { ReleaseTimeline: ReleaseTimelineStub } } })
     await flushPromises()
 
+    await wrapper.find('input[type="checkbox"]').setValue(true)
     var rhoaiBtn = wrapper.findAll('button').find(b => b.text() === 'rhoai')
     await rhoaiBtn.trigger('click')
 
@@ -315,18 +317,13 @@ describe('ScheduleView', () => {
     })
     await flushPromises()
 
-    // Show released rows so the past-only version is present.
-    const hideReleased = wrapper.find('input[type="checkbox"]')
-    await hideReleased.setValue(false)
-    await flushPromises()
-
     const cards = wrapper.findAll('[data-testid="milestone-countdown-card"]')
     expect(cards.length).toBeGreaterThan(0)
     expect(wrapper.text()).toContain('days ago')
     expect(wrapper.text()).toContain('5')
   })
 
-  it('auto-unticks "Hide released" when a released version pill is selected', async () => {
+  it('keeps released versions visible when a released version pill is selected', async () => {
     const past = new Date()
     past.setDate(past.getDate() - 5)
     const pastStr = localDateStr(past)
@@ -347,11 +344,11 @@ describe('ScheduleView', () => {
     const wrapper = mount(ScheduleView, { global: { stubs: { ReleaseTimeline: ReleaseTimelineStub } } })
     await flushPromises()
 
-    // "Hide released" is on by default.
+    // Released versions are visible by default.
     const hideReleased = wrapper.find('input[type="checkbox"]')
-    expect(hideReleased.element.checked).toBe(true)
+    expect(hideReleased.element.checked).toBe(false)
 
-    // Selecting the released version pill should untick it and keep the view populated.
+    // Selecting the released version keeps it visible and keeps the view populated.
     const ea1 = wrapper.findAll('button').find(b => b.text().trim() === '3.5 EA1')
     expect(ea1).toBeTruthy()
     await ea1.trigger('click')
@@ -384,6 +381,7 @@ describe('ScheduleView', () => {
     await flushPromises()
 
     const hideReleased = wrapper.find('input[type="checkbox"]')
+    await hideReleased.setValue(true)
     expect(hideReleased.element.checked).toBe(true)
 
     const ea1 = wrapper.findAll('button').find(b => b.text().trim() === '3.6 EA1')

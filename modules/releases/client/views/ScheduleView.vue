@@ -249,7 +249,7 @@ const loading = ref(true)
 const error = ref(null)
 const selectedProducts = ref(props.initialProducts.slice())
 const selectedStream = ref(null)
-const hideReleased = ref(true)
+const hideReleased = ref(false)
 const selectedVersions = ref([])
 
 async function fetchRegistry() {
