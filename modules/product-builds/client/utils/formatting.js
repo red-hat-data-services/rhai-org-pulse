@@ -68,6 +68,15 @@ export function formatDuration(start, end) {
   return `${s}s`
 }
 
+export function getCommitUrlForRepo(repoUrl, commit) {
+  if (!repoUrl || typeof repoUrl !== 'string' || !commit) return null
+  const baseUrl = repoUrl.replace(/\/+$/, '').replace(/\.git$/, '')
+  // GitHub commit URLs are /owner/repo/commit/<sha>;
+  // GitLab (and GitLab-style hosts) use /owner/repo/-/commit/<sha>.
+  const isGithub = /^https?:\/\/(www\.)?github\.com\//i.test(baseUrl)
+  return `${baseUrl}${isGithub ? '' : '/-'}/commit/${commit}`
+}
+
 export function getCommitUrl(artifact) {
   const commit = artifact?.commit || artifact?.labels?.['git.commit'] || artifact?.labels?.['org.opencontainers.image.revision'] || artifact?.labels?.['vcs-ref']
   if (!commit) return null
@@ -82,8 +91,7 @@ export function getCommitUrl(artifact) {
   }
   if (!repoUrl || typeof repoUrl !== 'string') return null
 
-  const baseUrl = repoUrl.replace(/\.git$/, '').replace(/\/$/, '')
-  return `${baseUrl}/-/commit/${commit}`
+  return getCommitUrlForRepo(repoUrl, commit)
 }
 
 export const CHI_GRADE_CLASSES = {
