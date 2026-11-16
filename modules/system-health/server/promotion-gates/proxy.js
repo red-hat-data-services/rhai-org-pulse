@@ -32,7 +32,8 @@ async function proxyGet(baseUrl, upstreamPath, query, res) {
       try {
         r = await fetch(url, {
           signal: AbortSignal.timeout(TIMEOUT_MS),
-          headers: { 'Accept': 'application/json' }
+          // JSON by default; the summary can return CSV.
+          headers: { Accept: 'application/json, text/csv' }
         });
       } catch (err) {
         if (err.name === 'TimeoutError') bail(err);
@@ -42,12 +43,23 @@ async function proxyGet(baseUrl, upstreamPath, query, res) {
       return r;
     }, { retries: RETRIES, minTimeout: 500 });
 
-    const body = await upstream.json();
     const totalCount = upstream.headers.get('X-Total-Count');
     const totalPages = upstream.headers.get('X-Total-Pages');
     if (totalCount) res.set('X-Total-Count', totalCount);
     if (totalPages) res.set('X-Total-Pages', totalPages);
-    res.status(upstream.status).json(body);
+
+    // The summary endpoint can answer CSV, so pass the body through as-is
+    // instead of assuming JSON.
+    const contentType = upstream.headers.get('Content-Type') || 'application/json';
+    res.status(upstream.status).set('Content-Type', contentType);
+    const disposition = upstream.headers.get('Content-Disposition');
+    if (disposition) res.set('Content-Disposition', disposition);
+
+    if (contentType.includes('application/json')) {
+      res.json(await upstream.json());
+      return;
+    }
+    res.send(await upstream.text());
   } catch (err) {
     if (err.name === 'TimeoutError') {
       return res.status(504).json({ error: 'Upstream request timed out' });

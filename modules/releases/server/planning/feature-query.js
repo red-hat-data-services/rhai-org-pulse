@@ -193,10 +193,26 @@ async function fetchFeatures(jiraClient) {
   return map
 }
 
+// Features List, AI Planner, and PM Hub each call fetchFeaturesWithTimeout independently
+// on every page load. Without sharing a result, two tabs open minutes apart can each race
+// a live 25s-budget Jira fetch and land on different outcomes — one completes and sees a
+// just-created issue, the other times out and falls back further to stale execution/health
+// cache — so the same feature appears on one tab and not the other even though both are
+// asking Jira the same question. Short TTL cache makes concurrent tabs see one snapshot.
+var _featureCache = { data: null, fetchedAt: 0 }
+var FEATURE_CACHE_TTL_MS = 2 * 60 * 1000
+
+function _resetFeatureCacheForTests() {
+  _featureCache = { data: null, fetchedAt: 0 }
+}
+
 /**
  * Like fetchFeatures, but abandons the wait after timeoutMs so the Features List
  * can respond from execution/health cache instead of gateway-timing-out.
  * The underlying Jira fetch may still complete in the background.
+ * Successful results are cached for FEATURE_CACHE_TTL_MS and shared across all callers
+ * (Features List, AI Planner, PM Hub) so they see the same snapshot, not three independent
+ * live fetches.
  *
  * @param {object} jiraClient
  * @param {number} [timeoutMs]
@@ -204,6 +220,9 @@ async function fetchFeatures(jiraClient) {
  */
 async function fetchFeaturesWithTimeout(jiraClient, timeoutMs) {
   if (!jiraClient || !jiraClient.fetchAllJqlResults) return null
+  if (_featureCache.data && (Date.now() - _featureCache.fetchedAt) < FEATURE_CACHE_TTL_MS) {
+    return _featureCache.data
+  }
   var ms = timeoutMs != null ? timeoutMs : FETCH_FEATURES_TIMEOUT_MS
   var timedOut = false
   var timeout = new Promise(function(resolve) {
@@ -222,11 +241,13 @@ async function fetchFeaturesWithTimeout(jiraClient, timeoutMs) {
     return null
   }
   if (result.size === 0) return null
+  _featureCache = { data: result, fetchedAt: Date.now() }
   return result
 }
 
 module.exports = {
   fetchFeatures: fetchFeatures,
+  _resetFeatureCacheForTests: _resetFeatureCacheForTests,
   fetchFeaturesWithTimeout: fetchFeaturesWithTimeout,
   normalizeIssue: normalizeIssue,
   extractTargetVersions: extractTargetVersions,

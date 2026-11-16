@@ -6,6 +6,7 @@ const DEFAULT_TIMEOUT_MS = 15_000;
 const RUNS_INDEX = 'workflow-executions';
 const TASKS_INDEX = 'workflow-task-executions';
 const BUGS_INDEX = 'workflow-root-causes';
+const IMAGES_INDEX = 'workflow-execution-images';
 
 function getOpenSearchConfig(secrets = {}, env = process.env, settings = {}) {
   const url = validateHttpUrl(settings.url || env.WORKFLOW_VALIDATION_OPENSEARCH_URL || DEFAULT_URL,
@@ -66,6 +67,7 @@ function createOpenSearchClient(config = {}, fetchImpl = fetch) {
   const search = (index, body) => request(`/${index}/_search`, {
     method: 'POST', body: JSON.stringify(body)
   });
+  const fieldCaps = (index, fields) => request(`/${index}/_field_caps?fields=${fields.map(encodeURIComponent).join(',')}`);
 
   async function status() {
     const count = async (index) => (await request(`/${index}/_count`)).count;
@@ -75,7 +77,7 @@ function createOpenSearchClient(config = {}, fetchImpl = fetch) {
     return { executions, tasks, rootCauses };
   }
 
-  return { search, status };
+  return { search, fieldCaps, status };
 }
 
 function boolQuery(filter, must) {
@@ -169,7 +171,7 @@ function taskFilters(q = {}) {
 }
 
 module.exports = {
-  RUNS_INDEX, TASKS_INDEX, BUGS_INDEX,
+  RUNS_INDEX, TASKS_INDEX, BUGS_INDEX, IMAGES_INDEX,
   getOpenSearchConfig, createOpenSearchClient,
   runFilters, taskFilters, bugFilters, timestampRange
 };

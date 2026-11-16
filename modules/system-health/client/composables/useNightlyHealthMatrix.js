@@ -377,6 +377,29 @@ export function normalizeComponentIdentityKey(value) {
 }
 
 /**
+ * Retired component names (normalizeComponentIdentityKey) → the name the producer publishes today.
+ * Heatmap snapshots and historic nightly runs keep the old label after a rename; without this the
+ * old label matches no producer row and the matrix renders an empty placeholder row for it
+ * (e.g. "Platform" next to "AI Core Platform").
+ */
+export const RENAMED_MATRIX_COMPONENT_LABELS = Object.freeze({
+  platform: 'AI Core Platform',
+  aigateway: 'Inference Gateway',
+  batchgateway: 'llm-d'
+})
+
+/**
+ * Current component name for a possibly retired label; other labels are returned unchanged.
+ *
+ * @param {string|null|undefined} label
+ * @returns {string}
+ */
+export function currentComponentLabel(label) {
+  if (typeof label !== 'string') return ''
+  return RENAMED_MATRIX_COMPONENT_LABELS[normalizeComponentIdentityKey(label)] || label
+}
+
+/**
  * @param {object} index
  * @param {string} key
  * @param {string} rowId
@@ -393,6 +416,22 @@ function addComponentIdentityKey(index, key, rowId) {
 }
 
 /**
+ * Identity strings a producer component answers to: its id, name, jira_component, plus the ids
+ * and names of producer rows folded into it (`merged_from`, e.g. llamastackoperator / "Llama Stack"
+ * folded into the OGX Core row), so heatmap labels of folded rows join the surviving row.
+ *
+ * @param {object} comp
+ * @returns {string[]}
+ */
+function componentIdentityFields(comp) {
+  const fields = [comp.id, comp.name, comp.jira_component]
+  for (const folded of Array.isArray(comp.merged_from) ? comp.merged_from : []) {
+    if (folded && typeof folded === 'object') fields.push(folded.id, folded.name)
+  }
+  return fields.filter((f) => typeof f === 'string' && f.length > 0)
+}
+
+/**
  * Map canonical identity strings (id, name, jira_component) → producer row id, or `null` when ambiguous.
  *
  * @param {object[]} days
@@ -404,9 +443,9 @@ export function buildComponentIdentityIndex(days) {
     for (const run of day.runs || []) {
       for (const comp of run.components || []) {
         if (!comp?.id) continue
-        addComponentIdentityKey(index, comp.id, comp.id)
-        if (comp.name) addComponentIdentityKey(index, comp.name, comp.id)
-        if (comp.jira_component) addComponentIdentityKey(index, comp.jira_component, comp.id)
+        for (const field of componentIdentityFields(comp)) {
+          addComponentIdentityKey(index, field, comp.id)
+        }
       }
     }
   }
@@ -433,7 +472,7 @@ export function producerRowIdsMatchingHeatmapLabel(componentName, days, scope = 
     if (!run || typeof run !== 'object') continue
     for (const comp of run.components || []) {
       if (!comp?.id) continue
-      const fields = [comp.id, comp.name, comp.jira_component]
+      const fields = componentIdentityFields(comp)
       if (fields.some((field) => normalizeComponentIdentityKey(field) === key)) {
         ids.add(comp.id)
       }
@@ -504,24 +543,37 @@ export function normalizeHeatmapComponentToNightlyId(componentName, daysOrIndex 
 }
 
 /**
- * Merge producer component fields across runs (later rows fill gaps in earlier metadata).
+ * Merge producer component fields across runs. Callers walk `days` oldest → newest, so `incoming`
+ * is the newer run: its published name / Jira component win, older values only fill gaps.
+ * Newest-wins keeps row identity in step with producer renames and remaps (e.g. sparkoperator
+ * KubeRay → Kubeflow Spark Operator); oldest-wins froze rows on the first published mapping.
  *
  * @param {{ name?: string, jira_component?: string }} existing
  * @param {{ name?: string, jira_component?: string }} incoming
  * @returns {{ name?: string, jira_component?: string }}
  */
 function mergeComponentMetaEntry(existing, incoming) {
-  const next = {
-    name: existing.name,
-    jira_component: existing.jira_component
+  return {
+    name: incoming.name || existing.name,
+    jira_component: incoming.jira_component || existing.jira_component
   }
-  if (!next.jira_component && incoming.jira_component) {
-    next.jira_component = incoming.jira_component
-  }
-  if (!next.name && incoming.name) {
-    next.name = incoming.name
-  }
-  return next
+}
+
+/**
+ * A day's runs ordered oldest → newest by completion (then start) time, then build number.
+ * Payload order is not guaranteed (producers store same-day retries newest-first).
+ *
+ * @param {object|null|undefined} day
+ * @returns {object[]}
+ */
+function dayRunsOldestFirst(day) {
+  const runs = Array.isArray(day?.runs) ? day.runs.filter((r) => r && typeof r === 'object') : []
+  const ts = (r) => String(r.completed_at || r.started_at || '')
+  const num = (r) => (Number.isFinite(Number(r.build_number)) ? Number(r.build_number) : -1)
+  return runs
+    .map((run, index) => ({ run, index }))
+    .sort((a, b) => ts(a.run).localeCompare(ts(b.run)) || num(a.run) - num(b.run) || a.index - b.index)
+    .map(({ run }) => run)
 }
 
 /**
@@ -533,7 +585,8 @@ function mergeComponentMetaEntry(existing, incoming) {
 function collectComponentMetaById(days) {
   const meta = new Map()
   for (const day of days || []) {
-    for (const run of day.runs || []) {
+    // Same-day retries are stored newest-first; walk them oldest → newest so the newest wins.
+    for (const run of dayRunsOldestFirst(day)) {
       for (const comp of run.components || []) {
         if (!comp?.id) continue
         const prev = meta.get(comp.id)
@@ -579,10 +632,75 @@ function matrixRowDedupeKey(rowId, metaById) {
   if (rowId === 'cluster-health' || rowId === 'operator-health') return rowId
   const entry = metaById.get(rowId)
   if (entry) {
-    const published = (entry.jira_component || entry.name || '').trim()
+    // A row published under a retired name dedupes into its renamed row.
+    const published = currentComponentLabel((entry.jira_component || entry.name || '').trim()).trim()
     if (published) return `pub:${published.toLowerCase()}`
   }
   return `id:${rowId}`
+}
+
+/**
+ * Producer id to use for each published component (dedupe key), taken from the newest selected
+ * run that emits one. When ids sharing a component change over time (llamastackoperator → ogx
+ * under "OGX Core"), the row follows the id the producer emits today rather than whichever id an
+ * older run or the heatmap label order happened to match first.
+ *
+ * @param {object[]} days sorted oldest → newest
+ * @param {Map<string, { name?: string, jira_component?: string }>} metaById
+ * @returns {Map<string, string>}
+ */
+function preferredRowIdByDedupeKey(days, metaById) {
+  const preferred = new Map()
+  for (let i = (days || []).length - 1; i >= 0; i -= 1) {
+    const { run } = resolveSelectedRun(days[i])
+    if (!run) continue
+    for (const comp of run.components || []) {
+      if (!comp?.id) continue
+      const key = matrixRowDedupeKey(comp.id, metaById)
+      if (!preferred.has(key)) preferred.set(key, comp.id)
+    }
+  }
+  return preferred
+}
+
+/**
+ * Newest producer cell for a row (labels and tooltips follow the latest published names).
+ *
+ * @param {string} rowId
+ * @param {object[]} days sorted oldest → newest
+ * @returns {object|null}
+ */
+function newestMatrixCellForRow(rowId, days) {
+  const list = days || []
+  for (let i = list.length - 1; i >= 0; i -= 1) {
+    for (const run of dayRunsOldestFirst(list[i]).reverse()) {
+      const cell = findMatrixCell(run, rowId, list)
+      if (cell) return cell
+    }
+  }
+  return null
+}
+
+/**
+ * Row label from the newest run that has the row (e.g. "Inference Gateway" after a rename,
+ * while older runs still say "AI Gateway").
+ *
+ * @param {string} rowId
+ * @param {object[]} days sorted oldest → newest
+ * @param {{ component?: string }[]|null} [heatmapComponents]
+ * @returns {string}
+ */
+export function matrixRowLabel(rowId, days, heatmapComponents = null) {
+  return rowLabel(rowId, newestMatrixCellForRow(rowId, days), heatmapComponents)
+}
+
+/**
+ * @param {string} rowId
+ * @param {object[]} days sorted oldest → newest
+ * @returns {string}
+ */
+export function matrixRowLabelTooltip(rowId, days) {
+  return rowLabelTooltip(rowId, newestMatrixCellForRow(rowId, days))
 }
 
 /**
@@ -774,6 +892,35 @@ export function dscSourceStatusClass(sourceStatus) {
 const NIGHTLY_GATE_ROW_IDS = new Set(['cluster-health', 'operator-health'])
 
 /**
+ * Caption under the cell status. Component cells name the DataScienceCluster component the
+ * status was read from (producer `dsc_component`, e.g. "trustyai", "aigateway.batchGateway"),
+ * so a user can map the row to the DSC. Older payloads without `dsc_component` keep "DSC: <status>".
+ *
+ * @param {string} rowId
+ * @param {object|null} cell
+ * @returns {{ text: string, status: string|null, title: string }|null}
+ */
+export function cellDscCaption(rowId, cell) {
+  if (!cell) return null
+  const status = cellSourceStatusSubtitle(cell)
+  if (NIGHTLY_GATE_ROW_IDS.has(rowId)) {
+    return status ? { text: `Gate: ${status}`, status, title: `Gate status: ${status}` } : null
+  }
+  const name = typeof cell.dsc_component === 'string' ? cell.dsc_component.trim() : ''
+  if (status) {
+    return {
+      text: name ? `DSC ${name}: ${status}` : `DSC: ${status}`,
+      status,
+      title: name ? `DataScienceCluster component "${name}" is ${status}` : `DSC status: ${status}`
+    }
+  }
+  if (name) {
+    return { text: `DSC ${name}`, status: null, title: `DataScienceCluster component "${name}"` }
+  }
+  return null
+}
+
+/**
  * Prefix for blocked-cell source_status subtitle (gate rows vs component DSC readiness).
  *
  * @param {string} rowId
@@ -867,31 +1014,64 @@ export function readinessCellTone(cell) {
 /** Title-case row labels (Cluster Health, AI Gateway, …). */
 export function titleCaseLabel(text) {
   if (!text || typeof text !== 'string') return text || ''
-  return text.replace(/\b\w+/g, (word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+  return text.replace(/\b\w+/g, (word) => {
+    const lower = word.toLowerCase()
+    if (lower === 'ai') return 'AI'
+    if (lower === 'rhoai') return 'RHOAI'
+    return word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()
+  })
+}
+
+function runStartedAtMs(run) {
+  const ms = Date.parse(String(run?.started_at || ''))
+  return Number.isFinite(ms) ? ms : Number.NEGATIVE_INFINITY
+}
+
+function runBuildNumber(run) {
+  const n = Number(run?.build_number)
+  return Number.isFinite(n) ? n : Number.NEGATIVE_INFINITY
 }
 
 /**
- * Same-day runs for the day panel: selected column run first, then chronological.
+ * Same-day runs for the day panel: selected column run first, then newest first.
+ * Sorts on parsed `started_at` (Jenkins and OpenSearch runs may format it differently),
+ * then `build_number`; runs without a timestamp go last.
  *
  * @param {{ latest_run_id?: string, runs?: object[] }|null} day
  * @returns {object[]}
  */
 export function orderDayRunsForPanel(day) {
   if (!day || !Array.isArray(day.runs)) return []
-  const sorted = [...day.runs].sort((a, b) =>
-    String(a.started_at || '').localeCompare(String(b.started_at || ''))
-  )
+  const sorted = day.runs
+    .filter((r) => r && typeof r === 'object')
+    .sort((a, b) => {
+      const ta = runStartedAtMs(a)
+      const tb = runStartedAtMs(b)
+      if (ta !== tb) return tb > ta ? 1 : -1
+      const na = runBuildNumber(a)
+      const nb = runBuildNumber(b)
+      if (na !== nb) return nb > na ? 1 : -1
+      return 0
+    })
   const latestId = day.latest_run_id
   if (typeof latestId !== 'string' || latestId.length === 0) {
     return sorted
   }
-  const idx = sorted.findIndex((r) => r && r.run_id === latestId)
+  const idx = sorted.findIndex((r) => r.run_id === latestId)
   if (idx <= 0) {
     return sorted
   }
   const selected = sorted[idx]
   return [selected, ...sorted.slice(0, idx), ...sorted.slice(idx + 1)]
 }
+
+/** How to reach the S3 artifacts linked from promotion-gate runs. */
+export const S3_ACCESS_HELP = Object.freeze({
+  loginUrl: 'https://auth.redhat.com/auth/realms/EmployeeIDP/protocol/saml/clients/itaws',
+  account: 'qe-rhods-general',
+  roles: Object.freeze(['rhoai-testops', 'rhoai-dev']),
+  requestChannel: '#rhoai-devtestops-requests'
+})
 
 /**
  * Human-readable product line (RHOAI version, channel, optional product_label).
@@ -1193,6 +1373,48 @@ export function runS3ArtifactsInlineLink(run) {
   return null
 }
 
+const JIRA_KEY_LABEL_RE = /^[A-Z][A-Z0-9]+-\d+$/
+
+function isJiraKeyLabel(label) {
+  return typeof label === 'string' && JIRA_KEY_LABEL_RE.test(label.trim())
+}
+
+/**
+ * Jira tickets the promotion gate created or reused in this run.
+ * Reads `run.jira.issues`; falls back to legacy Jira-key entries in `org_pulse_links`.
+ * When there are none, `emptyText` explains why (e.g. dry-run) next to "No Jira tied in this run".
+ *
+ * @param {object|null|undefined} run
+ * @returns {{ issues: { key: string, href: string, action: string }[], emptyText: string }}
+ */
+export function runJiraSummary(run) {
+  /** @type {{ key: string, href: string, action: string }[]} */
+  const issues = []
+  const seen = new Set()
+  const add = (key, rawHref, action) => {
+    const k = typeof key === 'string' ? key.trim().toUpperCase() : ''
+    const href = safeHttpUrl(rawHref)
+    if (!k || !href || seen.has(k)) return
+    seen.add(k)
+    issues.push({ key: k, href, action: action === 'created' || action === 'reused' ? action : '' })
+  }
+  const jira = run?.jira
+  if (Array.isArray(jira?.issues)) {
+    jira.issues.forEach((item) => add(item?.key, item?.href, item?.action))
+  }
+  if (!issues.length && Array.isArray(run?.org_pulse_links)) {
+    run.org_pulse_links.forEach((item) => {
+      if (isJiraKeyLabel(item?.label)) add(item.label, item.href, '')
+    })
+  }
+  let emptyText = 'No Jira tied in this run'
+  const status = typeof jira?.status === 'string' ? jira.status : ''
+  if (status === 'dry_run') emptyText += ' (Jira reporting ran in dry-run mode)'
+  else if (status === 'disabled') emptyText += ' (Jira reporting disabled)'
+  else if (status === 'failed') emptyText += ' (Jira reporter failed)'
+  return { issues, emptyText }
+}
+
 /**
  * Producer `org_pulse_links` minus any href already shown from `artifacts`.
  *
@@ -1209,13 +1431,15 @@ export function runOrgPulsePanelLinks(run) {
   const odsHref = runOdsBuildUrl(run)
   const odsKey = odsHref ? normalizeHttpUrlForCompare(odsHref) : ''
   const digestKeys = runPromotionGateQuayDigestKeys(run)
-  const showQuayOnProductLine = Boolean(odsHref) || digestKeys.size > 0
+  const showQuayOnProductLine = Boolean(odsHref)
   const raw = run?.org_pulse_links
   if (!Array.isArray(raw)) return []
   /** @type {{ id: string, label: string, href: string }[]} */
   const links = []
   const seen = new Set()
   raw.forEach((item, idx) => {
+    // Legacy producers put Jira tickets here; they are shown on the Jira line instead.
+    if (isJiraKeyLabel(item?.label)) return
     const rawHref = item?.href
     const href = safeHttpUrl(rawHref) || quayBrowserUrlFromImageRef(rawHref)
     const dedupeKey = href ? normalizeHttpUrlForCompare(href) : ''
@@ -1224,7 +1448,7 @@ export function runOrgPulsePanelLinks(run) {
     if (!href || artifactHrefs.has(dedupeKey) || seen.has(dedupeKey)) return
     if (odsKey && dedupeKey === odsKey) return
     if (showQuayOnProductLine && /^image$/i.test(label)) return
-    if (digestKeys.size && linkDigest && digestKeys.has(linkDigest)) return
+    if (showQuayOnProductLine && digestKeys.size && linkDigest && digestKeys.has(linkDigest)) return
     seen.add(dedupeKey)
     links.push({ id: `org-pulse-link-${idx}`, label, href })
   })
@@ -1354,6 +1578,55 @@ export function nightlyCellTone(cell) {
 }
 
 /**
+ * Components that must not appear as rows in the promotion-gate matrix.
+ * Keys are normalizeComponentIdentityKey() of the producer id, published name, Jira component or
+ * heatmap label. They are hidden here (not only at the producer) because rows also come from
+ * historic nightly runs already stored in Org Pulse and from the full heatmap inventory, neither of
+ * which is rewritten when the producer stops emitting a component.
+ */
+export const HIDDEN_MATRIX_COMPONENT_KEYS = new Set([
+  'workloadorchestration',
+  'distributedworkloads',
+  'kueue',
+  'demos',
+  'other',
+  'others',
+  'aitestingworkflowvalidation',
+  'testops'
+])
+
+/**
+ * @param {...(string|null|undefined)} candidates id / name / jira_component / heatmap label
+ * @returns {boolean}
+ */
+export function isHiddenMatrixComponent(...candidates) {
+  return candidates.some((c) => {
+    const key = normalizeComponentIdentityKey(typeof c === 'string' ? c : '')
+    return key !== '' && HIDDEN_MATRIX_COMPONENT_KEYS.has(key)
+  })
+}
+
+/**
+ * Heatmap label to match against producer rows. Stale heatmap snapshots can still carry a retired
+ * name ({@link RENAMED_MATRIX_COMPONENT_LABELS}):
+ * - a label a producer still publishes is used as-is;
+ * - a retired label is matched as its renamed component;
+ * - a retired label that matches nothing is dropped (`null`) instead of becoming an empty row.
+ *
+ * @param {string|null|undefined} label
+ * @param {object[]} days
+ * @returns {string|null}
+ */
+export function heatmapLabelForMatrix(label, days) {
+  if (typeof label !== 'string' || !label.trim()) return null
+  const renamed = currentComponentLabel(label)
+  if (renamed === label) return label
+  if (producerRowIdsMatchingHeatmapLabel(label, days).length > 0) return label
+  if (producerRowIdsMatchingHeatmapLabel(renamed, days).length > 0) return renamed
+  return null
+}
+
+/**
  * @param {object[]} days
  * @param {{ component?: string }[]|null} [heatmapComponents] full heatmap inventory (not date-filtered)
  * @returns {string[]}
@@ -1361,6 +1634,16 @@ export function nightlyCellTone(cell) {
 export function collectMatrixRowIds(days, heatmapComponents = null) {
   const ids = new Set()
   const metaById = collectComponentMetaById(days)
+  const isHiddenRowId = (id) => {
+    const entry = metaById.get(id)
+    return isHiddenMatrixComponent(id, entry?.name, entry?.jira_component)
+  }
+  const preferredIdByCanon = preferredRowIdByDedupeKey(days, metaById)
+  /** Several producer ids can share one published component (OGX Core: ogx + llamastackoperator). */
+  const preferRowId = (id) => {
+    if (id === 'cluster-health' || id === 'operator-health') return id
+    return preferredIdByCanon.get(matrixRowDedupeKey(id, metaById)) || id
+  }
 
   for (const day of days) {
     for (const run of day.runs || []) {
@@ -1379,8 +1662,12 @@ export function collectMatrixRowIds(days, heatmapComponents = null) {
   const canonicalKeysInOrder = new Set()
   if (Array.isArray(heatmapComponents)) {
     for (const entry of heatmapComponents) {
-      const rowId = pickHeatmapInventoryRowId(entry?.component, days)
-      if (!rowId) continue
+      const label = heatmapLabelForMatrix(entry?.component, days)
+      if (!label || isHiddenMatrixComponent(label)) continue
+      const pickedId = pickHeatmapInventoryRowId(label, days)
+      if (!pickedId) continue
+      const rowId = preferRowId(pickedId)
+      if (isHiddenRowId(rowId)) continue
       ids.add(rowId)
       if (rowId === 'cluster-health' || rowId === 'operator-health') continue
       const canon = matrixRowDedupeKey(rowId, metaById)
@@ -1404,8 +1691,9 @@ export function collectMatrixRowIds(days, heatmapComponents = null) {
   }
 
   const heatmapSet = new Set(heatmapOrder)
-  const nightlyOnly = Array.from(ids)
+  const nightlyOnly = [...new Set(Array.from(ids).map(preferRowId))]
     .filter((id) => !heatmapSet.has(id))
+    .filter((id) => !isHiddenRowId(id))
     .filter((id) => {
       if (id === 'cluster-health' || id === 'operator-health') return true
       const canon = matrixRowDedupeKey(id, metaById)
@@ -1461,7 +1749,7 @@ export function rowLabel(rowId, rowCell, heatmapComponents = null) {
   if (rowId === 'operator-health') return 'RHOAI Deployment'
   if (rowId === 'cluster-health') return 'Cluster Health'
   if (rowCell?.jira_component) return rowCell.jira_component
-  if (rowCell?.name) return titleCaseLabel(rowCell.name)
+  if (rowCell?.name) return String(rowCell.name).trim()
   const fromHeatmap = rowLabelFromHeatmap(rowId, heatmapComponents)
   if (fromHeatmap) return titleCaseLabel(fromHeatmap)
   return titleCaseLabel(rowId)

@@ -2,7 +2,7 @@
 const { createHash } = require('node:crypto');
 /** Create paging helpers with the same release rules used by the client. */
 module.exports = function createRecentRuns({ parseVersion, normalizeVersion, normalizeVersions, compareVersions, suiteLabel }) {
-  const SORT_FIELDS = ['timestamp', 'version', 'suite'];
+  const SORT_FIELDS = ['timestamp', 'version', 'suite', 'buildDate'];
   /** Reject an invalid paged request with a client-facing BAD_REQUEST error. */
   function invalid(message) { const error = new Error(message); error.code = 'BAD_REQUEST'; throw error; }
   /** Read a bounded optional query string and reject non-string values. */
@@ -56,7 +56,7 @@ module.exports = function createRecentRuns({ parseVersion, normalizeVersion, nor
       const legacy = [1, 2].includes(cursor?.v) && sortField === 'timestamp' && selected.length <= 1;
       const validScope = cursor?.scope === scope || (legacy && cursor.scope === legacyScope);
       const value = cursor?.anchor?.[0];
-      const validValue = sortField === 'timestamp' ? value === null || (Number.isSafeInteger(value) && Number.isFinite(new Date(value).getTime()))
+      const validValue = ['timestamp', 'buildDate'].includes(sortField) ? value === null || (Number.isSafeInteger(value) && Number.isFinite(new Date(value).getTime()))
         : sortField === 'suite' ? value === null : value === null || (typeof value === 'string' && value.length <= 256);
       if ((!legacy && cursor?.v !== 3) || !validScope || !['after', 'before'].includes(cursor.direction)
         || !Array.isArray(cursor.anchor) || cursor.anchor.length !== 3 || !validValue
@@ -70,11 +70,14 @@ module.exports = function createRecentRuns({ parseVersion, normalizeVersion, nor
   /** Return a comparable release label; missing and unparseable versions sort last. */
   function versionValue(row) { const value = normalizeVersion(row.rhoaiVersion); return parseVersion(value) ? value : null; }
   /** Select the normalized value used to order the requested column. */
-  function sortValue(row, field) { return field === 'timestamp' ? time(row.timestamp) : field === 'version' ? versionValue(row) : suiteLabel(row.suite); }
+  function sortValue(row, field) {
+    if (field === 'buildDate') return time(row.buildDate);
+    return field === 'timestamp' ? time(row.timestamp) : field === 'version' ? versionValue(row) : suiteLabel(row.suite);
+  }
   /** Compare valid values in the selected direction while keeping null values last. */
   function compareValues(a, b, field, direction) {
     if (a === null || b === null) return a === b ? 0 : a === null ? 1 : -1;
-    const value = field === 'timestamp' ? a - b : field === 'version' ? compareVersions(a, b)
+    const value = ['timestamp', 'buildDate'].includes(field) ? a - b : field === 'version' ? compareVersions(a, b)
       : a.localeCompare(b, 'en', { numeric: true, sensitivity: 'base' });
     return value * (direction === 'asc' ? 1 : -1);
   }
@@ -112,6 +115,7 @@ module.exports = function createRecentRuns({ parseVersion, normalizeVersion, nor
         const anchored = { ...origin };
         if (sortField === 'timestamp') anchored.timestamp = cursor.anchor[0] === null ? null : new Date(cursor.anchor[0]).toISOString();
         if (sortField === 'version') anchored.rhoaiVersion = cursor.anchor[0];
+        if (sortField === 'buildDate') anchored.buildDate = cursor.anchor[0] === null ? null : new Date(cursor.anchor[0]).toISOString();
         candidates = rows.filter(row => !sameRun(row, origin) && (cursor.direction === 'after'
           ? compareRows(row, anchored, sortField, direction) > 0 : compareRows(row, anchored, sortField, direction) < 0));
       }
@@ -120,7 +124,8 @@ module.exports = function createRecentRuns({ parseVersion, normalizeVersion, nor
     const start = page.length ? rows.indexOf(page[0]) : -1, end = start + page.length;
     const encode = (row, way) => Buffer.from(JSON.stringify({ v: 3, scope, direction: way,
       anchor: [sortField === 'suite' ? null : sortValue(row, sortField), hash(row.suite), hash(row.invocationId)] })).toString('base64url');
-    return { rows: page.map(({ suite, invocationId, timestamp, rhoaiVersion }) => ({ suite, invocationId, timestamp, rhoaiVersion })),
+    return { rows: page.map(({ suite, invocationId, timestamp, rhoaiVersion, buildDate = null, buildDateStatus = null }) => ({
+      suite, invocationId, timestamp, rhoaiVersion, buildDate, buildDateStatus })),
       total: rows.length, pageSize, start: start < 0 ? 0 : start + 1, end: start < 0 ? 0 : end,
       nextCursor: page.length && end < rows.length ? encode(page.at(-1), 'after') : null,
       previousCursor: page.length && start > 0 ? encode(page[0], 'before') : !page.length && rows.length && cursor ? '' : null,

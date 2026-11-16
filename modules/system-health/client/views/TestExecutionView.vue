@@ -129,17 +129,28 @@
                   <template v-if="nightlyHealth?.generated_at">
                     Generated {{ formatTimestamp(nightlyHealth.generated_at) }}.
                   </template>
-                  Matrix shows promotion-gate status per day (same fields as
-                  <code>promotion_gate_test_summary.yaml</code>). Click a date column to list all builds that day.
-                  <strong>Test Results Source</strong> below filters this matrix only.
+                  Each column shows promotion-gate results from the selected run for that day.
+                  Click a date column to open every build recorded that day.
                 </p>
               </div>
               <div class="help-box tab-help-box">
                 <h4>ℹ️ How to read {{ gatesPanelTitle }}</h4>
                 <ul>
-                  <li><strong>Each column</strong> — A UTC day; the cell uses that day&apos;s selected promotion-gate run (<code>latest_run_id</code>).</li>
-                  <li><strong>– (empty cell)</strong> — That component is missing from that run&apos;s YAML; <strong>Not Installed</strong> means the summary explicitly reports the component is not on the cluster.</li>
-                  <li><strong>Blocked</strong> — Deployment or gate prerequisites failed before component tests could run; a <strong>DSC:</strong> subtitle is operator/DataScienceCluster readiness from YAML, not a passed test result.</li>
+                  <li><strong>Each column</strong> — One day. Cells show the latest run for that day; click the date to see every run, newest first.</li>
+                  <li><strong>Passed</strong> — Tests passed, the component was Ready in the DSC.</li>
+                  <li><strong>Failed</strong> — Tests failed, the component was not Ready in the DSC.</li>
+                  <li><strong>Blocked</strong> — Tests did not run: health checks failed first, or the component was not Ready in the DSC.</li>
+                  <li><strong>Blank</strong> — No result was reported for the component in that run.</li>
+                  <li><strong>Not Installed</strong> — The component is set to <code>Removed</code> in the DSC.</li>
+                  <li><strong>DSC &lt;name&gt;</strong> — The DataScienceCluster component the status came from (for example <code>trustyai</code> or <code>aigateway.batchGateway</code>).</li>
+                  <li>
+                    <strong>S3 artifacts</strong> — Log in via
+                    <a :href="S3_ACCESS_HELP.loginUrl" target="_blank" rel="noopener noreferrer">Red Hat IT AWS</a>,
+                    choose the account <code>{{ S3_ACCESS_HELP.account }}</code> and the role
+                    <template v-for="(role, idx) in S3_ACCESS_HELP.roles" :key="role"><template v-if="idx > 0"> or </template><code>{{ role }}</code></template>.
+                    No role yet? Request access in <code>{{ S3_ACCESS_HELP.requestChannel }}</code>.
+                    <strong>S3 access help</strong> next to "Runs on &lt;date&gt;" shows these steps too.
+                  </li>
                 </ul>
               </div>
               <NightlyHealthTable
@@ -161,6 +172,7 @@
 import { ref, computed, onMounted, inject, watch, nextTick } from 'vue'
 import { useTestDashboard } from '../composables/useTestDashboard'
 import FilterBar from '../components/FilterBar.vue'
+import { S3_ACCESS_HELP } from '../composables/useNightlyHealthMatrix'
 import MetricsCards from '../components/MetricsCards.vue'
 import HeatmapTable from '../components/HeatmapTable.vue'
 import TrendChart from '../components/TrendChart.vue'

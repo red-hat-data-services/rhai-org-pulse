@@ -75,6 +75,7 @@
               <th class="min-w-[24rem] px-4 py-3 font-semibold text-gray-600 dark:text-gray-300">Outcome</th>
               <th class="min-w-[8rem] px-4 py-3 font-semibold text-gray-600 dark:text-gray-300">Status</th>
               <th class="min-w-[14rem] px-4 py-3 font-semibold text-gray-600 dark:text-gray-300">Target Version</th>
+              <th class="min-w-[14rem] px-4 py-3 font-semibold text-gray-600 dark:text-gray-300">Releases</th>
               <th class="min-w-[11rem] px-4 py-3 font-semibold text-gray-600 dark:text-gray-300">Product Manager</th>
               <th class="min-w-[11rem] px-4 py-3 font-semibold text-gray-600 dark:text-gray-300">Assignee</th>
               <th class="min-w-[13rem] px-4 py-3 font-semibold text-gray-600 dark:text-gray-300">Components</th>
@@ -130,6 +131,10 @@
                   <span v-if="outcome.targetVersions.length">{{ outcome.targetVersions.join(', ') }}</span>
                   <span v-else class="text-gray-400">—</span>
                 </td>
+                <td class="px-4 py-4 text-gray-700 dark:text-gray-300">
+                  <span v-if="outcome.fixVersions && outcome.fixVersions.length">{{ outcome.fixVersions.join(', ') }}</span>
+                  <span v-else class="text-gray-400">—</span>
+                </td>
                 <td class="px-4 py-4 text-gray-700 dark:text-gray-300">{{ outcome.productManager || '—' }}</td>
                 <td class="px-4 py-4 text-gray-700 dark:text-gray-300">{{ outcome.assignee || 'Unassigned' }}</td>
                 <td class="px-4 py-4 text-gray-700 dark:text-gray-300">
@@ -153,7 +158,7 @@
               </tr>
 
               <tr v-if="isExpanded(outcome.key)" class="bg-gray-50 dark:bg-gray-900/30">
-                <td colspan="8" class="px-6 py-3">
+                <td colspan="9" class="px-6 py-3">
                   <div v-if="loadingChildren[outcome.key]" class="flex items-center gap-2 py-3 text-sm text-gray-500 dark:text-gray-400">
                     <span class="h-4 w-4 animate-spin rounded-full border-2 border-gray-300 border-t-primary-600 dark:border-gray-600 dark:border-t-primary-400"></span>
                     Loading child work items…
@@ -171,13 +176,14 @@
                       </h3>
                       <span class="text-xs text-gray-500 dark:text-gray-400">{{ childrenFor(outcome.key).length }} shown</span>
                     </div>
-                    <div class="overflow-hidden rounded-md border border-gray-200 bg-white dark:border-gray-700 dark:bg-gray-800">
+                    <div class="overflow-x-auto rounded-md border border-gray-200 bg-white dark:border-gray-700 dark:bg-gray-800">
                       <table class="min-w-full divide-y divide-gray-100 text-left text-sm dark:divide-gray-700">
                         <thead class="bg-gray-100/70 dark:bg-gray-900/50">
                           <tr>
                             <th class="px-4 py-2 font-medium text-gray-600 dark:text-gray-300">Work item</th>
                             <th class="px-4 py-2 font-medium text-gray-600 dark:text-gray-300">Status</th>
                             <th class="px-4 py-2 font-medium text-gray-600 dark:text-gray-300">Target Version</th>
+                            <th class="px-4 py-2 font-medium text-gray-600 dark:text-gray-300">Releases</th>
                             <th class="px-4 py-2 font-medium text-gray-600 dark:text-gray-300">Assignee</th>
                             <th class="px-4 py-2 font-medium text-gray-600 dark:text-gray-300">Priority</th>
                           </tr>
@@ -208,6 +214,10 @@
                             </td>
                             <td class="px-4 py-3 text-gray-700 dark:text-gray-300">
                               <span v-if="child.targetVersions.length">{{ child.targetVersions.join(', ') }}</span>
+                              <span v-else class="text-gray-400">—</span>
+                            </td>
+                            <td class="px-4 py-3 text-gray-700 dark:text-gray-300">
+                              <span v-if="child.fixVersions && child.fixVersions.length">{{ child.fixVersions.join(', ') }}</span>
                               <span v-else class="text-gray-400">—</span>
                             </td>
                             <td class="px-4 py-3 text-gray-700 dark:text-gray-300">{{ child.assignee || 'Unassigned' }}</td>

@@ -1,7 +1,7 @@
 {
   "name": "org-pulse-ai-eng",
   "private": true,
-  "version": "1.0.639",
+  "version": "1.0.657",
   "engines": {
     "node": ">=22"
   },
@@ -30,7 +30,7 @@
   "dependencies": {
     "@dagrejs/dagre": "^3.1.1",
     "@octokit/rest": "^22.0.1",
-    "@org-pulse/core": "^2.0.95",
+    "@org-pulse/core": "^2.0.99",
     "@vue-flow/background": "^1.3.2",
     "@vue-flow/controls": "^1.1.3",
     "@vue-flow/core": "^1.48.2",
@@ -49,24 +49,24 @@
   "devDependencies": {
     "@apidevtools/swagger-parser": "^13.0.0",
     "@eslint/js": "^10.0.1",
-    "@playwright/test": "1.63.0",
+    "@playwright/test": "1.65.0",
     "@tailwindcss/postcss": "^4.3.3",
     "@tailwindcss/typography": "^0.5.20",
     "@vitejs/plugin-vue": "^6.0.10",
     "@vitest/coverage-v8": "^4.1.11",
     "@vue/test-utils": "^2.5.1",
     "concurrently": "^10.0.6",
-    "dotenv": "^18.0.8",
+    "dotenv": "^18.0.9",
     "eslint": "^10.12.0",
     "eslint-plugin-vue": "^10.11.1",
     "globals": "^17.13.0",
     "husky": "^9.1.7",
-    "jsdom": "^30.1.2",
+    "jsdom": "^30.1.3",
     "lint-staged": "^17.6.0",
     "postcss": "^8.5.29",
-    "puppeteer": "^25.14.0",
+    "puppeteer": "^25.16.0",
     "tailwindcss": "^4.3.3",
-    "vite": "^8.3.4",
+    "vite": "^8.3.5",
     "vitest": "^4.1.11",
     "xlsx": "^0.18.5"
   },
@@ -81,6 +81,7 @@
       "js-yaml": "4.3.2"
     },
     "vue": "3.5.43",
-    "katex": "^0.18.11"
+    "katex": "^0.18.11",
+    "mongoose": "9.11.4"
   }
 }

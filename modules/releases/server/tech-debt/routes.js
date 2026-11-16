@@ -142,6 +142,10 @@ function selectedComponentsFromQuery(query) {
   return components
 }
 
+function includeNoComponentFromQuery(query) {
+  return normalizeText(query && query.includeNoComponent).toLowerCase() === 'true'
+}
+
 function selectedIssueTypeFromQuery(query) {
   const raw = normalizeText(query && (query.issueType || query.issuetype)).toLowerCase()
   if (!raw || raw === 'all') return { value: null, error: null }
@@ -167,22 +171,30 @@ function escapeJqlString(value) {
   return normalizeText(value).replace(/\\/g, '\\\\').replace(/"/g, '\\"')
 }
 
-function componentJqlClause(components) {
-  return 'component in (' + components.map(function (component) {
-    return '"' + escapeJqlString(component) + '"'
-  }).join(', ') + ')'
+function componentJqlClause(components, includeNoComponent = false) {
+  const clauses = []
+  if (components.length) {
+    clauses.push('component in (' + components.map(function (component) {
+      return '"' + escapeJqlString(component) + '"'
+    }).join(', ') + ')')
+  }
+  if (includeNoComponent) clauses.push('component is EMPTY')
+  return clauses.length > 1 ? '(' + clauses.join(' OR ') + ')' : clauses[0] || ''
 }
 
-function scopedIssueJql(components) {
-  return ISSUE_JQL + ' AND ' + componentJqlClause(components)
+function scopedIssueJql(components, includeNoComponent = false) {
+  return ISSUE_JQL + ' AND ' + componentJqlClause(components, includeNoComponent)
 }
 
-function scopedSfdcJql(components) {
-  return SFDC_BUG_JQL + ' AND ' + componentJqlClause(components)
+function scopedSfdcJql(components, includeNoComponent = false) {
+  return SFDC_BUG_JQL + ' AND ' + componentJqlClause(components, includeNoComponent)
 }
 
-function cohortCacheKey(components) {
-  return components.slice().sort(function (a, b) { return a.localeCompare(b) }).join('\u0000')
+function cohortCacheKey(components, includeNoComponent = false) {
+  return JSON.stringify({
+    components: components.slice().sort(function (a, b) { return a.localeCompare(b) }),
+    includeNoComponent
+  })
 }
 
 async function fetchIssuePages(jira, jql = ISSUE_JQL) {
@@ -223,10 +235,10 @@ async function fetchIssueKeySet(jira, jql) {
   return keys
 }
 
-async function fetchIssueCohort(jira, selectedComponents) {
+async function fetchIssueCohort(jira, selectedComponents, includeNoComponent = false) {
   const [rows, sfdcBugKeys] = await Promise.all([
-    fetchIssuePages(jira, scopedIssueJql(selectedComponents)),
-    fetchIssueKeySet(jira, scopedSfdcJql(selectedComponents))
+    fetchIssuePages(jira, scopedIssueJql(selectedComponents, includeNoComponent)),
+    fetchIssueKeySet(jira, scopedSfdcJql(selectedComponents, includeNoComponent))
   ])
   const deduplicated = new Map()
   for (const row of Array.isArray(rows) ? rows : []) {
@@ -249,8 +261,8 @@ function writeIssueCache(key, entry) {
   }
 }
 
-async function loadIssueCohort(jira, selectedComponents, refresh) {
-  const key = cohortCacheKey(selectedComponents)
+async function loadIssueCohort(jira, selectedComponents, refresh, includeNoComponent = false) {
+  const key = cohortCacheKey(selectedComponents, includeNoComponent)
   const cached = issueCaches.get(key)
   if (!refresh && freshCache(cached)) {
     writeIssueCache(key, cached)
@@ -258,7 +270,7 @@ async function loadIssueCohort(jira, selectedComponents, refresh) {
   }
 
   if (!issueFetchPromises.has(key)) {
-    const fetchPromise = fetchIssueCohort(jira, selectedComponents).then(function (issues) {
+    const fetchPromise = fetchIssueCohort(jira, selectedComponents, includeNoComponent).then(function (issues) {
       const fetchedAt = new Date().toISOString()
       writeIssueCache(key, { issues, fetchedAt, cachedAt: Date.now() })
       return { issues, fetchedAt, cacheStatus: 'refreshed', warning: null }
@@ -339,10 +351,12 @@ function orderPaneIssues(issues, ranked) {
   return assignGroup(vulnerabilities, 'vulnerability-sla').concat(assignGroup(bugs, 'bug-score'))
 }
 
-function buildCockpitResponse(cohort, selectedComponents, selectedIssueType, selectedTriage = 'all', now = new Date()) {
+function buildCockpitResponse(cohort, selectedComponents, selectedIssueType, selectedTriage = 'all', now = new Date(), includeNoComponent = false) {
   const selected = new Set(selectedComponents)
   let matched = cohort.issues.filter(function (issue) {
-    return issue.components.some(function (component) { return selected.has(component) }) &&
+    const matchesComponent = issue.components.some(function (component) { return selected.has(component) }) ||
+      (includeNoComponent && issue.components.length === 0)
+    return matchesComponent &&
       (!selectedIssueType || issue.issueType.toLowerCase() === selectedIssueType.toLowerCase())
   }).map(function (issue) { return enrichIssue(issue, now) })
 
@@ -364,6 +378,7 @@ function buildCockpitResponse(cohort, selectedComponents, selectedIssueType, sel
   return {
     projects: PROJECTS,
     selectedComponents,
+    includeNoComponent,
     selectedIssueType: selectedIssueType || null,
     selectedTriage,
     bugScoring: { modelVersion: 'bug-v1', mode: 'active', rankingApplied: true },
@@ -449,14 +464,19 @@ function registerTechDebtRoutes(router, { requireAuth, requireScope, jira, stora
    *     parameters:
    *       - in: query
    *         name: component
-   *         required: true
    *         schema:
    *           type: array
    *           items:
    *             type: string
    *         style: form
    *         explode: true
-   *         description: One or more Jira component names.
+   *         description: One or more Jira component names. Optional when includeNoComponent is true.
+   *       - in: query
+   *         name: includeNoComponent
+   *         schema:
+   *           type: boolean
+   *           default: false
+   *         description: Include issues whose Jira component field is empty.
    *       - in: query
    *         name: refresh
    *         schema:
@@ -482,6 +502,9 @@ function registerTechDebtRoutes(router, { requireAuth, requireScope, jira, stora
    *             schema:
    *               type: object
    *               properties:
+   *                 includeNoComponent:
+   *                   type: boolean
+   *                   description: Whether issues with an empty Jira component field are included.
    *                 vulnerabilityPrioritization:
    *                   type: object
    *                   description: Company SLA model metadata and effective-dated policy configuration.
@@ -546,8 +569,9 @@ function registerTechDebtRoutes(router, { requireAuth, requireScope, jira, stora
    */
   router.get('/issues', requireAuth, requireScope('releases:read'), async function (req, res) {
     const selectedComponents = selectedComponentsFromQuery(req.query)
-    if (!selectedComponents.length) {
-      return res.status(400).json({ error: 'At least one component is required' })
+    const includeNoComponent = includeNoComponentFromQuery(req.query)
+    if (!selectedComponents.length && !includeNoComponent) {
+      return res.status(400).json({ error: 'At least one component or includeNoComponent=true is required' })
     }
     if (selectedComponents.length > MAX_SELECTED_COMPONENTS) {
       return res.status(400).json({ error: 'At most ' + MAX_SELECTED_COMPONENTS + ' components may be selected' })
@@ -565,8 +589,15 @@ function registerTechDebtRoutes(router, { requireAuth, requireScope, jira, stora
     }
 
     try {
-      const cohort = await loadIssueCohort(jira, selectedComponents, isRefreshRequested(req.query))
-      res.json(buildCockpitResponse(cohort, selectedComponents, issueTypeFilter.value, triageFilter.value))
+      const cohort = await loadIssueCohort(jira, selectedComponents, isRefreshRequested(req.query), includeNoComponent)
+      res.json(buildCockpitResponse(
+        cohort,
+        selectedComponents,
+        issueTypeFilter.value,
+        triageFilter.value,
+        new Date(),
+        includeNoComponent
+      ))
     } catch (err) {
       console.error('[releases/tech-debt] Issue fetch failed:', err.message)
       res.status(503).json({ error: 'Tech debt issues are temporarily unavailable' })
@@ -583,13 +614,19 @@ function registerTechDebtRoutes(router, { requireAuth, requireScope, jira, stora
    *     parameters:
    *       - in: query
    *         name: component
-   *         required: true
    *         schema:
    *           type: array
    *           items:
    *             type: string
    *         style: form
    *         explode: true
+   *         description: One or more Jira component names. Optional when includeNoComponent is true.
+   *       - in: query
+   *         name: includeNoComponent
+   *         schema:
+   *           type: boolean
+   *           default: false
+   *         description: Include issues whose Jira component field is empty.
    *       - in: query
    *         name: issueType
    *         schema:
@@ -605,7 +642,10 @@ function registerTechDebtRoutes(router, { requireAuth, requireScope, jira, stora
    */
   router.get('/trends', requireAuth, requireScope('releases:read'), async function (req, res) {
     const selectedComponents = selectedComponentsFromQuery(req.query)
-    if (!selectedComponents.length) return res.status(400).json({ error: 'At least one component is required' })
+    const includeNoComponent = includeNoComponentFromQuery(req.query)
+    if (!selectedComponents.length && !includeNoComponent) {
+      return res.status(400).json({ error: 'At least one component or includeNoComponent=true is required' })
+    }
     if (selectedComponents.length > MAX_SELECTED_COMPONENTS) {
       return res.status(400).json({ error: 'At most ' + MAX_SELECTED_COMPONENTS + ' components may be selected' })
     }
@@ -626,7 +666,9 @@ function registerTechDebtRoutes(router, { requireAuth, requireScope, jira, stora
       res.json(buildTrendResponse(
         normalized.snapshot,
         selectedComponents,
-        issueTypeFilter.value
+        issueTypeFilter.value,
+        new Date(),
+        includeNoComponent
       ))
     } catch (err) {
       console.error('[releases/tech-debt] Trend snapshot read failed:', err.message)
@@ -700,6 +742,7 @@ registerTechDebtRoutes._test = {
   compareVulnerabilitySla,
   fetchIssueKeySet,
   fetchIssuePages,
+  includeNoComponentFromQuery,
   normalizeIssue,
   normalizeReleaseBlockerStatus,
   orderPaneIssues,

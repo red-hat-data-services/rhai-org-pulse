@@ -30,8 +30,8 @@ describe('Recent Runs', () => {
     await flushPromises()
     expect(Object.fromEntries(request(0))).toEqual({ pageSize: '20', includeBugs: 'false', includeBugTickets: 'true', sortField: 'timestamp', sortDir: 'desc' })
     expect(wrapper.findAll('tbody tr')).toHaveLength(3)
-    expect(wrapper.findAll('thead th').map(cell => cell.attributes('aria-label'))).toEqual(['Test suite', 'Version', 'Executed at (UTC)', 'Issues found'])
-    expect(wrapper.findAll('th button')).toHaveLength(3)
+    expect(wrapper.findAll('thead th').map(cell => cell.attributes('aria-label'))).toEqual(['Test suite', 'Version', 'RHOAI build (UTC)', 'Executed at (UTC)', 'Issues found'])
+    expect(wrapper.findAll('th button')).toHaveLength(4)
     expect(wrapper.findAll('th select')).toHaveLength(0)
     expect(wrapper.get('button[aria-label="Sort execution time"]').text()).toContain('↓')
     expect(wrapper.get('nav[aria-label="Recent run pages"]').text()).toContain('Showing 1–3 of 3 runs')
@@ -39,8 +39,35 @@ describe('Recent Runs', () => {
     expect(button('Next').element.disabled).toBe(true)
     expect(wrapper.text()).not.toContain('All versions · All suites · All run IDs · All time')
     expect(wrapper.text()).toContain('Version unavailable')
-    expect(wrapper.findAll('time')).toHaveLength(2)
+    expect(wrapper.findAll('time')).toHaveLength(3)
+    expect(wrapper.text()).toContain('unavailable')
     expect(wrapper.text()).not.toMatch(/Build date|Jenkins|Image release/)
+  })
+
+  it('matches execution date formatting on one line without repeating UTC in build cells', async () => {
+    apiRequest.mockResolvedValueOnce(page([{ ...fixture.rows[0], buildDate: '2026-11-06T01:14:40+02:00', timestamp: '2026-11-05T23:14:40Z' }]))
+    wrapper = mount(RecentRunsView)
+    await flushPromises()
+    const cell = wrapper.get('tbody tr').findAll('td')[2]
+    expect(cell.get('time').text()).toBe('5 Nov 2026, 23:14:40')
+    expect(cell.text()).toBe(wrapper.get('tbody tr').findAll('td')[3].text())
+    expect(cell.find('br').exists()).toBe(false)
+    expect(cell.text()).not.toContain('UTC')
+    expect(cell.get('time').attributes('datetime')).toBe('2026-11-06T01:14:40+02:00')
+  })
+
+  it.each([
+    { buildDate: null, buildDateStatus: 'unavailable' },
+    { buildDate: 'not-a-date', buildDateStatus: 'verified' },
+    { buildDate: '2026-11-05T05:14:40Z', buildDateStatus: 'unavailable' },
+    { buildDate: undefined, buildDateStatus: undefined }
+  ])('shows lowercase unavailable for missing, invalid, or unverified build metadata: %j', async build => {
+    apiRequest.mockResolvedValueOnce(page([{ ...fixture.rows[0], ...build }]))
+    wrapper = mount(RecentRunsView)
+    await flushPromises()
+    const cell = wrapper.get('tbody tr').findAll('td')[2]
+    expect(cell.text()).toBe('unavailable')
+    expect(cell.find('time').exists()).toBe(false)
   })
 
   it('opens exact runs from the whole row by click and Enter without a version filter', async () => {
@@ -365,7 +392,7 @@ describe('Recent Runs', () => {
     const nav = { params, updateParams: vi.fn(values => { params.value = { ...params.value, ...values } }) }
     wrapper = mount(RecentRunsView, { global: { provide: { moduleNav: nav } } })
     await flushPromises()
-    for (const [index, field, first] of [[0, 'suite', 'asc'], [1, 'version', 'desc'], [2, 'timestamp', 'desc']]) {
+    for (const [index, field, first] of [[0, 'suite', 'asc'], [1, 'version', 'desc'], [2, 'buildDate', 'desc'], [3, 'timestamp', 'desc']]) {
       await wrapper.findAll('th button')[index].trigger('click')
       await flushPromises()
       expect(request(-1).get('sortField')).toBe(field)
@@ -375,7 +402,7 @@ describe('Recent Runs', () => {
       await flushPromises()
       expect(request(-1).get('sortDir')).not.toBe(first)
     }
-    for (const [index, first] of [[0, 'asc'], [1, 'desc'], [2, 'desc']]) {
+    for (const [index, first] of [[0, 'asc'], [1, 'desc'], [2, 'desc'], [3, 'desc']]) {
       await wrapper.findAll('th button')[index].trigger('click')
       await flushPromises()
       expect(request(-1).get('sortDir')).toBe(first)
@@ -412,7 +439,7 @@ describe('Recent Runs', () => {
     apiRequest.mockRejectedValueOnce(new Error('Temporary failure'))
     await wrapper.get('button[aria-label="Sort test suite"]').trigger('click')
     await flushPromises()
-    expect(wrapper.findAll('th')[2].attributes('aria-sort')).toBe('descending')
+    expect(wrapper.findAll('th')[3].attributes('aria-sort')).toBe('descending')
     await wrapper.get('button[aria-label="Sort execution time"]').trigger('click')
     await flushPromises()
     expect(request(-1).get('sortField')).toBe('timestamp')

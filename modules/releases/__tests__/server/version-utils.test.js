@@ -66,6 +66,7 @@ describe('normalizeVersionName', () => {
     expect(normalizeVersionName('RHAII-3.5.EA1')).toBe('rhaii 3 5 ea1');
     expect(normalizeVersionName('RHAII-3.5 EA1')).toBe('rhaii 3 5 ea1');
     expect(normalizeVersionName('RHAII 3.5 EA1')).toBe('rhaii 3 5 ea1');
+    expect(normalizeVersionName('3.7 EA RHOAI RELEASE')).toBe('rhoai 3 7 ea');
   });
 
   it('normalizes EA-1 to EA1 (hyphenated phase)', () => {
@@ -216,6 +217,18 @@ describe('parseVersionComponents', () => {
   it('parses {product}-{ver}.{phase}', () => {
     expect(parseVersionComponents('rhoai-3.5.EA1')).toEqual({
       product: 'rhoai', version: '3.5', phase: 'EA1'
+    });
+  });
+
+  it('preserves an unnumbered EA phase in registry and product-family names', () => {
+    expect(parseVersionComponents('rhoai-3.7.EA')).toEqual({
+      product: 'rhoai', version: '3.7', phase: 'EA'
+    });
+    expect(parseVersionComponents('3.7 EA RHOAI RELEASE')).toEqual({
+      product: 'rhoai', version: '3.7', phase: 'EA'
+    });
+    expect(parseVersionComponents('3.7_ea_rhai')).toEqual({
+      product: 'rhai', version: '3.7', phase: 'EA'
     });
   });
 

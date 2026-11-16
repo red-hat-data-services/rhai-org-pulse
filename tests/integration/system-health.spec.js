@@ -1666,6 +1666,72 @@ function buildPromotionGatesJob() {
   };
 }
 
+function buildPromotionGatesSummary() {
+  return {
+    runs: [
+      {
+        pr_number: 80,
+        date: '2026-11-05',
+        attempts: 2,
+        attempt_prs: [80, 81],
+        state: 'MERGED',
+        release: '3.7 EA1',
+        components: 2,
+        passed: 1,
+        failed: 1,
+        pending: 0,
+        blocked: 1,
+        classes: { build_failure: 1 },
+        repos: [
+          { repo: 'odh-dashboard', class: null },
+          { repo: 'odh-model-controller', class: 'build_failure' }
+        ],
+        creator_issues: 0,
+        all_passed: false,
+        gates_passed: false,
+        links: {
+          'odh-model-controller': ['https://redhat.atlassian.net/browse/RHAI-421']
+        }
+      },
+      {
+        pr_number: 75,
+        date: '2026-11-03',
+        attempts: 1,
+        attempt_prs: [75],
+        state: 'MERGED',
+        release: '3.7 EA1',
+        components: 1,
+        passed: 1,
+        failed: 0,
+        pending: 0,
+        blocked: 0,
+        classes: {},
+        repos: [{ repo: 'odh-dashboard', class: null }],
+        creator_issues: 0,
+        all_passed: true,
+        gates_passed: true,
+        links: {}
+      }
+    ],
+    components: [
+      { repo: 'odh-model-controller', runs: 1, blocks: 1, top_class: 'build_failure' },
+      { repo: 'odh-dashboard', runs: 2, blocks: 0, top_class: null }
+    ],
+    classes: [{ class: 'build_failure', label: 'Build failure', count: 1 }],
+    releases: [{ release: '3.7 EA1', runs: 2 }],
+    totals: {
+      runs: 2,
+      runs_all_passed: 1,
+      components: 3,
+      passed: 2,
+      failed: 1,
+      pending: 0,
+      blocked: 1,
+      creator_issues: 0
+    }
+  };
+}
+
 async function mockPromotionGatesApi(page, job) {
   await page.route('**/api/modules/system-health/promotion-gates/**', async (route) => {
     if (route.request().method() !== 'GET') {
@@ -1673,6 +1739,14 @@ async function mockPromotionGatesApi(page, job) {
       return;
     }
     const path = new URL(route.request().url()).pathname;
+    if (path === '/api/modules/system-health/promotion-gates/summary') {
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify(buildPromotionGatesSummary())
+      });
+      return;
+    }
     if (path !== '/api/modules/system-health/promotion-gates/latest') {
       await route.continue();
       return;
@@ -1769,6 +1843,66 @@ test.describe('Promotion Gates @system-health', () => {
     await page.waitForTimeout(DEFAULT_PAGE_WAIT_TIME);
 
     await expect(page.locator('text=No promotion gates data yet')).toBeVisible();
+
+    expectNoBenignConsoleErrors(page);
+  });
+
+  test('should render the Trends tab with stats, heatmap and rollup', async ({ page }) => {
+    await page.goto('/#/system-health/promotion-gates?tab=trends');
+    await page.waitForLoadState('networkidle');
+    await page.waitForTimeout(DEFAULT_PAGE_WAIT_TIME);
+
+    // period switch and export links
+    await expect(page.getByRole('button', { name: '30 days' })).toBeVisible();
+    await expect(page.getByRole('link', { name: /Export CSV/ })).toHaveAttribute(
+      'href',
+      /promotion-gates\/summary\?days=30&format=csv/
+    );
+
+    // stats and both charts, scoped to the panel: the hidden "Latest job"
+    // tab also renders status badges with this text
+    const trends = page.locator('[aria-label="Trends"]');
+    await expect(trends.locator('text=Promotion days')).toBeVisible();
+    await expect(trends.locator('text=Fully promoted')).toBeVisible();
+    await expect(trends.getByText('1 of 2 runs')).toBeVisible();
+    await expect(trends.locator('h2', { hasText: 'How often does promotion fail?' })).toBeVisible();
+    await expect(trends.locator('h2', { hasText: 'Promotion history - frequent blockers' })).toBeVisible();
+    // the legend entry that exists only in this tab
+    await expect(trends.locator('text=Not in run')).toBeVisible();
+
+    // the chart's component filter: default plus every repo from the summary
+    const chartFilter = trends.getByRole('combobox');
+    await expect(chartFilter).toBeVisible();
+    await expect(chartFilter.locator('option', { hasText: 'All components' })).toBeAttached();
+    await expect(chartFilter.locator('option', { hasText: 'odh-model-controller' })).toBeAttached();
+    await expect(chartFilter.locator('option', { hasText: 'odh-dashboard' })).toBeAttached();
+
+    // a failed cell with a Jira link becomes an anchor carrying the issue key
+    await expect(
+      trends.locator('a[href="https://redhat.atlassian.net/browse/RHAI-421"]')
+    ).toBeVisible();
+
+    // the per-day rollup, including the retried day
+    await expect(trends.locator('h2', { hasText: 'Run rollup' })).toBeVisible();
+    await expect(trends.locator('text=2 attempts')).toBeVisible();
+    // the Promoted column: exactly one of the two days is a clean pass
+    await expect(trends.locator('th', { hasText: 'Promoted' })).toBeVisible();
+    await expect(trends.getByText('✓')).toHaveCount(1);
+    // the not-promoted row explains itself in its tooltip
+    await expect(trends.locator('td span[title^="Not promoted"]')).toHaveCount(1);
+
+    // 7 days switches the heatmap from squares to word tiles: weekday headers,
+    // and the Jira key inside the tile is the link itself
+    await page.getByRole('button', { name: '7 days' }).click();
+    await page.waitForTimeout(1000);
+    await expect(
+      trends.locator('th', { hasText: /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun) \d\d\/\d\d$/ }).first()
+    ).toBeVisible();
+    const inlineKey = trends.locator('a', { hasText: 'RHAI-421' });
+    await expect(inlineKey).toHaveAttribute(
+      'href',
+      'https://redhat.atlassian.net/browse/RHAI-421'
+    );
 
     expectNoBenignConsoleErrors(page);
   });

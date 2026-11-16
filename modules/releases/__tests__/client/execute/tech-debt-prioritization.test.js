@@ -188,8 +188,53 @@ describe('TechDebtPrioritizationView', function () {
     await flushPromises()
 
     await wrapper.get('[data-testid="tech-debt-component-filter"]').trigger('click')
+    expect(wrapper.findAll('[role="listbox"] label')[0].text()).toBe('No component')
     expect(wrapper.text()).toContain('AI Gateway')
     expect(wrapper.text()).toContain('Model Serving')
+  })
+
+  it('selects No component alone or together with named components', async function () {
+    mockSuccessfulApi()
+    const wrapper = mount(TechDebtPrioritizationView)
+    await flushPromises()
+
+    await selectComponent(wrapper, 'No component')
+    expect(apiRequest).toHaveBeenCalledWith('/modules/releases/tech-debt/issues?includeNoComponent=true')
+    expect(apiRequest).toHaveBeenCalledWith('/modules/releases/tech-debt/trends?includeNoComponent=true')
+    expect(wrapper.get('[data-testid="tech-debt-component-filter"]').text()).toContain('No component')
+    expect(wrapper.get('[data-testid="tech-debt-selected-filters"]').text()).toContain('Component: No component')
+
+    await wrapper.get('input[aria-label="AI Gateway"]').setValue(true)
+    await flushPromises()
+    expect(apiRequest).toHaveBeenCalledWith(
+      '/modules/releases/tech-debt/issues?component=AI+Gateway&includeNoComponent=true'
+    )
+    expect(apiRequest).toHaveBeenCalledWith(
+      '/modules/releases/tech-debt/trends?component=AI+Gateway&includeNoComponent=true'
+    )
+
+    const noComponentChip = wrapper.findAll('[data-testid="tech-debt-selected-filters"] button').find(function (button) {
+      return button.attributes('aria-label') === 'Remove Component: No component filter'
+    })
+    await noComponentChip.trigger('click')
+    await flushPromises()
+    expect(wrapper.get('[data-testid="tech-debt-selected-filters"]').text()).not.toContain('No component')
+    expect(wrapper.get('[data-testid="tech-debt-selected-filters"]').text()).toContain('Component: AI Gateway')
+
+    const issueRequestCount = apiRequest.mock.calls.filter(function (call) {
+      return call[0].startsWith('/modules/releases/tech-debt/issues?')
+    }).length
+    await wrapper.get('input[aria-label="No component"]').setValue(true)
+    await flushPromises()
+    expect(apiRequest.mock.calls.filter(function (call) {
+      return call[0].startsWith('/modules/releases/tech-debt/issues?')
+    })).toHaveLength(issueRequestCount)
+    expect(wrapper.get('[data-testid="tech-debt-fetched-at"]').text()).toContain('saved session data')
+
+    await wrapper.get('[data-testid="tech-debt-clear-filters"]').trigger('click')
+    await flushPromises()
+    expect(wrapper.find('[data-testid="tech-debt-selected-filters"]').exists()).toBe(false)
+    expect(wrapper.find('[data-testid="tech-debt-cockpit"]').exists()).toBe(false)
   })
 
   it('opens company CVE SLA guidelines and retains the Bug scoring rubric', async function () {

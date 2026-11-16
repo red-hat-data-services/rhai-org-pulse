@@ -89,10 +89,10 @@
             >
               <input
                 type="checkbox"
-                :checked="selectedComponents.includes(component.name)"
+                :checked="selectedComponents.includes(component.value)"
                 class="h-4 w-4 rounded border-gray-300 text-primary-600 focus:ring-primary-500"
                 :aria-label="component.name"
-                @change="toggleComponent(component.name)"
+                @change="toggleComponent(component.value)"
               >
               <span>{{ component.name }}</span>
             </label>
@@ -414,6 +414,7 @@ import {
 } from '../services/techDebtIssueCache'
 
 const PAGE_SIZE = 25
+const NO_COMPONENT_KEY = '__no_component__'
 const componentOptions = ref([])
 const selectedComponents = ref([])
 const selectedRelease = ref('')
@@ -437,16 +438,27 @@ const visibleBugBacklogCount = ref(PAGE_SIZE)
 let issueRequestId = 0
 let trendRequestId = 0
 
+const selectedNamedComponents = computed(function () {
+  return selectedComponents.value.filter(function (component) { return component !== NO_COMPONENT_KEY })
+})
+const includeNoComponent = computed(function () {
+  return selectedComponents.value.includes(NO_COMPONENT_KEY)
+})
+
+function componentLabel(value) {
+  return value === NO_COMPONENT_KEY ? 'No component' : value
+}
+
 const componentFilterLabel = computed(() => {
   if (componentsLoading.value) return 'Loading components…'
   if (!selectedComponents.value.length) return 'All Components'
-  if (selectedComponents.value.length === 1) return selectedComponents.value[0]
+  if (selectedComponents.value.length === 1) return componentLabel(selectedComponents.value[0])
   return `${selectedComponents.value.length} components selected`
 })
 
 const selectedFilters = computed(() => {
-  const filters = selectedComponents.value.map(function (name) {
-    return { key: 'component:' + name, type: 'component', value: name, label: 'Component: ' + name }
+  const filters = selectedComponents.value.map(function (value) {
+    return { key: 'component:' + value, type: 'component', value, label: 'Component: ' + componentLabel(value) }
   })
   if (selectedRelease.value) {
     filters.push({ key: 'release:' + selectedRelease.value, type: 'release', value: selectedRelease.value, label: 'Release: ' + selectedRelease.value })
@@ -527,7 +539,8 @@ function closeComponentMenuOnOutsideClick(event) {
 
 function issuePath(refresh) {
   const params = new URLSearchParams()
-  for (const component of selectedComponents.value) params.append('component', component)
+  for (const component of selectedNamedComponents.value) params.append('component', component)
+  if (includeNoComponent.value) params.set('includeNoComponent', 'true')
   if (selectedIssueType.value) params.set('issueType', selectedIssueType.value)
   if (selectedTriage.value) params.set('triage', selectedTriage.value)
   if (refresh) params.set('refresh', 'true')
@@ -536,7 +549,8 @@ function issuePath(refresh) {
 
 function trendPath() {
   const params = new URLSearchParams()
-  for (const component of selectedComponents.value) params.append('component', component)
+  for (const component of selectedNamedComponents.value) params.append('component', component)
+  if (includeNoComponent.value) params.set('includeNoComponent', 'true')
   if (selectedIssueType.value) params.set('issueType', selectedIssueType.value)
   return '/modules/releases/tech-debt/trends?' + params.toString()
 }
@@ -648,11 +662,16 @@ async function loadComponents() {
   componentsError.value = ''
   try {
     const response = await apiRequest('/modules/releases/tech-debt/components')
-    componentOptions.value = Array.isArray(response && response.components)
+    const jiraComponents = Array.isArray(response && response.components)
       ? response.components.filter(function (component) { return component && component.name }).map(function (component) {
-        return { id: String(component.id || component.name), name: String(component.name) }
+        const name = String(component.name)
+        return { id: String(component.id || name), name, value: name }
       })
       : []
+    componentOptions.value = [
+      { id: NO_COMPONENT_KEY, name: 'No component', value: NO_COMPONENT_KEY },
+      ...jiraComponents
+    ]
   } catch (err) {
     componentsError.value = err && err.message ? err.message : 'Unable to load Jira components.'
   } finally {

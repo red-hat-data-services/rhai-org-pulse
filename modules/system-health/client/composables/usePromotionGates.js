@@ -2,6 +2,7 @@ import { ref, computed } from 'vue'
 import { apiRequest } from '@shared/client/services/api'
 
 const LATEST_ENDPOINT = '/modules/system-health/promotion-gates/latest'
+const SUMMARY_ENDPOINT = '/modules/system-health/promotion-gates/summary'
 
 /** Short repo name: last path segment of a full `org/repo` string, lowercased for joins. */
 export function repoKey(repo) {
@@ -199,7 +200,32 @@ export function usePromotionGates() {
   const error = ref(null)
   const notFound = ref(false)
   const notConfigured = ref(false)
+  const summary = ref(null)
+  const summaryLoading = ref(false)
+  const summaryError = ref(null)
   const job = ref(null)
+
+  /** Aggregate history for the trends tab; independent of the latest job. */
+  let summaryRequest = 0
+  async function loadSummary(days = 30) {
+    // Two quick period clicks can resolve out of order; only the newest wins.
+    const request = ++summaryRequest
+    summaryLoading.value = true
+    summaryError.value = null
+    try {
+      const data = await apiRequest(
+        `${SUMMARY_ENDPOINT}?days=${encodeURIComponent(days)}`
+      )
+      if (request === summaryRequest) summary.value = data
+    } catch (err) {
+      if (request === summaryRequest) {
+        summaryError.value = err.message || 'Failed to load promotion gates history'
+        summary.value = null
+      }
+    } finally {
+      if (request === summaryRequest) summaryLoading.value = false
+    }
+  }
 
   async function loadLatest() {
     loading.value = true
@@ -235,6 +261,10 @@ export function usePromotionGates() {
     error,
     notFound,
     notConfigured,
+    summary,
+    summaryLoading,
+    summaryError,
+    loadSummary,
     job,
     stateJson,
     pullRequests,

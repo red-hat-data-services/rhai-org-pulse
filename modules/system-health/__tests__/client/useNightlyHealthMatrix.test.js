@@ -7,6 +7,8 @@ import {
   resolveSelectedRun,
   canonicalKeyForRowId,
   collectMatrixRowIds,
+  cellDscCaption,
+  matrixRowLabel,
   dscSourceStatusClass,
   orderDayRunsForPanel,
   formatRunDuration,
@@ -73,6 +75,202 @@ describe('useNightlyHealthMatrix helpers', () => {
     expect(run.run_id).toBe('example-job:102')
   })
 
+  describe('row identity follows the newest published mapping (promotion-gate #52–#54)', () => {
+    const comp = (id, name, jira, status, extra = {}) => ({
+      id, name, jira_component: jira, source_status: status,
+      state: status === 'Ready' ? 'ready' : status === 'NotInstalled' ? 'not_applicable' : 'failed',
+      ...extra
+    })
+    // Old runs: published before the TRD mapping fix. Newest run: current mapping + dsc_component.
+    const days = [
+      {
+        date: '2026-11-12',
+        latest_run_id: 'pg:52',
+        runs: [{
+          run_id: 'pg:52',
+          gates: [],
+          components: [
+            comp('aigateway', 'AI Gateway', 'AI Gateway', 'Ready'),
+            comp('batchgateway', 'Batch Gateway', 'Batch Gateway', 'Ready'),
+            comp('ray', 'KubeRay', 'KubeRay', 'Ready'),
+            comp('sparkoperator', 'KubeRay', 'KubeRay', 'Ready'),
+            comp('ogx', 'OGX', 'OGX Core', 'Ready'),
+            comp('llamastackoperator', 'Llama Stack', 'OGX Core', 'NotInstalled'),
+            comp('mcplifecycleoperator', 'OGX', 'OGX Core', 'Ready')
+          ]
+        }]
+      },
+      {
+        date: '2026-11-13',
+        latest_run_id: 'pg:54',
+        // Producer stores same-day runs newest-first: #54 (new mapping) before #53 (old mapping).
+        runs: [{
+          run_id: 'pg:54',
+          build_number: 54,
+          completed_at: '2026-11-13T09:00:00Z',
+          gates: [],
+          components: [
+            comp('aigateway', 'Inference Gateway', 'Inference Gateway', 'Ready', { dsc_component: 'aigateway' }),
+            comp('batchgateway', 'llm-d', 'llm-d', 'Ready', { dsc_component: 'aigateway.batchGateway' }),
+            comp('ray', 'KubeRay', 'KubeRay', 'Ready', { dsc_component: 'ray' }),
+            comp('sparkoperator', 'Kubeflow Spark Operator', 'Kubeflow Spark Operator', 'Ready', { dsc_component: 'sparkoperator' }),
+            comp('ogx', 'OGX', 'OGX Core', 'Ready', { dsc_component: 'ogx' }),
+            comp('mcplifecycleoperator', 'AI Core Platform', 'AI Core Platform', 'Ready', { dsc_component: 'mcplifecycleoperator' })
+          ]
+        }, {
+          run_id: 'pg:53',
+          build_number: 53,
+          completed_at: '2026-11-13T05:00:00Z',
+          gates: [],
+          components: [
+            comp('aigateway', 'AI Gateway', 'AI Gateway', 'Ready'),
+            comp('sparkoperator', 'KubeRay', 'KubeRay', 'Ready'),
+            comp('ogx', 'OGX', 'OGX Core', 'Ready'),
+            comp('mcplifecycleoperator', 'OGX', 'OGX Core', 'Ready')
+          ]
+        }]
+      }
+    ]
+    // Heatmap before regeneration still lists old labels (incl. "Llama Stack" before "OGX").
+    const heatmap = ['AI Gateway', 'Batch Gateway', 'KubeRay', 'Llama Stack', 'OGX', 'Platform']
+      .map((component) => ({ component }))
+    const ids = collectMatrixRowIds(days, heatmap)
+    const labels = Object.fromEntries(ids.map((id) => [id, matrixRowLabel(id, days, heatmap)]))
+
+    it('renames rows without adding rows', () => {
+      expect(labels.aigateway).toBe('Inference Gateway')
+      expect(labels.batchgateway).toBe('llm-d')
+      expect(ids.filter((id) => ['aigateway', 'batchgateway'].includes(id))).toHaveLength(2)
+    })
+
+    it('gives Kubeflow Spark Operator and AI Core Platform their own rows', () => {
+      expect(ids).toContain('ray')
+      expect(ids).toContain('sparkoperator')
+      expect(labels.sparkoperator).toBe('Kubeflow Spark Operator')
+      expect(labels.mcplifecycleoperator).toBe('AI Core Platform')
+    })
+
+    it('folds the retired "Platform" heatmap label into AI Core Platform (no empty Platform row)', () => {
+      expect(ids).not.toContain('platform')
+      expect(Object.values(labels)).not.toContain('Platform')
+      expect(ids.filter((id) => labels[id] === 'AI Core Platform')).toEqual(['mcplifecycleoperator'])
+    })
+
+    it('folds "Platform" when the stale heatmap has no "AI Core Platform" entry', () => {
+      const staleHeatmap = [{ component: 'Platform' }, { component: 'KubeRay' }]
+      const staleIds = collectMatrixRowIds(days, staleHeatmap)
+      expect(staleIds).not.toContain('platform')
+      expect(staleIds.filter((id) => id === 'mcplifecycleoperator')).toHaveLength(1)
+      expect(matrixRowLabel('mcplifecycleoperator', days, staleHeatmap)).toBe('AI Core Platform')
+    })
+
+    it('folds an older run row published as "Platform" into AI Core Platform', () => {
+      const withLegacyRow = [{
+        date: '2026-11-11',
+        latest_run_id: 'pg:50',
+        runs: [{
+          run_id: 'pg:50',
+          build_number: 50,
+          completed_at: '2026-11-11T09:00:00Z',
+          gates: [],
+          components: [comp('platform', 'Platform', 'Platform', 'Ready')]
+        }]
+      }, ...days]
+      const legacyIds = collectMatrixRowIds(withLegacyRow, [{ component: 'AI Core Platform' }])
+      expect(legacyIds).not.toContain('platform')
+      expect(legacyIds.filter((id) => id === 'mcplifecycleoperator')).toHaveLength(1)
+    })
+
+    it('binds OGX Core to ogx (Ready), not llamastackoperator (Not Installed), on every day', () => {
+      expect(ids).toContain('ogx')
+      expect(ids).not.toContain('llamastackoperator')
+      for (const day of days) {
+        expect(findMatrixCell(day.runs[0], 'ogx', days)?.source_status).toBe('Ready')
+      }
+    })
+
+    it('shows each row only once per published component', () => {
+      const componentIds = ids.filter((id) => id !== 'cluster-health' && id !== 'operator-health')
+      const published = componentIds.map((id) => labels[id])
+      expect(new Set(published).size).toBe(published.length)
+    })
+  })
+
+  it('joins heatmap labels of folded producer rows (merged_from) instead of adding an empty row', () => {
+    const days = [{
+      date: '2026-11-13',
+      latest_run_id: 'pg:56',
+      runs: [{
+        run_id: 'pg:56',
+        gates: [],
+        components: [{
+          id: 'ogx',
+          name: 'OGX',
+          jira_component: 'OGX Core',
+          source_status: 'Ready',
+          state: 'blocked',
+          merged_from: [{ id: 'llamastackoperator', name: 'Llama Stack', source_status: 'NotInstalled' }]
+        }]
+      }]
+    }]
+    const heatmap = [{ component: 'Llama Stack' }, { component: 'OGX' }, { component: 'Model Runtimes' }]
+    const ids = collectMatrixRowIds(days, heatmap)
+    expect(ids).toContain('ogx')
+    expect(ids).not.toContain('llamastack')
+    expect(ids).not.toContain('llamastackoperator')
+    // Heatmap components with no producer data still get their placeholder row.
+    expect(ids).toContain('modelruntimes')
+  })
+
+  describe('cellDscCaption', () => {
+    it('names the DSC component with its status on blocked cells', () => {
+      const cell = { state: 'blocked', source_status: 'Ready', dsc_component: 'trustyai' }
+      expect(cellDscCaption('ai-guardrails', cell)).toEqual({
+        text: 'DSC trustyai: Ready',
+        status: 'Ready',
+        title: 'DataScienceCluster component "trustyai" is Ready'
+      })
+    })
+
+    it('names the DSC component on non-blocked cells (status is the main label)', () => {
+      expect(cellDscCaption('batchgateway', { state: 'ready', source_status: 'Ready', dsc_component: 'aigateway.batchGateway' })
+        ?.text).toBe('DSC aigateway.batchGateway')
+    })
+
+    it('keeps the legacy caption without dsc_component and for gate rows', () => {
+      expect(cellDscCaption('dashboard', { state: 'blocked', source_status: 'Ready' })?.text).toBe('DSC: Ready')
+      expect(cellDscCaption('dashboard', { state: 'ready', source_status: 'Ready' })).toBeNull()
+      expect(cellDscCaption('operator-health', { state: 'blocked', source_status: 'failed' })?.text).toBe('Gate: failed')
+      expect(cellDscCaption('dashboard', null)).toBeNull()
+    })
+  })
+
+  it('hides Workload Orchestration, Demos and Other rows from history and heatmap inventory', () => {
+    const days = [{
+      date: '2026-11-11',
+      stream_key: 'promotion-gate',
+      latest_run_id: 'r1',
+      runs: [{
+        run_id: 'r1',
+        gates: [],
+        components: [
+          { id: 'kueue', name: 'Distributed Workloads', jira_component: 'Workload Orchestration', state: 'blocked' },
+          { id: 'dashboard', name: 'Dashboard', jira_component: 'AI Core Dashboard', state: 'ready' }
+        ]
+      }]
+    }]
+    const heatmap = [
+      { component: 'Dashboard' },
+      { component: 'Demos' },
+      { component: 'Other' },
+      { component: 'Workload Orchestration' }
+    ]
+    const ids = collectMatrixRowIds(days, heatmap)
+    expect(ids).toContain('dashboard')
+    expect(ids).not.toContain('kueue')
+    expect(ids.some((id) => ['demos', 'other', 'workloadorchestration'].includes(id))).toBe(false)
+  })
+
   it('collects gate rows before component ids', () => {
     const fixture = JSON.parse(readFileSync(fixturePath, 'utf8'))
     const ids = collectMatrixRowIds(fixture.days)
@@ -83,14 +281,16 @@ describe('useNightlyHealthMatrix helpers', () => {
 
   it('adds heatmap inventory rows missing from nightly JSON', () => {
     const fixture = JSON.parse(readFileSync(fixturePath, 'utf8'))
-    const heatmap = [{ component: 'Batch Gateway' }, { component: 'Kserve' }]
+    const heatmap = [{ component: 'Model Runtimes' }, { component: 'Kserve' }, { component: 'Batch Gateway' }]
     const ids = collectMatrixRowIds(fixture.days, heatmap)
-    expect(ids).toContain('batchgateway')
+    expect(ids).toContain('modelruntimes')
     expect(ids).toContain('kserve')
+    // Retired label (renamed to llm-d) with no producer row: dropped, not an empty placeholder.
+    expect(ids).not.toContain('batchgateway')
     const dashIdx = ids.indexOf('dashboard')
-    const batchIdx = ids.indexOf('batchgateway')
-    expect(batchIdx).toBeGreaterThan(-1)
-    expect(dashIdx).toBeGreaterThan(batchIdx)
+    const runtimesIdx = ids.indexOf('modelruntimes')
+    expect(runtimesIdx).toBeGreaterThan(-1)
+    expect(dashIdx).toBeGreaterThan(runtimesIdx)
   })
 
   it('joins heatmap labels to producer YAML ids via canonical name and jira_component (MR !5 + PR #1855)', () => {
@@ -246,7 +446,9 @@ describe('useNightlyHealthMatrix helpers', () => {
     ]
     const heatmap = [{ component: 'Training Kubeflow' }]
     const ids = collectMatrixRowIds(days, heatmap)
-    expect(ids.filter((id) => id === 'trainer' || id === 'trainingoperator')).toEqual(['trainer'])
+    // One row, bound to the id the newest run emits; older days resolve via canonical identity.
+    expect(ids.filter((id) => id === 'trainer' || id === 'trainingoperator')).toEqual(['trainingoperator'])
+    expect(findMatrixCell(days[0].runs[0], 'trainingoperator', days)?.id).toBe('trainer')
     expect(findMatrixCell(days[1].runs[0], 'trainer', days)?.id).toBe('trainingoperator')
     expect(resolveHeatmapComponentToRowId('Training Kubeflow', days, { run: days[0].runs[0] })).toBe(
       'trainer'
@@ -461,7 +663,7 @@ describe('useNightlyHealthMatrix helpers', () => {
     expect(ordered.map((r) => r.run_id)).toEqual(['run-b', 'run-a'])
   })
 
-  it('orders an older latest_run_id run first with remaining runs ascending', () => {
+  it('orders an older latest_run_id run first with remaining runs newest first', () => {
     const day = {
       latest_run_id: 'run-b',
       runs: [
@@ -471,7 +673,23 @@ describe('useNightlyHealthMatrix helpers', () => {
       ]
     }
     const ordered = orderDayRunsForPanel(day)
-    expect(ordered.map((r) => r.run_id)).toEqual(['run-b', 'run-a', 'run-c'])
+    expect(ordered.map((r) => r.run_id)).toEqual(['run-b', 'run-c', 'run-a'])
+  })
+
+  it('orders remaining runs newest first across mixed timestamp formats', () => {
+    const day = {
+      latest_run_id: 'job:67',
+      runs: [
+        { run_id: 'job:53', started_at: '2026-11-13T04:59:00.000+00:00', build_number: 53 },
+        { run_id: 'job:67', started_at: '2026-11-13T16:10:46Z', build_number: 67 },
+        { run_id: 'job:54', started_at: '2026-11-13T06:12:00Z', build_number: 54 },
+        { run_id: 'job:60', started_at: '2026-11-13T11:30:00.123Z', build_number: 60 },
+        { run_id: 'job:61', build_number: 61 },
+        { run_id: 'job:62', started_at: '2026-11-13T11:30:00.123Z', build_number: 62 }
+      ]
+    }
+    const ordered = orderDayRunsForPanel(day)
+    expect(ordered.map((r) => r.run_id)).toEqual(['job:67', 'job:62', 'job:60', 'job:54', 'job:53', 'job:61'])
   })
 
   it('formats run duration from started_at and completed_at', () => {
@@ -593,7 +811,7 @@ describe('useNightlyHealthMatrix helpers', () => {
     expect(links[0].label).toBe('S3')
   })
 
-  it('drops Image org_pulse_link by digest when only operator_image_ref is set', () => {
+  it('drops Image org_pulse_link by digest when operator_image_ref resolves to ODS URL', () => {
     const digest =
       'sha256:8665a96e7b6aba002a922cec435995ffe15355996a255b8b1d3be2e16b1edaf8'
     const links = runOrgPulsePanelLinks({
@@ -610,6 +828,19 @@ describe('useNightlyHealthMatrix helpers', () => {
     expect(runPromotionGateQuayDigestKeys({
       promotion_gate: { operator_image_ref: `quay.io/x@${digest}` }
     }).has(digest.toLowerCase())).toBe(true)
+  })
+
+  it('keeps Image org_pulse_link when operator_image_ref digest is not shown as ODS URL', () => {
+    const digest =
+      'sha256:8665a96e7b6aba002a922cec435995ffe15355996a255b8b1d3be2e16b1edaf8'
+    const imageHref = `https://registry.example.invalid/rhoai/bundle@${digest}`
+    const links = runOrgPulsePanelLinks({
+      promotion_gate: { operator_image_ref: `registry.example.invalid/rhoai/bundle@${digest}` },
+      org_pulse_links: [{ label: 'Image', href: imageHref }]
+    })
+    expect(runOdsBuildUrl({ promotion_gate: { operator_image_ref: `registry.example.invalid/rhoai/bundle@${digest}` } })).toBeNull()
+    expect(links).toHaveLength(1)
+    expect(links[0].href).toBe(imageHref)
   })
 
   it('resolves ods URL from operator_image_ref when ods_build_url is absent', () => {
@@ -769,6 +1000,23 @@ describe('useNightlyHealthMatrix helpers', () => {
     expect(formatNightlyStatusLabel('passed')).toBe('Passed')
     expect(formatNightlyStatusLabel('not ready')).toBe('Not Ready')
     expect(titleCaseLabel('cluster health')).toBe('Cluster Health')
+    expect(titleCaseLabel('ai gateway')).toBe('AI Gateway')
+    expect(titleCaseLabel('ai-evaluations')).toBe('AI-Evaluations')
+  })
+
+  it('preserves producer canonical name casing when jira_component is absent', () => {
+    expect(
+      rowLabel('ai-evaluations', {
+        id: 'ai-evaluations',
+        name: 'AI Evaluations'
+      })
+    ).toBe('AI Evaluations')
+    expect(
+      rowLabel('aigateway', {
+        id: 'aigateway',
+        name: 'AI Gateway'
+      })
+    ).toBe('AI Gateway')
   })
 
   it('prefers jira_component for matrix row label and tooltip keeps id and canonical name', () => {

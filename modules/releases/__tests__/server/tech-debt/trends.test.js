@@ -86,6 +86,38 @@ describe('Tech Debt trend snapshot', function () {
     expect(response.components[0].months.find(function (month) { return month.month === '2026-08' }).received.categories['component-team']).toBe(1)
   })
 
+  it('preserves componentless events and combines them with named component panels', function () {
+    const snapshot = buildTrendSnapshot([
+      rawIssue('RHAI-NAMED', {
+        components: [{ name: 'AI Gateway' }],
+        created: '2026-08-01T00:00:00.000Z'
+      }),
+      rawIssue('RHAI-EMPTY', {
+        components: [],
+        created: '2026-09-01T00:00:00.000Z',
+        resolutiondate: '2026-10-20T10:00:00.000Z'
+      })
+    ], new Set(), new Date('2026-10-29T06:00:00.000Z'))
+
+    expect(snapshot.events.find(function (event) { return event.key === 'RHAI-EMPTY' }).components).toEqual([])
+    const normalized = normalizeTrendSnapshot(snapshot)
+    expect(normalized.error).toBeUndefined()
+
+    const response = buildTrendResponse(
+      normalized.snapshot,
+      ['AI Gateway'],
+      null,
+      new Date('2026-10-29T07:00:00.000Z'),
+      true
+    )
+    expect(response.totals).toEqual({ received: 2, resolved: 1 })
+    expect(response.includeNoComponent).toBe(true)
+    expect(response.components).toEqual([
+      expect.objectContaining({ component: 'AI Gateway', noComponent: false, totals: { received: 1, resolved: 0 } }),
+      expect.objectContaining({ component: 'No component', noComponent: true, totals: { received: 1, resolved: 1 } })
+    ])
+  })
+
   it('classifies the expanded Bug source taxonomy', function () {
     const snapshot = buildTrendSnapshot([
       rawIssue('RHAI-DASHBOARD', { labels: ['cypress_found_bug'] }),

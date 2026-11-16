@@ -110,11 +110,13 @@
                       {{ cellDisplayStatus(cellFor(day, rowId)) }}
                     </div>
                     <div
-                      v-if="cellSourceStatusSubtitle(cellFor(day, rowId))"
+                      v-for="caption in [cellDscCaption(rowId, cellFor(day, rowId))].filter(Boolean)"
+                      :key="caption.text"
                       class="cell-substatus"
-                      :class="dscSourceStatusClass(cellSourceStatusSubtitle(cellFor(day, rowId)))"
+                      :class="dscSourceStatusClass(caption.status)"
+                      :title="caption.title"
                     >
-                      {{ cellSourceStatusSubtitlePrefix(rowId) }}: {{ cellSourceStatusSubtitle(cellFor(day, rowId)) }}
+                      {{ caption.text }}
                     </div>
                     <div v-if="cellTestCounts(cellFor(day, rowId))" class="cell-counts">
                       <span class="cp">{{ cellTestCounts(cellFor(day, rowId)).passed }}</span>
@@ -144,10 +146,44 @@
         :aria-labelledby="dayPanelTitleId"
       >
         <div class="day-panel-header">
-          <h3 :id="dayPanelTitleId">Runs on {{ selectedDayEntry.date }}</h3>
+          <div class="day-panel-title">
+            <h3 :id="dayPanelTitleId">Runs on {{ selectedDayEntry.date }}</h3>
+            <button
+              type="button"
+              class="s3-help-btn"
+              :aria-expanded="s3HelpOpen ? 'true' : 'false'"
+              :aria-controls="s3HelpId"
+              title="How to access S3 artifacts"
+              @click="s3HelpOpen = !s3HelpOpen"
+            ><span class="s3-help-icon" aria-hidden="true">?</span>S3 access help</button>
+          </div>
           <button type="button" class="day-panel-close" @click="dismissDayPanel">
             Close
           </button>
+        </div>
+        <div
+          v-if="s3HelpOpen"
+          :id="s3HelpId"
+          class="s3-help-popover"
+          role="region"
+          aria-label="S3 artifacts access"
+        >
+          <div class="s3-help-header">
+            <strong>S3 artifacts access</strong>
+            <button type="button" class="s3-help-close" aria-label="Close S3 access help" @click="s3HelpOpen = false">×</button>
+          </div>
+          <ol>
+            <li>
+              Log in via
+              <a class="run-inline-link" :href="S3_ACCESS_HELP.loginUrl" target="_blank" rel="noopener noreferrer">Red Hat IT AWS</a>.
+            </li>
+            <li>Choose the account <code>{{ S3_ACCESS_HELP.account }}</code>.</li>
+            <li>
+              Choose your role:
+              <template v-for="(role, idx) in S3_ACCESS_HELP.roles" :key="role"><template v-if="idx > 0"> or </template><code>{{ role }}</code></template>.
+            </li>
+            <li>No role yet? Request access in <code>{{ S3_ACCESS_HELP.requestChannel }}</code> on Slack.</li>
+          </ol>
         </div>
         <p v-if="selectionError(selectedDayEntry)" class="selection-error" role="status">
           {{ selectionError(selectedDayEntry) }}
@@ -204,6 +240,21 @@
                 >{{ runOdsBuildLinkLabel(run) }}</a>
               </div>
               <div v-if="runEnvironmentLine(run)" class="run-line">{{ runEnvironmentLine(run) }}</div>
+              <div class="run-line" data-testid="run-jira-line">
+                <template v-if="runJiraSummary(run).issues.length">
+                  Jira:
+                  <template v-for="(issue, idx) in runJiraSummary(run).issues" :key="issue.key">
+                    <span v-if="idx > 0"> · </span>
+                    <a
+                      class="run-inline-link"
+                      :href="issue.href"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >{{ issue.key }}</a><template v-if="issue.action"> ({{ issue.action }})</template>
+                  </template>
+                </template>
+                <template v-else>{{ runJiraSummary(run).emptyText }}</template>
+              </div>
               <div v-if="runFooterLinks(run).length" class="run-line">
                 <template v-for="(link, idx) in runFooterLinks(run)" :key="link.key">
                   <span v-if="idx > 0"> · </span>
@@ -242,21 +293,21 @@ import {
   NIGHTLY_PAGE_SIZE,
   useNightlyHealthMatrix,
   resolveSelectedRun,
-  findMatrixCell,
   resolveDisplayMatrixCell,
   cellDisplayStatus,
   nightlyCellTone,
-  cellSourceStatusSubtitle,
-  cellSourceStatusSubtitlePrefix,
+  cellDscCaption,
   dscSourceStatusClass,
-  rowLabel,
-  rowLabelTooltip,
+  matrixRowLabel,
+  matrixRowLabelTooltip,
   nightlyRowHeatmapLinkTarget,
   friendlyDate,
   formatTimestamp,
   formatRunDuration,
   nightlyColumnHeaderSubline,
   runArtifactPanelEntries,
+  runJiraSummary,
+  S3_ACCESS_HELP,
   runOrgPulsePanelLinks,
   runS3ArtifactsInlineLink,
   runEnvironmentLine,
@@ -324,6 +375,8 @@ watch(
 
 const dayPopupRef = ref(null)
 const dayPanelTitleId = useId()
+const s3HelpId = useId()
+const s3HelpOpen = ref(false)
 const popupPos = ref({ top: 0, left: 0 })
 const lastMatrixClickTarget = ref(null)
 const lastPopupClickEvent = ref(null)
@@ -394,7 +447,15 @@ function onMatrixDayClick(date, event) {
 }
 
 onKeyStroke('Escape', () => {
+  if (s3HelpOpen.value) {
+    s3HelpOpen.value = false
+    return
+  }
   if (selectedDayEntry.value) dismissDayPanel()
+})
+
+watch(selectedDayEntry, () => {
+  s3HelpOpen.value = false
 })
 
 onClickOutside(dayPopupRef, (ev) => {
@@ -423,33 +484,22 @@ const newestBuildLabel = computed(() => {
   return run?.build_number ?? '—'
 })
 
+// Labels follow the newest run that has the row, so producer renames (e.g. AI Gateway →
+// Inference Gateway) show immediately instead of the oldest published name.
 const rowNameCache = computed(() => {
   const map = new Map()
-  for (const day of sortedDays.value) {
-    for (const run of day.runs || []) {
-      if (!run) continue
-      for (const rowId of rowIds.value) {
-        if (map.has(rowId)) continue
-        const cell = findMatrixCell(run, rowId, sortedDays.value)
-        if (cell) map.set(rowId, rowLabel(rowId, cell, props.heatmapComponents))
-      }
-    }
+  for (const rowId of rowIds.value) {
+    map.set(rowId, matrixRowLabel(rowId, sortedDays.value, props.heatmapComponents))
   }
   return map
 })
 
 function rowName(rowId) {
-  return rowNameCache.value.get(rowId) || rowLabel(rowId, null, props.heatmapComponents)
+  return rowNameCache.value.get(rowId) || matrixRowLabel(rowId, [], props.heatmapComponents)
 }
 
 function rowNameTooltip(rowId) {
-  for (const day of sortedDays.value) {
-    for (const run of day.runs || []) {
-      const cell = findMatrixCell(run, rowId, sortedDays.value)
-      if (cell) return rowLabelTooltip(rowId, cell)
-    }
-  }
-  return rowLabelTooltip(rowId, null)
+  return matrixRowLabelTooltip(rowId, sortedDays.value)
 }
 
 const rowLinkTargetCache = computed(() => {
@@ -844,6 +894,10 @@ table.nightly-matrix th {
   color: var(--te-text-muted);
   margin-top: 3px;
   line-height: 1.2;
+  /* DSC paths such as "aigateway.modelsAsAService" wrap inside the cell instead of widening the column. */
+  max-width: 110px;
+  white-space: normal;
+  overflow-wrap: anywhere;
 }
 
 .cell-substatus.dsc-status-ready {
@@ -917,6 +971,78 @@ html.dark .cell-substatus.dsc-status-not-ready {
   margin: 0;
   font-size: 16px;
   color: var(--te-heading);
+}
+
+.day-panel-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.s3-help-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  border: none;
+  background: transparent;
+  color: var(--te-link);
+  font-size: 12px;
+  line-height: 1;
+  cursor: pointer;
+  padding: 2px 0;
+}
+
+.s3-help-btn:hover {
+  text-decoration: underline;
+}
+
+.s3-help-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  border: 1px solid currentColor;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.s3-help-btn:focus-visible,
+.s3-help-close:focus-visible {
+  outline: 2px solid var(--te-accent);
+  outline-offset: 2px;
+}
+
+.s3-help-popover {
+  margin: 0 0 12px;
+  padding: 10px 12px;
+  border: 1px solid var(--te-border);
+  border-radius: 6px;
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--te-text-muted);
+}
+
+.s3-help-popover ol {
+  margin: 6px 0 0;
+  padding-left: 18px;
+}
+
+.s3-help-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.s3-help-close {
+  background: transparent;
+  border: none;
+  color: var(--te-text-muted);
+  font-size: 16px;
+  line-height: 1;
+  cursor: pointer;
+  padding: 0 2px;
 }
 
 .day-panel-close {
@@ -1023,6 +1149,18 @@ html.dark .test-execution-theme.nightly-day-popup .run-status,
 html.dark .test-execution-theme.nightly-day-popup .day-panel-empty,
 html.dark .test-execution-theme.nightly-day-popup .day-panel-close {
   color: #8899aa;
+}
+
+.test-execution-theme.nightly-day-popup .s3-help-popover {
+  background: #f9fafb;
+  border-color: #d1d5db;
+  color: #374151;
+}
+
+html.dark .test-execution-theme.nightly-day-popup .s3-help-popover {
+  background: #0f2236;
+  border-color: #1e4976;
+  color: #c8d4de;
 }
 
 html.dark .test-execution-theme.nightly-day-popup .run-list-item {

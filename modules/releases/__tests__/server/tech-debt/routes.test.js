@@ -142,6 +142,34 @@ describe('Tech Debt Prioritization routes', function () {
     expect(res.body.categories.every(function (category) { return category.issueType === 'Bug' })).toBe(true)
   })
 
+  it('serves componentless six-month trend data with issue-type filtering', async function () {
+    const snapshot = require('../../../server/tech-debt/trends').buildTrendSnapshot([
+      rawIssue('RHAI-EMPTY-BUG', {
+        fields: { components: [], created: '2026-09-01T00:00:00.000Z' }
+      }),
+      rawIssue('RHAI-EMPTY-CVE', {
+        fields: {
+          components: [],
+          issuetype: { name: 'Vulnerability' },
+          created: '2026-10-01T00:00:00.000Z'
+        }
+      })
+    ], new Set(), new Date('2026-10-29T06:00:00.000Z'))
+    const storage = { readFromStorage: vi.fn(async function () { return snapshot }) }
+    const res = makeResponse()
+
+    await register(null, storage).trends({
+      query: { includeNoComponent: 'true', issueType: 'Bug' }
+    }, res)
+
+    expect(res.statusCode).toBe(200)
+    expect(res.body.includeNoComponent).toBe(true)
+    expect(res.body.totals).toEqual({ received: 1, resolved: 0 })
+    expect(res.body.components).toEqual([
+      expect.objectContaining({ component: 'No component', noComponent: true })
+    ])
+  })
+
   it('returns 404 when no historical trend snapshot exists', async function () {
     const storage = { readFromStorage: vi.fn(async function () { return null }) }
     const res = makeResponse()
@@ -216,6 +244,51 @@ describe('Tech Debt Prioritization routes', function () {
     })
   })
 
+  it('queries unresolved componentless issues across all five projects', async function () {
+    const jira = jiraWithIssues([
+      rawIssue('RHAI-EMPTY-BUG', { fields: { components: [], issuetype: { name: 'Bug' } } }),
+      rawIssue('RHAI-EMPTY-CVE', { fields: { components: [], issuetype: { name: 'Vulnerability' } } })
+    ])
+    const res = makeResponse()
+
+    await register(jira).issues({
+      query: { includeNoComponent: 'true', issueType: 'Vulnerability', triage: 'exceptions' }
+    }, res)
+
+    const jqls = jira.jiraRequest.mock.calls.map(function (call) {
+      return new URLSearchParams(call[0].split('?')[1]).get('jql')
+    })
+    expect(jqls).toContain(registerTechDebtRoutes._test.scopedIssueJql([], true))
+    expect(jqls).toContain(registerTechDebtRoutes._test.scopedSfdcJql([], true))
+    expect(jqls.every(function (jql) { return jql.includes('component is EMPTY') })).toBe(true)
+    expect(jqls.every(function (jql) { return jql.includes('project in (RHAI, RHAIENG, RHOAIENG, INFERENG, AIPCC)') })).toBe(true)
+    expect(jqls.every(function (jql) { return jql.includes('statusCategory != Done') })).toBe(true)
+    expect(res.statusCode).toBe(200)
+    expect(res.body.includeNoComponent).toBe(true)
+    expect(res.body.selectedComponents).toEqual([])
+    expect(res.body.selectedTriage).toBe('exceptions')
+    expect(res.body.backlog.map(function (issue) { return issue.key })).toEqual(['RHAI-EMPTY-CVE'])
+  })
+
+  it('combines named and empty component matching without duplicating issues', async function () {
+    const jira = jiraWithIssues([
+      rawIssue('RHAI-NAMED', { fields: { components: [{ name: 'Model Serving' }] } }),
+      rawIssue('RHAI-EMPTY', { fields: { components: [] } }),
+      rawIssue('RHAI-EMPTY', { fields: { components: [] } })
+    ])
+    const res = makeResponse()
+
+    await register(jira).issues({
+      query: { component: 'Model Serving', includeNoComponent: 'true' }
+    }, res)
+
+    expect(registerTechDebtRoutes._test.componentJqlClause(['Model Serving'], true)).toBe(
+      '(component in ("Model Serving") OR component is EMPTY)'
+    )
+    expect(res.body.counts.total).toBe(2)
+    expect(res.body.backlog.map(function (issue) { return issue.key }).sort()).toEqual(['RHAI-EMPTY', 'RHAI-NAMED'])
+  })
+
   it('paginates Jira search results with SLA properties', async function () {
     const jira = {
       jiraRequest: vi.fn()
@@ -235,6 +308,12 @@ describe('Tech Debt Prioritization routes', function () {
   it('quotes selected component names safely in Jira JQL', function () {
     expect(registerTechDebtRoutes._test.componentJqlClause(['Model "Serving"', 'Pipelines\\Core'])).toBe(
       'component in ("Model \\"Serving\\"", "Pipelines\\\\Core")'
+    )
+  })
+
+  it('uses distinct cache entries for named and componentless selections', function () {
+    expect(registerTechDebtRoutes._test.cohortCacheKey(['Model Serving'], false)).not.toBe(
+      registerTechDebtRoutes._test.cohortCacheKey(['Model Serving'], true)
     )
   })
 

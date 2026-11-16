@@ -10,13 +10,24 @@ Dashboard opens Recent Runs inside Workflow Validation. The initial view shows
 20 runs, newest first, with Previous and Next controls. A run is one
 `telemetry_suite` and `invocation_id` pair. Keep different invocations separate.
 
-Show Test suite, Version, and Executed at (UTC). Each column heading
-sorts immediately on click. A second click reverses its order. Switching columns
-starts with suite A–Z, highest version first, or newest execution first. Make each run row clickable
-and keyboard accessible. Missing version
-or time shows an unavailable label. The time is the latest existing execution
-`timestamp` in the group. It is not a RHOAI build date. Build metadata and
-OpenSearch schema changes are outside this change.
+Show Test suite, Version, RHOAI build (UTC), and Executed at (UTC). Each column
+heading sorts immediately on click. A second click reverses its order. Switching
+columns starts with suite A–Z, highest version first, newest build first, or
+newest execution first. The initial order is still newest execution first.
+Make each run row clickable and keyboard accessible. Missing version, time, or
+build date shows an unavailable label. The time is the latest existing execution
+`timestamp` in the group. It is not a RHOAI build date.
+
+RHOAI build (UTC) is the verified operator image build time from the
+`workflow-execution-images` index. Build and execution timestamps use the same
+single-line UTC format, for example `5 Nov 2026, 05:14:40`. Keep `(UTC)` in the
+column heading without repeating it in each row. It joins on `invocation_id` equal to
+the run `invocationId`. Show `unavailable` when no document exists, the status is
+not `verified`, or the date is invalid. Missing build values sort last in both
+directions. Build date sorting uses the time as a tie breaker. Dates must be
+valid ISO timestamps with an explicit `Z` or numeric timezone offset. The server
+normalizes them to UTC. When image documents share an invocation, use the newest
+verified build timestamp. Unverified documents cannot replace a verified value.
 
 Multiple versions, suite, run ID, and Date Range filters are optional.
 Date Range provides All time, Last 7/30/90 days, and Custom dates. Show date
@@ -64,13 +75,13 @@ Paged parameters:
 - `suite`: exact group metadata match.
 - `runQuery`: case-insensitive invocation ID substring.
 - `dateFrom`, `dateTo`: optional `YYYY-MM-DD` bounds on the group timestamp.
-- `sortField`: `timestamp` (default), `version`, or `suite`.
+- `sortField`: `timestamp` (default), `version`, `suite`, or `buildDate`.
 - `sortDir`: `desc` (default) or `asc`.
 - `cursor`: opaque next/previous anchor, bound to filters, sort, and page size.
 - `refresh=true`: bypass the metadata cache (used by Refresh and Retry).
 
-Return lightweight `rows` with `suite`, `invocationId`, `rhoaiVersion`, and
-`timestamp`, plus `total`, `start`, `end`, `pageSize`, `nextCursor`,
+Return lightweight `rows` with `suite`, `invocationId`, `rhoaiVersion`,
+`timestamp`, `buildDate`, and `buildDateStatus`, plus `total`, `start`, `end`, `pageSize`, `nextCursor`,
 `previousCursor`, `options`, `sortField`, and `sortDir`. Options contain all
 available `versions` and `suites`. Null cursors disable the corresponding
 button. Complete grouped metadata is cached for up to 10 seconds per runtime
@@ -83,6 +94,13 @@ do not produce oversized URLs. Returned IDs are never truncated. New cursors use
 cursors remain supported. If a hashed anchor was deleted, or the anchor has no
 remaining rows, the page is empty and Previous resets to page one.
 
+Paged responses fetch build metadata before sorting or paging. Each query uses
+at most 500 invocation IDs and returns at most 500 invocation groups. Each group
+selects one verified image document, ordered by build timestamp descending.
+The server caches enriched rows with the run groups for up to 10 seconds.
+Page, filter, and sort requests reuse this complete snapshot. Refresh and expiry
+reload both indexes. Failed or disconnected enrichment is not cached.
+Other consumers keep their existing response shape.
 Invalid paged parameters return HTTP 400 before querying OpenSearch. Do not
 combine paged mode with legacy `limit`, `latest`, or bug enrichment. Calls
 without `pageSize` keep the existing unlimited/full response and optional
@@ -246,3 +264,18 @@ without changing CI configuration or another module's tests. The previous tests
 are retained in that suite. The Ownership Gate still requires approval. The PR
 is ready for review. This fix changes test discovery and documentation only;
 the deployed application code and GPUaaS evidence remain applicable.
+
+## RHOAI build column verification — 2026-11-12
+
+Backend build 11 and frontend build 6 are deployed to GPUaaS with core `v2.0.99`.
+All 157 run groups pass live API checks in the default execution order and both build orders.
+All 11 verified dates match the 18 image documents. Missing builds sort last.
+Next, Previous, reload, and Clear filters pass in the dashboard.
+Verified builds match the single-line execution format, for example
+`5 Nov 2026, 05:14:40`. UTC appears in the column headings only.
+
+[Validation evidence](rhai-10567-build-validation.json).
+[Deployment record](rhai-10567-dev-deployment.md).
+[Default order](images/rhai-10567-build-default-gpuaas.jpg).
+[Build descending](images/rhai-10567-build-descending-gpuaas.jpg).
+[Build ascending](images/rhai-10567-build-ascending-gpuaas.jpg).

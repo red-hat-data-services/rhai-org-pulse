@@ -198,6 +198,7 @@ test.describe('Releases Views @releases', () => {
     await expect(jiraPlan).toBeVisible();
     await expect(jiraPlan).toContainText('Read-only');
     await expect(jiraPlan).toContainText('RHAISTRAT-2921');
+    await expect(jiraPlan).toContainText('Releases');
     await expect(page.getByTestId('jira-plan-outcome-row')).toHaveCount(12);
     await expect(page.getByTestId('jira-plan-outcome-row').first()).toContainText('RHAISTRAT-3004');
 
@@ -225,6 +226,36 @@ test.describe('Releases Views @releases', () => {
 
   test('should load Schedule view', async ({ page }) => {
     await testView(page, 'schedule', 'Schedule');
+  });
+
+  test('keeps an unnumbered EA release distinct from GA in the Schedule', async ({ page }) => {
+    await page.route('**/api/modules/releases/registry', route => route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({ releases: [
+        {
+          id: '3.7_ea_rhai', displayName: '3.7 EA', state: 'active',
+          productPagesShortname: null,
+          fixVersions: ['3.7 EA RHOAI RELEASE', '3.7 EA RHAII RELEASE', '3.7 EA RHELAI RELEASE'],
+          milestones: { codeFreeze: '2090-12-09', ga: '2091-01-09' }
+        },
+        {
+          id: 'rhoai-3.7', displayName: 'rhoai-3.7', state: 'active',
+          productPagesShortname: 'rhoai',
+          milestones: { codeFreeze: '2090-12-10', ga: '2091-02-09' }
+        }
+      ] })
+    }));
+
+    await page.goto('/#/releases/schedule');
+    const ea = page.getByRole('button', { name: '3.7 EA', exact: true });
+    await expect(ea).toBeVisible();
+    await expect(page.getByRole('button', { name: '3.7 GA', exact: true })).toBeVisible();
+
+    await ea.click();
+    await expect(page.getByRole('cell', { name: '3.7 EA', exact: true })).toBeVisible();
+    await expect(page.getByRole('cell', { name: 'rhoai-3.7', exact: true })).toHaveCount(0);
+    await expect(page.getByTestId('milestone-countdown-card').first()).toContainText('3.7 EA');
   });
 
   test('should open AIPCC Milestones from the Schedule pill', async ({ page }) => {
@@ -1223,6 +1254,79 @@ test.describe('Releases FPDoR Readiness @releases', () => {
     await expect(page).toHaveURL(/#\/releases\/execute\?tab=tech-debt-prioritization/);
     await expect(page.getByTestId('tech-debt-prioritization')).toBeVisible();
 
+    expect(page.errors).toHaveLength(0);
+  });
+
+  test('Tech Debt Cockpit includes componentless issues alone or with named components', async ({ page }) => {
+    const issueRequests = [];
+    const trendRequests = [];
+    await page.route('**/api/modules/releases/tech-debt/components', async route => {
+      await route.fulfill({
+        json: { project: 'RHAI', components: [{ id: '1', name: 'AI Gateway' }] }
+      });
+    });
+    await page.route('**/api/modules/releases/tech-debt/issues?*', async route => {
+      issueRequests.push(route.request().url());
+      await route.fulfill({
+        json: {
+          projects: ['RHAI', 'RHAIENG', 'RHOAIENG', 'INFERENG', 'AIPCC'],
+          selectedComponents: new URL(route.request().url()).searchParams.getAll('component'),
+          includeNoComponent: new URL(route.request().url()).searchParams.get('includeNoComponent') === 'true',
+          fetchedAt: '2026-10-26T14:30:00.000Z',
+          counts: { total: 0, inFlight: 0, backlog: 0, bugs: 0, vulnerabilities: 0 },
+          inFlight: [],
+          backlog: []
+        }
+      });
+    });
+    await page.route('**/api/modules/releases/tech-debt/trends?*', async route => {
+      trendRequests.push(route.request().url());
+      const url = new URL(route.request().url());
+      const components = url.searchParams.getAll('component').map(component => ({
+        component,
+        noComponent: false,
+        totals: { received: 0, resolved: 0 },
+        months: []
+      }));
+      if (url.searchParams.get('includeNoComponent') === 'true') {
+        components.push({
+          component: 'No component',
+          noComponent: true,
+          totals: { received: 0, resolved: 0 },
+          months: []
+        });
+      }
+      await route.fulfill({
+        json: {
+          generatedAt: '2026-10-29T06:00:00.000Z',
+          window: { months: [], timezone: 'UTC' },
+          categories: [],
+          totals: { received: 0, resolved: 0 },
+          components,
+          stale: false,
+          warning: null
+        }
+      });
+    });
+
+    await page.goto('/#/releases/execute?tab=tech-debt-prioritization');
+    await page.getByTestId('tech-debt-component-filter').click();
+    await expect(page.locator('[role="listbox"] label').first()).toContainText('No component');
+    await page.getByRole('checkbox', { name: 'No component' }).check();
+
+    await expect(page.getByTestId('tech-debt-cockpit')).toBeVisible();
+    await expect(page.getByTestId('tech-debt-selected-filters')).toContainText('Component: No component');
+    await expect(page.getByTestId('tech-debt-trends')).toContainText('No component');
+    expect(issueRequests.at(-1)).toContain('includeNoComponent=true');
+    expect(trendRequests.at(-1)).toContain('includeNoComponent=true');
+
+    await page.getByRole('checkbox', { name: 'AI Gateway' }).check();
+    await expect.poll(() => issueRequests.length).toBe(2);
+    await expect.poll(() => trendRequests.length).toBe(2);
+    expect(issueRequests.at(-1)).toContain('component=AI+Gateway');
+    expect(issueRequests.at(-1)).toContain('includeNoComponent=true');
+    expect(trendRequests.at(-1)).toContain('component=AI+Gateway');
+    expect(trendRequests.at(-1)).toContain('includeNoComponent=true');
     expect(page.errors).toHaveLength(0);
   });
 
