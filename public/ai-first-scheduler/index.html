@@ -284,7 +284,7 @@ tr:hover td{background:#f8fafc}
   <div style="padding:8px 24px;display:flex;align-items:center;gap:8px;margin-bottom:12px;border-bottom:1px solid #e2e8f0">
     <button onclick="showTab('feat')" style="font-size:12px;padding:5px 12px;background:#f8fafc;border:1px solid #cbd5e1;border-radius:6px;cursor:pointer;color:#1d4ed8;font-weight:600">← Back to Features</button>
     <span style="font-size:11px;color:#94a3b8">or</span>
-    <button onclick="switchTab('roadmap')" style="font-size:12px;padding:5px 12px;background:#f8fafc;border:1px solid #cbd5e1;border-radius:6px;cursor:pointer;color:#475569">View Roadmap</button>
+    <button onclick="switchTab('executive')" style="font-size:12px;padding:5px 12px;background:#f8fafc;border:1px solid #cbd5e1;border-radius:6px;cursor:pointer;color:#475569">View Executive</button>
   </div>
   <div class="arch-card">
     <h2>AI-First Planning Pipeline</h2>
@@ -388,7 +388,6 @@ tr:hover td{background:#f8fafc}
 
   <div class="main-tab-bar" id="main-tab-bar">
     <button class="main-tab active" data-tab="features" onclick="switchTab('features')">📋 Feature Scheduling</button>
-    <button class="main-tab" data-tab="roadmap" onclick="switchTab('roadmap')">📅 Roadmap</button>
     <button class="main-tab" data-tab="executive" onclick="switchTab('executive')">📊 Executive</button>
     <div style="margin-left:auto;display:flex;align-items:center;gap:8px;padding:4px 12px">
       <select id="f-rel" onchange="run()" style="font-size:11px"><option value="">All Releases</option></select>
@@ -397,6 +396,7 @@ tr:hover td{background:#f8fafc}
       <span id="st-in" style="color:#1a7f37;font-weight:600;font-size:11px">— in-plan</span>
       <span id="st-no" style="display:none"></span>
       <button class="btn btn-red" onclick="doLiveRefresh()" style="font-size:11px;padding:3px 10px" title="Refresh — pulls live Jira features/outcomes and the latest Product Pages release dates">↻ Refresh</button>
+      <button class="btn" onclick="doExport()" style="font-size:11px;padding:3px 10px" title="Export the currently filtered/sorted features to CSV, including FPDoR readiness details">⬇ Export CSV</button>
       <div style="position:relative;display:inline-block">
         <button id="hamburger-btn" onclick="toggleHamburger(event)" title="Architecture & Data Appendix" style="font-size:16px;padding:4px 11px;background:#f8fafc;border:1px solid #cbd5e1;border-radius:6px;cursor:pointer;color:#475569;line-height:1;font-weight:700;letter-spacing:1px">☰</button>
         <div id="hamburger-menu" style="display:none;position:absolute;right:0;top:calc(100% + 4px);background:#fff;border:1px solid #e2e8f0;border-radius:8px;box-shadow:0 4px 16px rgba(0,0,0,.1);min-width:170px;z-index:300;padding:4px 0">
@@ -408,7 +408,7 @@ tr:hover td{background:#f8fafc}
     </div>
   </div>
 
-  <!-- TAB 1: Priority Outcomes — content moved to Roadmap (cards) and Executive (br-panel) -->
+  <!-- TAB 1: Priority Outcomes — content moved to Executive (summary cards + br-panel) -->
   <div class="tab-pane" id="tab-outcomes">
   </div><!-- /tab-outcomes -->
 
@@ -644,50 +644,10 @@ tr:hover td{background:#f8fafc}
   </div>
   </div><!-- /tab-features -->
 
-  <!-- TAB 2: Roadmap -->
-  <div class="tab-pane" id="tab-roadmap">
-  <!-- Org Pulse live KPI row (Aug 25 snapshot) -->
-  <div style="padding:0 0 8px">
-    <button onclick="(function(b){var r=document.getElementById('pulse-row');var open=r.style.display!=='none';r.style.display=open?'none':'';b.textContent=open?'▼ Show release metrics':'▲ Hide release metrics'})(this)" style="font-size:11px;color:#64748b;background:none;border:1px solid #e2e8f0;border-radius:6px;padding:3px 12px;cursor:pointer">▲ Hide release metrics</button>
-  </div>
-  <div class="pulse-row" id="pulse-row" style="display:flex;margin-bottom:16px">
-    <div class="pulse-tile" style="border-color:#c8e6c9">
-      <div class="pulse-lbl">TV/FV Aligned <span class="pulse-badge">Org Pulse Aug 25</span></div>
-      <div class="pulse-val" style="color:#2e7d32">89%</div>
-      <div class="pulse-sub">186 features in scope</div>
-      <div class="pulse-delta">↑ from 33% on Aug 17</div>
-    </div>
-    <div class="pulse-tile" style="border-color:#bbdefb">
-      <div class="pulse-lbl">EA2 Scope</div>
-      <div class="pulse-val" style="color:#1565c0">96</div>
-      <div class="pulse-sub">90% aligned · RHAII 85% · RHOAI 93%</div>
-    </div>
-    <div class="pulse-tile" style="border-color:#fff9c4">
-      <div class="pulse-lbl">GA Scope</div>
-      <div class="pulse-val" style="color:#f57f17">73</div>
-      <div class="pulse-sub">86% aligned · freeze Sep 23</div>
-    </div>
-    <div class="pulse-tile" style="border-color:#ffcdd2">
-      <div class="pulse-lbl">Blocked</div>
-      <div class="pulse-val" style="color:#c62828">16</div>
-      <div class="pulse-sub">4% of committed scope</div>
-    </div>
-    <div class="pulse-tile" style="border-color:#e1bee7">
-      <div class="pulse-lbl">EA1 (Done)</div>
-      <div class="pulse-val" style="color:#6a1b9a">17</div>
-      <div class="pulse-sub">100% aligned · Freeze was Jul 29</div>
-    </div>
-    <div class="pulse-tile" style="border-color:#ffcdd2;background:#fff5f5">
-      <div class="pulse-lbl">Readiness Gap <span class="pulse-badge" style="background:#c62828">Aug 24 sync</span></div>
-      <div class="pulse-val" style="color:#c62828">75%</div>
-      <div class="pulse-sub">of 1,138 features lack TV or readiness</div>
-    </div>
-    <div class="pulse-tile" style="border-color:#ffe082;background:#fffde7">
-      <div class="pulse-lbl">EA2 Funnel</div>
-      <div class="pulse-val" style="color:#f57f17">80<span style="font-size:13px;font-weight:400;color:#aaa"> / 167</span></div>
-      <div class="pulse-sub">committed of requested (48% conversion)</div>
-    </div>
-  </div>
+
+  <!-- TAB 4: Executive -->
+  <div class="tab-pane" id="tab-executive">
+  <!-- Moved here from the removed Roadmap tab (Nov 10) — same placement/outcome info now lives in this one tab -->
   <div id="summary-detail" style="display:block;margin-bottom:16px">
   <div id="cards-rel-note" style="font-size:11px;color:#64748b;margin-bottom:6px;display:flex;align-items:center;gap:6px">
     <span>Showing for:</span>
@@ -703,11 +663,6 @@ tr:hover td{background:#f8fafc}
     <div class="card c4"><div class="card-lbl">No</div><div class="card-n" id="cnt-no">—</div><div class="card-s">Fix inputs to requalify</div></div>
   </div>
   </div><!-- /summary-detail -->
-  <div id="roadmap-timeline-view" style="padding:0 0 16px"></div>
-  </div><!-- /tab-roadmap -->
-
-  <!-- TAB 4: Executive -->
-  <div class="tab-pane" id="tab-executive">
   <div id="br-panel" class="br-panel" style="display:none"></div>
   <div id="exec-view" style="padding:16px 0"></div>
   </div><!-- /tab-executive -->
@@ -3020,11 +2975,12 @@ window.onload=()=>{
   // Features are synced every 12h, so outcomes (extracted from feature parentKey) auto-update
   setInterval(fetchOutcomes, 12 * 60 * 60 * 1000);
 
-  // Role-based tab defaults (Sept 18 update): PM → Features, Delivery lead → Roadmap, ENG lead → default components
+  // Role-based tab defaults (Sept 18 update): PM → Features, Delivery lead → Executive, ENG lead → default components
+  // (Roadmap tab removed Nov 10 — its placement/outcome info now lives in Executive.)
   const userRole = localStorage.getItem('userRole') || 'pm'; // 'pm', 'delivery', or 'eng'
   const engLead = localStorage.getItem('engLead') || null; // engineering lead name
   if(userRole === 'delivery' && !localStorage.getItem('manualTabOverride')) {
-    switchTab('roadmap');
+    switchTab('executive');
   }
   if(userRole === 'eng' && engLead && ENG_COMPONENTS[engLead]) {
     window._engFilter = ENG_COMPONENTS[engLead];
@@ -3272,13 +3228,9 @@ function toggleScoreCol(){
   updateCapacityDisplay();
 }
 
-let _roadmapVisible = false;
-function toggleRoadmapView(){ switchTab('roadmap'); }
-
 function switchTab(name){
   document.querySelectorAll('.main-tab').forEach(b=>b.classList.toggle('active',b.dataset.tab===name));
   document.querySelectorAll('.tab-pane').forEach(p=>p.classList.toggle('active',p.id==='tab-'+name));
-  if(name==='roadmap'){window._roadmapVisible=true;if(typeof renderRoadmapTimeline==='function')renderRoadmapTimeline(allData);}
   // Re-run the shared filter pipeline so the Executive summary reflects whatever
   // Version/Team/PM/etc. filters are already selected, instead of always summarizing
   // all of allData regardless of the filter bar (reported by John Graham, Nov 3).
@@ -3547,8 +3499,8 @@ function run(){
     if(!r._bigRocks) return;
     r._bigRocks.forEach(name=>{if(r._place==='No') window._brGapMap[name]=(window._brGapMap[name]||0)+1;});
   });
+  window._lastFilteredRows=rows;
   renderTbl(rows); renderPmBanner(rows); renderCards(allData); updateLandingCapacity(rows); renderCapacityMix(allData); renderBigRocks(allData); renderAppendix(allData);
-  if(document.getElementById('tab-roadmap')?.classList.contains('active')) renderRoadmapTimeline(allData);
   if(document.getElementById('tab-executive')?.classList.contains('active')) renderExecView(rows);
 }
 function v(id){return document.getElementById(id).value;}
@@ -3657,7 +3609,7 @@ function renderTbl(rows){
   tb.innerHTML=rows.map(r=>{
     const fNum=r._fNum;
     const rCls=r._committed?'r-committed':r._place==='No'?'r-below':'r-above';
-    // FPDoR breakdown: tooltip with full tier breakdown, inline for Critical/High fails only
+    // FPDoR breakdown shown as a hover tooltip only (was inline pills — cluttered the table, Nov 10 request)
     const failedSet=new Set(r._failedItems);
     const hasCrossTeamDep=failedSet.has('Cross-team deps');
     const rowApv=_allApv[esc(r['Key'])]||{pm:false,do:false};
@@ -3676,16 +3628,6 @@ function renderTbl(rows){
         : esc(r['FPDoR'])+' passed \u00b7 nothing failing');
     }
     const fpdorTooltip=tooltipLines.join('\n');
-    const critFails=FPDOR_TIERS_DISPLAY[0].items.filter(i=>failedSet.has(i));
-    const highFails=FPDOR_TIERS_DISPLAY[1].items.filter(i=>failedSet.has(i));
-    const medFails=FPDOR_TIERS_DISPLAY[2].items.filter(i=>failedSet.has(i));
-    const softFails=FPDOR_TIERS_DISPLAY[3].items.filter(i=>failedSet.has(i));
-    const breakdownHtml=r._path==='legacy'?[
-      ...critFails.map(i=>`<span class="fd-item fd-crit" title="${i} [Critical −25]">${i}</span>`),
-      ...highFails.map(i=>`<span class="fd-item fd-high" title="${i} [High −10]">${i}</span>`),
-      ...medFails.map(i=>`<span class="fd-item fd-med" title="${i} [Medium −5]">${i}</span>`),
-      ...softFails.map(i=>`<span class="fd-item fd-soft" title="${i} [Soft −2]">${i}</span>`),
-    ].join(''):'';
     const pCls=r._place==='EA1'?'p-ea1':r._place==='EA2'?'p-ea2':r._place==='GA'?'p-ga':'p-no';
     const conf=r._conf||0;
     const cCls=conf>=70?'hi':conf>=40?'mi':'lo';
@@ -3743,7 +3685,7 @@ function renderTbl(rows){
     return cutLine+`<tr id="apv-row-${esc(r['Key'])}" style="${trStyle}" title="${isSwing?'Swing feature — confidence borderline (50–69%), worth discussing at freeze':''}">
       <td style="color:#666;font-weight:600;font-size:13px">${r['Rank']||'—'}</td>
       <td class="score-col" style="display:none"><span class="score">${esc(r['Score'])}</span></td>
-      <td><div class="fpdor-cell"><span class="rp ${rCls}" title="${fpdorTooltip}">${esc(r['FPDoR'])||'—'}</span><span class="fpdor-w">w:${esc(r._wFPDoR)}</span>${breakdownHtml}</div></td>
+      <td><div class="fpdor-cell"><span class="rp ${rCls}" title="${fpdorTooltip}">${esc(r['FPDoR'])||'—'}</span><span class="fpdor-w" title="${fpdorTooltip}">w:${esc(r._wFPDoR)}</span></div></td>
       <td>${(()=>{
         const rl=r._riskLevel||'HIGH';
         const rf=r._riskFails||{};
@@ -4463,6 +4405,30 @@ function renderExecView(rows){
   <div style="font-size:10px;color:#aaa;text-align:center;padding:8px 0 4px">
     AI-First Release Planner · RHOAI 3.6 · Model v10 (AUC 85.7%) · Data from Org Pulse CSV export
   </div>`;
+}
+
+// Exports the currently filtered/sorted Feature Scheduling rows, including the FPDoR
+// readiness breakdown that's shown as a hover tooltip on-screen (not listed inline in
+// the table — Nov 10 request) so it's still available for offline review/sharing.
+function doExport(){
+  const rows=window._lastFilteredRows||allData;
+  function csvQ(v){let s=v==null?'':String(v);if(/^[=+\-@\t\r]/.test(s))s="'"+s;return '"'+s.replace(/"/g,'""')+'"';}
+  const hdr=['Rank','Key','Title','FPDoR','Weighted FPDoR','Readiness Issues','Risk','Target Versions','Fix Version','Components','Team','Priority','Confidence','Placement','Confidence%','PM','Outcome'];
+  const lines=[hdr.join(','),...rows.map(r=>{
+    const failedSet=new Set(r._failedItems);
+    const issues=FPDOR_TIERS_DISPLAY.flatMap(t=>t.items.filter(i=>failedSet.has(i)).map(i=>t.label+': '+i)).join('; ');
+    return [
+      r['Rank'],r['Key']||'',csvQ(r['Title']),r['FPDoR'],r._wFPDoR,
+      csvQ(issues),r._riskLevel||'',
+      csvQ(r['Target Versions']),csvQ(r['Fix Version']),csvQ(r['Components']),
+      csvQ(r['Team']),r['Priority']||'',r['Confidence'],r._place,(r._conf||0)+'%',
+      csvQ(r['PM']),csvQ(r['Outcome'])
+    ].join(',');
+  })];
+  const url=URL.createObjectURL(new Blob([lines.join('\n')],{type:'text/csv;charset=utf-8'}));
+  const a=Object.assign(document.createElement('a'),{href:url,download:'feature-scheduling-export.csv'});
+  a.click();
+  setTimeout(()=>URL.revokeObjectURL(url),0);
 }
 
 function toggleHamburger(e){
