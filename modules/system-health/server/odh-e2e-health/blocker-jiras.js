@@ -3,10 +3,10 @@
  *
  * The opendatahub-operator repo runs an "e2e-failure-triage" automation
  * (.github/scripts/e2e-failure-triage/triage.py) that automatically files Jira
- * blocker bugs when a component's E2E tests fail. Every auto-filed bug is created
- * in the RHOAIENG project with the label `odh-operator-auto-e2e-blocker` (the
+ * blocker bugs when a component's E2E tests fail. Auto-filed bugs in RHAI and
+ * legacy bugs in RHOAIENG carry the label `odh-operator-auto-e2e-blocker` (the
  * automation's own dedup key — it files one open blocker per component, then
- * comments on repeats) and is linked to the template issue RHOAIENG-79740 via a
+ * comments on repeats) and are linked to the template issue RHOAIENG-79740 via a
  * "Cloners" link.
  *
  * This module fetches the currently-open blockers (identified by that label) via
@@ -20,7 +20,7 @@
 const { createJiraClient } = require('../../../../shared/server/jira');
 
 const AUTO_BLOCKER_LABEL = 'odh-operator-auto-e2e-blocker';
-const JIRA_PROJECT_KEY = 'RHOAIENG';
+const JIRA_PROJECT_KEYS = ['RHAI', 'RHOAIENG'];
 const TEMPLATE_ISSUE_KEY = 'RHOAIENG-79740';
 const STORAGE_KEY = 'system-health/odh-e2e-blocker-jiras.json';
 
@@ -28,7 +28,7 @@ const STORAGE_KEY = 'system-health/odh-e2e-blocker-jiras.json';
 // `resolution = Unresolved` here (combined with snapshot-overwrite semantics in
 // refreshBlockerJiras) means any JIRA that has been resolved/closed since the last
 // run naturally drops off the list.
-const JQL = `project = ${JIRA_PROJECT_KEY} AND labels = "${AUTO_BLOCKER_LABEL}" AND resolution = Unresolved ORDER BY created DESC`;
+const JQL = `project in (${JIRA_PROJECT_KEYS.join(', ')}) AND labels = "${AUTO_BLOCKER_LABEL}" AND resolution = Unresolved ORDER BY created DESC`;
 
 const JQL_FIELDS = 'summary,status,priority,components,assignee,created,updated,versions';
 
@@ -193,7 +193,7 @@ async function refreshBlockerJiras(context = {}) {
 
 module.exports = {
   AUTO_BLOCKER_LABEL,
-  JIRA_PROJECT_KEY,
+  JIRA_PROJECT_KEYS,
   TEMPLATE_ISSUE_KEY,
   STORAGE_KEY,
   JQL,
