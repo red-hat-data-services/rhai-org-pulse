@@ -1033,6 +1033,20 @@ test.describe('Test Execution Dashboard @system-health', () => {
     // It is a Vue view, NOT the old iframe dashboard
     expect(await page.locator('iframe').count()).toBe(0);
 
+    // Cascading Version picker (Option B) — button opens y/z popover with search
+    const rhoaiTabForPicker = page.getByRole('tab', { name: 'RHOAI Releases' });
+    if (await rhoaiTabForPicker.isEnabled()) {
+      await rhoaiTabForPicker.click();
+      await page.waitForTimeout(300);
+      const verBtn = releasesTabPanel(page).locator('button.ver-picker-btn').first();
+      expect(await verBtn.count()).toBeGreaterThan(0);
+      await verBtn.click();
+      await page.waitForTimeout(300);
+      expect(await page.locator('.ver-popover, [aria-label="Select version"]').count()).toBeGreaterThan(0);
+      expect(await page.locator('input.ver-search, input[placeholder*="Search version"]').count()).toBeGreaterThan(0);
+      await page.keyboard.press('Escape');
+    }
+
     // Loading spinner must not be stuck
     expect(await pageLoadComplete(page)).toBe(true);
 

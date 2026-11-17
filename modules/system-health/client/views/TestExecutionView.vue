@@ -175,6 +175,12 @@ import TrendChart from '../components/TrendChart.vue'
 import NightlyHealthTable from '../components/NightlyHealthTable.vue'
 import NightlyHealthLegend from '../components/NightlyHealthLegend.vue'
 import {
+  cleanVer,
+  collectVersionsFromComponents,
+  isZStream,
+  vrKeyMatches
+} from '../utils/versionFilter.js'
+import {
   filterNightlyHealthByStream,
   formatTimestamp,
   jenkinsJobBasename,
@@ -549,20 +555,8 @@ watch(loading, (isLoading, wasLoading) => {
 
 const components = computed(() => heatmap.value || [])
 
-// Distinct versions/releases discovered from the data, to populate filters.
-const availableVersions = computed(() => {
-  const set = new Set()
-  components.value.forEach((comp) => {
-    Object.values(comp.days || {}).forEach((day) => {
-      Object.entries(day.by_vr || {}).forEach(([vrKey, vr]) => {
-        if ((vr.total || 0) > 0) {
-          set.add(normalizeVersion(vrKey.split('|')[0]))
-        }
-      })
-    })
-  })
-  return Array.from(set).sort()
-})
+// Distinct versions discovered from by_vr (exact y- and z-stream; .0 → y-stream).
+const availableVersions = computed(() => collectVersionsFromComponents(components.value))
 
 const availableReleases = computed(() => {
   const set = new Set()
@@ -717,28 +711,18 @@ const heatmapFilterEmptyMessage = computed(() => {
   return msg
 })
 
-function vrKeyMatches(vrKey, version, release) {
-  const [v, r] = vrKey.split('|')
-  const normV = normalizeVersion(v)
-
-  if (version && version !== 'All' && normalizeVersion(version) !== normV) return false
-  if (release && release !== 'All' && r !== release) return false
-
-  return true
-}
-
-function normalizeVersion(v) {
-  const base = v.split('-')[0]
-  const parts = base.split('.')
-  return parts.length >= 2 ? parts[0] + '.' + parts[1] : base
-}
-
 function formatDate(d) {
   return d.toISOString().slice(0, 10)
 }
 
 function updateFilters(newFilters) {
-  filters.value = { ...newFilters }
+  const raw = newFilters?.version ?? 'All'
+  const ver = raw === 'All' ? 'All' : cleanVer(raw)
+  filters.value = {
+    ...newFilters,
+    version: ver,
+    release: isZStream(ver) ? 'GA' : (newFilters?.release ?? 'All')
+  }
 }
 
 function onComponentClick(componentName) {

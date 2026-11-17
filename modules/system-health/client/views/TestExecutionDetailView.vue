@@ -16,43 +16,14 @@
             <p>Deep-dive into quality gates, execution trends, and Jira failure classification for this component.</p>
           </div>
 
-          <!-- Filter bar -->
-          <div class="filter-bar">
-            <div class="filter-group">
-              <span class="filter-label">Environment</span>
-              <span class="filter-value">RHOAI</span>
-            </div>
-            <div class="filter-group">
-              <span class="filter-label">Version</span>
-              <select v-model="filters.version">
-                <option value="All">All</option>
-                <option v-for="v in availableVersions" :key="v" :value="v">{{ v }}</option>
-              </select>
-            </div>
-            <div class="filter-group">
-              <span class="filter-label">Release</span>
-              <select v-model="filters.release">
-                <option value="All">All</option>
-                <option v-for="r in availableReleases" :key="r" :value="r">{{ r }}</option>
-              </select>
-            </div>
-            <div class="filter-group date-toggle">
-              <span class="filter-label">Date Range</span>
-              <label class="toggle">
-                <input v-model="filters.useDateRange" type="checkbox">
-                <span>Enable</span>
-              </label>
-            </div>
-            <div class="filter-group" :class="{ disabled: !filters.useDateRange }">
-              <span class="filter-label">From</span>
-              <input v-model="filters.fromDate" type="date" :disabled="!filters.useDateRange">
-            </div>
-            <div class="filter-group" :class="{ disabled: !filters.useDateRange }">
-              <span class="filter-label">To</span>
-              <input v-model="filters.toDate" type="date" :disabled="!filters.useDateRange">
-            </div>
-          </div>
         </div>
+
+        <FilterBar
+          :filters="filters"
+          :versions="availableVersions"
+          :releases="availableReleases"
+          @filters-change="updateFilters"
+        />
 
         <div class="showing">
           Showing: {{ filterLabel }}
@@ -407,6 +378,14 @@ import {
 } from 'chart.js'
 import { fetchComponentDetail } from '../composables/useTestDashboard'
 import TrendChart from '../components/TrendChart.vue'
+import FilterBar from '../components/FilterBar.vue'
+import {
+  cleanVer,
+  collectVersionsFromComponents,
+  isZStream,
+  vrKeyMatches,
+  yStreamVer
+} from '../utils/versionFilter.js'
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, ArcElement, Title, Tooltip, Legend)
 
@@ -506,15 +485,9 @@ function initDates() {
 }
 
 // ── Version / release options discovered from this component's heatmap by_vr ──
-const availableVersions = computed(() => {
-  const set = new Set()
-  if (heatmapEntry.value) {
-    Object.values(heatmapEntry.value.days || {}).forEach((day) => {
-      Object.keys(day.by_vr || {}).forEach((k) => set.add(normalizeVersion(k.split('|')[0])))
-    })
-  }
-  return Array.from(set).sort()
-})
+const availableVersions = computed(() =>
+  collectVersionsFromComponents(heatmapEntry.value ? [heatmapEntry.value] : [])
+)
 
 const availableReleases = computed(() => {
   const set = new Set()
@@ -537,10 +510,17 @@ const filterLabel = computed(() => {
 })
 
 function vrMatches(vrKey) {
-  const [v, r] = vrKey.split('|')
-  if (filters.value.version !== 'All' && normalizeVersion(v) !== normalizeVersion(filters.value.version)) return false
-  if (filters.value.release !== 'All' && r !== filters.value.release) return false
-  return true
+  return vrKeyMatches(vrKey, filters.value.version, filters.value.release)
+}
+
+function updateFilters(newFilters) {
+  const raw = newFilters?.version ?? 'All'
+  const ver = raw === 'All' ? 'All' : cleanVer(raw)
+  filters.value = {
+    ...newFilters,
+    version: ver,
+    release: isZStream(ver) ? 'GA' : (newFilters?.release ?? 'All')
+  }
 }
 
 function dateInRange(date) {
@@ -835,9 +815,11 @@ const statusLinks = computed(() =>
 )
 
 function matchingVrKeys(keys) {
+  // Jira release vars are keyed by y-stream (3.5|GA), even when the UI filter is a z-stream.
   const { version, release } = filters.value
-  if (version !== 'All' && release !== 'All') return keys.filter((k) => k === `${version}|${release}`)
-  if (version !== 'All') return keys.filter((k) => k.startsWith(version + '|'))
+  const xy = version === 'All' ? 'All' : yStreamVer(version)
+  if (xy !== 'All' && release !== 'All') return keys.filter((k) => k === `${xy}|${release}`)
+  if (xy !== 'All') return keys.filter((k) => k.startsWith(xy + '|'))
   if (release !== 'All') return keys.filter((k) => k.endsWith('|' + release))
   return keys
 }
@@ -944,12 +926,6 @@ function friendlyDate(iso) {
   const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
   return months[d.getMonth()] + ' ' + d.getDate()
 }
-function normalizeVersion(v) {
-  const base = String(v).split('-')[0]
-  const parts = base.split('.')
-  return parts.length >= 2 ? parts[0] + '.' + parts[1] : base
-}
-
 function goBack() {
   if (nav) nav.navigateTo('test-execution', {})
   else window.location.hash = '#/system-health/test-execution'
