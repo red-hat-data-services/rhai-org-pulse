@@ -31,8 +31,9 @@ function isImagesQuery(url, body) {
 
 /** Image aggregation fixtures contain the newest verified hit for each invocation. */
 function imageResponse(entries = []) {
-  return jsonResponse({ aggregations: { builds: { buckets: entries.map(([key, date]) => ({ key,
-    verified: { latest: { hits: { hits: date === undefined ? [] : [{ _source: { operator_image: { build_date: date } } }] } } }
+  return jsonResponse({ aggregations: { builds: { buckets: entries.map(([key, date, version]) => ({ key,
+    verified: { latest: { hits: { hits: date === undefined ? [] : [{ _source: { operator_image: { build_date: date } } }] } } },
+    latestImage: { hits: { hits: version === undefined ? [] : [{ _source: { operator_image: { version } } }] } }
   })) } } })
 }
 
@@ -533,17 +534,17 @@ describe('workflow-validation live schema routes', () => {
       const body = JSON.parse(options.body)
       if (isImagesQuery(url, body)) {
         requests.push({ url, body })
-        return imageResponse([['run-verified', '2026-11-05T05:14:40Z'], ['run-unavailable']])
+        return imageResponse([['run-verified', '2026-11-05T05:14:40Z', 'v3.7.0-ea.1'], ['run-unavailable']])
       }
       return jsonResponse({ aggregations: { suite_runs: { buckets: rows } } })
     }))
     const response = makeResponse()
     await register()['/test-suites'].at(-1)({ query: { pageSize: '20', includeBugs: 'false' } }, response)
-    expect(response.body.rows.map(({ invocationId, buildDate, buildDateStatus }) => ({ invocationId, buildDate, buildDateStatus })))
+    expect(response.body.rows.map(({ invocationId, rhoaiVersion, buildDate, buildDateStatus }) => ({ invocationId, rhoaiVersion, buildDate, buildDateStatus })))
       .toEqual([
-        { invocationId: 'run-verified', buildDate: '2026-11-05T05:14:40.000Z', buildDateStatus: 'verified' },
-        { invocationId: 'run-unavailable', buildDate: null, buildDateStatus: 'unavailable' },
-        { invocationId: 'run-no-doc', buildDate: null, buildDateStatus: null }
+        { invocationId: 'run-verified', rhoaiVersion: '3.7.0-ea.1', buildDate: '2026-11-05T05:14:40.000Z', buildDateStatus: 'verified' },
+        { invocationId: 'run-unavailable', rhoaiVersion: '3.6', buildDate: null, buildDateStatus: 'unavailable' },
+        { invocationId: 'run-no-doc', rhoaiVersion: '3.6', buildDate: null, buildDateStatus: null }
       ])
     expect(requests).toHaveLength(1)
     expect(requests[0].url).toMatch(new RegExp(`/${IMAGES_INDEX}/_search$`))
@@ -551,12 +552,21 @@ describe('workflow-validation live schema routes', () => {
     expect(requests[0].body.size).toBe(0)
     expect(requests[0].body.aggs.builds).toEqual({
       terms: { field: 'invocation_id.keyword', size: 500 },
-      aggs: { verified: {
-        filter: { term: { 'operator_image.build_date_status': 'verified' } },
-        aggs: { latest: { top_hits: { size: 1,
-          sort: [{ 'operator_image.build_date': { order: 'desc', missing: '_last' } }],
-          _source: ['operator_image.build_date'] } } }
-      } }
+      aggs: {
+        verified: {
+          filter: { term: { 'operator_image.build_date_status': 'verified' } },
+          aggs: { latest: { top_hits: { size: 1,
+            sort: [{ 'operator_image.build_date': { order: 'desc', missing: '_last' } }],
+            _source: ['operator_image.build_date'] } } }
+        },
+        latestImage: {
+          top_hits: {
+            size: 1,
+            sort: [{ 'operator_image.observed_at': { order: 'desc' } }],
+            _source: ['operator_image.version']
+          }
+        }
+      }
     })
   })
 
@@ -578,6 +588,57 @@ describe('workflow-validation live schema routes', () => {
     expect(response.body.rows[0].buildDate).toBe('2026-11-05T05:14:40.000Z')
     expect(queries[0].query).toEqual({ terms: { invocation_id: ['run-1'] } })
     expect(queries[0].aggs.builds.terms.field).toBe('invocation_id')
+  })
+
+  it.each([
+    ['v3.7.0-ea.1', '3.7.0-ea.1'],
+    ['3.7.0-ea.1', '3.7.0-ea.1'],
+    ['  v3.7.0-ea.1  ', '3.7.0-ea.1'],
+    ['', '3.4'],
+    ['   ', '3.4'],
+    [null, '3.4'],
+    [undefined, '3.4'],
+    [37, '3.4'],
+    ['v', '3.4']
+  ])('resolves image version %j without requiring a verified build date', async (version, expected) => {
+    vi.stubGlobal('fetch', vi.fn(async (url, options) => {
+      const body = JSON.parse(options.body)
+      if (isImagesQuery(url, body)) return imageResponse([['run-1', undefined, version]])
+      return jsonResponse({ aggregations: { suite_runs: { buckets: [{
+        key: { suite: 'release_gate', invocation: 'run-1' }, doc_count: 1,
+        latest: { hits: { hits: [{ _source: { timestamp: '2026-11-11T10:00:00Z', rhoai_version: '3.4' } }] } }
+      }] } } })
+    }))
+    const response = makeResponse()
+    await register()['/test-suites'].at(-1)({ query: { pageSize: '20' } }, response)
+    expect(response.body.rows).toEqual([expect.objectContaining({
+      invocationId: 'run-1', rhoaiVersion: expected, buildDate: null, buildDateStatus: 'unavailable'
+    })])
+  })
+
+  it('filters and sorts recent runs using image versions while preserving legacy versions', async () => {
+    const rows = [
+      ['run-image', '3.4'], ['run-current', '3.6.0'], ['run-legacy', '3.5.0']
+    ].map(([invocation, version]) => ({
+      key: { suite: 'release_gate', invocation }, doc_count: 1,
+      latest: { hits: { hits: [{ _source: { timestamp: '2026-11-11T10:00:00Z', rhoai_version: version } }] } }
+    }))
+    vi.stubGlobal('fetch', vi.fn(async (url, options) => {
+      const body = JSON.parse(options.body)
+      if (isImagesQuery(url, body)) return imageResponse([
+        ['run-image', undefined, 'v3.7.0-ea.1'], ['run-current', undefined, '3.6.0']
+      ])
+      return jsonResponse({ aggregations: { suite_runs: { buckets: rows } } })
+    }))
+    const routes = register()
+    const sorted = makeResponse()
+    await routes['/test-suites'].at(-1)({ query: { pageSize: '20', sortField: 'version', sortDir: 'asc' } }, sorted)
+    expect(sorted.body.rows.map(row => row.invocationId)).toEqual(['run-legacy', 'run-current', 'run-image'])
+    expect(sorted.body.options.versions).toContain('3.7.0-ea.1')
+    expect(sorted.body.options.versions).not.toContain('3.4')
+    const filtered = makeResponse()
+    await routes['/test-suites'].at(-1)({ query: { pageSize: '20', version: '3.7.0-ea.1' } }, filtered)
+    expect(filtered.body.rows.map(row => row.invocationId)).toEqual(['run-image'])
   })
 
   it('sorts the complete row set by RHOAI build date and keeps missing values last', async () => {
@@ -696,6 +757,33 @@ describe('workflow-validation live schema routes', () => {
     now += 10_001
     await route({ query }, makeResponse())
     expect([scans, images]).toEqual([3, 3])
+  })
+
+  it('returns a restart response when an image version changes after cache expiry', async () => {
+    let now = 1000, imageVersion = null
+    vi.spyOn(Date, 'now').mockImplementation(() => now)
+    vi.stubGlobal('fetch', vi.fn(async (url, options) => {
+      if (isImagesQuery(url, JSON.parse(options.body))) return imageResponse(
+        imageVersion ? [['b', undefined, imageVersion]] : [])
+      return jsonResponse({ aggregations: { suite_runs: { buckets: [['a', '3.5.0'], ['b', '3.6.0']].map(([invocation, rhoai_version]) => ({
+        key: { suite: 's', invocation }, latest: { hits: { hits: [{ _source: { rhoai_version } }] } }
+      })) } } })
+    }))
+    const route = register()['/test-suites'].at(-1), first = makeResponse(), cached = makeResponse()
+    const query = { pageSize: '1', sortField: 'version', sortDir: 'asc' }
+    await route({ query }, first)
+    imageVersion = 'v3.4.0'
+    const next = { ...query, cursor: first.body.nextCursor }
+    await route({ query: next }, cached)
+    expect(cached.body.rows[0].invocationId).toBe('b')
+    now += 10_001
+    const stale = makeResponse()
+    await route({ query: next }, stale)
+    expect(stale.statusCode).toBe(409)
+    expect(stale.body).toMatchObject({ code: 'STALE_CURSOR', error: expect.stringContaining('first page') })
+    const restarted = makeResponse()
+    await route({ query }, restarted)
+    expect(restarted.body.rows[0]).toMatchObject({ invocationId: 'b', rhoaiVersion: '3.4.0' })
   })
 
   it('stops image batches after disconnect and does not cache incomplete enrichment', async () => {

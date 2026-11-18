@@ -42,7 +42,8 @@ async function mockRecentData(page, rows) {
     const query = Object.fromEntries(params)
     if (params.has('versions')) query.versions = params.getAll('versions')
     try { await route.fulfill({ json: tools.pageRecentRuns(rows, tools.parseRecentRuns(query)) }) }
-    catch (error) { await route.fulfill({ status: 400, json: { error: error.message } }) }
+    catch (error) { await route.fulfill({ status: error.code === 'STALE_CURSOR' ? 409 : 400,
+      json: { error: error.message, code: error.code } }) }
   })
   return tools
 }
@@ -76,6 +77,48 @@ async function mockTrendSuites(page) {
 }
 
 test.describe('Workflow Validation module @workflow-validation', () => {
+  test('restarts version pagination when late image metadata moves an unseen run', async ({ page }) => {
+    const late = { suite: 'release_gate', invocationId: 'late-image-version', rhoaiVersion: '3.6.0',
+      timestamp: '2026-11-01T00:00:00Z' }
+    await mockRecentData(page, [...Array.from({ length: 20 }, (_, index) => ({
+      suite: 'release_gate', invocationId: `existing-version-${index}`, rhoaiVersion: '3.5.0',
+      timestamp: '2026-11-18T12:00:00Z'
+    })), late])
+    await page.goto('/#/workflow-validation/recent-runs?recentSortField=version&recentSort=asc&recentDatePreset=all')
+    await expect(page.getByRole('row', { name: 'Open run existing-version-0', exact: true })).toBeVisible()
+    late.rhoaiVersion = '3.4.0'
+    await page.getByRole('button', { name: 'Next page', exact: true }).click()
+    await expect(page.getByRole('alert')).toContainText('Run versions changed')
+    await page.getByRole('button', { name: 'Return to first page', exact: true }).click()
+    await expect(page.getByRole('row', { name: 'Open run late-image-version', exact: true }).getByRole('cell').nth(1)).toHaveText('3.4.0')
+    await expect(page.getByRole('alert')).toHaveCount(0)
+    await expect(page).toHaveURL(/recentSortField=version/)
+    await expect(page).toHaveURL(/recentSort=asc/)
+    await expect(page).not.toHaveURL(/recentCursor=[^&]+/)
+  })
+
+  test('shows image-derived versions on recent runs and execution versions on older pages', async ({ page }) => {
+    const recentRows = Array.from({ length: 20 }, (_, index) => ({
+      suite: 'release_gate', invocationId: `image-version-run-${index}`, rhoaiVersion: '3.7.0-ea.1',
+      timestamp: new Date(Date.UTC(2026, 10, 18, 12, 0, -index)).toISOString(),
+      buildDate: '2026-11-14T02:24:01.000Z', buildDateStatus: 'verified'
+    }))
+    await mockRecentData(page, [...recentRows, {
+      suite: 'release_gate', invocationId: 'legacy-execution-version', rhoaiVersion: '3.4',
+      timestamp: '2026-11-01T00:00:00Z', buildDate: null, buildDateStatus: null
+    }])
+    await page.goto('/#/workflow-validation/recent-runs?recentDatePreset=all')
+    const recent = page.getByRole('row', { name: 'Open run image-version-run-0', exact: true })
+    await expect(recent.getByRole('cell').nth(1)).toHaveText('3.7.0-ea.1')
+    await expect(recent.getByRole('cell').nth(2)).not.toHaveText('unavailable')
+    await expect(page.getByRole('row', { name: 'Open run legacy-execution-version', exact: true })).toHaveCount(0)
+    await page.getByRole('button', { name: 'Next page', exact: true }).click()
+    const legacy = page.getByRole('row', { name: 'Open run legacy-execution-version', exact: true })
+    await expect(legacy.getByRole('cell').nth(1)).toHaveText('3.4')
+    await expect(legacy.getByRole('cell').nth(2)).toHaveText('unavailable')
+    await expect(page.getByRole('heading', { name: 'Recent Runs', exact: true })).toBeVisible()
+  })
+
   test('opens a run-scoped Jira search separately and shows verified empty and unavailable states', async ({ page, context }) => {
     const jql = 'key IN (RHOAIENG-1, RHOAIENG-2) AND (labels IS EMPTY OR labels NOT IN ("rca-scope-internal"))'
     const jiraUrl = 'https://redhat.atlassian.net/issues/?jql=' + encodeURIComponent(jql)

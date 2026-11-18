@@ -60,6 +60,7 @@ module.exports = function createRecentRuns({ parseVersion, normalizeVersion, nor
         : sortField === 'suite' ? value === null : value === null || (typeof value === 'string' && value.length <= 256);
       if ((!legacy && cursor?.v !== 3) || !validScope || !['after', 'before'].includes(cursor.direction)
         || !Array.isArray(cursor.anchor) || cursor.anchor.length !== 3 || !validValue
+        || (cursor.versionsHash !== undefined && (typeof cursor.versionsHash !== 'string' || !/^[a-f0-9]{64}$/.test(cursor.versionsHash)))
         || !cursor.anchor.slice(1).every(value => typeof value === 'string' && value.length > 0
           && (cursor.v === 1 || /^[a-f0-9]{64}$/.test(value)))) invalid('Cursor does not match the current filters and sorting');
     } else if (query.cursor !== undefined && typeof query.cursor !== 'string') invalid('Invalid recent-run cursor');
@@ -94,6 +95,14 @@ module.exports = function createRecentRuns({ parseVersion, normalizeVersion, nor
   function pageRecentRuns(allRows, request) {
     const { filters, direction, sortField, pageSize, scope, cursor } = request;
     const available = allRows.filter(row => typeof row.suite === 'string' && row.suite && typeof row.invocationId === 'string' && row.invocationId);
+    // Bind version-sorted cursors to all run versions, including runs outside the current page.
+    const versionsHash = sortField === 'version' ? hash(available.map(row =>
+      JSON.stringify([row.suite, row.invocationId, normalizeVersion(row.rhoaiVersion)])).sort().join('\n')) : null;
+    if (cursor && sortField === 'version' && cursor.versionsHash !== versionsHash) {
+      const error = new Error('Run versions changed. Return to the first page to continue.');
+      error.code = 'STALE_CURSOR';
+      throw error;
+    }
     const options = { versions: normalizeVersions(available.map(row => row.rhoaiVersion)), suites: [...new Set(available.map(row => row.suite))].sort() };
     const from = filters.dateFrom ? Date.parse(`${filters.dateFrom}T00:00:00Z`) : null;
     const until = filters.dateTo ? Date.parse(`${filters.dateTo}T00:00:00Z`) + 86400000 : null;
@@ -123,6 +132,7 @@ module.exports = function createRecentRuns({ parseVersion, normalizeVersion, nor
     const page = cursor?.direction === 'before' ? candidates.slice(-pageSize) : candidates.slice(0, pageSize);
     const start = page.length ? rows.indexOf(page[0]) : -1, end = start + page.length;
     const encode = (row, way) => Buffer.from(JSON.stringify({ v: 3, scope, direction: way,
+      ...(versionsHash ? { versionsHash } : {}),
       anchor: [sortField === 'suite' ? null : sortValue(row, sortField), hash(row.suite), hash(row.invocationId)] })).toString('base64url');
     return { rows: page.map(({ suite, invocationId, timestamp, rhoaiVersion, buildDate = null, buildDateStatus = null }) => ({
       suite, invocationId, timestamp, rhoaiVersion, buildDate, buildDateStatus })),

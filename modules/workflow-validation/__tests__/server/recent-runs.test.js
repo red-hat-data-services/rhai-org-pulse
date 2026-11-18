@@ -240,13 +240,65 @@ describe('Recent Runs multi-version and column sorting', () => {
     }
   })
 
-  it.each(['timestamp', 'version'])('never repeats the anchor when its %s changes', sortField => {
+  it('never repeats the anchor when its timestamp changes', () => {
+    const sortField = 'timestamp'
     const query = { pageSize: '3', sortField }
     const first = pageRecentRuns(input, request(query))
     const origin = first.rows.at(-1)
     const updated = input.map(row => row.invocationId === origin.invocationId ? { ...row, timestamp: '1990-01-01T00:00:00Z', rhoaiVersion: '1.0.0' } : row)
     const next = pageRecentRuns(updated, request({ ...query, cursor: first.nextCursor }))
     expect(next.rows.some(row => row.invocationId === origin.invocationId)).toBe(false)
+  })
+
+  it.each(['asc', 'desc'])('rejects stale %s version pages when an unseen run crosses the boundary', sortDir => {
+    const sample = ['3.5.0', '3.6.0'].map((rhoaiVersion, index) => ({
+      ...rows[index], invocationId: `version-${index}`, rhoaiVersion
+    }))
+    const query = { pageSize: '1', sortField: 'version', sortDir }
+    const first = pageRecentRuns(sample, request(query))
+    const second = pageRecentRuns(sample, request({ ...query, cursor: first.nextCursor }))
+    const unseen = second.rows[0].invocationId
+    const changed = sample.map(row => row.invocationId === unseen
+      ? { ...row, rhoaiVersion: sortDir === 'asc' ? '3.4.0' : '3.7.0' } : row)
+    for (const cursor of [first.nextCursor, second.previousCursor]) {
+      expect(() => pageRecentRuns(changed, request({ ...query, cursor })))
+        .toThrow(expect.objectContaining({ code: 'STALE_CURSOR' }))
+    }
+    expect(pageRecentRuns(changed, request(query)).rows[0].invocationId).toBe(unseen)
+  })
+
+  it('rejects version pages when the anchor version changes or an image version arrives late', () => {
+    const sample = ['3.5.0', null].map((rhoaiVersion, index) => ({ ...rows[index], rhoaiVersion }))
+    const query = { pageSize: '1', sortField: 'version', sortDir: 'asc' }
+    const first = pageRecentRuns(sample, request(query))
+    for (const index of [0, 1]) {
+      const changed = sample.map((row, i) => i === index ? { ...row, rhoaiVersion: '3.4.0' } : row)
+      expect(() => pageRecentRuns(changed, request({ ...query, cursor: first.nextCursor })))
+        .toThrow(expect.objectContaining({ code: 'STALE_CURSOR' }))
+    }
+  })
+
+  it('keeps version cursors valid across reordered scans and equivalent version spellings', () => {
+    const sample = ['3.5.0', '3.6.0'].map((rhoaiVersion, index) => ({ ...rows[index], rhoaiVersion }))
+    const query = { pageSize: '1', sortField: 'version', sortDir: 'asc' }
+    const first = pageRecentRuns(sample, request(query))
+    const rebuilt = sample.map(row => ({ ...row, rhoaiVersion: row.rhoaiVersion === '3.6.0' ? '3.6' : row.rhoaiVersion })).reverse()
+    expect(pageRecentRuns(rebuilt, request({ ...query, cursor: first.nextCursor })).rows[0].invocationId)
+      .toBe(sample[1].invocationId)
+  })
+
+  it('requires a restart for old version cursors and rejects malformed version hashes', () => {
+    const query = { pageSize: '1', sortField: 'version' }
+    const first = pageRecentRuns(input, request(query))
+    const decoded = JSON.parse(Buffer.from(first.nextCursor, 'base64url').toString())
+    delete decoded.versionsHash
+    const cursor = Buffer.from(JSON.stringify(decoded)).toString('base64url')
+    expect(() => pageRecentRuns(input, request({ ...query, cursor })))
+      .toThrow(expect.objectContaining({ code: 'STALE_CURSOR' }))
+    for (const versionsHash of [null, 'invalid', 42]) {
+      const malformed = Buffer.from(JSON.stringify({ ...decoded, versionsHash })).toString('base64url')
+      expect(() => request({ ...query, cursor: malformed })).toThrow(/Cursor/)
+    }
   })
 
   it.each([{ versions: [''] }, { versions: [{}] }, { versions: Array(51).fill('3.6.0') }, { versions: '3.6.0', version: '3.5.0' }, { sortField: 'execution_id' }])('rejects malformed multi-version/sort parameters %j', query => {

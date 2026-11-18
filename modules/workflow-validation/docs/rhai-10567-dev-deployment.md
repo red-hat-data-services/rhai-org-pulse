@@ -49,9 +49,10 @@ Use the existing fields.
 ### Server
 
 - `server/opensearch.js`: export `IMAGES_INDEX`.
-- `server/index.js`: add `addBuildDates(rows, search, isClosed)`.
+- `server/index.js`: add `addImageMetadata(rows, search, invocationField, isClosed)`.
   It queries at most 500 `invocation_id` values per request.
   Each invocation group selects its newest verified image build timestamp.
+  It also resolves the version from the latest observed image document.
   It validates explicit-zone ISO dates and normalizes them to UTC.
   It runs on the full result set before paging.
   Run groups and build metadata share the existing 10-second cache.
