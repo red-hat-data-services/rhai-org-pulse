@@ -1226,12 +1226,18 @@ test.describe('Test Execution Dashboard @system-health', () => {
 
   const bvtStreamKey = 'rhoai-nightly-bvt';
 
-  /** Fixture day re-published under the nightly BVT stream (same run shape as the promotion-gate fixture). */
+  /**
+   * Fixture day re-published under the nightly BVT stream (same run shape as the promotion-gate fixture),
+   * on a date no other fixture day uses, so date assertions prove which stream is rendered.
+   */
   function nightlyBvtDay(nightlyFixture) {
-    return {
+    const day = {
       ...JSON.parse(JSON.stringify(nightlyFixture.days.find((d) => d.stream_key === 'example-stream'))),
-      stream_key: bvtStreamKey
+      stream_key: bvtStreamKey,
+      date: '2026-11-03'
     };
+    expect(nightlyFixture.days.some((d) => d.date === day.date)).toBe(false);
+    return day;
   }
 
   const nightlyBvtJob = { stream_key: bvtStreamKey, label: 'devops/rhoai-nightly-bvt', jenkins_job: 'devops/rhoai-nightly-bvt' };
