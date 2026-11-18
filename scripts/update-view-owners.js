@@ -69,7 +69,12 @@ function discoverRoutes() {
     }
 
     const inlineRe = /'([^']+)':\s*defineAsyncComponent\(\(\)\s*=>\s*import\('([^']+)'\)\)/g
+    const trackingRe = /'([^']+)':\s*withTracking\('[^']+',\s*'[^']+',\s*\(\)\s*=>\s*import\('([^']+)'\)\)/g
     let m
+    while ((m = trackingRe.exec(src)) !== null) {
+      const filePath = path.resolve(dir, m[2])
+      entries.push({ key: `${slug}/${m[1]}`, file: toRelative(filePath), section: slug })
+    }
     while ((m = inlineRe.exec(src)) !== null) {
       const filePath = path.resolve(dir, m[2])
       entries.push({ key: `${slug}/${m[1]}`, file: toRelative(filePath), section: slug })
