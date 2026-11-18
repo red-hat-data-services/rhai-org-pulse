@@ -759,6 +759,33 @@ describe('workflow-validation live schema routes', () => {
     expect([scans, images]).toEqual([3, 3])
   })
 
+  it('returns a restart response when an image version changes after cache expiry', async () => {
+    let now = 1000, imageVersion = null
+    vi.spyOn(Date, 'now').mockImplementation(() => now)
+    vi.stubGlobal('fetch', vi.fn(async (url, options) => {
+      if (isImagesQuery(url, JSON.parse(options.body))) return imageResponse(
+        imageVersion ? [['b', undefined, imageVersion]] : [])
+      return jsonResponse({ aggregations: { suite_runs: { buckets: [['a', '3.5.0'], ['b', '3.6.0']].map(([invocation, rhoai_version]) => ({
+        key: { suite: 's', invocation }, latest: { hits: { hits: [{ _source: { rhoai_version } }] } }
+      })) } } })
+    }))
+    const route = register()['/test-suites'].at(-1), first = makeResponse(), cached = makeResponse()
+    const query = { pageSize: '1', sortField: 'version', sortDir: 'asc' }
+    await route({ query }, first)
+    imageVersion = 'v3.4.0'
+    const next = { ...query, cursor: first.body.nextCursor }
+    await route({ query: next }, cached)
+    expect(cached.body.rows[0].invocationId).toBe('b')
+    now += 10_001
+    const stale = makeResponse()
+    await route({ query: next }, stale)
+    expect(stale.statusCode).toBe(409)
+    expect(stale.body).toMatchObject({ code: 'STALE_CURSOR', error: expect.stringContaining('first page') })
+    const restarted = makeResponse()
+    await route({ query }, restarted)
+    expect(restarted.body.rows[0]).toMatchObject({ invocationId: 'b', rhoaiVersion: '3.4.0' })
+  })
+
   it('stops image batches after disconnect and does not cache incomplete enrichment', async () => {
     const response = makeResponse()
     let images = 0, scans = 0

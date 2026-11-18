@@ -47,7 +47,7 @@
     <div v-if="error || restoreError" role="alert" class="mb-4 rounded-xl border border-amber-200 bg-amber-50 p-5 dark:border-amber-800 dark:bg-amber-900/20">
       <p class="text-sm text-gray-800 dark:text-gray-200">{{ restoreError || error }}</p>
       <p v-if="hasLoaded" class="mt-1 text-sm text-gray-600 dark:text-gray-300">The previous results are still shown.</p>
-      <button v-if="!restoreError" type="button" :disabled="loading || searchPending" class="mt-2 text-sm font-semibold text-primary-700 dark:text-primary-300" @click="requestRuns(lastAttempt, true)">Retry</button>
+      <button v-if="!restoreError" type="button" :disabled="loading || searchPending" class="mt-2 text-sm font-semibold text-primary-700 dark:text-primary-300" @click="retryRuns">{{ restartRequired ? 'Return to first page' : 'Retry' }}</button>
     </div>
     <p v-if="loading || searchPending" role="status" class="mb-4 text-sm text-gray-500 dark:text-gray-400">{{ hasLoaded ? 'Updating recent runs…' : 'Loading recent runs…' }}</p>
     <div v-if="hasLoaded" :aria-busy="loading" class="overflow-hidden rounded-xl border border-gray-100 bg-white dark:border-gray-700 dark:bg-gray-800">
@@ -147,7 +147,7 @@ function fromUrl() {
 const applied = ref(fromUrl()), draft = reactive({ ...applied.value, versions: [...applied.value.versions] })
 const invalidDateRange = computed(() => draft.dateFrom && draft.dateTo && draft.dateFrom > draft.dateTo)
 const runs = ref([]), options = ref({ versions: [], suites: [] }), page = ref({ total: 0, start: 0, end: 0, nextCursor: null, previousCursor: null })
-const loading = ref(false), searchPending = ref(false), hasLoaded = ref(false), error = ref(''), lastAttempt = ref({ ...applied.value })
+const loading = ref(false), searchPending = ref(false), hasLoaded = ref(false), error = ref(''), restartRequired = ref(false), lastAttempt = ref({ ...applied.value })
 const hasFilters = computed(() => applied.value.versions.length || ['suite', 'runQuery', 'dateFrom', 'dateTo'].some(key => applied.value[key]))
 const inputClass = 'mt-1 block w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm dark:border-gray-600 dark:bg-gray-900'
 const buttonClass = 'rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 disabled:opacity-50 dark:border-gray-600 dark:text-gray-200 dark:hover:bg-gray-700'
@@ -174,7 +174,7 @@ async function requestRuns(query, refresh = false) {
   controller = new AbortController()
   const requested = { ...query, versions: [...query.versions] }
   lastAttempt.value = requested
-  loading.value = true; error.value = ''
+  loading.value = true; error.value = ''; restartRequired.value = false
   try {
     const { datePreset: _preset, ...params } = requested
     const data = await getRecentRuns({ ...params, ...(refresh ? { refresh: true } : {}) }, { signal: controller.signal })
@@ -186,8 +186,17 @@ async function requestRuns(query, refresh = false) {
     if (!requested.cursor) requested.versions = normalizeVersions(requested.versions)
     applied.value = requested; hasLoaded.value = true
     syncQueryParams(nav, { ...Object.fromEntries(Object.entries(fields).map(([key, name]) => [name, requested[key]])), recentVersions: requested.versions.length ? JSON.stringify(requested.versions) : '', recentVersion: '' })
-  } catch (err) { if (active && current === sequence) error.value = err.message || 'Failed to load recent runs.' }
+  } catch (err) {
+    if (active && current === sequence) {
+      error.value = err.message || 'Failed to load recent runs.'
+      restartRequired.value = err.data?.code === 'STALE_CURSOR'
+    }
+  }
   finally { if (active && current === sequence) loading.value = false }
+}
+/** Retry a failed request, returning changed version results to page one. */
+function retryRuns() {
+  requestRuns({ ...lastAttempt.value, ...(restartRequired.value ? { cursor: '' } : {}) }, true)
 }
 /** Apply canonical filters from page one after a user changes the selection. */
 function applyFilters() {

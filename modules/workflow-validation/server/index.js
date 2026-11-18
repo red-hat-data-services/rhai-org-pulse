@@ -27,6 +27,9 @@ function safe(handler) {
     try {
       await handler(req, res);
     } catch (err) {
+      if (err.code === 'STALE_CURSOR') {
+        return res.status(409).json({ error: err.message, code: err.code });
+      }
       if (err.code === 'BAD_REQUEST') {
         return res.status(400).json({ error: err.message, code: err.code });
       }
@@ -162,8 +165,8 @@ function verifiedBuildDate(value) {
   return new Date(timestamp).toISOString();
 }
 
-/** Join bounded image groups; duplicates use their newest verified build timestamp. */
-async function addBuildDates(rows, search, invocationField, isClosed = () => false) {
+/** Enrich run groups with the latest observed image version and newest verified build time. */
+async function addImageMetadata(rows, search, invocationField, isClosed = () => false) {
   const ids = [...new Set(rows.map(row => row.invocationId).filter(Boolean))];
   const byId = new Map();
   for (let offset = 0; offset < ids.length; offset += 500) {
@@ -196,8 +199,8 @@ async function addBuildDates(rows, search, invocationField, isClosed = () => fal
     for (const bucket of bucketList(response.aggregations?.builds)) {
       const date = bucket.verified?.latest?.hits?.hits?.[0]?._source?.operator_image?.build_date;
       const rawVersion = bucket.latestImage?.hits?.hits?.[0]?._source?.operator_image?.version;
-      const version = typeof rawVersion === 'string' && rawVersion.trim()
-        ? rawVersion.trim().replace(/^v/, '')
+      const version = typeof rawVersion === 'string'
+        ? rawVersion.trim().replace(/^v/, '') || null
         : null;
 
       byId.set(bucket.key, { buildDate: verifiedBuildDate(date), version });
@@ -606,13 +609,14 @@ module.exports = function registerRoutes(router, context) {
    *       - { in: query, name: dateFrom, schema: { type: string, format: date } }
    *       - { in: query, name: dateTo, schema: { type: string, format: date } }
    *       - { in: query, name: pageSize, schema: { type: integer, minimum: 1, maximum: 200 }, description: Opt into lightweight pagination across all run groups }
-   *       - { in: query, name: cursor, schema: { type: string }, description: Recent-run cursor bound to filters and sort order }
+   *       - { in: query, name: cursor, schema: { type: string }, description: Recent-run cursor bound to filters and sort order; version-sorted cursors also track the set of run versions }
    *       - { in: query, name: sortDir, schema: { type: string, enum: [asc, desc], default: desc }, description: Selected column sort direction; requires pageSize }
    *       - { in: query, name: runQuery, schema: { type: string, maxLength: 256 }, description: Run ID substring; requires pageSize }
    *       - { in: query, name: refresh, schema: { type: boolean, default: false }, description: Bypass the 10-second metadata cache; requires pageSize }
    *     responses:
    *       200: { description: "Run groups default to recorded execution timestamp descending. Paged mode returns rows, total, start, end, pageSize, nextCursor, previousCursor, options (versions and suites), sortField and sortDir. includeBugTickets adds bugTickets with ready, empty or unavailable status; ready includes a Jira search URL. buildDate is the newest verified RHOAI operator image build time for the invocation, normalized from a valid explicit-zone ISO timestamp, or null. buildDateStatus is verified, unavailable, or null when no image group exists. sortField buildDate sorts by build date, then time, with missing values last. Run and build metadata share a 10-second cache; refresh bypasses both." }
    *       400: { description: "Invalid limit, page parameters, or cursor" }
+   *       409: { description: "Version-sorted results changed, or the saved version cursor predates change detection. Restart from the first page with the same filters and sort order." }
    */
   router.get('/test-suites', requireAuth, safe(async function (req, res) {
     let disconnected = Boolean(res.destroyed);
@@ -657,7 +661,7 @@ module.exports = function registerRoutes(router, context) {
           if (rows.length) {
             const invocationField = await imageInvocationField(client);
             if (closed) return;
-            rows = await addBuildDates(rows, (index, body) => client.search(index, body), invocationField, () => closed);
+            rows = await addImageMetadata(rows, (index, body) => client.search(index, body), invocationField, () => closed);
             if (rows === null || closed) return;
           }
           if (cachedClient === client && scanSequence > (recentGroupsCache?.sequence || 0)) {

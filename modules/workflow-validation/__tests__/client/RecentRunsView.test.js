@@ -153,6 +153,30 @@ describe('Recent Runs', () => {
     expect(filters.version).toBe('')
   })
 
+  it('restarts stale version pages with the same filters and sorting', async () => {
+    const params = ref({ recentVersions: '["3.5.0","3.6.0"]', recentSuite: 'release_gate',
+      recentRun: 'original', recentSortField: 'version', recentSort: 'asc',
+      recentDatePreset: 'custom', recentFrom: '2026-01-01', recentTo: '2026-02-01' })
+    const nav = { params, updateParams: vi.fn(values => { params.value = { ...params.value, ...values } }) }
+    apiRequest.mockResolvedValueOnce(page(fixture.rows, { total: 21, nextCursor: 'old-page-two' }))
+      .mockRejectedValueOnce(Object.assign(new Error('Run versions changed. Return to the first page to continue.'),
+        { status: 409, data: { code: 'STALE_CURSOR' } }))
+    wrapper = mount(RecentRunsView, { global: { provide: { moduleNav: nav } } })
+    await flushPromises()
+    await button('Next').trigger('click')
+    await flushPromises()
+    expect(wrapper.get('[role="alert"]').text()).toContain('Run versions changed')
+    expect(wrapper.findAll('tbody tr')).toHaveLength(fixture.rows.length)
+    await button('Return to first page').trigger('click')
+    await flushPromises()
+    expect(Object.fromEntries(request(-1))).toMatchObject({ suite: 'release_gate', runQuery: 'original',
+      sortField: 'version', sortDir: 'asc', dateFrom: '2026-01-01', dateTo: '2026-02-01', refresh: 'true' })
+    expect(request(-1).getAll('versions')).toEqual(['3.6.0', '3.5.0'])
+    expect(request(-1).has('cursor')).toBe(false)
+    expect(params.value.recentCursor).toBe('')
+    expect(wrapper.find('[role="alert"]').exists()).toBe(false)
+  })
+
   it('waits for a pause in Run ID typing and returns to the first page', async () => {
     apiRequest.mockResolvedValueOnce(page(fixture.rows, { total: 45, nextCursor: 'page-two' }))
     wrapper = mount(RecentRunsView)

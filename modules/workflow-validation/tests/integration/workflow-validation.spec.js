@@ -42,7 +42,8 @@ async function mockRecentData(page, rows) {
     const query = Object.fromEntries(params)
     if (params.has('versions')) query.versions = params.getAll('versions')
     try { await route.fulfill({ json: tools.pageRecentRuns(rows, tools.parseRecentRuns(query)) }) }
-    catch (error) { await route.fulfill({ status: 400, json: { error: error.message } }) }
+    catch (error) { await route.fulfill({ status: error.code === 'STALE_CURSOR' ? 409 : 400,
+      json: { error: error.message, code: error.code } }) }
   })
   return tools
 }
@@ -76,6 +77,26 @@ async function mockTrendSuites(page) {
 }
 
 test.describe('Workflow Validation module @workflow-validation', () => {
+  test('restarts version pagination when late image metadata moves an unseen run', async ({ page }) => {
+    const late = { suite: 'release_gate', invocationId: 'late-image-version', rhoaiVersion: '3.6.0',
+      timestamp: '2026-11-01T00:00:00Z' }
+    await mockRecentData(page, [...Array.from({ length: 20 }, (_, index) => ({
+      suite: 'release_gate', invocationId: `existing-version-${index}`, rhoaiVersion: '3.5.0',
+      timestamp: '2026-11-18T12:00:00Z'
+    })), late])
+    await page.goto('/#/workflow-validation/recent-runs?recentSortField=version&recentSort=asc&recentDatePreset=all')
+    await expect(page.getByRole('row', { name: 'Open run existing-version-0', exact: true })).toBeVisible()
+    late.rhoaiVersion = '3.4.0'
+    await page.getByRole('button', { name: 'Next page', exact: true }).click()
+    await expect(page.getByRole('alert')).toContainText('Run versions changed')
+    await page.getByRole('button', { name: 'Return to first page', exact: true }).click()
+    await expect(page.getByRole('row', { name: 'Open run late-image-version', exact: true }).getByRole('cell').nth(1)).toHaveText('3.4.0')
+    await expect(page.getByRole('alert')).toHaveCount(0)
+    await expect(page).toHaveURL(/recentSortField=version/)
+    await expect(page).toHaveURL(/recentSort=asc/)
+    await expect(page).not.toHaveURL(/recentCursor=[^&]+/)
+  })
+
   test('shows image-derived versions on recent runs and execution versions on older pages', async ({ page }) => {
     const recentRows = Array.from({ length: 20 }, (_, index) => ({
       suite: 'release_gate', invocationId: `image-version-run-${index}`, rhoaiVersion: '3.7.0-ea.1',
