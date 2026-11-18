@@ -3024,17 +3024,17 @@ E2E (end-to-end) test health data for the opendatahub-operator repository. Conta
 
 Snapshot of the currently-open Jira blocker bugs auto-filed by the
 opendatahub-operator `e2e-failure-triage` automation. The automation labels every
-bug it creates with `odh-operator-auto-e2e-blocker` (in project `RHOAIENG`) and
+bug it creates in `RHAI` with `odh-operator-auto-e2e-blocker` and
 links it to the template issue `RHOAIENG-79740`. The `odh-e2e-blocker-jiras`
-refresh handler queries Jira for open (`resolution = Unresolved`) issues carrying
-that label and writes a full snapshot.
+refresh handler queries Jira for open (`resolution = Unresolved`) issues in
+`RHAI` and `RHOAIENG` carrying that label and writes a full snapshot.
 
 ```json
 {
   "lastSyncedAt": "2026-08-11T10:00:00.000Z",
   "available": true,
   "count": 3,
-  "jql": "project = RHOAIENG AND labels = \"odh-operator-auto-e2e-blocker\" AND resolution = Unresolved ORDER BY created DESC",
+  "jql": "project in (RHAI, RHOAIENG) AND labels = \"odh-operator-auto-e2e-blocker\" AND resolution = Unresolved ORDER BY created DESC",
   "jqlUrl": "https://redhat.atlassian.net/issues/?jql=...",
   "templateIssue": "RHOAIENG-79740",
   "issues": [

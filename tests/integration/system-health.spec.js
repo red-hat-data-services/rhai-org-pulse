@@ -929,7 +929,12 @@ test.describe('OpenDataHub E2E Health Features @system-health', () => {
     expectNoBenignConsoleErrors(page);
   });
 
-  test('should display blocker JIRA rows with links in demo mode', async ({ page }) => {
+  test('should display blocker JIRA links from both projects in demo mode', async ({ page }) => {
+    await page.route('**/api/modules/system-health/odh-e2e-health/blocker-jiras*', route => route.fulfill({
+      path: join(__dirname, '../../fixtures/system-health/odh-e2e-blocker-jiras.json'),
+      contentType: 'application/json'
+    }));
+
     await page.goto('/#/system-health/odh-e2e-health');
     await page.waitForLoadState('networkidle');
     await page.waitForTimeout(DEFAULT_PAGE_WAIT_TIME);
@@ -939,19 +944,9 @@ test.describe('OpenDataHub E2E Health Features @system-health', () => {
     await page.waitForLoadState('networkidle');
     await page.waitForTimeout(DEFAULT_PAGE_WAIT_TIME);
 
-    // Demo fixture ships open blocker JIRAs — either the table renders rows
-    // linking to Jira, or the graceful empty/unavailable state is shown. Both are valid.
-    const jiraLinks = page.locator('a[href*="/browse/RHOAIENG-"]');
-    const linkCount = await jiraLinks.count();
-
-    if (linkCount > 0) {
-      await expect(jiraLinks.first()).toBeVisible();
-    } else {
-      const emptyOrUnavailable = page.locator(
-        'text=/No open blocker JIRAs|credentials|not yet available|could not reach jira/i'
-      );
-      await expect(emptyOrUnavailable.first()).toBeVisible();
-    }
+    // The mixed-project fixture must render links from both Jira projects.
+    await expect(page.locator('a[href$="/browse/RHAI-81234"]')).toBeVisible();
+    await expect(page.locator('a[href$="/browse/RHOAIENG-81198"]')).toBeVisible();
 
     expectNoBenignConsoleErrors(page);
   });
