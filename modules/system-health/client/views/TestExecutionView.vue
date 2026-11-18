@@ -81,10 +81,10 @@
             <!-- Nightly BVT: shown whether or not heatmap data was uploaded -->
             <div v-if="rhoaiDeploymentHealth" class="section rhoai-deployment-section">
               <div class="section-title">
-                <h3 class="tab-section-subtitle">RHOAI Deployment</h3>
+                <h3 class="tab-section-subtitle">RHOAI Nightly BVT Results</h3>
               </div>
               <div class="help-box tab-help-box">
-                <h4>ℹ️ How to read RHOAI Deployment</h4>
+                <h4>ℹ️ How to read RHOAI Nightly BVT Results</h4>
                 <ul>
                   <li><strong>Each column</strong> — A UTC day; the nightly BVT run that installed that day&apos;s RHOAI nightly build on a fresh cluster. Click a date for the day&apos;s runs, logs and artifacts.</li>
                   <li><strong>Each row</strong> — Cluster health, RHOAI deployment (operator health) and each component&apos;s DataScienceCluster readiness.</li>
@@ -112,7 +112,7 @@
               <template v-else>
                 <div class="section">
                   <div class="section-title">
-                    <h3 class="tab-section-subtitle">Component Heatmap</h3>
+                    <h3 class="tab-section-subtitle">Component Heatmap (In Progress)</h3>
                   </div>
                   <div class="help-box tab-help-box">
                     <h4>ℹ️ How to read the heatmap</h4>
@@ -222,7 +222,7 @@ const {
   hasNightlyData: hasAnyNightlyData
 } = useTestDashboard()
 
-/** Nightly BVT stream: "RHOAI Deployment" matrix on the RHOAI Releases tab. */
+/** Nightly BVT stream: "RHOAI Nightly BVT Results" matrix on the RHOAI Releases tab. */
 const rhoaiDeploymentHealth = computed(() =>
   filterNightlyHealthByStream(allNightlyHealth.value, { include: [RHOAI_NIGHTLY_BVT_STREAM_KEY] })
 )
@@ -233,7 +233,7 @@ const nightlyHealth = computed(() =>
 )
 const hasNightlyData = computed(() => Boolean(nightlyHealth.value))
 
-/** RHOAI Releases tab: heatmap (OpenSearch) and/or the nightly BVT RHOAI Deployment matrix. */
+/** RHOAI Releases tab: heatmap (OpenSearch) and/or the nightly BVT results matrix. */
 const hasReleasesTabData = computed(() => hasHeatmapData.value || Boolean(rhoaiDeploymentHealth.value))
 
 const nav = inject('moduleNav', null)

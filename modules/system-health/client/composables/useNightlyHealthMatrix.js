@@ -127,7 +127,7 @@ export function resolveNightlyJenkinsJobOption(payload, streamKey) {
 }
 
 /**
- * `stream_key` of the RHOAI nightly BVT (`devops/rhoai-nightly-bvt`), shown as "RHOAI Deployment" on the
+ * `stream_key` of the RHOAI nightly BVT (`devops/rhoai-nightly-bvt`), shown as "RHOAI Nightly BVT Results" on the
  * RHOAI Releases tab instead of the Promotion Gate tab (RHAI-16425).
  */
 export const RHOAI_NIGHTLY_BVT_STREAM_KEY = 'rhoai-nightly-bvt'

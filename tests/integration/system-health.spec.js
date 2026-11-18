@@ -1278,7 +1278,7 @@ test.describe('Test Execution Dashboard @system-health', () => {
     await page.waitForTimeout(DEFAULT_PAGE_WAIT_TIME);
   }
 
-  test('should show the nightly BVT stream as RHOAI Deployment on the RHOAI Releases tab only', async ({ page }) => {
+  test('should show the nightly BVT stream as RHOAI Nightly BVT Results on the RHOAI Releases tab only', async ({ page }) => {
     const nightlyFixture = JSON.parse(readFileSync(nightlyHealthFixturePath, 'utf8'));
     const heatmapFixture = JSON.parse(readFileSync(heatmapFixturePath, 'utf8'));
     const bvtDay = nightlyBvtDay(nightlyFixture);
@@ -1291,9 +1291,9 @@ test.describe('Test Execution Dashboard @system-health', () => {
       }
     });
 
-    // RHOAI Releases: RHOAI Deployment matrix with only the nightly BVT day, above Component Heatmap
+    // RHOAI Releases: RHOAI Nightly BVT Results matrix with only the nightly BVT day, above Component Heatmap
     const deployment = releasesTabPanel(page).locator('.rhoai-deployment-section');
-    await expect(deployment.getByRole('heading', { name: 'RHOAI Deployment', exact: true })).toBeVisible();
+    await expect(deployment.getByRole('heading', { name: 'RHOAI Nightly BVT Results', exact: true })).toBeVisible();
     await expect(deployment.locator('.nightly-matrix')).toBeVisible();
     await expect(deployment.locator('.date-header-btn')).toHaveCount(1);
     await expect(deployment.locator(`.date-header-btn[title="Show all builds on ${bvtDay.date}"]`)).toBeVisible();
@@ -1309,7 +1309,7 @@ test.describe('Test Execution Dashboard @system-health', () => {
     expectNoBenignConsoleErrors(page);
   });
 
-  test('should show RHOAI Deployment when only nightly BVT data is uploaded', async ({ page }) => {
+  test('should show RHOAI Nightly BVT Results when only nightly BVT data is uploaded', async ({ page }) => {
     const nightlyFixture = JSON.parse(readFileSync(nightlyHealthFixturePath, 'utf8'));
     await openTestExecutionWithData(page, {
       heatmap: null,
