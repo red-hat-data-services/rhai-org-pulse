@@ -592,6 +592,7 @@ module.exports = function registerRoutes(router, context) {
    * /api/modules/workflow-validation/test-suites:
    *   get:
    *     summary: Test runs grouped by telemetry suite and invocation
+   *     description: In paged mode, rhoaiVersion uses the latest observed operator_image.version from the image index, with an optional leading v removed. Missing or empty image versions fall back to the execution version. Version filtering and sorting use this resolved value.
    *     tags: [Workflow Validation]
    *     parameters:
    *       - { in: query, name: suite, schema: { type: string } }

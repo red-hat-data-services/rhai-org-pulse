@@ -590,6 +590,57 @@ describe('workflow-validation live schema routes', () => {
     expect(queries[0].aggs.builds.terms.field).toBe('invocation_id')
   })
 
+  it.each([
+    ['v3.7.0-ea.1', '3.7.0-ea.1'],
+    ['3.7.0-ea.1', '3.7.0-ea.1'],
+    ['  v3.7.0-ea.1  ', '3.7.0-ea.1'],
+    ['', '3.4'],
+    ['   ', '3.4'],
+    [null, '3.4'],
+    [undefined, '3.4'],
+    [37, '3.4'],
+    ['v', '3.4']
+  ])('resolves image version %j without requiring a verified build date', async (version, expected) => {
+    vi.stubGlobal('fetch', vi.fn(async (url, options) => {
+      const body = JSON.parse(options.body)
+      if (isImagesQuery(url, body)) return imageResponse([['run-1', undefined, version]])
+      return jsonResponse({ aggregations: { suite_runs: { buckets: [{
+        key: { suite: 'release_gate', invocation: 'run-1' }, doc_count: 1,
+        latest: { hits: { hits: [{ _source: { timestamp: '2026-11-11T10:00:00Z', rhoai_version: '3.4' } }] } }
+      }] } } })
+    }))
+    const response = makeResponse()
+    await register()['/test-suites'].at(-1)({ query: { pageSize: '20' } }, response)
+    expect(response.body.rows).toEqual([expect.objectContaining({
+      invocationId: 'run-1', rhoaiVersion: expected, buildDate: null, buildDateStatus: 'unavailable'
+    })])
+  })
+
+  it('filters and sorts recent runs using image versions while preserving legacy versions', async () => {
+    const rows = [
+      ['run-image', '3.4'], ['run-current', '3.6.0'], ['run-legacy', '3.5.0']
+    ].map(([invocation, version]) => ({
+      key: { suite: 'release_gate', invocation }, doc_count: 1,
+      latest: { hits: { hits: [{ _source: { timestamp: '2026-11-11T10:00:00Z', rhoai_version: version } }] } }
+    }))
+    vi.stubGlobal('fetch', vi.fn(async (url, options) => {
+      const body = JSON.parse(options.body)
+      if (isImagesQuery(url, body)) return imageResponse([
+        ['run-image', undefined, 'v3.7.0-ea.1'], ['run-current', undefined, '3.6.0']
+      ])
+      return jsonResponse({ aggregations: { suite_runs: { buckets: rows } } })
+    }))
+    const routes = register()
+    const sorted = makeResponse()
+    await routes['/test-suites'].at(-1)({ query: { pageSize: '20', sortField: 'version', sortDir: 'asc' } }, sorted)
+    expect(sorted.body.rows.map(row => row.invocationId)).toEqual(['run-legacy', 'run-current', 'run-image'])
+    expect(sorted.body.options.versions).toContain('3.7.0-ea.1')
+    expect(sorted.body.options.versions).not.toContain('3.4')
+    const filtered = makeResponse()
+    await routes['/test-suites'].at(-1)({ query: { pageSize: '20', version: '3.7.0-ea.1' } }, filtered)
+    expect(filtered.body.rows.map(row => row.invocationId)).toEqual(['run-image'])
+  })
+
   it('sorts the complete row set by RHOAI build date and keeps missing values last', async () => {
     const rows = ['oldest', 'missing', 'newest'].map((name, index) => ({
       key: { suite: 'release_gate', invocation: `run-${name}` }, doc_count: 1,
