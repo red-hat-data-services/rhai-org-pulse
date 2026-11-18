@@ -83,14 +83,7 @@
               <div class="section-title">
                 <h3 class="tab-section-subtitle">RHOAI Nightly BVT Results</h3>
               </div>
-              <div class="help-box tab-help-box">
-                <h4>ℹ️ How to read RHOAI Nightly BVT Results</h4>
-                <ul>
-                  <li><strong>Each column</strong> — A UTC day; the nightly BVT run that installed that day&apos;s RHOAI nightly build on a fresh cluster. Click a date for the day&apos;s runs, logs and artifacts.</li>
-                  <li><strong>Each row</strong> — Cluster health, RHOAI deployment (operator health) and each component&apos;s DataScienceCluster readiness.</li>
-                  <li><strong>Blocked</strong> — The deployment failed, so the nightly tests for that build did not run.</li>
-                </ul>
-              </div>
+              <NightlyHealthLegend title="RHOAI Nightly BVT Results" />
               <NightlyHealthTable
                 :payload="rhoaiDeploymentHealth"
                 :heatmap-components="heatmap"
@@ -156,26 +149,7 @@
                   Click a date column to open every build recorded that day.
                 </p>
               </div>
-              <div class="help-box tab-help-box">
-                <h4>ℹ️ How to read {{ gatesPanelTitle }}</h4>
-                <ul>
-                  <li><strong>Each column</strong> — One day. Cells show the latest run for that day; click the date to see every run, newest first.</li>
-                  <li><strong>Passed</strong> — Tests passed, the component was Ready in the DSC.</li>
-                  <li><strong>Failed</strong> — Tests failed, the component was not Ready in the DSC.</li>
-                  <li><strong>Blocked</strong> — Tests did not run: health checks failed first, or the component was not Ready in the DSC.</li>
-                  <li><strong>Blank</strong> — No result was reported for the component in that run.</li>
-                  <li><strong>Not Installed</strong> — The component is set to <code>Removed</code> in the DSC.</li>
-                  <li><strong>DSC &lt;name&gt;</strong> — The DataScienceCluster component the status came from (for example <code>trustyai</code> or <code>aigateway.batchGateway</code>).</li>
-                  <li>
-                    <strong>S3 artifacts</strong> — Log in via
-                    <a :href="S3_ACCESS_HELP.loginUrl" target="_blank" rel="noopener noreferrer">Red Hat IT AWS</a>,
-                    choose the account <code>{{ S3_ACCESS_HELP.account }}</code> and the role
-                    <template v-for="(role, idx) in S3_ACCESS_HELP.roles" :key="role"><template v-if="idx > 0"> or </template><code>{{ role }}</code></template>.
-                    No role yet? Request access in <code>{{ S3_ACCESS_HELP.requestChannel }}</code>.
-                    <strong>S3 access help</strong> next to "Runs on &lt;date&gt;" shows these steps too.
-                  </li>
-                </ul>
-              </div>
+              <NightlyHealthLegend :title="gatesPanelTitle" />
               <NightlyHealthTable
                 v-model:selected-stream-key="selectedNightlyStreamKey"
                 :payload="nightlyHealth"
@@ -195,14 +169,15 @@
 import { ref, computed, onMounted, inject, watch, nextTick } from 'vue'
 import { useTestDashboard } from '../composables/useTestDashboard'
 import FilterBar from '../components/FilterBar.vue'
-import { S3_ACCESS_HELP } from '../composables/useNightlyHealthMatrix'
 import MetricsCards from '../components/MetricsCards.vue'
 import HeatmapTable from '../components/HeatmapTable.vue'
 import TrendChart from '../components/TrendChart.vue'
 import NightlyHealthTable from '../components/NightlyHealthTable.vue'
+import NightlyHealthLegend from '../components/NightlyHealthLegend.vue'
 import {
   filterNightlyHealthByStream,
   formatTimestamp,
+  jenkinsJobBasename,
   REPORTING_STREAM_KEYS,
   RHOAI_NIGHTLY_BVT_STREAM_KEY,
   TEST_RESULTS_SOURCE_QUERY_PARAM,
@@ -369,6 +344,19 @@ watch(
   { flush: 'post' }
 )
 
+/**
+ * Tab requested by the URL. The nightly BVT is not a Promotion Gate source: `tab=gates&source=rhoai-nightly-bvt`
+ * opens RHOAI Releases, where its results are shown.
+ */
+function requestedTabParam() {
+  const tab = nav?.params?.value?.[TEST_EXECUTION_TAB_PARAM]
+  const source = String(nav?.params?.value?.[TEST_RESULTS_SOURCE_QUERY_PARAM] ?? '').trim().toLowerCase()
+  if (parseTabQueryValue(tab) === 'gates' && jenkinsJobBasename(source) === RHOAI_NIGHTLY_BVT_STREAM_KEY) {
+    return 'releases'
+  }
+  return tab
+}
+
 function parseTabQueryValue(raw) {
   const tab = String(raw ?? '').trim().toLowerCase()
   if (tab === 'releases' || tab === 'nightly') return 'releases'
@@ -390,7 +378,7 @@ function defaultTabForData() {
 }
 
 function applyActiveTabFromNavParams() {
-  const wanted = parseTabQueryValue(nav?.params?.value?.[TEST_EXECUTION_TAB_PARAM])
+  const wanted = parseTabQueryValue(requestedTabParam())
   if (wanted === 'gates') {
     if (hasNightlyData.value) {
       activeTab.value = 'gates'
@@ -499,7 +487,7 @@ watch(activeTab, (tab) => {
 })
 
 watch([hasNightlyData, hasReleasesTabData], () => {
-  const fromUrl = resolveTabFromParam(nav?.params?.value?.[TEST_EXECUTION_TAB_PARAM])
+  const fromUrl = resolveTabFromParam(requestedTabParam())
   if (fromUrl) {
     activeTab.value = fromUrl
     if (fromUrl === 'gates') {

@@ -1243,7 +1243,7 @@ test.describe('Test Execution Dashboard @system-health', () => {
   const nightlyBvtJob = { stream_key: bvtStreamKey, label: 'devops/rhoai-nightly-bvt', jenkins_job: 'devops/rhoai-nightly-bvt' };
 
   /** Serves the given heatmap / nightly_health payloads and opens the RHOAI Releases tab. */
-  async function openTestExecutionWithData(page, { heatmap, nightlyHealth }) {
+  async function openTestExecutionWithData(page, { heatmap, nightlyHealth, hash = '?tab=releases' }) {
     await page.route('**/api/modules/system-health/quality/test-execution/data**', async (route) => {
       const url = route.request().url();
       if (url.includes('file=')) {
@@ -1272,7 +1272,7 @@ test.describe('Test Execution Dashboard @system-health', () => {
         && !response.url().includes('file=')
         && response.status() === 200
     );
-    await page.goto('/#/system-health/test-execution?tab=releases');
+    await page.goto(`/#/system-health/test-execution${hash}`);
     await dataReady;
     await page.waitForLoadState('networkidle');
     await page.waitForTimeout(DEFAULT_PAGE_WAIT_TIME);
@@ -1321,6 +1321,28 @@ test.describe('Test Execution Dashboard @system-health', () => {
     const releases = releasesTabPanel(page);
     await expect(releases.locator('.rhoai-deployment-section .nightly-matrix')).toBeVisible();
     await expect(releases.getByText('No OpenSearch release test data has been uploaded yet.')).toBeVisible();
+
+    expectNoBenignConsoleErrors(page);
+  });
+
+  test('should open RHOAI Releases for a gates link that targets the nightly BVT source', async ({ page }) => {
+    const nightlyFixture = JSON.parse(readFileSync(nightlyHealthFixturePath, 'utf8'));
+    const heatmapFixture = JSON.parse(readFileSync(heatmapFixturePath, 'utf8'));
+    await openTestExecutionWithData(page, {
+      heatmap: heatmapFixture,
+      nightlyHealth: {
+        ...nightlyFixture,
+        jenkins_jobs: [...nightlyFixture.jenkins_jobs, nightlyBvtJob],
+        days: [...nightlyFixture.days, nightlyBvtDay(nightlyFixture)]
+      },
+      hash: '?tab=gates&source=rhoai-nightly-bvt'
+    });
+
+    // The BVT is not a Promotion Gate source: the link lands on its results instead
+    await expect(page.getByRole('tab', { name: 'RHOAI Releases' })).toHaveAttribute('aria-selected', 'true');
+    await expect(releasesTabPanel(page).locator('.rhoai-deployment-section .nightly-matrix')).toBeVisible();
+    await expect.poll(() => page.url()).toMatch(/tab=releases/);
+    expect(page.url()).not.toMatch(/source=/);
 
     expectNoBenignConsoleErrors(page);
   });
