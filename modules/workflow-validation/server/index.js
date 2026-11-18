@@ -173,25 +173,47 @@ async function addBuildDates(rows, search, invocationField, isClosed = () => fal
       query: { terms: { [invocationField]: ids.slice(offset, offset + 500) } },
       aggs: { builds: {
         terms: { field: invocationField, size: 500 },
-        aggs: { verified: {
-          filter: { term: { 'operator_image.build_date_status': 'verified' } },
-          aggs: { latest: { top_hits: {
-            size: 1,
-            sort: [{ 'operator_image.build_date': { order: 'desc', missing: '_last' } }],
-            _source: ['operator_image.build_date']
-          } } }
-        } }
+        aggs: {
+          verified: {
+            filter: { term: { 'operator_image.build_date_status': 'verified' } },
+            aggs: { latest: { top_hits: {
+              size: 1,
+              sort: [{ 'operator_image.build_date': { order: 'desc', missing: '_last' } }],
+              _source: ['operator_image.build_date']
+            } } }
+          },
+          latestImage: {
+            top_hits: {
+              size: 1,
+              sort: [{ 'operator_image.observed_at': { order: 'desc' } }],
+              _source: ['operator_image.version']
+            }
+          }
+        }
       } }
     });
     if (isClosed()) return null;
     for (const bucket of bucketList(response.aggregations?.builds)) {
       const date = bucket.verified?.latest?.hits?.hits?.[0]?._source?.operator_image?.build_date;
-      byId.set(bucket.key, verifiedBuildDate(date));
+      const rawVersion = bucket.latestImage?.hits?.hits?.[0]?._source?.operator_image?.version;
+      const version = typeof rawVersion === 'string' && rawVersion.trim()
+        ? rawVersion.trim().replace(/^v/, '')
+        : null;
+
+      byId.set(bucket.key, { buildDate: verifiedBuildDate(date), version });
     }
   }
   return rows.map(row => {
-    const buildDate = byId.get(row.invocationId) || null;
-    return { ...row, buildDate, buildDateStatus: buildDate ? 'verified' : byId.has(row.invocationId) ? 'unavailable' : null };
+    const image = byId.get(row.invocationId) || null;
+    const buildDate = image?.buildDate || null;
+    const imageVersion = image?.version || null;
+
+    return {
+      ...row,
+      rhoaiVersion: imageVersion ?? row.rhoaiVersion,
+      buildDate,
+      buildDateStatus: buildDate ? 'verified' : image ? 'unavailable' : null
+    };
   });
 }
 

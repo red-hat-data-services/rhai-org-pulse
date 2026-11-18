@@ -31,8 +31,9 @@ function isImagesQuery(url, body) {
 
 /** Image aggregation fixtures contain the newest verified hit for each invocation. */
 function imageResponse(entries = []) {
-  return jsonResponse({ aggregations: { builds: { buckets: entries.map(([key, date]) => ({ key,
-    verified: { latest: { hits: { hits: date === undefined ? [] : [{ _source: { operator_image: { build_date: date } } }] } } }
+  return jsonResponse({ aggregations: { builds: { buckets: entries.map(([key, date, version]) => ({ key,
+    verified: { latest: { hits: { hits: date === undefined ? [] : [{ _source: { operator_image: { build_date: date } } }] } } },
+    latestImage: { hits: { hits: version === undefined ? [] : [{ _source: { operator_image: { version } } }] } }
   })) } } })
 }
 
@@ -533,17 +534,17 @@ describe('workflow-validation live schema routes', () => {
       const body = JSON.parse(options.body)
       if (isImagesQuery(url, body)) {
         requests.push({ url, body })
-        return imageResponse([['run-verified', '2026-11-05T05:14:40Z'], ['run-unavailable']])
+        return imageResponse([['run-verified', '2026-11-05T05:14:40Z', 'v3.7.0-ea.1'], ['run-unavailable']])
       }
       return jsonResponse({ aggregations: { suite_runs: { buckets: rows } } })
     }))
     const response = makeResponse()
     await register()['/test-suites'].at(-1)({ query: { pageSize: '20', includeBugs: 'false' } }, response)
-    expect(response.body.rows.map(({ invocationId, buildDate, buildDateStatus }) => ({ invocationId, buildDate, buildDateStatus })))
+    expect(response.body.rows.map(({ invocationId, rhoaiVersion, buildDate, buildDateStatus }) => ({ invocationId, rhoaiVersion, buildDate, buildDateStatus })))
       .toEqual([
-        { invocationId: 'run-verified', buildDate: '2026-11-05T05:14:40.000Z', buildDateStatus: 'verified' },
-        { invocationId: 'run-unavailable', buildDate: null, buildDateStatus: 'unavailable' },
-        { invocationId: 'run-no-doc', buildDate: null, buildDateStatus: null }
+        { invocationId: 'run-verified', rhoaiVersion: '3.7.0-ea.1', buildDate: '2026-11-05T05:14:40.000Z', buildDateStatus: 'verified' },
+        { invocationId: 'run-unavailable', rhoaiVersion: '3.6', buildDate: null, buildDateStatus: 'unavailable' },
+        { invocationId: 'run-no-doc', rhoaiVersion: '3.6', buildDate: null, buildDateStatus: null }
       ])
     expect(requests).toHaveLength(1)
     expect(requests[0].url).toMatch(new RegExp(`/${IMAGES_INDEX}/_search$`))
@@ -551,12 +552,21 @@ describe('workflow-validation live schema routes', () => {
     expect(requests[0].body.size).toBe(0)
     expect(requests[0].body.aggs.builds).toEqual({
       terms: { field: 'invocation_id.keyword', size: 500 },
-      aggs: { verified: {
-        filter: { term: { 'operator_image.build_date_status': 'verified' } },
-        aggs: { latest: { top_hits: { size: 1,
-          sort: [{ 'operator_image.build_date': { order: 'desc', missing: '_last' } }],
-          _source: ['operator_image.build_date'] } } }
-      } }
+      aggs: {
+        verified: {
+          filter: { term: { 'operator_image.build_date_status': 'verified' } },
+          aggs: { latest: { top_hits: { size: 1,
+            sort: [{ 'operator_image.build_date': { order: 'desc', missing: '_last' } }],
+            _source: ['operator_image.build_date'] } } }
+        },
+        latestImage: {
+          top_hits: {
+            size: 1,
+            sort: [{ 'operator_image.observed_at': { order: 'desc' } }],
+            _source: ['operator_image.version']
+          }
+        }
+      }
     })
   })
 
