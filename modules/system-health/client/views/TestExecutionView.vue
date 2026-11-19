@@ -6,7 +6,7 @@
       <div v-else-if="error" class="error">{{ error }}</div>
 
       <template v-else>
-        <div v-if="!hasHeatmapData && !hasNightlyData" class="no-data">
+        <div v-if="!hasHeatmapData && !hasAnyNightlyData" class="no-data">
           No test execution data has been uploaded yet. The external test-reports
           pipeline pushes data to this dashboard via the bulk API.
         </div>
@@ -27,7 +27,7 @@
               :aria-selected="activeTab === 'releases'"
               aria-controls="test-exec-panel-releases"
               :tabindex="activeTab === 'releases' ? 0 : -1"
-              :disabled="!hasHeatmapData"
+              :disabled="!hasReleasesTabData"
               @click="setActiveTab('releases')"
             >
               RHOAI Releases
@@ -55,10 +55,7 @@
             class="tab-panel"
             aria-labelledby="test-exec-tab-releases"
           >
-            <div v-if="!hasHeatmapData" class="no-data tab-empty">
-              No OpenSearch release test data has been uploaded yet.
-            </div>
-            <template v-else>
+            <template v-if="hasHeatmapData">
               <div class="tab-panel-heading">
                 <h2 class="tab-panel-title">RHOAI Releases Test Results</h2>
                 <p class="tab-panel-intro">
@@ -79,7 +76,26 @@
                 :components="filteredComponents"
                 :filters="filters"
               />
+            </template>
 
+            <!-- Nightly BVT: shown whether or not heatmap data was uploaded -->
+            <div v-if="rhoaiDeploymentHealth" class="section rhoai-deployment-section">
+              <div class="section-title">
+                <h3 class="tab-section-subtitle">RHOAI Nightly BVT Results</h3>
+              </div>
+              <NightlyHealthLegend title="RHOAI Nightly BVT Results" />
+              <NightlyHealthTable
+                :payload="rhoaiDeploymentHealth"
+                :heatmap-components="heatmap"
+                :tab-panel-active="activeTab === 'releases'"
+                @component-click="onComponentClick"
+              />
+            </div>
+
+            <div v-if="!hasHeatmapData" class="no-data tab-empty">
+              No OpenSearch release test data has been uploaded yet.
+            </div>
+            <template v-else>
               <div
                 v-if="filteredComponents.length === 0"
                 class="no-data heatmap-filter-empty"
@@ -89,7 +105,7 @@
               <template v-else>
                 <div class="section">
                   <div class="section-title">
-                    <h3 class="tab-section-subtitle">Component Heatmap</h3>
+                    <h3 class="tab-section-subtitle">Component Heatmap (In Progress)</h3>
                   </div>
                   <div class="help-box tab-help-box">
                     <h4>ℹ️ How to read the heatmap</h4>
@@ -133,26 +149,7 @@
                   Click a date column to open every build recorded that day.
                 </p>
               </div>
-              <div class="help-box tab-help-box">
-                <h4>ℹ️ How to read {{ gatesPanelTitle }}</h4>
-                <ul>
-                  <li><strong>Each column</strong> — One day. Cells show the latest run for that day; click the date to see every run, newest first.</li>
-                  <li><strong>Passed</strong> — Tests passed, the component was Ready in the DSC.</li>
-                  <li><strong>Failed</strong> — Tests failed, the component was not Ready in the DSC.</li>
-                  <li><strong>Blocked</strong> — Tests did not run: health checks failed first, or the component was not Ready in the DSC.</li>
-                  <li><strong>Blank</strong> — No result was reported for the component in that run.</li>
-                  <li><strong>Not Installed</strong> — The component is set to <code>Removed</code> in the DSC.</li>
-                  <li><strong>DSC &lt;name&gt;</strong> — The DataScienceCluster component the status came from (for example <code>trustyai</code> or <code>aigateway.batchGateway</code>).</li>
-                  <li>
-                    <strong>S3 artifacts</strong> — Log in via
-                    <a :href="S3_ACCESS_HELP.loginUrl" target="_blank" rel="noopener noreferrer">Red Hat IT AWS</a>,
-                    choose the account <code>{{ S3_ACCESS_HELP.account }}</code> and the role
-                    <template v-for="(role, idx) in S3_ACCESS_HELP.roles" :key="role"><template v-if="idx > 0"> or </template><code>{{ role }}</code></template>.
-                    No role yet? Request access in <code>{{ S3_ACCESS_HELP.requestChannel }}</code>.
-                    <strong>S3 access help</strong> next to "Runs on &lt;date&gt;" shows these steps too.
-                  </li>
-                </ul>
-              </div>
+              <NightlyHealthLegend :title="gatesPanelTitle" />
               <NightlyHealthTable
                 v-model:selected-stream-key="selectedNightlyStreamKey"
                 :payload="nightlyHealth"
@@ -172,14 +169,17 @@
 import { ref, computed, onMounted, inject, watch, nextTick } from 'vue'
 import { useTestDashboard } from '../composables/useTestDashboard'
 import FilterBar from '../components/FilterBar.vue'
-import { S3_ACCESS_HELP } from '../composables/useNightlyHealthMatrix'
 import MetricsCards from '../components/MetricsCards.vue'
 import HeatmapTable from '../components/HeatmapTable.vue'
 import TrendChart from '../components/TrendChart.vue'
 import NightlyHealthTable from '../components/NightlyHealthTable.vue'
+import NightlyHealthLegend from '../components/NightlyHealthLegend.vue'
 import {
+  filterNightlyHealthByStream,
   formatTimestamp,
+  jenkinsJobBasename,
   REPORTING_STREAM_KEYS,
+  RHOAI_NIGHTLY_BVT_STREAM_KEY,
   TEST_RESULTS_SOURCE_QUERY_PARAM,
   nightlyTestResultsPanelTitle,
   streamKeyFromTestResultsSourceQuery,
@@ -187,7 +187,29 @@ import {
 } from '../composables/useNightlyHealthMatrix'
 import '../styles/test-execution-theme.css'
 
-const { loadData, heatmap, nightlyHealth, loading, error, hasHeatmapData, hasNightlyData } = useTestDashboard()
+const {
+  loadData,
+  heatmap,
+  nightlyHealth: allNightlyHealth,
+  loading,
+  error,
+  hasHeatmapData,
+  hasNightlyData: hasAnyNightlyData
+} = useTestDashboard()
+
+/** Nightly BVT stream: "RHOAI Nightly BVT Results" matrix on the RHOAI Releases tab. */
+const rhoaiDeploymentHealth = computed(() =>
+  filterNightlyHealthByStream(allNightlyHealth.value, { include: [RHOAI_NIGHTLY_BVT_STREAM_KEY] })
+)
+
+/** Promotion Gate tab: every other stream (the nightly BVT is not a Test Results Source there). */
+const nightlyHealth = computed(() =>
+  filterNightlyHealthByStream(allNightlyHealth.value, { exclude: [RHOAI_NIGHTLY_BVT_STREAM_KEY] })
+)
+const hasNightlyData = computed(() => Boolean(nightlyHealth.value))
+
+/** RHOAI Releases tab: heatmap (OpenSearch) and/or the nightly BVT results matrix. */
+const hasReleasesTabData = computed(() => hasHeatmapData.value || Boolean(rhoaiDeploymentHealth.value))
 
 const nav = inject('moduleNav', null)
 
@@ -322,6 +344,19 @@ watch(
   { flush: 'post' }
 )
 
+/**
+ * Tab requested by the URL. The nightly BVT is not a Promotion Gate source: `tab=gates&source=rhoai-nightly-bvt`
+ * opens RHOAI Releases, where its results are shown.
+ */
+function requestedTabParam() {
+  const tab = nav?.params?.value?.[TEST_EXECUTION_TAB_PARAM]
+  const source = String(nav?.params?.value?.[TEST_RESULTS_SOURCE_QUERY_PARAM] ?? '').trim().toLowerCase()
+  if (parseTabQueryValue(tab) === 'gates' && jenkinsJobBasename(source) === RHOAI_NIGHTLY_BVT_STREAM_KEY) {
+    return 'releases'
+  }
+  return tab
+}
+
 function parseTabQueryValue(raw) {
   const tab = String(raw ?? '').trim().toLowerCase()
   if (tab === 'releases' || tab === 'nightly') return 'releases'
@@ -331,19 +366,19 @@ function parseTabQueryValue(raw) {
 
 function resolveTabFromParam(raw) {
   const tab = parseTabQueryValue(raw)
-  if (tab === 'releases' && hasHeatmapData.value) return 'releases'
+  if (tab === 'releases' && hasReleasesTabData.value) return 'releases'
   if (tab === 'gates' && hasNightlyData.value) return 'gates'
   return null
 }
 
 function defaultTabForData() {
-  if (hasHeatmapData.value) return 'releases'
+  if (hasReleasesTabData.value) return 'releases'
   if (hasNightlyData.value) return 'gates'
   return 'releases'
 }
 
 function applyActiveTabFromNavParams() {
-  const wanted = parseTabQueryValue(nav?.params?.value?.[TEST_EXECUTION_TAB_PARAM])
+  const wanted = parseTabQueryValue(requestedTabParam())
   if (wanted === 'gates') {
     if (hasNightlyData.value) {
       activeTab.value = 'gates'
@@ -355,7 +390,7 @@ function applyActiveTabFromNavParams() {
     }
   }
   if (wanted === 'releases') {
-    if (hasHeatmapData.value) {
+    if (hasReleasesTabData.value) {
       activeTab.value = 'releases'
       return
     }
@@ -408,7 +443,7 @@ function syncActiveTabToNavParams(tab) {
 }
 
 function isExecutionTabEnabled(tab) {
-  if (tab === 'releases') return hasHeatmapData.value
+  if (tab === 'releases') return hasReleasesTabData.value
   if (tab === 'gates') return hasNightlyData.value
   return false
 }
@@ -433,7 +468,7 @@ function onExecutionTabKeydown(event) {
 }
 
 function setActiveTab(tab) {
-  if (tab === 'releases' && !hasHeatmapData.value) return
+  if (tab === 'releases' && !hasReleasesTabData.value) return
   if (tab === 'gates' && !hasNightlyData.value) return
   activeTab.value = tab
   nextTick(() => {
@@ -451,8 +486,8 @@ watch(activeTab, (tab) => {
   }
 })
 
-watch([hasNightlyData, hasHeatmapData], () => {
-  const fromUrl = resolveTabFromParam(nav?.params?.value?.[TEST_EXECUTION_TAB_PARAM])
+watch([hasNightlyData, hasReleasesTabData], () => {
+  const fromUrl = resolveTabFromParam(requestedTabParam())
   if (fromUrl) {
     activeTab.value = fromUrl
     if (fromUrl === 'gates') {
@@ -460,9 +495,9 @@ watch([hasNightlyData, hasHeatmapData], () => {
     }
     return
   }
-  if (activeTab.value === 'releases' && !hasHeatmapData.value && hasNightlyData.value) {
+  if (activeTab.value === 'releases' && !hasReleasesTabData.value && hasNightlyData.value) {
     activeTab.value = 'gates'
-  } else if (activeTab.value === 'gates' && !hasNightlyData.value && hasHeatmapData.value) {
+  } else if (activeTab.value === 'gates' && !hasNightlyData.value && hasReleasesTabData.value) {
     activeTab.value = 'releases'
   }
 })
