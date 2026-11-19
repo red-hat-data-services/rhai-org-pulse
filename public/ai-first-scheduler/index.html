@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>AI-First Release Planner — RHAI</title>
+<title>Feature Planning Advisor — RHAI</title>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 body{font-family:-apple-system,BlinkMacSystemFont,'Inter','Segoe UI',sans-serif;background:#f8fafc;color:#1e293b;font-size:13px}
@@ -252,7 +252,7 @@ tr:hover td{background:#f8fafc}
 <body>
 
 <div class="hdr">
-  <div class="hdr-title">AI-First Release Planner · RHAI <span style="font-size:10px;font-weight:400;opacity:0.7">(RHOAI · RHELAI · RHAII)</span></div>
+  <div class="hdr-title">Feature Planning Advisor · RHAI <span style="font-size:10px;font-weight:400;opacity:0.7">(RHOAI · RHELAI · RHAII)</span></div>
   <div style="font-size:10px;color:rgba(255,255,255,0.55);margin-top:2px;font-style:italic">Stop making freeze decisions on gut feel — here's the data.</div>
   <div class="hdr-right">
     <span id="last-refreshed" style="font-size:10px;color:#94a3b8;margin:0 8px">Last refreshed: just now</span>
@@ -284,7 +284,7 @@ tr:hover td{background:#f8fafc}
   <div style="padding:8px 24px;display:flex;align-items:center;gap:8px;margin-bottom:12px;border-bottom:1px solid #e2e8f0">
     <button onclick="showTab('feat')" style="font-size:12px;padding:5px 12px;background:#f8fafc;border:1px solid #cbd5e1;border-radius:6px;cursor:pointer;color:#1d4ed8;font-weight:600">← Back to Features</button>
     <span style="font-size:11px;color:#94a3b8">or</span>
-    <button onclick="switchTab('roadmap')" style="font-size:12px;padding:5px 12px;background:#f8fafc;border:1px solid #cbd5e1;border-radius:6px;cursor:pointer;color:#475569">View Roadmap</button>
+    <button onclick="switchTab('executive')" style="font-size:12px;padding:5px 12px;background:#f8fafc;border:1px solid #cbd5e1;border-radius:6px;cursor:pointer;color:#475569">View Executive</button>
   </div>
   <div class="arch-card">
     <h2>AI-First Planning Pipeline</h2>
@@ -388,7 +388,6 @@ tr:hover td{background:#f8fafc}
 
   <div class="main-tab-bar" id="main-tab-bar">
     <button class="main-tab active" data-tab="features" onclick="switchTab('features')">📋 Feature Scheduling</button>
-    <button class="main-tab" data-tab="roadmap" onclick="switchTab('roadmap')">📅 Roadmap</button>
     <button class="main-tab" data-tab="executive" onclick="switchTab('executive')">📊 Executive</button>
     <div style="margin-left:auto;display:flex;align-items:center;gap:8px;padding:4px 12px">
       <select id="f-rel" onchange="run()" style="font-size:11px"><option value="">All Releases</option></select>
@@ -397,6 +396,7 @@ tr:hover td{background:#f8fafc}
       <span id="st-in" style="color:#1a7f37;font-weight:600;font-size:11px">— in-plan</span>
       <span id="st-no" style="display:none"></span>
       <button class="btn btn-red" onclick="doLiveRefresh()" style="font-size:11px;padding:3px 10px" title="Refresh — pulls live Jira features/outcomes and the latest Product Pages release dates">↻ Refresh</button>
+      <button class="btn" onclick="doExport()" style="font-size:11px;padding:3px 10px" title="Export the currently filtered/sorted features to CSV, including FPDoR readiness details">⬇ Export CSV</button>
       <div style="position:relative;display:inline-block">
         <button id="hamburger-btn" onclick="toggleHamburger(event)" title="Architecture & Data Appendix" style="font-size:16px;padding:4px 11px;background:#f8fafc;border:1px solid #cbd5e1;border-radius:6px;cursor:pointer;color:#475569;line-height:1;font-weight:700;letter-spacing:1px">☰</button>
         <div id="hamburger-menu" style="display:none;position:absolute;right:0;top:calc(100% + 4px);background:#fff;border:1px solid #e2e8f0;border-radius:8px;box-shadow:0 4px 16px rgba(0,0,0,.1);min-width:170px;z-index:300;padding:4px 0">
@@ -408,7 +408,7 @@ tr:hover td{background:#f8fafc}
     </div>
   </div>
 
-  <!-- TAB 1: Priority Outcomes — content moved to Roadmap (cards) and Executive (br-panel) -->
+  <!-- TAB 1: Priority Outcomes — content moved to Executive (summary cards + br-panel) -->
   <div class="tab-pane" id="tab-outcomes">
   </div><!-- /tab-outcomes -->
 
@@ -507,7 +507,7 @@ tr:hover td{background:#f8fafc}
       <option value="">Any Failed FPDoR</option>
       <option>Acceptance criteria</option><option>RICE</option><option>UXD</option>
       <option>Architectural alignment</option><option>Requirements clarity</option><option>Risks &amp; assumptions</option>
-      <option>Docs impact</option><option>Delivery Owner</option><option>Child epics</option>
+      <option>Product Documentation Required</option><option>Assignee</option><option>Child epics</option>
       <option>Cross-team deps</option><option>Source RFE / AI SDLC</option><option>PM</option>
     </select>
     <div style="display:flex;align-items:center;gap:4px;font-size:11px;color:#555;white-space:nowrap;background:#f0f7ff;border:1px solid #bfdbfe;border-radius:6px;padding:3px 8px">
@@ -626,7 +626,7 @@ tr:hover td{background:#f8fafc}
         <th onclick="sort('Rank')"># ↕</th>
         <th onclick="sort('Score')" id="th-score" class="score-col" style="display:none">SCORE ↕</th>
         <th onclick="sort('FPDoR')" style="cursor:pointer"><a href="https://redhat.atlassian.net/wiki/spaces/RHAI/pages/453312634/Feature+Planning+Definition+of+Ready+and+Checklist+for+Planning+DoD" target="_blank" style="color:inherit;text-decoration:none" title="Click to open FPDOR guide">FPDOR ↕</a></th>
-        <th><span class="tip">RISK ⓘ<span class="tip-box">🔴 HIGH: any Critical field missing (Components, Target Version, Fix Version, PM, Delivery Owner) or 2+ High fields missing.<br>🟡 MEDIUM: exactly 1 High field missing, or Feature Sign-Off absent.<br>🟢 LOW: all Critical/High/Medium items pass.</span></span></th>
+        <th><span class="tip">RISK ⓘ<span class="tip-box">🔴 HIGH: any Critical field missing (Target Version, Components, Feature human sign-off, Child epics, PM, Assignee, Release Type, Product Documentation Required) or RICE missing.<br>🟡 MEDIUM: RICE missing only.<br>🟢 LOW: all 9 items pass.</span></span></th>
         <th><span class="tip">CONFIDENCE ⓘ<span class="tip-box">How likely this feature ships as planned. High = 8–9 of 10 similar features shipped on time. Medium = 5–7 of 10. Low = 3–5 of 10.<br><br>Based on: shipping history, FPDoR completeness, component velocity, RICE. Hover the confidence bar for feature-specific detail.</span></span></th>
         <th onclick="sort('Priority')">PRIORITY ↕</th>
         <th onclick="sort('OutcomeNumber')">OC# ↕</th>
@@ -644,50 +644,10 @@ tr:hover td{background:#f8fafc}
   </div>
   </div><!-- /tab-features -->
 
-  <!-- TAB 2: Roadmap -->
-  <div class="tab-pane" id="tab-roadmap">
-  <!-- Org Pulse live KPI row (Aug 25 snapshot) -->
-  <div style="padding:0 0 8px">
-    <button onclick="(function(b){var r=document.getElementById('pulse-row');var open=r.style.display!=='none';r.style.display=open?'none':'';b.textContent=open?'▼ Show release metrics':'▲ Hide release metrics'})(this)" style="font-size:11px;color:#64748b;background:none;border:1px solid #e2e8f0;border-radius:6px;padding:3px 12px;cursor:pointer">▲ Hide release metrics</button>
-  </div>
-  <div class="pulse-row" id="pulse-row" style="display:flex;margin-bottom:16px">
-    <div class="pulse-tile" style="border-color:#c8e6c9">
-      <div class="pulse-lbl">TV/FV Aligned <span class="pulse-badge">Org Pulse Aug 25</span></div>
-      <div class="pulse-val" style="color:#2e7d32">89%</div>
-      <div class="pulse-sub">186 features in scope</div>
-      <div class="pulse-delta">↑ from 33% on Aug 17</div>
-    </div>
-    <div class="pulse-tile" style="border-color:#bbdefb">
-      <div class="pulse-lbl">EA2 Scope</div>
-      <div class="pulse-val" style="color:#1565c0">96</div>
-      <div class="pulse-sub">90% aligned · RHAII 85% · RHOAI 93%</div>
-    </div>
-    <div class="pulse-tile" style="border-color:#fff9c4">
-      <div class="pulse-lbl">GA Scope</div>
-      <div class="pulse-val" style="color:#f57f17">73</div>
-      <div class="pulse-sub">86% aligned · freeze Sep 23</div>
-    </div>
-    <div class="pulse-tile" style="border-color:#ffcdd2">
-      <div class="pulse-lbl">Blocked</div>
-      <div class="pulse-val" style="color:#c62828">16</div>
-      <div class="pulse-sub">4% of committed scope</div>
-    </div>
-    <div class="pulse-tile" style="border-color:#e1bee7">
-      <div class="pulse-lbl">EA1 (Done)</div>
-      <div class="pulse-val" style="color:#6a1b9a">17</div>
-      <div class="pulse-sub">100% aligned · Freeze was Jul 29</div>
-    </div>
-    <div class="pulse-tile" style="border-color:#ffcdd2;background:#fff5f5">
-      <div class="pulse-lbl">Readiness Gap <span class="pulse-badge" style="background:#c62828">Aug 24 sync</span></div>
-      <div class="pulse-val" style="color:#c62828">75%</div>
-      <div class="pulse-sub">of 1,138 features lack TV or readiness</div>
-    </div>
-    <div class="pulse-tile" style="border-color:#ffe082;background:#fffde7">
-      <div class="pulse-lbl">EA2 Funnel</div>
-      <div class="pulse-val" style="color:#f57f17">80<span style="font-size:13px;font-weight:400;color:#aaa"> / 167</span></div>
-      <div class="pulse-sub">committed of requested (48% conversion)</div>
-    </div>
-  </div>
+
+  <!-- TAB 4: Executive -->
+  <div class="tab-pane" id="tab-executive">
+  <!-- Moved here from the removed Roadmap tab (Nov 10) — same placement/outcome info now lives in this one tab -->
   <div id="summary-detail" style="display:block;margin-bottom:16px">
   <div id="cards-rel-note" style="font-size:11px;color:#64748b;margin-bottom:6px;display:flex;align-items:center;gap:6px">
     <span>Showing for:</span>
@@ -703,11 +663,6 @@ tr:hover td{background:#f8fafc}
     <div class="card c4"><div class="card-lbl">No</div><div class="card-n" id="cnt-no">—</div><div class="card-s">Fix inputs to requalify</div></div>
   </div>
   </div><!-- /summary-detail -->
-  <div id="roadmap-timeline-view" style="padding:0 0 16px"></div>
-  </div><!-- /tab-roadmap -->
-
-  <!-- TAB 4: Executive -->
-  <div class="tab-pane" id="tab-executive">
   <div id="br-panel" class="br-panel" style="display:none"></div>
   <div id="exec-view" style="padding:16px 0"></div>
   </div><!-- /tab-executive -->
@@ -813,7 +768,7 @@ tr:hover td{background:#f8fafc}
   </table></div>
   <div style="font-size:11px;color:#555;line-height:1.6;margin-bottom:4px">
     <strong>Why this matters for explainability:</strong> Score 77 vs 76 is a tiny difference — usually a single Priority Outcome position or one Jira priority tier. Two features with similar scores can have very different delivery risk.
-    The ML confidence score (this tool) adds the missing risk dimension: a feature with Score=77 but 9/17 FPDoR and a prior slip is more likely to miss than one with Score=76, 16/17 FPDoR, and no slips.
+    The ML confidence score (this tool) adds the missing risk dimension: a feature with Score=77 but 6/9 FPDoR and a prior slip is more likely to miss than one with Score=76, 9/9 FPDoR, and no slips.
   </div>
   <div style="font-size:11px;color:#555;line-height:1.6;margin-bottom:4px">
     <strong>Potential improvement — Risk-Adjusted Score:</strong> <code>Score × (ML confidence / 100)</code>.
@@ -849,7 +804,7 @@ tr:hover td{background:#f8fafc}
   </table></div>
 
   <div class="ap-sec">📊 Feature Risk Report — Aug 27 Snapshot (post-freeze)</div>
-  <div class="ap-note">Live readiness snapshot from Aug 27 2026, after the EA2 planning freeze (Aug 26). Source: Erle's FPDoR weighted tier system applied to the committed list. CRITICAL tier failures (Child Epics, Components, Delivery Owner, Target Version, Fix Version) count toward HIGH risk.</div>
+  <div class="ap-note">Live readiness snapshot from Aug 27 2026, after the EA2 planning freeze (Aug 26). Source: Updated Nov 17, 2026 — now 9 critical criteria. All missing items count toward HIGH risk.</div>
   <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:18px">
     <div style="background:#fff3e0;border:1px solid #ffb74d;border-radius:6px;padding:14px">
       <div style="font-size:11px;font-weight:700;color:#e65100;margin-bottom:10px;text-transform:uppercase;letter-spacing:.05em">EA2 — 96 features committed</div>
@@ -1061,7 +1016,7 @@ tr:hover td{background:#f8fafc}
         <tr><td style="padding:3px 0;color:#555">Label</td><td style="font-weight:600;color:#222">Shipped as planned vs. slipped</td></tr>
         <tr><td style="padding:3px 0;color:#555">Class split</td><td style="font-weight:600;color:#222">280 shipped · 39 slipped → balanced 280/280</td></tr>
         <tr><td style="padding:3px 0;color:#555">AUC-ROC (CV tuning)</td><td style="font-weight:600;color:#2e7d32">85.4% ± 9.5% (10-fold CV — more realistic with 3× more slipped examples)</td></tr>
-        <tr><td style="padding:3px 0;color:#555">Confidence caps</td><td style="font-weight:600;color:#222">🤖 real history → max 95% · ~🤖 no shipping history → max 85% minus FPDoR penalty<br><span style="font-weight:400;color:#666;font-size:10px">Why cap? Features with slip_count=0 cluster high. FPDoR penalty (0–15pts) restores differentiation: a feature at 9/17 FPDoR scores ~7pts lower than one at 16/17, even when both raw ML scores exceed 85.<br><strong>High FPDoR</strong> = a feature has completed most or all of the 17-item FPDoR readiness checklist (Feature Planning Document of Record) — covering: PM ownership, RICE priority, acceptance criteria, docs plan, release type, cross-team deps, and more. 17/17 = fully ready. The higher the FPDoR, the stronger the signal the feature is well-defined and likely to ship.</span></td></tr>
+        <tr><td style="padding:3px 0;color:#555">Confidence caps</td><td style="font-weight:600;color:#222">🤖 real history → max 95% · ~🤖 no shipping history → max 85% minus FPDoR penalty<br><span style="font-weight:400;color:#666;font-size:10px">Why cap? Features with slip_count=0 cluster high. FPDoR penalty (0–15pts) restores differentiation: a feature at 6/9 FPDoR scores ~7pts lower than one at 9/9, even when both raw ML scores exceed 85.<br><strong>High FPDoR</strong> = a feature has completed most or all of the 9-item FPDoR readiness checklist (Feature Planning Document of Record) — covering: Target Version, Components, Feature human sign-off, Child epics, PM, Assignee, Release Type, Product Documentation Required, RICE. 9/9 = fully ready. The higher the FPDoR, the stronger the signal the feature is well-defined and likely to ship.</span></td></tr>
         <tr><td style="padding:3px 0;color:#555">Applied to</td><td style="font-weight:600;color:#7b1fa2">All 638 in-plan features (🤖 70 w/slip history · ~🤖 568 imputed)</td></tr>
         <tr><td style="padding:3px 0;color:#555">Top signals</td><td style="font-weight:600;color:#222">Slip history 21% · Mandatory FPDoR rate 19% · FPDoR pass rate 9% · Release type 8% · Jira priority 8% · RICE 7%</td></tr>
       </table>
@@ -1085,7 +1040,7 @@ tr:hover td{background:#f8fafc}
 
   <div class="ap-sec">🌳 Example Decision Tree (one of 200 trees, depth=10 — illustrative first 3 levels)</div>
   <div style="background:#fafafa;border:1px solid #e0e0e0;border-radius:8px;padding:16px;margin-bottom:18px;font-family:monospace;font-size:11px;line-height:2">
-    <div style="color:#555;margin-bottom:8px;font-family:sans-serif;font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.05em">How a single tree scores a feature — example: 12/17 mandatory FPDoR · RICE 70 · Blocker · GA · slip_count=0</div>
+    <div style="color:#555;margin-bottom:8px;font-family:sans-serif;font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.05em">How a single tree scores a feature — example: 7/9 mandatory FPDoR · RICE 70 · Blocker · GA · slip_count=0</div>
     <div><span style="color:#1565c0;font-weight:700">Is mandatory_pass_rate &gt; 0.75?</span> <span style="color:#888">(mandatory FPDoR items — 19% importance)</span></div>
     <div style="padding-left:20px"><span style="color:#2e7d32">└── Yes</span> → <span style="color:#1565c0;font-weight:700">Is slip_count &gt; 0?</span> <span style="color:#888">(prior release slips — 21% importance)</span></div>
     <div style="padding-left:40px"><span style="color:#2e7d32">└── No</span> → <span style="color:#1565c0;font-weight:700">Is jira_priority = Critical/High?</span> <span style="color:#888">(8% importance)</span></div>
@@ -1517,43 +1472,31 @@ const ENG_COMPONENTS = {
   'Sudhir Dharanendraiah': ['PyTorch'],
 };
 
-// FPDoR weighted penalty per failed item — from Erle's ranked list (2026-08-07), remapped to Confluence/Org Pulse names.
+// New 9-item readiness criteria (Nov 17, 2026 — Arjay/Yuval/Confluence DoD)
 // Keys must match Org Pulse "Failed FPDoR Items" CSV strings exactly (otherwise default penalty 3 applies).
-// Critical (25 pts each): Components, Child epics, Target Version, Delivery Owner
-// High (10 pts each): Release Type, Priority, RICE, Docs impact
-// Medium (5 pts each): Cross-team deps, PM, Feature human sign-off, Requirements clarity, Acceptance criteria, Risks & assumptions, Architectural alignment
-// Soft (2 pts each): UXD, Source RFE / AI SDLC
+// Critical (8 items @ 15 pts each): Target Version, Components, Feature human sign-off, Child epics, PM, Assignee, Release Type, Product Documentation Required
+// High (1 item @ 10 pts): RICE Score
 // Weighted FPDoR score = 100 - sum of penalties for failed items (floored at 0)
 // Thresholds: ≥85 → High readiness (EA1 eligible), ≥60 → Moderate (EA2/GA), <60 → No
 const FPDOR_WEIGHTS = {
-  'Components':                   25,
-  'Child epics':                  25,
-  'Target Version':               25,
-  'Delivery Owner':               25,
+  'Target Version':               15,
+  'Components':                   15,
+  'Feature human sign-off':       15,
+  'Child epics':                  15,
+  'PM':                           15,
+  'Assignee':                     15,
   'Release Type':                 10,
-  'Priority':                     10,
+  'Product Documentation Required': 10,
   'RICE':                         10,
-  'Docs impact':                  10,
-  'Cross-team deps':               5,
-  'PM':                            5,
-  'Feature human sign-off':        5,
-  'Requirements clarity':          5,
-  'Acceptance criteria':           5,
-  'Risks & assumptions':           5,
-  'Architectural alignment':       5,
-  'UXD':                           2,
-  'Source RFE / AI SDLC':          2,
 };
 
-// Mandatory hard-fail — still gate on Release Type as before
-const FPDOR_MANDATORY_HARD = ['Release Type'];
+// Mandatory hard-fail — all 9 criteria are now critical (gate on each)
+const FPDOR_MANDATORY_HARD = ['Target Version','Components','Feature human sign-off','Child epics','PM','Assignee','Release Type','Product Documentation Required','RICE'];
 
 // Tier groupings used for the FPDoR breakdown column in the table
 const FPDOR_TIERS_DISPLAY = [
-  { label:'Critical', cls:'fd-crit', items:['Components','Child epics','Target Version','Delivery Owner','PM'] },
-  { label:'High',     cls:'fd-high', items:['Release Type','Priority','RICE','Docs impact'] },
-  { label:'Medium',   cls:'fd-med',  items:['Cross-team deps','Feature human sign-off','Requirements clarity','Acceptance criteria','Risks & assumptions','Architectural alignment'] },
-  { label:'Soft',     cls:'fd-soft', items:['UXD','Source RFE / AI SDLC'] },
+  { label:'Critical', cls:'fd-crit', items:['Target Version','Components','Feature human sign-off','Child epics','PM','Assignee','Release Type','Product Documentation Required'] },
+  { label:'High',     cls:'fd-high', items:['RICE'] },
 ];
 
 // ── FPDOR RISK TIER SCORING (Erle's Feature Risk Report system, Aug 2026) ──────
@@ -1572,7 +1515,6 @@ function computeFPDoRRisk(r) {
   const tv        = (r['Target Version'] || esc(r['Target Versions']) || '').trim();
   const comps     = (esc(r['Components']) || '').trim();
   const releaseType = (esc(r['Release Type']) || '').trim();
-  const priority  = (esc(r['Priority']) || '').trim();
   const docsField = (r['Product Documentation Required'] || '').trim().toLowerCase();
   const assignee  = r['Assignee'] !== undefined ? (r['Assignee'] || '').trim() : null;
   // null when the source has no such column, so CSV rows are not penalised for a
@@ -1582,43 +1524,37 @@ function computeFPDoRRisk(r) {
   const pmRaw     = r['PM'];
   const pmName    = pmRaw && typeof pmRaw === 'object' ? (pmRaw.displayName || '') : (pmRaw || '');
   const pm        = pmRaw !== undefined ? String(pmName).trim() : null;
-  const fv        = (esc(r['Fix Version']) || r['Fix Versions'] || '').trim();
+  const childEpics = (r['Child Epics'] || r['Child epics'] || '').trim();
 
-  // CRITICAL — any fail = HIGH risk
+  // CRITICAL (all 8 items) — any fail = HIGH risk
   const critFails = [];
-  if (!comps)                          critFails.push('Components');
   if (!tv)                             critFails.push('Target Version');
-  if (!fv)                             critFails.push('Fix Version');
-  if (assignee !== null && !assignee)  critFails.push('Delivery Owner');
+  if (!comps)                          critFails.push('Components');
+  if (!labels.includes('strat-creator-human-sign-off'))  critFails.push('Feature human sign-off');
+  if (!childEpics)                     critFails.push('Child epics');
   if (pm !== null && !pm)              critFails.push('PM');
+  if (assignee !== null && !assignee)  critFails.push('Assignee');
+  if (!releaseType)                    critFails.push('Release Type');
+  if (!docsField || docsField === 'unknown')  critFails.push('Product Documentation Required');
 
-  // HIGH — 2+ fails = HIGH; 1 fail = MEDIUM
+  // HIGH (1 item: RICE)
   const highFails = [];
-  if (!releaseType)                                                              highFails.push('Release Type');
-  if (!priority)                                                                 highFails.push('Priority');
-  if (!docsField || docsField === 'unknown')                                     highFails.push('Docs Impact');
-  // RICE: only flag if Failed FPDoR Items explicitly lists it (not a label proxy)
-  if (failedItems && failedItems.toLowerCase().includes('rice'))                 highFails.push('RICE score');
+  if (failedItems && failedItems.toLowerCase().includes('rice'))                 highFails.push('RICE');
 
-  // MEDIUM — any fail (no critical) = MEDIUM
+  // No MEDIUM or SOFT tiers in new 9-item model
   const medFails = [];
-  if (!labels.includes('strat-creator-human-sign-off'))      medFails.push('Feature Sign-Off');
-
-  // SOFT — margin only
   const softFails = [];
-  if (!labels.includes('rp-qg1-pass') && !labels.includes('rfe-creator-autofix-rubric-pass'))
-    softFails.push('Source RFE/AI SDLC');
 
   let riskLevel;
-  if (critFails.length > 0 || highFails.length >= 2) {
+  if (critFails.length > 0) {
     riskLevel = 'HIGH';
-  } else if (highFails.length === 1 || medFails.length > 0) {
+  } else if (highFails.length > 0) {
     riskLevel = 'MEDIUM';
   } else {
     riskLevel = 'LOW';
   }
 
-  const ready = critFails.length === 0 && highFails.length === 0 && medFails.length === 0;
+  const ready = critFails.length === 0 && highFails.length === 0;
   return { riskLevel, ready, critFails, highFails, medFails, softFails };
 }
 
@@ -2557,7 +2493,7 @@ function computeApproxMLScore(r){
   // RF+ROS approximation using CSV-available features only.
   // Slip history (53% of model signal per feature_importance_v3) is unknown → defaults to 0.
   // Uses: FPDoR pass rate/count/failures (27%), RICE+priority (8%), label boosts (8%) = ~43% of weight.
-  const mandatoryList=['Release Type','Target Version','Components','PM','Delivery Owner','Priority','RICE','Docs impact'];
+  const mandatoryList=['Target Version','Components','Feature human sign-off','Child epics','PM','Assignee','Release Type','Product Documentation Required','RICE'];
   const mFailed=(r._failedItems||[]).filter(i=>mandatoryList.includes(i)).length;
   const cFailed=Math.max(0,(r._failedItems||[]).length-mFailed);
   const passRate=(r._fNum||0)/13; // 0.846 = 11/13 ≈ training mean
@@ -2677,12 +2613,29 @@ function schedule(rows){
     return {boost: tier, signal};
   }
 
+  // ── Convert old 17-item FPDoR scores to new 9-item model (Nov 19, 2026) ──
+  // Legacy CSV data has X/17 format; convert to X/9 by scaling the passed count
+  function convertFPDoRScore(fpdorStr) {
+    if (!fpdorStr || typeof fpdorStr !== 'string') return fpdorStr;
+    const match = fpdorStr.match(/^(\d+)\/17$/);
+    if (!match) return fpdorStr; // Not an old 17-item score, leave as-is
+    const passed17 = parseInt(match[1]);
+    // Scale from 17-item → 9-item: map [0,17] → [0,9]
+    // Math: new_passed = Math.round((passed17 / 17) * 9)
+    const passed9 = Math.round((passed17 / 17) * 9);
+    return `${passed9}/9`;
+  }
+
   // ── Pre-filter: hard gates → No ──
   rows.forEach(r=>{
     r._comps = (esc(r['Components'])||'').split(';').map(x=>x.trim()).filter(Boolean);
     r._team  = (esc(r['Team'])||'').trim();
     r._teams = FEATURE_TEAM_LOOKUP[esc(r['Key'])] || null; // Erle's capacity-dataset: Jira Team field teams
-    const fpdorStr = typeof r['FPDoR'] === 'string' ? r['FPDoR'] : (r['FPDoR']?.passedCount + '/' + r['FPDoR']?.totalCount || '0/17');
+    // Convert old 17-item scores to new 9-item model for legacy CSV data
+    if (typeof r['FPDoR'] === 'string') {
+      r['FPDoR'] = convertFPDoRScore(r['FPDoR']);
+    }
+    const fpdorStr = typeof r['FPDoR'] === 'string' ? r['FPDoR'] : (r['FPDoR']?.passedCount + '/' + r['FPDoR']?.totalCount || '0/9');
     r._fNum  = parseInt((fpdorStr||'0').split('/')[0])||0;
     r._score = parseInt(r['Score'])||0;
     r._committed = (r['Confidence']||'').toLowerCase()==='committed';
@@ -2881,8 +2834,8 @@ function schedule(rows){
       } else {
         // FPDoR-completeness penalty: restores differentiation erased by the 85% cap.
         // Features with incomplete FPDoR (e.g. 9/17) score below the cap even when raw ML >= 85.
-        const fpdorStr2 = typeof r['FPDoR'] === 'string' ? r['FPDoR'] : (r['FPDoR']?.passedCount + '/' + r['FPDoR']?.totalCount || '0/17');
-        const fpdorDen=parseInt((fpdorStr2||'0/17').split('/')[1])||17;
+        const fpdorStr2 = typeof r['FPDoR'] === 'string' ? r['FPDoR'] : (r['FPDoR']?.passedCount + '/' + r['FPDoR']?.totalCount || '0/9');
+        const fpdorDen=parseInt((fpdorStr2||'0/9').split('/')[1])||9;
         const fpdorRatio=fpdorDen>0?r._fNum/fpdorDen:1;
         const fpdorPenalty=Math.round((1-fpdorRatio)*15);
         r._conf=Math.max(Math.min(85,r._rawMlScore)-fpdorPenalty,20);
@@ -2969,7 +2922,7 @@ window.addEventListener('message', async function(e){
       'OutcomeNumber': f.OutcomeNumber || '—',
       'Target Versions': f.PlannedFor || '',
       'RICE': f.Score || 0,
-      'FPDoR': f.FPDoR || '0/17',
+      'FPDoR': f.FPDoR || '0/9',
       'Failed FPDoR Items': f['Failed FPDoR Items'] || '',
       'Confidence': f.Confidence || 'not-ready',
       'Labels': f.Labels || '',
@@ -3020,11 +2973,12 @@ window.onload=()=>{
   // Features are synced every 12h, so outcomes (extracted from feature parentKey) auto-update
   setInterval(fetchOutcomes, 12 * 60 * 60 * 1000);
 
-  // Role-based tab defaults (Sept 18 update): PM → Features, Delivery lead → Roadmap, ENG lead → default components
+  // Role-based tab defaults (Sept 18 update): PM → Features, Delivery lead → Executive, ENG lead → default components
+  // (Roadmap tab removed Nov 10 — its placement/outcome info now lives in Executive.)
   const userRole = localStorage.getItem('userRole') || 'pm'; // 'pm', 'delivery', or 'eng'
   const engLead = localStorage.getItem('engLead') || null; // engineering lead name
   if(userRole === 'delivery' && !localStorage.getItem('manualTabOverride')) {
-    switchTab('roadmap');
+    switchTab('executive');
   }
   if(userRole === 'eng' && engLead && ENG_COMPONENTS[engLead]) {
     window._engFilter = ENG_COMPONENTS[engLead];
@@ -3272,13 +3226,9 @@ function toggleScoreCol(){
   updateCapacityDisplay();
 }
 
-let _roadmapVisible = false;
-function toggleRoadmapView(){ switchTab('roadmap'); }
-
 function switchTab(name){
   document.querySelectorAll('.main-tab').forEach(b=>b.classList.toggle('active',b.dataset.tab===name));
   document.querySelectorAll('.tab-pane').forEach(p=>p.classList.toggle('active',p.id==='tab-'+name));
-  if(name==='roadmap'){window._roadmapVisible=true;if(typeof renderRoadmapTimeline==='function')renderRoadmapTimeline(allData);}
   // Re-run the shared filter pipeline so the Executive summary reflects whatever
   // Version/Team/PM/etc. filters are already selected, instead of always summarizing
   // all of allData regardless of the filter bar (reported by John Graham, Nov 3).
@@ -3468,7 +3418,7 @@ function run(){
     if(read==='not-ready') {
       const fpdor = r['FPDoR'];
       const fpdorStr = typeof fpdor === 'string' ? fpdor : ((fpdor?.passedCount ?? 0) + '/' + (fpdor?.totalCount ?? 0));
-      if(fpdorStr === '17/17') return false;
+      if(fpdorStr === '9/9') return false;
     }
     if(place==='EA1+EA2'){if(r._place!=='EA1'&&r._place!=='EA2') return false;}
     else if(place&&r._place!==place) return false;
@@ -3547,8 +3497,8 @@ function run(){
     if(!r._bigRocks) return;
     r._bigRocks.forEach(name=>{if(r._place==='No') window._brGapMap[name]=(window._brGapMap[name]||0)+1;});
   });
+  window._lastFilteredRows=rows;
   renderTbl(rows); renderPmBanner(rows); renderCards(allData); updateLandingCapacity(rows); renderCapacityMix(allData); renderBigRocks(allData); renderAppendix(allData);
-  if(document.getElementById('tab-roadmap')?.classList.contains('active')) renderRoadmapTimeline(allData);
   if(document.getElementById('tab-executive')?.classList.contains('active')) renderExecView(rows);
 }
 function v(id){return document.getElementById(id).value;}
@@ -3657,35 +3607,29 @@ function renderTbl(rows){
   tb.innerHTML=rows.map(r=>{
     const fNum=r._fNum;
     const rCls=r._committed?'r-committed':r._place==='No'?'r-below':'r-above';
-    // FPDoR breakdown: tooltip with full tier breakdown, inline for Critical/High fails only
+    // FPDoR breakdown shown as a hover tooltip only (was inline pills — cluttered the table, Nov 10 request)
     const failedSet=new Set(r._failedItems);
     const hasCrossTeamDep=failedSet.has('Cross-team deps');
     const rowApv=_allApv[esc(r['Key'])]||{pm:false,do:false};
     const hasFpdorData=r['FPDoR']&&r['FPDoR']!=='—';
-    const tooltipLines=['Weighted FPDoR: '+r._wFPDoR+'/100 (Erle\'s tier weights)',''];
+    const tooltipLines=['Weighted FPDoR: '+r._wFPDoR+'/100',''];
     // Only the failures are listed. Printing a tier's passes as well split each tier
     // across two lines, and "passed" there also swept up N/A items, so the lines never
-    // added up to the N/17 badge — that badge counts outright passes only.
+    // added up to the N/9 badge — that badge counts outright passes only.
     FPDOR_TIERS_DISPLAY.forEach(t=>{
       const fails=t.items.filter(i=>failedSet.has(i));
       if(fails.length) tooltipLines.push('\u2717 '+t.label+': '+fails.join(', '));
     });
     if(hasFpdorData){
-      tooltipLines.push('', failedSet.size
-        ? esc(r['FPDoR'])+' passed \u00b7 '+failedSet.size+' failing \u00b7 remainder not applicable'
-        : esc(r['FPDoR'])+' passed \u00b7 nothing failing');
+      const fpdorStr = esc(r['FPDoR']);
+      const [passedStr] = fpdorStr.split('/');
+      const passed = parseInt(passedStr) || 0;
+      const failing = 9 - passed; // New 9-item model: total = 9
+      tooltipLines.push('', failing > 0
+        ? fpdorStr+' passed \u00b7 '+failing+' failing'
+        : fpdorStr+' passed \u00b7 all criteria met');
     }
     const fpdorTooltip=tooltipLines.join('\n');
-    const critFails=FPDOR_TIERS_DISPLAY[0].items.filter(i=>failedSet.has(i));
-    const highFails=FPDOR_TIERS_DISPLAY[1].items.filter(i=>failedSet.has(i));
-    const medFails=FPDOR_TIERS_DISPLAY[2].items.filter(i=>failedSet.has(i));
-    const softFails=FPDOR_TIERS_DISPLAY[3].items.filter(i=>failedSet.has(i));
-    const breakdownHtml=r._path==='legacy'?[
-      ...critFails.map(i=>`<span class="fd-item fd-crit" title="${i} [Critical −25]">${i}</span>`),
-      ...highFails.map(i=>`<span class="fd-item fd-high" title="${i} [High −10]">${i}</span>`),
-      ...medFails.map(i=>`<span class="fd-item fd-med" title="${i} [Medium −5]">${i}</span>`),
-      ...softFails.map(i=>`<span class="fd-item fd-soft" title="${i} [Soft −2]">${i}</span>`),
-    ].join(''):'';
     const pCls=r._place==='EA1'?'p-ea1':r._place==='EA2'?'p-ea2':r._place==='GA'?'p-ga':'p-no';
     const conf=r._conf||0;
     const cCls=conf>=70?'hi':conf>=40?'mi':'lo';
@@ -3743,7 +3687,7 @@ function renderTbl(rows){
     return cutLine+`<tr id="apv-row-${esc(r['Key'])}" style="${trStyle}" title="${isSwing?'Swing feature — confidence borderline (50–69%), worth discussing at freeze':''}">
       <td style="color:#666;font-weight:600;font-size:13px">${r['Rank']||'—'}</td>
       <td class="score-col" style="display:none"><span class="score">${esc(r['Score'])}</span></td>
-      <td><div class="fpdor-cell"><span class="rp ${rCls}" title="${fpdorTooltip}">${esc(r['FPDoR'])||'—'}</span><span class="fpdor-w">w:${esc(r._wFPDoR)}</span>${breakdownHtml}</div></td>
+      <td><div class="fpdor-cell"><span class="rp ${rCls}" title="${fpdorTooltip}">${esc(r['FPDoR'])||'—'}</span><span class="fpdor-w" title="${fpdorTooltip}">w:${esc(r._wFPDoR)}</span></div></td>
       <td>${(()=>{
         const rl=r._riskLevel||'HIGH';
         const rf=r._riskFails||{};
@@ -4463,6 +4407,27 @@ function renderExecView(rows){
   <div style="font-size:10px;color:#aaa;text-align:center;padding:8px 0 4px">
     AI-First Release Planner · RHOAI 3.6 · Model v10 (AUC 85.7%) · Data from Org Pulse CSV export
   </div>`;
+}
+
+// Exports the currently filtered/sorted Feature Scheduling rows, including the FPDoR
+// readiness breakdown that's shown as a hover tooltip on-screen (not listed inline in
+// the table — Nov 10 request) so it's still available for offline review/sharing.
+function doExport(){
+  const rows=window._lastFilteredRows||allData;
+  const hdr=['Rank','Key','Title','FPDoR','Weighted FPDoR','Readiness Issues','Risk','Target Versions','Fix Version','Components','Team','Priority','Confidence','Placement','Confidence%','PM','Outcome'];
+  const lines=[hdr.join(','),...rows.map(r=>{
+    const failedSet=new Set(r._failedItems);
+    const issues=FPDOR_TIERS_DISPLAY.flatMap(t=>t.items.filter(i=>failedSet.has(i)).map(i=>t.label+': '+i)).join('; ');
+    return [
+      r['Rank'],esc(r['Key']),`"${(esc(r['Title'])||'').replace(/"/g,'""')}"`,r['FPDoR'],r._wFPDoR,
+      `"${issues.replace(/"/g,'""')}"`,r._riskLevel||'',
+      `"${esc(r['Target Versions'])||''}"`,`"${esc(r['Fix Version'])||''}"`,`"${esc(r['Components'])||''}"`,
+      `"${esc(r['Team'])||''}"`,esc(r['Priority']),r['Confidence'],r._place,(r._conf||0)+'%',
+      `"${esc(r['PM'])||''}"`,`"${esc(r['Outcome'])||''}"`
+    ].join(',');
+  })];
+  const a=Object.assign(document.createElement('a'),{href:URL.createObjectURL(new Blob([lines.join('\n')],{type:'text/csv'})),download:'feature-scheduling-export.csv'});
+  a.click();
 }
 
 function toggleHamburger(e){
