@@ -25,6 +25,40 @@ step through each filter edit. Empty values are intentional: they preserve
 explicit choices such as “All versions” and “All time” instead of allowing
 future defaults to change a saved view.
 
+## Version summary
+
+Recent Runs shows suite runs, workflow executions, tasks, passed tasks, failed
+tasks, skipped tasks, and total bugs for the selected RHOAI versions. Repeated
+workflow executions count separately. Task counts come from execution counters.
+A missing counter makes that total unavailable; it is never replaced with zero.
+The outcome chart appears only when all task outcome counts are complete.
+
+The summary dropdown and existing version filter share the same selection.
+The summary covers every suite run for those versions, across all pages.
+Suite, Run ID, date, and **Contains bugs only** filters narrow only the table.
+Only records with a suite and invocation ID belong to this view.
+
+Bug totals count distinct linked Jira issues across the selected versions.
+Per-run counts deduplicate tickets within that run. Both use the existing Jira
+association rules and exclude issues labelled `rca-scope-internal`. A bug seen
+in multiple runs counts once in the summary. Unverified associations or labels
+show an unavailable count. The bug filter includes a run with any verified
+eligible issue, even when other keys in that run remain unresolved. Its exact
+count stays unavailable in that case. The filter runs before pagination and
+reports incomplete coverage.
+
+The original table retains suite/run ID, version, build time, execution time,
+Jira links, filters, sorting, and pagination. Workflow, task, passed, failed,
+skipped, and bug counts follow those columns. The suite column uses 20% of the
+table. Date columns have equal widths. Narrow screens can scroll the table.
+
+The client requests `includeSummary=true` on the existing paged `/test-suites`
+API. Execution counts are aggregated in OpenSearch. Metadata and counts share
+a 10-second cache. Bug associations for the selected versions are resolved in
+batches of at most 200 runs. Complete results are cached for 10 seconds. Jira
+label decisions retain their existing one-minute cache. Refresh bypasses these
+caches. All database operations are searches; this feature does not write records.
+
 ## Runtime configuration
 
 | Variable | Sensitive | Description |

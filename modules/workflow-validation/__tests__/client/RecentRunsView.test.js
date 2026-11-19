@@ -28,9 +28,9 @@ describe('Recent Runs', () => {
     Object.assign(filters, { version: 'older', testSuite: 'another-suite', invocationId: 'another-run', dateFrom: '2000-01-01' })
     wrapper = mount(RecentRunsView)
     await flushPromises()
-    expect(Object.fromEntries(request(0))).toEqual({ pageSize: '20', includeBugs: 'false', includeBugTickets: 'true', sortField: 'timestamp', sortDir: 'desc' })
+    expect(Object.fromEntries(request(0))).toEqual({ pageSize: '20', includeBugs: 'false', includeBugTickets: 'true', includeSummary: 'true', sortField: 'timestamp', sortDir: 'desc' })
     expect(wrapper.findAll('tbody tr')).toHaveLength(3)
-    expect(wrapper.findAll('thead th').map(cell => cell.attributes('aria-label'))).toEqual(['Test suite', 'Version', 'RHOAI build (UTC)', 'Executed at (UTC)', 'Issues found'])
+    expect(wrapper.findAll('thead th').map(cell => cell.attributes('aria-label'))).toEqual(['Test suite', 'Version', 'RHOAI build (UTC)', 'Executed at (UTC)', 'Issues found', 'Workflows', 'Tasks', 'Passed', 'Failed', 'Skipped', 'Bugs'])
     expect(wrapper.findAll('th button')).toHaveLength(4)
     expect(wrapper.findAll('th select')).toHaveLength(0)
     expect(wrapper.get('button[aria-label="Sort execution time"]').text()).toContain('↓')
@@ -42,6 +42,27 @@ describe('Recent Runs', () => {
     expect(wrapper.findAll('time')).toHaveLength(3)
     expect(wrapper.text()).toContain('unavailable')
     expect(wrapper.text()).not.toMatch(/Build date|Jenkins|Image release/)
+  })
+
+  it('renders API summary totals and applies the bug filter from page one', async () => {
+    const summary = { suiteRuns: 47, workflows: 100, tasks: 500, passed: 400, failed: 50, skipped: 50, bugs: 7 }
+    const row = { ...fixture.rows[0], workflows: 3, tasks: 12, passed: 9, failed: 1, skipped: 2, bugs: 2 }
+    apiRequest.mockResolvedValue(page([row], { summary, total: 47, nextCursor: 'next-page' }))
+    wrapper = mount(RecentRunsView)
+    await flushPromises()
+    expect(wrapper.get('[data-testid="summary-suiteRuns"] dd').text()).toBe('47')
+    expect(wrapper.get('[data-testid="summary-bugs"] dd').text()).toBe('7')
+    expect(wrapper.get('tbody tr').findAll('td').slice(5).map(cell => cell.text())).toEqual(['3', '12', '9', '1', '2', '2'])
+    await button('Next').trigger('click')
+    await flushPromises()
+    expect(request(-1).get('cursor')).toBe('next-page')
+    apiRequest.mockResolvedValue(page([row], { summary, bugFilterIncomplete: true }))
+    await button('Contains bugs only').trigger('click')
+    await flushPromises()
+    expect(request(-1).get('bugsOnly')).toBe('true')
+    expect(request(-1).has('cursor')).toBe(false)
+    expect(wrapper.text()).toContain('This filter shows only verified matches.')
+    expect(wrapper.get('[data-testid="summary-suiteRuns"] dd').text()).toBe('47')
   })
 
   it('matches execution date formatting on one line without repeating UTC in build cells', async () => {
@@ -147,7 +168,7 @@ describe('Recent Runs', () => {
     expect(wrapper.find('button[type="submit"]').exists()).toBe(false)
     await button('Clear filters').trigger('click')
     await flushPromises()
-    expect(Object.fromEntries(request(-1))).toEqual({ pageSize: '20', includeBugs: 'false', includeBugTickets: 'true', sortField: 'timestamp', sortDir: 'desc' })
+    expect(Object.fromEntries(request(-1))).toEqual({ pageSize: '20', includeBugs: 'false', includeBugTickets: 'true', includeSummary: 'true', sortField: 'timestamp', sortDir: 'desc' })
     expect(wrapper.get('select[aria-label="Date Range"]').element.value).toBe('all')
     expect(wrapper.find('input[type="date"]').exists()).toBe(false)
     expect(filters.version).toBe('')

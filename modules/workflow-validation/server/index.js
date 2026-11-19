@@ -19,6 +19,7 @@ const {
 const { getEffectiveSettings, getSavedSettings, saveSettings } = require('./config');
 const { createJiraClient } = require('../../../shared/server/jira');
 const { createBugTickets } = require('./bug-tickets');
+const { taskAggregations, groupCounts } = require('./run-summary');
 const recentRunTools = import('../lib/versions.js').then(rules => require('./recent-runs')(rules));
 
 /** Wrap an async handler so OpenSearch connectivity errors become clean HTTP responses. */
@@ -90,9 +91,9 @@ function visibleJiraIssues(query) {
 }
 
 /** Read complete run groups; stop between searches when the response closes.
- * Paged callers request metadata only. Legacy callers retain all aggregates.
+ * Paged callers can add task counters. Legacy callers retain their aggregates.
  */
-async function readSuiteRunGroups(query, search, { isClosed = () => false, metadataOnly = false } = {}) {
+async function readSuiteRunGroups(query, search, { isClosed = () => false, metadataOnly = false, includeCounts = false } = {}) {
   const buckets = [];
   let after;
   do {
@@ -111,6 +112,7 @@ async function readSuiteRunGroups(query, search, { isClosed = () => false, metad
             ...(after ? { after } : {})
           },
           aggs: {
+            ...(includeCounts ? taskAggregations : {}),
             ...(!metadataOnly ? {
               pass_rate: { avg: { field: 'passed_int' } },
               passed: { filter: { term: { verdict: 'PASS' } } },
@@ -129,6 +131,7 @@ async function readSuiteRunGroups(query, search, { isClosed = () => false, metad
       }
     });
     if (isClosed()) return null;
+    if (response.timed_out || response._shards?.failed) throw new Error('Incomplete execution aggregation');
     const aggregation = response.aggregations?.suite_runs;
     buckets.push(...bucketList(aggregation));
     after = aggregation?.after_key;
@@ -140,6 +143,7 @@ async function readSuiteRunGroups(query, search, { isClosed = () => false, metad
       suite: bucket.key.suite,
       invocationId: bucket.key.invocation,
       timestamp: latest.timestamp || null,
+      ...(includeCounts ? groupCounts(bucket) : {}),
       ...(!metadataOnly ? {
         tests: bucket.doc_count,
         passed: bucket.passed?.doc_count || 0,
@@ -196,6 +200,7 @@ async function addImageMetadata(rows, search, invocationField, isClosed = () => 
       } }
     });
     if (isClosed()) return null;
+    if (response.timed_out || response._shards?.failed) throw new Error('Incomplete image aggregation');
     for (const bucket of bucketList(response.aggregations?.builds)) {
       const date = bucket.verified?.latest?.hits?.hits?.[0]?._source?.operator_image?.build_date;
       const rawVersion = bucket.latestImage?.hits?.hits?.[0]?._source?.operator_image?.version;
@@ -227,6 +232,7 @@ module.exports = function registerRoutes(router, context) {
   let cachedClient;
   let cachedSignature;
   let recentGroupsCache;
+  let recentBugCountsCache;
   let recentScanSequence = 0;
   const imageInvocationFields = new WeakMap();
   let jiraClient;
@@ -606,6 +612,8 @@ module.exports = function registerRoutes(router, context) {
    *       - { in: query, name: limit, schema: { type: integer, minimum: 1, maximum: 200 }, description: Limit run groups after ordering newest first }
    *       - { in: query, name: includeBugs, schema: { type: boolean, default: true }, description: Set false for lightweight run metadata without RCA retrieval }
    *       - { in: query, name: includeBugTickets, schema: { type: boolean, default: false }, description: Add per-row Jira search links in paged mode; exclude rca-scope-internal using verified Jira labels }
+   *       - { in: query, name: includeSummary, schema: { type: boolean, default: false }, description: Add per-run workflow and task counts and a summary across all runs for the selected versions. Bugs count distinct linked Jira issues excluding rca-scope-internal. Missing counters or unverified bug counts are null. Requires pageSize. }
+   *       - { in: query, name: bugsOnly, schema: { type: boolean, default: false }, description: 'Include runs with at least one verified eligible Jira issue before pagination, even if other keys are unresolved. Exact counts can remain null and bugFilterIncomplete reports incomplete coverage. Requires pageSize.' }
    *       - { in: query, name: dateFrom, schema: { type: string, format: date } }
    *       - { in: query, name: dateTo, schema: { type: string, format: date } }
    *       - { in: query, name: pageSize, schema: { type: integer, minimum: 1, maximum: 200 }, description: Opt into lightweight pagination across all run groups }
@@ -625,7 +633,7 @@ module.exports = function registerRoutes(router, context) {
     let tools;
     try { tools = await recentRunTools; } finally { res.removeListener('close', onEarlyClose); }
     if (disconnected) return;
-    const { parseRecentRuns, pageRecentRuns } = tools;
+    const { parseRecentRuns, pageRecentRuns, selectVersionRuns } = tools;
     const recent = parseRecentRuns(req.query);
     let limit = null;
     if (req.query.limit !== undefined) {
@@ -650,12 +658,12 @@ module.exports = function registerRoutes(router, context) {
       try {
         const client = (await getRuntimeClient()).client;
         if (closed) return;
-        let rows = !recent.refresh && recentGroupsCache?.client === client
+        let rows = !recent.refresh && recentGroupsCache?.client === client && (!recent.includeSummary || recentGroupsCache.includeCounts)
           && Date.now() < recentGroupsCache.expiresAt ? recentGroupsCache.rows : null;
         if (!rows) {
           const scanSequence = ++recentScanSequence;
           rows = await readSuiteRunGroups(query, (index, body) => client.search(index, body), {
-            metadataOnly: true, isClosed: () => closed
+            metadataOnly: true, includeCounts: recent.includeSummary, isClosed: () => closed
           });
           if (rows === null || closed) return;
           if (rows.length) {
@@ -665,15 +673,40 @@ module.exports = function registerRoutes(router, context) {
             if (rows === null || closed) return;
           }
           if (cachedClient === client && scanSequence > (recentGroupsCache?.sequence || 0)) {
-            recentGroupsCache = { client, rows, sequence: scanSequence, expiresAt: Date.now() + 10_000 };
+            recentGroupsCache = { client, rows, includeCounts: recent.includeSummary, sequence: scanSequence, expiresAt: Date.now() + 10_000 };
+          }
+        }
+        const includeGlobalBugs = recent.includeSummary || recent.filters.bugsOnly;
+        if (includeGlobalBugs) {
+          const sourceRows = rows;
+          const versionScope = JSON.stringify(recent.filters.versions);
+          if (!recent.refresh && recentBugCountsCache?.sourceRows === sourceRows && recentBugCountsCache.versionScope === versionScope && Date.now() < recentBugCountsCache.expiresAt) {
+            rows = recentBugCountsCache.rows;
+          } else {
+            const selectedRows = selectVersionRuns(sourceRows, recent.filters.versions);
+            const enriched = [];
+            // Bound the execution correlation query below OpenSearch's Boolean-clause limit.
+            for (let offset = 0; offset < selectedRows.length; offset += 200) {
+              enriched.push(...await enrichBugTickets(selectedRows.slice(offset, offset + 200), {
+                search: (index, body) => client.search(index, body), refresh: recent.refresh,
+                isClosed: () => closed, includeKeys: true
+              }));
+              if (closed) return;
+            }
+            const byRun = new Map(enriched.map(row => [JSON.stringify([row.suite, row.invocationId]), row]));
+            rows = sourceRows.map(row => byRun.get(JSON.stringify([row.suite, row.invocationId])) || row);
+            if (recentGroupsCache?.rows === sourceRows && enriched.every(row => row._bugKeys !== null)) {
+              recentBugCountsCache = { sourceRows, versionScope, rows, expiresAt: Date.now() + 10_000 };
+            }
           }
         }
         const page = pageRecentRuns(rows, recent);
-        if (req.query.includeBugTickets === 'true') {
+        if (req.query.includeBugTickets === 'true' && !includeGlobalBugs) {
           page.rows = await enrichBugTickets(page.rows, {
             search: (index, body) => client.search(index, body), refresh: recent.refresh, isClosed: () => closed
           });
         }
+        if (req.query.includeBugTickets !== 'true') for (const row of page.rows) delete row.bugTickets;
         if (!closed) return res.json(page);
       } catch (err) {
         if (!closed) throw err;

@@ -10,8 +10,12 @@
         </p>
         <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">{{ RECENT_RUNS_PAGE_SIZE }} runs per page. Click a column heading to sort. All dates are UTC.</p>
       </div>
-      <button type="button" :disabled="loading || searchPending" :class="buttonClass" @click="requestRuns(applied, true)">Refresh</button>
+      <div class="flex flex-wrap items-center gap-3">
+        <button type="button" :disabled="loading || searchPending" :class="buttonClass" @click="requestRuns(applied, true)">Refresh</button>
+      </div>
     </div>
+    <VersionSummaryPanel v-if="hasLoaded" v-model="summaryVersion" class="mb-5"
+      :versions="options.versions" :summary="summary" :selection-label="applied.versions.length > 1 ? `${applied.versions.length} selected versions` : ''" />
     <form aria-label="Run filters" class="mb-5 rounded-xl border border-gray-200 bg-white p-4 dark:border-gray-700 dark:bg-gray-800" @submit.prevent="applyFilters">
       <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <RecentVersionSelect v-model="draft.versions" :options="options.versions" @update:model-value="applyFilters" />
@@ -41,6 +45,9 @@
       <div class="mt-4 flex flex-wrap gap-3">
         <p class="self-center text-sm text-gray-500 dark:text-gray-400">Filters update automatically.</p>
         <button type="button" :class="buttonClass" @click="clearFilters">Clear filters</button>
+        <button type="button" :aria-pressed="draft.bugsOnly" :disabled="loading || searchPending"
+          :class="[buttonClass, draft.bugsOnly ? 'bg-primary-50 ring-1 ring-primary-400 dark:bg-primary-900/30' : '']"
+          @click="draft.bugsOnly = !draft.bugsOnly; applyFilters()">Contains bugs only</button>
       </div>
       <p v-if="invalidDateRange" role="alert" class="mt-3 text-sm text-amber-700 dark:text-amber-300">Start Date must be on or before End Date.</p>
     </form>
@@ -50,10 +57,14 @@
       <button v-if="!restoreError" type="button" :disabled="loading || searchPending" class="mt-2 text-sm font-semibold text-primary-700 dark:text-primary-300" @click="retryRuns">{{ restartRequired ? 'Return to first page' : 'Retry' }}</button>
     </div>
     <p v-if="loading || searchPending" role="status" class="mb-4 text-sm text-gray-500 dark:text-gray-400">{{ hasLoaded ? 'Updating recent runs…' : 'Loading recent runs…' }}</p>
+    <p v-if="bugFilterIncomplete" role="status" class="mb-4 text-sm text-amber-700 dark:text-amber-300">Some bug counts are unavailable. This filter shows only verified matches.</p>
     <div v-if="hasLoaded" :aria-busy="loading" class="overflow-hidden rounded-xl border border-gray-100 bg-white dark:border-gray-700 dark:bg-gray-800">
       <div class="relative overflow-x-auto">
-        <table class="w-full min-w-[64rem] table-fixed text-left text-sm">
+        <table class="compact-summary w-full min-w-[66rem] table-fixed text-left text-sm">
           <caption class="sr-only">Recent Workflow Validation runs. Select a run to open its details.</caption>
+          <colgroup>
+            <col v-for="(width, index) in columnWidths" :key="index" :style="{ width: `${width}%` }">
+          </colgroup>
           <thead class="border-b border-gray-100 text-xs uppercase tracking-wide text-gray-500 dark:border-gray-700 dark:text-gray-400">
             <tr>
               <th v-for="column in columns" :key="column.field" scope="col" :aria-label="column.label" :aria-sort="applied.sortField === column.field ? (applied.sortDir === 'asc' ? 'ascending' : 'descending') : 'none'" class="p-0">
@@ -65,6 +76,7 @@
                 </button>
               </th>
               <th scope="col" aria-label="Issues found" class="px-5 py-3">Issues found</th>
+              <th v-for="column in countColumns" :key="column.key" scope="col" :aria-label="column.label" class="px-4 py-3 text-right">{{ column.label }}</th>
             </tr>
           </thead>
           <tbody>
@@ -77,10 +89,17 @@
               </td>
               <td class="break-words px-5 py-4 font-mono text-xs text-gray-600 dark:text-gray-300">{{ run.rhoaiVersion ? versionLabel(run.rhoaiVersion) : 'Version unavailable' }}</td>
               <td class="whitespace-nowrap px-5 py-4 text-gray-600 dark:text-gray-300">
-                <time v-if="run.buildDateStatus === 'verified' && validTime(run.buildDate)" :datetime="run.buildDate">{{ recordedTime(run.buildDate) }}</time>
+                <time v-if="run.buildDateStatus === 'verified' && validTime(run.buildDate)" :datetime="run.buildDate">
+                  <span class="inline-block whitespace-nowrap">{{ recordedTime(run.buildDate).split(', ')[0] }},</span>{{ ' ' }}<span class="inline-block whitespace-nowrap">{{ recordedTime(run.buildDate).split(', ')[1] }}</span>
+                </time>
                 <span v-else title="No verified RHOAI operator image build time is recorded for this run.">unavailable</span>
               </td>
-              <td class="whitespace-nowrap px-5 py-4 text-gray-600 dark:text-gray-300"><time v-if="validTime(run.timestamp)" :datetime="run.timestamp">{{ recordedTime(run.timestamp) }}</time><span v-else>Unavailable</span></td>
+              <td class="whitespace-nowrap px-5 py-4 text-gray-600 dark:text-gray-300">
+                <time v-if="validTime(run.timestamp)" :datetime="run.timestamp">
+                  <span class="inline-block whitespace-nowrap">{{ recordedTime(run.timestamp).split(', ')[0] }},</span>{{ ' ' }}<span class="inline-block whitespace-nowrap">{{ recordedTime(run.timestamp).split(', ')[1] }}</span>
+                </time>
+                <span v-else>Unavailable</span>
+              </td>
               <td class="px-5 py-4">
                 <a v-if="run.bugTickets?.status === 'ready' && safeExternalUrl(run.bugTickets.url)"
                   :href="safeExternalUrl(run.bugTickets.url)" target="_blank" rel="noopener noreferrer"
@@ -90,8 +109,10 @@
                 <span v-else-if="run.bugTickets?.status === 'empty'" class="text-xs text-gray-500 dark:text-gray-400" title="No eligible Jira issues are recorded for this run.">No issues recorded</span>
                 <span v-else class="text-xs text-gray-500 dark:text-gray-400" title="Issue associations or Jira labels could not be verified. Use Refresh to retry.">Issues unavailable</span>
               </td>
+              <td v-for="column in countColumns" :key="column.key" class="px-4 py-4 text-right tabular-nums"
+                :class="run[column.key] > 0 && column.tone ? column.tone : 'text-gray-600 dark:text-gray-300'">{{ formatCount(run[column.key]) }}</td>
             </tr>
-            <tr v-if="!runs.length"><td colspan="5" class="px-5 py-12 text-center text-gray-500 dark:text-gray-400">{{ page.total ? 'This page has changed. Use Previous to return to the first page.' : hasFilters ? 'No runs match these filters.' : 'No runs are available.' }}</td></tr>
+            <tr v-if="!runs.length"><td colspan="11" class="px-5 py-12 text-center text-gray-500 dark:text-gray-400">{{ page.total ? 'This page has changed. Use Previous to return to the first page.' : hasFilters ? 'No runs match these filters.' : 'No runs are available.' }}</td></tr>
           </tbody>
         </table>
       </div>
@@ -99,6 +120,7 @@
         <p aria-live="polite" class="text-sm text-gray-600 dark:text-gray-300">Showing {{ page.start }}–{{ page.end }} of {{ page.total }} runs</p>
         <div class="flex gap-3"><button type="button" aria-label="Previous page" :disabled="loading || searchPending || page.previousCursor === null" :class="buttonClass" @click="loadPage(page.previousCursor)">Previous</button><button type="button" aria-label="Next page" :disabled="loading || searchPending || page.nextCursor === null" :class="buttonClass" @click="loadPage(page.nextCursor)">Next</button></div>
       </nav>
+      <p class="border-t border-gray-100 px-5 py-3 text-xs text-gray-500 dark:border-gray-700 dark:text-gray-400">The summary includes all suite runs for the selected versions. — means a count is unavailable.</p>
     </div>
   </div>
 </template>
@@ -106,6 +128,7 @@
 import { computed, inject, onBeforeUnmount, onMounted, reactive, ref, watch } from 'vue'
 import { RECENT_RUNS_PAGE_SIZE, formatSuiteName, syncQueryParams, useWorkflowValidation } from '../composables/useWorkflowValidation'
 import RecentVersionSelect from '../components/RecentVersionSelect.vue'
+import VersionSummaryPanel from '../components/VersionSummaryPanel.vue'
 import * as versionRules from '../../lib/versions.js'
 import { safeExternalUrl } from '../utils/external-url'
 const { normalizeVersions, versionLabel } = versionRules
@@ -117,8 +140,17 @@ const columns = [
   { field: 'buildDate', label: 'RHOAI build (UTC)', sortLabel: 'Sort RHOAI build time', firstDirection: 'desc' },
   { field: 'timestamp', label: 'Executed at (UTC)', sortLabel: 'Sort execution time', firstDirection: 'desc' }
 ]
-const fields = { suite: 'recentSuite', runQuery: 'recentRun', datePreset: 'recentDatePreset', dateFrom: 'recentFrom', dateTo: 'recentTo', sortField: 'recentSortField', sortDir: 'recentSort', cursor: 'recentCursor' }
-const defaults = () => ({ versions: [], suite: '', runQuery: '', datePreset: 'all', dateFrom: '', dateTo: '', sortField: 'timestamp', sortDir: 'desc', cursor: '' })
+const countColumns = [
+  { key: 'workflows', label: 'Workflows' },
+  { key: 'tasks', label: 'Tasks' },
+  { key: 'passed', label: 'Passed', tone: 'text-emerald-600 dark:text-emerald-400' },
+  { key: 'failed', label: 'Failed', tone: 'text-red-600 dark:text-red-400' },
+  { key: 'skipped', label: 'Skipped', tone: 'text-amber-600 dark:text-amber-400' },
+  { key: 'bugs', label: 'Bugs' }
+]
+const columnWidths = [20, 8, 13, 13, 11, 8, 5, 6, 5, 6, 5]
+const fields = { suite: 'recentSuite', runQuery: 'recentRun', datePreset: 'recentDatePreset', dateFrom: 'recentFrom', dateTo: 'recentTo', sortField: 'recentSortField', sortDir: 'recentSort', cursor: 'recentCursor', bugsOnly: 'recentBugsOnly' }
+const defaults = () => ({ versions: [], suite: '', runQuery: '', datePreset: 'all', dateFrom: '', dateTo: '', sortField: 'timestamp', sortDir: 'desc', cursor: '', bugsOnly: false })
 const restoreError = ref('')
 /** Return inclusive UTC calendar bounds for a date preset. */
 function utcRange(days, now = new Date()) {
@@ -130,6 +162,7 @@ function fromUrl() {
   const query = defaults(), params = nav?.params?.value || {}
   restoreError.value = ''
   for (const [key, name] of Object.entries(fields)) if (typeof params[name] === 'string') query[key] = params[name]
+  query.bugsOnly = params.recentBugsOnly === 'true'
   if (params.recentVersions) {
     try {
       query.versions = JSON.parse(params.recentVersions)
@@ -148,12 +181,19 @@ const applied = ref(fromUrl()), draft = reactive({ ...applied.value, versions: [
 const invalidDateRange = computed(() => draft.dateFrom && draft.dateTo && draft.dateFrom > draft.dateTo)
 const runs = ref([]), options = ref({ versions: [], suites: [] }), page = ref({ total: 0, start: 0, end: 0, nextCursor: null, previousCursor: null })
 const loading = ref(false), searchPending = ref(false), hasLoaded = ref(false), error = ref(''), restartRequired = ref(false), lastAttempt = ref({ ...applied.value })
-const hasFilters = computed(() => applied.value.versions.length || ['suite', 'runQuery', 'dateFrom', 'dateTo'].some(key => applied.value[key]))
+const hasFilters = computed(() => applied.value.versions.length || ['suite', 'runQuery', 'dateFrom', 'dateTo'].some(key => applied.value[key]) || applied.value.bugsOnly)
+const emptySummary = () => ({ suiteRuns: null, workflows: null, tasks: null, passed: null, failed: null, skipped: null, bugs: null })
+const summary = ref(emptySummary()), bugFilterIncomplete = ref(false)
+const summaryVersion = computed({
+  get: () => applied.value.versions.length > 1 ? '__selected_versions__' : applied.value.versions[0] || '',
+  set: value => { draft.versions = value ? [value] : []; applyFilters() }
+})
 const inputClass = 'mt-1 block w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm dark:border-gray-600 dark:bg-gray-900'
 const buttonClass = 'rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 disabled:opacity-50 dark:border-gray-600 dark:text-gray-200 dark:hover:bg-gray-700'
 const formatter = new Intl.DateTimeFormat('en-GB', { dateStyle: 'medium', timeStyle: 'medium', timeZone: 'UTC' })
 const validTime = value => typeof value === 'string' && Number.isFinite(Date.parse(value))
 const recordedTime = value => formatter.format(new Date(value))
+const formatCount = value => value == null ? '—' : new Intl.NumberFormat('en-US').format(value)
 const canOpen = run => Boolean(run.suite && run.invocationId)
 let active = true, sequence = 0, controller, searchTimer
 /** Cancel a queued Run ID filter before another action takes over. */
@@ -176,16 +216,17 @@ async function requestRuns(query, refresh = false) {
   lastAttempt.value = requested
   loading.value = true; error.value = ''; restartRequired.value = false
   try {
-    const { datePreset: _preset, ...params } = requested
-    const data = await getRecentRuns({ ...params, ...(refresh ? { refresh: true } : {}) }, { signal: controller.signal })
+    const { datePreset: _preset, bugsOnly, ...params } = requested
+    const data = await getRecentRuns({ ...params, ...(bugsOnly ? { bugsOnly: true } : {}), ...(refresh ? { refresh: true } : {}) }, { signal: controller.signal })
     if (!active || current !== sequence) return
     if (!Array.isArray(data.rows) || data.rows.length > RECENT_RUNS_PAGE_SIZE || !Number.isInteger(data.total) || !Number.isInteger(data.start) || !Number.isInteger(data.end)
       || !Array.isArray(data.options?.versions) || !Array.isArray(data.options?.suites) || !(data.nextCursor === null || typeof data.nextCursor === 'string') || !(data.previousCursor === null || typeof data.previousCursor === 'string')) throw new Error('The run service returned an invalid page. Please retry.')
+    summary.value = { ...emptySummary(), ...data.summary }; bugFilterIncomplete.value = data.bugFilterIncomplete === true
     runs.value = data.rows; page.value = { total: data.total, start: data.start, end: data.end, nextCursor: data.nextCursor, previousCursor: data.previousCursor }; options.value = data.options
     // Keep the original spelling while a restored cursor still depends on its scope.
     if (!requested.cursor) requested.versions = normalizeVersions(requested.versions)
     applied.value = requested; hasLoaded.value = true
-    syncQueryParams(nav, { ...Object.fromEntries(Object.entries(fields).map(([key, name]) => [name, requested[key]])), recentVersions: requested.versions.length ? JSON.stringify(requested.versions) : '', recentVersion: '' })
+    syncQueryParams(nav, { ...Object.fromEntries(Object.entries(fields).map(([key, name]) => [name, key === 'bugsOnly' ? (requested[key] ? 'true' : '') : requested[key]])), recentVersions: requested.versions.length ? JSON.stringify(requested.versions) : '', recentVersion: '' })
   } catch (err) {
     if (active && current === sequence) {
       error.value = err.message || 'Failed to load recent runs.'
@@ -227,3 +268,26 @@ watch(() => nav?.params?.value, () => { const query = fromUrl(); if (JSON.string
 onMounted(() => requestRuns(applied.value))
 onBeforeUnmount(() => { active = false; sequence += 1; cancelSearch(); controller?.abort() })
 </script>
+
+<style scoped>
+.compact-summary :is(td, th:not(.p-0)) {
+  padding-inline: 0.625rem;
+}
+.compact-summary th button {
+  padding-inline: 0.625rem;
+  gap: 0.375rem;
+}
+.compact-summary thead {
+  text-transform: none;
+  letter-spacing: normal;
+}
+.compact-summary :is(th, td):nth-child(3),
+.compact-summary :is(th, td):nth-child(4) {
+  white-space: normal;
+}
+.compact-summary :is(th, td):nth-child(n + 6) {
+  padding-inline: 0.5rem;
+  text-align: center;
+  white-space: nowrap;
+}
+</style>

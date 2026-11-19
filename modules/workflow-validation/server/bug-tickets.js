@@ -7,7 +7,6 @@ const JIRA_BATCH_SIZE = 100;
 const LOOKUP_TIMEOUT_MS = 10_000;
 
 const identity = (row) => JSON.stringify([row.suite, row.invocationId]);
-const unavailable = (row) => ({ ...row, bugTickets: { status: 'unavailable' } });
 
 /** Read every matching OpenSearch page without broadening the supplied run scope. */
 async function readAll(search, index, body, isClosed) {
@@ -93,9 +92,12 @@ function createBugTickets({ getJiraClient }) {
     return { decisions, host: client.JIRA_HOST };
   }
 
-  /** Enrich only one displayed page; never infer Internal scope from RCA category. */
-  return async function bugTickets(rows, { search, refresh = false, isClosed = () => false }) {
+  /** Resolve a bounded set of runs; never infer Internal scope from RCA category. */
+  return async function bugTickets(rows, { search, refresh = false, isClosed = () => false, includeKeys = false }) {
     if (!rows.length) return rows;
+    const result = (row, bugTickets, keys = null, hasBugs = keys === null ? null : keys.length > 0) => ({ ...row, bugTickets,
+      ...(includeKeys ? { bugs: keys === null ? null : keys.length, hasBugs, _bugKeys: keys } : {}) });
+    const unavailable = (row, hasBugs = null) => result(row, { status: 'unavailable' }, null, hasBugs);
     try {
       const executionRows = await readAll(search, 'workflow-executions', {
         query: { bool: { should: rows.map(row => ({ bool: { filter: [
@@ -105,6 +107,11 @@ function createBugTickets({ getJiraClient }) {
         _source: ['telemetry_suite', 'invocation_id', 'workflow']
       }, isClosed);
       const scopes = new Map(rows.map(row => [identity(row), { workflows: new Set(), keys: new Set(), unknown: false }]));
+      const byInvocation = new Map();
+      for (const row of rows) {
+        if (!byInvocation.has(row.invocationId)) byInvocation.set(row.invocationId, []);
+        byInvocation.get(row.invocationId).push(row);
+      }
       for (const execution of executionRows) {
         const scope = scopes.get(identity({ suite: execution.telemetry_suite, invocationId: execution.invocation_id }));
         if (!scope) continue;
@@ -122,8 +129,7 @@ function createBugTickets({ getJiraClient }) {
       for (const finding of findings) {
         const workflows = [finding.workflow, ...(Array.isArray(finding.impacted_workflows) ? finding.impacted_workflows : [])]
           .filter(value => typeof value === 'string' && value);
-        for (const row of rows) {
-          if (finding.run_id !== row.invocationId) continue;
+        for (const row of byInvocation.get(finding.run_id) || []) {
           const scope = scopes.get(identity(row));
           if (!workflows.length) { scope.unknown = true; continue; }
           if (!workflows.some(workflow => scope.workflows.has(workflow))) continue;
@@ -140,18 +146,18 @@ function createBugTickets({ getJiraClient }) {
         try { ({ decisions, host } = await withinDeadline(labelsFor(keys, refresh))); }
         catch { /* Unverified labels remain unknown; metadata and other row states survive. */ }
       }
-      if (isClosed()) return rows.map(unavailable);
+      if (isClosed()) return rows.map(row => unavailable(row));
       return rows.map(row => {
         const scope = scopes.get(identity(row));
-        if (!scope.workflows.size || scope.unknown || [...scope.keys].some(key => !decisions.has(key))) return unavailable(row);
         const eligible = [...scope.keys].filter(key => decisions.get(key)).sort();
-        if (!eligible.length) return { ...row, bugTickets: { status: 'empty' } };
+        if (!scope.workflows.size || scope.unknown || [...scope.keys].some(key => !decisions.has(key))) return unavailable(row, eligible.length ? true : null);
+        if (!eligible.length) return result(row, { status: 'empty' }, []);
         const url = new URL('/issues/', host);
         if (url.protocol !== 'https:' || url.username || url.password) return unavailable(row);
         url.searchParams.set('jql', `key IN (${eligible.join(', ')}) AND ${LABEL_FILTER}`);
-        return { ...row, bugTickets: { status: 'ready', url: url.href } };
+        return result(row, { status: 'ready', url: url.href }, eligible);
       });
-    } catch { return rows.map(unavailable); }
+    } catch { return rows.map(row => unavailable(row)); }
   };
 }
 
