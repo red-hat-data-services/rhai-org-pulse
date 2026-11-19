@@ -85,6 +85,7 @@ export const viewOwners = {
   'team-tracker/manage':                           'Alex Corvin',
   'team-tracker/manager-dashboard':                'Alex Corvin',
   'team-tracker/org-dashboard':                    'Alex Corvin',
+  'team-tracker/org-explorer':                     'Dipanshu Gupta',
   'team-tracker/people':                           'Dipanshu Gupta',
   'team-tracker/person-detail':                    'Dipanshu Gupta',
   'team-tracker/reports':                          'Alex Corvin',
@@ -156,7 +157,6 @@ export const viewOwners = {
   'releases/reports/rhoai-component-architectures': 'Waldemar Znoinski',
 
   // team-tracker > reports
-  'team-tracker/reports/allocation':               'Alex Corvin',
   'team-tracker/reports/team-comparison':          'Alex Corvin',
   'team-tracker/reports/trends':                   'Alex Corvin',
 }

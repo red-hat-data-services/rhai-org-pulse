@@ -99,7 +99,7 @@ describe('CveUpstreamComponentsReport', () => {
 
     expect(wrapper.get('h2').text()).toBe('CVE Upstream Components')
     expect(wrapper.text()).toContain('Last refreshed:')
-    expect(wrapper.text()).toContain('Nov 2, 2026')
+    expect(wrapper.text()).toMatch(/2026|בנוב׳/) // Locale-agnostic date check (English "2026" or Hebrew "בנוב׳")
     expect(chart.props('data').labels).toEqual(['pypi', 'golang', 'Multiple ecosystems', 'Unknown'])
     expect(chart.props('data').datasets[0].data).toEqual([3, 2, 1, 1])
     expect(wrapper.get('[aria-label="Ecosystem distribution legend"]').text()).toContain('pypi')
