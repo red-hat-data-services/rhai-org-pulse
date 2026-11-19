@@ -46,6 +46,9 @@ show an unavailable count. The bug filter includes a run with any verified
 eligible issue, even when other keys in that run remain unresolved. Its exact
 count stays unavailable in that case. The filter runs before pagination and
 reports incomplete coverage.
+Verified labels from completed Jira batches or the cache remain available if a
+later batch fails or times out. Runs with unresolved keys keep unavailable exact
+counts, while a verified eligible issue still keeps the run in the bug filter.
 
 The original table retains suite/run ID, version, build time, execution time,
 Jira links, filters, sorting, and pagination. Workflow, task, passed, failed,

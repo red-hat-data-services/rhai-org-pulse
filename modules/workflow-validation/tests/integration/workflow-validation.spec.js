@@ -78,6 +78,40 @@ async function mockTrendSuites(page) {
 }
 
 test.describe('Workflow Validation module @workflow-validation', () => {
+  test('keeps verified bug matches when a later Jira batch fails', async ({ page }) => {
+    const { createBugTickets } = require('../../server/bug-tickets')
+    const keys = Array.from({ length: 101 }, (_, index) => `RHOAIENG-${1000 + index}`)
+    const runs = ['batch-verified', 'batch-mixed', 'batch-unresolved'].map(invocationId => ({ ...summaryRows[0], invocationId }))
+    let requests = 0
+    const enrich = createBugTickets({ getJiraClient: () => ({ JIRA_HOST: 'https://redhat.atlassian.net',
+      jiraRequest: async (_path, { body }) => {
+        if (++requests === 2) throw new Error('Later Jira batch failed')
+        return { issues: body.jql.match(/RHOAIENG-\d+/g).map(key => ({ key, fields: { labels: [] } })), isLast: true }
+      }
+    }) })
+    const findings = [
+      { run_id: runs[0].invocationId, bug_key: keys[0] },
+      ...keys.map(bug_key => ({ run_id: runs[1].invocationId, bug_key })),
+      { run_id: runs[2].invocationId, bug_key: keys.at(-1) }
+    ].map(doc => ({ workflow: 'workflow-a', ...doc }))
+    const rows = await enrich(runs, { includeKeys: true, search: async index => ({ hits: { hits:
+      (index === 'workflow-executions' ? runs.map(run => ({ telemetry_suite: run.suite, invocation_id: run.invocationId, workflow: 'workflow-a' }))
+        : findings).map(_source => ({ _source }))
+    } }) })
+    expect(requests).toBe(2)
+    await mockRecentData(page, rows)
+    await page.goto('/#/workflow-validation/recent-runs?recentVersion=3.7.0-ea.1')
+    await expect(page.getByRole('table').locator('tbody tr')).toHaveCount(3)
+    await page.getByRole('button', { name: 'Contains bugs only', exact: true }).click()
+    await expect(page.getByRole('table').locator('tbody tr')).toHaveCount(2)
+    await expect(page.getByRole('row', { name: 'Open run batch-verified', exact: true }).getByRole('cell').nth(10)).toHaveText('1')
+    await expect(page.getByRole('row', { name: 'Open run batch-mixed', exact: true }).getByRole('cell').nth(10)).toHaveText('—')
+    await expect(page.getByRole('row', { name: 'Open run batch-unresolved', exact: true })).toHaveCount(0)
+    await expect(page.getByText('Some bug counts are unavailable. This filter shows only verified matches.', { exact: true })).toBeVisible()
+    await expect(page.getByTestId('summary-suiteRuns').locator('dd').first()).toHaveText('3')
+    await expect(page.getByTestId('summary-bugs').locator('dd').first()).toHaveText('—')
+  })
+
   test('keeps a verified bug match when another Jira key is unresolved', async ({ page }) => {
     await mockRecentData(page, [{ ...summaryRows[0], bugs: null, hasBugs: true, _bugKeys: null, bugTickets: { status: 'unavailable' } }])
     await page.goto('/#/workflow-validation/recent-runs?recentVersion=3.7.0-ea.1')

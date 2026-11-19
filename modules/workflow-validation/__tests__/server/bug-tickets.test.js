@@ -15,6 +15,33 @@ function setup({ executions = [execution], findings = [finding], issues = [issue
   return { search, client, getJiraClient, enrich: createBugTickets({ getJiraClient }) }
 }
 
+/** Include runs with complete, partial, unresolved, internal-only, and empty bug scopes. */
+function batchedLookup() {
+  const keys = Array.from({ length: 201 }, (_, index) => `RHOAIENG-${1000 + index}`)
+  const rows = [row, ...['mixed', 'pending', 'internal', 'empty'].map(invocationId => ({ ...row, invocationId }))]
+  const test = setup({
+    executions: rows.map(item => ({ ...execution, invocation_id: item.invocationId })),
+    findings: [
+      { ...finding, bug_key: keys[0] },
+      ...keys.map(bug_key => ({ ...finding, run_id: 'mixed', bug_key })),
+      { ...finding, run_id: 'pending', bug_key: keys.at(-1) },
+      { ...finding, run_id: 'internal', bug_key: keys[1] }
+    ]
+  })
+  const labels = key => issue(key, key === keys[1] ? ['rca-scope-internal'] : [])
+  test.client.jiraRequest.mockImplementation(async (_path, { body }) => ({
+    issues: body.jql.match(/RHOAIENG-\d+/g).map(labels), isLast: true
+  }))
+  return { ...test, rows, keys, labels }
+}
+
+function expectPartialCounts(results) {
+  expect(results[0]).toMatchObject({ bugs: 1, hasBugs: true, _bugKeys: ['RHOAIENG-1000'], bugTickets: { status: 'ready' } })
+  expect(results[1]).toMatchObject({ bugs: null, hasBugs: true, _bugKeys: null, bugTickets: { status: 'unavailable' } })
+  expect(results[2]).toMatchObject({ bugs: null, hasBugs: null, _bugKeys: null, bugTickets: { status: 'unavailable' } })
+  for (const result of results.slice(3)) expect(result).toMatchObject({ bugs: 0, hasBugs: false, _bugKeys: [], bugTickets: { status: 'empty' } })
+}
+
 afterEach(() => vi.useRealTimers())
 
 describe('recent-run bug ticket links', () => {
@@ -123,6 +150,40 @@ describe('recent-run bug ticket links', () => {
     expect(test.client.jiraRequest).toHaveBeenCalledTimes(2)
     const jql = new URL(result.bugTickets.url).searchParams.get('jql')
     expect(jql.match(/RHOAIENG-\d+/g)).toHaveLength(105)
+  })
+
+  it('retains completed batch decisions when a later Jira batch fails', async () => {
+    const test = batchedLookup()
+    test.client.jiraRequest.mockImplementationOnce(test.client.jiraRequest.getMockImplementation())
+      .mockRejectedValueOnce(new Error('Later Jira batch failed'))
+    expectPartialCounts(await test.enrich(test.rows, { ...test, includeKeys: true }))
+    expect(test.client.jiraRequest).toHaveBeenCalledTimes(2)
+  })
+
+  it('retains cached decisions when the uncached Jira lookup fails', async () => {
+    const test = batchedLookup()
+    await test.enrich([test.rows[0], test.rows[3]], test)
+    test.client.jiraRequest.mockRejectedValue(new Error('Jira unavailable'))
+    expectPartialCounts(await test.enrich(test.rows, { ...test, includeKeys: true }))
+    expect(test.client.jiraRequest).toHaveBeenCalledTimes(2)
+  })
+
+  it('retains completed batches at the deadline and ignores late results without starting another batch', async () => {
+    vi.useFakeTimers()
+    const test = batchedLookup()
+    let finishLateBatch
+    test.client.jiraRequest.mockImplementationOnce(test.client.jiraRequest.getMockImplementation())
+      .mockImplementationOnce(() => new Promise(resolve => { finishLateBatch = resolve }))
+    const pending = test.enrich(test.rows, { ...test, includeKeys: true })
+    await vi.advanceTimersByTimeAsync(10_001)
+    const results = await pending
+    expectPartialCounts(results)
+    const beforeLateResult = JSON.stringify(results)
+    finishLateBatch({ issues: test.keys.slice(100, 200).map(test.labels), isLast: true })
+    await vi.advanceTimersByTimeAsync(0)
+    expect(JSON.stringify(results)).toBe(beforeLateResult)
+    expect(test.client.jiraRequest).toHaveBeenCalledTimes(2)
+    expect(vi.getTimerCount()).toBe(0)
   })
 
   it('caches verified labels for one minute and refreshes label changes explicitly', async () => {

@@ -112,3 +112,7 @@ of at most 200 suite runs. An empty version selection means all versions.
 Complete results share a 10-second cache tied to the metadata snapshot. Failed
 or partial results are not cached. Refresh bypasses both caches and the existing
 Jira label cache. `includeBugTickets` still controls whether links are returned.
+Verified cache hits and completed Jira batches survive a later batch failure or
+the 10-second Jira deadline. Runs with unresolved keys retain null exact counts;
+a verified eligible key still makes `hasBugs` true. Late responses after the
+deadline are ignored and do not start further Jira batches.
