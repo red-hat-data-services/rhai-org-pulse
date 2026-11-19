@@ -4062,11 +4062,11 @@ test.describe('Releases AI Planner tab @releases', () => {
     await aiPlannerTab.click();
     await page.waitForTimeout(DEFAULT_PAGE_WAIT_TIME);
 
-    const plannerFrame = page.frameLocator('iframe[title="Feature Planning Advisor — RHAI"]');
-    await expect(plannerFrame.locator('.hdr-title')).toContainText('Feature Planning Advisor');
-    await expect(plannerFrame.locator('#f-rel')).toHaveValue('');
-    await expect(plannerFrame.locator('#f-place')).toBeVisible();
-    await expect(plannerFrame.locator('#pm-tbl-wrap')).toBeVisible();
+    // Nov 2026: AI Planner is now a native Vue component (not iframe). Elements render directly on page.
+    await expect(page.locator('.hdr-title')).toContainText('Feature Planning Advisor');
+    await expect(page.locator('#f-rel')).toHaveValue('');
+    await expect(page.locator('#f-place')).toBeVisible();
+    await expect(page.locator('#pm-tbl-wrap')).toBeVisible();
 
     // Ignore 404 errors from AI Planner API endpoints in test mode (registry/outcomes endpoints may not be available)
     const nonFetchErrors = page.errors.filter(e => !e.message?.includes('Failed to load resource'));
@@ -4081,7 +4081,7 @@ test.describe('Releases AI Planner tab @releases', () => {
     const aiPlannerTab = page.locator('button', { hasText: 'AI Planner' });
     await expect(aiPlannerTab).toHaveClass(/border-primary-500/);
     await expect(page.getByRole('heading', { name: 'Under Construction' })).toHaveCount(0);
-    const plannerFrame = page.frameLocator('iframe[title="Feature Planning Advisor — RHAI"]');
+    const plannerFrame = page;
     await expect(plannerFrame.locator('.hdr-title')).toContainText('Feature Planning Advisor');
 
     // Ignore 404 errors from AI Planner API endpoints in test mode (registry/outcomes endpoints may not be available)
@@ -4094,7 +4094,7 @@ test.describe('Releases AI Planner tab @releases', () => {
     await page.waitForLoadState('networkidle');
     await page.waitForTimeout(DEFAULT_PAGE_WAIT_TIME);
 
-    const planner = page.frameLocator('iframe[title="Feature Planning Advisor — RHAI"]');
+    const planner = page;
     await planner.locator('#f-place').selectOption('EA1');
     await expect(planner.locator('#f-place')).toHaveValue('EA1');
 
@@ -4106,17 +4106,15 @@ test.describe('Releases AI Planner tab @releases', () => {
     await expect(planner.locator('#f-place')).toHaveValue('EA1');
   });
 
-  test('AI Planner iframe is addressed with the signed-in user', async ({ page }) => {
+  test('AI Planner native Vue component is addressed with the signed-in user', async ({ page }) => {
     await page.goto('/#/releases/plan?tab=ai-planner');
     await page.waitForLoadState('networkidle');
     await page.waitForTimeout(DEFAULT_PAGE_WAIT_TIME);
 
-    const frame = page.locator('iframe[title="Feature Planning Advisor — RHAI"]');
-    await expect(frame).toHaveAttribute('src', /\/ai-first-scheduler\/index\.html/);
-    // ?user= is only appended when the session exposes a uid, but the planner
-    // must still render when it does not.
+    // Nov 2026: AI Planner is now a native Vue component (not iframe). Verify it renders.
+    // Signed-in identity is resolved from session directly (no ?user= URL param needed anymore).
     await expect(
-      page.frameLocator('iframe[title="Feature Planning Advisor — RHAI"]').locator('.hdr-title')
+      page.locator('.hdr-title')
     ).toContainText('Feature Planning Advisor');
   });
 
@@ -4174,7 +4172,7 @@ test.describe('Releases AI Planner tab @releases', () => {
     const aiPlannerResponse = apiResponses.find(r => !r.url.includes('/status'));
     expect(aiPlannerResponse?.status).toBe(200);
 
-    const plannerFrame = page.frameLocator('iframe[title="Feature Planning Advisor — RHAI"]');
+    const plannerFrame = page;
     await expect(plannerFrame.locator('.hdr-title')).toContainText('Feature Planning Advisor');
     const tableRows = await plannerFrame.locator('#pm-tbl-wrap tbody tr').count();
     expect(tableRows).toBeGreaterThan(0);
@@ -4187,7 +4185,7 @@ test.describe('Releases AI Planner tab @releases', () => {
     await page.waitForLoadState('networkidle');
     await page.waitForTimeout(DEFAULT_PAGE_WAIT_TIME);
 
-    const plannerFrame = page.frameLocator('iframe[title="Feature Planning Advisor — RHAI"]');
+    const plannerFrame = page;
     const planSelect = plannerFrame.locator('#f-rel');
     const options = await planSelect.locator('option').allTextContents();
 
@@ -4206,7 +4204,7 @@ test.describe('Releases AI Planner tab @releases', () => {
     await page.waitForLoadState('networkidle');
     await page.waitForTimeout(DEFAULT_PAGE_WAIT_TIME);
 
-    const plannerFrame = page.frameLocator('iframe[title="Feature Planning Advisor — RHAI"]');
+    const plannerFrame = page;
     const placementSelect = plannerFrame.locator('#f-place');
     const beforeCount = await plannerFrame.locator('#pm-tbl-wrap tbody tr').count();
     await placementSelect.selectOption('GA');
@@ -4224,7 +4222,7 @@ test.describe('Releases AI Planner tab @releases', () => {
     await page.waitForLoadState('networkidle');
     await page.waitForTimeout(DEFAULT_PAGE_WAIT_TIME);
 
-    const plannerFrame = page.frameLocator('iframe[title="Feature Planning Advisor — RHAI"]');
+    const plannerFrame = page;
 
     // PM REC and DO REC columns were removed in PR #1749 (outcomes integration)
     // Verify the planner loads with at least one feature row
@@ -4240,8 +4238,8 @@ test.describe('Releases AI Planner tab @releases', () => {
     expect(unexpectedDemoResourceErrors(page)).toHaveLength(0);
   });
 
-  test('AI Planner receives live data from API via iframe', async ({ page }) => {
-    // Verify that AI Planner API data is sent to iframe
+  test('AI Planner receives live data from API', async ({ page }) => {
+    // Verify that AI Planner loads and displays live API data
     const apiDataReceived = [];
     page.on('request', request => {
       if (request.url().includes('/api/modules/releases/planning/ai-planner')) {
@@ -4262,15 +4260,13 @@ test.describe('Releases AI Planner tab @releases', () => {
     // API should have been called to fetch live data
     expect(apiDataReceived.length).toBeGreaterThan(0);
 
-    // Iframe should be visible and loaded
-    const iframe = page.locator('iframe[title="Feature Planning Advisor — RHAI"]');
-    await expect(iframe).toBeVisible();
+    // Nov 2026: AI Planner is now a native Vue component. Verify it's visible and loaded.
+    await expect(page.locator('.hdr-title')).toContainText('Feature Planning Advisor');
 
-    // Data from API should populate the iframe (features visible)
-    const plannerFrame = page.frameLocator('iframe[title="Feature Planning Advisor — RHAI"]');
-    const tableRows = await plannerFrame.locator('#pm-tbl-wrap tbody tr').count();
+    // Data from API should populate the component (features visible)
+    const tableRows = await page.locator('#pm-tbl-wrap tbody tr').count();
     expect(tableRows).toBeGreaterThan(0);
-    await expect(plannerFrame.locator('#pm-tbl-wrap tbody tr').filter({ hasText: liveFeatureKey })).toBeVisible();
+    await expect(page.locator('#pm-tbl-wrap tbody tr').filter({ hasText: liveFeatureKey })).toBeVisible();
 
     expect(unexpectedDemoResourceErrors(page)).toHaveLength(0);
   });
