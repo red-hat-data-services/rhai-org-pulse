@@ -1,0 +1,37 @@
+{
+  "rows": [
+    {
+      "suite": "release_gate",
+      "invocationId": "synthetic-summary-run",
+      "timestamp": "2026-11-19T12:00:00.000Z",
+      "rhoaiVersion": "3.7.0-ea.1",
+      "buildDate": null,
+      "buildDateStatus": null,
+      "workflows": 3,
+      "tasks": 12,
+      "passed": 6,
+      "failed": 3,
+      "skipped": 3,
+      "bugs": 2,
+      "hasBugs": true
+    }
+  ],
+  "summary": {
+    "suiteRuns": 2,
+    "workflows": 4,
+    "tasks": 14,
+    "passed": 8,
+    "failed": 3,
+    "skipped": null,
+    "bugs": 2
+  },
+  "total": 2,
+  "pageSize": 1,
+  "start": 1,
+  "end": 1,
+  "nextCursor": "opaque-example",
+  "previousCursor": null,
+  "options": { "versions": ["3.7.0-ea.1"], "suites": ["release_gate"] },
+  "sortField": "timestamp",
+  "sortDir": "desc"
+}

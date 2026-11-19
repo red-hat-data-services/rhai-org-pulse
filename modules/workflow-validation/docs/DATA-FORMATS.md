@@ -70,3 +70,49 @@ unknown. Jira lookup waits are limited to ten seconds per page. The shared
 client may finish an already-running request afterward; it cannot change a
 response that has already been returned. The Jira search URL also excludes
 the Internal label when the user opens it, covering later label changes.
+
+## Version summary and per-run counts
+
+Paged callers can add `includeSummary=true`. The response includes `summary`
+with `suiteRuns`, `workflows`, `tasks`, `passed`, `failed`, `skipped`, and `bugs`.
+Each row also includes `workflows`, `tasks`, `passed`, `failed`, `skipped`, and
+`bugs`, plus the nullable boolean `hasBugs`.
+See the synthetic [summary fixture](../__tests__/fixtures/recent-run-summary.json).
+
+One suite run is an exact `(telemetry_suite, invocation_id)` group. Workflows
+count execution documents, including repeat executions of the same workflow.
+Task counts sum `tasks_total`, `tasks_passed`, `tasks_failed`, and `tasks_skipped`.
+A counter is null if any execution in its scope lacks that counter. No skipped
+count is inferred from other counters. Empty selections have zero totals.
+Records without a suite or invocation ID do not belong to this view.
+
+The summary applies only the selected resolved versions, using the existing
+image-version priority, execution fallback, and confirmed version aliases.
+Suite, run substring, dates, sorting, cursor, and the bug filter affect the table
+only. Summary totals cover all pages and do not change when the table is narrowed.
+
+Per-run `bugs` counts distinct eligible Jira keys associated with that exact
+suite and invocation. Summary `bugs` counts the union of those keys, so it can
+be lower than the sum of row counts. Eligibility matches the existing Jira
+links, including the exclusion of `rca-scope-internal`. Unknown associations or
+labels produce null instead of zero. Internal key sets stay on the server.
+
+`hasBugs` is true when at least one eligible issue is verified, false when a
+complete lookup finds none, and null when the service cannot establish either.
+`bugsOnly=true` includes runs with `hasBugs: true`, before pagination, even when
+the exact `bugs` count is null because other keys remain unresolved. Its value
+is part of the cursor scope. The response adds `bugFilterIncomplete` when that
+filter is on. A true value means some exact bug counts are unavailable; runs
+without a verified eligible issue are excluded. Both new flags require
+`pageSize` and accept only `true` or `false`. Callers without either flag retain
+the existing contract.
+
+Version bug counts resolve associations only for selected versions, in batches
+of at most 200 suite runs. An empty version selection means all versions.
+Complete results share a 10-second cache tied to the metadata snapshot. Failed
+or partial results are not cached. Refresh bypasses both caches and the existing
+Jira label cache. `includeBugTickets` still controls whether links are returned.
+Verified cache hits and completed Jira batches survive a later batch failure or
+the 10-second Jira deadline. Runs with unresolved keys retain null exact counts;
+a verified eligible key still makes `hasBugs` true. Late responses after the
+deadline are ignored and do not start further Jira batches.

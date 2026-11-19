@@ -1,5 +1,6 @@
 /** Lightweight filtering and pagination of complete suite/invocation run groups. */
 const { createHash } = require('node:crypto');
+const { summarizeRuns } = require('./run-summary');
 /** Create paging helpers with the same release rules used by the client. */
 module.exports = function createRecentRuns({ parseVersion, normalizeVersion, normalizeVersions, compareVersions, suiteLabel }) {
   const SORT_FIELDS = ['timestamp', 'version', 'suite', 'buildDate'];
@@ -24,7 +25,7 @@ module.exports = function createRecentRuns({ parseVersion, normalizeVersion, nor
   /** Validate paged filters and bind a cursor to the selected criteria. */
   function parseRecentRuns(query) {
     if (query.pageSize === undefined) {
-      if (['cursor', 'sortDir', 'sortField', 'versions', 'runQuery', 'refresh', 'includeBugTickets'].some(key => query[key] !== undefined)) invalid('pageSize is required for recent-run pagination');
+      if (['cursor', 'sortDir', 'sortField', 'versions', 'runQuery', 'refresh', 'includeBugTickets', 'includeSummary', 'bugsOnly'].some(key => query[key] !== undefined)) invalid('pageSize is required for recent-run pagination');
       return null;
     }
     if (typeof query.pageSize !== 'string' || !/^[1-9]\d*$/.test(query.pageSize) || Number(query.pageSize) > 200) invalid('pageSize must be an integer between 1 and 200');
@@ -37,6 +38,11 @@ module.exports = function createRecentRuns({ parseVersion, normalizeVersion, nor
     if (selected.some(value => !value)) invalid('Invalid versions');
     const filters = { versions: normalizeVersions(selected), suite: text(query.suite, 'suite'),
       runQuery: text(query.runQuery, 'runQuery').toLowerCase(), dateFrom: date(query.dateFrom, 'dateFrom'), dateTo: date(query.dateTo, 'dateTo') };
+    for (const key of ['includeSummary', 'bugsOnly']) {
+      if (query[key] !== undefined && !['true', 'false'].includes(query[key])) invalid(`${key} must be true or false`);
+    }
+    // Preserve existing cursor scopes when the new filter is off.
+    if (query.bugsOnly === 'true') filters.bugsOnly = true;
     if (filters.dateFrom && filters.dateTo && filters.dateFrom > filters.dateTo) invalid('dateFrom must not be after dateTo');
     const direction = query.sortDir === undefined ? 'desc' : text(query.sortDir, 'sortDir');
     const sortField = query.sortField === undefined ? 'timestamp' : text(query.sortField, 'sortField');
@@ -53,7 +59,7 @@ module.exports = function createRecentRuns({ parseVersion, normalizeVersion, nor
     if (query.cursor) {
       if (typeof query.cursor !== 'string' || query.cursor.length > 8192 || !/^[\w-]+$/.test(query.cursor)) invalid('Invalid recent-run cursor');
       try { cursor = JSON.parse(Buffer.from(query.cursor, 'base64url').toString()); } catch { invalid('Invalid recent-run cursor'); }
-      const legacy = [1, 2].includes(cursor?.v) && sortField === 'timestamp' && selected.length <= 1;
+      const legacy = [1, 2].includes(cursor?.v) && sortField === 'timestamp' && selected.length <= 1 && !filters.bugsOnly;
       const validScope = cursor?.scope === scope || (legacy && cursor.scope === legacyScope);
       const value = cursor?.anchor?.[0];
       const validValue = ['timestamp', 'buildDate'].includes(sortField) ? value === null || (Number.isSafeInteger(value) && Number.isFinite(new Date(value).getTime()))
@@ -64,7 +70,7 @@ module.exports = function createRecentRuns({ parseVersion, normalizeVersion, nor
         || !cursor.anchor.slice(1).every(value => typeof value === 'string' && value.length > 0
           && (cursor.v === 1 || /^[a-f0-9]{64}$/.test(value)))) invalid('Cursor does not match the current filters and sorting');
     } else if (query.cursor !== undefined && typeof query.cursor !== 'string') invalid('Invalid recent-run cursor');
-    return { filters, direction, sortField, pageSize, scope, cursor, refresh: query.refresh === 'true' };
+    return { filters, direction, sortField, pageSize, scope, cursor, refresh: query.refresh === 'true', includeSummary: query.includeSummary === 'true' };
   }
   /** Convert a recorded timestamp to milliseconds; invalid or missing timestamps sort last. */
   function time(value) { const parsed = typeof value === 'string' && value ? Date.parse(value) : NaN; return Number.isFinite(parsed) ? parsed : null; }
@@ -91,6 +97,10 @@ module.exports = function createRecentRuns({ parseVersion, normalizeVersion, nor
   }
   /** Check the complete run identity independently of mutable sort metadata. */
   function sameRun(a, b) { return a.suite === b.suite && a.invocationId === b.invocationId; }
+  /** Match selected resolved versions before fetching their Jira associations. */
+  function selectVersionRuns(rows, versions) {
+    return rows.filter(row => !versions.length || versions.includes(normalizeVersion(row.rhoaiVersion)));
+  }
   /** Filter complete groups, sort globally, and return a stable anchored page. */
   function pageRecentRuns(allRows, request) {
     const { filters, direction, sortField, pageSize, scope, cursor } = request;
@@ -106,10 +116,11 @@ module.exports = function createRecentRuns({ parseVersion, normalizeVersion, nor
     const options = { versions: normalizeVersions(available.map(row => row.rhoaiVersion)), suites: [...new Set(available.map(row => row.suite))].sort() };
     const from = filters.dateFrom ? Date.parse(`${filters.dateFrom}T00:00:00Z`) : null;
     const until = filters.dateTo ? Date.parse(`${filters.dateTo}T00:00:00Z`) + 86400000 : null;
-    const rows = available.filter(row => {
+    const versionRows = selectVersionRuns(available, filters.versions);
+    const rows = versionRows.filter(row => {
       const recorded = time(row.timestamp);
-      return (!filters.versions.length || filters.versions.includes(normalizeVersion(row.rhoaiVersion)))
-        && (!filters.suite || row.suite === filters.suite)
+      return (!filters.suite || row.suite === filters.suite)
+        && (!filters.bugsOnly || row.hasBugs === true || row.bugs > 0)
         && (!filters.runQuery || row.invocationId.toLowerCase().includes(filters.runQuery))
         && (from === null || (recorded !== null && recorded >= from)) && (until === null || (recorded !== null && recorded < until));
     }).sort((a, b) => compareRows(a, b, sortField, direction));
@@ -134,12 +145,19 @@ module.exports = function createRecentRuns({ parseVersion, normalizeVersion, nor
     const encode = (row, way) => Buffer.from(JSON.stringify({ v: 3, scope, direction: way,
       ...(versionsHash ? { versionsHash } : {}),
       anchor: [sortField === 'suite' ? null : sortValue(row, sortField), hash(row.suite), hash(row.invocationId)] })).toString('base64url');
-    return { rows: page.map(({ suite, invocationId, timestamp, rhoaiVersion, buildDate = null, buildDateStatus = null }) => ({
-      suite, invocationId, timestamp, rhoaiVersion, buildDate, buildDateStatus })),
+    return { rows: page.map(row => {
+      const { suite, invocationId, timestamp, rhoaiVersion, buildDate = null, buildDateStatus = null } = row;
+      return { suite, invocationId, timestamp, rhoaiVersion, buildDate, buildDateStatus,
+        ...(request.includeSummary ? Object.fromEntries(['workflows', 'tasks', 'passed', 'failed', 'skipped', 'bugs'].map(key => [key, row[key] ?? null])) : {}),
+        ...(request.includeSummary ? { hasBugs: row.hasBugs ?? (row.bugs == null ? null : row.bugs > 0) } : {}),
+        ...(row.bugTickets ? { bugTickets: row.bugTickets } : {}) };
+    }),
+      ...(request.includeSummary ? { summary: summarizeRuns(versionRows) } : {}),
+      ...(filters.bugsOnly ? { bugFilterIncomplete: versionRows.some(row => row.bugs == null) } : {}),
       total: rows.length, pageSize, start: start < 0 ? 0 : start + 1, end: start < 0 ? 0 : end,
       nextCursor: page.length && end < rows.length ? encode(page.at(-1), 'after') : null,
       previousCursor: page.length && start > 0 ? encode(page[0], 'before') : !page.length && rows.length && cursor ? '' : null,
       options, sortField, sortDir: direction };
   }
-  return { parseRecentRuns, pageRecentRuns };
+  return { parseRecentRuns, pageRecentRuns, selectVersionRuns };
 };

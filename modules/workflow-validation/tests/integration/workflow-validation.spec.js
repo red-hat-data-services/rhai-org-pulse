@@ -1,4 +1,5 @@
 const { test, expect } = require('@playwright/test')
+const summaryRows = require('../../__tests__/fixtures/version-summary-runs.json')
 
 /** Build a complete paged response for browser fixtures. */
 function recentPage(rows, values = {}) {
@@ -77,6 +78,201 @@ async function mockTrendSuites(page) {
 }
 
 test.describe('Workflow Validation module @workflow-validation', () => {
+  test('keeps verified bug matches when a later Jira batch fails', async ({ page }) => {
+    const { createBugTickets } = require('../../server/bug-tickets')
+    const keys = Array.from({ length: 101 }, (_, index) => `RHOAIENG-${1000 + index}`)
+    const runs = ['batch-verified', 'batch-mixed', 'batch-unresolved'].map(invocationId => ({ ...summaryRows[0], invocationId }))
+    let requests = 0
+    const enrich = createBugTickets({ getJiraClient: () => ({ JIRA_HOST: 'https://redhat.atlassian.net',
+      jiraRequest: async (_path, { body }) => {
+        if (++requests === 2) throw new Error('Later Jira batch failed')
+        return { issues: body.jql.match(/RHOAIENG-\d+/g).map(key => ({ key, fields: { labels: [] } })), isLast: true }
+      }
+    }) })
+    const findings = [
+      { run_id: runs[0].invocationId, bug_key: keys[0] },
+      ...keys.map(bug_key => ({ run_id: runs[1].invocationId, bug_key })),
+      { run_id: runs[2].invocationId, bug_key: keys.at(-1) }
+    ].map(doc => ({ workflow: 'workflow-a', ...doc }))
+    const rows = await enrich(runs, { includeKeys: true, search: async index => ({ hits: { hits:
+      (index === 'workflow-executions' ? runs.map(run => ({ telemetry_suite: run.suite, invocation_id: run.invocationId, workflow: 'workflow-a' }))
+        : findings).map(_source => ({ _source }))
+    } }) })
+    expect(requests).toBe(2)
+    await mockRecentData(page, rows)
+    await page.goto('/#/workflow-validation/recent-runs?recentVersion=3.7.0-ea.1')
+    await expect(page.getByRole('table').locator('tbody tr')).toHaveCount(3)
+    await page.getByRole('button', { name: 'Contains bugs only', exact: true }).click()
+    await expect(page.getByRole('table').locator('tbody tr')).toHaveCount(2)
+    await expect(page.getByRole('row', { name: 'Open run batch-verified', exact: true }).getByRole('cell').nth(10)).toHaveText('1')
+    await expect(page.getByRole('row', { name: 'Open run batch-mixed', exact: true }).getByRole('cell').nth(10)).toHaveText('—')
+    await expect(page.getByRole('row', { name: 'Open run batch-unresolved', exact: true })).toHaveCount(0)
+    await expect(page.getByText('Some bug counts are unavailable. This filter shows only verified matches.', { exact: true })).toBeVisible()
+    await expect(page.getByTestId('summary-suiteRuns').locator('dd').first()).toHaveText('3')
+    await expect(page.getByTestId('summary-bugs').locator('dd').first()).toHaveText('—')
+  })
+
+  test('keeps a verified bug match when another Jira key is unresolved', async ({ page }) => {
+    await mockRecentData(page, [{ ...summaryRows[0], bugs: null, hasBugs: true, _bugKeys: null, bugTickets: { status: 'unavailable' } }])
+    await page.goto('/#/workflow-validation/recent-runs?recentVersion=3.7.0-ea.1')
+    await page.getByRole('button', { name: 'Contains bugs only', exact: true }).click()
+    await expect(page.getByRole('table').locator('tbody tr')).toHaveCount(1)
+    await expect(page.getByRole('table').locator('tbody tr').getByRole('cell').nth(10)).toHaveText('—')
+    await expect(page.getByText('Some bug counts are unavailable. This filter shows only verified matches.', { exact: true })).toBeVisible()
+    await expect(page.getByTestId('summary-bugs').locator('dd').first()).toHaveText('—')
+  })
+
+  test('shows API version totals across pages and filters suites with verified bugs', async ({ page }) => {
+    const rows = Array.from({ length: 21 }, (_, index) => ({
+      suite: 'release_gate', invocationId: `api-summary-${index}`, rhoaiVersion: '3.6.0',
+      timestamp: new Date(Date.UTC(2026, 10, 19, 12, 0, -index)).toISOString(),
+      workflows: 1, tasks: 4, passed: 2, failed: 1, skipped: 1,
+      bugs: index < 20 ? 1 : 0, _bugKeys: index < 20 ? ['RHOAIENG-1'] : []
+    }))
+    await mockRecentData(page, [...rows, { ...rows[0], invocationId: 'other-version', rhoaiVersion: '3.7.0-ea.1',
+      workflows: 2, tasks: 2, passed: 2, failed: 0, skipped: 0, bugs: 0, _bugKeys: [] }])
+    await page.goto('/#/workflow-validation/recent-runs?recentVersion=3.6.0')
+    const panel = page.getByRole('region', { name: 'Version summary', exact: true })
+    await expect(panel.getByTestId('summary-suiteRuns').locator('dd').first()).toHaveText('21')
+    await expect(panel.getByTestId('summary-tasks').locator('dd').first()).toHaveText('84')
+    await expect(panel.getByTestId('summary-bugs').locator('dd').first()).toHaveText('1')
+    await page.getByRole('button', { name: 'Next page', exact: true }).click()
+    await expect(page.getByText('Showing 21–21 of 21 runs', { exact: true })).toBeVisible()
+    await expect(panel.getByTestId('summary-tasks').locator('dd').first()).toHaveText('84')
+    await page.getByRole('button', { name: 'Contains bugs only', exact: true }).click()
+    await expect(page.getByText('Showing 1–20 of 20 runs', { exact: true })).toBeVisible()
+    await expect(page.getByRole('button', { name: 'Next page', exact: true })).toBeDisabled()
+    await expect(panel.getByTestId('summary-suiteRuns').locator('dd').first()).toHaveText('21')
+    await panel.getByRole('combobox', { name: 'Summary RHOAI version', exact: true }).selectOption('3.7.0-ea.1')
+    await expect(panel.getByTestId('summary-suiteRuns').locator('dd').first()).toHaveText('1')
+    await expect(panel.getByTestId('summary-bugs').locator('dd').first()).toHaveText('0')
+    await expect(page.getByText('No runs match these filters.', { exact: true })).toBeVisible()
+  })
+
+  test('appends API counts to the original Recent Runs table', async ({ page }) => {
+    const runRequests = []
+    page.on('request', request => {
+      if (request.url().includes('/api/modules/workflow-validation/test-suites')) runRequests.push(request.url())
+    })
+    await mockRecentData(page, summaryRows)
+    await page.goto('/#/workflow-validation/recent-runs?recentVersion=3.6.0')
+    const panel = page.getByRole('region', { name: 'Version summary', exact: true })
+    const suites = page.getByRole('table', { name: 'Recent Workflow Validation runs. Select a run to open its details.', exact: true })
+    await expect(suites.getByRole('columnheader')).toHaveText([
+      /Test suite/, /Version/, /RHOAI build \(UTC\)/, /Executed at \(UTC\)/, 'Issues found',
+      'Workflows', 'Tasks', 'Passed', 'Failed', 'Skipped', 'Bugs'
+    ])
+    await expect(page.getByRole('form', { name: 'Run filters', exact: true })).toBeVisible()
+    await expect(page.getByRole('button', { name: 'RHOAI versions', exact: true })).toBeVisible()
+    await expect(page.getByRole('combobox', { name: 'Test suite', exact: true })).toBeVisible()
+    await expect(page.getByRole('searchbox', { name: 'Run ID', exact: true })).toBeVisible()
+    await expect(page.getByRole('combobox', { name: 'Date Range', exact: true })).toBeVisible()
+    await expect(page.getByRole('button', { name: 'Next page', exact: true })).toBeDisabled()
+    await expect(page.getByRole('button', { name: 'Previous page', exact: true })).toBeDisabled()
+    for (const [key, value] of Object.entries({ suiteRuns: 4, workflows: 32, tasks: 137, passed: 117, failed: 8, skipped: 12, bugs: 4 })) {
+      await expect(panel.getByTestId(`summary-${key}`).locator('dd').first()).toHaveText(String(value))
+    }
+    await expect(suites.locator('tbody tr')).toHaveCount(4)
+    await expect(suites.getByRole('row', { name: /sample-aramco-001/ })).toContainText('29')
+    const originalCells = suites.getByRole('row', { name: 'Open run sample-aramco-001', exact: true }).getByRole('cell')
+    await expect(originalCells.nth(1)).toHaveText('3.6.0')
+    await expect(originalCells.nth(2).locator('time')).toHaveAttribute('datetime', '2026-11-10T10:47:11.000Z')
+    await expect(originalCells.nth(3).locator('time')).toHaveAttribute('datetime', '2026-11-18T12:00:00.000Z')
+    await expect(originalCells.nth(4).getByRole('link')).toHaveAttribute('target', '_blank')
+    await page.getByRole('combobox', { name: 'Summary RHOAI version', exact: true }).selectOption('3.7.0-ea.1')
+    await expect(panel.getByTestId('summary-workflows').locator('dd').first()).toHaveText('38')
+    await expect(panel.getByTestId('summary-tasks').locator('dd').first()).toHaveText('192')
+    await expect(panel.getByTestId('summary-bugs').locator('dd').first()).toHaveText('3')
+    await expect(suites.locator('tbody tr')).toHaveCount(3)
+    await expect(suites.getByText('sample-aramco-001', { exact: true })).toHaveCount(0)
+    expect(runRequests.length).toBeGreaterThan(0)
+    expect(runRequests.every(url => new URL(url).searchParams.get('includeSummary') === 'true')).toBe(true)
+  })
+
+  test('fits all run columns with balanced widths on desktop screens', async ({ page }) => {
+    await page.setViewportSize({ width: 1440, height: 1000 })
+    await mockRecentData(page, summaryRows)
+    await page.goto('/#/workflow-validation/recent-runs?recentVersion=3.6.0')
+    const table = page.getByRole('table')
+    await expect(table.getByRole('columnheader')).toHaveCount(11)
+    for (const width of [1440, 1728, 1920]) {
+      await page.setViewportSize({ width, height: 1000 })
+      await expect.poll(() => table.evaluate(element => element.parentElement.scrollWidth <= element.parentElement.clientWidth + 1)).toBe(true)
+      const widths = await table.evaluate(element => ({
+        table: element.getBoundingClientRect().width,
+        columns: Array.from(element.querySelectorAll('thead th'), cell => cell.getBoundingClientRect().width)
+      }))
+      expect(widths.columns[0] / widths.table).toBeGreaterThan(0.17)
+      expect(widths.columns[0] / widths.table).toBeLessThan(0.25)
+      expect(Math.abs(widths.columns[2] - widths.columns[3])).toBeLessThanOrEqual(1)
+    }
+    await expect(table.getByRole('row', { name: 'Open run sample-aramco-001', exact: true }).getByRole('cell')).toHaveCount(11)
+  })
+
+  test('filters suites with bugs while retaining the complete version summary', async ({ page }) => {
+    await mockRecentData(page, summaryRows)
+    await page.goto('/#/workflow-validation/recent-runs?recentVersion=3.6.0')
+    await expect(page.getByTestId('summary-suiteRuns').locator('dd').first()).toHaveText('4')
+    const toggle = page.getByRole('button', { name: 'Contains bugs only', exact: true })
+    await toggle.click()
+    await expect(toggle).toHaveAttribute('aria-pressed', 'true')
+    await expect(page.getByRole('table').locator('tbody tr')).toHaveCount(2)
+    await expect(page.getByText('Showing 1–2 of 2 runs', { exact: true })).toBeVisible()
+    await expect(page.getByTestId('summary-suiteRuns').locator('dd').first()).toHaveText('4')
+    await page.getByRole('combobox', { name: 'Summary RHOAI version', exact: true }).selectOption('3.5.2')
+    await expect(page.getByText('No runs match these filters.', { exact: true })).toBeVisible()
+    await expect(page.getByTestId('summary-tasks').locator('dd').first()).toHaveText('72')
+    await expect(page.getByTestId('summary-failed').locator('dd').first()).toHaveText('0')
+    await expect(page.getByTestId('summary-bugs').locator('dd').first()).toHaveText('0')
+    await toggle.click()
+    await expect(toggle).toHaveAttribute('aria-pressed', 'false')
+    await expect(page.getByRole('table').locator('tbody tr')).toHaveCount(2)
+  })
+
+  test('retains suite search, run search, sorting, date filters, and multiple versions with API data', async ({ page }) => {
+    await mockRecentData(page, summaryRows)
+    await page.goto('/#/workflow-validation/recent-runs?recentVersion=3.6.0')
+    const table = page.getByRole('table')
+    await page.getByRole('button', { name: 'Sort test suite', exact: true }).click()
+    await expect(table.locator('tbody tr').nth(1)).toHaveAttribute('aria-label', 'Open run sample-aramco-002')
+    await page.getByRole('combobox', { name: 'Test suite', exact: true }).selectOption('aramco')
+    await expect(table.locator('tbody tr')).toHaveCount(2)
+    await page.getByRole('searchbox', { name: 'Run ID', exact: true }).fill('sample-aramco-002')
+    await expect(table.locator('tbody tr')).toHaveCount(1)
+    await expect(table.locator('tbody tr')).toHaveAttribute('aria-label', 'Open run sample-aramco-002')
+    await expect(page.getByTestId('summary-suiteRuns').locator('dd').first()).toHaveText('4')
+    await page.getByRole('button', { name: 'Clear filters', exact: true }).click()
+    await expect(table.locator('tbody tr')).toHaveCount(9)
+    await expect(page.getByRole('combobox', { name: 'Summary RHOAI version', exact: true })).toHaveValue('')
+    await expect(page.getByTestId('summary-bugs').locator('dd').first()).toHaveText('7')
+    await selectRecentVersions(page, ['3.6.0', '3.7.0-ea.1'])
+    await expect(table.locator('tbody tr')).toHaveCount(7)
+    await expect(page.getByRole('combobox', { name: 'Summary RHOAI version', exact: true })).toHaveValue('__selected_versions__')
+    await expect(page.getByTestId('summary-suiteRuns').locator('dd').first()).toHaveText('7')
+    await expect(page.getByTestId('summary-bugs').locator('dd').first()).toHaveText('7')
+    await page.getByRole('combobox', { name: 'Date Range', exact: true }).selectOption('custom')
+    await page.getByLabel('Start Date (UTC)', { exact: true }).fill('2026-11-19')
+    await page.getByLabel('End Date (UTC)', { exact: true }).fill('2026-11-19')
+    await expect(table.locator('tbody tr')).toHaveCount(3)
+    await expect(page.getByTestId('summary-suiteRuns').locator('dd').first()).toHaveText('7')
+  })
+
+  test('keeps Jira links separate from original row navigation with API data', async ({ page, context }) => {
+    await context.route('https://redhat.atlassian.net/**', route => route.fulfill({ contentType: 'text/html', body: '<p>Mock Jira search</p>' }))
+    await mockRecentData(page, summaryRows)
+    await page.goto('/#/workflow-validation/recent-runs?recentVersion=3.6.0')
+    const row = page.getByRole('row', { name: 'Open run sample-aramco-001', exact: true })
+    const popupPromise = page.waitForEvent('popup')
+    await row.getByRole('link').click()
+    const popup = await popupPromise
+    await expect(popup).toHaveURL(/redhat\.atlassian\.net\/issues/)
+    await expect(page).toHaveURL(/workflow-validation\/recent-runs/)
+    await popup.close()
+    await row.focus()
+    await page.keyboard.press('Enter')
+    await expect(page).toHaveURL(/workflow-validation\/overview.*invocationId=sample-aramco-001/)
+  })
+
   test('restarts version pagination when late image metadata moves an unseen run', async ({ page }) => {
     const late = { suite: 'release_gate', invocationId: 'late-image-version', rhoaiVersion: '3.6.0',
       timestamp: '2026-11-01T00:00:00Z' }
@@ -524,12 +720,12 @@ test.describe('Workflow Validation module @workflow-validation', () => {
     })
     await page.goto('/#/workflow-validation/recent-runs?version=old&testSuite=old&invocationId=old')
     await expect(page.getByRole('heading', { name: 'Recent Runs', exact: true })).toBeVisible()
-    await expect(page.getByRole('columnheader')).toHaveCount(5)
+    await expect(page.getByRole('columnheader')).toHaveCount(11)
     await expect(page.getByRole('columnheader', { name: 'RHOAI build (UTC)', exact: true })).toBeVisible()
     await expect(page.getByRole('table').locator('tbody tr')).toHaveCount(1)
     await expect(page.getByText('Design preview', { exact: false })).toHaveCount(0)
     const recentRequest = requests.find(url => url.pathname.endsWith('/test-suites'))
-    expect(Object.fromEntries(recentRequest.searchParams)).toEqual({ pageSize: '20', includeBugs: 'false', includeBugTickets: 'true', sortField: 'timestamp', sortDir: 'desc' })
+    expect(Object.fromEntries(recentRequest.searchParams)).toEqual({ pageSize: '20', includeBugs: 'false', includeBugTickets: 'true', includeSummary: 'true', sortField: 'timestamp', sortDir: 'desc' })
 
     await expect(page.getByRole('link', { name: /View run/ })).toHaveCount(0)
     await page.getByRole('row', { name: 'Open run invocation-1' }).click()
@@ -592,7 +788,7 @@ test.describe('Workflow Validation module @workflow-validation', () => {
     }))
     await page.goto('/#/workflow-validation/recent-runs')
     await expect(page.getByRole('table').locator('tbody tr')).toHaveCount(2)
-    await expect(page.getByRole('columnheader')).toHaveCount(5)
+    await expect(page.getByRole('columnheader')).toHaveCount(11)
     await expect(page.getByRole('columnheader', { name: 'RHOAI build (UTC)', exact: true })).toBeVisible()
     await expect(page.getByRole('table').locator('tbody tr').first().locator('td').nth(2)).toHaveText('unavailable')
     await expect(page.locator('table time')).toHaveCount(0)
@@ -609,7 +805,7 @@ test.describe('Workflow Validation module @workflow-validation', () => {
     const tools = await mockRecentData(page, rows)
     await page.goto('/#/workflow-validation/recent-runs')
     const table = page.getByRole('table'), pages = page.getByRole('navigation', { name: 'Recent run pages' })
-    await expect(table.getByRole('columnheader')).toHaveText(['Test suite↕', 'Version↕', 'RHOAI build (UTC)↕', 'Executed at (UTC)↓', 'Issues found'])
+    await expect(table.getByRole('columnheader')).toHaveText(['Test suite↕', 'Version↕', 'RHOAI build (UTC)↕', 'Executed at (UTC)↓', 'Issues found', 'Workflows', 'Tasks', 'Passed', 'Failed', 'Skipped', 'Bugs'])
     const cell = table.locator('tbody tr').first().locator('td').nth(2)
     await expect(cell.locator('time')).toHaveText('2 Nov 2026, 22:00:00')
     await expect(cell.locator('br')).toHaveCount(0)
