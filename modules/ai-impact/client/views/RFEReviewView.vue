@@ -8,6 +8,7 @@ import { PHASES } from '../constants.js'
 import PhaseContent from '../components/PhaseContent.vue'
 import RFEDetailModal from '../components/RFEDetailModal.vue'
 import AIImpactGuide from '../components/AIImpactGuide.vue'
+import { useUsageTracking } from '../composables/useUsageTracking.js'
 
 const moduleNav = inject('moduleNav')
 const { navigateTo: crossNavigate } = useModuleLink()
@@ -22,6 +23,13 @@ const sortBy = ref('default')
 const passFailFilter = ref('all')
 const priorityFilter = ref('all')
 const statusFilter = ref('all')
+
+useUsageTracking({
+  filter: { aiInvolvement: filter, timeWindow, sortBy, passFail: passFailFilter, priority: priorityFilter, status: statusFilter },
+  search: searchQuery,
+  open: { rfe: selectedRFE },
+  toggle: { charts: chartExpanded },
+})
 
 const { rfeData, loading, error, load } = useAIImpact(timeWindow)
 const { assessments, loadAssessments, loadAssessmentDetail } = useAssessments()

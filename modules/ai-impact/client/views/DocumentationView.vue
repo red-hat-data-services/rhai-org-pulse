@@ -3,9 +3,12 @@ import { useDocumentation } from '../composables/useDocumentation.js'
 import { useDocMrKpi } from '../composables/useDocMrKpi.js'
 import DocumentationContent from '../components/DocumentationContent.vue'
 import AIImpactGuide from '../components/AIImpactGuide.vue'
+import { useUsageTracking } from '../composables/useUsageTracking.js'
 
 const { docData, loading, error, load } = useDocumentation()
 const { mrKpiData } = useDocMrKpi()
+
+useUsageTracking()
 </script>
 
 <template>

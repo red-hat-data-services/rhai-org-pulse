@@ -2,6 +2,8 @@
 import { ref, computed, watch, nextTick, inject } from 'vue'
 import { PHASES } from '../constants.js'
 import { ArrowLeft, ChevronRight, Sparkles, User, Pencil, Eye, RefreshCw, AlertTriangle, Play, FileText, StickyNote, Code, MessageSquare, HelpCircle, BookOpen, ChevronDown, Search, Zap, ChevronsRight, Archive, Globe, Lightbulb, GitPullRequest, Timer, Terminal, Package } from 'lucide-vue-next'
+import { useUsageTracking } from '../composables/useUsageTracking.js'
+import { trackUsage } from '@shared/client/services/usageTracking.js'
 
 const moduleNav = inject('moduleNav')
 
@@ -11,6 +13,16 @@ const featureLabelsExpanded = ref(false)
 const testPlanLabelsExpanded = ref(false)
 const buildReleaseLabelsExpanded = ref(false)
 const autofixLabelsExpanded = ref(false)
+
+useUsageTracking({
+  toggle: {
+    'labels-rfe': labelsExpanded,
+    'labels-feature': featureLabelsExpanded,
+    'labels-test-plan': testPlanLabelsExpanded,
+    'labels-build-release': buildReleaseLabelsExpanded,
+    'labels-autofix': autofixLabelsExpanded,
+  },
+})
 
 let updatingFromUrl = false
 
@@ -85,6 +97,7 @@ function getPhaseColors(phaseId) {
 function selectPhase(phase) {
   selectedPhase.value = phase
   if (!updatingFromUrl) {
+    if (phase) trackUsage('open', `phase-${phase.id}`)
     moduleNav.updateParams({ section: phase?.id })
   }
 }
