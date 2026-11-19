@@ -57,6 +57,7 @@ describe('Bug priority scoring', function () {
     expect(scoreBug(bug({ labels: ['odh-operator-auto-e2e-blocker'], reporter: { name: 'RHOAIENG AutomationBot' } }), NOW).scoreBreakdown.detectionSource.points).toBe(5)
     expect(scoreBug(bug({ labels: ['test-failed'], reporter: { name: 'DevTestOps Jira Bot' } }), NOW).scoreBreakdown.detectionSource.points).toBe(4)
     expect(scoreBug(bug({ reporter: { name: 'Workflow Validation' } }), NOW).scoreBreakdown.detectionSource.points).toBe(3)
+    expect(scoreBug(bug({ labels: ['cypress_found_bug'] }), NOW).scoreBreakdown.detectionSource.points).toBe(2)
     expect(scoreBug(bug({ labels: ['found_in_nightly'] }), NOW).scoreBreakdown.detectionSource.points).toBe(2)
     expect(scoreBug(bug({ labels: ['gate:release'] }), NOW).scoreBreakdown.detectionSource.points).toBe(2)
     expect(scoreBug(bug(), NOW).scoreBreakdown.detectionSource.points).toBe(0)
@@ -115,26 +116,68 @@ describe('Bug priority scoring', function () {
     expect(classification.primaryBugType).toEqual({ code: 'customer-linked', label: 'Affecting customer' })
     expect(classification.signals.map(signal => signal.code)).toEqual(expect.arrayContaining([
       'customer-linked',
-      'field-feedback',
       'prerelease-cve',
       'approved-release-blocker',
       'devtestops-test-failure'
     ]))
+    expect(classification.signals.map(signal => signal.code)).not.toContain('field-feedback')
     expect(classification.signals.find(signal => signal.code === 'prerelease-cve').evidenceData).toEqual({
       reporter: { id: 'account-123', name: 'DEVTESTOPS JIRA BOT' }
     })
   })
 
   it.each([
+    [{ labels: ['cypress_found_bug'] }, 'dashboard-integration-e2e'],
+    [{ labels: ['dsc-not-ready'] }, 'build-cannot-run'],
     [{ hasSfdcCases: true }, 'customer-linked'],
     [{ labels: ['prerelease-cve-remediation'], reporter: { name: 'devtestops jira bot' } }, 'prerelease-cve'],
     [{ releaseBlockerStatus: 'approved' }, 'approved-release-blocker'],
+    [{ labels: ['snyk'], reporter: { name: 'rhoaieng automationbot' } }, 'snyk'],
     [{ labels: ['AIBU_Feedback'] }, 'field-feedback'],
+    [{ labels: ['odh-operator-auto-e2e-blocker'], reporter: { name: 'rhoaieng automationbot' } }, 'operator-e2e'],
     [{ labels: ['test-failed'], reporter: { name: 'devtestops jira bot' } }, 'devtestops-e2e'],
     [{ reporter: { name: 'workflow validation' } }, 'workflow-validation'],
+    [{ reporter: { name: 'rhoaieng automationbot' } }, 'unclassified-automation'],
     [{ labels: ['product-bug'] }, 'component-team']
   ])('classifies primary Bug type %#', function (overrides, expected) {
     expect(classifyBug(bug(overrides)).primaryBugType.code).toBe(expected)
+  })
+
+  it('puts build-blocking source types ahead of customer, blocker, and Snyk evidence', function () {
+    const dashboard = classifyBug(bug({
+      hasSfdcCases: true,
+      releaseBlockerStatus: 'Approved',
+      labels: ['cypress_found_bug', 'dsc-not-ready', 'snyk', 'dependency'],
+      reporter: { name: 'RHOAIENG AutomationBot' }
+    }))
+    const build = classifyBug(bug({
+      hasSfdcCases: true,
+      releaseBlockerStatus: 'Approved',
+      labels: ['dsc-not-ready', 'snyk', 'code-analysis'],
+      reporter: { name: 'RHOAIENG AutomationBot' }
+    }))
+
+    expect(dashboard.primaryBugType.code).toBe('dashboard-integration-e2e')
+    expect(dashboard.signals.map(signal => signal.code)).toEqual(expect.arrayContaining([
+      'dashboard-integration-e2e',
+      'build-cannot-run',
+      'customer-linked',
+      'approved-release-blocker',
+      'snyk-sca'
+    ]))
+    expect(build.primaryBugType.code).toBe('build-cannot-run')
+    expect(build.signals.map(signal => signal.code)).toEqual(expect.arrayContaining([
+      'build-cannot-run',
+      'customer-linked',
+      'approved-release-blocker',
+      'snyk-sast'
+    ]))
+  })
+
+  it('requires an empty SFDC signal for field-feedback classification', function () {
+    const customer = classifyBug(bug({ hasSfdcCases: true, labels: ['AIBU_Feedback'] }))
+    expect(customer.primaryBugType.code).toBe('customer-linked')
+    expect(customer.signals.map(signal => signal.code)).not.toContain('field-feedback')
   })
 
   it('sums the highest matching dimension values without uncertainty bonuses', function () {
@@ -177,6 +220,20 @@ describe('Bug priority scoring', function () {
     expect(result.rawScore).toBe(46)
     expect(result.priorityScore).toBe(70)
     expect(result.guardrail.reasons[0]).toContain('Affecting-customer')
+  })
+
+  it.each([
+    ['cypress_found_bug', 'dashboard-integration-e2e', 10, 'Dashboard Integration E2E'],
+    ['dsc-not-ready', 'build-cannot-run', 8, 'Build Cannot Run']
+  ])('applies the %s P1 guardrail without adding category points', function (label, primaryCode, rawScore, reason) {
+    const result = scoreBug(bug({ labels: [label] }), NOW)
+
+    expect(result.primaryBugType.code).toBe(primaryCode)
+    expect(result.rawScore).toBe(rawScore)
+    expect(result.priorityScore).toBe(70)
+    expect(result.priorityBand.level).toBe('P1')
+    expect(result.guardrail).toMatchObject({ applied: true, minimumScore: 70 })
+    expect(result.guardrail.reasons).toContain(reason + ' guarantees at least P1')
   })
 
   it('uses UTC calendar dates and completed seven-day periods', function () {

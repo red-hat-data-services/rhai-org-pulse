@@ -1,4 +1,4 @@
-import { describe, it, expect, vi } from 'vitest'
+import { describe, it, expect, vi, beforeEach } from 'vitest'
 
 const {
   fetchFeatures,
@@ -6,7 +6,8 @@ const {
   normalizeIssue,
   enrichChildEpicCounts,
   JQL,
-  QUERY_FIELDS
+  QUERY_FIELDS,
+  _resetFeatureCacheForTests
 } = require('../feature-query')
 const { CUSTOM_FIELDS } = require('../../hygiene/jira-fetch')
 
@@ -384,6 +385,10 @@ describe('feature-query', function() {
   })
 
   describe('fetchFeaturesWithTimeout', function() {
+    beforeEach(function() {
+      _resetFeatureCacheForTests()
+    })
+
     it('returns null when jiraClient is missing', async function() {
       expect(await fetchFeaturesWithTimeout(null)).toBeNull()
     })
@@ -395,6 +400,16 @@ describe('feature-query', function() {
       var result = await fetchFeaturesWithTimeout(client, 5000)
       expect(result).toBeInstanceOf(Map)
       expect(result.get('RHAISTRAT-1').summary).toBe('Fast')
+    })
+
+    it('shares a cached result across callers so two tabs do not race independent live fetches', async function() {
+      var client = mockJiraClient([
+        { key: 'RHAISTRAT-1', fields: { summary: 'Fast' } }
+      ])
+      var first = await fetchFeaturesWithTimeout(client, 5000)
+      var second = await fetchFeaturesWithTimeout(client, 5000)
+      expect(second).toBe(first)
+      expect(client.fetchAllJqlResults).toHaveBeenCalledTimes(1)
     })
 
     it('returns null when the live fetch exceeds the timeout', async function() {

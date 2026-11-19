@@ -74,6 +74,7 @@ export const viewOwners = {
   'system-health/disconnected-repo-detail':        'Ajay Jaganathan',
   'system-health/e2e-run-detail':                  'Ajay Jaganathan',
   'system-health/odh-e2e-health':                  'Ajay Jaganathan',
+  'system-health/promotion-gates':                 'Giulia Naponiello',
   'system-health/quality-analysis':                'Dana Gutride',
   'system-health/test-execution':                  'Arthy Loganathan',
   'system-health/test-execution-detail':           'Arthy Loganathan',
@@ -84,7 +85,6 @@ export const viewOwners = {
   'team-tracker/manage':                           'Alex Corvin',
   'team-tracker/manager-dashboard':                'Alex Corvin',
   'team-tracker/org-dashboard':                    'Alex Corvin',
-  'team-tracker/org-explorer':                     'Dipanshu Gupta',
   'team-tracker/people':                           'Dipanshu Gupta',
   'team-tracker/person-detail':                    'Dipanshu Gupta',
   'team-tracker/reports':                          'Alex Corvin',
@@ -119,16 +119,15 @@ export const viewOwners = {
   'releases/deliver/risk-dashboard':               'Saiesh Prabhu',
 
   // releases > execute
-  'releases/execute/board':                        'Saiesh Prabhu',
-  'releases/execute/signals':                      'Alex Corvin',
-  'releases/execute/table':                        'Alex Corvin',
+  'releases/execute/feature-execution':            'Saiesh Prabhu',
+  'releases/execute/tech-debt-prioritization':     'Saiesh Prabhu',
 
   // releases > plan
   'releases/plan/ai-planner':                      'yuvalluria',
   'releases/plan/bu-feedback':                     'Saiesh Prabhu',
   'releases/plan/feature-readiness':               'Erle Marion',
+  'releases/plan/jira-plan':                       'Arjay Hinek',
   'releases/plan/pm-hub':                          'Saiesh Prabhu',
-  'releases/plan/tech-debt-prioritization':        'Saiesh Prabhu',
 
   // releases > registry
   'releases/registry/hygiene':                     'Alex Corvin',
@@ -157,6 +156,7 @@ export const viewOwners = {
   'releases/reports/rhoai-component-architectures': 'Waldemar Znoinski',
 
   // team-tracker > reports
+  'team-tracker/reports/allocation':               'Alex Corvin',
   'team-tracker/reports/team-comparison':          'Alex Corvin',
   'team-tracker/reports/trends':                   'Alex Corvin',
 }

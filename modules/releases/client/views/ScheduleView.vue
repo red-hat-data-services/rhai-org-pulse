@@ -278,6 +278,10 @@ function versionLabel(release) {
   var name = release.displayName || release.id
   var parsed = parseReleaseName(name)
   if (parsed) return parsed.major + '.' + parsed.minor + ' ' + parsed.milestone
+  var ea = /(\d+\.\d+)[.\s-]+(EA\d*)\b/i.exec(name)
+  if (ea) return ea[1] + ' ' + ea[2].toUpperCase()
+  parsed = parseReleaseName(release.id)
+  if (parsed) return parsed.major + '.' + parsed.minor + ' ' + parsed.milestone
   return null
 }
 
@@ -372,16 +376,16 @@ const availableVersions = computed(() => {
     }
   }
   list.sort(function (a, b) {
-    var ma = /^(\d+)\.(\d+)\s+(EA(\d+)|GA)$/.exec(a)
-    var mb = /^(\d+)\.(\d+)\s+(EA(\d+)|GA)$/.exec(b)
+    var ma = /^(\d+)\.(\d+)\s+(EA(\d*)|GA)$/.exec(a)
+    var mb = /^(\d+)\.(\d+)\s+(EA(\d*)|GA)$/.exec(b)
     if (!ma && !mb) return a.localeCompare(b)
     if (!ma) return 1
     if (!mb) return -1
     var ca = parseInt(ma[1]) * 100 + parseInt(ma[2])
     var cb = parseInt(mb[1]) * 100 + parseInt(mb[2])
     if (ca !== cb) return cb - ca
-    var oa = ma[3] === 'GA' ? 99 : parseInt(ma[4])
-    var ob = mb[3] === 'GA' ? 99 : parseInt(mb[4])
+    var oa = ma[3] === 'GA' ? 99 : parseInt(ma[4] || '0')
+    var ob = mb[3] === 'GA' ? 99 : parseInt(mb[4] || '0')
     return ob - oa
   })
   return list

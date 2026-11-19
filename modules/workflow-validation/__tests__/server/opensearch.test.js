@@ -1,9 +1,12 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
+vi.mock('../../../shared/server/jira', () => ({ createJiraClient: vi.fn() }))
+
 const {
   RUNS_INDEX,
   TASKS_INDEX,
   BUGS_INDEX,
+  IMAGES_INDEX,
   getOpenSearchConfig,
   createOpenSearchClient,
   bugFilters,
@@ -12,12 +15,26 @@ const {
   timestampRange
 } = require('../../server/opensearch')
 const registerRoutes = require('../../server/index')
+const { EventEmitter } = require('node:events')
 
 function jsonResponse(body, status = 200) {
   return new Response(JSON.stringify(body), {
     status,
     headers: { 'Content-Type': 'application/json' }
   })
+}
+
+/** True for a build-metadata search by run invocation IDs. */
+function isImagesQuery(url, body) {
+  return url.endsWith(`/${IMAGES_INDEX}/_search`) && Boolean(body?.query?.terms?.['invocation_id.keyword'] || body?.query?.terms?.invocation_id)
+}
+
+/** Image aggregation fixtures contain the newest verified hit for each invocation. */
+function imageResponse(entries = []) {
+  return jsonResponse({ aggregations: { builds: { buckets: entries.map(([key, date, version]) => ({ key,
+    verified: { latest: { hits: { hits: date === undefined ? [] : [{ _source: { operator_image: { build_date: date } } }] } } },
+    latestImage: { hits: { hits: version === undefined ? [] : [{ _source: { operator_image: { version } } }] } }
+  })) } } })
 }
 
 function makeRouter() {
@@ -30,16 +47,23 @@ function makeRouter() {
 }
 
 function makeResponse() {
-  const response = {
+  const response = Object.assign(new EventEmitter(), {
     statusCode: 200,
     body: null,
     status(code) { response.statusCode = code; return response },
     json(body) { response.body = body; return response }
-  }
+  })
   return response
 }
 
-function register(secrets = {}) {
+function register(secrets = {}, imageMapping = 'text') {
+  const fetch = globalThis.fetch
+  vi.stubGlobal('fetch', vi.fn((url, options) => url.includes(`/${IMAGES_INDEX}/_field_caps?`)
+    ? Promise.resolve(jsonResponse({ fields: imageMapping === 'text'
+      ? { invocation_id: { text: { searchable: true, aggregatable: false } },
+        'invocation_id.keyword': { keyword: { searchable: true, aggregatable: true } } }
+      : { invocation_id: { [imageMapping]: { searchable: true, aggregatable: true } } } }))
+    : fetch(url, options)))
   const router = makeRouter()
   registerRoutes(router, { requireAuth: vi.fn(), secrets })
   return router.routes
@@ -47,6 +71,7 @@ function register(secrets = {}) {
 
 afterEach(() => {
   vi.unstubAllGlobals()
+  vi.restoreAllMocks()
   delete process.env.WORKFLOW_VALIDATION_OPENSEARCH_URL
 })
 
@@ -80,6 +105,14 @@ describe('OpenSearch runtime client', () => {
     expect(url).toBe(`https://search.example/${RUNS_INDEX}/_search`)
     expect(options.headers.Authorization).toBe(`Basic ${Buffer.from('reader:secret').toString('base64')}`)
     expect(JSON.stringify(options)).not.toContain('WORKFLOW_VALIDATION_OPENSEARCH_PASSWORD')
+  })
+
+  it('reads field capabilities with the same authenticated client', async () => {
+    const request = vi.fn().mockResolvedValue(jsonResponse({ fields: {} }))
+    const client = createOpenSearchClient({ url: 'https://search.example', username: 'reader', password: 'secret' }, request)
+    await client.fieldCaps(IMAGES_INDEX, ['invocation_id', 'invocation_id.keyword'])
+    expect(request.mock.calls[0][0]).toBe(`https://search.example/${IMAGES_INDEX}/_field_caps?fields=invocation_id,invocation_id.keyword`)
+    expect(request.mock.calls[0][1].headers.Authorization).toBe(`Basic ${Buffer.from('reader:secret').toString('base64')}`)
   })
 
   it('supports an unauthenticated local POC and rejects partial credentials', async () => {
@@ -130,6 +163,40 @@ describe('OpenSearch runtime client', () => {
 })
 
 describe('workflow-validation live schema routes', () => {
+  it('adds verified-empty ticket states only for the selected page when requested', async () => {
+    const searches = []
+    vi.stubGlobal('fetch', vi.fn((url, options) => {
+      const body = JSON.parse(options.body)
+      if (!isImagesQuery(url, body)) searches.push({ url, body })
+      if (body.aggs?.suite_runs) return Promise.resolve(jsonResponse({ aggregations: { suite_runs: { buckets: [{
+        key: { suite: 'release_gate', invocation: 'run-1' }, latest: { hits: { hits: [{ _source: { timestamp: '2026-11-01T00:00:00Z' } }] } }
+      }] } } }))
+      if (url.includes(`/${RUNS_INDEX}/`)) return Promise.resolve(jsonResponse({ hits: { hits: [{ _source: {
+        telemetry_suite: 'release_gate', invocation_id: 'run-1', workflow: 'workflow-a'
+      } }] } }))
+      return Promise.resolve(jsonResponse({ hits: { hits: [] } }))
+    }))
+    const response = makeResponse()
+    await register()['/test-suites'].at(-1)({ query: { pageSize: '20', includeBugs: 'false', includeBugTickets: 'true' } }, response)
+    expect(response.statusCode).toBe(200)
+    expect(response.body.rows[0]).toMatchObject({ suite: 'release_gate', invocationId: 'run-1', bugTickets: { status: 'empty' } })
+    expect(searches).toHaveLength(3)
+    expect(searches[2].body.query.bool.filter).toContainEqual({ terms: { run_id: ['run-1'] } })
+    expect(JSON.stringify(searches[2])).not.toContain('category')
+  })
+
+  it.each([
+    { includeBugTickets: 'true' },
+    { pageSize: '20', includeBugTickets: 'invalid' },
+  ])('rejects invalid bug ticket enrichment parameters before searches: %j', async query => {
+    const fetch = vi.fn()
+    vi.stubGlobal('fetch', fetch)
+    const response = makeResponse()
+    await register()['/test-suites'].at(-1)({ query }, response)
+    expect(response.statusCode).toBe(400)
+    expect(fetch).not.toHaveBeenCalled()
+  })
+
   it('uses canonical workflow identity and never maps run verdict to task status', () => {
     expect(JSON.stringify(runFilters({ workflow: 'wf-a', verdict: 'PASS' })))
       .toContain('"workflow":"wf-a"')
@@ -451,6 +518,464 @@ describe('workflow-validation live schema routes', () => {
       suite: 'productization', invocationId: 'invocation-1', tests: 3,
       passed: 2, failed: 1, passRate: 2 / 3, duration: 180, rhodsOperatorDigest: 'abcdef0123456789'
     })])
+  })
+
+  it('adds only verified RHOAI build dates to paged rows', async () => {
+    const rows = [
+      { key: { suite: 'release_gate', invocation: 'run-verified' }, doc_count: 1,
+        latest: { hits: { hits: [{ _source: { timestamp: '2026-11-11T10:00:00Z', rhoai_version: '3.6' } }] } } },
+      { key: { suite: 'release_gate', invocation: 'run-unavailable' }, doc_count: 1,
+        latest: { hits: { hits: [{ _source: { timestamp: '2026-11-10T10:00:00Z', rhoai_version: '3.6' } }] } } },
+      { key: { suite: 'release_gate', invocation: 'run-no-doc' }, doc_count: 1,
+        latest: { hits: { hits: [{ _source: { timestamp: '2026-11-09T10:00:00Z', rhoai_version: '3.6' } }] } } }
+    ]
+    const requests = []
+    vi.stubGlobal('fetch', vi.fn(async (url, options) => {
+      const body = JSON.parse(options.body)
+      if (isImagesQuery(url, body)) {
+        requests.push({ url, body })
+        return imageResponse([['run-verified', '2026-11-05T05:14:40Z', 'v3.7.0-ea.1'], ['run-unavailable']])
+      }
+      return jsonResponse({ aggregations: { suite_runs: { buckets: rows } } })
+    }))
+    const response = makeResponse()
+    await register()['/test-suites'].at(-1)({ query: { pageSize: '20', includeBugs: 'false' } }, response)
+    expect(response.body.rows.map(({ invocationId, rhoaiVersion, buildDate, buildDateStatus }) => ({ invocationId, rhoaiVersion, buildDate, buildDateStatus })))
+      .toEqual([
+        { invocationId: 'run-verified', rhoaiVersion: '3.7.0-ea.1', buildDate: '2026-11-05T05:14:40.000Z', buildDateStatus: 'verified' },
+        { invocationId: 'run-unavailable', rhoaiVersion: '3.6', buildDate: null, buildDateStatus: 'unavailable' },
+        { invocationId: 'run-no-doc', rhoaiVersion: '3.6', buildDate: null, buildDateStatus: null }
+      ])
+    expect(requests).toHaveLength(1)
+    expect(requests[0].url).toMatch(new RegExp(`/${IMAGES_INDEX}/_search$`))
+    expect(requests[0].body.query).toEqual({ terms: { 'invocation_id.keyword': ['run-verified', 'run-unavailable', 'run-no-doc'] } })
+    expect(requests[0].body.size).toBe(0)
+    expect(requests[0].body.aggs.builds).toEqual({
+      terms: { field: 'invocation_id.keyword', size: 500 },
+      aggs: {
+        verified: {
+          filter: { term: { 'operator_image.build_date_status': 'verified' } },
+          aggs: { latest: { top_hits: { size: 1,
+            sort: [{ 'operator_image.build_date': { order: 'desc', missing: '_last' } }],
+            _source: ['operator_image.build_date'] } } }
+        },
+        latestImage: {
+          top_hits: {
+            size: 1,
+            sort: [{ 'operator_image.observed_at': { order: 'desc' } }],
+            _source: ['operator_image.version']
+          }
+        }
+      }
+    })
+  })
+
+  it('uses the root invocation field when the image index maps it as keyword', async () => {
+    const queries = []
+    vi.stubGlobal('fetch', vi.fn(async (url, options) => {
+      const body = JSON.parse(options.body)
+      if (isImagesQuery(url, body)) {
+        queries.push(body)
+        return imageResponse([['run-1', '2026-11-05T05:14:40Z']])
+      }
+      return jsonResponse({ aggregations: { suite_runs: { buckets: [
+        { key: { suite: 'release_gate', invocation: 'run-1' }, latest: { hits: { hits: [] } } }
+      ] } } })
+    }))
+    const response = makeResponse()
+    await register({}, 'keyword')['/test-suites'].at(-1)({ query: { pageSize: '20' } }, response)
+    expect(response.statusCode).toBe(200)
+    expect(response.body.rows[0].buildDate).toBe('2026-11-05T05:14:40.000Z')
+    expect(queries[0].query).toEqual({ terms: { invocation_id: ['run-1'] } })
+    expect(queries[0].aggs.builds.terms.field).toBe('invocation_id')
+  })
+
+  it.each([
+    ['v3.7.0-ea.1', '3.7.0-ea.1'],
+    ['3.7.0-ea.1', '3.7.0-ea.1'],
+    ['  v3.7.0-ea.1  ', '3.7.0-ea.1'],
+    ['', '3.4'],
+    ['   ', '3.4'],
+    [null, '3.4'],
+    [undefined, '3.4'],
+    [37, '3.4'],
+    ['v', '3.4']
+  ])('resolves image version %j without requiring a verified build date', async (version, expected) => {
+    vi.stubGlobal('fetch', vi.fn(async (url, options) => {
+      const body = JSON.parse(options.body)
+      if (isImagesQuery(url, body)) return imageResponse([['run-1', undefined, version]])
+      return jsonResponse({ aggregations: { suite_runs: { buckets: [{
+        key: { suite: 'release_gate', invocation: 'run-1' }, doc_count: 1,
+        latest: { hits: { hits: [{ _source: { timestamp: '2026-11-11T10:00:00Z', rhoai_version: '3.4' } }] } }
+      }] } } })
+    }))
+    const response = makeResponse()
+    await register()['/test-suites'].at(-1)({ query: { pageSize: '20' } }, response)
+    expect(response.body.rows).toEqual([expect.objectContaining({
+      invocationId: 'run-1', rhoaiVersion: expected, buildDate: null, buildDateStatus: 'unavailable'
+    })])
+  })
+
+  it('filters and sorts recent runs using image versions while preserving legacy versions', async () => {
+    const rows = [
+      ['run-image', '3.4'], ['run-current', '3.6.0'], ['run-legacy', '3.5.0']
+    ].map(([invocation, version]) => ({
+      key: { suite: 'release_gate', invocation }, doc_count: 1,
+      latest: { hits: { hits: [{ _source: { timestamp: '2026-11-11T10:00:00Z', rhoai_version: version } }] } }
+    }))
+    vi.stubGlobal('fetch', vi.fn(async (url, options) => {
+      const body = JSON.parse(options.body)
+      if (isImagesQuery(url, body)) return imageResponse([
+        ['run-image', undefined, 'v3.7.0-ea.1'], ['run-current', undefined, '3.6.0']
+      ])
+      return jsonResponse({ aggregations: { suite_runs: { buckets: rows } } })
+    }))
+    const routes = register()
+    const sorted = makeResponse()
+    await routes['/test-suites'].at(-1)({ query: { pageSize: '20', sortField: 'version', sortDir: 'asc' } }, sorted)
+    expect(sorted.body.rows.map(row => row.invocationId)).toEqual(['run-legacy', 'run-current', 'run-image'])
+    expect(sorted.body.options.versions).toContain('3.7.0-ea.1')
+    expect(sorted.body.options.versions).not.toContain('3.4')
+    const filtered = makeResponse()
+    await routes['/test-suites'].at(-1)({ query: { pageSize: '20', version: '3.7.0-ea.1' } }, filtered)
+    expect(filtered.body.rows.map(row => row.invocationId)).toEqual(['run-image'])
+  })
+
+  it('sorts the complete row set by RHOAI build date and keeps missing values last', async () => {
+    const rows = ['oldest', 'missing', 'newest'].map((name, index) => ({
+      key: { suite: 'release_gate', invocation: `run-${name}` }, doc_count: 1,
+      latest: { hits: { hits: [{ _source: { timestamp: new Date(Date.UTC(2026, 10, index + 1)).toISOString(), rhoai_version: '3.6' } }] } }
+    }))
+    vi.stubGlobal('fetch', vi.fn(async (url, options) => {
+      const body = JSON.parse(options.body)
+      if (isImagesQuery(url, body)) {
+        return imageResponse([['run-oldest', '2026-07-03T09:28:12Z'], ['run-newest', '2026-11-05T05:14:40Z']])
+      }
+      return jsonResponse({ aggregations: { suite_runs: { buckets: rows } } })
+    }))
+    const routes = register()
+    const desc = makeResponse()
+    await routes['/test-suites'].at(-1)({ query: { pageSize: '3', includeBugs: 'false', sortField: 'buildDate', sortDir: 'desc' } }, desc)
+    expect(desc.body.rows.map(row => row.invocationId)).toEqual(['run-newest', 'run-oldest', 'run-missing'])
+    const asc = makeResponse()
+    await routes['/test-suites'].at(-1)({ query: { pageSize: '3', includeBugs: 'false', sortField: 'buildDate', sortDir: 'asc' } }, asc)
+    expect(asc.body.rows.map(row => row.invocationId)).toEqual(['run-oldest', 'run-newest', 'run-missing'])
+  })
+
+  it.each([10_001, 65_537])('bounds image queries for %i invocations before global sorting', async count => {
+    let imageQueries = 0
+    const last = `run-${count - 1}`
+    vi.stubGlobal('fetch', vi.fn(async (url, options) => {
+      const body = JSON.parse(options.body)
+      if (isImagesQuery(url, body)) {
+        imageQueries++
+        expect(body.query.terms['invocation_id.keyword'].length).toBeLessThanOrEqual(500)
+        expect(body.size).toBe(0)
+        expect(body.aggs.builds.terms.size).toBe(500)
+        return imageResponse(body.query.terms['invocation_id.keyword'].includes(last) ? [[last, '2026-11-05T05:14:40Z']] : [])
+      }
+      const offset = Number(body.aggs.suite_runs.composite.after?.invocation || 0)
+      const end = Math.min(offset + 500, count)
+      return jsonResponse({ aggregations: { suite_runs: {
+        buckets: Array.from({ length: end - offset }, (_, index) => ({ key: { suite: 's', invocation: `run-${offset + index}` },
+          latest: { hits: { hits: [{ _source: { timestamp: '2026-11-11T00:00:00Z' } }] } } })),
+        ...(end < count ? { after_key: { suite: 's', invocation: String(end) } } : {})
+      } } })
+    }))
+    const response = makeResponse()
+    await register()['/test-suites'].at(-1)({ query: { pageSize: '1', sortField: 'buildDate' } }, response)
+    expect(response.statusCode).toBe(200)
+    expect(response.body.total).toBe(count)
+    expect(response.body.rows[0].invocationId).toBe(last)
+    expect(imageQueries).toBe(Math.ceil(count / 500))
+  })
+
+  it('uses grouped verified hits so duplicate documents cannot crowd out another invocation', async () => {
+    vi.stubGlobal('fetch', vi.fn(async (url, options) => {
+      const body = JSON.parse(options.body)
+      if (isImagesQuery(url, body)) {
+        expect(body.aggs.builds.terms).toEqual({ field: 'invocation_id.keyword', size: 500 })
+        expect(body.aggs.builds.aggs.verified.filter).toEqual({ term: { 'operator_image.build_date_status': 'verified' } })
+        expect(body.aggs.builds.aggs.verified.aggs.latest.top_hits.sort)
+          .toEqual([{ 'operator_image.build_date': { order: 'desc', missing: '_last' } }])
+        return jsonResponse({ hits: { total: { value: 4 } }, aggregations: { builds: { buckets: [
+          { key: 'a', doc_count: 3, verified: { latest: { hits: { hits: [{ _id: 'b',
+            _source: { operator_image: { build_date: '2026-11-06T05:14:40Z' } } }] } } } },
+          { key: 'b', doc_count: 1, verified: { latest: { hits: { hits: [{ _id: 'a',
+            _source: { operator_image: { build_date: '2026-11-05T05:14:40Z' } } }] } } } }
+        ] } } })
+      }
+      return jsonResponse({ aggregations: { suite_runs: { buckets: ['a', 'b'].map(invocation => ({
+        key: { suite: 's', invocation }, latest: { hits: { hits: [] } }
+      })) } } })
+    }))
+    const response = makeResponse()
+    await register()['/test-suites'].at(-1)({ query: { pageSize: '20', sortField: 'buildDate' } }, response)
+    expect(response.body.rows.map(row => [row.invocationId, row.buildDate])).toEqual([
+      ['a', '2026-11-06T05:14:40.000Z'], ['b', '2026-11-05T05:14:40.000Z']
+    ])
+  })
+
+  it.each([
+    ['2026-02-30T05:14:40Z', null], ['2026-11-05T05:14:40', null], ['not-a-date', null],
+    ['2026-11-05', null], ['2026-11-05T24:00:00Z', null], [undefined, null],
+    ['2024-02-29T23:30:00-02:00', '2024-03-01T01:30:00.000Z'],
+    ['2026-11-05T07:14:40.123456+02:00', '2026-11-05T05:14:40.123Z']
+  ])('validates build calendar dates and explicit timezones: %s', async (date, expected) => {
+    vi.stubGlobal('fetch', vi.fn(async (url, options) => isImagesQuery(url, JSON.parse(options.body))
+      ? imageResponse([['run', date]]) : jsonResponse({ aggregations: { suite_runs: { buckets: [
+        { key: { suite: 's', invocation: 'run' }, latest: { hits: { hits: [] } } }
+      ] } } })))
+    const response = makeResponse()
+    await register()['/test-suites'].at(-1)({ query: { pageSize: '20' } }, response)
+    expect(response.body.rows[0]).toMatchObject({ buildDate: expected, buildDateStatus: expected ? 'verified' : 'unavailable' })
+  })
+
+  it('caches build metadata with run groups until refresh or expiry, preserving next-page membership', async () => {
+    let now = 1000, scans = 0, images = 0
+    vi.spyOn(Date, 'now').mockImplementation(() => now)
+    vi.stubGlobal('fetch', vi.fn(async (url, options) => {
+      if (isImagesQuery(url, JSON.parse(options.body))) {
+        images++
+        return imageResponse([['a', '2026-11-05T00:00:00Z'], ['b', ...(images > 1 ? ['2026-11-06T00:00:00Z'] : [])]])
+      }
+      scans++
+      return jsonResponse({ aggregations: { suite_runs: { buckets: ['a', 'b'].map(invocation => ({
+        key: { suite: 's', invocation }, latest: { hits: { hits: [] } }
+      })) } } })
+    }))
+    const route = register()['/test-suites'].at(-1), first = makeResponse(), next = makeResponse()
+    const query = { pageSize: '1', sortField: 'buildDate' }
+    await route({ query }, first)
+    await route({ query: { ...query, cursor: first.body.nextCursor } }, next)
+    expect(next.body.rows[0]).toMatchObject({ invocationId: 'b', buildDate: null })
+    expect([scans, images]).toEqual([1, 1])
+    const refreshed = makeResponse()
+    await route({ query: { ...query, refresh: 'true' } }, refreshed)
+    expect(refreshed.body.rows[0].invocationId).toBe('b')
+    expect([scans, images]).toEqual([2, 2])
+    now += 10_001
+    await route({ query }, makeResponse())
+    expect([scans, images]).toEqual([3, 3])
+  })
+
+  it('returns a restart response when an image version changes after cache expiry', async () => {
+    let now = 1000, imageVersion = null
+    vi.spyOn(Date, 'now').mockImplementation(() => now)
+    vi.stubGlobal('fetch', vi.fn(async (url, options) => {
+      if (isImagesQuery(url, JSON.parse(options.body))) return imageResponse(
+        imageVersion ? [['b', undefined, imageVersion]] : [])
+      return jsonResponse({ aggregations: { suite_runs: { buckets: [['a', '3.5.0'], ['b', '3.6.0']].map(([invocation, rhoai_version]) => ({
+        key: { suite: 's', invocation }, latest: { hits: { hits: [{ _source: { rhoai_version } }] } }
+      })) } } })
+    }))
+    const route = register()['/test-suites'].at(-1), first = makeResponse(), cached = makeResponse()
+    const query = { pageSize: '1', sortField: 'version', sortDir: 'asc' }
+    await route({ query }, first)
+    imageVersion = 'v3.4.0'
+    const next = { ...query, cursor: first.body.nextCursor }
+    await route({ query: next }, cached)
+    expect(cached.body.rows[0].invocationId).toBe('b')
+    now += 10_001
+    const stale = makeResponse()
+    await route({ query: next }, stale)
+    expect(stale.statusCode).toBe(409)
+    expect(stale.body).toMatchObject({ code: 'STALE_CURSOR', error: expect.stringContaining('first page') })
+    const restarted = makeResponse()
+    await route({ query }, restarted)
+    expect(restarted.body.rows[0]).toMatchObject({ invocationId: 'b', rhoaiVersion: '3.4.0' })
+  })
+
+  it('stops image batches after disconnect and does not cache incomplete enrichment', async () => {
+    const response = makeResponse()
+    let images = 0, scans = 0
+    vi.stubGlobal('fetch', vi.fn(async (url, options) => {
+      if (isImagesQuery(url, JSON.parse(options.body))) {
+        if (++images === 1) response.emit('close')
+        return imageResponse()
+      }
+      scans++
+      return jsonResponse({ aggregations: { suite_runs: { buckets: Array.from({ length: 501 }, (_, index) => ({
+        key: { suite: 's', invocation: `run-${index}` }, latest: { hits: { hits: [] } }
+      })) } } })
+    }))
+    const route = register()['/test-suites'].at(-1)
+    await route({ query: { pageSize: '20', includeBugTickets: 'true' } }, response)
+    expect(images).toBe(1)
+    expect(response.body).toBeNull()
+    expect(response.listenerCount('close')).toBe(0)
+    await route({ query: { pageSize: '20' } }, makeResponse())
+    expect([scans, images]).toEqual([2, 3])
+  })
+
+  it('does not cache a failed image lookup', async () => {
+    let images = 0, scans = 0
+    vi.stubGlobal('fetch', vi.fn(async (url, options) => {
+      if (isImagesQuery(url, JSON.parse(options.body))) {
+        if (++images === 1) throw new Error('image lookup failed')
+        return imageResponse()
+      }
+      scans++
+      return jsonResponse({ aggregations: { suite_runs: { buckets: [
+        { key: { suite: 's', invocation: 'run' }, latest: { hits: { hits: [] } } }
+      ] } } })
+    }))
+    const route = register()['/test-suites'].at(-1), failed = makeResponse(), retry = makeResponse()
+    await route({ query: { pageSize: '20' } }, failed)
+    expect(failed.statusCode).toBe(503)
+    await route({ query: { pageSize: '20' } }, retry)
+    expect(retry.statusCode).toBe(200)
+    expect([scans, images]).toEqual([2, 2])
+  })
+
+  it('keeps newer enriched metadata cached when an older image query finishes later', async () => {
+    const pending = []
+    vi.stubGlobal('fetch', vi.fn(async (url, options) => isImagesQuery(url, JSON.parse(options.body))
+      ? new Promise(resolve => pending.push(resolve))
+      : jsonResponse({ aggregations: { suite_runs: { buckets: [
+        { key: { suite: 's', invocation: 'run' }, latest: { hits: { hits: [] } } }
+      ] } } })))
+    const route = register()['/test-suites'].at(-1)
+    const older = route({ query: { pageSize: '20' } }, makeResponse())
+    await vi.waitFor(() => expect(pending).toHaveLength(1))
+    const newer = route({ query: { pageSize: '20', refresh: 'true' } }, makeResponse())
+    await vi.waitFor(() => expect(pending).toHaveLength(2))
+    pending[1](imageResponse([['run', '2026-11-06T00:00:00Z']]))
+    await newer
+    pending[0](imageResponse([['run', '2026-11-05T00:00:00Z']]))
+    await older
+    const cached = makeResponse()
+    await route({ query: { pageSize: '20' } }, cached)
+    expect(cached.body.rows[0].buildDate).toBe('2026-11-06T00:00:00.000Z')
+    expect(pending).toHaveLength(2)
+  })
+
+  it('paginates and filters complete run groups across composite pages without loading bugs', async () => {
+    const all = Array.from({ length: 45 }, (_, index) => ({
+      key: { suite: 'release_gate', invocation: `run-${index}` }, doc_count: 2,
+      latest: { hits: { hits: [{ _source: { timestamp: new Date(Date.UTC(2026, 0, index + 1)).toISOString(), rhoai_version: index === 0 ? '3.0' : '3.6' } }] } }
+    }))
+    const requests = []
+    vi.stubGlobal('fetch', vi.fn(async (url, options) => {
+      const body = JSON.parse(options.body)
+      if (isImagesQuery(url, body)) {
+        return imageResponse(body.query.terms['invocation_id.keyword'].map(id => [id, '2026-11-05T05:14:40Z']))
+      }
+      requests.push(body)
+      return jsonResponse({ aggregations: { suite_runs: body.aggs.suite_runs.composite.after
+        ? { buckets: all.slice(25) }
+        : { buckets: all.slice(0, 25), after_key: { suite: 'release_gate', invocation: 'run-24' } } } })
+    }))
+    const route = register()['/test-suites'].at(-1)
+    const first = makeResponse()
+    await route({ query: { pageSize: '20', includeBugs: 'false' } }, first)
+    expect(first.body).toMatchObject({ total: 45, start: 1, end: 20, previousCursor: null })
+    expect(first.body.rows[0].invocationId).toBe('run-44')
+    const next = makeResponse()
+    await route({ query: { pageSize: '20', includeBugs: 'false', cursor: first.body.nextCursor } }, next)
+    expect(next.body).toMatchObject({ start: 21, end: 40 })
+    const old = makeResponse()
+    await route({ query: { pageSize: '20', version: '3.0', includeBugs: 'false' } }, old)
+    expect(old.body.rows.map(row => row.invocationId)).toEqual(['run-0'])
+    expect(requests).toHaveLength(2) // Page and filter changes reuse the complete metadata snapshot.
+    expect(requests.every(body => Object.keys(body.aggs.suite_runs.aggs).join() === 'latest')).toBe(true)
+    expect(requests.at(-1).query.bool.filter).not.toContainEqual({ term: { rhoai_version: '3.0' } })
+  })
+
+  it('expires metadata after 10 seconds, bypasses it on refresh, and isolates connections', async () => {
+    let now = 1000
+    vi.spyOn(Date, 'now').mockImplementation(() => now)
+    const fetch = vi.fn().mockImplementation(async () => jsonResponse({ aggregations: { suite_runs: { buckets: [] } } }))
+    vi.stubGlobal('fetch', fetch)
+    const route = register()['/test-suites'].at(-1)
+    const read = query => route({ query: { pageSize: '20', ...query } }, makeResponse())
+    await read({})
+    await read({ version: '3.6' })
+    expect(fetch).toHaveBeenCalledTimes(1)
+    await read({ refresh: 'true' })
+    expect(fetch).toHaveBeenCalledTimes(2)
+    now += 10_001
+    await read({})
+    expect(fetch).toHaveBeenCalledTimes(3)
+    process.env.WORKFLOW_VALIDATION_OPENSEARCH_URL = 'https://changed.example'
+    await read({})
+    expect(fetch).toHaveBeenCalledTimes(4)
+    expect(fetch.mock.lastCall[0]).toMatch(/^https:\/\/changed.example\//)
+    await route({ query: { includeBugs: 'false' } }, makeResponse())
+    await route({ query: { includeBugs: 'false' } }, makeResponse())
+    expect(fetch).toHaveBeenCalledTimes(6) // Legacy callers remain uncached.
+  })
+
+  it('keeps newer refresh results cached when an older scan finishes later', async () => {
+    const pending = []
+    const fetch = vi.fn((url, options) => isImagesQuery(url, JSON.parse(options.body))
+      ? Promise.resolve(jsonResponse({ hits: { hits: [] } }))
+      : new Promise(resolve => pending.push(resolve)))
+    vi.stubGlobal('fetch', fetch)
+    const route = register()['/test-suites'].at(-1)
+    const older = route({ query: { pageSize: '20' } }, makeResponse())
+    await vi.waitFor(() => expect(pending).toHaveLength(1))
+    const refreshed = makeResponse()
+    const newer = route({ query: { pageSize: '20', refresh: 'true' } }, refreshed)
+    await vi.waitFor(() => expect(pending).toHaveLength(2))
+    pending[1](jsonResponse({ aggregations: { suite_runs: { buckets: [{
+      key: { suite: 'release_gate', invocation: 'new-run' },
+      latest: { hits: { hits: [{ _source: { timestamp: '2026-01-01T00:00:00Z' } }] } }
+    }] } } }))
+    await newer
+    expect(refreshed.body.rows[0].invocationId).toBe('new-run')
+    pending[0](jsonResponse({ aggregations: { suite_runs: { buckets: [] } } }))
+    await older
+    const cached = makeResponse()
+    await route({ query: { pageSize: '20' } }, cached)
+    expect(cached.body.rows[0].invocationId).toBe('new-run')
+    expect(fetch.mock.calls.filter(([url, options]) => !isImagesQuery(url, JSON.parse(options.body)))).toHaveLength(2)
+  })
+
+  it('stops a disconnected composite scan and never caches its partial rows', async () => {
+    const response = makeResponse()
+    const fetch = vi.fn().mockImplementationOnce(async () => {
+      response.emit('close')
+      return jsonResponse({ aggregations: { suite_runs: { buckets: [], after_key: { suite: 's', invocation: 'i' } } } })
+    }).mockImplementation(async () => jsonResponse({ aggregations: { suite_runs: { buckets: [] } } }))
+    vi.stubGlobal('fetch', fetch)
+    const route = register()['/test-suites'].at(-1)
+    await route({ query: { pageSize: '20' } }, response)
+    expect(fetch).toHaveBeenCalledTimes(1)
+    expect(response.body).toBeNull()
+    expect(response.listenerCount('close')).toBe(0)
+    const connected = makeResponse()
+    await route({ query: { pageSize: '20' } }, connected)
+    expect(fetch).toHaveBeenCalledTimes(2)
+    expect(connected.body.total).toBe(0)
+  })
+
+  it('does not start a search after an early disconnect or cache a failed search', async () => {
+    const fetch = vi.fn().mockRejectedValueOnce(new Error('network failed'))
+      .mockImplementation(async () => jsonResponse({ aggregations: { suite_runs: { buckets: [] } } }))
+    vi.stubGlobal('fetch', fetch)
+    const route = register()['/test-suites'].at(-1)
+    const closed = makeResponse()
+    const pending = route({ query: { pageSize: '20' } }, closed)
+    closed.emit('close')
+    await pending
+    expect(fetch).not.toHaveBeenCalled()
+    const failed = makeResponse()
+    await route({ query: { pageSize: '20' } }, failed)
+    expect(failed.statusCode).toBe(503)
+    const retry = makeResponse()
+    await route({ query: { pageSize: '20' } }, retry)
+    expect(fetch).toHaveBeenCalledTimes(2)
+    expect(retry.body.total).toBe(0)
+  })
+
+  it('rejects invalid recent-run pagination before querying OpenSearch', async () => {
+    const fetch = vi.fn()
+    vi.stubGlobal('fetch', fetch)
+    const response = makeResponse()
+    await register()['/test-suites'].at(-1)({ query: { pageSize: '20', sortDir: 'wrong' } }, response)
+    expect(response.statusCode).toBe(400)
+    expect(fetch).not.toHaveBeenCalled()
   })
 
   it('selects the newest 20 run groups across all composite pages without loading bugs', async () => {

@@ -4,16 +4,22 @@ const SCHEMA_VERSION = 1
 const STALE_AFTER_MS = 48 * 60 * 60 * 1000
 const PROJECTS = ['RHAI', 'RHAIENG', 'RHOAIENG', 'INFERENG', 'AIPCC']
 const STORAGE_KEY = 'releases/tech-debt/trends.json'
+const NO_COMPONENT_LABEL = 'No component'
 
 const CATEGORY_DEFINITIONS = [
   { code: 'vulnerability', label: 'CVE / Vulnerability', issueType: 'Vulnerability', color: '#a21caf' },
+  { code: 'dashboard-integration-e2e', label: 'Dashboard Integration E2E', issueType: 'Bug', color: '#be123c' },
+  { code: 'build-cannot-run', label: 'Build Cannot Run', issueType: 'Bug', color: '#b45309' },
   { code: 'customer-linked', label: 'Affecting customer', issueType: 'Bug', color: '#dc2626' },
   { code: 'prerelease-cve', label: 'Pre-release CVE', issueType: 'Bug', color: '#db2777' },
   { code: 'approved-release-blocker', label: 'Approved Release Blocker', issueType: 'Bug', color: '#ea580c' },
+  { code: 'snyk', label: 'Snyk', issueType: 'Bug', color: '#7c3aed' },
   { code: 'field-feedback', label: 'BU/SSA/field feedback', issueType: 'Bug', color: '#2563eb' },
-  { code: 'devtestops-e2e', label: 'DevTestOps/E2E', issueType: 'Bug', color: '#0d9488' },
+  { code: 'operator-e2e', label: 'Operator auto E2E blocker', issueType: 'Bug', color: '#047857' },
+  { code: 'devtestops-e2e', label: 'DevTestOps automated test failure', issueType: 'Bug', color: '#0d9488' },
   { code: 'workflow-validation', label: 'Workflow validation', issueType: 'Bug', color: '#0891b2' },
-  { code: 'component-team', label: 'Component-team/unclassified', issueType: 'Bug', color: '#64748b' }
+  { code: 'component-team', label: 'Component-team/unclassified', issueType: 'Bug', color: '#64748b' },
+  { code: 'unclassified-automation', label: 'Unclassified automation', issueType: 'Bug', color: '#78716c' }
 ]
 
 const CATEGORY_BY_CODE = new Map(CATEGORY_DEFINITIONS.map(function (category) {
@@ -98,7 +104,6 @@ function eventFromIssue(issue, sfdcKeys, window) {
   if (!received && !resolved) return null
 
   const components = normalizeNamedRows(fields.components)
-  if (!components.length) return null
 
   let category = CATEGORY_BY_CODE.get('vulnerability')
   if (issueType === 'Bug') {
@@ -156,7 +161,6 @@ function normalizeEvent(value, validMonths) {
   const definition = CATEGORY_BY_CODE.get(category)
   if (!key || !['Bug', 'Vulnerability'].includes(issueType) || !definition || definition.issueType !== issueType) return null
   const components = normalizeNamedRows(value.components)
-  if (!components.length) return null
   const createdMonth = value.createdMonth === null || value.createdMonth === undefined
     ? null
     : normalizeText(value.createdMonth)
@@ -213,7 +217,7 @@ function emptyMetric(categoryCodes) {
   }
 }
 
-function buildTrendResponse(snapshot, selectedComponents, selectedIssueType, now = new Date()) {
+function buildTrendResponse(snapshot, selectedComponents, selectedIssueType, now = new Date(), includeNoComponent = false) {
   const componentSet = new Set(selectedComponents)
   const categories = CATEGORY_DEFINITIONS.filter(function (category) {
     return !selectedIssueType || category.issueType === selectedIssueType
@@ -221,16 +225,25 @@ function buildTrendResponse(snapshot, selectedComponents, selectedIssueType, now
   const categoryCodes = categories.map(function (category) { return category.code })
   const matched = snapshot.events.filter(function (event) {
     return (!selectedIssueType || event.issueType === selectedIssueType) &&
-      event.components.some(function (component) { return componentSet.has(component) })
+      (event.components.some(function (component) { return componentSet.has(component) }) ||
+        (includeNoComponent && event.components.length === 0))
   })
 
-  const panels = selectedComponents.map(function (component) {
+  const panelSelections = selectedComponents.map(function (component) {
+    return { component, noComponent: false }
+  })
+  if (includeNoComponent) panelSelections.push({ component: NO_COMPONENT_LABEL, noComponent: true })
+
+  const panels = panelSelections.map(function (selection) {
     const months = snapshot.window.months.map(function (month) {
       return { month, received: emptyMetric(categoryCodes), resolved: emptyMetric(categoryCodes) }
     })
     const byMonth = new Map(months.map(function (month) { return [month.month, month] }))
     for (const event of matched) {
-      if (!event.components.includes(component)) continue
+      const belongsToPanel = selection.noComponent
+        ? event.components.length === 0
+        : event.components.includes(selection.component)
+      if (!belongsToPanel) continue
       if (event.createdMonth && byMonth.has(event.createdMonth)) {
         const metric = byMonth.get(event.createdMonth).received
         metric.total += 1
@@ -243,7 +256,8 @@ function buildTrendResponse(snapshot, selectedComponents, selectedIssueType, now
       }
     }
     return {
-      component,
+      component: selection.component,
+      noComponent: selection.noComponent,
       totals: {
         received: months.reduce(function (sum, month) { return sum + month.received.total }, 0),
         resolved: months.reduce(function (sum, month) { return sum + month.resolved.total }, 0)
@@ -259,6 +273,7 @@ function buildTrendResponse(snapshot, selectedComponents, selectedIssueType, now
     generatedAt: snapshot.generatedAt,
     window: snapshot.window,
     selectedComponents,
+    includeNoComponent,
     selectedIssueType: selectedIssueType || null,
     categories,
     totals: {
@@ -274,6 +289,7 @@ function buildTrendResponse(snapshot, selectedComponents, selectedIssueType, now
 
 module.exports = {
   CATEGORY_DEFINITIONS,
+  NO_COMPONENT_LABEL,
   PROJECTS,
   SCHEMA_VERSION,
   STALE_AFTER_MS,

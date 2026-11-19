@@ -21,14 +21,18 @@ describe('NightlyHealthTable', () => {
     wrapper = null
   })
 
-  it('renders date-column matrix from fixture', () => {
+  it('renders date-column matrix from fixture', async () => {
     const payload = JSON.parse(readFileSync(fixturePath, 'utf8'))
-    wrapper = mount(NightlyHealthTable, { props: { payload }, ...mountOptions })
+    // Oct 28–31 omit stream_key (→ default); Nov 1–2 use example-stream.
+    wrapper = mount(NightlyHealthTable, {
+      props: { payload, selectedStreamKey: 'default' },
+      ...mountOptions
+    })
+    await nextTick()
 
     expect(wrapper.find('.nightly-matrix').exists()).toBe(true)
     expect(wrapper.text()).toContain('Cluster Health')
     expect(wrapper.text()).toContain('RHOAI Deployment')
-    // Fixture mixes default-stream days (Oct 28–31) and example-stream (Nov 1–2).
     expect(wrapper.find('.pager-job-select').exists()).toBe(true)
     expect(wrapper.text()).toContain('Showing all 4 UTC days in this snapshot')
   })
@@ -72,13 +76,19 @@ describe('NightlyHealthTable', () => {
     expect(document.body.textContent).toContain('Runs on 2026-11-01')
     expect(document.body.textContent).toContain('Blocked')
     expect(document.body.textContent).toContain('DSC: failed')
-    expect(document.body.textContent).toContain('Build #101')
-    expect(document.body.textContent).toContain('Build #102')
-    expect(document.body.textContent).toContain('Selected for column')
+    expect(document.body.textContent).toContain('Jenkins run')
+    expect(document.body.textContent).toContain('#101')
+    expect(document.body.textContent).toContain('#102')
+    expect(document.body.textContent).toContain('RHOAI 3.6.0')
+    expect(document.body.textContent).not.toContain('Product under test:')
+    expect(document.body.textContent).not.toContain('Selected for column')
+    expect(document.body.textContent).not.toContain('Product payload (ODS build)')
+    expect(document.body.textContent).not.toContain('Test source:')
+    expect(document.body.textContent).not.toContain('Unavailable')
 
     const items = document.body.querySelectorAll('.run-list-item')
-    expect(items[0].textContent).toContain('Build #102')
-    expect(items[0].textContent).toContain('Selected for column')
+    expect(items[0].textContent).toContain('#102')
+    expect(items[0].classList.contains('run-list-item--selected')).toBe(true)
   })
 
   it('shows Jenkins job filter when multiple stream_key values are present', async () => {
@@ -201,7 +211,193 @@ describe('NightlyHealthTable', () => {
     expect(document.body.textContent).toContain('not-in-list')
   })
 
-  it('links component rows to heatmap detail and leaves gate rows plain text', async () => {
+  it('puts S3 Artifacts link on the Jenkins line in the day panel', async () => {
+    const s3Href =
+      'https://us-east-1.console.aws.amazon.com/s3/buckets/b?region=us-east-1&prefix=ci/7/'
+    const payload = {
+      schema_version: 1,
+      days: [{
+        date: '2026-11-08',
+        latest_run_id: 'job:7',
+        runs: [{
+          run_id: 'job:7',
+          build_number: 7,
+          jenkins_url: 'https://jenkins.example/job/1/7/',
+          promotion_gate: { status: 'passed' },
+          artifacts: { s3_artifacts: s3Href },
+          gates: [],
+          components: []
+        }]
+      }]
+    }
+    wrapper = mount(NightlyHealthTable, { props: { payload }, ...mountOptions })
+    await wrapper.find('.date-header-btn').trigger('click')
+    await nextTick()
+
+    const item = document.body.querySelector('.run-list-item')
+    expect(item).toBeTruthy()
+    const line = item.querySelector('.run-line')
+    expect(line.textContent).toContain('Jenkins run')
+    expect(line.textContent).toContain('#7')
+    expect(line.textContent).toContain('S3 Artifacts')
+    expect(line.textContent).not.toContain('passed')
+    expect(line.textContent).not.toContain('Open')
+    const s3Anchor = Array.from(line.querySelectorAll('a')).find((a) => a.textContent === 'Artifacts')
+    expect(s3Anchor?.getAttribute('href')).toBe(s3Href)
+    const jenkinsAnchor = line.querySelector('a.run-inline-link')
+    expect(jenkinsAnchor?.textContent).toContain('Jenkins run')
+    expect(jenkinsAnchor?.textContent).not.toBe('Artifacts')
+  })
+
+  it('shows S3 Artifacts without Jenkins label when Jenkins metadata is absent', async () => {
+    const s3Href =
+      'https://us-east-1.console.aws.amazon.com/s3/buckets/b?region=us-east-1&prefix=ci/9/'
+    const payload = {
+      schema_version: 1,
+      days: [{
+        date: '2026-11-09',
+        latest_run_id: 'job:9',
+        runs: [{
+          run_id: 'job:9',
+          artifacts: { s3_artifacts: s3Href },
+          gates: [],
+          components: []
+        }]
+      }]
+    }
+    wrapper = mount(NightlyHealthTable, { props: { payload }, ...mountOptions })
+    await wrapper.find('.date-header-btn').trigger('click')
+    await nextTick()
+
+    const item = document.body.querySelector('.run-list-item')
+    const line = item.querySelector('.run-line')
+    expect(line.textContent).not.toContain('Jenkins')
+    expect(line.textContent).toContain('S3 Artifacts')
+    const s3Anchor = line.querySelector('a.run-inline-link')
+    expect(s3Anchor?.getAttribute('href')).toBe(s3Href)
+    expect(s3Anchor?.textContent).toBe('Artifacts')
+  })
+
+  it('renders org_pulse_links in the day panel', async () => {
+    const ticketHref = 'https://example.invalid/notes/999'
+    const payload = {
+      schema_version: 1,
+      days: [{
+        date: '2026-11-09',
+        latest_run_id: 'job:1',
+        runs: [{
+          run_id: 'job:1',
+          build_number: 1,
+          jenkins_url: 'https://jenkins.example/job/1/1/',
+          org_pulse_links: [{ label: 'Release notes', href: ticketHref }],
+          gates: [],
+          components: []
+        }]
+      }]
+    }
+    wrapper = mount(NightlyHealthTable, { props: { payload }, ...mountOptions })
+    await wrapper.find('.date-header-btn').trigger('click')
+    await nextTick()
+
+    const anchors = Array.from(document.body.querySelectorAll('.run-list-item a.run-inline-link'))
+    const ticketAnchor = anchors.find((a) => a.getAttribute('href') === ticketHref)
+    expect(ticketAnchor).toBeTruthy()
+    expect(ticketAnchor?.textContent).toBe('Open')
+    expect(document.body.textContent).toContain('Release notes')
+  })
+
+  function mountSingleRun(run) {
+    const payload = {
+      schema_version: 1,
+      days: [{
+        date: '2026-11-09',
+        latest_run_id: 'job:1',
+        runs: [{
+          run_id: 'job:1',
+          build_number: 1,
+          jenkins_url: 'https://jenkins.example/job/1/1/',
+          gates: [],
+          components: [],
+          ...run
+        }]
+      }]
+    }
+    wrapper = mount(NightlyHealthTable, { props: { payload }, ...mountOptions })
+    return wrapper.find('.date-header-btn').trigger('click').then(() => nextTick())
+  }
+
+  it('opens and closes the S3 access help popover from the Runs on header', async () => {
+    await mountSingleRun({})
+    const btn = document.body.querySelector('.s3-help-btn')
+    expect(btn).toBeTruthy()
+    expect(btn.textContent).toContain('S3 access help')
+    expect(btn.getAttribute('aria-expanded')).toBe('false')
+    expect(document.body.querySelector('.s3-help-popover')).toBeNull()
+
+    btn.click()
+    await nextTick()
+    const pop = document.body.querySelector('.s3-help-popover')
+    expect(pop).toBeTruthy()
+    expect(btn.getAttribute('aria-expanded')).toBe('true')
+    expect(pop.getAttribute('id')).toBe(btn.getAttribute('aria-controls'))
+    expect(pop.textContent).toContain('qe-rhods-general')
+    expect(pop.textContent).toContain('rhoai-testops')
+    expect(pop.textContent).toContain('#rhoai-devtestops-requests')
+    const login = pop.querySelector('a')
+    expect(login.getAttribute('href')).toBe('https://auth.redhat.com/auth/realms/EmployeeIDP/protocol/saml/clients/itaws')
+    expect(login.getAttribute('target')).toBe('_blank')
+
+    pop.querySelector('.s3-help-close').click()
+    await nextTick()
+    expect(document.body.querySelector('.s3-help-popover')).toBeNull()
+  })
+
+  it('renders Jira keys as hyperlinks with created/reused action', async () => {
+    const href1 = 'https://redhat.atlassian.net/browse/RHOAIENG-1'
+    const href2 = 'https://redhat.atlassian.net/browse/RHOAIENG-2'
+    await mountSingleRun({
+      jira: {
+        status: 'live',
+        issues: [
+          { key: 'RHOAIENG-1', href: href1, action: 'created' },
+          { key: 'RHOAIENG-2', href: href2, action: 'reused' }
+        ]
+      }
+    })
+    const line = document.body.querySelector('[data-testid="run-jira-line"]')
+    expect(line.textContent.replace(/\s+/g, ' ')).toContain('Jira: RHOAIENG-1 (created) · RHOAIENG-2 (reused)')
+    const anchors = Array.from(line.querySelectorAll('a'))
+    expect(anchors.map((a) => a.getAttribute('href'))).toEqual([href1, href2])
+    expect(anchors.map((a) => a.textContent)).toEqual(['RHOAIENG-1', 'RHOAIENG-2'])
+    expect(anchors[0].getAttribute('target')).toBe('_blank')
+    expect(anchors[0].getAttribute('rel')).toContain('noopener')
+  })
+
+  it('shows "No Jira tied in this run" when there are no tickets', async () => {
+    await mountSingleRun({ jira: { status: 'live', issues: [] } })
+    const line = document.body.querySelector('[data-testid="run-jira-line"]')
+    expect(line.textContent.trim()).toBe('No Jira tied in this run')
+    expect(line.querySelector('a')).toBeNull()
+  })
+
+  it('notes dry-run mode when no Jira tickets were created', async () => {
+    await mountSingleRun({ jira: { status: 'dry_run', issues: [] } })
+    const line = document.body.querySelector('[data-testid="run-jira-line"]')
+    expect(line.textContent).toContain('No Jira tied in this run')
+    expect(line.textContent).toContain('dry-run')
+  })
+
+  it('falls back to legacy Jira links in org_pulse_links', async () => {
+    const href = 'https://redhat.atlassian.net/browse/RHOAIENG-77'
+    await mountSingleRun({ org_pulse_links: [{ label: 'RHOAIENG-77', href }] })
+    const line = document.body.querySelector('[data-testid="run-jira-line"]')
+    expect(line.querySelector('a')?.getAttribute('href')).toBe(href)
+    const openAnchors = Array.from(document.body.querySelectorAll('.run-list-item a.run-inline-link'))
+      .filter((a) => a.textContent === 'Open')
+    expect(openAnchors).toHaveLength(0)
+  })
+
+  it('renders component rows as plain text without heatmap drill-down links', async () => {
     const payload = JSON.parse(readFileSync(fixturePath, 'utf8'))
     const heatmapComponents = [
       { component: 'Dashboard' },
@@ -212,13 +408,8 @@ describe('NightlyHealthTable', () => {
       ...mountOptions
     })
 
-    const links = wrapper.findAll('.comp-name a.comp-link')
-    expect(links.length).toBeGreaterThanOrEqual(2)
-    const linkLabels = links.map((a) => a.text())
-    expect(linkLabels).not.toContain('Cluster Health')
-    expect(linkLabels).not.toContain('RHOAI Deployment')
-
-    await links[0].trigger('click')
-    expect(wrapper.emitted('component-click')?.[0]?.[0]).toBeTruthy()
+    expect(wrapper.findAll('.comp-name a.comp-link')).toHaveLength(0)
+    expect(wrapper.findAll('.comp-name span.comp-label').length).toBeGreaterThanOrEqual(2)
+    expect(wrapper.emitted('component-click')).toBeFalsy()
   })
 })

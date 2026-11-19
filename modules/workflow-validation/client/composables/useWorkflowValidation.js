@@ -70,7 +70,8 @@ export function filterQueryValues(keys = []) {
 export function buildQuery(extra = {}, base = filters) {
   const params = new URLSearchParams()
   for (const [k, v] of Object.entries({ ...base, ...extra })) {
-    if (v !== '' && v !== null && v !== undefined) params.set(k, v)
+    if (Array.isArray(v)) v.forEach(value => params.append(k, value))
+    else if (v !== '' && v !== null && v !== undefined) params.set(k, v)
   }
   const s = params.toString()
   return s ? `?${s}` : ''
@@ -226,8 +227,10 @@ export function runOutcomeCounts(run = {}) {
 
 // ─── API ───
 
+export const RECENT_RUNS_PAGE_SIZE = 20
+
 export function useWorkflowValidation() {
-  const getRecentRuns = () => apiRequest(`${BASE}/test-suites?limit=20&includeBugs=false`)
+  const getRecentRuns = (params = {}, options = {}) => apiRequest(`${BASE}/test-suites${buildQuery({ pageSize: RECENT_RUNS_PAGE_SIZE, includeBugs: false, includeBugTickets: true, includeSummary: true, ...params }, {})}`, options)
   const getFilters = () => initializeVersionFilter()
   const getOverview = (extra = {}) => filteredRequest('overview', ['version', 'dateFrom', 'dateTo', 'testSuite', 'invocationId'], extra)
   const getCharts = (extra = {}) => filteredRequest('charts', ['version', 'dateFrom', 'dateTo', 'testSuite', 'invocationId'], extra)

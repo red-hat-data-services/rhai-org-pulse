@@ -25,7 +25,7 @@
             aria-label="Test Results Source"
           >
             <option v-for="job in jenkinsJobOptions" :key="job.stream_key" :value="job.stream_key">
-              {{ job.label }}
+              {{ testResultsSourceDropdownLabel(job, jenkinsJobOptions) }}
             </option>
           </select>
         </label>
@@ -110,11 +110,13 @@
                       {{ cellDisplayStatus(cellFor(day, rowId)) }}
                     </div>
                     <div
-                      v-if="cellSourceStatusSubtitle(cellFor(day, rowId))"
+                      v-for="caption in [cellDscCaption(rowId, cellFor(day, rowId))].filter(Boolean)"
+                      :key="caption.text"
                       class="cell-substatus"
-                      :class="dscSourceStatusClass(cellSourceStatusSubtitle(cellFor(day, rowId)))"
+                      :class="dscSourceStatusClass(caption.status)"
+                      :title="caption.title"
                     >
-                      {{ cellSourceStatusSubtitlePrefix(rowId) }}: {{ cellSourceStatusSubtitle(cellFor(day, rowId)) }}
+                      {{ caption.text }}
                     </div>
                     <div v-if="cellTestCounts(cellFor(day, rowId))" class="cell-counts">
                       <span class="cp">{{ cellTestCounts(cellFor(day, rowId)).passed }}</span>
@@ -144,10 +146,44 @@
         :aria-labelledby="dayPanelTitleId"
       >
         <div class="day-panel-header">
-          <h3 :id="dayPanelTitleId">Runs on {{ selectedDayEntry.date }}</h3>
+          <div class="day-panel-title">
+            <h3 :id="dayPanelTitleId">Runs on {{ selectedDayEntry.date }}</h3>
+            <button
+              type="button"
+              class="s3-help-btn"
+              :aria-expanded="s3HelpOpen ? 'true' : 'false'"
+              :aria-controls="s3HelpId"
+              title="How to access S3 artifacts"
+              @click="s3HelpOpen = !s3HelpOpen"
+            ><span class="s3-help-icon" aria-hidden="true">?</span>S3 access help</button>
+          </div>
           <button type="button" class="day-panel-close" @click="dismissDayPanel">
             Close
           </button>
+        </div>
+        <div
+          v-if="s3HelpOpen"
+          :id="s3HelpId"
+          class="s3-help-popover"
+          role="region"
+          aria-label="S3 artifacts access"
+        >
+          <div class="s3-help-header">
+            <strong>S3 artifacts access</strong>
+            <button type="button" class="s3-help-close" aria-label="Close S3 access help" @click="s3HelpOpen = false">×</button>
+          </div>
+          <ol>
+            <li>
+              Log in via
+              <a class="run-inline-link" :href="S3_ACCESS_HELP.loginUrl" target="_blank" rel="noopener noreferrer">Red Hat IT AWS</a>.
+            </li>
+            <li>Choose the account <code>{{ S3_ACCESS_HELP.account }}</code>.</li>
+            <li>
+              Choose your role:
+              <template v-for="(role, idx) in S3_ACCESS_HELP.roles" :key="role"><template v-if="idx > 0"> or </template><code>{{ role }}</code></template>.
+            </li>
+            <li>No role yet? Request access in <code>{{ S3_ACCESS_HELP.requestChannel }}</code> on Slack.</li>
+          </ol>
         </div>
         <p v-if="selectionError(selectedDayEntry)" class="selection-error" role="status">
           {{ selectionError(selectedDayEntry) }}
@@ -159,26 +195,90 @@
             :key="run.run_id"
             class="run-list-item"
             :class="{ 'run-list-item--selected': run.run_id === selectedDayEntry.latest_run_id }"
+            :aria-current="run.run_id === selectedDayEntry.latest_run_id ? 'true' : undefined"
           >
-            <div class="run-list-main">
-              <span v-if="run.run_id === selectedDayEntry.latest_run_id" class="selected-badge">Selected for column</span>
-              <span class="run-build">Build #{{ run.build_number ?? '—' }}</span>
-              <span v-if="runPromotionStatus(run)" class="run-status">{{ runPromotionStatus(run) }}</span>
+            <div class="run-lines">
+              <template v-for="jenkinsRow in [runJenkinsRow(run)]" :key="`${jenkinsRow.showJenkins ? 'j' : 's3'}-${jenkinsRow.s3?.href || ''}`">
+                <div v-if="jenkinsRow.showJenkins" class="run-line">
+                  <a
+                    v-if="safeHttpUrl(run.jenkins_url)"
+                    class="run-inline-link"
+                    :href="safeHttpUrl(run.jenkins_url)"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >{{ runJenkinsLinkText(run) }}</a>
+                  <span v-else>{{ runJenkinsLinkText(run) }}</span><template v-if="jenkinsRow.s3"> · <template v-if="jenkinsRow.s3.plainPrefix"><span class="run-s3-prefix">{{ jenkinsRow.s3.plainPrefix }}</span><span v-text="' '" class="run-s3-gap" /></template><a
+                    class="run-inline-link"
+                    :href="jenkinsRow.s3.href"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >{{ jenkinsRow.s3.linkText }}</a></template>
+                </div>
+                <div v-else-if="jenkinsRow.s3" class="run-line">
+                  <template v-if="jenkinsRow.s3.plainPrefix"><span class="run-s3-prefix">{{ jenkinsRow.s3.plainPrefix }}</span><span v-text="' '" class="run-s3-gap" /></template><a
+                    class="run-inline-link"
+                    :href="jenkinsRow.s3.href"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >{{ jenkinsRow.s3.linkText }}</a>
+                </div>
+              </template>
+              <div v-if="runProductUnderTestLabel(run)" class="run-line">
+                {{ runProductUnderTestLabel(run) }}<template v-if="runOdsBuildUrl(run)"> · <a
+                  class="run-inline-link"
+                  :href="runOdsBuildUrl(run)"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >{{ runOdsBuildLinkLabel(run) }}</a></template>
+              </div>
+              <div v-else-if="runOdsBuildUrl(run)" class="run-line">
+                <a
+                  class="run-inline-link"
+                  :href="runOdsBuildUrl(run)"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >{{ runOdsBuildLinkLabel(run) }}</a>
+              </div>
+              <div v-if="runEnvironmentLine(run)" class="run-line">{{ runEnvironmentLine(run) }}</div>
+              <div class="run-line" data-testid="run-jira-line">
+                <template v-if="runJiraSummary(run).issues.length">
+                  Jira:
+                  <template v-for="(issue, idx) in runJiraSummary(run).issues" :key="issue.key">
+                    <span v-if="idx > 0"> · </span>
+                    <a
+                      class="run-inline-link"
+                      :href="issue.href"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >{{ issue.key }}</a><template v-if="issue.action"> ({{ issue.action }})</template>
+                  </template>
+                </template>
+                <template v-else>{{ runJiraSummary(run).emptyText }}</template>
+              </div>
+              <div v-if="runFooterLinks(run).length" class="run-line">
+                <template v-for="(link, idx) in runFooterLinks(run)" :key="link.key">
+                  <span v-if="idx > 0"> · </span>
+                  <template v-if="link.prefix">{{ link.prefix }}</template><a
+                    class="run-inline-link"
+                    :href="link.href"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >{{ link.label }}</a>
+                </template>
+              </div>
+              <div v-if="runOrgPulseLinks(run).length" class="run-line">
+                <template v-for="(link, idx) in runOrgPulseLinks(run)" :key="link.key">
+                  <span v-if="idx > 0"> · </span>
+                  <template v-if="link.prefix">{{ link.prefix }}</template><a
+                    class="run-inline-link"
+                    :href="link.href"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >{{ link.label }}</a>
+                </template>
+              </div>
+              <div v-if="runTimestampLine(run)" class="run-line">{{ runTimestampLine(run) }}</div>
             </div>
-            <div class="run-list-meta">
-              <span>{{ formatTimestamp(run.started_at) }}</span>
-              <span v-if="run.completed_at"> → {{ formatTimestamp(run.completed_at) }}</span>
-            </div>
-            <div v-if="runMetaLine(run)" class="run-list-detail">{{ runMetaLine(run) }}</div>
-            <a
-              v-if="safeHttpUrl(run.jenkins_url)"
-              class="run-link"
-              :href="safeHttpUrl(run.jenkins_url)"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              Jenkins run
-            </a>
           </li>
         </ul>
       </div>
@@ -187,25 +287,36 @@
 </template>
 
 <script setup>
-import { computed, nextTick, ref, toRef, useId } from 'vue'
+import { computed, nextTick, ref, toRef, useId, watch } from 'vue'
 import { onClickOutside, onKeyStroke, useEventListener } from '@vueuse/core'
 import {
   NIGHTLY_PAGE_SIZE,
   useNightlyHealthMatrix,
   resolveSelectedRun,
-  findMatrixCell,
   resolveDisplayMatrixCell,
   cellDisplayStatus,
   nightlyCellTone,
-  cellSourceStatusSubtitle,
-  cellSourceStatusSubtitlePrefix,
+  cellDscCaption,
   dscSourceStatusClass,
-  rowLabel,
-  rowLabelTooltip,
+  matrixRowLabel,
+  matrixRowLabelTooltip,
   nightlyRowHeatmapLinkTarget,
   friendlyDate,
   formatTimestamp,
-  safeHttpUrl
+  formatRunDuration,
+  nightlyColumnHeaderSubline,
+  runArtifactPanelEntries,
+  runJiraSummary,
+  S3_ACCESS_HELP,
+  runOrgPulsePanelLinks,
+  runS3ArtifactsInlineLink,
+  runEnvironmentLine,
+  runJenkinsBuildNumberDisplay,
+  runOdsBuildUrl,
+  runOdsBuildLinkLabel,
+  runProductUnderTestLabel,
+  safeHttpUrl,
+  testResultsSourceDropdownLabel
 } from '../composables/useNightlyHealthMatrix'
 import '../styles/test-execution-theme.css'
 
@@ -218,6 +329,11 @@ const props = defineProps({
   heatmapComponents: {
     type: Array,
     default: () => []
+  },
+  /** When false (e.g. parent tab hidden), close any teleported day popup. */
+  tabPanelActive: {
+    type: Boolean,
+    default: true
   }
 })
 
@@ -250,8 +366,17 @@ const {
   jenkinsJobOptions
 } = useNightlyHealthMatrix(payloadRef, heatmapComponentsRef, selectedStreamKey)
 
+watch(
+  () => props.tabPanelActive,
+  (active) => {
+    if (!active) closeDay()
+  }
+)
+
 const dayPopupRef = ref(null)
 const dayPanelTitleId = useId()
+const s3HelpId = useId()
+const s3HelpOpen = ref(false)
 const popupPos = ref({ top: 0, left: 0 })
 const lastMatrixClickTarget = ref(null)
 const lastPopupClickEvent = ref(null)
@@ -322,7 +447,15 @@ function onMatrixDayClick(date, event) {
 }
 
 onKeyStroke('Escape', () => {
+  if (s3HelpOpen.value) {
+    s3HelpOpen.value = false
+    return
+  }
   if (selectedDayEntry.value) dismissDayPanel()
+})
+
+watch(selectedDayEntry, () => {
+  s3HelpOpen.value = false
 })
 
 onClickOutside(dayPopupRef, (ev) => {
@@ -351,33 +484,22 @@ const newestBuildLabel = computed(() => {
   return run?.build_number ?? '—'
 })
 
+// Labels follow the newest run that has the row, so producer renames (e.g. AI Gateway →
+// Inference Gateway) show immediately instead of the oldest published name.
 const rowNameCache = computed(() => {
   const map = new Map()
-  for (const day of sortedDays.value) {
-    for (const run of day.runs || []) {
-      if (!run) continue
-      for (const rowId of rowIds.value) {
-        if (map.has(rowId)) continue
-        const cell = findMatrixCell(run, rowId)
-        if (cell) map.set(rowId, rowLabel(rowId, cell, props.heatmapComponents))
-      }
-    }
+  for (const rowId of rowIds.value) {
+    map.set(rowId, matrixRowLabel(rowId, sortedDays.value, props.heatmapComponents))
   }
   return map
 })
 
 function rowName(rowId) {
-  return rowNameCache.value.get(rowId) || rowLabel(rowId, null, props.heatmapComponents)
+  return rowNameCache.value.get(rowId) || matrixRowLabel(rowId, [], props.heatmapComponents)
 }
 
 function rowNameTooltip(rowId) {
-  for (const day of sortedDays.value) {
-    for (const run of day.runs || []) {
-      const cell = findMatrixCell(run, rowId)
-      if (cell) return rowLabelTooltip(rowId, cell)
-    }
-  }
-  return rowLabelTooltip(rowId, null)
+  return matrixRowLabelTooltip(rowId, sortedDays.value)
 }
 
 const rowLinkTargetCache = computed(() => {
@@ -407,16 +529,60 @@ function selectedRun(day) {
 }
 
 function cellFor(day, rowId) {
-  return resolveDisplayMatrixCell(selectedRun(day), rowId)
+  return resolveDisplayMatrixCell(selectedRun(day), rowId, sortedDays.value)
 }
 
 function columnBuildLabel(day) {
-  const run = selectedRun(day)
-  if (!run) return ''
-  const pg = run.promotion_gate
-  const num = run.build_number != null ? `#${run.build_number}` : ''
-  const ver = pg?.rhoai_version ? `RHOAI ${pg.rhoai_version}` : ''
-  return [num, ver].filter(Boolean).join(' · ')
+  return nightlyColumnHeaderSubline(selectedRun(day))
+}
+
+function runJenkinsLinkText(run) {
+  const num = runJenkinsBuildNumberDisplay(run)
+  if (num) return `Jenkins run ${num}`
+  return 'Jenkins run'
+}
+
+/** @returns {{ showJenkins: boolean, s3: ReturnType<typeof runS3ArtifactsInlineLink> }} */
+function runJenkinsRow(run) {
+  const s3 = runS3ArtifactsInlineLink(run)
+  const showJenkins = Boolean(safeHttpUrl(run?.jenkins_url) || runJenkinsBuildNumberDisplay(run))
+  return { showJenkins, s3 }
+}
+
+function runTimestampLine(run) {
+  const started = run?.started_at
+  const duration = formatRunDuration(run)
+  if (!started && !duration) return ''
+  const parts = []
+  if (started) parts.push(formatTimestamp(started))
+  if (duration) parts.push(`Duration ${duration}`)
+  return parts.join(' · ')
+}
+
+/** @returns {{ key: string, prefix: string, href: string, label: string }[]} */
+function runFooterLinks(run) {
+  /** @type {{ key: string, prefix: string, href: string, label: string }[]} */
+  const links = []
+  for (const entry of runArtifactPanelEntries(run)) {
+    if (!entry.href || entry.id === 's3_artifacts') continue
+    links.push({
+      key: entry.id,
+      prefix: `${entry.label}: `,
+      href: entry.href,
+      label: 'Open'
+    })
+  }
+  return links
+}
+
+/** @returns {{ key: string, prefix: string, href: string, label: string }[]} */
+function runOrgPulseLinks(run) {
+  return runOrgPulsePanelLinks(run).map((entry) => ({
+    key: entry.id,
+    prefix: `${entry.label}: `,
+    href: entry.href,
+    label: 'Open'
+  }))
 }
 
 function cellTestCounts(cell) {
@@ -431,22 +597,6 @@ function cellTestCounts(cell) {
   return { passed, failed, skipped }
 }
 
-function runPromotionStatus(run) {
-  const pg = run.promotion_gate
-  if (pg?.status) return pg.status
-  if (run.source_result) return run.source_result
-  return ''
-}
-
-function runMetaLine(run) {
-  const pg = run.promotion_gate || {}
-  const parts = []
-  if (pg.rhoai_version) parts.push(`RHOAI ${pg.rhoai_version}`)
-  if (pg.update_channel) parts.push(pg.update_channel)
-  if (pg.cluster_name) parts.push(pg.cluster_name)
-  if (pg.openshift_version) parts.push(`OCP ${pg.openshift_version}`)
-  return parts.join(' · ')
-}
 </script>
 
 <style scoped>
@@ -744,6 +894,10 @@ table.nightly-matrix th {
   color: var(--te-text-muted);
   margin-top: 3px;
   line-height: 1.2;
+  /* DSC paths such as "aigateway.modelsAsAService" wrap inside the cell instead of widening the column. */
+  max-width: 110px;
+  white-space: normal;
+  overflow-wrap: anywhere;
 }
 
 .cell-substatus.dsc-status-ready {
@@ -819,6 +973,78 @@ html.dark .cell-substatus.dsc-status-not-ready {
   color: var(--te-heading);
 }
 
+.day-panel-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.s3-help-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  border: none;
+  background: transparent;
+  color: var(--te-link);
+  font-size: 12px;
+  line-height: 1;
+  cursor: pointer;
+  padding: 2px 0;
+}
+
+.s3-help-btn:hover {
+  text-decoration: underline;
+}
+
+.s3-help-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  border: 1px solid currentColor;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.s3-help-btn:focus-visible,
+.s3-help-close:focus-visible {
+  outline: 2px solid var(--te-accent);
+  outline-offset: 2px;
+}
+
+.s3-help-popover {
+  margin: 0 0 12px;
+  padding: 10px 12px;
+  border: 1px solid var(--te-border);
+  border-radius: 6px;
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--te-text-muted);
+}
+
+.s3-help-popover ol {
+  margin: 6px 0 0;
+  padding-left: 18px;
+}
+
+.s3-help-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.s3-help-close {
+  background: transparent;
+  border: none;
+  color: var(--te-text-muted);
+  font-size: 16px;
+  line-height: 1;
+  cursor: pointer;
+  padding: 0 2px;
+}
+
 .day-panel-close {
   background: transparent;
   border: 1px solid var(--te-border);
@@ -841,8 +1067,11 @@ html.dark .cell-substatus.dsc-status-not-ready {
 }
 
 .run-list-item {
-  padding: 12px 0;
+  padding: 10px 0;
   border-bottom: 1px solid var(--te-divider-soft);
+  font-size: 12px;
+  line-height: 1.45;
+  color: var(--te-text-muted);
 }
 
 .run-list-item--selected {
@@ -850,44 +1079,28 @@ html.dark .cell-substatus.dsc-status-not-ready {
   padding-left: 10px;
 }
 
-.run-list-main {
+.run-lines {
   display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-  align-items: center;
+  flex-direction: column;
+  gap: 2px;
 }
 
-.selected-badge {
-  font-size: 11px;
-  font-weight: 600;
-  color: var(--te-accent);
-  background: var(--te-accent-soft);
-  padding: 2px 8px;
-  border-radius: 4px;
-}
-
-.run-build {
-  font-weight: 600;
-  color: var(--te-heading);
-}
-
-.run-status {
-  text-transform: capitalize;
-  color: var(--te-pager-label);
-}
-
-.run-list-meta,
-.run-list-detail {
+.run-line {
   font-size: 12px;
+  font-weight: 400;
   color: var(--te-text-muted);
-  margin-top: 4px;
 }
 
-.run-link {
-  display: inline-block;
-  margin-top: 6px;
-  font-size: 12px;
+.run-inline-link {
   color: var(--te-link);
+  font-size: inherit;
+  font-weight: inherit;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.run-inline-link:hover {
+  color: var(--te-link-hover, var(--te-link));
 }
 
 .day-panel-empty {
@@ -936,6 +1149,18 @@ html.dark .test-execution-theme.nightly-day-popup .run-status,
 html.dark .test-execution-theme.nightly-day-popup .day-panel-empty,
 html.dark .test-execution-theme.nightly-day-popup .day-panel-close {
   color: #8899aa;
+}
+
+.test-execution-theme.nightly-day-popup .s3-help-popover {
+  background: #f9fafb;
+  border-color: #d1d5db;
+  color: #374151;
+}
+
+html.dark .test-execution-theme.nightly-day-popup .s3-help-popover {
+  background: #0f2236;
+  border-color: #1e4976;
+  color: #c8d4de;
 }
 
 html.dark .test-execution-theme.nightly-day-popup .run-list-item {

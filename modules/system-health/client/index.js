@@ -7,5 +7,6 @@ export const routes = {
   'odh-e2e-health': defineAsyncComponent(() => import('./views/OdhOperatorE2eHealthView.vue')),
   'e2e-run-detail': defineAsyncComponent(() => import('./views/E2eRunDetailView.vue')),
   'test-execution': defineAsyncComponent(() => import('./views/TestExecutionView.vue')),
-  'test-execution-detail': defineAsyncComponent(() => import('./views/TestExecutionDetailView.vue'))
+  'test-execution-detail': defineAsyncComponent(() => import('./views/TestExecutionDetailView.vue')),
+  'promotion-gates': defineAsyncComponent(() => import('./views/PromotionGatesView.vue'))
 }

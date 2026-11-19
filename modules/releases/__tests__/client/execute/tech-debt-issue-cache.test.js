@@ -10,7 +10,7 @@ import {
   techDebtTrendCacheKey,
   writeTechDebtTrendCache,
   writeTechDebtIssueCache
-} from '../../../client/plan/services/techDebtIssueCache'
+} from '../../../client/execute/services/techDebtIssueCache'
 
 describe('Tech Debt issue response cache', function () {
   beforeEach(function () {

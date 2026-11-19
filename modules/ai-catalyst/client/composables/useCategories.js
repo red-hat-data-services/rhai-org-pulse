@@ -137,9 +137,10 @@ export function useCategories() {
   function getDecisionStatus(candidate) {
     const dec = (candidate.pmDecision || '').toLowerCase()
     if (!dec) return 'pending'
-    if (dec.includes('approve')) return 'approved'
-    if (dec.includes('decline')) return 'declined'
+    // Negatives first: "Disapprove" and "Not approved" contain "approve".
+    if (/disapprov|declin|reject|\bnot\s+approv/.test(dec)) return 'declined'
     if (dec.includes('revisit')) return 'revisit'
+    if (/\bapprov/.test(dec)) return 'approved'
     return 'pending'
   }
 
@@ -147,8 +148,11 @@ export function useCategories() {
     return DECISION_STATUSES[status] || DECISION_STATUSES.pending
   }
 
+  /** Map a feed source value to its display label, normalising "hackernews". */
   function getSourceLabel(source) {
-    return SOURCE_LABELS[source] || source
+    // The feed emits "hackernews"; the legacy key stays "hn" for cached data
+    // and for the single filter option.
+    return SOURCE_LABELS[source === 'hackernews' ? 'hn' : source] || source
   }
 
   function getScoreColor(score) {

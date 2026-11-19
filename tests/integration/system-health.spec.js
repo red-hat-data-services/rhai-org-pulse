@@ -8,6 +8,10 @@ const nightlyHealthFixturePath = join(
   __dirname,
   '../../fixtures/system-health/test-execution/nightly_health.json'
 );
+const heatmapFixturePath = join(
+  __dirname,
+  '../../fixtures/system-health/test-execution/heatmap.json'
+);
 const qualityReportsFixturePath = join(
   __dirname,
   '../../fixtures/system-health/quality/reports.json'
@@ -28,6 +32,34 @@ function qualityReportsListPayload() {
 function disconnectedSummaryPayload() {
   const data = JSON.parse(readFileSync(disconnectedReportsFixturePath, 'utf8'));
   return getSummaryProjection(data);
+}
+
+/** YYYY-MM-DD within the Test Execution default 30-day filter window. */
+function recentHeatmapDayKey(daysAgo = 1) {
+  const d = new Date();
+  d.setDate(d.getDate() - daysAgo);
+  return d.toISOString().slice(0, 10);
+}
+
+function buildTabCoexistenceHeatmapFixture(dayKey = recentHeatmapDayKey(1)) {
+  return {
+    components: [
+      {
+        component: 'Dashboard',
+        overall: { total: 10, passed: 9, failed: 1, skipped: 0 },
+        days: {
+          [dayKey]: {
+            passed: 10,
+            failed: 0,
+            skipped: 0,
+            total: 10,
+            jenkins_urls: [],
+            by_vr: { '3.0|fast': { passed: 10, failed: 0, skipped: 0, total: 10, jenkins_urls: [] } }
+          }
+        }
+      }
+    ]
+  };
 }
 
 /** Demo container has no OAuth session; stub read APIs so UI tests see fixture data. */
@@ -901,7 +933,12 @@ test.describe('OpenDataHub E2E Health Features @system-health', () => {
     expectNoBenignConsoleErrors(page);
   });
 
-  test('should display blocker JIRA rows with links in demo mode', async ({ page }) => {
+  test('should display blocker JIRA links from both projects in demo mode', async ({ page }) => {
+    await page.route('**/api/modules/system-health/odh-e2e-health/blocker-jiras*', route => route.fulfill({
+      path: join(__dirname, '../../fixtures/system-health/odh-e2e-blocker-jiras.json'),
+      contentType: 'application/json'
+    }));
+
     await page.goto('/#/system-health/odh-e2e-health');
     await page.waitForLoadState('networkidle');
     await page.waitForTimeout(DEFAULT_PAGE_WAIT_TIME);
@@ -911,19 +948,9 @@ test.describe('OpenDataHub E2E Health Features @system-health', () => {
     await page.waitForLoadState('networkidle');
     await page.waitForTimeout(DEFAULT_PAGE_WAIT_TIME);
 
-    // Demo fixture ships open blocker JIRAs — either the table renders rows
-    // linking to Jira, or the graceful empty/unavailable state is shown. Both are valid.
-    const jiraLinks = page.locator('a[href*="/browse/RHOAIENG-"]');
-    const linkCount = await jiraLinks.count();
-
-    if (linkCount > 0) {
-      await expect(jiraLinks.first()).toBeVisible();
-    } else {
-      const emptyOrUnavailable = page.locator(
-        'text=/No open blocker JIRAs|credentials|not yet available|could not reach jira/i'
-      );
-      await expect(emptyOrUnavailable.first()).toBeVisible();
-    }
+    // The mixed-project fixture must render links from both Jira projects.
+    await expect(page.locator('a[href$="/browse/RHAI-81234"]')).toBeVisible();
+    await expect(page.locator('a[href$="/browse/RHOAIENG-81198"]')).toBeVisible();
 
     expectNoBenignConsoleErrors(page);
   });
@@ -941,6 +968,11 @@ test.describe('OpenDataHub E2E Health Features @system-health', () => {
  *     return the expected data / status
  */
 test.describe('Test Execution Dashboard @system-health', () => {
+  const releasesTabPanel = (page) =>
+    page.getByRole('tabpanel', { name: 'RHOAI Releases' })
+  const gatesTabPanel = (page) =>
+    page.getByRole('tabpanel', { name: 'Promotion Gate' })
+
   test.beforeEach(async ({ page }) => {
     setupErrorTracking(page);
   });
@@ -983,16 +1015,19 @@ test.describe('Test Execution Dashboard @system-health', () => {
     // Main content renders
     expect(await mainContentIsVisible(page)).toBe(true);
 
-    // With heatmap + nightly data, OpenSearch header and Nightly Build Health both render.
-    const nightlyHeading = page.locator('h2').filter({ hasText: /Nightly Build Health/i });
-    const opensearchHeader = page.locator('.opensearch-section-header');
-    expect(await nightlyHeading.count() + await opensearchHeader.count()).toBeGreaterThan(0);
-    if (await opensearchHeader.count() > 0) {
-      await expect(opensearchHeader.locator('h1').filter({ hasText: /Test Execution/i })).toBeVisible();
-      await expect(opensearchHeader.locator('text=/Beta/i')).toBeVisible();
+    // Tabbed layout: RHOAI Releases = releases heatmap; Promotion Gate = promotion-gate matrix.
+    await expect(page.getByRole('tab', { name: 'RHOAI Releases' })).toBeVisible();
+    await expect(page.getByRole('tab', { name: 'Promotion Gate' })).toBeVisible();
+
+    const releasesTitle = releasesTabPanel(page).locator('h2.tab-panel-title');
+    const gatesTitle = gatesTabPanel(page).locator('h2.tab-panel-title');
+    if (await releasesTitle.count() > 0) {
+      await expect(releasesTitle.first()).toContainText('RHOAI Releases Test Results');
     }
-    if (await nightlyHeading.count() > 0) {
-      await expect(nightlyHeading.first()).toBeVisible();
+    if (await gatesTabPanel(page).locator('h2.tab-panel-title').count() > 0) {
+      await page.getByRole('tab', { name: 'Promotion Gate' }).click();
+      await page.waitForTimeout(300);
+      await expect(gatesTitle.first()).toBeVisible();
     }
 
     // It is a Vue view, NOT the old iframe dashboard
@@ -1009,11 +1044,17 @@ test.describe('Test Execution Dashboard @system-health', () => {
     await page.waitForLoadState('networkidle');
     await page.waitForTimeout(DEFAULT_PAGE_WAIT_TIME);
 
-    // With data → the component heatmap table renders; without data → the
-    // view shows its "no data" message. Either is a valid, non-broken render.
-    const hasTable = await page.locator('table').count() > 0;
-    const hasEmptyState = await page.locator('text=/No test execution data|No data available/i').count() > 0;
-    expect(hasTable || hasEmptyState).toBe(true);
+    // With data → heatmap on RHOAI Releases tab; without data → empty state.
+    const rhoaiTab = page.getByRole('tab', { name: 'RHOAI Releases' });
+    if (await rhoaiTab.isEnabled()) {
+      await rhoaiTab.click();
+      await page.waitForTimeout(300);
+    }
+    const panel = releasesTabPanel(page);
+    const hasHeatmap = await panel.locator('table.heatmap').count() > 0;
+    const hasEmptyState =
+      (await panel.locator('text=/No OpenSearch release test data|No component test executions match/i').count() > 0);
+    expect(hasHeatmap || hasEmptyState).toBe(true);
 
     expectNoBenignConsoleErrors(page);
   });
@@ -1023,13 +1064,30 @@ test.describe('Test Execution Dashboard @system-health', () => {
     await page.waitForLoadState('networkidle');
     await page.waitForTimeout(DEFAULT_PAGE_WAIT_TIME);
 
-    // Component names are rendered as links in the heatmap's first column.
-    const componentLink = page.locator('table a, table tbody tr td:first-child a').first();
+    const rhoaiTab = page.getByRole('tab', { name: 'RHOAI Releases' });
+    if (!(await rhoaiTab.isEnabled())) {
+      console.log('RHOAI Releases tab disabled (no heatmap upload) — skipping drill-down navigation check');
+      return;
+    }
+    await rhoaiTab.click();
+    await page.waitForTimeout(300);
+    await expect(releasesTabPanel(page)).toBeVisible();
+
+    // Fixture heatmap dates are older than the default 30-day window; show all rows for this check.
+    const dateRangeToggle = releasesTabPanel(page).locator('label.date-toggle-label input[type="checkbox"]');
+    if (await dateRangeToggle.isChecked()) {
+      await dateRangeToggle.uncheck();
+      await page.waitForTimeout(300);
+    }
+
+    // Heatmap links live only in the releases tabpanel (Promotion Gate uses .comp-link in a separate table).
+    const componentLink = releasesTabPanel(page).locator('table.heatmap tbody td.comp-name a').first();
     if (await componentLink.count() === 0) {
-      console.log('No component rows present (no data uploaded) — skipping drill-down navigation check');
+      console.log('No heatmap component rows in RHOAI Releases panel — skipping drill-down navigation check');
       return;
     }
 
+    await expect(componentLink).toBeVisible();
     await componentLink.click();
     await page.waitForLoadState('networkidle');
     await page.waitForTimeout(DEFAULT_PAGE_WAIT_TIME);
@@ -1127,20 +1185,26 @@ test.describe('Test Execution Dashboard @system-health', () => {
       });
     });
 
-    await page.goto('/#/system-health/test-execution');
-    await page.waitForResponse(
+    const dataReady = page.waitForResponse(
       (response) =>
         response.url().includes('/test-execution/data')
         && !response.url().includes('file=')
         && response.status() === 200
     );
+    await page.goto('/#/system-health/test-execution');
+    await dataReady;
     await page.waitForLoadState('networkidle');
     await page.waitForTimeout(DEFAULT_PAGE_WAIT_TIME);
 
-    const nightlyHeading = page.locator('h2').filter({ hasText: /Nightly Build Health/i });
-    await expect(nightlyHeading.first()).toBeVisible();
+    await expect(page.getByRole('tab', { name: 'RHOAI Releases' })).toBeDisabled();
+    await expect(page.getByRole('tab', { name: 'Promotion Gate' })).toBeEnabled();
+    await page.getByRole('tab', { name: 'Promotion Gate' }).click();
+    await page.waitForTimeout(300);
+
+    await expect(page.getByRole('tab', { name: 'Promotion Gate' })).toHaveAttribute('aria-selected', 'true');
+    const gatesTitle = gatesTabPanel(page).locator('h2.tab-panel-title');
+    await expect(gatesTitle.first()).toBeVisible();
     await expect(page.locator('.nightly-matrix')).toBeVisible();
-    await expect(page.locator('.opensearch-section-header')).toHaveCount(0);
 
     await expect(page.locator('.pager-job-select')).toBeVisible();
     await page.locator('.pager-job-select').selectOption('example-stream');
@@ -1154,32 +1218,241 @@ test.describe('Test Execution Dashboard @system-health', () => {
     await expect(dayPanel).toBeVisible();
     await expect(dayPanel).toContainText('Runs on 2026-11-01');
     await expect(dayPanel.locator('.run-list-item').first()).toBeVisible();
-    await expect(dayPanel.getByText('Build #102')).toBeVisible();
-    await expect(dayPanel.getByText('Selected for column')).toBeVisible();
+    await expect(dayPanel.getByRole('link', { name: 'Jenkins run #102' })).toBeVisible();
+    await expect(dayPanel.locator('.run-list-item--selected')).toHaveCount(1);
 
     expectNoBenignConsoleErrors(page);
   });
 
-  test('should keep OpenSearch heatmap visible when promotion-gate nightly source is selected', async ({ page }) => {
+  const bvtStreamKey = 'rhoai-nightly-bvt';
+
+  /**
+   * Fixture day re-published under the nightly BVT stream (same run shape as the promotion-gate fixture),
+   * on a date no other fixture day uses, so date assertions prove which stream is rendered.
+   */
+  function nightlyBvtDay(nightlyFixture) {
+    const day = {
+      ...JSON.parse(JSON.stringify(nightlyFixture.days.find((d) => d.stream_key === 'example-stream'))),
+      stream_key: bvtStreamKey,
+      date: '2026-11-03'
+    };
+    expect(nightlyFixture.days.some((d) => d.date === day.date)).toBe(false);
+    return day;
+  }
+
+  const nightlyBvtJob = { stream_key: bvtStreamKey, label: 'devops/rhoai-nightly-bvt', jenkins_job: 'devops/rhoai-nightly-bvt' };
+
+  /** Serves the given heatmap / nightly_health payloads and opens the RHOAI Releases tab. */
+  async function openTestExecutionWithData(page, { heatmap, nightlyHealth, hash = '?tab=releases' }) {
+    await page.route('**/api/modules/system-health/quality/test-execution/data**', async (route) => {
+      const url = route.request().url();
+      if (url.includes('file=')) {
+        const file = new URL(url).searchParams.get('file');
+        const body = file === 'nightly_health' ? nightlyHealth : file === 'heatmap' ? (heatmap || {}) : {};
+        await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(body) });
+        return;
+      }
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({
+          heatmap,
+          components: null,
+          jira_config: null,
+          meta: null,
+          nightly_health: nightlyHealth,
+          lastUpload: null
+        })
+      });
+    });
+
+    const dataReady = page.waitForResponse(
+      (response) =>
+        response.url().includes('/test-execution/data')
+        && !response.url().includes('file=')
+        && response.status() === 200
+    );
+    await page.goto(`/#/system-health/test-execution${hash}`);
+    await dataReady;
+    await page.waitForLoadState('networkidle');
+    await page.waitForTimeout(DEFAULT_PAGE_WAIT_TIME);
+  }
+
+  test('should show the nightly BVT stream as RHOAI Nightly BVT Results on the RHOAI Releases tab only', async ({ page }) => {
     const nightlyFixture = JSON.parse(readFileSync(nightlyHealthFixturePath, 'utf8'));
-    const heatmapFixture = {
-      components: [
+    const heatmapFixture = JSON.parse(readFileSync(heatmapFixturePath, 'utf8'));
+    const bvtDay = nightlyBvtDay(nightlyFixture);
+    await openTestExecutionWithData(page, {
+      heatmap: heatmapFixture,
+      nightlyHealth: {
+        ...nightlyFixture,
+        jenkins_jobs: [...nightlyFixture.jenkins_jobs, nightlyBvtJob],
+        days: [...nightlyFixture.days, bvtDay]
+      }
+    });
+
+    // RHOAI Releases: RHOAI Nightly BVT Results matrix with only the nightly BVT day, above Component Heatmap
+    const deployment = releasesTabPanel(page).locator('.rhoai-deployment-section');
+    await expect(deployment.getByRole('heading', { name: 'RHOAI Nightly BVT Results', exact: true })).toBeVisible();
+    await expect(deployment.locator('.nightly-matrix')).toBeVisible();
+    await expect(deployment.locator('.date-header-btn')).toHaveCount(1);
+    await expect(deployment.locator(`.date-header-btn[title="Show all builds on ${bvtDay.date}"]`)).toBeVisible();
+    await expect(deployment.locator('.pager-job-select')).toHaveCount(0);
+
+    // Promotion Gate: the nightly BVT is not a Test Results Source
+    await page.getByRole('tab', { name: 'Promotion Gate' }).click();
+    await page.waitForTimeout(300);
+    const sourceOptions = gatesTabPanel(page).locator('.pager-job-select option');
+    await expect(sourceOptions).not.toHaveCount(0);
+    await expect(gatesTabPanel(page).locator(`.pager-job-select option[value="${bvtStreamKey}"]`)).toHaveCount(0);
+
+    expectNoBenignConsoleErrors(page);
+  });
+
+  test('should show RHOAI Nightly BVT Results when only nightly BVT data is uploaded', async ({ page }) => {
+    const nightlyFixture = JSON.parse(readFileSync(nightlyHealthFixturePath, 'utf8'));
+    await openTestExecutionWithData(page, {
+      heatmap: null,
+      nightlyHealth: { ...nightlyFixture, jenkins_jobs: [nightlyBvtJob], days: [nightlyBvtDay(nightlyFixture)] }
+    });
+
+    await expect(page.getByRole('tab', { name: 'RHOAI Releases' })).toBeEnabled();
+    await expect(page.getByRole('tab', { name: 'Promotion Gate' })).toBeDisabled();
+    const releases = releasesTabPanel(page);
+    await expect(releases.locator('.rhoai-deployment-section .nightly-matrix')).toBeVisible();
+    await expect(releases.getByText('No OpenSearch release test data has been uploaded yet.')).toBeVisible();
+
+    expectNoBenignConsoleErrors(page);
+  });
+
+  test('should open RHOAI Releases for a gates link that targets the nightly BVT source', async ({ page }) => {
+    const nightlyFixture = JSON.parse(readFileSync(nightlyHealthFixturePath, 'utf8'));
+    const heatmapFixture = JSON.parse(readFileSync(heatmapFixturePath, 'utf8'));
+    await openTestExecutionWithData(page, {
+      heatmap: heatmapFixture,
+      nightlyHealth: {
+        ...nightlyFixture,
+        jenkins_jobs: [...nightlyFixture.jenkins_jobs, nightlyBvtJob],
+        days: [...nightlyFixture.days, nightlyBvtDay(nightlyFixture)]
+      },
+      hash: '?tab=gates&source=rhoai-nightly-bvt'
+    });
+
+    // The BVT is not a Promotion Gate source: the link lands on its results instead
+    await expect(page.getByRole('tab', { name: 'RHOAI Releases' })).toHaveAttribute('aria-selected', 'true');
+    await expect(releasesTabPanel(page).locator('.rhoai-deployment-section .nightly-matrix')).toBeVisible();
+    await expect.poll(() => page.url()).toMatch(/tab=releases/);
+    expect(page.url()).not.toMatch(/source=/);
+
+    expectNoBenignConsoleErrors(page);
+  });
+
+  test('should honor tab=gates and source= query params on load', async ({ page }) => {
+    const nightlyFixture = JSON.parse(readFileSync(nightlyHealthFixturePath, 'utf8'));
+
+    await page.route('**/api/modules/system-health/quality/test-execution/data**', async (route) => {
+      const url = route.request().url();
+      if (url.includes('file=')) {
+        const file = new URL(url).searchParams.get('file');
+        const body = file === 'nightly_health' ? nightlyFixture : {};
+        await route.fulfill({
+          status: 200,
+          contentType: 'application/json',
+          body: JSON.stringify(body)
+        });
+        return;
+      }
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({
+          heatmap: null,
+          components: null,
+          jira_config: null,
+          meta: null,
+          nightly_health: nightlyFixture,
+          lastUpload: null
+        })
+      });
+    });
+
+    const dataReady = page.waitForResponse(
+      (response) =>
+        response.url().includes('/test-execution/data')
+        && !response.url().includes('file=')
+        && response.status() === 200
+    );
+    await page.goto('/#/system-health/test-execution?tab=gates&source=promotion-gate-tests');
+    await dataReady;
+    await page.waitForLoadState('networkidle');
+    await page.waitForTimeout(DEFAULT_PAGE_WAIT_TIME);
+
+    await expect(page.getByRole('tab', { name: 'Promotion Gate' })).toHaveAttribute('aria-selected', 'true');
+    await expect(gatesTabPanel(page).locator('h2.tab-panel-title').first()).toBeVisible();
+    expect(page.url()).toMatch(/tab=gates/);
+    expect(page.url()).toMatch(/source=promotion-gate-tests(&|$)/);
+
+    expectNoBenignConsoleErrors(page);
+  });
+
+  test('should rewrite legacy source=stream_key to filter basename on load', async ({ page }) => {
+    const nightlyFixture = JSON.parse(readFileSync(nightlyHealthFixturePath, 'utf8'));
+    const withReportingStreamKey = {
+      ...nightlyFixture,
+      jenkins_jobs: [
         {
-          component: 'Dashboard',
-          overall: { total: 10, passed: 9, failed: 1, skipped: 0 },
-          days: {
-            '2026-11-01': {
-              passed: 10,
-              failed: 0,
-              skipped: 0,
-              total: 10,
-              jenkins_urls: [],
-              by_vr: { '3.0|fast': { passed: 10, failed: 0, skipped: 0, total: 10, jenkins_urls: [] } }
-            }
-          }
+          stream_key: 'example-stream',
+          label: 'example-stream'
         }
       ]
     };
+
+    await page.route('**/api/modules/system-health/quality/test-execution/data**', async (route) => {
+      const url = route.request().url();
+      if (url.includes('file=')) {
+        const file = new URL(url).searchParams.get('file');
+        const body = file === 'nightly_health' ? withReportingStreamKey : {};
+        await route.fulfill({
+          status: 200,
+          contentType: 'application/json',
+          body: JSON.stringify(body)
+        });
+        return;
+      }
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({
+          heatmap: null,
+          components: null,
+          jira_config: null,
+          meta: null,
+          nightly_health: withReportingStreamKey,
+          lastUpload: null
+        })
+      });
+    });
+
+    const dataReady = page.waitForResponse(
+      (response) =>
+        response.url().includes('/test-execution/data')
+        && !response.url().includes('file=')
+        && response.status() === 200
+    );
+    await page.goto('/#/system-health/test-execution?tab=gates&source=example-stream');
+    await dataReady;
+    await page.waitForLoadState('networkidle');
+    await page.waitForTimeout(DEFAULT_PAGE_WAIT_TIME);
+
+    await expect.poll(() => page.url()).toMatch(/source=promotion-gate/);
+    expect(page.url()).not.toMatch(/source=example-stream/);
+
+    expectNoBenignConsoleErrors(page);
+  });
+
+  test('should sync tab query param when switching tabs and drop source on RHOAI Releases', async ({ page }) => {
+    const nightlyFixture = JSON.parse(readFileSync(nightlyHealthFixturePath, 'utf8'));
+    const heatmapFixture = buildTabCoexistenceHeatmapFixture();
 
     await page.route('**/api/modules/system-health/quality/test-execution/data**', async (route) => {
       const url = route.request().url();
@@ -1213,16 +1486,79 @@ test.describe('Test Execution Dashboard @system-health', () => {
     await page.waitForLoadState('networkidle');
     await page.waitForTimeout(DEFAULT_PAGE_WAIT_TIME);
 
-    await expect(page.locator('.opensearch-section-header')).toBeVisible();
-    await expect(page.locator('h2').filter({ hasText: /Component Heatmap/i })).toBeVisible();
-    await expect(page.locator('h3').filter({ hasText: /Execution Across Versions/i })).toBeVisible();
-    await expect(page.locator('h2').filter({ hasText: /Nightly Build Health/i })).toBeVisible();
+    await page.getByRole('tab', { name: 'RHOAI Releases' }).click();
+    await page.waitForTimeout(300);
+    await expect(page.getByRole('tab', { name: 'RHOAI Releases' })).toHaveAttribute('aria-selected', 'true');
+    await expect(releasesTabPanel(page)).toBeVisible();
+    await expect(releasesTabPanel(page).locator('h2.tab-panel-title')).toContainText('RHOAI Releases Test Results');
+    await expect(releasesTabPanel(page).locator('h3.tab-section-subtitle').filter({ hasText: /Component Heatmap/i })).toBeVisible();
+    await expect(releasesTabPanel(page).locator('h3').filter({ hasText: /Execution Across Versions/i })).toBeVisible();
+    expect(page.url()).toMatch(/tab=releases/);
+    expect(page.url()).not.toMatch(/source=/);
 
-    const heatmapHeading = page.locator('h2').filter({ hasText: /Component Heatmap/i });
-    const nightlyHeading = page.locator('h2').filter({ hasText: /Nightly Build Health/i });
-    const heatmapBox = await heatmapHeading.boundingBox();
-    const nightlyBox = await nightlyHeading.boundingBox();
-    expect(heatmapBox && nightlyBox && heatmapBox.y < nightlyBox.y).toBe(true);
+    await page.getByRole('tab', { name: 'Promotion Gate' }).click();
+    await page.waitForTimeout(300);
+    await expect(gatesTabPanel(page).locator('h2.tab-panel-title')).toBeVisible();
+    await expect(page.locator('.nightly-matrix')).toBeVisible();
+    await expect(
+      releasesTabPanel(page).locator('h2.tab-panel-title').filter({ hasText: /RHOAI Releases Test Results/i })
+    ).toBeHidden();
+    expect(page.url()).toMatch(/tab=gates/);
+
+    expectNoBenignConsoleErrors(page);
+  });
+
+  test('should show releases heatmap on RHOAI Releases tab and promotion gate matrix on Promotion Gate tab', async ({ page }) => {
+    const nightlyFixture = JSON.parse(readFileSync(nightlyHealthFixturePath, 'utf8'));
+    const heatmapFixture = buildTabCoexistenceHeatmapFixture();
+
+    await page.route('**/api/modules/system-health/quality/test-execution/data**', async (route) => {
+      const url = route.request().url();
+      if (url.includes('file=')) {
+        const file = new URL(url).searchParams.get('file');
+        let body = {};
+        if (file === 'nightly_health') body = nightlyFixture;
+        if (file === 'heatmap') body = heatmapFixture;
+        await route.fulfill({
+          status: 200,
+          contentType: 'application/json',
+          body: JSON.stringify(body)
+        });
+        return;
+      }
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({
+          heatmap: heatmapFixture,
+          components: heatmapFixture.components,
+          jira_config: null,
+          meta: null,
+          nightly_health: nightlyFixture,
+          lastUpload: null
+        })
+      });
+    });
+
+    await page.goto('/#/system-health/test-execution');
+    await page.waitForLoadState('networkidle');
+    await page.waitForTimeout(DEFAULT_PAGE_WAIT_TIME);
+
+    await page.getByRole('tab', { name: 'RHOAI Releases' }).click();
+    await page.waitForTimeout(300);
+    await expect(page.getByRole('tab', { name: 'RHOAI Releases' })).toHaveAttribute('aria-selected', 'true');
+    await expect(releasesTabPanel(page)).toBeVisible();
+    await expect(releasesTabPanel(page).locator('h2.tab-panel-title')).toContainText('RHOAI Releases Test Results');
+    await expect(releasesTabPanel(page).locator('h3.tab-section-subtitle').filter({ hasText: /Component Heatmap/i })).toBeVisible();
+    await expect(releasesTabPanel(page).locator('h3').filter({ hasText: /Execution Across Versions/i })).toBeVisible();
+
+    await page.getByRole('tab', { name: 'Promotion Gate' }).click();
+    await page.waitForTimeout(300);
+    await expect(gatesTabPanel(page).locator('h2.tab-panel-title')).toBeVisible();
+    await expect(page.locator('.nightly-matrix')).toBeVisible();
+    await expect(
+      releasesTabPanel(page).locator('h2.tab-panel-title').filter({ hasText: /RHOAI Releases Test Results/i })
+    ).toBeHidden();
 
     expectNoBenignConsoleErrors(page);
   });
@@ -1357,5 +1693,353 @@ test.describe('Test Execution Dashboard @system-health', () => {
     expect(response.status()).toBe(400);
     const body = await response.json();
     expect(body.error).toMatch(/gates must be an array/);
+  });
+});
+
+/**
+ * Promotion Gates
+ *
+ * The view proxies the AIPCC Dashboard API through the module server; the
+ * browser only calls /api/modules/system-health/promotion-gates/*. Mock those
+ * endpoints with a trimmed job so the UI tests do not need a live dashboard.
+ */
+function buildPromotionGatesJob() {
+  return {
+    pr_number: 80,
+    trigger_id: 'gap-d7deac-test',
+    title: 'GAP leader: gap-test',
+    state: 'OPEN',
+    created_at: '2026-11-05T08:06:17Z',
+    closed_at: null,
+    merged_at: null,
+    labels: ['gated-artifacts-promoter'],
+    is_test: false,
+    source_url: 'https://github.com/red-hat-data-services/gated-artifacts-promoter/pull/80',
+    state_json: {
+      'pull-requests': [
+        {
+          repo: 'odh-dashboard',
+          'pr-url': 'https://github.com/red-hat-data-services/odh-dashboard/pull/2696',
+          'pr-status': 'success',
+          builds: [],
+          'build-observations': {
+            runs: [{ name: 'odh-dashboard-run', status: 'success', reason: 'Completed', url: 'https://konflux.example.com/runs/1' }]
+          }
+        },
+        {
+          repo: 'odh-model-controller',
+          'pr-url': 'https://github.com/red-hat-data-services/odh-model-controller/pull/1784',
+          'pr-status': 'build-failure',
+          builds: [],
+          'build-observations': {
+            'gate-reason': 'Required build failed',
+            runs: [{ name: 'odh-model-controller-run', status: 'failure', reason: 'Step failed', url: 'https://konflux.example.com/runs/2' }]
+          }
+        }
+      ],
+      'creator-outcomes': [
+        {
+          repo: 'red-hat-data-services/odh-dashboard',
+          'source-branch': 'main',
+          'target-branch': 'stable',
+          outcome: 'success',
+          reason: 'Updated pull request #2696',
+          'pr-url': 'https://github.com/red-hat-data-services/odh-dashboard/pull/2696',
+          'workflow-url': 'https://github.com/red-hat-data-services/rhods-devops-infra/actions/runs/1',
+          'observed-at': '2026-11-05T07:56:48+00:00'
+        },
+        {
+          repo: 'red-hat-data-services/odh-model-controller',
+          'source-branch': 'main',
+          'target-branch': 'stable',
+          outcome: 'merge-failure',
+          reason: 'Auto-merge failed',
+          'pr-url': 'https://github.com/red-hat-data-services/odh-model-controller/pull/1784',
+          'workflow-url': 'https://github.com/red-hat-data-services/rhods-devops-infra/actions/runs/2',
+          'observed-at': '2026-11-05T07:56:48+00:00'
+        }
+      ],
+      'promotion-gates': [
+        { id: 'component-builds', required: true, status: 'pending' },
+        { id: 'early-gate-build', required: false, status: 'failed' },
+        { id: 'early-gate-test', required: false, status: 'pending' }
+      ]
+    },
+    failure_links: [
+      {
+        repo: 'odh-model-controller',
+        label: 'odh-model-serving-api',
+        jira_url: 'https://stage-redhat.atlassian.net/browse/RHAI-219',
+        slack_url: 'https://redhat-internal.slack.com/archives/C1/p2'
+      }
+    ],
+    early_gate: {
+      build: {
+        status: 'failed',
+        pipeline_url: 'https://konflux.example.com/pipelineruns/early-gate-build',
+        ephemeral_branch: 'eg-80-test',
+        comment_url: 'https://github.com/red-hat-data-services/gated-artifacts-promoter/issues/80#issuecomment-1',
+        raw: '',
+        updated_at: '2026-11-05T09:25:43Z'
+      },
+      test: { status: 'unknown', pipeline_url: null, ephemeral_branch: null, comment_url: null, raw: null, updated_at: null }
+    },
+    synced_at: '2026-11-06T08:30:00Z'
+  };
+}
+
+function buildPromotionGatesSummary() {
+  return {
+    runs: [
+      {
+        pr_number: 80,
+        date: '2026-11-05',
+        attempts: 2,
+        attempt_prs: [80, 81],
+        state: 'MERGED',
+        release: '3.7 EA1',
+        components: 2,
+        passed: 1,
+        failed: 1,
+        pending: 0,
+        blocked: 1,
+        classes: { build_failure: 1 },
+        repos: [
+          { repo: 'odh-dashboard', class: null },
+          { repo: 'odh-model-controller', class: 'build_failure' }
+        ],
+        creator_issues: 0,
+        all_passed: false,
+        gates_passed: false,
+        links: {
+          'odh-model-controller': ['https://redhat.atlassian.net/browse/RHAI-421']
+        }
+      },
+      {
+        pr_number: 75,
+        date: '2026-11-03',
+        attempts: 1,
+        attempt_prs: [75],
+        state: 'MERGED',
+        release: '3.7 EA1',
+        components: 1,
+        passed: 1,
+        failed: 0,
+        pending: 0,
+        blocked: 0,
+        classes: {},
+        repos: [{ repo: 'odh-dashboard', class: null }],
+        creator_issues: 0,
+        all_passed: true,
+        gates_passed: true,
+        links: {}
+      }
+    ],
+    components: [
+      { repo: 'odh-model-controller', runs: 1, blocks: 1, top_class: 'build_failure' },
+      { repo: 'odh-dashboard', runs: 2, blocks: 0, top_class: null }
+    ],
+    classes: [{ class: 'build_failure', label: 'Build failure', count: 1 }],
+    releases: [{ release: '3.7 EA1', runs: 2 }],
+    totals: {
+      runs: 2,
+      runs_all_passed: 1,
+      components: 3,
+      passed: 2,
+      failed: 1,
+      pending: 0,
+      blocked: 1,
+      creator_issues: 0
+    }
+  };
+}
+
+async function mockPromotionGatesApi(page, job) {
+  await page.route('**/api/modules/system-health/promotion-gates/**', async (route) => {
+    if (route.request().method() !== 'GET') {
+      await route.continue();
+      return;
+    }
+    const path = new URL(route.request().url()).pathname;
+    if (path === '/api/modules/system-health/promotion-gates/summary') {
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify(buildPromotionGatesSummary())
+      });
+      return;
+    }
+    if (path !== '/api/modules/system-health/promotion-gates/latest') {
+      await route.continue();
+      return;
+    }
+    if (job === null) {
+      await route.fulfill({ status: 404, contentType: 'application/json', body: JSON.stringify({ message: 'No promotion gates data yet' }) });
+      return;
+    }
+    await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(job) });
+  });
+}
+
+test.describe('Promotion Gates @system-health', () => {
+  test.beforeEach(async ({ page }) => {
+    setupErrorTracking(page);
+    await mockDemoSystemHealthReadApis(page);
+    await mockPromotionGatesApi(page, buildPromotionGatesJob());
+  });
+
+  test.afterEach(async ({ page }, testInfo) => {
+    logCapturedErrors(page, testInfo);
+  });
+
+  test('should load Promotion Gates view with verdict, stages and early gate', async ({ page }) => {
+    await page.goto('/#/system-health/promotion-gates');
+    await page.waitForLoadState('networkidle');
+    await page.waitForTimeout(DEFAULT_PAGE_WAIT_TIME);
+
+    const mainContentVisible = await mainContentIsVisible(page);
+    expect(mainContentVisible).toBe(true);
+
+    await expect(page.locator('h1', { hasText: 'Promotion gates' })).toBeVisible();
+    await expect(page.getByRole('link', { name: /Leader PR #80/ })).toBeVisible();
+
+    // Hero verdict with the promoted count
+    await expect(page.locator('text=Promotion blocked')).toBeVisible();
+    await expect(page.locator('text=1 of 2 components passed')).toBeVisible();
+
+    // Stage strip covering the whole flow
+    for (const stage of ['Child PRs', 'Builds', 'Early gate build', 'Early gate test', 'Merge']) {
+      await expect(page.locator('text=' + stage).first()).toBeVisible();
+    }
+    await expect(page.locator('text=Not run')).toBeVisible();
+    await expect(page.locator('text=eg-80-test')).toBeVisible();
+
+    expectNoBenignConsoleErrors(page);
+  });
+
+  test('should split components into blocking and passing tables', async ({ page }) => {
+    await page.goto('/#/system-health/promotion-gates');
+    await page.waitForLoadState('networkidle');
+    await page.waitForTimeout(DEFAULT_PAGE_WAIT_TIME);
+
+    await expect(page.locator('h2', { hasText: 'Blocking components' })).toBeVisible();
+    await expect(page.locator('h2', { hasText: 'Succeeded components' })).toBeVisible();
+
+    // Both tables render at once, no toggle; the failing repo carries its reason
+    const blocking = page.locator('section', { has: page.locator('h2', { hasText: 'Blocking components' }) });
+    const passing = page.locator('section', { has: page.locator('h2', { hasText: 'Succeeded components' }) });
+    // the repo name now also appears in the per-component lines
+    await expect(blocking.locator('text=odh-model-controller').first()).toBeVisible();
+    // each failing build now carries its own reason on its own line
+    await expect(blocking.locator('text=odh-model-controller-run').first()).toBeVisible();
+    await expect(blocking.locator('text=Step failed').first()).toBeVisible();
+    // the bot's Jira link is shown against the failing component
+    await expect(blocking.getByRole('link', { name: 'RHAI-219' })).toBeVisible();
+    // Slack links are not rendered (they point at private channels)
+    await expect(blocking.locator('text=Slack')).toHaveCount(0);
+    await expect(passing.locator('text=odh-dashboard').first()).toBeVisible();
+
+    // Auto-merge issue from creator-outcomes surfaces in its own section
+    await expect(page.locator('h2', { hasText: 'PR creation and auto-merge issues' })).toBeVisible();
+    await expect(page.locator('text=Auto-merge failed')).toBeVisible();
+
+    expectNoBenignConsoleErrors(page);
+  });
+
+  test('should link each repo to its GitHub page', async ({ page }) => {
+    await page.goto('/#/system-health/promotion-gates');
+    await page.waitForLoadState('networkidle');
+    await page.waitForTimeout(DEFAULT_PAGE_WAIT_TIME);
+
+    const repoLink = page.getByRole('link', { name: 'odh-model-controller', exact: true }).first();
+    await expect(repoLink).toBeVisible();
+    await expect(repoLink).toHaveAttribute('href', 'https://github.com/red-hat-data-services/odh-model-controller');
+
+    expectNoBenignConsoleErrors(page);
+  });
+
+  test('should show friendly empty state when no data is collected yet', async ({ page }) => {
+    await mockPromotionGatesApi(page, null);
+    await page.goto('/#/system-health/promotion-gates');
+    await page.waitForLoadState('networkidle');
+    await page.waitForTimeout(DEFAULT_PAGE_WAIT_TIME);
+
+    await expect(page.locator('text=No promotion gates data yet')).toBeVisible();
+
+    expectNoBenignConsoleErrors(page);
+  });
+
+  test('should render the Trends tab with stats, heatmap and rollup', async ({ page }) => {
+    await page.goto('/#/system-health/promotion-gates?tab=trends');
+    await page.waitForLoadState('networkidle');
+    await page.waitForTimeout(DEFAULT_PAGE_WAIT_TIME);
+
+    // period switch and export links
+    await expect(page.getByRole('button', { name: '30 days' })).toBeVisible();
+    await expect(page.getByRole('link', { name: /Export CSV/ })).toHaveAttribute(
+      'href',
+      /promotion-gates\/summary\?days=30&format=csv/
+    );
+
+    // stats and both charts, scoped to the panel: the hidden "Latest job"
+    // tab also renders status badges with this text
+    const trends = page.locator('[aria-label="Trends"]');
+    await expect(trends.locator('text=Promotion days')).toBeVisible();
+    await expect(trends.locator('text=Fully promoted')).toBeVisible();
+    await expect(trends.getByText('1 of 2 runs')).toBeVisible();
+    await expect(trends.locator('h2', { hasText: 'How often does promotion fail?' })).toBeVisible();
+    await expect(trends.locator('h2', { hasText: 'Promotion history - frequent blockers' })).toBeVisible();
+    // the legend entry that exists only in this tab
+    await expect(trends.locator('text=Not in run')).toBeVisible();
+
+    // the chart's component filter: default plus every repo from the summary
+    const chartFilter = trends.getByRole('combobox');
+    await expect(chartFilter).toBeVisible();
+    await expect(chartFilter.locator('option', { hasText: 'All components' })).toBeAttached();
+    await expect(chartFilter.locator('option', { hasText: 'odh-model-controller' })).toBeAttached();
+    await expect(chartFilter.locator('option', { hasText: 'odh-dashboard' })).toBeAttached();
+
+    // a failed cell with a Jira link becomes an anchor carrying the issue key
+    await expect(
+      trends.locator('a[href="https://redhat.atlassian.net/browse/RHAI-421"]')
+    ).toBeVisible();
+
+    // the per-day rollup, including the retried day
+    await expect(trends.locator('h2', { hasText: 'Run rollup' })).toBeVisible();
+    await expect(trends.locator('text=2 attempts')).toBeVisible();
+    // the Promoted column: exactly one of the two days is a clean pass
+    await expect(trends.locator('th', { hasText: 'Promoted' })).toBeVisible();
+    await expect(trends.getByText('✓')).toHaveCount(1);
+    // the not-promoted row explains itself in its tooltip
+    await expect(trends.locator('td span[title^="Not promoted"]')).toHaveCount(1);
+
+    // 7 days switches the heatmap from squares to word tiles: weekday headers,
+    // and the Jira key inside the tile is the link itself
+    await page.getByRole('button', { name: '7 days' }).click();
+    await page.waitForTimeout(1000);
+    await expect(
+      trends.locator('th', { hasText: /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun) \d\d\/\d\d$/ }).first()
+    ).toBeVisible();
+    const inlineKey = trends.locator('a', { hasText: 'RHAI-421' });
+    await expect(inlineKey).toHaveAttribute(
+      'href',
+      'https://redhat.atlassian.net/browse/RHAI-421'
+    );
+
+    expectNoBenignConsoleErrors(page);
+  });
+
+  test('should render Release branches tab with diff links', async ({ page }) => {
+    await page.goto('/#/system-health/promotion-gates?tab=branches');
+    await page.waitForLoadState('networkidle');
+    await page.waitForTimeout(DEFAULT_PAGE_WAIT_TIME);
+
+    await expect(page.getByRole('tab', { name: 'Release branches' })).toBeVisible();
+
+    const diffLink = page.getByRole('link', { name: 'main → stable' }).first();
+    await expect(diffLink).toBeVisible();
+    await expect(diffLink).toHaveAttribute('href', 'https://github.com/red-hat-data-services/odh-dashboard/compare/stable...main');
+
+    expectNoBenignConsoleErrors(page);
   });
 });

@@ -325,7 +325,7 @@ test.describe('AI Catalyst feed sync (local stub) @ai-catalyst', () => {
     const syncRes = await request.post('/api/modules/ai-catalyst/sync');
     expect(syncRes.ok()).toBe(true);
     const syncBody = await syncRes.json();
-    expect(syncBody).toMatchObject({ status: 'ok', synced: 0, total: 1 });
+    expect(syncBody).toMatchObject({ status: 'failed', synced: 0, total: 1 });
     expect(syncBody.failed).toHaveLength(1);
     expect(syncBody.failed[0].board).toBe(`board-${STUB_BOARD_MONTH}`);
     expect(syncBody.failed[0].error).toContain('rows');
@@ -446,17 +446,15 @@ test.describe('AI Catalyst feed sync (local stub) @ai-catalyst', () => {
     });
   }
 
-  test('should reject feed URLs with unapproved origins before fetching', async ({ request }) => {
+  test('should reject feed URLs with unapproved origins at save time', async ({ request }) => {
     const saveRes = await request.post('/api/modules/ai-catalyst/board-config', {
       data: { feedUrl: 'https://evil.example.test' },
     });
-    expect(saveRes.ok()).toBe(true);
+    expect(saveRes.status()).toBe(400);
+    expect((await saveRes.json()).error).toContain('not an approved origin');
 
-    const syncRes = await request.post('/api/modules/ai-catalyst/sync');
-    expect(syncRes.status()).toBe(500);
-
-    const body = await syncRes.json();
-    expect(body.error).toContain('not an approved origin');
+    const configRes = await request.get('/api/modules/ai-catalyst/board-config');
+    expect(await configRes.json()).toEqual({ feedUrl: '' });
     expect(stub.requests).toHaveLength(0);
   });
 });

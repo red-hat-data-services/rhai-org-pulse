@@ -10,12 +10,17 @@ const {
   RUNS_INDEX,
   TASKS_INDEX,
   BUGS_INDEX,
+  IMAGES_INDEX,
   getOpenSearchConfig,
   createOpenSearchClient,
   runFilters,
   bugFilters
 } = require('./opensearch');
 const { getEffectiveSettings, getSavedSettings, saveSettings } = require('./config');
+const { createJiraClient } = require('../../../shared/server/jira');
+const { createBugTickets } = require('./bug-tickets');
+const { taskAggregations, groupCounts } = require('./run-summary');
+const recentRunTools = import('../lib/versions.js').then(rules => require('./recent-runs')(rules));
 
 /** Wrap an async handler so OpenSearch connectivity errors become clean HTTP responses. */
 function safe(handler) {
@@ -23,6 +28,9 @@ function safe(handler) {
     try {
       await handler(req, res);
     } catch (err) {
+      if (err.code === 'STALE_CURSOR') {
+        return res.status(409).json({ error: err.message, code: err.code });
+      }
       if (err.code === 'BAD_REQUEST') {
         return res.status(400).json({ error: err.message, code: err.code });
       }
@@ -82,11 +90,165 @@ function visibleJiraIssues(query) {
   return addFilter(withoutHiddenIssues(query), { exists: { field: 'bug_key' } });
 }
 
+/** Read complete run groups; stop between searches when the response closes.
+ * Paged callers can add task counters. Legacy callers retain their aggregates.
+ */
+async function readSuiteRunGroups(query, search, { isClosed = () => false, metadataOnly = false, includeCounts = false } = {}) {
+  const buckets = [];
+  let after;
+  do {
+    if (isClosed()) return null;
+    const response = await search(RUNS_INDEX, {
+      size: 0,
+      query,
+      aggs: {
+        suite_runs: {
+          composite: {
+            size: 500,
+            sources: [
+              { suite: { terms: { field: 'telemetry_suite' } } },
+              { invocation: { terms: { field: 'invocation_id' } } }
+            ],
+            ...(after ? { after } : {})
+          },
+          aggs: {
+            ...(includeCounts ? taskAggregations : {}),
+            ...(!metadataOnly ? {
+              pass_rate: { avg: { field: 'passed_int' } },
+              passed: { filter: { term: { verdict: 'PASS' } } },
+              failed: { filter: { term: { verdict: 'FAIL' } } },
+              errors: { filter: { term: { verdict: 'ERROR' } } },
+              duration: { sum: { field: 'duration_s' } },
+              duration_count: { value_count: { field: 'duration_s' } },
+            } : {}),
+            latest: { top_hits: {
+              size: 1,
+              sort: [{ timestamp: 'desc' }, { execution_id: 'asc' }],
+              _source: metadataOnly ? ['timestamp', 'rhoai_version'] : ['timestamp', 'rhoai_version', 'rhods_operator_digest', 'cluster_name']
+            } }
+          }
+        }
+      }
+    });
+    if (isClosed()) return null;
+    if (response.timed_out || response._shards?.failed) throw new Error('Incomplete execution aggregation');
+    const aggregation = response.aggregations?.suite_runs;
+    buckets.push(...bucketList(aggregation));
+    after = aggregation?.after_key;
+  } while (after);
+
+  return buckets.map((bucket) => {
+    const latest = bucket.latest?.hits?.hits?.[0]?._source || {};
+    return {
+      suite: bucket.key.suite,
+      invocationId: bucket.key.invocation,
+      timestamp: latest.timestamp || null,
+      ...(includeCounts ? groupCounts(bucket) : {}),
+      ...(!metadataOnly ? {
+        tests: bucket.doc_count,
+        passed: bucket.passed?.doc_count || 0,
+        failed: bucket.failed?.doc_count || 0,
+        errors: bucket.errors?.doc_count || 0,
+        duration: bucket.duration_count?.value === bucket.doc_count ? valueOrNull(bucket.duration) : null,
+        passRate: bucket.pass_rate?.value ?? null,
+      } : {}),
+      rhoaiVersion: latest.rhoai_version || null,
+      ...(!metadataOnly ? {
+        rhodsOperatorDigest: latest.rhods_operator_digest || null,
+        clusterName: latest.cluster_name || null
+      } : {})
+    };
+  });
+}
+
+/** Accept explicit-zone ISO timestamps without normalizing invalid calendar days. */
+function verifiedBuildDate(value) {
+  if (typeof value !== 'string' || !/^\d{4}-\d{2}-\d{2}T(?:[01]\d|2[0-3]):[0-5]\d:[0-5]\d(?:\.\d{1,9})?(?:Z|[+-](?:[01]\d|2[0-3]):[0-5]\d)$/.test(value)) return null;
+  const day = value.slice(0, 10), midnight = Date.parse(`${day}T00:00:00Z`), timestamp = Date.parse(value);
+  if (!Number.isFinite(midnight) || new Date(midnight).toISOString().slice(0, 10) !== day || !Number.isFinite(timestamp)) return null;
+  return new Date(timestamp).toISOString();
+}
+
+/** Enrich run groups with the latest observed image version and newest verified build time. */
+async function addImageMetadata(rows, search, invocationField, isClosed = () => false) {
+  const ids = [...new Set(rows.map(row => row.invocationId).filter(Boolean))];
+  const byId = new Map();
+  for (let offset = 0; offset < ids.length; offset += 500) {
+    if (isClosed()) return null;
+    const response = await search(IMAGES_INDEX, {
+      size: 0,
+      query: { terms: { [invocationField]: ids.slice(offset, offset + 500) } },
+      aggs: { builds: {
+        terms: { field: invocationField, size: 500 },
+        aggs: {
+          verified: {
+            filter: { term: { 'operator_image.build_date_status': 'verified' } },
+            aggs: { latest: { top_hits: {
+              size: 1,
+              sort: [{ 'operator_image.build_date': { order: 'desc', missing: '_last' } }],
+              _source: ['operator_image.build_date']
+            } } }
+          },
+          latestImage: {
+            top_hits: {
+              size: 1,
+              sort: [{ 'operator_image.observed_at': { order: 'desc' } }],
+              _source: ['operator_image.version']
+            }
+          }
+        }
+      } }
+    });
+    if (isClosed()) return null;
+    if (response.timed_out || response._shards?.failed) throw new Error('Incomplete image aggregation');
+    for (const bucket of bucketList(response.aggregations?.builds)) {
+      const date = bucket.verified?.latest?.hits?.hits?.[0]?._source?.operator_image?.build_date;
+      const rawVersion = bucket.latestImage?.hits?.hits?.[0]?._source?.operator_image?.version;
+      const version = typeof rawVersion === 'string'
+        ? rawVersion.trim().replace(/^v/, '') || null
+        : null;
+
+      byId.set(bucket.key, { buildDate: verifiedBuildDate(date), version });
+    }
+  }
+  return rows.map(row => {
+    const image = byId.get(row.invocationId) || null;
+    const buildDate = image?.buildDate || null;
+    const imageVersion = image?.version || null;
+
+    return {
+      ...row,
+      rhoaiVersion: imageVersion ?? row.rhoaiVersion,
+      buildDate,
+      buildDateStatus: buildDate ? 'verified' : image ? 'unavailable' : null
+    };
+  });
+}
+
+/** Mount read-only routes and a short-lived metadata cache for this connection. */
 module.exports = function registerRoutes(router, context) {
   const { requireAuth, requireAdmin } = context;
   const { readFromStorage, writeToStorage } = context.storage || {};
   let cachedClient;
   let cachedSignature;
+  let recentGroupsCache;
+  let recentBugCountsCache;
+  let recentScanSequence = 0;
+  const imageInvocationFields = new WeakMap();
+  let jiraClient;
+  let jiraSignature;
+  const enrichBugTickets = createBugTickets({ getJiraClient() {
+    const email = context.secrets?.JIRA_EMAIL;
+    const token = context.secrets?.JIRA_TOKEN;
+    if (!email || !token) throw new Error('Jira credentials are unavailable');
+    const host = process.env.JIRA_HOST || 'https://redhat.atlassian.net';
+    const signature = JSON.stringify([email, token, host]);
+    if (!jiraClient || jiraSignature !== signature) {
+      jiraClient = createJiraClient({ email, token, host });
+      jiraSignature = signature;
+    }
+    return jiraClient;
+  } });
 
   async function getRuntimeClient() {
     const settings = await getEffectiveSettings(readFromStorage);
@@ -110,6 +272,25 @@ module.exports = function registerRoutes(router, context) {
   const osSearch = async function(...args) {
     return (await getRuntimeClient()).client.search(...args);
   };
+
+  /** Resolve the image index's exact-value field without assuming its mapping matches executions. */
+  function imageInvocationField(client) {
+    let pending = imageInvocationFields.get(client);
+    if (!pending) {
+      pending = client.fieldCaps(IMAGES_INDEX, ['invocation_id', 'invocation_id.keyword']).then(({ fields }) => {
+        const subfield = fields?.['invocation_id.keyword']?.keyword;
+        const direct = fields?.invocation_id?.keyword;
+        if (subfield?.aggregatable && subfield.searchable) return 'invocation_id.keyword';
+        if (direct?.aggregatable && direct.searchable) return 'invocation_id';
+        throw new Error('Image index invocation_id must be a keyword field or have a keyword subfield');
+      }).catch((error) => {
+        imageInvocationFields.delete(client);
+        throw error;
+      });
+      imageInvocationFields.set(client, pending);
+    }
+    return pending;
+  }
 
   if (context.registerSecretValidator) {
     context.registerSecretValidator('WORKFLOW_VALIDATION_OPENSEARCH_PASSWORD', async function() {
@@ -215,6 +396,7 @@ module.exports = function registerRoutes(router, context) {
       const overrides = await saveSettings(writeToStorage, req.body);
       cachedClient = null;
       cachedSignature = null;
+      recentGroupsCache = null;
       const effective = await getEffectiveSettings(readFromStorage);
       res.json({ status: 'saved', overrides, ...effective });
     } catch (err) {
@@ -419,20 +601,40 @@ module.exports = function registerRoutes(router, context) {
    * /api/modules/workflow-validation/test-suites:
    *   get:
    *     summary: Test runs grouped by telemetry suite and invocation
+   *     description: In paged mode, rhoaiVersion uses the latest observed operator_image.version from the image index, with an optional leading v removed. Missing or empty image versions fall back to the execution version. Version filtering and sorting use this resolved value.
    *     tags: [Workflow Validation]
    *     parameters:
    *       - { in: query, name: suite, schema: { type: string } }
    *       - { in: query, name: version, schema: { type: string } }
+   *       - { in: query, name: versions, schema: { type: array, maxItems: 50, items: { type: string } }, style: form, explode: true, description: Match any selected version; paged mode only; cannot combine with version }
+   *       - { in: query, name: sortField, schema: { type: string, enum: [timestamp, version, suite, buildDate], default: timestamp }, description: Global sort column in paged mode }
    *       - { in: query, name: latest, schema: { type: boolean } }
    *       - { in: query, name: limit, schema: { type: integer, minimum: 1, maximum: 200 }, description: Limit run groups after ordering newest first }
    *       - { in: query, name: includeBugs, schema: { type: boolean, default: true }, description: Set false for lightweight run metadata without RCA retrieval }
+   *       - { in: query, name: includeBugTickets, schema: { type: boolean, default: false }, description: Add per-row Jira search links in paged mode; exclude rca-scope-internal using verified Jira labels }
+   *       - { in: query, name: includeSummary, schema: { type: boolean, default: false }, description: Add per-run workflow and task counts and a summary across all runs for the selected versions. Bugs count distinct linked Jira issues excluding rca-scope-internal. Missing counters or unverified bug counts are null. Requires pageSize. }
+   *       - { in: query, name: bugsOnly, schema: { type: boolean, default: false }, description: 'Include runs with at least one verified eligible Jira issue before pagination, even if other keys are unresolved. Exact counts can remain null and bugFilterIncomplete reports incomplete coverage. Requires pageSize.' }
    *       - { in: query, name: dateFrom, schema: { type: string, format: date } }
    *       - { in: query, name: dateTo, schema: { type: string, format: date } }
+   *       - { in: query, name: pageSize, schema: { type: integer, minimum: 1, maximum: 200 }, description: Opt into lightweight pagination across all run groups }
+   *       - { in: query, name: cursor, schema: { type: string }, description: Recent-run cursor bound to filters and sort order; version-sorted cursors also track the set of run versions }
+   *       - { in: query, name: sortDir, schema: { type: string, enum: [asc, desc], default: desc }, description: Selected column sort direction; requires pageSize }
+   *       - { in: query, name: runQuery, schema: { type: string, maxLength: 256 }, description: Run ID substring; requires pageSize }
+   *       - { in: query, name: refresh, schema: { type: boolean, default: false }, description: Bypass the 10-second metadata cache; requires pageSize }
    *     responses:
-   *       200: { description: "Test run rows ordered by latest recorded execution time. Lightweight responses contain suite, invocation, version and execution timestamp." }
-   *       400: { description: Invalid limit }
+   *       200: { description: "Run groups default to recorded execution timestamp descending. Paged mode returns rows, total, start, end, pageSize, nextCursor, previousCursor, options (versions and suites), sortField and sortDir. includeBugTickets adds bugTickets with ready, empty or unavailable status; ready includes a Jira search URL. buildDate is the newest verified RHOAI operator image build time for the invocation, normalized from a valid explicit-zone ISO timestamp, or null. buildDateStatus is verified, unavailable, or null when no image group exists. sortField buildDate sorts by build date, then time, with missing values last. Run and build metadata share a 10-second cache; refresh bypasses both." }
+   *       400: { description: "Invalid limit, page parameters, or cursor" }
+   *       409: { description: "Version-sorted results changed, or the saved version cursor predates change detection. Restart from the first page with the same filters and sort order." }
    */
   router.get('/test-suites', requireAuth, safe(async function (req, res) {
+    let disconnected = Boolean(res.destroyed);
+    const onEarlyClose = () => { disconnected = true; };
+    res.once('close', onEarlyClose);
+    let tools;
+    try { tools = await recentRunTools; } finally { res.removeListener('close', onEarlyClose); }
+    if (disconnected) return;
+    const { parseRecentRuns, pageRecentRuns, selectVersionRuns } = tools;
+    const recent = parseRecentRuns(req.query);
     let limit = null;
     if (req.query.limit !== undefined) {
       if (!/^[1-9]\d*$/.test(String(req.query.limit)) || Number(req.query.limit) > 200) {
@@ -440,69 +642,80 @@ module.exports = function registerRoutes(router, context) {
       }
       limit = Number(req.query.limit);
     }
-    let query = runFilters({
+    let query = runFilters(recent ? {} : {
       version: req.query.version,
       dateFrom: req.query.dateFrom,
       dateTo: req.query.dateTo
     });
     query = addFilter(query, { exists: { field: 'telemetry_suite' } });
     query = addFilter(query, { exists: { field: 'invocation_id' } });
-    if (req.query.suite) query = addFilter(query, { term: { telemetry_suite: req.query.suite } });
+    if (!recent && req.query.suite) query = addFilter(query, { term: { telemetry_suite: req.query.suite } });
 
-    const buckets = [];
-    let after;
-    do {
-      const response = await osSearch(RUNS_INDEX, {
-        size: 0,
-        query,
-        aggs: {
-          suite_runs: {
-            composite: {
-              size: 500,
-              sources: [
-                { suite: { terms: { field: 'telemetry_suite' } } },
-                { invocation: { terms: { field: 'invocation_id' } } }
-              ],
-              ...(after ? { after } : {})
-            },
-            aggs: {
-              pass_rate: { avg: { field: 'passed_int' } },
-              passed: { filter: { term: { verdict: 'PASS' } } },
-              failed: { filter: { term: { verdict: 'FAIL' } } },
-              errors: { filter: { term: { verdict: 'ERROR' } } },
-              duration: { sum: { field: 'duration_s' } },
-              duration_count: { value_count: { field: 'duration_s' } },
-              latest: { top_hits: {
-                size: 1,
-                sort: [{ timestamp: 'desc' }, { execution_id: 'asc' }],
-                _source: ['timestamp', 'rhoai_version', 'rhods_operator_digest', 'cluster_name']
-              } }
+    if (recent) {
+      let closed = res.destroyed;
+      const onClose = () => { closed = true; };
+      res.once('close', onClose);
+      try {
+        const client = (await getRuntimeClient()).client;
+        if (closed) return;
+        let rows = !recent.refresh && recentGroupsCache?.client === client && (!recent.includeSummary || recentGroupsCache.includeCounts)
+          && Date.now() < recentGroupsCache.expiresAt ? recentGroupsCache.rows : null;
+        if (!rows) {
+          const scanSequence = ++recentScanSequence;
+          rows = await readSuiteRunGroups(query, (index, body) => client.search(index, body), {
+            metadataOnly: true, includeCounts: recent.includeSummary, isClosed: () => closed
+          });
+          if (rows === null || closed) return;
+          if (rows.length) {
+            const invocationField = await imageInvocationField(client);
+            if (closed) return;
+            rows = await addImageMetadata(rows, (index, body) => client.search(index, body), invocationField, () => closed);
+            if (rows === null || closed) return;
+          }
+          if (cachedClient === client && scanSequence > (recentGroupsCache?.sequence || 0)) {
+            recentGroupsCache = { client, rows, includeCounts: recent.includeSummary, sequence: scanSequence, expiresAt: Date.now() + 10_000 };
+          }
+        }
+        const includeGlobalBugs = recent.includeSummary || recent.filters.bugsOnly;
+        if (includeGlobalBugs) {
+          const sourceRows = rows;
+          const versionScope = JSON.stringify(recent.filters.versions);
+          if (!recent.refresh && recentBugCountsCache?.sourceRows === sourceRows && recentBugCountsCache.versionScope === versionScope && Date.now() < recentBugCountsCache.expiresAt) {
+            rows = recentBugCountsCache.rows;
+          } else {
+            const selectedRows = selectVersionRuns(sourceRows, recent.filters.versions);
+            const enriched = [];
+            // Bound the execution correlation query below OpenSearch's Boolean-clause limit.
+            for (let offset = 0; offset < selectedRows.length; offset += 200) {
+              enriched.push(...await enrichBugTickets(selectedRows.slice(offset, offset + 200), {
+                search: (index, body) => client.search(index, body), refresh: recent.refresh,
+                isClosed: () => closed, includeKeys: true
+              }));
+              if (closed) return;
+            }
+            const byRun = new Map(enriched.map(row => [JSON.stringify([row.suite, row.invocationId]), row]));
+            rows = sourceRows.map(row => byRun.get(JSON.stringify([row.suite, row.invocationId])) || row);
+            if (recentGroupsCache?.rows === sourceRows && enriched.every(row => row._bugKeys !== null)) {
+              recentBugCountsCache = { sourceRows, versionScope, rows, expiresAt: Date.now() + 10_000 };
             }
           }
         }
-      });
-      const aggregation = response.aggregations?.suite_runs;
-      buckets.push(...bucketList(aggregation));
-      after = aggregation?.after_key;
-    } while (after);
-
-    let rows = buckets.map((bucket) => {
-      const latest = bucket.latest?.hits?.hits?.[0]?._source || {};
-      return {
-        suite: bucket.key.suite,
-        invocationId: bucket.key.invocation,
-        timestamp: latest.timestamp || null,
-        tests: bucket.doc_count,
-        passed: bucket.passed?.doc_count || 0,
-        failed: bucket.failed?.doc_count || 0,
-        errors: bucket.errors?.doc_count || 0,
-        duration: bucket.duration_count?.value === bucket.doc_count ? valueOrNull(bucket.duration) : null,
-        passRate: bucket.pass_rate?.value ?? null,
-        rhoaiVersion: latest.rhoai_version || null,
-        rhodsOperatorDigest: latest.rhods_operator_digest || null,
-        clusterName: latest.cluster_name || null
-      };
-    });
+        const page = pageRecentRuns(rows, recent);
+        if (req.query.includeBugTickets === 'true' && !includeGlobalBugs) {
+          page.rows = await enrichBugTickets(page.rows, {
+            search: (index, body) => client.search(index, body), refresh: recent.refresh, isClosed: () => closed
+          });
+        }
+        if (req.query.includeBugTickets !== 'true') for (const row of page.rows) delete row.bugTickets;
+        if (!closed) return res.json(page);
+      } catch (err) {
+        if (!closed) throw err;
+      } finally {
+        res.removeListener('close', onClose);
+      }
+      return;
+    }
+    let rows = await readSuiteRunGroups(query, osSearch);
     rows.sort((a, b) => {
       const time = row => Number.isFinite(Date.parse(row.timestamp)) ? Date.parse(row.timestamp) : -Infinity;
       const left = time(a), right = time(b);

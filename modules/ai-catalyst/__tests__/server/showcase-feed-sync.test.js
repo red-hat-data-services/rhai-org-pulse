@@ -348,6 +348,22 @@ describe('fetchShowcaseData', () => {
     );
   });
 
+  it('keeps the fresh catalog in memory when the storage write fails', async () => {
+    stubFeed({ '/feed/showcase.json': FEED_PAYLOAD });
+    const storage = {
+      writeToStorage: vi.fn(async () => { throw new Error('read-only file system') }),
+      readFromStorage: vi.fn(async () => { throw new Error('should not read') }),
+    };
+
+    await expect(fetchShowcaseData('https://feed.example.test', 'token-123', storage))
+      .rejects.toThrow('read-only file system');
+
+    // The read path serves the fetched catalog, not the stale stored one.
+    const data = await getShowcaseData('https://feed.example.test', 'token-123', storage);
+    expect(data.entries.map(e => e.slug)).toContain('vllm-serving');
+    expect(storage.readFromStorage).not.toHaveBeenCalled();
+  });
+
   it('surfaces an actionable error on 401', async () => {
     stubFeed({});
     const storage = { writeToStorage: vi.fn(async () => {}), readFromStorage: vi.fn(async () => null) };

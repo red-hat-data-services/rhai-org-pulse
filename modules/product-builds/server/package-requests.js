@@ -62,7 +62,7 @@ const {
 } = require('./request-common');
 
 const EPIC_LABELS = ['package', 'dashboard-filed'];
-const COMPONENT_NAME = 'Accelerator Enablement';
+const COMPONENT_NAME = 'AIPCC Ecosystems';
 const DEFAULT_TARGET_VERSION_FIELD = 'customfield_10855';
 // Numeric id of redhat/rhel-ai/core/package-onboarding. GitLab answers 404 for
 // private projects the token cannot see, so a 404 here means the token owner
@@ -667,10 +667,9 @@ module.exports = function registerPackageRequestRoutes(router, context, deps = {
    *       verifies the related Jira issue, checks for recent duplicate
    *       requests, validates PyPI sources, and warns when the package is
    *       already present in a production index. On success it files an Epic
-   *       in the project chosen in the form (RHAI; RHAISTRAT falls back to the
-   *       default), or in PACKAGE_REQUEST_JIRA_PROJECT when that is set,
+   *       in the RHAI project, or in PACKAGE_REQUEST_JIRA_PROJECT when that is set,
    *       with its required Epic Name field, due date, team label, Red
-   *       Hat Employee security, and Accelerator Enablement component, sets the
+   *       Hat Employee security, and AIPCC Ecosystems component, sets the
    *       release target field when provided, and triggers the
    *       redhat/rhel-ai/core/package-onboarding GitLab pipeline using
    *       PACKAGE_ONBOARDING_GITLAB_TOKEN. Pipeline failure, or a missing

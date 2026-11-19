@@ -1,0 +1,16 @@
+{
+  "type": "server-routes",
+  "mountPath": "/api/usage",
+  "server": {
+    "entry": "./server/index.js"
+  },
+  "secrets": {
+    "module": [
+      {
+        "key": "USAGE_TRACKING_HMAC_KEY",
+        "description": "HMAC key for pseudonymizing user IDs in usage events",
+        "required": false
+      }
+    ]
+  }
+}

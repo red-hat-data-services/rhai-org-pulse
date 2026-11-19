@@ -1,6 +1,7 @@
 import { describe, it, expect, vi } from 'vitest';
+import http from 'node:http';
 
-import { createFeedClient, FeedError } from '../../server/feed-client.js';
+import { createFeedClient, FeedError, proxyDispatcherFromEnv, redactUrl, redactText } from '../../server/feed-client.js';
 
 function jsonResponse(status, body) {
   return {
@@ -393,5 +394,117 @@ describe('createFeedClient destination validation', () => {
     expect(err).toBeInstanceOf(FeedError);
     expect(err.message).toContain('not a valid URL');
     expect(fetchFn).not.toHaveBeenCalled();
+  });
+
+  it('rejects a base URL with a query or fragment instead of sending a broken path', async () => {
+    const fetchFn = vi.fn();
+    for (const baseUrl of ['https://feed.example.test?x=1', 'https://feed.example.test#frag']) {
+      const client = createFeedClient({ baseUrl, token: 't', fetchFn });
+      const err = await client.listBoards().catch(e => e);
+      expect(err).toBeInstanceOf(FeedError);
+      expect(err.message).toContain('query or fragment');
+    }
+    expect(fetchFn).not.toHaveBeenCalled();
+  });
+
+  it('rejects credentialed feed URLs before the token is sent', async () => {
+    const fetchFn = vi.fn();
+    const client = createFeedClient({ baseUrl: 'https://user:pass@feed.example.test', token: 't', fetchFn });
+
+    const err = await client.listBoards().catch(e => e);
+    expect(err).toBeInstanceOf(FeedError);
+    expect(err.message).toContain('must not contain credentials');
+    expect(err.message).not.toContain('pass');
+    expect(fetchFn).not.toHaveBeenCalled();
+  });
+
+  it('sends external requests through the proxy dispatcher and keeps loopback direct', async () => {
+    const dispatcher = { dispatch: vi.fn() };
+    const fetchFn = vi.fn(async () => jsonResponse(200, { boards: [] }));
+
+    const external = createFeedClient({ baseUrl: 'https://feed.example.test', token: 't', fetchFn, dispatcher });
+    await external.listBoards();
+    expect(fetchFn.mock.calls[0][1].dispatcher).toBe(dispatcher);
+
+    const loopback = createFeedClient({
+      baseUrl: 'http://127.0.0.1:45678',
+      token: 't',
+      fetchFn,
+      allowLoopback: true,
+      dispatcher,
+    });
+    await loopback.listBoards();
+    expect(fetchFn.mock.calls[1][1].dispatcher).toBeUndefined();
+  });
+});
+
+describe('default proxy dispatcher', () => {
+  it('routes the client through HTTPS_PROXY when no dispatcher is injected', async () => {
+    const seen = [];
+    const proxy = http.createServer();
+    proxy.on('connect', (req, socket) => {
+      seen.push(req.url);
+      socket.destroy();
+    });
+    await new Promise(resolve => proxy.listen(0, '127.0.0.1', resolve));
+    const previous = process.env.HTTPS_PROXY;
+    process.env.HTTPS_PROXY = `http://127.0.0.1:${proxy.address().port}`;
+
+    try {
+      const client = createFeedClient({ baseUrl: 'https://feed.example.test', token: 't' });
+      await expect(client.listBoards()).rejects.toThrow();
+      expect(seen).toEqual(['feed.example.test:443']);
+    } finally {
+      if (previous === undefined) delete process.env.HTTPS_PROXY;
+      else process.env.HTTPS_PROXY = previous;
+      await new Promise(resolve => proxy.close(resolve));
+    }
+  });
+
+  it('uses a stubbed global fetch instead of undici fetch when a proxy is set', async () => {
+    const fetchMock = vi.fn(async () => jsonResponse(200, { boards: ['board-2026-09'] }));
+    const previous = process.env.HTTPS_PROXY;
+    process.env.HTTPS_PROXY = 'http://proxy.invalid:1';
+    vi.stubGlobal('fetch', fetchMock);
+
+    try {
+      const client = createFeedClient({ baseUrl: 'https://feed.example.test', token: 't' });
+      await expect(client.listBoards()).resolves.toEqual(['board-2026-09']);
+      expect(fetchMock).toHaveBeenCalledTimes(1);
+    } finally {
+      vi.unstubAllGlobals();
+      if (previous === undefined) delete process.env.HTTPS_PROXY;
+      else process.env.HTTPS_PROXY = previous;
+    }
+  });
+});
+
+describe('proxyDispatcherFromEnv', () => {
+  it('is absent when no proxy is configured', () => {
+    expect(proxyDispatcherFromEnv({})).toBeNull();
+  });
+
+  it('honours HTTPS_PROXY and HTTP_PROXY', () => {
+    expect(proxyDispatcherFromEnv({ HTTPS_PROXY: 'http://proxy.example:3128' })).toHaveProperty('dispatch');
+    expect(proxyDispatcherFromEnv({ HTTP_PROXY: 'http://proxy.example:3128' })).toHaveProperty('dispatch');
+  });
+});
+
+describe('redactUrl', () => {
+  it('drops userinfo, including a password that contains "@"', () => {
+    expect(redactUrl('https://user:pa@ss@feed.example.test')).toBe('https://feed.example.test');
+    expect(redactUrl('https://user:secret@feed.example.test/path?x=1')).toBe('https://feed.example.test/path?x=1');
+  });
+
+  it('replaces a malformed value instead of echoing it', () => {
+    expect(redactUrl('user:secret@feed.example.test')).toBe('(invalid URL)');
+    expect(redactUrl('not a url')).toBe('(invalid URL)');
+  });
+
+  it('drops scheme userinfo from error text without losing the message', () => {
+    const message = 'Failed to reach https://user:pass@feed.example.test: boom';
+    expect(redactText(message)).not.toContain('user:pass');
+    expect(redactText(message)).toContain('feed.example.test');
+    expect(redactText(message)).toContain('boom');
   });
 });

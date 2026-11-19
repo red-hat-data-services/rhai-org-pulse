@@ -86,6 +86,87 @@ describe('Tech Debt trend snapshot', function () {
     expect(response.components[0].months.find(function (month) { return month.month === '2026-08' }).received.categories['component-team']).toBe(1)
   })
 
+  it('preserves componentless events and combines them with named component panels', function () {
+    const snapshot = buildTrendSnapshot([
+      rawIssue('RHAI-NAMED', {
+        components: [{ name: 'AI Gateway' }],
+        created: '2026-08-01T00:00:00.000Z'
+      }),
+      rawIssue('RHAI-EMPTY', {
+        components: [],
+        created: '2026-09-01T00:00:00.000Z',
+        resolutiondate: '2026-10-20T10:00:00.000Z'
+      })
+    ], new Set(), new Date('2026-10-29T06:00:00.000Z'))
+
+    expect(snapshot.events.find(function (event) { return event.key === 'RHAI-EMPTY' }).components).toEqual([])
+    const normalized = normalizeTrendSnapshot(snapshot)
+    expect(normalized.error).toBeUndefined()
+
+    const response = buildTrendResponse(
+      normalized.snapshot,
+      ['AI Gateway'],
+      null,
+      new Date('2026-10-29T07:00:00.000Z'),
+      true
+    )
+    expect(response.totals).toEqual({ received: 2, resolved: 1 })
+    expect(response.includeNoComponent).toBe(true)
+    expect(response.components).toEqual([
+      expect.objectContaining({ component: 'AI Gateway', noComponent: false, totals: { received: 1, resolved: 0 } }),
+      expect.objectContaining({ component: 'No component', noComponent: true, totals: { received: 1, resolved: 1 } })
+    ])
+  })
+
+  it('classifies the expanded Bug source taxonomy', function () {
+    const snapshot = buildTrendSnapshot([
+      rawIssue('RHAI-DASHBOARD', { labels: ['cypress_found_bug'] }),
+      rawIssue('RHAI-BUILD', { labels: ['dsc-not-ready'] }),
+      rawIssue('RHAI-SNYK', {
+        labels: ['snyk', 'dependency'],
+        reporter: { accountId: 'automation', displayName: 'RHOAIENG AutomationBot' }
+      }),
+      rawIssue('RHAI-OPERATOR', {
+        labels: ['odh-operator-auto-e2e-blocker'],
+        reporter: { accountId: 'automation', displayName: 'RHOAIENG AutomationBot' }
+      }),
+      rawIssue('RHAI-AUTOMATION', {
+        reporter: { accountId: 'automation', displayName: 'RHOAIENG AutomationBot' }
+      })
+    ], new Set(), new Date('2026-10-29T06:00:00.000Z'))
+
+    expect(Object.fromEntries(snapshot.events.map(function (event) { return [event.key, event.category] }))).toEqual({
+      'RHAI-AUTOMATION': 'unclassified-automation',
+      'RHAI-BUILD': 'build-cannot-run',
+      'RHAI-DASHBOARD': 'dashboard-integration-e2e',
+      'RHAI-OPERATOR': 'operator-e2e',
+      'RHAI-SNYK': 'snyk'
+    })
+  })
+
+  it('continues to accept stored snapshots using the legacy devtestops-e2e category code', function () {
+    const normalized = normalizeTrendSnapshot({
+      schemaVersion: 1,
+      generatedAt: '2026-10-29T06:00:00.000Z',
+      window: {
+        months: ['2026-05', '2026-06', '2026-07', '2026-08', '2026-09', '2026-10'],
+        startDate: '2026-05-01',
+        endExclusive: '2026-11-01'
+      },
+      events: [{
+        key: 'RHAI-1',
+        issueType: 'Bug',
+        category: 'devtestops-e2e',
+        components: ['AI Gateway'],
+        createdMonth: '2026-10',
+        resolvedMonth: null
+      }]
+    })
+
+    expect(normalized.error).toBeUndefined()
+    expect(normalized.snapshot.events[0].category).toBe('devtestops-e2e')
+  })
+
   it('filters categories and events by issue type', function () {
     const snapshot = buildTrendSnapshot([
       rawIssue('RHAI-1'),

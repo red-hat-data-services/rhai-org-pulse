@@ -3,6 +3,13 @@
   "generated_at": "2026-11-02T10:00:00Z",
   "timezone": "UTC",
   "selection_policy": "latest_completed_by_started_at",
+  "jenkins_jobs": [
+    {
+      "stream_key": "example-stream",
+      "label": "devops/promotion-gate-tests",
+      "jenkins_job": "devops/promotion-gate-tests"
+    }
+  ],
   "days": [
     {
       "date": "2026-11-02",
@@ -21,7 +28,8 @@
             "rhoai_version": "3.6.0",
             "update_channel": "beta",
             "cluster_name": "fixture-cluster",
-            "openshift_version": "4.20"
+            "openshift_version": "4.20",
+            "ods_build_url": "https://example.invalid/quay/rhoai/3.6.0-fixture"
           },
           "gates": [
             {

@@ -213,9 +213,9 @@ module.exports = function registerOpendatahubOperatorE2ERoutes(router, context) 
    *     summary: List auto-filed opendatahub-operator E2E blocker JIRAs
    *     description: >
    *       Returns the currently-open Jira blocker bugs auto-filed by the
-   *       opendatahub-operator e2e-failure-triage automation (identified by the
-   *       label odh-operator-auto-e2e-blocker). Served from a snapshot refreshed
-   *       on a schedule.
+   *       opendatahub-operator e2e-failure-triage automation in RHAI and RHOAIENG
+   *       (identified by the label odh-operator-auto-e2e-blocker). Served from a
+   *       snapshot refreshed on a schedule.
    *     responses:
    *       200:
    *         description: Open blocker JIRAs snapshot

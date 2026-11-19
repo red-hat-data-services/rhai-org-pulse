@@ -6,6 +6,7 @@ const qualityScheduler = require('./quality/scheduler');
 const aicpE2ERoutes = require('./odh-e2e-health/routes');
 const aicpE2EScheduler = require('./odh-e2e-health/scheduler');
 const blockerJiras = require('./odh-e2e-health/blocker-jiras');
+const registerPromotionGatesRoutes = require('./promotion-gates/routes');
 
 module.exports = function registerRoutes(router, context) {
   const { storage, requireAuth, requireAdmin, requireScope } = context;
@@ -51,6 +52,13 @@ module.exports = function registerRoutes(router, context) {
     requireScope
   });
   router.use('/odh-e2e-health', aicpE2ERouter);
+
+  const promotionGatesRouter = express.Router();
+  registerPromotionGatesRoutes(promotionGatesRouter, {
+    storage,
+    requireAdmin
+  });
+  router.use('/promotion-gates', promotionGatesRouter);
 
   if (context.registerRefresh) {
     context.registerRefresh('disconnected-readiness', {

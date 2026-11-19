@@ -1201,7 +1201,9 @@ is shown.
 ## Releases — Tech Debt Priority Scoring (API Response)
 
 `GET /api/modules/releases/tech-debt/issues` returns the complete open Bug and
-Vulnerability cohort for the selected Jira components. Vulnerabilities use
+Vulnerability cohort for the selected Jira components. Pass repeated
+`component` parameters for named components and/or `includeNoComponent=true`
+for issues whose Jira component field is empty. Vulnerabilities use
 `company-sla-v1` prioritization. Bugs use the deterministic `bug-v1`
 assessment. Backlog issues are returned in separate groups with independent
 rank sequences.
@@ -1211,6 +1213,8 @@ Response metadata identifies that behavior with:
 
 ```json
 {
+  "selectedComponents": ["AI Core Platform"],
+  "includeNoComponent": false,
   "bugScoring": {
     "modelVersion": "bug-v1",
     "mode": "active",
@@ -1320,7 +1324,8 @@ ranks.
 All date comparisons use UTC calendar dates. The response is calculated from
 a live Jira query scoped to the selected components. Up to six recent component
 selections are cached for five minutes and the response remains independent of
-the CVE Sustaining report's 90-day timeline and exclusions.
+the CVE Sustaining report's 90-day timeline and exclusions. Bugs labeled
+`ux-debt` are excluded from the live cohort and the historical trend collector.
 
 ### Bug score
 
@@ -1379,16 +1384,25 @@ Only the highest matching rule in each dimension contributes points:
 | Jira Due Date | 15 past due; 13 within 7 days; 9 within 30; 5 within 90; 2 later; missing 0 |
 | Issue age | 5 for 13+ weeks; 4 for 8–12; 3 for 4–7; 2 for 2–3; otherwise 0 |
 
-The primary Bug type is selected in this order: Affecting customer,
-Pre-release CVE, Approved Release Blocker, BU/SSA/field feedback,
-DevTestOps/E2E, Workflow validation, then Component-team/unclassified. All
-matching evidence remains in `classificationSignals`. SFDC membership is
+The primary Bug type is selected in this order: Dashboard Integration E2E,
+Build Cannot Run, Affecting customer, Pre-release CVE, Approved Release
+Blocker, Snyk, BU/SSA/field feedback, Operator auto E2E blocker, DevTestOps
+automated test failure, Workflow validation, Unclassified automation, then
+Component-team/unclassified.
+An unmatched DevTestOps, RHOAIENG AutomationBot, or Workflow Validation
+reporter is classified as Unclassified automation immediately before the
+Component-team fallback. Component-team/unclassified is reserved for
+non-source reporters when no higher-precedence source rule matches.
+All matching evidence remains in `classificationSignals`. SFDC membership is
 derived by a parallel Jira key query because the field is not read directly
 from issue results. If that lookup fails, the API uses its existing stale-cache
 fallback instead of treating every issue as non-customer-facing.
 
 Classification evidence is normalized case-insensitively. The source rules are:
 
+- Dashboard Integration E2E: `cypress_found_bug`. It retains the existing
+  two-point secondary detection contribution.
+- Build Cannot Run: `dsc-not-ready`. It adds no raw-score category points.
 - Affecting customer: `SFDC_Cases_Counter > 0`.
 - Field feedback: `AIBU_Feedback`, `AISSA_Feedback`, or
   `BU_EarlyAccess_Feedback` without SFDC.
@@ -1398,15 +1412,18 @@ Classification evidence is normalized case-insensitively. The source rules are:
 - Snyk: `snyk` plus the RHOAIENG AutomationBot reporter. `dependency` or
   `vuln` identifies SCA; `code-analysis` or a `cwe` label identifies SAST. SCA
   wins when both subtypes match.
-- DevTestOps/E2E: `test-failed` plus DevTestOps Jira Bot, or
-  `odh-operator-auto-e2e-blocker` plus RHOAIENG AutomationBot.
+- Operator auto E2E: `odh-operator-auto-e2e-blocker` plus RHOAIENG
+  AutomationBot.
+- DevTestOps automated test: `test-failed` plus DevTestOps Jira Bot.
 - Workflow validation: Workflow Validation reporter.
 - Other detection: CI/nightly, release tooling, human `test-failed`, or
   human-filed `gate:*` labels.
 
-An Approved Release Blocker has an effective score floor of 70/P1. An
-affecting-customer Bug with Jira priority Blocker, Highest, Critical, or High also has
-a 70/P1 floor. Missing Bug fields receive zero points and no uncertainty bonus.
+Dashboard Integration E2E, Build Cannot Run, and Approved Release Blocker each
+have an effective score floor of 70/P1. An affecting-customer Bug with Jira
+priority Blocker, Highest, Critical, or High also has a 70/P1 floor. The two
+new build-blocking guardrails do not add raw-score points. Missing Bug fields
+receive zero points and no uncertainty bonus.
 The score reuses the shared P0–P4 bands and UTC date boundaries. Bugs sort by
 effective score descending, then earliest Jira Due Date, oldest creation date,
 and Jira key. In a mixed result, the Vulnerability SLA group is displayed first,
@@ -1419,7 +1436,9 @@ followed by the Bug score group; each group's backlog ranks start at 1.
 The scheduled Tech Debt collector uploads this compact Jira event snapshot to
 `POST /api/modules/releases/tech-debt/trends/bulk`. The dashboard reads filtered
 aggregates from `GET /api/modules/releases/tech-debt/trends` using repeated
-`component` parameters and an optional `issueType=Bug|Vulnerability` parameter.
+`component` parameters, optional `includeNoComponent=true`, and an optional
+`issueType=Bug|Vulnerability` parameter. `includeNoComponent` selects Jira
+issues whose component field is empty and may be combined with named components.
 The representative fixture is `fixtures/releases/tech-debt/trends.json`.
 
 ```json
@@ -1433,7 +1452,7 @@ The representative fixture is `fixtures/releases/tech-debt/trends.json`.
     "timezone": "UTC"
   },
   "projects": ["RHAI", "RHAIENG", "RHOAIENG", "INFERENG", "AIPCC"],
-  "issueCount": 1,
+  "issueCount": 2,
   "events": [
     {
       "key": "RHAIENG-100",
@@ -1442,6 +1461,14 @@ The representative fixture is `fixtures/releases/tech-debt/trends.json`.
       "components": ["AI Core Platform", "Model Serving"],
       "createdMonth": "2026-08",
       "resolvedMonth": "2026-10"
+    },
+    {
+      "key": "RHAIENG-101",
+      "issueType": "Vulnerability",
+      "category": "vulnerability",
+      "components": [],
+      "createdMonth": "2026-10",
+      "resolvedMonth": null
     }
   ]
 }
@@ -1452,8 +1479,10 @@ The representative fixture is `fixtures/releases/tech-debt/trends.json`.
 calendar-month window. Bug categories use the existing primary Bug classifier;
 Vulnerability issues use `vulnerability`. The API counts a multi-component
 issue in every matching component panel while deduplicating the overall
-Received and Resolved totals by Jira key. Snapshots older than 48 hours are
-served with a warning.
+Received and Resolved totals by Jira key. An empty `components` array represents
+the **No component** panel. Snapshots older than 48 hours are served with a
+warning. A refreshed snapshot is required after classifier or component-scope
+changes to populate updated historical events.
 
 ---
 
@@ -2995,17 +3024,17 @@ E2E (end-to-end) test health data for the opendatahub-operator repository. Conta
 
 Snapshot of the currently-open Jira blocker bugs auto-filed by the
 opendatahub-operator `e2e-failure-triage` automation. The automation labels every
-bug it creates with `odh-operator-auto-e2e-blocker` (in project `RHOAIENG`) and
+bug it creates in `RHAI` with `odh-operator-auto-e2e-blocker` and
 links it to the template issue `RHOAIENG-79740`. The `odh-e2e-blocker-jiras`
-refresh handler queries Jira for open (`resolution = Unresolved`) issues carrying
-that label and writes a full snapshot.
+refresh handler queries Jira for open (`resolution = Unresolved`) issues in
+`RHAI` and `RHOAIENG` carrying that label and writes a full snapshot.
 
 ```json
 {
   "lastSyncedAt": "2026-08-11T10:00:00.000Z",
   "available": true,
   "count": 3,
-  "jql": "project = RHOAIENG AND labels = \"odh-operator-auto-e2e-blocker\" AND resolution = Unresolved ORDER BY created DESC",
+  "jql": "project in (RHAI, RHOAIENG) AND labels = \"odh-operator-auto-e2e-blocker\" AND resolution = Unresolved ORDER BY created DESC",
   "jqlUrl": "https://redhat.atlassian.net/issues/?jql=...",
   "templateIssue": "RHOAIENG-79740",
   "issues": [
@@ -3255,10 +3284,11 @@ Producer-computed nightly readiness (not derived from the heatmap). Stored as th
 
 - `schema_version` — required; must be exactly `1` (reject other values on upload).
 - `days[]` — calendar rows; each `(stream_key, date)` pair must be unique when multiple Jenkins jobs are published in one snapshot. Omit `stream_key` for single-job snapshots (legacy). `latest_run_id` selects the run shown in each matrix column; other same-day entries remain in `runs[]` for the day detail panel.
-- `jenkins_jobs[]` — optional catalog for the UI job switcher: `{ "stream_key", "label", "jenkins_job" }` (folder/job path). When more than one `stream_key` appears in `days[]`, the Test Execution matrix shows a **Test results source** filter beside the date pager. Deep link: `#/system-health/test-execution?source=<label-or-stream_key>` (for example `source=devops/promotion-gate-tests`).
-- `runs[].promotion_gate` — optional metadata from `promotion_gate_test_summary.yaml` (`status`, `rhoai_version`, `update_channel`, `cluster_name`, `openshift_version`, …).
+- `jenkins_jobs[]` — optional catalog for the UI job switcher: `{ "stream_key", "label", "jenkins_job" }` (folder/job path). When more than one `stream_key` appears in `days[]`, the Test Execution matrix shows a **Test results source** filter beside the date pager. Deep link: `#/system-health/test-execution?tab=gates&source=<job-basename-or-stream_key>` (for example `tab=gates&source=promotion-gate-tests`; legacy full paths such as `devops/promotion-gate-tests` still resolve).
+- `runs[].promotion_gate` — optional metadata from `promotion_gate_test_summary.yaml` (`status`, `rhoai_version`, `update_channel`, `cluster_name`, `openshift_version`, optional `ods_build_url`, …).
 - `runs[].gates` — optional **array** of BVT gate rows (`cluster-health`, `operator-health`) with `source_status` and `tests` counts matching the YAML; each entry must be an object with non-empty `id` (reject `{}` or non-array `gates` on bulk upload). Optional `state` uses the same enum as `components[].state`.
-- `runs[].components[]` — `state` is one of `ready`, `failed`, `blocked`, `unknown`, `not_run`, `not_applicable`; `source_status` mirrors YAML `components.<id>.status` for display. When `state` is `blocked`, the UI shows **Blocked** as the readiness label and `source_status` separately (BVT/YAML).
+- `runs[].components[]` — `state` is one of `ready`, `failed`, `blocked`, `unknown`, `not_run`, `not_applicable`; `source_status` mirrors YAML `components.<id>.status` for display. When `state` is `blocked`, the UI shows **Blocked** as the readiness label and `source_status` separately (BVT/YAML). Optional `dsc_component` is the DataScienceCluster `spec.components` path the status came from (e.g. `trustyai`, `aigateway.batchGateway`); the cell caption then reads `DSC <dsc_component>: <source_status>` (legacy payloads: `DSC: <source_status>`).
+- **Row identity:** one matrix row per published component (`jira_component`, else `name`). Names come from the **newest** run that has the component (runs ordered by `completed_at`/`started_at`, then `build_number`), so producer renames and remaps take effect without extra rows. When several producer ids share a published component over time, the row binds to the id the newest selected run emits; older days resolve through the shared identity.
 - **Heatmap join:** match heatmap row `component` names to `components[].id` by normalizing display names (lowercase, strip non-alphanumeric). The synthetic heatmap row **RHOAI Deployment** maps to gate `operator-health`. Overlay uses each day's `latest_run_id` only (same as the nightly matrix).
 - `tests: null` — no observed test results (not zero failures).
 - `artifacts` — durable refs plus optional browser URLs when verified; null when unavailable.
@@ -3352,21 +3382,26 @@ registry below.
 | `uniqueId` | string | Stable candidate identifier; legacy rows with a blank ID use their source `link` for detail navigation without changing stored identity |
 | `link` | string | Source repository or project URL |
 | `itemType` | string | `repo` or another discovery item type |
-| `source` | string | Primary discovery source (`github`, `hn`, or `reddit`) |
+| `source` | string | Primary discovery source (`github`, `hn`, `hackernews`, or `reddit`) |
 | `sources` | string[] | All discovery sources for the candidate |
 | `category` | string | Stable strategy-pillar key; must match a pillar key when metadata is available |
 | `capabilityLabels` | string[] | Capability labels parsed from the board feed row |
 | `impactScore` | number/null | Impact score from the board evaluation |
 | `feasibilityScore` | number/null | Original feasibility score |
 | `boardFeasibilityScore` | number/null | Board score used for sorting and display |
-| `boardPassesGate` | boolean | Whether the candidate passes the board gate |
+| `boardFeasibilityEstimated` | boolean/null | Whether the board score is estimated; `null` when the feed says unknown or leaves the cell blank |
+| `boardPassesGate` | boolean/null | Whether the candidate passes the board gate; `null` when the feed says unknown or leaves the cell blank |
+| `gpuRequired` | boolean/null | Whether the candidate needs a GPU; `null` for `unknown` or trend rows |
+| `hasDockerfile` | boolean/null | Whether the project ships a Dockerfile; `null` for trend rows |
 | `pmDecision` | string | PM decision text; status is derived from `Approve`, `Decline`, `Revisit`, or empty |
 
 `data/ai-catalyst/index.json` contains the available month list and candidate
-counts. Adding a new month adds one board file and one index entry. A board
-sync refreshes discovered months in place, so the board file and its
-`lastSynced` value represent the latest feed snapshot rather than an
-immutable historical record.
+counts, plus the last attempt: `lastSynced` advances when at least one month
+was written, `lastAttemptedAt` records when a run last started, and `lastError`
+holds the failure summary (or `null`). Adding a new month adds one board file
+and one index entry. A board sync refreshes discovered months in place, so the
+board file and its `lastSynced` value represent the latest feed snapshot rather
+than an immutable historical record.
 
 Repository files under `fixtures/ai-catalyst/` are deterministic mock data for
 demo mode and tests; production deployments read the corresponding board rows
@@ -3640,6 +3675,114 @@ Cached AIPCC milestone schedule normalized from the `tpm_source_of_truth` Google
 The Releases module reads the sheet through Org Pulse's shared Google Sheets client and the platform Google service account mounted at `GOOGLE_SERVICE_ACCOUNT_KEY_FILE`. Administrators can refresh on demand through `POST /api/modules/releases/aipcc-milestones/refresh`. GET requests use a 15-minute freshness window; after that window they attempt a live refresh. If Google Sheets is temporarily unavailable, the GET endpoint serves the stored copy with `cacheStatus: "stale"`.
 
 ---
+
+### `releases/planning/jira-plan.json`
+
+Demo fixture for the read-only **Releases > Plan > Jira Plan** tab. Production
+does not persist this payload; the API composes it live from Jira and the
+fixture mirrors that response for demo mode.
+
+```json
+{
+  "plan": {
+    "id": "5187",
+    "scenarioId": "5190",
+    "viewId": "7542",
+    "name": "RHAI Outcome to Feature Prioritization",
+    "url": "https://redhat.atlassian.net/jira/plans/5187/scenarios/5190/timeline?vid=7542",
+    "project": "RHAISTRAT",
+    "sentinelKey": "RHAISTRAT-2921"
+  },
+  "sentinelKey": "RHAISTRAT-2921",
+  "generatedAt": "2026-11-04T15:00:00.000Z",
+  "outcomes": [
+    {
+      "key": "RHAISTRAT-3004",
+      "rank": 1,
+      "summary": "Deliver a Production-Ready, Praxis-Native AI Gateway",
+      "issueType": "Outcome",
+      "status": "New",
+      "statusCategory": "To Do",
+      "priority": "Blocker",
+      "assignee": "Christopher Ferreira",
+      "reporter": "Christopher Ferreira",
+      "productManager": "Christopher Ferreira",
+      "components": [],
+      "targetVersions": ["3.7 GA RHOAI RELEASE"],
+      "fixVersions": [],
+      "releaseType": null,
+      "team": null,
+      "labels": ["Priority-Outcome-3.7"],
+      "project": "RHAISTRAT",
+      "created": null,
+      "updated": null,
+      "url": "https://redhat.atlassian.net/browse/RHAISTRAT-3004"
+    }
+  ],
+  "childrenByOutcome": {
+    "RHAISTRAT-3004": []
+  }
+}
+```
+
+`outcomes` is ordered by Jira Rank and stops before `sentinelKey`; the marker
+itself and Outcomes below it are omitted. `childrenByOutcome` is demo-only and
+backs the expand action by returning direct open child work items. The live
+endpoints are `GET /api/modules/releases/planning/jira-plan` and
+`GET /api/modules/releases/planning/jira-plan/outcomes/{key}/children`.
+
+---
+
+---
+
+## Usage Tracking (`data/usage/`)
+
+The usage-tracking platform extension stores pseudonymized usage analytics data. User IDs are HMAC-SHA256 hashes of the user email and are stable for a given key.
+
+**Ingestion limits:** Each request accepts at most 100 events. Each user is capped at 2,000 events per day; requests beyond the quota are rejected (429) or partially accepted.
+
+**Retention:** Event files and dated reports older than 30 days are automatically deleted during the daily report generation cycle.
+
+### Event Files: `usage/events-{YYYY-MM-DD}.jsonl`
+
+Daily append-only JSONL files. Each line is a JSON object:
+
+```json
+{"ts":"2026-10-12T10:00:00.000Z","module":"ai-impact","view":"autofix","action":"view","target":null,"userId":"hmac:a1b2c3...","persona":"developer","org":"rhai"}
+```
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `ts` | string | ISO 8601 timestamp (server time) |
+| `module` | string | Module slug (e.g., `ai-impact`, `releases`) |
+| `view` | string | View identifier within the module |
+| `action` | string | One of: `view`, `tab-switch`, `filter`, `search`, `drill-down`, `button-click`, `external-link`, `navigate` |
+| `target` | string\|null | Action target, truncated to 100 chars |
+| `userId` | string | HMAC-SHA256 pseudonymized user ID (`hmac:` prefix) or `anonymous` |
+| `persona` | string\|null | Resolved persona (e.g., `developer`, `engineering-manager`, `other`) |
+| `org` | string\|null | Organization context |
+
+### Reports: `usage/report-latest.txt` and `usage/report-{YYYY-MM-DD}.txt`
+
+Plain text usage reports generated daily (24h refresh cadence). Contains summary stats, per-module breakdown, AI Impact breakdown, per-persona breakdown, navigation flows, and measurement gaps.
+
+### Persona Map: `usage/persona-map.json`
+
+Title-to-persona mapping configuration:
+
+```json
+{
+  "Software Engineer": "developer",
+  "Senior Software Engineer": "developer",
+  "Engineering Manager": "engineering-manager"
+}
+```
+
+Keys are job titles (matched from the team registry). Values are persona slugs. Unmapped titles resolve to `other`.
+
+### HMAC Key: `usage/hmac-key.txt`
+
+Auto-generated HMAC key fallback (plain hex string). Created on first use when `USAGE_TRACKING_HMAC_KEY` env var is not set. Persisted across restarts for stable user correlation. Operators should set the env var in production rather than relying on this file.
 
 ## Fixture Rules
 

@@ -3,7 +3,8 @@ const { resolveTargetVersion, resolveBuildType } = require('./target-version');
 const VALID_COMPLETION_STATUSES = ['completed', 'in-progress', 'in_queue'];
 const VALID_PRODUCT_CONTEXTS = ['RHOAI', 'ODH'];
 const VALID_ONBOARDING_METHODS = ['automated', 'manual'];
-const VALID_KEY_PREFIXES = ['RHOAIENG-'];
+// Keep aligned with JIRA_PROJECT in rhoai-component-onboarding/.gitlab-ci.yml.
+const VALID_KEY_PREFIXES = ['RHOAIENG-', 'RHAI-', 'RHAIENG-'];
 
 // Pipeline step keys in execution order (per onboarding skill doc)
 const ONBOARDING_STEP_KEYS = [

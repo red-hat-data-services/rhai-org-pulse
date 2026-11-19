@@ -1,0 +1,188 @@
+[
+  {
+    "suite": "release_gate",
+    "invocationId": "sample-release-gate-003",
+    "workflows": 18,
+    "tasks": 108,
+    "passed": 100,
+    "failed": 3,
+    "skipped": 5,
+    "bugs": 2,
+    "rhoaiVersion": "3.7.0-ea.1",
+    "timestamp": "2026-11-19T12:00:00.000Z",
+    "buildDate": "2026-11-10T10:47:11.000Z",
+    "buildDateStatus": "verified",
+    "hasBugs": true,
+    "_bugKeys": [
+      "RHOAIENG-90000",
+      "RHOAIENG-90001"
+    ],
+    "bugTickets": {
+      "status": "ready",
+      "url": "https://redhat.atlassian.net/issues/?jql=key%20IN%20(RHOAIENG-90000%2C%20RHOAIENG-90001)%20AND%20(labels%20IS%20EMPTY%20OR%20labels%20NOT%20IN%20(%22rca-scope-internal%22))"
+    }
+  },
+  {
+    "suite": "performer_plugin",
+    "invocationId": "sample-performer-002",
+    "workflows": 12,
+    "tasks": 60,
+    "passed": 48,
+    "failed": 4,
+    "skipped": 8,
+    "bugs": 1,
+    "rhoaiVersion": "3.7.0-ea.1",
+    "timestamp": "2026-11-19T11:59:59.000Z",
+    "buildDate": "2026-11-10T10:47:11.000Z",
+    "buildDateStatus": "verified",
+    "hasBugs": true,
+    "_bugKeys": [
+      "RHOAIENG-90010"
+    ],
+    "bugTickets": {
+      "status": "ready",
+      "url": "https://redhat.atlassian.net/issues/?jql=key%20IN%20(RHOAIENG-90010)%20AND%20(labels%20IS%20EMPTY%20OR%20labels%20NOT%20IN%20(%22rca-scope-internal%22))"
+    }
+  },
+  {
+    "suite": "aramco",
+    "invocationId": "sample-aramco-003",
+    "workflows": 8,
+    "tasks": 24,
+    "passed": 24,
+    "failed": 0,
+    "skipped": 0,
+    "bugs": 0,
+    "rhoaiVersion": "3.7.0-ea.1",
+    "timestamp": "2026-11-19T11:59:58.000Z",
+    "buildDate": "2026-11-10T10:47:11.000Z",
+    "buildDateStatus": "verified",
+    "hasBugs": false,
+    "_bugKeys": [],
+    "bugTickets": {
+      "status": "empty"
+    }
+  },
+  {
+    "suite": "aramco",
+    "invocationId": "sample-aramco-001",
+    "workflows": 10,
+    "tasks": 29,
+    "passed": 19,
+    "failed": 4,
+    "skipped": 6,
+    "bugs": 3,
+    "rhoaiVersion": "3.6.0",
+    "timestamp": "2026-11-18T12:00:00.000Z",
+    "buildDate": "2026-11-10T10:47:11.000Z",
+    "buildDateStatus": "verified",
+    "hasBugs": true,
+    "_bugKeys": [
+      "RHOAIENG-90100",
+      "RHOAIENG-90101",
+      "RHOAIENG-90102"
+    ],
+    "bugTickets": {
+      "status": "ready",
+      "url": "https://redhat.atlassian.net/issues/?jql=key%20IN%20(RHOAIENG-90100%2C%20RHOAIENG-90101%2C%20RHOAIENG-90102)%20AND%20(labels%20IS%20EMPTY%20OR%20labels%20NOT%20IN%20(%22rca-scope-internal%22))"
+    }
+  },
+  {
+    "suite": "release_gate",
+    "invocationId": "sample-release-gate-001",
+    "workflows": 8,
+    "tasks": 48,
+    "passed": 43,
+    "failed": 2,
+    "skipped": 3,
+    "bugs": 1,
+    "rhoaiVersion": "3.6.0",
+    "timestamp": "2026-11-18T11:59:59.000Z",
+    "buildDate": "2026-11-10T10:47:11.000Z",
+    "buildDateStatus": "verified",
+    "hasBugs": true,
+    "_bugKeys": [
+      "RHOAIENG-90110"
+    ],
+    "bugTickets": {
+      "status": "ready",
+      "url": "https://redhat.atlassian.net/issues/?jql=key%20IN%20(RHOAIENG-90110)%20AND%20(labels%20IS%20EMPTY%20OR%20labels%20NOT%20IN%20(%22rca-scope-internal%22))"
+    }
+  },
+  {
+    "suite": "performer_plugin",
+    "invocationId": "sample-performer-001",
+    "workflows": 6,
+    "tasks": 36,
+    "passed": 31,
+    "failed": 2,
+    "skipped": 3,
+    "bugs": 0,
+    "rhoaiVersion": "3.6.0",
+    "timestamp": "2026-11-18T11:59:58.000Z",
+    "buildDate": "2026-11-10T10:47:11.000Z",
+    "buildDateStatus": "verified",
+    "hasBugs": false,
+    "_bugKeys": [],
+    "bugTickets": {
+      "status": "empty"
+    }
+  },
+  {
+    "suite": "aramco",
+    "invocationId": "sample-aramco-002",
+    "workflows": 8,
+    "tasks": 24,
+    "passed": 24,
+    "failed": 0,
+    "skipped": 0,
+    "bugs": 0,
+    "rhoaiVersion": "3.6.0",
+    "timestamp": "2026-11-18T11:59:57.000Z",
+    "buildDate": "2026-11-10T10:47:11.000Z",
+    "buildDateStatus": "verified",
+    "hasBugs": false,
+    "_bugKeys": [],
+    "bugTickets": {
+      "status": "empty"
+    }
+  },
+  {
+    "suite": "release_gate",
+    "invocationId": "sample-release-gate-older",
+    "workflows": 8,
+    "tasks": 48,
+    "passed": 48,
+    "failed": 0,
+    "skipped": 0,
+    "bugs": 0,
+    "rhoaiVersion": "3.5.2",
+    "timestamp": "2026-11-17T12:00:00.000Z",
+    "buildDate": "2026-11-10T10:47:11.000Z",
+    "buildDateStatus": "verified",
+    "hasBugs": false,
+    "_bugKeys": [],
+    "bugTickets": {
+      "status": "empty"
+    }
+  },
+  {
+    "suite": "performer_plugin",
+    "invocationId": "sample-performer-older",
+    "workflows": 6,
+    "tasks": 24,
+    "passed": 24,
+    "failed": 0,
+    "skipped": 0,
+    "bugs": 0,
+    "rhoaiVersion": "3.5.2",
+    "timestamp": "2026-11-17T11:59:59.000Z",
+    "buildDate": null,
+    "buildDateStatus": null,
+    "hasBugs": false,
+    "_bugKeys": [],
+    "bugTickets": {
+      "status": "empty"
+    }
+  }
+]

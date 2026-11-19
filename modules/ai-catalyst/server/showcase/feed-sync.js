@@ -217,6 +217,7 @@ function normalizeShowcaseData(data) {
   };
 }
 
+/** Fetch and map the showcase feed, then publish it to the cache and storage. */
 async function fetchShowcaseData(baseUrl, token, storage, allowedOrigins, allowLoopback, timeoutMs) {
   const client = createFeedClient({ baseUrl, token, allowedOrigins, allowLoopback, timeoutMs });
   const payload = await client.getShowcase();
@@ -241,12 +242,12 @@ async function fetchShowcaseData(baseUrl, token, storage, allowedOrigins, allowL
     fetchedAt: new Date().toISOString(),
   });
 
+  // Publish the fresh data before persisting it: a PVC write failure must not
+  // leave the read path serving the previous catalog while the feed is healthy.
+  _cache = { data: result, ts: Date.now() };
   if (storage) {
     await storage.writeToStorage(STORAGE_KEY, result);
   }
-  // Set only after the storage write so a failed sync cannot leave the
-  // in-memory cache ahead of the preserved stored catalog.
-  _cache = { data: result, ts: Date.now() };
 
   return result;
 }
@@ -284,10 +285,16 @@ function clearCache() {
   _cache = null;
 }
 
+/** Return the in-memory catalog, or null when no fetch has succeeded yet. */
+function getCachedShowcaseData() {
+  return _cache ? _cache.data : null;
+}
+
 module.exports = {
   fetchShowcaseData,
   getShowcaseData,
   clearCache,
+  getCachedShowcaseData,
   parseArrayField,
   mapRow,
   humanizePillarKey,

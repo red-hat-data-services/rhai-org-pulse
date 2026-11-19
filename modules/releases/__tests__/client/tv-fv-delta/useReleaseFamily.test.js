@@ -40,6 +40,17 @@ describe('parseReleaseName', function () {
     })
   })
 
+  it('parses an unnumbered EA release as EA instead of GA', function () {
+    expect(parseReleaseName('rhoai-3.7.EA')).toMatchObject({
+      product: 'rhoai', major: 3, minor: 7, milestone: 'EA', milestoneOrder: 0,
+    })
+    expect(parseReleaseName('3.7 EA RHOAI RELEASE')).toMatchObject({
+      product: 'rhoai', major: 3, minor: 7, milestone: 'EA', milestoneOrder: 0,
+    })
+    expect(extractMilestoneGroup('rhoai-3.7.EA')).toBe('3.7-EA')
+    expect(milestoneGroupLabel('3.7-EA')).toBe('3.7 EA Release')
+  })
+
   it('parses rhoai z-stream EA1 as its base release', function () {
     var r = parseReleaseName('rhoai-3.6.z.EA1')
     expect(r).toEqual({

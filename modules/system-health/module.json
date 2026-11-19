@@ -12,13 +12,15 @@
       { "id": "quality-analysis", "label": "Quality analysis", "icon": "clipboard-list", "default": true },
       { "id": "component-maturity", "label": "Component maturity", "icon": "layers" },
       { "id": "odh-e2e-health", "label": "opendatahub-operator E2E health", "icon": "activity" },
-      { "id": "test-execution", "label": "Test Execution", "icon": "bar-chart-2" }
+      { "id": "test-execution", "label": "Test Execution", "icon": "bar-chart-2" },
+      { "id": "promotion-gates", "label": "Promotion Gates", "icon": "Shield" }
     ],
     "hiddenRoutes": {
       "disconnected-repo-detail": "component-maturity",
       "e2e-run-detail": "odh-e2e-health",
       "test-execution-detail": "test-execution"
-    }
+    },
+    "settingsComponent": "./client/components/PromotionGatesSettings.vue"
   },
   "server": {
     "entry": "./server/index.js"

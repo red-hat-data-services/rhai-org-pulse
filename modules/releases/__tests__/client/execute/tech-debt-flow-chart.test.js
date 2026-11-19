@@ -31,7 +31,7 @@ vi.mock('vue-chartjs', function () {
   }
 })
 
-import TechDebtFlowChart from '../../../client/plan/components/TechDebtFlowChart.vue'
+import TechDebtFlowChart from '../../../client/execute/components/TechDebtFlowChart.vue'
 
 describe('TechDebtFlowChart', function () {
   const chartProps = {

@@ -15,9 +15,6 @@ vi.mock('../../../client/plan/views/DashboardView.vue', function() {
 vi.mock('../../../client/plan/views/FeatureReadinessView.vue', function() {
   return { default: { name: 'FeatureReadinessView', template: '<div>Features</div>' } }
 })
-vi.mock('../../../client/plan/views/TechDebtPrioritizationView.vue', function() {
-  return { default: { name: 'TechDebtPrioritizationView', template: '<div data-testid="tech-debt-prioritization">Tech Debt Prioritization</div>' } }
-})
 vi.mock('../../../client/plan/views/DraftPlansView.vue', function() {
   return { default: { name: 'DraftPlansView', template: '<div>Draft Plans Body</div>' } }
 })
@@ -27,20 +24,24 @@ vi.mock('../../../client/plan/views/BuFeedbackView.vue', function() {
 vi.mock('../../../client/plan/views/PmHubView.vue', function() {
   return { default: { name: 'PmHubView', template: '<div>PM Hub</div>' } }
 })
+vi.mock('../../../client/plan/views/JiraPlanView.vue', function() {
+  return { default: { name: 'JiraPlanView', template: '<div data-testid="jira-plan-view">Jira Plan Body</div>' } }
+})
 vi.mock('../../../client/plan/views/AIPlanner.vue', function() {
   return { default: { name: 'AIPlanner', template: '<div data-testid="ai-planner">AI-First Release Planner</div>' } }
 })
 
 import { apiRequest } from '@shared/client/services/api'
 
-function mountPlanView(params) {
+function mountPlanView(params, navigateTo) {
   var paramsRef = ref(params || {})
   return mount(PlanView, {
     global: {
       provide: {
         moduleNav: {
           params: paramsRef,
-          updateParams: vi.fn()
+          updateParams: vi.fn(),
+          navigateTo: navigateTo || vi.fn()
         }
       }
     }
@@ -83,6 +84,27 @@ describe('PlanView Draft Plans gate', function() {
 
     expect(wrapper.text()).not.toContain('Draft Plans Body')
     expect(wrapper.findComponent({ name: 'PmHubView' }).exists()).toBe(true)
+  })
+})
+
+describe('PlanView Jira Plan tab', function() {
+  beforeEach(function() {
+    vi.clearAllMocks()
+  })
+
+  afterEach(function() {
+    vi.clearAllMocks()
+  })
+
+  it('shows the Prioritized Outcomes tab and opens it from a deep link', async function() {
+    apiRequest.mockResolvedValue({ canViewDraftPlans: false })
+    var wrapper = mountPlanView({ tab: 'jira-plan' })
+    await flushPromises()
+    await nextTick()
+
+    expect(wrapper.findAll('button').map(function(button) { return button.text() })).toContain('Prioritized Outcomes')
+    expect(wrapper.find('[data-testid="jira-plan-view"]').exists()).toBe(true)
+    expect(wrapper.text()).toContain('Jira Plan Body')
   })
 })
 
@@ -147,7 +169,7 @@ describe('PlanView Tech Debt Prioritization tab', function() {
     vi.clearAllMocks()
   })
 
-  it('shows the Tech Debt Prioritization tab after Features List', async function() {
+  it('does not show Tech Debt Prioritization in Plan', async function() {
     apiRequest.mockResolvedValue({ canViewDraftPlans: false })
     var wrapper = mountPlanView()
     await flushPromises()
@@ -155,15 +177,21 @@ describe('PlanView Tech Debt Prioritization tab', function() {
 
     var buttons = wrapper.findAll('button')
     var labels = buttons.map(function(button) { return button.text() })
-    expect(labels.indexOf('Tech Debt Prioritization')).toBe(labels.indexOf('Features List (1-n)') + 1)
+    expect(labels).not.toContain('Tech Debt Prioritization')
   })
 
-  it('renders on a tech-debt-prioritization deep link', async function() {
+  it('redirects the legacy Plan deep link to Execute and preserves other params', async function() {
     apiRequest.mockResolvedValue({ canViewDraftPlans: false })
-    var wrapper = mountPlanView({ tab: 'tech-debt-prioritization' })
+    var navigateTo = vi.fn()
+    mountPlanView({ tab: 'tech-debt-prioritization', version: '3.5' }, navigateTo)
     await flushPromises()
     await nextTick()
 
-    expect(wrapper.find('[data-testid="tech-debt-prioritization"]').exists()).toBe(true)
+    expect(navigateTo).toHaveBeenCalledWith('execute', {
+      tab: 'tech-debt-prioritization',
+      version: '3.5'
+    })
+    expect(navigateTo).toHaveBeenCalledTimes(1)
+    expect(apiRequest).not.toHaveBeenCalled()
   })
 })

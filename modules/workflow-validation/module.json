@@ -26,6 +26,7 @@
     "entry": "./server/index.js"
   },
   "secrets": {
+    "platform": ["jira"],
     "module": [
       {
         "key": "WORKFLOW_VALIDATION_OPENSEARCH_USERNAME",

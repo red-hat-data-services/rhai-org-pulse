@@ -25,6 +25,24 @@ describe('timeline-model', function () {
       .toBe('custom-3.6-GA')
   })
 
+  it('keeps an unnumbered EA release separate from GA in the same cycle', function () {
+    var ea = release('3.7_ea_rhai', {
+      displayName: '3.7 EA',
+      shortname: null,
+      milestones: { codeFreeze: '2026-12-09' }
+    })
+    var ga = release('rhoai-3.7', {
+      displayName: 'rhoai-3.7',
+      milestones: { codeFreeze: '2026-12-10' }
+    })
+
+    expect(groupKey(ea)).toBe('rhai-3.7-EA')
+    expect(groupKey(release('rhoai-3.7', { displayName: '3.7 EA' }))).toBe('rhoai-3.7-EA')
+    expect(groupKey(ga)).toBe('rhoai-3.7-GA')
+    expect(buildTimelineNodes([ea, ga]).map(function (node) { return node.groupLabel }))
+      .toEqual(['3.7 EA', '3.7 GA'])
+  })
+
   it('falls back to the display name, id, or other', function () {
     expect(groupKey(release('custom', { displayName: 'Infrastructure Refresh', shortname: null })))
       .toBe('Infrastructure Refresh')

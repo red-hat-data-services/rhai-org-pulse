@@ -3,7 +3,7 @@ import { onMounted, inject, ref, computed, reactive, watch, nextTick } from 'vue
 import { useDropDetail } from '../composables/useDrops'
 import { useArtifacts } from '../composables/useArtifacts'
 import { apiRequest } from '@shared/client/services/api'
-import { formatDate, envBadgeClass, archBadgeClass, konfluxStateBadgeClass, testStatusBadgeClass, testStatusLabel, formatDuration, getCommitUrl, getRegistryUrl, getQuayDirectTagUrl, getQuayAllTagsUrl, getDigestUrl } from '../utils/formatting'
+import { formatDate, envBadgeClass, archBadgeClass, konfluxStateBadgeClass, testStatusBadgeClass, testStatusLabel, formatDuration, getCommitUrl, getCommitUrlForRepo, getRegistryUrl, getQuayDirectTagUrl, getQuayAllTagsUrl, getDigestUrl } from '../utils/formatting'
 import ChiBadge from '../components/ChiBadge.vue'
 import DropTimeline from '../components/DropTimeline.vue'
 import PersistentSearchBar from '../components/PersistentSearchBar.vue'
@@ -724,7 +724,7 @@ const totalColumns = 7
               >
                 <a
                   v-if="cl.repository_url"
-                  :href="`${cl.repository_url.replace(/\/$/, '')}/-/commit/${commit.sha}`"
+                  :href="getCommitUrlForRepo(cl.repository_url, commit.sha)"
                   target="_blank"
                   rel="noopener noreferrer"
                   class="font-mono text-xs text-primary-600 dark:text-blue-400 hover:underline shrink-0"

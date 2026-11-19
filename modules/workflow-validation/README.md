@@ -25,6 +25,43 @@ step through each filter edit. Empty values are intentional: they preserve
 explicit choices such as “All versions” and “All time” instead of allowing
 future defaults to change a saved view.
 
+## Version summary
+
+Recent Runs shows suite runs, workflow executions, tasks, passed tasks, failed
+tasks, skipped tasks, and total bugs for the selected RHOAI versions. Repeated
+workflow executions count separately. Task counts come from execution counters.
+A missing counter makes that total unavailable; it is never replaced with zero.
+The outcome chart appears only when all task outcome counts are complete.
+
+The summary dropdown and existing version filter share the same selection.
+The summary covers every suite run for those versions, across all pages.
+Suite, Run ID, date, and **Contains bugs only** filters narrow only the table.
+Only records with a suite and invocation ID belong to this view.
+
+Bug totals count distinct linked Jira issues across the selected versions.
+Per-run counts deduplicate tickets within that run. Both use the existing Jira
+association rules and exclude issues labelled `rca-scope-internal`. A bug seen
+in multiple runs counts once in the summary. Unverified associations or labels
+show an unavailable count. The bug filter includes a run with any verified
+eligible issue, even when other keys in that run remain unresolved. Its exact
+count stays unavailable in that case. The filter runs before pagination and
+reports incomplete coverage.
+Verified labels from completed Jira batches or the cache remain available if a
+later batch fails or times out. Runs with unresolved keys keep unavailable exact
+counts, while a verified eligible issue still keeps the run in the bug filter.
+
+The original table retains suite/run ID, version, build time, execution time,
+Jira links, filters, sorting, and pagination. Workflow, task, passed, failed,
+skipped, and bug counts follow those columns. The suite column uses 20% of the
+table. Date columns have equal widths. Narrow screens can scroll the table.
+
+The client requests `includeSummary=true` on the existing paged `/test-suites`
+API. Execution counts are aggregated in OpenSearch. Metadata and counts share
+a 10-second cache. Bug associations for the selected versions are resolved in
+batches of at most 200 runs. Complete results are cached for 10 seconds. Jira
+label decisions retain their existing one-minute cache. Refresh bypasses these
+caches. All database operations are searches; this feature does not write records.
+
 ## Runtime configuration
 
 | Variable | Sensitive | Description |
@@ -104,7 +141,9 @@ Important rules:
   can select another cohort; the dashboard never defaults to an aggregation
   of historical executions.
 - Dashboard metrics and the complete test-results table are scoped to that one
-  `rhoai_version`, `telemetry_suite`, and `invocation_id`. Jira-linked issues
+  `rhoai_version`, `telemetry_suite`, and `invocation_id`, except exact-run links
+  from Recent Runs. Those links select `telemetry_suite` and `invocation_id`
+  across versions. Jira-linked issues
   from the same execution are separated into newly opened issues and existing
   issues encountered without opening another issue.
 - The dashboard table omits task counts; task outcomes remain available in the
@@ -149,15 +188,68 @@ contract, representative tests, and affected Vue transformations together.
 
 ## Recent Runs landing page
 
-Dashboard opens Recent Runs. It lists up to 20 suite/invocation groups across
-all recorded versions, ordered by latest execution time. Each row shows the
-suite, recorded version, and View run. The page uses the existing
-`/test-suites?limit=20&includeBugs=false` API and ignores shared detail filters.
-View run opens the existing Overview view for that exact suite and invocation.
-Loading, empty, retry, and refresh states are covered by client and integration
-tests. Build metadata is outside this landing-page change.
+Dashboard opens Recent Runs with the latest 20 suite/invocation groups and
+pagination across all available runs. Each row shows the suite, version, RHOAI
+build date and time (`RHOAI build (UTC)`), and execution time (`Executed at (UTC)`). Select a row or press Enter to open its exact run.
+Build and execution timestamps use the same single-line date/time format.
+The column headings identify UTC; individual cells do not repeat the label.
+An explanation below the Recent Runs heading and above the filters describes
+each row and the separate Jira issues link for associated bugs and RFEs.
 
-See the [Recent Runs contract](docs/rhai-10567-recent-runs-contract.md) for
-navigation, page states, and deployment evidence. The
-[API response format](docs/DATA-FORMATS.md) documents the synthetic
-[unit-test fixture](__tests__/fixtures/recent-runs.json).
+Select up to 50 versions, a suite, a Run ID, or a Date Range. Date Range
+supports All time, Last 7/30/90 days, and Custom dates. Choices update results
+immediately. Run ID search waits for a 300 ms typing pause. Click a column heading to sort all matching runs immediately. Click the active
+heading again to reverse its order. Switching columns starts with A–Z for suites,
+highest first for versions, and newest first for RHOAI build and execution time.
+Rows show `unavailable` when the verified build date is missing.
+Versions use numeric release order, with GA above EA for the same release.
+The legacy `3.6` label shares the `3.6.0` choice and display. EA releases remain
+separate. Other partial versions keep their recorded label.
+
+Clear filters restores the unfiltered, newest-first first page. Shareable URLs
+retain the filters, sort, and page. Execution dates use existing execution
+metadata. Build values join the existing `workflow-execution-images` index by
+`invocation_id`. Duplicate image documents use the newest verified build date.
+The image lookup uses `invocation_id.keyword` when the image index maps
+`invocation_id` as text with a keyword subfield, or `invocation_id` when it is
+already a keyword field.
+Build dates must include a timezone and are normalized to UTC. The page uses
+`/test-suites?pageSize=20&includeBugs=false&includeBugTickets=true` and ignores shared detail filters.
+Run and build metadata share one cache for up to 10 seconds. Image queries use
+batches of at most 500 invocation IDs. Refresh bypasses the cache.
+
+Each row also shows **Jira issues**, **No issues recorded**, or **Issues
+unavailable**. The link opens a Jira search in a new tab without opening the
+run details. Recorded associations supply the keys. Jira labels determine
+eligibility: exclude `rca-scope-internal`, regardless of RCA category. The
+backend requests labels only and caches verified decisions for up to one minute.
+Refresh bypasses that cache. Runs with only Internal-labelled tickets show
+**No issues recorded**. Missing credentials, inaccessible tickets, incomplete
+associations, and service failures show **Issues unavailable**.
+
+The module consumes the platform `jira` secret group (`JIRA_EMAIL` and
+`JIRA_TOKEN`) through `context.secrets`. Credentials stay on the backend.
+See [RHAI-10569 details](docs/rhai-10569-bug-ticket-links.md).
+
+See the [Recent Runs contract](docs/rhai-10567-recent-runs-contract.md),
+[RHAI-20044 details](docs/rhai-20044-recent-runs-ux.md), and
+[API response format](docs/DATA-FORMATS.md). The
+[unit-test fixture](__tests__/fixtures/recent-runs.json) is synthetic.
+
+## Browser integration tests
+
+The Workflow Validation browser suite lives in
+[`tests/integration/workflow-validation.spec.js`](tests/integration/workflow-validation.spec.js).
+Run it from the repository root:
+
+```bash
+npx playwright test --config modules/workflow-validation/playwright.config.cjs
+```
+
+The configuration starts the frontend locally. Start `npm run dev:server`
+separately for the backend route check. CI uses its existing app containers.
+The existing shared entrypoint, `tests/integration/workflow-validation.spec.js`
+at the repository root, loads this suite with one `require`. The existing CI
+command therefore runs the same 27 tests. Test implementations stay inside the
+module. This shared entrypoint is the only changed file outside the module;
+CODEOWNERS explicitly lists `@adamrdrew` for it, as in PR #1792.

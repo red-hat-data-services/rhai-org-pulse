@@ -13,10 +13,8 @@ test-results/
 coverage/
 
 # Environment variables
-.env
-.env.local
-.env.*.local
-.env.production
+.env*
+!.env.example
 
 # IDE
 .vscode/
