@@ -120,6 +120,30 @@ function generateReport(allEvents, periodStart, periodEnd, knownModules) {
     lines.push(`  ${persona.padEnd(22)} ${String(stats.visits).padStart(5)}  ${String(stats.interactions).padStart(12)}  ${String(stats.users.size).padStart(5)}`)
   }
 
+  if (Object.keys(aiImpactByPersona).length > 0) {
+    const allViews = new Set()
+    for (const views of Object.values(aiImpactByPersona)) {
+      for (const v of Object.keys(views)) allViews.add(v)
+    }
+    const viewCols = [...allViews].sort()
+    if (viewCols.length > 0) {
+      lines.push('')
+      lines.push('AI IMPACT x PERSONA')
+      const header = '  ' + 'Persona'.padEnd(22) + viewCols.map(function (v) { return v.padStart(14) }).join('')
+      lines.push(header)
+      lines.push('  ' + '─'.repeat(22) + viewCols.map(function () { return '  ' + '─'.repeat(12) }).join(''))
+      const sortedCrossPersonas = Object.entries(aiImpactByPersona).sort(function (a, b) {
+        const aTotal = Object.values(a[1]).reduce(function (s, n) { return s + n }, 0)
+        const bTotal = Object.values(b[1]).reduce(function (s, n) { return s + n }, 0)
+        return bTotal - aTotal
+      })
+      for (const [p, views] of sortedCrossPersonas) {
+        const row = '  ' + p.padEnd(22) + viewCols.map(function (v) { return String(views[v] || 0).padStart(14) }).join('')
+        lines.push(row)
+      }
+    }
+  }
+
   if (Object.keys(navigationFlows).length > 0) {
     lines.push('')
     lines.push('AI IMPACT NAVIGATION FLOWS')
