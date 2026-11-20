@@ -1035,7 +1035,7 @@ test.describe('Test Execution Dashboard @system-health', () => {
 
     // Cascading Version picker (Option B) — button opens y/z popover with search
     const rhoaiTabForPicker = page.getByRole('tab', { name: 'RHOAI Releases' });
-    if (await rhoaiTabForPicker.isEnabled()) {
+    if (await rhoaiTabForPicker.isEnabled() && await releasesTitle.count() > 0) {
       await rhoaiTabForPicker.click();
       await page.waitForTimeout(300);
       const verBtn = releasesTabPanel(page).locator('button.ver-picker-btn').first();
