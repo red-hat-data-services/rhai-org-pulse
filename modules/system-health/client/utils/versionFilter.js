@@ -73,6 +73,11 @@ export function vrKeyMatches(vrKey, version, release) {
   return true
 }
 
+/** Escape a string for safe use inside a RegExp (including backslashes). */
+function escapeRegExp(s) {
+  return String(s).replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+}
+
 /**
  * Match a Jenkins job URL folder segment to the selected RHOAI version.
  * Exact: /3.5/ or /3.5.0/ match y-stream 3.5; /3.5.2/ does not.
@@ -82,7 +87,7 @@ export function urlMatchesVersion(url, ver) {
   if (!ver || ver === 'All') return true
   const cleaned = cleanVer(ver).toLowerCase()
   if (!cleaned) return true
-  const esc = cleaned.replace(/\./g, '\\.')
+  const esc = escapeRegExp(cleaned)
   const u = String(url || '').toLowerCase()
   if (cleaned.split('.').length === 2) {
     return new RegExp(`/${esc}(?:\\.0)?(?:/|-|$)`).test(u)

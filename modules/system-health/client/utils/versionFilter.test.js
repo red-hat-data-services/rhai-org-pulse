@@ -93,6 +93,9 @@ describe('versionFilter', () => {
     expect(urlMatchesVersion(URL_352, '3.5.2')).toBe(true)
     expect(urlMatchesVersion(URL_25, '3.6')).toBe(false)
     expect(urlMatchesVersion(URL_25, 'All')).toBe(true)
+    // Metacharacters / backslashes in the filter must not break RegExp construction.
+    expect(() => urlMatchesVersion(URL_36_GA, '3.6\\d+')).not.toThrow()
+    expect(urlMatchesVersion(URL_36_GA, '3.6\\d+')).toBe(false)
   })
 
   it('matches Jenkins URL release milestones', () => {
