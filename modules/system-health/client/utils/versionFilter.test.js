@@ -1,8 +1,11 @@
 import { describe, expect, it } from 'vitest'
 import {
   cleanVer,
+  collectReleasesFromComponents,
   collectVersionsFromComponents,
   filterGateDayByVersionRelease,
+  isKnownRelease,
+  isKnownVersion,
   isZStream,
   urlMatchesRelease,
   urlMatchesVersion,
@@ -54,7 +57,7 @@ describe('versionFilter', () => {
     expect(vrKeyMatches('3.5.0|GA', '3.5', 'GA')).toBe(true)
   })
 
-  it('collects versions from heatmap components', () => {
+  it('collects versions/releases and never surfaces ingest unknown', () => {
     const comps = [{
       component: 'Dashboard',
       days: {
@@ -63,12 +66,18 @@ describe('versionFilter', () => {
             '3.5|GA': { total: 1 },
             '3.5.0|GA': { total: 1 },
             '3.5.2|GA': { total: 1 },
-            'unknown|GA': { total: 1 }
+            '3.6|EA1': { total: 1 },
+            'unknown|unknown': { total: 1 },
+            'Unknown|Unknown': { total: 1 }
           }
         }
       }
     }]
-    expect(collectVersionsFromComponents(comps)).toEqual(['3.5', '3.5.2'])
+    expect(isKnownVersion('unknown')).toBe(false)
+    expect(isKnownVersion('Unknown')).toBe(false)
+    expect(isKnownRelease('unknown')).toBe(false)
+    expect(collectVersionsFromComponents(comps)).toEqual(['3.5', '3.5.2', '3.6'])
+    expect(collectReleasesFromComponents(comps)).toEqual(['EA1', 'GA'])
   })
 
   it('maps z-stream to y-stream for Jira family keys', () => {

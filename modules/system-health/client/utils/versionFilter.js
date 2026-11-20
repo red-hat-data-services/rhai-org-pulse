@@ -41,6 +41,21 @@ export function compareVers(a, b) {
   return 0
 }
 
+/**
+ * True for real RHOAI versions. Ingest writes `unknown` when a Jenkins build
+ * has no RHOAI_VERSION / path / image / branch — never offer that in pickers.
+ */
+export function isKnownVersion(v) {
+  const c = cleanVer(v)
+  return Boolean(c) && c.toLowerCase() !== 'unknown'
+}
+
+/** True for real release milestones (EA1/EA2/GA). Drops ingest sentinel `unknown`. */
+export function isKnownRelease(r) {
+  const s = String(r || '').trim()
+  return Boolean(s) && s.toLowerCase() !== 'unknown'
+}
+
 /** Exact version match: 3.5 ≡ 3.5.0; 3.5 ≠ 3.5.2. */
 export function versionMatches(raw, filter) {
   if (!filter || filter === 'All') return true
@@ -127,6 +142,7 @@ export function filterGateDayByVersionRelease(dayData, version, release) {
 /**
  * Collect cleaned versions from heatmap component day.by_vr keys.
  * Only includes entries with total > 0 (matches dashboard filter population).
+ * Never includes ingest sentinel `unknown`.
  */
 export function collectVersionsFromComponents(components) {
   const set = new Set()
@@ -135,11 +151,29 @@ export function collectVersionsFromComponents(components) {
       Object.entries(day.by_vr || {}).forEach(([k, vr]) => {
         if ((vr?.total || 0) <= 0) return
         const cleaned = cleanVer(k.split('|')[0])
-        if (cleaned && cleaned !== 'unknown') set.add(cleaned)
+        if (isKnownVersion(cleaned)) set.add(cleaned)
       })
     })
   })
   return Array.from(set).sort(compareVers)
+}
+
+/**
+ * Collect release milestones from by_vr keys (EA1/EA2/GA).
+ * Never includes ingest sentinel `unknown`.
+ */
+export function collectReleasesFromComponents(components) {
+  const set = new Set()
+  ;(components || []).forEach((comp) => {
+    Object.values(comp.days || {}).forEach((day) => {
+      Object.entries(day.by_vr || {}).forEach(([k, vr]) => {
+        if ((vr?.total || 0) <= 0) return
+        const r = k.split('|')[1]
+        if (isKnownRelease(r)) set.add(r)
+      })
+    })
+  })
+  return Array.from(set).sort()
 }
 
 export function yStreamList(versions) {

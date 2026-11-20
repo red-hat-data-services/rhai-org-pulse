@@ -176,6 +176,7 @@ import NightlyHealthTable from '../components/NightlyHealthTable.vue'
 import NightlyHealthLegend from '../components/NightlyHealthLegend.vue'
 import {
   cleanVer,
+  collectReleasesFromComponents,
   collectVersionsFromComponents,
   isZStream,
   vrKeyMatches
@@ -558,20 +559,7 @@ const components = computed(() => heatmap.value || [])
 // Distinct versions discovered from by_vr (exact y- and z-stream; .0 → y-stream).
 const availableVersions = computed(() => collectVersionsFromComponents(components.value))
 
-const availableReleases = computed(() => {
-  const set = new Set()
-  components.value.forEach((comp) => {
-    Object.values(comp.days || {}).forEach((day) => {
-      Object.entries(day.by_vr || {}).forEach(([vrKey, vr]) => {
-        if ((vr.total || 0) > 0) {
-          const r = vrKey.split('|')[1]
-          if (r) set.add(r)
-        }
-      })
-    })
-  })
-  return Array.from(set).sort()
-})
+const availableReleases = computed(() => collectReleasesFromComponents(components.value))
 
 function filterHeatmapComponents(filterOverrides = {}) {
   if (!components.value || components.value.length === 0) return []

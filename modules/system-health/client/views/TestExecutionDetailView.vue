@@ -381,6 +381,7 @@ import TrendChart from '../components/TrendChart.vue'
 import FilterBar from '../components/FilterBar.vue'
 import {
   cleanVer,
+  collectReleasesFromComponents,
   collectVersionsFromComponents,
   filterGateDayByVersionRelease,
   isZStream,
@@ -490,18 +491,9 @@ const availableVersions = computed(() =>
   collectVersionsFromComponents(heatmapEntry.value ? [heatmapEntry.value] : [])
 )
 
-const availableReleases = computed(() => {
-  const set = new Set()
-  if (heatmapEntry.value) {
-    Object.values(heatmapEntry.value.days || {}).forEach((day) => {
-      Object.keys(day.by_vr || {}).forEach((k) => {
-        const r = k.split('|')[1]
-        if (r) set.add(r)
-      })
-    })
-  }
-  return Array.from(set).sort()
-})
+const availableReleases = computed(() =>
+  collectReleasesFromComponents(heatmapEntry.value ? [heatmapEntry.value] : [])
+)
 
 const filterLabel = computed(() => {
   const parts = []
