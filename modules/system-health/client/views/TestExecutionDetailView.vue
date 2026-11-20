@@ -382,6 +382,7 @@ import FilterBar from '../components/FilterBar.vue'
 import {
   cleanVer,
   collectVersionsFromComponents,
+  filterGateDayByVersionRelease,
   isZStream,
   vrKeyMatches,
   yStreamVer
@@ -551,21 +552,24 @@ const overall = computed(() => {
   return { total: o.total || 0, passed: o.passed || 0, failed: o.failed || 0, skipped: o.skipped || 0 }
 })
 
-// ── Quality gates (components.json[comp].quality_gates), date-filtered ──
+// ── Quality gates: date + version/release (via jenkins_url path segments) ──
 const gateRows = computed(() => {
   const qg = (detail.value && detail.value.quality_gates) || {}
+  const { version, release } = filters.value
   return Object.entries(qg).map(([gate, days]) => {
     let passed = 0, failed = 0, skipped = 0, total = 0
     const normDays = {}
     Object.entries(days || {}).forEach(([date, d]) => {
       if (!dateInRange(date)) return
-      const p = d.passed || 0, f = d.failed || 0, s = d.skipped || 0
-      const t = d.total || (p + f + s)
-      // Carry the per-run executions (each has jenkins_url) so the gate cell can
-      // link to the component-specific Jenkins test result.
-      const executions = Array.isArray(d.executions) ? d.executions : []
-      normDays[date] = { passed: p, failed: f, skipped: s, total: t, executions }
-      passed += p; failed += f; skipped += s; total += t
+      // Filter executions by RHOAI version/release encoded in jenkins_url
+      // (same semantics as test-reports-dashboard renderGateHeatmap).
+      const filtered = filterGateDayByVersionRelease(d, version, release)
+      if (!filtered || !(filtered.total > 0)) return
+      normDays[date] = filtered
+      passed += filtered.passed || 0
+      failed += filtered.failed || 0
+      skipped += filtered.skipped || 0
+      total += filtered.total || 0
     })
     return { gate, days: normDays, passed, failed, skipped, total }
   }).filter((r) => r.total > 0)

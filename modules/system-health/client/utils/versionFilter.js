@@ -59,6 +59,72 @@ export function vrKeyMatches(vrKey, version, release) {
 }
 
 /**
+ * Match a Jenkins job URL folder segment to the selected RHOAI version.
+ * Exact: /3.5/ or /3.5.0/ match y-stream 3.5; /3.5.2/ does not.
+ * Matches test-reports-dashboard `urlMatchesVersion`.
+ */
+export function urlMatchesVersion(url, ver) {
+  if (!ver || ver === 'All') return true
+  const cleaned = cleanVer(ver).toLowerCase()
+  if (!cleaned) return true
+  const esc = cleaned.replace(/\./g, '\\.')
+  const u = String(url || '').toLowerCase()
+  if (cleaned.split('.').length === 2) {
+    return new RegExp(`/${esc}(?:\\.0)?(?:/|-|$)`).test(u)
+  }
+  return new RegExp(`/${esc}(?:/|-|$)`).test(u)
+}
+
+/**
+ * Match release milestone encoded in the Jenkins path (-ea.1 / -ea.2 / GA).
+ * GA = path has no `-ea.` segment. Matches test-reports-dashboard gate filter.
+ */
+export function urlMatchesRelease(url, release) {
+  if (!release || release === 'All') return true
+  const u = String(url || '').toLowerCase()
+  const relLower = String(release).toLowerCase()
+  if (relLower === 'ga') return !u.includes('-ea.')
+  if (relLower.startsWith('ea')) {
+    const eaNum = relLower.replace('ea', '')
+    return u.includes(`-ea.${eaNum}`)
+  }
+  return true
+}
+
+/**
+ * Keep quality-gate executions whose jenkins_url matches version/release.
+ * Recalculates passed/failed/skipped/total from the filtered set.
+ * Returns null when nothing matches (caller should drop the day cell).
+ */
+export function filterGateDayByVersionRelease(dayData, version, release) {
+  if (!dayData) return null
+  const executions = Array.isArray(dayData.executions) ? dayData.executions : []
+  if (executions.length === 0) {
+    if ((!version || version === 'All') && (!release || release === 'All')) return dayData
+    return null
+  }
+  if ((!version || version === 'All') && (!release || release === 'All')) return dayData
+
+  const filtered = executions.filter((ex) => {
+    if (!ex?.jenkins_url) return true
+    return urlMatchesVersion(ex.jenkins_url, version) && urlMatchesRelease(ex.jenkins_url, release)
+  })
+  if (filtered.length === 0) return null
+
+  let passed = 0
+  let failed = 0
+  let skipped = 0
+  let total = 0
+  filtered.forEach((ex) => {
+    passed += ex.passed || 0
+    failed += ex.failed || 0
+    skipped += ex.skipped || 0
+    total += ex.total || ((ex.passed || 0) + (ex.failed || 0) + (ex.skipped || 0))
+  })
+  return { passed, failed, skipped, total, executions: filtered }
+}
+
+/**
  * Collect cleaned versions from heatmap component day.by_vr keys.
  * Only includes entries with total > 0 (matches dashboard filter population).
  */
