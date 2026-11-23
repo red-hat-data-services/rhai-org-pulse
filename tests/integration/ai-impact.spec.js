@@ -441,6 +441,48 @@ test.describe('AI Impact Build & Release @ai-impact', () => {
 
     expect(page.errors).toHaveLength(0);
   });
+
+  test('Activity column labels each row ON or OFF', async ({ page }) => {
+    await expect(page.getByRole('columnheader', { name: /Activity/ })).toBeVisible();
+
+    const rows = page.locator('table tbody tr');
+    const rowCount = await rows.count();
+    expect(rowCount).toBeGreaterThan(0);
+
+    for (let i = 0; i < rowCount; i++) {
+      await expect(rows.nth(i).getByTestId('activity-badge')).toHaveText(/^(ON|OFF)$/);
+    }
+
+    expect(page.errors).toHaveLength(0);
+  });
+
+  test('activity filter restricts the table to offboarding records', async ({ page }) => {
+    const activityButton = page.getByRole('button', { name: /Onboarding & Offboarding/ });
+    await expect(activityButton).toBeVisible();
+    await activityButton.click();
+
+    const menu = page.getByTestId('activity-filter-menu');
+    await expect(menu).toBeVisible();
+    await expect(menu.getByText('Onboarding', { exact: true })).toBeVisible();
+    await expect(menu.getByText('Offboarding', { exact: true })).toBeVisible();
+
+    await menu.locator('input[type="checkbox"][value="offboarding"]').check();
+    await menu.getByRole('button', { name: 'Done' }).click();
+    await page.waitForTimeout(500);
+
+    const rows = page.locator('table tbody tr');
+    const rowCount = await rows.count();
+
+    if (rowCount === 0) {
+      await expect(page.getByText('No components match the current filters.')).toBeVisible();
+    } else {
+      for (let i = 0; i < rowCount; i++) {
+        await expect(rows.nth(i).getByTestId('activity-badge')).toHaveText('OFF');
+      }
+    }
+
+    expect(page.errors).toHaveLength(0);
+  });
 });
 
 /**

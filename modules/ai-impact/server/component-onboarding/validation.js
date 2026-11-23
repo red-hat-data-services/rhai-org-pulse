@@ -3,6 +3,9 @@ const { resolveTargetVersion, resolveBuildType } = require('./target-version');
 const VALID_COMPLETION_STATUSES = ['completed', 'in-progress', 'in_queue'];
 const VALID_PRODUCT_CONTEXTS = ['RHOAI', 'ODH'];
 const VALID_ONBOARDING_METHODS = ['automated', 'manual'];
+// Record lifecycle: the same dataset carries onboarding and offboarding tickets.
+// Absent means onboarding so pre-existing sync clients keep working unchanged.
+const VALID_ACTIVITIES = ['onboarding', 'offboarding'];
 // Keep aligned with JIRA_PROJECT in rhoai-component-onboarding/.gitlab-ci.yml.
 const VALID_KEY_PREFIXES = ['RHOAIENG-', 'RHAI-', 'RHAIENG-'];
 
@@ -45,7 +48,7 @@ function deriveCompletionStatus(status, completionStatus, context) {
   const resolution = context?.resolution || null;
   const statusCategory = context?.statusCategory || null;
 
-  if (labels.includes('component-onboarding-completed')) {
+  if (labels.includes('component-onboarding-completed') || labels.includes('component-offboarding-completed')) {
     return 'completed';
   }
   if (resolution === 'Done' || statusCategory === 'Done') {
@@ -174,6 +177,24 @@ function validateComponentOnboarding(body) {
     }
   }
 
+  // activity: optional enum (onboarding/offboarding), defaults to "onboarding"
+  if (body.activity !== undefined && !VALID_ACTIVITIES.includes(body.activity)) {
+    errors.push(`activity must be one of: ${VALID_ACTIVITIES.join(', ')}`);
+  }
+
+  // offboardingSteps: optional object of booleans (offboarding records)
+  if (body.offboardingSteps !== undefined) {
+    if (!body.offboardingSteps || typeof body.offboardingSteps !== 'object' || Array.isArray(body.offboardingSteps)) {
+      errors.push('offboardingSteps must be an object');
+    } else {
+      for (const [k, v] of Object.entries(body.offboardingSteps)) {
+        if (typeof v !== 'boolean') {
+          errors.push(`offboardingSteps.${k} must be a boolean`);
+        }
+      }
+    }
+  }
+
   // created: optional ISO 8601
   if (body.created !== undefined && (typeof body.created !== 'string' || isNaN(Date.parse(body.created)))) {
     errors.push('created must be a valid ISO 8601 date string');
@@ -250,6 +271,7 @@ function validateComponentOnboarding(body) {
         resolution: body.resolution || null,
         statusCategory: body.statusCategory || null
       }),
+      activity: body.activity || 'onboarding',
       productContext: body.productContext,
       targetVersion: resolveTargetVersion(body),
       // Ingest metadata only (YAML build_type); not projected via projectComponent().
@@ -265,6 +287,7 @@ function validateComponentOnboarding(body) {
       featureTitles: body.featureTitles || {},
       labels: body.labels || [],
       onboardingSteps: body.onboardingSteps || {},
+      offboardingSteps: body.offboardingSteps || {},
       created: body.created || null,
       resolution: body.resolution || null,
       resolved: body.resolved || null,
@@ -282,5 +305,6 @@ module.exports = {
   VALID_COMPLETION_STATUSES,
   VALID_PRODUCT_CONTEXTS,
   VALID_ONBOARDING_METHODS,
+  VALID_ACTIVITIES,
   ONBOARDING_STEP_KEYS
 };
