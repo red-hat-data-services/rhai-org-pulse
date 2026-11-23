@@ -35,6 +35,7 @@ import {
   Filler
 } from 'chart.js'
 import { useChartTheme } from '../composables/useChartTheme.js'
+import { isKnownVersion, yStreamVer } from '../utils/versionFilter.js'
 
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend, Filler)
 
@@ -60,12 +61,6 @@ const LINE_COLORS_LIGHT = [
 
 const lineColors = computed(() => (isDark.value ? LINE_COLORS_DARK : LINE_COLORS_LIGHT))
 
-function normalizeVersion(v) {
-  const base = String(v).split('-')[0]
-  const parts = base.split('.')
-  return parts.length >= 2 ? parts[0] + '.' + parts[1] : base
-}
-
 function friendlyDate(iso) {
   const d = new Date(iso + 'T00:00:00')
   const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
@@ -79,7 +74,10 @@ const versionDayPassed = computed(() => {
     Object.entries(comp.days || {}).forEach(([date, day]) => {
       if (!day.by_vr) return
       Object.entries(day.by_vr).forEach(([vrKey, vr]) => {
-        const v = normalizeVersion(vrKey.split('|')[0])
+        // Trend chart groups by y-stream family (3.5.2 → 3.5) for lifecycle view.
+        // Skip ingest sentinel `unknown` (builds with no RHOAI_VERSION).
+        const v = yStreamVer(vrKey.split('|')[0])
+        if (!isKnownVersion(v)) return
         map[v] = map[v] || {}
         map[v][date] = (map[v][date] || 0) + (vr.passed || 0)
       })
