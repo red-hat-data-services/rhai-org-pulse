@@ -545,7 +545,7 @@ test.describe('AI Impact Component Onboarding API @ai-impact', () => {
       await page.waitForTimeout(500);
     }
 
-    const versionCells = page.locator('table tbody tr td:nth-child(5)');
+    const versionCells = page.locator('table tbody tr td:nth-child(6)');
     const count = await versionCells.count();
     for (let i = 0; i < count; i++) {
       const text = (await versionCells.nth(i).innerText()).trim();
