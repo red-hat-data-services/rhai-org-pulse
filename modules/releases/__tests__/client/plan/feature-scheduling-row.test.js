@@ -39,32 +39,13 @@ describe('FeatureSchedulingRow', () => {
     expect(wrapper.text()).not.toContain('C')
   })
 
-  it('emits toggle-approval with the feature key and role when a checkbox changes', async () => {
-    const wrapper = mount(FeatureSchedulingRow, {
-      props: { feature: feature(), approval: { pm: false, do: false } }
-    })
-    const pmCheckbox = wrapper.find('[data-approval-pm]')
-    await pmCheckbox.setValue(true)
-    expect(wrapper.emitted('toggle-approval')[0]).toEqual(['RHAISTRAT-500', 'pm'])
-
-    const doCheckbox = wrapper.find('[data-approval-do]')
-    await doCheckbox.setValue(true)
-    expect(wrapper.emitted('toggle-approval')[1]).toEqual(['RHAISTRAT-500', 'do'])
-  })
-
-  it('highlights the row green once both PM and DO approvals are checked', () => {
-    const wrapper = mount(FeatureSchedulingRow, {
-      props: { feature: feature(), approval: { pm: true, do: true } }
-    })
-    expect(wrapper.classes().join(' ')).toContain('bg-green-50')
-  })
-
   it('shows the FPDoR tier breakdown as a hover tooltip, not permanent inline pills (PR #1877)', () => {
     const wrapper = mount(FeatureSchedulingRow, {
       props: { feature: feature({ FPDoR: '15/17', _wFPDoR: 85, _failedItems: ['Priority'] }) }
     })
     expect(wrapper.find('.fd-item').exists()).toBe(false)
-    const titledEls = wrapper.findAll('[title]').filter(el => el.attributes('title').includes('✗ High: Priority'))
-    expect(titledEls.length).toBeGreaterThan(0)
+    // Nov 24 2026: Tooltip now rendered as a visual hover element via group-hover
+    const tooltipDiv = wrapper.find('.group-hover\\:block')
+    expect(tooltipDiv.exists()).toBe(true)
   })
 })

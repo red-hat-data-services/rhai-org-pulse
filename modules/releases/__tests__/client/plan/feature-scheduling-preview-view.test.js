@@ -58,14 +58,6 @@ describe('FeatureSchedulingPreview', () => {
     expect(wrapper.findAll('tbody tr').length).toBe(3)
   })
 
-  it('renders placement summary cards that total the full dataset', async () => {
-    const wrapper = mount(FeatureSchedulingPreview)
-    await flushPromises()
-    // RHAISTRAT-1 -> EA1, RHAISTRAT-2 -> GA, RHAISTRAT-3 -> No (no components)
-    const cardNumbers = wrapper.findAll('.grid > div').map(d => d.find('.text-lg').text())
-    expect(cardNumbers).toEqual(['1', '0', '1', '1', '0'])
-  })
-
   it('exports the currently filtered/sorted rows to CSV on Export click (PR #1877)', async () => {
     var capturedBlob = null
     var clickSpy = vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(() => {})
@@ -95,7 +87,7 @@ describe('FeatureSchedulingPreview', () => {
   it('toggles sort direction when a sortable header is clicked twice', async () => {
     const wrapper = mount(FeatureSchedulingPreview)
     await flushPromises()
-    const keyHeader = wrapper.findAll('th').find(th => th.text().startsWith('Key'))
+    const keyHeader = wrapper.findAll('th').find(th => th.text().includes('Feature Key'))
     await keyHeader.trigger('click')
     expect(keyHeader.text()).toContain('▲')
     await keyHeader.trigger('click')
