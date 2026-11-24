@@ -11,6 +11,7 @@ const TEAM_FIELD_ID = 'customfield_10001'
 const DEVELOPMENT_FIELD_ID = 'customfield_10000'
 const PRODUCT_MANAGER_FIELD_ID = 'customfield_10469'
 const GITHUB_APPLICATION_TYPE = 'oAuth-com.github.integration.production'
+const BLOCKER_PROJECT_KEYS = ['RHOAIENG', 'RHAIENG', 'RHAI', 'INFERENG', 'AIPCC']
 const RELEASE_BLOCKER_OPTION_LABELS = {
   '16772': 'Approved',
   '16773': 'Proposed',
@@ -18,12 +19,14 @@ const RELEASE_BLOCKER_OPTION_LABELS = {
 }
 
 const BLOCKER_FIELDS = [
-  'summary', 'status', 'priority', 'issuetype', 'components', 'assignee', 'reporter',
+  'summary', 'status', 'priority', 'issuetype', 'project', 'components', 'assignee', 'reporter',
   'fixVersions', 'versions', TEAM_FIELD_ID,
   'created', 'updated', 'resolutiondate',
   BLOCKER_FIELD_ID, TARGET_VERSION_FIELD_ID, DEVELOPMENT_FIELD_ID,
   PRODUCT_MANAGER_FIELD_ID, 'labels', 'comment'
 ].join(',')
+
+const BLOCKER_SUMMARY_FIELDS = [BLOCKER_FIELD_ID, 'fixVersions', 'project'].join(',')
 
 const CACHE_TTL_MS = 5 * 60 * 1000
 const CACHE_MAX_ENTRIES = 50
@@ -88,6 +91,83 @@ function serializeReleaseBlockerStatus(field) {
     return field.value || field.name || RELEASE_BLOCKER_OPTION_LABELS[String(field.id)] || null
   }
   return RELEASE_BLOCKER_OPTION_LABELS[String(field)] || String(field)
+}
+
+function utcDateKey(value) {
+  var date = value instanceof Date ? value : new Date(value)
+  if (!Number.isFinite(date.getTime())) throw new Error('Invalid UTC date')
+  return date.toISOString().slice(0, 10)
+}
+
+function isValidJiraReleaseDate(value) {
+  var text = String(value || '')
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(text)) return false
+  var parsed = new Date(text + 'T00:00:00.000Z')
+  return Number.isFinite(parsed.getTime()) && parsed.toISOString().slice(0, 10) === text
+}
+
+function buildEligibleFixVersionCatalog(versions, asOfDate) {
+  var today = utcDateKey(asOfDate)
+  var catalog = new Map()
+  for (var p = 0; p < BLOCKER_PROJECT_KEYS.length; p++) {
+    catalog.set(BLOCKER_PROJECT_KEYS[p], new Set())
+  }
+
+  for (var i = 0; i < (versions || []).length; i++) {
+    var version = versions[i] || {}
+    var project = String(version.project || '').trim().toUpperCase()
+    var name = String(version.name || '').trim()
+    var releaseDate = String(version.releaseDate || '')
+    if (!catalog.has(project) || !name) continue
+    if (version.archived === true || version.released === true) continue
+    if (!isValidJiraReleaseDate(releaseDate) || releaseDate < today) continue
+    catalog.get(project).add(name.toLowerCase())
+  }
+
+  return catalog
+}
+
+function issueProjectKey(issue) {
+  var fields = (issue && issue.fields) || {}
+  var project = fields.project && (fields.project.key || fields.project.name)
+  if (project) return String(project).trim().toUpperCase()
+  var key = String((issue && issue.key) || '')
+  return key.includes('-') ? key.split('-')[0].toUpperCase() : ''
+}
+
+function issueHasEligibleFixVersion(issue, catalog) {
+  var eligibleVersions = catalog && catalog.get(issueProjectKey(issue))
+  if (!eligibleVersions || eligibleVersions.size === 0) return false
+  var fixVersions = extractJiraNames(issue && issue.fields && issue.fields.fixVersions)
+  return fixVersions.some(function (name) {
+    return eligibleVersions.has(String(name).trim().toLowerCase())
+  })
+}
+
+function filterIssuesToEligibleFixVersions(issues, catalog) {
+  return (issues || []).filter(function (issue) {
+    return issueHasEligibleFixVersion(issue, catalog)
+  })
+}
+
+async function fetchBlockerProjectVersionsStrict(jiraRequest) {
+  var versionGroups = await Promise.all(BLOCKER_PROJECT_KEYS.map(async function (project) {
+    var path = '/rest/api/3/project/' + encodeURIComponent(project) + '/versions'
+    var response = await jiraRequest(path)
+    if (!Array.isArray(response)) {
+      throw new Error('Invalid Jira version response for ' + project)
+    }
+    return response.map(function (version) {
+      return {
+        project: project,
+        name: version && version.name,
+        released: version && version.released === true,
+        archived: version && version.archived === true,
+        releaseDate: version && version.releaseDate
+      }
+    })
+  }))
+  return versionGroups.flat()
 }
 
 function extractAdfText(node) {
@@ -335,6 +415,88 @@ function buildHistoricalTrendsJql() {
     'AND cf[10847] in (16772, 16774) ' +
     'ORDER BY updated DESC'
   )
+}
+
+function buildOrganizationSummaryJql() {
+  return (
+    'project in (RHOAIENG, RHAIENG, RHAI, INFERENG, AIPCC) ' +
+    'AND cf[10847] in (Approved, Rejected, Proposed)'
+  )
+}
+
+function buildOrganizationAwarenessJql() {
+  return (
+    'project in (RHOAIENG, RHAIENG, RHAI, INFERENG, AIPCC) ' +
+    'AND cf[10847] in (Approved, Rejected, Proposed) ' +
+    'ORDER BY updated DESC'
+  )
+}
+
+function buildOrganizationSummary(issues) {
+  var summary = { proposed: 0, approved: 0, rejected: 0, total: 0 }
+
+  for (var i = 0; i < (issues || []).length; i++) {
+    var status = serializeReleaseBlockerStatus(issues[i].fields && issues[i].fields[BLOCKER_FIELD_ID])
+    if (status === 'Proposed') summary.proposed++
+    else if (status === 'Approved') summary.approved++
+    else if (status === 'Rejected') summary.rejected++
+  }
+
+  summary.total = summary.proposed + summary.approved + summary.rejected
+  return summary
+}
+
+function serializeAwarenessIssue(issue, jiraHost, options) {
+  var fields = (issue && issue.fields) || {}
+  var history = options && options.history ? options.history : parseBlockerHistory(issue)
+  var triageReadiness = options && Object.prototype.hasOwnProperty.call(options, 'triageReadiness')
+    ? options.triageReadiness
+    : null
+
+  return {
+    key: issue.key,
+    summary: fields.summary || '',
+    link: jiraHost ? jiraHost + '/browse/' + encodeURIComponent(issue.key) : null,
+    priority: (fields.priority && fields.priority.name) || 'Unknown',
+    issueType: (fields.issuetype && fields.issuetype.name) || 'Unknown',
+    status: (fields.status && fields.status.name) || 'Unknown',
+    releaseBlockerStatus: history.currentStatus,
+    assignee: serializeJiraUser(fields.assignee),
+    reporter: serializeJiraUser(fields.reporter),
+    fixVersions: extractJiraNames(fields.fixVersions),
+    affectedVersions: extractJiraNames(fields.versions),
+    components: extractJiraNames(fields.components),
+    labels: extractJiraNames(fields.labels),
+    team: serializeJiraField(fields[TEAM_FIELD_ID]),
+    isRegression: regressionStatus(fields.comment),
+    created: fields.created || null,
+    updated: fields.updated || null,
+    latestProposedDate: history.latestProposedDate,
+    triageReadiness: triageReadiness
+  }
+}
+
+function buildOrganizationAwareness(issues, jiraHost) {
+  return (issues || []).map(function (issue) {
+    return serializeAwarenessIssue(issue, jiraHost)
+  }).filter(function (issue) {
+    return issue.releaseBlockerStatus === 'Approved' || issue.releaseBlockerStatus === 'Rejected'
+  })
+}
+
+function buildOrganizationProposed(issues, jiraHost, triageReadinessByKey) {
+  return (issues || []).filter(function (issue) {
+    return serializeReleaseBlockerStatus(issue.fields && issue.fields[BLOCKER_FIELD_ID]) === 'Proposed'
+  }).map(function (issue) {
+    return serializeAwarenessIssue(issue, jiraHost, {
+      triageReadiness: triageReadinessByKey && triageReadinessByKey.get(issue.key)
+    })
+  }).sort(function (left, right) {
+    var leftDate = left.latestProposedDate || left.updated || left.created || ''
+    var rightDate = right.latestProposedDate || right.updated || right.created || ''
+    var dateOrder = String(rightDate).localeCompare(String(leftDate))
+    return dateOrder || String(left.key).localeCompare(String(right.key))
+  })
 }
 
 function compareReleaseNames(left, right) {
@@ -677,33 +839,12 @@ function buildResponse(releaseNumber, blockerIssues, criticalIssues, codeFreezeD
   for (var a = 0; a < trendIssues.length; a++) {
     var trendIssue = trendIssues[a]
     var trendHistory = parseBlockerHistory(trendIssue)
-    var trendComponents = ((trendIssue.fields && trendIssue.fields.components) || [])
-      .map(function (component) { return (component.name || '').trim() })
-      .filter(Boolean)
-
-    awarenessTrends.push({
-      key: trendIssue.key,
-      summary: (trendIssue.fields && trendIssue.fields.summary) || '',
-      link: jiraHost + '/browse/' + encodeURIComponent(trendIssue.key),
-      priority: (trendIssue.fields && trendIssue.fields.priority && trendIssue.fields.priority.name) || 'Unknown',
-      issueType: (trendIssue.fields && trendIssue.fields.issuetype && trendIssue.fields.issuetype.name) || 'Unknown',
-      status: (trendIssue.fields && trendIssue.fields.status && trendIssue.fields.status.name) || 'Unknown',
-      releaseBlockerStatus: trendHistory.currentStatus,
-      assignee: serializeJiraUser(trendIssue.fields && trendIssue.fields.assignee),
-      reporter: serializeJiraUser(trendIssue.fields && trendIssue.fields.reporter),
-      fixVersions: extractJiraNames(trendIssue.fields && trendIssue.fields.fixVersions),
-      affectedVersions: extractJiraNames(trendIssue.fields && trendIssue.fields.versions),
-      components: trendComponents,
-      labels: extractJiraNames(trendIssue.fields && trendIssue.fields.labels),
-      team: serializeJiraField(trendIssue.fields && trendIssue.fields[TEAM_FIELD_ID]),
-      isRegression: regressionStatus(trendIssue.fields && trendIssue.fields.comment),
-      created: trendIssue.fields && trendIssue.fields.created ? trendIssue.fields.created : null,
-      updated: trendIssue.fields && trendIssue.fields.updated ? trendIssue.fields.updated : null,
-      latestProposedDate: trendHistory.latestProposedDate,
+    awarenessTrends.push(serializeAwarenessIssue(trendIssue, jiraHost, {
+      history: trendHistory,
       triageReadiness: trendHistory.currentStatus === 'Proposed'
         ? ((triageReadinessByKey && triageReadinessByKey.get(trendIssue.key)) || buildTriageReadiness(trendIssue, []))
         : null
-    })
+    }))
   }
 
   return {
@@ -756,6 +897,132 @@ async function registerBlockerRoutes(router, context) {
       return sharedJira.fetchAllJqlResults(sharedJira.jiraRequest, jql, fields, opts)
     }
   }
+
+  var eligibleFixVersionCatalog = null
+  var eligibleFixVersionCatalogPromise = null
+
+  async function getEligibleFixVersionCatalog() {
+    var now = Date.now()
+    var asOfDate = utcDateKey(now)
+    if (
+      eligibleFixVersionCatalog &&
+      eligibleFixVersionCatalog.asOfDate === asOfDate &&
+      (now - eligibleFixVersionCatalog.timestamp) < CACHE_TTL_MS
+    ) {
+      return eligibleFixVersionCatalog.catalog
+    }
+    if (eligibleFixVersionCatalogPromise) return eligibleFixVersionCatalogPromise
+
+    eligibleFixVersionCatalogPromise = fetchBlockerProjectVersionsStrict(jiraRequest).then(function (versions) {
+      var catalog = buildEligibleFixVersionCatalog(versions, asOfDate)
+      eligibleFixVersionCatalog = { asOfDate: asOfDate, catalog: catalog, timestamp: Date.now() }
+      return catalog
+    }).finally(function () {
+      eligibleFixVersionCatalogPromise = null
+    })
+
+    return eligibleFixVersionCatalogPromise
+  }
+
+  /**
+   * @openapi
+   * /api/modules/releases/delivery/blockers/summary:
+   *   get:
+   *     tags: ['Releases: Delivery']
+   *     summary: Get organization-wide release blocker totals
+   *     description: Returns Proposed, Approved, Rejected, and total Release Blocker counts across the five AI Engineering Jira projects for issues assigned to a non-archived, unreleased Jira Fix Version whose release date is today or later in UTC. The cohort is independent of page filters.
+   *     responses:
+   *       200:
+   *         description: Organization-wide release blocker totals
+   *       500:
+   *         description: Failed to fetch release blocker totals
+   */
+  router.get('/blockers/summary', requireAuth, requireScope('releases:read'), async function (req, res) {
+    var cacheKey = '__organization-summary__'
+    var cached = blockersCache.get(cacheKey)
+    if (cached && (Date.now() - cached.timestamp) < CACHE_TTL_MS) {
+      return res.json(cached.data)
+    }
+
+    if (DEMO_MODE) {
+      var summaryFixture = await readFromStorage('releases/delivery/blockers-summary.json')
+      var demoSummary = summaryFixture || { proposed: 0, approved: 0, rejected: 0, total: 0, fetchedAt: new Date().toISOString() }
+      blockersCache.set(cacheKey, { data: demoSummary, timestamp: Date.now() })
+      return res.json(demoSummary)
+    }
+
+    try {
+      var results = await Promise.all([
+        fetchJql(buildOrganizationSummaryJql(), BLOCKER_SUMMARY_FIELDS, { maxResults: 100 }),
+        getEligibleFixVersionCatalog()
+      ])
+      var issues = filterIssuesToEligibleFixVersions(results[0] || [], results[1])
+      var summary = buildOrganizationSummary(issues)
+      var response = {
+        proposed: summary.proposed,
+        approved: summary.approved,
+        rejected: summary.rejected,
+        total: summary.total,
+        fetchedAt: new Date().toISOString()
+      }
+      blockersCache.set(cacheKey, { data: response, timestamp: Date.now() })
+      res.json(response)
+    } catch (err) {
+      console.error('[releases/delivery] blocker summary fetch error:', err)
+      res.status(500).json({ error: 'Failed to fetch release blocker summary: ' + err.message })
+    }
+  })
+
+  /**
+   * @openapi
+   * /api/modules/releases/delivery/blockers/awareness:
+   *   get:
+   *     tags: ['Releases: Delivery']
+   *     summary: Get organization-wide release blockers for Awareness and Triage
+   *     description: Returns Approved and Rejected Release Blocker issues for the Awareness table plus Proposed issues and their readiness evidence for Triage Readiness across the five AI Engineering Jira projects. Every issue is assigned to a non-archived, unreleased Jira Fix Version whose release date is today or later in UTC. The cohort is independent of page, workflow status, priority, component, and label filters.
+   *     responses:
+   *       200:
+   *         description: Organization-wide release blocker Awareness issues
+   *       500:
+   *         description: Failed to fetch release blocker Awareness issues
+   */
+  router.get('/blockers/awareness', requireAuth, requireScope('releases:read'), async function (req, res) {
+    var cacheKey = '__organization-awareness__'
+    var cached = blockersCache.get(cacheKey)
+    if (cached && (Date.now() - cached.timestamp) < CACHE_TTL_MS) {
+      return res.json(cached.data)
+    }
+
+    if (DEMO_MODE) {
+      var awarenessFixture = await readFromStorage('releases/delivery/blockers-awareness.json')
+      var demoAwareness = awarenessFixture || { issues: [], total: 0, proposedIssues: [], proposedTotal: 0, fetchedAt: new Date().toISOString() }
+      blockersCache.set(cacheKey, { data: demoAwareness, timestamp: Date.now() })
+      return res.json(demoAwareness)
+    }
+
+    try {
+      var results = await Promise.all([
+        fetchJql(buildOrganizationAwarenessJql(), BLOCKER_FIELDS, { expand: 'changelog', maxResults: 100 }),
+        getEligibleFixVersionCatalog()
+      ])
+      var issues = filterIssuesToEligibleFixVersions(results[0] || [], results[1])
+      var triageReadinessByKey = await buildTriageReadinessMap(issues, jiraRequest)
+      var awarenessIssues = buildOrganizationAwareness(issues, jiraHost)
+      var proposedIssues = buildOrganizationProposed(issues, jiraHost, triageReadinessByKey)
+      var response = {
+        issues: awarenessIssues,
+        total: awarenessIssues.length,
+        proposedIssues: proposedIssues,
+        proposedTotal: proposedIssues.length,
+        fetchedAt: new Date().toISOString()
+      }
+      blockersCache.set(cacheKey, { data: response, timestamp: Date.now() })
+      res.json(response)
+    } catch (err) {
+      console.error('[releases/delivery] blocker awareness fetch error:', err)
+      res.status(500).json({ error: 'Failed to fetch release blocker awareness: ' + err.message })
+    }
+  })
 
   /**
    * @openapi
@@ -981,7 +1248,19 @@ async function registerBlockerRoutes(router, context) {
 
 module.exports = registerBlockerRoutes
 module.exports.BLOCKER_FIELDS = BLOCKER_FIELDS
+module.exports.BLOCKER_SUMMARY_FIELDS = BLOCKER_SUMMARY_FIELDS
+module.exports.BLOCKER_PROJECT_KEYS = BLOCKER_PROJECT_KEYS
 module.exports.buildResponse = buildResponse
+module.exports.buildEligibleFixVersionCatalog = buildEligibleFixVersionCatalog
+module.exports.issueHasEligibleFixVersion = issueHasEligibleFixVersion
+module.exports.filterIssuesToEligibleFixVersions = filterIssuesToEligibleFixVersions
+module.exports.fetchBlockerProjectVersionsStrict = fetchBlockerProjectVersionsStrict
+module.exports.buildOrganizationSummaryJql = buildOrganizationSummaryJql
+module.exports.buildOrganizationSummary = buildOrganizationSummary
+module.exports.buildOrganizationAwarenessJql = buildOrganizationAwarenessJql
+module.exports.buildOrganizationAwareness = buildOrganizationAwareness
+module.exports.buildOrganizationProposed = buildOrganizationProposed
+module.exports.serializeAwarenessIssue = serializeAwarenessIssue
 module.exports.buildAwarenessTrendsJql = buildAwarenessTrendsJql
 module.exports.buildHistoricalTrendsJql = buildHistoricalTrendsJql
 module.exports.buildHistoricalTrends = buildHistoricalTrends

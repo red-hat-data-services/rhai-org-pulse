@@ -1517,6 +1517,103 @@ Admin-configurable settings for the Releases module delivery domain (formerly Re
 
 ---
 
+## Releases — Release Blocker Summary (`fixtures/releases/delivery/blockers-summary.json`)
+
+The `GET /api/modules/releases/delivery/blockers/summary` response contains
+organization-wide totals from Jira Release Blocker field `customfield_10847`:
+
+```json
+{
+  "total": 3,
+  "proposed": 1,
+  "approved": 1,
+  "rejected": 1,
+  "fetchedAt": "2026-11-24T12:00:00.000Z"
+}
+```
+
+The cohort covers RHOAIENG, RHAIENG, RHAI, INFERENG, and AIPCC issues whose
+current Release Blocker value is Proposed, Approved, or Rejected and whose Jira
+Fix Version is eligible for upcoming work. An eligible Fix Version belongs to
+the issue's Jira project, is neither archived nor released, and has a valid Jira
+release date equal to or later than the current UTC date. Issues with no Fix
+Version or only unknown, undated, invalid, past, released, or archived versions
+are excluded. A multi-version issue is included when at least one Fix Version is
+eligible. The cohort is independent of workflow status, priority, component,
+label, and page filters. `total` is the sum of the three outcome counts.
+
+## Releases — Release Blockers Awareness (`fixtures/releases/delivery/blockers-awareness.json`)
+
+The `GET /api/modules/releases/delivery/blockers/awareness` response contains
+the organization-wide Approved, Rejected, and Proposed cohorts across
+RHOAIENG, RHAIENG, RHAI, INFERENG, and AIPCC. Approved and Rejected issues are
+returned in `issues` for the Awareness table. Proposed issues are returned in
+`proposedIssues` with their Triage Readiness evidence:
+
+```json
+{
+  "total": 2,
+  "proposedTotal": 1,
+  "fetchedAt": "2026-11-24T12:00:00.000Z",
+  "issues": [
+    {
+      "key": "RHOAIENG-APPROVED",
+      "summary": "Approved organization-wide release blocker",
+      "link": "https://issues.redhat.com/browse/RHOAIENG-APPROVED",
+      "priority": "Blocker",
+      "issueType": "Bug",
+      "status": "Closed",
+      "releaseBlockerStatus": "Approved",
+      "assignee": "Example Owner",
+      "reporter": "Example Reporter",
+      "fixVersions": ["3.8 GA RHOAI RELEASE"],
+      "affectedVersions": ["rhoai-3.8"],
+      "components": ["Dashboard"],
+      "labels": [],
+      "team": "AI Core Platform",
+      "isRegression": "Unknown",
+      "created": "2026-11-01T09:00:00.000Z",
+      "updated": "2026-11-24T10:00:00.000Z",
+      "latestProposedDate": null,
+      "triageReadiness": null
+    }
+  ],
+  "proposedIssues": [
+    {
+      "key": "RHAI-PROPOSED",
+      "summary": "Organization-wide proposed release blocker ready for triage",
+      "status": "Closed",
+      "releaseBlockerStatus": "Proposed",
+      "latestProposedDate": "2026-11-24T11:00:00.000Z",
+      "triageReadiness": {
+        "ready": true,
+        "criteria": {
+          "fixVersion": true,
+          "linkedPullRequest": true,
+          "assessmentCompleted": true,
+          "pmAcknowledgement": true
+        },
+        "missingCriteria": []
+      }
+    }
+  ]
+}
+```
+
+The same strict Fix Version eligibility rule used by the summary endpoint is
+applied before this response is split into Approved/Rejected and Proposed rows.
+The cohort is independent of workflow status, priority, component, label, and
+page filters, so resolved and closed blockers remain visible when they target an
+eligible upcoming Fix Version. `total` equals the number of serialized
+Approved/Rejected `issues`; `proposedTotal` equals the number of serialized
+`proposedIssues`. The Release Blockers Awareness table consumes `issues`, while
+Triage Readiness consumes `proposedIssues`, sorted by the newest Proposed
+transition and then Jira key. The release-scoped response retains its Proposed
+fields for compatibility but does not drive the organization-wide Triage
+Readiness table. If any of the five Jira project version catalogs cannot be
+loaded, the organization-wide endpoints fail instead of returning a partial or
+potentially stale cohort.
+
 ## Releases — Release Blockers Response (`fixtures/releases/delivery/blockers-{version}.json`)
 
 The `GET /api/modules/releases/delivery/blockers/{version}` response contains

@@ -21,6 +21,216 @@ const COMPLETE_ASSESSMENT = [
 ].join(' ')
 
 describe('release blocker Jira field mapping', () => {
+  it('builds the organization-wide summary query without release or issue restrictions', () => {
+    const jql = registerBlockerRoutes.buildOrganizationSummaryJql()
+
+    expect(jql).toBe(
+      'project in (RHOAIENG, RHAIENG, RHAI, INFERENG, AIPCC) ' +
+      'AND cf[10847] in (Approved, Rejected, Proposed)'
+    )
+    expect(jql).not.toContain('status')
+    expect(jql).not.toContain('priority')
+    expect(jql).not.toContain('fixVersion')
+    expect(jql).not.toContain('component')
+    expect(jql).not.toContain('labels')
+  })
+
+  it('counts organization-wide blocker values from Jira names and option IDs', () => {
+    const summary = registerBlockerRoutes.buildOrganizationSummary([
+      { fields: { customfield_10847: { value: 'Proposed' } } },
+      { fields: { customfield_10847: { name: 'Approved' } } },
+      { fields: { customfield_10847: { id: '16772' } } },
+      { fields: { customfield_10847: '16773' } },
+      { fields: { customfield_10847: { id: '16774' } } }
+    ])
+
+    expect(summary).toEqual({ proposed: 2, approved: 2, rejected: 1, total: 5 })
+    expect(registerBlockerRoutes.buildOrganizationSummary([])).toEqual({
+      proposed: 0,
+      approved: 0,
+      rejected: 0,
+      total: 0
+    })
+  })
+
+  it('builds a project-specific catalog of unreleased and non-archived Fix Versions dated today or later', () => {
+    const catalog = registerBlockerRoutes.buildEligibleFixVersionCatalog([
+      { project: 'RHOAIENG', name: 'Today', releaseDate: '2026-11-24', released: false, archived: false },
+      { project: 'RHOAIENG', name: 'Future', releaseDate: '2026-12-01', released: false, archived: false },
+      { project: 'RHOAIENG', name: 'Past', releaseDate: '2026-11-23', released: false, archived: false },
+      { project: 'RHOAIENG', name: 'Released', releaseDate: '2026-12-01', released: true, archived: false },
+      { project: 'RHOAIENG', name: 'Archived', releaseDate: '2026-12-01', released: false, archived: true },
+      { project: 'RHOAIENG', name: 'Undated', released: false, archived: false },
+      { project: 'RHOAIENG', name: 'Invalid', releaseDate: '2026-02-30', released: false, archived: false },
+      { project: 'AIPCC', name: 'Today', releaseDate: '2026-11-24', released: false, archived: false },
+      { project: 'OTHER', name: 'Future', releaseDate: '2026-12-01', released: false, archived: false }
+    ], '2026-11-24')
+
+    expect([...catalog.get('RHOAIENG')]).toEqual(['today', 'future'])
+    expect([...catalog.get('AIPCC')]).toEqual(['today'])
+    expect(catalog.has('OTHER')).toBe(false)
+  })
+
+  it('matches Fix Versions within the Jira project case-insensitively and includes any eligible version', () => {
+    const catalog = registerBlockerRoutes.buildEligibleFixVersionCatalog([
+      { project: 'RHOAIENG', name: 'RHOAI Future', releaseDate: '2026-12-01' },
+      { project: 'RHAI', name: 'Shared Name', releaseDate: '2026-12-02' }
+    ], '2026-11-24')
+    const issue = (key, project, versions) => ({
+      key,
+      fields: {
+        project: project ? { key: project } : undefined,
+        fixVersions: versions.map(name => ({ name }))
+      }
+    })
+
+    expect(registerBlockerRoutes.issueHasEligibleFixVersion(
+      issue('RHOAIENG-1', 'rhoAIeng', ['Historical', 'rhoai future']), catalog
+    )).toBe(true)
+    expect(registerBlockerRoutes.issueHasEligibleFixVersion(
+      issue('RHAI-2', 'RHAI', ['SHARED NAME']), catalog
+    )).toBe(true)
+    expect(registerBlockerRoutes.issueHasEligibleFixVersion(
+      issue('RHOAIENG-3', 'RHOAIENG', ['Shared Name']), catalog
+    )).toBe(false)
+    expect(registerBlockerRoutes.issueHasEligibleFixVersion(
+      issue('RHOAIENG-4', 'RHOAIENG', []), catalog
+    )).toBe(false)
+    expect(registerBlockerRoutes.issueHasEligibleFixVersion(
+      issue('RHOAIENG-5', 'RHOAIENG', ['Unknown']), catalog
+    )).toBe(false)
+    expect(registerBlockerRoutes.issueHasEligibleFixVersion(
+      issue('RHAI-6', null, ['Shared Name']), catalog
+    )).toBe(true)
+  })
+
+  it('builds the organization-wide Awareness query without release or issue restrictions', () => {
+    const jql = registerBlockerRoutes.buildOrganizationAwarenessJql()
+
+    expect(jql).toBe(
+      'project in (RHOAIENG, RHAIENG, RHAI, INFERENG, AIPCC) ' +
+      'AND cf[10847] in (Approved, Rejected, Proposed) ' +
+      'ORDER BY updated DESC'
+    )
+    expect(jql).not.toContain('status')
+    expect(jql).not.toContain('priority')
+    expect(jql).not.toContain('fixVersion')
+    expect(jql).not.toContain('component')
+    expect(jql).not.toContain('labels')
+  })
+
+  it('serializes organization-wide Approved and Rejected blockers including closed issues', () => {
+    const issues = registerBlockerRoutes.buildOrganizationAwareness([
+      {
+        key: 'RHOAIENG-100',
+        fields: {
+          summary: 'Approved closed blocker',
+          priority: { name: 'Blocker' },
+          issuetype: { name: 'Bug' },
+          status: { name: 'Closed' },
+          customfield_10847: { id: '16772' },
+          assignee: { displayName: 'Owner' },
+          reporter: { displayName: 'Reporter' },
+          fixVersions: [{ name: '3.7 GA RHOAI RELEASE' }],
+          versions: [{ name: 'rhoai-3.7' }],
+          components: [{ name: 'Dashboard' }],
+          customfield_10001: { name: 'AI Core Platform' },
+          created: '2026-11-01T00:00:00.000Z',
+          updated: '2026-11-24T00:00:00.000Z'
+        }
+      },
+      {
+        key: 'AIPCC-200',
+        fields: {
+          summary: 'Rejected resolved blocker',
+          status: { name: 'Resolved' },
+          customfield_10847: { value: 'Rejected' },
+          created: '2026-11-02T00:00:00.000Z'
+        }
+      },
+      {
+        key: 'RHAI-300',
+        fields: {
+          summary: 'Proposed blocker excluded defensively',
+          customfield_10847: { value: 'Proposed' },
+          created: '2026-11-03T00:00:00.000Z'
+        }
+      }
+    ], 'https://jira.example.com')
+
+    expect(issues).toHaveLength(2)
+    expect(issues[0]).toMatchObject({
+      key: 'RHOAIENG-100',
+      status: 'Closed',
+      releaseBlockerStatus: 'Approved',
+      fixVersions: ['3.7 GA RHOAI RELEASE'],
+      affectedVersions: ['rhoai-3.7'],
+      components: ['Dashboard'],
+      team: 'AI Core Platform',
+      link: 'https://jira.example.com/browse/RHOAIENG-100'
+    })
+    expect(issues[1]).toMatchObject({
+      key: 'AIPCC-200',
+      status: 'Resolved',
+      releaseBlockerStatus: 'Rejected'
+    })
+  })
+
+  it('serializes only organization-wide Proposed blockers with readiness and stable newest-first ordering', () => {
+    const readiness = new Map([
+      ['RHAI-300', { ready: true, missingCriteria: [] }],
+      ['INFERENG-100', { ready: false, missingCriteria: ['Fix Version'] }],
+      ['AIPCC-200', { ready: false, missingCriteria: ['active red-hat-data-services PR'] }]
+    ])
+    const issues = registerBlockerRoutes.buildOrganizationProposed([
+      {
+        key: 'RHOAIENG-APPROVED',
+        fields: {
+          customfield_10847: { value: 'Approved' },
+          created: '2026-11-01T00:00:00.000Z',
+          updated: '2026-11-24T12:00:00.000Z'
+        }
+      },
+      {
+        key: 'RHAI-300',
+        fields: {
+          summary: 'Newest proposed blocker',
+          status: { name: 'Closed' },
+          customfield_10847: { id: '16773' },
+          created: '2026-11-03T00:00:00.000Z',
+          updated: '2026-11-24T11:00:00.000Z'
+        }
+      },
+      {
+        key: 'INFERENG-100',
+        fields: {
+          summary: 'Tied proposed blocker A',
+          status: { name: 'Resolved' },
+          customfield_10847: { value: 'Proposed' },
+          created: '2026-11-02T00:00:00.000Z',
+          updated: '2026-11-23T10:00:00.000Z'
+        }
+      },
+      {
+        key: 'AIPCC-200',
+        fields: {
+          summary: 'Tied proposed blocker B',
+          customfield_10847: '16773',
+          created: '2026-11-02T00:00:00.000Z',
+          updated: '2026-11-23T10:00:00.000Z'
+        }
+      }
+    ], 'https://jira.example.com', readiness)
+
+    expect(issues.map(issue => issue.key)).toEqual(['RHAI-300', 'AIPCC-200', 'INFERENG-100'])
+    expect(issues[0]).toMatchObject({
+      status: 'Closed',
+      releaseBlockerStatus: 'Proposed',
+      triageReadiness: { ready: true, missingCriteria: [] }
+    })
+    expect(issues[1].triageReadiness.missingCriteria).toContain('active red-hat-data-services PR')
+  })
+
   it('builds an unfiltered historical trends query', () => {
     const jql = registerBlockerRoutes.buildHistoricalTrendsJql()
 
@@ -78,6 +288,7 @@ describe('release blocker Jira field mapping', () => {
   })
 
   it('requests the fields shown in the release blockers table', () => {
+    expect(registerBlockerRoutes.BLOCKER_FIELDS).toContain('project')
     expect(registerBlockerRoutes.BLOCKER_FIELDS).toContain('issuetype')
     expect(registerBlockerRoutes.BLOCKER_FIELDS).toContain('reporter')
     expect(registerBlockerRoutes.BLOCKER_FIELDS).toContain('fixVersions')
@@ -86,6 +297,8 @@ describe('release blocker Jira field mapping', () => {
     expect(registerBlockerRoutes.BLOCKER_FIELDS).toContain('customfield_10000')
     expect(registerBlockerRoutes.BLOCKER_FIELDS).toContain('customfield_10469')
     expect(registerBlockerRoutes.BLOCKER_FIELDS).toContain('comment')
+    expect(registerBlockerRoutes.BLOCKER_SUMMARY_FIELDS).toContain('project')
+    expect(registerBlockerRoutes.BLOCKER_SUMMARY_FIELDS).toContain('fixVersions')
   })
 
   it('requires substantive human answers for all five assessment questions', () => {

@@ -1,0 +1,99 @@
+{
+  "fetchedAt": "2026-11-24T12:00:00.000Z",
+  "total": 2,
+  "issues": [
+    {
+      "key": "RHOAIENG-APPROVED",
+      "summary": "Approved organization-wide release blocker",
+      "link": "https://issues.redhat.com/browse/RHOAIENG-APPROVED",
+      "priority": "Blocker",
+      "issueType": "Bug",
+      "status": "Closed",
+      "releaseBlockerStatus": "Approved",
+      "assignee": "Example Owner",
+      "reporter": "Example Reporter",
+      "fixVersions": ["3.8 GA RHOAI RELEASE"],
+      "affectedVersions": ["rhoai-3.8"],
+      "components": ["Dashboard"],
+      "labels": [],
+      "team": "AI Core Platform",
+      "isRegression": "Unknown",
+      "created": "2026-11-01T09:00:00.000Z",
+      "updated": "2026-11-24T10:00:00.000Z",
+      "latestProposedDate": null,
+      "triageReadiness": null
+    },
+    {
+      "key": "AIPCC-REJECTED",
+      "summary": "Rejected organization-wide release blocker",
+      "link": "https://issues.redhat.com/browse/AIPCC-REJECTED",
+      "priority": "Critical",
+      "issueType": "Bug",
+      "status": "Resolved",
+      "releaseBlockerStatus": "Rejected",
+      "assignee": null,
+      "reporter": "Example Reporter",
+      "fixVersions": ["rhelai-3.8"],
+      "affectedVersions": [],
+      "components": [],
+      "labels": [],
+      "team": null,
+      "isRegression": "No",
+      "created": "2026-10-15T09:00:00.000Z",
+      "updated": "2026-11-23T10:00:00.000Z",
+      "latestProposedDate": null,
+      "triageReadiness": null
+    }
+  ],
+  "proposedTotal": 1,
+  "proposedIssues": [
+    {
+      "key": "RHAI-PROPOSED",
+      "summary": "Organization-wide proposed release blocker ready for triage",
+      "link": "https://issues.redhat.com/browse/RHAI-PROPOSED",
+      "priority": "Blocker",
+      "issueType": "Bug",
+      "status": "Closed",
+      "releaseBlockerStatus": "Proposed",
+      "assignee": "Example Owner",
+      "reporter": "Example Reporter",
+      "fixVersions": ["3.8 GA RHOAI RELEASE"],
+      "affectedVersions": ["rhoai-3.8"],
+      "components": ["Dashboard"],
+      "labels": [],
+      "team": "AI Core Platform",
+      "isRegression": "No",
+      "created": "2026-11-10T09:00:00.000Z",
+      "updated": "2026-11-24T11:00:00.000Z",
+      "latestProposedDate": "2026-11-24T11:00:00.000Z",
+      "triageReadiness": {
+        "ready": true,
+        "criteria": {
+          "fixVersion": true,
+          "linkedPullRequest": true,
+          "assessmentCompleted": true,
+          "pmAcknowledgement": true
+        },
+        "missingCriteria": [],
+        "assessmentAnswers": {
+          "workaround": true,
+          "impact": true,
+          "earlyCatch": true,
+          "regression": true,
+          "reviewsAndTests": true
+        },
+        "activePullRequests": [
+          {
+            "name": "Example remediation",
+            "repository": "red-hat-data-services/example",
+            "status": "OPEN",
+            "url": "https://github.com/red-hat-data-services/example/pull/1"
+          }
+        ],
+        "isZStream": false,
+        "pmAcknowledgementRequired": false,
+        "productManager": "Example Product Manager"
+      }
+    }
+  ]
+}
