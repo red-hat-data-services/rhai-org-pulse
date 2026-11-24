@@ -9,7 +9,7 @@
 
     <!-- Shared Deliver filters; hidden on tabs that provide independent controls -->
     <ReleaseChipBar
-      v-if="allReleases.length && activeTab !== 'risk-dashboard' && activeTab !== 'program-level-release'"
+      v-if="allReleases.length && activeTab !== 'risk-dashboard' && activeTab !== 'program-level-release' && activeTab !== 'release-blockers'"
     />
 
     <div class="border-b border-gray-200 dark:border-gray-700">
