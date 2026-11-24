@@ -37,8 +37,10 @@ function batchedLookup() {
 
 function expectPartialCounts(results) {
   expect(results[0]).toMatchObject({ bugs: 1, hasBugs: true, _bugKeys: ['RHOAIENG-1000'], bugTickets: { status: 'ready' } })
-  expect(results[1]).toMatchObject({ bugs: null, hasBugs: true, _bugKeys: null, bugTickets: { status: 'unavailable' } })
-  expect(results[2]).toMatchObject({ bugs: null, hasBugs: null, _bugKeys: null, bugTickets: { status: 'unavailable' } })
+  expect(results[1]).toMatchObject({ bugs: null, hasBugs: true, _bugKeysIncomplete: true, bugTickets: { status: 'unavailable' } })
+  expect(results[1]._bugKeys).toContain('RHOAIENG-1000')
+  expect(results[1]._bugKeys).not.toContain('RHOAIENG-1001')
+  expect(results[2]).toMatchObject({ bugs: null, hasBugs: null, _bugKeys: [], _bugKeysIncomplete: true, bugTickets: { status: 'unavailable' } })
   for (const result of results.slice(3)) expect(result).toMatchObject({ bugs: 0, hasBugs: false, _bugKeys: [], bugTickets: { status: 'empty' } })
 }
 

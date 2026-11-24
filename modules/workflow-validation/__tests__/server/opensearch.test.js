@@ -9,6 +9,7 @@ const {
   IMAGES_INDEX,
   getOpenSearchConfig,
   createOpenSearchClient,
+  readAll,
   bugFilters,
   runFilters,
   taskFilters,
@@ -76,6 +77,15 @@ afterEach(() => {
 })
 
 describe('OpenSearch runtime client', () => {
+  it('rejects a repeated search cursor instead of consuming the same page again', async () => {
+    const hits = Array.from({ length: 500 }, (_, id) => ({ _source: { id }, sort: [id] }))
+    const search = vi.fn().mockResolvedValue({ hits: { hits: [] } })
+      .mockResolvedValueOnce({ hits: { hits } }).mockResolvedValueOnce({ hits: { hits } })
+    await expect(readAll(search, RUNS_INDEX, { sort: ['id'] }, () => false)).rejects.toThrow(/repeated.*cursor/i)
+    expect(search).toHaveBeenCalledTimes(2)
+    expect(search.mock.calls[1][1].search_after).toEqual([499])
+  })
+
   it('uses runtime URL configuration and preserves the local POC default', () => {
     expect(getOpenSearchConfig({}, {})).toEqual({
       url: 'http://localhost:9200', httpProxy: '', httpsProxy: '', username: '', password: '', authenticated: false, authenticationValid: true

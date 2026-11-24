@@ -1,4 +1,5 @@
 /** Resolve recorded run associations and exclude Jira tickets labelled Internal. */
+const { readAll } = require('./opensearch');
 const INTERNAL_LABEL = 'rca-scope-internal';
 const LABEL_FILTER = `(labels IS EMPTY OR labels NOT IN ("${INTERNAL_LABEL}"))`;
 const CACHE_MS = 60_000;
@@ -8,21 +9,15 @@ const LOOKUP_TIMEOUT_MS = 10_000;
 
 const identity = (row) => JSON.stringify([row.suite, row.invocationId]);
 
-/** Read every matching OpenSearch page without broadening the supplied run scope. */
-async function readAll(search, index, body, isClosed) {
-  const results = [];
-  let after;
-  do {
-    if (isClosed()) throw new Error('Request closed');
-    const response = await search(index, { ...body, size: 500, ...(after ? { search_after: after } : {}) });
-    if (response.timed_out || response._shards?.failed) throw new Error('Incomplete search');
-    const hits = response.hits?.hits;
-    if (!Array.isArray(hits)) throw new Error('Invalid search response');
-    results.push(...hits.map(hit => hit._source || {}));
-    after = hits.length === 500 ? hits.at(-1)?.sort : null;
-    if (hits.length === 500 && !after) throw new Error('Missing search cursor');
-  } while (after);
-  return results;
+/** Build the same Jira search for a row or a summary of verified keys. */
+function bugSearchUrl(host, keys) {
+  if (!keys.length) return null;
+  try {
+    const url = new URL('/issues/', host);
+    if (url.protocol !== 'https:' || url.username || url.password) return null;
+    url.searchParams.set('jql', `key IN (${keys.join(', ')}) AND ${LABEL_FILTER}`);
+    return url.href;
+  } catch { return null; }
 }
 
 /** Bound the page's wait for Jira, including shared-client retries. */
@@ -98,9 +93,12 @@ function createBugTickets({ getJiraClient }) {
   /** Resolve a bounded set of runs; never infer Internal scope from RCA category. */
   return async function bugTickets(rows, { search, refresh = false, isClosed = () => false, includeKeys = false }) {
     if (!rows.length) return rows;
-    const result = (row, bugTickets, keys = null, hasBugs = keys === null ? null : keys.length > 0) => ({ ...row, bugTickets,
-      ...(includeKeys ? { bugs: keys === null ? null : keys.length, hasBugs, _bugKeys: keys } : {}) });
-    const unavailable = (row, hasBugs = null) => result(row, { status: 'unavailable' }, null, hasBugs);
+    const result = (row, bugTickets, keys) => {
+      const complete = bugTickets.status !== 'unavailable';
+      return { ...row, bugTickets, ...(includeKeys ? { bugs: complete ? keys.length : null,
+        hasBugs: keys.length ? true : complete ? false : null, _bugKeys: keys, _bugKeysIncomplete: !complete } : {}) };
+    };
+    const unavailable = (row, keys = []) => result(row, { status: 'unavailable' }, keys);
     try {
       const executionRows = await readAll(search, 'workflow-executions', {
         query: { bool: { should: rows.map(row => ({ bool: { filter: [
@@ -155,15 +153,14 @@ function createBugTickets({ getJiraClient }) {
       return rows.map(row => {
         const scope = scopes.get(identity(row));
         const eligible = [...scope.keys].filter(key => decisions.get(key)).sort();
-        if (!scope.workflows.size || scope.unknown || [...scope.keys].some(key => !decisions.has(key))) return unavailable(row, eligible.length ? true : null);
+        if (!scope.workflows.size || scope.unknown || [...scope.keys].some(key => !decisions.has(key))) return unavailable(row, eligible);
         if (!eligible.length) return result(row, { status: 'empty' }, []);
-        const url = new URL('/issues/', host);
-        if (url.protocol !== 'https:' || url.username || url.password) return unavailable(row);
-        url.searchParams.set('jql', `key IN (${eligible.join(', ')}) AND ${LABEL_FILTER}`);
-        return result(row, { status: 'ready', url: url.href }, eligible);
+        const url = bugSearchUrl(host, eligible);
+        if (!url) return unavailable(row);
+        return result(row, { status: 'ready', url }, eligible);
       });
     } catch { return rows.map(row => unavailable(row)); }
   };
 }
 
-module.exports = { createBugTickets };
+module.exports = { createBugTickets, bugSearchUrl };
