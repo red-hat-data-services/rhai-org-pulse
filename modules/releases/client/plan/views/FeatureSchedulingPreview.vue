@@ -66,6 +66,17 @@ function scrollToFirstUnchecked() {
   }
 }
 
+// Horizontal table scroll navigation (Nov 24 2026)
+function scrollTableLeft() {
+  const wrap = document.querySelector('#feature-scheduling-wrap')
+  if (wrap) wrap.scrollLeft -= 200
+}
+
+function scrollTableRight() {
+  const wrap = document.querySelector('#feature-scheduling-wrap')
+  if (wrap) wrap.scrollLeft += 200
+}
+
 const headers = [
   // Nov 24 2026: Reordered to match iframe (public/ai-first-scheduler/index.html)
   // Columns: # (rank), FPDoR, Risk, Confidence, Priority, OC#, Feature Key, Title, Outcome, Target Version, Fix Version, Components, Size, Team
@@ -143,7 +154,24 @@ const headers = [
       {{ error }}
     </div>
 
-    <div class="overflow-x-auto">
+    <!-- Horizontal scroll navigation (Nov 24 2026) -->
+    <div class="flex items-center justify-center gap-2 py-2 px-4 bg-gray-50 dark:bg-gray-800/50 border-b border-gray-200 dark:border-gray-700">
+      <button
+        type="button"
+        @click="scrollTableLeft"
+        title="Scroll table left"
+        class="px-3 py-1 text-xs rounded border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
+      >← scroll</button>
+      <span class="text-xs text-gray-400 dark:text-gray-500">scroll table left / right</span>
+      <button
+        type="button"
+        @click="scrollTableRight"
+        title="Scroll table right"
+        class="px-3 py-1 text-xs rounded border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
+      >scroll →</button>
+    </div>
+
+    <div class="overflow-x-auto" id="feature-scheduling-wrap">
       <table role="table" class="w-full text-xs">
         <thead role="rowgroup" class="bg-gray-50 dark:bg-gray-800/60 border-b border-gray-200 dark:border-gray-700">
           <tr role="row">
@@ -169,14 +197,21 @@ const headers = [
             </tr>
           </template>
 
-          <FeatureSchedulingRow
-            v-for="(feature, idx) in displayRows"
-            :key="feature['Key']"
-            :feature="feature"
-            :approval="approvalFor(feature['Key'])"
-            :index="idx + 1"
-            @toggle-approval="toggleApproval"
-          />
+          <template v-for="(feature, idx) in displayRows" :key="feature['Key']">
+            <!-- Nov 24 2026: Risk divider row (between good/bad risk items) -->
+            <tr v-if="idx > 0 && displayRows[idx - 1]._riskLevel !== feature._riskLevel && feature._riskLevel === 'HIGH'"
+              class="bg-red-50 dark:bg-red-900/20 border-b-2 border-red-200 dark:border-red-800">
+              <td :colspan="headers.length + 1" class="px-4 py-2 text-xs font-semibold text-red-700 dark:text-red-300">
+                ▼ Items below this line pose significant capacity, dependency, or historical release risks
+              </td>
+            </tr>
+            <FeatureSchedulingRow
+              :feature="feature"
+              :approval="approvalFor(feature['Key'])"
+              :index="idx + 1"
+              @toggle-approval="toggleApproval"
+            />
+          </template>
 
           <tr v-if="!loading && !displayRows.length">
             <td :colspan="headers.length + 1" class="px-4 py-10 text-center text-sm text-gray-400 dark:text-gray-500">

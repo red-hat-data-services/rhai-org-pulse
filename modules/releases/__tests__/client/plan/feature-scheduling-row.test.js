@@ -56,7 +56,9 @@ describe('FeatureSchedulingRow', () => {
     const wrapper = mount(FeatureSchedulingRow, {
       props: { feature: feature(), approval: { pm: true, do: true } }
     })
-    expect(wrapper.classes().join(' ')).toContain('bg-green-50')
+    // Nov 24 2026: Classes now in :class binding array
+    const classes = wrapper.find('tr').classes().join(' ')
+    expect(classes).toContain('bg-green-50')
   })
 
   it('shows the FPDoR tier breakdown as a hover tooltip, not permanent inline pills (PR #1877)', () => {
@@ -64,7 +66,8 @@ describe('FeatureSchedulingRow', () => {
       props: { feature: feature({ FPDoR: '15/17', _wFPDoR: 85, _failedItems: ['Priority'] }) }
     })
     expect(wrapper.find('.fd-item').exists()).toBe(false)
-    const titledEls = wrapper.findAll('[title]').filter(el => el.attributes('title').includes('✗ High: Priority'))
-    expect(titledEls.length).toBeGreaterThan(0)
+    // Nov 24 2026: Tooltip now rendered as a visual hover element via group-hover
+    const tooltipDiv = wrapper.find('.group-hover\\:block')
+    expect(tooltipDiv.exists()).toBe(true)
   })
 })

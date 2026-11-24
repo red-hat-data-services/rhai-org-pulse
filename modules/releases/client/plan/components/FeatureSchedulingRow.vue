@@ -38,10 +38,14 @@ const fpdorTooltip = computed(() => buildFpdorTooltip(props.feature))
 </script>
 
 <template>
+  <!-- Nov 24 2026: Added colored left border and row separators -->
   <tr
     role="row"
-    class="border-b border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900"
-    :class="(approval.pm && approval.do) ? 'bg-green-50/60 dark:bg-green-900/10' : ''"
+    class="border-b-2 bg-white dark:bg-gray-900 border-l-4"
+    :class="[
+      (approval.pm && approval.do) ? 'bg-green-50/60 dark:bg-green-900/10' : '',
+      feature._riskLevel === 'HIGH' || feature._riskLevel === 'CRITICAL' ? 'border-b-red-100 dark:border-b-red-900/40 border-l-red-500' : 'border-b-green-100 dark:border-b-green-900/40 border-l-green-500'
+    ]"
   >
     <td class="px-2 py-2.5 text-center text-xs tabular-nums text-gray-400 dark:text-gray-600 select-none w-8 shrink-0">
       {{ index != null ? index : '' }}
@@ -90,9 +94,14 @@ const fpdorTooltip = computed(() => buildFpdorTooltip(props.feature))
       <span class="text-xs text-gray-700 dark:text-gray-300">{{ feature['Priority'] || '—' }}</span>
     </td>
 
-    <td class="px-3 py-2.5 whitespace-nowrap text-center">
-      <span class="text-xs font-mono text-gray-700 dark:text-gray-300" :title="fpdorTooltip">{{ feature['FPDoR'] || '—' }}</span>
-      <span class="text-xs text-gray-400" :title="fpdorTooltip">(w:{{ feature._wFPDoR }})</span>
+    <!-- FPDOR cell with hover tooltip (Nov 24 2026) -->
+    <td class="px-3 py-2.5 whitespace-nowrap text-center relative group">
+      <span class="text-xs font-mono text-gray-700 dark:text-gray-300 cursor-help">{{ feature['FPDoR'] || '—' }}</span>
+      <span class="text-xs text-gray-400">(w:{{ feature._wFPDoR }})</span>
+      <!-- Hover tooltip showing FPDoR details -->
+      <div class="absolute left-1/2 -translate-x-1/2 bottom-full mb-2 hidden group-hover:block bg-gray-900 dark:bg-gray-800 text-white dark:text-gray-100 text-xs rounded px-2 py-1 whitespace-nowrap z-50 pointer-events-none shadow-lg border border-gray-700">
+        {{ fpdorTooltip }}
+      </div>
     </td>
 
     <td class="px-3 py-2.5 whitespace-nowrap text-center">
