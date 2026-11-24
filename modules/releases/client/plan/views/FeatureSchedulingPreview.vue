@@ -23,8 +23,6 @@ const {
   sortAsc,
   setSort,
   resetFilters,
-  approvals,
-  toggleApproval,
   pmReviewStatus,
   urgentFilterKeys,
   applyUrgentFilter,
@@ -39,9 +37,7 @@ function sortIndicator(col) {
   return sortAsc.value ? '▲' : '▼'
 }
 
-function approvalFor(key) {
-  return approvals.value[key] || { pm: false, do: false }
-}
+// Nov 24 2026: Approval checkboxes removed (not in local/iframe version)
 
 // index.html's doExport() (PR #1877) -- exports the currently filtered/sorted
 // rows (window._lastFilteredRows there, displayRows here), not the full dataset.
@@ -207,9 +203,7 @@ const headers = [
             </tr>
             <FeatureSchedulingRow
               :feature="feature"
-              :approval="approvalFor(feature['Key'])"
               :index="idx + 1"
-              @toggle-approval="toggleApproval"
             />
           </template>
 

@@ -39,27 +39,9 @@ describe('FeatureSchedulingRow', () => {
     expect(wrapper.text()).not.toContain('C')
   })
 
-  it('emits toggle-approval with the feature key and role when a checkbox changes', async () => {
-    const wrapper = mount(FeatureSchedulingRow, {
-      props: { feature: feature(), approval: { pm: false, do: false } }
-    })
-    const pmCheckbox = wrapper.find('[data-approval-pm]')
-    await pmCheckbox.setValue(true)
-    expect(wrapper.emitted('toggle-approval')[0]).toEqual(['RHAISTRAT-500', 'pm'])
+  // Nov 24 2026: PM/DO approval checkboxes removed (not in local/iframe version)
 
-    const doCheckbox = wrapper.find('[data-approval-do]')
-    await doCheckbox.setValue(true)
-    expect(wrapper.emitted('toggle-approval')[1]).toEqual(['RHAISTRAT-500', 'do'])
-  })
-
-  it('highlights the row green once both PM and DO approvals are checked', () => {
-    const wrapper = mount(FeatureSchedulingRow, {
-      props: { feature: feature(), approval: { pm: true, do: true } }
-    })
-    // Nov 24 2026: Classes now in :class binding array
-    const classes = wrapper.find('tr').classes().join(' ')
-    expect(classes).toContain('bg-green-50')
-  })
+  // Nov 24 2026: Approval-based highlighting removed (not in local version)
 
   it('shows the FPDoR tier breakdown as a hover tooltip, not permanent inline pills (PR #1877)', () => {
     const wrapper = mount(FeatureSchedulingRow, {

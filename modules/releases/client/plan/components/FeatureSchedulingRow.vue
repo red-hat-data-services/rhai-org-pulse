@@ -4,21 +4,11 @@ import { buildFpdorTooltip } from '../ai-planner/core.js'
 
 const props = defineProps({
   feature: { type: Object, required: true },
-  approval: { type: Object, default: () => ({ pm: false, do: false }) },
   jiraBaseUrl: { type: String, default: 'https://issues.redhat.com/browse' },
   index: { type: Number, default: null }
 })
 
-const emit = defineEmits(['toggle-approval'])
-
-const placementClass = computed(() => {
-  switch (props.feature._place) {
-    case 'EA1': return 'bg-blue-100 text-blue-800 dark:bg-blue-900/40 dark:text-blue-200'
-    case 'EA2': return 'bg-indigo-100 text-indigo-800 dark:bg-indigo-900/40 dark:text-indigo-200'
-    case 'GA': return 'bg-green-100 text-green-800 dark:bg-green-900/40 dark:text-green-200'
-    default: return 'bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-300'
-  }
-})
+// Nov 24 2026: Placement badge removed (not in local/iframe version)
 
 const riskClass = computed(() => {
   switch (props.feature._riskLevel) {
@@ -42,21 +32,43 @@ const fpdorTooltip = computed(() => buildFpdorTooltip(props.feature))
   <tr
     role="row"
     class="border-b-2 bg-white dark:bg-gray-900 border-l-4"
-    :class="[
-      (approval.pm && approval.do) ? 'bg-green-50/60 dark:bg-green-900/10' : '',
-      feature._riskLevel === 'HIGH' || feature._riskLevel === 'CRITICAL' ? 'border-b-red-100 dark:border-b-red-900/40 border-l-red-500' : 'border-b-green-100 dark:border-b-green-900/40 border-l-green-500'
-    ]"
+    :class="feature._riskLevel === 'HIGH' || feature._riskLevel === 'CRITICAL' ? 'border-b-red-100 dark:border-b-red-900/40 border-l-red-500' : 'border-b-green-100 dark:border-b-green-900/40 border-l-green-500'"
   >
+    <!-- Nov 24 2026: REORDERED to match header layout (FPDOR, Risk, Confidence, Priority, OC#, Feature Key, Title, Outcome, Target Version, Fix Version, Components, Team) -->
     <td class="px-2 py-2.5 text-center text-xs tabular-nums text-gray-400 dark:text-gray-600 select-none w-8 shrink-0">
       {{ index != null ? index : '' }}
     </td>
 
-    <td class="px-3 py-2.5 whitespace-nowrap text-center">
-      <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold" :class="placementClass">
-        {{ feature._place || '—' }}
-      </span>
+    <!-- FPDOR cell with hover tooltip -->
+    <td class="px-3 py-2.5 whitespace-nowrap text-center relative group">
+      <span class="text-xs font-mono text-gray-700 dark:text-gray-300 cursor-help">{{ feature['FPDoR'] || '—' }}</span>
+      <span class="text-xs text-gray-400">(w:{{ feature._wFPDoR }})</span>
+      <div class="absolute left-1/2 -translate-x-1/2 bottom-full mb-2 hidden group-hover:block bg-gray-900 dark:bg-gray-800 text-white dark:text-gray-100 text-xs rounded px-2 py-1 whitespace-nowrap z-50 pointer-events-none shadow-lg border border-gray-700">
+        {{ fpdorTooltip }}
+      </div>
     </td>
 
+    <!-- Risk -->
+    <td class="px-3 py-2.5 whitespace-nowrap text-center">
+      <span class="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium" :class="riskClass">{{ feature._riskLevel || '—' }}</span>
+    </td>
+
+    <!-- Confidence -->
+    <td class="px-3 py-2.5 whitespace-nowrap text-center">
+      <span class="text-xs font-semibold tabular-nums text-gray-800 dark:text-gray-200">{{ feature._conf != null ? feature._conf + '%' : '—' }}</span>
+    </td>
+
+    <!-- Priority -->
+    <td class="px-3 py-2.5 whitespace-nowrap">
+      <span class="text-xs text-gray-700 dark:text-gray-300">{{ feature['Priority'] || '—' }}</span>
+    </td>
+
+    <!-- OC# (Outcome Number) -->
+    <td class="px-3 py-2.5 whitespace-nowrap text-center">
+      <span class="text-xs text-gray-700 dark:text-gray-300">{{ feature['OutcomeNumber'] || '—' }}</span>
+    </td>
+
+    <!-- Feature Key -->
     <td class="px-3 py-2.5 whitespace-nowrap">
       <a
         :href="jiraBaseUrl + '/' + feature['Key']"
@@ -66,18 +78,27 @@ const fpdorTooltip = computed(() => buildFpdorTooltip(props.feature))
       >{{ feature['Key'] }}</a>
     </td>
 
+    <!-- Title -->
     <td class="px-3 py-2.5 max-w-xs">
       <span class="text-xs text-gray-900 dark:text-gray-100 block truncate" :title="feature['Title']">{{ feature['Title'] || '—' }}</span>
     </td>
 
+    <!-- Outcome -->
     <td class="px-3 py-2.5 max-w-[8rem]">
       <span class="text-xs text-gray-700 dark:text-gray-300 block truncate" :title="feature['Outcome'] || undefined">{{ feature['Outcome'] || '—' }}</span>
     </td>
 
+    <!-- Target Version -->
     <td class="px-3 py-2.5 whitespace-nowrap">
       <span class="font-mono text-xs text-gray-700 dark:text-gray-300">{{ feature['Target Versions'] || '—' }}</span>
     </td>
 
+    <!-- Fix Version -->
+    <td class="px-3 py-2.5 whitespace-nowrap">
+      <span class="font-mono text-xs text-gray-700 dark:text-gray-300">{{ feature['Fix Version'] || '—' }}</span>
+    </td>
+
+    <!-- Components -->
     <td class="px-3 py-2.5">
       <div class="flex flex-wrap gap-1">
         <span
@@ -90,48 +111,9 @@ const fpdorTooltip = computed(() => buildFpdorTooltip(props.feature))
       </div>
     </td>
 
+    <!-- Team -->
     <td class="px-3 py-2.5 whitespace-nowrap">
-      <span class="text-xs text-gray-700 dark:text-gray-300">{{ feature['Priority'] || '—' }}</span>
-    </td>
-
-    <!-- FPDOR cell with hover tooltip (Nov 24 2026) -->
-    <td class="px-3 py-2.5 whitespace-nowrap text-center relative group">
-      <span class="text-xs font-mono text-gray-700 dark:text-gray-300 cursor-help">{{ feature['FPDoR'] || '—' }}</span>
-      <span class="text-xs text-gray-400">(w:{{ feature._wFPDoR }})</span>
-      <!-- Hover tooltip showing FPDoR details -->
-      <div class="absolute left-1/2 -translate-x-1/2 bottom-full mb-2 hidden group-hover:block bg-gray-900 dark:bg-gray-800 text-white dark:text-gray-100 text-xs rounded px-2 py-1 whitespace-nowrap z-50 pointer-events-none shadow-lg border border-gray-700">
-        {{ fpdorTooltip }}
-      </div>
-    </td>
-
-    <td class="px-3 py-2.5 whitespace-nowrap text-center">
-      <span class="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium" :class="riskClass">{{ feature._riskLevel || '—' }}</span>
-    </td>
-
-    <td class="px-3 py-2.5 whitespace-nowrap text-center">
-      <span class="text-xs font-semibold tabular-nums text-gray-800 dark:text-gray-200">{{ feature._conf != null ? feature._conf + '%' : '—' }}</span>
-    </td>
-
-    <td class="px-3 py-2.5 text-center">
-      <input
-        type="checkbox"
-        :checked="approval.pm"
-        @change="emit('toggle-approval', feature['Key'], 'pm')"
-        :aria-label="'PM approval for ' + feature['Key']"
-        class="rounded border-gray-300 dark:border-gray-600 text-primary-600 focus:ring-primary-500"
-        :data-approval-pm="feature['Key']"
-      />
-    </td>
-
-    <td class="px-3 py-2.5 text-center">
-      <input
-        type="checkbox"
-        :checked="approval.do"
-        @change="emit('toggle-approval', feature['Key'], 'do')"
-        :aria-label="'Delivery Owner approval for ' + feature['Key']"
-        class="rounded border-gray-300 dark:border-gray-600 text-primary-600 focus:ring-primary-500"
-        :data-approval-do="feature['Key']"
-      />
+      <span class="text-xs text-gray-700 dark:text-gray-300">{{ feature['Team'] || '—' }}</span>
     </td>
   </tr>
 </template>
