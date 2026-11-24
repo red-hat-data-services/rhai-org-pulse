@@ -16,9 +16,10 @@ async function mockRecentPages(page, { refreshRunPrefix = '' } = {}) {
   await page.route('**/api/modules/workflow-validation/test-suites?**', route => {
     const query = new URL(route.request().url()).searchParams
     const versions = query.getAll('versions').length ? query.getAll('versions') : query.get('version') ? [query.get('version')] : []
+    const suites = query.getAll('suites')
     const canonical = version => version === '3.6' ? '3.6.0' : version
     let matching = all.filter(row => (!versions.length || versions.map(canonical).includes(canonical(row.rhoaiVersion)))
-      && (!query.get('suite') || row.suite === query.get('suite'))
+      && (!suites.length || suites.includes(row.suite))
       && (!query.get('runQuery') || row.invocationId.includes(query.get('runQuery')))
       && (!query.get('dateFrom') || row.timestamp.slice(0, 10) >= query.get('dateFrom'))
       && (!query.get('dateTo') || row.timestamp.slice(0, 10) <= query.get('dateTo')))
@@ -42,7 +43,8 @@ async function mockRecentData(page, rows) {
     const params = new URL(route.request().url()).searchParams
     const query = Object.fromEntries(params)
     if (params.has('versions')) query.versions = params.getAll('versions')
-    try { await route.fulfill({ json: tools.pageRecentRuns(rows, tools.parseRecentRuns(query)) }) }
+    if (params.has('suites')) query.suites = params.getAll('suites')
+    try { await route.fulfill({ json: tools.pageRecentRuns(rows, tools.parseRecentRuns(query), 'https://redhat.atlassian.net') }) }
     catch (error) { await route.fulfill({ status: error.code === 'STALE_CURSOR' ? 409 : 400,
       json: { error: error.message, code: error.code } }) }
   })
@@ -55,6 +57,14 @@ async function selectRecentVersions(page, values) {
   if (await trigger.getAttribute('aria-expanded') !== 'true') await trigger.click()
   await page.getByRole('checkbox', { name: 'All versions', exact: true }).check()
   for (const version of values) await page.getByRole('checkbox', { name: version, exact: true }).check()
+  await page.keyboard.press('Escape')
+}
+
+async function selectRecentSuites(page, names) {
+  const trigger = page.getByRole('button', { name: 'Test suites', exact: true })
+  if (await trigger.getAttribute('aria-expanded') !== 'true') await trigger.click()
+  await page.getByRole('checkbox', { name: 'All suites', exact: true }).check()
+  for (const name of names) await page.getByRole('checkbox', { name, exact: true }).check()
   await page.keyboard.press('Escape')
 }
 
@@ -108,8 +118,9 @@ test.describe('Workflow Validation module @workflow-validation', () => {
     await expect(page.getByRole('row', { name: 'Open run batch-mixed', exact: true }).getByRole('cell').nth(10)).toHaveText('—')
     await expect(page.getByRole('row', { name: 'Open run batch-unresolved', exact: true })).toHaveCount(0)
     await expect(page.getByText('Some bug counts are unavailable. This filter shows only verified matches.', { exact: true })).toBeVisible()
-    await expect(page.getByTestId('summary-suiteRuns').locator('dd').first()).toHaveText('3')
-    await expect(page.getByTestId('summary-bugs').locator('dd').first()).toHaveText('—')
+    await expect(page.getByTestId('summary-suiteRuns').locator('dd').first()).toHaveText('2')
+    await expect(page.getByTestId('summary-bugs').locator('dd').first()).toHaveText('100')
+    await expect(page.getByTestId('summary-bugs').locator('dd')).toHaveCount(1)
   })
 
   test('keeps a verified bug match when another Jira key is unresolved', async ({ page }) => {
@@ -136,17 +147,134 @@ test.describe('Workflow Validation module @workflow-validation', () => {
     await expect(panel.getByTestId('summary-suiteRuns').locator('dd').first()).toHaveText('21')
     await expect(panel.getByTestId('summary-tasks').locator('dd').first()).toHaveText('84')
     await expect(panel.getByTestId('summary-bugs').locator('dd').first()).toHaveText('1')
+    const scroll = page.getByRole('region', { name: 'Recent runs table', exact: true })
+    const heading = page.getByRole('columnheader', { name: 'Test suite', exact: true })
+    await expect.poll(() => scroll.evaluate(element => element.scrollHeight > element.clientHeight)).toBe(true)
+    await scroll.scrollIntoViewIfNeeded()
+    const headerTop = (await heading.boundingBox()).y
+    await scroll.evaluate(element => { element.scrollTop = 500 })
+    await expect.poll(() => scroll.evaluate(element => element.scrollTop)).toBeGreaterThan(0)
+    expect(Math.abs((await heading.boundingBox()).y - headerTop)).toBeLessThanOrEqual(1)
+    const focusRow = page.getByRole('row', { name: 'Open run api-summary-5', exact: true })
+    await focusRow.evaluate(element => {
+      const container = element.closest('[aria-label="Recent runs table"]')
+      container.scrollTop += element.getBoundingClientRect().top - container.getBoundingClientRect().top
+      element.focus({ preventScroll: true })
+    })
+    await expect(focusRow).toBeFocused()
+    const headerBox = await heading.boundingBox()
+    expect((await focusRow.boundingBox()).y).toBeGreaterThanOrEqual(headerBox.y + headerBox.height - 1)
     await page.getByRole('button', { name: 'Next page', exact: true }).click()
     await expect(page.getByText('Showing 21–21 of 21 runs', { exact: true })).toBeVisible()
     await expect(panel.getByTestId('summary-tasks').locator('dd').first()).toHaveText('84')
     await page.getByRole('button', { name: 'Contains bugs only', exact: true }).click()
     await expect(page.getByText('Showing 1–20 of 20 runs', { exact: true })).toBeVisible()
     await expect(page.getByRole('button', { name: 'Next page', exact: true })).toBeDisabled()
-    await expect(panel.getByTestId('summary-suiteRuns').locator('dd').first()).toHaveText('21')
-    await panel.getByRole('combobox', { name: 'Summary RHOAI version', exact: true }).selectOption('3.7.0-ea.1')
-    await expect(panel.getByTestId('summary-suiteRuns').locator('dd').first()).toHaveText('1')
+    await expect(panel.getByTestId('summary-suiteRuns').locator('dd').first()).toHaveText('20')
+    await selectRecentVersions(page, ['3.7.0-ea.1'])
+    await expect(panel.getByTestId('summary-suiteRuns').locator('dd').first()).toHaveText('0')
     await expect(panel.getByTestId('summary-bugs').locator('dd').first()).toHaveText('0')
     await expect(page.getByText('No runs match these filters.', { exact: true })).toBeVisible()
+  })
+
+  test('defaults to two suites, remembers custom selections and links the filtered Jira keys', async ({ page, context }) => {
+    await context.route('https://redhat.atlassian.net/**', route => route.fulfill({ contentType: 'text/html', body: '<p>Mock Jira search</p>' }))
+    await mockRecentData(page, summaryRows)
+    await page.goto('/#/workflow-validation/recent-runs')
+    const trigger = page.getByRole('button', { name: 'Test suites', exact: true })
+    await expect(trigger).toContainText('Aramco, Release Gate')
+    await expect(page.getByRole('table').locator('tbody tr')).toHaveCount(6)
+    await expect(page.getByRole('table')).not.toContainText('Performer Plugin')
+    await selectRecentSuites(page, ['Aramco', 'Performer Plugin'])
+    await selectRecentVersions(page, ['3.6.0', '3.7.0-ea.1'])
+    await expect(page.getByTestId('summary-skipped').locator('dd').first()).toHaveText('17')
+    await page.reload()
+    await expect(trigger).toContainText('Aramco, Performer Plugin')
+    await expect(page.getByRole('table').locator('tbody tr')).toHaveCount(5)
+    await expect(page.getByTestId('summary-skipped').locator('dd').first()).toHaveText('17')
+    const total = page.getByTestId('summary-bugs').getByRole('link')
+    await expect(total).toHaveText('4')
+    const popupPromise = page.waitForEvent('popup')
+    await total.click()
+    const popup = await popupPromise
+    await expect(popup).toHaveURL(/redhat\.atlassian\.net\/issues\/\?jql=/)
+    expect(new URL(popup.url()).searchParams.get('jql')).toBe(
+      'key IN (RHOAIENG-90010, RHOAIENG-90100, RHOAIENG-90101, RHOAIENG-90102) AND (labels IS EMPTY OR labels NOT IN ("rca-scope-internal"))')
+    await popup.close()
+    await page.getByRole('button', { name: 'Clear filters', exact: true }).click()
+    await expect(page.getByRole('table').locator('tbody tr')).toHaveCount(9)
+    await page.reload()
+    await expect(trigger).toContainText('All suites')
+    await expect(page.getByRole('table').locator('tbody tr')).toHaveCount(9)
+  })
+
+  test('keeps focus on a run link when refresh moves its row', async ({ page }) => {
+    const rows = [0, 1, 2].map(index => ({ ...summaryRows[0], invocationId: `focus-run-${index}`,
+      timestamp: new Date(Date.UTC(2026, 10, 5 - index)).toISOString() }))
+    await mockRecentData(page, rows)
+    await page.goto('/#/workflow-validation/recent-runs')
+    const table = page.getByRole('table')
+    const link = table.getByRole('row', { name: 'Open run focus-run-0', exact: true }).getByRole('link')
+    const refresh = page.getByRole('main').getByRole('button', { name: 'Refresh', exact: true })
+    await expect(table.locator('tbody tr').first()).toHaveAttribute('aria-label', 'Open run focus-run-0')
+    await link.focus()
+    rows[0].timestamp = '2026-11-01T00:00:00Z'
+    // Start refresh without moving focus to the button.
+    await refresh.evaluate(button => button.click())
+    await expect(table.locator('tbody tr').last()).toHaveAttribute('aria-label', 'Open run focus-run-0')
+    await expect(link).toBeFocused()
+  })
+
+  test('removes applied filter chips by keyboard and updates the task breakdown and rows', async ({ page }) => {
+    await mockRecentData(page, summaryRows)
+    await page.goto('/#/workflow-validation/recent-runs')
+    const chips = page.getByRole('list', { name: 'Applied filters' })
+    const table = page.getByRole('table')
+    const count = key => page.getByTestId(`summary-${key}`).locator('dd').first()
+    const aramco = chips.getByRole('button', { name: 'Remove suite Aramco', exact: true })
+    const gate = chips.getByRole('button', { name: 'Remove suite Release Gate', exact: true })
+    await expect(table.locator('tbody tr')).toHaveCount(6)
+    await aramco.press('Enter')
+    await expect(aramco).toHaveCount(0)
+    await expect(gate).toBeFocused()
+    await expect(table.locator('tbody tr')).toHaveCount(3)
+    await expect(table).not.toContainText('Aramco')
+
+    await selectRecentVersions(page, ['3.7.0-ea.1', '3.6.0'])
+    await chips.getByRole('button', { name: 'Remove version 3.7.0-ea.1', exact: true }).press('Space')
+    const ga = chips.getByRole('button', { name: 'Remove version 3.6.0', exact: true })
+    await expect(ga).toBeFocused()
+    await expect(table.locator('tbody tr')).toHaveCount(1)
+    await expect(count('tasks')).toHaveText('48')
+    const outcomes = await Promise.all(['passed', 'failed', 'skipped'].map(async key => Number(await count(key).innerText())))
+    expect(outcomes.reduce((sum, value) => sum + value, 0)).toBe(48)
+    expect((await count('tasks').boundingBox()).y).toBeLessThan((await count('passed').boundingBox()).y)
+    await expect(page.getByTestId('summary-bugs').getByRole('link')).toHaveText('1')
+    await page.reload()
+    await expect(chips.getByRole('button')).toHaveCount(2)
+    await expect(ga).toBeVisible()
+    await expect(gate).toBeVisible()
+    await gate.press('Enter')
+    await expect(ga).toBeFocused()
+    await ga.press('Enter')
+    await expect(chips).toHaveCount(0)
+    await expect(page.getByRole('button', { name: 'Clear filters', exact: true })).toBeFocused()
+    await expect(table.locator('tbody tr')).toHaveCount(9)
+  })
+
+  test('keeps the outcome counts readable on a narrow screen', async ({ page }) => {
+    await page.setViewportSize({ width: 320, height: 812 })
+    await mockRecentData(page, summaryRows)
+    await page.goto('/#/workflow-validation/recent-runs')
+    const counts = page.getByLabel('Task outcomes', { exact: true }).locator('dd')
+    await expect(counts).toHaveText(['258', '9', '14'])
+    await page.getByRole('button', { name: 'Collapse sidebar', exact: true }).click()
+    await expect.poll(() => page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(320)
+    expect(await counts.evaluateAll(elements => elements.map(element => {
+      const range = document.createRange()
+      range.selectNodeContents(element)
+      return range.getClientRects().length
+    }))).toEqual([1, 1, 1])
   })
 
   test('appends API counts to the original Recent Runs table', async ({ page }) => {
@@ -164,7 +292,10 @@ test.describe('Workflow Validation module @workflow-validation', () => {
     ])
     await expect(page.getByRole('form', { name: 'Run filters', exact: true })).toBeVisible()
     await expect(page.getByRole('button', { name: 'RHOAI versions', exact: true })).toBeVisible()
-    await expect(page.getByRole('combobox', { name: 'Test suite', exact: true })).toBeVisible()
+    await expect(page.getByRole('button', { name: 'Test suites', exact: true })).toBeVisible()
+    await expect(page.getByRole('combobox', { name: 'Summary RHOAI version', exact: true })).toHaveCount(0)
+    const filters = page.getByRole('form', { name: 'Run filters', exact: true })
+    expect((await filters.boundingBox()).y).toBeLessThan((await panel.boundingBox()).y)
     await expect(page.getByRole('searchbox', { name: 'Run ID', exact: true })).toBeVisible()
     await expect(page.getByRole('combobox', { name: 'Date Range', exact: true })).toBeVisible()
     await expect(page.getByRole('button', { name: 'Next page', exact: true })).toBeDisabled()
@@ -179,7 +310,7 @@ test.describe('Workflow Validation module @workflow-validation', () => {
     await expect(originalCells.nth(2).locator('time')).toHaveAttribute('datetime', '2026-11-10T10:47:11.000Z')
     await expect(originalCells.nth(3).locator('time')).toHaveAttribute('datetime', '2026-11-18T12:00:00.000Z')
     await expect(originalCells.nth(4).getByRole('link')).toHaveAttribute('target', '_blank')
-    await page.getByRole('combobox', { name: 'Summary RHOAI version', exact: true }).selectOption('3.7.0-ea.1')
+    await selectRecentVersions(page, ['3.7.0-ea.1'])
     await expect(panel.getByTestId('summary-workflows').locator('dd').first()).toHaveText('38')
     await expect(panel.getByTestId('summary-tasks').locator('dd').first()).toHaveText('192')
     await expect(panel.getByTestId('summary-bugs').locator('dd').first()).toHaveText('3')
@@ -209,19 +340,19 @@ test.describe('Workflow Validation module @workflow-validation', () => {
     await expect(table.getByRole('row', { name: 'Open run sample-aramco-001', exact: true }).getByRole('cell')).toHaveCount(11)
   })
 
-  test('filters suites with bugs while retaining the complete version summary', async ({ page }) => {
+  test('summarizes runs matching the bug and version filters', async ({ page }) => {
     await mockRecentData(page, summaryRows)
-    await page.goto('/#/workflow-validation/recent-runs?recentVersion=3.6.0')
+    await page.goto('/#/workflow-validation/recent-runs?recentVersion=3.6.0&recentSuite=')
     await expect(page.getByTestId('summary-suiteRuns').locator('dd').first()).toHaveText('4')
     const toggle = page.getByRole('button', { name: 'Contains bugs only', exact: true })
     await toggle.click()
     await expect(toggle).toHaveAttribute('aria-pressed', 'true')
     await expect(page.getByRole('table').locator('tbody tr')).toHaveCount(2)
     await expect(page.getByText('Showing 1–2 of 2 runs', { exact: true })).toBeVisible()
-    await expect(page.getByTestId('summary-suiteRuns').locator('dd').first()).toHaveText('4')
-    await page.getByRole('combobox', { name: 'Summary RHOAI version', exact: true }).selectOption('3.5.2')
+    await expect(page.getByTestId('summary-suiteRuns').locator('dd').first()).toHaveText('2')
+    await selectRecentVersions(page, ['3.5.2'])
     await expect(page.getByText('No runs match these filters.', { exact: true })).toBeVisible()
-    await expect(page.getByTestId('summary-tasks').locator('dd').first()).toHaveText('72')
+    await expect(page.getByTestId('summary-tasks').locator('dd').first()).toHaveText('0')
     await expect(page.getByTestId('summary-failed').locator('dd').first()).toHaveText('0')
     await expect(page.getByTestId('summary-bugs').locator('dd').first()).toHaveText('0')
     await toggle.click()
@@ -231,30 +362,30 @@ test.describe('Workflow Validation module @workflow-validation', () => {
 
   test('retains suite search, run search, sorting, date filters, and multiple versions with API data', async ({ page }) => {
     await mockRecentData(page, summaryRows)
-    await page.goto('/#/workflow-validation/recent-runs?recentVersion=3.6.0')
+    await page.goto('/#/workflow-validation/recent-runs?recentVersion=3.6.0&recentSuite=')
     const table = page.getByRole('table')
     await page.getByRole('button', { name: 'Sort test suite', exact: true }).click()
     await expect(table.locator('tbody tr').nth(1)).toHaveAttribute('aria-label', 'Open run sample-aramco-002')
-    await page.getByRole('combobox', { name: 'Test suite', exact: true }).selectOption('aramco')
+    await selectRecentSuites(page, ['Aramco'])
     await expect(table.locator('tbody tr')).toHaveCount(2)
     await page.getByRole('searchbox', { name: 'Run ID', exact: true }).fill('sample-aramco-002')
     await expect(table.locator('tbody tr')).toHaveCount(1)
     await expect(table.locator('tbody tr')).toHaveAttribute('aria-label', 'Open run sample-aramco-002')
-    await expect(page.getByTestId('summary-suiteRuns').locator('dd').first()).toHaveText('4')
+    await expect(page.getByTestId('summary-suiteRuns').locator('dd').first()).toHaveText('1')
     await page.getByRole('button', { name: 'Clear filters', exact: true }).click()
     await expect(table.locator('tbody tr')).toHaveCount(9)
-    await expect(page.getByRole('combobox', { name: 'Summary RHOAI version', exact: true })).toHaveValue('')
+    await expect(page.getByRole('button', { name: 'RHOAI versions', exact: true })).toContainText('All versions')
     await expect(page.getByTestId('summary-bugs').locator('dd').first()).toHaveText('7')
     await selectRecentVersions(page, ['3.6.0', '3.7.0-ea.1'])
     await expect(table.locator('tbody tr')).toHaveCount(7)
-    await expect(page.getByRole('combobox', { name: 'Summary RHOAI version', exact: true })).toHaveValue('__selected_versions__')
+    await expect(page.getByRole('button', { name: 'RHOAI versions', exact: true })).toContainText('3.7.0-ea.1, 3.6.0')
     await expect(page.getByTestId('summary-suiteRuns').locator('dd').first()).toHaveText('7')
     await expect(page.getByTestId('summary-bugs').locator('dd').first()).toHaveText('7')
     await page.getByRole('combobox', { name: 'Date Range', exact: true }).selectOption('custom')
     await page.getByLabel('Start Date (UTC)', { exact: true }).fill('2026-11-19')
     await page.getByLabel('End Date (UTC)', { exact: true }).fill('2026-11-19')
     await expect(table.locator('tbody tr')).toHaveCount(3)
-    await expect(page.getByTestId('summary-suiteRuns').locator('dd').first()).toHaveText('7')
+    await expect(page.getByTestId('summary-suiteRuns').locator('dd').first()).toHaveText('3')
   })
 
   test('keeps Jira links separate from original row navigation with API data', async ({ page, context }) => {
@@ -449,7 +580,7 @@ test.describe('Workflow Validation module @workflow-validation', () => {
 
   test('shows pagination on the initial list and reaches all 47 runs', async ({ page }) => {
     await mockRecentPages(page)
-    await page.goto('/#/workflow-validation/recent-runs')
+    await page.goto('/#/workflow-validation/recent-runs?recentSuite=')
     const pages = page.getByRole('navigation', { name: 'Recent run pages' })
     await expect(pages).toBeVisible()
     await expect(page.getByRole('button', { name: 'Apply filters' })).toHaveCount(0)
@@ -472,7 +603,7 @@ test.describe('Workflow Validation module @workflow-validation', () => {
 
   test('filters outside the initial 20, restores selections on reload, and clears back to page one', async ({ page }) => {
     await mockRecentPages(page)
-    await page.goto('/#/workflow-validation/recent-runs')
+    await page.goto('/#/workflow-validation/recent-runs?recentSuite=')
     await expect(page.getByRole('table').locator('tbody tr')).toHaveCount(20)
     await selectRecentVersions(page, ['3.0'])
     await expect(page.getByRole('table').locator('tbody tr')).toHaveCount(1)
@@ -488,7 +619,7 @@ test.describe('Workflow Validation module @workflow-validation', () => {
 
   test('automatically searches Run ID and recorded dates without an apply button', async ({ page }) => {
     await mockRecentPages(page)
-    await page.goto('/#/workflow-validation/recent-runs')
+    await page.goto('/#/workflow-validation/recent-runs?recentSuite=')
     const pages = page.getByRole('navigation', { name: 'Recent run pages' })
     await expect(pages).toContainText('Showing 1–20 of 47 runs')
     await pages.getByRole('button', { name: 'Next page' }).click()
@@ -510,7 +641,7 @@ test.describe('Workflow Validation module @workflow-validation', () => {
     await mockRecentPages(page)
     const requests = []
     page.on('request', request => { const url = new URL(request.url()); if (url.pathname.endsWith('/test-suites') && url.searchParams.has('pageSize')) requests.push(url) })
-    await page.goto('/#/workflow-validation/recent-runs')
+    await page.goto('/#/workflow-validation/recent-runs?recentSuite=')
     const trigger = page.getByRole('button', { name: 'RHOAI versions', exact: true })
     await trigger.click()
     await expect(page.getByRole('group', { name: 'RHOAI versions' }).locator('label')).toHaveText(['All versions', '3.6.0', '3.6.0-ea.2', '3.6.0-ea.1', '3.5.2', '3.0'])
@@ -530,7 +661,7 @@ test.describe('Workflow Validation module @workflow-validation', () => {
 
   test('groups 3.6 and 3.6.0 under one choice and restores a legacy 3.6 filter', async ({ page }) => {
     await mockRecentPages(page)
-    await page.goto('/#/workflow-validation/recent-runs?recentVersion=3.6')
+    await page.goto('/#/workflow-validation/recent-runs?recentVersion=3.6&recentSuite=')
     const trigger = page.getByRole('button', { name: 'RHOAI versions', exact: true })
     await expect(page.getByRole('navigation', { name: 'Recent run pages' })).toContainText('Showing 1–11 of 11 runs')
     await expect(trigger).toContainText('3.6.0')
@@ -548,7 +679,7 @@ test.describe('Workflow Validation module @workflow-validation', () => {
 
   test('sorts each data column in both directions and resets pagination', async ({ page }) => {
     await mockRecentPages(page)
-    await page.goto('/#/workflow-validation/recent-runs')
+    await page.goto('/#/workflow-validation/recent-runs?recentSuite=')
     const pages = page.getByRole('navigation', { name: 'Recent run pages' })
     await expect(pages).toContainText('Showing 1–20')
     await pages.getByRole('button', { name: 'Next page' }).click()
@@ -591,13 +722,13 @@ test.describe('Workflow Validation module @workflow-validation', () => {
     await mockRecentPages(page)
     const requests = []
     page.on('request', request => { const url = new URL(request.url()); if (url.pathname.endsWith('/test-suites') && url.searchParams.has('pageSize')) requests.push(url) })
-    await page.goto('/#/workflow-validation/recent-runs')
+    await page.goto('/#/workflow-validation/recent-runs?recentSuite=')
     const pages = page.getByRole('navigation', { name: 'Recent run pages' })
     await expect(pages).toContainText('of 47 runs')
     await expect(page.getByLabel('Start Date (UTC)', { exact: true })).toHaveCount(0)
-    await page.getByRole('combobox', { name: 'Test suite', exact: true }).selectOption('release-gate')
+    await selectRecentSuites(page, ['Release Gate'])
     await expect(pages).toContainText('of 23 runs')
-    expect(requests.at(-1).searchParams.get('suite')).toBe('release-gate')
+    expect(requests.at(-1).searchParams.getAll('suites')).toEqual(['release-gate'])
     await page.getByRole('combobox', { name: 'Date Range', exact: true }).selectOption('7')
     await expect(pages).toContainText('of 0 runs')
     const query = requests.at(-1).searchParams
@@ -614,7 +745,7 @@ test.describe('Workflow Validation module @workflow-validation', () => {
     await mockRecentPages(page)
     const requests = []
     page.on('request', request => { const url = new URL(request.url()); if (url.pathname.endsWith('/test-suites') && url.searchParams.has('pageSize')) requests.push(url) })
-    await page.goto('/#/workflow-validation/recent-runs')
+    await page.goto('/#/workflow-validation/recent-runs?recentSuite=')
     const heading = page.getByRole('columnheader', { name: 'Executed at (UTC)', exact: true })
     await expect(heading).toHaveAttribute('aria-sort', 'descending')
     await page.getByRole('combobox', { name: 'Date Range', exact: true }).selectOption('custom')
@@ -670,7 +801,7 @@ test.describe('Workflow Validation module @workflow-validation', () => {
     const rows = ['3.6.0', 'broken', null, '3.5.0'].map((rhoaiVersion, index) =>
       ({ suite: 'suite', invocationId: `id-${index}`, rhoaiVersion, timestamp: '2026-01-01T00:00:00Z' }))
     await mockRecentData(page, rows)
-    await page.goto('/#/workflow-validation/recent-runs')
+    await page.goto('/#/workflow-validation/recent-runs?recentSuite=')
     const versions = page.getByRole('table').locator('tbody tr td:nth-child(2)')
     await page.getByRole('button', { name: 'Sort version', exact: true }).click()
     await expect(versions).toHaveText(['3.6.0', '3.5.0', 'broken', 'Version unavailable'])
@@ -682,7 +813,7 @@ test.describe('Workflow Validation module @workflow-validation', () => {
     const rows = Array.from({ length: 51 }, (_, index) => ({ suite: 'suite', invocationId: `id-${index}`,
       rhoaiVersion: `3.6.${index}`, timestamp: '2026-01-01T00:00:00Z' }))
     await mockRecentData(page, rows)
-    await page.goto('/#/workflow-validation/recent-runs?' + new URLSearchParams({ recentVersions: JSON.stringify(rows.slice(0, 50).map(row => row.rhoaiVersion)) }))
+    await page.goto('/#/workflow-validation/recent-runs?' + new URLSearchParams({ recentSuite: '', recentVersions: JSON.stringify(rows.slice(0, 50).map(row => row.rhoaiVersion)) }))
     await expect(page.getByRole('navigation', { name: 'Recent run pages' })).toContainText('of 50 runs')
     await page.getByRole('button', { name: 'RHOAI versions', exact: true }).click()
     const remaining = page.getByRole('checkbox', { name: '3.6.50', exact: true })
@@ -725,7 +856,8 @@ test.describe('Workflow Validation module @workflow-validation', () => {
     await expect(page.getByRole('table').locator('tbody tr')).toHaveCount(1)
     await expect(page.getByText('Design preview', { exact: false })).toHaveCount(0)
     const recentRequest = requests.find(url => url.pathname.endsWith('/test-suites'))
-    expect(Object.fromEntries(recentRequest.searchParams)).toEqual({ pageSize: '20', includeBugs: 'false', includeBugTickets: 'true', includeSummary: 'true', sortField: 'timestamp', sortDir: 'desc' })
+    expect(Object.fromEntries(recentRequest.searchParams)).toMatchObject({ pageSize: '20', includeBugs: 'false', includeBugTickets: 'true', includeSummary: 'true', sortField: 'timestamp', sortDir: 'desc' })
+    expect(recentRequest.searchParams.getAll('suites')).toEqual(['aramco', 'release_gate'])
 
     await expect(page.getByRole('link', { name: /View run/ })).toHaveCount(0)
     await page.getByRole('row', { name: 'Open run invocation-1' }).click()
@@ -766,7 +898,7 @@ test.describe('Workflow Validation module @workflow-validation', () => {
 
   test('Refresh bypasses the metadata cache and retains the current page', async ({ page }) => {
     await mockRecentPages(page, { refreshRunPrefix: 'refreshed-' })
-    await page.goto('/#/workflow-validation/recent-runs')
+    await page.goto('/#/workflow-validation/recent-runs?recentSuite=')
     const pages = page.getByRole('navigation', { name: 'Recent run pages' })
     await expect(pages).toContainText('Showing 1–20 of 47 runs')
     await pages.getByRole('button', { name: 'Next page' }).click()
@@ -899,7 +1031,7 @@ test.describe('Workflow Validation module @workflow-validation', () => {
     await expect(page.getByText('No runs are available.')).toHaveCount(0)
     failed = false
     await page.getByRole('button', { name: 'Retry' }).click()
-    await expect(page.getByText('No runs are available.')).toBeVisible()
+    await expect(page.getByText('No runs match these filters.')).toBeVisible()
     await expect(page.getByRole('alert')).toHaveCount(0)
   })
 

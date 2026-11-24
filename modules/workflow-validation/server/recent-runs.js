@@ -25,7 +25,7 @@ module.exports = function createRecentRuns({ parseVersion, normalizeVersion, nor
   /** Validate paged filters and bind a cursor to the selected criteria. */
   function parseRecentRuns(query) {
     if (query.pageSize === undefined) {
-      if (['cursor', 'sortDir', 'sortField', 'versions', 'runQuery', 'refresh', 'includeBugTickets', 'includeSummary', 'bugsOnly'].some(key => query[key] !== undefined)) invalid('pageSize is required for recent-run pagination');
+      if (['cursor', 'sortDir', 'sortField', 'versions', 'suites', 'runQuery', 'refresh', 'includeBugTickets', 'includeSummary', 'bugsOnly'].some(key => query[key] !== undefined)) invalid('pageSize is required for recent-run pagination');
       return null;
     }
     if (typeof query.pageSize !== 'string' || !/^[1-9]\d*$/.test(query.pageSize) || Number(query.pageSize) > 200) invalid('pageSize must be an integer between 1 and 200');
@@ -36,8 +36,15 @@ module.exports = function createRecentRuns({ parseVersion, normalizeVersion, nor
     if (rawVersions.length > 50) invalid('Select at most 50 versions');
     const selected = rawVersions.map(value => text(value, 'versions'));
     if (selected.some(value => !value)) invalid('Invalid versions');
-    const filters = { versions: normalizeVersions(selected), suite: text(query.suite, 'suite'),
+    if (query.suites !== undefined && query.suite !== undefined) invalid('Use suites or suite, not both');
+    const rawSuites = query.suites === undefined ? [] : [query.suites].flat();
+    if (rawSuites.length > 50) invalid('Select at most 50 test suites');
+    const suites = [...new Set(rawSuites.map(value => text(value, 'suites')))].sort();
+    if (suites.includes('')) invalid('Invalid suites');
+    const filters = { versions: normalizeVersions(selected), suite: suites.length === 1 ? suites[0] : text(query.suite, 'suite'),
       runQuery: text(query.runQuery, 'runQuery').toLowerCase(), dateFrom: date(query.dateFrom, 'dateFrom'), dateTo: date(query.dateTo, 'dateTo') };
+    // Keep the old scope for cursors with no suite or one suite.
+    if (suites.length > 1) filters.suites = suites;
     for (const key of ['includeSummary', 'bugsOnly']) {
       if (query[key] !== undefined && !['true', 'false'].includes(query[key])) invalid(`${key} must be true or false`);
     }
@@ -59,7 +66,7 @@ module.exports = function createRecentRuns({ parseVersion, normalizeVersion, nor
     if (query.cursor) {
       if (typeof query.cursor !== 'string' || query.cursor.length > 8192 || !/^[\w-]+$/.test(query.cursor)) invalid('Invalid recent-run cursor');
       try { cursor = JSON.parse(Buffer.from(query.cursor, 'base64url').toString()); } catch { invalid('Invalid recent-run cursor'); }
-      const legacy = [1, 2].includes(cursor?.v) && sortField === 'timestamp' && selected.length <= 1 && !filters.bugsOnly;
+      const legacy = [1, 2].includes(cursor?.v) && sortField === 'timestamp' && selected.length <= 1 && !filters.bugsOnly && !filters.suites;
       const validScope = cursor?.scope === scope || (legacy && cursor.scope === legacyScope);
       const value = cursor?.anchor?.[0];
       const validValue = ['timestamp', 'buildDate'].includes(sortField) ? value === null || (Number.isSafeInteger(value) && Number.isFinite(new Date(value).getTime()))
@@ -97,14 +104,25 @@ module.exports = function createRecentRuns({ parseVersion, normalizeVersion, nor
   }
   /** Check the complete run identity independently of mutable sort metadata. */
   function sameRun(a, b) { return a.suite === b.suite && a.invocationId === b.invocationId; }
-  /** Match selected resolved versions before fetching their Jira associations. */
-  function selectVersionRuns(rows, versions) {
-    return rows.filter(row => !versions.length || versions.includes(normalizeVersion(row.rhoaiVersion)));
+  const hasRunIdentity = row => typeof row?.suite === 'string' && row.suite.length > 0
+    && typeof row.invocationId === 'string' && row.invocationId.length > 0;
+  /** Apply all filters that do not depend on Jira lookups. */
+  function selectRuns(rows, filters) {
+    const from = filters.dateFrom ? Date.parse(`${filters.dateFrom}T00:00:00Z`) : null;
+    const until = filters.dateTo ? Date.parse(`${filters.dateTo}T00:00:00Z`) + 86400000 : null;
+    return rows.filter(row => {
+      if (!hasRunIdentity(row)) return false;
+      const recorded = time(row.timestamp);
+      return (!filters.versions.length || filters.versions.includes(normalizeVersion(row.rhoaiVersion)))
+        && (!filters.suite || row.suite === filters.suite) && (!filters.suites || filters.suites.includes(row.suite))
+        && (!filters.runQuery || row.invocationId.toLowerCase().includes(filters.runQuery))
+        && (from === null || (recorded !== null && recorded >= from)) && (until === null || (recorded !== null && recorded < until));
+    });
   }
   /** Filter complete groups, sort globally, and return a stable anchored page. */
-  function pageRecentRuns(allRows, request) {
+  function pageRecentRuns(allRows, request, jiraHost) {
     const { filters, direction, sortField, pageSize, scope, cursor } = request;
-    const available = allRows.filter(row => typeof row.suite === 'string' && row.suite && typeof row.invocationId === 'string' && row.invocationId);
+    const available = allRows.filter(hasRunIdentity);
     // Bind version-sorted cursors to all run versions, including runs outside the current page.
     const versionsHash = sortField === 'version' ? hash(available.map(row =>
       JSON.stringify([row.suite, row.invocationId, normalizeVersion(row.rhoaiVersion)])).sort().join('\n')) : null;
@@ -114,16 +132,10 @@ module.exports = function createRecentRuns({ parseVersion, normalizeVersion, nor
       throw error;
     }
     const options = { versions: normalizeVersions(available.map(row => row.rhoaiVersion)), suites: [...new Set(available.map(row => row.suite))].sort() };
-    const from = filters.dateFrom ? Date.parse(`${filters.dateFrom}T00:00:00Z`) : null;
-    const until = filters.dateTo ? Date.parse(`${filters.dateTo}T00:00:00Z`) + 86400000 : null;
-    const versionRows = selectVersionRuns(available, filters.versions);
-    const rows = versionRows.filter(row => {
-      const recorded = time(row.timestamp);
-      return (!filters.suite || row.suite === filters.suite)
-        && (!filters.bugsOnly || row.hasBugs === true || row.bugs > 0)
-        && (!filters.runQuery || row.invocationId.toLowerCase().includes(filters.runQuery))
-        && (from === null || (recorded !== null && recorded >= from)) && (until === null || (recorded !== null && recorded < until));
-    }).sort((a, b) => compareRows(a, b, sortField, direction));
+    const matching = selectRuns(available, filters);
+    const bugsIncomplete = matching.some(row => row._bugKeysIncomplete || !Array.isArray(row._bugKeys));
+    const rows = matching.filter(row => !filters.bugsOnly || row.hasBugs === true || row.bugs > 0)
+      .sort((a, b) => compareRows(a, b, sortField, direction));
     let origin;
     if (cursor) origin = available.find(row => cursor.v === 1
       ? row.suite === cursor.anchor[1] && row.invocationId === cursor.anchor[2]
@@ -152,12 +164,12 @@ module.exports = function createRecentRuns({ parseVersion, normalizeVersion, nor
         ...(request.includeSummary ? { hasBugs: row.hasBugs ?? (row.bugs == null ? null : row.bugs > 0) } : {}),
         ...(row.bugTickets ? { bugTickets: row.bugTickets } : {}) };
     }),
-      ...(request.includeSummary ? { summary: summarizeRuns(versionRows) } : {}),
-      ...(filters.bugsOnly ? { bugFilterIncomplete: versionRows.some(row => row.bugs == null) } : {}),
+      ...(request.includeSummary ? { summary: summarizeRuns(rows, jiraHost, bugsIncomplete) } : {}),
+      ...(filters.bugsOnly ? { bugFilterIncomplete: bugsIncomplete } : {}),
       total: rows.length, pageSize, start: start < 0 ? 0 : start + 1, end: start < 0 ? 0 : end,
       nextCursor: page.length && end < rows.length ? encode(page.at(-1), 'after') : null,
       previousCursor: page.length && start > 0 ? encode(page[0], 'before') : !page.length && rows.length && cursor ? '' : null,
       options, sortField, sortDir: direction };
   }
-  return { parseRecentRuns, pageRecentRuns, selectVersionRuns };
+  return { parseRecentRuns, pageRecentRuns, selectRuns };
 };

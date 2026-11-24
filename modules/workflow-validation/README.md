@@ -188,15 +188,13 @@ contract, representative tests, and affected Vue transformations together.
 
 ## Recent Runs landing page
 
-Dashboard opens Recent Runs with the latest 20 suite/invocation groups and
-pagination across all available runs. Each row shows the suite, version, RHOAI
+Dashboard opens Recent Runs with Aramco and Release Gate selected on a fresh URL.
+Each page shows up to 20 matching suite/invocation groups. Each row shows the suite, version, RHOAI
 build date and time (`RHOAI build (UTC)`), and execution time (`Executed at (UTC)`). Select a row or press Enter to open its exact run.
 Build and execution timestamps use the same single-line date/time format.
 The column headings identify UTC; individual cells do not repeat the label.
-An explanation below the Recent Runs heading and above the filters describes
-each row and the separate Jira issues link for associated bugs and RFEs.
-
-Select up to 50 versions, a suite, a Run ID, or a Date Range. Date Range
+Select up to 50 versions and up to 50 suites. You can also filter by Run ID and
+Date Range, or show only runs with bugs. Date Range
 supports All time, Last 7/30/90 days, and Custom dates. Choices update results
 immediately. Run ID search waits for a 300 ms typing pause. Click a column heading to sort all matching runs immediately. Click the active
 heading again to reverse its order. Switching columns starts with A–Z for suites,
@@ -205,6 +203,10 @@ Rows show `unavailable` when the verified build date is missing.
 Versions use numeric release order, with GA above EA for the same release.
 The legacy `3.6` label shares the `3.6.0` choice and display. EA releases remain
 separate. Other partial versions keep their recorded label.
+
+Applied filters appear below the filter controls. Use × to remove one filter
+and return to the first page. The summary covers all matching pages and groups
+the task total with its Passed, Failed, and Skipped counts.
 
 Clear filters restores the unfiltered, newest-first first page. Shareable URLs
 retain the filters, sort, and page. Execution dates use existing execution

@@ -8,6 +8,26 @@ const TASKS_INDEX = 'workflow-task-executions';
 const BUGS_INDEX = 'workflow-root-causes';
 const IMAGES_INDEX = 'workflow-execution-images';
 
+/** Read all hits in a stable sort order, rejecting incomplete results. */
+async function readAll(search, index, body, isClosed) {
+  const results = [];
+  let after;
+  do {
+    if (isClosed()) throw new Error('Request closed');
+    const response = await search(index, { ...body, size: 500, ...(after ? { search_after: after } : {}) });
+    if (response.timed_out || response._shards?.failed) throw new Error('Incomplete search');
+    const hits = response.hits?.hits;
+    if (!Array.isArray(hits)) throw new Error('Invalid search response');
+    const next = hits.length === 500 ? hits.at(-1)?.sort : null;
+    if (hits.length === 500 && (!Array.isArray(next) || !next.length || JSON.stringify(next) === JSON.stringify(after))) {
+      throw new Error('Missing or repeated OpenSearch search cursor');
+    }
+    results.push(...hits.map(hit => hit._source || {}));
+    after = next;
+  } while (after);
+  return results;
+}
+
 function getOpenSearchConfig(secrets = {}, env = process.env, settings = {}) {
   const url = validateHttpUrl(settings.url || env.WORKFLOW_VALIDATION_OPENSEARCH_URL || DEFAULT_URL,
     'WORKFLOW_VALIDATION_OPENSEARCH_URL', { required: true });
@@ -172,6 +192,6 @@ function taskFilters(q = {}) {
 
 module.exports = {
   RUNS_INDEX, TASKS_INDEX, BUGS_INDEX, IMAGES_INDEX,
-  getOpenSearchConfig, createOpenSearchClient,
+  getOpenSearchConfig, createOpenSearchClient, readAll,
   runFilters, taskFilters, bugFilters, timestampRange
 };

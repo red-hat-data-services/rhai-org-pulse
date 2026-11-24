@@ -4,27 +4,18 @@
       <div class="min-w-0">
         <h2 class="text-2xl font-bold text-gray-900 dark:text-gray-100">Recent Runs</h2>
         <p class="mt-2 max-w-3xl text-sm leading-6 text-gray-600 dark:text-gray-300">
-          Each row shows one test suite run, its RHOAI version, RHOAI operator image build time, and execution time.
-          Select a row to view its results.
-          Select <strong class="font-medium">Jira issues</strong> to open the bugs and RFEs associated with that run.
+          Select a run for its results. Use <strong class="font-medium">Jira issues</strong> to open its linked bugs and RFEs. All dates are UTC.
         </p>
-        <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">{{ RECENT_RUNS_PAGE_SIZE }} runs per page. Click a column heading to sort. All dates are UTC.</p>
       </div>
       <div class="flex flex-wrap items-center gap-3">
         <button type="button" :disabled="loading || searchPending" :class="buttonClass" @click="requestRuns(applied, true)">Refresh</button>
       </div>
     </div>
-    <VersionSummaryPanel v-if="hasLoaded" v-model="summaryVersion" class="mb-5"
-      :versions="options.versions" :summary="summary" :selection-label="applied.versions.length > 1 ? `${applied.versions.length} selected versions` : ''" />
     <form aria-label="Run filters" class="mb-5 rounded-xl border border-gray-200 bg-white p-4 dark:border-gray-700 dark:bg-gray-800" @submit.prevent="applyFilters">
       <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <RecentVersionSelect v-model="draft.versions" :options="options.versions" @update:model-value="applyFilters" />
-        <label class="text-sm text-gray-700 dark:text-gray-200">Test suite
-          <select v-model="draft.suite" aria-label="Test suite" :class="inputClass" @change="applyFilters">
-            <option value="">All suites</option>
-            <option v-for="suite in options.suites" :key="suite" :value="suite">{{ formatSuiteName(suite) }}</option>
-          </select>
-        </label>
+        <RecentFilterSelect v-model="draft.suites" :options="options.suites" label="Test suites" all-label="All suites"
+          :format-label="formatSuiteName" @update:model-value="applyFilters" />
         <label class="text-sm text-gray-700 dark:text-gray-200">Run ID
           <input v-model="draft.runQuery" aria-label="Run ID" type="search" maxlength="256" placeholder="Search any run ID" :class="inputClass" @input="scheduleSearch">
         </label>
@@ -43,13 +34,21 @@
         </template>
       </div>
       <div class="mt-4 flex flex-wrap gap-3">
-        <p class="self-center text-sm text-gray-500 dark:text-gray-400">Filters update automatically.</p>
-        <button type="button" :class="buttonClass" @click="clearFilters">Clear filters</button>
+        <button ref="clearFiltersButton" type="button" :class="buttonClass" @click="clearFilters">Clear filters</button>
         <button type="button" :aria-pressed="draft.bugsOnly" :disabled="loading || searchPending"
           :class="[buttonClass, draft.bugsOnly ? 'bg-primary-50 ring-1 ring-primary-400 dark:bg-primary-900/30' : '']"
           @click="draft.bugsOnly = !draft.bugsOnly; applyFilters()">Contains bugs only</button>
       </div>
       <p v-if="invalidDateRange" role="alert" class="mt-3 text-sm text-amber-700 dark:text-amber-300">Start Date must be on or before End Date.</p>
+      <ul v-if="appliedChips.length" ref="chipList" aria-label="Applied filters" class="mb-0 mt-3 flex list-none flex-wrap gap-2 border-t border-gray-100 pt-3 dark:border-gray-700">
+        <li v-for="(chip, index) in appliedChips" :key="chip.key" class="min-w-0 max-w-full">
+          <button type="button" :aria-label="chip.removeLabel" @click="removeFilter(chip, index, $event.currentTarget)"
+            class="flex min-h-8 w-full items-center gap-1.5 rounded-full border border-gray-200 bg-gray-50 px-3 py-1 text-left text-xs font-medium text-gray-700 hover:bg-gray-100 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-600 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 dark:hover:bg-gray-600 dark:focus-visible:outline-primary-300">
+            <span class="min-w-0 [overflow-wrap:anywhere]">{{ chip.label }}</span>
+            <X :size="13" class="shrink-0" aria-hidden="true" />
+          </button>
+        </li>
+      </ul>
     </form>
     <div v-if="error || restoreError" role="alert" class="mb-4 rounded-xl border border-amber-200 bg-amber-50 p-5 dark:border-amber-800 dark:bg-amber-900/20">
       <p class="text-sm text-gray-800 dark:text-gray-200">{{ restoreError || error }}</p>
@@ -58,14 +57,17 @@
     </div>
     <p v-if="loading || searchPending" role="status" class="mb-4 text-sm text-gray-500 dark:text-gray-400">{{ hasLoaded ? 'Updating recent runs…' : 'Loading recent runs…' }}</p>
     <p v-if="bugFilterIncomplete" role="status" class="mb-4 text-sm text-amber-700 dark:text-amber-300">Some bug counts are unavailable. This filter shows only verified matches.</p>
+    <VersionSummaryPanel v-if="hasLoaded" class="mb-5" :summary="summary" :aria-busy="loading || searchPending"
+      :show-bug-search="!loading && !searchPending && !error && !restoreError && !invalidDateRange" />
     <div v-if="hasLoaded" :aria-busy="loading" class="overflow-hidden rounded-xl border border-gray-100 bg-white dark:border-gray-700 dark:bg-gray-800">
-      <div class="relative overflow-x-auto">
+      <div ref="tableScroll" role="region" aria-label="Recent runs table" tabindex="0" @focusin="revealFocusedRow($event.target)"
+        class="table-scroll relative overflow-auto focus-visible:outline focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-primary-500">
         <table class="compact-summary w-full min-w-[66rem] table-fixed text-left text-sm">
           <caption class="sr-only">Recent Workflow Validation runs. Select a run to open its details.</caption>
           <colgroup>
             <col v-for="(width, index) in columnWidths" :key="index" :style="{ width: `${width}%` }">
           </colgroup>
-          <thead class="border-b border-gray-100 text-xs uppercase tracking-wide text-gray-500 dark:border-gray-700 dark:text-gray-400">
+          <thead class="sticky top-0 z-10 bg-white text-xs uppercase tracking-wide text-gray-500 dark:bg-gray-800 dark:text-gray-400">
             <tr>
               <th v-for="column in columns" :key="column.field" scope="col" :aria-label="column.label" :aria-sort="applied.sortField === column.field ? (applied.sortDir === 'asc' ? 'ascending' : 'descending') : 'none'" class="p-0">
                 <button type="button" :aria-label="column.sortLabel"
@@ -120,14 +122,16 @@
         <p aria-live="polite" class="text-sm text-gray-600 dark:text-gray-300">Showing {{ page.start }}–{{ page.end }} of {{ page.total }} runs</p>
         <div class="flex gap-3"><button type="button" aria-label="Previous page" :disabled="loading || searchPending || page.previousCursor === null" :class="buttonClass" @click="loadPage(page.previousCursor)">Previous</button><button type="button" aria-label="Next page" :disabled="loading || searchPending || page.nextCursor === null" :class="buttonClass" @click="loadPage(page.nextCursor)">Next</button></div>
       </nav>
-      <p class="border-t border-gray-100 px-5 py-3 text-xs text-gray-500 dark:border-gray-700 dark:text-gray-400">The summary includes all suite runs for the selected versions. — means a count is unavailable.</p>
+      <p class="border-t border-gray-100 px-5 py-3 text-xs text-gray-500 dark:border-gray-700 dark:text-gray-400">— means a count is unavailable.</p>
     </div>
   </div>
 </template>
 <script setup>
-import { computed, inject, onBeforeUnmount, onMounted, reactive, ref, watch } from 'vue'
+import { computed, inject, nextTick, onBeforeUnmount, onMounted, reactive, ref, watch } from 'vue'
+import { X } from 'lucide-vue-next'
 import { RECENT_RUNS_PAGE_SIZE, formatSuiteName, syncQueryParams, useWorkflowValidation } from '../composables/useWorkflowValidation'
 import RecentVersionSelect from '../components/RecentVersionSelect.vue'
+import RecentFilterSelect from '../components/RecentFilterSelect.vue'
 import VersionSummaryPanel from '../components/VersionSummaryPanel.vue'
 import * as versionRules from '../../lib/versions.js'
 import { safeExternalUrl } from '../utils/external-url'
@@ -149,8 +153,10 @@ const countColumns = [
   { key: 'bugs', label: 'Bugs' }
 ]
 const columnWidths = [20, 8, 13, 13, 11, 8, 5, 6, 5, 6, 5]
-const fields = { suite: 'recentSuite', runQuery: 'recentRun', datePreset: 'recentDatePreset', dateFrom: 'recentFrom', dateTo: 'recentTo', sortField: 'recentSortField', sortDir: 'recentSort', cursor: 'recentCursor', bugsOnly: 'recentBugsOnly' }
-const defaults = () => ({ versions: [], suite: '', runQuery: '', datePreset: 'all', dateFrom: '', dateTo: '', sortField: 'timestamp', sortDir: 'desc', cursor: '', bugsOnly: false })
+const fields = { runQuery: 'recentRun', datePreset: 'recentDatePreset', dateFrom: 'recentFrom', dateTo: 'recentTo', sortField: 'recentSortField', sortDir: 'recentSort', cursor: 'recentCursor', bugsOnly: 'recentBugsOnly' }
+const legacyFilters = ['recentVersion', 'recentVersions', ...Object.values(fields)]
+const unfiltered = () => ({ versions: [], suites: [], runQuery: '', datePreset: 'all', dateFrom: '', dateTo: '', sortField: 'timestamp', sortDir: 'desc', cursor: '', bugsOnly: false })
+const defaultSuites = ['aramco', 'release_gate']
 const restoreError = ref('')
 /** Return inclusive UTC calendar bounds for a date preset. */
 function utcRange(days, now = new Date()) {
@@ -159,7 +165,7 @@ function utcRange(days, now = new Date()) {
 }
 /** Restore page-owned filters while keeping legacy cursor spellings intact. */
 function fromUrl() {
-  const query = defaults(), params = nav?.params?.value || {}
+  const query = unfiltered(), params = nav?.params?.value || {}
   restoreError.value = ''
   for (const [key, name] of Object.entries(fields)) if (typeof params[name] === 'string') query[key] = params[name]
   query.bugsOnly = params.recentBugsOnly === 'true'
@@ -169,6 +175,14 @@ function fromUrl() {
       if (!Array.isArray(query.versions) || query.versions.length > 50 || query.versions.some(value => typeof value !== 'string' || !value || value.length > 256)) throw new Error()
     } catch { query.versions = []; restoreError.value = 'The saved version selection is invalid. Choose versions again or clear filters.' }
   } else if (typeof params.recentVersion === 'string' && params.recentVersion) query.versions = [params.recentVersion]
+  if (params.recentSuites !== undefined) {
+    try {
+      const suites = JSON.parse(params.recentSuites)
+      if (!Array.isArray(suites) || suites.length > 50 || suites.some(value => typeof value !== 'string' || !value.trim() || value.length > 256)) throw new Error()
+      query.suites = [...new Set(suites.map(value => value.trim()))].sort()
+    } catch { restoreError.value = 'The saved test suite selection is invalid. Choose suites again or clear filters.' }
+  } else if (typeof params.recentSuite === 'string') query.suites = params.recentSuite.trim() ? [params.recentSuite.trim()] : []
+  else if (!legacyFilters.some(key => Object.hasOwn(params, key))) query.suites = [...defaultSuites]
   query.sortDir = query.sortDir === 'asc' ? 'asc' : 'desc'
   query.sortField = columns.some(column => column.field === query.sortField) ? query.sortField : 'timestamp'
   if (!['all', '7', '30', '90', 'custom'].includes(query.datePreset)) query.datePreset = 'all'
@@ -177,17 +191,31 @@ function fromUrl() {
   if (['7', '30', '90'].includes(query.datePreset) && !query.dateFrom && !query.dateTo) Object.assign(query, utcRange(Number(query.datePreset)))
   return query
 }
-const applied = ref(fromUrl()), draft = reactive({ ...applied.value, versions: [...applied.value.versions] })
+const applied = ref(fromUrl()), draft = reactive({ ...applied.value })
 const invalidDateRange = computed(() => draft.dateFrom && draft.dateTo && draft.dateFrom > draft.dateTo)
 const runs = ref([]), options = ref({ versions: [], suites: [] }), page = ref({ total: 0, start: 0, end: 0, nextCursor: null, previousCursor: null })
 const loading = ref(false), searchPending = ref(false), hasLoaded = ref(false), error = ref(''), restartRequired = ref(false), lastAttempt = ref({ ...applied.value })
-const hasFilters = computed(() => applied.value.versions.length || ['suite', 'runQuery', 'dateFrom', 'dateTo'].some(key => applied.value[key]) || applied.value.bugsOnly)
+const appliedChips = computed(() => {
+  const { versions, suites, runQuery, dateFrom, dateTo, bugsOnly } = applied.value
+  const chips = normalizeVersions(versions).map(value => ({ key: `version:${value}`, field: 'versions', value,
+    label: `Version: ${versionLabel(value)}`, removeLabel: `Remove version ${versionLabel(value)}` }))
+  for (const value of suites) {
+    const name = formatSuiteName(value)
+    chips.push({ key: `suite:${value}`, field: 'suites', value, label: `Suite: ${name}`, removeLabel: `Remove suite ${name}` })
+  }
+  const runId = runQuery.trim()
+  if (runId) chips.push({ key: 'run', field: 'runQuery', label: `Run ID: ${runId}`, removeLabel: 'Remove run ID filter' })
+  if (dateFrom || dateTo) {
+    const range = dateFrom && dateTo ? `${dateFrom} to ${dateTo}` : dateFrom ? `from ${dateFrom}` : `through ${dateTo}`
+    chips.push({ key: 'date', field: 'dates', label: `Date: ${range} (UTC)`, removeLabel: 'Remove date range filter' })
+  }
+  if (bugsOnly) chips.push({ key: 'bugs', field: 'bugsOnly', label: 'Contains bugs only', removeLabel: 'Remove contains bugs only filter' })
+  return chips
+})
+const hasFilters = computed(() => appliedChips.value.length > 0)
 const emptySummary = () => ({ suiteRuns: null, workflows: null, tasks: null, passed: null, failed: null, skipped: null, bugs: null })
 const summary = ref(emptySummary()), bugFilterIncomplete = ref(false)
-const summaryVersion = computed({
-  get: () => applied.value.versions.length > 1 ? '__selected_versions__' : applied.value.versions[0] || '',
-  set: value => { draft.versions = value ? [value] : []; applyFilters() }
-})
+const tableScroll = ref(null), chipList = ref(null), clearFiltersButton = ref(null)
 const inputClass = 'mt-1 block w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm dark:border-gray-600 dark:bg-gray-900'
 const buttonClass = 'rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 disabled:opacity-50 dark:border-gray-600 dark:text-gray-200 dark:hover:bg-gray-700'
 const formatter = new Intl.DateTimeFormat('en-GB', { dateStyle: 'medium', timeStyle: 'medium', timeZone: 'UTC' })
@@ -205,6 +233,16 @@ function openRun(run, event) {
   if (nav?.navigateTo) nav.navigateTo('overview', params)
   else window.location.hash = `/workflow-validation/overview?${new URLSearchParams(params)}`
 }
+/** Keep a focused row or Jira link clear of the sticky header. */
+function revealFocusedRow(target) {
+  const scroll = tableScroll.value
+  if (!scroll?.contains(target) || !target.closest('tbody')) return
+  const bounds = target.getBoundingClientRect()
+  const headerBottom = scroll.querySelector('thead').getBoundingClientRect().bottom
+  const tableBottom = scroll.getBoundingClientRect().bottom
+  if (bounds.top < headerBottom) scroll.scrollTop -= headerBottom - bounds.top
+  else if (bounds.bottom > tableBottom) scroll.scrollTop += bounds.bottom - tableBottom
+}
 /** Load a validated page, ignore stale responses, and commit matching URL and cursor state. */
 async function requestRuns(query, refresh = false) {
   cancelSearch()
@@ -212,7 +250,7 @@ async function requestRuns(query, refresh = false) {
   controller?.abort()
   if (restoreError.value || (query.dateFrom && query.dateTo && query.dateFrom > query.dateTo)) { loading.value = false; error.value = ''; return }
   controller = new AbortController()
-  const requested = { ...query, versions: [...query.versions] }
+  const requested = { ...query, versions: [...query.versions], suites: [...query.suites] }
   lastAttempt.value = requested
   loading.value = true; error.value = ''; restartRequired.value = false
   try {
@@ -223,10 +261,21 @@ async function requestRuns(query, refresh = false) {
       || !Array.isArray(data.options?.versions) || !Array.isArray(data.options?.suites) || !(data.nextCursor === null || typeof data.nextCursor === 'string') || !(data.previousCursor === null || typeof data.previousCursor === 'string')) throw new Error('The run service returned an invalid page. Please retry.')
     summary.value = { ...emptySummary(), ...data.summary }; bugFilterIncomplete.value = data.bugFilterIncomplete === true
     runs.value = data.rows; page.value = { total: data.total, start: data.start, end: data.end, nextCursor: data.nextCursor, previousCursor: data.previousCursor }; options.value = data.options
+    const focused = document.activeElement
+    if (tableScroll.value?.contains(focused) && focused.closest('tbody')) {
+      nextTick(() => {
+        if (!tableScroll.value?.contains(focused)) return
+        // Moving a keyed row can drop focus. Restore it only if focus went back to the page.
+        if (document.activeElement === document.body) focused.focus({ preventScroll: true })
+        if (document.activeElement === focused) revealFocusedRow(focused)
+      })
+    } else if (tableScroll.value) tableScroll.value.scrollTop = 0
     // Keep the original spelling while a restored cursor still depends on its scope.
     if (!requested.cursor) requested.versions = normalizeVersions(requested.versions)
     applied.value = requested; hasLoaded.value = true
-    syncQueryParams(nav, { ...Object.fromEntries(Object.entries(fields).map(([key, name]) => [name, key === 'bugsOnly' ? (requested[key] ? 'true' : '') : requested[key]])), recentVersions: requested.versions.length ? JSON.stringify(requested.versions) : '', recentVersion: '' })
+    syncQueryParams(nav, { ...Object.fromEntries(Object.entries(fields).map(([key, name]) => [name, key === 'bugsOnly' ? (requested[key] ? 'true' : '') : requested[key]])),
+      recentVersions: requested.versions.length ? JSON.stringify(requested.versions) : '', recentVersion: '',
+      recentSuites: JSON.stringify(requested.suites), recentSuite: '' })
   } catch (err) {
     if (active && current === sequence) {
       error.value = err.message || 'Failed to load recent runs.'
@@ -242,7 +291,26 @@ function retryRuns() {
 /** Apply canonical filters from page one after a user changes the selection. */
 function applyFilters() {
   cancelSearch(); restoreError.value = ''
-  requestRuns({ ...draft, versions: normalizeVersions(draft.versions), cursor: '' })
+  return requestRuns({ ...draft, versions: normalizeVersions(draft.versions), cursor: '' })
+}
+/** Remove one filter and keep keyboard focus in the filter controls. */
+async function removeFilter(chip, index, button) {
+  const wasFocused = document.activeElement === button
+  // Failed or invalid edits do not belong to the results these chips describe.
+  if (error.value || restoreError.value || invalidDateRange.value) Object.assign(draft, applied.value)
+  switch (chip.field) {
+    case 'versions': draft.versions = normalizeVersions(draft.versions).filter(value => value !== chip.value); break
+    case 'suites': draft.suites = draft.suites.filter(value => value !== chip.value); break
+    case 'dates': Object.assign(draft, { datePreset: 'all', dateFrom: '', dateTo: '' }); break
+    case 'runQuery': draft.runQuery = ''; break
+    case 'bugsOnly': draft.bugsOnly = false; break
+  }
+  await applyFilters()
+  await nextTick()
+  if (!wasFocused || button.isConnected || document.activeElement !== document.body) return
+  const remaining = chipList.value?.querySelectorAll('button')
+  const next = remaining?.[index] || remaining?.[index - 1] || clearFiltersButton.value
+  next?.focus()
 }
 /** Set the date bounds for the selected preset before applying filters. */
 function applyDatePreset() {
@@ -261,7 +329,7 @@ function setSort(column) {
 /** Cancel outdated work and debounce the next Run ID request. */
 function scheduleSearch() { cancelSearch(); sequence += 1; controller?.abort(); loading.value = false; error.value = ''; searchPending.value = true; searchTimer = setTimeout(applyFilters, 300) }
 /** Restore the unfiltered newest-first first page. */
-function clearFilters() { Object.assign(draft, defaults()); applyFilters() }
+function clearFilters() { Object.assign(draft, unfiltered()); applyFilters() }
 /** Load a neighboring page with the exact filter scope that produced its cursor. */
 function loadPage(cursor) { requestRuns({ ...applied.value, cursor: cursor || '' }) }
 watch(() => nav?.params?.value, () => { const query = fromUrl(); if (JSON.stringify(query) === JSON.stringify(applied.value)) return; Object.assign(draft, query); requestRuns(query) }, { deep: true })
@@ -270,6 +338,9 @@ onBeforeUnmount(() => { active = false; sequence += 1; cancelSearch(); controlle
 </script>
 
 <style scoped>
+.table-scroll {
+  max-height: min(34rem, 65vh);
+}
 .compact-summary :is(td, th:not(.p-0)) {
   padding-inline: 0.625rem;
 }

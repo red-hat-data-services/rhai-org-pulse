@@ -24,11 +24,12 @@ describe('Recent Runs', () => {
   beforeEach(() => { vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout'] }); apiRequest.mockReset().mockResolvedValue(page()); resetFilters() })
   afterEach(() => { wrapper?.unmount(); vi.useRealTimers() })
 
-  it('starts unfiltered with pagination and the existing recorded timestamp', async () => {
+  it('starts with Aramco and Release Gate, independent of shared filters', async () => {
     Object.assign(filters, { version: 'older', testSuite: 'another-suite', invocationId: 'another-run', dateFrom: '2000-01-01' })
     wrapper = mount(RecentRunsView)
     await flushPromises()
-    expect(Object.fromEntries(request(0))).toEqual({ pageSize: '20', includeBugs: 'false', includeBugTickets: 'true', includeSummary: 'true', sortField: 'timestamp', sortDir: 'desc' })
+    expect(request(0).getAll('suites')).toEqual(['aramco', 'release_gate'])
+    expect(Object.fromEntries(request(0))).toMatchObject({ pageSize: '20', includeBugs: 'false', includeBugTickets: 'true', includeSummary: 'true', sortField: 'timestamp', sortDir: 'desc' })
     expect(wrapper.findAll('tbody tr')).toHaveLength(3)
     expect(wrapper.findAll('thead th').map(cell => cell.attributes('aria-label'))).toEqual(['Test suite', 'Version', 'RHOAI build (UTC)', 'Executed at (UTC)', 'Issues found', 'Workflows', 'Tasks', 'Passed', 'Failed', 'Skipped', 'Bugs'])
     expect(wrapper.findAll('th button')).toHaveLength(4)
@@ -151,11 +152,12 @@ describe('Recent Runs', () => {
     apiRequest.mockResolvedValueOnce(page(fixture.rows, { nextCursor: 'next-page', total: 40 }))
     wrapper = mount(RecentRunsView)
     await flushPromises()
-    await wrapper.get('button[aria-controls]').trigger('click')
+    await wrapper.findAll('button[aria-controls]')[0].trigger('click')
     const checkbox = value => wrapper.findAll('[role="group"] label').find(label => label.text() === value).get('input')
     await checkbox('older').setValue(true)
     await checkbox('3.5.0').setValue(true)
-    await wrapper.get('select[aria-label="Test suite"]').setValue('release_gate')
+    await wrapper.findAll('button[aria-controls]')[1].trigger('click')
+    await wrapper.findAll('[role="group"]')[1].findAll('label').find(label => label.text() === 'Aramco').get('input').setValue(false)
     await wrapper.get('input[aria-label="Run ID"]').setValue('original-run')
     await wrapper.get('select[aria-label="Date Range"]').setValue('custom')
     await wrapper.get('input[aria-label="Start Date (UTC)"]').setValue('2026-01-01')
@@ -163,7 +165,8 @@ describe('Recent Runs', () => {
     await wrapper.get('button[aria-label="Sort test suite"]').trigger('click')
     await flushPromises()
     expect(request(-1).getAll('versions')).toEqual(['3.5.0', 'older'])
-    expect(Object.fromEntries(request(-1))).toMatchObject({ suite: 'release_gate', runQuery: 'original-run', dateFrom: '2026-01-01', dateTo: '2026-02-01', sortField: 'suite', sortDir: 'asc' })
+    expect(request(-1).getAll('suites')).toEqual(['release_gate'])
+    expect(Object.fromEntries(request(-1))).toMatchObject({ runQuery: 'original-run', dateFrom: '2026-01-01', dateTo: '2026-02-01', sortField: 'suite', sortDir: 'asc' })
     expect(request(-1).has('cursor')).toBe(false)
     expect(wrapper.find('button[type="submit"]').exists()).toBe(false)
     await button('Clear filters').trigger('click')
@@ -172,6 +175,99 @@ describe('Recent Runs', () => {
     expect(wrapper.get('select[aria-label="Date Range"]').element.value).toBe('all')
     expect(wrapper.find('input[type="date"]').exists()).toBe(false)
     expect(filters.version).toBe('')
+  })
+
+  it('shows only the latest suite results and Jira link when requests finish out of order', async () => {
+    const params = ref({})
+    const nav = { params, updateParams: values => { params.value = { ...params.value, ...values } } }
+    const jira = key => `https://jira.example.test/issues/?jql=key%20%3D%20${key}`
+    apiRequest.mockResolvedValueOnce(page(fixture.rows, { summary: { bugs: 1, bugUrl: jira('OLD-1') } }))
+    wrapper = mount(RecentRunsView, { global: { provide: { moduleNav: nav } } })
+    await flushPromises()
+    const total = wrapper.get('[data-testid="summary-bugs"]')
+    expect(total.get('a').attributes('href')).toBe(jira('OLD-1'))
+    let finishFirst, finishSecond
+    apiRequest.mockImplementationOnce(() => new Promise(resolve => { finishFirst = resolve }))
+      .mockImplementationOnce(() => new Promise(resolve => { finishSecond = resolve }))
+    await wrapper.findAll('button[aria-controls]')[1].trigger('click')
+    const suite = name => wrapper.findAll('[role="group"] label').find(label => label.text() === name).get('input')
+    await suite('Release Gate').setValue(false)
+    await suite('Exploratory Specs').setValue(true)
+    expect(total.find('a').exists()).toBe(false)
+    finishSecond(page([{ ...fixture.rows[0], invocationId: 'latest' }], { summary: { bugs: 2, bugUrl: jira('LATEST-1') } }))
+    await flushPromises()
+    finishFirst(page([{ ...fixture.rows[0], invocationId: 'stale' }], { summary: { bugs: 1, bugUrl: jira('STALE-1') } }))
+    await flushPromises()
+    expect(wrapper.get('tbody tr').text()).toContain('latest')
+    expect(total.get('a').attributes('href')).toBe(jira('LATEST-1'))
+    expect(params.value.recentSuites).toBe('["aramco","exploratory_specs"]')
+  })
+
+  it('keeps All suites checked when users activate it again', async () => {
+    wrapper = mount(RecentRunsView)
+    await flushPromises()
+    await wrapper.findAll('button[aria-controls]')[1].trigger('click')
+    const all = wrapper.get('[role="group"] label input')
+    await all.setValue(true)
+    await flushPromises()
+    expect(all.element.checked).toBe(true)
+    await all.setValue(false)
+    expect(all.element.checked).toBe(true)
+    expect(request(-1).has('suites')).toBe(false)
+  })
+
+  it('removes only the selected filter chip and resets pagination', async () => {
+    const params = ref({ recentVersions: '["3.6.0","3.5.0"]', recentSuites: '["aramco","release_gate"]',
+      recentRun: 'sample-12', recentFrom: '2026-11-18', recentTo: '2026-11-24', recentBugsOnly: 'true', recentCursor: 'page-two' })
+    const nav = { params, updateParams: values => { params.value = { ...params.value, ...values } } }
+    wrapper = mount(RecentRunsView, { global: { provide: { moduleNav: nav } } })
+    await flushPromises()
+    const list = wrapper.get('[aria-label="Applied filters"]')
+    expect(list.findAll('button').map(chip => chip.text())).toEqual([
+      'Version: 3.6.0', 'Version: 3.5.0', 'Suite: Aramco', 'Suite: Release Gate', 'Run ID: sample-12',
+      'Date: 2026-11-18 to 2026-11-24 (UTC)', 'Contains bugs only'
+    ])
+    const remove = async label => { await list.get(`button[aria-label="${label}"]`).trigger('click'); await flushPromises() }
+    await remove('Remove suite Aramco')
+    expect(request(-1).getAll('suites')).toEqual(['release_gate'])
+    expect(request(-1).getAll('versions')).toEqual(['3.6.0', '3.5.0'])
+    expect(request(-1).get('cursor')).toBeNull()
+    await remove('Remove version 3.6.0')
+    expect(request(-1).getAll('versions')).toEqual(['3.5.0'])
+    await remove('Remove date range filter')
+    expect(request(-1).has('dateFrom')).toBe(false)
+    expect(request(-1).has('dateTo')).toBe(false)
+    expect(wrapper.get('select[aria-label="Date Range"]').element.value).toBe('all')
+    await remove('Remove run ID filter')
+    expect(request(-1).has('runQuery')).toBe(false)
+    await remove('Remove contains bugs only filter')
+    expect(request(-1).has('bugsOnly')).toBe(false)
+    expect(list.findAll('button').map(chip => chip.text())).toEqual(['Version: 3.5.0', 'Suite: Release Gate'])
+  })
+
+  it('removes a chip from the visible results when a draft edit is invalid or failed', async () => {
+    const params = ref({ recentSuites: '["aramco","release_gate"]', recentFrom: '2026-11-18', recentTo: '2026-11-24' })
+    const nav = { params, updateParams: values => { params.value = { ...params.value, ...values } } }
+    wrapper = mount(RecentRunsView, { global: { provide: { moduleNav: nav } } })
+    await flushPromises()
+    const start = wrapper.get('input[aria-label="Start Date (UTC)"]')
+    await start.setValue('2026-11-25')
+    expect(wrapper.get('[role="alert"]').text()).toContain('Start Date must be on or before End Date')
+    await wrapper.get('button[aria-label="Remove suite Aramco"]').trigger('click')
+    await flushPromises()
+    expect(request(-1).get('dateFrom')).toBe('2026-11-18')
+    expect(request(-1).getAll('suites')).toEqual(['release_gate'])
+    expect(start.element.value).toBe('2026-11-18')
+
+    apiRequest.mockRejectedValueOnce(new Error('Service unavailable'))
+    await wrapper.get('select[aria-label="Date Range"]').setValue('all')
+    await flushPromises()
+    expect(wrapper.get('[role="alert"]').text()).toContain('The previous results are still shown.')
+    await wrapper.get('button[aria-label="Remove suite Release Gate"]').trigger('click')
+    await flushPromises()
+    expect(request(-1).get('dateFrom')).toBe('2026-11-18')
+    expect(request(-1).has('suites')).toBe(false)
+    expect(wrapper.find('[role="alert"]').exists()).toBe(false)
   })
 
   it('restarts stale version pages with the same filters and sorting', async () => {
@@ -190,7 +286,7 @@ describe('Recent Runs', () => {
     expect(wrapper.findAll('tbody tr')).toHaveLength(fixture.rows.length)
     await button('Return to first page').trigger('click')
     await flushPromises()
-    expect(Object.fromEntries(request(-1))).toMatchObject({ suite: 'release_gate', runQuery: 'original',
+    expect(Object.fromEntries(request(-1))).toMatchObject({ suites: 'release_gate', runQuery: 'original',
       sortField: 'version', sortDir: 'asc', dateFrom: '2026-01-01', dateTo: '2026-02-01', refresh: 'true' })
     expect(request(-1).getAll('versions')).toEqual(['3.6.0', '3.5.0'])
     expect(request(-1).has('cursor')).toBe(false)
@@ -386,7 +482,7 @@ describe('Recent Runs', () => {
     expect(wrapper.text()).not.toContain('No runs are available')
     resolve(page([]))
     await flushPromises()
-    expect(wrapper.text()).toContain('No runs are available.')
+    expect(wrapper.text()).toContain('No runs match these filters.')
     expect(wrapper.get('nav').text()).toContain('Showing 0–0 of 0 runs')
   })
 
