@@ -457,24 +457,22 @@ describe('computeFpdorFieldBreakdown', () => {
 })
 
 describe('buildFpdorTooltip', () => {
-  it('lists only failing tiers, with the weighted score and pass/fail summary', () => {
+  it('lists missing items with the weighted score', () => {
     const row = { _wFPDoR: 75, _failedItems: ['Priority', 'UXD'], FPDoR: '15/17' }
     const tooltip = buildFpdorTooltip(row)
     expect(tooltip).toContain('Weighted FPDoR: 75/100')
-    expect(tooltip).toContain('✗ High: Priority')
-    expect(tooltip).toContain('✗ Soft: UXD')
-    expect(tooltip).not.toContain('Critical:')
-    expect(tooltip).toContain('15/17 passed · 2 failing · remainder not applicable')
+    expect(tooltip).toContain('✗ Missing: Priority, UXD')
   })
 
-  it('reports nothing failing when there are no failed items', () => {
+  it('reports all criteria met when there are no failed items', () => {
     const tooltip = buildFpdorTooltip({ _wFPDoR: 100, _failedItems: [], FPDoR: '17/17' })
-    expect(tooltip).toContain('17/17 passed · nothing failing')
+    expect(tooltip).toContain('Weighted FPDoR: 100/100')
+    expect(tooltip).toContain('✓ All criteria met')
   })
 
-  it('omits the pass/fail summary line when FPDoR data is absent', () => {
+  it('omits the criteria line when FPDoR data is absent', () => {
     const tooltip = buildFpdorTooltip({ _wFPDoR: 0, _failedItems: [], FPDoR: '—' })
-    expect(tooltip).not.toContain('passed')
+    expect(tooltip).not.toContain('criteria met')
   })
 })
 
@@ -484,7 +482,7 @@ describe('buildFeatureSchedulingCsv', () => {
     expect(csv).toBe('Rank,Key,Title,FPDoR,Weighted FPDoR,Readiness Issues,Risk,Target Versions,Fix Version,Components,Team,Priority,Confidence,Placement,Confidence%,PM,Outcome')
   })
 
-  it('quotes free-text fields and includes a tier-labeled Readiness Issues column', () => {
+  it('quotes free-text fields and includes Readiness Issues column without tier labels', () => {
     const row = {
       Rank: '1', Key: 'RHAISTRAT-1', Title: 'Has, a comma', FPDoR: '15/17', _wFPDoR: 85,
       _failedItems: ['Priority'], _riskLevel: 'MEDIUM', 'Target Versions': '3.6 EA1 RHOAI RELEASE',
@@ -492,7 +490,7 @@ describe('buildFeatureSchedulingCsv', () => {
       Confidence: 'committed', _place: 'EA1', _conf: 82, PM: 'Jane PM', Outcome: 'AI Hub'
     }
     const lines = buildFeatureSchedulingCsv([row]).split('\n')
-    expect(lines[1]).toBe('1,RHAISTRAT-1,"Has, a comma",15/17,85,"High: Priority",MEDIUM,"3.6 EA1 RHOAI RELEASE","","AI Hub","RHOAI AI Hub",Major,committed,EA1,82%,"Jane PM","AI Hub"')
+    expect(lines[1]).toBe('1,RHAISTRAT-1,"Has, a comma",15/17,85,"Priority",MEDIUM,"3.6 EA1 RHOAI RELEASE","","AI Hub","RHOAI AI Hub",Major,committed,EA1,82%,"Jane PM","AI Hub"')
   })
 
   it('escapes embedded double quotes by doubling them', () => {
