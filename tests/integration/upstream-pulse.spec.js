@@ -192,3 +192,33 @@ test.describe('Upstream Pulse Views @upstream-pulse', () => {
     await testView(page, 'strategy', 'Strategy');
   });
 });
+
+/**
+ * PyTorch repository access
+ *
+ * Demo mode exposes a PyTorch project plus fictional repository-access members
+ * so the card and its role-grouped list are covered end to end.
+ */
+test.describe('Upstream Pulse PyTorch access @upstream-pulse', () => {
+  test.beforeEach(async ({ page }) => {
+    setupErrorTracking(page);
+  });
+
+  test.afterEach(async ({ page }, testInfo) => {
+    logCapturedErrors(page, testInfo);
+  });
+
+  test('should render repository access counts and members', async ({ page }) => {
+    await page.goto('/#/upstream-pulse/project-detail?projectId=pytorch-demo');
+    await page.waitForLoadState('networkidle');
+    await page.waitForTimeout(DEFAULT_PAGE_WAIT_TIME);
+
+    await expect(page.getByText('Repository Access')).toBeVisible();
+    await expect(page.getByText('Write access (owners)')).toBeVisible();
+    await expect(page.getByText('Triage access')).toBeVisible();
+    await expect(page.getByText('Alex Kim')).toBeVisible();
+    await expect(page.getByText('Sam Rivera')).toBeVisible();
+
+    expect(page.errors).toHaveLength(0);
+  });
+});
