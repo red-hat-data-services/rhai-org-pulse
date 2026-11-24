@@ -1664,9 +1664,9 @@ omit `triageReadiness`; clients display those records as Not Ready.
 The `GET /api/modules/releases/delivery/blockers/trends` response contains an
 unfiltered historical aggregate for Blocker-priority issues whose Release
 Blocker field has the Approved (`16772`) or Rejected (`16774`) Jira option.
-It is independent of page-level
-release, team, component, status, and priority filters, and includes resolved
-issues so the trend remains historical:
+The cohort spans RHOAIENG, RHAIENG, RHAI, INFERENG, and AIPCC. It is independent
+of page-level release, team, component, status, and priority filters, and
+includes resolved issues so the trend remains historical:
 
 ```json
 {

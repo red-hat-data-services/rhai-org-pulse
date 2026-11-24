@@ -408,7 +408,7 @@ function buildAwarenessTrendsJql(version) {
 
 function buildHistoricalTrendsJql() {
   return (
-    'project in (RHAIENG, RHOAIENG) ' +
+    'project in (RHOAIENG, RHAIENG, RHAI, INFERENG, AIPCC) ' +
     'AND (labels not in (RHOAI-releases, RHOAI-internal, devtestops-service) OR labels is empty) ' +
     'AND component not in (Documentation, PXE) ' +
     'AND priority in (Blocker) ' +
@@ -1030,7 +1030,7 @@ async function registerBlockerRoutes(router, context) {
    *   get:
    *     tags: ['Releases: Delivery']
    *     summary: Get historical release blocker trends
-   *     description: Returns raw Approved and Rejected blocker totals grouped by Jira release version and component, plus the deduplicated issue records used to build those totals. The data is independent of dashboard filters.
+   *     description: Returns raw Approved and Rejected blocker totals across the five AI Engineering Jira projects, grouped by Jira release version and component, plus the deduplicated issue records used to build those totals. The data is independent of dashboard filters.
    *     responses:
    *       200:
    *         description: Historical blocker trend totals

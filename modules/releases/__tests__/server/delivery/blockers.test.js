@@ -234,6 +234,7 @@ describe('release blocker Jira field mapping', () => {
   it('builds an unfiltered historical trends query', () => {
     const jql = registerBlockerRoutes.buildHistoricalTrendsJql()
 
+    expect(jql).toContain('project in (RHOAIENG, RHAIENG, RHAI, INFERENG, AIPCC)')
     expect(jql).toContain('cf[10847] in (16772, 16774)')
     expect(jql).not.toContain('fixVersion IN')
     expect(jql).not.toContain('status not in (Closed, Resolved)')
