@@ -40,6 +40,7 @@ function createTestContext() {
     requireAdmin: function (_req, _res, next) { next() },
     resolveSecret: vi.fn(function () { return undefined }),
     registerRefresh: vi.fn(),
+
     _written: written
   }
 }
@@ -76,10 +77,12 @@ describe('usage-tracking routes', () => {
   })
 
   it('registers a refresh handler', () => {
-    expect(ctx.registerRefresh).toHaveBeenCalledWith('report', expect.objectContaining({
-      cadence: '24h'
+    expect(ctx.registerRefresh).toHaveBeenCalledWith('generate-report', expect.objectContaining({
+      cadence: '24h',
+      order: 200
     }))
   })
+
 
   describe('POST /events', () => {
     async function postEvents(body) {

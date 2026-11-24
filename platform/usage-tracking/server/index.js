@@ -61,7 +61,7 @@ module.exports = function registerUsageTracking(router, context) {
     return hmacKeyPromise
   }
 
-  context.registerRefresh('report', {
+  context.registerRefresh('generate-report', {
     handler: async function () {
       const result = await runReportGeneration(context)
       console.log(`[usage-tracking] Report generated: ${result.eventCount} events, ${result.periodStart} to ${result.periodEnd}`)
@@ -69,8 +69,9 @@ module.exports = function registerUsageTracking(router, context) {
     },
     cadence: '24h',
     timeout: 60_000,
-    order: 500
+    order: 200
   })
+
 
   /**
    * @openapi

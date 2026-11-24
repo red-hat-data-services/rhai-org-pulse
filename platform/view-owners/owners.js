@@ -85,7 +85,6 @@ export const viewOwners = {
   'team-tracker/manage':                           'Alex Corvin',
   'team-tracker/manager-dashboard':                'Alex Corvin',
   'team-tracker/org-dashboard':                    'Alex Corvin',
-  'team-tracker/org-explorer':                     'Dipanshu Gupta',
   'team-tracker/people':                           'Dipanshu Gupta',
   'team-tracker/person-detail':                    'Dipanshu Gupta',
   'team-tracker/reports':                          'Alex Corvin',
