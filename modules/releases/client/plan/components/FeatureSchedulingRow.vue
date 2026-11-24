@@ -8,8 +8,6 @@ const props = defineProps({
   index: { type: Number, default: null }
 })
 
-// Nov 24 2026: Placement badge removed (not in local/iframe version)
-
 const riskClass = computed(() => {
   switch (props.feature._riskLevel) {
     case 'HIGH':

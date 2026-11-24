@@ -58,15 +58,6 @@ describe('FeatureSchedulingPreview', () => {
     expect(wrapper.findAll('tbody tr').length).toBe(3)
   })
 
-  // Nov 24 2026: Placement summary cards removed (using column order from iframe instead)
-  // it('renders placement summary cards that total the full dataset', async () => {
-  //   const wrapper = mount(FeatureSchedulingPreview)
-  //   await flushPromises()
-  //   // RHAISTRAT-1 -> EA1, RHAISTRAT-2 -> GA, RHAISTRAT-3 -> No (no components)
-  //   const cardNumbers = wrapper.findAll('.grid > div').map(d => d.find('.text-lg').text())
-  //   expect(cardNumbers).toEqual(['1', '0', '1', '1', '0'])
-  // })
-
   it('exports the currently filtered/sorted rows to CSV on Export click (PR #1877)', async () => {
     var capturedBlob = null
     var clickSpy = vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(() => {})
