@@ -1033,6 +1033,20 @@ test.describe('Test Execution Dashboard @system-health', () => {
     // It is a Vue view, NOT the old iframe dashboard
     expect(await page.locator('iframe').count()).toBe(0);
 
+    // Cascading Version picker (Option B) — button opens y/z popover with search
+    const rhoaiTabForPicker = page.getByRole('tab', { name: 'RHOAI Releases' });
+    if (await rhoaiTabForPicker.isEnabled() && await releasesTitle.count() > 0) {
+      await rhoaiTabForPicker.click();
+      await page.waitForTimeout(300);
+      const verBtn = releasesTabPanel(page).locator('button.ver-picker-btn').first();
+      expect(await verBtn.count()).toBeGreaterThan(0);
+      await verBtn.click();
+      await page.waitForTimeout(300);
+      expect(await page.locator('.ver-popover, [aria-label="Select version"]').count()).toBeGreaterThan(0);
+      expect(await page.locator('input.ver-search, input[placeholder*="Search version"]').count()).toBeGreaterThan(0);
+      await page.keyboard.press('Escape');
+    }
+
     // Loading spinner must not be stuck
     expect(await pageLoadComplete(page)).toBe(true);
 
@@ -1110,6 +1124,75 @@ test.describe('Test Execution Dashboard @system-health', () => {
     const hasBack = await page.locator('text=/Back to heatmap|Back/i').count() > 0;
     const hasHeading = await page.locator('h1, h2, h3').count() > 0;
     expect(hasBack || hasHeading).toBe(true);
+
+    expectNoBenignConsoleErrors(page);
+  });
+
+  test('quality-gate Jenkins links should respect the selected RHOAI version', async ({ page }) => {
+    await page.goto('/#/system-health/test-execution-detail?component=AI%20Hub');
+    await page.waitForLoadState('networkidle');
+    await page.waitForTimeout(DEFAULT_PAGE_WAIT_TIME);
+
+    const gateHm = page.locator('table.gate-hm');
+    if (await gateHm.count() === 0) {
+      console.log('No quality-gate heatmap for AI Hub — skipping version filter check');
+      return;
+    }
+
+    // Fixture gate dates are older than the default 30-day window.
+    const dateToggle = page.locator('label.date-toggle-label input[type="checkbox"], .date-toggle input[type="checkbox"]').first();
+    if (await dateToggle.count() > 0 && await dateToggle.isChecked()) {
+      await dateToggle.uncheck();
+      await page.waitForTimeout(300);
+    }
+    await expect(gateHm).toBeVisible();
+
+    // Pick y-stream 3.5 via cascading Version picker — fixture gate URLs are 3.6-ea.1 / 2.25 only.
+    const verBtn = page.locator('button.ver-picker-btn').first();
+    expect(await verBtn.count()).toBeGreaterThan(0);
+    await verBtn.click();
+    await page.waitForTimeout(200);
+    const popover = page.locator('.ver-popover');
+    const y35 = popover.locator('button.ver-item', { hasText: /^3\.5$/ }).first();
+    if (await y35.count() === 0) {
+      console.log('Version 3.5 not in picker — skipping');
+      await page.keyboard.press('Escape');
+      return;
+    }
+    await y35.click();
+    await page.waitForTimeout(200);
+    // Z-stream column: "3.5 (y-stream only)" selects exact y-stream.
+    const z35 = popover.locator('button.ver-item', { hasText: /3\.5 \(y-stream only\)/ }).first();
+    if (await z35.count() > 0) {
+      await z35.click();
+    }
+    await page.waitForTimeout(400);
+
+    // No gate rows should remain — Jenkins URLs do not match 3.5.
+    expect(await page.locator('table.gate-hm').count()).toBe(0);
+
+    // Switch to 3.6 — 3.6-ea.1 runs should reappear; 2.25 run must not.
+    await verBtn.click();
+    await page.waitForTimeout(200);
+    const y36 = page.locator('.ver-popover button.ver-item', { hasText: /^3\.6$/ }).first();
+    await y36.click();
+    await page.waitForTimeout(200);
+    const z36 = page.locator('.ver-popover button.ver-item', { hasText: /3\.6 \(y-stream only\)/ }).first();
+    if (await z36.count() > 0) {
+      await z36.click();
+    }
+    await page.waitForTimeout(400);
+
+    await expect(page.locator('table.gate-hm')).toBeVisible();
+    const smokeCell = page.locator('table.gate-hm tbody tr').filter({ hasText: 'smoke' }).locator('.gate-cell').first();
+    await smokeCell.hover();
+    await page.waitForTimeout(200);
+    const dd = page.locator('.gc-dd').first();
+    await expect(dd).toBeVisible();
+    const hrefs = await dd.locator('a[href*="jenkins"]').evaluateAll((as) => as.map((a) => a.href));
+    expect(hrefs.length).toBeGreaterThan(0);
+    expect(hrefs.every((h) => h.includes('/3.6'))).toBe(true);
+    expect(hrefs.some((h) => h.includes('/2.25/'))).toBe(false);
 
     expectNoBenignConsoleErrors(page);
   });

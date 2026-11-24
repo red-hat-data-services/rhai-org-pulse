@@ -3,14 +3,23 @@
     <div class="flex flex-wrap items-start justify-between gap-3 border-b border-gray-200 px-5 py-4 dark:border-gray-700">
       <div>
         <h3 class="text-base font-semibold text-gray-800 dark:text-gray-100">Triage Readiness</h3>
-        <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Proposed release blockers and the evidence required before exception triage.</p>
+        <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Organization-wide Proposed blockers for upcoming Jira Fix Versions and the evidence required before exception triage.</p>
       </div>
       <span class="rounded-full bg-gray-100 px-3 py-1 text-xs font-medium text-gray-500 dark:bg-gray-700 dark:text-gray-300">
-        {{ readyCount }} of {{ issues.length }} ready
+        {{ loading ? 'Loading…' : readyCount + ' of ' + issues.length + ' ready' }}
       </span>
     </div>
 
-    <div v-if="issues.length" class="max-h-96 overflow-auto">
+    <div v-if="loading" class="px-5 py-12 text-center">
+      <p class="text-sm text-gray-400 dark:text-gray-500">Loading organization-wide Proposed release blockers…</p>
+    </div>
+
+    <div v-else-if="error" class="space-y-2 px-5 py-12 text-center">
+      <p class="text-sm text-red-600 dark:text-red-400">Organization-wide Triage Readiness is temporarily unavailable.</p>
+      <button type="button" class="text-sm text-blue-600 hover:underline dark:text-blue-400" @click="emit('retry')">Retry</button>
+    </div>
+
+    <div v-else-if="issues.length" class="max-h-96 overflow-auto">
       <table class="w-full min-w-[1050px] text-sm">
         <thead class="sticky top-0 z-10 bg-gray-50 dark:bg-gray-900">
           <tr class="border-b border-gray-200 dark:border-gray-700">
@@ -75,7 +84,7 @@
     </div>
 
     <div v-else class="px-5 py-12 text-center">
-      <p class="text-sm text-gray-400 dark:text-gray-500">No Proposed release blockers match the selected page filters.</p>
+      <p class="text-sm text-gray-400 dark:text-gray-500">No Proposed release blockers were found for upcoming Jira Fix Versions.</p>
     </div>
   </section>
 </template>
@@ -84,8 +93,12 @@
 import { computed } from 'vue'
 
 var props = defineProps({
-  issues: { type: Array, default: function () { return [] } }
+  issues: { type: Array, default: function () { return [] } },
+  loading: { type: Boolean, default: false },
+  error: { type: String, default: null }
 })
+
+var emit = defineEmits(['retry'])
 
 var readinessCriteria = [
   { key: 'fixVersion', label: 'Fix Version assigned' },

@@ -1,67 +1,54 @@
 <template>
   <div>
-    <p v-if="effectiveReleaseNumbers.length" class="mb-4 text-right text-xs text-gray-500 dark:text-gray-400">
-      Combining {{ effectiveReleaseNumbers.length }} selected release{{ effectiveReleaseNumbers.length === 1 ? '' : 's' }}
+    <p class="mb-4 text-right text-xs text-gray-500 dark:text-gray-400">
+      Organization-wide totals for upcoming Jira Fix Versions across five AI Engineering projects
     </p>
 
-    <!-- Loading -->
-    <div v-if="loading" class="flex items-center justify-center py-12">
-      <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-    </div>
-
-    <!-- Error -->
-    <div v-else-if="error" class="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4">
-      <p class="text-sm text-red-600 dark:text-red-400">{{ error }}</p>
-    </div>
-
-    <!-- Empty / no release selected -->
-    <div v-else-if="!data && !effectiveReleaseNumbers.length" class="text-center py-12">
-      <p class="text-gray-500 dark:text-gray-400">Enter a release version above or select one from the filter bar to view blockers.</p>
-    </div>
-
-    <!-- Content -->
-    <div v-else-if="data">
-      <!-- Summary Cards -->
-      <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-6">
-        <div
-          data-testid="blocker-summary-total"
-          class="rounded-lg border border-blue-200 bg-blue-50/50 p-4 text-left dark:border-blue-800 dark:bg-blue-900/10"
-        >
-          <p class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-1">Total Blockers</p>
-          <p class="text-2xl font-bold text-gray-900 dark:text-gray-100">{{ awarenessSummary.total }}</p>
-        </div>
-        <div
-          data-testid="blocker-summary-proposed"
-          class="rounded-lg border border-amber-200 bg-white p-4 text-left dark:border-amber-800 dark:bg-gray-800"
-        >
-          <p class="text-xs font-medium text-amber-600 dark:text-amber-400 uppercase tracking-wide mb-1">Proposed</p>
-          <p class="text-2xl font-bold text-amber-700 dark:text-amber-300">{{ awarenessSummary.proposed }}</p>
-        </div>
-        <div
-          data-testid="blocker-summary-approved"
-          class="rounded-lg border border-red-200 bg-white p-4 text-left dark:border-red-800 dark:bg-gray-800"
-        >
-          <p class="text-xs font-medium text-red-600 dark:text-red-400 uppercase tracking-wide mb-1">Approved</p>
-          <p class="text-2xl font-bold text-red-700 dark:text-red-300">{{ awarenessSummary.approved }}</p>
-        </div>
-        <div
-          data-testid="blocker-summary-rejected"
-          class="rounded-lg border border-emerald-200 bg-white p-4 text-left dark:border-emerald-800 dark:bg-gray-800"
-        >
-          <p class="text-xs font-medium text-emerald-600 dark:text-emerald-400 uppercase tracking-wide mb-1">Rejected</p>
-          <p class="text-2xl font-bold text-emerald-700 dark:text-emerald-300">{{ awarenessSummary.rejected }}</p>
-        </div>
+    <!-- Organization-wide Summary Cards -->
+    <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-2">
+      <div
+        data-testid="blocker-summary-total"
+        class="rounded-lg border border-blue-200 bg-blue-50/50 p-4 text-left dark:border-blue-800 dark:bg-blue-900/10"
+      >
+        <p class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-1">Total Blockers</p>
+        <p class="text-2xl font-bold text-gray-900 dark:text-gray-100">{{ summaryValue('total') }}</p>
       </div>
+      <div
+        data-testid="blocker-summary-proposed"
+        class="rounded-lg border border-amber-200 bg-white p-4 text-left dark:border-amber-800 dark:bg-gray-800"
+      >
+        <p class="text-xs font-medium text-amber-600 dark:text-amber-400 uppercase tracking-wide mb-1">Proposed</p>
+        <p class="text-2xl font-bold text-amber-700 dark:text-amber-300">{{ summaryValue('proposed') }}</p>
+      </div>
+      <div
+        data-testid="blocker-summary-approved"
+        class="rounded-lg border border-red-200 bg-white p-4 text-left dark:border-red-800 dark:bg-gray-800"
+      >
+        <p class="text-xs font-medium text-red-600 dark:text-red-400 uppercase tracking-wide mb-1">Approved</p>
+        <p class="text-2xl font-bold text-red-700 dark:text-red-300">{{ summaryValue('approved') }}</p>
+      </div>
+      <div
+        data-testid="blocker-summary-rejected"
+        class="rounded-lg border border-emerald-200 bg-white p-4 text-left dark:border-emerald-800 dark:bg-gray-800"
+      >
+        <p class="text-xs font-medium text-emerald-600 dark:text-emerald-400 uppercase tracking-wide mb-1">Rejected</p>
+        <p class="text-2xl font-bold text-emerald-700 dark:text-emerald-300">{{ summaryValue('rejected') }}</p>
+      </div>
+    </div>
+    <p v-if="blockerSummaryError" class="mb-6 text-right text-xs text-red-600 dark:text-red-400">
+      Organization-wide blocker totals are temporarily unavailable.
+    </p>
+    <div v-else class="mb-6"></div>
 
-      <!-- Release Blockers Awareness -->
+    <!-- Release Blockers Awareness -->
       <section data-testid="blockers-awareness-trends" class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden mb-6">
         <div class="px-4 py-3 border-b border-gray-200 dark:border-gray-700">
           <div class="flex items-center justify-between gap-3 mb-3">
             <div>
               <h3 class="text-sm font-semibold text-gray-700 dark:text-gray-300">Release Blockers Awareness</h3>
-              <p class="text-xs text-gray-400 dark:text-gray-500 mt-0.5">Issues with a Proposed, Approved, or Rejected Release blocker value.</p>
+              <p class="text-xs text-gray-400 dark:text-gray-500 mt-0.5">Organization-wide Approved and Rejected blockers assigned to unreleased, non-archived Jira Fix Versions.</p>
             </div>
-            <span class="text-xs text-gray-400 dark:text-gray-500 whitespace-nowrap">{{ visibleAwarenessTrends.length }} of {{ awarenessTrends.length }} issues</span>
+            <span v-if="!blockerAwarenessLoading && !blockerAwarenessError" class="text-xs text-gray-400 dark:text-gray-500 whitespace-nowrap">{{ visibleAwarenessTrends.length }} of {{ awarenessTrends.length }} issues</span>
           </div>
 
           <div class="flex items-end gap-2 flex-wrap">
@@ -104,7 +91,7 @@
           </div>
         </div>
 
-        <div v-if="visibleAwarenessTrends.length" class="overflow-x-auto scrollable-table">
+        <div v-if="!blockerAwarenessLoading && !blockerAwarenessError && visibleAwarenessTrends.length" class="overflow-x-auto scrollable-table">
           <table class="w-full text-sm">
             <thead class="sticky top-0 z-10">
               <tr class="border-b border-gray-100 dark:border-gray-700 bg-gray-50 dark:bg-gray-900">
@@ -142,12 +129,40 @@
           </table>
         </div>
         <div v-else class="px-4 py-6 text-center">
-          <p v-if="awarenessTrends.length" class="text-xs text-gray-400 dark:text-gray-500">No issues match the selected table filters.</p>
-          <p v-else class="text-xs text-gray-400 dark:text-gray-500">No issues with a Release blocker value were found for this version.</p>
+          <p v-if="blockerAwarenessLoading" class="text-xs text-gray-400 dark:text-gray-500">Loading organization-wide Approved and Rejected blockers…</p>
+          <div v-else-if="blockerAwarenessError" class="space-y-2">
+            <p class="text-xs text-red-600 dark:text-red-400">Organization-wide Release Blockers Awareness is temporarily unavailable.</p>
+            <button @click="refreshBlockerAwareness" class="text-xs text-blue-600 dark:text-blue-400 hover:underline">Retry</button>
+          </div>
+          <p v-else-if="awarenessTrends.length" class="text-xs text-gray-400 dark:text-gray-500">No issues match the selected table filters.</p>
+          <p v-else class="text-xs text-gray-400 dark:text-gray-500">No Approved or Rejected blockers were found for upcoming Jira Fix Versions.</p>
         </div>
       </section>
 
-      <TriageReadinessTable :issues="triageReadinessIssues" />
+      <TriageReadinessTable
+        :issues="triageReadinessIssues"
+        :loading="blockerAwarenessLoading"
+        :error="blockerAwarenessError"
+        @retry="refreshBlockerAwareness"
+      />
+
+    <!-- Release-scoped loading -->
+    <div v-if="loading" class="flex items-center justify-center py-12">
+      <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+    </div>
+
+    <!-- Release-scoped error -->
+    <div v-else-if="error" class="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4">
+      <p class="text-sm text-red-600 dark:text-red-400">{{ error }}</p>
+    </div>
+
+    <!-- Empty / no release selected -->
+    <div v-else-if="!data && !effectiveReleaseNumbers.length" class="text-center py-12">
+      <p class="text-gray-500 dark:text-gray-400">No registered releases are available for the detailed blocker report.</p>
+    </div>
+
+    <!-- Release-scoped content -->
+    <div v-else-if="data">
 
       <!-- Historical trend charts intentionally use a separate, unfiltered data source. -->
       <BlockerTrendsSection :data="blockerTrendData" :loading="blockerTrendLoading" :error="blockerTrendError" />
@@ -315,8 +330,10 @@
 </template>
 
 <script setup>
-import { ref, computed, inject, watch } from 'vue'
+import { ref, computed, inject } from 'vue'
 import { useReleaseBlockers } from '../composables/useReleaseBlockers.js'
+import { useReleaseBlockerSummary } from '../composables/useReleaseBlockerSummary.js'
+import { useReleaseBlockerAwareness } from '../composables/useReleaseBlockerAwareness.js'
 import { useBlockerTrends } from '../composables/useBlockerTrends.js'
 import { useBlockerAnalysis } from '../composables/useBlockerAnalysis.js'
 import TfaRiskSection from '../components/TfaRiskSection.vue'
@@ -324,15 +341,11 @@ import BlockerTrendsSection from '../components/BlockerTrendsSection.vue'
 import TriageReadinessTable from '../components/TriageReadinessTable.vue'
 import BlockerAnalysisSection from '../components/BlockerAnalysisSection.vue'
 
-const filter = inject('releaseFilter')
-
-const filteredReleases = computed(function () {
-  return filter.filteredReleases.value || []
-})
+const allAnalysisReleases = inject('allAnalysisReleases')
 
 const releaseRequests = computed(function () {
   var seen = new Set()
-  return filteredReleases.value.filter(function (release) {
+  return (allAnalysisReleases.value || []).filter(function (release) {
     if (!release.releaseNumber || seen.has(release.releaseNumber)) return false
     seen.add(release.releaseNumber)
     return true
@@ -349,6 +362,17 @@ const effectiveReleaseNumbers = computed(function () {
 })
 
 const { data, loading, error, refresh } = useReleaseBlockers(releaseRequests)
+const {
+  data: blockerSummary,
+  loading: blockerSummaryLoading,
+  error: blockerSummaryError
+} = useReleaseBlockerSummary()
+const {
+  data: blockerAwareness,
+  loading: blockerAwarenessLoading,
+  error: blockerAwarenessError,
+  refresh: refreshBlockerAwareness
+} = useReleaseBlockerAwareness()
 const {
   data: blockerTrendData,
   loading: blockerTrendLoading,
@@ -396,7 +420,7 @@ const awarenessSortKey = ref(null)
 const awarenessSortDir = ref('desc')
 
 const awarenessTrends = computed(function () {
-  return (data.value && Array.isArray(data.value.awarenessTrends)) ? data.value.awarenessTrends : []
+  return (blockerAwareness.value && Array.isArray(blockerAwareness.value.issues)) ? blockerAwareness.value.issues : []
 })
 
 const {
@@ -405,23 +429,11 @@ const {
   error: blockerAnalysisError
 } = useBlockerAnalysis(blockerTrendData)
 
-const awarenessSummary = computed(function () {
-  var summary = {
-    proposed: 0,
-    approved: 0,
-    rejected: 0,
-    total: awarenessTrends.value.length
-  }
-
-  for (var i = 0; i < awarenessTrends.value.length; i++) {
-    var status = awarenessTrends.value[i].releaseBlockerStatus
-    if (status === 'Proposed') summary.proposed++
-    else if (status === 'Approved') summary.approved++
-    else if (status === 'Rejected') summary.rejected++
-  }
-
-  return summary
-})
+function summaryValue(key) {
+  if (blockerSummaryLoading.value) return '…'
+  if (!blockerSummary.value || blockerSummary.value[key] === undefined) return '—'
+  return blockerSummary.value[key]
+}
 
 function uniqueSortedValues(rows, key) {
   var values = new Set()
@@ -437,7 +449,7 @@ function uniqueSortedValues(rows, key) {
 
 const awarenessReleaseBlockerOptions = computed(function () {
   var present = new Set(uniqueSortedValues(awarenessTrends.value, 'releaseBlockerStatus'))
-  return ['Proposed', 'Approved', 'Rejected'].filter(function (status) { return present.has(status) })
+  return ['Approved', 'Rejected'].filter(function (status) { return present.has(status) })
 })
 const awarenessFixVersionOptions = computed(function () { return uniqueSortedValues(awarenessTrends.value, 'fixVersions') })
 const awarenessStatusOptions = computed(function () { return uniqueSortedValues(awarenessTrends.value, 'status') })
@@ -462,12 +474,6 @@ function clearAwarenessFilters() {
   awarenessComponentFilter.value = ''
 }
 
-watch(effectiveReleaseNumbers, function () {
-  clearAwarenessFilters()
-  awarenessSortKey.value = null
-  awarenessSortDir.value = 'desc'
-})
-
 function toggleAwarenessSort(key) {
   if (awarenessSortKey.value === key) {
     awarenessSortDir.value = awarenessSortDir.value === 'asc' ? 'desc' : 'asc'
@@ -491,7 +497,10 @@ function sortAwarenessByDefault(rows) {
 }
 
 const triageReadinessIssues = computed(function () {
-  return sortAwarenessByDefault(awarenessTrends.value.filter(function (issue) {
+  var issues = blockerAwareness.value && Array.isArray(blockerAwareness.value.proposedIssues)
+    ? blockerAwareness.value.proposedIssues
+    : []
+  return sortAwarenessByDefault(issues.filter(function (issue) {
     return issue.releaseBlockerStatus === 'Proposed'
   }))
 })
