@@ -3,7 +3,6 @@ import { onMounted } from 'vue'
 import { useFeatureScheduling } from '../composables/useFeatureScheduling'
 import FeatureSchedulingFilterBar from '../components/FeatureSchedulingFilterBar.vue'
 import FeatureSchedulingRow from '../components/FeatureSchedulingRow.vue'
-import PlacementSummaryCards from '../components/PlacementSummaryCards.vue'
 import { buildFeatureSchedulingCsv } from '../ai-planner/core.js'
 
 // Native Vue rebuild of the AI Planner iframe's Feature Scheduling tab
@@ -26,8 +25,6 @@ const {
   resetFilters,
   approvals,
   toggleApproval,
-  placementCounts,
-  recommendedCount,
   pmReviewStatus,
   urgentFilterKeys,
   applyUrgentFilter,
@@ -70,19 +67,20 @@ function scrollToFirstUnchecked() {
 }
 
 const headers = [
-  { id: 'h-place', label: 'Placement' },
-  { id: 'h-key', label: 'Key', sortKey: 'Key' },
-  { id: 'h-title', label: 'Title', sortKey: 'Title' },
-  { id: 'h-outcome', label: 'Outcome', sortKey: 'OutcomeNumber' },
-  { id: 'h-tv', label: 'Target Version' },
-  { id: 'h-comp', label: 'Components' },
-  { id: 'h-team', label: 'Team' },
-  { id: 'h-pri', label: 'Priority', sortKey: 'Priority' },
-  { id: 'h-fpdor', label: 'FPDoR', sortKey: 'FPDoR' },
+  // Nov 24 2026: Reordered to match iframe (public/ai-first-scheduler/index.html)
+  // Columns: # (rank), FPDoR, Risk, Confidence, Priority, OC#, Feature Key, Title, Outcome, Target Version, Fix Version, Components, Size, Team
+  { id: 'h-fpdor', label: 'FPDOR', sortKey: 'FPDoR' },
   { id: 'h-risk', label: 'Risk' },
   { id: 'h-conf', label: 'Confidence', sortKey: '_conf' },
-  { id: 'h-pm', label: 'PM ✓' },
-  { id: 'h-do', label: 'DO ✓' }
+  { id: 'h-pri', label: 'Priority', sortKey: 'Priority' },
+  { id: 'h-oc', label: 'OC#', sortKey: 'OutcomeNumber' },
+  { id: 'h-key', label: 'Feature Key', sortKey: 'Key' },
+  { id: 'h-title', label: 'Title', sortKey: 'Title' },
+  { id: 'h-outcome', label: 'Outcome' },
+  { id: 'h-tv', label: 'Target Version' },
+  { id: 'h-fv', label: 'Fix Version' },
+  { id: 'h-comp', label: 'Components' },
+  { id: 'h-team', label: 'Team' }
 ]
 </script>
 
@@ -109,8 +107,8 @@ const headers = [
       </div>
     </div>
 
-    <!-- Placement summary cards -- always over the full dataset, not the filtered view -->
-    <PlacementSummaryCards :counts="placementCounts" :recommendedCount="recommendedCount" />
+    <!-- Placement summary cards removed Nov 24 2026 (use column order from iframe instead) -->
+    <!-- <PlacementSummaryCards :counts="placementCounts" :recommendedCount="recommendedCount" /> -->
 
     <!-- PM banner: needs-review + urgent filter + scroll-to-next-unchecked -->
     <div v-if="filters.pm" class="flex items-center justify-between gap-3 px-4 py-2 bg-amber-50 dark:bg-amber-900/10 border-b border-amber-200 dark:border-amber-800 text-xs">

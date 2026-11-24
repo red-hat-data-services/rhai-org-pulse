@@ -172,7 +172,7 @@ const hasActiveFilters = computed(() => {
         @change="update('bigRockOnly', $event.target.checked)"
         class="rounded border-gray-300 dark:border-gray-600 text-primary-600 focus:ring-primary-500"
       />
-      Big Rock only
+      🎯 Outcomes only
     </label>
 
     <button
