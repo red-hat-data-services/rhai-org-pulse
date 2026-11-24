@@ -67,7 +67,27 @@
         No ranked Outcomes were returned.
       </div>
 
-      <div v-else class="overflow-x-auto rounded-lg border border-gray-200 bg-white shadow-sm dark:border-gray-700 dark:bg-gray-800">
+      <div
+        v-if="outcomes.length > 0"
+        ref="outcomesTopScrollRef"
+        data-testid="jira-plan-top-scrollbar"
+        class="jira-plan-scroll-region jira-plan-top-scrollbar rounded-lg"
+        aria-hidden="true"
+        @scroll="syncScrollFromTop"
+      >
+        <div :style="{ width: outcomesScrollWidth + 'px', minWidth: '100%' }"></div>
+      </div>
+
+      <div
+        v-if="outcomes.length > 0"
+        ref="outcomesScrollRef"
+        data-testid="jira-plan-scroll-region"
+        class="jira-plan-scroll-region rounded-lg border border-gray-200 bg-white shadow-sm focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 dark:border-gray-700 dark:bg-gray-800"
+        tabindex="0"
+        role="region"
+        aria-label="Prioritized Outcomes table. Scroll horizontally to view all columns."
+        @scroll="syncScrollFromBottom"
+      >
         <table class="min-w-full divide-y divide-gray-200 text-left text-sm dark:divide-gray-700">
           <thead class="bg-gray-50 dark:bg-gray-900/40">
             <tr>
@@ -176,7 +196,13 @@
                       </h3>
                       <span class="text-xs text-gray-500 dark:text-gray-400">{{ childrenFor(outcome.key).length }} shown</span>
                     </div>
-                    <div class="overflow-x-auto rounded-md border border-gray-200 bg-white dark:border-gray-700 dark:bg-gray-800">
+                    <div
+                      data-testid="jira-plan-child-scroll-region"
+                      class="jira-plan-scroll-region rounded-md border border-gray-200 bg-white focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 dark:border-gray-700 dark:bg-gray-800"
+                      tabindex="0"
+                      role="region"
+                      :aria-label="'Child work items for ' + outcome.key + '. Scroll horizontally to view all columns.'"
+                    >
                       <table class="min-w-full divide-y divide-gray-100 text-left text-sm dark:divide-gray-700">
                         <thead class="bg-gray-100/70 dark:bg-gray-900/50">
                           <tr>
@@ -245,7 +271,7 @@
 </template>
 
 <script setup>
-import { onMounted, ref } from 'vue'
+import { nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { apiRequest } from '@shared/client/services/api'
 
 const PLAN_URL = 'https://redhat.atlassian.net/jira/plans/5187/scenarios/5190/timeline?vid=7542'
@@ -265,7 +291,66 @@ const expandedKeys = ref(new Set())
 const childrenByKey = ref({})
 const loadingChildren = ref({})
 const childErrors = ref({})
+const outcomesScrollRef = ref(null)
+const outcomesTopScrollRef = ref(null)
+const outcomesScrollWidth = ref(0)
 var planGeneration = 0
+var tableResizeObserver = null
+
+function syncScrollFromTop() {
+  var top = outcomesTopScrollRef.value
+  var table = outcomesScrollRef.value
+  if (!top || !table || Math.abs(top.scrollLeft - table.scrollLeft) < 1) return
+  table.scrollLeft = top.scrollLeft
+}
+
+function syncScrollFromBottom() {
+  var top = outcomesTopScrollRef.value
+  var table = outcomesScrollRef.value
+  if (!top || !table || Math.abs(top.scrollLeft - table.scrollLeft) < 1) return
+  top.scrollLeft = table.scrollLeft
+}
+
+function measureOutcomesScrollWidth() {
+  var table = outcomesScrollRef.value
+  if (!table) return
+  outcomesScrollWidth.value = table.scrollWidth
+  syncScrollFromBottom()
+}
+
+function observeOutcomesTable() {
+  if (tableResizeObserver) tableResizeObserver.disconnect()
+  tableResizeObserver = null
+
+  var table = outcomesScrollRef.value
+  var tableElement = table && table.querySelector('table')
+  if (!tableElement) {
+    measureOutcomesScrollWidth()
+    return
+  }
+
+  if (typeof ResizeObserver !== 'undefined') {
+    tableResizeObserver = new ResizeObserver(measureOutcomesScrollWidth)
+    tableResizeObserver.observe(tableElement)
+  }
+  measureOutcomesScrollWidth()
+}
+
+watch(outcomes, async function() {
+  await nextTick()
+  observeOutcomesTable()
+})
+
+watch(childrenByKey, async function() {
+  await nextTick()
+  measureOutcomesScrollWidth()
+})
+
+window.addEventListener('resize', measureOutcomesScrollWidth)
+onBeforeUnmount(function() {
+  window.removeEventListener('resize', measureOutcomesScrollWidth)
+  if (tableResizeObserver) tableResizeObserver.disconnect()
+})
 
 function isExpanded(key) {
   return expandedKeys.value.has(key)
@@ -361,3 +446,61 @@ onMounted(function() {
   loadPlan(false)
 })
 </script>
+
+<style>
+/* Keep the horizontal scrollbar visible across OS/browser scrollbar settings. */
+.jira-plan-scroll-region {
+  overflow-x: scroll;
+  overflow-y: hidden;
+  overscroll-behavior-x: contain;
+  scrollbar-width: auto;
+  scrollbar-color: #9ca3af #f3f4f6;
+}
+
+.jira-plan-scroll-region::-webkit-scrollbar {
+  height: 12px;
+}
+
+.jira-plan-scroll-region::-webkit-scrollbar-track {
+  background: #f3f4f6;
+  border-top: 1px solid #e5e7eb;
+}
+
+.jira-plan-scroll-region::-webkit-scrollbar-thumb {
+  background: #9ca3af;
+  border: 3px solid #f3f4f6;
+  border-radius: 9999px;
+}
+
+.jira-plan-scroll-region::-webkit-scrollbar-thumb:hover {
+  background: #6b7280;
+}
+
+.jira-plan-top-scrollbar {
+  height: 16px;
+  margin-bottom: 4px;
+  background: transparent;
+}
+
+.jira-plan-top-scrollbar > div {
+  height: 1px;
+}
+
+.dark .jira-plan-scroll-region {
+  scrollbar-color: #9ca3af #1f2937;
+}
+
+.dark .jira-plan-scroll-region::-webkit-scrollbar-track {
+  background: #1f2937;
+  border-top-color: #374151;
+}
+
+.dark .jira-plan-scroll-region::-webkit-scrollbar-thumb {
+  background: #9ca3af;
+  border-color: #1f2937;
+}
+
+.dark .jira-plan-scroll-region::-webkit-scrollbar-thumb:hover {
+  background: #d1d5db;
+}
+</style>

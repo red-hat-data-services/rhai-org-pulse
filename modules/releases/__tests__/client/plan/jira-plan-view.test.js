@@ -63,6 +63,21 @@ describe('JiraPlanView', function() {
     expect(wrapper.text()).toContain('Second ranked outcome')
     expect(wrapper.text()).toContain('Releases')
     expect(wrapper.text()).toContain('3.6 GA RHOAI RELEASE')
+    var scrollRegion = wrapper.get('[data-testid="jira-plan-scroll-region"]')
+    var topScrollbar = wrapper.get('[data-testid="jira-plan-top-scrollbar"]')
+    expect(scrollRegion.classes()).toContain('jira-plan-scroll-region')
+    expect(scrollRegion.attributes('tabindex')).toBe('0')
+    expect(scrollRegion.attributes('role')).toBe('region')
+    expect(topScrollbar.classes()).toContain('jira-plan-top-scrollbar')
+    expect(topScrollbar.attributes('aria-hidden')).toBe('true')
+
+    topScrollbar.element.scrollLeft = 40
+    await topScrollbar.trigger('scroll')
+    expect(scrollRegion.element.scrollLeft).toBe(40)
+
+    scrollRegion.element.scrollLeft = 90
+    await scrollRegion.trigger('scroll')
+    expect(topScrollbar.element.scrollLeft).toBe(90)
     expect(apiRequest).toHaveBeenCalledWith('/modules/releases/planning/jira-plan')
   })
 
@@ -96,6 +111,10 @@ describe('JiraPlanView', function() {
     expect(wrapper.text()).toContain('Child feature')
     expect(wrapper.text()).toContain('Releases')
     expect(wrapper.text()).toContain('3.7 GA RHOAI RELEASE')
+    var childScrollRegion = wrapper.get('[data-testid="jira-plan-child-scroll-region"]')
+    expect(childScrollRegion.classes()).toContain('jira-plan-scroll-region')
+    expect(childScrollRegion.attributes('tabindex')).toBe('0')
+    expect(childScrollRegion.attributes('role')).toBe('region')
   })
 
   it('shows a clear error when the Plan cannot be loaded', async function() {
