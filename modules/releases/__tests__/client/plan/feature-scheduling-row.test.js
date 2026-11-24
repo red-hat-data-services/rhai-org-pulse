@@ -39,10 +39,6 @@ describe('FeatureSchedulingRow', () => {
     expect(wrapper.text()).not.toContain('C')
   })
 
-  // Nov 24 2026: PM/DO approval checkboxes removed (not in local/iframe version)
-
-  // Nov 24 2026: Approval-based highlighting removed (not in local version)
-
   it('shows the FPDoR tier breakdown as a hover tooltip, not permanent inline pills (PR #1877)', () => {
     const wrapper = mount(FeatureSchedulingRow, {
       props: { feature: feature({ FPDoR: '15/17', _wFPDoR: 85, _failedItems: ['Priority'] }) }
