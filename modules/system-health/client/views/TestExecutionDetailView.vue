@@ -388,6 +388,7 @@ import {
   vrKeyMatches,
   yStreamVer
 } from '../utils/versionFilter.js'
+import { jenkinsLabel, testReportUrl } from '../utils/jenkinsUrl.js'
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, ArcElement, Title, Tooltip, Legend)
 
@@ -567,36 +568,14 @@ const gateRows = computed(() => {
   }).filter((r) => r.total > 0)
 })
 
-// Shorten a Jenkins URL into a readable run label for the dropdown.
-function jenkinsLabel(url) {
-  if (!url) return 'Run'
-  return url
-    .replace('https://jenkins-csb-rhods-opendatascience.dno.corp.redhat.com/job/', '')
-    .replace(/\/$/, '')
-    .replace(/\/job\//g, '/')
-}
-
-// Deep-link a Jenkins build URL to its test-results page. With no suite it
-// lands on the whole run's report (…/testReport/). With a suite it lands on
-// that suite's node (…/testReport/<Suite>/) — Jenkins keys the testReport tree
-// by the raw suite name with spaces encoded as %20 (verified against the live
-// server: the %20 form returns 200, an underscore form 404).
-function testReportUrl(url, suite) {
-  if (!url) return url
-  const base = url.endsWith('/') ? url : url + '/'
-  if (!suite) return `${base}testReport/`
-  // Encode the suite as a single path segment; encodeURIComponent turns spaces
-  // into %20 and escapes other unsafe characters, matching Jenkins' tree URLs.
-  return `${base}testReport/${encodeURIComponent(suite)}/`
-}
-
 // Group per-run execution rows by Jenkins build URL so one build renders as a
 // single line, then union the component suites seen in that build. This avoids
 // emitting several near-identical links for the same build when a dashboard
 // component maps to multiple Jenkins suites. Component-specific suite links are
 // only produced for data sourced from the testReport API (xml_source), where
 // the suite name maps exactly to the Jenkins testReport URL; otherwise the
-// caller falls back to the whole-run report link.
+// caller falls back to the whole-run report link. Links are rewritten to
+// https://jenkins.rh-ods.com via testReportUrl().
 function groupedRuns(executions) {
   const byUrl = new Map()
   ;(executions || []).forEach((ex) => {
