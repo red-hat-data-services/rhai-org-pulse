@@ -611,7 +611,7 @@ function registerTechDebtRoutes(router, { requireAuth, requireScope, jira, stora
    *   get:
    *     tags: [Releases]
    *     summary: Get organization-wide weekly Bug creation and resolution trends
-   *     description: Returns precomputed ISO-week Bug counts across all five AI Engineering Jira projects and all component states, including issues with no component.
+   *     description: Returns precomputed ISO-week Bug counts plus Bug distributions for Jira Fix Version and Affects Version across all five AI Engineering Jira projects and all component states, including issues with no component.
    *     responses:
    *       200:
    *         description: Weekly Bug Created and Resolved trend data

@@ -1481,6 +1481,26 @@ The representative fixture is `fixtures/releases/tech-debt/trends.json`.
       { "week": "2026-W18", "startDate": "2026-04-27", "created": 0, "resolved": 0 },
       { "week": "2026-W19", "startDate": "2026-05-04", "created": 0, "resolved": 0 }
     ]
+  },
+  "bugFixVersions": {
+    "sourceField": "fixVersions",
+    "assignment": "one-bucket-per-issue",
+    "total": 4,
+    "versions": [
+      { "version": "3.5 GA RHOAI RELEASE", "count": 2 },
+      { "version": "Multiple Fix Versions", "count": 1 },
+      { "version": "No Fix Version", "count": 1 }
+    ]
+  },
+  "bugAffectsVersions": {
+    "sourceField": "versions",
+    "assignment": "one-bucket-per-issue",
+    "total": 4,
+    "versions": [
+      { "version": "3.5 GA RHOAI RELEASE", "count": 2 },
+      { "version": "Multiple Affects Versions", "count": 1 },
+      { "version": "No Affects Version", "count": 1 }
+    ]
   }
 }
 ```
@@ -1504,11 +1524,27 @@ organization-wide aggregation counts multi-component Bugs once and includes
 empty component arrays. The example above abbreviates the contiguous `weeks`
 array; the stored fixture contains the complete series.
 
+`bugFixVersions` is an additive schema-version-1 distribution for the same
+unique Bugs represented by the six-calendar-month snapshot. It uses Jira Fix
+Version. A Bug with one Fix Version is assigned to that version, a Bug without
+one is assigned to **No Fix Version**, and a Bug with more than one is assigned
+to **Multiple Fix Versions**. This one-bucket-per-issue rule keeps the total and
+pie-chart percentages based on unique Bugs rather than version associations.
+Older valid snapshots may omit this field.
+
+`bugAffectsVersions` applies the identical unique-Bug assignment to Jira's
+**Affects versions** field (`versions`). Empty values use **No Affects
+Version**, and issues with multiple values use **Multiple Affects Versions**.
+The client toggles between these two precomputed distributions without querying
+Jira or changing the historic cohort.
+
 `GET /api/modules/releases/tech-debt/trends/weekly-bugs` returns the precomputed
-weekly series independently of dashboard filters, together with snapshot age
-metadata. Older valid snapshots that omit `weeklyBugs` continue serving monthly
-trends; the weekly endpoint returns a specific unavailable response until the
-next collector refresh.
+weekly series plus Fix Version and Affects Version distributions independently
+of dashboard filters, together with snapshot age metadata. Older valid snapshots that omit
+`weeklyBugs` continue serving monthly trends; the weekly endpoint returns a
+specific unavailable response until the next collector refresh. A snapshot
+with weekly data but no version distributions continues serving the line chart
+and marks unavailable pie choices until refresh.
 
 ---
 

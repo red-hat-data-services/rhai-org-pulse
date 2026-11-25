@@ -327,6 +327,18 @@
             <div v-else class="flex h-48 items-center justify-center rounded-xl border border-dashed border-gray-300 text-center text-sm text-gray-500 dark:border-gray-700 dark:text-gray-400" data-testid="tech-debt-weekly-trend-empty">
               No Bugs were created or resolved in this six-month window.
             </div>
+            <TechDebtBugFixVersionChart
+              v-if="weeklyBugTrendData.bugFixVersions?.total || weeklyBugTrendData.bugAffectsVersions?.total"
+              :fix-version-distribution="weeklyBugTrendData.bugFixVersions"
+              :affects-version-distribution="weeklyBugTrendData.bugAffectsVersions"
+            />
+            <div
+              v-else-if="weeklyBugTrendData.bugFixVersions === null && weeklyBugTrendData.bugAffectsVersions === null"
+              class="mt-6 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800 dark:border-amber-800 dark:bg-amber-950/30 dark:text-amber-200"
+              data-testid="tech-debt-fix-version-unavailable"
+            >
+              The Fix Version breakdown will be available after the next nightly Tech Debt snapshot refresh.
+            </div>
           </div>
         </template>
       </div>
@@ -538,6 +550,7 @@
 <script setup>
 import { computed, nextTick, onActivated, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { apiRequest } from '@shared/client/services/api'
+import TechDebtBugFixVersionChart from '../components/TechDebtBugFixVersionChart.vue'
 import TechDebtFlowChart from '../components/TechDebtFlowChart.vue'
 import TechDebtIssueCard from '../components/TechDebtIssueCard.vue'
 import TechDebtScoringRubricModal from '../components/TechDebtScoringRubricModal.vue'

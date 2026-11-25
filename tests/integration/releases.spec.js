@@ -1489,6 +1489,24 @@ test.describe('Releases FPDoR Readiness @releases', () => {
             { week: '2026-W43', startDate: '2026-10-19', created: 2, resolved: 2 },
             { week: '2026-W44', startDate: '2026-10-26', created: 0, resolved: 0 }
           ],
+          bugFixVersions: {
+            sourceField: 'fixVersions',
+            assignment: 'one-bucket-per-issue',
+            total: 3,
+            versions: [
+              { version: '3.7 GA', count: 2 },
+              { version: 'No Fix Version', count: 1 }
+            ]
+          },
+          bugAffectsVersions: {
+            sourceField: 'versions',
+            assignment: 'one-bucket-per-issue',
+            total: 3,
+            versions: [
+              { version: '3.7 EA', count: 2 },
+              { version: 'No Affects Version', count: 1 }
+            ]
+          },
           stale: false,
           warning: null
         }
@@ -1566,6 +1584,15 @@ test.describe('Releases FPDoR Readiness @releases', () => {
     await expect(page.getByTestId('tech-debt-historic-trends-content')).toContainText('3 created · 2 resolved');
     await expect(page.getByRole('table', { name: 'Weekly Bug created and resolved counts' })).toContainText('2026-W42');
     await expect(page.getByRole('table', { name: 'Weekly Bug created and resolved counts' })).toContainText('2026-W44');
+    await expect(page.getByTestId('tech-debt-bug-fix-version-chart')).toContainText('Bugs by Fix Version');
+    await expect(page.getByTestId('tech-debt-bug-fix-version-chart')).toContainText('3.7 GA');
+    await expect(page.getByTestId('tech-debt-bug-fix-version-chart')).toContainText('No Fix Version');
+    await expect(page.getByTestId('tech-debt-bug-fix-version-chart')).toContainText('3 Bugs · Issues by Fix Version');
+    await page.getByTestId('tech-debt-affects-version-toggle').click();
+    await expect(page.getByTestId('tech-debt-bug-fix-version-chart')).toContainText('Bugs by Affects Version');
+    await expect(page.getByTestId('tech-debt-bug-fix-version-chart')).toContainText('3.7 EA');
+    await expect(page.getByTestId('tech-debt-bug-fix-version-chart')).toContainText('No Affects Version');
+    await expect(page.getByTestId('tech-debt-bug-fix-version-chart')).toContainText('3 Bugs · Issues by Affects Version');
     expect(weeklyTrendRequests).toHaveLength(1);
     expect(issueRequests).toHaveLength(0);
 

@@ -148,6 +148,8 @@ describe('Tech Debt Prioritization routes', function () {
       rawIssue('RHAI-1', {
         fields: {
           components: [],
+          fixVersions: [{ name: '3.7 GA' }],
+          versions: [{ name: '3.7 EA' }],
           created: '2026-10-05T00:00:00.000Z',
           resolutiondate: '2026-10-20T00:00:00.000Z'
         }
@@ -163,6 +165,18 @@ describe('Tech Debt Prioritization routes', function () {
     expect(res.body.issueType).toBe('Bug')
     expect(res.body.includeNoComponent).toBe(true)
     expect(res.body.projects).toEqual(['RHAI', 'RHAIENG', 'RHOAIENG', 'INFERENG', 'AIPCC'])
+    expect(res.body.bugFixVersions).toEqual({
+      sourceField: 'fixVersions',
+      assignment: 'one-bucket-per-issue',
+      total: 1,
+      versions: [{ version: '3.7 GA', count: 1 }]
+    })
+    expect(res.body.bugAffectsVersions).toEqual({
+      sourceField: 'versions',
+      assignment: 'one-bucket-per-issue',
+      total: 1,
+      versions: [{ version: '3.7 EA', count: 1 }]
+    })
   })
 
   it('returns a specific unavailable response for legacy snapshots without weekly data', async function () {

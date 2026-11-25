@@ -23,6 +23,15 @@ vi.mock('../../../client/execute/components/TechDebtWeeklyBugChart.vue', functio
   }
 })
 
+vi.mock('../../../client/execute/components/TechDebtBugFixVersionChart.vue', function () {
+  return {
+    default: {
+      props: ['fixVersionDistribution', 'affectsVersionDistribution'],
+      template: '<div data-testid="tech-debt-bug-fix-version-chart-stub">Fix: {{ fixVersionDistribution.total }} Bugs · {{ fixVersionDistribution.versions.map(row => `${row.version}: ${row.count}`).join(" · ") }} | Affects: {{ affectsVersionDistribution.total }} Bugs · {{ affectsVersionDistribution.versions.map(row => `${row.version}: ${row.count}`).join(" · ") }}</div>'
+    }
+  }
+})
+
 import { apiRequest } from '@shared/client/services/api'
 import TechDebtPrioritizationView from '../../../client/execute/views/TechDebtPrioritizationView.vue'
 import {
@@ -176,6 +185,24 @@ function weeklyBugTrendResponse(overrides = {}) {
       { week: '2026-W42', startDate: '2026-10-12', created: 1, resolved: 0 },
       { week: '2026-W43', startDate: '2026-10-19', created: 2, resolved: 2 }
     ],
+    bugFixVersions: {
+      sourceField: 'fixVersions',
+      assignment: 'one-bucket-per-issue',
+      total: 3,
+      versions: [
+        { version: '3.7 GA', count: 2 },
+        { version: 'No Fix Version', count: 1 }
+      ]
+    },
+    bugAffectsVersions: {
+      sourceField: 'versions',
+      assignment: 'one-bucket-per-issue',
+      total: 3,
+      versions: [
+        { version: '3.7 EA', count: 2 },
+        { version: 'No Affects Version', count: 1 }
+      ]
+    },
     stale: false,
     warning: null,
     ...overrides
@@ -235,6 +262,9 @@ describe('TechDebtPrioritizationView', function () {
     expect(apiRequest).toHaveBeenCalledWith('/modules/releases/tech-debt/trends/weekly-bugs')
     expect(wrapper.get('[data-testid="tech-debt-historic-trends-content"]').text()).toContain('3 created · 2 resolved')
     expect(wrapper.get('[data-testid="tech-debt-weekly-bug-chart-stub"]').text()).toContain('2026-W42: 1 created, 0 resolved')
+    expect(wrapper.get('[data-testid="tech-debt-bug-fix-version-chart-stub"]').text()).toContain('3.7 GA: 2')
+    expect(wrapper.get('[data-testid="tech-debt-bug-fix-version-chart-stub"]').text()).toContain('No Fix Version: 1')
+    expect(wrapper.get('[data-testid="tech-debt-bug-fix-version-chart-stub"]').text()).toContain('3.7 EA: 2')
 
     await selectComponent(wrapper, 'AI Gateway')
     await wrapper.get('[data-testid="tech-debt-issue-type-filter"]').setValue('Vulnerability')
@@ -265,6 +295,27 @@ describe('TechDebtPrioritizationView', function () {
     await flushPromises()
 
     expect(wrapper.get('[data-testid="tech-debt-weekly-trend-unavailable"]').text()).toContain('next nightly Tech Debt snapshot refresh')
+  })
+
+  it('keeps weekly history usable when a legacy snapshot lacks version distributions', async function () {
+    apiRequest.mockImplementation(function (path) {
+      if (path === '/modules/releases/tech-debt/components') return Promise.resolve(componentsResponse)
+      if (path === '/modules/releases/tech-debt/trends/weekly-bugs') {
+        return Promise.resolve(weeklyBugTrendResponse({
+          bugFixVersions: null,
+          bugAffectsVersions: null
+        }))
+      }
+      return Promise.resolve(cockpitResponse())
+    })
+    const wrapper = mount(TechDebtPrioritizationView)
+    await flushPromises()
+
+    await wrapper.get('[data-testid="tech-debt-historic-trends-toggle"]').trigger('click')
+    await flushPromises()
+
+    expect(wrapper.get('[data-testid="tech-debt-weekly-bug-chart-stub"]').exists()).toBe(true)
+    expect(wrapper.get('[data-testid="tech-debt-fix-version-unavailable"]').text()).toContain('next nightly Tech Debt snapshot refresh')
   })
 
   it('shows stale metadata and a no-activity state for empty weekly Bug history', async function () {

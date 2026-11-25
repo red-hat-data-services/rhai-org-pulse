@@ -52,6 +52,8 @@ describe('Tech Debt trend collector', function () {
           fields: {
             issuetype: { name: 'Bug' },
             components: [{ name: 'AI Gateway' }],
+            fixVersions: [{ name: '3.7 GA' }],
+            versions: [{ name: '3.7 EA' }],
             created: '2026-09-01T00:00:00.000Z',
             resolutiondate: null,
             labels: [],
@@ -67,6 +69,20 @@ describe('Tech Debt trend collector', function () {
     expect(snapshot.events[0].category).toBe('customer-linked')
     expect(snapshot.weeklyBugs.totals).toEqual({ created: 1, resolved: 0 })
     expect(snapshot.weeklyBugs.weeks.at(-1).week).toBe('2026-W44')
+    expect(snapshot.bugFixVersions).toEqual({
+      sourceField: 'fixVersions',
+      assignment: 'one-bucket-per-issue',
+      total: 1,
+      versions: [{ version: '3.7 GA', count: 1 }]
+    })
+    expect(snapshot.bugAffectsVersions).toEqual({
+      sourceField: 'versions',
+      assignment: 'one-bucket-per-issue',
+      total: 1,
+      versions: [{ version: '3.7 EA', count: 1 }]
+    })
+    expect(new URL(fetchImpl.mock.calls[0][0]).searchParams.get('fields')).toContain('fixVersions')
+    expect(new URL(fetchImpl.mock.calls[0][0]).searchParams.get('fields')).toContain('versions')
     expect(fetchImpl).toHaveBeenCalledTimes(2)
   })
 

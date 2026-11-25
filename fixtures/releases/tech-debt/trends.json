@@ -94,5 +94,25 @@
       { "week": "2026-W43", "startDate": "2026-10-19", "created": 1, "resolved": 0 },
       { "week": "2026-W44", "startDate": "2026-10-26", "created": 0, "resolved": 0 }
     ]
+  },
+  "bugFixVersions": {
+    "sourceField": "fixVersions",
+    "assignment": "one-bucket-per-issue",
+    "total": 4,
+    "versions": [
+      { "version": "3.5 GA RHOAI RELEASE", "count": 2 },
+      { "version": "Multiple Fix Versions", "count": 1 },
+      { "version": "No Fix Version", "count": 1 }
+    ]
+  },
+  "bugAffectsVersions": {
+    "sourceField": "versions",
+    "assignment": "one-bucket-per-issue",
+    "total": 4,
+    "versions": [
+      { "version": "3.5 GA RHOAI RELEASE", "count": 2 },
+      { "version": "Multiple Affects Versions", "count": 1 },
+      { "version": "No Affects Version", "count": 1 }
+    ]
   }
 }

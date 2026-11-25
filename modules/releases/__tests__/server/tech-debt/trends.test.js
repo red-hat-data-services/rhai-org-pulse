@@ -15,6 +15,8 @@ function rawIssue(key, overrides = {}) {
     fields: {
       issuetype: { name: 'Bug' },
       components: [{ name: 'AI Gateway' }],
+      fixVersions: [],
+      versions: [],
       created: '2026-07-10T12:00:00.000Z',
       resolutiondate: null,
       labels: [],
@@ -46,19 +48,27 @@ describe('Tech Debt trend snapshot', function () {
     const snapshot = buildTrendSnapshot([
       rawIssue('RHAI-MULTI', {
         components: [{ name: 'AI Gateway' }, { name: 'Model Serving' }],
+        fixVersions: [{ name: '3.5 GA' }],
+        versions: [{ name: '3.5 GA' }],
         created: '2026-10-05T12:00:00.000Z',
         resolutiondate: '2026-10-19T12:00:00.000Z'
       }),
       rawIssue('RHAI-MULTI', { created: '2026-10-06T12:00:00.000Z' }),
       rawIssue('RHAI-EMPTY', {
         components: [],
+        fixVersions: [],
+        versions: [],
         created: '2026-10-06T12:00:00.000Z'
       }),
       rawIssue('RHAI-BOTH', {
+        fixVersions: [{ name: '3.6 GA' }, { name: '3.7 GA' }],
+        versions: [{ name: '3.6 GA' }, { name: '3.7 GA' }],
         created: '2026-10-12T12:00:00.000Z',
         resolutiondate: '2026-10-15T12:00:00.000Z'
       }),
       rawIssue('RHAI-REOPENED', {
+        fixVersions: [{ name: '3.5 GA' }],
+        versions: [{ name: '3.5 GA' }],
         created: '2026-10-20T12:00:00.000Z',
         resolutiondate: null
       }),
@@ -81,12 +91,34 @@ describe('Tech Debt trend snapshot', function () {
     expect(snapshot.weeklyBugs.weeks.find(function (week) { return week.week === '2026-W42' })).toEqual(
       expect.objectContaining({ created: 1, resolved: 1 })
     )
+    expect(snapshot.bugFixVersions).toEqual({
+      sourceField: 'fixVersions',
+      assignment: 'one-bucket-per-issue',
+      total: 4,
+      versions: [
+        { version: '3.5 GA', count: 2 },
+        { version: 'Multiple Fix Versions', count: 1 },
+        { version: 'No Fix Version', count: 1 }
+      ]
+    })
+    expect(snapshot.bugAffectsVersions).toEqual({
+      sourceField: 'versions',
+      assignment: 'one-bucket-per-issue',
+      total: 4,
+      versions: [
+        { version: '3.5 GA', count: 2 },
+        { version: 'Multiple Affects Versions', count: 1 },
+        { version: 'No Affects Version', count: 1 }
+      ]
+    })
 
     const response = buildWeeklyBugTrendResponse(snapshot, new Date('2026-10-29T07:00:00.000Z'))
     expect(response.issueType).toBe('Bug')
     expect(response.componentScope).toBe('all')
     expect(response.includeNoComponent).toBe(true)
     expect(response.totals).toEqual({ created: 4, resolved: 2 })
+    expect(response.bugFixVersions).toEqual(snapshot.bugFixVersions)
+    expect(response.bugAffectsVersions).toEqual(snapshot.bugAffectsVersions)
   })
 
   it('deduplicates Jira pages and classifies Bug and Vulnerability events', function () {
@@ -234,6 +266,36 @@ describe('Tech Debt trend snapshot', function () {
     expect(normalizeTrendSnapshot(snapshot).error).toContain('weeklyBugs.totals')
 
     delete snapshot.weeklyBugs
+    expect(normalizeTrendSnapshot(snapshot).error).toBeUndefined()
+  })
+
+  it('rejects malformed Fix Version totals without invalidating legacy snapshots', function () {
+    const snapshot = buildTrendSnapshot([
+      rawIssue('RHAI-1', {
+        created: '2026-10-01T00:00:00.000Z',
+        fixVersions: [{ name: '3.5 GA' }]
+      })
+    ], new Set(), new Date('2026-10-29T06:00:00.000Z'))
+    snapshot.bugFixVersions.total += 1
+
+    expect(normalizeTrendSnapshot(snapshot).error).toContain('bugFixVersions.total')
+
+    delete snapshot.bugFixVersions
+    expect(normalizeTrendSnapshot(snapshot).error).toBeUndefined()
+  })
+
+  it('rejects malformed Affects Version totals without invalidating legacy snapshots', function () {
+    const snapshot = buildTrendSnapshot([
+      rawIssue('RHAI-1', {
+        created: '2026-10-01T00:00:00.000Z',
+        versions: [{ name: '3.5 GA' }]
+      })
+    ], new Set(), new Date('2026-10-29T06:00:00.000Z'))
+    snapshot.bugAffectsVersions.total += 1
+
+    expect(normalizeTrendSnapshot(snapshot).error).toContain('bugAffectsVersions.total')
+
+    delete snapshot.bugAffectsVersions
     expect(normalizeTrendSnapshot(snapshot).error).toBeUndefined()
   })
 
