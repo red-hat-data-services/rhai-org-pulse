@@ -123,7 +123,7 @@ const chartOptions = computed(function () {
         <Pie :data="chartData" :options="chartOptions" />
       </div>
       <div class="min-w-0">
-        <ul class="space-y-2" aria-label="Bug counts by Fix Version">
+        <ul class="space-y-2" :aria-label="`Bug counts by ${activeConfig.singular}`">
           <li v-for="(row, index) in slices" :key="row.version" class="flex items-start gap-2 text-sm text-gray-600 dark:text-gray-300">
             <span class="mt-1 h-3 w-3 shrink-0 rounded-full" :style="{ backgroundColor: COLORS[index % COLORS.length] }" aria-hidden="true" />
             <span class="min-w-0 break-words">
