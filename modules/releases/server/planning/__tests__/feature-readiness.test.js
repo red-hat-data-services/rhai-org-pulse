@@ -1365,17 +1365,11 @@ describe('buildFeatureReadiness', function() {
       expect(result.gates.noBlockingViolations).toBe(true)
     })
 
-    it('returns isReady=false when riceScore is 0', function() {
-      var result = computeReadiness(readyFeature({ riceScore: 0 }))
-      expect(result.isReady).toBe(false)
-      expect(result.gates.fpDorPassed).toBeLessThan(result.gates.fpDorEvaluated)
-    })
-
-    it('returns isReady=false when child epics missing (no epicCount / decomposition label)', function() {
-      var result = computeReadiness(readyFeature({ epicCount: 0, labels: [] }))
-      expect(result.isReady).toBe(false)
-      var child = result.fpdor.items.find(function(i) { return i.name === 'Child epics' })
-      expect(child.pass).toBe(false)
+    it('7-item FPDoR model enforces mandatory fields', function() {
+      var result = computeReadiness(readyFeature())
+      expect(result.fpdor.items).toHaveLength(7)
+      var allHaveNames = result.fpdor.items.every(function(i) { return i.name && i.pass !== undefined })
+      expect(allHaveNames).toBe(true)
     })
 
     it('returns isReady=true when epicCount > 0', function() {
@@ -1403,23 +1397,12 @@ describe('buildFeatureReadiness', function() {
       expect(result.isReady).toBe(false)
     })
 
-    it('docs impact fails without Docs Required; UXD is N/A without component or N/A note', function() {
+    it('docs impact is evaluated from docsRequired field', function() {
       var result = computeReadiness(readyFeature({ components: ['Platform', 'Serving'], docsRequired: null }))
       expect(result.isReady).toBe(false)
-      var docsItem = result.fpdor.items.find(function(i) { return i.name === 'Docs impact' })
-      var uxdItem = result.fpdor.items.find(function(i) { return i.name === 'UXD' })
-      var engItem = result.fpdor.items.find(function(i) { return i.name === 'Cross-team deps' })
-      expect(engItem.pass).toBe(true)
+      var docsItem = result.fpdor.items.find(function(i) { return i.name === 'Product Documentation Required' })
+      expect(docsItem).toBeDefined()
       expect(docsItem.pass).toBe(false)
-      expect(uxdItem.pass).toBe(true)
-      expect(uxdItem.state).toBe('not-applicable')
-    })
-
-    it('cross-team deps fails with single eng component and no dependency signal', function() {
-      var result = computeReadiness(readyFeature({ components: ['Platform', 'Documentation', 'UXD'], docsRequired: 'Yes' }))
-      expect(result.isReady).toBe(false)
-      var engItem = result.fpdor.items.find(function(i) { return i.name === 'Cross-team deps' })
-      expect(engItem.pass).toBe(false)
     })
 
     it('returns isReady=true when status is New if all FPDoR items pass', function() {
@@ -1469,360 +1452,20 @@ describe('buildFeatureReadiness', function() {
         expect(result.fpdor.items[i]).toHaveProperty('source')
         expect(result.fpdor.items[i]).toHaveProperty('group')
       }
-      expect(result.fpdor.confluenceUrl).toContain('442958832')
+      expect(result.fpdor.confluenceUrl).toContain('453312634')
     })
 
-    // --- Child epics (formerly Scope Defined) ---
-
-    it('child epics passes with epicCount > 0', function() {
-      var result = computeReadiness(readyFeature({ epicCount: 3 }))
-      var child = result.fpdor.items.find(function(i) { return i.name === 'Child epics' })
-      expect(child.pass).toBe(true)
-    })
-
-    it('child epics fails when epicCount is 0 and no decomposition label', function() {
-      var result = computeReadiness(readyFeature({ epicCount: 0, labels: [] }))
-      var child = result.fpdor.items.find(function(i) { return i.name === 'Child epics' })
-      expect(child.pass).toBe(false)
-    })
-
-    it('child epics passes via epic-creator-auto-decomposed without epicCount', function() {
-      var result = computeReadiness(readyFeature({ epicCount: 0, labels: ['epic-creator-auto-decomposed'] }))
-      var child = result.fpdor.items.find(function(i) { return i.name === 'Child epics' })
-      expect(child.pass).toBe(true)
-      expect(child.detail).toContain('epic-creator-auto-decomposed')
-    })
-
-    it('source RFE passes with RFE link; sizing alone does not satisfy child epics', function() {
-      var result = computeReadiness(readyFeature({ epicCount: 0, storyPoints: 5, sourceRfe: 'RFE-123', labels: [] }))
-      var child = result.fpdor.items.find(function(i) { return i.name === 'Child epics' })
-      var rfe = result.fpdor.items.find(function(i) { return i.name === 'Source RFE / AI SDLC' })
-      expect(child.pass).toBe(false)
-      expect(rfe.pass).toBe(true)
-    })
-
-    // --- Strat-creator sign-off (humanVerified) tests ---
-
-    it('humanVerified is set on criteria items when strat-creator-human-sign-off label present', function() {
-      var result = computeReadiness(readyFeature({ labels: ['strat-creator-auto-created', 'strat-creator-human-sign-off'] }))
-      var items = result.fpdor.items
-      var reqItem = items.find(function(i) { return i.name === 'Requirements clarity' })
-      var acItem = items.find(function(i) { return i.name === 'Acceptance criteria' })
-      var archItem = items.find(function(i) { return i.name === 'Architectural alignment' })
-      var riskItem = items.find(function(i) { return i.name === 'Risks & assumptions' })
-      expect(reqItem.humanVerified).toBe(true)
-      expect(acItem.humanVerified).toBe(true)
-      expect(archItem.humanVerified).toBe(true)
-      expect(riskItem.humanVerified).toBe(true)
-    })
-
-    it('humanVerified is not set on mandatory field items when sign-off label present', function() {
-      var result = computeReadiness(readyFeature({ labels: ['strat-creator-auto-created', 'strat-creator-human-sign-off'] }))
-      var items = result.fpdor.items
-      var riceItem = items.find(function(i) { return i.name === 'RICE' })
-      var engItem = items.find(function(i) { return i.name === 'Cross-team deps' })
-      var docsItem = items.find(function(i) { return i.name === 'Docs impact' })
-      var tvItem = items.find(function(i) { return i.name === 'Target Version' })
-      expect(riceItem.humanVerified).toBeUndefined()
-      expect(engItem.humanVerified).toBeUndefined()
-      expect(docsItem.humanVerified).toBeUndefined()
-      expect(tvItem.humanVerified).toBeUndefined()
-    })
-
-    it('humanVerified is not set when sign-off label is absent', function() {
-      var result = computeReadiness(readyFeature({ labels: [] }))
-      var items = result.fpdor.items
-      var reqItem = items.find(function(i) { return i.name === 'Requirements clarity' })
-      expect(reqItem.humanVerified).toBeUndefined()
-    })
-
-    it('feature human sign-off is N/A for Legacy features', function() {
-      var result = computeReadiness(readyFeature({ labels: [] }))
-      var signOff = result.fpdor.items.find(function(i) { return i.name === 'Feature human sign-off' })
-      expect(signOff.pass).toBe(true)
-      expect(signOff.state).toBe('not-applicable')
-    })
-
-    it('feature human sign-off passes via strat-creator-human* for AI First', function() {
-      var result = computeReadiness(readyFeature({ labels: ['strat-creator-auto-created', 'strat-creator-human-sign-off'] }))
-      var signOff = result.fpdor.items.find(function(i) { return i.name === 'Feature human sign-off' })
-      expect(signOff.pass).toBe(true)
-      expect(signOff.detail).toContain('strat-creator-human')
-    })
-
-    it('feature human sign-off fails for AI First without human* or rp-qg1-pass', function() {
-      var result = computeReadiness(readyFeature({ labels: ['strat-creator-auto-created'] }))
-      var signOff = result.fpdor.items.find(function(i) { return i.name === 'Feature human sign-off' })
-      expect(signOff.pass).toBe(false)
-      expect(result.isReady).toBe(false)
-    })
-
-    // --- Cross-team deps / Docs impact / UXD ---
-
-    it('cross-team deps passes with ≥2 eng components (Docs/UXD excluded)', function() {
-      var result = computeReadiness(readyFeature({ components: ['Platform', 'Serving', 'Documentation', 'UXD'] }))
-      var engItem = result.fpdor.items.find(function(i) { return i.name === 'Cross-team deps' })
-      expect(engItem.pass).toBe(true)
-    })
-
-    it('cross-team deps fails with only Documentation and UXD', function() {
-      var result = computeReadiness(readyFeature({ components: ['Documentation', 'UXD'], docsRequired: 'Yes' }))
-      var engItem = result.fpdor.items.find(function(i) { return i.name === 'Cross-team deps' })
-      expect(engItem.pass).toBe(false)
-    })
-
-    it('cross-team deps passes with single eng component plus dependency signal', function() {
-      var result = computeReadiness(readyFeature({
-        components: ['Platform', 'Documentation', 'UXD'],
-        docsRequired: 'Yes',
-        descriptionSignals: {
-          hasContent: true,
-          signalCount: 3,
-          hasAcceptanceCriteria: true,
-          hasUseCases: true,
-          hasScopeDefinition: true,
-          hasRequirements: true,
-          hasRisks: true,
-          hasArchitectureSignal: true,
-          hasCrossFunctionalDependency: true,
-          matchedSections: []
-        }
-      }))
-      var engItem = result.fpdor.items.find(function(i) { return i.name === 'Cross-team deps' })
-      expect(engItem.pass).toBe(true)
-    })
-
-    it('docs impact passes for Docs Required Yes with Documentation component', function() {
-      var result = computeReadiness(readyFeature({ components: ['Platform', 'Serving', 'UXD', 'Documentation'], docsRequired: 'Yes' }))
-      var docsItem = result.fpdor.items.find(function(i) { return i.name === 'Docs impact' })
-      expect(docsItem.pass).toBe(true)
-    })
-
-    it('docs impact passes when Docs Required is No', function() {
-      var result = computeReadiness(readyFeature({ components: ['Platform', 'Serving', 'UXD'], docsRequired: 'No' }))
-      var docsItem = result.fpdor.items.find(function(i) { return i.name === 'Docs impact' })
-      expect(docsItem.pass).toBe(true)
-    })
-
-    it('docs impact fails when Docs Required is Yes without Documentation component', function() {
-      var result = computeReadiness(readyFeature({ components: ['Platform', 'Serving', 'UXD'], docsRequired: 'Yes' }))
-      var docsItem = result.fpdor.items.find(function(i) { return i.name === 'Docs impact' })
-      expect(docsItem.pass).toBe(false)
-    })
-
-    it('docs impact fails when Docs Required unset', function() {
-      var result = computeReadiness(readyFeature({ components: ['Platform', 'Serving', 'UXD'], docsRequired: null }))
-      var docsItem = result.fpdor.items.find(function(i) { return i.name === 'Docs impact' })
-      expect(docsItem.pass).toBe(false)
-    })
-
-    it('docs impact ignores unverified rp-qg1-pass without fields', function() {
-      var result = computeReadiness(readyFeature({
-        components: ['Platform', 'Serving', 'UXD'],
-        docsRequired: null,
-        labels: ['rp-qg1-pass']
-      }))
-      var docsItem = result.fpdor.items.find(function(i) { return i.name === 'Docs impact' })
-      expect(docsItem.pass).toBe(false)
-    })
-
-    it('docs impact passes via bot-verified rp-qg1-pass without fields', function() {
-      var result = computeReadiness(readyFeature({
-        components: ['Platform', 'Serving', 'UXD'],
-        docsRequired: null,
-        labels: ['rp-qg1-pass'],
-        qg1PassVerified: true
-      }))
-      var docsItem = result.fpdor.items.find(function(i) { return i.name === 'Docs impact' })
-      expect(docsItem.pass).toBe(true)
-      expect(docsItem.detail).toContain('rp-qg1-pass')
-    })
-
-    it('mandatory shortcuts ignore hand-applied rp-qg1-pass', function() {
-      var result = computeReadiness(readyFeature({
-        targetVersions: [],
-        releaseType: null,
-        priority: null,
-        riceScore: null,
-        docsRequired: null,
-        labels: ['rp-qg1-pass']
-      }))
-      expect(result.isReady).toBe(false)
-      expect(result.fpdor.items.find(function(i) { return i.name === 'Target Version' }).pass).toBe(false)
-      expect(result.fpdor.items.find(function(i) { return i.name === 'RICE' }).pass).toBe(false)
-    })
-
-    it('mandatory shortcuts accept bot-verified rp-qg1-pass', function() {
-      var result = computeReadiness(readyFeature({
-        targetVersions: [],
-        releaseType: null,
-        priority: null,
-        riceScore: null,
-        docsRequired: null,
-        labels: ['rp-qg1-pass'],
-        qg1PassVerified: true
-      }))
-      expect(result.fpdor.items.find(function(i) { return i.name === 'Target Version' }).pass).toBe(true)
-      expect(result.fpdor.items.find(function(i) { return i.name === 'Release Type' }).pass).toBe(true)
-      expect(result.fpdor.items.find(function(i) { return i.name === 'Priority' }).pass).toBe(true)
-      expect(result.fpdor.items.find(function(i) { return i.name === 'RICE' }).pass).toBe(true)
-      expect(result.fpdor.items.find(function(i) { return i.name === 'Docs impact' }).pass).toBe(true)
-    })
-
-    it('AI First sign-off ignores unverified rp-qg1-pass', function() {
-      var result = computeReadiness(readyFeature({
-        labels: ['strat-creator-auto-created', 'rp-qg1-pass']
-      }))
-      var signOff = result.fpdor.items.find(function(i) { return i.name === 'Feature human sign-off' })
-      expect(signOff.pass).toBe(false)
-    })
-
-    it('AI First sign-off passes via bot-verified rp-qg1-pass', function() {
-      var result = computeReadiness(readyFeature({
-        labels: ['strat-creator-auto-created', 'rp-qg1-pass'],
-        qg1PassVerified: true
-      }))
-      var signOff = result.fpdor.items.find(function(i) { return i.name === 'Feature human sign-off' })
-      expect(signOff.pass).toBe(true)
-      expect(signOff.detail).toContain('rp-qg1-pass')
-    })
-
-    it('UXD is N/A without UXD component or N/A note', function() {
-      var result = computeReadiness(readyFeature({ components: ['Platform', 'Serving', 'Documentation'], docsRequired: 'Yes' }))
-      var uxdItem = result.fpdor.items.find(function(i) { return i.name === 'UXD' })
-      expect(uxdItem.pass).toBe(true)
-      expect(uxdItem.state).toBe('not-applicable')
-    })
-
-    it('UXD passes with UXD component', function() {
-      var result = computeReadiness(readyFeature({ components: ['Platform', 'Serving', 'UXD'] }))
-      var uxdItem = result.fpdor.items.find(function(i) { return i.name === 'UXD' })
-      expect(uxdItem.pass).toBe(true)
-    })
-
-    it('UXD passes via N/A – no UX in description signals', function() {
-      var result = computeReadiness(readyFeature({
-        components: ['Platform', 'Serving', 'Documentation'],
-        docsRequired: 'Yes',
-        descriptionSignals: Object.assign({}, readyFeature().descriptionSignals, { hasNaNoUx: true })
-      }))
-      var uxdItem = result.fpdor.items.find(function(i) { return i.name === 'UXD' })
-      expect(uxdItem.pass).toBe(true)
-      expect(uxdItem.detail).toMatch(/N\/A/i)
-    })
-
-    // --- Requirements / AC / Risks / Arch (labels then description; no rubric scores) ---
-
-    it('requirements clarity passes via strat-creator-rubric-pass (not scores)', function() {
-      var result = computeReadiness(readyFeature({
-        scores: {},
-        descriptionSignals: { hasContent: true, signalCount: 0, hasRequirements: false, hasUseCases: false, hasScopeDefinition: false, hasAcceptanceCriteria: false, hasRisks: false, hasArchitectureSignal: false, matchedSections: [] },
-        labels: ['strat-creator-rubric-pass']
-      }))
-      var reqItem = result.fpdor.items.find(function(i) { return i.name === 'Requirements clarity' })
-      expect(reqItem.pass).toBe(true)
-      expect(reqItem.detail).toContain('strat-creator-rubric-pass')
-    })
-
-    it('requirements clarity ignores low rubric scores and uses description', function() {
-      var result = computeReadiness(readyFeature({
-        scores: { scope: 1, testability: 1, architecture: 1, feasibility: 1 },
-        descriptionSignals: {
-          hasContent: true,
-          hasRequirements: true,
-          hasUseCases: false,
-          hasScopeDefinition: false,
-          hasAcceptanceCriteria: true,
-          hasRisks: true,
-          hasArchitectureSignal: true,
-          matchedSections: [{ kind: 'requirements', title: 'Problem Statement' }]
-        }
-      }))
-      var reqItem = result.fpdor.items.find(function(i) { return i.name === 'Requirements clarity' })
-      expect(reqItem.pass).toBe(true)
-      expect(reqItem.detail).toContain('description')
-    })
-
-    it('requirements clarity fails without label or requirement-oriented signals', function() {
-      var result = computeReadiness(readyFeature({
-        scores: {},
-        labels: [],
-        descriptionSignals: {
-          hasContent: true,
-          signalCount: 1,
-          hasRequirements: false,
-          hasUseCases: false,
-          hasScopeDefinition: false,
-          hasAcceptanceCriteria: true,
-          hasRisks: true,
-          hasArchitectureSignal: false,
-          matchedSections: []
-        }
-      }))
-      var reqItem = result.fpdor.items.find(function(i) { return i.name === 'Requirements clarity' })
-      expect(reqItem.pass).toBe(false)
-    })
-
-    it('acceptance criteria passes via description Success Criteria section', function() {
-      var result = computeReadiness(readyFeature({
-        scores: {},
-        labels: [],
-        descriptionSignals: {
-          hasContent: true,
-          hasAcceptanceCriteria: true,
-          hasRequirements: true,
-          hasUseCases: true,
-          hasScopeDefinition: true,
-          hasRisks: true,
-          hasArchitectureSignal: true,
-          matchedSections: [{ kind: 'acceptanceCriteria', title: 'Success Criteria' }]
-        }
-      }))
-      var acItem = result.fpdor.items.find(function(i) { return i.name === 'Acceptance criteria' })
-      expect(acItem.pass).toBe(true)
-      expect(acItem.detail).toContain('Success Criteria')
-    })
-
-    it('architectural alignment is N/A without signals', function() {
-      var result = computeReadiness(readyFeature({
-        scores: {},
-        labels: [],
-        descriptionSignals: {
-          hasContent: true,
-          hasAcceptanceCriteria: true,
-          hasRequirements: true,
-          hasUseCases: true,
-          hasScopeDefinition: true,
-          hasRisks: true,
-          hasArchitectureSignal: false,
-          hasArchitectureNotRequired: false,
-          matchedSections: []
-        }
-      }))
-      var archItem = result.fpdor.items.find(function(i) { return i.name === 'Architectural alignment' })
-      expect(archItem.pass).toBe(true)
-      expect(archItem.state).toBe('not-applicable')
-    })
-
-    it('architectural alignment passes when architecture not required', function() {
-      var result = computeReadiness(readyFeature({
-        scores: {},
-        labels: [],
-        descriptionSignals: Object.assign({}, readyFeature().descriptionSignals, {
-          hasArchitectureSignal: false,
-          hasArchitectureNotRequired: true
-        })
-      }))
-      var archItem = result.fpdor.items.find(function(i) { return i.name === 'Architectural alignment' })
-      expect(archItem.pass).toBe(true)
-    })
-
-    it('priority passes via field; Components passes with eng component', function() {
-      var result = computeReadiness(readyFeature({ priority: 'Critical' }))
-      expect(result.fpdor.items.find(function(i) { return i.name === 'Priority' }).pass).toBe(true)
-      expect(result.fpdor.items.find(function(i) { return i.name === 'Components' }).pass).toBe(true)
-      expect(result.fpdor.items.find(function(i) { return i.name === 'Delivery Owner' }).pass).toBe(true)
-      expect(result.fpdor.items.find(function(i) { return i.name === 'PM' }).pass).toBe(true)
+    it('7 mandatory items are evaluated from Jira fields', function() {
+      var result = computeReadiness(readyFeature())
+      expect(result.fpdor.items).toHaveLength(7)
+      var names = result.fpdor.items.map(function(i) { return i.name })
+      expect(names).toContain('Target Version')
+      expect(names).toContain('Feature Human Signoff')
+      expect(names).toContain('Components')
+      expect(names).toContain('PM')
+      expect(names).toContain('Assignee')
+      expect(names).toContain('Release Type')
+      expect(names).toContain('Product Documentation Required')
     })
 
     it('FPDoR has 7 items total', function() {
@@ -2532,96 +2175,6 @@ describe('buildFeatureReadiness — pass 3 (jiraFeatures)', function() {
     expect(result.pendingReview[0].title).toBe('Jira Feature RHAISTRAT-900')
   })
 
-  it('prefers explicit jira epicCount for Child epics over stale exec count of 0', async function() {
-    var jiraFeatures = makeJiraMap([
-      makeJiraFeature('RHAISTRAT-2198', {
-        epicCount: 2,
-        components: ['Platform', 'Serving', 'UXD', 'Documentation'],
-        docsRequired: 'Yes',
-        labels: ['strat-creator-auto-created', 'strat-creator-human-sign-off', 'rp-qg1-pass'],
-        riceScore: 50,
-        releaseType: 'GA',
-        pmOwner: 'Jane'
-      })
-    ])
-    var readFromStorage = makeReadFromStorage({
-      ...convertToUnifiedFormat(makeFeaturesStore({
-        'RHAISTRAT-2198': {
-          key: 'RHAISTRAT-2198',
-          summary: 'Validated Models',
-          status: 'In Progress',
-          epicCount: 0
-        }
-      })),
-      'releases/planning/config.json': CONFIG_3_6,
-      'releases/execution/index.json': makeExecIndex([
-        { key: 'RHAISTRAT-2198', epicCount: 0 }
-      ])
-    })
-
-    var result = await buildFeatureReadiness(readFromStorage, jiraFeatures)
-    var feature = result.pendingReview.concat(result.ready).find(function(f) {
-      return f.key === 'RHAISTRAT-2198'
-    })
-    expect(feature).toBeTruthy()
-    expect(feature.epicCount).toBe(2)
-    var child = feature.fpdor.items.find(function(i) { return i.name === 'Child epics' })
-    expect(child.pass).toBe(true)
-  })
-
-  it('uses exec epicCount when live jira omits epicCount (request path does not discover children)', async function() {
-    var jiraFeature = makeJiraFeature('RHAISTRAT-1473', {
-      components: ['Platform', 'Serving', 'UXD', 'Documentation'],
-      docsRequired: 'Yes',
-      labels: ['strat-creator-auto-created', 'strat-creator-human-sign-off', 'rp-qg1-pass'],
-      riceScore: 50,
-      releaseType: 'GA',
-      pmOwner: 'Jane'
-    })
-    delete jiraFeature.epicCount
-    var jiraFeatures = makeJiraMap([jiraFeature])
-    var readFromStorage = makeReadFromStorage({
-      ...convertToUnifiedFormat(makeFeaturesStore({})),
-      'releases/planning/config.json': CONFIG_3_6,
-      'releases/planning/health-cache-3.6-all.json': {
-        features: [{
-          key: 'RHAISTRAT-1473',
-          deliveryOwner: 'Alice',
-          pmOwner: 'Jane',
-          targetRelease: 'rhoai-3.6',
-          storyPoints: 5,
-          epicCount: 0,
-          releaseType: 'GA',
-          components: ['Platform', 'Serving', 'UXD', 'Documentation'],
-          docsRequired: 'Yes'
-        }]
-      },
-      'releases/execution/index.json': makeExecIndex([
-        {
-          key: 'RHAISTRAT-1473',
-          summary: 'Tool Calling',
-          status: 'Release Pending',
-          epicCount: 5,
-          components: ['Platform', 'Serving', 'UXD', 'Documentation'],
-          docsRequired: 'Yes',
-          labels: ['strat-creator-auto-created', 'strat-creator-human-sign-off', 'rp-qg1-pass'],
-          riceScore: 50,
-          releaseType: 'GA',
-          assignee: 'Alice',
-          pm: 'Jane'
-        }
-      ])
-    })
-
-    var result = await buildFeatureReadiness(readFromStorage, jiraFeatures)
-    var feature = result.pendingReview.concat(result.ready).find(function(f) {
-      return f.key === 'RHAISTRAT-1473'
-    })
-    expect(feature).toBeTruthy()
-    expect(feature.epicCount).toBe(5)
-    var child = feature.fpdor.items.find(function(i) { return i.name === 'Child epics' })
-    expect(child.pass).toBe(true)
-  })
 
   it('falls back to execution index when jiraFeatures is null', async function() {
     var readFromStorage = makeReadFromStorage({

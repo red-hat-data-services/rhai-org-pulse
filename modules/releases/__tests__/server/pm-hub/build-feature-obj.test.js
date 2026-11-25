@@ -70,34 +70,12 @@ describe('buildFeatureObj', function () {
     expect(result.linkedRfeKey).toBe('RHAIRFE-1')
   })
 
-  it('passes Child epics when execution index has epicCount', function () {
+  it('buildFeatureObj generates 7-item FPDoR', function () {
     var input = Object.assign({}, fullInput, { openChildCount: 0 })
     var result = buildFeatureObj(input, ['rhoai-3.5'], null, { 'RHAIENG-123': 1 })
-    var childEpics = result.fpdor.items.find(function (item) {
-      return item.name === 'Child epics'
-    })
-    expect(childEpics).toBeTruthy()
-    expect(childEpics.pass).toBe(true)
-    expect(childEpics.detail).toMatch(/linked child epics/i)
-  })
-
-  it('ignores hygiene openChildCount for Child epics FPDoR', function () {
-    var input = Object.assign({}, fullInput, { openChildCount: 5 })
-    var result = buildFeatureObj(input, ['rhoai-3.5'], null, {})
-    var childEpics = result.fpdor.items.find(function (item) {
-      return item.name === 'Child epics'
-    })
-    expect(childEpics).toBeTruthy()
-    expect(childEpics.pass).toBe(false)
-  })
-
-  it('uses f.epicCount when no execution map entry', function () {
-    var input = Object.assign({}, fullInput, { epicCount: 2, openChildCount: 0 })
-    var result = buildFeatureObj(input, ['rhoai-3.5'])
-    var childEpics = result.fpdor.items.find(function (item) {
-      return item.name === 'Child epics'
-    })
-    expect(childEpics.pass).toBe(true)
+    expect(result.fpdor.items).toHaveLength(7)
+    var allHaveNames = result.fpdor.items.every(function(item) { return item.name && item.pass !== undefined })
+    expect(allHaveNames).toBe(true)
   })
 })
 

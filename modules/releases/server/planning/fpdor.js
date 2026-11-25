@@ -89,10 +89,6 @@ function hasEpicCreatorDecomposed(feature) {
   return hasLabel(feature, 'epic-creator-auto-decomposed')
 }
 
-function hasStratCreatorAutoCreated(feature) {
-  return hasLabel(feature, 'strat-creator-auto-created')
-}
-
 function normalizeComponentName(name) {
   if (!name || typeof name !== 'string') return ''
   return name.trim()
@@ -281,18 +277,6 @@ function evalDeliveryOwner(feature) {
   return evalItem('Delivery Owner', false, 'No delivery owner (assignee) set', 'mandatory')
 }
 
-function evalPriority(feature) {
-  if (hasPriority(feature)) return passViaField('Priority', 'Passed via Priority field', 'mandatory')
-  if (hasRpQg1Pass(feature)) return passViaLabel('Priority', 'rp-qg1-pass', 'mandatory')
-  return evalItem('Priority', false, 'No priority set', 'mandatory')
-}
-
-function evalRice(feature) {
-  if (hasRiceScore(feature)) return passViaField('RICE', 'Passed via RICE score', 'mandatory')
-  if (hasRpQg1Pass(feature)) return passViaLabel('RICE', 'rp-qg1-pass', 'mandatory')
-  if (feature.riceScore == null) return evalItem('RICE', false, 'No RICE score in Jira', 'mandatory')
-  return evalItem('RICE', false, 'RICE score is 0', 'mandatory')
-}
 
 function evalDocsImpact(feature) {
   if (hasRpQg1Pass(feature)) return passViaLabel('Docs impact', 'rp-qg1-pass', 'mandatory')
@@ -325,15 +309,6 @@ function evalDocsImpact(feature) {
 
 // --- Criteria evaluators ---
 
-function evalSourceRfe(feature) {
-  if (hasStratCreatorAutoCreated(feature)) {
-    return passViaLabel('Source RFE / AI SDLC', 'strat-creator-auto-created', 'criteria')
-  }
-  if (hasRfeLink(feature)) {
-    return passViaField('Source RFE / AI SDLC', 'Passed via RFE link', 'criteria')
-  }
-  return evalItem('Source RFE / AI SDLC', false, 'No RFE link and no strat-creator-auto-created label', 'criteria')
-}
 
 function evalRequirementsClarity(feature) {
   if (hasStratCreatorRubricPass(feature)) {
@@ -466,16 +441,6 @@ function evalFeatureHumanSignOff(feature) {
   )
 }
 
-function evalChildEpics(feature) {
-  if (hasEpicCreatorDecomposed(feature)) {
-    return passViaLabel('Child epics', 'epic-creator-auto-decomposed', 'criteria')
-  }
-  if (hasChildEpics(feature)) {
-    return passViaField('Child epics', 'Passed via linked child epics', 'criteria')
-  }
-  return evalItem('Child epics', false, 'No linked child epics and no epic-creator-auto-decomposed label', 'criteria')
-}
-
 /** @deprecated Prefer Child epics; retained for transitional callers */
 function hasScopeDefined(feature) {
   return hasChildEpics(feature) || hasEpicCreatorDecomposed(feature) || hasRfeLink(feature)
@@ -534,45 +499,33 @@ function extractRubricData(feature) {
 }
 
 function computeFPDoRReadiness(feature) {
-  var items = [
-    evalTargetVersion(feature),
-    evalReleaseType(feature),
-    evalComponents(feature),
-    evalPm(feature),
-    evalDeliveryOwner(feature),
-    evalPriority(feature),
-    evalRice(feature),
-    evalDocsImpact(feature),
-    evalSourceRfe(feature),
-    evalRequirementsClarity(feature),
-    evalAcceptanceCriteria(feature),
-    evalRisksAndAssumptions(feature),
-    evalArchitecturalAlignment(feature),
-    evalUxd(feature),
-    evalCrossTeamDeps(feature),
-    evalFeatureHumanSignOff(feature),
-    evalChildEpics(feature)
-  ]
+  // Map each MANDATORY_ITEM to its evaluator function and the name the evaluator returns
+  var evaluatorMap = {
+    'Target Version': { fn: evalTargetVersion, returnedName: 'Target Version' },
+    'Feature Human Signoff': { fn: evalFeatureHumanSignOff, returnedName: 'Feature human sign-off' },
+    'Components': { fn: evalComponents, returnedName: 'Components' },
+    'PM': { fn: evalPm, returnedName: 'PM' },
+    'Assignee': { fn: evalDeliveryOwner, returnedName: 'Delivery Owner' },
+    'Release Type': { fn: evalReleaseType, returnedName: 'Release Type' },
+    'Product Documentation Required': { fn: evalDocsImpact, returnedName: 'Docs impact' }
+  }
 
-  var signedOff = hasStratCreatorHumanLabel(feature)
-  if (signedOff) {
-    var verifiedNames = {
-      'Requirements clarity': true,
-      'Acceptance criteria': true,
-      'Architectural alignment': true,
-      'Risks & assumptions': true,
-      'Feature human sign-off': true
-    }
-    for (var hi = 0; hi < items.length; hi++) {
-      if (verifiedNames[items[hi].name]) items[hi].humanVerified = true
+  var items = []
+  for (var i = 0; i < MANDATORY_ITEMS.length; i++) {
+    var itemName = MANDATORY_ITEMS[i]
+    var mapping = evaluatorMap[itemName]
+    if (mapping) {
+      var evaluated = mapping.fn(feature)
+      evaluated.name = itemName
+      items.push(evaluated)
     }
   }
 
   var passedCount = 0
   var evaluatedCount = 0
-  for (var i = 0; i < items.length; i++) {
-    if (items[i].pass === true) passedCount++
-    if (items[i].pass !== null) evaluatedCount++
+  for (var j = 0; j < items.length; j++) {
+    if (items[j].pass === true) passedCount++
+    if (items[j].pass !== null) evaluatedCount++
   }
 
   var allApplicablePassed = items.every(function(item) { return item.pass !== false })
