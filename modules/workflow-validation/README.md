@@ -62,6 +62,44 @@ batches of at most 200 runs. Complete results are cached for 10 seconds. Jira
 label decisions retain their existing one-minute cache. Refresh bypasses these
 caches. All database operations are searches; this feature does not write records.
 
+## Suite runs and ad hoc runs
+
+A **suite run** executed a test suite that is defined in the specs repository
+and was started by name in CI (`SUITE=<name>`). Before it starts, CI writes one
+announcement to the `workflow-suite-runs` index: the run's `telemetry_suite`,
+its `invocation_id`, and the workflows the suite is expected to run. Every
+other run is **ad hoc**: a merge request run, a single workflow, or a custom
+selection. Carrying a suite's label is not enough; only the announcement makes
+a run a suite run.
+
+Recent Runs marks each row `Suite run` or `Ad hoc`. Ad hoc runs stay in the
+list with all their results. For a suite run the Workflows column shows
+expected workflows that ran / expected workflows, for example `28 / 30`, and
+its tooltip names the workflows that did not run. **Suite runs only** hides ad
+hoc runs. Opening a suite run shows a **Suite coverage** section that lists the
+expected workflows that did not run.
+
+How the numbers are derived:
+
+- **Expected** is the announcement's distinct `expected_workflows`, as the
+  suite was defined when the run started.
+- **Ran** counts the expected workflows that have at least one execution in
+  the run, matched by `workflow_id`. A workflow executed twice counts once. A
+  workflow that ran but is not expected is not counted.
+- **Ran is unavailable** (`—`) unless every execution of the run recorded a
+  `workflow_id`. Runs made before the Director sent that field show
+  `— / 30`, never a misleading `0 / 30`.
+- **No mark is shown** when the announcement index cannot be read. A suite
+  run whose expected workflows cannot be read keeps its mark and shows its
+  plain workflow count. A missing
+  index means no suite runs exist yet, so every run is ad hoc.
+
+The run-list scan reads only the identity of each announcement, to mark suite
+runs, and shares the scan's 10-second cache. Expected workflows and the
+workflows that ran are read for the suite runs on the returned page only: one
+announcement search and one execution aggregation per page. A count is shown
+only from a complete search result. All operations are searches.
+
 ## Runtime configuration
 
 | Variable | Sensitive | Description |
@@ -100,6 +138,10 @@ The module reads three strict-mapping indices:
 | `workflow-executions` | `execution_id` | Test runs group by `invocation_id`; tests within them use `workflow` |
 | `workflow-task-executions` | `task_execution_id` | Join to an execution using `execution_id` |
 | `workflow-root-causes` | `root_cause_id` | `run_id` joins to execution `invocation_id`, then `workflow`/`impacted_workflows` |
+
+It also reads the optional `workflow-suite-runs` index (identity `suite_run_id`), which joins to a test run by
+`telemetry_suite` and `invocation_id`. The read-only account needs search access to it; without access, or
+without the index, runs are listed as before. See [Suite runs and ad hoc runs](#suite-runs-and-ad-hoc-runs).
 
 Important rules:
 

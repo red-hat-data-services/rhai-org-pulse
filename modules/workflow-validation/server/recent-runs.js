@@ -25,7 +25,7 @@ module.exports = function createRecentRuns({ parseVersion, normalizeVersion, nor
   /** Validate paged filters and bind a cursor to the selected criteria. */
   function parseRecentRuns(query) {
     if (query.pageSize === undefined) {
-      if (['cursor', 'sortDir', 'sortField', 'versions', 'suites', 'runQuery', 'refresh', 'includeBugTickets', 'includeSummary', 'bugsOnly'].some(key => query[key] !== undefined)) invalid('pageSize is required for recent-run pagination');
+      if (['cursor', 'sortDir', 'sortField', 'versions', 'suites', 'runQuery', 'refresh', 'includeBugTickets', 'includeSummary', 'bugsOnly', 'suiteRunsOnly'].some(key => query[key] !== undefined)) invalid('pageSize is required for recent-run pagination');
       return null;
     }
     if (typeof query.pageSize !== 'string' || !/^[1-9]\d*$/.test(query.pageSize) || Number(query.pageSize) > 200) invalid('pageSize must be an integer between 1 and 200');
@@ -45,11 +45,12 @@ module.exports = function createRecentRuns({ parseVersion, normalizeVersion, nor
       runQuery: text(query.runQuery, 'runQuery').toLowerCase(), dateFrom: date(query.dateFrom, 'dateFrom'), dateTo: date(query.dateTo, 'dateTo') };
     // Keep the old scope for cursors with no suite or one suite.
     if (suites.length > 1) filters.suites = suites;
-    for (const key of ['includeSummary', 'bugsOnly']) {
+    for (const key of ['includeSummary', 'bugsOnly', 'suiteRunsOnly']) {
       if (query[key] !== undefined && !['true', 'false'].includes(query[key])) invalid(`${key} must be true or false`);
     }
     // Preserve existing cursor scopes when the new filter is off.
     if (query.bugsOnly === 'true') filters.bugsOnly = true;
+    if (query.suiteRunsOnly === 'true') filters.suiteRunsOnly = true;
     if (filters.dateFrom && filters.dateTo && filters.dateFrom > filters.dateTo) invalid('dateFrom must not be after dateTo');
     const direction = query.sortDir === undefined ? 'desc' : text(query.sortDir, 'sortDir');
     const sortField = query.sortField === undefined ? 'timestamp' : text(query.sortField, 'sortField');
@@ -66,7 +67,7 @@ module.exports = function createRecentRuns({ parseVersion, normalizeVersion, nor
     if (query.cursor) {
       if (typeof query.cursor !== 'string' || query.cursor.length > 8192 || !/^[\w-]+$/.test(query.cursor)) invalid('Invalid recent-run cursor');
       try { cursor = JSON.parse(Buffer.from(query.cursor, 'base64url').toString()); } catch { invalid('Invalid recent-run cursor'); }
-      const legacy = [1, 2].includes(cursor?.v) && sortField === 'timestamp' && selected.length <= 1 && !filters.bugsOnly && !filters.suites;
+      const legacy = [1, 2].includes(cursor?.v) && sortField === 'timestamp' && selected.length <= 1 && !filters.bugsOnly && !filters.suiteRunsOnly && !filters.suites;
       const validScope = cursor?.scope === scope || (legacy && cursor.scope === legacyScope);
       const value = cursor?.anchor?.[0];
       const validValue = ['timestamp', 'buildDate'].includes(sortField) ? value === null || (Number.isSafeInteger(value) && Number.isFinite(new Date(value).getTime()))
@@ -116,6 +117,7 @@ module.exports = function createRecentRuns({ parseVersion, normalizeVersion, nor
       return (!filters.versions.length || filters.versions.includes(normalizeVersion(row.rhoaiVersion)))
         && (!filters.suite || row.suite === filters.suite) && (!filters.suites || filters.suites.includes(row.suite))
         && (!filters.runQuery || row.invocationId.toLowerCase().includes(filters.runQuery))
+        && (!filters.suiteRunsOnly || row.suiteRun === true)
         && (from === null || (recorded !== null && recorded >= from)) && (until === null || (recorded !== null && recorded < until));
     });
   }
@@ -162,6 +164,9 @@ module.exports = function createRecentRuns({ parseVersion, normalizeVersion, nor
       return { suite, invocationId, timestamp, rhoaiVersion, buildDate, buildDateStatus,
         ...(request.includeSummary ? Object.fromEntries(['workflows', 'tasks', 'passed', 'failed', 'skipped', 'bugs'].map(key => [key, row[key] ?? null])) : {}),
         ...(request.includeSummary ? { hasBugs: row.hasBugs ?? (row.bugs == null ? null : row.bugs > 0) } : {}),
+        // Absent when announcements could not be read: unknown is neither a suite run nor ad hoc.
+        ...(typeof row.suiteRun === 'boolean' ? { suiteRun: row.suiteRun } : {}),
+        ...(row.suiteRun === true ? Object.fromEntries(['suiteName', 'workflowsExpected', 'workflowsRan', 'workflowsMissing'].map(key => [key, row[key] ?? null])) : {}),
         ...(row.bugTickets ? { bugTickets: row.bugTickets } : {}) };
     }),
       ...(request.includeSummary ? { summary: summarizeRuns(rows, jiraHost, bugsIncomplete) } : {}),

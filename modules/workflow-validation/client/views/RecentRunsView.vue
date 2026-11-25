@@ -5,6 +5,7 @@
         <h2 class="text-2xl font-bold text-gray-900 dark:text-gray-100">Recent Runs</h2>
         <p class="mt-2 max-w-3xl text-sm leading-6 text-gray-600 dark:text-gray-300">
           Select a run for its results. Use <strong class="font-medium">Jira issues</strong> to open its linked bugs and RFEs. All dates are UTC.
+          A <strong class="font-medium">suite run</strong> executed a defined test suite and shows how many of its expected workflows ran; any other run is <strong class="font-medium">ad hoc</strong>.
         </p>
       </div>
       <div class="flex flex-wrap items-center gap-3">
@@ -38,6 +39,9 @@
         <button type="button" :aria-pressed="draft.bugsOnly" :disabled="loading || searchPending"
           :class="[buttonClass, draft.bugsOnly ? 'bg-primary-50 ring-1 ring-primary-400 dark:bg-primary-900/30' : '']"
           @click="draft.bugsOnly = !draft.bugsOnly; applyFilters()">Contains bugs only</button>
+        <button type="button" :aria-pressed="draft.suiteRunsOnly" :disabled="loading || searchPending"
+          :class="[buttonClass, draft.suiteRunsOnly ? 'bg-primary-50 ring-1 ring-primary-400 dark:bg-primary-900/30' : '']"
+          @click="draft.suiteRunsOnly = !draft.suiteRunsOnly; applyFilters()">Suite runs only</button>
       </div>
       <p v-if="invalidDateRange" role="alert" class="mt-3 text-sm text-amber-700 dark:text-amber-300">Start Date must be on or before End Date.</p>
       <ul v-if="appliedChips.length" ref="chipList" aria-label="Applied filters" class="mb-0 mt-3 flex list-none flex-wrap gap-2 border-t border-gray-100 pt-3 dark:border-gray-700">
@@ -86,7 +90,12 @@
               class="border-b border-gray-50 dark:border-gray-700" :class="canOpen(run) ? 'cursor-pointer hover:bg-gray-50 focus-visible:outline focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-primary-500 dark:hover:bg-gray-700/30' : ''"
               @click="openRun(run, $event)" @keydown.enter.prevent="openRun(run, $event)">
               <td class="px-5 py-4">
-                <div class="font-medium text-gray-900 dark:text-gray-100">{{ run.suite ? formatSuiteName(run.suite) : 'Test suite unavailable' }}</div>
+                <div class="font-medium text-gray-900 dark:text-gray-100">{{ run.suite ? formatSuiteName(run.suite) : 'Test suite unavailable' }}
+                  <span v-if="run.suiteRun === true" data-testid="run-kind" title="This run executed a defined test suite. Its expected workflows were recorded when it started."
+                    class="ml-1 inline-block whitespace-nowrap rounded-full bg-primary-50 px-2 py-0.5 text-xs font-medium text-primary-700 dark:bg-primary-900/30 dark:text-primary-200">Suite run</span>
+                  <span v-else-if="run.suiteRun === false" data-testid="run-kind" title="This run was not started as a test suite, so it has no expected set of workflows."
+                    class="ml-1 inline-block whitespace-nowrap rounded-full bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-600 dark:bg-gray-700 dark:text-gray-300">Ad hoc</span>
+                </div>
                 <div class="mt-1 break-all font-mono text-xs text-gray-500 dark:text-gray-400">{{ run.invocationId }}</div>
               </td>
               <td class="break-words px-5 py-4 font-mono text-xs text-gray-600 dark:text-gray-300">{{ run.rhoaiVersion ? versionLabel(run.rhoaiVersion) : 'Version unavailable' }}</td>
@@ -111,8 +120,8 @@
                 <span v-else-if="run.bugTickets?.status === 'empty'" class="text-xs text-gray-500 dark:text-gray-400" title="No eligible Jira issues are recorded for this run.">No issues recorded</span>
                 <span v-else class="text-xs text-gray-500 dark:text-gray-400" title="Issue associations or Jira labels could not be verified. Use Refresh to retry.">Issues unavailable</span>
               </td>
-              <td v-for="column in countColumns" :key="column.key" class="px-4 py-4 text-right tabular-nums"
-                :class="run[column.key] > 0 && column.tone ? column.tone : 'text-gray-600 dark:text-gray-300'">{{ formatCount(run[column.key]) }}</td>
+              <td v-for="column in countColumns" :key="column.key" class="px-4 py-4 text-right tabular-nums" :title="countTitle(run, column)"
+                :class="run[column.key] > 0 && column.tone ? column.tone : 'text-gray-600 dark:text-gray-300'">{{ countText(run, column) }}</td>
             </tr>
             <tr v-if="!runs.length"><td colspan="11" class="px-5 py-12 text-center text-gray-500 dark:text-gray-400">{{ page.total ? 'This page has changed. Use Previous to return to the first page.' : hasFilters ? 'No runs match these filters.' : 'No runs are available.' }}</td></tr>
           </tbody>
@@ -122,7 +131,7 @@
         <p aria-live="polite" class="text-sm text-gray-600 dark:text-gray-300">Showing {{ page.start }}–{{ page.end }} of {{ page.total }} runs</p>
         <div class="flex gap-3"><button type="button" aria-label="Previous page" :disabled="loading || searchPending || page.previousCursor === null" :class="buttonClass" @click="loadPage(page.previousCursor)">Previous</button><button type="button" aria-label="Next page" :disabled="loading || searchPending || page.nextCursor === null" :class="buttonClass" @click="loadPage(page.nextCursor)">Next</button></div>
       </nav>
-      <p class="border-t border-gray-100 px-5 py-3 text-xs text-gray-500 dark:border-gray-700 dark:text-gray-400">— means a count is unavailable.</p>
+      <p class="border-t border-gray-100 px-5 py-3 text-xs text-gray-500 dark:border-gray-700 dark:text-gray-400">— means a count is unavailable. For a suite run, Workflows shows expected workflows that ran / expected workflows.</p>
     </div>
   </div>
 </template>
@@ -153,9 +162,9 @@ const countColumns = [
   { key: 'bugs', label: 'Bugs' }
 ]
 const columnWidths = [20, 8, 13, 13, 11, 8, 5, 6, 5, 6, 5]
-const fields = { runQuery: 'recentRun', datePreset: 'recentDatePreset', dateFrom: 'recentFrom', dateTo: 'recentTo', sortField: 'recentSortField', sortDir: 'recentSort', cursor: 'recentCursor', bugsOnly: 'recentBugsOnly' }
+const fields = { runQuery: 'recentRun', datePreset: 'recentDatePreset', dateFrom: 'recentFrom', dateTo: 'recentTo', sortField: 'recentSortField', sortDir: 'recentSort', cursor: 'recentCursor', bugsOnly: 'recentBugsOnly', suiteRunsOnly: 'recentSuiteRunsOnly' }
 const legacyFilters = ['recentVersion', 'recentVersions', ...Object.values(fields)]
-const unfiltered = () => ({ versions: [], suites: [], runQuery: '', datePreset: 'all', dateFrom: '', dateTo: '', sortField: 'timestamp', sortDir: 'desc', cursor: '', bugsOnly: false })
+const unfiltered = () => ({ versions: [], suites: [], runQuery: '', datePreset: 'all', dateFrom: '', dateTo: '', sortField: 'timestamp', sortDir: 'desc', cursor: '', bugsOnly: false, suiteRunsOnly: false })
 const defaultSuites = ['aramco', 'release_gate']
 const restoreError = ref('')
 /** Return inclusive UTC calendar bounds for a date preset. */
@@ -169,6 +178,7 @@ function fromUrl() {
   restoreError.value = ''
   for (const [key, name] of Object.entries(fields)) if (typeof params[name] === 'string') query[key] = params[name]
   query.bugsOnly = params.recentBugsOnly === 'true'
+  query.suiteRunsOnly = params.recentSuiteRunsOnly === 'true'
   if (params.recentVersions) {
     try {
       query.versions = JSON.parse(params.recentVersions)
@@ -196,7 +206,7 @@ const invalidDateRange = computed(() => draft.dateFrom && draft.dateTo && draft.
 const runs = ref([]), options = ref({ versions: [], suites: [] }), page = ref({ total: 0, start: 0, end: 0, nextCursor: null, previousCursor: null })
 const loading = ref(false), searchPending = ref(false), hasLoaded = ref(false), error = ref(''), restartRequired = ref(false), lastAttempt = ref({ ...applied.value })
 const appliedChips = computed(() => {
-  const { versions, suites, runQuery, dateFrom, dateTo, bugsOnly } = applied.value
+  const { versions, suites, runQuery, dateFrom, dateTo, bugsOnly, suiteRunsOnly } = applied.value
   const chips = normalizeVersions(versions).map(value => ({ key: `version:${value}`, field: 'versions', value,
     label: `Version: ${versionLabel(value)}`, removeLabel: `Remove version ${versionLabel(value)}` }))
   for (const value of suites) {
@@ -210,6 +220,7 @@ const appliedChips = computed(() => {
     chips.push({ key: 'date', field: 'dates', label: `Date: ${range} (UTC)`, removeLabel: 'Remove date range filter' })
   }
   if (bugsOnly) chips.push({ key: 'bugs', field: 'bugsOnly', label: 'Contains bugs only', removeLabel: 'Remove contains bugs only filter' })
+  if (suiteRunsOnly) chips.push({ key: 'suiteRuns', field: 'suiteRunsOnly', label: 'Suite runs only', removeLabel: 'Remove suite runs only filter' })
   return chips
 })
 const hasFilters = computed(() => appliedChips.value.length > 0)
@@ -222,6 +233,17 @@ const formatter = new Intl.DateTimeFormat('en-GB', { dateStyle: 'medium', timeSt
 const validTime = value => typeof value === 'string' && Number.isFinite(Date.parse(value))
 const recordedTime = value => formatter.format(new Date(value))
 const formatCount = value => value == null ? '—' : new Intl.NumberFormat('en-US').format(value)
+const showsExpected = (run, column) => column.key === 'workflows' && run.suiteRun === true && Number.isInteger(run.workflowsExpected)
+/** Show a suite run's workflows as ran / expected; every other count stays a plain number. */
+const countText = (run, column) => showsExpected(run, column)
+  ? `${formatCount(run.workflowsRan)} / ${formatCount(run.workflowsExpected)}` : formatCount(run[column.key])
+/** Name the expected workflows that did not run, for the Workflows cell of a suite run. */
+function countTitle(run, column) {
+  if (!showsExpected(run, column)) return undefined
+  if (!Array.isArray(run.workflowsMissing)) return 'The workflows that ran cannot be counted: not every execution of this run recorded a workflow id, or the result was incomplete.'
+  if (!run.workflowsMissing.length) return 'Every expected workflow ran.'
+  return `Did not run: ${run.workflowsMissing.map(workflow => workflow.title || workflow.workflowId).join('; ')}`
+}
 const canOpen = run => Boolean(run.suite && run.invocationId)
 let active = true, sequence = 0, controller, searchTimer
 /** Cancel a queued Run ID filter before another action takes over. */
@@ -254,8 +276,8 @@ async function requestRuns(query, refresh = false) {
   lastAttempt.value = requested
   loading.value = true; error.value = ''; restartRequired.value = false
   try {
-    const { datePreset: _preset, bugsOnly, ...params } = requested
-    const data = await getRecentRuns({ ...params, ...(bugsOnly ? { bugsOnly: true } : {}), ...(refresh ? { refresh: true } : {}) }, { signal: controller.signal })
+    const { datePreset: _preset, bugsOnly, suiteRunsOnly, ...params } = requested
+    const data = await getRecentRuns({ ...params, ...(bugsOnly ? { bugsOnly: true } : {}), ...(suiteRunsOnly ? { suiteRunsOnly: true } : {}), ...(refresh ? { refresh: true } : {}) }, { signal: controller.signal })
     if (!active || current !== sequence) return
     if (!Array.isArray(data.rows) || data.rows.length > RECENT_RUNS_PAGE_SIZE || !Number.isInteger(data.total) || !Number.isInteger(data.start) || !Number.isInteger(data.end)
       || !Array.isArray(data.options?.versions) || !Array.isArray(data.options?.suites) || !(data.nextCursor === null || typeof data.nextCursor === 'string') || !(data.previousCursor === null || typeof data.previousCursor === 'string')) throw new Error('The run service returned an invalid page. Please retry.')
@@ -273,7 +295,7 @@ async function requestRuns(query, refresh = false) {
     // Keep the original spelling while a restored cursor still depends on its scope.
     if (!requested.cursor) requested.versions = normalizeVersions(requested.versions)
     applied.value = requested; hasLoaded.value = true
-    syncQueryParams(nav, { ...Object.fromEntries(Object.entries(fields).map(([key, name]) => [name, key === 'bugsOnly' ? (requested[key] ? 'true' : '') : requested[key]])),
+    syncQueryParams(nav, { ...Object.fromEntries(Object.entries(fields).map(([key, name]) => [name, ['bugsOnly', 'suiteRunsOnly'].includes(key) ? (requested[key] ? 'true' : '') : requested[key]])),
       recentVersions: requested.versions.length ? JSON.stringify(requested.versions) : '', recentVersion: '',
       recentSuites: JSON.stringify(requested.suites), recentSuite: '' })
   } catch (err) {
@@ -304,6 +326,7 @@ async function removeFilter(chip, index, button) {
     case 'dates': Object.assign(draft, { datePreset: 'all', dateFrom: '', dateTo: '' }); break
     case 'runQuery': draft.runQuery = ''; break
     case 'bugsOnly': draft.bugsOnly = false; break
+    case 'suiteRunsOnly': draft.suiteRunsOnly = false; break
   }
   await applyFilters()
   await nextTick()

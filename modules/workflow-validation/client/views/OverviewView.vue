@@ -22,6 +22,31 @@
       @ready="loadAll"
       @suite-execution="selectedSuiteExecution = $event"
     />
+    <section v-if="exactRun && hasLoaded && typeof selectedSuiteExecution?.suiteRun === 'boolean'" aria-label="Suite coverage"
+      class="mb-4 rounded-xl border border-gray-100 bg-white px-6 py-4 text-sm text-gray-700 shadow-sm dark:border-gray-700/60 dark:bg-gray-800 dark:text-gray-200">
+      <template v-if="selectedSuiteExecution.suiteRun">
+        <h3 class="text-base font-semibold text-gray-900 dark:text-gray-100">Suite run{{ selectedSuiteExecution.suiteName ? `: ${selectedSuiteExecution.suiteName}` : '' }}</h3>
+        <p v-if="!Number.isInteger(selectedSuiteExecution.workflowsExpected)" class="mt-1">The expected workflows of this run could not be read.</p>
+        <p v-else-if="!Array.isArray(selectedSuiteExecution.workflowsMissing)" class="mt-1">
+          {{ selectedSuiteExecution.workflowsExpected }} workflows were expected. The workflows that ran cannot be counted: not every execution of this run recorded a workflow id, or the result was incomplete.
+        </p>
+        <template v-else>
+          <p class="mt-1">{{ selectedSuiteExecution.workflowsRan }} of {{ selectedSuiteExecution.workflowsExpected }} expected workflows ran.</p>
+          <template v-if="selectedSuiteExecution.workflowsMissing.length">
+            <p class="mt-3 font-medium text-amber-700 dark:text-amber-300">Did not run:</p>
+            <ul aria-label="Expected workflows that did not run" class="mt-1 list-disc pl-5">
+              <li v-for="workflow in selectedSuiteExecution.workflowsMissing" :key="workflow.workflowId">
+                {{ workflow.title }} <span class="break-all font-mono text-xs text-gray-500 dark:text-gray-400">{{ workflow.workflowId }}</span>
+              </li>
+            </ul>
+          </template>
+        </template>
+      </template>
+      <template v-else>
+        <h3 class="text-base font-semibold text-gray-900 dark:text-gray-100">Ad hoc run</h3>
+        <p class="mt-1">This run was not started as a test suite, so it has no expected set of workflows. All its results are shown below.</p>
+      </template>
+    </section>
 
     <p v-if="exactRun && loading" role="status" class="mb-4 text-sm text-gray-500 dark:text-gray-400">Loading selected run…</p>
     <div v-if="unreachable" role="alert" class="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-xl p-10 text-center">

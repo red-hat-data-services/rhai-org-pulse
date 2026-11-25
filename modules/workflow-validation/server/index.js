@@ -20,6 +20,7 @@ const { getEffectiveSettings, getSavedSettings, saveSettings } = require('./conf
 const { createJiraClient, JIRA_HOST } = require('../../../shared/server/jira');
 const { createBugTickets } = require('./bug-tickets');
 const { taskAggregations, recoverSkipped, groupCounts } = require('./run-summary');
+const { markSuiteRuns, addCoverage, suiteRunDetail } = require('./suite-runs');
 const recentRunTools = import('../lib/versions.js').then(rules => require('./recent-runs')(rules));
 
 /** Wrap an async handler so OpenSearch connectivity errors become clean HTTP responses. */
@@ -619,6 +620,7 @@ module.exports = function registerRoutes(router, context) {
    *       - { in: query, name: includeBugTickets, schema: { type: boolean, default: false }, description: Add per-row Jira search links in paged mode; exclude rca-scope-internal using verified Jira labels }
    *       - { in: query, name: includeSummary, schema: { type: boolean, default: false }, description: Add per-run counts and a summary across all filtered runs. The summary counts distinct verified Jira issues and includes a link when available. bugsIncomplete indicates unresolved counts. Requires pageSize. }
    *       - { in: query, name: bugsOnly, schema: { type: boolean, default: false }, description: 'Include runs with at least one verified eligible Jira issue before pagination, even if other keys are unresolved. Exact counts can remain null and bugFilterIncomplete reports incomplete coverage. Requires pageSize.' }
+   *       - { in: query, name: suiteRunsOnly, schema: { type: boolean, default: false }, description: 'Include only runs announced as a suite run in the workflow-suite-runs index, before pagination. Requires pageSize.' }
    *       - { in: query, name: dateFrom, schema: { type: string, format: date } }
    *       - { in: query, name: dateTo, schema: { type: string, format: date } }
    *       - { in: query, name: pageSize, schema: { type: integer, minimum: 1, maximum: 200 }, description: Opt into lightweight pagination across all run groups }
@@ -627,7 +629,7 @@ module.exports = function registerRoutes(router, context) {
    *       - { in: query, name: runQuery, schema: { type: string, maxLength: 256 }, description: Run ID substring; requires pageSize }
    *       - { in: query, name: refresh, schema: { type: boolean, default: false }, description: Bypass the 10-second metadata cache; requires pageSize }
    *     responses:
-   *       200: { description: "Run groups default to recorded execution timestamp descending. Paged mode returns rows, total, start, end, pageSize, nextCursor, previousCursor, options (versions and suites), sortField and sortDir. includeBugTickets adds bugTickets with ready, empty or unavailable status; ready includes a Jira search URL. buildDate is the newest verified RHOAI operator image build time for the invocation, normalized from a valid explicit-zone ISO timestamp, or null. buildDateStatus is verified, unavailable, or null when no image group exists. sortField buildDate sorts by build date, then time, with missing values last. Run and build metadata share a 10-second cache; refresh bypasses both." }
+   *       200: { description: "Run groups default to recorded execution timestamp descending. Paged mode returns rows, total, start, end, pageSize, nextCursor, previousCursor, options (versions and suites), sortField and sortDir. includeBugTickets adds bugTickets with ready, empty or unavailable status; ready includes a Jira search URL. buildDate is the newest verified RHOAI operator image build time for the invocation, normalized from a valid explicit-zone ISO timestamp, or null. buildDateStatus is verified, unavailable, or null when no image group exists. sortField buildDate sorts by build date, then time, with missing values last. Run and build metadata share a 10-second cache; refresh bypasses both. In paged mode suiteRun is true for a run announced in the workflow-suite-runs index, false for an ad hoc run, and absent when announcements cannot be read. A suite run adds suiteName, workflowsExpected, workflowsRan (expected workflows with at least one execution, or null when executions carry no workflow_id) and workflowsMissing (workflowId and title of each expected workflow without an execution, or null)." }
    *       400: { description: "Invalid limit, page parameters, or cursor" }
    *       409: { description: "Version-sorted results changed, or the saved version cursor predates change detection. Restart from the first page with the same filters and sort order." }
    */
@@ -676,6 +678,8 @@ module.exports = function registerRoutes(router, context) {
             if (closed) return;
             rows = await addImageMetadata(rows, (index, body) => client.search(index, body), invocationField, () => closed);
             if (rows === null || closed) return;
+            rows = await markSuiteRuns(rows, (index, body) => client.search(index, body), () => closed);
+            if (closed) return;
           }
           if (cachedClient === client && scanSequence > (recentGroupsCache?.sequence || 0)) {
             recentGroupsCache = { client, rows, includeCounts: recent.includeSummary, sequence: scanSequence, expiresAt: Date.now() + 10_000 };
@@ -710,6 +714,9 @@ module.exports = function registerRoutes(router, context) {
           }
         }
         const page = pageRecentRuns(rows, recent, jiraHost);
+        // Expected versus ran is read for the returned page only; the cached scan holds just the suite-run mark.
+        page.rows = await addCoverage(page.rows, (index, body) => client.search(index, body), () => closed);
+        if (closed) return;
         if (req.query.includeBugTickets === 'true' && !includeGlobalBugs) {
           page.rows = await enrichBugTickets(page.rows, {
             search: (index, body) => client.search(index, body), refresh: recent.refresh, isClosed: () => closed
@@ -764,7 +771,7 @@ module.exports = function registerRoutes(router, context) {
    *       - { in: path, name: suite, required: true, schema: { type: string } }
    *       - { in: path, name: invocationId, required: true, schema: { type: string } }
    *     responses:
-   *       200: { description: Test run detail }
+   *       200: { description: "Test run detail. suiteRun, suiteName, workflowsExpected, workflowsRan and workflowsMissing have the same meaning as in the paged run list." }
    *       404: { description: Test run not found }
    */
   router.get('/test-suites/:suite/:invocationId', requireAuth, safe(async function (req, res) {
@@ -790,9 +797,11 @@ module.exports = function registerRoutes(router, context) {
     const failed = tests.filter((test) => test.verdict === 'FAIL').length;
     const errors = tests.filter((test) => test.verdict === 'ERROR').length;
     const latest = tests[0];
+    const suiteRun = await suiteRunDetail(suite, invocationId, osSearch);
     res.json({
       suite,
       invocationId,
+      ...suiteRun,
       timestamp: latest.timestamp || null,
       rhoaiVersion: latest.rhoai_version || null,
       rhodsOperatorDigest: latest.rhods_operator_digest || null,
