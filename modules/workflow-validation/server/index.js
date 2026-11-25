@@ -17,9 +17,10 @@ const {
   bugFilters
 } = require('./opensearch');
 const { getEffectiveSettings, getSavedSettings, saveSettings } = require('./config');
-const { createJiraClient } = require('../../../shared/server/jira');
+const { createJiraClient, JIRA_HOST } = require('../../../shared/server/jira');
 const { createBugTickets } = require('./bug-tickets');
-const { taskAggregations, groupCounts } = require('./run-summary');
+const { taskAggregations, recoverSkipped, groupCounts } = require('./run-summary');
+const { markSuiteRuns, addCoverage, suiteRunDetail } = require('./suite-runs');
 const recentRunTools = import('../lib/versions.js').then(rules => require('./recent-runs')(rules));
 
 /** Wrap an async handler so OpenSearch connectivity errors become clean HTTP responses. */
@@ -133,8 +134,12 @@ async function readSuiteRunGroups(query, search, { isClosed = () => false, metad
     if (isClosed()) return null;
     if (response.timed_out || response._shards?.failed) throw new Error('Incomplete execution aggregation');
     const aggregation = response.aggregations?.suite_runs;
+    const next = aggregation?.after_key;
+    if (next && after && next.suite === after.suite && next.invocation === after.invocation) {
+      throw new Error('Repeated OpenSearch suite run cursor');
+    }
     buckets.push(...bucketList(aggregation));
-    after = aggregation?.after_key;
+    after = next;
   } while (after);
 
   return buckets.map((bucket) => {
@@ -237,14 +242,14 @@ module.exports = function registerRoutes(router, context) {
   const imageInvocationFields = new WeakMap();
   let jiraClient;
   let jiraSignature;
+  const jiraHost = process.env.JIRA_HOST || JIRA_HOST;
   const enrichBugTickets = createBugTickets({ getJiraClient() {
     const email = context.secrets?.JIRA_EMAIL;
     const token = context.secrets?.JIRA_TOKEN;
     if (!email || !token) throw new Error('Jira credentials are unavailable');
-    const host = process.env.JIRA_HOST || 'https://redhat.atlassian.net';
-    const signature = JSON.stringify([email, token, host]);
+    const signature = JSON.stringify([email, token, jiraHost]);
     if (!jiraClient || jiraSignature !== signature) {
-      jiraClient = createJiraClient({ email, token, host });
+      jiraClient = createJiraClient({ email, token, host: jiraHost });
       jiraSignature = signature;
     }
     return jiraClient;
@@ -605,6 +610,7 @@ module.exports = function registerRoutes(router, context) {
    *     tags: [Workflow Validation]
    *     parameters:
    *       - { in: query, name: suite, schema: { type: string } }
+   *       - { in: query, name: suites, schema: { type: array, maxItems: 50, items: { type: string } }, style: form, explode: true, description: Match any selected test suite; paged mode only; cannot combine with suite }
    *       - { in: query, name: version, schema: { type: string } }
    *       - { in: query, name: versions, schema: { type: array, maxItems: 50, items: { type: string } }, style: form, explode: true, description: Match any selected version; paged mode only; cannot combine with version }
    *       - { in: query, name: sortField, schema: { type: string, enum: [timestamp, version, suite, buildDate], default: timestamp }, description: Global sort column in paged mode }
@@ -612,8 +618,9 @@ module.exports = function registerRoutes(router, context) {
    *       - { in: query, name: limit, schema: { type: integer, minimum: 1, maximum: 200 }, description: Limit run groups after ordering newest first }
    *       - { in: query, name: includeBugs, schema: { type: boolean, default: true }, description: Set false for lightweight run metadata without RCA retrieval }
    *       - { in: query, name: includeBugTickets, schema: { type: boolean, default: false }, description: Add per-row Jira search links in paged mode; exclude rca-scope-internal using verified Jira labels }
-   *       - { in: query, name: includeSummary, schema: { type: boolean, default: false }, description: Add per-run workflow and task counts and a summary across all runs for the selected versions. Bugs count distinct linked Jira issues excluding rca-scope-internal. Missing counters or unverified bug counts are null. Requires pageSize. }
+   *       - { in: query, name: includeSummary, schema: { type: boolean, default: false }, description: Add per-run counts and a summary across all filtered runs. The summary counts distinct verified Jira issues and includes a link when available. bugsIncomplete indicates unresolved counts. Requires pageSize. }
    *       - { in: query, name: bugsOnly, schema: { type: boolean, default: false }, description: 'Include runs with at least one verified eligible Jira issue before pagination, even if other keys are unresolved. Exact counts can remain null and bugFilterIncomplete reports incomplete coverage. Requires pageSize.' }
+   *       - { in: query, name: suiteRunsOnly, schema: { type: boolean, default: false }, description: 'Include only runs announced as a suite run in the workflow-suite-runs index, before pagination. Requires pageSize.' }
    *       - { in: query, name: dateFrom, schema: { type: string, format: date } }
    *       - { in: query, name: dateTo, schema: { type: string, format: date } }
    *       - { in: query, name: pageSize, schema: { type: integer, minimum: 1, maximum: 200 }, description: Opt into lightweight pagination across all run groups }
@@ -622,7 +629,7 @@ module.exports = function registerRoutes(router, context) {
    *       - { in: query, name: runQuery, schema: { type: string, maxLength: 256 }, description: Run ID substring; requires pageSize }
    *       - { in: query, name: refresh, schema: { type: boolean, default: false }, description: Bypass the 10-second metadata cache; requires pageSize }
    *     responses:
-   *       200: { description: "Run groups default to recorded execution timestamp descending. Paged mode returns rows, total, start, end, pageSize, nextCursor, previousCursor, options (versions and suites), sortField and sortDir. includeBugTickets adds bugTickets with ready, empty or unavailable status; ready includes a Jira search URL. buildDate is the newest verified RHOAI operator image build time for the invocation, normalized from a valid explicit-zone ISO timestamp, or null. buildDateStatus is verified, unavailable, or null when no image group exists. sortField buildDate sorts by build date, then time, with missing values last. Run and build metadata share a 10-second cache; refresh bypasses both." }
+   *       200: { description: "Run groups default to recorded execution timestamp descending. Paged mode returns rows, total, start, end, pageSize, nextCursor, previousCursor, options (versions and suites), sortField and sortDir. includeBugTickets adds bugTickets with ready, empty or unavailable status; ready includes a Jira search URL. buildDate is the newest verified RHOAI operator image build time for the invocation, normalized from a valid explicit-zone ISO timestamp, or null. buildDateStatus is verified, unavailable, or null when no image group exists. sortField buildDate sorts by build date, then time, with missing values last. Run and build metadata share a 10-second cache; refresh bypasses both. In paged mode suiteRun is true for a run announced in the workflow-suite-runs index, false for an ad hoc run, and absent when announcements cannot be read. A suite run adds suiteName, workflowsExpected, workflowsRan (expected workflows with at least one execution, or null when executions carry no workflow_id) and workflowsMissing (workflowId and title of each expected workflow without an execution, or null)." }
    *       400: { description: "Invalid limit, page parameters, or cursor" }
    *       409: { description: "Version-sorted results changed, or the saved version cursor predates change detection. Restart from the first page with the same filters and sort order." }
    */
@@ -633,7 +640,7 @@ module.exports = function registerRoutes(router, context) {
     let tools;
     try { tools = await recentRunTools; } finally { res.removeListener('close', onEarlyClose); }
     if (disconnected) return;
-    const { parseRecentRuns, pageRecentRuns, selectVersionRuns } = tools;
+    const { parseRecentRuns, pageRecentRuns, selectRuns } = tools;
     const recent = parseRecentRuns(req.query);
     let limit = null;
     if (req.query.limit !== undefined) {
@@ -671,6 +678,8 @@ module.exports = function registerRoutes(router, context) {
             if (closed) return;
             rows = await addImageMetadata(rows, (index, body) => client.search(index, body), invocationField, () => closed);
             if (rows === null || closed) return;
+            rows = await markSuiteRuns(rows, (index, body) => client.search(index, body), () => closed);
+            if (closed) return;
           }
           if (cachedClient === client && scanSequence > (recentGroupsCache?.sequence || 0)) {
             recentGroupsCache = { client, rows, includeCounts: recent.includeSummary, sequence: scanSequence, expiresAt: Date.now() + 10_000 };
@@ -679,28 +688,35 @@ module.exports = function registerRoutes(router, context) {
         const includeGlobalBugs = recent.includeSummary || recent.filters.bugsOnly;
         if (includeGlobalBugs) {
           const sourceRows = rows;
-          const versionScope = JSON.stringify(recent.filters.versions);
-          if (!recent.refresh && recentBugCountsCache?.sourceRows === sourceRows && recentBugCountsCache.versionScope === versionScope && Date.now() < recentBugCountsCache.expiresAt) {
+          const { bugsOnly: _bugsOnly, ...scopeFilters } = recent.filters;
+          const filterScope = JSON.stringify(scopeFilters);
+          if (!recent.refresh && recentBugCountsCache?.sourceRows === sourceRows && recentBugCountsCache.filterScope === filterScope
+            && (!recent.includeSummary || recentBugCountsCache.includeSummary) && Date.now() < recentBugCountsCache.expiresAt) {
             rows = recentBugCountsCache.rows;
           } else {
-            const selectedRows = selectVersionRuns(sourceRows, recent.filters.versions);
+            const selectedRows = selectRuns(sourceRows, scopeFilters);
             const enriched = [];
+            const search = (index, body) => client.search(index, body);
+            const isClosed = () => closed;
             // Bound the execution correlation query below OpenSearch's Boolean-clause limit.
             for (let offset = 0; offset < selectedRows.length; offset += 200) {
-              enriched.push(...await enrichBugTickets(selectedRows.slice(offset, offset + 200), {
-                search: (index, body) => client.search(index, body), refresh: recent.refresh,
-                isClosed: () => closed, includeKeys: true
-              }));
+              let batch = selectedRows.slice(offset, offset + 200);
+              if (recent.includeSummary) batch = await recoverSkipped(batch, search, isClosed);
+              if (closed) return;
+              enriched.push(...await enrichBugTickets(batch, { search, isClosed, refresh: recent.refresh, includeKeys: true }));
               if (closed) return;
             }
             const byRun = new Map(enriched.map(row => [JSON.stringify([row.suite, row.invocationId]), row]));
             rows = sourceRows.map(row => byRun.get(JSON.stringify([row.suite, row.invocationId])) || row);
-            if (recentGroupsCache?.rows === sourceRows && enriched.every(row => row._bugKeys !== null)) {
-              recentBugCountsCache = { sourceRows, versionScope, rows, expiresAt: Date.now() + 10_000 };
+            if (recentGroupsCache?.rows === sourceRows && enriched.every(row => !row._bugKeysIncomplete && (!recent.includeSummary || !row._skippedCoverage || row.skipped != null))) {
+              recentBugCountsCache = { sourceRows, filterScope, rows, includeSummary: recent.includeSummary, expiresAt: Date.now() + 10_000 };
             }
           }
         }
-        const page = pageRecentRuns(rows, recent);
+        const page = pageRecentRuns(rows, recent, jiraHost);
+        // Expected versus ran is read for the returned page only; the cached scan holds just the suite-run mark.
+        page.rows = await addCoverage(page.rows, (index, body) => client.search(index, body), () => closed);
+        if (closed) return;
         if (req.query.includeBugTickets === 'true' && !includeGlobalBugs) {
           page.rows = await enrichBugTickets(page.rows, {
             search: (index, body) => client.search(index, body), refresh: recent.refresh, isClosed: () => closed
@@ -755,7 +771,7 @@ module.exports = function registerRoutes(router, context) {
    *       - { in: path, name: suite, required: true, schema: { type: string } }
    *       - { in: path, name: invocationId, required: true, schema: { type: string } }
    *     responses:
-   *       200: { description: Test run detail }
+   *       200: { description: "Test run detail. suiteRun, suiteName, workflowsExpected, workflowsRan and workflowsMissing have the same meaning as in the paged run list." }
    *       404: { description: Test run not found }
    */
   router.get('/test-suites/:suite/:invocationId', requireAuth, safe(async function (req, res) {
@@ -781,9 +797,11 @@ module.exports = function registerRoutes(router, context) {
     const failed = tests.filter((test) => test.verdict === 'FAIL').length;
     const errors = tests.filter((test) => test.verdict === 'ERROR').length;
     const latest = tests[0];
+    const suiteRun = await suiteRunDetail(suite, invocationId, osSearch);
     res.json({
       suite,
       invocationId,
+      ...suiteRun,
       timestamp: latest.timestamp || null,
       rhoaiVersion: latest.rhoai_version || null,
       rhodsOperatorDigest: latest.rhods_operator_digest || null,

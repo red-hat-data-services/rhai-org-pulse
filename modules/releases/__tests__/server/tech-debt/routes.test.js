@@ -31,6 +31,7 @@ function register(jira, storage = {}) {
   return {
     components: router._routes['/components'].at(-1),
     issues: router._routes['/issues'].at(-1),
+    weeklyTrends: router._routes['/trends/weekly-bugs'].at(-1),
     trends: router._routes['/trends'].at(-1),
     uploadTrends: router._routes['/trends/bulk'].at(-1)
   }
@@ -140,6 +141,57 @@ describe('Tech Debt Prioritization routes', function () {
     expect(res.statusCode).toBe(200)
     expect(res.body.totals).toEqual({ received: 1, resolved: 1 })
     expect(res.body.categories.every(function (category) { return category.issueType === 'Bug' })).toBe(true)
+  })
+
+  it('serves organization-wide weekly Bug trends without component filters', async function () {
+    const snapshot = require('../../../server/tech-debt/trends').buildTrendSnapshot([
+      rawIssue('RHAI-1', {
+        fields: {
+          components: [],
+          fixVersions: [{ name: '3.7 GA' }],
+          versions: [{ name: '3.7 EA' }],
+          created: '2026-10-05T00:00:00.000Z',
+          resolutiondate: '2026-10-20T00:00:00.000Z'
+        }
+      })
+    ], new Set(), new Date('2026-10-29T06:00:00.000Z'))
+    const storage = { readFromStorage: vi.fn(async function () { return snapshot }) }
+    const res = makeResponse()
+
+    await register(null, storage).weeklyTrends({}, res)
+
+    expect(res.statusCode).toBe(200)
+    expect(res.body.totals).toEqual({ created: 1, resolved: 1 })
+    expect(res.body.issueType).toBe('Bug')
+    expect(res.body.includeNoComponent).toBe(true)
+    expect(res.body.projects).toEqual(['RHAI', 'RHAIENG', 'RHOAIENG', 'INFERENG', 'AIPCC'])
+    expect(res.body.bugFixVersions).toEqual({
+      sourceField: 'fixVersions',
+      assignment: 'one-bucket-per-issue',
+      total: 1,
+      versions: [{ version: '3.7 GA', count: 1 }]
+    })
+    expect(res.body.bugAffectsVersions).toEqual({
+      sourceField: 'versions',
+      assignment: 'one-bucket-per-issue',
+      total: 1,
+      versions: [{ version: '3.7 EA', count: 1 }]
+    })
+  })
+
+  it('returns a specific unavailable response for legacy snapshots without weekly data', async function () {
+    const snapshot = require('../../../server/tech-debt/trends').buildTrendSnapshot(
+      [rawIssue('RHAI-1', { fields: { created: '2026-10-01T00:00:00.000Z' } })],
+      new Set(),
+      new Date('2026-10-29T06:00:00.000Z')
+    )
+    delete snapshot.weeklyBugs
+    const res = makeResponse()
+
+    await register(null, { readFromStorage: vi.fn(async function () { return snapshot }) }).weeklyTrends({}, res)
+
+    expect(res.statusCode).toBe(404)
+    expect(res.body.code).toBe('weekly-bug-trends-unavailable')
   })
 
   it('serves componentless six-month trend data with issue-type filtering', async function () {

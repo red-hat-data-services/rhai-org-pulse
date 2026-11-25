@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import * as versionRules from '../../lib/versions.js'
-const { parseRecentRuns, pageRecentRuns } = require('../../server/recent-runs')(versionRules)
+const { parseRecentRuns, pageRecentRuns, selectRuns } = require('../../server/recent-runs')(versionRules)
 
 const rows = Array.from({ length: 47 }, (_, index) => ({
   suite: index % 2 ? 'release_gate' : 'ad-hoc', invocationId: `run-${String(index).padStart(2, '0')}`,
@@ -31,6 +31,26 @@ describe('Recent run pagination', () => {
     expect(result.rows[0].invocationId).toBe('run-00')
     expect(result.options.versions).toEqual(first.options.versions)
   })
+
+  it('ignores malformed run identities before looking up filtered run counts', () => {
+    const valid = rows[0]
+    const source = [valid, { ...valid, invocationId: 123 }, { ...valid, suite: '' }, null]
+    const query = request({ runQuery: 'RUN-00' })
+    expect(selectRuns(source, query.filters)).toEqual([valid])
+    expect(pageRecentRuns(source, query).total).toBe(1)
+  })
+
+  it('matches multiple exact suite IDs and binds pagination to their canonical set', () => {
+    const suites = ['ad-hoc', 'release_gate'];
+    const all = [...rows, { ...rows[0], suite: 'other' }];
+    const first = pageRecentRuns(all, request({ suites }));
+    expect(first.total).toBe(rows.length);
+    expect(first.options.suites).toContain('other');
+    expect(pageRecentRuns(all, request({ suites: ['release_gate', ...suites], cursor: first.nextCursor })).start).toBe(21);
+    expect(() => request({ suites: [suites[0]], cursor: first.nextCursor })).toThrow(/Cursor/);
+    const old = pageRecentRuns(all, request({ suite: 'ad-hoc' }));
+    expect(pageRecentRuns(all, request({ suites: 'ad-hoc', cursor: old.nextCursor })).start).toBe(21);
+  });
 
   it('keeps a next-page anchor when newer runs arrive', () => {
     const first = pageRecentRuns(rows, request())
@@ -107,7 +127,8 @@ describe('Recent run pagination', () => {
   it.each([
     { pageSize: '0' }, { pageSize: '201' }, { pageSize: '20x' }, { sortDir: 'sideways' },
     { dateFrom: '2026-02-31' }, { dateFrom: '2026-02-01', dateTo: '2026-01-01' },
-    { version: ['3.5', '3.6'] }, { cursor: 'not-json' }, { limit: '20' }, { refresh: 'maybe' }
+    { version: ['3.5', '3.6'] }, { cursor: 'not-json' }, { limit: '20' }, { refresh: 'maybe' },
+    { suites: ['', 'aramco'] }, { suites: ['aramco'], suite: 'aramco' }, { suites: 'aramco', pageSize: undefined }
   ])('rejects invalid page parameters: %j', values => {
     expect(() => request(values)).toThrow()
   })

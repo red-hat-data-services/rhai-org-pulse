@@ -7,8 +7,10 @@ const {
   TASKS_INDEX,
   BUGS_INDEX,
   IMAGES_INDEX,
+  SUITE_RUNS_INDEX,
   getOpenSearchConfig,
   createOpenSearchClient,
+  readAll,
   bugFilters,
   runFilters,
   taskFilters,
@@ -27,6 +29,12 @@ function jsonResponse(body, status = 200) {
 /** True for a build-metadata search by run invocation IDs. */
 function isImagesQuery(url, body) {
   return url.endsWith(`/${IMAGES_INDEX}/_search`) && Boolean(body?.query?.terms?.['invocation_id.keyword'] || body?.query?.terms?.invocation_id)
+}
+
+/** Stub fetch for a server whose suite-run announcement index does not exist; every other request reaches the handler. */
+function stubFetchWithoutAnnouncements(handler) {
+  vi.stubGlobal('fetch', (url, options) => url.includes(`/${SUITE_RUNS_INDEX}/`)
+    ? Promise.resolve(jsonResponse({ error: { type: 'index_not_found_exception' } }, 404)) : handler(url, options))
 }
 
 /** Image aggregation fixtures contain the newest verified hit for each invocation. */
@@ -76,6 +84,15 @@ afterEach(() => {
 })
 
 describe('OpenSearch runtime client', () => {
+  it('rejects a repeated search cursor instead of consuming the same page again', async () => {
+    const hits = Array.from({ length: 500 }, (_, id) => ({ _source: { id }, sort: [id] }))
+    const search = vi.fn().mockResolvedValue({ hits: { hits: [] } })
+      .mockResolvedValueOnce({ hits: { hits } }).mockResolvedValueOnce({ hits: { hits } })
+    await expect(readAll(search, RUNS_INDEX, { sort: ['id'] }, () => false)).rejects.toThrow(/repeated.*cursor/i)
+    expect(search).toHaveBeenCalledTimes(2)
+    expect(search.mock.calls[1][1].search_after).toEqual([499])
+  })
+
   it('uses runtime URL configuration and preserves the local POC default', () => {
     expect(getOpenSearchConfig({}, {})).toEqual({
       url: 'http://localhost:9200', httpProxy: '', httpsProxy: '', username: '', password: '', authenticated: false, authenticationValid: true
@@ -165,7 +182,7 @@ describe('OpenSearch runtime client', () => {
 describe('workflow-validation live schema routes', () => {
   it('adds verified-empty ticket states only for the selected page when requested', async () => {
     const searches = []
-    vi.stubGlobal('fetch', vi.fn((url, options) => {
+    stubFetchWithoutAnnouncements(vi.fn((url, options) => {
       const body = JSON.parse(options.body)
       if (!isImagesQuery(url, body)) searches.push({ url, body })
       if (body.aggs?.suite_runs) return Promise.resolve(jsonResponse({ aggregations: { suite_runs: { buckets: [{
@@ -734,7 +751,7 @@ describe('workflow-validation live schema routes', () => {
   it('caches build metadata with run groups until refresh or expiry, preserving next-page membership', async () => {
     let now = 1000, scans = 0, images = 0
     vi.spyOn(Date, 'now').mockImplementation(() => now)
-    vi.stubGlobal('fetch', vi.fn(async (url, options) => {
+    stubFetchWithoutAnnouncements(vi.fn(async (url, options) => {
       if (isImagesQuery(url, JSON.parse(options.body))) {
         images++
         return imageResponse([['a', '2026-11-05T00:00:00Z'], ['b', ...(images > 1 ? ['2026-11-06T00:00:00Z'] : [])]])
@@ -789,7 +806,7 @@ describe('workflow-validation live schema routes', () => {
   it('stops image batches after disconnect and does not cache incomplete enrichment', async () => {
     const response = makeResponse()
     let images = 0, scans = 0
-    vi.stubGlobal('fetch', vi.fn(async (url, options) => {
+    stubFetchWithoutAnnouncements(vi.fn(async (url, options) => {
       if (isImagesQuery(url, JSON.parse(options.body))) {
         if (++images === 1) response.emit('close')
         return imageResponse()
@@ -810,7 +827,7 @@ describe('workflow-validation live schema routes', () => {
 
   it('does not cache a failed image lookup', async () => {
     let images = 0, scans = 0
-    vi.stubGlobal('fetch', vi.fn(async (url, options) => {
+    stubFetchWithoutAnnouncements(vi.fn(async (url, options) => {
       if (isImagesQuery(url, JSON.parse(options.body))) {
         if (++images === 1) throw new Error('image lookup failed')
         return imageResponse()
@@ -856,7 +873,7 @@ describe('workflow-validation live schema routes', () => {
       latest: { hits: { hits: [{ _source: { timestamp: new Date(Date.UTC(2026, 0, index + 1)).toISOString(), rhoai_version: index === 0 ? '3.0' : '3.6' } }] } }
     }))
     const requests = []
-    vi.stubGlobal('fetch', vi.fn(async (url, options) => {
+    stubFetchWithoutAnnouncements(vi.fn(async (url, options) => {
       const body = JSON.parse(options.body)
       if (isImagesQuery(url, body)) {
         return imageResponse(body.query.terms['invocation_id.keyword'].map(id => [id, '2026-11-05T05:14:40Z']))
@@ -911,7 +928,7 @@ describe('workflow-validation live schema routes', () => {
     const fetch = vi.fn((url, options) => isImagesQuery(url, JSON.parse(options.body))
       ? Promise.resolve(jsonResponse({ hits: { hits: [] } }))
       : new Promise(resolve => pending.push(resolve)))
-    vi.stubGlobal('fetch', fetch)
+    stubFetchWithoutAnnouncements(fetch)
     const route = register()['/test-suites'].at(-1)
     const older = route({ query: { pageSize: '20' } }, makeResponse())
     await vi.waitFor(() => expect(pending).toHaveLength(1))
