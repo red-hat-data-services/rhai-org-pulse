@@ -43,8 +43,8 @@ describe('FPDoR in health pipeline', function() {
     expect(result.features).toHaveLength(1)
     var f = result.features[0]
     expect(f.fpdor).toBeDefined()
-    expect(f.fpdor.items).toHaveLength(17)
-    expect(f.fpdor.totalCount).toBe(17)
+    expect(f.fpdor.items).toHaveLength(7)
+    expect(f.fpdor.totalCount).toBe(7)
     expect(typeof f.fpdor.passedCount).toBe('number')
     expect(typeof f.fpdor.evaluatedCount).toBe('number')
     expect(f.fpdor.confluenceUrl).toContain('442958832')
@@ -57,7 +57,7 @@ describe('FPDoR in health pipeline', function() {
     var result = await runHealthPipeline('3.5', storage.readFromStorage, storage.writeToStorage, vi.fn(), vi.fn())
     var items = result.features[0].fpdor.items
     var jiraItems = items.filter(function(i) { return i.source === 'jira' })
-    expect(jiraItems).toHaveLength(17)
+    expect(jiraItems).toHaveLength(7)
   })
 
   it('criteria fail without labels or description enrichment', async function() {
@@ -303,7 +303,7 @@ describe('FPDoR in health pipeline', function() {
     ]))
     var result = await runHealthPipeline('3.5', storage.readFromStorage, storage.writeToStorage, vi.fn(), vi.fn())
     var fpdor = result.features[0].fpdor
-    expect(fpdor.totalCount).toBe(17)
+    expect(fpdor.totalCount).toBe(7)
     var passed = fpdor.items.filter(function(i) { return i.pass === true })
     var passedNames = passed.map(function(i) { return i.name }).sort()
     expect(passedNames).toEqual(expect.arrayContaining([

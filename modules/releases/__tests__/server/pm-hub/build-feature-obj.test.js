@@ -38,7 +38,7 @@ describe('buildFeatureObj', function () {
     expect(result.pmDoAligned).toBe(true)
     expect(result.fpdor).toBeTruthy()
     expect(Array.isArray(result.fpdor.items)).toBe(true)
-    expect(result.fpdor.totalCount).toBe(17)
+    expect(result.fpdor.totalCount).toBe(7)
     expect(result.isAiFirst).toBe(true)
     expect(result.confidence).toBeTruthy()
     expect(result.labels).toEqual(['strat-creator-auto-created'])

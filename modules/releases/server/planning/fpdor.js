@@ -1,33 +1,28 @@
 /**
  * Feature Planning Definition of Ready (FPDoR)
  * Source of truth: Confluence Planning Phase DoR checklist
- * https://redhat.atlassian.net/wiki/spaces/RHAI/pages/442958832
+ * https://redhat.atlassian.net/wiki/spaces/RHAI/pages/453312634/Feature+Planning+Definition+of+Ready+and+Checklist+for+Planning+DoD
+ *
+ * Updated Nov 24 2026: Changed from 17-item to 7-item model
+ * See: https://redhat.atlassian.net/wiki/spaces/RHAI/pages/453312634/Feature+Planning+Definition+of+Ready+and+Checklist+for+Planning+DoD
  */
 
-var FPDOR_TOTAL_COUNT = 17
-var FPDOR_CONFLUENCE_URL = 'https://redhat.atlassian.net/wiki/spaces/RHAI/pages/442958832/Planning+Phase+-+Definition+of+Ready+Definition+of+Done'
+var FPDOR_TOTAL_COUNT = 7
+var FPDOR_CONFLUENCE_URL = 'https://redhat.atlassian.net/wiki/spaces/RHAI/pages/453312634/Feature+Planning+Definition+of+Ready+and+Checklist+for+Planning+DoD'
 
+// 7-item FPDoR checklist (Nov 24 2026)
 var MANDATORY_ITEMS = [
   'Target Version',
-  'Release Type',
+  'Feature Human Signoff',
   'Components',
   'PM',
-  'Delivery Owner',
-  'Priority',
-  'RICE',
-  'Docs impact'
+  'Assignee',
+  'Release Type',
+  'Product Documentation Required'
 ]
 
 var CRITERIA_ITEMS = [
-  'Source RFE / AI SDLC',
-  'Requirements clarity',
-  'Acceptance criteria',
-  'Risks & assumptions',
-  'Architectural alignment',
-  'UXD',
-  'Cross-team deps',
-  'Feature human sign-off',
-  'Child epics'
+  // All 7 items are equally critical in the new model (no separate criteria tier)
 ]
 
 var NON_ENG_COMPONENTS = {

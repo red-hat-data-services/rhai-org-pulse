@@ -1358,9 +1358,9 @@ describe('buildFeatureReadiness', function() {
     it('returns isReady=true when all applicable FPDoR items pass', function() {
       var result = computeReadiness(readyFeature())
       expect(result.isReady).toBe(true)
-      expect(result.gates.fpDorTotal).toBe(17)
+      expect(result.gates.fpDorTotal).toBe(7)
       expect(result.fpdor.allApplicablePassed).toBe(true)
-      expect(result.fpdor.totalCount).toBe(17)
+      expect(result.fpdor.totalCount).toBe(7)
       expect(result.gates.pastRefinement).toBe(true)
       expect(result.gates.noBlockingViolations).toBe(true)
     })
@@ -1462,7 +1462,7 @@ describe('buildFeatureReadiness', function() {
 
     it('fpdor object contains items array with individual checks and groups', function() {
       var result = computeReadiness(readyFeature())
-      expect(result.fpdor.items.length).toBe(17)
+      expect(result.fpdor.items.length).toBe(7)
       for (var i = 0; i < result.fpdor.items.length; i++) {
         expect(result.fpdor.items[i]).toHaveProperty('name')
         expect(result.fpdor.items[i]).toHaveProperty('pass')
@@ -1825,11 +1825,11 @@ describe('buildFeatureReadiness', function() {
       expect(result.fpdor.items.find(function(i) { return i.name === 'PM' }).pass).toBe(true)
     })
 
-    it('FPDoR has 17 items total', function() {
+    it('FPDoR has 7 items total', function() {
       var result = computeReadiness(readyFeature())
-      expect(result.fpdor.totalCount).toBe(17)
-      expect(result.fpdor.applicableCount).toBe(17)
-      expect(result.fpdor.items).toHaveLength(17)
+      expect(result.fpdor.totalCount).toBe(7)
+      expect(result.fpdor.applicableCount).toBe(7)
+      expect(result.fpdor.items).toHaveLength(7)
     })
   })
 
