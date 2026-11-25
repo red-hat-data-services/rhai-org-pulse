@@ -1470,7 +1470,18 @@ The representative fixture is `fixtures/releases/tech-debt/trends.json`.
       "createdMonth": "2026-10",
       "resolvedMonth": null
     }
-  ]
+  ],
+  "weeklyBugs": {
+    "granularity": "iso-week",
+    "timezone": "UTC",
+    "startDate": "2026-05-01",
+    "throughDate": "2026-10-29",
+    "totals": { "created": 4, "resolved": 1 },
+    "weeks": [
+      { "week": "2026-W18", "startDate": "2026-04-27", "created": 0, "resolved": 0 },
+      { "week": "2026-W19", "startDate": "2026-05-04", "created": 0, "resolved": 0 }
+    ]
+  }
 }
 ```
 
@@ -1483,6 +1494,21 @@ Received and Resolved totals by Jira key. An empty `components` array represents
 the **No component** panel. Snapshots older than 48 hours are served with a
 warning. A refreshed snapshot is required after classifier or component-scope
 changes to populate updated historical events.
+
+`weeklyBugs` is an additive schema-version-1 field precomputed by the collector.
+It contains every contiguous ISO-8601 week from the week intersecting
+`window.startDate` through the partial week containing `generatedAt`; zero-count
+weeks are retained. Only Jira Bugs contribute. Created uses `created`, Resolved
+uses `resolutiondate`, and an issue can contribute once to both series. The
+organization-wide aggregation counts multi-component Bugs once and includes
+empty component arrays. The example above abbreviates the contiguous `weeks`
+array; the stored fixture contains the complete series.
+
+`GET /api/modules/releases/tech-debt/trends/weekly-bugs` returns the precomputed
+weekly series independently of dashboard filters, together with snapshot age
+metadata. Older valid snapshots that omit `weeklyBugs` continue serving monthly
+trends; the weekly endpoint returns a specific unavailable response until the
+next collector refresh.
 
 ---
 

@@ -245,6 +245,94 @@
     </section>
 
     <section
+      class="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm dark:border-gray-700 dark:bg-gray-800"
+      aria-labelledby="ai-engineering-historic-trends-heading"
+      data-testid="tech-debt-historic-trends"
+    >
+      <header class="flex items-center justify-between gap-4 px-5 py-4">
+        <div>
+          <h3 id="ai-engineering-historic-trends-heading" class="text-base font-bold text-gray-900 dark:text-gray-100">
+            AI Engineering Historic Trends
+          </h3>
+          <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
+            Weekly Bugs created and resolved across all five AI Engineering Jira projects, including Bugs with no component.
+          </p>
+        </div>
+        <button
+          type="button"
+          class="inline-flex h-9 shrink-0 items-center gap-1.5 rounded-full border border-gray-300 bg-gray-50 px-3 text-xs font-semibold text-gray-700 transition hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-primary-500 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-200 dark:hover:bg-gray-600"
+          :aria-expanded="historicTrendsExpanded"
+          aria-controls="ai-engineering-historic-trends-content"
+          :aria-label="historicTrendsExpanded ? 'Collapse AI Engineering Historic Trends' : 'Expand AI Engineering Historic Trends'"
+          data-testid="tech-debt-historic-trends-toggle"
+          @click="toggleHistoricTrends"
+        >
+          <span>{{ historicTrendsExpanded ? 'Collapse' : 'Expand' }}</span>
+          <svg
+            class="h-4 w-4 transition-transform"
+            :class="{ 'rotate-180': historicTrendsExpanded }"
+            viewBox="0 0 20 20"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            aria-hidden="true"
+          >
+            <path d="m5 7.5 5 5 5-5" stroke-linecap="round" stroke-linejoin="round" />
+          </svg>
+        </button>
+      </header>
+
+      <div
+        v-if="historicTrendsExpanded"
+        id="ai-engineering-historic-trends-content"
+        class="border-t border-gray-200 dark:border-gray-700"
+        data-testid="tech-debt-historic-trends-content"
+      >
+        <div v-if="weeklyBugTrendLoading && !weeklyBugTrendData" class="space-y-4 p-5" aria-label="Loading weekly Bug trends">
+          <div class="h-5 w-64 animate-pulse rounded bg-gray-200 dark:bg-gray-700" />
+          <div class="h-72 animate-pulse rounded-xl bg-gray-100 dark:bg-gray-700" />
+        </div>
+
+        <div v-else-if="weeklyBugTrendUnavailable" class="flex flex-wrap items-center justify-between gap-3 bg-amber-50 px-5 py-4 text-sm text-amber-800 dark:bg-amber-950/30 dark:text-amber-200" role="status" data-testid="tech-debt-weekly-trend-unavailable">
+          <span>Weekly Bug history will be available after the next nightly Tech Debt snapshot refresh.</span>
+          <button type="button" class="rounded-lg border border-amber-300 px-3 py-1.5 font-semibold hover:bg-amber-100 focus:outline-none focus:ring-2 focus:ring-amber-500 dark:border-amber-700 dark:hover:bg-amber-900/40" @click="loadWeeklyBugTrends">
+            Retry
+          </button>
+        </div>
+
+        <div v-else-if="weeklyBugTrendError" class="flex flex-wrap items-center justify-between gap-3 bg-red-50 px-5 py-4 text-sm text-red-800 dark:bg-red-950/30 dark:text-red-200" role="alert" data-testid="tech-debt-weekly-trend-error">
+          <span>Weekly Bug trends are temporarily unavailable. The live cockpit remains available.</span>
+          <button type="button" class="rounded-lg border border-red-300 px-3 py-1.5 font-semibold hover:bg-red-100 focus:outline-none focus:ring-2 focus:ring-red-500 dark:border-red-700 dark:hover:bg-red-900/40" @click="loadWeeklyBugTrends">
+            Retry
+          </button>
+        </div>
+
+        <template v-else-if="weeklyBugTrendData">
+          <div v-if="weeklyBugTrendData.warning" class="border-b border-amber-200 bg-amber-50 px-5 py-3 text-sm text-amber-800 dark:border-amber-800 dark:bg-amber-950/30 dark:text-amber-200" role="status" data-testid="tech-debt-weekly-trend-stale-warning">
+            {{ weeklyBugTrendData.warning }}
+          </div>
+          <div class="p-5">
+            <div class="mb-4 flex flex-wrap items-start justify-between gap-3">
+              <div>
+                <p class="text-sm font-semibold text-gray-700 dark:text-gray-200">
+                  {{ weeklyBugTrendData.totals.created }} created · {{ weeklyBugTrendData.totals.resolved }} resolved
+                </p>
+                <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                  Six-calendar-month UTC window · Snapshot generated {{ formatTimestamp(weeklyBugTrendData.generatedAt) }}
+                </p>
+              </div>
+              <span class="rounded-full bg-gray-100 px-3 py-1 text-xs font-semibold text-gray-600 dark:bg-gray-700 dark:text-gray-300">Bugs only · All components</span>
+            </div>
+            <TechDebtWeeklyBugChart v-if="weeklyBugTrendHasActivity" :weeks="weeklyBugTrendData.weeks" />
+            <div v-else class="flex h-48 items-center justify-center rounded-xl border border-dashed border-gray-300 text-center text-sm text-gray-500 dark:border-gray-700 dark:text-gray-400" data-testid="tech-debt-weekly-trend-empty">
+              No Bugs were created or resolved in this six-month window.
+            </div>
+          </div>
+        </template>
+      </div>
+    </section>
+
+    <section
       v-if="!selectedComponents.length"
       class="rounded-2xl border border-dashed border-gray-300 bg-gradient-to-br from-gray-50 to-white px-6 py-16 text-center dark:border-gray-700 dark:from-gray-800 dark:to-gray-900"
       data-testid="tech-debt-component-required"
@@ -453,6 +541,7 @@ import { apiRequest } from '@shared/client/services/api'
 import TechDebtFlowChart from '../components/TechDebtFlowChart.vue'
 import TechDebtIssueCard from '../components/TechDebtIssueCard.vue'
 import TechDebtScoringRubricModal from '../components/TechDebtScoringRubricModal.vue'
+import TechDebtWeeklyBugChart from '../components/TechDebtWeeklyBugChart.vue'
 import {
   readTechDebtIssueCache,
   readTechDebtTrendCache,
@@ -483,11 +572,17 @@ const trendData = ref(null)
 const trendLoading = ref(false)
 const trendError = ref('')
 const trendViewMode = ref('volume')
+const historicTrendsExpanded = ref(false)
+const weeklyBugTrendData = ref(null)
+const weeklyBugTrendLoading = ref(false)
+const weeklyBugTrendError = ref('')
+const weeklyBugTrendUnavailable = ref(false)
 const visibleInFlight = ref(PAGE_SIZE)
 const visibleVulnerabilityBacklogCount = ref(PAGE_SIZE)
 const visibleBugBacklogCount = ref(PAGE_SIZE)
 let issueRequestId = 0
 let trendRequestId = 0
+let weeklyBugTrendRequestId = 0
 
 const selectedNamedComponents = computed(function () {
   return selectedComponents.value.filter(function (component) { return component !== NO_COMPONENT_KEY })
@@ -554,6 +649,9 @@ const visibleBugBacklogIssues = computed(() => bugBacklog.value.slice(0, visible
 const hasMoreInFlight = computed(() => (cockpitData.value?.inFlight || []).length > visibleInFlight.value)
 const hasMoreVulnerabilityBacklog = computed(() => vulnerabilityBacklog.value.length > visibleVulnerabilityBacklogCount.value)
 const hasMoreBugBacklog = computed(() => bugBacklog.value.length > visibleBugBacklogCount.value)
+const weeklyBugTrendHasActivity = computed(function () {
+  return Number(weeklyBugTrendData.value?.totals?.created || 0) + Number(weeklyBugTrendData.value?.totals?.resolved || 0) > 0
+})
 
 function toggleComponent(name) {
   if (selectedComponents.value.includes(name)) {
@@ -615,6 +713,39 @@ function clearFilters() {
   selectedIssueType.value = ''
   selectedTriage.value = ''
   closeComponentMenu()
+}
+
+function toggleHistoricTrends() {
+  historicTrendsExpanded.value = !historicTrendsExpanded.value
+  if (historicTrendsExpanded.value && !weeklyBugTrendData.value && !weeklyBugTrendLoading.value) {
+    loadWeeklyBugTrends()
+  }
+}
+
+async function loadWeeklyBugTrends() {
+  const requestId = ++weeklyBugTrendRequestId
+  weeklyBugTrendLoading.value = true
+  weeklyBugTrendError.value = ''
+  weeklyBugTrendUnavailable.value = false
+  try {
+    const response = await apiRequest('/modules/releases/tech-debt/trends/weekly-bugs')
+    if (requestId !== weeklyBugTrendRequestId) return
+    weeklyBugTrendData.value = {
+      ...response,
+      totals: response?.totals || { created: 0, resolved: 0 },
+      weeks: Array.isArray(response?.weeks) ? response.weeks : []
+    }
+  } catch (err) {
+    if (requestId !== weeklyBugTrendRequestId) return
+    weeklyBugTrendData.value = null
+    if (err && err.status === 404) {
+      weeklyBugTrendUnavailable.value = true
+    } else {
+      weeklyBugTrendError.value = err && err.message ? err.message : 'Unable to load weekly Bug trends.'
+    }
+  } finally {
+    if (requestId === weeklyBugTrendRequestId) weeklyBugTrendLoading.value = false
+  }
 }
 
 function closeComponentMenuOnOutsideClick(event) {

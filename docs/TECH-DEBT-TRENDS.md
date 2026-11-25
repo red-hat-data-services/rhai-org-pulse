@@ -28,9 +28,11 @@ npm run collect:tech-debt-trends
 ```
 
 The collector requests the current UTC calendar month and previous five months,
-classifies Bugs with the same deterministic rules as the cockpit, then uploads
-the complete validated snapshot. A Jira or upload failure exits non-zero and
-does not replace the previous snapshot.
+classifies Bugs with the same deterministic rules as the cockpit, and precomputes
+organization-wide ISO-week Bug Created and Resolved totals before uploading the
+complete validated snapshot. Weekly totals include all five projects and all
+component states, including issues with no component. A Jira or upload failure
+exits non-zero and does not replace the previous snapshot.
 
 ## Required configuration
 
@@ -51,3 +53,8 @@ values remain in OpenShift/Vault and are not copied to GitHub Actions.
 The upload endpoint rejects malformed snapshots and payloads larger than 15 MB
 before writing through the shared storage abstraction. The stored contract is
 documented in `docs/DATA-FORMATS.md`.
+
+Deployments with a pre-weekly schema-version-1 snapshot continue serving the
+existing monthly charts. Run the collector once after deployment (or wait for
+the next 06:00 UTC CronJob) to populate the AI Engineering Historic Trends
+section immediately.

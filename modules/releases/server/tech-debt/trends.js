@@ -2,6 +2,7 @@ const { classifyBug } = require('./bug-score')
 
 const SCHEMA_VERSION = 1
 const STALE_AFTER_MS = 48 * 60 * 60 * 1000
+const DAY_MS = 24 * 60 * 60 * 1000
 const PROJECTS = ['RHAI', 'RHAIENG', 'RHOAIENG', 'INFERENG', 'AIPCC']
 const STORAGE_KEY = 'releases/tech-debt/trends.json'
 const NO_COMPONENT_LABEL = 'No component'
@@ -39,6 +40,36 @@ function monthId(value) {
 
 function monthStart(month) {
   return month + '-01'
+}
+
+function utcDate(value) {
+  const parsed = value instanceof Date ? value : new Date(value)
+  if (Number.isNaN(parsed.getTime())) return null
+  return new Date(Date.UTC(parsed.getUTCFullYear(), parsed.getUTCMonth(), parsed.getUTCDate()))
+}
+
+function isoDate(value) {
+  const parsed = utcDate(value)
+  return parsed ? parsed.toISOString().slice(0, 10) : null
+}
+
+function isoWeekStart(value) {
+  const parsed = utcDate(value)
+  if (!parsed) return null
+  const daysSinceMonday = (parsed.getUTCDay() + 6) % 7
+  parsed.setUTCDate(parsed.getUTCDate() - daysSinceMonday)
+  return parsed
+}
+
+function isoWeekId(value) {
+  const parsed = utcDate(value)
+  if (!parsed) return null
+  const isoDay = parsed.getUTCDay() || 7
+  parsed.setUTCDate(parsed.getUTCDate() + 4 - isoDay)
+  const isoYear = parsed.getUTCFullYear()
+  const yearStart = new Date(Date.UTC(isoYear, 0, 1))
+  const week = Math.ceil((((parsed - yearStart) / DAY_MS) + 1) / 7)
+  return String(isoYear) + '-W' + String(week).padStart(2, '0')
 }
 
 function sixMonthWindow(now = new Date()) {
@@ -130,6 +161,56 @@ function eventFromIssue(issue, sfdcKeys, window) {
   }
 }
 
+function buildWeeklyBugSeries(rawIssues, window, now) {
+  const generatedAt = now instanceof Date ? now : new Date(now)
+  const windowStart = new Date(window.startDate + 'T00:00:00.000Z')
+  const windowEnd = new Date(window.endExclusive + 'T00:00:00.000Z')
+  const throughDate = utcDate(generatedAt)
+  const firstWeekStart = isoWeekStart(windowStart)
+  const lastWeekStart = isoWeekStart(throughDate)
+  const weeks = []
+  const byWeek = new Map()
+
+  for (let cursor = firstWeekStart; cursor && lastWeekStart && cursor <= lastWeekStart; cursor = new Date(cursor.getTime() + 7 * DAY_MS)) {
+    const week = {
+      week: isoWeekId(cursor),
+      startDate: isoDate(cursor),
+      created: 0,
+      resolved: 0
+    }
+    weeks.push(week)
+    byWeek.set(week.week, week)
+  }
+
+  function increment(value, metric) {
+    if (!value) return
+    const parsed = new Date(value)
+    if (Number.isNaN(parsed.getTime())) return
+    if (parsed < windowStart || parsed >= windowEnd || parsed > generatedAt) return
+    const bucket = byWeek.get(isoWeekId(parsed))
+    if (bucket) bucket[metric] += 1
+  }
+
+  for (const issue of rawIssues) {
+    const fields = issue && issue.fields || {}
+    if (normalizeText(fields.issuetype && fields.issuetype.name) !== 'Bug') continue
+    increment(fields.created, 'created')
+    increment(fields.resolutiondate, 'resolved')
+  }
+
+  return {
+    granularity: 'iso-week',
+    timezone: 'UTC',
+    startDate: window.startDate,
+    throughDate: isoDate(generatedAt),
+    totals: {
+      created: weeks.reduce(function (sum, week) { return sum + week.created }, 0),
+      resolved: weeks.reduce(function (sum, week) { return sum + week.resolved }, 0)
+    },
+    weeks
+  }
+}
+
 function buildTrendSnapshot(rawIssues, sfdcKeys = new Set(), now = new Date()) {
   const window = sixMonthWindow(now)
   const issueMap = new Map()
@@ -149,7 +230,8 @@ function buildTrendSnapshot(rawIssues, sfdcKeys = new Set(), now = new Date()) {
     window,
     projects: PROJECTS,
     issueCount: events.length,
-    events
+    events,
+    weeklyBugs: buildWeeklyBugSeries(issueMap.values(), window, now)
   }
 }
 
@@ -171,6 +253,72 @@ function normalizeEvent(value, validMonths) {
   if (resolvedMonth && !validMonths.has(resolvedMonth)) return null
   if (!createdMonth && !resolvedMonth) return null
   return { key, issueType, category, components, createdMonth, resolvedMonth }
+}
+
+function normalizeWeeklyBugs(value, window, generatedAt) {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return { error: 'weeklyBugs must be an object' }
+  if (value.granularity !== 'iso-week') return { error: 'weeklyBugs.granularity must be iso-week' }
+  if (value.timezone !== 'UTC') return { error: 'weeklyBugs.timezone must be UTC' }
+  const startDate = normalizeText(value.startDate)
+  const throughDate = normalizeText(value.throughDate)
+  if (startDate !== window.startDate) return { error: 'weeklyBugs.startDate must match window.startDate' }
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(throughDate)) return { error: 'weeklyBugs.throughDate must use YYYY-MM-DD' }
+  const through = utcDate(throughDate)
+  const windowStart = utcDate(window.startDate)
+  const windowEnd = utcDate(window.endExclusive)
+  if (!through || through < windowStart || through >= windowEnd) {
+    return { error: 'weeklyBugs.throughDate must fall inside the trend window' }
+  }
+  if (throughDate !== isoDate(generatedAt)) return { error: 'weeklyBugs.throughDate must match generatedAt in UTC' }
+  if (!Array.isArray(value.weeks) || !value.weeks.length) return { error: 'weeklyBugs.weeks must be a non-empty array' }
+
+  const weeks = []
+  let previousStart = null
+  for (const row of value.weeks) {
+    const week = normalizeText(row && row.week)
+    const weekStart = normalizeText(row && row.startDate)
+    const parsedStart = /^\d{4}-\d{2}-\d{2}$/.test(weekStart) ? utcDate(weekStart) : null
+    const created = Number(row && row.created)
+    const resolved = Number(row && row.resolved)
+    if (!/^\d{4}-W\d{2}$/.test(week) || !parsedStart || parsedStart.getUTCDay() !== 1 || isoWeekId(parsedStart) !== week) {
+      return { error: 'weeklyBugs.weeks contains an invalid ISO week' }
+    }
+    if (!Number.isInteger(created) || created < 0 || !Number.isInteger(resolved) || resolved < 0) {
+      return { error: 'weeklyBugs week counts must be non-negative integers' }
+    }
+    if (previousStart && parsedStart.getTime() - previousStart.getTime() !== 7 * DAY_MS) {
+      return { error: 'weeklyBugs.weeks must be contiguous and ordered' }
+    }
+    previousStart = parsedStart
+    weeks.push({ week, startDate: weekStart, created, resolved })
+  }
+
+  const firstStart = utcDate(weeks[0].startDate)
+  const lastStart = utcDate(weeks[weeks.length - 1].startDate)
+  if (windowStart < firstStart || windowStart >= new Date(firstStart.getTime() + 7 * DAY_MS)) {
+    return { error: 'weeklyBugs.weeks must include the trend window start' }
+  }
+  if (lastStart.getTime() !== isoWeekStart(through).getTime()) {
+    return { error: 'weeklyBugs.weeks must end with the throughDate week' }
+  }
+
+  const totals = {
+    created: weeks.reduce(function (sum, week) { return sum + week.created }, 0),
+    resolved: weeks.reduce(function (sum, week) { return sum + week.resolved }, 0)
+  }
+  if (Number(value.totals && value.totals.created) !== totals.created || Number(value.totals && value.totals.resolved) !== totals.resolved) {
+    return { error: 'weeklyBugs.totals must equal the sum of weekly counts' }
+  }
+  return {
+    weeklyBugs: {
+      granularity: 'iso-week',
+      timezone: 'UTC',
+      startDate,
+      throughDate,
+      totals,
+      weeks
+    }
+  }
 }
 
 function normalizeTrendSnapshot(body) {
@@ -198,14 +346,22 @@ function normalizeTrendSnapshot(body) {
   if (!/^\d{4}-\d{2}-\d{2}$/.test(startDate) || !/^\d{4}-\d{2}-\d{2}$/.test(endExclusive)) {
     return { error: 'window dates must use YYYY-MM-DD' }
   }
+  const window = { months, startDate, endExclusive, timezone: 'UTC' }
+  let weeklyBugs
+  if (body.weeklyBugs !== undefined) {
+    const normalizedWeekly = normalizeWeeklyBugs(body.weeklyBugs, window, generatedAt)
+    if (normalizedWeekly.error) return { error: normalizedWeekly.error }
+    weeklyBugs = normalizedWeekly.weeklyBugs
+  }
   return {
     snapshot: {
       schemaVersion: SCHEMA_VERSION,
       generatedAt: generatedAt.toISOString(),
-      window: { months, startDate, endExclusive, timezone: 'UTC' },
+      window,
       projects: PROJECTS,
       issueCount: events.length,
-      events
+      events,
+      ...(weeklyBugs ? { weeklyBugs } : {})
     }
   }
 }
@@ -287,6 +443,29 @@ function buildTrendResponse(snapshot, selectedComponents, selectedIssueType, now
   }
 }
 
+function buildWeeklyBugTrendResponse(snapshot, now = new Date()) {
+  if (!snapshot.weeklyBugs) return null
+  const generatedAt = Date.parse(snapshot.generatedAt)
+  const ageMs = Number.isNaN(generatedAt) ? Number.MAX_SAFE_INTEGER : now.getTime() - generatedAt
+  const stale = ageMs > STALE_AFTER_MS
+  return {
+    generatedAt: snapshot.generatedAt,
+    window: {
+      ...snapshot.window,
+      throughDate: snapshot.weeklyBugs.throughDate
+    },
+    projects: PROJECTS,
+    issueType: 'Bug',
+    componentScope: 'all',
+    includeNoComponent: true,
+    granularity: 'iso-week',
+    totals: snapshot.weeklyBugs.totals,
+    weeks: snapshot.weeklyBugs.weeks,
+    stale,
+    warning: stale ? 'Tech debt weekly Bug trend data is more than 48 hours old.' : null
+  }
+}
+
 module.exports = {
   CATEGORY_DEFINITIONS,
   NO_COMPONENT_LABEL,
@@ -296,8 +475,13 @@ module.exports = {
   STORAGE_KEY,
   buildTrendResponse,
   buildTrendSnapshot,
+  buildWeeklyBugSeries,
+  buildWeeklyBugTrendResponse,
   eventFromIssue,
+  isoWeekId,
+  isoWeekStart,
   monthId,
+  normalizeWeeklyBugs,
   normalizeTrendSnapshot,
   sixMonthWindow
 }

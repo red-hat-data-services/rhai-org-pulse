@@ -1333,6 +1333,7 @@ test.describe('Releases FPDoR Readiness @releases', () => {
   test('Tech Debt Cockpit filters, classifies, and ranks deterministic Jira issues', async ({ page }) => {
     const issueRequests = [];
     const trendRequests = [];
+    const weeklyTrendRequests = [];
     await page.route('**/api/modules/releases/tech-debt/components', async route => {
       await route.fulfill({
         json: {
@@ -1465,6 +1466,34 @@ test.describe('Releases FPDoR Readiness @releases', () => {
         }
       });
     });
+    await page.route('**/api/modules/releases/tech-debt/trends/weekly-bugs', async route => {
+      weeklyTrendRequests.push(route.request().url());
+      await route.fulfill({
+        json: {
+          generatedAt: '2026-10-29T06:00:00.000Z',
+          window: {
+            months: ['2026-05', '2026-06', '2026-07', '2026-08', '2026-09', '2026-10'],
+            startDate: '2026-05-01',
+            endExclusive: '2026-11-01',
+            throughDate: '2026-10-29',
+            timezone: 'UTC'
+          },
+          projects: ['RHAI', 'RHAIENG', 'RHOAIENG', 'INFERENG', 'AIPCC'],
+          issueType: 'Bug',
+          componentScope: 'all',
+          includeNoComponent: true,
+          granularity: 'iso-week',
+          totals: { created: 3, resolved: 2 },
+          weeks: [
+            { week: '2026-W42', startDate: '2026-10-12', created: 1, resolved: 0 },
+            { week: '2026-W43', startDate: '2026-10-19', created: 2, resolved: 2 },
+            { week: '2026-W44', startDate: '2026-10-26', created: 0, resolved: 0 }
+          ],
+          stale: false,
+          warning: null
+        }
+      });
+    });
     await page.route('**/api/modules/releases/tech-debt/trends?*', async route => {
       trendRequests.push(route.request().url());
       const url = new URL(route.request().url());
@@ -1528,6 +1557,16 @@ test.describe('Releases FPDoR Readiness @releases', () => {
     await expect(page.getByTestId('tech-debt-release-filter')).toBeVisible();
     await expect(page.getByTestId('tech-debt-clear-filters')).toBeVisible();
     await expect(page.getByTestId('tech-debt-component-required')).toBeVisible();
+    await expect(page.getByTestId('tech-debt-historic-trends-toggle')).toHaveAttribute('aria-expanded', 'false');
+    expect(weeklyTrendRequests).toHaveLength(0);
+    expect(issueRequests).toHaveLength(0);
+
+    await page.getByTestId('tech-debt-historic-trends-toggle').click();
+    await expect(page.getByTestId('tech-debt-historic-trends-toggle')).toHaveAttribute('aria-expanded', 'true');
+    await expect(page.getByTestId('tech-debt-historic-trends-content')).toContainText('3 created · 2 resolved');
+    await expect(page.getByRole('table', { name: 'Weekly Bug created and resolved counts' })).toContainText('2026-W42');
+    await expect(page.getByRole('table', { name: 'Weekly Bug created and resolved counts' })).toContainText('2026-W44');
+    expect(weeklyTrendRequests).toHaveLength(1);
     expect(issueRequests).toHaveLength(0);
 
     await page.getByTestId('tech-debt-component-filter').click();
@@ -1566,6 +1605,7 @@ test.describe('Releases FPDoR Readiness @releases', () => {
     await expect(page.getByRole('link', { name: /RHAI-201/ })).toHaveAttribute('href', 'https://redhat.atlassian.net/browse/RHAI-201');
     expect(issueRequests[0]).toContain('component=AI+Gateway');
     expect(trendRequests[0]).toContain('component=AI+Gateway');
+    expect(weeklyTrendRequests).toHaveLength(1);
 
     await page.getByTestId('tech-debt-component-filter').click();
     await page.getByRole('checkbox', { name: 'AI Gateway' }).uncheck();

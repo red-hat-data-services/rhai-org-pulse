@@ -65,6 +65,8 @@ describe('Tech Debt trend collector', function () {
 
     const snapshot = await collectSnapshot(config, new Date('2026-10-29T06:00:00.000Z'), fetchImpl)
     expect(snapshot.events[0].category).toBe('customer-linked')
+    expect(snapshot.weeklyBugs.totals).toEqual({ created: 1, resolved: 0 })
+    expect(snapshot.weeklyBugs.weeks.at(-1).week).toBe('2026-W44')
     expect(fetchImpl).toHaveBeenCalledTimes(2)
   })
 

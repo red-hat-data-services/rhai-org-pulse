@@ -14,6 +14,15 @@ vi.mock('../../../client/execute/components/TechDebtFlowChart.vue', function () 
   }
 })
 
+vi.mock('../../../client/execute/components/TechDebtWeeklyBugChart.vue', function () {
+  return {
+    default: {
+      props: ['weeks'],
+      template: '<div data-testid="tech-debt-weekly-bug-chart-stub">{{ weeks.map(week => `${week.week}: ${week.created} created, ${week.resolved} resolved`).join(" · ") }}</div>'
+    }
+  }
+})
+
 import { apiRequest } from '@shared/client/services/api'
 import TechDebtPrioritizationView from '../../../client/execute/views/TechDebtPrioritizationView.vue'
 import {
@@ -147,9 +156,36 @@ function trendResponse(overrides = {}) {
   }
 }
 
+function weeklyBugTrendResponse(overrides = {}) {
+  return {
+    generatedAt: '2026-10-29T06:00:00.000Z',
+    window: {
+      months: ['2026-05', '2026-06', '2026-07', '2026-08', '2026-09', '2026-10'],
+      startDate: '2026-05-01',
+      endExclusive: '2026-11-01',
+      throughDate: '2026-10-29',
+      timezone: 'UTC'
+    },
+    projects: ['RHAI', 'RHAIENG', 'RHOAIENG', 'INFERENG', 'AIPCC'],
+    issueType: 'Bug',
+    componentScope: 'all',
+    includeNoComponent: true,
+    granularity: 'iso-week',
+    totals: { created: 3, resolved: 2 },
+    weeks: [
+      { week: '2026-W42', startDate: '2026-10-12', created: 1, resolved: 0 },
+      { week: '2026-W43', startDate: '2026-10-19', created: 2, resolved: 2 }
+    ],
+    stale: false,
+    warning: null,
+    ...overrides
+  }
+}
+
 function mockSuccessfulApi(response = cockpitResponse()) {
   apiRequest.mockImplementation(function (path) {
     if (path === '/modules/releases/tech-debt/components') return Promise.resolve(componentsResponse)
+    if (path === '/modules/releases/tech-debt/trends/weekly-bugs') return Promise.resolve(weeklyBugTrendResponse())
     if (path.startsWith('/modules/releases/tech-debt/trends?')) return Promise.resolve(trendResponse())
     return Promise.resolve(response)
   })
@@ -180,6 +216,78 @@ describe('TechDebtPrioritizationView', function () {
     expect(wrapper.get('[data-testid="tech-debt-importance"]').text()).toContain('CVE remediation as part of every feature')
     expect(wrapper.find('[data-testid="tech-debt-component-required"]').exists()).toBe(true)
     expect(wrapper.find('[data-testid="tech-debt-cockpit"]').exists()).toBe(false)
+  })
+
+  it('keeps organization-wide weekly Bug trends collapsed and loads them independently on first expansion', async function () {
+    mockSuccessfulApi()
+    const wrapper = mount(TechDebtPrioritizationView)
+    await flushPromises()
+
+    const toggle = wrapper.get('[data-testid="tech-debt-historic-trends-toggle"]')
+    expect(toggle.attributes('aria-expanded')).toBe('false')
+    expect(wrapper.find('[data-testid="tech-debt-historic-trends-content"]').exists()).toBe(false)
+    expect(apiRequest).not.toHaveBeenCalledWith('/modules/releases/tech-debt/trends/weekly-bugs')
+
+    await toggle.trigger('click')
+    await flushPromises()
+
+    expect(toggle.attributes('aria-expanded')).toBe('true')
+    expect(apiRequest).toHaveBeenCalledWith('/modules/releases/tech-debt/trends/weekly-bugs')
+    expect(wrapper.get('[data-testid="tech-debt-historic-trends-content"]').text()).toContain('3 created · 2 resolved')
+    expect(wrapper.get('[data-testid="tech-debt-weekly-bug-chart-stub"]').text()).toContain('2026-W42: 1 created, 0 resolved')
+
+    await selectComponent(wrapper, 'AI Gateway')
+    await wrapper.get('[data-testid="tech-debt-issue-type-filter"]').setValue('Vulnerability')
+    await flushPromises()
+    expect(apiRequest.mock.calls.filter(function (call) {
+      return call[0] === '/modules/releases/tech-debt/trends/weekly-bugs'
+    })).toHaveLength(1)
+
+    await toggle.trigger('click')
+    await toggle.trigger('click')
+    await flushPromises()
+    expect(apiRequest.mock.calls.filter(function (call) {
+      return call[0] === '/modules/releases/tech-debt/trends/weekly-bugs'
+    })).toHaveLength(1)
+  })
+
+  it('shows the snapshot-refresh state when weekly Bug data is not available yet', async function () {
+    const unavailable = Object.assign(new Error('Weekly trends unavailable'), { status: 404 })
+    apiRequest.mockImplementation(function (path) {
+      if (path === '/modules/releases/tech-debt/components') return Promise.resolve(componentsResponse)
+      if (path === '/modules/releases/tech-debt/trends/weekly-bugs') return Promise.reject(unavailable)
+      return Promise.resolve(cockpitResponse())
+    })
+    const wrapper = mount(TechDebtPrioritizationView)
+    await flushPromises()
+
+    await wrapper.get('[data-testid="tech-debt-historic-trends-toggle"]').trigger('click')
+    await flushPromises()
+
+    expect(wrapper.get('[data-testid="tech-debt-weekly-trend-unavailable"]').text()).toContain('next nightly Tech Debt snapshot refresh')
+  })
+
+  it('shows stale metadata and a no-activity state for empty weekly Bug history', async function () {
+    apiRequest.mockImplementation(function (path) {
+      if (path === '/modules/releases/tech-debt/components') return Promise.resolve(componentsResponse)
+      if (path === '/modules/releases/tech-debt/trends/weekly-bugs') {
+        return Promise.resolve(weeklyBugTrendResponse({
+          totals: { created: 0, resolved: 0 },
+          weeks: [{ week: '2026-W43', startDate: '2026-10-19', created: 0, resolved: 0 }],
+          stale: true,
+          warning: 'Tech debt weekly Bug trend data is more than 48 hours old.'
+        }))
+      }
+      return Promise.resolve(cockpitResponse())
+    })
+    const wrapper = mount(TechDebtPrioritizationView)
+    await flushPromises()
+
+    await wrapper.get('[data-testid="tech-debt-historic-trends-toggle"]').trigger('click')
+    await flushPromises()
+
+    expect(wrapper.get('[data-testid="tech-debt-weekly-trend-stale-warning"]').text()).toContain('48 hours old')
+    expect(wrapper.get('[data-testid="tech-debt-weekly-trend-empty"]').text()).toContain('No Bugs were created or resolved')
   })
 
   it('loads RHAI components into the multi-select filter', async function () {

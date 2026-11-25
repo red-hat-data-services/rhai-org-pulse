@@ -3,6 +3,8 @@ import { describe, expect, it } from 'vitest'
 const {
   buildTrendResponse,
   buildTrendSnapshot,
+  buildWeeklyBugTrendResponse,
+  isoWeekId,
   normalizeTrendSnapshot,
   sixMonthWindow
 } = require('../../../server/tech-debt/trends')
@@ -31,6 +33,60 @@ describe('Tech Debt trend snapshot', function () {
       endExclusive: '2026-02-01',
       timezone: 'UTC'
     })
+  })
+
+  it('uses ISO weeks in UTC across year boundaries and timestamp offsets', function () {
+    expect(isoWeekId('2026-01-01T00:00:00.000Z')).toBe('2026-W01')
+    expect(isoWeekId('2027-01-01T12:00:00.000Z')).toBe('2026-W53')
+    expect(isoWeekId('2026-01-05T00:30:00+14:00')).toBe('2026-W01')
+    expect(isoWeekId('2026-01-05T00:30:00-10:00')).toBe('2026-W02')
+  })
+
+  it('precomputes zero-filled weekly Bug totals across all component states', function () {
+    const snapshot = buildTrendSnapshot([
+      rawIssue('RHAI-MULTI', {
+        components: [{ name: 'AI Gateway' }, { name: 'Model Serving' }],
+        created: '2026-10-05T12:00:00.000Z',
+        resolutiondate: '2026-10-19T12:00:00.000Z'
+      }),
+      rawIssue('RHAI-MULTI', { created: '2026-10-06T12:00:00.000Z' }),
+      rawIssue('RHAI-EMPTY', {
+        components: [],
+        created: '2026-10-06T12:00:00.000Z'
+      }),
+      rawIssue('RHAI-BOTH', {
+        created: '2026-10-12T12:00:00.000Z',
+        resolutiondate: '2026-10-15T12:00:00.000Z'
+      }),
+      rawIssue('RHAI-REOPENED', {
+        created: '2026-10-20T12:00:00.000Z',
+        resolutiondate: null
+      }),
+      rawIssue('RHAI-CVE', {
+        issuetype: { name: 'Vulnerability' },
+        created: '2026-10-05T12:00:00.000Z',
+        resolutiondate: '2026-10-20T12:00:00.000Z'
+      })
+    ], new Set(), new Date('2026-10-29T06:00:00.000Z'))
+
+    expect(snapshot.weeklyBugs.weeks[0]).toEqual({
+      week: '2026-W18',
+      startDate: '2026-04-27',
+      created: 0,
+      resolved: 0
+    })
+    expect(snapshot.weeklyBugs.weeks.at(-1).week).toBe('2026-W44')
+    expect(snapshot.weeklyBugs.throughDate).toBe('2026-10-29')
+    expect(snapshot.weeklyBugs.totals).toEqual({ created: 4, resolved: 2 })
+    expect(snapshot.weeklyBugs.weeks.find(function (week) { return week.week === '2026-W42' })).toEqual(
+      expect.objectContaining({ created: 1, resolved: 1 })
+    )
+
+    const response = buildWeeklyBugTrendResponse(snapshot, new Date('2026-10-29T07:00:00.000Z'))
+    expect(response.issueType).toBe('Bug')
+    expect(response.componentScope).toBe('all')
+    expect(response.includeNoComponent).toBe(true)
+    expect(response.totals).toEqual({ created: 4, resolved: 2 })
   })
 
   it('deduplicates Jira pages and classifies Bug and Vulnerability events', function () {
@@ -165,6 +221,20 @@ describe('Tech Debt trend snapshot', function () {
 
     expect(normalized.error).toBeUndefined()
     expect(normalized.snapshot.events[0].category).toBe('devtestops-e2e')
+    expect(normalized.snapshot.weeklyBugs).toBeUndefined()
+    expect(buildWeeklyBugTrendResponse(normalized.snapshot)).toBeNull()
+  })
+
+  it('rejects malformed weekly totals without invalidating snapshots that omit weekly data', function () {
+    const snapshot = buildTrendSnapshot([
+      rawIssue('RHAI-1', { created: '2026-10-01T00:00:00.000Z' })
+    ], new Set(), new Date('2026-10-29T06:00:00.000Z'))
+    snapshot.weeklyBugs.totals.created += 1
+
+    expect(normalizeTrendSnapshot(snapshot).error).toContain('weeklyBugs.totals')
+
+    delete snapshot.weeklyBugs
+    expect(normalizeTrendSnapshot(snapshot).error).toBeUndefined()
   })
 
   it('filters categories and events by issue type', function () {
