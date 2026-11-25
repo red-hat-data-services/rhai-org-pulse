@@ -373,7 +373,8 @@ describe('Dashboard navigation from Recent Runs', () => {
 
   it.each([
     [{ suiteRun: true, suiteName: 'release-gate', workflowsExpected: 30, workflowsRan: 30, workflowsMissing: [] }, '30 of 30 expected workflows ran.', 'Did not run'],
-    [{ suiteRun: true, suiteName: 'release-gate', workflowsExpected: 30, workflowsRan: null, workflowsMissing: null }, 'did not record workflow ids', 'expected workflows ran'],
+    [{ suiteRun: true, suiteName: 'release-gate', workflowsExpected: 30, workflowsRan: null, workflowsMissing: null }, 'cannot be counted', 'expected workflows ran'],
+    [{ suiteRun: true, suiteName: null, workflowsExpected: null, workflowsRan: null, workflowsMissing: null }, 'could not be read', 'were expected'],
     [{ suiteRun: false }, 'Ad hoc run', 'expected workflows']
   ])('describes the coverage of %j', async (fields, shown, hidden) => {
     const responses = apiRequest.getMockImplementation()

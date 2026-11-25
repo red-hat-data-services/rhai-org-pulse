@@ -25,9 +25,10 @@
     <section v-if="exactRun && hasLoaded && typeof selectedSuiteExecution?.suiteRun === 'boolean'" aria-label="Suite coverage"
       class="mb-4 rounded-xl border border-gray-100 bg-white px-6 py-4 text-sm text-gray-700 shadow-sm dark:border-gray-700/60 dark:bg-gray-800 dark:text-gray-200">
       <template v-if="selectedSuiteExecution.suiteRun">
-        <h3 class="text-base font-semibold text-gray-900 dark:text-gray-100">Suite run: {{ selectedSuiteExecution.suiteName }}</h3>
-        <p v-if="!Array.isArray(selectedSuiteExecution.workflowsMissing)" class="mt-1">
-          {{ selectedSuiteExecution.workflowsExpected }} workflows were expected. This run did not record workflow ids, so the workflows that ran cannot be counted.
+        <h3 class="text-base font-semibold text-gray-900 dark:text-gray-100">Suite run{{ selectedSuiteExecution.suiteName ? `: ${selectedSuiteExecution.suiteName}` : '' }}</h3>
+        <p v-if="!Number.isInteger(selectedSuiteExecution.workflowsExpected)" class="mt-1">The expected workflows of this run could not be read.</p>
+        <p v-else-if="!Array.isArray(selectedSuiteExecution.workflowsMissing)" class="mt-1">
+          {{ selectedSuiteExecution.workflowsExpected }} workflows were expected. The workflows that ran cannot be counted: not every execution of this run recorded a workflow id, or the result was incomplete.
         </p>
         <template v-else>
           <p class="mt-1">{{ selectedSuiteExecution.workflowsRan }} of {{ selectedSuiteExecution.workflowsExpected }} expected workflows ran.</p>

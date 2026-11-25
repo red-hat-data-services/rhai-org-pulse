@@ -240,7 +240,7 @@ const countText = (run, column) => showsExpected(run, column)
 /** Name the expected workflows that did not run, for the Workflows cell of a suite run. */
 function countTitle(run, column) {
   if (!showsExpected(run, column)) return undefined
-  if (!Array.isArray(run.workflowsMissing)) return 'This run did not record workflow ids, so the workflows that ran cannot be counted.'
+  if (!Array.isArray(run.workflowsMissing)) return 'The workflows that ran cannot be counted: not every execution of this run recorded a workflow id, or the result was incomplete.'
   if (!run.workflowsMissing.length) return 'Every expected workflow ran.'
   return `Did not run: ${run.workflowsMissing.map(workflow => workflow.title || workflow.workflowId).join('; ')}`
 }

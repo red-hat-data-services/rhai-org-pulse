@@ -619,7 +619,7 @@ describe('Recent Runs', () => {
     expect(workflows(suiteRun).attributes('title')).toBe('Did not run: Fraud Detection Workflow Validation Spec')
     expect(withoutIds.get('[data-testid="run-kind"]').text()).toBe('Suite run')
     expect(workflows(withoutIds).text()).toBe('— / 3')
-    expect(workflows(withoutIds).attributes('title')).toContain('did not record workflow ids')
+    expect(workflows(withoutIds).attributes('title')).toContain('cannot be counted')
     // An ad hoc run keeps every result; it only has no expected count.
     expect(adHoc.get('[data-testid="run-kind"]').text()).toBe('Ad hoc')
     expect(adHoc.findAll('td').slice(5).map(cell => cell.text())).toEqual(['1', '4', '4', '0', '0', '0'])
@@ -629,6 +629,12 @@ describe('Recent Runs', () => {
     await flushPromises()
     expect(workflows(wrapper.get('tbody tr')).text()).toBe('3 / 3')
     expect(workflows(wrapper.get('tbody tr')).attributes('title')).toBe('Every expected workflow ran.')
+    // Expected workflows that could not be read leave the plain count.
+    apiRequest.mockResolvedValue(page([{ ...suiteRuns.rows[0], suiteName: null, workflowsExpected: null, workflowsRan: null, workflowsMissing: null }]))
+    await button('Refresh').trigger('click')
+    await flushPromises()
+    expect(wrapper.get('[data-testid="run-kind"]').text()).toBe('Suite run')
+    expect(workflows(wrapper.get('tbody tr')).text()).toBe('3')
   })
 
   it('shows no run kind when the service does not report one', async () => {

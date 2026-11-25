@@ -89,12 +89,16 @@ How the numbers are derived:
 - **Ran is unavailable** (`—`) unless every execution of the run recorded a
   `workflow_id`. Runs made before the Director sent that field show
   `— / 30`, never a misleading `0 / 30`.
-- **No mark is shown** when the announcement index cannot be read. A missing
+- **No mark is shown** when the announcement index cannot be read. A suite
+  run whose expected workflows cannot be read keeps its mark and shows its
+  plain workflow count. A missing
   index means no suite runs exist yet, so every run is ad hoc.
 
-Announcements are read once per run-list scan and share its 10-second cache.
-Only announced runs are correlated with their executions, in batches of at most
-200 runs. All operations are searches.
+The run-list scan reads only the identity of each announcement, to mark suite
+runs, and shares the scan's 10-second cache. Expected workflows and the
+workflows that ran are read for the suite runs on the returned page only: one
+announcement search and one execution aggregation per page. A count is shown
+only from a complete search result. All operations are searches.
 
 ## Runtime configuration
 

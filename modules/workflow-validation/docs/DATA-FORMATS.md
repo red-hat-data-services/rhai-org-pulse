@@ -135,9 +135,9 @@ announcements (`workflow-suite-runs` index):
 | Field | Type | Meaning |
 |-------|------|---------|
 | `suiteRun` | boolean, or absent | `true` when the run has an announcement, `false` for an ad hoc run, absent when announcements could not be read |
-| `suiteName` | string | Suite name from the announcement, such as `release-gate`. Suite runs only |
-| `workflowsExpected` | integer | Distinct workflows the suite expected. Suite runs only |
-| `workflowsRan` | integer or null | Expected workflows with at least one execution. Null unless every execution recorded `workflow_id`. Suite runs only |
+| `suiteName` | string or null | Suite name from the announcement, such as `release-gate`. Null when the announcement's expected workflows could not be read. Suite runs only |
+| `workflowsExpected` | integer or null | Distinct workflows the suite expected. Null when they could not be read. Suite runs only |
+| `workflowsRan` | integer or null | Expected workflows with at least one execution. Null unless the execution search was complete and every execution recorded `workflow_id`. Suite runs only |
 | `workflowsMissing` | array or null | `{ workflowId, title }` for each expected workflow without an execution. Null when `workflowsRan` is null. Suite runs only |
 
 `suiteRunsOnly=true` keeps only rows with `suiteRun: true`, before pagination

@@ -20,7 +20,7 @@ const { getEffectiveSettings, getSavedSettings, saveSettings } = require('./conf
 const { createJiraClient, JIRA_HOST } = require('../../../shared/server/jira');
 const { createBugTickets } = require('./bug-tickets');
 const { taskAggregations, recoverSkipped, groupCounts } = require('./run-summary');
-const { addSuiteRuns, suiteRunDetail } = require('./suite-runs');
+const { markSuiteRuns, addCoverage, suiteRunDetail } = require('./suite-runs');
 const recentRunTools = import('../lib/versions.js').then(rules => require('./recent-runs')(rules));
 
 /** Wrap an async handler so OpenSearch connectivity errors become clean HTTP responses. */
@@ -678,7 +678,7 @@ module.exports = function registerRoutes(router, context) {
             if (closed) return;
             rows = await addImageMetadata(rows, (index, body) => client.search(index, body), invocationField, () => closed);
             if (rows === null || closed) return;
-            rows = await addSuiteRuns(rows, (index, body) => client.search(index, body), () => closed);
+            rows = await markSuiteRuns(rows, (index, body) => client.search(index, body), () => closed);
             if (closed) return;
           }
           if (cachedClient === client && scanSequence > (recentGroupsCache?.sequence || 0)) {
@@ -714,6 +714,9 @@ module.exports = function registerRoutes(router, context) {
           }
         }
         const page = pageRecentRuns(rows, recent, jiraHost);
+        // Expected versus ran is read for the returned page only; the cached scan holds just the suite-run mark.
+        page.rows = await addCoverage(page.rows, (index, body) => client.search(index, body), () => closed);
+        if (closed) return;
         if (req.query.includeBugTickets === 'true' && !includeGlobalBugs) {
           page.rows = await enrichBugTickets(page.rows, {
             search: (index, body) => client.search(index, body), refresh: recent.refresh, isClosed: () => closed
@@ -782,7 +785,7 @@ module.exports = function registerRoutes(router, context) {
       _source: [
         'execution_id', 'invocation_id', 'workflow', 'workflow_label', 'timestamp', 'verdict',
         'passed_int', 'tasks_total', 'tasks_passed', 'tasks_failed', 'rhoai_version',
-        'rhods_operator_digest', 'cluster_name', 'duration_s', 'telemetry_origin', 'workflow_id'
+        'rhods_operator_digest', 'cluster_name', 'duration_s', 'telemetry_origin'
       ]
     });
     if (!hits.length) return res.status(404).json({ error: 'Test run not found' });
@@ -794,7 +797,7 @@ module.exports = function registerRoutes(router, context) {
     const failed = tests.filter((test) => test.verdict === 'FAIL').length;
     const errors = tests.filter((test) => test.verdict === 'ERROR').length;
     const latest = tests[0];
-    const suiteRun = await suiteRunDetail(suite, invocationId, tests, osSearch);
+    const suiteRun = await suiteRunDetail(suite, invocationId, osSearch);
     res.json({
       suite,
       invocationId,
