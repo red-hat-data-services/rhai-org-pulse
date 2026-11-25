@@ -1558,6 +1558,14 @@ test.describe('Releases FPDoR Readiness @releases', () => {
     await expect(page.getByTestId('tech-debt-user-testing-warning')).toContainText('proceed with caution');
     await expect(page.getByTestId('tech-debt-importance')).toContainText('Why this report matters');
     await expect(page.getByTestId('tech-debt-importance')).toContainText('CVE remediation as part of every feature');
+    const importanceLightBackground = await page.getByTestId('tech-debt-importance').evaluate(element => window.getComputedStyle(element).backgroundColor);
+    await page.evaluate(() => document.documentElement.classList.add('dark'));
+    const importanceDarkBackground = await page.getByTestId('tech-debt-importance').evaluate(element => window.getComputedStyle(element).backgroundColor);
+    expect(importanceDarkBackground).not.toBe(importanceLightBackground);
+    await expect(page.getByTestId('tech-debt-importance')).toHaveClass(/dark:bg-gray-800/);
+    await expect(page.getByTestId('tech-debt-importance').locator('p')).toHaveClass(/dark:text-gray-200/);
+    await expect(page.getByTestId('vulnerability-rubric-open')).toHaveClass(/dark:text-primary-200/);
+    await page.evaluate(() => document.documentElement.classList.remove('dark'));
     await page.getByTestId('vulnerability-rubric-open').click();
     await expect(page.getByTestId('vulnerability-scoring-rubric')).toContainText('CVE order follows Jira’s `rh-sla-dt` deadline—not a weighted score.');
     await expect(page.getByTestId('vulnerability-scoring-rubric')).toContainText('Dec 1, 2026 at 00:00 UTC');

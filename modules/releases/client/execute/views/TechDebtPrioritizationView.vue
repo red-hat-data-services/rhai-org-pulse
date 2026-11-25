@@ -24,21 +24,21 @@
     </aside>
 
     <aside
-      class="flex items-start gap-3 rounded-xl border border-primary-200 bg-primary-50/70 px-4 py-3 dark:border-primary-800 dark:bg-primary-950/30"
+      class="flex items-start gap-3 rounded-xl border border-primary-200 bg-primary-50/70 px-4 py-3 dark:border-primary-600 dark:bg-gray-800"
       aria-labelledby="tech-debt-importance-heading"
       data-testid="tech-debt-importance"
     >
-      <div class="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary-100 text-primary-700 dark:bg-primary-900/60 dark:text-primary-300" aria-hidden="true">
+      <div class="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary-100 text-primary-700 dark:bg-primary-900 dark:text-primary-200" aria-hidden="true">
         ◈
       </div>
       <div>
         <h3 id="tech-debt-importance-heading" class="text-sm font-bold text-gray-900 dark:text-gray-100">Why this report matters</h3>
-        <p class="mt-0.5 max-w-5xl text-sm leading-5 text-gray-600 dark:text-gray-300">
+        <p class="mt-0.5 max-w-5xl text-sm leading-5 text-gray-600 dark:text-gray-200">
           High-quality, secure software earns the trust enterprise customers place in Red Hat. AI Engineering treats CVE remediation as part of every feature we deliver—patching continuously helps make vulnerability management sustainable, not a series of fire drills.
         </p>
         <button
           type="button"
-          class="mt-2 inline-flex items-center gap-1.5 text-sm font-semibold text-primary-700 underline decoration-primary-300 underline-offset-4 hover:text-primary-800 focus:outline-none focus:ring-2 focus:ring-primary-500 dark:text-primary-300 dark:hover:text-primary-200"
+          class="mt-2 inline-flex items-center gap-1.5 text-sm font-semibold text-primary-700 underline decoration-primary-300 underline-offset-4 hover:text-primary-800 focus:outline-none focus:ring-2 focus:ring-primary-500 dark:text-primary-200 dark:decoration-primary-400 dark:hover:text-primary-100"
           aria-haspopup="dialog"
           data-testid="vulnerability-rubric-open"
           @click="scoringRubricOpen = true"
