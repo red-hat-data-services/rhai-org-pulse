@@ -1531,6 +1531,9 @@ test.describe('Releases FPDoR Readiness @releases', () => {
     expect(issueRequests).toHaveLength(0);
 
     await page.getByTestId('tech-debt-component-filter').click();
+    await page.getByTestId('tech-debt-component-search').fill('gateway');
+    await expect(page.getByRole('checkbox', { name: 'AI Gateway' })).toBeVisible();
+    await expect(page.getByRole('checkbox', { name: 'Model Serving' })).toHaveCount(0);
     await page.getByRole('checkbox', { name: 'AI Gateway' }).check();
 
     await expect(page.getByTestId('tech-debt-cockpit')).toBeVisible();

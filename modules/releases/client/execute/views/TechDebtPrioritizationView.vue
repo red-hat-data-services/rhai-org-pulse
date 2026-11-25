@@ -61,29 +61,78 @@
           <label for="tech-debt-component-filter" class="mb-2 block text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">
             Component
           </label>
-          <button
-            id="tech-debt-component-filter"
-            type="button"
-            class="flex min-h-12 w-full items-center justify-between rounded-lg border border-gray-300 bg-white px-4 py-3 text-left text-sm font-medium text-gray-900 transition-colors hover:border-gray-400 focus:outline-none focus:ring-2 focus:ring-primary-500 disabled:cursor-wait disabled:opacity-60 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 dark:hover:border-gray-500"
-            :aria-expanded="componentMenuOpen"
-            aria-haspopup="listbox"
-            :disabled="componentsLoading"
+          <div
+            class="flex min-h-12 w-full cursor-text flex-wrap items-center gap-1.5 rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm font-medium text-gray-900 transition-colors hover:border-gray-400 focus-within:border-primary-500 focus-within:ring-2 focus-within:ring-primary-500 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 dark:hover:border-gray-500"
+            :class="{ 'cursor-wait opacity-60': componentsLoading }"
             data-testid="tech-debt-component-filter"
-            @click="componentMenuOpen = !componentMenuOpen"
+            @click="openComponentMenu"
           >
-            <span>{{ componentFilterLabel }}</span>
-            <span aria-hidden="true" class="ml-3 text-gray-500">⌄</span>
-          </button>
+            <svg
+              v-if="!selectedComponents.length"
+              class="h-4 w-4 shrink-0 text-gray-400"
+              viewBox="0 0 20 20"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.75"
+              aria-hidden="true"
+            >
+              <circle cx="8.5" cy="8.5" r="5.5" />
+              <path d="m12.5 12.5 4 4" stroke-linecap="round" />
+            </svg>
+            <span
+              v-for="component in selectedComponents"
+              :key="component"
+              class="inline-flex max-w-full items-center gap-1 rounded-md bg-primary-100 px-2 py-1 text-xs font-semibold text-primary-700 dark:bg-primary-900/50 dark:text-primary-200"
+            >
+              <span class="truncate">{{ componentLabel(component) }}</span>
+              <button
+                type="button"
+                class="rounded-sm text-primary-500 hover:text-primary-900 focus:outline-none focus:ring-2 focus:ring-primary-500 dark:text-primary-300 dark:hover:text-white"
+                :aria-label="`Remove ${componentLabel(component)} component`"
+                @click.stop="toggleComponent(component)"
+              >
+                ×
+              </button>
+            </span>
+            <input
+              id="tech-debt-component-filter"
+              ref="componentInput"
+              v-model="componentSearch"
+              type="text"
+              class="min-w-16 flex-1 bg-transparent px-1 py-1 outline-none placeholder:text-gray-700 disabled:cursor-wait dark:placeholder:text-gray-200"
+              :placeholder="componentFilterLabel"
+              :disabled="componentsLoading"
+              role="combobox"
+              aria-autocomplete="list"
+              aria-controls="tech-debt-component-options"
+              :aria-expanded="componentMenuOpen"
+              data-testid="tech-debt-component-search"
+              @focus="componentMenuOpen = true"
+              @keydown.backspace="removeLastComponentOnBackspace"
+              @keydown.enter.prevent="selectFirstFilteredComponent"
+              @keydown.esc.stop.prevent="closeComponentMenu"
+            >
+            <button
+              type="button"
+              class="shrink-0 rounded p-1 text-gray-500 hover:text-gray-800 focus:outline-none focus:ring-2 focus:ring-primary-500 disabled:cursor-wait dark:text-gray-300 dark:hover:text-white"
+              :disabled="componentsLoading"
+              aria-label="Toggle component options"
+              @click.stop="toggleComponentMenu"
+            >
+              <span aria-hidden="true">⌄</span>
+            </button>
+          </div>
 
           <div
             v-if="componentMenuOpen"
+            id="tech-debt-component-options"
             class="absolute z-20 mt-2 max-h-72 w-full overflow-y-auto rounded-lg border border-gray-200 bg-white p-2 shadow-lg dark:border-gray-600 dark:bg-gray-800"
             role="listbox"
             aria-label="Jira components"
             aria-multiselectable="true"
           >
             <label
-              v-for="component in componentOptions"
+              v-for="component in filteredComponentOptions"
               :key="component.id"
               class="flex cursor-pointer items-center gap-3 rounded-md px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 dark:text-gray-200 dark:hover:bg-gray-700"
             >
@@ -96,8 +145,8 @@
               >
               <span>{{ component.name }}</span>
             </label>
-            <p v-if="!componentsLoading && !componentOptions.length" class="px-3 py-2 text-sm text-gray-500 dark:text-gray-400">
-              No Jira components found.
+            <p v-if="!componentsLoading && !filteredComponentOptions.length" class="px-3 py-2 text-sm text-gray-500 dark:text-gray-400">
+              {{ componentOptions.length ? 'No matching components.' : 'No Jira components found.' }}
             </p>
           </div>
         </div>
@@ -399,7 +448,7 @@
 </template>
 
 <script setup>
-import { computed, onActivated, onBeforeUnmount, onMounted, ref, watch } from 'vue'
+import { computed, nextTick, onActivated, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { apiRequest } from '@shared/client/services/api'
 import TechDebtFlowChart from '../components/TechDebtFlowChart.vue'
 import TechDebtIssueCard from '../components/TechDebtIssueCard.vue'
@@ -417,6 +466,8 @@ const PAGE_SIZE = 25
 const NO_COMPONENT_KEY = '__no_component__'
 const componentOptions = ref([])
 const selectedComponents = ref([])
+const componentSearch = ref('')
+const componentInput = ref(null)
 const selectedRelease = ref('')
 const selectedIssueType = ref('')
 const selectedTriage = ref('')
@@ -444,6 +495,13 @@ const selectedNamedComponents = computed(function () {
 const includeNoComponent = computed(function () {
   return selectedComponents.value.includes(NO_COMPONENT_KEY)
 })
+const filteredComponentOptions = computed(function () {
+  const query = componentSearch.value.trim().toLowerCase()
+  if (!query) return componentOptions.value
+  return componentOptions.value.filter(function (component) {
+    return component.name.toLowerCase().includes(query)
+  })
+})
 
 function componentLabel(value) {
   return value === NO_COMPONENT_KEY ? 'No component' : value
@@ -451,9 +509,7 @@ function componentLabel(value) {
 
 const componentFilterLabel = computed(() => {
   if (componentsLoading.value) return 'Loading components…'
-  if (!selectedComponents.value.length) return 'All Components'
-  if (selectedComponents.value.length === 1) return componentLabel(selectedComponents.value[0])
-  return `${selectedComponents.value.length} components selected`
+  return 'Search components…'
 })
 
 const selectedFilters = computed(() => {
@@ -505,6 +561,40 @@ function toggleComponent(name) {
   } else {
     selectedComponents.value = selectedComponents.value.concat(name)
   }
+  componentSearch.value = ''
+  nextTick(function () {
+    componentInput.value?.focus()
+  })
+}
+
+function openComponentMenu() {
+  if (componentsLoading.value) return
+  componentMenuOpen.value = true
+  componentInput.value?.focus()
+}
+
+function closeComponentMenu() {
+  componentMenuOpen.value = false
+  componentSearch.value = ''
+}
+
+function toggleComponentMenu() {
+  if (componentMenuOpen.value) {
+    closeComponentMenu()
+  } else {
+    openComponentMenu()
+  }
+}
+
+function removeLastComponentOnBackspace() {
+  if (!componentSearch.value && selectedComponents.value.length) {
+    toggleComponent(selectedComponents.value[selectedComponents.value.length - 1])
+  }
+}
+
+function selectFirstFilteredComponent() {
+  if (!componentMenuOpen.value || !componentSearch.value.trim() || !filteredComponentOptions.value.length) return
+  toggleComponent(filteredComponentOptions.value[0].value)
 }
 
 function removeFilter(filter) {
@@ -524,7 +614,7 @@ function clearFilters() {
   selectedRelease.value = ''
   selectedIssueType.value = ''
   selectedTriage.value = ''
-  componentMenuOpen.value = false
+  closeComponentMenu()
 }
 
 function closeComponentMenuOnOutsideClick(event) {
@@ -533,7 +623,7 @@ function closeComponentMenuOnOutsideClick(event) {
     componentFilterContainer.value &&
     !componentFilterContainer.value.contains(event.target)
   ) {
-    componentMenuOpen.value = false
+    closeComponentMenu()
   }
 }
 

@@ -187,10 +187,17 @@ describe('TechDebtPrioritizationView', function () {
     const wrapper = mount(TechDebtPrioritizationView)
     await flushPromises()
 
+    expect(wrapper.get('[data-testid="tech-debt-component-search"]').attributes('placeholder')).toBe('Search components…')
     await wrapper.get('[data-testid="tech-debt-component-filter"]').trigger('click')
     expect(wrapper.findAll('[role="listbox"] label')[0].text()).toBe('No component')
     expect(wrapper.text()).toContain('AI Gateway')
     expect(wrapper.text()).toContain('Model Serving')
+
+    await wrapper.get('[data-testid="tech-debt-component-search"]').setValue('model')
+    expect(wrapper.findAll('[role="listbox"] label').map(function (option) { return option.text() })).toEqual(['Model Serving'])
+
+    await wrapper.get('[data-testid="tech-debt-component-search"]').setValue('missing')
+    expect(wrapper.get('[role="listbox"]').text()).toContain('No matching components.')
   })
 
   it('selects No component alone or together with named components', async function () {
