@@ -1,4 +1,5 @@
 import { ref, computed, unref, watch } from 'vue'
+import { rewriteJenkinsUrl } from '../utils/jenkinsUrl.js'
 
 /** Max day columns per matrix page when the snapshot has many days. */
 export const NIGHTLY_PAGE_SIZE = 5
@@ -1984,8 +1985,11 @@ export function formatTimestamp(iso) {
 export function safeHttpUrl(url) {
   if (!url || typeof url !== 'string') return null
   try {
-    const parsed = new URL(url)
-    if (parsed.protocol === 'https:' || parsed.protocol === 'http:') return url
+    // Rewrite legacy Jenkins CSB host to jenkins.rh-ods.com so Test Execution /
+    // nightly links stay functional after the Jenkins move.
+    const rewritten = rewriteJenkinsUrl(url)
+    const parsed = new URL(rewritten)
+    if (parsed.protocol === 'https:' || parsed.protocol === 'http:') return rewritten
   } catch {
     /* ignore */
   }
