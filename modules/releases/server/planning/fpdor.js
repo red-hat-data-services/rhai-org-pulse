@@ -217,7 +217,7 @@ function evalItem(name, passed, detail, group) {
 
 /**
  * Item does not apply to this feature — counts as pass for readiness and the
- * fixed 17-item denominator (aligned with QG1 ``not_applicable`` checks).
+ * fixed 7-item denominator (aligned with QG1 ``not_applicable`` checks).
  */
 function naPassItem(name, detail, group) {
   return {
@@ -517,6 +517,7 @@ function computeFPDoRReadiness(feature) {
     if (mapping) {
       var evaluated = mapping.fn(feature)
       evaluated.name = itemName
+      evaluated.group = 'mandatory'
       items.push(evaluated)
     }
   }
