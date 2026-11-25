@@ -180,9 +180,12 @@ export function useFeatureScheduling() {
     const assignees = new Set()
     scheduledRows.value.forEach(r => {
       const tv = (r['Target Versions'] || '').trim()
-      if (tv) versions.add(tv)
+      // Filter: only include "Unreleased" or future releases (not archived/released versions)
+      // Heuristic: exclude versions that look like past releases (3.6, 3.5, etc.)
+      // Keep only: Unreleased, future versions (3.8+), EA/GA labels without archive indicators
+      if (tv && isUnreleasedVersion(tv)) versions.add(tv)
       const fv = (r['Fix Version'] || '').trim()
-      if (fv) versions.add(fv)
+      if (fv && isUnreleasedVersion(fv)) versions.add(fv)
       ;(r['Team'] || '').split(';').map(s => s.trim()).filter(Boolean).forEach(t => teams.add(t))
       ;(r['Components'] || '').split(';').map(s => s.trim()).filter(Boolean).forEach(c => components.add(c))
       if (r['Priority']) priorities.add(r['Priority'])
@@ -200,6 +203,26 @@ export function useFeatureScheduling() {
       assignees: [...assignees].sort()
     }
   })
+
+  // Filter out archived/released versions. Keep only "Unreleased" and active/future versions.
+  // Heuristic: 3.8+ are future, 3.7 EA1+ are in-progress, exclude 3.6 and older (released/archived).
+  // This prevents archived releases from cluttering the release filter dropdown.
+  function isUnreleasedVersion(version) {
+    if (!version) return false
+    const v = version.toLowerCase()
+    // Explicitly include Unreleased marker
+    if (v.includes('unreleased')) return true
+    // Exclude past/released versions
+    if (v.includes('3.6')) return false  // 3.6 is released (all variants: EA2, GA, etc.)
+    if (v.includes('3.5')) return false  // 3.5 is released
+    if (v.includes('3.4')) return false  // 3.4 is released
+    if (v.includes('3.3')) return false  // 3.3 is released
+    // Exclude duplicate/typo releases with trailing spaces or malformed names
+    if (version.trim() !== version) return false
+    if (version.match(/\s{2,}/)) return false  // Multiple spaces = likely typo
+    // Keep 3.7+, 3.8+, and anything unrecognized (might be future versions)
+    return true
+  }
 
   // Executive tab summary -- unlike placementCounts above, this honors the shared
   // filter bar (index.html lines 4364-4366, Nov 3 fix: "previously this always
