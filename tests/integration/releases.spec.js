@@ -1316,10 +1316,12 @@ test.describe('Releases FPDoR Readiness @releases', () => {
 
     await expect(page.getByTestId('tech-debt-cockpit')).toBeVisible();
     await expect(page.getByTestId('tech-debt-selected-filters')).toContainText('Component: No component');
+    await page.getByTestId('tech-debt-overview-toggle').click();
     await expect(page.getByTestId('tech-debt-trends')).toContainText('No component');
     expect(issueRequests.at(-1)).toContain('includeNoComponent=true');
     expect(trendRequests.at(-1)).toContain('includeNoComponent=true');
 
+    await page.getByTestId('tech-debt-component-filter').click();
     await page.getByRole('checkbox', { name: 'AI Gateway' }).check();
     await expect.poll(() => issueRequests.length).toBe(2);
     await expect.poll(() => trendRequests.length).toBe(2);
