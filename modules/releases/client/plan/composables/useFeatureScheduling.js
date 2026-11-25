@@ -217,9 +217,6 @@ export function useFeatureScheduling() {
     if (v.includes('3.5')) return false  // 3.5 is released
     if (v.includes('3.4')) return false  // 3.4 is released
     if (v.includes('3.3')) return false  // 3.3 is released
-    // Exclude duplicate/typo releases with trailing spaces or malformed names
-    if (version.trim() !== version) return false
-    if (version.match(/\s{2,}/)) return false  // Multiple spaces = likely typo
     // Keep 3.7+, 3.8+, and anything unrecognized (might be future versions)
     return true
   }
