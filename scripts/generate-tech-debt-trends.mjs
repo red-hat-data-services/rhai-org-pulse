@@ -8,6 +8,8 @@ const FIELDS = [
   'created',
   'resolutiondate',
   'components',
+  'fixVersions',
+  'versions',
   'issuetype',
   'labels',
   'reporter',

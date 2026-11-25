@@ -14,6 +14,24 @@ vi.mock('../../../client/execute/components/TechDebtFlowChart.vue', function () 
   }
 })
 
+vi.mock('../../../client/execute/components/TechDebtWeeklyBugChart.vue', function () {
+  return {
+    default: {
+      props: ['weeks'],
+      template: '<div data-testid="tech-debt-weekly-bug-chart-stub">{{ weeks.map(week => `${week.week}: ${week.created} created, ${week.resolved} resolved`).join(" · ") }}</div>'
+    }
+  }
+})
+
+vi.mock('../../../client/execute/components/TechDebtBugFixVersionChart.vue', function () {
+  return {
+    default: {
+      props: ['fixVersionDistribution', 'affectsVersionDistribution'],
+      template: '<div data-testid="tech-debt-bug-fix-version-chart-stub">Fix: {{ fixVersionDistribution.total }} Bugs · {{ fixVersionDistribution.versions.map(row => `${row.version}: ${row.count}`).join(" · ") }} | Affects: {{ affectsVersionDistribution.total }} Bugs · {{ affectsVersionDistribution.versions.map(row => `${row.version}: ${row.count}`).join(" · ") }}</div>'
+    }
+  }
+})
+
 import { apiRequest } from '@shared/client/services/api'
 import TechDebtPrioritizationView from '../../../client/execute/views/TechDebtPrioritizationView.vue'
 import {
@@ -147,9 +165,54 @@ function trendResponse(overrides = {}) {
   }
 }
 
+function weeklyBugTrendResponse(overrides = {}) {
+  return {
+    generatedAt: '2026-10-29T06:00:00.000Z',
+    window: {
+      months: ['2026-05', '2026-06', '2026-07', '2026-08', '2026-09', '2026-10'],
+      startDate: '2026-05-01',
+      endExclusive: '2026-11-01',
+      throughDate: '2026-10-29',
+      timezone: 'UTC'
+    },
+    projects: ['RHAI', 'RHAIENG', 'RHOAIENG', 'INFERENG', 'AIPCC'],
+    issueType: 'Bug',
+    componentScope: 'all',
+    includeNoComponent: true,
+    granularity: 'iso-week',
+    totals: { created: 3, resolved: 2 },
+    weeks: [
+      { week: '2026-W42', startDate: '2026-10-12', created: 1, resolved: 0 },
+      { week: '2026-W43', startDate: '2026-10-19', created: 2, resolved: 2 }
+    ],
+    bugFixVersions: {
+      sourceField: 'fixVersions',
+      assignment: 'one-bucket-per-issue',
+      total: 3,
+      versions: [
+        { version: '3.7 GA', count: 2 },
+        { version: 'No Fix Version', count: 1 }
+      ]
+    },
+    bugAffectsVersions: {
+      sourceField: 'versions',
+      assignment: 'one-bucket-per-issue',
+      total: 3,
+      versions: [
+        { version: '3.7 EA', count: 2 },
+        { version: 'No Affects Version', count: 1 }
+      ]
+    },
+    stale: false,
+    warning: null,
+    ...overrides
+  }
+}
+
 function mockSuccessfulApi(response = cockpitResponse()) {
   apiRequest.mockImplementation(function (path) {
     if (path === '/modules/releases/tech-debt/components') return Promise.resolve(componentsResponse)
+    if (path === '/modules/releases/tech-debt/trends/weekly-bugs') return Promise.resolve(weeklyBugTrendResponse())
     if (path.startsWith('/modules/releases/tech-debt/trends?')) return Promise.resolve(trendResponse())
     return Promise.resolve(response)
   })
@@ -159,6 +222,14 @@ async function selectComponent(wrapper, name = 'AI Gateway') {
   await wrapper.get('[data-testid="tech-debt-component-filter"]').trigger('click')
   await wrapper.get(`input[aria-label="${name}"]`).setValue(true)
   await flushPromises()
+}
+
+async function expandComponentTrends(wrapper) {
+  const toggle = wrapper.get('[data-testid="tech-debt-overview-toggle"]')
+  if (toggle.attributes('aria-expanded') === 'false') {
+    await toggle.trigger('click')
+    await wrapper.vm.$nextTick()
+  }
 }
 
 describe('TechDebtPrioritizationView', function () {
@@ -176,10 +247,112 @@ describe('TechDebtPrioritizationView', function () {
     expect(apiRequest).toHaveBeenCalledWith('/modules/releases/tech-debt/components')
     expect(wrapper.get('[data-testid="tech-debt-user-testing-warning"]').text()).toContain('This report is currently under user testing')
     expect(wrapper.get('[data-testid="tech-debt-user-testing-warning"]').text()).toContain('proceed with caution')
-    expect(wrapper.get('[data-testid="tech-debt-importance"]').text()).toContain('Why this report matters')
-    expect(wrapper.get('[data-testid="tech-debt-importance"]').text()).toContain('CVE remediation as part of every feature')
+    const importance = wrapper.get('[data-testid="tech-debt-importance"]')
+    expect(importance.text()).toContain('Why this report matters')
+    expect(importance.text()).toContain('CVE remediation as part of every feature')
+    expect(importance.classes()).toContain('dark:bg-gray-800')
+    expect(importance.classes()).toContain('dark:border-primary-600')
+    expect(importance.classes()).not.toContain('dark:bg-primary-950/30')
+    expect(importance.get('p').classes()).toContain('dark:text-gray-200')
+    expect(importance.get('[data-testid="vulnerability-rubric-open"]').classes()).toContain('dark:text-primary-200')
     expect(wrapper.find('[data-testid="tech-debt-component-required"]').exists()).toBe(true)
     expect(wrapper.find('[data-testid="tech-debt-cockpit"]').exists()).toBe(false)
+  })
+
+  it('keeps organization-wide weekly Bug trends collapsed and loads them independently on first expansion', async function () {
+    mockSuccessfulApi()
+    const wrapper = mount(TechDebtPrioritizationView)
+    await flushPromises()
+
+    const toggle = wrapper.get('[data-testid="tech-debt-historic-trends-toggle"]')
+    expect(toggle.attributes('aria-expanded')).toBe('false')
+    expect(wrapper.find('[data-testid="tech-debt-historic-trends-content"]').exists()).toBe(false)
+    expect(apiRequest).not.toHaveBeenCalledWith('/modules/releases/tech-debt/trends/weekly-bugs')
+
+    await toggle.trigger('click')
+    await flushPromises()
+
+    expect(toggle.attributes('aria-expanded')).toBe('true')
+    expect(apiRequest).toHaveBeenCalledWith('/modules/releases/tech-debt/trends/weekly-bugs')
+    expect(wrapper.get('[data-testid="tech-debt-historic-trends-content"]').text()).toContain('3 created · 2 resolved')
+    expect(wrapper.get('[data-testid="tech-debt-weekly-bug-chart-stub"]').text()).toContain('2026-W42: 1 created, 0 resolved')
+    expect(wrapper.get('[data-testid="tech-debt-bug-fix-version-chart-stub"]').text()).toContain('3.7 GA: 2')
+    expect(wrapper.get('[data-testid="tech-debt-bug-fix-version-chart-stub"]').text()).toContain('No Fix Version: 1')
+    expect(wrapper.get('[data-testid="tech-debt-bug-fix-version-chart-stub"]').text()).toContain('3.7 EA: 2')
+
+    await selectComponent(wrapper, 'AI Gateway')
+    await wrapper.get('[data-testid="tech-debt-issue-type-filter"]').setValue('Vulnerability')
+    await flushPromises()
+    expect(apiRequest.mock.calls.filter(function (call) {
+      return call[0] === '/modules/releases/tech-debt/trends/weekly-bugs'
+    })).toHaveLength(1)
+
+    await toggle.trigger('click')
+    await toggle.trigger('click')
+    await flushPromises()
+    expect(apiRequest.mock.calls.filter(function (call) {
+      return call[0] === '/modules/releases/tech-debt/trends/weekly-bugs'
+    })).toHaveLength(1)
+  })
+
+  it('shows the snapshot-refresh state when weekly Bug data is not available yet', async function () {
+    const unavailable = Object.assign(new Error('Weekly trends unavailable'), { status: 404 })
+    apiRequest.mockImplementation(function (path) {
+      if (path === '/modules/releases/tech-debt/components') return Promise.resolve(componentsResponse)
+      if (path === '/modules/releases/tech-debt/trends/weekly-bugs') return Promise.reject(unavailable)
+      return Promise.resolve(cockpitResponse())
+    })
+    const wrapper = mount(TechDebtPrioritizationView)
+    await flushPromises()
+
+    await wrapper.get('[data-testid="tech-debt-historic-trends-toggle"]').trigger('click')
+    await flushPromises()
+
+    expect(wrapper.get('[data-testid="tech-debt-weekly-trend-unavailable"]').text()).toContain('next nightly Tech Debt snapshot refresh')
+  })
+
+  it('keeps weekly history usable when a legacy snapshot lacks version distributions', async function () {
+    apiRequest.mockImplementation(function (path) {
+      if (path === '/modules/releases/tech-debt/components') return Promise.resolve(componentsResponse)
+      if (path === '/modules/releases/tech-debt/trends/weekly-bugs') {
+        return Promise.resolve(weeklyBugTrendResponse({
+          bugFixVersions: null,
+          bugAffectsVersions: null
+        }))
+      }
+      return Promise.resolve(cockpitResponse())
+    })
+    const wrapper = mount(TechDebtPrioritizationView)
+    await flushPromises()
+
+    await wrapper.get('[data-testid="tech-debt-historic-trends-toggle"]').trigger('click')
+    await flushPromises()
+
+    expect(wrapper.get('[data-testid="tech-debt-weekly-bug-chart-stub"]').exists()).toBe(true)
+    expect(wrapper.get('[data-testid="tech-debt-fix-version-unavailable"]').text()).toContain('next nightly Tech Debt snapshot refresh')
+  })
+
+  it('shows stale metadata and a no-activity state for empty weekly Bug history', async function () {
+    apiRequest.mockImplementation(function (path) {
+      if (path === '/modules/releases/tech-debt/components') return Promise.resolve(componentsResponse)
+      if (path === '/modules/releases/tech-debt/trends/weekly-bugs') {
+        return Promise.resolve(weeklyBugTrendResponse({
+          totals: { created: 0, resolved: 0 },
+          weeks: [{ week: '2026-W43', startDate: '2026-10-19', created: 0, resolved: 0 }],
+          stale: true,
+          warning: 'Tech debt weekly Bug trend data is more than 48 hours old.'
+        }))
+      }
+      return Promise.resolve(cockpitResponse())
+    })
+    const wrapper = mount(TechDebtPrioritizationView)
+    await flushPromises()
+
+    await wrapper.get('[data-testid="tech-debt-historic-trends-toggle"]').trigger('click')
+    await flushPromises()
+
+    expect(wrapper.get('[data-testid="tech-debt-weekly-trend-stale-warning"]').text()).toContain('48 hours old')
+    expect(wrapper.get('[data-testid="tech-debt-weekly-trend-empty"]').text()).toContain('No Bugs were created or resolved')
   })
 
   it('loads RHAI components into the multi-select filter', async function () {
@@ -187,10 +360,17 @@ describe('TechDebtPrioritizationView', function () {
     const wrapper = mount(TechDebtPrioritizationView)
     await flushPromises()
 
+    expect(wrapper.get('[data-testid="tech-debt-component-search"]').attributes('placeholder')).toBe('Search components…')
     await wrapper.get('[data-testid="tech-debt-component-filter"]').trigger('click')
     expect(wrapper.findAll('[role="listbox"] label')[0].text()).toBe('No component')
     expect(wrapper.text()).toContain('AI Gateway')
     expect(wrapper.text()).toContain('Model Serving')
+
+    await wrapper.get('[data-testid="tech-debt-component-search"]').setValue('model')
+    expect(wrapper.findAll('[role="listbox"] label').map(function (option) { return option.text() })).toEqual(['Model Serving'])
+
+    await wrapper.get('[data-testid="tech-debt-component-search"]').setValue('missing')
+    expect(wrapper.get('[role="listbox"]').text()).toContain('No matching components.')
   })
 
   it('selects No component alone or together with named components', async function () {
@@ -352,6 +532,7 @@ describe('TechDebtPrioritizationView', function () {
     await flushPromises()
 
     await selectComponent(wrapper, 'AI Gateway')
+    await expandComponentTrends(wrapper)
 
     expect(wrapper.get('[data-testid="tech-debt-summary"]').text()).toContain('7')
     expect(wrapper.get('[data-testid="tech-debt-background-refresh"]').text()).toContain('Previously loaded results remain available')
@@ -493,6 +674,7 @@ describe('TechDebtPrioritizationView', function () {
     const wrapper = mount(TechDebtPrioritizationView)
     await flushPromises()
     await selectComponent(wrapper)
+    await expandComponentTrends(wrapper)
 
     const summary = wrapper.get('[data-testid="tech-debt-summary"]').text()
     expect(summary).toContain('Total')
@@ -508,6 +690,16 @@ describe('TechDebtPrioritizationView', function () {
     await flushPromises()
     await selectComponent(wrapper)
 
+    const overview = wrapper.get('[data-testid="tech-debt-overview"]')
+    const overviewToggle = wrapper.get('[data-testid="tech-debt-overview-toggle"]')
+    expect(overview.text()).toContain('Component Specific Historic Trends')
+    expect(overview.text()).toContain('Current open Bugs and CVEs, queue status, and six-month received-versus-resolved history for the selected components.')
+    expect(overview.text()).not.toContain('Tech Debt Cockpit')
+    expect(overviewToggle.attributes('aria-expanded')).toBe('false')
+    expect(wrapper.find('[data-testid="tech-debt-summary"]').exists()).toBe(false)
+    expect(wrapper.find('[data-testid="tech-debt-trends"]').exists()).toBe(false)
+    await expandComponentTrends(wrapper)
+
     const summary = wrapper.get('[data-testid="tech-debt-summary"]').text()
     expect(summary).toContain('Received · 6 months')
     expect(summary).toContain('8')
@@ -516,6 +708,15 @@ describe('TechDebtPrioritizationView', function () {
     expect(wrapper.get('[data-testid="tech-debt-trends"]').text()).toContain('Received vs. closed tech debt')
     expect(wrapper.get('[data-testid="tech-debt-trend-chart-stub"]').text()).toContain('AI Gateway · 8 received · 5 closed · totals')
     expect(wrapper.find('[aria-label="Issue category legend"]').exists()).toBe(false)
+
+    expect(overviewToggle.attributes('aria-expanded')).toBe('true')
+    await overviewToggle.trigger('click')
+    expect(overviewToggle.attributes('aria-expanded')).toBe('false')
+    expect(wrapper.find('[data-testid="tech-debt-summary"]').exists()).toBe(false)
+    expect(wrapper.find('[data-testid="tech-debt-trends"]').exists()).toBe(false)
+    await overviewToggle.trigger('click')
+    expect(wrapper.get('[data-testid="tech-debt-summary"]').exists()).toBe(true)
+    expect(wrapper.get('[data-testid="tech-debt-trends"]').exists()).toBe(true)
 
     await wrapper.get('[data-testid="tech-debt-trend-issue-types-view"]').trigger('click')
 
@@ -550,6 +751,7 @@ describe('TechDebtPrioritizationView', function () {
     const wrapper = mount(TechDebtPrioritizationView)
     await flushPromises()
     await selectComponent(wrapper)
+    await expandComponentTrends(wrapper)
 
     expect(wrapper.get('[data-testid="tech-debt-trend-error"]').text()).toContain('live priority queue remains available')
     expect(wrapper.get('[data-testid="tech-debt-backlog-pane"]').text()).toContain('RHAI-20')
@@ -572,11 +774,40 @@ describe('TechDebtPrioritizationView', function () {
     await selectComponent(wrapper)
 
     expect(wrapper.findAll('[data-testid="tech-debt-backlog-card"]')).toHaveLength(50)
+    const backlogPane = wrapper.get('[data-testid="tech-debt-backlog-pane"]')
+    backlogPane.element.scrollTop = 240
     await wrapper.get('[data-testid="tech-debt-vulnerability-backlog-more"]').trigger('click')
+    expect(backlogPane.element.scrollTop).toBe(240)
     expect(wrapper.get('[data-testid="tech-debt-vulnerability-backlog"]').findAll('[data-testid="tech-debt-backlog-card"]')).toHaveLength(26)
     expect(wrapper.get('[data-testid="tech-debt-bug-backlog"]').findAll('[data-testid="tech-debt-backlog-card"]')).toHaveLength(25)
     await wrapper.get('[data-testid="tech-debt-bug-backlog-more"]').trigger('click')
     expect(wrapper.findAll('[data-testid="tech-debt-backlog-card"]')).toHaveLength(52)
+  })
+
+  it('keeps issue queues in independent accessible panes and resets them when filters change', async function () {
+    mockSuccessfulApi()
+    const wrapper = mount(TechDebtPrioritizationView)
+    await flushPromises()
+    await selectComponent(wrapper)
+
+    const inFlightPane = wrapper.get('[data-testid="tech-debt-in-flight-pane"]')
+    const backlogPane = wrapper.get('[data-testid="tech-debt-backlog-pane"]')
+    for (const pane of [inFlightPane, backlogPane]) {
+      expect(pane.classes()).toContain('overflow-y-auto')
+      expect(pane.classes()).toContain('overscroll-contain')
+      expect(pane.classes()).toContain('max-h-[min(70vh,48rem)]')
+      expect(pane.attributes('tabindex')).toBe('0')
+    }
+    expect(inFlightPane.attributes('aria-label')).toBe('In-Flight Work issues')
+    expect(backlogPane.attributes('aria-label')).toBe('Prioritized Backlog issues')
+
+    inFlightPane.element.scrollTop = 180
+    backlogPane.element.scrollTop = 260
+    await wrapper.get('[data-testid="tech-debt-issue-type-filter"]').setValue('Vulnerability')
+    await flushPromises()
+
+    expect(wrapper.get('[data-testid="tech-debt-in-flight-pane"]').element.scrollTop).toBe(0)
+    expect(wrapper.get('[data-testid="tech-debt-backlog-pane"]').element.scrollTop).toBe(0)
   })
 
   it('forces a refresh from the manual Refresh action', async function () {

@@ -1316,10 +1316,12 @@ test.describe('Releases FPDoR Readiness @releases', () => {
 
     await expect(page.getByTestId('tech-debt-cockpit')).toBeVisible();
     await expect(page.getByTestId('tech-debt-selected-filters')).toContainText('Component: No component');
+    await page.getByTestId('tech-debt-overview-toggle').click();
     await expect(page.getByTestId('tech-debt-trends')).toContainText('No component');
     expect(issueRequests.at(-1)).toContain('includeNoComponent=true');
     expect(trendRequests.at(-1)).toContain('includeNoComponent=true');
 
+    await page.getByTestId('tech-debt-component-filter').click();
     await page.getByRole('checkbox', { name: 'AI Gateway' }).check();
     await expect.poll(() => issueRequests.length).toBe(2);
     await expect.poll(() => trendRequests.length).toBe(2);
@@ -1333,6 +1335,7 @@ test.describe('Releases FPDoR Readiness @releases', () => {
   test('Tech Debt Cockpit filters, classifies, and ranks deterministic Jira issues', async ({ page }) => {
     const issueRequests = [];
     const trendRequests = [];
+    const weeklyTrendRequests = [];
     await page.route('**/api/modules/releases/tech-debt/components', async route => {
       await route.fulfill({
         json: {
@@ -1465,6 +1468,52 @@ test.describe('Releases FPDoR Readiness @releases', () => {
         }
       });
     });
+    await page.route('**/api/modules/releases/tech-debt/trends/weekly-bugs', async route => {
+      weeklyTrendRequests.push(route.request().url());
+      await route.fulfill({
+        json: {
+          generatedAt: '2026-10-29T06:00:00.000Z',
+          window: {
+            months: ['2026-05', '2026-06', '2026-07', '2026-08', '2026-09', '2026-10'],
+            startDate: '2026-05-01',
+            endExclusive: '2026-11-01',
+            throughDate: '2026-10-29',
+            timezone: 'UTC'
+          },
+          projects: ['RHAI', 'RHAIENG', 'RHOAIENG', 'INFERENG', 'AIPCC'],
+          issueType: 'Bug',
+          componentScope: 'all',
+          includeNoComponent: true,
+          granularity: 'iso-week',
+          totals: { created: 3, resolved: 2 },
+          weeks: [
+            { week: '2026-W42', startDate: '2026-10-12', created: 1, resolved: 0 },
+            { week: '2026-W43', startDate: '2026-10-19', created: 2, resolved: 2 },
+            { week: '2026-W44', startDate: '2026-10-26', created: 0, resolved: 0 }
+          ],
+          bugFixVersions: {
+            sourceField: 'fixVersions',
+            assignment: 'one-bucket-per-issue',
+            total: 3,
+            versions: [
+              { version: '3.7 GA', count: 2 },
+              { version: 'No Fix Version', count: 1 }
+            ]
+          },
+          bugAffectsVersions: {
+            sourceField: 'versions',
+            assignment: 'one-bucket-per-issue',
+            total: 3,
+            versions: [
+              { version: '3.7 EA', count: 2 },
+              { version: 'No Affects Version', count: 1 }
+            ]
+          },
+          stale: false,
+          warning: null
+        }
+      });
+    });
     await page.route('**/api/modules/releases/tech-debt/trends?*', async route => {
       trendRequests.push(route.request().url());
       const url = new URL(route.request().url());
@@ -1511,6 +1560,14 @@ test.describe('Releases FPDoR Readiness @releases', () => {
     await expect(page.getByTestId('tech-debt-user-testing-warning')).toContainText('proceed with caution');
     await expect(page.getByTestId('tech-debt-importance')).toContainText('Why this report matters');
     await expect(page.getByTestId('tech-debt-importance')).toContainText('CVE remediation as part of every feature');
+    const importanceLightBackground = await page.getByTestId('tech-debt-importance').evaluate(element => window.getComputedStyle(element).backgroundColor);
+    await page.evaluate(() => document.documentElement.classList.add('dark'));
+    const importanceDarkBackground = await page.getByTestId('tech-debt-importance').evaluate(element => window.getComputedStyle(element).backgroundColor);
+    expect(importanceDarkBackground).not.toBe(importanceLightBackground);
+    await expect(page.getByTestId('tech-debt-importance')).toHaveClass(/dark:bg-gray-800/);
+    await expect(page.getByTestId('tech-debt-importance').locator('p')).toHaveClass(/dark:text-gray-200/);
+    await expect(page.getByTestId('vulnerability-rubric-open')).toHaveClass(/dark:text-primary-200/);
+    await page.evaluate(() => document.documentElement.classList.remove('dark'));
     await page.getByTestId('vulnerability-rubric-open').click();
     await expect(page.getByTestId('vulnerability-scoring-rubric')).toContainText('CVE order follows Jira’s `rh-sla-dt` deadline—not a weighted score.');
     await expect(page.getByTestId('vulnerability-scoring-rubric')).toContainText('Dec 1, 2026 at 00:00 UTC');
@@ -1528,12 +1585,41 @@ test.describe('Releases FPDoR Readiness @releases', () => {
     await expect(page.getByTestId('tech-debt-release-filter')).toBeVisible();
     await expect(page.getByTestId('tech-debt-clear-filters')).toBeVisible();
     await expect(page.getByTestId('tech-debt-component-required')).toBeVisible();
+    await expect(page.getByTestId('tech-debt-historic-trends-toggle')).toHaveAttribute('aria-expanded', 'false');
+    expect(weeklyTrendRequests).toHaveLength(0);
+    expect(issueRequests).toHaveLength(0);
+
+    await page.getByTestId('tech-debt-historic-trends-toggle').click();
+    await expect(page.getByTestId('tech-debt-historic-trends-toggle')).toHaveAttribute('aria-expanded', 'true');
+    await expect(page.getByTestId('tech-debt-historic-trends-content')).toContainText('3 created · 2 resolved');
+    await expect(page.getByRole('table', { name: 'Weekly Bug created and resolved counts' })).toContainText('2026-W42');
+    await expect(page.getByRole('table', { name: 'Weekly Bug created and resolved counts' })).toContainText('2026-W44');
+    await expect(page.getByTestId('tech-debt-bug-fix-version-chart')).toContainText('Bugs by Fix Version');
+    await expect(page.getByTestId('tech-debt-bug-fix-version-chart')).toContainText('3.7 GA');
+    await expect(page.getByTestId('tech-debt-bug-fix-version-chart')).toContainText('No Fix Version');
+    await expect(page.getByTestId('tech-debt-bug-fix-version-chart')).toContainText('3 Bugs · Issues by Fix Version');
+    await page.getByTestId('tech-debt-affects-version-toggle').click();
+    await expect(page.getByTestId('tech-debt-bug-fix-version-chart')).toContainText('Bugs by Affects Version');
+    await expect(page.getByTestId('tech-debt-bug-fix-version-chart')).toContainText('3.7 EA');
+    await expect(page.getByTestId('tech-debt-bug-fix-version-chart')).toContainText('No Affects Version');
+    await expect(page.getByTestId('tech-debt-bug-fix-version-chart')).toContainText('3 Bugs · Issues by Affects Version');
+    expect(weeklyTrendRequests).toHaveLength(1);
     expect(issueRequests).toHaveLength(0);
 
     await page.getByTestId('tech-debt-component-filter').click();
+    await page.getByTestId('tech-debt-component-search').fill('gateway');
+    await expect(page.getByRole('checkbox', { name: 'AI Gateway' })).toBeVisible();
+    await expect(page.getByRole('checkbox', { name: 'Model Serving' })).toHaveCount(0);
     await page.getByRole('checkbox', { name: 'AI Gateway' }).check();
 
     await expect(page.getByTestId('tech-debt-cockpit')).toBeVisible();
+    await expect(page.getByTestId('tech-debt-overview')).toContainText('Component Specific Historic Trends');
+    await expect(page.getByTestId('tech-debt-overview')).toContainText('Current open Bugs and CVEs, queue status, and six-month received-versus-resolved history for the selected components.');
+    await expect(page.getByTestId('tech-debt-overview')).not.toContainText('Tech Debt Cockpit');
+    await expect(page.getByTestId('tech-debt-overview-toggle')).toHaveAttribute('aria-expanded', 'false');
+    await expect(page.getByTestId('tech-debt-summary')).toBeHidden();
+    await expect(page.getByTestId('tech-debt-trends')).toBeHidden();
+    await page.getByTestId('tech-debt-overview-toggle').click();
     await expect(page.getByTestId('tech-debt-summary')).toContainText(/Total\s*3/);
     await expect(page.getByTestId('tech-debt-summary')).toContainText(/Received · 6 months\s*4/);
     await expect(page.getByTestId('tech-debt-summary')).toContainText(/Resolved · 6 months\s*2/);
@@ -1541,14 +1627,40 @@ test.describe('Releases FPDoR Readiness @releases', () => {
     await expect(page.getByTestId('tech-debt-trends')).toContainText('AI Gateway');
     await expect(page.getByTestId('tech-debt-trend-volume-view')).toHaveAttribute('aria-pressed', 'true');
     await expect(page.getByTestId('tech-debt-trends')).not.toContainText('CVE / Vulnerability');
+    await expect(page.getByTestId('tech-debt-overview-toggle')).toHaveAttribute('aria-expanded', 'true');
+    await page.getByTestId('tech-debt-overview-toggle').click();
+    await expect(page.getByTestId('tech-debt-summary')).toBeHidden();
+    await expect(page.getByTestId('tech-debt-trends')).toBeHidden();
+    await page.getByTestId('tech-debt-overview-toggle').click();
+    await expect(page.getByTestId('tech-debt-summary')).toBeVisible();
+    await expect(page.getByTestId('tech-debt-trends')).toBeVisible();
     await page.getByTestId('tech-debt-trend-issue-types-view').click();
     await expect(page.getByTestId('tech-debt-trend-issue-types-view')).toHaveAttribute('aria-pressed', 'true');
     await expect(page.getByTestId('tech-debt-trends')).toContainText('CVE / Vulnerability');
     await expect(page.getByTestId('tech-debt-in-flight-pane')).toContainText('RHAI-101');
     await expect(page.getByTestId('tech-debt-in-flight-pane')).toContainText('RHAI-102');
+    await expect(page.getByTestId('tech-debt-in-flight-pane')).toHaveAttribute('tabindex', '0');
+    await expect(page.getByTestId('tech-debt-in-flight-pane')).toHaveAttribute('aria-label', 'In-Flight Work issues');
     await expect(page.getByTestId('tech-debt-in-flight-pane')).toContainText('P1 · 70');
     await expect(page.getByTestId('tech-debt-in-flight-pane')).toContainText('Approved Release Blocker');
     await expect(page.getByTestId('tech-debt-backlog-pane')).toContainText('RHAI-201');
+    await expect(page.getByTestId('tech-debt-backlog-pane')).toHaveAttribute('tabindex', '0');
+    await expect(page.getByTestId('tech-debt-backlog-pane')).toHaveAttribute('aria-label', 'Prioritized Backlog issues');
+    for (const pane of [page.getByTestId('tech-debt-in-flight-pane'), page.getByTestId('tech-debt-backlog-pane')]) {
+      const styles = await pane.evaluate(element => {
+        const computed = window.getComputedStyle(element);
+        return {
+          maxHeight: computed.maxHeight,
+          overflowY: computed.overflowY,
+          overscrollBehaviorY: computed.overscrollBehaviorY,
+          scrollbarGutter: computed.scrollbarGutter
+        };
+      });
+      expect(styles.overflowY).toBe('auto');
+      expect(styles.overscrollBehaviorY).toBe('contain');
+      expect(styles.scrollbarGutter).toBe('stable');
+      expect(styles.maxHeight).not.toBe('none');
+    }
     await expect(page.getByTestId('tech-debt-backlog-pane')).toContainText('Critical dependency vulnerability');
     await expect(page.getByText('Separate ranked groups: company SLA for CVEs and priority score for Bugs')).toBeVisible();
     await expect(page.getByTestId('tech-debt-backlog-pane').getByTestId('tech-debt-sla-badge')).toHaveText('SLA breached · 1 day');
@@ -1563,6 +1675,7 @@ test.describe('Releases FPDoR Readiness @releases', () => {
     await expect(page.getByRole('link', { name: /RHAI-201/ })).toHaveAttribute('href', 'https://redhat.atlassian.net/browse/RHAI-201');
     expect(issueRequests[0]).toContain('component=AI+Gateway');
     expect(trendRequests[0]).toContain('component=AI+Gateway');
+    expect(weeklyTrendRequests).toHaveLength(1);
 
     await page.getByTestId('tech-debt-component-filter').click();
     await page.getByRole('checkbox', { name: 'AI Gateway' }).uncheck();

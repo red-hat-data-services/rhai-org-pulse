@@ -58,5 +58,61 @@
       "createdMonth": "2026-10",
       "resolvedMonth": null
     }
-  ]
+  ],
+  "weeklyBugs": {
+    "granularity": "iso-week",
+    "timezone": "UTC",
+    "startDate": "2026-05-01",
+    "throughDate": "2026-10-29",
+    "totals": { "created": 4, "resolved": 1 },
+    "weeks": [
+      { "week": "2026-W18", "startDate": "2026-04-27", "created": 0, "resolved": 0 },
+      { "week": "2026-W19", "startDate": "2026-05-04", "created": 0, "resolved": 0 },
+      { "week": "2026-W20", "startDate": "2026-05-11", "created": 0, "resolved": 0 },
+      { "week": "2026-W21", "startDate": "2026-05-18", "created": 0, "resolved": 0 },
+      { "week": "2026-W22", "startDate": "2026-05-25", "created": 0, "resolved": 0 },
+      { "week": "2026-W23", "startDate": "2026-06-01", "created": 0, "resolved": 0 },
+      { "week": "2026-W24", "startDate": "2026-06-08", "created": 0, "resolved": 0 },
+      { "week": "2026-W25", "startDate": "2026-06-15", "created": 0, "resolved": 0 },
+      { "week": "2026-W26", "startDate": "2026-06-22", "created": 0, "resolved": 0 },
+      { "week": "2026-W27", "startDate": "2026-06-29", "created": 0, "resolved": 0 },
+      { "week": "2026-W28", "startDate": "2026-07-06", "created": 0, "resolved": 0 },
+      { "week": "2026-W29", "startDate": "2026-07-13", "created": 0, "resolved": 0 },
+      { "week": "2026-W30", "startDate": "2026-07-20", "created": 0, "resolved": 0 },
+      { "week": "2026-W31", "startDate": "2026-07-27", "created": 0, "resolved": 0 },
+      { "week": "2026-W32", "startDate": "2026-08-03", "created": 1, "resolved": 0 },
+      { "week": "2026-W33", "startDate": "2026-08-10", "created": 0, "resolved": 0 },
+      { "week": "2026-W34", "startDate": "2026-08-17", "created": 0, "resolved": 0 },
+      { "week": "2026-W35", "startDate": "2026-08-24", "created": 0, "resolved": 0 },
+      { "week": "2026-W36", "startDate": "2026-08-31", "created": 0, "resolved": 0 },
+      { "week": "2026-W37", "startDate": "2026-09-07", "created": 1, "resolved": 0 },
+      { "week": "2026-W38", "startDate": "2026-09-14", "created": 0, "resolved": 0 },
+      { "week": "2026-W39", "startDate": "2026-09-21", "created": 0, "resolved": 0 },
+      { "week": "2026-W40", "startDate": "2026-09-28", "created": 0, "resolved": 0 },
+      { "week": "2026-W41", "startDate": "2026-10-05", "created": 0, "resolved": 1 },
+      { "week": "2026-W42", "startDate": "2026-10-12", "created": 1, "resolved": 0 },
+      { "week": "2026-W43", "startDate": "2026-10-19", "created": 1, "resolved": 0 },
+      { "week": "2026-W44", "startDate": "2026-10-26", "created": 0, "resolved": 0 }
+    ]
+  },
+  "bugFixVersions": {
+    "sourceField": "fixVersions",
+    "assignment": "one-bucket-per-issue",
+    "total": 4,
+    "versions": [
+      { "version": "3.5 GA RHOAI RELEASE", "count": 2 },
+      { "version": "Multiple Fix Versions", "count": 1 },
+      { "version": "No Fix Version", "count": 1 }
+    ]
+  },
+  "bugAffectsVersions": {
+    "sourceField": "versions",
+    "assignment": "one-bucket-per-issue",
+    "total": 4,
+    "versions": [
+      { "version": "3.5 GA RHOAI RELEASE", "count": 2 },
+      { "version": "Multiple Affects Versions", "count": 1 },
+      { "version": "No Affects Version", "count": 1 }
+    ]
+  }
 }

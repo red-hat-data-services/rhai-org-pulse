@@ -19,6 +19,7 @@ const { scoreBug } = require('./bug-score')
 const {
   STORAGE_KEY: TRENDS_STORAGE_KEY,
   buildTrendResponse,
+  buildWeeklyBugTrendResponse,
   normalizeTrendSnapshot
 } = require('./trends')
 
@@ -606,6 +607,48 @@ function registerTechDebtRoutes(router, { requireAuth, requireScope, jira, stora
 
   /**
    * @openapi
+   * /api/modules/releases/tech-debt/trends/weekly-bugs:
+   *   get:
+   *     tags: [Releases]
+   *     summary: Get organization-wide weekly Bug creation and resolution trends
+   *     description: Returns precomputed ISO-week Bug counts plus Bug distributions for Jira Fix Version and Affects Version across all five AI Engineering Jira projects and all component states, including issues with no component.
+   *     responses:
+   *       200:
+   *         description: Weekly Bug Created and Resolved trend data
+   *       404:
+   *         description: No trend snapshot exists or the snapshot predates weekly Bug aggregation
+   *       500:
+   *         description: The stored trend snapshot is invalid or cannot be read
+   */
+  router.get('/trends/weekly-bugs', requireAuth, requireScope('releases:read'), async function (req, res) {
+    if (!storage || typeof storage.readFromStorage !== 'function') {
+      return res.status(503).json({ error: 'Tech debt trend storage is unavailable' })
+    }
+
+    try {
+      const stored = await storage.readFromStorage(TRENDS_STORAGE_KEY)
+      if (!stored) return res.status(404).json({ error: 'No tech debt trend snapshot is available', code: 'trend-snapshot-unavailable' })
+      const normalized = normalizeTrendSnapshot(stored)
+      if (normalized.error) {
+        console.error('[releases/tech-debt] Stored trend snapshot is invalid:', normalized.error)
+        return res.status(500).json({ error: 'Stored tech debt trend snapshot is invalid' })
+      }
+      const response = buildWeeklyBugTrendResponse(normalized.snapshot, new Date())
+      if (!response) {
+        return res.status(404).json({
+          error: 'Weekly Bug trends are unavailable until the next Tech Debt snapshot refresh',
+          code: 'weekly-bug-trends-unavailable'
+        })
+      }
+      res.json(response)
+    } catch (err) {
+      console.error('[releases/tech-debt] Weekly Bug trend snapshot read failed:', err.message)
+      res.status(500).json({ error: 'Failed to read weekly Bug trend data' })
+    }
+  })
+
+  /**
+   * @openapi
    * /api/modules/releases/tech-debt/trends:
    *   get:
    *     tags: [Releases]
@@ -750,6 +793,7 @@ registerTechDebtRoutes._test = {
   scopedIssueJql,
   scopedSfdcJql,
   buildTrendResponse,
+  buildWeeklyBugTrendResponse,
   normalizeTrendSnapshot,
   resetCache: function () {
     issueCaches.clear()
