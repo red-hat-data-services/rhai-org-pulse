@@ -1,0 +1,71 @@
+{
+  "rows": [
+    {
+      "suite": "release_gate",
+      "invocationId": "synthetic-suite-run",
+      "timestamp": "2026-11-25T12:00:00.000Z",
+      "rhoaiVersion": "3.7.0-ea.1",
+      "buildDate": null,
+      "buildDateStatus": null,
+      "workflows": 3,
+      "tasks": 12,
+      "passed": 9,
+      "failed": 1,
+      "skipped": 2,
+      "bugs": 0,
+      "hasBugs": false,
+      "suiteRun": true,
+      "suiteName": "release-gate",
+      "workflowsExpected": 3,
+      "workflowsRan": 2,
+      "workflowsMissing": [
+        { "workflowId": "documentation-fraud-detection", "title": "Fraud Detection Workflow Validation Spec" }
+      ]
+    },
+    {
+      "suite": "release_gate",
+      "invocationId": "synthetic-suite-run-without-ids",
+      "timestamp": "2026-11-24T12:00:00.000Z",
+      "rhoaiVersion": "3.7.0-ea.1",
+      "buildDate": null,
+      "buildDateStatus": null,
+      "workflows": 3,
+      "tasks": 12,
+      "passed": 12,
+      "failed": 0,
+      "skipped": 0,
+      "bugs": 0,
+      "hasBugs": false,
+      "suiteRun": true,
+      "suiteName": "release-gate",
+      "workflowsExpected": 3,
+      "workflowsRan": null,
+      "workflowsMissing": null
+    },
+    {
+      "suite": "release_gate",
+      "invocationId": "synthetic-ad-hoc-run",
+      "timestamp": "2026-11-23T12:00:00.000Z",
+      "rhoaiVersion": "3.7.0-ea.1",
+      "buildDate": null,
+      "buildDateStatus": null,
+      "workflows": 1,
+      "tasks": 4,
+      "passed": 4,
+      "failed": 0,
+      "skipped": 0,
+      "bugs": 0,
+      "hasBugs": false,
+      "suiteRun": false
+    }
+  ],
+  "total": 3,
+  "pageSize": 20,
+  "start": 1,
+  "end": 3,
+  "nextCursor": null,
+  "previousCursor": null,
+  "options": { "versions": ["3.7.0-ea.1"], "suites": ["release_gate"] },
+  "sortField": "timestamp",
+  "sortDir": "desc"
+}

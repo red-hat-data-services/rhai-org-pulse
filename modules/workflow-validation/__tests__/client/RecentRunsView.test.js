@@ -5,6 +5,7 @@ import RecentRunsView from '../../client/views/RecentRunsView.vue'
 import { filters, resetFilters } from '../../client/composables/useWorkflowValidation'
 import { apiRequest } from '@shared/client/services/api'
 import fixture from '../fixtures/recent-runs.json'
+import suiteRuns from '../fixtures/recent-run-suite-runs.json'
 import { createHash } from 'node:crypto'
 import * as versionRules from '../../lib/versions.js'
 const { parseRecentRuns, pageRecentRuns } = require('../../server/recent-runs')(versionRules)
@@ -605,6 +606,57 @@ describe('Recent Runs', () => {
     await wrapper.get('tbody tr').trigger('click')
     expect(nav.navigateTo).not.toHaveBeenCalled()
     selection.mockRestore()
+  })
+
+  it('shows expected versus ran for a suite run and marks every other run ad hoc', async () => {
+    apiRequest.mockResolvedValue(page(suiteRuns.rows))
+    wrapper = mount(RecentRunsView)
+    await flushPromises()
+    const [suiteRun, withoutIds, adHoc] = wrapper.findAll('tbody tr')
+    const workflows = row => row.findAll('td')[5]
+    expect(suiteRun.get('[data-testid="run-kind"]').text()).toBe('Suite run')
+    expect(workflows(suiteRun).text()).toBe('2 / 3')
+    expect(workflows(suiteRun).attributes('title')).toBe('Did not run: Fraud Detection Workflow Validation Spec')
+    expect(withoutIds.get('[data-testid="run-kind"]').text()).toBe('Suite run')
+    expect(workflows(withoutIds).text()).toBe('— / 3')
+    expect(workflows(withoutIds).attributes('title')).toContain('did not record workflow ids')
+    // An ad hoc run keeps every result; it only has no expected count.
+    expect(adHoc.get('[data-testid="run-kind"]').text()).toBe('Ad hoc')
+    expect(adHoc.findAll('td').slice(5).map(cell => cell.text())).toEqual(['1', '4', '4', '0', '0', '0'])
+    expect(workflows(adHoc).attributes('title')).toBeUndefined()
+    apiRequest.mockResolvedValue(page([{ ...suiteRuns.rows[0], workflowsRan: 3, workflowsMissing: [] }]))
+    await button('Refresh').trigger('click')
+    await flushPromises()
+    expect(workflows(wrapper.get('tbody tr')).text()).toBe('3 / 3')
+    expect(workflows(wrapper.get('tbody tr')).attributes('title')).toBe('Every expected workflow ran.')
+  })
+
+  it('shows no run kind when the service does not report one', async () => {
+    wrapper = mount(RecentRunsView)
+    await flushPromises()
+    expect(wrapper.findAll('[data-testid="run-kind"]')).toHaveLength(0)
+  })
+
+  it('filters to suite runs from page one, remembers the choice and removes it by its chip', async () => {
+    const nav = { params: ref({}), updateParams: vi.fn() }
+    apiRequest.mockResolvedValue(page(suiteRuns.rows))
+    wrapper = mount(RecentRunsView, { global: { provide: { moduleNav: nav } } })
+    await flushPromises()
+    expect(request(-1).has('suiteRunsOnly')).toBe(false)
+    await button('Suite runs only').trigger('click')
+    await flushPromises()
+    expect(request(-1).get('suiteRunsOnly')).toBe('true')
+    expect(request(-1).has('cursor')).toBe(false)
+    expect(button('Suite runs only').attributes('aria-pressed')).toBe('true')
+    expect(nav.updateParams.mock.calls.at(-1)[0]).toMatchObject({ recentSuiteRunsOnly: 'true' })
+    await wrapper.get('button[aria-label="Remove suite runs only filter"]').trigger('click')
+    await flushPromises()
+    expect(request(-1).has('suiteRunsOnly')).toBe(false)
+    wrapper.unmount()
+    nav.params.value = { recentSuiteRunsOnly: 'true' }
+    wrapper = mount(RecentRunsView, { global: { provide: { moduleNav: nav } } })
+    await flushPromises()
+    expect(request(-1).get('suiteRunsOnly')).toBe('true')
   })
 
 })

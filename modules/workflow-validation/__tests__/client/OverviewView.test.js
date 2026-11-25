@@ -356,6 +356,43 @@ describe('Dashboard navigation from Recent Runs', () => {
     expect(wrapper.get('a[href="#/workflow-validation/recent-runs"]').text()).toBe('Recent Runs')
   })
 
+  it('lists the expected workflows that did not run in a suite run', async () => {
+    const run = { suite: 'productization', invocationId: 'selected-run', rhoaiVersion: '3.6', suiteRun: true, suiteName: 'release-gate',
+      workflowsExpected: 30, workflowsRan: 28, workflowsMissing: [
+        { workflowId: 'documentation-fraud-detection', title: 'Fraud Detection' }, { workflowId: 'demos-pipelines', title: 'Pipeline Exploration' }] }
+    const responses = apiRequest.getMockImplementation()
+    apiRequest.mockImplementation((path, ...rest) => path.includes('/test-suites/') ? Promise.resolve(run) : responses(path, ...rest))
+    wrapper = mount(OverviewView, { global: { provide: { moduleNav: nav } } })
+    await flushPromises()
+    const coverage = wrapper.get('section[aria-label="Suite coverage"]')
+    expect(coverage.text()).toContain('Suite run: release-gate')
+    expect(coverage.text()).toContain('28 of 30 expected workflows ran.')
+    expect(coverage.findAll('li').map(item => item.text())).toEqual(['Fraud Detection documentation-fraud-detection', 'Pipeline Exploration demos-pipelines'])
+    apiRequest.mockImplementation(responses)
+  })
+
+  it.each([
+    [{ suiteRun: true, suiteName: 'release-gate', workflowsExpected: 30, workflowsRan: 30, workflowsMissing: [] }, '30 of 30 expected workflows ran.', 'Did not run'],
+    [{ suiteRun: true, suiteName: 'release-gate', workflowsExpected: 30, workflowsRan: null, workflowsMissing: null }, 'did not record workflow ids', 'expected workflows ran'],
+    [{ suiteRun: false }, 'Ad hoc run', 'expected workflows']
+  ])('describes the coverage of %j', async (fields, shown, hidden) => {
+    const responses = apiRequest.getMockImplementation()
+    apiRequest.mockImplementation((path, ...rest) => path.includes('/test-suites/')
+      ? Promise.resolve({ suite: 'productization', invocationId: 'selected-run', ...fields }) : responses(path, ...rest))
+    wrapper = mount(OverviewView, { global: { provide: { moduleNav: nav } } })
+    await flushPromises()
+    const coverage = wrapper.get('section[aria-label="Suite coverage"]')
+    expect(coverage.text()).toContain(shown)
+    expect(coverage.text()).not.toContain(hidden)
+    apiRequest.mockImplementation(responses)
+  })
+
+  it('shows no coverage section when the run does not say whether it is a suite run', async () => {
+    wrapper = mount(OverviewView, { global: { provide: { moduleNav: nav } } })
+    await flushPromises()
+    expect(wrapper.find('section[aria-label="Suite coverage"]').exists()).toBe(false)
+  })
+
   it('keeps shared filters unchanged while an exact run is open', async () => {
     Object.assign(filters, { version: '3.5', testSuite: 'exploratory-specs', invocationId: 'previous-run',
       datePreset: 'custom', dateFrom: '2026-09-01', dateTo: '2026-09-30' })

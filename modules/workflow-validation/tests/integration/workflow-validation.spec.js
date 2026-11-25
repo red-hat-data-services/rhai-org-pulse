@@ -1,5 +1,6 @@
 const { test, expect } = require('@playwright/test')
 const summaryRows = require('../../__tests__/fixtures/version-summary-runs.json')
+const suiteRunRows = require('../../__tests__/fixtures/recent-run-suite-runs.json').rows
 
 /** Build a complete paged response for browser fixtures. */
 function recentPage(rows, values = {}) {
@@ -338,6 +339,45 @@ test.describe('Workflow Validation module @workflow-validation', () => {
       expect(Math.abs(widths.columns[2] - widths.columns[3])).toBeLessThanOrEqual(1)
     }
     await expect(table.getByRole('row', { name: 'Open run sample-aramco-001', exact: true }).getByRole('cell')).toHaveCount(11)
+  })
+
+  test('shows expected versus ran for suite runs, keeps ad hoc runs, and lists the missing workflows', async ({ page }) => {
+    await mockRecentData(page, suiteRunRows)
+    const [suiteRun] = suiteRunRows
+    await page.route(`**/api/modules/workflow-validation/test-suites/${suiteRun.suite}/${suiteRun.invocationId}`, route => route.fulfill({ json: {
+      suite: suiteRun.suite, invocationId: suiteRun.invocationId, timestamp: suiteRun.timestamp, rhoaiVersion: suiteRun.rhoaiVersion,
+      suiteRun: true, suiteName: suiteRun.suiteName, workflowsExpected: suiteRun.workflowsExpected, workflowsRan: suiteRun.workflowsRan,
+      workflowsMissing: suiteRun.workflowsMissing, summary: { tests: 3, passed: 2, failed: 1, errors: 0, passRate: 2 / 3 }, productBugs: [], tests: [] } }))
+    await page.goto('/#/workflow-validation/recent-runs')
+    const table = page.getByRole('table', { name: 'Recent Workflow Validation runs. Select a run to open its details.', exact: true })
+    await expect(table.locator('tbody tr')).toHaveCount(3)
+    const announced = table.getByRole('row', { name: 'Open run synthetic-suite-run', exact: true })
+    await expect(announced.getByTestId('run-kind')).toHaveText('Suite run')
+    await expect(announced.getByRole('cell').nth(5)).toHaveText('2 / 3')
+    await expect(announced.getByRole('cell').nth(5)).toHaveAttribute('title', 'Did not run: Fraud Detection Workflow Validation Spec')
+    await expect(table.getByRole('row', { name: 'Open run synthetic-suite-run-without-ids', exact: true }).getByRole('cell').nth(5)).toHaveText('— / 3')
+    // An ad hoc run stays in the list with all its counts.
+    const adHoc = table.getByRole('row', { name: 'Open run synthetic-ad-hoc-run', exact: true })
+    await expect(adHoc.getByTestId('run-kind')).toHaveText('Ad hoc')
+    await expect(adHoc.getByRole('cell').nth(5)).toHaveText('1')
+    await expect(adHoc.getByRole('cell').nth(6)).toHaveText('4')
+
+    const toggle = page.getByRole('button', { name: 'Suite runs only', exact: true })
+    await toggle.click()
+    await expect(toggle).toHaveAttribute('aria-pressed', 'true')
+    await expect(table.locator('tbody tr')).toHaveCount(2)
+    await expect(table.getByTestId('run-kind')).toHaveText(['Suite run', 'Suite run'])
+    await expect(page).toHaveURL(/recentSuiteRunsOnly=true/)
+    await page.getByRole('button', { name: 'Remove suite runs only filter', exact: true }).click()
+    await expect(table.locator('tbody tr')).toHaveCount(3)
+
+    await announced.getByRole('cell').first().click()
+    await expect(page).toHaveURL(/workflow-validation\/overview.*invocationId=synthetic-suite-run/)
+    const coverage = page.getByRole('region', { name: 'Suite coverage', exact: true })
+    await expect(coverage).toContainText('Suite run: release-gate')
+    await expect(coverage).toContainText('2 of 3 expected workflows ran.')
+    await expect(coverage.getByRole('list', { name: 'Expected workflows that did not run', exact: true }).getByRole('listitem'))
+      .toHaveText(['Fraud Detection Workflow Validation Spec documentation-fraud-detection'])
   })
 
   test('summarizes runs matching the bug and version filters', async ({ page }) => {

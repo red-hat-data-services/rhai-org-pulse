@@ -7,6 +7,7 @@ const RUNS_INDEX = 'workflow-executions';
 const TASKS_INDEX = 'workflow-task-executions';
 const BUGS_INDEX = 'workflow-root-causes';
 const IMAGES_INDEX = 'workflow-execution-images';
+const SUITE_RUNS_INDEX = 'workflow-suite-runs';
 
 /** Read all hits in a stable sort order, rejecting incomplete results. */
 async function readAll(search, index, body, isClosed) {
@@ -191,7 +192,7 @@ function taskFilters(q = {}) {
 }
 
 module.exports = {
-  RUNS_INDEX, TASKS_INDEX, BUGS_INDEX, IMAGES_INDEX,
+  RUNS_INDEX, TASKS_INDEX, BUGS_INDEX, IMAGES_INDEX, SUITE_RUNS_INDEX,
   getOpenSearchConfig, createOpenSearchClient, readAll,
   runFilters, taskFilters, bugFilters, timestampRange
 };

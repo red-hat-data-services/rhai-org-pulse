@@ -126,3 +126,25 @@ Verified cache hits and completed Jira batches survive a later batch failure or
 the 10-second Jira deadline. Runs with unresolved keys retain null exact counts;
 a verified eligible key still makes `hasBugs` true. Late responses after the
 deadline are ignored and do not start further Jira batches.
+
+## Suite runs: expected versus ran
+
+Paged rows carry `suiteRun` when the service could read the suite-run
+announcements (`workflow-suite-runs` index):
+
+| Field | Type | Meaning |
+|-------|------|---------|
+| `suiteRun` | boolean, or absent | `true` when the run has an announcement, `false` for an ad hoc run, absent when announcements could not be read |
+| `suiteName` | string | Suite name from the announcement, such as `release-gate`. Suite runs only |
+| `workflowsExpected` | integer | Distinct workflows the suite expected. Suite runs only |
+| `workflowsRan` | integer or null | Expected workflows with at least one execution. Null unless every execution recorded `workflow_id`. Suite runs only |
+| `workflowsMissing` | array or null | `{ workflowId, title }` for each expected workflow without an execution. Null when `workflowsRan` is null. Suite runs only |
+
+`suiteRunsOnly=true` keeps only rows with `suiteRun: true`, before pagination
+and the summary. The run detail (`/test-suites/{suite}/{invocationId}`) returns
+the same fields. See the synthetic
+[suite-run fixture](../__tests__/fixtures/recent-run-suite-runs.json).
+
+An announcement document has `telemetry_suite`, `invocation_id`, `suite`, and
+`expected_workflows` (a list of `{ workflow_id, title }`). The service reads
+only these fields.
