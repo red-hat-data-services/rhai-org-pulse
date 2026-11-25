@@ -1603,6 +1603,13 @@ test.describe('Releases FPDoR Readiness @releases', () => {
     await page.getByRole('checkbox', { name: 'AI Gateway' }).check();
 
     await expect(page.getByTestId('tech-debt-cockpit')).toBeVisible();
+    await expect(page.getByTestId('tech-debt-overview')).toContainText('Component Specific Historic Trends');
+    await expect(page.getByTestId('tech-debt-overview')).toContainText('Current open Bugs and CVEs, queue status, and six-month received-versus-resolved history for the selected components.');
+    await expect(page.getByTestId('tech-debt-overview')).not.toContainText('Tech Debt Cockpit');
+    await expect(page.getByTestId('tech-debt-overview-toggle')).toHaveAttribute('aria-expanded', 'false');
+    await expect(page.getByTestId('tech-debt-summary')).toBeHidden();
+    await expect(page.getByTestId('tech-debt-trends')).toBeHidden();
+    await page.getByTestId('tech-debt-overview-toggle').click();
     await expect(page.getByTestId('tech-debt-summary')).toContainText(/Total\s*3/);
     await expect(page.getByTestId('tech-debt-summary')).toContainText(/Received · 6 months\s*4/);
     await expect(page.getByTestId('tech-debt-summary')).toContainText(/Resolved · 6 months\s*2/);
@@ -1610,14 +1617,40 @@ test.describe('Releases FPDoR Readiness @releases', () => {
     await expect(page.getByTestId('tech-debt-trends')).toContainText('AI Gateway');
     await expect(page.getByTestId('tech-debt-trend-volume-view')).toHaveAttribute('aria-pressed', 'true');
     await expect(page.getByTestId('tech-debt-trends')).not.toContainText('CVE / Vulnerability');
+    await expect(page.getByTestId('tech-debt-overview-toggle')).toHaveAttribute('aria-expanded', 'true');
+    await page.getByTestId('tech-debt-overview-toggle').click();
+    await expect(page.getByTestId('tech-debt-summary')).toBeHidden();
+    await expect(page.getByTestId('tech-debt-trends')).toBeHidden();
+    await page.getByTestId('tech-debt-overview-toggle').click();
+    await expect(page.getByTestId('tech-debt-summary')).toBeVisible();
+    await expect(page.getByTestId('tech-debt-trends')).toBeVisible();
     await page.getByTestId('tech-debt-trend-issue-types-view').click();
     await expect(page.getByTestId('tech-debt-trend-issue-types-view')).toHaveAttribute('aria-pressed', 'true');
     await expect(page.getByTestId('tech-debt-trends')).toContainText('CVE / Vulnerability');
     await expect(page.getByTestId('tech-debt-in-flight-pane')).toContainText('RHAI-101');
     await expect(page.getByTestId('tech-debt-in-flight-pane')).toContainText('RHAI-102');
+    await expect(page.getByTestId('tech-debt-in-flight-pane')).toHaveAttribute('tabindex', '0');
+    await expect(page.getByTestId('tech-debt-in-flight-pane')).toHaveAttribute('aria-label', 'In-Flight Work issues');
     await expect(page.getByTestId('tech-debt-in-flight-pane')).toContainText('P1 · 70');
     await expect(page.getByTestId('tech-debt-in-flight-pane')).toContainText('Approved Release Blocker');
     await expect(page.getByTestId('tech-debt-backlog-pane')).toContainText('RHAI-201');
+    await expect(page.getByTestId('tech-debt-backlog-pane')).toHaveAttribute('tabindex', '0');
+    await expect(page.getByTestId('tech-debt-backlog-pane')).toHaveAttribute('aria-label', 'Prioritized Backlog issues');
+    for (const pane of [page.getByTestId('tech-debt-in-flight-pane'), page.getByTestId('tech-debt-backlog-pane')]) {
+      const styles = await pane.evaluate(element => {
+        const computed = window.getComputedStyle(element);
+        return {
+          maxHeight: computed.maxHeight,
+          overflowY: computed.overflowY,
+          overscrollBehaviorY: computed.overscrollBehaviorY,
+          scrollbarGutter: computed.scrollbarGutter
+        };
+      });
+      expect(styles.overflowY).toBe('auto');
+      expect(styles.overscrollBehaviorY).toBe('contain');
+      expect(styles.scrollbarGutter).toBe('stable');
+      expect(styles.maxHeight).not.toBe('none');
+    }
     await expect(page.getByTestId('tech-debt-backlog-pane')).toContainText('Critical dependency vulnerability');
     await expect(page.getByText('Separate ranked groups: company SLA for CVEs and priority score for Bugs')).toBeVisible();
     await expect(page.getByTestId('tech-debt-backlog-pane').getByTestId('tech-debt-sla-badge')).toHaveText('SLA breached · 1 day');

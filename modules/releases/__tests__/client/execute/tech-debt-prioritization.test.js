@@ -224,6 +224,14 @@ async function selectComponent(wrapper, name = 'AI Gateway') {
   await flushPromises()
 }
 
+async function expandComponentTrends(wrapper) {
+  const toggle = wrapper.get('[data-testid="tech-debt-overview-toggle"]')
+  if (toggle.attributes('aria-expanded') === 'false') {
+    await toggle.trigger('click')
+    await wrapper.vm.$nextTick()
+  }
+}
+
 describe('TechDebtPrioritizationView', function () {
   beforeEach(function () {
     vi.clearAllMocks()
@@ -518,6 +526,7 @@ describe('TechDebtPrioritizationView', function () {
     await flushPromises()
 
     await selectComponent(wrapper, 'AI Gateway')
+    await expandComponentTrends(wrapper)
 
     expect(wrapper.get('[data-testid="tech-debt-summary"]').text()).toContain('7')
     expect(wrapper.get('[data-testid="tech-debt-background-refresh"]').text()).toContain('Previously loaded results remain available')
@@ -659,6 +668,7 @@ describe('TechDebtPrioritizationView', function () {
     const wrapper = mount(TechDebtPrioritizationView)
     await flushPromises()
     await selectComponent(wrapper)
+    await expandComponentTrends(wrapper)
 
     const summary = wrapper.get('[data-testid="tech-debt-summary"]').text()
     expect(summary).toContain('Total')
@@ -674,6 +684,16 @@ describe('TechDebtPrioritizationView', function () {
     await flushPromises()
     await selectComponent(wrapper)
 
+    const overview = wrapper.get('[data-testid="tech-debt-overview"]')
+    const overviewToggle = wrapper.get('[data-testid="tech-debt-overview-toggle"]')
+    expect(overview.text()).toContain('Component Specific Historic Trends')
+    expect(overview.text()).toContain('Current open Bugs and CVEs, queue status, and six-month received-versus-resolved history for the selected components.')
+    expect(overview.text()).not.toContain('Tech Debt Cockpit')
+    expect(overviewToggle.attributes('aria-expanded')).toBe('false')
+    expect(wrapper.find('[data-testid="tech-debt-summary"]').exists()).toBe(false)
+    expect(wrapper.find('[data-testid="tech-debt-trends"]').exists()).toBe(false)
+    await expandComponentTrends(wrapper)
+
     const summary = wrapper.get('[data-testid="tech-debt-summary"]').text()
     expect(summary).toContain('Received · 6 months')
     expect(summary).toContain('8')
@@ -682,6 +702,15 @@ describe('TechDebtPrioritizationView', function () {
     expect(wrapper.get('[data-testid="tech-debt-trends"]').text()).toContain('Received vs. closed tech debt')
     expect(wrapper.get('[data-testid="tech-debt-trend-chart-stub"]').text()).toContain('AI Gateway · 8 received · 5 closed · totals')
     expect(wrapper.find('[aria-label="Issue category legend"]').exists()).toBe(false)
+
+    expect(overviewToggle.attributes('aria-expanded')).toBe('true')
+    await overviewToggle.trigger('click')
+    expect(overviewToggle.attributes('aria-expanded')).toBe('false')
+    expect(wrapper.find('[data-testid="tech-debt-summary"]').exists()).toBe(false)
+    expect(wrapper.find('[data-testid="tech-debt-trends"]').exists()).toBe(false)
+    await overviewToggle.trigger('click')
+    expect(wrapper.get('[data-testid="tech-debt-summary"]').exists()).toBe(true)
+    expect(wrapper.get('[data-testid="tech-debt-trends"]').exists()).toBe(true)
 
     await wrapper.get('[data-testid="tech-debt-trend-issue-types-view"]').trigger('click')
 
@@ -716,6 +745,7 @@ describe('TechDebtPrioritizationView', function () {
     const wrapper = mount(TechDebtPrioritizationView)
     await flushPromises()
     await selectComponent(wrapper)
+    await expandComponentTrends(wrapper)
 
     expect(wrapper.get('[data-testid="tech-debt-trend-error"]').text()).toContain('live priority queue remains available')
     expect(wrapper.get('[data-testid="tech-debt-backlog-pane"]').text()).toContain('RHAI-20')
@@ -738,11 +768,40 @@ describe('TechDebtPrioritizationView', function () {
     await selectComponent(wrapper)
 
     expect(wrapper.findAll('[data-testid="tech-debt-backlog-card"]')).toHaveLength(50)
+    const backlogPane = wrapper.get('[data-testid="tech-debt-backlog-pane"]')
+    backlogPane.element.scrollTop = 240
     await wrapper.get('[data-testid="tech-debt-vulnerability-backlog-more"]').trigger('click')
+    expect(backlogPane.element.scrollTop).toBe(240)
     expect(wrapper.get('[data-testid="tech-debt-vulnerability-backlog"]').findAll('[data-testid="tech-debt-backlog-card"]')).toHaveLength(26)
     expect(wrapper.get('[data-testid="tech-debt-bug-backlog"]').findAll('[data-testid="tech-debt-backlog-card"]')).toHaveLength(25)
     await wrapper.get('[data-testid="tech-debt-bug-backlog-more"]').trigger('click')
     expect(wrapper.findAll('[data-testid="tech-debt-backlog-card"]')).toHaveLength(52)
+  })
+
+  it('keeps issue queues in independent accessible panes and resets them when filters change', async function () {
+    mockSuccessfulApi()
+    const wrapper = mount(TechDebtPrioritizationView)
+    await flushPromises()
+    await selectComponent(wrapper)
+
+    const inFlightPane = wrapper.get('[data-testid="tech-debt-in-flight-pane"]')
+    const backlogPane = wrapper.get('[data-testid="tech-debt-backlog-pane"]')
+    for (const pane of [inFlightPane, backlogPane]) {
+      expect(pane.classes()).toContain('overflow-y-auto')
+      expect(pane.classes()).toContain('overscroll-contain')
+      expect(pane.classes()).toContain('max-h-[min(70vh,48rem)]')
+      expect(pane.attributes('tabindex')).toBe('0')
+    }
+    expect(inFlightPane.attributes('aria-label')).toBe('In-Flight Work issues')
+    expect(backlogPane.attributes('aria-label')).toBe('Prioritized Backlog issues')
+
+    inFlightPane.element.scrollTop = 180
+    backlogPane.element.scrollTop = 260
+    await wrapper.get('[data-testid="tech-debt-issue-type-filter"]').setValue('Vulnerability')
+    await flushPromises()
+
+    expect(wrapper.get('[data-testid="tech-debt-in-flight-pane"]').element.scrollTop).toBe(0)
+    expect(wrapper.get('[data-testid="tech-debt-backlog-pane"]').element.scrollTop).toBe(0)
   })
 
   it('forces a refresh from the manual Refresh action', async function () {
