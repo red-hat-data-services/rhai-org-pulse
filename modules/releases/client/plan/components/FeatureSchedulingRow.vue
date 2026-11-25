@@ -8,8 +8,6 @@ const props = defineProps({
   index: { type: Number, default: null }
 })
 
-// Nov 24 2026: Placement badge removed (not in local/iframe version)
-
 const riskClass = computed(() => {
   switch (props.feature._riskLevel) {
     case 'HIGH':
@@ -43,7 +41,7 @@ const fpdorTooltip = computed(() => buildFpdorTooltip(props.feature))
     <td class="px-3 py-2.5 whitespace-nowrap text-center relative group">
       <span class="text-xs font-mono text-gray-700 dark:text-gray-300 cursor-help">{{ feature['FPDoR'] || '—' }}</span>
       <span class="text-xs text-gray-400">(w:{{ feature._wFPDoR }})</span>
-      <div class="absolute left-1/2 -translate-x-1/2 bottom-full mb-2 hidden group-hover:block bg-gray-900 dark:bg-gray-800 text-white dark:text-gray-100 text-xs rounded px-2 py-1 whitespace-nowrap z-50 pointer-events-none shadow-lg border border-gray-700">
+      <div class="absolute left-1/2 -translate-x-1/2 bottom-full mb-2 hidden group-hover:block bg-gray-900 dark:bg-gray-800 text-white dark:text-gray-100 text-xs rounded px-3 py-2 whitespace-normal z-[9999] pointer-events-none shadow-lg border border-gray-700 w-max max-w-xs">
         {{ fpdorTooltip }}
       </div>
     </td>

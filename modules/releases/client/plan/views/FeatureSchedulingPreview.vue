@@ -150,8 +150,8 @@ const headers = [
       {{ error }}
     </div>
 
-    <!-- Horizontal scroll navigation (Nov 24 2026) -->
-    <div class="flex items-center justify-center gap-2 py-2 px-4 bg-gray-50 dark:bg-gray-800/50 border-b border-gray-200 dark:border-gray-700">
+    <!-- Horizontal scroll navigation (Nov 24 2026) - sticky so it stays visible while scrolling -->
+    <div class="sticky top-0 flex items-center justify-center gap-2 py-2 px-4 bg-gray-50 dark:bg-gray-800/50 border-b border-gray-200 dark:border-gray-700 z-40">
       <button
         type="button"
         @click="scrollTableLeft"

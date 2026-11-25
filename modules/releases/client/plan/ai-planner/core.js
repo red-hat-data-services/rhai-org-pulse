@@ -21,8 +21,7 @@ import {
   FPDOR_MANDATORY_HARD,
   ML_SCORES,
   ML_REAL_KEYS,
-  ROADMAP_OUTCOMES,
-  FPDOR_TIERS_DISPLAY
+  ROADMAP_OUTCOMES
 } from './constants.js'
 
 /**
@@ -895,18 +894,13 @@ export function computeFpdorFieldBreakdown(rows) {
 export function buildFpdorTooltip(r) {
   const failedSet = new Set(r._failedItems);
   const hasFpdorData = r['FPDoR'] && r['FPDoR'] !== '—';
-  const tooltipLines = ['Weighted FPDoR: '+r._wFPDoR+'/100 (Erle\'s tier weights)', ''];
-  // Only the failures are listed. Printing a tier's passes as well split each tier
-  // across two lines, and "passed" there also swept up N/A items, so the lines never
-  // added up to the N/17 badge — that badge counts outright passes only.
-  FPDOR_TIERS_DISPLAY.forEach(t=>{
-    const fails = t.items.filter(i=>failedSet.has(i));
-    if(fails.length) tooltipLines.push('✗ '+t.label+': '+fails.join(', '));
-  });
-  if(hasFpdorData){
-    tooltipLines.push('', failedSet.size
-      ? esc(r['FPDoR'])+' passed · '+failedSet.size+' failing · remainder not applicable'
-      : esc(r['FPDoR'])+' passed · nothing failing');
+  const tooltipLines = ['Weighted FPDoR: '+r._wFPDoR+'/100', ''];
+  // 7-item FPDoR checklist (Nov 24 2026): Target Version, Feature Human Signoff, Components,
+  // PM, Assignee, Release Type, Product Documentation Required
+  if(failedSet.size > 0) {
+    tooltipLines.push('✗ Missing: '+Array.from(failedSet).join(', '));
+  } else if(hasFpdorData) {
+    tooltipLines.push('✓ All criteria met');
   }
   return tooltipLines.join('\n');
 }
@@ -924,7 +918,7 @@ export function buildFeatureSchedulingCsv(rows) {
   const hdr=['Rank','Key','Title','FPDoR','Weighted FPDoR','Readiness Issues','Risk','Target Versions','Fix Version','Components','Team','Priority','Confidence','Placement','Confidence%','PM','Outcome'];
   const lines=[hdr.join(','),...rows.map(r=>{
     const failedSet=new Set(r._failedItems);
-    const issues=FPDOR_TIERS_DISPLAY.flatMap(t=>t.items.filter(i=>failedSet.has(i)).map(i=>t.label+': '+i)).join('; ');
+    const issues=Array.from(failedSet).join('; ');
     return [
       r['Rank'],r['Key']||'',csvQ(r['Title']),r['FPDoR'],r._wFPDoR,
       csvQ(issues),r._riskLevel||'',
