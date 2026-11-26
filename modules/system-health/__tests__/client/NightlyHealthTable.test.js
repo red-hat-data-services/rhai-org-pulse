@@ -91,6 +91,29 @@ describe('NightlyHealthTable', () => {
     expect(items[0].classList.contains('run-list-item--selected')).toBe(true)
   })
 
+  it('shows version-filter empty copy when a filtered day has no matching runs', async () => {
+    const payload = {
+      schema_version: 1,
+      days: [{
+        date: '2026-11-04',
+        stream_key: 'rhoai-nightly-bvt',
+        latest_run_id: undefined,
+        runs: []
+      }]
+    }
+    wrapper = mount(NightlyHealthTable, {
+      props: { payload, versionFilter: '3.6' },
+      ...mountOptions
+    })
+    await nextTick()
+
+    const headerBtn = wrapper.find('.date-header-btn')
+    await headerBtn.trigger('click')
+    await nextTick()
+
+    expect(document.body.textContent).toContain('No runs for version 3.6 on this day.')
+  })
+
   it('shows Jenkins job filter when multiple stream_key values are present', async () => {
     const payload = {
       schema_version: 1,

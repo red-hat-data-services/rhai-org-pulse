@@ -1,4 +1,5 @@
 import { ref, computed, unref, watch } from 'vue'
+import { cleanVer, compareVers, isKnownVersion, versionMatches } from '../utils/versionFilter.js'
 
 /** Max day columns per matrix page when the snapshot has many days. */
 export const NIGHTLY_PAGE_SIZE = 5
@@ -152,6 +153,106 @@ export function filterNightlyHealthByStream(payload, { include = null, exclude =
     ? payload.jenkins_jobs.filter((job) => job && keep(job.stream_key))
     : payload.jenkins_jobs
   return { ...payload, days, ...(jobs !== undefined ? { jenkins_jobs: jobs } : {}) }
+}
+
+/**
+ * True when a nightly run's `promotion_gate.rhoai_version` matches the Version picker
+ * (exact y/z semantics via `versionMatches`). Missing version never matches a specific filter.
+ *
+ * @param {object|null|undefined} run
+ * @param {string|null|undefined} versionFilter
+ * @returns {boolean}
+ */
+export function runMatchesRhoaiVersion(run, versionFilter) {
+  if (!versionFilter || versionFilter === 'All') return true
+  const raw = run?.promotion_gate?.rhoai_version
+  if (raw == null || String(raw).trim() === '') return false
+  return versionMatches(raw, versionFilter)
+}
+
+/**
+ * Newest run id by `started_at` then `build_number` (same ordering as the day panel).
+ *
+ * @param {object[]} runs
+ * @returns {string|null}
+ */
+export function pickLatestRunId(runs) {
+  if (!Array.isArray(runs) || runs.length === 0) return null
+  let best = null
+  let bestStarted = Number.NEGATIVE_INFINITY
+  let bestBuild = Number.NEGATIVE_INFINITY
+  for (const run of runs) {
+    if (!run || typeof run !== 'object' || typeof run.run_id !== 'string' || !run.run_id) continue
+    const started = runStartedAtMs(run)
+    const build = runBuildNumber(run)
+    if (
+      !best
+      || started > bestStarted
+      || (started === bestStarted && build > bestBuild)
+    ) {
+      best = run
+      bestStarted = started
+      bestBuild = build
+    }
+  }
+  return best?.run_id ?? null
+}
+
+/**
+ * Day copy with runs limited to `versionFilter`; recomputes `latest_run_id` from the filtered set.
+ * Days with no matching runs are kept (empty runs) so matrix columns stay visible as "–".
+ *
+ * @param {object|null|undefined} day
+ * @param {string|null|undefined} versionFilter
+ * @returns {object|null|undefined}
+ */
+export function filterDayByRhoaiVersion(day, versionFilter) {
+  if (!day || !versionFilter || versionFilter === 'All') return day
+  const runs = Array.isArray(day.runs)
+    ? day.runs.filter((run) => runMatchesRhoaiVersion(run, versionFilter))
+    : []
+  const latest_run_id = pickLatestRunId(runs)
+  return {
+    ...day,
+    runs,
+    latest_run_id: latest_run_id || undefined
+  }
+}
+
+/**
+ * Nightly payload with every day's runs filtered by RHOAI version (Version picker).
+ *
+ * @param {object|null|undefined} payload
+ * @param {string|null|undefined} versionFilter
+ * @returns {object|null|undefined}
+ */
+export function filterNightlyHealthByRhoaiVersion(payload, versionFilter) {
+  if (!payload || typeof payload !== 'object' || !Array.isArray(payload.days)) return payload
+  if (!versionFilter || versionFilter === 'All') return payload
+  return {
+    ...payload,
+    days: payload.days.map((day) => filterDayByRhoaiVersion(day, versionFilter))
+  }
+}
+
+/**
+ * Distinct cleaned RHOAI versions from nightly `promotion_gate.rhoai_version` (excludes `unknown`).
+ *
+ * @param {object|null|undefined} payload
+ * @returns {string[]}
+ */
+export function collectVersionsFromNightlyHealth(payload) {
+  const set = new Set()
+  const days = Array.isArray(payload?.days) ? payload.days : []
+  for (const day of days) {
+    const runs = Array.isArray(day?.runs) ? day.runs : []
+    for (const run of runs) {
+      const raw = run?.promotion_gate?.rhoai_version
+      if (!isKnownVersion(raw)) continue
+      set.add(cleanVer(raw))
+    }
+  }
+  return Array.from(set).sort(compareVers)
 }
 
 /** Hash query key for nightly test-results source deep links (`#/system-health/test-execution?source=…`). */

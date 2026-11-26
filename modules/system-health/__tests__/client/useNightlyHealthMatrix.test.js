@@ -60,6 +60,11 @@ import {
   resolveHeatmapComponentToRowId,
   producerRowIdsMatchingHeatmapLabel,
   filterNightlyHealthByStream,
+  filterNightlyHealthByRhoaiVersion,
+  filterDayByRhoaiVersion,
+  runMatchesRhoaiVersion,
+  pickLatestRunId,
+  collectVersionsFromNightlyHealth,
   RHOAI_NIGHTLY_BVT_STREAM_KEY
 } from '../../client/composables/useNightlyHealthMatrix'
 
@@ -1378,6 +1383,105 @@ describe('useNightlyHealthMatrix helpers', () => {
     expect(filterNightlyHealthByStream(null, { include: [RHOAI_NIGHTLY_BVT_STREAM_KEY] })).toBeNull()
     expect(filterNightlyHealthByStream({ schema_version: 1 }, {})).toBeNull()
     expect(filterNightlyHealthByStream(payload, { exclude: [RHOAI_NIGHTLY_BVT_STREAM_KEY] }).jenkins_jobs).toBeUndefined()
+  })
+
+  it('matches promotion_gate.rhoai_version with exact y/z semantics', () => {
+    const run36 = { promotion_gate: { rhoai_version: '3.6.0' } }
+    const run354 = { promotion_gate: { rhoai_version: '3.5.4' } }
+    expect(runMatchesRhoaiVersion(run36, 'All')).toBe(true)
+    expect(runMatchesRhoaiVersion(run36, '3.6')).toBe(true)
+    expect(runMatchesRhoaiVersion(run36, '3.6.0')).toBe(true)
+    expect(runMatchesRhoaiVersion(run354, '3.6')).toBe(false)
+    expect(runMatchesRhoaiVersion({ promotion_gate: {} }, '3.6')).toBe(false)
+  })
+
+  it('filters day runs by version and recomputes latest_run_id as newest matching', () => {
+    const day = {
+      date: '2026-11-25',
+      latest_run_id: 'bvt:23',
+      runs: [
+        {
+          run_id: 'bvt:21',
+          build_number: 21,
+          started_at: '2026-11-25T06:00:00Z',
+          promotion_gate: { rhoai_version: '3.6.0' }
+        },
+        {
+          run_id: 'bvt:22',
+          build_number: 22,
+          started_at: '2026-11-25T10:00:00Z',
+          promotion_gate: { rhoai_version: '3.5.4' }
+        },
+        {
+          run_id: 'bvt:23',
+          build_number: 23,
+          started_at: '2026-11-25T14:00:00Z',
+          promotion_gate: { rhoai_version: '3.6.0' }
+        }
+      ]
+    }
+
+    expect(filterDayByRhoaiVersion(day, 'All')).toBe(day)
+
+    const filtered36 = filterDayByRhoaiVersion(day, '3.6')
+    expect(filtered36.runs.map((r) => r.run_id)).toEqual(['bvt:21', 'bvt:23'])
+    expect(filtered36.latest_run_id).toBe('bvt:23')
+    expect(orderDayRunsForPanel(filtered36).map((r) => r.run_id)).toEqual(['bvt:23', 'bvt:21'])
+
+    const filtered354 = filterDayByRhoaiVersion(day, '3.5.4')
+    expect(filtered354.runs.map((r) => r.run_id)).toEqual(['bvt:22'])
+    expect(filtered354.latest_run_id).toBe('bvt:22')
+
+    const empty = filterDayByRhoaiVersion(day, '3.4')
+    expect(empty.runs).toEqual([])
+    expect(empty.latest_run_id).toBeUndefined()
+    expect(resolveSelectedRun(empty)).toEqual({ run: null, error: null })
+
+    // Input day is not mutated
+    expect(day.runs).toHaveLength(3)
+    expect(day.latest_run_id).toBe('bvt:23')
+  })
+
+  it('filters a nightly payload by RHOAI version and collects BVT versions', () => {
+    const payload = {
+      schema_version: 1,
+      days: [
+        {
+          date: '2026-11-04',
+          stream_key: RHOAI_NIGHTLY_BVT_STREAM_KEY,
+          latest_run_id: 'bvt:23',
+          runs: [
+            {
+              run_id: 'bvt:21',
+              build_number: 21,
+              started_at: '2026-11-04T06:00:00Z',
+              promotion_gate: { rhoai_version: '3.6.0' }
+            },
+            {
+              run_id: 'bvt:22',
+              build_number: 22,
+              started_at: '2026-11-04T10:00:00Z',
+              promotion_gate: { rhoai_version: '3.5.4' }
+            },
+            {
+              run_id: 'bvt:23',
+              build_number: 23,
+              started_at: '2026-11-04T14:00:00Z',
+              promotion_gate: { rhoai_version: '3.6.0' }
+            }
+          ]
+        }
+      ]
+    }
+
+    expect(collectVersionsFromNightlyHealth(payload)).toEqual(['3.5.4', '3.6'])
+    expect(filterNightlyHealthByRhoaiVersion(payload, 'All')).toBe(payload)
+
+    const filtered = filterNightlyHealthByRhoaiVersion(payload, '3.6')
+    expect(filtered.days[0].runs.map((r) => r.run_id)).toEqual(['bvt:21', 'bvt:23'])
+    expect(filtered.days[0].latest_run_id).toBe('bvt:23')
+    expect(pickLatestRunId(filtered.days[0].runs)).toBe('bvt:23')
+    expect(payload.days[0].runs).toHaveLength(3)
   })
 
   it('filters omitted stream_key days under the default option when multiple streams exist', async () => {

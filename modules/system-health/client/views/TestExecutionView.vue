@@ -55,8 +55,8 @@
             class="tab-panel"
             aria-labelledby="test-exec-tab-releases"
           >
-            <template v-if="hasHeatmapData">
-              <div class="tab-panel-heading">
+            <template v-if="hasHeatmapData || rhoaiDeploymentHealth">
+              <div v-if="hasHeatmapData" class="tab-panel-heading">
                 <h2 class="tab-panel-title">RHOAI Releases Test Results</h2>
                 <p class="tab-panel-intro">
                   Aggregated view of RHOAI test execution across all components, quality gates, and releases.
@@ -72,21 +72,28 @@
               />
 
               <MetricsCards
-                v-if="filteredComponents.length > 0"
+                v-if="hasHeatmapData && filteredComponents.length > 0"
                 :components="filteredComponents"
                 :filters="filters"
               />
             </template>
 
-            <!-- Nightly BVT: shown whether or not heatmap data was uploaded -->
+            <!-- Nightly BVT: shown whether or not heatmap data was uploaded; Version filter applies here -->
             <div v-if="rhoaiDeploymentHealth" class="section rhoai-deployment-section">
               <div class="section-title">
                 <h3 class="tab-section-subtitle">RHOAI Nightly BVT Results</h3>
+                <p
+                  v-if="filters.version && filters.version !== 'All'"
+                  class="bvt-version-filter-hint"
+                >
+                  Showing version {{ filters.version }}
+                </p>
               </div>
               <NightlyHealthLegend title="RHOAI Nightly BVT Results" />
               <NightlyHealthTable
-                :payload="rhoaiDeploymentHealth"
+                :payload="filteredRhoaiDeploymentHealth"
                 :heatmap-components="heatmap"
+                :version-filter="filters.version"
                 :tab-panel-active="activeTab === 'releases'"
                 @component-click="onComponentClick"
               />
@@ -176,12 +183,15 @@ import NightlyHealthTable from '../components/NightlyHealthTable.vue'
 import NightlyHealthLegend from '../components/NightlyHealthLegend.vue'
 import {
   cleanVer,
+  compareVers,
   collectReleasesFromComponents,
   collectVersionsFromComponents,
   isZStream,
   vrKeyMatches
 } from '../utils/versionFilter.js'
 import {
+  collectVersionsFromNightlyHealth,
+  filterNightlyHealthByRhoaiVersion,
   filterNightlyHealthByStream,
   formatTimestamp,
   jenkinsJobBasename,
@@ -530,6 +540,11 @@ const filters = ref({
   toDate: null
 })
 
+/** BVT matrix/day panel limited to the Releases Version picker (`promotion_gate.rhoai_version`). */
+const filteredRhoaiDeploymentHealth = computed(() =>
+  filterNightlyHealthByRhoaiVersion(rhoaiDeploymentHealth.value, filters.value.version)
+)
+
 // Set default dates (last 30 days) and load data on mount.
 onMounted(() => {
   const today = new Date()
@@ -556,8 +571,12 @@ watch(loading, (isLoading, wasLoading) => {
 
 const components = computed(() => heatmap.value || [])
 
-// Distinct versions discovered from by_vr (exact y- and z-stream; .0 → y-stream).
-const availableVersions = computed(() => collectVersionsFromComponents(components.value))
+// Distinct versions from heatmap by_vr plus BVT promotion_gate.rhoai_version (exact y/z; .0 → y-stream).
+const availableVersions = computed(() => {
+  const fromHeatmap = collectVersionsFromComponents(components.value)
+  const fromBvt = collectVersionsFromNightlyHealth(rhoaiDeploymentHealth.value)
+  return Array.from(new Set([...fromHeatmap, ...fromBvt])).sort(compareVers)
+})
 
 const availableReleases = computed(() => collectReleasesFromComponents(components.value))
 
@@ -814,6 +833,13 @@ function onComponentClick(componentName) {
 
 .section-title {
   margin-bottom: 6px;
+}
+
+.bvt-version-filter-hint {
+  font-size: 12px;
+  color: var(--te-text-muted);
+  margin: 6px 0 0;
+  padding-left: 16px;
 }
 
 .section-title h2 {
