@@ -199,6 +199,16 @@ test.describe('Releases Views @releases', () => {
     await expect(jiraPlan).toContainText('Read-only');
     await expect(jiraPlan).toContainText('RHAISTRAT-2921');
     await expect(jiraPlan).toContainText('Releases');
+    const topScrollbar = page.getByTestId('jira-plan-top-scrollbar');
+    const tableScrollbar = page.getByTestId('jira-plan-scroll-region');
+    await expect(topScrollbar).toBeVisible();
+    await expect(tableScrollbar).toBeVisible();
+    await tableScrollbar.evaluate(element => {
+      element.scrollLeft = 120;
+      element.dispatchEvent(new Event('scroll'));
+    });
+    await expect.poll(() => topScrollbar.evaluate(element => element.scrollLeft)).toBe(120);
+
     await expect(page.getByTestId('jira-plan-outcome-row')).toHaveCount(12);
     await expect(page.getByTestId('jira-plan-outcome-row').first()).toContainText('RHAISTRAT-3004');
 
