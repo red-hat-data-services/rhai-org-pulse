@@ -3923,7 +3923,19 @@ Daily append-only JSONL files. Each line is a JSON object:
 
 ### Reports: `usage/report-latest.txt` and `usage/report-{YYYY-MM-DD}.txt`
 
-Plain text usage reports generated daily (24h refresh cadence). Contains summary stats, per-module breakdown, AI Impact breakdown, per-persona breakdown, navigation flows, and measurement gaps.
+Plain text usage reports generated daily (24h refresh cadence). Contains summary stats, per-module breakdown, AI Impact breakdown, per-persona breakdown, AI Impact × persona cross-tab, navigation flows, and measurement gaps.
+
+Report sections (in order):
+
+| Section | Description |
+|---------|-------------|
+| `SUMMARY` | Total visits, interactions, unique users, and date range |
+| `BY MODULE` | Per-module visits, interactions, and unique user counts |
+| `AI IMPACT BREAKDOWN` | Per-view visits, interactions, and unique users within the `ai-impact` module |
+| `BY PERSONA` | Per-persona visits, interactions, and unique user counts |
+| `AI IMPACT x PERSONA` | Cross-tab matrix of AI Impact view visits broken down by persona. Rows are personas (sorted by total visits descending), columns are AI Impact view IDs. Only present when AI Impact view events exist in the period |
+| `AI IMPACT NAVIGATION FLOWS` | Top 10 cross-view navigation transitions within AI Impact (e.g., `rfe-review → feature-review`), sorted by count |
+| `MEASUREMENT GAPS` | Modules with no tracking data in the period |
 
 ### Persona Map: `usage/persona-map.json`
 
