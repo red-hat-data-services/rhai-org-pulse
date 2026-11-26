@@ -1,5 +1,8 @@
 const DEMO_MODE = process.env.DEMO_MODE === 'true';
 
+// JUnit XML comes from PR-controlled CI artifacts, so treat it as untrusted input.
+const MAX_JUNIT_XML_BYTES = 20 * 1024 * 1024;
+
 const {
   extractComponentFromTestPath,
   mapSuiteToComponent
@@ -731,6 +734,35 @@ function generateMockStackTrace(component, _testName) {
 }
 
 /**
+ * Read a fetch response body as text, aborting once it exceeds maxBytes
+ * @param {Response} response - fetch response
+ * @param {number} maxBytes - Maximum body size in bytes
+ * @param {AbortController} controller - Controller used to abort the request
+ * @returns {Promise<string>} Response text
+ */
+async function readTextWithLimit(response, maxBytes, controller) {
+  const declared = Number(response.headers.get('content-length'));
+  if (declared > maxBytes) {
+    controller.abort();
+    throw new Error(`JUnit XML exceeds ${maxBytes} bytes`);
+  }
+
+  if (!response.body) return '';
+
+  const chunks = [];
+  let received = 0;
+  for await (const chunk of response.body) {
+    received += chunk.length;
+    if (received > maxBytes) {
+      controller.abort();
+      throw new Error(`JUnit XML exceeds ${maxBytes} bytes`);
+    }
+    chunks.push(chunk);
+  }
+  return Buffer.concat(chunks).toString('utf8');
+}
+
+/**
  * Fetch JUnit XML from Prow artifacts URL
  * @param {string} artifactsUrl - The artifacts URL from runDetails
  * @returns {Promise<string|null>} JUnit XML content or null if not found
@@ -761,7 +793,7 @@ async function fetchJunitXmlFromArtifacts(artifactsUrl) {
         throw new Error(`HTTP ${response.status}: ${response.statusText}`);
       }
 
-      const xml = await response.text();
+      const xml = await readTextWithLimit(response, MAX_JUNIT_XML_BYTES, controller);
       if (xml.trim().length > 0) {
         console.log(`Found JUnit XML at: ${junitUrl} (${xml.length} bytes)`);
         return xml;
@@ -857,11 +889,9 @@ function parseRealJunitXml(xmlContent, runDetails) {
     return testSuites;
 
   } catch (error) {
+    // No regex fallback: malformed XML is untrusted input and regex re-parsing is prone to ReDoS
     console.error('Error parsing real JUnit XML with xml2js:', error.message);
-    console.log('Falling back to regex parsing...');
-
-    // Fallback to regex parsing if xml2js fails
-    return parseRealJunitXmlWithRegex(xmlContent, runDetails);
+    return [];
   }
 }
 
@@ -922,61 +952,6 @@ function extractTestCasesWithDetails(suite) {
 }
 
 /**
- * Fallback regex-based XML parsing for when xml2js fails
- * @param {string} xmlContent - The JUnit XML content
- * @param {Object} runDetails - Basic run information
- * @returns {Array} Array of test suite data
- */
-function parseRealJunitXmlWithRegex(xmlContent, runDetails) {
-  const testSuites = [];
-
-  try {
-    console.log(`Fallback: parsing JUnit XML with regex for build ${runDetails.buildId}`);
-
-    // Parse test suites from XML using regex
-    const testSuiteRegex = /<testsuite[^>]*name="([^"]+)"[^>]*tests="(\d+)"[^>]*failures="(\d+)"[^>]*errors="(\d+)"[^>]*time="([^"]*)"[^>]*>/g;
-
-    let suiteMatch;
-    while ((suiteMatch = testSuiteRegex.exec(xmlContent)) !== null) {
-      const suiteName = suiteMatch[1];
-      const totalTests = parseInt(suiteMatch[2]);
-      const failures = parseInt(suiteMatch[3]);
-      const errors = parseInt(suiteMatch[4]);
-      const timeStr = suiteMatch[5];
-
-      const failed = failures + errors;
-      const passed = totalTests - failed;
-      const duration = parseFloat(timeStr) || 0;
-
-      // Extract component name from suite name
-      const component = extractComponentFromSuiteName(suiteName);
-
-      // Find all test cases in this suite (basic regex extraction)
-      const testCases = extractTestCasesFromSuite(xmlContent, suiteName);
-
-      testSuites.push({
-        name: suiteName,
-        component: component,
-        total: totalTests,
-        passed: passed,
-        failed: failed,
-        status: failed > 0 ? 'failed' : 'passed',
-        duration: Math.round(duration),
-        testCases: testCases,
-        failedTestCases: testCases.filter(tc => tc.status === 'failed')
-      });
-    }
-
-    console.log(`Fallback regex parsed ${testSuites.length} test suites`);
-    return testSuites;
-
-  } catch (error) {
-    console.error('Fallback regex parsing also failed:', error.message);
-    return [];
-  }
-}
-
-/**
  * Extract component name from test suite name - zero maintenance version
  * @param {string} suiteName - The test suite name
  * @returns {string} Component name
@@ -998,70 +973,7 @@ function extractComponentFromSuiteName(suiteName) {
   return 'unknown';
 }
 
-/**
- * Extract test cases from a specific test suite in the XML
- * @param {string} xmlContent - The full JUnit XML content
- * @param {string} suiteName - The test suite name
- * @returns {Array} Array of test case objects
- */
-function extractTestCasesFromSuite(xmlContent, suiteName) {
-  const testCases = [];
-
-  try {
-    // Find the test suite section in the XML
-    const suiteStartRegex = new RegExp(`<testsuite[^>]*name="${suiteName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}"[^>]*>`, 'i');
-    const suiteMatch = xmlContent.match(suiteStartRegex);
-
-    if (!suiteMatch) {
-      return testCases;
-    }
-
-    const suiteStartIndex = suiteMatch.index + suiteMatch[0].length;
-    const suiteEndIndex = xmlContent.indexOf('</testsuite>', suiteStartIndex);
-
-    if (suiteEndIndex === -1) {
-      return testCases;
-    }
-
-    const suiteContent = xmlContent.substring(suiteStartIndex, suiteEndIndex);
-
-    // Extract test cases
-    const testCaseRegex = /<testcase[^>]*name="([^"]+)"[^>]*time="([^"]*)"[^>]*>([\s\S]*?)<\/testcase>/g;
-
-    let testMatch;
-    while ((testMatch = testCaseRegex.exec(suiteContent)) !== null) {
-      const testName = testMatch[1];
-      const timeStr = testMatch[2];
-      const testContent = testMatch[3];
-
-      const duration = Math.round(parseFloat(timeStr) || 0);
-
-      // Check if test failed
-      const hasFailure = testContent.includes('<failure') || testContent.includes('<error');
-
-      const testCase = {
-        name: testName,
-        duration: duration,
-        status: hasFailure ? 'failed' : 'passed'
-      };
-
-      if (hasFailure) {
-        // Extract failure information
-        const failureMatch = testContent.match(/<(failure|error)[^>]*message="([^"]*)"[^>]*>([\s\S]*?)<\/\1>/);
-        if (failureMatch) {
-          testCase.failure = {
-            message: failureMatch[2] || 'Test failed',
-            stackTrace: failureMatch[3] || ''
-          };
-        }
-      }
-
-      testCases.push(testCase);
-    }
-
-  } catch (error) {
-    console.error('Error extracting test cases:', error.message);
-  }
-
-  return testCases;
+module.exports._testExports = {
+  parseRealJunitXml,
+  readTextWithLimit
 };

@@ -13,6 +13,11 @@ const PROW_CONFIG = {
   repoName: 'opendatahub-operator'
 };
 
+// JUnit XML comes from PR-controlled CI artifacts, so treat it as untrusted input.
+// Cap the download size and the length of names fed into the pattern matchers below.
+const MAX_JUNIT_XML_BYTES = 20 * 1024 * 1024;
+const MAX_TEST_NAME_LENGTH = 256;
+
 /**
  * Modern fetch API helper with timeout
  * @param {string} url - URL to fetch
@@ -398,7 +403,16 @@ async function fetchJunitXml(url) {
       }
 
       let data = '';
-      res.on('data', chunk => data += chunk);
+      let received = 0;
+      res.on('data', chunk => {
+        received += chunk.length;
+        if (received > MAX_JUNIT_XML_BYTES) {
+          res.destroy();
+          reject(new Error(`JUnit XML exceeds ${MAX_JUNIT_XML_BYTES} bytes`));
+          return;
+        }
+        data += chunk;
+      });
       res.on('end', () => {
         if (data.trim().length === 0) {
           resolve(null);
@@ -515,7 +529,7 @@ function parseJunitXmlForComponents(xmlContent) {
       if (!suite) continue;
 
       // Check for suite-level failures
-      const suiteName = suite.name || 'unknown';
+      const suiteName = String(suite.name || 'unknown').slice(0, MAX_TEST_NAME_LENGTH);
       const suiteFailures = parseInt(suite.failures) || 0;
 
       if (suiteFailures > 0) {
@@ -551,7 +565,7 @@ function parseJunitXmlForComponents(xmlContent) {
         const hasError = testCase.error !== undefined;
 
         if (hasFailure || hasError) {
-          const testName = testCase.name || testCase.classname || 'unknown';
+          const testName = String(testCase.name || testCase.classname || 'unknown').slice(0, MAX_TEST_NAME_LENGTH);
           const errorMessage = testCase.failure?.message || testCase.error?.message || 'No message';
 
           console.log(`Failed test: "${testName}" - ${errorMessage.substring(0, 100)}...`);
@@ -590,57 +604,8 @@ function parseJunitXmlForComponents(xmlContent) {
     return components;
 
   } catch (error) {
+    // No regex fallback: malformed XML is untrusted input and regex re-parsing is prone to ReDoS
     console.error('Error parsing JUnit XML with xml2js:', error.message);
-    console.log('Falling back to minimal regex parsing...');
-
-    // Fallback to basic regex if XML parsing fails
-    return parseJunitXmlWithRegexFallback(xmlContent);
-  }
-}
-
-/**
- * Fallback regex-based XML parsing for when xml2js fails
- * @param {string} xmlContent - The JUnit XML content
- * @returns {Array<string>} Array of failed component names
- */
-function parseJunitXmlWithRegexFallback(xmlContent) {
-  const failedComponents = new Set();
-
-  try {
-    // Simple regex for test failures
-    const failureRegex = /<testcase[^>]*name="([^"]*)"[^>]*>[\s\S]*?<(?:failure|error)/g;
-    let match;
-
-    while ((match = failureRegex.exec(xmlContent)) !== null) {
-      const testName = match[1];
-
-      // Check if this is an infrastructure/diagnostic test
-      const isInfrastructure = /gather.*audit.*logs?|gather.*extra|gather.*must.*gather|must.*gather|cluster.*preflight|health.*check|rbac.*install|pre\s+phase|post\s+phase|step.*graph|build.*image|clone.*source|find.*input.*image|run.*multi.*stage.*test.*gather|run.*multi.*stage.*test.*pre.*phase|run.*multi.*stage.*test.*post.*phase|opendatahub-operator-e2e.*gather|opendatahub-operator-e2e.*preflight|opendatahub-operator-rhoai-e2e.*gather|opendatahub-operator-rhoai-e2e.*preflight|gather.*audit.*logs.*container.*test|gather.*extra.*container.*test|gather.*must.*gather.*container.*test|cluster.*preflight.*health.*check.*container.*test/i.test(testName);
-
-      if (isInfrastructure) {
-        failedComponents.add('infrastructure');
-        console.log(`Mapped infrastructure test in fallback: "${testName}"`);
-        continue;
-      }
-
-      // Only map actual E2E component tests (with TestOdhOperator patterns when available)
-      if (/TestOdhOperator.*components.*dashboard|dashboard.*e2e|ui.*test/i.test(testName)) failedComponents.add('dashboard');
-      else if (/TestOdhOperator.*components.*auth|auth.*e2e|login.*test/i.test(testName)) failedComponents.add('authentication');
-      else if (/TestOdhOperator.*components.*kserve|kserve.*e2e|serving.*test/i.test(testName)) failedComponents.add('kserve');
-      else if (/TestOdhOperator.*components.*notebook|TestOdhOperator.*components.*workbench|notebook.*e2e|jupyter.*test/i.test(testName)) failedComponents.add('notebook');
-      else if (/TestOdhOperator.*components.*ray|ray.*e2e|ray.*test/i.test(testName)) failedComponents.add('ray');
-      else if (/TestOdhOperator.*components.*datasciencepipelines|TestOdhOperator.*components.*dsp|pipeline.*e2e|workflow.*test/i.test(testName)) failedComponents.add('datasciencepipelines');
-      else {
-        console.log(`Unmapped test failure in fallback: "${testName}"`);
-      }
-    }
-
-    const components = Array.from(failedComponents);
-    console.log(`Fallback regex extracted components: ${components.join(', ') || 'none'}`);
-    return components;
-
-  } catch (error) {
-    console.error('Fallback regex parsing also failed:', error.message);
     return [];
   }
 }
@@ -648,4 +613,9 @@ function parseJunitXmlWithRegexFallback(xmlContent) {
 module.exports = {
   fetchRecentE2ERuns,
   validateProwConnection
+};
+
+module.exports._testExports = {
+  parseJunitXmlForComponents,
+  MAX_TEST_NAME_LENGTH
 };
