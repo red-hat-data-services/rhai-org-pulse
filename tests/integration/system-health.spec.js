@@ -1239,8 +1239,36 @@ test.describe('Test Execution Dashboard @system-health', () => {
     }
   });
 
+  const bvtStreamKey = 'rhoai-nightly-bvt';
+
+  /**
+   * Fixture day re-published under the nightly BVT stream (same run shape as the promotion-gate fixture),
+   * on a date no other fixture day uses, so date assertions prove which stream is rendered.
+   */
+  function nightlyBvtDay(nightlyFixture) {
+    const day = {
+      ...JSON.parse(JSON.stringify(nightlyFixture.days.find((d) => d.stream_key === 'example-stream'))),
+      stream_key: bvtStreamKey,
+      date: '2026-11-03'
+    };
+    expect(nightlyFixture.days.some((d) => d.date === day.date)).toBe(false);
+    return day;
+  }
+
+  const nightlyBvtJob = { stream_key: bvtStreamKey, label: 'devops/rhoai-nightly-bvt', jenkins_job: 'devops/rhoai-nightly-bvt' };
+
+  /** Fixture days/jobs without the nightly BVT stream (tests re-add a controlled BVT day). */
+  function nightlyWithoutBvt(nightlyFixture) {
+    return {
+      ...nightlyFixture,
+      jenkins_jobs: (nightlyFixture.jenkins_jobs || []).filter((j) => j.stream_key !== bvtStreamKey),
+      days: (nightlyFixture.days || []).filter((d) => d.stream_key !== bvtStreamKey)
+    };
+  }
+
   test('should render nightly health section for nightly-only dashboard data', async ({ page }) => {
-    const nightlyFixture = JSON.parse(readFileSync(nightlyHealthFixturePath, 'utf8'));
+    // Strip BVT so this stays Promotion-Gate-only (BVT alone enables the RHOAI Releases tab).
+    const nightlyFixture = nightlyWithoutBvt(JSON.parse(readFileSync(nightlyHealthFixturePath, 'utf8')));
 
     await page.route('**/api/modules/system-health/quality/test-execution/data**', async (route) => {
       const url = route.request().url();
@@ -1306,33 +1334,6 @@ test.describe('Test Execution Dashboard @system-health', () => {
 
     expectNoBenignConsoleErrors(page);
   });
-
-  const bvtStreamKey = 'rhoai-nightly-bvt';
-
-  /**
-   * Fixture day re-published under the nightly BVT stream (same run shape as the promotion-gate fixture),
-   * on a date no other fixture day uses, so date assertions prove which stream is rendered.
-   */
-  function nightlyBvtDay(nightlyFixture) {
-    const day = {
-      ...JSON.parse(JSON.stringify(nightlyFixture.days.find((d) => d.stream_key === 'example-stream'))),
-      stream_key: bvtStreamKey,
-      date: '2026-11-03'
-    };
-    expect(nightlyFixture.days.some((d) => d.date === day.date)).toBe(false);
-    return day;
-  }
-
-  const nightlyBvtJob = { stream_key: bvtStreamKey, label: 'devops/rhoai-nightly-bvt', jenkins_job: 'devops/rhoai-nightly-bvt' };
-
-  /** Fixture days/jobs without the nightly BVT stream (tests re-add a controlled BVT day). */
-  function nightlyWithoutBvt(nightlyFixture) {
-    return {
-      ...nightlyFixture,
-      jenkins_jobs: (nightlyFixture.jenkins_jobs || []).filter((j) => j.stream_key !== bvtStreamKey),
-      days: (nightlyFixture.days || []).filter((d) => d.stream_key !== bvtStreamKey)
-    };
-  }
 
   /** Serves the given heatmap / nightly_health payloads and opens the RHOAI Releases tab. */
   async function openTestExecutionWithData(page, { heatmap, nightlyHealth, hash = '?tab=releases' }) {
@@ -1640,7 +1641,8 @@ test.describe('Test Execution Dashboard @system-health', () => {
     await page.getByRole('tab', { name: 'Promotion Gate' }).click();
     await page.waitForTimeout(300);
     await expect(gatesTabPanel(page).locator('h2.tab-panel-title')).toBeVisible();
-    await expect(page.locator('.nightly-matrix')).toBeVisible();
+    // Scope to gates: Releases may also host a Nightly BVT matrix (v-show keeps both in the DOM).
+    await expect(gatesTabPanel(page).locator('.nightly-matrix')).toBeVisible();
     await expect(
       releasesTabPanel(page).locator('h2.tab-panel-title').filter({ hasText: /RHOAI Releases Test Results/i })
     ).toBeHidden();
@@ -1696,7 +1698,7 @@ test.describe('Test Execution Dashboard @system-health', () => {
     await page.getByRole('tab', { name: 'Promotion Gate' }).click();
     await page.waitForTimeout(300);
     await expect(gatesTabPanel(page).locator('h2.tab-panel-title')).toBeVisible();
-    await expect(page.locator('.nightly-matrix')).toBeVisible();
+    await expect(gatesTabPanel(page).locator('.nightly-matrix')).toBeVisible();
     await expect(
       releasesTabPanel(page).locator('h2.tab-panel-title').filter({ hasText: /RHOAI Releases Test Results/i })
     ).toBeHidden();
