@@ -1325,6 +1325,15 @@ test.describe('Test Execution Dashboard @system-health', () => {
 
   const nightlyBvtJob = { stream_key: bvtStreamKey, label: 'devops/rhoai-nightly-bvt', jenkins_job: 'devops/rhoai-nightly-bvt' };
 
+  /** Fixture days/jobs without the nightly BVT stream (tests re-add a controlled BVT day). */
+  function nightlyWithoutBvt(nightlyFixture) {
+    return {
+      ...nightlyFixture,
+      jenkins_jobs: (nightlyFixture.jenkins_jobs || []).filter((j) => j.stream_key !== bvtStreamKey),
+      days: (nightlyFixture.days || []).filter((d) => d.stream_key !== bvtStreamKey)
+    };
+  }
+
   /** Serves the given heatmap / nightly_health payloads and opens the RHOAI Releases tab. */
   async function openTestExecutionWithData(page, { heatmap, nightlyHealth, hash = '?tab=releases' }) {
     await page.route('**/api/modules/system-health/quality/test-execution/data**', async (route) => {
@@ -1362,7 +1371,7 @@ test.describe('Test Execution Dashboard @system-health', () => {
   }
 
   test('should show the nightly BVT stream as RHOAI Nightly BVT Results on the RHOAI Releases tab only', async ({ page }) => {
-    const nightlyFixture = JSON.parse(readFileSync(nightlyHealthFixturePath, 'utf8'));
+    const nightlyFixture = nightlyWithoutBvt(JSON.parse(readFileSync(nightlyHealthFixturePath, 'utf8')));
     const heatmapFixture = JSON.parse(readFileSync(heatmapFixturePath, 'utf8'));
     const bvtDay = nightlyBvtDay(nightlyFixture);
     await openTestExecutionWithData(page, {
@@ -1393,7 +1402,7 @@ test.describe('Test Execution Dashboard @system-health', () => {
   });
 
   test('should show RHOAI Nightly BVT Results when only nightly BVT data is uploaded', async ({ page }) => {
-    const nightlyFixture = JSON.parse(readFileSync(nightlyHealthFixturePath, 'utf8'));
+    const nightlyFixture = nightlyWithoutBvt(JSON.parse(readFileSync(nightlyHealthFixturePath, 'utf8')));
     await openTestExecutionWithData(page, {
       heatmap: null,
       nightlyHealth: { ...nightlyFixture, jenkins_jobs: [nightlyBvtJob], days: [nightlyBvtDay(nightlyFixture)] }
@@ -1409,7 +1418,7 @@ test.describe('Test Execution Dashboard @system-health', () => {
   });
 
   test('should open RHOAI Releases for a gates link that targets the nightly BVT source', async ({ page }) => {
-    const nightlyFixture = JSON.parse(readFileSync(nightlyHealthFixturePath, 'utf8'));
+    const nightlyFixture = nightlyWithoutBvt(JSON.parse(readFileSync(nightlyHealthFixturePath, 'utf8')));
     const heatmapFixture = JSON.parse(readFileSync(heatmapFixturePath, 'utf8'));
     await openTestExecutionWithData(page, {
       heatmap: heatmapFixture,
@@ -1426,6 +1435,55 @@ test.describe('Test Execution Dashboard @system-health', () => {
     await expect(releasesTabPanel(page).locator('.rhoai-deployment-section .nightly-matrix')).toBeVisible();
     await expect.poll(() => page.url()).toMatch(/tab=releases/);
     expect(page.url()).not.toMatch(/source=/);
+
+    expectNoBenignConsoleErrors(page);
+  });
+
+  test('should filter RHOAI Nightly BVT day-panel runs by Version picker', async ({ page }) => {
+    const nightlyFixture = JSON.parse(readFileSync(nightlyHealthFixturePath, 'utf8'));
+    const bvtDay = nightlyFixture.days.find((d) => d.stream_key === bvtStreamKey);
+    expect(bvtDay).toBeTruthy();
+    expect(bvtDay.runs.map((r) => r.promotion_gate.rhoai_version)).toEqual(
+      expect.arrayContaining(['3.6.0', '3.5.4'])
+    );
+
+    await openTestExecutionWithData(page, {
+      heatmap: null,
+      nightlyHealth: {
+        ...nightlyFixture,
+        jenkins_jobs: [nightlyBvtJob],
+        days: [bvtDay]
+      }
+    });
+
+    const deployment = releasesTabPanel(page).locator('.rhoai-deployment-section');
+    await expect(deployment.locator('.nightly-matrix')).toBeVisible();
+
+    // Unfiltered: day panel lists all three builds (#23, #22, #21)
+    await deployment.locator(`.date-header-btn[title="Show all builds on ${bvtDay.date}"]`).click();
+    const dayPanel = page.locator('.nightly-day-popup');
+    await expect(dayPanel).toBeVisible();
+    await expect(dayPanel.locator('.run-list-item')).toHaveCount(3);
+    await expect(dayPanel.getByRole('link', { name: 'Jenkins run #23' })).toBeVisible();
+    await expect(dayPanel.getByRole('link', { name: 'Jenkins run #22' })).toBeVisible();
+    await expect(dayPanel.getByRole('link', { name: 'Jenkins run #21' })).toBeVisible();
+    await page.keyboard.press('Escape');
+    await expect(dayPanel).toHaveCount(0);
+
+    // Pick y-stream 3.6 (≡ 3.6.0): only #23 and #21 remain, newest first
+    await page.locator('.ver-picker-btn').click();
+    await page.locator('.ver-popover button.ver-item', { hasText: /^3\.6$/ }).click();
+    await page.locator('.ver-popover button.ver-item', { hasText: /3\.6 \(y-stream only\)/ }).click();
+    await expect(page.locator('.ver-picker-btn')).toHaveText('3.6');
+    await expect(deployment.getByText('Showing version 3.6')).toBeVisible();
+
+    await deployment.locator(`.date-header-btn[title="Show all builds on ${bvtDay.date}"]`).click();
+    await expect(dayPanel).toBeVisible();
+    await expect(dayPanel.locator('.run-list-item')).toHaveCount(2);
+    await expect(dayPanel.getByRole('link', { name: 'Jenkins run #23' })).toBeVisible();
+    await expect(dayPanel.getByRole('link', { name: 'Jenkins run #21' })).toBeVisible();
+    await expect(dayPanel.getByRole('link', { name: 'Jenkins run #22' })).toHaveCount(0);
+    await expect(dayPanel.locator('.run-list-item').first()).toContainText('#23');
 
     expectNoBenignConsoleErrors(page);
   });

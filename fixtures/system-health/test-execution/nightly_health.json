@@ -8,9 +8,138 @@
       "stream_key": "example-stream",
       "label": "devops/promotion-gate-tests",
       "jenkins_job": "devops/promotion-gate-tests"
+    },
+    {
+      "stream_key": "rhoai-nightly-bvt",
+      "label": "devops/rhoai-nightly-bvt",
+      "jenkins_job": "devops/rhoai-nightly-bvt"
     }
   ],
   "days": [
+    {
+      "date": "2026-11-04",
+      "stream_key": "rhoai-nightly-bvt",
+      "latest_run_id": "rhoai-nightly-bvt:23",
+      "runs": [
+        {
+          "run_id": "rhoai-nightly-bvt:21",
+          "build_number": 21,
+          "jenkins_url": "https://jenkins.rh-ods.com/job/devops/job/rhoai-nightly-bvt/21/",
+          "started_at": "2026-11-04T06:00:00Z",
+          "completed_at": "2026-11-04T06:40:00Z",
+          "source_result": "SUCCESS",
+          "promotion_gate": {
+            "status": "passed",
+            "rhoai_version": "3.6.0",
+            "update_channel": "fast"
+          },
+          "gates": [
+            {
+              "id": "cluster-health",
+              "name": "Cluster health",
+              "source_status": "passed",
+              "tests": { "passed": 1, "failed": 0, "skipped": 0 }
+            },
+            {
+              "id": "operator-health",
+              "name": "RHOAI deployment",
+              "source_status": "passed",
+              "tests": { "passed": 4, "failed": 0, "skipped": 0 }
+            }
+          ],
+          "components": [
+            {
+              "id": "dashboard",
+              "name": "Dashboard",
+              "state": "ready",
+              "source_status": "passed",
+              "reason_code": "ok",
+              "tests": { "passed": 2, "failed": 0, "skipped": 0 }
+            }
+          ],
+          "artifacts": { "pod_logs": null, "bvt_results": null },
+          "collection": { "state": "complete", "xml_available": true, "warnings": [] }
+        },
+        {
+          "run_id": "rhoai-nightly-bvt:22",
+          "build_number": 22,
+          "jenkins_url": "https://jenkins.rh-ods.com/job/devops/job/rhoai-nightly-bvt/22/",
+          "started_at": "2026-11-04T10:00:00Z",
+          "completed_at": "2026-11-04T10:35:00Z",
+          "source_result": "SUCCESS",
+          "promotion_gate": {
+            "status": "passed",
+            "rhoai_version": "3.5.4",
+            "update_channel": "stable"
+          },
+          "gates": [
+            {
+              "id": "cluster-health",
+              "name": "Cluster health",
+              "source_status": "passed",
+              "tests": { "passed": 1, "failed": 0, "skipped": 0 }
+            },
+            {
+              "id": "operator-health",
+              "name": "RHOAI deployment",
+              "source_status": "passed",
+              "tests": { "passed": 4, "failed": 0, "skipped": 0 }
+            }
+          ],
+          "components": [
+            {
+              "id": "dashboard",
+              "name": "Dashboard",
+              "state": "ready",
+              "source_status": "passed",
+              "reason_code": "ok",
+              "tests": { "passed": 3, "failed": 0, "skipped": 0 }
+            }
+          ],
+          "artifacts": { "pod_logs": null, "bvt_results": null },
+          "collection": { "state": "complete", "xml_available": true, "warnings": [] }
+        },
+        {
+          "run_id": "rhoai-nightly-bvt:23",
+          "build_number": 23,
+          "jenkins_url": "https://jenkins.rh-ods.com/job/devops/job/rhoai-nightly-bvt/23/",
+          "started_at": "2026-11-04T14:00:00Z",
+          "completed_at": "2026-11-04T14:45:00Z",
+          "source_result": "SUCCESS",
+          "promotion_gate": {
+            "status": "passed",
+            "rhoai_version": "3.6.0",
+            "update_channel": "fast"
+          },
+          "gates": [
+            {
+              "id": "cluster-health",
+              "name": "Cluster health",
+              "source_status": "passed",
+              "tests": { "passed": 1, "failed": 0, "skipped": 0 }
+            },
+            {
+              "id": "operator-health",
+              "name": "RHOAI deployment",
+              "source_status": "passed",
+              "tests": { "passed": 4, "failed": 0, "skipped": 0 }
+            }
+          ],
+          "components": [
+            {
+              "id": "dashboard",
+              "name": "Dashboard",
+              "state": "ready",
+              "source_status": "passed",
+              "reason_code": "ok",
+              "tests": { "passed": 5, "failed": 0, "skipped": 0 }
+            }
+          ],
+          "artifacts": { "pod_logs": null, "bvt_results": null },
+          "collection": { "state": "complete", "xml_available": true, "warnings": [] }
+        }
+      ]
+    },
     {
       "date": "2026-11-02",
       "stream_key": "example-stream",

@@ -188,7 +188,13 @@
         <p v-if="selectionError(selectedDayEntry)" class="selection-error" role="status">
           {{ selectionError(selectedDayEntry) }}
         </p>
-        <div v-if="selectedDayRuns.length === 0" class="day-panel-empty">No runs recorded for this day.</div>
+        <div v-if="selectedDayRuns.length === 0" class="day-panel-empty">
+          {{
+            versionFilter && versionFilter !== 'All'
+              ? `No runs for version ${versionFilter} on this day.`
+              : 'No runs recorded for this day.'
+          }}
+        </div>
         <ul v-else class="run-list">
           <li
             v-for="run in selectedDayRuns"
@@ -334,6 +340,11 @@ const props = defineProps({
   tabPanelActive: {
     type: Boolean,
     default: true
+  },
+  /** Releases Version picker value; used for empty-state copy when a version filter is active. */
+  versionFilter: {
+    type: String,
+    default: 'All'
   }
 })
 
