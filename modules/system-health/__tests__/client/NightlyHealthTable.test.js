@@ -91,27 +91,44 @@ describe('NightlyHealthTable', () => {
     expect(items[0].classList.contains('run-list-item--selected')).toBe(true)
   })
 
-  it('shows version-filter empty copy when a filtered day has no matching runs', async () => {
+  it('filters the column by version but lists every run of the day in the day panel', async () => {
+    const run = (id, build, version, startedAt) => ({
+      run_id: id,
+      build_number: build,
+      started_at: startedAt,
+      jenkins_url: `https://jenkins.example.com/job/devops/job/rhoai-nightly-bvt/${build}/`,
+      promotion_gate: { rhoai_version: version },
+      components: []
+    })
     const payload = {
       schema_version: 1,
       days: [{
         date: '2026-11-04',
         stream_key: 'rhoai-nightly-bvt',
-        latest_run_id: undefined,
-        runs: []
+        latest_run_id: 'bvt:23',
+        runs: [
+          run('bvt:21', 21, '3.6.0', '2026-11-04T01:00:00Z'),
+          run('bvt:22', 22, '3.5.4', '2026-11-04T02:00:00Z'),
+          run('bvt:23', 23, '3.6.0', '2026-11-04T03:00:00Z')
+        ]
       }]
     }
     wrapper = mount(NightlyHealthTable, {
-      props: { payload, versionFilter: '3.6' },
+      props: {
+        payload,
+        versionFilter: { version: '3.5.4', release: 'GA' },
+        dateWindow: { from: '2026-11-04', to: '2026-11-04' }
+      },
       ...mountOptions
     })
     await nextTick()
 
     const headerBtn = wrapper.find('.date-header-btn')
+    expect(headerBtn.text()).toContain('#22')
     await headerBtn.trigger('click')
     await nextTick()
 
-    expect(document.body.textContent).toContain('No runs for version 3.6 on this day.')
+    expect(document.body.querySelectorAll('.nightly-day-popup .run-list-item')).toHaveLength(3)
   })
 
   it('shows Jenkins job filter when multiple stream_key values are present', async () => {

@@ -1,8 +1,137 @@
 import { ref, computed, unref, watch } from 'vue'
-import { cleanVer, compareVers, isKnownVersion, versionMatches } from '../utils/versionFilter.js'
+import {
+  cleanVer,
+  compareVers,
+  compareVersionRelease,
+  isKnownVersion,
+  parseVersionRelease,
+  versionMatches
+} from '../utils/versionFilter.js'
 
 /** Max day columns per matrix page when the snapshot has many days. */
 export const NIGHTLY_PAGE_SIZE = 5
+
+/**
+ * Version and release milestone of a nightly run (`promotion_gate.rhoai_version`, e.g. 3.7.0-ea.1 → 3.7 / EA1).
+ *
+ * @param {object|null|undefined} run
+ * @returns {{ version: string, release: string }|null}
+ */
+export function nightlyRunVersionRelease(run) {
+  if (!run || typeof run !== 'object') return null
+  return parseVersionRelease(run.promotion_gate?.rhoai_version ?? run.rhoai_version)
+}
+
+/**
+ * Distinct version/release pairs in a nightly payload, newest first.
+ *
+ * @param {object|null|undefined} payload nightly_health payload
+ * @returns {{ version: string, release: string }[]}
+ */
+export function collectNightlyVersionReleases(payload) {
+  const seen = new Map()
+  for (const day of Array.isArray(payload?.days) ? payload.days : []) {
+    for (const run of Array.isArray(day?.runs) ? day.runs : []) {
+      const vr = nightlyRunVersionRelease(run)
+      if (vr) seen.set(`${vr.version}|${vr.release}`, vr)
+    }
+  }
+  return [...seen.values()].sort((a, b) => compareVersionRelease(b, a))
+}
+
+/**
+ * Copy of a nightly day keeping only the runs of one version/release. The day's selected run stays when it
+ * matches; otherwise the newest matching run is selected.
+ *
+ * @param {object} day
+ * @param {{ version?: string, release?: string }|null} filter
+ * @returns {object|null} null when no run matches
+ */
+export function filterNightlyDayByVersionRelease(day, filter) {
+  if (!day || typeof day !== 'object') return null
+  if (!filter?.version) return day
+  const wantedVersion = cleanVer(filter.version)
+  const runs = (Array.isArray(day.runs) ? day.runs : []).filter((run) => {
+    const vr = nightlyRunVersionRelease(run)
+    if (!vr || vr.version !== wantedVersion) return false
+    return !filter.release || vr.release === filter.release
+  })
+  if (runs.length === 0) return null
+  const keepsSelected = runs.some((run) => run.run_id === day.latest_run_id)
+  const latestRunId = keepsSelected ? day.latest_run_id : pickLatestRunId(runs)
+  return { ...day, runs, latest_run_id: latestRunId }
+}
+
+/**
+ * Calendar dates from `to` back to `from` (inclusive, newest first), as YYYY-MM-DD.
+ *
+ * @param {string} from YYYY-MM-DD
+ * @param {string} to YYYY-MM-DD
+ * @returns {string[]} empty when a date is invalid or from > to
+ */
+export function calendarDatesDesc(from, to) {
+  const start = Date.parse(`${from}T00:00:00Z`)
+  const end = Date.parse(`${to}T00:00:00Z`)
+  if (Number.isNaN(start) || Number.isNaN(end) || start > end) return []
+  const dates = []
+  for (let t = end; t >= start; t -= 86400000) {
+    dates.push(new Date(t).toISOString().slice(0, 10))
+  }
+  return dates
+}
+
+/**
+ * Move a From/To window by its own length: +1 newer, -1 older. Newer stops at `maxDate` (the window keeps its
+ * length and ends on `maxDate`).
+ *
+ * @param {{ from: string, to: string }} dateWindow YYYY-MM-DD, from <= to
+ * @param {number} direction +1 or -1
+ * @param {string|null} [maxDate] YYYY-MM-DD
+ * @returns {{ from: string, to: string }} unchanged when the window is invalid
+ */
+export function shiftDateWindow(dateWindow, direction, maxDate = null) {
+  const days = calendarDatesDesc(dateWindow?.from, dateWindow?.to)
+  if (days.length === 0) return dateWindow
+  const span = days.length
+  const dayMs = 86400000
+  let to = Date.parse(`${dateWindow.to}T00:00:00Z`) + direction * span * dayMs
+  const max = maxDate ? Date.parse(`${maxDate}T00:00:00Z`) : NaN
+  if (!Number.isNaN(max) && to > max) to = max
+  const iso = (ms) => new Date(ms).toISOString().slice(0, 10)
+  return { from: iso(to - (span - 1) * dayMs), to: iso(to) }
+}
+
+/** Why a matrix column has no run to show. */
+export const EMPTY_DAY_REASON = Object.freeze({
+  NO_RUNS: 'no_runs',
+  NO_MATCHING_RUNS: 'no_matching_runs'
+})
+
+/**
+ * Placeholder column for a date without a (matching) run.
+ *
+ * @param {string} date
+ * @param {string} reason one of {@link EMPTY_DAY_REASON}
+ */
+export function emptyNightlyDay(date, reason) {
+  return { date, runs: [], latest_run_id: null, empty_reason: reason }
+}
+
+/**
+ * Column message for a placeholder day.
+ *
+ * @param {object} day
+ * @param {{ version?: string, release?: string }|null} [filter]
+ * @returns {string} empty when the day has a run to show
+ */
+export function emptyNightlyDayMessage(day, filter = null) {
+  if (day?.empty_reason === EMPTY_DAY_REASON.NO_RUNS) return 'No nightly run'
+  if (day?.empty_reason === EMPTY_DAY_REASON.NO_MATCHING_RUNS) {
+    const label = [filter?.version, filter?.release].filter(Boolean).join(' ')
+    return label ? `No ${label} run` : 'No matching run'
+  }
+  return ''
+}
 
 /**
  * Columns per pager step for a given snapshot day count.
@@ -1928,8 +2057,17 @@ export function visibleDayWindow(daysAsc, pageOffset, columnsPerPage) {
  * @param {import('vue').Ref<object|null>} payloadRef
  * @param {import('vue').Ref<{ component?: string }[]>|null} [heatmapComponentsRef]
  * @param {import('vue').Ref<string|null>|null} [selectedStreamKeyRef] optional v-model from parent
+ * @param {import('vue').Ref<{ versionFilter?: { version?: string, release?: string }|null,
+ *   dateWindow?: { from: string, to: string }|null }>|null} [viewOptionsRef] optional column filters: with a
+ *   `dateWindow`, columns are every calendar date in it (the parent pages the window instead of this pager);
+ *   with a `versionFilter`, each column shows only that version/release's runs
  */
-export function useNightlyHealthMatrix(payloadRef, heatmapComponentsRef = null, selectedStreamKeyRef = null) {
+export function useNightlyHealthMatrix(
+  payloadRef,
+  heatmapComponentsRef = null,
+  selectedStreamKeyRef = null,
+  viewOptionsRef = null
+) {
   const pageOffset = ref(0)
   const selectedDate = ref(null)
   const internalStreamKey = ref(null)
@@ -1965,6 +2103,21 @@ export function useNightlyHealthMatrix(payloadRef, heatmapComponentsRef = null, 
 
   /** Newest window first; columns left → right = newer → older. */
   const visibleDays = computed(() => {
+    const options = unref(viewOptionsRef) || {}
+    const versionFilter = options.versionFilter?.version ? options.versionFilter : null
+    const dateWindow = options.dateWindow
+    if (dateWindow?.from && dateWindow?.to) {
+      const byDate = new Map(sortedDays.value.map((day) => [day.date, day]))
+      return calendarDatesDesc(dateWindow.from, dateWindow.to).map((date) => {
+        const day = byDate.get(date)
+        if (!day || !Array.isArray(day.runs) || day.runs.length === 0) {
+          return emptyNightlyDay(date, EMPTY_DAY_REASON.NO_RUNS)
+        }
+        if (!versionFilter) return day
+        return filterNightlyDayByVersionRelease(day, versionFilter)
+          || emptyNightlyDay(date, EMPTY_DAY_REASON.NO_MATCHING_RUNS)
+      })
+    }
     const days = sortedDays.value
     const per = columnsPerPage.value
     const total = days.length

@@ -1015,14 +1015,14 @@ test.describe('Test Execution Dashboard @system-health', () => {
     // Main content renders
     expect(await mainContentIsVisible(page)).toBe(true);
 
-    // Tabbed layout: RHOAI Releases = releases heatmap; Promotion Gate = promotion-gate matrix.
+    // Tabbed layout: RHOAI Releases = Nightly Build Stability matrix; Promotion Gate = promotion-gate matrix.
     await expect(page.getByRole('tab', { name: 'RHOAI Releases' })).toBeVisible();
     await expect(page.getByRole('tab', { name: 'Promotion Gate' })).toBeVisible();
 
     const releasesTitle = releasesTabPanel(page).locator('h2.tab-panel-title');
     const gatesTitle = gatesTabPanel(page).locator('h2.tab-panel-title');
     if (await releasesTitle.count() > 0) {
-      await expect(releasesTitle.first()).toContainText('RHOAI Releases Test Results');
+      await expect(releasesTitle.first()).toContainText('Nightly Build Stability');
     }
     if (await gatesTabPanel(page).locator('h2.tab-panel-title').count() > 0) {
       await page.getByRole('tab', { name: 'Promotion Gate' }).click();
@@ -1049,66 +1049,6 @@ test.describe('Test Execution Dashboard @system-health', () => {
 
     // Loading spinner must not be stuck
     expect(await pageLoadComplete(page)).toBe(true);
-
-    expectNoBenignConsoleErrors(page);
-  });
-
-  test('should render heatmap data or a clear empty state', async ({ page }) => {
-    await page.goto('/#/system-health/test-execution');
-    await page.waitForLoadState('networkidle');
-    await page.waitForTimeout(DEFAULT_PAGE_WAIT_TIME);
-
-    // With data → heatmap on RHOAI Releases tab; without data → empty state.
-    const rhoaiTab = page.getByRole('tab', { name: 'RHOAI Releases' });
-    if (await rhoaiTab.isEnabled()) {
-      await rhoaiTab.click();
-      await page.waitForTimeout(300);
-    }
-    const panel = releasesTabPanel(page);
-    const hasHeatmap = await panel.locator('table.heatmap').count() > 0;
-    const hasEmptyState =
-      (await panel.locator('text=/No OpenSearch release test data|No component test executions match/i').count() > 0);
-    expect(hasHeatmap || hasEmptyState).toBe(true);
-
-    expectNoBenignConsoleErrors(page);
-  });
-
-  test('should navigate to a component detail view when a component is clicked', async ({ page }) => {
-    await page.goto('/#/system-health/test-execution');
-    await page.waitForLoadState('networkidle');
-    await page.waitForTimeout(DEFAULT_PAGE_WAIT_TIME);
-
-    const rhoaiTab = page.getByRole('tab', { name: 'RHOAI Releases' });
-    if (!(await rhoaiTab.isEnabled())) {
-      console.log('RHOAI Releases tab disabled (no heatmap upload) — skipping drill-down navigation check');
-      return;
-    }
-    await rhoaiTab.click();
-    await page.waitForTimeout(300);
-    await expect(releasesTabPanel(page)).toBeVisible();
-
-    // Fixture heatmap dates are older than the default 30-day window; show all rows for this check.
-    const dateRangeToggle = releasesTabPanel(page).locator('label.date-toggle-label input[type="checkbox"]');
-    if (await dateRangeToggle.isChecked()) {
-      await dateRangeToggle.uncheck();
-      await page.waitForTimeout(300);
-    }
-
-    // Heatmap links live only in the releases tabpanel (Promotion Gate uses .comp-link in a separate table).
-    const componentLink = releasesTabPanel(page).locator('table.heatmap tbody td.comp-name a').first();
-    if (await componentLink.count() === 0) {
-      console.log('No heatmap component rows in RHOAI Releases panel — skipping drill-down navigation check');
-      return;
-    }
-
-    await expect(componentLink).toBeVisible();
-    await componentLink.click();
-    await page.waitForLoadState('networkidle');
-    await page.waitForTimeout(DEFAULT_PAGE_WAIT_TIME);
-
-    // Drill-down routes to the hidden test-execution-detail view with a component param
-    expect(page.url()).toMatch(/test-execution-detail/i);
-    expect(await mainContentIsVisible(page)).toBe(true);
 
     expectNoBenignConsoleErrors(page);
   });
@@ -1242,14 +1182,15 @@ test.describe('Test Execution Dashboard @system-health', () => {
   const bvtStreamKey = 'rhoai-nightly-bvt';
 
   /**
-   * Fixture day re-published under the nightly BVT stream (same run shape as the promotion-gate fixture),
-   * on a date no other fixture day uses, so date assertions prove which stream is rendered.
+   * Fixture day re-published under the nightly BVT stream (same run shape as the promotion-gate fixture, RHOAI
+   * 3.6.0), yesterday so it falls inside the default 5-day window, on a date no other fixture day uses, so date
+   * assertions prove which stream is rendered.
    */
-  function nightlyBvtDay(nightlyFixture) {
+  function nightlyBvtDay(nightlyFixture, daysAgo = 1) {
     const day = {
       ...JSON.parse(JSON.stringify(nightlyFixture.days.find((d) => d.stream_key === 'example-stream'))),
       stream_key: bvtStreamKey,
-      date: '2026-11-03'
+      date: recentHeatmapDayKey(daysAgo)
     };
     expect(nightlyFixture.days.some((d) => d.date === day.date)).toBe(false);
     return day;
@@ -1371,7 +1312,7 @@ test.describe('Test Execution Dashboard @system-health', () => {
     await page.waitForTimeout(DEFAULT_PAGE_WAIT_TIME);
   }
 
-  test('should show the nightly BVT stream as RHOAI Nightly BVT Results on the RHOAI Releases tab only', async ({ page }) => {
+  test('should show the nightly BVT stream as Nightly Build Stability on the RHOAI Releases tab only', async ({ page }) => {
     const nightlyFixture = nightlyWithoutBvt(JSON.parse(readFileSync(nightlyHealthFixturePath, 'utf8')));
     const heatmapFixture = JSON.parse(readFileSync(heatmapFixturePath, 'utf8'));
     const bvtDay = nightlyBvtDay(nightlyFixture);
@@ -1384,9 +1325,9 @@ test.describe('Test Execution Dashboard @system-health', () => {
       }
     });
 
-    // RHOAI Releases: RHOAI Nightly BVT Results matrix with only the nightly BVT day, above Component Heatmap
+    // RHOAI Releases: Nightly Build Stability matrix with only the nightly BVT day
+    await expect(releasesTabPanel(page).getByRole('heading', { name: 'Nightly Build Stability', exact: true })).toBeVisible();
     const deployment = releasesTabPanel(page).locator('.rhoai-deployment-section');
-    await expect(deployment.getByRole('heading', { name: 'RHOAI Nightly BVT Results', exact: true })).toBeVisible();
     await expect(deployment.locator('.nightly-matrix')).toBeVisible();
     await expect(deployment.locator('.date-header-btn')).toHaveCount(1);
     await expect(deployment.locator(`.date-header-btn[title="Show all builds on ${bvtDay.date}"]`)).toBeVisible();
@@ -1402,7 +1343,7 @@ test.describe('Test Execution Dashboard @system-health', () => {
     expectNoBenignConsoleErrors(page);
   });
 
-  test('should show RHOAI Nightly BVT Results when only nightly BVT data is uploaded', async ({ page }) => {
+  test('should show Nightly Build Stability when only nightly BVT data is uploaded', async ({ page }) => {
     const nightlyFixture = nightlyWithoutBvt(JSON.parse(readFileSync(nightlyHealthFixturePath, 'utf8')));
     await openTestExecutionWithData(page, {
       heatmap: null,
@@ -1413,7 +1354,49 @@ test.describe('Test Execution Dashboard @system-health', () => {
     await expect(page.getByRole('tab', { name: 'Promotion Gate' })).toBeDisabled();
     const releases = releasesTabPanel(page);
     await expect(releases.locator('.rhoai-deployment-section .nightly-matrix')).toBeVisible();
-    await expect(releases.getByText('No OpenSearch release test data has been uploaded yet.')).toBeVisible();
+
+    expectNoBenignConsoleErrors(page);
+  });
+
+  test('should filter Nightly Build Stability by version and a 5-day window, opening runs from the date only', async ({ page }) => {
+    const nightlyFixture = nightlyWithoutBvt(JSON.parse(readFileSync(nightlyHealthFixturePath, 'utf8')));
+    const yesterday = nightlyBvtDay(nightlyFixture, 1);
+    const twoDaysAgo = nightlyBvtDay(nightlyFixture, 2);
+    twoDaysAgo.runs = twoDaysAgo.runs.map((run) => ({
+      ...run,
+      promotion_gate: { ...run.promotion_gate, rhoai_version: '3.7.0-ea.1' }
+    }));
+    await openTestExecutionWithData(page, {
+      heatmap: buildTabCoexistenceHeatmapFixture(),
+      nightlyHealth: { ...nightlyFixture, jenkins_jobs: [nightlyBvtJob], days: [yesterday, twoDaysAgo] }
+    });
+
+    const releases = releasesTabPanel(page);
+    // Product dropdown with RHOAI only; newest version/release preselected; no "All"; no date toggle
+    await expect(releases.locator('#te-filter-product option')).toHaveText(['RHOAI']);
+    await expect(releases.locator('button.ver-picker-btn')).toHaveText('3.7');
+    await expect(releases.locator('select option[value="All"]')).toHaveCount(0);
+    await expect(releases.locator('.date-toggle-input')).toHaveCount(0);
+    // Heatmap, totals and trend chart are gone even with heatmap data uploaded
+    await expect(releases.locator('table.heatmap')).toHaveCount(0);
+    await expect(releases.getByText(/Execution Across Versions|Total Tests|Component Heatmap/)).toHaveCount(0);
+
+    // One column per day of the default 5-day window, newest first
+    const matrix = releases.locator('.rhoai-deployment-section .nightly-matrix');
+    await expect(matrix.locator('th.date-header')).toHaveCount(5);
+    await expect(matrix.locator('th.date-header').nth(0)).toContainText('No nightly run');
+    await expect(matrix.locator('th.date-header').nth(1)).toContainText('No 3.7 EA1 run');
+
+    // Cells do not open the day panel; the date header does
+    await matrix.locator('td.data-cell .cell-btn').first().click();
+    await expect(page.locator('.nightly-day-popup')).toHaveCount(0);
+    await matrix.locator(`.date-header-btn[title="Show all builds on ${twoDaysAgo.date}"]`).click();
+    await expect(page.locator('.nightly-day-popup')).toContainText(`Runs on ${twoDaysAgo.date}`);
+    await page.keyboard.press('Escape');
+
+    // Older moves the whole window back by its length
+    await releases.getByRole('button', { name: /Older 5 days/ }).click();
+    await expect(matrix.locator(`.date-header-btn[title="Show all builds on ${twoDaysAgo.date}"]`)).toHaveCount(0);
 
     expectNoBenignConsoleErrors(page);
   });
@@ -1440,51 +1423,44 @@ test.describe('Test Execution Dashboard @system-health', () => {
     expectNoBenignConsoleErrors(page);
   });
 
-  test('should filter RHOAI Nightly BVT day-panel runs by Version picker', async ({ page }) => {
+  test('should keep every run of the day in the day panel while the matrix follows the Version picker', async ({ page }) => {
     const nightlyFixture = JSON.parse(readFileSync(nightlyHealthFixturePath, 'utf8'));
-    const bvtDay = nightlyFixture.days.find((d) => d.stream_key === bvtStreamKey);
-    expect(bvtDay).toBeTruthy();
-    expect(bvtDay.runs.map((r) => r.promotion_gate.rhoai_version)).toEqual(
+    const fixtureBvtDay = nightlyFixture.days.find((d) => d.stream_key === bvtStreamKey);
+    expect(fixtureBvtDay).toBeTruthy();
+    expect(fixtureBvtDay.runs.map((r) => r.promotion_gate.rhoai_version)).toEqual(
       expect.arrayContaining(['3.6.0', '3.5.4'])
     );
+    // Same runs (#23 and #21 on 3.6.0, #22 on 3.5.4), yesterday so the day is inside the default 5-day window
+    const bvtDay = { ...JSON.parse(JSON.stringify(fixtureBvtDay)), date: recentHeatmapDayKey(1) };
 
     await openTestExecutionWithData(page, {
       heatmap: null,
-      nightlyHealth: {
-        ...nightlyFixture,
-        jenkins_jobs: [nightlyBvtJob],
-        days: [bvtDay]
-      }
+      nightlyHealth: { ...nightlyFixture, jenkins_jobs: [nightlyBvtJob], days: [bvtDay] }
     });
 
     const deployment = releasesTabPanel(page).locator('.rhoai-deployment-section');
-    await expect(deployment.locator('.nightly-matrix')).toBeVisible();
-
-    // Unfiltered: day panel lists all three builds (#23, #22, #21)
-    await deployment.locator(`.date-header-btn[title="Show all builds on ${bvtDay.date}"]`).click();
+    const header = deployment.locator(`.date-header-btn[title="Show all builds on ${bvtDay.date}"]`);
     const dayPanel = page.locator('.nightly-day-popup');
-    await expect(dayPanel).toBeVisible();
+
+    // Default: newest version (3.6); the column shows the newest 3.6 run
+    await expect(page.locator('.ver-picker-btn')).toHaveText('3.6');
+    await expect(header).toContainText('#23');
+    await header.click();
     await expect(dayPanel.locator('.run-list-item')).toHaveCount(3);
-    await expect(dayPanel.getByRole('link', { name: 'Jenkins run #23' })).toBeVisible();
-    await expect(dayPanel.getByRole('link', { name: 'Jenkins run #22' })).toBeVisible();
-    await expect(dayPanel.getByRole('link', { name: 'Jenkins run #21' })).toBeVisible();
     await page.keyboard.press('Escape');
     await expect(dayPanel).toHaveCount(0);
 
-    // Pick y-stream 3.6 (≡ 3.6.0): only #23 and #21 remain, newest first
+    // Pick 3.5.4: the column switches to that run; the day panel still lists every run of the day
     await page.locator('.ver-picker-btn').click();
-    await page.locator('.ver-popover button.ver-item', { hasText: /^3\.6$/ }).click();
-    await page.locator('.ver-popover button.ver-item', { hasText: /3\.6 \(y-stream only\)/ }).click();
-    await expect(page.locator('.ver-picker-btn')).toHaveText('3.6');
-    await expect(deployment.getByText('Showing version 3.6')).toBeVisible();
-
-    await deployment.locator(`.date-header-btn[title="Show all builds on ${bvtDay.date}"]`).click();
-    await expect(dayPanel).toBeVisible();
-    await expect(dayPanel.locator('.run-list-item')).toHaveCount(2);
-    await expect(dayPanel.getByRole('link', { name: 'Jenkins run #23' })).toBeVisible();
-    await expect(dayPanel.getByRole('link', { name: 'Jenkins run #21' })).toBeVisible();
-    await expect(dayPanel.getByRole('link', { name: 'Jenkins run #22' })).toHaveCount(0);
-    await expect(dayPanel.locator('.run-list-item').first()).toContainText('#23');
+    await page.locator('.ver-popover button.ver-item', { hasText: /^3\.5$/ }).click();
+    await page.locator('.ver-popover button.ver-item', { hasText: /^3\.5\.4$/ }).click();
+    await expect(page.locator('.ver-picker-btn')).toHaveText('3.5.4');
+    await expect(header).toContainText('#22');
+    await header.click();
+    await expect(dayPanel.locator('.run-list-item')).toHaveCount(3);
+    for (const build of [23, 22, 21]) {
+      await expect(dayPanel.getByRole('link', { name: `Jenkins run #${build}` })).toBeVisible();
+    }
 
     expectNoBenignConsoleErrors(page);
   });
@@ -1593,7 +1569,12 @@ test.describe('Test Execution Dashboard @system-health', () => {
   });
 
   test('should sync tab query param when switching tabs and drop source on RHOAI Releases', async ({ page }) => {
-    const nightlyFixture = JSON.parse(readFileSync(nightlyHealthFixturePath, 'utf8'));
+    const promotionGateFixture = nightlyWithoutBvt(JSON.parse(readFileSync(nightlyHealthFixturePath, 'utf8')));
+    const nightlyFixture = {
+      ...promotionGateFixture,
+      jenkins_jobs: [...promotionGateFixture.jenkins_jobs, nightlyBvtJob],
+      days: [...promotionGateFixture.days, nightlyBvtDay(promotionGateFixture)]
+    };
     const heatmapFixture = buildTabCoexistenceHeatmapFixture();
 
     await page.route('**/api/modules/system-health/quality/test-execution/data**', async (route) => {
@@ -1632,9 +1613,8 @@ test.describe('Test Execution Dashboard @system-health', () => {
     await page.waitForTimeout(300);
     await expect(page.getByRole('tab', { name: 'RHOAI Releases' })).toHaveAttribute('aria-selected', 'true');
     await expect(releasesTabPanel(page)).toBeVisible();
-    await expect(releasesTabPanel(page).locator('h2.tab-panel-title')).toContainText('RHOAI Releases Test Results');
-    await expect(releasesTabPanel(page).locator('h3.tab-section-subtitle').filter({ hasText: /Component Heatmap/i })).toBeVisible();
-    await expect(releasesTabPanel(page).locator('h3').filter({ hasText: /Execution Across Versions/i })).toBeVisible();
+    await expect(releasesTabPanel(page).locator('h2.tab-panel-title')).toContainText('Nightly Build Stability');
+    await expect(releasesTabPanel(page).locator('.rhoai-deployment-section .nightly-matrix')).toBeVisible();
     expect(page.url()).toMatch(/tab=releases/);
     expect(page.url()).not.toMatch(/source=/);
 
@@ -1644,15 +1624,20 @@ test.describe('Test Execution Dashboard @system-health', () => {
     // Scope to gates: Releases may also host a Nightly BVT matrix (v-show keeps both in the DOM).
     await expect(gatesTabPanel(page).locator('.nightly-matrix')).toBeVisible();
     await expect(
-      releasesTabPanel(page).locator('h2.tab-panel-title').filter({ hasText: /RHOAI Releases Test Results/i })
+      releasesTabPanel(page).locator('h2.tab-panel-title').filter({ hasText: /Nightly Build Stability/i })
     ).toBeHidden();
     expect(page.url()).toMatch(/tab=gates/);
 
     expectNoBenignConsoleErrors(page);
   });
 
-  test('should show releases heatmap on RHOAI Releases tab and promotion gate matrix on Promotion Gate tab', async ({ page }) => {
-    const nightlyFixture = JSON.parse(readFileSync(nightlyHealthFixturePath, 'utf8'));
+  test('should show Nightly Build Stability on RHOAI Releases tab and promotion gate matrix on Promotion Gate tab', async ({ page }) => {
+    const promotionGateFixture = nightlyWithoutBvt(JSON.parse(readFileSync(nightlyHealthFixturePath, 'utf8')));
+    const nightlyFixture = {
+      ...promotionGateFixture,
+      jenkins_jobs: [...promotionGateFixture.jenkins_jobs, nightlyBvtJob],
+      days: [...promotionGateFixture.days, nightlyBvtDay(promotionGateFixture)]
+    };
     const heatmapFixture = buildTabCoexistenceHeatmapFixture();
 
     await page.route('**/api/modules/system-health/quality/test-execution/data**', async (route) => {
@@ -1691,16 +1676,15 @@ test.describe('Test Execution Dashboard @system-health', () => {
     await page.waitForTimeout(300);
     await expect(page.getByRole('tab', { name: 'RHOAI Releases' })).toHaveAttribute('aria-selected', 'true');
     await expect(releasesTabPanel(page)).toBeVisible();
-    await expect(releasesTabPanel(page).locator('h2.tab-panel-title')).toContainText('RHOAI Releases Test Results');
-    await expect(releasesTabPanel(page).locator('h3.tab-section-subtitle').filter({ hasText: /Component Heatmap/i })).toBeVisible();
-    await expect(releasesTabPanel(page).locator('h3').filter({ hasText: /Execution Across Versions/i })).toBeVisible();
+    await expect(releasesTabPanel(page).locator('h2.tab-panel-title')).toContainText('Nightly Build Stability');
+    await expect(releasesTabPanel(page).locator('.rhoai-deployment-section .nightly-matrix')).toBeVisible();
 
     await page.getByRole('tab', { name: 'Promotion Gate' }).click();
     await page.waitForTimeout(300);
     await expect(gatesTabPanel(page).locator('h2.tab-panel-title')).toBeVisible();
     await expect(gatesTabPanel(page).locator('.nightly-matrix')).toBeVisible();
     await expect(
-      releasesTabPanel(page).locator('h2.tab-panel-title').filter({ hasText: /RHOAI Releases Test Results/i })
+      releasesTabPanel(page).locator('h2.tab-panel-title').filter({ hasText: /Nightly Build Stability/i })
     ).toBeHidden();
 
     expectNoBenignConsoleErrors(page);

@@ -6,7 +6,7 @@
       <div v-else-if="error" class="error">{{ error }}</div>
 
       <template v-else>
-        <div v-if="!hasHeatmapData && !hasAnyNightlyData" class="no-data">
+        <div v-if="!hasAnyNightlyData" class="no-data">
           No test execution data has been uploaded yet. The external test-reports
           pipeline pushes data to this dashboard via the bulk API.
         </div>
@@ -55,12 +55,16 @@
             class="tab-panel"
             aria-labelledby="test-exec-tab-releases"
           >
-            <template v-if="hasHeatmapData || rhoaiDeploymentHealth">
-              <div v-if="hasHeatmapData" class="tab-panel-heading">
-                <h2 class="tab-panel-title">RHOAI Releases Test Results</h2>
+            <div v-if="!rhoaiDeploymentHealth" class="no-data tab-empty">
+              No nightly build results have been uploaded yet.
+            </div>
+            <template v-else>
+              <div class="tab-panel-heading">
+                <h2 class="tab-panel-title">{{ NIGHTLY_BUILD_STABILITY_TITLE }}</h2>
                 <p class="tab-panel-intro">
-                  Aggregated view of RHOAI test execution across all components, quality gates, and releases.
-                  Data is ingested from Jenkins CI builds and indexed in OpenSearch.
+                  Results of the RHOAI nightly builds, starting with the BVT gate (deployment, cluster and RHOAI
+                  health checks) that runs before the other quality gates.
+                  Click a date to open every build recorded that day.
                 </p>
               </div>
 
@@ -68,70 +72,27 @@
                 :filters="filters"
                 :versions="availableVersions"
                 :releases="availableReleases"
+                :products="NIGHTLY_PRODUCTS"
+                :allow-all="false"
+                :show-date-toggle="false"
+                :max-date="todayIso"
                 @filters-change="updateFilters"
               />
 
-              <MetricsCards
-                v-if="hasHeatmapData && filteredComponents.length > 0"
-                :components="filteredComponents"
-                :filters="filters"
-              />
-            </template>
-
-            <!-- Nightly BVT: shown whether or not heatmap data was uploaded; Version filter applies here -->
-            <div v-if="rhoaiDeploymentHealth" class="section rhoai-deployment-section">
-              <div class="section-title">
-                <h3 class="tab-section-subtitle">RHOAI Nightly BVT Results</h3>
-                <p
-                  v-if="filters.version && filters.version !== 'All'"
-                  class="bvt-version-filter-hint"
-                >
-                  Showing version {{ filters.version }}
-                </p>
+              <div class="section rhoai-deployment-section">
+                <NightlyHealthLegend :title="NIGHTLY_BUILD_STABILITY_TITLE" />
+                <NightlyHealthTable
+                  :payload="rhoaiDeploymentHealth"
+                  :heatmap-components="heatmap"
+                  :tab-panel-active="activeTab === 'releases'"
+                  :version-filter="nightlyVersionFilter"
+                  :date-window="nightlyDateWindow"
+                  :cells-open-day-panel="false"
+                  :window-max-date="todayIso"
+                  @step-window="stepNightlyWindow"
+                  @component-click="onComponentClick"
+                />
               </div>
-              <NightlyHealthLegend title="RHOAI Nightly BVT Results" />
-              <NightlyHealthTable
-                :payload="filteredRhoaiDeploymentHealth"
-                :heatmap-components="heatmap"
-                :version-filter="filters.version"
-                :tab-panel-active="activeTab === 'releases'"
-                @component-click="onComponentClick"
-              />
-            </div>
-
-            <div v-if="!hasHeatmapData" class="no-data tab-empty">
-              No OpenSearch release test data has been uploaded yet.
-            </div>
-            <template v-else>
-              <div
-                v-if="filteredComponents.length === 0"
-                class="no-data heatmap-filter-empty"
-              >
-                <p>{{ heatmapFilterEmptyMessage }}</p>
-              </div>
-              <template v-else>
-                <div class="section">
-                  <div class="section-title">
-                    <h3 class="tab-section-subtitle">Component Heatmap (In Progress)</h3>
-                  </div>
-                  <div class="help-box tab-help-box">
-                    <h4>ℹ️ How to read the heatmap</h4>
-                    <ul>
-                      <li><strong>Each row</strong> — A test component (e.g., Platform, Workbenches, Model Server).</li>
-                      <li><strong>Each column</strong> — A calendar date; dates with no executions show "–".</li>
-                      <li><strong>Cell color</strong> — Pass rate: <span class="color-green">🟢 ≥95%</span> · <span class="color-amber">🟡 80–94%</span> · <span class="color-orange">🟠 60–79%</span> · <span class="color-red">🔴 &lt;60%</span>.</li>
-                      <li><strong>Cell content</strong> — Pass percentage plus pass/fail/skip counts below it.</li>
-                    </ul>
-                  </div>
-
-                  <HeatmapTable
-                    :components="filteredComponents"
-                    @component-click="onComponentClick"
-                  />
-                </div>
-
-                <TrendChart :components="filteredComponents" />
-              </template>
             </template>
           </div>
 
@@ -176,23 +137,13 @@
 import { ref, computed, onMounted, inject, watch, nextTick } from 'vue'
 import { useTestDashboard } from '../composables/useTestDashboard'
 import FilterBar from '../components/FilterBar.vue'
-import MetricsCards from '../components/MetricsCards.vue'
-import HeatmapTable from '../components/HeatmapTable.vue'
-import TrendChart from '../components/TrendChart.vue'
 import NightlyHealthTable from '../components/NightlyHealthTable.vue'
 import NightlyHealthLegend from '../components/NightlyHealthLegend.vue'
+import { cleanVer, compareVersionRelease, isZStream } from '../utils/versionFilter.js'
 import {
-  cleanVer,
-  compareVers,
-  collectReleasesFromComponents,
-  collectVersionsFromComponents,
-  isZStream,
-  vrKeyMatches
-} from '../utils/versionFilter.js'
-import {
-  collectVersionsFromNightlyHealth,
-  filterNightlyHealthByRhoaiVersion,
+  collectNightlyVersionReleases,
   filterNightlyHealthByStream,
+  shiftDateWindow,
   formatTimestamp,
   jenkinsJobBasename,
   REPORTING_STREAM_KEYS,
@@ -210,11 +161,19 @@ const {
   nightlyHealth: allNightlyHealth,
   loading,
   error,
-  hasHeatmapData,
   hasNightlyData: hasAnyNightlyData
 } = useTestDashboard()
 
-/** Nightly BVT stream: "RHOAI Nightly BVT Results" matrix on the RHOAI Releases tab. */
+/** Header of the nightly BVT matrix on the RHOAI Releases tab (RHAI-59088). */
+const NIGHTLY_BUILD_STABILITY_TITLE = 'Nightly Build Stability'
+
+/** Products with nightly results; RHAII joins later. */
+const NIGHTLY_PRODUCTS = ['RHOAI']
+
+/** Default From/To window, in days, ending today (RHAI-59096). */
+const NIGHTLY_WINDOW_DAYS = 5
+
+/** Nightly BVT stream: "Nightly Build Stability" matrix on the RHOAI Releases tab. */
 const rhoaiDeploymentHealth = computed(() =>
   filterNightlyHealthByStream(allNightlyHealth.value, { include: [RHOAI_NIGHTLY_BVT_STREAM_KEY] })
 )
@@ -225,8 +184,8 @@ const nightlyHealth = computed(() =>
 )
 const hasNightlyData = computed(() => Boolean(nightlyHealth.value))
 
-/** RHOAI Releases tab: heatmap (OpenSearch) and/or the nightly BVT results matrix. */
-const hasReleasesTabData = computed(() => hasHeatmapData.value || Boolean(rhoaiDeploymentHealth.value))
+/** RHOAI Releases tab: the Nightly Build Stability matrix (nightly BVT stream). */
+const hasReleasesTabData = computed(() => Boolean(rhoaiDeploymentHealth.value))
 
 const nav = inject('moduleNav', null)
 
@@ -532,28 +491,24 @@ if (nav) {
   )
 }
 
+/** Today's UTC date (nightly columns are UTC days). */
+const todayIso = new Date().toISOString().slice(0, 10)
+
+/** YYYY-MM-DD `days` before `iso`. */
+function isoDaysBefore(iso, days) {
+  return new Date(Date.parse(`${iso}T00:00:00Z`) - days * 86400000).toISOString().slice(0, 10)
+}
+
 const filters = ref({
-  version: 'All',
-  release: 'All',
+  product: NIGHTLY_PRODUCTS[0],
+  version: null,
+  release: null,
   useDateRange: true,
-  fromDate: null,
-  toDate: null
+  fromDate: isoDaysBefore(todayIso, NIGHTLY_WINDOW_DAYS - 1),
+  toDate: todayIso
 })
 
-/** BVT matrix/day panel limited to the Releases Version picker (`promotion_gate.rhoai_version`). */
-const filteredRhoaiDeploymentHealth = computed(() =>
-  filterNightlyHealthByRhoaiVersion(rhoaiDeploymentHealth.value, filters.value.version)
-)
-
-// Set default dates (last 30 days) and load data on mount.
 onMounted(() => {
-  const today = new Date()
-  const from = new Date(today)
-  from.setDate(today.getDate() - 30)
-
-  filters.value.fromDate = formatDate(from)
-  filters.value.toDate = formatDate(today)
-
   applyActiveTabFromNavParams()
   loadData()
 })
@@ -569,167 +524,60 @@ watch(loading, (isLoading, wasLoading) => {
   }
 })
 
-const components = computed(() => heatmap.value || [])
+/** Version/release pairs with nightly BVT runs, newest first (3.7-EA1 before 3.6 GA). */
+const nightlyVersionReleases = computed(() => collectNightlyVersionReleases(rhoaiDeploymentHealth.value))
 
-// Distinct versions from heatmap by_vr plus BVT promotion_gate.rhoai_version (exact y/z; .0 → y-stream).
-const availableVersions = computed(() => {
-  const fromHeatmap = collectVersionsFromComponents(components.value)
-  const fromBvt = collectVersionsFromNightlyHealth(rhoaiDeploymentHealth.value)
-  return Array.from(new Set([...fromHeatmap, ...fromBvt])).sort(compareVers)
-})
+const availableVersions = computed(() => [...new Set(nightlyVersionReleases.value.map((vr) => vr.version))])
 
-const availableReleases = computed(() => collectReleasesFromComponents(components.value))
+/** Releases with runs for the selected version, oldest first (EA1, EA2, GA). */
+const availableReleases = computed(() => nightlyVersionReleases.value
+  .filter((vr) => vr.version === filters.value.version)
+  .sort(compareVersionRelease)
+  .map((vr) => vr.release))
 
-function filterHeatmapComponents(filterOverrides = {}) {
-  if (!components.value || components.value.length === 0) return []
-
-  const f = { ...filters.value, ...filterOverrides }
-  const from = f.fromDate
-  const to = f.toDate
-  const useDate = f.useDateRange !== false
-
-  return components.value
-    .map((comp) => {
-      const filteredDays = {}
-
-      Object.entries(comp.days || {}).forEach(([date, day]) => {
-        if (useDate && (date < from || date > to)) return
-
-        if ((f.version !== 'All' || f.release !== 'All') && day.by_vr) {
-          let totalP = 0
-          let totalF = 0
-          let totalS = 0
-          let totalT = 0
-          let urls = []
-
-          Object.entries(day.by_vr).forEach(([vrKey, vr]) => {
-            if (vrKeyMatches(vrKey, f.version, f.release)) {
-              totalP += vr.passed || 0
-              totalF += vr.failed || 0
-              totalS += vr.skipped || 0
-              totalT += vr.total || 0
-              urls = urls.concat(vr.jenkins_urls || [])
-            }
-          })
-
-          const filteredByVr = {}
-          Object.entries(day.by_vr).forEach(([vrKey, vr]) => {
-            if (vrKeyMatches(vrKey, f.version, f.release)) {
-              filteredByVr[vrKey] = vr
-            }
-          })
-
-          if (totalT > 0) {
-            filteredDays[date] = {
-              passed: totalP,
-              failed: totalF,
-              skipped: totalS,
-              total: totalT,
-              jenkins_urls: urls,
-              by_vr: filteredByVr
-            }
-          }
-        } else {
-          filteredDays[date] = day
-        }
-      })
-
-      let overallP = 0
-      let overallF = 0
-      let overallS = 0
-      let overallT = 0
-      Object.values(filteredDays).forEach((day) => {
-        overallP += day.passed || 0
-        overallF += day.failed || 0
-        overallS += day.skipped || 0
-        overallT += day.total || 0
-      })
-
-      return {
-        component: comp.component,
-        overall: {
-          total: overallT,
-          passed: overallP,
-          failed: overallF,
-          skipped: overallS
-        },
-        days: filteredDays
-      }
-    })
-    .filter((comp) => comp.overall.total > 0)
+/** Newest release with runs for a version (GA for z-streams). */
+function newestReleaseFor(version) {
+  if (isZStream(version)) return 'GA'
+  return nightlyVersionReleases.value.find((vr) => vr.version === version)?.release ?? null
 }
 
-const filteredComponents = computed(() => filterHeatmapComponents())
-
+// No "All" (RHAI-59092): default to the newest version/release, and keep the selection valid when data changes.
 watch(
-  [availableVersions, availableReleases],
-  ([versions, releases]) => {
-    let next = filters.value
-    let changed = false
-    if (next.version !== 'All' && !versions.includes(next.version)) {
-      next = { ...next, version: 'All' }
-      changed = true
-    }
-    if (next.release !== 'All' && !releases.includes(next.release)) {
-      next = { ...next, release: 'All' }
-      changed = true
-    }
-    if (changed) filters.value = next
+  nightlyVersionReleases,
+  (pairs) => {
+    const { version, release } = filters.value
+    if (pairs.some((vr) => vr.version === version && vr.release === release)) return
+    const newest = pairs[0]
+    filters.value = { ...filters.value, version: newest?.version ?? null, release: newest?.release ?? null }
   },
   { immediate: true }
 )
 
-const heatmapDateExtents = computed(() => {
-  let min = null
-  let max = null
-  for (const comp of components.value) {
-    for (const d of Object.keys(comp.days || {})) {
-      if (!min || d < min) min = d
-      if (!max || d > max) max = d
-    }
-  }
-  return min && max ? { min, max } : null
+const nightlyVersionFilter = computed(() => (filters.value.version
+  ? { version: filters.value.version, release: filters.value.release }
+  : null))
+
+/** From/To window for the matrix columns; a reversed window is read in order. */
+const nightlyDateWindow = computed(() => {
+  const { fromDate, toDate } = filters.value
+  if (!fromDate || !toDate) return null
+  return fromDate <= toDate ? { from: fromDate, to: toDate } : { from: toDate, to: fromDate }
 })
 
-const heatmapFilterEmptyMessage = computed(() => {
-  const f = filters.value
-  const ext = heatmapDateExtents.value
-  let msg =
-    'No component test executions match the current filters. The heatmap only shows rows with non-zero test counts (production OpenSearch data).'
-  if (f.useDateRange !== false && f.fromDate && f.toDate && ext) {
-    msg += ` Uploaded heatmap dates span ${ext.min} through ${ext.max}; selected range is ${f.fromDate} through ${f.toDate}.`
-  }
-  if (
-    filteredComponents.value.length === 0 &&
-    (f.version !== 'All' || f.release !== 'All') &&
-    filterHeatmapComponents({ version: 'All', release: 'All' }).length > 0
-  ) {
-    msg += ' Set Version and Release to All — promotion-gate placeholder rows often use update channels with zero test counts.'
-  } else if (
-    filteredComponents.value.length === 0 &&
-    f.useDateRange !== false &&
-    filterHeatmapComponents({ useDateRange: false }).length > 0
-  ) {
-    msg += ' Widen the date range or disable Date Range to include older heatmap days.'
-  }
-  if (hasNightlyData.value) {
-    msg += ' Promotion-gate status is on the Promotion Gate tab.'
-  }
-  return msg
-})
-
-function formatDate(d) {
-  return d.toISOString().slice(0, 10)
+/** Newer / Older above the matrix: move the From/To window by its length (RHAI-59096). */
+function stepNightlyWindow(direction) {
+  if (!nightlyDateWindow.value) return
+  const { from, to } = shiftDateWindow(nightlyDateWindow.value, direction, todayIso)
+  filters.value = { ...filters.value, fromDate: from, toDate: to }
 }
 
 function updateFilters(newFilters) {
-  const raw = newFilters?.version ?? 'All'
-  const ver = raw === 'All' ? 'All' : cleanVer(raw)
-  filters.value = {
-    ...newFilters,
-    version: ver,
-    release: isZStream(ver) ? 'GA' : (newFilters?.release ?? 'All')
-  }
+  const version = newFilters?.version ? cleanVer(newFilters.version) : filters.value.version
+  const releaseHasRuns = nightlyVersionReleases.value
+    .some((vr) => vr.version === version && vr.release === newFilters?.release)
+  let release = releaseHasRuns ? newFilters.release : newestReleaseFor(version)
+  if (isZStream(version)) release = 'GA'
+  filters.value = { ...filters.value, ...newFilters, version, release, useDateRange: true }
 }
 
 function onComponentClick(componentName) {
@@ -833,13 +681,6 @@ function onComponentClick(componentName) {
 
 .section-title {
   margin-bottom: 6px;
-}
-
-.bvt-version-filter-hint {
-  font-size: 12px;
-  color: var(--te-text-muted);
-  margin: 6px 0 0;
-  padding-left: 16px;
 }
 
 .section-title h2 {

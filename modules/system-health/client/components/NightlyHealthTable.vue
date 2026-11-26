@@ -1,7 +1,7 @@
 <template>
   <div class="nightly-health">
     <div
-      v-if="totalDays > 0 && (maxPageOffset > 0 || jenkinsJobOptions.length > 1)"
+      v-if="!hasDateWindow && totalDays > 0 && (maxPageOffset > 0 || jenkinsJobOptions.length > 1)"
       class="pager-toolbar"
     >
       <div v-if="maxPageOffset > 0" class="pager">
@@ -31,7 +31,26 @@
         </label>
       </div>
     </div>
-    <div v-if="viewingOlderDays" class="pager-notice" role="status">
+    <div v-if="hasDateWindow && visibleDays.length > 0" class="pager-toolbar">
+      <div class="pager">
+        <button
+          type="button"
+          class="pager-btn"
+          :disabled="!canStepWindowNewer"
+          @click="emit('step-window', 1)"
+        >
+          ← Newer {{ visibleDays.length }} days
+        </button>
+        <span class="pager-label">
+          {{ visibleDayRangeLabel }}
+          <span class="pager-count">({{ visibleDays.length }} days)</span>
+        </span>
+        <button type="button" class="pager-btn" @click="emit('step-window', -1)">
+          Older {{ visibleDays.length }} days →
+        </button>
+      </div>
+    </div>
+    <div v-if="!hasDateWindow && viewingOlderDays" class="pager-notice" role="status">
       You are viewing older UTC days. Latest data is
       <strong>{{ friendlyDate(newestDayDate) }}</strong>
       (build #{{ newestBuildLabel }}).
@@ -40,7 +59,7 @@
       </button>
     </div>
     <p
-      v-else-if="totalDays > 0 && visibleDays.length === totalDays"
+      v-else-if="!hasDateWindow && totalDays > 0 && visibleDays.length === totalDays"
       class="day-snapshot-hint"
     >
       Showing all {{ totalDays }} UTC days in this snapshot
@@ -60,6 +79,7 @@
               :class="{ 'date-header--selected': selectedDate === day.date }"
             >
               <button
+                v-if="dayHasRuns(day.date)"
                 type="button"
                 class="date-header-btn"
                 :title="`Show all builds on ${day.date}`"
@@ -68,8 +88,13 @@
                 <div class="date-cell">
                   <span class="date-label">{{ friendlyDate(day.date) }}</span>
                   <span v-if="columnBuildLabel(day)" class="build-label">{{ columnBuildLabel(day) }}</span>
+                  <span v-if="emptyDayMessage(day)" class="empty-day-label">{{ emptyDayMessage(day) }}</span>
                 </div>
               </button>
+              <div v-else class="date-cell">
+                <span class="date-label">{{ friendlyDate(day.date) }}</span>
+                <span class="empty-day-label">{{ emptyDayMessage(day) || 'No nightly run' }}</span>
+              </div>
             </th>
           </tr>
         </thead>
@@ -91,12 +116,14 @@
               v-for="day in visibleDays"
               :key="`${rowId}-${day.date}`"
               class="data-cell"
-              :class="{ 'data-cell--selected': selectedDate === day.date }"
+              :class="{ 'data-cell--selected': cellsOpenDayPanel && selectedDate === day.date }"
             >
-              <button
-                type="button"
+              <component
+                :is="cellsOpenDayPanel ? 'button' : 'div'"
+                v-bind="cellsOpenDayPanel ? { type: 'button' } : {}"
                 class="cell-btn"
-                @click="onMatrixDayClick(day.date, $event)"
+                :class="{ 'cell-btn--static': !cellsOpenDayPanel }"
+                @click="cellsOpenDayPanel && onMatrixDayClick(day.date, $event)"
               >
                 <template v-if="cellFor(day, rowId)">
                   <div
@@ -127,7 +154,7 @@
                 </template>
                 <span v-else-if="selectionError(day)" class="cell-na" :title="selectionError(day)">!</span>
                 <span v-else class="cell-na">–</span>
-              </button>
+              </component>
             </td>
           </tr>
         </tbody>
@@ -188,13 +215,7 @@
         <p v-if="selectionError(selectedDayEntry)" class="selection-error" role="status">
           {{ selectionError(selectedDayEntry) }}
         </p>
-        <div v-if="selectedDayRuns.length === 0" class="day-panel-empty">
-          {{
-            versionFilter && versionFilter !== 'All'
-              ? `No runs for version ${versionFilter} on this day.`
-              : 'No runs recorded for this day.'
-          }}
-        </div>
+        <div v-if="selectedDayRuns.length === 0" class="day-panel-empty">No runs recorded for this day.</div>
         <ul v-else class="run-list">
           <li
             v-for="run in selectedDayRuns"
@@ -301,6 +322,7 @@ import {
   resolveSelectedRun,
   resolveDisplayMatrixCell,
   cellDisplayStatus,
+  emptyNightlyDayMessage,
   nightlyCellTone,
   cellDscCaption,
   dscSourceStatusClass,
@@ -341,19 +363,44 @@ const props = defineProps({
     type: Boolean,
     default: true
   },
-  /** Releases Version picker value; used for empty-state copy when a version filter is active. */
+  /**
+   * Show only this version/release's runs in each column (`{ version: '3.7', release: 'EA1' }`). The day panel
+   * still lists every run of the date (daily summary).
+   */
   versionFilter: {
+    type: Object,
+    default: null
+  },
+  /** One column per calendar date in `{ from, to }` (YYYY-MM-DD); the parent pages the window. */
+  dateWindow: {
+    type: Object,
+    default: null
+  },
+  /** When false, only the date header opens the day panel; component cells are not clickable or highlighted. */
+  cellsOpenDayPanel: {
+    type: Boolean,
+    default: true
+  },
+  /** With `dateWindow`: latest date the window can reach (Newer is disabled once `dateWindow.to` gets there). */
+  windowMaxDate: {
     type: String,
-    default: 'All'
+    default: null
   }
 })
 
 const selectedStreamKey = defineModel('selectedStreamKey', { type: String, default: null })
 
-const emit = defineEmits(['component-click'])
+/** `step-window` (+1 newer / -1 older): the parent moves `dateWindow` by its length. */
+const emit = defineEmits(['component-click', 'step-window'])
 
 const payloadRef = toRef(props, 'payload')
 const heatmapComponentsRef = toRef(props, 'heatmapComponents')
+const viewOptions = computed(() => ({
+  versionFilter: props.versionFilter,
+  dateWindow: props.dateWindow
+}))
+const hasDateWindow = computed(() => Boolean(props.dateWindow?.from && props.dateWindow?.to))
+const canStepWindowNewer = computed(() => !props.windowMaxDate || props.dateWindow?.to < props.windowMaxDate)
 
 const {
   visibleDays,
@@ -375,7 +422,17 @@ const {
   newestDayDate,
   sortedDays,
   jenkinsJobOptions
-} = useNightlyHealthMatrix(payloadRef, heatmapComponentsRef, selectedStreamKey)
+} = useNightlyHealthMatrix(payloadRef, heatmapComponentsRef, selectedStreamKey, viewOptions)
+
+/** Whether the snapshot has any run on this date (any version): its header opens the day panel. */
+function dayHasRuns(date) {
+  const day = sortedDays.value.find((d) => d.date === date)
+  return Boolean(day && Array.isArray(day.runs) && day.runs.length > 0)
+}
+
+function emptyDayMessage(day) {
+  return emptyNightlyDayMessage(day, props.versionFilter)
+}
 
 watch(
   () => props.tabPanelActive,
@@ -816,6 +873,21 @@ table.nightly-matrix th {
   white-space: normal;
   text-align: center;
   line-height: 1.2;
+}
+
+.empty-day-label {
+  font-size: 10px;
+  font-style: italic;
+  color: var(--te-text-muted, #6b7280);
+  font-weight: 400;
+  max-width: 120px;
+  white-space: normal;
+  text-align: center;
+  line-height: 1.2;
+}
+
+.cell-btn.cell-btn--static {
+  cursor: default;
 }
 
 .data-cell {
