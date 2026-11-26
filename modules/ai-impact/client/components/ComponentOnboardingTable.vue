@@ -47,6 +47,7 @@ function sortIcon(key) {
 const search = ref('')
 // Empty arrays mean "all". Within a filter = OR; across filters = AND.
 const completionFilter = ref([])
+const activityFilter = ref([])
 const productFilter = ref('all')
 const targetVersionFilter = ref([])
 
@@ -54,6 +55,12 @@ const STATUS_OPTIONS = [
   { value: 'completed', label: 'Completed' },
   { value: 'in-progress', label: 'In Progress' },
   { value: 'in_queue', label: 'In Queue' }
+]
+
+// Empty = both kinds of record.
+const ACTIVITY_OPTIONS = [
+  { value: 'onboarding', label: 'Onboarding' },
+  { value: 'offboarding', label: 'Offboarding' }
 ]
 
 const targetVersionOptions = computed(() => {
@@ -82,10 +89,18 @@ const selectedVersionChips = computed(() =>
   }))
 )
 
+const selectedActivityChips = computed(() =>
+  activityFilter.value.map(v => ({
+    value: v,
+    label: ACTIVITY_OPTIONS.find(o => o.value === v)?.label || v
+  }))
+)
+
 const hasActiveFilters = computed(() =>
   Boolean(
     search.value ||
     completionFilter.value.length ||
+    activityFilter.value.length ||
     productFilter.value !== 'all' ||
     targetVersionFilter.value.length
   )
@@ -95,6 +110,10 @@ function removeStatus(value) {
   completionFilter.value = completionFilter.value.filter(v => v !== value)
 }
 
+function removeActivity(value) {
+  activityFilter.value = activityFilter.value.filter(v => v !== value)
+}
+
 function removeVersion(value) {
   targetVersionFilter.value = targetVersionFilter.value.filter(v => v !== value)
 }
@@ -102,6 +121,7 @@ function removeVersion(value) {
 function clearAllFilters() {
   search.value = ''
   completionFilter.value = []
+  activityFilter.value = []
   productFilter.value = 'all'
   targetVersionFilter.value = []
 }
@@ -137,6 +157,9 @@ const componentList = computed(() => {
       if (completionFilter.value.length && !completionFilter.value.includes(c.completionStatus)) {
         return false
       }
+      if (activityFilter.value.length && !activityFilter.value.includes(c.activity || 'onboarding')) {
+        return false
+      }
       if (productFilter.value !== 'all' && c.productContext !== productFilter.value) return false
       if (!matchesVersionGroups(c.targetVersion, targetVersionFilter.value)) return false
       if (!q) return true
@@ -158,9 +181,11 @@ const componentList = computed(() => {
           return dir * (a.productContext || '').localeCompare(b.productContext || '')
         case 'status':
           return dir * a.completionStatus.localeCompare(b.completionStatus)
+        case 'activity':
+          return dir * (Number(isOffboarding(a)) - Number(isOffboarding(b)))
         case 'steps': {
-          const aSteps = Object.values(a.onboardingSteps || {}).filter(Boolean).length
-          const bSteps = Object.values(b.onboardingSteps || {}).filter(Boolean).length
+          const aSteps = Object.values(stepsState(a)).filter(Boolean).length
+          const bSteps = Object.values(stepsState(b)).filter(Boolean).length
           return dir * (aSteps - bSteps)
         }
         case 'days': {
@@ -191,6 +216,34 @@ const STEPS = [
   { key: 'renovateSetup',           label: 'Renovate', title: 'Renovate Setup (RHOAI)',           product: 'rhoai' }
 ]
 
+// Offboarding steps in order (from the offboarding skill doc)
+const OFFBOARDING_STEPS = [
+  { key: 'validate',            label: 'YAML',   title: 'YAML Attached & Validated',             product: 'both' },
+  { key: 'removeKrd',           label: 'KRD',    title: 'Removed from Konflux Release Data',     product: 'both' },
+  { key: 'removeOkc',           label: 'OKC',    title: 'Removed from ODH Konflux Central',      product: 'both' },
+  { key: 'removePullPipelines', label: 'Pull',   title: 'Pull Pipelines Removed (RHOAI)',        product: 'rhoai' },
+  { key: 'removeBundle',        label: 'Bundle', title: 'Bundle Entry Removed',                  product: 'both' },
+  { key: 'removeOperator',      label: 'Op',     title: 'Operator Integration Removed',          product: 'operator' },
+  { key: 'syncComponentTekton', label: 'Tekton', title: 'Component Tekton Config Synced',        product: 'both' },
+  { key: 'removeComponentCr',   label: 'CR',     title: 'Component CR Removed from Cluster',     product: 'both' }
+]
+
+function isOffboarding(component) {
+  return (component?.activity || 'onboarding') === 'offboarding'
+}
+
+function stepsFor(component) {
+  return isOffboarding(component) ? OFFBOARDING_STEPS : STEPS
+}
+
+function stepsState(component) {
+  return isOffboarding(component) ? (component.offboardingSteps || {}) : (component.onboardingSteps || {})
+}
+
+function historySteps(h) {
+  return isOffboarding(h) ? (h.offboardingSteps || {}) : (h.onboardingSteps || {})
+}
+
 // Product badge classes
 const PRODUCT_STEP_CLASSES = {
   rhoai:    'text-red-600 dark:text-red-400',
@@ -211,7 +264,7 @@ function selectRow(key) {
 
 // Count steps done for a component
 function stepsDone(component) {
-  return Object.values(component.onboardingSteps || {}).filter(Boolean).length
+  return Object.values(stepsState(component)).filter(Boolean).length
 }
 
 function completionStatusLabel(status) {
@@ -273,6 +326,13 @@ function completionStatusDotClass(status) {
           test-id="status-filter-menu"
         />
 
+        <MultiSelectDropdown
+          v-model="activityFilter"
+          :options="ACTIVITY_OPTIONS"
+          placeholder="Onboarding & Offboarding"
+          test-id="activity-filter-menu"
+        />
+
         <!-- Product filter -->
         <select
           v-model="productFilter"
@@ -314,6 +374,19 @@ function completionStatusDotClass(status) {
         >
           {{ productFilter }}
           <button type="button" :class="filterChipRemoveClass" aria-label="Clear product" @click="productFilter = 'all'">×</button>
+        </span>
+        <span
+          v-for="chip in selectedActivityChips"
+          :key="'a-' + chip.value"
+          :class="filterChipNeutralClass"
+        >
+          {{ chip.label }}
+          <button
+            type="button"
+            :class="filterChipRemoveClass"
+            :aria-label="'Remove ' + chip.label"
+            @click="removeActivity(chip.value)"
+          >×</button>
         </span>
         <span
           v-for="chip in selectedStatusChips"
@@ -372,6 +445,12 @@ function completionStatusDotClass(status) {
             @click="setSort('product')"
           >
             Product <span class="ml-1 opacity-60">{{ sortIcon('product') }}</span>
+          </th>
+          <th
+            class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider w-20 cursor-pointer select-none hover:text-gray-700 dark:hover:text-gray-200"
+            @click="setSort('activity')"
+          >
+            Activity <span class="ml-1 opacity-60">{{ sortIcon('activity') }}</span>
           </th>
           <th
             class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider w-28 cursor-pointer select-none hover:text-gray-700 dark:hover:text-gray-200"
@@ -436,6 +515,16 @@ function completionStatusDotClass(status) {
             </td>
             <td class="px-4 py-3">
               <span
+                data-testid="activity-badge"
+                class="inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold font-mono"
+                :class="isOffboarding(component)
+                  ? 'bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-300'
+                  : 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-300'"
+                :title="isOffboarding(component) ? 'Offboarding' : 'Onboarding'"
+              >{{ isOffboarding(component) ? 'OFF' : 'ON' }}</span>
+            </td>
+            <td class="px-4 py-3">
+              <span
                 class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium"
                 :class="completionStatusBadgeClass(component.completionStatus)"
               >
@@ -470,17 +559,17 @@ function completionStatusDotClass(status) {
             <td class="px-4 py-3">
               <div class="flex gap-0.5 flex-wrap">
                 <span
-                  v-for="step in STEPS"
+                  v-for="step in stepsFor(component)"
                   :key="step.key"
                   class="h-2.5 w-2.5 rounded-sm"
-                  :class="component.onboardingSteps?.[step.key]
+                  :class="stepsState(component)[step.key]
                     ? 'bg-green-500'
                     : 'bg-gray-200 dark:bg-gray-700'"
-                  :title="`${step.title}: ${component.onboardingSteps?.[step.key] ? 'done' : 'pending'}`"
+                  :title="`${step.title}: ${stepsState(component)[step.key] ? 'done' : 'pending'}`"
                 />
               </div>
               <span class="text-xs text-gray-400 dark:text-gray-500 mt-0.5 block">
-                {{ stepsDone(component) }}/{{ STEPS.length }}
+                {{ stepsDone(component) }}/{{ stepsFor(component).length }}
               </span>
             </td>
             <td class="px-4 py-3 text-xs text-gray-500 dark:text-gray-400">{{ formatDate(component.created) }}</td>
@@ -496,7 +585,7 @@ function completionStatusDotClass(status) {
 
           <!-- Expanded detail row -->
           <tr v-if="selectedKey === component.key" class="bg-gray-50 dark:bg-gray-800/50">
-            <td colspan="9" class="px-6 py-5">
+            <td colspan="10" class="px-6 py-5">
               <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 text-sm">
 
                 <!-- Repo & metadata -->
@@ -510,6 +599,10 @@ function completionStatusDotClass(status) {
                           ? 'text-red-700 dark:text-red-300'
                           : 'text-blue-700 dark:text-blue-300'"
                       >{{ component.productContext }}</span>
+                    </div>
+                    <div class="flex gap-2">
+                      <span class="text-gray-400 w-20 flex-shrink-0">Activity</span>
+                      <span class="font-medium text-gray-700 dark:text-gray-300">{{ isOffboarding(component) ? 'Offboarding' : 'Onboarding' }}</span>
                     </div>
                     <div v-if="component.targetVersion" class="flex gap-2">
                       <span class="text-gray-400 w-20 flex-shrink-0">Version</span>
@@ -544,14 +637,16 @@ function completionStatusDotClass(status) {
 
                 <!-- Pipeline steps with product indicators -->
                 <div class="space-y-2">
-                  <p class="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide">Pipeline Steps</p>
+                  <p class="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide">
+                    {{ isOffboarding(component) ? 'Offboarding Steps' : 'Pipeline Steps' }}
+                  </p>
                   <div class="grid grid-cols-1 gap-y-1">
-                    <div v-for="step in STEPS" :key="step.key" class="flex items-center gap-2 text-xs">
+                    <div v-for="step in stepsFor(component)" :key="step.key" class="flex items-center gap-2 text-xs">
                       <span
                         class="h-2 w-2 rounded-full flex-shrink-0"
-                        :class="component.onboardingSteps?.[step.key] ? 'bg-green-500' : 'bg-gray-300 dark:bg-gray-600'"
+                        :class="stepsState(component)[step.key] ? 'bg-green-500' : 'bg-gray-300 dark:bg-gray-600'"
                       />
-                      <span :class="component.onboardingSteps?.[step.key] ? 'text-gray-700 dark:text-gray-300' : 'text-gray-400 dark:text-gray-500'">
+                      <span :class="stepsState(component)[step.key] ? 'text-gray-700 dark:text-gray-300' : 'text-gray-400 dark:text-gray-500'">
                         {{ step.title }}
                       </span>
                       <span class="text-xs ml-auto" :class="PRODUCT_STEP_CLASSES[step.product]">
@@ -576,7 +671,7 @@ function completionStatusDotClass(status) {
                           class="px-1.5 py-0.5 rounded-full"
                           :class="completionStatusBadgeClass(h.completionStatus)"
                         >{{ completionStatusLabel(h.completionStatus) }}</span>
-                        <span class="text-gray-400">{{ Object.values(h.onboardingSteps || {}).filter(Boolean).length }}/{{ STEPS.length }} steps</span>
+                        <span class="text-gray-400">{{ Object.values(historySteps(h)).filter(Boolean).length }}/{{ stepsFor(h).length }} steps</span>
                       </div>
                     </div>
                   </div>

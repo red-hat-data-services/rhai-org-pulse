@@ -17,8 +17,10 @@ async function writeComponentOnboardingAtomic(writeToStorage, data) {
 
 function trimForHistory(component) {
   return {
+    activity: component.activity || 'onboarding',
     completionStatus: component.completionStatus,
     onboardingSteps: component.onboardingSteps,
+    offboardingSteps: component.offboardingSteps || {},
     onboardingMethod: component.onboardingMethod,
     syncedAt: component.syncedAt
   };
@@ -83,6 +85,7 @@ function projectComponent(entry) {
       resolution: latest.resolution || null,
       statusCategory: latest.statusCategory || null
     }),
+    activity: latest.activity || 'onboarding',
     productContext: latest.productContext,
     targetVersion: latest.targetVersion || null,
     componentName: latest.componentName,
@@ -94,6 +97,7 @@ function projectComponent(entry) {
     featureTitles: latest.featureTitles || {},
     labels: latest.labels || [],
     onboardingSteps: latest.onboardingSteps,
+    offboardingSteps: latest.offboardingSteps || {},
     created: latest.created,
     resolution: latest.resolution || null,
     resolved: latest.resolved,

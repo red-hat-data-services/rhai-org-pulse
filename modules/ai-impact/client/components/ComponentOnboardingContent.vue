@@ -56,6 +56,16 @@ const filteredComponents = computed(() => {
   return filtered
 })
 
+// Onboarding metrics and charts describe onboarding records only; the table
+// below shows both lifecycle kinds.
+const onboardingComponents = computed(() => {
+  const filtered = {}
+  for (const [key, comp] of Object.entries(filteredComponents.value)) {
+    if ((comp.activity || 'onboarding') !== 'offboarding') filtered[key] = comp
+  }
+  return filtered
+})
+
 function removeVersion(value) {
   versionFilter.value = versionFilter.value.filter(v => v !== value)
 }
@@ -91,7 +101,7 @@ function calcAvgDaysManual(list) {
 }
 
 const metrics = computed(() => {
-  const list = Object.values(filteredComponents.value)
+  const list = Object.values(onboardingComponents.value)
   const automated = list.filter(c => (c.onboardingMethod || 'automated') === 'automated')
   const manual = list.filter(c => c.onboardingMethod === 'manual')
   const completedAutomated = automated.filter(c => c.completionStatus === 'completed')
@@ -126,9 +136,9 @@ const metrics = computed(() => {
   <div class="flex-1 flex flex-col overflow-hidden">
     <!-- Header -->
     <div class="px-6 py-4 border-b border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900">
-      <h2 class="text-lg font-semibold text-gray-900 dark:text-gray-100">Component Onboarding</h2>
+      <h2 class="text-lg font-semibold text-gray-900 dark:text-gray-100">Component Onboarding and Offboarding</h2>
       <p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
-        Automated onboarding of components into ODH &amp; RHOAI via Konflux
+        Automated onboarding of components into ODH &amp; RHOAI via Konflux, and offboarding of retired components
       </p>
     </div>
 
@@ -185,7 +195,7 @@ const metrics = computed(() => {
 
       <OnboardingMetricsRow :metrics="metrics" />
       <OnboardingCharts
-        :components="filteredComponents"
+        :components="onboardingComponents"
         :feature-titles="featureTitles"
         :expanded="chartsExpanded"
         @toggle="chartsExpanded = !chartsExpanded"

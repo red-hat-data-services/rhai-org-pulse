@@ -985,6 +985,49 @@ Admin-configurable settings for the AI Impact module.
 - `trendThresholdPp` is the percentage-point threshold for classifying trends as "growing" or "declining" (0-50)
 - Defaults are used when no config file exists
 
+## AI Impact — Component Onboarding & Offboarding (`data/ai-impact/component-onboarding-data.json`)
+
+Ingested by the `component-onboarding-offboarding-sync` CI job in
+`rhoai-component-onboarding` through `POST /api/modules/ai-impact/component-onboarding/bulk`
+(the dataset is deleted first, then upserted in chunks). One entry per Jira ticket,
+keyed by issue key, with `latest` + `history` snapshots:
+
+```json
+{
+  "fetchedAt": "2026-11-23T00:00:00.000Z",
+  "totalComponents": 1,
+  "components": {
+    "RHOAIENG-102732": {
+      "latest": {
+        "key": "RHOAIENG-102732",
+        "summary": "[Offboarding] Konflux Offboarding odh-foo (ODH)",
+        "status": "Resolved",
+        "completionStatus": "completed",
+        "activity": "offboarding",
+        "productContext": "ODH",
+        "onboardingSteps": {},
+        "offboardingSteps": { "validate": true, "removeKrd": true },
+        "syncedAt": "2026-11-23T00:00:00.000Z"
+      },
+      "history": []
+    }
+  }
+}
+```
+
+**Notes:**
+- `activity` is optional on ingest and defaults to `onboarding`, so older sync clients
+  keep working unchanged. Valid values: `onboarding`, `offboarding`.
+- Onboarding records fill `onboardingSteps`; offboarding records fill `offboardingSteps`
+  (`validate`, `removeKrd`, `removeOkc`, `removePullPipelines`, `removeBundle`,
+  `removeOperator`, `syncComponentTekton`, `removeComponentCr`).
+- `completionStatus` is re-derived from the latest Jira status on read;
+  `component-offboarding-completed` is treated like `component-onboarding-completed`.
+- History entries keep `activity`, `completionStatus`, `onboardingSteps`,
+  `offboardingSteps`, `onboardingMethod` and `syncedAt` (max 20 entries).
+- The full ingest contract lives in
+  `modules/ai-impact/server/component-onboarding/validation.js`.
+
 ## Releases — CVE Sustaining Snapshot (`data/releases/cve-sustaining/latest.json`)
 
 The CVE sustaining snapshot may include `slaCompliance` for quarterly SLA and

@@ -1,6 +1,6 @@
 {
   "fetchedAt": "2026-05-10T11:01:55.980Z",
-  "totalComponents": 16,
+  "totalComponents": 17,
   "components": {
     "RHOAIENG-61528": {
       "latest": {
@@ -852,6 +852,55 @@
         "targetVersion": "rhoai-2.21",
         "syncedAt": "2026-05-12T09:15:30.450Z",
         "resolution": null
+      },
+      "history": []
+    },
+    "RHOAIENG-102732": {
+      "latest": {
+        "key": "RHOAIENG-102732",
+        "summary": "[Offboarding] Konflux Offboarding odh-pipeline-runtime-pytorch-rocm-py312-v3-7-ea-1 (RHOAI 3.7-ea-1)",
+        "status": "Resolved",
+        "completionStatus": "completed",
+        "activity": "offboarding",
+        "productContext": "RHOAI",
+        "targetVersion": "3.7-ea-1",
+        "componentName": "odh-pipeline-runtime-pytorch-rocm-py312-v3-7-ea-1",
+        "repoUrl": "",
+        "branch": "",
+        "dockerfilePath": "",
+        "contextPath": "",
+        "isOperator": false,
+        "linkedFeatures": [],
+        "featureTitles": {},
+        "labels": [
+          "offboarding-yaml-attached",
+          "offboarding-validation-successful",
+          "offboard-krd-mr-raised",
+          "offboard-krd-mr-merged",
+          "offboard-okc-pr-raised",
+          "offboard-bundle-pr-raised",
+          "offboard-bundle-pr-merged",
+          "offboard-component-cr-removed"
+        ],
+        "onboardingSteps": {},
+        "offboardingSteps": {
+          "validate": true,
+          "removeKrd": true,
+          "removeOkc": true,
+          "removePullPipelines": false,
+          "removeBundle": true,
+          "removeOperator": false,
+          "syncComponentTekton": false,
+          "removeComponentCr": true
+        },
+        "created": "2026-11-04T09:12:00.000+0000",
+        "resolution": "Done",
+        "resolved": "2026-11-12T15:40:00.000+0000",
+        "validationDate": "2026-11-04T10:05:00.000+0000",
+        "onboardingMethod": "automated",
+        "firstCommentDate": null,
+        "statusCategory": "Done",
+        "syncedAt": "2026-11-23T00:00:00.000Z"
       },
       "history": []
     }
