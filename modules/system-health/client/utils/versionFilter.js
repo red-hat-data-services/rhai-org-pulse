@@ -181,6 +181,43 @@ export function collectReleasesFromComponents(components) {
   return Array.from(set).sort()
 }
 
+/**
+ * Version and release milestone of an RHOAI build version string, as the Test Execution filters use them.
+ *   3.7.0-ea.1 → { version: '3.7', release: 'EA1' }
+ *   3.6.0      → { version: '3.6', release: 'GA' }
+ *   3.5.3      → { version: '3.5.3', release: 'GA' }
+ * @param {string|null|undefined} raw
+ * @returns {{ version: string, release: string }|null}
+ */
+export function parseVersionRelease(raw) {
+  const s = String(raw || '').trim().replace(/^v/i, '')
+  const m = s.match(/^(\d+)\.(\d+)(?:\.(\d+))?(?:[-.]?ea[.-]?(\d+))?/i)
+  if (!m) return null
+  const version = cleanVer(m[3] !== undefined ? `${m[1]}.${m[2]}.${m[3]}` : `${m[1]}.${m[2]}`)
+  const release = m[4] !== undefined ? `EA${Number(m[4])}` : 'GA'
+  return { version, release }
+}
+
+/** EA1 < EA2 < … < GA; unknown milestones sort first. */
+function releaseRank(release) {
+  const s = String(release || '').toUpperCase()
+  if (s === 'GA') return Number.MAX_SAFE_INTEGER
+  const ea = s.match(/^EA(\d+)$/)
+  return ea ? Number(ea[1]) : 0
+}
+
+/**
+ * Release order: 3.6-EA1 < 3.6-EA2 < 3.6 (GA) < 3.6.1 < 3.7-EA1.
+ * @param {{ version: string, release: string }} a
+ * @param {{ version: string, release: string }} b
+ * @returns {number} negative when a is older than b
+ */
+export function compareVersionRelease(a, b) {
+  const byVersion = compareVers(cleanVer(a?.version), cleanVer(b?.version))
+  if (byVersion) return byVersion
+  return releaseRank(a?.release) - releaseRank(b?.release)
+}
+
 export function yStreamList(versions) {
   const ys = new Set()
   ;(versions || []).forEach((v) => ys.add(yStreamVer(v)))

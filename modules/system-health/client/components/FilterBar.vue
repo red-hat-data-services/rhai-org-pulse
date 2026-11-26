@@ -2,8 +2,14 @@
   <div>
     <div class="filter-bar">
       <div class="filter-group">
-        <span class="filter-label">Environment</span>
-        <span class="filter-value">RHOAI</span>
+        <label class="filter-label" for="te-filter-product">Product</label>
+        <select
+          id="te-filter-product"
+          v-model="localFilters.product"
+          @change="emitFilters"
+        >
+          <option v-for="p in products" :key="p" :value="p">{{ p }}</option>
+        </select>
       </div>
 
       <div class="filter-group ver-picker-wrap" ref="pickerWrap">
@@ -36,6 +42,7 @@
             <div class="ver-col">
               <div class="ver-col-title">Y-stream</div>
               <button
+                v-if="allowAll"
                 type="button"
                 class="ver-item"
                 :class="{ active: localFilters.version === 'All' }"
@@ -84,7 +91,7 @@
             :disabled="releaseLocked"
             @change="emitFilters"
           >
-            <option value="All">All</option>
+            <option v-if="allowAll" value="All">All</option>
             <option v-for="r in releases" :key="r" :value="r">{{ r }}</option>
           </select>
           <span
@@ -95,7 +102,7 @@
         </div>
       </div>
 
-      <div class="filter-group filter-group--divider">
+      <div v-if="showDateToggle" class="filter-group filter-group--divider">
         <span class="filter-label">Date Range</span>
         <label class="date-toggle-label">
           <input
@@ -107,19 +114,28 @@
           <span>Enable</span>
         </label>
       </div>
-      <div v-if="localFilters.useDateRange" class="filter-group">
-        <span class="filter-label">From</span>
+      <div
+        v-if="datesShown"
+        class="filter-group"
+        :class="{ 'filter-group--divider': !showDateToggle }"
+      >
+        <label class="filter-label" for="te-filter-from">From</label>
         <input
+          id="te-filter-from"
           v-model="localFilters.fromDate"
           type="date"
+          :max="localFilters.toDate || maxDate || undefined"
           @change="emitFilters"
         >
       </div>
-      <div v-if="localFilters.useDateRange" class="filter-group">
-        <span class="filter-label">To</span>
+      <div v-if="datesShown" class="filter-group">
+        <label class="filter-label" for="te-filter-to">To</label>
         <input
+          id="te-filter-to"
           v-model="localFilters.toDate"
           type="date"
+          :min="localFilters.fromDate || undefined"
+          :max="maxDate || undefined"
           @change="emitFilters"
         >
       </div>
@@ -129,9 +145,13 @@
       <h4>ℹ️ How to use filters</h4>
       <ul>
         <li><strong>Version</strong> — Open the picker: y-stream on the left, z-streams on the right. Search filters both columns. Selection is <em>exact</em>: 3.5 ≡ 3.5.0, but 3.5 does not include 3.5.2.</li>
-        <li><strong>Release</strong> — EA1 / EA2 / GA / All. Choosing a <em>z-stream</em> (e.g. 3.5.2) auto-locks Release to <strong>GA</strong>.</li>
-        <li><strong>Date Range</strong> — Enable the checkbox to filter by date window. When disabled, all data for selected Version/Release is shown regardless of dates.</li>
-        <li><strong>Filter precedence</strong>: Version &amp; Release filter the data first. If Date Range is enabled, it further narrows the window.</li>
+        <li v-if="allowAll"><strong>Release</strong> — EA1 / EA2 / GA / All. Choosing a <em>z-stream</em> (e.g. 3.5.2) auto-locks Release to <strong>GA</strong>.</li>
+        <li v-else><strong>Release</strong> — EA1 / EA2 / GA. Choosing a <em>z-stream</em> (e.g. 3.5.2) auto-locks Release to <strong>GA</strong>. Defaults to the newest version and release with results.</li>
+        <template v-if="showDateToggle">
+          <li><strong>Date Range</strong> — Enable the checkbox to filter by date window. When disabled, all data for selected Version/Release is shown regardless of dates.</li>
+          <li><strong>Filter precedence</strong>: Version &amp; Release filter the data first. If Date Range is enabled, it further narrows the window.</li>
+        </template>
+        <li v-else><strong>From / To</strong> — One column per day in the window (the last 5 days by default). <strong>Newer</strong> / <strong>Older</strong> above the table move the whole window by its length.</li>
       </ul>
     </div>
   </div>
@@ -165,12 +185,35 @@ const props = defineProps({
   releases: {
     type: Array,
     default: () => []
+  },
+  /** Product choices; the first one is the default. */
+  products: {
+    type: Array,
+    default: () => ['RHOAI']
+  },
+  /** Offer "All" for Version and Release. */
+  allowAll: {
+    type: Boolean,
+    default: true
+  },
+  /** Show the Date Range on/off checkbox; when false, From/To are always shown. */
+  showDateToggle: {
+    type: Boolean,
+    default: true
+  },
+  /** Latest selectable date (YYYY-MM-DD), e.g. today. */
+  maxDate: {
+    type: String,
+    default: null
   }
 })
 
 const emit = defineEmits(['filters-change'])
 
-const localFilters = ref({ ...props.filters })
+const localFilters = ref({ product: props.products[0], ...props.filters })
+
+const datesShown = computed(() => !props.showDateToggle || Boolean(localFilters.value.useDateRange))
+
 const popoverOpen = ref(false)
 const searchQuery = ref('')
 const activeYStream = ref(null)
@@ -214,9 +257,10 @@ function syncFromProps(newFilters) {
   const raw = newFilters?.version ?? 'All'
   const ver = raw === 'All' ? 'All' : cleanVer(raw)
   localFilters.value = {
+    product: props.products[0],
     ...newFilters,
     version: ver,
-    release: isZStream(ver) ? 'GA' : (newFilters?.release ?? 'All')
+    release: isZStream(ver) ? 'GA' : (newFilters?.release ?? (props.allowAll ? 'All' : null))
   }
   activeYStream.value = ver === 'All' ? null : yStreamVer(ver)
 }

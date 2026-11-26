@@ -3452,7 +3452,9 @@ Producer-computed nightly readiness (not derived from the heatmap). Stored as th
 - `tests: null` — no observed test results (not zero failures).
 - `artifacts` — durable refs plus optional browser URLs when verified; null when unavailable.
 
-**UI:** Test Execution Dashboard renders a **date-column matrix** (five-day paging) above the component heatmap; clicking a date lists all `runs[]` for that day.
+**UI:** Test Execution Dashboard renders a **date-column matrix**; clicking a date lists all `runs[]` for that day.
+- **RHOAI Releases tab — Nightly Build Stability** (`stream_key: rhoai-nightly-bvt` only): one column per calendar date in the From/To window (default: the last 5 UTC days; Newer/Older move the window by its length). Version/Release select the runs shown, matched on `runs[].promotion_gate.rhoai_version` (`3.7.0-ea.1` → 3.7 / EA1, `3.6.0` → 3.6 / GA); there is no "All" and the default is the newest version/release with runs. A column whose date has no run, or no run of the selected version, shows a message instead of cells and does not open the day panel. Only the date header opens the day panel, which lists that date's runs of the selected version/release. The heatmap, totals and trend chart are not shown on this tab.
+- **Promotion Gate tab**: every other stream, with five-day paging over the snapshot and the Test Results Source filter; clicking a date or a cell opens the day panel.
 
 **API:**
 

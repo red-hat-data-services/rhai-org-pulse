@@ -22,7 +22,7 @@
 </template>
 
 <script setup>
-/** "How to read" legend shared by every nightly health matrix (Promotion Gate tab and RHOAI Nightly BVT Results). */
+/** "How to read" legend shared by every nightly health matrix (Promotion Gate tab and Nightly Build Stability). */
 import { S3_ACCESS_HELP } from '../composables/useNightlyHealthMatrix'
 
 defineProps({
