@@ -260,7 +260,7 @@ function syncFromProps(newFilters) {
     product: props.products[0],
     ...newFilters,
     version: ver,
-    release: isZStream(ver) ? 'GA' : (newFilters?.release ?? 'All')
+    release: isZStream(ver) ? 'GA' : (newFilters?.release ?? (props.allowAll ? 'All' : null))
   }
   activeYStream.value = ver === 'All' ? null : yStreamVer(ver)
 }

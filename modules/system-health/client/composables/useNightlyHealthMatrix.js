@@ -2106,17 +2106,18 @@ export function useNightlyHealthMatrix(
     const options = unref(viewOptionsRef) || {}
     const versionFilter = options.versionFilter?.version ? options.versionFilter : null
     const dateWindow = options.dateWindow
+    /** Keep only the selected version's runs; a placeholder says why a day has none. */
+    const forVersion = (day, date) => {
+      if (!day || !Array.isArray(day.runs) || day.runs.length === 0) {
+        return emptyNightlyDay(date, EMPTY_DAY_REASON.NO_RUNS)
+      }
+      if (!versionFilter) return day
+      return filterNightlyDayByVersionRelease(day, versionFilter)
+        || emptyNightlyDay(date, EMPTY_DAY_REASON.NO_MATCHING_RUNS)
+    }
     if (dateWindow?.from && dateWindow?.to) {
       const byDate = new Map(sortedDays.value.map((day) => [day.date, day]))
-      return calendarDatesDesc(dateWindow.from, dateWindow.to).map((date) => {
-        const day = byDate.get(date)
-        if (!day || !Array.isArray(day.runs) || day.runs.length === 0) {
-          return emptyNightlyDay(date, EMPTY_DAY_REASON.NO_RUNS)
-        }
-        if (!versionFilter) return day
-        return filterNightlyDayByVersionRelease(day, versionFilter)
-          || emptyNightlyDay(date, EMPTY_DAY_REASON.NO_MATCHING_RUNS)
-      })
+      return calendarDatesDesc(dateWindow.from, dateWindow.to).map((date) => forVersion(byDate.get(date), date))
     }
     const days = sortedDays.value
     const per = columnsPerPage.value
@@ -2124,7 +2125,9 @@ export function useNightlyHealthMatrix(
     if (total === 0) return []
     const end = Math.max(0, total - pageOffset.value * per)
     const start = Math.max(0, end - per)
-    return days.slice(start, end).reverse()
+    const page = days.slice(start, end).reverse()
+    // Snapshot pager (no window, e.g. From or To cleared): still honor the version filter when one is set
+    return versionFilter ? page.map((day) => forVersion(day, day.date)) : page
   })
 
   const rowIds = computed(() =>

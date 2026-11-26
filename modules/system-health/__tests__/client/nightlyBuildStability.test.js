@@ -146,6 +146,16 @@ describe('nightly version and date window helpers', () => {
     const { visibleDays } = useNightlyHealthMatrix(ref(payload))
     expect(visibleDays.value.map((d) => d.date)).toEqual(['2026-11-24', '2026-11-23', '2026-11-22'])
   })
+
+  it('still applies the version filter on the snapshot pager (From or To cleared)', () => {
+    const options = ref({ versionFilter: { version: '3.7', release: 'EA1' }, dateWindow: null })
+    const { visibleDays } = useNightlyHealthMatrix(ref(payload), null, null, options)
+    expect(visibleDays.value.map((d) => [d.date, d.latest_run_id, d.empty_reason ?? null])).toEqual([
+      ['2026-11-24', 'bvt:12', null],
+      ['2026-11-23', null, EMPTY_DAY_REASON.NO_MATCHING_RUNS],
+      ['2026-11-22', 'bvt:9', null]
+    ])
+  })
 })
 
 describe('NightlyHealthTable in Nightly Build Stability mode', () => {
@@ -265,6 +275,11 @@ describe('FilterBar in Nightly Build Stability mode', () => {
     expect(bar.find('.date-toggle-input').exists()).toBe(false)
     expect(bar.find('#te-filter-from').exists()).toBe(true)
     expect(bar.find('#te-filter-to').exists()).toBe(true)
+  })
+
+  it('does not fall back to "All" for an empty release when "All" is not allowed', () => {
+    const bar = mountBar({ filters: { ...filters, release: null } })
+    expect(bar.vm.$.setupState.localFilters.release).toBeNull()
   })
 
   it('keeps the default behavior for other views', () => {
