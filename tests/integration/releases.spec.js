@@ -1965,13 +1965,17 @@ test.describe('Releases FPDoR Readiness @releases', () => {
     expect(sample.fpdor).toHaveProperty('allApplicablePassed');
     expect(sample.fpdor).toHaveProperty('groups');
     expect(Array.isArray(sample.fpdor.items)).toBe(true);
-    expect(sample.fpdor.totalCount).toBe(17);
-    expect(sample.fpdor.items.length).toBe(17);
+    expect(sample.fpdor.totalCount).toBe(7);
+    expect(sample.fpdor.items.length).toBe(7);
 
     var itemNames = sample.fpdor.items.map(function(i) { return i.name });
     expect(itemNames).toContain('Target Version');
-    expect(itemNames).toContain('UXD');
-    expect(itemNames).toContain('Cross-team deps');
+    expect(itemNames).toContain('Feature Human Signoff');
+    expect(itemNames).toContain('Components');
+    expect(itemNames).toContain('PM');
+    expect(itemNames).toContain('Assignee');
+    expect(itemNames).toContain('Release Type');
+    expect(itemNames).toContain('Product Documentation Required');
 
     var item = sample.fpdor.items[0];
     expect(item).toHaveProperty('name');

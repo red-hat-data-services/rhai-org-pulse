@@ -194,11 +194,25 @@ const headers = [
           </template>
 
           <template v-for="(feature, idx) in displayRows" :key="feature['Key']">
-            <!-- Nov 24 2026: Risk divider row (between good/bad risk items) -->
-            <tr v-if="idx > 0 && displayRows[idx - 1]._riskLevel !== feature._riskLevel && feature._riskLevel === 'HIGH'"
+            <!-- Divider: Green committed section -->
+            <tr v-if="idx > 0 && displayRows[idx - 1]._riskLevel === 'LOW' && feature._riskLevel !== 'LOW'"
+              class="bg-green-50 dark:bg-green-900/10 border-b-2 border-green-200 dark:border-green-800">
+              <td :colspan="headers.length + 1" class="px-4 py-2 text-xs font-semibold text-green-700 dark:text-green-300">
+                ✓ Committed for {{ filters.rel || 'current release' }} — Planning Freeze
+              </td>
+            </tr>
+            <!-- Divider: Red high-risk section -->
+            <tr v-if="idx > 0 && displayRows[idx - 1]._riskLevel !== 'HIGH' && feature._riskLevel === 'HIGH'"
               class="bg-red-50 dark:bg-red-900/20 border-b-2 border-red-200 dark:border-red-800">
               <td :colspan="headers.length + 1" class="px-4 py-2 text-xs font-semibold text-red-700 dark:text-red-300">
                 ▼ Items below this line pose significant capacity, dependency, or historical release risks
+              </td>
+            </tr>
+            <!-- Divider: Yellow medium-risk section -->
+            <tr v-if="idx > 0 && displayRows[idx - 1]._riskLevel !== 'MEDIUM' && feature._riskLevel === 'MEDIUM'"
+              class="bg-amber-50 dark:bg-amber-900/10 border-b-2 border-amber-200 dark:border-amber-800">
+              <td :colspan="headers.length + 1" class="px-4 py-2 text-xs font-semibold text-amber-700 dark:text-amber-300">
+                ▼ Items below this line may be good release candidates but are missing information for a full analysis
               </td>
             </tr>
             <FeatureSchedulingRow
