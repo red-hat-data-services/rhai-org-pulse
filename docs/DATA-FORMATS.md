@@ -3943,6 +3943,48 @@ Keys are job titles (matched from the team registry). Values are persona slugs. 
 
 Auto-generated HMAC key fallback (plain hex string). Created on first use when `USAGE_TRACKING_HMAC_KEY` env var is not set. Persisted across restarts for stable user correlation. Operators should set the env var in production rather than relying on this file.
 
+## Upstream Pulse — PyTorch Repository Access (`github-access.json`)
+
+PyTorch's upstream governance is expressed through GitHub repository permission
+levels (`write` and `triage`), not CODEOWNERS. The upstream-pulse module reads a
+precomputed file from the private GitLab project configured by
+`GITLAB_TEAM_DATA_PROJECT_ID` (default `82624331`):
+
+`https://gitlab.com/redhat/rhel-ai/team-pytorch/pytorch-team-data/-/raw/main/github-access.json`
+
+The file is **not stored in `data/`** and is not written by this app. The backend
+fetches it with `GITLAB_TOKEN`, caches it in memory for 30 minutes, and serves it
+from `GET /api/modules/upstream-pulse/github-access` for PyTorch project pages.
+
+Schema v2:
+
+```json
+{
+  "schemaVersion": 2,
+  "updatedAt": "2026-11-24",
+  "total": 45,
+  "write": 8,
+  "triage": 6,
+  "members": {
+    "write": ["Alex Kim", "Jordan Lee"],
+    "triage": ["Sam Rivera", "Taylor Chen"]
+  }
+}
+```
+
+- `total` is required.
+- `write` and `triage` are non-negative integers.
+- `members.write` and `members.triage` are optional arrays of names or
+  `{ "name": "...", "githubUsername": "..." }` objects. When present, they are
+  the source of truth: the server derives the counts from the arrays and logs a
+  warning if the top-level counts disagree. List every person with that
+  permission so the derived count is accurate.
+- `updatedAt` is shown in the UI as "As of ...".
+- Schema v1 (`{ write, triage, total }` without `members`) remains supported.
+
+Because the file is private and contains employee names, keep real names out of
+this repository's fixtures and tests; demo data uses fictional names.
+
 ## Fixture Rules
 
 The `fixtures/` directory provides read-only demo data used when `DEMO_MODE=true`. These rules prevent data format drift:

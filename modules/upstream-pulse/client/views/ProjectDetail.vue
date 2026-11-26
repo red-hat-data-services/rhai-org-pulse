@@ -229,27 +229,7 @@
             :percentThreshold="card.positionType === 'reviewer' ? 5 : 10"
           />
           <!-- PyTorch repo access card -->
-          <div v-if="githubAccess" class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700/60 p-5 hover:shadow-md hover:border-gray-200 dark:hover:border-gray-600 transition-all duration-200">
-            <div class="flex items-center gap-3 mb-3">
-              <div class="p-2 rounded-lg bg-purple-50 dark:bg-purple-900/20">
-                <UsersIcon :size="16" class="text-purple-600 dark:text-purple-400" />
-              </div>
-              <span class="text-sm font-medium text-gray-600 dark:text-gray-400">Repository Access</span>
-            </div>
-            <div class="flex items-center gap-6">
-              <div>
-                <span class="text-2xl font-bold text-gray-900 dark:text-gray-100 tabular-nums">{{ githubAccess.write ?? 0 }}</span>
-                <span class="text-sm text-gray-500 dark:text-gray-400 ml-1">/ {{ githubAccess.total ?? 0 }}</span>
-                <p class="text-xs text-gray-400 dark:text-gray-500 mt-0.5">Write</p>
-              </div>
-              <div class="w-px h-10 bg-gray-200 dark:bg-gray-700"></div>
-              <div>
-                <span class="text-2xl font-bold text-gray-900 dark:text-gray-100 tabular-nums">{{ githubAccess.triage ?? 0 }}</span>
-                <span class="text-sm text-gray-500 dark:text-gray-400 ml-1">/ {{ githubAccess.total ?? 0 }}</span>
-                <p class="text-xs text-gray-400 dark:text-gray-500 mt-0.5">Triage</p>
-              </div>
-            </div>
-          </div>
+          <RepositoryAccessCard v-if="githubAccess" :access="githubAccess" />
         </div>
 
         <!-- Top maintainers -->
@@ -465,6 +445,7 @@ import { StatCardSkeleton, ContributionCardSkeleton, ContributorRowSkeleton } fr
 import StatCard from '../components/StatCard.vue'
 import ContributionTypeCard from '../components/ContributionTypeCard.vue'
 import LeadershipCard from '../components/LeadershipCard.vue'
+import RepositoryAccessCard from '../components/RepositoryAccessCard.vue'
 import ContributionTrendChart from '../components/ContributionTrendChart.vue'
 import StickyPageHeader from '../components/StickyPageHeader.vue'
 import { useGovernanceCards, uniqueRoles } from '../composables/useGovernanceCards.js'

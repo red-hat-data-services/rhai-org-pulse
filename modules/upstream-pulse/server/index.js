@@ -136,7 +136,116 @@ function getGitlabProjectId() {
 }
 const GITLAB_DATA_FILE_PATH = encodeURIComponent('github-access.json');
 const GITLAB_DATA_CACHE_TTL = 30 * 60 * 1000;
+const GITHUB_ACCESS_ROLES = ['write', 'triage'];
 let _gitlabDataCache = null;
+
+function toAccessCount(value) {
+  const count = Number(value);
+  return Number.isFinite(count) && count >= 0 ? Math.floor(count) : 0;
+}
+
+function hasAccessCount(value) {
+  return value !== undefined && value !== null && value !== '';
+}
+
+function normalizeAccessMember(entry) {
+  if (typeof entry === 'string') {
+    const name = entry.trim();
+    return name ? { name } : null;
+  }
+  if (!entry || typeof entry !== 'object' || Array.isArray(entry)) return null;
+
+  const name = typeof entry.name === 'string' ? entry.name.trim() : '';
+  const githubUsername = typeof entry.githubUsername === 'string' ? entry.githubUsername.trim() : '';
+  if (!name && !githubUsername) return null;
+
+  return {
+    ...(name ? { name } : {}),
+    ...(githubUsername ? { githubUsername } : {}),
+  };
+}
+
+function normalizeAccessMembers(rawMembers) {
+  const members = { write: [], triage: [] };
+  if (!rawMembers || typeof rawMembers !== 'object' || Array.isArray(rawMembers)) return members;
+
+  for (const role of GITHUB_ACCESS_ROLES) {
+    const entries = Array.isArray(rawMembers[role]) ? rawMembers[role] : [];
+    const seen = new Set();
+    for (const entry of entries) {
+      const member = normalizeAccessMember(entry);
+      if (!member) continue;
+      const key = (member.githubUsername || member.name).toLowerCase();
+      if (seen.has(key)) continue;
+      seen.add(key);
+      members[role].push(member);
+    }
+  }
+
+  // Write access implies triage access, so list each person once under the
+  // higher-privilege role.
+  const writeKeys = new Set(
+    members.write.map(member => (member.githubUsername || member.name).toLowerCase())
+  );
+  members.triage = members.triage.filter(
+    member => !writeKeys.has((member.githubUsername || member.name).toLowerCase())
+  );
+
+  return members;
+}
+
+/**
+ * Normalize the externally generated github-access.json payload.
+ *
+ * v1 shape: { write, triage, total }
+ * v2 shape: { schemaVersion, updatedAt, write, triage, total,
+ *             members: { write: [...], triage: [...] } }
+ *
+ * When a members container is present, its arrays are the source of truth for
+ * the counts so a stale top-level count cannot disagree with the rendered list.
+ * Files without members keep the original count-only behavior.
+ */
+function normalizeGithubAccess(payload) {
+  if (!payload || typeof payload !== 'object' || Array.isArray(payload)) return null;
+  if (!hasAccessCount(payload.total)) return null;
+
+  const membersContainer = payload.members;
+  const hasMembersContainer = !!membersContainer
+    && typeof membersContainer === 'object'
+    && !Array.isArray(membersContainer);
+  const members = normalizeAccessMembers(membersContainer);
+  const membersAreSource = hasMembersContainer
+    && (Array.isArray(membersContainer.write) || Array.isArray(membersContainer.triage));
+
+  if (!membersAreSource && !hasAccessCount(payload.write)) return null;
+
+  const write = membersAreSource ? members.write.length : toAccessCount(payload.write);
+  const triage = membersAreSource ? members.triage.length : toAccessCount(payload.triage);
+
+  if (membersAreSource) {
+    if (hasAccessCount(payload.write) && toAccessCount(payload.write) !== write) {
+      console.warn('[upstream-pulse] github-access.json write count does not match members; using member count', {
+        declared: toAccessCount(payload.write),
+        derived: write
+      });
+    }
+    if (hasAccessCount(payload.triage) && toAccessCount(payload.triage) !== triage) {
+      console.warn('[upstream-pulse] github-access.json triage count does not match members; using member count', {
+        declared: toAccessCount(payload.triage),
+        derived: triage
+      });
+    }
+  }
+
+  return {
+    write,
+    triage,
+    total: toAccessCount(payload.total),
+    members: membersAreSource ? members : null,
+    updatedAt: typeof payload.updatedAt === 'string' ? payload.updatedAt : null,
+    schemaVersion: Number.isInteger(payload.schemaVersion) ? payload.schemaVersion : 1
+  };
+}
 
 async function fetchPytorchAccess() {
   if (_gitlabDataCache && Date.now() - _gitlabDataCache.ts < GITLAB_DATA_CACHE_TTL) {
@@ -157,9 +266,9 @@ async function fetchPytorchAccess() {
     throw new Error(`GitLab returned ${resp.status}: ${body.slice(0, 200)}`);
   }
 
-  const data = await resp.json();
-  if (data.write == null || data.total == null) {
-    throw new Error('GitLab data missing required fields (write, total)');
+  const data = normalizeGithubAccess(await resp.json());
+  if (!data) {
+    throw new Error('GitLab data missing required fields (write, total) or members');
   }
   _gitlabDataCache = { data, ts: Date.now() };
   return data;
@@ -389,7 +498,8 @@ module.exports = function registerRoutes(router, context) {
       return {
         projects: [
           { id: '1', name: 'kubernetes', githubOrg: 'kubernetes', githubRepo: 'kubernetes', contributions: 450, activeContributors: 15 },
-          { id: '2', name: 'kubeflow', githubOrg: 'kubeflow', githubRepo: 'kubeflow', contributions: 320, activeContributors: 12 }
+          { id: '2', name: 'kubeflow', githubOrg: 'kubeflow', githubRepo: 'kubeflow', contributions: 320, activeContributors: 12 },
+          { id: 'pytorch-demo', name: 'pytorch', githubOrg: 'pytorch', githubRepo: 'pytorch', contributions: 180, activeContributors: 5 }
         ]
       };
     } else if (endpoint === 'orgs') {
@@ -510,17 +620,27 @@ module.exports = function registerRoutes(router, context) {
    * /api/modules/upstream-pulse/github-access:
    *   get:
    *     tags: [Upstream Pulse]
-   *     summary: PyTorch repo access level counts
+   *     summary: PyTorch repository access counts and members
    *     responses:
    *       200:
-   *         description: Access level counts sourced from GitLab team data
+   *         description: Access level counts and role-grouped members sourced from GitLab team data
    *       503:
    *         description: GitLab token not configured
    */
   router.get('/github-access', requireScope('upstream-pulse:read'), async function(req, res) {
     try {
       if (DEMO_MODE) {
-        return res.json({ write: 12, triage: 8, total: 45 });
+        return res.json({
+          write: 3,
+          triage: 2,
+          total: 45,
+          members: {
+            write: ['Alex Kim', 'Jordan Lee', 'Priya Nair'],
+            triage: ['Sam Rivera', 'Taylor Chen']
+          },
+          updatedAt: '2026-11-24',
+          schemaVersion: 2
+        });
       }
       const data = await fetchPytorchAccess();
       if (!data) {
@@ -767,4 +887,10 @@ module.exports = function registerRoutes(router, context) {
       };
     });
   }
+};
+
+// Exported for unit tests without changing the module's registerRoutes shape.
+module.exports.normalizeGithubAccess = normalizeGithubAccess;
+module.exports.resetGithubAccessCache = function resetGithubAccessCache() {
+  _gitlabDataCache = null;
 };

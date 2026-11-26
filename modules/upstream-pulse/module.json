@@ -26,7 +26,7 @@
       },
       {
         "key": "GITLAB_TEAM_DATA_PROJECT_ID",
-        "description": "GitLab project ID containing github-access.json",
+        "description": "GitLab project ID containing github-access.json (PyTorch access counts and members)",
         "required": false
       }
     ]
