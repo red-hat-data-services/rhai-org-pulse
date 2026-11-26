@@ -231,7 +231,7 @@ describe('FPDoR in health pipeline', function() {
     expect(passed.length).toBeGreaterThan(0)
   })
 
-  it('passes mandatory field items with correct candidate data', async function() {
+  it('passes mandatory field items with fully populated candidate', async function() {
     var storage = makeStorage(makeCandidatesCache([
       {
         issueKey: 'T-1', summary: 'F1', status: 'In Progress',
