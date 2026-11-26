@@ -10,6 +10,7 @@ import RFEDetailModal from '../components/RFEDetailModal.vue'
 import AIImpactGuide from '../components/AIImpactGuide.vue'
 
 const moduleNav = inject('moduleNav')
+const tracker = inject('usageTracker', null)
 const { navigateTo: crossNavigate } = useModuleLink()
 
 const selectedRFE = ref(null)
@@ -98,6 +99,7 @@ function handleRetry() {
 function handleSelectRFE(rfe) {
   selectedRFE.value = rfe
   moduleNav.navigateTo('rfe-review', { select: rfe.key })
+  if (tracker) tracker.trackInteraction('ai-impact', 'rfe-review', 'select', rfe.key)
 }
 
 function handleCloseModal() {
@@ -111,6 +113,7 @@ function handleNavigateToFeature(featureKey) {
     key: featureKey,
     fromRfe: selectedRFE.value?.key
   })
+  if (tracker) tracker.trackInteraction('ai-impact', 'rfe-review', 'navigate', 'releases:feature-detail')
 }
 
 function handleNavigateToTestPlan(sourceKey) {
@@ -188,14 +191,14 @@ watch([() => moduleNav.params.value, rfeData], ([params]) => {
       :selectedRFE="selectedRFE"
       :rfeToFeature="rfeToFeature"
       :pipelineFriction="pipelineFriction"
-      @update:timeWindow="timeWindow = $event"
-      @update:filter="filter = $event"
+      @update:timeWindow="timeWindow = $event; tracker?.trackInteraction('ai-impact', 'rfe-review', 'filter', `timeWindow:${$event}`)"
+      @update:filter="filter = $event; tracker?.trackInteraction('ai-impact', 'rfe-review', 'filter', `involvement:${$event}`)"
       @update:searchQuery="searchQuery = $event"
       @update:chartExpanded="chartExpanded = $event"
-      @update:sortBy="sortBy = $event"
-      @update:passFailFilter="passFailFilter = $event"
-      @update:priorityFilter="priorityFilter = $event"
-      @update:statusFilter="statusFilter = $event"
+      @update:sortBy="sortBy = $event; tracker?.trackInteraction('ai-impact', 'rfe-review', 'sort', $event)"
+      @update:passFailFilter="passFailFilter = $event; tracker?.trackInteraction('ai-impact', 'rfe-review', 'filter', `passFail:${$event}`)"
+      @update:priorityFilter="priorityFilter = $event; tracker?.trackInteraction('ai-impact', 'rfe-review', 'filter', `priority:${$event}`)"
+      @update:statusFilter="statusFilter = $event; tracker?.trackInteraction('ai-impact', 'rfe-review', 'filter', `status:${$event}`)"
       @selectRFE="handleSelectRFE"
       @retry="handleRetry"
     />

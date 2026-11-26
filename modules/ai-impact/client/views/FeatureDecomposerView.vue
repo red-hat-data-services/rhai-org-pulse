@@ -7,6 +7,7 @@ import DecomposerContent from '../components/DecomposerContent.vue'
 import DecomposerDetailPanel from '../components/DecomposerDetailPanel.vue'
 
 const moduleNav = inject('moduleNav')
+const tracker = inject('usageTracker', null)
 const { navigateTo: crossNavigate } = useModuleLink()
 
 const { snapshot, loading, error, load } = useDecomposer()
@@ -17,6 +18,7 @@ function handleSelectStrategy(strategy) {
   selectedStrategy.value = strategy
   if (strategy) {
     moduleNav.navigateTo('feature-decomposer', { select: strategy.strat_id })
+    if (tracker) tracker.trackInteraction('ai-impact', 'feature-decomposer', 'select', strategy.strat_id)
   }
 }
 
@@ -34,6 +36,7 @@ function handleNavigateToFeature(featureKey) {
     key: featureKey,
     fromDecomposer: '1'
   })
+  if (tracker) tracker.trackInteraction('ai-impact', 'feature-decomposer', 'navigate', 'releases:feature-detail')
 }
 
 function handleNavigateToTestPlan(sourceKey) {
