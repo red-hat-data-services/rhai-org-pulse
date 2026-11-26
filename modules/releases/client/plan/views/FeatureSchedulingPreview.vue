@@ -150,21 +150,22 @@ const headers = [
       {{ error }}
     </div>
 
-    <!-- Horizontal scroll navigation (Nov 24 2026) - sticky so it stays visible while scrolling -->
-    <div class="sticky top-0 flex items-center justify-center gap-2 py-2 px-4 bg-gray-50 dark:bg-gray-800/50 border-b border-gray-200 dark:border-gray-700 z-40">
-      <button
-        type="button"
-        @click="scrollTableLeft"
-        title="Scroll table left"
-        class="px-3 py-1 text-xs rounded border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
-      >← scroll</button>
-      <span class="text-xs text-gray-400 dark:text-gray-500">scroll table left / right</span>
-      <button
-        type="button"
-        @click="scrollTableRight"
-        title="Scroll table right"
-        class="px-3 py-1 text-xs rounded border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
-      >scroll →</button>
+    <div class="relative z-40">
+      <div class="flex items-center justify-center gap-2 py-2 px-4 bg-gray-50 dark:bg-gray-800/50 border-b border-gray-200 dark:border-gray-700">
+        <button
+          type="button"
+          @click="scrollTableLeft"
+          title="Scroll table left"
+          class="px-3 py-1 text-xs rounded border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
+        >← scroll</button>
+        <span class="text-xs text-gray-400 dark:text-gray-500">scroll table left / right</span>
+        <button
+          type="button"
+          @click="scrollTableRight"
+          title="Scroll table right"
+          class="px-3 py-1 text-xs rounded border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
+        >scroll →</button>
+      </div>
     </div>
 
     <div class="overflow-x-auto" id="feature-scheduling-wrap">

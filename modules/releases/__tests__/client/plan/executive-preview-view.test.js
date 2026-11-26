@@ -21,7 +21,7 @@ function apiFeature(overrides) {
     Components: ['AI Hub'],
     Priority: 'Major',
     Outcome: 'Upgrade Support',
-    PlannedFor: '3.6 EA1 RHOAI RELEASE',
+    PlannedFor: '3.7 EA1 RHOAI RELEASE',  // Use 3.7+ (3.6 is archived/filtered out)
     Score: 30,
     FPDoR: '17/17',
     Confidence: 'committed',
@@ -38,7 +38,7 @@ describe('ExecutivePreview', () => {
     mockApiRequest.mockResolvedValue({
       features: [
         apiFeature({ Key: 'RHAISTRAT-1' }),
-        apiFeature({ Key: 'RHAISTRAT-2', PlannedFor: '3.6 ga release' }),
+        apiFeature({ Key: 'RHAISTRAT-2', PlannedFor: '3.7 ga release' }),  // Use 3.7+ (3.6 is archived)
         apiFeature({ Key: 'RHAISTRAT-3', Outcome: '', Components: [] })
       ],
       metadata: { source: 'live' },
@@ -71,7 +71,8 @@ describe('ExecutivePreview', () => {
     expect(before).toContain('3')
 
     const select = wrapper.find('select')
-    await select.setValue('3.6 ga release')
+    // Use 3.7 instead of 3.6 (3.6 is archived/released, filter now excludes it)
+    await select.setValue('3.7 ga release')
     await flushPromises()
 
     const row = wrapper.findAll('tbody tr').find(r => r.text().includes('Upgrade Support'))
@@ -117,15 +118,15 @@ describe('ExecutivePreview', () => {
       if (String(path).indexOf('/outcomes') !== -1) {
         return Promise.resolve({
           outcomes: [
-            { key: 'RHAISTRAT-1', title: 'EA1 Outcome', outcomeNumber: 1, inPlan: 0, total: 0, percentComplete: 0, confidence: 0, status: 'No features in plan', linkedVersions: ['3.6 EA1 RHOAI RELEASE'] },
-            { key: 'RHAISTRAT-2', title: 'GA Outcome', outcomeNumber: 2, inPlan: 0, total: 0, percentComplete: 0, confidence: 0, status: 'No features in plan', linkedVersions: ['3.6 GA RHOAI RELEASE'] }
+            { key: 'RHAISTRAT-1', title: 'EA1 Outcome', outcomeNumber: 1, inPlan: 0, total: 0, percentComplete: 0, confidence: 0, status: 'No features in plan', linkedVersions: ['3.7 EA1 RHOAI RELEASE'] },
+            { key: 'RHAISTRAT-2', title: 'GA Outcome', outcomeNumber: 2, inPlan: 0, total: 0, percentComplete: 0, confidence: 0, status: 'No features in plan', linkedVersions: ['3.8 GA RHOAI RELEASE'] }
           ]
         })
       }
       return Promise.resolve({
         features: [{
           Key: 'RHAISTRAT-1', Summary: 'Feature one', Components: ['AI Hub'], Priority: 'Major',
-          PlannedFor: '3.6 EA1 RHOAI RELEASE', Score: 30, FPDoR: '17/17', Confidence: 'committed',
+          PlannedFor: '3.7 EA1 RHOAI RELEASE', Score: 30, FPDoR: '17/17', Confidence: 'committed',
           PM: 'Jane PM', DeliveryOwner: 'Someone'
         }],
         metadata: { source: 'live' }
@@ -138,7 +139,7 @@ describe('ExecutivePreview', () => {
     expect(wrapper.text()).toContain('GA Outcome')
 
     const select = wrapper.find('select')
-    await select.setValue('3.6 EA1 RHOAI RELEASE')
+    await select.setValue('3.7 EA1 RHOAI RELEASE')
     await flushPromises()
     expect(wrapper.text()).toContain('EA1 Outcome')
     expect(wrapper.text()).not.toContain('GA Outcome')
