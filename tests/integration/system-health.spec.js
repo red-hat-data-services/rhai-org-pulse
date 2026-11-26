@@ -1386,6 +1386,8 @@ test.describe('Test Execution Dashboard @system-health', () => {
     await expect(matrix.locator('th.date-header')).toHaveCount(5);
     await expect(matrix.locator('th.date-header').nth(0)).toContainText('No nightly run');
     await expect(matrix.locator('th.date-header').nth(1)).toContainText('No 3.7 EA1 run');
+    // That date only had a 3.6 run: it does not open a panel of other versions' runs
+    await expect(matrix.locator('th.date-header').nth(1).locator('.date-header-btn')).toHaveCount(0);
 
     // Cells do not open the day panel; the date header does
     await matrix.locator('td.data-cell .cell-btn').first().click();
@@ -1423,7 +1425,7 @@ test.describe('Test Execution Dashboard @system-health', () => {
     expectNoBenignConsoleErrors(page);
   });
 
-  test('should keep every run of the day in the day panel while the matrix follows the Version picker', async ({ page }) => {
+  test('should filter Nightly Build Stability columns and day-panel runs by the Version picker', async ({ page }) => {
     const nightlyFixture = JSON.parse(readFileSync(nightlyHealthFixturePath, 'utf8'));
     const fixtureBvtDay = nightlyFixture.days.find((d) => d.stream_key === bvtStreamKey);
     expect(fixtureBvtDay).toBeTruthy();
@@ -1442,25 +1444,26 @@ test.describe('Test Execution Dashboard @system-health', () => {
     const header = deployment.locator(`.date-header-btn[title="Show all builds on ${bvtDay.date}"]`);
     const dayPanel = page.locator('.nightly-day-popup');
 
-    // Default: newest version (3.6); the column shows the newest 3.6 run
+    // Default: newest version (3.6); the column and the day panel show 3.6 runs only (#23 newest, #21)
     await expect(page.locator('.ver-picker-btn')).toHaveText('3.6');
     await expect(header).toContainText('#23');
     await header.click();
-    await expect(dayPanel.locator('.run-list-item')).toHaveCount(3);
+    await expect(dayPanel.locator('.run-list-item')).toHaveCount(2);
+    await expect(dayPanel.locator('.run-list-item').first()).toContainText('#23');
+    await expect(dayPanel.getByRole('link', { name: 'Jenkins run #21' })).toBeVisible();
+    await expect(dayPanel.getByRole('link', { name: 'Jenkins run #22' })).toHaveCount(0);
     await page.keyboard.press('Escape');
     await expect(dayPanel).toHaveCount(0);
 
-    // Pick 3.5.4: the column switches to that run; the day panel still lists every run of the day
+    // Pick 3.5.4: the column and the day panel switch to that version's run (#22)
     await page.locator('.ver-picker-btn').click();
     await page.locator('.ver-popover button.ver-item', { hasText: /^3\.5$/ }).click();
     await page.locator('.ver-popover button.ver-item', { hasText: /^3\.5\.4$/ }).click();
     await expect(page.locator('.ver-picker-btn')).toHaveText('3.5.4');
     await expect(header).toContainText('#22');
     await header.click();
-    await expect(dayPanel.locator('.run-list-item')).toHaveCount(3);
-    for (const build of [23, 22, 21]) {
-      await expect(dayPanel.getByRole('link', { name: `Jenkins run #${build}` })).toBeVisible();
-    }
+    await expect(dayPanel.locator('.run-list-item')).toHaveCount(1);
+    await expect(dayPanel.getByRole('link', { name: 'Jenkins run #22' })).toBeVisible();
 
     expectNoBenignConsoleErrors(page);
   });

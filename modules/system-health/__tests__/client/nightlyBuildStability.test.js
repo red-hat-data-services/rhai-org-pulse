@@ -187,6 +187,8 @@ describe('NightlyHealthTable in Nightly Build Stability mode', () => {
     const headers = wrapper.findAll('th.date-header')
     expect(headers).toHaveLength(4)
     expect(headers[1].text()).toContain('No 3.7 EA1 run')
+    // Only a 3.6 run that day: the date does not open a panel of other versions' runs
+    expect(headers[1].find('button').exists()).toBe(false)
     expect(headers[3].text()).toContain('No nightly run')
     // Window pager only: no snapshot pager notice, hint or stream selector
     expect(wrapper.findAll('.pager-toolbar')).toHaveLength(1)
@@ -205,6 +207,8 @@ describe('NightlyHealthTable in Nightly Build Stability mode', () => {
     await nextTick()
     const popup = document.body.querySelector('.nightly-day-popup')
     expect(popup?.textContent).toContain('Runs on 2026-11-24')
+    // Nov 24 has a 3.6 run and a 3.7 EA1 run: the panel lists the selected version's run only
+    expect(popup.querySelectorAll('.run-list-item')).toHaveLength(1)
   })
 
   it('shows Newer / Older above the table and asks the parent to move the window', async () => {

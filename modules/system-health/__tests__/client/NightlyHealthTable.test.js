@@ -91,7 +91,7 @@ describe('NightlyHealthTable', () => {
     expect(items[0].classList.contains('run-list-item--selected')).toBe(true)
   })
 
-  it('filters the column by version but lists every run of the day in the day panel', async () => {
+  it('filters the column and the day panel by version (#1925 behavior)', async () => {
     const run = (id, build, version, startedAt) => ({
       run_id: id,
       build_number: build,
@@ -128,7 +128,9 @@ describe('NightlyHealthTable', () => {
     await headerBtn.trigger('click')
     await nextTick()
 
-    expect(document.body.querySelectorAll('.nightly-day-popup .run-list-item')).toHaveLength(3)
+    const items = document.body.querySelectorAll('.nightly-day-popup .run-list-item')
+    expect(items).toHaveLength(1)
+    expect(items[0].textContent).toContain('#22')
   })
 
   it('shows Jenkins job filter when multiple stream_key values are present', async () => {

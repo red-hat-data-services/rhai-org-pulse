@@ -64,7 +64,7 @@
                 <p class="tab-panel-intro">
                   Results of the RHOAI nightly builds, starting with the BVT gate (deployment, cluster and RHOAI
                   health checks) that runs before the other quality gates.
-                  Click a date to open every build recorded that day.
+                  Click a date to open that day's builds of the selected version.
                 </p>
               </div>
 

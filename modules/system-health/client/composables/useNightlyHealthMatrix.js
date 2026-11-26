@@ -2153,9 +2153,15 @@ export function useNightlyHealthMatrix(
     selectedDate.value = null
   }
 
+  /**
+   * Day shown in the day panel: the visible column's day, so with a version filter the panel lists that
+   * version/release's runs only (same as the column); otherwise the full snapshot day.
+   */
   const selectedDayEntry = computed(() => {
     if (!selectedDate.value) return null
-    return sortedDays.value.find((d) => d.date === selectedDate.value) || null
+    return visibleDays.value.find((d) => d.date === selectedDate.value)
+      || sortedDays.value.find((d) => d.date === selectedDate.value)
+      || null
   })
 
   const selectedDayRuns = computed(() => orderDayRunsForPanel(selectedDayEntry.value))

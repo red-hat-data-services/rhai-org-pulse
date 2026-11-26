@@ -79,7 +79,7 @@
               :class="{ 'date-header--selected': selectedDate === day.date }"
             >
               <button
-                v-if="dayHasRuns(day.date)"
+                v-if="dayHasRuns(day)"
                 type="button"
                 class="date-header-btn"
                 :title="`Show all builds on ${day.date}`"
@@ -364,8 +364,8 @@ const props = defineProps({
     default: true
   },
   /**
-   * Show only this version/release's runs in each column (`{ version: '3.7', release: 'EA1' }`). The day panel
-   * still lists every run of the date (daily summary).
+   * Show only this version/release's runs (`{ version: '3.7', release: 'EA1' }`), in each column and in the day
+   * panel; a date with no such run shows a message and does not open the panel.
    */
   versionFilter: {
     type: Object,
@@ -424,10 +424,12 @@ const {
   jenkinsJobOptions
 } = useNightlyHealthMatrix(payloadRef, heatmapComponentsRef, selectedStreamKey, viewOptions)
 
-/** Whether the snapshot has any run on this date (any version): its header opens the day panel. */
-function dayHasRuns(date) {
-  const day = sortedDays.value.find((d) => d.date === date)
-  return Boolean(day && Array.isArray(day.runs) && day.runs.length > 0)
+/**
+ * Whether this column has runs to list: with a version filter, runs of that version/release only, so a
+ * "No 3.7 EA1 run" date does not open a panel of other versions' runs.
+ */
+function dayHasRuns(day) {
+  return Array.isArray(day?.runs) && day.runs.length > 0
 }
 
 function emptyDayMessage(day) {
