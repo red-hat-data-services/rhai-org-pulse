@@ -2,6 +2,7 @@
 import { ref, computed, watch } from 'vue'
 import DecomposerMetricsRow from './DecomposerMetricsRow.vue'
 import DecomposerCharts from './DecomposerCharts.vue'
+import { trackRefs } from '../composables/useUsageTracking.js'
 
 const props = defineProps({
   snapshot: { type: Object, default: null },
@@ -16,6 +17,8 @@ const PAGE_SIZE = 10
 const searchQuery = ref('')
 const timeWindow = ref('month') // all | week | month | 3months
 const currentPage = ref(1)
+
+trackRefs({ filter: { timeWindow }, search: searchQuery })
 
 const WINDOW_DAYS = { week: 7, month: 30, '3months': 90 }
 

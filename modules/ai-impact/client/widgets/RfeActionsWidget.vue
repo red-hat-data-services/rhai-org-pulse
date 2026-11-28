@@ -13,6 +13,8 @@ import ForYouSettings from '../components/ForYouSettings.vue'
 import ForYouEmptyState from '../components/ForYouEmptyState.vue'
 import ForYouActionsTab from '../components/ForYouActionsTab.vue'
 import { useModuleLink } from '@shared/client/composables/useModuleLink.js'
+import { useUsageTracking } from '../composables/useUsageTracking.js'
+import { trackUsage } from '@shared/client/services/usageTracking.js'
 
 defineProps({
   size: { type: String, default: 'full' }
@@ -71,17 +73,23 @@ const {
 const loading = computed(() => rfeLoading.value || featureLoading.value || assessmentLoading.value)
 const showSettings = ref(false)
 
+const USAGE_PAGE = 'ai-impact::sotu/rfe-actions'
+useUsageTracking({ page: USAGE_PAGE, open: { settings: showSettings } })
+
 function handleWizardComplete(wizardMode, components) {
+  trackUsage('wizard', `complete-${wizardMode === 'manual' ? 'manual' : 'auto'}`, USAGE_PAGE)
   setMode(wizardMode)
   setManualComponents(components)
   markWizardSeen()
 }
 
 function handleWizardSkip() {
+  trackUsage('wizard', 'skip', USAGE_PAGE)
   markWizardSeen()
 }
 
 function handleSettingsUpdate(newMode, components) {
+  trackUsage('settings', 'for-you', USAGE_PAGE)
   setMode(newMode)
   setManualComponents(components)
   showSettings.value = false
@@ -128,6 +136,7 @@ const priorityOptions = [
 ]
 
 function handleNavigate(item) {
+  trackUsage('open', item.type === 'rfe' ? 'rfe' : 'feature', USAGE_PAGE)
   if (item.type === 'rfe') {
     crossNavigate('ai-impact', 'rfe-review', { select: item.key, from: 'sotu' })
   } else {
